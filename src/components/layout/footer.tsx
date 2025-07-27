@@ -4,17 +4,17 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const footerVariants = cva("w-full border-t bg-background", {
+const footerVariants = cva("w-full border-t bg-gray-50/50", {
   variants: {
     variant: {
-      default: "border-border",
+      default: "border-gray-200/60",
       ghost: "border-transparent",
-      solid: "bg-muted/50",
+      solid: "bg-gray-50 border-gray-200",
     },
     size: {
-      sm: "py-4",
-      md: "py-6",
-      lg: "py-8",
+      sm: "py-8",
+      md: "py-12",
+      lg: "py-16",
     },
   },
   defaultVariants: {
@@ -44,7 +44,11 @@ const FooterContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("container px-4", className)} {...props} />
+  <div
+    ref={ref}
+    className={cn("container mx-auto max-w-7xl px-6 lg:px-8", className)}
+    {...props}
+  />
 ));
 FooterContent.displayName = "FooterContent";
 
@@ -52,7 +56,7 @@ const FooterSection = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("space-y-3", className)} {...props} />
+  <div ref={ref} className={cn("space-y-4", className)} {...props} />
 ));
 FooterSection.displayName = "FooterSection";
 
@@ -60,7 +64,14 @@ const FooterTitle = React.forwardRef<
   HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
-  <h3 ref={ref} className={cn("text-sm font-semibold", className)} {...props} />
+  <h3
+    ref={ref}
+    className={cn(
+      "text-sm font-semibold tracking-wide text-gray-900 uppercase",
+      className
+    )}
+    {...props}
+  />
 ));
 FooterTitle.displayName = "FooterTitle";
 
@@ -71,7 +82,7 @@ const FooterLink = React.forwardRef<
   <a
     ref={ref}
     className={cn(
-      "text-sm text-muted-foreground transition-colors hover:text-foreground",
+      "text-sm text-gray-600 transition-colors duration-200 hover:text-gray-900 block py-1",
       className
     )}
     {...props}
@@ -85,11 +96,10 @@ const FooterText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-sm text-gray-600 leading-relaxed", className)}
     {...props}
   />
 ));
-FooterText.displayName = "FooterText";
 
 export {
   Footer,

@@ -4,16 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const headerVariants = cva(
-  "w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+  "w-full border-b bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/80",
   {
     variants: {
       variant: {
-        default: "border-border",
+        default: "border-gray-200/60",
         ghost: "border-transparent",
-        solid: "bg-background border-border",
+        solid: "bg-white border-gray-200",
       },
       size: {
-        sm: "h-12",
+        sm: "h-14",
         md: "h-16",
         lg: "h-20",
       },
@@ -54,7 +54,7 @@ const HeaderContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "container flex h-full items-center justify-between px-4",
+      "container mx-auto flex h-full max-w-7xl items-center justify-between px-6 lg:px-8",
       className
     )}
     {...props}
@@ -66,7 +66,11 @@ const HeaderTitle = React.forwardRef<
   HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
-  <h1 ref={ref} className={cn("text-lg font-semibold", className)} {...props} />
+  <h2
+    ref={ref}
+    className={cn("text-xl font-bold tracking-tight text-gray-900", className)}
+    {...props}
+  />
 ));
 HeaderTitle.displayName = "HeaderTitle";
 
@@ -76,10 +80,29 @@ const HeaderNav = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <nav
     ref={ref}
-    className={cn("flex items-center space-x-4", className)}
+    className={cn("flex items-center space-x-8", className)}
     {...props}
   />
 ));
 HeaderNav.displayName = "HeaderNav";
 
-export { Header, HeaderContent, HeaderTitle, HeaderNav, headerVariants };
+const HeaderActions = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center space-x-4", className)}
+    {...props}
+  />
+));
+HeaderActions.displayName = "HeaderActions";
+
+export {
+  Header,
+  HeaderContent,
+  HeaderTitle,
+  HeaderNav,
+  HeaderActions,
+  headerVariants,
+};
