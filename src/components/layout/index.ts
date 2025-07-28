@@ -5,6 +5,7 @@ export {
   HeaderContent,
   HeaderTitle,
   HeaderNav,
+  HeaderActions,
   headerVariants,
 } from "./header";
 export {
@@ -14,7 +15,6 @@ export {
   PageTitle,
   PageDescription,
   PageContent,
-  mainLayoutVariants,
 } from "./main-layout";
 export {
   Footer,

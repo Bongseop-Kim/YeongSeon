@@ -1,0 +1,67 @@
+import { Shirt } from "lucide-react";
+import type { Control, UseFormWatch } from "react-hook-form";
+import type { OrderOptions } from "../types/order";
+import { FormSection } from "./FormSection";
+import { CheckboxField } from "./CheckboxField";
+import { SelectField } from "./SelectField";
+import {
+  FABRIC_TYPES,
+  DESIGN_TYPES,
+  PATTERN_TYPES,
+} from "../constants/formOptions";
+
+interface FabricSectionProps {
+  control: Control<OrderOptions>;
+  watch: UseFormWatch<OrderOptions>;
+}
+
+export const FabricSection = ({ control, watch }: FabricSectionProps) => {
+  const watchedValues = watch();
+
+  return (
+    <FormSection icon={Shirt} title="원단 정보">
+      <CheckboxField
+        name="fabricProvided"
+        control={control}
+        label="원단 직접 제공"
+        description="실크, 폴리, 면 소재만 가능하며, 44인치 기준 1마에 4개씩 주문 가능합니다"
+      />
+
+      {!watchedValues.fabricProvided && (
+        <div className="space-y-6">
+          <CheckboxField
+            name="reorder"
+            control={control}
+            label="동일 디자인 재주문"
+            description="원단 디자인의 색상 및 패턴 수정은 불가능하지만 넥타이의 제작 옵션은 변경 가능합니다"
+          />
+
+          {!watchedValues.reorder && (
+            <div className="space-y-6">
+              <SelectField
+                name="fabricType"
+                control={control}
+                label="원단 종류"
+                options={FABRIC_TYPES}
+              />
+
+              <SelectField
+                name="designType"
+                control={control}
+                label="디자인 종류"
+                options={DESIGN_TYPES}
+              />
+
+              <SelectField
+                name="patternType"
+                control={control}
+                label="패턴 종류"
+                options={PATTERN_TYPES}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </FormSection>
+  );
+};
