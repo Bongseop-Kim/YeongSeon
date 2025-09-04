@@ -23,10 +23,10 @@ const ReformPage = () => {
           image: undefined,
           tieLength: undefined,
           wearerHeight: undefined,
-          notes: "",
         },
       ],
       bulkApply: {
+        currentMeasurementType: "length",
         tieLength: undefined,
         wearerHeight: undefined,
       },
@@ -46,7 +46,6 @@ const ReformPage = () => {
       image: undefined,
       tieLength: undefined,
       wearerHeight: undefined,
-      notes: "",
     });
   };
 
@@ -82,50 +81,35 @@ const ReformPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* 왼쪽: 수선 주문 폼 */}
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-xl border border-stone-200 shadow-sm">
-                  <div className="p-8">
-                    <div className="space-y-8">
-                      {/* 일괄 적용 섹션 */}
-                      <BulkApplySection
-                        control={control}
-                        setValue={setValue}
-                        tieCount={fields.length}
-                      />
+                <div className="space-y-8">
+                  {/* 넥타이 목록 */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-semibold text-stone-900">
+                        수선할 넥타이 목록
+                      </h2>
+                      <Button
+                        type="button"
+                        onClick={addTie}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        넥타이 추가
+                      </Button>
+                    </div>
 
-                      <Separator />
-
-                      {/* 넥타이 목록 */}
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                          <h2 className="text-xl font-semibold text-stone-900">
-                            수선할 넥타이 목록
-                          </h2>
-                          <Button
-                            type="button"
-                            onClick={addTie}
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-2"
-                          >
-                            <Plus className="h-4 w-4" />
-                            넥타이 추가
-                          </Button>
-                        </div>
-
-                        <div className="space-y-6">
-                          {fields.map((field, index) => (
-                            <TieItemCard
-                              key={field.id}
-                              index={index}
-                              control={control}
-                              onRemove={() => removeTie(index)}
-                              showRemoveButton={fields.length > 1}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <Separator />
+                    <div className="space-y-6">
+                      {fields.map((field, index) => (
+                        <TieItemCard
+                          key={field.id}
+                          index={index}
+                          control={control}
+                          onRemove={() => removeTie(index)}
+                          showRemoveButton={fields.length > 1}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -134,6 +118,13 @@ const ReformPage = () => {
               {/* 오른쪽: 주문 요약 */}
               <div className="lg:col-span-1">
                 <div className="sticky top-8 space-y-4">
+                  {/* 일괄 적용 섹션 */}
+                  <BulkApplySection
+                    control={control}
+                    setValue={setValue}
+                    tieCount={fields.length}
+                  />
+
                   {/* 주문 요약 */}
                   <Card className="border-stone-200">
                     <CardHeader>

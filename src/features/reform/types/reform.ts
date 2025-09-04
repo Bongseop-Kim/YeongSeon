@@ -11,5 +11,6 @@ export interface ReformOptions {
   bulkApply: {
     tieLength?: number;
     wearerHeight?: number;
+    currentMeasurementType?: "length" | "height";
   };
 }
