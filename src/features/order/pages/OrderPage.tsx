@@ -17,20 +17,20 @@ const OrderPage = () => {
       // 원단 정보
       fabricProvided: false,
       reorder: false,
-      fabricType: null,
-      designType: null,
-      patternType: null,
+      fabricType: "POLY",
+      designType: "PRINTING",
+      patternType: "BASIC",
 
       // 제작 옵션
-      tieType: null,
-      interlining: null,
-      interliningThickness: null,
-      sizeType: null,
+      tieType: "MANUAL",
+      interlining: "POLY",
+      interliningThickness: "THICK",
+      sizeType: "ADULT",
       tieWidth: 8,
 
       // 추가 옵션
-      triangleStitch: false,
-      sideStitch: false,
+      triangleStitch: true,
+      sideStitch: true,
       barTack: false,
       fold7: false,
       dimple: false,

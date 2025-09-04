@@ -1,7 +1,7 @@
 import { Tags } from "lucide-react";
 import type { Control } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
-import { FormSection } from "./FormSection";
+import { FormSection } from "@/components/atoms";
 import { CheckboxField } from "./CheckboxField";
 import { LABEL_OPTIONS } from "../constants/formOptions";
 

@@ -34,7 +34,7 @@ import { ShoppingCart, User, Menu } from "lucide-react";
 const navigationItems = [
   { href: "/design", label: "디자인하기" },
   { href: "/order", label: "맞춤 주문" },
-  { href: "/repair", label: "수선 서비스" },
+  { href: "/reform", label: "수선 서비스" },
 ];
 
 function App() {
@@ -88,7 +88,7 @@ function App() {
             </Sheet>
 
             {/* 데스크톱 액션 버튼들 */}
-            <div className="hidden md:flex items-center">
+            <div className="hidden md:flex items-center gap-4">
               <Button variant="ghost" className="relative">
                 <ShoppingCart className="w-5 h-5" />
                 <span className="sr-only">장바구니</span>

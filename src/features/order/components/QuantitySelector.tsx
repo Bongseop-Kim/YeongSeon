@@ -23,8 +23,6 @@ export const QuantitySelector = ({ control }: QuantitySelectorProps) => {
             <Input
               type="number"
               min={QUANTITY_CONFIG.min}
-              max={QUANTITY_CONFIG.max}
-              step={QUANTITY_CONFIG.step}
               value={field.value}
               onChange={(e) => field.onChange(Number(e.target.value))}
               className="w-24 text-center"

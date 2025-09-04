@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Control, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
-import { FormSection } from "./FormSection";
+import { FormSection } from "@/components/atoms";
 import { CheckboxField } from "./CheckboxField";
 import { QuantitySelector } from "./QuantitySelector";
 import { ImageUpload } from "./ImageUpload";
