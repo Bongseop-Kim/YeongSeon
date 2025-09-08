@@ -75,15 +75,11 @@ const OrderPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* 왼쪽: 주문 폼 */}
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-xl border border-stone-200 shadow-sm">
-                  <div className="p-8">
-                    <OrderForm
-                      control={control}
-                      watch={watch}
-                      setValue={setValue}
-                    />
-                  </div>
-                </div>
+                <OrderForm
+                  control={control}
+                  watch={watch}
+                  setValue={setValue}
+                />
               </div>
 
               {/* 오른쪽: 주문 내역 */}

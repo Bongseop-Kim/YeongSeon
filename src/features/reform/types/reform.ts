@@ -1,6 +1,7 @@
 export interface TieItem {
   id: string;
   image?: File;
+  measurementType?: "length" | "height";
   tieLength?: number;
   wearerHeight?: number;
   notes?: string;
@@ -11,6 +12,6 @@ export interface ReformOptions {
   bulkApply: {
     tieLength?: number;
     wearerHeight?: number;
-    currentMeasurementType?: "length" | "height";
+    measurementType?: "length" | "height";
   };
 }
