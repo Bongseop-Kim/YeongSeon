@@ -1,25 +1,22 @@
 import { MainLayout, MainContent } from "@/components/layout";
-import Video from "@/assets/videos/silk1.mp4";
-import Video2 from "@/assets/videos/silk2.mp4";
-import Video3 from "@/assets/videos/silk3.mp4";
-import { VideoCard } from "../components/video-card";
+import { VideoCard } from "./components/video-card";
 
 // 영상 데이터
 const videoData = [
   {
-    videoSrc: Video,
+    videoSrc: "/videos/silk1.mp4",
     title: "디자인하기",
     description: "나만의 특별한 디자인을 만들어보세요",
     href: "/design",
   },
   {
-    videoSrc: Video2,
+    videoSrc: "/videos/silk2.mp4",
     title: "맞춤 주문",
     description: "고객님의 요구에 맞춘 제품을 주문하세요",
     href: "/order",
   },
   {
-    videoSrc: Video3,
+    videoSrc: "/videos/silk3.mp4",
     title: "수선 서비스",
     description: "전문적인 수선 서비스를 받아보세요",
     href: "/repair",

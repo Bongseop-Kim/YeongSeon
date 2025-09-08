@@ -1,9 +1,9 @@
 import { useForm } from "react-hook-form";
 import { MainLayout, MainContent } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import OrderForm from "../components/OrderForm";
-import CostBreakdown from "../components/CostBreakdown";
-import type { OrderOptions } from "../types/order";
+import OrderForm from "./components/OrderForm";
+import CostBreakdown from "./components/CostBreakdown";
+import type { OrderOptions } from "./types/order";
 
 const OrderPage = () => {
   const {

@@ -168,7 +168,6 @@ const BulkApplySection = ({
                     measurementType === "length"
                       ? field.value?.tieLength
                       : field.value?.wearerHeight;
-                  console.log(measurementType, value, field);
                   if (value) {
                     handleBulkApply({
                       measurementType,

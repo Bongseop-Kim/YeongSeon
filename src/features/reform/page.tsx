@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Form } from "@/components/ui/form";
 import { Plus, Calculator } from "lucide-react";
-import TieItemCard from "../components/TieItemCard";
-import BulkApplySection from "../components/BulkApplySection";
-import type { ReformOptions } from "../types/reform";
+import TieItemCard from "./components/TieItemCard";
+import BulkApplySection from "./components/BulkApplySection";
+import type { ReformOptions } from "./types/reform";
 
 const ReformPage = () => {
   const form = useForm<ReformOptions>({
