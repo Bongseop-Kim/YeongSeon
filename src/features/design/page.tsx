@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { MainContent, MainLayout } from "@/components/layout";
 import type { DesignOptions, PatternType } from "./types/design";
 import Preview from "./components/Preview";
 import Option from "./components/Option";
+import { MainContent, MainLayout } from "@/components/layout/main-layout";
 
 const DesignPage = () => {
   const [isPattern, setIsPattern] = useState<boolean>(false);

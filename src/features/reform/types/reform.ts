@@ -5,6 +5,7 @@ export interface TieItem {
   tieLength?: number;
   wearerHeight?: number;
   notes?: string;
+  checked?: boolean;
 }
 
 export interface ReformOptions {

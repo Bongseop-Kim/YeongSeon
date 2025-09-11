@@ -3,8 +3,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X } from "lucide-react";
 import type { DesignOptions } from "../types/design";
+import { ImagePicker } from "@/components/composite/image-picker";
 
 interface OptionPanelProps {
   options: DesignOptions;
@@ -55,59 +55,19 @@ const Option = ({ options, stateSetters }: OptionPanelProps) => {
     <Card className="p-4 space-y-4">
       {/* 미리보기 이미지 */}
       <div className="space-y-2">
-        <Label className="text-sm">이미지</Label>
+        <Label>이미지</Label>
         <div className="flex gap-2">
-          <div className="relative border border-dashed border-gray-300 p-1 w-fit">
-            {options.selectedFile ? (
-              <>
-                <img
-                  src={URL.createObjectURL(options.selectedFile)}
-                  alt="업로드된 이미지 1"
-                  className="w-10 h-10 object-contain"
-                />
-                <button
-                  type="button"
-                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 hover:bg-gray-100"
-                  onClick={() => handleFileUpload(undefined, "selectedFile")}
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </>
-            ) : (
-              <label
-                htmlFor="fileUpload"
-                className="w-10 h-10 flex items-center justify-center cursor-pointer border border-dashed border-gray-400"
-              >
-                +
-              </label>
-            )}
-          </div>
+          <ImagePicker
+            selectedFile={options.selectedFile}
+            onFileChange={(file) => handleFileUpload(file, "selectedFile")}
+            id="image-picker"
+          />
           {options.isPattern && (
-            <div className="relative border border-dashed border-gray-300 p-1 w-fit">
-              {options.selectedFile2 ? (
-                <>
-                  <img
-                    src={URL.createObjectURL(options.selectedFile2)}
-                    alt="업로드된 이미지 2"
-                    className="w-10 h-10 object-contain"
-                  />
-                  <button
-                    type="button"
-                    className="absolute -top-2 -right-2 bg-white rounded-full p-1 hover:bg-gray-100"
-                    onClick={() => handleFileUpload(undefined, "selectedFile2")}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </>
-              ) : (
-                <label
-                  htmlFor="fileUpload2"
-                  className="w-10 h-10 flex items-center justify-center cursor-pointer border border-dashed border-gray-400"
-                >
-                  +
-                </label>
-              )}
-            </div>
+            <ImagePicker
+              selectedFile={options.selectedFile2}
+              onFileChange={(file) => handleFileUpload(file, "selectedFile2")}
+              id="image-picker2"
+            />
           )}
         </div>
         <input

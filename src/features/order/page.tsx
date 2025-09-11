@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { MainLayout, MainContent } from "@/components/layout";
+import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import OrderForm from "./components/OrderForm";
 import CostBreakdown from "./components/CostBreakdown";

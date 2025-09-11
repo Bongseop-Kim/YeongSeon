@@ -7,8 +7,8 @@ import {
   FABRIC_TYPES,
   DESIGN_TYPES,
   PATTERN_TYPES,
-} from "../constants/formOptions";
-import { FormSection } from "@/components/atoms";
+} from "../constants/FORM_OPTIONS";
+import { FormSection } from "@/components/ui/form-section";
 
 interface FabricSectionProps {
   control: Control<OrderOptions>;
