@@ -1,9 +1,9 @@
 import { useForm } from "react-hook-form";
-import { MainLayout, MainContent } from "@/components/layout";
+import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import OrderForm from "../components/OrderForm";
-import CostBreakdown from "../components/CostBreakdown";
-import type { OrderOptions } from "../types/order";
+import OrderForm from "./components/OrderForm";
+import CostBreakdown from "./components/CostBreakdown";
+import type { OrderOptions } from "./types/order";
 
 const OrderPage = () => {
   const {
@@ -17,20 +17,20 @@ const OrderPage = () => {
       // 원단 정보
       fabricProvided: false,
       reorder: false,
-      fabricType: null,
-      designType: null,
-      patternType: null,
+      fabricType: "POLY",
+      designType: "PRINTING",
+      patternType: "BASIC",
 
       // 제작 옵션
-      tieType: null,
-      interlining: null,
-      interliningThickness: null,
-      sizeType: null,
+      tieType: "MANUAL",
+      interlining: "POLY",
+      interliningThickness: "THICK",
+      sizeType: "ADULT",
       tieWidth: 8,
 
       // 추가 옵션
-      triangleStitch: false,
-      sideStitch: false,
+      triangleStitch: true,
+      sideStitch: true,
       barTack: false,
       fold7: false,
       dimple: false,
@@ -75,15 +75,11 @@ const OrderPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* 왼쪽: 주문 폼 */}
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-xl border border-stone-200 shadow-sm">
-                  <div className="p-8">
-                    <OrderForm
-                      control={control}
-                      watch={watch}
-                      setValue={setValue}
-                    />
-                  </div>
-                </div>
+                <OrderForm
+                  control={control}
+                  watch={watch}
+                  setValue={setValue}
+                />
               </div>
 
               {/* 오른쪽: 주문 내역 */}

@@ -1,9 +1,9 @@
 import { Tags } from "lucide-react";
 import type { Control } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
-import { FormSection } from "./FormSection";
 import { CheckboxField } from "./CheckboxField";
-import { LABEL_OPTIONS } from "../constants/formOptions";
+import { LABEL_OPTIONS } from "../constants/FORM_OPTIONS";
+import { FormSection } from "@/components/ui/form-section";
 
 interface LabelSectionProps {
   control: Control<OrderOptions>;

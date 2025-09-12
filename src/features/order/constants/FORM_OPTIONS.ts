@@ -5,16 +5,13 @@ export const FABRIC_TYPES = [
 
 export const DESIGN_TYPES = [
   { value: "YARN_DYED", label: "선염" },
-  { value: "PRINTED", label: "날염" },
+  { value: "PRINTING", label: "날염" },
 ] as const;
 
 export const PATTERN_TYPES = [
   { value: "BASIC", label: "기본" },
-  { value: "STRIPE", label: "스트라이프" },
-  { value: "DOT", label: "도트" },
-  { value: "PAISLEY", label: "페이즐리" },
-  { value: "FLORAL", label: "플로럴" },
-  { value: "GEOMETRIC", label: "기하학" },
+  { value: "TWILL", label: "트윌" },
+  { value: "JACQUARD", label: "자카드" },
 ] as const;
 
 export const TIE_TYPES = [
@@ -79,8 +76,6 @@ export const LABEL_OPTIONS = [
 
 export const QUANTITY_CONFIG = {
   min: 4,
-  max: 100,
-  step: 4,
 } as const;
 
 export const TIE_WIDTH_CONFIG = {
