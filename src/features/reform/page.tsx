@@ -56,9 +56,7 @@ const ReformPage = () => {
   };
 
   const removeTie = (index: number) => {
-    if (fields.length > 1) {
-      remove(index);
-    }
+    remove(index);
   };
 
   const onSubmit = (data: ReformOptions) => {
@@ -107,19 +105,6 @@ const ReformPage = () => {
               <TwoPanelLayout
                 leftPanel={
                   <Card>
-                    <CardContent className="flex justify-end ">
-                      <Button
-                        type="button"
-                        onClick={addTie}
-                        variant="outline"
-                        size="sm"
-                      >
-                        넥타이 추가
-                      </Button>
-                    </CardContent>
-
-                    <Separator />
-
                     <CardContent className="flex items-center justify-between">
                       <div className="flex gap-6 items-center">
                         <Checkbox
@@ -194,8 +179,16 @@ const ReformPage = () => {
                         <TieItemCard
                           index={index}
                           control={form.control}
-                          onRemove={() => removeTie(index)}
-                          showRemoveButton={fields.length > 1}
+                          onRemove={() =>
+                            confirm(
+                              "정말 삭제하시겠습니까?",
+                              () => removeTie(index),
+                              {
+                                confirmText: "삭제",
+                                cancelText: "취소",
+                              }
+                            )
+                          }
                         />
                         {index < fields.length - 1 && <Separator />}
                       </React.Fragment>
@@ -206,6 +199,18 @@ const ReformPage = () => {
                         description="수선할 넥타이를 추가해주세요."
                       />
                     )}
+
+                    <Separator />
+                    <CardContent className="flex justify-end ">
+                      <Button
+                        type="button"
+                        onClick={addTie}
+                        variant="outline"
+                        size="sm"
+                      >
+                        넥타이 추가
+                      </Button>
+                    </CardContent>
                   </Card>
                 }
                 stickyRight

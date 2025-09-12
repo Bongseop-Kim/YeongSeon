@@ -35,11 +35,6 @@ function App() {
           <HeaderContent className="bg-stone-900">
             <HeaderTitle className="text-stone-50 flex items-center gap-2">
               영선산업
-              <img
-                src="/logo/logo-white.png"
-                alt="영선산업 로고"
-                className="w-4 h-4"
-              />
             </HeaderTitle>
 
             {/* 데스크톱 네비게이션 */}
@@ -63,11 +58,6 @@ function App() {
                 <SheetContent side="right" className="w-80">
                   <SheetHeader>
                     <SheetTitle className="flex items-center gap-3">
-                      <img
-                        src="/logo/logo-white.png"
-                        alt="영선산업 로고"
-                        className="w-12 h-12"
-                      />
                       영선산업
                     </SheetTitle>
                   </SheetHeader>

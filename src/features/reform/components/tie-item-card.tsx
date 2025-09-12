@@ -18,15 +18,9 @@ interface TieItemCardProps {
   index: number;
   control: Control<ReformOptions>;
   onRemove: () => void;
-  showRemoveButton: boolean;
 }
 
-const TieItemCard = ({
-  index,
-  control,
-  onRemove,
-  showRemoveButton,
-}: TieItemCardProps) => {
+const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   return (
     <CardContent className="flex gap-6 py-2">
       <FormField
@@ -158,7 +152,7 @@ const TieItemCard = ({
           }}
         />
       </div>
-      {showRemoveButton && <CloseButton onRemove={onRemove} />}
+      <CloseButton onRemove={onRemove} />
     </CardContent>
   );
 };

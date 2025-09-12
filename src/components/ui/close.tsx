@@ -8,7 +8,7 @@ const CloseButton = ({ onRemove }: { onRemove: () => void }) => {
       variant="ghost"
       size="sm"
       onClick={onRemove}
-      className="h-8 w-8 p-0 text-stone-500 hover:text-stone-700"
+      className="h-8 w-8 p-0 text-stone-500 border-none"
     >
       <X className="h-4 w-4" />
     </Button>
