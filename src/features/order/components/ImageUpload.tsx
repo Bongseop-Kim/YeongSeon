@@ -22,7 +22,7 @@ export const ImageUpload = ({ setValue, watch }: ImageUploadProps) => {
         참고 이미지
       </Label>
       <div className="space-y-3">
-        <div className="border-2 border-dashed border-stone-200 rounded-lg p-6 text-center hover:border-stone-300 transition-colors">
+        <div className="border-2 border-dashed border-stone-200 rounded-md p-6 text-center hover:border-stone-300 transition-colors">
           <input
             type="file"
             multiple

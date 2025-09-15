@@ -11,7 +11,7 @@ const OrderPage = () => {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    // formState: { errors },
   } = useForm<OrderOptions>({
     defaultValues: {
       // 원단 정보

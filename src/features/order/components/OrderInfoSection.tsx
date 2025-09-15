@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Control, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
 import { FormSection } from "@/components/ui/form-section";
-import { CheckboxField } from "./CheckboxField";
+import { CheckboxField } from "@/components/composite/CheckboxField";
 import { QuantitySelector } from "./QuantitySelector";
 import { ImageUpload } from "./ImageUpload";
 
@@ -47,7 +47,7 @@ export const OrderInfoSection = ({
         />
       </div>
 
-      <CheckboxField
+      <CheckboxField<OrderOptions>
         name="sample"
         control={control}
         label="샘플 제작"

@@ -1,40 +1,39 @@
 import { Controller, type Control } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import type { OrderOptions } from "../types/order";
 
-interface CheckboxFieldProps {
-  name: keyof OrderOptions;
-  control: Control<OrderOptions>;
+interface CheckboxFieldProps<T extends Record<string, any>> {
+  name: keyof T;
+  control: Control<T>;
   label: string;
   description?: string;
   id?: string;
 }
 
-export const CheckboxField = ({
+export const CheckboxField = <T extends Record<string, any>>({
   name,
   control,
   label,
   description,
   id,
-}: CheckboxFieldProps) => {
+}: CheckboxFieldProps<T>) => {
   const fieldId = id || name;
 
   return (
     <Controller
-      name={name}
+      name={name as any}
       control={control}
       render={({ field }) => (
         <div className="flex items-start gap-3">
           <Checkbox
-            id={fieldId}
+            id={fieldId as string}
             checked={field.value as boolean}
             onCheckedChange={field.onChange}
             className="mt-1"
           />
           <div className="flex-1">
             <Label
-              htmlFor={fieldId}
+              htmlFor={fieldId as string}
               className={`text-sm font-medium text-stone-900 cursor-pointer block ${
                 description ? "mb-1" : "mt-0.5"
               }`}

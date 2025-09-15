@@ -1,7 +1,7 @@
 import { Tags } from "lucide-react";
 import type { Control } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
-import { CheckboxField } from "./CheckboxField";
+import { CheckboxField } from "@/components/composite/CheckboxField";
 import { LABEL_OPTIONS } from "../constants/FORM_OPTIONS";
 import { FormSection } from "@/components/ui/form-section";
 
@@ -14,7 +14,7 @@ export const LabelSection = ({ control }: LabelSectionProps) => {
     <FormSection icon={Tags} title="라벨 옵션">
       <div className="space-y-3">
         {LABEL_OPTIONS.map((option) => (
-          <CheckboxField
+          <CheckboxField<OrderOptions>
             key={option.key}
             name={option.key as keyof OrderOptions}
             control={control}

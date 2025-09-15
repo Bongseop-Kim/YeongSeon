@@ -1,4 +1,4 @@
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import Router from "./routes";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,10 +27,15 @@ import {
 } from "./components/composite/header";
 import NavLink from "./components/ui/nav-link";
 
-function App() {
+function AppLayout() {
+  const location = useLocation();
+  const hideHeaderPaths = ["/shipping"];
+  const showHeader = !hideHeaderPaths.some((path) =>
+    location.pathname.startsWith(path)
+  );
   return (
-    <BrowserRouter>
-      <Providers>
+    <>
+      {showHeader && (
         <Header>
           <HeaderContent className="bg-stone-900">
             <HeaderTitle className="text-stone-50 flex items-center gap-2">
@@ -93,8 +98,18 @@ function App() {
             </HeaderActions>
           </HeaderContent>
         </Header>
+      )}
 
-        <Router />
+      <Router />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Providers>
+        <AppLayout />
       </Providers>
     </BrowserRouter>
   );

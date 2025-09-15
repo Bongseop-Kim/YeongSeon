@@ -26,7 +26,7 @@ const Option = ({ options, stateSetters }: OptionPanelProps) => {
         <div className="flex rounded-lg border bg-muted p-1">
           <button
             type="button"
-            className={`flex-1 rounded-md px-3 py-1 text-sm transition-all ${
+            className={`flex-1 rounded-sm px-3 py-1 text-sm transition-all ${
               options.patternType === "normal"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground"
@@ -37,7 +37,7 @@ const Option = ({ options, stateSetters }: OptionPanelProps) => {
           </button>
           <button
             type="button"
-            className={`flex-1 rounded-md px-3 py-1 text-sm transition-all ${
+            className={`flex-1 rounded-sm px-3 py-1 text-sm transition-all ${
               options.patternType === "grid1"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground"
