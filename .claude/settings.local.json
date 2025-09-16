@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:postcode.map.daum.net)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

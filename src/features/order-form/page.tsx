@@ -28,7 +28,7 @@ interface OrderData {
 
 const OrderFormPage = () => {
   const [orderData, setOrderData] = useState<OrderData | null>(null);
-  const [popup, setPopup] = useState<Window | null>(null);
+  const [_, setPopup] = useState<Window | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 

@@ -52,7 +52,7 @@ const PageTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h1
     ref={ref}
-    className={cn("text-xl font-semibold tracking-tight py-4", className)}
+    className={cn("font-semibold tracking-tight py-4", className)}
     {...props}
   />
 ));

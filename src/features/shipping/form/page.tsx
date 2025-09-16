@@ -12,16 +12,20 @@ import { SelectField } from "@/components/composite/SelectField";
 import { DELIVERY_REQUEST_OPTIONS } from "../constants/DELIVERY_REQUEST_OPTIONS";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckboxField } from "@/components/composite/CheckboxField";
+import { PostcodeSearch } from "@/features/shipping/components/PostcodeSearch";
+import { useState } from "react";
+import type { DaumPostcodeData } from "@/features/shipping/hooks/useDaumPostcode";
 
 const ShippingFormPage = () => {
   const navigate = useNavigate();
+  const [showPostcodeSearch, setShowPostcodeSearch] = useState(false);
 
   const form = useForm<ShippingAddress>({});
 
   return (
     <div className="min-h-screen w-full relative">
       <div className="bg-stone-100 px-2 flex items-center justify-between">
-        <PageTitle className="text-base">배송지 추가</PageTitle>
+        <PageTitle>배송지 추가</PageTitle>
 
         <CloseButton onRemove={() => navigate("/shipping")} />
       </div>
@@ -80,7 +84,13 @@ const ShippingFormPage = () => {
                     />
                   )}
                 />
-                <Button variant="outline">우편번호 검색</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowPostcodeSearch(true)}
+                >
+                  우편번호 검색
+                </Button>
               </div>
               <Controller
                 name="address"
@@ -95,6 +105,18 @@ const ShippingFormPage = () => {
                     disabled
                   />
                 )}
+              />
+              <PostcodeSearch
+                isOpen={showPostcodeSearch}
+                onComplete={(data: DaumPostcodeData) => {
+                  form.setValue("postalCode", data.zonecode);
+                  form.setValue(
+                    "address",
+                    data.roadAddress || data.jibunAddress
+                  );
+                  setShowPostcodeSearch(false);
+                }}
+                onClose={() => setShowPostcodeSearch(false)}
               />
               <Controller
                 name="detailAddress"
@@ -144,7 +166,7 @@ const ShippingFormPage = () => {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-2 py-4 bg-white border-t">
-        <Button className="w-full">변경하기</Button>
+        <Button className="w-full">저장하기</Button>
       </div>
     </div>
   );
