@@ -1,6 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { PageTitle } from "./main-layout";
+import { Separator } from "../ui/separator";
 
 interface TwoPanelLayoutProps {
   leftPanel: React.ReactNode;
@@ -9,7 +9,6 @@ interface TwoPanelLayoutProps {
   rightPanelClassName?: string;
   containerClassName?: string;
   stickyRight?: boolean;
-  title?: string;
 }
 
 export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
@@ -19,22 +18,23 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
   rightPanelClassName,
   containerClassName,
   stickyRight = false,
-  title,
 }) => {
   return (
-    <div className="max-w-7xl mx-auto py-2 px-4">
-      {title && <PageTitle>{title}</PageTitle>}
+    <div className="max-w-7xl lg:px-8 lg:pt-4">
       {/* Left Panel - Product Info */}
       <div
-        className={cn("flex flex-col lg:flex-row gap-4 ", containerClassName)}
+        className={cn("flex flex-col lg:flex-row lg:gap-8", containerClassName)}
       >
-        <div className={cn("flex-1 lg:w-2/3", leftPanelClassName)}>
+        <div className={cn("w-full lg:flex-1 lg:w-2/3", leftPanelClassName)}>
           {leftPanel}
+          <Separator />
         </div>
 
         {/* Right Panel - Order Summary */}
-        <div className={cn("lg:w-1/3", rightPanelClassName)}>
-          <div className={cn(stickyRight && "sticky top-8")}>{rightPanel}</div>
+        <div className={cn("w-full lg:w-1/3", rightPanelClassName)}>
+          <div className={cn(stickyRight && "lg:sticky lg:top-8")}>
+            {rightPanel}
+          </div>
         </div>
       </div>
     </div>

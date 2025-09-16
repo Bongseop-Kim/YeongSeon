@@ -36,7 +36,7 @@ function AppLayout() {
   return (
     <>
       {showHeader && (
-        <Header>
+        <Header size="sm">
           <HeaderContent className="bg-stone-900">
             <HeaderTitle className="text-stone-50 flex items-center gap-2">
               영선산업

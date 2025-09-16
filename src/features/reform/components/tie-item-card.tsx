@@ -22,7 +22,7 @@ interface TieItemCardProps {
 
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   return (
-    <CardContent className="flex gap-6 py-2">
+    <CardContent className="flex gap-4 py-2">
       <FormField
         control={control}
         name={`ties.${index}.checked`}
@@ -57,7 +57,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
           control={control}
           name={`ties.${index}.measurementType`}
           render={({ field }) => (
-            <FormItem className="flex">
+            <FormItem>
               <FormLabel>측정 방식</FormLabel>
               <FormControl>
                 <RadioGroup
@@ -91,7 +91,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                   required: "넥타이 길이를 입력해주세요",
                 }}
                 render={({ field }) => (
-                  <FormItem className="flex">
+                  <FormItem>
                     <FormLabel
                       htmlFor={`tie-length-${index}`}
                       subLabel="(매듭 포함)"

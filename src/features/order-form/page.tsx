@@ -96,7 +96,6 @@ const OrderFormPage = () => {
     <MainLayout>
       <MainContent className="bg-stone-100">
         <TwoPanelLayout
-          title="주문서"
           leftPanel={
             <Card>
               <CardHeader className="flex justify-between items-center">

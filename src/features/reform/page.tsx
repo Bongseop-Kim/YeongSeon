@@ -180,11 +180,10 @@ const ReformPage = () => {
       <MainContent className="bg-stone-100 overflow-visible">
         <Form {...form}>
           <TwoPanelLayout
-            title="자동 넥타이 수선"
             leftPanel={
               <Card>
                 <CardContent className="flex items-center justify-between">
-                  <div className="flex gap-6 items-center">
+                  <div className="flex gap-4 items-center">
                     <Checkbox
                       checked={isAllChecked}
                       onCheckedChange={handleSelectAll}
