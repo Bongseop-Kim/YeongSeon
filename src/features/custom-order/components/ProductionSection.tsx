@@ -1,12 +1,11 @@
 import { Controller } from "react-hook-form";
-import { Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Control } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
 import { FormSection } from "@/components/ui/form-section";
-import { SelectField } from "./SelectField";
-import { CheckboxField } from "./CheckboxField";
+import { SelectField } from "@/components/composite/SelectField";
+import { CheckboxField } from "@/components/composite/CheckboxField";
 import {
   TIE_TYPES,
   INTERLINING_TYPES,
@@ -22,29 +21,29 @@ interface ProductionSectionProps {
 
 export const ProductionSection = ({ control }: ProductionSectionProps) => {
   return (
-    <FormSection icon={Settings} title="제작 옵션">
-      <SelectField
+    <FormSection title="제작 옵션">
+      <SelectField<OrderOptions>
         name="tieType"
         control={control}
         label="봉제 방식"
         options={TIE_TYPES}
       />
 
-      <SelectField
+      <SelectField<OrderOptions>
         name="interlining"
         control={control}
         label="심지 종류"
         options={INTERLINING_TYPES}
       />
 
-      <SelectField
+      <SelectField<OrderOptions>
         name="interliningThickness"
         control={control}
         label="심지 두께"
         options={INTERLINING_THICKNESS}
       />
 
-      <SelectField
+      <SelectField<OrderOptions>
         name="sizeType"
         control={control}
         label="사이즈 타입"
@@ -79,7 +78,7 @@ export const ProductionSection = ({ control }: ProductionSectionProps) => {
 
         <div className="grid grid-cols-3 gap-4">
           {ADDITIONAL_OPTIONS.map((option) => (
-            <CheckboxField
+            <CheckboxField<OrderOptions>
               key={option.key}
               name={option.key as keyof OrderOptions}
               control={control}

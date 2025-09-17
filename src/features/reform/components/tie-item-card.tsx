@@ -18,17 +18,11 @@ interface TieItemCardProps {
   index: number;
   control: Control<ReformOptions>;
   onRemove: () => void;
-  showRemoveButton: boolean;
 }
 
-const TieItemCard = ({
-  index,
-  control,
-  onRemove,
-  showRemoveButton,
-}: TieItemCardProps) => {
+const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   return (
-    <CardContent className="flex gap-6 py-2">
+    <CardContent className="flex gap-4 py-2">
       <FormField
         control={control}
         name={`ties.${index}.checked`}
@@ -63,7 +57,7 @@ const TieItemCard = ({
           control={control}
           name={`ties.${index}.measurementType`}
           render={({ field }) => (
-            <FormItem className="flex">
+            <FormItem>
               <FormLabel>측정 방식</FormLabel>
               <FormControl>
                 <RadioGroup
@@ -97,7 +91,7 @@ const TieItemCard = ({
                   required: "넥타이 길이를 입력해주세요",
                 }}
                 render={({ field }) => (
-                  <FormItem className="flex">
+                  <FormItem>
                     <FormLabel
                       htmlFor={`tie-length-${index}`}
                       subLabel="(매듭 포함)"
@@ -158,7 +152,7 @@ const TieItemCard = ({
           }}
         />
       </div>
-      {showRemoveButton && <CloseButton onRemove={onRemove} />}
+      <CloseButton onRemove={onRemove} />
     </CardContent>
   );
 };

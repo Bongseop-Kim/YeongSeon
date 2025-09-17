@@ -1,13 +1,8 @@
-import { Shirt } from "lucide-react";
 import type { Control, UseFormWatch } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
-import { CheckboxField } from "./CheckboxField";
-import { SelectField } from "./SelectField";
-import {
-  FABRIC_TYPES,
-  DESIGN_TYPES,
-  PATTERN_TYPES,
-} from "../constants/FORM_OPTIONS";
+import { CheckboxField } from "@/components/composite/CheckboxField";
+import { SelectField } from "@/components/composite/SelectField";
+import { FABRIC_TYPES, DESIGN_TYPES } from "../constants/FORM_OPTIONS";
 import { FormSection } from "@/components/ui/form-section";
 
 interface FabricSectionProps {
@@ -19,8 +14,8 @@ export const FabricSection = ({ control, watch }: FabricSectionProps) => {
   const watchedValues = watch();
 
   return (
-    <FormSection icon={Shirt} title="원단 정보">
-      <CheckboxField
+    <FormSection title="원단 정보">
+      <CheckboxField<OrderOptions>
         name="fabricProvided"
         control={control}
         label="원단 직접 제공"
@@ -29,7 +24,7 @@ export const FabricSection = ({ control, watch }: FabricSectionProps) => {
 
       {!watchedValues.fabricProvided && (
         <div className="space-y-6">
-          <CheckboxField
+          <CheckboxField<OrderOptions>
             name="reorder"
             control={control}
             label="동일 디자인 재주문"
@@ -38,25 +33,18 @@ export const FabricSection = ({ control, watch }: FabricSectionProps) => {
 
           {!watchedValues.reorder && (
             <div className="space-y-6">
-              <SelectField
+              <SelectField<OrderOptions>
                 name="fabricType"
                 control={control}
                 label="원단 소재"
                 options={FABRIC_TYPES}
               />
 
-              <SelectField
+              <SelectField<OrderOptions>
                 name="designType"
                 control={control}
                 label="선염&날염"
                 options={DESIGN_TYPES}
-              />
-
-              <SelectField
-                name="patternType"
-                control={control}
-                label="패턴 종류"
-                options={PATTERN_TYPES}
               />
             </div>
           )}

@@ -54,7 +54,7 @@ const HeaderContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "container mx-auto flex h-full max-w-7xl items-center justify-between px-6 lg:px-8",
+      "container mx-auto flex h-full max-w-7xl items-center justify-between px-4 lg:px-8",
       className
     )}
     {...props}
@@ -68,7 +68,7 @@ const HeaderTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h2
     ref={ref}
-    className={cn("text-xl font-bold tracking-tight text-gray-900", className)}
+    className={cn("font-bold tracking-tight text-gray-900", className)}
     {...props}
   />
 ));

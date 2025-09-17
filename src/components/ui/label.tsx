@@ -8,7 +8,7 @@ interface LabelProps extends React.ComponentProps<typeof LabelPrimitive.Root> {
 }
 
 const baseClassName =
-  "flex text-stone-900 w-24 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50";
+  "flex text-stone-900 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50";
 
 function Label({ className, subLabel, ...props }: LabelProps) {
   const labelId = React.useId();

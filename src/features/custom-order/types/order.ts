@@ -4,7 +4,6 @@ export interface OrderOptions {
   reorder: boolean;
   fabricType: "SILK" | "POLY" | null;
   designType: "PRINTING" | "YARN_DYED" | null;
-  patternType: "BASIC" | "TWILL" | "JACQUARD" | null;
 
   // 제작 옵션
   tieType: "MANUAL" | "AUTO" | null;

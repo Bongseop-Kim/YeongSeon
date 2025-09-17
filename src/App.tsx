@@ -1,4 +1,4 @@
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import Router from "./routes";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,19 +27,19 @@ import {
 } from "./components/composite/header";
 import NavLink from "./components/ui/nav-link";
 
-function App() {
+function AppLayout() {
+  const location = useLocation();
+  const hideHeaderPaths = ["/shipping"];
+  const showHeader = !hideHeaderPaths.some((path) =>
+    location.pathname.startsWith(path)
+  );
   return (
-    <BrowserRouter>
-      <Providers>
-        <Header>
+    <>
+      {showHeader && (
+        <Header size="sm">
           <HeaderContent className="bg-stone-900">
             <HeaderTitle className="text-stone-50 flex items-center gap-2">
               영선산업
-              <img
-                src="/logo/logo-white.png"
-                alt="영선산업 로고"
-                className="w-4 h-4"
-              />
             </HeaderTitle>
 
             {/* 데스크톱 네비게이션 */}
@@ -60,26 +60,19 @@ function App() {
                     <span className="sr-only">메뉴 열기</span>
                   </button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-80">
+                <SheetContent side="right" className="w-50 bg-stone-200">
                   <SheetHeader>
                     <SheetTitle className="flex items-center gap-3">
-                      <img
-                        src="/logo/logo-white.png"
-                        alt="영선산업 로고"
-                        className="w-12 h-12"
-                      />
-                      영선산업
+                      {/* 영선산업 */}
                     </SheetTitle>
                   </SheetHeader>
-                  <div className="mt-8 space-y-6">
-                    <nav className="space-y-4">
-                      {NAVIGATION_ITEMS.map((item) => (
-                        <NavLink key={item.href} to={item.href}>
-                          {item.label}
-                        </NavLink>
-                      ))}
-                    </nav>
-                  </div>
+                  <nav className="space-y-4 flex flex-col items-end">
+                    {NAVIGATION_ITEMS.map((item) => (
+                      <NavLink key={item.href} to={item.href}>
+                        {item.label}
+                      </NavLink>
+                    ))}
+                  </nav>
                 </SheetContent>
               </Sheet>
 
@@ -103,8 +96,18 @@ function App() {
             </HeaderActions>
           </HeaderContent>
         </Header>
+      )}
 
-        <Router />
+      <Router />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Providers>
+        <AppLayout />
       </Providers>
     </BrowserRouter>
   );
