@@ -1,7 +1,7 @@
 import DesignPage from "@/features/design/page";
 import HomePage from "@/features/home/page";
 import OrderFormPage from "@/features/order-form/page";
-import OrderPage from "@/features/order/page";
+import OrderPage from "@/features/custom-order/page";
 import ReformPage from "@/features/reform/page";
 import ShippingFormPage from "@/features/shipping/form/page";
 import ShippingPage from "@/features/shipping/page";
@@ -12,7 +12,7 @@ export default function Router() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/design" element={<DesignPage />} />
-      <Route path="/order" element={<OrderPage />} />
+      <Route path="/custom-order" element={<OrderPage />} />
       <Route path="/reform" element={<ReformPage />} />
       <Route path="/order-form" element={<OrderFormPage />} />
       <Route path="/shipping" element={<ShippingPage />} />
