@@ -4,22 +4,17 @@ import { Button } from "@/components/ui/button";
 import OrderForm from "./components/OrderForm";
 import CostBreakdown from "./components/CostBreakdown";
 import type { OrderOptions } from "./types/order";
+import { Form } from "@/components/ui/form";
+import TwoPanelLayout from "@/components/layout/two-panel-layout";
 
 const OrderPage = () => {
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    // formState: { errors },
-  } = useForm<OrderOptions>({
+  const form = useForm<OrderOptions>({
     defaultValues: {
       // 원단 정보
       fabricProvided: false,
       reorder: false,
       fabricType: "POLY",
       designType: "PRINTING",
-      patternType: "BASIC",
 
       // 제작 옵션
       tieType: "MANUAL",
@@ -48,18 +43,7 @@ const OrderPage = () => {
     },
   });
 
-  const watchedValues = watch();
-
-  const onSubmit = (data: OrderOptions) => {
-    console.log("Order submitted:", data);
-    // 주문 제출 로직
-  };
-
-  const handleAddToCart = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Added to cart:", watchedValues);
-    // 장바구니 추가 로직
-  };
+  const watchedValues = form.watch();
 
   const handleDirectOrder = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,48 +53,32 @@ const OrderPage = () => {
 
   return (
     <MainLayout>
-      <MainContent>
-        <div className="max-w-6xl mx-auto py-8 px-4">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* 왼쪽: 주문 폼 */}
-              <div className="lg:col-span-2">
-                <OrderForm
-                  control={control}
-                  watch={watch}
-                  setValue={setValue}
-                />
-              </div>
+      <MainContent className="bg-stone-100 overflow-visible">
+        <Form {...form}>
+          <TwoPanelLayout
+            leftPanel={
+              <OrderForm
+                control={form.control}
+                watch={form.watch}
+                setValue={form.setValue}
+              />
+            }
+            rightPanel={
+              <>
+                <CostBreakdown options={watchedValues} />
 
-              {/* 오른쪽: 주문 내역 */}
-              <div className="lg:col-span-1">
-                <div className="sticky top-8 space-y-4">
-                  <CostBreakdown options={watchedValues} />
-
-                  <div className="space-y-3">
-                    <Button
-                      type="button"
-                      onClick={handleAddToCart}
-                      size="lg"
-                      variant="outline"
-                      className="w-full h-12 text-base font-medium"
-                    >
-                      장바구니 담기
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleDirectOrder}
-                      size="lg"
-                      className="w-full h-12 text-base font-medium bg-stone-900 hover:bg-stone-800"
-                    >
-                      바로 주문하기
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
+                <Button
+                  type="button"
+                  onClick={handleDirectOrder}
+                  size="lg"
+                  className="w-full h-12 text-base font-medium bg-stone-900 hover:bg-stone-800"
+                >
+                  바로 주문하기
+                </Button>
+              </>
+            }
+          />
+        </Form>
       </MainContent>
     </MainLayout>
   );

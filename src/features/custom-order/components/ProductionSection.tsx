@@ -1,5 +1,4 @@
 import { Controller } from "react-hook-form";
-import { Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Control } from "react-hook-form";
@@ -22,7 +21,7 @@ interface ProductionSectionProps {
 
 export const ProductionSection = ({ control }: ProductionSectionProps) => {
   return (
-    <FormSection icon={Settings} title="제작 옵션">
+    <FormSection title="제작 옵션">
       <SelectField<OrderOptions>
         name="tieType"
         control={control}

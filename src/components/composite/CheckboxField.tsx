@@ -31,21 +31,9 @@ export const CheckboxField = <T extends Record<string, any>>({
             onCheckedChange={field.onChange}
             className="mt-1"
           />
-          <div className="flex-1">
-            <Label
-              htmlFor={fieldId as string}
-              className={`text-sm font-medium text-stone-900 cursor-pointer block ${
-                description ? "mb-1" : "mt-0.5"
-              }`}
-            >
-              {label}
-            </Label>
-            {description && (
-              <p className="text-xs text-stone-600 leading-relaxed">
-                {description}
-              </p>
-            )}
-          </div>
+          <Label htmlFor={fieldId as string} subLabel={description}>
+            {label}
+          </Label>
         </div>
       )}
     />

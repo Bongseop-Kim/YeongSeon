@@ -1,13 +1,8 @@
-import { Shirt } from "lucide-react";
 import type { Control, UseFormWatch } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
 import { CheckboxField } from "@/components/composite/CheckboxField";
 import { SelectField } from "@/components/composite/SelectField";
-import {
-  FABRIC_TYPES,
-  DESIGN_TYPES,
-  PATTERN_TYPES,
-} from "../constants/FORM_OPTIONS";
+import { FABRIC_TYPES, DESIGN_TYPES } from "../constants/FORM_OPTIONS";
 import { FormSection } from "@/components/ui/form-section";
 
 interface FabricSectionProps {
@@ -19,7 +14,7 @@ export const FabricSection = ({ control, watch }: FabricSectionProps) => {
   const watchedValues = watch();
 
   return (
-    <FormSection icon={Shirt} title="원단 정보">
+    <FormSection title="원단 정보">
       <CheckboxField<OrderOptions>
         name="fabricProvided"
         control={control}
@@ -50,13 +45,6 @@ export const FabricSection = ({ control, watch }: FabricSectionProps) => {
                 control={control}
                 label="선염&날염"
                 options={DESIGN_TYPES}
-              />
-
-              <SelectField
-                name="patternType"
-                control={control}
-                label="패턴 종류"
-                options={PATTERN_TYPES}
               />
             </div>
           )}

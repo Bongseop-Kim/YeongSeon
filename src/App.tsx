@@ -60,21 +60,19 @@ function AppLayout() {
                     <span className="sr-only">메뉴 열기</span>
                   </button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-80">
+                <SheetContent side="right" className="w-50 bg-stone-200">
                   <SheetHeader>
                     <SheetTitle className="flex items-center gap-3">
-                      영선산업
+                      {/* 영선산업 */}
                     </SheetTitle>
                   </SheetHeader>
-                  <div className="mt-8 space-y-6">
-                    <nav className="space-y-4">
-                      {NAVIGATION_ITEMS.map((item) => (
-                        <NavLink key={item.href} to={item.href}>
-                          {item.label}
-                        </NavLink>
-                      ))}
-                    </nav>
-                  </div>
+                  <nav className="space-y-4 flex flex-col items-end">
+                    {NAVIGATION_ITEMS.map((item) => (
+                      <NavLink key={item.href} to={item.href}>
+                        {item.label}
+                      </NavLink>
+                    ))}
+                  </nav>
                 </SheetContent>
               </Sheet>
 

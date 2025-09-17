@@ -1,5 +1,5 @@
 import { Button } from "../ui/button";
-import { X } from "lucide-react";
+import { XIcon } from "lucide-react";
 
 const CloseButton = ({ onRemove }: { onRemove: () => void }) => {
   return (
@@ -8,9 +8,9 @@ const CloseButton = ({ onRemove }: { onRemove: () => void }) => {
       variant="ghost"
       size="sm"
       onClick={onRemove}
-      className="h-8 w-8 p-0 text-stone-500 border-none"
+      className="ring-offset-background rounded-xs focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 opacity-70 transition-opacity focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
     >
-      <X className="h-4 w-4" />
+      <XIcon className="size-4" />
     </Button>
   );
 };

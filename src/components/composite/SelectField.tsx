@@ -29,10 +29,8 @@ export const SelectField = <T extends Record<string, any>>({
   placeholder = "선택하세요",
 }: SelectFieldProps<T>) => {
   return (
-    <div>
-      <Label className="text-sm font-medium text-stone-900 mb-2 block">
-        {label}
-      </Label>
+    <div className="space-y-1">
+      <Label>{label}</Label>
       <Controller
         name={name as any}
         control={control}

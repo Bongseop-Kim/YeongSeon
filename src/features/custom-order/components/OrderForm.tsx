@@ -5,6 +5,7 @@ import { FabricSection } from "./FabricSection";
 import { ProductionSection } from "./ProductionSection";
 import { LabelSection } from "./LabelSection";
 import { OrderInfoSection } from "./OrderInfoSection";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface OrderFormProps {
   control: Control<OrderOptions>;
@@ -14,21 +15,23 @@ interface OrderFormProps {
 
 const OrderForm = ({ control, watch, setValue }: OrderFormProps) => {
   return (
-    <div className="space-y-8">
-      <FabricSection control={control} watch={watch} />
+    <Card>
+      <CardContent className="space-y-4">
+        <FabricSection control={control} watch={watch} />
 
-      <Separator />
+        <Separator />
 
-      <ProductionSection control={control} />
+        <ProductionSection control={control} />
 
-      <Separator />
+        <Separator />
 
-      <LabelSection control={control} />
+        <LabelSection control={control} />
 
-      <Separator />
+        <Separator />
 
-      <OrderInfoSection control={control} setValue={setValue} watch={watch} />
-    </div>
+        <OrderInfoSection control={control} setValue={setValue} watch={watch} />
+      </CardContent>
+    </Card>
   );
 };
 

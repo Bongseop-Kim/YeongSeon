@@ -8,12 +8,6 @@ export const DESIGN_TYPES = [
   { value: "PRINTING", label: "날염" },
 ] as const;
 
-export const PATTERN_TYPES = [
-  { value: "BASIC", label: "기본" },
-  { value: "TWILL", label: "트윌" },
-  { value: "JACQUARD", label: "자카드" },
-] as const;
-
 export const TIE_TYPES = [
   { value: "MANUAL", label: "수동 봉제" },
   { value: "AUTO", label: "자동 봉제" },
