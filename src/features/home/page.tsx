@@ -8,28 +8,7 @@ import {
   FooterSection,
   FooterTitle,
 } from "./components/footer";
-
-// 영상 데이터
-const videoData = [
-  {
-    videoSrc: "/videos/silk1.mp4",
-    title: "디자인하기",
-    description: "나만의 특별한 디자인을 만들어보세요",
-    href: "/design",
-  },
-  {
-    videoSrc: "/videos/silk2.mp4",
-    title: "맞춤 주문",
-    description: "고객님의 요구에 맞춘 제품을 주문하세요",
-    href: "/order",
-  },
-  {
-    videoSrc: "/videos/silk3.mp4",
-    title: "수선 서비스",
-    description: "전문적인 수선 서비스를 받아보세요",
-    href: "/repair",
-  },
-];
+import { VIDEO_DATA } from "@/constants/NAVIGATION_ITEMS";
 
 const HomePage = () => {
   return (
@@ -38,7 +17,7 @@ const HomePage = () => {
         <div className="flex-1 min-h-screen flex items-center justify-center">
           <div className="w-full max-w-7xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[70vh]">
-              {videoData.map((video) => (
+              {VIDEO_DATA.map((video) => (
                 <VideoCard
                   key={video.href}
                   videoSrc={video.videoSrc}

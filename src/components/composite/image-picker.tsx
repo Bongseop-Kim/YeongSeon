@@ -119,7 +119,7 @@ export const ImagePicker = React.forwardRef<HTMLInputElement, ImagePickerProps>(
                   className="absolute top-1 right-1 bg-black rounded-full w-4 h-4 flex items-center justify-center"
                   onClick={() => handleRemove()}
                 >
-                  <X className="w-3 h-3" color="white" />
+                  <X className="size-3" color="white" />
                 </button>
               </>
             ) : (

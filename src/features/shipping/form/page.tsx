@@ -27,7 +27,7 @@ const ShippingFormPage = () => {
       <div className="bg-stone-100 px-2 flex items-center justify-between">
         <PageTitle>배송지 추가</PageTitle>
 
-        <CloseButton onRemove={() => navigate("/shipping")} />
+        <CloseButton onRemove={() => navigate(-1)} />
       </div>
 
       <div className="px-2 py-4 pb-20">

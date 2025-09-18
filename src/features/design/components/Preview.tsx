@@ -206,27 +206,17 @@ const Preview = ({ options, stateSetters }: PreviewProps) => {
 
   return (
     <Card className="bg-white min-h-[700px] flex justify-center items-center overflow-hidden p-6">
-      <div
-        style={{
-          position: "relative",
-        }}
-      >
+      <div className="relative">
         <img
           src="/images/tieShadow.png"
           alt="패턴 이미지"
-          style={{
-            position: "absolute",
-            left: -1,
-            top: -54,
-            zIndex: 100,
-            pointerEvents: "none",
-          }}
+          className="absolute top-[-57px] z-10 pointer-events-none"
         />
         <div
           style={{
             backgroundColor: options.color,
             height: "600px",
-            width: "314px",
+            width: "316px",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
