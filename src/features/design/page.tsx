@@ -3,6 +3,7 @@ import type { DesignOptions, PatternType } from "./types/design";
 import Preview from "./components/Preview";
 import Option from "./components/Option";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
+import TwoPanelLayout from "@/components/layout/two-panel-layout";
 
 const DesignPage = () => {
   const [isPattern, setIsPattern] = useState<boolean>(false);
@@ -56,29 +57,13 @@ const DesignPage = () => {
     setText,
   };
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // 수선 주문 제출 로직
-  };
-
   return (
     <MainLayout>
-      <MainContent>
-        <div className="max-w-6xl mx-auto py-8 px-4">
-          <form onSubmit={onSubmit}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* 왼쪽: 디자인 폼 */}
-              <div className="lg:col-span-2">
-                <Preview options={options} stateSetters={stateSetters} />
-              </div>
-
-              {/* 오른쪽: 옵션 폼 */}
-              <div className="lg:col-span-1">
-                <Option options={options} stateSetters={stateSetters} />
-              </div>
-            </div>
-          </form>
-        </div>
+      <MainContent className="bg-stone-100 overflow-visible">
+        <TwoPanelLayout
+          leftPanel={<Preview options={options} stateSetters={stateSetters} />}
+          rightPanel={<Option options={options} stateSetters={stateSetters} />}
+        />
       </MainContent>
     </MainLayout>
   );

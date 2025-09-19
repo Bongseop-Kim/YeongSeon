@@ -1,5 +1,6 @@
 import { PageTitle } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
+import CloseButton from "@/components/ui/close";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +11,14 @@ const ShippingPage = () => {
   return (
     <div className="min-h-screen w-full relative">
       <div className="bg-stone-100 px-2 pb-4">
-        <PageTitle className="text-base">배송지 정보</PageTitle>
+        <div className="flex items-center justify-between">
+          <PageTitle className="text-base">배송지 정보</PageTitle>
+          <CloseButton
+            onRemove={() => {
+              window.close();
+            }}
+          />
+        </div>
         <Input
           placeholder="배송지 이름, 주소, 연락처로 검색하세요."
           className="bg-white"
