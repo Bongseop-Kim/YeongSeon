@@ -8,7 +8,7 @@ interface TwoPanelLayoutProps {
   leftPanelClassName?: string;
   rightPanelClassName?: string;
   containerClassName?: string;
-  stickyRight?: boolean;
+  button?: React.ReactNode;
 }
 
 export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
@@ -17,7 +17,7 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
   leftPanelClassName,
   rightPanelClassName,
   containerClassName,
-  stickyRight = false,
+  button,
 }) => {
   return (
     <div className="max-w-7xl lg:px-8 lg:pt-4 lg:pb-4">
@@ -31,10 +31,16 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
         </div>
 
         {/* Right Panel - Order Summary */}
-        <div className={cn("w-full lg:w-1/3", rightPanelClassName)}>
-          <div className={cn(stickyRight && "lg:sticky lg:top-8")}>
-            {rightPanel}
-          </div>
+        <div
+          className={cn("w-full lg:w-1/3 relative mb-16", rightPanelClassName)}
+        >
+          {rightPanel}
+
+          {button && (
+            <div className="fixed bottom-2 left-0 right-0 mt-4 px-2 lg:relative lg:left-auto lg:right-auto lg:bottom-auto lg:px-0">
+              {button}
+            </div>
+          )}
         </div>
       </div>
     </div>

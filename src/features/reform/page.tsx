@@ -290,71 +290,67 @@ const ReformPage = () => {
                 </CardContent>
               </Card>
             }
-            stickyRight
             rightPanel={
-              <div className="space-y-4">
-                {/* 주문 요약 */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>구매 금액</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-stone-600">수량 x 비용</span>
-                        <span className="font-medium">
-                          {fields.length}개 x 15,000원
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-stone-600">배송비</span>
-                        <span className="font-medium">3,000원</span>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between font-semibold">
-                        <span>총 비용</span>
-                        <span>
-                          {(calculateEstimatedCost() + 3000).toLocaleString()}원
-                        </span>
-                      </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>구매 금액</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-stone-600">수량 x 비용</span>
+                      <span className="font-medium">
+                        {fields.length}개 x 15,000원
+                      </span>
                     </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-stone-600">배송비</span>
+                      <span className="font-medium">3,000원</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-semibold">
+                      <span>총 비용</span>
+                      <span>
+                        {(calculateEstimatedCost() + 3000).toLocaleString()}원
+                      </span>
+                    </div>
+                  </div>
 
-                    <Accordion type="single" collapsible>
-                      <AccordionItem value="item-1">
-                        <AccordionTrigger>유의사항</AccordionTrigger>
-                        <AccordionContent className="text-stone-600">
-                          <p>
-                            • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
-                            부과됩니다.
-                          </p>
-                          <p>
-                            • 예상 수선 기간은 넥타이 확인 후 영업일 기준
-                            10일입니다.
-                          </p>
-                          <p>
-                            • 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이
-                            불가능합니다.
-                          </p>
-                          <p>
-                            • 수선 진행 전 취소 시, 택배비 3,000원을 제외한
-                            금액을 환불해드립니다.
-                          </p>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </CardContent>
-                </Card>
-
-                {/* 주문 버튼 */}
-                <Button
-                  type="button"
-                  onClick={handleDirectOrder}
-                  size="lg"
-                  className="w-full"
-                >
-                  구매하기
-                </Button>
-              </div>
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger>유의사항</AccordionTrigger>
+                      <AccordionContent className="text-stone-600">
+                        <p>
+                          • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
+                          부과됩니다.
+                        </p>
+                        <p>
+                          • 예상 수선 기간은 넥타이 확인 후 영업일 기준
+                          10일입니다.
+                        </p>
+                        <p>
+                          • 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이
+                          불가능합니다.
+                        </p>
+                        <p>
+                          • 수선 진행 전 취소 시, 택배비 3,000원을 제외한 금액을
+                          환불해드립니다.
+                        </p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </CardContent>
+              </Card>
+            }
+            button={
+              <Button
+                type="button"
+                onClick={handleDirectOrder}
+                size="lg"
+                className="w-full"
+              >
+                {(calculateEstimatedCost() + 3000).toLocaleString()}원 주문하기
+              </Button>
             }
           />
         </Form>

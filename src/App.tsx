@@ -43,13 +43,27 @@ function AppLayout() {
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  const getCurrentPageName = () => {
+    // 데스크톱에서는 항상 영선산업 표시
+    if (window.innerWidth >= 768) {
+      return "영선산업";
+    }
+
+    // 모바일에서는 현재 페이지에 따라 다르게 표시
+    const currentItem = NAVIGATION_ITEMS.find(item => item.href === location.pathname);
+    if (currentItem) {
+      return currentItem.href === "/" ? "영선산업" : currentItem.label;
+    }
+    return "영선산업";
+  };
+
   return (
     <>
       {showHeader && (
         <Header size="sm">
           <HeaderContent className="bg-stone-900">
             <HeaderTitle className="text-stone-200 flex items-center gap-2">
-              영선산업
+              {getCurrentPageName()}
             </HeaderTitle>
 
             {/* 데스크톱 네비게이션 */}

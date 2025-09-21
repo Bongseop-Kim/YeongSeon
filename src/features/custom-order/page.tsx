@@ -6,6 +6,7 @@ import CostBreakdown from "./components/CostBreakdown";
 import type { OrderOptions } from "./types/order";
 import { Form } from "@/components/ui/form";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { calculateTotalCost } from "./utils/pricing";
 
 const OrderPage = () => {
   const form = useForm<OrderOptions>({
@@ -51,6 +52,8 @@ const OrderPage = () => {
     // 바로 주문 로직
   };
 
+  const { sewingCost, fabricCost, totalCost } = calculateTotalCost(watchedValues);
+
   return (
     <MainLayout>
       <MainContent className="bg-stone-100 overflow-visible">
@@ -64,18 +67,22 @@ const OrderPage = () => {
               />
             }
             rightPanel={
-              <>
-                <CostBreakdown options={watchedValues} />
-
-                <Button
-                  type="button"
-                  onClick={handleDirectOrder}
-                  size="lg"
-                  className="w-full h-12 text-base font-medium bg-stone-900 hover:bg-stone-800"
-                >
-                  바로 주문하기
-                </Button>
-              </>
+              <CostBreakdown
+                options={watchedValues}
+                totalCost={totalCost}
+                sewingCost={sewingCost}
+                fabricCost={fabricCost}
+              />
+            }
+            button={
+              <Button
+                type="button"
+                onClick={handleDirectOrder}
+                size="lg"
+                className="w-full"
+              >
+                {totalCost.toLocaleString()}원 주문하기
+              </Button>
             }
           />
         </Form>

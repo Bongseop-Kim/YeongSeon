@@ -162,45 +162,35 @@ const OrderFormPage = () => {
             </Card>
           }
           rightPanel={
-            <div className="space-y-4">
-              {/* 주문 요약 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>결제 금액</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-stone-600">
-                      수선비 ({orderData.ties.length}개)
-                    </span>
-                    <span>
-                      {(orderData.totalCost - 3000).toLocaleString()}원
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-stone-600">배송비</span>
-                    <span>3,000원</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-semibold text-lg">
-                    <span>총 결제 금액</span>
-                    <span className="text-blue-600">
-                      {orderData.totalCost.toLocaleString()}원
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 주문 완료 버튼 */}
-
-              <Button
-                onClick={handleCompleteOrder}
-                className="w-full"
-                size="lg"
-              >
-                결제하기
-              </Button>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>결제 금액</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-stone-600">
+                    수선비 ({orderData.ties.length}개)
+                  </span>
+                  <span>{(orderData.totalCost - 3000).toLocaleString()}원</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-stone-600">배송비</span>
+                  <span>3,000원</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>총 결제 금액</span>
+                  <span className="text-blue-600">
+                    {orderData.totalCost.toLocaleString()}원
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          }
+          button={
+            <Button onClick={handleCompleteOrder} className="w-full" size="lg">
+              결제하기
+            </Button>
           }
         />
       </MainContent>

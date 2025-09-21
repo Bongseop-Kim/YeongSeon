@@ -1,49 +1,35 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { OrderOptions } from "../types/order";
+import {
+  START_COST,
+  SEWING_PER_COST,
+  AUTO_TIE_COST,
+  TRIANGLE_STITCH_COST,
+  SIDE_STITCH_COST,
+  DIMPLE_COST,
+  SPODERATO_COST,
+  FOLD7_COST,
+  WOOL_INTERLINING_COST,
+  BRAND_LABEL_COST,
+  CARE_LABEL_COST,
+  YARN_DYED_DESIGN_COST,
+  FABRIC_COST,
+} from "../constants/PRICING";
 
 interface CostBreakdownProps {
   options: OrderOptions;
+  totalCost: number;
+  sewingCost: number;
+  fabricCost: number;
 }
 
-const formatPrice = (price: number) => {
-  return price.toLocaleString();
-};
-
-const CostBreakdown = ({ options }: CostBreakdownProps) => {
-  // 봉제 비용 계산
-  const startCost = 50000;
-  let sewingPerCost = 4000;
-
-  if (options.tieType === "AUTO") sewingPerCost += 1000;
-  if (options.triangleStitch) sewingPerCost += 1000;
-  if (options.sideStitch) sewingPerCost += 1000;
-  if (options.dimple) sewingPerCost = 12000;
-  if (options.spoderato) sewingPerCost = 30000;
-  if (options.fold7) sewingPerCost = 60000;
-  if (options.interlining === "WOOL") sewingPerCost += 500;
-  if (options.brandLabel) sewingPerCost += 300;
-  if (options.careLabel) sewingPerCost += 300;
-
-  const sewingCost = sewingPerCost * options.quantity + startCost;
-
-  // 원단 비용 계산
-  let fabricCost = 0;
-  if (!options.fabricProvided) {
-    const designCost = options.designType === "YARN_DYED" ? 100000 : 0;
-    const unitFabricCost = (() => {
-      if (options.designType === "YARN_DYED") {
-        return options.fabricType === "SILK" ? 25000 : 20000;
-      } else {
-        return options.fabricType === "SILK" ? 20000 : 8000;
-      }
-    })();
-    const fabricQuantity = options.quantity / 4;
-    fabricCost = fabricQuantity * unitFabricCost + designCost;
-  }
-
-  const totalCost = sewingCost + fabricCost;
-
+const CostBreakdown = ({
+  options,
+  totalCost,
+  sewingCost,
+  fabricCost,
+}: CostBreakdownProps) => {
   return (
     <Card className="w-full">
       <CardHeader>
@@ -59,18 +45,18 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
             <div className="flex justify-between items-center">
               <span className="text-sm text-stone-600">기본 봉제 비용</span>
               <span className="text-sm">
-                {formatPrice(4000)}원 × {options.quantity}개
+                {SEWING_PER_COST.toLocaleString()}원 × {options.quantity}개
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-stone-600">봉제 시작 비용</span>
-              <span className="text-sm">{formatPrice(startCost)}원</span>
+              <span className="text-sm">{START_COST.toLocaleString()}원</span>
             </div>
             {options.tieType === "AUTO" && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-stone-600">자동 봉제 추가</span>
                 <span className="text-sm">
-                  +{formatPrice(1000)}원 × {options.quantity}개
+                  +{AUTO_TIE_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
               </div>
             )}
@@ -78,7 +64,8 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-stone-600">삼각 봉제</span>
                 <span className="text-sm">
-                  +{formatPrice(1000)}원 × {options.quantity}개
+                  +{TRIANGLE_STITCH_COST.toLocaleString()}원 ×{" "}
+                  {options.quantity}개
                 </span>
               </div>
             )}
@@ -86,7 +73,7 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-stone-600">옆선 봉제</span>
                 <span className="text-sm">
-                  +{formatPrice(1000)}원 × {options.quantity}개
+                  +{SIDE_STITCH_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
               </div>
             )}
@@ -94,7 +81,7 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-stone-600">딤플</span>
                 <span className="text-sm">
-                  {formatPrice(12000)}원 × {options.quantity}개
+                  {DIMPLE_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
               </div>
             )}
@@ -102,7 +89,7 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-stone-600">스포데라토</span>
                 <span className="text-sm">
-                  {formatPrice(30000)}원 × {options.quantity}개
+                  {SPODERATO_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
               </div>
             )}
@@ -110,7 +97,7 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-stone-600">7폴드</span>
                 <span className="text-sm">
-                  {formatPrice(60000)}원 × {options.quantity}개
+                  {FOLD7_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
               </div>
             )}
@@ -118,7 +105,8 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-stone-600">울 심지 추가</span>
                 <span className="text-sm">
-                  +{formatPrice(500)}원 × {options.quantity}개
+                  +{WOOL_INTERLINING_COST.toLocaleString()}원 ×{" "}
+                  {options.quantity}개
                 </span>
               </div>
             )}
@@ -126,7 +114,7 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-stone-600">브랜드 라벨</span>
                 <span className="text-sm">
-                  +{formatPrice(300)}원 × {options.quantity}개
+                  +{BRAND_LABEL_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
               </div>
             )}
@@ -134,7 +122,7 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-stone-600">케어 라벨</span>
                 <span className="text-sm">
-                  +{formatPrice(300)}원 × {options.quantity}개
+                  +{CARE_LABEL_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
               </div>
             )}
@@ -144,7 +132,7 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
                 봉제 비용 합계
               </span>
               <span className="text-sm font-medium">
-                {formatPrice(sewingCost)}원
+                {sewingCost.toLocaleString()}원
               </span>
             </div>
           </div>
@@ -160,15 +148,11 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
                   원단 단가 ({options.quantity / 4}마)
                 </span>
                 <span className="text-sm">
-                  {formatPrice(
-                    options.designType === "YARN_DYED"
-                      ? options.fabricType === "SILK"
-                        ? 25000
-                        : 20000
-                      : options.fabricType === "SILK"
-                      ? 20000
-                      : 8000
-                  )}
+                  {options.designType && options.fabricType
+                    ? FABRIC_COST[options.designType][
+                        options.fabricType
+                      ].toLocaleString()
+                    : 0}
                   원 × {options.quantity / 4}마
                 </span>
               </div>
@@ -177,7 +161,9 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
                   <span className="text-sm text-stone-600">
                     선염 디자인 비용
                   </span>
-                  <span className="text-sm">{formatPrice(100000)}원</span>
+                  <span className="text-sm">
+                    {YARN_DYED_DESIGN_COST.toLocaleString()}원
+                  </span>
                 </div>
               )}
               <Separator />
@@ -186,7 +172,7 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
                   원단 비용 합계
                 </span>
                 <span className="text-sm font-medium">
-                  {formatPrice(fabricCost)}원
+                  {fabricCost.toLocaleString()}원
                 </span>
               </div>
             </div>
@@ -200,14 +186,14 @@ const CostBreakdown = ({ options }: CostBreakdownProps) => {
           <div className="flex justify-between items-center">
             <span className="font-medium text-stone-900">총 비용</span>
             <span className="font-medium text-lg text-stone-900">
-              {formatPrice(totalCost)}원
+              {totalCost.toLocaleString()}원
             </span>
           </div>
 
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-stone-900">단가</span>
             <span className="text-sm">
-              {formatPrice(totalCost / options.quantity)}원
+              {(totalCost / options.quantity).toLocaleString()}원
             </span>
           </div>
         </div>
