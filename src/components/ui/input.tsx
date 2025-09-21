@@ -12,7 +12,7 @@ function Input({ className, type, unit, icon, ...props }: InputProps) {
     return (
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
             {icon}
           </div>
         )}

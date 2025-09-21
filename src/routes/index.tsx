@@ -6,6 +6,8 @@ import ReformPage from "@/features/reform/page";
 import ShippingFormPage from "@/features/shipping/form/page";
 import ShippingPage from "@/features/shipping/page";
 import { Route, Routes } from "react-router-dom";
+import MypagePage from "@/features/my-page/page";
+import MyInfoPage from "@/features/my-page/my-info/page";
 
 export default function Router() {
   return (
@@ -17,6 +19,9 @@ export default function Router() {
       <Route path="/order-form" element={<OrderFormPage />} />
       <Route path="/shipping" element={<ShippingPage />} />
       <Route path="/shipping/form" element={<ShippingFormPage />} />
+
+      <Route path="/my-page" element={<MypagePage />} />
+      <Route path="/my-page/my-info" element={<MyInfoPage />} />
     </Routes>
   );
 }

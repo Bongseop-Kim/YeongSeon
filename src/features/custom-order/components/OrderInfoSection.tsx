@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Control, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
 import { FormSection } from "@/components/ui/form-section";
-import { CheckboxField } from "@/components/composite/CheckboxField";
+import { CheckboxField } from "@/components/composite/check-box-field";
 import { QuantitySelector } from "./QuantitySelector";
 import { ImageUpload } from "./ImageUpload";
 

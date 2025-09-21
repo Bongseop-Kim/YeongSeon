@@ -1,0 +1,53 @@
+import { MainContent, MainLayout } from "@/components/layout/main-layout";
+import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChevronRightIcon } from "lucide-react";
+import { ListItem } from "./components/list-item";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+
+export default function MypagePage() {
+  const navigate = useNavigate();
+
+  return (
+    <MainLayout>
+      <MainContent className="bg-stone-100">
+        <TwoPanelLayout
+          leftPanel={
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  <div
+                    className="flex items-center justify-between"
+                    onClick={() => {
+                      navigate("/my-page/my-info");
+                    }}
+                  >
+                    김봉섭 <ChevronRightIcon className="size-4" />
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <Separator />
+              <CardContent className="space-y-2">
+                <div>
+                  <ListItem label="주문 내역" onClick={() => {}} />
+                  <ListItem label="취소 내역" onClick={() => {}} />
+                  <ListItem label="고객센터" onClick={() => {}} />
+                  <ListItem label="1:1 문의 내역" onClick={() => {}} />
+                  <ListItem label="배송지 정보" onClick={() => {}} />
+                  <ListItem label="공지사항" onClick={() => {}} />
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm">
+                    로그아웃
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          }
+        />
+      </MainContent>
+    </MainLayout>
+  );
+}
