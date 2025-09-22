@@ -4,8 +4,8 @@ import { Label } from "@/components/ui/label";
 import type { Control } from "react-hook-form";
 import type { OrderOptions } from "../types/order";
 import { FormSection } from "@/components/ui/form-section";
-import { SelectField } from "@/components/composite/SelectField";
-import { CheckboxField } from "@/components/composite/CheckboxField";
+import { SelectField } from "@/components/composite/select-field";
+import { CheckboxField } from "@/components/composite/check-box-field";
 import {
   TIE_TYPES,
   INTERLINING_TYPES,
@@ -51,9 +51,7 @@ export const ProductionSection = ({ control }: ProductionSectionProps) => {
       />
 
       <div>
-        <Label className="text-sm font-medium text-stone-900 mb-2 block">
-          넥타이 폭 (cm)
-        </Label>
+        <Label className="mb-1">넥타이 폭 (cm)</Label>
         <Controller
           name="tieWidth"
           control={control}
@@ -72,9 +70,7 @@ export const ProductionSection = ({ control }: ProductionSectionProps) => {
       </div>
 
       <div className="space-y-3">
-        <Label className="text-sm font-medium text-stone-900 block">
-          추가 옵션
-        </Label>
+        <Label>추가 옵션</Label>
 
         <div className="grid grid-cols-3 gap-4">
           {ADDITIONAL_OPTIONS.map((option) => (

@@ -43,13 +43,29 @@ function AppLayout() {
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  const getCurrentPageName = () => {
+    // 데스크톱에서는 항상 영선산업 표시
+    if (window.innerWidth >= 768) {
+      return "영선산업";
+    }
+
+    // 모바일에서는 현재 페이지에 따라 다르게 표시
+    const currentItem = NAVIGATION_ITEMS.find(
+      (item) => item.href === location.pathname
+    );
+    if (currentItem) {
+      return currentItem.href === "/" ? "영선산업" : currentItem.label;
+    }
+    return "영선산업";
+  };
+
   return (
     <>
       {showHeader && (
         <Header size="sm">
-          <HeaderContent className="bg-stone-900">
+          <HeaderContent>
             <HeaderTitle className="text-stone-200 flex items-center gap-2">
-              영선산업
+              {getCurrentPageName()}
             </HeaderTitle>
 
             {/* 데스크톱 네비게이션 */}
@@ -95,7 +111,7 @@ function AppLayout() {
                   </nav>
 
                   <div className="flex flex-col">
-                    <NavLink to="/login">My Page</NavLink>
+                    <NavLink to="/my-page">My Page</NavLink>
 
                     <Button size="sm" className="mx-4">
                       <span>로그인</span>
@@ -105,7 +121,7 @@ function AppLayout() {
               </Sheet>
 
               <div className="hidden md:flex items-center">
-                <NavLink to="/login" className="text-stone-50 ">
+                <NavLink to="/my-page" className="text-stone-50 ">
                   My Page
                 </NavLink>
                 <Button variant="ghost" size="sm">
