@@ -9,6 +9,7 @@ interface TwoPanelLayoutProps {
   rightPanelClassName?: string;
   containerClassName?: string;
   button?: React.ReactNode;
+  detail?: React.ReactNode;
 }
 
 export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
@@ -18,6 +19,7 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
   rightPanelClassName,
   containerClassName,
   button,
+  detail,
 }) => {
   return (
     <div className="max-w-7xl lg:px-8 lg:pt-4 lg:pb-4 mx-auto">
@@ -33,13 +35,21 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
           )}
         >
           {leftPanel}
-          {rightPanel && <Separator />}
+          {rightPanel && <Separator className="lg:hidden" />}
+
+          {/* Detail section - appears below leftPanel on desktop */}
+          {detail && (
+            <div className="hidden lg:block">
+              <Separator />
+              {detail}
+            </div>
+          )}
         </div>
 
         {rightPanel && (
           <div
             className={cn(
-              "w-full lg:w-1/3 relative mb-16",
+              "w-full lg:w-1/3 lg:sticky lg:top-20 lg:self-start relative",
               rightPanelClassName
             )}
           >
@@ -50,6 +60,14 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
                 {button}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Detail section - appears below rightPanel on mobile */}
+        {detail && (
+          <div className="w-full lg:hidden">
+            <Separator />
+            {detail}
           </div>
         )}
       </div>

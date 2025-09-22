@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:postcode.map.daum.net)"
+      "WebFetch(domain:postcode.map.daum.net)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []

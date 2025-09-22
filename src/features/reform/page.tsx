@@ -20,6 +20,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useNavigate } from "react-router-dom";
+import { Detail } from "./components/detail";
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
@@ -180,6 +181,7 @@ const ReformPage = () => {
       <MainContent className="bg-stone-100 overflow-visible">
         <Form {...form}>
           <TwoPanelLayout
+            detail={<Detail />}
             leftPanel={
               <Card>
                 <CardContent className="flex items-center justify-between">
