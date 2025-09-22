@@ -11,9 +11,13 @@ export const ListItem = ({
   onClick: () => void;
 }) => {
   return (
-    <div onClick={onClick} className="flex items-center justify-between py-4">
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-between py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 rounded"
+    >
       <Label subLabel={subLabel}>{label}</Label>
       <ChevronRightIcon className="size-4 text-stone-500" />
-    </div>
+    </button>
   );
 };
