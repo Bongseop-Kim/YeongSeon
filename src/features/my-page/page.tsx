@@ -18,14 +18,14 @@ export default function MypagePage() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  <div
-                    className="flex items-center justify-between"
-                    onClick={() => {
-                      navigate("/my-page/my-info");
-                    }}
+                  <button
+                    type="button"
+                    className="flex items-center justify-between w-full text-left"
+                    onClick={() => navigate("/my-page/my-info")}
+                    aria-label="내 정보로 이동"
                   >
-                    김봉섭 <ChevronRightIcon className="size-4" />
-                  </div>
+                    김봉섭 <ChevronRightIcon className="size-4" aria-hidden="true" />
+                  </button>
                 </CardTitle>
               </CardHeader>
               <Separator />
