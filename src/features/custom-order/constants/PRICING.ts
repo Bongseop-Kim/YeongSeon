@@ -5,6 +5,7 @@ export const SEWING_PER_COST = 4000; // 봉제 단가
 export const AUTO_TIE_COST = 1000; // 자동 봉제 추가 비용
 export const TRIANGLE_STITCH_COST = 1000; // 삼각 봉제 추가 비용
 export const SIDE_STITCH_COST = 1000; // 옆선 봉제 추가 비용
+export const BAR_TACK_COST = 1000; // 바택 봉제 추가 비용
 export const DIMPLE_COST = 12000; // 딤플 비용
 export const SPODERATO_COST = 30000; // 스포데라토 비용
 export const FOLD7_COST = 60000; // 7폴드 비용
