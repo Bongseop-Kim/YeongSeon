@@ -8,6 +8,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-brand-red: var(--brand-red);
+  --color-brand-yellow: var(--brand-yellow);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -43,6 +45,8 @@
 
 :root {
   --radius: 0.625rem;
+  --brand-red: #7f1d1d;
+  --brand-yellow: #fef3c7;
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
   --card: oklch(1 0 0);
@@ -116,5 +120,24 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-1000%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 60s linear infinite;
+}
+
+@media (min-width: 768px) {
+  .animate-scroll {
+    animation: scroll 80s linear infinite;
   }
 }
