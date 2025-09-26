@@ -1,9 +1,9 @@
-import { BrowserRouter, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { BrowserRouter, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Router from "./routes";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, ChevronLeft } from "lucide-react";
 import { Providers } from "./providers";
 import { NAVIGATION_ITEMS } from "./constants/NAVIGATION_ITEMS";
 import {
@@ -17,15 +17,27 @@ import NavLink from "./components/ui/nav-link";
 
 function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const hideHeaderPaths = ["/shipping"];
   const showHeader = !hideHeaderPaths.some((path) =>
     location.pathname.startsWith(path)
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const getCurrentPageName = () => {
     // 데스크톱에서는 항상 영선산업 표시
-    if (window.innerWidth >= 768) {
+    if (!isMobile) {
       return "영선산업";
     }
 
@@ -39,12 +51,30 @@ function AppLayout() {
     return "영선산업";
   };
 
+  const canGoBack = () => {
+    return window.history.length > 1 && location.pathname !== "/";
+  };
+
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
   return (
     <>
       {showHeader && (
         <Header size="sm">
           <HeaderContent>
             <HeaderTitle className="text-stone-200 flex items-center gap-2">
+              {/* 모바일에서 뒤로가기 버튼 */}
+              {canGoBack() && isMobile && (
+                <button
+                  onClick={handleBackClick}
+                  className="text-stone-200 hover:text-stone-50 transition-colors duration-200 p-1 -ml-2"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  <span className="sr-only">뒤로가기</span>
+                </button>
+              )}
               {getCurrentPageName()}
             </HeaderTitle>
 

@@ -4,7 +4,7 @@ import * as LabelPrimitive from "@radix-ui/react-label";
 import { cn } from "@/lib/utils";
 
 interface LabelProps extends React.ComponentProps<typeof LabelPrimitive.Root> {
-  subLabel?: string;
+  subLabel?: string | React.ReactNode;
 }
 
 const baseClassName =
