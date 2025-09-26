@@ -24,7 +24,8 @@ export default function MypagePage() {
                     onClick={() => navigate("/my-page/my-info")}
                     aria-label="내 정보로 이동"
                   >
-                    김봉섭 <ChevronRightIcon className="size-4" aria-hidden="true" />
+                    김봉섭{" "}
+                    <ChevronRightIcon className="size-4" aria-hidden="true" />
                   </button>
                 </CardTitle>
               </CardHeader>
@@ -35,7 +36,6 @@ export default function MypagePage() {
                   <ListItem label="취소 내역" onClick={() => {}} />
                   <ListItem label="고객센터" onClick={() => {}} />
                   <ListItem label="1:1 문의 내역" onClick={() => {}} />
-                  <ListItem label="배송지 정보" onClick={() => {}} />
                   <ListItem label="공지사항" onClick={() => {}} />
                 </div>
                 <div className="flex justify-end">

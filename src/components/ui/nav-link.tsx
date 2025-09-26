@@ -5,13 +5,16 @@ const NavLink = ({
   to,
   children,
   className,
+  onClick,
 }: {
   to: string;
   children: React.ReactNode;
   className?: string;
+  onClick?: () => void;
 }) => (
   <Link
     to={to}
+    onClick={onClick}
     className={cn(
       // 기본 스타일
       "inline-flex items-center px-4 py-2 text-sm font-medium",

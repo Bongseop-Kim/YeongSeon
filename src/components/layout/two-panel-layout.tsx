@@ -56,7 +56,7 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
             {rightPanel}
 
             {button && (
-              <div className="z-10 fixed bottom-2 left-0 right-0 mt-4 px-2 lg:relative lg:left-auto lg:right-auto lg:bottom-auto lg:px-0">
+              <div className="z-30 fixed bottom-2 left-0 right-0 mt-4 px-2 lg:relative lg:left-auto lg:right-auto lg:bottom-auto lg:px-0">
                 {button}
               </div>
             )}

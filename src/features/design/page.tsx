@@ -9,7 +9,7 @@ const DesignPage = () => {
   const [isPattern, setIsPattern] = useState<boolean>(false);
   const [horizontalCount, setHorizontalCount] = useState<number>(1);
   const [verticalCount, setVerticalCount] = useState<number>(1);
-  const [imageSize, setImageSize] = useState<number>(100);
+  const [imageSize, setImageSize] = useState<number>(50);
   const [position, setPosition] = useState<number>(0);
   const [verticalPosition, setVerticalPosition] = useState<number>(0.5);
   const [rotation, setRotation] = useState<number>(0);
