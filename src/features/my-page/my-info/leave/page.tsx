@@ -53,7 +53,7 @@ export default function MyInfoLeavePage() {
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="agree"
-                        checked={form.watch("agree")}
+                        checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                       <Label subLabel="유의사항을 확인하였으며, 이에 동의합니다." />

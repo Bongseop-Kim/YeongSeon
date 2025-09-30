@@ -1,6 +1,6 @@
 import DesignPage from "@/features/design/page";
 import HomePage from "@/features/home/page";
-import OrderFormPage from "@/features/order-form/page";
+import OrderFormPage from "@/features/order/order-form/page";
 import OrderPage from "@/features/custom-order/page";
 import ReformPage from "@/features/reform/page";
 import ShippingFormPage from "@/features/shipping/form/page";
@@ -12,6 +12,7 @@ import MyInfoDetailPage from "@/features/my-page/my-info/detail/page";
 import MyInfoEmailPage from "@/features/my-page/my-info/email/page";
 import MyInfoNoticePage from "@/features/my-page/my-info/notice/page";
 import MyInfoLeavePage from "@/features/my-page/my-info/leave/page";
+import OrderListPage from "@/features/order/order-list/page";
 
 export default function Router() {
   return (
@@ -20,7 +21,9 @@ export default function Router() {
       <Route path="/design" element={<DesignPage />} />
       <Route path="/custom-order" element={<OrderPage />} />
       <Route path="/reform" element={<ReformPage />} />
-      <Route path="/order-form" element={<OrderFormPage />} />
+
+      <Route path="/order/order-form" element={<OrderFormPage />} />
+      <Route path="/order/order-list" element={<OrderListPage />} />
 
       <Route path="/shipping" element={<ShippingPage />} />
       <Route path="/shipping/form" element={<ShippingFormPage />} />
