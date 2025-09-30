@@ -1,17 +1,11 @@
-import { BrowserRouter, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { BrowserRouter, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Router from "./routes";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, ChevronLeft } from "lucide-react";
 import { Providers } from "./providers";
-import { NAVIGATION_ITEMS } from "./constants";
+import { NAVIGATION_ITEMS } from "./constants/NAVIGATION_ITEMS";
 import {
   Header,
   HeaderActions,
@@ -21,31 +15,29 @@ import {
 } from "./components/composite/header";
 import NavLink from "./components/ui/nav-link";
 
-import {
-  HomeIcon,
-  PaletteIcon,
-  ShoppingCartIcon,
-  ScissorsIcon,
-} from "lucide-react";
-
-const ICONS = [
-  <HomeIcon className="size-4" />,
-  <PaletteIcon className="size-4" />,
-  <ShoppingCartIcon className="size-4" />,
-  <ScissorsIcon className="size-4" />,
-];
-
 function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const hideHeaderPaths = ["/shipping"];
   const showHeader = !hideHeaderPaths.some((path) =>
     location.pathname.startsWith(path)
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const getCurrentPageName = () => {
     // 데스크톱에서는 항상 영선산업 표시
-    if (window.innerWidth >= 768) {
+    if (!isMobile) {
       return "영선산업";
     }
 
@@ -59,12 +51,30 @@ function AppLayout() {
     return "영선산업";
   };
 
+  const canGoBack = () => {
+    return window.history.length > 1 && location.pathname !== "/";
+  };
+
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
   return (
     <>
       {showHeader && (
         <Header size="sm">
           <HeaderContent>
             <HeaderTitle className="text-stone-200 flex items-center gap-2">
+              {/* 모바일에서 뒤로가기 버튼 */}
+              {canGoBack() && isMobile && (
+                <button
+                  onClick={handleBackClick}
+                  className="text-stone-200 hover:text-stone-50 transition-colors duration-200 p-1 -ml-2"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  <span className="sr-only">뒤로가기</span>
+                </button>
+              )}
               {getCurrentPageName()}
             </HeaderTitle>
 
@@ -90,39 +100,41 @@ function AppLayout() {
                     <span className="sr-only">메뉴 열기</span>
                   </button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-50 bg-stone-200">
-                  <SheetHeader>
-                    <SheetTitle className="flex items-center gap-3">
-                      {/* 영선산업 */}
-                    </SheetTitle>
-                  </SheetHeader>
+                <SheetContent className="bg-stone-900">
                   <nav className="space-y-4 flex flex-col">
-                    {NAVIGATION_ITEMS.map((item, index) => (
+                    {NAVIGATION_ITEMS.map((item) => (
                       <div
                         key={item.href}
                         onClick={() => setIsSheetOpen(false)}
                       >
-                        <NavLink to={item.href} className="gap-2">
-                          {ICONS[index]}
+                        <NavLink to={item.href} className="gap-2 text-stone-50">
                           {item.label}
                         </NavLink>
                       </div>
                     ))}
                   </nav>
 
-                  <div className="flex flex-col">
-                    <NavLink to="/my-page">My Page</NavLink>
+                  <div className="flex items-center justify-between">
+                    <NavLink
+                      to="/my-page"
+                      className="text-stone-50"
+                      onClick={() => setIsSheetOpen(false)}
+                    >
+                      마이페이지
+                    </NavLink>
 
-                    <Button size="sm" className="mx-4">
-                      <span>로그인</span>
-                    </Button>
+                    <div>
+                      <Button variant="ghost" size="sm">
+                        <span className="text-stone-50">로그인</span>
+                      </Button>
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
 
               <div className="hidden md:flex items-center">
                 <NavLink to="/my-page" className="text-stone-50 ">
-                  My Page
+                  마이페이지
                 </NavLink>
                 <Button variant="ghost" size="sm">
                   <span className="text-stone-50">로그인</span>

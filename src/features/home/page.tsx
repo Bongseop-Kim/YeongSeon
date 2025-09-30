@@ -1,6 +1,6 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { VideoCard } from "./components/video-card";
-import { NAVIGATION_ITEMS } from "@/constants";
+import { NAVIGATION_ITEMS } from "@/constants/NAVIGATION_ITEMS";
 import {
   Footer,
   FooterContent,
@@ -8,7 +8,7 @@ import {
   FooterSection,
   FooterTitle,
 } from "./components/footer";
-import { VIDEO_DATA } from "@/constants/NAVIGATION_ITEMS";
+import { VIDEO_DATA } from "./constants/VIDEO_DATA";
 
 const HomePage = () => {
   return (

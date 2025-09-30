@@ -13,28 +13,29 @@ export const Detail = () => {
   return (
     <div className="bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-stone-700 text-stone-50 py-30">
+      <section className="bg-stone-700 text-stone-50 py-28">
         <h1 className="text-xl md:text-2xl font-bold mb-12 text-center">
           30년 넥타이 장인이 직접 만들어요
         </h1>
 
         <div className="relative">
-          <p className="absolute right-4 bottom-1/6 z-0 text-6xl text-brand-yellow">
+          <p className="absolute right-4 bottom-[16%] z-0 text-6xl text-brand-yellow">
             Premium
           </p>
-          <p className="absolute left-4 bottom-1/3 z-2 text-6xl text-brand-yellow">
+          <p className="absolute left-4 bottom-1/3 z-20 text-6xl text-brand-yellow">
             Craftsmanship
           </p>
-          <p className="absolute left-4 top-1/8 z-0 text-6xl text-brand-yellow">
+          <p className="absolute left-4 top-[12.5%] z-0 text-6xl text-brand-yellow">
             Heritage
           </p>
 
           <img
             src="/images/detail/fabric.png"
             alt="hero"
-            className="w-2/3 h-full relative z-1 mx-auto"
+            className="w-2/3 h-full relative z-10 mx-auto"
             style={{
               maskImage: "url('/images/detail/tie.svg')",
+              WebkitMaskImage: "url('/images/detail/tie.svg')",
               maskSize: "contain",
               maskRepeat: "no-repeat",
               maskPosition: "center",
@@ -46,10 +47,12 @@ export const Detail = () => {
           <div className="text-center">
             <p className="text-xl md:text-2xl mb-4 flex justify-center items-center gap-1">
               매일 아침 3분이{" "}
-              <p className="text-brand-yellow font-bold text-2xl">5초로</p>
+              <span className="text-brand-yellow font-bold text-2xl">
+                5초로
+              </span>
               줄어들어요
             </p>
-            <p className="text-lg mb-8 ">
+            <p className="text-lg mb-8 text-stone-50">
               넥타이 못 매도 괜찮아요. 5초면 완벽하게 끝나거든요
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-8">
@@ -121,6 +124,7 @@ export const Detail = () => {
             autoPlay
             loop
             muted
+            playsInline
             className="w-full h-full object-cover"
           />
         </div>
@@ -339,15 +343,14 @@ export const Detail = () => {
               </div>
             </div>
           </div>
-          <p className="text-stone-900 text-lg px-12 py-4 bg-stone-100 font-semibold">
+          <p className="text-stone-50 text-lg px-12 py-4 font-semibold">
             한번 체험해보실래요?
+            <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm ">
+              <span>✓ 전국 배송 가능</span>
+              <span>✓ 무상 A/S</span>
+              <span>✓ 대량 주문 환영</span>
+            </div>
           </p>
-
-          <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm ">
-            <span>✓ 전국 배송 가능</span>
-            <span>✓ 무상 A/S</span>
-            <span>✓ 대량 주문 환영</span>
-          </div>
         </div>
       </section>
     </div>
