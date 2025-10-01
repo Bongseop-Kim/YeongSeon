@@ -32,7 +32,12 @@ export default function MypagePage() {
               <Separator />
               <CardContent className="space-y-2">
                 <div>
-                  <ListItem label="주문 내역" onClick={() => {}} />
+                  <ListItem
+                    label="주문 내역"
+                    onClick={() => {
+                      navigate("/order/order-list");
+                    }}
+                  />
                   <ListItem label="취소 내역" onClick={() => {}} />
                   <ListItem label="고객센터" onClick={() => {}} />
                   <ListItem label="1:1 문의 내역" onClick={() => {}} />

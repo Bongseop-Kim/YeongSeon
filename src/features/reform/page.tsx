@@ -147,7 +147,7 @@ const ReformPage = () => {
       })
     );
 
-    navigate("/order-form");
+    navigate("/order/order-form");
   };
 
   // 간단한 비용 계산 (실제로는 더 복잡한 로직이 필요)

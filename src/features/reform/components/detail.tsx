@@ -343,14 +343,14 @@ export const Detail = () => {
               </div>
             </div>
           </div>
-          <p className="text-stone-50 text-lg px-12 py-4 font-semibold">
+          <div className="text-stone-50 text-lg px-12 py-4 font-semibold">
             한번 체험해보실래요?
             <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm ">
               <span>✓ 전국 배송 가능</span>
               <span>✓ 무상 A/S</span>
               <span>✓ 대량 주문 환영</span>
             </div>
-          </p>
+          </div>
         </div>
       </section>
     </div>

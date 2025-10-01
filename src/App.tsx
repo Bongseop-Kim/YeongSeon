@@ -41,13 +41,37 @@ function AppLayout() {
       return "영선산업";
     }
 
-    // 모바일에서는 현재 페이지에 따라 다르게 표시
-    const currentItem = NAVIGATION_ITEMS.find(
-      (item) => item.href === location.pathname
-    );
-    if (currentItem) {
-      return currentItem.href === "/" ? "영선산업" : currentItem.label;
+    const { pathname } = location;
+
+    // 정확한 경로 매칭
+    const routeTitles: Record<string, string> = {
+      "/": "영선산업",
+      "/design": "디자인",
+      "/custom-order": "주문 제작",
+      "/reform": "수선",
+      "/order/order-form": "주문서 작성",
+      "/order/order-list": "주문 내역",
+      "/shipping": "배송",
+      "/shipping/form": "배송 정보",
+      "/my-page": "마이페이지",
+      "/my-page/my-info": "내 정보",
+      "/my-page/my-info/detail": "개인정보 수정",
+      "/my-page/my-info/email": "이메일 변경",
+      "/my-page/my-info/notice": "마케팅 수신 동의",
+      "/my-page/my-info/leave": "회원 탈퇴",
+    };
+
+    // 정확한 매칭 먼저 시도
+    if (routeTitles[pathname]) {
+      return routeTitles[pathname];
     }
+
+    // 패턴 매칭 (동적 라우트나 하위 경로)
+    if (pathname.startsWith("/reform/")) return "수선 상세";
+    if (pathname.startsWith("/order/")) return "주문";
+    if (pathname.startsWith("/shipping/")) return "배송";
+    if (pathname.startsWith("/my-page/")) return "마이페이지";
+
     return "영선산업";
   };
 
