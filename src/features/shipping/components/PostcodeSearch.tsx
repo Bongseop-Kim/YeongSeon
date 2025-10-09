@@ -52,7 +52,7 @@ export const PostcodeSearch = ({
         showCloseButton={false}
         className="max-w-lg w-full h-full rounded-none p-0 gap-0"
       >
-        <div className="bg-stone-100 px-2 flex items-center justify-between">
+        <div className="bg-zinc-100 px-2 flex items-center justify-between">
           <PageTitle>우편번호 검색</PageTitle>
 
           <CloseButton onRemove={() => onClose?.()} />

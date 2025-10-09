@@ -94,7 +94,7 @@ const OrderFormPage = () => {
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100">
+      <MainContent className="bg-zinc-100">
         <TwoPanelLayout
           leftPanel={
             <Card>
@@ -141,7 +141,7 @@ const OrderFormPage = () => {
                     key={tie.id}
                     className="flex justify-between items-start"
                   >
-                    <div className="text-sm text-stone-600 space-y-1">
+                    <div className="text-sm text-zinc-600 space-y-1">
                       <p>
                         측정 방식:{" "}
                         {tie.measurementType === "length"
@@ -168,13 +168,13 @@ const OrderFormPage = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-stone-600">
+                  <span className="text-zinc-600">
                     수선비 ({orderData.ties.length}개)
                   </span>
                   <span>{(orderData.totalCost - 3000).toLocaleString()}원</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-stone-600">배송비</span>
+                  <span className="text-zinc-600">배송비</span>
                   <span>3,000원</span>
                 </div>
                 <Separator />

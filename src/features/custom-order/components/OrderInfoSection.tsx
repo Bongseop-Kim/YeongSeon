@@ -28,7 +28,7 @@ export const OrderInfoSection = ({
       <div>
         <Label
           htmlFor="additionalNotes"
-          className="text-sm font-medium text-stone-900 mb-2 block"
+          className="text-sm font-medium text-zinc-900 mb-2 block"
         >
           추가 요청사항
         </Label>

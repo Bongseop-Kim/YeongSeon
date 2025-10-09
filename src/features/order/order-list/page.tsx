@@ -2,12 +2,13 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import type { OrderItem } from "./types/order-item";
-import { formatDate, getOrderTypeLabel, getOrderDetails } from "./utils/fs";
+import { getOrderTypeLabel, getOrderDetails, formatDate } from "./utils/fs";
 import { ImageViewer } from "@/components/composite/image-viewer";
 import { useNavigate } from "react-router-dom";
+import { useSearchStore } from "@/store/search";
+import { useEffect } from "react";
 
 const dummyData: OrderItem[] = [
   {
@@ -82,75 +83,63 @@ const dummyData: OrderItem[] = [
 
 export default function OrderListPage() {
   const router = useNavigate();
-  // 날짜별로 그룹화
-  const groupedByDate = dummyData.reduce((groups, order) => {
-    const date = order.date;
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(order);
-    return groups;
-  }, {} as Record<string, typeof dummyData>);
+  const { setSearchEnabled } = useSearchStore();
 
-  // 날짜를 최신순으로 정렬
-  const sortedDates = Object.keys(groupedByDate).sort(
-    (a, b) => new Date(b).getTime() - new Date(a).getTime()
-  );
+  useEffect(() => {
+    setSearchEnabled(true, {
+      placeholder: "주문 검색...",
+      onSearch: (query, dateFilter) => {
+        console.log("검색:", query);
+        console.log("기간:", dateFilter);
+        // 검색 로직 구현
+      },
+    });
+
+    return () => setSearchEnabled(false);
+  }, []);
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100">
+      <MainContent className="bg-zinc-100">
         <TwoPanelLayout
-          leftPanel={
-            <div>
-              {sortedDates.map((date) => (
-                <>
-                  <Card key={date}>
-                    <CardHeader>
-                      <CardTitle>{formatDate(date)}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {groupedByDate[date].map((order) => (
-                        <div
-                          key={order.id}
-                          className="pb-3"
-                          onClick={() => {
-                            router(`/order/${order.id}`);
-                          }}
-                        >
-                          <div className="flex gap-3">
-                            {order.image && <ImageViewer image={order.image} />}
+          leftPanel={dummyData.map((order) => (
+            <Card key={order.id} className="border-b-1">
+              <CardHeader className="text-lg font-bold">
+                <CardTitle>{formatDate(order.date)}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <button
+                  type="button"
+                  className="py-3 block w-full"
+                  onClick={() => {
+                    router(`/order/${order.id}`);
+                  }}
+                >
+                  <div className="flex gap-3">
+                    {order.image && <ImageViewer image={order.image} />}
 
-                            {/* 주문 정보 섹션 */}
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Label className="font-bold">
-                                  {getOrderTypeLabel(order.type)}
-                                </Label>
-                                <Badge variant="secondary">
-                                  {order.status}
-                                </Badge>
-                              </div>
+                    {/* 주문 정보 섹션 */}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="font-bold">
+                          {getOrderTypeLabel(order.type)}
+                        </Label>
+                        <Badge variant="secondary">{order.status}</Badge>
+                      </div>
 
-                              <div className="flex flex-col gap-2">
-                                <Label>{getOrderDetails(order)}</Label>
+                      <div className="flex flex-col gap-2">
+                        <Label>{getOrderDetails(order)}</Label>
 
-                                <Label className="font-bold">
-                                  {order.price.toLocaleString()}원
-                                </Label>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-
-                  <Separator />
-                </>
-              ))}
-            </div>
-          }
+                        <Label className="font-bold">
+                          {order.price.toLocaleString()}원
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </CardContent>
+            </Card>
+          ))}
         />
       </MainContent>
     </MainLayout>

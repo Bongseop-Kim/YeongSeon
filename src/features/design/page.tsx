@@ -59,7 +59,7 @@ const DesignPage = () => {
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100 overflow-visible">
+      <MainContent className="bg-zinc-100 overflow-visible">
         <TwoPanelLayout
           leftPanel={<Preview options={options} stateSetters={stateSetters} />}
           rightPanel={<Option options={options} stateSetters={stateSetters} />}

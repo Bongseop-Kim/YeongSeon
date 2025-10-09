@@ -22,7 +22,7 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
   detail,
 }) => {
   return (
-    <div className="max-w-7xl lg:px-8 lg:pt-4 lg:pb-4 mx-auto">
+    <div className="max-w-7xl lg:px-8 lg:pb-4 mx-auto">
       {/* Left Panel - Product Info */}
       <div
         className={cn("flex flex-col lg:flex-row lg:gap-8", containerClassName)}

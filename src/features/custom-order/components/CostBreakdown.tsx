@@ -33,28 +33,28 @@ const CostBreakdown = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-stone-900">
+        <CardTitle className="text-lg font-semibold text-zinc-900">
           비용 산정 내역
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* 봉제 비용 */}
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-stone-900">봉제 비용</h3>
+          <h3 className="text-sm font-medium text-zinc-900">봉제 비용</h3>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-stone-600">기본 봉제 비용</span>
+              <span className="text-sm text-zinc-600">기본 봉제 비용</span>
               <span className="text-sm">
                 {SEWING_PER_COST.toLocaleString()}원 × {options.quantity}개
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-stone-600">봉제 시작 비용</span>
+              <span className="text-sm text-zinc-600">봉제 시작 비용</span>
               <span className="text-sm">{START_COST.toLocaleString()}원</span>
             </div>
             {options.tieType === "AUTO" && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">자동 봉제 추가</span>
+                <span className="text-sm text-zinc-600">자동 봉제 추가</span>
                 <span className="text-sm">
                   +{AUTO_TIE_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
@@ -62,7 +62,7 @@ const CostBreakdown = ({
             )}
             {options.triangleStitch && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">삼각 봉제</span>
+                <span className="text-sm text-zinc-600">삼각 봉제</span>
                 <span className="text-sm">
                   +{TRIANGLE_STITCH_COST.toLocaleString()}원 ×{" "}
                   {options.quantity}개
@@ -71,7 +71,7 @@ const CostBreakdown = ({
             )}
             {options.sideStitch && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">옆선 봉제</span>
+                <span className="text-sm text-zinc-600">옆선 봉제</span>
                 <span className="text-sm">
                   +{SIDE_STITCH_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
@@ -79,7 +79,7 @@ const CostBreakdown = ({
             )}
             {options.dimple && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">딤플</span>
+                <span className="text-sm text-zinc-600">딤플</span>
                 <span className="text-sm">
                   {DIMPLE_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
@@ -87,7 +87,7 @@ const CostBreakdown = ({
             )}
             {options.spoderato && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">스포데라토</span>
+                <span className="text-sm text-zinc-600">스포데라토</span>
                 <span className="text-sm">
                   {SPODERATO_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
@@ -95,7 +95,7 @@ const CostBreakdown = ({
             )}
             {options.fold7 && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">7폴드</span>
+                <span className="text-sm text-zinc-600">7폴드</span>
                 <span className="text-sm">
                   {FOLD7_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
@@ -103,7 +103,7 @@ const CostBreakdown = ({
             )}
             {options.interlining === "WOOL" && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">울 심지 추가</span>
+                <span className="text-sm text-zinc-600">울 심지 추가</span>
                 <span className="text-sm">
                   +{WOOL_INTERLINING_COST.toLocaleString()}원 ×{" "}
                   {options.quantity}개
@@ -112,7 +112,7 @@ const CostBreakdown = ({
             )}
             {options.brandLabel && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">브랜드 라벨</span>
+                <span className="text-sm text-zinc-600">브랜드 라벨</span>
                 <span className="text-sm">
                   +{BRAND_LABEL_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
@@ -120,7 +120,7 @@ const CostBreakdown = ({
             )}
             {options.careLabel && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">케어 라벨</span>
+                <span className="text-sm text-zinc-600">케어 라벨</span>
                 <span className="text-sm">
                   +{CARE_LABEL_COST.toLocaleString()}원 × {options.quantity}개
                 </span>
@@ -128,7 +128,7 @@ const CostBreakdown = ({
             )}
             <Separator />
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-stone-900">
+              <span className="text-sm font-medium text-zinc-900">
                 봉제 비용 합계
               </span>
               <span className="text-sm font-medium">
@@ -141,10 +141,10 @@ const CostBreakdown = ({
         {/* 원단 비용 */}
         {!options.fabricProvided && (
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-stone-900">원단 비용</h3>
+            <h3 className="text-sm font-medium text-zinc-900">원단 비용</h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-stone-600">
+                <span className="text-sm text-zinc-600">
                   원단 단가 ({options.quantity / 4}마)
                 </span>
                 <span className="text-sm">
@@ -158,7 +158,7 @@ const CostBreakdown = ({
               </div>
               {options.designType === "YARN_DYED" && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-stone-600">
+                  <span className="text-sm text-zinc-600">
                     선염 디자인 비용
                   </span>
                   <span className="text-sm">
@@ -168,7 +168,7 @@ const CostBreakdown = ({
               )}
               <Separator />
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-stone-900">
+                <span className="text-sm font-medium text-zinc-900">
                   원단 비용 합계
                 </span>
                 <span className="text-sm font-medium">
@@ -184,14 +184,14 @@ const CostBreakdown = ({
         {/* 총 비용 */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="font-medium text-stone-900">총 비용</span>
-            <span className="font-medium text-lg text-stone-900">
+            <span className="font-medium text-zinc-900">총 비용</span>
+            <span className="font-medium text-lg text-zinc-900">
               {totalCost.toLocaleString()}원
             </span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-stone-900">단가</span>
+            <span className="text-sm font-medium text-zinc-900">단가</span>
             <span className="text-sm">
               {(totalCost / options.quantity).toLocaleString()}원
             </span>
@@ -203,7 +203,7 @@ const CostBreakdown = ({
         {/* 제작 기간 설명 */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-stone-900">
+            <span className="text-sm font-medium text-zinc-900">
               예상 제작 기간
             </span>
             <span className="text-sm font-medium">
@@ -214,7 +214,7 @@ const CostBreakdown = ({
                 : "28~42일"}
             </span>
           </div>
-          <p className="text-xs text-stone-600 leading-relaxed">
+          <p className="text-xs text-zinc-600 leading-relaxed">
             {options.fabricProvided
               ? "고객 제공 원단으로 제작되는 경우 봉제 작업만 진행되어 비교적 빠른 제작이 가능합니다."
               : options.reorder

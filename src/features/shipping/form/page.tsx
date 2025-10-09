@@ -24,7 +24,7 @@ const ShippingFormPage = () => {
 
   return (
     <div className="min-h-screen w-full relative">
-      <div className="bg-stone-100 px-2 flex items-center justify-between">
+      <div className="bg-zinc-100 px-2 flex items-center justify-between">
         <PageTitle>배송지 추가</PageTitle>
 
         <CloseButton onRemove={() => navigate(-1)} />

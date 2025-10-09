@@ -1,0 +1,16 @@
+export const ROUTE_TITLES = {
+  "/": "영선산업",
+  "/design": "디자인",
+  "/custom-order": "주문 제작",
+  "/reform": "수선",
+  "/order/order-form": "주문서 작성",
+  "/order/order-list": "주문 내역",
+  "/shipping": "배송",
+  "/shipping/form": "배송 정보",
+  "/my-page": "마이페이지",
+  "/my-page/my-info": "내 정보",
+  "/my-page/my-info/detail": "개인정보 수정",
+  "/my-page/my-info/email": "이메일 변경",
+  "/my-page/my-info/notice": "마케팅 수신 동의",
+  "/my-page/my-info/leave": "회원 탈퇴",
+};

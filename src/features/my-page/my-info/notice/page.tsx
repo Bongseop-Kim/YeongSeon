@@ -21,7 +21,7 @@ export default function MyInfoNoticePage() {
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100">
+      <MainContent className="bg-zinc-100">
         <TwoPanelLayout
           leftPanel={
             <Card>

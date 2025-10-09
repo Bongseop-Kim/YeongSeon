@@ -13,7 +13,7 @@ export const Detail = () => {
   return (
     <div className="bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-stone-700 text-stone-50 py-28">
+      <section className="bg-zinc-700 text-zinc-50 py-28">
         <h1 className="text-xl md:text-2xl font-bold mb-12 text-center">
           30년 넥타이 장인이 직접 만들어요
         </h1>
@@ -52,14 +52,14 @@ export const Detail = () => {
               </span>
               줄어들어요
             </p>
-            <p className="text-lg mb-8 text-stone-50">
+            <p className="text-lg mb-8 text-zinc-50">
               넥타이 못 매도 괜찮아요. 5초면 완벽하게 끝나거든요
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-8">
-              <Badge variant="outline" className="text-stone-50 border-white">
+              <Badge variant="outline" className="text-zinc-50 border-white">
                 30년 장인 기술
               </Badge>
-              <Badge variant="outline" className="text-stone-50 border-white">
+              <Badge variant="outline" className="text-zinc-50 border-white">
                 3개월 무료 A/S
               </Badge>
             </div>
@@ -91,8 +91,8 @@ export const Detail = () => {
             <div className="flex flex-col items-center gap-4">
               {FEATURES.map((feature, index) => (
                 <div key={index} className="flex items-center gap-4 w-5/6">
-                  <div className="bg-stone-200 rounded-full p-1">
-                    <XIcon className="w-3 h-3 text-stone-700" />
+                  <div className="bg-zinc-200 rounded-full p-1">
+                    <XIcon className="w-3 h-3 text-zinc-700" />
                   </div>
                   <div>
                     <div className="font-semibold">{feature.title}</div>
@@ -108,7 +108,7 @@ export const Detail = () => {
       </section>
 
       {/* Expertise Section */}
-      <section className="py-16 bg-stone-100">
+      <section className="py-16 bg-zinc-100">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12 w-5/6 mx-auto">
             <h2 className="text-3xl font-bold mb-4">
@@ -152,26 +152,26 @@ export const Detail = () => {
             ))}
           </div>
 
-          <div className="bg-stone-700 p-8">
-            <h3 className="text-xl font-bold mb-6 text-center text-stone-50">
+          <div className="bg-zinc-700 p-8">
+            <h3 className="text-xl font-bold mb-6 text-center text-zinc-50">
               실제 주문 고객 현황
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-brand-yellow">40%</div>
-                <div className="text-sm text-stone-50">학생 (해외, 국내)</div>
+                <div className="text-sm text-zinc-50">학생 (해외, 국내)</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-brand-yellow">20%</div>
-                <div className="text-sm text-stone-50">기업 단체</div>
+                <div className="text-sm text-zinc-50">기업 단체</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-brand-yellow">35%</div>
-                <div className="text-sm text-stone-50">직장인</div>
+                <div className="text-sm text-zinc-50">직장인</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-brand-yellow">5%</div>
-                <div className="text-sm text-stone-50">기타</div>
+                <div className="text-sm text-zinc-50">기타</div>
               </div>
             </div>
           </div>
@@ -192,7 +192,7 @@ export const Detail = () => {
 
           <div className="grid md:grid-cols-4 gap-6 mb-12">
             <div className="text-center">
-              <div className="bg-stone-600 text-stone-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-zinc-600 text-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 1
               </div>
               <h3 className="font-bold mb-2">키만 알려주세요</h3>
@@ -201,7 +201,7 @@ export const Detail = () => {
               </p>
             </div>
             <div className="text-center">
-              <div className="bg-stone-600 text-stone-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-zinc-600 text-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 2
               </div>
               <h3 className="font-bold mb-2">넥타이만 보내주세요</h3>
@@ -210,7 +210,7 @@ export const Detail = () => {
               </p>
             </div>
             <div className="text-center">
-              <div className="bg-stone-600 text-stone-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-zinc-600 text-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 3
               </div>
               <h3 className="font-bold mb-2">장인이 손수 작업해요</h3>
@@ -219,7 +219,7 @@ export const Detail = () => {
               </p>
             </div>
             <div className="text-center">
-              <div className="bg-stone-600 text-stone-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-zinc-600 text-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 4
               </div>
               <h3 className="font-bold mb-2">집까지 배송해드려요</h3>
@@ -250,7 +250,7 @@ export const Detail = () => {
                         key={index}
                         className="border-b last:border-b-0 hover:bg-gray-50"
                       >
-                        <td className="text-center py-3 font-semibold text-stone-600">
+                        <td className="text-center py-3 font-semibold text-zinc-600">
                           {guide.height}
                         </td>
                         <td className="text-center py-3">{guide.length}</td>
@@ -293,7 +293,7 @@ export const Detail = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br bg-stone-600 text-stone-50">
+      <section className="py-20 bg-gradient-to-br bg-zinc-600 text-zinc-50">
         <div className="max-w-4xl text-center">
           <h2 className="text-2xl font-bold mb-6">Heritage</h2>
           <div className="relative">
@@ -343,7 +343,7 @@ export const Detail = () => {
               </div>
             </div>
           </div>
-          <div className="text-stone-50 text-lg px-12 py-4 font-semibold">
+          <div className="text-zinc-50 text-lg px-12 py-4 font-semibold">
             한번 체험해보실래요?
             <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm ">
               <span>✓ 전국 배송 가능</span>
