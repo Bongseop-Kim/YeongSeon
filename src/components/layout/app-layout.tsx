@@ -39,9 +39,9 @@ export default function AppLayout() {
   }, []);
 
   const getCurrentPageName = () => {
-    // 데스크톱에서는 항상 영선산업 표시
+    // 데스크톱에서는 항상 ESSE SION 표시
     if (!isMobile) {
-      return "영선산업";
+      return "ESSE SION";
     }
 
     const { pathname } = location;
@@ -57,7 +57,7 @@ export default function AppLayout() {
     if (pathname.startsWith("/shipping/")) return "배송";
     if (pathname.startsWith("/my-page/")) return "마이페이지";
 
-    return "영선산업";
+    return "ESSE SION";
   };
 
   const canGoBack = () => {

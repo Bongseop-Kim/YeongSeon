@@ -293,9 +293,9 @@ export const Detail = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br bg-zinc-600 text-zinc-50">
+      <section className="py-20 bg-gradient-to-br bg-zinc-700 text-zinc-50">
         <div className="max-w-4xl text-center">
-          <h2 className="text-2xl font-bold mb-6">Heritage</h2>
+          <h2 className="text-2xl font-bold mb-4">Heritage</h2>
           <div className="relative">
             <img
               src="/images/detail/product1.png"

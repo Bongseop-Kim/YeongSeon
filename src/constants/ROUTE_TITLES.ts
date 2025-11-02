@@ -1,5 +1,5 @@
 export const ROUTE_TITLES = {
-  "/": "영선산업",
+  "/": "ESSE SION",
   "/design": "디자인",
   "/custom-order": "주문 제작",
   "/reform": "수선",

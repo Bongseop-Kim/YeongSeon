@@ -106,7 +106,7 @@ const OrderFormPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-1 text-sm ">
-                  <p>대전 동구 가양동 418-25 영선산업</p>
+                  <p>대전 동구 가양동 418-25 ESSE SION</p>
                   <p>042-462-0510</p>
                 </div>
                 <Select>
