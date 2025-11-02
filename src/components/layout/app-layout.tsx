@@ -108,7 +108,7 @@ export default function AppLayout() {
             </HeaderActions>
           </HeaderContent>
           {config.enabled && (
-            <div className="bg-zinc-200 relative pb-4 px-4">
+            <div className="bg-zinc-200 pb-4 mx-auto px-4 lg:px-8 max-w-7xl flex">
               <SearchBar />
 
               <SearchSheet />
@@ -117,7 +117,7 @@ export default function AppLayout() {
         </Header>
       )}
 
-      <div className={config.enabled ? "pt-14" : "pt-0"}>
+      <div className={config.enabled ? "pt-12" : "pt-0"}>
         <Router />
       </div>
     </>

@@ -5,6 +5,7 @@ export const ROUTE_TITLES = {
   "/reform": "수선",
   "/order/order-form": "주문서 작성",
   "/order/order-list": "주문 내역",
+  "/order/claim-list": "취소 내역",
   "/shipping": "배송",
   "/shipping/form": "배송 정보",
   "/my-page": "마이페이지",

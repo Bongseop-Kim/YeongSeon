@@ -3,32 +3,41 @@ import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import type { OrderItem } from "../types/order-item";
-import { getOrderTypeLabel, getOrderDetails, formatDate } from "../utils/fs";
+import type { ClaimItem } from "../types/claim-item";
+import {
+  getClaimTypeLabel,
+  getOrderDetails,
+  formatDate,
+} from "../utils/claim-utils";
 import { ImageViewer } from "@/components/composite/image-viewer";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
 
-const dummyData: OrderItem[] = [
+const dummyData: ClaimItem[] = [
   {
     id: "1",
     date: "2025-01-15",
-    status: "완료",
-    type: "reform",
+    status: "처리중",
+    type: "return",
+    orderId: "ORD-001",
+    orderNumber: "RF-20250115-001",
+    reason: "사이즈가 맞지 않음",
     orderDetails: {
       tieCount: 3,
       measurementType: "length",
     },
     price: 45000,
-    orderNumber: "RF-20250115-001",
     image: "/images/detail/tie1.png",
   },
   {
     id: "2",
     date: "2025-01-15",
-    status: "진행중",
-    type: "custom-order",
+    status: "접수",
+    type: "exchange",
+    orderId: "ORD-002",
+    orderNumber: "CO-20250115-001",
+    reason: "색상 변경 요청",
     orderDetails: {
       fabricType: "SILK",
       designType: "PRINTING",
@@ -36,26 +45,30 @@ const dummyData: OrderItem[] = [
       quantity: 50,
     },
     price: 580000,
-    orderNumber: "CO-20250115-001",
     image: "/images/detail/fabric1.png",
   },
   {
     id: "3",
     date: "2025-01-14",
     status: "완료",
-    type: "reform",
+    type: "cancel",
+    orderId: "ORD-003",
+    orderNumber: "RF-20250114-001",
+    reason: "단순 변심",
     orderDetails: {
       tieCount: 1,
       measurementType: "height",
     },
     price: 15000,
-    orderNumber: "RF-20250114-001",
   },
   {
     id: "4",
     date: "2025-01-12",
-    status: "배송중",
-    type: "custom-order",
+    status: "거부",
+    type: "return",
+    orderId: "ORD-004",
+    orderNumber: "CO-20250112-001",
+    reason: "제품 불량",
     orderDetails: {
       fabricType: "POLY",
       designType: "YARN_DYED",
@@ -63,31 +76,32 @@ const dummyData: OrderItem[] = [
       quantity: 20,
     },
     price: 240000,
-    orderNumber: "CO-20250112-001",
     image: "/images/detail/fabric2.png",
   },
   {
     id: "5",
     date: "2025-01-12",
     status: "완료",
-    type: "reform",
+    type: "cancel",
+    orderId: "ORD-005",
+    orderNumber: "RF-20250112-001",
+    reason: "배송지 변경",
     orderDetails: {
       tieCount: 2,
       measurementType: "length",
     },
     price: 30000,
-    orderNumber: "RF-20250112-001",
     image: "/images/detail/tie3.png",
   },
 ];
 
-export default function OrderListPage() {
+export default function ClaimListPage() {
   const router = useNavigate();
   const { setSearchEnabled } = useSearchStore();
 
   useEffect(() => {
     setSearchEnabled(true, {
-      placeholder: "주문 검색...",
+      placeholder: "취소/반품/교환 검색...",
       onSearch: (query, dateFilter) => {
         console.log("검색:", query);
         console.log("기간:", dateFilter);
@@ -102,36 +116,39 @@ export default function OrderListPage() {
     <MainLayout>
       <MainContent>
         <TwoPanelLayout
-          leftPanel={dummyData.map((order) => (
-            <Card key={order.id}>
+          leftPanel={dummyData.map((claim) => (
+            <Card key={claim.id}>
               <CardHeader className="text-lg font-bold">
-                <CardTitle>{formatDate(order.date)}</CardTitle>
+                <CardTitle>{formatDate(claim.date)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <button
                   type="button"
                   className="py-3 block w-full"
                   onClick={() => {
-                    router(`/order/${order.id}`);
+                    router(`/claim/${claim.id}`);
                   }}
                 >
                   <div className="flex gap-3">
-                    {order.image && <ImageViewer image={order.image} />}
+                    {claim.image && <ImageViewer image={claim.image} />}
 
-                    {/* 주문 정보 섹션 */}
+                    {/* 클레임 정보 섹션 */}
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <Label className="font-bold">
-                          {getOrderTypeLabel(order.type)}
+                          {getClaimTypeLabel(claim.type)}
                         </Label>
-                        <Badge variant="secondary">{order.status}</Badge>
+                        <Badge variant="secondary">{claim.status}</Badge>
                       </div>
 
                       <div className="flex flex-col gap-2">
-                        <Label>{getOrderDetails(order)}</Label>
+                        <Label className="text-zinc-500 text-xs">
+                          {claim.reason}
+                        </Label>
+                        <Label>{getOrderDetails(claim)}</Label>
 
                         <Label className="font-bold">
-                          {order.price.toLocaleString()}원
+                          {claim.price.toLocaleString()}원
                         </Label>
                       </div>
                     </div>

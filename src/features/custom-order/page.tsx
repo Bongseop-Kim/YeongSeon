@@ -57,7 +57,7 @@ const OrderPage = () => {
 
   return (
     <MainLayout>
-      <MainContent className="bg-zinc-100 overflow-visible">
+      <MainContent className="overflow-visible">
         <Form {...form}>
           <TwoPanelLayout
             leftPanel={
