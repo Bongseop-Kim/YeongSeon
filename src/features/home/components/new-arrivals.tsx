@@ -9,7 +9,7 @@ import { NEW_ARRIVALS_DATA } from "../constants/NEW_ARRIVALS_DATA";
 
 export const NewArrivals = () => {
   return (
-    <div className="w-full px-4 py-8">
+    <div className="w-full px-4 py-8 max-w-7xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">New Arrivals</h2>
       <Carousel
         opts={{

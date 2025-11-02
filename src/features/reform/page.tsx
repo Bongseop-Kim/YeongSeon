@@ -348,7 +348,7 @@ const ReformPage = () => {
               <Button
                 type="button"
                 onClick={handleDirectOrder}
-                size="lg"
+                size="xl"
                 className="w-full"
               >
                 {(calculateEstimatedCost() + 3000).toLocaleString()}원 주문하기

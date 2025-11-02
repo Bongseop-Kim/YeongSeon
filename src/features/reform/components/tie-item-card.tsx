@@ -125,7 +125,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                   required: "착용자 키를 입력해주세요",
                 }}
                 render={({ field }) => (
-                  <FormItem className="flex">
+                  <FormItem>
                     <FormLabel htmlFor={`wearer-height-${index}`}>
                       착용자 키
                     </FormLabel>
