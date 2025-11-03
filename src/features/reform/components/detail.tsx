@@ -7,7 +7,7 @@ import {
   HEIGHT_GUIDE,
   TARGET_CUSTOMERS,
   TESTIMONIALS,
-} from "../constans/DETAIL";
+} from "../constants/DETAIL";
 
 export const Detail = () => {
   return (

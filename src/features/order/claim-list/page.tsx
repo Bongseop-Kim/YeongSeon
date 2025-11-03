@@ -4,15 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import type { ClaimItem } from "../types/claim-item";
-import {
-  getClaimTypeLabel,
-  getOrderDetails,
-  formatDate,
-} from "../utils/claim-utils";
+import { getClaimTypeLabel, getOrderDetails } from "../utils/claim-utils";
 import { ImageViewer } from "@/components/composite/image-viewer";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
+import { formatDate } from "../utils/fs";
 
 const dummyData: ClaimItem[] = [
   {
@@ -110,7 +107,7 @@ export default function ClaimListPage() {
     });
 
     return () => setSearchEnabled(false);
-  }, []);
+  }, [setSearchEnabled]);
 
   return (
     <MainLayout>

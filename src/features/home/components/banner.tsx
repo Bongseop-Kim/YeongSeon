@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Carousel,
   CarouselContent,
@@ -13,7 +11,7 @@ import { useRef, useState, useEffect } from "react";
 import type { CarouselApi } from "@/components/ui/carousel";
 
 export const Banner = () => {
-  const plugin = useRef(Autoplay({ delay: 6000, stopOnInteraction: true }));
+  const plugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 

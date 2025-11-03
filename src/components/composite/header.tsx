@@ -29,7 +29,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
   ({ className, size, sticky, ...props }, ref) => {
     return (
       <header
-        className={cn(headerVariants({ size, sticky, className }))}
+        className={cn(headerVariants({ size, sticky }), className)}
         ref={ref}
         {...props}
       />

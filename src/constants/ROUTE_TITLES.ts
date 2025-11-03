@@ -1,5 +1,6 @@
 export const ROUTE_TITLES = {
   "/": "ESSE SION",
+  "/shop": "스토어",
   "/design": "디자인",
   "/custom-order": "주문 제작",
   "/reform": "수선",
