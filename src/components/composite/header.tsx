@@ -3,13 +3,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const headerVariants = cva("w-full border-b bg-stone-900 backdrop-blur-md", {
+const headerVariants = cva("w-full bg-zinc-200 backdrop-blur-md", {
   variants: {
-    variant: {
-      default: "border-gray-200/60",
-      ghost: "border-transparent",
-      solid: "bg-white border-gray-200",
-    },
     size: {
       sm: "h-14",
       md: "h-16",
@@ -21,7 +16,6 @@ const headerVariants = cva("w-full border-b bg-stone-900 backdrop-blur-md", {
     },
   },
   defaultVariants: {
-    variant: "default",
     size: "md",
     sticky: true,
   },
@@ -32,10 +26,10 @@ export interface HeaderProps
     VariantProps<typeof headerVariants> {}
 
 const Header = React.forwardRef<HTMLElement, HeaderProps>(
-  ({ className, variant, size, sticky, ...props }, ref) => {
+  ({ className, size, sticky, ...props }, ref) => {
     return (
       <header
-        className={cn(headerVariants({ variant, size, sticky, className }))}
+        className={cn(headerVariants({ size, sticky, className }))}
         ref={ref}
         {...props}
       />

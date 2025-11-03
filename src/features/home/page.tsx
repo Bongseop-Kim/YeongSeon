@@ -1,5 +1,4 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { VideoCard } from "./components/video-card";
 import { NAVIGATION_ITEMS } from "@/constants/NAVIGATION_ITEMS";
 import {
   Footer,
@@ -8,27 +7,44 @@ import {
   FooterSection,
   FooterTitle,
 } from "./components/footer";
-import { VIDEO_DATA } from "./constants/VIDEO_DATA";
+import { Banner } from "./components/banner";
+import { Recommended } from "./components/recommended";
+import { NewArrivals } from "./components/new-arrivals";
+import { InstagramFeed } from "./components/instagram-feed";
 
 const HomePage = () => {
   return (
     <MainLayout>
       <MainContent>
-        <div className="flex-1 min-h-screen flex items-center justify-center">
-          <div className="w-full max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[70vh]">
-              {VIDEO_DATA.map((video) => (
-                <VideoCard
-                  key={video.href}
-                  videoSrc={video.videoSrc}
-                  title={video.title}
-                  description={video.description}
-                  href={video.href}
-                />
-              ))}
+        <Banner />
+        <NewArrivals />
+        <Recommended />
+        <div className="w-full py-16 lg:py-24">
+          <div className="px-4 max-w-7xl mx-auto">
+            <p className="text-center text-sm lg:text-base font-light tracking-wide text-zinc-600 leading-relaxed">
+              minimal, magnetic, and made to be lived in.
+              <br />
+              Because beauty isn't forced.
+              <br />
+              It's the way you wear it.
+            </p>
+          </div>
+          <div className="w-full lg:w-2/3 lg:mx-auto mt-12 lg:mt-16">
+            <div className="aspect-[4/5] lg:aspect-video">
+              <video
+                className="w-full h-full object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
+              >
+                <source src="/videos/home.mp4" type="video/mp4" />
+                브라우저가 비디오를 지원하지 않습니다.
+              </video>
             </div>
           </div>
         </div>
+        <InstagramFeed />
         <Footer>
           <FooterContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -61,7 +77,7 @@ const HomePage = () => {
             </div>
             <div className="mt-12 pt-8 border-t border-gray-200">
               <p className="text-xs text-gray-500 text-center">
-                2024 영선산업. All rights reserved.
+                2024 ESSE SION. All rights reserved.
               </p>
             </div>
           </FooterContent>

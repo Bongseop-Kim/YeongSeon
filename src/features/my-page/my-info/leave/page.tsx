@@ -21,7 +21,7 @@ export default function MyInfoLeavePage() {
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100">
+      <MainContent>
         <TwoPanelLayout
           leftPanel={
             <Card>

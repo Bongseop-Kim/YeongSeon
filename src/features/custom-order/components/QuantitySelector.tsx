@@ -12,7 +12,7 @@ interface QuantitySelectorProps {
 export const QuantitySelector = ({ control }: QuantitySelectorProps) => {
   return (
     <div>
-      <Label className="text-sm font-medium text-stone-900 mb-2 block">
+      <Label className="text-sm font-medium text-zinc-900 mb-2 block">
         주문 수량
       </Label>
       <div className="flex items-center gap-3">
@@ -30,9 +30,9 @@ export const QuantitySelector = ({ control }: QuantitySelectorProps) => {
             />
           )}
         />
-        <span className="text-sm text-stone-600">개</span>
+        <span className="text-sm text-zinc-600">개</span>
       </div>
-      <p className="text-xs text-stone-600 mt-1">
+      <p className="text-xs text-zinc-600 mt-1">
         {QUANTITY_CONFIG.min}개 이상 주문 가능합니다
       </p>
     </div>

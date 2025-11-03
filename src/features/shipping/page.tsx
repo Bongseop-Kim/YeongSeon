@@ -10,7 +10,7 @@ const ShippingPage = () => {
 
   return (
     <div className="min-h-screen w-full relative">
-      <div className="bg-stone-100 px-2 pb-4">
+      <div className="bg-zinc-100 px-2 pb-4">
         <div className="flex items-center justify-between">
           <PageTitle className="text-base">배송지 정보</PageTitle>
           <CloseButton

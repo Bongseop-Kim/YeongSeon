@@ -16,7 +16,7 @@ export default function MyInfoEmailPage() {
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100">
+      <MainContent>
         <TwoPanelLayout
           leftPanel={
             <Card>

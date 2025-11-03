@@ -29,7 +29,7 @@ function Textarea({
         onChange={handleChange}
       />
       {maxLength && (
-        <div className="absolute bottom-2 right-3 text-xs text-stone-400">
+        <div className="absolute bottom-2 right-3 text-xs text-zinc-400">
           {String(value).length}/{maxLength}
         </div>
       )}

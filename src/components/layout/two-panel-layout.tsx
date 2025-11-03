@@ -22,7 +22,7 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
   detail,
 }) => {
   return (
-    <div className="max-w-7xl lg:px-8 lg:pt-4 lg:pb-4 mx-auto">
+    <div className="max-w-7xl lg:px-8 lg:pb-4 mx-auto">
       {/* Left Panel - Product Info */}
       <div
         className={cn("flex flex-col lg:flex-row lg:gap-8", containerClassName)}
@@ -50,13 +50,21 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
           <div
             className={cn(
               "w-full lg:w-1/3 lg:sticky lg:top-20 lg:self-start relative",
+              button && "pb-14 lg:pb-0",
               rightPanelClassName
             )}
           >
             {rightPanel}
 
             {button && (
-              <div className="z-30 fixed bottom-2 left-0 right-0 mt-4 px-2 lg:relative lg:left-auto lg:right-auto lg:bottom-auto lg:px-0">
+              <div
+                className="z-30 fixed bottom-0 left-0 right-0 mt-4 px-2 bg-white
+                pt-2 border-t
+               lg:relative lg:left-auto lg:right-auto lg:bottom-auto lg:px-0 lg:border-t-0"
+                style={{
+                  paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0))",
+                }}
+              >
                 {button}
               </div>
             )}

@@ -17,7 +17,7 @@ export default function MyInfoDetailPage() {
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100">
+      <MainContent>
         <TwoPanelLayout
           leftPanel={
             <Card>

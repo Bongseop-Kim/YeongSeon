@@ -178,7 +178,7 @@ const ReformPage = () => {
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100 overflow-visible">
+      <MainContent className="overflow-visible">
         <Form {...form}>
           <TwoPanelLayout
             detail={<Detail />}
@@ -300,13 +300,13 @@ const ReformPage = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-stone-600">수량 x 비용</span>
+                      <span className="text-zinc-600">수량 x 비용</span>
                       <span className="font-medium">
                         {fields.length}개 x 15,000원
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-stone-600">배송비</span>
+                      <span className="text-zinc-600">배송비</span>
                       <span className="font-medium">3,000원</span>
                     </div>
                     <Separator />
@@ -321,7 +321,7 @@ const ReformPage = () => {
                   <Accordion type="single" collapsible>
                     <AccordionItem value="item-1">
                       <AccordionTrigger>유의사항</AccordionTrigger>
-                      <AccordionContent className="text-stone-600">
+                      <AccordionContent className="text-zinc-600">
                         <p>
                           • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
                           부과됩니다.
@@ -348,7 +348,7 @@ const ReformPage = () => {
               <Button
                 type="button"
                 onClick={handleDirectOrder}
-                size="lg"
+                size="xl"
                 className="w-full"
               >
                 {(calculateEstimatedCost() + 3000).toLocaleString()}원 주문하기

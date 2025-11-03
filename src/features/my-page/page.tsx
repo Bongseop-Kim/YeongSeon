@@ -12,7 +12,7 @@ export default function MypagePage() {
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100">
+      <MainContent>
         <TwoPanelLayout
           leftPanel={
             <Card>
@@ -38,7 +38,12 @@ export default function MypagePage() {
                       navigate("/order/order-list");
                     }}
                   />
-                  <ListItem label="취소 내역" onClick={() => {}} />
+                  <ListItem
+                    label="취소 내역"
+                    onClick={() => {
+                      navigate("/order/claim-list");
+                    }}
+                  />
                   <ListItem label="고객센터" onClick={() => {}} />
                   <ListItem label="1:1 문의 내역" onClick={() => {}} />
                   <ListItem label="공지사항" onClick={() => {}} />

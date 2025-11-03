@@ -18,7 +18,7 @@ export const ImageUpload = ({ setValue, watch }: ImageUploadProps) => {
 
   return (
     <div>
-      <Label className="text-sm font-medium text-stone-900 mb-2 block">
+      <Label className="text-sm font-medium text-zinc-900 mb-2 block">
         참고 이미지
       </Label>
       <div className="space-y-3">
@@ -35,11 +35,9 @@ export const ImageUpload = ({ setValue, watch }: ImageUploadProps) => {
             htmlFor="image-upload"
             className="cursor-pointer flex flex-col items-center gap-2"
           >
-            <Upload className="w-8 h-8 text-stone-400" />
-            <span className="text-sm text-stone-600">
-              이미지를 업로드하세요
-            </span>
-            <span className="text-xs text-stone-500">
+            <Upload className="w-8 h-8 text-zinc-400" />
+            <span className="text-sm text-zinc-600">이미지를 업로드하세요</span>
+            <span className="text-xs text-zinc-500">
               PNG, JPG, GIF 파일 지원
             </span>
           </Label>
@@ -53,10 +51,10 @@ export const ImageUpload = ({ setValue, watch }: ImageUploadProps) => {
                 className="relative border border-stone-200 rounded-lg p-2"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-stone-100 rounded flex items-center justify-center flex-shrink-0">
-                    <Upload className="w-4 h-4 text-stone-600" />
+                  <div className="w-8 h-8 bg-zinc-100 rounded flex items-center justify-center flex-shrink-0">
+                    <Upload className="w-4 h-4 text-zinc-600" />
                   </div>
-                  <span className="text-sm text-stone-700 truncate">
+                  <span className="text-sm text-zinc-700 truncate">
                     {image.name}
                   </span>
                   <Button

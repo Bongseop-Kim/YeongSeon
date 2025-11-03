@@ -10,26 +10,43 @@ interface ImageViewerProps {
 }
 
 export const ImageViewer = React.forwardRef<HTMLDivElement, ImageViewerProps>(
-  (
-    {
-      image,
-      alt = "이미지 미리보기",
-      onClose,
-      className,
-      ...props
-    },
-    ref
-  ) => {
-    const getImageSrc = (img: string | File) => {
-      if (typeof img === 'string') {
-        return img;
+  ({ image, alt = "이미지 미리보기", onClose, className, ...props }, ref) => {
+    const objectUrlRef = React.useRef<string | null>(null);
+    const [imageSrc, setImageSrc] = React.useState<string>("");
+
+    React.useEffect(() => {
+      // Revoke previous object URL if it exists
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
       }
-      return URL.createObjectURL(img);
-    };
+
+      // Create new object URL for File inputs
+      if (image instanceof File) {
+        const url = URL.createObjectURL(image);
+        objectUrlRef.current = url;
+        setImageSrc(url);
+      } else if (typeof image === "string") {
+        setImageSrc(image);
+      }
+
+      // Cleanup on unmount
+      return () => {
+        if (objectUrlRef.current) {
+          URL.revokeObjectURL(objectUrlRef.current);
+          objectUrlRef.current = null;
+        }
+      };
+    }, [image]);
 
     if (!image) {
       return (
-        <div className={cn("flex items-center justify-center text-gray-500 w-[107px] h-[129px] border border-dashed border-gray-300", className)}>
+        <div
+          className={cn(
+            "flex items-center justify-center text-gray-500 w-[107px] h-[129px] border border-dashed border-gray-300",
+            className
+          )}
+        >
           이미지가 없습니다
         </div>
       );
@@ -37,9 +54,9 @@ export const ImageViewer = React.forwardRef<HTMLDivElement, ImageViewerProps>(
 
     return (
       <div ref={ref} className={cn("relative", className)} {...props}>
-        <div className="relative w-[107px] h-[129px] bg-stone-50">
+        <div className="relative w-[107px] h-[129px] bg-zinc-50">
           <img
-            src={getImageSrc(image)}
+            src={imageSrc}
             alt={alt}
             className="w-full h-full object-cover"
           />

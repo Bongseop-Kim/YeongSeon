@@ -40,7 +40,7 @@ function RadioGroup({
                 id={id}
                 disabled={option.disabled}
               />
-              <Label htmlFor={id} className="text-xs  text-stone-600">
+              <Label htmlFor={id} className="text-xs  text-zinc-600">
                 {option.label}
               </Label>
             </div>

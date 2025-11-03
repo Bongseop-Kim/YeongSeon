@@ -103,7 +103,7 @@ export const ImagePicker = React.forwardRef<HTMLInputElement, ImagePickerProps>(
             className={cn(
               "relative  w-[107px] h-[129px]",
               selectedFile
-                ? "bg-stone-50"
+                ? "bg-zinc-50"
                 : "border border-dashed border-gray-300"
             )}
           >

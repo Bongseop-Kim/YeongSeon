@@ -52,11 +52,12 @@ const OrderPage = () => {
     // 바로 주문 로직
   };
 
-  const { sewingCost, fabricCost, totalCost } = calculateTotalCost(watchedValues);
+  const { sewingCost, fabricCost, totalCost } =
+    calculateTotalCost(watchedValues);
 
   return (
     <MainLayout>
-      <MainContent className="bg-stone-100 overflow-visible">
+      <MainContent className="overflow-visible">
         <Form {...form}>
           <TwoPanelLayout
             leftPanel={

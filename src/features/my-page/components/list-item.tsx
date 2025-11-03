@@ -17,7 +17,7 @@ export const ListItem = ({
       className="flex w-full items-center justify-between py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 rounded"
     >
       <Label subLabel={subLabel}>{label}</Label>
-      <ChevronRightIcon className="size-4 text-stone-500" />
+      <ChevronRightIcon className="size-4 text-zinc-500" />
     </button>
   );
 };
