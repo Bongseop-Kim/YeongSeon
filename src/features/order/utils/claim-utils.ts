@@ -1,28 +1,6 @@
 import type { ClaimItem } from "../types/claim-item";
 
-export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (date.toDateString() === today.toDateString()) {
-    return "오늘";
-  } else if (date.toDateString() === yesterday.toDateString()) {
-    return "어제";
-  } else {
-    return date.toLocaleDateString("ko-KR", {
-      year: "2-digit",
-      month: "2-digit",
-      day: "2-digit",
-      weekday: "long",
-    });
-  }
-};
-
-export const getClaimTypeLabel = (
-  type: "cancel" | "return" | "exchange"
-) => {
+export const getClaimTypeLabel = (type: "cancel" | "return" | "exchange") => {
   switch (type) {
     case "cancel":
       return "취소";
@@ -34,8 +12,14 @@ export const getClaimTypeLabel = (
 };
 
 export const getOrderDetails = (claim: ClaimItem) => {
-  const { fabricType, designType, tieType, quantity, tieCount, measurementType } =
-    claim.orderDetails;
+  const {
+    fabricType,
+    designType,
+    tieType,
+    quantity,
+    tieCount,
+    measurementType,
+  } = claim.orderDetails;
 
   const details = [];
 

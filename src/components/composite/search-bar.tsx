@@ -7,6 +7,7 @@ export const SearchBar: React.FC = () => {
 
   return (
     <button
+      type="button"
       onClick={openSheet}
       className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md transition-colors w-full"
     >
