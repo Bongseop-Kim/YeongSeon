@@ -33,9 +33,9 @@ export const MATERIAL_OPTIONS = [
 
 export const PRICE_RANGE_OPTIONS = [
   { value: "all", label: "전체", min: 0, max: Infinity },
-  { value: "under-30", label: "3만원 이하", min: 0, max: 30000 },
-  { value: "30-50", label: "3만원 ~ 5만원", min: 30000, max: 50000 },
-  { value: "50-70", label: "5만원 ~ 7만원", min: 50000, max: 70000 },
+  { value: "under-30", label: "3만원 이하", min: 0, max: 29999 },
+  { value: "30-50", label: "3만원 ~ 5만원", min: 30000, max: 49999 },
+  { value: "50-70", label: "5만원 ~ 7만원", min: 50000, max: 69999 },
   { value: "over-70", label: "7만원 이상", min: 70000, max: Infinity },
 ] as const;
 

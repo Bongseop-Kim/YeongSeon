@@ -14,10 +14,10 @@ import {
   PRICE_RANGE_OPTIONS,
 } from "../constants/FILTER_OPTIONS";
 import {
-  ProductCategory,
-  ProductColor,
-  ProductPattern,
-  ProductMaterial,
+  type ProductCategory,
+  type ProductColor,
+  type ProductPattern,
+  type ProductMaterial,
 } from "../types/product";
 
 interface FilterSectionProps {
@@ -47,7 +47,10 @@ export const FilterSection = ({
 }: FilterSectionProps) => {
   return (
     <div className="w-full">
-      <Accordion type="multiple" defaultValue={["category", "price", "color", "pattern", "material"]}>
+      <Accordion
+        type="multiple"
+        defaultValue={["category", "price", "color", "pattern", "material"]}
+      >
         {/* 카테고리 필터 */}
         <AccordionItem value="category">
           <AccordionTrigger className="text-sm font-semibold">
