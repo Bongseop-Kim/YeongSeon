@@ -9,10 +9,10 @@ import {
 import { FilterSection } from "./filter-section";
 import { SlidersHorizontal } from "lucide-react";
 import {
-  ProductCategory,
-  ProductColor,
-  ProductPattern,
-  ProductMaterial,
+  type ProductCategory,
+  type ProductColor,
+  type ProductPattern,
+  type ProductMaterial,
 } from "../types/product";
 
 interface FilterSheetProps {
@@ -50,7 +50,7 @@ export const FilterSheet = ({
           필터
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-80 overflow-y-auto">
+      <SheetContent className="w-80 overflow-y-auto">
         <SheetHeader>
           <SheetTitle>필터</SheetTitle>
         </SheetHeader>
@@ -68,11 +68,7 @@ export const FilterSheet = ({
             onPriceRangeChange={onPriceRangeChange}
           />
           <div className="mt-6 pt-6 border-t">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={onReset}
-            >
+            <Button variant="outline" className="w-full" onClick={onReset}>
               필터 초기화
             </Button>
           </div>
