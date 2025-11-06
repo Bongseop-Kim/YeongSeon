@@ -11,7 +11,7 @@ export interface Product {
   likes: number;
 }
 
-export type ProductCategory = "formal" | "casual" | "wedding" | "business";
+export type ProductCategory = "3fold" | "sfolderato" | "knit" | "bowtie";
 export type ProductColor =
   | "black"
   | "navy"
