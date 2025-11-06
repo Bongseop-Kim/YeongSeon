@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SORT_OPTIONS } from "../constants/FILTER_OPTIONS";
-import { SortOption } from "../types/product";
+import type { SortOption } from "../types/product";
 
 interface SortSelectProps {
   value: SortOption;
@@ -16,7 +16,7 @@ interface SortSelectProps {
 export const SortSelect = ({ value, onChange }: SortSelectProps) => {
   return (
     <Select value={value} onValueChange={(val) => onChange(val as SortOption)}>
-      <SelectTrigger className="w-[140px]">
+      <SelectTrigger className="w-[140px]" size="sm" variant="borderless">
         <SelectValue placeholder="정렬" />
       </SelectTrigger>
       <SelectContent>

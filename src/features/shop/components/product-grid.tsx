@@ -1,4 +1,4 @@
-import { Product } from "../types/product";
+import type { Product } from "../types/product";
 import { ProductCard } from "./product-card";
 
 interface ProductGridProps {
@@ -15,7 +15,7 @@ export const ProductGrid = ({ products }: ProductGridProps) => {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+    <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-5 ">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

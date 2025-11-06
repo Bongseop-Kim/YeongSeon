@@ -1,14 +1,14 @@
 export interface Product {
   id: number;
-  title: string;
+  code: string;
+  name: string;
   price: number;
   image: string;
   category: ProductCategory;
   color: ProductColor;
   pattern: ProductPattern;
   material: ProductMaterial;
-  isNew?: boolean;
-  isPopular?: boolean;
+  likes: number;
 }
 
 export type ProductCategory = "formal" | "casual" | "wedding" | "business";

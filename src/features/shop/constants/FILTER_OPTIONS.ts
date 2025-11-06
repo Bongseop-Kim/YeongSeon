@@ -1,8 +1,8 @@
 export const CATEGORY_OPTIONS = [
-  { value: "formal", label: "정장용" },
-  { value: "casual", label: "캐주얼" },
-  { value: "wedding", label: "웨딩" },
-  { value: "business", label: "비즈니스" },
+  { value: "3fold", label: "3FOLD" },
+  { value: "sfolderato", label: "SFODERATO" },
+  { value: "knit", label: "KNITED" },
+  { value: "bowtie", label: "BOW TIE" },
 ] as const;
 
 export const COLOR_OPTIONS = [
