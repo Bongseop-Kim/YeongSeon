@@ -141,23 +141,23 @@ export default function ShopPage() {
 
   return (
     <MainLayout>
+      <FilterSheet
+        selectedCategories={selectedCategories}
+        selectedColors={selectedColors}
+        selectedPatterns={selectedPatterns}
+        selectedMaterials={selectedMaterials}
+        selectedPriceRange={selectedPriceRange}
+        onCategoryChange={handleCategoryChange}
+        onColorChange={handleColorChange}
+        onPatternChange={handlePatternChange}
+        onMaterialChange={handleMaterialChange}
+        onPriceRangeChange={handlePriceRangeChange}
+        onReset={handleResetFilters}
+      />
       <MainContent>
         <TwoPanelLayout
           leftPanel={
             <>
-              <FilterSheet
-                selectedCategories={selectedCategories}
-                selectedColors={selectedColors}
-                selectedPatterns={selectedPatterns}
-                selectedMaterials={selectedMaterials}
-                selectedPriceRange={selectedPriceRange}
-                onCategoryChange={handleCategoryChange}
-                onColorChange={handleColorChange}
-                onPatternChange={handlePatternChange}
-                onMaterialChange={handleMaterialChange}
-                onPriceRangeChange={handlePriceRangeChange}
-                onReset={handleResetFilters}
-              />
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs text-zinc-800 px-2">
                   전체 {filteredAndSortedProducts.length}개
