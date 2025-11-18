@@ -1,7 +1,7 @@
 export const CATEGORY_OPTIONS = [
   { value: "3fold", label: "3FOLD" },
   { value: "sfolderato", label: "SFODERATO" },
-  { value: "knit", label: "KNITED" },
+  { value: "knit", label: "KNITTED" },
   { value: "bowtie", label: "BOW TIE" },
 ] as const;
 
