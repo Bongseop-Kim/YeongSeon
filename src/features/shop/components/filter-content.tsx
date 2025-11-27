@@ -16,6 +16,7 @@ import {
   MATERIAL_OPTIONS,
   PRICE_RANGE_OPTIONS,
 } from "../constants/FILTER_OPTIONS";
+import { Badge } from "@/components/ui/badge";
 
 type FilterTab = "category" | "price" | "color" | "pattern" | "material";
 
@@ -138,18 +139,18 @@ export const FilterContent = ({
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hidden">
             {selectedFilters.map((filter, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-1 px-2 py-1 bg-accent rounded-sm text-sm flex-shrink-0"
-              >
+              <Badge variant="secondary" className="gap-1" key={index}>
                 <span>{filter.label}</span>
                 <button
-                  onClick={filter.onRemove}
-                  className="hover:bg-background rounded-full p-0.5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    filter.onRemove();
+                  }}
+                  className="hover:bg-background rounded-full p-0.5 -mr-1 pointer-events-auto"
                 >
                   <X className="size-3" />
                 </button>
-              </div>
+              </Badge>
             ))}
           </div>
           <Button variant="text" size="sm" onClick={onReset}>

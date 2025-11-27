@@ -1,4 +1,5 @@
 import { HeartIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { Product } from "../types/product";
 
 interface ProductCardProps {
@@ -6,8 +7,14 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product }: ProductCardProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/shop/${product.id}`);
+  };
+
   return (
-    <div className="group cursor-pointer">
+    <div className="group cursor-pointer" onClick={handleClick}>
       <div className="relative aspect-square overflow-hidden bg-zinc-100">
         <img
           src={product.image}

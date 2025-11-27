@@ -17,6 +17,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { useModalStore } from "@/store/modal";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 type FilterTab = "category" | "price" | "color" | "pattern" | "material";
 
@@ -33,20 +34,10 @@ export default function ShopPage() {
   );
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>("all");
   const [sortOption, setSortOption] = useState<SortOption>("latest");
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const [activeFilterTab, setActiveFilterTab] = useState<FilterTab>("category");
   const { openModal, closeModal, isOpen } = useModalStore();
   const isModalUpdatingRef = useRef(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   const handleCategoryChange = (category: ProductCategory) => {
     setSelectedCategories((prev) =>
