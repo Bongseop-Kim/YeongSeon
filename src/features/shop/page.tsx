@@ -1,5 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { FilterSheet } from "./components/filter-sheet";
+import { FilterButtons } from "./components/filter-buttons";
+import { FilterContent } from "./components/filter-content";
 import { ProductGrid } from "./components/product-grid";
 import { SortSelect } from "./components/sort-select";
 import { PRODUCTS_DATA } from "./constants/PRODUCTS_DATA";
@@ -13,6 +15,11 @@ import type {
 } from "./types/product";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { useModalStore } from "@/store/modal";
+import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-is-mobile";
+
+type FilterTab = "category" | "price" | "color" | "pattern" | "material";
 
 export default function ShopPage() {
   const [selectedCategories, setSelectedCategories] = useState<
@@ -27,6 +34,10 @@ export default function ShopPage() {
   );
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>("all");
   const [sortOption, setSortOption] = useState<SortOption>("latest");
+  const isMobile = useIsMobile();
+  const [activeFilterTab, setActiveFilterTab] = useState<FilterTab>("category");
+  const { openModal, closeModal, isOpen } = useModalStore();
+  const isModalUpdatingRef = useRef(false);
 
   const handleCategoryChange = (category: ProductCategory) => {
     setSelectedCategories((prev) =>
@@ -69,6 +80,87 @@ export default function ShopPage() {
     setSelectedMaterials([]);
     setSelectedPriceRange("all");
   };
+
+  const handleFilterButtonClick = (tab: FilterTab) => {
+    setActiveFilterTab(tab);
+    if (!isMobile) {
+      // PC에서는 모달 열기
+      openFilterModal(tab);
+    }
+    // 모바일에서는 FilterSheet가 자체적으로 처리
+  };
+
+  const openFilterModal = useCallback(
+    (tab?: FilterTab) => {
+      if (isModalUpdatingRef.current) return;
+      isModalUpdatingRef.current = true;
+      openModal({
+        title: "필터",
+        modalType: "custom",
+        showDefaultFooter: false,
+        customFooter: (
+          <div className="sticky bottom-0 bg-background p-2 border-t">
+            <Button className="w-full" onClick={closeModal}>
+              적용하기
+            </Button>
+          </div>
+        ),
+        children: () => (
+          <FilterContent
+            selectedCategories={selectedCategories}
+            selectedColors={selectedColors}
+            selectedPatterns={selectedPatterns}
+            selectedMaterials={selectedMaterials}
+            selectedPriceRange={selectedPriceRange}
+            onCategoryChange={handleCategoryChange}
+            onColorChange={handleColorChange}
+            onPatternChange={handlePatternChange}
+            onMaterialChange={handleMaterialChange}
+            onPriceRangeChange={handlePriceRangeChange}
+            onReset={handleResetFilters}
+            initialTab={tab || activeFilterTab}
+          />
+        ),
+      });
+      setTimeout(() => {
+        isModalUpdatingRef.current = false;
+      }, 0);
+    },
+    [
+      selectedCategories,
+      selectedColors,
+      selectedPatterns,
+      selectedMaterials,
+      selectedPriceRange,
+      activeFilterTab,
+      openModal,
+      closeModal,
+      handleCategoryChange,
+      handleColorChange,
+      handlePatternChange,
+      handleMaterialChange,
+      handlePriceRangeChange,
+      handleResetFilters,
+    ]
+  );
+
+  // 모달이 열려있는 동안 필터 상태가 변경되면 모달 업데이트
+  useEffect(() => {
+    if (isOpen && !isMobile && !isModalUpdatingRef.current) {
+      // 모달이 열려있고 PC일 때만 업데이트
+      openFilterModal(activeFilterTab);
+    }
+  }, [
+    selectedCategories,
+    selectedColors,
+    selectedPatterns,
+    selectedMaterials,
+    selectedPriceRange,
+    activeFilterTab,
+    isOpen,
+    isMobile,
+    openFilterModal,
+  ]);
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = PRODUCTS_DATA;
@@ -141,19 +233,27 @@ export default function ShopPage() {
 
   return (
     <MainLayout>
-      <FilterSheet
-        selectedCategories={selectedCategories}
-        selectedColors={selectedColors}
-        selectedPatterns={selectedPatterns}
-        selectedMaterials={selectedMaterials}
-        selectedPriceRange={selectedPriceRange}
-        onCategoryChange={handleCategoryChange}
-        onColorChange={handleColorChange}
-        onPatternChange={handlePatternChange}
-        onMaterialChange={handleMaterialChange}
-        onPriceRangeChange={handlePriceRangeChange}
-        onReset={handleResetFilters}
-      />
+      {isMobile ? (
+        <FilterSheet
+          selectedCategories={selectedCategories}
+          selectedColors={selectedColors}
+          selectedPatterns={selectedPatterns}
+          selectedMaterials={selectedMaterials}
+          selectedPriceRange={selectedPriceRange}
+          onCategoryChange={handleCategoryChange}
+          onColorChange={handleColorChange}
+          onPatternChange={handlePatternChange}
+          onMaterialChange={handleMaterialChange}
+          onPriceRangeChange={handlePriceRangeChange}
+          onReset={handleResetFilters}
+          initialTab={activeFilterTab}
+        />
+      ) : (
+        <FilterButtons
+          onFilterClick={handleFilterButtonClick}
+          onMainButtonClick={() => openFilterModal()}
+        />
+      )}
       <MainContent>
         <TwoPanelLayout
           leftPanel={

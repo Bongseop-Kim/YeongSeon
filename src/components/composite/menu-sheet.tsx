@@ -16,7 +16,7 @@ export default function MenuSheet() {
           <span className="sr-only">메뉴 열기</span>
         </button>
       </SheetTrigger>
-      <SheetContent className="bg-zinc-200">
+      <SheetContent className="bg-zinc-200 pt-10">
         <nav className="space-y-4 flex flex-col">
           {NAVIGATION_ITEMS.map((item) => (
             <div key={item.href} onClick={() => setIsSheetOpen(false)}>
@@ -27,7 +27,7 @@ export default function MenuSheet() {
           ))}
         </nav>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pr-4">
           <NavLink to="/my-page" onClick={() => setIsSheetOpen(false)}>
             마이페이지
           </NavLink>

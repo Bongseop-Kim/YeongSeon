@@ -1,3 +1,9 @@
+export interface ProductOption {
+  id: string;
+  name: string;
+  additionalPrice: number;
+}
+
 export interface Product {
   id: number;
   code: string;
@@ -9,6 +15,8 @@ export interface Product {
   pattern: ProductPattern;
   material: ProductMaterial;
   likes: number;
+  info: string;
+  options?: ProductOption[];
 }
 
 export type ProductCategory = "3fold" | "sfolderato" | "knit" | "bowtie";

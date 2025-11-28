@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import Router from "@/routes";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
@@ -17,6 +16,7 @@ import SearchSheet from "@/components/composite/search-sheet";
 import { ROUTE_TITLES } from "@/constants/ROUTE_TITLES";
 import MenuSheet from "../composite/menu-sheet";
 import { useSearchStore } from "@/store/search";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 export default function AppLayout() {
   const location = useLocation();
@@ -25,18 +25,8 @@ export default function AppLayout() {
   const showHeader = !hideHeaderPaths.some((path) =>
     location.pathname.startsWith(path)
   );
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const { config } = useSearchStore();
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   const getCurrentPageName = () => {
     // 데스크톱에서는 항상 ESSE SION 표시

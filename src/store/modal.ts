@@ -1,10 +1,13 @@
 import { create } from "zustand";
 
+type ModalType = "confirm" | "custom";
+
 interface ModalState {
   isOpen: boolean;
+  modalType: ModalType;
   title: string;
   description?: string;
-  children?: React.ReactNode;
+  children?: React.ReactNode | (() => React.ReactNode);
   confirmText: string;
   cancelText: string;
   confirmVariant:
@@ -14,6 +17,8 @@ interface ModalState {
     | "secondary"
     | "ghost"
     | "link";
+  customFooter?: React.ReactNode | (() => React.ReactNode);
+  showDefaultFooter: boolean;
   onConfirm?: () => void;
   onCancel?: () => void;
 }
@@ -21,8 +26,9 @@ interface ModalState {
 interface ModalStore extends ModalState {
   openModal: (config: {
     title: string;
+    modalType?: ModalType;
     description?: string;
-    children?: React.ReactNode;
+    children?: React.ReactNode | (() => React.ReactNode);
     confirmText?: string;
     cancelText?: string;
     confirmVariant?:
@@ -32,6 +38,8 @@ interface ModalStore extends ModalState {
       | "secondary"
       | "ghost"
       | "link";
+    customFooter?: React.ReactNode | (() => React.ReactNode);
+    showDefaultFooter?: boolean;
     onConfirm?: () => void;
     onCancel?: () => void;
   }) => void;
@@ -45,24 +53,30 @@ interface ModalStore extends ModalState {
 
 export const useModalStore = create<ModalStore>((set, get) => ({
   isOpen: false,
+  modalType: "confirm",
   title: "",
   description: "",
   children: null,
   confirmText: "확인",
   cancelText: "취소",
   confirmVariant: "default",
+  customFooter: undefined,
+  showDefaultFooter: true,
   onConfirm: undefined,
   onCancel: undefined,
 
   openModal: (config) => {
     set({
       isOpen: true,
+      modalType: config.modalType || "confirm",
       title: config.title,
       description: config.description,
       children: config.children,
       confirmText: config.confirmText || "확인",
       cancelText: config.cancelText || "취소",
       confirmVariant: config.confirmVariant || "default",
+      customFooter: config.customFooter,
+      showDefaultFooter: config.showDefaultFooter !== false,
       onConfirm: config.onConfirm,
       onCancel: config.onCancel,
     });
@@ -71,12 +85,15 @@ export const useModalStore = create<ModalStore>((set, get) => ({
   closeModal: () => {
     set({
       isOpen: false,
+      modalType: "confirm",
       title: "",
       description: "",
       children: null,
       confirmText: "확인",
       cancelText: "취소",
       confirmVariant: "default",
+      customFooter: undefined,
+      showDefaultFooter: true,
       onConfirm: undefined,
       onCancel: undefined,
     });

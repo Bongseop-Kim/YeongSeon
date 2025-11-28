@@ -3,7 +3,9 @@ import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const mainLayoutVariants = cva("w-full bg-background flex flex-col");
+const mainLayoutVariants = cva(
+  "w-full bg-background flex flex-col max-w-7xl mx-auto"
+);
 
 export interface MainLayoutProps extends React.HTMLAttributes<HTMLDivElement> {}
 

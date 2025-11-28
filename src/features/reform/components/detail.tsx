@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/ui/data-table";
 import { XIcon } from "lucide-react";
 import {
   BANNER_IMAGES,
@@ -236,29 +237,13 @@ export const Detail = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-center py-3 font-bold">키</th>
-                      <th className="text-center py-3 font-bold">권장 길이</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {HEIGHT_GUIDE.map((guide, index) => (
-                      <tr
-                        key={index}
-                        className="border-b last:border-b-0 hover:bg-gray-50"
-                      >
-                        <td className="text-center py-3 font-semibold text-zinc-600">
-                          {guide.height}
-                        </td>
-                        <td className="text-center py-3">{guide.length}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                headers={["키", "권장 길이"]}
+                data={HEIGHT_GUIDE.map((guide) => ({
+                  키: guide.height,
+                  "권장 길이": guide.length,
+                }))}
+              />
             </CardContent>
           </Card>
         </div>

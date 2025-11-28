@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/accordion";
 import { useNavigate } from "react-router-dom";
 import { Detail } from "./components/detail";
+import { HEIGHT_GUIDE } from "./constants/DETAIL";
+import { DataTable } from "@/components/ui/data-table";
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
@@ -299,48 +301,57 @@ const ReformPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-zinc-600">수량 x 비용</span>
-                      <span className="font-medium">
-                        {fields.length}개 x 15,000원
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-zinc-600">배송비</span>
-                      <span className="font-medium">3,000원</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between font-semibold">
-                      <span>총 비용</span>
-                      <span>
-                        {(calculateEstimatedCost() + 3000).toLocaleString()}원
-                      </span>
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span>총 {fields.length}개</span>
+                      <span>{calculateEstimatedCost().toLocaleString()}원</span>
                     </div>
                   </div>
 
-                  <Accordion type="single" collapsible>
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger>유의사항</AccordionTrigger>
-                      <AccordionContent className="text-zinc-600">
-                        <p>
-                          • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
-                          부과됩니다.
-                        </p>
-                        <p>
-                          • 예상 수선 기간은 넥타이 확인 후 영업일 기준
-                          10일입니다.
-                        </p>
-                        <p>
-                          • 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이
-                          불가능합니다.
-                        </p>
-                        <p>
-                          • 수선 진행 전 취소 시, 택배비 3,000원을 제외한 금액을
-                          환불해드립니다.
-                        </p>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                  <Separator />
+
+                  <div>
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="item-1">
+                        <AccordionTrigger>
+                          키별 권장 넥타이 길이
+                        </AccordionTrigger>
+                        <AccordionContent className="text-zinc-600">
+                          <DataTable
+                            headers={["키", "권장 길이"]}
+                            data={HEIGHT_GUIDE.map((guide) => ({
+                              키: guide.height,
+                              "권장 길이": guide.length,
+                            }))}
+                            size="sm"
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="item-1">
+                        <AccordionTrigger>유의사항</AccordionTrigger>
+                        <AccordionContent className="text-zinc-600">
+                          <p>
+                            • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
+                            부과됩니다.
+                          </p>
+                          <p>
+                            • 예상 수선 기간은 넥타이 확인 후 영업일 기준
+                            10일입니다.
+                          </p>
+                          <p>
+                            • 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이
+                            불가능합니다.
+                          </p>
+                          <p>
+                            • 수선 진행 전 취소 시, 택배비 3,000원을 제외한
+                            금액을 환불해드립니다.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </div>
                 </CardContent>
               </Card>
             }
