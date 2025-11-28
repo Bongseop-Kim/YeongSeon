@@ -28,7 +28,7 @@ const MainContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <main
     ref={ref}
-    className={cn("flex-1 overflow-auto", className)}
+    className={cn("flex-1 overflow-y-auto overflow-x-hidden", className)}
     {...props}
   />
 ));

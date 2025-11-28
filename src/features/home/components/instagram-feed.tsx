@@ -21,7 +21,7 @@ const INSTAGRAM_IMAGES = [
 
 export const InstagramFeed = () => {
   return (
-    <section className="w-full py-12 px-4">
+    <section className="w-full py-12 px-4 max-w-7xl mx-auto">
       <div>
         {/* Header */}
         <div className="text-center mb-8">
@@ -36,7 +36,7 @@ export const InstagramFeed = () => {
             href="https://www.instagram.com/yeongseong_official"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block mt-4 text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline"
+            className="inline-block mt-4 text-sm font-medium text-zinc-900 dark:text-zinc-100"
           >
             팔로우하기 →
           </a>
@@ -55,11 +55,11 @@ export const InstagramFeed = () => {
               <img
                 src={image.src}
                 alt={image.alt}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-300"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                <Instagram className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-black/0 transition-colors duration-300 flex items-center justify-center">
+                <Instagram className="w-8 h-8 text-white opacity-0 transition-opacity duration-300" />
               </div>
             </a>
           ))}

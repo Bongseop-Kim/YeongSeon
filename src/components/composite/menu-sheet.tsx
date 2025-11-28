@@ -11,7 +11,7 @@ export default function MenuSheet() {
   return (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetTrigger asChild>
-        <button className="md:hidden hover:text-zinc-900 transition-colors duration-200">
+        <button className="md:hidden transition-colors duration-200">
           <Menu className="w-5 h-5" />
           <span className="sr-only">메뉴 열기</span>
         </button>

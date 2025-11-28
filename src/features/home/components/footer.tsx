@@ -82,7 +82,7 @@ const FooterLink = React.forwardRef<
   <a
     ref={ref}
     className={cn(
-      "text-sm text-gray-600 transition-colors duration-200 hover:text-gray-900 block py-1",
+      "text-sm text-gray-600 transition-colors duration-200 block py-1",
       className
     )}
     {...props}

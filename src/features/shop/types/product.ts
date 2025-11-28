@@ -15,6 +15,7 @@ export interface Product {
   pattern: ProductPattern;
   material: ProductMaterial;
   likes: number;
+  isLiked?: boolean;
   info: string;
   options?: ProductOption[];
 }

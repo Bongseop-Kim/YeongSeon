@@ -93,7 +93,7 @@ export const Banner = () => {
               className={`h-2 rounded-full transition-all border border-zinc-200 ${
                 index === current
                   ? "w-8 bg-white"
-                  : "w-2 bg-white/50 border-zinc-200 hover:bg-white/75"
+                  : "w-2 bg-white/50 border-zinc-200"
               }`}
               aria-label={`배너 ${index + 1}로 이동`}
             />
