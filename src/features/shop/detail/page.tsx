@@ -121,19 +121,19 @@ export default function ShopDetailPage() {
       <MainContent className="overflow-visible">
         <TwoPanelLayout
           leftPanel={
-            <Card>
+            <div>
               <img
                 src={product.image}
                 alt={product.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-"
               />
-            </Card>
+            </div>
           }
           detail={
             <div>
               {/* 유사한 상품 섹션 */}
               {similarProducts.length > 0 && (
-                <Card>
+                <Card className="bg-zinc-100">
                   <CardHeader>
                     <CardTitle>유사한 상품</CardTitle>
                     <CardDescription>
@@ -141,14 +141,16 @@ export default function ShopDetailPage() {
                     </CardDescription>
                   </CardHeader>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4">
-                    {similarProducts.map((similarProduct) => (
-                      <ProductCard
-                        key={similarProduct.id}
-                        product={similarProduct}
-                      />
-                    ))}
-                  </div>
+                  <CardContent>
+                    <div className="grid grid-cols-3 md:grid-cols-4">
+                      {similarProducts.map((similarProduct) => (
+                        <ProductCard
+                          key={similarProduct.id}
+                          product={similarProduct}
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
                 </Card>
               )}
 
@@ -261,7 +263,7 @@ export default function ShopDetailPage() {
                 <div>
                   <Accordion type="single" collapsible>
                     <AccordionItem value="item-1">
-                      <AccordionTrigger>키별 권장 넥타이 길이</AccordionTrigger>
+                      <AccordionTrigger>내게 맞는 넥타이 길이</AccordionTrigger>
                       <AccordionContent className="text-zinc-600">
                         <DataTable
                           headers={["키", "권장 길이"]}

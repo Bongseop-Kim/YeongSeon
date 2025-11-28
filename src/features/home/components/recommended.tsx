@@ -21,12 +21,9 @@ export const Recommended = () => {
           }}
           className="w-full"
         >
-          <CarouselContent className="!-ml-2 md:!-ml-4">
+          <CarouselContent>
             {NEW_ARRIVALS_DATA.map((item) => (
-              <CarouselItem
-                key={item.id}
-                className="!pl-2 md:!pl-4 basis-1/2 md:basis-1/4"
-              >
+              <CarouselItem key={item.id} className="basis-1/2 md:basis-1/4">
                 <div className="group cursor-pointer">
                   <div className="aspect-square overflow-hidden rounded-lg bg-zinc-100 mb-3">
                     <img

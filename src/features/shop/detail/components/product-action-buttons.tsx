@@ -22,17 +22,18 @@ export function ProductActionButtons({
   if (isMobile) {
     return (
       <div className="flex gap-2 items-center">
-        <div className="flex flex-col items-center shrink-0">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onLikeToggle}
-          >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onLikeToggle}
+          className="size-12"
+        >
+          <div className="flex flex-col items-center shrink-0 gap-1">
             <Heart className={isLiked ? "fill-red-500 text-red-500" : ""} />
-          </Button>
-          <span className="text-xs text-zinc-600 -mt-1">{likes}</span>
-        </div>
+            <span className="text-xs text-zinc-600 -mt-1">{likes}</span>
+          </div>
+        </Button>
         <Button type="button" onClick={onOrder} size="xl" className="flex-1">
           구매하기
         </Button>

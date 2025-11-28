@@ -313,7 +313,7 @@ const ReformPage = () => {
                     <Accordion type="single" collapsible>
                       <AccordionItem value="item-1">
                         <AccordionTrigger>
-                          키별 권장 넥타이 길이
+                          내게 맞는 넥타이 길이
                         </AccordionTrigger>
                         <AccordionContent className="text-zinc-600">
                           <DataTable

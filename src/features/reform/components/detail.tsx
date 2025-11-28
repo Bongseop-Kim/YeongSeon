@@ -233,7 +233,7 @@ export const Detail = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-center">
-                키별 권장 넥타이 길이 가이드
+                내게 맞는 넥타이 길이
               </CardTitle>
             </CardHeader>
             <CardContent>

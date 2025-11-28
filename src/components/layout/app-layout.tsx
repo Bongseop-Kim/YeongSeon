@@ -77,11 +77,11 @@ export default function AppLayout() {
                   onClick={handleBackClick}
                   className="transition-colors duration-200 p-1 -ml-2"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-5 h-5 text-zinc-50" />
                   <span className="sr-only">뒤로가기</span>
                 </button>
               )}
-              {getCurrentPageName()}
+              <span className="text-zinc-50">{getCurrentPageName()}</span>
             </HeaderTitle>
 
             {/* 데스크톱 네비게이션 */}
