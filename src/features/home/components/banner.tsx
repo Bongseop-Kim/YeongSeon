@@ -26,7 +26,7 @@ export const Banner = () => {
   }, [api]);
 
   return (
-    <section className="w-full py-4 px-4 md:py-6 md:px-6 max-w-7xl mx-auto">
+    <section className="w-full py-4 px-4 md:py-6 md:px-6">
       <Carousel
         opts={{
           align: "start",

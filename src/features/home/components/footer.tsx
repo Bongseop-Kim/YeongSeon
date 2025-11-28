@@ -46,7 +46,7 @@ const FooterContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("container mx-auto max-w-7xl px-6 lg:px-8", className)}
+    className={cn("container mx-auto px-6 lg:px-8", className)}
     {...props}
   />
 ));

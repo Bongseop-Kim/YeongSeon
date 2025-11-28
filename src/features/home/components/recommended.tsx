@@ -9,7 +9,7 @@ import { NEW_ARRIVALS_DATA } from "../constants/NEW_ARRIVALS_DATA";
 
 export const Recommended = () => {
   return (
-    <div className="w-full px-4 py-8 max-w-7xl mx-auto">
+    <div className="w-full px-4 py-8">
       <h2 className="text-2xl font-bold mb-6">Recommended</h2>
       <Carousel
         opts={{

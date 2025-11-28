@@ -22,7 +22,7 @@ const INSTAGRAM_IMAGES = [
 export const InstagramFeed = () => {
   return (
     <section className="w-full py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
