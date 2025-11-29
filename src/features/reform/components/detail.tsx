@@ -74,7 +74,7 @@ export const Detail = () => {
                 key={index}
                 src={image.src}
                 alt={image.alt}
-                className="rounded-md w-1/3 flex-shrink-0"
+                className="rounded-sm w-1/3 flex-shrink-0"
               />
             ))}
           </div>

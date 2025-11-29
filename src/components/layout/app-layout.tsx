@@ -118,7 +118,7 @@ export default function AppLayout() {
         <Router />
       </div>
       <Footer>
-        <FooterContent>
+        <FooterContent className="mb-20">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <FooterSection>
               <FooterTitle>서비스</FooterTitle>
@@ -148,9 +148,25 @@ export default function AppLayout() {
             </FooterSection>
           </div>
           <div className="mt-12 pt-8 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              2024 ESSE SION. All rights reserved.
-            </p>
+            <div className="space-y-4">
+              <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
+                <FooterLink href="/privacy" className="text-xs">
+                  개인정보처리방침
+                </FooterLink>
+                <span className="text-gray-300">|</span>
+                <FooterLink href="/terms" className="text-xs">
+                  이용약관
+                </FooterLink>
+              </div>
+              <div className="text-xs text-gray-500 text-center space-y-1">
+                <div>영선산업 | 대표: 김영선</div>
+                <div>주소: 대전 동구 가양2동 408-7</div>
+                <div>호스팅사업자: 영선산업 | 사업자등록번호: 305-26-32033</div>
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                2024 ESSE SION. All rights reserved.
+              </p>
+            </div>
           </div>
         </FooterContent>
       </Footer>

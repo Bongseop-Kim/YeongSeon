@@ -42,6 +42,8 @@ import { DataTable } from "@/components/ui/data-table";
 import { HEIGHT_GUIDE } from "@/features/reform/constants/DETAIL";
 import { ProductCard } from "../components/product-card";
 import { useMemo } from "react";
+import { useCartStore } from "@/store/cart";
+import { useModalStore } from "@/store/modal";
 
 interface SelectedOption {
   option: ProductOption;
@@ -52,6 +54,8 @@ export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { addToCart } = useCartStore();
+  const { confirm } = useModalStore();
   const [isLiked, setIsLiked] = useState(false);
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
@@ -101,6 +105,35 @@ export default function ShopDetailPage() {
 
   const handleUpdateBaseQuantity = (delta: number) => {
     setBaseQuantity(Math.max(1, baseQuantity + delta));
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+
+    if (hasOptions) {
+      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
+      if (selectedOptions.length === 0) {
+        confirm("옵션을 선택해주세요.");
+        return;
+      }
+
+      // 선택된 각 옵션을 장바구니에 추가
+      selectedOptions.forEach((selectedOption) => {
+        addToCart(product, {
+          option: selectedOption.option,
+          quantity: selectedOption.quantity,
+        });
+      });
+
+      // 옵션 초기화
+      setSelectedOptions([]);
+    } else {
+      // 옵션이 없는 경우: baseQuantity로 추가
+      addToCart(product, { quantity: baseQuantity });
+
+      // 수량 초기화
+      setBaseQuantity(1);
+    }
   };
 
   if (!product) {
@@ -309,10 +342,7 @@ export default function ShopDetailPage() {
               likes={product.likes}
               isLiked={isLiked}
               onLikeToggle={() => setIsLiked(!isLiked)}
-              onAddToCart={() => {
-                // TODO: 장바구니 추가 로직
-                alert("장바구니에 추가되었습니다.");
-              }}
+              onAddToCart={handleAddToCart}
               onOrder={() => {
                 if (isMobile) {
                   setIsPurchaseSheetOpen(true);
@@ -327,10 +357,7 @@ export default function ShopDetailPage() {
           product={product}
           open={isPurchaseSheetOpen}
           onOpenChange={setIsPurchaseSheetOpen}
-          onAddToCart={() => {
-            // TODO: 장바구니 추가 로직
-            alert("장바구니에 추가되었습니다.");
-          }}
+          onAddToCart={handleAddToCart}
           onOrder={() => {
             navigate(`/order/reform`);
           }}
