@@ -38,10 +38,7 @@ export const DataTable = ({
         </TableHeader>
         <TableBody>
           {data.map((row, rowIndex) => (
-            <TableRow
-              key={rowIndex}
-              className="border-b last:border-b-0 hover:bg-gray-50"
-            >
+            <TableRow key={rowIndex} className="border-b last:border-b-0">
               {headers.map((header, colIndex) => {
                 const cellValue = row[header];
 

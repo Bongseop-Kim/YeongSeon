@@ -88,8 +88,17 @@ export function MobilePurchaseSheet({
 
   const handleAddToCart = () => {
     if (!hasOptions) {
-      // 옵션이 없으면 기본 상품으로 추가
-      onAddToCart([]);
+      // 옵션이 없으면 기본 상품으로 추가 (수량 포함)
+      onAddToCart([
+        {
+          option: {
+            id: "base",
+            name: product.name,
+            additionalPrice: 0,
+          },
+          quantity: baseQuantity,
+        },
+      ]);
     } else {
       onAddToCart(selectedOptions);
     }
@@ -98,7 +107,17 @@ export function MobilePurchaseSheet({
 
   const handleOrder = () => {
     if (!hasOptions) {
-      onOrder([]);
+      // 옵션이 없으면 기본 상품으로 주문 (수량 포함)
+      onOrder([
+        {
+          option: {
+            id: "base",
+            name: product.name,
+            additionalPrice: 0,
+          },
+          quantity: baseQuantity,
+        },
+      ]);
     } else {
       onOrder(selectedOptions);
     }

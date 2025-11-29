@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import type { TieItem } from "@/features/reform/types/reform";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import {
   Select,
@@ -14,44 +13,95 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
-interface OrderData {
-  ties: TieItem[];
-  bulkApply: {
-    tieLength?: number;
-    wearerHeight?: number;
-    measurementType?: "length" | "height";
-  };
-  timestamp: string;
-  totalCost: number;
-}
+import type { CartItem } from "@/types/cart";
+import { OrderItemCard } from "./components/order-item-card";
+import { ReformOrderItemCard } from "./components/reform-order-item-card";
+import { useModalStore } from "@/store/modal";
+import {
+  CouponSelectModal,
+  type CouponSelectModalRef,
+} from "@/features/cart/components/coupon-select-modal";
+import { calculateDiscount } from "@/types/coupon";
+import React from "react";
 
 const OrderFormPage = () => {
-  const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [orderItems, setOrderItems] = useState<CartItem[]>([]);
   const [_, setPopup] = useState<Window | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { openModal, confirm } = useModalStore();
 
   useEffect(() => {
-    const savedOrderData = localStorage.getItem("reformOrderData");
+    const savedOrderItems = localStorage.getItem("orderItems");
 
-    if (savedOrderData) {
+    if (savedOrderItems) {
       try {
-        const data = JSON.parse(savedOrderData) as OrderData;
-        setOrderData(data);
+        const items = JSON.parse(savedOrderItems) as CartItem[];
+        setOrderItems(items);
       } catch (error) {
         console.error("주문 데이터 파싱 실패:", error);
-        navigate("/reform");
+        navigate("/cart");
       }
     } else {
-      navigate("/reform");
+      navigate("/cart");
     }
 
     setLoading(false);
   }, [navigate]);
 
+  const handleChangeCoupon = (itemId: string) => {
+    const item = orderItems.find((i) => i.id === itemId);
+    if (!item) return;
+
+    const modalRef: { current: CouponSelectModalRef | null } = {
+      current: null,
+    };
+
+    openModal({
+      title: "쿠폰 사용",
+      children: (
+        <CouponSelectModal
+          ref={(ref) => {
+            modalRef.current = ref;
+          }}
+          currentCouponId={item.appliedCoupon?.id}
+        />
+      ),
+      confirmText: "적용",
+      cancelText: "취소",
+      onConfirm: () => {
+        if (!modalRef.current) return;
+
+        const selectedCoupon = modalRef.current.getSelectedCoupon();
+
+        // 쿠폰 적용
+        setOrderItems((prevItems) =>
+          prevItems.map((prevItem) =>
+            prevItem.id === itemId
+              ? { ...prevItem, appliedCoupon: selectedCoupon }
+              : prevItem
+          )
+        );
+
+        // localStorage 업데이트
+        const updatedItems = orderItems.map((prevItem) =>
+          prevItem.id === itemId
+            ? { ...prevItem, appliedCoupon: selectedCoupon }
+            : prevItem
+        );
+        localStorage.setItem("orderItems", JSON.stringify(updatedItems));
+
+        confirm(
+          selectedCoupon
+            ? `${selectedCoupon.name}이(가) 적용되었습니다.`
+            : "쿠폰 사용을 취소했습니다."
+        );
+      },
+    });
+  };
+
   const handleCompleteOrder = () => {
-    localStorage.removeItem("reformOrderData");
+    localStorage.removeItem("orderItems");
     alert("주문이 완료되었습니다!");
     navigate("/");
   };
@@ -65,6 +115,44 @@ const OrderFormPage = () => {
     setPopup(popup);
   };
 
+  // 총액 계산
+  const calculateTotals = () => {
+    let originalPrice = 0;
+    let totalDiscount = 0;
+
+    orderItems.forEach((item) => {
+      if (item.type === "product") {
+        const basePrice = item.product.price;
+        const optionPrice = item.selectedOption?.additionalPrice || 0;
+        const itemPrice = basePrice + optionPrice;
+        const itemOriginalPrice = itemPrice * item.quantity;
+
+        originalPrice += itemOriginalPrice;
+
+        const discount = calculateDiscount(itemPrice, item.appliedCoupon);
+        const itemDiscountAmount = discount * item.quantity;
+
+        totalDiscount += itemDiscountAmount;
+      } else {
+        // reform 아이템
+        const itemPrice = item.reformData.cost;
+        const itemOriginalPrice = itemPrice * item.quantity;
+
+        originalPrice += itemOriginalPrice;
+
+        const discount = calculateDiscount(itemPrice, item.appliedCoupon);
+        const itemDiscountAmount = discount * item.quantity;
+
+        totalDiscount += itemDiscountAmount;
+      }
+    });
+
+    const totalPrice = originalPrice - totalDiscount;
+    return { originalPrice, totalDiscount, totalPrice };
+  };
+
+  const totals = calculateTotals();
+
   if (loading) {
     return (
       <MainLayout>
@@ -77,14 +165,14 @@ const OrderFormPage = () => {
     );
   }
 
-  if (!orderData) {
+  if (orderItems.length === 0) {
     return (
       <MainLayout>
         <MainContent>
           <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
             <div>주문 데이터를 찾을 수 없습니다.</div>
-            <Button onClick={() => navigate("/reform")}>
-              수선 페이지로 돌아가기
+            <Button onClick={() => navigate("/cart")}>
+              장바구니로 돌아가기
             </Button>
           </div>
         </MainContent>
@@ -133,32 +221,25 @@ const OrderFormPage = () => {
               </CardContent>
 
               <CardHeader>
-                <CardTitle>주문 상품</CardTitle>
+                <CardTitle>주문 상품 {orderItems.length}개</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {orderData.ties.map((tie) => (
-                  <div
-                    key={tie.id}
-                    className="flex justify-between items-start"
-                  >
-                    <div className="text-sm text-zinc-600 space-y-1">
-                      <p>
-                        측정 방식:{" "}
-                        {tie.measurementType === "length"
-                          ? "넥타이 길이"
-                          : "착용자 키"}
-                      </p>
-                      {tie.measurementType === "length" && tie.tieLength && (
-                        <p>넥타이 길이: {tie.tieLength}cm</p>
-                      )}
-                      {tie.measurementType === "height" && tie.wearerHeight && (
-                        <p>착용자 키: {tie.wearerHeight}cm</p>
-                      )}
-                      {tie.notes && <p>메모: {tie.notes}</p>}
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
+
+              {orderItems.map((item, index) => (
+                <React.Fragment key={item.id}>
+                  {item.type === "product" ? (
+                    <OrderItemCard
+                      item={item}
+                      onChangeCoupon={() => handleChangeCoupon(item.id)}
+                    />
+                  ) : (
+                    <ReformOrderItemCard
+                      item={item}
+                      onChangeCoupon={() => handleChangeCoupon(item.id)}
+                    />
+                  )}
+                  {index < orderItems.length - 1 && <Separator />}
+                </React.Fragment>
+              ))}
             </Card>
           }
           rightPanel={
@@ -168,20 +249,26 @@ const OrderFormPage = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-zinc-600">
-                    수선비 ({orderData.ties.length}개)
-                  </span>
-                  <span>{(orderData.totalCost - 3000).toLocaleString()}원</span>
+                  <span className="text-zinc-600">상품 금액</span>
+                  <span>{totals.originalPrice.toLocaleString()}원</span>
                 </div>
+                {totals.totalDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-zinc-600">할인 금액</span>
+                    <span className="text-red-500">
+                      -{totals.totalDiscount.toLocaleString()}원
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-600">배송비</span>
-                  <span>3,000원</span>
+                  <span>무료</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-semibold text-lg">
                   <span>총 결제 금액</span>
                   <span className="text-blue-600">
-                    {orderData.totalCost.toLocaleString()}원
+                    {totals.totalPrice.toLocaleString()}원
                   </span>
                 </div>
               </CardContent>

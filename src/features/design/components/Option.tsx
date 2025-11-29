@@ -147,7 +147,7 @@ const Option = ({ options, stateSetters }: OptionPanelProps) => {
             <button
               key={color}
               type="button"
-              className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform"
+              className="w-6 h-6 rounded border border-gray-300 transition-transform"
               style={{ backgroundColor: color }}
               onClick={() => stateSetters.setColor(color)}
             />

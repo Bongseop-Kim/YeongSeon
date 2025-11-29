@@ -16,6 +16,7 @@ import MyInfoNoticePage from "@/features/my-page/my-info/notice/page";
 import MyInfoLeavePage from "@/features/my-page/my-info/leave/page";
 import OrderListPage from "@/features/order/order-list/page";
 import ClaimListPage from "@/features/order/claim-list/page";
+import CartPage from "@/features/cart/page";
 
 export default function Router() {
   return (
@@ -26,6 +27,8 @@ export default function Router() {
       <Route path="/design" element={<DesignPage />} />
       <Route path="/custom-order" element={<OrderPage />} />
       <Route path="/reform" element={<ReformPage />} />
+
+      <Route path="/cart" element={<CartPage />} />
 
       <Route path="/order/order-form" element={<OrderFormPage />} />
       <Route path="/order/order-list" element={<OrderListPage />} />

@@ -1,7 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Minus, Plus } from "lucide-react";
 import type { Product, ProductOption } from "../../types/product";
 import CloseButton from "@/components/ui/close";
+import { QuantitySelector } from "@/components/composite/quantity-selector";
 
 interface SelectedOption {
   option: ProductOption;
@@ -27,29 +26,13 @@ export function SelectedOptionItem({
     <div className="relative flex justify-between items-start gap-4 p-3 border rounded-sm bg-zinc-100">
       <div className="flex flex-col gap-2 flex-1">
         <p className="text-sm font-semibold">{item.option.name}</p>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => onUpdateQuantity(-1)}
-            className="h-8 w-8"
-          >
-            <Minus className="h-4 w-4" />
-          </Button>
-          <span className="w-8 text-center text-sm font-medium">
-            {item.quantity}
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => onUpdateQuantity(1)}
-            className="h-8 w-8"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+        <QuantitySelector
+          value={item.quantity}
+          onChange={(newQuantity) => {
+            const delta = newQuantity - item.quantity;
+            onUpdateQuantity(delta);
+          }}
+        />
       </div>
 
       <div className="flex flex-col items-end justify-end flex-shrink-0 self-stretch">

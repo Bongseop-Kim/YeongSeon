@@ -6,7 +6,10 @@ import { useState, useEffect } from "react";
  * @returns 현재 화면이 모바일인지 여부
  */
 export function useIsMobile(breakpoint: number = 768): boolean {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < breakpoint;
+  });
 
   useEffect(() => {
     const checkMobile = () => {

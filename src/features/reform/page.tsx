@@ -4,15 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Form } from "@/components/ui/form";
 import TieItemCard from "./components/tie-item-card";
-import BulkApplySection from "./components/bulk-apply-section";
+import BulkApplySection from "../../components/composite/bulk-apply-section";
 import type { ReformOptions } from "./types/reform";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useModalStore } from "@/store/modal";
+import { useCartStore } from "@/store/cart";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import React, { useEffect, useCallback } from "react";
-import { Empty } from "./components/empty";
+import React, { useEffect, useCallback, useState } from "react";
+import { Empty } from "../../components/composite/empty";
 import {
   Accordion,
   AccordionContent,
@@ -23,10 +24,16 @@ import { useNavigate } from "react-router-dom";
 import { Detail } from "./components/detail";
 import { HEIGHT_GUIDE } from "./constants/DETAIL";
 import { DataTable } from "@/components/ui/data-table";
+import { ReformActionButtons } from "./components/reform-action-buttons";
+import { MobileReformSheet } from "./components/mobile-reform-sheet";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
+  const { addReformToCart } = useCartStore();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
 
   const form = useForm<ReformOptions>({
     defaultValues: {
@@ -136,8 +143,50 @@ const ReformPage = () => {
     remove(index);
   };
 
-  const handleDirectOrder = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateTies = (): { isValid: boolean; message?: string } => {
+    if (fields.length === 0) {
+      return { isValid: false, message: "수선할 넥타이를 추가해주세요." };
+    }
+
+    for (let i = 0; i < watchedValues.ties.length; i++) {
+      const tie = watchedValues.ties[i];
+
+      if (!tie.measurementType) {
+        return {
+          isValid: false,
+          message: `${i + 1}번째 넥타이의 측정 방식을 선택해주세요.`
+        };
+      }
+
+      if (tie.measurementType === "length" && !tie.tieLength) {
+        return {
+          isValid: false,
+          message: `${i + 1}번째 넥타이의 길이를 입력해주세요.`
+        };
+      }
+
+      if (tie.measurementType === "height" && !tie.wearerHeight) {
+        return {
+          isValid: false,
+          message: `${i + 1}번째 넥타이의 착용자 키를 입력해주세요.`
+        };
+      }
+    }
+
+    return { isValid: true };
+  };
+
+  const handleDirectOrder = () => {
+    const validation = validateTies();
+    if (!validation.isValid) {
+      confirm(validation.message || "입력값을 확인해주세요.");
+      return;
+    }
+
+    if (isMobile) {
+      setIsPurchaseSheetOpen(true);
+      return;
+    }
 
     localStorage.removeItem("reformDraft");
     localStorage.setItem(
@@ -150,6 +199,67 @@ const ReformPage = () => {
     );
 
     navigate("/order/order-form");
+  };
+
+  const handleMobileOrder = () => {
+    const validation = validateTies();
+    if (!validation.isValid) {
+      confirm(validation.message || "입력값을 확인해주세요.");
+      return;
+    }
+
+    localStorage.removeItem("reformDraft");
+    localStorage.setItem(
+      "reformOrderData",
+      JSON.stringify({
+        ...watchedValues,
+        timestamp: new Date().toISOString(),
+        totalCost: calculateEstimatedCost() + 3000,
+      })
+    );
+
+    navigate("/order/order-form");
+  };
+
+  const handleAddToCart = () => {
+    const validation = validateTies();
+    if (!validation.isValid) {
+      confirm(validation.message || "입력값을 확인해주세요.");
+      return;
+    }
+
+    const baseCost = 15000; // 기본 수선 비용
+    const shippingCost = 3000; // 배송비
+
+    // 각 넥타이를 개별적으로 장바구니에 추가
+    watchedValues.ties.forEach((tie) => {
+      addReformToCart({
+        tie: tie,
+        cost: baseCost + shippingCost,
+      });
+    });
+
+    // 임시 저장 데이터 삭제
+    localStorage.removeItem("reformDraft");
+
+    // 폼 초기화
+    form.reset({
+      ties: [
+        {
+          id: "tie-1",
+          image: undefined,
+          measurementType: "length",
+          tieLength: undefined,
+          wearerHeight: undefined,
+          checked: false,
+        },
+      ],
+      bulkApply: {
+        measurementType: "length",
+        tieLength: undefined,
+        wearerHeight: undefined,
+      },
+    });
   };
 
   // 간단한 비용 계산 (실제로는 더 복잡한 로직이 필요)
@@ -209,7 +319,7 @@ const ReformPage = () => {
                           .filter((index) => index !== -1);
 
                         if (checkedIndices.length === 0) {
-                          alert("적용할 항목을 선택해주세요.");
+                          confirm("적용할 항목을 선택해주세요.");
                           return;
                         }
 
@@ -313,7 +423,7 @@ const ReformPage = () => {
                     <Accordion type="single" collapsible>
                       <AccordionItem value="item-1">
                         <AccordionTrigger>
-                          키별 권장 넥타이 길이
+                          내게 맞는 넥타이 길이
                         </AccordionTrigger>
                         <AccordionContent className="text-zinc-600">
                           <DataTable
@@ -356,17 +466,21 @@ const ReformPage = () => {
               </Card>
             }
             button={
-              <Button
-                type="button"
-                onClick={handleDirectOrder}
-                size="xl"
-                className="w-full"
-              >
-                {(calculateEstimatedCost() + 3000).toLocaleString()}원 주문하기
-              </Button>
+              <ReformActionButtons
+                onAddToCart={handleAddToCart}
+                onOrder={handleDirectOrder}
+              />
             }
           />
         </Form>
+        <MobileReformSheet
+          open={isPurchaseSheetOpen}
+          onOpenChange={setIsPurchaseSheetOpen}
+          onAddToCart={handleAddToCart}
+          onOrder={handleMobileOrder}
+          tieCount={fields.length}
+          totalCost={calculateEstimatedCost() + 3000}
+        />
       </MainContent>
     </MainLayout>
   );
