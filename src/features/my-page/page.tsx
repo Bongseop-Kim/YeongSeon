@@ -44,7 +44,12 @@ export default function MypagePage() {
                       navigate("/order/claim-list");
                     }}
                   />
-                  <ListItem label="고객센터" onClick={() => {}} />
+                  <ListItem
+                    label="고객센터"
+                    onClick={() => {
+                      navigate("/customer-service");
+                    }}
+                  />
                   <ListItem label="1:1 문의 내역" onClick={() => {}} />
                   <ListItem label="공지사항" onClick={() => {}} />
                 </div>

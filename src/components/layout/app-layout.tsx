@@ -105,7 +105,7 @@ export default function AppLayout() {
             </HeaderActions>
           </HeaderContent>
           {config.enabled && (
-            <div className="bg-zinc-200 pb-4 mx-auto px-4 lg:px-8 max-w-7xl flex">
+            <div className="bg-zinc-900 pb-4 mx-auto px-4 lg:px-8 max-w-7xl flex">
               <SearchBar />
 
               <SearchSheet />

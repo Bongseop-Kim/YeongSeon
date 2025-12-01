@@ -17,6 +17,7 @@ import MyInfoLeavePage from "@/features/my-page/my-info/leave/page";
 import OrderListPage from "@/features/order/order-list/page";
 import ClaimListPage from "@/features/order/claim-list/page";
 import CartPage from "@/features/cart/page";
+import CustomerServicePage from "@/features/customer-service/page";
 
 export default function Router() {
   return (
@@ -42,6 +43,7 @@ export default function Router() {
       <Route path="/my-page/my-info/email" element={<MyInfoEmailPage />} />
       <Route path="/my-page/my-info/notice" element={<MyInfoNoticePage />} />
       <Route path="/my-page/my-info/leave" element={<MyInfoLeavePage />} />
+      <Route path="/customer-service" element={<CustomerServicePage />} />
     </Routes>
   );
 }
