@@ -16,7 +16,7 @@ import SearchSheet from "@/components/composite/search-sheet";
 import { ROUTE_TITLES } from "@/constants/ROUTE_TITLES";
 import MenuSheet from "../composite/menu-sheet";
 import { useSearchStore } from "@/store/search";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 import {
   Footer,
   FooterContent,
@@ -32,7 +32,7 @@ export default function AppLayout() {
   const showHeader = !hideHeaderPaths.some((path) =>
     location.pathname.startsWith(path)
   );
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoint();
   const { config } = useSearchStore();
 
   const getCurrentPageName = () => {
@@ -70,7 +70,9 @@ export default function AppLayout() {
       {showHeader && (
         <Header size="sm">
           <HeaderContent>
-            <HeaderTitle className="flex items-center gap-2 md:gap-4">
+            <HeaderTitle
+              className={`flex items-center ${isMobile ? "gap-2" : "gap-4"}`}
+            >
               {/* 모바일에서 뒤로가기 버튼 */}
               {canGoBack() && isMobile && (
                 <button
@@ -85,27 +87,33 @@ export default function AppLayout() {
             </HeaderTitle>
 
             {/* 데스크톱 네비게이션 */}
-            <HeaderNav className="hidden md:flex">
-              {NAVIGATION_ITEMS.map((item) => (
-                <NavLink key={item.href} to={item.href}>
-                  {item.label}
-                </NavLink>
-              ))}
-            </HeaderNav>
+            {!isMobile && (
+              <HeaderNav>
+                {NAVIGATION_ITEMS.map((item) => (
+                  <NavLink key={item.href} to={item.href}>
+                    {item.label}
+                  </NavLink>
+                ))}
+              </HeaderNav>
+            )}
 
             <HeaderActions>
               <MenuSheet />
 
-              <div className="hidden md:flex items-center">
-                <NavLink to="/my-page">마이페이지</NavLink>
-                <Button variant="secondary" size="sm">
-                  <span>로그인</span>
-                </Button>
-              </div>
+              {!isMobile && (
+                <div className="flex items-center">
+                  <NavLink to="/my-page">마이페이지</NavLink>
+                  <Button variant="secondary" size="sm">
+                    <span>로그인</span>
+                  </Button>
+                </div>
+              )}
             </HeaderActions>
           </HeaderContent>
           {config.enabled && (
-            <div className="bg-zinc-900 pb-4 mx-auto px-4 lg:px-8 max-w-7xl flex">
+            <div
+              className={`bg-zinc-900 pb-4 mx-auto ${isMobile ? "px-4" : "px-8"} max-w-7xl flex`}
+            >
               <SearchBar />
 
               <SearchSheet />
@@ -119,7 +127,9 @@ export default function AppLayout() {
       </div>
       <Footer>
         <FooterContent className="mb-20">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div
+            className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-4"} gap-8`}
+          >
             <FooterSection>
               <FooterTitle>서비스</FooterTitle>
               {NAVIGATION_ITEMS.map((item) => (

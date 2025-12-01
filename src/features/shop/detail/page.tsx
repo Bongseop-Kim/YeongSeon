@@ -19,7 +19,7 @@ import {
 import { useState } from "react";
 import { ProductActionButtons } from "./components/product-action-buttons";
 import { MobilePurchaseSheet } from "./components/mobile-purchase-sheet";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { SelectedOptionItem } from "./components/selected-option-item";
 import { SelectedOptionsList } from "./components/selected-options-list";
 import {
@@ -53,7 +53,7 @@ interface SelectedOption {
 export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoint();
   const { addToCart } = useCartStore();
   const { confirm } = useModalStore();
   const [isLiked, setIsLiked] = useState(false);
@@ -175,7 +175,9 @@ export default function ShopDetailPage() {
                   </CardHeader>
 
                   <CardContent>
-                    <div className="grid grid-cols-3 md:grid-cols-4">
+                    <div
+                      className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"}`}
+                    >
                       {similarProducts.map((similarProduct) => (
                         <ProductCard
                           key={similarProduct.id}

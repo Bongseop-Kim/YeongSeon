@@ -9,6 +9,7 @@ import type { InquiryItem } from "./types/inquiry-item";
 import { useState } from "react";
 import { InquiryForm } from "./components/InquiryForm";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 const formatDate = (date: string) => {
   const d = new Date(date);
@@ -65,6 +66,7 @@ const dummyData: InquiryItem[] = [
 export default function InquiryPage() {
   const [editingInquiryId, setEditingInquiryId] = useState<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const { isMobile } = useBreakpoint();
 
   const handleEdit = (id: string) => {
     setEditingInquiryId(id);
@@ -175,9 +177,11 @@ export default function InquiryPage() {
             </Card>
           }
           button={
-            <Button className="w-full lg:hidden" onClick={handleNewInquiry}>
-              1:1 문의 등록
-            </Button>
+            isMobile ? (
+              <Button className="w-full" onClick={handleNewInquiry}>
+                1:1 문의 등록
+              </Button>
+            ) : undefined
           }
         />
 

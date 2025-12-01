@@ -27,13 +27,13 @@ import { REFORM_BASE_COST, REFORM_SHIPPING_COST } from "./constants/COST";
 import { DataTable } from "@/components/ui/data-table";
 import { ReformActionButtons } from "./components/reform-action-buttons";
 import { MobileReformSheet } from "./components/mobile-reform-sheet";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
   const { addReformToCart } = useCartStore();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoint();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
 
   const form = useForm<ReformOptions>({

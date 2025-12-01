@@ -33,12 +33,14 @@ import {
 import { ProductCard } from "../shop/components/product-card";
 import { PRODUCTS_DATA } from "../shop/constants/PRODUCTS_DATA";
 import { calculateDiscount } from "@/types/coupon";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 const CartPage = () => {
   const { openModal, confirm } = useModalStore();
   const navigate = useNavigate();
   const { items, removeFromCart, addToCart, updateReformOption, applyCoupon } =
     useCartStore();
+  const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   const handleSelectAll = (checked: boolean) => {
@@ -410,7 +412,9 @@ const CartPage = () => {
                   </CardHeader>
 
                   <CardContent>
-                    <div className="grid grid-cols-3 md:grid-cols-4">
+                    <div
+                      className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"}`}
+                    >
                       {similarProducts.map((similarProduct) => (
                         <ProductCard
                           key={similarProduct.id}

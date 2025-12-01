@@ -9,8 +9,11 @@ import {
   TARGET_CUSTOMERS,
   TESTIMONIALS,
 } from "../constants/DETAIL";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 export const Detail = () => {
+  const { isMobile } = useBreakpoint();
+
   return (
     <div className="bg-gray-50">
       {/* Hero Section */}
@@ -140,7 +143,9 @@ export const Detail = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+          <div
+            className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-4"} gap-6 mb-12`}
+          >
             {TARGET_CUSTOMERS.map((customer, index) => (
               <div key={index} className="text-center">
                 <div className="p-6">
@@ -157,7 +162,9 @@ export const Detail = () => {
             <h3 className="text-xl font-bold mb-6 text-center text-zinc-50">
               실제 주문 고객 현황
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div
+              className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-4"} gap-4`}
+            >
               <div className="text-center">
                 <div className="text-3xl font-bold text-brand-yellow">40%</div>
                 <div className="text-sm text-zinc-50">학생 (해외, 국내)</div>
@@ -191,7 +198,9 @@ export const Detail = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6 mb-12">
+          <div
+            className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-4"} gap-6 mb-12`}
+          >
             <div className="text-center">
               <div className="bg-zinc-600 text-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 1
@@ -259,7 +268,9 @@ export const Detail = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div
+            className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-3"} gap-6`}
+          >
             {TESTIMONIALS.map((testimonial, index) => (
               <Card key={index}>
                 <CardHeader>
