@@ -56,7 +56,12 @@ export default function MypagePage() {
                       navigate("/my-page/inquiry");
                     }}
                   />
-                  <ListItem label="공지사항" onClick={() => {}} />
+                  <ListItem
+                    label="공지사항"
+                    onClick={() => {
+                      navigate("/notice");
+                    }}
+                  />
                 </div>
                 <div className="flex justify-end">
                   <Button variant="outline" size="sm">
