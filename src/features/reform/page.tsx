@@ -155,21 +155,21 @@ const ReformPage = () => {
       if (!tie.measurementType) {
         return {
           isValid: false,
-          message: `${i + 1}번째 넥타이의 측정 방식을 선택해주세요.`
+          message: `${i + 1}번째 넥타이의 측정 방식을 선택해주세요.`,
         };
       }
 
       if (tie.measurementType === "length" && !tie.tieLength) {
         return {
           isValid: false,
-          message: `${i + 1}번째 넥타이의 길이를 입력해주세요.`
+          message: `${i + 1}번째 넥타이의 길이를 입력해주세요.`,
         };
       }
 
       if (tie.measurementType === "height" && !tie.wearerHeight) {
         return {
           isValid: false,
-          message: `${i + 1}번째 넥타이의 착용자 키를 입력해주세요.`
+          message: `${i + 1}번째 넥타이의 착용자 키를 입력해주세요.`,
         };
       }
     }

@@ -37,7 +37,8 @@ import { calculateDiscount } from "@/types/coupon";
 const CartPage = () => {
   const { openModal, confirm } = useModalStore();
   const navigate = useNavigate();
-  const { items, removeFromCart, addToCart, updateReformOption, applyCoupon } = useCartStore();
+  const { items, removeFromCart, addToCart, updateReformOption, applyCoupon } =
+    useCartStore();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   const handleSelectAll = (checked: boolean) => {
@@ -278,9 +279,7 @@ const CartPage = () => {
     if (productItems.length === 0) return [];
 
     // 장바구니에 있는 상품 ID들
-    const cartProductIds = new Set(
-      productItems.map((item) => item.product.id)
-    );
+    const cartProductIds = new Set(productItems.map((item) => item.product.id));
 
     // 장바구니 상품들의 속성 수집
     const cartProperties = productItems.map((item) => ({
@@ -383,7 +382,9 @@ const CartPage = () => {
                                   }
                                 );
                               }}
-                              onChangeOption={() => handleChangeReformOption(item.id)}
+                              onChangeOption={() =>
+                                handleChangeReformOption(item.id)
+                              }
                               onChangeCoupon={() => handleChangeCoupon(item.id)}
                             />
                           )}
@@ -431,7 +432,9 @@ const CartPage = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-600">상품 금액</span>
-                    <span>{selectedTotals.originalPrice.toLocaleString()}원</span>
+                    <span>
+                      {selectedTotals.originalPrice.toLocaleString()}원
+                    </span>
                   </div>
                   {selectedTotals.totalDiscount > 0 && (
                     <div className="flex justify-between text-sm">

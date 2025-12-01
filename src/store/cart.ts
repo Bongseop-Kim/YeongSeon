@@ -49,7 +49,8 @@ export const useCartStore = create<CartState>()(
           if (showModal) {
             useModalStore.getState().openModal({
               title: "장바구니",
-              description: "이미 장바구니에 있는 상품입니다. 수량을 추가했습니다.",
+              description:
+                "이미 장바구니에 있는 상품입니다. 수량을 추가했습니다.",
               confirmText: "장바구니 보기",
               cancelText: "닫기",
               onConfirm: () => {
@@ -133,9 +134,7 @@ export const useCartStore = create<CartState>()(
       applyCoupon: (itemId, coupon) => {
         set({
           items: get().items.map((item) =>
-            item.id === itemId
-              ? { ...item, appliedCoupon: coupon }
-              : item
+            item.id === itemId ? { ...item, appliedCoupon: coupon } : item
           ),
         });
       },
