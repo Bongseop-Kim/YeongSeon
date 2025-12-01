@@ -50,7 +50,12 @@ export default function MypagePage() {
                       navigate("/customer-service");
                     }}
                   />
-                  <ListItem label="1:1 문의 내역" onClick={() => {}} />
+                  <ListItem
+                    label="1:1 문의 내역"
+                    onClick={() => {
+                      navigate("/my-page/inquiry");
+                    }}
+                  />
                   <ListItem label="공지사항" onClick={() => {}} />
                 </div>
                 <div className="flex justify-end">
