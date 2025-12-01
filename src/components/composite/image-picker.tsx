@@ -74,7 +74,7 @@ export const ImagePicker = React.forwardRef<HTMLInputElement, ImagePickerProps>(
                 />
                 <button
                   type="button"
-                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 hover:bg-gray-100 shadow-sm"
+                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-sm"
                   onClick={() => handleRemove(index)}
                 >
                   <X className="w-3 h-3" />
@@ -87,7 +87,7 @@ export const ImagePicker = React.forwardRef<HTMLInputElement, ImagePickerProps>(
                 <div className="relative border border-dashed border-gray-300 p-1 w-[107px] h-[129px]">
                   <label
                     htmlFor={id || "image-picker"}
-                    className="w-full h-full flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="w-full h-full flex items-center justify-center cursor-pointer"
                   >
                     +
                   </label>

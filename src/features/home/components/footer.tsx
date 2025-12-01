@@ -46,7 +46,7 @@ const FooterContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("container mx-auto max-w-7xl px-6 lg:px-8", className)}
+    className={cn("container mx-auto px-6 lg:px-8", className)}
     {...props}
   />
 ));
@@ -82,7 +82,7 @@ const FooterLink = React.forwardRef<
   <a
     ref={ref}
     className={cn(
-      "text-sm text-gray-600 transition-colors duration-200 hover:text-gray-900 block py-1",
+      "text-sm text-gray-600 transition-colors duration-200 block py-1",
       className
     )}
     {...props}

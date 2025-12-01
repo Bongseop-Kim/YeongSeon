@@ -10,7 +10,7 @@ import type {
  */
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   "3fold": "3FOLD",
-  sfolderato: "SFODERATO",
+  sfolderato: "SFOLDERATO",
   knit: "KNITTED",
   bowtie: "BOW TIE",
 } as const;

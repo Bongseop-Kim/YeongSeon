@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const headerVariants = cva("w-full bg-zinc-200 backdrop-blur-md", {
+const headerVariants = cva("w-full bg-zinc-900 backdrop-blur-md", {
   variants: {
     size: {
       sm: "h-14",

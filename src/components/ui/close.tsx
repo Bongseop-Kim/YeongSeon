@@ -5,13 +5,18 @@ import { cn } from "@/lib/utils";
 interface CloseButtonProps {
   onRemove: () => void;
   className?: string;
+  variant?: "ghost" | "outline" | "none";
 }
 
-const CloseButton = ({ onRemove, className }: CloseButtonProps) => {
+const CloseButton = ({
+  onRemove,
+  className,
+  variant = "ghost",
+}: CloseButtonProps) => {
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant={variant}
       size="sm"
       onClick={onRemove}
       className={cn("opacity-70 transition-opacity h-8 w-8", className)}

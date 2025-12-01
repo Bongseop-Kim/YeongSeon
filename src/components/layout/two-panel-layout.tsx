@@ -62,7 +62,8 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
                 pt-2 border-t
                lg:relative lg:left-auto lg:right-auto lg:bottom-auto lg:px-0 lg:border-t-0"
                 style={{
-                  paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0))",
+                  paddingBottom:
+                    "calc(0.5rem + env(safe-area-inset-bottom, 0))",
                 }}
               >
                 {button}

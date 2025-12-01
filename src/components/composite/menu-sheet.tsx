@@ -11,16 +11,16 @@ export default function MenuSheet() {
   return (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetTrigger asChild>
-        <button className="md:hidden hover:text-zinc-900 transition-colors duration-200">
+        <button className="md:hidden transition-colors duration-200 text-zinc-50">
           <Menu className="w-5 h-5" />
           <span className="sr-only">메뉴 열기</span>
         </button>
       </SheetTrigger>
-      <SheetContent className="bg-zinc-200 pt-10">
+      <SheetContent className="bg-zinc-900 pt-10">
         <nav className="space-y-4 flex flex-col">
           {NAVIGATION_ITEMS.map((item) => (
             <div key={item.href} onClick={() => setIsSheetOpen(false)}>
-              <NavLink to={item.href} className="gap-2">
+              <NavLink to={item.href} className="gap-2 w-full">
                 {item.label}
               </NavLink>
             </div>

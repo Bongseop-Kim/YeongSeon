@@ -26,7 +26,7 @@ export const Banner = () => {
   }, [api]);
 
   return (
-    <section className="w-full py-4 px-4 md:py-6 md:px-6 max-w-7xl mx-auto">
+    <section className="w-full py-4 px-4 md:py-6 md:px-6">
       <Carousel
         opts={{
           align: "start",
@@ -93,7 +93,7 @@ export const Banner = () => {
               className={`h-2 rounded-full transition-all border border-zinc-200 ${
                 index === current
                   ? "w-8 bg-white"
-                  : "w-2 bg-white/50 border-zinc-200 hover:bg-white/75"
+                  : "w-2 bg-white/50 border-zinc-200"
               }`}
               aria-label={`배너 ${index + 1}로 이동`}
             />

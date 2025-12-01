@@ -146,7 +146,7 @@ export const FilterContent = ({
                     e.stopPropagation();
                     filter.onRemove();
                   }}
-                  className="hover:bg-background rounded-full p-0.5 -mr-1 pointer-events-auto"
+                  className="rounded-full p-0.5 -mr-1 pointer-events-auto"
                 >
                   <X className="size-3" />
                 </button>

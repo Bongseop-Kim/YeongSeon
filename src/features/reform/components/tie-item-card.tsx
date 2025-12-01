@@ -13,6 +13,7 @@ import type { ReformOptions } from "../types/reform";
 import { ImagePicker } from "@/components/composite/image-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import CloseButton from "@/components/ui/close";
+import { Required } from "@/components/ui/required";
 
 interface TieItemCardProps {
   index: number;
@@ -96,6 +97,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                       htmlFor={`tie-length-${index}`}
                       subLabel="(매듭 포함)"
                     >
+                      <Required />
                       넥타이 길이
                     </FormLabel>
                     <FormControl>
@@ -127,6 +129,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel htmlFor={`wearer-height-${index}`}>
+                      <Required />
                       착용자 키
                     </FormLabel>
                     <FormControl>
@@ -152,7 +155,11 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
           }}
         />
       </div>
-      <CloseButton onRemove={onRemove} />
+      <CloseButton
+        onRemove={onRemove}
+        className="flex-shrink-0 -mt-2 -mr-2"
+        variant="none"
+      />
     </CardContent>
   );
 };
