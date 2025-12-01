@@ -11,7 +11,7 @@ interface CartState {
   items: CartItem[];
   addToCart: (
     product: Product,
-    options?: { option?: ProductOption; quantity?: number }
+    options?: { option?: ProductOption; quantity?: number; showModal?: boolean }
   ) => void;
   addReformToCart: (reformData: { tie: TieItem; cost: number }) => void;
   removeFromCart: (itemId: string) => void;
@@ -29,7 +29,7 @@ export const useCartStore = create<CartState>()(
       items: [],
 
       addToCart: (product, options = {}) => {
-        const { option, quantity = 1 } = options;
+        const { option, quantity = 1, showModal = true } = options;
         const items = get().items;
 
         // 같은 상품 + 같은 옵션이 이미 장바구니에 있는지 확인
@@ -46,15 +46,17 @@ export const useCartStore = create<CartState>()(
           updatedItems[existingItemIndex].quantity += quantity;
           set({ items: updatedItems });
 
-          useModalStore.getState().openModal({
-            title: "장바구니",
-            description: "이미 장바구니에 있는 상품입니다. 수량을 추가했습니다.",
-            confirmText: "장바구니 보기",
-            cancelText: "닫기",
-            onConfirm: () => {
-              window.location.href = "/cart";
-            },
-          });
+          if (showModal) {
+            useModalStore.getState().openModal({
+              title: "장바구니",
+              description: "이미 장바구니에 있는 상품입니다. 수량을 추가했습니다.",
+              confirmText: "장바구니 보기",
+              cancelText: "닫기",
+              onConfirm: () => {
+                window.location.href = "/cart";
+              },
+            });
+          }
         } else {
           // 새로운 아이템 추가
           const newItem: CartItem = {
@@ -66,15 +68,17 @@ export const useCartStore = create<CartState>()(
           };
 
           set({ items: [...items, newItem] });
-          useModalStore.getState().openModal({
-            title: "장바구니",
-            description: "장바구니에 추가되었습니다.",
-            confirmText: "장바구니 보기",
-            cancelText: "닫기",
-            onConfirm: () => {
-              window.location.href = "/cart";
-            },
-          });
+          if (showModal) {
+            useModalStore.getState().openModal({
+              title: "장바구니",
+              description: "장바구니에 추가되었습니다.",
+              confirmText: "장바구니 보기",
+              cancelText: "닫기",
+              onConfirm: () => {
+                window.location.href = "/cart";
+              },
+            });
+          }
         }
       },
 

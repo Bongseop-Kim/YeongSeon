@@ -115,6 +115,7 @@ const CartPage = () => {
         addToCart(item.product, {
           option: newOption,
           quantity: quantity,
+          showModal: false,
         });
       },
     });

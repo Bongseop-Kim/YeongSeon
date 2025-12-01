@@ -158,7 +158,7 @@ export default function ShopDetailPage() {
               <img
                 src={product.image}
                 alt={product.name}
-                className="w-full h-full object-"
+                className="w-full h-full object-cover"
               />
             </div>
           }
