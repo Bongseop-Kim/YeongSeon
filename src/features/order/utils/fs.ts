@@ -20,25 +20,23 @@ export const formatDate = (dateString: string) => {
   }
 };
 
-export const getOrderTypeLabel = (type: "custom-order" | "reform") => {
-  return type === "custom-order" ? "맞춤 제작" : "수선";
-};
-
-export const getOrderDetails = (order: OrderItem) => {
-  if (order.type === "custom-order") {
-    const { fabricType, designType, tieType, quantity } = order.orderDetails;
-    const details = [];
-    if (fabricType) details.push(fabricType === "SILK" ? "실크" : "폴리");
-    if (designType) details.push(designType === "PRINTING" ? "프린팅" : "선염");
-    if (tieType) details.push(tieType === "MANUAL" ? "수동" : "자동");
-    if (quantity) details.push(`${quantity}개`);
-    return details.join(" · ");
+// OrderItem의 상세 정보 가져오기
+export const getOrderItemDetails = (item: OrderItem): string => {
+  if (item.type === "product") {
+    const parts = [item.product.name];
+    if (item.selectedOption) {
+      parts.push(item.selectedOption.name);
+    }
+    return parts.join(" · ");
   } else {
-    const { tieCount, measurementType } = order.orderDetails;
+    // reform 타입
+    const { tie } = item.reformData;
     const details = [];
-    if (tieCount) details.push(`넥타이 ${tieCount}개`);
-    if (measurementType)
-      details.push(measurementType === "length" ? "길이 조절" : "신장 기준");
-    return details.join(" · ");
+    if (tie.measurementType === "length" && tie.tieLength) {
+      details.push(`길이 ${tie.tieLength}cm`);
+    } else if (tie.measurementType === "height" && tie.wearerHeight) {
+      details.push(`신장 ${tie.wearerHeight}cm 기준`);
+    }
+    return details.join(" · ") || "수선";
   }
 };

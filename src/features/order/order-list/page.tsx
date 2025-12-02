@@ -3,81 +3,119 @@ import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import type { OrderItem } from "../types/order-item";
-import { getOrderTypeLabel, getOrderDetails, formatDate } from "../utils/fs";
+import { Separator } from "@/components/ui/separator";
+import { Empty } from "@/components/composite/empty";
+import { Button } from "@/components/ui/button";
+import type { Order } from "../types/order-item";
+import { getOrderItemDetails, formatDate } from "../utils/fs";
 import { ImageViewer } from "@/components/composite/image-viewer";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
+import React from "react";
+import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 
-const dummyData: OrderItem[] = [
+// 더미 주문 데이터
+const dummyOrders: Order[] = [
   {
-    id: "1",
+    id: "order-1",
+    orderNumber: "ORD-20250115-001",
     date: "2025-01-15",
     status: "완료",
-    type: "reform",
-    orderDetails: {
-      tieCount: 3,
-      measurementType: "length",
-    },
-    price: 45000,
-    orderNumber: "RF-20250115-001",
-    image: "/images/detail/tie1.png",
+    totalPrice: 135000,
+    items: [
+      {
+        id: "item-1",
+        type: "product",
+        product: PRODUCTS_DATA[0], // 실크 넥타이 1
+        quantity: 2,
+      },
+      {
+        id: "item-2",
+        type: "product",
+        product: PRODUCTS_DATA[1], // 실크 넥타이 2
+        selectedOption: { id: "45", name: "45cm", additionalPrice: 0 },
+        quantity: 1,
+      },
+      {
+        id: "item-3",
+        type: "reform",
+        quantity: 1,
+        reformData: {
+          tie: {
+            id: "tie-1",
+            measurementType: "length",
+            tieLength: 145,
+          },
+          cost: 15000,
+        },
+      },
+    ],
   },
   {
-    id: "2",
-    date: "2025-01-15",
-    status: "진행중",
-    type: "custom-order",
-    orderDetails: {
-      fabricType: "SILK",
-      designType: "PRINTING",
-      tieType: "MANUAL",
-      quantity: 50,
-    },
-    price: 580000,
-    orderNumber: "CO-20250115-001",
-    image: "/images/detail/fabric1.png",
-  },
-  {
-    id: "3",
+    id: "order-2",
+    orderNumber: "ORD-20250114-002",
     date: "2025-01-14",
-    status: "완료",
-    type: "reform",
-    orderDetails: {
-      tieCount: 1,
-      measurementType: "height",
-    },
-    price: 15000,
-    orderNumber: "RF-20250114-001",
-  },
-  {
-    id: "4",
-    date: "2025-01-12",
     status: "배송중",
-    type: "custom-order",
-    orderDetails: {
-      fabricType: "POLY",
-      designType: "YARN_DYED",
-      tieType: "AUTO",
-      quantity: 20,
-    },
-    price: 240000,
-    orderNumber: "CO-20250112-001",
-    image: "/images/detail/fabric2.png",
+    totalPrice: 96000,
+    items: [
+      {
+        id: "item-4",
+        type: "product",
+        product: PRODUCTS_DATA[2], // 실크 넥타이 3
+        quantity: 2,
+      },
+    ],
   },
   {
-    id: "5",
+    id: "order-3",
+    orderNumber: "ORD-20250113-003",
+    date: "2025-01-13",
+    status: "진행중",
+    totalPrice: 78000,
+    items: [
+      {
+        id: "item-5",
+        type: "product",
+        product: PRODUCTS_DATA[3], // 실크 넥타이 4
+        quantity: 2,
+      },
+    ],
+  },
+  {
+    id: "order-4",
+    orderNumber: "ORD-20250112-004",
     date: "2025-01-12",
     status: "완료",
-    type: "reform",
-    orderDetails: {
-      tieCount: 2,
-      measurementType: "length",
-    },
-    price: 30000,
-    orderNumber: "RF-20250112-001",
-    image: "/images/detail/tie3.png",
+    totalPrice: 30000,
+    items: [
+      {
+        id: "item-6",
+        type: "reform",
+        quantity: 1,
+        reformData: {
+          tie: {
+            id: "tie-2",
+            measurementType: "height",
+            wearerHeight: 175,
+          },
+          cost: 15000,
+        },
+      },
+      {
+        id: "item-7",
+        type: "reform",
+        quantity: 1,
+        reformData: {
+          tie: {
+            id: "tie-3",
+            measurementType: "length",
+            tieLength: 150,
+          },
+          cost: 15000,
+        },
+      },
+    ],
   },
 ];
 
@@ -98,48 +136,145 @@ export default function OrderListPage() {
     return () => setSearchEnabled(false);
   }, []);
 
+  const handleReturnRequest = (orderId: string, itemId: string) => {
+    console.log("반품 요청:", orderId, itemId);
+    // 반품 요청 로직
+  };
+
+  const handleExchangeRequest = (orderId: string, itemId: string) => {
+    console.log("교환 요청:", orderId, itemId);
+    // 교환 요청 로직
+  };
+
   return (
     <MainLayout>
       <MainContent>
         <TwoPanelLayout
-          leftPanel={dummyData.map((order) => (
-            <Card key={order.id}>
-              <CardHeader className="text-lg font-bold">
-                <CardTitle>{formatDate(order.date)}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <button
-                  type="button"
-                  className="py-3 block w-full"
-                  onClick={() => {
-                    router(`/order/${order.id}`);
-                  }}
-                >
-                  <div className="flex gap-3">
-                    {order.image && <ImageViewer image={order.image} />}
-
-                    {/* 주문 정보 섹션 */}
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <Label className="font-bold">
-                          {getOrderTypeLabel(order.type)}
-                        </Label>
+          leftPanel={
+            <div>
+              {dummyOrders.length === 0 ? (
+                <Card>
+                  <Empty
+                    title="주문 내역이 없습니다."
+                    description="첫 주문을 시작해보세요!"
+                  />
+                </Card>
+              ) : (
+                dummyOrders.map((order, index) => (
+                  <Card key={order.id}>
+                    {/* 주문 헤더 */}
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-base">
+                            {formatDate(order.date)}
+                          </CardTitle>
+                          <span className="text-sm text-zinc-500">
+                            {order.orderNumber}
+                          </span>
+                        </div>
                         <Badge variant="secondary">{order.status}</Badge>
                       </div>
+                    </CardHeader>
 
-                      <div className="flex flex-col gap-2">
-                        <Label>{getOrderDetails(order)}</Label>
+                    {/* 주문 상품 목록 */}
+                    <div className="space-y-0">
+                      {order.items.map((item) => (
+                        <React.Fragment key={item.id}>
+                          <CardContent className="py-4">
+                            <div className="space-y-3">
+                              {/* 상품 정보 */}
+                              <button
+                                type="button"
+                                className="block w-full"
+                                onClick={() => {
+                                  router(`/order/${order.id}`);
+                                }}
+                              >
+                                <div className="flex gap-3">
+                                  {/* 이미지 */}
+                                  {item.type === "product" && (
+                                    <ImageViewer image={item.product.image} />
+                                  )}
 
-                        <Label className="font-bold">
-                          {order.price.toLocaleString()}원
+                                  {/* 상품 상세 정보 */}
+                                  <div className="flex-1 text-left">
+                                    <div className="flex flex-col gap-1">
+                                      <Label className="font-bold">
+                                        {item.type === "product"
+                                          ? item.product.name
+                                          : "넥타이 수선"}
+                                      </Label>
+                                      <Label className="text-sm text-zinc-500">
+                                        {getOrderItemDetails(item)}
+                                      </Label>
+                                      <div className="flex items-center justify-between mt-1">
+                                        <span className="text-sm text-zinc-500">
+                                          수량: {item.quantity}개
+                                        </span>
+                                        <Label className="font-bold">
+                                          {item.type === "product"
+                                            ? (
+                                                item.product.price *
+                                                item.quantity
+                                              ).toLocaleString()
+                                            : (
+                                                item.reformData.cost *
+                                                item.quantity
+                                              ).toLocaleString()}
+                                          원
+                                        </Label>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </button>
+
+                              {/* 반품/교환 버튼 */}
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1"
+                                  onClick={() =>
+                                    handleReturnRequest(order.id, item.id)
+                                  }
+                                >
+                                  반품 요청
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1"
+                                  onClick={() =>
+                                    handleExchangeRequest(order.id, item.id)
+                                  }
+                                >
+                                  교환 요청
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </React.Fragment>
+                      ))}
+                    </div>
+
+                    {/* 주문 총액 */}
+                    <CardContent className="py-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="font-bold">주문 총액</Label>
+                        <Label className="text-lg font-bold">
+                          {order.totalPrice.toLocaleString()}원
                         </Label>
                       </div>
-                    </div>
-                  </div>
-                </button>
-              </CardContent>
-            </Card>
-          ))}
+                    </CardContent>
+
+                    {index < dummyOrders.length - 1 && <Separator />}
+                  </Card>
+                ))
+              )}
+            </div>
+          }
         />
       </MainContent>
     </MainLayout>
