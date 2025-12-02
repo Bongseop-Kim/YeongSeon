@@ -7,8 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Empty } from "@/components/composite/empty";
 import { Button } from "@/components/ui/button";
 import type { Order } from "../types/order-item";
-import { getOrderItemDetails, formatDate } from "../utils/fs";
-import { ImageViewer } from "@/components/composite/image-viewer";
+import { formatDate } from "../utils/fs";
+import { OrderItemCard } from "../components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
@@ -165,15 +165,13 @@ export default function OrderListPage() {
                     {/* 주문 헤더 */}
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <CardTitle className="text-base">
-                            {formatDate(order.date)}
-                          </CardTitle>
-                          <span className="text-sm text-zinc-500">
-                            {order.orderNumber}
-                          </span>
-                        </div>
+                        <CardTitle className="text-base">
+                          {formatDate(order.date)}
+                        </CardTitle>
                         <Badge variant="secondary">{order.status}</Badge>
+                      </div>
+                      <div className="text-sm text-zinc-500 mt-1">
+                        주문번호: {order.orderNumber}
                       </div>
                     </CardHeader>
 
@@ -182,78 +180,34 @@ export default function OrderListPage() {
                       {order.items.map((item) => (
                         <React.Fragment key={item.id}>
                           <CardContent className="py-4">
-                            <div className="space-y-3">
-                              {/* 상품 정보 */}
-                              <button
-                                type="button"
-                                className="block w-full"
-                                onClick={() => {
-                                  router(`/order/${order.id}`);
-                                }}
-                              >
-                                <div className="flex gap-3">
-                                  {/* 이미지 */}
-                                  {item.type === "product" && (
-                                    <ImageViewer image={item.product.image} />
-                                  )}
-
-                                  {/* 상품 상세 정보 */}
-                                  <div className="flex-1 text-left">
-                                    <div className="flex flex-col gap-1">
-                                      <Label className="font-bold">
-                                        {item.type === "product"
-                                          ? item.product.name
-                                          : "넥타이 수선"}
-                                      </Label>
-                                      <Label className="text-sm text-zinc-500">
-                                        {getOrderItemDetails(item)}
-                                      </Label>
-                                      <div className="flex items-center justify-between mt-1">
-                                        <span className="text-sm text-zinc-500">
-                                          수량: {item.quantity}개
-                                        </span>
-                                        <Label className="font-bold">
-                                          {item.type === "product"
-                                            ? (
-                                                item.product.price *
-                                                item.quantity
-                                              ).toLocaleString()
-                                            : (
-                                                item.reformData.cost *
-                                                item.quantity
-                                              ).toLocaleString()}
-                                          원
-                                        </Label>
-                                      </div>
-                                    </div>
-                                  </div>
+                            <OrderItemCard
+                              item={item}
+                              onClick={() => router(`/order/${order.id}`)}
+                              actions={
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() =>
+                                      handleReturnRequest(order.id, item.id)
+                                    }
+                                  >
+                                    반품 요청
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() =>
+                                      handleExchangeRequest(order.id, item.id)
+                                    }
+                                  >
+                                    교환 요청
+                                  </Button>
                                 </div>
-                              </button>
-
-                              {/* 반품/교환 버튼 */}
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="flex-1"
-                                  onClick={() =>
-                                    handleReturnRequest(order.id, item.id)
-                                  }
-                                >
-                                  반품 요청
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="flex-1"
-                                  onClick={() =>
-                                    handleExchangeRequest(order.id, item.id)
-                                  }
-                                >
-                                  교환 요청
-                                </Button>
-                              </div>
-                            </div>
+                              }
+                            />
                           </CardContent>
                         </React.Fragment>
                       ))}

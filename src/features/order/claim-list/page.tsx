@@ -7,8 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Empty } from "@/components/composite/empty";
 import type { ClaimItem } from "../types/claim-item";
 import { getClaimTypeLabel } from "../utils/claim-utils";
-import { getOrderItemDetails, formatDate } from "../utils/fs";
-import { ImageViewer } from "@/components/composite/image-viewer";
+import { formatDate } from "../utils/fs";
+import { OrderItemCard } from "../components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
@@ -153,7 +153,7 @@ export default function ClaimListPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-zinc-500 mt-1">
-                        <span>{claim.claimNumber}</span>
+                        <span>클레임번호: {claim.claimNumber}</span>
                         <span>·</span>
                         <span>주문번호: {claim.orderNumber}</span>
                       </div>
@@ -163,54 +163,13 @@ export default function ClaimListPage() {
 
                     {/* 클레임 상품 정보 */}
                     <CardContent className="py-4">
-                      <button
-                        type="button"
-                        className="block w-full mb-3"
-                        onClick={() => {
-                          router(`/claim/${claim.id}`);
-                        }}
-                      >
-                        <div className="flex gap-3">
-                          {/* 이미지 */}
-                          {claim.item.type === "product" && (
-                            <ImageViewer image={claim.item.product.image} />
-                          )}
-
-                          {/* 상품 상세 정보 */}
-                          <div className="flex-1 text-left">
-                            <div className="flex flex-col gap-1">
-                              <Label className="font-bold">
-                                {claim.item.type === "product"
-                                  ? claim.item.product.name
-                                  : "넥타이 수선"}
-                              </Label>
-                              <Label className="text-sm text-zinc-500">
-                                {getOrderItemDetails(claim.item)}
-                              </Label>
-                              <div className="flex items-center justify-between mt-1">
-                                <span className="text-sm text-zinc-500">
-                                  수량: {claim.item.quantity}개
-                                </span>
-                                <Label className="font-bold">
-                                  {claim.item.type === "product"
-                                    ? (
-                                        claim.item.product.price *
-                                        claim.item.quantity
-                                      ).toLocaleString()
-                                    : (
-                                        claim.item.reformData.cost *
-                                        claim.item.quantity
-                                      ).toLocaleString()}
-                                  원
-                                </Label>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
+                      <OrderItemCard
+                        item={claim.item}
+                        onClick={() => router(`/claim/${claim.id}`)}
+                      />
 
                       {/* 클레임 사유 */}
-                      <div className="p-3 bg-zinc-50 rounded-md">
+                      <div className="p-3 bg-zinc-50 rounded-md mt-3">
                         <Label className="text-sm text-zinc-600">
                           사유: {claim.reason}
                         </Label>
