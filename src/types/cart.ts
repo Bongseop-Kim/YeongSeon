@@ -1,28 +1,11 @@
-import type { Product, ProductOption } from "@/features/shop/types/product";
-import type { Coupon } from "./coupon";
-import type { TieItem } from "@/features/reform/types/reform";
+import type { OrderItem } from "@/features/order/types/order-item";
 
-export interface ProductCartItem {
-  id: string;
-  type: "product";
-  product: Product;
-  selectedOption?: ProductOption;
-  quantity: number;
-  appliedCoupon?: Coupon;
-}
+// 장바구니 아이템은 주문 아이템과 동일한 구조
+export type CartItem = OrderItem;
 
-export interface ReformCartItem {
-  id: string;
-  type: "reform";
-  quantity: number; // 항상 1 (개별 넥타이)
-  reformData: {
-    tie: TieItem;
-    cost: number;
-  };
-  appliedCoupon?: Coupon;
-}
-
-export type CartItem = ProductCartItem | ReformCartItem;
+// 이전 타입 호환성을 위한 별칭
+export type ProductCartItem = Extract<CartItem, { type: "product" }>;
+export type ReformCartItem = Extract<CartItem, { type: "reform" }>;
 
 export interface CartSummary {
   totalItems: number;
