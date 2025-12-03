@@ -189,9 +189,10 @@ export default function OrderListPage() {
                                     variant="outline"
                                     size="sm"
                                     className="flex-1"
-                                    onClick={() =>
-                                      handleReturnRequest(order.id, item.id)
-                                    }
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleReturnRequest(order.id, item.id);
+                                    }}
                                   >
                                     반품 요청
                                   </Button>
@@ -199,9 +200,10 @@ export default function OrderListPage() {
                                     variant="outline"
                                     size="sm"
                                     className="flex-1"
-                                    onClick={() =>
-                                      handleExchangeRequest(order.id, item.id)
-                                    }
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleExchangeRequest(order.id, item.id);
+                                    }}
                                   >
                                     교환 요청
                                   </Button>

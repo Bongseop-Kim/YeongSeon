@@ -44,7 +44,11 @@ export function OrderItemCard({
               {showPrice && (
                 <Label className="font-bold">
                   {item.type === "product"
-                    ? (item.product.price * item.quantity).toLocaleString()
+                    ? (
+                        (item.product.price +
+                          (item.selectedOption?.additionalPrice ?? 0)) *
+                        item.quantity
+                      ).toLocaleString()
                     : (item.reformData.cost * item.quantity).toLocaleString()}
                   원
                 </Label>

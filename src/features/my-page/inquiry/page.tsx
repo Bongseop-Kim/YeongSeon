@@ -10,14 +10,8 @@ import { useState } from "react";
 import { InquiryForm } from "./components/InquiryForm";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-
-const formatDate = (date: string) => {
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}.${month}.${day}`;
-};
+import { formatDate } from "@/features/order/utils/fs";
+import { useModalStore } from "@/store/modal";
 
 const dummyData: InquiryItem[] = [
   {
@@ -64,6 +58,7 @@ const dummyData: InquiryItem[] = [
 ];
 
 export default function InquiryPage() {
+  const { confirm } = useModalStore();
   const [editingInquiryId, setEditingInquiryId] = useState<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { isMobile } = useBreakpoint();
@@ -74,8 +69,10 @@ export default function InquiryPage() {
   };
 
   const handleDelete = (id: string) => {
-    console.log("삭제:", id);
-    // 삭제 로직 구현
+    confirm("문의를 삭제하시겠습니까?", () => {
+      console.log("삭제:", id);
+      // 삭제 API 호출 로직 구현
+    });
   };
 
   const handleFormSubmit = (data: { title: string; content: string }) => {
