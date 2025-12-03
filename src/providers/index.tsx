@@ -1,8 +1,9 @@
 import GlobalModal from "@/components/ui/modal";
+import { BreakpointProvider } from "./breakpoint-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <BreakpointProvider>
       {/* 나중에 추가될 다른 Provider들 */}
       {/* <QueryProvider client={queryClient}> */}
       {/* <ThemeProvider> */}
@@ -18,6 +19,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       {/* </ToastProvider> */}
       {/* </ThemeProvider> */}
       {/* </QueryProvider> */}
-    </>
+    </BreakpointProvider>
   );
 }

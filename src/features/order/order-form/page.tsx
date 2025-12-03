@@ -75,21 +75,15 @@ const OrderFormPage = () => {
         const selectedCoupon = modalRef.current.getSelectedCoupon();
 
         // 쿠폰 적용
-        setOrderItems((prevItems) =>
-          prevItems.map((prevItem) =>
+        setOrderItems((prev) => {
+          const updated = prev.map((prevItem) =>
             prevItem.id === itemId
               ? { ...prevItem, appliedCoupon: selectedCoupon }
               : prevItem
-          )
-        );
-
-        // localStorage 업데이트
-        const updatedItems = orderItems.map((prevItem) =>
-          prevItem.id === itemId
-            ? { ...prevItem, appliedCoupon: selectedCoupon }
-            : prevItem
-        );
-        localStorage.setItem("orderItems", JSON.stringify(updatedItems));
+          );
+          localStorage.setItem("orderItems", JSON.stringify(updated));
+          return updated;
+        });
 
         confirm(
           selectedCoupon

@@ -4,14 +4,18 @@ import { NAVIGATION_ITEMS } from "@/constants/NAVIGATION_ITEMS";
 import NavLink from "@/components/ui/nav-link";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 export default function MenuSheet() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const { isMobile } = useBreakpoint();
+
+  if (!isMobile) return null;
 
   return (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetTrigger asChild>
-        <button className="md:hidden transition-colors duration-200 text-zinc-50">
+        <button className="transition-colors duration-200 text-zinc-50">
           <Menu className="w-5 h-5" />
           <span className="sr-only">메뉴 열기</span>
         </button>

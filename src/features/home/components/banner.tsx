@@ -9,11 +9,13 @@ import { BANNER_DATA } from "../constants/BANNER_DATA";
 import Autoplay from "embla-carousel-autoplay";
 import { useRef, useState, useEffect } from "react";
 import type { CarouselApi } from "@/components/ui/carousel";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 export const Banner = () => {
   const plugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const { isMobile } = useBreakpoint();
 
   useEffect(() => {
     if (!api) return;
@@ -26,7 +28,9 @@ export const Banner = () => {
   }, [api]);
 
   return (
-    <section className="w-full py-4 px-4 md:py-6 md:px-6">
+    <section
+      className={`w-full ${isMobile ? "py-4 px-4" : "py-6 px-6"}`}
+    >
       <Carousel
         opts={{
           align: "start",
@@ -39,23 +43,28 @@ export const Banner = () => {
         <CarouselContent>
           {BANNER_DATA.map((banner) => (
             <CarouselItem key={banner.id}>
-              {/* 모바일 레이아웃 */}
-              <div className="relative w-full aspect-[4/5] md:hidden">
-                <img
-                  src={banner.image}
-                  alt={banner.title}
-                  className="w-full h-full object-cover rounded-lg"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent rounded-lg">
-                  <div className="absolute bottom-0 left-0 right-0 p-6 pb-12 text-white">
-                    <h2 className="text-3xl font-bold mb-2">{banner.title}</h2>
-                    <p className="text-lg opacity-90">{banner.description}</p>
+              {isMobile ? (
+                // 모바일 레이아웃
+                <div className="relative w-full aspect-[4/5]">
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent rounded-lg">
+                    <div className="absolute bottom-0 left-0 right-0 p-6 pb-12 text-white">
+                      <h2 className="text-3xl font-bold mb-2">
+                        {banner.title}
+                      </h2>
+                      <p className="text-lg opacity-90">
+                        {banner.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* PC 레이아웃 - 이미지(왼쪽) : 텍스트(오른쪽) = 1:1 */}
-              <div className="hidden md:flex w-full gap-8 items-center">
+              ) : (
+                // PC 레이아웃 - 이미지(왼쪽) : 텍스트(오른쪽) = 1:1
+                <div className="flex w-full gap-8 items-center">
                 <div className="w-1/2">
                   <img
                     src={banner.image}
@@ -63,26 +72,29 @@ export const Banner = () => {
                     className="w-full h-full object-cover rounded-lg aspect-square"
                   />
                 </div>
-                <div className="w-1/2 flex items-center justify-center p-8">
-                  <div className="max-w-md">
-                    <h2 className="text-5xl font-bold mb-6 text-gray-900">
-                      {banner.title}
-                    </h2>
-                    <p className="text-2xl text-gray-700">
-                      {banner.description}
-                    </p>
+                  <div className="w-1/2 flex items-center justify-center p-8">
+                    <div className="max-w-md">
+                      <h2 className="text-5xl font-bold mb-6 text-gray-900">
+                        {banner.title}
+                      </h2>
+                      <p className="text-2xl text-gray-700">
+                        {banner.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </CarouselItem>
           ))}
         </CarouselContent>
 
         {/* 네비게이션 버튼 - PC에서만 표시 */}
-        <div className="hidden md:block">
-          <CarouselPrevious className="left-4" />
-          <CarouselNext className="right-4" />
-        </div>
+        {!isMobile && (
+          <>
+            <CarouselPrevious className="left-4" />
+            <CarouselNext className="right-4" />
+          </>
+        )}
 
         {/* 페이지네이션 인디케이터 (Dots) */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">

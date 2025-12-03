@@ -6,8 +6,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { NEW_ARRIVALS_DATA } from "../constants/NEW_ARRIVALS_DATA";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 export const Recommended = () => {
+  const { isMobile } = useBreakpoint();
+
   return (
     <div className="w-full py-8 overflow-x-hidden">
       <div className="px-4">
@@ -23,7 +26,10 @@ export const Recommended = () => {
         >
           <CarouselContent>
             {NEW_ARRIVALS_DATA.map((item) => (
-              <CarouselItem key={item.id} className="basis-1/2 md:basis-1/4">
+              <CarouselItem
+                key={item.id}
+                className={isMobile ? "basis-1/2" : "basis-1/4"}
+              >
                 <div className="group cursor-pointer">
                   <div className="aspect-square overflow-hidden rounded-lg bg-zinc-100 mb-3">
                     <img
@@ -40,8 +46,12 @@ export const Recommended = () => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex" />
-          <CarouselNext className="hidden md:flex" />
+          {!isMobile && (
+            <>
+              <CarouselPrevious />
+              <CarouselNext />
+            </>
+          )}
         </Carousel>
       </div>
     </div>

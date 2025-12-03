@@ -23,16 +23,17 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Detail } from "./components/detail";
 import { HEIGHT_GUIDE } from "./constants/DETAIL";
+import { REFORM_BASE_COST, REFORM_SHIPPING_COST } from "./constants/COST";
 import { DataTable } from "@/components/ui/data-table";
 import { ReformActionButtons } from "./components/reform-action-buttons";
 import { MobileReformSheet } from "./components/mobile-reform-sheet";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
   const { addReformToCart } = useCartStore();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoint();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
 
   const form = useForm<ReformOptions>({
@@ -154,21 +155,21 @@ const ReformPage = () => {
       if (!tie.measurementType) {
         return {
           isValid: false,
-          message: `${i + 1}번째 넥타이의 측정 방식을 선택해주세요.`
+          message: `${i + 1}번째 넥타이의 측정 방식을 선택해주세요.`,
         };
       }
 
       if (tie.measurementType === "length" && !tie.tieLength) {
         return {
           isValid: false,
-          message: `${i + 1}번째 넥타이의 길이를 입력해주세요.`
+          message: `${i + 1}번째 넥타이의 길이를 입력해주세요.`,
         };
       }
 
       if (tie.measurementType === "height" && !tie.wearerHeight) {
         return {
           isValid: false,
-          message: `${i + 1}번째 넥타이의 착용자 키를 입력해주세요.`
+          message: `${i + 1}번째 넥타이의 착용자 키를 입력해주세요.`,
         };
       }
     }
@@ -194,7 +195,7 @@ const ReformPage = () => {
       JSON.stringify({
         ...watchedValues,
         timestamp: new Date().toISOString(),
-        totalCost: calculateEstimatedCost() + 3000,
+        totalCost: calculateEstimatedCost() + REFORM_SHIPPING_COST,
       })
     );
 
@@ -214,7 +215,7 @@ const ReformPage = () => {
       JSON.stringify({
         ...watchedValues,
         timestamp: new Date().toISOString(),
-        totalCost: calculateEstimatedCost() + 3000,
+        totalCost: calculateEstimatedCost() + REFORM_SHIPPING_COST,
       })
     );
 
@@ -228,14 +229,11 @@ const ReformPage = () => {
       return;
     }
 
-    const baseCost = 15000; // 기본 수선 비용
-    const shippingCost = 3000; // 배송비
-
-    // 각 넥타이를 개별적으로 장바구니에 추가
+    // 각 넥타이를 개별적으로 장바구니에 추가 (배송비는 주문당 한 번만 적용)
     watchedValues.ties.forEach((tie) => {
       addReformToCart({
         tie: tie,
-        cost: baseCost + shippingCost,
+        cost: REFORM_BASE_COST,
       });
     });
 
@@ -264,9 +262,8 @@ const ReformPage = () => {
 
   // 간단한 비용 계산 (실제로는 더 복잡한 로직이 필요)
   const calculateEstimatedCost = () => {
-    const baseCost = 15000; // 기본 수선 비용
     const tieCount = fields.length;
-    return baseCost * tieCount;
+    return REFORM_BASE_COST * tieCount;
   };
 
   const handleDelete = () => {
@@ -479,7 +476,7 @@ const ReformPage = () => {
           onAddToCart={handleAddToCart}
           onOrder={handleMobileOrder}
           tieCount={fields.length}
-          totalCost={calculateEstimatedCost() + 3000}
+          totalCost={calculateEstimatedCost() + REFORM_SHIPPING_COST}
         />
       </MainContent>
     </MainLayout>

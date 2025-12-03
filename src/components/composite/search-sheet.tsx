@@ -34,7 +34,7 @@ export default function SearchSheet() {
 
   return (
     <Sheet open={isSheetOpen} onOpenChange={closeSheet}>
-      <SheetContent className="bg-zinc-200 px-4 pt-0">
+      <SheetContent className="bg-zinc-200 px-4 pt-4 pb-4" side="top">
         {/* 검색어 입력 */}
 
         <Input

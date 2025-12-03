@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 interface ReformActionButtonsProps {
   onAddToCart: () => void;
@@ -10,7 +10,7 @@ export function ReformActionButtons({
   onAddToCart,
   onOrder,
 }: ReformActionButtonsProps) {
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoint();
 
   if (isMobile) {
     return (

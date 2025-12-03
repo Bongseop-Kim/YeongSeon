@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { Heart } from "lucide-react";
 
 interface ProductActionButtonsProps {
@@ -17,7 +17,7 @@ export function ProductActionButtons({
   onAddToCart,
   onOrder,
 }: ProductActionButtonsProps) {
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoint();
 
   if (isMobile) {
     return (

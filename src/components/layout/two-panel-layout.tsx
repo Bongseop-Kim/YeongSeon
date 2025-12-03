@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 interface TwoPanelLayoutProps {
   leftPanel: React.ReactNode;
@@ -21,25 +22,32 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
   button,
   detail,
 }) => {
+  const { isMobile } = useBreakpoint();
+
   return (
-    <div className="max-w-7xl lg:px-8 lg:pb-4 mx-auto">
+    <div
+      className={`max-w-7xl mx-auto ${isMobile ? "" : "px-8 pb-4"}`}
+    >
       {/* Left Panel - Product Info */}
       <div
-        className={cn("flex flex-col lg:flex-row lg:gap-8", containerClassName)}
+        className={cn(
+          `flex ${isMobile ? "flex-col" : "flex-row gap-8"}`,
+          containerClassName
+        )}
       >
         <div
           className={cn(
             "w-full",
-            rightPanel ? "lg:flex-1 lg:w-2/3" : "",
+            !isMobile && rightPanel ? "flex-1 w-2/3" : "",
             leftPanelClassName
           )}
         >
           {leftPanel}
-          {rightPanel && <Separator className="lg:hidden" />}
+          {rightPanel && isMobile && <Separator />}
 
           {/* Detail section - appears below leftPanel on desktop */}
-          {detail && (
-            <div className="hidden lg:block">
+          {detail && !isMobile && (
+            <div>
               <Separator />
               {detail}
             </div>
@@ -49,8 +57,10 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
         {rightPanel && (
           <div
             className={cn(
-              "w-full lg:w-1/3 lg:sticky lg:top-20 lg:self-start relative",
-              button && "pb-14 lg:pb-0",
+              isMobile
+                ? "w-full relative"
+                : "w-1/3 sticky top-20 self-start",
+              button && (isMobile ? "pb-14" : "pb-0"),
               rightPanelClassName
             )}
           >
@@ -58,13 +68,19 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
 
             {button && (
               <div
-                className="z-30 fixed bottom-0 left-0 right-0 mt-4 px-2 bg-white
-                pt-2 border-t
-               lg:relative lg:left-auto lg:right-auto lg:bottom-auto lg:px-0 lg:border-t-0"
-                style={{
-                  paddingBottom:
-                    "calc(0.5rem + env(safe-area-inset-bottom, 0))",
-                }}
+                className={
+                  isMobile
+                    ? "z-30 fixed bottom-0 left-0 right-0 mt-4 px-2 bg-white pt-2 border-t"
+                    : "relative mt-4"
+                }
+                style={
+                  isMobile
+                    ? {
+                        paddingBottom:
+                          "calc(0.5rem + env(safe-area-inset-bottom, 0))",
+                      }
+                    : undefined
+                }
               >
                 {button}
               </div>
@@ -73,8 +89,8 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
         )}
 
         {/* Detail section - appears below rightPanel on mobile */}
-        {detail && (
-          <div className="w-full lg:hidden">
+        {detail && isMobile && (
+          <div className="w-full">
             <Separator />
             {detail}
           </div>
