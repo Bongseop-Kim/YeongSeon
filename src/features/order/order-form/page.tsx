@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { CartItem } from "@/types/cart";
 import { OrderItemCard } from "./components/order-item-card";
 import { ReformOrderItemCard } from "./components/reform-order-item-card";
 import { useModalStore } from "@/store/modal";
@@ -23,31 +22,25 @@ import {
 } from "@/features/cart/components/coupon-select-modal";
 import { calculateDiscount } from "@/types/coupon";
 import React from "react";
+import { useOrderStore } from "@/store/order";
 
 const OrderFormPage = () => {
-  const [orderItems, setOrderItems] = useState<CartItem[]>([]);
   const [_, setPopup] = useState<Window | null>(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { openModal, confirm } = useModalStore();
+  const {
+    items: orderItems,
+    updateOrderItemCoupon,
+    clearOrderItems,
+    hasOrderItems,
+  } = useOrderStore();
 
   useEffect(() => {
-    const savedOrderItems = localStorage.getItem("orderItems");
-
-    if (savedOrderItems) {
-      try {
-        const items = JSON.parse(savedOrderItems) as CartItem[];
-        setOrderItems(items);
-      } catch (error) {
-        console.error("주문 데이터 파싱 실패:", error);
-        navigate("/cart");
-      }
-    } else {
+    // 주문 아이템이 없으면 장바구니로 리다이렉트
+    if (!hasOrderItems()) {
       navigate("/cart");
     }
-
-    setLoading(false);
-  }, [navigate]);
+  }, [navigate, hasOrderItems]);
 
   const handleChangeCoupon = (itemId: string) => {
     const item = orderItems.find((i) => i.id === itemId);
@@ -75,15 +68,7 @@ const OrderFormPage = () => {
         const selectedCoupon = modalRef.current.getSelectedCoupon();
 
         // 쿠폰 적용
-        setOrderItems((prev) => {
-          const updated = prev.map((prevItem) =>
-            prevItem.id === itemId
-              ? { ...prevItem, appliedCoupon: selectedCoupon }
-              : prevItem
-          );
-          localStorage.setItem("orderItems", JSON.stringify(updated));
-          return updated;
-        });
+        updateOrderItemCoupon(itemId, selectedCoupon);
 
         confirm(
           selectedCoupon
@@ -95,7 +80,7 @@ const OrderFormPage = () => {
   };
 
   const handleCompleteOrder = () => {
-    localStorage.removeItem("orderItems");
+    clearOrderItems();
     alert("주문이 완료되었습니다!");
     navigate("/");
   };
@@ -146,18 +131,6 @@ const OrderFormPage = () => {
   };
 
   const totals = calculateTotals();
-
-  if (loading) {
-    return (
-      <MainLayout>
-        <MainContent>
-          <div className="flex items-center justify-center min-h-96">
-            <div>로딩 중...</div>
-          </div>
-        </MainContent>
-      </MainLayout>
-    );
-  }
 
   if (orderItems.length === 0) {
     return (
