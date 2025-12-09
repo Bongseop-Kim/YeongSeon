@@ -3,7 +3,6 @@ import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Empty } from "@/components/composite/empty";
 import { Button } from "@/components/ui/button";
 import type { Order } from "../types/order-item";
@@ -160,7 +159,7 @@ export default function OrderListPage() {
                   />
                 </Card>
               ) : (
-                dummyOrders.map((order, index) => (
+                dummyOrders.map((order) => (
                   <Card key={order.id}>
                     {/* 주문 헤더 */}
                     <CardHeader>
@@ -224,8 +223,6 @@ export default function OrderListPage() {
                         </Label>
                       </div>
                     </CardContent>
-
-                    {index < dummyOrders.length - 1 && <Separator />}
                   </Card>
                 ))
               )}

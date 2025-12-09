@@ -137,7 +137,7 @@ export default function ClaimListPage() {
                   />
                 </Card>
               ) : (
-                dummyClaims.map((claim, index) => (
+                dummyClaims.map((claim) => (
                   <Card key={claim.id}>
                     {/* 클레임 헤더 */}
                     <CardHeader>
@@ -175,8 +175,6 @@ export default function ClaimListPage() {
                         </Label>
                       </div>
                     </CardContent>
-
-                    {index < dummyClaims.length - 1 && <Separator />}
                   </Card>
                 ))
               )}
