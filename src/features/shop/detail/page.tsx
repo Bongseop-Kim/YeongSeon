@@ -46,6 +46,7 @@ import { useCartStore } from "@/store/cart";
 import { useModalStore } from "@/store/modal";
 import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@/types/cart";
+import { generateItemId } from "@/lib/utils";
 
 interface SelectedOption {
   option: ProductOption;
@@ -151,7 +152,7 @@ export default function ShopDetailPage() {
 
       // SelectedOption[]을 CartItem[]로 변환
       const orderItems: CartItem[] = selectedOptions.map((selectedOption) => ({
-        id: `${product.id}-${selectedOption.option.id}-${Date.now()}`,
+        id: generateItemId(product.id, selectedOption.option.id),
         type: "product",
         product,
         selectedOption: selectedOption.option,
@@ -163,7 +164,7 @@ export default function ShopDetailPage() {
       // 옵션이 없는 경우
       const orderItems: CartItem[] = [
         {
-          id: `${product.id}-base-${Date.now()}`,
+          id: generateItemId(product.id, "base"),
           type: "product",
           product,
           selectedOption: undefined,

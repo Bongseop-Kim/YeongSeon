@@ -30,6 +30,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { ReformActionButtons } from "./components/reform-action-buttons";
 import { MobileReformSheet } from "./components/mobile-reform-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { generateItemId } from "@/lib/utils";
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
@@ -128,7 +129,7 @@ const ReformPage = () => {
 
     // ReformOptions를 CartItem[]로 변환
     const orderItems: CartItem[] = watchedValues.ties.map((tie) => ({
-      id: `reform-${tie.id}-${Date.now()}`,
+      id: generateItemId("reform", tie.id),
       type: "reform",
       quantity: 1,
       reformData: {
@@ -150,7 +151,7 @@ const ReformPage = () => {
 
     // ReformOptions를 CartItem[]로 변환
     const orderItems: CartItem[] = watchedValues.ties.map((tie) => ({
-      id: `reform-${tie.id}-${Date.now()}`,
+      id: generateItemId("reform", tie.id),
       type: "reform",
       quantity: 1,
       reformData: {

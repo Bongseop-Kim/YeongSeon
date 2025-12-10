@@ -6,6 +6,7 @@ import type { Coupon } from "@/types/coupon";
 import type { TieItem } from "@/features/reform/types/reform";
 import { calculateDiscount } from "@/types/coupon";
 import { useModalStore } from "./modal";
+import { generateItemId } from "@/lib/utils";
 
 interface CartState {
   items: CartItem[];
@@ -61,7 +62,7 @@ export const useCartStore = create<CartState>()(
         } else {
           // 새로운 아이템 추가
           const newItem: CartItem = {
-            id: `${product.id}-${option?.id || "base"}-${Date.now()}`,
+            id: generateItemId(product.id, option?.id || "base"),
             type: "product",
             product,
             selectedOption: option,
@@ -88,7 +89,7 @@ export const useCartStore = create<CartState>()(
 
         // 새로운 수선 아이템 추가
         const newItem: ReformCartItem = {
-          id: `reform-${Date.now()}`,
+          id: generateItemId("reform"),
           type: "reform",
           quantity: 1,
           reformData,
