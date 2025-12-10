@@ -79,7 +79,7 @@ const OrderPage = () => {
               <Button
                 type="button"
                 onClick={handleDirectOrder}
-                size="lg"
+                size="xl"
                 className="w-full"
               >
                 {totalCost.toLocaleString()}원 주문하기

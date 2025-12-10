@@ -25,9 +25,7 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
   const { isMobile } = useBreakpoint();
 
   return (
-    <div
-      className={`max-w-7xl mx-auto ${isMobile ? "" : "px-8 pb-4"}`}
-    >
+    <div className={`max-w-7xl mx-auto ${isMobile ? "" : "px-8 pb-4"}`}>
       {/* Left Panel - Product Info */}
       <div
         className={cn(
@@ -57,9 +55,7 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
         {rightPanel && (
           <div
             className={cn(
-              isMobile
-                ? "w-full relative"
-                : "w-1/3 sticky top-20 self-start",
+              isMobile ? "w-full relative" : "w-1/3 sticky top-20 self-start",
               button && (isMobile ? "pb-14" : "pb-0"),
               rightPanelClassName
             )}

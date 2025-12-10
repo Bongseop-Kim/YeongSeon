@@ -44,6 +44,9 @@ import { ProductCard } from "../components/product-card";
 import { useMemo } from "react";
 import { useCartStore } from "@/store/cart";
 import { useModalStore } from "@/store/modal";
+import { useOrderStore } from "@/store/order";
+import type { CartItem } from "@/types/cart";
+import { generateItemId } from "@/lib/utils";
 
 interface SelectedOption {
   option: ProductOption;
@@ -56,6 +59,7 @@ export default function ShopDetailPage() {
   const { isMobile } = useBreakpoint();
   const { addToCart } = useCartStore();
   const { confirm } = useModalStore();
+  const { setOrderItems } = useOrderStore();
   const [isLiked, setIsLiked] = useState(false);
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
@@ -136,6 +140,44 @@ export default function ShopDetailPage() {
     }
   };
 
+  const handleOrder = () => {
+    if (!product) return;
+
+    if (hasOptions) {
+      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
+      if (selectedOptions.length === 0) {
+        confirm("옵션을 선택해주세요.");
+        return;
+      }
+
+      // SelectedOption[]을 CartItem[]로 변환
+      const orderItems: CartItem[] = selectedOptions.map((selectedOption) => ({
+        id: generateItemId(product.id, selectedOption.option.id),
+        type: "product",
+        product,
+        selectedOption: selectedOption.option,
+        quantity: selectedOption.quantity,
+      }));
+
+      setOrderItems(orderItems);
+    } else {
+      // 옵션이 없는 경우
+      const orderItems: CartItem[] = [
+        {
+          id: generateItemId(product.id, "base"),
+          type: "product",
+          product,
+          selectedOption: undefined,
+          quantity: baseQuantity,
+        },
+      ];
+
+      setOrderItems(orderItems);
+    }
+
+    navigate(`/order/order-form`);
+  };
+
   if (!product) {
     return (
       <MainLayout>
@@ -176,7 +218,9 @@ export default function ShopDetailPage() {
 
                   <CardContent>
                     <div
-                      className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"}`}
+                      className={`grid ${
+                        isMobile ? "grid-cols-3" : "grid-cols-4"
+                      }`}
                     >
                       {similarProducts.map((similarProduct) => (
                         <ProductCard
@@ -345,13 +389,7 @@ export default function ShopDetailPage() {
               isLiked={isLiked}
               onLikeToggle={() => setIsLiked(!isLiked)}
               onAddToCart={handleAddToCart}
-              onOrder={() => {
-                if (isMobile) {
-                  setIsPurchaseSheetOpen(true);
-                } else {
-                  navigate(`/order/reform`);
-                }
-              }}
+              onOrder={handleOrder}
             />
           }
         />
@@ -360,9 +398,7 @@ export default function ShopDetailPage() {
           open={isPurchaseSheetOpen}
           onOpenChange={setIsPurchaseSheetOpen}
           onAddToCart={handleAddToCart}
-          onOrder={() => {
-            navigate(`/order/reform`);
-          }}
+          onOrder={handleOrder}
         />
       </MainContent>
     </MainLayout>

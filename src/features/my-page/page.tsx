@@ -6,6 +6,7 @@ import { ListItem } from "./components/list-item";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { AdPanel } from "@/components/composite/ad-panel";
 
 export default function MypagePage() {
   const navigate = useNavigate();
@@ -16,6 +17,9 @@ export default function MypagePage() {
         <TwoPanelLayout
           leftPanel={
             <Card>
+              <div className="p-2">
+                <AdPanel />
+              </div>
               <CardHeader>
                 <CardTitle>
                   <button
@@ -39,7 +43,7 @@ export default function MypagePage() {
                     }}
                   />
                   <ListItem
-                    label="취소 내역"
+                    label="취소/반품/교환 내역"
                     onClick={() => {
                       navigate("/order/claim-list");
                     }}

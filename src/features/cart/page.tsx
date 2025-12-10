@@ -16,6 +16,7 @@ import React, { useState, useMemo } from "react";
 import { Empty } from "@/components/composite/empty";
 import { useNavigate } from "react-router-dom";
 import { useCartStore } from "@/store/cart";
+import { useOrderStore } from "@/store/order";
 import { CartItemCard } from "./components/cart-item-card";
 import { ReformCartItemCard } from "./components/reform-cart-item-card";
 import {
@@ -40,6 +41,7 @@ const CartPage = () => {
   const navigate = useNavigate();
   const { items, removeFromCart, addToCart, updateReformOption, applyCoupon } =
     useCartStore();
+  const { setOrderItems } = useOrderStore();
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
@@ -215,8 +217,8 @@ const CartPage = () => {
       selectedItems.includes(item.id)
     );
 
-    // 선택된 상품들을 localStorage에 저장
-    localStorage.setItem("orderItems", JSON.stringify(selectedCartItems));
+    // 선택된 상품들을 주문 store에 저장
+    setOrderItems(selectedCartItems);
 
     // 주문 페이지로 이동
     navigate("/order/order-form");
@@ -413,7 +415,9 @@ const CartPage = () => {
 
                   <CardContent>
                     <div
-                      className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"}`}
+                      className={`grid ${
+                        isMobile ? "grid-cols-3" : "grid-cols-4"
+                      }`}
                     >
                       {similarProducts.map((similarProduct) => (
                         <ProductCard
@@ -455,7 +459,7 @@ const CartPage = () => {
 
                   <Separator />
 
-                  <div className="flex justify-between text-base font-bold">
+                  <div className="flex justify-between text-base font-semibold">
                     <span>총 {selectedTotals.totalQuantity}개</span>
                     <span className="text-lg">
                       {selectedTotals.totalPrice.toLocaleString()}원

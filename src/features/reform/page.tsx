@@ -11,8 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useModalStore } from "@/store/modal";
 import { useCartStore } from "@/store/cart";
+import { useOrderStore } from "@/store/order";
+import type { CartItem } from "@/types/cart";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useState } from "react";
 import { Empty } from "../../components/composite/empty";
 import {
   Accordion,
@@ -28,10 +30,12 @@ import { DataTable } from "@/components/ui/data-table";
 import { ReformActionButtons } from "./components/reform-action-buttons";
 import { MobileReformSheet } from "./components/mobile-reform-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { generateItemId } from "@/lib/utils";
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
   const { addReformToCart } = useCartStore();
+  const { setOrderItems } = useOrderStore();
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
@@ -62,72 +66,6 @@ const ReformPage = () => {
   });
 
   const watchedValues = form.watch();
-
-  const debounce = useCallback((func: Function, delay: number) => {
-    let timeoutId: NodeJS.Timeout;
-    return (...args: any[]) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(null, args), delay);
-    };
-  }, []);
-
-  const saveToLocalStorage = useCallback(
-    debounce((data: ReformOptions) => {
-      if (data.ties && data.ties.length > 0) {
-        const reformData = {
-          ties: data.ties,
-          bulkApply: data.bulkApply,
-          timestamp: new Date().toISOString(),
-        };
-        localStorage.setItem("reformDraft", JSON.stringify(reformData));
-      }
-    }, 500),
-    [debounce]
-  );
-
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      if (value.ties && value.ties.length > 0) {
-        saveToLocalStorage(value);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form.watch, saveToLocalStorage]);
-
-  useEffect(() => {
-    const savedData = localStorage.getItem("reformDraft");
-    if (savedData) {
-      try {
-        const reformData = JSON.parse(savedData);
-        const savedTime = new Date(reformData.timestamp);
-        const now = new Date();
-        const hoursDiff =
-          (now.getTime() - savedTime.getTime()) / (1000 * 60 * 60);
-
-        if (hoursDiff < 24) {
-          openModal({
-            title: "데이터 복구",
-            description:
-              "이전에 작성하던 수선 정보가 있습니다.\n복구하시겠습니까?",
-            confirmText: "복구",
-            cancelText: "새로 작성",
-            onConfirm: () => {
-              form.reset(reformData);
-              localStorage.removeItem("reformDraft");
-            },
-            onCancel: () => {
-              localStorage.removeItem("reformDraft");
-            },
-          });
-        } else {
-          localStorage.removeItem("reformDraft");
-        }
-      } catch (error) {
-        localStorage.removeItem("reformDraft");
-      }
-    }
-  }, [confirm, form]);
 
   const addTie = () => {
     append({
@@ -189,16 +127,18 @@ const ReformPage = () => {
       return;
     }
 
-    localStorage.removeItem("reformDraft");
-    localStorage.setItem(
-      "reformOrderData",
-      JSON.stringify({
-        ...watchedValues,
-        timestamp: new Date().toISOString(),
-        totalCost: calculateEstimatedCost() + REFORM_SHIPPING_COST,
-      })
-    );
+    // ReformOptions를 CartItem[]로 변환
+    const orderItems: CartItem[] = watchedValues.ties.map((tie) => ({
+      id: generateItemId("reform", tie.id),
+      type: "reform",
+      quantity: 1,
+      reformData: {
+        tie: tie,
+        cost: REFORM_BASE_COST,
+      },
+    }));
 
+    setOrderItems(orderItems);
     navigate("/order/order-form");
   };
 
@@ -209,16 +149,18 @@ const ReformPage = () => {
       return;
     }
 
-    localStorage.removeItem("reformDraft");
-    localStorage.setItem(
-      "reformOrderData",
-      JSON.stringify({
-        ...watchedValues,
-        timestamp: new Date().toISOString(),
-        totalCost: calculateEstimatedCost() + REFORM_SHIPPING_COST,
-      })
-    );
+    // ReformOptions를 CartItem[]로 변환
+    const orderItems: CartItem[] = watchedValues.ties.map((tie) => ({
+      id: generateItemId("reform", tie.id),
+      type: "reform",
+      quantity: 1,
+      reformData: {
+        tie: tie,
+        cost: REFORM_BASE_COST,
+      },
+    }));
 
+    setOrderItems(orderItems);
     navigate("/order/order-form");
   };
 
@@ -236,9 +178,6 @@ const ReformPage = () => {
         cost: REFORM_BASE_COST,
       });
     });
-
-    // 임시 저장 데이터 삭제
-    localStorage.removeItem("reformDraft");
 
     // 폼 초기화
     form.reset({

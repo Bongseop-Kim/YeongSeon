@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import type { InquiryItem } from "./types/inquiry-item";
 import { useState } from "react";
 import { InquiryForm } from "./components/InquiryForm";
@@ -98,9 +97,9 @@ export default function InquiryPage() {
         <TwoPanelLayout
           leftPanel={
             <>
-              {dummyData.map((inquiry, index) => (
+              {dummyData.map((inquiry) => (
                 <Card key={inquiry.id}>
-                  <CardContent className="pt-4 pb-4">
+                  <CardContent className="py-4">
                     <div className="flex flex-col gap-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
@@ -156,9 +155,6 @@ export default function InquiryPage() {
                       </div>
                     </div>
                   </CardContent>
-                  {index < dummyData.length - 1 && (
-                    <Separator className="my-2" />
-                  )}
                 </Card>
               ))}
             </>
@@ -175,7 +171,7 @@ export default function InquiryPage() {
           }
           button={
             isMobile ? (
-              <Button className="w-full" onClick={handleNewInquiry}>
+              <Button className="w-full" onClick={handleNewInquiry} size="xl">
                 1:1 문의 등록
               </Button>
             ) : undefined

@@ -15,7 +15,9 @@ import MyInfoEmailPage from "@/features/my-page/my-info/email/page";
 import MyInfoNoticePage from "@/features/my-page/my-info/notice/page";
 import MyInfoLeavePage from "@/features/my-page/my-info/leave/page";
 import OrderListPage from "@/features/order/order-list/page";
+import OrderDetailPage from "@/features/order/order-detail/[id]/page";
 import ClaimListPage from "@/features/order/claim-list/page";
+import ClaimFormPage from "@/features/order/claim/[type]/[orderId]/[itemId]/page";
 import CartPage from "@/features/cart/page";
 import CustomerServicePage from "@/features/customer-service/page";
 import InquiryPage from "@/features/my-page/inquiry/page";
@@ -35,7 +37,12 @@ export default function Router() {
 
       <Route path="/order/order-form" element={<OrderFormPage />} />
       <Route path="/order/order-list" element={<OrderListPage />} />
+      <Route path="/order/order-detail/:id" element={<OrderDetailPage />} />
       <Route path="/order/claim-list" element={<ClaimListPage />} />
+      <Route
+        path="/order/claim/:type/:orderId/:itemId"
+        element={<ClaimFormPage />}
+      />
 
       <Route path="/shipping" element={<ShippingPage />} />
       <Route path="/shipping/form" element={<ShippingFormPage />} />
