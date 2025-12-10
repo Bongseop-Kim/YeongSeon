@@ -81,8 +81,8 @@ const OrderFormPage = () => {
 
   const handleCompleteOrder = () => {
     clearOrderItems();
-    alert("주문이 완료되었습니다!");
-    navigate("/");
+    confirm("주문이 완료되었습니다!");
+    navigate("/order/order-detail/order-1");
   };
 
   const openPopup = () => {
@@ -232,7 +232,7 @@ const OrderFormPage = () => {
                   <span>무료</span>
                 </div>
                 <Separator />
-                <div className="flex justify-between font-semibold text-lg">
+                <div className="flex justify-between text-base font-semibold">
                   <span>총 결제 금액</span>
                   <span className="text-blue-600">
                     {totals.totalPrice.toLocaleString()}원

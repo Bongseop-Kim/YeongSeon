@@ -459,7 +459,7 @@ const CartPage = () => {
 
                   <Separator />
 
-                  <div className="flex justify-between text-base font-bold">
+                  <div className="flex justify-between text-base font-semibold">
                     <span>총 {selectedTotals.totalQuantity}개</span>
                     <span className="text-lg">
                       {selectedTotals.totalPrice.toLocaleString()}원
