@@ -43,7 +43,7 @@ export default function MypagePage() {
                     }}
                   />
                   <ListItem
-                    label="취소 내역"
+                    label="취소/반품/교환 내역"
                     onClick={() => {
                       navigate("/order/claim-list");
                     }}

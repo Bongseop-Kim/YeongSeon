@@ -136,13 +136,15 @@ export default function OrderListPage() {
   }, []);
 
   const handleReturnRequest = (orderId: string, itemId: string) => {
-    console.log("반품 요청:", orderId, itemId);
-    // 반품 요청 로직
+    router(`/order/claim/return/${orderId}/${itemId}`);
   };
 
   const handleExchangeRequest = (orderId: string, itemId: string) => {
-    console.log("교환 요청:", orderId, itemId);
-    // 교환 요청 로직
+    router(`/order/claim/exchange/${orderId}/${itemId}`);
+  };
+
+  const handleCancelRequest = (orderId: string, itemId: string) => {
+    router(`/order/claim/cancel/${orderId}/${itemId}`);
   };
 
   return (
@@ -194,6 +196,17 @@ export default function OrderListPage() {
                                     }}
                                   >
                                     반품 요청
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCancelRequest(order.id, item.id);
+                                    }}
+                                  >
+                                    취소 요청
                                   </Button>
                                   <Button
                                     variant="outline"

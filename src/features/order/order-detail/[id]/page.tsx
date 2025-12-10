@@ -189,13 +189,15 @@ const OrderDetailPage = () => {
   const totals = calculateTotals();
 
   const handleReturnRequest = (itemId: string) => {
-    console.log("반품 요청:", order.id, itemId);
-    // 반품 요청 로직
+    navigate(`/order/claim/return/${order.id}/${itemId}`);
   };
 
   const handleExchangeRequest = (itemId: string) => {
-    console.log("교환 요청:", order.id, itemId);
-    // 교환 요청 로직
+    navigate(`/order/claim/exchange/${order.id}/${itemId}`);
+  };
+
+  const handleCancelRequest = (itemId: string) => {
+    navigate(`/order/claim/cancel/${order.id}/${itemId}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -267,7 +269,7 @@ const OrderDetailPage = () => {
                       showQuantity={true}
                       showPrice={true}
                       actions={
-                        order.status === "완료" && (
+                        order.status === "완료" || order.status === "배송중" ? (
                           <div className="flex gap-2 mt-3">
                             <Button
                               variant="outline"
@@ -286,7 +288,19 @@ const OrderDetailPage = () => {
                               교환 요청
                             </Button>
                           </div>
-                        )
+                        ) : order.status === "진행중" ||
+                          order.status === "대기중" ? (
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => handleCancelRequest(item.id)}
+                            >
+                              취소 요청
+                            </Button>
+                          </div>
+                        ) : null
                       }
                     />
                   </CardContent>
