@@ -242,7 +242,7 @@ const OrderFormPage = () => {
             </Card>
           }
           button={
-            <Button onClick={handleCompleteOrder} className="w-full" size="lg">
+            <Button onClick={handleCompleteOrder} className="w-full" size="xl">
               결제하기
             </Button>
           }

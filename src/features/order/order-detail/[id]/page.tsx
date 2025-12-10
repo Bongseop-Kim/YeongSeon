@@ -336,7 +336,7 @@ const OrderDetailPage = () => {
               onClick={() => navigate("/order/order-list")}
               variant="outline"
               className="w-full"
-              size="lg"
+              size="xl"
             >
               주문 목록으로
             </Button>

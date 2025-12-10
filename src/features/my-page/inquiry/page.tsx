@@ -171,7 +171,7 @@ export default function InquiryPage() {
           }
           button={
             isMobile ? (
-              <Button className="w-full" onClick={handleNewInquiry}>
+              <Button className="w-full" onClick={handleNewInquiry} size="xl">
                 1:1 문의 등록
               </Button>
             ) : undefined
