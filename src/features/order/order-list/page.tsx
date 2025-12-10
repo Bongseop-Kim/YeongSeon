@@ -183,7 +183,9 @@ export default function OrderListPage() {
                           <CardContent className="py-4">
                             <OrderItemCard
                               item={item}
-                              onClick={() => router(`/order/${order.id}`)}
+                              onClick={() =>
+                                router(`/order/order-detail/order-1`)
+                              }
                               actions={
                                 <div className="flex gap-2">
                                   <Button
