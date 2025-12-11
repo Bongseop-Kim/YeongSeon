@@ -1,5 +1,6 @@
 import GlobalModal from "@/components/ui/modal";
 import { BreakpointProvider } from "./breakpoint-provider";
+import { ScrollToTop } from "./scroll-to-top";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       {/* <ThemeProvider> */}
       {/* <ToastProvider> */}
 
+      <ScrollToTop />
       {children}
 
       {/* 전역 컴포넌트들 */}
