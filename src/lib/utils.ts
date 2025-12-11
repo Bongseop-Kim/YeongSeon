@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { v4 as uuidv4 } from "uuid";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,6 +17,8 @@ export function generateItemId(
   const validParts = parts.filter(
     (part) => part !== undefined && part !== null
   );
-  const uuid = crypto.randomUUID();
-  return validParts.length > 0 ? `${validParts.join("-")}-${uuid}` : uuid;
+
+  return validParts.length > 0
+    ? `${validParts.join("-")}-${uuidv4()}`
+    : uuidv4();
 }

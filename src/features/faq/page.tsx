@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { FAQ_DATA } from "./constants/FAQ";
 
-export default function CustomerServicePage() {
-  console.log(FAQ_DATA);
+export default function FaqPage() {
   return (
     <MainLayout>
       <MainContent>

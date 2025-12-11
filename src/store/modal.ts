@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type ModalType = "confirm" | "custom";
+type ModalType = "alert" | "confirm" | "custom";
 
 interface ModalState {
   isOpen: boolean;
@@ -19,6 +19,7 @@ interface ModalState {
     | "link";
   customFooter?: React.ReactNode | (() => React.ReactNode);
   showDefaultFooter: boolean;
+  fullScreenOnMobile: boolean;
   onConfirm?: () => void;
   onCancel?: () => void;
 }
@@ -40,6 +41,7 @@ interface ModalStore extends ModalState {
       | "link";
     customFooter?: React.ReactNode | (() => React.ReactNode);
     showDefaultFooter?: boolean;
+    fullScreenOnMobile?: boolean;
     onConfirm?: () => void;
     onCancel?: () => void;
   }) => void;
@@ -48,6 +50,11 @@ interface ModalStore extends ModalState {
     message: string,
     onConfirm?: () => void,
     options?: { confirmText?: string; cancelText?: string }
+  ) => void;
+  alert: (
+    message: string,
+    onConfirm?: () => void,
+    options?: { title?: string; confirmText?: string }
   ) => void;
 }
 
@@ -62,6 +69,7 @@ export const useModalStore = create<ModalStore>((set, get) => ({
   confirmVariant: "default",
   customFooter: undefined,
   showDefaultFooter: true,
+  fullScreenOnMobile: false,
   onConfirm: undefined,
   onCancel: undefined,
 
@@ -77,6 +85,7 @@ export const useModalStore = create<ModalStore>((set, get) => ({
       confirmVariant: config.confirmVariant || "default",
       customFooter: config.customFooter,
       showDefaultFooter: config.showDefaultFooter !== false,
+      fullScreenOnMobile: config.fullScreenOnMobile || false,
       onConfirm: config.onConfirm,
       onCancel: config.onCancel,
     });
@@ -94,6 +103,7 @@ export const useModalStore = create<ModalStore>((set, get) => ({
       confirmVariant: "default",
       customFooter: undefined,
       showDefaultFooter: true,
+      fullScreenOnMobile: false,
       onConfirm: undefined,
       onCancel: undefined,
     });
@@ -105,6 +115,16 @@ export const useModalStore = create<ModalStore>((set, get) => ({
       description: message,
       confirmText: options?.confirmText || "확인",
       cancelText: options?.cancelText || "취소",
+      onConfirm,
+    });
+  },
+
+  alert: (message, onConfirm, options) => {
+    get().openModal({
+      modalType: "alert",
+      title: options?.title || "알림",
+      description: message,
+      confirmText: options?.confirmText || "확인",
       onConfirm,
     });
   },

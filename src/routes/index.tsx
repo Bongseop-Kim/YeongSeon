@@ -1,3 +1,4 @@
+import { Route, Routes } from "react-router-dom";
 import DesignPage from "@/features/design/page";
 import HomePage from "@/features/home/page";
 import OrderFormPage from "@/features/order/order-form/page";
@@ -7,7 +8,6 @@ import ShopPage from "@/features/shop/page";
 import ShopDetailPage from "@/features/shop/detail/page";
 import ShippingFormPage from "@/features/shipping/form/page";
 import ShippingPage from "@/features/shipping/page";
-import { Route, Routes } from "react-router-dom";
 import MypagePage from "@/features/my-page/page";
 import MyInfoPage from "@/features/my-page/my-info/page";
 import MyInfoDetailPage from "@/features/my-page/my-info/detail/page";
@@ -19,7 +19,7 @@ import OrderDetailPage from "@/features/order/order-detail/[id]/page";
 import ClaimListPage from "@/features/order/claim-list/page";
 import ClaimFormPage from "@/features/order/claim/[type]/[orderId]/[itemId]/page";
 import CartPage from "@/features/cart/page";
-import CustomerServicePage from "@/features/customer-service/page";
+import FaqPage from "@/features/faq/page";
 import InquiryPage from "@/features/my-page/inquiry/page";
 import NoticePage from "@/features/notice/page";
 
@@ -53,7 +53,7 @@ export default function Router() {
       <Route path="/my-page/my-info/notice" element={<MyInfoNoticePage />} />
       <Route path="/my-page/my-info/leave" element={<MyInfoLeavePage />} />
       <Route path="/my-page/inquiry" element={<InquiryPage />} />
-      <Route path="/customer-service" element={<CustomerServicePage />} />
+      <Route path="/faq" element={<FaqPage />} />
       <Route path="/notice" element={<NoticePage />} />
     </Routes>
   );

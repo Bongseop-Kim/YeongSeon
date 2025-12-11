@@ -27,7 +27,7 @@ import { useOrderStore } from "@/store/order";
 const OrderFormPage = () => {
   const [_, setPopup] = useState<Window | null>(null);
   const navigate = useNavigate();
-  const { openModal, confirm } = useModalStore();
+  const { openModal, alert } = useModalStore();
   const {
     items: orderItems,
     updateOrderItemCoupon,
@@ -60,6 +60,7 @@ const OrderFormPage = () => {
           currentCouponId={item.appliedCoupon?.id}
         />
       ),
+      fullScreenOnMobile: true,
       confirmText: "적용",
       cancelText: "취소",
       onConfirm: () => {
@@ -70,7 +71,7 @@ const OrderFormPage = () => {
         // 쿠폰 적용
         updateOrderItemCoupon(itemId, selectedCoupon);
 
-        confirm(
+        alert(
           selectedCoupon
             ? `${selectedCoupon.name}이(가) 적용되었습니다.`
             : "쿠폰 사용을 취소했습니다."
@@ -81,7 +82,7 @@ const OrderFormPage = () => {
 
   const handleCompleteOrder = () => {
     clearOrderItems();
-    confirm("주문이 완료되었습니다!");
+    alert("주문이 완료되었습니다!");
     navigate("/order/order-detail/order-1");
   };
 

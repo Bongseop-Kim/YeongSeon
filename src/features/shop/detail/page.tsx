@@ -83,7 +83,7 @@ export default function ShopDetailPage() {
         p.pattern === product.pattern ||
         p.material === product.material
       );
-    }).slice(0, 4); // 최대 4개만 표시
+    }).slice(0, isMobile ? 3 : 4); // 최대 4개만 표시
   }, [product]);
 
   const handleSelectOption = (option: ProductOption) => {
@@ -142,6 +142,11 @@ export default function ShopDetailPage() {
 
   const handleOrder = () => {
     if (!product) return;
+
+    if (isMobile) {
+      setIsPurchaseSheetOpen(true);
+      return;
+    }
 
     if (hasOptions) {
       // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
@@ -397,8 +402,6 @@ export default function ShopDetailPage() {
           product={product}
           open={isPurchaseSheetOpen}
           onOpenChange={setIsPurchaseSheetOpen}
-          onAddToCart={handleAddToCart}
-          onOrder={handleOrder}
         />
       </MainContent>
     </MainLayout>

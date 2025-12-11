@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -12,6 +13,11 @@ import {
 import type { Product, ProductOption } from "../../types/product";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
+import { useCartStore } from "@/store/cart";
+import { useOrderStore } from "@/store/order";
+import { useModalStore } from "@/store/modal";
+import type { CartItem } from "@/types/cart";
+import { generateItemId } from "@/lib/utils";
 
 interface SelectedOption {
   option: ProductOption;
@@ -22,17 +28,17 @@ interface MobilePurchaseSheetProps {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddToCart: (items: SelectedOption[]) => void;
-  onOrder: (items: SelectedOption[]) => void;
 }
 
 export function MobilePurchaseSheet({
   product,
   open,
   onOpenChange,
-  onAddToCart,
-  onOrder,
 }: MobilePurchaseSheetProps) {
+  const navigate = useNavigate();
+  const { addToCart } = useCartStore();
+  const { setOrderItems } = useOrderStore();
+  const { confirm } = useModalStore();
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
 
   // 옵션이 없으면 기본 상품으로 1개 초기화
@@ -87,41 +93,69 @@ export function MobilePurchaseSheet({
   const grandTotal = totalAmount;
 
   const handleAddToCart = () => {
-    if (!hasOptions) {
-      // 옵션이 없으면 기본 상품으로 추가 (수량 포함)
-      onAddToCart([
-        {
-          option: {
-            id: "base",
-            name: product.name,
-            additionalPrice: 0,
-          },
-          quantity: baseQuantity,
-        },
-      ]);
+    if (hasOptions) {
+      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
+      if (selectedOptions.length === 0) {
+        confirm("옵션을 선택해주세요.");
+        return;
+      }
+
+      // 선택된 각 옵션을 장바구니에 추가
+      selectedOptions.forEach((selectedOption) => {
+        addToCart(product, {
+          option: selectedOption.option,
+          quantity: selectedOption.quantity,
+        });
+      });
+
+      // 옵션 초기화
+      setSelectedOptions([]);
     } else {
-      onAddToCart(selectedOptions);
+      // 옵션이 없는 경우: baseQuantity로 추가
+      addToCart(product, { quantity: baseQuantity });
+
+      // 수량 초기화
+      setBaseQuantity(1);
     }
+
     onOpenChange(false);
   };
 
   const handleOrder = () => {
-    if (!hasOptions) {
-      // 옵션이 없으면 기본 상품으로 주문 (수량 포함)
-      onOrder([
+    if (hasOptions) {
+      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
+      if (selectedOptions.length === 0) {
+        confirm("옵션을 선택해주세요.");
+        return;
+      }
+
+      // SelectedOption[]을 CartItem[]로 변환
+      const orderItems: CartItem[] = selectedOptions.map((selectedOption) => ({
+        id: generateItemId(product.id, selectedOption.option.id),
+        type: "product",
+        product,
+        selectedOption: selectedOption.option,
+        quantity: selectedOption.quantity,
+      }));
+
+      setOrderItems(orderItems);
+    } else {
+      // 옵션이 없는 경우
+      const orderItems: CartItem[] = [
         {
-          option: {
-            id: "base",
-            name: product.name,
-            additionalPrice: 0,
-          },
+          id: generateItemId(product.id, "base"),
+          type: "product",
+          product,
+          selectedOption: undefined,
           quantity: baseQuantity,
         },
-      ]);
-    } else {
-      onOrder(selectedOptions);
+      ];
+
+      setOrderItems(orderItems);
     }
+
     onOpenChange(false);
+    navigate(`/order/order-form`);
   };
 
   return (

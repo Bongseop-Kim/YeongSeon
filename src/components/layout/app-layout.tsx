@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import Router from "@/routes";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ShoppingBagIcon } from "lucide-react";
 import { NAVIGATION_ITEMS } from "@/constants/NAVIGATION_ITEMS";
 import {
   Header,
@@ -17,6 +17,8 @@ import { ROUTE_TITLES } from "@/constants/ROUTE_TITLES";
 import MenuSheet from "../composite/menu-sheet";
 import { useSearchStore } from "@/store/search";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { useCartStore } from "@/store/cart";
+import { Badge } from "@/components/ui/badge";
 import {
   Footer,
   FooterContent,
@@ -34,6 +36,8 @@ export default function AppLayout() {
   );
   const { isMobile } = useBreakpoint();
   const { config } = useSearchStore();
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
+  const cartItemCount = getTotalItems();
 
   const getCurrentPageName = () => {
     // 데스크톱에서는 항상 ESSE SION 표시
@@ -97,12 +101,37 @@ export default function AppLayout() {
               </HeaderNav>
             )}
 
-            <HeaderActions>
+            <HeaderActions className="space-x-1">
+              {isMobile && (
+                <NavLink
+                  to="/cart"
+                  className={`relative ${cartItemCount > 0 ? "mr-2" : ""}`}
+                >
+                  <ShoppingBagIcon className="w-5 h-5" />
+                  {cartItemCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 text-xs flex items-center justify-center bg-blue-600">
+                      {cartItemCount}
+                    </Badge>
+                  )}
+                </NavLink>
+              )}
               <MenuSheet />
-
               {!isMobile && (
                 <div className="flex items-center">
-                  <NavLink to="/my-page">마이페이지</NavLink>
+                  <NavLink to="/my-page">마이</NavLink>
+                  <NavLink
+                    to="/cart"
+                    className={`relative ${
+                      cartItemCount > 0 ? "pr-6 mr-2" : "pr-2 mr-2"
+                    }`}
+                  >
+                    장바구니
+                    {cartItemCount > 0 && (
+                      <Badge className="absolute -top-1 right-0 h-5 min-w-5 px-1.5 text-xs flex items-center justify-center bg-blue-600">
+                        {cartItemCount}
+                      </Badge>
+                    )}
+                  </NavLink>
                   <Button variant="secondary" size="sm">
                     <span>로그인</span>
                   </Button>
@@ -112,7 +141,9 @@ export default function AppLayout() {
           </HeaderContent>
           {config.enabled && (
             <div
-              className={`bg-zinc-900 pb-4 mx-auto ${isMobile ? "px-4" : "px-8"} max-w-7xl flex`}
+              className={`bg-zinc-900 pb-4 mx-auto ${
+                isMobile ? "px-4" : "px-8"
+              } max-w-7xl flex`}
             >
               <SearchBar />
 
@@ -128,7 +159,7 @@ export default function AppLayout() {
       <Footer>
         <FooterContent className="mb-20">
           <div
-            className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-4"} gap-8`}
+            className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-3"} gap-8`}
           >
             <FooterSection>
               <FooterTitle>서비스</FooterTitle>
@@ -141,15 +172,15 @@ export default function AppLayout() {
             <FooterSection>
               <FooterTitle>고객지원</FooterTitle>
               <FooterLink href="/faq">자주 묻는 질문</FooterLink>
-              <FooterLink href="/contact">문의하기</FooterLink>
-              <FooterLink href="/guide">이용 가이드</FooterLink>
+              <FooterLink href="/my-page/inquiry">문의하기</FooterLink>
+              <FooterLink href="/notice">공지사항</FooterLink>
             </FooterSection>
-            <FooterSection>
+            {/* <FooterSection>
               <FooterTitle>회사소개</FooterTitle>
               <FooterLink href="/about">회사 소개</FooterLink>
               <FooterLink href="/history">연혁</FooterLink>
               <FooterLink href="/location">찾아오시는 길</FooterLink>
-            </FooterSection>
+            </FooterSection> */}
             <FooterSection>
               <FooterTitle>정책</FooterTitle>
               <FooterLink href="/privacy">개인정보처리방침</FooterLink>
