@@ -88,7 +88,7 @@ const OrderFormPage = () => {
 
   const openPopup = () => {
     const popup = window.open(
-      "shipping",
+      "/shipping",
       "popup",
       "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
     );
