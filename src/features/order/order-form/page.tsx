@@ -133,6 +133,15 @@ const OrderFormPage = () => {
 
   const totals = calculateTotals();
 
+  const openPrivacyPolicyPopup = () => {
+    const popup = window.open(
+      "/privacy-policy",
+      "popup",
+      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
+    );
+    setPopup(popup);
+  };
+
   if (orderItems.length === 0) {
     return (
       <MainLayout>
@@ -261,7 +270,7 @@ const OrderFormPage = () => {
                       variant="ghost"
                       size="sm"
                       className="h-auto p-1 text-xs text-zinc-500 hover:text-zinc-700"
-                      onClick={() => {}}
+                      onClick={openPrivacyPolicyPopup}
                     >
                       자세히
                     </Button>
