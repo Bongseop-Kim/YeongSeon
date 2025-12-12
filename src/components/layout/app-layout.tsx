@@ -30,7 +30,7 @@ import {
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const hideHeaderPaths = ["/shipping"];
+  const hideHeaderPaths = ["/shipping", "/privacy-policy"];
   const showHeader = !hideHeaderPaths.some((path) =>
     location.pathname.startsWith(path)
   );
@@ -52,11 +52,28 @@ export default function AppLayout() {
       return ROUTE_TITLES[pathname as keyof typeof ROUTE_TITLES];
     }
 
-    // 패턴 매칭 (동적 라우트나 하위 경로)
-    if (pathname.startsWith("/reform/")) return "수선 상세";
-    if (pathname.startsWith("/order/")) return "주문";
-    if (pathname.startsWith("/shipping/")) return "배송";
-    if (pathname.startsWith("/my-page/")) return "마이페이지";
+    // ROUTE_TITLES에서 가장 긴 매칭 경로 찾기
+    let matchedPath = "";
+    let matchedTitle = "";
+
+    // ROUTE_TITLES의 모든 키를 확인하여 가장 긴 매칭 찾기
+    for (const [route, title] of Object.entries(ROUTE_TITLES)) {
+      if (pathname.startsWith(route) && route.length > matchedPath.length) {
+        // 슬래시로 끝나는 경로가 아니거나, 정확히 일치하거나, 다음 문자가 슬래시인 경우만 매칭
+        if (
+          route === "/" ||
+          pathname === route ||
+          pathname.startsWith(route + "/")
+        ) {
+          matchedPath = route;
+          matchedTitle = title;
+        }
+      }
+    }
+
+    if (matchedTitle) {
+      return matchedTitle;
+    }
 
     return "ESSE SION";
   };
