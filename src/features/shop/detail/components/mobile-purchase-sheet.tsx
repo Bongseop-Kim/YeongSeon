@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -14,10 +13,7 @@ import type { Product, ProductOption } from "../../types/product";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
 import { useCartStore } from "@/store/cart";
-import { useOrderStore } from "@/store/order";
 import { useModalStore } from "@/store/modal";
-import type { CartItem } from "@/types/cart";
-import { generateItemId } from "@/lib/utils";
 
 interface SelectedOption {
   option: ProductOption;
@@ -28,16 +24,19 @@ interface MobilePurchaseSheetProps {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onProcessOrder: (
+    selectedOptions: SelectedOption[],
+    baseQuantity: number
+  ) => void;
 }
 
 export function MobilePurchaseSheet({
   product,
   open,
   onOpenChange,
+  onProcessOrder,
 }: MobilePurchaseSheetProps) {
-  const navigate = useNavigate();
   const { addToCart } = useCartStore();
-  const { setOrderItems } = useOrderStore();
   const { confirm } = useModalStore();
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
 
@@ -122,40 +121,8 @@ export function MobilePurchaseSheet({
   };
 
   const handleOrder = () => {
-    if (hasOptions) {
-      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
-      if (selectedOptions.length === 0) {
-        confirm("옵션을 선택해주세요.");
-        return;
-      }
-
-      // SelectedOption[]을 CartItem[]로 변환
-      const orderItems: CartItem[] = selectedOptions.map((selectedOption) => ({
-        id: generateItemId(product.id, selectedOption.option.id),
-        type: "product",
-        product,
-        selectedOption: selectedOption.option,
-        quantity: selectedOption.quantity,
-      }));
-
-      setOrderItems(orderItems);
-    } else {
-      // 옵션이 없는 경우
-      const orderItems: CartItem[] = [
-        {
-          id: generateItemId(product.id, "base"),
-          type: "product",
-          product,
-          selectedOption: undefined,
-          quantity: baseQuantity,
-        },
-      ];
-
-      setOrderItems(orderItems);
-    }
-
     onOpenChange(false);
-    navigate(`/order/order-form`);
+    onProcessOrder(selectedOptions, baseQuantity);
   };
 
   return (
