@@ -22,6 +22,7 @@ import CartPage from "@/features/cart/page";
 import FaqPage from "@/features/faq/page";
 import InquiryPage from "@/features/my-page/inquiry/page";
 import NoticePage from "@/features/notice/page";
+import PrivacyPolicyPage from "@/features/privacy-policy/page";
 
 export default function Router() {
   return (
@@ -55,6 +56,7 @@ export default function Router() {
       <Route path="/my-page/inquiry" element={<InquiryPage />} />
       <Route path="/faq" element={<FaqPage />} />
       <Route path="/notice" element={<NoticePage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
     </Routes>
   );
 }
