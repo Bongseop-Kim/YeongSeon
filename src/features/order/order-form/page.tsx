@@ -142,6 +142,14 @@ const OrderFormPage = () => {
     setPopup(popup);
   };
 
+  const openTermsOfServicePopup = () => {
+    const popup = window.open(
+      "/terms",
+      "popup",
+      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
+    );
+    setPopup(popup);
+  };
   if (orderItems.length === 0) {
     return (
       <MainLayout>
@@ -257,7 +265,7 @@ const OrderFormPage = () => {
                       variant="link"
                       size="sm"
                       className="h-auto p-1 text-xs text-zinc-500 hover:text-zinc-700"
-                      onClick={() => {}}
+                      onClick={openTermsOfServicePopup}
                     >
                       자세히
                     </Button>
@@ -267,7 +275,7 @@ const OrderFormPage = () => {
                       회원님의 개인정보는 안전하게 관리됩니다.
                     </span>
                     <Button
-                      variant="ghost"
+                      variant="link"
                       size="sm"
                       className="h-auto p-1 text-xs text-zinc-500 hover:text-zinc-700"
                       onClick={openPrivacyPolicyPopup}

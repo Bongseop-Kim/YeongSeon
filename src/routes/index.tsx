@@ -23,6 +23,7 @@ import FaqPage from "@/features/faq/page";
 import InquiryPage from "@/features/my-page/inquiry/page";
 import NoticePage from "@/features/notice/page";
 import PrivacyPolicyPage from "@/features/privacy-policy/page";
+import TermsOfServicePage from "@/features/terms-of-service/page";
 
 export default function Router() {
   return (
@@ -57,6 +58,7 @@ export default function Router() {
       <Route path="/faq" element={<FaqPage />} />
       <Route path="/notice" element={<NoticePage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsOfServicePage />} />
     </Routes>
   );
 }

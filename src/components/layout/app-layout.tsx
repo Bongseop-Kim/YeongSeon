@@ -30,7 +30,7 @@ import {
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const hideHeaderPaths = ["/shipping", "/privacy-policy"];
+  const hideHeaderPaths = ["/shipping", "/privacy-policy", "/terms"];
   const showHeader = !hideHeaderPaths.some((path) =>
     location.pathname.startsWith(path)
   );
