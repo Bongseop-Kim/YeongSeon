@@ -14,7 +14,7 @@ const ShippingPage = () => {
       headerContent={
         <Input
           placeholder="배송지 이름, 주소, 연락처로 검색하세요."
-          className="bg-white"
+          className="bg-white mb-4"
           icon={<Search className="w-4 h-4" />}
         />
       }
