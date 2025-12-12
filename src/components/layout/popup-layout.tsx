@@ -1,5 +1,6 @@
 import { PageTitle } from "@/components/layout/main-layout";
 import CloseButton from "@/components/ui/close";
+import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
 interface PopupLayoutProps {
@@ -22,34 +23,24 @@ export const PopupLayout = ({
   contentClassName,
 }: PopupLayoutProps) => {
   return (
-    <div className="min-h-screen w-full relative">
+    <div className="min-h-screen flex flex-col">
+      {/* header */}
       <div
-        className={`fixed top-0 left-0 right-0 z-10 bg-zinc-100 px-2 ${
-          headerContent ? "pb-4" : ""
-        } ${headerClassName || ""}`}
+        className={cn("sticky top-0 z-10 bg-zinc-100 px-2", headerClassName)}
       >
         <div className="flex items-center justify-between">
           <PageTitle className="text-base">{title}</PageTitle>
-          <CloseButton
-            onRemove={() => {
-              onClose();
-            }}
-          />
+          <CloseButton onRemove={onClose} />
         </div>
-        {headerContent && <div className="mt-2">{headerContent}</div>}
+        {headerContent}
       </div>
 
-      <div
-        className={`px-2 py-4 pb-20 pt-20 ${contentClassName || ""}`}
-        style={{
-          paddingTop: headerContent ? "6rem" : "4rem",
-        }}
-      >
-        {children}
-      </div>
+      {/* content */}
+      <div className={cn("flex-1 px-2 py-4", contentClassName)}>{children}</div>
 
+      {/* footer */}
       {footer && (
-        <div className="fixed bottom-0 left-0 right-0 p-2 py-4 bg-white border-t">
+        <div className="sticky bottom-0 bg-white border-t p-2 py-4">
           {footer}
         </div>
       )}
