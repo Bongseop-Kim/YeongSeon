@@ -56,7 +56,7 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
           <div
             className={cn(
               isMobile ? "w-full relative" : "w-1/3 sticky top-20 self-start",
-              button && (isMobile ? "pb-14" : "pb-0"),
+              button && (isMobile ? "pb-24" : "pb-0"),
               rightPanelClassName
             )}
           >

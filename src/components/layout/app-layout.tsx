@@ -156,61 +156,73 @@ export default function AppLayout() {
       <div className={config.enabled ? "pt-12" : "pt-0"}>
         <Router />
       </div>
-      <Footer>
-        <FooterContent className="mb-20">
-          <div
-            className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-3"} gap-8`}
-          >
-            <FooterSection>
-              <FooterTitle>서비스</FooterTitle>
-              {NAVIGATION_ITEMS.map((item) => (
-                <FooterLink key={item.href} href={item.href}>
-                  {item.label}
-                </FooterLink>
-              ))}
-            </FooterSection>
-            <FooterSection>
-              <FooterTitle>고객지원</FooterTitle>
-              <FooterLink href="/faq">자주 묻는 질문</FooterLink>
-              <FooterLink href="/my-page/inquiry">문의하기</FooterLink>
-              <FooterLink href="/notice">공지사항</FooterLink>
-            </FooterSection>
-            {/* <FooterSection>
-              <FooterTitle>회사소개</FooterTitle>
-              <FooterLink href="/about">회사 소개</FooterLink>
-              <FooterLink href="/history">연혁</FooterLink>
-              <FooterLink href="/location">찾아오시는 길</FooterLink>
-            </FooterSection> */}
-            <FooterSection>
-              <FooterTitle>정책</FooterTitle>
-              <FooterLink href="/privacy">개인정보처리방침</FooterLink>
-              <FooterLink href="/terms">이용약관</FooterLink>
-              <FooterLink href="/refund">환불정책</FooterLink>
-            </FooterSection>
-          </div>
-          <div className="mt-12 pt-8 border-t border-gray-200">
-            <div className="space-y-4">
-              <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
-                <FooterLink href="/privacy" className="text-xs">
-                  개인정보처리방침
-                </FooterLink>
-                <span className="text-gray-300">|</span>
-                <FooterLink href="/terms" className="text-xs">
-                  이용약관
-                </FooterLink>
+      {/* 모바일에서는 홈 페이지에서만 footer 표시 */}
+      {(!isMobile || location.pathname === "/") && (
+        <Footer>
+          <FooterContent className={isMobile ? "" : "mb-20"}>
+            {!isMobile && (
+              <div className="grid grid-cols-3 gap-8">
+                <FooterSection>
+                  <FooterTitle>서비스</FooterTitle>
+                  {NAVIGATION_ITEMS.map((item) => (
+                    <FooterLink key={item.href} href={item.href}>
+                      {item.label}
+                    </FooterLink>
+                  ))}
+                </FooterSection>
+                <FooterSection>
+                  <FooterTitle>고객지원</FooterTitle>
+                  <FooterLink href="/faq">자주 묻는 질문</FooterLink>
+                  <FooterLink href="/my-page/inquiry">문의하기</FooterLink>
+                  <FooterLink href="/notice">공지사항</FooterLink>
+                </FooterSection>
+                {/* <FooterSection>
+                <FooterTitle>회사소개</FooterTitle>
+                <FooterLink href="/about">회사 소개</FooterLink>
+                <FooterLink href="/history">연혁</FooterLink>
+                <FooterLink href="/location">찾아오시는 길</FooterLink>
+              </FooterSection> */}
+                <FooterSection>
+                  <FooterTitle>정책</FooterTitle>
+                  <FooterLink href="/privacy">개인정보처리방침</FooterLink>
+                  <FooterLink href="/terms">이용약관</FooterLink>
+                  <FooterLink href="/refund">환불정책</FooterLink>
+                </FooterSection>
               </div>
-              <div className="text-xs text-gray-500 text-center space-y-1">
-                <div>영선산업 | 대표: 김영선</div>
-                <div>주소: 대전 동구 가양2동 408-7</div>
-                <div>호스팅사업자: 영선산업 | 사업자등록번호: 305-26-32033</div>
+            )}
+            {isMobile ? (
+              // 모바일: 간소화된 레이아웃 (섹션 없음, border 없음)
+              <div>
+                <div className="text-xs text-gray-500 text-center leading-relaxed">
+                  <div className="mb-1">
+                    영선산업 | 대표: 김영선 | 사업자등록번호: 305-26-32033
+                  </div>
+                  <div>대전 동구 가양2동 408-7</div>
+                </div>
+                <p className="text-xs text-gray-500 text-center">
+                  © 2024 ESSE SION. All rights reserved.
+                </p>
               </div>
-              <p className="text-xs text-gray-500 text-center">
-                2024 ESSE SION. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </FooterContent>
-      </Footer>
+            ) : (
+              // 데스크톱: 기존 레이아웃 유지
+              <div className="mt-12 pt-8 border-t border-gray-200">
+                <div className="space-y-4">
+                  <div className="text-xs text-gray-500 text-center space-y-1">
+                    <div>영선산업 | 대표: 김영선</div>
+                    <div>주소: 대전 동구 가양2동 408-7</div>
+                    <div>
+                      호스팅사업자: 영선산업 | 사업자등록번호: 305-26-32033
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    © 2024 ESSE SION. All rights reserved.
+                  </p>
+                </div>
+              </div>
+            )}
+          </FooterContent>
+        </Footer>
+      )}
     </>
   );
 }
