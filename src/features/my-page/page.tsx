@@ -49,9 +49,9 @@ export default function MypagePage() {
                     }}
                   />
                   <ListItem
-                    label="고객센터"
+                    label="자주 묻는 질문"
                     onClick={() => {
-                      navigate("/customer-service");
+                      navigate("/faq");
                     }}
                   />
                   <ListItem

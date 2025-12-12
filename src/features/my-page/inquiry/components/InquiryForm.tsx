@@ -65,7 +65,7 @@ export const InquiryForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="space-y-2">
+        <div className="space-y-2 py-2">
           <Label>제목</Label>
           <Controller
             name="title"

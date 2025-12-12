@@ -12,6 +12,8 @@ import {
 import type { Product, ProductOption } from "../../types/product";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
+import { useCartStore } from "@/store/cart";
+import { useModalStore } from "@/store/modal";
 
 interface SelectedOption {
   option: ProductOption;
@@ -22,17 +24,20 @@ interface MobilePurchaseSheetProps {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddToCart: (items: SelectedOption[]) => void;
-  onOrder: (items: SelectedOption[]) => void;
+  onProcessOrder: (
+    selectedOptions: SelectedOption[],
+    baseQuantity: number
+  ) => void;
 }
 
 export function MobilePurchaseSheet({
   product,
   open,
   onOpenChange,
-  onAddToCart,
-  onOrder,
+  onProcessOrder,
 }: MobilePurchaseSheetProps) {
+  const { addToCart } = useCartStore();
+  const { confirm } = useModalStore();
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
 
   // 옵션이 없으면 기본 상품으로 1개 초기화
@@ -87,41 +92,37 @@ export function MobilePurchaseSheet({
   const grandTotal = totalAmount;
 
   const handleAddToCart = () => {
-    if (!hasOptions) {
-      // 옵션이 없으면 기본 상품으로 추가 (수량 포함)
-      onAddToCart([
-        {
-          option: {
-            id: "base",
-            name: product.name,
-            additionalPrice: 0,
-          },
-          quantity: baseQuantity,
-        },
-      ]);
+    if (hasOptions) {
+      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
+      if (selectedOptions.length === 0) {
+        confirm("옵션을 선택해주세요.");
+        return;
+      }
+
+      // 선택된 각 옵션을 장바구니에 추가
+      selectedOptions.forEach((selectedOption) => {
+        addToCart(product, {
+          option: selectedOption.option,
+          quantity: selectedOption.quantity,
+        });
+      });
+
+      // 옵션 초기화
+      setSelectedOptions([]);
     } else {
-      onAddToCart(selectedOptions);
+      // 옵션이 없는 경우: baseQuantity로 추가
+      addToCart(product, { quantity: baseQuantity });
+
+      // 수량 초기화
+      setBaseQuantity(1);
     }
+
     onOpenChange(false);
   };
 
   const handleOrder = () => {
-    if (!hasOptions) {
-      // 옵션이 없으면 기본 상품으로 주문 (수량 포함)
-      onOrder([
-        {
-          option: {
-            id: "base",
-            name: product.name,
-            additionalPrice: 0,
-          },
-          quantity: baseQuantity,
-        },
-      ]);
-    } else {
-      onOrder(selectedOptions);
-    }
     onOpenChange(false);
+    onProcessOrder(selectedOptions, baseQuantity);
   };
 
   return (

@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ProductOption } from "../types/product";
+import type { ProductOption, Product } from "../types/product";
 import { Badge } from "@/components/ui/badge";
 import {
   getCategoryLabel,
@@ -53,6 +53,54 @@ interface SelectedOption {
   quantity: number;
 }
 
+/**
+ * 주문 처리 및 네비게이션을 수행하는 공통 헬퍼 함수
+ * CartItem 변환, 옵션 검증, 주문 상태 설정, 네비게이션을 처리합니다.
+ */
+function processOrderAndNavigate(
+  product: Product,
+  hasOptions: boolean,
+  selectedOptions: SelectedOption[],
+  baseQuantity: number,
+  setOrderItems: (items: CartItem[]) => void,
+  navigate: (path: string) => void,
+  confirm: (message: string) => void
+): void {
+  if (hasOptions) {
+    // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
+    if (selectedOptions.length === 0) {
+      confirm("옵션을 선택해주세요.");
+      return;
+    }
+
+    // SelectedOption[]을 CartItem[]로 변환
+    const orderItems: CartItem[] = selectedOptions.map((selectedOption) => ({
+      id: generateItemId(product.id, selectedOption.option.id),
+      type: "product",
+      product,
+      selectedOption: selectedOption.option,
+      quantity: selectedOption.quantity,
+    }));
+
+    setOrderItems(orderItems);
+  } else {
+    // 옵션이 없는 경우
+    const orderItems: CartItem[] = [
+      {
+        id: generateItemId(product.id, "base"),
+        type: "product",
+        product,
+        selectedOption: undefined,
+        quantity: baseQuantity,
+      },
+    ];
+
+    setOrderItems(orderItems);
+  }
+
+  navigate(`/order/order-form`);
+}
+
 export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -67,7 +115,7 @@ export default function ShopDetailPage() {
 
   const product = PRODUCTS_DATA.find((p) => p.id === Number(id));
 
-  const hasOptions = product?.options && product.options.length > 0;
+  const hasOptions = !!(product?.options && product.options.length > 0);
 
   // 유사한 상품 찾기 (같은 카테고리, 색상, 패턴, 재질 중 하나 이상 일치)
   const similarProducts = useMemo(() => {
@@ -83,7 +131,7 @@ export default function ShopDetailPage() {
         p.pattern === product.pattern ||
         p.material === product.material
       );
-    }).slice(0, 4); // 최대 4개만 표시
+    }).slice(0, isMobile ? 3 : 4); // 최대 4개만 표시
   }, [product]);
 
   const handleSelectOption = (option: ProductOption) => {
@@ -143,39 +191,20 @@ export default function ShopDetailPage() {
   const handleOrder = () => {
     if (!product) return;
 
-    if (hasOptions) {
-      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
-      if (selectedOptions.length === 0) {
-        confirm("옵션을 선택해주세요.");
-        return;
-      }
-
-      // SelectedOption[]을 CartItem[]로 변환
-      const orderItems: CartItem[] = selectedOptions.map((selectedOption) => ({
-        id: generateItemId(product.id, selectedOption.option.id),
-        type: "product",
-        product,
-        selectedOption: selectedOption.option,
-        quantity: selectedOption.quantity,
-      }));
-
-      setOrderItems(orderItems);
-    } else {
-      // 옵션이 없는 경우
-      const orderItems: CartItem[] = [
-        {
-          id: generateItemId(product.id, "base"),
-          type: "product",
-          product,
-          selectedOption: undefined,
-          quantity: baseQuantity,
-        },
-      ];
-
-      setOrderItems(orderItems);
+    if (isMobile) {
+      setIsPurchaseSheetOpen(true);
+      return;
     }
 
-    navigate(`/order/order-form`);
+    processOrderAndNavigate(
+      product,
+      hasOptions,
+      selectedOptions,
+      baseQuantity,
+      setOrderItems,
+      navigate,
+      confirm
+    );
   };
 
   if (!product) {
@@ -397,8 +426,17 @@ export default function ShopDetailPage() {
           product={product}
           open={isPurchaseSheetOpen}
           onOpenChange={setIsPurchaseSheetOpen}
-          onAddToCart={handleAddToCart}
-          onOrder={handleOrder}
+          onProcessOrder={(selectedOptions, baseQuantity) =>
+            processOrderAndNavigate(
+              product,
+              hasOptions,
+              selectedOptions,
+              baseQuantity,
+              setOrderItems,
+              navigate,
+              confirm
+            )
+          }
         />
       </MainContent>
     </MainLayout>

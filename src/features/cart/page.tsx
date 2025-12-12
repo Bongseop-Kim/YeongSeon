@@ -306,8 +306,8 @@ const CartPage = () => {
           product.pattern === props.pattern ||
           product.material === props.material
       );
-    }).slice(0, 8); // 최대 8개만 표시
-  }, [items]);
+    }).slice(0, isMobile ? 6 : 8); // 최대 8개만 표시
+  }, [items, isMobile]);
 
   const isAllChecked =
     items.length > 0 && selectedItems.length === items.length;
