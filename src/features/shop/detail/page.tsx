@@ -64,12 +64,12 @@ function processOrderAndNavigate(
   baseQuantity: number,
   setOrderItems: (items: CartItem[]) => void,
   navigate: (path: string) => void,
-  confirm: (message: string) => void
+  alert: (message: string) => void
 ): void {
   if (hasOptions) {
     // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
     if (selectedOptions.length === 0) {
-      confirm("옵션을 선택해주세요.");
+      alert("옵션을 선택해주세요.");
       return;
     }
 
@@ -106,7 +106,7 @@ export default function ShopDetailPage() {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const { addToCart } = useCartStore();
-  const { confirm } = useModalStore();
+  const { alert } = useModalStore();
   const { setOrderItems } = useOrderStore();
   const [isLiked, setIsLiked] = useState(false);
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
@@ -165,7 +165,7 @@ export default function ShopDetailPage() {
     if (hasOptions) {
       // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
       if (selectedOptions.length === 0) {
-        confirm("옵션을 선택해주세요.");
+        alert("옵션을 선택해주세요.");
         return;
       }
 
@@ -203,7 +203,7 @@ export default function ShopDetailPage() {
       baseQuantity,
       setOrderItems,
       navigate,
-      confirm
+      alert
     );
   };
 
@@ -434,7 +434,7 @@ export default function ShopDetailPage() {
               baseQuantity,
               setOrderItems,
               navigate,
-              confirm
+              alert
             )
           }
         />

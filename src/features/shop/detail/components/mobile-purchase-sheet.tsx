@@ -37,7 +37,7 @@ export function MobilePurchaseSheet({
   onProcessOrder,
 }: MobilePurchaseSheetProps) {
   const { addToCart } = useCartStore();
-  const { confirm } = useModalStore();
+  const { alert } = useModalStore();
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
 
   // 옵션이 없으면 기본 상품으로 1개 초기화
@@ -95,7 +95,7 @@ export function MobilePurchaseSheet({
     if (hasOptions) {
       // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
       if (selectedOptions.length === 0) {
-        confirm("옵션을 선택해주세요.");
+        alert("옵션을 선택해주세요.");
         return;
       }
 
