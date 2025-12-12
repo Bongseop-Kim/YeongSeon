@@ -233,11 +233,39 @@ const OrderFormPage = () => {
                   <span>무료</span>
                 </div>
                 <Separator />
-                <div className="flex justify-between text-base font-semibold">
+                <div className="flex justify-between text-base font-semibold space-y-3">
                   <span>총 결제 금액</span>
                   <span className="text-blue-600">
                     {totals.totalPrice.toLocaleString()}원
                   </span>
+                </div>
+                <div className="space-y-3 pt-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-600">
+                      주문 내용을 확인했으며 결재에 동의합니다.
+                    </span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-1 text-xs text-zinc-500 hover:text-zinc-700"
+                      onClick={() => {}}
+                    >
+                      자세히
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-600">
+                      회원님의 개인정보는 안전하게 관리됩니다.
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-1 text-xs text-zinc-500 hover:text-zinc-700"
+                      onClick={() => {}}
+                    >
+                      자세히
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

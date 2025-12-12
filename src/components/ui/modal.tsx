@@ -67,7 +67,7 @@ const GlobalModal = () => {
         <DialogHeader
           className={cn("shrink-0", modalType === "custom" && "px-6 pt-6")}
         >
-          <DialogTitle>{title}</DialogTitle>
+          {title && <DialogTitle>{title}</DialogTitle>}
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {children && (

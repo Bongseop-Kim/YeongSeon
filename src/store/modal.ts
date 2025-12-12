@@ -26,7 +26,7 @@ interface ModalState {
 
 interface ModalStore extends ModalState {
   openModal: (config: {
-    title: string;
+    title?: string;
     modalType?: ModalType;
     description?: string;
     children?: React.ReactNode | (() => React.ReactNode);
@@ -122,7 +122,7 @@ export const useModalStore = create<ModalStore>((set, get) => ({
   alert: (message, onConfirm, options) => {
     get().openModal({
       modalType: "alert",
-      title: options?.title || "알림",
+      title: options?.title,
       description: message,
       confirmText: options?.confirmText || "확인",
       onConfirm,
