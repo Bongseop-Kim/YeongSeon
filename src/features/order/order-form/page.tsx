@@ -251,7 +251,7 @@ const OrderFormPage = () => {
                   <span>무료</span>
                 </div>
                 <Separator />
-                <div className="flex justify-between text-base font-semibold space-y-3">
+                <div className="flex justify-between text-base font-semibold">
                   <span>총 결제 금액</span>
                   <span className="text-blue-600">
                     {totals.totalPrice.toLocaleString()}원
@@ -260,7 +260,7 @@ const OrderFormPage = () => {
                 <div className="space-y-3 pt-3">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-zinc-600">
-                      주문 내용을 확인했으며 결재에 동의합니다.
+                      주문 내용을 확인했으며 결제에 동의합니다.
                     </span>
                     <Button
                       variant="link"
