@@ -19,16 +19,43 @@ const ShippingFormPage = () => {
   const navigate = useNavigate();
   const [showPostcodeSearch, setShowPostcodeSearch] = useState(false);
 
-  const form = useForm<ShippingAddress>({});
+  const form = useForm<ShippingAddress>({
+    defaultValues: {
+      recipientName: "",
+      recipientPhone: "",
+      address: "",
+      detailAddress: "",
+      postalCode: "",
+      deliveryRequest: undefined,
+      deliveryMemo: undefined,
+      isDefault: false,
+    },
+  });
+
+  const { handleSubmit } = form;
+
+  const onSubmit = (data: ShippingAddress) => {
+    // TODO: 배송지 저장 로직 구현
+    console.log("배송지 저장:", data);
+    navigate(-1);
+  };
 
   return (
     <PopupLayout
       title="배송지 추가"
       onClose={() => navigate(-1)}
-      footer={<Button className="w-full">저장하기</Button>}
+      footer={
+        <Button type="submit" form="shipping-form" className="w-full">
+          저장하기
+        </Button>
+      }
     >
       <Form {...form}>
-        <div className="space-y-4">
+        <form
+          id="shipping-form"
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
           <div className="space-y-2">
             <Label>이름</Label>
             <Controller
@@ -38,7 +65,7 @@ const ShippingFormPage = () => {
                 <Input
                   type="text"
                   placeholder="받는 분의 이름을 입력해주세요."
-                  value={field.value}
+                  value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value)}
                   className="w-full"
                 />
@@ -55,7 +82,7 @@ const ShippingFormPage = () => {
                 <Input
                   type="tel"
                   placeholder="휴대폰번호를 입력해주세요."
-                  value={field.value}
+                  value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value)}
                   className="w-full"
                 />
@@ -73,7 +100,7 @@ const ShippingFormPage = () => {
                   <Input
                     type="text"
                     placeholder="우편번호를 입력해주세요."
-                    value={field.value}
+                    value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value)}
                     className="w-full"
                     disabled
@@ -95,7 +122,7 @@ const ShippingFormPage = () => {
                 <Input
                   type="text"
                   placeholder="주소를 입력해주세요."
-                  value={field.value}
+                  value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value)}
                   className="w-full"
                   disabled
@@ -118,7 +145,7 @@ const ShippingFormPage = () => {
                 <Input
                   type="text"
                   placeholder="상세주소를 입력해주세요."
-                  value={field.value}
+                  value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value)}
                   className="w-full"
                 />
@@ -142,7 +169,11 @@ const ShippingFormPage = () => {
                     placeholder="최대 50자까지 입력 가능합니다."
                     className="min-h-[100px] resize-none"
                     maxLength={50}
-                    {...field}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
                   />
                 )}
               />
@@ -154,7 +185,7 @@ const ShippingFormPage = () => {
             control={form.control}
             label="기본 배송지"
           />
-        </div>
+        </form>
       </Form>
     </PopupLayout>
   );
