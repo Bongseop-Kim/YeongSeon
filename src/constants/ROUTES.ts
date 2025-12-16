@@ -9,7 +9,7 @@ export const ROUTES = {
   ORDER_LIST: "/order/order-list", // 주문 내역
   ORDER_DETAIL: "/order", // 주문 상세
   CLAIM_LIST: "/order/claim-list", // 취소 내역
-  CLAIM_FORM: "/order/claim/:type/:orderId/:itemId", // 취소 신청
+  CLAIM_FORM: "/order/claim", // 취소 신청
   SHIPPING: "/shipping", // 배송
   SHIPPING_FORM: "/shipping/form", // 배송 정보
   MY_PAGE: "/my-page", // 마이페이지
