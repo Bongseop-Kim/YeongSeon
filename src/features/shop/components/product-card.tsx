@@ -1,5 +1,6 @@
 import { HeartIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 import type { Product } from "../types/product";
 
 interface ProductCardProps {
@@ -10,7 +11,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/shop/${product.id}`);
+    navigate(`${ROUTES.SHOP}/${product.id}`);
   };
 
   return (

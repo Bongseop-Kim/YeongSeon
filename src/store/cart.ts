@@ -7,6 +7,7 @@ import type { TieItem } from "@/features/reform/types/reform";
 import { calculateDiscount } from "@/types/coupon";
 import { useModalStore } from "./modal";
 import { generateItemId } from "@/lib/utils";
+import { ROUTES } from "@/constants/ROUTES";
 
 interface CartState {
   items: CartItem[];
@@ -55,7 +56,7 @@ export const useCartStore = create<CartState>()(
               confirmText: "장바구니 보기",
               cancelText: "닫기",
               onConfirm: () => {
-                window.location.href = "/cart";
+                window.location.href = ROUTES.CART;
               },
             });
           }
@@ -77,7 +78,7 @@ export const useCartStore = create<CartState>()(
               confirmText: "장바구니 보기",
               cancelText: "닫기",
               onConfirm: () => {
-                window.location.href = "/cart";
+                window.location.href = ROUTES.CART;
               },
             });
           }
@@ -103,7 +104,7 @@ export const useCartStore = create<CartState>()(
           confirmText: "장바구니 보기",
           cancelText: "닫기",
           onConfirm: () => {
-            window.location.href = "/cart";
+            window.location.href = ROUTES.CART;
           },
         });
       },

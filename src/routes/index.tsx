@@ -15,13 +15,15 @@ import MyInfoEmailPage from "@/features/my-page/my-info/email/page";
 import MyInfoNoticePage from "@/features/my-page/my-info/notice/page";
 import MyInfoLeavePage from "@/features/my-page/my-info/leave/page";
 import OrderListPage from "@/features/order/order-list/page";
-import OrderDetailPage from "@/features/order/order-detail/[id]/page";
+import OrderDetailPage from "@/features/order/[id]/page";
 import ClaimListPage from "@/features/order/claim-list/page";
 import ClaimFormPage from "@/features/order/claim/[type]/[orderId]/[itemId]/page";
 import CartPage from "@/features/cart/page";
 import FaqPage from "@/features/faq/page";
 import InquiryPage from "@/features/my-page/inquiry/page";
 import NoticePage from "@/features/notice/page";
+import PrivacyPolicyPage from "@/features/privacy-policy/page";
+import TermsOfServicePage from "@/features/terms-of-service/page";
 
 export default function Router() {
   return (
@@ -37,7 +39,7 @@ export default function Router() {
 
       <Route path="/order/order-form" element={<OrderFormPage />} />
       <Route path="/order/order-list" element={<OrderListPage />} />
-      <Route path="/order/order-detail/:id" element={<OrderDetailPage />} />
+      <Route path="/order/:id" element={<OrderDetailPage />} />
       <Route path="/order/claim-list" element={<ClaimListPage />} />
       <Route
         path="/order/claim/:type/:orderId/:itemId"
@@ -55,6 +57,8 @@ export default function Router() {
       <Route path="/my-page/inquiry" element={<InquiryPage />} />
       <Route path="/faq" element={<FaqPage />} />
       <Route path="/notice" element={<NoticePage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsOfServicePage />} />
     </Routes>
   );
 }

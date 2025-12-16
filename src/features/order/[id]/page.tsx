@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
-import { OrderItemCard } from "../../components/order-item-card";
-import type { Order } from "../../types/order-item";
-import { formatDate } from "../../utils/fs";
+import { OrderItemCard } from "../components/order-item-card";
+import type { Order } from "../types/order-item";
+import { formatDate } from "../utils/fs";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import React from "react";
 import { calculateDiscount } from "@/types/coupon";
@@ -124,14 +125,14 @@ const OrderDetailPage = () => {
 
   useEffect(() => {
     if (!id) {
-      navigate("/order/order-list");
+      navigate(ROUTES.ORDER_LIST);
       return;
     }
 
     // 실제로는 API에서 주문 정보를 가져올 것
     const foundOrder = dummyOrders.find((o) => o.id === id);
     if (!foundOrder) {
-      navigate("/order/order-list");
+      navigate(ROUTES.ORDER_LIST);
       return;
     }
 
@@ -189,15 +190,15 @@ const OrderDetailPage = () => {
   const totals = calculateTotals();
 
   const handleReturnRequest = (itemId: string) => {
-    navigate(`/order/claim/return/${order.id}/${itemId}`);
+    navigate(`${ROUTES.CLAIM_FORM}/return/${order.id}/${itemId}`);
   };
 
   const handleExchangeRequest = (itemId: string) => {
-    navigate(`/order/claim/exchange/${order.id}/${itemId}`);
+    navigate(`${ROUTES.CLAIM_FORM}/exchange/${order.id}/${itemId}`);
   };
 
   const handleCancelRequest = (itemId: string) => {
-    navigate(`/order/claim/cancel/${order.id}/${itemId}`);
+    navigate(`${ROUTES.CLAIM_FORM}/cancel/${order.id}/${itemId}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -347,7 +348,7 @@ const OrderDetailPage = () => {
           }
           button={
             <Button
-              onClick={() => navigate("/order/order-list")}
+              onClick={() => navigate(ROUTES.ORDER_LIST)}
               variant="outline"
               className="w-full"
               size="xl"

@@ -4,7 +4,7 @@ export const ROUTE_TITLES = {
   "/design": "디자인",
   "/custom-order": "주문 제작",
   "/reform": "수선",
-  "/order/order-form": "주문서 작성",
+  "/order/order-form": "주문서",
   "/order/order-list": "주문 내역",
   "/order/claim-list": "취소 내역",
   "/shipping": "배송",
@@ -15,4 +15,6 @@ export const ROUTE_TITLES = {
   "/my-page/my-info/email": "이메일 변경",
   "/my-page/my-info/notice": "마케팅 수신 동의",
   "/my-page/my-info/leave": "회원 탈퇴",
+  "/privacy-policy": "개인정보처리방침",
+  "/terms": "이용약관",
 };

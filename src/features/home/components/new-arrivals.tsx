@@ -8,6 +8,7 @@ import {
 import { NEW_ARRIVALS_DATA } from "../constants/NEW_ARRIVALS_DATA";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 
 export const NewArrivals = () => {
   const { isMobile } = useBreakpoint();
@@ -32,7 +33,7 @@ export const NewArrivals = () => {
                 key={item.id}
                 className={isMobile ? "basis-1/2" : "basis-1/4"}
                 onClick={() => {
-                  navigate(`/shop/${item.id}`);
+                  navigate(`${ROUTES.SHOP}/${item.id}`);
                 }}
               >
                 <div className="group cursor-pointer">

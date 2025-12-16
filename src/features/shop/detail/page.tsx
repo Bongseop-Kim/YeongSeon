@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { PRODUCTS_DATA } from "../constants/PRODUCTS_DATA";
@@ -64,12 +65,12 @@ function processOrderAndNavigate(
   baseQuantity: number,
   setOrderItems: (items: CartItem[]) => void,
   navigate: (path: string) => void,
-  confirm: (message: string) => void
+  alert: (message: string) => void
 ): void {
   if (hasOptions) {
     // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
     if (selectedOptions.length === 0) {
-      confirm("옵션을 선택해주세요.");
+      alert("옵션을 선택해주세요.");
       return;
     }
 
@@ -98,7 +99,7 @@ function processOrderAndNavigate(
     setOrderItems(orderItems);
   }
 
-  navigate(`/order/order-form`);
+  navigate(ROUTES.ORDER_FORM);
 }
 
 export default function ShopDetailPage() {
@@ -106,7 +107,7 @@ export default function ShopDetailPage() {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const { addToCart } = useCartStore();
-  const { confirm } = useModalStore();
+  const { alert } = useModalStore();
   const { setOrderItems } = useOrderStore();
   const [isLiked, setIsLiked] = useState(false);
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
@@ -165,7 +166,7 @@ export default function ShopDetailPage() {
     if (hasOptions) {
       // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
       if (selectedOptions.length === 0) {
-        confirm("옵션을 선택해주세요.");
+        alert("옵션을 선택해주세요.");
         return;
       }
 
@@ -203,7 +204,7 @@ export default function ShopDetailPage() {
       baseQuantity,
       setOrderItems,
       navigate,
-      confirm
+      alert
     );
   };
 
@@ -213,7 +214,7 @@ export default function ShopDetailPage() {
         <MainContent>
           <div className="flex flex-col items-center justify-center py-16">
             <p className="text-zinc-500 mb-4">상품을 찾을 수 없습니다.</p>
-            <Button onClick={() => navigate("/shop")}>쇼핑 계속하기</Button>
+            <Button onClick={() => navigate(ROUTES.SHOP)}>쇼핑 계속하기</Button>
           </div>
         </MainContent>
       </MainLayout>
@@ -434,7 +435,7 @@ export default function ShopDetailPage() {
               baseQuantity,
               setOrderItems,
               navigate,
-              confirm
+              alert
             )
           }
         />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -38,7 +39,7 @@ const OrderFormPage = () => {
   useEffect(() => {
     // 주문 아이템이 없으면 장바구니로 리다이렉트
     if (!hasOrderItems()) {
-      navigate("/cart");
+      navigate(ROUTES.CART);
     }
   }, [navigate, hasOrderItems]);
 
@@ -83,12 +84,12 @@ const OrderFormPage = () => {
   const handleCompleteOrder = () => {
     clearOrderItems();
     alert("주문이 완료되었습니다!");
-    navigate("/order/order-detail/order-1");
+    navigate(`${ROUTES.ORDER_DETAIL}/order-1`);
   };
 
   const openPopup = () => {
     const popup = window.open(
-      "shipping",
+      ROUTES.SHIPPING,
       "popup",
       "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
     );
@@ -133,13 +134,30 @@ const OrderFormPage = () => {
 
   const totals = calculateTotals();
 
+  const openPrivacyPolicyPopup = () => {
+    const popup = window.open(
+      ROUTES.PRIVACY_POLICY,
+      "popup",
+      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
+    );
+    setPopup(popup);
+  };
+
+  const openTermsOfServicePopup = () => {
+    const popup = window.open(
+      ROUTES.TERMS,
+      "popup",
+      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
+    );
+    setPopup(popup);
+  };
   if (orderItems.length === 0) {
     return (
       <MainLayout>
         <MainContent>
           <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
             <div>주문 데이터를 찾을 수 없습니다.</div>
-            <Button onClick={() => navigate("/cart")}>
+            <Button onClick={() => navigate(ROUTES.CART)}>
               장바구니로 돌아가기
             </Button>
           </div>
@@ -238,6 +256,34 @@ const OrderFormPage = () => {
                   <span className="text-blue-600">
                     {totals.totalPrice.toLocaleString()}원
                   </span>
+                </div>
+                <div className="space-y-3 pt-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-600">
+                      주문 내용을 확인했으며 결제에 동의합니다.
+                    </span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-1 text-xs text-zinc-500 hover:text-zinc-700"
+                      onClick={openTermsOfServicePopup}
+                    >
+                      자세히
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-600">
+                      회원님의 개인정보는 안전하게 관리됩니다.
+                    </span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-1 text-xs text-zinc-500 hover:text-zinc-700"
+                      onClick={openPrivacyPolicyPopup}
+                    >
+                      자세히
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

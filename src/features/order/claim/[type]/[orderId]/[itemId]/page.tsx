@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
+import { ROUTES } from "@/constants/ROUTES";
 
 // 더미 주문 데이터 (실제로는 API에서 가져올 것)
 const dummyOrders: Order[] = [
@@ -194,26 +195,26 @@ const ClaimFormPage = () => {
 
   useEffect(() => {
     if (!type || !orderId || !itemId) {
-      navigate("/order/order-list");
+      navigate(ROUTES.ORDER_LIST);
       return;
     }
 
     // 유효한 클레임 타입인지 확인
     if (!["cancel", "return", "exchange"].includes(type)) {
-      navigate("/order/order-list");
+      navigate(ROUTES.ORDER_LIST);
       return;
     }
 
     // 실제로는 API에서 주문 정보를 가져올 것
     const foundOrder = dummyOrders.find((o) => o.id === orderId);
     if (!foundOrder) {
-      navigate("/order/order-list");
+      navigate(ROUTES.ORDER_LIST);
       return;
     }
 
     const foundItem = foundOrder.items.find((item) => item.id === itemId);
     if (!foundItem) {
-      navigate("/order/order-list");
+      navigate(ROUTES.ORDER_LIST);
       return;
     }
 
@@ -249,7 +250,7 @@ const ClaimFormPage = () => {
     });
     // 실제로는 API 호출
     alert(`${claimTypeLabel} 신청이 완료되었습니다.`);
-    navigate(`/order/order-detail/${orderId}`);
+    navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`);
   };
 
   return (
@@ -412,7 +413,7 @@ const ClaimFormPage = () => {
                         variant="outline"
                         className="flex-1"
                         onClick={() =>
-                          navigate(`/order/order-detail/${orderId}`)
+                          navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`)
                         }
                       >
                         취소

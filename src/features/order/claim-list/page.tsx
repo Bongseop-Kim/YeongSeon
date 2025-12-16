@@ -107,7 +107,7 @@ const dummyClaims: ClaimItem[] = [
 ];
 
 export default function ClaimListPage() {
-  const router = useNavigate();
+  const navigate = useNavigate();
   const { setSearchEnabled } = useSearchStore();
 
   useEffect(() => {
@@ -165,7 +165,7 @@ export default function ClaimListPage() {
                     <CardContent className="py-4">
                       <OrderItemCard
                         item={claim.item}
-                        onClick={() => router(`/claim/${claim.id}`)}
+                        onClick={() => navigate(`/claim/${claim.id}`)}
                       />
 
                       {/* 클레임 사유 */}
