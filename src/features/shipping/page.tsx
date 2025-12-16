@@ -1,6 +1,7 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ROUTES } from "@/constants/ROUTES";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +11,7 @@ const ShippingPage = () => {
   return (
     <PopupLayout
       title="배송지 정보"
-      onClose={() => window.close()}
+      onClose={() => (window.opener ? window.close() : navigate(-1))}
       headerContent={
         <Input
           placeholder="배송지 이름, 주소, 연락처로 검색하세요."
@@ -23,7 +24,7 @@ const ShippingPage = () => {
       <Button
         className="w-full"
         variant="outline"
-        onClick={() => navigate("/shipping/form")}
+        onClick={() => navigate(ROUTES.SHIPPING_FORM)}
       >
         배송지 추가하기
       </Button>
