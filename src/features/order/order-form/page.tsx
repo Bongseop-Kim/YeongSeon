@@ -89,7 +89,7 @@ const OrderFormPage = () => {
 
   const openPopup = () => {
     const popup = window.open(
-      "/shipping",
+      ROUTES.SHIPPING,
       "popup",
       "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
     );
@@ -136,7 +136,7 @@ const OrderFormPage = () => {
 
   const openPrivacyPolicyPopup = () => {
     const popup = window.open(
-      "/privacy-policy",
+      ROUTES.PRIVACY_POLICY,
       "popup",
       "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
     );
@@ -145,7 +145,7 @@ const OrderFormPage = () => {
 
   const openTermsOfServicePopup = () => {
     const popup = window.open(
-      "/terms",
+      ROUTES.TERMS,
       "popup",
       "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
     );
@@ -157,7 +157,7 @@ const OrderFormPage = () => {
         <MainContent>
           <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
             <div>주문 데이터를 찾을 수 없습니다.</div>
-            <Button onClick={() => navigate("/cart")}>
+            <Button onClick={() => navigate(ROUTES.CART)}>
               장바구니로 돌아가기
             </Button>
           </div>
