@@ -40,7 +40,7 @@ export const PopupLayout = ({
 
       {/* footer */}
       {footer && (
-        <div className="sticky bottom-0 bg-white border-t p-2 py-4">
+        <div className="sticky bottom-0 z-10 bg-white border-t p-2 py-4 pb-[env(safe-area-inset-bottom)]">
           {footer}
         </div>
       )}
