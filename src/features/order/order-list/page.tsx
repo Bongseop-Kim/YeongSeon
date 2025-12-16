@@ -13,6 +13,7 @@ import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
 import React from "react";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
+import { ROUTES } from "@/constants/ROUTES";
 
 // 더미 주문 데이터
 const dummyOrders: Order[] = [
@@ -119,7 +120,7 @@ const dummyOrders: Order[] = [
 ];
 
 export default function OrderListPage() {
-  const router = useNavigate();
+  const navigate = useNavigate();
   const { setSearchEnabled } = useSearchStore();
 
   useEffect(() => {
@@ -136,15 +137,15 @@ export default function OrderListPage() {
   }, []);
 
   const handleReturnRequest = (orderId: string, itemId: string) => {
-    router(`/order/claim/return/${orderId}/${itemId}`);
+    navigate(`${ROUTES.CLAIM_FORM}/return/${orderId}/${itemId}`);
   };
 
   const handleExchangeRequest = (orderId: string, itemId: string) => {
-    router(`/order/claim/exchange/${orderId}/${itemId}`);
+    navigate(`${ROUTES.CLAIM_FORM}/exchange/${orderId}/${itemId}`);
   };
 
   const handleCancelRequest = (orderId: string, itemId: string) => {
-    router(`/order/claim/cancel/${orderId}/${itemId}`);
+    navigate(`${ROUTES.CLAIM_FORM}/cancel/${orderId}/${itemId}`);
   };
 
   return (
@@ -184,7 +185,7 @@ export default function OrderListPage() {
                             <OrderItemCard
                               item={item}
                               onClick={() =>
-                                router(`/order/order-detail/order-1`)
+                                navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
                               }
                               actions={
                                 <div className="flex gap-2">

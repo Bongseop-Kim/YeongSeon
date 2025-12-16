@@ -84,7 +84,7 @@ const OrderFormPage = () => {
   const handleCompleteOrder = () => {
     clearOrderItems();
     alert("주문이 완료되었습니다!");
-    navigate("/order/order-detail/order-1");
+    navigate(`${ROUTES.ORDER_DETAIL}/order-1`);
   };
 
   const openPopup = () => {

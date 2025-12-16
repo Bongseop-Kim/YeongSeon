@@ -1,14 +1,13 @@
 export const ROUTES = {
   HOME: "/",
   SHOP: "/shop", // 스토어
-  SHOP_DETAIL: "/shop/:id", // 스토어 상품 상세
   DESIGN: "/design", // 디자인
   CUSTOM_ORDER: "/custom-order", // 주문 제작
   REFORM: "/reform", // 수선
   CART: "/cart", // 장바구니
   ORDER_FORM: "/order/order-form", // 주문서
   ORDER_LIST: "/order/order-list", // 주문 내역
-  ORDER_DETAIL: "/order/order-detail/:id", // 주문 상세
+  ORDER_DETAIL: "/order", // 주문 상세
   CLAIM_LIST: "/order/claim-list", // 취소 내역
   CLAIM_FORM: "/order/claim/:type/:orderId/:itemId", // 취소 신청
   SHIPPING: "/shipping", // 배송
