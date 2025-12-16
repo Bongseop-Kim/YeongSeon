@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { PRODUCTS_DATA } from "../constants/PRODUCTS_DATA";
@@ -98,7 +99,7 @@ function processOrderAndNavigate(
     setOrderItems(orderItems);
   }
 
-  navigate(`/order/order-form`);
+  navigate(ROUTES.ORDER_FORM);
 }
 
 export default function ShopDetailPage() {
@@ -213,7 +214,7 @@ export default function ShopDetailPage() {
         <MainContent>
           <div className="flex flex-col items-center justify-center py-16">
             <p className="text-zinc-500 mb-4">상품을 찾을 수 없습니다.</p>
-            <Button onClick={() => navigate("/shop")}>쇼핑 계속하기</Button>
+            <Button onClick={() => navigate(ROUTES.SHOP)}>쇼핑 계속하기</Button>
           </div>
         </MainContent>
       </MainLayout>

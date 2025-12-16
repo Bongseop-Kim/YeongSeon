@@ -35,6 +35,7 @@ import { ProductCard } from "../shop/components/product-card";
 import { PRODUCTS_DATA } from "../shop/constants/PRODUCTS_DATA";
 import { calculateDiscount } from "@/types/coupon";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { ROUTES } from "@/constants/ROUTES";
 
 const CartPage = () => {
   const { openModal, confirm } = useModalStore();
@@ -221,7 +222,7 @@ const CartPage = () => {
     setOrderItems(selectedCartItems);
 
     // 주문 페이지로 이동
-    navigate("/order/order-form");
+    navigate(ROUTES.ORDER_FORM);
   };
 
   // 선택된 상품의 총액 계산

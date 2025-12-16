@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -124,14 +125,14 @@ const OrderDetailPage = () => {
 
   useEffect(() => {
     if (!id) {
-      navigate("/order/order-list");
+      navigate(ROUTES.ORDER_LIST);
       return;
     }
 
     // 실제로는 API에서 주문 정보를 가져올 것
     const foundOrder = dummyOrders.find((o) => o.id === id);
     if (!foundOrder) {
-      navigate("/order/order-list");
+      navigate(ROUTES.ORDER_LIST);
       return;
     }
 

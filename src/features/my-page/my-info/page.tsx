@@ -2,6 +2,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ROUTES } from "@/constants/ROUTES";
 import { ListItem } from "@/features/my-page/components/list-item";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +36,7 @@ export default function MyInfoPage() {
                     label="회원정보 변경"
                     subLabel="이름, 생년월일, 휴대폰번호, 이메일"
                     onClick={() => {
-                      navigate("/my-page/my-info/detail");
+                      navigate(ROUTES.MY_PAGE_MY_INFO_DETAIL);
                     }}
                   />
                   <ListItem
@@ -47,13 +48,13 @@ export default function MyInfoPage() {
                   <ListItem
                     label="알림 설정"
                     onClick={() => {
-                      navigate("/my-page/my-info/notice");
+                      navigate(ROUTES.MY_PAGE_MY_INFO_NOTICE);
                     }}
                   />
                   <ListItem
                     label="회원탈퇴"
                     onClick={() => {
-                      navigate("/my-page/my-info/leave");
+                      navigate(ROUTES.MY_PAGE_MY_INFO_LEAVE);
                     }}
                   />
                 </div>

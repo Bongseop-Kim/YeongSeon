@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 
 export default function MyInfoDetailPage() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function MyInfoDetailPage() {
                   variant="outline"
                   className="flex-1"
                   onClick={() => {
-                    navigate("/my-page/my-info/email");
+                    navigate(ROUTES.MY_PAGE_MY_INFO_EMAIL);
                   }}
                 >
                   이메일 변경

@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { AdPanel } from "@/components/composite/ad-panel";
+import { ROUTES } from "@/constants/ROUTES";
 
 export default function MypagePage() {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export default function MypagePage() {
                   <button
                     type="button"
                     className="flex items-center justify-between w-full text-left"
-                    onClick={() => navigate("/my-page/my-info")}
+                    onClick={() => navigate(ROUTES.MY_PAGE_MY_INFO)}
                     aria-label="내 정보로 이동"
                   >
                     김봉섭{" "}
@@ -39,31 +40,31 @@ export default function MypagePage() {
                   <ListItem
                     label="주문 내역"
                     onClick={() => {
-                      navigate("/order/order-list");
+                      navigate(ROUTES.ORDER_LIST);
                     }}
                   />
                   <ListItem
                     label="취소/반품/교환 내역"
                     onClick={() => {
-                      navigate("/order/claim-list");
+                      navigate(ROUTES.CLAIM_LIST);
                     }}
                   />
                   <ListItem
                     label="자주 묻는 질문"
                     onClick={() => {
-                      navigate("/faq");
+                      navigate(ROUTES.FAQ);
                     }}
                   />
                   <ListItem
                     label="1:1 문의 내역"
                     onClick={() => {
-                      navigate("/my-page/inquiry");
+                      navigate(ROUTES.MY_PAGE_INQUIRY);
                     }}
                   />
                   <ListItem
                     label="공지사항"
                     onClick={() => {
-                      navigate("/notice");
+                      navigate(ROUTES.NOTICE);
                     }}
                   />
                 </div>

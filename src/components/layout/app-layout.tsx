@@ -14,6 +14,7 @@ import NavLink from "@/components/ui/nav-link";
 import { SearchBar } from "@/components/composite/search-bar";
 import SearchSheet from "@/components/composite/search-sheet";
 import { ROUTE_TITLES } from "@/constants/ROUTE_TITLES";
+import { ROUTES } from "@/constants/ROUTES";
 import MenuSheet from "../composite/menu-sheet";
 import { useSearchStore } from "@/store/search";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
@@ -30,7 +31,11 @@ import {
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const hideHeaderPaths = ["/shipping", "/privacy-policy", "/terms"];
+  const hideHeaderPaths = [
+    ROUTES.SHIPPING,
+    ROUTES.PRIVACY_POLICY,
+    ROUTES.TERMS,
+  ];
   const showHeader = !hideHeaderPaths.some((path) =>
     location.pathname.startsWith(path)
   );
@@ -79,7 +84,7 @@ export default function AppLayout() {
   };
 
   const canGoBack = () => {
-    return window.history.length > 1 && location.pathname !== "/";
+    return window.history.length > 1 && location.pathname !== ROUTES.HOME;
   };
 
   const handleBackClick = () => {
@@ -121,7 +126,7 @@ export default function AppLayout() {
             <HeaderActions className="space-x-1">
               {isMobile && (
                 <NavLink
-                  to="/cart"
+                  to={ROUTES.CART}
                   className={`relative ${cartItemCount > 0 ? "mr-2" : ""}`}
                 >
                   <ShoppingBagIcon className="w-5 h-5" />
@@ -135,9 +140,9 @@ export default function AppLayout() {
               <MenuSheet />
               {!isMobile && (
                 <div className="flex items-center">
-                  <NavLink to="/my-page">마이</NavLink>
+                  <NavLink to={ROUTES.MY_PAGE}>마이</NavLink>
                   <NavLink
-                    to="/cart"
+                    to={ROUTES.CART}
                     className={`relative ${
                       cartItemCount > 0 ? "pr-6 mr-2" : "pr-2 mr-2"
                     }`}
@@ -174,7 +179,7 @@ export default function AppLayout() {
         <Router />
       </div>
       {/* 모바일에서는 홈 페이지에서만 footer 표시 */}
-      {(!isMobile || location.pathname === "/") && (
+      {(!isMobile || location.pathname === ROUTES.HOME) && (
         <Footer>
           <FooterContent className={isMobile ? "" : "mb-20"}>
             {!isMobile && (
@@ -189,9 +194,11 @@ export default function AppLayout() {
                 </FooterSection>
                 <FooterSection>
                   <FooterTitle>고객지원</FooterTitle>
-                  <FooterLink href="/faq">자주 묻는 질문</FooterLink>
-                  <FooterLink href="/my-page/inquiry">문의하기</FooterLink>
-                  <FooterLink href="/notice">공지사항</FooterLink>
+                  <FooterLink href={ROUTES.FAQ}>자주 묻는 질문</FooterLink>
+                  <FooterLink href={ROUTES.MY_PAGE_INQUIRY}>
+                    문의하기
+                  </FooterLink>
+                  <FooterLink href={ROUTES.NOTICE}>공지사항</FooterLink>
                 </FooterSection>
                 {/* <FooterSection>
                 <FooterTitle>회사소개</FooterTitle>
@@ -201,9 +208,11 @@ export default function AppLayout() {
               </FooterSection> */}
                 <FooterSection>
                   <FooterTitle>정책</FooterTitle>
-                  <FooterLink href="/privacy">개인정보처리방침</FooterLink>
-                  <FooterLink href="/terms">이용약관</FooterLink>
-                  <FooterLink href="/refund">환불정책</FooterLink>
+                  <FooterLink href={ROUTES.PRIVACY_POLICY}>
+                    개인정보처리방침
+                  </FooterLink>
+                  <FooterLink href={ROUTES.TERMS}>이용약관</FooterLink>
+                  <FooterLink href={ROUTES.REFUND}>환불정책</FooterLink>
                 </FooterSection>
               </div>
             )}

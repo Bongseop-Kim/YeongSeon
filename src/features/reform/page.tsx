@@ -1,4 +1,6 @@
 import { useForm, useFieldArray } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -22,7 +24,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useNavigate } from "react-router-dom";
 import { Detail } from "./components/detail";
 import { HEIGHT_GUIDE } from "./constants/DETAIL";
 import { REFORM_BASE_COST, REFORM_SHIPPING_COST } from "./constants/COST";
@@ -139,7 +140,7 @@ const ReformPage = () => {
     }));
 
     setOrderItems(orderItems);
-    navigate("/order/order-form");
+    navigate(ROUTES.ORDER_FORM);
   };
 
   const handleMobileOrder = () => {
@@ -161,7 +162,7 @@ const ReformPage = () => {
     }));
 
     setOrderItems(orderItems);
-    navigate("/order/order-form");
+    navigate(ROUTES.ORDER_FORM);
   };
 
   const handleAddToCart = () => {

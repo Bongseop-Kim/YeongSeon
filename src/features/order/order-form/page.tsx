@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -38,7 +39,7 @@ const OrderFormPage = () => {
   useEffect(() => {
     // 주문 아이템이 없으면 장바구니로 리다이렉트
     if (!hasOrderItems()) {
-      navigate("/cart");
+      navigate(ROUTES.CART);
     }
   }, [navigate, hasOrderItems]);
 
