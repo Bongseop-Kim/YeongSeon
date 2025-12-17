@@ -1,10 +1,12 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
+import { useNavigate } from "react-router-dom";
 
 export default function TermsOfServicePage() {
+  const navigate = useNavigate();
   return (
     <PopupLayout
       title="이용약관"
-      onClose={() => window.close()}
+      onClose={() => (window.opener ? window.close() : navigate(-1))}
       contentClassName="px-4"
     >
       <div className="space-y-6 text-sm text-muted-foreground whitespace-pre-line">
