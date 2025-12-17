@@ -59,7 +59,7 @@ export default function Router() {
       <Route path="/faq" element={<FaqPage />} />
       <Route path="/notice" element={<NoticePage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-      <Route path="/terms" element={<TermsOfServicePage />} />
+      <Route path="/terms-of-service" element={<TermsOfServicePage />} />
       <Route path="/refund-policy" element={<RefundPolicyPage />} />
     </Routes>
   );

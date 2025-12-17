@@ -145,7 +145,7 @@ const OrderFormPage = () => {
 
   const openTermsOfServicePopup = () => {
     const popup = window.open(
-      ROUTES.TERMS,
+      ROUTES.TERMS_OF_SERVICE,
       "popup",
       "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
     );

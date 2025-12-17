@@ -34,7 +34,8 @@ export default function AppLayout() {
   const hideHeaderPaths = [
     ROUTES.SHIPPING,
     ROUTES.PRIVACY_POLICY,
-    ROUTES.TERMS,
+    ROUTES.TERMS_OF_SERVICE,
+    ROUTES.REFUND_POLICY,
   ];
   const showHeader = !hideHeaderPaths.some((path) =>
     location.pathname.startsWith(path)
@@ -211,7 +212,9 @@ export default function AppLayout() {
                   <FooterLink href={ROUTES.PRIVACY_POLICY}>
                     개인정보처리방침
                   </FooterLink>
-                  <FooterLink href={ROUTES.TERMS}>이용약관</FooterLink>
+                  <FooterLink href={ROUTES.TERMS_OF_SERVICE}>
+                    이용약관
+                  </FooterLink>
                   <FooterLink href={ROUTES.REFUND_POLICY}>환불정책</FooterLink>
                 </FooterSection>
               </div>

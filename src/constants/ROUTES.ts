@@ -22,6 +22,6 @@ export const ROUTES = {
   FAQ: "/faq", // 자주 묻는 질문
   NOTICE: "/notice", // 공지사항
   PRIVACY_POLICY: "/privacy-policy", // 개인정보처리방침
-  TERMS: "/terms", // 이용약관
+  TERMS_OF_SERVICE: "/terms-of-service", // 이용약관
   REFUND_POLICY: "/refund-policy", // 환불정책
 } as const;
