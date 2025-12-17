@@ -27,10 +27,12 @@ import {
   FooterSection,
   FooterTitle,
 } from "@/features/home/components/footer";
+import { useState } from "react";
 
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [_, setPopup] = useState<Window | null>(null);
   const hideHeaderPaths = [
     ROUTES.SHIPPING,
     ROUTES.PRIVACY_POLICY,
@@ -44,6 +46,15 @@ export default function AppLayout() {
   const { config } = useSearchStore();
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const cartItemCount = getTotalItems();
+
+  const openPopup = (url: string) => {
+    const popup = window.open(
+      url,
+      "popup",
+      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
+    );
+    setPopup(popup);
+  };
 
   const getCurrentPageName = () => {
     // 데스크톱에서는 항상 ESSE SION 표시
@@ -209,13 +220,33 @@ export default function AppLayout() {
               </FooterSection> */}
                 <FooterSection>
                   <FooterTitle>정책</FooterTitle>
-                  <FooterLink href={ROUTES.PRIVACY_POLICY}>
+                  <FooterLink
+                    href={ROUTES.PRIVACY_POLICY}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openPopup(ROUTES.PRIVACY_POLICY);
+                    }}
+                  >
                     개인정보처리방침
                   </FooterLink>
-                  <FooterLink href={ROUTES.TERMS_OF_SERVICE}>
+                  <FooterLink
+                    href={ROUTES.TERMS_OF_SERVICE}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openPopup(ROUTES.TERMS_OF_SERVICE);
+                    }}
+                  >
                     이용약관
                   </FooterLink>
-                  <FooterLink href={ROUTES.REFUND_POLICY}>환불정책</FooterLink>
+                  <FooterLink
+                    href={ROUTES.REFUND_POLICY}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openPopup(ROUTES.REFUND_POLICY);
+                    }}
+                  >
+                    환불정책
+                  </FooterLink>
                 </FooterSection>
               </div>
             )}
