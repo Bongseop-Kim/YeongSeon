@@ -212,7 +212,7 @@ export default function AppLayout() {
                     개인정보처리방침
                   </FooterLink>
                   <FooterLink href={ROUTES.TERMS}>이용약관</FooterLink>
-                  <FooterLink href={ROUTES.REFUND}>환불정책</FooterLink>
+                  <FooterLink href={ROUTES.REFUND_POLICY}>환불정책</FooterLink>
                 </FooterSection>
               </div>
             )}

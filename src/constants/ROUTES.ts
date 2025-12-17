@@ -23,5 +23,5 @@ export const ROUTES = {
   NOTICE: "/notice", // 공지사항
   PRIVACY_POLICY: "/privacy-policy", // 개인정보처리방침
   TERMS: "/terms", // 이용약관
-  REFUND: "/refund", // 환불정책
+  REFUND_POLICY: "/refund-policy", // 환불정책
 } as const;

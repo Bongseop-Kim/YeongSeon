@@ -24,6 +24,7 @@ import InquiryPage from "@/features/my-page/inquiry/page";
 import NoticePage from "@/features/notice/page";
 import PrivacyPolicyPage from "@/features/privacy-policy/page";
 import TermsOfServicePage from "@/features/terms-of-service/page";
+import RefundPolicyPage from "@/features/refund-policy/page";
 
 export default function Router() {
   return (
@@ -59,6 +60,7 @@ export default function Router() {
       <Route path="/notice" element={<NoticePage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsOfServicePage />} />
+      <Route path="/refund-policy" element={<RefundPolicyPage />} />
     </Routes>
   );
 }

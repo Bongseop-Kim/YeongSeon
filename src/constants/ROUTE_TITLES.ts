@@ -17,4 +17,5 @@ export const ROUTE_TITLES = {
   "/my-page/my-info/leave": "회원 탈퇴",
   "/privacy-policy": "개인정보처리방침",
   "/terms": "이용약관",
+  "/refund-policy": "환불정책",
 };
