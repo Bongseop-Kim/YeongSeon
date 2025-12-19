@@ -24,11 +24,12 @@ import {
 import { calculateDiscount } from "@/types/coupon";
 import React from "react";
 import { useOrderStore } from "@/store/order";
+import { toast } from "@/lib/toast";
 
 const OrderFormPage = () => {
   const [_, setPopup] = useState<Window | null>(null);
   const navigate = useNavigate();
-  const { openModal, alert } = useModalStore();
+  const { openModal } = useModalStore();
   const {
     items: orderItems,
     updateOrderItemCoupon,
@@ -72,7 +73,7 @@ const OrderFormPage = () => {
         // 쿠폰 적용
         updateOrderItemCoupon(itemId, selectedCoupon);
 
-        alert(
+        toast.success(
           selectedCoupon
             ? `${selectedCoupon.name}이(가) 적용되었습니다.`
             : "쿠폰 사용을 취소했습니다."
@@ -83,7 +84,7 @@ const OrderFormPage = () => {
 
   const handleCompleteOrder = () => {
     clearOrderItems();
-    alert("주문이 완료되었습니다!");
+    toast.success("주문이 완료되었습니다!");
     navigate(`${ROUTES.ORDER_DETAIL}/order-1`);
   };
 

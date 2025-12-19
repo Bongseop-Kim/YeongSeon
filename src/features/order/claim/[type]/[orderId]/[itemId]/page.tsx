@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
 import { ROUTES } from "@/constants/ROUTES";
+import { toast } from "@/lib/toast";
 
 // 더미 주문 데이터 (실제로는 API에서 가져올 것)
 const dummyOrders: Order[] = [
@@ -249,7 +250,7 @@ const ClaimFormPage = () => {
       quantity: data.quantity,
     });
     // 실제로는 API 호출
-    alert(`${claimTypeLabel} 신청이 완료되었습니다.`);
+    toast.success(`${claimTypeLabel} 신청이 완료되었습니다.`);
     navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`);
   };
 

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type ModalType = "alert" | "confirm" | "custom";
+type ModalType = "confirm" | "custom";
 
 interface ModalState {
   isOpen: boolean;
@@ -50,11 +50,6 @@ interface ModalStore extends ModalState {
     message: string,
     onConfirm?: () => void,
     options?: { confirmText?: string; cancelText?: string }
-  ) => void;
-  alert: (
-    message: string,
-    onConfirm?: () => void,
-    options?: { title?: string; confirmText?: string }
   ) => void;
 }
 
@@ -115,16 +110,6 @@ export const useModalStore = create<ModalStore>((set, get) => ({
       description: message,
       confirmText: options?.confirmText || "확인",
       cancelText: options?.cancelText || "취소",
-      onConfirm,
-    });
-  },
-
-  alert: (message, onConfirm, options) => {
-    get().openModal({
-      modalType: "alert",
-      title: options?.title,
-      description: message,
-      confirmText: options?.confirmText || "확인",
       onConfirm,
     });
   },
