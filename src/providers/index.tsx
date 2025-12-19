@@ -9,6 +9,7 @@ import { AuthSyncProvider } from "./auth-sync-provider";
 export function Providers({ children }: { children: React.ReactNode }) {
   // Zustand store는 기존 코드 호환성을 위해 유지
   // 실제 세션 관리는 TanStack Query와 AuthSyncProvider에서 처리
+  // Supabase는 자동으로 토큰 갱신을 처리합니다 (autoRefreshToken 기본 활성화)
 
   return (
     <QueryProvider>

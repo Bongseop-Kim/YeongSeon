@@ -18,4 +18,5 @@ export const ROUTE_TITLES = {
   "/privacy-policy": "개인정보처리방침",
   "/terms-of-service": "이용약관",
   "/refund-policy": "환불정책",
+  "/login": "로그인",
 };

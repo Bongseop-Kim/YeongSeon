@@ -1,0 +1,62 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSession, signInWithOAuth, signOut as signOutApi } from "./auth.api";
+
+/**
+ * 세션 쿼리 키
+ */
+export const authKeys = {
+  all: ["auth"] as const,
+  session: () => [...authKeys.all, "session"] as const,
+};
+
+/**
+ * 현재 세션 조회 쿼리
+ * 세션 변경은 전역에서 감지되므로 이 훅은 단순히 캐시된 세션을 반환합니다.
+ */
+export const useSession = () => {
+  return useQuery({
+    queryKey: authKeys.session(),
+    queryFn: getSession,
+    staleTime: 1000 * 60 * 5, // 5분
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+};
+
+/**
+ * OAuth 로그인 뮤테이션
+ */
+export const useSignIn = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (provider: "kakao" | "google") => signInWithOAuth(provider),
+    onSuccess: () => {
+      // 로그인 성공 후 세션 쿼리 무효화하여 최신 세션 가져오기
+      queryClient.invalidateQueries({ queryKey: authKeys.session() });
+    },
+    onError: (error) => {
+      console.error("Sign in error:", error);
+    },
+  });
+};
+
+/**
+ * 로그아웃 뮤테이션
+ */
+export const useSignOut = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: signOutApi,
+    onSuccess: () => {
+      // 세션 쿼리 무효화 및 캐시 초기화
+      queryClient.setQueryData(authKeys.session(), null);
+      queryClient.invalidateQueries({ queryKey: authKeys.session() });
+    },
+    onError: (error) => {
+      console.error("Sign out error:", error);
+    },
+  });
+};

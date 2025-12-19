@@ -19,6 +19,8 @@ import MenuSheet from "../composite/menu-sheet";
 import { useSearchStore } from "@/store/search";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useCartStore } from "@/store/cart";
+import { useAuthStore } from "@/store/auth";
+import { useSignOut } from "@/features/auth/api/auth.query";
 import { Badge } from "@/components/ui/badge";
 import {
   Footer,
@@ -46,6 +48,16 @@ export default function AppLayout() {
   const { config } = useSearchStore();
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const cartItemCount = getTotalItems();
+  const { user } = useAuthStore();
+  const signOutMutation = useSignOut();
+
+  const handleSignOut = async () => {
+    try {
+      await signOutMutation.mutateAsync();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
 
   const openPopup = (url: string) => {
     const popup = window.open(
@@ -166,9 +178,24 @@ export default function AppLayout() {
                       </Badge>
                     )}
                   </NavLink>
-                  <Button variant="secondary" size="sm">
-                    <span>로그인</span>
-                  </Button>
+                  {user ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleSignOut}
+                      disabled={signOutMutation.isPending}
+                    >
+                      <span>로그아웃</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(ROUTES.LOGIN)}
+                    >
+                      <span>로그인</span>
+                    </Button>
+                  )}
                 </div>
               )}
             </HeaderActions>
