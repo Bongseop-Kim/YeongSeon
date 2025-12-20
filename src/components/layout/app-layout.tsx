@@ -54,6 +54,7 @@ export default function AppLayout() {
   const handleSignOut = async () => {
     try {
       await signOutMutation.mutateAsync();
+      navigate(ROUTES.HOME);
     } catch (error) {
       console.error("Sign out error:", error);
     }
