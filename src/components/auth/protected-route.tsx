@@ -15,7 +15,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
   const { data: session, isLoading } = useSession();
-  const { user, initialized } = useAuthStore();
+  const { initialized } = useAuthStore();
 
   // 인증 상태 초기화 대기
   if (!initialized || isLoading) {
@@ -31,7 +31,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
   // 현재 경로를 state와 sessionStorage에 저장하여 로그인 후 돌아올 수 있도록 함
-  if (!session || !user) {
+  // session이 있으면 user도 존재하므로 session만 확인
+  if (!session) {
     const redirectPath = location.pathname + location.search;
     // OAuth 콜백 후에도 경로를 복원할 수 있도록 sessionStorage에 저장
     sessionStorage.setItem("authRedirect", redirectPath);

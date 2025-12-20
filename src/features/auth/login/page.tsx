@@ -1,16 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth";
 import { useSignIn } from "@/features/auth/api/auth.query";
 import { ROUTES } from "@/constants/ROUTES";
-import { toast } from "@/lib/toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [_, setPopup] = useState<Window | null>(null);
   const { user } = useAuthStore();
   const signInMutation = useSignIn();
 
@@ -22,12 +20,11 @@ const LoginPage = () => {
     ROUTES.HOME;
 
   const openPopup = (url: string) => {
-    const popup = window.open(
+    window.open(
       url,
       "popup",
       "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
     );
-    setPopup(popup);
   };
 
   useEffect(() => {
@@ -44,15 +41,8 @@ const LoginPage = () => {
   }, [user, navigate, from]);
 
   const handleSignIn = async (provider: "kakao" | "google") => {
-    try {
-      await signInMutation.mutateAsync(provider);
-    } catch (error) {
-      const errorMessage =
-        provider === "kakao"
-          ? "카카오 로그인에 실패했습니다."
-          : "구글 로그인에 실패했습니다.";
-      toast.error(errorMessage);
-    }
+    // 에러는 뮤테이션의 onError에서 처리되므로 여기서는 호출만
+    await signInMutation.mutateAsync(provider);
   };
 
   const handleSignInNaver = () => {

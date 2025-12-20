@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getSession, signInWithOAuth, signOut as signOutApi } from "./auth.api";
+import { toast } from "@/lib/toast";
 
 /**
  * 세션 쿼리 키
@@ -19,7 +20,7 @@ export const useSession = () => {
     queryFn: getSession,
     staleTime: 1000 * 60 * 5, // 5분
     refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // 보안을 위해 윈도우 포커스 시 세션 확인
     retry: 1,
   });
 };
@@ -38,6 +39,11 @@ export const useSignIn = () => {
     },
     onError: (error) => {
       console.error("Sign in error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "로그인에 실패했습니다. 다시 시도해주세요.";
+      toast.error(errorMessage);
     },
   });
 };
@@ -57,6 +63,11 @@ export const useSignOut = () => {
     },
     onError: (error) => {
       console.error("Sign out error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "로그아웃에 실패했습니다. 다시 시도해주세요.";
+      toast.error(errorMessage);
     },
   });
 };
