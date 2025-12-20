@@ -44,10 +44,10 @@ import { HEIGHT_GUIDE } from "@/features/reform/constants/DETAIL";
 import { ProductCard } from "../components/product-card";
 import { useMemo } from "react";
 import { useCartStore } from "@/store/cart";
-import { useModalStore } from "@/store/modal";
 import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@/types/cart";
 import { generateItemId } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 interface SelectedOption {
   option: ProductOption;
@@ -64,13 +64,12 @@ function processOrderAndNavigate(
   selectedOptions: SelectedOption[],
   baseQuantity: number,
   setOrderItems: (items: CartItem[]) => void,
-  navigate: (path: string) => void,
-  alert: (message: string) => void
+  navigate: (path: string) => void
 ): void {
   if (hasOptions) {
     // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
     if (selectedOptions.length === 0) {
-      alert("옵션을 선택해주세요.");
+      toast.warning("옵션을 선택해주세요.");
       return;
     }
 
@@ -107,7 +106,6 @@ export default function ShopDetailPage() {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const { addToCart } = useCartStore();
-  const { alert } = useModalStore();
   const { setOrderItems } = useOrderStore();
   const [isLiked, setIsLiked] = useState(false);
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
@@ -166,7 +164,7 @@ export default function ShopDetailPage() {
     if (hasOptions) {
       // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
       if (selectedOptions.length === 0) {
-        alert("옵션을 선택해주세요.");
+        toast.warning("옵션을 선택해주세요.");
         return;
       }
 
@@ -203,8 +201,7 @@ export default function ShopDetailPage() {
       selectedOptions,
       baseQuantity,
       setOrderItems,
-      navigate,
-      alert
+      navigate
     );
   };
 
@@ -434,8 +431,7 @@ export default function ShopDetailPage() {
               selectedOptions,
               baseQuantity,
               setOrderItems,
-              navigate,
-              alert
+              navigate
             )
           }
         />

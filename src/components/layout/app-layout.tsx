@@ -19,6 +19,8 @@ import MenuSheet from "../composite/menu-sheet";
 import { useSearchStore } from "@/store/search";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useCartStore } from "@/store/cart";
+import { useAuthStore } from "@/store/auth";
+import { useSignOut } from "@/features/auth/api/auth.query";
 import { Badge } from "@/components/ui/badge";
 import {
   Footer,
@@ -27,14 +29,17 @@ import {
   FooterSection,
   FooterTitle,
 } from "@/features/home/components/footer";
+import { useState } from "react";
 
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [_, setPopup] = useState<Window | null>(null);
   const hideHeaderPaths = [
     ROUTES.SHIPPING,
     ROUTES.PRIVACY_POLICY,
-    ROUTES.TERMS,
+    ROUTES.TERMS_OF_SERVICE,
+    ROUTES.REFUND_POLICY,
   ];
   const showHeader = !hideHeaderPaths.some((path) =>
     location.pathname.startsWith(path)
@@ -43,6 +48,25 @@ export default function AppLayout() {
   const { config } = useSearchStore();
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const cartItemCount = getTotalItems();
+  const { user } = useAuthStore();
+  const signOutMutation = useSignOut();
+
+  const handleSignOut = async () => {
+    try {
+      await signOutMutation.mutateAsync();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
+
+  const openPopup = (url: string) => {
+    const popup = window.open(
+      url,
+      "popup",
+      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
+    );
+    setPopup(popup);
+  };
 
   const getCurrentPageName = () => {
     // 데스크톱에서는 항상 ESSE SION 표시
@@ -154,9 +178,24 @@ export default function AppLayout() {
                       </Badge>
                     )}
                   </NavLink>
-                  <Button variant="secondary" size="sm">
-                    <span>로그인</span>
-                  </Button>
+                  {user ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleSignOut}
+                      disabled={signOutMutation.isPending}
+                    >
+                      <span>로그아웃</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(ROUTES.LOGIN)}
+                    >
+                      <span>로그인</span>
+                    </Button>
+                  )}
                 </div>
               )}
             </HeaderActions>
@@ -208,11 +247,33 @@ export default function AppLayout() {
               </FooterSection> */}
                 <FooterSection>
                   <FooterTitle>정책</FooterTitle>
-                  <FooterLink href={ROUTES.PRIVACY_POLICY}>
+                  <FooterLink
+                    href={ROUTES.PRIVACY_POLICY}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openPopup(ROUTES.PRIVACY_POLICY);
+                    }}
+                  >
                     개인정보처리방침
                   </FooterLink>
-                  <FooterLink href={ROUTES.TERMS}>이용약관</FooterLink>
-                  <FooterLink href={ROUTES.REFUND}>환불정책</FooterLink>
+                  <FooterLink
+                    href={ROUTES.TERMS_OF_SERVICE}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openPopup(ROUTES.TERMS_OF_SERVICE);
+                    }}
+                  >
+                    이용약관
+                  </FooterLink>
+                  <FooterLink
+                    href={ROUTES.REFUND_POLICY}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openPopup(ROUTES.REFUND_POLICY);
+                    }}
+                  >
+                    환불정책
+                  </FooterLink>
                 </FooterSection>
               </div>
             )}

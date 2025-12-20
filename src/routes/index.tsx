@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import DesignPage from "@/features/design/page";
 import HomePage from "@/features/home/page";
 import OrderFormPage from "@/features/order/order-form/page";
@@ -24,41 +24,151 @@ import InquiryPage from "@/features/my-page/inquiry/page";
 import NoticePage from "@/features/notice/page";
 import PrivacyPolicyPage from "@/features/privacy-policy/page";
 import TermsOfServicePage from "@/features/terms-of-service/page";
+import RefundPolicyPage from "@/features/refund-policy/page";
+import LoginPage from "@/features/auth/login/page";
+import AuthCallbackPage from "@/features/auth/callback/page";
+import { ProtectedRoute } from "@/components/auth/protected-route";
 
 export default function Router() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/shop" element={<ShopPage />} />
       <Route path="/shop/:id" element={<ShopDetailPage />} />
       <Route path="/design" element={<DesignPage />} />
       <Route path="/custom-order" element={<OrderPage />} />
       <Route path="/reform" element={<ReformPage />} />
 
-      <Route path="/cart" element={<CartPage />} />
-
-      <Route path="/order/order-form" element={<OrderFormPage />} />
-      <Route path="/order/order-list" element={<OrderListPage />} />
-      <Route path="/order/:id" element={<OrderDetailPage />} />
-      <Route path="/order/claim-list" element={<ClaimListPage />} />
       <Route
-        path="/order/claim/:type/:orderId/:itemId"
-        element={<ClaimFormPage />}
+        path="/cart"
+        element={
+          <ProtectedRoute>
+            <CartPage />
+          </ProtectedRoute>
+        }
       />
 
-      <Route path="/shipping" element={<ShippingPage />} />
-      <Route path="/shipping/form" element={<ShippingFormPage />} />
-      <Route path="/my-page" element={<MypagePage />} />
-      <Route path="/my-page/my-info" element={<MyInfoPage />} />
-      <Route path="/my-page/my-info/detail" element={<MyInfoDetailPage />} />
-      <Route path="/my-page/my-info/email" element={<MyInfoEmailPage />} />
-      <Route path="/my-page/my-info/notice" element={<MyInfoNoticePage />} />
-      <Route path="/my-page/my-info/leave" element={<MyInfoLeavePage />} />
-      <Route path="/my-page/inquiry" element={<InquiryPage />} />
+      <Route
+        path="/order/order-form"
+        element={
+          <ProtectedRoute>
+            <OrderFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/order/order-list"
+        element={
+          <ProtectedRoute>
+            <OrderListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/order/:id"
+        element={
+          <ProtectedRoute>
+            <OrderDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/order/claim-list"
+        element={
+          <ProtectedRoute>
+            <ClaimListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/order/claim/:type/:orderId/:itemId"
+        element={
+          <ProtectedRoute>
+            <ClaimFormPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/shipping"
+        element={
+          <ProtectedRoute>
+            <ShippingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/shipping/form"
+        element={
+          <ProtectedRoute>
+            <ShippingFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page"
+        element={
+          <ProtectedRoute>
+            <MypagePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page/my-info"
+        element={
+          <ProtectedRoute>
+            <MyInfoPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page/my-info/detail"
+        element={
+          <ProtectedRoute>
+            <MyInfoDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page/my-info/email"
+        element={
+          <ProtectedRoute>
+            <MyInfoEmailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page/my-info/notice"
+        element={
+          <ProtectedRoute>
+            <MyInfoNoticePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page/my-info/leave"
+        element={
+          <ProtectedRoute>
+            <MyInfoLeavePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page/inquiry"
+        element={
+          <ProtectedRoute>
+            <InquiryPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/faq" element={<FaqPage />} />
       <Route path="/notice" element={<NoticePage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-      <Route path="/terms" element={<TermsOfServicePage />} />
+      <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+      <Route path="/refund-policy" element={<RefundPolicyPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

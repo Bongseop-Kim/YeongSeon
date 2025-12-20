@@ -86,13 +86,11 @@ const GlobalModal = () => {
             : customFooter
           : showDefaultFooter && (
               <DialogFooter className="shrink-0">
-                {modalType !== "alert" && (
-                  <DialogClose asChild className="flex-1">
-                    <Button variant="outline" onClick={handleCancel}>
-                      {cancelText}
-                    </Button>
-                  </DialogClose>
-                )}
+                <DialogClose asChild className="flex-1">
+                  <Button variant="outline" onClick={handleCancel}>
+                    {cancelText}
+                  </Button>
+                </DialogClose>
                 <DialogClose asChild className="flex-1">
                   <Button variant={confirmVariant} onClick={handleConfirm}>
                     {confirmText}
