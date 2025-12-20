@@ -42,7 +42,13 @@ const ERROR_MESSAGES: Record<string, string> = {
  */
 export const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
-    // 에러 코드가 있는 경우 매핑된 메시지 반환
+    // AppError의 code 속성이 있는 경우 우선적으로 사용
+    if ("code" in error && typeof error.code === "string" && error.code) {
+      if (ERROR_MESSAGES[error.code]) {
+        return ERROR_MESSAGES[error.code];
+      }
+    }
+    // code가 없거나 매핑되지 않은 경우 message로 폴백
     if (error.message && ERROR_MESSAGES[error.message]) {
       return ERROR_MESSAGES[error.message];
     }
