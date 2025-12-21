@@ -68,10 +68,8 @@ const CartPage = () => {
       return;
     }
 
-    confirm("선택한 상품을 삭제하시겠습니까?", () => {
-      selectedItems.forEach((itemId) => {
-        removeFromCart(itemId);
-      });
+    confirm("선택한 상품을 삭제하시겠습니까?", async () => {
+      await Promise.all(selectedItems.map((itemId) => removeFromCart(itemId)));
       setSelectedItems([]);
     });
   };
@@ -96,7 +94,7 @@ const CartPage = () => {
       ),
       confirmText: "변경",
       cancelText: "취소",
-      onConfirm: () => {
+      onConfirm: async () => {
         if (!modalRef.current) return;
 
         const { quantity, optionId } = modalRef.current.getValues();
@@ -111,14 +109,14 @@ const CartPage = () => {
         }
 
         // 기존 아이템 제거
-        removeFromCart(itemId);
+        await removeFromCart(itemId);
 
         // 새로운 옵션으로 추가
         const newOption = optionId
           ? item.product.options?.find((opt) => opt.id === optionId)
           : undefined;
 
-        addToCart(item.product, {
+        await addToCart(item.product, {
           option: newOption,
           quantity: quantity,
           showModal: false,
@@ -147,7 +145,7 @@ const CartPage = () => {
       ),
       confirmText: "변경",
       cancelText: "취소",
-      onConfirm: () => {
+      onConfirm: async () => {
         if (!modalRef.current) return;
 
         const updatedTie = modalRef.current.getValues();
@@ -164,7 +162,7 @@ const CartPage = () => {
         }
 
         // 옵션 업데이트
-        updateReformOption(itemId, updatedTie);
+        await updateReformOption(itemId, updatedTie);
         confirm("수선 옵션이 변경되었습니다.");
       },
     });
@@ -190,13 +188,13 @@ const CartPage = () => {
       ),
       confirmText: "적용",
       cancelText: "취소",
-      onConfirm: () => {
+      onConfirm: async () => {
         if (!modalRef.current) return;
 
         const selectedCoupon = modalRef.current.getSelectedCoupon();
 
         // 쿠폰 적용
-        applyCoupon(itemId, selectedCoupon);
+        await applyCoupon(itemId, selectedCoupon);
 
         confirm(
           selectedCoupon

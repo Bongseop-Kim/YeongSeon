@@ -44,8 +44,21 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
             <FormLabel subLabel="(선택사항)">넥타이 사진</FormLabel>
             <FormControl>
               <ImagePicker
-                selectedFile={field.value}
-                onFileChange={field.onChange}
+                selectedFile={
+                  field.value instanceof File ? field.value : undefined
+                }
+                previewUrl={
+                  typeof field.value === "string" ? field.value : undefined
+                }
+                onFileChange={(file) => {
+                  // File이 선택되면 File로 저장, undefined면 undefined로 저장
+                  field.onChange(file);
+                }}
+                onPreviewUrlChange={(url) => {
+                  // previewUrl 제거 시 undefined로 명확하게 저장
+                  // url이 undefined면 제거, string이면 업데이트 (현재는 제거만 사용)
+                  field.onChange(url ?? undefined);
+                }}
               />
             </FormControl>
           </FormItem>

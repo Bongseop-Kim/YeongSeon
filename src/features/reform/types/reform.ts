@@ -1,6 +1,6 @@
 export interface TieItem {
   id: string;
-  image?: File;
+  image?: File | string; // File: 업로드 시, string: DB에서 복원된 URL
   measurementType?: "length" | "height";
   tieLength?: number;
   wearerHeight?: number;

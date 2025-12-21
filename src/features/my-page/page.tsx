@@ -8,9 +8,20 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { AdPanel } from "@/components/composite/ad-panel";
 import { ROUTES } from "@/constants/ROUTES";
+import { useSignOut } from "@/features/auth/api/auth.query";
 
 export default function MypagePage() {
   const navigate = useNavigate();
+  const signOutMutation = useSignOut();
+
+  const handleSignOut = async () => {
+    try {
+      await signOutMutation.mutateAsync();
+      navigate(ROUTES.HOME);
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
 
   return (
     <MainLayout>
@@ -69,7 +80,12 @@ export default function MypagePage() {
                   />
                 </div>
                 <div className="flex justify-end">
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSignOut}
+                    disabled={signOutMutation.isPending}
+                  >
                     로그아웃
                   </Button>
                 </div>

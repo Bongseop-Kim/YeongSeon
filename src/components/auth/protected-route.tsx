@@ -16,7 +16,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
   const { data: session, isLoading } = useSession();
   const { initialized } = useAuthStore();
-
   // 인증 상태 초기화 대기
   if (!initialized || isLoading) {
     return (

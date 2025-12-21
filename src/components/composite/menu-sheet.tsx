@@ -5,10 +5,27 @@ import NavLink from "@/components/ui/nav-link";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { useAuthStore } from "@/store/auth";
+import { useSignOut } from "@/features/auth/api/auth.query";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 
 export default function MenuSheet() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { isMobile } = useBreakpoint();
+  const { user } = useAuthStore();
+  const signOutMutation = useSignOut();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await signOutMutation.mutateAsync();
+      setIsSheetOpen(false);
+      navigate(ROUTES.HOME);
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
 
   if (!isMobile) return null;
 
@@ -37,9 +54,27 @@ export default function MenuSheet() {
           </NavLink>
 
           <div>
-            <Button variant="secondary" size="sm">
-              <span>로그인</span>
-            </Button>
+            {user ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSignOut}
+                disabled={signOutMutation.isPending}
+              >
+                <span>로그아웃</span>
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setIsSheetOpen(false);
+                  navigate(ROUTES.LOGIN);
+                }}
+              >
+                <span>로그인</span>
+              </Button>
+            )}
           </div>
         </div>
       </SheetContent>

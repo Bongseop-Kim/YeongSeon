@@ -40,15 +40,7 @@ export default function Router() {
       <Route path="/design" element={<DesignPage />} />
       <Route path="/custom-order" element={<OrderPage />} />
       <Route path="/reform" element={<ReformPage />} />
-
-      <Route
-        path="/cart"
-        element={
-          <ProtectedRoute>
-            <CartPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/cart" element={<CartPage />} />
 
       <Route
         path="/order/order-form"
