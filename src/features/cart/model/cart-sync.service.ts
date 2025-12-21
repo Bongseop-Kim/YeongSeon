@@ -46,9 +46,10 @@ export class CartSyncService {
       return mergedItems;
     } catch (error) {
       console.error("장바구니 병합 실패:", error);
-      // 병합 실패 시 락 해제하여 재시도 가능하도록
-      cartLocalService.clearMergeLock(userId);
       throw error;
+    } finally {
+      // 병합 완료 후 락 해제 (성공/실패 관계없이 항상 실행)
+      cartLocalService.clearMergeLock(userId);
     }
   }
 
