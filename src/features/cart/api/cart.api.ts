@@ -44,7 +44,7 @@ export const getCartItems = async (userId: string): Promise<CartItem[]> => {
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: true });
-  console.log("data", data, error);
+
   if (error) {
     throw new Error(`장바구니 조회 실패: ${error.message}`);
   }
@@ -65,33 +65,31 @@ export const getCartItems = async (userId: string): Promise<CartItem[]> => {
 
 /**
  * 서버에 장바구니 아이템 저장
+ * 트랜잭션을 사용하여 원자적으로 처리 (삭제 후 삽입)
  */
 export const setCartItems = async (
   userId: string,
   items: CartItem[]
 ): Promise<void> => {
-  // 기존 아이템 삭제
-  const { error: deleteError } = await supabase
-    .from(TABLE_NAME)
-    .delete()
-    .eq("user_id", userId);
-
-  if (deleteError) {
-    throw new Error(`장바구니 삭제 실패: ${deleteError.message}`);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error("세션이 없습니다. 다시 로그인해주세요.");
   }
 
-  // 새 아이템 추가
-  if (items.length > 0) {
-    // CartItem을 DB 레코드로 변환
-    const records = items.map((item) => mapCartItemToRecord(item, userId));
+  // CartItem을 DB 레코드로 변환
+  const records = items.map((item) => mapCartItemToRecord(item, userId));
 
-    const { error: insertError } = await supabase
-      .from(TABLE_NAME)
-      .insert(records);
+  // PostgreSQL 함수를 통해 트랜잭션으로 원자적 처리
+  // 삭제와 삽입이 하나의 트랜잭션으로 처리되어 실패 시 롤백됨
+  const { error } = await supabase.rpc("replace_cart_items", {
+    p_user_id: userId,
+    p_items: records,
+  });
 
-    if (insertError) {
-      throw new Error(`장바구니 저장 실패: ${insertError.message}`);
-    }
+  if (error) {
+    throw new Error(`장바구니 저장 실패: ${error.message}`);
   }
 };
 
@@ -99,6 +97,13 @@ export const setCartItems = async (
  * 서버에서 장바구니 초기화
  */
 export const clearCartItems = async (userId: string): Promise<void> => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error("세션이 없습니다. 다시 로그인해주세요.");
+  }
+
   const { error } = await supabase
     .from(TABLE_NAME)
     .delete()
