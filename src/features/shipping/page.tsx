@@ -16,13 +16,14 @@ import { toast } from "@/lib/toast";
 import { formatPhoneNumber } from "./utils/phone-format";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SHIPPING_MESSAGE_TYPE } from "../order/constants/SHIPPING_EVENTS";
+import { usePopupChild } from "@/hooks/usePopup";
 
 const ShippingPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") || "select"; // "select" 또는 "manage"
   const showChangeButton = mode === "select"; // 주문 페이지에서 열린 경우만 변경 버튼 표시
-
+  const { postMessageAndClose } = usePopupChild();
   const { data: addresses, isLoading } = useShippingAddresses();
   const { openModal } = useModalStore();
   const deleteMutation = useDeleteShippingAddress();
@@ -60,19 +61,10 @@ const ShippingPage = () => {
   };
 
   const handleConfirm = () => {
-    if (selectedAddressId && window.opener) {
-      // 부모 창에 선택된 배송지 ID 전달
-      window.opener.postMessage(
-        {
-          type: SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED,
-          addressId: selectedAddressId,
-        },
-        "*"
-      );
-      window.close();
-    } else {
-      navigate(-1);
-    }
+    postMessageAndClose({
+      type: SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED,
+      addressId: selectedAddressId,
+    });
   };
 
   return (

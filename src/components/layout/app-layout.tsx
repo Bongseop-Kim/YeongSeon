@@ -29,12 +29,11 @@ import {
   FooterSection,
   FooterTitle,
 } from "@/features/home/components/footer";
-import { useState } from "react";
+import { usePopup } from "@/hooks/usePopup";
 
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [_, setPopup] = useState<Window | null>(null);
   const hideHeaderPaths = [
     ROUTES.SHIPPING,
     ROUTES.PRIVACY_POLICY,
@@ -50,6 +49,7 @@ export default function AppLayout() {
   const cartItemCount = getTotalItems();
   const { user } = useAuthStore();
   const signOutMutation = useSignOut();
+  const { openPopup } = usePopup();
 
   const handleSignOut = async () => {
     try {
@@ -58,15 +58,6 @@ export default function AppLayout() {
     } catch (error) {
       console.error("Sign out error:", error);
     }
-  };
-
-  const openPopup = (url: string) => {
-    const popup = window.open(
-      url,
-      "popup",
-      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
-    );
-    setPopup(popup);
   };
 
   const getCurrentPageName = () => {

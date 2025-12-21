@@ -22,6 +22,7 @@ import {
 import { extractPhoneNumber, formatPhoneNumber } from "../utils/phone-format";
 import { toast } from "@/lib/toast";
 import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
+import { usePopupChild } from "@/hooks/usePopup";
 
 const ShippingFormPage = () => {
   const navigate = useNavigate();
@@ -29,8 +30,7 @@ const ShippingFormPage = () => {
   const addressId = searchParams.get("id");
   const isEditMode = !!addressId;
   const [showPostcodeSearch, setShowPostcodeSearch] = useState(false);
-  const isPopup = !!window.opener;
-
+  const { postMessageAndClose } = usePopupChild();
   const { data: existingAddress, isLoading } = useShippingAddress(
     addressId || ""
   );
@@ -136,26 +136,11 @@ const ShippingFormPage = () => {
         },
         {
           onSuccess: (newAddress) => {
-            if (isPopup && isFirstAddress) {
-              // 처음 등록이고 팝업인 경우 부모 창에 기본 배송지 정보 전달 후 닫기
-              window.opener?.postMessage(
-                {
-                  type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
-                  addressId: newAddress.id,
-                },
-                "*"
-              );
-              window.close();
-            } else if (isPopup) {
-              // 팝업인 경우 부모 창에 메시지 전달 후 닫기
-              window.opener?.postMessage(
-                {
-                  type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
-                  addressId: newAddress.id,
-                },
-                "*"
-              );
-              window.close();
+            if (isFirstAddress) {
+              postMessageAndClose({
+                type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
+                addressId: newAddress.id,
+              });
             } else {
               navigate(-1);
             }

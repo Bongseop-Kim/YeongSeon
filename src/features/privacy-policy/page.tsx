@@ -1,13 +1,12 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
-import { useNavigate } from "react-router-dom";
+import { usePopup } from "@/hooks/usePopup";
 
 export default function PrivacyPolicyPage() {
-  const navigate = useNavigate();
-
+  const { closePopup } = usePopup();
   return (
     <PopupLayout
       title="개인정보처리방침"
-      onClose={() => (window.opener ? window.close() : navigate(-1))}
+      onClose={closePopup}
       contentClassName="px-4"
     >
       <div className="space-y-6 text-sm text-muted-foreground whitespace-pre-line">

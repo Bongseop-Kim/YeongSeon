@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth";
 import { useSignIn } from "@/features/auth/api/auth.query";
 import { ROUTES } from "@/constants/ROUTES";
+import { usePopup } from "@/hooks/usePopup";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthStore();
   const signInMutation = useSignIn();
+  const { openPopup } = usePopup();
 
   // 로그인 전에 가려던 페이지 경로 (ProtectedRoute에서 전달됨)
   // state가 없으면 sessionStorage에서 확인
@@ -18,14 +20,6 @@ const LoginPage = () => {
     (location.state as { from?: string })?.from ||
     sessionStorage.getItem("authRedirect") ||
     ROUTES.HOME;
-
-  const openPopup = (url: string) => {
-    window.open(
-      url,
-      "popup",
-      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
-    );
-  };
 
   useEffect(() => {
     // 이미 로그인된 경우 원래 가려던 페이지 또는 홈으로 리다이렉트

@@ -34,9 +34,10 @@ import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { useQueryClient } from "@tanstack/react-query";
 import { SHIPPING_MESSAGE_TYPE } from "../constants/SHIPPING_EVENTS";
 import { calculateOrderTotals } from "../utils/fs";
+import { usePopup } from "@/hooks/usePopup";
 
 const OrderFormPage = () => {
-  const [_, setPopup] = useState<Window | null>(null);
+  const { openPopup } = usePopup();
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null
   );
@@ -138,34 +139,8 @@ const OrderFormPage = () => {
     navigate(`${ROUTES.ORDER_DETAIL}/order-1`);
   };
 
-  const openPopup = () => {
-    const popup = window.open(
-      `${ROUTES.SHIPPING}?mode=select`,
-      "popup",
-      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
-    );
-    setPopup(popup);
-  };
-
   const totals = calculateOrderTotals(orderItems);
 
-  const openPrivacyPolicyPopup = () => {
-    const popup = window.open(
-      ROUTES.PRIVACY_POLICY,
-      "popup",
-      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
-    );
-    setPopup(popup);
-  };
-
-  const openTermsOfServicePopup = () => {
-    const popup = window.open(
-      ROUTES.TERMS_OF_SERVICE,
-      "popup",
-      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
-    );
-    setPopup(popup);
-  };
   if (orderItems.length === 0) {
     return (
       <MainLayout>
@@ -191,7 +166,11 @@ const OrderFormPage = () => {
                 <CardTitle>
                   {selectedAddress?.recipientName || "배송지 정보"}
                 </CardTitle>
-                <Button variant="outline" size="sm" onClick={openPopup}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openPopup(`${ROUTES.SHIPPING}?mode=select`)}
+                >
                   배송지 관리
                 </Button>
               </CardHeader>
@@ -321,7 +300,7 @@ const OrderFormPage = () => {
                       variant="link"
                       size="sm"
                       className="h-auto p-1 text-xs text-zinc-500 hover:text-zinc-700"
-                      onClick={openTermsOfServicePopup}
+                      onClick={() => openPopup(ROUTES.TERMS_OF_SERVICE)}
                     >
                       자세히
                     </Button>
@@ -334,7 +313,7 @@ const OrderFormPage = () => {
                       variant="link"
                       size="sm"
                       className="h-auto p-1 text-xs text-zinc-500 hover:text-zinc-700"
-                      onClick={openPrivacyPolicyPopup}
+                      onClick={() => openPopup(ROUTES.PRIVACY_POLICY)}
                     >
                       자세히
                     </Button>
