@@ -4,8 +4,8 @@ import { FilterButtons } from "./components/filter-buttons";
 import { FilterContent } from "./components/filter-content";
 import { ProductGrid } from "./components/product-grid";
 import { SortSelect } from "./components/sort-select";
-import { PRODUCTS_DATA } from "./constants/PRODUCTS_DATA";
 import { PRICE_RANGE_OPTIONS } from "./constants/FILTER_OPTIONS";
+import { useProducts } from "./api/products.query";
 import type {
   ProductCategory,
   ProductColor,
@@ -162,8 +162,13 @@ export default function ShopPage() {
     openFilterModal,
   ]);
 
+  const { data: products = [], isLoading } = useProducts();
+
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = PRODUCTS_DATA;
+    if (isLoading) {
+      return [];
+    }
+    let filtered = products;
 
     if (selectedCategories.length > 0) {
       filtered = filtered.filter((product) =>
@@ -223,6 +228,8 @@ export default function ShopPage() {
 
     return sorted;
   }, [
+    products,
+    isLoading,
     selectedCategories,
     selectedColors,
     selectedPatterns,
