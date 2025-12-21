@@ -158,7 +158,7 @@ export default function ShopDetailPage() {
     setBaseQuantity(Math.max(1, baseQuantity + delta));
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return;
 
     if (hasOptions) {
@@ -169,18 +169,20 @@ export default function ShopDetailPage() {
       }
 
       // 선택된 각 옵션을 장바구니에 추가
-      selectedOptions.forEach((selectedOption) => {
-        addToCart(product, {
-          option: selectedOption.option,
-          quantity: selectedOption.quantity,
-        });
-      });
+      await Promise.all(
+        selectedOptions.map((selectedOption) =>
+          addToCart(product, {
+            option: selectedOption.option,
+            quantity: selectedOption.quantity,
+          })
+        )
+      );
 
       // 옵션 초기화
       setSelectedOptions([]);
     } else {
       // 옵션이 없는 경우: baseQuantity로 추가
-      addToCart(product, { quantity: baseQuantity });
+      await addToCart(product, { quantity: baseQuantity });
 
       // 수량 초기화
       setBaseQuantity(1);

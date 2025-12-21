@@ -165,7 +165,7 @@ const ReformPage = () => {
     navigate(ROUTES.ORDER_FORM);
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     const validation = validateTies();
     if (!validation.isValid) {
       confirm(validation.message || "입력값을 확인해주세요.");
@@ -173,12 +173,14 @@ const ReformPage = () => {
     }
 
     // 각 넥타이를 개별적으로 장바구니에 추가 (배송비는 주문당 한 번만 적용)
-    watchedValues.ties.forEach((tie) => {
-      addReformToCart({
-        tie: tie,
-        cost: REFORM_BASE_COST,
-      });
-    });
+    await Promise.all(
+      watchedValues.ties.map((tie) =>
+        addReformToCart({
+          tie: tie,
+          cost: REFORM_BASE_COST,
+        })
+      )
+    );
 
     // 폼 초기화
     form.reset({
