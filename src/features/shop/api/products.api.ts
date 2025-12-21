@@ -4,6 +4,7 @@ import type {
   ProductRecord,
   ProductOptionRecord,
 } from "../types/product-record";
+import { checkLikedProducts, getLikeCounts } from "./likes.api";
 
 const TABLE_NAME = "products";
 const OPTIONS_TABLE_NAME = "product_options";
@@ -52,6 +53,23 @@ export const getProducts = async (): Promise<Product[]> => {
     });
   }
 
+  // 사용자가 좋아요한 제품 ID 조회
+  let likedProductIds = new Set<number>();
+  try {
+    likedProductIds = await checkLikedProducts(productIds);
+  } catch (error) {
+    // 로그인하지 않은 경우 무시
+    console.warn("좋아요 상태 조회 실패:", error);
+  }
+
+  // 모든 제품의 좋아요 수 조회
+  let likeCounts = new Map<number, number>();
+  try {
+    likeCounts = await getLikeCounts(productIds);
+  } catch (error) {
+    console.warn("좋아요 수 조회 실패:", error);
+  }
+
   // 레코드를 Product 타입으로 변환
   return data.map((record: ProductRecord) => {
     const product: Product = {
@@ -64,8 +82,9 @@ export const getProducts = async (): Promise<Product[]> => {
       color: record.color,
       pattern: record.pattern,
       material: record.material,
-      likes: record.likes,
+      likes: likeCounts.get(record.id) || 0,
       info: record.info,
+      isLiked: likedProductIds.has(record.id),
     };
 
     const options = optionsByProductId.get(record.id);
@@ -106,6 +125,25 @@ export const getProductById = async (id: number): Promise<Product | null> => {
     .eq("product_id", id)
     .order("option_id", { ascending: true });
 
+  // 사용자가 좋아요한 제품인지 확인
+  let isLiked = false;
+  try {
+    const likedProductIds = await checkLikedProducts([id]);
+    isLiked = likedProductIds.has(id);
+  } catch (error) {
+    // 로그인하지 않은 경우 무시
+    console.warn("좋아요 상태 조회 실패:", error);
+  }
+
+  // 좋아요 수 조회
+  let likeCount = 0;
+  try {
+    const likeCounts = await getLikeCounts([id]);
+    likeCount = likeCounts.get(id) || 0;
+  } catch (error) {
+    console.warn("좋아요 수 조회 실패:", error);
+  }
+
   // 레코드를 Product 타입으로 변환
   const product: Product = {
     id: data.id,
@@ -117,8 +155,9 @@ export const getProductById = async (id: number): Promise<Product | null> => {
     color: data.color,
     pattern: data.pattern,
     material: data.material,
-    likes: data.likes,
+    likes: likeCount,
     info: data.info,
+    isLiked,
   };
 
   // 옵션이 있으면 추가

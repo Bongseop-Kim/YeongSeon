@@ -24,7 +24,6 @@ export interface ProductRecord {
   color: Product["color"];
   pattern: Product["pattern"];
   material: Product["material"];
-  likes: number;
   info: string;
   created_at: string;
   updated_at: string;

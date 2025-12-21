@@ -48,6 +48,8 @@ import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@/types/cart";
 import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
+import { useProduct } from "../api/products.query";
+import { useIsLiked, useToggleLike, useLikeCount } from "../api/likes.query";
 
 interface SelectedOption {
   option: ProductOption;
@@ -107,16 +109,21 @@ export default function ShopDetailPage() {
   const { isMobile } = useBreakpoint();
   const { addToCart } = useCartStore();
   const { setOrderItems } = useOrderStore();
-  const [isLiked, setIsLiked] = useState(false);
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
   const [baseQuantity, setBaseQuantity] = useState(1);
 
-  const product = PRODUCTS_DATA.find((p) => p.id === Number(id));
+  const productId = Number(id);
+  const { data: product, isLoading: isProductLoading } = useProduct(productId);
 
-  const hasOptions = !!(product?.options && product.options.length > 0);
+  // 좋아요 상태 및 수 조회
+  const { data: isLiked = false } = useIsLiked(productId);
+  const { data: likeCount = 0 } = useLikeCount(productId);
+  const toggleLikeMutation = useToggleLike(productId);
 
   // 유사한 상품 찾기 (같은 카테고리, 색상, 패턴, 재질 중 하나 이상 일치)
+  // TODO: 실제 API에서 가져오도록 수정 필요
+  // useMemo는 hooks 규칙에 따라 조건부 return 전에 호출되어야 함
   const similarProducts = useMemo(() => {
     if (!product) return [];
 
@@ -131,7 +138,44 @@ export default function ShopDetailPage() {
         p.material === product.material
       );
     }).slice(0, isMobile ? 3 : 4); // 최대 4개만 표시
-  }, [product]);
+  }, [product, isMobile]);
+
+  // 로딩 중이거나 제품이 없을 때 처리
+  if (isProductLoading) {
+    return (
+      <MainLayout>
+        <MainContent>
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className="text-zinc-500">로딩 중...</p>
+          </div>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  if (!product) {
+    return (
+      <MainLayout>
+        <MainContent>
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className="text-zinc-500 mb-4">상품을 찾을 수 없습니다.</p>
+            <Button onClick={() => navigate(ROUTES.SHOP)}>쇼핑 계속하기</Button>
+          </div>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  const hasOptions = !!(product?.options && product.options.length > 0);
+
+  // 좋아요 토글 핸들러
+  const handleLikeToggle = async () => {
+    try {
+      await toggleLikeMutation.mutateAsync(isLiked);
+    } catch (error) {
+      toast.error("좋아요 처리 중 오류가 발생했습니다.");
+    }
+  };
 
   const handleSelectOption = (option: ProductOption) => {
     const exists = selectedOptions.find((s) => s.option.id === option.id);
@@ -206,19 +250,6 @@ export default function ShopDetailPage() {
       navigate
     );
   };
-
-  if (!product) {
-    return (
-      <MainLayout>
-        <MainContent>
-          <div className="flex flex-col items-center justify-center py-16">
-            <p className="text-zinc-500 mb-4">상품을 찾을 수 없습니다.</p>
-            <Button onClick={() => navigate(ROUTES.SHOP)}>쇼핑 계속하기</Button>
-          </div>
-        </MainContent>
-      </MainLayout>
-    );
-  }
 
   return (
     <MainLayout>
@@ -414,9 +445,9 @@ export default function ShopDetailPage() {
           }
           button={
             <ProductActionButtons
-              likes={product.likes}
+              likes={likeCount}
               isLiked={isLiked}
-              onLikeToggle={() => setIsLiked(!isLiked)}
+              onLikeToggle={handleLikeToggle}
               onAddToCart={handleAddToCart}
               onOrder={handleOrder}
             />
