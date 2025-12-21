@@ -25,9 +25,20 @@ import { calculateDiscount } from "@/types/coupon";
 import React from "react";
 import { useOrderStore } from "@/store/order";
 import { toast } from "@/lib/toast";
+import {
+  useDefaultShippingAddress,
+  useShippingAddresses,
+  useUpdateShippingAddress,
+  shippingKeys,
+} from "@/features/shipping/api/shipping.query";
+import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
+import { useQueryClient } from "@tanstack/react-query";
 
 const OrderFormPage = () => {
   const [_, setPopup] = useState<Window | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null
+  );
   const navigate = useNavigate();
   const { openModal } = useModalStore();
   const {
@@ -36,6 +47,10 @@ const OrderFormPage = () => {
     clearOrderItems,
     hasOrderItems,
   } = useOrderStore();
+  const queryClient = useQueryClient();
+  const { data: defaultAddress } = useDefaultShippingAddress();
+  const { data: addresses } = useShippingAddresses();
+  const updateShippingAddress = useUpdateShippingAddress();
 
   useEffect(() => {
     // 주문 아이템이 없으면 장바구니로 리다이렉트
@@ -43,6 +58,39 @@ const OrderFormPage = () => {
       navigate(ROUTES.CART);
     }
   }, [navigate, hasOrderItems]);
+
+  // 기본 배송지가 있으면 자동 선택
+  useEffect(() => {
+    if (defaultAddress && !selectedAddressId) {
+      setSelectedAddressId(defaultAddress.id);
+    }
+  }, [defaultAddress, selectedAddressId]);
+
+  // 팝업에서 배송지 선택/생성/업데이트 시 처리
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "SHIPPING_ADDRESS_SELECTED") {
+        setSelectedAddressId(event.data.addressId);
+      } else if (event.data?.type === "SHIPPING_ADDRESS_CREATED") {
+        // 배송지 생성 시 쿼리 무효화하여 최신 데이터 가져오기
+        queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
+        queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
+        setSelectedAddressId(event.data.addressId);
+      } else if (event.data?.type === "SHIPPING_ADDRESS_UPDATED") {
+        // 배송지 업데이트 시 쿼리 무효화하여 최신 데이터 가져오기
+        queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
+        queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
+        setSelectedAddressId(event.data.addressId);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  // 선택된 배송지 정보
+  const selectedAddress =
+    addresses?.find((addr) => addr.id === selectedAddressId) || defaultAddress;
 
   const handleChangeCoupon = (itemId: string) => {
     const item = orderItems.find((i) => i.id === itemId);
@@ -90,7 +138,7 @@ const OrderFormPage = () => {
 
   const openPopup = () => {
     const popup = window.open(
-      ROUTES.SHIPPING,
+      `${ROUTES.SHIPPING}?mode=select`,
       "popup",
       "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
     );
@@ -174,33 +222,73 @@ const OrderFormPage = () => {
           leftPanel={
             <Card>
               <CardHeader className="flex justify-between items-center">
-                <CardTitle>김봉섭</CardTitle>
+                <CardTitle>
+                  {selectedAddress?.recipientName || "배송지 정보"}
+                </CardTitle>
                 <Button variant="outline" size="sm" onClick={openPopup}>
-                  배송지 변경
+                  배송지 관리
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-1 text-sm ">
-                  <p>대전 동구 가양동 418-25 ESSE SION</p>
-                  <p>042-462-0510</p>
-                </div>
-                <Select>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="배송지 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">문 앞에 놔주세요.</SelectItem>
-                    <SelectItem value="2">경비실에 맡겨 주세요.</SelectItem>
-                    <SelectItem value="3">택배함에 넣어 주세요.</SelectItem>
-                    <SelectItem value="4">배송 전에 연락 주세요.</SelectItem>
-                    <SelectItem value="5">직접입력</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Textarea
-                  placeholder="최대 50자까지 입력 가능합니다."
-                  className="min-h-[100px] resize-none"
-                  maxLength={50}
-                />
+                {selectedAddress ? (
+                  <>
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
+                        {selectedAddress.detailAddress}
+                      </p>
+                      <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
+                    </div>
+                    <Select
+                      value={selectedAddress.deliveryRequest || undefined}
+                      onValueChange={(value) => {
+                        if (selectedAddressId) {
+                          updateShippingAddress.mutate({
+                            id: selectedAddressId,
+                            data: {
+                              deliveryRequest: value,
+                            },
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="배송 요청사항 선택" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DELIVERY_REQUEST_1">
+                          문 앞에 놔주세요.
+                        </SelectItem>
+                        <SelectItem value="DELIVERY_REQUEST_2">
+                          경비실에 맡겨 주세요.
+                        </SelectItem>
+                        <SelectItem value="DELIVERY_REQUEST_3">
+                          택배함에 넣어 주세요.
+                        </SelectItem>
+                        <SelectItem value="DELIVERY_REQUEST_4">
+                          배송 전에 연락 주세요.
+                        </SelectItem>
+                        <SelectItem value="DELIVERY_REQUEST_5">
+                          직접입력
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {selectedAddress.deliveryRequest ===
+                      "DELIVERY_REQUEST_5" && (
+                      <Textarea
+                        placeholder="최대 50자까지 입력 가능합니다."
+                        className="min-h-[100px] resize-none"
+                        maxLength={50}
+                        value={selectedAddress.deliveryMemo || ""}
+                        readOnly
+                      />
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-zinc-500">
+                    배송지를 추가해주세요.
+                  </div>
+                )}
               </CardContent>
 
               <CardContent>
@@ -290,9 +378,21 @@ const OrderFormPage = () => {
             </Card>
           }
           button={
-            <Button onClick={handleCompleteOrder} className="w-full" size="xl">
-              결제하기
-            </Button>
+            <div className="space-y-2">
+              <Button
+                onClick={handleCompleteOrder}
+                className="w-full"
+                size="xl"
+                disabled={!selectedAddress}
+              >
+                결제하기
+              </Button>
+              {!selectedAddress && (
+                <p className="text-sm text-center text-zinc-500">
+                  배송지를 추가하면 결제를 진행할 수 있어요
+                </p>
+              )}
+            </div>
           }
         />
       </MainContent>
