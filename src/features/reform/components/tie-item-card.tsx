@@ -44,7 +44,9 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
             <FormLabel subLabel="(선택사항)">넥타이 사진</FormLabel>
             <FormControl>
               <ImagePicker
-                selectedFile={field.value}
+                selectedFile={
+                  field.value instanceof File ? field.value : undefined
+                }
                 onFileChange={field.onChange}
               />
             </FormControl>
