@@ -99,65 +99,56 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   addToCart: async (product, options = {}) => {
     const { option, quantity = 1, showModal = true } = options;
-    const items = get().items;
+    const newItem: CartItem = {
+      id: generateItemId(product.id, option?.id || "base"),
+      type: "product",
+      product,
+      selectedOption: option,
+      quantity,
+    };
 
-    // 같은 상품 + 같은 옵션이 이미 장바구니에 있는지 확인
-    const existingItemIndex = items.findIndex(
-      (item) =>
-        item.type === "product" &&
-        item.product.id === product.id &&
-        item.selectedOption?.id === option?.id
-    );
+    // updater 내부에서 기존 아이템 존재 여부 추적
+    let wasExistingItem = false;
 
-    if (existingItemIndex !== -1) {
-      // 이미 있으면 수량만 증가
-      await updateItemsAndSync(set, get, (currentItems) => {
-        const updatedItems = [...currentItems];
-        updatedItems[existingItemIndex].quantity += quantity;
-        return updatedItems;
+    // updater 내부에서 인덱스를 계산하고 업데이트 수행
+    await updateItemsAndSync(set, get, (currentItems) => {
+      // updater 내부에서 현재 상태를 기반으로 인덱스 계산
+      const existingItemIndex = currentItems.findIndex(
+        (item) =>
+          item.type === "product" &&
+          item.product.id === product.id &&
+          item.selectedOption?.id === option?.id
+      );
+
+      if (existingItemIndex !== -1) {
+        // 기존 아이템이 있으면 새 객체로 교체 (spread 사용, 직접 mutation 방지)
+        wasExistingItem = true;
+        const existingItem = currentItems[existingItemIndex];
+        return currentItems.map((item, index) =>
+          index === existingItemIndex
+            ? { ...existingItem, quantity: existingItem.quantity + quantity }
+            : item
+        );
+      } else {
+        // 기존 아이템이 없으면 새 아이템 추가
+        wasExistingItem = false;
+        return [...currentItems, newItem];
+      }
+    });
+
+    // updater 완료 후 모달 표시 (updater 결과 기반)
+    if (showModal) {
+      useModalStore.getState().openModal({
+        title: "장바구니",
+        description: wasExistingItem
+          ? "이미 장바구니에 있는 상품입니다. 수량을 추가했습니다."
+          : "장바구니에 추가되었습니다.",
+        confirmText: "장바구니 보기",
+        cancelText: "닫기",
+        onConfirm: () => {
+          window.location.href = ROUTES.CART;
+        },
       });
-
-      if (showModal) {
-        useModalStore.getState().openModal({
-          title: "장바구니",
-          description: "이미 장바구니에 있는 상품입니다. 수량을 추가했습니다.",
-          confirmText: "장바구니 보기",
-          cancelText: "닫기",
-          onConfirm: () => {
-            window.location.href = ROUTES.CART;
-          },
-        });
-      }
-      return;
-    }
-
-    // 새로운 아이템 추가
-    {
-      // 새로운 아이템 추가
-      const newItem: CartItem = {
-        id: generateItemId(product.id, option?.id || "base"),
-        type: "product",
-        product,
-        selectedOption: option,
-        quantity,
-      };
-
-      await updateItemsAndSync(set, get, (currentItems) => [
-        ...currentItems,
-        newItem,
-      ]);
-
-      if (showModal) {
-        useModalStore.getState().openModal({
-          title: "장바구니",
-          description: "장바구니에 추가되었습니다.",
-          confirmText: "장바구니 보기",
-          cancelText: "닫기",
-          onConfirm: () => {
-            window.location.href = ROUTES.CART;
-          },
-        });
-      }
     }
   },
 
