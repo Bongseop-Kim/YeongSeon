@@ -15,6 +15,7 @@ import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { formatPhoneNumber } from "./utils/phone-format";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { SHIPPING_MESSAGE_TYPE } from "../order/constants/SHIPPING_EVENTS";
 
 const ShippingPage = () => {
   const navigate = useNavigate();
@@ -62,7 +63,10 @@ const ShippingPage = () => {
     if (selectedAddressId && window.opener) {
       // 부모 창에 선택된 배송지 ID 전달
       window.opener.postMessage(
-        { type: "SHIPPING_ADDRESS_SELECTED", addressId: selectedAddressId },
+        {
+          type: SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED,
+          addressId: selectedAddressId,
+        },
         "*"
       );
       window.close();

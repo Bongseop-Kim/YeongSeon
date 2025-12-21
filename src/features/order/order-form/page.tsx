@@ -33,6 +33,7 @@ import {
 } from "@/features/shipping/api/shipping.query";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { useQueryClient } from "@tanstack/react-query";
+import { SHIPPING_MESSAGE_TYPE } from "../constants/SHIPPING_EVENTS";
 
 const OrderFormPage = () => {
   const [_, setPopup] = useState<Window | null>(null);
@@ -69,18 +70,19 @@ const OrderFormPage = () => {
   // 팝업에서 배송지 선택/생성/업데이트 시 처리
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === "SHIPPING_ADDRESS_SELECTED") {
-        setSelectedAddressId(event.data.addressId);
-      } else if (event.data?.type === "SHIPPING_ADDRESS_CREATED") {
-        // 배송지 생성 시 쿼리 무효화하여 최신 데이터 가져오기
-        queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
-        queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
-        setSelectedAddressId(event.data.addressId);
-      } else if (event.data?.type === "SHIPPING_ADDRESS_UPDATED") {
-        // 배송지 업데이트 시 쿼리 무효화하여 최신 데이터 가져오기
-        queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
-        queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
-        setSelectedAddressId(event.data.addressId);
+      if (!event.data) return;
+
+      switch (event.data.type) {
+        case SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED:
+          setSelectedAddressId(event.data.addressId);
+          break;
+
+        case SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED:
+        case SHIPPING_MESSAGE_TYPE.ADDRESS_UPDATED:
+          queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
+          queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
+          setSelectedAddressId(event.data.addressId);
+          break;
       }
     };
 

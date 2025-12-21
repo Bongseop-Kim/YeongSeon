@@ -21,6 +21,7 @@ import {
 } from "../api/shipping.query";
 import { extractPhoneNumber, formatPhoneNumber } from "../utils/phone-format";
 import { toast } from "@/lib/toast";
+import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
 
 const ShippingFormPage = () => {
   const navigate = useNavigate();
@@ -139,7 +140,7 @@ const ShippingFormPage = () => {
               // 처음 등록이고 팝업인 경우 부모 창에 기본 배송지 정보 전달 후 닫기
               window.opener?.postMessage(
                 {
-                  type: "SHIPPING_ADDRESS_CREATED",
+                  type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
                   addressId: newAddress.id,
                 },
                 "*"
@@ -149,7 +150,7 @@ const ShippingFormPage = () => {
               // 팝업인 경우 부모 창에 메시지 전달 후 닫기
               window.opener?.postMessage(
                 {
-                  type: "SHIPPING_ADDRESS_CREATED",
+                  type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
                   addressId: newAddress.id,
                 },
                 "*"

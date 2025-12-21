@@ -28,7 +28,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
         } as React.CSSProperties
       }
       position="top-center"
-      richColors
       {...props}
     />
   );
