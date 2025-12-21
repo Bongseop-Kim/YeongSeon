@@ -133,20 +133,27 @@ export class CartAuthBridge {
     }
 
     // 게스트 카트와 서버 카트 병합
+    let mergedItems: CartItem[];
     try {
-      const mergedItems = await cartSyncService.mergeOnSignIn(
-        serverItems,
-        userId
-      );
-
-      // 병합된 결과를 서버에 저장 (강제 동기화)
-      await CartSyncManager.forceSync(mergedItems, userId);
-      // Zustand store 업데이트
-      useCartStore.getState().syncItems(mergedItems);
+      mergedItems = await cartSyncService.mergeOnSignIn(serverItems, userId);
     } catch (error) {
       console.error("장바구니 병합 실패, 서버 데이터만 사용:", error);
       // 병합 실패 시 서버 데이터만 사용
       useCartStore.getState().syncItems(serverItems);
+      return;
+    }
+
+    // 병합된 결과를 서버에 저장 (강제 동기화)
+    try {
+      await CartSyncManager.forceSync(mergedItems, userId);
+      // Zustand store 업데이트
+      useCartStore.getState().syncItems(mergedItems);
+    } catch (error) {
+      console.error("서버 동기화 실패, 서버 상태로 롤백:", error);
+      // 서버 동기화 실패 시 서버 상태로 롤백
+      useCartStore.getState().syncItems(serverItems);
+      // 에러를 다시 던져서 상위 호출자가 처리할 수 있도록 함
+      throw error;
     }
   }
 

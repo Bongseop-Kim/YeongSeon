@@ -86,11 +86,7 @@ export class CartSyncService {
       await cartLocalService.setUserCacheItems(userId, items);
       // 서버 동기화 즉시 실행
       if (syncToServer) {
-        try {
-          await syncToServer(items);
-        } catch (error) {
-          console.error("Failed to sync cart to server:", error);
-        }
+        await syncToServer(items);
       }
     } else {
       // 비로그인 상태: 게스트 카트에만 저장
