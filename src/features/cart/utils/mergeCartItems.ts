@@ -15,8 +15,8 @@ export function mergeCartItems(
   localItems: CartItem[],
   serverItems: CartItem[]
 ): CartItem[] {
-  // 서버 아이템을 기본으로 시작
-  const merged: CartItem[] = [...serverItems];
+  // 서버 아이템을 기본으로 시작 (새로운 객체 배열로 생성하여 원본 변경 방지)
+  const merged: CartItem[] = serverItems.map((item) => ({ ...item }));
   const mergedIds = new Set(serverItems.map((item) => item.id));
 
   for (const localItem of localItems) {
@@ -31,7 +31,11 @@ export function mergeCartItems(
 
       if (existingIndex !== -1) {
         // 같은 상품+옵션이 있으면 수량 합산 (양쪽 모두 유지)
-        merged[existingIndex].quantity += localItem.quantity;
+        // 새로운 객체로 교체하여 원본 변경 방지
+        merged[existingIndex] = {
+          ...merged[existingIndex],
+          quantity: merged[existingIndex].quantity + localItem.quantity,
+        };
       } else if (!mergedIds.has(localItem.id)) {
         // 새로운 아이템 추가 (ID 중복 체크)
         merged.push(localItem);
