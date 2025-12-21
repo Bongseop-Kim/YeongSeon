@@ -9,10 +9,12 @@ import { useNavigate } from "react-router-dom";
 import { AdPanel } from "@/components/composite/ad-panel";
 import { ROUTES } from "@/constants/ROUTES";
 import { useSignOut } from "@/features/auth/api/auth.query";
+import { useProfile } from "./api/profile.query";
 
 export default function MypagePage() {
   const navigate = useNavigate();
   const signOutMutation = useSignOut();
+  const { data: profile, isLoading } = useProfile();
 
   const handleSignOut = async () => {
     try {
@@ -40,7 +42,7 @@ export default function MypagePage() {
                     onClick={() => navigate(ROUTES.MY_PAGE_MY_INFO)}
                     aria-label="내 정보로 이동"
                   >
-                    김봉섭{" "}
+                    {isLoading ? "로딩 중..." : profile?.name || "사용자"}{" "}
                     <ChevronRightIcon className="size-4" aria-hidden="true" />
                   </button>
                 </CardTitle>

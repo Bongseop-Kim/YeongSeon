@@ -5,16 +5,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
+import { useProfile } from "../../api/profile.query";
 
 export default function MyInfoDetailPage() {
   const navigate = useNavigate();
-
-  const data = {
-    name: "김봉섭",
-    birth: "1990-01-01",
-    phone: "010-1234-5678",
-    email: "kim@example.com",
-  };
+  const { data: profile, isLoading } = useProfile();
 
   return (
     <MainLayout>
@@ -24,10 +19,20 @@ export default function MyInfoDetailPage() {
             <Card>
               <CardHeader />
               <CardContent className="space-y-4">
-                <Item label="이름" value={data.name} />
-                <Item label="생년월일" value={data.birth} />
-                <Item label="휴대폰번호" value={data.phone} />
-                <Item label="이메일" value={data.email} />
+                {isLoading ? (
+                  <div className="text-center py-4">로딩 중...</div>
+                ) : profile ? (
+                  <>
+                    <Item label="이름" value={profile.name || "-"} />
+                    <Item label="생년월일" value={profile.birth || "-"} />
+                    <Item label="휴대폰번호" value={profile.phone || "-"} />
+                    <Item label="이메일" value={profile.email || "-"} />
+                  </>
+                ) : (
+                  <div className="text-center py-4 text-red-500">
+                    프로필을 불러올 수 없습니다.
+                  </div>
+                )}
               </CardContent>
 
               <div className="flex gap-2 mt-4 px-4">
