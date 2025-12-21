@@ -9,7 +9,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { OrderItemCard } from "../components/order-item-card";
 import type { Order } from "../types/order-item";
-import { calculateOrderTotals } from "../utils/fs";
+import { calculateOrderTotals } from "../utils/calculated-order-totals";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import React from "react";
 import { formatDate } from "@/utils/formatDate";

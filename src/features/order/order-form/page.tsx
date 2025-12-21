@@ -16,13 +16,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { OrderItemCard } from "./components/order-item-card";
 import { ReformOrderItemCard } from "./components/reform-order-item-card";
-import { useModalStore } from "@/store/modal";
-import {
-  CouponSelectModal,
-  type CouponSelectModalRef,
-} from "@/features/cart/components/coupon-select-modal";
 import React from "react";
 import { useOrderStore } from "@/store/order";
+import { useCouponSelect } from "./hook/useCouponSelect";
 import { toast } from "@/lib/toast";
 import {
   useDefaultShippingAddress,
@@ -33,7 +29,7 @@ import {
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { useQueryClient } from "@tanstack/react-query";
 import { SHIPPING_MESSAGE_TYPE } from "../constants/SHIPPING_EVENTS";
-import { calculateOrderTotals } from "../utils/fs";
+import { calculateOrderTotals } from "../utils/calculated-order-totals";
 import { usePopup } from "@/hooks/usePopup";
 
 const OrderFormPage = () => {
@@ -42,13 +38,13 @@ const OrderFormPage = () => {
     null
   );
   const navigate = useNavigate();
-  const { openModal } = useModalStore();
   const {
     items: orderItems,
-    updateOrderItemCoupon,
     clearOrderItems,
     hasOrderItems,
+    updateOrderItemCoupon,
   } = useOrderStore();
+  const { openCouponSelect } = useCouponSelect();
   const queryClient = useQueryClient();
   const { data: defaultAddress } = useDefaultShippingAddress();
   const { data: addresses } = useShippingAddresses();
@@ -89,48 +85,27 @@ const OrderFormPage = () => {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [queryClient]);
 
   // 선택된 배송지 정보
   const selectedAddress =
     addresses?.find((addr) => addr.id === selectedAddressId) || defaultAddress;
 
-  const handleChangeCoupon = (itemId: string) => {
+  const handleChangeCoupon = async (itemId: string) => {
     const item = orderItems.find((i) => i.id === itemId);
     if (!item) return;
 
-    const modalRef: { current: CouponSelectModalRef | null } = {
-      current: null,
-    };
+    const selectedCoupon = await openCouponSelect(item.appliedCoupon?.id);
 
-    openModal({
-      title: "쿠폰 사용",
-      children: (
-        <CouponSelectModal
-          ref={(ref) => {
-            modalRef.current = ref;
-          }}
-          currentCouponId={item.appliedCoupon?.id}
-        />
-      ),
-      fullScreenOnMobile: true,
-      confirmText: "적용",
-      cancelText: "취소",
-      onConfirm: () => {
-        if (!modalRef.current) return;
+    // 쿠폰 적용 (null이면 쿠폰 제거)
+    updateOrderItemCoupon(itemId, selectedCoupon ?? undefined);
 
-        const selectedCoupon = modalRef.current.getSelectedCoupon();
-
-        // 쿠폰 적용
-        updateOrderItemCoupon(itemId, selectedCoupon);
-
-        toast.success(
-          selectedCoupon
-            ? `${selectedCoupon.name}이(가) 적용되었습니다.`
-            : "쿠폰 사용을 취소했습니다."
-        );
-      },
-    });
+    // 성공 메시지 표시
+    toast.success(
+      selectedCoupon
+        ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`
+        : "쿠폰 사용을 취소했습니다."
+    );
   };
 
   const handleCompleteOrder = () => {
