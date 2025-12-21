@@ -1,7 +1,7 @@
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { ProductCartItem } from "@/types/cart";
-import { calculateDiscount } from "@/types/coupon";
+import type { ProductCartItem } from "@/features/cart/types/cart";
+import { calculateDiscount } from "@/features/order/types/coupon";
 import CloseButton from "@/components/ui/close";
 
 interface CartItemCardProps {

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
 import { Button } from "@/components/ui/button";
 import type { Order } from "../types/order-item";
-import { formatDate } from "../utils/fs";
+import { formatDate } from "@/utils/formatDate";
 import { OrderItemCard } from "../components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";

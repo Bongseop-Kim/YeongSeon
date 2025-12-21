@@ -1,4 +1,4 @@
-import type { CartItem } from "@/types/cart";
+import type { CartItem } from "@/features/cart/types/cart";
 
 const GUEST_CART_KEY = "cart_guest";
 const USER_CACHE_KEY_PREFIX = "cart_cache_user_";

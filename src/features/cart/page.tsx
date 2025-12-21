@@ -33,7 +33,7 @@ import {
 } from "./components/coupon-select-modal";
 import { ProductCard } from "../shop/components/product-card";
 import { PRODUCTS_DATA } from "../shop/constants/PRODUCTS_DATA";
-import { calculateDiscount } from "@/types/coupon";
+import { calculateDiscount } from "@/features/order/types/coupon";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ROUTES } from "@/constants/ROUTES";
 

@@ -1,9 +1,9 @@
 import { create } from "zustand";
-import type { CartItem, ReformCartItem } from "@/types/cart";
+import type { CartItem, ReformCartItem } from "@/features/cart/types/cart";
 import type { Product, ProductOption } from "@/features/shop/types/product";
-import type { Coupon } from "@/types/coupon";
+import type { Coupon } from "@/features/order/types/coupon";
 import type { TieItem } from "@/features/reform/types/reform";
-import { calculateDiscount } from "@/types/coupon";
+import { calculateDiscount } from "@/features/order/types/coupon";
 import { useModalStore } from "./modal";
 import { generateItemId } from "@/lib/utils";
 import { ROUTES } from "@/constants/ROUTES";

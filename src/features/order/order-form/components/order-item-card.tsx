@@ -1,17 +1,14 @@
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { ProductCartItem } from "@/types/cart";
-import { calculateDiscount } from "@/types/coupon";
+import type { ProductCartItem } from "@/features/cart/types/cart";
+import { calculateDiscount } from "@/features/order/types/coupon";
 
 interface OrderItemCardProps {
   item: ProductCartItem;
   onChangeCoupon: () => void;
 }
 
-export function OrderItemCard({
-  item,
-  onChangeCoupon,
-}: OrderItemCardProps) {
+export function OrderItemCard({ item, onChangeCoupon }: OrderItemCardProps) {
   const itemPrice =
     item.product.price + (item.selectedOption?.additionalPrice || 0);
   const discount = calculateDiscount(itemPrice, item.appliedCoupon);

@@ -21,7 +21,6 @@ import {
   CouponSelectModal,
   type CouponSelectModalRef,
 } from "@/features/cart/components/coupon-select-modal";
-import { calculateDiscount } from "@/types/coupon";
 import React from "react";
 import { useOrderStore } from "@/store/order";
 import { toast } from "@/lib/toast";
@@ -34,6 +33,7 @@ import {
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { useQueryClient } from "@tanstack/react-query";
 import { SHIPPING_MESSAGE_TYPE } from "../constants/SHIPPING_EVENTS";
+import { calculateOrderTotals } from "../utils/fs";
 
 const OrderFormPage = () => {
   const [_, setPopup] = useState<Window | null>(null);
@@ -147,43 +147,7 @@ const OrderFormPage = () => {
     setPopup(popup);
   };
 
-  // 총액 계산
-  const calculateTotals = () => {
-    let originalPrice = 0;
-    let totalDiscount = 0;
-
-    orderItems.forEach((item) => {
-      if (item.type === "product") {
-        const basePrice = item.product.price;
-        const optionPrice = item.selectedOption?.additionalPrice || 0;
-        const itemPrice = basePrice + optionPrice;
-        const itemOriginalPrice = itemPrice * item.quantity;
-
-        originalPrice += itemOriginalPrice;
-
-        const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-        const itemDiscountAmount = discount * item.quantity;
-
-        totalDiscount += itemDiscountAmount;
-      } else {
-        // reform 아이템
-        const itemPrice = item.reformData.cost;
-        const itemOriginalPrice = itemPrice * item.quantity;
-
-        originalPrice += itemOriginalPrice;
-
-        const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-        const itemDiscountAmount = discount * item.quantity;
-
-        totalDiscount += itemDiscountAmount;
-      }
-    });
-
-    const totalPrice = originalPrice - totalDiscount;
-    return { originalPrice, totalDiscount, totalPrice };
-  };
-
-  const totals = calculateTotals();
+  const totals = calculateOrderTotals(orderItems);
 
   const openPrivacyPolicyPopup = () => {
     const popup = window.open(

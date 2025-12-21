@@ -1,5 +1,5 @@
 import type { Product, ProductOption } from "@/features/shop/types/product";
-import type { Coupon } from "@/types/coupon";
+import type { Coupon } from "@/features/order/types/coupon";
 import type { TieItem } from "@/features/reform/types/reform";
 
 // 주문 상태

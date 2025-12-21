@@ -2,7 +2,7 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { SAMPLE_COUPONS, type Coupon } from "@/types/coupon";
+import { SAMPLE_COUPONS, type Coupon } from "@/features/order/types/coupon";
 import { Separator } from "@/components/ui/separator";
 
 export interface CouponSelectModalRef {

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CartItem } from "@/types/cart";
-import type { Coupon } from "@/types/coupon";
+import type { CartItem } from "@/features/cart/types/cart";
+import type { Coupon } from "@/features/order/types/coupon";
 
 interface OrderState {
   items: CartItem[];

@@ -1,24 +1,5 @@
 import type { OrderItem } from "../types/order-item";
-
-export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (date.toDateString() === today.toDateString()) {
-    return "오늘";
-  } else if (date.toDateString() === yesterday.toDateString()) {
-    return "어제";
-  } else {
-    return date.toLocaleDateString("ko-KR", {
-      year: "2-digit",
-      month: "2-digit",
-      day: "2-digit",
-      weekday: "long",
-    });
-  }
-};
+import { calculateDiscount } from "@/features/order/types/coupon";
 
 // OrderItem의 상세 정보 가져오기
 export const getOrderItemDetails = (item: OrderItem): string => {
@@ -39,4 +20,28 @@ export const getOrderItemDetails = (item: OrderItem): string => {
     }
     return details.join(" · ") || "수선";
   }
+};
+
+export const calculateOrderTotals = (items: OrderItem[]) => {
+  let originalPrice = 0;
+  let totalDiscount = 0;
+
+  items.forEach((item) => {
+    const unitPrice =
+      item.type === "product"
+        ? item.product!.price + (item.selectedOption?.additionalPrice ?? 0)
+        : item.reformData!.cost;
+
+    const itemOriginalPrice = unitPrice * item.quantity;
+    originalPrice += itemOriginalPrice;
+
+    const discount = calculateDiscount(unitPrice, item.appliedCoupon);
+    totalDiscount += discount * item.quantity;
+  });
+
+  return {
+    originalPrice,
+    totalDiscount,
+    totalPrice: originalPrice - totalDiscount,
+  };
 };

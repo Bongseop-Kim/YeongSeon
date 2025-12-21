@@ -27,7 +27,7 @@ import TermsOfServicePage from "@/features/terms-of-service/page";
 import RefundPolicyPage from "@/features/refund-policy/page";
 import LoginPage from "@/features/auth/login/page";
 import AuthCallbackPage from "@/features/auth/callback/page";
-import { ProtectedRoute } from "@/components/auth/protected-route";
+import { ProtectedRoute } from "@/components/composite/protected-route";
 
 export default function Router() {
   return (
