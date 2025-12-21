@@ -55,17 +55,17 @@ export class CartSyncManager {
     userId?: string
   ): Promise<void> {
     const syncToServer = userId ? this.createSyncToServer(userId) : undefined;
-    await cartSyncService.updateItems(items, userId, syncToServer, false);
+    await cartSyncService.updateItems(items, userId, syncToServer);
   }
 
   /**
    * 장바구니 강제 동기화
-   * 대기 중인 동기화를 취소하고 즉시 동기화합니다.
+   * 즉시 동기화합니다.
    * 로컬 스토리지 + 서버 + React Query 캐시를 모두 동기화합니다.
    */
   static async forceSync(items: CartItem[], userId?: string): Promise<void> {
     const syncToServer = userId ? this.createSyncToServer(userId) : undefined;
-    await cartSyncService.updateItems(items, userId, syncToServer, true);
+    await cartSyncService.updateItems(items, userId, syncToServer);
   }
 
   /**

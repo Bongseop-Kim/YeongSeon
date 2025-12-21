@@ -7,8 +7,6 @@ import type { CartItem } from "@/types/cart";
  * 로컬과 서버 간의 동기화를 관리
  */
 export class CartSyncService {
-  syncTimeout: NodeJS.Timeout | null = null;
-
   /**
    * 로그인 시 게스트 카트와 서버 장바구니 병합
    * 병합 중복 방지 로직 포함
@@ -55,32 +53,15 @@ export class CartSyncService {
   }
 
   /**
-   * 대기 중인 동기화 취소
-   */
-  cancelPendingSync(): void {
-    if (this.syncTimeout) {
-      clearTimeout(this.syncTimeout);
-      this.syncTimeout = null;
-    }
-  }
-
-  /**
    * 장바구니 아이템 즉시 업데이트
    * 비로그인: 게스트 카트만 업데이트
    * 로그인: 유저 캐시 업데이트 + 서버 동기화 (즉시)
-   *
-   * @param cancelPending 대기 중인 동기화를 취소할지 여부 (기본값: false)
    */
   async updateItems(
     items: CartItem[],
     userId?: string,
-    syncToServer?: (items: CartItem[]) => Promise<void>,
-    cancelPending = false
+    syncToServer?: (items: CartItem[]) => Promise<void>
   ): Promise<void> {
-    if (cancelPending) {
-      this.cancelPendingSync();
-    }
-
     if (userId) {
       // 로그인 상태: 유저 캐시에 저장
       await cartLocalService.setUserCacheItems(userId, items);
@@ -103,19 +84,19 @@ export class CartSyncService {
     userId?: string,
     syncToServer?: (items: CartItem[]) => Promise<void>
   ): Promise<void> {
-    return this.updateItems(items, userId, syncToServer, false);
+    return this.updateItems(items, userId, syncToServer);
   }
 
   /**
-   * 강제 동기화 (즉시, 대기 중인 동기화 취소)
-   * @deprecated updateItems(cancelPending: true)를 사용하세요
+   * 강제 동기화 (즉시)
+   * @deprecated updateItems를 사용하세요
    */
   async forceSync(
     items: CartItem[],
     userId?: string,
     syncToServer?: (items: CartItem[]) => Promise<void>
   ): Promise<void> {
-    return this.updateItems(items, userId, syncToServer, true);
+    return this.updateItems(items, userId, syncToServer);
   }
 
   /**
@@ -127,8 +108,6 @@ export class CartSyncService {
     userId?: string,
     syncToServer?: () => Promise<void>
   ): Promise<void> {
-    this.cancelPendingSync();
-
     if (userId) {
       // 로그인 상태: 유저 캐시 초기화
       await cartLocalService.clearUserCache(userId);

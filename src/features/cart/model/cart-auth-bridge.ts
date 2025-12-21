@@ -58,9 +58,6 @@ export class CartAuthBridge {
       cartInitializationLocks.delete(GUEST_USER_ID);
     }
 
-    // 대기 중인 동기화 취소
-    cartSyncService.cancelPendingSync();
-
     // 새로운 userId에 대한 장바구니 초기화
     await this.initializeCartForUser(newUserId);
   }
