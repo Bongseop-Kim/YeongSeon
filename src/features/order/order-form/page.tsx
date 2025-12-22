@@ -67,6 +67,10 @@ const OrderFormPage = () => {
   // 팝업에서 배송지 선택/생성/업데이트 시 처리
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
       if (!event.data) return;
 
       switch (event.data.type) {
