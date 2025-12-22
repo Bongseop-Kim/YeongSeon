@@ -107,12 +107,18 @@ export const updateProfile = async (data: {
   if (data.phone !== undefined) updateData.phone = data.phone;
   if (data.birth !== undefined) updateData.birth = data.birth;
 
-  const { error } = await supabase
+  const { data: updatedProfile, error } = await supabase
     .from(TABLE_NAME)
     .update(updateData)
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select()
+    .single();
 
   if (error) {
     throw new Error(`프로필 업데이트 실패: ${error.message}`);
+  }
+
+  if (!updatedProfile) {
+    throw new Error("프로필이 존재하지 않습니다.");
   }
 };
