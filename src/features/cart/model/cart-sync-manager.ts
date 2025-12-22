@@ -5,7 +5,7 @@ import {
   clearCartItems as clearCartItemsApi,
 } from "../api/cart.api";
 import { cartKeys } from "../api/cart.query";
-import type { CartItem } from "@/types/cart";
+import type { CartItem } from "@/features/cart/types/cart";
 
 /**
  * 장바구니 동기화 매니저

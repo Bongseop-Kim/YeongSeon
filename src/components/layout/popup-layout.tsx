@@ -36,11 +36,13 @@ export const PopupLayout = ({
       </div>
 
       {/* content */}
-      <div className={cn("flex-1 px-2 py-4", contentClassName)}>{children}</div>
+      <div className={cn("flex-1 px-2 pt-4 pb-8", contentClassName)}>
+        {children}
+      </div>
 
       {/* footer */}
       {footer && (
-        <div className="sticky bottom-0 z-10 bg-white border-t p-2 py-4 pb-[env(safe-area-inset-bottom)]">
+        <div className="sticky bottom-4 z-10 bg-white border-t p-2 py-4 pb-[env(safe-area-inset-bottom)]">
           {footer}
         </div>
       )}

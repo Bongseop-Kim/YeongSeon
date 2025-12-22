@@ -1,54 +1,27 @@
-import type { CartItem, ProductCartItem, ReformCartItem } from "@/types/cart";
+import type {
+  CartItem,
+  ProductCartItem,
+  ReformCartItem,
+} from "@/features/cart/types/cart";
 import type { Product } from "@/features/shop/types/product";
-import type { Coupon } from "@/types/coupon";
+import type { AppliedCoupon } from "@/features/order/types/coupon";
 import type { TieItem } from "@/features/reform/types/reform";
+import type { CartItemRecord } from "@/features/cart/types/cart-record";
 
-/**
- * DB 레코드 타입
- * TieItem의 image는 File이므로 DB에는 URL 문자열로 저장
- */
-export interface CartItemRecord {
-  id: string;
-  user_id: string;
-  item_id: string;
-  item_type: "product" | "reform";
-  product_id: number | null;
-  selected_option_id: string | null;
-  reform_data: {
-    tie: {
-      id: string;
-      image?: string; // DB에는 URL 문자열로 저장 (File은 스토리지에 저장)
-      measurementType?: "length" | "height";
-      tieLength?: number;
-      wearerHeight?: number;
-      notes?: string;
-      checked?: boolean;
-    };
-    cost: number;
-  } | null;
-  quantity: number;
-  applied_coupon_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-// TODO:: 슈퍼베이스에 상품과 큐폰 테이블이 없어서 클라이언트 상수에서 가져오기 위해 만들어진 쓸데 없는 MAPPER 함수
-// TODO:: 이거 없애고 서버에서 상품과 큐폰 정보를 조인해서 가져오도록 수정
 /**
  * DB 레코드를 CartItem으로 변환
- * Product와 Coupon 정보는 클라이언트 상수에서 가져옴
  */
 export function mapRecordToCartItem(
   record: CartItemRecord,
-  productResolver: (productId: number) => Product | undefined,
-  couponResolver?: (couponId: string) => Coupon | undefined
+  productsById: Map<number, Product>,
+  couponsById?: Map<string, AppliedCoupon>
 ): CartItem {
   if (record.item_type === "product") {
     if (!record.product_id) {
       throw new Error("Product ID is required for product cart items");
     }
 
-    const product = productResolver(record.product_id);
+    const product = productsById.get(record.product_id);
     if (!product) {
       throw new Error(`Product not found: ${record.product_id}`);
     }
@@ -57,8 +30,8 @@ export function mapRecordToCartItem(
       ? product.options?.find((opt) => opt.id === record.selected_option_id)
       : undefined;
 
-    const appliedCoupon: Coupon | undefined = record.applied_coupon_id
-      ? couponResolver?.(record.applied_coupon_id) || undefined
+    const appliedCoupon: AppliedCoupon | undefined = record.applied_coupon_id
+      ? couponsById?.get(record.applied_coupon_id)
       : undefined;
 
     const cartItem: ProductCartItem = {
@@ -77,8 +50,8 @@ export function mapRecordToCartItem(
       throw new Error("Reform data is required for reform cart items");
     }
 
-    const appliedCoupon: Coupon | undefined = record.applied_coupon_id
-      ? couponResolver?.(record.applied_coupon_id) || undefined
+    const appliedCoupon: AppliedCoupon | undefined = record.applied_coupon_id
+      ? couponsById?.get(record.applied_coupon_id)
       : undefined;
 
     // DB의 tie.image는 string (URL)로 저장됨

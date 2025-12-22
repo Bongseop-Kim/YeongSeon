@@ -8,7 +8,7 @@ import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import type { Order, OrderItem } from "@/features/order/types/order-item";
 import type { ClaimType } from "@/features/order/types/claim-item";
-import { formatDate } from "@/features/order/utils/fs";
+import { formatDate } from "@/utils/formatDate";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import { Form } from "@/components/ui/form";
 import { useForm, Controller } from "react-hook-form";

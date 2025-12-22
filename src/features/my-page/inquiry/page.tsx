@@ -9,7 +9,7 @@ import { useState } from "react";
 import { InquiryForm } from "./components/InquiryForm";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { formatDate } from "@/features/order/utils/fs";
+import { formatDate } from "@/utils/formatDate";
 import { useModalStore } from "@/store/modal";
 
 const dummyData: InquiryItem[] = [

@@ -1,7 +1,7 @@
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { ProductCartItem } from "@/types/cart";
-import { calculateDiscount } from "@/types/coupon";
+import type { ProductCartItem } from "@/features/cart/types/cart";
+import { calculateDiscount } from "@/features/order/utils/calculate-discount";
 import CloseButton from "@/components/ui/close";
 
 interface CartItemCardProps {
@@ -73,7 +73,7 @@ export function CartItemCard({
               {/* 적용된 쿠폰 표시 */}
               {hasCoupon && (
                 <p className="text-xs text-primary font-medium">
-                  {item.appliedCoupon?.name} 적용
+                  {item.appliedCoupon?.coupon?.name ?? "쿠폰"} 적용
                 </p>
               )}
             </div>

@@ -1,13 +1,10 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
-import { useNavigate } from "react-router-dom";
 
 export default function RefundPolicyPage() {
-  const navigate = useNavigate();
-
   return (
     <PopupLayout
       title="환불정책"
-      onClose={() => (window.opener ? window.close() : navigate(-1))}
+      onClose={() => window.close()}
       contentClassName="px-4"
     >
       <div className="space-y-6 text-sm text-muted-foreground whitespace-pre-line">

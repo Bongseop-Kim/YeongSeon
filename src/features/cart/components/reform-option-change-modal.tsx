@@ -1,5 +1,5 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
-import type { ReformCartItem } from "@/types/cart";
+import type { ReformCartItem } from "@/features/cart/types/cart";
 import type { TieItem } from "@/features/reform/types/reform";
 import {
   Select,

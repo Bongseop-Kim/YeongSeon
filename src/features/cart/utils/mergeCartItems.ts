@@ -1,4 +1,4 @@
-import type { CartItem } from "@/types/cart";
+import type { CartItem } from "@/features/cart/types/cart";
 
 /**
  * 두 장바구니를 병합합니다.

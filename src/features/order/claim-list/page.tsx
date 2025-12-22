@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Empty } from "@/components/composite/empty";
 import type { ClaimItem } from "../types/claim-item";
 import { getClaimTypeLabel } from "../utils/claim-utils";
-import { formatDate } from "../utils/fs";
+import { formatDate } from "@/utils/formatDate";
 import { OrderItemCard } from "../components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";

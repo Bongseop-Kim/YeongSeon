@@ -1,17 +1,14 @@
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { ProductCartItem } from "@/types/cart";
-import { calculateDiscount } from "@/types/coupon";
+import type { ProductCartItem } from "@/features/cart/types/cart";
+import { calculateDiscount } from "@/features/order/utils/calculate-discount";
 
 interface OrderItemCardProps {
   item: ProductCartItem;
   onChangeCoupon: () => void;
 }
 
-export function OrderItemCard({
-  item,
-  onChangeCoupon,
-}: OrderItemCardProps) {
+export function OrderItemCard({ item, onChangeCoupon }: OrderItemCardProps) {
   const itemPrice =
     item.product.price + (item.selectedOption?.additionalPrice || 0);
   const discount = calculateDiscount(itemPrice, item.appliedCoupon);
@@ -68,7 +65,7 @@ export function OrderItemCard({
               {/* 적용된 쿠폰 표시 */}
               {hasCoupon && (
                 <p className="text-xs text-primary font-medium">
-                  {item.appliedCoupon?.name} 적용
+                  {item.appliedCoupon?.coupon?.name ?? "쿠폰"} 적용
                 </p>
               )}
             </div>
@@ -84,7 +81,7 @@ export function OrderItemCard({
           size="sm"
           onClick={onChangeCoupon}
         >
-          쿠폰 사용
+          {hasCoupon ? "쿠폰 변경" : "쿠폰 사용"}
         </Button>
       </div>
     </CardContent>

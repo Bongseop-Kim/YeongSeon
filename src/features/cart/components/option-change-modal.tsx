@@ -1,5 +1,5 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
-import type { ProductCartItem } from "@/types/cart";
+import type { ProductCartItem } from "@/features/cart/types/cart";
 import {
   Select,
   SelectContent,

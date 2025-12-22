@@ -1,6 +1,6 @@
 import { cartLocalService } from "./cart-local.service";
 import { mergeCartItems } from "../utils/mergeCartItems";
-import type { CartItem } from "@/types/cart";
+import type { CartItem } from "@/features/cart/types/cart";
 
 /**
  * 장바구니 동기화 서비스

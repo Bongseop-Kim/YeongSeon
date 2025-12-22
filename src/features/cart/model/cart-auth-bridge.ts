@@ -5,7 +5,7 @@ import { getCartItems } from "../api/cart.api";
 import { cartLocalService } from "./cart-local.service";
 import { queryClient } from "@/lib/query-client";
 import { cartKeys } from "../api/cart.query";
-import type { CartItem } from "@/types/cart";
+import type { CartItem } from "@/features/cart/types/cart";
 
 /**
  * userId별 장바구니 초기화 락

@@ -27,15 +27,13 @@ import {
   ReformOptionChangeModal,
   type ReformOptionChangeModalRef,
 } from "./components/reform-option-change-modal";
-import {
-  CouponSelectModal,
-  type CouponSelectModalRef,
-} from "./components/coupon-select-modal";
+import { useCouponSelect } from "@/features/order/order-form/hook/useCouponSelect";
 import { ProductCard } from "../shop/components/product-card";
 import { PRODUCTS_DATA } from "../shop/constants/PRODUCTS_DATA";
-import { calculateDiscount } from "@/types/coupon";
+import { calculateDiscount } from "@/features/order/utils/calculate-discount";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ROUTES } from "@/constants/ROUTES";
+import { toast } from "sonner";
 
 const CartPage = () => {
   const { openModal, confirm } = useModalStore();
@@ -45,6 +43,7 @@ const CartPage = () => {
   const { setOrderItems } = useOrderStore();
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const { openCouponSelect } = useCouponSelect();
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -163,46 +162,36 @@ const CartPage = () => {
 
         // 옵션 업데이트
         await updateReformOption(itemId, updatedTie);
-        confirm("수선 옵션이 변경되었습니다.");
+        toast.success("수선 옵션이 변경되었습니다.");
       },
     });
   };
 
-  const handleChangeCoupon = (itemId: string) => {
-    const item = items.find((i) => i.id === itemId);
-    if (!item) return;
+  const handleChangeCoupon = async (itemId: string) => {
+    try {
+      const item = items.find((i) => i.id === itemId);
+      if (!item) return;
 
-    const modalRef: { current: CouponSelectModalRef | null } = {
-      current: null,
-    };
+      const selectedCoupon = await openCouponSelect(item.appliedCoupon?.id);
 
-    openModal({
-      title: "쿠폰 사용",
-      children: (
-        <CouponSelectModal
-          ref={(ref) => {
-            modalRef.current = ref;
-          }}
-          currentCouponId={item.appliedCoupon?.id}
-        />
-      ),
-      confirmText: "적용",
-      cancelText: "취소",
-      onConfirm: async () => {
-        if (!modalRef.current) return;
+      // 취소된 경우 (null 반환) 처리하지 않음
+      // 쿠폰을 명시적으로 제거하려면 모달에서 "쿠폰 없음"을 선택하고 확인해야 함
+      if (selectedCoupon === null) {
+        return;
+      }
+      // 쿠폰 적용 (null이면 쿠폰 제거)
+      await applyCoupon(itemId, selectedCoupon ?? undefined);
 
-        const selectedCoupon = modalRef.current.getSelectedCoupon();
-
-        // 쿠폰 적용
-        await applyCoupon(itemId, selectedCoupon);
-
-        confirm(
-          selectedCoupon
-            ? `${selectedCoupon.name}이(가) 적용되었습니다.`
-            : "쿠폰 사용을 취소했습니다."
-        );
-      },
-    });
+      // 성공 메시지 표시
+      confirm(
+        selectedCoupon
+          ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`
+          : "쿠폰 사용을 취소했습니다."
+      );
+    } catch (error) {
+      console.error(error);
+      confirm("쿠폰 변경에 실패했습니다.");
+    }
   };
 
   const handleOrder = () => {

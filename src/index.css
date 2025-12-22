@@ -138,6 +138,10 @@
   .scrollbar-hidden {
     -ms-overflow-style: none;
   }
+
+  .scrollbar-gutter-stable {
+    scrollbar-gutter: stable;
+  }
 }
 
 @keyframes scroll {

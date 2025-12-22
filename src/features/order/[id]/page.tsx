@@ -9,10 +9,10 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { OrderItemCard } from "../components/order-item-card";
 import type { Order } from "../types/order-item";
-import { formatDate } from "../utils/fs";
+import { calculateOrderTotals } from "../utils/calculated-order-totals";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import React from "react";
-import { calculateDiscount } from "@/types/coupon";
+import { formatDate } from "@/utils/formatDate";
 
 // 더미 주문 데이터 (실제로는 API에서 가져올 것)
 const dummyOrders: Order[] = [
@@ -151,43 +151,7 @@ const OrderDetailPage = () => {
     );
   }
 
-  // 총액 계산
-  const calculateTotals = () => {
-    let originalPrice = 0;
-    let totalDiscount = 0;
-
-    order.items.forEach((item) => {
-      if (item.type === "product") {
-        const basePrice = item.product.price;
-        const optionPrice = item.selectedOption?.additionalPrice || 0;
-        const itemPrice = basePrice + optionPrice;
-        const itemOriginalPrice = itemPrice * item.quantity;
-
-        originalPrice += itemOriginalPrice;
-
-        const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-        const itemDiscountAmount = discount * item.quantity;
-
-        totalDiscount += itemDiscountAmount;
-      } else {
-        // reform 아이템
-        const itemPrice = item.reformData.cost;
-        const itemOriginalPrice = itemPrice * item.quantity;
-
-        originalPrice += itemOriginalPrice;
-
-        const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-        const itemDiscountAmount = discount * item.quantity;
-
-        totalDiscount += itemDiscountAmount;
-      }
-    });
-
-    const totalPrice = originalPrice - totalDiscount;
-    return { originalPrice, totalDiscount, totalPrice };
-  };
-
-  const totals = calculateTotals();
+  const totals = calculateOrderTotals(order.items);
 
   const handleReturnRequest = (itemId: string) => {
     navigate(`${ROUTES.CLAIM_FORM}/return/${order.id}/${itemId}`);

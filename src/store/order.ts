@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CartItem } from "@/types/cart";
-import type { Coupon } from "@/types/coupon";
+import type { CartItem } from "@/features/cart/types/cart";
+import type { AppliedCoupon } from "@/features/order/types/coupon";
 
 interface OrderState {
   items: CartItem[];
   setOrderItems: (items: CartItem[]) => void;
-  updateOrderItemCoupon: (itemId: string, coupon: Coupon | undefined) => void;
+  updateOrderItemCoupon: (
+    itemId: string,
+    coupon: AppliedCoupon | undefined
+  ) => void;
   clearOrderItems: () => void;
   hasOrderItems: () => boolean;
 }

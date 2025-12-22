@@ -4,21 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/constants/ROUTES";
 import { ListItem } from "@/features/my-page/components/list-item";
-import { useState } from "react";
+import { usePopup } from "@/hooks/usePopup";
 import { useNavigate } from "react-router-dom";
 
 export default function MyInfoPage() {
   const navigate = useNavigate();
-  const [_, setPopup] = useState<Window | null>(null);
-
-  const openPopup = () => {
-    const popup = window.open(
-      ROUTES.SHIPPING,
-      "popup",
-      "width=430,height=650,left=200,top=100,scrollbars=yes,resizable=no"
-    );
-    setPopup(popup);
-  };
+  const { openPopup } = usePopup();
 
   return (
     <MainLayout>
@@ -42,7 +33,7 @@ export default function MyInfoPage() {
                   <ListItem
                     label="배송지 관리"
                     onClick={() => {
-                      openPopup();
+                      openPopup(`${ROUTES.SHIPPING}?mode=manage`);
                     }}
                   />
                   <ListItem
