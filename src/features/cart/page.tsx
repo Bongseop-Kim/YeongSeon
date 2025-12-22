@@ -33,6 +33,7 @@ import { PRODUCTS_DATA } from "../shop/constants/PRODUCTS_DATA";
 import { calculateDiscount } from "@/features/order/utils/calculate-discount";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ROUTES } from "@/constants/ROUTES";
+import { toast } from "sonner";
 
 const CartPage = () => {
   const { openModal, confirm } = useModalStore();
@@ -161,26 +162,31 @@ const CartPage = () => {
 
         // 옵션 업데이트
         await updateReformOption(itemId, updatedTie);
-        confirm("수선 옵션이 변경되었습니다.");
+        toast.success("수선 옵션이 변경되었습니다.");
       },
     });
   };
 
   const handleChangeCoupon = async (itemId: string) => {
-    const item = items.find((i) => i.id === itemId);
-    if (!item) return;
+    try {
+      const item = items.find((i) => i.id === itemId);
+      if (!item) return;
 
-    const selectedCoupon = await openCouponSelect(item.appliedCoupon?.id);
+      const selectedCoupon = await openCouponSelect(item.appliedCoupon?.id);
 
-    // 쿠폰 적용 (null이면 쿠폰 제거)
-    await applyCoupon(itemId, selectedCoupon ?? undefined);
+      // 쿠폰 적용 (null이면 쿠폰 제거)
+      await applyCoupon(itemId, selectedCoupon ?? undefined);
 
-    // 성공 메시지 표시
-    confirm(
-      selectedCoupon
-        ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`
-        : "쿠폰 사용을 취소했습니다."
-    );
+      // 성공 메시지 표시
+      confirm(
+        selectedCoupon
+          ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`
+          : "쿠폰 사용을 취소했습니다."
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("쿠폰 변경에 실패했습니다.");
+    }
   };
 
   const handleOrder = () => {
