@@ -1,10 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { CartItem } from "@/features/cart/types/cart";
-import {
-  mapRecordToCartItem,
-  mapCartItemToRecord,
-  type CartItemRecord,
-} from "./cart-mapper";
+import type { CartItemRecord } from "@/features/cart/types/cart-record";
+import { mapRecordToCartItem, mapCartItemToRecord } from "./cart-mapper";
 import type { Product, ProductOption } from "@/features/shop/types/product";
 import type {
   ProductRecord,
