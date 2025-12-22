@@ -1,3 +1,5 @@
+const APP_TIMEZONE = "UTC";
+
 export const formatDate = (dateString: string) => {
   const date = new Date(dateString);
 
@@ -7,20 +9,33 @@ export const formatDate = (dateString: string) => {
     return dateString;
   }
 
+  const getDateKey = (value: Date) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: APP_TIMEZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(value);
+
   const today = new Date();
   const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
-  if (date.toDateString() === today.toDateString()) {
+  const todayKey = getDateKey(today);
+  const yesterdayKey = getDateKey(yesterday);
+  const dateKey = getDateKey(date);
+
+  if (dateKey === todayKey) {
     return "오늘";
-  } else if (date.toDateString() === yesterday.toDateString()) {
+  } else if (dateKey === yesterdayKey) {
     return "어제";
   } else {
-    return date.toLocaleDateString("ko-KR", {
+    return new Intl.DateTimeFormat("ko-KR", {
+      timeZone: APP_TIMEZONE,
       year: "2-digit",
       month: "2-digit",
       day: "2-digit",
       weekday: "long",
-    });
+    }).format(date);
   }
 };
