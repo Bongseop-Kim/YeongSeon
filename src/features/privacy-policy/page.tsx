@@ -1,12 +1,10 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
-import { usePopup } from "@/hooks/usePopup";
 
 export default function PrivacyPolicyPage() {
-  const { closePopup } = usePopup();
   return (
     <PopupLayout
       title="개인정보처리방침"
-      onClose={closePopup}
+      onClose={() => window.close()}
       contentClassName="px-4"
     >
       <div className="space-y-6 text-sm text-muted-foreground whitespace-pre-line">

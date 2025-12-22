@@ -1,10 +1,12 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
-import { usePopup } from "@/hooks/usePopup";
 
 export default function RefundPolicyPage() {
-  const { closePopup } = usePopup();
   return (
-    <PopupLayout title="환불정책" onClose={closePopup} contentClassName="px-4">
+    <PopupLayout
+      title="환불정책"
+      onClose={() => window.close()}
+      contentClassName="px-4"
+    >
       <div className="space-y-6 text-sm text-muted-foreground whitespace-pre-line">
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">

@@ -69,8 +69,8 @@ const ShippingPage = () => {
 
   return (
     <PopupLayout
+      onClose={() => window.close()}
       title="배송지 정보"
-      onClose={() => (window.opener ? window.close() : navigate(-1))}
       headerContent={
         <Input
           placeholder="배송지 이름, 주소, 연락처로 검색하세요."
