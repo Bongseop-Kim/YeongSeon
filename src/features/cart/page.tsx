@@ -174,6 +174,11 @@ const CartPage = () => {
 
       const selectedCoupon = await openCouponSelect(item.appliedCoupon?.id);
 
+      // 취소된 경우 (null 반환) 처리하지 않음
+      // 쿠폰을 명시적으로 제거하려면 모달에서 "쿠폰 없음"을 선택하고 확인해야 함
+      if (selectedCoupon === null) {
+        return;
+      }
       // 쿠폰 적용 (null이면 쿠폰 제거)
       await applyCoupon(itemId, selectedCoupon ?? undefined);
 
@@ -185,7 +190,7 @@ const CartPage = () => {
       );
     } catch (error) {
       console.error(error);
-      toast.error("쿠폰 변경에 실패했습니다.");
+      confirm("쿠폰 변경에 실패했습니다.");
     }
   };
 
