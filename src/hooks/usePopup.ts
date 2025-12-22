@@ -50,8 +50,8 @@ export const usePopup = () => {
 };
 
 export const usePopupChild = () => {
-  const postMessageAndClose = useCallback((message: any) => {
-    window.opener?.postMessage(message, "*");
+  const postMessageAndClose = useCallback((message: any, targetOrigin?: string) => {
+    window.opener?.postMessage(message, targetOrigin || window.location.origin);
     window.close();
   }, []);
 
