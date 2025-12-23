@@ -12,7 +12,7 @@ import {
 import type { Product, ProductOption } from "../../types/product";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
-import { useCartStore } from "@/store/cart";
+import { useCart } from "@/features/cart/hooks/useCart";
 import { toast } from "@/lib/toast";
 
 interface SelectedOption {
@@ -36,7 +36,7 @@ export function MobilePurchaseSheet({
   onOpenChange,
   onProcessOrder,
 }: MobilePurchaseSheetProps) {
-  const { addToCart } = useCartStore();
+  const { addToCart } = useCart();
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
 
   // 옵션이 없으면 기본 상품으로 1개 초기화

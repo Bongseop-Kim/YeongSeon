@@ -18,7 +18,7 @@ import { ROUTES } from "@/constants/ROUTES";
 import MenuSheet from "../composite/menu-sheet";
 import { useSearchStore } from "@/store/search";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { useCartStore } from "@/store/cart";
+import { useCart } from "@/features/cart/hooks/useCart";
 import { useAuthStore } from "@/store/auth";
 import { useSignOut } from "@/features/auth/api/auth.query";
 import { Badge } from "@/components/ui/badge";
@@ -45,8 +45,8 @@ export default function AppLayout() {
   );
   const { isMobile } = useBreakpoint();
   const { config } = useSearchStore();
-  const getTotalItems = useCartStore((state) => state.getTotalItems);
-  const cartItemCount = getTotalItems();
+
+  const { totalItems: cartItemCount } = useCart();
   const { user } = useAuthStore();
   const signOutMutation = useSignOut();
   const { openPopup } = usePopup();

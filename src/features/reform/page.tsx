@@ -12,7 +12,7 @@ import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useModalStore } from "@/store/modal";
-import { useCartStore } from "@/store/cart";
+import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@/features/cart/types/cart";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
@@ -35,7 +35,7 @@ import { generateItemId } from "@/lib/utils";
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
-  const { addReformToCart } = useCartStore();
+  const { addReformToCart } = useCart();
   const { setOrderItems } = useOrderStore();
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();

@@ -15,7 +15,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import React, { useState, useMemo } from "react";
 import { Empty } from "@/components/composite/empty";
 import { useNavigate } from "react-router-dom";
-import { useCartStore } from "@/store/cart";
+import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
 import { CartItemCard } from "./components/cart-item-card";
 import { ReformCartItemCard } from "./components/reform-cart-item-card";
@@ -38,8 +38,9 @@ import { toast } from "sonner";
 const CartPage = () => {
   const { openModal, confirm } = useModalStore();
   const navigate = useNavigate();
+
   const { items, removeFromCart, addToCart, updateReformOption, applyCoupon } =
-    useCartStore();
+    useCart();
   const { setOrderItems } = useOrderStore();
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);

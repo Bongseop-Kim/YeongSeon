@@ -43,7 +43,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { HEIGHT_GUIDE } from "@/features/reform/constants/DETAIL";
 import { ProductCard } from "../components/product-card";
 import { useMemo } from "react";
-import { useCartStore } from "@/store/cart";
+import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@/features/cart/types/cart";
 import { generateItemId } from "@/lib/utils";
@@ -107,7 +107,7 @@ export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
-  const { addToCart } = useCartStore();
+  const { addToCart } = useCart();
   const { setOrderItems } = useOrderStore();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
