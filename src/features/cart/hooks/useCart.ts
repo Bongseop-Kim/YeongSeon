@@ -20,7 +20,7 @@ import {
   useCartItems,
   useClearCartItems,
   useSetCartItems,
-} from "@/features/cart/api/cart.query";
+} from "@/features/cart/api/cart-query";
 
 type AddToCartOptions = {
   option?: ProductOption;

@@ -48,8 +48,8 @@ import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@/features/cart/types/cart";
 import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import { useProduct } from "../api/products.query";
-import { useIsLiked, useToggleLike, useLikeCount } from "../api/likes.query";
+import { useProduct } from "../api/products-query";
+import { useIsLiked, useToggleLike, useLikeCount } from "../api/likes-query";
 
 interface SelectedOption {
   option: ProductOption;

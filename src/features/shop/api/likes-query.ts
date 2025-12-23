@@ -5,8 +5,8 @@ import {
   checkIsLiked,
   checkLikedProducts,
   getLikeCount,
-} from "./likes.api";
-import { productKeys } from "./products.query";
+} from "./likes-api";
+import { productKeys } from "./products-query";
 
 /**
  * 좋아요 쿼리 키

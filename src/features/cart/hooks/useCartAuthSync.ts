@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth";
-import { cartKeys, useSetCartItems } from "../api/cart.query";
-import { getCartItems } from "../api/cart.api";
+import { cartKeys, useSetCartItems } from "../api/cart-query";
+import { getCartItems } from "../api/cart-api";
 import {
   clearGuest,
   clearMergeLock,

@@ -25,7 +25,7 @@ import {
   useShippingAddresses,
   useUpdateShippingAddress,
   shippingKeys,
-} from "@/features/shipping/api/shipping.query";
+} from "@/features/shipping/api/shipping-query";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { useQueryClient } from "@tanstack/react-query";
 import { SHIPPING_MESSAGE_TYPE } from "../constants/SHIPPING_EVENTS";

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getProfile, updateProfile } from "./profile.api";
+import { getProfile, updateProfile } from "./profile-api";
 import { toast } from "@/lib/toast";
 
 /**

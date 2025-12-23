@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { AdPanel } from "@/components/composite/ad-panel";
 import { ROUTES } from "@/constants/ROUTES";
 import { useSignOut } from "@/features/auth/api/auth.query";
-import { useProfile } from "./api/profile.query";
+import { useProfile } from "./api/profile-query";
 
 export default function MypagePage() {
   const navigate = useNavigate();

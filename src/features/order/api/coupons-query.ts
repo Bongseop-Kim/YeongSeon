@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUserCoupons } from "./coupons.api";
+import { getUserCoupons } from "./coupons-api";
 
 export const userCouponKeys = {
   all: ["user-coupons"] as const,
