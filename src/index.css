@@ -123,6 +123,17 @@
   }
 }
 
+/* 모달이 열려있을 때 html의 scrollbar-gutter를 제거하여 중복 스크롤바 공간 방지 */
+/* @layer 밖에서 정의하여 높은 우선순위 보장 */
+html.scrollbar-gutter-stable:has(
+    [data-slot="dialog-portal"] [data-state="open"]
+  ) {
+  scrollbar-gutter: auto !important;
+}
+html.scrollbar-gutter-stable:has(body[data-scroll-locked]) {
+  scrollbar-gutter: auto !important;
+}
+
 @layer utilities {
   /* Chrome, Safari and Opera */
   .scrollbar-hidden::-webkit-scrollbar {
