@@ -141,10 +141,7 @@ export default function AppLayout() {
 
             <HeaderActions className="space-x-1">
               {isMobile && (
-                <NavLink
-                  to={ROUTES.CART}
-                  className={`relative ${cartItemCount > 0 ? "mr-2" : ""}`}
-                >
+                <NavLink to={ROUTES.CART} className={`relative pr-3 mr-2`}>
                   <ShoppingBagIcon className="w-5 h-5" />
                   {cartItemCount > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 text-xs flex items-center justify-center bg-blue-600">
@@ -157,12 +154,7 @@ export default function AppLayout() {
               {!isMobile && (
                 <div className="flex items-center">
                   <NavLink to={ROUTES.MY_PAGE}>마이</NavLink>
-                  <NavLink
-                    to={ROUTES.CART}
-                    className={`relative ${
-                      cartItemCount > 0 ? "pr-6 mr-2" : "pr-2 mr-2"
-                    }`}
-                  >
+                  <NavLink to={ROUTES.CART} className={`relative pr-6 mr-2`}>
                     장바구니
                     {cartItemCount > 0 && (
                       <Badge className="absolute -top-1 right-0 h-5 min-w-5 px-1.5 text-xs flex items-center justify-center bg-blue-600">
