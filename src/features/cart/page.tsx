@@ -39,8 +39,14 @@ const CartPage = () => {
   const { openModal, confirm } = useModalStore();
   const navigate = useNavigate();
 
-  const { items, removeFromCart, addToCart, updateReformOption, applyCoupon } =
-    useCart();
+  const {
+    items,
+    removeFromCart,
+    updateQuantity,
+    updateProductOption,
+    updateReformOption,
+    applyCoupon,
+  } = useCart();
   const { setOrderItems } = useOrderStore();
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -108,19 +114,18 @@ const CartPage = () => {
           return;
         }
 
-        // 기존 아이템 제거
-        await removeFromCart(itemId);
-
-        // 새로운 옵션으로 추가
         const newOption = optionId
           ? item.product.options?.find((opt) => opt.id === optionId)
           : undefined;
 
-        await addToCart(item.product, {
-          option: newOption,
-          quantity: quantity,
-          showModal: false,
-        });
+        // 옵션이 변경되지 않고 수량만 변경된 경우
+        if (optionId === item.selectedOption?.id) {
+          await updateQuantity(itemId, quantity);
+          return;
+        }
+
+        // 옵션이 변경된 경우: 원자적으로 기존 아이템을 제거하고 새 옵션으로 교체
+        await updateProductOption(itemId, newOption, quantity);
       },
     });
   };

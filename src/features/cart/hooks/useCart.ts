@@ -225,6 +225,53 @@ export function useCart() {
     [updateItems]
   );
 
+  const updateProductOption = useCallback(
+    async (
+      itemId: string,
+      newOption: ProductOption | undefined,
+      newQuantity: number
+    ) => {
+      await updateItems((currentItems) => {
+        const item = currentItems.find((i) => i.id === itemId);
+        if (!item || item.type !== "product") {
+          return currentItems;
+        }
+
+        // 기존 아이템 제거
+        const itemsWithoutOld = currentItems.filter((i) => i.id !== itemId);
+
+        // 같은 상품+옵션이 이미 있는지 확인
+        const existingItemIndex = itemsWithoutOld.findIndex(
+          (i) =>
+            i.type === "product" &&
+            i.product.id === item.product.id &&
+            i.selectedOption?.id === newOption?.id
+        );
+
+        if (existingItemIndex !== -1) {
+          // 같은 상품+옵션이 이미 있으면 수량을 합침
+          return itemsWithoutOld.map((i, index) =>
+            index === existingItemIndex
+              ? { ...i, quantity: i.quantity + newQuantity }
+              : i
+          );
+        }
+
+        // 같은 상품+옵션이 없으면 새 아이템 추가
+        const newItem: CartItem = {
+          id: generateItemId(item.product.id, newOption?.id || "base"),
+          type: "product",
+          product: item.product,
+          selectedOption: newOption,
+          quantity: newQuantity,
+        };
+
+        return [...itemsWithoutOld, newItem];
+      });
+    },
+    [updateItems]
+  );
+
   const clearCart = useCallback(async () => {
     const previousItems = items;
     const rollback = async () => {
@@ -299,6 +346,7 @@ export function useCart() {
     addReformToCart,
     removeFromCart,
     updateQuantity,
+    updateProductOption,
     updateReformOption,
     applyCoupon,
     clearCart,
