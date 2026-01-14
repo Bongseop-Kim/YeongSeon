@@ -137,7 +137,7 @@ const OrderFormPage = () => {
 
   return (
     <MainLayout>
-      <MainContent>
+      <MainContent className="overflow-visible">
         <TwoPanelLayout
           leftPanel={
             <Card>
