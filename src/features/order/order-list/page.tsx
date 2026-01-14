@@ -5,123 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
 import { Button } from "@/components/ui/button";
-import type { Order } from "../types/order-item";
 import { formatDate } from "@/utils/formatDate";
 import { OrderItemCard } from "../components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
 import React from "react";
-import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import { ROUTES } from "@/constants/ROUTES";
-
-// 더미 주문 데이터
-const dummyOrders: Order[] = [
-  {
-    id: "order-1",
-    orderNumber: "ORD-20250115-001",
-    date: "2025-01-15",
-    status: "완료",
-    totalPrice: 135000,
-    items: [
-      {
-        id: "item-1",
-        type: "product",
-        product: PRODUCTS_DATA[0], // 실크 넥타이 1
-        quantity: 2,
-      },
-      {
-        id: "item-2",
-        type: "product",
-        product: PRODUCTS_DATA[1], // 실크 넥타이 2
-        selectedOption: { id: "45", name: "45cm", additionalPrice: 0 },
-        quantity: 1,
-      },
-      {
-        id: "item-3",
-        type: "reform",
-        quantity: 1,
-        reformData: {
-          tie: {
-            id: "tie-1",
-            measurementType: "length",
-            tieLength: 145,
-          },
-          cost: 15000,
-        },
-      },
-    ],
-  },
-  {
-    id: "order-2",
-    orderNumber: "ORD-20250114-002",
-    date: "2025-01-14",
-    status: "배송중",
-    totalPrice: 96000,
-    items: [
-      {
-        id: "item-4",
-        type: "product",
-        product: PRODUCTS_DATA[2], // 실크 넥타이 3
-        quantity: 2,
-      },
-    ],
-  },
-  {
-    id: "order-3",
-    orderNumber: "ORD-20250113-003",
-    date: "2025-01-13",
-    status: "진행중",
-    totalPrice: 78000,
-    items: [
-      {
-        id: "item-5",
-        type: "product",
-        product: PRODUCTS_DATA[3], // 실크 넥타이 4
-        quantity: 2,
-      },
-    ],
-  },
-  {
-    id: "order-4",
-    orderNumber: "ORD-20250112-004",
-    date: "2025-01-12",
-    status: "완료",
-    totalPrice: 30000,
-    items: [
-      {
-        id: "item-6",
-        type: "reform",
-        quantity: 1,
-        reformData: {
-          tie: {
-            id: "tie-2",
-            measurementType: "height",
-            wearerHeight: 175,
-          },
-          cost: 15000,
-        },
-      },
-      {
-        id: "item-7",
-        type: "reform",
-        quantity: 1,
-        reformData: {
-          tie: {
-            id: "tie-3",
-            measurementType: "length",
-            tieLength: 150,
-          },
-          cost: 15000,
-        },
-      },
-    ],
-  },
-];
-
+import { useOrders } from "../api/order-query";
 export default function OrderListPage() {
   const navigate = useNavigate();
   const { setSearchEnabled } = useSearchStore();
+  const { data: orders = [], isLoading, error } = useOrders();
 
   useEffect(() => {
     setSearchEnabled(true, {
@@ -148,13 +43,42 @@ export default function OrderListPage() {
     navigate(`${ROUTES.CLAIM_FORM}/cancel/${orderId}/${itemId}`);
   };
 
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <MainContent>
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-zinc-500">주문 목록을 불러오는 중...</div>
+          </div>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <MainContent>
+          <Card>
+            <Empty
+              title="주문 목록을 불러올 수 없습니다."
+              description={
+                error instanceof Error ? error.message : "오류가 발생했습니다."
+              }
+            />
+          </Card>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <MainContent>
         <TwoPanelLayout
           leftPanel={
             <div>
-              {dummyOrders.length === 0 ? (
+              {orders.length === 0 ? (
                 <Card>
                   <Empty
                     title="주문 내역이 없습니다."
@@ -162,7 +86,7 @@ export default function OrderListPage() {
                   />
                 </Card>
               ) : (
-                dummyOrders.map((order) => (
+                orders.map((order) => (
                   <Card key={order.id}>
                     {/* 주문 헤더 */}
                     <CardHeader>
