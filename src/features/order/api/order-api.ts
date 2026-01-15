@@ -48,28 +48,7 @@ export const createOrder = async (
 
   const orderNumber = orderNumberData as string;
 
-  // 주문 생성
-  const { data: orderData, error: orderError } = await supabase
-    .from(ORDERS_TABLE_NAME)
-    .insert({
-      user_id: userId,
-      order_number: orderNumber,
-      shipping_address_id: request.shippingAddressId,
-      total_price: request.totals.totalPrice,
-      original_price: request.totals.originalPrice,
-      total_discount: request.totals.totalDiscount,
-      status: "대기중",
-    })
-    .select()
-    .single();
-
-  if (orderError) {
-    throw new Error(`주문 생성 실패: ${orderError.message}`);
-  }
-
-  const orderId = orderData.id;
-
-  // 주문 아이템 생성
+  // 주문 아이템 레코드 준비 (orderId는 나중에 RPC 함수에서 생성됨)
   const orderItemRecords = request.items.map((item) => {
     const unitPrice =
       item.type === "product"
@@ -78,18 +57,146 @@ export const createOrder = async (
 
     const discountAmount = calculateDiscount(unitPrice, item.appliedCoupon);
 
-    return mapOrderItemToRecord(item, orderId, unitPrice, discountAmount);
+    // orderId는 임시로 빈 문자열 사용 (RPC 함수에서 실제 orderId 생성)
+    const record = mapOrderItemToRecord(item, "", unitPrice, discountAmount);
+    // order_id 필드는 제거 (RPC 함수에서 설정됨)
+    const { order_id, ...itemRecordWithoutOrderId } = record;
+    return itemRecordWithoutOrderId;
   });
 
-  const { error: orderItemsError } = await supabase
-    .from(ORDER_ITEMS_TABLE_NAME)
-    .insert(orderItemRecords);
+  // RPC 함수를 사용하여 트랜잭션으로 주문과 주문 아이템을 함께 생성
+  // 실패 시 자동 롤백되므로 orphaned order가 생성되지 않음
+  const { data: orderResult, error: orderError } = await supabase.rpc(
+    "create_order_with_items",
+    {
+      p_user_id: userId,
+      p_order_number: orderNumber,
+      p_shipping_address_id: request.shippingAddressId,
+      p_total_price: request.totals.totalPrice,
+      p_original_price: request.totals.originalPrice,
+      p_total_discount: request.totals.totalDiscount,
+      p_order_items: orderItemRecords as any,
+    }
+  );
 
-  if (orderItemsError) {
-    // 주문 아이템 생성 실패 시 주문도 롤백
-    await supabase.from(ORDERS_TABLE_NAME).delete().eq("id", orderId);
-    throw new Error(`주문 아이템 생성 실패: ${orderItemsError.message}`);
+  if (orderError) {
+    // RPC 함수가 없는 경우 fallback: 기존 로직 사용
+    // RPC 함수가 존재하지 않는 경우 (42883 에러 코드) 기존 방식으로 처리
+    if (
+      orderError.code === "42883" ||
+      orderError.message.includes("function") ||
+      orderError.message.includes("does not exist")
+    ) {
+      console.warn(
+        "RPC 함수가 없습니다. 기존 방식으로 처리합니다:",
+        orderError.message
+      );
+
+      // 기존 방식: 주문 생성 후 주문 아이템 생성, 실패 시 수동 롤백
+      const { data: orderData, error: insertOrderError } = await supabase
+        .from(ORDERS_TABLE_NAME)
+        .insert({
+          user_id: userId,
+          order_number: orderNumber,
+          shipping_address_id: request.shippingAddressId,
+          total_price: request.totals.totalPrice,
+          original_price: request.totals.originalPrice,
+          total_discount: request.totals.totalDiscount,
+          status: "대기중",
+        })
+        .select()
+        .single();
+
+      if (insertOrderError) {
+        throw new Error(`주문 생성 실패: ${insertOrderError.message}`);
+      }
+
+      const orderId = orderData.id;
+
+      // orderId를 포함한 주문 아이템 레코드 생성
+      const orderItemRecordsWithOrderId = request.items.map((item) => {
+        const unitPrice =
+          item.type === "product"
+            ? item.product.price + (item.selectedOption?.additionalPrice ?? 0)
+            : item.reformData.cost;
+
+        const discountAmount = calculateDiscount(unitPrice, item.appliedCoupon);
+
+        return mapOrderItemToRecord(item, orderId, unitPrice, discountAmount);
+      });
+
+      const { error: insertError } = await supabase
+        .from(ORDER_ITEMS_TABLE_NAME)
+        .insert(orderItemRecordsWithOrderId);
+
+      if (insertError) {
+        // 주문 아이템 생성 실패 시 주문도 롤백
+        // 롤백 결과를 확인하고 실패 시 에러를 로깅
+        const { error: deleteError, data: deleteData } = await supabase
+          .from(ORDERS_TABLE_NAME)
+          .delete()
+          .eq("id", orderId)
+          .select();
+
+        if (deleteError) {
+          // 롤백 실패: orphaned order가 생성될 수 있음
+          const errorMessage = `주문 아이템 생성 실패 및 롤백 실패: 아이템 생성 오류 - ${insertError.message}, 롤백 오류 - ${deleteError.message}`;
+          console.error(
+            "심각한 오류: orphaned order가 생성되었을 수 있습니다.",
+            {
+              orderId,
+              insertError: insertError.message,
+              deleteError: deleteError.message,
+              deleteData,
+            }
+          );
+          throw new Error(errorMessage);
+        }
+
+        // 롤백 성공
+        throw new Error(`주문 아이템 생성 실패: ${insertError.message}`);
+      }
+
+      const fallbackOrderId = orderId;
+
+      // 사용된 쿠폰 상태 업데이트
+      const usedCouponIds = request.items
+        .filter((item) => item.appliedCoupon?.id)
+        .map((item) => item.appliedCoupon!.id);
+
+      if (usedCouponIds.length > 0) {
+        const { error: couponUpdateError } = await supabase
+          .from("user_coupons")
+          .update({
+            status: "used",
+            used_at: new Date().toISOString(),
+          })
+          .in("id", usedCouponIds);
+
+        if (couponUpdateError) {
+          console.warn("쿠폰 상태 업데이트 실패:", couponUpdateError.message);
+          // 쿠폰 업데이트 실패는 주문 생성 실패로 처리하지 않음 (경고만)
+        }
+      }
+
+      return {
+        orderId: fallbackOrderId,
+        orderNumber,
+      };
+    } else {
+      // RPC 함수 호출 실패 (다른 이유)
+      // RPC 함수 내부에서 트랜잭션이 롤백되었으므로 order는 자동으로 삭제됨
+      throw new Error(`주문 생성 실패: ${orderError.message}`);
+    }
   }
+
+  // RPC 함수 성공 시 결과 반환
+  if (!orderResult) {
+    throw new Error("주문 생성 결과를 받을 수 없습니다.");
+  }
+
+  const orderId = orderResult.order_id as string;
+  const finalOrderNumber = orderResult.order_number as string;
 
   // 사용된 쿠폰 상태 업데이트
   const usedCouponIds = request.items
@@ -113,7 +220,7 @@ export const createOrder = async (
 
   return {
     orderId,
-    orderNumber,
+    orderNumber: finalOrderNumber,
   };
 };
 
