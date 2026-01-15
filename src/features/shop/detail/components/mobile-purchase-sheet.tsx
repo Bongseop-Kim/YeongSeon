@@ -45,6 +45,9 @@ export function MobilePurchaseSheet({
   // 기본 상품 수량 (옵션이 없을 때)
   const [baseQuantity, setBaseQuantity] = useState(1);
 
+  // 장바구니에 추가 중인지 여부
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
   const handleSelectOption = (option: ProductOption) => {
     const exists = selectedOptions.find((s) => s.option.id === option.id);
     if (!exists) {
@@ -91,6 +94,8 @@ export function MobilePurchaseSheet({
   const grandTotal = totalAmount;
 
   const handleAddToCart = async () => {
+    if (isAddingToCart) return;
+
     if (hasOptions) {
       // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
       if (selectedOptions.length === 0) {
@@ -98,22 +103,39 @@ export function MobilePurchaseSheet({
         return;
       }
 
-      for (const selectedOption of selectedOptions) {
-        await addToCart(product, {
-          option: selectedOption.option,
-          quantity: selectedOption.quantity,
-          showModal: false,
-        });
-      }
+      setIsAddingToCart(true);
 
-      // 옵션 초기화
-      setSelectedOptions([]);
+      try {
+        for (const selectedOption of selectedOptions) {
+          await addToCart(product, {
+            option: selectedOption.option,
+            quantity: selectedOption.quantity,
+            showModal: false,
+          });
+        }
+
+        // 옵션 초기화
+        setSelectedOptions([]);
+      } catch (error) {
+        toast.error("장바구니 추가에 실패했습니다.");
+        return;
+      } finally {
+        setIsAddingToCart(false);
+      }
     } else {
       // 옵션이 없는 경우: baseQuantity로 추가
-      await addToCart(product, { quantity: baseQuantity, showModal: false });
+      setIsAddingToCart(true);
+      try {
+        await addToCart(product, { quantity: baseQuantity, showModal: false });
 
-      // 수량 초기화
-      setBaseQuantity(1);
+        // 수량 초기화
+        setBaseQuantity(1);
+      } catch (error) {
+        toast.error("장바구니 추가에 실패했습니다.");
+        return;
+      } finally {
+        setIsAddingToCart(false);
+      }
     }
 
     onOpenChange(false);
@@ -207,10 +229,12 @@ export function MobilePurchaseSheet({
               size="lg"
               variant="outline"
               onClick={handleAddToCart}
-              disabled={hasOptions && selectedOptions.length === 0}
+              disabled={
+                isAddingToCart || (hasOptions && selectedOptions.length === 0)
+              }
               className="flex-1"
             >
-              장바구니
+              {isAddingToCart ? "추가 중..." : "장바구니"}
             </Button>
             <Button
               type="button"
