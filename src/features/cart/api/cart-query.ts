@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCartItems, setCartItems, clearCartItems } from "./cart.api";
+import { getCartItems, setCartItems, clearCartItems } from "./cart-api";
 import type { CartItem } from "@/features/cart/types/cart";
 import { useAuthStore } from "@/store/auth";
 
@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/auth";
 export const cartKeys = {
   all: ["cart"] as const,
   items: (userId?: string) => [...cartKeys.all, "items", userId] as const,
+  guest: () => [...cartKeys.all, "guest"] as const,
 };
 
 /**

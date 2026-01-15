@@ -5,7 +5,7 @@ import { FilterContent } from "./components/filter-content";
 import { ProductGrid } from "./components/product-grid";
 import { SortSelect } from "./components/sort-select";
 import { PRICE_RANGE_OPTIONS } from "./constants/FILTER_OPTIONS";
-import { useProducts } from "./api/products.query";
+import { useProducts } from "./api/products-query";
 import type {
   ProductCategory,
   ProductColor,

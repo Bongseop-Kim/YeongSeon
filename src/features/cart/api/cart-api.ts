@@ -10,8 +10,8 @@ import type {
 import {
   checkLikedProducts,
   getLikeCounts,
-} from "@/features/shop/api/likes.api";
-import { getUserCouponsByIds } from "@/features/order/api/coupons.api";
+} from "@/features/shop/api/likes-api";
+import { getUserCouponsByIds } from "@/features/order/api/coupons-api";
 import type { AppliedCoupon } from "@/features/order/types/coupon";
 
 const TABLE_NAME = "cart_items";

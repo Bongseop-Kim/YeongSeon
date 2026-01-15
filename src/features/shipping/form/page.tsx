@@ -18,7 +18,7 @@ import {
   useCreateShippingAddress,
   useUpdateShippingAddress,
   useShippingAddresses,
-} from "../api/shipping.query";
+} from "../api/shipping-query";
 import { extractPhoneNumber, formatPhoneNumber } from "../utils/phone-format";
 import { toast } from "@/lib/toast";
 import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";

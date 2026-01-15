@@ -123,6 +123,19 @@
   }
 }
 
+/* OverlayScrollbars 커스터마이징 - 흰색 배경에서도 보이도록 */
+.os-scrollbar-handle {
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+.os-scrollbar-handle:hover {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.os-scrollbar-track {
+  background: transparent !important;
+}
+
 @layer utilities {
   /* Chrome, Safari and Opera */
   .scrollbar-hidden::-webkit-scrollbar {
@@ -137,10 +150,6 @@
   /* IE and Edge */
   .scrollbar-hidden {
     -ms-overflow-style: none;
-  }
-
-  .scrollbar-gutter-stable {
-    scrollbar-gutter: stable;
   }
 }
 

@@ -6,7 +6,7 @@ import {
   createShippingAddress,
   updateShippingAddress,
   deleteShippingAddress,
-} from "./shipping.api";
+} from "./shipping-api";
 import type { UpdateShippingAddressData } from "../types/shipping-address-record";
 import { toast } from "@/lib/toast";
 

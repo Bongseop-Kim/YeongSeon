@@ -4,7 +4,7 @@ import type {
   ProductRecord,
   ProductOptionRecord,
 } from "../types/product-record";
-import { checkLikedProducts, getLikeCounts } from "./likes.api";
+import { checkLikedProducts, getLikeCounts } from "./likes-api";
 
 const TABLE_NAME = "products";
 const OPTIONS_TABLE_NAME = "product_options";

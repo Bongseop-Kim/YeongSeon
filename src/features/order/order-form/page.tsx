@@ -25,12 +25,19 @@ import {
   useShippingAddresses,
   useUpdateShippingAddress,
   shippingKeys,
-} from "@/features/shipping/api/shipping.query";
+} from "@/features/shipping/api/shipping-query";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { useQueryClient } from "@tanstack/react-query";
 import { SHIPPING_MESSAGE_TYPE } from "../constants/SHIPPING_EVENTS";
 import { calculateOrderTotals } from "../utils/calculated-order-totals";
 import { usePopup } from "@/hooks/usePopup";
+import { useCreateOrder } from "../api/order-query";
+import {
+  useCartItems,
+  useSetCartItems,
+  cartKeys,
+} from "@/features/cart/api/cart-query";
+import { useAuthStore } from "@/store/auth";
 
 const OrderFormPage = () => {
   const { openPopup } = usePopup();
@@ -49,6 +56,10 @@ const OrderFormPage = () => {
   const { data: defaultAddress } = useDefaultShippingAddress();
   const { data: addresses } = useShippingAddresses();
   const updateShippingAddress = useUpdateShippingAddress();
+  const createOrder = useCreateOrder();
+  const { data: cartItems = [] } = useCartItems();
+  const setCartItems = useSetCartItems();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     // 주문 아이템이 없으면 장바구니로 리다이렉트
@@ -112,10 +123,67 @@ const OrderFormPage = () => {
     );
   };
 
-  const handleCompleteOrder = () => {
-    clearOrderItems();
-    toast.success("주문이 완료되었습니다!");
-    navigate(`${ROUTES.ORDER_DETAIL}/order-1`);
+  const handleCompleteOrder = async () => {
+    if (!selectedAddressId || !selectedAddress) {
+      toast.error("배송지를 선택해주세요.");
+      return;
+    }
+
+    if (orderItems.length === 0) {
+      toast.error("주문할 상품이 없습니다.");
+      return;
+    }
+
+    try {
+      const result = await createOrder.mutateAsync({
+        items: orderItems,
+        shippingAddressId: selectedAddressId,
+        totals: calculateOrderTotals(orderItems),
+      });
+
+      // 주문한 아이템 ID 목록
+      const orderedItemIds = new Set(orderItems.map((item) => item.id));
+
+      // 장바구니에서 주문한 아이템 제거
+      const remainingCartItems = cartItems.filter(
+        (cartItem) => !orderedItemIds.has(cartItem.id)
+      );
+
+      // 장바구니 업데이트 (주문한 아이템이 장바구니에 있는 경우에만)
+      if (cartItems.length > remainingCartItems.length) {
+        try {
+          await setCartItems.mutateAsync(remainingCartItems);
+          // 장바구니 쿼리 무효화 및 재조회하여 모든 컴포넌트에 즉시 반영
+          if (user?.id) {
+            // 쿼리 캐시 즉시 업데이트
+            queryClient.setQueryData(
+              cartKeys.items(user.id),
+              remainingCartItems
+            );
+            // 쿼리 무효화 및 재조회
+            await queryClient.invalidateQueries({
+              queryKey: cartKeys.items(user.id),
+            });
+            await queryClient.refetchQueries({
+              queryKey: cartKeys.items(user.id),
+            });
+          }
+        } catch (cartError) {
+          console.warn("장바구니 업데이트 실패:", cartError);
+          // 장바구니 업데이트 실패는 주문 실패로 처리하지 않음 (경고만)
+        }
+      }
+
+      clearOrderItems();
+      toast.success("주문이 완료되었습니다!");
+      navigate(`${ROUTES.ORDER_DETAIL}/${result.orderId}`);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "주문 처리 중 오류가 발생했습니다.";
+      toast.error(errorMessage);
+    }
   };
 
   const totals = calculateOrderTotals(orderItems);
@@ -137,7 +205,7 @@ const OrderFormPage = () => {
 
   return (
     <MainLayout>
-      <MainContent>
+      <MainContent className="overflow-visible">
         <TwoPanelLayout
           leftPanel={
             <Card>
@@ -307,9 +375,9 @@ const OrderFormPage = () => {
                 onClick={handleCompleteOrder}
                 className="w-full"
                 size="xl"
-                disabled={!selectedAddress}
+                disabled={!selectedAddress || createOrder.isPending}
               >
-                결제하기
+                {createOrder.isPending ? "결제 처리 중..." : "결제하기"}
               </Button>
               {!selectedAddress && (
                 <p className="text-sm text-center text-zinc-500">
