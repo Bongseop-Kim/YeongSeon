@@ -2,6 +2,7 @@ import { HeartIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import type { Product } from "../types/product";
+import { Image } from "@imagekit/react";
 
 interface ProductCardProps {
   product: Product;
@@ -13,14 +14,21 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const handleClick = () => {
     navigate(`${ROUTES.SHOP}/${product.id}`);
   };
-
+  console.log(product.image);
   return (
     <div className="cursor-pointer" onClick={handleClick}>
       <div className="relative aspect-square overflow-hidden bg-zinc-100">
-        <img
+        <Image
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover"
+          transformation={[
+            {
+              width: 500,
+              height: 500,
+              quality: 80,
+            },
+          ]}
         />
         <div className="absolute bottom-2 right-2">
           <HeartIcon

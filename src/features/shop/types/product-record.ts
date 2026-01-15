@@ -20,6 +20,7 @@ export interface ProductRecord {
   name: string;
   price: number;
   image: string;
+  detail_images?: string[] | null;
   category: Product["category"];
   color: Product["color"];
   pattern: Product["pattern"];

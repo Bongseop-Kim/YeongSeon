@@ -4,6 +4,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { PRODUCTS_DATA } from "../constants/PRODUCTS_DATA";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { Image } from "@imagekit/react";
 import {
   Card,
   CardContent,
@@ -257,10 +258,17 @@ export default function ShopDetailPage() {
         <TwoPanelLayout
           leftPanel={
             <div>
-              <img
+              <Image
                 src={product.image}
                 alt={product.name}
                 className="w-full h-full object-cover"
+                transformation={[
+                  {
+                    width: 800,
+                    height: 800,
+                    quality: 85,
+                  },
+                ]}
               />
             </div>
           }
@@ -293,17 +301,36 @@ export default function ShopDetailPage() {
                 </Card>
               )}
 
-              <img
-                src={product.image}
-                alt={`${product.name} 상세 이미지 1`}
-                className="w-full h-auto object-contain"
-              />
-
-              <img
-                src={product.image}
-                alt={`${product.name} 상세 이미지 2`}
-                className="w-full h-auto object-contain"
-              />
+              {/* 상세 이미지들 */}
+              {product.detailImages && product.detailImages.length > 0 ? (
+                product.detailImages.map((detailImage, index) => (
+                  <Image
+                    key={index}
+                    src={detailImage}
+                    alt={`${product.name} 상세 이미지 ${index + 1}`}
+                    className="w-full h-auto object-contain"
+                    transformation={[
+                      {
+                        width: 1200,
+                        quality: 90,
+                      },
+                    ]}
+                  />
+                ))
+              ) : (
+                // detailImages가 없을 경우 기본 이미지 표시 (하위 호환성)
+                <Image
+                  src={product.image}
+                  alt={`${product.name} 상세 이미지`}
+                  className="w-full h-auto object-contain"
+                  transformation={[
+                    {
+                      width: 1200,
+                      quality: 90,
+                    },
+                  ]}
+                />
+              )}
             </div>
           }
           rightPanel={
