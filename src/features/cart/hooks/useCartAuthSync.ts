@@ -25,7 +25,7 @@ export function useCartAuthSync() {
   const previousUserIdRef = useRef<string | undefined>(undefined);
   const isProcessingRef = useRef(false);
   const queryClient = useQueryClient();
-  const setCartItemsMutation = useSetCartItems();
+  const { mutateAsync } = useSetCartItems();
 
   useEffect(() => {
     if (!authInitialized) {
@@ -86,7 +86,7 @@ export function useCartAuthSync() {
         if (guestItems.length > 0) {
           try {
             // 로컬 장바구니를 서버로 업로드 (서버 장바구니 대체)
-            await setCartItemsMutation.mutateAsync(guestItems);
+            await mutateAsync(guestItems);
             queryClient.setQueryData(cartKeys.items(userId), guestItems);
             await clearGuest();
           } catch (error) {
@@ -112,5 +112,5 @@ export function useCartAuthSync() {
     };
 
     handleUserChange();
-  }, [authInitialized, queryClient, setCartItemsMutation, userId]);
+  }, [authInitialized, queryClient, mutateAsync, userId]);
 }
