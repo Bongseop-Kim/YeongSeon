@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { PRODUCTS_DATA } from "../constants/PRODUCTS_DATA";
+import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import {
   Card,
@@ -18,11 +18,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useState } from "react";
-import { ProductActionButtons } from "./components/product-action-buttons";
-import { MobilePurchaseSheet } from "./components/mobile-purchase-sheet";
+import { ProductActionButtons } from "@/features/shop/detail/components/product-action-buttons";
+import { MobilePurchaseSheet } from "@/features/shop/detail/components/mobile-purchase-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { SelectedOptionItem } from "./components/selected-option-item";
-import { SelectedOptionsList } from "./components/selected-options-list";
+import { SelectedOptionItem } from "@/features/shop/detail/components/selected-option-item";
+import { SelectedOptionsList } from "@/features/shop/detail/components/selected-options-list";
 import {
   Select,
   SelectContent,
@@ -37,19 +37,19 @@ import {
   getColorLabel,
   getMaterialLabel,
   getPatternLabel,
-} from "../constants/PRODUCT_LABELS";
+} from "@/features/shop/constants/PRODUCT_LABELS";
 import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/ui/data-table";
 import { HEIGHT_GUIDE } from "@/features/reform/constants/DETAIL";
-import { ProductCard } from "../components/product-card";
+import { ProductCard } from "@/features/shop/components/product-card";
 import { useMemo } from "react";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@/features/cart/types/cart";
 import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import { useProduct } from "../api/products-query";
-import { useIsLiked, useToggleLike, useLikeCount } from "../api/likes-query";
+import { useProduct } from "@/features/shop/api/products-query";
+import { useToggleLike } from "@/features/shop/api/likes-query";
 
 interface SelectedOption {
   option: ProductOption;
@@ -116,9 +116,9 @@ export default function ShopDetailPage() {
   const productId = Number(id);
   const { data: product, isLoading: isProductLoading } = useProduct(productId);
 
-  // 좋아요 상태 및 수 조회
-  const { data: isLiked = false } = useIsLiked(productId);
-  const { data: likeCount = 0 } = useLikeCount(productId);
+  // 좋아요 상태 및 수는 상품 상세 응답에서 사용
+  const isLiked = product?.isLiked ?? false;
+  const likeCount = product?.likes ?? 0;
   const toggleLikeMutation = useToggleLike(productId);
 
   // 유사한 상품 찾기 (같은 카테고리, 색상, 패턴, 재질 중 하나 이상 일치)
@@ -278,9 +278,8 @@ export default function ShopDetailPage() {
 
                   <CardContent>
                     <div
-                      className={`grid ${
-                        isMobile ? "grid-cols-3" : "grid-cols-4"
-                      }`}
+                      className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"
+                        }`}
                     >
                       {similarProducts.map((similarProduct) => (
                         <ProductCard
@@ -385,7 +384,7 @@ export default function ShopDetailPage() {
                       quantity: baseQuantity,
                     }}
                     product={product}
-                    onRemove={() => {}}
+                    onRemove={() => { }}
                     onUpdateQuantity={(delta) =>
                       handleUpdateBaseQuantity(delta)
                     }
