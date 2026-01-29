@@ -4,22 +4,12 @@ import { mapOrderItemToRecord, mapRecordToOrderItem } from "./order-mapper";
 import { calculateDiscount } from "../utils/calculate-discount";
 import type { Order } from "../types/order-item";
 import type { OrderRecord, OrderItemRecord } from "../types/order-record";
-import type { Product, ProductOption } from "@/features/shop/types/product";
-import type {
-  ProductRecord,
-  ProductOptionRecord,
-} from "@/features/shop/types/product-record";
-import {
-  checkLikedProducts,
-  getLikeCounts,
-} from "@/features/shop/api/likes-api";
+import type { Product } from "@/features/shop/types/product";
 import { getUserCouponsByIds } from "@/features/order/api/coupons-api";
 import type { AppliedCoupon } from "@/features/order/types/coupon";
 
 const ORDERS_TABLE_NAME = "orders";
 const ORDER_ITEMS_TABLE_NAME = "order_items";
-const PRODUCT_TABLE_NAME = "products";
-const PRODUCT_OPTIONS_TABLE_NAME = "product_options";
 
 /**
  * 주문 생성
@@ -234,75 +224,18 @@ async function fetchProductsByIds(
     return new Map();
   }
 
-  const { data, error } = await supabase
-    .from(PRODUCT_TABLE_NAME)
-    .select("*")
-    .in("id", productIds);
+  const { data, error } = await supabase.rpc("get_products_by_ids", {
+    p_ids: productIds,
+  });
 
   if (error) {
     throw new Error(`주문 상품 정보를 불러올 수 없습니다: ${error.message}`);
   }
 
-  const { data: optionsData, error: optionsError } = await supabase
-    .from(PRODUCT_OPTIONS_TABLE_NAME)
-    .select("*")
-    .in("product_id", productIds);
-
-  if (optionsError) {
-    console.warn("상품 옵션 조회 실패:", optionsError.message);
-  }
-
-  const optionsByProductId = new Map<number, ProductOption[]>();
-  optionsData?.forEach((opt: ProductOptionRecord) => {
-    const option: ProductOption = {
-      id: opt.option_id,
-      name: opt.name,
-      additionalPrice: opt.additional_price,
-    };
-    if (!optionsByProductId.has(opt.product_id)) {
-      optionsByProductId.set(opt.product_id, []);
-    }
-    optionsByProductId.get(opt.product_id)!.push(option);
-  });
-
-  let likedProductIds = new Set<number>();
-  let likeCounts = new Map<number, number>();
-  try {
-    likedProductIds = await checkLikedProducts(productIds);
-  } catch (error) {
-    console.warn("좋아요 상태 조회 실패:", error);
-  }
-
-  try {
-    likeCounts = await getLikeCounts(productIds);
-  } catch (error) {
-    console.warn("좋아요 수 조회 실패:", error);
-  }
-
-  const productsById = new Map<number, Product>();
-  data?.forEach((record: ProductRecord) => {
-    const product: Product = {
-      id: record.id,
-      code: record.code,
-      name: record.name,
-      price: record.price,
-      image: record.image,
-      category: record.category,
-      color: record.color,
-      pattern: record.pattern,
-      material: record.material,
-      info: record.info,
-      likes: likeCounts.get(record.id) || 0,
-      isLiked: likedProductIds.has(record.id),
-    };
-
-    const options = optionsByProductId.get(record.id);
-    if (options && options.length > 0) {
-      product.options = options;
-    }
-
-    productsById.set(record.id, product);
-  });
+  const records = (data as Product[] | null) ?? [];
+  const productsById = new Map<number, Product>(
+    records.map((record) => [record.id, record])
+  );
 
   return productsById;
 }

@@ -51,35 +51,7 @@ export const removeLike = async (productId: number): Promise<void> => {
   }
 };
 
-/**
- * 사용자가 특정 제품을 좋아요 했는지 확인
- */
-export const checkIsLiked = async (productId: number): Promise<boolean> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) {
-    return false;
-  }
-
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("product_id", productId)
-    .maybeSingle();
-
-  if (error) {
-    if (error.code === "PGRST116") {
-      // 데이터가 없음
-      return false;
-    }
-    throw new Error(`좋아요 확인 실패: ${error.message}`);
-  }
-
-  return !!data;
-};
 
 /**
  * 여러 제품의 좋아요 상태 확인
@@ -106,22 +78,6 @@ export const checkLikedProducts = async (
   }
 
   return new Set(data?.map((item) => item.product_id) || []);
-};
-
-/**
- * 제품의 좋아요 수 조회
- */
-export const getLikeCount = async (productId: number): Promise<number> => {
-  const { count, error } = await supabase
-    .from(TABLE_NAME)
-    .select("*", { count: "exact", head: true })
-    .eq("product_id", productId);
-
-  if (error) {
-    throw new Error(`좋아요 수 조회 실패: ${error.message}`);
-  }
-
-  return count || 0;
 };
 
 /**
