@@ -1,4 +1,4 @@
-import type { OrderItem } from "./order-item";
+import type { OrderItem } from "./view/order";
 
 // 클레임 상태
 export type ClaimStatus = "접수" | "처리중" | "완료" | "거부";

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { OrderItemCard } from "../components/order-item-card";
-import type { Order } from "../types/order-item";
+import type { Order } from "../types/view/order";
 import { calculateOrderTotals } from "../utils/calculated-order-totals";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import React from "react";

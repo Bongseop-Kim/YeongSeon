@@ -1,22 +1,4 @@
-/**
- * DB 레코드 타입
- */
-export interface OrderRecord {
-  id: string;
-  user_id: string;
-  order_number: string;
-  shipping_address_id: string;
-  total_price: number;
-  original_price: number;
-  total_discount: number;
-  status: "대기중" | "진행중" | "배송중" | "완료" | "취소";
-  created_at: string;
-  updated_at: string;
-}
-
-export interface OrderItemRecord {
-  id: string;
-  order_id: string;
+export interface CreateOrderItemInputDTO {
   item_id: string;
   item_type: "product" | "reform";
   product_id: number | null;
@@ -37,5 +19,12 @@ export interface OrderItemRecord {
   unit_price: number;
   discount_amount: number;
   applied_user_coupon_id: string | null;
-  created_at: string;
+}
+
+export interface CreateOrderInputDTO {
+  p_shipping_address_id: string;
+  p_total_price: number;
+  p_original_price: number;
+  p_total_discount: number;
+  p_order_items: CreateOrderItemInputDTO[];
 }

@@ -43,7 +43,7 @@ export const getCartItems = async (userId: string): Promise<CartItem[]> => {
   }
 
   const { data, error } = await supabase
-    .rpc("get_cart_items_with_details", {
+    .rpc("get_cart_items", {
       p_user_id: userId,
       p_active_only: true,
     });
