@@ -4,6 +4,41 @@
 
 Standardize the codebase on **Option B: UI/DTO separation**.
 
+## Supabase Workflow Strategy
+
+- **Source of truth is Git**: all DB/RPC/Edge Function changes must be in repo.
+- **No dashboard edits**: if a dashboard change happens, immediately backport with `supabase db pull` and commit the migration.
+- **Local-first development**:
+  - Run `supabase start` for local stack.
+  - Create migrations via `supabase migration new` (or `supabase db diff` after manual edits).
+  - Validate with `supabase db reset` before PR.
+- **Deploy via CLI only**:
+  - DB: `supabase db push`
+  - Functions: `supabase functions deploy`
+- **Edge Functions location**: `supabase/functions/*` (shared code in `_shared`).
+  - Local dev: `supabase functions serve`
+  - Function config via `supabase/config.toml` (e.g., `verify_jwt`).
+- **Edge Functions workflow**:
+  - Manage in `supabase/functions/*` only (no dashboard edits).
+  - Local test (`deno check` / `supabase functions serve`) before deploy.
+  - Deploy via CLI: `supabase functions deploy <name>`.
+- **Secrets management**: use `supabase secrets set`, never commit secrets.
+- **Environment policy**:
+  - Minimum `dev` and `prod` separation.
+  - If preview branches are used, treat them as read-only outputs of PRs.
+- **Migration squash/rebase safety**:
+  - **Never squash migrations already applied to production.**
+  - **Squash only before first prod deploy** or during a planned “schema reset” milestone.
+  - **Safe squash (pre‑prod only)**:
+    - Ensure all teammates are synced; no pending local migrations.
+    - Replace multiple migrations with a single baseline migration.
+    - Run `supabase db reset` locally and verify schema matches.
+    - For remote dev/preview DBs, **reset/recreate** instead of pushing conflicting history.
+  - **Rebase**:
+    - Rebase feature branches on `main` when behind.
+    - If migration conflicts appear, regenerate/reapply as needed.
+    - After rebase, run `supabase db reset` to validate.
+
 ## Core Principle
 
 - **UI types are display/domain models.**
