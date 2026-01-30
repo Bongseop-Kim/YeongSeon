@@ -1,4 +1,4 @@
-import type { Product, ProductOption } from "@/features/shop/types/product";
+import type { Product, ProductOption } from "@/features/shop/types/view/product";
 import type { AppliedCoupon } from "@/features/order/types/coupon";
 import type { TieItem } from "@/features/reform/types/reform";
 

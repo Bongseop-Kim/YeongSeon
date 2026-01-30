@@ -1,4 +1,4 @@
-import type { Product, ProductOption } from "../types/product";
+import type { Product, ProductOption } from "@/features/shop/types/view/product";
 
 const PRODUCT_OPTIONS: ProductOption[] = [
   {

@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
-import type { Product } from "../types/product";
+import type { Product } from "@/features/shop/types/view/product";
+import type { ProductDTO } from "@/features/shop/types/dto/product";
+import { toProduct, toProducts } from "@/features/shop/api/products-mapper";
 /**
  * 모든 제품 조회
  */
@@ -28,12 +30,12 @@ export const getProducts = async (filters?: {
     throw new Error(`제품 조회 실패: ${error.message}`);
   }
 
-  const records = (data as Product[]) ?? [];
+  const records = (data as ProductDTO[]) ?? [];
   if (records.length === 0) {
     return [];
   }
 
-  return records;
+  return toProducts(records);
 };
 
 /**
@@ -48,5 +50,6 @@ export const getProductById = async (id: number): Promise<Product | null> => {
     throw new Error(`제품 조회 실패: ${error.message}`);
   }
 
-  return (data as Product | null) ?? null;
+  const record = (data as ProductDTO | null) ?? null;
+  return record ? toProduct(record) : null;
 };

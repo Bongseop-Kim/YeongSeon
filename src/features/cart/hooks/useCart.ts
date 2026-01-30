@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CartItem, ReformCartItem } from "@/features/cart/types/view/cart";
-import type { Product, ProductOption } from "@/features/shop/types/product";
+import type { Product, ProductOption } from "@/features/shop/types/view/product";
 import type { AppliedCoupon } from "@/features/order/types/coupon";
 import type { TieItem } from "@/features/reform/types/reform";
 import { calculateDiscount } from "@/features/order/utils/calculate-discount";

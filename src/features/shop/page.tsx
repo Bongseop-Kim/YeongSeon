@@ -12,7 +12,7 @@ import type {
   ProductPattern,
   ProductMaterial,
   SortOption,
-} from "./types/product";
+} from "@/features/shop/types/view/product";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { useModalStore } from "@/store/modal";

@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ProductOption, Product } from "../types/product";
+import type { ProductOption, Product } from "@/features/shop/types/view/product";
 import { Badge } from "@/components/ui/badge";
 import {
   getCategoryLabel,

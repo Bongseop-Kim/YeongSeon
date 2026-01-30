@@ -3,7 +3,7 @@ import type {
   ProductColor,
   ProductPattern,
   ProductMaterial,
-} from "../types/product";
+} from "@/features/shop/types/view/product";
 
 /**
  * 카테고리 키-값 매핑

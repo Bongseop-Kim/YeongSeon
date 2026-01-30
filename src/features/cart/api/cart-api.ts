@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { CartItem } from "@/features/cart/types/view/cart";
 import type { CartItemViewDTO } from "@/features/cart/types/dto/cart-view";
-import type { Product } from "@/features/shop/types/product";
+import type { Product } from "@/features/shop/types/view/product";
 import type { ProductDTO } from "@/features/shop/types/dto/product";
 import { toCartItemInputDTO, toCartItemView } from "@/features/cart/api/cart-mapper";
 import { toProductView } from "@/features/shared/api/shared-mapper";
