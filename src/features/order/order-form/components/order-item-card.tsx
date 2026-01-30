@@ -16,6 +16,7 @@ export function OrderItemCard({ item, onChangeCoupon }: OrderItemCardProps) {
   const totalPrice = itemPrice * item.quantity;
   const totalDiscountedPrice = discountedPrice * item.quantity;
   const hasCoupon = !!item.appliedCoupon;
+  const hasUnavailableCoupon = !hasCoupon && !!item.appliedCouponId;
 
   return (
     <CardContent>
@@ -63,11 +64,15 @@ export function OrderItemCard({ item, onChangeCoupon }: OrderItemCardProps) {
               )}
 
               {/* 적용된 쿠폰 표시 */}
-              {hasCoupon && (
+              {hasCoupon ? (
                 <p className="text-xs text-primary font-medium">
                   {item.appliedCoupon?.coupon?.name ?? "쿠폰"} 적용
                 </p>
-              )}
+              ) : hasUnavailableCoupon ? (
+                <p className="text-xs text-amber-600 font-medium">
+                  쿠폰이 만료/사용되어 적용이 해제되었습니다
+                </p>
+              ) : null}
             </div>
           </div>
         </div>

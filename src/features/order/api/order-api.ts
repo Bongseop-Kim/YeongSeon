@@ -4,9 +4,8 @@ import { mapOrderItemToRecord, mapRecordToOrderItem } from "./order-mapper";
 import { calculateDiscount } from "../utils/calculate-discount";
 import type { Order } from "../types/order-item";
 import type { OrderRecord, OrderItemRecord } from "../types/order-record";
-import type { Product } from "@/features/shop/types/product";
-import { getUserCouponsByIds } from "@/features/order/api/coupons-api";
-import type { AppliedCoupon } from "@/features/order/types/coupon";
+import { getUserCouponsByIdsMap } from "@/features/order/api/coupons-api";
+import { getProductsByIds } from "@/features/cart/api/cart-api";
 
 const ORDERS_TABLE_NAME = "orders";
 const ORDER_ITEMS_TABLE_NAME = "order_items";
@@ -214,50 +213,6 @@ export const createOrder = async (
   };
 };
 
-/**
- * 상품 정보 조회 (주문 목록용)
- */
-async function fetchProductsByIds(
-  productIds: number[]
-): Promise<Map<number, Product>> {
-  if (productIds.length === 0) {
-    return new Map();
-  }
-
-  const { data, error } = await supabase.rpc("get_products_by_ids", {
-    p_ids: productIds,
-  });
-
-  if (error) {
-    throw new Error(`주문 상품 정보를 불러올 수 없습니다: ${error.message}`);
-  }
-
-  const records = (data as Product[] | null) ?? [];
-  const productsById = new Map<number, Product>(
-    records.map((record) => [record.id, record])
-  );
-
-  return productsById;
-}
-
-/**
- * 주문에 적용된 쿠폰 조회
- */
-async function fetchAppliedCoupons(
-  couponIds: string[]
-): Promise<Map<string, AppliedCoupon>> {
-  if (couponIds.length === 0) {
-    return new Map();
-  }
-
-  try {
-    const coupons = await getUserCouponsByIds(couponIds, { activeOnly: false });
-    return new Map(coupons.map((coupon) => [coupon.id, coupon]));
-  } catch (error) {
-    console.warn("주문 쿠폰 정보를 불러오지 못했습니다:", error);
-    return new Map();
-  }
-}
 
 /**
  * 주문 목록 조회
@@ -334,8 +289,17 @@ export const getOrders = async (userId: string): Promise<Order[]> => {
 
   // 상품 및 쿠폰 정보 병렬 조회
   const [productsById, couponsById] = await Promise.all([
-    fetchProductsByIds(productIds),
-    fetchAppliedCoupons(couponIds),
+    getProductsByIds(productIds),
+    (async () => {
+      try {
+        return await getUserCouponsByIdsMap(couponIds, {
+          activeOnly: false,
+        });
+      } catch (error) {
+        console.warn("주문 쿠폰 정보를 불러오지 못했습니다:", error);
+        return new Map();
+      }
+    })(),
   ]);
 
   // OrderRecord를 Order로 변환
@@ -433,8 +397,17 @@ export const getOrder = async (
 
   // 상품 및 쿠폰 정보 병렬 조회
   const [productsById, couponsById] = await Promise.all([
-    fetchProductsByIds(productIds),
-    fetchAppliedCoupons(couponIds),
+    getProductsByIds(productIds),
+    (async () => {
+      try {
+        return await getUserCouponsByIdsMap(couponIds, {
+          activeOnly: false,
+        });
+      } catch (error) {
+        console.warn("주문 쿠폰 정보를 불러오지 못했습니다:", error);
+        return new Map();
+      }
+    })(),
   ]);
 
   // OrderItemRecord를 OrderItem으로 변환
