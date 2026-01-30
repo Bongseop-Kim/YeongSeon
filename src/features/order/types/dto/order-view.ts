@@ -2,7 +2,7 @@ import type { AppliedCouponDTO } from "./coupon";
 import type { ProductDTO, ProductOptionDTO } from "@/features/shop/types/dto/product";
 import type { TieItemDTO } from "@/features/reform/types/dto/reform";
 
-export type OrderStatusDTO = "진행중" | "완료" | "배송중" | "대기중";
+export type OrderStatusDTO = "진행중" | "완료" | "배송중" | "대기중" | "취소";
 
 export interface ProductOrderItemDTO {
   id: string;

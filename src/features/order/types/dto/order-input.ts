@@ -16,15 +16,10 @@ export interface CreateOrderItemInputDTO {
     cost: number;
   } | null;
   quantity: number;
-  unit_price: number;
-  discount_amount: number;
   applied_user_coupon_id: string | null;
 }
 
 export interface CreateOrderInputDTO {
-  p_shipping_address_id: string;
-  p_total_price: number;
-  p_original_price: number;
-  p_total_discount: number;
-  p_order_items: CreateOrderItemInputDTO[];
+  shipping_address_id: string;
+  items: CreateOrderItemInputDTO[];
 }

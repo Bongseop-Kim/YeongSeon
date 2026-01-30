@@ -173,6 +173,8 @@ const OrderDetailPage = () => {
         return "bg-blue-100 text-blue-800";
       case "진행중":
         return "bg-yellow-100 text-yellow-800";
+      case "취소":
+        return "bg-red-100 text-red-800";
       case "대기중":
         return "bg-gray-100 text-gray-800";
       default:

@@ -32,6 +32,15 @@ Standardize the codebase on **Option B: UI/DTO separation**.
    - Never trust client totals/prices; derive from DB.
 3. **Auth enforced in every personalized RPC.**
    - Must use `auth.uid()` checks.
+4. **Business rules live in service layer.**
+   - Avoid policy decisions (if/else business logic) inside RPC/SQL.
+5. **SQL limited to data access/formatting.**
+   - SQL handles retrieval, filtering, and formatting only.
+   - Meaning/decision logic belongs in the service layer.
+6. **RPC security mode must be explicit.**
+   - Always specify SECURITY DEFINER or SECURITY INVOKER and review RLS impact.
+7. **Prefer DB Views for simple joins/formatting.**
+   - Use Views to return `*ViewDTO` directly and reduce service-layer mapping.
 
 ## Facade Rule
 

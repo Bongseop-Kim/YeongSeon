@@ -5,7 +5,6 @@ import type {
   OrderViewDTO,
 } from "@/features/order/types/dto/order-view";
 import type { Order } from "@/features/order/types/view/order";
-import { getOrderItemPricing } from "@/features/order/utils/calculated-order-totals";
 import {
   toAppliedCouponView,
   toProductOptionView,
@@ -15,15 +14,11 @@ import {
 
 export const toOrderItemInputDTO = (
   item: CreateOrderRequest["items"][number]
-): CreateOrderInputDTO["p_order_items"][number] => {
-  const { unitPrice, discount } = getOrderItemPricing(item);
-
+): CreateOrderInputDTO["items"][number] => {
   const baseRecord = {
     item_id: item.id,
     quantity: item.quantity,
-    unit_price: unitPrice,
-    discount_amount: discount,
-    applied_user_coupon_id: item.appliedCoupon?.id || null,
+    applied_user_coupon_id: item.appliedCoupon?.id ?? item.appliedCouponId ?? null,
   };
 
   if (item.type === "product") {

@@ -17,17 +17,14 @@ export const createOrder = async (
 ): Promise<CreateOrderResponse> => {
 
   const input: CreateOrderInputDTO = {
-    p_shipping_address_id: request.shippingAddressId,
-    p_total_price: request.totals.totalPrice,
-    p_original_price: request.totals.originalPrice,
-    p_total_discount: request.totals.totalDiscount,
-    p_order_items: request.items.map(toOrderItemInputDTO),
+    shipping_address_id: request.shippingAddressId,
+    items: request.items.map(toOrderItemInputDTO),
   };
 
-  const { data: orderResult, error: orderError } = await supabase.rpc(
-    "create_order",
-    input
-  );
+  const { data: orderResult, error: orderError } =
+    await supabase.functions.invoke("create-order", {
+      body: input,
+    });
 
   if (orderError) {
     throw new Error(`주문 생성 실패: ${orderError.message}`);
