@@ -33,6 +33,11 @@ Standardize the codebase on **Option B: UI/DTO separation**.
 3. **Auth enforced in every personalized RPC.**
    - Must use `auth.uid()` checks.
 
+## Facade Rule
+
+- Introduce a facade/service **when multiple features depend on the same API surface**.
+- If an API is only used within a single feature, keep it local (no facade).
+
 ## Frontend Rules
 
 1. **Type layering**
