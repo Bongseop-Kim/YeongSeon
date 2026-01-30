@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCartItems, setCartItems, clearCartItems } from "./cart-api";
-import type { CartItem } from "@/features/cart/types/cart";
+import {
+  getCartItems,
+  setCartItems,
+  clearCartItems,
+} from "@/features/cart/api/cart-api";
+import type { CartItem } from "@/features/cart/types/view/cart";
 import { useAuthStore } from "@/store/auth";
 
 /**

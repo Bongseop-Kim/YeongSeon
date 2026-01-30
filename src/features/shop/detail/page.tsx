@@ -46,7 +46,7 @@ import { ProductCard } from "@/features/shop/components/product-card";
 import { useMemo } from "react";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
-import type { CartItem } from "@/features/cart/types/cart";
+import type { CartItem } from "@/features/cart/types/view/cart";
 import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { useProduct } from "@/features/shop/api/products-query";

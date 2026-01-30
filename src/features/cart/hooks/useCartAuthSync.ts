@@ -1,16 +1,16 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth";
-import { cartKeys, useSetCartItems } from "../api/cart-query";
-import { getCartItems } from "../api/cart-api";
+import { cartKeys, useSetCartItems } from "@/features/cart/api/cart-query";
+import { getCartItems } from "@/features/cart/api/cart-api";
 import {
   clearGuest,
   clearMergeLock,
   clearUserCache,
   getGuestItems,
-} from "../utils/cart-local-storage";
+} from "@/features/cart/utils/cart-local-storage";
 import { toast } from "@/lib/toast";
-import type { CartItem } from "../types/cart";
+import type { CartItem } from "@/features/cart/types/view/cart";
 
 /**
  * 로그인/로그아웃 시 장바구니 동기화를 처리하는 hook

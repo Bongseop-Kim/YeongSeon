@@ -1,4 +1,4 @@
-import type { CartItem } from "@/features/cart/types/cart";
+import type { CartItem } from "@/features/cart/types/view/cart";
 
 export interface CreateOrderRequest {
   items: CartItem[];

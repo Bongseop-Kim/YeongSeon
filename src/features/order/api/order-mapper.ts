@@ -1,25 +1,17 @@
 import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
 import type { CreateOrderInputDTO } from "@/features/order/types/dto/order-input";
 import type {
-  AppliedCouponDTO,
-  CouponDTO,
-} from "@/features/order/types/dto/coupon";
-import type {
   OrderItemDTO,
   OrderViewDTO,
-  ProductOrderItemDTO,
-  ReformOrderItemDTO,
 } from "@/features/order/types/dto/order-view";
 import type { Order } from "@/features/order/types/view/order";
-import type {
-  AppliedCoupon,
-  Coupon,
-} from "@/features/order/types/coupon";
-import type { Product, ProductOption } from "@/features/shop/types/product";
-import type { ProductDTO, ProductOptionDTO } from "@/features/shop/types/dto/product";
-import type { TieItem } from "@/features/reform/types/reform";
-import type { TieItemDTO } from "@/features/reform/types/dto/reform";
 import { getOrderItemPricing } from "@/features/order/utils/calculated-order-totals";
+import {
+  toAppliedCouponView,
+  toProductOptionView,
+  toProductView,
+  toTieItemView,
+} from "@/features/shared/api/shared-mapper";
 
 export const toOrderItemInputDTO = (
   item: CreateOrderRequest["items"][number]
@@ -62,54 +54,32 @@ export const toOrderItemInputDTO = (
   };
 };
 
-const toProductOption = (option: ProductOptionDTO): ProductOption => ({
-  ...option,
-});
-
-const toProduct = (product: ProductDTO): Product => ({
-  ...product,
-  options: product.options?.map(toProductOption),
-});
-
-const toCoupon = (coupon: CouponDTO): Coupon => ({
-  ...coupon,
-});
-
-const toAppliedCoupon = (
-  coupon?: AppliedCouponDTO
-): AppliedCoupon | undefined =>
-  coupon
-    ? {
-        ...coupon,
-        coupon: toCoupon(coupon.coupon),
-      }
-    : undefined;
-
-const toTieItem = (tie: TieItemDTO): TieItem => ({
-  ...tie,
-});
-
 const toOrderItem = (item: OrderItemDTO): Order["items"][number] => {
   if (item.type === "product") {
-    const productItem: ProductOrderItemDTO = item;
+    if (!item.product) {
+      throw new Error("Product data is required for product order items.");
+    }
     return {
-      ...productItem,
-      product: toProduct(productItem.product),
-      selectedOption: productItem.selectedOption
-        ? toProductOption(productItem.selectedOption)
+      ...item,
+      product: toProductView(item.product),
+      selectedOption: item.selectedOption
+        ? toProductOptionView(item.selectedOption)
         : undefined,
-      appliedCoupon: toAppliedCoupon(productItem.appliedCoupon),
+      appliedCoupon: toAppliedCouponView(item.appliedCoupon),
     };
   }
 
-  const reformItem: ReformOrderItemDTO = item;
+  if (!item.reformData) {
+    throw new Error("Reform data is required for reform order items.");
+  }
+
   return {
-    ...reformItem,
+    ...item,
     reformData: {
-      ...reformItem.reformData,
-      tie: toTieItem(reformItem.reformData.tie),
+      ...item.reformData,
+      tie: toTieItemView(item.reformData.tie),
     },
-    appliedCoupon: toAppliedCoupon(reformItem.appliedCoupon),
+    appliedCoupon: toAppliedCouponView(item.appliedCoupon),
   };
 };
 

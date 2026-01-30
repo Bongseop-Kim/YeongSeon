@@ -1,6 +1,10 @@
 import { supabase } from "@/lib/supabase";
-import type { CartItem } from "@/features/cart/types/cart";
+import type { CartItem } from "@/features/cart/types/view/cart";
+import type { CartItemViewDTO } from "@/features/cart/types/dto/cart-view";
 import type { Product } from "@/features/shop/types/product";
+import type { ProductDTO } from "@/features/shop/types/dto/product";
+import { toCartItemInputDTO, toCartItemView } from "@/features/cart/api/cart-mapper";
+import { toProductView } from "@/features/shared/api/shared-mapper";
 
 const TABLE_NAME = "cart_items";
 
@@ -21,9 +25,9 @@ export async function getProductsByIds(
     );
   }
 
-  const records = (data as Product[] | null) ?? [];
+  const records = (data as ProductDTO[] | null) ?? [];
   const productsById = new Map<number, Product>(
-    records.map((record) => [record.id, record])
+    records.map((record) => [record.id, toProductView(record)])
   );
 
   return productsById;
@@ -55,7 +59,8 @@ export const getCartItems = async (userId: string): Promise<CartItem[]> => {
   if (!data || data.length === 0) {
     return [];
   }
-  return (data as CartItem[]) ?? [];
+  const records = (data as CartItemViewDTO[] | null) ?? [];
+  return records.map((record) => toCartItemView(record));
 };
 
 /**
@@ -77,7 +82,7 @@ export const setCartItems = async (
   // 삭제와 삽입이 하나의 트랜잭션으로 처리되어 실패 시 롤백됨
   const { error } = await supabase.rpc("replace_cart_items", {
     p_user_id: userId,
-    p_items: items,
+    p_items: items.map(toCartItemInputDTO),
   });
 
   if (error) {

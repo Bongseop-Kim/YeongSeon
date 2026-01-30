@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useModalStore } from "@/store/modal";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
-import type { CartItem } from "@/features/cart/types/cart";
+import type { CartItem } from "@/features/cart/types/view/cart";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import React, { useState } from "react";
 import { Empty } from "../../components/composite/empty";
