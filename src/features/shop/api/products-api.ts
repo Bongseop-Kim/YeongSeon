@@ -53,3 +53,29 @@ export const getProductById = async (id: number): Promise<Product | null> => {
   const record = (data as ProductDTO | null) ?? null;
   return record ? toProduct(record) : null;
 };
+
+/**
+ * IDs로 제품 조회
+ */
+export const getProductsByIds = async (
+  productIds: number[]
+): Promise<Map<number, Product>> => {
+  if (productIds.length === 0) {
+    return new Map();
+  }
+
+  const { data, error } = await supabase.rpc("get_products_by_ids", {
+    p_ids: productIds,
+  });
+
+  if (error) {
+    throw new Error(`상품 정보를 불러올 수 없습니다: ${error.message}`);
+  }
+
+  const records = (data as ProductDTO[] | null) ?? [];
+  const productsById = new Map<number, Product>(
+    records.map((record) => [record.id, toProduct(record)])
+  );
+
+  return productsById;
+};

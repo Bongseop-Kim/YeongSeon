@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { getProducts, getProductById } from "./products-api";
+import {
+  getProducts,
+  getProductById,
+} from "@/features/shop/api/product-service";
 
 /**
  * 제품 쿼리 키

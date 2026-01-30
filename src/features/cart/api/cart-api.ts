@@ -2,35 +2,15 @@ import { supabase } from "@/lib/supabase";
 import type { CartItem } from "@/features/cart/types/view/cart";
 import type { CartItemViewDTO } from "@/features/cart/types/dto/cart-view";
 import type { Product } from "@/features/shop/types/view/product";
-import type { ProductDTO } from "@/features/shop/types/dto/product";
+import { productService } from "@/features/shop/api/product-service";
 import { toCartItemInputDTO, toCartItemView } from "@/features/cart/api/cart-mapper";
-import { toProductView } from "@/features/shared/api/shared-mapper";
 
 const TABLE_NAME = "cart_items";
 
 export async function getProductsByIds(
   productIds: number[]
 ): Promise<Map<number, Product>> {
-  if (productIds.length === 0) {
-    return new Map();
-  }
-
-  const { data, error } = await supabase.rpc("get_products_by_ids", {
-    p_ids: productIds,
-  });
-
-  if (error) {
-    throw new Error(
-      `장바구니 상품 정보를 불러올 수 없습니다: ${error.message}`
-    );
-  }
-
-  const records = (data as ProductDTO[] | null) ?? [];
-  const productsById = new Map<number, Product>(
-    records.map((record) => [record.id, toProductView(record)])
-  );
-
-  return productsById;
+  return productService.getProductsByIds(productIds);
 }
 
 /**
