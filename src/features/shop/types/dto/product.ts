@@ -23,6 +23,7 @@ export interface ProductDTO {
   name: string;
   price: number;
   image: string;
+  deleted?: boolean;
   detailImages?: string[];
   category: ProductCategoryDTO;
   color: ProductColorDTO;

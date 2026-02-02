@@ -91,13 +91,25 @@ export const toOrderView = (order: OrderViewDTO): Order => ({
 
 export const fromOrderItemRowDTO = (item: OrderItemRowDTO): OrderItemDTO => {
   if (item.type === "product") {
-    if (!item.product) {
-      throw new Error("주문 상품 데이터가 올바르지 않습니다.");
-    }
+    const product = item.product ?? {
+      id: -1,
+      code: "DELETED",
+      name: "삭제된 상품",
+      price: 0,
+      image: "",
+      deleted: true,
+      category: "3fold",
+      color: "black",
+      pattern: "solid",
+      material: "silk",
+      likes: 0,
+      info: "",
+      options: [],
+    };
     return {
       id: item.id,
       type: "product",
-      product: item.product,
+      product,
       selectedOption: item.selectedOption ?? undefined,
       quantity: item.quantity,
       appliedCoupon: item.appliedCoupon ?? undefined,
