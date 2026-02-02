@@ -107,7 +107,8 @@ Standardize the codebase on **Option B: UI/DTO separation**.
 
 ## Shared Mapper Rules
 
-- Common mapping helpers (product/coupon/tie) should live in `api/shared/` or `mappers/`
+- Shared mapping helpers must live in `src/features/shared/api/shared-mapper.ts`
+- Feature-specific mappers must follow `src/features/[feature]/api/[feature]-mapper.ts`
 - Prefer reuse over duplicating mapping logic across features
 
 ## DTO Naming
