@@ -2,6 +2,8 @@ import { supabase } from "@/lib/supabase";
 import type { Product } from "@/features/shop/types/view/product";
 import type { ProductDTO } from "@/features/shop/types/dto/product";
 import { toProduct, toProducts } from "@/features/shop/api/products-mapper";
+
+const PRODUCT_VIEW = "product_list_view";
 /**
  * 모든 제품 조회
  */
@@ -14,17 +16,45 @@ export const getProducts = async (filters?: {
   priceMax?: number | null;
   sortOption?: string;
 }): Promise<Product[]> => {
-  const { data, error } = await supabase.rpc("get_products", {
-    p_categories: filters?.categories?.length ? filters.categories : null,
-    p_colors: filters?.colors?.length ? filters.colors : null,
-    p_patterns: filters?.patterns?.length ? filters.patterns : null,
-    p_materials: filters?.materials?.length ? filters.materials : null,
-    p_price_min:
-      typeof filters?.priceMin === "number" ? filters.priceMin : null,
-    p_price_max:
-      typeof filters?.priceMax === "number" ? filters.priceMax : null,
-    p_sort_option: filters?.sortOption ?? "latest",
-  });
+  let query = supabase.from(PRODUCT_VIEW).select("*");
+
+  if (filters?.categories?.length) {
+    query = query.in("category", filters.categories);
+  }
+  if (filters?.colors?.length) {
+    query = query.in("color", filters.colors);
+  }
+  if (filters?.patterns?.length) {
+    query = query.in("pattern", filters.patterns);
+  }
+  if (filters?.materials?.length) {
+    query = query.in("material", filters.materials);
+  }
+  if (typeof filters?.priceMin === "number") {
+    query = query.gte("price", filters.priceMin);
+  }
+  if (typeof filters?.priceMax === "number") {
+    query = query.lte("price", filters.priceMax);
+  }
+
+  const sortOption = filters?.sortOption ?? "latest";
+  if (sortOption === "price-low") {
+    query = query.order("price", { ascending: true }).order("id", {
+      ascending: false,
+    });
+  } else if (sortOption === "price-high") {
+    query = query.order("price", { ascending: false }).order("id", {
+      ascending: false,
+    });
+  } else if (sortOption === "popular") {
+    query = query.order("likes", { ascending: false }).order("id", {
+      ascending: false,
+    });
+  } else {
+    query = query.order("id", { ascending: false });
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(`제품 조회 실패: ${error.message}`);
@@ -42,9 +72,11 @@ export const getProducts = async (filters?: {
  * ID로 제품 조회
  */
 export const getProductById = async (id: number): Promise<Product | null> => {
-  const { data, error } = await supabase.rpc("get_product_by_id", {
-    p_id: id,
-  });
+  const { data, error } = await supabase
+    .from(PRODUCT_VIEW)
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
 
   if (error) {
     throw new Error(`제품 조회 실패: ${error.message}`);
@@ -64,9 +96,11 @@ export const getProductsByIds = async (
     return new Map();
   }
 
-  const { data, error } = await supabase.rpc("get_products_by_ids", {
-    p_ids: productIds,
-  });
+  const { data, error } = await supabase
+    .from(PRODUCT_VIEW)
+    .select("*")
+    .in("id", productIds)
+    .order("id", { ascending: true });
 
   if (error) {
     throw new Error(`상품 정보를 불러올 수 없습니다: ${error.message}`);
