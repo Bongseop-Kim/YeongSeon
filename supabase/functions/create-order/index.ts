@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
     (item) => item.item_type === "product"
   );
   const productIds = Array.from(
-    new Set(productItems.map((item) => item.product_id).filter(Boolean))
+    new Set(productItems.map((item) => item.product_id).filter((id): id is number => id !== null))
   );
   const optionIds = Array.from(
     new Set(productItems.map((item) => item.selected_option_id).filter(Boolean))
@@ -274,9 +274,9 @@ Deno.serve(async (req) => {
         selected_option_id: item.selected_option_id,
         reform_data: item.reform_data
           ? {
-              ...item.reform_data,
-              cost: REFORM_BASE_COST,
-            }
+            ...item.reform_data,
+            cost: REFORM_BASE_COST,
+          }
           : null,
         quantity: item.quantity,
         unit_price: unitPrice,

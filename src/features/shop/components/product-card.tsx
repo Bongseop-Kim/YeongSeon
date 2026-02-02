@@ -14,7 +14,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const handleClick = () => {
     navigate(`${ROUTES.SHOP}/${product.id}`);
   };
-  console.log(product.image);
+
   return (
     <div className="cursor-pointer" onClick={handleClick}>
       <div className="relative aspect-square overflow-hidden bg-zinc-100">
@@ -32,11 +32,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         />
         <div className="absolute bottom-2 right-2">
           <HeartIcon
-            className={`size-5 ${
-              product.isLiked
+            className={`size-5 ${product.isLiked
                 ? "text-red-500 fill-red-500"
                 : "text-white fill-gray-900/50"
-            }`}
+              }`}
           />
         </div>
       </div>
