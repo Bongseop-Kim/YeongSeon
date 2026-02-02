@@ -101,7 +101,7 @@ Standardize the codebase on **Option B: UI/DTO separation**.
    - Prefer `type`-based narrowing over `as` casts in mappers
 6. **Avoid non-null assertions**
    - Do not use `!` unless guarded by explicit runtime checks
-5. **Import Conventions (Strict)**
+7. **Import Conventions (Strict)**
    - Always use absolute paths with the @/ alias (e.g., import { ... } from '@/types/dto/order').
    - No relative paths (e.g., ../../types) allowed for cross-directory imports.
 
