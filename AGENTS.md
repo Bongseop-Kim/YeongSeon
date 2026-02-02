@@ -121,3 +121,9 @@ Standardize the codebase on **Option B: UI/DTO separation**.
 - New RPCs must not accept/return UI types directly.
 - Avoid mixed shapes (e.g. no `product` + `product_id` in a single type).
 - Prefer per-feature `dto/` and `view/` folders.
+
+## Reference Docs (Required)
+
+- ADR: `docs/adr/0001-read-view-write-rpc.md`
+- Write boundary: `docs/supabase-write-boundary.md`
+- Write security audit snapshot: `docs/supabase-write-security-audit-2026-02-02.md`
