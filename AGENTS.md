@@ -128,3 +128,98 @@ Standardize the codebase on **Option B: UI/DTO separation**.
 - ADR: `docs/adr/0001-read-view-write-rpc.md`
 - Write boundary: `docs/supabase-write-boundary.md`
 - Write security audit snapshot: `docs/supabase-write-security-audit-2026-02-02.md`
+
+## AI Interaction Stopping Rules
+
+### Core Rule
+
+AI assistance must stop when work reaches **Decision, Execution, or Verification**.
+More ideas are not a valid reason to continue.
+
+---
+
+### State Machine
+
+All AI-assisted tasks must be in exactly one state:
+
+| State | Meaning                 |
+| ----- | ----------------------- |
+| S0    | Problem definition      |
+| S1    | Idea expansion          |
+| S2    | Convergence / selection |
+| S3    | Execution               |
+
+---
+
+### Forced Stop Conditions
+
+#### S0 → S1
+
+- Problem is written as a single sentence.
+  → Automatically move to S1.
+
+---
+
+#### S1 (Expansion) — STOP when ANY applies
+
+- 3 ideas generated
+- New ideas are minor variations of existing ones
+- Same pattern repeats
+
+→ Immediately move to S2.
+
+Hard limit: **max 3 turns**
+
+---
+
+#### S2 (Convergence) — STOP when ANY applies
+
+- Options ≤ 2
+- Decision criteria ≤ 3
+- A recommended option is clear
+
+→ Immediately move to S3.
+
+Hard limit: **max 2 turns**
+
+---
+
+#### S3 (Execution) — DONE when ANY applies
+
+- TODO list ≤ 5 items
+- First task can be done in ≤ 30 minutes
+- Output is code / command / file-level work
+
+→ Conversation must end.
+
+Hard limit: **1 turn**
+
+---
+
+### Mandatory Stop Output
+
+When stopping, AI must end with ONE of the following formats only:
+
+- `결론:` one-line decision
+- `다음 행동:` numbered TODO list
+- `검증 방법:` single experiment or implementation plan
+
+No additional suggestions allowed after this output.
+
+---
+
+### Explicit Resume Rule
+
+AI may continue ONLY if the user explicitly says:
+
+- “다시 발산”
+- “대안 더”
+- “다시 비교”
+
+Otherwise, stopping rules remain enforced.
+
+---
+
+### One-line Definition
+
+> Termination is determined by **state, count, and turn limits — not intuition**.
