@@ -34,3 +34,27 @@ export interface OrderViewDTO {
   items: OrderItemDTO[];
   totalPrice: number;
 }
+
+export interface OrderListRowDTO {
+  id: string;
+  orderNumber: string;
+  date: string;
+  status: OrderStatusDTO;
+  totalPrice: number;
+  created_at: string;
+}
+
+export interface OrderItemRowDTO {
+  order_id: string;
+  id: string;
+  type: "product" | "reform";
+  product: ProductDTO | null;
+  selectedOption: ProductOptionDTO | null;
+  quantity: number;
+  reformData: {
+    tie: TieItemDTO;
+    cost: number;
+  } | null;
+  appliedCoupon: AppliedCouponDTO | null;
+  created_at: string;
+}

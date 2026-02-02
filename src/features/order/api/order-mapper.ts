@@ -1,6 +1,7 @@
 import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
 import type { CreateOrderInputDTO } from "@/features/order/types/dto/order-input";
 import type {
+  OrderItemRowDTO,
   OrderItemDTO,
   OrderViewDTO,
 } from "@/features/order/types/dto/order-view";
@@ -82,3 +83,31 @@ export const toOrderView = (order: OrderViewDTO): Order => ({
   ...order,
   items: order.items.map(toOrderItem),
 });
+
+export const fromOrderItemRowDTO = (item: OrderItemRowDTO): OrderItemDTO => {
+  if (item.type === "product") {
+    if (!item.product) {
+      throw new Error("주문 상품 데이터가 올바르지 않습니다.");
+    }
+    return {
+      id: item.id,
+      type: "product",
+      product: item.product,
+      selectedOption: item.selectedOption ?? undefined,
+      quantity: item.quantity,
+      appliedCoupon: item.appliedCoupon ?? undefined,
+    };
+  }
+
+  if (!item.reformData) {
+    throw new Error("주문 수선 데이터가 올바르지 않습니다.");
+  }
+
+  return {
+    id: item.id,
+    type: "reform",
+    quantity: item.quantity,
+    reformData: item.reformData,
+    appliedCoupon: item.appliedCoupon ?? undefined,
+  };
+};
