@@ -45,22 +45,19 @@ Recommendation:
 - Keep as-is for now if backward compatibility is required.
 - If strict boundary is needed, move to service-role-mediated write path or add RPC-level anti-abuse constraints and tighter grants.
 
-## F-02 (Medium): money values still accepted as RPC params
+## F-02 (Resolved): money computation moved to RPC
 
-`create_order_txn` accepts `p_original_price`, `p_total_discount`, `p_total_price`.
+Hardening migration `20260202150000_harden_create_order_txn_coupon_lock.sql` changed
+`create_order_txn` to:
 
-Risk:
+- accept only `p_shipping_address_id`, `p_items`
+- compute `unit_price`, `discount_amount`, totals in DB transaction
+- lock/revalidate `user_coupons` rows via `FOR UPDATE`
 
-- Violates the strict interpretation of "write RPC computes money server-side".
-- Trust boundary depends on Edge correctness.
+Residual risk:
 
-Current mitigation:
-
-- Edge recomputes prices from DB state before RPC call.
-
-Recommendation:
-
-- Next milestone: make RPC compute totals from normalized line inputs and DB prices, or assert passed totals against DB-derived values inside RPC.
+- Direct authenticated invocation of write RPC remains possible by design.
+- Boundary relies on team rule and grant model.
 
 ## F-03 (Low): legacy `order_items_view` linter issue
 

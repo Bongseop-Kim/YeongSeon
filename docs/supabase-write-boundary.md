@@ -17,14 +17,10 @@ Define a clear write boundary for orders and cart:
 
 1. Client calls `create-order` Edge Function from `src/features/order/api/order-api.ts`.
 2. Edge authenticates user from `Authorization` header.
-3. Edge loads products/options/coupons and computes:
-   - `unit_price`
-   - `discount_amount`
-   - `originalPrice`
-   - `totalDiscount`
-   - `totalPrice`
-4. Edge calls `public.create_order_txn(...)`.
-5. RPC writes `orders`, `order_items`, updates `user_coupons` status.
+3. Edge performs request-shape validation only.
+4. Edge calls `public.create_order_txn(p_shipping_address_id, p_items)`.
+5. RPC re-validates coupons in-transaction, computes totals/discounts server-side,
+   writes `orders`, `order_items`, and consumes `user_coupons`.
 
 ## Cart Replace
 
@@ -36,11 +32,11 @@ Define a clear write boundary for orders and cart:
 - Edge Function (`supabase/functions/create-order/index.ts`)
   - Request schema checks
   - Auth check
-  - Product/option/coupon availability checks
-  - Price/discount derivation
+  - Shipping ownership pre-check (fast failure)
 - Write RPC (`create_order_txn`, `replace_cart_items`)
   - Atomic writes and integrity
   - Ownership checks (`auth.uid()`)
+  - Coupon lock/revalidation and money computation
   - Final persistence
 
 ## Security Notes
