@@ -37,16 +37,21 @@ export const toOrderItemInputDTO = (
     item_type: "reform",
     product_id: null,
     selected_option_id: null,
-    reform_data: {
-      tie: {
-        ...item.reformData.tie,
-        image:
-          typeof item.reformData.tie.image === "string"
-            ? item.reformData.tie.image
-            : undefined,
-      },
-      cost: item.reformData.cost,
-    },
+    reform_data:
+      item.reformData &&
+      item.reformData.tie &&
+      typeof item.reformData.tie === "object"
+        ? {
+            tie: {
+              ...item.reformData.tie,
+              image:
+                typeof item.reformData.tie.image === "string"
+                  ? item.reformData.tie.image
+                  : undefined,
+            },
+            cost: item.reformData.cost,
+          }
+        : null,
   };
 };
 
