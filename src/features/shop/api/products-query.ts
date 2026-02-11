@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { getProducts, getProductById } from "./products-api";
+import {
+  getProducts,
+  getProductById,
+} from "@/features/shop/api/product-service";
 
 /**
  * 제품 쿼리 키
@@ -12,7 +15,9 @@ export const productKeys = {
     colors?: string[];
     patterns?: string[];
     materials?: string[];
-    priceRange?: string;
+    priceMin?: number | null;
+    priceMax?: number | null;
+    sortOption?: string;
   }) => [...productKeys.lists(), filters] as const,
   details: () => [...productKeys.all, "detail"] as const,
   detail: (id: number) => [...productKeys.details(), id] as const,
@@ -21,10 +26,18 @@ export const productKeys = {
 /**
  * 모든 제품 조회 쿼리
  */
-export const useProducts = () => {
+export const useProducts = (filters?: {
+  categories?: string[];
+  colors?: string[];
+  patterns?: string[];
+  materials?: string[];
+  priceMin?: number | null;
+  priceMax?: number | null;
+  sortOption?: string;
+}) => {
   return useQuery({
-    queryKey: productKeys.lists(),
-    queryFn: getProducts,
+    queryKey: productKeys.list(filters),
+    queryFn: () => getProducts(filters),
     staleTime: 1000 * 60 * 5, // 5분
     refetchOnWindowFocus: false,
     retry: 1,

@@ -1,158 +1,130 @@
-import type { OrderItemRecord } from "../types/order-record";
-import type { Product } from "@/features/shop/types/product";
-import type { AppliedCoupon } from "../types/coupon";
-import type { TieItem } from "@/features/reform/types/reform";
+import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
+import type { CreateOrderInputDTO } from "@/features/order/types/dto/order-input";
 import type {
-  OrderItem,
-  ProductOrderItem,
-  ReformOrderItem,
-} from "../types/order-item";
-import type { CartItem } from "@/features/cart/types/cart";
+  OrderItemRowDTO,
+  OrderItemDTO,
+  OrderViewDTO,
+} from "@/features/order/types/dto/order-view";
+import type { Order } from "@/features/order/types/view/order";
+import {
+  toAppliedCouponView,
+  toProductOptionView,
+  toProductView,
+  toTieItemView,
+} from "@/features/shared/api/shared-mapper";
 
-/**
- * 주문 생성 요청 데이터
- */
-export interface CreateOrderRequest {
-  items: CartItem[];
-  shippingAddressId: string;
-  totals: {
-    originalPrice: number;
-    totalDiscount: number;
-    totalPrice: number;
+export const toOrderItemInputDTO = (
+  item: CreateOrderRequest["items"][number]
+): CreateOrderInputDTO["items"][number] => {
+  const baseRecord = {
+    item_id: item.id,
+    quantity: item.quantity,
+    applied_user_coupon_id: item.appliedCoupon?.id ?? item.appliedCouponId ?? null,
   };
-}
 
-/**
- * 주문 생성 응답 데이터
- */
-export interface CreateOrderResponse {
-  orderId: string;
-  orderNumber: string;
-}
-
-/**
- * OrderItem을 OrderItemRecord로 변환
- */
-export function mapOrderItemToRecord(
-  item: OrderItem,
-  orderId: string,
-  unitPrice: number,
-  discountAmount: number
-): Omit<OrderItemRecord, "id" | "created_at"> {
   if (item.type === "product") {
     return {
-      order_id: orderId,
-      item_id: item.id,
+      ...baseRecord,
       item_type: "product",
       product_id: item.product.id,
       selected_option_id: item.selectedOption?.id || null,
       reform_data: null,
-      quantity: item.quantity,
-      unit_price: unitPrice,
-      discount_amount: discountAmount,
-      applied_user_coupon_id: item.appliedCoupon?.id || null,
-    };
-  } else {
-    // reform 타입
-    return {
-      order_id: orderId,
-      item_id: item.id,
-      item_type: "reform",
-      product_id: null,
-      selected_option_id: null,
-      reform_data: {
-        tie: {
-          id: item.reformData.tie.id,
-          image: item.reformData.tie.image
-            ? typeof item.reformData.tie.image === "string"
-              ? item.reformData.tie.image
-              : undefined
-            : undefined,
-          measurementType: item.reformData.tie.measurementType,
-          tieLength: item.reformData.tie.tieLength,
-          wearerHeight: item.reformData.tie.wearerHeight,
-          notes: item.reformData.tie.notes,
-          checked: item.reformData.tie.checked,
-        },
-        cost: item.reformData.cost,
-      },
-      quantity: item.quantity,
-      unit_price: unitPrice,
-      discount_amount: discountAmount,
-      applied_user_coupon_id: item.appliedCoupon?.id || null,
     };
   }
-}
 
-/**
- * OrderItemRecord를 OrderItem으로 변환
- */
-export function mapRecordToOrderItem(
-  record: OrderItemRecord,
-  productsById: Map<number, Product>,
-  couponsById?: Map<string, AppliedCoupon>
-): OrderItem {
-  if (record.item_type === "product") {
-    if (!record.product_id) {
-      throw new Error("Product ID is required for product order items");
+  return {
+    ...baseRecord,
+    item_type: "reform",
+    product_id: null,
+    selected_option_id: null,
+    reform_data:
+      item.reformData &&
+      item.reformData.tie &&
+      typeof item.reformData.tie === "object"
+        ? {
+            tie: {
+              ...item.reformData.tie,
+              image:
+                typeof item.reformData.tie.image === "string"
+                  ? item.reformData.tie.image
+                  : undefined,
+            },
+            cost: item.reformData.cost,
+          }
+        : null,
+  };
+};
+
+const toOrderItem = (item: OrderItemDTO): Order["items"][number] => {
+  if (item.type === "product") {
+    if (!item.product) {
+      throw new Error("Product data is required for product order items.");
     }
+    return {
+      ...item,
+      product: toProductView(item.product),
+      selectedOption: item.selectedOption
+        ? toProductOptionView(item.selectedOption)
+        : undefined,
+      appliedCoupon: toAppliedCouponView(item.appliedCoupon),
+    };
+  }
 
-    const product = productsById.get(record.product_id);
-    if (!product) {
-      throw new Error(`Product not found: ${record.product_id}`);
-    }
+  if (!item.reformData) {
+    throw new Error("Reform data is required for reform order items.");
+  }
 
-    const selectedOption = record.selected_option_id
-      ? product.options?.find((opt) => opt.id === record.selected_option_id)
-      : undefined;
+  return {
+    ...item,
+    reformData: {
+      ...item.reformData,
+      tie: toTieItemView(item.reformData.tie),
+    },
+    appliedCoupon: toAppliedCouponView(item.appliedCoupon),
+  };
+};
 
-    const appliedCoupon: AppliedCoupon | undefined =
-      record.applied_user_coupon_id
-        ? couponsById?.get(record.applied_user_coupon_id)
-        : undefined;
+export const toOrderView = (order: OrderViewDTO): Order => ({
+  ...order,
+  items: order.items.map(toOrderItem),
+});
 
-    const orderItem: ProductOrderItem = {
-      id: record.item_id,
+export const fromOrderItemRowDTO = (item: OrderItemRowDTO): OrderItemDTO => {
+  if (item.type === "product") {
+    const product = item.product ?? {
+      id: -1,
+      code: "DELETED",
+      name: "삭제된 상품",
+      price: 0,
+      image: "",
+      deleted: true,
+      category: "3fold",
+      color: "black",
+      pattern: "solid",
+      material: "silk",
+      likes: 0,
+      info: "",
+      options: [],
+    };
+    return {
+      id: item.id,
       type: "product",
       product,
-      selectedOption,
-      quantity: record.quantity,
-      appliedCoupon,
+      selectedOption: item.selectedOption ?? undefined,
+      quantity: item.quantity,
+      appliedCoupon: item.appliedCoupon ?? undefined,
     };
-
-    return orderItem;
-  } else {
-    // reform 타입
-    if (!record.reform_data) {
-      throw new Error("Reform data is required for reform order items");
-    }
-
-    const appliedCoupon: AppliedCoupon | undefined =
-      record.applied_user_coupon_id
-        ? couponsById?.get(record.applied_user_coupon_id)
-        : undefined;
-
-    const tie: TieItem = {
-      id: record.reform_data.tie.id,
-      image: record.reform_data.tie.image,
-      measurementType: record.reform_data.tie.measurementType,
-      tieLength: record.reform_data.tie.tieLength,
-      wearerHeight: record.reform_data.tie.wearerHeight,
-      notes: record.reform_data.tie.notes,
-      checked: record.reform_data.tie.checked,
-    };
-
-    const orderItem: ReformOrderItem = {
-      id: record.item_id,
-      type: "reform",
-      quantity: record.quantity,
-      reformData: {
-        tie,
-        cost: record.reform_data.cost,
-      },
-      appliedCoupon,
-    };
-
-    return orderItem;
   }
-}
+
+  if (!item.reformData) {
+    throw new Error("주문 수선 데이터가 올바르지 않습니다.");
+  }
+
+  return {
+    id: item.id,
+    type: "reform",
+    quantity: item.quantity,
+    reformData: item.reformData,
+    appliedCoupon: item.appliedCoupon ?? undefined,
+  };
+};

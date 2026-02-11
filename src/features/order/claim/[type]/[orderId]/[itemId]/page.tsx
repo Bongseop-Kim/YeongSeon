@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
-import type { Order, OrderItem } from "@/features/order/types/order-item";
+import type { Order, OrderItem } from "@/features/order/types/view/order";
 import type { ClaimType } from "@/features/order/types/claim-item";
 import { formatDate } from "@/utils/formatDate";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";

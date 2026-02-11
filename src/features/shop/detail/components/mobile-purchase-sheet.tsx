@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Product, ProductOption } from "../../types/product";
+import type { Product, ProductOption } from "@/features/shop/types/view/product";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
 import { useCart } from "@/features/cart/hooks/useCart";

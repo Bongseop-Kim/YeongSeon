@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { FilterSheet } from "./components/filter-sheet";
 import { FilterButtons } from "./components/filter-buttons";
 import { FilterContent } from "./components/filter-content";
@@ -12,7 +12,7 @@ import type {
   ProductPattern,
   ProductMaterial,
   SortOption,
-} from "./types/product";
+} from "@/features/shop/types/view/product";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { useModalStore } from "@/store/modal";
@@ -162,81 +162,30 @@ export default function ShopPage() {
     openFilterModal,
   ]);
 
-  const { data: products = [], isLoading } = useProducts();
+  const selectedPriceOption = useMemo(
+    () =>
+      PRICE_RANGE_OPTIONS.find((opt) => opt.value === selectedPriceRange) ??
+      PRICE_RANGE_OPTIONS[0],
+    [selectedPriceRange]
+  );
 
-  const filteredAndSortedProducts = useMemo(() => {
-    if (isLoading) {
-      return [];
-    }
-    let filtered = products;
+  const priceMin =
+    selectedPriceOption.value === "all" ? null : selectedPriceOption.min;
+  const priceMax = Number.isFinite(selectedPriceOption.max)
+    ? selectedPriceOption.max
+    : null;
 
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter((product) =>
-        selectedCategories.includes(product.category)
-      );
-    }
-
-    if (selectedColors.length > 0) {
-      filtered = filtered.filter((product) =>
-        selectedColors.includes(product.color)
-      );
-    }
-
-    if (selectedPatterns.length > 0) {
-      filtered = filtered.filter((product) =>
-        selectedPatterns.includes(product.pattern)
-      );
-    }
-
-    if (selectedMaterials.length > 0) {
-      filtered = filtered.filter((product) =>
-        selectedMaterials.includes(product.material)
-      );
-    }
-
-    if (selectedPriceRange !== "all") {
-      const priceRange = PRICE_RANGE_OPTIONS.find(
-        (opt) => opt.value === selectedPriceRange
-      );
-      if (priceRange) {
-        filtered = filtered.filter(
-          (product) =>
-            product.price >= priceRange.min && product.price <= priceRange.max
-        );
-      }
-    }
-
-    const sorted = [...filtered];
-    switch (sortOption) {
-      case "latest":
-        sorted.sort((a, b) => b.id - a.id);
-        break;
-      case "price-low":
-        sorted.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high":
-        sorted.sort((a, b) => b.price - a.price);
-        break;
-      case "popular":
-        sorted.sort((a, b) => {
-          if (a.likes > b.likes) return -1;
-          if (a.likes < b.likes) return 1;
-          return 0;
-        });
-        break;
-    }
-
-    return sorted;
-  }, [
-    products,
-    isLoading,
-    selectedCategories,
-    selectedColors,
-    selectedPatterns,
-    selectedMaterials,
-    selectedPriceRange,
+  const { data: products = [], isLoading } = useProducts({
+    categories: selectedCategories,
+    colors: selectedColors,
+    patterns: selectedPatterns,
+    materials: selectedMaterials,
+    priceMin,
+    priceMax,
     sortOption,
-  ]);
+  });
+
+  const productList = isLoading ? [] : products;
 
   return (
     <MainLayout>
@@ -267,11 +216,11 @@ export default function ShopPage() {
             <>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs text-zinc-800 px-2">
-                  전체 {filteredAndSortedProducts.length}개
+                  전체 {productList.length}개
                 </span>
                 <SortSelect value={sortOption} onChange={setSortOption} />
               </div>
-              <ProductGrid products={filteredAndSortedProducts} />
+              <ProductGrid products={productList} />
             </>
           }
         />

@@ -8,7 +8,7 @@ import {
   type ProductColor,
   type ProductPattern,
   type ProductMaterial,
-} from "../types/product";
+} from "@/features/shop/types/view/product";
 import {
   CATEGORY_OPTIONS,
   COLOR_OPTIONS,

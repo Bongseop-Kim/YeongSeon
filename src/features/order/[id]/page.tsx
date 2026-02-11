@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { OrderItemCard } from "../components/order-item-card";
-import type { Order } from "../types/order-item";
+import type { Order } from "../types/view/order";
 import { calculateOrderTotals } from "../utils/calculated-order-totals";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import React from "react";
@@ -173,6 +173,8 @@ const OrderDetailPage = () => {
         return "bg-blue-100 text-blue-800";
       case "진행중":
         return "bg-yellow-100 text-yellow-800";
+      case "취소":
+        return "bg-red-100 text-red-800";
       case "대기중":
         return "bg-gray-100 text-gray-800";
       default:

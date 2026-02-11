@@ -10,6 +10,8 @@ export interface Product {
   name: string;
   price: number;
   image: string;
+  deleted?: boolean;
+  detailImages?: string[];
   category: ProductCategory;
   color: ProductColor;
   pattern: ProductPattern;

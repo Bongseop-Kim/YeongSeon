@@ -1,69 +1,22 @@
-# React + TypeScript + Vite
+## Supabase 워크플로우 (브랜치/CI/CD)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- **브랜치 정책 (Git)**
+  - `main`은 운영(production) 브랜치이며 보호(protected) 상태로 유지합니다.
+  - 기능 브랜치에는 마이그레이션과 함수 변경을 반드시 함께 포함합니다.
+  - `main` 직접 푸시는 금지하고, PR 머지만 허용합니다.
+- **Supabase 브랜치 정책 (선택)**
+  - Preview 브랜치는 PR 검증 용도로만 사용합니다.
+  - Preview에서 직접 핫픽스하지 않고, 반드시 Git 소스를 수정합니다.
+- **CI/CD 정책**
+  - PR 단계에서 lint/test와 `supabase db diff`를 실행해 스키마 드리프트를 확인합니다.
+  - `main` 머지 후에는 `supabase db push` → `supabase functions deploy` 순서로 배포합니다.
+  - 필요 시 운영 배포에 수동 승인 단계를 둡니다.
+- **배포 규칙**
+  - DB 마이그레이션을 함수 배포보다 먼저 적용합니다.
+  - 롤백은 파괴적 복구 대신 `커밋 되돌리기 + 신규 정방향 마이그레이션`으로 처리합니다.
 
-Currently, two official plugins are available:
+## 아키텍처 의사결정 문서
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Read/Write 경계 ADR: `docs/adr/0001-read-view-write-rpc.md`
+- Write 경계 명세: `docs/supabase-write-boundary.md`
+- Write 보안 점검 스냅샷 (2026-02-02): `docs/supabase-write-security-audit-2026-02-02.md`

@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CartItem, ReformCartItem } from "@/features/cart/types/cart";
-import type { Product, ProductOption } from "@/features/shop/types/product";
+import type { CartItem, ReformCartItem } from "@/features/cart/types/view/cart";
+import type { Product, ProductOption } from "@/features/shop/types/view/product";
 import type { AppliedCoupon } from "@/features/order/types/coupon";
 import type { TieItem } from "@/features/reform/types/reform";
 import { calculateDiscount } from "@/features/order/utils/calculate-discount";
@@ -218,7 +218,13 @@ export function useCart() {
     async (itemId: string, coupon: AppliedCoupon | undefined) => {
       await updateItems((currentItems) =>
         currentItems.map((item) =>
-          item.id === itemId ? { ...item, appliedCoupon: coupon } : item
+          item.id === itemId
+            ? {
+                ...item,
+                appliedCoupon: coupon,
+                appliedCouponId: coupon?.id,
+              }
+            : item
         )
       );
     },

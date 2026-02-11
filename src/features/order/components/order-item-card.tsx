@@ -1,6 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { ImageViewer } from "@/components/composite/image-viewer";
-import type { OrderItem } from "../types/order-item";
+import type { OrderItem } from "../types/view/order";
 import { getOrderItemDetails } from "../utils/get-order-item-details";
 
 interface OrderItemCardProps {
@@ -20,10 +20,19 @@ export function OrderItemCard({
   actions,
   className = "",
 }: OrderItemCardProps) {
+  const isDeletedProduct = item.type === "product" && item.product.deleted === true;
+
   const content = (
     <div className={`flex gap-3 ${className}`}>
       {/* 이미지 */}
-      {item.type === "product" && <ImageViewer image={item.product.image} />}
+      {item.type === "product" &&
+        (isDeletedProduct ? (
+          <div className="w-20 h-20 rounded-sm bg-zinc-100 flex items-center justify-center text-xs text-zinc-500">
+            삭제됨
+          </div>
+        ) : (
+          <ImageViewer image={item.product.image} />
+        ))}
 
       {/* 상품 상세 정보 */}
       <div className="flex-1 text-left">
@@ -44,7 +53,9 @@ export function OrderItemCard({
               {showPrice && (
                 <Label className="font-bold">
                   {item.type === "product"
-                    ? (
+                    ? isDeletedProduct
+                      ? "0"
+                      : (
                         (item.product.price +
                           (item.selectedOption?.additionalPrice ?? 0)) *
                         item.quantity

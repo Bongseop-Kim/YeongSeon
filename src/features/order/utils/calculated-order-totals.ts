@@ -1,20 +1,26 @@
-import type { OrderItem } from "../types/order-item";
+import type { OrderItem } from "@/features/order/types/view/order";
 import { calculateDiscount } from "./calculate-discount";
+
+export const getOrderItemPricing = (item: OrderItem) => {
+  const unitPrice =
+    item.type === "product"
+      ? item.product.price + (item.selectedOption?.additionalPrice ?? 0)
+      : item.reformData.cost;
+
+  const discount = calculateDiscount(unitPrice, item.appliedCoupon);
+
+  return { unitPrice, discount };
+};
 
 export const calculateOrderTotals = (items: OrderItem[]) => {
   let originalPrice = 0;
   let totalDiscount = 0;
 
   items.forEach((item) => {
-    const unitPrice =
-      item.type === "product"
-        ? item.product!.price + (item.selectedOption?.additionalPrice ?? 0)
-        : item.reformData!.cost;
-
+    const { unitPrice, discount } = getOrderItemPricing(item);
     const itemOriginalPrice = unitPrice * item.quantity;
     originalPrice += itemOriginalPrice;
 
-    const discount = calculateDiscount(unitPrice, item.appliedCoupon);
     totalDiscount += discount * item.quantity;
   });
 

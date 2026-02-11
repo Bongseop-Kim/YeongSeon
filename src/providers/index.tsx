@@ -5,6 +5,8 @@ import { ScrollToTop } from "./scroll-to-top";
 import { QueryProvider } from "./query-provider";
 import { AuthSyncProvider } from "./auth-sync-provider";
 import { CartSyncProvider } from "./cart-sync-provider";
+import { ImageKitProvider } from "@imagekit/react";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/imagekit";
 // import { ThemeProvider } from "./theme-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -18,18 +20,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <AuthSyncProvider>
         <CartSyncProvider>
           <BreakpointProvider>
-            {/* 나중에 추가될 다른 Provider들 */}
-            {/* <ThemeProvider> */}
+            <ImageKitProvider urlEndpoint={IMAGEKIT_URL_ENDPOINT}>
+              {/* 나중에 추가될 다른 Provider들 */}
+              {/* <ThemeProvider> */}
 
-            <ScrollToTop />
-            {children}
+              <ScrollToTop />
+              {children}
 
-            {/* 전역 컴포넌트들 */}
-            <GlobalModal />
-            <Toaster />
-            {/* <GlobalLoadingSpinner /> */}
+              {/* 전역 컴포넌트들 */}
+              <GlobalModal />
+              <Toaster />
+              {/* <GlobalLoadingSpinner /> */}
 
-            {/* </ThemeProvider> */}
+              {/* </ThemeProvider> */}
+            </ImageKitProvider>
           </BreakpointProvider>
         </CartSyncProvider>
       </AuthSyncProvider>

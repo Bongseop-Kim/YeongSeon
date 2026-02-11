@@ -1,99 +1,71 @@
 import { supabase } from "@/lib/supabase";
-import type { Product, ProductOption } from "../types/product";
-import type {
-  ProductRecord,
-  ProductOptionRecord,
-} from "../types/product-record";
-import { checkLikedProducts, getLikeCounts } from "./likes-api";
+import type { Product } from "@/features/shop/types/view/product";
+import type { ProductDTO } from "@/features/shop/types/dto/product";
+import { toProduct, toProducts } from "@/features/shop/api/products-mapper";
 
-const TABLE_NAME = "products";
-const OPTIONS_TABLE_NAME = "product_options";
-
+const PRODUCT_VIEW = "product_list_view";
 /**
  * 모든 제품 조회
  */
-export const getProducts = async (): Promise<Product[]> => {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select("*")
-    .order("id", { ascending: true });
+export const getProducts = async (filters?: {
+  categories?: string[];
+  colors?: string[];
+  patterns?: string[];
+  materials?: string[];
+  priceMin?: number | null;
+  priceMax?: number | null;
+  sortOption?: string;
+}): Promise<Product[]> => {
+  let query = supabase.from(PRODUCT_VIEW).select("*");
+
+  if (filters?.categories?.length) {
+    query = query.in("category", filters.categories);
+  }
+  if (filters?.colors?.length) {
+    query = query.in("color", filters.colors);
+  }
+  if (filters?.patterns?.length) {
+    query = query.in("pattern", filters.patterns);
+  }
+  if (filters?.materials?.length) {
+    query = query.in("material", filters.materials);
+  }
+  if (typeof filters?.priceMin === "number") {
+    query = query.gte("price", filters.priceMin);
+  }
+  if (typeof filters?.priceMax === "number") {
+    query = query.lte("price", filters.priceMax);
+  }
+
+  const sortOption = filters?.sortOption ?? "latest";
+  if (sortOption === "price-low") {
+    query = query.order("price", { ascending: true }).order("id", {
+      ascending: false,
+    });
+  } else if (sortOption === "price-high") {
+    query = query.order("price", { ascending: false }).order("id", {
+      ascending: false,
+    });
+  } else if (sortOption === "popular") {
+    query = query.order("likes", { ascending: false }).order("id", {
+      ascending: false,
+    });
+  } else {
+    query = query.order("id", { ascending: false });
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(`제품 조회 실패: ${error.message}`);
   }
 
-  if (!data || data.length === 0) {
+  const records = (data as ProductDTO[]) ?? [];
+  if (records.length === 0) {
     return [];
   }
 
-  // 제품 옵션 조회
-  const productIds = data.map((p) => p.id);
-  const { data: optionsData, error: optionsError } = await supabase
-    .from(OPTIONS_TABLE_NAME)
-    .select("*")
-    .in("product_id", productIds);
-
-  if (optionsError) {
-    console.warn("제품 옵션 조회 실패:", optionsError.message);
-  }
-
-  // 옵션을 제품별로 그룹화
-  const optionsByProductId = new Map<number, ProductOption[]>();
-  if (optionsData) {
-    optionsData.forEach((opt: ProductOptionRecord) => {
-      const option: ProductOption = {
-        id: opt.option_id,
-        name: opt.name,
-        additionalPrice: opt.additional_price,
-      };
-      if (!optionsByProductId.has(opt.product_id)) {
-        optionsByProductId.set(opt.product_id, []);
-      }
-      optionsByProductId.get(opt.product_id)!.push(option);
-    });
-  }
-
-  // 사용자가 좋아요한 제품 ID 조회
-  let likedProductIds = new Set<number>();
-  try {
-    likedProductIds = await checkLikedProducts(productIds);
-  } catch (error) {
-    // 로그인하지 않은 경우 무시
-    console.warn("좋아요 상태 조회 실패:", error);
-  }
-
-  // 모든 제품의 좋아요 수 조회
-  let likeCounts = new Map<number, number>();
-  try {
-    likeCounts = await getLikeCounts(productIds);
-  } catch (error) {
-    console.warn("좋아요 수 조회 실패:", error);
-  }
-
-  // 레코드를 Product 타입으로 변환
-  return data.map((record: ProductRecord) => {
-    const product: Product = {
-      id: record.id,
-      code: record.code,
-      name: record.name,
-      price: record.price,
-      image: record.image,
-      category: record.category,
-      color: record.color,
-      pattern: record.pattern,
-      material: record.material,
-      likes: likeCounts.get(record.id) || 0,
-      info: record.info,
-      isLiked: likedProductIds.has(record.id),
-    };
-
-    const options = optionsByProductId.get(record.id);
-    if (options && options.length > 0) {
-      product.options = options;
-    }
-
-    return product;
-  });
+  return toProducts(records);
 };
 
 /**
@@ -101,73 +73,43 @@ export const getProducts = async (): Promise<Product[]> => {
  */
 export const getProductById = async (id: number): Promise<Product | null> => {
   const { data, error } = await supabase
-    .from(TABLE_NAME)
+    .from(PRODUCT_VIEW)
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    if (error.code === "PGRST116") {
-      // 데이터가 없음
-      return null;
-    }
     throw new Error(`제품 조회 실패: ${error.message}`);
   }
 
-  if (!data) {
-    return null;
+  const record = (data as ProductDTO | null) ?? null;
+  return record ? toProduct(record) : null;
+};
+
+/**
+ * IDs로 제품 조회
+ */
+export const getProductsByIds = async (
+  productIds: number[]
+): Promise<Map<number, Product>> => {
+  if (productIds.length === 0) {
+    return new Map();
   }
 
-  // 제품 옵션 조회
-  const { data: optionsData } = await supabase
-    .from(OPTIONS_TABLE_NAME)
+  const { data, error } = await supabase
+    .from(PRODUCT_VIEW)
     .select("*")
-    .eq("product_id", id)
-    .order("option_id", { ascending: true });
+    .in("id", productIds)
+    .order("id", { ascending: true });
 
-  // 사용자가 좋아요한 제품인지 확인
-  let isLiked = false;
-  try {
-    const likedProductIds = await checkLikedProducts([id]);
-    isLiked = likedProductIds.has(id);
-  } catch (error) {
-    // 로그인하지 않은 경우 무시
-    console.warn("좋아요 상태 조회 실패:", error);
+  if (error) {
+    throw new Error(`상품 정보를 불러올 수 없습니다: ${error.message}`);
   }
 
-  // 좋아요 수 조회
-  let likeCount = 0;
-  try {
-    const likeCounts = await getLikeCounts([id]);
-    likeCount = likeCounts.get(id) || 0;
-  } catch (error) {
-    console.warn("좋아요 수 조회 실패:", error);
-  }
+  const records = (data as ProductDTO[] | null) ?? [];
+  const productsById = new Map<number, Product>(
+    records.map((record) => [record.id, toProduct(record)])
+  );
 
-  // 레코드를 Product 타입으로 변환
-  const product: Product = {
-    id: data.id,
-    code: data.code,
-    name: data.name,
-    price: data.price,
-    image: data.image,
-    category: data.category,
-    color: data.color,
-    pattern: data.pattern,
-    material: data.material,
-    likes: likeCount,
-    info: data.info,
-    isLiked,
-  };
-
-  // 옵션이 있으면 추가
-  if (optionsData && optionsData.length > 0) {
-    product.options = optionsData.map((opt: ProductOptionRecord) => ({
-      id: opt.option_id,
-      name: opt.name,
-      additionalPrice: opt.additional_price,
-    }));
-  }
-
-  return product;
+  return productsById;
 };

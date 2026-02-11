@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createOrder, getOrders, getOrder } from "./order-api";
-import type { CreateOrderRequest } from "./order-mapper";
+import { createOrder, getOrders, getOrder } from "@/features/order/api/order-api";
+import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
 import { useAuthStore } from "@/store/auth";
 
 /**
@@ -24,7 +24,7 @@ export const useOrders = () => {
       if (!user?.id) {
         throw new Error("로그인이 필요합니다.");
       }
-      return getOrders(user.id);
+      return getOrders();
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // 5분
@@ -45,7 +45,7 @@ export const useOrder = (orderId: string) => {
       if (!user?.id) {
         throw new Error("로그인이 필요합니다.");
       }
-      return getOrder(user.id, orderId);
+      return getOrder(orderId);
     },
     enabled: !!user?.id && !!orderId,
     staleTime: 1000 * 60 * 5, // 5분

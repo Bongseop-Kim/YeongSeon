@@ -88,3 +88,15 @@ export const getUserCouponsByIds = async (
 
   return (data as unknown as UserCouponRecord[]).map(mapRecordToUserCoupon);
 };
+
+export const getUserCouponsByIdsMap = async (
+  ids: string[],
+  options?: { activeOnly?: boolean }
+): Promise<Map<string, UserCoupon>> => {
+  if (ids.length === 0) {
+    return new Map();
+  }
+
+  const coupons = await getUserCouponsByIds(ids, options);
+  return new Map(coupons.map((coupon) => [coupon.id, coupon]));
+};

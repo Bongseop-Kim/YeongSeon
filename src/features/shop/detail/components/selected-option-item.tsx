@@ -1,4 +1,4 @@
-import type { Product, ProductOption } from "../../types/product";
+import type { Product, ProductOption } from "@/features/shop/types/view/product";
 import CloseButton from "@/components/ui/close";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
 

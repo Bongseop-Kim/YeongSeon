@@ -1,10 +1,4 @@
-/**
- * DB 레코드 타입
- * TieItem의 image는 File이므로 DB에는 URL 문자열로 저장
- */
-export interface CartItemRecord {
-  id: string;
-  user_id: string;
+export interface CreateOrderItemInputDTO {
   item_id: string;
   item_type: "product" | "reform";
   product_id: number | null;
@@ -12,7 +6,7 @@ export interface CartItemRecord {
   reform_data: {
     tie: {
       id: string;
-      image?: string; // DB에는 URL 문자열로 저장 (File은 스토리지에 저장)
+      image?: string;
       measurementType?: "length" | "height";
       tieLength?: number;
       wearerHeight?: number;
@@ -22,7 +16,10 @@ export interface CartItemRecord {
     cost: number;
   } | null;
   quantity: number;
-  applied_coupon_id: string | null;
-  created_at: string;
-  updated_at: string;
+  applied_user_coupon_id: string | null;
+}
+
+export interface CreateOrderInputDTO {
+  shipping_address_id: string;
+  items: CreateOrderItemInputDTO[];
 }
