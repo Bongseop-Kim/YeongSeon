@@ -10,6 +10,10 @@ declare
   quantity_text text;
   quantity_value integer;
 begin
+  if auth.uid() is null or p_user_id is null then
+    raise exception 'unauthorized: authentication required';
+  end if;
+
   if p_user_id is distinct from auth.uid() then
     raise exception 'unauthorized: cart can only be modified for the current user';
   end if;
