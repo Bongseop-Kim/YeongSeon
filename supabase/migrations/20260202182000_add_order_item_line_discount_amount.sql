@@ -41,6 +41,7 @@ declare
   v_applied_coupon_id uuid;
   v_unit_price integer;
   v_discount_amount integer;
+  v_per_unit_cap integer;
   v_option_additional_price integer;
   v_line_discount_total integer;
 
@@ -196,14 +197,14 @@ begin
       end if;
 
       v_discount_amount := greatest(0, least(v_discount_amount, v_unit_price));
-      v_line_discount_total := v_discount_amount * v_quantity;
 
       if v_coupon.max_discount_amount is not null then
-        v_line_discount_total :=
-          least(v_line_discount_total, floor(v_coupon.max_discount_amount::numeric)::integer);
+        v_per_unit_cap :=
+          floor(v_coupon.max_discount_amount::numeric / v_quantity)::integer;
+        v_discount_amount := least(v_discount_amount, v_per_unit_cap);
       end if;
 
-      v_discount_amount := floor(v_line_discount_total::numeric / v_quantity)::integer;
+      v_line_discount_total := v_discount_amount * v_quantity;
       v_used_coupon_ids := array_append(v_used_coupon_ids, v_applied_coupon_id);
     end if;
 
