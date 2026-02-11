@@ -138,3 +138,8 @@ as $function$
     lc.likes
   order by p.id;
 $function$;
+
+revoke all on function public.get_products_by_ids(integer[]) from public;
+grant execute on function public.get_products_by_ids(integer[]) to anon;
+grant execute on function public.get_products_by_ids(integer[]) to authenticated;
+grant execute on function public.get_products_by_ids(integer[]) to service_role;
