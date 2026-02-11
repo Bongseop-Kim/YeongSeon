@@ -76,6 +76,9 @@ Standardize the codebase on **Option B: UI/DTO separation**.
    - Always specify SECURITY DEFINER or SECURITY INVOKER and review RLS impact.
 7. **Prefer DB Views for simple joins/formatting.**
    - Use Views to return `*ViewDTO` directly and reduce service-layer mapping.
+8. **Money consistency first, formula details in docs.**
+   - Keep RPC money calculations internally consistent (unit/line/total reconciliation).
+   - Put domain-specific formulas (e.g., coupon cap math) in dedicated docs, not AGENTS.
 
 ## Facade Rule
 
@@ -128,6 +131,7 @@ Standardize the codebase on **Option B: UI/DTO separation**.
 - ADR: `docs/adr/0001-read-view-write-rpc.md`
 - Write boundary: `docs/supabase-write-boundary.md`
 - Write security audit snapshot: `docs/supabase-write-security-audit-2026-02-02.md`
+- Pricing/discount domain rules: `docs/pricing-discount-rules.md`
 
 ## AI Interaction Stopping Rules
 
