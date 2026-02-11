@@ -20,6 +20,10 @@ begin
 
   delete from cart_items where user_id = p_user_id;
 
+  if p_items is not null and jsonb_typeof(p_items) <> 'array' then
+    raise exception 'invalid p_items: expected a JSON array';
+  end if;
+
   if p_items is not null and jsonb_array_length(p_items) > 0 then
     for item_record in select * from jsonb_array_elements(p_items)
     loop
