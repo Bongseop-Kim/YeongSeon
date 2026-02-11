@@ -67,6 +67,9 @@ group by
   p.updated_at,
   lc.likes;
 
+drop view if exists public.order_items_view;
+drop function if exists public.get_products_by_ids(integer[]);
+
 create or replace function public.get_products_by_ids(p_ids integer[])
 returns table(
   id integer,
