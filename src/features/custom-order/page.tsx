@@ -7,8 +7,12 @@ import type { OrderOptions } from "./types/order";
 import { Form } from "@/components/ui/form";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { calculateTotalCost } from "./utils/pricing";
+import { useSearchParams } from "react-router-dom";
 
 const OrderPage = () => {
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get("mode");
+
   const form = useForm<OrderOptions>({
     defaultValues: {
       // 원단 정보
@@ -73,6 +77,7 @@ const OrderPage = () => {
                 totalCost={totalCost}
                 sewingCost={sewingCost}
                 fabricCost={fabricCost}
+                mode={mode}
               />
             }
             button={
