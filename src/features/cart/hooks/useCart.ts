@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CartItem, ReformCartItem } from "@/features/cart/types/view/cart";
+import type { CartItem } from "@/features/cart/types/view/cart";
 import type { Product, ProductOption } from "@/features/shop/types/view/product";
 import type { AppliedCoupon } from "@/features/order/types/coupon";
 import type { TieItem } from "@/features/reform/types/reform";
@@ -21,6 +21,19 @@ import {
   useClearCartItems,
   useSetCartItems,
 } from "@/features/cart/api/cart-query";
+import {
+  addProductToCart,
+  addReformToCart as addReformItemToCart,
+  applyCartItemCoupon,
+  removeCartItem,
+  updateCartItemQuantity,
+  updateProductCartItemOption,
+  updateReformCartItemOption,
+} from "@/features/cart/hooks/cart-item-operations";
+import {
+  clearCartItemsWithRollback,
+  syncCartItemsWithRollback,
+} from "@/features/cart/hooks/cart-sync";
 
 type AddToCartOptions = {
   option?: ProductOption;
@@ -61,87 +74,31 @@ export function useCart() {
 
   const syncItems = useCallback(
     async (nextItems: CartItem[], previousItems: CartItem[]) => {
-      const applyOptimistic = async () => {
-        if (isLoggedIn && userId) {
-          queryClient.setQueryData(cartKeys.items(userId), nextItems);
-          return;
-        }
-        queryClient.setQueryData(cartKeys.guest(), nextItems);
-        await setGuestItems(nextItems);
-      };
-
-      const rollback = async () => {
-        if (isLoggedIn && userId) {
-          queryClient.setQueryData(cartKeys.items(userId), previousItems);
-          return;
-        }
-        queryClient.setQueryData(cartKeys.guest(), previousItems);
-        await setGuestItems(previousItems);
-      };
-
-      try {
-        await applyOptimistic();
-
-        if (isLoggedIn && userId) {
-          await setCartItemsMutation.mutateAsync(nextItems);
-        }
-      } catch (error) {
-        await rollback();
-        toast.error("장바구니 업데이트에 실패했습니다. 다시 시도해주세요.");
-        throw error;
-      }
+      await syncCartItemsWithRollback({
+        isLoggedIn,
+        userId,
+        queryClient,
+        nextItems,
+        previousItems,
+        setGuestItems,
+        setCartItems: setCartItemsMutation.mutateAsync,
+        onError: toast.error,
+        errorMessage: "장바구니 업데이트에 실패했습니다. 다시 시도해주세요.",
+      });
     },
     [isLoggedIn, queryClient, setCartItemsMutation, userId]
-  );
-
-  const updateItems = useCallback(
-    async (updater: (items: CartItem[]) => CartItem[]) => {
-      const previousItems = items;
-      const updatedItems = updater(previousItems);
-      await syncItems(updatedItems, previousItems);
-    },
-    [items, syncItems]
   );
 
   const addToCart = useCallback(
     async (product: Product, options: AddToCartOptions = {}) => {
       const { option, quantity = 1, showModal = true } = options;
-      const newItem: CartItem = {
-        id: generateItemId(product.id, option?.id || "base"),
-        type: "product",
-        product,
-        selectedOption: option,
-        quantity,
-      };
-
-      let wasExistingItem = false;
-
-      await updateItems((currentItems) => {
-        const existingItemIndex = currentItems.findIndex(
-          (item) =>
-            item.type === "product" &&
-            item.product.id === product.id &&
-            item.selectedOption?.id === option?.id
-        );
-
-        if (existingItemIndex !== -1) {
-          wasExistingItem = true;
-          const existingItem = currentItems[existingItemIndex];
-          return currentItems.map((item, index) =>
-            index === existingItemIndex
-              ? { ...existingItem, quantity: existingItem.quantity + quantity }
-              : item
-          );
-        }
-
-        wasExistingItem = false;
-        return [...currentItems, newItem];
-      });
+      const result = addProductToCart(items, product, option, quantity, generateItemId);
+      await syncItems(result.nextItems, items);
 
       if (showModal) {
         openModal({
           title: "장바구니",
-          description: wasExistingItem
+          description: result.wasExistingItem
             ? "이미 장바구니에 있는 상품입니다. 수량을 추가했습니다."
             : "장바구니에 추가되었습니다.",
           confirmText: "장바구니 보기",
@@ -152,19 +109,13 @@ export function useCart() {
         });
       }
     },
-    [openModal, updateItems]
+    [items, openModal, syncItems]
   );
 
   const addReformToCart = useCallback(
     async (reformData: { tie: TieItem; cost: number }) => {
-      const newItem: ReformCartItem = {
-        id: generateItemId("reform"),
-        type: "reform",
-        quantity: 1,
-        reformData,
-      };
-
-      await updateItems((currentItems) => [...currentItems, newItem]);
+      const nextItems = addReformItemToCart(items, reformData, generateItemId);
+      await syncItems(nextItems, items);
 
       openModal({
         title: "장바구니",
@@ -176,59 +127,40 @@ export function useCart() {
         },
       });
     },
-    [openModal, updateItems]
+    [items, openModal, syncItems]
   );
 
   const removeFromCart = useCallback(
     async (itemId: string) => {
-      await updateItems((currentItems) =>
-        currentItems.filter((item) => item.id !== itemId)
-      );
+      const nextItems = removeCartItem(items, itemId);
+      await syncItems(nextItems, items);
     },
-    [updateItems]
+    [items, syncItems]
   );
 
   const updateQuantity = useCallback(
     async (itemId: string, quantity: number) => {
-      if (quantity < 1) return;
-
-      await updateItems((currentItems) =>
-        currentItems.map((item) =>
-          item.id === itemId ? { ...item, quantity } : item
-        )
-      );
+      const nextItems = updateCartItemQuantity(items, itemId, quantity);
+      if (nextItems === items) return;
+      await syncItems(nextItems, items);
     },
-    [updateItems]
+    [items, syncItems]
   );
 
   const updateReformOption = useCallback(
     async (itemId: string, tie: TieItem) => {
-      await updateItems((currentItems) =>
-        currentItems.map((item) =>
-          item.id === itemId && item.type === "reform"
-            ? { ...item, reformData: { ...item.reformData, tie } }
-            : item
-        )
-      );
+      const nextItems = updateReformCartItemOption(items, itemId, tie);
+      await syncItems(nextItems, items);
     },
-    [updateItems]
+    [items, syncItems]
   );
 
   const applyCoupon = useCallback(
     async (itemId: string, coupon: AppliedCoupon | undefined) => {
-      await updateItems((currentItems) =>
-        currentItems.map((item) =>
-          item.id === itemId
-            ? {
-                ...item,
-                appliedCoupon: coupon,
-                appliedCouponId: coupon?.id,
-              }
-            : item
-        )
-      );
+      const nextItems = applyCartItemCoupon(items, itemId, coupon);
+      await syncItems(nextItems, items);
     },
-    [updateItems]
+    [items, syncItems]
   );
 
   const updateProductOption = useCallback(
@@ -237,78 +169,30 @@ export function useCart() {
       newOption: ProductOption | undefined,
       newQuantity: number
     ) => {
-      await updateItems((currentItems) => {
-        const item = currentItems.find((i) => i.id === itemId);
-        if (!item || item.type !== "product") {
-          return currentItems;
-        }
-
-        // 기존 아이템 제거
-        const itemsWithoutOld = currentItems.filter((i) => i.id !== itemId);
-
-        // 같은 상품+옵션이 이미 있는지 확인
-        const existingItemIndex = itemsWithoutOld.findIndex(
-          (i) =>
-            i.type === "product" &&
-            i.product.id === item.product.id &&
-            i.selectedOption?.id === newOption?.id
-        );
-
-        if (existingItemIndex !== -1) {
-          // 같은 상품+옵션이 이미 있으면 수량을 합침
-          return itemsWithoutOld.map((i, index) =>
-            index === existingItemIndex
-              ? { ...i, quantity: i.quantity + newQuantity }
-              : i
-          );
-        }
-
-        // 같은 상품+옵션이 없으면 새 아이템 추가
-        const newItem: CartItem = {
-          id: generateItemId(item.product.id, newOption?.id || "base"),
-          type: "product",
-          product: item.product,
-          selectedOption: newOption,
-          quantity: newQuantity,
-        };
-
-        return [...itemsWithoutOld, newItem];
-      });
+      const nextItems = updateProductCartItemOption(
+        items,
+        itemId,
+        newOption,
+        newQuantity,
+        generateItemId
+      );
+      await syncItems(nextItems, items);
     },
-    [updateItems]
+    [items, syncItems]
   );
 
   const clearCart = useCallback(async () => {
-    const previousItems = items;
-    const rollback = async () => {
-      if (isLoggedIn && userId) {
-        queryClient.setQueryData(cartKeys.items(userId), previousItems);
-        return;
-      }
-      queryClient.setQueryData(cartKeys.guest(), previousItems);
-      await setGuestItems(previousItems);
-    };
-
-    if (isLoggedIn && userId) {
-      try {
-        queryClient.setQueryData(cartKeys.items(userId), []);
-        await clearCartItemsMutation.mutateAsync();
-      } catch (error) {
-        await rollback();
-        toast.error("장바구니를 비우지 못했어요. 다시 시도해주세요.");
-        throw error;
-      }
-      return;
-    }
-
-    try {
-      queryClient.setQueryData(cartKeys.guest(), []);
-      await clearGuest();
-    } catch (error) {
-      await rollback();
-      toast.error("장바구니를 비우지 못했어요. 다시 시도해주세요.");
-      throw error;
-    }
+    await clearCartItemsWithRollback({
+      isLoggedIn,
+      userId,
+      queryClient,
+      previousItems: items,
+      clearGuest,
+      clearServerCart: clearCartItemsMutation.mutateAsync,
+      setGuestItems,
+      onError: toast.error,
+      errorMessage: "장바구니를 비우지 못했어요. 다시 시도해주세요.",
+    });
   }, [clearCartItemsMutation, isLoggedIn, items, queryClient, userId]);
 
   const summary = useMemo(() => calculateOrderSummary(items), [items]);
