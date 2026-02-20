@@ -5,14 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Empty } from "@/components/composite/empty";
-import { getClaimTypeLabel } from "../utils/claim-utils";
+import { getClaimTypeLabel } from "@/features/order/utils/claim-utils";
 import { formatDate } from "@/utils/formatDate";
-import { OrderItemCard } from "../components/order-item-card";
+import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
 import { buildClaimDetailRoute } from "@/constants/ROUTES";
-import { useClaims } from "../api/claims-query";
+import { useClaims } from "@/features/order/api/claims-query";
 
 export default function ClaimListPage() {
   const navigate = useNavigate();

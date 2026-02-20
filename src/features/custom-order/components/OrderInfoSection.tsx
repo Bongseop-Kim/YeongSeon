@@ -2,7 +2,7 @@ import { Controller } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Control, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import type { OrderOptions } from "../types/order";
+import type { OrderOptions } from "@/features/custom-order/types/order";
 import { FormSection } from "@/components/ui/form-section";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import { QuantitySelector } from "./QuantitySelector";

@@ -1,8 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
-import type { UserCoupon } from "../types/coupon";
-import type { UserCouponRecord } from "../types/coupon-record";
-import { mapRecordToUserCoupon } from "../utils/map-record-to-user-coupon";
+import type { UserCoupon } from "@/features/order/types/coupon";
+import type { UserCouponRecord } from "@/features/order/types/coupon-record";
+import { mapRecordToUserCoupon } from "@/features/order/utils/map-record-to-user-coupon";
 
 const COUPON_COLUMNS =
   "id, name, discount_type, discount_value, max_discount_amount, description, expiry_date, additional_info";

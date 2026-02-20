@@ -8,7 +8,7 @@ import {
   HEIGHT_GUIDE,
   TARGET_CUSTOMERS,
   TESTIMONIALS,
-} from "../constants/DETAIL";
+} from "@/features/reform/constants/DETAIL";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 export const Detail = () => {

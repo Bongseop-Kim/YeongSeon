@@ -15,7 +15,7 @@ import { SearchBar } from "@/components/composite/search-bar";
 import SearchSheet from "@/components/composite/search-sheet";
 import { ROUTE_TITLES } from "@/constants/ROUTE_TITLES";
 import { ROUTES } from "@/constants/ROUTES";
-import MenuSheet from "../composite/menu-sheet";
+import MenuSheet from "@/components/composite/menu-sheet";
 import { useSearchStore } from "@/store/search";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useCart } from "@/features/cart/hooks/useCart";

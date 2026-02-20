@@ -7,13 +7,13 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
-import { OrderItemCard } from "../components/order-item-card";
-import { calculateOrderTotals } from "../utils/calculated-order-totals";
+import { OrderItemCard } from "@/features/order/components/order-item-card";
+import { calculateOrderTotals } from "@/features/order/utils/calculated-order-totals";
 import React from "react";
 import { formatDate } from "@/utils/formatDate";
-import { useOrderDetail } from "../api/order-query";
+import { useOrderDetail } from "@/features/order/api/order-query";
 import { Empty } from "@/components/composite/empty";
-import type { OrderItem, OrderStatus } from "../types/view/order";
+import type { OrderItem, OrderStatus } from "@/features/order/types/view/order";
 
 type ClaimActionType = "return" | "exchange" | "cancel";
 

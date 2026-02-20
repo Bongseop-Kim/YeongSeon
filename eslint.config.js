@@ -29,4 +29,20 @@ export default tseslint.config([
       ],
     },
   },
+  {
+    files: ["src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["../*", "../../*", "../../../*", "../../../../*"],
+              message: "교차 디렉터리 import는 @/ 절대경로를 사용하세요.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);

@@ -5,7 +5,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { BANNER_DATA } from "../constants/BANNER_DATA";
+import { BANNER_DATA } from "@/features/home/constants/BANNER_DATA";
 import Autoplay from "embla-carousel-autoplay";
 import { useRef, useState, useEffect } from "react";
 import type { CarouselApi } from "@/components/ui/carousel";

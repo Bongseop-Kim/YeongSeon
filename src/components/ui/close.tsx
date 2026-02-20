@@ -1,4 +1,4 @@
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 

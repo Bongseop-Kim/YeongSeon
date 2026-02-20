@@ -1,5 +1,5 @@
-import type { InquiryRowDTO } from "../types/dto/inquiry";
-import type { InquiryItem } from "../types/inquiry-item";
+import type { InquiryRowDTO } from "@/features/my-page/inquiry/types/dto/inquiry";
+import type { InquiryItem } from "@/features/my-page/inquiry/types/inquiry-item";
 
 /**
  * InquiryRowDTO → InquiryItem (View)

@@ -17,7 +17,7 @@ import {
   type ReformOptionChangeModalRef,
 } from "./components/reform-option-change-modal";
 import { useCouponSelect } from "@/features/order/order-form/hook/useCouponSelect";
-import { PRODUCTS_DATA } from "../shop/constants/PRODUCTS_DATA";
+import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import { calculateOrderSummary } from "@/features/order/utils/calculated-order-totals";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ROUTES } from "@/constants/ROUTES";

@@ -15,7 +15,7 @@ import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { formatPhoneNumber } from "./utils/phone-format";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { SHIPPING_MESSAGE_TYPE } from "../order/constants/SHIPPING_EVENTS";
+import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
 import { usePopupChild } from "@/hooks/usePopup";
 
 const ShippingPage = () => {

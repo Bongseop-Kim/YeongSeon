@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { UseFormSetValue, UseFormWatch } from "react-hook-form";
-import type { OrderOptions } from "../types/order";
+import type { OrderOptions } from "@/features/custom-order/types/order";
 
 interface UseImageUploadProps {
   setValue: UseFormSetValue<OrderOptions>;

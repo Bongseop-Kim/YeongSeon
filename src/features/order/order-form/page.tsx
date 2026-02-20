@@ -28,10 +28,10 @@ import {
 } from "@/features/shipping/api/shipping-query";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { useQueryClient } from "@tanstack/react-query";
-import { SHIPPING_MESSAGE_TYPE } from "../constants/SHIPPING_EVENTS";
-import { calculateOrderTotals } from "../utils/calculated-order-totals";
+import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
+import { calculateOrderTotals } from "@/features/order/utils/calculated-order-totals";
 import { usePopup } from "@/hooks/usePopup";
-import { useCreateOrder } from "../api/order-query";
+import { useCreateOrder } from "@/features/order/api/order-query";
 import {
   useCartItems,
   useSetCartItems,

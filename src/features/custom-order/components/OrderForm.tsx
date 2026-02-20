@@ -1,6 +1,6 @@
 import type { Control, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { Separator } from "@/components/ui/separator";
-import type { OrderOptions } from "../types/order";
+import type { OrderOptions } from "@/features/custom-order/types/order";
 import { FabricSection } from "./FabricSection";
 import { ProductionSection } from "./ProductionSection";
 import { LabelSection } from "./LabelSection";

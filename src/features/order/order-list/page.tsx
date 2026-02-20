@@ -6,13 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/formatDate";
-import { OrderItemCard } from "../components/order-item-card";
+import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
 import React from "react";
 import { ROUTES } from "@/constants/ROUTES";
-import { useOrders } from "../api/order-query";
+import { useOrders } from "@/features/order/api/order-query";
 export default function OrderListPage() {
   const navigate = useNavigate();
   const { setSearchEnabled } = useSearchStore();

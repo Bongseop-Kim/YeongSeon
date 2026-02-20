@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Upload, X } from "lucide-react";
-import { useImageUpload } from "../hooks/useImageUpload";
+import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 import type { UseFormSetValue, UseFormWatch } from "react-hook-form";
-import type { OrderOptions } from "../types/order";
+import type { OrderOptions } from "@/features/custom-order/types/order";
 
 interface ImageUploadProps {
   setValue: UseFormSetValue<OrderOptions>;

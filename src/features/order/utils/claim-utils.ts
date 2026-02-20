@@ -1,4 +1,4 @@
-import type { ClaimType } from "../types/claim-item";
+import type { ClaimType } from "@/features/order/types/claim-item";
 
 export const getClaimTypeLabel = (type: ClaimType) => {
   switch (type) {
