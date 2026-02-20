@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,10 +5,8 @@ import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
-import type { Order, OrderItem } from "@/features/order/types/view/order";
 import type { ClaimType } from "@/features/order/types/claim-item";
 import { formatDate } from "@/utils/formatDate";
-import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import { Form } from "@/components/ui/form";
 import { useForm, Controller } from "react-hook-form";
 import { Label } from "@/components/ui/label";
@@ -18,110 +15,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
 import { ROUTES } from "@/constants/ROUTES";
 import { toast } from "@/lib/toast";
-
-// 더미 주문 데이터 (실제로는 API에서 가져올 것)
-const dummyOrders: Order[] = [
-  {
-    id: "order-1",
-    orderNumber: "ORD-20250115-001",
-    date: "2025-01-15",
-    status: "완료",
-    totalPrice: 135000,
-    items: [
-      {
-        id: "item-1",
-        type: "product",
-        product: PRODUCTS_DATA[0],
-        quantity: 2,
-      },
-      {
-        id: "item-2",
-        type: "product",
-        product: PRODUCTS_DATA[1],
-        selectedOption: { id: "45", name: "45cm", additionalPrice: 0 },
-        quantity: 1,
-      },
-      {
-        id: "item-3",
-        type: "reform",
-        quantity: 1,
-        reformData: {
-          tie: {
-            id: "tie-1",
-            measurementType: "length",
-            tieLength: 145,
-          },
-          cost: 15000,
-        },
-      },
-    ],
-  },
-  {
-    id: "order-2",
-    orderNumber: "ORD-20250114-002",
-    date: "2025-01-14",
-    status: "배송중",
-    totalPrice: 96000,
-    items: [
-      {
-        id: "item-4",
-        type: "product",
-        product: PRODUCTS_DATA[2],
-        quantity: 2,
-      },
-    ],
-  },
-  {
-    id: "order-3",
-    orderNumber: "ORD-20250113-003",
-    date: "2025-01-13",
-    status: "진행중",
-    totalPrice: 78000,
-    items: [
-      {
-        id: "item-5",
-        type: "product",
-        product: PRODUCTS_DATA[3],
-        quantity: 2,
-      },
-    ],
-  },
-  {
-    id: "order-4",
-    orderNumber: "ORD-20250112-004",
-    date: "2025-01-12",
-    status: "완료",
-    totalPrice: 30000,
-    items: [
-      {
-        id: "item-6",
-        type: "reform",
-        quantity: 1,
-        reformData: {
-          tie: {
-            id: "tie-2",
-            measurementType: "height",
-            wearerHeight: 175,
-          },
-          cost: 15000,
-        },
-      },
-      {
-        id: "item-7",
-        type: "reform",
-        quantity: 1,
-        reformData: {
-          tie: {
-            id: "tie-3",
-            measurementType: "length",
-            tieLength: 150,
-          },
-          cost: 15000,
-        },
-      },
-    ],
-  },
-];
+import { Empty } from "@/components/composite/empty";
+import { useOrderDetail } from "@/features/order/api/order-query";
+import { useCreateClaim } from "@/features/order/api/claims-query";
+import { getClaimTypeLabel } from "@/features/order/utils/claim-utils";
+import { useMemo } from "react";
 
 // 클레임 사유 옵션
 const getClaimReasons = (type: ClaimType) => {
@@ -156,19 +54,7 @@ const getClaimReasons = (type: ClaimType) => {
   }
 };
 
-// 클레임 타입 한글명
-const getClaimTypeLabel = (type: ClaimType) => {
-  switch (type) {
-    case "cancel":
-      return "취소";
-    case "return":
-      return "반품";
-    case "exchange":
-      return "교환";
-    default:
-      return "";
-  }
-};
+const VALID_CLAIM_TYPES = ["cancel", "return", "exchange"];
 
 interface ClaimFormData {
   reason: string;
@@ -183,8 +69,17 @@ const ClaimFormPage = () => {
     itemId: string;
   }>();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<Order | null>(null);
-  const [orderItem, setOrderItem] = useState<OrderItem | null>(null);
+  const createClaimMutation = useCreateClaim();
+
+  const isValidType = !!type && VALID_CLAIM_TYPES.includes(type);
+  const { order, isLoading, isError, error, isNotFound } = useOrderDetail(
+    isValidType ? orderId : undefined,
+  );
+
+  const orderItem = useMemo(
+    () => order?.items.find((item) => item.id === itemId) ?? null,
+    [order, itemId],
+  );
 
   const form = useForm<ClaimFormData>({
     defaultValues: {
@@ -194,64 +89,113 @@ const ClaimFormPage = () => {
     },
   });
 
-  useEffect(() => {
-    if (!type || !orderId || !itemId) {
-      navigate(ROUTES.ORDER_LIST);
-      return;
+  // 주문 아이템 로드 시 수량 기본값 설정
+  useMemo(() => {
+    if (orderItem) {
+      form.setValue("quantity", orderItem.quantity);
     }
+  }, [orderItem, form]);
 
-    // 유효한 클레임 타입인지 확인
-    if (!["cancel", "return", "exchange"].includes(type)) {
-      navigate(ROUTES.ORDER_LIST);
-      return;
-    }
-
-    // 실제로는 API에서 주문 정보를 가져올 것
-    const foundOrder = dummyOrders.find((o) => o.id === orderId);
-    if (!foundOrder) {
-      navigate(ROUTES.ORDER_LIST);
-      return;
-    }
-
-    const foundItem = foundOrder.items.find((item) => item.id === itemId);
-    if (!foundItem) {
-      navigate(ROUTES.ORDER_LIST);
-      return;
-    }
-
-    setOrder(foundOrder);
-    setOrderItem(foundItem);
-    // 수량 기본값 설정
-    form.setValue("quantity", foundItem.quantity);
-  }, [type, orderId, itemId, navigate, form]);
-
-  if (!order || !orderItem) {
+  // 유효하지 않은 클레임 타입
+  if (!type || !orderId || !itemId || !isValidType) {
     return (
       <MainLayout>
         <MainContent>
-          <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
-            <div>주문 정보를 불러오는 중...</div>
+          <Card>
+            <Empty
+              title="잘못된 접근입니다."
+              description="올바른 경로로 접근해주세요."
+            />
+          </Card>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <MainContent>
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-zinc-500">주문 정보를 불러오는 중...</div>
           </div>
         </MainContent>
       </MainLayout>
     );
   }
 
-  const claimTypeLabel = getClaimTypeLabel(type!);
-  const reasons = getClaimReasons(type!);
+  if (isError) {
+    return (
+      <MainLayout>
+        <MainContent>
+          <Card>
+            <Empty
+              title="주문 정보를 불러올 수 없습니다."
+              description={
+                error instanceof Error ? error.message : "오류가 발생했습니다."
+              }
+            />
+          </Card>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  if (isNotFound || !order) {
+    return (
+      <MainLayout>
+        <MainContent>
+          <Card>
+            <Empty
+              title="주문을 찾을 수 없습니다."
+              description="존재하지 않는 주문이거나 접근 권한이 없습니다."
+            />
+          </Card>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  if (!orderItem) {
+    return (
+      <MainLayout>
+        <MainContent>
+          <Card>
+            <Empty
+              title="주문 상품을 찾을 수 없습니다."
+              description="해당 상품이 주문에 포함되어 있지 않습니다."
+            />
+          </Card>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  const claimTypeLabel = getClaimTypeLabel(type);
+  const reasons = getClaimReasons(type);
 
   const handleSubmit = (data: ClaimFormData) => {
-    console.log("클레임 신청:", {
-      type,
-      orderId,
-      itemId,
-      reason: data.reason,
-      description: data.description,
-      quantity: data.quantity,
-    });
-    // 실제로는 API 호출
-    toast.success(`${claimTypeLabel} 신청이 완료되었습니다.`);
-    navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`);
+    createClaimMutation.mutate(
+      {
+        type,
+        orderId: orderId!,
+        itemId: itemId!,
+        reason: data.reason,
+        description: data.description || undefined,
+        quantity: data.quantity,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${claimTypeLabel} 신청이 완료되었습니다.`);
+          navigate(ROUTES.CLAIM_LIST);
+        },
+        onError: (err) => {
+          const message =
+            err instanceof Error ? err.message : "오류가 발생했습니다.";
+          toast.error(`${claimTypeLabel} 신청 실패: ${message}`);
+        },
+      },
+    );
   };
 
   return (
@@ -419,8 +363,14 @@ const ClaimFormPage = () => {
                       >
                         취소
                       </Button>
-                      <Button type="submit" className="flex-1">
-                        {claimTypeLabel} 신청하기
+                      <Button
+                        type="submit"
+                        className="flex-1"
+                        disabled={createClaimMutation.isPending}
+                      >
+                        {createClaimMutation.isPending
+                          ? "신청 중..."
+                          : `${claimTypeLabel} 신청하기`}
                       </Button>
                     </div>
                   </form>
