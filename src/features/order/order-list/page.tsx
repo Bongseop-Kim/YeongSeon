@@ -18,6 +18,10 @@ import {
   type ListFilters,
 } from "@/features/order/api/list-filters";
 import { useDebouncedValue } from "@/features/order/hooks/use-debounced-value";
+import {
+  CLAIM_ACTION_LABEL,
+  getClaimActions,
+} from "@/features/order/constants/CLAIM_ACTIONS";
 
 export default function OrderListPage() {
   const navigate = useNavigate();
@@ -49,16 +53,12 @@ export default function OrderListPage() {
     return () => setSearchEnabled(false);
   }, [setSearchEnabled]);
 
-  const handleReturnRequest = (orderId: string, itemId: string) => {
-    navigate(`${ROUTES.CLAIM_FORM}/return/${orderId}/${itemId}`);
-  };
-
-  const handleExchangeRequest = (orderId: string, itemId: string) => {
-    navigate(`${ROUTES.CLAIM_FORM}/exchange/${orderId}/${itemId}`);
-  };
-
-  const handleCancelRequest = (orderId: string, itemId: string) => {
-    navigate(`${ROUTES.CLAIM_FORM}/cancel/${orderId}/${itemId}`);
+  const handleClaimRequest = (
+    type: string,
+    orderId: string,
+    itemId: string
+  ) => {
+    navigate(`${ROUTES.CLAIM_FORM}/${type}/${orderId}/${itemId}`);
   };
 
   if (isLoading) {
@@ -130,42 +130,31 @@ export default function OrderListPage() {
                                 navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
                               }
                               actions={
+                              getClaimActions(order.status).length > 0 ? (
                                 <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleReturnRequest(order.id, item.id);
-                                    }}
-                                  >
-                                    반품 요청
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleCancelRequest(order.id, item.id);
-                                    }}
-                                  >
-                                    취소 요청
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleExchangeRequest(order.id, item.id);
-                                    }}
-                                  >
-                                    교환 요청
-                                  </Button>
+                                  {getClaimActions(order.status).map(
+                                    (actionType) => (
+                                      <Button
+                                        key={actionType}
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleClaimRequest(
+                                            actionType,
+                                            order.id,
+                                            item.id
+                                          );
+                                        }}
+                                      >
+                                        {CLAIM_ACTION_LABEL[actionType]}
+                                      </Button>
+                                    )
+                                  )}
                                 </div>
-                              }
+                              ) : undefined
+                            }
                             />
                           </CardContent>
                         </React.Fragment>

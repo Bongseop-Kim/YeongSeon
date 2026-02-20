@@ -14,8 +14,11 @@ import { formatDate } from "@/utils/formatDate";
 import { useOrderDetail } from "@/features/order/api/order-query";
 import { Empty } from "@/components/composite/empty";
 import type { OrderItem, OrderStatus } from "@/features/order/types/view/order";
-
-type ClaimActionType = "return" | "exchange" | "cancel";
+import {
+  type ClaimActionType,
+  CLAIM_ACTION_LABEL,
+  getClaimActions,
+} from "@/features/order/constants/CLAIM_ACTIONS";
 
 const STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
   완료: "bg-green-100 text-green-800",
@@ -24,22 +27,6 @@ const STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
   취소: "bg-red-100 text-red-800",
   대기중: "bg-gray-100 text-gray-800",
 };
-
-const CLAIM_ACTIONS_BY_STATUS: Partial<Record<OrderStatus, ClaimActionType[]>> = {
-  완료: ["return", "exchange"],
-  배송중: ["return", "exchange"],
-  진행중: ["cancel"],
-  대기중: ["cancel"],
-};
-
-const CLAIM_ACTION_LABEL: Record<ClaimActionType, string> = {
-  return: "반품 요청",
-  exchange: "교환 요청",
-  cancel: "취소 요청",
-};
-
-const getClaimActions = (status: OrderStatus): ClaimActionType[] =>
-  CLAIM_ACTIONS_BY_STATUS[status] ?? [];
 
 const getOrderErrorDescription = (error: unknown): string => {
   if (!(error instanceof Error)) {

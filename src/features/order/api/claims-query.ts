@@ -3,6 +3,7 @@ import { getClaims, createClaim } from "@/features/order/api/claims-api";
 import type { CreateClaimRequest } from "@/features/order/types/view/claim-input";
 import { useAuthStore } from "@/store/auth";
 import type { ListFilters } from "@/features/order/api/list-filters";
+import { orderKeys } from "@/features/order/api/order-query";
 
 /**
  * 클레임 쿼리 키
@@ -58,6 +59,7 @@ export const useCreateClaim = () => {
     onSuccess: () => {
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: claimKeys.list(user.id) });
+        queryClient.invalidateQueries({ queryKey: orderKeys.all });
       }
     },
     onError: (error) => {
