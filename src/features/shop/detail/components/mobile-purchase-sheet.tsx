@@ -38,9 +38,10 @@ export function MobilePurchaseSheet({
 }: MobilePurchaseSheetProps) {
   const { addToCart } = useCart();
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
+  const productOptions = product.options ?? [];
 
   // 옵션이 없으면 기본 상품으로 1개 초기화
-  const hasOptions = product.options && product.options.length > 0;
+  const hasOptions = productOptions.length > 0;
 
   // 기본 상품 수량 (옵션이 없을 때)
   const [baseQuantity, setBaseQuantity] = useState(1);
@@ -116,7 +117,7 @@ export function MobilePurchaseSheet({
 
         // 옵션 초기화
         setSelectedOptions([]);
-      } catch (error) {
+      } catch {
         toast.error("장바구니 추가에 실패했습니다.");
         return;
       } finally {
@@ -130,7 +131,7 @@ export function MobilePurchaseSheet({
 
         // 수량 초기화
         setBaseQuantity(1);
-      } catch (error) {
+      } catch {
         toast.error("장바구니 추가에 실패했습니다.");
         return;
       } finally {
@@ -155,7 +156,7 @@ export function MobilePurchaseSheet({
             <Select
               value=""
               onValueChange={(value) => {
-                const option = product.options!.find((o) => o.id === value);
+                const option = productOptions.find((o) => o.id === value);
                 if (option) {
                   handleSelectOption(option);
                 }
@@ -165,8 +166,8 @@ export function MobilePurchaseSheet({
                 <SelectValue placeholder="길이를 선택하세요" />
               </SelectTrigger>
               <SelectContent>
-                {product
-                  .options!.filter(
+                {productOptions
+                  .filter(
                     (option) =>
                       !selectedOptions.some((s) => s.option.id === option.id)
                   )

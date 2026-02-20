@@ -167,13 +167,14 @@ export default function ShopDetailPage() {
     );
   }
 
-  const hasOptions = !!(product?.options && product.options.length > 0);
+  const productOptions = product.options ?? [];
+  const hasOptions = productOptions.length > 0;
 
   // 좋아요 토글 핸들러
   const handleLikeToggle = async () => {
     try {
       await toggleLikeMutation.mutateAsync(isLiked);
-    } catch (error) {
+    } catch {
       toast.error("좋아요 처리 중 오류가 발생했습니다.");
     }
   };
@@ -359,9 +360,7 @@ export default function ShopDetailPage() {
                   <Select
                     value=""
                     onValueChange={(value) => {
-                      const option = product.options!.find(
-                        (o) => o.id === value
-                      );
+                      const option = productOptions.find((o) => o.id === value);
                       if (option) {
                         handleSelectOption(option);
                       }
@@ -371,12 +370,10 @@ export default function ShopDetailPage() {
                       <SelectValue placeholder="길이를 선택하세요" />
                     </SelectTrigger>
                     <SelectContent>
-                      {product
-                        .options!.filter(
+                      {productOptions
+                        .filter(
                           (option) =>
-                            !selectedOptions.some(
-                              (s) => s.option.id === option.id
-                            )
+                            !selectedOptions.some((s) => s.option.id === option.id)
                         )
                         .map((option) => (
                           <SelectItem key={option.id} value={option.id}>
