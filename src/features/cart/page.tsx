@@ -30,7 +30,7 @@ import {
 import { useCouponSelect } from "@/features/order/order-form/hook/useCouponSelect";
 import { ProductCard } from "../shop/components/product-card";
 import { PRODUCTS_DATA } from "../shop/constants/PRODUCTS_DATA";
-import { calculateDiscount } from "@/features/order/utils/calculate-discount";
+import { calculateOrderSummary } from "@/features/order/utils/calculated-order-totals";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ROUTES } from "@/constants/ROUTES";
 import { toast } from "sonner";
@@ -223,49 +223,7 @@ const CartPage = () => {
     const selectedCartItems = items.filter((item) =>
       selectedItems.includes(item.id)
     );
-
-    const totalQuantity = selectedCartItems.reduce(
-      (total, item) => total + item.quantity,
-      0
-    );
-
-    let originalPrice = 0;
-    let totalDiscount = 0;
-
-    const totalPrice = selectedCartItems.reduce((total, item) => {
-      if (item.type === "product") {
-        const basePrice = item.product.price;
-        const optionPrice = item.selectedOption?.additionalPrice || 0;
-        const itemPrice = basePrice + optionPrice;
-        const itemOriginalPrice = itemPrice * item.quantity;
-
-        originalPrice += itemOriginalPrice;
-
-        const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-        const itemDiscountAmount = discount * item.quantity;
-
-        totalDiscount += itemDiscountAmount;
-
-        const finalPrice = itemOriginalPrice - itemDiscountAmount;
-        return total + finalPrice;
-      } else {
-        // reform 아이템
-        const itemPrice = item.reformData.cost;
-        const itemOriginalPrice = itemPrice * item.quantity;
-
-        originalPrice += itemOriginalPrice;
-
-        const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-        const itemDiscountAmount = discount * item.quantity;
-
-        totalDiscount += itemDiscountAmount;
-
-        const finalPrice = itemOriginalPrice - itemDiscountAmount;
-        return total + finalPrice;
-      }
-    }, 0);
-
-    return { totalQuantity, originalPrice, totalDiscount, totalPrice };
+    return calculateOrderSummary(selectedCartItems);
   }, [items, selectedItems]);
 
   // 장바구니 상품 기반 추천 상품 찾기

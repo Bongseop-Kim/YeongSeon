@@ -4,7 +4,7 @@ import type { CartItem, ReformCartItem } from "@/features/cart/types/view/cart";
 import type { Product, ProductOption } from "@/features/shop/types/view/product";
 import type { AppliedCoupon } from "@/features/order/types/coupon";
 import type { TieItem } from "@/features/reform/types/reform";
-import { calculateDiscount } from "@/features/order/utils/calculate-discount";
+import { calculateOrderSummary } from "@/features/order/utils/calculated-order-totals";
 import { useModalStore } from "@/store/modal";
 import { generateItemId } from "@/lib/utils";
 import { ROUTES } from "@/constants/ROUTES";
@@ -311,30 +311,9 @@ export function useCart() {
     }
   }, [clearCartItemsMutation, isLoggedIn, items, queryClient, userId]);
 
-  const totalItems = useMemo(
-    () => items.reduce((total, item) => total + item.quantity, 0),
-    [items]
-  );
-
-  const totalPrice = useMemo(
-    () =>
-      items.reduce((total, item) => {
-        if (item.type === "product") {
-          const basePrice = item.product.price;
-          const optionPrice = item.selectedOption?.additionalPrice || 0;
-          const itemPrice = basePrice + optionPrice;
-          const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-          const finalPrice = (itemPrice - discount) * item.quantity;
-          return total + finalPrice;
-        }
-
-        const itemPrice = item.reformData.cost;
-        const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-        const finalPrice = (itemPrice - discount) * item.quantity;
-        return total + finalPrice;
-      }, 0),
-    [items]
-  );
+  const summary = useMemo(() => calculateOrderSummary(items), [items]);
+  const totalItems = summary.totalQuantity;
+  const totalPrice = summary.totalPrice;
 
   const initialized = isLoggedIn
     ? serverCartQuery.isFetched || serverCartQuery.isError

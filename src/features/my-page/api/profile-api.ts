@@ -96,15 +96,20 @@ export const applyMarketingConsentToggle = (
   const base = normalizeMarketingConsent(current);
 
   if (input.target === "all") {
+    const allChannels = Object.keys(base.channels).reduce(
+      (acc, key) => {
+        acc[key] = input.checked;
+        return acc;
+      },
+      { ...DEFAULT_MARKETING_CONSENT.channels } as Record<string, boolean>,
+    );
+
     return {
       all: input.checked,
-      channels: Object.keys(base.channels).reduce(
-        (acc, key) => {
-          acc[key] = input.checked;
-          return acc;
-        },
-        {} as Record<string, boolean>,
-      ),
+      channels: {
+        ...DEFAULT_MARKETING_CONSENT.channels,
+        ...allChannels,
+      },
     };
   }
 

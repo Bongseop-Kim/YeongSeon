@@ -1,6 +1,16 @@
 import type { OrderItem } from "@/features/order/types/view/order";
 import { calculateDiscount } from "./calculate-discount";
 
+export interface OrderTotals {
+  originalPrice: number;
+  totalDiscount: number;
+  totalPrice: number;
+}
+
+export interface OrderSummary extends OrderTotals {
+  totalQuantity: number;
+}
+
 export const getOrderItemPricing = (item: OrderItem) => {
   const unitPrice =
     item.type === "product"
@@ -12,7 +22,7 @@ export const getOrderItemPricing = (item: OrderItem) => {
   return { unitPrice, discount };
 };
 
-export const calculateOrderTotals = (items: OrderItem[]) => {
+export const calculateOrderTotals = (items: OrderItem[]): OrderTotals => {
   let originalPrice = 0;
   let totalDiscount = 0;
 
@@ -30,3 +40,8 @@ export const calculateOrderTotals = (items: OrderItem[]) => {
     totalPrice: originalPrice - totalDiscount,
   };
 };
+
+export const calculateOrderSummary = (items: OrderItem[]): OrderSummary => ({
+  totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+  ...calculateOrderTotals(items),
+});
