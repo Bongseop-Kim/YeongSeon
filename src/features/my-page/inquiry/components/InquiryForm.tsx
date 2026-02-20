@@ -16,28 +16,15 @@ interface InquiryFormProps {
   initialData?: InquiryFormData;
   onSubmit: (data: InquiryFormData) => void;
   onCancel?: () => void;
+  isPending?: boolean;
 }
-
-// 더미 데이터 (실제로는 API에서 가져와야 함)
-const getInquiryById = (id: string): InquiryFormData | null => {
-  const dummyInquiries: Record<string, InquiryFormData> = {
-    "2": {
-      title: "맞춤 제작 문의",
-      content: "맞춤 제작 시 최소 수량이 어떻게 되나요?",
-    },
-    "5": {
-      title: "제품 재고 문의",
-      content: "해당 제품 재입고 예정이 있나요?",
-    },
-  };
-  return dummyInquiries[id] || null;
-};
 
 export const InquiryForm = ({
   inquiryId,
   initialData,
   onSubmit,
   onCancel,
+  isPending,
 }: InquiryFormProps) => {
   const isEditMode = !!inquiryId;
 
@@ -49,13 +36,12 @@ export const InquiryForm = ({
   });
 
   useEffect(() => {
-    if (isEditMode && inquiryId && !initialData) {
-      const inquiryData = getInquiryById(inquiryId);
-      if (inquiryData) {
-        form.reset(inquiryData);
-      }
+    if (initialData) {
+      form.reset(initialData);
+    } else {
+      form.reset({ title: "", content: "" });
     }
-  }, [isEditMode, inquiryId, initialData, form]);
+  }, [initialData, form]);
 
   const handleSubmit = (data: InquiryFormData) => {
     onSubmit(data);
@@ -123,8 +109,12 @@ export const InquiryForm = ({
               취소
             </Button>
           )}
-          <Button type="submit" className="flex-1">
-            {isEditMode ? "수정하기" : "등록하기"}
+          <Button type="submit" className="flex-1" disabled={isPending}>
+            {isPending
+              ? "처리 중..."
+              : isEditMode
+                ? "수정하기"
+                : "등록하기"}
           </Button>
         </div>
       </form>
