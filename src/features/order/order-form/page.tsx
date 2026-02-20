@@ -377,11 +377,14 @@ const OrderFormPage = () => {
                 size="xl"
                 disabled={!selectedAddress || createOrder.isPending}
               >
-                {createOrder.isPending ? "결제 처리 중..." : "결제하기"}
+                {createOrder.isPending ? "주문 처리 중..." : "주문하기"}
               </Button>
+              <p className="text-xs text-center text-zinc-400">
+                결제 기능은 준비 중입니다. 주문 접수만 진행됩니다.
+              </p>
               {!selectedAddress && (
                 <p className="text-sm text-center text-zinc-500">
-                  배송지를 추가하면 결제를 진행할 수 있어요
+                  배송지를 추가하면 주문을 진행할 수 있어요
                 </p>
               )}
             </div>
