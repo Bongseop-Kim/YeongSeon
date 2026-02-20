@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { IKUpload } from "@imagekit/react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Upload, X, Loader2 } from "lucide-react";
@@ -10,23 +9,25 @@ type ImageUploadHook = ReturnType<typeof useImageUpload>;
 interface ImageUploadProps {
   uploadedImages: ImageUploadHook["uploadedImages"];
   isUploading: ImageUploadHook["isUploading"];
-  authenticator: ImageUploadHook["authenticator"];
-  onUploadSuccess: ImageUploadHook["handleUploadSuccess"];
-  onUploadStart: ImageUploadHook["handleUploadStart"];
-  onUploadError: ImageUploadHook["handleUploadError"];
+  onFileSelect: ImageUploadHook["uploadFile"];
   onRemoveImage: ImageUploadHook["removeImage"];
 }
 
 export const ImageUpload = ({
   uploadedImages,
   isUploading,
-  authenticator,
-  onUploadSuccess,
-  onUploadStart,
-  onUploadError,
+  onFileSelect,
   onRemoveImage,
 }: ImageUploadProps) => {
-  const uploadRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onFileSelect(file);
+      e.target.value = "";
+    }
+  };
 
   return (
     <div>
@@ -35,18 +36,15 @@ export const ImageUpload = ({
       </Label>
       <div className="space-y-3">
         <div className="border-2 border-dashed border-stone-200 rounded-sm p-6 text-center transition-colors">
-          <IKUpload
-            ref={uploadRef}
-            folder="/custom-orders"
-            authenticator={authenticator}
-            onUploadStart={onUploadStart}
-            onSuccess={onUploadSuccess}
-            onError={onUploadError}
+          <input
+            ref={inputRef}
+            type="file"
             accept="image/*"
+            onChange={handleChange}
             style={{ display: "none" }}
           />
           <Label
-            onClick={() => uploadRef.current?.click()}
+            onClick={() => inputRef.current?.click()}
             className="cursor-pointer flex flex-col items-center gap-2"
           >
             {isUploading ? (

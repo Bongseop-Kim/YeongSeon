@@ -27,10 +27,7 @@ export const OrderInfoSection = ({
       <ImageUpload
         uploadedImages={imageUpload.uploadedImages}
         isUploading={imageUpload.isUploading}
-        authenticator={imageUpload.authenticator}
-        onUploadSuccess={imageUpload.handleUploadSuccess}
-        onUploadStart={imageUpload.handleUploadStart}
-        onUploadError={imageUpload.handleUploadError}
+        onFileSelect={imageUpload.uploadFile}
         onRemoveImage={imageUpload.removeImage}
       />
 

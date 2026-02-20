@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
+import { upload } from "@imagekit/react";
 import { supabase } from "@/lib/supabase";
+import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 
 interface UploadedImage {
   name: string;
@@ -10,31 +12,36 @@ export const useImageUpload = () => {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  const authenticator = async () => {
-    const { data, error } = await supabase.functions.invoke("imagekit-auth");
-    if (error || !data) {
-      throw new Error("ImageKit 인증에 실패했습니다.");
-    }
-    return data as { signature: string; token: string; expire: number };
-  };
+  const uploadFile = useCallback(async (file: File) => {
+    setIsUploading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("imagekit-auth");
+      if (error || !data) {
+        throw new Error("ImageKit 인증에 실패했습니다.");
+      }
+      const { signature, token, expire } = data as {
+        signature: string;
+        token: string;
+        expire: number;
+      };
 
-  const handleUploadSuccess = useCallback(
-    (response: { name: string; url: string }) => {
+      const response = await upload({
+        file,
+        fileName: file.name,
+        signature,
+        token,
+        expire,
+        publicKey: IMAGEKIT_PUBLIC_KEY,
+        folder: "/custom-orders",
+      });
+
       setUploadedImages((prev) => [
         ...prev,
-        { name: response.name, url: response.url },
+        { name: response.name ?? file.name, url: response.url ?? "" },
       ]);
+    } finally {
       setIsUploading(false);
-    },
-    []
-  );
-
-  const handleUploadStart = useCallback(() => {
-    setIsUploading(true);
-  }, []);
-
-  const handleUploadError = useCallback(() => {
-    setIsUploading(false);
+    }
   }, []);
 
   const removeImage = useCallback((index: number) => {
@@ -48,10 +55,7 @@ export const useImageUpload = () => {
   return {
     uploadedImages,
     isUploading,
-    authenticator,
-    handleUploadSuccess,
-    handleUploadStart,
-    handleUploadError,
+    uploadFile,
     removeImage,
     getImageUrls,
   };
