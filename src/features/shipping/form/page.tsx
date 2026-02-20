@@ -136,14 +136,10 @@ const ShippingFormPage = () => {
         },
         {
           onSuccess: (newAddress) => {
-            if (isFirstAddress) {
-              postMessageAndClose({
-                type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
-                addressId: newAddress.id,
-              });
-            } else {
-              navigate(-1);
-            }
+            postMessageAndClose({
+              type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
+              addressId: newAddress.id,
+            });
           },
         }
       );

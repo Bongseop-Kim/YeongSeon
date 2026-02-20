@@ -14,6 +14,7 @@ import { useModalStore } from "@/store/modal";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { formatPhoneNumber } from "./utils/phone-format";
+import { getDeliveryRequestLabel } from "./constants/DELIVERY_REQUEST_OPTIONS";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
 import { usePopupChild } from "@/hooks/usePopup";
@@ -189,7 +190,11 @@ const ShippingPage = () => {
                         </p>
                         {address.deliveryRequest && (
                           <p className="text-zinc-500">
-                            배송 요청: {address.deliveryRequest}
+                            배송 요청:{" "}
+                            {getDeliveryRequestLabel(
+                              address.deliveryRequest,
+                              address.deliveryMemo
+                            )}
                           </p>
                         )}
                       </div>
