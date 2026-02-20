@@ -16,6 +16,7 @@ import {
   toOrderItemInputDTO,
   toOrderView,
 } from "@/features/order/api/order-mapper";
+import { normalizeKeyword, type ListFilters } from "@/features/order/api/list-filters";
 
 const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_ITEM_VIEW = "order_item_view";
@@ -56,11 +57,21 @@ export const createOrder = async (
 /**
  * 주문 목록 조회
  */
-export const getOrders = async (): Promise<Order[]> => {
-  const { data: orders, error: ordersError } = await supabase
+export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
+  let query = supabase
     .from(ORDER_LIST_VIEW)
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (filters?.dateFrom) {
+    query = query.gte("date", filters.dateFrom);
+  }
+
+  if (filters?.dateTo) {
+    query = query.lte("date", filters.dateTo);
+  }
+
+  const { data: orders, error: ordersError } = await query;
 
   if (ordersError) {
     throw new Error(`주문 목록 조회 실패: ${ordersError.message}`);
@@ -100,7 +111,25 @@ export const getOrders = async (): Promise<Order[]> => {
     totalPrice: order.totalPrice,
   }));
 
-  return records.map(toOrderView);
+  const views = records.map(toOrderView);
+  const keyword = normalizeKeyword(filters?.keyword);
+  if (!keyword) {
+    return views;
+  }
+
+  return views.filter((order) => {
+    const itemText = order.items
+      .map((item) => {
+        if (item.type === "product") {
+          return `${item.product.name} ${item.selectedOption?.name ?? ""}`;
+        }
+        return "수선";
+      })
+      .join(" ");
+
+    const searchText = `${order.orderNumber} ${order.status} ${itemText}`.toLowerCase();
+    return searchText.includes(keyword);
+  });
 };
 
 /**

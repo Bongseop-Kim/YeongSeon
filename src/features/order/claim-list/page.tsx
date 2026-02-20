@@ -10,22 +10,39 @@ import { formatDate } from "@/utils/formatDate";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buildClaimDetailRoute } from "@/constants/ROUTES";
 import { useClaims } from "@/features/order/api/claims-query";
+import {
+  toDateString,
+  type ListFilters,
+} from "@/features/order/api/list-filters";
+import { useDebouncedValue } from "@/features/order/hooks/use-debounced-value";
 
 export default function ClaimListPage() {
   const navigate = useNavigate();
   const { setSearchEnabled } = useSearchStore();
-  const { data: claims = [], isLoading, error } = useClaims();
+  const [searchFilters, setSearchFilters] = useState<ListFilters>({});
+  const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
+  const queryFilters = useMemo(
+    () => ({
+      keyword: debouncedKeyword,
+      dateFrom: searchFilters.dateFrom,
+      dateTo: searchFilters.dateTo,
+    }),
+    [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
+  );
+  const { data: claims = [], isLoading, error } = useClaims(queryFilters);
 
   useEffect(() => {
     setSearchEnabled(true, {
       placeholder: "취소/반품/교환 검색...",
       onSearch: (query, dateFilter) => {
-        console.log("검색:", query);
-        console.log("기간:", dateFilter);
-        // 검색 로직 구현
+        setSearchFilters({
+          keyword: query,
+          dateFrom: toDateString(dateFilter.customRange?.from),
+          dateTo: toDateString(dateFilter.customRange?.to),
+        });
       },
     });
 

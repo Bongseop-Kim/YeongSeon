@@ -9,27 +9,45 @@ import { formatDate } from "@/utils/formatDate";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 import { ROUTES } from "@/constants/ROUTES";
 import { useOrders } from "@/features/order/api/order-query";
+import {
+  toDateString,
+  type ListFilters,
+} from "@/features/order/api/list-filters";
+import { useDebouncedValue } from "@/features/order/hooks/use-debounced-value";
+
 export default function OrderListPage() {
   const navigate = useNavigate();
   const { setSearchEnabled } = useSearchStore();
-  const { data: orders = [], isLoading, error } = useOrders();
+  const [searchFilters, setSearchFilters] = useState<ListFilters>({});
+  const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
+  const queryFilters = useMemo(
+    () => ({
+      keyword: debouncedKeyword,
+      dateFrom: searchFilters.dateFrom,
+      dateTo: searchFilters.dateTo,
+    }),
+    [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
+  );
+  const { data: orders = [], isLoading, error } = useOrders(queryFilters);
 
   useEffect(() => {
     setSearchEnabled(true, {
       placeholder: "주문 검색...",
       onSearch: (query, dateFilter) => {
-        console.log("검색:", query);
-        console.log("기간:", dateFilter);
-        // 검색 로직 구현
+        setSearchFilters({
+          keyword: query,
+          dateFrom: toDateString(dateFilter.customRange?.from),
+          dateTo: toDateString(dateFilter.customRange?.to),
+        });
       },
     });
 
     return () => setSearchEnabled(false);
-  }, []);
+  }, [setSearchEnabled]);
 
   const handleReturnRequest = (orderId: string, itemId: string) => {
     navigate(`${ROUTES.CLAIM_FORM}/return/${orderId}/${itemId}`);
