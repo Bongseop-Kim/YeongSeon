@@ -1,6 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSession, signInWithOAuth, signOut as signOutApi } from "./auth.api";
+import {
+  getSession,
+  signInWithOAuth,
+  signOut as signOutApi,
+  deleteAccount,
+} from "./auth.api";
 import { toast } from "@/lib/toast";
+import { useAuthStore } from "@/store/auth";
 
 /**
  * 세션 쿼리 키
@@ -68,6 +74,21 @@ export const useSignOut = () => {
           ? error.message
           : "로그아웃에 실패했습니다. 다시 시도해주세요.";
       toast.error(errorMessage);
+    },
+  });
+};
+
+/**
+ * 회원탈퇴 뮤테이션
+ */
+export const useDeleteAccount = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: () => {
+      queryClient.clear();
+      useAuthStore.setState({ user: null, initialized: false });
     },
   });
 };

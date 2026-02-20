@@ -1,4 +1,3 @@
-import { PwInput } from "@/components/composite/pw-input";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { Button } from "@/components/ui/button";
@@ -6,18 +5,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { ROUTES } from "@/constants/ROUTES";
+import { useDeleteAccount } from "@/features/auth/api/auth.query";
+import { toast } from "@/lib/toast";
+import { useModalStore } from "@/store/modal";
 import { Controller, useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 export default function MyInfoLeavePage() {
-  const form = useForm<{
-    pw: string;
-    agree: boolean;
-  }>({
-    defaultValues: {
-      pw: "",
-      agree: false,
-    },
+  const form = useForm<{ agree: boolean }>({
+    defaultValues: { agree: false },
   });
+
+  const navigate = useNavigate();
+  const { confirm } = useModalStore();
+  const deleteAccount = useDeleteAccount();
+
+  const agree = form.watch("agree");
+
+  const handleLeave = () => {
+    confirm("정말 탈퇴하시겠습니까?", () => {
+      deleteAccount.mutate(undefined, {
+        onSuccess: () => {
+          toast.success("회원탈퇴가 완료되었습니다.");
+          navigate(ROUTES.HOME);
+        },
+        onError: (err) => {
+          toast.error(
+            err instanceof Error
+              ? err.message
+              : "회원탈퇴에 실패했습니다. 다시 시도해주세요."
+          );
+        },
+      });
+    });
+  };
 
   return (
     <MainLayout>
@@ -26,8 +48,7 @@ export default function MyInfoLeavePage() {
           leftPanel={
             <Card>
               <CardHeader className="space-y-2">
-                <CardTitle>비밀번호와 유의사항을 확인해주세요.</CardTitle>
-                <PwInput name="pw" />
+                <CardTitle>유의사항을 확인해주세요.</CardTitle>
               </CardHeader>
               <Separator />
 
@@ -62,10 +83,20 @@ export default function MyInfoLeavePage() {
                 />
 
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1">
-                    다음
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    disabled={!agree || deleteAccount.isPending}
+                    onClick={handleLeave}
+                  >
+                    {deleteAccount.isPending ? "처리 중..." : "회원 탈퇴"}
                   </Button>
-                  <Button className="flex-1">탈퇴 그만두기</Button>
+                  <Button
+                    className="flex-1"
+                    onClick={() => navigate(-1)}
+                  >
+                    탈퇴 그만두기
+                  </Button>
                 </div>
               </CardContent>
             </Card>

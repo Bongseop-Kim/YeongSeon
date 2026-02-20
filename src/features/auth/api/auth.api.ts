@@ -64,3 +64,33 @@ export const signOut = async (): Promise<void> => {
     throw new Error(`로그아웃 실패: ${error.message}`);
   }
 };
+
+/**
+ * 회원탈퇴
+ * Edge Function을 호출하여 유저 삭제
+ */
+export const deleteAccount = async (): Promise<void> => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "회원탈퇴에 실패했습니다.");
+  }
+};
