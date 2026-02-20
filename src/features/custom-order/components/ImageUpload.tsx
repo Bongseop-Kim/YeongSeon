@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, ImageOff } from "lucide-react";
 import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 
 type ImageUploadHook = ReturnType<typeof useImageUpload>;
@@ -77,11 +77,15 @@ export const ImageUpload = ({
               >
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-zinc-100 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    <img
-                      src={image.url}
-                      alt={image.name}
-                      className="w-8 h-8 object-cover"
-                    />
+                    {image.url ? (
+                      <img
+                        src={image.url}
+                        alt={image.name}
+                        className="w-8 h-8 object-cover"
+                      />
+                    ) : (
+                      <ImageOff className="w-4 h-4 text-zinc-400" />
+                    )}
                   </div>
                   <span className="text-sm text-zinc-700 truncate">
                     {image.name}

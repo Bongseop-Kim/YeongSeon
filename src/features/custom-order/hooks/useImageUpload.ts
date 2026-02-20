@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { upload } from "@imagekit/react";
 import { supabase } from "@/lib/supabase";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
+import { toast } from "@/lib/toast";
 
 interface UploadedImage {
   name: string;
@@ -35,10 +36,20 @@ export const useImageUpload = () => {
         folder: "/custom-orders",
       });
 
+      if (!response.url) {
+        throw new Error("이미지 URL을 받지 못했습니다.");
+      }
+
       setUploadedImages((prev) => [
         ...prev,
-        { name: response.name ?? file.name, url: response.url ?? "" },
+        { name: response.name ?? file.name, url: response.url! },
       ]);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "이미지 업로드에 실패했습니다."
+      );
     } finally {
       setIsUploading(false);
     }
@@ -49,7 +60,7 @@ export const useImageUpload = () => {
   }, []);
 
   const getImageUrls = useCallback(() => {
-    return uploadedImages.map((img) => img.url);
+    return uploadedImages.map((img) => img.url).filter(Boolean);
   }, [uploadedImages]);
 
   return {
