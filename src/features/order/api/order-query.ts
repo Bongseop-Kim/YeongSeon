@@ -55,6 +55,20 @@ export const useOrder = (orderId: string) => {
 };
 
 /**
+ * 주문 상세 페이지 상태 조회 훅
+ */
+export const useOrderDetail = (orderId?: string) => {
+  const query = useOrder(orderId ?? "");
+
+  return {
+    ...query,
+    order: query.data ?? null,
+    isNotFound:
+      !!orderId && !query.isLoading && !query.isError && query.data === null,
+  };
+};
+
+/**
  * 주문 생성 뮤테이션
  */
 export const useCreateOrder = () => {
