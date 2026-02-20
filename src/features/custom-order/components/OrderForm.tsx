@@ -1,4 +1,4 @@
-import type { Control, UseFormWatch, UseFormSetValue } from "react-hook-form";
+import type { Control, UseFormWatch } from "react-hook-form";
 import { Separator } from "@/components/ui/separator";
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import { FabricSection } from "./FabricSection";
@@ -6,14 +6,17 @@ import { ProductionSection } from "./ProductionSection";
 import { LabelSection } from "./LabelSection";
 import { OrderInfoSection } from "./OrderInfoSection";
 import { Card, CardContent } from "@/components/ui/card";
+import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
+
+type ImageUploadHook = ReturnType<typeof useImageUpload>;
 
 interface OrderFormProps {
   control: Control<OrderOptions>;
   watch: UseFormWatch<OrderOptions>;
-  setValue: UseFormSetValue<OrderOptions>;
+  imageUpload: ImageUploadHook;
 }
 
-const OrderForm = ({ control, watch, setValue }: OrderFormProps) => {
+const OrderForm = ({ control, watch, imageUpload }: OrderFormProps) => {
   return (
     <Card>
       <CardContent className="space-y-4">
@@ -29,7 +32,7 @@ const OrderForm = ({ control, watch, setValue }: OrderFormProps) => {
 
         <Separator />
 
-        <OrderInfoSection control={control} setValue={setValue} watch={watch} />
+        <OrderInfoSection control={control} imageUpload={imageUpload} />
       </CardContent>
     </Card>
   );

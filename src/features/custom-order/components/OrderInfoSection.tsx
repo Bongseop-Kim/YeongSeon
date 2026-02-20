@@ -1,29 +1,38 @@
 import { Controller } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { Control, UseFormSetValue, UseFormWatch } from "react-hook-form";
+import type { Control } from "react-hook-form";
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import { FormSection } from "@/components/ui/form-section";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import { QuantitySelector } from "./QuantitySelector";
 import { ImageUpload } from "./ImageUpload";
+import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
+
+type ImageUploadHook = ReturnType<typeof useImageUpload>;
 
 interface OrderInfoSectionProps {
   control: Control<OrderOptions>;
-  setValue: UseFormSetValue<OrderOptions>;
-  watch: UseFormWatch<OrderOptions>;
+  imageUpload: ImageUploadHook;
 }
 
 export const OrderInfoSection = ({
   control,
-  setValue,
-  watch,
+  imageUpload,
 }: OrderInfoSectionProps) => {
   return (
     <FormSection title="주문 정보">
       <QuantitySelector control={control} />
 
-      <ImageUpload setValue={setValue} watch={watch} />
+      <ImageUpload
+        uploadedImages={imageUpload.uploadedImages}
+        isUploading={imageUpload.isUploading}
+        authenticator={imageUpload.authenticator}
+        onUploadSuccess={imageUpload.handleUploadSuccess}
+        onUploadStart={imageUpload.handleUploadStart}
+        onUploadError={imageUpload.handleUploadError}
+        onRemoveImage={imageUpload.removeImage}
+      />
 
       <div>
         <Label

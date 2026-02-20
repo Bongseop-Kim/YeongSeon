@@ -1,34 +1,58 @@
-import { useState } from "react";
-import type { UseFormSetValue, UseFormWatch } from "react-hook-form";
-import type { OrderOptions } from "@/features/custom-order/types/order";
+import { useState, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 
-interface UseImageUploadProps {
-  setValue: UseFormSetValue<OrderOptions>;
-  watch: UseFormWatch<OrderOptions>;
+interface UploadedImage {
+  name: string;
+  url: string;
 }
 
-export const useImageUpload = ({ setValue, watch }: UseImageUploadProps) => {
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const watchedValues = watch();
+export const useImageUpload = () => {
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    setSelectedImages((prev) => [...prev, ...files]);
-    setValue("referenceImages", [
-      ...(watchedValues.referenceImages || []),
-      ...files,
-    ]);
+  const authenticator = async () => {
+    const { data, error } = await supabase.functions.invoke("imagekit-auth");
+    if (error || !data) {
+      throw new Error("ImageKit 인증에 실패했습니다.");
+    }
+    return data as { signature: string; token: string; expire: number };
   };
 
-  const removeImage = (index: number) => {
-    const newImages = selectedImages.filter((_, i) => i !== index);
-    setSelectedImages(newImages);
-    setValue("referenceImages", newImages);
-  };
+  const handleUploadSuccess = useCallback(
+    (response: { name: string; url: string }) => {
+      setUploadedImages((prev) => [
+        ...prev,
+        { name: response.name, url: response.url },
+      ]);
+      setIsUploading(false);
+    },
+    []
+  );
+
+  const handleUploadStart = useCallback(() => {
+    setIsUploading(true);
+  }, []);
+
+  const handleUploadError = useCallback(() => {
+    setIsUploading(false);
+  }, []);
+
+  const removeImage = useCallback((index: number) => {
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const getImageUrls = useCallback(() => {
+    return uploadedImages.map((img) => img.url);
+  }, [uploadedImages]);
 
   return {
-    selectedImages,
-    handleImageUpload,
+    uploadedImages,
+    isUploading,
+    authenticator,
+    handleUploadSuccess,
+    handleUploadStart,
+    handleUploadError,
     removeImage,
+    getImageUrls,
   };
 };

@@ -6,7 +6,7 @@ import { QueryProvider } from "./query-provider";
 import { AuthSyncProvider } from "./auth-sync-provider";
 import { CartSyncProvider } from "./cart-sync-provider";
 import { ImageKitProvider } from "@imagekit/react";
-import { IMAGEKIT_URL_ENDPOINT } from "@/lib/imagekit";
+import { IMAGEKIT_URL_ENDPOINT, IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 // import { ThemeProvider } from "./theme-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -20,7 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <AuthSyncProvider>
         <CartSyncProvider>
           <BreakpointProvider>
-            <ImageKitProvider urlEndpoint={IMAGEKIT_URL_ENDPOINT}>
+            <ImageKitProvider urlEndpoint={IMAGEKIT_URL_ENDPOINT} publicKey={IMAGEKIT_PUBLIC_KEY}>
               {/* 나중에 추가될 다른 Provider들 */}
               {/* <ThemeProvider> */}
 
