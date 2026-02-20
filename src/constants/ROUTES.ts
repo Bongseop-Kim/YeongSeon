@@ -26,3 +26,11 @@ export const ROUTES = {
   REFUND_POLICY: "/refund-policy", // 환불정책
   LOGIN: "/login", // 로그인
 } as const;
+
+export type ClaimRouteType = "return" | "exchange" | "cancel";
+
+export const buildClaimDetailRoute = (
+  type: ClaimRouteType,
+  orderId: string,
+  itemId: string,
+) => `${ROUTES.CLAIM_FORM}/${type}/${orderId}/${itemId}`;

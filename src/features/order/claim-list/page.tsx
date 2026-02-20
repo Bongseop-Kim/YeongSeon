@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect } from "react";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
+import { buildClaimDetailRoute } from "@/constants/ROUTES";
 
 // 더미 클레임 데이터
 const dummyClaims: ClaimItem[] = [
@@ -165,7 +166,15 @@ export default function ClaimListPage() {
                     <CardContent className="py-4">
                       <OrderItemCard
                         item={claim.item}
-                        onClick={() => navigate(`/claim/${claim.id}`)}
+                        onClick={() =>
+                          navigate(
+                            buildClaimDetailRoute(
+                              claim.type,
+                              claim.orderId,
+                              claim.item.id,
+                            ),
+                          )
+                        }
                       />
 
                       {/* 클레임 사유 */}
