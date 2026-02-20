@@ -3,13 +3,38 @@
     "allow": [
       "WebFetch(domain:postcode.map.daum.net)",
       "Bash(npm run lint)",
-      "Read(//var/folders/4t/3s_4q4rd15x5grx8r55rzs1w0000gn/T/TemporaryItems/NSIRD_screencaptureui_96bDAz/**)"
+      "Read(//var/folders/4t/3s_4q4rd15x5grx8r55rzs1w0000gn/T/TemporaryItems/NSIRD_screencaptureui_96bDAz/**)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__list_migrations",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__get_advisors",
+      "Bash(npx tsc:*)",
+      "Bash(git -C /Users/gimbongseob/git/YeongSeon status -u)",
+      "Bash(git -C /Users/gimbongseob/git/YeongSeon diff)",
+      "Bash(git -C /Users/gimbongseob/git/YeongSeon log --oneline -5)",
+      "Bash(git -C /Users/gimbongseob/git/YeongSeon add supabase/migrations/20260220120000_create_claims_system.sql docs/claims-backend-design.md src/features/order/types/dto/claim-view.ts src/features/order/types/dto/claim-input.ts src/features/order/types/dto/claim-output.ts src/features/order/types/view/claim-input.ts src/features/order/api/claims-mapper.ts src/features/order/api/claims-api.ts src/features/order/api/claims-query.ts src/features/order/claim-list/page.tsx \"src/features/order/claim/[type]/[orderId]/[itemId]/page.tsx\")",
+      "Bash(git -C:*)",
+      "mcp__supabase__apply_migration",
+      "Bash(git add:*)",
+      "mcp__supabase__list_edge_functions",
+      "Bash(grep:*)",
+      "mcp__supabase__search_docs",
+      "mcp__supabase__deploy_edge_function",
+      "Bash(npx eslint:*)",
+      "Bash(git commit:*)",
+      "Bash(node --version:*)",
+      "Bash(npm:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(git restore:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
