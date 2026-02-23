@@ -16,6 +16,41 @@ create table if not exists public.custom_order_fabric_prices (
     check (fabric_type in ('SILK', 'POLY'))
 );
 
+alter table public.custom_order_pricing_constants enable row level security;
+alter table public.custom_order_fabric_prices enable row level security;
+
+revoke all on table public.custom_order_pricing_constants from public;
+revoke all on table public.custom_order_pricing_constants from anon;
+revoke all on table public.custom_order_pricing_constants from authenticated;
+revoke all on table public.custom_order_pricing_constants from service_role;
+revoke all on table public.custom_order_fabric_prices from public;
+revoke all on table public.custom_order_fabric_prices from anon;
+revoke all on table public.custom_order_fabric_prices from authenticated;
+revoke all on table public.custom_order_fabric_prices from service_role;
+
+grant select, insert, update, delete on table public.custom_order_pricing_constants to service_role;
+grant select, insert, update, delete on table public.custom_order_fabric_prices to service_role;
+
+drop policy if exists custom_order_pricing_constants_service_role_only
+  on public.custom_order_pricing_constants;
+create policy custom_order_pricing_constants_service_role_only
+on public.custom_order_pricing_constants
+as restrictive
+for all
+to service_role, postgres
+using (true)
+with check (true);
+
+drop policy if exists custom_order_fabric_prices_service_role_only
+  on public.custom_order_fabric_prices;
+create policy custom_order_fabric_prices_service_role_only
+on public.custom_order_fabric_prices
+as restrictive
+for all
+to service_role, postgres
+using (true)
+with check (true);
+
 insert into public.custom_order_pricing_constants (key, amount)
 values
   ('START_COST', 50000),
@@ -374,8 +409,21 @@ begin
 end;
 $function$;
 
-grant execute on function public.calculate_custom_order_amounts(jsonb, integer)
-to authenticated;
+revoke all on function public.calculate_custom_order_amounts(jsonb, integer)
+from public;
+revoke all on function public.calculate_custom_order_amounts(jsonb, integer)
+from anon;
+revoke all on function public.calculate_custom_order_amounts(jsonb, integer)
+from authenticated;
 
+grant execute on function public.calculate_custom_order_amounts(jsonb, integer)
+to service_role;
+
+revoke all on function public.create_custom_order_txn(uuid, jsonb, integer, text[], text, boolean)
+from public;
+revoke all on function public.create_custom_order_txn(uuid, jsonb, integer, text[], text, boolean)
+from anon;
 grant execute on function public.create_custom_order_txn(uuid, jsonb, integer, text[], text, boolean)
 to authenticated;
+grant execute on function public.create_custom_order_txn(uuid, jsonb, integer, text[], text, boolean)
+to service_role;
