@@ -1,34 +1,23 @@
 import { supabase } from "@/lib/supabase";
-import type { OrderOptions } from "@/features/custom-order/types/order";
-
-export interface CreateCustomOrderRequest {
-  shippingAddressId: string;
-  options: OrderOptions;
-  quantity: number;
-  referenceImageUrls: string[];
-  additionalNotes: string;
-  sample: boolean;
-}
+import { toCreateCustomOrderRequestDto } from "@/features/custom-order/api/custom-order-mapper";
+import type { CreateCustomOrderRequest } from "@/features/custom-order/types/dto/custom-order-input";
 
 export interface CreateCustomOrderResponse {
   orderId: string;
   orderNumber: string;
 }
 
+export type { CreateCustomOrderRequest };
+
 export const createCustomOrder = async (
   request: CreateCustomOrderRequest
 ): Promise<CreateCustomOrderResponse> => {
+  const requestDto = toCreateCustomOrderRequestDto(request);
+
   const { data, error } = await supabase.functions.invoke(
     "create-custom-order",
     {
-      body: {
-        shipping_address_id: request.shippingAddressId,
-        options: request.options,
-        quantity: request.quantity,
-        reference_image_urls: request.referenceImageUrls,
-        additional_notes: request.additionalNotes,
-        sample: request.sample,
-      },
+      body: requestDto,
     }
   );
 

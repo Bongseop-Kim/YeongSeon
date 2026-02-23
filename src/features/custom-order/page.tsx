@@ -29,6 +29,7 @@ import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENT
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateCustomOrder } from "./api/custom-order-query";
 import { useImageUpload } from "./hooks/useImageUpload";
+import { toCreateCustomOrderRequest } from "@/features/custom-order/api/custom-order-mapper";
 
 const OrderPage = () => {
   const [searchParams] = useSearchParams();
@@ -143,12 +144,13 @@ const OrderPage = () => {
 
     try {
       await createCustomOrder.mutateAsync({
-        shippingAddressId: selectedAddressId,
-        options: watchedValues,
-        quantity: watchedValues.quantity,
-        referenceImageUrls: imageUpload.getImageUrls(),
-        additionalNotes: watchedValues.additionalNotes,
-        sample: watchedValues.sample,
+        ...toCreateCustomOrderRequest({
+          shippingAddressId: selectedAddressId,
+          options: watchedValues,
+          referenceImageUrls: imageUpload.getImageUrls(),
+          additionalNotes: watchedValues.additionalNotes,
+          sample: watchedValues.sample,
+        }),
       });
 
       toast.success("주문이 완료되었습니다!");

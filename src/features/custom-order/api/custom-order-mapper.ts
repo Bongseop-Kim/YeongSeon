@@ -1,0 +1,99 @@
+import type { OrderOptions } from "@/features/custom-order/types/order";
+import type {
+  CreateCustomOrderOptionsDto,
+  CreateCustomOrderRequest,
+  CreateCustomOrderRequestDto,
+} from "@/features/custom-order/types/dto/custom-order-input";
+
+const normalizeEnum = <T extends string>(
+  value: unknown,
+  allowed: readonly T[]
+): T | null => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  return allowed.includes(value as T) ? (value as T) : null;
+};
+
+const normalizeBoolean = (value: unknown): boolean => value === true;
+
+const normalizeNumber = (value: unknown, fallback: number): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+
+  return value;
+};
+
+const normalizeReferenceImageUrls = (urls: string[]): string[] => {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const url of urls) {
+    const trimmed = url.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+
+    seen.add(trimmed);
+    normalized.push(trimmed);
+  }
+
+  return normalized;
+};
+
+export const toCreateCustomOrderOptionsDto = (
+  options: OrderOptions
+): CreateCustomOrderOptionsDto => ({
+  fabricProvided: normalizeBoolean(options.fabricProvided),
+  reorder: normalizeBoolean(options.reorder),
+  fabricType: normalizeEnum(options.fabricType, ["SILK", "POLY"]),
+  designType: normalizeEnum(options.designType, ["PRINTING", "YARN_DYED"]),
+  tieType: normalizeEnum(options.tieType, ["MANUAL", "AUTO"]),
+  interlining: normalizeEnum(options.interlining, ["POLY", "WOOL"]),
+  interliningThickness: normalizeEnum(options.interliningThickness, [
+    "THICK",
+    "THIN",
+  ]),
+  sizeType: normalizeEnum(options.sizeType, ["ADULT", "CHILD"]),
+  tieWidth: normalizeNumber(options.tieWidth, 8),
+  triangleStitch: normalizeBoolean(options.triangleStitch),
+  sideStitch: normalizeBoolean(options.sideStitch),
+  barTack: normalizeBoolean(options.barTack),
+  fold7: normalizeBoolean(options.fold7),
+  dimple: normalizeBoolean(options.dimple),
+  spoderato: normalizeBoolean(options.spoderato),
+  brandLabel: normalizeBoolean(options.brandLabel),
+  careLabel: normalizeBoolean(options.careLabel),
+});
+
+interface ToCreateCustomOrderRequestInput {
+  shippingAddressId: string;
+  options: OrderOptions;
+  referenceImageUrls: string[];
+  additionalNotes: string;
+  sample: boolean;
+}
+
+export const toCreateCustomOrderRequest = (
+  input: ToCreateCustomOrderRequestInput
+): CreateCustomOrderRequest => ({
+  shippingAddressId: input.shippingAddressId,
+  options: toCreateCustomOrderOptionsDto(input.options),
+  quantity: input.options.quantity,
+  referenceImageUrls: normalizeReferenceImageUrls(input.referenceImageUrls),
+  additionalNotes: input.additionalNotes.trim(),
+  sample: normalizeBoolean(input.sample),
+});
+
+export const toCreateCustomOrderRequestDto = (
+  request: CreateCustomOrderRequest
+): CreateCustomOrderRequestDto => ({
+  shipping_address_id: request.shippingAddressId,
+  options: request.options,
+  quantity: request.quantity,
+  reference_image_urls: normalizeReferenceImageUrls(request.referenceImageUrls),
+  additional_notes: request.additionalNotes,
+  sample: request.sample,
+});
