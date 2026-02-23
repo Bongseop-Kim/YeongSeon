@@ -108,6 +108,9 @@ create trigger update_claims_updated_at
 -- 6. Grants (matches existing orders table pattern)
 -- ─────────────────────────────────────────────────────────────
 
+revoke all on table "public"."claims" from "anon";
+revoke all on table "public"."claims" from "authenticated";
+
 grant references on table "public"."claims" to "anon";
 grant select on table "public"."claims" to "anon";
 
@@ -153,6 +156,8 @@ begin
   return claim_num;
 end;
 $function$;
+
+revoke execute on function public.generate_claim_number() from public;
 
 -- ─────────────────────────────────────────────────────────────
 -- 8. create_claim() RPC — SECURITY DEFINER
