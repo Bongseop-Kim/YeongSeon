@@ -217,7 +217,7 @@ begin
 
   -- 5. Order item lookup (p_item_id is order_items.item_id text)
   select oi.id, oi.quantity
-  into v_order_item
+  into strict v_order_item
   from order_items oi
   where oi.item_id = p_item_id
     and oi.order_id = p_order_id;
