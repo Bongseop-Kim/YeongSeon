@@ -216,15 +216,16 @@ begin
   end if;
 
   -- 5. Order item lookup (p_item_id is order_items.item_id text)
-  select oi.id, oi.quantity
-  into strict v_order_item
-  from order_items oi
-  where oi.item_id = p_item_id
-    and oi.order_id = p_order_id;
-
-  if not found then
-    raise exception 'Order item not found';
-  end if;
+  begin
+    select oi.id, oi.quantity
+    into strict v_order_item
+    from order_items oi
+    where oi.item_id = p_item_id
+      and oi.order_id = p_order_id;
+  exception
+    when no_data_found then
+      raise exception 'Order item not found';
+  end;
 
   -- 6. Quantity validation
   v_claim_quantity := coalesce(p_quantity, v_order_item.quantity);
