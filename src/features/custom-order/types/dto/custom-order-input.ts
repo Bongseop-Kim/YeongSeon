@@ -18,6 +18,26 @@ export interface CreateCustomOrderOptionsDto {
   careLabel: boolean;
 }
 
+export interface CreateCustomOrderOptionsDtoSnakeCase {
+  fabric_provided: boolean;
+  reorder: boolean;
+  fabric_type: "SILK" | "POLY" | null;
+  design_type: "PRINTING" | "YARN_DYED" | null;
+  tie_type: "MANUAL" | "AUTO" | null;
+  interlining: "POLY" | "WOOL" | null;
+  interlining_thickness: "THICK" | "THIN" | null;
+  size_type: "ADULT" | "CHILD" | null;
+  tie_width: number;
+  triangle_stitch: boolean;
+  side_stitch: boolean;
+  bar_tack: boolean;
+  fold7: boolean;
+  dimple: boolean;
+  spoderato: boolean;
+  brand_label: boolean;
+  care_label: boolean;
+}
+
 export interface CreateCustomOrderRequest {
   shippingAddressId: string;
   options: CreateCustomOrderOptionsDto;
@@ -29,7 +49,7 @@ export interface CreateCustomOrderRequest {
 
 export interface CreateCustomOrderRequestDto {
   shipping_address_id: string;
-  options: CreateCustomOrderOptionsDto;
+  options: CreateCustomOrderOptionsDtoSnakeCase;
   quantity: number;
   reference_image_urls: string[];
   additional_notes: string;

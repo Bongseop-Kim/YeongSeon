@@ -193,20 +193,20 @@ begin
     raise exception 'Custom order pricing constants are not configured';
   end if;
 
-  v_tie_type := coalesce(p_options->>'tieType', '');
+  v_tie_type := coalesce(p_options->>'tie_type', '');
   v_interlining := coalesce(p_options->>'interlining', '');
-  v_design_type := nullif(p_options->>'designType', '');
-  v_fabric_type := nullif(p_options->>'fabricType', '');
-  v_fabric_provided := coalesce((p_options->>'fabricProvided')::boolean, false);
+  v_design_type := nullif(p_options->>'design_type', '');
+  v_fabric_type := nullif(p_options->>'fabric_type', '');
+  v_fabric_provided := coalesce((p_options->>'fabric_provided')::boolean, false);
 
-  v_triangle_stitch := coalesce((p_options->>'triangleStitch')::boolean, false);
-  v_side_stitch := coalesce((p_options->>'sideStitch')::boolean, false);
-  v_bar_tack := coalesce((p_options->>'barTack')::boolean, false);
+  v_triangle_stitch := coalesce((p_options->>'triangle_stitch')::boolean, false);
+  v_side_stitch := coalesce((p_options->>'side_stitch')::boolean, false);
+  v_bar_tack := coalesce((p_options->>'bar_tack')::boolean, false);
   v_dimple := coalesce((p_options->>'dimple')::boolean, false);
   v_spoderato := coalesce((p_options->>'spoderato')::boolean, false);
   v_fold7 := coalesce((p_options->>'fold7')::boolean, false);
-  v_brand_label := coalesce((p_options->>'brandLabel')::boolean, false);
-  v_care_label := coalesce((p_options->>'careLabel')::boolean, false);
+  v_brand_label := coalesce((p_options->>'brand_label')::boolean, false);
+  v_care_label := coalesce((p_options->>'care_label')::boolean, false);
   v_exclusive_style_count :=
     (case when v_dimple then 1 else 0 end)
     + (case when v_spoderato then 1 else 0 end)

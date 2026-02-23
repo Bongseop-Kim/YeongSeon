@@ -1,6 +1,7 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import type {
   CreateCustomOrderOptionsDto,
+  CreateCustomOrderOptionsDtoSnakeCase,
   CreateCustomOrderRequest,
   CreateCustomOrderRequestDto,
 } from "@/features/custom-order/types/dto/custom-order-input";
@@ -91,7 +92,25 @@ export const toCreateCustomOrderRequestDto = (
   request: CreateCustomOrderRequest
 ): CreateCustomOrderRequestDto => ({
   shipping_address_id: request.shippingAddressId,
-  options: request.options,
+  options: {
+    fabric_provided: request.options.fabricProvided,
+    reorder: request.options.reorder,
+    fabric_type: request.options.fabricType,
+    design_type: request.options.designType,
+    tie_type: request.options.tieType,
+    interlining: request.options.interlining,
+    interlining_thickness: request.options.interliningThickness,
+    size_type: request.options.sizeType,
+    tie_width: request.options.tieWidth,
+    triangle_stitch: request.options.triangleStitch,
+    side_stitch: request.options.sideStitch,
+    bar_tack: request.options.barTack,
+    fold7: request.options.fold7,
+    dimple: request.options.dimple,
+    spoderato: request.options.spoderato,
+    brand_label: request.options.brandLabel,
+    care_label: request.options.careLabel,
+  } satisfies CreateCustomOrderOptionsDtoSnakeCase,
   quantity: request.quantity,
   reference_image_urls: normalizeReferenceImageUrls(request.referenceImageUrls),
   additional_notes: request.additionalNotes,
