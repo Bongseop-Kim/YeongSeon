@@ -28,6 +28,10 @@ const ShippingPage = () => {
   const { data: addresses, isLoading } = useShippingAddresses();
   const { openModal } = useModalStore();
   const deleteMutation = useDeleteShippingAddress();
+  const isPopupContext =
+    typeof window !== "undefined" &&
+    !!window.opener &&
+    window.opener !== window;
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null
   );
@@ -62,15 +66,27 @@ const ShippingPage = () => {
   };
 
   const handleConfirm = () => {
-    postMessageAndClose({
-      type: SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED,
-      addressId: selectedAddressId,
-    });
+    if (isPopupContext) {
+      postMessageAndClose({
+        type: SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED,
+        addressId: selectedAddressId,
+      });
+      return;
+    }
+
+    navigate(-1);
   };
 
   return (
     <PopupLayout
-      onClose={() => window.close()}
+      onClose={() => {
+        if (isPopupContext) {
+          window.close();
+          return;
+        }
+
+        navigate(-1);
+      }}
       title="배송지 정보"
       headerContent={
         <Input

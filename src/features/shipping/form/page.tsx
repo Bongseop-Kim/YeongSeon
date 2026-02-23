@@ -81,6 +81,10 @@ const ShippingFormPage = () => {
   const canUncheckDefault = !isEditMode || (addresses && addresses.length > 1);
 
   const { handleSubmit } = form;
+  const isPopupContext =
+    typeof window !== "undefined" &&
+    !!window.opener &&
+    window.opener !== window;
 
   const onSubmit = (data: ShippingAddress) => {
     // 필수값 검증
@@ -136,10 +140,15 @@ const ShippingFormPage = () => {
         },
         {
           onSuccess: (newAddress) => {
-            postMessageAndClose({
-              type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
-              addressId: newAddress.id,
-            });
+            if (isPopupContext) {
+              postMessageAndClose({
+                type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
+                addressId: newAddress.id,
+              });
+              return;
+            }
+
+            navigate(-1);
           },
         }
       );
