@@ -14,7 +14,7 @@ import { useModalStore } from "@/store/modal";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { formatPhoneNumber } from "./utils/phone-format";
-import { getDeliveryRequestLabel } from "./constants/DELIVERY_REQUEST_OPTIONS";
+import { getDeliveryRequestLabel } from "@/features/shipping/constants/DELIVERY_REQUEST_OPTIONS";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
 import { usePopupChild } from "@/hooks/usePopup";
