@@ -19,7 +19,7 @@ import { Empty } from "@/components/composite/empty";
 import { useOrderDetail } from "@/features/order/api/order-query";
 import { useCreateClaim } from "@/features/order/api/claims-query";
 import { getClaimTypeLabel } from "@/features/order/utils/claim-utils";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 // 클레임 사유 옵션
 const getClaimReasons = (type: ClaimType) => {
@@ -90,7 +90,7 @@ const ClaimFormPage = () => {
   });
 
   // 주문 아이템 로드 시 수량 기본값 설정
-  useMemo(() => {
+  useEffect(() => {
     if (orderItem) {
       form.setValue("quantity", orderItem.quantity);
     }
