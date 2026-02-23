@@ -4,7 +4,10 @@ import type {
   ProductOrderItem,
   ReformOrderItem,
 } from "@/features/order/types/view/order";
-import type { CartItem } from "@/features/cart/types/view/cart";
+import type {
+  ProductCartItem,
+  ReformCartItem,
+} from "@/features/cart/types/view/cart";
 
 // ── Product ──
 
@@ -87,14 +90,18 @@ export const createReformOrderItem = (
 
 // ── CartItem ──
 
-export const createCartItem = (overrides?: Partial<CartItem>): CartItem => ({
+export const createCartItem = (
+  overrides?: Partial<ProductCartItem>,
+): ProductCartItem => ({
   ...createProductOrderItem(),
+  appliedCouponId: null,
   ...overrides,
 });
 
 export const createReformCartItem = (
-  overrides?: Partial<CartItem>,
-): CartItem => ({
+  overrides?: Partial<ReformCartItem>,
+): ReformCartItem => ({
   ...createReformOrderItem(),
+  appliedCouponId: null,
   ...overrides,
 });
