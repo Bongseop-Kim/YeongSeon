@@ -145,9 +145,6 @@ const OrderPage = () => {
       await createCustomOrder.mutateAsync({
         shippingAddressId: selectedAddressId,
         options: watchedValues,
-        sewingCost,
-        fabricCost,
-        totalCost,
         quantity: watchedValues.quantity,
         referenceImageUrls: imageUpload.getImageUrls(),
         additionalNotes: watchedValues.additionalNotes,

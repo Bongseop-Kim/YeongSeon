@@ -5,9 +5,6 @@ import { corsHeaders } from "../_shared/cors.ts";
 type CreateCustomOrderInput = {
   shipping_address_id: string;
   options: Record<string, unknown>;
-  sewing_cost: number;
-  fabric_cost: number;
-  total_cost: number;
   quantity: number;
   reference_image_urls?: string[];
   additional_notes?: string;
@@ -74,10 +71,6 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "Invalid quantity" });
   }
 
-  if (!Number.isInteger(payload.total_cost) || payload.total_cost < 0) {
-    return jsonResponse(400, { error: "Invalid total cost" });
-  }
-
   // 배송지 소유 검증
   const { data: shippingAddress, error: shippingError } = await supabase
     .from("shipping_addresses")
@@ -97,9 +90,6 @@ Deno.serve(async (req) => {
     {
       p_shipping_address_id: payload.shipping_address_id,
       p_options: payload.options,
-      p_sewing_cost: payload.sewing_cost,
-      p_fabric_cost: payload.fabric_cost,
-      p_total_cost: payload.total_cost,
       p_quantity: payload.quantity,
       p_reference_image_urls: payload.reference_image_urls ?? [],
       p_additional_notes: payload.additional_notes ?? "",

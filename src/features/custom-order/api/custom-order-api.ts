@@ -4,9 +4,6 @@ import type { OrderOptions } from "@/features/custom-order/types/order";
 export interface CreateCustomOrderRequest {
   shippingAddressId: string;
   options: OrderOptions;
-  sewingCost: number;
-  fabricCost: number;
-  totalCost: number;
   quantity: number;
   referenceImageUrls: string[];
   additionalNotes: string;
@@ -27,9 +24,6 @@ export const createCustomOrder = async (
       body: {
         shipping_address_id: request.shippingAddressId,
         options: request.options,
-        sewing_cost: request.sewingCost,
-        fabric_cost: request.fabricCost,
-        total_cost: request.totalCost,
         quantity: request.quantity,
         reference_image_urls: request.referenceImageUrls,
         additional_notes: request.additionalNotes,
