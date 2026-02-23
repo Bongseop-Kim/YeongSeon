@@ -85,14 +85,14 @@ create policy "Users can view their own claims"
 on "public"."claims"
 as permissive
 for select
-to public
+to authenticated
 using ((auth.uid() = user_id));
 
 create policy "Users can create their own claims"
 on "public"."claims"
 as permissive
 for insert
-to public
+to authenticated
 with check ((auth.uid() = user_id));
 
 -- ─────────────────────────────────────────────────────────────
@@ -108,21 +108,12 @@ create trigger update_claims_updated_at
 -- 6. Grants (matches existing orders table pattern)
 -- ─────────────────────────────────────────────────────────────
 
-grant delete on table "public"."claims" to "anon";
-grant insert on table "public"."claims" to "anon";
 grant references on table "public"."claims" to "anon";
 grant select on table "public"."claims" to "anon";
-grant trigger on table "public"."claims" to "anon";
-grant truncate on table "public"."claims" to "anon";
-grant update on table "public"."claims" to "anon";
 
-grant delete on table "public"."claims" to "authenticated";
 grant insert on table "public"."claims" to "authenticated";
 grant references on table "public"."claims" to "authenticated";
 grant select on table "public"."claims" to "authenticated";
-grant trigger on table "public"."claims" to "authenticated";
-grant truncate on table "public"."claims" to "authenticated";
-grant update on table "public"."claims" to "authenticated";
 
 grant delete on table "public"."claims" to "service_role";
 grant insert on table "public"."claims" to "service_role";
