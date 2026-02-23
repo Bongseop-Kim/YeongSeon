@@ -76,6 +76,9 @@ create index "idx_claims_user_id" on "public"."claims" ("user_id");
 create index "idx_claims_order_id" on "public"."claims" ("order_id");
 create index "idx_claims_order_item_id" on "public"."claims" ("order_item_id");
 create index "idx_claims_status" on "public"."claims" ("status");
+create unique index "idx_claims_active_per_item"
+on "public"."claims" ("order_item_id", "type")
+where "status" in ('접수', '처리중');
 
 -- ─────────────────────────────────────────────────────────────
 -- 4. RLS Policies
@@ -229,7 +232,7 @@ begin
     raise exception 'Invalid claim quantity';
   end if;
 
-  -- 7. Duplicate claim check (same order_item_id + type with active status)
+  -- 7. Duplicate claim pre-check (final race-safety enforced by unique index)
   if exists (
     select 1
     from claims
@@ -243,7 +246,7 @@ begin
   -- 8. Generate claim number
   v_claim_number := generate_claim_number();
 
-  -- 9. Insert claim
+  -- 9. Insert claim (atomic conflict handling via partial unique index)
   insert into claims (
     user_id,
     order_id,
@@ -264,7 +267,13 @@ begin
     p_description,
     v_claim_quantity
   )
+  on conflict (order_item_id, type) where (status in ('접수', '처리중'))
+  do nothing
   returning id into v_claim_id;
+
+  if v_claim_id is null then
+    raise exception 'Active claim already exists for this item';
+  end if;
 
   return jsonb_build_object(
     'claim_id', v_claim_id,
