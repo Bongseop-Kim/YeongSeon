@@ -31,6 +31,39 @@ import { useCreateCustomOrder } from "./api/custom-order-query";
 import { useImageUpload } from "./hooks/useImageUpload";
 import { toCreateCustomOrderRequest } from "@/features/custom-order/api/custom-order-mapper";
 
+type ShippingMessageTypeValue =
+  (typeof SHIPPING_MESSAGE_TYPE)[keyof typeof SHIPPING_MESSAGE_TYPE];
+
+interface ShippingMessageData {
+  type: ShippingMessageTypeValue;
+  addressId: string;
+}
+
+const isShippingMessageData = (
+  data: unknown
+): data is ShippingMessageData => {
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+
+  const candidate = data as Record<string, unknown>;
+  if (typeof candidate.type !== "string") {
+    return false;
+  }
+
+  const allowedTypes: ShippingMessageTypeValue[] = [
+    SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED,
+    SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
+    SHIPPING_MESSAGE_TYPE.ADDRESS_UPDATED,
+  ];
+
+  if (!allowedTypes.includes(candidate.type as ShippingMessageTypeValue)) {
+    return false;
+  }
+
+  return typeof candidate.addressId === "string" && candidate.addressId.length > 0;
+};
+
 const OrderPage = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode");
@@ -62,7 +95,9 @@ const OrderPage = () => {
         return;
       }
 
-      if (!event.data) return;
+      if (!isShippingMessageData(event.data)) {
+        return;
+      }
 
       switch (event.data.type) {
         case SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED:
