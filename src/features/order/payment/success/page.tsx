@@ -8,7 +8,6 @@ import { useOrderStore } from "@/store/order";
 import { useCartItems, useSetCartItems, cartKeys } from "@/features/cart/api/cart-query";
 import { useAuthStore } from "@/store/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { calculateOrderTotals } from "@/features/order/utils/calculated-order-totals";
 import { toast } from "@/lib/toast";
 import { Loader2 } from "lucide-react";
 
@@ -62,7 +61,6 @@ const PaymentSuccessPage = () => {
         const result = await createOrder({
           items: orderItems,
           shippingAddressId,
-          totals: calculateOrderTotals(orderItems),
         });
 
         // 3. 장바구니에서 주문한 아이템 제거
