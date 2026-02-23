@@ -157,11 +157,18 @@ const OrderFormPage = () => {
       });
     } catch (error) {
       // 사용자가 결제를 취소한 경우 등
+      const errorCode =
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        typeof (error as { code?: unknown }).code === "string"
+          ? ((error as { code: string }).code ?? "")
+          : "";
       const errorMessage =
         error instanceof Error
           ? error.message
           : "결제 요청 중 오류가 발생했습니다.";
-      if (errorMessage !== "USER_CANCEL") {
+      if (errorCode !== "USER_CANCEL") {
         toast.error(errorMessage);
       }
     } finally {
