@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
@@ -77,16 +77,22 @@ const OrderPage = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null
   );
+  const initializedDefaultAddressRef = useRef(false);
 
   const { data: defaultAddress } = useDefaultShippingAddress();
   const { data: addresses } = useShippingAddresses();
 
   // 기본 배송지가 있으면 자동 선택
   useEffect(() => {
-    if (defaultAddress && !selectedAddressId) {
+    if (
+      defaultAddress &&
+      !initializedDefaultAddressRef.current &&
+      !selectedAddressId
+    ) {
       setSelectedAddressId(defaultAddress.id);
+      initializedDefaultAddressRef.current = true;
     }
-  }, [defaultAddress, selectedAddressId]);
+  }, [defaultAddress]);
 
   // 팝업에서 배송지 선택/생성/업데이트 시 처리
   useEffect(() => {
