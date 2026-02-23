@@ -25,32 +25,50 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
     const paymentMethodRef = useRef<HTMLDivElement>(null);
     const agreementRef = useRef<HTMLDivElement>(null);
     const [ready, setReady] = useState(false);
+    const [initError, setInitError] = useState<string | null>(null);
 
     useEffect(() => {
       let cancelled = false;
 
       const init = async () => {
-        const tossPayments = await loadTossPayments(CLIENT_KEY);
-        if (cancelled) return;
+        if (!CLIENT_KEY) {
+          const message = "VITE_TOSS_CLIENT_KEY가 설정되지 않아 결제위젯을 초기화할 수 없습니다.";
+          console.error(`[payment-widget] ${message}`);
+          if (!cancelled) {
+            setInitError(message);
+          }
+          return;
+        }
 
-        const widgets = tossPayments.widgets({ customerKey });
-        widgetsRef.current = widgets;
+        try {
+          const tossPayments = await loadTossPayments(CLIENT_KEY);
+          if (cancelled) return;
 
-        await widgets.setAmount({ currency: "KRW", value: amount });
-        if (cancelled) return;
+          const widgets = tossPayments.widgets({ customerKey });
+          widgetsRef.current = widgets;
 
-        await Promise.all([
-          widgets.renderPaymentMethods({
-            selector: "#payment-method",
-          }),
-          widgets.renderAgreement({
-            selector: "#payment-agreement",
-            variantKey: "AGREEMENT",
-          }),
-        ]);
+          await widgets.setAmount({ currency: "KRW", value: amount });
+          if (cancelled) return;
 
-        if (!cancelled) {
-          setReady(true);
+          await Promise.all([
+            widgets.renderPaymentMethods({
+              selector: "#payment-method",
+            }),
+            widgets.renderAgreement({
+              selector: "#payment-agreement",
+              variantKey: "AGREEMENT",
+            }),
+          ]);
+
+          if (!cancelled) {
+            setReady(true);
+          }
+        } catch (error) {
+          const message = "결제위젯 초기화에 실패했습니다.";
+          console.error(`[payment-widget] ${message}`, error);
+          if (!cancelled) {
+            setInitError(message);
+          }
         }
       };
 
@@ -70,6 +88,9 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
 
     useImperativeHandle(ref, () => ({
       requestPayment: async (params) => {
+        if (initError) {
+          throw new Error(initError);
+        }
         if (!widgetsRef.current) {
           throw new Error("결제위젯이 초기화되지 않았습니다.");
         }
@@ -83,6 +104,10 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
         });
       },
     }));
+
+    if (initError) {
+      return null;
+    }
 
     return (
       <div>
