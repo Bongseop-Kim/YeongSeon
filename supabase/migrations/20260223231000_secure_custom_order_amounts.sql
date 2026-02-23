@@ -83,6 +83,7 @@ declare
   v_fold7 boolean;
   v_brand_label boolean;
   v_care_label boolean;
+  v_exclusive_style_count integer;
 
   v_sewing_per_unit integer;
   v_unit_fabric_cost integer;
@@ -171,6 +172,15 @@ begin
   v_fold7 := coalesce((p_options->>'fold7')::boolean, false);
   v_brand_label := coalesce((p_options->>'brandLabel')::boolean, false);
   v_care_label := coalesce((p_options->>'careLabel')::boolean, false);
+  v_exclusive_style_count :=
+    (case when v_dimple then 1 else 0 end)
+    + (case when v_spoderato then 1 else 0 end)
+    + (case when v_fold7 then 1 else 0 end);
+
+  -- dimple/spoderato/fold7 are treated as mutually exclusive sewing styles.
+  if v_exclusive_style_count > 1 then
+    raise exception 'Only one of dimple, spoderato, or fold7 can be selected';
+  end if;
 
   v_sewing_per_unit := v_sewing_per_cost;
 
@@ -231,7 +241,9 @@ begin
       raise exception 'Unsupported design/fabric option for custom order pricing';
     end if;
 
-    v_fabric_amount := ((p_quantity * v_unit_fabric_cost) / 4)
+    v_fabric_amount := round(
+      (p_quantity::numeric * v_unit_fabric_cost::numeric) / 4
+    )::integer
       + case when v_design_type = 'YARN_DYED' then v_yarn_dyed_design_cost else 0 end;
   end if;
 
