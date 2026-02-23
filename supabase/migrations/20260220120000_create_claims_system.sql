@@ -139,6 +139,7 @@ grant update on table "public"."claims" to "service_role";
 create or replace function public.generate_claim_number()
 returns text
 language plpgsql
+security invoker
 set search_path = public
 as $function$
 declare
