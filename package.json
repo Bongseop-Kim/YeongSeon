@@ -12,7 +12,8 @@
     "type-check": "turbo type-check",
     "db:reset": "supabase db reset",
     "db:diff": "supabase db diff",
-    "db:push": "supabase db push"
+    "db:push": "supabase db push",
+    "preinstall": "npx only-allow pnpm"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
