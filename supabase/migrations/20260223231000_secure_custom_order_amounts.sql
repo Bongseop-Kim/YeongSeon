@@ -1231,6 +1231,7 @@ CREATE TABLE IF NOT EXISTS "public"."order_items" (
     "line_discount_amount" integer DEFAULT 0 NOT NULL,
     CONSTRAINT "order_items_discount_amount_check" CHECK (("discount_amount" >= 0)),
     CONSTRAINT "order_items_item_type_check" CHECK (("item_type" = ANY (ARRAY['product'::"text", 'reform'::"text"]))),
+    CONSTRAINT "order_items_item_consistency_check" CHECK (((("item_type" = 'product'::"text") AND ("product_id" IS NOT NULL) AND ("reform_data" IS NULL)) OR (("item_type" = 'reform'::"text") AND ("product_id" IS NULL) AND ("reform_data" IS NOT NULL)))),
     CONSTRAINT "order_items_line_discount_amount_check" CHECK (("line_discount_amount" >= 0)),
     CONSTRAINT "order_items_quantity_check" CHECK (("quantity" > 0)),
     CONSTRAINT "order_items_unit_price_check" CHECK (("unit_price" >= 0))
