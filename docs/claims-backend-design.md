@@ -1,6 +1,6 @@
-# Claims Backend Design
+# 클레임 백엔드 설계
 
-마이그레이션: `supabase/migrations/20260220120000_create_claims_system.sql`
+스키마: `supabase/schemas/60_claims.sql`, `supabase/schemas/91_functions.sql`
 
 ## 설계 결정
 
