@@ -182,8 +182,9 @@ const OrderPage = () => {
       return;
     }
 
-    const { referenceImages: _referenceImages, ...optionsWithoutReferenceImages } =
-      watchedValues;
+    const optionsWithoutReferenceImages = Object.fromEntries(
+      Object.entries(watchedValues).filter(([key]) => key !== "referenceImages")
+    ) as Omit<OrderOptions, "referenceImages">;
 
     try {
       await createCustomOrder.mutateAsync({
