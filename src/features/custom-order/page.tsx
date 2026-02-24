@@ -183,11 +183,14 @@ const OrderPage = () => {
       return;
     }
 
+    const { referenceImages: _referenceImages, ...optionsWithoutReferenceImages } =
+      watchedValues;
+
     try {
       await createCustomOrder.mutateAsync({
         ...toCreateCustomOrderRequest({
           shippingAddressId: selectedAddressId,
-          options: watchedValues,
+          options: optionsWithoutReferenceImages,
           referenceImageUrls: imageUpload.getImageUrls(),
           additionalNotes: watchedValues.additionalNotes,
           sample: watchedValues.sample,

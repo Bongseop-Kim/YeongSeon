@@ -1,4 +1,5 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
+
 import type {
   CreateCustomOrderOptionsDto,
   CreateCustomOrderOptionsDtoSnakeCase,
@@ -6,6 +7,7 @@ import type {
   CreateCustomOrderRequestDto,
 } from "@/features/custom-order/types/dto/custom-order-input";
 
+type OrderOptionsWithoutReferenceImages = Omit<OrderOptions, "referenceImages">;
 const normalizeEnum = <T extends string>(
   value: unknown,
   allowed: readonly T[]
@@ -45,7 +47,7 @@ const normalizeReferenceImageUrls = (urls: string[]): string[] => {
 };
 
 export const toCreateCustomOrderOptionsDto = (
-  options: OrderOptions
+  options: OrderOptionsWithoutReferenceImages
 ): CreateCustomOrderOptionsDto => ({
   fabricProvided: normalizeBoolean(options.fabricProvided),
   reorder: normalizeBoolean(options.reorder),
@@ -71,7 +73,7 @@ export const toCreateCustomOrderOptionsDto = (
 
 interface ToCreateCustomOrderRequestInput {
   shippingAddressId: string;
-  options: OrderOptions;
+  options: OrderOptionsWithoutReferenceImages;
   referenceImageUrls: string[];
   additionalNotes: string;
   sample: boolean;
