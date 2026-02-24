@@ -54,3 +54,20 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access to products"
   ON public.products FOR SELECT
   USING (true);
+
+-- Admin policies
+CREATE POLICY "Admins can insert products"
+  ON public.products FOR INSERT
+  TO authenticated
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admins can update products"
+  ON public.products FOR UPDATE
+  TO authenticated
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admins can delete products"
+  ON public.products FOR DELETE
+  TO authenticated
+  USING (public.is_admin());

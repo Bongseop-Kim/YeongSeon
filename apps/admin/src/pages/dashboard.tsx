@@ -1,0 +1,134 @@
+import { useList } from "@refinedev/core";
+import { Card, Col, Row, Statistic, Table, Tag, Typography } from "antd";
+import {
+  ShoppingOutlined,
+  DollarOutlined,
+  ExceptionOutlined,
+  QuestionCircleOutlined,
+} from "@ant-design/icons";
+import type { AdminOrderListRowDTO } from "@yeongseon/shared";
+
+const { Title } = Typography;
+
+const STATUS_COLORS: Record<string, string> = {
+  대기중: "default",
+  진행중: "processing",
+  배송중: "blue",
+  완료: "success",
+  취소: "error",
+};
+
+export default function DashboardPage() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { result: todayOrdersResult } = useList<AdminOrderListRowDTO>({
+    resource: "admin_order_list_view",
+    filters: [{ field: "date", operator: "eq", value: today }],
+    pagination: { pageSize: 1000 },
+  });
+
+  const { result: recentOrdersResult } = useList<AdminOrderListRowDTO>({
+    resource: "admin_order_list_view",
+    sorters: [{ field: "created_at", order: "desc" }],
+    pagination: { pageSize: 5 },
+  });
+
+  const { result: pendingClaimsResult } = useList({
+    resource: "admin_claim_list_view",
+    filters: [
+      {
+        operator: "or",
+        value: [
+          { field: "status", operator: "eq", value: "접수" },
+          { field: "status", operator: "eq", value: "처리중" },
+        ],
+      },
+    ],
+    pagination: { pageSize: 1 },
+  });
+
+  const { result: pendingInquiriesResult } = useList({
+    resource: "inquiries",
+    filters: [{ field: "status", operator: "eq", value: "답변대기" }],
+    pagination: { pageSize: 1 },
+  });
+
+  const todayOrderCount = todayOrdersResult.data?.length ?? 0;
+  const todayRevenue =
+    todayOrdersResult.data?.reduce(
+      (sum: number, o: AdminOrderListRowDTO) => sum + (o.totalPrice ?? 0),
+      0
+    ) ?? 0;
+
+  return (
+    <>
+      <Title level={4}>대시보드</Title>
+
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="오늘 주문"
+              value={todayOrderCount}
+              suffix="건"
+              prefix={<ShoppingOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="오늘 매출"
+              value={todayRevenue}
+              suffix="원"
+              prefix={<DollarOutlined />}
+              formatter={(v) => Number(v).toLocaleString()}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="미처리 클레임"
+              value={pendingClaimsResult.total ?? 0}
+              suffix="건"
+              prefix={<ExceptionOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="미답변 문의"
+              value={pendingInquiriesResult.total ?? 0}
+              suffix="건"
+              prefix={<QuestionCircleOutlined />}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <Title level={5}>최근 주문</Title>
+      <Table
+        dataSource={recentOrdersResult.data}
+        rowKey="id"
+        pagination={false}
+        size="small"
+      >
+        <Table.Column dataIndex="orderNumber" title="주문번호" />
+        <Table.Column dataIndex="date" title="주문일" />
+        <Table.Column dataIndex="customerName" title="고객명" />
+        <Table.Column
+          dataIndex="status"
+          title="상태"
+          render={(v: string) => <Tag color={STATUS_COLORS[v]}>{v}</Tag>}
+        />
+        <Table.Column
+          dataIndex="totalPrice"
+          title="결제금액"
+          render={(v: number) => `${v?.toLocaleString()}원`}
+        />
+      </Table>
+    </>
+  );
+}

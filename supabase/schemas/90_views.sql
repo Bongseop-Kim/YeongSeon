@@ -210,3 +210,79 @@ LEFT JOIN LATERAL (
   LIMIT 1
 ) uc ON true
 WHERE cl.user_id = auth.uid();
+
+-- =============================================================
+-- Admin Views
+-- =============================================================
+
+-- ── admin_order_list_view ──────────────────────────────────
+CREATE OR REPLACE VIEW public.admin_order_list_view
+WITH (security_invoker = true)
+AS
+SELECT
+  o.id,
+  o.user_id       AS "userId",
+  o.order_number   AS "orderNumber",
+  to_char(o.created_at, 'YYYY-MM-DD') AS date,
+  o.status,
+  o.total_price    AS "totalPrice",
+  o.original_price AS "originalPrice",
+  o.total_discount AS "totalDiscount",
+  o.created_at,
+  o.updated_at,
+  p.name           AS "customerName",
+  p.phone          AS "customerPhone"
+FROM public.orders o
+LEFT JOIN public.profiles p ON p.id = o.user_id;
+
+-- ── admin_order_item_view ──────────────────────────────────
+CREATE OR REPLACE VIEW public.admin_order_item_view
+WITH (security_invoker = true)
+AS
+SELECT
+  oi.id,
+  oi.order_id      AS "orderId",
+  oi.item_id       AS "itemId",
+  oi.item_type     AS "itemType",
+  oi.product_id    AS "productId",
+  oi.selected_option_id AS "selectedOptionId",
+  oi.reform_data   AS "reformData",
+  oi.quantity,
+  oi.unit_price    AS "unitPrice",
+  oi.discount_amount     AS "discountAmount",
+  oi.line_discount_amount AS "lineDiscountAmount",
+  oi.applied_user_coupon_id AS "appliedUserCouponId",
+  oi.created_at,
+  pr.name  AS "productName",
+  pr.code  AS "productCode",
+  pr.image AS "productImage"
+FROM public.order_items oi
+LEFT JOIN public.products pr ON pr.id = oi.product_id;
+
+-- ── admin_claim_list_view ──────────────────────────────────
+CREATE OR REPLACE VIEW public.admin_claim_list_view
+WITH (security_invoker = true)
+AS
+SELECT
+  cl.id,
+  cl.user_id      AS "userId",
+  cl.claim_number  AS "claimNumber",
+  to_char(cl.created_at, 'YYYY-MM-DD') AS date,
+  cl.status,
+  cl.type,
+  cl.reason,
+  cl.description,
+  cl.quantity      AS "claimQuantity",
+  cl.created_at,
+  cl.updated_at,
+  o.id             AS "orderId",
+  o.order_number   AS "orderNumber",
+  p.name           AS "customerName",
+  p.phone          AS "customerPhone",
+  oi.item_type     AS "itemType",
+  pr.name          AS "productName"
+FROM public.claims cl
+JOIN public.orders o ON o.id = cl.order_id
+JOIN public.order_items oi ON oi.id = cl.order_item_id
+LEFT JOIN public.products pr ON pr.id = oi.product_id
+LEFT JOIN public.profiles p ON p.id = cl.user_id;

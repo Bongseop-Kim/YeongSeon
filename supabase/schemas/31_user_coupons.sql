@@ -43,3 +43,20 @@ CREATE POLICY "user_coupons_service_all"
   ON public.user_coupons
   USING (auth.role() = 'service_role')
   WITH CHECK (auth.role() = 'service_role');
+
+-- Admin policies
+CREATE POLICY "Admins can view all user coupons"
+  ON public.user_coupons FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
+CREATE POLICY "Admins can insert user coupons"
+  ON public.user_coupons FOR INSERT
+  TO authenticated
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admins can update user coupons"
+  ON public.user_coupons FOR UPDATE
+  TO authenticated
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());

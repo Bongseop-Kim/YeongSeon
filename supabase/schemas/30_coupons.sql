@@ -42,3 +42,20 @@ CREATE POLICY "Allow service role full access to coupons"
   ON public.coupons
   USING (auth.role() = 'service_role')
   WITH CHECK (auth.role() = 'service_role');
+
+-- Admin policies
+CREATE POLICY "Admins can insert coupons"
+  ON public.coupons FOR INSERT
+  TO authenticated
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admins can update coupons"
+  ON public.coupons FOR UPDATE
+  TO authenticated
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admins can delete coupons"
+  ON public.coupons FOR DELETE
+  TO authenticated
+  USING (public.is_admin());

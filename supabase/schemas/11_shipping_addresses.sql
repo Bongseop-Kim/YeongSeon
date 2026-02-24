@@ -41,3 +41,9 @@ CREATE POLICY "Enable update for users based on user_id"
 CREATE POLICY "Enable delete for users based on user_id"
   ON public.shipping_addresses FOR DELETE
   USING ((SELECT auth.uid()) = user_id);
+
+-- Admin policies
+CREATE POLICY "Admins can view all shipping addresses"
+  ON public.shipping_addresses FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
