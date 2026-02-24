@@ -187,7 +187,7 @@ const OrderPage = () => {
       additionalNotes,
       sample,
       ...optionsWithoutReferenceImages
-    }: Omit<OrderOptions, "referenceImages"> = watchedValues;
+    }: OrderOptions = watchedValues;
 
     try {
       await createCustomOrder.mutateAsync({

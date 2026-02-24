@@ -59,6 +59,18 @@ CREATE POLICY "Users can delete their own pending inquiries"
   TO authenticated
   USING (auth.uid() = user_id AND status = '답변대기');
 
+CREATE POLICY "Admins can view all inquiries"
+  ON public.inquiries FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
 CREATE POLICY "Admins can answer inquiries"
   ON public.inquiries FOR UPDATE
   TO authenticated
@@ -90,3 +102,5 @@ CREATE POLICY "inquiries_service_all"
 -- Privilege hardening for user updates
 REVOKE UPDATE ON TABLE public.inquiries FROM authenticated;
 GRANT UPDATE (title, content) ON TABLE public.inquiries TO authenticated;
+-- Admin columns for answering inquiries
+GRANT UPDATE (status, answer, answer_date) ON TABLE public.inquiries TO authenticated;
