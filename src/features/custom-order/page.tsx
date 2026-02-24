@@ -86,8 +86,7 @@ const OrderPage = () => {
   useEffect(() => {
     if (
       defaultAddress &&
-      !initializedDefaultAddressRef.current &&
-      !selectedAddressId
+      !initializedDefaultAddressRef.current
     ) {
       setSelectedAddressId(defaultAddress.id);
       initializedDefaultAddressRef.current = true;
