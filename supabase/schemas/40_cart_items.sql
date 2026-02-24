@@ -28,7 +28,9 @@ CREATE TABLE IF NOT EXISTS public.cart_items (
       (item_type = 'reform' AND product_id IS NULL AND reform_data IS NOT NULL)
     ),
   CONSTRAINT cart_items_user_id_fkey
-    FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE,
+  CONSTRAINT cart_items_applied_user_coupon_id_fkey
+    FOREIGN KEY (applied_user_coupon_id) REFERENCES public.user_coupons (id) ON DELETE SET NULL
 );
 
 -- Indexes
