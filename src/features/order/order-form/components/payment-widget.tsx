@@ -24,6 +24,7 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
     const widgetsRef = useRef<TossPaymentsWidgets | null>(null);
     const paymentMethodRef = useRef<HTMLDivElement>(null);
     const agreementRef = useRef<HTMLDivElement>(null);
+    const amountRef = useRef(amount);
     const [ready, setReady] = useState(false);
     const [initError, setInitError] = useState<string | null>(null);
 
@@ -47,7 +48,7 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
           const widgets = tossPayments.widgets({ customerKey });
           widgetsRef.current = widgets;
 
-          await widgets.setAmount({ currency: "KRW", value: amount });
+          await widgets.setAmount({ currency: "KRW", value: amountRef.current });
           if (cancelled) return;
 
           await Promise.all([
@@ -78,6 +79,10 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
         cancelled = true;
       };
     }, [customerKey]);
+
+    useEffect(() => {
+      amountRef.current = amount;
+    }, [amount]);
 
     // 금액 변경 시 업데이트
     useEffect(() => {
