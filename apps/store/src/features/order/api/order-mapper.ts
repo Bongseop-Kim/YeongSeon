@@ -4,6 +4,7 @@ import type {
   OrderItemRowDTO,
   OrderItemDTO,
   OrderViewDTO,
+  OrderDetailRowDTO,
 } from "@yeongseon/shared/types/dto/order-view";
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
@@ -87,6 +88,39 @@ const toOrderItem = (item: OrderItemDTO): Order["items"][number] => {
 export const toOrderView = (order: OrderViewDTO): Order => ({
   ...order,
   items: order.items.map(toOrderItem),
+  shippingInfo: null,
+  trackingInfo: null,
+});
+
+export const toOrderViewFromDetail = (
+  detail: OrderDetailRowDTO,
+  items: OrderItemDTO[],
+): Order => ({
+  id: detail.id,
+  orderNumber: detail.orderNumber,
+  date: detail.date,
+  status: detail.status,
+  totalPrice: detail.totalPrice,
+  items: items.map(toOrderItem),
+  shippingInfo: detail.recipientName
+    ? {
+        recipientName: detail.recipientName,
+        recipientPhone: detail.recipientPhone ?? "",
+        address: detail.shippingAddress ?? "",
+        addressDetail: detail.shippingAddressDetail ?? null,
+        postalCode: detail.shippingPostalCode ?? "",
+        deliveryMemo: detail.deliveryMemo ?? null,
+        deliveryRequest: detail.deliveryRequest ?? null,
+      }
+    : null,
+  trackingInfo:
+    detail.courierCompany && detail.trackingNumber
+      ? {
+          courierCompany: detail.courierCompany,
+          trackingNumber: detail.trackingNumber,
+          shippedAt: detail.shippedAt ?? null,
+        }
+      : null,
 });
 
 export const fromOrderItemRowDTO = (item: OrderItemRowDTO): OrderItemDTO => {

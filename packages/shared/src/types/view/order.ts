@@ -30,6 +30,24 @@ export interface ReformOrderItem {
 // 주문 아이템 (일반 상품 또는 수선)
 export type OrderItem = ProductOrderItem | ReformOrderItem;
 
+// 배송지 정보
+export interface ShippingInfo {
+  recipientName: string;
+  recipientPhone: string;
+  address: string;
+  addressDetail: string | null;
+  postalCode: string;
+  deliveryMemo: string | null;
+  deliveryRequest: string | null;
+}
+
+// 배송 추적 정보
+export interface TrackingInfo {
+  courierCompany: string;
+  trackingNumber: string;
+  shippedAt: string | null;
+}
+
 // 주문 (한 주문에 여러 상품이 포함됨)
 export interface Order {
   id: string;
@@ -38,4 +56,6 @@ export interface Order {
   status: OrderStatus;
   items: OrderItem[]; // 주문에 포함된 상품들
   totalPrice: number; // 총 주문 금액
+  shippingInfo: ShippingInfo | null;
+  trackingInfo: TrackingInfo | null;
 }

@@ -13,7 +13,8 @@ import React from "react";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { useOrderDetail } from "@/features/order/api/order-query";
 import { Empty } from "@/components/composite/empty";
-import type { OrderItem, OrderStatus } from "@yeongseon/shared/types/view/order";
+import type { OrderItem, OrderStatus, ShippingInfo, TrackingInfo } from "@yeongseon/shared/types/view/order";
+import { buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies";
 import {
   type ClaimActionType,
   CLAIM_ACTION_LABEL,
@@ -120,6 +121,62 @@ const OrderDetailSkeleton = () => (
   </MainLayout>
 );
 
+const ShippingInfoSection = ({ info }: { info: ShippingInfo }) => (
+  <>
+    <p>
+      <span className="text-zinc-500">수령인:</span> {info.recipientName}
+    </p>
+    <p>
+      <span className="text-zinc-500">연락처:</span> {info.recipientPhone}
+    </p>
+    <p>
+      <span className="text-zinc-500">주소:</span> ({info.postalCode}){" "}
+      {info.address}
+      {info.addressDetail && ` ${info.addressDetail}`}
+    </p>
+    {info.deliveryMemo && (
+      <p>
+        <span className="text-zinc-500">배송메모:</span> {info.deliveryMemo}
+      </p>
+    )}
+    {info.deliveryRequest && (
+      <p>
+        <span className="text-zinc-500">배송요청:</span> {info.deliveryRequest}
+      </p>
+    )}
+  </>
+);
+
+const TrackingInfoSection = ({ info }: { info: TrackingInfo }) => {
+  const trackingUrl = buildTrackingUrl(info.courierCompany, info.trackingNumber);
+  return (
+    <>
+      <p>
+        <span className="text-zinc-500">택배사:</span> {info.courierCompany}
+      </p>
+      <p>
+        <span className="text-zinc-500">송장번호:</span> {info.trackingNumber}
+      </p>
+      {info.shippedAt && (
+        <p>
+          <span className="text-zinc-500">발송일시:</span>{" "}
+          {formatDate(info.shippedAt)}
+        </p>
+      )}
+      {trackingUrl && (
+        <a
+          href={trackingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-1 text-blue-600 underline"
+        >
+          배송조회
+        </a>
+      )}
+    </>
+  );
+};
+
 const OrderDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -217,10 +274,27 @@ const OrderDetailPage = () => {
                 <CardTitle>배송지 정보</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 text-sm">
-                <p className="text-zinc-500">
-                  현재 주문 상세 API에는 배송지 정보가 포함되지 않습니다.
-                </p>
+                {order.shippingInfo ? (
+                  <ShippingInfoSection info={order.shippingInfo} />
+                ) : (
+                  <p className="text-zinc-500">배송지 정보가 없습니다.</p>
+                )}
               </CardContent>
+
+              {/* 배송 추적 정보 */}
+              {order.trackingInfo && (
+                <>
+                  <CardContent>
+                    <Separator />
+                  </CardContent>
+                  <CardHeader>
+                    <CardTitle>배송 추적</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <TrackingInfoSection info={order.trackingInfo} />
+                  </CardContent>
+                </>
+              )}
 
               <CardContent>
                 <Separator />

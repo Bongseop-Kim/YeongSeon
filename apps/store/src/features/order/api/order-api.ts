@@ -8,6 +8,7 @@ import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-out
 import type {
   OrderItemRowDTO,
   OrderListRowDTO,
+  OrderDetailRowDTO,
   OrderViewDTO,
 } from "@yeongseon/shared/types/dto/order-view";
 import type { Order } from "@yeongseon/shared/types/view/order";
@@ -15,10 +16,12 @@ import {
   fromOrderItemRowDTO,
   toOrderItemInputDTO,
   toOrderView,
+  toOrderViewFromDetail,
 } from "@/features/order/api/order-mapper";
 import { normalizeKeyword, type ListFilters } from "@/features/order/api/list-filters";
 
 const ORDER_LIST_VIEW = "order_list_view";
+const ORDER_DETAIL_VIEW = "order_detail_view";
 const ORDER_ITEM_VIEW = "order_item_view";
 
 /**
@@ -137,7 +140,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
  */
 export const getOrder = async (orderId: string): Promise<Order | null> => {
   const { data: order, error: orderError } = await supabase
-    .from(ORDER_LIST_VIEW)
+    .from(ORDER_DETAIL_VIEW)
     .select("*")
     .eq("id", orderId)
     .maybeSingle();
@@ -163,15 +166,6 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
   const itemRows = (items as OrderItemRowDTO[] | null) ?? [];
   const mappedItems: OrderViewDTO["items"] = itemRows.map(fromOrderItemRowDTO);
 
-  const orderRow = order as OrderListRowDTO;
-  const record: OrderViewDTO = {
-    id: orderRow.id,
-    orderNumber: orderRow.orderNumber,
-    date: orderRow.date,
-    status: orderRow.status,
-    items: mappedItems,
-    totalPrice: orderRow.totalPrice,
-  };
-
-  return toOrderView(record);
+  const detailRow = order as OrderDetailRowDTO;
+  return toOrderViewFromDetail(detailRow, mappedItems);
 };

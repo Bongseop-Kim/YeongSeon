@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS public.orders (
   original_price      integer     NOT NULL,
   total_discount      integer     NOT NULL DEFAULT 0,
   status              text        NOT NULL DEFAULT '대기중',
+  courier_company     text,
+  tracking_number     text,
+  shipped_at          timestamptz,
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now(),
 
@@ -61,4 +64,4 @@ CREATE POLICY "Admins can update order status"
 
 -- Privilege hardening
 REVOKE UPDATE ON TABLE public.orders FROM authenticated;
-GRANT UPDATE (status) ON TABLE public.orders TO authenticated;
+GRANT UPDATE (status, courier_company, tracking_number, shipped_at) ON TABLE public.orders TO authenticated;

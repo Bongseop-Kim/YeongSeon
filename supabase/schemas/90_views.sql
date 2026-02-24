@@ -55,6 +55,31 @@ SELECT
 FROM public.orders o
 WHERE o.user_id = auth.uid();
 
+-- ── order_detail_view ───────────────────────────────────────
+CREATE OR REPLACE VIEW public.order_detail_view
+WITH (security_invoker = true)
+AS
+SELECT
+  o.id,
+  o.order_number    AS "orderNumber",
+  to_char(o.created_at, 'YYYY-MM-DD') AS date,
+  o.status,
+  o.total_price     AS "totalPrice",
+  o.courier_company AS "courierCompany",
+  o.tracking_number AS "trackingNumber",
+  o.shipped_at      AS "shippedAt",
+  o.created_at,
+  sa.recipient_name   AS "recipientName",
+  sa.recipient_phone  AS "recipientPhone",
+  sa.address          AS "shippingAddress",
+  sa.address_detail   AS "shippingAddressDetail",
+  sa.postal_code      AS "shippingPostalCode",
+  sa.delivery_memo    AS "deliveryMemo",
+  sa.delivery_request AS "deliveryRequest"
+FROM public.orders o
+LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id
+WHERE o.user_id = auth.uid();
+
 -- ── order_item_view ──────────────────────────────────────────
 CREATE OR REPLACE VIEW public.order_item_view
 WITH (security_invoker = true)
@@ -247,12 +272,48 @@ SELECT
   o.total_price    AS "totalPrice",
   o.original_price AS "originalPrice",
   o.total_discount AS "totalDiscount",
+  o.courier_company  AS "courierCompany",
+  o.tracking_number  AS "trackingNumber",
+  o.shipped_at       AS "shippedAt",
   o.created_at,
   o.updated_at,
   p.name           AS "customerName",
-  p.phone          AS "customerPhone"
+  p.phone          AS "customerPhone",
+  public.admin_get_email(o.user_id) AS "customerEmail"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id;
+
+-- ── admin_order_detail_view ──────────────────────────────
+CREATE OR REPLACE VIEW public.admin_order_detail_view
+WITH (security_invoker = true)
+AS
+SELECT
+  o.id,
+  o.user_id        AS "userId",
+  o.order_number   AS "orderNumber",
+  to_char(o.created_at, 'YYYY-MM-DD') AS date,
+  o.status,
+  o.total_price    AS "totalPrice",
+  o.original_price AS "originalPrice",
+  o.total_discount AS "totalDiscount",
+  o.courier_company  AS "courierCompany",
+  o.tracking_number  AS "trackingNumber",
+  o.shipped_at       AS "shippedAt",
+  o.created_at,
+  o.updated_at,
+  p.name           AS "customerName",
+  p.phone          AS "customerPhone",
+  public.admin_get_email(o.user_id) AS "customerEmail",
+  sa.recipient_name   AS "recipientName",
+  sa.recipient_phone  AS "recipientPhone",
+  sa.address          AS "shippingAddress",
+  sa.address_detail   AS "shippingAddressDetail",
+  sa.postal_code      AS "shippingPostalCode",
+  sa.delivery_memo    AS "deliveryMemo",
+  sa.delivery_request AS "deliveryRequest"
+FROM public.orders o
+LEFT JOIN public.profiles p ON p.id = o.user_id
+LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id;
 
 -- ── admin_order_item_view ──────────────────────────────────
 CREATE OR REPLACE VIEW public.admin_order_item_view
