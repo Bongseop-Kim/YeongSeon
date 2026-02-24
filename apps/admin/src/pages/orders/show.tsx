@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useList, useUpdate } from "@refinedev/core";
+import { useShow, useList, useUpdate, useOne } from "@refinedev/core";
 import {
   Descriptions,
   Tag,
@@ -8,11 +8,20 @@ import {
   Space,
   Modal,
   Typography,
+  Input,
+  Select,
+  message,
 } from "antd";
+import { useState, useEffect } from "react";
 import type {
-  AdminOrderListRowDTO,
+  AdminOrderDetailRowDTO,
   AdminOrderItemRowDTO,
+  AdminSettingRowDTO,
 } from "@yeongseon/shared";
+import {
+  COURIER_COMPANY_NAMES,
+  buildTrackingUrl,
+} from "@yeongseon/shared/constants/courier-companies";
 
 const { Title } = Typography;
 
@@ -31,8 +40,8 @@ const STATUS_FLOW: Record<string, string> = {
 };
 
 export default function OrderShow() {
-  const { query: queryResult } = useShow<AdminOrderListRowDTO>({
-    resource: "admin_order_list_view",
+  const { query: queryResult } = useShow<AdminOrderDetailRowDTO>({
+    resource: "admin_order_detail_view",
   });
   const order = queryResult?.data?.data;
 
@@ -42,7 +51,32 @@ export default function OrderShow() {
     queryOptions: { enabled: !!order?.id },
   });
 
+  const { data: defaultCourierSetting } = useOne<AdminSettingRowDTO>({
+    resource: "admin_settings",
+    id: "default_courier_company",
+    meta: { idColumnName: "key" },
+    queryOptions: { enabled: true },
+  });
+
   const { mutate: updateOrder, mutation: updateMutation } = useUpdate();
+
+  const [courierCompany, setCourierCompany] = useState<string>("");
+  const [trackingNumber, setTrackingNumber] = useState<string>("");
+
+  useEffect(() => {
+    if (order) {
+      if (courierCompany === "") {
+        setCourierCompany(
+          order.courierCompany ??
+            defaultCourierSetting?.data?.value ??
+            ""
+        );
+      }
+      if (trackingNumber === "") {
+        setTrackingNumber(order.trackingNumber ?? "");
+      }
+    }
+  }, [order, defaultCourierSetting, courierCompany, trackingNumber]);
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === "취소") {
@@ -62,14 +96,42 @@ export default function OrderShow() {
       return;
     }
 
+    const values: Record<string, unknown> = { status: newStatus };
+    if (newStatus === "배송중" && !order?.shippedAt) {
+      values.shipped_at = new Date().toISOString();
+    }
+
     updateOrder({
       resource: "orders",
       id: order!.id,
-      values: { status: newStatus },
+      values,
     });
   };
 
+  const handleSaveTracking = () => {
+    if (!order) return;
+    updateOrder(
+      {
+        resource: "orders",
+        id: order.id,
+        values: {
+          courier_company: courierCompany || null,
+          tracking_number: trackingNumber || null,
+        },
+      },
+      {
+        onSuccess: () => {
+          message.success("배송 정보가 저장되었습니다.");
+        },
+      },
+    );
+  };
+
   const nextStatus = order?.status ? STATUS_FLOW[order.status] : undefined;
+  const trackingUrl =
+    courierCompany && trackingNumber
+      ? buildTrackingUrl(courierCompany, trackingNumber)
+      : null;
 
   return (
     <Show>
@@ -84,6 +146,9 @@ export default function OrderShow() {
         </Descriptions.Item>
         <Descriptions.Item label="연락처">
           {order?.customerPhone ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="이메일">
+          {order?.customerEmail ?? "-"}
         </Descriptions.Item>
         <Descriptions.Item label="상태">
           {order?.status && (
@@ -119,6 +184,73 @@ export default function OrderShow() {
           >
             취소 처리
           </Button>
+        )}
+      </Space>
+
+      <Title level={5}>배송지 정보</Title>
+      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+        <Descriptions.Item label="수령인">
+          {order?.recipientName ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="연락처">
+          {order?.recipientPhone ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="우편번호">
+          {order?.shippingPostalCode ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="주소" span={2}>
+          {order?.shippingAddress ?? "-"}
+          {order?.shippingAddressDetail && ` ${order.shippingAddressDetail}`}
+        </Descriptions.Item>
+        <Descriptions.Item label="배송메모">
+          {order?.deliveryMemo ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="배송요청사항">
+          {order?.deliveryRequest ?? "-"}
+        </Descriptions.Item>
+      </Descriptions>
+
+      <Title level={5}>배송 정보</Title>
+      <Space direction="vertical" style={{ width: "100%", marginBottom: 24 }}>
+        <Space wrap>
+          <Select
+            value={courierCompany || undefined}
+            placeholder="택배사 선택"
+            onChange={setCourierCompany}
+            style={{ width: 180 }}
+            options={COURIER_COMPANY_NAMES.map((name) => ({
+              label: name,
+              value: name,
+            }))}
+            allowClear
+          />
+          <Input
+            value={trackingNumber}
+            placeholder="송장번호"
+            onChange={(e) => setTrackingNumber(e.target.value)}
+            style={{ width: 220 }}
+          />
+          <Button
+            type="primary"
+            onClick={handleSaveTracking}
+            loading={updateMutation.isPending}
+          >
+            저장
+          </Button>
+          {trackingUrl && (
+            <Button
+              href={trackingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              배송추적
+            </Button>
+          )}
+        </Space>
+        {order?.shippedAt && (
+          <Typography.Text type="secondary">
+            발송일시: {new Date(order.shippedAt).toLocaleString("ko-KR")}
+          </Typography.Text>
         )}
       </Space>
 

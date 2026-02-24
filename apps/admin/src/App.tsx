@@ -11,6 +11,7 @@ import {
   TeamOutlined,
   QuestionCircleOutlined,
   DashboardOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 
 import { authProvider } from "@/providers/auth-provider";
@@ -32,6 +33,7 @@ import CustomerList from "@/pages/customers/list";
 import CustomerShow from "@/pages/customers/show";
 import InquiryList from "@/pages/inquiries/list";
 import InquiryShow from "@/pages/inquiries/show";
+import SettingsPage from "@/pages/settings";
 
 import "@refinedev/antd/dist/reset.css";
 
@@ -96,6 +98,11 @@ export default function App() {
               show: "/inquiries/show/:id",
               meta: { label: "문의 관리", icon: <QuestionCircleOutlined /> },
             },
+            {
+              name: "admin_settings",
+              list: "/settings",
+              meta: { label: "설정", icon: <SettingOutlined /> },
+            },
           ]}
           options={{
             syncWithLocation: true,
@@ -128,6 +135,7 @@ export default function App() {
               <Route path="/customers/show/:id" element={<CustomerShow />} />
               <Route path="/inquiries" element={<InquiryList />} />
               <Route path="/inquiries/show/:id" element={<InquiryShow />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
             <Route
               path="/login"

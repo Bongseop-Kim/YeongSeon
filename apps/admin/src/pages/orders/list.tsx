@@ -84,6 +84,11 @@ export default function OrderList() {
           title="고객명"
         />
         <Table.Column
+          dataIndex="customerEmail"
+          title="이메일"
+          render={(value: string | null) => value ?? "-"}
+        />
+        <Table.Column
           dataIndex="status"
           title="상태"
           render={(value: string) => (

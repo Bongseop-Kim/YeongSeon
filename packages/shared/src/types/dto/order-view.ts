@@ -44,6 +44,26 @@ export interface OrderListRowDTO {
   created_at: string;
 }
 
+/** order_detail_view row (customer order detail with shipping + tracking) */
+export interface OrderDetailRowDTO {
+  id: string;
+  orderNumber: string;
+  date: string;
+  status: OrderStatusDTO;
+  totalPrice: number;
+  courierCompany: string | null;
+  trackingNumber: string | null;
+  shippedAt: string | null;
+  created_at: string;
+  recipientName: string | null;
+  recipientPhone: string | null;
+  shippingAddress: string | null;
+  shippingAddressDetail: string | null;
+  shippingPostalCode: string | null;
+  deliveryMemo: string | null;
+  deliveryRequest: string | null;
+}
+
 export interface OrderItemRowDTO {
   order_id: string;
   id: string;
