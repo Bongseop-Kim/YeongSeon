@@ -45,7 +45,7 @@ CREATE POLICY "Users can create their own inquiries"
 CREATE POLICY "Users can update their own pending inquiries"
   ON public.inquiries FOR UPDATE
   USING (auth.uid() = user_id AND status = '답변대기')
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (auth.uid() = user_id AND status = '답변대기' AND answer IS NULL AND answer_date IS NULL);
 
 CREATE POLICY "Users can delete their own pending inquiries"
   ON public.inquiries FOR DELETE
