@@ -27,8 +27,8 @@ import {
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCreateCustomOrder } from "./api/custom-order-query";
-import { useImageUpload } from "./hooks/useImageUpload";
+import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
+import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
 
 type ShippingMessageTypeValue =
