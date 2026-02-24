@@ -215,6 +215,24 @@ WHERE cl.user_id = auth.uid();
 -- Admin Views
 -- =============================================================
 
+-- ── admin_user_coupon_view ──────────────────────────────────
+CREATE OR REPLACE VIEW public.admin_user_coupon_view
+WITH (security_invoker = true)
+AS
+SELECT
+  uc.id,
+  uc.user_id       AS "userId",
+  uc.coupon_id     AS "couponId",
+  uc.status,
+  uc.issued_at     AS "issuedAt",
+  uc.expires_at    AS "expiresAt",
+  uc.used_at       AS "usedAt",
+  p.name           AS "userName",
+  p.phone          AS "userPhone",
+  public.admin_get_email(uc.user_id) AS "userEmail"
+FROM public.user_coupons uc
+LEFT JOIN public.profiles p ON p.id = uc.user_id;
+
 -- ── admin_order_list_view ──────────────────────────────────
 CREATE OR REPLACE VIEW public.admin_order_list_view
 WITH (security_invoker = true)

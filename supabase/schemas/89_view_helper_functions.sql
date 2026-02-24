@@ -31,6 +31,21 @@ AS $$
   );
 $$;
 
+-- ── admin_get_email ────────────────────────────────────────
+-- Returns auth.users.email for admins only; NULL otherwise.
+CREATE OR REPLACE FUNCTION public.admin_get_email(uid uuid)
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
+  SELECT CASE
+    WHEN public.is_admin()
+    THEN (SELECT email FROM auth.users WHERE id = uid)
+    ELSE NULL
+  END;
+$$;
+
 -- Returns products with options, likes, isLiked by id array
 CREATE OR REPLACE FUNCTION public.get_products_by_ids(p_ids integer[])
 RETURNS TABLE (

@@ -14,6 +14,7 @@ import {
 import { useList, useCreate } from "@refinedev/core";
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
+import dayjs from "dayjs";
 
 export default function CouponEdit() {
   const { formProps, saveButtonProps, id } = useForm({
@@ -27,8 +28,8 @@ export default function CouponEdit() {
   >([]);
 
   const { result: issuedResult } = useList({
-    resource: "user_coupons",
-    filters: [{ field: "coupon_id", operator: "eq", value: id }],
+    resource: "admin_user_coupon_view",
+    filters: [{ field: "couponId", operator: "eq", value: id }],
     queryOptions: { enabled: !!id },
   });
 
@@ -38,6 +39,7 @@ export default function CouponEdit() {
     const { data } = await supabase
       .from("profiles")
       .select("id, name, phone")
+      .eq("role", "customer")
       .ilike("name", `%${value}%`)
       .limit(10);
 
@@ -81,7 +83,13 @@ export default function CouponEdit() {
         <Form.Item label="설명" name="description">
           <Input.TextArea rows={2} />
         </Form.Item>
-        <Form.Item label="만료일" name="expiry_date" rules={[{ required: true }]}>
+        <Form.Item
+          label="만료일"
+          name="expiry_date"
+          rules={[{ required: true }]}
+          getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
+          getValueFromEvent={(date: dayjs.Dayjs | null) => date?.format("YYYY-MM-DD") ?? null}
+        >
           <DatePicker style={{ width: "100%" }} />
         </Form.Item>
         <Form.Item label="추가정보" name="additional_info">
@@ -107,13 +115,14 @@ export default function CouponEdit() {
         size="small"
         title={() => `발급 내역 (${issuedResult.data?.length ?? 0}건)`}
       >
-        <Table.Column dataIndex="user_id" title="사용자 ID" />
+        <Table.Column dataIndex="userName" title="이름" />
+        <Table.Column dataIndex="userEmail" title="이메일" />
         <Table.Column
           dataIndex="status"
           title="상태"
           render={(v: string) => <Tag>{v}</Tag>}
         />
-        <Table.Column dataIndex="issued_at" title="발급일" />
+        <Table.Column dataIndex="issuedAt" title="발급일" />
       </Table>
 
       <Modal

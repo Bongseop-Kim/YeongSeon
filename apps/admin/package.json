@@ -19,6 +19,7 @@
     "@yeongseon/shared": "workspace:*",
     "@yeongseon/supabase": "workspace:*",
     "antd": "^5.25.3",
+    "dayjs": "^1.11.19",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.0"
