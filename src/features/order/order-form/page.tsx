@@ -361,7 +361,7 @@ const OrderFormPage = () => {
                 onClick={handleRequestPayment}
                 className="w-full"
                 size="xl"
-                disabled={!user || !selectedAddress || !paymentWidgetRef.current || isPaymentLoading}
+                disabled={!user || !selectedAddress || isPaymentLoading}
               >
                 {isPaymentLoading
                   ? "결제 요청 중..."
