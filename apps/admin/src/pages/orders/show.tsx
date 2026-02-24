@@ -65,14 +65,18 @@ export default function OrderShow() {
 
   useEffect(() => {
     if (order) {
-      setCourierCompany(
-        order.courierCompany ??
-          defaultCourierSetting?.data?.value ??
-          ""
-      );
-      setTrackingNumber(order.trackingNumber ?? "");
+      if (courierCompany === "") {
+        setCourierCompany(
+          order.courierCompany ??
+            defaultCourierSetting?.data?.value ??
+            ""
+        );
+      }
+      if (trackingNumber === "") {
+        setTrackingNumber(order.trackingNumber ?? "");
+      }
     }
-  }, [order, defaultCourierSetting]);
+  }, [order, defaultCourierSetting, courierCompany, trackingNumber]);
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === "취소") {
