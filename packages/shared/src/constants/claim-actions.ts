@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/features/order/types/view/order";
+import type { OrderStatus } from "../types/view/order";
 
 export type ClaimActionType = "return" | "exchange" | "cancel";
 

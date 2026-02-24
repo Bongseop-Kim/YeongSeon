@@ -1,4 +1,4 @@
-import type { ClaimType } from "@/features/order/types/claim-item";
+import type { ClaimType } from "./claim-item";
 
 export interface CreateClaimRequest {
   type: ClaimType;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { CartItem } from "@/features/cart/types/view/cart";
+import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { createReformCartItem } from "@/test/fixtures";
 import { syncCartItemsWithRollback } from "@/features/cart/hooks/cart-sync";
 

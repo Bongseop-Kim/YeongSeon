@@ -21,7 +21,7 @@ import { useDebouncedValue } from "@/features/order/hooks/use-debounced-value";
 import {
   CLAIM_ACTION_LABEL,
   getClaimActions,
-} from "@/features/order/constants/CLAIM_ACTIONS";
+} from "@yeongseon/shared/constants/claim-actions";
 
 export default function OrderListPage() {
   const navigate = useNavigate();

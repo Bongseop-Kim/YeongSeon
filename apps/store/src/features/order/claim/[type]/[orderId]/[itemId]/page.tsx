@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
-import type { ClaimType } from "@/features/order/types/claim-item";
+import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
 import { formatDate } from "@/utils/formatDate";
 import { Form } from "@/components/ui/form";
 import { useForm, Controller } from "react-hook-form";

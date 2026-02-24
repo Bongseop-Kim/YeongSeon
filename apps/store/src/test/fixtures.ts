@@ -1,13 +1,13 @@
-import type { Product, ProductOption } from "@/features/shop/types/view/product";
-import type { AppliedCoupon, Coupon } from "@/features/order/types/coupon";
+import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
+import type { AppliedCoupon, Coupon } from "@yeongseon/shared/types/view/coupon";
 import type {
   ProductOrderItem,
   ReformOrderItem,
-} from "@/features/order/types/view/order";
+} from "@yeongseon/shared/types/view/order";
 import type {
   ProductCartItem,
   ReformCartItem,
-} from "@/features/cart/types/view/cart";
+} from "@yeongseon/shared/types/view/cart";
 
 // ── Product ──
 

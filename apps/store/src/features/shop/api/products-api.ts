@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
-import type { Product } from "@/features/shop/types/view/product";
-import type { ProductDTO } from "@/features/shop/types/dto/product";
+import type { Product } from "@yeongseon/shared/types/view/product";
+import type { ProductDTO } from "@yeongseon/shared/types/dto/product";
 import { toProduct, toProducts } from "@/features/shop/api/products-mapper";
 
 const PRODUCT_VIEW = "product_list_view";

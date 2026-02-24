@@ -14,7 +14,7 @@ import {
   YARN_DYED_DESIGN_COST,
   FABRIC_COST,
   BAR_TACK_COST,
-} from "@/features/custom-order/constants/PRICING";
+} from "@yeongseon/shared/constants/custom-order-pricing";
 
 export interface CostCalculation {
   sewingCost: number;

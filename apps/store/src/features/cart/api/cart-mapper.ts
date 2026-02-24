@@ -1,6 +1,6 @@
-import type { CartItem } from "@/features/cart/types/view/cart";
-import type { CartItemViewDTO } from "@/features/cart/types/dto/cart-view";
-import type { CartItemInputDTO } from "@/features/cart/types/dto/cart-input";
+import type { CartItem } from "@yeongseon/shared/types/view/cart";
+import type { CartItemViewDTO } from "@yeongseon/shared/types/dto/cart-view";
+import type { CartItemInputDTO } from "@yeongseon/shared/types/dto/cart-input";
 import {
   toAppliedCouponDTO,
   toAppliedCouponView,

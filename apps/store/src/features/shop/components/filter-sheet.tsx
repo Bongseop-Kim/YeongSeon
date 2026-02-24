@@ -15,7 +15,7 @@ import {
   type ProductColor,
   type ProductPattern,
   type ProductMaterial,
-} from "@/features/shop/types/view/product";
+} from "@yeongseon/shared/types/view/product";
 
 type FilterTab = "category" | "price" | "color" | "pattern" | "material";
 

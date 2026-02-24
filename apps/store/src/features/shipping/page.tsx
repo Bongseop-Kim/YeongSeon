@@ -16,7 +16,7 @@ import { toast } from "@/lib/toast";
 import { formatPhoneNumber } from "./utils/phone-format";
 import { getDeliveryRequestLabel } from "@/features/shipping/constants/DELIVERY_REQUEST_OPTIONS";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
+import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
 import { usePopupChild } from "@/hooks/usePopup";
 
 const ShippingPage = () => {

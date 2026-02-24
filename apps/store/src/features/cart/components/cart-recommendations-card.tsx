@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ProductCard } from "@/features/shop/components/product-card";
-import type { Product } from "@/features/shop/types/view/product";
+import type { Product } from "@yeongseon/shared/types/view/product";
 
 interface CartRecommendationsCardProps {
   products: Product[];

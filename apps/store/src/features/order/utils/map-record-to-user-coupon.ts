@@ -1,4 +1,4 @@
-import type { UserCoupon } from "@/features/order/types/coupon";
+import type { UserCoupon } from "@yeongseon/shared/types/view/coupon";
 import type { UserCouponRecord } from "@/features/order/types/coupon-record";
 import { mapRecordToCoupon } from "./map-record-to-coupon";
 

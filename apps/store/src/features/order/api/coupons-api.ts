@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
-import type { UserCoupon } from "@/features/order/types/coupon";
+import type { UserCoupon } from "@yeongseon/shared/types/view/coupon";
 import type { UserCouponRecord } from "@/features/order/types/coupon-record";
 import { mapRecordToUserCoupon } from "@/features/order/utils/map-record-to-user-coupon";
 

@@ -1,4 +1,4 @@
-import type { AppliedCoupon } from "@/features/order/types/coupon";
+import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 
 const isExpired = (expiresAt?: string | null) => {
   if (!expiresAt) return false;

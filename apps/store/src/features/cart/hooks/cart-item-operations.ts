@@ -1,7 +1,7 @@
-import type { CartItem, ReformCartItem } from "@/features/cart/types/view/cart";
-import type { AppliedCoupon } from "@/features/order/types/coupon";
-import type { TieItem } from "@/features/reform/types/reform";
-import type { Product, ProductOption } from "@/features/shop/types/view/product";
+import type { CartItem, ReformCartItem } from "@yeongseon/shared/types/view/cart";
+import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
+import type { TieItem } from "@yeongseon/shared/types/view/reform";
+import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
 
 type GenerateItemId = (productId: string | number, optionId?: string) => string;
 

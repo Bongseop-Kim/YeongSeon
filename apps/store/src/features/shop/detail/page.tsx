@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ProductOption, Product } from "@/features/shop/types/view/product";
+import type { ProductOption, Product } from "@yeongseon/shared/types/view/product";
 import { Badge } from "@/components/ui/badge";
 import {
   getCategoryLabel,
@@ -46,7 +46,7 @@ import { ProductCard } from "@/features/shop/components/product-card";
 import { useMemo } from "react";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
-import type { CartItem } from "@/features/cart/types/view/cart";
+import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { useProduct } from "@/features/shop/api/products-query";

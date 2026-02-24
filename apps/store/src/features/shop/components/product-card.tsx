@@ -1,7 +1,7 @@
 import { HeartIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
-import type { Product } from "@/features/shop/types/view/product";
+import type { Product } from "@yeongseon/shared/types/view/product";
 import { Image } from "@imagekit/react";
 
 interface ProductCardProps {

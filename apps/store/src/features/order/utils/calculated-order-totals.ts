@@ -1,4 +1,4 @@
-import type { OrderItem } from "@/features/order/types/view/order";
+import type { OrderItem } from "@yeongseon/shared/types/view/order";
 import { calculateDiscount } from "./calculate-discount";
 
 export interface OrderTotals {

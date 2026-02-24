@@ -13,12 +13,12 @@ import React from "react";
 import { formatDate } from "@/utils/formatDate";
 import { useOrderDetail } from "@/features/order/api/order-query";
 import { Empty } from "@/components/composite/empty";
-import type { OrderItem, OrderStatus } from "@/features/order/types/view/order";
+import type { OrderItem, OrderStatus } from "@yeongseon/shared/types/view/order";
 import {
   type ClaimActionType,
   CLAIM_ACTION_LABEL,
   getClaimActions,
-} from "@/features/order/constants/CLAIM_ACTIONS";
+} from "@yeongseon/shared/constants/claim-actions";
 
 const STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
   완료: "bg-green-100 text-green-800",

@@ -21,7 +21,7 @@ import {
 } from "@/features/shipping/api/shipping-query";
 import { extractPhoneNumber, formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { toast } from "@/lib/toast";
-import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
+import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
 import { usePopupChild } from "@/hooks/usePopup";
 
 const ShippingFormPage = () => {

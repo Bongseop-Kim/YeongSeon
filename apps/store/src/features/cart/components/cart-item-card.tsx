@@ -1,6 +1,6 @@
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { ProductCartItem } from "@/features/cart/types/view/cart";
+import type { ProductCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@/features/order/utils/calculate-discount";
 import CloseButton from "@/components/ui/close";
 

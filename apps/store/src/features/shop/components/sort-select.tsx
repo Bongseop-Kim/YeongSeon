@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SORT_OPTIONS } from "@/features/shop/constants/FILTER_OPTIONS";
-import type { SortOption } from "@/features/shop/types/view/product";
+import type { SortOption } from "@yeongseon/shared/types/view/product";
 
 interface SortSelectProps {
   value: SortOption;

@@ -1,11 +1,11 @@
 import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
-import type { CreateOrderInputDTO } from "@/features/order/types/dto/order-input";
+import type { CreateOrderInputDTO } from "@yeongseon/shared/types/dto/order-input";
 import type {
   OrderItemRowDTO,
   OrderItemDTO,
   OrderViewDTO,
-} from "@/features/order/types/dto/order-view";
-import type { Order } from "@/features/order/types/view/order";
+} from "@yeongseon/shared/types/dto/order-view";
+import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   toAppliedCouponView,
   toProductOptionView,

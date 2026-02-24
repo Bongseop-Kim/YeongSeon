@@ -3,14 +3,14 @@ import type {
   CreateOrderRequest,
   CreateOrderResponse,
 } from "@/features/order/types/view/order-input";
-import type { CreateOrderInputDTO } from "@/features/order/types/dto/order-input";
-import type { CreateOrderResultDTO } from "@/features/order/types/dto/order-output";
+import type { CreateOrderInputDTO } from "@yeongseon/shared/types/dto/order-input";
+import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-output";
 import type {
   OrderItemRowDTO,
   OrderListRowDTO,
   OrderViewDTO,
-} from "@/features/order/types/dto/order-view";
-import type { Order } from "@/features/order/types/view/order";
+} from "@yeongseon/shared/types/dto/order-view";
+import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   fromOrderItemRowDTO,
   toOrderItemInputDTO,

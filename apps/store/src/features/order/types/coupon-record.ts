@@ -1,4 +1,4 @@
-import type { UserCouponStatus } from "./coupon";
+import type { UserCouponStatus } from "@yeongseon/shared/types/view/coupon";
 
 export interface CouponRecord {
   id: string;

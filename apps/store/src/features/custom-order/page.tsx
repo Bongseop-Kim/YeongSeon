@@ -25,7 +25,7 @@ import {
   shippingKeys,
 } from "@/features/shipping/api/shipping-query";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
-import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
+import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";

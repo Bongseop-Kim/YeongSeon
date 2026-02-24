@@ -1,9 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CartItem } from "@/features/cart/types/view/cart";
-import type { Product, ProductOption } from "@/features/shop/types/view/product";
-import type { AppliedCoupon } from "@/features/order/types/coupon";
-import type { TieItem } from "@/features/reform/types/reform";
+import type { CartItem } from "@yeongseon/shared/types/view/cart";
+import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
+import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
+import type { TieItem } from "@yeongseon/shared/types/view/reform";
 import { calculateOrderSummary } from "@/features/order/utils/calculated-order-totals";
 import { useModalStore } from "@/store/modal";
 import { generateItemId } from "@/lib/utils";

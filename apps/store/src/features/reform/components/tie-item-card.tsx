@@ -9,7 +9,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import type { ReformOptions } from "@/features/reform/types/reform";
+import type { ReformOptions } from "@yeongseon/shared/types/view/reform";
 import { ImagePicker } from "@/components/composite/image-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import CloseButton from "@/components/ui/close";

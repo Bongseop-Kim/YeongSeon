@@ -1,5 +1,5 @@
 import type { CouponSelectModalRef } from "@/features/cart/components/coupon-select-modal";
-import type { AppliedCoupon } from "@/features/order/types/coupon";
+import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 import { useModalStore } from "@/store/modal";
 import { CouponSelectModal } from "@/features/cart/components/coupon-select-modal";
 

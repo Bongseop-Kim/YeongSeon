@@ -15,7 +15,7 @@ import {
   CARE_LABEL_COST,
   YARN_DYED_DESIGN_COST,
   FABRIC_COST,
-} from "@/features/custom-order/constants/PRICING";
+} from "@yeongseon/shared/constants/custom-order-pricing";
 
 interface CostBreakdownProps {
   options: OrderOptions;

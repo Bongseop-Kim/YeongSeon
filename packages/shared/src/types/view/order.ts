@@ -1,6 +1,6 @@
-import type { Product, ProductOption } from "@/features/shop/types/view/product";
-import type { AppliedCoupon } from "@/features/order/types/coupon";
-import type { TieItem } from "@/features/reform/types/reform";
+import type { Product, ProductOption } from "./product";
+import type { AppliedCoupon } from "./coupon";
+import type { TieItem } from "./reform";
 
 // 주문 상태
 export type OrderStatus = "진행중" | "완료" | "배송중" | "대기중" | "취소";

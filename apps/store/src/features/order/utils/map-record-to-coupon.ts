@@ -1,4 +1,4 @@
-import type { Coupon } from "@/features/order/types/coupon";
+import type { Coupon } from "@yeongseon/shared/types/view/coupon";
 import type { CouponRecord } from "@/features/order/types/coupon-record";
 
 export const mapRecordToCoupon = (record: CouponRecord): Coupon => ({

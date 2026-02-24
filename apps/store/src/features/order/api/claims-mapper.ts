@@ -1,11 +1,11 @@
 import type {
   ClaimItemRowDTO,
   ClaimListRowDTO,
-} from "@/features/order/types/dto/claim-view";
-import type { CreateClaimInputDTO } from "@/features/order/types/dto/claim-input";
-import type { OrderItemDTO } from "@/features/order/types/dto/order-view";
-import type { ClaimItem } from "@/features/order/types/claim-item";
-import type { CreateClaimRequest } from "@/features/order/types/view/claim-input";
+} from "@yeongseon/shared/types/dto/claim-view";
+import type { CreateClaimInputDTO } from "@yeongseon/shared/types/dto/claim-input";
+import type { OrderItemDTO } from "@yeongseon/shared/types/dto/order-view";
+import type { ClaimItem } from "@yeongseon/shared/types/view/claim-item";
+import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-input";
 import {
   toAppliedCouponView,
   toProductOptionView,

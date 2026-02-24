@@ -1,4 +1,4 @@
-import type { Product } from "@/features/shop/types/view/product";
+import type { Product } from "@yeongseon/shared/types/view/product";
 import {
   getProductById,
   getProducts,

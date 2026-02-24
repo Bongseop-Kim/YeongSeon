@@ -1,6 +1,6 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
-import type { ReformCartItem } from "@/features/cart/types/view/cart";
-import type { TieItem } from "@/features/reform/types/reform";
+import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
+import type { TieItem } from "@yeongseon/shared/types/view/reform";
 import {
   Select,
   SelectContent,

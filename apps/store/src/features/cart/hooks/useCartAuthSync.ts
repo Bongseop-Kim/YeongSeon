@@ -10,7 +10,7 @@ import {
   getGuestItems,
 } from "@/features/cart/utils/cart-local-storage";
 import { toast } from "@/lib/toast";
-import type { CartItem } from "@/features/cart/types/view/cart";
+import type { CartItem } from "@yeongseon/shared/types/view/cart";
 
 /**
  * 로그인/로그아웃 시 장바구니 동기화를 처리하는 hook

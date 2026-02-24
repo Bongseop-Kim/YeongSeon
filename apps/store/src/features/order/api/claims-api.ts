@@ -2,10 +2,10 @@ import { supabase } from "@/lib/supabase";
 import type {
   CreateClaimRequest,
   CreateClaimResponse,
-} from "@/features/order/types/view/claim-input";
-import type { CreateClaimResultDTO } from "@/features/order/types/dto/claim-output";
-import type { ClaimListRowDTO } from "@/features/order/types/dto/claim-view";
-import type { ClaimItem } from "@/features/order/types/claim-item";
+} from "@yeongseon/shared/types/view/claim-input";
+import type { CreateClaimResultDTO } from "@yeongseon/shared/types/dto/claim-output";
+import type { ClaimListRowDTO } from "@yeongseon/shared/types/dto/claim-view";
+import type { ClaimItem } from "@yeongseon/shared/types/view/claim-item";
 import {
   toClaimItemView,
   toCreateClaimInputDTO,

@@ -1,5 +1,5 @@
-import type { ProductDTO, ProductOptionDTO } from "@/features/shop/types/dto/product";
-import type { TieItemDTO } from "@/features/reform/types/dto/reform";
+import type { ProductDTO, ProductOptionDTO } from "./product";
+import type { TieItemDTO } from "./reform";
 import type { AppliedCouponDTO } from "./coupon";
 
 export type ClaimStatusDTO = "접수" | "처리중" | "완료" | "거부";

@@ -1,5 +1,5 @@
-import type { CartItem } from "@/features/cart/types/view/cart";
-import type { Product } from "@/features/shop/types/view/product";
+import type { CartItem } from "@yeongseon/shared/types/view/cart";
+import type { Product } from "@yeongseon/shared/types/view/product";
 
 export const getSelectedCartItems = (
   items: CartItem[],

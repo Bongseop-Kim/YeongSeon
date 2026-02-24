@@ -1,9 +1,9 @@
-import type { Product, ProductOption } from "@/features/shop/types/view/product";
-import type { ProductDTO, ProductOptionDTO } from "@/features/shop/types/dto/product";
-import type { Coupon, AppliedCoupon } from "@/features/order/types/coupon";
-import type { CouponDTO, AppliedCouponDTO } from "@/features/order/types/dto/coupon";
-import type { TieItem } from "@/features/reform/types/reform";
-import type { TieItemDTO } from "@/features/reform/types/dto/reform";
+import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
+import type { ProductDTO, ProductOptionDTO } from "@yeongseon/shared/types/dto/product";
+import type { Coupon, AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
+import type { CouponDTO, AppliedCouponDTO } from "@yeongseon/shared/types/dto/coupon";
+import type { TieItem } from "@yeongseon/shared/types/view/reform";
+import type { TieItemDTO } from "@yeongseon/shared/types/dto/reform";
 
 export const toProductOptionView = (option: ProductOptionDTO): ProductOption => ({
   ...option,

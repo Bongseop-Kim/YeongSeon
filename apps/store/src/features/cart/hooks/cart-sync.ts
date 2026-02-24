@@ -1,4 +1,4 @@
-import type { CartItem } from "@/features/cart/types/view/cart";
+import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { cartKeys } from "@/features/cart/api/cart-query";
 
 interface QueryClientLike {

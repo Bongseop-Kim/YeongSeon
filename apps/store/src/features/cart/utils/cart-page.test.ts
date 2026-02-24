@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createCartItem, createProduct } from "@/test/fixtures";
-import type { Product } from "@/features/shop/types/view/product";
+import type { Product } from "@yeongseon/shared/types/view/product";
 import { getSelectedCartItems, getRecommendedProducts } from "./cart-page";
 
 describe("getSelectedCartItems", () => {

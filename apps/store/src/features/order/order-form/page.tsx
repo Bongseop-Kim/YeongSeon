@@ -28,7 +28,7 @@ import {
 } from "@/features/shipping/api/shipping-query";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { useQueryClient } from "@tanstack/react-query";
-import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
+import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
 import { calculateOrderTotals } from "@/features/order/utils/calculated-order-totals";
 import { usePopup } from "@/hooks/usePopup";
 import { useAuthStore } from "@/store/auth";

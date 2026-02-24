@@ -1,0 +1,31 @@
+{
+  "name": "@yeongseon/shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types/dto/product": "./src/types/dto/product.ts",
+    "./types/dto/coupon": "./src/types/dto/coupon.ts",
+    "./types/dto/reform": "./src/types/dto/reform.ts",
+    "./types/dto/order-view": "./src/types/dto/order-view.ts",
+    "./types/dto/order-input": "./src/types/dto/order-input.ts",
+    "./types/dto/order-output": "./src/types/dto/order-output.ts",
+    "./types/dto/claim-input": "./src/types/dto/claim-input.ts",
+    "./types/dto/claim-view": "./src/types/dto/claim-view.ts",
+    "./types/dto/claim-output": "./src/types/dto/claim-output.ts",
+    "./types/dto/cart-view": "./src/types/dto/cart-view.ts",
+    "./types/dto/cart-input": "./src/types/dto/cart-input.ts",
+    "./types/view/product": "./src/types/view/product.ts",
+    "./types/view/coupon": "./src/types/view/coupon.ts",
+    "./types/view/reform": "./src/types/view/reform.ts",
+    "./types/view/order": "./src/types/view/order.ts",
+    "./types/view/claim-item": "./src/types/view/claim-item.ts",
+    "./types/view/claim-input": "./src/types/view/claim-input.ts",
+    "./types/view/cart": "./src/types/view/cart.ts",
+    "./constants/claim-actions": "./src/constants/claim-actions.ts",
+    "./constants/shipping-events": "./src/constants/shipping-events.ts",
+    "./constants/reform-pricing": "./src/constants/reform-pricing.ts",
+    "./constants/custom-order-pricing": "./src/constants/custom-order-pricing.ts"
+  }
+}

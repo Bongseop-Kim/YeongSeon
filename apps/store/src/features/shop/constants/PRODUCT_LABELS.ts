@@ -3,7 +3,7 @@ import type {
   ProductColor,
   ProductPattern,
   ProductMaterial,
-} from "@/features/shop/types/view/product";
+} from "@yeongseon/shared/types/view/product";
 
 /**
  * 카테고리 키-값 매핑

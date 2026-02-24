@@ -1,4 +1,4 @@
-import type { OrderItem } from "@/features/order/types/view/order";
+import type { OrderItem } from "./order";
 
 // 장바구니 아이템은 주문 아이템과 동일한 구조 + 쿠폰 ID 보존
 export type CartItem = OrderItem & {
