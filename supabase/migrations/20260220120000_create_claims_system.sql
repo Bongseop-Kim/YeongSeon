@@ -225,6 +225,8 @@ begin
   exception
     when no_data_found then
       raise exception 'Order item not found';
+    when too_many_rows then
+      raise exception 'Multiple order items found for given order_id and item_id';
   end;
 
   -- 6. Quantity validation
