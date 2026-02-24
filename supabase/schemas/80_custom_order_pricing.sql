@@ -16,7 +16,7 @@ ALTER TABLE public.custom_order_pricing_constants ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "custom_order_pricing_constants_service_role_only"
   ON public.custom_order_pricing_constants
-  AS RESTRICTIVE
+  AS PERMISSIVE
   TO service_role, postgres
   USING (true)
   WITH CHECK (true);
@@ -41,7 +41,7 @@ ALTER TABLE public.custom_order_fabric_prices ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "custom_order_fabric_prices_service_role_only"
   ON public.custom_order_fabric_prices
-  AS RESTRICTIVE
+  AS PERMISSIVE
   TO service_role, postgres
   USING (true)
   WITH CHECK (true);
