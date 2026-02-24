@@ -35,6 +35,7 @@
     "./types/view/claim-input": "./src/types/view/claim-input.ts",
     "./types/view/cart": "./src/types/view/cart.ts",
     "./constants/claim-actions": "./src/constants/claim-actions.ts",
+    "./constants/courier-companies": "./src/constants/courier-companies.ts",
     "./constants/shipping-events": "./src/constants/shipping-events.ts",
     "./constants/reform-pricing": "./src/constants/reform-pricing.ts",
     "./constants/custom-order-pricing": "./src/constants/custom-order-pricing.ts",
