@@ -145,6 +145,7 @@ $_$;
 CREATE OR REPLACE FUNCTION public.get_cart_items(p_user_id uuid, p_active_only boolean DEFAULT true)
 RETURNS SETOF jsonb
 LANGUAGE sql
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
   with cart as (
