@@ -1,8 +1,8 @@
 import type { Control, UseFormWatch } from "react-hook-form";
-import type { OrderOptions } from "../types/order";
+import type { OrderOptions } from "@/features/custom-order/types/order";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import { SelectField } from "@/components/composite/select-field";
-import { FABRIC_TYPES, DESIGN_TYPES } from "../constants/FORM_OPTIONS";
+import { FABRIC_TYPES, DESIGN_TYPES } from "@/features/custom-order/constants/FORM_OPTIONS";
 import { FormSection } from "@/components/ui/form-section";
 
 interface FabricSectionProps {

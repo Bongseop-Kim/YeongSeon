@@ -1,4 +1,4 @@
-import type { OrderOptions } from "../types/order";
+import type { OrderOptions } from "@/features/custom-order/types/order";
 import {
   START_COST,
   SEWING_PER_COST,
@@ -14,7 +14,7 @@ import {
   YARN_DYED_DESIGN_COST,
   FABRIC_COST,
   BAR_TACK_COST,
-} from "../constants/PRICING";
+} from "@/features/custom-order/constants/PRICING";
 
 export interface CostCalculation {
   sewingCost: number;

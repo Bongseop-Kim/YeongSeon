@@ -1,151 +1,180 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ROUTES } from "@/constants/ROUTES";
+import { buildClaimDetailRoute, ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
-import { OrderItemCard } from "../components/order-item-card";
-import type { Order } from "../types/view/order";
-import { calculateOrderTotals } from "../utils/calculated-order-totals";
-import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
+import { OrderItemCard } from "@/features/order/components/order-item-card";
+import { calculateOrderTotals } from "@/features/order/utils/calculated-order-totals";
 import React from "react";
 import { formatDate } from "@/utils/formatDate";
+import { useOrderDetail } from "@/features/order/api/order-query";
+import { Empty } from "@/components/composite/empty";
+import type { OrderItem, OrderStatus } from "@/features/order/types/view/order";
+import {
+  type ClaimActionType,
+  CLAIM_ACTION_LABEL,
+  getClaimActions,
+} from "@/features/order/constants/CLAIM_ACTIONS";
 
-// 더미 주문 데이터 (실제로는 API에서 가져올 것)
-const dummyOrders: Order[] = [
-  {
-    id: "order-1",
-    orderNumber: "ORD-20250115-001",
-    date: "2025-01-15",
-    status: "완료",
-    totalPrice: 135000,
-    items: [
-      {
-        id: "item-1",
-        type: "product",
-        product: PRODUCTS_DATA[0],
-        quantity: 2,
-      },
-      {
-        id: "item-2",
-        type: "product",
-        product: PRODUCTS_DATA[1],
-        selectedOption: { id: "45", name: "45cm", additionalPrice: 0 },
-        quantity: 1,
-      },
-      {
-        id: "item-3",
-        type: "reform",
-        quantity: 1,
-        reformData: {
-          tie: {
-            id: "tie-1",
-            measurementType: "length",
-            tieLength: 145,
-          },
-          cost: 15000,
-        },
-      },
-    ],
-  },
-  {
-    id: "order-2",
-    orderNumber: "ORD-20250114-002",
-    date: "2025-01-14",
-    status: "배송중",
-    totalPrice: 96000,
-    items: [
-      {
-        id: "item-4",
-        type: "product",
-        product: PRODUCTS_DATA[2],
-        quantity: 2,
-      },
-    ],
-  },
-  {
-    id: "order-3",
-    orderNumber: "ORD-20250113-003",
-    date: "2025-01-13",
-    status: "진행중",
-    totalPrice: 78000,
-    items: [
-      {
-        id: "item-5",
-        type: "product",
-        product: PRODUCTS_DATA[3],
-        quantity: 2,
-      },
-    ],
-  },
-  {
-    id: "order-4",
-    orderNumber: "ORD-20250112-004",
-    date: "2025-01-12",
-    status: "완료",
-    totalPrice: 30000,
-    items: [
-      {
-        id: "item-6",
-        type: "reform",
-        quantity: 1,
-        reformData: {
-          tie: {
-            id: "tie-2",
-            measurementType: "height",
-            wearerHeight: 175,
-          },
-          cost: 15000,
-        },
-      },
-      {
-        id: "item-7",
-        type: "reform",
-        quantity: 1,
-        reformData: {
-          tie: {
-            id: "tie-3",
-            measurementType: "length",
-            tieLength: 150,
-          },
-          cost: 15000,
-        },
-      },
-    ],
-  },
-];
+const STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
+  완료: "bg-green-100 text-green-800",
+  배송중: "bg-blue-100 text-blue-800",
+  진행중: "bg-yellow-100 text-yellow-800",
+  취소: "bg-red-100 text-red-800",
+  대기중: "bg-gray-100 text-gray-800",
+};
+
+const getOrderErrorDescription = (error: unknown): string => {
+  if (!(error instanceof Error)) {
+    return "잠시 후 다시 시도해주세요.";
+  }
+
+  if (error.message.includes("로그인이 필요")) {
+    return "로그인 후 다시 시도해주세요.";
+  }
+
+  return error.message;
+};
+
+const renderClaimButtons = (
+  status: OrderStatus,
+  item: OrderItem,
+  onClaim: (type: ClaimActionType, itemId: string) => void,
+) => {
+  const actions = getClaimActions(status);
+  if (actions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex gap-2 mt-3">
+      {actions.map((actionType) => (
+        <Button
+          key={actionType}
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => onClaim(actionType, item.id)}
+        >
+          {CLAIM_ACTION_LABEL[actionType]}
+        </Button>
+      ))}
+    </div>
+  );
+};
+
+const OrderDetailSkeleton = () => (
+  <MainLayout>
+    <MainContent>
+      <TwoPanelLayout
+        leftPanel={
+          <Card className="animate-pulse">
+            <CardHeader className="space-y-3">
+              <div className="h-6 w-32 bg-zinc-200 rounded" />
+              <div className="h-4 w-56 bg-zinc-200 rounded" />
+              <div className="h-4 w-40 bg-zinc-200 rounded" />
+            </CardHeader>
+            <CardContent>
+              <Separator />
+            </CardContent>
+            <CardHeader>
+              <div className="h-6 w-24 bg-zinc-200 rounded" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="h-4 w-40 bg-zinc-200 rounded" />
+              <div className="h-4 w-72 bg-zinc-200 rounded" />
+              <div className="h-4 w-28 bg-zinc-200 rounded" />
+            </CardContent>
+            <CardContent>
+              <Separator />
+            </CardContent>
+            <CardHeader>
+              <div className="h-6 w-36 bg-zinc-200 rounded" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="h-24 w-full bg-zinc-200 rounded" />
+              <div className="h-24 w-full bg-zinc-200 rounded" />
+            </CardContent>
+          </Card>
+        }
+        rightPanel={
+          <Card className="animate-pulse">
+            <CardHeader>
+              <div className="h-6 w-20 bg-zinc-200 rounded" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="h-4 w-full bg-zinc-200 rounded" />
+              <div className="h-4 w-full bg-zinc-200 rounded" />
+              <div className="h-4 w-full bg-zinc-200 rounded" />
+              <Separator />
+              <div className="h-6 w-full bg-zinc-200 rounded" />
+            </CardContent>
+          </Card>
+        }
+      />
+    </MainContent>
+  </MainLayout>
+);
 
 const OrderDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<Order | null>(null);
+  const { order, isLoading, isError, error, isNotFound, refetch } =
+    useOrderDetail(id);
 
   useEffect(() => {
     if (!id) {
       navigate(ROUTES.ORDER_LIST);
-      return;
     }
-
-    // 실제로는 API에서 주문 정보를 가져올 것
-    const foundOrder = dummyOrders.find((o) => o.id === id);
-    if (!foundOrder) {
-      navigate(ROUTES.ORDER_LIST);
-      return;
-    }
-
-    setOrder(foundOrder);
   }, [id, navigate]);
 
-  if (!order) {
+  if (!id) {
+    return null;
+  }
+
+  if (isLoading) {
+    return <OrderDetailSkeleton />;
+  }
+
+  if (isError) {
     return (
       <MainLayout>
         <MainContent>
-          <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
-            <div>주문 정보를 불러오는 중...</div>
-          </div>
+          <Card>
+            <Empty
+              title="주문 정보를 불러오지 못했습니다."
+              description={getOrderErrorDescription(error)}
+            />
+            <CardContent className="pt-0">
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" onClick={() => refetch()}>
+                  다시 시도
+                </Button>
+                <Button onClick={() => navigate(ROUTES.ORDER_LIST)}>
+                  주문 목록으로
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  if (isNotFound || !order) {
+    return (
+      <MainLayout>
+        <MainContent>
+          <Card>
+            <Empty
+              title="주문 정보를 찾을 수 없습니다."
+              description="주문 목록에서 다시 확인해주세요."
+            />
+          </Card>
         </MainContent>
       </MainLayout>
     );
@@ -153,33 +182,8 @@ const OrderDetailPage = () => {
 
   const totals = calculateOrderTotals(order.items);
 
-  const handleReturnRequest = (itemId: string) => {
-    navigate(`${ROUTES.CLAIM_FORM}/return/${order.id}/${itemId}`);
-  };
-
-  const handleExchangeRequest = (itemId: string) => {
-    navigate(`${ROUTES.CLAIM_FORM}/exchange/${order.id}/${itemId}`);
-  };
-
-  const handleCancelRequest = (itemId: string) => {
-    navigate(`${ROUTES.CLAIM_FORM}/cancel/${order.id}/${itemId}`);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "완료":
-        return "bg-green-100 text-green-800";
-      case "배송중":
-        return "bg-blue-100 text-blue-800";
-      case "진행중":
-        return "bg-yellow-100 text-yellow-800";
-      case "취소":
-        return "bg-red-100 text-red-800";
-      case "대기중":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const handleClaimRequest = (type: ClaimActionType, itemId: string) => {
+    navigate(buildClaimDetailRoute(type, order.id, itemId));
   };
 
   return (
@@ -199,7 +203,7 @@ const OrderDetailPage = () => {
                     주문일시: {formatDate(order.date)}
                   </div>
                 </div>
-                <Badge className={getStatusColor(order.status)}>
+                <Badge className={STATUS_BADGE_CLASS[order.status]}>
                   {order.status}
                 </Badge>
               </CardHeader>
@@ -213,10 +217,9 @@ const OrderDetailPage = () => {
                 <CardTitle>배송지 정보</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 text-sm">
-                <p>김봉섭</p>
-                <p>대전 동구 가양동 418-25 ESSE SION</p>
-                <p>042-462-0510</p>
-                <p className="text-zinc-500 mt-2">문 앞에 놔주세요.</p>
+                <p className="text-zinc-500">
+                  현재 주문 상세 API에는 배송지 정보가 포함되지 않습니다.
+                </p>
               </CardContent>
 
               <CardContent>
@@ -235,40 +238,7 @@ const OrderDetailPage = () => {
                       item={item}
                       showQuantity={true}
                       showPrice={true}
-                      actions={
-                        order.status === "완료" || order.status === "배송중" ? (
-                          <div className="flex gap-2 mt-3">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => handleReturnRequest(item.id)}
-                            >
-                              반품 요청
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => handleExchangeRequest(item.id)}
-                            >
-                              교환 요청
-                            </Button>
-                          </div>
-                        ) : order.status === "진행중" ||
-                          order.status === "대기중" ? (
-                          <div className="flex gap-2 mt-3">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => handleCancelRequest(item.id)}
-                            >
-                              취소 요청
-                            </Button>
-                          </div>
-                        ) : null
-                      }
+                      actions={renderClaimButtons(order.status, item, handleClaimRequest)}
                     />
                   </CardContent>
                   {index < order.items.length - 1 && (

@@ -1,10 +1,10 @@
 import { supabase } from "@/lib/supabase";
-import type { ShippingAddress } from "../types/shipping-address";
+import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 import type {
   ShippingAddressRecord,
   CreateShippingAddressData,
   UpdateShippingAddressData,
-} from "../types/shipping-address-record";
+} from "@/features/shipping/types/shipping-address-record";
 
 const TABLE_NAME = "shipping_addresses";
 

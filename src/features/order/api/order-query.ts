@@ -2,29 +2,38 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createOrder, getOrders, getOrder } from "@/features/order/api/order-api";
 import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
 import { useAuthStore } from "@/store/auth";
+import type { ListFilters } from "@/features/order/api/list-filters";
 
 /**
  * 주문 쿼리 키
  */
 export const orderKeys = {
   all: ["orders"] as const,
-  list: (userId?: string) => [...orderKeys.all, "list", userId] as const,
+  list: (userId?: string, filters?: ListFilters) =>
+    [
+      ...orderKeys.all,
+      "list",
+      userId,
+      filters?.keyword ?? "",
+      filters?.dateFrom ?? "",
+      filters?.dateTo ?? "",
+    ] as const,
   detail: (orderId: string) => [...orderKeys.all, "detail", orderId] as const,
 };
 
 /**
  * 주문 목록 조회 쿼리
  */
-export const useOrders = () => {
+export const useOrders = (filters?: ListFilters) => {
   const { user } = useAuthStore();
 
   return useQuery({
-    queryKey: orderKeys.list(user?.id),
+    queryKey: orderKeys.list(user?.id, filters),
     queryFn: () => {
       if (!user?.id) {
         throw new Error("로그인이 필요합니다.");
       }
-      return getOrders();
+      return getOrders(filters);
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // 5분
@@ -52,6 +61,20 @@ export const useOrder = (orderId: string) => {
     refetchOnWindowFocus: false,
     retry: 1,
   });
+};
+
+/**
+ * 주문 상세 페이지 상태 조회 훅
+ */
+export const useOrderDetail = (orderId?: string) => {
+  const query = useOrder(orderId ?? "");
+
+  return {
+    ...query,
+    order: query.data ?? null,
+    isNotFound:
+      !!orderId && !query.isLoading && !query.isError && query.data === null,
+  };
 };
 
 /**

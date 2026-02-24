@@ -15,7 +15,7 @@ import {
   PATTERN_OPTIONS,
   MATERIAL_OPTIONS,
   PRICE_RANGE_OPTIONS,
-} from "../constants/FILTER_OPTIONS";
+} from "@/features/shop/constants/FILTER_OPTIONS";
 import { Badge } from "@/components/ui/badge";
 
 type FilterTab = "category" | "price" | "color" | "pattern" | "material";

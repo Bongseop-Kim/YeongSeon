@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
-import { useProfile } from "../../api/profile-query";
+import { useProfile } from "@/features/my-page/api/profile-query";
 
 export default function MyInfoDetailPage() {
   const navigate = useNavigate();

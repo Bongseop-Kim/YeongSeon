@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { DesignOptions } from "../types/design";
+import type { DesignOptions } from "@/features/design/types/design";
 import { ImagePicker } from "@/components/composite/image-picker";
 
 interface OptionPanelProps {

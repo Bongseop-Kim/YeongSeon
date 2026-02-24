@@ -6,41 +6,59 @@ import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/formatDate";
-import { OrderItemCard } from "../components/order-item-card";
+import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 import { ROUTES } from "@/constants/ROUTES";
-import { useOrders } from "../api/order-query";
+import { useOrders } from "@/features/order/api/order-query";
+import {
+  toDateString,
+  type ListFilters,
+} from "@/features/order/api/list-filters";
+import { useDebouncedValue } from "@/features/order/hooks/use-debounced-value";
+import {
+  CLAIM_ACTION_LABEL,
+  getClaimActions,
+} from "@/features/order/constants/CLAIM_ACTIONS";
+
 export default function OrderListPage() {
   const navigate = useNavigate();
   const { setSearchEnabled } = useSearchStore();
-  const { data: orders = [], isLoading, error } = useOrders();
+  const [searchFilters, setSearchFilters] = useState<ListFilters>({});
+  const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
+  const queryFilters = useMemo(
+    () => ({
+      keyword: debouncedKeyword,
+      dateFrom: searchFilters.dateFrom,
+      dateTo: searchFilters.dateTo,
+    }),
+    [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
+  );
+  const { data: orders = [], isLoading, error } = useOrders(queryFilters);
 
   useEffect(() => {
     setSearchEnabled(true, {
       placeholder: "주문 검색...",
       onSearch: (query, dateFilter) => {
-        console.log("검색:", query);
-        console.log("기간:", dateFilter);
-        // 검색 로직 구현
+        setSearchFilters({
+          keyword: query,
+          dateFrom: toDateString(dateFilter.customRange?.from),
+          dateTo: toDateString(dateFilter.customRange?.to),
+        });
       },
     });
 
     return () => setSearchEnabled(false);
-  }, []);
+  }, [setSearchEnabled]);
 
-  const handleReturnRequest = (orderId: string, itemId: string) => {
-    navigate(`${ROUTES.CLAIM_FORM}/return/${orderId}/${itemId}`);
-  };
-
-  const handleExchangeRequest = (orderId: string, itemId: string) => {
-    navigate(`${ROUTES.CLAIM_FORM}/exchange/${orderId}/${itemId}`);
-  };
-
-  const handleCancelRequest = (orderId: string, itemId: string) => {
-    navigate(`${ROUTES.CLAIM_FORM}/cancel/${orderId}/${itemId}`);
+  const handleClaimRequest = (
+    type: string,
+    orderId: string,
+    itemId: string
+  ) => {
+    navigate(`${ROUTES.CLAIM_FORM}/${type}/${orderId}/${itemId}`);
   };
 
   if (isLoading) {
@@ -112,42 +130,31 @@ export default function OrderListPage() {
                                 navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
                               }
                               actions={
+                              getClaimActions(order.status).length > 0 ? (
                                 <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleReturnRequest(order.id, item.id);
-                                    }}
-                                  >
-                                    반품 요청
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleCancelRequest(order.id, item.id);
-                                    }}
-                                  >
-                                    취소 요청
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleExchangeRequest(order.id, item.id);
-                                    }}
-                                  >
-                                    교환 요청
-                                  </Button>
+                                  {getClaimActions(order.status).map(
+                                    (actionType) => (
+                                      <Button
+                                        key={actionType}
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleClaimRequest(
+                                            actionType,
+                                            order.id,
+                                            item.id
+                                          );
+                                        }}
+                                      >
+                                        {CLAIM_ACTION_LABEL[actionType]}
+                                      </Button>
+                                    )
+                                  )}
                                 </div>
-                              }
+                              ) : undefined
+                            }
                             />
                           </CardContent>
                         </React.Fragment>

@@ -1,4 +1,4 @@
-import type { OrderItem } from "../types/view/order";
+import type { OrderItem } from "@/features/order/types/view/order";
 
 // OrderItem의 상세 정보 가져오기
 export const getOrderItemDetails = (item: OrderItem): string => {

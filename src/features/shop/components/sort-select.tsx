@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SORT_OPTIONS } from "../constants/FILTER_OPTIONS";
+import { SORT_OPTIONS } from "@/features/shop/constants/FILTER_OPTIONS";
 import type { SortOption } from "@/features/shop/types/view/product";
 
 interface SortSelectProps {

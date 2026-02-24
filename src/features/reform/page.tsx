@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Form } from "@/components/ui/form";
 import TieItemCard from "./components/tie-item-card";
-import BulkApplySection from "../../components/composite/bulk-apply-section";
+import BulkApplySection from "@/components/composite/bulk-apply-section";
 import type { ReformOptions } from "./types/reform";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,7 +17,7 @@ import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@/features/cart/types/view/cart";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import React, { useState } from "react";
-import { Empty } from "../../components/composite/empty";
+import { Empty } from "@/components/composite/empty";
 import {
   Accordion,
   AccordionContent,

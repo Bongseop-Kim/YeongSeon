@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import type { DesignOptions } from "../types/design";
+import type { DesignOptions } from "@/features/design/types/design";
 
 interface PreviewProps {
   options: DesignOptions;

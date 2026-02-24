@@ -2,7 +2,7 @@ import { Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Control } from "react-hook-form";
-import type { OrderOptions } from "../types/order";
+import type { OrderOptions } from "@/features/custom-order/types/order";
 import { FormSection } from "@/components/ui/form-section";
 import { SelectField } from "@/components/composite/select-field";
 import { CheckboxField } from "@/components/composite/check-box-field";
@@ -13,7 +13,7 @@ import {
   SIZE_TYPES,
   ADDITIONAL_OPTIONS,
   TIE_WIDTH_CONFIG,
-} from "../constants/FORM_OPTIONS";
+} from "@/features/custom-order/constants/FORM_OPTIONS";
 
 interface ProductionSectionProps {
   control: Control<OrderOptions>;

@@ -10,6 +10,8 @@ export const ROUTES = {
   ORDER_DETAIL: "/order", // 주문 상세
   CLAIM_LIST: "/order/claim-list", // 취소 내역
   CLAIM_FORM: "/order/claim", // 취소 신청
+  PAYMENT_SUCCESS: "/order/payment/success", // 결제 성공
+  PAYMENT_FAIL: "/order/payment/fail", // 결제 실패
   SHIPPING: "/shipping", // 배송
   SHIPPING_FORM: "/shipping/form", // 배송 정보
   MY_PAGE: "/my-page", // 마이페이지
@@ -26,3 +28,11 @@ export const ROUTES = {
   REFUND_POLICY: "/refund-policy", // 환불정책
   LOGIN: "/login", // 로그인
 } as const;
+
+export type ClaimRouteType = "return" | "exchange" | "cancel";
+
+export const buildClaimDetailRoute = (
+  type: ClaimRouteType,
+  orderId: string,
+  itemId: string,
+) => `${ROUTES.CLAIM_FORM}/${type}/${orderId}/${itemId}`;

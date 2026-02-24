@@ -14,8 +14,9 @@ import { useModalStore } from "@/store/modal";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { formatPhoneNumber } from "./utils/phone-format";
+import { getDeliveryRequestLabel } from "@/features/shipping/constants/DELIVERY_REQUEST_OPTIONS";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { SHIPPING_MESSAGE_TYPE } from "../order/constants/SHIPPING_EVENTS";
+import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
 import { usePopupChild } from "@/hooks/usePopup";
 
 const ShippingPage = () => {
@@ -27,6 +28,10 @@ const ShippingPage = () => {
   const { data: addresses, isLoading } = useShippingAddresses();
   const { openModal } = useModalStore();
   const deleteMutation = useDeleteShippingAddress();
+  const isPopupContext =
+    typeof window !== "undefined" &&
+    !!window.opener &&
+    window.opener !== window;
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null
   );
@@ -61,15 +66,27 @@ const ShippingPage = () => {
   };
 
   const handleConfirm = () => {
-    postMessageAndClose({
-      type: SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED,
-      addressId: selectedAddressId,
-    });
+    if (isPopupContext) {
+      postMessageAndClose({
+        type: SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED,
+        addressId: selectedAddressId,
+      });
+      return;
+    }
+
+    navigate(-1);
   };
 
   return (
     <PopupLayout
-      onClose={() => window.close()}
+      onClose={() => {
+        if (isPopupContext) {
+          window.close();
+          return;
+        }
+
+        navigate(-1);
+      }}
       title="배송지 정보"
       headerContent={
         <Input
@@ -189,7 +206,11 @@ const ShippingPage = () => {
                         </p>
                         {address.deliveryRequest && (
                           <p className="text-zinc-500">
-                            배송 요청: {address.deliveryRequest}
+                            배송 요청:{" "}
+                            {getDeliveryRequestLabel(
+                              address.deliveryRequest,
+                              address.deliveryMemo
+                            )}
                           </p>
                         )}
                       </div>

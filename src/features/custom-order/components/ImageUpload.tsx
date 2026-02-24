@@ -1,20 +1,33 @@
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Upload, X } from "lucide-react";
-import { useImageUpload } from "../hooks/useImageUpload";
-import type { UseFormSetValue, UseFormWatch } from "react-hook-form";
-import type { OrderOptions } from "../types/order";
+import { Upload, X, Loader2, ImageOff } from "lucide-react";
+import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
+
+type ImageUploadHook = ReturnType<typeof useImageUpload>;
 
 interface ImageUploadProps {
-  setValue: UseFormSetValue<OrderOptions>;
-  watch: UseFormWatch<OrderOptions>;
+  uploadedImages: ImageUploadHook["uploadedImages"];
+  isUploading: ImageUploadHook["isUploading"];
+  onFileSelect: ImageUploadHook["uploadFile"];
+  onRemoveImage: ImageUploadHook["removeImage"];
 }
 
-export const ImageUpload = ({ setValue, watch }: ImageUploadProps) => {
-  const { selectedImages, handleImageUpload, removeImage } = useImageUpload({
-    setValue,
-    watch,
-  });
+export const ImageUpload = ({
+  uploadedImages,
+  isUploading,
+  onFileSelect,
+  onRemoveImage,
+}: ImageUploadProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onFileSelect(file);
+      e.target.value = "";
+    }
+  };
 
   return (
     <div>
@@ -24,35 +37,55 @@ export const ImageUpload = ({ setValue, watch }: ImageUploadProps) => {
       <div className="space-y-3">
         <div className="border-2 border-dashed border-stone-200 rounded-sm p-6 text-center transition-colors">
           <input
+            ref={inputRef}
             type="file"
-            multiple
             accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-            id="image-upload"
+            onChange={handleChange}
+            style={{ display: "none" }}
           />
           <Label
-            htmlFor="image-upload"
+            onClick={() => inputRef.current?.click()}
             className="cursor-pointer flex flex-col items-center gap-2"
           >
-            <Upload className="w-8 h-8 text-zinc-400" />
-            <span className="text-sm text-zinc-600">이미지를 업로드하세요</span>
-            <span className="text-xs text-zinc-500">
-              PNG, JPG, GIF 파일 지원
-            </span>
+            {isUploading ? (
+              <>
+                <Loader2 className="w-8 h-8 text-zinc-400 animate-spin" />
+                <span className="text-sm text-zinc-600">
+                  업로드 중...
+                </span>
+              </>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-zinc-400" />
+                <span className="text-sm text-zinc-600">
+                  이미지를 업로드하세요
+                </span>
+                <span className="text-xs text-zinc-500">
+                  PNG, JPG, GIF 파일 지원
+                </span>
+              </>
+            )}
           </Label>
         </div>
 
-        {selectedImages.length > 0 && (
+        {uploadedImages.length > 0 && (
           <div className="grid grid-cols-2 gap-3">
-            {selectedImages.map((image, index) => (
+            {uploadedImages.map((image, index) => (
               <div
-                key={index}
+                key={image.url}
                 className="relative border border-stone-200 rounded-lg p-2"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-zinc-100 rounded flex items-center justify-center flex-shrink-0">
-                    <Upload className="w-4 h-4 text-zinc-600" />
+                  <div className="w-8 h-8 bg-zinc-100 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {image.url ? (
+                      <img
+                        src={image.url}
+                        alt={image.name}
+                        className="w-8 h-8 object-cover"
+                      />
+                    ) : (
+                      <ImageOff className="w-4 h-4 text-zinc-400" />
+                    )}
                   </div>
                   <span className="text-sm text-zinc-700 truncate">
                     {image.name}
@@ -61,7 +94,7 @@ export const ImageUpload = ({ setValue, watch }: ImageUploadProps) => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeImage(index)}
+                    onClick={() => onRemoveImage(index)}
                     className="h-6 w-6 p-0 ml-auto flex-shrink-0"
                   >
                     <X className="w-3 h-3" />

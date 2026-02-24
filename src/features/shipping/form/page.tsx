@@ -2,12 +2,12 @@ import { PopupLayout } from "@/components/layout/popup-layout";
 import { Button } from "@/components/ui/button";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { ShippingAddress } from "../types/shipping-address";
+import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectField } from "@/components/composite/select-field";
-import { DELIVERY_REQUEST_OPTIONS } from "../constants/DELIVERY_REQUEST_OPTIONS";
+import { DELIVERY_REQUEST_OPTIONS } from "@/features/shipping/constants/DELIVERY_REQUEST_OPTIONS";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import { PostcodeSearch } from "@/features/shipping/components/PostcodeSearch";
@@ -18,8 +18,8 @@ import {
   useCreateShippingAddress,
   useUpdateShippingAddress,
   useShippingAddresses,
-} from "../api/shipping-query";
-import { extractPhoneNumber, formatPhoneNumber } from "../utils/phone-format";
+} from "@/features/shipping/api/shipping-query";
+import { extractPhoneNumber, formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { toast } from "@/lib/toast";
 import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENTS";
 import { usePopupChild } from "@/hooks/usePopup";
@@ -81,6 +81,10 @@ const ShippingFormPage = () => {
   const canUncheckDefault = !isEditMode || (addresses && addresses.length > 1);
 
   const { handleSubmit } = form;
+  const isPopupContext =
+    typeof window !== "undefined" &&
+    !!window.opener &&
+    window.opener !== window;
 
   const onSubmit = (data: ShippingAddress) => {
     // 필수값 검증
@@ -136,14 +140,15 @@ const ShippingFormPage = () => {
         },
         {
           onSuccess: (newAddress) => {
-            if (isFirstAddress) {
+            if (isPopupContext) {
               postMessageAndClose({
                 type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
                 addressId: newAddress.id,
               });
-            } else {
-              navigate(-1);
+              return;
             }
+
+            navigate(-1);
           },
         }
       );

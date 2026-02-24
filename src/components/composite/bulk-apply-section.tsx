@@ -3,7 +3,7 @@ import { type UseFormSetValue } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
-import type { ReformOptions } from "../../features/reform/types/reform";
+import type { ReformOptions } from "@/features/reform/types/reform";
 import { FormItem } from "@/components/ui/form";
 
 interface BulkApplySectionProps {

@@ -5,7 +5,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { NEW_ARRIVALS_DATA } from "../constants/NEW_ARRIVALS_DATA";
+import { NEW_ARRIVALS_DATA } from "@/features/home/constants/NEW_ARRIVALS_DATA";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
