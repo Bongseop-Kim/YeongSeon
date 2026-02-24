@@ -147,6 +147,19 @@ Deno.serve(async (req) => {
     return jsonResponse(404, { error: "Order not found" });
   }
 
+  const allowedPrePaymentStatuses = new Set(["대기중", "pending", "created"]);
+  if (!allowedPrePaymentStatuses.has(order.status)) {
+    errorLogger("invalid_order_status", new Error("Order is not in payable state"), {
+      orderId: order.id,
+      userId: user.id,
+      orderStatus: order.status,
+    });
+    return jsonResponse(409, {
+      error: "Order is not payable",
+      orderId: order.id,
+    });
+  }
+
   if (order.user_id !== user.id) {
     return jsonResponse(403, { error: "Forbidden" });
   }
