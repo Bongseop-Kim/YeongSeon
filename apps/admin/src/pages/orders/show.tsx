@@ -97,7 +97,7 @@ export default function OrderShow() {
     }
 
     const values: Record<string, unknown> = { status: newStatus };
-    if (newStatus === "배송중") {
+    if (newStatus === "배송중" && !order?.shippedAt) {
       values.shipped_at = new Date().toISOString();
     }
 
