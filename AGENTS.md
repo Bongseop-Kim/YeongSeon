@@ -39,7 +39,7 @@
 
 ### 변경 워크플로우
 
-```
+```text
 schemas/*.sql 수정 → db diff -f <name> → db reset → commit → (쌓이면) migration squash → db push
 ```
 
