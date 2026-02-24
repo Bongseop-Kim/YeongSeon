@@ -231,22 +231,39 @@ Deno.serve(async (req) => {
     return jsonResponse(502, { error: "Failed to confirm payment" });
   }
 
-  const { error: updateError } = await adminClient
+  const { data: updatedOrder, error: updateError } = await adminClient
     .from("orders")
     .update({
       status: "진행중",
       updated_at: new Date().toISOString(),
     })
     .eq("id", order.id)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("status", order.status)
+    .select("id")
+    .maybeSingle();
 
   if (updateError) {
     errorLogger("order_update_failed", updateError, {
       orderId: order.id,
       userId: user.id,
       paymentKey: payload.paymentKey,
+      originalStatus: order.status,
     });
     return jsonResponse(500, { error: "Payment confirmed but order update failed" });
+  }
+
+  if (!updatedOrder) {
+    errorLogger("order_update_conflict", new Error("Order status changed before update"), {
+      orderId: order.id,
+      userId: user.id,
+      expectedStatus: order.status,
+      paymentKey: payload.paymentKey,
+    });
+    return jsonResponse(409, {
+      error: "Payment confirmed but order state changed",
+      orderId: order.id,
+    });
   }
 
   processLogger("payment_confirmed", {
