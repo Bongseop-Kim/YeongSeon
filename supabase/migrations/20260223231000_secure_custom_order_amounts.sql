@@ -2293,6 +2293,7 @@ GRANT ALL ON FUNCTION "public"."generate_claim_number"() TO "service_role";
 
 
 
+REVOKE ALL ON FUNCTION "public"."generate_order_number"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."generate_order_number"() TO "anon";
 GRANT ALL ON FUNCTION "public"."generate_order_number"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."generate_order_number"() TO "service_role";
