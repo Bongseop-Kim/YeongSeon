@@ -178,6 +178,8 @@ Deno.serve(async (req) => {
     });
   }
 
+  const serverAmount = order.total_price;
+
   const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
 
   let tossResult: TossConfirmResponse;
@@ -193,7 +195,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           paymentKey: payload.paymentKey,
           orderId: payload.orderId,
-          amount: payload.amount,
+          amount: serverAmount,
         }),
       }
     );
@@ -251,7 +253,7 @@ Deno.serve(async (req) => {
     orderId: order.id,
     userId: user.id,
     paymentKey: payload.paymentKey,
-    amount: payload.amount,
+    amount: serverAmount,
     paymentStatus: tossResult.status ?? "UNKNOWN",
   });
 
