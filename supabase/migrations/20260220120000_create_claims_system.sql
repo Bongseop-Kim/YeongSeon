@@ -117,7 +117,6 @@ revoke all on table "public"."claims" from "authenticated";
 grant references on table "public"."claims" to "anon";
 grant select on table "public"."claims" to "anon";
 
-grant insert on table "public"."claims" to "authenticated";
 grant references on table "public"."claims" to "authenticated";
 grant select on table "public"."claims" to "authenticated";
 
