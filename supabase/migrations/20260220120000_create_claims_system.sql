@@ -378,3 +378,6 @@ left join lateral (
 ) uc
   on true
 where cl.user_id = auth.uid();
+
+
+grant select on public.claim_list_view to authenticated;
