@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session } from "@yeongseon/supabase";
 import { authKeys } from "@/features/auth/api/auth.query";
 import { useAuthStore } from "@/store/auth";
 

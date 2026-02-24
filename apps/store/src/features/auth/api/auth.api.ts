@@ -1,4 +1,4 @@
-import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
+import type { Session, AuthChangeEvent } from "@yeongseon/supabase";
 import { supabase } from "@/lib/supabase";
 
 /**
