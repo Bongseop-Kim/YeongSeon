@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS public.inquiries (
   id          uuid        NOT NULL DEFAULT gen_random_uuid(),
-  user_id     uuid        NOT NULL,
+  user_id     uuid,
   title       text        NOT NULL,
   content     text        NOT NULL,
   status      text        NOT NULL DEFAULT '답변대기',
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
   CONSTRAINT inquiries_answer_pair_check
     CHECK ((answer IS NULL AND answer_date IS NULL) OR (answer IS NOT NULL AND answer_date IS NOT NULL)),
   CONSTRAINT inquiries_user_id_fkey
-    FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE SET NULL
 );
 
 -- Indexes
@@ -40,17 +40,53 @@ ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own inquiries"
   ON public.inquiries FOR SELECT
+  TO authenticated
   USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can create their own inquiries"
   ON public.inquiries FOR INSERT
+  TO authenticated
   WITH CHECK (auth.uid() = user_id AND status = '답변대기' AND answer IS NULL AND answer_date IS NULL);
 
 CREATE POLICY "Users can update their own pending inquiries"
   ON public.inquiries FOR UPDATE
+  TO authenticated
   USING (auth.uid() = user_id AND status = '답변대기')
   WITH CHECK (auth.uid() = user_id AND status = '답변대기' AND answer IS NULL AND answer_date IS NULL);
 
 CREATE POLICY "Users can delete their own pending inquiries"
   ON public.inquiries FOR DELETE
+  TO authenticated
   USING (auth.uid() = user_id AND status = '답변대기');
+
+CREATE POLICY "Admins can answer inquiries"
+  ON public.inquiries FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+    AND status = '답변완료'
+    AND answer IS NOT NULL
+    AND answer_date IS NOT NULL
+  );
+
+CREATE POLICY "inquiries_service_all"
+  ON public.inquiries
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+
+-- Privilege hardening for user updates
+REVOKE UPDATE ON TABLE public.inquiries FROM authenticated;
+GRANT UPDATE (title, content) ON TABLE public.inquiries TO authenticated;
