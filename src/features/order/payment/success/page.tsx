@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { confirmPayment } from "@/features/order/api/payment-api";
-import { createOrder } from "@/features/order/api/order-api";
 import { useOrderStore } from "@/store/order";
 import { useCartItems, useSetCartItems, cartKeys } from "@/features/cart/api/cart-query";
 import { useAuthStore } from "@/store/auth";
@@ -41,29 +40,15 @@ const PaymentSuccessPage = () => {
         return;
       }
 
-      const shippingAddressId = sessionStorage.getItem(
-        "payment_shipping_address_id"
-      );
-      if (!shippingAddressId) {
-        setError("배송지 정보를 찾을 수 없습니다.");
-        return;
-      }
-
       try {
         // 1. 결제 승인
-        await confirmPayment({
+        const paymentResult = await confirmPayment({
           paymentKey,
           orderId,
           amount: Number(amount),
         });
 
-        // 2. 주문 생성
-        const result = await createOrder({
-          items: orderItems,
-          shippingAddressId,
-        });
-
-        // 3. 장바구니에서 주문한 아이템 제거
+        // 2. 장바구니에서 주문한 아이템 제거
         const orderedItemIds = new Set(orderItems.map((item) => item.id));
         const remainingCartItems = cartItems.filter(
           (cartItem) => !orderedItemIds.has(cartItem.id)
@@ -86,12 +71,11 @@ const PaymentSuccessPage = () => {
           }
         }
 
-        // 4. 정리
+        // 3. 정리
         clearOrderItems();
-        sessionStorage.removeItem("payment_shipping_address_id");
 
         toast.success("결제가 완료되었습니다!");
-        navigate(`${ROUTES.ORDER_DETAIL}/${result.orderId}`, { replace: true });
+        navigate(`${ROUTES.ORDER_DETAIL}/${paymentResult.orderId}`, { replace: true });
       } catch (err) {
         const errorMessage =
           err instanceof Error

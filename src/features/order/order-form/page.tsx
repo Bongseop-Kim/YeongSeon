@@ -32,6 +32,7 @@ import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENT
 import { calculateOrderTotals } from "@/features/order/utils/calculated-order-totals";
 import { usePopup } from "@/hooks/usePopup";
 import { useAuthStore } from "@/store/auth";
+import { createOrder } from "@/features/order/api/order-api";
 import PaymentWidget, {
   type PaymentWidgetRef,
 } from "./components/payment-widget";
@@ -137,10 +138,11 @@ const OrderFormPage = () => {
     setIsPaymentLoading(true);
 
     try {
-      // 리다이렉트 후 복구를 위해 배송지 ID를 sessionStorage에 저장
-      sessionStorage.setItem("payment_shipping_address_id", selectedAddressId);
-
-      const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      const orderResult = await createOrder({
+        items: orderItems,
+        shippingAddressId: selectedAddressId,
+      });
+      const orderId = orderResult.orderId;
       const firstItem = orderItems[0];
       const orderName =
         orderItems.length === 1
