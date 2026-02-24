@@ -1,8 +1,10 @@
 import { Create, useForm } from "@refinedev/antd";
-import { Form, Input, InputNumber, Select, Button, Space, Card } from "antd";
+import { Form, Input, InputNumber, Select, Button, Space, Card, message } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { supabase } from "@/lib/supabase";
 import { useNavigation } from "@refinedev/core";
+import { useImageKitUpload } from "@/hooks/useImageKitUpload";
+import { ProductImageUpload } from "@/components/ProductImageUpload";
 
 const CATEGORY_OPTIONS = ["3fold", "sfolderato", "knit", "bowtie"];
 const COLOR_OPTIONS = ["black", "navy", "gray", "wine", "blue", "brown", "beige", "silver"];
@@ -11,6 +13,7 @@ const MATERIAL_OPTIONS = ["silk", "cotton", "polyester", "wool"];
 
 export default function ProductCreate() {
   const { list } = useNavigation();
+  const imageUpload = useImageKitUpload();
 
   const { formProps, saveButtonProps, form } = useForm({
     resource: "products",
@@ -36,9 +39,29 @@ export default function ProductCreate() {
     },
   });
 
+  const handleFinish = async (values: Record<string, unknown>) => {
+    if (imageUpload.uploading) {
+      message.warning("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도하세요.");
+      return;
+    }
+
+    const urls = imageUpload.getUrls();
+    if (urls.length === 0) {
+      message.error("최소 1개의 상품 이미지를 업로드해주세요.");
+      return;
+    }
+
+    const { options, ...rest } = values;
+    formProps.onFinish?.({
+      ...rest,
+      image: urls[0],
+      detail_images: urls,
+    });
+  };
+
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <Form {...formProps} layout="vertical">
+      <Form {...formProps} layout="vertical" onFinish={handleFinish}>
         <Form.Item label="코드" name="code" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
@@ -48,15 +71,18 @@ export default function ProductCreate() {
         <Form.Item label="가격" name="price" rules={[{ required: true }]}>
           <InputNumber min={0} style={{ width: "100%" }} />
         </Form.Item>
-        <Form.Item label="이미지 URL" name="image" rules={[{ required: true }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item label="상세 이미지 URL (줄바꿈 구분)" name="detail_images">
-          <Input.TextArea
-            rows={3}
-            placeholder="URL을 줄바꿈으로 구분하여 입력"
+
+        <Form.Item label="상품 이미지">
+          <ProductImageUpload
+            fileList={imageUpload.fileList}
+            uploading={imageUpload.uploading}
+            customRequest={imageUpload.customRequest}
+            onChange={imageUpload.handleChange}
+            onRemove={imageUpload.handleRemove}
+            onMove={imageUpload.moveFile}
           />
         </Form.Item>
+
         <Form.Item label="카테고리" name="category" rules={[{ required: true }]}>
           <Select options={CATEGORY_OPTIONS.map((v) => ({ label: v, value: v }))} />
         </Form.Item>
