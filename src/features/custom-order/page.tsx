@@ -182,8 +182,12 @@ const OrderPage = () => {
       return;
     }
 
-    const { referenceImages: _referenceImages, ...optionsWithoutReferenceImages } =
-      watchedValues;
+    const {
+      referenceImages: _referenceImages,
+      additionalNotes,
+      sample,
+      ...optionsWithoutReferenceImages
+    }: OrderOptions = watchedValues;
 
     try {
       await createCustomOrder.mutateAsync({
@@ -191,8 +195,8 @@ const OrderPage = () => {
           shippingAddressId: selectedAddressId,
           options: optionsWithoutReferenceImages,
           referenceImageUrls: imageUpload.getImageUrls(),
-          additionalNotes: watchedValues.additionalNotes,
-          sample: watchedValues.sample,
+          additionalNotes,
+          sample,
         }),
       });
 

@@ -1,55 +1,55 @@
-# ADR 0001: Read = View, Write = RPC
+# ADR 0001: 읽기 = View, 쓰기 = RPC
 
-Status: Accepted  
-Date: 2026-02-02
+상태: 승인됨
+일자: 2026-02-02
 
-## Context
+## 배경
 
-The project had growing read RPC usage for data shapes that can be expressed with DB views and client query builder calls. This increased duplication and API surface complexity.
+프로젝트에서 DB 뷰와 클라이언트 쿼리 빌더 호출로 표현 가능한 데이터 형태에 읽기 RPC 사용이 늘어나고 있었다. 이로 인해 중복과 API 표면 복잡도가 증가했다.
 
-At the same time, write paths (order create, cart replace) require transactional integrity and ownership checks that are not suitable for pure client-side table writes.
+동시에 쓰기 경로(주문 생성, 장바구니 교체)는 트랜잭션 무결성과 소유권 검증이 필요하여 순수 클라이언트 테이블 쓰기로는 적합하지 않았다.
 
-## Decision
+## 결정
 
-Adopt the following architecture rule:
+다음 아키텍처 규칙을 채택한다:
 
-- **Read path**: DB View + `from().select()` in API layer.
-- **Write path**: Edge Function entrypoint + write RPC for transactional persistence.
+- **읽기 경로**: DB View + API 레이어에서 `from().select()` 사용.
+- **쓰기 경로**: Edge Function 진입점 + 트랜잭션 영속화를 위한 쓰기 RPC.
 
-Additional constraints:
+추가 제약:
 
-1. UI and DTO remain separated (Option B).
-2. Mapping lives in API mapper files only.
-3. Read RPCs are disallowed when a view + query builder can satisfy the shape.
-4. Write RPCs must declare explicit security mode and ownership checks.
+1. UI와 DTO는 분리 유지 (Option B).
+2. 매핑은 API mapper 파일에서만 수행.
+3. 뷰 + 쿼리 빌더로 충분한 경우 읽기 RPC 사용 금지.
+4. 쓰기 RPC는 명시적 보안 모드와 소유권 검증을 선언해야 한다.
 
-## Consequences
+## 결과
 
-Positive:
+긍정적:
 
-- Smaller RPC surface area for read use cases.
-- Better discoverability of read models via views.
-- Cleaner feature API layer and mapper boundaries.
+- 읽기 사용 사례에 대한 RPC 표면 축소.
+- 뷰를 통한 읽기 모델 탐색성 향상.
+- 기능별 API 레이어와 매퍼 경계 명확화.
 
-Trade-offs:
+트레이드오프:
 
-- Two patterns coexist by design (View for read, RPC for write).
-- Requires discipline in code review to prevent direct write RPC use from client.
+- 설계상 두 가지 패턴이 공존 (읽기는 View, 쓰기는 RPC).
+- 코드 리뷰에서 클라이언트의 직접 쓰기 RPC 사용을 방지하는 규율 필요.
 
-## Applied Changes
+## 적용된 변경 사항
 
-- Product read migrated to `product_list_view`.
-- Order read migrated to `order_list_view` + `order_item_view`.
-- `get_products`, `get_product_by_id`, `get_products_by_ids` read RPC usage removed from client.
-- `get_orders`, `get_order` read RPC usage removed from client.
+- 상품 읽기를 `product_list_view`로 전환.
+- 주문 읽기를 `order_list_view` + `order_item_view`로 전환.
+- `get_products`, `get_product_by_id`, `get_products_by_ids` 읽기 RPC의 클라이언트 사용 제거.
+- `get_orders`, `get_order` 읽기 RPC의 클라이언트 사용 제거.
 
-## Non-Goals
+## 비목표
 
-- Immediate rewrite of write RPC internals.
-- Immediate grant model overhaul for existing write RPCs.
+- 쓰기 RPC 내부의 즉시 재작성.
+- 기존 쓰기 RPC에 대한 즉시 권한 모델 개편.
 
-## Follow-up
+## 후속 작업
 
-1. Tighten write RPC execution boundary (if strict Edge-only contract is required).
-2. Move money finalization fully into RPC and/or verify totals in RPC.
-3. Remove legacy read objects no longer referenced (`get_orders`, `get_order`, legacy `order_items_view`).
+1. 쓰기 RPC 실행 경계 강화 (엄격한 Edge 전용 계약이 필요한 경우).
+2. 금액 최종 확정을 RPC로 완전 이전 및/또는 RPC에서 합계 검증.
+3. 더 이상 참조되지 않는 레거시 읽기 객체 제거 (`get_orders`, `get_order`, 레거시 `order_items_view`).

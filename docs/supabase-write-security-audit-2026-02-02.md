@@ -1,78 +1,77 @@
-# Supabase Write Security Audit (2026-02-02)
+# Supabase 쓰기 보안 감사 (2026-02-02)
 
-## Scope
+## 범위
 
-- Write RPCs: `create_order_txn`, `replace_cart_items`
-- Related read/write RPC: `get_cart_items`
-- Related tables/policies: `orders`, `order_items`, `cart_items`, `user_coupons`, `shipping_addresses`
+- 쓰기 RPC: `create_order_txn`, `replace_cart_items`
+- 관련 읽기/쓰기 RPC: `get_cart_items`
+- 관련 테이블/정책: `orders`, `order_items`, `cart_items`, `user_coupons`, `shipping_addresses`
 - Edge Function: `create-order`
 
-## Snapshot
+## 스냅샷
 
-- `create-order` Edge: `verify_jwt = true` (deployed)
-- `create_order_txn`: `SECURITY DEFINER`, executable by `authenticated`
-- `replace_cart_items`: `SECURITY DEFINER`, executable by `authenticated`
-- `get_cart_items`: `SECURITY INVOKER`, executable by `authenticated`
+- `create-order` Edge: `verify_jwt = true` (배포됨)
+- `create_order_txn`: `SECURITY DEFINER`, `authenticated`가 실행 가능
+- `replace_cart_items`: `SECURITY DEFINER`, `authenticated`가 실행 가능
+- `get_cart_items`: `SECURITY INVOKER`, `authenticated`가 실행 가능
 
-## RLS/Policy Check
+## RLS/정책 확인
 
-Confirmed policies enforce user ownership on:
+다음 테이블에서 사용자 소유권을 강제하는 정책 확인:
 
-- `orders`: insert/select with `auth.uid() = user_id`
-- `order_items`: select/insert through owning `orders` row
-- `cart_items`: select/insert/update/delete for own `user_id`
-- `shipping_addresses`: select/insert/update/delete with own `user_id`
-- `user_coupons`: own select + service role all
+- `orders`: `auth.uid() = user_id`로 insert/select
+- `order_items`: 소유한 `orders` 행을 통한 select/insert
+- `cart_items`: 자신의 `user_id`로 select/insert/update/delete
+- `shipping_addresses`: 자신의 `user_id`로 select/insert/update/delete
+- `user_coupons`: 자신의 select + service role 전체
 
-## Findings
+## 발견 사항
 
-## F-01 (Medium): write RPCs executable by `authenticated`
+## F-01 (중간): 쓰기 RPC가 `authenticated`에 실행 가능
 
-`create_order_txn` and `replace_cart_items` can be called directly by authenticated clients.
+`create_order_txn`과 `replace_cart_items`를 인증된 클라이언트가 직접 호출 가능.
 
-Risk:
+위험:
 
-- Bypasses intended Edge-only boundary.
-- Allows alternate clients to hit write RPC contract directly.
+- 의도된 Edge 전용 경계를 우회.
+- 대체 클라이언트가 쓰기 RPC 계약을 직접 접근 가능.
 
-Current mitigation:
+현재 완화 조치:
 
-- `replace_cart_items` has `p_user_id` ownership check.
-- `create_order_txn` validates auth + shipping ownership + item type.
+- `replace_cart_items`는 `p_user_id` 소유권 검증 보유.
+- `create_order_txn`은 auth + 배송지 소유권 + 아이템 타입 검증.
 
-Recommendation:
+권고:
 
-- Keep as-is for now if backward compatibility is required.
-- If strict boundary is needed, move to service-role-mediated write path or add RPC-level anti-abuse constraints and tighter grants.
+- 하위 호환성이 필요하면 현재 상태 유지.
+- 엄격한 경계가 필요하면 service-role 매개 쓰기 경로로 전환하거나 RPC 수준 남용 방지 제약 및 강화된 권한 추가.
 
-## F-02 (Resolved): money computation moved to RPC
+## F-02 (해결됨): 금액 계산이 RPC로 이전
 
-Hardening migration `20260202150000_harden_create_order_txn_coupon_lock.sql` changed
-`create_order_txn` to:
+강화 마이그레이션으로 `create_order_txn`을 다음과 같이 변경:
 
-- accept only `p_shipping_address_id`, `p_items`
-- compute `unit_price`, `discount_amount`, totals in DB transaction
-- lock/revalidate `user_coupons` rows via `FOR UPDATE`
+- `p_shipping_address_id`, `p_items`만 수신
+- DB 트랜잭션 내에서 `unit_price`, `discount_amount`, 합계 계산
+- `FOR UPDATE`로 `user_coupons` 행 잠금/재검증
 
-Residual risk:
+잔여 위험:
 
-- Direct authenticated invocation of write RPC remains possible by design.
-- Boundary relies on team rule and grant model.
+- 설계상 인증된 사용자의 쓰기 RPC 직접 호출이 여전히 가능.
+- 경계는 팀 규칙과 권한 모델에 의존.
 
-## F-03 (Low): legacy `order_items_view` linter issue
+## F-03 (낮음): 레거시 `order_items_view` 린터 이슈
 
-Advisor reports `security_definer_view` on `public.order_items_view`.
+Advisor가 `public.order_items_view`에 대해 `security_definer_view` 보고.
 
-Risk:
+위험:
 
-- Potential confusion/misuse if legacy view is used.
+- 레거시 뷰가 사용될 경우 혼동/오용 가능성.
 
-Recommendation:
+권고:
 
-- Deprecate and eventually remove or replace with invoker-safe view strategy (`order_item_view`).
+- 폐기 후 최종적으로 제거하거나 invoker 안전 뷰 전략(`order_item_view`)으로 교체.
 
-## Decision
+## 결정
 
-- No immediate grant/policy migration in this phase.
-- Boundary and rules are documented and locked by ADR.
-- Security hardening tasks remain as follow-up backlog items.
+- 이번 단계에서는 즉시 권한/정책 마이그레이션 없음.
+- 경계와 규칙은 ADR로 문서화 및 고정.
+- 보안 강화 작업은 후속 백로그 항목으로 유지.
