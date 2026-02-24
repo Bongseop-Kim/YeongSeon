@@ -792,7 +792,7 @@ ALTER FUNCTION "public"."create_order_txn"("p_shipping_address_id" "uuid", "p_it
 
 
 CREATE OR REPLACE FUNCTION "public"."generate_claim_number"() RETURNS "text"
-    LANGUAGE "plpgsql"
+    LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
 declare
@@ -821,7 +821,7 @@ ALTER FUNCTION "public"."generate_claim_number"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."generate_order_number"() RETURNS "text"
-    LANGUAGE "plpgsql"
+    LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
 declare
