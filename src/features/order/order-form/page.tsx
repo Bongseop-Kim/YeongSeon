@@ -43,7 +43,7 @@ const OrderFormPage = () => {
     null
   );
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const paymentWidgetRef = useRef<PaymentWidgetRef>(null);
+  const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const navigate = useNavigate();
   const {
     items: orderItems,
