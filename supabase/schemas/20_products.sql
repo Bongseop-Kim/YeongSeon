@@ -54,3 +54,44 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access to products"
   ON public.products FOR SELECT
   USING (true);
+
+-- Admin policies
+CREATE POLICY "Admins can insert products"
+  ON public.products FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+CREATE POLICY "Admins can update products"
+  ON public.products FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+CREATE POLICY "Admins can delete products"
+  ON public.products FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );

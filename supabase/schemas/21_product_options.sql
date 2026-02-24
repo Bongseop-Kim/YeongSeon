@@ -26,3 +26,44 @@ ALTER TABLE public.product_options ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access to product_options"
   ON public.product_options FOR SELECT
   USING (true);
+
+-- Admin policies
+CREATE POLICY "Admins can insert product options"
+  ON public.product_options FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+CREATE POLICY "Admins can update product options"
+  ON public.product_options FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+CREATE POLICY "Admins can delete product options"
+  ON public.product_options FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );

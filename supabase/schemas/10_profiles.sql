@@ -44,3 +44,38 @@ CREATE POLICY "Users can update their own profile"
     AND role = 'customer'
     AND is_active = true
   );
+
+-- Admin policies
+CREATE POLICY "Admins can view all profiles"
+  ON public.profiles FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+CREATE POLICY "Admins can update profiles"
+  ON public.profiles FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+-- Privilege hardening
+REVOKE UPDATE ON TABLE public.profiles FROM authenticated;
+GRANT UPDATE (name, phone, birth) ON TABLE public.profiles TO authenticated;
+GRANT UPDATE (role, is_active) ON TABLE public.profiles TO authenticated;

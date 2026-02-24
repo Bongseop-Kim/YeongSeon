@@ -43,3 +43,44 @@ CREATE POLICY "user_coupons_service_all"
   ON public.user_coupons
   USING (auth.role() = 'service_role')
   WITH CHECK (auth.role() = 'service_role');
+
+-- Admin policies
+CREATE POLICY "Admins can view all user coupons"
+  ON public.user_coupons FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+CREATE POLICY "Admins can insert user coupons"
+  ON public.user_coupons FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+CREATE POLICY "Admins can update user coupons"
+  ON public.user_coupons FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );

@@ -10,6 +10,9 @@ export type * from "./types/dto/claim-view";
 export type * from "./types/dto/claim-output";
 export type * from "./types/dto/cart-view";
 export type * from "./types/dto/cart-input";
+export type * from "./types/dto/admin-order";
+export type * from "./types/dto/admin-claim";
+export type * from "./types/dto/admin-coupon";
 
 // Types - View
 export type * from "./types/view/product";

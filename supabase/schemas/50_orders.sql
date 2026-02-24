@@ -46,3 +46,37 @@ CREATE POLICY "Users can view their own orders"
 CREATE POLICY "Users can create their own orders"
   ON public.orders FOR INSERT
   WITH CHECK (auth.uid() = user_id);
+
+-- Admin policies
+CREATE POLICY "Admins can view all orders"
+  ON public.orders FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+CREATE POLICY "Admins can update order status"
+  ON public.orders FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
+
+-- Privilege hardening
+REVOKE UPDATE ON TABLE public.orders FROM authenticated;
+GRANT UPDATE (status) ON TABLE public.orders TO authenticated;

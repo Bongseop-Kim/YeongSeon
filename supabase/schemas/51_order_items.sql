@@ -60,3 +60,15 @@ CREATE POLICY "Users can create their own order items"
     WHERE orders.id = order_items.order_id
       AND orders.user_id = auth.uid()
   ));
+
+-- Admin policies
+CREATE POLICY "Admins can view all order items"
+  ON public.order_items FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
+    )
+  );
