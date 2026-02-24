@@ -1,4 +1,4 @@
-import type { Coupon } from "@yeongseon/shared/types/view/coupon";
+import type { Coupon } from "../types/view/coupon";
 
 export const formatCouponAmount = (coupon: Coupon): string => {
   if (coupon.discountType === "percentage") {

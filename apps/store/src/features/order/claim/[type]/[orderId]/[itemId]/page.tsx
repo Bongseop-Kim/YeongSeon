@@ -6,7 +6,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
-import { formatDate } from "@/utils/formatDate";
+import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { Form } from "@/components/ui/form";
 import { useForm, Controller } from "react-hook-form";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,7 @@ import { toast } from "@/lib/toast";
 import { Empty } from "@/components/composite/empty";
 import { useOrderDetail } from "@/features/order/api/order-query";
 import { useCreateClaim } from "@/features/order/api/claims-query";
-import { getClaimTypeLabel } from "@/features/order/utils/claim-utils";
+import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { useEffect, useMemo } from "react";
 
 // 클레임 사유 옵션

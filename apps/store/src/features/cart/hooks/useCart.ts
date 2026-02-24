@@ -4,7 +4,7 @@ import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
-import { calculateOrderSummary } from "@/features/order/utils/calculated-order-totals";
+import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useModalStore } from "@/store/modal";
 import { generateItemId } from "@/lib/utils";
 import { ROUTES } from "@/constants/ROUTES";

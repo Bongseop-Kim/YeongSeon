@@ -1,4 +1,4 @@
-import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
+import type { ClaimType } from "../types/view/claim-item";
 
 export const getClaimTypeLabel = (type: ClaimType) => {
   switch (type) {

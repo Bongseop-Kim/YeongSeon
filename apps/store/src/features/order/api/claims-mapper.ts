@@ -11,7 +11,7 @@ import {
   toProductOptionView,
   toProductView,
   toTieItemView,
-} from "@/features/shared/api/shared-mapper";
+} from "@yeongseon/shared/mappers/shared-mapper";
 
 /**
  * claim_list_view의 item jsonb → 정규화된 OrderItemDTO

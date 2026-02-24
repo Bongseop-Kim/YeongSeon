@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createCoupon } from "@/test/fixtures";
+import { createCoupon } from "../test/fixtures";
 import { formatCouponAmount } from "./format-coupon-amount";
 
 describe("formatCouponAmount", () => {

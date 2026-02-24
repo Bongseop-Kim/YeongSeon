@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { ImageViewer } from "@/components/composite/image-viewer";
 import type { OrderItem } from "@yeongseon/shared/types/view/order";
-import { getOrderItemDetails } from "@/features/order/utils/get-order-item-details";
+import { getOrderItemDetails } from "@yeongseon/shared/utils/get-order-item-details";
 
 interface OrderItemCardProps {
   item: OrderItem;

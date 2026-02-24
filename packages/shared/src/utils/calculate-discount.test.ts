@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createAppliedCoupon } from "@/test/fixtures";
+import { createAppliedCoupon } from "../test/fixtures";
 import { calculateDiscount } from "./calculate-discount";
 
 describe("calculateDiscount", () => {

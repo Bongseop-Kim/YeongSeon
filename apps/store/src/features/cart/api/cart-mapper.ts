@@ -10,7 +10,7 @@ import {
   toProductOptionView,
   toTieItemDTO,
   toTieItemView,
-} from "@/features/shared/api/shared-mapper";
+} from "@yeongseon/shared/mappers/shared-mapper";
 
 export const toCartItemView = (record: CartItemViewDTO): CartItem => {
   if (record.type === "product") {

@@ -4,7 +4,7 @@ import {
   createReformOrderItem,
   createProduct,
   createProductOption,
-} from "@/test/fixtures";
+} from "../test/fixtures";
 import { getOrderItemDetails } from "./get-order-item-details";
 
 describe("getOrderItemDetails", () => {

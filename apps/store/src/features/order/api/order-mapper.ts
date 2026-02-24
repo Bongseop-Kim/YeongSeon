@@ -11,7 +11,7 @@ import {
   toProductOptionView,
   toProductView,
   toTieItemView,
-} from "@/features/shared/api/shared-mapper";
+} from "@yeongseon/shared/mappers/shared-mapper";
 
 export const toOrderItemInputDTO = (
   item: CreateOrderRequest["items"][number]

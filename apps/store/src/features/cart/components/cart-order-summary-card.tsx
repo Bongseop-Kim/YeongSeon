@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { OrderSummary } from "@/features/order/utils/calculated-order-totals";
+import type { OrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
 
 interface CartOrderSummaryCardProps {
   summary: OrderSummary;

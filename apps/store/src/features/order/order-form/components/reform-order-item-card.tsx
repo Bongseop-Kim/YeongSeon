@@ -1,7 +1,7 @@
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
-import { calculateDiscount } from "@/features/order/utils/calculate-discount";
+import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
 import { Package } from "lucide-react";
 
 interface ReformOrderItemCardProps {

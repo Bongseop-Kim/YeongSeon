@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/utils/formatDate";
+import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";

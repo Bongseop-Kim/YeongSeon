@@ -8,7 +8,7 @@ import { useState } from "react";
 import { InquiryForm } from "./components/InquiryForm";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { formatDate } from "@/utils/formatDate";
+import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { useModalStore } from "@/store/modal";
 import { toast } from "@/lib/toast";
 import { Empty } from "@/components/composite/empty";

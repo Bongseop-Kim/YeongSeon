@@ -5,7 +5,7 @@ import {
   createAppliedCoupon,
   createProduct,
   createProductOption,
-} from "@/test/fixtures";
+} from "../test/fixtures";
 import {
   getOrderItemPricing,
   calculateOrderTotals,
