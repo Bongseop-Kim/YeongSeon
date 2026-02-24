@@ -46,6 +46,22 @@ schemas/*.sql 수정 → db diff -f <name> → db reset → commit → (쌓이�
 - `migration squash`는 **프로덕션 push 전**에만 실행. push 후에는 원격 추적 테이블 불일치 발생.
 - squash 후 `db reset`으로 검증 필수.
 
+### Supabase CLI 실패 시 필수 규칙
+
+세 지점의 일관성을 항상 보장해야 한다: **로컬 DB ↔ 코드(`schemas/`, `migrations/`) ↔ 원격 DB**
+
+1. **`db push`, `db pull`, `db diff`, `db reset` 실패 시 반드시 전체 에러 메시지를 사용자에게 출력한다.**
+   - 에러를 요약하거나 생략하지 않는다.
+   - 실패 원인과 Supabase CLI가 제안하는 복구 명령어를 그대로 표시한다.
+2. **실패 후 자동 재시도 금지.**
+   - 원인 분석 → 사용자 확인 → 복구 순서를 따른다.
+3. **히스토리 불일치 진단 절차:**
+   - `supabase migration list`로 Local/Remote 매칭 상태를 확인한다.
+   - 원격에만 있는 마이그레이션 → `migration repair --status reverted` 검토.
+   - 로컬에만 있는 마이그레이션 → `db push`로 적용.
+4. **복구 명령 실행 전 반드시 사용자 승인을 받는다.**
+   - `migration repair`, `db reset --linked` 등 원격/로컬 상태를 변경하는 명령은 영향 범위를 설명한 후 실행한다.
+
 ### 일반 정책
 
 - **진실 공급원은 Git**: 모든 DB/RPC/Edge Function 변경은 반드시 저장소에 반영.
