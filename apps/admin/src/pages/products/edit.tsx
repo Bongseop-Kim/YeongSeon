@@ -92,9 +92,12 @@ export default function ProductEdit() {
       return;
     }
 
-    const { options, image, detail_images, ...rest } = values;
+    const payload = { ...values };
+    delete payload.options;
+    delete payload.image;
+    delete payload.detail_images;
     formProps.onFinish?.({
-      ...rest,
+      ...payload,
       image: urls[0],
       detail_images: urls,
     });

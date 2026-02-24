@@ -9,7 +9,8 @@ let fileUid = 0;
 
 export const useImageKitUpload = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [activeUploads, setActiveUploads] = useState(0);
+  const uploading = activeUploads > 0;
 
   const customRequest = useCallback(async (options: {
     file: string | RcFile | Blob;
@@ -19,7 +20,7 @@ export const useImageKitUpload = () => {
     const { file, onSuccess, onError } = options;
     const rcFile = file as RcFile;
 
-    setUploading(true);
+    setActiveUploads((n) => n + 1);
     try {
       const { data, error } = await supabase.functions.invoke("imagekit-auth");
       if (error || !data) {
@@ -60,7 +61,7 @@ export const useImageKitUpload = () => {
       setFileList((prev) => prev.filter((f) => f.uid !== rcFile.uid));
       onError?.(err instanceof Error ? err : new Error(errMsg));
     } finally {
-      setUploading(false);
+      setActiveUploads((n) => Math.max(0, n - 1));
     }
   }, []);
 

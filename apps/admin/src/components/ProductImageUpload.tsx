@@ -58,9 +58,7 @@ export const ProductImageUpload = ({
 
   const itemRender = (
     originNode: React.ReactElement,
-    file: UploadFile,
-    _fileList: UploadFile[],
-    _actions: { remove: () => void }
+    file: UploadFile
   ) => {
     const index = fileList.findIndex((f) => f.uid === file.uid);
     const isFirst = index === 0;

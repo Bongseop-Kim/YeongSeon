@@ -51,9 +51,10 @@ export default function ProductCreate() {
       return;
     }
 
-    const { options, ...rest } = values;
+    const payload = { ...values };
+    delete payload.options;
     formProps.onFinish?.({
-      ...rest,
+      ...payload,
       image: urls[0],
       detail_images: urls,
     });
