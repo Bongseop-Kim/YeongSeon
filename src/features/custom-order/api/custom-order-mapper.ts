@@ -8,16 +8,15 @@ import type {
 } from "@/features/custom-order/types/dto/custom-order-input";
 
 type OrderOptionsWithoutReferenceImages = Omit<OrderOptions, "referenceImages">;
+const isAllowed = <T extends string>(
+  value: unknown,
+  allowed: readonly T[]
+): value is T => typeof value === "string" && allowed.some((candidate) => candidate === value);
+
 const normalizeEnum = <T extends string>(
   value: unknown,
   allowed: readonly T[]
-): T | null => {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  return allowed.includes(value as T) ? (value as T) : null;
-};
+): T | null => (isAllowed(value, allowed) ? value : null);
 
 const normalizeBoolean = (value: unknown): boolean => value === true;
 
@@ -46,7 +45,7 @@ const normalizeReferenceImageUrls = (urls: string[]): string[] => {
   return normalized;
 };
 
-export const toCreateCustomOrderOptionsDto = (
+export const toCreateCustomOrderOptionsInput = (
   options: OrderOptionsWithoutReferenceImages
 ): CreateCustomOrderOptionsDto => ({
   fabricProvided: normalizeBoolean(options.fabricProvided),
@@ -79,18 +78,18 @@ interface ToCreateCustomOrderRequestInput {
   sample: boolean;
 }
 
-export const toCreateCustomOrderRequest = (
+export const toCreateCustomOrderInput = (
   input: ToCreateCustomOrderRequestInput
 ): CreateCustomOrderRequest => ({
   shippingAddressId: input.shippingAddressId,
-  options: toCreateCustomOrderOptionsDto(input.options),
+  options: toCreateCustomOrderOptionsInput(input.options),
   quantity: input.options.quantity,
   referenceImageUrls: normalizeReferenceImageUrls(input.referenceImageUrls),
   additionalNotes: input.additionalNotes.trim(),
   sample: normalizeBoolean(input.sample),
 });
 
-export const toCreateCustomOrderRequestDto = (
+export const toCreateCustomOrderInputDto = (
   request: CreateCustomOrderRequest
 ): CreateCustomOrderRequestDto => ({
   shipping_address_id: request.shippingAddressId,
