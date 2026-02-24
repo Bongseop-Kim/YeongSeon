@@ -132,7 +132,7 @@ begin
         end,
         quantity_value,
         case
-          when coupon_id_text is null or coupon_id_text = '' then null
+          when coupon_id_text is null or coupon_id_text = '' or coupon_id_text = 'null' then null
           else coupon_id_text::uuid
         end
       );
