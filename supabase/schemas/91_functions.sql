@@ -6,6 +6,7 @@
 CREATE OR REPLACE FUNCTION public.generate_order_number()
 RETURNS text
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 declare
@@ -32,6 +33,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.generate_claim_number()
 RETURNS text
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 declare
