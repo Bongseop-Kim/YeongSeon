@@ -26,8 +26,21 @@ CREATE POLICY "Users can view their own profile"
 
 CREATE POLICY "Users can insert their own profile"
   ON public.profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
+  WITH CHECK (
+    auth.uid() = id
+    AND role = 'customer'
+    AND is_active = true
+  );
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
-  USING (auth.uid() = id);
+  USING (
+    auth.uid() = id
+    AND role = 'customer'
+    AND is_active = true
+  )
+  WITH CHECK (
+    auth.uid() = id
+    AND role = 'customer'
+    AND is_active = true
+  );
