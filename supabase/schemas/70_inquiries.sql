@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
   CONSTRAINT inquiries_content_check CHECK (char_length(content) > 0),
   CONSTRAINT inquiries_status_check
     CHECK (status = ANY (ARRAY['답변대기','답변완료'])),
+  CONSTRAINT inquiries_answer_pair_check
+    CHECK ((answer IS NULL AND answer_date IS NULL) OR (answer IS NOT NULL AND answer_date IS NOT NULL)),
   CONSTRAINT inquiries_user_id_fkey
     FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE
 );
