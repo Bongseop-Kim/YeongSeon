@@ -7,21 +7,22 @@ import { COURIER_COMPANY_NAMES } from "@yeongseon/shared/constants/courier-compa
 const { Title } = Typography;
 
 export default function SettingsPage() {
-  const { data, isLoading } = useOne<AdminSettingRowDTO>({
+  const { query, result } = useOne<AdminSettingRowDTO>({
     resource: "admin_settings",
     id: "default_courier_company",
     meta: { idColumnName: "key" },
   });
+  const isLoading = query.isLoading;
 
   const { mutate: updateSetting, mutation } = useUpdate();
 
   const [defaultCourier, setDefaultCourier] = useState<string>("");
 
   useEffect(() => {
-    if (data?.data?.value) {
-      setDefaultCourier(data.data.value);
+    if (result?.value) {
+      setDefaultCourier(result.value);
     }
-  }, [data]);
+  }, [result]);
 
   const handleSave = () => {
     updateSetting(

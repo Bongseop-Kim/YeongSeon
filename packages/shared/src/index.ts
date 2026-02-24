@@ -30,6 +30,7 @@ export * from "./constants/shipping-events";
 export * from "./constants/reform-pricing";
 export * from "./constants/custom-order-pricing";
 export * from "./constants/courier-companies";
+export * from "./constants/order-status";
 
 // Utils
 export * from "./utils/calculate-discount";

@@ -268,6 +268,7 @@ SELECT
   o.user_id       AS "userId",
   o.order_number   AS "orderNumber",
   to_char(o.created_at, 'YYYY-MM-DD') AS date,
+  o.order_type     AS "orderType",
   o.status,
   o.total_price    AS "totalPrice",
   o.original_price AS "originalPrice",
@@ -279,9 +280,21 @@ SELECT
   o.updated_at,
   p.name           AS "customerName",
   p.phone          AS "customerPhone",
-  public.admin_get_email(o.user_id) AS "customerEmail"
+  public.admin_get_email(o.user_id) AS "customerEmail",
+  CASE WHEN o.order_type = 'custom' THEN ri.reform_data->'options'->>'fabric_type' ELSE NULL END AS "fabricType",
+  CASE WHEN o.order_type = 'custom' THEN ri.reform_data->'options'->>'design_type' ELSE NULL END AS "designType",
+  CASE WHEN o.order_type IN ('custom', 'repair') THEN ri.item_quantity ELSE NULL END AS "itemQuantity",
+  CASE WHEN o.order_type = 'repair' THEN
+    ri.item_quantity || '개 넥타이 수선'
+  ELSE NULL END AS "reformSummary"
 FROM public.orders o
-LEFT JOIN public.profiles p ON p.id = o.user_id;
+LEFT JOIN public.profiles p ON p.id = o.user_id
+LEFT JOIN LATERAL (
+  SELECT oi.reform_data, oi.quantity AS item_quantity
+  FROM public.order_items oi
+  WHERE oi.order_id = o.id AND oi.item_type = 'reform'
+  LIMIT 1
+) ri ON o.order_type IN ('custom', 'repair');
 
 -- ── admin_order_detail_view ──────────────────────────────
 CREATE OR REPLACE VIEW public.admin_order_detail_view
@@ -292,6 +305,7 @@ SELECT
   o.user_id        AS "userId",
   o.order_number   AS "orderNumber",
   to_char(o.created_at, 'YYYY-MM-DD') AS date,
+  o.order_type     AS "orderType",
   o.status,
   o.total_price    AS "totalPrice",
   o.original_price AS "originalPrice",

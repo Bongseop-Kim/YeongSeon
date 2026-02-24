@@ -1,35 +1,48 @@
+import { useState } from "react";
 import { useList } from "@refinedev/core";
-import { Card, Col, Row, Statistic, Table, Tag, Typography } from "antd";
+import { Card, Col, Row, Segmented, Statistic, Table, Tag, Typography } from "antd";
 import {
   ShoppingOutlined,
   DollarOutlined,
   ExceptionOutlined,
   QuestionCircleOutlined,
 } from "@ant-design/icons";
-import type { AdminOrderListRowDTO } from "@yeongseon/shared";
+import type { AdminOrderListRowDTO, OrderType } from "@yeongseon/shared";
+import { ORDER_TYPE_LABELS, ORDER_STATUS_COLORS } from "@yeongseon/shared";
 
 const { Title } = Typography;
 
-const STATUS_COLORS: Record<string, string> = {
-  대기중: "default",
-  진행중: "processing",
-  배송중: "blue",
-  완료: "success",
-  취소: "error",
-};
+type SegmentValue = OrderType | "all";
+
+const SEGMENT_OPTIONS: { label: string; value: SegmentValue }[] = [
+  { label: "전체", value: "all" },
+  { label: ORDER_TYPE_LABELS.sale, value: "sale" },
+  { label: ORDER_TYPE_LABELS.custom, value: "custom" },
+  { label: ORDER_TYPE_LABELS.repair, value: "repair" },
+];
 
 export default function DashboardPage() {
   const today = new Date().toISOString().slice(0, 10);
+  const [segment, setSegment] = useState<SegmentValue>("all");
+
+  const orderTypeFilter =
+    segment !== "all"
+      ? [{ field: "orderType" as const, operator: "eq" as const, value: segment }]
+      : [];
 
   const { result: todayOrdersResult } = useList<AdminOrderListRowDTO>({
     resource: "admin_order_list_view",
-    filters: [{ field: "date", operator: "eq", value: today }],
+    filters: [
+      { field: "date", operator: "eq", value: today },
+      ...orderTypeFilter,
+    ],
     pagination: { pageSize: 1000 },
   });
 
   const { result: recentOrdersResult } = useList<AdminOrderListRowDTO>({
     resource: "admin_order_list_view",
     sorters: [{ field: "created_at", order: "desc" }],
+    filters: orderTypeFilter,
     pagination: { pageSize: 5 },
   });
 
@@ -108,6 +121,13 @@ export default function DashboardPage() {
         </Col>
       </Row>
 
+      <Segmented
+        options={SEGMENT_OPTIONS}
+        value={segment}
+        onChange={(val) => setSegment(val as SegmentValue)}
+        style={{ marginBottom: 16 }}
+      />
+
       <Title level={5}>최근 주문</Title>
       <Table
         dataSource={recentOrdersResult.data}
@@ -119,9 +139,14 @@ export default function DashboardPage() {
         <Table.Column dataIndex="date" title="주문일" />
         <Table.Column dataIndex="customerName" title="고객명" />
         <Table.Column
+          dataIndex="orderType"
+          title="유형"
+          render={(v: OrderType) => ORDER_TYPE_LABELS[v] ?? v}
+        />
+        <Table.Column
           dataIndex="status"
           title="상태"
-          render={(v: string) => <Tag color={STATUS_COLORS[v]}>{v}</Tag>}
+          render={(v: string) => <Tag color={ORDER_STATUS_COLORS[v]}>{v}</Tag>}
         />
         <Table.Column
           dataIndex="totalPrice"

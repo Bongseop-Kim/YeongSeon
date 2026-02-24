@@ -1,9 +1,12 @@
+import type { OrderType } from "../../constants/order-status";
+
 /** admin_order_list_view row */
 export interface AdminOrderListRowDTO {
   id: string;
   userId: string;
   orderNumber: string;
   date: string;
+  orderType: OrderType;
   status: string;
   totalPrice: number;
   originalPrice: number;
@@ -16,10 +19,14 @@ export interface AdminOrderListRowDTO {
   customerName: string;
   customerPhone: string | null;
   customerEmail: string | null;
+  fabricType: string | null;
+  designType: string | null;
+  itemQuantity: number | null;
+  reformSummary: string | null;
 }
 
-/** admin_order_detail_view row (extends list + shipping address) */
-export interface AdminOrderDetailRowDTO extends AdminOrderListRowDTO {
+/** admin_order_detail_view row (extends list + shipping address, minus list-only fields) */
+export interface AdminOrderDetailRowDTO extends Omit<AdminOrderListRowDTO, 'fabricType' | 'designType' | 'itemQuantity' | 'reformSummary'> {
   recipientName: string | null;
   recipientPhone: string | null;
   shippingAddress: string | null;

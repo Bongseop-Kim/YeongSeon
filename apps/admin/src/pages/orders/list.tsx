@@ -1,36 +1,34 @@
 import { List, useTable, TagField } from "@refinedev/antd";
-import { Table, Input, Select, Space } from "antd";
-import { useNavigation } from "@refinedev/core";
-import type { AdminOrderListRowDTO } from "@yeongseon/shared";
+import { Table, Input, Select, Space, Tabs } from "antd";
+import { useNavigation, useGo } from "@refinedev/core";
+import { useSearchParams } from "react-router-dom";
+import type { AdminOrderListRowDTO, OrderType } from "@yeongseon/shared";
+import {
+  ORDER_TYPE_LABELS,
+  ORDER_STATUS_OPTIONS,
+  ORDER_STATUS_COLORS,
+} from "@yeongseon/shared";
 
-const STATUS_OPTIONS = [
-  { label: "전체", value: "" },
-  { label: "대기중", value: "대기중" },
-  { label: "진행중", value: "진행중" },
-  { label: "배송중", value: "배송중" },
-  { label: "완료", value: "완료" },
-  { label: "취소", value: "취소" },
-];
-
-const STATUS_COLORS: Record<string, string> = {
-  대기중: "default",
-  진행중: "processing",
-  배송중: "blue",
-  완료: "success",
-  취소: "error",
-};
-
-export default function OrderList() {
+function DomainOrderTable({ orderType }: { orderType: OrderType }) {
   const { show } = useNavigation();
 
   const { tableProps, setFilters } = useTable<AdminOrderListRowDTO>({
     resource: "admin_order_list_view",
     sorters: { initial: [{ field: "created_at", order: "desc" }] },
-    syncWithLocation: true,
+    filters: {
+      permanent: [
+        { field: "orderType", operator: "eq", value: orderType },
+      ],
+    },
+    syncWithLocation: false,
   });
 
+  const statusOptions = ORDER_STATUS_OPTIONS[orderType];
+
+  const columns = getColumnsForType(orderType);
+
   return (
-    <List>
+    <>
       <Space style={{ marginBottom: 16 }} wrap>
         <Input.Search
           placeholder="주문번호 / 고객명 검색"
@@ -49,7 +47,7 @@ export default function OrderList() {
         <Select
           placeholder="상태"
           allowClear
-          options={STATUS_OPTIONS}
+          options={statusOptions}
           onChange={(value) => {
             setFilters([
               {
@@ -71,38 +69,139 @@ export default function OrderList() {
           style: { cursor: "pointer" },
         })}
       >
-        <Table.Column
-          dataIndex="orderNumber"
-          title="주문번호"
-        />
-        <Table.Column
-          dataIndex="date"
-          title="주문일"
-        />
-        <Table.Column
-          dataIndex="customerName"
-          title="고객명"
-        />
-        <Table.Column
-          dataIndex="customerEmail"
-          title="이메일"
-          render={(value: string | null) => value ?? "-"}
-        />
-        <Table.Column
-          dataIndex="status"
-          title="상태"
-          render={(value: string) => (
-            <TagField value={value} color={STATUS_COLORS[value]} />
-          )}
-        />
-        <Table.Column
-          dataIndex="totalPrice"
-          title="결제금액"
-          render={(value: number) =>
-            `${value?.toLocaleString()}원`
-          }
-        />
+        {columns}
       </Table>
+    </>
+  );
+}
+
+function getColumnsForType(orderType: OrderType) {
+  const common = [
+    <Table.Column key="orderNumber" dataIndex="orderNumber" title="주문번호" />,
+    <Table.Column key="date" dataIndex="date" title="주문일" />,
+    <Table.Column key="customerName" dataIndex="customerName" title="고객명" />,
+  ];
+
+  if (orderType === "sale") {
+    return [
+      ...common,
+      <Table.Column
+        key="customerEmail"
+        dataIndex="customerEmail"
+        title="이메일"
+        render={(value: string | null) => value ?? "-"}
+      />,
+      <Table.Column
+        key="totalPrice"
+        dataIndex="totalPrice"
+        title="결제금액"
+        render={(value: number) => `${value?.toLocaleString()}원`}
+      />,
+      <Table.Column
+        key="status"
+        dataIndex="status"
+        title="상태"
+        render={(value: string) => (
+          <TagField value={value} color={ORDER_STATUS_COLORS[value]} />
+        )}
+      />,
+    ];
+  }
+
+  if (orderType === "custom") {
+    return [
+      ...common,
+      <Table.Column
+        key="fabricType"
+        dataIndex="fabricType"
+        title="원단유형"
+        render={(value: string | null) => value ?? "-"}
+      />,
+      <Table.Column
+        key="designType"
+        dataIndex="designType"
+        title="디자인유형"
+        render={(value: string | null) => value ?? "-"}
+      />,
+      <Table.Column
+        key="itemQuantity"
+        dataIndex="itemQuantity"
+        title="수량"
+        render={(value: number | null) => value ?? "-"}
+      />,
+      <Table.Column
+        key="totalPrice"
+        dataIndex="totalPrice"
+        title="결제금액"
+        render={(value: number) => `${value?.toLocaleString()}원`}
+      />,
+      <Table.Column
+        key="status"
+        dataIndex="status"
+        title="상태"
+        render={(value: string) => (
+          <TagField value={value} color={ORDER_STATUS_COLORS[value]} />
+        )}
+      />,
+    ];
+  }
+
+  // repair
+  return [
+    ...common,
+    <Table.Column
+      key="reformSummary"
+      dataIndex="reformSummary"
+      title="수선요약"
+      render={(value: string | null) => value ?? "-"}
+    />,
+    <Table.Column
+      key="totalPrice"
+      dataIndex="totalPrice"
+      title="결제금액"
+      render={(value: number) => `${value?.toLocaleString()}원`}
+    />,
+    <Table.Column
+      key="status"
+      dataIndex="status"
+      title="상태"
+      render={(value: string) => (
+        <TagField value={value} color={ORDER_STATUS_COLORS[value]} />
+      )}
+    />,
+  ];
+}
+
+const TAB_ITEMS: { key: OrderType; label: string }[] = [
+  { key: "sale", label: ORDER_TYPE_LABELS.sale },
+  { key: "custom", label: ORDER_TYPE_LABELS.custom },
+  { key: "repair", label: ORDER_TYPE_LABELS.repair },
+];
+
+export default function OrderList() {
+  const [searchParams] = useSearchParams();
+  const go = useGo();
+  const activeTab = (searchParams.get("tab") as OrderType) || "sale";
+
+  const handleTabChange = (key: string) => {
+    go({
+      query: { tab: key },
+      options: { keepQuery: false },
+      type: "replace",
+    });
+  };
+
+  return (
+    <List>
+      <Tabs
+        activeKey={activeTab}
+        onChange={handleTabChange}
+        items={TAB_ITEMS.map((item) => ({
+          key: item.key,
+          label: item.label,
+          children: <DomainOrderTable orderType={item.key} />,
+        }))}
+      />
     </List>
   );
 }

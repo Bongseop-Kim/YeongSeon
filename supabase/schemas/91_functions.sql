@@ -271,6 +271,8 @@ declare
   v_reform_base_cost constant integer := 15000;
   v_used_coupon_ids uuid[] := '{}'::uuid[];
   v_coupon record;
+  v_has_reform boolean;
+  v_order_type text;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -454,6 +456,12 @@ begin
   v_total_price := v_original_price - v_total_discount;
   v_order_number := generate_order_number();
 
+  v_has_reform := exists (
+    select 1 from jsonb_array_elements(v_normalized_items) elem
+    where elem->>'item_type' = 'reform'
+  );
+  v_order_type := case when v_has_reform then 'repair' else 'sale' end;
+
   insert into orders (
     user_id,
     order_number,
@@ -461,6 +469,7 @@ begin
     total_price,
     original_price,
     total_discount,
+    order_type,
     status
   )
   values (
@@ -470,6 +479,7 @@ begin
     v_total_price,
     v_original_price,
     v_total_discount,
+    v_order_type,
     '대기중'
   )
   returning id into v_order_id;
@@ -912,6 +922,7 @@ begin
     total_price,
     original_price,
     total_discount,
+    order_type,
     status
   )
   values (
@@ -921,6 +932,7 @@ begin
     v_total_cost,
     v_total_cost,
     0,
+    'custom',
     '대기중'
   )
   returning id into v_order_id;
