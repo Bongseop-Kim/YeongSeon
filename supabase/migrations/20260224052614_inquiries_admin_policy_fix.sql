@@ -1,42 +1,15 @@
--- =============================================================
--- 70_inquiries.sql  –  Customer inquiries
--- =============================================================
+-- 1. user_id: NOT NULL 제거 + FK ON DELETE CASCADE → SET NULL
+ALTER TABLE public.inquiries ALTER COLUMN user_id DROP NOT NULL;
+ALTER TABLE public.inquiries DROP CONSTRAINT inquiries_user_id_fkey;
+ALTER TABLE public.inquiries
+  ADD CONSTRAINT inquiries_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE SET NULL;
 
-CREATE TABLE IF NOT EXISTS public.inquiries (
-  id          uuid        NOT NULL DEFAULT gen_random_uuid(),
-  user_id     uuid,
-  title       text        NOT NULL,
-  content     text        NOT NULL,
-  status      text        NOT NULL DEFAULT '답변대기',
-  answer      text,
-  answer_date timestamptz,
-  created_at  timestamptz NOT NULL DEFAULT now(),
-  updated_at  timestamptz NOT NULL DEFAULT now(),
-
-  CONSTRAINT inquiries_pkey PRIMARY KEY (id),
-  CONSTRAINT inquiries_title_check
-    CHECK (char_length(title) BETWEEN 1 AND 200),
-  CONSTRAINT inquiries_content_check
-    CHECK (char_length(content) BETWEEN 1 AND 5000),
-  CONSTRAINT inquiries_status_check
-    CHECK (status = ANY (ARRAY['답변대기','답변완료'])),
-  CONSTRAINT inquiries_answer_pair_check
-    CHECK ((answer IS NULL AND answer_date IS NULL) OR (answer IS NOT NULL AND answer_date IS NOT NULL)),
-  CONSTRAINT inquiries_user_id_fkey
-    FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE SET NULL
-);
-
--- Indexes
-CREATE INDEX idx_inquiries_user_id ON public.inquiries USING btree (user_id);
-CREATE INDEX idx_inquiries_status  ON public.inquiries USING btree (status);
-
--- Trigger
-CREATE OR REPLACE TRIGGER update_inquiries_updated_at
-  BEFORE UPDATE ON public.inquiries
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
--- RLS
-ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
+-- 2. 기존 정책 재생성 (TO authenticated 명시)
+DROP POLICY IF EXISTS "Users can view their own inquiries"   ON public.inquiries;
+DROP POLICY IF EXISTS "Users can create their own inquiries" ON public.inquiries;
+DROP POLICY IF EXISTS "Users can update their own pending inquiries" ON public.inquiries;
+DROP POLICY IF EXISTS "Users can delete their own pending inquiries" ON public.inquiries;
 
 CREATE POLICY "Users can view their own inquiries"
   ON public.inquiries FOR SELECT
@@ -59,6 +32,7 @@ CREATE POLICY "Users can delete their own pending inquiries"
   TO authenticated
   USING (auth.uid() = user_id AND status = '답변대기');
 
+-- 3. 관리자/서비스 정책 추가
 CREATE POLICY "Admins can view all inquiries"
   ON public.inquiries FOR SELECT
   TO authenticated
@@ -99,8 +73,7 @@ CREATE POLICY "inquiries_service_all"
   USING (auth.role() = 'service_role')
   WITH CHECK (auth.role() = 'service_role');
 
--- Privilege hardening for user updates
+-- 4. 컬럼 수준 UPDATE 권한 강화
 REVOKE UPDATE ON TABLE public.inquiries FROM authenticated;
 GRANT UPDATE (title, content) ON TABLE public.inquiries TO authenticated;
--- Admin columns for answering inquiries
 GRANT UPDATE (status, answer, answer_date) ON TABLE public.inquiries TO authenticated;
