@@ -1,0 +1,33 @@
+{
+  "name": "@yeongseon/admin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "type-check": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@refinedev/antd": "^6.0.3",
+    "@refinedev/core": "^5.0.9",
+    "@refinedev/react-router": "^2.0.3",
+    "@refinedev/supabase": "^6.0.1",
+    "@yeongseon/shared": "workspace:*",
+    "@yeongseon/supabase": "workspace:*",
+    "antd": "^5.25.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react-swc": "^3.10.2",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  }
+}
