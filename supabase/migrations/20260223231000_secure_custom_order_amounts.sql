@@ -236,15 +236,15 @@ begin
   end if;
 
   if v_dimple then
-    v_sewing_per_unit := v_dimple_cost;
+    v_sewing_per_unit := v_sewing_per_unit + v_dimple_cost;
   end if;
 
   if v_spoderato then
-    v_sewing_per_unit := v_spoderato_cost;
+    v_sewing_per_unit := v_sewing_per_unit + v_spoderato_cost;
   end if;
 
   if v_fold7 then
-    v_sewing_per_unit := v_fold7_cost;
+    v_sewing_per_unit := v_sewing_per_unit + v_fold7_cost;
   end if;
 
   if v_interlining = 'WOOL' then
