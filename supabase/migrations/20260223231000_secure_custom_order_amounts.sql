@@ -1814,6 +1814,11 @@ CREATE OR REPLACE TRIGGER "user_coupons_set_updated_at" BEFORE UPDATE ON "public
 
 
 ALTER TABLE ONLY "public"."cart_items"
+    ADD CONSTRAINT "cart_items_applied_user_coupon_id_fkey" FOREIGN KEY ("applied_user_coupon_id") REFERENCES "public"."user_coupons"("id");
+
+
+
+ALTER TABLE ONLY "public"."cart_items"
     ADD CONSTRAINT "cart_items_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
@@ -1850,6 +1855,11 @@ ALTER TABLE ONLY "public"."order_items"
 
 ALTER TABLE ONLY "public"."order_items"
     ADD CONSTRAINT "order_items_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id");
+
+
+
+ALTER TABLE ONLY "public"."products"
+    ADD CONSTRAINT "products_price_check" CHECK (("price" >= 0));
 
 
 
