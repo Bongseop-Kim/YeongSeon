@@ -20,6 +20,12 @@ CREATE TABLE IF NOT EXISTS public.order_items (
   CONSTRAINT order_items_pkey PRIMARY KEY (id),
   CONSTRAINT order_items_item_type_check
     CHECK (item_type = ANY (ARRAY['product','reform'])),
+  CONSTRAINT order_items_item_type_content_check
+    CHECK (
+      (item_type = 'product' AND product_id IS NOT NULL)
+      OR
+      (item_type = 'reform' AND reform_data IS NOT NULL)
+    ),
   CONSTRAINT order_items_quantity_check       CHECK (quantity > 0),
   CONSTRAINT order_items_unit_price_check     CHECK (unit_price >= 0),
   CONSTRAINT order_items_discount_amount_check      CHECK (discount_amount >= 0),
