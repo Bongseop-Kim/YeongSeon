@@ -14,8 +14,10 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
   updated_at  timestamptz NOT NULL DEFAULT now(),
 
   CONSTRAINT inquiries_pkey PRIMARY KEY (id),
-  CONSTRAINT inquiries_title_check   CHECK (char_length(title) > 0),
-  CONSTRAINT inquiries_content_check CHECK (char_length(content) > 0),
+  CONSTRAINT inquiries_title_check
+    CHECK (char_length(title) BETWEEN 1 AND 200),
+  CONSTRAINT inquiries_content_check
+    CHECK (char_length(content) BETWEEN 1 AND 5000),
   CONSTRAINT inquiries_status_check
     CHECK (status = ANY (ARRAY['답변대기','답변완료'])),
   CONSTRAINT inquiries_answer_pair_check
