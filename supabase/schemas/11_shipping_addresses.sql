@@ -46,10 +46,4 @@ CREATE POLICY "Enable delete for users based on user_id"
 CREATE POLICY "Admins can view all shipping addresses"
   ON public.shipping_addresses FOR SELECT
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  );
+  USING (public.is_admin());

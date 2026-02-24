@@ -47,39 +47,15 @@ CREATE POLICY "Allow service role full access to coupons"
 CREATE POLICY "Admins can insert coupons"
   ON public.coupons FOR INSERT
   TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  );
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "Admins can update coupons"
   ON public.coupons FOR UPDATE
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  );
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "Admins can delete coupons"
   ON public.coupons FOR DELETE
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  );
+  USING (public.is_admin());

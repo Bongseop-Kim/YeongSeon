@@ -62,33 +62,14 @@ CREATE POLICY "Users can delete their own pending inquiries"
 CREATE POLICY "Admins can view all inquiries"
   ON public.inquiries FOR SELECT
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1
-      FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  );
+  USING (public.is_admin());
 
 CREATE POLICY "Admins can answer inquiries"
   ON public.inquiries FOR UPDATE
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1
-      FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  )
+  USING (public.is_admin())
   WITH CHECK (
-    EXISTS (
-      SELECT 1
-      FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
+    public.is_admin()
     AND status = '답변완료'
     AND answer IS NOT NULL
     AND answer_date IS NOT NULL

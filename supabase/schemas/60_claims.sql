@@ -67,31 +67,13 @@ CREATE POLICY "Users can create their own claims"
 CREATE POLICY "Admins can view all claims"
   ON public.claims FOR SELECT
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  );
+  USING (public.is_admin());
 
 CREATE POLICY "Admins can update claim status"
   ON public.claims FOR UPDATE
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('admin'::public.user_role, 'manager'::public.user_role)
-    )
-  );
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- Privilege hardening
 REVOKE UPDATE ON TABLE public.claims FROM authenticated;
