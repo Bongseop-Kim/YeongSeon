@@ -1987,7 +1987,7 @@ CREATE POLICY "Users can update their own cart items" ON "public"."cart_items" F
 
 
 
-CREATE POLICY "Users can update their own pending inquiries" ON "public"."inquiries" FOR UPDATE USING ((("auth"."uid"() = "user_id") AND ("status" = '답변대기'::"text"))) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can update their own pending inquiries" ON "public"."inquiries" FOR UPDATE USING ((("auth"."uid"() = "user_id") AND ("status" = '답변대기'::"text"))) WITH CHECK ((("auth"."uid"() = "user_id") AND ("status" = '답변대기'::"text") AND ("answer" IS NULL)));
 
 
 
