@@ -29,7 +29,7 @@ import { SHIPPING_MESSAGE_TYPE } from "@/features/order/constants/SHIPPING_EVENT
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateCustomOrder } from "./api/custom-order-query";
 import { useImageUpload } from "./hooks/useImageUpload";
-import { toCreateCustomOrderRequest } from "@/features/custom-order/api/custom-order-mapper";
+import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
 
 type ShippingMessageTypeValue =
   (typeof SHIPPING_MESSAGE_TYPE)[keyof typeof SHIPPING_MESSAGE_TYPE];
@@ -187,7 +187,7 @@ const OrderPage = () => {
 
     try {
       await createCustomOrder.mutateAsync({
-        ...toCreateCustomOrderRequest({
+        ...toCreateCustomOrderInput({
           shippingAddressId: selectedAddressId,
           options: optionsWithoutReferenceImages,
           referenceImageUrls: imageUpload.getImageUrls(),

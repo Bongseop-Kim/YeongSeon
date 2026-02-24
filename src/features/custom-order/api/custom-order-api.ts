@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { toCreateCustomOrderRequestDto } from "@/features/custom-order/api/custom-order-mapper";
+import { toCreateCustomOrderInputDto } from "@/features/custom-order/api/custom-order-mapper";
 import type { CreateCustomOrderRequest } from "@/features/custom-order/types/dto/custom-order-input";
 
 export interface CreateCustomOrderResponse {
@@ -12,7 +12,7 @@ export type { CreateCustomOrderRequest };
 export const createCustomOrder = async (
   request: CreateCustomOrderRequest
 ): Promise<CreateCustomOrderResponse> => {
-  const requestDto = toCreateCustomOrderRequestDto(request);
+  const requestDto = toCreateCustomOrderInputDto(request);
 
   const { data, error } = await supabase.functions.invoke(
     "create-custom-order",
