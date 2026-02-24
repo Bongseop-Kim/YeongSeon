@@ -5,8 +5,8 @@ ALTER TABLE public.inquiries
   ADD CONSTRAINT inquiries_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE SET NULL;
 
--- 2. 기존 정책 재생성 (TO authenticated 명시)
-DROP POLICY IF EXISTS "Users can view their own inquiries"   ON public.inquiries;
+-- 2. 기존 사용자 정책 재생성 (TO authenticated 명시)
+DROP POLICY IF EXISTS "Users can view their own inquiries" ON public.inquiries;
 DROP POLICY IF EXISTS "Users can create their own inquiries" ON public.inquiries;
 DROP POLICY IF EXISTS "Users can update their own pending inquiries" ON public.inquiries;
 DROP POLICY IF EXISTS "Users can delete their own pending inquiries" ON public.inquiries;
@@ -33,6 +33,10 @@ CREATE POLICY "Users can delete their own pending inquiries"
   USING (auth.uid() = user_id AND status = '답변대기');
 
 -- 3. 관리자/서비스 정책 추가
+DROP POLICY IF EXISTS "Admins can view all inquiries" ON public.inquiries;
+DROP POLICY IF EXISTS "Admins can answer inquiries" ON public.inquiries;
+DROP POLICY IF EXISTS "inquiries_service_all" ON public.inquiries;
+
 CREATE POLICY "Admins can view all inquiries"
   ON public.inquiries FOR SELECT
   TO authenticated
@@ -75,5 +79,4 @@ CREATE POLICY "inquiries_service_all"
 
 -- 4. 컬럼 수준 UPDATE 권한 강화
 REVOKE UPDATE ON TABLE public.inquiries FROM authenticated;
-GRANT UPDATE (title, content) ON TABLE public.inquiries TO authenticated;
-GRANT UPDATE (status, answer, answer_date) ON TABLE public.inquiries TO authenticated;
+GRANT UPDATE (title, content, status, answer, answer_date) ON TABLE public.inquiries TO authenticated;
