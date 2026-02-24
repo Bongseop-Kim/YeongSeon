@@ -37,10 +37,10 @@ CREATE OR REPLACE FUNCTION public.admin_get_email(uid uuid)
 RETURNS text
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = 'public'
+SET search_path TO 'public'
 AS $$
   SELECT CASE
-    WHEN public.is_admin()
+    WHEN auth.uid() IS NOT NULL AND public.is_admin()
     THEN (SELECT email FROM auth.users WHERE id = uid)
     ELSE NULL
   END;

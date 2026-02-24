@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.user_coupons (
 CREATE INDEX user_coupons_user_id_idx  ON public.user_coupons USING btree (user_id);
 CREATE INDEX user_coupons_status_idx   ON public.user_coupons USING btree (status);
 CREATE INDEX user_coupons_expires_idx  ON public.user_coupons USING btree (expires_at);
+CREATE UNIQUE INDEX user_coupons_user_coupon_uniq ON public.user_coupons (user_id, coupon_id);
 
 -- Trigger
 CREATE OR REPLACE TRIGGER user_coupons_set_updated_at

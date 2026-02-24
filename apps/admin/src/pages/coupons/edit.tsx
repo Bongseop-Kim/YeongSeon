@@ -15,7 +15,7 @@ import {
 } from "antd";
 import { useInvalidate, useList } from "@refinedev/core";
 import { supabase } from "@/lib/supabase";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 
 type CouponUser = {
@@ -89,7 +89,6 @@ export default function CouponEdit() {
     const normalized = (status ?? "").trim().toLowerCase();
     return (
       normalized === "active" ||
-      normalized.includes("active") ||
       normalized === "활성" ||
       normalized === "발급" ||
       normalized === "사용가능" ||
@@ -98,17 +97,32 @@ export default function CouponEdit() {
   };
 
   const loadCustomers = async (): Promise<CouponUser[]> => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, name, phone, birth, created_at")
-      .eq("role", "customer")
-      .eq("is_active", true);
+    const pageSize = 1000;
+    const allData: CouponUser[] = [];
+    let from = 0;
 
-    if (error) {
-      throw error;
+    while (true) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, name, phone, birth, created_at")
+        .eq("role", "customer")
+        .eq("is_active", true)
+        .range(from, from + pageSize - 1);
+
+      if (error) {
+        throw error;
+      }
+
+      const rows = (data ?? []) as CouponUser[];
+      allData.push(...rows);
+
+      if (rows.length < pageSize) {
+        break;
+      }
+      from += pageSize;
     }
 
-    return (data ?? []) as CouponUser[];
+    return allData;
   };
 
   const loadPurchasedUserIds = async (): Promise<Set<string>> => {
@@ -141,99 +155,111 @@ export default function CouponEdit() {
     return new Set((data ?? []).map((row) => row.user_id).filter(Boolean));
   };
 
-  const applyPreset = async (preset: PresetKey) => {
-    if (!couponId) {
-      return;
-    }
-
-    setLoadingPreset(true);
-    setSelectedPreset(preset);
-    setSelectedUserIds([]);
-
-    try {
-      const [allCustomers, alreadyIssued] = await Promise.all([
-        loadCustomers(),
-        loadAlreadyIssuedUserIds(),
-      ]);
-
-      const now = dayjs();
-      const start30d = now.subtract(30, "day");
-      const start90d = now.subtract(90, "day");
-
-      let presetUsers = allCustomers;
-
-      if (preset === "new30") {
-        presetUsers = allCustomers.filter(
-          (user) => user.created_at && dayjs(user.created_at).isAfter(start30d)
-        );
+  const applyPreset = useCallback(
+    async (preset: PresetKey) => {
+      if (!couponId) {
+        return;
       }
 
-      if (preset === "birthdayThisMonth") {
-        const targetMonth = now.month();
-        presetUsers = allCustomers.filter((user) => {
-          if (!user.birth) {
-            return false;
+      setLoadingPreset(true);
+      setSelectedUserIds([]);
+
+      try {
+        const [allCustomers, alreadyIssued] = await Promise.all([
+          loadCustomers(),
+          loadAlreadyIssuedUserIds(),
+        ]);
+
+        const now = dayjs();
+        const start30d = now.subtract(30, "day");
+        const start90d = now.subtract(90, "day");
+
+        let presetUsers = allCustomers;
+
+        switch (preset) {
+          case "new30":
+            presetUsers = allCustomers.filter(
+              (user) => user.created_at && dayjs(user.created_at).isAfter(start30d)
+            );
+            break;
+
+          case "birthdayThisMonth": {
+            const targetMonth = now.month();
+            presetUsers = allCustomers.filter((user) => {
+              if (!user.birth) {
+                return false;
+              }
+
+              const birthDate = dayjs(user.birth);
+              return birthDate.isValid() && birthDate.month() === targetMonth;
+            });
+            break;
           }
 
-          const birthDate = dayjs(user.birth);
-          return birthDate.isValid() && birthDate.month() === targetMonth;
-        });
-      }
+          case "purchased": {
+            const purchasedUserIds = await loadPurchasedUserIds();
+            presetUsers = allCustomers.filter((user) => purchasedUserIds.has(user.id));
+            break;
+          }
 
-      if (preset === "purchased") {
-        const purchasedUserIds = await loadPurchasedUserIds();
-        presetUsers = allCustomers.filter((user) => purchasedUserIds.has(user.id));
-      }
+          case "notPurchased": {
+            const purchasedUserIds = await loadPurchasedUserIds();
+            presetUsers = allCustomers.filter((user) => !purchasedUserIds.has(user.id));
+            break;
+          }
 
-      if (preset === "notPurchased") {
-        const purchasedUserIds = await loadPurchasedUserIds();
-        presetUsers = allCustomers.filter((user) => !purchasedUserIds.has(user.id));
-      }
+          case "dormant": {
+            const { data: completedOrders, error } = await supabase
+              .from("orders")
+              .select("user_id, created_at")
+              .eq("status", "완료");
 
-      if (preset === "dormant") {
-        const { data: completedOrders, error } = await supabase
-          .from("orders")
-          .select("user_id, created_at")
-          .eq("status", "완료");
+            if (error) {
+              throw error;
+            }
 
-        if (error) {
-          throw error;
+            const latestOrderByUser = new Map<string, dayjs.Dayjs>();
+
+            for (const row of completedOrders ?? []) {
+              if (!row.user_id || !row.created_at) {
+                continue;
+              }
+
+              const orderDate = dayjs(row.created_at);
+              const prev = latestOrderByUser.get(row.user_id);
+
+              if (!prev || orderDate.isAfter(prev)) {
+                latestOrderByUser.set(row.user_id, orderDate);
+              }
+            }
+
+            presetUsers = allCustomers.filter((user) => {
+              const latest = latestOrderByUser.get(user.id);
+              return !!latest && latest.isBefore(start90d);
+            });
+            break;
+          }
+
+          case "all":
+          default:
+            break;
         }
 
-        const latestOrderByUser = new Map<string, dayjs.Dayjs>();
-
-        for (const row of completedOrders ?? []) {
-          if (!row.user_id || !row.created_at) {
-            continue;
-          }
-
-          const orderDate = dayjs(row.created_at);
-          const prev = latestOrderByUser.get(row.user_id);
-
-          if (!prev || orderDate.isAfter(prev)) {
-            latestOrderByUser.set(row.user_id, orderDate);
-          }
+        if (excludeIssuedUsers) {
+          presetUsers = presetUsers.filter((user) => !alreadyIssued.has(user.id));
         }
 
-        presetUsers = allCustomers.filter((user) => {
-          const latest = latestOrderByUser.get(user.id);
-          return !!latest && latest.isBefore(start90d);
-        });
+        setUsers(presetUsers);
+      } catch (error) {
+        console.error(error);
+        message.error("대상 고객 조회에 실패했습니다.");
+        setUsers([]);
+      } finally {
+        setLoadingPreset(false);
       }
-
-      if (excludeIssuedUsers) {
-        presetUsers = presetUsers.filter((user) => !alreadyIssued.has(user.id));
-      }
-
-      setUsers(presetUsers);
-    } catch (error) {
-      console.error(error);
-      message.error("대상 고객 조회에 실패했습니다.");
-      setUsers([]);
-    } finally {
-      setLoadingPreset(false);
-    }
-  };
+    },
+    [couponId, excludeIssuedUsers]
+  );
 
   useEffect(() => {
     if (!issueModal || !couponId) {
@@ -241,8 +267,7 @@ export default function CouponEdit() {
     }
 
     applyPreset(selectedPreset);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [issueModal, excludeIssuedUsers]);
+  }, [issueModal, selectedPreset, couponId, excludeIssuedUsers, applyPreset]);
 
   const filteredUsers = useMemo(() => {
     if (!keyword.trim()) {
@@ -279,12 +304,13 @@ export default function CouponEdit() {
       onOk: async () => {
         setIssuing(true);
         try {
-          const { error } = await supabase.from("user_coupons").insert(
+          const { error } = await supabase.from("user_coupons").upsert(
             targetIds.map((userId) => ({
               user_id: userId,
               coupon_id: couponId,
               status: "active",
-            }))
+            })),
+            { onConflict: "user_id,coupon_id" }
           );
 
           if (error) {
@@ -313,7 +339,7 @@ export default function CouponEdit() {
       return;
     }
 
-    const couponIds = Array.from(
+    const userCouponIds = Array.from(
       new Set(targetRows.map((row) => row.id).filter((value): value is string => !!value))
     );
     const userIds = Array.from(
@@ -329,11 +355,11 @@ export default function CouponEdit() {
         try {
           let updateError: { message?: string } | null = null;
 
-          if (couponIds.length > 0) {
+          if (userCouponIds.length > 0) {
             const { error } = await supabase
               .from("user_coupons")
               .update({ status: "revoked" })
-              .in("id", couponIds);
+              .in("id", userCouponIds);
             updateError = error;
           } else if (couponId && userIds.length > 0) {
             const { error } = await supabase
@@ -482,7 +508,7 @@ export default function CouponEdit() {
               checked={selectedPreset === preset}
               onChange={(checked) => {
                 if (checked) {
-                  applyPreset(preset);
+                  setSelectedPreset(preset);
                 }
               }}
             >

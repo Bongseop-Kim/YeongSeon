@@ -228,10 +228,11 @@ SELECT
   uc.expires_at    AS "expiresAt",
   uc.used_at       AS "usedAt",
   p.name           AS "userName",
-  p.phone          AS "userPhone",
+  CASE WHEN public.is_admin() THEN p.phone ELSE NULL END AS "userPhone",
   public.admin_get_email(uc.user_id) AS "userEmail"
 FROM public.user_coupons uc
-LEFT JOIN public.profiles p ON p.id = uc.user_id;
+LEFT JOIN public.profiles p ON p.id = uc.user_id
+WHERE public.is_admin();
 
 -- ── admin_order_list_view ──────────────────────────────────
 CREATE OR REPLACE VIEW public.admin_order_list_view
