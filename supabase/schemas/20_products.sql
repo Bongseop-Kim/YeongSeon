@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS public.products (
   CONSTRAINT products_material_check
     CHECK ((material)::text = ANY ((ARRAY['silk'::character varying, 'cotton'::character varying, 'polyester'::character varying, 'wool'::character varying])::text[])),
   CONSTRAINT products_pattern_check
-    CHECK ((pattern)::text = ANY ((ARRAY['solid'::character varying, 'stripe'::character varying, 'dot'::character varying, 'check'::character varying, 'paisley'::character varying])::text[]))
+    CHECK ((pattern)::text = ANY ((ARRAY['solid'::character varying, 'stripe'::character varying, 'dot'::character varying, 'check'::character varying, 'paisley'::character varying])::text[])),
+  CONSTRAINT products_price_check
+    CHECK (price >= 0)
 );
 
 ALTER SEQUENCE public.products_id_seq OWNED BY public.products.id;
