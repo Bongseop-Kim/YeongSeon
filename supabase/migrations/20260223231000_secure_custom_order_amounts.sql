@@ -849,7 +849,7 @@ ALTER FUNCTION "public"."generate_order_number"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_cart_items"("p_user_id" "uuid", "p_active_only" boolean DEFAULT true) RETURNS SETOF "jsonb"
-    LANGUAGE "sql"
+    LANGUAGE "sql" SECURITY INVOKER
     SET "search_path" TO 'public'
     AS $$
   with cart as (
@@ -946,7 +946,7 @@ ALTER FUNCTION "public"."get_cart_items"("p_user_id" "uuid", "p_active_only" boo
 
 
 CREATE OR REPLACE FUNCTION "public"."get_products_by_ids"("p_ids" integer[]) RETURNS TABLE("id" integer, "code" character varying, "name" character varying, "price" integer, "image" "text", "detailImages" "text"[], "category" character varying, "color" character varying, "pattern" character varying, "material" character varying, "info" "text", "created_at" timestamp with time zone, "updated_at" timestamp with time zone, "options" "jsonb", "likes" integer, "isLiked" boolean)
-    LANGUAGE "sql" STABLE
+    LANGUAGE "sql" STABLE SECURITY INVOKER
     SET "search_path" TO 'public'
     AS $$
   select
@@ -2345,7 +2345,7 @@ GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."cart_items" TO "anon";
+GRANT SELECT ON TABLE "public"."cart_items" TO "anon";
 GRANT ALL ON TABLE "public"."cart_items" TO "authenticated";
 GRANT ALL ON TABLE "public"."cart_items" TO "service_role";
 
@@ -2357,31 +2357,31 @@ GRANT SELECT,REFERENCES ON TABLE "public"."claims" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."coupons" TO "anon";
+GRANT SELECT ON TABLE "public"."coupons" TO "anon";
 GRANT ALL ON TABLE "public"."coupons" TO "authenticated";
 GRANT ALL ON TABLE "public"."coupons" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."order_items" TO "anon";
+GRANT SELECT ON TABLE "public"."order_items" TO "anon";
 GRANT ALL ON TABLE "public"."order_items" TO "authenticated";
 GRANT ALL ON TABLE "public"."order_items" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."orders" TO "anon";
+GRANT SELECT ON TABLE "public"."orders" TO "anon";
 GRANT ALL ON TABLE "public"."orders" TO "authenticated";
 GRANT ALL ON TABLE "public"."orders" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."product_options" TO "anon";
+GRANT SELECT ON TABLE "public"."product_options" TO "anon";
 GRANT ALL ON TABLE "public"."product_options" TO "authenticated";
 GRANT ALL ON TABLE "public"."product_options" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."products" TO "anon";
+GRANT SELECT ON TABLE "public"."products" TO "anon";
 GRANT ALL ON TABLE "public"."products" TO "authenticated";
 GRANT ALL ON TABLE "public"."products" TO "service_role";
 
@@ -2393,7 +2393,7 @@ GRANT ALL ON TABLE "public"."product_list_view" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."user_coupons" TO "anon";
+GRANT SELECT ON TABLE "public"."user_coupons" TO "anon";
 GRANT ALL ON TABLE "public"."user_coupons" TO "authenticated";
 GRANT ALL ON TABLE "public"."user_coupons" TO "service_role";
 
@@ -2413,7 +2413,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."custom_order_pricing_consta
 
 
 
-GRANT ALL ON TABLE "public"."inquiries" TO "anon";
+GRANT SELECT ON TABLE "public"."inquiries" TO "anon";
 GRANT ALL ON TABLE "public"."inquiries" TO "authenticated";
 GRANT ALL ON TABLE "public"."inquiries" TO "service_role";
 
@@ -2443,13 +2443,13 @@ GRANT ALL ON SEQUENCE "public"."products_id_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT ON TABLE "public"."profiles" TO "anon";
 GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."profiles" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."shipping_addresses" TO "anon";
+GRANT SELECT ON TABLE "public"."shipping_addresses" TO "anon";
 GRANT ALL ON TABLE "public"."shipping_addresses" TO "authenticated";
 GRANT ALL ON TABLE "public"."shipping_addresses" TO "service_role";
 
