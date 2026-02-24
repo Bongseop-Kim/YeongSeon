@@ -120,6 +120,12 @@ const OrderFormPage = () => {
   };
 
   const handleRequestPayment = async () => {
+    if (!user) {
+      toast.error("로그인이 필요합니다. 로그인 후 결제를 진행해주세요.");
+      navigate(ROUTES.LOGIN);
+      return;
+    }
+
     if (!selectedAddressId || !selectedAddress) {
       toast.error("배송지를 선택해주세요.");
       return;
@@ -355,7 +361,7 @@ const OrderFormPage = () => {
                 onClick={handleRequestPayment}
                 className="w-full"
                 size="xl"
-                disabled={!selectedAddress || isPaymentLoading}
+                disabled={!user || !selectedAddress || !paymentWidgetRef.current || isPaymentLoading}
               >
                 {isPaymentLoading
                   ? "결제 요청 중..."
