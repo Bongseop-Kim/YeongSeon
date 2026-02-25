@@ -11,7 +11,7 @@ import {
   Select,
   message,
 } from "antd";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { AdminClaimListRowDTO } from "@yeongseon/shared";
 import {
   CLAIM_STATUS_FLOW,
@@ -40,25 +40,22 @@ export default function ClaimShow() {
   // Resend tracking state
   const [resendCourier, setResendCourier] = useState("");
   const [resendTracking, setResendTracking] = useState("");
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (claim) {
-      if (returnCourier === "") {
-        setReturnCourier(claim.returnCourierCompany ?? "");
-      }
-      if (returnTracking === "") {
-        setReturnTracking(claim.returnTrackingNumber ?? "");
-      }
-      if (resendCourier === "") {
-        setResendCourier(claim.resendCourierCompany ?? "");
-      }
-      if (resendTracking === "") {
-        setResendTracking(claim.resendTrackingNumber ?? "");
-      }
+    if (claim && !initializedRef.current) {
+      setReturnCourier(claim.returnCourierCompany ?? "");
+      setReturnTracking(claim.returnTrackingNumber ?? "");
+      setResendCourier(claim.resendCourierCompany ?? "");
+      setResendTracking(claim.resendTrackingNumber ?? "");
+      initializedRef.current = true;
     }
-  }, [claim, returnCourier, returnTracking, resendCourier, resendTracking]);
+  }, [claim]);
 
   const handleStatusChange = (newStatus: string) => {
+    if (!claim) return;
+    const claimId = claim.id;
+
     if (newStatus === "거부") {
       Modal.confirm({
         title: "클레임 거부",
@@ -69,7 +66,7 @@ export default function ClaimShow() {
         onOk: () =>
           updateClaim({
             resource: "claims",
-            id: claim!.id,
+            id: claimId,
             values: { status: "거부" },
           }),
       });
@@ -78,7 +75,7 @@ export default function ClaimShow() {
 
     updateClaim({
       resource: "claims",
-      id: claim!.id,
+      id: claimId,
       values: { status: newStatus },
     });
   };
@@ -94,7 +91,10 @@ export default function ClaimShow() {
           return_tracking_number: returnTracking || null,
         },
       },
-      { onSuccess: () => message.success("수거 배송 정보가 저장되었습니다.") },
+      {
+        onSuccess: () => message.success("수거 배송 정보가 저장되었습니다."),
+        onError: () => message.error("수거 배송 정보 저장에 실패했습니다."),
+      },
     );
   };
 
@@ -109,7 +109,10 @@ export default function ClaimShow() {
           resend_tracking_number: resendTracking || null,
         },
       },
-      { onSuccess: () => message.success("재발송 배송 정보가 저장되었습니다.") },
+      {
+        onSuccess: () => message.success("재발송 배송 정보가 저장되었습니다."),
+        onError: () => message.error("재발송 배송 정보 저장에 실패했습니다."),
+      },
     );
   };
 
@@ -249,7 +252,7 @@ export default function ClaimShow() {
               <Select
                 value={returnCourier || undefined}
                 placeholder="택배사 선택"
-                onChange={setReturnCourier}
+                onChange={(value) => setReturnCourier(value ?? "")}
                 style={{ width: 180 }}
                 options={courierOptions}
                 allowClear
@@ -293,7 +296,7 @@ export default function ClaimShow() {
               <Select
                 value={resendCourier || undefined}
                 placeholder="택배사 선택"
-                onChange={setResendCourier}
+                onChange={(value) => setResendCourier(value ?? "")}
                 style={{ width: 180 }}
                 options={courierOptions}
                 allowClear

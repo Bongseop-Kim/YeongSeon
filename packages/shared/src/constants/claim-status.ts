@@ -1,7 +1,7 @@
-import type { ClaimTypeDTO } from "../types/dto/claim-view";
+import type { ClaimType } from "../types/view/claim-item";
 
 export const CLAIM_STATUS_FLOW: Record<
-  ClaimTypeDTO,
+  ClaimType,
   Record<string, string>
 > = {
   cancel: { 접수: "처리중", 처리중: "완료" },
@@ -34,7 +34,7 @@ export const CLAIM_STATUS_OPTIONS: { label: string; value: string }[] = [
   { label: "거부", value: "거부" },
 ];
 
-export const CLAIM_TYPE_LABELS: Record<ClaimTypeDTO, string> = {
+export const CLAIM_TYPE_LABELS: Record<ClaimType, string> = {
   cancel: "취소",
   return: "반품",
   exchange: "교환",

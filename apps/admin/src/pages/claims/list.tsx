@@ -34,11 +34,10 @@ export default function ClaimList() {
         <Select
           placeholder="유형"
           allowClear
-          options={[
-            { label: "취소", value: "cancel" },
-            { label: "반품", value: "return" },
-            { label: "교환", value: "exchange" },
-          ]}
+          options={Object.entries(CLAIM_TYPE_LABELS).map(([value, label]) => ({
+            label,
+            value,
+          }))}
           onChange={(value) => {
             setFilters([
               { field: "type", operator: "eq", value: value || undefined },
@@ -52,7 +51,7 @@ export default function ClaimList() {
         {...tableProps}
         rowKey="id"
         onRow={(record) => ({
-          onClick: () => show("admin_claim_list_view", record.id!),
+          onClick: () => show("admin_claim_list_view", record.id),
           style: { cursor: "pointer" },
         })}
       >
