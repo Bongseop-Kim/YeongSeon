@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import OrderForm from "./components/OrderForm";
 import CostBreakdown from "./components/CostBreakdown";
-import type { OrderOptions } from "./types/order";
+import type { QuoteOrderOptions } from "./types/order";
 import { Form } from "@/components/ui/form";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { calculateTotalCost } from "./utils/pricing";
@@ -30,6 +30,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
+import { useCreateQuoteRequest } from "@/features/quote-request/api/quote-request-query";
+import { toCreateQuoteRequestInput } from "@/features/quote-request/api/quote-request-mapper";
+import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
 
 type ShippingMessageTypeValue =
   (typeof SHIPPING_MESSAGE_TYPE)[keyof typeof SHIPPING_MESSAGE_TYPE];
@@ -72,6 +75,7 @@ const OrderPage = () => {
   const { openPopup } = usePopup();
   const queryClient = useQueryClient();
   const createCustomOrder = useCreateCustomOrder();
+  const createQuoteRequest = useCreateQuoteRequest();
   const imageUpload = useImageUpload();
 
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
@@ -125,7 +129,7 @@ const OrderPage = () => {
   const selectedAddress =
     addresses?.find((addr) => addr.id === selectedAddressId) || defaultAddress;
 
-  const form = useForm<OrderOptions>({
+  const form = useForm<QuoteOrderOptions>({
     defaultValues: {
       // 원단 정보
       fabricProvided: false,
@@ -157,6 +161,12 @@ const OrderPage = () => {
       referenceImages: null,
       additionalNotes: "",
       sample: false,
+
+      // 견적요청 연락처
+      contactName: "",
+      contactTitle: "",
+      contactMethod: "phone",
+      contactValue: "",
     },
   });
 
@@ -164,6 +174,72 @@ const OrderPage = () => {
 
   const { sewingCost, fabricCost, totalCost } =
     calculateTotalCost(watchedValues);
+
+  const isQuoteMode = watchedValues.quantity >= 100;
+
+  const handleCreateQuoteRequest = async () => {
+    if (!user) {
+      toast.error("로그인이 필요합니다.");
+      navigate(ROUTES.LOGIN);
+      return;
+    }
+
+    if (!selectedAddressId || !selectedAddress) {
+      toast.error("배송지를 선택해주세요.");
+      return;
+    }
+
+    if (!watchedValues.contactName.trim()) {
+      toast.error("담당자 성함을 입력해주세요.");
+      return;
+    }
+
+    if (!watchedValues.contactValue.trim()) {
+      toast.error("연락처를 입력해주세요.");
+      return;
+    }
+
+    if (imageUpload.isUploading) {
+      toast.error("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+
+    const {
+      referenceImages,
+      additionalNotes,
+      sample,
+      contactName,
+      contactTitle,
+      contactMethod,
+      contactValue,
+      ...optionsWithoutExtra
+    } = watchedValues;
+
+    try {
+      await createQuoteRequest.mutateAsync({
+        ...toCreateQuoteRequestInput({
+          shippingAddressId: selectedAddressId,
+          options: optionsWithoutExtra,
+          referenceImageUrls: imageUpload.getImageUrls(),
+          additionalNotes,
+          contactName,
+          contactTitle,
+          contactMethod,
+          contactValue,
+        }),
+      });
+
+      toast.success("견적요청이 완료되었습니다!");
+      form.reset();
+      navigate(ROUTES.ORDER_LIST);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "견적요청 처리 중 오류가 발생했습니다.";
+      toast.error(errorMessage);
+    }
+  };
 
   const handleCreateOrder = async () => {
     if (!user) {
@@ -183,11 +259,15 @@ const OrderPage = () => {
     }
 
     const {
-      referenceImages: _referenceImages,
+      referenceImages,
       additionalNotes,
       sample,
+      contactName,
+      contactTitle,
+      contactMethod,
+      contactValue,
       ...optionsWithoutReferenceImages
-    }: OrderOptions = watchedValues;
+    } = watchedValues;
 
     try {
       await createCustomOrder.mutateAsync({
@@ -226,6 +306,13 @@ const OrderPage = () => {
             }
             rightPanel={
               <div className="space-y-4">
+                {isQuoteMode && (
+                  <ContactInfoSection
+                    control={form.control}
+                    contactMethod={watchedValues.contactMethod}
+                  />
+                )}
+
                 <Card>
                   <CardHeader className="flex justify-between items-center">
                     <CardTitle>
@@ -272,24 +359,42 @@ const OrderPage = () => {
             }
             button={
               <div className="space-y-2">
-                <Button
-                  type="button"
-                  onClick={handleCreateOrder}
-                  size="xl"
-                  className="w-full"
-                  disabled={
-                    !selectedAddress ||
-                    createCustomOrder.isPending ||
-                    imageUpload.isUploading
-                  }
-                >
-                  {createCustomOrder.isPending
-                    ? "주문 처리 중..."
-                    : `${totalCost.toLocaleString()}원 주문하기`}
-                </Button>
+                {isQuoteMode ? (
+                  <Button
+                    type="button"
+                    onClick={handleCreateQuoteRequest}
+                    size="xl"
+                    className="w-full"
+                    disabled={
+                      !selectedAddress ||
+                      createQuoteRequest.isPending ||
+                      imageUpload.isUploading
+                    }
+                  >
+                    {createQuoteRequest.isPending
+                      ? "견적요청 처리 중..."
+                      : "견적요청"}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={handleCreateOrder}
+                    size="xl"
+                    className="w-full"
+                    disabled={
+                      !selectedAddress ||
+                      createCustomOrder.isPending ||
+                      imageUpload.isUploading
+                    }
+                  >
+                    {createCustomOrder.isPending
+                      ? "주문 처리 중..."
+                      : `${totalCost.toLocaleString()}원 주문하기`}
+                  </Button>
+                )}
                 {!selectedAddress && (
                   <p className="text-sm text-center text-zinc-500">
-                    배송지를 추가하면 주문을 진행할 수 있어요
+                    배송지를 추가하면 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수 있어요
                   </p>
                 )}
               </div>

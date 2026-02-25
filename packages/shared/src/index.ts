@@ -14,6 +14,7 @@ export type * from "./types/dto/admin-order";
 export type * from "./types/dto/admin-claim";
 export type * from "./types/dto/admin-coupon";
 export type * from "./types/dto/admin-settings";
+export type * from "./types/dto/admin-quote-request";
 
 // Types - View
 export type * from "./types/view/product";
@@ -31,6 +32,7 @@ export * from "./constants/reform-pricing";
 export * from "./constants/custom-order-pricing";
 export * from "./constants/courier-companies";
 export * from "./constants/order-status";
+export * from "./constants/quote-request-status";
 
 // Utils
 export * from "./utils/calculate-discount";
