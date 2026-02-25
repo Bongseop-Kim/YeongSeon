@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import {
   Layout,
   Menu,
-  Grid,
   Drawer,
   Button,
   theme,
@@ -26,6 +25,7 @@ import {
   useWarnAboutChange,
 } from "@refinedev/core";
 import { ThemedTitle, useThemedLayoutContext } from "@refinedev/antd";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 import type { CSSProperties } from "react";
 
@@ -48,11 +48,8 @@ export const AdminSider: React.FC<AdminSiderProps> = ({ Title: TitleFromProps })
   const { warnWhen, setWarnWhen } = useWarnAboutChange();
   const translate = useTranslate();
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu();
-  const breakpoint = Grid.useBreakpoint();
   const { mutate: mutateLogout } = useLogout();
-
-  const isMobile =
-    typeof breakpoint.lg === "undefined" ? false : !breakpoint.lg;
+  const isMobile = useIsMobile();
 
   const RenderToTitle = TitleFromProps ?? ThemedTitle;
 
@@ -275,6 +272,8 @@ export const AdminSider: React.FC<AdminSiderProps> = ({ Title: TitleFromProps })
       trigger={
         <Button
           type="text"
+          aria-label={siderCollapsed ? "사이드바 펼치기" : "사이드바 접기"}
+          aria-expanded={!siderCollapsed}
           style={{
             borderRadius: 0,
             height: "100%",

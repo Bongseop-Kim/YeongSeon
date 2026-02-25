@@ -32,6 +32,7 @@ export const AdminHeader: React.FC = () => {
         type="text"
         icon={<BarsOutlined />}
         onClick={() => setMobileSiderOpen(true)}
+        aria-label="메뉴 열기"
         style={{ marginRight: 8 }}
       />
       <span style={{ fontWeight: 600, fontSize: 16 }}>{label}</span>

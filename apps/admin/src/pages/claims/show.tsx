@@ -5,6 +5,7 @@ import {
   Tag,
   Table,
   Button,
+  Flex,
   Space,
   Modal,
   Typography,
@@ -351,7 +352,7 @@ export default function ClaimShow() {
             direction="vertical"
             style={{ width: "100%", marginBottom: 24 }}
           >
-            <Space wrap>
+            <Flex wrap="wrap" gap={8}>
               <Select
                 value={returnCourier || undefined}
                 placeholder="택배사 선택"
@@ -382,7 +383,7 @@ export default function ClaimShow() {
                   수거추적
                 </Button>
               )}
-            </Space>
+            </Flex>
           </Space>
         </>
       )}
@@ -395,7 +396,7 @@ export default function ClaimShow() {
             direction="vertical"
             style={{ width: "100%", marginBottom: 24 }}
           >
-            <Space wrap>
+            <Flex wrap="wrap" gap={8}>
               <Select
                 value={resendCourier || undefined}
                 placeholder="택배사 선택"
@@ -426,7 +427,7 @@ export default function ClaimShow() {
                   배송추적
                 </Button>
               )}
-            </Space>
+            </Flex>
           </Space>
         </>
       )}

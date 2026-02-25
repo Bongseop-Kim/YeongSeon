@@ -5,6 +5,7 @@ import {
   Tag,
   Table,
   Button,
+  Flex,
   Space,
   Modal,
   Typography,
@@ -517,7 +518,7 @@ export default function OrderShow() {
 
       <Title level={5}>배송 정보</Title>
       <Space direction="vertical" style={{ width: "100%", marginBottom: 24 }}>
-        <Space wrap>
+        <Flex wrap="wrap" gap={8}>
           <Select
             value={courierCompany || undefined}
             placeholder="택배사 선택"
@@ -551,7 +552,7 @@ export default function OrderShow() {
               배송추적
             </Button>
           )}
-        </Space>
+        </Flex>
         {order?.shippedAt && (
           <Text type="secondary">
             발송일시: {new Date(order.shippedAt).toLocaleString("ko-KR")}
