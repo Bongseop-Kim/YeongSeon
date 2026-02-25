@@ -119,7 +119,4 @@ CREATE POLICY "Admins can view all order status logs"
   TO authenticated
   USING (public.is_admin());
 
-CREATE POLICY "Admins can insert order status logs"
-  ON public.order_status_logs FOR INSERT
-  TO authenticated
-  WITH CHECK (public.is_admin() AND changed_by = auth.uid());
+-- No INSERT policy: audit logs are written exclusively by SECURITY DEFINER RPCs.
