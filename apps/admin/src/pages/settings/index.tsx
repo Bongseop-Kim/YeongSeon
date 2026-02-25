@@ -79,7 +79,7 @@ export default function SettingsPage() {
           value={defaultCourier || undefined}
           placeholder="기본 택배사 선택"
           onChange={setDefaultCourier}
-          style={{ width: 200 }}
+          style={{ minWidth: 140, maxWidth: 200, flex: 1 }}
           options={COURIER_COMPANY_NAMES.map((name) => ({
             label: name,
             value: name,

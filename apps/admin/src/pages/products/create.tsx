@@ -107,6 +107,7 @@ export default function ProductCreate() {
                 {fields.map(({ key, name, ...restField }) => (
                   <Space
                     key={key}
+                    wrap
                     style={{ display: "flex", marginBottom: 8 }}
                     align="baseline"
                   >

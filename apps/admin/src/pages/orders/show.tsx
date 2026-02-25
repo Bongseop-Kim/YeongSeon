@@ -51,7 +51,7 @@ function CustomOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
   return (
     <>
       <Title level={5}>주문 제작 상세</Title>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="넥타이 유형">
           {(options.tie_type as string) ?? "-"}
         </Descriptions.Item>
@@ -72,7 +72,7 @@ function CustomOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
         </Descriptions.Item>
       </Descriptions>
 
-      <Descriptions bordered column={3} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="삼각봉제">
           {options.triangle_stitch ? "O" : "-"}
         </Descriptions.Item>
@@ -102,7 +102,7 @@ function CustomOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
         </Descriptions.Item>
       </Descriptions>
 
-      <Descriptions bordered column={3} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="봉제비용">
           {((pricing.sewing_cost as number) ?? 0).toLocaleString()}원
         </Descriptions.Item>
@@ -163,7 +163,7 @@ function RepairOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
                 <Descriptions
                   key={tieIdx}
                   bordered
-                  column={2}
+                  column={{ xs: 1, sm: 1, md: 2 }}
                   size="small"
                   style={{ marginBottom: 8 }}
                 >
@@ -188,7 +188,7 @@ function RepairOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
                 </Descriptions>
               ))}
               {ties.length === 0 && (
-                <Descriptions bordered column={2} size="small">
+                <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} size="small">
                   <Descriptions.Item label="수량">
                     {item.quantity}
                   </Descriptions.Item>
@@ -397,7 +397,7 @@ export default function OrderShow() {
   return (
     <Show>
       <Title level={5}>주문 정보</Title>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="주문번호">
           {order?.orderNumber}
         </Descriptions.Item>
@@ -493,7 +493,7 @@ export default function OrderShow() {
       )}
 
       <Title level={5}>배송지 정보</Title>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="수령인">
           {order?.recipientName ?? "-"}
         </Descriptions.Item>
@@ -522,7 +522,7 @@ export default function OrderShow() {
             value={courierCompany || undefined}
             placeholder="택배사 선택"
             onChange={setCourierCompany}
-            style={{ width: 180 }}
+            style={{ flex: 1, minWidth: 140 }}
             options={COURIER_COMPANY_NAMES.map((name) => ({
               label: name,
               value: name,
@@ -533,7 +533,7 @@ export default function OrderShow() {
             value={trackingNumber}
             placeholder="송장번호"
             onChange={(e) => setTrackingNumber(e.target.value)}
-            style={{ width: 220 }}
+            style={{ flex: 1, minWidth: 140 }}
           />
           <Button
             type="primary"
