@@ -27,6 +27,7 @@ export type * from "./types/view/cart";
 
 // Constants
 export * from "./constants/claim-actions";
+export * from "./constants/claim-status";
 export * from "./constants/shipping-events";
 export * from "./constants/reform-pricing";
 export * from "./constants/custom-order-pricing";

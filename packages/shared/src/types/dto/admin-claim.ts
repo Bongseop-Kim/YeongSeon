@@ -11,8 +11,16 @@ export interface AdminClaimListRowDTO {
   claimQuantity: number;
   created_at: string;
   updated_at: string;
+  returnCourierCompany: string | null;
+  returnTrackingNumber: string | null;
+  resendCourierCompany: string | null;
+  resendTrackingNumber: string | null;
   orderId: string;
   orderNumber: string;
+  orderStatus: string;
+  orderCourierCompany: string | null;
+  orderTrackingNumber: string | null;
+  orderShippedAt: string | null;
   customerName: string;
   customerPhone: string | null;
   itemType: "product" | "reform";

@@ -31,6 +31,7 @@
 - `db push`, `db pull`, `db diff`, `db reset` 실패 시 에러 전문을 그대로 공유한다. 요약/생략 금지.
 - Supabase CLI 실패 후 자동 재시도하지 않는다.
 - `migration repair`, `db reset --linked` 등 상태 변경 복구 명령은 영향 범위를 설명한 뒤 사용자 승인 후 실행한다.
+- 마이그레이션 내 `DROP CONSTRAINT`, `DROP INDEX` 등은 이전 마이그레이션에서 해당 객체 생성이 보장되므로 `IF EXISTS`를 붙이지 않는다. 존재하지 않으면 에러로 감지되는 것이 올바르다.
 
 ## 참고 문서
 

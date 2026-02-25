@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useList, useInvalidate } from "@refinedev/core";
+import { useShow, useList, useInvalidate, useNavigation } from "@refinedev/core";
 import {
   Descriptions,
   Tag,
@@ -88,6 +88,7 @@ function CustomOrderOptionsDetail({
 }
 
 export default function QuoteRequestShow() {
+  const { show } = useNavigation();
   const { query: queryResult } = useShow<AdminQuoteRequestDetailRowDTO>({
     resource: "admin_quote_request_detail_view",
   });
@@ -200,7 +201,16 @@ export default function QuoteRequestShow() {
           {quote?.quantity?.toLocaleString()}개
         </Descriptions.Item>
         <Descriptions.Item label="고객명">
-          {quote?.customerName}
+          {quote?.userId ? (
+            <a
+              onClick={() => show("profiles", quote.userId)}
+              style={{ cursor: "pointer" }}
+            >
+              {quote.customerName}
+            </a>
+          ) : (
+            quote?.customerName
+          )}
         </Descriptions.Item>
         <Descriptions.Item label="고객 연락처">
           {quote?.customerPhone ?? "-"}

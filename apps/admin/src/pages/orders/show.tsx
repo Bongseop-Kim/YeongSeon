@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useList, useUpdate, useOne } from "@refinedev/core";
+import { useShow, useList, useUpdate, useOne, useNavigation } from "@refinedev/core";
 import {
   Descriptions,
   Tag,
@@ -199,6 +199,7 @@ function RepairOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
 }
 
 export default function OrderShow() {
+  const { edit, show } = useNavigation();
   const { query: queryResult } = useShow<AdminOrderDetailRowDTO>({
     resource: "admin_order_detail_view",
   });
@@ -312,7 +313,19 @@ export default function OrderShow() {
           )}
         </Descriptions.Item>
         <Descriptions.Item label="고객명">
-          {order?.customerName}
+          {order?.userId ? (
+            <a
+              onClick={(e) => {
+                e.stopPropagation();
+                show("profiles", order.userId);
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              {order.customerName}
+            </a>
+          ) : (
+            order?.customerName
+          )}
         </Descriptions.Item>
         <Descriptions.Item label="연락처">
           {order?.customerPhone ?? "-"}
@@ -436,9 +449,24 @@ export default function OrderShow() {
         <Table.Column
           dataIndex="productName"
           title="상품명"
-          render={(value: string | null, record: AdminOrderItemRowDTO) =>
-            record.itemType === "reform" ? "리폼 상품" : (value ?? "-")
-          }
+          render={(value: string | null, record: AdminOrderItemRowDTO) => {
+            if (record.itemType === "reform") return "리폼 상품";
+            if (!value) return "-";
+            if (record.productId) {
+              return (
+                <a
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    edit("products", record.productId!);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  {value}
+                </a>
+              );
+            }
+            return value;
+          }}
         />
         <Table.Column dataIndex="quantity" title="수량" />
         <Table.Column

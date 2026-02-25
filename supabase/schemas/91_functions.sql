@@ -640,7 +640,7 @@ begin
     from claims
     where order_item_id = v_order_item.id
       and type = p_type
-      and status in ('접수', '처리중')
+      and status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
   ) then
     raise exception 'Active claim already exists for this item';
   end if;
@@ -669,7 +669,7 @@ begin
     p_description,
     v_claim_quantity
   )
-  on conflict (order_item_id, type) where (status in ('접수', '처리중'))
+  on conflict (order_item_id, type) where (status in ('접수', '처리중', '수거요청', '수거완료', '재발송'))
   do nothing
   returning id into v_claim_id;
 

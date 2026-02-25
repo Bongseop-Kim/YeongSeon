@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useList } from "@refinedev/core";
+import { useShow, useList, useNavigation } from "@refinedev/core";
 import { Descriptions, Tag, Table, Typography } from "antd";
 import type { AdminOrderListRowDTO } from "@yeongseon/shared";
 
@@ -14,6 +14,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function CustomerShow() {
+  const { show, edit } = useNavigation();
   const { query: queryResult } = useShow({ resource: "profiles" });
   const profile = queryResult?.data?.data;
 
@@ -63,6 +64,10 @@ export default function CustomerShow() {
         pagination={false}
         size="small"
         style={{ marginBottom: 24 }}
+        onRow={(record) => ({
+          onClick: () => show("admin_order_list_view", record.id),
+          style: { cursor: "pointer" },
+        })}
       >
         <Table.Column dataIndex="orderNumber" title="주문번호" />
         <Table.Column dataIndex="date" title="주문일" />
@@ -84,6 +89,10 @@ export default function CustomerShow() {
         rowKey="id"
         pagination={false}
         size="small"
+        onRow={(record) => ({
+          onClick: () => edit("coupons", record.coupon_id),
+          style: { cursor: "pointer" },
+        })}
       >
         <Table.Column dataIndex="coupon_id" title="쿠폰 ID" />
         <Table.Column

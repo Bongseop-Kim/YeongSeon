@@ -1,7 +1,7 @@
 import type { OrderItem } from "./order";
 
 // 클레임 상태
-export type ClaimStatus = "접수" | "처리중" | "완료" | "거부";
+export type ClaimStatus = "접수" | "처리중" | "수거요청" | "수거완료" | "재발송" | "완료" | "거부";
 
 // 클레임 타입
 export type ClaimType = "cancel" | "return" | "exchange";
