@@ -151,7 +151,9 @@ export default function DashboardPage() {
         <Table.Column
           dataIndex="totalPrice"
           title="결제금액"
-          render={(v: number) => `${v?.toLocaleString()}원`}
+          render={(v: number | null) =>
+            v != null ? `${v.toLocaleString()}원` : "-"
+          }
         />
       </Table>
     </>

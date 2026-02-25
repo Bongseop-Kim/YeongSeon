@@ -971,7 +971,7 @@ begin
     null,
     null,
     v_reform_data,
-    (v_reform_data->>'quantity')::integer,
+    1,
     v_total_cost,
     0,
     0,

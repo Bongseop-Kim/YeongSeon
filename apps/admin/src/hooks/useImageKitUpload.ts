@@ -1,13 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { upload } from "@imagekit/react";
 import { message } from "antd";
 import type { UploadFile, RcFile } from "antd/es/upload";
 import { supabase } from "@/lib/supabase";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 
-let fileUid = 0;
-
 export const useImageKitUpload = () => {
+  const fileUidRef = useRef(0);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [activeUploads, setActiveUploads] = useState(0);
   const uploading = activeUploads > 0;
@@ -79,7 +78,7 @@ export const useImageKitUpload = () => {
   const initFromUrls = useCallback((urls: string[]) => {
     setFileList(
       urls.map((url) => ({
-        uid: `existing-${++fileUid}`,
+        uid: `existing-${++fileUidRef.current}`,
         name: url.split("/").pop() || "image",
         status: "done" as const,
         url,

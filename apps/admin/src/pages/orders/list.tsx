@@ -9,6 +9,12 @@ import {
   ORDER_STATUS_COLORS,
 } from "@yeongseon/shared";
 
+const VALID_ORDER_TYPES: OrderType[] = ["sale", "custom", "repair"];
+
+function isValidOrderType(value: string | null): value is OrderType {
+  return value !== null && VALID_ORDER_TYPES.includes(value as OrderType);
+}
+
 function DomainOrderTable({ orderType }: { orderType: OrderType }) {
   const { show } = useNavigation();
 
@@ -31,16 +37,19 @@ function DomainOrderTable({ orderType }: { orderType: OrderType }) {
     <>
       <Space style={{ marginBottom: 16 }} wrap>
         <Input.Search
-          placeholder="주문번호 / 고객명 검색"
+          placeholder="주문번호 검색"
           allowClear
           onSearch={(value) => {
-            setFilters([
-              {
-                field: "orderNumber",
-                operator: "contains",
-                value: value || undefined,
-              },
-            ]);
+            setFilters(
+              [
+                {
+                  field: "orderNumber",
+                  operator: "contains",
+                  value: value || undefined,
+                },
+              ],
+              "merge",
+            );
           }}
           style={{ width: 250 }}
         />
@@ -49,13 +58,16 @@ function DomainOrderTable({ orderType }: { orderType: OrderType }) {
           allowClear
           options={statusOptions}
           onChange={(value) => {
-            setFilters([
-              {
-                field: "status",
-                operator: "eq",
-                value: value || undefined,
-              },
-            ]);
+            setFilters(
+              [
+                {
+                  field: "status",
+                  operator: "eq",
+                  value: value || undefined,
+                },
+              ],
+              "merge",
+            );
           }}
           style={{ width: 120 }}
         />
@@ -82,6 +94,25 @@ function getColumnsForType(orderType: OrderType) {
     <Table.Column key="customerName" dataIndex="customerName" title="고객명" />,
   ];
 
+  const tail = [
+    <Table.Column
+      key="totalPrice"
+      dataIndex="totalPrice"
+      title="결제금액"
+      render={(value: number | null) =>
+        value != null ? `${value.toLocaleString()}원` : "-"
+      }
+    />,
+    <Table.Column
+      key="status"
+      dataIndex="status"
+      title="상태"
+      render={(value: string) => (
+        <TagField value={value} color={ORDER_STATUS_COLORS[value]} />
+      )}
+    />,
+  ];
+
   if (orderType === "sale") {
     return [
       ...common,
@@ -91,20 +122,7 @@ function getColumnsForType(orderType: OrderType) {
         title="이메일"
         render={(value: string | null) => value ?? "-"}
       />,
-      <Table.Column
-        key="totalPrice"
-        dataIndex="totalPrice"
-        title="결제금액"
-        render={(value: number) => `${value?.toLocaleString()}원`}
-      />,
-      <Table.Column
-        key="status"
-        dataIndex="status"
-        title="상태"
-        render={(value: string) => (
-          <TagField value={value} color={ORDER_STATUS_COLORS[value]} />
-        )}
-      />,
+      ...tail,
     ];
   }
 
@@ -129,20 +147,7 @@ function getColumnsForType(orderType: OrderType) {
         title="수량"
         render={(value: number | null) => value ?? "-"}
       />,
-      <Table.Column
-        key="totalPrice"
-        dataIndex="totalPrice"
-        title="결제금액"
-        render={(value: number) => `${value?.toLocaleString()}원`}
-      />,
-      <Table.Column
-        key="status"
-        dataIndex="status"
-        title="상태"
-        render={(value: string) => (
-          <TagField value={value} color={ORDER_STATUS_COLORS[value]} />
-        )}
-      />,
+      ...tail,
     ];
   }
 
@@ -155,20 +160,7 @@ function getColumnsForType(orderType: OrderType) {
       title="수선요약"
       render={(value: string | null) => value ?? "-"}
     />,
-    <Table.Column
-      key="totalPrice"
-      dataIndex="totalPrice"
-      title="결제금액"
-      render={(value: number) => `${value?.toLocaleString()}원`}
-    />,
-    <Table.Column
-      key="status"
-      dataIndex="status"
-      title="상태"
-      render={(value: string) => (
-        <TagField value={value} color={ORDER_STATUS_COLORS[value]} />
-      )}
-    />,
+    ...tail,
   ];
 }
 
@@ -181,9 +173,11 @@ const TAB_ITEMS: { key: OrderType; label: string }[] = [
 export default function OrderList() {
   const [searchParams] = useSearchParams();
   const go = useGo();
-  const activeTab = (searchParams.get("tab") as OrderType) || "sale";
+  const rawTab = searchParams.get("tab");
+  const activeTab: OrderType = isValidOrderType(rawTab) ? rawTab : "sale";
 
   const handleTabChange = (key: string) => {
+    if (!isValidOrderType(key)) return;
     go({
       query: { tab: key },
       options: { keepQuery: false },
@@ -196,6 +190,7 @@ export default function OrderList() {
       <Tabs
         activeKey={activeTab}
         onChange={handleTabChange}
+        destroyInactiveTabPane
         items={TAB_ITEMS.map((item) => ({
           key: item.key,
           label: item.label,

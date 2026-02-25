@@ -78,7 +78,7 @@ export default function ProductEdit() {
         imageUpload.initFromUrls(urls);
       }
     }
-  }, [queryResult?.data?.data, imageUpload]);
+  }, [queryResult?.data?.data, imageUpload.initFromUrls]);
 
   const handleFinish = async (values: Record<string, unknown>) => {
     if (imageUpload.uploading) {
