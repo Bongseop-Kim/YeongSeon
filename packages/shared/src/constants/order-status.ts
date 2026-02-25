@@ -9,12 +9,14 @@ export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
 export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
   sale: { 대기중: "진행중", 진행중: "배송중", 배송중: "완료" },
   custom: {
+    대기중: "접수",
     접수: "제작중",
     제작중: "제작완료",
     제작완료: "배송중",
     배송중: "완료",
   },
   repair: {
+    대기중: "접수",
     접수: "수선중",
     수선중: "수선완료",
     수선완료: "배송중",

@@ -73,3 +73,52 @@ CREATE POLICY "Admins can update order status"
 -- Privilege hardening
 REVOKE UPDATE ON TABLE public.orders FROM authenticated;
 GRANT UPDATE (status, courier_company, tracking_number, shipped_at) ON TABLE public.orders TO authenticated;
+
+-- =============================================================
+-- order_status_logs  –  Status change audit trail
+-- =============================================================
+
+CREATE TABLE IF NOT EXISTS public.order_status_logs (
+  id              uuid        NOT NULL DEFAULT gen_random_uuid(),
+  order_id        uuid        NOT NULL,
+  changed_by      uuid        NOT NULL,
+  previous_status text        NOT NULL,
+  new_status      text        NOT NULL,
+  memo            text,
+  created_at      timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT order_status_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT order_status_logs_order_id_fkey
+    FOREIGN KEY (order_id) REFERENCES public.orders (id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT order_status_logs_changed_by_fkey
+    FOREIGN KEY (changed_by) REFERENCES auth.users (id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE INDEX idx_order_status_logs_order_id
+  ON public.order_status_logs USING btree (order_id, created_at DESC);
+
+-- RLS
+ALTER TABLE public.order_status_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view logs of their own orders"
+  ON public.order_status_logs FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.orders o
+      WHERE o.id = order_id
+        AND o.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Admins can view all order status logs"
+  ON public.order_status_logs FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
+CREATE POLICY "Admins can insert order status logs"
+  ON public.order_status_logs FOR INSERT
+  TO authenticated
+  WITH CHECK (public.is_admin() AND changed_by = auth.uid());
