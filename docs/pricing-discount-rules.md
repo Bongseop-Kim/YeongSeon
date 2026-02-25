@@ -9,24 +9,25 @@
 
 1. 금액은 RPC에서 서버 측으로만 계산한다.
 2. 단위 할인은 `0 <= unit_discount <= unit_price`를 만족해야 한다.
-3. 라인 할인은 나머지 분배 방식: `line_discount = unit_discount * quantity + remainder` (0 <= remainder < quantity).
+3. 라인 할인은 나머지 분배 방식: `line_discount = unit_discount * quantity + remainder` (0 <= remainder < quantity). remainder는 쿠폰 캡 역분배 경로에서만 발생하며, 쿠폰 미적용 시 remainder = 0.
 4. 주문 총 할인은 모든 라인 할인의 합과 같아야 한다: `total_discount = sum(line_discount)`.
 
 ## 쿠폰 캡 규칙 (주문 도메인)
 
 쿠폰이 라인 아이템에 적용될 때:
 
-1. 쿠폰 타입으로부터 단위당 초기 할인 계산:
+1. 쿠폰 타입으로부터 단위당 초기 할인 계산 (`initial_unit_discount`):
    - `percentage`: `floor(unit_price * (discount_value / 100))`
    - `fixed`: `floor(discount_value)`
-2. 단위 가격으로 단위 할인 클램프:
-   - `unit_discount = greatest(0, least(unit_discount, unit_price))`
-3. 라인 전체 할인 계산 후 `max_discount_amount` 캡 적용:
-   - `capped_line_discount = least(unit_discount * quantity, max_discount_amount)`
+2. 단위 가격으로 클램프:
+   - `clamped_unit_discount = greatest(0, least(initial_unit_discount, unit_price))`
+3. 라인 전체 할인 계산 후 `coupons.max_discount_amount` 캡 적용 (라인 단위):
+   - `capped_line_discount = least(clamped_unit_discount * quantity, max_discount_amount)`
 4. 캡이 적용된 라인 할인을 단위로 역분배 (나머지 분배):
-   - `unit_discount = floor(capped_line_discount / quantity)`
+   - `distributed_unit_discount = floor(capped_line_discount / quantity)`
    - `remainder = capped_line_discount % quantity`
-   - `line_discount = unit_discount * quantity + remainder` (= `capped_line_discount`)
+   - `line_discount = distributed_unit_discount * quantity + remainder` (= `capped_line_discount`)
+   - 저장: `order_items.discount_amount` = `distributed_unit_discount`, `order_items.line_discount_amount` = `line_discount`
 
 ## 라인 캡 + 나머지 분배 방식 이유
 

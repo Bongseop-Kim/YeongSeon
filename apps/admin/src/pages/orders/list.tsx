@@ -77,7 +77,7 @@ function DomainOrderTable({ orderType }: { orderType: OrderType }) {
         {...tableProps}
         rowKey="id"
         onRow={(record) => ({
-          onClick: () => show("admin_order_list_view", record.id!),
+          onClick: () => show("admin_order_list_view", record.id),
           style: { cursor: "pointer" },
         })}
       >
@@ -108,7 +108,7 @@ function getColumnsForType(orderType: OrderType) {
       dataIndex="status"
       title="상태"
       render={(value: string) => (
-        <TagField value={value} color={ORDER_STATUS_COLORS[value]} />
+        <TagField value={value} color={ORDER_STATUS_COLORS[value] ?? "default"} />
       )}
     />,
   ];

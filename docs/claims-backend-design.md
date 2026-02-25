@@ -49,7 +49,7 @@
 ### RLS 정책
 - SELECT: `auth.uid() = user_id`
 - INSERT: `auth.uid() = user_id` (WITH CHECK)
-- UPDATE: 관리자만 가능 (`public.is_admin()`) + 컬럼 권한은 `status`로 제한
+- UPDATE: RLS 정책 — 관리자만 가능 (`public.is_admin()` USING/WITH CHECK). 별도로 컬럼 레벨 GRANT(`GRANT UPDATE (status) ON public.claims TO authenticated`)로 수정 가능 컬럼을 `status`로 제한. (RLS는 행 필터, GRANT는 수정 가능 컬럼 제어 — 독립적으로 동작)
 - DELETE: 정책 없음 (RLS 활성화 테이블에서 DELETE 정책이 없으면 일반 역할의 DELETE는 기본 거부됨. 테이블 소유자 또는 BYPASSRLS 세션만 삭제 가능)
 
 ### RPC
@@ -145,7 +145,7 @@ curl -X POST https://<project-ref>.supabase.co/rest/v1/rpc/create_claim \
   -d '{
     "p_type": "cancel",
     "p_order_id": "<order_id>",
-    "p_item_id": "<item_id>",
+    "p_item_id": "<order_items.item_id (text)>",
     "p_reason": "change_mind"
   }'
 ```

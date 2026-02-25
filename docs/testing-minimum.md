@@ -26,6 +26,17 @@
 - [ ] 본인 장바구니만 삭제 성공
 - [ ] 타인 `user_id` 조건 삭제 시도 시 실패(RLS 차단)
 
+### 커스텀 주문 생성 (`create-custom-order` → `create_custom_order_txn`)
+
+- [ ] 정상 커스텀 주문 생성 성공
+- [ ] 유효하지 않은 옵션/수량으로 실패
+- [ ] 서버 합계 계산 검증 (`calculate_custom_order_amounts` 결과와 저장된 금액 일치)
+
+### 수선 주문 (`create_order_txn` — repair 경로)
+
+- [ ] `item_type='reform'` 아이템이 포함된 주문이 `order_type='repair'`로 생성됨
+- [ ] 수선 주문에서 금액 불변식(`0 <= unit_discount <= unit_price` 등) 유지
+
 ### 클레임 생성 (`create_claim`)
 
 - [ ] 정상 클레임 생성 성공
@@ -43,7 +54,8 @@
 - [ ] `unit_discount = floor(capped_line_discount / quantity)` (나머지 분배 방식)
 - [ ] `line_discount = unit_discount * quantity + remainder` (remainder = capped_line_discount % quantity, 0 이상 quantity-1 이하)
 - [ ] `total_discount = sum(line_discount)`
-- [ ] 쿠폰 캡(`max_discount_amount`) 적용 시 `line_discount <= max_discount_amount` 및 라인 합계 정합 유지
+- [ ] 쿠폰 캡 적용 시 라인별 `line_discount <= coupons.max_discount_amount` (캡은 라인 단위로 적용됨)
+- [ ] `total_discount = sum(line_discount)` 정합 유지
 
 ## 5) Release Gate
 

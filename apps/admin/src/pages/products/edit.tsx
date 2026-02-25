@@ -79,9 +79,7 @@ export default function ProductEdit() {
       const detailImages = product.detail_images as string[] | null;
       const image = product.image as string | null;
       const urls = detailImages?.length ? detailImages : image ? [image] : [];
-      if (urls.length > 0) {
-        imageUpload.initFromUrls(urls);
-      }
+      imageUpload.initFromUrls(urls);
     }
   }, [queryResult?.data?.data, imageUpload.initFromUrls]);
 
