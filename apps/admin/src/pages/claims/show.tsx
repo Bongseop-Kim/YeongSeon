@@ -348,43 +348,38 @@ export default function ClaimShow() {
       {showReturnSection && (
         <>
           <Title level={5}>수거 정보</Title>
-          <Space
-            direction="vertical"
-            style={{ width: "100%", marginBottom: 24 }}
-          >
-            <Flex wrap="wrap" gap={8}>
-              <Select
-                value={returnCourier || undefined}
-                placeholder="택배사 선택"
-                onChange={(value) => setReturnCourier(value ?? "")}
-                style={{ flex: 1, minWidth: 140 }}
-                options={courierOptions}
-                allowClear
-              />
-              <Input
-                value={returnTracking}
-                placeholder="송장번호"
-                onChange={(e) => setReturnTracking(e.target.value)}
-                style={{ flex: 1, minWidth: 140 }}
-              />
+          <Flex wrap="wrap" gap={8} style={{ width: "100%", marginBottom: 24 }}>
+            <Select
+              value={returnCourier || undefined}
+              placeholder="택배사 선택"
+              onChange={(value) => setReturnCourier(value ?? "")}
+              style={{ flex: 1, minWidth: 140 }}
+              options={courierOptions}
+              allowClear
+            />
+            <Input
+              value={returnTracking}
+              placeholder="송장번호"
+              onChange={(e) => setReturnTracking(e.target.value)}
+              style={{ flex: 1, minWidth: 140 }}
+            />
+            <Button
+              type="primary"
+              onClick={handleSaveReturnTracking}
+              loading={updateMutation.isPending}
+            >
+              저장
+            </Button>
+            {returnTrackingUrl && (
               <Button
-                type="primary"
-                onClick={handleSaveReturnTracking}
-                loading={updateMutation.isPending}
+                href={returnTrackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                저장
+                수거추적
               </Button>
-              {returnTrackingUrl && (
-                <Button
-                  href={returnTrackingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  수거추적
-                </Button>
-              )}
-            </Flex>
-          </Space>
+            )}
+          </Flex>
         </>
       )}
 
@@ -392,43 +387,38 @@ export default function ClaimShow() {
       {showResendSection && (
         <>
           <Title level={5}>재발송 정보</Title>
-          <Space
-            direction="vertical"
-            style={{ width: "100%", marginBottom: 24 }}
-          >
-            <Flex wrap="wrap" gap={8}>
-              <Select
-                value={resendCourier || undefined}
-                placeholder="택배사 선택"
-                onChange={(value) => setResendCourier(value ?? "")}
-                style={{ flex: 1, minWidth: 140 }}
-                options={courierOptions}
-                allowClear
-              />
-              <Input
-                value={resendTracking}
-                placeholder="송장번호"
-                onChange={(e) => setResendTracking(e.target.value)}
-                style={{ flex: 1, minWidth: 140 }}
-              />
+          <Flex wrap="wrap" gap={8} style={{ width: "100%", marginBottom: 24 }}>
+            <Select
+              value={resendCourier || undefined}
+              placeholder="택배사 선택"
+              onChange={(value) => setResendCourier(value ?? "")}
+              style={{ flex: 1, minWidth: 140 }}
+              options={courierOptions}
+              allowClear
+            />
+            <Input
+              value={resendTracking}
+              placeholder="송장번호"
+              onChange={(e) => setResendTracking(e.target.value)}
+              style={{ flex: 1, minWidth: 140 }}
+            />
+            <Button
+              type="primary"
+              onClick={handleSaveResendTracking}
+              loading={updateMutation.isPending}
+            >
+              저장
+            </Button>
+            {resendTrackingUrl && (
               <Button
-                type="primary"
-                onClick={handleSaveResendTracking}
-                loading={updateMutation.isPending}
+                href={resendTrackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                저장
+                배송추적
               </Button>
-              {resendTrackingUrl && (
-                <Button
-                  href={resendTrackingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  배송추적
-                </Button>
-              )}
-            </Flex>
-          </Space>
+            )}
+          </Flex>
         </>
       )}
 

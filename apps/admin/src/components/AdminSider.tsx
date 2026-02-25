@@ -97,9 +97,13 @@ export const AdminSider: React.FC<AdminSiderProps> = ({ Title: TitleFromProps })
             icon={icon ?? (isRoute && <UnorderedListOutlined />)}
             style={linkStyle}
           >
-            <Link to={route ?? ""} style={linkStyle}>
-              {label}
-            </Link>
+            {route ? (
+              <Link to={route} style={linkStyle}>
+                {label}
+              </Link>
+            ) : (
+              <span style={linkStyle}>{label}</span>
+            )}
             {!siderCollapsed && isSelected && (
               <div className="ant-menu-tree-arrow" />
             )}
@@ -231,7 +235,9 @@ export const AdminSider: React.FC<AdminSiderProps> = ({ Title: TitleFromProps })
           style={{
             height: "100vh",
             backgroundColor: token.colorBgContainer,
-            borderRight: `1px solid ${token.colorBgElevated}`,
+            ...(direction === "rtl"
+              ? { borderLeft: `1px solid ${token.colorBgElevated}` }
+              : { borderRight: `1px solid ${token.colorBgElevated}` }),
           }}
         >
           {renderSiderContent(false)}
@@ -246,7 +252,9 @@ export const AdminSider: React.FC<AdminSiderProps> = ({ Title: TitleFromProps })
 
   const siderStyles: CSSProperties = {
     backgroundColor: token.colorBgContainer,
-    borderRight: `1px solid ${token.colorBgElevated}`,
+    ...(direction === "rtl"
+      ? { borderLeft: `1px solid ${token.colorBgElevated}` }
+      : { borderRight: `1px solid ${token.colorBgElevated}` }),
   };
 
   const renderClosingIcons = () => {
