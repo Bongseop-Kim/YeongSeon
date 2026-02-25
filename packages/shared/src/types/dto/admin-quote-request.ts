@@ -11,8 +11,8 @@ export interface AdminQuoteRequestListRowDTO {
   contactTitle: string;
   contactMethod: "email" | "kakao" | "phone";
   contactValue: string;
-  created_at: string;
-  updated_at: string | null;
+  createdAt: string;
+  updatedAt: string | null;
   customerName: string;
   customerPhone: string | null;
   customerEmail: string | null;
@@ -36,8 +36,8 @@ export interface AdminQuoteRequestDetailRowDTO {
   quotedAmount: number | null;
   quoteConditions: string | null;
   adminMemo: string | null;
-  created_at: string;
-  updated_at: string | null;
+  createdAt: string;
+  updatedAt: string | null;
   customerName: string;
   customerPhone: string | null;
   customerEmail: string | null;
@@ -50,13 +50,13 @@ export interface AdminQuoteRequestDetailRowDTO {
   deliveryRequest: string | null;
 }
 
-/** quote_request_status_logs row */
+/** admin_quote_request_status_log_view row */
 export interface QuoteRequestStatusLogDTO {
   id: string;
-  quote_request_id: string;
-  changed_by: string;
-  previous_status: string;
-  new_status: string;
+  quoteRequestId: string;
+  changedBy: string;
+  previousStatus: string;
+  newStatus: string;
   memo: string | null;
-  created_at: string;
+  createdAt: string;
 }

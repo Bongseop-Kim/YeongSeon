@@ -77,7 +77,7 @@ export const toCreateQuoteRequestInputDto = (
     care_label: request.options.careLabel,
   } satisfies CreateCustomOrderOptionsDtoSnakeCase,
   quantity: request.quantity,
-  reference_image_urls: normalizeReferenceImageUrls(request.referenceImageUrls),
+  reference_image_urls: request.referenceImageUrls,
   additional_notes: request.additionalNotes,
   contact_name: request.contactName,
   contact_title: request.contactTitle,

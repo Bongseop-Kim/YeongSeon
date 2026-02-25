@@ -66,12 +66,32 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "Invalid JSON body" });
   }
 
-  if (!payload?.shipping_address_id || !payload.options) {
-    return jsonResponse(400, { error: "Invalid request payload" });
+  if (!payload?.shipping_address_id) {
+    return jsonResponse(400, { error: "Shipping address is required" });
+  }
+
+  if (
+    !payload.options ||
+    typeof payload.options !== "object" ||
+    Array.isArray(payload.options)
+  ) {
+    return jsonResponse(400, { error: "Options must be a non-null object" });
   }
 
   if (!Number.isInteger(payload.quantity) || payload.quantity < 100) {
     return jsonResponse(400, { error: "Quantity must be 100 or more" });
+  }
+
+  if (
+    payload.reference_image_urls !== undefined &&
+    (!Array.isArray(payload.reference_image_urls) ||
+      !payload.reference_image_urls.every(
+        (url: unknown) => typeof url === "string"
+      ))
+  ) {
+    return jsonResponse(400, {
+      error: "reference_image_urls must be an array of strings",
+    });
   }
 
   if (!payload.contact_name?.trim()) {

@@ -10,13 +10,21 @@ import type { useImageUpload } from "@/features/custom-order/hooks/useImageUploa
 
 type ImageUploadHook = ReturnType<typeof useImageUpload>;
 
-interface OrderFormProps {
-  control: Control<OrderOptions>;
-  watch: UseFormWatch<OrderOptions>;
+interface OrderFormProps<T extends OrderOptions = OrderOptions> {
+  control: Control<T>;
+  watch: UseFormWatch<T>;
   imageUpload: ImageUploadHook;
 }
 
-const OrderForm = ({ control, watch, imageUpload }: OrderFormProps) => {
+const OrderForm = <T extends OrderOptions>({
+  control: formControl,
+  watch: formWatch,
+  imageUpload,
+}: OrderFormProps<T>) => {
+  // Sub-components only access OrderOptions fields; safe narrowing
+  const control = formControl as unknown as Control<OrderOptions>;
+  const watch = formWatch as unknown as UseFormWatch<OrderOptions>;
+
   return (
     <Card>
       <CardContent className="space-y-4">

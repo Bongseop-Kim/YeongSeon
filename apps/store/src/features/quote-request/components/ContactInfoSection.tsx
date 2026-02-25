@@ -20,7 +20,7 @@ const CONTACT_METHOD_PLACEHOLDERS: Record<string, string> = {
 
 interface ContactInfoSectionProps {
   control: Control<QuoteOrderOptions>;
-  contactMethod: string;
+  contactMethod: "email" | "kakao" | "phone";
 }
 
 export const ContactInfoSection = ({

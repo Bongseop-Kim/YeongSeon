@@ -414,8 +414,8 @@ SELECT
   qr.contact_title   AS "contactTitle",
   qr.contact_method  AS "contactMethod",
   qr.contact_value   AS "contactValue",
-  qr.created_at,
-  qr.updated_at,
+  qr.created_at      AS "createdAt",
+  qr.updated_at      AS "updatedAt",
   p.name             AS "customerName",
   p.phone            AS "customerPhone",
   public.admin_get_email(qr.user_id) AS "customerEmail"
@@ -443,8 +443,8 @@ SELECT
   qr.quoted_amount   AS "quotedAmount",
   qr.quote_conditions AS "quoteConditions",
   qr.admin_memo      AS "adminMemo",
-  qr.created_at,
-  qr.updated_at,
+  qr.created_at      AS "createdAt",
+  qr.updated_at      AS "updatedAt",
   p.name             AS "customerName",
   p.phone            AS "customerPhone",
   public.admin_get_email(qr.user_id) AS "customerEmail",
@@ -458,3 +458,17 @@ SELECT
 FROM public.quote_requests qr
 LEFT JOIN public.profiles p ON p.id = qr.user_id
 LEFT JOIN public.shipping_addresses sa ON sa.id = qr.shipping_address_id;
+
+-- ── admin_quote_request_status_log_view ──────────────────────
+CREATE OR REPLACE VIEW public.admin_quote_request_status_log_view
+WITH (security_invoker = true)
+AS
+SELECT
+  l.id,
+  l.quote_request_id AS "quoteRequestId",
+  l.changed_by       AS "changedBy",
+  l.previous_status  AS "previousStatus",
+  l.new_status       AS "newStatus",
+  l.memo,
+  l.created_at       AS "createdAt"
+FROM public.quote_request_status_logs l;

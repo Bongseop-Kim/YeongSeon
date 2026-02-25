@@ -13,7 +13,7 @@ export default function QuoteRequestList() {
 
   const { tableProps, setFilters } = useTable<AdminQuoteRequestListRowDTO>({
     resource: "admin_quote_request_list_view",
-    sorters: { initial: [{ field: "created_at", order: "desc" }] },
+    sorters: { initial: [{ field: "createdAt", order: "desc" }] },
     syncWithLocation: true,
   });
 
@@ -51,8 +51,11 @@ export default function QuoteRequestList() {
         {...tableProps}
         rowKey="id"
         onRow={(record) => ({
-          onClick: () =>
-            show("admin_quote_request_list_view", record.id!),
+          onClick: () => {
+            if (record.id) {
+              show("admin_quote_request_list_view", record.id);
+            }
+          },
           style: { cursor: "pointer" },
         })}
       >

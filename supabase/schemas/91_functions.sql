@@ -1164,6 +1164,20 @@ begin
     raise exception 'Status is already %', p_new_status;
   end if;
 
+  -- Validate state transition
+  if not (
+    (v_current_status = '요청'     and p_new_status in ('견적발송', '종료'))
+    or (v_current_status = '견적발송' and p_new_status in ('협의중', '종료'))
+    or (v_current_status = '협의중'   and p_new_status in ('확정', '종료'))
+  ) then
+    raise exception 'Invalid transition from "%" to "%"', v_current_status, p_new_status;
+  end if;
+
+  -- Validate quoted_amount is non-negative
+  if p_quoted_amount is not null and p_quoted_amount < 0 then
+    raise exception 'Quoted amount must be non-negative';
+  end if;
+
   -- Update quote request
   update public.quote_requests
   set

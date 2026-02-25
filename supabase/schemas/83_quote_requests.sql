@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.quote_requests (
   contact_method       text        NOT NULL,
   contact_value        varchar     NOT NULL,
   status               text        NOT NULL DEFAULT '요청',
-  quoted_amount        integer,
+  quoted_amount        integer     CONSTRAINT quote_requests_quoted_amount_nonneg CHECK (quoted_amount >= 0),
   quote_conditions     text,
   admin_memo           text,
   created_at           timestamptz NOT NULL DEFAULT now(),
@@ -58,7 +58,14 @@ CREATE POLICY "Users can view their own quote requests"
 CREATE POLICY "Users can insert their own quote requests"
   ON public.quote_requests FOR INSERT
   TO authenticated
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (
+    auth.uid() = user_id
+    AND EXISTS (
+      SELECT 1 FROM public.shipping_addresses sa
+      WHERE sa.id = shipping_address_id
+        AND sa.user_id = auth.uid()
+    )
+  );
 
 CREATE POLICY "Admins can view all quote requests"
   ON public.quote_requests FOR SELECT
@@ -73,7 +80,7 @@ CREATE POLICY "Admins can update all quote requests"
 
 -- Privilege hardening: admins can only update specific columns
 REVOKE UPDATE ON TABLE public.quote_requests FROM authenticated;
-GRANT UPDATE (status, quoted_amount, quote_conditions, admin_memo, updated_at) ON TABLE public.quote_requests TO authenticated;
+GRANT UPDATE (status, quoted_amount, quote_conditions, admin_memo) ON TABLE public.quote_requests TO authenticated;
 
 -- =============================================================
 -- quote_request_status_logs  –  Status change audit trail
@@ -122,4 +129,4 @@ CREATE POLICY "Admins can view all status logs"
 CREATE POLICY "Admins can insert status logs"
   ON public.quote_request_status_logs FOR INSERT
   TO authenticated
-  WITH CHECK (public.is_admin());
+  WITH CHECK (public.is_admin() AND changed_by = auth.uid());

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useForm, type Control, type UseFormWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import OrderForm from "./components/OrderForm";
 import CostBreakdown from "./components/CostBreakdown";
-import type { OrderOptions, QuoteOrderOptions } from "./types/order";
+import type { QuoteOrderOptions } from "./types/order";
 import { Form } from "@/components/ui/form";
 import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { calculateTotalCost } from "./utils/pricing";
@@ -205,15 +205,15 @@ const OrderPage = () => {
     }
 
     const {
-      referenceImages: _referenceImages,
+      referenceImages,
       additionalNotes,
-      sample: _sample,
+      sample,
       contactName,
       contactTitle,
       contactMethod,
       contactValue,
       ...optionsWithoutExtra
-    }: QuoteOrderOptions = watchedValues;
+    } = watchedValues;
 
     try {
       await createQuoteRequest.mutateAsync({
@@ -259,15 +259,15 @@ const OrderPage = () => {
     }
 
     const {
-      referenceImages: _referenceImages,
+      referenceImages,
       additionalNotes,
       sample,
-      contactName: _contactName,
-      contactTitle: _contactTitle,
-      contactMethod: _contactMethod,
-      contactValue: _contactValue,
+      contactName,
+      contactTitle,
+      contactMethod,
+      contactValue,
       ...optionsWithoutReferenceImages
-    }: QuoteOrderOptions = watchedValues;
+    } = watchedValues;
 
     try {
       await createCustomOrder.mutateAsync({
@@ -299,8 +299,8 @@ const OrderPage = () => {
           <TwoPanelLayout
             leftPanel={
               <OrderForm
-                control={form.control as unknown as Control<OrderOptions>}
-                watch={form.watch as unknown as UseFormWatch<OrderOptions>}
+                control={form.control}
+                watch={form.watch}
                 imageUpload={imageUpload}
               />
             }

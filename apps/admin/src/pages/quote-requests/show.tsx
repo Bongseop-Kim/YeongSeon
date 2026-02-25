@@ -13,7 +13,7 @@ import {
   Image,
   message,
 } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type {
   AdminQuoteRequestDetailRowDTO,
   QuoteRequestStatusLogDTO,
@@ -94,11 +94,11 @@ export default function QuoteRequestShow() {
   const quote = queryResult?.data?.data;
 
   const { result: logsResult } = useList<QuoteRequestStatusLogDTO>({
-    resource: "quote_request_status_logs",
+    resource: "admin_quote_request_status_log_view",
     filters: [
-      { field: "quote_request_id", operator: "eq", value: quote?.id },
+      { field: "quoteRequestId", operator: "eq", value: quote?.id },
     ],
-    sorters: [{ field: "created_at", order: "desc" }],
+    sorters: [{ field: "createdAt", order: "desc" }],
     queryOptions: { enabled: !!quote?.id },
   });
 
@@ -111,14 +111,15 @@ export default function QuoteRequestShow() {
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Sync state when data loads
-  const syncedId = quote?.id;
   const [lastSyncedId, setLastSyncedId] = useState<string>();
-  if (syncedId && syncedId !== lastSyncedId) {
-    setLastSyncedId(syncedId);
-    setQuotedAmount(quote?.quotedAmount ?? null);
-    setQuoteConditions(quote?.quoteConditions ?? "");
-    setAdminMemo(quote?.adminMemo ?? "");
-  }
+  useEffect(() => {
+    if (quote?.id && quote.id !== lastSyncedId) {
+      setLastSyncedId(quote.id);
+      setQuotedAmount(quote.quotedAmount ?? null);
+      setQuoteConditions(quote.quoteConditions ?? "");
+      setAdminMemo(quote.adminMemo ?? "");
+    }
+  }, [quote?.id, quote?.quotedAmount, quote?.quoteConditions, quote?.adminMemo, lastSyncedId]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!quote) return;
@@ -147,9 +148,13 @@ export default function QuoteRequestShow() {
         setStatusMemo("");
         queryResult.refetch();
         invalidate({
-          resource: "quote_request_status_logs",
+          resource: "admin_quote_request_status_log_view",
           invalidates: ["list"],
         });
+      } catch (err) {
+        message.error(
+          `상태 변경 중 오류: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+        );
       } finally {
         setIsUpdating(false);
       }
@@ -342,27 +347,27 @@ export default function QuoteRequestShow() {
 
       <Title level={5}>상태 변경 이력</Title>
       <Table
-        dataSource={logsResult.data}
+        dataSource={logsResult?.data}
         rowKey="id"
         pagination={false}
         style={{ marginBottom: 24 }}
       >
         <Table.Column
-          dataIndex="created_at"
+          dataIndex="createdAt"
           title="일시"
           render={(v: string) =>
             v ? new Date(v).toLocaleString("ko-KR") : "-"
           }
         />
         <Table.Column
-          dataIndex="previous_status"
+          dataIndex="previousStatus"
           title="이전 상태"
           render={(v: string) => (
             <Tag color={QUOTE_REQUEST_STATUS_COLORS[v]}>{v}</Tag>
           )}
         />
         <Table.Column
-          dataIndex="new_status"
+          dataIndex="newStatus"
           title="변경 상태"
           render={(v: string) => (
             <Tag color={QUOTE_REQUEST_STATUS_COLORS[v]}>{v}</Tag>
