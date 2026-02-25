@@ -92,7 +92,7 @@ GRANT UPDATE (status, return_courier_company, return_tracking_number,
 CREATE TABLE IF NOT EXISTS public.claim_status_logs (
   id              uuid        NOT NULL DEFAULT gen_random_uuid(),
   claim_id        uuid        NOT NULL,
-  changed_by      uuid        NOT NULL,
+  changed_by      uuid,
   previous_status text        NOT NULL,
   new_status      text        NOT NULL,
   memo            text,
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS public.claim_status_logs (
     ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT claim_status_logs_changed_by_fkey
     FOREIGN KEY (changed_by) REFERENCES auth.users (id)
-    ON UPDATE CASCADE ON DELETE CASCADE
+    ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE INDEX idx_claim_status_logs_claim_id

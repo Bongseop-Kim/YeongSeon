@@ -81,7 +81,7 @@ GRANT UPDATE (status, courier_company, tracking_number, shipped_at) ON TABLE pub
 CREATE TABLE IF NOT EXISTS public.order_status_logs (
   id              uuid        NOT NULL DEFAULT gen_random_uuid(),
   order_id        uuid        NOT NULL,
-  changed_by      uuid        NOT NULL,
+  changed_by      uuid,
   previous_status text        NOT NULL,
   new_status      text        NOT NULL,
   memo            text,
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS public.order_status_logs (
     ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT order_status_logs_changed_by_fkey
     FOREIGN KEY (changed_by) REFERENCES auth.users (id)
-    ON UPDATE CASCADE ON DELETE CASCADE
+    ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE INDEX idx_order_status_logs_order_id
