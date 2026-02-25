@@ -492,6 +492,7 @@ SELECT
   l.previous_status  AS "previousStatus",
   l.new_status       AS "newStatus",
   l.memo,
+  l.is_rollback      AS "isRollback",
   l.created_at       AS "createdAt"
 FROM public.order_status_logs l;
 
@@ -506,5 +507,6 @@ SELECT
   l.previous_status  AS "previousStatus",
   l.new_status       AS "newStatus",
   l.memo,
+  l.is_rollback      AS "isRollback",
   l.created_at       AS "createdAt"
 FROM public.claim_status_logs l;

@@ -14,6 +14,14 @@ export const CLAIM_STATUS_FLOW: Record<
   },
 };
 
+export const CLAIM_ROLLBACK_FLOW: Record<ClaimType, Record<string, string>> = {
+  cancel: { 처리중: "접수" },
+  return: { 수거요청: "접수" },
+  exchange: { 수거요청: "접수" },
+};
+
+export const CLAIM_REJECT_RESTORE_STATUS = "접수";
+
 export const CLAIM_STATUS_COLORS: Record<string, string> = {
   접수: "default",
   처리중: "processing",

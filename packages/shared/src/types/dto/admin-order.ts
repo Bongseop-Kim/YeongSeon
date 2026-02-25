@@ -44,6 +44,7 @@ export interface OrderStatusLogDTO {
   previousStatus: string;
   newStatus: string;
   memo: string | null;
+  isRollback: boolean;
   createdAt: string;
 }
 

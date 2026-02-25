@@ -24,6 +24,12 @@ export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
   },
 };
 
+export const ORDER_ROLLBACK_FLOW: Record<OrderType, Record<string, string>> = {
+  sale: { 진행중: "대기중" },
+  custom: { 접수: "대기중", 제작중: "접수", 제작완료: "제작중" },
+  repair: { 접수: "대기중", 수선중: "접수", 수선완료: "수선중" },
+};
+
 export const ORDER_STATUS_COLORS: Record<string, string> = {
   대기중: "default",
   진행중: "processing",

@@ -37,16 +37,37 @@
 
 ## 관리자 주문 상태 변경
 
-1. 관리자가 `apps/admin/src/pages/orders/show.tsx`에서 `public.admin_update_order_status(p_order_id, p_new_status, p_memo)` 호출.
+1. 관리자가 `apps/admin/src/pages/orders/show.tsx`에서 `public.admin_update_order_status(p_order_id, p_new_status, p_memo, p_is_rollback)` 호출.
 2. RPC가 `is_admin()` 확인 후 `order_type`별 상태 전이 규칙 검증.
-3. RPC가 `orders.status` 업데이트 + `order_status_logs` 감사 로그 INSERT.
-4. `배송중` 전환 시 `shipped_at = now()` 자동 설정.
+3. `p_is_rollback = true`일 때: memo 필수, 1단계 이전 상태로만 롤백 허용 (배송중/완료/취소 롤백 금지).
+4. RPC가 `orders.status` 업데이트 + `order_status_logs` 감사 로그 INSERT (`is_rollback` 플래그 포함).
+5. `배송중` 전환 시 `shipped_at = now()` 자동 설정.
+
+### 주문 롤백 허용 매트릭스
+
+| order_type | 현재 → 롤백 대상 |
+|---|---|
+| sale | 진행중 → 대기중 |
+| custom | 접수 → 대기중, 제작중 → 접수, 제작완료 → 제작중 |
+| repair | 접수 → 대기중, 수선중 → 접수, 수선완료 → 수선중 |
+| **모든** | **배송중/완료/취소 → 이전: 금지** |
 
 ## 관리자 클레임 상태 변경
 
-1. 관리자가 `apps/admin/src/pages/claims/show.tsx`에서 `public.admin_update_claim_status(p_claim_id, p_new_status, p_memo)` 호출.
+1. 관리자가 `apps/admin/src/pages/claims/show.tsx`에서 `public.admin_update_claim_status(p_claim_id, p_new_status, p_memo, p_is_rollback)` 호출.
 2. RPC가 `is_admin()` 확인 후 `claim.type`별 상태 전이 규칙 검증.
-3. RPC가 `claims.status` 업데이트 + `claim_status_logs` 감사 로그 INSERT.
+3. `p_is_rollback = true`일 때: memo 필수, 1단계 이전 상태로만 롤백 허용 (수거완료/재발송/완료 롤백 금지). 거부 → 접수 복원은 모든 타입에서 허용.
+4. RPC가 `claims.status` 업데이트 + `claim_status_logs` 감사 로그 INSERT (`is_rollback` 플래그 포함).
+
+### 클레임 롤백 허용 매트릭스
+
+| claim.type | 현재 → 롤백 대상 |
+|---|---|
+| cancel | 처리중 → 접수 |
+| return | 수거요청 → 접수 |
+| exchange | 수거요청 → 접수 |
+| **모든** | 거부 → 접수 (오거부 복원) |
+| **모든** | **수거완료/재발송/완료 → 이전: 금지** |
 
 ## 책임 분리
 

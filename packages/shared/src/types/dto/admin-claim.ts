@@ -6,6 +6,7 @@ export interface ClaimStatusLogDTO {
   previousStatus: string;
   newStatus: string;
   memo: string | null;
+  isRollback: boolean;
   createdAt: string;
 }
 

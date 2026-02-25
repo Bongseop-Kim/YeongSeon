@@ -16,6 +16,8 @@ import { useState, useEffect, useRef } from "react";
 import type { AdminClaimListRowDTO, ClaimStatusLogDTO } from "@yeongseon/shared";
 import {
   CLAIM_STATUS_FLOW,
+  CLAIM_ROLLBACK_FLOW,
+  CLAIM_REJECT_RESTORE_STATUS,
   CLAIM_STATUS_COLORS,
   CLAIM_TYPE_LABELS,
   CLAIM_REASON_LABELS,
@@ -158,6 +160,69 @@ export default function ClaimShow() {
   const statusFlow = claimType ? CLAIM_STATUS_FLOW[claimType] : undefined;
   const nextStatus =
     claim?.status && statusFlow ? statusFlow[claim.status] : undefined;
+
+  const rollbackFlow = claimType ? CLAIM_ROLLBACK_FLOW[claimType] : undefined;
+  const rollbackStatus =
+    claim?.status && rollbackFlow ? rollbackFlow[claim.status] : undefined;
+  const isRejected = claim?.status === "거부";
+
+  const handleRollback = (targetStatus: string) => {
+    if (!claim) return;
+
+    let rollbackMemoValue = "";
+
+    Modal.confirm({
+      title: "상태 롤백",
+      content: (
+        <div>
+          <p>
+            현재 상태 <Tag>{claim.status}</Tag> → <Tag>{targetStatus}</Tag>(으)로 롤백합니다.
+          </p>
+          <p style={{ marginBottom: 4 }}><strong>사유 (필수)</strong></p>
+          <TextArea
+            rows={3}
+            placeholder="롤백 사유를 입력하세요"
+            onChange={(e) => { rollbackMemoValue = e.target.value; }}
+          />
+        </div>
+      ),
+      okText: "롤백",
+      cancelText: "취소",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        if (!rollbackMemoValue.trim()) {
+          message.error("롤백 사유를 입력해주세요.");
+          throw new Error("memo required");
+        }
+        setIsUpdating(true);
+        try {
+          const { error } = await supabase.rpc("admin_update_claim_status", {
+            p_claim_id: claim.id,
+            p_new_status: targetStatus,
+            p_memo: rollbackMemoValue,
+            p_is_rollback: true,
+          });
+          if (error) {
+            message.error(`롤백 실패: ${error.message}`);
+            return;
+          }
+          message.success(`"${targetStatus}"(으)로 롤백되었습니다.`);
+          queryResult.refetch();
+          invalidate({
+            resource: "admin_claim_status_log_view",
+            invalidates: ["list"],
+          });
+        } catch (err) {
+          if (err instanceof Error && err.message === "memo required") throw err;
+          message.error(
+            `롤백 중 오류: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+          );
+        } finally {
+          setIsUpdating(false);
+        }
+      },
+    });
+  };
 
   const showReturnSection =
     claimType === "return" || claimType === "exchange";
@@ -390,6 +455,22 @@ export default function ClaimShow() {
             {nextStatus} 으로 변경
           </Button>
         )}
+        {rollbackStatus && (
+          <Button
+            loading={isUpdating}
+            onClick={() => handleRollback(rollbackStatus)}
+          >
+            {rollbackStatus} 으로 롤백
+          </Button>
+        )}
+        {isRejected && (
+          <Button
+            loading={isUpdating}
+            onClick={() => handleRollback(CLAIM_REJECT_RESTORE_STATUS)}
+          >
+            접수로 복원
+          </Button>
+        )}
         {claim?.status !== "거부" && claim?.status !== "완료" && (
           <Button
             danger
@@ -433,6 +514,13 @@ export default function ClaimShow() {
           dataIndex="memo"
           title="메모"
           render={(v: string | null) => v ?? "-"}
+        />
+        <Table.Column
+          dataIndex="isRollback"
+          title="구분"
+          render={(v: boolean) =>
+            v ? <Tag color="red">롤백</Tag> : null
+          }
         />
       </Table>
     </Show>

@@ -1215,7 +1215,8 @@ $$;
 CREATE OR REPLACE FUNCTION public.admin_update_order_status(
   p_order_id uuid,
   p_new_status text,
-  p_memo text DEFAULT NULL
+  p_memo text DEFAULT NULL,
+  p_is_rollback boolean DEFAULT false
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -1251,40 +1252,72 @@ begin
     raise exception 'Status is already %', p_new_status;
   end if;
 
-  -- Validate state transition by order_type
-  if v_order_type = 'sale' then
-    if not (
-      (v_current_status = '대기중' and p_new_status = '진행중')
-      or (v_current_status = '진행중' and p_new_status = '배송중')
-      or (v_current_status = '배송중' and p_new_status = '완료')
-      or (p_new_status = '취소' and v_current_status in ('대기중', '진행중', '배송중'))
-    ) then
-      raise exception 'Invalid transition from "%" to "%" for sale order', v_current_status, p_new_status;
+  if p_is_rollback then
+    -- Rollback requires memo
+    if p_memo is null or trim(p_memo) = '' then
+      raise exception '롤백 시 사유 입력 필수';
     end if;
-  elsif v_order_type = 'custom' then
-    if not (
-      (v_current_status = '대기중' and p_new_status = '접수')
-      or (v_current_status = '접수' and p_new_status = '제작중')
-      or (v_current_status = '제작중' and p_new_status = '제작완료')
-      or (v_current_status = '제작완료' and p_new_status = '배송중')
-      or (v_current_status = '배송중' and p_new_status = '완료')
-      or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
-    ) then
-      raise exception 'Invalid transition from "%" to "%" for custom order', v_current_status, p_new_status;
-    end if;
-  elsif v_order_type = 'repair' then
-    if not (
-      (v_current_status = '대기중' and p_new_status = '접수')
-      or (v_current_status = '접수' and p_new_status = '수선중')
-      or (v_current_status = '수선중' and p_new_status = '수선완료')
-      or (v_current_status = '수선완료' and p_new_status = '배송중')
-      or (v_current_status = '배송중' and p_new_status = '완료')
-      or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
-    ) then
-      raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
+
+    -- Validate rollback transition by order_type
+    if v_order_type = 'sale' then
+      if not (v_current_status = '진행중' and p_new_status = '대기중') then
+        raise exception 'Invalid rollback from "%" to "%" for sale order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'custom' then
+      if not (
+        (v_current_status = '접수' and p_new_status = '대기중')
+        or (v_current_status = '제작중' and p_new_status = '접수')
+        or (v_current_status = '제작완료' and p_new_status = '제작중')
+      ) then
+        raise exception 'Invalid rollback from "%" to "%" for custom order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'repair' then
+      if not (
+        (v_current_status = '접수' and p_new_status = '대기중')
+        or (v_current_status = '수선중' and p_new_status = '접수')
+        or (v_current_status = '수선완료' and p_new_status = '수선중')
+      ) then
+        raise exception 'Invalid rollback from "%" to "%" for repair order', v_current_status, p_new_status;
+      end if;
+    else
+      raise exception 'Unknown order type: %', v_order_type;
     end if;
   else
-    raise exception 'Unknown order type: %', v_order_type;
+    -- Validate forward state transition by order_type
+    if v_order_type = 'sale' then
+      if not (
+        (v_current_status = '대기중' and p_new_status = '진행중')
+        or (v_current_status = '진행중' and p_new_status = '배송중')
+        or (v_current_status = '배송중' and p_new_status = '완료')
+        or (p_new_status = '취소' and v_current_status in ('대기중', '진행중', '배송중'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for sale order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'custom' then
+      if not (
+        (v_current_status = '대기중' and p_new_status = '접수')
+        or (v_current_status = '접수' and p_new_status = '제작중')
+        or (v_current_status = '제작중' and p_new_status = '제작완료')
+        or (v_current_status = '제작완료' and p_new_status = '배송중')
+        or (v_current_status = '배송중' and p_new_status = '완료')
+        or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for custom order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'repair' then
+      if not (
+        (v_current_status = '대기중' and p_new_status = '접수')
+        or (v_current_status = '접수' and p_new_status = '수선중')
+        or (v_current_status = '수선중' and p_new_status = '수선완료')
+        or (v_current_status = '수선완료' and p_new_status = '배송중')
+        or (v_current_status = '배송중' and p_new_status = '완료')
+        or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
+      end if;
+    else
+      raise exception 'Unknown order type: %', v_order_type;
+    end if;
   end if;
 
   -- Auto-set shipped_at when transitioning to 배송중
@@ -1305,14 +1338,16 @@ begin
     changed_by,
     previous_status,
     new_status,
-    memo
+    memo,
+    is_rollback
   )
   values (
     p_order_id,
     v_admin_id,
     v_current_status,
     p_new_status,
-    p_memo
+    p_memo,
+    p_is_rollback
   );
 
   return jsonb_build_object(
@@ -1327,7 +1362,8 @@ $$;
 CREATE OR REPLACE FUNCTION public.admin_update_claim_status(
   p_claim_id uuid,
   p_new_status text,
-  p_memo text DEFAULT NULL
+  p_memo text DEFAULT NULL,
+  p_is_rollback boolean DEFAULT false
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -1363,36 +1399,64 @@ begin
     raise exception 'Status is already %', p_new_status;
   end if;
 
-  -- Validate state transition by claim type
-  if v_claim_type = 'cancel' then
-    if not (
-      (v_current_status = '접수' and p_new_status = '처리중')
-      or (v_current_status = '처리중' and p_new_status = '완료')
-      or (p_new_status = '거부' and v_current_status in ('접수', '처리중'))
-    ) then
-      raise exception 'Invalid transition from "%" to "%" for cancel claim', v_current_status, p_new_status;
+  if p_is_rollback then
+    -- Rollback requires memo
+    if p_memo is null or trim(p_memo) = '' then
+      raise exception '롤백 시 사유 입력 필수';
     end if;
-  elsif v_claim_type = 'return' then
-    if not (
-      (v_current_status = '접수' and p_new_status = '수거요청')
-      or (v_current_status = '수거요청' and p_new_status = '수거완료')
-      or (v_current_status = '수거완료' and p_new_status = '완료')
-      or (p_new_status = '거부' and v_current_status in ('접수', '수거요청', '수거완료'))
-    ) then
-      raise exception 'Invalid transition from "%" to "%" for return claim', v_current_status, p_new_status;
-    end if;
-  elsif v_claim_type = 'exchange' then
-    if not (
-      (v_current_status = '접수' and p_new_status = '수거요청')
-      or (v_current_status = '수거요청' and p_new_status = '수거완료')
-      or (v_current_status = '수거완료' and p_new_status = '재발송')
-      or (v_current_status = '재발송' and p_new_status = '완료')
-      or (p_new_status = '거부' and v_current_status in ('접수', '수거요청', '수거완료', '재발송'))
-    ) then
-      raise exception 'Invalid transition from "%" to "%" for exchange claim', v_current_status, p_new_status;
+
+    -- Validate rollback transition by claim type
+    -- Special: 거부 → 접수 allowed for all types (오거부 복원)
+    if v_current_status = '거부' and p_new_status = '접수' then
+      -- allowed for all claim types
+      null;
+    elsif v_claim_type = 'cancel' then
+      if not (v_current_status = '처리중' and p_new_status = '접수') then
+        raise exception 'Invalid rollback from "%" to "%" for cancel claim', v_current_status, p_new_status;
+      end if;
+    elsif v_claim_type = 'return' then
+      if not (v_current_status = '수거요청' and p_new_status = '접수') then
+        raise exception 'Invalid rollback from "%" to "%" for return claim', v_current_status, p_new_status;
+      end if;
+    elsif v_claim_type = 'exchange' then
+      if not (v_current_status = '수거요청' and p_new_status = '접수') then
+        raise exception 'Invalid rollback from "%" to "%" for exchange claim', v_current_status, p_new_status;
+      end if;
+    else
+      raise exception 'Unknown claim type: %', v_claim_type;
     end if;
   else
-    raise exception 'Unknown claim type: %', v_claim_type;
+    -- Validate forward state transition by claim type
+    if v_claim_type = 'cancel' then
+      if not (
+        (v_current_status = '접수' and p_new_status = '처리중')
+        or (v_current_status = '처리중' and p_new_status = '완료')
+        or (p_new_status = '거부' and v_current_status in ('접수', '처리중'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for cancel claim', v_current_status, p_new_status;
+      end if;
+    elsif v_claim_type = 'return' then
+      if not (
+        (v_current_status = '접수' and p_new_status = '수거요청')
+        or (v_current_status = '수거요청' and p_new_status = '수거완료')
+        or (v_current_status = '수거완료' and p_new_status = '완료')
+        or (p_new_status = '거부' and v_current_status in ('접수', '수거요청', '수거완료'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for return claim', v_current_status, p_new_status;
+      end if;
+    elsif v_claim_type = 'exchange' then
+      if not (
+        (v_current_status = '접수' and p_new_status = '수거요청')
+        or (v_current_status = '수거요청' and p_new_status = '수거완료')
+        or (v_current_status = '수거완료' and p_new_status = '재발송')
+        or (v_current_status = '재발송' and p_new_status = '완료')
+        or (p_new_status = '거부' and v_current_status in ('접수', '수거요청', '수거완료', '재발송'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for exchange claim', v_current_status, p_new_status;
+      end if;
+    else
+      raise exception 'Unknown claim type: %', v_claim_type;
+    end if;
   end if;
 
   -- Update claim status
@@ -1406,14 +1470,16 @@ begin
     changed_by,
     previous_status,
     new_status,
-    memo
+    memo,
+    is_rollback
   )
   values (
     p_claim_id,
     v_admin_id,
     v_current_status,
     p_new_status,
-    p_memo
+    p_memo,
+    p_is_rollback
   );
 
   return jsonb_build_object(

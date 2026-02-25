@@ -96,6 +96,7 @@ CREATE TABLE IF NOT EXISTS public.claim_status_logs (
   previous_status text        NOT NULL,
   new_status      text        NOT NULL,
   memo            text,
+  is_rollback     boolean     NOT NULL DEFAULT false,
   created_at      timestamptz NOT NULL DEFAULT now(),
 
   CONSTRAINT claim_status_logs_pkey PRIMARY KEY (id),
