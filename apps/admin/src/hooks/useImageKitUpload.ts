@@ -20,6 +20,13 @@ export const useImageKitUpload = () => {
     const { file, onSuccess, onError } = options;
     const rcFile = file as RcFile;
 
+    if (!IMAGEKIT_PUBLIC_KEY) {
+      const err = new Error("Missing IMAGEKIT_PUBLIC_KEY");
+      message.error(err.message);
+      onError?.(err);
+      return;
+    }
+
     activeUploadsRef.current += 1;
     setActiveUploads((n) => n + 1);
     try {

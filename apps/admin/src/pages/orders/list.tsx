@@ -9,7 +9,7 @@ import {
   ORDER_STATUS_COLORS,
 } from "@yeongseon/shared";
 
-const VALID_ORDER_TYPES: OrderType[] = ["sale", "custom", "repair"];
+const VALID_ORDER_TYPES = Object.keys(ORDER_TYPE_LABELS) as OrderType[];
 
 function isValidOrderType(value: string | null): value is OrderType {
   return value !== null && VALID_ORDER_TYPES.includes(value as OrderType);
@@ -164,11 +164,10 @@ function getColumnsForType(orderType: OrderType) {
   ];
 }
 
-const TAB_ITEMS: { key: OrderType; label: string }[] = [
-  { key: "sale", label: ORDER_TYPE_LABELS.sale },
-  { key: "custom", label: ORDER_TYPE_LABELS.custom },
-  { key: "repair", label: ORDER_TYPE_LABELS.repair },
-];
+const TAB_ITEMS = VALID_ORDER_TYPES.map((key) => ({
+  key,
+  label: ORDER_TYPE_LABELS[key],
+}));
 
 export default function OrderList() {
   const [searchParams] = useSearchParams();

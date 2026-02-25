@@ -66,6 +66,11 @@ export default function ProductEdit() {
     }
   }, [optionsResult.data, form]);
 
+  // Reset image initialization when product id changes
+  useEffect(() => {
+    imagesInitialized.current = false;
+  }, [id]);
+
   // Load existing images
   useEffect(() => {
     const product = queryResult?.data?.data;

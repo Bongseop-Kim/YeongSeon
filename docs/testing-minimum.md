@@ -40,9 +40,10 @@
 ## 4) 금액 불변식 테스트 (주문)
 
 - [ ] `0 <= unit_discount <= unit_price`
-- [ ] `line_discount = unit_discount * quantity`
+- [ ] `unit_discount = floor(capped_line_discount / quantity)` (나머지 분배 방식)
+- [ ] `line_discount = unit_discount * quantity + remainder` (remainder = capped_line_discount % quantity, 0 이상 quantity-1 이하)
 - [ ] `total_discount = sum(line_discount)`
-- [ ] 쿠폰 캡(`max_discount_amount`) 적용 시 라인 합계 정합 유지
+- [ ] 쿠폰 캡(`max_discount_amount`) 적용 시 `line_discount <= max_discount_amount` 및 라인 합계 정합 유지
 
 ## 5) Release Gate
 
