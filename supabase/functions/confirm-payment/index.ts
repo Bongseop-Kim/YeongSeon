@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
 
   const { data: order, error: orderError } = await adminClient
     .from("orders")
-    .select("id, user_id, total_price, status")
+    .select("id, user_id, total_price, status, order_type")
     .eq("id", payload.orderId)
     .maybeSingle();
 
@@ -231,10 +231,13 @@ Deno.serve(async (req) => {
     return jsonResponse(502, { error: "Failed to confirm payment" });
   }
 
+  const postPaymentStatus =
+    order.order_type === "sale" ? "진행중" : "접수";
+
   const { data: updatedOrder, error: updateError } = await adminClient
     .from("orders")
     .update({
-      status: "진행중",
+      status: postPaymentStatus,
       updated_at: new Date().toISOString(),
     })
     .eq("id", order.id)

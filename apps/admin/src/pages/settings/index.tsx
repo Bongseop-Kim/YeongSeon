@@ -1,27 +1,30 @@
 import { useOne, useUpdate } from "@refinedev/core";
 import { Card, Typography, Select, Space, Button, message, Spin } from "antd";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { AdminSettingRowDTO } from "@yeongseon/shared";
 import { COURIER_COMPANY_NAMES } from "@yeongseon/shared/constants/courier-companies";
 
 const { Title } = Typography;
 
 export default function SettingsPage() {
-  const { data, isLoading } = useOne<AdminSettingRowDTO>({
+  const { query, result } = useOne<AdminSettingRowDTO>({
     resource: "admin_settings",
     id: "default_courier_company",
     meta: { idColumnName: "key" },
   });
+  const isLoading = query.isLoading;
 
   const { mutate: updateSetting, mutation } = useUpdate();
 
   const [defaultCourier, setDefaultCourier] = useState<string>("");
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (data?.data?.value) {
-      setDefaultCourier(data.data.value);
+    if (result?.value && !initialized.current) {
+      initialized.current = true;
+      setDefaultCourier(result.value);
     }
-  }, [data]);
+  }, [result]);
 
   const handleSave = () => {
     updateSetting(
@@ -35,6 +38,9 @@ export default function SettingsPage() {
         onSuccess: () => {
           message.success("설정이 저장되었습니다.");
         },
+        onError: (error) => {
+          message.error(`설정 저장에 실패했습니다: ${error.message}`);
+        },
       },
     );
   };
@@ -43,6 +49,20 @@ export default function SettingsPage() {
     return (
       <Card>
         <Spin />
+      </Card>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <Card>
+        <Typography.Text type="danger">
+          설정을 불러오는데 실패했습니다: {query.error?.message ?? "알 수 없는 오류"}
+        </Typography.Text>
+        <br />
+        <Button onClick={() => query.refetch()} style={{ marginTop: 8 }}>
+          다시 시도
+        </Button>
       </Card>
     );
   }

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   total_price         integer     NOT NULL,
   original_price      integer     NOT NULL,
   total_discount      integer     NOT NULL DEFAULT 0,
+  order_type          text        NOT NULL DEFAULT 'sale',
   status              text        NOT NULL DEFAULT '대기중',
   courier_company     text,
   tracking_number     text,
@@ -22,8 +23,14 @@ CREATE TABLE IF NOT EXISTS public.orders (
   CONSTRAINT orders_total_price_check    CHECK (total_price >= 0),
   CONSTRAINT orders_original_price_check CHECK (original_price >= 0),
   CONSTRAINT orders_total_discount_check CHECK (total_discount >= 0),
+  CONSTRAINT orders_order_type_check
+    CHECK (order_type = ANY (ARRAY['sale','custom','repair'])),
   CONSTRAINT orders_status_check
-    CHECK (status = ANY (ARRAY['대기중','진행중','배송중','완료','취소'])),
+    CHECK (status = ANY (ARRAY[
+      '대기중','진행중','배송중','완료','취소',
+      '접수','제작중','제작완료',
+      '수선중','수선완료'
+    ])),
   CONSTRAINT orders_user_id_fkey
     FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE,
   CONSTRAINT orders_shipping_address_id_fkey
@@ -33,6 +40,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
 -- Indexes
 CREATE INDEX idx_orders_user_id      ON public.orders USING btree (user_id);
 CREATE INDEX idx_orders_order_number ON public.orders USING btree (order_number);
+CREATE INDEX idx_orders_order_type   ON public.orders USING btree (order_type);
 
 -- Trigger
 CREATE OR REPLACE TRIGGER update_orders_updated_at

@@ -10,6 +10,8 @@ import {
   Typography,
   Input,
   Select,
+  Card,
+  Image,
   message,
 } from "antd";
 import { useState, useEffect } from "react";
@@ -17,27 +19,184 @@ import type {
   AdminOrderDetailRowDTO,
   AdminOrderItemRowDTO,
   AdminSettingRowDTO,
+  OrderType,
 } from "@yeongseon/shared";
 import {
   COURIER_COMPANY_NAMES,
   buildTrackingUrl,
 } from "@yeongseon/shared/constants/courier-companies";
+import {
+  ORDER_STATUS_FLOW,
+  ORDER_STATUS_COLORS,
+  ORDER_TYPE_LABELS,
+} from "@yeongseon/shared";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
-const STATUS_COLORS: Record<string, string> = {
-  대기중: "default",
-  진행중: "processing",
-  배송중: "blue",
-  완료: "success",
-  취소: "error",
-};
+function CustomOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
+  const reformItem = items.find(
+    (i) => i.itemType === "reform" && i.reformData
+  );
+  if (!reformItem?.reformData) return null;
 
-const STATUS_FLOW: Record<string, string> = {
-  대기중: "진행중",
-  진행중: "배송중",
-  배송중: "완료",
-};
+  const rd = reformItem.reformData as Record<string, unknown>;
+  const options = (rd.options ?? {}) as Record<string, unknown>;
+  const pricing = (rd.pricing ?? {}) as Record<string, unknown>;
+  const refImages = (rd.reference_image_urls ?? []) as string[];
+
+  return (
+    <>
+      <Title level={5}>주문 제작 상세</Title>
+      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+        <Descriptions.Item label="넥타이 유형">
+          {(options.tie_type as string) ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="심지">
+          {(options.interlining as string) ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="디자인 유형">
+          {(options.design_type as string) ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="원단 유형">
+          {(options.fabric_type as string) ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="원단 지참">
+          {options.fabric_provided ? "예" : "아니오"}
+        </Descriptions.Item>
+        <Descriptions.Item label="수량">
+          {(rd.quantity as number) ?? "-"}
+        </Descriptions.Item>
+      </Descriptions>
+
+      <Descriptions bordered column={3} style={{ marginBottom: 24 }}>
+        <Descriptions.Item label="삼각봉제">
+          {options.triangle_stitch ? "O" : "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="옆선봉제">
+          {options.side_stitch ? "O" : "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="바택">
+          {options.bar_tack ? "O" : "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="딤플">
+          {options.dimple ? "O" : "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="스포데라토">
+          {options.spoderato ? "O" : "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="7폴드">
+          {options.fold7 ? "O" : "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="브랜드 라벨">
+          {options.brand_label ? "O" : "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="케어 라벨">
+          {options.care_label ? "O" : "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="샘플">
+          {rd.sample ? "O" : "-"}
+        </Descriptions.Item>
+      </Descriptions>
+
+      <Descriptions bordered column={3} style={{ marginBottom: 24 }}>
+        <Descriptions.Item label="봉제비용">
+          {((pricing.sewing_cost as number) ?? 0).toLocaleString()}원
+        </Descriptions.Item>
+        <Descriptions.Item label="원단비용">
+          {((pricing.fabric_cost as number) ?? 0).toLocaleString()}원
+        </Descriptions.Item>
+        <Descriptions.Item label="합계">
+          {((pricing.total_cost as number) ?? 0).toLocaleString()}원
+        </Descriptions.Item>
+      </Descriptions>
+
+      {refImages.length > 0 && (
+        <>
+          <Title level={5}>참고 이미지</Title>
+          <Image.PreviewGroup>
+            <Space wrap style={{ marginBottom: 24 }}>
+              {refImages.map((url, idx) => (
+                <Image key={idx} width={120} src={url} />
+              ))}
+            </Space>
+          </Image.PreviewGroup>
+        </>
+      )}
+
+      {rd.additional_notes && (
+        <Descriptions bordered column={1} style={{ marginBottom: 24 }}>
+          <Descriptions.Item label="추가 메모">
+            {rd.additional_notes as string}
+          </Descriptions.Item>
+        </Descriptions>
+      )}
+    </>
+  );
+}
+
+function RepairOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
+  const reformItems = items.filter(
+    (i) => i.itemType === "reform" && i.reformData
+  );
+  if (reformItems.length === 0) return null;
+
+  return (
+    <>
+      <Title level={5}>수선 상세</Title>
+      <Space direction="vertical" style={{ width: "100%", marginBottom: 24 }}>
+        {reformItems.map((item, idx) => {
+          const rd = item.reformData as Record<string, unknown>;
+          const ties = (rd.ties ?? []) as Record<string, unknown>[];
+
+          return (
+            <Card
+              key={item.id}
+              size="small"
+              title={`넥타이 ${idx + 1}`}
+              style={{ marginBottom: 8 }}
+            >
+              {ties.map((tie, tieIdx) => (
+                <Descriptions
+                  key={tieIdx}
+                  bordered
+                  column={2}
+                  size="small"
+                  style={{ marginBottom: 8 }}
+                >
+                  {typeof tie.image_url === "string" && (
+                    <Descriptions.Item label="이미지" span={2}>
+                      <Image width={100} src={tie.image_url} />
+                    </Descriptions.Item>
+                  )}
+                  <Descriptions.Item label="측정방식">
+                    {(tie.measurement_type as string) === "length"
+                      ? "길이 직접 입력"
+                      : "키 입력"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="측정값">
+                    {(tie.measurement_value as string) ?? "-"}
+                  </Descriptions.Item>
+                  {typeof tie.memo === "string" && (
+                    <Descriptions.Item label="메모" span={2}>
+                      {tie.memo}
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              ))}
+              {ties.length === 0 && (
+                <Descriptions bordered column={2} size="small">
+                  <Descriptions.Item label="수량">
+                    {item.quantity}
+                  </Descriptions.Item>
+                </Descriptions>
+              )}
+            </Card>
+          );
+        })}
+      </Space>
+    </>
+  );
+}
 
 export default function OrderShow() {
   const { query: queryResult } = useShow<AdminOrderDetailRowDTO>({
@@ -51,7 +210,7 @@ export default function OrderShow() {
     queryOptions: { enabled: !!order?.id },
   });
 
-  const { data: defaultCourierSetting } = useOne<AdminSettingRowDTO>({
+  const { result: defaultCourierSetting } = useOne<AdminSettingRowDTO>({
     resource: "admin_settings",
     id: "default_courier_company",
     meta: { idColumnName: "key" },
@@ -68,7 +227,7 @@ export default function OrderShow() {
       if (courierCompany === "") {
         setCourierCompany(
           order.courierCompany ??
-            defaultCourierSetting?.data?.value ??
+            defaultCourierSetting?.value ??
             ""
         );
       }
@@ -77,6 +236,9 @@ export default function OrderShow() {
       }
     }
   }, [order, defaultCourierSetting, courierCompany, trackingNumber]);
+
+  const orderType: OrderType = order?.orderType ?? "sale";
+  const statusFlow = ORDER_STATUS_FLOW[orderType];
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === "취소") {
@@ -127,7 +289,7 @@ export default function OrderShow() {
     );
   };
 
-  const nextStatus = order?.status ? STATUS_FLOW[order.status] : undefined;
+  const nextStatus = order?.status ? statusFlow[order.status] : undefined;
   const trackingUrl =
     courierCompany && trackingNumber
       ? buildTrackingUrl(courierCompany, trackingNumber)
@@ -141,6 +303,14 @@ export default function OrderShow() {
           {order?.orderNumber}
         </Descriptions.Item>
         <Descriptions.Item label="주문일">{order?.date}</Descriptions.Item>
+        <Descriptions.Item label="주문유형">
+          <Tag>{ORDER_TYPE_LABELS[orderType]}</Tag>
+        </Descriptions.Item>
+        <Descriptions.Item label="상태">
+          {order?.status && (
+            <Tag color={ORDER_STATUS_COLORS[order.status]}>{order.status}</Tag>
+          )}
+        </Descriptions.Item>
         <Descriptions.Item label="고객명">
           {order?.customerName}
         </Descriptions.Item>
@@ -150,19 +320,14 @@ export default function OrderShow() {
         <Descriptions.Item label="이메일">
           {order?.customerEmail ?? "-"}
         </Descriptions.Item>
-        <Descriptions.Item label="상태">
-          {order?.status && (
-            <Tag color={STATUS_COLORS[order.status]}>{order.status}</Tag>
-          )}
+        <Descriptions.Item label="결제금액">
+          <strong>{order?.totalPrice?.toLocaleString()}원</strong>
         </Descriptions.Item>
         <Descriptions.Item label="원가">
           {order?.originalPrice?.toLocaleString()}원
         </Descriptions.Item>
         <Descriptions.Item label="할인">
           {order?.totalDiscount?.toLocaleString()}원
-        </Descriptions.Item>
-        <Descriptions.Item label="결제금액">
-          <strong>{order?.totalPrice?.toLocaleString()}원</strong>
         </Descriptions.Item>
       </Descriptions>
 
@@ -186,6 +351,14 @@ export default function OrderShow() {
           </Button>
         )}
       </Space>
+
+      {orderType === "custom" && (
+        <CustomOrderDetail items={itemsResult.data ?? []} />
+      )}
+
+      {orderType === "repair" && (
+        <RepairOrderDetail items={itemsResult.data ?? []} />
+      )}
 
       <Title level={5}>배송지 정보</Title>
       <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
@@ -248,9 +421,9 @@ export default function OrderShow() {
           )}
         </Space>
         {order?.shippedAt && (
-          <Typography.Text type="secondary">
+          <Text type="secondary">
             발송일시: {new Date(order.shippedAt).toLocaleString("ko-KR")}
-          </Typography.Text>
+          </Text>
         )}
       </Space>
 

@@ -19,4 +19,3 @@
 
 - Read/Write 경계 ADR: `docs/adr/0001-read-view-write-rpc.md`
 - Write 경계 명세: `docs/supabase-write-boundary.md`
-- Write 보안 점검 스냅샷 (2026-02-02): `docs/supabase-write-security-audit-2026-02-02.md`
