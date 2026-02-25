@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS public.claims (
   reason         text        NOT NULL,
   description    text,
   quantity       integer     NOT NULL,
+  return_courier_company  text,
+  return_tracking_number  text,
+  resend_courier_company  text,
+  resend_tracking_number  text,
   created_at     timestamptz NOT NULL DEFAULT now(),
   updated_at     timestamptz NOT NULL DEFAULT now(),
 
@@ -21,7 +25,7 @@ CREATE TABLE IF NOT EXISTS public.claims (
   CONSTRAINT claims_type_check
     CHECK (type = ANY (ARRAY['cancel','return','exchange'])),
   CONSTRAINT claims_status_check
-    CHECK (status = ANY (ARRAY['접수','처리중','완료','거부'])),
+    CHECK (status = ANY (ARRAY['접수','처리중','수거요청','수거완료','재발송','완료','거부'])),
   CONSTRAINT claims_reason_check
     CHECK (reason = ANY (ARRAY[
       'change_mind','defect','delay','wrong_item',
@@ -43,7 +47,7 @@ CREATE INDEX idx_claims_order_item_id ON public.claims USING btree (order_item_i
 CREATE INDEX idx_claims_status        ON public.claims USING btree (status);
 CREATE UNIQUE INDEX idx_claims_active_per_item
   ON public.claims USING btree (order_item_id, type)
-  WHERE status = ANY (ARRAY['접수','처리중']);
+  WHERE status = ANY (ARRAY['접수','처리중','수거요청','수거완료','재발송']);
 
 -- Trigger
 CREATE OR REPLACE TRIGGER update_claims_updated_at
@@ -77,4 +81,6 @@ CREATE POLICY "Admins can update claim status"
 
 -- Privilege hardening
 REVOKE UPDATE ON TABLE public.claims FROM authenticated;
-GRANT UPDATE (status) ON TABLE public.claims TO authenticated;
+GRANT UPDATE (status, return_courier_company, return_tracking_number,
+              resend_courier_company, resend_tracking_number)
+  ON TABLE public.claims TO authenticated;
