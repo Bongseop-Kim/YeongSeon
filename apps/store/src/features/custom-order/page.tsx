@@ -1,19 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import OrderForm from "./components/OrderForm";
-import CostBreakdown from "./components/CostBreakdown";
-import type { QuoteOrderOptions } from "./types/order";
 import { Form } from "@/components/ui/form";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
 import { calculateTotalCost } from "./utils/pricing";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
@@ -24,7 +14,6 @@ import {
   useShippingAddresses,
   shippingKeys,
 } from "@/features/shipping/api/shipping-query";
-import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
@@ -32,7 +21,28 @@ import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
 import { useCreateQuoteRequest } from "@/features/quote-request/api/quote-request-query";
 import { toCreateQuoteRequestInput } from "@/features/quote-request/api/quote-request-mapper";
-import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
+import type { QuoteOrderOptions, OrderOptions } from "./types/order";
+import type { OrderPurpose, PackagePreset, WizardStepId } from "./types/wizard";
+import { WIZARD_STEPS, SAMPLE_WIZARD_STEPS } from "./constants/WIZARD_STEPS";
+import { PACKAGE_PRESETS } from "./constants/PACKAGE_PRESETS";
+import { SAMPLE_COST } from "./constants/SAMPLE_PRICING";
+
+import { useWizardStep } from "./hooks/useWizardStep";
+import { useWizardDraft } from "./hooks/useWizardDraft";
+import { WizardLayout } from "./components/wizard/WizardLayout";
+import { ProgressBar } from "./components/wizard/ProgressBar";
+import { StepNavigation } from "./components/wizard/StepNavigation";
+import { StickySummary } from "./components/wizard/StickySummary";
+import { PurposeSelector } from "./components/PurposeSelector";
+import { QuantityStep } from "./components/steps/QuantityStep";
+import { FabricStep } from "./components/steps/FabricStep";
+import { SewingStep } from "./components/steps/SewingStep";
+import { SpecStep } from "./components/steps/SpecStep";
+import { FinishingStep } from "./components/steps/FinishingStep";
+import { AttachmentStep } from "./components/steps/AttachmentStep";
+import { ConfirmStep } from "./components/steps/ConfirmStep";
+import { SampleSetupStep } from "./components/steps/SampleSetupStep";
+import { SampleConfirmStep } from "./components/steps/SampleConfirmStep";
 
 type ShippingMessageTypeValue =
   (typeof SHIPPING_MESSAGE_TYPE)[keyof typeof SHIPPING_MESSAGE_TYPE];
@@ -68,16 +78,18 @@ const isShippingMessageData = (
 };
 
 const OrderPage = () => {
-  const [searchParams] = useSearchParams();
-  const mode = searchParams.get("mode");
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const isLoggedIn = !!user;
   const { openPopup } = usePopup();
   const queryClient = useQueryClient();
   const createCustomOrder = useCreateCustomOrder();
   const createQuoteRequest = useCreateQuoteRequest();
   const imageUpload = useImageUpload();
+  const draft = useWizardDraft();
 
+  const [purpose, setPurpose] = useState<OrderPurpose | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<PackagePreset | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null
   );
@@ -161,6 +173,7 @@ const OrderPage = () => {
       referenceImages: null,
       additionalNotes: "",
       sample: false,
+      sampleType: null,
 
       // 견적요청 연락처
       contactName: "",
@@ -170,12 +183,90 @@ const OrderPage = () => {
     },
   });
 
+  const handleSelectPurpose = (selected: OrderPurpose) => {
+    if (purpose !== null && purpose !== selected) {
+      form.reset();
+    }
+    setPurpose(selected);
+    if (selected === "sample") {
+      form.setValue("sample", true);
+      form.setValue("quantity", 1);
+    } else {
+      form.setValue("sample", false);
+      form.setValue("sampleType", null);
+    }
+  };
+
+  const handleSelectPackage = (preset: PackagePreset) => {
+    const config = PACKAGE_PRESETS.find((p) => p.id === preset);
+    if (!config) return;
+    for (const [key, value] of Object.entries(config.values)) {
+      form.setValue(key as keyof OrderOptions, value);
+    }
+    setSelectedPackage(preset);
+  };
+
   const watchedValues = form.watch();
 
   const { sewingCost, fabricCost, totalCost } =
     calculateTotalCost(watchedValues);
 
-  const isQuoteMode = watchedValues.quantity >= 100;
+  const isSampleMode = purpose === "sample";
+  const isQuoteMode = !isSampleMode && watchedValues.quantity >= 100;
+
+  const stepsConfig = isSampleMode ? SAMPLE_WIZARD_STEPS : WIZARD_STEPS;
+  const wizard = useWizardStep({ steps: stepsConfig, getValues: form.getValues });
+
+  // 마운트 시 드래프트 존재 확인 → 복원 토스트
+  const draftCheckedRef = useRef(false);
+  const { resetTo } = wizard;
+  useEffect(() => {
+    if (draftCheckedRef.current) return;
+    draftCheckedRef.current = true;
+
+    const existing = draft.loadDraft();
+    if (!existing) return;
+
+    toast.info("이전에 작성 중이던 주문이 있어요", {
+      action: {
+        label: "이어서 하기",
+        onClick: () => {
+          setPurpose(existing.purpose);
+          form.reset(existing.formValues);
+          resetTo(
+            existing.currentStepIndex,
+            new Set(existing.visitedSteps)
+          );
+        },
+      },
+      duration: 8000,
+    });
+  }, [draft, form, resetTo]);
+
+  // 자동 저장: watchedValues + currentStepIndex 변경 시 1초 debounce
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      draft.saveDraft({
+        formValues: watchedValues,
+        currentStepIndex: wizard.currentStepIndex,
+        visitedSteps: [...wizard.visitedSteps],
+        savedAt: Date.now(),
+        purpose,
+      });
+    }, 1000);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [watchedValues, wizard.currentStepIndex, wizard.visitedSteps, draft, purpose]);
+
+  const handleNext = () => {
+    const error = wizard.goNext();
+    if (error) {
+      toast.error(error);
+    }
+  };
 
   const handleCreateQuoteRequest = async () => {
     if (!user) {
@@ -208,6 +299,7 @@ const OrderPage = () => {
       referenceImages,
       additionalNotes,
       sample,
+      sampleType,
       contactName,
       contactTitle,
       contactMethod,
@@ -229,6 +321,7 @@ const OrderPage = () => {
         }),
       });
 
+      draft.clearDraft();
       toast.success("견적요청이 완료되었습니다!");
       form.reset();
       navigate(ROUTES.ORDER_LIST);
@@ -262,6 +355,7 @@ const OrderPage = () => {
       referenceImages,
       additionalNotes,
       sample,
+      sampleType,
       contactName,
       contactTitle,
       contactMethod,
@@ -277,9 +371,11 @@ const OrderPage = () => {
           referenceImageUrls: imageUpload.getImageUrls(),
           additionalNotes,
           sample,
+          sampleType,
         }),
       });
 
+      draft.clearDraft();
       toast.success("주문이 완료되었습니다!");
       form.reset();
       navigate(ROUTES.ORDER_LIST);
@@ -292,114 +388,191 @@ const OrderPage = () => {
     }
   };
 
+  const handleSubmit = isQuoteMode
+    ? handleCreateQuoteRequest
+    : handleCreateOrder;
+
+  const isPending = isQuoteMode
+    ? createQuoteRequest.isPending
+    : createCustomOrder.isPending;
+
+  const isSubmitDisabled =
+    !selectedAddress || isPending || imageUpload.isUploading;
+
+  const sampleCost = watchedValues.sampleType
+    ? SAMPLE_COST[watchedValues.sampleType]
+    : 0;
+
+  const estimatedDays = watchedValues.fabricProvided
+    ? "7~14일"
+    : watchedValues.reorder
+      ? "21~28일"
+      : "28~42일";
+
+  const goToStepById = (id: WizardStepId) => {
+    const idx = stepsConfig.findIndex((s) => s.id === id);
+    if (idx !== -1) wizard.goToStep(idx);
+  };
+
+  if (purpose === null) {
+    return (
+      <MainLayout>
+        <MainContent className="overflow-visible">
+          <PurposeSelector onSelectPurpose={handleSelectPurpose} />
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <MainContent className="overflow-visible">
         <Form {...form}>
-          <TwoPanelLayout
-            leftPanel={
-              <OrderForm
-                control={form.control}
-                watch={form.watch}
-                imageUpload={imageUpload}
+          <WizardLayout
+            progressBar={
+              <ProgressBar
+                steps={wizard.steps}
+                currentStepIndex={wizard.currentStepIndex}
+                visitedSteps={wizard.visitedSteps}
+                shouldShowStep={wizard.shouldShowStep}
+                onStepClick={wizard.goToStep}
               />
             }
-            rightPanel={
-              <div className="space-y-4">
-                {isQuoteMode && (
-                  <ContactInfoSection
-                    control={form.control}
-                    contactMethod={watchedValues.contactMethod}
-                  />
-                )}
-
-                <Card>
-                  <CardHeader className="flex justify-between items-center">
-                    <CardTitle>
-                      {selectedAddress?.recipientName || "배송지 정보"}
-                    </CardTitle>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        openPopup(`${ROUTES.SHIPPING}?mode=select`)
-                      }
-                    >
-                      배송지 관리
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedAddress ? (
-                      <div className="space-y-1 text-sm">
-                        <p>
-                          ({selectedAddress.postalCode}){" "}
-                          {selectedAddress.address}{" "}
-                          {selectedAddress.detailAddress}
-                        </p>
-                        <p>
-                          {formatPhoneNumber(selectedAddress.recipientPhone)}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4 text-zinc-500 text-sm">
-                        배송지를 추가해주세요.
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <CostBreakdown
-                  options={watchedValues}
-                  totalCost={totalCost}
-                  sewingCost={sewingCost}
-                  fabricCost={fabricCost}
-                  mode={mode}
-                />
-              </div>
+            navigation={
+              <StepNavigation
+                isFirstStep={wizard.isFirstStep}
+                isLastStep={wizard.isLastStep}
+                isQuoteMode={isQuoteMode}
+                isPending={isPending}
+                isSubmitDisabled={isSubmitDisabled}
+                onPrev={wizard.goPrev}
+                onNext={handleNext}
+                onSubmit={handleSubmit}
+              />
             }
-            button={
+            summary={
+              <StickySummary
+                options={watchedValues}
+                totalCost={totalCost}
+                sewingCost={sewingCost}
+                fabricCost={fabricCost}
+                isLoggedIn={isLoggedIn}
+                isSampleMode={isSampleMode}
+              />
+            }
+            mobileBottomBar={
               <div className="space-y-2">
-                {isQuoteMode ? (
-                  <Button
-                    type="button"
-                    onClick={handleCreateQuoteRequest}
-                    size="xl"
-                    className="w-full"
-                    disabled={
-                      !selectedAddress ||
-                      createQuoteRequest.isPending ||
-                      imageUpload.isUploading
-                    }
-                  >
-                    {createQuoteRequest.isPending
-                      ? "견적요청 처리 중..."
-                      : "견적요청"}
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    onClick={handleCreateOrder}
-                    size="xl"
-                    className="w-full"
-                    disabled={
-                      !selectedAddress ||
-                      createCustomOrder.isPending ||
-                      imageUpload.isUploading
-                    }
-                  >
-                    {createCustomOrder.isPending
-                      ? "주문 처리 중..."
-                      : `${totalCost.toLocaleString()}원 주문하기`}
-                  </Button>
+                {!wizard.isLastStep && (
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    {isSampleMode && watchedValues.sampleType ? (
+                      <>
+                        <span className="text-zinc-900 font-medium">
+                          {sampleCost.toLocaleString()}원
+                        </span>
+                      </>
+                    ) : isLoggedIn ? (
+                      <span className="text-zinc-900 font-medium">
+                        {totalCost.toLocaleString()}원
+                      </span>
+                    ) : (
+                      <span className="text-zinc-500 text-xs">
+                        예상 기간: {estimatedDays}
+                      </span>
+                    )}
+                    {!isSampleMode && isLoggedIn && (
+                      <span className="text-zinc-500">{estimatedDays}</span>
+                    )}
+                  </div>
                 )}
-                {!selectedAddress && (
-                  <p className="text-sm text-center text-zinc-500">
-                    배송지를 추가하면 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수 있어요
-                  </p>
+                {wizard.isLastStep ? (
+                  <div className="space-y-2">
+                    <Button
+                      type="button"
+                      onClick={handleSubmit}
+                      size="xl"
+                      className="w-full"
+                      disabled={isSubmitDisabled}
+                    >
+                      {isPending
+                        ? isSampleMode
+                          ? "샘플 주문 처리 중..."
+                          : isQuoteMode
+                            ? "견적요청 처리 중..."
+                            : "주문 처리 중..."
+                        : isSampleMode
+                          ? `${sampleCost.toLocaleString()}원 샘플 주문하기`
+                          : isQuoteMode
+                            ? "견적요청"
+                            : `${totalCost.toLocaleString()}원 주문하기`}
+                    </Button>
+                    {!selectedAddress && (
+                      <p className="text-sm text-center text-zinc-500">
+                        배송지를 추가하면 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수 있어요
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    {!wizard.isFirstStep && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={wizard.goPrev}
+                        className="flex-none"
+                      >
+                        이전
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      size="lg"
+                      onClick={handleNext}
+                      className="flex-1"
+                    >
+                      다음
+                    </Button>
+                  </div>
                 )}
               </div>
             }
-          />
+          >
+            {wizard.currentStep.id === "quantity" && (
+              <QuantityStep
+                isLoggedIn={isLoggedIn}
+                selectedPackage={selectedPackage}
+                onSelectPackage={handleSelectPackage}
+              />
+            )}
+            {wizard.currentStep.id === "fabric" && <FabricStep />}
+            {wizard.currentStep.id === "sewing" && <SewingStep />}
+            {wizard.currentStep.id === "spec" && <SpecStep />}
+            {wizard.currentStep.id === "finishing" && <FinishingStep />}
+            {wizard.currentStep.id === "attachment" && (
+              <AttachmentStep imageUpload={imageUpload} />
+            )}
+            {wizard.currentStep.id === "confirm" && (
+              <ConfirmStep
+                selectedAddress={selectedAddress}
+                onOpenShippingPopup={() =>
+                  openPopup(`${ROUTES.SHIPPING}?mode=select`)
+                }
+                imageUpload={imageUpload}
+                goToStepById={goToStepById}
+              />
+            )}
+            {wizard.currentStep.id === "sample-setup" && <SampleSetupStep />}
+            {wizard.currentStep.id === "sample-confirm" && (
+              <SampleConfirmStep
+                selectedAddress={selectedAddress}
+                onOpenShippingPopup={() =>
+                  openPopup(`${ROUTES.SHIPPING}?mode=select`)
+                }
+                imageUpload={imageUpload}
+                goToStepById={goToStepById}
+              />
+            )}
+          </WizardLayout>
         </Form>
       </MainContent>
     </MainLayout>

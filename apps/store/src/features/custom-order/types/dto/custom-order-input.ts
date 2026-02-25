@@ -45,6 +45,7 @@ export interface CreateCustomOrderRequest {
   referenceImageUrls: string[];
   additionalNotes: string;
   sample: boolean;
+  sampleType: "sewing" | "fabric" | "fabric_and_sewing" | null;
 }
 
 export interface CreateCustomOrderRequestDto {
@@ -54,4 +55,5 @@ export interface CreateCustomOrderRequestDto {
   reference_image_urls: string[];
   additional_notes: string;
   sample: boolean;
+  sample_type: "sewing" | "fabric" | "fabric_and_sewing" | null;
 }
