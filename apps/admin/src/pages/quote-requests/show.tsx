@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useList } from "@refinedev/core";
+import { useShow, useList, useInvalidate } from "@refinedev/core";
 import {
   Descriptions,
   Tag,
@@ -102,6 +102,8 @@ export default function QuoteRequestShow() {
     queryOptions: { enabled: !!quote?.id },
   });
 
+  const invalidate = useInvalidate();
+
   const [quotedAmount, setQuotedAmount] = useState<number | null>(null);
   const [quoteConditions, setQuoteConditions] = useState("");
   const [adminMemo, setAdminMemo] = useState("");
@@ -144,7 +146,10 @@ export default function QuoteRequestShow() {
         message.success(`상태가 "${newStatus}"(으)로 변경되었습니다.`);
         setStatusMemo("");
         queryResult.refetch();
-        logsResult.refetch();
+        invalidate({
+          resource: "quote_request_status_logs",
+          invalidates: ["list"],
+        });
       } finally {
         setIsUpdating(false);
       }
