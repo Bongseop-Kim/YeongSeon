@@ -5,6 +5,7 @@ import {
   Tag,
   Table,
   Button,
+  Flex,
   Space,
   Modal,
   Typography,
@@ -250,7 +251,7 @@ export default function ClaimShow() {
     <Show>
       {/* Section 1: Claim Info */}
       <Title level={5}>클레임 정보</Title>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="클레임번호">
           {claim?.claimNumber}
         </Descriptions.Item>
@@ -308,7 +309,7 @@ export default function ClaimShow() {
 
       {/* Section 2: Order Shipping Info (read-only) */}
       <Title level={5}>주문 배송 정보</Title>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="주문상태">
           {claim?.orderStatus ? (
             <Tag color={ORDER_STATUS_COLORS[claim.orderStatus]}>
@@ -347,43 +348,38 @@ export default function ClaimShow() {
       {showReturnSection && (
         <>
           <Title level={5}>수거 정보</Title>
-          <Space
-            direction="vertical"
-            style={{ width: "100%", marginBottom: 24 }}
-          >
-            <Space wrap>
-              <Select
-                value={returnCourier || undefined}
-                placeholder="택배사 선택"
-                onChange={(value) => setReturnCourier(value ?? "")}
-                style={{ width: 180 }}
-                options={courierOptions}
-                allowClear
-              />
-              <Input
-                value={returnTracking}
-                placeholder="송장번호"
-                onChange={(e) => setReturnTracking(e.target.value)}
-                style={{ width: 220 }}
-              />
+          <Flex wrap="wrap" gap={8} style={{ width: "100%", marginBottom: 24 }}>
+            <Select
+              value={returnCourier || undefined}
+              placeholder="택배사 선택"
+              onChange={(value) => setReturnCourier(value ?? "")}
+              style={{ flex: 1, minWidth: 140 }}
+              options={courierOptions}
+              allowClear
+            />
+            <Input
+              value={returnTracking}
+              placeholder="송장번호"
+              onChange={(e) => setReturnTracking(e.target.value)}
+              style={{ flex: 1, minWidth: 140 }}
+            />
+            <Button
+              type="primary"
+              onClick={handleSaveReturnTracking}
+              loading={updateMutation.isPending}
+            >
+              저장
+            </Button>
+            {returnTrackingUrl && (
               <Button
-                type="primary"
-                onClick={handleSaveReturnTracking}
-                loading={updateMutation.isPending}
+                href={returnTrackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                저장
+                수거추적
               </Button>
-              {returnTrackingUrl && (
-                <Button
-                  href={returnTrackingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  수거추적
-                </Button>
-              )}
-            </Space>
-          </Space>
+            )}
+          </Flex>
         </>
       )}
 
@@ -391,43 +387,38 @@ export default function ClaimShow() {
       {showResendSection && (
         <>
           <Title level={5}>재발송 정보</Title>
-          <Space
-            direction="vertical"
-            style={{ width: "100%", marginBottom: 24 }}
-          >
-            <Space wrap>
-              <Select
-                value={resendCourier || undefined}
-                placeholder="택배사 선택"
-                onChange={(value) => setResendCourier(value ?? "")}
-                style={{ width: 180 }}
-                options={courierOptions}
-                allowClear
-              />
-              <Input
-                value={resendTracking}
-                placeholder="송장번호"
-                onChange={(e) => setResendTracking(e.target.value)}
-                style={{ width: 220 }}
-              />
+          <Flex wrap="wrap" gap={8} style={{ width: "100%", marginBottom: 24 }}>
+            <Select
+              value={resendCourier || undefined}
+              placeholder="택배사 선택"
+              onChange={(value) => setResendCourier(value ?? "")}
+              style={{ flex: 1, minWidth: 140 }}
+              options={courierOptions}
+              allowClear
+            />
+            <Input
+              value={resendTracking}
+              placeholder="송장번호"
+              onChange={(e) => setResendTracking(e.target.value)}
+              style={{ flex: 1, minWidth: 140 }}
+            />
+            <Button
+              type="primary"
+              onClick={handleSaveResendTracking}
+              loading={updateMutation.isPending}
+            >
+              저장
+            </Button>
+            {resendTrackingUrl && (
               <Button
-                type="primary"
-                onClick={handleSaveResendTracking}
-                loading={updateMutation.isPending}
+                href={resendTrackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                저장
+                배송추적
               </Button>
-              {resendTrackingUrl && (
-                <Button
-                  href={resendTrackingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  배송추적
-                </Button>
-              )}
-            </Space>
-          </Space>
+            )}
+          </Flex>
         </>
       )}
 

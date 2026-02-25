@@ -499,7 +499,8 @@ export default function CouponEdit() {
         okText="선택 발급"
         cancelText="취소"
         confirmLoading={issuing}
-        width={860}
+        width="90vw"
+        style={{ maxWidth: 860 }}
       >
         <Space wrap style={{ marginBottom: 12 }}>
           {(Object.keys(PRESET_LABELS) as PresetKey[]).map((preset) => (

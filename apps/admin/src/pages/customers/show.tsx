@@ -34,7 +34,7 @@ export default function CustomerShow() {
 
   return (
     <Show>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="이름">
           {profile?.name as string}
         </Descriptions.Item>

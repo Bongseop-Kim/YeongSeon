@@ -79,7 +79,7 @@ export default function DashboardPage() {
       <Title level={4}>대시보드</Title>
 
       <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
               title="오늘 주문"
@@ -89,7 +89,7 @@ export default function DashboardPage() {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
               title="오늘 매출"
@@ -100,7 +100,7 @@ export default function DashboardPage() {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
               title="미처리 클레임"
@@ -110,7 +110,7 @@ export default function DashboardPage() {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
               title="미답변 문의"

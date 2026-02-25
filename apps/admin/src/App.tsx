@@ -17,6 +17,8 @@ import {
 
 import { authProvider } from "@/providers/auth-provider";
 import { dataProvider } from "@/providers/data-provider";
+import { AdminSider } from "@/components/AdminSider";
+import { AdminHeader } from "@/components/AdminHeader";
 
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
@@ -42,7 +44,7 @@ import "@refinedev/antd/dist/reset.css";
 
 function AppLayout() {
   return (
-    <ThemedLayout>
+    <ThemedLayout Sider={AdminSider} Header={AdminHeader}>
       <Outlet />
     </ThemedLayout>
   );

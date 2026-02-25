@@ -28,7 +28,7 @@ export default function LoginPage() {
         background: "#f0f2f5",
       }}
     >
-      <Card style={{ width: 400 }}>
+      <Card style={{ maxWidth: 400, width: "100%", margin: "0 16px" }}>
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
           <Title level={3} style={{ textAlign: "center", margin: 0 }}>
             ESSE SION 관리자

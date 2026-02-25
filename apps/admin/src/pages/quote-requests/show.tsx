@@ -36,7 +36,7 @@ function CustomOrderOptionsDetail({
   return (
     <>
       <Title level={5}>주문제작 옵션 상세</Title>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="넥타이 유형">
           {(options.tie_type as string) ?? "-"}
         </Descriptions.Item>
@@ -57,7 +57,7 @@ function CustomOrderOptionsDetail({
         </Descriptions.Item>
       </Descriptions>
 
-      <Descriptions bordered column={3} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="삼각봉제">
           {options.triangle_stitch ? "O" : "-"}
         </Descriptions.Item>
@@ -185,7 +185,7 @@ export default function QuoteRequestShow() {
   return (
     <Show>
       <Title level={5}>견적 기본 정보</Title>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="견적번호">
           {quote?.quoteNumber}
         </Descriptions.Item>
@@ -221,7 +221,7 @@ export default function QuoteRequestShow() {
       </Descriptions>
 
       <Title level={5}>담당자 연락처</Title>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="성함">
           {quote?.contactName}
         </Descriptions.Item>
@@ -262,7 +262,7 @@ export default function QuoteRequestShow() {
       )}
 
       <Title level={5}>배송지 정보</Title>
-      <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="수령인">
           {quote?.recipientName ?? "-"}
         </Descriptions.Item>

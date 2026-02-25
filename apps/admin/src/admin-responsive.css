@@ -1,0 +1,28 @@
+@media (max-width: 991px) {
+  /* 테이블 가로 스크롤 */
+  .ant-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ant-table-cell {
+    white-space: nowrap;
+  }
+
+  /* 콘텐츠 영역 패딩 축소 */
+  .ant-layout-content {
+    padding: 16px 12px !important;
+  }
+
+  /* 필터바 Select/Input 풀 너비 */
+  .ant-space-horizontal .ant-space-item .ant-select,
+  .ant-space-horizontal .ant-space-item .ant-input-search,
+  .ant-space-horizontal .ant-space-item .ant-input-affix-wrapper {
+    width: 100% !important;
+  }
+  .ant-space.ant-space-horizontal:has(
+      > .ant-space-item > .ant-select,
+      > .ant-space-item > .ant-input-search
+    ) {
+    width: 100%;
+  }
+}
