@@ -178,6 +178,7 @@ export default function OrderList() {
 
   const handleTabChange = (key: string) => {
     if (!isValidOrderType(key)) return;
+    // keepQuery: false — 탭 전환 시 필터/페이지 쿼리 초기화 (destroyInactiveTabPane과 일관)
     go({
       query: { tab: key },
       options: { keepQuery: false },

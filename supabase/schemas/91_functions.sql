@@ -271,7 +271,6 @@ declare
   v_reform_base_cost constant integer := 15000;
   v_used_coupon_ids uuid[] := '{}'::uuid[];
   v_coupon record;
-  v_has_reform boolean;
   v_order_type text;
 begin
   v_user_id := auth.uid();
@@ -456,11 +455,13 @@ begin
   v_total_price := v_original_price - v_total_discount;
   v_order_number := generate_order_number();
 
-  v_has_reform := exists (
-    select 1 from jsonb_array_elements(v_normalized_items) elem
-    where elem->>'item_type' = 'reform'
-  );
-  v_order_type := case when v_has_reform then 'repair' else 'sale' end;
+  v_order_type := case
+    when exists (
+      select 1 from jsonb_array_elements(v_normalized_items) elem
+      where elem->>'item_type' = 'reform'
+    ) then 'repair'
+    else 'sale'
+  end;
 
   insert into orders (
     user_id,

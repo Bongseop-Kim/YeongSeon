@@ -96,11 +96,17 @@ export default function ProductEdit() {
     delete payload.options;
     delete payload.image;
     delete payload.detail_images;
-    formProps.onFinish?.({
-      ...payload,
-      image: urls[0],
-      detail_images: urls,
-    });
+    try {
+      await formProps.onFinish?.({
+        ...payload,
+        image: urls[0],
+        detail_images: urls,
+      });
+    } catch (err) {
+      message.error(
+        err instanceof Error ? err.message : "상품 수정에 실패했습니다.",
+      );
+    }
   };
 
   return (

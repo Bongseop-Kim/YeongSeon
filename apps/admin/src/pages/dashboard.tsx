@@ -124,7 +124,10 @@ export default function DashboardPage() {
       <Segmented
         options={SEGMENT_OPTIONS}
         value={segment}
-        onChange={(val) => setSegment(val as SegmentValue)}
+        onChange={(val) => {
+          const valid = SEGMENT_OPTIONS.find((o) => o.value === val);
+          if (valid) setSegment(valid.value);
+        }}
         style={{ marginBottom: 16 }}
       />
 

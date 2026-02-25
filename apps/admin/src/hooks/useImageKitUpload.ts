@@ -7,6 +7,7 @@ import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 
 export const useImageKitUpload = () => {
   const fileUidRef = useRef(0);
+  const activeUploadsRef = useRef(0);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [activeUploads, setActiveUploads] = useState(0);
   const uploading = activeUploads > 0;
@@ -19,6 +20,7 @@ export const useImageKitUpload = () => {
     const { file, onSuccess, onError } = options;
     const rcFile = file as RcFile;
 
+    activeUploadsRef.current += 1;
     setActiveUploads((n) => n + 1);
     try {
       const { data, error } = await supabase.functions.invoke("imagekit-auth");
@@ -60,13 +62,19 @@ export const useImageKitUpload = () => {
       setFileList((prev) => prev.filter((f) => f.uid !== rcFile.uid));
       onError?.(err instanceof Error ? err : new Error(errMsg));
     } finally {
+      activeUploadsRef.current = Math.max(0, activeUploadsRef.current - 1);
       setActiveUploads((n) => Math.max(0, n - 1));
     }
   }, []);
 
   const handleChange = useCallback(
     ({ fileList: newFileList }: { fileList: UploadFile[] }) => {
-      setFileList(newFileList);
+      setFileList((prev) =>
+        newFileList.map((n) => {
+          const existing = prev.find((p) => p.uid === n.uid);
+          return existing?.url && !n.url ? { ...n, url: existing.url } : n;
+        })
+      );
     },
     []
   );
@@ -76,6 +84,7 @@ export const useImageKitUpload = () => {
   }, []);
 
   const initFromUrls = useCallback((urls: string[]) => {
+    if (activeUploadsRef.current > 0) return;
     setFileList(
       urls.map((url) => ({
         uid: `existing-${++fileUidRef.current}`,
