@@ -236,6 +236,23 @@ LEFT JOIN LATERAL (
 ) uc ON true
 WHERE cl.user_id = auth.uid();
 
+-- ── quote_request_list_view ─────────────────────────────────
+CREATE OR REPLACE VIEW public.quote_request_list_view
+WITH (security_invoker = true)
+AS
+SELECT
+  qr.id,
+  qr.quote_number    AS "quoteNumber",
+  to_char(qr.created_at, 'YYYY-MM-DD') AS date,
+  qr.status,
+  qr.quantity,
+  qr.quoted_amount   AS "quotedAmount",
+  qr.contact_name    AS "contactName",
+  qr.contact_method  AS "contactMethod",
+  qr.created_at
+FROM public.quote_requests qr
+WHERE qr.user_id = auth.uid();
+
 -- =============================================================
 -- Admin Views
 -- =============================================================
@@ -380,3 +397,64 @@ JOIN public.orders o ON o.id = cl.order_id
 JOIN public.order_items oi ON oi.id = cl.order_item_id
 LEFT JOIN public.products pr ON pr.id = oi.product_id
 LEFT JOIN public.profiles p ON p.id = cl.user_id;
+
+-- ── admin_quote_request_list_view ──────────────────────────
+CREATE OR REPLACE VIEW public.admin_quote_request_list_view
+WITH (security_invoker = true)
+AS
+SELECT
+  qr.id,
+  qr.user_id        AS "userId",
+  qr.quote_number    AS "quoteNumber",
+  to_char(qr.created_at, 'YYYY-MM-DD') AS date,
+  qr.status,
+  qr.quantity,
+  qr.quoted_amount   AS "quotedAmount",
+  qr.contact_name    AS "contactName",
+  qr.contact_title   AS "contactTitle",
+  qr.contact_method  AS "contactMethod",
+  qr.contact_value   AS "contactValue",
+  qr.created_at,
+  qr.updated_at,
+  p.name             AS "customerName",
+  p.phone            AS "customerPhone",
+  public.admin_get_email(qr.user_id) AS "customerEmail"
+FROM public.quote_requests qr
+LEFT JOIN public.profiles p ON p.id = qr.user_id;
+
+-- ── admin_quote_request_detail_view ────────────────────────
+CREATE OR REPLACE VIEW public.admin_quote_request_detail_view
+WITH (security_invoker = true)
+AS
+SELECT
+  qr.id,
+  qr.user_id        AS "userId",
+  qr.quote_number    AS "quoteNumber",
+  to_char(qr.created_at, 'YYYY-MM-DD') AS date,
+  qr.status,
+  qr.options,
+  qr.quantity,
+  qr.reference_image_urls AS "referenceImageUrls",
+  qr.additional_notes     AS "additionalNotes",
+  qr.contact_name    AS "contactName",
+  qr.contact_title   AS "contactTitle",
+  qr.contact_method  AS "contactMethod",
+  qr.contact_value   AS "contactValue",
+  qr.quoted_amount   AS "quotedAmount",
+  qr.quote_conditions AS "quoteConditions",
+  qr.admin_memo      AS "adminMemo",
+  qr.created_at,
+  qr.updated_at,
+  p.name             AS "customerName",
+  p.phone            AS "customerPhone",
+  public.admin_get_email(qr.user_id) AS "customerEmail",
+  sa.recipient_name   AS "recipientName",
+  sa.recipient_phone  AS "recipientPhone",
+  sa.address          AS "shippingAddress",
+  sa.address_detail   AS "shippingAddressDetail",
+  sa.postal_code      AS "shippingPostalCode",
+  sa.delivery_memo    AS "deliveryMemo",
+  sa.delivery_request AS "deliveryRequest"
+FROM public.quote_requests qr
+LEFT JOIN public.profiles p ON p.id = qr.user_id
+LEFT JOIN public.shipping_addresses sa ON sa.id = qr.shipping_address_id;

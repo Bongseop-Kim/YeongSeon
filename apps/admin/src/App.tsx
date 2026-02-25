@@ -12,6 +12,7 @@ import {
   QuestionCircleOutlined,
   DashboardOutlined,
   SettingOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 
 import { authProvider } from "@/providers/auth-provider";
@@ -33,6 +34,8 @@ import CustomerList from "@/pages/customers/list";
 import CustomerShow from "@/pages/customers/show";
 import InquiryList from "@/pages/inquiries/list";
 import InquiryShow from "@/pages/inquiries/show";
+import QuoteRequestList from "@/pages/quote-requests/list";
+import QuoteRequestShow from "@/pages/quote-requests/show";
 import SettingsPage from "@/pages/settings";
 
 import "@refinedev/antd/dist/reset.css";
@@ -79,6 +82,12 @@ export default function App() {
               create: "/coupons/create",
               edit: "/coupons/edit/:id",
               meta: { label: "쿠폰 관리", icon: <TagOutlined /> },
+            },
+            {
+              name: "admin_quote_request_list_view",
+              list: "/quote-requests",
+              show: "/quote-requests/show/:id",
+              meta: { label: "견적 관리", icon: <FileTextOutlined /> },
             },
             {
               name: "admin_claim_list_view",
@@ -129,6 +138,8 @@ export default function App() {
               <Route path="/coupons" element={<CouponList />} />
               <Route path="/coupons/create" element={<CouponCreate />} />
               <Route path="/coupons/edit/:id" element={<CouponEdit />} />
+              <Route path="/quote-requests" element={<QuoteRequestList />} />
+              <Route path="/quote-requests/show/:id" element={<QuoteRequestShow />} />
               <Route path="/claims" element={<ClaimList />} />
               <Route path="/claims/show/:id" element={<ClaimShow />} />
               <Route path="/customers" element={<CustomerList />} />

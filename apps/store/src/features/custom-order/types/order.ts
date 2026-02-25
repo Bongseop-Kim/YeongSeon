@@ -1,3 +1,12 @@
+export interface QuoteContactInfo {
+  contactName: string;
+  contactTitle: string;
+  contactMethod: "email" | "kakao" | "phone";
+  contactValue: string;
+}
+
+export type QuoteOrderOptions = OrderOptions & QuoteContactInfo;
+
 export interface OrderOptions {
   // 원단 정보
   fabricProvided: boolean;
