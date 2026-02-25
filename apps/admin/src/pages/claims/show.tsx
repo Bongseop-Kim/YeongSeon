@@ -1,8 +1,9 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useUpdate, useNavigation } from "@refinedev/core";
+import { useShow, useList, useUpdate, useInvalidate, useNavigation } from "@refinedev/core";
 import {
   Descriptions,
   Tag,
+  Table,
   Button,
   Space,
   Modal,
@@ -12,9 +13,11 @@ import {
   message,
 } from "antd";
 import { useState, useEffect, useRef } from "react";
-import type { AdminClaimListRowDTO } from "@yeongseon/shared";
+import type { AdminClaimListRowDTO, ClaimStatusLogDTO } from "@yeongseon/shared";
 import {
   CLAIM_STATUS_FLOW,
+  CLAIM_ROLLBACK_FLOW,
+  CLAIM_REJECT_RESTORE_STATUS,
   CLAIM_STATUS_COLORS,
   CLAIM_TYPE_LABELS,
   CLAIM_REASON_LABELS,
@@ -22,8 +25,10 @@ import {
   buildTrackingUrl,
   ORDER_STATUS_COLORS,
 } from "@yeongseon/shared";
+import { supabase } from "@/lib/supabase";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 export default function ClaimShow() {
   const { show } = useNavigation();
@@ -32,7 +37,17 @@ export default function ClaimShow() {
   });
   const claim = queryResult?.data?.data;
 
+  const { result: logsResult } = useList<ClaimStatusLogDTO>({
+    resource: "admin_claim_status_log_view",
+    filters: [
+      { field: "claimId", operator: "eq", value: claim?.id },
+    ],
+    sorters: [{ field: "createdAt", order: "desc" }],
+    queryOptions: { enabled: !!claim?.id },
+  });
+
   const { mutate: updateClaim, mutation: updateMutation } = useUpdate();
+  const invalidate = useInvalidate();
 
   // Return tracking state
   const [returnCourier, setReturnCourier] = useState("");
@@ -40,6 +55,8 @@ export default function ClaimShow() {
   // Resend tracking state
   const [resendCourier, setResendCourier] = useState("");
   const [resendTracking, setResendTracking] = useState("");
+  const [statusMemo, setStatusMemo] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -52,9 +69,41 @@ export default function ClaimShow() {
     }
   }, [claim]);
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = async (newStatus: string) => {
     if (!claim) return;
-    const claimId = claim.id;
+
+    const doUpdate = async () => {
+      setIsUpdating(true);
+      try {
+        const { error } = await supabase.rpc(
+          "admin_update_claim_status",
+          {
+            p_claim_id: claim.id,
+            p_new_status: newStatus,
+            p_memo: statusMemo || null,
+          }
+        );
+
+        if (error) {
+          message.error(`상태 변경 실패: ${error.message}`);
+          return;
+        }
+
+        message.success(`상태가 "${newStatus}"(으)로 변경되었습니다.`);
+        setStatusMemo("");
+        queryResult.refetch();
+        invalidate({
+          resource: "admin_claim_status_log_view",
+          invalidates: ["list"],
+        });
+      } catch (err) {
+        message.error(
+          `상태 변경 중 오류: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+        );
+      } finally {
+        setIsUpdating(false);
+      }
+    };
 
     if (newStatus === "거부") {
       Modal.confirm({
@@ -63,21 +112,12 @@ export default function ClaimShow() {
         okText: "거부",
         cancelText: "닫기",
         okButtonProps: { danger: true },
-        onOk: () =>
-          updateClaim({
-            resource: "claims",
-            id: claimId,
-            values: { status: "거부" },
-          }),
+        onOk: doUpdate,
       });
       return;
     }
 
-    updateClaim({
-      resource: "claims",
-      id: claimId,
-      values: { status: newStatus },
-    });
+    await doUpdate();
   };
 
   const handleSaveReturnTracking = () => {
@@ -120,6 +160,69 @@ export default function ClaimShow() {
   const statusFlow = claimType ? CLAIM_STATUS_FLOW[claimType] : undefined;
   const nextStatus =
     claim?.status && statusFlow ? statusFlow[claim.status] : undefined;
+
+  const rollbackFlow = claimType ? CLAIM_ROLLBACK_FLOW[claimType] : undefined;
+  const rollbackStatus =
+    claim?.status && rollbackFlow ? rollbackFlow[claim.status] : undefined;
+  const isRejected = claim?.status === "거부";
+
+  const handleRollback = (targetStatus: string) => {
+    if (!claim) return;
+
+    let rollbackMemoValue = "";
+
+    Modal.confirm({
+      title: "상태 롤백",
+      content: (
+        <div>
+          <p>
+            현재 상태 <Tag>{claim.status}</Tag> → <Tag>{targetStatus}</Tag>(으)로 롤백합니다.
+          </p>
+          <p style={{ marginBottom: 4 }}><strong>사유 (필수)</strong></p>
+          <TextArea
+            rows={3}
+            placeholder="롤백 사유를 입력하세요"
+            onChange={(e) => { rollbackMemoValue = e.target.value; }}
+          />
+        </div>
+      ),
+      okText: "롤백",
+      cancelText: "취소",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        if (!rollbackMemoValue.trim()) {
+          message.error("롤백 사유를 입력해주세요.");
+          throw new Error("memo required");
+        }
+        setIsUpdating(true);
+        try {
+          const { error } = await supabase.rpc("admin_update_claim_status", {
+            p_claim_id: claim.id,
+            p_new_status: targetStatus,
+            p_memo: rollbackMemoValue,
+            p_is_rollback: true,
+          });
+          if (error) {
+            message.error(`롤백 실패: ${error.message}`);
+            return;
+          }
+          message.success(`"${targetStatus}"(으)로 롤백되었습니다.`);
+          queryResult.refetch();
+          invalidate({
+            resource: "admin_claim_status_log_view",
+            invalidates: ["list"],
+          });
+        } catch (err) {
+          if (err instanceof Error && err.message === "memo required") throw err;
+          message.error(
+            `롤백 중 오류: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+          );
+        } finally {
+          setIsUpdating(false);
+        }
+      },
+    });
+  };
 
   const showReturnSection =
     claimType === "return" || claimType === "exchange";
@@ -328,27 +431,98 @@ export default function ClaimShow() {
         </>
       )}
 
-      {/* Status Action Buttons */}
-      <Space style={{ marginTop: 16 }}>
+      {/* Status Memo + Action Buttons */}
+      <Space direction="vertical" style={{ width: "100%", marginTop: 16 }}>
+        <div>
+          <Text strong>상태 변경 메모</Text>
+          <TextArea
+            value={statusMemo}
+            onChange={(e) => setStatusMemo(e.target.value)}
+            rows={2}
+            placeholder="상태 변경 사유 (이력에 기록됨)"
+            style={{ marginTop: 4 }}
+          />
+        </div>
+      </Space>
+
+      <Space style={{ marginTop: 12, marginBottom: 24 }}>
         {nextStatus && (
           <Button
             type="primary"
-            loading={updateMutation.isPending}
+            loading={isUpdating}
             onClick={() => handleStatusChange(nextStatus)}
           >
             {nextStatus} 으로 변경
           </Button>
         )}
+        {rollbackStatus && (
+          <Button
+            loading={isUpdating}
+            onClick={() => handleRollback(rollbackStatus)}
+          >
+            {rollbackStatus} 으로 롤백
+          </Button>
+        )}
+        {isRejected && (
+          <Button
+            loading={isUpdating}
+            onClick={() => handleRollback(CLAIM_REJECT_RESTORE_STATUS)}
+          >
+            접수로 복원
+          </Button>
+        )}
         {claim?.status !== "거부" && claim?.status !== "완료" && (
           <Button
             danger
-            loading={updateMutation.isPending}
+            loading={isUpdating}
             onClick={() => handleStatusChange("거부")}
           >
             거부
           </Button>
         )}
       </Space>
+
+      <Title level={5}>상태 변경 이력</Title>
+      <Table
+        dataSource={logsResult?.data}
+        rowKey="id"
+        pagination={false}
+        style={{ marginBottom: 24 }}
+      >
+        <Table.Column
+          dataIndex="createdAt"
+          title="일시"
+          render={(v: string) =>
+            v ? new Date(v).toLocaleString("ko-KR") : "-"
+          }
+        />
+        <Table.Column
+          dataIndex="previousStatus"
+          title="이전 상태"
+          render={(v: string) => (
+            <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>
+          )}
+        />
+        <Table.Column
+          dataIndex="newStatus"
+          title="변경 상태"
+          render={(v: string) => (
+            <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>
+          )}
+        />
+        <Table.Column
+          dataIndex="memo"
+          title="메모"
+          render={(v: string | null) => v ?? "-"}
+        />
+        <Table.Column
+          dataIndex="isRollback"
+          title="구분"
+          render={(v: boolean) =>
+            v ? <Tag color="red">롤백</Tag> : null
+          }
+        />
+      </Table>
     </Show>
   );
 }

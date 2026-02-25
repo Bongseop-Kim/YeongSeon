@@ -1,3 +1,15 @@
+/** admin_claim_status_log_view row */
+export interface ClaimStatusLogDTO {
+  id: string;
+  claimId: string;
+  changedBy: string;
+  previousStatus: string;
+  newStatus: string;
+  memo: string | null;
+  isRollback: boolean;
+  createdAt: string;
+}
+
 /** admin_claim_list_view row */
 export interface AdminClaimListRowDTO {
   id: string;

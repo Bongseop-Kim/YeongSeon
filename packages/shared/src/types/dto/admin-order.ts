@@ -36,6 +36,18 @@ export interface AdminOrderDetailRowDTO extends Omit<AdminOrderListRowDTO, 'fabr
   deliveryRequest: string | null;
 }
 
+/** admin_order_status_log_view row */
+export interface OrderStatusLogDTO {
+  id: string;
+  orderId: string;
+  changedBy: string;
+  previousStatus: string;
+  newStatus: string;
+  memo: string | null;
+  isRollback: boolean;
+  createdAt: string;
+}
+
 /** admin_order_item_view row */
 export interface AdminOrderItemRowDTO {
   id: string;

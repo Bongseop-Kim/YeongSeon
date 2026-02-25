@@ -480,3 +480,33 @@ SELECT
   l.memo,
   l.created_at       AS "createdAt"
 FROM public.quote_request_status_logs l;
+
+-- ── admin_order_status_log_view ────────────────────────────
+CREATE OR REPLACE VIEW public.admin_order_status_log_view
+WITH (security_invoker = true)
+AS
+SELECT
+  l.id,
+  l.order_id         AS "orderId",
+  l.changed_by       AS "changedBy",
+  l.previous_status  AS "previousStatus",
+  l.new_status       AS "newStatus",
+  l.memo,
+  l.is_rollback      AS "isRollback",
+  l.created_at       AS "createdAt"
+FROM public.order_status_logs l;
+
+-- ── admin_claim_status_log_view ────────────────────────────
+CREATE OR REPLACE VIEW public.admin_claim_status_log_view
+WITH (security_invoker = true)
+AS
+SELECT
+  l.id,
+  l.claim_id         AS "claimId",
+  l.changed_by       AS "changedBy",
+  l.previous_status  AS "previousStatus",
+  l.new_status       AS "newStatus",
+  l.memo,
+  l.is_rollback      AS "isRollback",
+  l.created_at       AS "createdAt"
+FROM public.claim_status_logs l;

@@ -84,3 +84,50 @@ REVOKE UPDATE ON TABLE public.claims FROM authenticated;
 GRANT UPDATE (status, return_courier_company, return_tracking_number,
               resend_courier_company, resend_tracking_number)
   ON TABLE public.claims TO authenticated;
+
+-- =============================================================
+-- claim_status_logs  –  Status change audit trail
+-- =============================================================
+
+CREATE TABLE IF NOT EXISTS public.claim_status_logs (
+  id              uuid        NOT NULL DEFAULT gen_random_uuid(),
+  claim_id        uuid        NOT NULL,
+  changed_by      uuid,
+  previous_status text        NOT NULL,
+  new_status      text        NOT NULL,
+  memo            text,
+  is_rollback     boolean     NOT NULL DEFAULT false,
+  created_at      timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT claim_status_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT claim_status_logs_claim_id_fkey
+    FOREIGN KEY (claim_id) REFERENCES public.claims (id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT claim_status_logs_changed_by_fkey
+    FOREIGN KEY (changed_by) REFERENCES auth.users (id)
+    ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE INDEX idx_claim_status_logs_claim_id
+  ON public.claim_status_logs USING btree (claim_id, created_at DESC);
+
+-- RLS
+ALTER TABLE public.claim_status_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view logs of their own claims"
+  ON public.claim_status_logs FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.claims c
+      WHERE c.id = claim_id
+        AND c.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Admins can view all claim status logs"
+  ON public.claim_status_logs FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
+-- No INSERT policy: audit logs are written exclusively by SECURITY DEFINER RPCs.

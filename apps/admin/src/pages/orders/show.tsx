@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useList, useUpdate, useOne, useNavigation } from "@refinedev/core";
+import { useShow, useList, useUpdate, useOne, useInvalidate, useNavigation } from "@refinedev/core";
 import {
   Descriptions,
   Tag,
@@ -19,6 +19,7 @@ import type {
   AdminOrderDetailRowDTO,
   AdminOrderItemRowDTO,
   AdminSettingRowDTO,
+  OrderStatusLogDTO,
   OrderType,
 } from "@yeongseon/shared";
 import {
@@ -27,11 +28,14 @@ import {
 } from "@yeongseon/shared/constants/courier-companies";
 import {
   ORDER_STATUS_FLOW,
+  ORDER_ROLLBACK_FLOW,
   ORDER_STATUS_COLORS,
   ORDER_TYPE_LABELS,
 } from "@yeongseon/shared";
+import { supabase } from "@/lib/supabase";
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 function CustomOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
   const reformItem = items.find(
@@ -211,6 +215,15 @@ export default function OrderShow() {
     queryOptions: { enabled: !!order?.id },
   });
 
+  const { result: logsResult } = useList<OrderStatusLogDTO>({
+    resource: "admin_order_status_log_view",
+    filters: [
+      { field: "orderId", operator: "eq", value: order?.id },
+    ],
+    sorters: [{ field: "createdAt", order: "desc" }],
+    queryOptions: { enabled: !!order?.id },
+  });
+
   const { result: defaultCourierSetting } = useOne<AdminSettingRowDTO>({
     resource: "admin_settings",
     id: "default_courier_company",
@@ -219,9 +232,12 @@ export default function OrderShow() {
   });
 
   const { mutate: updateOrder, mutation: updateMutation } = useUpdate();
+  const invalidate = useInvalidate();
 
   const [courierCompany, setCourierCompany] = useState<string>("");
   const [trackingNumber, setTrackingNumber] = useState<string>("");
+  const [statusMemo, setStatusMemo] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (order) {
@@ -241,7 +257,42 @@ export default function OrderShow() {
   const orderType: OrderType = order?.orderType ?? "sale";
   const statusFlow = ORDER_STATUS_FLOW[orderType];
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = async (newStatus: string) => {
+    if (!order) return;
+
+    const doUpdate = async () => {
+      setIsUpdating(true);
+      try {
+        const { error } = await supabase.rpc(
+          "admin_update_order_status",
+          {
+            p_order_id: order.id,
+            p_new_status: newStatus,
+            p_memo: statusMemo || null,
+          }
+        );
+
+        if (error) {
+          message.error(`상태 변경 실패: ${error.message}`);
+          return;
+        }
+
+        message.success(`상태가 "${newStatus}"(으)로 변경되었습니다.`);
+        setStatusMemo("");
+        queryResult.refetch();
+        invalidate({
+          resource: "admin_order_status_log_view",
+          invalidates: ["list"],
+        });
+      } catch (err) {
+        message.error(
+          `상태 변경 중 오류: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+        );
+      } finally {
+        setIsUpdating(false);
+      }
+    };
+
     if (newStatus === "취소") {
       Modal.confirm({
         title: "주문 취소",
@@ -249,26 +300,12 @@ export default function OrderShow() {
         okText: "취소 처리",
         cancelText: "닫기",
         okButtonProps: { danger: true },
-        onOk: () =>
-          updateOrder({
-            resource: "orders",
-            id: order!.id,
-            values: { status: "취소" },
-          }),
+        onOk: doUpdate,
       });
       return;
     }
 
-    const values: Record<string, unknown> = { status: newStatus };
-    if (newStatus === "배송중" && !order?.shippedAt) {
-      values.shipped_at = new Date().toISOString();
-    }
-
-    updateOrder({
-      resource: "orders",
-      id: order!.id,
-      values,
-    });
+    await doUpdate();
   };
 
   const handleSaveTracking = () => {
@@ -288,6 +325,67 @@ export default function OrderShow() {
         },
       },
     );
+  };
+
+  const rollbackFlow = ORDER_ROLLBACK_FLOW[orderType];
+  const rollbackStatus = order?.status ? rollbackFlow[order.status] : undefined;
+
+  const handleRollback = (targetStatus: string) => {
+    if (!order) return;
+
+    let rollbackMemoValue = "";
+
+    Modal.confirm({
+      title: "상태 롤백",
+      content: (
+        <div>
+          <p>
+            현재 상태 <Tag>{order.status}</Tag> → <Tag>{targetStatus}</Tag>(으)로 롤백합니다.
+          </p>
+          <p style={{ marginBottom: 4 }}><strong>사유 (필수)</strong></p>
+          <TextArea
+            rows={3}
+            placeholder="롤백 사유를 입력하세요"
+            onChange={(e) => { rollbackMemoValue = e.target.value; }}
+          />
+        </div>
+      ),
+      okText: "롤백",
+      cancelText: "취소",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        if (!rollbackMemoValue.trim()) {
+          message.error("롤백 사유를 입력해주세요.");
+          throw new Error("memo required");
+        }
+        setIsUpdating(true);
+        try {
+          const { error } = await supabase.rpc("admin_update_order_status", {
+            p_order_id: order.id,
+            p_new_status: targetStatus,
+            p_memo: rollbackMemoValue,
+            p_is_rollback: true,
+          });
+          if (error) {
+            message.error(`롤백 실패: ${error.message}`);
+            return;
+          }
+          message.success(`"${targetStatus}"(으)로 롤백되었습니다.`);
+          queryResult.refetch();
+          invalidate({
+            resource: "admin_order_status_log_view",
+            invalidates: ["list"],
+          });
+        } catch (err) {
+          if (err instanceof Error && err.message === "memo required") throw err;
+          message.error(
+            `롤백 중 오류: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+          );
+        } finally {
+          setIsUpdating(false);
+        }
+      },
+    });
   };
 
   const nextStatus = order?.status ? statusFlow[order.status] : undefined;
@@ -344,20 +442,41 @@ export default function OrderShow() {
         </Descriptions.Item>
       </Descriptions>
 
-      <Space style={{ marginBottom: 16 }}>
+      <Space direction="vertical" style={{ width: "100%", marginBottom: 16 }}>
+        <div>
+          <Text strong>상태 변경 메모</Text>
+          <TextArea
+            value={statusMemo}
+            onChange={(e) => setStatusMemo(e.target.value)}
+            rows={2}
+            placeholder="상태 변경 사유 (이력에 기록됨)"
+            style={{ marginTop: 4 }}
+          />
+        </div>
+      </Space>
+
+      <Space style={{ marginBottom: 24 }}>
         {nextStatus && (
           <Button
             type="primary"
-            loading={updateMutation.isPending}
+            loading={isUpdating}
             onClick={() => handleStatusChange(nextStatus)}
           >
             {nextStatus} 으로 변경
           </Button>
         )}
+        {rollbackStatus && (
+          <Button
+            loading={isUpdating}
+            onClick={() => handleRollback(rollbackStatus)}
+          >
+            {rollbackStatus} 으로 롤백
+          </Button>
+        )}
         {order?.status !== "취소" && order?.status !== "완료" && (
           <Button
             danger
-            loading={updateMutation.isPending}
+            loading={isUpdating}
             onClick={() => handleStatusChange("취소")}
           >
             취소 처리
@@ -486,6 +605,48 @@ export default function OrderShow() {
               record.unitPrice * record.quantity - record.lineDiscountAmount;
             return `${subtotal.toLocaleString()}원`;
           }}
+        />
+      </Table>
+
+      <Title level={5}>상태 변경 이력</Title>
+      <Table
+        dataSource={logsResult?.data}
+        rowKey="id"
+        pagination={false}
+        style={{ marginBottom: 24 }}
+      >
+        <Table.Column
+          dataIndex="createdAt"
+          title="일시"
+          render={(v: string) =>
+            v ? new Date(v).toLocaleString("ko-KR") : "-"
+          }
+        />
+        <Table.Column
+          dataIndex="previousStatus"
+          title="이전 상태"
+          render={(v: string) => (
+            <Tag color={ORDER_STATUS_COLORS[v]}>{v}</Tag>
+          )}
+        />
+        <Table.Column
+          dataIndex="newStatus"
+          title="변경 상태"
+          render={(v: string) => (
+            <Tag color={ORDER_STATUS_COLORS[v]}>{v}</Tag>
+          )}
+        />
+        <Table.Column
+          dataIndex="memo"
+          title="메모"
+          render={(v: string | null) => v ?? "-"}
+        />
+        <Table.Column
+          dataIndex="isRollback"
+          title="구분"
+          render={(v: boolean) =>
+            v ? <Tag color="red">롤백</Tag> : null
+          }
         />
       </Table>
     </Show>
