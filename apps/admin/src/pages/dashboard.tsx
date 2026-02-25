@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useList } from "@refinedev/core";
+import { useList, useNavigation } from "@refinedev/core";
 import { Card, Col, Row, Segmented, Statistic, Table, Tag, Typography } from "antd";
 import {
   ShoppingOutlined,
@@ -22,6 +22,7 @@ const SEGMENT_OPTIONS: { label: string; value: SegmentValue }[] = [
 ];
 
 export default function DashboardPage() {
+  const { show } = useNavigation();
   const today = new Date().toISOString().slice(0, 10);
   const [segment, setSegment] = useState<SegmentValue>("all");
 
@@ -137,6 +138,10 @@ export default function DashboardPage() {
         rowKey="id"
         pagination={false}
         size="small"
+        onRow={(record) => ({
+          onClick: () => show("admin_order_list_view", record.id),
+          style: { cursor: "pointer" },
+        })}
       >
         <Table.Column dataIndex="orderNumber" title="주문번호" />
         <Table.Column dataIndex="date" title="주문일" />

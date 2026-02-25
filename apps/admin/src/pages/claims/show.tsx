@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useUpdate } from "@refinedev/core";
+import { useShow, useUpdate, useNavigation } from "@refinedev/core";
 import { Descriptions, Tag, Button, Space, Modal } from "antd";
 import type { AdminClaimListRowDTO } from "@yeongseon/shared";
 
@@ -32,6 +32,7 @@ const STATUS_FLOW: Record<string, string> = {
 };
 
 export default function ClaimShow() {
+  const { show } = useNavigation();
   const { query: queryResult } = useShow<AdminClaimListRowDTO>({
     resource: "admin_claim_list_view",
   });
@@ -82,13 +83,31 @@ export default function ClaimShow() {
           )}
         </Descriptions.Item>
         <Descriptions.Item label="고객명">
-          {claim?.customerName}
+          {claim?.userId ? (
+            <a
+              onClick={() => show("profiles", claim.userId)}
+              style={{ cursor: "pointer" }}
+            >
+              {claim.customerName}
+            </a>
+          ) : (
+            claim?.customerName
+          )}
         </Descriptions.Item>
         <Descriptions.Item label="연락처">
           {claim?.customerPhone ?? "-"}
         </Descriptions.Item>
         <Descriptions.Item label="주문번호">
-          {claim?.orderNumber}
+          {claim?.orderId ? (
+            <a
+              onClick={() => show("admin_order_list_view", claim.orderId)}
+              style={{ cursor: "pointer" }}
+            >
+              {claim.orderNumber}
+            </a>
+          ) : (
+            claim?.orderNumber
+          )}
         </Descriptions.Item>
         <Descriptions.Item label="상품명">
           {claim?.productName ?? "-"}
