@@ -8,6 +8,11 @@
 `claims.user_id`를 직접 저장하여 RLS에서 `orders` JOIN 없이 `auth.uid() = user_id`로 체크.
 쓰기 시 `create_claim()` RPC가 소유권을 보장하므로 불일치 불가.
 
+### 쓰기 진입점
+현재 애플리케이션 경로에서는 클라이언트가 `apps/store/src/features/order/api/claims-api.ts`에서
+`create_claim()` RPC를 직접 호출한다.
+보안 경계는 RPC 내부 인증/소유권/수량/중복 검증으로 보장한다.
+
 ### order_item_id UUID 변환
 프론트엔드는 `order_items.item_id` (text)를 사용하지만, FK는 `order_items.id` (UUID PK)를 참조.
 `create_claim()` RPC 내부에서 `item_id` → `id` 변환 수행.
@@ -44,7 +49,8 @@
 ### RLS 정책
 - SELECT: `auth.uid() = user_id`
 - INSERT: `auth.uid() = user_id` (WITH CHECK)
-- UPDATE/DELETE: 없음 (관리자 RPC로 향후 처리)
+- UPDATE: 관리자만 가능 (`public.is_admin()`) + 컬럼 권한은 `status`로 제한
+- DELETE: 정책 없음
 
 ### RPC
 - `create_claim(p_type, p_order_id, p_item_id, p_reason, p_description?, p_quantity?)` → `{claim_id, claim_number}`
@@ -91,7 +97,7 @@ SELECT generate_claim_number();
 -- 비인증 상태에서 뷰 접근 → 0 rows
 SELECT count(*) FROM claim_list_view;
 
--- 비인증 상태에서 create_claim → Unauthorized 에러
+-- 비인증 상태에서 create_claim → 권한 오류(permission denied for function create_claim) 예상
 SELECT create_claim('cancel', gen_random_uuid(), 'test', 'change_mind');
 ```
 
@@ -106,7 +112,7 @@ SELECT create_claim('cancel', gen_random_uuid(), 'test', 'change_mind');
 
 ### 4. E2E 시나리오 (실제 auth 유저 필요)
 
-1. 주문 생성 → `create_order_txn(...)`
+1. 주문 생성 → `create-order` Edge 호출
 2. 클레임 접수 → `create_claim('cancel', order_id, item_id, 'change_mind')`
 3. 클레임 조회 → `SELECT * FROM claim_list_view`
 4. 중복 클레임 → `create_claim` 재호출 → `Active claim already exists` 에러
