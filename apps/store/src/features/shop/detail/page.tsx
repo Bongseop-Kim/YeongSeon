@@ -169,7 +169,9 @@ export default function ShopDetailPage() {
 
   const productOptions = product.options ?? [];
   const hasOptions = productOptions.length > 0;
-  const isProductSoldOut = product.stock === 0;
+  const isProductSoldOut = hasOptions
+    ? productOptions.every((o) => o.stock === 0)
+    : product.stock === 0;
 
   // 좋아요 토글 핸들러
   const handleLikeToggle = async () => {

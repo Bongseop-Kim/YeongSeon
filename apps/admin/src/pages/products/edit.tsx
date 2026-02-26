@@ -58,11 +58,11 @@ export default function ProductEdit() {
     if (optionsData?.data?.length) {
       form.setFieldValue(
         "options",
-        optionsData.data.map((opt: Record<string, unknown>) => ({
-          option_id: opt.option_id,
-          name: opt.name,
-          additional_price: opt.additional_price,
-          stock: opt.stock ?? null,
+        optionsData.data.map((opt) => ({
+          option_id: String(opt.option_id ?? ""),
+          name: String(opt.name ?? ""),
+          additional_price: Number(opt.additional_price ?? 0),
+          stock: opt.stock != null ? Number(opt.stock) : null,
         }))
       );
     }

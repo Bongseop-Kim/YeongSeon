@@ -1,28 +1,6 @@
--- =============================================================
--- 01_trigger_functions.sql  –  Shared trigger functions
--- =============================================================
-
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.update_cart_items_updated_at()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$;
-
--- Auto-generate product code: {PREFIX}-{YYYYMMDD}-{NNN}
+-- Harden auto_generate_product_code:
+-- 1. Filter out non-numeric suffixes before casting to integer
+-- 2. Raise exception when sequence exceeds 999 (3-digit overflow)
 CREATE OR REPLACE FUNCTION public.auto_generate_product_code()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -48,6 +26,7 @@ begin
 
   v_date_str := to_char(now(), 'YYYYMMDD');
 
+  -- Advisory lock to prevent concurrent sequence gaps
   perform pg_advisory_xact_lock(hashtext('PROD' || v_prefix || v_date_str));
 
   select coalesce(

@@ -55,8 +55,9 @@ const PaymentSuccessPage = () => {
             await queryClient.invalidateQueries({
               queryKey: cartKeys.items(user.id),
             });
-          } catch {
+          } catch (cartErr) {
             // 장바구니 업데이트 실패는 주문 실패로 처리하지 않음
+            console.warn("장바구니 아이템 제거 실패:", cartErr);
           }
         }
 

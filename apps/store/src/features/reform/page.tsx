@@ -120,12 +120,13 @@ const ReformPage = () => {
   };
 
   const uploadAndGetTies = useCallback(async () => {
-    const hasFileImages = watchedValues.ties.some((t) => t.image instanceof File);
-    if (!hasFileImages) return watchedValues.ties;
+    const ties = form.getValues().ties;
+    const hasFileImages = ties.some((t) => t.image instanceof File);
+    if (!hasFileImages) return ties;
 
     setIsUploading(true);
     try {
-      return await uploadTieImages(watchedValues.ties);
+      return await uploadTieImages(ties);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "이미지 업로드에 실패했습니다."
@@ -134,7 +135,25 @@ const ReformPage = () => {
     } finally {
       setIsUploading(false);
     }
-  }, [watchedValues.ties]);
+  }, [form]);
+
+  const processReformOrder = useCallback(async () => {
+    const uploadedTies = await uploadAndGetTies();
+    if (!uploadedTies) return;
+
+    const orderItems: CartItem[] = uploadedTies.map((tie) => ({
+      id: generateItemId("reform", tie.id),
+      type: "reform",
+      quantity: 1,
+      reformData: {
+        tie: tie,
+        cost: REFORM_BASE_COST,
+      },
+    }));
+
+    setOrderItems(orderItems);
+    navigate(ROUTES.ORDER_FORM);
+  }, [uploadAndGetTies, setOrderItems, navigate]);
 
   const handleDirectOrder = async () => {
     const validation = validateTies();
@@ -148,21 +167,7 @@ const ReformPage = () => {
       return;
     }
 
-    const uploadedTies = await uploadAndGetTies();
-    if (!uploadedTies) return;
-
-    const orderItems: CartItem[] = uploadedTies.map((tie) => ({
-      id: generateItemId("reform", tie.id),
-      type: "reform",
-      quantity: 1,
-      reformData: {
-        tie: tie,
-        cost: REFORM_BASE_COST,
-      },
-    }));
-
-    setOrderItems(orderItems);
-    navigate(ROUTES.ORDER_FORM);
+    await processReformOrder();
   };
 
   const handleMobileOrder = async () => {
@@ -172,21 +177,7 @@ const ReformPage = () => {
       return;
     }
 
-    const uploadedTies = await uploadAndGetTies();
-    if (!uploadedTies) return;
-
-    const orderItems: CartItem[] = uploadedTies.map((tie) => ({
-      id: generateItemId("reform", tie.id),
-      type: "reform",
-      quantity: 1,
-      reformData: {
-        tie: tie,
-        cost: REFORM_BASE_COST,
-      },
-    }));
-
-    setOrderItems(orderItems);
-    navigate(ROUTES.ORDER_FORM);
+    await processReformOrder();
   };
 
   const handleAddToCart = async () => {

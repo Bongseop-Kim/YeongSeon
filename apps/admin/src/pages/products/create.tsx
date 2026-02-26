@@ -54,7 +54,6 @@ export default function ProductCreate() {
 
     const payload = { ...values };
     delete payload.options;
-    delete payload.code;
     formProps.onFinish?.({
       ...payload,
       code: null,

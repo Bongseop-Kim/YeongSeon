@@ -79,6 +79,13 @@ export const removeCartItemsByIds = async (
 ): Promise<void> => {
   if (itemIds.length === 0) return;
 
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error("세션이 없습니다. 다시 로그인해주세요.");
+  }
+
   const { error } = await supabase.rpc("remove_cart_items_by_ids", {
     p_user_id: userId,
     p_item_ids: itemIds,

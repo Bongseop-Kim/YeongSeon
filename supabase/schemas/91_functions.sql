@@ -188,6 +188,10 @@ begin
     raise exception 'unauthorized: cart can only be modified for the current user';
   end if;
 
+  if p_item_ids is null or cardinality(p_item_ids) = 0 then
+    return;
+  end if;
+
   delete from cart_items
   where user_id = p_user_id
     and item_id = any(p_item_ids);
@@ -967,6 +971,15 @@ begin
   v_user_id := auth.uid();
   if v_user_id is null then
     raise exception 'Unauthorized';
+  end if;
+
+  -- p_sample / p_sample_type 정합성 검증
+  if p_sample is not true and p_sample_type is not null then
+    raise exception 'p_sample_type must be null when p_sample is not true';
+  end if;
+
+  if p_sample is true and (p_sample_type is null or trim(p_sample_type) = '') then
+    raise exception 'p_sample_type is required when p_sample is true';
   end if;
 
   if p_shipping_address_id is null then

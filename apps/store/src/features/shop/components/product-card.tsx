@@ -10,7 +10,10 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product }: ProductCardProps) => {
   const navigate = useNavigate();
-  const isSoldOut = product.stock === 0;
+  const options = product.options ?? [];
+  const isSoldOut = options.length > 0
+    ? options.every((o) => o.stock === 0)
+    : product.stock === 0;
 
   const handleClick = () => {
     if (isSoldOut) return;
