@@ -48,7 +48,7 @@ export default function ProductEdit() {
     },
   });
 
-  const { data: optionsData } = useList({
+  const { result: optionsData } = useList({
     resource: "product_options",
     filters: [{ field: "product_id", operator: "eq", value: id }],
     queryOptions: { enabled: !!id },

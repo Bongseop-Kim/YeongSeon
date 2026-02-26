@@ -210,13 +210,13 @@ export default function OrderShow() {
   });
   const order = queryResult?.data?.data;
 
-  const { data: itemsData } = useList<AdminOrderItemRowDTO>({
+  const { result: itemsData } = useList<AdminOrderItemRowDTO>({
     resource: "admin_order_item_view",
     filters: [{ field: "orderId", operator: "eq", value: order?.id }],
     queryOptions: { enabled: !!order?.id },
   });
 
-  const { data: logsData } = useList<OrderStatusLogDTO>({
+  const { result: logsData } = useList<OrderStatusLogDTO>({
     resource: "admin_order_status_log_view",
     filters: [
       { field: "orderId", operator: "eq", value: order?.id },
@@ -225,7 +225,7 @@ export default function OrderShow() {
     queryOptions: { enabled: !!order?.id },
   });
 
-  const { data: courierSettingData } = useOne<AdminSettingRowDTO>({
+  const { result: courierSettingData } = useOne<AdminSettingRowDTO>({
     resource: "admin_settings",
     id: "default_courier_company",
     meta: { idColumnName: "key" },
@@ -245,7 +245,7 @@ export default function OrderShow() {
       if (courierCompany === "") {
         setCourierCompany(
           order.courierCompany ??
-            courierSettingData?.data?.value ??
+            courierSettingData?.value ??
             ""
         );
       }
