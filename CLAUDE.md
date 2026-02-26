@@ -2,6 +2,44 @@
 
 코드베이스를 UI/DTO 분리 패턴으로 일관되게 유지한다.
 
+## 빠른 시작
+
+> 패키지 매니저는 **pnpm** 전용 (`npm`/`yarn` 사용 시 preinstall 훅에서 차단됨)
+
+```bash
+pnpm install
+
+pnpm dev:store          # store 앱 개발 서버 (Vite)
+pnpm dev:admin          # admin 앱 개발 서버
+pnpm dev                # 전체 앱 동시 실행 (Turborepo)
+
+pnpm test               # 전체 테스트 (Vitest)
+pnpm type-check         # TypeScript 타입 검사
+pnpm lint               # ESLint
+pnpm build              # 전체 빌드
+
+pnpm db:diff            # DB 스키마 diff
+pnpm db:push            # 마이그레이션 push
+supabase migration list # Remote 마이그레이션 목록 확인
+```
+
+## 프로젝트 구조
+
+```
+apps/
+  store/    # 고객용 쇼핑몰 (React + Vite + TypeScript + Vitest)
+  admin/    # 관리자 대시보드 (React + Vite + TypeScript)
+packages/
+  shared/   # 공통 컴포넌트/유틸
+  supabase/ # Supabase 클라이언트/타입
+  tsconfig/ # 공유 TypeScript 설정
+supabase/
+  schemas/  # DB 구조 기준 (*.sql) — Source of Truth
+  migrations/ # 마이그레이션 이력
+```
+
+feature 단위 구조: `apps/{app}/src/features/{domain}/api/{domain}-api.ts` + `{domain}-mapper.ts`
+
 ## 아키텍처 결정 (고정)
 
 - 프론트 API 레이어(`apps/*/features/*/api`)가 Supabase(RPC/View/Table)를 직접 호출한다.
