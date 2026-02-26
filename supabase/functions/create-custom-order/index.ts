@@ -9,6 +9,7 @@ type CreateCustomOrderInput = {
   reference_image_urls?: string[];
   additional_notes?: string;
   sample?: boolean;
+  sample_type?: string | null;
 };
 
 const jsonResponse = (status: number, body: Record<string, unknown>) =>
@@ -94,6 +95,7 @@ Deno.serve(async (req) => {
       p_reference_image_urls: payload.reference_image_urls ?? [],
       p_additional_notes: payload.additional_notes ?? "",
       p_sample: payload.sample ?? false,
+      p_sample_type: payload.sample_type ?? null,
     }
   );
 

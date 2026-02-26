@@ -8,12 +8,15 @@ CREATE TABLE IF NOT EXISTS public.product_options (
   option_id        varchar(50)  NOT NULL,
   name             varchar(255) NOT NULL,
   additional_price integer      NOT NULL DEFAULT 0,
+  stock            integer,
   created_at       timestamptz  NOT NULL DEFAULT now(),
 
   CONSTRAINT product_options_pkey PRIMARY KEY (id),
   CONSTRAINT product_options_product_id_option_id_key UNIQUE (product_id, option_id),
   CONSTRAINT product_options_product_id_fkey
-    FOREIGN KEY (product_id) REFERENCES public.products (id) ON DELETE CASCADE
+    FOREIGN KEY (product_id) REFERENCES public.products (id) ON DELETE CASCADE,
+  CONSTRAINT product_options_stock_check
+    CHECK (stock IS NULL OR stock >= 0)
 );
 
 -- Index

@@ -169,6 +169,7 @@ export default function ShopDetailPage() {
 
   const productOptions = product.options ?? [];
   const hasOptions = productOptions.length > 0;
+  const isProductSoldOut = product.stock === 0;
 
   // 좋아요 토글 핸들러
   const handleLikeToggle = async () => {
@@ -322,6 +323,12 @@ export default function ShopDetailPage() {
               <CardHeader>
                 <CardTitle>{product.name}</CardTitle>
                 <CardDescription>{product.code}</CardDescription>
+                {isProductSoldOut && (
+                  <Badge variant="destructive">품절</Badge>
+                )}
+                {product.stock != null && product.stock > 0 && product.stock <= 5 && (
+                  <Badge variant="secondary">{product.stock}개 남음</Badge>
+                )}
 
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="gap-1">
@@ -360,10 +367,17 @@ export default function ShopDetailPage() {
                             !selectedOptions.some((s) => s.option.id === option.id)
                         )
                         .map((option) => (
-                          <SelectItem key={option.id} value={option.id}>
+                          <SelectItem
+                            key={option.id}
+                            value={option.id}
+                            disabled={option.stock === 0}
+                          >
                             {option.name}
                             {option.additionalPrice > 0 &&
                               ` (+${option.additionalPrice.toLocaleString()}원)`}
+                            {option.stock === 0 && " (품절)"}
+                            {option.stock != null && option.stock > 0 && option.stock <= 5 &&
+                              ` (${option.stock}개 남음)`}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -457,6 +471,7 @@ export default function ShopDetailPage() {
               onLikeToggle={handleLikeToggle}
               onAddToCart={handleAddToCart}
               onOrder={handleOrder}
+              disabled={isProductSoldOut}
             />
           }
         >

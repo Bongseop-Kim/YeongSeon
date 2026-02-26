@@ -4,18 +4,20 @@ import { useBreakpoint } from "@/providers/breakpoint-provider";
 interface ReformActionButtonsProps {
   onAddToCart: () => void;
   onOrder: () => void;
+  disabled?: boolean;
 }
 
 export function ReformActionButtons({
   onAddToCart,
   onOrder,
+  disabled,
 }: ReformActionButtonsProps) {
   const { isMobile } = useBreakpoint();
 
   if (isMobile) {
     return (
-      <Button type="button" onClick={onOrder} size="xl" className="w-full">
-        주문하기
+      <Button type="button" onClick={onOrder} size="xl" className="w-full" disabled={disabled}>
+        {disabled ? "업로드 중..." : "주문하기"}
       </Button>
     );
   }
@@ -28,11 +30,12 @@ export function ReformActionButtons({
         size="xl"
         onClick={onAddToCart}
         className="flex-1"
+        disabled={disabled}
       >
-        장바구니
+        {disabled ? "업로드 중..." : "장바구니"}
       </Button>
-      <Button type="button" onClick={onOrder} size="xl" className="flex-1">
-        주문하기
+      <Button type="button" onClick={onOrder} size="xl" className="flex-1" disabled={disabled}>
+        {disabled ? "업로드 중..." : "주문하기"}
       </Button>
     </div>
   );

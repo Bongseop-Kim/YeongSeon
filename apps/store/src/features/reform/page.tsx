@@ -16,8 +16,10 @@ import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Empty } from "@/components/composite/empty";
+import { uploadTieImages } from "./api/upload-tie-images";
+import { toast } from "@/lib/toast";
 import {
   Accordion,
   AccordionContent,
@@ -40,6 +42,7 @@ const ReformPage = () => {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<ReformOptions>({
     defaultValues: {
@@ -116,7 +119,24 @@ const ReformPage = () => {
     return { isValid: true };
   };
 
-  const handleDirectOrder = () => {
+  const uploadAndGetTies = useCallback(async () => {
+    const hasFileImages = watchedValues.ties.some((t) => t.image instanceof File);
+    if (!hasFileImages) return watchedValues.ties;
+
+    setIsUploading(true);
+    try {
+      return await uploadTieImages(watchedValues.ties);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "이미지 업로드에 실패했습니다."
+      );
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  }, [watchedValues.ties]);
+
+  const handleDirectOrder = async () => {
     const validation = validateTies();
     if (!validation.isValid) {
       confirm(validation.message || "입력값을 확인해주세요.");
@@ -128,8 +148,10 @@ const ReformPage = () => {
       return;
     }
 
-    // ReformOptions를 CartItem[]로 변환
-    const orderItems: CartItem[] = watchedValues.ties.map((tie) => ({
+    const uploadedTies = await uploadAndGetTies();
+    if (!uploadedTies) return;
+
+    const orderItems: CartItem[] = uploadedTies.map((tie) => ({
       id: generateItemId("reform", tie.id),
       type: "reform",
       quantity: 1,
@@ -143,15 +165,17 @@ const ReformPage = () => {
     navigate(ROUTES.ORDER_FORM);
   };
 
-  const handleMobileOrder = () => {
+  const handleMobileOrder = async () => {
     const validation = validateTies();
     if (!validation.isValid) {
       confirm(validation.message || "입력값을 확인해주세요.");
       return;
     }
 
-    // ReformOptions를 CartItem[]로 변환
-    const orderItems: CartItem[] = watchedValues.ties.map((tie) => ({
+    const uploadedTies = await uploadAndGetTies();
+    if (!uploadedTies) return;
+
+    const orderItems: CartItem[] = uploadedTies.map((tie) => ({
       id: generateItemId("reform", tie.id),
       type: "reform",
       quantity: 1,
@@ -172,9 +196,11 @@ const ReformPage = () => {
       return;
     }
 
-    // 각 넥타이를 개별적으로 장바구니에 추가 (배송비는 주문당 한 번만 적용)
+    const uploadedTies = await uploadAndGetTies();
+    if (!uploadedTies) return;
+
     await Promise.all(
-      watchedValues.ties.map((tie) =>
+      uploadedTies.map((tie) =>
         addReformToCart({
           tie: tie,
           cost: REFORM_BASE_COST,
@@ -182,7 +208,6 @@ const ReformPage = () => {
       )
     );
 
-    // 폼 초기화
     form.reset({
       ties: [
         {
@@ -298,6 +323,7 @@ const ReformPage = () => {
               <ReformActionButtons
                 onAddToCart={handleAddToCart}
                 onOrder={handleDirectOrder}
+                disabled={isUploading}
               />
             }
           >
