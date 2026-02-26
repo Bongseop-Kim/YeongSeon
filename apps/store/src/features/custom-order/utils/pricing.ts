@@ -1,5 +1,4 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
-import { SAMPLE_DURATION } from "@/features/custom-order/constants/SAMPLE_PRICING";
 import {
   START_COST,
   SEWING_PER_COST,
@@ -53,12 +52,8 @@ export const calculateFabricCost = (options: OrderOptions): number => {
 };
 
 export const getEstimatedDays = (
-  options: Pick<OrderOptions, "fabricProvided" | "reorder" | "sampleType">,
-  isSampleMode: boolean,
+  options: Pick<OrderOptions, "fabricProvided" | "reorder">,
 ): string => {
-  if (isSampleMode) {
-    return options.sampleType ? SAMPLE_DURATION[options.sampleType] : "";
-  }
   if (options.fabricProvided) return "7~14일";
   if (options.reorder) return "21~28일";
   return "28~42일";

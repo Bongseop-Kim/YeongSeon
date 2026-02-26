@@ -14,7 +14,6 @@ interface StickySummaryProps {
   sewingCost: number;
   fabricCost: number;
   isLoggedIn: boolean;
-  isSampleMode?: boolean;
 }
 
 export const StickySummary = ({
@@ -23,7 +22,6 @@ export const StickySummary = ({
   sewingCost,
   fabricCost,
   isLoggedIn,
-  isSampleMode = false,
 }: StickySummaryProps) => {
   const [showDetail, setShowDetail] = useState(false);
 
@@ -51,78 +49,60 @@ export const StickySummary = ({
       ].join(" · ")
     : "미선택";
 
-  const sampleCost = options.sampleType ? SAMPLE_COST[options.sampleType] : 0;
-  const estimatedDays = getEstimatedDays(options, isSampleMode);
-
-  const displayCost = isSampleMode ? sampleCost : totalCost;
+  const sampleCost = options.sample && options.sampleType
+    ? SAMPLE_COST[options.sampleType]
+    : 0;
+  const grandTotal = totalCost + sampleCost;
+  const estimatedDays = getEstimatedDays(options);
 
   return (
     <Card className="w-full">
       <CardContent className="space-y-4 pt-4">
         <div className="space-y-2 text-sm">
-          {isSampleMode && options.sampleType && (
-            <div className="flex justify-between">
-              <span className="text-zinc-500">샘플 유형</span>
-              <span className="text-zinc-900">
-                {options.sampleType === "sewing"
-                  ? "봉제 샘플"
-                  : options.sampleType === "fabric"
-                    ? "원단 샘플"
-                    : "원단 + 봉제 샘플"}
-              </span>
-            </div>
-          )}
-          {(!isSampleMode || options.sampleType !== "fabric") && (
-            <>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">원단</span>
-                <span className="text-zinc-900">{fabricLabel}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">봉제</span>
-                <span className="text-zinc-900">{sewingLabel}</span>
-              </div>
-            </>
-          )}
-          {!isSampleMode && (
-            <div className="flex justify-between">
-              <span className="text-zinc-500">수량</span>
-              <span className="text-zinc-900">{options.quantity}개</span>
-            </div>
-          )}
+          <div className="flex justify-between">
+            <span className="text-zinc-500">원단</span>
+            <span className="text-zinc-900">{fabricLabel}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-zinc-500">봉제</span>
+            <span className="text-zinc-900">{sewingLabel}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-zinc-500">수량</span>
+            <span className="text-zinc-900">{options.quantity}개</span>
+          </div>
         </div>
 
         <Separator />
 
-        {isSampleMode ? (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="font-medium text-zinc-900">고정 비용</span>
-              <span className="font-medium text-lg text-zinc-900">
-                {sampleCost.toLocaleString()}원
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-zinc-500">예상 기간</span>
-              <span className="text-sm font-medium text-zinc-900">
-                {estimatedDays}
-              </span>
-            </div>
-          </div>
-        ) : isLoggedIn ? (
+        {isLoggedIn ? (
           <>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
+                <span className="font-medium text-zinc-900">제작 비용</span>
+                <span className="font-medium text-zinc-900">
+                  {totalCost.toLocaleString()}원
+                </span>
+              </div>
+              {sampleCost > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-zinc-500">샘플 비용</span>
+                  <span className="text-sm text-zinc-900">
+                    +{sampleCost.toLocaleString()}원
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
                 <span className="font-medium text-zinc-900">총비용</span>
                 <span className="font-medium text-lg text-zinc-900">
-                  {displayCost.toLocaleString()}원
+                  {grandTotal.toLocaleString()}원
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-zinc-500">단가</span>
                 <span className="text-sm text-zinc-900">
                   {options.quantity > 0
-                    ? `${Math.round(displayCost / options.quantity).toLocaleString()}원/개`
+                    ? `${Math.round(totalCost / options.quantity).toLocaleString()}원/개`
                     : "-"}
                 </span>
               </div>

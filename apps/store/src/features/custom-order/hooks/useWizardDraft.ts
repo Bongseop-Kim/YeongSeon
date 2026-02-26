@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-import type { OrderPurpose } from "@/features/custom-order/types/wizard";
 
 const DRAFT_KEY = "custom-order-draft";
 
@@ -9,7 +8,6 @@ export interface WizardDraft {
   currentStepIndex: number;
   visitedSteps: number[];
   savedAt: number;
-  purpose: OrderPurpose | null;
 }
 
 const isWizardDraft = (obj: unknown): obj is WizardDraft => {
@@ -20,8 +18,7 @@ const isWizardDraft = (obj: unknown): obj is WizardDraft => {
     d.formValues === null ||
     typeof d.currentStepIndex !== "number" ||
     !Array.isArray(d.visitedSteps) || !d.visitedSteps.every((s) => typeof s === "number") ||
-    typeof d.savedAt !== "number" ||
-    (d.purpose !== null && d.purpose !== "order" && d.purpose !== "sample")
+    typeof d.savedAt !== "number"
   ) {
     return false;
   }
@@ -36,9 +33,6 @@ export const useWizardDraft = () => {
       if (!raw) return null;
       const parsed: unknown = JSON.parse(raw);
       if (!isWizardDraft(parsed)) return null;
-      if (!parsed.purpose) {
-        parsed.purpose = "order";
-      }
       return parsed;
     } catch {
       return null;
