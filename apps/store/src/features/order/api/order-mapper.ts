@@ -162,17 +162,19 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
 };
 
 export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
-  if (!isRecord(data)) {
+  if (typeof data !== "object" || data === null) {
     throw new Error("주문 상세 응답이 올바르지 않습니다: 객체가 아닙니다.");
   }
+  const d = data as Record<string, unknown>;
   if (
-    typeof data.id !== "string" ||
-    typeof data.orderNumber !== "string"
+    typeof d.id !== "string" ||
+    typeof d.orderNumber !== "string"
   ) {
     throw new Error(
       "주문 상세 응답이 올바르지 않습니다: 필수 필드(id, orderNumber) 누락."
     );
   }
+  // data는 object로 좁혀져 있어 OrderDetailRowDTO로 캐스트 가능
   return data as OrderDetailRowDTO;
 };
 
