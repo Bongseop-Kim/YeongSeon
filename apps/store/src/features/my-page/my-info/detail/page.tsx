@@ -1,5 +1,5 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,7 @@ export default function MyInfoDetailPage() {
   return (
     <MainLayout>
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout>
             <Card>
               <CardHeader />
               <CardContent className="space-y-4">
@@ -51,8 +50,7 @@ export default function MyInfoDetailPage() {
                 </Button>
               </div>
             </Card>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

@@ -4,7 +4,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const mainLayoutVariants = cva(
-  "w-full bg-background flex flex-col max-w-7xl mx-auto"
+  "w-full bg-background flex flex-col"
 );
 
 export interface MainLayoutProps extends React.HTMLAttributes<HTMLDivElement> {}
@@ -34,18 +34,6 @@ const MainContent = React.forwardRef<
 ));
 MainContent.displayName = "MainContent";
 
-const PageHeader = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("border-b bg-background px-6 py-4", className)}
-    {...props}
-  />
-));
-PageHeader.displayName = "PageHeader";
-
 const PageTitle = React.forwardRef<
   HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
@@ -58,27 +46,8 @@ const PageTitle = React.forwardRef<
 ));
 PageTitle.displayName = "PageTitle";
 
-const PageDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn("text-muted-foreground", className)} {...props} />
-));
-PageDescription.displayName = "PageDescription";
-
-const PageContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex-1 p-6", className)} {...props} />
-));
-PageContent.displayName = "PageContent";
-
 export {
   MainLayout,
   MainContent,
-  PageHeader,
   PageTitle,
-  PageDescription,
-  PageContent,
 };

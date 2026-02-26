@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
 import React from "react";
@@ -71,8 +71,22 @@ const renderClaimButtons = (
 const OrderDetailSkeleton = () => (
   <MainLayout>
     <MainContent>
-      <TwoPanelLayout
-        leftPanel={
+      <PageLayout
+        sidebar={
+          <Card className="animate-pulse">
+            <CardHeader>
+              <div className="h-6 w-20 bg-zinc-200 rounded" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="h-4 w-full bg-zinc-200 rounded" />
+              <div className="h-4 w-full bg-zinc-200 rounded" />
+              <div className="h-4 w-full bg-zinc-200 rounded" />
+              <Separator />
+              <div className="h-6 w-full bg-zinc-200 rounded" />
+            </CardContent>
+          </Card>
+        }
+      >
           <Card className="animate-pulse">
             <CardHeader className="space-y-3">
               <div className="h-6 w-32 bg-zinc-200 rounded" />
@@ -101,22 +115,7 @@ const OrderDetailSkeleton = () => (
               <div className="h-24 w-full bg-zinc-200 rounded" />
             </CardContent>
           </Card>
-        }
-        rightPanel={
-          <Card className="animate-pulse">
-            <CardHeader>
-              <div className="h-6 w-20 bg-zinc-200 rounded" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="h-4 w-full bg-zinc-200 rounded" />
-              <div className="h-4 w-full bg-zinc-200 rounded" />
-              <div className="h-4 w-full bg-zinc-200 rounded" />
-              <Separator />
-              <div className="h-6 w-full bg-zinc-200 rounded" />
-            </CardContent>
-          </Card>
-        }
-      />
+      </PageLayout>
     </MainContent>
   </MainLayout>
 );
@@ -246,8 +245,50 @@ const OrderDetailPage = () => {
   return (
     <MainLayout>
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout
+          sidebar={
+            <Card>
+              <CardHeader>
+                <CardTitle>결제 정보</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-600">상품 금액</span>
+                  <span>{totals.originalPrice.toLocaleString()}원</span>
+                </div>
+                {totals.totalDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-zinc-600">할인 금액</span>
+                    <span className="text-red-500">
+                      -{totals.totalDiscount.toLocaleString()}원
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-600">배송비</span>
+                  <span>무료</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-base font-semibold">
+                  <span>총 결제 금액</span>
+                  <span className="text-blue-600">
+                    {totals.totalPrice.toLocaleString()}원
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          }
+          actionBar={
+            <Button
+              onClick={() => navigate(ROUTES.ORDER_LIST)}
+              variant="outline"
+              className="w-full"
+              size="xl"
+            >
+              주문 목록으로
+            </Button>
+          }
+        >
             <Card>
               {/* 주문 정보 헤더 */}
               <CardHeader className="flex justify-between items-center">
@@ -323,50 +364,7 @@ const OrderDetailPage = () => {
                 </React.Fragment>
               ))}
             </Card>
-          }
-          rightPanel={
-            <Card>
-              <CardHeader>
-                <CardTitle>결제 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-zinc-600">상품 금액</span>
-                  <span>{totals.originalPrice.toLocaleString()}원</span>
-                </div>
-                {totals.totalDiscount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-600">할인 금액</span>
-                    <span className="text-red-500">
-                      -{totals.totalDiscount.toLocaleString()}원
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-zinc-600">배송비</span>
-                  <span>무료</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-base font-semibold">
-                  <span>총 결제 금액</span>
-                  <span className="text-blue-600">
-                    {totals.totalPrice.toLocaleString()}원
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          }
-          button={
-            <Button
-              onClick={() => navigate(ROUTES.ORDER_LIST)}
-              variant="outline"
-              className="w-full"
-              size="xl"
-            >
-              주문 목록으로
-            </Button>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

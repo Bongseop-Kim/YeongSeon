@@ -29,7 +29,7 @@ import { SAMPLE_COST } from "./constants/SAMPLE_PRICING";
 
 import { useWizardStep } from "./hooks/useWizardStep";
 import { useWizardDraft } from "./hooks/useWizardDraft";
-import { TwoPanelLayout } from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ProgressBar } from "./components/wizard/ProgressBar";
 import { StepNavigation } from "./components/wizard/StepNavigation";
@@ -440,8 +440,18 @@ const OrderPage = () => {
     <MainLayout>
       <MainContent className="overflow-visible">
         <Form {...form}>
-          <TwoPanelLayout
-            leftPanel={
+          <PageLayout
+            sidebar={
+              <StickySummary
+                options={watchedValues}
+                totalCost={totalCost}
+                sewingCost={sewingCost}
+                fabricCost={fabricCost}
+                isLoggedIn={isLoggedIn}
+              />
+            }
+            sidebarClassName={isMobile ? "pb-24" : ""}
+          >
               <>
                 <ProgressBar
                   steps={wizard.steps}
@@ -488,18 +498,7 @@ const OrderPage = () => {
                   />
                 )}
               </>
-            }
-            rightPanel={
-              <StickySummary
-                options={watchedValues}
-                totalCost={totalCost}
-                sewingCost={sewingCost}
-                fabricCost={fabricCost}
-                isLoggedIn={isLoggedIn}
-              />
-            }
-            rightPanelClassName={isMobile ? "pb-24" : ""}
-          />
+          </PageLayout>
           {isMobile && (
             <div
               className="z-30 fixed bottom-0 left-0 right-0 px-4 bg-white pt-3 border-t"

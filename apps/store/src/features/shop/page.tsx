@@ -14,7 +14,7 @@ import type {
   SortOption,
 } from "@yeongseon/shared/types/view/product";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { useModalStore } from "@/store/modal";
 import { Button } from "@/components/ui/button";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
@@ -211,9 +211,7 @@ export default function ShopPage() {
         />
       )}
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
-            <>
+        <PageLayout>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs text-zinc-800 px-2">
                   전체 {productList.length}개
@@ -221,9 +219,7 @@ export default function ShopPage() {
                 <SortSelect value={sortOption} onChange={setSortOption} />
               </div>
               <ProductGrid products={productList} />
-            </>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

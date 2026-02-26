@@ -3,7 +3,7 @@ import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Image } from "@imagekit/react";
 import {
   Card,
@@ -256,23 +256,7 @@ export default function ShopDetailPage() {
   return (
     <MainLayout>
       <MainContent className="overflow-visible">
-        <TwoPanelLayout
-          leftPanel={
-            <div>
-              <Image
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover"
-                transformation={[
-                  {
-                    width: 800,
-                    height: 800,
-                    quality: 85,
-                  },
-                ]}
-              />
-            </div>
-          }
+        <PageLayout
           detail={
             <div>
               {/* 유사한 상품 섹션 */}
@@ -333,7 +317,7 @@ export default function ShopDetailPage() {
               )}
             </div>
           }
-          rightPanel={
+          sidebar={
             <Card>
               <CardHeader>
                 <CardTitle>{product.name}</CardTitle>
@@ -466,7 +450,7 @@ export default function ShopDetailPage() {
               </CardContent>
             </Card>
           }
-          button={
+          actionBar={
             <ProductActionButtons
               likes={likeCount}
               isLiked={isLiked}
@@ -475,7 +459,22 @@ export default function ShopDetailPage() {
               onOrder={handleOrder}
             />
           }
-        />
+        >
+            <div>
+              <Image
+                src={product.image}
+                alt={product.name}
+                className="w-full h-full object-cover"
+                transformation={[
+                  {
+                    width: 800,
+                    height: 800,
+                    quality: 85,
+                  },
+                ]}
+              />
+            </div>
+        </PageLayout>
         <MobilePurchaseSheet
           product={product}
           open={isPurchaseSheetOpen}
