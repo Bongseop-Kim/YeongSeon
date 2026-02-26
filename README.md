@@ -1,21 +1,122 @@
-## Supabase 워크플로우 (브랜치/CI/CD)
+# YeongSeon
 
-- **브랜치 정책 (Git)**
-  - `main`은 운영(production) 브랜치이며 보호(protected) 상태로 유지합니다.
-  - 기능 브랜치에는 마이그레이션과 함수 변경을 반드시 함께 포함합니다.
-  - `main` 직접 푸시는 금지하고, PR 머지만 허용합니다.
-- **Supabase 브랜치 정책 (선택)**
-  - Preview 브랜치는 PR 검증 용도로만 사용합니다.
-  - Preview에서 직접 핫픽스하지 않고, 반드시 Git 소스를 수정합니다.
-- **CI/CD 정책**
-  - PR 단계에서 lint/test와 `supabase db diff`를 실행해 스키마 드리프트를 확인합니다.
-  - `main` 머지 후에는 `supabase db push` → `supabase functions deploy` 순서로 배포합니다.
-  - 필요 시 운영 배포에 수동 승인 단계를 둡니다.
-- **배포 규칙**
-  - DB 마이그레이션을 함수 배포보다 먼저 적용합니다.
-  - 롤백은 파괴적 복구 대신 `커밋 되돌리기 + 신규 정방향 마이그레이션`으로 처리합니다.
+AI 에이전트와 함께 개발하는 쇼핑몰 프로젝트입니다.
 
-## 아키텍처 의사결정 문서
+## Tech Stack
 
-- Read/Write 경계 ADR: `docs/adr/0001-read-view-write-rpc.md`
-- Write 경계 명세: `docs/supabase-write-boundary.md`
+| 영역 | 기술 |
+|------|------|
+| Frontend | React + TypeScript + Vite |
+| Backend | Supabase (RPC, RLS, Edge Functions) |
+| Monorepo | Turborepo + pnpm |
+| Test | Vitest |
+| Payment | 토스페이먼츠 |
+
+## 프로젝트 구조
+
+```
+apps/
+  store/              # 고객용 쇼핑몰
+  admin/              # 관리자 대시보드
+packages/
+  shared/             # 공통 컴포넌트 · 유틸
+  supabase/           # Supabase 클라이언트 · 타입
+  tsconfig/           # 공유 TypeScript 설정
+supabase/
+  schemas/            # DB 구조 Source of Truth (*.sql)
+  migrations/         # 마이그레이션 이력
+```
+
+### Feature 단위 구조
+
+```
+apps/{app}/src/features/{domain}/
+  api/
+    {domain}-api.ts       # Supabase 호출 (얇게 유지)
+    {domain}-mapper.ts    # DTO → UI 타입 변환
+  components/             # 도메인 UI 컴포넌트
+  types.ts                # UI 타입 정의
+```
+
+## 아키텍처
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    Frontend (React)                  │
+│                                                     │
+│   UI Component → Hook → API Layer → Mapper          │
+│                           │                         │
+│              UI 타입 ←── mapper ──→ DTO 타입         │
+└───────────────────────────┬─────────────────────────┘
+                            │ Supabase Client
+┌───────────────────────────┴─────────────────────────┐
+│                  Supabase (Backend)                  │
+│                                                     │
+│   ┌─────────┐  ┌─────────┐  ┌───────────────────┐  │
+│   │  Views  │  │   RPC   │  │  RLS · Triggers   │  │
+│   │ (Read)  │  │ (Write) │  │ (Security Layer)  │  │
+│   └─────────┘  └─────────┘  └───────────────────┘  │
+└─────────────────────────────────────────────────────┘
+```
+
+> BFF/서버 서비스 계층 없이, 프론트 API 레이어가 Supabase를 직접 호출합니다.
+> 보안/정합성은 DB 계층(RPC, RLS, 제약, 트리거)에서 강제합니다.
+
+## 개발 파이프라인
+
+Claude Code + CodeRabbit 기반의 AI 에이전트 개발 워크플로우를 사용합니다.
+
+```
+  ┌──────────────────── Claude Code Plugins ────────────────────┐
+  │                                                             │
+  │  1. PLAN                                                    │
+  │  ┌─────────────┐    ┌──────────────────┐                    │
+  │  │ Brainstorm  │ ──→│  Writing Plans   │                    │
+  │  │ (요구사항    │    │  (구현 계획 수립)  │                    │
+  │  │  탐색/정리)  │    │                  │                    │
+  │  └─────────────┘    └────────┬─────────┘                    │
+  │                              │                              │
+  │  2. IMPLEMENT                ▼                              │
+  │  ┌─────────────┐    ┌──────────────────┐                    │
+  │  │     TDD     │ ──→│  Frontend Design │  ← Context7       │
+  │  │ (테스트 먼저 │    │  (컴포넌트 구현)   │    (최신 문서 참조) │
+  │  │  작성)      │    │                  │                    │
+  │  └─────────────┘    └────────┬─────────┘                    │
+  │                              │         ← TypeScript LSP     │
+  │  3. VERIFY                   ▼            (타입 검사)        │
+  │  ┌─────────────┐    ┌──────────────────┐                    │
+  │  │  Debugging  │ ──→│  Verification    │                    │
+  │  │ (문제 발생시 │    │  (완료 전 검증)   │                    │
+  │  │  체계적 분석)│    │                  │                    │
+  │  └─────────────┘    └────────┬─────────┘                    │
+  │                              │                              │
+  │  4. DELIVER                  ▼                              │
+  │  ┌─────────────┐    ┌──────────────────┐                    │
+  │  │   Commit    │ ──→│  Push + PR       │                    │
+  │  │ (/commit)   │    │ (/commit-push-pr)│                    │
+  │  └─────────────┘    └────────┬─────────┘                    │
+  │                              │                              │
+  └──────────────────────────────┼──────────────────────────────┘
+                                 │
+                                 ▼
+                  ┌──────────────────────────┐
+                  │       CodeRabbit         │
+                  │  (PR 자동 코드 리뷰)      │
+                  │                          │
+                  │  - 코드 품질 검사          │
+                  │  - 보안 취약점 탐지        │
+                  │  - 개선 제안              │
+                  └──────────────────────────┘
+```
+
+### 사용 도구 요약
+
+| 단계 | 도구 | 역할 |
+|------|------|------|
+| **계획** | Superpowers (Brainstorm, Plans) | 요구사항 분석, 구현 계획 수립 |
+| **구현** | Superpowers (TDD), Frontend Design | 테스트 우선 개발, UI 컴포넌트 구축 |
+| **지원** | Context7, TypeScript LSP | 라이브러리 문서 참조, 실시간 타입 검사 |
+| **검증** | Superpowers (Debug, Verify) | 체계적 디버깅, 완료 전 검증 |
+| **배포** | Commit Commands | 커밋, 푸시, PR 생성 자동화 |
+| **리뷰** | CodeRabbit, Code Review | PR 자동 리뷰, 코드 품질 관리 |
+| **유지보수** | Code Simplifier, Claude MD Management | 코드 정리, 프로젝트 문서 관리 |
