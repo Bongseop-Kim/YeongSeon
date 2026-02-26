@@ -577,7 +577,7 @@ export default function OrderShow() {
                 <a
                   onClick={(e) => {
                     e.stopPropagation();
-                    edit("products", record.productId!);
+                    edit("products", record.productId);
                   }}
                   style={{ cursor: "pointer" }}
                 >

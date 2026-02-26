@@ -3,98 +3,75 @@ import type {
   ClaimListRowDTO,
 } from "@yeongseon/shared/types/dto/claim-view";
 import type { CreateClaimInputDTO } from "@yeongseon/shared/types/dto/claim-input";
+import type { CreateClaimResultDTO } from "@yeongseon/shared/types/dto/claim-output";
 import type { OrderItemDTO } from "@yeongseon/shared/types/dto/order-view";
 import type { ClaimItem } from "@yeongseon/shared/types/view/claim-item";
 import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-input";
 import {
-  toAppliedCouponView,
-  toProductOptionView,
-  toProductView,
-  toTieItemView,
+  normalizeItemRow,
+  toOrderItemView,
 } from "@yeongseon/shared/mappers/shared-mapper";
+
+// ── parse helpers (런타임 검증) ──────────────────────
+
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null;
+
+export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
+  if (data == null) return [];
+  if (!Array.isArray(data)) {
+    throw new Error("클레임 목록 응답이 올바르지 않습니다: 배열이 아닙니다.");
+  }
+  for (let i = 0; i < data.length; i++) {
+    const row: unknown = data[i];
+    if (
+      !isRecord(row) ||
+      typeof row.id !== "string" ||
+      typeof row.claimNumber !== "string"
+    ) {
+      throw new Error(
+        `클레임 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, claimNumber) 누락.`
+      );
+    }
+    if (!isRecord(row.item)) {
+      throw new Error(
+        `클레임 목록 행(${i})이 올바르지 않습니다: item 객체 누락.`
+      );
+    }
+  }
+  return data as ClaimListRowDTO[];
+};
+
+export const parseCreateClaimResult = (
+  data: unknown
+): CreateClaimResultDTO => {
+  if (!isRecord(data)) {
+    throw new Error("클레임 생성 응답이 올바르지 않습니다: 객체가 아닙니다.");
+  }
+  if (
+    typeof data.claim_id !== "string" ||
+    typeof data.claim_number !== "string"
+  ) {
+    throw new Error(
+      "클레임 생성 응답이 올바르지 않습니다: claim_id 또는 claim_number 누락."
+    );
+  }
+  return { claim_id: data.claim_id, claim_number: data.claim_number };
+};
+
+// ── row → DTO 변환 ──────────────────────────────────
 
 /**
  * claim_list_view의 item jsonb → 정규화된 OrderItemDTO
- * (fromOrderItemRowDTO와 동일 로직, order_id/created_at 없는 입력 대응)
  */
-export const fromClaimItemRowDTO = (item: ClaimItemRowDTO): OrderItemDTO => {
-  if (item.type === "product") {
-    const product = item.product ?? {
-      id: -1,
-      code: "DELETED",
-      name: "삭제된 상품",
-      price: 0,
-      image: "",
-      deleted: true,
-      category: "3fold" as const,
-      color: "black" as const,
-      pattern: "solid" as const,
-      material: "silk" as const,
-      likes: 0,
-      info: "",
-      options: [],
-    };
-    return {
-      id: item.id,
-      type: "product",
-      product,
-      selectedOption: item.selectedOption ?? undefined,
-      quantity: item.quantity,
-      appliedCoupon: item.appliedCoupon ?? undefined,
-    };
-  }
-
-  if (!item.reformData) {
-    throw new Error("주문 수선 데이터가 올바르지 않습니다.");
-  }
-
-  return {
-    id: item.id,
-    type: "reform",
-    quantity: item.quantity,
-    reformData: item.reformData,
-    appliedCoupon: item.appliedCoupon ?? undefined,
-  };
-};
-
-/**
- * OrderItemDTO → OrderItem (View)
- * order-mapper의 toOrderItem과 동일한 변환
- */
-const toOrderItemView = (item: OrderItemDTO): ClaimItem["item"] => {
-  if (item.type === "product") {
-    if (!item.product) {
-      throw new Error("Product data is required for product order items.");
-    }
-    return {
-      ...item,
-      product: toProductView(item.product),
-      selectedOption: item.selectedOption
-        ? toProductOptionView(item.selectedOption)
-        : undefined,
-      appliedCoupon: toAppliedCouponView(item.appliedCoupon),
-    };
-  }
-
-  if (!item.reformData) {
-    throw new Error("Reform data is required for reform order items.");
-  }
-
-  return {
-    ...item,
-    reformData: {
-      ...item.reformData,
-      tie: toTieItemView(item.reformData.tie),
-    },
-    appliedCoupon: toAppliedCouponView(item.appliedCoupon),
-  };
-};
+export const fromClaimItemRowDTO = (item: ClaimItemRowDTO): OrderItemDTO =>
+  normalizeItemRow(item);
 
 /**
  * ClaimListRowDTO → ClaimItem (View)
  */
 export const toClaimItemView = (row: ClaimListRowDTO): ClaimItem => {
-  const itemDTO = fromClaimItemRowDTO(row.item);
+  const itemDTO = normalizeItemRow(row.item);
 
   return {
     id: row.id,

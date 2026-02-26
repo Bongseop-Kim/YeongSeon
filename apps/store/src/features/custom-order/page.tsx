@@ -264,11 +264,11 @@ const OrderPage = () => {
   // 자동 저장: form values 변경 시 1초 debounce
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    const subscription = form.watch((values) => {
+    const subscription = form.watch(() => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
         draft.saveDraft({
-          formValues: values as QuoteOrderOptions,
+          formValues: form.getValues(),
           currentStepIndex: wizard.currentStepIndex,
           visitedSteps: [...wizard.visitedSteps],
           savedAt: Date.now(),
@@ -284,7 +284,7 @@ const OrderPage = () => {
   // 자동 저장: 스텝 이동 시 즉시 저장
   useEffect(() => {
     draft.saveDraft({
-      formValues: form.getValues() as QuoteOrderOptions,
+      formValues: form.getValues(),
       currentStepIndex: wizard.currentStepIndex,
       visitedSteps: [...wizard.visitedSteps],
       savedAt: Date.now(),

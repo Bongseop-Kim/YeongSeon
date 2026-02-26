@@ -1,4 +1,8 @@
 import { supabase } from "@/lib/supabase";
+import {
+  parseConfirmPaymentResponse,
+  type ConfirmPaymentResponse,
+} from "@/features/order/api/payment-mapper";
 
 interface ConfirmPaymentRequest {
   paymentKey: string;
@@ -6,11 +10,7 @@ interface ConfirmPaymentRequest {
   amount: number;
 }
 
-interface ConfirmPaymentResponse {
-  paymentKey: string;
-  orderId: string;
-  status: string;
-}
+export type { ConfirmPaymentResponse };
 
 export const confirmPayment = async (
   request: ConfirmPaymentRequest
@@ -27,5 +27,5 @@ export const confirmPayment = async (
     throw new Error("결제 승인 결과를 받을 수 없습니다.");
   }
 
-  return data as ConfirmPaymentResponse;
+  return parseConfirmPaymentResponse(data);
 };

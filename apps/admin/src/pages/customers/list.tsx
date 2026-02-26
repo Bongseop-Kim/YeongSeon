@@ -30,7 +30,7 @@ export default function CustomerList() {
         {...tableProps}
         rowKey="id"
         onRow={(record) => ({
-          onClick: () => show("profiles", record.id!),
+          onClick: () => { if (record.id != null) show("profiles", record.id); },
           style: { cursor: "pointer" },
         })}
       >

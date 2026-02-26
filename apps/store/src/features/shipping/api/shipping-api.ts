@@ -1,31 +1,16 @@
 import { supabase } from "@/lib/supabase";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 import type {
-  ShippingAddressRecord,
   CreateShippingAddressData,
   UpdateShippingAddressData,
 } from "@/features/shipping/types/shipping-address-record";
+import {
+  toShippingAddressView,
+  toCreateShippingAddressRecord,
+  toUpdateShippingAddressRecord,
+} from "@/features/shipping/api/shipping-mapper";
 
 const TABLE_NAME = "shipping_addresses";
-
-/**
- * 레코드를 ShippingAddress 타입으로 변환
- */
-const mapRecordToShippingAddress = (
-  record: ShippingAddressRecord
-): ShippingAddress => {
-  return {
-    id: record.id,
-    recipientName: record.recipient_name,
-    recipientPhone: record.recipient_phone,
-    address: record.address,
-    detailAddress: record.address_detail,
-    postalCode: record.postal_code,
-    deliveryRequest: record.delivery_request || undefined,
-    deliveryMemo: record.delivery_memo || undefined,
-    isDefault: record.is_default,
-  };
-};
 
 /**
  * 현재 사용자의 모든 배송지 조회
@@ -54,7 +39,7 @@ export const getShippingAddresses = async (): Promise<ShippingAddress[]> => {
     return [];
   }
 
-  return data.map(mapRecordToShippingAddress);
+  return data.map(toShippingAddressView);
 };
 
 /**
@@ -89,7 +74,7 @@ export const getDefaultShippingAddress =
       return null;
     }
 
-    return mapRecordToShippingAddress(data);
+    return toShippingAddressView(data);
   };
 
 /**
@@ -124,7 +109,7 @@ export const getShippingAddressById = async (
     return null;
   }
 
-  return mapRecordToShippingAddress(data);
+  return toShippingAddressView(data);
 };
 
 /**
@@ -152,17 +137,7 @@ export const createShippingAddress = async (
 
   const { data: newRecord, error } = await supabase
     .from(TABLE_NAME)
-    .insert({
-      user_id: user.id,
-      recipient_name: data.recipientName,
-      recipient_phone: data.recipientPhone,
-      address: data.address,
-      address_detail: data.detailAddress,
-      postal_code: data.postalCode,
-      delivery_request: data.deliveryRequest || null,
-      delivery_memo: data.deliveryMemo || null,
-      is_default: data.isDefault,
-    })
+    .insert(toCreateShippingAddressRecord(user.id, data))
     .select()
     .single();
 
@@ -170,7 +145,7 @@ export const createShippingAddress = async (
     throw new Error(`배송지 생성 실패: ${error.message}`);
   }
 
-  return mapRecordToShippingAddress(newRecord);
+  return toShippingAddressView(newRecord);
 };
 
 /**
@@ -198,24 +173,9 @@ export const updateShippingAddress = async (
       .neq("id", id);
   }
 
-  const updateData: Partial<ShippingAddressRecord> = {};
-  if (data.recipientName !== undefined)
-    updateData.recipient_name = data.recipientName;
-  if (data.recipientPhone !== undefined)
-    updateData.recipient_phone = data.recipientPhone;
-  if (data.address !== undefined) updateData.address = data.address;
-  if (data.detailAddress !== undefined)
-    updateData.address_detail = data.detailAddress;
-  if (data.postalCode !== undefined) updateData.postal_code = data.postalCode;
-  if (data.deliveryRequest !== undefined)
-    updateData.delivery_request = data.deliveryRequest;
-  if (data.deliveryMemo !== undefined)
-    updateData.delivery_memo = data.deliveryMemo;
-  if (data.isDefault !== undefined) updateData.is_default = data.isDefault;
-
   const { data: updatedRecord, error } = await supabase
     .from(TABLE_NAME)
-    .update(updateData)
+    .update(toUpdateShippingAddressRecord(data))
     .eq("id", id)
     .eq("user_id", user.id)
     .select()
@@ -225,7 +185,7 @@ export const updateShippingAddress = async (
     throw new Error(`배송지 업데이트 실패: ${error.message}`);
   }
 
-  return mapRecordToShippingAddress(updatedRecord);
+  return toShippingAddressView(updatedRecord);
 };
 
 /**

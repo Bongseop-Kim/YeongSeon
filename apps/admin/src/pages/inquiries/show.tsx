@@ -16,11 +16,11 @@ export default function InquiryShow() {
   const { mutate: updateInquiry, mutation: updateMutation } = useUpdate();
 
   const handleAnswer = () => {
-    if (!answerText.trim()) return;
+    if (!answerText.trim() || !inquiry?.id) return;
 
     updateInquiry({
       resource: "inquiries",
-      id: inquiry!.id as string,
+      id: inquiry.id as string,
       values: {
         status: "답변완료",
         answer: answerText,

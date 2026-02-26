@@ -43,7 +43,7 @@ export default function ProductList() {
         {...tableProps}
         rowKey="id"
         onRow={(record) => ({
-          onClick: () => edit("products", record.id!),
+          onClick: () => { if (record.id != null) edit("products", record.id); },
           style: { cursor: "pointer" },
         })}
       >

@@ -1,8 +1,10 @@
 import { supabase } from "@/lib/supabase";
 import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
 import type { UserCoupon } from "@yeongseon/shared/types/view/coupon";
-import type { UserCouponRecord } from "@/features/order/types/coupon-record";
-import { mapRecordToUserCoupon } from "@/features/order/utils/map-record-to-user-coupon";
+import {
+  mapRecordToUserCoupon,
+  parseUserCouponRecords,
+} from "@/features/order/utils/map-record-to-user-coupon";
 
 const COUPON_COLUMNS =
   "id, name, discount_type, discount_value, max_discount_amount, description, expiry_date, additional_info";
@@ -47,7 +49,7 @@ export const getUserCoupons = async (): Promise<UserCoupon[]> => {
 
   if (!data) return [];
 
-  return (data as unknown as UserCouponRecord[]).map(mapRecordToUserCoupon);
+  return parseUserCouponRecords(data).map(mapRecordToUserCoupon);
 };
 
 export const getUserCouponsByIds = async (
@@ -86,7 +88,7 @@ export const getUserCouponsByIds = async (
 
   if (!data) return [];
 
-  return (data as unknown as UserCouponRecord[]).map(mapRecordToUserCoupon);
+  return parseUserCouponRecords(data).map(mapRecordToUserCoupon);
 };
 
 export const getUserCouponsByIdsMap = async (
