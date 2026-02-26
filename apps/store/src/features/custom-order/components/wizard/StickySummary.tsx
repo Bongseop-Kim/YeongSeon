@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import CostBreakdown from "@/features/custom-order/components/CostBreakdown";
-import { SAMPLE_COST, SAMPLE_DURATION } from "@/features/custom-order/constants/SAMPLE_PRICING";
+import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
+import { getEstimatedDays } from "@/features/custom-order/utils/pricing";
 import type { OrderOptions } from "@/features/custom-order/types/order";
 
 interface StickySummaryProps {
@@ -47,15 +48,7 @@ export const StickySummary = ({
   ].join(" · ");
 
   const sampleCost = options.sampleType ? SAMPLE_COST[options.sampleType] : 0;
-  const sampleDuration = options.sampleType ? SAMPLE_DURATION[options.sampleType] : "";
-
-  const estimatedDays = isSampleMode
-    ? sampleDuration
-    : options.fabricProvided
-      ? "7~14일"
-      : options.reorder
-        ? "21~28일"
-        : "28~42일";
+  const estimatedDays = getEstimatedDays(options, isSampleMode);
 
   const displayCost = isSampleMode ? sampleCost : totalCost;
 

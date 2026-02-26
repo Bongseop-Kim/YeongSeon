@@ -18,6 +18,7 @@ export const SummaryRow = ({ label, value, onEdit }: SummaryRowProps) => (
       variant="ghost"
       size="sm"
       onClick={onEdit}
+      aria-label={`${label} 수정`}
       className="h-7 px-2 text-zinc-400 hover:text-zinc-600"
     >
       <Pencil className="w-3.5 h-3.5" />

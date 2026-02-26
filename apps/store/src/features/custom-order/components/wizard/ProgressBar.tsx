@@ -34,6 +34,8 @@ export const ProgressBar = ({
                 type="button"
                 onClick={() => isClickable && onStepClick(index)}
                 disabled={!isClickable}
+                aria-label={`${index + 1}단계${isCurrent ? ", 현재 단계" : isCompleted ? ", 완료" : ""}`}
+                aria-current={isCurrent ? "step" : undefined}
                 className={cn(
                   "flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-colors shrink-0",
                   isCurrent && "bg-zinc-900 text-white",

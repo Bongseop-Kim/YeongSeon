@@ -1,15 +1,14 @@
 import { Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Control } from "react-hook-form";
-import type { OrderOptions } from "@/features/custom-order/types/order";
+import type { Control, FieldValues, Path } from "react-hook-form";
 import { QUANTITY_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
 
-interface QuantitySelectorProps {
-  control: Control<OrderOptions>;
+interface QuantitySelectorProps<T extends FieldValues = FieldValues> {
+  control: Control<T>;
 }
 
-export const QuantitySelector = ({ control }: QuantitySelectorProps) => {
+export const QuantitySelector = <T extends FieldValues>({ control }: QuantitySelectorProps<T>) => {
   return (
     <div>
       <Label className="text-sm font-medium text-zinc-900 mb-2 block">
@@ -17,7 +16,7 @@ export const QuantitySelector = ({ control }: QuantitySelectorProps) => {
       </Label>
       <div className="flex items-center gap-3">
         <Controller
-          name="quantity"
+          name={"quantity" as Path<T>}
           control={control}
           render={({ field }) => (
             <Input

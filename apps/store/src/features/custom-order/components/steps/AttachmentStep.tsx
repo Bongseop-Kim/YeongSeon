@@ -3,10 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/features/custom-order/components/ImageUpload";
-import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
+import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-
-type ImageUploadHook = ReturnType<typeof useImageUpload>;
 
 interface AttachmentStepProps {
   imageUpload: ImageUploadHook;

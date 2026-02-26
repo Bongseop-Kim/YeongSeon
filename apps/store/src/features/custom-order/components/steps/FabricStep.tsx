@@ -66,6 +66,7 @@ export const FabricStep = () => {
           <button
             key={`${card.fabricType}-${card.designType}`}
             type="button"
+            aria-pressed={isSelected(card)}
             onClick={() => handleCardClick(card)}
             className={cn(
               "text-left p-5 rounded-lg border-2 transition-all",

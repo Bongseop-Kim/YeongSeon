@@ -63,7 +63,12 @@ export const SpecStep = () => {
                     max={TIE_WIDTH_CONFIG.max}
                     step={TIE_WIDTH_CONFIG.step}
                     value={field.value}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === "") return;
+                      const num = Number(raw);
+                      if (!Number.isNaN(num)) field.onChange(num);
+                    }}
                     className="w-24 text-center"
                   />
                   <span className="text-sm text-zinc-600">cm</span>

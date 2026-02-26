@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
-import { useFormContext, type Control } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import { QuantitySelector } from "@/features/custom-order/components/QuantitySelector";
 import { PackageSelector } from "@/features/custom-order/components/PackageSelector";
-import type { OrderOptions, QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,7 @@ export const QuantityStep = ({
   const { control, watch, setValue } = useFormContext<QuoteOrderOptions>();
   const quantity = watch("quantity");
   const fabricProvided = watch("fabricProvided");
+  const reorder = watch("reorder");
   const prevFabricProvided = useRef(fabricProvided);
 
   // fabricProvided true 전환 시 연관 필드 리셋
@@ -77,7 +78,7 @@ export const QuantityStep = ({
             </div>
           </div>
 
-          <QuantitySelector control={control as unknown as Control<OrderOptions>} />
+          <QuantitySelector control={control} />
 
           {quantity >= 100 && (
             <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
@@ -87,7 +88,7 @@ export const QuantityStep = ({
         </CardContent>
       </Card>
 
-      {!fabricProvided && !watch("reorder") && (
+      {!fabricProvided && !reorder && (
         <PackageSelector
           quantity={quantity}
           isLoggedIn={isLoggedIn}

@@ -25,9 +25,9 @@ export const FinishingStep = () => {
   const careLabel = watch("careLabel");
 
   const interliningLabel = [
-    interlining === "WOOL" ? "울" : "폴리",
-    interliningThickness === "THIN" ? "얇음" : "두꺼움",
-  ].join(", ");
+    interlining === "WOOL" ? "울" : interlining ? "폴리" : null,
+    interliningThickness === "THIN" ? "얇음" : interliningThickness ? "두꺼움" : null,
+  ].filter(Boolean).join(", ") || "미선택";
 
   const stitchLabels = [
     triangleStitch && "삼각",

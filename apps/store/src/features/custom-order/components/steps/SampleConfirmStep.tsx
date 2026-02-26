@@ -12,10 +12,8 @@ import { SummaryRow } from "@/features/custom-order/components/SummaryRow";
 import { SAMPLE_COST, SAMPLE_DURATION } from "@/features/custom-order/constants/SAMPLE_PRICING";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
+import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { WizardStepId } from "@/features/custom-order/types/wizard";
-
-type ImageUploadHook = ReturnType<typeof useImageUpload>;
 
 interface SampleConfirmStepProps {
   selectedAddress: ShippingAddress | null | undefined;
@@ -42,18 +40,22 @@ export const SampleConfirmStep = ({
       ? "봉제 샘플"
       : sampleType === "fabric"
         ? "원단 샘플"
-        : "원단 + 봉제 샘플";
+        : sampleType === "fabric_and_sewing"
+          ? "원단 + 봉제 샘플"
+          : null;
 
   const fabricLabel = values.fabricProvided
     ? "원단 직접 제공"
-    : [
-        values.fabricType === "SILK" ? "실크" : "폴리",
-        values.designType === "YARN_DYED" ? "선염" : "날염",
-      ].join(" · ");
+    : values.fabricType && values.designType
+      ? [
+          values.fabricType === "SILK" ? "실크" : "폴리",
+          values.designType === "YARN_DYED" ? "선염" : "날염",
+        ].join(" · ")
+      : null;
 
-  const showSewingOptions = sampleType !== "fabric";
+  const showSewingOptions = sampleType === "sewing" || sampleType === "fabric_and_sewing";
 
-  const sewingLabel = showSewingOptions
+  const sewingLabel = showSewingOptions && values.tieType
     ? [
         values.tieType === "AUTO" ? "자동 봉제" : "수동 봉제",
         values.dimple
@@ -79,7 +81,7 @@ export const SampleConfirmStep = ({
         <CardContent className="space-y-4 pt-6">
           <SummaryRow
             label="샘플 유형"
-            value={sampleTypeLabel}
+            value={sampleTypeLabel ?? "미선택"}
             onEdit={() => goToStepById("sample-setup")}
           />
           <Separator />
@@ -100,7 +102,7 @@ export const SampleConfirmStep = ({
       {/* Option Summary */}
       <Card>
         <CardContent className="space-y-4 pt-6">
-          {!values.fabricProvided && (
+          {!values.fabricProvided && fabricLabel && (
             <>
               <SummaryRow
                 label="원단"

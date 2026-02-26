@@ -12,10 +12,8 @@ import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { SummaryRow } from "@/features/custom-order/components/SummaryRow";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
+import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { WizardStepId } from "@/features/custom-order/types/wizard";
-
-type ImageUploadHook = ReturnType<typeof useImageUpload>;
 
 interface ConfirmStepProps {
   selectedAddress: ShippingAddress | null | undefined;
@@ -38,28 +36,32 @@ export const ConfirmStep = ({
     ? "원단 직접 제공"
     : values.reorder
       ? "재주문"
-      : [
-          values.fabricType === "SILK" ? "실크" : "폴리",
-          values.designType === "YARN_DYED" ? "선염" : "날염",
-        ].join(" · ");
+      : values.fabricType && values.designType
+        ? [
+            values.fabricType === "SILK" ? "실크" : "폴리",
+            values.designType === "YARN_DYED" ? "선염" : "날염",
+          ].join(" · ")
+        : "미선택";
 
-  const sewingLabel = [
-    values.tieType === "AUTO" ? "자동 봉제" : "수동 봉제",
-    values.dimple
-      ? "딤플"
-      : values.spoderato
-        ? "스포데라토"
-        : values.fold7
-          ? "7폴드"
-          : "일반",
-  ].join(" · ");
+  const sewingLabel = values.tieType
+    ? [
+        values.tieType === "AUTO" ? "자동 봉제" : "수동 봉제",
+        values.dimple
+          ? "딤플"
+          : values.spoderato
+            ? "스포데라토"
+            : values.fold7
+              ? "7폴드"
+              : "일반",
+      ].join(" · ")
+    : "미선택";
 
-  const sizeLabel = values.sizeType === "CHILD" ? "아동용" : "성인용";
+  const sizeLabel = values.sizeType === "CHILD" ? "아동용" : values.sizeType ? "성인용" : "미선택";
 
   const interliningLabel = [
-    values.interlining === "WOOL" ? "울 심지" : "폴리 심지",
-    values.interliningThickness === "THIN" ? "얇음" : "두꺼움",
-  ].join(", ");
+    values.interlining === "WOOL" ? "울 심지" : values.interlining ? "폴리 심지" : null,
+    values.interliningThickness === "THIN" ? "얇음" : values.interliningThickness ? "두꺼움" : null,
+  ].filter(Boolean).join(", ") || "미선택";
 
   const additionalStitch = [
     values.triangleStitch && "삼각 봉제",

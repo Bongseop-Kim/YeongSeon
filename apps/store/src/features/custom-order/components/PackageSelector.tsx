@@ -12,12 +12,12 @@ interface PackageSelectorProps {
   onSelectPackage: (preset: PackagePreset) => void;
 }
 
-const OPTION_LABELS: Record<string, (v: unknown) => string> = {
-  fabricType: (v) => (v === "SILK" ? "실크" : "폴리"),
-  designType: (v) => (v === "YARN_DYED" ? "선염" : "날염"),
-  tieType: (v) => (v === "AUTO" ? "자동 봉제" : "수동 봉제"),
-  interlining: (v) => (v === "WOOL" ? "울 심지" : "폴리 심지"),
-};
+const OPTION_LABELS = {
+  fabricType: (v: OrderOptions["fabricType"]) => (v === "SILK" ? "실크" : "폴리"),
+  designType: (v: OrderOptions["designType"]) => (v === "YARN_DYED" ? "선염" : "날염"),
+  tieType: (v: OrderOptions["tieType"]) => (v === "AUTO" ? "자동 봉제" : "수동 봉제"),
+  interlining: (v: OrderOptions["interlining"]) => (v === "WOOL" ? "울 심지" : "폴리 심지"),
+} as const;
 
 export const PackageSelector = ({
   quantity,
@@ -34,20 +34,32 @@ export const PackageSelector = ({
         {PACKAGE_PRESETS.map((preset) => {
           const isSelected = selectedPackage === preset.id;
 
+          const packageOptions: OrderOptions = {
+            fabricProvided: false,
+            reorder: false,
+            fabricType: preset.values.fabricType ?? "POLY",
+            designType: preset.values.designType ?? "PRINTING",
+            tieType: preset.values.tieType ?? "MANUAL",
+            interlining: preset.values.interlining ?? "POLY",
+            interliningThickness: preset.values.interliningThickness ?? "THICK",
+            sizeType: "ADULT",
+            tieWidth: 8,
+            triangleStitch: preset.values.triangleStitch ?? true,
+            sideStitch: preset.values.sideStitch ?? true,
+            barTack: preset.values.barTack ?? false,
+            fold7: preset.values.fold7 ?? false,
+            dimple: preset.values.dimple ?? false,
+            spoderato: preset.values.spoderato ?? false,
+            brandLabel: preset.values.brandLabel ?? false,
+            careLabel: preset.values.careLabel ?? false,
+            quantity,
+            referenceImages: null,
+            additionalNotes: "",
+            sample: false,
+            sampleType: null,
+          };
           const packageCost = isLoggedIn
-            ? calculateTotalCost({
-                fabricProvided: false,
-                reorder: false,
-                quantity,
-                referenceImages: null,
-                additionalNotes: "",
-                sample: false,
-                sampleType: null,
-                sizeType: "ADULT",
-                tieWidth: 8,
-                barTack: false,
-                ...preset.values,
-              } as OrderOptions).totalCost
+            ? calculateTotalCost(packageOptions).totalCost
             : null;
 
           return (

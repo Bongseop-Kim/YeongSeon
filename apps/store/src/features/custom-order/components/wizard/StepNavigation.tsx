@@ -38,9 +38,9 @@ export const StepNavigation = ({
       {isLastStep ? (
         <Button
           type="button"
-          onClick={onSubmit}
+          onClick={() => { if (!isPending) onSubmit(); }}
           size="lg"
-          disabled={isSubmitDisabled}
+          disabled={isSubmitDisabled || isPending}
         >
           {isPending
             ? isQuoteMode

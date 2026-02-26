@@ -64,6 +64,9 @@ export const useWizardStep = ({
   );
 
   const goNext = useCallback((): string | null => {
+    if (steps.length === 0 || currentStepIndex < 0 || currentStepIndex >= steps.length) {
+      return null;
+    }
     const values = getValues();
     const currentStep = steps[currentStepIndex];
     const error = currentStep.validate(values);
@@ -101,7 +104,10 @@ export const useWizardStep = ({
     []
   );
 
-  const currentStep = steps[currentStepIndex];
+  const currentStep =
+    steps.length > 0 && currentStepIndex >= 0 && currentStepIndex < steps.length
+      ? steps[currentStepIndex]
+      : steps[0];
   const isFirstStep = findPrevVisibleStep(currentStepIndex) === null;
   const isLastStep = findNextVisibleStep(currentStepIndex) === null;
 

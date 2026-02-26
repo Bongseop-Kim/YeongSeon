@@ -12,12 +12,26 @@ export interface WizardDraft {
   purpose: OrderPurpose | null;
 }
 
+const isWizardDraft = (obj: unknown): obj is WizardDraft => {
+  if (!obj || typeof obj !== "object") return false;
+  const d = obj as Record<string, unknown>;
+  return (
+    typeof d.formValues === "object" &&
+    d.formValues !== null &&
+    typeof d.currentStepIndex === "number" &&
+    Array.isArray(d.visitedSteps) &&
+    typeof d.savedAt === "number" &&
+    (d.purpose === null || d.purpose === "order" || d.purpose === "sample")
+  );
+};
+
 export const useWizardDraft = () => {
   const loadDraft = useCallback((): WizardDraft | null => {
     try {
       const raw = sessionStorage.getItem(DRAFT_KEY);
       if (!raw) return null;
-      const parsed = JSON.parse(raw) as WizardDraft;
+      const parsed: unknown = JSON.parse(raw);
+      if (!isWizardDraft(parsed)) return null;
       if (!parsed.purpose) {
         parsed.purpose = "order";
       }

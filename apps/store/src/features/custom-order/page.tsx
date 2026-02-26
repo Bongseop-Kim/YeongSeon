@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { calculateTotalCost } from "./utils/pricing";
+import { calculateTotalCost, getEstimatedDays } from "./utils/pricing";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { ROUTES } from "@/constants/ROUTES";
@@ -243,23 +243,26 @@ const OrderPage = () => {
     });
   }, [draft, form, resetTo]);
 
-  // 자동 저장: watchedValues + currentStepIndex 변경 시 1초 debounce
+  // 자동 저장: form values + currentStepIndex 변경 시 1초 debounce
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      draft.saveDraft({
-        formValues: watchedValues,
-        currentStepIndex: wizard.currentStepIndex,
-        visitedSteps: [...wizard.visitedSteps],
-        savedAt: Date.now(),
-        purpose,
-      });
-    }, 1000);
+    const subscription = form.watch((values) => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => {
+        draft.saveDraft({
+          formValues: values as QuoteOrderOptions,
+          currentStepIndex: wizard.currentStepIndex,
+          visitedSteps: [...wizard.visitedSteps],
+          savedAt: Date.now(),
+          purpose,
+        });
+      }, 1000);
+    });
     return () => {
+      subscription.unsubscribe();
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [watchedValues, wizard.currentStepIndex, wizard.visitedSteps, draft, purpose]);
+  }, [form, wizard.currentStepIndex, wizard.visitedSteps, draft, purpose]);
 
   const handleNext = () => {
     const error = wizard.goNext();
@@ -403,11 +406,7 @@ const OrderPage = () => {
     ? SAMPLE_COST[watchedValues.sampleType]
     : 0;
 
-  const estimatedDays = watchedValues.fabricProvided
-    ? "7~14일"
-    : watchedValues.reorder
-      ? "21~28일"
-      : "28~42일";
+  const estimatedDays = getEstimatedDays(watchedValues, isSampleMode);
 
   const goToStepById = (id: WizardStepId) => {
     const idx = stepsConfig.findIndex((s) => s.id === id);
