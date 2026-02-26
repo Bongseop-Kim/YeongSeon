@@ -1,4 +1,4 @@
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast, type ExternalToast } from "sonner";
 
 /**
  * Toast 타입 정의
@@ -142,5 +142,12 @@ export const toast = {
     }
   ) => {
     return sonnerToast.promise(promise, data);
+  },
+
+  /**
+   * 특정 토스트 또는 모든 토스트 닫기
+   */
+  dismiss: (toastId?: string | number) => {
+    return sonnerToast.dismiss(toastId);
   },
 };

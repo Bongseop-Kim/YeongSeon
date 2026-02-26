@@ -213,10 +213,26 @@ const OrderPage = () => {
     const existing = draft.loadDraft();
     if (!existing) return;
 
-    toast.info("이전에 작성 중이던 주문이 있어요", {
+    let restored = false;
+    let toastId: string | number | undefined;
+
+    const removeClickListener = () => {
+      document.removeEventListener("pointerdown", handleClickOutside, true);
+    };
+
+    const handleClickOutside = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-sonner-toast]")) return;
+      removeClickListener();
+      if (toastId !== undefined) toast.dismiss(toastId);
+    };
+
+    toastId = toast.info("이전에 작성 중이던 주문이 있어요", {
       action: {
         label: "이어서 하기",
         onClick: () => {
+          restored = true;
+          removeClickListener();
           form.reset(existing.formValues);
           resetTo(
             existing.currentStepIndex,
@@ -224,8 +240,23 @@ const OrderPage = () => {
           );
         },
       },
+      onDismiss: () => {
+        removeClickListener();
+        if (!restored) draft.clearDraft();
+      },
+      onAutoClose: () => {
+        removeClickListener();
+        if (!restored) draft.clearDraft();
+      },
       duration: 8000,
     });
+
+    // 토스트 렌더 후 바깥 클릭 리스너 등록
+    // cleanup을 반환하지 않음 — StrictMode에서 cleanup이 리스너를 제거하는 문제 방지
+    // 리스너는 바깥 클릭 / onDismiss / onAutoClose / 이어서 하기 시 자체 정리됨
+    setTimeout(() => {
+      document.addEventListener("pointerdown", handleClickOutside, true);
+    }, 100);
   }, [draft, form, resetTo]);
 
   // 자동 저장: form values 변경 시 1초 debounce
