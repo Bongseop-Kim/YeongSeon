@@ -6,9 +6,7 @@ import { ProductionSection } from "./ProductionSection";
 import { LabelSection } from "./LabelSection";
 import { OrderInfoSection } from "./OrderInfoSection";
 import { Card, CardContent } from "@/components/ui/card";
-import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
-
-type ImageUploadHook = ReturnType<typeof useImageUpload>;
+import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 
 interface OrderFormProps<T extends OrderOptions = OrderOptions> {
   control: Control<T>;

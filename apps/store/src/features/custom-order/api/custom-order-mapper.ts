@@ -7,7 +7,7 @@ import type {
   CreateCustomOrderRequestDto,
 } from "@/features/custom-order/types/dto/custom-order-input";
 
-type OrderOptionsForCreateCustomOrderOptions = Omit<OrderOptions, "referenceImages" | "additionalNotes" | "sample">;
+type OrderOptionsForCreateCustomOrderOptions = Omit<OrderOptions, "referenceImages" | "additionalNotes" | "sample" | "sampleType">;
 const isAllowed = <T extends string>(
   value: unknown,
   allowed: readonly T[]
@@ -76,6 +76,7 @@ interface ToCreateCustomOrderRequestInput {
   referenceImageUrls: string[];
   additionalNotes: string;
   sample: boolean;
+  sampleType: "sewing" | "fabric" | "fabric_and_sewing" | null;
 }
 
 export const toCreateCustomOrderInput = (
@@ -87,6 +88,7 @@ export const toCreateCustomOrderInput = (
   referenceImageUrls: normalizeReferenceImageUrls(input.referenceImageUrls),
   additionalNotes: input.additionalNotes.trim(),
   sample: normalizeBoolean(input.sample),
+  sampleType: normalizeEnum(input.sampleType, ["sewing", "fabric", "fabric_and_sewing"]),
 });
 
 export const toCreateCustomOrderInputDto = (
@@ -116,4 +118,5 @@ export const toCreateCustomOrderInputDto = (
   reference_image_urls: normalizeReferenceImageUrls(request.referenceImageUrls),
   additional_notes: request.additionalNotes,
   sample: request.sample,
+  sample_type: request.sampleType,
 });

@@ -8,7 +8,7 @@ import type { CreateCustomOrderOptionsDtoSnakeCase } from "@/features/custom-ord
 
 type OrderOptionsForMapping = Omit<
   OrderOptions,
-  "referenceImages" | "additionalNotes" | "sample"
+  "referenceImages" | "additionalNotes" | "sample" | "sampleType"
 >;
 
 const normalizeReferenceImageUrls = (urls: string[]): string[] => {
