@@ -156,6 +156,7 @@ const ReformPage = () => {
   }, [uploadAndGetTies, setOrderItems, navigate]);
 
   const handleDirectOrder = async () => {
+    if (isUploading) return;
     const validation = validateTies();
     if (!validation.isValid) {
       confirm(validation.message || "입력값을 확인해주세요.");
@@ -171,6 +172,7 @@ const ReformPage = () => {
   };
 
   const handleMobileOrder = async () => {
+    if (isUploading) return;
     const validation = validateTies();
     if (!validation.isValid) {
       confirm(validation.message || "입력값을 확인해주세요.");
@@ -181,6 +183,7 @@ const ReformPage = () => {
   };
 
   const handleAddToCart = async () => {
+    if (isUploading) return;
     const validation = validateTies();
     if (!validation.isValid) {
       confirm(validation.message || "입력값을 확인해주세요.");

@@ -328,7 +328,7 @@ export default function ShopDetailPage() {
                 {isProductSoldOut && (
                   <Badge variant="destructive">품절</Badge>
                 )}
-                {product.stock != null && product.stock > 0 && product.stock <= 5 && (
+                {!hasOptions && product.stock != null && product.stock > 0 && product.stock <= 5 && (
                   <Badge variant="secondary">{product.stock}개 남음</Badge>
                 )}
 

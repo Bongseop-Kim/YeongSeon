@@ -16,7 +16,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     : product.stock === 0;
 
   const handleClick = () => {
-    if (isSoldOut) return;
     navigate(`${ROUTES.SHOP}/${product.id}`);
   };
 
