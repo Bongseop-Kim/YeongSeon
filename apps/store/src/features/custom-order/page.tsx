@@ -29,7 +29,8 @@ import { SAMPLE_COST } from "./constants/SAMPLE_PRICING";
 
 import { useWizardStep } from "./hooks/useWizardStep";
 import { useWizardDraft } from "./hooks/useWizardDraft";
-import { WizardLayout } from "./components/wizard/WizardLayout";
+import { TwoPanelLayout } from "@/components/layout/two-panel-layout";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ProgressBar } from "./components/wizard/ProgressBar";
 import { StepNavigation } from "./components/wizard/StepNavigation";
 import { StickySummary } from "./components/wizard/StickySummary";
@@ -85,6 +86,7 @@ const OrderPage = () => {
   const createQuoteRequest = useCreateQuoteRequest();
   const imageUpload = useImageUpload();
   const draft = useWizardDraft();
+  const { isMobile } = useBreakpoint();
 
   const [selectedPackage, setSelectedPackage] = useState<PackagePreset | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
@@ -438,29 +440,56 @@ const OrderPage = () => {
     <MainLayout>
       <MainContent className="overflow-visible">
         <Form {...form}>
-          <WizardLayout
-            progressBar={
-              <ProgressBar
-                steps={wizard.steps}
-                currentStepIndex={wizard.currentStepIndex}
-                visitedSteps={wizard.visitedSteps}
-                shouldShowStep={wizard.shouldShowStep}
-                onStepClick={wizard.goToStep}
-              />
+          <TwoPanelLayout
+            leftPanel={
+              <>
+                <ProgressBar
+                  steps={wizard.steps}
+                  currentStepIndex={wizard.currentStepIndex}
+                  visitedSteps={wizard.visitedSteps}
+                  shouldShowStep={wizard.shouldShowStep}
+                  onStepClick={wizard.goToStep}
+                />
+                {wizard.currentStep.id === "quantity" && (
+                  <QuantityStep
+                    isLoggedIn={isLoggedIn}
+                    selectedPackage={selectedPackage}
+                    onSelectPackage={handleSelectPackage}
+                  />
+                )}
+                {wizard.currentStep.id === "fabric" && <FabricStep />}
+                {wizard.currentStep.id === "sewing" && <SewingStep />}
+                {wizard.currentStep.id === "spec" && <SpecStep />}
+                {wizard.currentStep.id === "finishing" && <FinishingStep />}
+                {wizard.currentStep.id === "sample" && <SampleOptionStep />}
+                {wizard.currentStep.id === "attachment" && (
+                  <AttachmentStep imageUpload={imageUpload} />
+                )}
+                {wizard.currentStep.id === "confirm" && (
+                  <ConfirmStep
+                    selectedAddress={selectedAddress}
+                    onOpenShippingPopup={() =>
+                      openPopup(`${ROUTES.SHIPPING}?mode=select`)
+                    }
+                    imageUpload={imageUpload}
+                    goToStepById={goToStepById}
+                  />
+                )}
+                {!isMobile && (
+                  <StepNavigation
+                    isFirstStep={wizard.isFirstStep}
+                    isLastStep={wizard.isLastStep}
+                    isQuoteMode={isQuoteMode}
+                    isPending={isPending}
+                    isSubmitDisabled={isSubmitDisabled}
+                    onPrev={wizard.goPrev}
+                    onNext={handleNext}
+                    onSubmit={handleSubmit}
+                  />
+                )}
+              </>
             }
-            navigation={
-              <StepNavigation
-                isFirstStep={wizard.isFirstStep}
-                isLastStep={wizard.isLastStep}
-                isQuoteMode={isQuoteMode}
-                isPending={isPending}
-                isSubmitDisabled={isSubmitDisabled}
-                onPrev={wizard.goPrev}
-                onNext={handleNext}
-                onSubmit={handleSubmit}
-              />
-            }
-            summary={
+            rightPanel={
               <StickySummary
                 options={watchedValues}
                 totalCost={totalCost}
@@ -469,7 +498,16 @@ const OrderPage = () => {
                 isLoggedIn={isLoggedIn}
               />
             }
-            mobileBottomBar={
+            rightPanelClassName={isMobile ? "pb-24" : ""}
+          />
+          {isMobile && (
+            <div
+              className="z-30 fixed bottom-0 left-0 right-0 px-4 bg-white pt-3 border-t"
+              style={{
+                paddingBottom:
+                  "calc(0.5rem + env(safe-area-inset-bottom, 0))",
+              }}
+            >
               <div className="space-y-2">
                 {!wizard.isLastStep && (
                   <div className="flex items-center justify-between text-sm mb-2">
@@ -534,34 +572,8 @@ const OrderPage = () => {
                   </div>
                 )}
               </div>
-            }
-          >
-            {wizard.currentStep.id === "quantity" && (
-              <QuantityStep
-                isLoggedIn={isLoggedIn}
-                selectedPackage={selectedPackage}
-                onSelectPackage={handleSelectPackage}
-              />
-            )}
-            {wizard.currentStep.id === "fabric" && <FabricStep />}
-            {wizard.currentStep.id === "sewing" && <SewingStep />}
-            {wizard.currentStep.id === "spec" && <SpecStep />}
-            {wizard.currentStep.id === "finishing" && <FinishingStep />}
-            {wizard.currentStep.id === "sample" && <SampleOptionStep />}
-            {wizard.currentStep.id === "attachment" && (
-              <AttachmentStep imageUpload={imageUpload} />
-            )}
-            {wizard.currentStep.id === "confirm" && (
-              <ConfirmStep
-                selectedAddress={selectedAddress}
-                onOpenShippingPopup={() =>
-                  openPopup(`${ROUTES.SHIPPING}?mode=select`)
-                }
-                imageUpload={imageUpload}
-                goToStepById={goToStepById}
-              />
-            )}
-          </WizardLayout>
+            </div>
+          )}
         </Form>
       </MainContent>
     </MainLayout>
