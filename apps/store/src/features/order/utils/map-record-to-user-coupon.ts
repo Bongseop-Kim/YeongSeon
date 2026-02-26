@@ -1,5 +1,5 @@
-import type { UserCoupon } from "@yeongseon/shared/types/view/coupon";
-import type { UserCouponRecord } from "@/features/order/types/coupon-record";
+import type { UserCoupon, UserCouponStatus } from "@yeongseon/shared/types/view/coupon";
+import type { UserCouponRecord, CouponRecord } from "@/features/order/types/coupon-record";
 import { mapRecordToCoupon } from "./map-record-to-coupon";
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -15,19 +15,37 @@ export const parseUserCouponRecords = (
   if (!Array.isArray(data)) {
     throw new Error("쿠폰 조회 응답이 올바르지 않습니다: 배열이 아닙니다.");
   }
-  for (let i = 0; i < data.length; i++) {
-    const row: unknown = data[i];
+  return data.map((row: unknown, i: number): UserCouponRecord => {
+    if (!isRecord(row)) {
+      throw new Error(`쿠폰 조회 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`);
+    }
     if (
-      !isRecord(row) ||
       typeof row.id !== "string" ||
-      typeof row.coupon_id !== "string"
+      typeof row.user_id !== "string" ||
+      typeof row.coupon_id !== "string" ||
+      typeof row.status !== "string" ||
+      typeof row.issued_at !== "string"
     ) {
       throw new Error(
-        `쿠폰 조회 행(${i})이 올바르지 않습니다: 필수 필드(id, coupon_id) 누락.`
+        `쿠폰 조회 행(${i})이 올바르지 않습니다: 필수 필드(id, user_id, coupon_id, status, issued_at) 누락.`
       );
     }
-  }
-  return data as UserCouponRecord[];
+    if (row.coupon != null && typeof row.coupon !== "object") {
+      throw new Error(
+        `쿠폰 조회 행(${i})이 올바르지 않습니다: coupon이 올바른 객체가 아닙니다.`
+      );
+    }
+    return {
+      id: row.id,
+      user_id: row.user_id,
+      coupon_id: row.coupon_id,
+      status: row.status as UserCouponStatus,
+      issued_at: row.issued_at,
+      expires_at: typeof row.expires_at === "string" ? row.expires_at : null,
+      used_at: typeof row.used_at === "string" ? row.used_at : null,
+      coupon: (row.coupon ?? null) as CouponRecord | null,
+    };
+  });
 };
 
 export const mapRecordToUserCoupon = (record: UserCouponRecord): UserCoupon => {

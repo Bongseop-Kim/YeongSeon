@@ -22,24 +22,46 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
   if (!Array.isArray(data)) {
     throw new Error("클레임 목록 응답이 올바르지 않습니다: 배열이 아닙니다.");
   }
-  for (let i = 0; i < data.length; i++) {
-    const row: unknown = data[i];
+  return data.map((row: unknown, i: number): ClaimListRowDTO => {
+    if (!isRecord(row)) {
+      throw new Error(`클레임 목록 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`);
+    }
     if (
-      !isRecord(row) ||
       typeof row.id !== "string" ||
-      typeof row.claimNumber !== "string"
+      typeof row.claimNumber !== "string" ||
+      typeof row.date !== "string" ||
+      typeof row.status !== "string" ||
+      typeof row.type !== "string" ||
+      typeof row.reason !== "string" ||
+      typeof row.claimQuantity !== "number" ||
+      typeof row.orderId !== "string" ||
+      typeof row.orderNumber !== "string" ||
+      typeof row.orderDate !== "string"
     ) {
       throw new Error(
-        `클레임 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, claimNumber) 누락.`
+        `클레임 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, claimNumber, date, status, type, reason, claimQuantity, orderId, orderNumber, orderDate) 누락.`
       );
     }
-    if (!isRecord(row.item)) {
+    if (row.item == null || typeof row.item !== "object") {
       throw new Error(
         `클레임 목록 행(${i})이 올바르지 않습니다: item 객체 누락.`
       );
     }
-  }
-  return data as ClaimListRowDTO[];
+    return {
+      id: row.id,
+      claimNumber: row.claimNumber,
+      date: row.date,
+      status: row.status as ClaimListRowDTO["status"],
+      type: row.type as ClaimListRowDTO["type"],
+      reason: row.reason,
+      description: typeof row.description === "string" ? row.description : null,
+      claimQuantity: row.claimQuantity,
+      orderId: row.orderId,
+      orderNumber: row.orderNumber,
+      orderDate: row.orderDate,
+      item: row.item as ClaimListRowDTO["item"],
+    };
+  });
 };
 
 export const parseCreateClaimResult = (

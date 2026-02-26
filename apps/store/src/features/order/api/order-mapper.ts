@@ -6,6 +6,7 @@ import type {
   OrderViewDTO,
   OrderListRowDTO,
   OrderDetailRowDTO,
+  OrderStatusDTO,
 } from "@yeongseon/shared/types/dto/order-view";
 import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-output";
 import type { Order } from "@yeongseon/shared/types/view/order";
@@ -121,19 +122,31 @@ export const parseOrderListRows = (data: unknown): OrderListRowDTO[] => {
   if (!Array.isArray(data)) {
     throw new Error("주문 목록 응답이 올바르지 않습니다: 배열이 아닙니다.");
   }
-  for (let i = 0; i < data.length; i++) {
-    const row: unknown = data[i];
+  return data.map((row: unknown, i: number): OrderListRowDTO => {
+    if (!isRecord(row)) {
+      throw new Error(`주문 목록 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`);
+    }
     if (
-      !isRecord(row) ||
       typeof row.id !== "string" ||
-      typeof row.orderNumber !== "string"
+      typeof row.orderNumber !== "string" ||
+      typeof row.date !== "string" ||
+      typeof row.status !== "string" ||
+      typeof row.totalPrice !== "number" ||
+      typeof row.created_at !== "string"
     ) {
       throw new Error(
-        `주문 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, orderNumber) 누락.`
+        `주문 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, orderNumber, date, status, totalPrice, created_at) 누락.`
       );
     }
-  }
-  return data as OrderListRowDTO[];
+    return {
+      id: row.id,
+      orderNumber: row.orderNumber,
+      date: row.date,
+      status: row.status as OrderStatusDTO,
+      totalPrice: row.totalPrice,
+      created_at: row.created_at,
+    };
+  });
 };
 
 export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
@@ -141,15 +154,18 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
   if (!Array.isArray(data)) {
     throw new Error("주문 상품 응답이 올바르지 않습니다: 배열이 아닙니다.");
   }
-  for (let i = 0; i < data.length; i++) {
-    const row: unknown = data[i];
+  return data.map((row: unknown, i: number): OrderItemRowDTO => {
+    if (!isRecord(row)) {
+      throw new Error(`주문 상품 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`);
+    }
     if (
-      !isRecord(row) ||
       typeof row.id !== "string" ||
-      typeof row.order_id !== "string"
+      typeof row.order_id !== "string" ||
+      typeof row.quantity !== "number" ||
+      typeof row.created_at !== "string"
     ) {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: 필수 필드(id, order_id) 누락.`
+        `주문 상품 행(${i})이 올바르지 않습니다: 필수 필드(id, order_id, quantity, created_at) 누락.`
       );
     }
     if (row.type !== "product" && row.type !== "reform") {
@@ -157,25 +173,56 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "product" 또는 "reform"이 아닙니다.`
       );
     }
-  }
-  return data as OrderItemRowDTO[];
+    return {
+      order_id: row.order_id,
+      id: row.id,
+      type: row.type,
+      product: (row.product ?? null) as OrderItemRowDTO["product"],
+      selectedOption: (row.selectedOption ?? null) as OrderItemRowDTO["selectedOption"],
+      quantity: row.quantity,
+      reformData: (row.reformData ?? null) as OrderItemRowDTO["reformData"],
+      appliedCoupon: (row.appliedCoupon ?? null) as OrderItemRowDTO["appliedCoupon"],
+      created_at: row.created_at,
+    };
+  });
 };
 
 export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
-  if (typeof data !== "object" || data === null) {
+  if (!isRecord(data)) {
     throw new Error("주문 상세 응답이 올바르지 않습니다: 객체가 아닙니다.");
   }
-  const d = data as Record<string, unknown>;
   if (
-    typeof d.id !== "string" ||
-    typeof d.orderNumber !== "string"
+    typeof data.id !== "string" ||
+    typeof data.orderNumber !== "string" ||
+    typeof data.date !== "string" ||
+    typeof data.status !== "string" ||
+    typeof data.totalPrice !== "number" ||
+    typeof data.created_at !== "string"
   ) {
     throw new Error(
-      "주문 상세 응답이 올바르지 않습니다: 필수 필드(id, orderNumber) 누락."
+      "주문 상세 응답이 올바르지 않습니다: 필수 필드(id, orderNumber, date, status, totalPrice, created_at) 누락."
     );
   }
-  // data는 object로 좁혀져 있어 OrderDetailRowDTO로 캐스트 가능
-  return data as OrderDetailRowDTO;
+  const str = (v: unknown): string | null =>
+    typeof v === "string" ? v : null;
+  return {
+    id: data.id,
+    orderNumber: data.orderNumber,
+    date: data.date,
+    status: data.status as OrderStatusDTO,
+    totalPrice: data.totalPrice,
+    courierCompany: str(data.courierCompany),
+    trackingNumber: str(data.trackingNumber),
+    shippedAt: str(data.shippedAt),
+    created_at: data.created_at,
+    recipientName: str(data.recipientName),
+    recipientPhone: str(data.recipientPhone),
+    shippingAddress: str(data.shippingAddress),
+    shippingAddressDetail: str(data.shippingAddressDetail),
+    shippingPostalCode: str(data.shippingPostalCode),
+    deliveryMemo: str(data.deliveryMemo),
+    deliveryRequest: str(data.deliveryRequest),
+  };
 };
 
 // ── row → DTO 변환 ──────────────────────────────────

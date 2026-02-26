@@ -7,6 +7,9 @@ import type {
 
 /**
  * DB 레코드 → ShippingAddress (View)
+ *
+ * View 타입은 optional 필드(`?: string`)이므로 falsy → undefined 변환.
+ * DB 레코드(`string | null`)와 View optional 필드의 의미 차이를 반영한다.
  */
 export const toShippingAddressView = (
   record: ShippingAddressRecord
@@ -24,6 +27,8 @@ export const toShippingAddressView = (
 
 /**
  * CreateShippingAddressData (View) → insert record
+ *
+ * DB 레코드는 `string | null` 컬럼이므로 falsy → null 변환.
  */
 export const toCreateShippingAddressRecord = (
   userId: string,
