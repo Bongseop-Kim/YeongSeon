@@ -8,6 +8,7 @@ interface ProductActionButtonsProps {
   onLikeToggle: () => void;
   onAddToCart: () => void;
   onOrder: () => void;
+  disabled?: boolean;
 }
 
 export function ProductActionButtons({
@@ -16,6 +17,7 @@ export function ProductActionButtons({
   onLikeToggle,
   onAddToCart,
   onOrder,
+  disabled,
 }: ProductActionButtonsProps) {
   const { isMobile } = useBreakpoint();
 
@@ -34,8 +36,8 @@ export function ProductActionButtons({
             <span className="text-xs text-zinc-600 -mt-1">{likes}</span>
           </div>
         </Button>
-        <Button type="button" onClick={onOrder} size="xl" className="flex-1">
-          구매하기
+        <Button type="button" onClick={onOrder} size="xl" className="flex-1" disabled={disabled}>
+          {disabled ? "품절" : "구매하기"}
         </Button>
       </div>
     );
@@ -62,11 +64,12 @@ export function ProductActionButtons({
         size="xl"
         onClick={onAddToCart}
         className="flex-1"
+        disabled={disabled}
       >
-        장바구니
+        {disabled ? "품절" : "장바구니"}
       </Button>
-      <Button type="button" onClick={onOrder} size="xl" className="flex-1">
-        주문하기
+      <Button type="button" onClick={onOrder} size="xl" className="flex-1" disabled={disabled}>
+        {disabled ? "품절" : "주문하기"}
       </Button>
     </div>
   );

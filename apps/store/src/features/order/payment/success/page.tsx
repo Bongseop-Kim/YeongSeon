@@ -4,7 +4,8 @@ import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { confirmPayment } from "@/features/order/api/payment-api";
 import { useOrderStore } from "@/store/order";
-import { useCartItems, useSetCartItems, cartKeys } from "@/features/cart/api/cart-query";
+import { cartKeys } from "@/features/cart/api/cart-query";
+import { removeCartItemsByIds } from "@/features/cart/api/cart-api";
 import { useAuthStore } from "@/store/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
@@ -15,8 +16,6 @@ const PaymentSuccessPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { items: orderItems, clearOrderItems } = useOrderStore();
-  const { data: cartItems = [] } = useCartItems();
-  const setCartItems = useSetCartItems();
   const { user } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const processedRef = useRef(false);
@@ -49,25 +48,16 @@ const PaymentSuccessPage = () => {
         });
 
         // 2. 장바구니에서 주문한 아이템 제거
-        const orderedItemIds = new Set(orderItems.map((item) => item.id));
-        const remainingCartItems = cartItems.filter(
-          (cartItem) => !orderedItemIds.has(cartItem.id)
-        );
-
-        if (cartItems.length > remainingCartItems.length) {
+        if (user?.id) {
           try {
-            await setCartItems.mutateAsync(remainingCartItems);
-            if (user?.id) {
-              queryClient.setQueryData(
-                cartKeys.items(user.id),
-                remainingCartItems
-              );
-              await queryClient.invalidateQueries({
-                queryKey: cartKeys.items(user.id),
-              });
-            }
-          } catch {
+            const orderedItemIds = orderItems.map((item) => item.id);
+            await removeCartItemsByIds(user.id, orderedItemIds);
+            await queryClient.invalidateQueries({
+              queryKey: cartKeys.items(user.id),
+            });
+          } catch (cartErr) {
             // 장바구니 업데이트 실패는 주문 실패로 처리하지 않음
+            console.warn("장바구니 아이템 제거 실패:", cartErr);
           }
         }
 

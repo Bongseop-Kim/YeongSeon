@@ -210,13 +210,13 @@ export default function OrderShow() {
   });
   const order = queryResult?.data?.data;
 
-  const { result: itemsResult } = useList<AdminOrderItemRowDTO>({
+  const { result: itemsData } = useList<AdminOrderItemRowDTO>({
     resource: "admin_order_item_view",
     filters: [{ field: "orderId", operator: "eq", value: order?.id }],
     queryOptions: { enabled: !!order?.id },
   });
 
-  const { result: logsResult } = useList<OrderStatusLogDTO>({
+  const { result: logsData } = useList<OrderStatusLogDTO>({
     resource: "admin_order_status_log_view",
     filters: [
       { field: "orderId", operator: "eq", value: order?.id },
@@ -225,7 +225,7 @@ export default function OrderShow() {
     queryOptions: { enabled: !!order?.id },
   });
 
-  const { result: defaultCourierSetting } = useOne<AdminSettingRowDTO>({
+  const { result: courierSettingData } = useOne<AdminSettingRowDTO>({
     resource: "admin_settings",
     id: "default_courier_company",
     meta: { idColumnName: "key" },
@@ -245,7 +245,7 @@ export default function OrderShow() {
       if (courierCompany === "") {
         setCourierCompany(
           order.courierCompany ??
-            defaultCourierSetting?.value ??
+            courierSettingData?.value ??
             ""
         );
       }
@@ -253,7 +253,7 @@ export default function OrderShow() {
         setTrackingNumber(order.trackingNumber ?? "");
       }
     }
-  }, [order, defaultCourierSetting, courierCompany, trackingNumber]);
+  }, [order, courierSettingData, courierCompany, trackingNumber]);
 
   const orderType: OrderType = order?.orderType ?? "sale";
   const statusFlow = ORDER_STATUS_FLOW[orderType];
@@ -486,11 +486,11 @@ export default function OrderShow() {
       </Space>
 
       {orderType === "custom" && (
-        <CustomOrderDetail items={itemsResult.data ?? []} />
+        <CustomOrderDetail items={itemsData?.data ?? []} />
       )}
 
       {orderType === "repair" && (
-        <RepairOrderDetail items={itemsResult.data ?? []} />
+        <RepairOrderDetail items={itemsData?.data ?? []} />
       )}
 
       <Title level={5}>배송지 정보</Title>
@@ -562,7 +562,7 @@ export default function OrderShow() {
 
       <Title level={5}>주문 아이템</Title>
       <Table
-        dataSource={itemsResult.data}
+        dataSource={itemsData?.data}
         rowKey="id"
         pagination={false}
       >
@@ -612,7 +612,7 @@ export default function OrderShow() {
 
       <Title level={5}>상태 변경 이력</Title>
       <Table
-        dataSource={logsResult?.data}
+        dataSource={logsData?.data}
         rowKey="id"
         pagination={false}
         style={{ marginBottom: 24 }}

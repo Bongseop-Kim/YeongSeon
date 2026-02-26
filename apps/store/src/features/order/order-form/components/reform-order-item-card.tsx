@@ -22,9 +22,17 @@ export function ReformOrderItemCard({
   return (
     <CardContent>
       <div className="flex gap-4">
-        {/* 수선 아이콘 */}
+        {/* 수선 이미지 또는 아이콘 */}
         <div className="w-24 h-24 flex-shrink-0 bg-zinc-100 rounded-sm overflow-hidden flex items-center justify-center">
-          <Package className="w-12 h-12 text-zinc-400" />
+          {typeof item.reformData.tie.image === "string" ? (
+            <img
+              src={item.reformData.tie.image}
+              alt="넥타이"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Package className="w-12 h-12 text-zinc-400" />
+          )}
         </div>
 
         {/* 수선 정보 */}

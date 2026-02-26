@@ -1,5 +1,5 @@
 import { List, useTable } from "@refinedev/antd";
-import { Table, Image, Select, Space } from "antd";
+import { Table, Image, Select, Space, Tag } from "antd";
 import { useNavigation } from "@refinedev/core";
 
 const CATEGORY_OPTIONS = [
@@ -63,6 +63,15 @@ export default function ProductList() {
           dataIndex="price"
           title="가격"
           render={(v: number) => `${v?.toLocaleString()}원`}
+        />
+        <Table.Column
+          dataIndex="stock"
+          title="재고"
+          render={(v: number | null) => {
+            if (v == null) return <Tag>무제한</Tag>;
+            if (v === 0) return <Tag color="red">품절</Tag>;
+            return v;
+          }}
         />
       </Table>
     </List>

@@ -2,6 +2,7 @@ export interface ProductOption {
   id: string;
   name: string;
   additionalPrice: number;
+  stock?: number | null;
 }
 
 export interface Product {
@@ -19,6 +20,7 @@ export interface Product {
   likes: number;
   isLiked?: boolean;
   info: string;
+  stock?: number | null;
   options?: ProductOption[];
 }
 

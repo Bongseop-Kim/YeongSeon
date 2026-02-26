@@ -169,6 +169,35 @@ begin
 end;
 $_$;
 
+-- ── remove_cart_items_by_ids ──────────────────────────────────
+CREATE OR REPLACE FUNCTION public.remove_cart_items_by_ids(
+  p_user_id uuid,
+  p_item_ids text[]
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+begin
+  if auth.uid() is null or p_user_id is null then
+    raise exception 'unauthorized: authentication required';
+  end if;
+
+  if p_user_id is distinct from auth.uid() then
+    raise exception 'unauthorized: cart can only be modified for the current user';
+  end if;
+
+  if p_item_ids is null or cardinality(p_item_ids) = 0 then
+    return;
+  end if;
+
+  delete from cart_items
+  where user_id = p_user_id
+    and item_id = any(p_item_ids);
+end;
+$$;
+
 -- ── get_cart_items ───────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.get_cart_items(p_user_id uuid, p_active_only boolean DEFAULT true)
 RETURNS SETOF jsonb
@@ -292,6 +321,8 @@ declare
   v_discount_remainder integer;
   v_option_additional_price integer;
   v_line_discount_total integer;
+  v_product_stock integer;
+  v_option_stock integer;
 
   v_original_price integer := 0;
   v_total_discount integer := 0;
@@ -352,25 +383,47 @@ begin
         raise exception 'Product id is required';
       end if;
 
-      select p.price
-      into v_unit_price
+      select p.price, p.stock
+      into v_unit_price, v_product_stock
       from products p
-      where p.id = v_product_id;
+      where p.id = v_product_id
+      for update;
 
       if not found then
         raise exception 'Product not found';
       end if;
 
       if v_selected_option_id is not null then
-        select coalesce(po.additional_price, 0)
-        into v_option_additional_price
+        select coalesce(po.additional_price, 0), po.stock
+        into v_option_additional_price, v_option_stock
         from product_options po
         where po.product_id = v_product_id
           and po.option_id = v_selected_option_id
-        limit 1;
+        for update;
 
         if not found then
           raise exception 'Selected option not found';
+        end if;
+
+        -- Check option stock
+        if v_option_stock is not null then
+          if v_option_stock < v_quantity then
+            raise exception 'Insufficient stock for option';
+          end if;
+          update product_options
+          set stock = stock - v_quantity
+          where product_id = v_product_id
+            and option_id = v_selected_option_id;
+        end if;
+      else
+        -- No option selected: check product-level stock
+        if v_product_stock is not null then
+          if v_product_stock < v_quantity then
+            raise exception 'Insufficient stock';
+          end if;
+          update products
+          set stock = stock - v_quantity
+          where id = v_product_id;
         end if;
       end if;
 
@@ -898,7 +951,8 @@ CREATE OR REPLACE FUNCTION public.create_custom_order_txn(
   p_quantity integer,
   p_reference_image_urls text[] DEFAULT '{}'::text[],
   p_additional_notes text DEFAULT '',
-  p_sample boolean DEFAULT false
+  p_sample boolean DEFAULT false,
+  p_sample_type text DEFAULT null
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -917,6 +971,15 @@ begin
   v_user_id := auth.uid();
   if v_user_id is null then
     raise exception 'Unauthorized';
+  end if;
+
+  -- p_sample / p_sample_type 정합성 검증
+  if p_sample is not true and p_sample_type is not null then
+    raise exception 'p_sample_type must be null when p_sample is not true';
+  end if;
+
+  if p_sample is true and (p_sample_type is null or trim(p_sample_type) = '') then
+    raise exception 'p_sample_type is required when p_sample is true';
   end if;
 
   if p_shipping_address_id is null then
@@ -973,6 +1036,7 @@ begin
     'reference_image_urls', to_jsonb(coalesce(p_reference_image_urls, '{}'::text[])),
     'additional_notes', coalesce(p_additional_notes, ''),
     'sample', coalesce(p_sample, false),
+    'sample_type', p_sample_type,
     'pricing', jsonb_build_object(
       'sewing_cost', v_sewing_cost,
       'fabric_cost', v_fabric_cost,

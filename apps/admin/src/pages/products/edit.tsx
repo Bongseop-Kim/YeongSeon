@@ -23,7 +23,7 @@ export default function ProductEdit() {
     onMutationSuccess: async () => {
       const productId = Number(id);
       const options = form.getFieldValue("options") as
-        | { option_id: string; name: string; additional_price: number }[]
+        | { option_id: string; name: string; additional_price: number; stock?: number | null }[]
         | undefined;
 
       // Replace pattern: delete existing → insert new
@@ -39,6 +39,7 @@ export default function ProductEdit() {
             option_id: opt.option_id,
             name: opt.name,
             additional_price: opt.additional_price ?? 0,
+            stock: opt.stock ?? null,
           }))
         );
       }
@@ -47,24 +48,25 @@ export default function ProductEdit() {
     },
   });
 
-  const { result: optionsResult } = useList({
+  const { result: optionsData } = useList({
     resource: "product_options",
     filters: [{ field: "product_id", operator: "eq", value: id }],
     queryOptions: { enabled: !!id },
   });
 
   useEffect(() => {
-    if (optionsResult.data?.length) {
+    if (optionsData?.data?.length) {
       form.setFieldValue(
         "options",
-        optionsResult.data.map((opt) => ({
-          option_id: opt.option_id,
-          name: opt.name,
-          additional_price: opt.additional_price,
+        optionsData.data.map((opt) => ({
+          option_id: String(opt.option_id ?? ""),
+          name: String(opt.name ?? ""),
+          additional_price: Number(opt.additional_price ?? 0),
+          stock: opt.stock != null ? Number(opt.stock) : null,
         }))
       );
     }
-  }, [optionsResult.data, form]);
+  }, [optionsData?.data, form]);
 
   // Reset image initialization when product id changes
   useEffect(() => {
@@ -115,8 +117,8 @@ export default function ProductEdit() {
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical" onFinish={handleFinish}>
-        <Form.Item label="코드" name="code" rules={[{ required: true }]}>
-          <Input />
+        <Form.Item label="코드" name="code">
+          <Input disabled />
         </Form.Item>
         <Form.Item label="상품명" name="name" rules={[{ required: true }]}>
           <Input />
@@ -151,6 +153,9 @@ export default function ProductEdit() {
         <Form.Item label="상품 정보" name="info" rules={[{ required: true }]}>
           <Input.TextArea rows={4} />
         </Form.Item>
+        <Form.Item label="재고" name="stock" tooltip="비워두면 무제한">
+          <InputNumber min={0} style={{ width: "100%" }} placeholder="비워두면 무제한" />
+        </Form.Item>
 
         <Card title="옵션" size="small" style={{ marginBottom: 24 }}>
           <Form.List name="options">
@@ -171,6 +176,9 @@ export default function ProductEdit() {
                     </Form.Item>
                     <Form.Item {...restField} name={[name, "additional_price"]}>
                       <InputNumber placeholder="추가금액" min={0} />
+                    </Form.Item>
+                    <Form.Item {...restField} name={[name, "stock"]}>
+                      <InputNumber placeholder="재고 (무제한)" min={0} />
                     </Form.Item>
                     <MinusCircleOutlined onClick={() => remove(name)} />
                   </Space>

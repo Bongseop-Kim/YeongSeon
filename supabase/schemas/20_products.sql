@@ -7,7 +7,7 @@ CREATE SEQUENCE IF NOT EXISTS public.products_id_seq
 
 CREATE TABLE IF NOT EXISTS public.products (
   id            integer      NOT NULL DEFAULT nextval('public.products_id_seq'::regclass),
-  code          varchar(255) NOT NULL,
+  code          varchar(255),
   name          varchar(255) NOT NULL,
   price         integer      NOT NULL,
   image         text         NOT NULL,
@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   created_at    timestamptz  NOT NULL DEFAULT now(),
   updated_at    timestamptz  NOT NULL DEFAULT now(),
   detail_images text[],
+  stock         integer,
 
   CONSTRAINT products_pkey PRIMARY KEY (id),
   CONSTRAINT products_code_key UNIQUE (code),
@@ -31,7 +32,9 @@ CREATE TABLE IF NOT EXISTS public.products (
   CONSTRAINT products_pattern_check
     CHECK ((pattern)::text = ANY ((ARRAY['solid'::character varying, 'stripe'::character varying, 'dot'::character varying, 'check'::character varying, 'paisley'::character varying])::text[])),
   CONSTRAINT products_price_check
-    CHECK (price >= 0)
+    CHECK (price >= 0),
+  CONSTRAINT products_stock_check
+    CHECK (stock IS NULL OR stock >= 0)
 );
 
 ALTER SEQUENCE public.products_id_seq OWNED BY public.products.id;
@@ -43,10 +46,16 @@ CREATE INDEX idx_products_material ON public.products USING btree (material);
 CREATE INDEX idx_products_pattern  ON public.products USING btree (pattern);
 CREATE INDEX idx_products_price    ON public.products USING btree (price);
 
--- Trigger
+-- Triggers
 CREATE OR REPLACE TRIGGER update_products_updated_at
   BEFORE UPDATE ON public.products
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER auto_product_code
+  BEFORE INSERT ON public.products
+  FOR EACH ROW
+  WHEN (NEW.code IS NULL OR NEW.code = '')
+  EXECUTE FUNCTION public.auto_generate_product_code();
 
 -- RLS
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;

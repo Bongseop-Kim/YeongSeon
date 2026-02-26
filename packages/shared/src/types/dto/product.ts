@@ -2,6 +2,7 @@ export interface ProductOptionDTO {
   id: string;
   name: string;
   additionalPrice: number;
+  stock?: number | null;
 }
 
 export type ProductCategoryDTO = "3fold" | "sfolderato" | "knit" | "bowtie";
@@ -32,5 +33,6 @@ export interface ProductDTO {
   likes: number;
   isLiked?: boolean;
   info: string;
+  stock?: number | null;
   options?: ProductOptionDTO[];
 }
