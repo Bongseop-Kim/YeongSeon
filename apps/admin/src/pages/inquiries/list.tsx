@@ -39,7 +39,7 @@ export default function InquiryList() {
         {...tableProps}
         rowKey="id"
         onRow={(record) => ({
-          onClick: () => show("inquiries", record.id!),
+          onClick: () => { if (record.id != null) show("inquiries", record.id); },
           style: { cursor: "pointer" },
         })}
       >

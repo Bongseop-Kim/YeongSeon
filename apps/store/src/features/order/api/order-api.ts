@@ -4,16 +4,14 @@ import type {
   CreateOrderResponse,
 } from "@/features/order/types/view/order-input";
 import type { CreateOrderInputDTO } from "@yeongseon/shared/types/dto/order-input";
-import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-output";
-import type {
-  OrderItemRowDTO,
-  OrderListRowDTO,
-  OrderDetailRowDTO,
-  OrderViewDTO,
-} from "@yeongseon/shared/types/dto/order-view";
+import type { OrderViewDTO } from "@yeongseon/shared/types/dto/order-view";
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   fromOrderItemRowDTO,
+  parseCreateOrderResult,
+  parseOrderListRows,
+  parseOrderItemRows,
+  parseOrderDetailRow,
   toOrderItemInputDTO,
   toOrderView,
   toOrderViewFromDetail,
@@ -48,7 +46,7 @@ export const createOrder = async (
     throw new Error("주문 생성 결과를 받을 수 없습니다.");
   }
 
-  const result = orderResult as CreateOrderResultDTO;
+  const result = parseCreateOrderResult(orderResult);
 
   return {
     orderId: result.order_id,
@@ -80,7 +78,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     throw new Error(`주문 목록 조회 실패: ${ordersError.message}`);
   }
 
-  const orderRows = (orders as OrderListRowDTO[] | null) ?? [];
+  const orderRows = parseOrderListRows(orders);
   if (orderRows.length === 0) {
     return [];
   }
@@ -96,7 +94,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     throw new Error(`주문 상품 조회 실패: ${itemsError.message}`);
   }
 
-  const itemRows = (items as OrderItemRowDTO[] | null) ?? [];
+  const itemRows = parseOrderItemRows(items);
   const itemsByOrderId = new Map<string, OrderViewDTO["items"]>();
 
   for (const item of itemRows) {
@@ -163,9 +161,9 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
     throw new Error(`주문 상품 조회 실패: ${itemsError.message}`);
   }
 
-  const itemRows = (items as OrderItemRowDTO[] | null) ?? [];
+  const itemRows = parseOrderItemRows(items);
   const mappedItems: OrderViewDTO["items"] = itemRows.map(fromOrderItemRowDTO);
 
-  const detailRow = order as OrderDetailRowDTO;
+  const detailRow = parseOrderDetailRow(order);
   return toOrderViewFromDetail(detailRow, mappedItems);
 };

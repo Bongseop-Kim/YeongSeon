@@ -3,10 +3,10 @@ import type {
   CreateClaimRequest,
   CreateClaimResponse,
 } from "@yeongseon/shared/types/view/claim-input";
-import type { CreateClaimResultDTO } from "@yeongseon/shared/types/dto/claim-output";
-import type { ClaimListRowDTO } from "@yeongseon/shared/types/dto/claim-view";
 import type { ClaimItem } from "@yeongseon/shared/types/view/claim-item";
 import {
+  parseClaimListRows,
+  parseCreateClaimResult,
   toClaimItemView,
   toCreateClaimInputDTO,
 } from "@/features/order/api/claims-mapper";
@@ -37,7 +37,7 @@ export const getClaims = async (filters?: ListFilters): Promise<ClaimItem[]> => 
     throw new Error(`클레임 목록 조회 실패: ${error.message}`);
   }
 
-  const rows = (data as ClaimListRowDTO[] | null) ?? [];
+  const rows = parseClaimListRows(data);
   const views = rows.map(toClaimItemView);
   const keyword = normalizeKeyword(filters?.keyword);
   if (!keyword) {
@@ -72,7 +72,7 @@ export const createClaim = async (
     throw new Error("클레임 생성 결과를 받을 수 없습니다.");
   }
 
-  const result = data as CreateClaimResultDTO;
+  const result = parseCreateClaimResult(data);
 
   return {
     claimId: result.claim_id,

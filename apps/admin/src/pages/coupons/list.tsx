@@ -17,7 +17,7 @@ export default function CouponList() {
         {...tableProps}
         rowKey="id"
         onRow={(record) => ({
-          onClick: () => edit("coupons", record.id!),
+          onClick: () => { if (record.id != null) edit("coupons", record.id); },
           style: { cursor: "pointer" },
         })}
       >
