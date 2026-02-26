@@ -1,4 +1,4 @@
-import { toast as sonnerToast, type ExternalToast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 
 /**
  * Toast 타입 정의
