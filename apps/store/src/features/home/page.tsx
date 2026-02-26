@@ -13,7 +13,7 @@ const HomePage = () => {
           <NewArrivals />
           <Recommended />
           <div className="w-full py-16 lg:py-24">
-            <div className="px-4 max-w-7xl mx-auto">
+            <div className="px-4">
               <p className="text-center text-sm lg:text-base font-light tracking-wide text-zinc-600 leading-relaxed">
                 minimal, magnetic, and made to be lived in.
                 <br />

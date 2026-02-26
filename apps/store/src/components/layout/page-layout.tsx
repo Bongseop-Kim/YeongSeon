@@ -26,7 +26,6 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
   return (
     <div className={`max-w-7xl mx-auto ${isMobile ? "" : "px-8 pb-4"}`}>
-      {/* Left Panel - Product Info */}
       <div
         className={cn(
           `flex ${isMobile ? "flex-col" : "flex-row gap-8"}`,
