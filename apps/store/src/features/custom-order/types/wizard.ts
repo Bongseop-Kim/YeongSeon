@@ -6,10 +6,9 @@ export type WizardStepId =
   | "sewing"
   | "spec"
   | "finishing"
+  | "sample"
   | "attachment"
-  | "confirm"
-  | "sample-setup"
-  | "sample-confirm";
+  | "confirm";
 
 export interface StepConfig {
   id: WizardStepId;
@@ -20,5 +19,4 @@ export interface StepConfig {
 
 export type SewingStyle = "normal" | "dimple" | "spoderato" | "fold7";
 
-export type OrderPurpose = "order" | "sample";
 export type PackagePreset = "basic" | "recommended" | "premium";

@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { SummaryRow } from "@/features/custom-order/components/SummaryRow";
+import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
@@ -74,6 +75,18 @@ export const ConfirmStep = ({
     values.careLabel && "케어 라벨",
   ].filter(Boolean);
 
+  const sampleTypeLabel = values.sample && values.sampleType
+    ? values.sampleType === "sewing"
+      ? "봉제 샘플"
+      : values.sampleType === "fabric"
+        ? "원단 샘플"
+        : "원단 + 봉제 샘플"
+    : null;
+
+  const sampleCost = values.sample && values.sampleType
+    ? SAMPLE_COST[values.sampleType]
+    : 0;
+
   return (
     <div className="space-y-6">
       <div>
@@ -131,6 +144,16 @@ export const ConfirmStep = ({
                 label="라벨"
                 value={labels.join(", ")}
                 onEdit={() => goToStepById("finishing")}
+              />
+            </>
+          )}
+          {sampleTypeLabel && (
+            <>
+              <Separator />
+              <SummaryRow
+                label="샘플"
+                value={`${sampleTypeLabel} (${sampleCost.toLocaleString()}원)`}
+                onEdit={() => goToStepById("sample")}
               />
             </>
           )}
