@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import type { UseFormGetValues } from "react-hook-form";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { StepConfig } from "@/features/custom-order/types/wizard";
@@ -104,6 +104,13 @@ export const useWizardStep = ({
     },
     [steps.length]
   );
+
+  // steps 배열 변경 시 currentStepIndex가 범위를 벗어나면 자동 보정
+  useEffect(() => {
+    if (currentStepIndex >= steps.length) {
+      setCurrentStepIndex(Math.max(0, steps.length - 1));
+    }
+  }, [steps.length, currentStepIndex]);
 
   const currentStep =
     steps.length > 0 && currentStepIndex >= 0 && currentStepIndex < steps.length

@@ -244,7 +244,7 @@ const OrderPage = () => {
     });
   }, [draft, form, resetTo]);
 
-  // 자동 저장: form values + currentStepIndex 변경 시 1초 debounce
+  // 자동 저장: form values 변경 시 1초 debounce
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const subscription = form.watch((values) => {
@@ -264,6 +264,18 @@ const OrderPage = () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
   }, [form, wizard.currentStepIndex, wizard.visitedSteps, draft, purpose]);
+
+  // 자동 저장: 스텝 이동·목적 변경 시 즉시 저장
+  useEffect(() => {
+    if (!purpose) return;
+    draft.saveDraft({
+      formValues: form.getValues() as QuoteOrderOptions,
+      currentStepIndex: wizard.currentStepIndex,
+      visitedSteps: [...wizard.visitedSteps],
+      savedAt: Date.now(),
+      purpose,
+    });
+  }, [wizard.currentStepIndex, purpose, draft, form, wizard.visitedSteps]);
 
   const handleNext = () => {
     const error = wizard.goNext();

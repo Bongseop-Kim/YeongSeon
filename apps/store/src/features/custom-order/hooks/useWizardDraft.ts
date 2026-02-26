@@ -15,14 +15,18 @@ export interface WizardDraft {
 const isWizardDraft = (obj: unknown): obj is WizardDraft => {
   if (!obj || typeof obj !== "object") return false;
   const d = obj as Record<string, unknown>;
-  return (
-    typeof d.formValues === "object" &&
-    d.formValues !== null &&
-    typeof d.currentStepIndex === "number" &&
-    Array.isArray(d.visitedSteps) && d.visitedSteps.every((s) => typeof s === "number") &&
-    typeof d.savedAt === "number" &&
-    (d.purpose === null || d.purpose === "order" || d.purpose === "sample")
-  );
+  if (
+    typeof d.formValues !== "object" ||
+    d.formValues === null ||
+    typeof d.currentStepIndex !== "number" ||
+    !Array.isArray(d.visitedSteps) || !d.visitedSteps.every((s) => typeof s === "number") ||
+    typeof d.savedAt !== "number" ||
+    (d.purpose !== null && d.purpose !== "order" && d.purpose !== "sample")
+  ) {
+    return false;
+  }
+  const f = d.formValues as Record<string, unknown>;
+  return typeof f.quantity === "number";
 };
 
 export const useWizardDraft = () => {
