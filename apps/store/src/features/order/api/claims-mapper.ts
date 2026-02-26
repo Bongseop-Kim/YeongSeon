@@ -1,6 +1,8 @@
 import type {
   ClaimItemRowDTO,
   ClaimListRowDTO,
+  ClaimStatusDTO,
+  ClaimTypeDTO,
 } from "@yeongseon/shared/types/dto/claim-view";
 import type { CreateClaimInputDTO } from "@yeongseon/shared/types/dto/claim-input";
 import type { CreateClaimResultDTO } from "@yeongseon/shared/types/dto/claim-output";
@@ -16,6 +18,16 @@ import {
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null;
+
+const CLAIM_STATUSES: ReadonlySet<string> = new Set([
+  "접수", "처리중", "수거요청", "수거완료", "재발송", "완료", "거부",
+]);
+const isClaimStatus = (v: string): v is ClaimStatusDTO =>
+  CLAIM_STATUSES.has(v);
+
+const CLAIM_TYPES: ReadonlySet<string> = new Set(["cancel", "return", "exchange"]);
+const isClaimType = (v: string): v is ClaimTypeDTO =>
+  CLAIM_TYPES.has(v);
 
 export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
   if (data == null) return [];
@@ -42,6 +54,16 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
         `클레임 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, claimNumber, date, status, type, reason, claimQuantity, orderId, orderNumber, orderDate) 누락.`
       );
     }
+    if (!isClaimStatus(row.status)) {
+      throw new Error(
+        `클레임 목록 행(${i})이 올바르지 않습니다: status 값(${row.status})이 허용된 상태가 아닙니다.`
+      );
+    }
+    if (!isClaimType(row.type)) {
+      throw new Error(
+        `클레임 목록 행(${i})이 올바르지 않습니다: type 값(${row.type})이 허용된 유형이 아닙니다.`
+      );
+    }
     if (row.item == null || typeof row.item !== "object") {
       throw new Error(
         `클레임 목록 행(${i})이 올바르지 않습니다: item 객체 누락.`
@@ -51,8 +73,8 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
       id: row.id,
       claimNumber: row.claimNumber,
       date: row.date,
-      status: row.status as ClaimListRowDTO["status"],
-      type: row.type as ClaimListRowDTO["type"],
+      status: row.status,
+      type: row.type,
       reason: row.reason,
       description: typeof row.description === "string" ? row.description : null,
       claimQuantity: row.claimQuantity,

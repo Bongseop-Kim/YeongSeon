@@ -62,9 +62,9 @@ export const toUpdateShippingAddressRecord = (
     record.address_detail = data.detailAddress;
   if (data.postalCode !== undefined) record.postal_code = data.postalCode;
   if (data.deliveryRequest !== undefined)
-    record.delivery_request = data.deliveryRequest;
+    record.delivery_request = data.deliveryRequest || null;
   if (data.deliveryMemo !== undefined)
-    record.delivery_memo = data.deliveryMemo;
+    record.delivery_memo = data.deliveryMemo || null;
   if (data.isDefault !== undefined) record.is_default = data.isDefault;
 
   return record;

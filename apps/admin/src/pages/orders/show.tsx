@@ -572,12 +572,13 @@ export default function OrderShow() {
           render={(value: string | null, record: AdminOrderItemRowDTO) => {
             if (record.itemType === "reform") return "리폼 상품";
             if (!value) return "-";
-            if (record.productId) {
+            if (record.productId != null) {
+              const productId = record.productId;
               return (
                 <a
                   onClick={(e) => {
                     e.stopPropagation();
-                    edit("products", record.productId);
+                    edit("products", productId);
                   }}
                   style={{ cursor: "pointer" }}
                 >

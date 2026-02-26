@@ -100,6 +100,12 @@ export const toOrderViewFromDetail = (
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null;
 
+const ORDER_STATUSES: ReadonlySet<string> = new Set([
+  "진행중", "완료", "배송중", "대기중", "취소",
+]);
+const isOrderStatus = (v: string): v is OrderStatusDTO =>
+  ORDER_STATUSES.has(v);
+
 export const parseCreateOrderResult = (
   data: unknown
 ): CreateOrderResultDTO => {
@@ -138,11 +144,16 @@ export const parseOrderListRows = (data: unknown): OrderListRowDTO[] => {
         `주문 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, orderNumber, date, status, totalPrice, created_at) 누락.`
       );
     }
+    if (!isOrderStatus(row.status)) {
+      throw new Error(
+        `주문 목록 행(${i})이 올바르지 않습니다: status 값(${row.status})이 허용된 상태가 아닙니다.`
+      );
+    }
     return {
       id: row.id,
       orderNumber: row.orderNumber,
       date: row.date,
-      status: row.status as OrderStatusDTO,
+      status: row.status,
       totalPrice: row.totalPrice,
       created_at: row.created_at,
     };
@@ -203,13 +214,18 @@ export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
       "주문 상세 응답이 올바르지 않습니다: 필수 필드(id, orderNumber, date, status, totalPrice, created_at) 누락."
     );
   }
+  if (!isOrderStatus(data.status)) {
+    throw new Error(
+      `주문 상세 응답이 올바르지 않습니다: status 값(${data.status})이 허용된 상태가 아닙니다.`
+    );
+  }
   const str = (v: unknown): string | null =>
     typeof v === "string" ? v : null;
   return {
     id: data.id,
     orderNumber: data.orderNumber,
     date: data.date,
-    status: data.status as OrderStatusDTO,
+    status: data.status,
     totalPrice: data.totalPrice,
     courierCompany: str(data.courierCompany),
     trackingNumber: str(data.trackingNumber),
