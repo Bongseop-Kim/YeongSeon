@@ -31,21 +31,25 @@ export const StickySummary = ({
     ? "원단 직접 제공"
     : options.reorder
       ? "재주문"
-      : [
-          options.fabricType === "SILK" ? "실크" : "폴리",
-          options.designType === "YARN_DYED" ? "선염" : "날염",
-        ].join(" · ");
+      : options.fabricType && options.designType
+        ? [
+            options.fabricType === "SILK" ? "실크" : "폴리",
+            options.designType === "YARN_DYED" ? "선염" : "날염",
+          ].join(" · ")
+        : "미선택";
 
-  const sewingLabel = [
-    options.tieType === "AUTO" ? "자동" : "수동",
-    options.dimple
-      ? "딤플"
-      : options.spoderato
-        ? "스포데라토"
-        : options.fold7
-          ? "7폴드"
-          : "일반",
-  ].join(" · ");
+  const sewingLabel = options.tieType
+    ? [
+        options.tieType === "AUTO" ? "자동" : "수동",
+        options.dimple
+          ? "딤플"
+          : options.spoderato
+            ? "스포데라토"
+            : options.fold7
+              ? "7폴드"
+              : "일반",
+      ].join(" · ")
+    : "미선택";
 
   const sampleCost = options.sampleType ? SAMPLE_COST[options.sampleType] : 0;
   const estimatedDays = getEstimatedDays(options, isSampleMode);

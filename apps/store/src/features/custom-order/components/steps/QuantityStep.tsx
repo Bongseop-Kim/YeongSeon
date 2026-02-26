@@ -64,6 +64,7 @@ export const QuantityStep = ({
                 <button
                   key={preset}
                   type="button"
+                  aria-pressed={quantity === preset}
                   onClick={() => handlePresetClick(preset)}
                   className={cn(
                     "px-4 py-2 rounded-full text-sm font-medium transition-colors border",

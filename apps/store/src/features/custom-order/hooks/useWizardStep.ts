@@ -98,10 +98,11 @@ export const useWizardStep = ({
 
   const resetTo = useCallback(
     (stepIndex: number, visited: Set<number>) => {
-      setCurrentStepIndex(stepIndex);
+      const clamped = Math.max(0, Math.min(stepIndex, steps.length - 1));
+      setCurrentStepIndex(clamped);
       setVisitedSteps(visited);
     },
-    []
+    [steps.length]
   );
 
   const currentStep =

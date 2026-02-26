@@ -19,7 +19,7 @@ const isWizardDraft = (obj: unknown): obj is WizardDraft => {
     typeof d.formValues === "object" &&
     d.formValues !== null &&
     typeof d.currentStepIndex === "number" &&
-    Array.isArray(d.visitedSteps) &&
+    Array.isArray(d.visitedSteps) && d.visitedSteps.every((s) => typeof s === "number") &&
     typeof d.savedAt === "number" &&
     (d.purpose === null || d.purpose === "order" || d.purpose === "sample")
   );

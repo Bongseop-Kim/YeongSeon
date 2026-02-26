@@ -13,10 +13,10 @@ interface PackageSelectorProps {
 }
 
 const OPTION_LABELS = {
-  fabricType: (v: OrderOptions["fabricType"]) => (v === "SILK" ? "실크" : "폴리"),
-  designType: (v: OrderOptions["designType"]) => (v === "YARN_DYED" ? "선염" : "날염"),
-  tieType: (v: OrderOptions["tieType"]) => (v === "AUTO" ? "자동 봉제" : "수동 봉제"),
-  interlining: (v: OrderOptions["interlining"]) => (v === "WOOL" ? "울 심지" : "폴리 심지"),
+  fabricType: (v: OrderOptions["fabricType"] | undefined) => (v === "SILK" ? "실크" : "폴리"),
+  designType: (v: OrderOptions["designType"] | undefined) => (v === "YARN_DYED" ? "선염" : "날염"),
+  tieType: (v: OrderOptions["tieType"] | undefined) => (v === "AUTO" ? "자동 봉제" : "수동 봉제"),
+  interlining: (v: OrderOptions["interlining"] | undefined) => (v === "WOOL" ? "울 심지" : "폴리 심지"),
 } as const;
 
 export const PackageSelector = ({

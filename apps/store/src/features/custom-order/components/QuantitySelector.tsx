@@ -4,11 +4,13 @@ import { Label } from "@/components/ui/label";
 import type { Control, FieldValues, Path } from "react-hook-form";
 import { QUANTITY_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
 
-interface QuantitySelectorProps<T extends FieldValues = FieldValues> {
+type HasQuantity = FieldValues & { quantity: number };
+
+interface QuantitySelectorProps<T extends HasQuantity = HasQuantity> {
   control: Control<T>;
 }
 
-export const QuantitySelector = <T extends FieldValues>({ control }: QuantitySelectorProps<T>) => {
+export const QuantitySelector = <T extends HasQuantity>({ control }: QuantitySelectorProps<T>) => {
   return (
     <div>
       <Label className="text-sm font-medium text-zinc-900 mb-2 block">

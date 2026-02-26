@@ -186,6 +186,7 @@ const OrderPage = () => {
   const handleSelectPurpose = (selected: OrderPurpose) => {
     if (purpose !== null && purpose !== selected) {
       form.reset();
+      setSelectedPackage(null);
     }
     setPurpose(selected);
     if (selected === "sample") {
