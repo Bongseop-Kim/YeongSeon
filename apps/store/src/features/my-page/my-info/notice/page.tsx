@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -107,8 +107,7 @@ export default function MyInfoNoticePage() {
   return (
     <MainLayout>
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout>
             <Card>
               <CardHeader className="flex items-center justify-between">
                 <CardTitle>
@@ -187,8 +186,7 @@ export default function MyInfoNoticePage() {
                 </Label>
               </CardContent>
             </Card>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

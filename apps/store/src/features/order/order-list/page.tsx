@@ -1,5 +1,5 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -93,8 +93,7 @@ export default function OrderListPage() {
   return (
     <MainLayout>
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout>
             <div>
               {orders.length === 0 ? (
                 <Card>
@@ -174,8 +173,7 @@ export default function OrderListPage() {
                 ))
               )}
             </div>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

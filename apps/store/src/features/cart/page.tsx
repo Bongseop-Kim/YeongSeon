@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { useModalStore } from "@/store/modal";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { useState, useMemo } from "react";
@@ -228,8 +228,28 @@ const CartPage = () => {
   return (
     <MainLayout>
       <MainContent className="overflow-visible">
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout
+          detail={
+            <div>
+              <CartRecommendationsCard
+                products={similarProducts}
+                isMobile={isMobile}
+              />
+            </div>
+          }
+          sidebar={<CartOrderSummaryCard summary={selectedTotals} />}
+          actionBar={
+            <Button
+              type="button"
+              onClick={handleOrder}
+              size="xl"
+              className="w-full"
+              disabled={selectedItems.length === 0}
+            >
+              주문하기
+            </Button>
+          }
+        >
             <Card>
               <CartSelectionToolbar
                 isAllChecked={isAllChecked}
@@ -262,28 +282,7 @@ const CartPage = () => {
                 onChangeCoupon={handleChangeCoupon}
               />
             </Card>
-          }
-          detail={
-            <div>
-              <CartRecommendationsCard
-                products={similarProducts}
-                isMobile={isMobile}
-              />
-            </div>
-          }
-          rightPanel={<CartOrderSummaryCard summary={selectedTotals} />}
-          button={
-            <Button
-              type="button"
-              onClick={handleOrder}
-              size="xl"
-              className="w-full"
-              disabled={selectedItems.length === 0}
-            >
-              주문하기
-            </Button>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

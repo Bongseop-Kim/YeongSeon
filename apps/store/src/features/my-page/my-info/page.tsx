@@ -1,5 +1,5 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/constants/ROUTES";
@@ -14,8 +14,7 @@ export default function MyInfoPage() {
   return (
     <MainLayout>
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout>
             <Card>
               <CardHeader>
                 <CardTitle>김봉섭</CardTitle>
@@ -51,8 +50,7 @@ export default function MyInfoPage() {
                 </div>
               </CardContent>
             </Card>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

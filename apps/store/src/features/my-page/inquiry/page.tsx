@@ -1,5 +1,5 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -134,8 +134,34 @@ export default function InquiryPage() {
   return (
     <MainLayout>
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout
+          sidebar={
+            <Card>
+              <CardContent>
+                <InquiryForm
+                  inquiryId={editingInquiryId}
+                  initialData={
+                    editingInquiry
+                      ? {
+                          title: editingInquiry.title,
+                          content: editingInquiry.content,
+                        }
+                      : undefined
+                  }
+                  onSubmit={handleFormSubmit}
+                  isPending={createMutation.isPending || updateMutation.isPending}
+                />
+              </CardContent>
+            </Card>
+          }
+          actionBar={
+            isMobile ? (
+              <Button className="w-full" onClick={handleNewInquiry} size="xl">
+                1:1 문의 등록
+              </Button>
+            ) : undefined
+          }
+        >
             <>
               {inquiries.length === 0 ? (
                 <Card>
@@ -211,34 +237,7 @@ export default function InquiryPage() {
                 ))
               )}
             </>
-          }
-          rightPanel={
-            <Card>
-              <CardContent>
-                <InquiryForm
-                  inquiryId={editingInquiryId}
-                  initialData={
-                    editingInquiry
-                      ? {
-                          title: editingInquiry.title,
-                          content: editingInquiry.content,
-                        }
-                      : undefined
-                  }
-                  onSubmit={handleFormSubmit}
-                  isPending={createMutation.isPending || updateMutation.isPending}
-                />
-              </CardContent>
-            </Card>
-          }
-          button={
-            isMobile ? (
-              <Button className="w-full" onClick={handleNewInquiry} size="xl">
-                1:1 문의 등록
-              </Button>
-            ) : undefined
-          }
-        />
+        </PageLayout>
 
         {/* 모바일 전용 Sheet */}
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>

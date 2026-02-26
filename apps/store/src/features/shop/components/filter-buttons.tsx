@@ -15,7 +15,8 @@ export const FilterButtons = ({
   mainButton,
 }: FilterButtonsProps) => {
   return (
-    <div className="sticky top-14 z-40 bg-background flex ">
+    <div className="sticky top-14 z-40 bg-background">
+      <div className="max-w-7xl mx-auto flex">
       {mainButton ? (
         mainButton
       ) : onMainButtonClick ? (
@@ -71,6 +72,7 @@ export const FilterButtons = ({
           소재
           <ChevronDown />
         </Button>
+      </div>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import type { DesignOptions, PatternType } from "./types/design";
 import Preview from "./components/Preview";
 import Option from "./components/Option";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 
 const DesignPage = () => {
   const [isPattern, setIsPattern] = useState<boolean>(false);
@@ -60,10 +60,11 @@ const DesignPage = () => {
   return (
     <MainLayout>
       <MainContent className="overflow-visible">
-        <TwoPanelLayout
-          leftPanel={<Preview options={options} stateSetters={stateSetters} />}
-          rightPanel={<Option options={options} stateSetters={stateSetters} />}
-        />
+        <PageLayout
+          sidebar={<Option options={options} stateSetters={stateSetters} />}
+        >
+          <Preview options={options} stateSetters={stateSetters} />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

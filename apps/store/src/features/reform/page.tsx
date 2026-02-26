@@ -8,7 +8,7 @@ import { Form } from "@/components/ui/form";
 import TieItemCard from "./components/tie-item-card";
 import BulkApplySection from "@/components/composite/bulk-apply-section";
 import type { ReformOptions } from "@yeongseon/shared/types/view/reform";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useModalStore } from "@/store/modal";
@@ -231,9 +231,76 @@ const ReformPage = () => {
     <MainLayout>
       <MainContent className="overflow-visible">
         <Form {...form}>
-          <TwoPanelLayout
+          <PageLayout
             detail={<Detail />}
-            leftPanel={
+            sidebar={
+              <Card>
+                <CardHeader>
+                  <CardTitle>구매 금액</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span>총 {fields.length}개</span>
+                      <span>{calculateEstimatedCost().toLocaleString()}원</span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="item-1">
+                        <AccordionTrigger>
+                          내게 맞는 넥타이 길이
+                        </AccordionTrigger>
+                        <AccordionContent className="text-zinc-600">
+                          <DataTable
+                            headers={["키", "권장 길이"]}
+                            data={HEIGHT_GUIDE.map((guide) => ({
+                              키: guide.height,
+                              "권장 길이": guide.length,
+                            }))}
+                            size="sm"
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="item-1">
+                        <AccordionTrigger>유의사항</AccordionTrigger>
+                        <AccordionContent className="text-zinc-600">
+                          <p>
+                            • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
+                            부과됩니다.
+                          </p>
+                          <p>
+                            • 예상 수선 기간은 넥타이 확인 후 영업일 기준
+                            10일입니다.
+                          </p>
+                          <p>
+                            • 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이
+                            불가능합니다.
+                          </p>
+                          <p>
+                            • 수선 진행 전 취소 시, 택배비 3,000원을 제외한
+                            금액을 환불해드립니다.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </div>
+                </CardContent>
+              </Card>
+            }
+            actionBar={
+              <ReformActionButtons
+                onAddToCart={handleAddToCart}
+                onOrder={handleDirectOrder}
+              />
+            }
+          >
               <Card>
                 <CardContent className="flex items-center justify-between">
                   <div className="flex gap-4 items-center">
@@ -342,75 +409,7 @@ const ReformPage = () => {
                   </Button>
                 </CardContent>
               </Card>
-            }
-            rightPanel={
-              <Card>
-                <CardHeader>
-                  <CardTitle>구매 금액</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm font-semibold">
-                      <span>총 {fields.length}개</span>
-                      <span>{calculateEstimatedCost().toLocaleString()}원</span>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <Accordion type="single" collapsible>
-                      <AccordionItem value="item-1">
-                        <AccordionTrigger>
-                          내게 맞는 넥타이 길이
-                        </AccordionTrigger>
-                        <AccordionContent className="text-zinc-600">
-                          <DataTable
-                            headers={["키", "권장 길이"]}
-                            data={HEIGHT_GUIDE.map((guide) => ({
-                              키: guide.height,
-                              "권장 길이": guide.length,
-                            }))}
-                            size="sm"
-                          />
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-
-                    <Accordion type="single" collapsible>
-                      <AccordionItem value="item-1">
-                        <AccordionTrigger>유의사항</AccordionTrigger>
-                        <AccordionContent className="text-zinc-600">
-                          <p>
-                            • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
-                            부과됩니다.
-                          </p>
-                          <p>
-                            • 예상 수선 기간은 넥타이 확인 후 영업일 기준
-                            10일입니다.
-                          </p>
-                          <p>
-                            • 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이
-                            불가능합니다.
-                          </p>
-                          <p>
-                            • 수선 진행 전 취소 시, 택배비 3,000원을 제외한
-                            금액을 환불해드립니다.
-                          </p>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </div>
-                </CardContent>
-              </Card>
-            }
-            button={
-              <ReformActionButtons
-                onAddToCart={handleAddToCart}
-                onOrder={handleDirectOrder}
-              />
-            }
-          />
+          </PageLayout>
         </Form>
         <MobileReformSheet
           open={isPurchaseSheetOpen}

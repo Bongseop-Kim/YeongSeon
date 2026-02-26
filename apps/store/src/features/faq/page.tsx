@@ -1,5 +1,5 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Accordion,
@@ -13,8 +13,7 @@ export default function FaqPage() {
   return (
     <MainLayout>
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout>
             <Card>
               <CardContent>
                 <Accordion type="single" collapsible className="w-full">
@@ -38,8 +37,7 @@ export default function FaqPage() {
                 </Accordion>
               </CardContent>
             </Card>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

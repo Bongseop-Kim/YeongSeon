@@ -3,47 +3,46 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 
-interface TwoPanelLayoutProps {
-  leftPanel: React.ReactNode;
-  rightPanel?: React.ReactNode;
-  leftPanelClassName?: string;
-  rightPanelClassName?: string;
-  containerClassName?: string;
-  button?: React.ReactNode;
+interface PageLayoutProps {
+  children: React.ReactNode;
+  sidebar?: React.ReactNode;
+  contentClassName?: string;
+  sidebarClassName?: string;
+  className?: string;
+  actionBar?: React.ReactNode;
   detail?: React.ReactNode;
 }
 
-export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
-  leftPanel,
-  rightPanel,
-  leftPanelClassName,
-  rightPanelClassName,
-  containerClassName,
-  button,
+export const PageLayout: React.FC<PageLayoutProps> = ({
+  children,
+  sidebar,
+  contentClassName,
+  sidebarClassName,
+  className,
+  actionBar,
   detail,
 }) => {
   const { isMobile } = useBreakpoint();
 
   return (
     <div className={`max-w-7xl mx-auto ${isMobile ? "" : "px-8 pb-4"}`}>
-      {/* Left Panel - Product Info */}
       <div
         className={cn(
           `flex ${isMobile ? "flex-col" : "flex-row gap-8"}`,
-          containerClassName
+          className
         )}
       >
         <div
           className={cn(
             "w-full",
-            !isMobile && rightPanel ? "flex-1 w-2/3" : "",
-            leftPanelClassName
+            !isMobile && sidebar ? "flex-1 w-2/3" : "",
+            contentClassName
           )}
         >
-          {leftPanel}
-          {rightPanel && isMobile && <Separator />}
+          {children}
+          {sidebar && isMobile && <Separator />}
 
-          {/* Detail section - appears below leftPanel on desktop */}
+          {/* Detail section - appears below children on desktop */}
           {detail && !isMobile && (
             <div>
               <Separator />
@@ -52,17 +51,17 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
           )}
         </div>
 
-        {rightPanel && (
+        {sidebar && (
           <div
             className={cn(
               isMobile ? "w-full relative" : "w-1/3 sticky top-20 self-start",
-              button && (isMobile ? "pb-24" : "pb-0"),
-              rightPanelClassName
+              actionBar && (isMobile ? "pb-24" : "pb-0"),
+              sidebarClassName
             )}
           >
-            {rightPanel}
+            {sidebar}
 
-            {button && (
+            {actionBar && (
               <div
                 className={
                   isMobile
@@ -78,13 +77,13 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
                     : undefined
                 }
               >
-                {button}
+                {actionBar}
               </div>
             )}
           </div>
         )}
 
-        {/* Detail section - appears below rightPanel on mobile */}
+        {/* Detail section - appears below sidebar on mobile */}
         {detail && isMobile && (
           <div className="w-full">
             <Separator />
@@ -95,5 +94,3 @@ export const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
     </div>
   );
 };
-
-export default TwoPanelLayout;

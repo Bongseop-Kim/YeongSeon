@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -153,8 +153,7 @@ export default function MyInfoEmailPage() {
   return (
     <MainLayout>
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout>
             <Card className="max-w-xl">
               <CardHeader />
               <CardContent className="space-y-4">
@@ -266,8 +265,7 @@ export default function MyInfoEmailPage() {
                 )}
               </CardContent>
             </Card>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

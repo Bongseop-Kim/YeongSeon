@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import TwoPanelLayout from "@/components/layout/two-panel-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
@@ -178,8 +178,8 @@ const ClaimFormPage = () => {
     createClaimMutation.mutate(
       {
         type,
-        orderId: orderId!,
-        itemId: itemId!,
+        orderId: orderId,
+        itemId: itemId,
         reason: data.reason,
         description: data.description || undefined,
         quantity: data.quantity,
@@ -201,8 +201,64 @@ const ClaimFormPage = () => {
   return (
     <MainLayout>
       <MainContent>
-        <TwoPanelLayout
-          leftPanel={
+        <PageLayout
+          sidebar={
+            <Card>
+              <CardHeader>
+                <CardTitle>안내사항</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-zinc-600">
+                {type === "cancel" && (
+                  <div>
+                    <p className="font-semibold mb-1">취소 안내</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>주문 취소는 배송 전에만 가능합니다.</li>
+                      <li>결제 취소는 영업일 기준 3-5일 소요됩니다.</li>
+                      <li>이미 배송이 시작된 경우 취소가 불가능합니다.</li>
+                    </ul>
+                  </div>
+                )}
+                {type === "return" && (
+                  <div>
+                    <p className="font-semibold mb-1">반품 안내</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>반품은 상품 수령 후 7일 이내에 신청 가능합니다.</li>
+                      <li>
+                        상품이 사용되거나 훼손된 경우 반품이 불가능합니다.
+                      </li>
+                      <li>
+                        반품 배송비는 고객 부담입니다. (단순 변심의 경우)
+                      </li>
+                      <li>상품 불량의 경우 배송비는 판매자 부담입니다.</li>
+                    </ul>
+                  </div>
+                )}
+                {type === "exchange" && (
+                  <div>
+                    <p className="font-semibold mb-1">교환 안내</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>교환은 상품 수령 후 7일 이내에 신청 가능합니다.</li>
+                      <li>교환 배송비는 고객 부담입니다.</li>
+                      <li>
+                        교환 가능한 재고가 있는 경우에만 교환이 가능합니다.
+                      </li>
+                      <li>
+                        상품이 사용되거나 훼손된 경우 교환이 불가능합니다.
+                      </li>
+                    </ul>
+                  </div>
+                )}
+                <Separator />
+                <div>
+                  <p className="font-semibold mb-1">문의</p>
+                  <p className="text-xs">
+                    추가 문의사항이 있으시면 고객센터로 연락해주세요.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          }
+        >
             <Card>
               {/* 헤더 */}
               <CardHeader>
@@ -377,70 +433,7 @@ const ClaimFormPage = () => {
                 </Form>
               </CardContent>
             </Card>
-          }
-          rightPanel={
-            <Card>
-              <CardHeader>
-                <CardTitle>안내사항</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-zinc-600">
-                {type === "cancel" && (
-                  <>
-                    <div>
-                      <p className="font-semibold mb-1">취소 안내</p>
-                      <ul className="list-disc list-inside space-y-1 text-xs">
-                        <li>주문 취소는 배송 전에만 가능합니다.</li>
-                        <li>결제 취소는 영업일 기준 3-5일 소요됩니다.</li>
-                        <li>이미 배송이 시작된 경우 취소가 불가능합니다.</li>
-                      </ul>
-                    </div>
-                  </>
-                )}
-                {type === "return" && (
-                  <>
-                    <div>
-                      <p className="font-semibold mb-1">반품 안내</p>
-                      <ul className="list-disc list-inside space-y-1 text-xs">
-                        <li>반품은 상품 수령 후 7일 이내에 신청 가능합니다.</li>
-                        <li>
-                          상품이 사용되거나 훼손된 경우 반품이 불가능합니다.
-                        </li>
-                        <li>
-                          반품 배송비는 고객 부담입니다. (단순 변심의 경우)
-                        </li>
-                        <li>상품 불량의 경우 배송비는 판매자 부담입니다.</li>
-                      </ul>
-                    </div>
-                  </>
-                )}
-                {type === "exchange" && (
-                  <>
-                    <div>
-                      <p className="font-semibold mb-1">교환 안내</p>
-                      <ul className="list-disc list-inside space-y-1 text-xs">
-                        <li>교환은 상품 수령 후 7일 이내에 신청 가능합니다.</li>
-                        <li>교환 배송비는 고객 부담입니다.</li>
-                        <li>
-                          교환 가능한 재고가 있는 경우에만 교환이 가능합니다.
-                        </li>
-                        <li>
-                          상품이 사용되거나 훼손된 경우 교환이 불가능합니다.
-                        </li>
-                      </ul>
-                    </div>
-                  </>
-                )}
-                <Separator />
-                <div>
-                  <p className="font-semibold mb-1">문의</p>
-                  <p className="text-xs">
-                    추가 문의사항이 있으시면 고객센터로 연락해주세요.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          }
-        />
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );
