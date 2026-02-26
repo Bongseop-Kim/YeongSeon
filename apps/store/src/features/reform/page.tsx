@@ -16,7 +16,7 @@ import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Empty } from "@/components/composite/empty";
 import { uploadTieImages } from "./api/upload-tie-images";
 import { toast } from "@/lib/toast";
@@ -43,6 +43,7 @@ const ReformPage = () => {
   const { isMobile } = useBreakpoint();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const form = useForm<ReformOptions>({
     defaultValues: {
@@ -156,7 +157,7 @@ const ReformPage = () => {
   }, [uploadAndGetTies, setOrderItems, navigate]);
 
   const handleDirectOrder = async () => {
-    if (isUploading) return;
+    if (isSubmittingRef.current) return;
     const validation = validateTies();
     if (!validation.isValid) {
       confirm(validation.message || "입력값을 확인해주세요.");
@@ -168,57 +169,72 @@ const ReformPage = () => {
       return;
     }
 
-    await processReformOrder();
+    isSubmittingRef.current = true;
+    try {
+      await processReformOrder();
+    } finally {
+      isSubmittingRef.current = false;
+    }
   };
 
   const handleMobileOrder = async () => {
-    if (isUploading) return;
+    if (isSubmittingRef.current) return;
     const validation = validateTies();
     if (!validation.isValid) {
       confirm(validation.message || "입력값을 확인해주세요.");
       return;
     }
 
-    await processReformOrder();
+    isSubmittingRef.current = true;
+    try {
+      await processReformOrder();
+    } finally {
+      isSubmittingRef.current = false;
+    }
   };
 
   const handleAddToCart = async () => {
-    if (isUploading) return;
+    if (isSubmittingRef.current) return;
     const validation = validateTies();
     if (!validation.isValid) {
       confirm(validation.message || "입력값을 확인해주세요.");
       return;
     }
 
-    const uploadedTies = await uploadAndGetTies();
-    if (!uploadedTies) return;
+    isSubmittingRef.current = true;
+    try {
+      const uploadedTies = await uploadAndGetTies();
+      if (!uploadedTies) return;
 
-    await Promise.all(
-      uploadedTies.map((tie) =>
-        addReformToCart({
-          tie: tie,
-          cost: REFORM_BASE_COST,
-        })
-      )
-    );
+      await Promise.all(
+        uploadedTies.map((tie) =>
+          addReformToCart({
+            tie: tie,
+            cost: REFORM_BASE_COST,
+          })
+        )
+      );
 
-    form.reset({
-      ties: [
-        {
-          id: "tie-1",
-          image: undefined,
+      form.reset({
+        ties: [
+          {
+            id: "tie-1",
+            image: undefined,
+            measurementType: "length",
+            tieLength: undefined,
+            wearerHeight: undefined,
+            checked: false,
+          },
+        ],
+        bulkApply: {
           measurementType: "length",
           tieLength: undefined,
           wearerHeight: undefined,
-          checked: false,
         },
-      ],
-      bulkApply: {
-        measurementType: "length",
-        tieLength: undefined,
-        wearerHeight: undefined,
-      },
-    });
+      });
+    } finally {
+      isSubmittingRef.current = false;
+    }
   };
 
   // 간단한 비용 계산 (실제로는 더 복잡한 로직이 필요)
