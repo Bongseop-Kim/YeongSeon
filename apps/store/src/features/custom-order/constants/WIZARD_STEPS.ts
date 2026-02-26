@@ -54,8 +54,10 @@ export const WIZARD_STEPS: StepConfig[] = [
     id: "sample",
     label: "샘플",
     validate: (values) => {
-      if (values.sample && !values.sampleType) {
-        return "샘플 유형을 선택해주세요";
+      if (!values.sample) return null;
+      if (!values.sampleType) return "샘플 유형을 선택해주세요";
+      if (!values.fabricProvided && values.sampleType === "sewing") {
+        return "원단 미제공 시 해당 샘플 유형을 선택할 수 없습니다";
       }
       return null;
     },

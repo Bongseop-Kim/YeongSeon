@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,16 @@ export const SampleOptionStep = () => {
   const sample = watch("sample");
   const fabricProvided = watch("fabricProvided");
   const sampleType = watch("sampleType");
+
+  // fabricProvided 변경 시 sampleType 동기화
+  useEffect(() => {
+    if (!sample) return;
+    if (fabricProvided) {
+      setValue("sampleType", "sewing");
+    } else if (sampleType === "sewing") {
+      setValue("sampleType", null);
+    }
+  }, [fabricProvided, sample, sampleType, setValue]);
 
   const handleSampleToggle = (wantsSample: boolean) => {
     setValue("sample", wantsSample);
