@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useList, useInvalidate } from "@refinedev/core";
 import { message } from "antd";
 import dayjs from "dayjs";
@@ -51,9 +51,13 @@ export function usePresetCustomers(
 ) {
   const [users, setUsers] = useState<AdminCouponUser[]>([]);
   const [loading, setLoading] = useState(false);
+  const loadIdRef = useRef(0);
 
   const load = useCallback(async () => {
     if (!couponId) return;
+
+    loadIdRef.current += 1;
+    const requestId = loadIdRef.current;
 
     setLoading(true);
     setUsers([]);
@@ -63,6 +67,8 @@ export function usePresetCustomers(
         fetchCustomers(),
         excludeIssued ? fetchIssuedUserIds(couponId) : Promise.resolve(new Set<string>()),
       ]);
+
+      if (requestId !== loadIdRef.current) return;
 
       const now = dayjs();
       const start30d = now.subtract(30, "day");
@@ -89,18 +95,21 @@ export function usePresetCustomers(
 
         case "purchased": {
           const purchasedUserIds = await fetchPurchasedUserIds();
+          if (requestId !== loadIdRef.current) return;
           presetUsers = allCustomers.filter((user) => purchasedUserIds.has(user.id));
           break;
         }
 
         case "notPurchased": {
           const purchasedUserIds = await fetchPurchasedUserIds();
+          if (requestId !== loadIdRef.current) return;
           presetUsers = allCustomers.filter((user) => !purchasedUserIds.has(user.id));
           break;
         }
 
         case "dormant": {
           const completedOrders = await fetchCompletedOrderDates();
+          if (requestId !== loadIdRef.current) return;
           const latestOrderByUser = new Map<string, dayjs.Dayjs>();
 
           for (const row of completedOrders) {
@@ -127,13 +136,17 @@ export function usePresetCustomers(
         presetUsers = presetUsers.filter((user) => !alreadyIssued.has(user.id));
       }
 
+      if (requestId !== loadIdRef.current) return;
       setUsers(presetUsers);
     } catch (err) {
+      if (requestId !== loadIdRef.current) return;
       console.error(err);
       message.error("대상 고객 조회에 실패했습니다.");
       setUsers([]);
     } finally {
-      setLoading(false);
+      if (requestId === loadIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [couponId, preset, excludeIssued]);
 
@@ -196,21 +209,28 @@ export function useCouponRevoke(couponId: string | undefined) {
       return false;
     }
 
-    const userCouponIds = Array.from(
-      new Set(targetRows.map((row) => row.id).filter((v): v is string => !!v))
+    const rowsWithId = targetRows.filter((row) => !!row.id);
+    const rowsWithoutId = targetRows.filter((row) => !row.id);
+
+    const idsToRevoke = Array.from(
+      new Set(rowsWithId.map((row) => row.id).filter((v): v is string => !!v))
     );
-    const userIds = Array.from(
-      new Set(targetRows.map((row) => row.userId).filter((v): v is string => !!v))
+    const userIdsToRevoke = Array.from(
+      new Set(rowsWithoutId.map((row) => row.userId).filter((v): v is string => !!v))
     );
 
     setRevoking(true);
     try {
-      if (userCouponIds.length > 0) {
-        await revokeCouponsByIds(userCouponIds);
-      } else if (couponId && userIds.length > 0) {
-        await revokeCouponsByUserIds(couponId, userIds);
-      } else {
+      if (idsToRevoke.length === 0 && userIdsToRevoke.length === 0) {
         throw new Error("회수 대상 식별자(id/userId)가 없습니다.");
+      }
+
+      if (idsToRevoke.length > 0) {
+        await revokeCouponsByIds(idsToRevoke);
+      }
+
+      if (couponId && userIdsToRevoke.length > 0) {
+        await revokeCouponsByUserIds(couponId, userIdsToRevoke);
       }
 
       message.success(`${targetRows.length}건 회수 완료`);
