@@ -36,3 +36,14 @@ export const PRESET_LABELS: Record<PresetKey, string> = {
   notPurchased: "미구매 고객",
   dormant: "휴면 고객",
 };
+
+export function isActiveIssuedStatus(status: string | null | undefined): boolean {
+  const normalized = (status ?? "").trim().toLowerCase();
+  return (
+    normalized === "active" ||
+    normalized === "활성" ||
+    normalized === "발급" ||
+    normalized === "사용가능" ||
+    normalized === "미사용"
+  );
+}

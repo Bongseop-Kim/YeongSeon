@@ -34,7 +34,7 @@ export function toAdminCouponUser(row: ProfileRow): AdminCouponUser {
 
 export function toAdminIssuedCouponRow(row: IssuedCouponViewRow): AdminIssuedCouponRow {
   return {
-    id: row.id ?? "",
+    id: row.id ?? `${row.userId}:${row.couponId}`,
     userId: row.userId ?? null,
     couponId: row.couponId ?? null,
     userName: row.userName ?? null,

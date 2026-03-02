@@ -4,7 +4,6 @@ import dayjs from "dayjs";
 
 type CouponEditFormProps = {
   formProps: UseFormReturnType["formProps"];
-  saveButtonProps: UseFormReturnType["saveButtonProps"];
 };
 
 export function CouponEditForm({ formProps }: CouponEditFormProps) {

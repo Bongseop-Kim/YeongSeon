@@ -12,20 +12,8 @@ import {
   revokeCouponsByUserIds,
 } from "./coupons-api";
 import { toAdminIssuedCouponRow } from "./coupons-mapper";
+import { isActiveIssuedStatus } from "../types/admin-coupon";
 import type { AdminCouponUser, AdminIssuedCouponRow, PresetKey } from "../types/admin-coupon";
-
-// ── 헬퍼 ───────────────────────────────────────────────────────
-
-export function isActiveIssuedStatus(status: string | null | undefined): boolean {
-  const normalized = (status ?? "").trim().toLowerCase();
-  return (
-    normalized === "active" ||
-    normalized === "활성" ||
-    normalized === "발급" ||
-    normalized === "사용가능" ||
-    normalized === "미사용"
-  );
-}
 
 // ── 발급 내역 조회 ──────────────────────────────────────────────
 

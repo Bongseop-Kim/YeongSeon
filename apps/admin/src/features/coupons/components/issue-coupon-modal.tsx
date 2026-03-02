@@ -60,7 +60,10 @@ export function IssueCouponModal({
             key={preset}
             checked={selectedPreset === preset}
             onChange={(checked) => {
-              if (checked) setSelectedPreset(preset);
+              if (checked) {
+                setSelectedPreset(preset);
+                setSelectedUserIds([]);
+              }
             }}
           >
             {PRESET_LABELS[preset]}
@@ -69,7 +72,13 @@ export function IssueCouponModal({
       </Space>
 
       <Space style={{ display: "block", marginBottom: 12 }}>
-        <Switch checked={excludeIssuedUsers} onChange={setExcludeIssuedUsers} />
+        <Switch
+          checked={excludeIssuedUsers}
+          onChange={(val) => {
+            setExcludeIssuedUsers(val);
+            setSelectedUserIds([]);
+          }}
+        />
         <span>중복 발급 방지</span>
       </Space>
 
