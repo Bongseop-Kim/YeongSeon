@@ -1,5 +1,6 @@
 import { Show } from "@refinedev/antd";
 import { useShow, useList, useUpdate, useOne, useInvalidate, useNavigation } from "@refinedev/core";
+import { useParams } from "react-router-dom";
 import {
   Descriptions,
   Tag,
@@ -205,8 +206,10 @@ function RepairOrderDetail({ items }: { items: AdminOrderItemRowDTO[] }) {
 
 export default function OrderShow() {
   const { edit, show } = useNavigation();
+  const { id: orderId } = useParams<{ id: string }>();
   const { query: queryResult } = useShow<AdminOrderDetailRowDTO>({
     resource: "admin_order_detail_view",
+    id: orderId,
   });
   const order = queryResult?.data?.data;
 
