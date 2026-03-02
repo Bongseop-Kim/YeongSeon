@@ -16,8 +16,8 @@ export function CustomerCouponsTable({ coupons }: Props) {
       pagination={false}
       size="small"
       onRow={(record: AdminCustomerCouponRow) => ({
-        onClick: () => edit("coupons", record.couponId),
-        style: { cursor: "pointer" },
+        onClick: record.couponId ? () => edit("coupons", record.couponId) : undefined,
+        style: { cursor: record.couponId ? "pointer" : "default" },
       })}
     >
       <Table.Column dataIndex="couponId" title="쿠폰 ID" />

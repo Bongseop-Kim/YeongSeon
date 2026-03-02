@@ -56,7 +56,7 @@ export function useAdminCustomerOrders(customerId: string | undefined) {
     resource: "admin_order_list_view",
     filters: [{ field: "userId", operator: "eq", value: customerId }],
     sorters: [{ field: "created_at", order: "desc" }],
-    pagination: { pageSize: 10 },
+    pagination: { mode: "off" },
     queryOptions: { enabled: !!customerId },
   });
 
@@ -73,6 +73,7 @@ export function useAdminCustomerCoupons(customerId: string | undefined) {
   const { result } = useList<UserCouponRow>({
     resource: "user_coupons",
     filters: [{ field: "user_id", operator: "eq", value: customerId }],
+    pagination: { mode: "off" },
     queryOptions: { enabled: !!customerId },
   });
 
