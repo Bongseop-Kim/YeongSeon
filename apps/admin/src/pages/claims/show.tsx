@@ -1,519 +1,115 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useList, useUpdate, useInvalidate, useNavigation } from "@refinedev/core";
+import { useParams } from "react-router-dom";
+import { useState } from "react";
+import { Typography } from "antd";
+import { CLAIM_STATUS_FLOW, CLAIM_ROLLBACK_FLOW } from "@yeongseon/shared";
 import {
-  Descriptions,
-  Tag,
-  Table,
-  Button,
-  Flex,
-  Space,
-  Modal,
-  Typography,
-  Input,
-  Select,
-  message,
-} from "antd";
-import { useState, useEffect, useRef } from "react";
-import type { AdminClaimListRowDTO, ClaimStatusLogDTO } from "@yeongseon/shared";
-import {
-  CLAIM_STATUS_FLOW,
-  CLAIM_ROLLBACK_FLOW,
-  CLAIM_REJECT_RESTORE_STATUS,
-  CLAIM_STATUS_COLORS,
-  CLAIM_TYPE_LABELS,
-  CLAIM_REASON_LABELS,
-  COURIER_COMPANY_NAMES,
-  buildTrackingUrl,
-  ORDER_STATUS_COLORS,
-} from "@yeongseon/shared";
-import { supabase } from "@/lib/supabase";
+  useAdminClaimDetail,
+  useAdminClaimStatusLogs,
+  useClaimStatusUpdate,
+  useClaimTrackingSave,
+  useClaimTrackingState,
+} from "@/features/claims/api/claims-query";
+import { ClaimInfoSection } from "@/features/claims/components/claim-info-section";
+import { OrderShippingSection } from "@/features/claims/components/order-shipping-section";
+import { ClaimTrackingSection } from "@/features/claims/components/claim-tracking-section";
+import { ClaimStatusActions } from "@/features/claims/components/claim-status-actions";
+import { ClaimStatusLogTable } from "@/features/claims/components/claim-status-log-table";
 
-const { Title, Text } = Typography;
-const { TextArea } = Input;
+const { Title } = Typography;
 
 export default function ClaimShow() {
-  const { show } = useNavigation();
-  const { query: queryResult } = useShow<AdminClaimListRowDTO>({
-    resource: "admin_claim_list_view",
-  });
-  const claim = queryResult?.data?.data;
+  const { id: claimId } = useParams<{ id: string }>();
+  const { claim, refetch } = useAdminClaimDetail(claimId);
 
-  const { result: logsResult } = useList<ClaimStatusLogDTO>({
-    resource: "admin_claim_status_log_view",
-    filters: [
-      { field: "claimId", operator: "eq", value: claim?.id },
-    ],
-    sorters: [{ field: "createdAt", order: "desc" }],
-    queryOptions: { enabled: !!claim?.id },
-  });
+  const { logs } = useAdminClaimStatusLogs(claimId);
+  const { isUpdating, changeStatus, rollback } = useClaimStatusUpdate(
+    claimId,
+    refetch
+  );
+  const { saveTracking, isPending: trackingPending } = useClaimTrackingSave();
 
-  const { mutate: updateClaim, mutation: updateMutation } = useUpdate();
-  const invalidate = useInvalidate();
+  const returnTrackingState = useClaimTrackingState(
+    claim?.returnTracking,
+    claimId
+  );
+  const resendTrackingState = useClaimTrackingState(
+    claim?.resendTracking,
+    claimId
+  );
 
-  // Return tracking state
-  const [returnCourier, setReturnCourier] = useState("");
-  const [returnTracking, setReturnTracking] = useState("");
-  // Resend tracking state
-  const [resendCourier, setResendCourier] = useState("");
-  const [resendTracking, setResendTracking] = useState("");
   const [statusMemo, setStatusMemo] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);
-  const initializedRef = useRef(false);
 
-  useEffect(() => {
-    if (claim && !initializedRef.current) {
-      setReturnCourier(claim.returnCourierCompany ?? "");
-      setReturnTracking(claim.returnTrackingNumber ?? "");
-      setResendCourier(claim.resendCourierCompany ?? "");
-      setResendTracking(claim.resendTrackingNumber ?? "");
-      initializedRef.current = true;
-    }
-  }, [claim]);
-
-  const handleStatusChange = async (newStatus: string) => {
-    if (!claim) return;
-
-    const doUpdate = async () => {
-      setIsUpdating(true);
-      try {
-        const { error } = await supabase.rpc(
-          "admin_update_claim_status",
-          {
-            p_claim_id: claim.id,
-            p_new_status: newStatus,
-            p_memo: statusMemo || null,
-          }
-        );
-
-        if (error) {
-          message.error(`상태 변경 실패: ${error.message}`);
-          return;
-        }
-
-        message.success(`상태가 "${newStatus}"(으)로 변경되었습니다.`);
-        setStatusMemo("");
-        queryResult.refetch();
-        invalidate({
-          resource: "admin_claim_status_log_view",
-          invalidates: ["list"],
-        });
-      } catch (err) {
-        message.error(
-          `상태 변경 중 오류: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
-        );
-      } finally {
-        setIsUpdating(false);
-      }
-    };
-
-    if (newStatus === "거부") {
-      Modal.confirm({
-        title: "클레임 거부",
-        content: "정말 이 클레임을 거부하시겠습니까?",
-        okText: "거부",
-        cancelText: "닫기",
-        okButtonProps: { danger: true },
-        onOk: doUpdate,
-      });
-      return;
-    }
-
-    await doUpdate();
-  };
-
-  const handleSaveReturnTracking = () => {
-    if (!claim) return;
-    updateClaim(
-      {
-        resource: "claims",
-        id: claim.id,
-        values: {
-          return_courier_company: returnCourier || null,
-          return_tracking_number: returnTracking || null,
-        },
-      },
-      {
-        onSuccess: () => message.success("수거 배송 정보가 저장되었습니다."),
-        onError: () => message.error("수거 배송 정보 저장에 실패했습니다."),
-      },
-    );
-  };
-
-  const handleSaveResendTracking = () => {
-    if (!claim) return;
-    updateClaim(
-      {
-        resource: "claims",
-        id: claim.id,
-        values: {
-          resend_courier_company: resendCourier || null,
-          resend_tracking_number: resendTracking || null,
-        },
-      },
-      {
-        onSuccess: () => message.success("재발송 배송 정보가 저장되었습니다."),
-        onError: () => message.error("재발송 배송 정보 저장에 실패했습니다."),
-      },
-    );
-  };
-
-  const claimType = claim?.type;
+  const claimType = claim?.claimType;
   const statusFlow = claimType ? CLAIM_STATUS_FLOW[claimType] : undefined;
-  const nextStatus =
-    claim?.status && statusFlow ? statusFlow[claim.status] : undefined;
+  const nextStatus = claim?.status && statusFlow ? statusFlow[claim.status] : undefined;
 
   const rollbackFlow = claimType ? CLAIM_ROLLBACK_FLOW[claimType] : undefined;
   const rollbackStatus =
     claim?.status && rollbackFlow ? rollbackFlow[claim.status] : undefined;
-  const isRejected = claim?.status === "거부";
-
-  const handleRollback = (targetStatus: string) => {
-    if (!claim) return;
-
-    let rollbackMemoValue = "";
-
-    Modal.confirm({
-      title: "상태 롤백",
-      content: (
-        <div>
-          <p>
-            현재 상태 <Tag>{claim.status}</Tag> → <Tag>{targetStatus}</Tag>(으)로 롤백합니다.
-          </p>
-          <p style={{ marginBottom: 4 }}><strong>사유 (필수)</strong></p>
-          <TextArea
-            rows={3}
-            placeholder="롤백 사유를 입력하세요"
-            onChange={(e) => { rollbackMemoValue = e.target.value; }}
-          />
-        </div>
-      ),
-      okText: "롤백",
-      cancelText: "취소",
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        if (!rollbackMemoValue.trim()) {
-          message.error("롤백 사유를 입력해주세요.");
-          throw new Error("memo required");
-        }
-        setIsUpdating(true);
-        try {
-          const { error } = await supabase.rpc("admin_update_claim_status", {
-            p_claim_id: claim.id,
-            p_new_status: targetStatus,
-            p_memo: rollbackMemoValue,
-            p_is_rollback: true,
-          });
-          if (error) {
-            message.error(`롤백 실패: ${error.message}`);
-            return;
-          }
-          message.success(`"${targetStatus}"(으)로 롤백되었습니다.`);
-          queryResult.refetch();
-          invalidate({
-            resource: "admin_claim_status_log_view",
-            invalidates: ["list"],
-          });
-        } catch (err) {
-          if (err instanceof Error && err.message === "memo required") throw err;
-          message.error(
-            `롤백 중 오류: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
-          );
-        } finally {
-          setIsUpdating(false);
-        }
-      },
-    });
-  };
 
   const showReturnSection =
     claimType === "return" || claimType === "exchange";
   const showResendSection = claimType === "exchange";
 
-  const returnTrackingUrl =
-    returnCourier && returnTracking
-      ? buildTrackingUrl(returnCourier, returnTracking)
-      : null;
-  const resendTrackingUrl =
-    resendCourier && resendTracking
-      ? buildTrackingUrl(resendCourier, resendTracking)
-      : null;
-  const orderTrackingUrl =
-    claim?.orderCourierCompany && claim?.orderTrackingNumber
-      ? buildTrackingUrl(claim.orderCourierCompany, claim.orderTrackingNumber)
-      : null;
-
-  const courierOptions = COURIER_COMPANY_NAMES.map((name) => ({
-    label: name,
-    value: name,
-  }));
-
   return (
     <Show>
-      {/* Section 1: Claim Info */}
       <Title level={5}>클레임 정보</Title>
-      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
-        <Descriptions.Item label="클레임번호">
-          {claim?.claimNumber}
-        </Descriptions.Item>
-        <Descriptions.Item label="접수일">{claim?.date}</Descriptions.Item>
-        <Descriptions.Item label="유형">
-          {claim?.type ? CLAIM_TYPE_LABELS[claim.type] : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="상태">
-          {claim?.status && (
-            <Tag color={CLAIM_STATUS_COLORS[claim.status]}>{claim.status}</Tag>
-          )}
-        </Descriptions.Item>
-        <Descriptions.Item label="고객명">
-          {claim?.userId ? (
-            <a
-              onClick={() => show("profiles", claim.userId)}
-              style={{ cursor: "pointer" }}
-            >
-              {claim.customerName}
-            </a>
-          ) : (
-            claim?.customerName
-          )}
-        </Descriptions.Item>
-        <Descriptions.Item label="연락처">
-          {claim?.customerPhone ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="주문번호">
-          {claim?.orderId ? (
-            <a
-              onClick={() => show("admin_order_list_view", claim.orderId)}
-              style={{ cursor: "pointer" }}
-            >
-              {claim.orderNumber}
-            </a>
-          ) : (
-            claim?.orderNumber
-          )}
-        </Descriptions.Item>
-        <Descriptions.Item label="상품명">
-          {claim?.productName ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="사유">
-          {claim?.reason
-            ? CLAIM_REASON_LABELS[claim.reason] ?? claim.reason
-            : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="수량">
-          {claim?.claimQuantity}
-        </Descriptions.Item>
-        <Descriptions.Item label="상세설명" span={2}>
-          {claim?.description ?? "-"}
-        </Descriptions.Item>
-      </Descriptions>
+      {claim && <ClaimInfoSection claim={claim} />}
 
-      {/* Section 2: Order Shipping Info (read-only) */}
       <Title level={5}>주문 배송 정보</Title>
-      <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
-        <Descriptions.Item label="주문상태">
-          {claim?.orderStatus ? (
-            <Tag color={ORDER_STATUS_COLORS[claim.orderStatus]}>
-              {claim.orderStatus}
-            </Tag>
-          ) : (
-            "-"
-          )}
-        </Descriptions.Item>
-        <Descriptions.Item label="택배사">
-          {claim?.orderCourierCompany ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="송장번호">
-          <Space>
-            {claim?.orderTrackingNumber ?? "-"}
-            {orderTrackingUrl && (
-              <Button
-                size="small"
-                href={orderTrackingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                배송추적
-              </Button>
-            )}
-          </Space>
-        </Descriptions.Item>
-        <Descriptions.Item label="발송일">
-          {claim?.orderShippedAt
-            ? new Date(claim.orderShippedAt).toLocaleString("ko-KR")
-            : "-"}
-        </Descriptions.Item>
-      </Descriptions>
+      {claim && <OrderShippingSection shipping={claim.orderShipping} />}
 
-      {/* Section 3: Return (수거) Info — return/exchange only */}
-      {showReturnSection && (
+      {showReturnSection && claimId && (
         <>
           <Title level={5}>수거 정보</Title>
-          <Flex wrap="wrap" gap={8} style={{ width: "100%", marginBottom: 24 }}>
-            <Select
-              value={returnCourier || undefined}
-              placeholder="택배사 선택"
-              onChange={(value) => setReturnCourier(value ?? "")}
-              style={{ flex: 1, minWidth: 140 }}
-              options={courierOptions}
-              allowClear
-            />
-            <Input
-              value={returnTracking}
-              placeholder="송장번호"
-              onChange={(e) => setReturnTracking(e.target.value)}
-              style={{ flex: 1, minWidth: 140 }}
-            />
-            <Button
-              type="primary"
-              onClick={handleSaveReturnTracking}
-              loading={updateMutation.isPending}
-            >
-              저장
-            </Button>
-            {returnTrackingUrl && (
-              <Button
-                href={returnTrackingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                수거추적
-              </Button>
-            )}
-          </Flex>
+          <ClaimTrackingSection
+            claimId={claimId}
+            trackingType="return"
+            courierCompany={returnTrackingState.courierCompany}
+            trackingNumber={returnTrackingState.trackingNumber}
+            onCourierChange={returnTrackingState.setCourierCompany}
+            onTrackingNumberChange={returnTrackingState.setTrackingNumber}
+            onSave={saveTracking}
+            isPending={trackingPending}
+          />
         </>
       )}
 
-      {/* Section 4: Resend (재발송) Info — exchange only */}
-      {showResendSection && (
+      {showResendSection && claimId && (
         <>
           <Title level={5}>재발송 정보</Title>
-          <Flex wrap="wrap" gap={8} style={{ width: "100%", marginBottom: 24 }}>
-            <Select
-              value={resendCourier || undefined}
-              placeholder="택배사 선택"
-              onChange={(value) => setResendCourier(value ?? "")}
-              style={{ flex: 1, minWidth: 140 }}
-              options={courierOptions}
-              allowClear
-            />
-            <Input
-              value={resendTracking}
-              placeholder="송장번호"
-              onChange={(e) => setResendTracking(e.target.value)}
-              style={{ flex: 1, minWidth: 140 }}
-            />
-            <Button
-              type="primary"
-              onClick={handleSaveResendTracking}
-              loading={updateMutation.isPending}
-            >
-              저장
-            </Button>
-            {resendTrackingUrl && (
-              <Button
-                href={resendTrackingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                배송추적
-              </Button>
-            )}
-          </Flex>
+          <ClaimTrackingSection
+            claimId={claimId}
+            trackingType="resend"
+            courierCompany={resendTrackingState.courierCompany}
+            trackingNumber={resendTrackingState.trackingNumber}
+            onCourierChange={resendTrackingState.setCourierCompany}
+            onTrackingNumberChange={resendTrackingState.setTrackingNumber}
+            onSave={saveTracking}
+            isPending={trackingPending}
+          />
         </>
       )}
 
-      {/* Status Memo + Action Buttons */}
-      <Space direction="vertical" style={{ width: "100%", marginTop: 16 }}>
-        <div>
-          <Text strong>상태 변경 메모</Text>
-          <TextArea
-            value={statusMemo}
-            onChange={(e) => setStatusMemo(e.target.value)}
-            rows={2}
-            placeholder="상태 변경 사유 (이력에 기록됨)"
-            style={{ marginTop: 4 }}
-          />
-        </div>
-      </Space>
-
-      <Space style={{ marginTop: 12, marginBottom: 24 }}>
-        {nextStatus && (
-          <Button
-            type="primary"
-            loading={isUpdating}
-            onClick={() => handleStatusChange(nextStatus)}
-          >
-            {nextStatus} 으로 변경
-          </Button>
-        )}
-        {rollbackStatus && (
-          <Button
-            loading={isUpdating}
-            onClick={() => handleRollback(rollbackStatus)}
-          >
-            {rollbackStatus} 으로 롤백
-          </Button>
-        )}
-        {isRejected && (
-          <Button
-            loading={isUpdating}
-            onClick={() => handleRollback(CLAIM_REJECT_RESTORE_STATUS)}
-          >
-            접수로 복원
-          </Button>
-        )}
-        {claim?.status !== "거부" && claim?.status !== "완료" && (
-          <Button
-            danger
-            loading={isUpdating}
-            onClick={() => handleStatusChange("거부")}
-          >
-            거부
-          </Button>
-        )}
-      </Space>
+      {claim && (
+        <ClaimStatusActions
+          claim={claim}
+          nextStatus={nextStatus}
+          rollbackStatus={rollbackStatus}
+          statusMemo={statusMemo}
+          onMemoChange={setStatusMemo}
+          onStatusChange={async (newStatus, memo) => {
+            const ok = await changeStatus(newStatus, memo);
+            if (ok) setStatusMemo("");
+          }}
+          onRollback={rollback}
+          isUpdating={isUpdating}
+        />
+      )}
 
       <Title level={5}>상태 변경 이력</Title>
-      <Table
-        dataSource={logsResult?.data}
-        rowKey="id"
-        pagination={false}
-        style={{ marginBottom: 24 }}
-      >
-        <Table.Column
-          dataIndex="createdAt"
-          title="일시"
-          render={(v: string) =>
-            v ? new Date(v).toLocaleString("ko-KR") : "-"
-          }
-        />
-        <Table.Column
-          dataIndex="previousStatus"
-          title="이전 상태"
-          render={(v: string) => (
-            <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>
-          )}
-        />
-        <Table.Column
-          dataIndex="newStatus"
-          title="변경 상태"
-          render={(v: string) => (
-            <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>
-          )}
-        />
-        <Table.Column
-          dataIndex="memo"
-          title="메모"
-          render={(v: string | null) => v ?? "-"}
-        />
-        <Table.Column
-          dataIndex="isRollback"
-          title="구분"
-          render={(v: boolean) =>
-            v ? <Tag color="red">롤백</Tag> : null
-          }
-        />
-      </Table>
+      <ClaimStatusLogTable logs={logs} />
     </Show>
   );
 }
