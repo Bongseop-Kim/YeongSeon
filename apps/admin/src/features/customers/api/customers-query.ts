@@ -36,7 +36,7 @@ export function useAdminCustomerTable() {
 // ── Detail ─────────────────────────────────────────────────────
 
 export function useAdminCustomerDetail(customerId: string | undefined) {
-  const { query, result: rawProfile } = useShow<ProfileRow>({
+  const { result: rawProfile } = useShow<ProfileRow>({
     resource: "profiles",
     id: customerId,
     queryOptions: { enabled: !!customerId },
