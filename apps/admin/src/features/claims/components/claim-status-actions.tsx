@@ -46,7 +46,11 @@ export function ClaimStatusActions({
       cancelText: "닫기",
       okButtonProps: { danger: true },
       onOk: async () => {
-        await onStatusChange("거부", statusMemo);
+        try {
+          await onStatusChange("거부", statusMemo);
+        } catch {
+          message.error("거부 처리에 실패했습니다.");
+        }
       },
     });
   };
@@ -79,7 +83,11 @@ export function ClaimStatusActions({
           message.error("롤백 사유를 입력해주세요.");
           throw new Error("memo required");
         }
-        await onRollback(targetStatus, rollbackMemoValue);
+        try {
+          await onRollback(targetStatus, rollbackMemoValue);
+        } catch {
+          message.error("롤백 처리에 실패했습니다.");
+        }
       },
     });
   };

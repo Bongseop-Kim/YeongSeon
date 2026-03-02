@@ -100,8 +100,8 @@ export default function ClaimShow() {
           statusMemo={statusMemo}
           onMemoChange={setStatusMemo}
           onStatusChange={async (newStatus, memo) => {
-            await changeStatus(newStatus, memo);
-            setStatusMemo("");
+            const ok = await changeStatus(newStatus, memo);
+            if (ok) setStatusMemo("");
           }}
           onRollback={rollback}
           isUpdating={isUpdating}

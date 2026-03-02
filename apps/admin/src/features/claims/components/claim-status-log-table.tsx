@@ -17,9 +17,11 @@ export function ClaimStatusLogTable({ logs }: ClaimStatusLogTableProps) {
       <Table.Column
         dataIndex="createdAt"
         title="일시"
-        render={(v: string) =>
-          v ? new Date(v).toLocaleString("ko-KR") : "-"
-        }
+        render={(v: string) => {
+          if (!v) return "-";
+          const d = new Date(v);
+          return isNaN(d.getTime()) ? "-" : d.toLocaleString("ko-KR");
+        }}
       />
       <Table.Column
         dataIndex="previousStatus"

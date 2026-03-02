@@ -38,9 +38,11 @@ export function OrderShippingSection({ shipping }: OrderShippingSectionProps) {
         </Space>
       </Descriptions.Item>
       <Descriptions.Item label="발송일">
-        {shipping.shippedAt
-          ? new Date(shipping.shippedAt).toLocaleString("ko-KR")
-          : "-"}
+        {(() => {
+          if (!shipping.shippedAt) return "-";
+          const d = new Date(shipping.shippedAt);
+          return isNaN(d.getTime()) ? "-" : d.toLocaleString("ko-KR");
+        })()}
       </Descriptions.Item>
     </Descriptions>
   );

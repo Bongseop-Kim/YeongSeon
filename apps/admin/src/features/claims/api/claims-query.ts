@@ -84,18 +84,20 @@ export function useClaimStatusUpdate(
       invalidates: ["list"],
     });
 
-  const changeStatus = async (newStatus: string, memo: string) => {
-    if (!claimId) return;
+  const changeStatus = async (newStatus: string, memo: string): Promise<boolean> => {
+    if (!claimId) return false;
     setIsUpdating(true);
     try {
       await updateClaimStatus({ claimId, newStatus, memo: memo || null });
       message.success(`상태가 "${newStatus}"(으)로 변경되었습니다.`);
       refetch();
       invalidateLogs();
+      return true;
     } catch (err) {
       message.error(
         `상태 변경 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
       );
+      return false;
     } finally {
       setIsUpdating(false);
     }
@@ -137,15 +139,16 @@ export function useClaimTrackingSave() {
     courierCompany: string,
     trackingNumber: string
   ) => {
+    const hasBoth = courierCompany.trim() !== "" && trackingNumber.trim() !== "";
     const values =
       trackingType === "return"
         ? {
-            return_courier_company: courierCompany || null,
-            return_tracking_number: trackingNumber || null,
+            return_courier_company: hasBoth ? courierCompany : null,
+            return_tracking_number: hasBoth ? trackingNumber : null,
           }
         : {
-            resend_courier_company: courierCompany || null,
-            resend_tracking_number: trackingNumber || null,
+            resend_courier_company: hasBoth ? courierCompany : null,
+            resend_tracking_number: hasBoth ? trackingNumber : null,
           };
 
     const successMsg =
@@ -180,13 +183,21 @@ export function useClaimTrackingState(
   const [trackingNumber, setTrackingNumber] = useState<string>("");
   const prevClaimIdRef = useRef<string | undefined>(undefined);
 
+  // Reset local state when navigating to a different claim
   useEffect(() => {
     if (!claimId) return;
     if (claimId === prevClaimIdRef.current) return;
     prevClaimIdRef.current = claimId;
-    setCourierCompany(tracking?.courierCompany ?? "");
-    setTrackingNumber(tracking?.trackingNumber ?? "");
-  }, [tracking, claimId]);
+    setCourierCompany("");
+    setTrackingNumber("");
+  }, [claimId]);
+
+  // Hydrate local state when tracking data arrives for the current claim
+  useEffect(() => {
+    if (!tracking) return;
+    setCourierCompany(tracking.courierCompany);
+    setTrackingNumber(tracking.trackingNumber);
+  }, [tracking]);
 
   return {
     courierCompany,
