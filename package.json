@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "turbo dev",
-    "dev:store": "turbo dev --filter=@yeongseon/store",
+    "dev:store": "turbo dev --filter=@yeongseon/store -- --host",
     "dev:admin": "turbo dev --filter=@yeongseon/admin",
     "build": "turbo build",
     "lint": "turbo lint",
