@@ -12,8 +12,9 @@ export function ShippingAddressSection({ address }: ShippingAddressSectionProps)
       <Descriptions.Item label="연락처">{address?.recipientPhone ?? "-"}</Descriptions.Item>
       <Descriptions.Item label="우편번호">{address?.postalCode ?? "-"}</Descriptions.Item>
       <Descriptions.Item label="주소" span={2}>
-        {address?.address ?? "-"}
-        {address?.addressDetail && ` ${address.addressDetail}`}
+        {address?.address
+          ? `${address.address}${address.addressDetail ? ` ${address.addressDetail}` : ""}`
+          : "-"}
       </Descriptions.Item>
       <Descriptions.Item label="배송메모">{address?.deliveryMemo ?? "-"}</Descriptions.Item>
       <Descriptions.Item label="배송요청사항">{address?.deliveryRequest ?? "-"}</Descriptions.Item>

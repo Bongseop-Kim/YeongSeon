@@ -1,5 +1,6 @@
 import { Card, Descriptions, Image, Space, Typography } from "antd";
-import type { AdminReformOrderItem, RepairOrderReformData } from "../types/admin-order";
+import { isRepairReformData } from "../types/admin-order";
+import type { AdminReformOrderItem } from "../types/admin-order";
 
 const { Title } = Typography;
 
@@ -8,9 +9,7 @@ interface RepairOrderDetailProps {
 }
 
 export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
-  const repairItems = items.filter(
-    (i) => i.reformData?._tag === "repair"
-  );
+  const repairItems = items.filter((i) => isRepairReformData(i.reformData));
   if (repairItems.length === 0) return null;
 
   return (
@@ -18,8 +17,8 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
       <Title level={5}>수선 상세</Title>
       <Space direction="vertical" style={{ width: "100%", marginBottom: 24 }}>
         {repairItems.map((item, idx) => {
-          const rd = item.reformData as RepairOrderReformData;
-          const { ties } = rd;
+          if (!isRepairReformData(item.reformData)) return null;
+          const { ties } = item.reformData;
 
           return (
             <Card
@@ -36,16 +35,16 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
                   size="small"
                   style={{ marginBottom: 8 }}
                 >
-                  {tie.image_url && (
+                  {tie.imageUrl && (
                     <Descriptions.Item label="이미지" span={2}>
-                      <Image width={100} src={tie.image_url} />
+                      <Image width={100} src={tie.imageUrl} />
                     </Descriptions.Item>
                   )}
                   <Descriptions.Item label="측정방식">
-                    {tie.measurement_type === "length" ? "길이 직접 입력" : "키 입력"}
+                    {tie.measurementType === "length" ? "길이 직접 입력" : "키 입력"}
                   </Descriptions.Item>
                   <Descriptions.Item label="측정값">
-                    {tie.measurement_value || "-"}
+                    {tie.measurementValue || "-"}
                   </Descriptions.Item>
                   {tie.memo && (
                     <Descriptions.Item label="메모" span={2}>

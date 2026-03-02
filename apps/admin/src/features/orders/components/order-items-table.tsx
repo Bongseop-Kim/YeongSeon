@@ -20,15 +20,17 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
           if (!item.productName) return "-";
           if (item.productId != null) {
             return (
-              <a
+              <button
+                type="button"
+                aria-label={item.productName ?? undefined}
                 onClick={(e) => {
                   e.stopPropagation();
                   edit("products", item.productId!);
                 }}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
               >
                 {item.productName}
-              </a>
+              </button>
             );
           }
           return item.productName;

@@ -25,15 +25,16 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
       </Descriptions.Item>
       <Descriptions.Item label="고객명">
         {order.userId ? (
-          <a
+          <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               show("profiles", order.userId);
             }}
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
           >
             {order.customerName}
-          </a>
+          </button>
         ) : (
           order.customerName
         )}

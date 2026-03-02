@@ -27,7 +27,7 @@ export function OrderStatusActions({
   isUpdating,
 }: OrderStatusActionsProps) {
   const handleCancelClick = () => {
-    onStatusChange("취소", statusMemo).catch(() => {});
+    void onStatusChange("취소", statusMemo);
   };
 
   const handleRollbackClick = (targetStatus: string) => {
@@ -76,7 +76,7 @@ export function OrderStatusActions({
       });
       return;
     }
-    onStatusChange(nextStatus, statusMemo).catch(() => {});
+    void onStatusChange(nextStatus, statusMemo);
   };
 
   return (

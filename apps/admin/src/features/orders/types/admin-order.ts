@@ -88,25 +88,25 @@ export type AdminOrderItem = AdminProductOrderItem | AdminReformOrderItem;
 // ── reformData typed structures ────────────────────────────────
 
 export interface CustomOrderOptions {
-  tie_type: string | null;
+  tieType: string | null;
   interlining: string | null;
-  design_type: string | null;
-  fabric_type: string | null;
-  fabric_provided: boolean;
-  triangle_stitch: boolean;
-  side_stitch: boolean;
-  bar_tack: boolean;
+  designType: string | null;
+  fabricType: string | null;
+  fabricProvided: boolean;
+  triangleStitch: boolean;
+  sideStitch: boolean;
+  barTack: boolean;
   dimple: boolean;
   spoderato: boolean;
   fold7: boolean;
-  brand_label: boolean;
-  care_label: boolean;
+  brandLabel: boolean;
+  careLabel: boolean;
 }
 
 export interface CustomOrderPricing {
-  sewing_cost: number;
-  fabric_cost: number;
-  total_cost: number;
+  sewingCost: number;
+  fabricCost: number;
+  totalCost: number;
 }
 
 export interface CustomOrderReformData {
@@ -115,20 +115,34 @@ export interface CustomOrderReformData {
   pricing: CustomOrderPricing;
   quantity: number;
   sample: boolean;
-  reference_image_urls: string[];
-  additional_notes: string | null;
+  referenceImageUrls: string[];
+  additionalNotes: string | null;
 }
 
 export interface RepairTie {
-  image_url: string | undefined;
-  measurement_type: "length" | "height";
-  measurement_value: string;
+  imageUrl: string | undefined;
+  measurementType: "length" | "height";
+  measurementValue: string;
   memo: string | undefined;
 }
 
 export interface RepairOrderReformData {
   readonly _tag: "repair";
   ties: RepairTie[];
+}
+
+// ── type guards ────────────────────────────────────────────────
+
+export function isCustomReformData(
+  value: CustomOrderReformData | RepairOrderReformData | null | undefined
+): value is CustomOrderReformData {
+  return value?._tag === "custom";
+}
+
+export function isRepairReformData(
+  value: CustomOrderReformData | RepairOrderReformData | null | undefined
+): value is RepairOrderReformData {
+  return value?._tag === "repair";
 }
 
 // ── Status log ────────────────────────────────────────────────

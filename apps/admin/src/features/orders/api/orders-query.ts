@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTable } from "@refinedev/antd";
 import {
   useShow,
@@ -69,6 +69,7 @@ export function useAdminOrderDetail(orderId: string | undefined) {
   const { query, result: rawOrder } = useShow<AdminOrderDetailRowDTO>({
     resource: "admin_order_detail_view",
     id: orderId,
+    queryOptions: { enabled: !!orderId },
   });
 
   const order: AdminOrderDetail | undefined = rawOrder
@@ -222,19 +223,15 @@ export function useTrackingState(
 ) {
   const [courierCompany, setCourierCompany] = useState<string>("");
   const [trackingNumber, setTrackingNumber] = useState<string>("");
+  const prevOrderIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    if (order) {
-      if (courierCompany === "") {
-        setCourierCompany(
-          order.trackingInfo?.courierCompany ?? defaultCourier ?? ""
-        );
-      }
-      if (trackingNumber === "") {
-        setTrackingNumber(order.trackingInfo?.trackingNumber ?? "");
-      }
-    }
-  }, [order, defaultCourier, courierCompany, trackingNumber]);
+    if (!order) return;
+    if (order.id === prevOrderIdRef.current) return;
+    prevOrderIdRef.current = order.id;
+    setCourierCompany(order.trackingInfo?.courierCompany ?? defaultCourier ?? "");
+    setTrackingNumber(order.trackingInfo?.trackingNumber ?? "");
+  }, [order, defaultCourier]);
 
   return {
     courierCompany,

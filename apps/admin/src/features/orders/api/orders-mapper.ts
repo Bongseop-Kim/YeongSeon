@@ -112,25 +112,25 @@ export function parseCustomReformData(
   const rawPricing = isRecord(raw.pricing) ? raw.pricing : {};
 
   const options: CustomOrderOptions = {
-    tie_type: str(rawOptions.tie_type),
+    tieType: str(rawOptions.tie_type),
     interlining: str(rawOptions.interlining),
-    design_type: str(rawOptions.design_type),
-    fabric_type: str(rawOptions.fabric_type),
-    fabric_provided: bool(rawOptions.fabric_provided),
-    triangle_stitch: bool(rawOptions.triangle_stitch),
-    side_stitch: bool(rawOptions.side_stitch),
-    bar_tack: bool(rawOptions.bar_tack),
+    designType: str(rawOptions.design_type),
+    fabricType: str(rawOptions.fabric_type),
+    fabricProvided: bool(rawOptions.fabric_provided),
+    triangleStitch: bool(rawOptions.triangle_stitch),
+    sideStitch: bool(rawOptions.side_stitch),
+    barTack: bool(rawOptions.bar_tack),
     dimple: bool(rawOptions.dimple),
     spoderato: bool(rawOptions.spoderato),
     fold7: bool(rawOptions.fold7),
-    brand_label: bool(rawOptions.brand_label),
-    care_label: bool(rawOptions.care_label),
+    brandLabel: bool(rawOptions.brand_label),
+    careLabel: bool(rawOptions.care_label),
   };
 
   const pricing: CustomOrderPricing = {
-    sewing_cost: num(rawPricing.sewing_cost),
-    fabric_cost: num(rawPricing.fabric_cost),
-    total_cost: num(rawPricing.total_cost),
+    sewingCost: num(rawPricing.sewing_cost),
+    fabricCost: num(rawPricing.fabric_cost),
+    totalCost: num(rawPricing.total_cost),
   };
 
   const refImages = Array.isArray(raw.reference_image_urls)
@@ -143,19 +143,23 @@ export function parseCustomReformData(
     pricing,
     quantity: num(raw.quantity),
     sample: bool(raw.sample),
-    reference_image_urls: refImages,
-    additional_notes: str(raw.additional_notes),
+    referenceImageUrls: refImages,
+    additionalNotes: str(raw.additional_notes),
   };
 }
 
 function parseRepairTie(raw: unknown): RepairTie {
   const r = isRecord(raw) ? raw : {};
-  const measurementType =
-    str(r.measurement_type) === "length" ? "length" : "height";
+  const rawType = str(r.measurement_type);
+  const measurementType: "length" | "height" =
+    rawType === "length" || rawType === "height" ? rawType : "height";
+  if (rawType !== "length" && rawType !== "height") {
+    console.warn(`[parseRepairTie] Invalid measurement_type: ${rawType}`);
+  }
   return {
-    image_url: typeof r.image_url === "string" ? r.image_url : undefined,
-    measurement_type: measurementType,
-    measurement_value: str(r.measurement_value) ?? "",
+    imageUrl: typeof r.image_url === "string" ? r.image_url : undefined,
+    measurementType,
+    measurementValue: str(r.measurement_value) ?? "",
     memo: typeof r.memo === "string" ? r.memo : undefined,
   };
 }
