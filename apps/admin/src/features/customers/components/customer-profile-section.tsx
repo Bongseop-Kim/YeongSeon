@@ -1,4 +1,5 @@
 import { Descriptions, Tag } from "antd";
+import { ROLE_COLORS } from "../types/admin-customer";
 import type { AdminCustomerDetail } from "../types/admin-customer";
 
 interface Props {
@@ -13,7 +14,7 @@ export function CustomerProfileSection({ customer }: Props) {
         {customer.phone ?? "-"}
       </Descriptions.Item>
       <Descriptions.Item label="역할">
-        <Tag>{customer.role}</Tag>
+        <Tag color={ROLE_COLORS[customer.role] ?? "default"}>{customer.role}</Tag>
       </Descriptions.Item>
       <Descriptions.Item label="활성">
         <Tag color={customer.isActive ? "green" : "default"}>

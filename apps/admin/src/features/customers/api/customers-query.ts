@@ -46,7 +46,7 @@ export function useAdminCustomerDetail(customerId: string | undefined) {
     ? toAdminCustomerDetail(rawProfile)
     : undefined;
 
-  return { customer, refetch: query.refetch };
+  return { customer };
 }
 
 // ── Orders ─────────────────────────────────────────────────────

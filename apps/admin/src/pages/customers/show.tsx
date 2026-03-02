@@ -15,8 +15,8 @@ const { Title } = Typography;
 export default function CustomerShow() {
   const { id } = useParams<{ id: string }>();
   const { customer } = useAdminCustomerDetail(id);
-  const { orders } = useAdminCustomerOrders(customer?.id);
-  const { coupons } = useAdminCustomerCoupons(customer?.id);
+  const { orders } = useAdminCustomerOrders(id);
+  const { coupons } = useAdminCustomerCoupons(id);
 
   return (
     <Show>
