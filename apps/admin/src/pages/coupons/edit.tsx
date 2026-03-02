@@ -15,7 +15,7 @@ import {
 } from "antd";
 import { useInvalidate, useList } from "@refinedev/core";
 import { supabase } from "@/lib/supabase";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dayjs from "dayjs";
 
 type CouponUser = {
@@ -74,6 +74,8 @@ export default function CouponEdit() {
   const [selectedIssuedIds, setSelectedIssuedIds] = useState<React.Key[]>([]);
   const [selectedIssuedRows, setSelectedIssuedRows] = useState<IssuedCouponRow[]>([]);
   const [revoking, setRevoking] = useState(false);
+
+  const loadIdRef = useRef(0);
 
   const couponId = id;
 
@@ -161,6 +163,9 @@ export default function CouponEdit() {
         return;
       }
 
+      loadIdRef.current += 1;
+      const requestId = loadIdRef.current;
+
       setLoadingPreset(true);
       setSelectedUserIds([]);
 
@@ -169,6 +174,8 @@ export default function CouponEdit() {
           loadCustomers(),
           loadAlreadyIssuedUserIds(),
         ]);
+
+        if (requestId !== loadIdRef.current) return;
 
         const now = dayjs();
         const start30d = now.subtract(30, "day");
@@ -198,12 +205,14 @@ export default function CouponEdit() {
 
           case "purchased": {
             const purchasedUserIds = await loadPurchasedUserIds();
+            if (requestId !== loadIdRef.current) return;
             presetUsers = allCustomers.filter((user) => purchasedUserIds.has(user.id));
             break;
           }
 
           case "notPurchased": {
             const purchasedUserIds = await loadPurchasedUserIds();
+            if (requestId !== loadIdRef.current) return;
             presetUsers = allCustomers.filter((user) => !purchasedUserIds.has(user.id));
             break;
           }
@@ -217,6 +226,8 @@ export default function CouponEdit() {
             if (error) {
               throw error;
             }
+
+            if (requestId !== loadIdRef.current) return;
 
             const latestOrderByUser = new Map<string, dayjs.Dayjs>();
 
@@ -249,13 +260,17 @@ export default function CouponEdit() {
           presetUsers = presetUsers.filter((user) => !alreadyIssued.has(user.id));
         }
 
+        if (requestId !== loadIdRef.current) return;
         setUsers(presetUsers);
       } catch (error) {
+        if (requestId !== loadIdRef.current) return;
         console.error(error);
         message.error("대상 고객 조회에 실패했습니다.");
         setUsers([]);
       } finally {
-        setLoadingPreset(false);
+        if (requestId === loadIdRef.current) {
+          setLoadingPreset(false);
+        }
       }
     },
     [couponId, excludeIssuedUsers]
@@ -339,11 +354,14 @@ export default function CouponEdit() {
       return;
     }
 
-    const userCouponIds = Array.from(
-      new Set(targetRows.map((row) => row.id).filter((value): value is string => !!value))
+    const rowsWithId = targetRows.filter((row) => !!row.id);
+    const rowsWithoutId = targetRows.filter((row) => !row.id);
+
+    const idsToRevoke = Array.from(
+      new Set(rowsWithId.map((row) => row.id).filter((value): value is string => !!value))
     );
-    const userIds = Array.from(
-      new Set(targetRows.map((row) => row.userId).filter((value): value is string => !!value))
+    const userIdsToRevoke = Array.from(
+      new Set(rowsWithoutId.map((row) => row.userId).filter((value): value is string => !!value))
     );
 
     modal.confirm({
@@ -353,28 +371,26 @@ export default function CouponEdit() {
       onOk: async () => {
         setRevoking(true);
         try {
-          let updateError: { message?: string } | null = null;
+          if (idsToRevoke.length === 0 && userIdsToRevoke.length === 0) {
+            throw { message: "회수 대상 식별자(id/userId)가 없습니다." };
+          }
 
-          if (userCouponIds.length > 0) {
+          if (idsToRevoke.length > 0) {
             const { error } = await supabase
               .from("user_coupons")
               .update({ status: "revoked" })
-              .in("id", userCouponIds);
-            updateError = error;
-          } else if (couponId && userIds.length > 0) {
+              .in("id", idsToRevoke);
+            if (error) throw error;
+          }
+
+          if (couponId && userIdsToRevoke.length > 0) {
             const { error } = await supabase
               .from("user_coupons")
               .update({ status: "revoked" })
               .eq("coupon_id", couponId)
-              .in("user_id", userIds)
+              .in("user_id", userIdsToRevoke)
               .eq("status", "active");
-            updateError = error;
-          } else {
-            updateError = { message: "회수 대상 식별자(id/userId)가 없습니다." };
-          }
-
-          if (updateError) {
-            throw updateError;
+            if (error) throw error;
           }
 
           message.success(`${targetRows.length}건 회수 완료`);
