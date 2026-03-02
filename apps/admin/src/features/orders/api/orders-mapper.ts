@@ -203,7 +203,8 @@ export function toAdminOrderItem(
     return item;
   }
 
-  const reformType = orderType === "sale" ? "custom" : orderType;
+  const reformData =
+    orderType === "sale" ? null : toReformData(dto.reformData, orderType);
   const item: AdminReformOrderItem = {
     type: "reform",
     id: dto.id,
@@ -212,7 +213,7 @@ export function toAdminOrderItem(
     unitPrice: dto.unitPrice,
     discountAmount: dto.discountAmount,
     lineDiscountAmount: dto.lineDiscountAmount,
-    reformData: toReformData(dto.reformData, reformType),
+    reformData,
   };
   return item;
 }

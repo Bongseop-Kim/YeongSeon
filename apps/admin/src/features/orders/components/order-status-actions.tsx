@@ -26,8 +26,12 @@ export function OrderStatusActions({
   onRollback,
   isUpdating,
 }: OrderStatusActionsProps) {
-  const handleCancelClick = () => {
-    void onStatusChange("취소", statusMemo);
+  const handleCancelClick = async () => {
+    try {
+      await onStatusChange("취소", statusMemo);
+    } catch {
+      message.error("상태 변경에 실패했습니다.");
+    }
   };
 
   const handleRollbackClick = (targetStatus: string) => {
@@ -63,7 +67,7 @@ export function OrderStatusActions({
     });
   };
 
-  const handleNextStatusClick = () => {
+  const handleNextStatusClick = async () => {
     if (!nextStatus) return;
     if (nextStatus === "취소") {
       Modal.confirm({
@@ -72,11 +76,17 @@ export function OrderStatusActions({
         okText: "취소 처리",
         cancelText: "닫기",
         okButtonProps: { danger: true },
-        onOk: () => onStatusChange(nextStatus, statusMemo),
+        onOk: async () => {
+          await onStatusChange(nextStatus, statusMemo);
+        },
       });
       return;
     }
-    void onStatusChange(nextStatus, statusMemo);
+    try {
+      await onStatusChange(nextStatus, statusMemo);
+    } catch {
+      message.error("상태 변경에 실패했습니다.");
+    }
   };
 
   return (
