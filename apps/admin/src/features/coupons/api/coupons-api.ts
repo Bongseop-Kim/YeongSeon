@@ -111,7 +111,8 @@ export async function revokeCouponsByIds(ids: string[]): Promise<void> {
   const { error } = await supabase
     .from("user_coupons")
     .update({ status: "revoked" })
-    .in("id", ids);
+    .in("id", ids)
+    .eq("status", "active");
 
   if (error) {
     throw error;
