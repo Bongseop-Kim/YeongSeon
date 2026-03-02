@@ -63,7 +63,7 @@ export function IssuedCouponTable({
         <Table.Column
           dataIndex="status"
           title="상태"
-          render={(v: string) => <Tag>{v}</Tag>}
+          render={(v: string | null) => v != null ? <Tag>{v}</Tag> : null}
         />
         <Table.Column dataIndex="issuedAt" title="발급일" />
         <Table.Column

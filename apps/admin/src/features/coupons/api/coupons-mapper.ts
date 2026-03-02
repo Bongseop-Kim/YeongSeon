@@ -11,7 +11,7 @@ interface ProfileRow {
 }
 
 interface IssuedCouponViewRow {
-  id: string | null;
+  id: string | null | undefined;
   userId: string | null;
   couponId: string | null;
   userName: string | null;
@@ -34,7 +34,7 @@ export function toAdminCouponUser(row: ProfileRow): AdminCouponUser {
 
 export function toAdminIssuedCouponRow(row: IssuedCouponViewRow): AdminIssuedCouponRow {
   return {
-    id: row.id ?? `${row.userId}:${row.couponId}`,
+    id: row.id ?? (row.userId != null && row.couponId != null ? `${row.userId}:${row.couponId}` : undefined),
     userId: row.userId ?? null,
     couponId: row.couponId ?? null,
     userName: row.userName ?? null,

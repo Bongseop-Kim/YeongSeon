@@ -9,7 +9,7 @@ export interface AdminCouponUser {
 }
 
 export interface AdminIssuedCouponRow {
-  id: string;
+  id: string | undefined;
   userId: string | null;
   couponId: string | null;
   userName: string | null;
