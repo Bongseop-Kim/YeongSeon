@@ -120,10 +120,10 @@ export interface CustomOrderReformData {
 }
 
 export interface RepairTie {
-  imageUrl: string | undefined;
+  imageUrl: string | null;
   measurementType: "length" | "height";
   measurementValue: string;
-  memo: string | undefined;
+  memo: string | null;
 }
 
 export interface RepairOrderReformData {
@@ -150,6 +150,7 @@ export function isRepairReformData(
 export interface AdminStatusLogEntry {
   id: string;
   orderId: string;
+  changedBy: string;
   previousStatus: string;
   newStatus: string;
   memo: string | null;

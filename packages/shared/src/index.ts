@@ -43,6 +43,7 @@ export * from "./utils/format-coupon-amount";
 export * from "./utils/claim-utils";
 export * from "./utils/get-order-item-details";
 export * from "./utils/format-date";
+export * from "./utils/korean-postposition";
 
 // Mappers
 export * from "./mappers/shared-mapper";

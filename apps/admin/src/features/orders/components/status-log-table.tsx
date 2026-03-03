@@ -36,6 +36,11 @@ export function StatusLogTable({ logs }: StatusLogTableProps) {
         )}
       />
       <Table.Column
+        dataIndex="changedBy"
+        title="변경자"
+        render={(v: string) => v ?? "-"}
+      />
+      <Table.Column
         dataIndex="memo"
         title="메모"
         render={(v: string | null) => v ?? "-"}

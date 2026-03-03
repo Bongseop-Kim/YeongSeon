@@ -1,6 +1,6 @@
 import { Table } from "antd";
 import { useNavigation } from "@refinedev/core";
-import type { AdminOrderItem, AdminProductOrderItem } from "../types/admin-order";
+import type { AdminOrderItem } from "../types/admin-order";
 
 interface OrderItemsTableProps {
   items: AdminOrderItem[];
@@ -16,24 +16,24 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
         title="상품명"
         render={(_: unknown, record: AdminOrderItem) => {
           if (record.type === "reform") return "리폼 상품";
-          const item = record as AdminProductOrderItem;
-          if (!item.productName) return "-";
-          if (item.productId != null) {
+          if (!record.productName) return "-";
+          if (record.productId != null) {
+            const { productId } = record;
             return (
               <button
                 type="button"
-                aria-label={item.productName ?? undefined}
+                aria-label={record.productName}
                 onClick={(e) => {
                   e.stopPropagation();
-                  edit("products", item.productId!);
+                  edit("products", productId);
                 }}
                 style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
               >
-                {item.productName}
+                {record.productName}
               </button>
             );
           }
-          return item.productName;
+          return record.productName;
         }}
       />
       <Table.Column dataIndex="quantity" title="수량" />

@@ -1,6 +1,8 @@
+import { useRef } from "react";
 import { Button, Space, Typography, Input, Modal, Tag } from "antd";
 import { message } from "antd";
 import type { AdminOrderDetail } from "../types/admin-order";
+import { eulo } from "@yeongseon/shared";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -26,31 +28,29 @@ export function OrderStatusActions({
   onRollback,
   isUpdating,
 }: OrderStatusActionsProps) {
+  const rollbackMemoRef = useRef("");
+
   const handleCancelClick = async () => {
-    try {
-      await onStatusChange("취소", statusMemo);
-    } catch {
-      message.error("상태 변경에 실패했습니다.");
-    }
+    await onStatusChange("취소", statusMemo);
   };
 
   const handleRollbackClick = (targetStatus: string) => {
     if (!targetStatus) return;
 
-    let rollbackMemoValue = "";
+    rollbackMemoRef.current = "";
 
     Modal.confirm({
       title: "상태 롤백",
       content: (
         <div>
           <p>
-            현재 상태 <Tag>{order.status}</Tag> → <Tag>{targetStatus}</Tag>(으)로 롤백합니다.
+            현재 상태 <Tag>{order.status}</Tag> → <Tag>{targetStatus}</Tag>{eulo(targetStatus)} 롤백합니다.
           </p>
           <p style={{ marginBottom: 4 }}><strong>사유 (필수)</strong></p>
           <TextArea
             rows={3}
             placeholder="롤백 사유를 입력하세요"
-            onChange={(e) => { rollbackMemoValue = e.target.value; }}
+            onChange={(e) => { rollbackMemoRef.current = e.target.value; }}
           />
         </div>
       ),
@@ -58,11 +58,11 @@ export function OrderStatusActions({
       cancelText: "취소",
       okButtonProps: { danger: true },
       onOk: async () => {
-        if (!rollbackMemoValue.trim()) {
+        if (!rollbackMemoRef.current.trim()) {
           message.error("롤백 사유를 입력해주세요.");
           throw new Error("memo required");
         }
-        await onRollback(targetStatus, rollbackMemoValue);
+        await onRollback(targetStatus, rollbackMemoRef.current);
       },
     });
   };
@@ -82,11 +82,7 @@ export function OrderStatusActions({
       });
       return;
     }
-    try {
-      await onStatusChange(nextStatus, statusMemo);
-    } catch {
-      message.error("상태 변경에 실패했습니다.");
-    }
+    await onStatusChange(nextStatus, statusMemo);
   };
 
   return (
@@ -111,7 +107,7 @@ export function OrderStatusActions({
             loading={isUpdating}
             onClick={handleNextStatusClick}
           >
-            {nextStatus} 으로 변경
+            {nextStatus}{eulo(nextStatus)} 변경
           </Button>
         )}
         {rollbackStatus && (
@@ -119,7 +115,7 @@ export function OrderStatusActions({
             loading={isUpdating}
             onClick={() => handleRollbackClick(rollbackStatus)}
           >
-            {rollbackStatus} 으로 롤백
+            {rollbackStatus}{eulo(rollbackStatus)} 롤백
           </Button>
         )}
         {order.status !== "취소" && order.status !== "완료" && (
