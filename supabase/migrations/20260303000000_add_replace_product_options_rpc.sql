@@ -12,6 +12,10 @@ BEGIN
   DELETE FROM public.product_options
   WHERE product_id = p_product_id;
 
+  IF p_options IS NULL OR jsonb_typeof(p_options) <> 'array' THEN
+    RAISE EXCEPTION 'p_options must be a JSON array';
+  END IF;
+
   IF jsonb_array_length(p_options) > 0 THEN
     INSERT INTO public.product_options
       (product_id, option_id, name, additional_price, stock)
