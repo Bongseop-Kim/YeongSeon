@@ -43,7 +43,6 @@ export function ProductListTable() {
             }
           },
           tabIndex: 0,
-          role: "button" as React.AriaRole,
           "aria-label": `${record.name} 상품 수정`,
           style: { cursor: "pointer" },
         })}
