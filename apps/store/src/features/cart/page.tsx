@@ -63,9 +63,9 @@ const CartPage = () => {
 
   const handleSelectItem = (itemId: string, checked: boolean) => {
     if (checked) {
-      setSelectedItems([...selectedItems, itemId]);
+      setSelectedItems((prev) => (prev.includes(itemId) ? prev : [...prev, itemId]));
     } else {
-      setSelectedItems(selectedItems.filter((id) => id !== itemId));
+      setSelectedItems((prev) => prev.filter((id) => id !== itemId));
     }
   };
 
