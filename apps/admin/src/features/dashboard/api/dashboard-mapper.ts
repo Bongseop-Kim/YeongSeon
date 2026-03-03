@@ -1,27 +1,34 @@
-import type { AdminOrderListRowDTO } from "@yeongseon/shared";
+import type { TodayStatsDTO } from "./dashboard-api";
 import type {
   AdminDashboardRecentOrder,
   AdminDashboardStats,
 } from "../types/admin-dashboard";
 
+type DashboardRecentOrderRowDTO = {
+  id: string;
+  orderNumber: string;
+  date: string;
+  customerName: string;
+  orderType: AdminDashboardRecentOrder["orderType"];
+  status: string;
+  totalPrice?: number | null;
+};
+
 export function toDashboardStats(
-  todayOrders: AdminOrderListRowDTO[],
+  todayStats: TodayStatsDTO,
   pendingClaimTotal: number,
   pendingInquiryTotal: number
 ): AdminDashboardStats {
   return {
-    todayOrderCount: todayOrders.length,
-    todayRevenue: todayOrders.reduce(
-      (sum: number, order: AdminOrderListRowDTO) => sum + (order.totalPrice ?? 0),
-      0
-    ),
+    todayOrderCount: todayStats.todayOrderCount,
+    todayRevenue: todayStats.todayRevenue,
     pendingClaimCount: pendingClaimTotal,
     pendingInquiryCount: pendingInquiryTotal,
   };
 }
 
 export function toDashboardRecentOrder(
-  dto: AdminOrderListRowDTO
+  dto: DashboardRecentOrderRowDTO
 ): AdminDashboardRecentOrder {
   return {
     id: dto.id,

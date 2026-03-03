@@ -1,5 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { useList } from "@refinedev/core";
 import type { AdminOrderListRowDTO } from "@yeongseon/shared";
+import { getTodayStats } from "./dashboard-api";
 import { toDashboardRecentOrder, toDashboardStats } from "./dashboard-mapper";
 import type {
   AdminDashboardRecentOrder,
@@ -10,15 +12,9 @@ import type {
 export function useDashboardStats(segment: SegmentValue): AdminDashboardStats {
   const today = new Date().toISOString().slice(0, 10);
 
-  const orderTypeFilter =
-    segment !== "all"
-      ? [{ field: "orderType" as const, operator: "eq" as const, value: segment }]
-      : [];
-
-  const { result: todayOrdersResult } = useList<AdminOrderListRowDTO>({
-    resource: "admin_order_list_view",
-    filters: [{ field: "date", operator: "eq", value: today }, ...orderTypeFilter],
-    pagination: { pageSize: 1000 },
+  const { data: todayStats } = useQuery({
+    queryKey: ["dashboard", "today-stats", segment, today],
+    queryFn: () => getTodayStats(segment, today),
   });
 
   const { result: pendingClaimsResult } = useList({
@@ -42,7 +38,7 @@ export function useDashboardStats(segment: SegmentValue): AdminDashboardStats {
   });
 
   return toDashboardStats(
-    todayOrdersResult.data ?? [],
+    todayStats ?? { todayOrderCount: 0, todayRevenue: 0 },
     pendingClaimsResult.total ?? 0,
     pendingInquiriesResult.total ?? 0
   );

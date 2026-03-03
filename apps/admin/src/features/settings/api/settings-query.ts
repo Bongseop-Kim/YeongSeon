@@ -32,6 +32,9 @@ export function useDefaultCourierForm() {
       initialized.current = true;
       setCourierCompany(toDefaultCourierSetting(result).courierCompany);
     }
+    if (!result) {
+      initialized.current = false;
+    }
   }, [result]);
 
   const save = () => {
