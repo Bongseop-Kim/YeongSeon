@@ -205,7 +205,7 @@ export function useAdminProductEditForm() {
   });
 
   useEffect(() => {
-    if (optionsData?.data?.length) {
+    if (optionsData?.data !== undefined) {
       form.setFieldValue(
         "options",
         optionsData.data.map(toAdminProductOption)
