@@ -5,10 +5,12 @@ import type { AdminSettingRowDTO } from "@yeongseon/shared";
 
 import { toDefaultCourierSetting } from "@/features/settings/api/settings-mapper";
 
+const DEFAULT_COURIER_COMPANY_KEY = "default_courier_company";
+
 export function useDefaultCourier(): string | undefined {
   const { result } = useOne<AdminSettingRowDTO>({
     resource: "admin_settings",
-    id: "default_courier_company",
+    id: DEFAULT_COURIER_COMPANY_KEY,
     meta: { idColumnName: "key" },
   });
 
@@ -18,7 +20,7 @@ export function useDefaultCourier(): string | undefined {
 export function useDefaultCourierForm() {
   const { query, result } = useOne<AdminSettingRowDTO>({
     resource: "admin_settings",
-    id: "default_courier_company",
+    id: DEFAULT_COURIER_COMPANY_KEY,
     meta: { idColumnName: "key" },
   });
 
@@ -28,7 +30,7 @@ export function useDefaultCourierForm() {
   const initialized = useRef(false);
 
   useEffect(() => {
-    if (result?.value && !initialized.current) {
+    if (result !== undefined && !initialized.current) {
       initialized.current = true;
       setCourierCompany(toDefaultCourierSetting(result).courierCompany);
     }
@@ -41,7 +43,7 @@ export function useDefaultCourierForm() {
     updateSetting(
       {
         resource: "admin_settings",
-        id: "default_courier_company",
+        id: DEFAULT_COURIER_COMPANY_KEY,
         values: { value: courierCompany },
         meta: { idColumnName: "key" },
       },

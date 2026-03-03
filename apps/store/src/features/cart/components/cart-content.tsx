@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { PageLayout } from "@/components/layout/page-layout";
 import { useModalStore } from "@/store/modal";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
@@ -47,6 +47,11 @@ export const CartContent = () => {
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const { openCouponSelect } = useCouponSelect();
+
+  useEffect(() => {
+    const currentIds = new Set(items.map((item) => item.id));
+    setSelectedItems((prev) => prev.filter((id) => currentIds.has(id)));
+  }, [items]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -197,12 +202,12 @@ export const CartContent = () => {
   };
 
   const handleOrder = () => {
-    if (selectedItems.length === 0) {
+    const selectedCartItems = getSelectedCartItems(items, selectedItems);
+
+    if (selectedCartItems.length === 0) {
       confirm("주문할 상품을 선택해주세요.");
       return;
     }
-
-    const selectedCartItems = getSelectedCartItems(items, selectedItems);
 
     // 선택된 상품들을 주문 store에 저장
     setOrderItems(selectedCartItems);

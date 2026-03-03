@@ -15,6 +15,14 @@ begin
     raise exception 'Admin access required';
   end if;
 
+  if p_date is null or p_date = '' then
+    raise exception 'p_date is required';
+  end if;
+
+  if p_order_type is null or p_order_type not in ('all', 'sale', 'custom', 'repair') then
+    raise exception 'invalid p_order_type: %', p_order_type;
+  end if;
+
   RETURN QUERY
   SELECT
     COUNT(*)::bigint AS today_order_count,

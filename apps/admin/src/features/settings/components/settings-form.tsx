@@ -57,7 +57,7 @@ export function SettingsForm() {
             value: name,
           }))}
         />
-        <Button type="primary" onClick={save} loading={isSaving}>
+        <Button type="primary" onClick={save} loading={isSaving} disabled={!courierCompany || isSaving}>
           저장
         </Button>
       </Space>

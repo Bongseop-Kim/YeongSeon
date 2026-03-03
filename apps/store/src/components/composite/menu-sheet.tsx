@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useAuthStore } from "@/store/auth";
-import { useSignOut } from "@/features/auth/api/auth.query";
+import { useSignOut } from "@/features/auth/api/auth-query";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 

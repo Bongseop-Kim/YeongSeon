@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSession } from "@/features/auth/api/auth.query";
+import { useSession } from "@/features/auth/api/auth-query";
 import { ROUTES } from "@/constants/ROUTES";
 
 const AuthCallbackPage = () => {

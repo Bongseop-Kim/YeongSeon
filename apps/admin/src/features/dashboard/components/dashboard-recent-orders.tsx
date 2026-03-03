@@ -47,6 +47,13 @@ export function DashboardRecentOrders({
         size="small"
         onRow={(record) => ({
           onClick: () => show("admin_order_list_view", record.id),
+          tabIndex: 0,
+          onKeyDown: (e: React.KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              show("admin_order_list_view", record.id);
+            }
+          },
           style: { cursor: "pointer" },
         })}
       >
