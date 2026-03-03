@@ -4,7 +4,6 @@ import { useTable } from "@refinedev/antd";
 import {
   useShow,
   useList,
-  useOne,
   useUpdate,
   useInvalidate,
 } from "@refinedev/core";
@@ -14,7 +13,6 @@ import type {
   AdminOrderListRowDTO,
   AdminOrderDetailRowDTO,
   AdminOrderItemRowDTO,
-  AdminSettingRowDTO,
   OrderStatusLogDTO,
   OrderType,
 } from "@yeongseon/shared";
@@ -113,20 +111,6 @@ export function useAdminOrderStatusLogs(orderId: string | undefined) {
   const logs: AdminStatusLogEntry[] = result.data.map(toAdminStatusLogEntry);
 
   return { logs };
-}
-
-// ── Default courier ───────────────────────────────────────────
-// useOne returns { result: TData | undefined }
-
-export function useDefaultCourier(): string | undefined {
-  const { result } = useOne<AdminSettingRowDTO>({
-    resource: "admin_settings",
-    id: "default_courier_company",
-    meta: { idColumnName: "key" },
-    queryOptions: { enabled: true },
-  });
-
-  return result?.value ?? undefined;
 }
 
 // ── Status update ─────────────────────────────────────────────
