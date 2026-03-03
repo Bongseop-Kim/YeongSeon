@@ -122,9 +122,11 @@ export function useQuoteRequestStatusUpdate(
 ) {
   const invalidate = useInvalidate();
   const [isUpdating, setIsUpdating] = useState(false);
+  const isUpdatingRef = useRef(false);
 
   const updateStatus = async (newStatus: string) => {
-    if (!detail) return;
+    if (!detail || isUpdatingRef.current) return;
+    isUpdatingRef.current = true;
     setIsUpdating(true);
     try {
       await updateQuoteRequestStatus({
@@ -147,6 +149,7 @@ export function useQuoteRequestStatusUpdate(
         `상태 변경 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
       );
     } finally {
+      isUpdatingRef.current = false;
       setIsUpdating(false);
     }
   };
