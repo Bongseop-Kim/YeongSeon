@@ -6,8 +6,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/constants/ROUTES";
-import { useDeleteAccount } from "@/features/auth/api/auth.query";
+import { useDeleteAccount } from "@/features/auth/api/auth-query";
 import { toast } from "@/lib/toast";
+import { useAuthStore } from "@/store/auth";
 import { useModalStore } from "@/store/modal";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +28,7 @@ export default function MyInfoLeavePage() {
     confirm("정말 탈퇴하시겠습니까?", () => {
       deleteAccount.mutate(undefined, {
         onSuccess: () => {
+          useAuthStore.setState({ user: null, initialized: false });
           toast.success("회원탈퇴가 완료되었습니다.");
           navigate(ROUTES.HOME);
         },

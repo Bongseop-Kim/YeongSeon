@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useSession } from "@/features/auth/api/auth.query";
+import { useSession } from "@/features/auth/api/auth-query";
 import { useAuthStore } from "@/store/auth";
 import { ROUTES } from "@/constants/ROUTES";
 

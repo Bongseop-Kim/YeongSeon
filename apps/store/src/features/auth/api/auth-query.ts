@@ -2,18 +2,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getSession,
   signInWithOAuth,
-  signOut as signOutApi,
+  signOut,
   deleteAccount,
-} from "./auth.api";
+} from "./auth-api";
 import { toast } from "@/lib/toast";
-import { useAuthStore } from "@/store/auth";
 
 /**
  * 세션 쿼리 키
  */
 export const authKeys = {
-  all: ["auth"] as const,
-  session: () => [...authKeys.all, "session"] as const,
+  all: ["auth"],
+  session: () => [...authKeys.all, "session"],
 };
 
 /**
@@ -61,7 +60,7 @@ export const useSignOut = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: signOutApi,
+    mutationFn: signOut,
     onSuccess: () => {
       // 세션 쿼리 무효화 및 캐시 초기화
       queryClient.setQueryData(authKeys.session(), null);
@@ -88,7 +87,6 @@ export const useDeleteAccount = () => {
     mutationFn: deleteAccount,
     onSuccess: () => {
       queryClient.clear();
-      useAuthStore.setState({ user: null, initialized: false });
     },
   });
 };
