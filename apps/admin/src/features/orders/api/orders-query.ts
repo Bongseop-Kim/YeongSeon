@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { eulo } from "@yeongseon/shared";
 import { useTable } from "@refinedev/antd";
 import {
   useShow,
@@ -76,7 +77,7 @@ export function useAdminOrderDetail(orderId: string | undefined) {
     ? toAdminOrderDetail(rawOrder)
     : undefined;
 
-  return { order, refetch: query.refetch };
+  return { order, refetch: query.refetch, isLoading: query.isLoading, isError: query.isError };
 }
 
 // ── Items ────────────────────────────────────────────────────
@@ -143,50 +144,41 @@ export function useOrderStatusUpdate(
       invalidates: ["list"],
     });
 
-  const changeStatus = async (newStatus: string, memo: string) => {
+  const updateStatus = async (newStatus: string, memo: string, isRollback: boolean) => {
     if (!orderId) return;
     setIsUpdating(true);
     try {
-      await updateOrderStatus({ orderId, newStatus, memo: memo || null });
-      message.success(`상태가 "${newStatus}"(으)로 변경되었습니다.`);
+      await updateOrderStatus({ orderId, newStatus, memo: memo || null, isRollback });
+      message.success(
+        isRollback
+          ? `"${newStatus}"${eulo(newStatus)} 롤백되었습니다.`
+          : `상태가 "${newStatus}"${eulo(newStatus)} 변경되었습니다.`
+      );
       refetch();
       invalidateLogs();
     } catch (err) {
       message.error(
-        `상태 변경 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+        `${isRollback ? "롤백" : "상태 변경"} 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
       );
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const rollback = async (targetStatus: string, memo: string) => {
-    if (!orderId) return;
-    setIsUpdating(true);
-    try {
-      await updateOrderStatus({
-        orderId,
-        newStatus: targetStatus,
-        memo,
-        isRollback: true,
-      });
-      message.success(`"${targetStatus}"(으)로 롤백되었습니다.`);
-      refetch();
-      invalidateLogs();
-    } catch (err) {
-      message.error(
-        `롤백 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
-      );
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+  const changeStatus = (newStatus: string, memo: string) =>
+    updateStatus(newStatus, memo, false);
+
+  const rollback = (targetStatus: string, memo: string) =>
+    updateStatus(targetStatus, memo, true);
 
   return { isUpdating, changeStatus, rollback };
 }
 
 // ── Tracking save ─────────────────────────────────────────────
 
+// TODO: 직접 테이블 쓰기 가드레일 위반 — `orders` 테이블에 직접 UPDATE하고 있음.
+// 가드레일에 따르면 직접 테이블 쓰기는 `cart_items` DELETE만 허용된다.
+// 배송 정보 저장은 `admin_update_order_tracking` RPC로 이관해야 한다.
 export function useTrackingSave() {
   const { mutate: updateOrder, mutation } = useUpdate();
 

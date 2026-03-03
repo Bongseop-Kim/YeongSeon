@@ -40,7 +40,7 @@ export interface AdminOrderDetailRowDTO extends Omit<AdminOrderListRowDTO, 'fabr
 export interface OrderStatusLogDTO {
   id: string;
   orderId: string;
-  changedBy: string;
+  changedBy: string | null;
   previousStatus: string;
   newStatus: string;
   memo: string | null;

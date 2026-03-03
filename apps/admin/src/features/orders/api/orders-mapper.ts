@@ -157,10 +157,10 @@ function parseRepairTie(raw: unknown): RepairTie {
     console.warn(`[parseRepairTie] Invalid measurement_type: ${rawType}`);
   }
   return {
-    imageUrl: typeof r.image_url === "string" ? r.image_url : undefined,
+    imageUrl: typeof r.image_url === "string" ? r.image_url : null,
     measurementType,
     measurementValue: str(r.measurement_value) ?? "",
-    memo: typeof r.memo === "string" ? r.memo : undefined,
+    memo: typeof r.memo === "string" ? r.memo : null,
   };
 }
 
@@ -226,6 +226,7 @@ export function toAdminStatusLogEntry(
   return {
     id: dto.id,
     orderId: dto.orderId,
+    changedBy: dto.changedBy,
     previousStatus: dto.previousStatus,
     newStatus: dto.newStatus,
     memo: dto.memo,
