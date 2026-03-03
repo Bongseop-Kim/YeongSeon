@@ -150,7 +150,7 @@ export function isRepairReformData(
 export interface AdminStatusLogEntry {
   id: string;
   orderId: string;
-  changedBy: string;
+  changedBy: string | null;
   previousStatus: string;
   newStatus: string;
   memo: string | null;

@@ -77,7 +77,7 @@ export function useAdminOrderDetail(orderId: string | undefined) {
     ? toAdminOrderDetail(rawOrder)
     : undefined;
 
-  return { order, refetch: query.refetch };
+  return { order, refetch: query.refetch, isLoading: query.isLoading, isError: query.isError };
 }
 
 // ── Items ────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Typography, Spin } from "antd";
+import { Typography, Spin, Result } from "antd";
 import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW } from "@yeongseon/shared";
 import {
   useAdminOrderDetail,
@@ -25,7 +25,7 @@ const { Title } = Typography;
 
 export function OrderDetailSection() {
   const { id: orderId } = useParams<{ id: string }>();
-  const { order, refetch } = useAdminOrderDetail(orderId);
+  const { order, refetch, isLoading, isError } = useAdminOrderDetail(orderId);
   const orderType = order?.orderType ?? "sale";
 
   const { items } = useAdminOrderItems(orderId, orderType);
@@ -48,7 +48,9 @@ export function OrderDetailSection() {
     (i): i is AdminReformOrderItem => i.type === "reform"
   );
 
-  if (!order) return <Spin />;
+  if (isLoading) return <Spin />;
+  if (isError) return <Result status="error" title="오류" subTitle="주문 정보를 불러오는 중 오류가 발생했습니다." />;
+  if (!order) return <Result status="404" title="주문 없음" subTitle="주문 정보를 찾을 수 없습니다." />;
 
   return (
     <>
