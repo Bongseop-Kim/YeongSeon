@@ -125,6 +125,29 @@ export function useAdminProductTable() {
   return { tableProps, setFilters };
 }
 
+function normalizeProductSubmit(
+  values: AdminProductFormValues,
+  imageUpload: ReturnType<typeof useImageKitUpload>
+): AdminProductFormValues | null {
+  if (imageUpload.uploading) {
+    message.warning("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도하세요.");
+    return null;
+  }
+
+  const urls = imageUpload.getUrls();
+  if (urls.length === 0) {
+    message.error("최소 1개의 상품 이미지를 업로드해주세요.");
+    return null;
+  }
+
+  const payload = { ...values };
+  delete payload.options;
+  delete payload.image;
+  delete payload.detail_images;
+
+  return { ...payload, image: urls[0], detail_images: urls };
+}
+
 export function useAdminProductCreateForm() {
   const { list } = useNavigation();
   const imageUpload = useImageKitUpload();
@@ -155,26 +178,9 @@ export function useAdminProductCreateForm() {
   });
 
   const handleFinish = async (values: AdminProductFormValues) => {
-    if (imageUpload.uploading) {
-      message.warning("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도하세요.");
-      return;
-    }
-
-    const urls = imageUpload.getUrls();
-    if (urls.length === 0) {
-      message.error("최소 1개의 상품 이미지를 업로드해주세요.");
-      return;
-    }
-
-    const payload = { ...values };
-    delete payload.options;
-
-    await formProps.onFinish?.({
-      ...payload,
-      code: null,
-      image: urls[0],
-      detail_images: urls,
-    });
+    const payload = normalizeProductSubmit(values, imageUpload);
+    if (payload === null) return;
+    await formProps.onFinish?.({ ...payload, code: null });
   };
 
   return { formProps, saveButtonProps, form, imageUpload, handleFinish };
@@ -232,7 +238,7 @@ export function useAdminProductEditForm() {
 
   useEffect(() => {
     const product = queryResult?.data?.data;
-    if (product && !imagesInitialized.current) {
+    if (product && !imagesInitialized.current && product.id === toProductId(id)) {
       imagesInitialized.current = true;
       const urls =
         product.detail_images && product.detail_images.length > 0
@@ -242,31 +248,13 @@ export function useAdminProductEditForm() {
             : [];
       imageUpload.initFromUrls(urls);
     }
-  }, [queryResult?.data?.data, imageUpload.initFromUrls]);
+  }, [queryResult?.data?.data, imageUpload.initFromUrls, id]);
 
   const handleFinish = async (values: AdminProductFormValues) => {
-    if (imageUpload.uploading) {
-      message.warning("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도하세요.");
-      return;
-    }
-
-    const urls = imageUpload.getUrls();
-    if (urls.length === 0) {
-      message.error("최소 1개의 상품 이미지를 업로드해주세요.");
-      return;
-    }
-
-    const payload = { ...values };
-    delete payload.options;
-    delete payload.image;
-    delete payload.detail_images;
-
+    const payload = normalizeProductSubmit(values, imageUpload);
+    if (payload === null) return;
     try {
-      await formProps.onFinish?.({
-        ...payload,
-        image: urls[0],
-        detail_images: urls,
-      });
+      await formProps.onFinish?.(payload);
     } catch (err) {
       message.error(
         err instanceof Error ? err.message : "상품 수정에 실패했습니다."
