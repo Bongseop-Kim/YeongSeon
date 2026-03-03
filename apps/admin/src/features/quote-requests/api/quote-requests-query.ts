@@ -93,6 +93,7 @@ export function useQuoteRequestFormState(detail: AdminQuoteRequestDetail | undef
     setQuotedAmount(detail.quotedAmount ?? null);
     setQuoteConditions(detail.quoteConditions ?? "");
     setAdminMemo(detail.adminMemo ?? "");
+    setStatusMemo("");
   }, [detail]);
 
   const formValues: QuoteRequestFormValues = {
