@@ -28,7 +28,7 @@ export function useDefaultCourierForm() {
   const initialized = useRef(false);
 
   useEffect(() => {
-    if (result?.value && !initialized.current) {
+    if (result !== undefined && !initialized.current) {
       initialized.current = true;
       setCourierCompany(toDefaultCourierSetting(result).courierCompany);
     }
