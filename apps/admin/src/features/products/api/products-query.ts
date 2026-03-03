@@ -54,13 +54,13 @@ interface ProductOptionRecord {
 }
 
 function toProductId(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
+  if (typeof value === "number" && Number.isInteger(value) && value > 0) {
     return value;
   }
 
   if (typeof value === "string" && value.trim() !== "") {
     const parsed = Number(value);
-    if (Number.isFinite(parsed)) {
+    if (Number.isInteger(parsed) && parsed > 0) {
       return parsed;
     }
   }
@@ -224,13 +224,14 @@ export function useAdminProductEditForm() {
   });
 
   useEffect(() => {
+    form.setFieldValue("options", []);
     if (optionsData?.data !== undefined) {
       form.setFieldValue(
         "options",
         optionsData.data.map(toAdminProductOption)
       );
     }
-  }, [optionsData?.data, form]);
+  }, [id, optionsData?.data, form]);
 
   useEffect(() => {
     imagesInitialized.current = false;
