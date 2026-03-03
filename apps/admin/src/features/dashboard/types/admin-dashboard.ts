@@ -2,6 +2,11 @@ import type { OrderType } from "@yeongseon/shared";
 
 export type SegmentValue = OrderType | "all";
 
+export interface TodayStatsDTO {
+  todayOrderCount: number;
+  todayRevenue: number;
+}
+
 export interface AdminDashboardStats {
   todayOrderCount: number;
   todayRevenue: number;
