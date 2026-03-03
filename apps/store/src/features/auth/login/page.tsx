@@ -1,88 +1,19 @@
-import { useEffect, type ReactNode } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/auth";
-import { useSignIn } from "@/features/auth/api/auth.query";
+import { useSignIn } from "@/features/auth/api/auth-query";
+import { ProviderButton } from "@/features/auth/components/provider-button";
+import { PROVIDERS, type SupportedProvider } from "@/features/auth/constants/providers";
 import { ROUTES } from "@/constants/ROUTES";
 import { usePopup } from "@/hooks/usePopup";
+import { useAuthStore } from "@/store/auth";
 
-type SupportedProvider = "kakao" | "google";
-type ProviderId = SupportedProvider | "naver" | "apple";
-
-interface ProviderConfig {
-  id: ProviderId;
-  label: string;
-  supported: boolean;
-  variant?: "default" | "outline";
-  className: string;
-  icon: ReactNode;
-}
-
-const PROVIDERS: ProviderConfig[] = [
-  {
-    id: "kakao",
-    label: "카카오로 시작하기",
-    supported: true,
-    className:
-      "w-full h-12 bg-[#FEE500] text-[#000000] hover:bg-[#FEE500]/90 font-medium",
-    icon: (
-      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z" />
-      </svg>
-    ),
-  },
-  {
-    id: "google",
-    label: "구글로 시작하기",
-    supported: true,
-    variant: "outline",
-    className: "w-full h-12 font-medium",
-    icon: (
-      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-          fill="#4285F4"
-        />
-        <path
-          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-          fill="#34A853"
-        />
-        <path
-          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-          fill="#FBBC05"
-        />
-        <path
-          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-          fill="#EA4335"
-        />
-      </svg>
-    ),
-  },
-  {
-    id: "naver",
-    label: "네이버로 시작하기",
-    supported: false,
-    className: "w-full h-12 bg-[#03C75A] text-white font-medium",
-    icon: (
-      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z" />
-      </svg>
-    ),
-  },
-  {
-    id: "apple",
-    label: "Apple로 시작하기",
-    supported: false,
-    variant: "outline",
-    className: "w-full h-12 font-medium",
-    icon: (
-      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-      </svg>
-    ),
-  },
-];
+const isLocationStateWithFrom = (value: unknown): value is { from?: string } => {
+  if (typeof value !== "object" || value === null) return false;
+  if (!Object.prototype.hasOwnProperty.call(value, "from")) return true;
+  const from = Reflect.get(value, "from");
+  return typeof from === "string" || typeof from === "undefined";
+};
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -90,99 +21,33 @@ const LoginPage = () => {
   const { user } = useAuthStore();
   const signInMutation = useSignIn();
   const { openPopup } = usePopup();
-
-  // 로그인 전에 가려던 페이지 경로 (ProtectedRoute에서 전달됨)
-  // state가 없으면 sessionStorage에서 확인
-  const from =
-    (location.state as { from?: string })?.from ||
-    sessionStorage.getItem("authRedirect") ||
-    ROUTES.HOME;
+  const from = (isLocationStateWithFrom(location.state) ? location.state?.from : undefined) || sessionStorage.getItem("authRedirect") || ROUTES.HOME;
 
   useEffect(() => {
-    // 이미 로그인된 경우 원래 가려던 페이지 또는 홈으로 리다이렉트
-    if (user) {
-      const redirectPath = sessionStorage.getItem("authRedirect");
-      if (redirectPath) {
-        sessionStorage.removeItem("authRedirect");
-        navigate(redirectPath, { replace: true });
-      } else {
-        navigate(from, { replace: true });
-      }
+    if (!user) return;
+    const redirectPath = sessionStorage.getItem("authRedirect");
+    if (redirectPath) {
+      sessionStorage.removeItem("authRedirect");
+      navigate(redirectPath, { replace: true });
+      return;
     }
-  }, [user, navigate, from]);
+    navigate(from, { replace: true });
+  }, [from, navigate, user]);
 
-  const handleSignIn = async (provider: "kakao" | "google") => {
-    // 에러는 뮤테이션의 onError에서 처리되므로 여기서는 호출만
+  const handleSignIn = async (provider: SupportedProvider) => {
     await signInMutation.mutateAsync(provider);
   };
-
-  const isPending = signInMutation.isPending;
 
   return (
     <MainLayout>
       <MainContent>
         <div className="min-h-[60vh] flex items-center justify-center px-4">
           <div className="w-full max-w-md space-y-8">
-            <div className="text-center space-y-2">
-              <h1 className="text-2xl font-semibold">로그인</h1>
-              <p className="text-sm text-zinc-600">
-                소셜 계정으로 간편하게 로그인하세요
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              {PROVIDERS.map((provider) => {
-                const isSupported = provider.supported;
-                return (
-                  <Button
-                    key={provider.id}
-                    onClick={
-                      isSupported
-                        ? () => void handleSignIn(provider.id as SupportedProvider)
-                        : undefined
-                    }
-                    disabled={isPending || !isSupported}
-                    variant={provider.variant}
-                    className={`${provider.className} ${
-                      !isSupported ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    title={!isSupported ? "준비 중인 로그인 방식입니다." : undefined}
-                  >
-                    {provider.icon}
-                    {provider.label}
-                    {!isSupported && (
-                      <span className="ml-2 text-xs font-normal">준비 중</span>
-                    )}
-                  </Button>
-                );
-              })}
-            </div>
-
+            <div className="text-center space-y-2"><h1 className="text-2xl font-semibold">로그인</h1><p className="text-sm text-zinc-600">소셜 계정으로 간편하게 로그인하세요</p></div>
+            <div className="space-y-3">{PROVIDERS.map((provider) => <ProviderButton key={provider.id} provider={provider} onSignIn={handleSignIn} isPending={signInMutation.isPending} />)}</div>
             <div className="text-center text-xs text-zinc-500 pt-4">
               <p>
-                로그인 시{" "}
-                <a
-                  href={ROUTES.TERMS_OF_SERVICE}
-                  className="underline"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    openPopup(ROUTES.TERMS_OF_SERVICE);
-                  }}
-                >
-                  이용약관
-                </a>
-                과{" "}
-                <a
-                  href={ROUTES.PRIVACY_POLICY}
-                  className="underline"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    openPopup(ROUTES.PRIVACY_POLICY);
-                  }}
-                >
-                  개인정보처리방침
-                </a>
-                에 동의하게 됩니다.
+                로그인 시 <a href={ROUTES.TERMS_OF_SERVICE} className="underline" onClick={(e) => { e.preventDefault(); openPopup(ROUTES.TERMS_OF_SERVICE); }}>이용약관</a>과 <a href={ROUTES.PRIVACY_POLICY} className="underline" onClick={(e) => { e.preventDefault(); openPopup(ROUTES.PRIVACY_POLICY); }}>개인정보처리방침</a>에 동의하게 됩니다.
               </p>
             </div>
           </div>
