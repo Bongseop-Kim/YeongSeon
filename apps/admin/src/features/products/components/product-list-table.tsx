@@ -1,3 +1,4 @@
+import React from "react";
 import { useNavigation } from "@refinedev/core";
 import { Image, Select, Space, Table, Tag } from "antd";
 import { useAdminProductTable } from "../api/products-query";
@@ -35,6 +36,15 @@ export function ProductListTable() {
           onClick: () => {
             if (record.id != null) edit("products", record.id);
           },
+          onKeyDown: (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+            if ((e.key === "Enter" || e.key === " ") && record.id != null) {
+              e.preventDefault();
+              edit("products", record.id);
+            }
+          },
+          tabIndex: 0,
+          role: "button" as React.AriaRole,
+          "aria-label": `${record.name} 상품 수정`,
           style: { cursor: "pointer" },
         })}
       >
