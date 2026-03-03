@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const { Title } = Typography;
 
-export default function LoginPage() {
+export function LoginForm() {
   const { mutate: login, isPending } = useLogin();
   const [error, setError] = useState<string | null>(null);
 
