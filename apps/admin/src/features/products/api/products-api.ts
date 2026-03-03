@@ -34,22 +34,12 @@ export async function saveProductOptions({
   productId: number;
   options: AdminProductOption[];
 }): Promise<void> {
-  const { error: deleteError } = await supabase
-    .from("product_options")
-    .delete()
-    .eq("product_id", productId);
+  const { error } = await supabase.rpc("replace_product_options", {
+    p_product_id: productId,
+    p_options: options.map((option) => fromAdminProductOption(option, productId)),
+  });
 
-  if (deleteError) {
-    throw new Error(deleteError.message);
-  }
-
-  if (options.length === 0) return;
-
-  const { error: insertError } = await supabase
-    .from("product_options")
-    .insert(options.map((option) => fromAdminProductOption(option, productId)));
-
-  if (insertError) {
-    throw new Error(insertError.message);
+  if (error) {
+    throw new Error(error.message);
   }
 }
