@@ -46,3 +46,34 @@ CREATE POLICY "Admins can delete product options"
   ON public.product_options FOR DELETE
   TO authenticated
   USING (public.is_admin());
+
+-- ── replace_product_options ──────────────────────────────────
+-- 관리자 전용: product_options를 트랜잭션 내에서 삭제 후 재삽입.
+-- SECURITY INVOKER: 호출자(관리자)의 RLS 정책("Admins can delete/insert product_options")으로 실행.
+CREATE OR REPLACE FUNCTION public.replace_product_options(
+  p_product_id integer,
+  p_options     jsonb
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+BEGIN
+  DELETE FROM public.product_options
+  WHERE product_id = p_product_id;
+
+  IF jsonb_array_length(p_options) > 0 THEN
+    INSERT INTO public.product_options
+      (product_id, option_id, name, additional_price, stock)
+    SELECT
+      p_product_id,
+      (elem->>'option_id')::varchar(50),
+      (elem->>'name')::varchar(255),
+      (elem->>'additional_price')::integer,
+      CASE WHEN elem->>'stock' IS NULL THEN NULL
+           ELSE (elem->>'stock')::integer END
+    FROM jsonb_array_elements(p_options) AS elem;
+  END IF;
+END;
+$$;
