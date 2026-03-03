@@ -39,7 +39,7 @@ export function InquiryListTable() {
         <Table.Column
           dataIndex="status"
           title="상태"
-          render={(v: string) => <Tag color={INQUIRY_STATUS_COLORS[v as keyof typeof INQUIRY_STATUS_COLORS]}>{v}</Tag>}
+          render={(v: AdminInquiryListItem["status"]) => <Tag color={INQUIRY_STATUS_COLORS[v]}>{v}</Tag>}
         />
         <Table.Column dataIndex="date" title="작성일" />
       </Table>

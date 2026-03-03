@@ -44,6 +44,7 @@ export function InquiryDetailSection() {
           <Input.TextArea
             rows={4}
             placeholder="답변을 입력하세요"
+            aria-label="답변 입력"
             value={answerText}
             onChange={(e) => setAnswerText(e.target.value)}
           />
