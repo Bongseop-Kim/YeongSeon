@@ -68,7 +68,9 @@ export function ProductListTable() {
         <Table.Column
           dataIndex="price"
           title="가격"
-          render={(value: number) => `${value?.toLocaleString()}원`}
+          render={(value: number | null | undefined) =>
+            value != null ? `${value.toLocaleString()}원` : "-"
+          }
         />
         <Table.Column
           dataIndex="stock"

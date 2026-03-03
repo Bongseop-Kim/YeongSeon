@@ -140,11 +140,17 @@ export function useAdminProductCreateForm() {
       const productId = toProductId(data?.data?.id);
       const options = toAdminProductOptions(form.getFieldValue("options"));
 
-      if (productId !== null && options.length > 0) {
-        await insertProductOptions({ productId, options });
+      try {
+        if (productId !== null && options.length > 0) {
+          await insertProductOptions({ productId, options });
+        }
+      } catch (err) {
+        message.error(
+          err instanceof Error ? err.message : "옵션 저장에 실패했습니다."
+        );
+      } finally {
+        list("products");
       }
-
-      list("products");
     },
   });
 
@@ -191,7 +197,14 @@ export function useAdminProductEditForm() {
       const options = toAdminProductOptions(form.getFieldValue("options"));
 
       if (productId !== null) {
-        await saveProductOptions({ productId, options });
+        try {
+          await saveProductOptions({ productId, options });
+        } catch (err) {
+          message.error(
+            err instanceof Error ? err.message : "옵션 저장에 실패했습니다."
+          );
+          return;
+        }
       }
 
       list("products");
