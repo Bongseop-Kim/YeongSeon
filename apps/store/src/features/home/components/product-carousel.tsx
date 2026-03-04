@@ -5,19 +5,24 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { NEW_ARRIVALS_DATA } from "@/features/home/constants/NEW_ARRIVALS_DATA";
+import type { ProductItem } from "@/features/home/types/home";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 
-export const Recommended = () => {
+interface ProductCarouselProps {
+  title: string;
+  items: ProductItem[];
+}
+
+export const ProductCarousel = ({ title, items }: ProductCarouselProps) => {
   const { isMobile } = useBreakpoint();
   const navigate = useNavigate();
 
   return (
     <div className="w-full py-8 overflow-x-hidden">
       <div className="px-4">
-        <h2 className="text-2xl font-bold mb-6">Recommended</h2>
+        <h2 className="text-2xl font-bold mb-6">{title}</h2>
       </div>
       <div className="px-4">
         <Carousel
@@ -28,7 +33,7 @@ export const Recommended = () => {
           className="w-full"
         >
           <CarouselContent>
-            {NEW_ARRIVALS_DATA.map((item) => (
+            {items.map((item) => (
               <CarouselItem
                 key={item.id}
                 className={isMobile ? "basis-1/2" : "basis-1/4"}

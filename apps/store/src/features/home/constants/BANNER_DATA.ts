@@ -1,4 +1,6 @@
-export const BANNER_DATA = [
+import type { BannerSlide } from "@/features/home/types/home";
+
+export const BANNER_DATA: BannerSlide[] = [
   {
     id: 1,
     image: "/images/banner/banner1.png",

@@ -28,7 +28,7 @@ import {
   FooterLink,
   FooterSection,
   FooterTitle,
-} from "@/features/home/components/footer";
+} from "@/components/layout/footer";
 import { usePopup } from "@/hooks/usePopup";
 
 export default function AppLayout() {
