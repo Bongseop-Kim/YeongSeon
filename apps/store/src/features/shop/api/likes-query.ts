@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addLike, removeLike } from "./likes-api";
 import { productKeys } from "./products-query";
+import type { Product } from "@yeongseon/shared/types/view/product";
 
 /**
  * 좋아요 추가/제거 뮤테이션
@@ -29,7 +30,7 @@ export const useToggleLike = (productId: number) => {
 
       // 낙관적 업데이트
       // 제품 상세 정보도 업데이트
-      queryClient.setQueryData(productKeys.detail(productId), (old: any) => {
+      queryClient.setQueryData(productKeys.detail(productId), (old: Product | undefined) => {
         if (!old) return old;
         return {
           ...old,

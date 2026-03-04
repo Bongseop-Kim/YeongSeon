@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useSelectedOptions } from "@/features/shop/detail/hooks/useSelectedOptions";
 import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -9,16 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
+import type { Product } from "@yeongseon/shared/types/view/product";
+import type { SelectedOption } from "@/features/shop/detail/types";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { toast } from "@/lib/toast";
-
-interface SelectedOption {
-  option: ProductOption;
-  quantity: number;
-}
 
 interface MobilePurchaseSheetProps {
   product: Product;
@@ -37,42 +34,21 @@ export function MobilePurchaseSheet({
   onProcessOrder,
 }: MobilePurchaseSheetProps) {
   const { addToCart } = useCart();
-  const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
+  const {
+    selectedOptions,
+    baseQuantity,
+    handleSelectOption,
+    handleRemoveOption,
+    handleUpdateQuantity,
+    handleUpdateBaseQuantity,
+    resetOptions,
+  } = useSelectedOptions();
   const productOptions = product.options ?? [];
 
-  // 옵션이 없으면 기본 상품으로 1개 초기화
   const hasOptions = productOptions.length > 0;
-
-  // 기본 상품 수량 (옵션이 없을 때)
-  const [baseQuantity, setBaseQuantity] = useState(1);
 
   // 장바구니에 추가 중인지 여부
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-
-  const handleSelectOption = (option: ProductOption) => {
-    const exists = selectedOptions.find((s) => s.option.id === option.id);
-    if (!exists) {
-      setSelectedOptions([...selectedOptions, { option, quantity: 1 }]);
-    }
-  };
-
-  const handleRemoveOption = (optionId: string) => {
-    setSelectedOptions(selectedOptions.filter((s) => s.option.id !== optionId));
-  };
-
-  const handleUpdateQuantity = (optionId: string, delta: number) => {
-    setSelectedOptions(
-      selectedOptions.map((s) =>
-        s.option.id === optionId
-          ? { ...s, quantity: Math.max(1, s.quantity + delta) }
-          : s
-      )
-    );
-  };
-
-  const handleUpdateBaseQuantity = (delta: number) => {
-    setBaseQuantity(Math.max(1, baseQuantity + delta));
-  };
 
   const totalAmount = useMemo(() => {
     if (!hasOptions) {
@@ -115,8 +91,7 @@ export function MobilePurchaseSheet({
           });
         }
 
-        // 옵션 초기화
-        setSelectedOptions([]);
+        resetOptions();
       } catch {
         toast.error("장바구니 추가에 실패했습니다.");
         return;
@@ -129,8 +104,7 @@ export function MobilePurchaseSheet({
       try {
         await addToCart(product, { quantity: baseQuantity, showModal: false });
 
-        // 수량 초기화
-        setBaseQuantity(1);
+        resetOptions();
       } catch {
         toast.error("장바구니 추가에 실패했습니다.");
         return;

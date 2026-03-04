@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { CartItemViewDTO } from "@yeongseon/shared/types/dto/cart-view";
 import type { Product } from "@yeongseon/shared/types/view/product";
-import { productService } from "@/features/shop/api/product-service";
+import { getProductsByIds as fetchProductsByIds } from "@/features/shop/api/products-api";
 import { toCartItemInputDTO, toCartItemView } from "@/features/cart/api/cart-mapper";
 
 const TABLE_NAME = "cart_items";
@@ -10,7 +10,7 @@ const TABLE_NAME = "cart_items";
 export async function getProductsByIds(
   productIds: number[]
 ): Promise<Map<number, Product>> {
-  return productService.getProductsByIds(productIds);
+  return fetchProductsByIds(productIds);
 }
 
 /**

@@ -1,5 +1,8 @@
 import { supabase } from "@/lib/supabase";
 
+// CLAUDE.md 직접 테이블 쓰기 예외: product_likes INSERT/DELETE
+// 근거: supabase/schemas/22_product_likes.sql에서 RLS 정책
+//   "user_id = auth.uid()" 로 소유권이 보장되므로 직접 쓰기 허용.
 const TABLE_NAME = "product_likes";
 
 /**

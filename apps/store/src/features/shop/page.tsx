@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import { FilterSheet } from "./components/filter-sheet";
 import { FilterButtons } from "./components/filter-buttons";
 import { FilterContent } from "./components/filter-content";
@@ -15,11 +15,15 @@ import type {
 } from "@yeongseon/shared/types/view/product";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { useModalStore } from "@/store/modal";
 import { Button } from "@/components/ui/button";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-
-type FilterTab = "category" | "price" | "color" | "pattern" | "material";
+import type { FilterTab } from "@/features/shop/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ShopPage() {
   const [selectedCategories, setSelectedCategories] = useState<
@@ -36,8 +40,7 @@ export default function ShopPage() {
   const [sortOption, setSortOption] = useState<SortOption>("latest");
   const { isMobile } = useBreakpoint();
   const [activeFilterTab, setActiveFilterTab] = useState<FilterTab>("category");
-  const { openModal, closeModal, isOpen } = useModalStore();
-  const isModalUpdatingRef = useRef(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const handleCategoryChange = (category: ProductCategory) => {
     setSelectedCategories((prev) =>
@@ -84,83 +87,10 @@ export default function ShopPage() {
   const handleFilterButtonClick = (tab: FilterTab) => {
     setActiveFilterTab(tab);
     if (!isMobile) {
-      // PC에서는 모달 열기
-      openFilterModal(tab);
+      setIsFilterModalOpen(true);
     }
     // 모바일에서는 FilterSheet가 자체적으로 처리
   };
-
-  const openFilterModal = useCallback(
-    (tab?: FilterTab) => {
-      if (isModalUpdatingRef.current) return;
-      isModalUpdatingRef.current = true;
-      openModal({
-        title: "필터",
-        modalType: "custom",
-        showDefaultFooter: false,
-        customFooter: (
-          <div className="sticky bottom-0 bg-background p-2 border-t">
-            <Button className="w-full" onClick={closeModal}>
-              적용하기
-            </Button>
-          </div>
-        ),
-        children: () => (
-          <FilterContent
-            selectedCategories={selectedCategories}
-            selectedColors={selectedColors}
-            selectedPatterns={selectedPatterns}
-            selectedMaterials={selectedMaterials}
-            selectedPriceRange={selectedPriceRange}
-            onCategoryChange={handleCategoryChange}
-            onColorChange={handleColorChange}
-            onPatternChange={handlePatternChange}
-            onMaterialChange={handleMaterialChange}
-            onPriceRangeChange={handlePriceRangeChange}
-            onReset={handleResetFilters}
-            initialTab={tab || activeFilterTab}
-          />
-        ),
-      });
-      setTimeout(() => {
-        isModalUpdatingRef.current = false;
-      }, 0);
-    },
-    [
-      selectedCategories,
-      selectedColors,
-      selectedPatterns,
-      selectedMaterials,
-      selectedPriceRange,
-      activeFilterTab,
-      openModal,
-      closeModal,
-      handleCategoryChange,
-      handleColorChange,
-      handlePatternChange,
-      handleMaterialChange,
-      handlePriceRangeChange,
-      handleResetFilters,
-    ]
-  );
-
-  // 모달이 열려있는 동안 필터 상태가 변경되면 모달 업데이트
-  useEffect(() => {
-    if (isOpen && !isMobile && !isModalUpdatingRef.current) {
-      // 모달이 열려있고 PC일 때만 업데이트
-      openFilterModal(activeFilterTab);
-    }
-  }, [
-    selectedCategories,
-    selectedColors,
-    selectedPatterns,
-    selectedMaterials,
-    selectedPriceRange,
-    activeFilterTab,
-    isOpen,
-    isMobile,
-    openFilterModal,
-  ]);
 
   const selectedPriceOption = useMemo(
     () =>
@@ -207,7 +137,7 @@ export default function ShopPage() {
       ) : (
         <FilterButtons
           onFilterClick={handleFilterButtonClick}
-          onMainButtonClick={() => openFilterModal()}
+          onMainButtonClick={() => setIsFilterModalOpen(true)}
         />
       )}
       <MainContent>
@@ -221,6 +151,36 @@ export default function ShopPage() {
               <ProductGrid products={productList} />
         </PageLayout>
       </MainContent>
+
+      {/* PC 필터 모달 — ShopPage 내에서 직접 렌더링하여 필터 상태와 동일한 렌더 사이클 공유 */}
+      <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
+        <DialogContent className="flex flex-col max-h-[80vh] p-0 gap-0" showCloseButton={false}>
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle>필터</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto p-4">
+            <FilterContent
+              selectedCategories={selectedCategories}
+              selectedColors={selectedColors}
+              selectedPatterns={selectedPatterns}
+              selectedMaterials={selectedMaterials}
+              selectedPriceRange={selectedPriceRange}
+              onCategoryChange={handleCategoryChange}
+              onColorChange={handleColorChange}
+              onPatternChange={handlePatternChange}
+              onMaterialChange={handleMaterialChange}
+              onPriceRangeChange={handlePriceRangeChange}
+              onReset={handleResetFilters}
+              initialTab={activeFilterTab}
+            />
+          </div>
+          <div className="p-4 border-t">
+            <Button className="w-full" onClick={() => setIsFilterModalOpen(false)}>
+              적용하기
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

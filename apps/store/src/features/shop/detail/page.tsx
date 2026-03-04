@@ -18,6 +18,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useState } from "react";
+import { useSelectedOptions } from "@/features/shop/detail/hooks/useSelectedOptions";
 import { ProductActionButtons } from "@/features/shop/detail/components/product-action-buttons";
 import { MobilePurchaseSheet } from "@/features/shop/detail/components/mobile-purchase-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
@@ -30,7 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ProductOption, Product } from "@yeongseon/shared/types/view/product";
+import type { Product } from "@yeongseon/shared/types/view/product";
+import type { SelectedOption } from "@/features/shop/detail/types";
 import { Badge } from "@/components/ui/badge";
 import {
   getCategoryLabel,
@@ -50,11 +52,6 @@ import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { useProduct, useProducts } from "@/features/shop/api/products-query";
 import { useToggleLike } from "@/features/shop/api/likes-query";
-
-interface SelectedOption {
-  option: ProductOption;
-  quantity: number;
-}
 
 /**
  * 주문 처리 및 네비게이션을 수행하는 공통 헬퍼 함수
@@ -110,8 +107,15 @@ export default function ShopDetailPage() {
   const { addToCart } = useCart();
   const { setOrderItems } = useOrderStore();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
-  const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
-  const [baseQuantity, setBaseQuantity] = useState(1);
+  const {
+    selectedOptions,
+    baseQuantity,
+    handleSelectOption,
+    handleRemoveOption,
+    handleUpdateQuantity,
+    handleUpdateBaseQuantity,
+    resetOptions,
+  } = useSelectedOptions();
 
   const productId = Number(id);
   const { data: product, isLoading: isProductLoading } = useProduct(productId);
@@ -175,31 +179,6 @@ export default function ShopDetailPage() {
     }
   };
 
-  const handleSelectOption = (option: ProductOption) => {
-    const exists = selectedOptions.find((s) => s.option.id === option.id);
-    if (!exists) {
-      setSelectedOptions([...selectedOptions, { option, quantity: 1 }]);
-    }
-  };
-
-  const handleRemoveOption = (optionId: string) => {
-    setSelectedOptions(selectedOptions.filter((s) => s.option.id !== optionId));
-  };
-
-  const handleUpdateQuantity = (optionId: string, delta: number) => {
-    setSelectedOptions(
-      selectedOptions.map((s) =>
-        s.option.id === optionId
-          ? { ...s, quantity: Math.max(1, s.quantity + delta) }
-          : s
-      )
-    );
-  };
-
-  const handleUpdateBaseQuantity = (delta: number) => {
-    setBaseQuantity(Math.max(1, baseQuantity + delta));
-  };
-
   const handleAddToCart = async () => {
     if (!product) return;
 
@@ -220,14 +199,12 @@ export default function ShopDetailPage() {
         )
       );
 
-      // 옵션 초기화
-      setSelectedOptions([]);
+      resetOptions();
     } else {
       // 옵션이 없는 경우: baseQuantity로 추가
       await addToCart(product, { quantity: baseQuantity });
 
-      // 수량 초기화
-      setBaseQuantity(1);
+      resetOptions();
     }
   };
 

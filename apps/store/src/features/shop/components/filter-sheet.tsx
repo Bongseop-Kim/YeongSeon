@@ -16,8 +16,7 @@ import {
   type ProductPattern,
   type ProductMaterial,
 } from "@yeongseon/shared/types/view/product";
-
-type FilterTab = "category" | "price" | "color" | "pattern" | "material";
+import type { FilterTab } from "@/features/shop/types";
 
 interface FilterSheetProps {
   selectedCategories: ProductCategory[];
