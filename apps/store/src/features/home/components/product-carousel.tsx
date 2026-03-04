@@ -5,14 +5,14 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import type { ProductItem } from "@/features/home/types/home";
+import type { Product } from "@yeongseon/shared/types/view/product";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 
 interface ProductCarouselProps {
   title: string;
-  items: ProductItem[];
+  items: Product[];
 }
 
 export const ProductCarousel = ({ title, items }: ProductCarouselProps) => {
@@ -45,11 +45,11 @@ export const ProductCarousel = ({ title, items }: ProductCarouselProps) => {
                   <div className="aspect-square overflow-hidden rounded-lg bg-zinc-100 mb-3">
                     <img
                       src={item.image}
-                      alt={item.title}
+                      alt={item.name}
                       className="w-full h-full object-cover transition-transform duration-300"
                     />
                   </div>
-                  <h3 className="text-sm font-medium mb-1">{item.title}</h3>
+                  <h3 className="text-sm font-medium mb-1">{item.name}</h3>
                   <p className="text-sm text-zinc-600">
                     {item.price.toLocaleString()}원
                   </p>
