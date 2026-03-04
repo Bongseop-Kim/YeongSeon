@@ -1,9 +1,9 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
+import { OrderStatusBadge } from "@/components/composite/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
@@ -112,7 +112,7 @@ export default function OrderListPage() {
                         <CardTitle className="text-base">
                           {formatDate(order.date)}
                         </CardTitle>
-                        <Badge variant="secondary">{order.status}</Badge>
+                        <OrderStatusBadge status={order.status} />
                       </div>
                       <div className="text-sm text-zinc-500 mt-1">
                         주문번호: {order.orderNumber}

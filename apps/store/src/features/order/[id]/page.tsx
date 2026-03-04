@@ -4,10 +4,10 @@ import { buildClaimDetailRoute, ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
+import { OrderStatusBadge } from "@/components/composite/status-badge";
 import React from "react";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { useOrderDetail } from "@/features/order/api/order-query";
@@ -19,14 +19,6 @@ import {
   CLAIM_ACTION_LABEL,
   getClaimActions,
 } from "@yeongseon/shared/constants/claim-actions";
-
-const STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
-  완료: "bg-green-100 text-green-800",
-  배송중: "bg-blue-100 text-blue-800",
-  진행중: "bg-yellow-100 text-yellow-800",
-  취소: "bg-red-100 text-red-800",
-  대기중: "bg-gray-100 text-gray-800",
-};
 
 const getOrderErrorDescription = (error: unknown): string => {
   if (!(error instanceof Error)) {
@@ -286,9 +278,7 @@ const OrderDetailPage = () => {
                     주문일시: {formatDate(order.date)}
                   </div>
                 </div>
-                <Badge className={STATUS_BADGE_CLASS[order.status]}>
-                  {order.status}
-                </Badge>
+                <OrderStatusBadge status={order.status} />
               </CardHeader>
 
               <CardContent>
