@@ -15,6 +15,7 @@ export const ROUTE_TITLES = {
   "/my-page/my-info/email": "이메일 변경",
   "/my-page/my-info/notice": "마케팅 수신 동의",
   "/my-page/my-info/leave": "회원 탈퇴",
+  "/faq": "자주 묻는 질문",
   "/privacy-policy": "개인정보처리방침",
   "/terms-of-service": "이용약관",
   "/refund-policy": "환불정책",
