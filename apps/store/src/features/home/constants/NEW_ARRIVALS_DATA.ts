@@ -1,4 +1,6 @@
-export const NEW_ARRIVALS_DATA = [
+import type { ProductItem } from "@/features/home/types/home";
+
+export const NEW_ARRIVALS_DATA: ProductItem[] = [
   {
     id: 1,
     title: "실크 넥타이 1",
