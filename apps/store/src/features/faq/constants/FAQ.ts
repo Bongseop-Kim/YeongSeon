@@ -1,9 +1,4 @@
-export interface FAQItem {
-  id: string;
-  category: string;
-  question: string;
-  answer: string;
-}
+import type { FAQItem } from "@/features/faq/types/faq-types";
 
 export const FAQ_DATA: FAQItem[] = [
   {
