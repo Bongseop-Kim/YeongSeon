@@ -24,7 +24,7 @@
 
 ## 데이터 흐름
 
-```
+```text
 product_list_view (Supabase)
   └── getProducts({ sortOption: 'latest', limit: 8 })       → Home New Arrivals
   └── getProducts({ sortOption: 'popular', limit: 8 })       → Home Recommended

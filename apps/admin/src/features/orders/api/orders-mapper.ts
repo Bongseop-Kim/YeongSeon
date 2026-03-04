@@ -177,7 +177,10 @@ function parseRepairTie(raw: unknown): RepairTie {
 export function parseRepairReformData(
   raw: Record<string, unknown>
 ): RepairOrderReformData {
-  const ties = raw.tie ? [parseRepairTie(raw.tie)] : [];
+  const ties =
+    typeof raw.tie === "object" && raw.tie !== null && !Array.isArray(raw.tie)
+      ? [parseRepairTie(raw.tie as Record<string, unknown>)]
+      : [];
   return { _tag: "repair", ties };
 }
 

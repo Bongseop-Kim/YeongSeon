@@ -35,6 +35,15 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const schedulerToken = Deno.env.get("SCHEDULER_BEARER_TOKEN");
+  const authHeader = req.headers.get("Authorization");
+  if (schedulerToken && authHeader !== `Bearer ${schedulerToken}`) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const sweetTrackerKey = Deno.env.get("SWEET_TRACKER_API_KEY");
@@ -83,7 +92,7 @@ Deno.serve(async (req: Request) => {
 
     try {
       const apiUrl =
-        `http://info.sweettracker.co.kr/api/v1/trackingInfo` +
+        `https://info.sweettracker.co.kr/api/v1/trackingInfo` +
         `?t_key=${encodeURIComponent(sweetTrackerKey)}` +
         `&t_code=${encodeURIComponent(trackerCode)}` +
         `&t_invoice=${encodeURIComponent(order.tracking_number)}`;
@@ -98,17 +107,24 @@ Deno.serve(async (req: Request) => {
 
       // level 6 = 배달완료
       if (data.level === 6) {
-        const { error: updateError } = await supabase
+        const { data: updatedOrder, error: updateError } = await supabase
           .from("orders")
           .update({
             status: "배송완료",
             delivered_at: new Date().toISOString(),
           })
           .eq("id", order.id)
-          .eq("status", "배송중"); // 동시 호출 시 중복 전환 방지
+          .eq("status", "배송중") // 동시 호출 시 중복 전환 방지
+          .select("id")
+          .maybeSingle();
 
         if (updateError) {
           errors.push(`Order ${order.id}: ${updateError.message}`);
+          continue;
+        }
+
+        if (!updatedOrder) {
+          errors.push(`Order ${order.id}: status was not '배송중', skipped`);
           continue;
         }
 

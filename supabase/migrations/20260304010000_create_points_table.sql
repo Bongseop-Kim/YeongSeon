@@ -31,15 +31,15 @@ CREATE POLICY "Admins can view all points"
   USING (public.is_admin());
 
 -- ── get_user_point_balance ───────────────────────────────────
-CREATE OR REPLACE FUNCTION public.get_user_point_balance(p_user_id uuid)
+CREATE OR REPLACE FUNCTION public.get_user_point_balance()
 RETURNS integer
 LANGUAGE sql
 STABLE
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
   SELECT COALESCE(SUM(amount), 0)::integer
   FROM public.points
-  WHERE user_id = p_user_id
+  WHERE user_id = auth.uid()
     AND (expires_at IS NULL OR expires_at > now());
 $$;

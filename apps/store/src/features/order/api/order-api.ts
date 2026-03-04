@@ -8,6 +8,7 @@ import type { OrderViewDTO } from "@yeongseon/shared/types/dto/order-view";
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   fromOrderItemRowDTO,
+  parseConfirmPurchaseResponse,
   parseCreateOrderResult,
   parseOrderListRows,
   parseOrderItemRows,
@@ -147,7 +148,7 @@ export const confirmPurchase = async (
     throw new Error(`구매확정 실패: ${error.message}`);
   }
 
-  return { pointsEarned: (data as { points_earned: number }).points_earned };
+  return parseConfirmPurchaseResponse(data);
 };
 
 /**

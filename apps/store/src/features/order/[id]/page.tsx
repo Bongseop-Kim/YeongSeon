@@ -72,7 +72,7 @@ const PurchaseConfirmSection = ({
   const { mutate, isPending, isSuccess } = useConfirmPurchase(orderId);
 
   const daysRemaining = deliveredAt
-    ? Math.max(0, 7 - Math.floor((Date.now() - new Date(deliveredAt).getTime()) / 86_400_000))
+    ? Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - new Date(deliveredAt).getTime()) / 86_400_000)))
     : 7;
 
   const manualPoints = Math.floor(totalPrice * 0.02).toLocaleString();

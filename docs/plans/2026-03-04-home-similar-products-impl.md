@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: `getProducts()` API에 `limit` 파라미터 추가
+## Task 1: `getProducts()` API에 `limit` 파라미터 추가
 
 **Files:**
 - Modify: `apps/store/src/features/shop/api/products-api.ts`
@@ -51,7 +51,7 @@ git commit -m "feat(shop): add limit parameter to getProducts and useProducts"
 
 ---
 
-### Task 2: `ProductCarousel` 컴포넌트를 `Product[]` 타입으로 교체
+## Task 2: `ProductCarousel` 컴포넌트를 `Product[]` 타입으로 교체
 
 **Files:**
 - Modify: `apps/store/src/features/home/components/product-carousel.tsx`
@@ -103,7 +103,7 @@ git commit -m "feat(home): migrate ProductCarousel to use Product type"
 
 ---
 
-### Task 3: Home 하드코딩 데이터 제거 및 API 연동
+## Task 3: Home 하드코딩 데이터 제거 및 API 연동
 
 **Files:**
 - Modify: `apps/store/src/features/home/components/home-content.tsx`
@@ -179,7 +179,7 @@ git commit -m "feat(home): connect New Arrivals and Recommended to real API"
 
 ---
 
-### Task 4: Shop 상세 페이지 유사 상품 API 연동
+## Task 4: Shop 상세 페이지 유사 상품 API 연동
 
 **Files:**
 - Modify: `apps/store/src/features/shop/detail/page.tsx`
@@ -248,7 +248,7 @@ git commit -m "feat(shop): connect similar products section to real API by categ
 
 ---
 
-### Task 5: 통합 검증
+## Task 5: 통합 검증
 
 **Step 1: 개발 서버 실행 후 수동 확인**
 

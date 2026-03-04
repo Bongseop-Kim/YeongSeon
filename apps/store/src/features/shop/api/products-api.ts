@@ -58,7 +58,7 @@ export const getProducts = async (filters?: ProductFilters): Promise<Product[]> 
     query = query.order("id", { ascending: false });
   }
 
-  if (typeof filters?.limit === "number") {
+  if (typeof filters?.limit === "number" && Number.isInteger(filters.limit) && filters.limit > 0) {
     query = query.limit(filters.limit);
   }
 

@@ -19,8 +19,9 @@ ALTER TABLE public.orders
       '수선중','수선완료'
     ]));
 
--- 3. Grant UPDATE on new columns to authenticated role
-GRANT UPDATE (delivered_at, confirmed_at) ON TABLE public.orders TO authenticated;
+-- 3. (removed) Direct GRANT removed — delivered_at and confirmed_at are written
+--    exclusively via SECURITY DEFINER RPCs (customer_confirm_purchase,
+--    admin_update_order_status, auto_confirm_delivered_orders).
 
 -- 4. Index for auto-confirmation batch job (pending confirmation after 7 days)
 CREATE INDEX IF NOT EXISTS idx_orders_pending_confirmation
