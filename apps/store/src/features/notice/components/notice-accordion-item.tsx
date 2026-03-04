@@ -22,9 +22,9 @@ export function NoticeAccordionItem({ notice }: NoticeAccordionItemProps) {
               </Badge>
             )}
             <span className="text-xs text-muted-foreground">{notice.category}</span>
-            <span className="text-xs text-muted-foreground ml-auto">
+            <time dateTime={notice.date} className="text-xs text-muted-foreground ml-auto">
               {notice.date}
-            </span>
+            </time>
           </div>
           <span>{notice.title}</span>
         </div>
