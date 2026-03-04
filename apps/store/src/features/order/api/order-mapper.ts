@@ -23,6 +23,45 @@ import {
 } from "@yeongseon/shared/mappers/shared-mapper";
 import { isRecord } from "@/lib/type-guard";
 
+const PRODUCT_CATEGORIES: ReadonlySet<string> = new Set([
+  "3fold", "sfolderato", "knit", "bowtie",
+]);
+const isProductCategory = (v: string): v is ProductCategoryDTO =>
+  PRODUCT_CATEGORIES.has(v);
+
+const PRODUCT_COLORS: ReadonlySet<string> = new Set([
+  "black", "navy", "gray", "wine", "blue", "brown", "beige", "silver",
+]);
+const isProductColor = (v: string): v is ProductColorDTO =>
+  PRODUCT_COLORS.has(v);
+
+const PRODUCT_PATTERNS: ReadonlySet<string> = new Set([
+  "solid", "stripe", "dot", "check", "paisley",
+]);
+const isProductPattern = (v: string): v is ProductPatternDTO =>
+  PRODUCT_PATTERNS.has(v);
+
+const PRODUCT_MATERIALS: ReadonlySet<string> = new Set([
+  "silk", "cotton", "polyester", "wool",
+]);
+const isProductMaterial = (v: string): v is ProductMaterialDTO =>
+  PRODUCT_MATERIALS.has(v);
+
+const TIE_MEASUREMENT_TYPES: ReadonlySet<string> = new Set(["length", "height"]);
+const isTieMeasurementType = (
+  v: string
+): v is "length" | "height" => TIE_MEASUREMENT_TYPES.has(v);
+
+const DISCOUNT_TYPES: ReadonlySet<string> = new Set(["percentage", "fixed"]);
+const isDiscountType = (v: string): v is "percentage" | "fixed" =>
+  DISCOUNT_TYPES.has(v);
+
+const USER_COUPON_STATUSES: ReadonlySet<string> = new Set([
+  "active", "used", "expired", "revoked",
+]);
+const isUserCouponStatus = (v: string): v is UserCouponStatusDTO =>
+  USER_COUPON_STATUSES.has(v);
+
 export const toOrderItemInputDTO = (
   item: CreateOrderRequest["items"][number]
 ): CreateOrderInputDTO["items"][number] => {
@@ -133,16 +172,36 @@ const parseProductField = (
       `주문 상품 행(${idx})의 product가 올바르지 않습니다: 필수 필드(id, code, name, price, image, category, color, pattern, material, likes, info) 누락.`
     );
   }
+  if (!isProductCategory(v.category)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: category 값(${v.category})이 허용된 값이 아닙니다.`
+    );
+  }
+  if (!isProductColor(v.color)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: color 값(${v.color})이 허용된 값이 아닙니다.`
+    );
+  }
+  if (!isProductPattern(v.pattern)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: pattern 값(${v.pattern})이 허용된 값이 아닙니다.`
+    );
+  }
+  if (!isProductMaterial(v.material)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: material 값(${v.material})이 허용된 값이 아닙니다.`
+    );
+  }
   return {
     id: v.id,
     code: v.code,
     name: v.name,
     price: v.price,
     image: v.image,
-    category: v.category as ProductCategoryDTO,
-    color: v.color as ProductColorDTO,
-    pattern: v.pattern as ProductPatternDTO,
-    material: v.material as ProductMaterialDTO,
+    category: v.category,
+    color: v.color,
+    pattern: v.pattern,
+    material: v.material,
     likes: v.likes,
     info: v.info,
   };
@@ -189,9 +248,73 @@ const parseReformDataField = (
       `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: id 필드 누락.`
     );
   }
+  if (
+    v.tie.image != null &&
+    typeof v.tie.image !== "string"
+  ) {
+    throw new Error(
+      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: image 필드 타입 오류.`
+    );
+  }
+  if (v.tie.measurementType != null) {
+    if (typeof v.tie.measurementType !== "string") {
+      throw new Error(
+        `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: measurementType 필드 타입 오류.`
+      );
+    }
+    if (!isTieMeasurementType(v.tie.measurementType)) {
+      throw new Error(
+        `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: measurementType 값(${v.tie.measurementType})이 허용된 값이 아닙니다.`
+      );
+    }
+  }
+  if (
+    v.tie.tieLength != null &&
+    typeof v.tie.tieLength !== "number"
+  ) {
+    throw new Error(
+      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: tieLength 필드 타입 오류.`
+    );
+  }
+  if (
+    v.tie.wearerHeight != null &&
+    typeof v.tie.wearerHeight !== "number"
+  ) {
+    throw new Error(
+      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: wearerHeight 필드 타입 오류.`
+    );
+  }
+  if (
+    v.tie.notes != null &&
+    typeof v.tie.notes !== "string"
+  ) {
+    throw new Error(
+      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: notes 필드 타입 오류.`
+    );
+  }
+  if (
+    v.tie.checked != null &&
+    typeof v.tie.checked !== "boolean"
+  ) {
+    throw new Error(
+      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: checked 필드 타입 오류.`
+    );
+  }
   return {
     cost: v.cost,
-    tie: { id: v.tie.id },
+    tie: {
+      id: v.tie.id,
+      image: typeof v.tie.image === "string" ? v.tie.image : undefined,
+      measurementType:
+        typeof v.tie.measurementType === "string"
+          ? v.tie.measurementType
+          : undefined,
+      tieLength: typeof v.tie.tieLength === "number" ? v.tie.tieLength : undefined,
+      wearerHeight:
+        typeof v.tie.wearerHeight === "number" ? v.tie.wearerHeight : undefined,
+      notes: typeof v.tie.notes === "string" ? v.tie.notes : undefined,
+      checked: typeof v.tie.checked === "boolean" ? v.tie.checked : undefined,
+    },
   };
 };
 
@@ -230,16 +353,28 @@ const parseAppliedCouponField = (
       `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(discountType, discountValue, expiryDate) 누락.`
     );
   }
+  if (!isUserCouponStatus(v.status)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 appliedCoupon이 올바르지 않습니다: status 값(${v.status})이 허용된 상태가 아닙니다.`
+    );
+  }
+  if (!isDiscountType(v.coupon.discountType)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: discountType 값(${v.coupon.discountType})이 허용된 값이 아닙니다.`
+    );
+  }
   return {
     id: v.id,
     userId: v.userId,
     couponId: v.couponId,
-    status: v.status as UserCouponStatusDTO,
+    status: v.status,
     issuedAt: v.issuedAt,
+    expiresAt: typeof v.expiresAt === "string" ? v.expiresAt : null,
+    usedAt: typeof v.usedAt === "string" ? v.usedAt : null,
     coupon: {
       id: v.coupon.id,
       name: v.coupon.name,
-      discountType: v.coupon.discountType as "percentage" | "fixed",
+      discountType: v.coupon.discountType,
       discountValue: v.coupon.discountValue,
       expiryDate: v.coupon.expiryDate,
     },
