@@ -18,6 +18,7 @@ export const BrandVideo = () => {
             loop
             muted
             playsInline
+            preload="metadata"
           >
             <source src="/videos/home.mp4" type="video/mp4" />
             브라우저가 비디오를 지원하지 않습니다.
