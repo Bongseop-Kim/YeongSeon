@@ -35,6 +35,16 @@ const parseClaimItemField = (
       `클레임 목록 행(${i})의 item이 올바르지 않습니다: 필수 필드(id, type, quantity) 누락 또는 type 값 오류.`
     );
   }
+  if (v.type === "product" && v.product == null) {
+    throw new Error(
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "product"인 경우 product 필드가 있어야 합니다.`
+    );
+  }
+  if (v.type === "reform" && v.reformData == null) {
+    throw new Error(
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 있어야 합니다.`
+    );
+  }
   if (v.product != null) {
     if (
       !isRecord(v.product) ||
@@ -81,7 +91,15 @@ const parseClaimItemField = (
       );
     }
   }
-  return v as unknown as ClaimListRowDTO["item"];
+  return {
+    id: v.id,
+    type: v.type,
+    quantity: v.quantity,
+    product: v.product as ClaimItemRowDTO["product"],
+    selectedOption: v.selectedOption as ClaimItemRowDTO["selectedOption"],
+    reformData: v.reformData as ClaimItemRowDTO["reformData"],
+    appliedCoupon: v.appliedCoupon as ClaimItemRowDTO["appliedCoupon"],
+  };
 };
 
 const CLAIM_STATUSES: ReadonlySet<string> = new Set([

@@ -120,7 +120,19 @@ const parseProductField = (
       `주문 상품 행(${idx})의 product가 올바르지 않습니다: 필수 필드(id, code, name, price, image) 누락.`
     );
   }
-  return v as unknown as NonNullable<OrderItemRowDTO["product"]>;
+  return {
+    id: v.id,
+    code: v.code,
+    name: v.name,
+    price: v.price,
+    image: v.image,
+    category: v.category as NonNullable<OrderItemRowDTO["product"]>["category"],
+    color: v.color as NonNullable<OrderItemRowDTO["product"]>["color"],
+    pattern: v.pattern as NonNullable<OrderItemRowDTO["product"]>["pattern"],
+    material: v.material as NonNullable<OrderItemRowDTO["product"]>["material"],
+    likes: v.likes as number,
+    info: v.info as string,
+  };
 };
 
 const parseSelectedOptionField = (
@@ -276,14 +288,26 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "product" 또는 "reform"이 아닙니다.`
       );
     }
+    const product = parseProductField(row.product, i);
+    const reformData = parseReformDataField(row.reformData, i);
+    if (row.type === "product" && product == null) {
+      throw new Error(
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product"인 경우 product 필드가 필요합니다.`
+      );
+    }
+    if (row.type === "reform" && reformData == null) {
+      throw new Error(
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 필요합니다.`
+      );
+    }
     return {
       order_id: row.order_id,
       id: row.id,
       type: row.type,
-      product: parseProductField(row.product, i),
+      product,
       selectedOption: parseSelectedOptionField(row.selectedOption, i),
       quantity: row.quantity,
-      reformData: parseReformDataField(row.reformData, i),
+      reformData,
       appliedCoupon: parseAppliedCouponField(row.appliedCoupon, i),
       created_at: row.created_at,
     };
