@@ -22,3 +22,24 @@ export async function updateOrderStatus(
     throw new Error(error.message);
   }
 }
+
+export interface UpdateOrderTrackingParams {
+  orderId: string;
+  courierCompany: string;
+  trackingNumber: string;
+}
+
+export async function updateOrderTracking(
+  params: UpdateOrderTrackingParams
+): Promise<void> {
+  const { orderId, courierCompany, trackingNumber } = params;
+  const { error } = await supabase.rpc("admin_update_order_tracking", {
+    p_order_id: orderId,
+    p_courier_company: courierCompany || null,
+    p_tracking_number: trackingNumber || null,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

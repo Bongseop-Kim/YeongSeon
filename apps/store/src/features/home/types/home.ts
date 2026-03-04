@@ -5,13 +5,6 @@ export interface BannerSlide {
   description: string;
 }
 
-export interface ProductItem {
-  id: number;
-  title: string;
-  price: number;
-  image: string;
-}
-
 export interface InstagramImage {
   id: number;
   src: string;

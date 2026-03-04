@@ -4,13 +4,13 @@ import { buildClaimDetailRoute, ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
+import { OrderStatusBadge } from "@/components/composite/status-badge";
 import React from "react";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import { useOrderDetail } from "@/features/order/api/order-query";
+import { useOrderDetail, useConfirmPurchase } from "@/features/order/api/order-query";
 import { Empty } from "@/components/composite/empty";
 import type { OrderItem, OrderStatus, ShippingInfo, TrackingInfo } from "@yeongseon/shared/types/view/order";
 import { buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies";
@@ -19,14 +19,6 @@ import {
   CLAIM_ACTION_LABEL,
   getClaimActions,
 } from "@yeongseon/shared/constants/claim-actions";
-
-const STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
-  완료: "bg-green-100 text-green-800",
-  배송중: "bg-blue-100 text-blue-800",
-  진행중: "bg-yellow-100 text-yellow-800",
-  취소: "bg-red-100 text-red-800",
-  대기중: "bg-gray-100 text-gray-800",
-};
 
 const getOrderErrorDescription = (error: unknown): string => {
   if (!(error instanceof Error)) {
@@ -63,6 +55,61 @@ const renderClaimButtons = (
           {CLAIM_ACTION_LABEL[actionType]}
         </Button>
       ))}
+    </div>
+  );
+};
+
+/** 배송완료 상태에서 구매확정 버튼과 포인트 안내를 표시 */
+const PurchaseConfirmSection = ({
+  orderId,
+  deliveredAt,
+  totalPrice,
+}: {
+  orderId: string;
+  deliveredAt: string | null;
+  totalPrice: number;
+}) => {
+  const { mutate, isPending, isSuccess, isError, error } = useConfirmPurchase(orderId);
+
+  const parsedDeliveredAt = deliveredAt ? Date.parse(deliveredAt) : Number.NaN;
+  const daysRemaining = Number.isNaN(parsedDeliveredAt)
+    ? 7
+    : Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - parsedDeliveredAt) / 86_400_000)));
+
+  const manualPoints = Math.floor(totalPrice * 0.02).toLocaleString();
+  const autoPoints = Math.floor(totalPrice * 0.005).toLocaleString();
+
+  if (isSuccess) {
+    return (
+      <div className="rounded-md bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+        구매확정이 완료되었습니다. 포인트가 적립되었습니다.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md bg-blue-50 border border-blue-200 p-4 space-y-3">
+      <p className="text-sm text-zinc-700">
+        지금 구매확정하면{" "}
+        <span className="font-semibold text-blue-700">{manualPoints}P (2%)</span> 적립!
+      </p>
+      <p className="text-xs text-zinc-500">
+        자동 구매확정까지 <span className="font-medium">{daysRemaining}일</span> 남음
+        (자동 확정 시 {autoPoints}P / 0.5% 적립)
+      </p>
+      {isError && (
+        <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+          {getOrderErrorDescription(error) || "구매확정에 실패했습니다. 다시 시도해주세요."}
+        </div>
+      )}
+      <Button
+        onClick={() => mutate()}
+        disabled={isPending}
+        className="w-full"
+        size="sm"
+      >
+        {isPending ? "처리 중..." : "구매확정"}
+      </Button>
     </div>
   );
 };
@@ -286,9 +333,7 @@ const OrderDetailPage = () => {
                     주문일시: {formatDate(order.date)}
                   </div>
                 </div>
-                <Badge className={STATUS_BADGE_CLASS[order.status]}>
-                  {order.status}
-                </Badge>
+                <OrderStatusBadge status={order.status} />
               </CardHeader>
 
               <CardContent>
@@ -325,6 +370,17 @@ const OrderDetailPage = () => {
               <CardContent>
                 <Separator />
               </CardContent>
+
+              {/* 구매확정 */}
+              {order.status === "배송완료" && (
+                <CardContent>
+                  <PurchaseConfirmSection
+                    orderId={order.id}
+                    deliveredAt={order.trackingInfo?.deliveredAt ?? null}
+                    totalPrice={order.totalPrice}
+                  />
+                </CardContent>
+              )}
 
               {/* 주문 상품 목록 */}
               <CardHeader>

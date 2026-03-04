@@ -8,6 +8,7 @@ import type { OrderViewDTO } from "@yeongseon/shared/types/dto/order-view";
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   fromOrderItemRowDTO,
+  parseConfirmPurchaseResponse,
   parseCreateOrderResult,
   parseOrderListRows,
   parseOrderItemRows,
@@ -131,6 +132,23 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     const searchText = `${order.orderNumber} ${order.status} ${itemText}`.toLowerCase();
     return searchText.includes(keyword);
   });
+};
+
+/**
+ * 구매확정 (배송완료 상태에서만 가능, 2% 포인트 적립)
+ */
+export const confirmPurchase = async (
+  orderId: string
+): Promise<{ pointsEarned: number }> => {
+  const { data, error } = await supabase.rpc("customer_confirm_purchase", {
+    p_order_id: orderId,
+  });
+
+  if (error) {
+    throw new Error(`구매확정 실패: ${error.message}`);
+  }
+
+  return parseConfirmPurchaseResponse(data);
 };
 
 /**

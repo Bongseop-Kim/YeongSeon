@@ -3,7 +3,7 @@ import type { AppliedCoupon } from "./coupon";
 import type { TieItem } from "./reform";
 
 // 주문 상태
-export type OrderStatus = "진행중" | "완료" | "배송중" | "대기중" | "취소";
+export type OrderStatus = "진행중" | "완료" | "배송중" | "배송완료" | "대기중" | "취소" | "접수" | "제작중" | "제작완료" | "수선중" | "수선완료";
 
 // 일반 상품 주문 아이템
 export interface ProductOrderItem {
@@ -46,6 +46,7 @@ export interface TrackingInfo {
   courierCompany: string;
   trackingNumber: string;
   shippedAt: string | null;
+  deliveredAt: string | null;
 }
 
 // 주문 (한 주문에 여러 상품이 포함됨)
@@ -58,4 +59,5 @@ export interface Order {
   totalPrice: number; // 총 주문 금액
   shippingInfo: ShippingInfo | null;
   trackingInfo: TrackingInfo | null;
+  confirmedAt: string | null; // 구매확정 시점
 }

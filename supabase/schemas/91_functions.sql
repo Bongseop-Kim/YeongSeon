@@ -1289,9 +1289,12 @@ SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 declare
-  v_admin_id uuid;
+  v_admin_id       uuid;
   v_current_status text;
-  v_order_type text;
+  v_order_type     text;
+  v_total_price    integer;
+  v_user_id        uuid;
+  v_points_earned  integer;
 begin
   v_admin_id := auth.uid();
   if v_admin_id is null then
@@ -1302,9 +1305,9 @@ begin
     raise exception 'Admin access required';
   end if;
 
-  -- Lock the row and get current status + order type
-  select o.status, o.order_type
-  into v_current_status, v_order_type
+  -- Lock the row and get current status, order type, price, user
+  select o.status, o.order_type, o.total_price, o.user_id
+  into v_current_status, v_order_type, v_total_price, v_user_id
   from public.orders o
   where o.id = p_order_id
   for update;
@@ -1324,6 +1327,7 @@ begin
     end if;
 
     -- Validate rollback transition by order_type
+    -- 배송완료, 완료, 취소 상태는 is_rollback 여부와 무관하게 롤백 불가
     if v_order_type = 'sale' then
       if not (v_current_status = '진행중' and p_new_status = '대기중') then
         raise exception 'Invalid rollback from "%" to "%" for sale order', v_current_status, p_new_status;
@@ -1351,31 +1355,34 @@ begin
     -- Validate forward state transition by order_type
     if v_order_type = 'sale' then
       if not (
-        (v_current_status = '대기중' and p_new_status = '진행중')
-        or (v_current_status = '진행중' and p_new_status = '배송중')
-        or (v_current_status = '배송중' and p_new_status = '완료')
+        (v_current_status = '대기중'   and p_new_status = '진행중')
+        or (v_current_status = '진행중'   and p_new_status = '배송중')
+        or (v_current_status = '배송중'   and p_new_status = '배송완료')
+        or (v_current_status = '배송완료' and p_new_status = '완료')
         or (p_new_status = '취소' and v_current_status in ('대기중', '진행중', '배송중'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for sale order', v_current_status, p_new_status;
       end if;
     elsif v_order_type = 'custom' then
       if not (
-        (v_current_status = '대기중' and p_new_status = '접수')
-        or (v_current_status = '접수' and p_new_status = '제작중')
-        or (v_current_status = '제작중' and p_new_status = '제작완료')
+        (v_current_status = '대기중'   and p_new_status = '접수')
+        or (v_current_status = '접수'     and p_new_status = '제작중')
+        or (v_current_status = '제작중'   and p_new_status = '제작완료')
         or (v_current_status = '제작완료' and p_new_status = '배송중')
-        or (v_current_status = '배송중' and p_new_status = '완료')
+        or (v_current_status = '배송중'   and p_new_status = '배송완료')
+        or (v_current_status = '배송완료' and p_new_status = '완료')
         or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for custom order', v_current_status, p_new_status;
       end if;
     elsif v_order_type = 'repair' then
       if not (
-        (v_current_status = '대기중' and p_new_status = '접수')
-        or (v_current_status = '접수' and p_new_status = '수선중')
-        or (v_current_status = '수선중' and p_new_status = '수선완료')
+        (v_current_status = '대기중'   and p_new_status = '접수')
+        or (v_current_status = '접수'     and p_new_status = '수선중')
+        or (v_current_status = '수선중'   and p_new_status = '수선완료')
         or (v_current_status = '수선완료' and p_new_status = '배송중')
-        or (v_current_status = '배송중' and p_new_status = '완료')
+        or (v_current_status = '배송중'   and p_new_status = '배송완료')
+        or (v_current_status = '배송완료' and p_new_status = '완료')
         or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
@@ -1385,12 +1392,39 @@ begin
     end if;
   end if;
 
-  -- Auto-set shipped_at when transitioning to 배송중
+  -- Apply the status update with any timestamp side-effects
   if p_new_status = '배송중' then
     update public.orders
     set status = p_new_status,
         shipped_at = coalesce(shipped_at, now())
     where id = p_order_id;
+
+  elsif p_new_status = '배송완료' then
+    update public.orders
+    set status = p_new_status,
+        delivered_at = now()
+    where id = p_order_id;
+
+  elsif p_new_status = '완료' then
+    -- Admin manually confirms purchase: 2% points
+    v_points_earned := floor(v_total_price * 0.02);
+
+    update public.orders
+    set status       = p_new_status,
+        confirmed_at = now()
+    where id = p_order_id;
+
+    if v_points_earned > 0 then
+      insert into public.points (user_id, order_id, amount, type, description)
+      values (
+        v_user_id,
+        p_order_id,
+        v_points_earned,
+        'earn',
+        '구매확정 포인트 적립 (관리자 처리, 2%)'
+      );
+    end if;
+
   else
     update public.orders
     set status = p_new_status
@@ -1419,6 +1453,155 @@ begin
     'success', true,
     'previous_status', v_current_status,
     'new_status', p_new_status
+  );
+end;
+$$;
+
+
+-- ── customer_confirm_purchase ─────────────────────────────────
+-- Allows a customer to manually confirm purchase after delivery.
+-- Earns 2% points. Only callable when status = '배송완료'.
+-- SECURITY DEFINER: needed to INSERT into order_status_logs and points
+--   (neither table has INSERT RLS policy for regular users).
+CREATE OR REPLACE FUNCTION public.customer_confirm_purchase(p_order_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_user_id        uuid;
+  v_current_status text;
+  v_total_price    integer;
+  v_points_earned  integer;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- Lock the row and verify ownership + status
+  select o.status, o.total_price
+  into v_current_status, v_total_price
+  from public.orders o
+  where o.id = p_order_id
+    and o.user_id = v_user_id
+  for update;
+
+  if not found then
+    raise exception 'Order not found or access denied';
+  end if;
+
+  if v_current_status <> '배송완료' then
+    raise exception '구매확정은 배송완료 상태에서만 가능합니다 (현재: %)', v_current_status;
+  end if;
+
+  -- Earn 2% points for manual confirmation
+  v_points_earned := floor(v_total_price * 0.02);
+
+  update public.orders
+  set status       = '완료',
+      confirmed_at = now()
+  where id = p_order_id;
+
+  if v_points_earned > 0 then
+    insert into public.points (user_id, order_id, amount, type, description)
+    values (
+      v_user_id,
+      p_order_id,
+      v_points_earned,
+      'earn',
+      '구매확정 포인트 적립 (직접 확정, 2%)'
+    );
+  end if;
+
+  -- Audit log (changed_by = customer uid)
+  insert into public.order_status_logs (
+    order_id,
+    changed_by,
+    previous_status,
+    new_status,
+    memo
+  )
+  values (
+    p_order_id,
+    v_user_id,
+    '배송완료',
+    '완료',
+    '고객 직접 구매확정'
+  );
+
+  return jsonb_build_object(
+    'success', true,
+    'points_earned', v_points_earned
+  );
+end;
+$$;
+
+
+-- ── auto_confirm_delivered_orders ────────────────────────────
+-- Called by pg_cron daily at 03:00 KST.
+-- Confirms all orders in '배송완료' that have been delivered for 7+ days.
+-- Earns 0.5% points for auto-confirmed orders.
+-- SECURITY DEFINER: runs as a privileged role outside user sessions.
+CREATE OR REPLACE FUNCTION public.auto_confirm_delivered_orders()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_order  record;
+  v_points integer;
+  v_count  integer := 0;
+begin
+  for v_order in
+    select id, user_id, total_price
+    from public.orders
+    where status = '배송완료'
+      and delivered_at <= now() - interval '7 days'
+    for update skip locked
+  loop
+    v_points := floor(v_order.total_price * 0.005);
+
+    update public.orders
+    set status       = '완료',
+        confirmed_at = now()
+    where id = v_order.id;
+
+    if v_points > 0 then
+      insert into public.points (user_id, order_id, amount, type, description)
+      values (
+        v_order.user_id,
+        v_order.id,
+        v_points,
+        'earn',
+        '구매확정 포인트 적립 (자동 확정, 0.5%)'
+      );
+    end if;
+
+    -- Audit log (changed_by = NULL indicates automated system action)
+    insert into public.order_status_logs (
+      order_id,
+      changed_by,
+      previous_status,
+      new_status,
+      memo
+    )
+    values (
+      v_order.id,
+      NULL,
+      '배송완료',
+      '완료',
+      '자동 구매확정 (배송완료 후 7일 경과)'
+    );
+
+    v_count := v_count + 1;
+  end loop;
+
+  return jsonb_build_object(
+    'success', true,
+    'confirmed_count', v_count
   );
 end;
 $$;
@@ -1591,5 +1774,172 @@ begin
       p_order_type = 'all'
       OR "orderType" = p_order_type
     );
+end;
+$$;
+-- ── admin_update_order_tracking ─────────────────────────────────
+CREATE OR REPLACE FUNCTION public.admin_update_order_tracking(
+  p_order_id uuid,
+  p_courier_company text DEFAULT NULL,
+  p_tracking_number text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+declare
+  v_admin_id uuid;
+  v_tracking_number text;
+begin
+  v_admin_id := auth.uid();
+  if v_admin_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  v_tracking_number := nullif(trim(p_tracking_number), '');
+
+  update public.orders
+  set
+    courier_company = nullif(trim(p_courier_company), ''),
+    tracking_number = v_tracking_number,
+    shipped_at = case
+      when v_tracking_number is not null then coalesce(shipped_at, now())
+      else shipped_at
+    end
+  where id = p_order_id;
+
+  if not found then
+    raise exception 'Order not found';
+  end if;
+
+  return jsonb_build_object('success', true, 'order_id', p_order_id);
+end;
+$$;
+
+-- ── admin_bulk_issue_coupons ────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.admin_bulk_issue_coupons(
+  p_coupon_id uuid,
+  p_user_ids uuid[]
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+declare
+  v_admin_id uuid;
+  v_affected_count integer := 0;
+begin
+  v_admin_id := auth.uid();
+  if v_admin_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  if p_user_ids is null or coalesce(array_length(p_user_ids, 1), 0) = 0 then
+    return jsonb_build_object('success', true, 'affected_count', 0);
+  end if;
+
+  with target_user_ids as (
+    select distinct t.user_id
+    from unnest(p_user_ids) as t(user_id)
+    where t.user_id is not null
+  ),
+  upserted as (
+    insert into public.user_coupons (user_id, coupon_id, status)
+    select user_id, p_coupon_id, 'active'
+    from target_user_ids
+    on conflict (user_id, coupon_id)
+    do update set status = excluded.status
+    returning 1
+  )
+  select count(*)
+  into v_affected_count
+  from upserted;
+
+  return jsonb_build_object('success', true, 'affected_count', v_affected_count);
+end;
+$$;
+
+-- ── admin_revoke_coupons_by_ids ─────────────────────────────────
+CREATE OR REPLACE FUNCTION public.admin_revoke_coupons_by_ids(
+  p_ids uuid[]
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+declare
+  v_admin_id uuid;
+  v_affected_count integer := 0;
+begin
+  v_admin_id := auth.uid();
+  if v_admin_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  if p_ids is null or coalesce(array_length(p_ids, 1), 0) = 0 then
+    return jsonb_build_object('success', true, 'affected_count', 0);
+  end if;
+
+  update public.user_coupons
+  set status = 'revoked'
+  where id = any(p_ids)
+    and status = 'active';
+
+  get diagnostics v_affected_count = row_count;
+
+  return jsonb_build_object('success', true, 'affected_count', v_affected_count);
+end;
+$$;
+
+-- ── admin_revoke_coupons_by_user_ids ────────────────────────────
+CREATE OR REPLACE FUNCTION public.admin_revoke_coupons_by_user_ids(
+  p_coupon_id uuid,
+  p_user_ids uuid[]
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+declare
+  v_admin_id uuid;
+  v_affected_count integer := 0;
+begin
+  v_admin_id := auth.uid();
+  if v_admin_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  if p_user_ids is null or coalesce(array_length(p_user_ids, 1), 0) = 0 then
+    return jsonb_build_object('success', true, 'affected_count', 0);
+  end if;
+
+  update public.user_coupons
+  set status = 'revoked'
+  where coupon_id = p_coupon_id
+    and user_id = any(p_user_ids)
+    and status = 'active';
+
+  get diagnostics v_affected_count = row_count;
+
+  return jsonb_build_object('success', true, 'affected_count', v_affected_count);
 end;
 $$;

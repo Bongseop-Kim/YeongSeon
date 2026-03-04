@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Empty } from "@/components/composite/empty";
+import { ClaimStatusBadge } from "@/components/composite/status-badge";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
@@ -105,7 +106,7 @@ export default function ClaimListPage() {
                           <Badge variant="outline">
                             {getClaimTypeLabel(claim.type)}
                           </Badge>
-                          <Badge variant="secondary">{claim.status}</Badge>
+                          <ClaimStatusBadge status={claim.status} />
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-zinc-500 mt-1">

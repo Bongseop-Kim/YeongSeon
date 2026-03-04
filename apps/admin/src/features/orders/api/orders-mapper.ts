@@ -79,6 +79,7 @@ function toTrackingInfo(
     courierCompany: dto.courierCompany,
     trackingNumber: dto.trackingNumber,
     shippedAt: dto.shippedAt,
+    deliveredAt: dto.deliveredAt,
   };
 }
 
@@ -100,6 +101,8 @@ export function toAdminOrderDetail(
     customerEmail: dto.customerEmail,
     shippingAddress: toShippingAddress(dto),
     trackingInfo: toTrackingInfo(dto),
+    deliveredAt: dto.deliveredAt,
+    confirmedAt: dto.confirmedAt,
   };
 }
 
@@ -150,26 +153,38 @@ export function parseCustomReformData(
 
 function parseRepairTie(raw: unknown): RepairTie {
   const r = isRecord(raw) ? raw : {};
-  const rawType = str(r.measurement_type);
+  const rawType = str(r.measurementType);
   const measurementType: "length" | "height" =
-    rawType === "length" || rawType === "height" ? rawType : "height";
+    rawType === "length" || rawType === "height"
+      ? rawType
+      : r.tieLength != null
+        ? "length"
+        : "height";
   if (rawType !== "length" && rawType !== "height") {
-    console.warn(`[parseRepairTie] Invalid measurement_type: ${rawType}`);
+    console.warn(`[parseRepairTie] Invalid measurementType: ${rawType}`);
   }
+
+  const rawMeasurementValue =
+    measurementType === "length" ? r.tieLength : r.wearerHeight;
+  const measurementValue =
+    str(rawMeasurementValue) ??
+    (typeof rawMeasurementValue === "number" ? String(rawMeasurementValue) : "");
+
   return {
-    imageUrl: typeof r.image_url === "string" ? r.image_url : null,
+    imageUrl: typeof r.image === "string" ? r.image : null,
     measurementType,
-    measurementValue: str(r.measurement_value) ?? "",
-    memo: typeof r.memo === "string" ? r.memo : null,
+    measurementValue,
+    memo: typeof r.notes === "string" ? r.notes : null,
   };
 }
 
 export function parseRepairReformData(
   raw: Record<string, unknown>
 ): RepairOrderReformData {
-  const ties = Array.isArray(raw.ties)
-    ? raw.ties.map(parseRepairTie)
-    : [];
+  const ties =
+    typeof raw.tie === "object" && raw.tie !== null && !Array.isArray(raw.tie)
+      ? [parseRepairTie(raw.tie)]
+      : [];
   return { _tag: "repair", ties };
 }
 

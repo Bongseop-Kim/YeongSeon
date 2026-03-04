@@ -36,3 +36,4 @@ dist-ssr
 
 # Git worktrees
 .worktrees/
+.worktrees
