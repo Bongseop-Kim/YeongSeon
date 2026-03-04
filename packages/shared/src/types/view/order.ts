@@ -3,7 +3,7 @@ import type { AppliedCoupon } from "./coupon";
 import type { TieItem } from "./reform";
 
 // 주문 상태
-export type OrderStatus = "진행중" | "완료" | "배송중" | "대기중" | "취소";
+export type OrderStatus = "진행중" | "완료" | "배송중" | "대기중" | "취소" | "접수" | "제작중" | "제작완료" | "수선중" | "수선완료";
 
 // 일반 상품 주문 아이템
 export interface ProductOrderItem {
