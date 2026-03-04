@@ -123,10 +123,12 @@ const ReformPage = () => {
         confirm("수선할 넥타이를 추가해주세요.");
         return;
       }
-      const isValid = await form.trigger("ties");
-      if (!isValid) return;
-
       isSubmittingRef.current = true;
+      const isValid = await form.trigger("ties");
+      if (!isValid) {
+        isSubmittingRef.current = false;
+        return;
+      }
       try {
         await action();
       } finally {
@@ -153,11 +155,9 @@ const ReformPage = () => {
       const uploadedTies = await uploadAndGetTies();
       if (!uploadedTies) return;
 
-      await Promise.all(
-        uploadedTies.map((tie) =>
-          addReformToCart(toReformData(tie))
-        )
-      );
+      for (const tie of uploadedTies) {
+        await addReformToCart(toReformData(tie));
+      }
 
       form.reset(DEFAULT_REFORM_OPTIONS);
     });
@@ -182,7 +182,8 @@ const ReformPage = () => {
     });
   };
 
-  const isAllChecked = watchedTies.every((tie) => tie.checked);
+  const isAllChecked =
+    watchedTies.length > 0 && watchedTies.every((tie) => tie.checked);
 
   return (
     <MainLayout>
