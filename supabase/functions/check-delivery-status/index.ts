@@ -11,6 +11,7 @@ const SWEET_TRACKER_CODES: Record<string, string> = {
   lotte: "08",    // 롯데택배
   kyungdong: "23", // 경동택배
 };
+const REQUEST_TIMEOUT_MS = 10_000;
 
 interface SweetTrackerResponse {
   result: string;
@@ -37,7 +38,7 @@ Deno.serve(async (req: Request) => {
 
   const schedulerToken = Deno.env.get("SCHEDULER_BEARER_TOKEN");
   const authHeader = req.headers.get("Authorization");
-  if (schedulerToken && authHeader !== `Bearer ${schedulerToken}`) {
+  if (!schedulerToken || authHeader !== `Bearer ${schedulerToken}`) {
     return new Response(
       JSON.stringify({ error: "Unauthorized" }),
       { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -97,7 +98,14 @@ Deno.serve(async (req: Request) => {
         `&t_code=${encodeURIComponent(trackerCode)}` +
         `&t_invoice=${encodeURIComponent(order.tracking_number)}`;
 
-      const res = await fetch(apiUrl);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      let res: Response;
+      try {
+        res = await fetch(apiUrl, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       if (!res.ok) {
         errors.push(`Order ${order.id}: HTTP ${res.status}`);
         continue;
@@ -129,15 +137,18 @@ Deno.serve(async (req: Request) => {
         }
 
         // 상태 로그 기록 (changed_by = null → 시스템 자동 전환)
-        await supabase.from("order_status_logs").insert({
+        const { error: insertError } = await supabase.from("order_status_logs").insert({
           order_id: order.id,
           changed_by: null,
           previous_status: "배송중",
           new_status: "배송완료",
           memo: "스마트택배 배달완료 자동 감지",
         });
-
-        deliveredCount++;
+        if (insertError) {
+          errors.push(`Order ${order.id} log insert failed: ${insertError.message}`);
+        } else {
+          deliveredCount++;
+        }
       }
     } catch (err) {
       errors.push(`Order ${order.id}: ${String(err)}`);

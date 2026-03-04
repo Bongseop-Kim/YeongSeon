@@ -172,7 +172,6 @@ export function useTrackingSave() {
       message.success("배송 정보가 저장되었습니다.");
     } catch (err) {
       message.error(err instanceof Error ? err.message : "배송 정보 저장에 실패했습니다.");
-      throw err;
     } finally {
       setIsPending(false);
     }

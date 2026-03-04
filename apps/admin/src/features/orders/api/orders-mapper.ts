@@ -155,7 +155,11 @@ function parseRepairTie(raw: unknown): RepairTie {
   const r = isRecord(raw) ? raw : {};
   const rawType = str(r.measurementType);
   const measurementType: "length" | "height" =
-    rawType === "length" || rawType === "height" ? rawType : "height";
+    rawType === "length" || rawType === "height"
+      ? rawType
+      : r.tieLength != null
+        ? "length"
+        : "height";
   if (rawType !== "length" && rawType !== "height") {
     console.warn(`[parseRepairTie] Invalid measurementType: ${rawType}`);
   }
@@ -179,7 +183,7 @@ export function parseRepairReformData(
 ): RepairOrderReformData {
   const ties =
     typeof raw.tie === "object" && raw.tie !== null && !Array.isArray(raw.tie)
-      ? [parseRepairTie(raw.tie as Record<string, unknown>)]
+      ? [parseRepairTie(raw.tie)]
       : [];
   return { _tag: "repair", ties };
 }

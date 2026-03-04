@@ -69,7 +69,7 @@ const PurchaseConfirmSection = ({
   deliveredAt: string | null;
   totalPrice: number;
 }) => {
-  const { mutate, isPending, isSuccess } = useConfirmPurchase(orderId);
+  const { mutate, isPending, isSuccess, isError, error } = useConfirmPurchase(orderId);
 
   const daysRemaining = deliveredAt
     ? Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - new Date(deliveredAt).getTime()) / 86_400_000)))
@@ -96,6 +96,11 @@ const PurchaseConfirmSection = ({
         자동 구매확정까지 <span className="font-medium">{daysRemaining}일</span> 남음
         (자동 확정 시 {autoPoints}P / 0.5% 적립)
       </p>
+      {isError && (
+        <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+          {error instanceof Error ? error.message : "구매확정에 실패했습니다. 다시 시도해주세요."}
+        </div>
+      )}
       <Button
         onClick={() => mutate()}
         disabled={isPending}
