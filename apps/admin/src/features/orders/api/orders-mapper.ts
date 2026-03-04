@@ -79,6 +79,7 @@ function toTrackingInfo(
     courierCompany: dto.courierCompany,
     trackingNumber: dto.trackingNumber,
     shippedAt: dto.shippedAt,
+    deliveredAt: dto.deliveredAt,
   };
 }
 
@@ -100,6 +101,8 @@ export function toAdminOrderDetail(
     customerEmail: dto.customerEmail,
     shippingAddress: toShippingAddress(dto),
     trackingInfo: toTrackingInfo(dto),
+    deliveredAt: dto.deliveredAt,
+    confirmedAt: dto.confirmedAt,
   };
 }
 

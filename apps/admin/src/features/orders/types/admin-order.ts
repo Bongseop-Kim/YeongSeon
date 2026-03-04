@@ -16,6 +16,7 @@ export interface AdminTrackingInfo {
   courierCompany: string;
   trackingNumber: string;
   shippedAt: string | null;
+  deliveredAt: string | null;
 }
 
 // ── List UI model ──────────────────────────────────────────────
@@ -54,6 +55,8 @@ export interface AdminOrderDetail {
   customerEmail: string | null;
   shippingAddress: AdminShippingAddress | null;
   trackingInfo: AdminTrackingInfo | null;
+  deliveredAt: string | null;
+  confirmedAt: string | null;
 }
 
 // ── Order items (discriminated union) ─────────────────────────

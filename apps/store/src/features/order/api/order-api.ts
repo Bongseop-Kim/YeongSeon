@@ -134,6 +134,23 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
 };
 
 /**
+ * 구매확정 (배송완료 상태에서만 가능, 2% 포인트 적립)
+ */
+export const confirmPurchase = async (
+  orderId: string
+): Promise<{ pointsEarned: number }> => {
+  const { data, error } = await supabase.rpc("customer_confirm_purchase", {
+    p_order_id: orderId,
+  });
+
+  if (error) {
+    throw new Error(`구매확정 실패: ${error.message}`);
+  }
+
+  return { pointsEarned: (data as { points_earned: number }).points_earned };
+};
+
+/**
  * 주문 상세 조회
  */
 export const getOrder = async (orderId: string): Promise<Order | null> => {

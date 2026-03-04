@@ -10,7 +10,7 @@ import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
 import React from "react";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import { useOrderDetail } from "@/features/order/api/order-query";
+import { useOrderDetail, useConfirmPurchase } from "@/features/order/api/order-query";
 import { Empty } from "@/components/composite/empty";
 import type { OrderItem, OrderStatus, ShippingInfo, TrackingInfo } from "@yeongseon/shared/types/view/order";
 import { buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies";
@@ -55,6 +55,55 @@ const renderClaimButtons = (
           {CLAIM_ACTION_LABEL[actionType]}
         </Button>
       ))}
+    </div>
+  );
+};
+
+/** 배송완료 상태에서 구매확정 버튼과 포인트 안내를 표시 */
+const PurchaseConfirmSection = ({
+  orderId,
+  deliveredAt,
+  totalPrice,
+}: {
+  orderId: string;
+  deliveredAt: string | null;
+  totalPrice: number;
+}) => {
+  const { mutate, isPending, isSuccess } = useConfirmPurchase(orderId);
+
+  const daysRemaining = deliveredAt
+    ? Math.max(0, 7 - Math.floor((Date.now() - new Date(deliveredAt).getTime()) / 86_400_000))
+    : 7;
+
+  const manualPoints = Math.floor(totalPrice * 0.02).toLocaleString();
+  const autoPoints = Math.floor(totalPrice * 0.005).toLocaleString();
+
+  if (isSuccess) {
+    return (
+      <div className="rounded-md bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+        구매확정이 완료되었습니다. 포인트가 적립되었습니다.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md bg-blue-50 border border-blue-200 p-4 space-y-3">
+      <p className="text-sm text-zinc-700">
+        지금 구매확정하면{" "}
+        <span className="font-semibold text-blue-700">{manualPoints}P (2%)</span> 적립!
+      </p>
+      <p className="text-xs text-zinc-500">
+        자동 구매확정까지 <span className="font-medium">{daysRemaining}일</span> 남음
+        (자동 확정 시 {autoPoints}P / 0.5% 적립)
+      </p>
+      <Button
+        onClick={() => mutate()}
+        disabled={isPending}
+        className="w-full"
+        size="sm"
+      >
+        {isPending ? "처리 중..." : "구매확정"}
+      </Button>
     </div>
   );
 };
@@ -315,6 +364,17 @@ const OrderDetailPage = () => {
               <CardContent>
                 <Separator />
               </CardContent>
+
+              {/* 구매확정 */}
+              {order.status === "배송완료" && (
+                <CardContent>
+                  <PurchaseConfirmSection
+                    orderId={order.id}
+                    deliveredAt={order.trackingInfo?.deliveredAt ?? null}
+                    totalPrice={order.totalPrice}
+                  />
+                </CardContent>
+              )}
 
               {/* 주문 상품 목록 */}
               <CardHeader>

@@ -7,20 +7,22 @@ export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
 };
 
 export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
-  sale: { 대기중: "진행중", 진행중: "배송중", 배송중: "완료" },
+  sale: { 대기중: "진행중", 진행중: "배송중", 배송중: "배송완료", 배송완료: "완료" },
   custom: {
     대기중: "접수",
     접수: "제작중",
     제작중: "제작완료",
     제작완료: "배송중",
-    배송중: "완료",
+    배송중: "배송완료",
+    배송완료: "완료",
   },
   repair: {
     대기중: "접수",
     접수: "수선중",
     수선중: "수선완료",
     수선완료: "배송중",
-    배송중: "완료",
+    배송중: "배송완료",
+    배송완료: "완료",
   },
 };
 
@@ -39,6 +41,7 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   수선중: "orange",
   수선완료: "lime",
   배송중: "blue",
+  배송완료: "geekblue",
   완료: "success",
   취소: "error",
 };
@@ -52,6 +55,7 @@ export const ORDER_STATUS_OPTIONS: Record<
     { label: "대기중", value: "대기중" },
     { label: "진행중", value: "진행중" },
     { label: "배송중", value: "배송중" },
+    { label: "배송완료", value: "배송완료" },
     { label: "완료", value: "완료" },
     { label: "취소", value: "취소" },
   ],
@@ -62,6 +66,7 @@ export const ORDER_STATUS_OPTIONS: Record<
     { label: "제작중", value: "제작중" },
     { label: "제작완료", value: "제작완료" },
     { label: "배송중", value: "배송중" },
+    { label: "배송완료", value: "배송완료" },
     { label: "완료", value: "완료" },
     { label: "취소", value: "취소" },
   ],
@@ -72,6 +77,7 @@ export const ORDER_STATUS_OPTIONS: Record<
     { label: "수선중", value: "수선중" },
     { label: "수선완료", value: "수선완료" },
     { label: "배송중", value: "배송중" },
+    { label: "배송완료", value: "배송완료" },
     { label: "완료", value: "완료" },
     { label: "취소", value: "취소" },
   ],
