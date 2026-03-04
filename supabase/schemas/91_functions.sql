@@ -1543,7 +1543,7 @@ $$;
 -- Called by pg_cron daily at 03:00 KST.
 -- Confirms all orders in '배송완료' that have been delivered for 7+ days.
 -- Earns 0.5% points for auto-confirmed orders.
--- SECURITY DEFINER: runs as a privileged role outside user sessions.
+-- SECURITY DEFINER: runs as a privileged role, restricted to pg_cron/service_role callers only.
 CREATE OR REPLACE FUNCTION public.auto_confirm_delivered_orders()
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -1555,6 +1555,11 @@ declare
   v_points integer;
   v_count  integer := 0;
 begin
+  -- Only allow pg_cron / service_role (no authenticated user session)
+  if coalesce(current_setting('request.jwt.claim.role', true), '') not in ('', 'service_role') then
+    raise exception 'unauthorized: scheduler-only function';
+  end if;
+
   for v_order in
     select id, user_id, total_price
     from public.orders

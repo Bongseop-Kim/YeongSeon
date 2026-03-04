@@ -54,7 +54,7 @@ const DEFAULT_REFORM_OPTIONS: ReformOptions = {
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
-  const { addReformToCart } = useCart();
+  const { addMultipleReformToCart } = useCart();
   const { setOrderItems } = useOrderStore();
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
@@ -155,9 +155,7 @@ const ReformPage = () => {
       const uploadedTies = await uploadAndGetTies();
       if (!uploadedTies) return;
 
-      for (const tie of uploadedTies) {
-        await addReformToCart(toReformData(tie));
-      }
+      await addMultipleReformToCart(uploadedTies.map(toReformData));
 
       form.reset(DEFAULT_REFORM_OPTIONS);
     });

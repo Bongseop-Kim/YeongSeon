@@ -130,6 +130,29 @@ export function useCart() {
     [items, openModal, syncItems]
   );
 
+  const addMultipleReformToCart = useCallback(
+    async (reforms: { tie: TieItem; cost: number }[]) => {
+      let nextItems = items;
+
+      for (const reformData of reforms) {
+        nextItems = addReformItemToCart(nextItems, reformData, generateItemId);
+      }
+
+      await syncItems(nextItems, items);
+
+      openModal({
+        title: "장바구니",
+        description: "수선 요청이 장바구니에 추가되었습니다.",
+        confirmText: "장바구니 보기",
+        cancelText: "닫기",
+        onConfirm: () => {
+          window.location.href = ROUTES.CART;
+        },
+      });
+    },
+    [items, openModal, syncItems]
+  );
+
   const removeFromCart = useCallback(
     async (itemId: string) => {
       const nextItems = removeCartItem(items, itemId);
@@ -213,6 +236,7 @@ export function useCart() {
     isLoading,
     addToCart,
     addReformToCart,
+    addMultipleReformToCart,
     removeFromCart,
     updateQuantity,
     updateProductOption,
