@@ -71,9 +71,10 @@ const PurchaseConfirmSection = ({
 }) => {
   const { mutate, isPending, isSuccess, isError, error } = useConfirmPurchase(orderId);
 
-  const daysRemaining = deliveredAt
-    ? Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - new Date(deliveredAt).getTime()) / 86_400_000)))
-    : 7;
+  const parsedDeliveredAt = deliveredAt ? Date.parse(deliveredAt) : Number.NaN;
+  const daysRemaining = Number.isNaN(parsedDeliveredAt)
+    ? 7
+    : Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - parsedDeliveredAt) / 86_400_000)));
 
   const manualPoints = Math.floor(totalPrice * 0.02).toLocaleString();
   const autoPoints = Math.floor(totalPrice * 0.005).toLocaleString();
@@ -98,7 +99,7 @@ const PurchaseConfirmSection = ({
       </p>
       {isError && (
         <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800">
-          {error instanceof Error ? error.message : "구매확정에 실패했습니다. 다시 시도해주세요."}
+          {getOrderErrorDescription(error) || "구매확정에 실패했습니다. 다시 시도해주세요."}
         </div>
       )}
       <Button
