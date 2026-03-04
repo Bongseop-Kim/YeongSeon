@@ -18,6 +18,7 @@ export const productKeys = {
     priceMin?: number | null;
     priceMax?: number | null;
     sortOption?: string;
+    limit?: number;
   }) => [...productKeys.lists(), filters] as const,
   details: () => [...productKeys.all, "detail"] as const,
   detail: (id: number) => [...productKeys.details(), id] as const,
@@ -34,6 +35,7 @@ export const useProducts = (filters?: {
   priceMin?: number | null;
   priceMax?: number | null;
   sortOption?: string;
+  limit?: number;
 }) => {
   return useQuery({
     queryKey: productKeys.list(filters),

@@ -15,6 +15,7 @@ export const getProducts = async (filters?: {
   priceMin?: number | null;
   priceMax?: number | null;
   sortOption?: string;
+  limit?: number;
 }): Promise<Product[]> => {
   let query = supabase.from(PRODUCT_VIEW).select("*");
 
@@ -52,6 +53,10 @@ export const getProducts = async (filters?: {
     });
   } else {
     query = query.order("id", { ascending: false });
+  }
+
+  if (typeof filters?.limit === "number") {
+    query = query.limit(filters.limit);
   }
 
   const { data, error } = await query;
