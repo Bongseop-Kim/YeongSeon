@@ -163,7 +163,9 @@ const ReformPage = () => {
     });
 
   const calculateTotalCost = () =>
-    REFORM_BASE_COST * fields.length + REFORM_SHIPPING_COST;
+    fields.length === 0
+      ? 0
+      : REFORM_BASE_COST * fields.length + REFORM_SHIPPING_COST;
 
   const handleDelete = () => {
     const checkedIndices = watchedTies
