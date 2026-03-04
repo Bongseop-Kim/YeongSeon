@@ -2,7 +2,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Image } from "@imagekit/react";
 import {
@@ -49,7 +48,7 @@ import { useOrderStore } from "@/store/order";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import { useProduct } from "@/features/shop/api/products-query";
+import { useProduct, useProducts } from "@/features/shop/api/products-query";
 import { useToggleLike } from "@/features/shop/api/likes-query";
 
 interface SelectedOption {
@@ -122,24 +121,18 @@ export default function ShopDetailPage() {
   const likeCount = product?.likes ?? 0;
   const toggleLikeMutation = useToggleLike(productId);
 
-  // 유사한 상품 찾기 (같은 카테고리, 색상, 패턴, 재질 중 하나 이상 일치)
-  // TODO: 실제 API에서 가져오도록 수정 필요
-  // useMemo는 hooks 규칙에 따라 조건부 return 전에 호출되어야 함
-  const similarProducts = useMemo(() => {
-    if (!product) return [];
+  const { data: categoryProducts = [] } = useProducts(
+    {
+      categories: product ? [product.category] : [],
+      limit: isMobile ? 4 : 5,
+    },
+    { enabled: !!product }
+  );
 
-    return PRODUCTS_DATA.filter((p) => {
-      if (p.id === product.id) return false; // 현재 상품 제외
-
-      // 하나 이상의 속성이 일치하면 유사 상품으로 간주
-      return (
-        p.category === product.category ||
-        p.color === product.color ||
-        p.pattern === product.pattern ||
-        p.material === product.material
-      );
-    }).slice(0, isMobile ? 3 : 4); // 최대 4개만 표시
-  }, [product, isMobile]);
+  const similarProducts = useMemo(
+    () => categoryProducts.filter((p) => p.id !== product?.id).slice(0, isMobile ? 3 : 4),
+    [categoryProducts, product?.id, isMobile]
+  );
 
   // 로딩 중이거나 제품이 없을 때 처리
   if (isProductLoading) {

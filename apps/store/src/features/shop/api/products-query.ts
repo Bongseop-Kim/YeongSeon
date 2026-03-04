@@ -27,22 +27,26 @@ export const productKeys = {
 /**
  * 모든 제품 조회 쿼리
  */
-export const useProducts = (filters?: {
-  categories?: string[];
-  colors?: string[];
-  patterns?: string[];
-  materials?: string[];
-  priceMin?: number | null;
-  priceMax?: number | null;
-  sortOption?: string;
-  limit?: number;
-}) => {
+export const useProducts = (
+  filters?: {
+    categories?: string[];
+    colors?: string[];
+    patterns?: string[];
+    materials?: string[];
+    priceMin?: number | null;
+    priceMax?: number | null;
+    sortOption?: string;
+    limit?: number;
+  },
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: productKeys.list(filters),
     queryFn: () => getProducts(filters),
     staleTime: 1000 * 60 * 5, // 5분
     refetchOnWindowFocus: false,
     retry: 1,
+    enabled: options?.enabled !== false,
   });
 };
 
