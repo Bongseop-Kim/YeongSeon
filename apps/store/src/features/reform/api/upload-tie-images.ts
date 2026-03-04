@@ -25,11 +25,7 @@ export async function uploadTieImages(ties: TieItem[]): Promise<TieItem[]> {
     throw new Error("ImageKit 인증 응답 형식이 올바르지 않습니다.");
   }
 
-  const { signature, token, expire } = data as {
-    signature: string;
-    token: string;
-    expire: number;
-  };
+  const { signature, token, expire } = data;
 
   return Promise.all(
     ties.map(async (tie) => {

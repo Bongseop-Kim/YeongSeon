@@ -34,6 +34,24 @@ import { MobileReformSheet } from "./components/mobile-reform-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { toReformCartItems, toReformData } from "./api/reform-mapper";
 
+const DEFAULT_TIE_ITEM = {
+  id: "tie-1",
+  image: undefined,
+  measurementType: "length" as const,
+  tieLength: undefined,
+  wearerHeight: undefined,
+  checked: false,
+};
+
+const DEFAULT_REFORM_OPTIONS: ReformOptions = {
+  ties: [DEFAULT_TIE_ITEM],
+  bulkApply: {
+    measurementType: "length",
+    tieLength: undefined,
+    wearerHeight: undefined,
+  },
+};
+
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
   const { addReformToCart } = useCart();
@@ -45,23 +63,7 @@ const ReformPage = () => {
   const isSubmittingRef = useRef(false);
 
   const form = useForm<ReformOptions>({
-    defaultValues: {
-      ties: [
-        {
-          id: "tie-1",
-          image: undefined,
-          measurementType: "length",
-          tieLength: undefined,
-          wearerHeight: undefined,
-          checked: false,
-        },
-      ],
-      bulkApply: {
-        measurementType: "length",
-        tieLength: undefined,
-        wearerHeight: undefined,
-      },
-    },
+    defaultValues: DEFAULT_REFORM_OPTIONS,
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -69,7 +71,7 @@ const ReformPage = () => {
     name: "ties",
   });
 
-  const watchedValues = form.watch();
+  const watchedTies = form.watch("ties");
 
   const addTie = () => {
     append({
@@ -114,62 +116,40 @@ const ReformPage = () => {
     navigate(ROUTES.ORDER_FORM);
   }, [uploadAndGetTies, setOrderItems, navigate]);
 
-  const handleDirectOrder = async () => {
-    if (isSubmittingRef.current) return;
-    if (fields.length === 0) {
-      confirm("수선할 넥타이를 추가해주세요.");
-      return;
-    }
-    const isValid = await form.trigger("ties");
-    if (!isValid) {
-      return;
-    }
+  const withSubmitGuard = useCallback(
+    async (action: () => Promise<void>) => {
+      if (isSubmittingRef.current) return;
+      if (fields.length === 0) {
+        confirm("수선할 넥타이를 추가해주세요.");
+        return;
+      }
+      const isValid = await form.trigger("ties");
+      if (!isValid) return;
 
-    if (isMobile) {
-      setIsPurchaseSheetOpen(true);
-      return;
-    }
+      isSubmittingRef.current = true;
+      try {
+        await action();
+      } finally {
+        isSubmittingRef.current = false;
+      }
+    },
+    [fields.length, confirm, form]
+  );
 
-    isSubmittingRef.current = true;
-    try {
+  const handleDirectOrder = () =>
+    withSubmitGuard(async () => {
+      if (isMobile) {
+        setIsPurchaseSheetOpen(true);
+        return;
+      }
       await processReformOrder();
-    } finally {
-      isSubmittingRef.current = false;
-    }
-  };
+    });
 
-  const handleMobileOrder = async () => {
-    if (isSubmittingRef.current) return;
-    if (fields.length === 0) {
-      confirm("수선할 넥타이를 추가해주세요.");
-      return;
-    }
-    const isValid = await form.trigger("ties");
-    if (!isValid) {
-      return;
-    }
+  const handleMobileOrder = () =>
+    withSubmitGuard(processReformOrder);
 
-    isSubmittingRef.current = true;
-    try {
-      await processReformOrder();
-    } finally {
-      isSubmittingRef.current = false;
-    }
-  };
-
-  const handleAddToCart = async () => {
-    if (isSubmittingRef.current) return;
-    if (fields.length === 0) {
-      confirm("수선할 넥타이를 추가해주세요.");
-      return;
-    }
-    const isValid = await form.trigger("ties");
-    if (!isValid) {
-      return;
-    }
-
-    isSubmittingRef.current = true;
-    try {
+  const handleAddToCart = () =>
+    withSubmitGuard(async () => {
       const uploadedTies = await uploadAndGetTies();
       if (!uploadedTies) return;
 
@@ -179,36 +159,14 @@ const ReformPage = () => {
         )
       );
 
-      form.reset({
-        ties: [
-          {
-            id: "tie-1",
-            image: undefined,
-            measurementType: "length",
-            tieLength: undefined,
-            wearerHeight: undefined,
-            checked: false,
-          },
-        ],
-        bulkApply: {
-          measurementType: "length",
-          tieLength: undefined,
-          wearerHeight: undefined,
-        },
-      });
-    } finally {
-      isSubmittingRef.current = false;
-    }
-  };
+      form.reset(DEFAULT_REFORM_OPTIONS);
+    });
 
-  // 간단한 비용 계산 (실제로는 더 복잡한 로직이 필요)
-  const calculateEstimatedCost = () => {
-    const tieCount = fields.length;
-    return REFORM_BASE_COST * tieCount;
-  };
+  const calculateTotalCost = () =>
+    REFORM_BASE_COST * fields.length + REFORM_SHIPPING_COST;
 
   const handleDelete = () => {
-    const checkedIndices = watchedValues.ties
+    const checkedIndices = watchedTies
       .map((tie, index) => (tie.checked ? index : -1))
       .filter((index) => index !== -1)
       .sort((a, b) => b - a);
@@ -224,7 +182,7 @@ const ReformPage = () => {
     });
   };
 
-  const isAllChecked = watchedValues.ties.every((tie) => tie.checked);
+  const isAllChecked = watchedTies.every((tie) => tie.checked);
 
   return (
     <MainLayout>
@@ -241,7 +199,7 @@ const ReformPage = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm font-semibold">
                       <span>총 {fields.length}개</span>
-                      <span>{calculateEstimatedCost().toLocaleString()}원</span>
+                      <span>{calculateTotalCost().toLocaleString()}원</span>
                     </div>
                   </div>
 
@@ -320,7 +278,7 @@ const ReformPage = () => {
                           handleBulkApply: () => void;
                         } | null = null;
 
-                        const checkedIndices = watchedValues.ties
+                        const checkedIndices = watchedTies
                           .map((tie, index) => (tie.checked ? index : -1))
                           .filter((index) => index !== -1);
 
@@ -417,7 +375,7 @@ const ReformPage = () => {
           onAddToCart={handleAddToCart}
           onOrder={handleMobileOrder}
           tieCount={fields.length}
-          totalCost={calculateEstimatedCost() + REFORM_SHIPPING_COST}
+          totalCost={calculateTotalCost()}
         />
       </MainContent>
     </MainLayout>
