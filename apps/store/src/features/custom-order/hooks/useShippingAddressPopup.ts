@@ -52,13 +52,14 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
   const queryClient = useQueryClient();
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const initializedDefaultAddressRef = useRef(false);
+  const userInteractedRef = useRef(false);
 
   const { data: defaultAddress } = useDefaultShippingAddress();
   const { data: addresses } = useShippingAddresses();
 
-  // 기본 배송지가 있으면 자동 선택
+  // 기본 배송지가 있으면 자동 선택 (사용자가 직접 선택한 경우 덮어쓰지 않음)
   useEffect(() => {
-    if (defaultAddress && !initializedDefaultAddressRef.current) {
+    if (defaultAddress && !initializedDefaultAddressRef.current && !userInteractedRef.current) {
       setSelectedAddressId(defaultAddress.id);
       initializedDefaultAddressRef.current = true;
     }
@@ -75,6 +76,7 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
         return;
       }
 
+      userInteractedRef.current = true;
       switch (event.data.type) {
         case SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED:
           setSelectedAddressId(event.data.addressId);
