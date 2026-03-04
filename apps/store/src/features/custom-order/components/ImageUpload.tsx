@@ -2,9 +2,7 @@ import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Upload, X, Loader2, ImageOff } from "lucide-react";
-import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
-
-type ImageUploadHook = ReturnType<typeof useImageUpload>;
+import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 
 interface ImageUploadProps {
   uploadedImages: ImageUploadHook["uploadedImages"];
