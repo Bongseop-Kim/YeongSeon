@@ -4,7 +4,6 @@ import { useTable } from "@refinedev/antd";
 import {
   useShow,
   useList,
-  useUpdate,
   useInvalidate,
 } from "@refinedev/core";
 import { message } from "antd";
@@ -22,7 +21,7 @@ import {
   toAdminOrderItem,
   toAdminStatusLogEntry,
 } from "./orders-mapper";
-import { updateOrderStatus } from "./orders-api";
+import { updateOrderStatus, updateOrderTracking } from "./orders-api";
 import type {
   AdminOrderListItem,
   AdminOrderDetail,
@@ -159,36 +158,24 @@ export function useOrderStatusUpdate(
 }
 
 // ── Tracking save ─────────────────────────────────────────────
-
-// TODO: 직접 테이블 쓰기 가드레일 위반 — `orders` 테이블에 직접 UPDATE하고 있음.
-// 가드레일에 따르면 직접 테이블 쓰기는 `cart_items` DELETE만 허용된다.
-// 배송 정보 저장은 `admin_update_order_tracking` RPC로 이관해야 한다.
 export function useTrackingSave() {
-  const { mutate: updateOrder, mutation } = useUpdate();
+  const [isPending, setIsPending] = useState(false);
 
-  const saveTracking = (
+  const saveTracking = async (
     orderId: string,
     courierCompany: string,
     trackingNumber: string
   ) => {
-    updateOrder(
-      {
-        resource: "orders",
-        id: orderId,
-        values: {
-          courier_company: courierCompany || null,
-          tracking_number: trackingNumber || null,
-        },
-      },
-      {
-        onSuccess: () => {
-          message.success("배송 정보가 저장되었습니다.");
-        },
-      }
-    );
+    setIsPending(true);
+    try {
+      await updateOrderTracking({ orderId, courierCompany, trackingNumber });
+      message.success("배송 정보가 저장되었습니다.");
+    } finally {
+      setIsPending(false);
+    }
   };
 
-  return { saveTracking, isPending: mutation.isPending };
+  return { saveTracking, isPending };
 }
 
 // ── Tracking local state ──────────────────────────────────────

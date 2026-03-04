@@ -2,9 +2,6 @@ import { supabase } from "@/lib/supabase";
 import { toAdminCouponUser } from "./coupons-mapper";
 import type { AdminCouponUser } from "../types/admin-coupon";
 
-// TODO: RPC 마이그레이션 — user_coupons 직접 쓰기는 CLAUDE.md 가드레일 위반이나,
-// RLS(is_admin())로 관리자 접근만 허용되므로 임시 예외. 추후 RPC로 교체 필요.
-
 // ── 읽기 ───────────────────────────────────────────────────────
 
 export async function fetchCustomers(): Promise<AdminCouponUser[]> {
@@ -93,14 +90,10 @@ export async function bulkIssueCoupons(
   couponId: string,
   userIds: string[]
 ): Promise<void> {
-  const { error } = await supabase.from("user_coupons").upsert(
-    userIds.map((userId) => ({
-      user_id: userId,
-      coupon_id: couponId,
-      status: "active",
-    })),
-    { onConflict: "user_id,coupon_id" }
-  );
+  const { error } = await supabase.rpc("admin_bulk_issue_coupons", {
+    p_coupon_id: couponId,
+    p_user_ids: userIds,
+  });
 
   if (error) {
     throw error;
@@ -108,11 +101,9 @@ export async function bulkIssueCoupons(
 }
 
 export async function revokeCouponsByIds(ids: string[]): Promise<void> {
-  const { error } = await supabase
-    .from("user_coupons")
-    .update({ status: "revoked" })
-    .in("id", ids)
-    .eq("status", "active");
+  const { error } = await supabase.rpc("admin_revoke_coupons_by_ids", {
+    p_ids: ids,
+  });
 
   if (error) {
     throw error;
@@ -123,12 +114,10 @@ export async function revokeCouponsByUserIds(
   couponId: string,
   userIds: string[]
 ): Promise<void> {
-  const { error } = await supabase
-    .from("user_coupons")
-    .update({ status: "revoked" })
-    .eq("coupon_id", couponId)
-    .in("user_id", userIds)
-    .eq("status", "active");
+  const { error } = await supabase.rpc("admin_revoke_coupons_by_user_ids", {
+    p_coupon_id: couponId,
+    p_user_ids: userIds,
+  });
 
   if (error) {
     throw error;
