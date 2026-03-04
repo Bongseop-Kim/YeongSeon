@@ -29,10 +29,13 @@ export function LeaveContent() {
     confirm("정말 탈퇴하시겠습니까?", () => {
       deleteAccount.mutate(undefined, {
         onSuccess: async () => {
-          await signOut();
-          useAuthStore.setState({ user: null, initialized: false });
-          toast.success("회원탈퇴가 완료되었습니다.");
-          navigate(ROUTES.HOME);
+          try {
+            await signOut();
+          } finally {
+            useAuthStore.setState({ user: null, initialized: false });
+            toast.success("회원탈퇴가 완료되었습니다.");
+            navigate(ROUTES.HOME);
+          }
         },
         onError: (err) => {
           toast.error(

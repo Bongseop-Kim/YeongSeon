@@ -34,7 +34,7 @@ export function InquiryContent() {
 
   const handleEdit = (id: string) => {
     setEditingInquiryId(id);
-    setIsSheetOpen(true);
+    if (isMobile) setIsSheetOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -180,13 +180,15 @@ export function InquiryContent() {
         </PageLayout>
 
         {/* 모바일 전용 Sheet */}
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent side="bottom">
-            <div className="px-4 pb-4">
-              <InquiryForm {...inquiryFormProps} onCancel={handleFormCancel} />
-            </div>
-          </SheetContent>
-        </Sheet>
+        {isMobile && (
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <SheetContent side="bottom">
+              <div className="px-4 pb-4">
+                <InquiryForm {...inquiryFormProps} onCancel={handleFormCancel} />
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
       </MainContent>
     </MainLayout>
   );

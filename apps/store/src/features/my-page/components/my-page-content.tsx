@@ -46,36 +46,19 @@ export function MyPageContent() {
             <Separator />
             <CardContent className="space-y-2">
               <div>
-                <ListItem
-                  label="주문 내역"
-                  onClick={() => {
-                    navigate(ROUTES.ORDER_LIST);
-                  }}
-                />
-                <ListItem
-                  label="취소/반품/교환 내역"
-                  onClick={() => {
-                    navigate(ROUTES.CLAIM_LIST);
-                  }}
-                />
-                <ListItem
-                  label="자주 묻는 질문"
-                  onClick={() => {
-                    navigate(ROUTES.FAQ);
-                  }}
-                />
-                <ListItem
-                  label="1:1 문의 내역"
-                  onClick={() => {
-                    navigate(ROUTES.MY_PAGE_INQUIRY);
-                  }}
-                />
-                <ListItem
-                  label="공지사항"
-                  onClick={() => {
-                    navigate(ROUTES.NOTICE);
-                  }}
-                />
+                {[
+                  { label: "주문 내역", route: ROUTES.ORDER_LIST },
+                  { label: "취소/반품/교환 내역", route: ROUTES.CLAIM_LIST },
+                  { label: "자주 묻는 질문", route: ROUTES.FAQ },
+                  { label: "1:1 문의 내역", route: ROUTES.MY_PAGE_INQUIRY },
+                  { label: "공지사항", route: ROUTES.NOTICE },
+                ].map((item) => (
+                  <ListItem
+                    key={item.route}
+                    label={item.label}
+                    onClick={() => navigate(item.route)}
+                  />
+                ))}
               </div>
               <div className="flex justify-end">
                 <Button

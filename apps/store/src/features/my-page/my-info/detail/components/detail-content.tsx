@@ -1,7 +1,7 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { useProfile } from "@/features/my-page/api/profile-query";
@@ -16,10 +16,9 @@ export function DetailContent() {
       <MainContent>
         <PageLayout>
           <Card>
-            <CardHeader />
             <CardContent className="space-y-4">
               {isLoading ? (
-                <div className="text-center py-4">로딩 중...</div>
+                <div className="text-center py-4" role="status" aria-live="polite" aria-atomic="true">로딩 중...</div>
               ) : profile ? (
                 <>
                   <ProfileItem label="이름" value={profile.name || "-"} />
@@ -28,7 +27,7 @@ export function DetailContent() {
                   <ProfileItem label="이메일" value={profile.email || "-"} />
                 </>
               ) : (
-                <div className="text-center py-4 text-red-500">
+                <div className="text-center py-4 text-red-500" role="alert" aria-live="assertive" aria-atomic="true">
                   프로필을 불러올 수 없습니다.
                 </div>
               )}
