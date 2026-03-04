@@ -89,10 +89,10 @@ export default function PrivacyPolicyPage() {
             권리를 행사할 수 있습니다.
           </p>
           <PolicyList>
-            <li>개인정보 처리정지 요구권</li>
             <li>개인정보 열람요구권</li>
             <li>개인정보 정정·삭제요구권</li>
             <li>개인정보 처리정지 요구권</li>
+            <li>개인정보 손해배상청구권</li>
           </PolicyList>
         </PolicySection>
 

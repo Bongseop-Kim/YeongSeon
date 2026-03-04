@@ -1,9 +1,19 @@
+"use client";
+
 import { type ReactNode } from "react";
 import { PopupLayout } from "@/components/layout/popup-layout";
 
-export function PolicyPageLayout({ title, children }: { title: string; children: ReactNode }) {
+export function PolicyPageLayout({ title, children, onClose }: { title: string; children: ReactNode; onClose?: () => void }) {
+  const defaultOnClose = () => {
+    if (typeof window !== "undefined") {
+      window.close();
+    } else {
+      history.back();
+    }
+  };
+
   return (
-    <PopupLayout title={title} onClose={() => window.close()} contentClassName="px-4">
+    <PopupLayout title={title} onClose={onClose ?? defaultOnClose} contentClassName="px-4">
       <div className="space-y-6 text-sm text-muted-foreground whitespace-pre-line">
         {children}
       </div>
