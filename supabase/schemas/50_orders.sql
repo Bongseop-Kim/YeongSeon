@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS public.orders (
   courier_company     text,
   tracking_number     text,
   shipped_at          timestamptz,
+  delivered_at        timestamptz,
+  confirmed_at        timestamptz,
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now(),
 
@@ -27,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     CHECK (order_type = ANY (ARRAY['sale','custom','repair'])),
   CONSTRAINT orders_status_check
     CHECK (status = ANY (ARRAY[
-      '대기중','진행중','배송중','완료','취소',
+      '대기중','진행중','배송중','배송완료','완료','취소',
       '접수','제작중','제작완료',
       '수선중','수선완료'
     ])),
@@ -41,6 +43,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
 CREATE INDEX idx_orders_user_id      ON public.orders USING btree (user_id);
 CREATE INDEX idx_orders_order_number ON public.orders USING btree (order_number);
 CREATE INDEX idx_orders_order_type   ON public.orders USING btree (order_type);
+CREATE INDEX idx_orders_pending_confirmation ON public.orders (delivered_at) WHERE status = '배송완료';
 
 -- Trigger
 CREATE OR REPLACE TRIGGER update_orders_updated_at
@@ -72,7 +75,7 @@ CREATE POLICY "Admins can update order status"
 
 -- Privilege hardening
 REVOKE UPDATE ON TABLE public.orders FROM authenticated;
-GRANT UPDATE (status, courier_company, tracking_number, shipped_at) ON TABLE public.orders TO authenticated;
+GRANT UPDATE (status, courier_company, tracking_number, shipped_at, delivered_at, confirmed_at) ON TABLE public.orders TO authenticated;
 
 -- =============================================================
 -- order_status_logs  –  Status change audit trail

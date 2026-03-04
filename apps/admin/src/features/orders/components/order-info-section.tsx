@@ -54,6 +54,16 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
       <Descriptions.Item label="할인">
         {order.totalDiscount.toLocaleString()}원
       </Descriptions.Item>
+      {order.deliveredAt && (
+        <Descriptions.Item label="배송완료일시">
+          {new Date(order.deliveredAt).toLocaleString("ko-KR")}
+        </Descriptions.Item>
+      )}
+      {order.confirmedAt && (
+        <Descriptions.Item label="구매확정일시">
+          {new Date(order.confirmedAt).toLocaleString("ko-KR")}
+        </Descriptions.Item>
+      )}
     </Descriptions>
   );
 }

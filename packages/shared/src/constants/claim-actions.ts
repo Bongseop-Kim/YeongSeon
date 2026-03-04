@@ -6,7 +6,7 @@ export const CLAIM_ACTIONS_BY_STATUS: Partial<
   Record<OrderStatus, ClaimActionType[]>
 > = {
   완료: ["return", "exchange"],
-  배송중: ["return", "exchange"],
+  배송완료: ["return", "exchange"],
   진행중: ["cancel"],
   대기중: ["cancel"],
 };

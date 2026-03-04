@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createOrder, getOrders, getOrder } from "@/features/order/api/order-api";
+import { createOrder, getOrders, getOrder, confirmPurchase } from "@/features/order/api/order-api";
 import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
 import { useAuthStore } from "@/store/auth";
 import type { ListFilters } from "@/features/order/api/list-filters";
@@ -101,6 +101,23 @@ export const useCreateOrder = () => {
     },
     onError: (error) => {
       console.error("주문 생성 실패:", error);
+    },
+  });
+};
+
+/**
+ * 구매확정 뮤테이션
+ */
+export const useConfirmPurchase = (orderId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => confirmPurchase(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(orderId) });
+    },
+    onError: (error) => {
+      console.error("구매확정 실패:", error);
     },
   });
 };
