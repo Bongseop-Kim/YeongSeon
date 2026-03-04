@@ -4,10 +4,8 @@ import type { ProductDTO } from "@yeongseon/shared/types/dto/product";
 import { toProduct, toProducts } from "@/features/shop/api/products-mapper";
 
 const PRODUCT_VIEW = "product_list_view";
-/**
- * 모든 제품 조회
- */
-export const getProducts = async (filters?: {
+
+export type ProductFilters = {
   categories?: string[];
   colors?: string[];
   patterns?: string[];
@@ -16,7 +14,12 @@ export const getProducts = async (filters?: {
   priceMax?: number | null;
   sortOption?: string;
   limit?: number;
-}): Promise<Product[]> => {
+};
+
+/**
+ * 모든 제품 조회
+ */
+export const getProducts = async (filters?: ProductFilters): Promise<Product[]> => {
   let query = supabase.from(PRODUCT_VIEW).select("*");
 
   if (filters?.categories?.length) {
