@@ -7,6 +7,13 @@ import type {
 import type { CreateClaimInputDTO } from "@yeongseon/shared/types/dto/claim-input";
 import type { CreateClaimResultDTO } from "@yeongseon/shared/types/dto/claim-output";
 import type { OrderItemDTO } from "@yeongseon/shared/types/dto/order-view";
+import type {
+  ProductCategoryDTO,
+  ProductColorDTO,
+  ProductMaterialDTO,
+  ProductPatternDTO,
+} from "@yeongseon/shared/types/dto/product";
+import type { UserCouponStatusDTO } from "@yeongseon/shared/types/dto/coupon";
 import type { ClaimItem } from "@yeongseon/shared/types/view/claim-item";
 import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-input";
 import {
@@ -45,28 +52,61 @@ const parseClaimItemField = (
       `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 있어야 합니다.`
     );
   }
+  let product: ClaimItemRowDTO["product"] = null;
   if (v.product != null) {
     if (
       !isRecord(v.product) ||
       typeof v.product.id !== "number" ||
-      typeof v.product.name !== "string"
+      typeof v.product.code !== "string" ||
+      typeof v.product.name !== "string" ||
+      typeof v.product.price !== "number" ||
+      typeof v.product.image !== "string" ||
+      typeof v.product.category !== "string" ||
+      typeof v.product.color !== "string" ||
+      typeof v.product.pattern !== "string" ||
+      typeof v.product.material !== "string" ||
+      typeof v.product.likes !== "number" ||
+      typeof v.product.info !== "string"
     ) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: 필수 필드(id, name) 누락.`
+        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: 필수 필드(id, code, name, price, image, category, color, pattern, material, likes, info) 누락.`
       );
     }
+    product = {
+      id: v.product.id,
+      code: v.product.code,
+      name: v.product.name,
+      price: v.product.price,
+      image: v.product.image,
+      category: v.product.category as ProductCategoryDTO,
+      color: v.product.color as ProductColorDTO,
+      pattern: v.product.pattern as ProductPatternDTO,
+      material: v.product.material as ProductMaterialDTO,
+      likes: v.product.likes,
+      info: v.product.info,
+    };
   }
+
+  let selectedOption: ClaimItemRowDTO["selectedOption"] = null;
   if (v.selectedOption != null) {
     if (
       !isRecord(v.selectedOption) ||
       typeof v.selectedOption.id !== "string" ||
-      typeof v.selectedOption.name !== "string"
+      typeof v.selectedOption.name !== "string" ||
+      typeof v.selectedOption.additionalPrice !== "number"
     ) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.selectedOption이 올바르지 않습니다: 필수 필드(id, name) 누락.`
+        `클레임 목록 행(${i})의 item.selectedOption이 올바르지 않습니다: 필수 필드(id, name, additionalPrice) 누락.`
       );
     }
+    selectedOption = {
+      id: v.selectedOption.id,
+      name: v.selectedOption.name,
+      additionalPrice: v.selectedOption.additionalPrice,
+    };
   }
+
+  let reformData: ClaimItemRowDTO["reformData"] = null;
   if (v.reformData != null) {
     if (
       !isRecord(v.reformData) ||
@@ -78,27 +118,62 @@ const parseClaimItemField = (
         `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: 필수 필드 누락.`
       );
     }
+    reformData = {
+      cost: v.reformData.cost,
+      tie: { id: v.reformData.tie.id },
+    };
   }
+
+  let appliedCoupon: ClaimItemRowDTO["appliedCoupon"] = null;
   if (v.appliedCoupon != null) {
     if (
       !isRecord(v.appliedCoupon) ||
       typeof v.appliedCoupon.id !== "string" ||
+      typeof v.appliedCoupon.userId !== "string" ||
+      typeof v.appliedCoupon.couponId !== "string" ||
+      typeof v.appliedCoupon.status !== "string" ||
+      typeof v.appliedCoupon.issuedAt !== "string" ||
       !isRecord(v.appliedCoupon.coupon) ||
-      typeof v.appliedCoupon.coupon.id !== "string"
+      typeof v.appliedCoupon.coupon.id !== "string" ||
+      typeof v.appliedCoupon.coupon.name !== "string"
     ) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.appliedCoupon이 올바르지 않습니다: 필수 필드(id, coupon.id) 누락.`
+        `클레임 목록 행(${i})의 item.appliedCoupon이 올바르지 않습니다: 필수 필드(id, userId, couponId, status, issuedAt, coupon.id, coupon.name) 누락.`
       );
     }
+    if (
+      typeof v.appliedCoupon.coupon.discountType !== "string" ||
+      typeof v.appliedCoupon.coupon.discountValue !== "number" ||
+      typeof v.appliedCoupon.coupon.expiryDate !== "string"
+    ) {
+      throw new Error(
+        `클레임 목록 행(${i})의 item.appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(discountType, discountValue, expiryDate) 누락.`
+      );
+    }
+    appliedCoupon = {
+      id: v.appliedCoupon.id,
+      userId: v.appliedCoupon.userId,
+      couponId: v.appliedCoupon.couponId,
+      status: v.appliedCoupon.status as UserCouponStatusDTO,
+      issuedAt: v.appliedCoupon.issuedAt,
+      coupon: {
+        id: v.appliedCoupon.coupon.id,
+        name: v.appliedCoupon.coupon.name,
+        discountType: v.appliedCoupon.coupon.discountType as "percentage" | "fixed",
+        discountValue: v.appliedCoupon.coupon.discountValue,
+        expiryDate: v.appliedCoupon.coupon.expiryDate,
+      },
+    };
   }
+
   return {
     id: v.id,
     type: v.type,
     quantity: v.quantity,
-    product: v.product as ClaimItemRowDTO["product"],
-    selectedOption: v.selectedOption as ClaimItemRowDTO["selectedOption"],
-    reformData: v.reformData as ClaimItemRowDTO["reformData"],
-    appliedCoupon: v.appliedCoupon as ClaimItemRowDTO["appliedCoupon"],
+    product,
+    selectedOption,
+    reformData,
+    appliedCoupon,
   };
 };
 

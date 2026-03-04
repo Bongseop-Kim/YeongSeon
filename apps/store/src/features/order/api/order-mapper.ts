@@ -9,6 +9,13 @@ import type {
   OrderStatusDTO,
 } from "@yeongseon/shared/types/dto/order-view";
 import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-output";
+import type { UserCouponStatusDTO } from "@yeongseon/shared/types/dto/coupon";
+import type {
+  ProductCategoryDTO,
+  ProductColorDTO,
+  ProductMaterialDTO,
+  ProductPatternDTO,
+} from "@yeongseon/shared/types/dto/product";
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   normalizeItemRow,
@@ -114,10 +121,16 @@ const parseProductField = (
     typeof v.code !== "string" ||
     typeof v.name !== "string" ||
     typeof v.price !== "number" ||
-    typeof v.image !== "string"
+    typeof v.image !== "string" ||
+    typeof v.category !== "string" ||
+    typeof v.color !== "string" ||
+    typeof v.pattern !== "string" ||
+    typeof v.material !== "string" ||
+    typeof v.likes !== "number" ||
+    typeof v.info !== "string"
   ) {
     throw new Error(
-      `주문 상품 행(${idx})의 product가 올바르지 않습니다: 필수 필드(id, code, name, price, image) 누락.`
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: 필수 필드(id, code, name, price, image, category, color, pattern, material, likes, info) 누락.`
     );
   }
   return {
@@ -126,12 +139,12 @@ const parseProductField = (
     name: v.name,
     price: v.price,
     image: v.image,
-    category: v.category as NonNullable<OrderItemRowDTO["product"]>["category"],
-    color: v.color as NonNullable<OrderItemRowDTO["product"]>["color"],
-    pattern: v.pattern as NonNullable<OrderItemRowDTO["product"]>["pattern"],
-    material: v.material as NonNullable<OrderItemRowDTO["product"]>["material"],
-    likes: v.likes as number,
-    info: v.info as string,
+    category: v.category as ProductCategoryDTO,
+    color: v.color as ProductColorDTO,
+    pattern: v.pattern as ProductPatternDTO,
+    material: v.material as ProductMaterialDTO,
+    likes: v.likes,
+    info: v.info,
   };
 };
 
@@ -154,7 +167,11 @@ const parseSelectedOptionField = (
       `주문 상품 행(${idx})의 selectedOption이 올바르지 않습니다: 필수 필드(id, name, additionalPrice) 누락.`
     );
   }
-  return v as unknown as NonNullable<OrderItemRowDTO["selectedOption"]>;
+  return {
+    id: v.id,
+    name: v.name,
+    additionalPrice: v.additionalPrice,
+  };
 };
 
 const parseReformDataField = (
@@ -172,7 +189,10 @@ const parseReformDataField = (
       `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: id 필드 누락.`
     );
   }
-  return v as unknown as NonNullable<OrderItemRowDTO["reformData"]>;
+  return {
+    cost: v.cost,
+    tie: { id: v.tie.id },
+  };
 };
 
 const parseAppliedCouponField = (
@@ -201,7 +221,29 @@ const parseAppliedCouponField = (
       `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(id, name) 누락.`
     );
   }
-  return v as unknown as NonNullable<OrderItemRowDTO["appliedCoupon"]>;
+  if (
+    typeof v.coupon.discountType !== "string" ||
+    typeof v.coupon.discountValue !== "number" ||
+    typeof v.coupon.expiryDate !== "string"
+  ) {
+    throw new Error(
+      `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(discountType, discountValue, expiryDate) 누락.`
+    );
+  }
+  return {
+    id: v.id,
+    userId: v.userId,
+    couponId: v.couponId,
+    status: v.status as UserCouponStatusDTO,
+    issuedAt: v.issuedAt,
+    coupon: {
+      id: v.coupon.id,
+      name: v.coupon.name,
+      discountType: v.coupon.discountType as "percentage" | "fixed",
+      discountValue: v.coupon.discountValue,
+      expiryDate: v.coupon.expiryDate,
+    },
+  };
 };
 
 const ORDER_STATUSES: ReadonlySet<string> = new Set([
