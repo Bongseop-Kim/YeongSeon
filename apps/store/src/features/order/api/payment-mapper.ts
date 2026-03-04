@@ -1,11 +1,10 @@
+import { isRecord } from "@/lib/type-guard";
+
 export interface ConfirmPaymentResponse {
   paymentKey: string;
   orderId: string;
   status: string;
 }
-
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null;
 
 export const parseConfirmPaymentResponse = (
   data: unknown

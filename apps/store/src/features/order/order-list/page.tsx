@@ -103,8 +103,9 @@ export default function OrderListPage() {
                   />
                 </Card>
               ) : (
-                orders.map((order) => (
-                  <Card key={order.id}>
+                orders.map((order) => {
+                  const claimActions = getClaimActions(order.status);
+                  return (<Card key={order.id}>
                     {/* 주문 헤더 */}
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -129,9 +130,9 @@ export default function OrderListPage() {
                                 navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
                               }
                               actions={
-                              getClaimActions(order.status).length > 0 ? (
+                              claimActions.length > 0 ? (
                                 <div className="flex gap-2">
-                                  {getClaimActions(order.status).map(
+                                  {claimActions.map(
                                     (actionType) => (
                                       <Button
                                         key={actionType}
@@ -170,7 +171,8 @@ export default function OrderListPage() {
                       </div>
                     </CardContent>
                   </Card>
-                ))
+                  );
+                })
               )}
             </div>
         </PageLayout>

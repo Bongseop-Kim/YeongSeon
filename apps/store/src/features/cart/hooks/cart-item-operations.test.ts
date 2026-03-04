@@ -75,7 +75,6 @@ describe("cart-item-operations", () => {
     const coupon = createAppliedCoupon();
     const nextItems = applyCartItemCoupon([baseItem], "item-1", coupon);
     expect(nextItems[0].appliedCoupon?.id).toBe("uc-1");
-    expect(nextItems[0].appliedCouponId).toBe("uc-1");
   });
 
   it("updateOption: 옵션 변경 시 같은 옵션 아이템이 있으면 수량을 합친다", () => {

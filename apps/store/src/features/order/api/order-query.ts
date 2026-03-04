@@ -94,7 +94,7 @@ export const useCreateOrder = () => {
     onSuccess: () => {
       // 주문 목록 쿼리 무효화
       if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: orderKeys.list(user.id) });
+        queryClient.invalidateQueries({ queryKey: orderKeys.all });
       }
       // 장바구니 쿼리 무효화 (주문 완료 후 장바구니 비우기)
       queryClient.invalidateQueries({ queryKey: ["cart"] });

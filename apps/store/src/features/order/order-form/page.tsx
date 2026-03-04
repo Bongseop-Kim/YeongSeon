@@ -165,13 +165,12 @@ const OrderFormPage = () => {
       });
     } catch (error) {
       // 사용자가 결제를 취소한 경우 등
-      const errorCode =
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        typeof (error as { code?: unknown }).code === "string"
-          ? ((error as { code: string }).code ?? "")
-          : "";
+      const hasStringCode = (e: unknown): e is { code: string } =>
+        typeof e === "object" &&
+        e !== null &&
+        "code" in e &&
+        typeof (e as { code?: unknown }).code === "string";
+      const errorCode = hasStringCode(error) ? error.code : "";
       const errorMessage =
         error instanceof Error
           ? error.message

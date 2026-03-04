@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
-import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
 import React from "react";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { useOrderDetail } from "@/features/order/api/order-query";
@@ -236,8 +235,6 @@ const OrderDetailPage = () => {
     );
   }
 
-  const totals = calculateOrderTotals(order.items);
-
   const handleClaimRequest = (type: ClaimActionType, itemId: string) => {
     navigate(buildClaimDetailRoute(type, order.id, itemId));
   };
@@ -253,18 +250,6 @@ const OrderDetailPage = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-zinc-600">상품 금액</span>
-                  <span>{totals.originalPrice.toLocaleString()}원</span>
-                </div>
-                {totals.totalDiscount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-600">할인 금액</span>
-                    <span className="text-red-500">
-                      -{totals.totalDiscount.toLocaleString()}원
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
                   <span className="text-zinc-600">배송비</span>
                   <span>무료</span>
                 </div>
@@ -272,7 +257,7 @@ const OrderDetailPage = () => {
                 <div className="flex justify-between text-base font-semibold">
                   <span>총 결제 금액</span>
                   <span className="text-blue-600">
-                    {totals.totalPrice.toLocaleString()}원
+                    {order.totalPrice.toLocaleString()}원
                   </span>
                 </div>
               </CardContent>

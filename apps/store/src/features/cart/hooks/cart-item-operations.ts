@@ -99,13 +99,7 @@ export const applyCartItemCoupon = (
   coupon: AppliedCoupon | undefined,
 ) =>
   currentItems.map((item) =>
-    item.id === itemId
-      ? {
-          ...item,
-          appliedCoupon: coupon,
-          appliedCouponId: coupon?.id,
-        }
-      : item,
+    item.id === itemId ? { ...item, appliedCoupon: coupon } : item,
   );
 
 export const updateProductCartItemOption = (

@@ -94,7 +94,6 @@ export const createCartItem = (
   overrides?: Partial<ProductCartItem>,
 ): ProductCartItem => ({
   ...createProductOrderItem(),
-  appliedCouponId: null,
   ...overrides,
 });
 
@@ -102,6 +101,5 @@ export const createReformCartItem = (
   overrides?: Partial<ReformCartItem>,
 ): ReformCartItem => ({
   ...createReformOrderItem(),
-  appliedCouponId: null,
   ...overrides,
 });
