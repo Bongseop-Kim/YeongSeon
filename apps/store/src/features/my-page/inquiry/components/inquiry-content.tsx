@@ -129,6 +129,15 @@ export function InquiryContent() {
     );
   }
 
+  const inquiryFormProps = {
+    inquiryId: editingInquiryId,
+    initialData: editingInquiry
+      ? { title: editingInquiry.title, content: editingInquiry.content }
+      : undefined,
+    onSubmit: handleFormSubmit,
+    isPending: createMutation.isPending || updateMutation.isPending,
+  };
+
   return (
     <MainLayout>
       <MainContent>
@@ -136,19 +145,7 @@ export function InquiryContent() {
           sidebar={
             <Card>
               <CardContent>
-                <InquiryForm
-                  inquiryId={editingInquiryId}
-                  initialData={
-                    editingInquiry
-                      ? {
-                          title: editingInquiry.title,
-                          content: editingInquiry.content,
-                        }
-                      : undefined
-                  }
-                  onSubmit={handleFormSubmit}
-                  isPending={createMutation.isPending || updateMutation.isPending}
-                />
+                <InquiryForm {...inquiryFormProps} />
               </CardContent>
             </Card>
           }
@@ -186,20 +183,7 @@ export function InquiryContent() {
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetContent side="bottom">
             <div className="px-4 pb-4">
-              <InquiryForm
-                inquiryId={editingInquiryId}
-                initialData={
-                  editingInquiry
-                    ? {
-                        title: editingInquiry.title,
-                        content: editingInquiry.content,
-                      }
-                    : undefined
-                }
-                onSubmit={handleFormSubmit}
-                onCancel={handleFormCancel}
-                isPending={createMutation.isPending || updateMutation.isPending}
-              />
+              <InquiryForm {...inquiryFormProps} onCancel={handleFormCancel} />
             </div>
           </SheetContent>
         </Sheet>

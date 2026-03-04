@@ -55,6 +55,11 @@ export function useEmailChange() {
     }
 
     const timer = window.setInterval(() => {
+      const remaining = Math.ceil((cooldownEndAt - Date.now()) / 1000);
+      if (remaining <= 0) {
+        window.clearInterval(timer);
+        return;
+      }
       setNow(Date.now());
     }, 1000);
 
@@ -68,12 +73,12 @@ export function useEmailChange() {
     step === "verify" &&
     requestedEmail.length > 0 &&
     emailCode.trim().length === EMAIL_CODE_LENGTH &&
-    !verifyCodeMutation.isPending;
+    !isSubmitting;
   const canResendCode =
     step === "verify" &&
     requestedEmail.length > 0 &&
     cooldownSecondsLeft === 0 &&
-    !resendCodeMutation.isPending;
+    !isSubmitting;
 
   const handleRequestCode = form.handleSubmit(async ({ email }) => {
     setErrorMessage("");

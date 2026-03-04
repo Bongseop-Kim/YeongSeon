@@ -3,7 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import type { InquiryItem } from "@/features/my-page/inquiry/types/inquiry-item";
+import {
+  INQUIRY_STATUS,
+  type InquiryItem,
+} from "@/features/my-page/inquiry/types/inquiry-item";
 
 interface InquiryCardProps {
   inquiry: InquiryItem;
@@ -33,7 +36,7 @@ export function InquiryCard({
               </Label>
             </div>
 
-            {inquiry.status === "답변대기" && (
+            {inquiry.status === INQUIRY_STATUS.PENDING && (
               <div className="flex gap-2">
                 <Button
                   variant="outline"

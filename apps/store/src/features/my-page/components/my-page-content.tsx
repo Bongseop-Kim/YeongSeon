@@ -16,13 +16,10 @@ export function MyPageContent() {
   const signOutMutation = useSignOut();
   const { data: profile, isLoading } = useProfile();
 
-  const handleSignOut = async () => {
-    try {
-      await signOutMutation.mutateAsync();
-      navigate(ROUTES.HOME);
-    } catch (error) {
-      console.error("Sign out error:", error);
-    }
+  const handleSignOut = () => {
+    signOutMutation.mutate(undefined, {
+      onSuccess: () => navigate(ROUTES.HOME),
+    });
   };
 
   return (

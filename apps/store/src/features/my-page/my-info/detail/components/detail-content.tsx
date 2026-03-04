@@ -35,7 +35,13 @@ export function DetailContent() {
             </CardContent>
 
             <div className="flex gap-2 mt-4 px-4">
-              <Button variant="outline" className="flex-1">
+              <Button
+                variant="outline"
+                className="flex-1"
+                disabled
+                aria-disabled="true"
+                title="준비 중인 기능입니다."
+              >
                 회원정보 변경
               </Button>
 

@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/constants/ROUTES";
+import { signOut } from "@/features/auth/api/auth-api";
 import { useDeleteAccount } from "@/features/auth/api/auth-query";
 import { toast } from "@/lib/toast";
 import { useAuthStore } from "@/store/auth";
@@ -27,7 +28,8 @@ export function LeaveContent() {
   const handleLeave = () => {
     confirm("정말 탈퇴하시겠습니까?", () => {
       deleteAccount.mutate(undefined, {
-        onSuccess: () => {
+        onSuccess: async () => {
+          await signOut();
           useAuthStore.setState({ user: null, initialized: false });
           toast.success("회원탈퇴가 완료되었습니다.");
           navigate(ROUTES.HOME);
