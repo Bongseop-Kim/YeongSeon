@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { useModalStore } from "@/store/modal";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
-import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import React, { useState, useCallback, useRef } from "react";
 import { Empty } from "@/components/composite/empty";
@@ -33,7 +32,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { ReformActionButtons } from "./components/reform-action-buttons";
 import { MobileReformSheet } from "./components/mobile-reform-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { generateItemId } from "@/lib/utils";
+import { toReformCartItems, toReformData } from "./api/reform-mapper";
 
 const ReformPage = () => {
   const { openModal, confirm } = useModalStore();
@@ -87,39 +86,6 @@ const ReformPage = () => {
     remove(index);
   };
 
-  const validateTies = (): { isValid: boolean; message?: string } => {
-    if (fields.length === 0) {
-      return { isValid: false, message: "수선할 넥타이를 추가해주세요." };
-    }
-
-    for (let i = 0; i < watchedValues.ties.length; i++) {
-      const tie = watchedValues.ties[i];
-
-      if (!tie.measurementType) {
-        return {
-          isValid: false,
-          message: `${i + 1}번째 넥타이의 측정 방식을 선택해주세요.`,
-        };
-      }
-
-      if (tie.measurementType === "length" && !tie.tieLength) {
-        return {
-          isValid: false,
-          message: `${i + 1}번째 넥타이의 길이를 입력해주세요.`,
-        };
-      }
-
-      if (tie.measurementType === "height" && !tie.wearerHeight) {
-        return {
-          isValid: false,
-          message: `${i + 1}번째 넥타이의 착용자 키를 입력해주세요.`,
-        };
-      }
-    }
-
-    return { isValid: true };
-  };
-
   const uploadAndGetTies = useCallback(async () => {
     const ties = form.getValues().ties;
     const hasFileImages = ties.some((t) => t.image instanceof File);
@@ -142,15 +108,7 @@ const ReformPage = () => {
     const uploadedTies = await uploadAndGetTies();
     if (!uploadedTies) return;
 
-    const orderItems: CartItem[] = uploadedTies.map((tie) => ({
-      id: generateItemId("reform", tie.id),
-      type: "reform",
-      quantity: 1,
-      reformData: {
-        tie: tie,
-        cost: REFORM_BASE_COST,
-      },
-    }));
+    const orderItems = toReformCartItems(uploadedTies);
 
     setOrderItems(orderItems);
     navigate(ROUTES.ORDER_FORM);
@@ -158,9 +116,12 @@ const ReformPage = () => {
 
   const handleDirectOrder = async () => {
     if (isSubmittingRef.current) return;
-    const validation = validateTies();
-    if (!validation.isValid) {
-      confirm(validation.message || "입력값을 확인해주세요.");
+    if (fields.length === 0) {
+      confirm("수선할 넥타이를 추가해주세요.");
+      return;
+    }
+    const isValid = await form.trigger("ties");
+    if (!isValid) {
       return;
     }
 
@@ -179,9 +140,12 @@ const ReformPage = () => {
 
   const handleMobileOrder = async () => {
     if (isSubmittingRef.current) return;
-    const validation = validateTies();
-    if (!validation.isValid) {
-      confirm(validation.message || "입력값을 확인해주세요.");
+    if (fields.length === 0) {
+      confirm("수선할 넥타이를 추가해주세요.");
+      return;
+    }
+    const isValid = await form.trigger("ties");
+    if (!isValid) {
       return;
     }
 
@@ -195,9 +159,12 @@ const ReformPage = () => {
 
   const handleAddToCart = async () => {
     if (isSubmittingRef.current) return;
-    const validation = validateTies();
-    if (!validation.isValid) {
-      confirm(validation.message || "입력값을 확인해주세요.");
+    if (fields.length === 0) {
+      confirm("수선할 넥타이를 추가해주세요.");
+      return;
+    }
+    const isValid = await form.trigger("ties");
+    if (!isValid) {
       return;
     }
 
@@ -208,10 +175,7 @@ const ReformPage = () => {
 
       await Promise.all(
         uploadedTies.map((tie) =>
-          addReformToCart({
-            tie: tie,
-            cost: REFORM_BASE_COST,
-          })
+          addReformToCart(toReformData(tie))
         )
       );
 

@@ -9,7 +9,10 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import type { ReformOptions } from "@yeongseon/shared/types/view/reform";
+import {
+  isMeasurementType,
+  type ReformOptions,
+} from "@yeongseon/shared/types/view/reform";
 import { ImagePicker } from "@/components/composite/image-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import CloseButton from "@/components/ui/close";
@@ -77,7 +80,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                 <RadioGroup
                   value={field.value || "length"}
                   onValueChange={(value) => {
-                    field.onChange(value as "length" | "height");
+                    field.onChange(isMeasurementType(value) ? value : "length");
                   }}
                   options={[
                     { value: "length", label: "넥타이 길이" },

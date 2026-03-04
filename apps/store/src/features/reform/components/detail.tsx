@@ -3,16 +3,18 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { XIcon } from "lucide-react";
 import {
-  BANNER_IMAGES,
+  getShuffledBannerImages,
   FEATURES,
   HEIGHT_GUIDE,
   TARGET_CUSTOMERS,
   TESTIMONIALS,
 } from "@/features/reform/constants/DETAIL";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { useState } from "react";
 
 export const Detail = () => {
   const { isMobile } = useBreakpoint();
+  const [bannerImages] = useState(getShuffledBannerImages);
 
   return (
     <div className="bg-gray-50">
@@ -72,7 +74,7 @@ export const Detail = () => {
 
         <div className="overflow-hidden max-w-6xl mx-auto mt-12">
           <div className="flex animate-scroll gap-4">
-            {BANNER_IMAGES.map((image, index) => (
+            {bannerImages.map((image, index) => (
               <img
                 key={index}
                 src={image.src}

@@ -1,7 +1,12 @@
+export type MeasurementType = "length" | "height";
+
+export const isMeasurementType = (value: unknown): value is MeasurementType =>
+  value === "length" || value === "height";
+
 export interface TieItem {
   id: string;
   image?: File | string; // File: 업로드 시, string: DB에서 복원된 URL
-  measurementType?: "length" | "height";
+  measurementType?: MeasurementType;
   tieLength?: number;
   wearerHeight?: number;
   notes?: string;
@@ -13,6 +18,6 @@ export interface ReformOptions {
   bulkApply: {
     tieLength?: number;
     wearerHeight?: number;
-    measurementType?: "length" | "height";
+    measurementType?: MeasurementType;
   };
 }

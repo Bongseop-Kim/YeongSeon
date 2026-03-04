@@ -276,7 +276,6 @@ const parseReformDataField = (
       wearerHeight:
         typeof v.tie.wearerHeight === "number" ? v.tie.wearerHeight : undefined,
       notes: typeof v.tie.notes === "string" ? v.tie.notes : undefined,
-      checked: typeof v.tie.checked === "boolean" ? v.tie.checked : undefined,
     },
   };
 };

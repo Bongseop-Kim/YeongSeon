@@ -216,10 +216,6 @@ const parseClaimItemField = (
           typeof v.reformData.tie.notes === "string"
             ? v.reformData.tie.notes
             : undefined,
-        checked:
-          typeof v.reformData.tie.checked === "boolean"
-            ? v.reformData.tie.checked
-            : undefined,
       },
     };
   }

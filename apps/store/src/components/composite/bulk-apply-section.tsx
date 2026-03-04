@@ -3,7 +3,10 @@ import { type UseFormSetValue } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
-import type { ReformOptions } from "@yeongseon/shared/types/view/reform";
+import {
+  isMeasurementType,
+  type ReformOptions,
+} from "@yeongseon/shared/types/view/reform";
 import { FormItem } from "@/components/ui/form";
 
 interface BulkApplySectionProps {
@@ -54,7 +57,7 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
           <RadioGroup
             value={measurementType}
             onValueChange={(value) =>
-              setMeasurementType(value as "length" | "height")
+              setMeasurementType(isMeasurementType(value) ? value : "length")
             }
             options={[
               { value: "length", label: "넥타이 길이" },

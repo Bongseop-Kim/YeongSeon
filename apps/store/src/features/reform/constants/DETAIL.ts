@@ -116,7 +116,7 @@ const shuffleArray = (array: typeof originalBannerImages) => {
   return shuffled;
 };
 
-export const BANNER_IMAGES = [
+export const getShuffledBannerImages = () => [
   ...shuffleArray(originalBannerImages),
   ...shuffleArray(originalBannerImages),
 ];

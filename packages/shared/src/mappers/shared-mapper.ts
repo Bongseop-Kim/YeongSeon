@@ -57,10 +57,11 @@ export const toAppliedCouponDTO = (
       }
     : undefined;
 
-export const toTieItemDTO = (tie: TieItem): TieItemDTO => ({
-  ...tie,
-  image: typeof tie.image === "string" ? tie.image : undefined,
-});
+export const toTieItemDTO = (tie: TieItem): TieItemDTO => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { checked, image, ...rest } = tie;
+  return { ...rest, image: typeof image === "string" ? image : undefined };
+};
 
 // ── Item Row 공유 정규화 ─────────────────────────────
 

@@ -5,5 +5,4 @@ export interface TieItemDTO {
   tieLength?: number;
   wearerHeight?: number;
   notes?: string;
-  checked?: boolean;
 }

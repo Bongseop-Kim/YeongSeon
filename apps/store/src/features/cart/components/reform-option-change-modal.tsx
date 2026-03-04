@@ -1,6 +1,9 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
-import type { TieItem } from "@yeongseon/shared/types/view/reform";
+import {
+  isMeasurementType,
+  type TieItem,
+} from "@yeongseon/shared/types/view/reform";
 import {
   Select,
   SelectContent,
@@ -50,7 +53,7 @@ export const ReformOptionChangeModal = forwardRef<
         <Select
           value={measurementType}
           onValueChange={(value) =>
-            setMeasurementType(value as "length" | "height")
+            setMeasurementType(isMeasurementType(value) ? value : "length")
           }
         >
           <SelectTrigger className="w-full">
