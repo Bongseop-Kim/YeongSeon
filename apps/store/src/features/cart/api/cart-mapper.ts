@@ -26,7 +26,6 @@ export const toCartItemView = (record: CartItemViewDTO): CartItem => {
         : undefined,
       quantity: record.quantity,
       appliedCoupon: toAppliedCouponView(record.appliedCoupon),
-      appliedCouponId: record.appliedCouponId ?? null,
     };
   }
 
@@ -43,7 +42,6 @@ export const toCartItemView = (record: CartItemViewDTO): CartItem => {
       cost: record.reformData.cost,
     },
     appliedCoupon: toAppliedCouponView(record.appliedCoupon),
-    appliedCouponId: record.appliedCouponId ?? null,
   };
 };
 
@@ -59,7 +57,7 @@ export const toCartItemInputDTO = (item: CartItem): CartItemInputDTO => {
       quantity: item.quantity,
       reformData: null,
       appliedCoupon: toAppliedCouponDTO(item.appliedCoupon),
-      appliedCouponId: item.appliedCouponId ?? null,
+      appliedCouponId: item.appliedCoupon?.id ?? null,
     };
   }
 
@@ -74,6 +72,6 @@ export const toCartItemInputDTO = (item: CartItem): CartItemInputDTO => {
       cost: item.reformData.cost,
     },
     appliedCoupon: toAppliedCouponDTO(item.appliedCoupon),
-    appliedCouponId: item.appliedCouponId ?? null,
+    appliedCouponId: item.appliedCoupon?.id ?? null,
   };
 };

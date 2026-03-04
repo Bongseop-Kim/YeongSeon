@@ -58,7 +58,7 @@ export const useCreateClaim = () => {
     },
     onSuccess: () => {
       if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: claimKeys.list(user.id) });
+        queryClient.invalidateQueries({ queryKey: claimKeys.all });
         queryClient.invalidateQueries({ queryKey: orderKeys.all });
       }
     },

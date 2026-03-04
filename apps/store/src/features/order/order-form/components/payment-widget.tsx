@@ -108,7 +108,7 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
           customerEmail: params.customerEmail,
         });
       },
-    }));
+    }), [initError]);
 
     if (initError) {
       return null;

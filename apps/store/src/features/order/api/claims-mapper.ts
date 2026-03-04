@@ -13,11 +13,76 @@ import {
   normalizeItemRow,
   toOrderItemView,
 } from "@yeongseon/shared/mappers/shared-mapper";
+import { isRecord } from "@/lib/type-guard";
 
 // ── parse helpers (런타임 검증) ──────────────────────
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null;
+const parseClaimItemField = (
+  v: unknown,
+  i: number
+): ClaimListRowDTO["item"] => {
+  if (!isRecord(v)) {
+    throw new Error(
+      `클레임 목록 행(${i})이 올바르지 않습니다: item 객체가 아닙니다.`
+    );
+  }
+  if (
+    typeof v.id !== "string" ||
+    (v.type !== "product" && v.type !== "reform") ||
+    typeof v.quantity !== "number"
+  ) {
+    throw new Error(
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: 필수 필드(id, type, quantity) 누락 또는 type 값 오류.`
+    );
+  }
+  if (v.product != null) {
+    if (
+      !isRecord(v.product) ||
+      typeof v.product.id !== "number" ||
+      typeof v.product.name !== "string"
+    ) {
+      throw new Error(
+        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: 필수 필드(id, name) 누락.`
+      );
+    }
+  }
+  if (v.selectedOption != null) {
+    if (
+      !isRecord(v.selectedOption) ||
+      typeof v.selectedOption.id !== "string" ||
+      typeof v.selectedOption.name !== "string"
+    ) {
+      throw new Error(
+        `클레임 목록 행(${i})의 item.selectedOption이 올바르지 않습니다: 필수 필드(id, name) 누락.`
+      );
+    }
+  }
+  if (v.reformData != null) {
+    if (
+      !isRecord(v.reformData) ||
+      typeof v.reformData.cost !== "number" ||
+      !isRecord(v.reformData.tie) ||
+      typeof v.reformData.tie.id !== "string"
+    ) {
+      throw new Error(
+        `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: 필수 필드 누락.`
+      );
+    }
+  }
+  if (v.appliedCoupon != null) {
+    if (
+      !isRecord(v.appliedCoupon) ||
+      typeof v.appliedCoupon.id !== "string" ||
+      !isRecord(v.appliedCoupon.coupon) ||
+      typeof v.appliedCoupon.coupon.id !== "string"
+    ) {
+      throw new Error(
+        `클레임 목록 행(${i})의 item.appliedCoupon이 올바르지 않습니다: 필수 필드(id, coupon.id) 누락.`
+      );
+    }
+  }
+  return v as unknown as ClaimListRowDTO["item"];
+};
 
 const CLAIM_STATUSES: ReadonlySet<string> = new Set([
   "접수", "처리중", "수거요청", "수거완료", "재발송", "완료", "거부",
@@ -64,11 +129,6 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
         `클레임 목록 행(${i})이 올바르지 않습니다: type 값(${row.type})이 허용된 유형이 아닙니다.`
       );
     }
-    if (row.item == null || typeof row.item !== "object") {
-      throw new Error(
-        `클레임 목록 행(${i})이 올바르지 않습니다: item 객체 누락.`
-      );
-    }
     return {
       id: row.id,
       claimNumber: row.claimNumber,
@@ -81,7 +141,7 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
       orderId: row.orderId,
       orderNumber: row.orderNumber,
       orderDate: row.orderDate,
-      item: row.item as ClaimListRowDTO["item"],
+      item: parseClaimItemField(row.item, i),
     };
   });
 };

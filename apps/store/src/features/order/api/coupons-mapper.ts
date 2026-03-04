@@ -1,9 +1,12 @@
-import type { UserCoupon, UserCouponStatus } from "@yeongseon/shared/types/view/coupon";
+import type { Coupon, UserCoupon, UserCouponStatus } from "@yeongseon/shared/types/view/coupon";
 import type { UserCouponRecord, CouponRecord } from "@/features/order/types/coupon-record";
-import { mapRecordToCoupon } from "./map-record-to-coupon";
+import { isRecord } from "@/lib/type-guard";
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null;
+// ── parse helpers (런타임 검증) ──────────────────────
+
+const DISCOUNT_TYPES: ReadonlySet<string> = new Set(["percentage", "fixed"]);
+const isDiscountType = (v: string): v is CouponRecord["discount_type"] =>
+  DISCOUNT_TYPES.has(v);
 
 const USER_COUPON_STATUSES: ReadonlySet<string> = new Set([
   "active", "used", "expired", "revoked",
@@ -29,10 +32,15 @@ const parseCouponRecord = (v: unknown, i: number): CouponRecord | null => {
       `쿠폰 조회 행(${i})의 coupon이 올바르지 않습니다: 필수 필드(id, name, discount_type, discount_value, expiry_date) 누락.`
     );
   }
+  if (!isDiscountType(v.discount_type)) {
+    throw new Error(
+      `쿠폰 조회 행(${i})의 coupon이 올바르지 않습니다: discount_type 값(${v.discount_type})이 허용된 유형("percentage" | "fixed")이 아닙니다.`
+    );
+  }
   return {
     id: v.id,
     name: v.name,
-    discount_type: v.discount_type as CouponRecord["discount_type"],
+    discount_type: v.discount_type,
     discount_value: v.discount_value,
     max_discount_amount: typeof v.max_discount_amount === "number" ? v.max_discount_amount : null,
     description: typeof v.description === "string" ? v.description : null,
@@ -83,6 +91,22 @@ export const parseUserCouponRecords = (
     };
   });
 };
+
+// ── record → view 변환 ──────────────────────────────
+
+export const mapRecordToCoupon = (record: CouponRecord): Coupon => ({
+  id: record.id,
+  name: record.name,
+  discountType: record.discount_type,
+  discountValue: Number(record.discount_value),
+  maxDiscountAmount:
+    record.max_discount_amount != null
+      ? Number(record.max_discount_amount)
+      : null,
+  description: record.description,
+  expiryDate: record.expiry_date,
+  additionalInfo: record.additional_info,
+});
 
 export const mapRecordToUserCoupon = (record: UserCouponRecord): UserCoupon => {
   if (!record.coupon) {

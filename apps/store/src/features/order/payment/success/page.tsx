@@ -34,6 +34,12 @@ const PaymentSuccessPage = () => {
         return;
       }
 
+      const parsedAmount = Number(amount);
+      if (Number.isNaN(parsedAmount)) {
+        setError("결제 금액이 올바르지 않습니다.");
+        return;
+      }
+
       if (orderItems.length === 0) {
         setError("주문 데이터를 찾을 수 없습니다.");
         return;
@@ -44,7 +50,7 @@ const PaymentSuccessPage = () => {
         const paymentResult = await confirmPayment({
           paymentKey,
           orderId,
-          amount: Number(amount),
+          amount: parsedAmount,
         });
 
         // 2. 장바구니에서 주문한 아이템 제거

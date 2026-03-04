@@ -14,6 +14,7 @@ import {
   normalizeItemRow,
   toOrderItemView,
 } from "@yeongseon/shared/mappers/shared-mapper";
+import { isRecord } from "@/lib/type-guard";
 
 export const toOrderItemInputDTO = (
   item: CreateOrderRequest["items"][number]
@@ -21,7 +22,7 @@ export const toOrderItemInputDTO = (
   const baseRecord = {
     item_id: item.id,
     quantity: item.quantity,
-    applied_user_coupon_id: item.appliedCoupon?.id ?? item.appliedCouponId ?? null,
+    applied_user_coupon_id: item.appliedCoupon?.id ?? null,
   };
 
   if (item.type === "product") {
@@ -97,8 +98,99 @@ export const toOrderViewFromDetail = (
 
 // ── parse helpers (런타임 검증) ──────────────────────
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null;
+// JSONB 중첩 필드 검증 헬퍼
+const parseProductField = (
+  v: unknown,
+  idx: number
+): OrderItemRowDTO["product"] => {
+  if (v == null) return null;
+  if (!isRecord(v)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: 객체가 아닙니다.`
+    );
+  }
+  if (
+    typeof v.id !== "number" ||
+    typeof v.code !== "string" ||
+    typeof v.name !== "string" ||
+    typeof v.price !== "number" ||
+    typeof v.image !== "string"
+  ) {
+    throw new Error(
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: 필수 필드(id, code, name, price, image) 누락.`
+    );
+  }
+  return v as unknown as NonNullable<OrderItemRowDTO["product"]>;
+};
+
+const parseSelectedOptionField = (
+  v: unknown,
+  idx: number
+): OrderItemRowDTO["selectedOption"] => {
+  if (v == null) return null;
+  if (!isRecord(v)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 selectedOption이 올바르지 않습니다: 객체가 아닙니다.`
+    );
+  }
+  if (
+    typeof v.id !== "string" ||
+    typeof v.name !== "string" ||
+    typeof v.additionalPrice !== "number"
+  ) {
+    throw new Error(
+      `주문 상품 행(${idx})의 selectedOption이 올바르지 않습니다: 필수 필드(id, name, additionalPrice) 누락.`
+    );
+  }
+  return v as unknown as NonNullable<OrderItemRowDTO["selectedOption"]>;
+};
+
+const parseReformDataField = (
+  v: unknown,
+  idx: number
+): OrderItemRowDTO["reformData"] => {
+  if (v == null) return null;
+  if (!isRecord(v) || typeof v.cost !== "number") {
+    throw new Error(
+      `주문 상품 행(${idx})의 reformData가 올바르지 않습니다: cost 필드 누락.`
+    );
+  }
+  if (!isRecord(v.tie) || typeof v.tie.id !== "string") {
+    throw new Error(
+      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: id 필드 누락.`
+    );
+  }
+  return v as unknown as NonNullable<OrderItemRowDTO["reformData"]>;
+};
+
+const parseAppliedCouponField = (
+  v: unknown,
+  idx: number
+): OrderItemRowDTO["appliedCoupon"] => {
+  if (v == null) return null;
+  if (!isRecord(v)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 appliedCoupon이 올바르지 않습니다: 객체가 아닙니다.`
+    );
+  }
+  if (
+    typeof v.id !== "string" ||
+    typeof v.userId !== "string" ||
+    typeof v.couponId !== "string" ||
+    typeof v.status !== "string" ||
+    typeof v.issuedAt !== "string"
+  ) {
+    throw new Error(
+      `주문 상품 행(${idx})의 appliedCoupon이 올바르지 않습니다: 필수 필드(id, userId, couponId, status, issuedAt) 누락.`
+    );
+  }
+  if (!isRecord(v.coupon) || typeof v.coupon.id !== "string" || typeof v.coupon.name !== "string") {
+    throw new Error(
+      `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(id, name) 누락.`
+    );
+  }
+  return v as unknown as NonNullable<OrderItemRowDTO["appliedCoupon"]>;
+};
 
 const ORDER_STATUSES: ReadonlySet<string> = new Set([
   "진행중", "완료", "배송중", "대기중", "취소",
@@ -188,11 +280,11 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
       order_id: row.order_id,
       id: row.id,
       type: row.type,
-      product: (row.product ?? null) as OrderItemRowDTO["product"],
-      selectedOption: (row.selectedOption ?? null) as OrderItemRowDTO["selectedOption"],
+      product: parseProductField(row.product, i),
+      selectedOption: parseSelectedOptionField(row.selectedOption, i),
       quantity: row.quantity,
-      reformData: (row.reformData ?? null) as OrderItemRowDTO["reformData"],
-      appliedCoupon: (row.appliedCoupon ?? null) as OrderItemRowDTO["appliedCoupon"],
+      reformData: parseReformDataField(row.reformData, i),
+      appliedCoupon: parseAppliedCouponField(row.appliedCoupon, i),
       created_at: row.created_at,
     };
   });
