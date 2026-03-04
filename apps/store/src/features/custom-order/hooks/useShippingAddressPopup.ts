@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePopup } from "@/hooks/usePopup";
 import { ROUTES } from "@/constants/ROUTES";
+import { toast } from "@/lib/toast";
 import {
   useDefaultShippingAddress,
   useShippingAddresses,
@@ -67,7 +68,7 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
 
   // 팝업에서 배송지 선택/생성/업데이트 시 처리
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin) {
         return;
       }
@@ -84,8 +85,8 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
 
         case SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED:
         case SHIPPING_MESSAGE_TYPE.ADDRESS_UPDATED:
-          queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
-          queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
+          await queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
+          await queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
           setSelectedAddressId(event.data.addressId);
           break;
       }
@@ -98,7 +99,12 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
   const selectedAddress =
     (addresses?.find((addr) => addr.id === selectedAddressId) || defaultAddress) ?? undefined;
 
-  const openShippingPopup = () => openPopup(`${ROUTES.SHIPPING}?mode=select`);
+  const openShippingPopup = () => {
+    const win = openPopup(`${ROUTES.SHIPPING}?mode=select`);
+    if (!win) {
+      toast.error("팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.");
+    }
+  };
 
   return { selectedAddressId, selectedAddress, openShippingPopup };
 };

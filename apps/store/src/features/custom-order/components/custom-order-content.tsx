@@ -250,7 +250,7 @@ export const CustomOrderContent = () => {
     ? createQuoteRequest.isPending
     : createCustomOrder.isPending;
 
-  const isSubmitDisabled = (isLoggedIn && !selectedAddress) || isPending || imageUpload.isUploading;
+  const isSubmitDisabled = (isLoggedIn && (!selectedAddressId || !selectedAddress)) || isPending || imageUpload.isUploading;
 
   const estimatedDays = getEstimatedDays(watchedValues);
 
