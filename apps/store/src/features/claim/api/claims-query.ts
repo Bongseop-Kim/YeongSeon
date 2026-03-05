@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getClaims, createClaim } from "@/features/claim/api/claims-api";
 import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-input";
 import { useAuthStore } from "@/store/auth";
-import type { ListFilters } from "@/features/order/api/list-filters";
+import type { ListFilters } from "@/features/order/utils/list-filters";
 import { orderKeys } from "@/features/order/api/order-query";
 
 /**

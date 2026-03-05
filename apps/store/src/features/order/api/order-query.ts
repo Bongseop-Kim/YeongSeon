@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createOrder, getOrders, getOrder, confirmPurchase } from "@/features/order/api/order-api";
 import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
 import { useAuthStore } from "@/store/auth";
-import type { ListFilters } from "@/features/order/api/list-filters";
+import type { ListFilters } from "@/features/order/utils/list-filters";
 
 /**
  * 주문 쿼리 키

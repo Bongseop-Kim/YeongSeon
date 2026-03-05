@@ -17,7 +17,7 @@ import {
   toOrderView,
   toOrderViewFromDetail,
 } from "@/features/order/api/order-mapper";
-import { normalizeKeyword, type ListFilters } from "@/features/order/api/list-filters";
+import { normalizeKeyword, type ListFilters } from "@/features/order/utils/list-filters";
 
 const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";

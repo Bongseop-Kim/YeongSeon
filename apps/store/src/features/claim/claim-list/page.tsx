@@ -17,7 +17,7 @@ import { useClaims } from "@/features/claim/api/claims-query";
 import {
   toDateString,
   type ListFilters,
-} from "@/features/order/api/list-filters";
+} from "@/features/order/utils/list-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export default function ClaimListPage() {
