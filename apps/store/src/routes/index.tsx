@@ -15,7 +15,7 @@ import MyInfoEmailPage from "@/features/my-page/my-info/email/page";
 import MyInfoNoticePage from "@/features/my-page/my-info/notice/page";
 import MyInfoLeavePage from "@/features/my-page/my-info/leave/page";
 import OrderListPage from "@/features/order/order-list/page";
-import OrderDetailPage from "@/features/order/[id]/page";
+import OrderDetailPage from "@/features/order/detail/page";
 import ClaimListPage from "@/features/claim/claim-list/page";
 import ClaimFormPage from "@/features/claim/claim-form/page";
 import PaymentSuccessPage from "@/features/payment/success/page";
