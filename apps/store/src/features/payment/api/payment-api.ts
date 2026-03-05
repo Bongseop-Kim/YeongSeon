@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { FunctionsHttpError } from "@supabase/functions-js";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import {
   parseConfirmPaymentResponse,
   type ConfirmPaymentResponse,
