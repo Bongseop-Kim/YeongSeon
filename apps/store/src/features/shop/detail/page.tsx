@@ -42,7 +42,7 @@ import {
 } from "@/features/shop/constants/PRODUCT_LABELS";
 import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/ui/data-table";
-import { HEIGHT_GUIDE } from "@/features/reform/constants/DETAIL";
+import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
 import { ProductCard } from "@/features/shop/components/product-card";
 import { useMemo } from "react";
 import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";

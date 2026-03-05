@@ -5,10 +5,10 @@ import { XIcon } from "lucide-react";
 import {
   getShuffledBannerImages,
   FEATURES,
-  HEIGHT_GUIDE,
   TARGET_CUSTOMERS,
   TESTIMONIALS,
 } from "@/features/reform/constants/DETAIL";
+import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useState } from "react";
 

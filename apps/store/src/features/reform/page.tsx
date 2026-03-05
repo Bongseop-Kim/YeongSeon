@@ -26,7 +26,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Detail } from "./components/detail";
-import { HEIGHT_GUIDE } from "./constants/DETAIL";
+import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
 import { REFORM_BASE_COST, REFORM_SHIPPING_COST } from "@yeongseon/shared/constants/reform-pricing";
 import { DataTable } from "@/components/ui/data-table";
 import { ReformActionButtons } from "./components/reform-action-buttons";

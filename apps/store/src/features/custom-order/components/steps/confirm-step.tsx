@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
-import { SummaryRow } from "@/features/custom-order/components/SummaryRow";
+import { SummaryRow } from "@/features/custom-order/components/summary-row";
 import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";

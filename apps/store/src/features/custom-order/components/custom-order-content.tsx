@@ -21,18 +21,18 @@ import { useWizardDraft, useRestoreDraft, useAutoSave } from "../hooks/useWizard
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { PageLayout } from "@/components/layout/page-layout";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { ProgressBar } from "./wizard/ProgressBar";
-import { StepNavigation } from "./wizard/StepNavigation";
-import { StickySummary } from "./wizard/StickySummary";
-import { MobileNavigation } from "./wizard/MobileNavigation";
-import { QuantityStep } from "./steps/QuantityStep";
-import { FabricStep } from "./steps/FabricStep";
-import { SewingStep } from "./steps/SewingStep";
-import { SpecStep } from "./steps/SpecStep";
-import { FinishingStep } from "./steps/FinishingStep";
-import { SampleOptionStep } from "./steps/SampleOptionStep";
-import { AttachmentStep } from "./steps/AttachmentStep";
-import { ConfirmStep } from "./steps/ConfirmStep";
+import { ProgressBar } from "./wizard/progress-bar";
+import { StepNavigation } from "./wizard/step-navigation";
+import { StickySummary } from "./wizard/sticky-summary";
+import { MobileNavigation } from "./wizard/mobile-navigation";
+import { QuantityStep } from "./steps/quantity-step";
+import { FabricStep } from "./steps/fabric-step";
+import { SewingStep } from "./steps/sewing-step";
+import { SpecStep } from "./steps/spec-step";
+import { FinishingStep } from "./steps/finishing-step";
+import { SampleOptionStep } from "./steps/sample-option-step";
+import { AttachmentStep } from "./steps/attachment-step";
+import { ConfirmStep } from "./steps/confirm-step";
 
 export const CustomOrderContent = () => {
   const navigate = useNavigate();

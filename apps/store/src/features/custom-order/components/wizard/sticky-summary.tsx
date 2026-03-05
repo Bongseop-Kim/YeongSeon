@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import CostBreakdown from "@/features/custom-order/components/CostBreakdown";
+import CostBreakdown from "@/features/custom-order/components/cost-breakdown";
 import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
 import { getEstimatedDays } from "@/features/custom-order/utils/pricing";
 import type { OrderOptions } from "@/features/custom-order/types/order";
