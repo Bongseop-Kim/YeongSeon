@@ -2,7 +2,7 @@ import { PopupLayout } from "@/components/layout/popup-layout";
 import { Button } from "@/components/ui/button";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
+import type { ShippingAddress, ShippingAddressInput } from "@/features/shipping/types/shipping-address";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +39,7 @@ const ShippingFormPage = () => {
   const updateMutation = useUpdateShippingAddress();
 
   // 처음 등록인지 확인 (배송지가 0개인 경우)
-  const isFirstAddress = !isEditMode && (!addresses || addresses.length === 0);
+  const isFirstAddress = !isEditMode && !!addresses && addresses.length === 0;
 
   const form = useForm<ShippingAddress>({
     defaultValues: {
@@ -105,21 +105,20 @@ const ShippingFormPage = () => {
     // 전화번호는 숫자만 저장
     const phoneNumber = extractPhoneNumber(data.recipientPhone);
 
+    const inputData: ShippingAddressInput = {
+      recipientName: data.recipientName,
+      recipientPhone: phoneNumber,
+      address: data.address,
+      detailAddress: data.detailAddress || undefined,
+      postalCode: data.postalCode,
+      deliveryRequest: data.deliveryRequest,
+      deliveryMemo: data.deliveryMemo,
+      isDefault: isFirstAddress ? true : data.isDefault,
+    };
+
     if (isEditMode && addressId) {
       updateMutation.mutate(
-        {
-          id: addressId,
-          data: {
-            recipientName: data.recipientName,
-            recipientPhone: phoneNumber,
-            address: data.address,
-            detailAddress: data.detailAddress || "",
-            postalCode: data.postalCode,
-            deliveryRequest: data.deliveryRequest,
-            deliveryMemo: data.deliveryMemo,
-            isDefault: data.isDefault,
-          },
-        },
+        { id: addressId, data: inputData },
         {
           onSuccess: () => {
             navigate(-1);
@@ -128,16 +127,7 @@ const ShippingFormPage = () => {
       );
     } else {
       createMutation.mutate(
-        {
-          recipientName: data.recipientName,
-          recipientPhone: phoneNumber,
-          address: data.address,
-          detailAddress: data.detailAddress,
-          postalCode: data.postalCode,
-          deliveryRequest: data.deliveryRequest,
-          deliveryMemo: data.deliveryMemo,
-          isDefault: isFirstAddress ? true : data.isDefault, // 처음 등록 시 항상 기본 배송지
-        },
+        inputData,
         {
           onSuccess: (newAddress) => {
             if (isPopupContext) {

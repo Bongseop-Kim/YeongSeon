@@ -18,7 +18,7 @@ import { PACKAGE_PRESETS } from "../constants/PACKAGE_PRESETS";
 import { SAMPLE_COST } from "../constants/SAMPLE_PRICING";
 import { useWizardStep } from "../hooks/useWizardStep";
 import { useWizardDraft, useRestoreDraft, useAutoSave } from "../hooks/useWizardDraft";
-import { useShippingAddressPopup } from "../hooks/useShippingAddressPopup";
+import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { PageLayout } from "@/components/layout/page-layout";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ProgressBar } from "./wizard/ProgressBar";

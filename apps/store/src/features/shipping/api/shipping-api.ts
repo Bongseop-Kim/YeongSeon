@@ -1,13 +1,9 @@
 import { supabase } from "@/lib/supabase";
-import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
-import type {
-  CreateShippingAddressData,
-  UpdateShippingAddressData,
-} from "@/features/shipping/types/shipping-address-record";
+import type { ShippingAddress, ShippingAddressInput } from "@/features/shipping/types/shipping-address";
+import type { ShippingAddressRecord } from "@/features/shipping/types/shipping-address-record";
 import {
   toShippingAddressView,
-  toCreateShippingAddressRecord,
-  toUpdateShippingAddressRecord,
+  toUpsertShippingAddressParams,
 } from "@/features/shipping/api/shipping-mapper";
 
 const TABLE_NAME = "shipping_addresses";
@@ -113,83 +109,46 @@ export const getShippingAddressById = async (
 };
 
 /**
- * 배송지 생성
+ * 배송지 생성 (RPC: is_default 토글 원자적 처리)
  */
 export const createShippingAddress = async (
-  data: CreateShippingAddressData
+  data: ShippingAddressInput
 ): Promise<ShippingAddress> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
-  // 기본 배송지로 설정하는 경우, 다른 배송지들의 is_default를 false로 변경
-  if (data.isDefault) {
-    await supabase
-      .from(TABLE_NAME)
-      .update({ is_default: false })
-      .eq("user_id", user.id)
-      .eq("is_default", true);
-  }
-
-  const { data: newRecord, error } = await supabase
-    .from(TABLE_NAME)
-    .insert(toCreateShippingAddressRecord(user.id, data))
-    .select()
+  const { data: record, error } = await supabase
+    .rpc("upsert_shipping_address", toUpsertShippingAddressParams(null, data))
     .single();
 
   if (error) {
     throw new Error(`배송지 생성 실패: ${error.message}`);
   }
 
-  return toShippingAddressView(newRecord);
+  return toShippingAddressView(record as ShippingAddressRecord);
 };
 
 /**
- * 배송지 업데이트
+ * 배송지 업데이트 (RPC: is_default 토글 원자적 처리)
  */
 export const updateShippingAddress = async (
   id: string,
-  data: UpdateShippingAddressData
+  data: ShippingAddressInput
 ): Promise<ShippingAddress> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
-  // 기본 배송지로 설정하는 경우, 다른 배송지들의 is_default를 false로 변경
-  if (data.isDefault === true) {
-    await supabase
-      .from(TABLE_NAME)
-      .update({ is_default: false })
-      .eq("user_id", user.id)
-      .eq("is_default", true)
-      .neq("id", id);
-  }
-
-  const { data: updatedRecord, error } = await supabase
-    .from(TABLE_NAME)
-    .update(toUpdateShippingAddressRecord(data))
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .select()
+  const { data: record, error } = await supabase
+    .rpc("upsert_shipping_address", toUpsertShippingAddressParams(id, data))
     .single();
 
   if (error) {
     throw new Error(`배송지 업데이트 실패: ${error.message}`);
   }
 
-  return toShippingAddressView(updatedRecord);
+  return toShippingAddressView(record as ShippingAddressRecord);
 };
 
 /**
  * 배송지 삭제
+ *
+ * 직접 테이블 쓰기 예외: shipping_addresses DELETE
+ * 근거: supabase/schemas/11_shipping_addresses.sql RLS 정책
+ *   "user_id = auth.uid()" 로 소유권이 보장되며, 단일 원자 연산이므로 직접 삭제 허용.
  */
 export const deleteShippingAddress = async (id: string): Promise<void> => {
   const {

@@ -1,9 +1,5 @@
-import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
-import type {
-  ShippingAddressRecord,
-  CreateShippingAddressData,
-  UpdateShippingAddressData,
-} from "@/features/shipping/types/shipping-address-record";
+import type { ShippingAddress, ShippingAddressInput } from "@/features/shipping/types/shipping-address";
+import type { ShippingAddressRecord } from "@/features/shipping/types/shipping-address-record";
 
 /**
  * DB 레코드 → ShippingAddress (View)
@@ -18,7 +14,7 @@ export const toShippingAddressView = (
   recipientName: record.recipient_name,
   recipientPhone: record.recipient_phone,
   address: record.address,
-  detailAddress: record.address_detail,
+  detailAddress: record.address_detail ?? undefined,
   postalCode: record.postal_code,
   deliveryRequest: record.delivery_request || undefined,
   deliveryMemo: record.delivery_memo || undefined,
@@ -26,46 +22,19 @@ export const toShippingAddressView = (
 });
 
 /**
- * CreateShippingAddressData (View) → insert record
- *
- * DB 레코드는 `string | null` 컬럼이므로 falsy → null 변환.
+ * ShippingAddressInput → upsert_shipping_address RPC 파라미터
  */
-export const toCreateShippingAddressRecord = (
-  userId: string,
-  data: CreateShippingAddressData
-): Omit<ShippingAddressRecord, "id" | "created_at"> => ({
-  user_id: userId,
-  recipient_name: data.recipientName,
-  recipient_phone: data.recipientPhone,
-  address: data.address,
-  address_detail: data.detailAddress,
-  postal_code: data.postalCode,
-  delivery_request: data.deliveryRequest || null,
-  delivery_memo: data.deliveryMemo || null,
-  is_default: data.isDefault,
+export const toUpsertShippingAddressParams = (
+  id: string | null,
+  data: ShippingAddressInput
+) => ({
+  p_id: id ?? undefined,
+  p_recipient_name: data.recipientName,
+  p_recipient_phone: data.recipientPhone,
+  p_address: data.address,
+  p_address_detail: data.detailAddress ?? null,
+  p_postal_code: data.postalCode,
+  p_delivery_request: data.deliveryRequest ?? null,
+  p_delivery_memo: data.deliveryMemo ?? null,
+  p_is_default: data.isDefault,
 });
-
-/**
- * UpdateShippingAddressData (View) → partial update record
- */
-export const toUpdateShippingAddressRecord = (
-  data: UpdateShippingAddressData
-): Partial<ShippingAddressRecord> => {
-  const record: Partial<ShippingAddressRecord> = {};
-
-  if (data.recipientName !== undefined)
-    record.recipient_name = data.recipientName;
-  if (data.recipientPhone !== undefined)
-    record.recipient_phone = data.recipientPhone;
-  if (data.address !== undefined) record.address = data.address;
-  if (data.detailAddress !== undefined)
-    record.address_detail = data.detailAddress;
-  if (data.postalCode !== undefined) record.postal_code = data.postalCode;
-  if (data.deliveryRequest !== undefined)
-    record.delivery_request = data.deliveryRequest || null;
-  if (data.deliveryMemo !== undefined)
-    record.delivery_memo = data.deliveryMemo || null;
-  if (data.isDefault !== undefined) record.is_default = data.isDefault;
-
-  return record;
-};
