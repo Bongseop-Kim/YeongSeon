@@ -1,4 +1,4 @@
-import { FunctionsHttpError } from "@supabase/supabase-js";
+import { FunctionsHttpError } from "@yeongseon/supabase";
 
 export const extractEdgeFunctionErrorMessage = async (
   error: unknown,
