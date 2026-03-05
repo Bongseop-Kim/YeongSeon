@@ -24,6 +24,7 @@ export function SelectedOptionItem({
         <p className="text-sm font-semibold">{item.option.name}</p>
         <QuantitySelector
           value={item.quantity}
+          max={item.option.stock ?? undefined}
           onChange={(newQuantity) => {
             const delta = newQuantity - item.quantity;
             onUpdateQuantity(delta);

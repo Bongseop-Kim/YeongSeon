@@ -406,7 +406,7 @@ export default function ShopDetailPage() {
                     product={product}
                     onRemove={() => { }}
                     onUpdateQuantity={(delta) =>
-                      handleUpdateBaseQuantity(delta)
+                      handleUpdateBaseQuantity(delta, product.stock)
                     }
                     showCloseButton={false}
                   />
