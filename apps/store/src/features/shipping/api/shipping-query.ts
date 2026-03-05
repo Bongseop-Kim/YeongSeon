@@ -7,7 +7,7 @@ import {
   updateShippingAddress,
   deleteShippingAddress,
 } from "./shipping-api";
-import type { UpdateShippingAddressData } from "@/features/shipping/types/shipping-address-record";
+import type { ShippingAddressInput } from "@/features/shipping/types/shipping-address";
 import { toast } from "@/lib/toast";
 
 /**
@@ -15,8 +15,7 @@ import { toast } from "@/lib/toast";
  */
 export const shippingKeys = {
   all: ["shipping"] as const,
-  lists: () => [...shippingKeys.all, "list"] as const,
-  list: () => [...shippingKeys.lists()] as const,
+  list: () => [...shippingKeys.all, "list"] as const,
   details: () => [...shippingKeys.all, "detail"] as const,
   detail: (id: string) => [...shippingKeys.details(), id] as const,
   default: () => [...shippingKeys.all, "default"] as const,
@@ -96,7 +95,7 @@ export const useUpdateShippingAddress = () => {
       data,
     }: {
       id: string;
-      data: UpdateShippingAddressData;
+      data: ShippingAddressInput;
     }) => updateShippingAddress(id, data),
     onSuccess: (_, variables) => {
       // 배송지 목록 및 상세 쿼리 무효화

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,28 +20,18 @@ import React from "react";
 import { useOrderStore } from "@/store/order";
 import { useCouponSelect } from "@/features/order/order-form/hook/useCouponSelect";
 import { toast } from "@/lib/toast";
-import {
-  useDefaultShippingAddress,
-  useShippingAddresses,
-  useUpdateShippingAddress,
-  shippingKeys,
-} from "@/features/shipping/api/shipping-query";
+import { useUpdateShippingAddress } from "@/features/shipping/api/shipping-query";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
-import { useQueryClient } from "@tanstack/react-query";
-import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
-import { usePopup } from "@/hooks/usePopup";
 import { useAuthStore } from "@/store/auth";
 import { createOrder } from "@/features/order/api/order-api";
 import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/features/order/order-form/components/payment-widget";
+import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
+import { useState } from "react";
 
 const OrderFormPage = () => {
-  const { openPopup } = usePopup();
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null
-  );
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const navigate = useNavigate();
@@ -51,11 +41,11 @@ const OrderFormPage = () => {
     updateOrderItemCoupon,
   } = useOrderStore();
   const { openCouponSelect } = useCouponSelect();
-  const queryClient = useQueryClient();
-  const { data: defaultAddress } = useDefaultShippingAddress();
-  const { data: addresses } = useShippingAddresses();
   const updateShippingAddress = useUpdateShippingAddress();
   const { user } = useAuthStore();
+
+  const { selectedAddressId, selectedAddress, openShippingPopup } =
+    useShippingAddressPopup();
 
   useEffect(() => {
     // 주문 아이템이 없으면 장바구니로 리다이렉트
@@ -63,44 +53,6 @@ const OrderFormPage = () => {
       navigate(ROUTES.CART);
     }
   }, [navigate, hasOrderItems]);
-
-  // 기본 배송지가 있으면 자동 선택
-  useEffect(() => {
-    if (defaultAddress && !selectedAddressId) {
-      setSelectedAddressId(defaultAddress.id);
-    }
-  }, [defaultAddress, selectedAddressId]);
-
-  // 팝업에서 배송지 선택/생성/업데이트 시 처리
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) {
-        return;
-      }
-
-      if (!event.data) return;
-
-      switch (event.data.type) {
-        case SHIPPING_MESSAGE_TYPE.ADDRESS_SELECTED:
-          setSelectedAddressId(event.data.addressId);
-          break;
-
-        case SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED:
-        case SHIPPING_MESSAGE_TYPE.ADDRESS_UPDATED:
-          queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
-          queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
-          setSelectedAddressId(event.data.addressId);
-          break;
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [queryClient]);
-
-  // 선택된 배송지 정보
-  const selectedAddress =
-    addresses?.find((addr) => addr.id === selectedAddressId) || defaultAddress;
 
   const handleChangeCoupon = async (itemId: string) => {
     const item = orderItems.find((i) => i.id === itemId);
@@ -280,7 +232,7 @@ const OrderFormPage = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => openPopup(`${ROUTES.SHIPPING}?mode=select`)}
+                  onClick={openShippingPopup}
                 >
                   배송지 관리
                 </Button>
@@ -298,12 +250,11 @@ const OrderFormPage = () => {
                     <Select
                       value={selectedAddress.deliveryRequest || undefined}
                       onValueChange={(value) => {
-                        if (selectedAddressId) {
+                        if (selectedAddressId && selectedAddress) {
+                          const { id, ...addressData } = selectedAddress;
                           updateShippingAddress.mutate({
                             id: selectedAddressId,
-                            data: {
-                              deliveryRequest: value,
-                            },
+                            data: { ...addressData, deliveryRequest: value },
                           });
                         }
                       }}
