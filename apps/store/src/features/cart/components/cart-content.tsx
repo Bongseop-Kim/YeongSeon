@@ -16,7 +16,7 @@ import {
   ReformOptionChangeModal,
   type ReformOptionChangeModalRef,
 } from "./reform-option-change-modal";
-import { useCouponSelect } from "@/features/order/order-form/hook/useCouponSelect";
+import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
 import { useProducts } from "@/features/shop/api/products-query";
 import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useBreakpoint } from "@/providers/breakpoint-provider";

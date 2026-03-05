@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { confirmPayment } from "@/features/order/api/payment-api";
+import { confirmPayment } from "@/features/payment/api/payment-api";
 import { useOrderStore } from "@/store/order";
 import { cartKeys } from "@/features/cart/api/cart-query";
 import { removeCartItemsByIds } from "@/features/cart/api/cart-api";

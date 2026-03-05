@@ -17,7 +17,7 @@ import { ROUTES } from "@/constants/ROUTES";
 import { toast } from "@/lib/toast";
 import { Empty } from "@/components/composite/empty";
 import { useOrderDetail } from "@/features/order/api/order-query";
-import { useCreateClaim } from "@/features/order/api/claims-query";
+import { useCreateClaim } from "@/features/claim/api/claims-query";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { useEffect, useMemo } from "react";
 

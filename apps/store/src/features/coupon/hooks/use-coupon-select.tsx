@@ -1,7 +1,7 @@
-import type { CouponSelectModalRef } from "@/features/cart/components/coupon-select-modal";
+import type { CouponSelectModalRef } from "@/features/coupon/components/coupon-select-modal";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 import { useModalStore } from "@/store/modal";
-import { CouponSelectModal } from "@/features/cart/components/coupon-select-modal";
+import { CouponSelectModal } from "@/features/coupon/components/coupon-select-modal";
 
 /**
  * 쿠폰 선택 모달을 열고 선택된 쿠폰을 반환하는 범용 hook

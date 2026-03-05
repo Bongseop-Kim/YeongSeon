@@ -4,7 +4,7 @@ import type { UserCoupon } from "@yeongseon/shared/types/view/coupon";
 import {
   mapRecordToUserCoupon,
   parseUserCouponRecords,
-} from "@/features/order/api/coupons-mapper";
+} from "@/features/coupon/api/coupons-mapper";
 
 const COUPON_COLUMNS =
   "id, name, discount_type, discount_value, max_discount_amount, description, expiry_date, additional_info";

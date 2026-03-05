@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { formatCouponAmount } from "@yeongseon/shared/utils/format-coupon-amount";
 import type { AppliedCoupon, UserCoupon } from "@yeongseon/shared/types/view/coupon";
 import { Separator } from "@/components/ui/separator";
-import { useUserCoupons } from "@/features/order/api/coupons-query";
+import { useUserCoupons } from "@/features/coupon/api/coupons-query";
 
 export interface CouponSelectModalRef {
   getSelectedCoupon: () => AppliedCoupon | undefined;

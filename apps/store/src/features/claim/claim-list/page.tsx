@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect, useMemo, useState } from "react";
 import { buildClaimDetailRoute } from "@/constants/ROUTES";
-import { useClaims } from "@/features/order/api/claims-query";
+import { useClaims } from "@/features/claim/api/claims-query";
 import {
   toDateString,
   type ListFilters,

@@ -1,5 +1,5 @@
 import type { Coupon, UserCoupon, UserCouponStatus } from "@yeongseon/shared/types/view/coupon";
-import type { UserCouponRecord, CouponRecord } from "@/features/order/types/coupon-record";
+import type { UserCouponRecord, CouponRecord } from "@/features/coupon/types/coupon-record";
 import { isRecord } from "@/lib/type-guard";
 
 // ── parse helpers (런타임 검증) ──────────────────────

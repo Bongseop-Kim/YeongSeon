@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import {
   parseConfirmPaymentResponse,
   type ConfirmPaymentResponse,
-} from "@/features/order/api/payment-mapper";
+} from "@/features/payment/api/payment-mapper";
 
 interface ConfirmPaymentRequest {
   paymentKey: string;

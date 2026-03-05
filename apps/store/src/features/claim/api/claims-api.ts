@@ -9,7 +9,7 @@ import {
   parseCreateClaimResult,
   toClaimItemView,
   toCreateClaimInputDTO,
-} from "@/features/order/api/claims-mapper";
+} from "@/features/claim/api/claims-mapper";
 import { normalizeKeyword, type ListFilters } from "@/features/order/api/list-filters";
 
 const CLAIM_LIST_VIEW = "claim_list_view";

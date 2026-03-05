@@ -18,7 +18,7 @@ import { OrderItemCard } from "@/features/order/order-form/components/order-item
 import { ReformOrderItemCard } from "@/features/order/order-form/components/reform-order-item-card";
 import React from "react";
 import { useOrderStore } from "@/store/order";
-import { useCouponSelect } from "@/features/order/order-form/hook/useCouponSelect";
+import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
 import { toast } from "@/lib/toast";
 import { useUpdateShippingAddress } from "@/features/shipping/api/shipping-query";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
@@ -27,7 +27,7 @@ import { useAuthStore } from "@/store/auth";
 import { createOrder } from "@/features/order/api/order-api";
 import PaymentWidget, {
   type PaymentWidgetRef,
-} from "@/features/order/order-form/components/payment-widget";
+} from "@/features/payment/components/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useState } from "react";
 
