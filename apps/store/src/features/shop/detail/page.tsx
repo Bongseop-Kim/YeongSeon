@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Product } from "@yeongseon/shared/types/view/product";
-import type { SelectedOption } from "@/features/shop/detail/types";
+import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 import { Badge } from "@/components/ui/badge";
 import {
   getCategoryLabel,

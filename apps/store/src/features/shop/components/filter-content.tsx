@@ -17,7 +17,7 @@ import {
   PRICE_RANGE_OPTIONS,
 } from "@/features/shop/constants/FILTER_OPTIONS";
 import { Badge } from "@/components/ui/badge";
-import type { FilterTab } from "@/features/shop/types";
+import type { FilterTab } from "@/features/shop/types/filter";
 
 interface FilterContentProps {
   selectedCategories: ProductCategory[];

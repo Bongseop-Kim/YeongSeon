@@ -1,5 +1,5 @@
 import type { Product } from "@yeongseon/shared/types/view/product";
-import type { SelectedOption } from "@/features/shop/detail/types";
+import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 import CloseButton from "@/components/ui/close";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
 

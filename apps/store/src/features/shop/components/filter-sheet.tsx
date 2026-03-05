@@ -16,7 +16,7 @@ import {
   type ProductPattern,
   type ProductMaterial,
 } from "@yeongseon/shared/types/view/product";
-import type { FilterTab } from "@/features/shop/types";
+import type { FilterTab } from "@/features/shop/types/filter";
 
 interface FilterSheetProps {
   selectedCategories: ProductCategory[];

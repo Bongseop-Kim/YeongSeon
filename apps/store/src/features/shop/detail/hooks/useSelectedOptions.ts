@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ProductOption } from "@yeongseon/shared/types/view/product";
-import type { SelectedOption } from "@/features/shop/detail/types";
+import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 
 export function useSelectedOptions() {
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
