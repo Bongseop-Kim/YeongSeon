@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/features/shop/components/product-card";
 import type { Product } from "@yeongseon/shared/types/view/product";
 
@@ -13,6 +14,7 @@ interface CartRecommendationsCardProps {
   isMobile: boolean;
   isLoading?: boolean;
   isError?: boolean;
+  onRetry?: () => void;
 }
 
 export function CartRecommendationsCard({
@@ -20,9 +22,9 @@ export function CartRecommendationsCard({
   isMobile,
   isLoading,
   isError,
+  onRetry,
 }: CartRecommendationsCardProps) {
   if (isLoading) {
-    const cols = isMobile ? 3 : 4;
     const skeletonCount = isMobile ? 6 : 8;
     return (
       <Card className="bg-zinc-100">
@@ -33,7 +35,7 @@ export function CartRecommendationsCard({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={`grid grid-cols-${cols} gap-2`}>
+          <div className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"} gap-2`}>
             {Array.from({ length: skeletonCount }).map((_, i) => (
               <div key={i} className="animate-pulse rounded-md bg-zinc-200 aspect-square" />
             ))}
@@ -43,7 +45,25 @@ export function CartRecommendationsCard({
     );
   }
 
-  if (isError || products.length === 0) {
+  if (isError) {
+    return (
+      <Card className="bg-zinc-100">
+        <CardHeader>
+          <CardTitle>추천 상품</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-zinc-500">추천 상품을 불러오는 중 오류가 발생했습니다.</p>
+          {onRetry && (
+            <Button variant="outline" size="sm" onClick={onRetry} className="mt-2">
+              다시 시도
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (products.length === 0) {
     return null;
   }
 

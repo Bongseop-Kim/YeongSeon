@@ -44,7 +44,7 @@ export const CartContent = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const { openCouponSelect } = useCouponSelect();
 
-  const { data: similarProducts = [], isLoading: similarLoading, isError: similarError } = useProducts({ sortOption: "popular", limit: isMobile ? 6 : 8 });
+  const { data: similarProducts = [], isLoading: similarLoading, isError: similarError, refetch: refetchSimilar } = useProducts({ sortOption: "popular", limit: isMobile ? 6 : 8 });
 
   useEffect(() => {
     const currentIds = new Set(items.map((item) => item.id));
@@ -238,6 +238,7 @@ export const CartContent = () => {
                 isMobile={isMobile}
                 isLoading={similarLoading}
                 isError={similarError}
+                onRetry={refetchSimilar}
               />
             </div>
           }

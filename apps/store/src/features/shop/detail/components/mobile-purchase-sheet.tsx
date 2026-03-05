@@ -13,7 +13,7 @@ import type { Product, ProductOption } from "@yeongseon/shared/types/view/produc
 import type { SelectedOption } from "@/features/shop/detail/types";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
-import { useCart } from "@/features/cart/hooks/useCart";
+import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";
 import { toast } from "@/lib/toast";
 
 interface MobilePurchaseSheetProps {
@@ -46,7 +46,7 @@ export function MobilePurchaseSheet({
   handleUpdateBaseQuantity,
   resetOptions,
 }: MobilePurchaseSheetProps) {
-  const { addToCart } = useCart();
+  const { addItemsToCart } = useAddToCartItems();
   const productOptions = product.options ?? [];
 
   const hasOptions = productOptions.length > 0;
@@ -77,46 +77,29 @@ export function MobilePurchaseSheet({
   const handleAddToCart = async () => {
     if (isAddingToCart) return;
 
-    if (hasOptions) {
-      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
-      if (selectedOptions.length === 0) {
-        toast.warning("옵션을 선택해주세요.");
-        return;
-      }
-
-      setIsAddingToCart(true);
-
-      try {
-        for (const selectedOption of selectedOptions) {
-          await addToCart(product, {
-            option: selectedOption.option,
-            quantity: selectedOption.quantity,
-            showModal: false,
-          });
-        }
-
-        resetOptions();
-      } catch {
-        toast.error("장바구니 추가에 실패했습니다.");
-        return;
-      } finally {
-        setIsAddingToCart(false);
-      }
-    } else {
-      // 옵션이 없는 경우: baseQuantity로 추가
-      setIsAddingToCart(true);
-      try {
-        await addToCart(product, { quantity: baseQuantity, showModal: false });
-
-        resetOptions();
-      } catch {
-        toast.error("장바구니 추가에 실패했습니다.");
-        return;
-      } finally {
-        setIsAddingToCart(false);
-      }
+    if (hasOptions && selectedOptions.length === 0) {
+      toast.warning("옵션을 선택해주세요.");
+      return;
     }
 
+    setIsAddingToCart(true);
+    const { succeeded, failed, total } = await addItemsToCart(product, {
+      selectedOptions,
+      baseQuantity,
+      hasOptions,
+    });
+    setIsAddingToCart(false);
+
+    if (failed === total) {
+      toast.error("장바구니 추가에 실패했습니다.");
+      return;
+    }
+
+    if (failed > 0) {
+      toast.warning(`일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`);
+    }
+
+    resetOptions();
     onOpenChange(false);
   };
 
