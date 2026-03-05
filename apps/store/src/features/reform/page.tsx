@@ -88,7 +88,7 @@ const ReformPage = () => {
   };
 
   const uploadTiesIfNeeded = useCallback(
-    async (ties: ReturnType<typeof form.getValues>["ties"]) => {
+    async (ties: ReformOptions["ties"]) => {
       const hasFileImages = ties.some((tie) => tie.image instanceof File);
       return hasFileImages
         ? await uploadTieImagesMutation.mutateAsync(ties)
