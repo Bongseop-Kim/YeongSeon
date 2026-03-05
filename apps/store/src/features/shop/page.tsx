@@ -17,7 +17,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-import type { FilterTab } from "@/features/shop/types";
+import type { FilterTab } from "@/features/shop/types/filter";
 import {
   Dialog,
   DialogContent,

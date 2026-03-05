@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Product } from "@yeongseon/shared/types/view/product";
-import type { SelectedOption } from "@/features/shop/detail/types";
+import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 import { Badge } from "@/components/ui/badge";
 import {
   getCategoryLabel,
@@ -42,7 +42,7 @@ import {
 } from "@/features/shop/constants/PRODUCT_LABELS";
 import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/ui/data-table";
-import { HEIGHT_GUIDE } from "@/features/reform/constants/DETAIL";
+import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
 import { ProductCard } from "@/features/shop/components/product-card";
 import { useMemo } from "react";
 import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";
@@ -53,6 +53,7 @@ import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { useProduct, useProducts } from "@/features/shop/api/products-query";
 import { useToggleLike } from "@/features/shop/api/likes-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * 주문 처리 및 네비게이션을 수행하는 공통 헬퍼 함수
@@ -126,19 +127,31 @@ export default function ShopDetailPage() {
   const isLiked = product?.isLiked ?? false;
   const likeCount = product?.likes ?? 0;
   const toggleLikeMutation = useToggleLike(productId);
+  const SIMILAR_LIMIT = isMobile ? 3 : 4;
 
-  const { data: categoryProducts = [] } = useProducts(
+  const { data: categoryProducts = [], isLoading: isCategoryLoading } = useProducts(
     {
       categories: product ? [product.category] : [],
-      limit: isMobile ? 4 : 5,
+      limit: SIMILAR_LIMIT + 1,
     },
     { enabled: !!product }
   );
 
-  const similarProducts = useMemo(
-    () => categoryProducts.filter((p) => p.id !== product?.id).slice(0, isMobile ? 3 : 4),
-    [categoryProducts, product?.id, isMobile]
+  const filteredSimilar = useMemo(
+    () =>
+      categoryProducts
+        .filter((p) => p.id !== product?.id)
+        .slice(0, SIMILAR_LIMIT),
+    [categoryProducts, product?.id, SIMILAR_LIMIT]
   );
+  const needsFallback = !isCategoryLoading && filteredSimilar.length === 0;
+  const { data: fallbackProducts = [], isLoading: isFallbackLoading } = useProducts(
+    { sortOption: "latest", limit: SIMILAR_LIMIT },
+    { enabled: !!product && needsFallback }
+  );
+  const similarProducts = filteredSimilar.length > 0 ? filteredSimilar : fallbackProducts.filter((p) => p.id !== product?.id);
+  const isSimilarLoading = isCategoryLoading || (needsFallback && isFallbackLoading);
+  const showSimilarSection = isSimilarLoading || similarProducts.length > 0;
 
   // 로딩 중이거나 제품이 없을 때 처리
   if (isProductLoading) {
@@ -242,7 +255,7 @@ export default function ShopDetailPage() {
           detail={
             <div>
               {/* 유사한 상품 섹션 */}
-              {similarProducts.length > 0 && (
+              {showSimilarSection && (
                 <Card className="bg-zinc-100">
                   <CardHeader>
                     <CardTitle>유사한 상품</CardTitle>
@@ -256,12 +269,16 @@ export default function ShopDetailPage() {
                       className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"
                         }`}
                     >
-                      {similarProducts.map((similarProduct) => (
-                        <ProductCard
-                          key={similarProduct.id}
-                          product={similarProduct}
-                        />
-                      ))}
+                      {isSimilarLoading
+                        ? Array.from({ length: SIMILAR_LIMIT }).map((_, index) => (
+                          <Skeleton key={`similar-skeleton-${index}`} className="aspect-square w-full" />
+                        ))
+                        : similarProducts.map((similarProduct) => (
+                          <ProductCard
+                            key={similarProduct.id}
+                            product={similarProduct}
+                          />
+                        ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -389,7 +406,7 @@ export default function ShopDetailPage() {
                     product={product}
                     onRemove={() => { }}
                     onUpdateQuantity={(delta) =>
-                      handleUpdateBaseQuantity(delta)
+                      handleUpdateBaseQuantity(delta, product.stock)
                     }
                     showCloseButton={false}
                   />

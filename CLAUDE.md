@@ -38,6 +38,7 @@ supabase migration list # Remote 마이그레이션 목록 확인
 - API 파일(`*-api.ts`)은 얇게 유지하고, 매핑은 `*-mapper.ts`로 분리한다.
 - 매퍼에서 `as` 남용보다 구별된 유니언(`type`) 기반 좁히기를 우선한다.
 - 런타임 검증 없이 non-null 단언(`!`)을 사용하지 않는다.
+- import 경로: 같은 feature 내부는 상대 경로(`./`), 다른 feature·공통 패키지는 절대 경로(`@/`). 파일 수정 시 해당 파일의 import가 이 규칙을 따르도록 함께 정리한다.
 
 ## Supabase 함수 선택 기준
 

@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
-import type { SelectedOption } from "@/features/shop/detail/types";
+import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
 import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";
@@ -29,7 +29,7 @@ interface MobilePurchaseSheetProps {
   handleSelectOption: (option: ProductOption) => void;
   handleRemoveOption: (optionId: string) => void;
   handleUpdateQuantity: (optionId: string, delta: number) => void;
-  handleUpdateBaseQuantity: (delta: number) => void;
+  handleUpdateBaseQuantity: (delta: number, maxStock?: number | null) => void;
   resetOptions: () => void;
 }
 
@@ -170,7 +170,9 @@ export function MobilePurchaseSheet({
                 }}
                 product={product}
                 onRemove={() => {}}
-                onUpdateQuantity={(delta) => handleUpdateBaseQuantity(delta)}
+                onUpdateQuantity={(delta) =>
+                  handleUpdateBaseQuantity(delta, product.stock)
+                }
                 showCloseButton={false}
               />
             </div>

@@ -45,7 +45,7 @@ export const useWizardDraft = () => {
     try {
       const sanitized: WizardDraft = {
         ...draft,
-        formValues: { ...draft.formValues, referenceImages: null },
+        formValues: { ...draft.formValues, referenceImages: null, contactName: "", contactValue: "" },
       };
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify(sanitized));
     } catch {

@@ -17,7 +17,8 @@ import {
   toOrderView,
   toOrderViewFromDetail,
 } from "@/features/order/api/order-mapper";
-import { normalizeKeyword, type ListFilters } from "@/features/order/api/list-filters";
+import { extractEdgeFunctionErrorMessage } from "./order-error-mapper";
+import { normalizeKeyword, type ListFilters } from "@/features/order/utils/list-filters";
 
 const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";
@@ -40,7 +41,10 @@ export const createOrder = async (
     });
 
   if (orderError) {
-    throw new Error(`주문 생성 실패: ${orderError.message}`);
+    const message =
+      (await extractEdgeFunctionErrorMessage(orderError)) ??
+      "주문 생성에 실패했습니다.";
+    throw new Error(message);
   }
 
   if (!orderResult) {
@@ -76,7 +80,8 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
   const { data: orders, error: ordersError } = await query;
 
   if (ordersError) {
-    throw new Error(`주문 목록 조회 실패: ${ordersError.message}`);
+    console.error(ordersError);
+    throw new Error("주문 목록을 불러오는 데 실패했습니다.");
   }
 
   const orderRows = parseOrderListRows(orders);
@@ -92,7 +97,8 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     .order("created_at", { ascending: true });
 
   if (itemsError) {
-    throw new Error(`주문 상품 조회 실패: ${itemsError.message}`);
+    console.error(itemsError);
+    throw new Error("주문 목록을 불러오는 데 실패했습니다.");
   }
 
   const itemRows = parseOrderItemRows(items);
@@ -162,7 +168,8 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
     .maybeSingle();
 
   if (orderError) {
-    throw new Error(`주문 조회 실패: ${orderError.message}`);
+    console.error(orderError);
+    throw new Error("주문을 불러오는 데 실패했습니다.");
   }
 
   if (!order) {
@@ -176,7 +183,8 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
     .order("created_at", { ascending: true });
 
   if (itemsError) {
-    throw new Error(`주문 상품 조회 실패: ${itemsError.message}`);
+    console.error(itemsError);
+    throw new Error("주문을 불러오는 데 실패했습니다.");
   }
 
   const itemRows = parseOrderItemRows(items);

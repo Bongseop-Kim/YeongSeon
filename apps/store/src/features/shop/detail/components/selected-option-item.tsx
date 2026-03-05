@@ -1,5 +1,5 @@
 import type { Product } from "@yeongseon/shared/types/view/product";
-import type { SelectedOption } from "@/features/shop/detail/types";
+import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 import CloseButton from "@/components/ui/close";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
 
@@ -24,6 +24,7 @@ export function SelectedOptionItem({
         <p className="text-sm font-semibold">{item.option.name}</p>
         <QuantitySelector
           value={item.quantity}
+          max={item.option.stock ?? undefined}
           onChange={(newQuantity) => {
             const delta = newQuantity - item.quantity;
             onUpdateQuantity(delta);

@@ -15,10 +15,8 @@ import { useModalStore } from "@/store/modal";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import React, { useState, useCallback, useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Empty } from "@/components/composite/empty";
-import { uploadTieImages } from "./api/upload-tie-images";
-import { toast } from "@/lib/toast";
 import {
   Accordion,
   AccordionContent,
@@ -26,13 +24,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Detail } from "./components/detail";
-import { HEIGHT_GUIDE } from "./constants/DETAIL";
+import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
 import { REFORM_BASE_COST, REFORM_SHIPPING_COST } from "@yeongseon/shared/constants/reform-pricing";
 import { DataTable } from "@/components/ui/data-table";
 import { ReformActionButtons } from "./components/reform-action-buttons";
 import { MobileReformSheet } from "./components/mobile-reform-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { toReformCartItems, toReformData } from "./api/reform-mapper";
+import { useUploadTieImages } from "./api/reform-query";
 
 const DEFAULT_TIE_ITEM = {
   id: "tie-1",
@@ -59,8 +58,8 @@ const ReformPage = () => {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const isSubmittingRef = useRef(false);
+  const uploadTieImagesMutation = useUploadTieImages();
 
   const form = useForm<ReformOptions>({
     defaultValues: DEFAULT_REFORM_OPTIONS,
@@ -88,33 +87,24 @@ const ReformPage = () => {
     remove(index);
   };
 
-  const uploadAndGetTies = useCallback(async () => {
-    const ties = form.getValues().ties;
-    const hasFileImages = ties.some((t) => t.image instanceof File);
-    if (!hasFileImages) return ties;
-
-    setIsUploading(true);
-    try {
-      return await uploadTieImages(ties);
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "이미지 업로드에 실패했습니다."
-      );
-      return null;
-    } finally {
-      setIsUploading(false);
-    }
-  }, [form]);
+  const uploadTiesIfNeeded = useCallback(
+    async (ties: ReformOptions["ties"]) => {
+      const hasFileImages = ties.some((tie) => tie.image instanceof File);
+      if (hasFileImages) return await uploadTieImagesMutation.mutateAsync(ties);
+      return ties;
+    },
+    [uploadTieImagesMutation]
+  );
 
   const processReformOrder = useCallback(async () => {
-    const uploadedTies = await uploadAndGetTies();
-    if (!uploadedTies) return;
+    const ties = form.getValues().ties;
+    const uploadedTies = await uploadTiesIfNeeded(ties);
 
     const orderItems = toReformCartItems(uploadedTies);
 
     setOrderItems(orderItems);
     navigate(ROUTES.ORDER_FORM);
-  }, [uploadAndGetTies, setOrderItems, navigate]);
+  }, [form, navigate, setOrderItems, uploadTiesIfNeeded]);
 
   const withSubmitGuard = useCallback(
     async (action: () => Promise<void>) => {
@@ -152,8 +142,8 @@ const ReformPage = () => {
 
   const handleAddToCart = () =>
     withSubmitGuard(async () => {
-      const uploadedTies = await uploadAndGetTies();
-      if (!uploadedTies) return;
+      const ties = form.getValues().ties;
+      const uploadedTies = await uploadTiesIfNeeded(ties);
 
       await addMultipleReformToCart(uploadedTies.map(toReformData));
 
@@ -256,7 +246,7 @@ const ReformPage = () => {
               <ReformActionButtons
                 onAddToCart={handleAddToCart}
                 onOrder={handleDirectOrder}
-                disabled={isUploading}
+                disabled={uploadTieImagesMutation.isPending}
               />
             }
           >
