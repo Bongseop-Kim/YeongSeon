@@ -87,18 +87,25 @@ const ReformPage = () => {
     remove(index);
   };
 
+  const uploadTiesIfNeeded = useCallback(
+    async (ties: ReturnType<typeof form.getValues>["ties"]) => {
+      const hasFileImages = ties.some((tie) => tie.image instanceof File);
+      return hasFileImages
+        ? await uploadTieImagesMutation.mutateAsync(ties)
+        : ties;
+    },
+    [uploadTieImagesMutation]
+  );
+
   const processReformOrder = useCallback(async () => {
     const ties = form.getValues().ties;
-    const hasFileImages = ties.some((tie) => tie.image instanceof File);
-    const uploadedTies = hasFileImages
-      ? await uploadTieImagesMutation.mutateAsync(ties)
-      : ties;
+    const uploadedTies = await uploadTiesIfNeeded(ties);
 
     const orderItems = toReformCartItems(uploadedTies);
 
     setOrderItems(orderItems);
     navigate(ROUTES.ORDER_FORM);
-  }, [form, navigate, setOrderItems, uploadTieImagesMutation]);
+  }, [form, navigate, setOrderItems, uploadTiesIfNeeded]);
 
   const withSubmitGuard = useCallback(
     async (action: () => Promise<void>) => {
@@ -137,10 +144,7 @@ const ReformPage = () => {
   const handleAddToCart = () =>
     withSubmitGuard(async () => {
       const ties = form.getValues().ties;
-      const hasFileImages = ties.some((tie) => tie.image instanceof File);
-      const uploadedTies = hasFileImages
-        ? await uploadTieImagesMutation.mutateAsync(ties)
-        : ties;
+      const uploadedTies = await uploadTiesIfNeeded(ties);
 
       await addMultipleReformToCart(uploadedTies.map(toReformData));
 
