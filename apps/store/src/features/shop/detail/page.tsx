@@ -149,7 +149,7 @@ export default function ShopDetailPage() {
     { sortOption: "latest", limit: SIMILAR_LIMIT },
     { enabled: !!product && needsFallback }
   );
-  const similarProducts = filteredSimilar.length > 0 ? filteredSimilar : fallbackProducts;
+  const similarProducts = filteredSimilar.length > 0 ? filteredSimilar : fallbackProducts.filter((p) => p.id !== product?.id);
   const isSimilarLoading = isCategoryLoading || (needsFallback && isFallbackLoading);
   const showSimilarSection = isSimilarLoading || similarProducts.length > 0;
 

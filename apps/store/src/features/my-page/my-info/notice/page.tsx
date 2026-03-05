@@ -54,6 +54,7 @@ export default function MyInfoNoticePage() {
       {
         all: currentValues.isMarketingConsent,
         channels: {
+          ...(profile?.marketingConsent?.channels ?? {}),
           sms: currentValues.isSmsConsent,
           email: currentValues.isEmailConsent,
         },

@@ -127,14 +127,19 @@ export default function CartPage() {
 
         if (optionId && !newOption) return;
 
-        // 옵션이 변경되지 않고 수량만 변경된 경우
-        if (optionId === item.selectedOption?.id) {
-          await updateQuantity(itemId, quantity);
-          return;
-        }
+        try {
+          // 옵션이 변경되지 않고 수량만 변경된 경우
+          if (optionId === item.selectedOption?.id) {
+            await updateQuantity(itemId, quantity);
+            return;
+          }
 
-        // 옵션이 변경된 경우: 원자적으로 기존 아이템을 제거하고 새 옵션으로 교체
-        await updateProductOption(itemId, newOption, quantity);
+          // 옵션이 변경된 경우: 원자적으로 기존 아이템을 제거하고 새 옵션으로 교체
+          await updateProductOption(itemId, newOption, quantity);
+        } catch (error) {
+          toast.error("변경에 실패했습니다.");
+          console.error(error);
+        }
       },
     });
   };
@@ -175,9 +180,13 @@ export default function CartPage() {
           return;
         }
 
-        // 옵션 업데이트
-        await updateReformOption(itemId, updatedTie);
-        toast.success("수선 옵션이 변경되었습니다.");
+        try {
+          await updateReformOption(itemId, updatedTie);
+          toast.success("수선 옵션이 변경되었습니다.");
+        } catch (error) {
+          toast.error("수선 옵션 변경에 실패했습니다.");
+          console.error(error);
+        }
       },
     });
   };

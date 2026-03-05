@@ -102,6 +102,14 @@ export default function InquiryPage() {
     updateMutation.isPending ||
     deleteMutation.isPending;
 
+  const initialData = useMemo(
+    () =>
+      editingInquiry
+        ? { title: editingInquiry.title, content: editingInquiry.content }
+        : undefined,
+    [editingInquiry],
+  );
+
   if (isLoading) {
     return (
       <MainLayout>
@@ -130,14 +138,6 @@ export default function InquiryPage() {
       </MainLayout>
     );
   }
-
-  const initialData = useMemo(
-    () =>
-      editingInquiry
-        ? { title: editingInquiry.title, content: editingInquiry.content }
-        : undefined,
-    [editingInquiry?.title, editingInquiry?.content],
-  );
 
   const inquiryFormProps = {
     inquiryId: editingInquiryId,

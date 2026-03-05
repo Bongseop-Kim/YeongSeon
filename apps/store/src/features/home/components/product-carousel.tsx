@@ -8,7 +8,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Product } from "@yeongseon/shared/types/view/product";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 
 interface ProductCarouselProps {
@@ -23,7 +23,6 @@ export const ProductCarousel = ({
   isLoading = false,
 }: ProductCarouselProps) => {
   const { isMobile } = useBreakpoint();
-  const navigate = useNavigate();
   const skeletonCount = isMobile ? 4 : 8;
 
   return (
@@ -57,11 +56,11 @@ export const ProductCarousel = ({
                   <CarouselItem
                     key={item.id}
                     className={isMobile ? "basis-1/2" : "basis-1/4"}
-                    onClick={() => {
-                      navigate(`${ROUTES.SHOP}/${item.id}`);
-                    }}
                   >
-                    <div className="group cursor-pointer">
+                    <Link
+                      to={`${ROUTES.SHOP}/${item.id}`}
+                      className="group cursor-pointer block"
+                    >
                       <div className="aspect-square overflow-hidden rounded-lg bg-zinc-100 mb-3">
                         <img
                           src={item.image}
@@ -73,7 +72,7 @@ export const ProductCarousel = ({
                       <p className="text-sm text-zinc-600">
                         {item.price.toLocaleString()}원
                       </p>
-                    </div>
+                    </Link>
                   </CarouselItem>
                 ))}
           </CarouselContent>
