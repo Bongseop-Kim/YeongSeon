@@ -286,7 +286,15 @@ export default function CartPage() {
               selectedItems={selectedItems}
               onSelectItem={handleSelectItem}
               onRemoveProductItem={(itemId) => {
-                confirm("상품을 삭제하시겠습니까?", () => removeFromCart(itemId), {
+                confirm("상품을 삭제하시겠습니까?", () => {
+                  void (async () => {
+                    try {
+                      await removeFromCart(itemId);
+                    } catch (error) {
+                      console.error(error);
+                    }
+                  })();
+                }, {
                   confirmText: "삭제",
                   cancelText: "취소",
                 });
@@ -294,7 +302,15 @@ export default function CartPage() {
               onRemoveReformItem={(itemId) => {
                 confirm(
                   "수선 요청을 삭제하시겠습니까?",
-                  () => removeFromCart(itemId),
+                  () => {
+                    void (async () => {
+                      try {
+                        await removeFromCart(itemId);
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    })();
+                  },
                   {
                     confirmText: "삭제",
                     cancelText: "취소",

@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-import { FunctionsHttpError } from "@supabase/supabase-js";
 import type {
   CreateOrderRequest,
   CreateOrderResponse,
@@ -18,33 +17,12 @@ import {
   toOrderView,
   toOrderViewFromDetail,
 } from "@/features/order/api/order-mapper";
+import { extractEdgeFunctionErrorMessage } from "./order-error-mapper";
 import { normalizeKeyword, type ListFilters } from "@/features/order/utils/list-filters";
 
 const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";
 const ORDER_ITEM_VIEW = "order_item_view";
-
-const extractEdgeFunctionErrorMessage = async (
-  error: unknown,
-): Promise<string | null> => {
-  if (!(error instanceof FunctionsHttpError)) {
-    return null;
-  }
-
-  try {
-    const payload = await error.context.json();
-    if (payload && typeof payload === "object" && "error" in payload) {
-      const message = payload.error;
-      if (typeof message === "string" && message.trim()) {
-        return message.trim();
-      }
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-};
 
 /**
  * 주문 생성
@@ -102,6 +80,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
   const { data: orders, error: ordersError } = await query;
 
   if (ordersError) {
+    console.error(ordersError);
     throw new Error("주문 목록을 불러오는 데 실패했습니다.");
   }
 
@@ -118,6 +97,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     .order("created_at", { ascending: true });
 
   if (itemsError) {
+    console.error(itemsError);
     throw new Error("주문 목록을 불러오는 데 실패했습니다.");
   }
 
@@ -188,6 +168,7 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
     .maybeSingle();
 
   if (orderError) {
+    console.error(orderError);
     throw new Error("주문을 불러오는 데 실패했습니다.");
   }
 
@@ -202,6 +183,7 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
     .order("created_at", { ascending: true });
 
   if (itemsError) {
+    console.error(itemsError);
     throw new Error("주문을 불러오는 데 실패했습니다.");
   }
 

@@ -38,6 +38,13 @@ const extractEdgeFunctionErrorMessage = async (
 export const confirmPayment = async (
   request: ConfirmPaymentRequest
 ): Promise<ConfirmPaymentResponse> => {
+  if (!request.paymentKey || !request.orderId) {
+    throw new Error("결제 정보가 올바르지 않습니다.");
+  }
+  if (!Number.isFinite(request.amount) || request.amount <= 0) {
+    throw new Error("결제 금액이 올바르지 않습니다.");
+  }
+
   const { data, error } = await supabase.functions.invoke("confirm-payment", {
     body: request,
   });

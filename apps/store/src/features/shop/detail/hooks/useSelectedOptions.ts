@@ -19,35 +19,36 @@ export function useSelectedOptions() {
   };
 
   const handleUpdateQuantity = (optionId: string, delta: number) => {
-    setSelectedOptions((prev) =>
-      prev.map((s) =>
-        s.option.id === optionId
-          ? (() => {
-              const nextQuantity = Math.max(1, s.quantity + delta);
+    let isStockExceeded = false;
+    const nextSelectedOptions = selectedOptions.map((s) => {
+      if (s.option.id !== optionId) return s;
 
-              if (s.option.stock != null && nextQuantity > s.option.stock) {
-                toast.warning("재고가 부족합니다.");
-                return { ...s, quantity: s.option.stock };
-              }
+      const nextQuantity = Math.max(1, s.quantity + delta);
+      if (s.option.stock != null && nextQuantity > s.option.stock) {
+        isStockExceeded = true;
+        return { ...s, quantity: Math.max(1, s.option.stock) };
+      }
 
-              return { ...s, quantity: nextQuantity };
-            })()
-          : s
-      )
-    );
+      return { ...s, quantity: nextQuantity };
+    });
+
+    setSelectedOptions(nextSelectedOptions);
+
+    if (isStockExceeded) {
+      toast.warning("재고가 부족합니다.");
+    }
   };
 
   const handleUpdateBaseQuantity = (delta: number, maxStock?: number | null) => {
-    setBaseQuantity((prev) => {
-      const nextQuantity = Math.max(1, prev + delta);
+    const nextQuantity = Math.max(1, baseQuantity + delta);
+    const isStockExceeded = maxStock != null && nextQuantity > maxStock;
+    const clampedQuantity = isStockExceeded ? Math.max(1, maxStock) : nextQuantity;
 
-      if (maxStock != null && nextQuantity > maxStock) {
-        toast.warning("재고가 부족합니다.");
-        return maxStock;
-      }
+    setBaseQuantity(clampedQuantity);
 
-      return nextQuantity;
-    });
+    if (isStockExceeded) {
+      toast.warning("재고가 부족합니다.");
+    }
   };
 
   const resetOptions = () => {

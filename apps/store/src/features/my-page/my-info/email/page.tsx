@@ -72,19 +72,19 @@ export default function MyInfoEmailPage() {
 
               {step !== "request" && (
                 <>
-                  <div className="space-y-2 rounded-md bg-zinc-50 p-3">
-                    <p className="text-sm text-zinc-700">
-                      {requestedEmail}로 인증번호를 보냈습니다.
-                    </p>
-                    {step === "verify" && (
+                  {step === "verify" && (
+                    <div className="space-y-2 rounded-md bg-zinc-50 p-3">
+                      <p className="text-sm text-zinc-700">
+                        {requestedEmail}로 인증번호를 보냈습니다.
+                      </p>
                       <p className="text-xs text-zinc-500">
                         코드가 오지 않았나요?{" "}
                         {cooldownSecondsLeft > 0
                           ? `${cooldownSecondsLeft}초 후 재요청 가능`
                           : "재요청할 수 있습니다."}
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {step === "verify" && (
                     <>
@@ -155,7 +155,9 @@ export default function MyInfoEmailPage() {
               )}
 
               {errorMessage && (
-                <p className="text-sm text-red-600">{errorMessage}</p>
+                <p className="text-sm text-red-600" role="alert">
+                  {errorMessage}
+                </p>
               )}
             </CardContent>
           </Card>

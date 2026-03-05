@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Empty } from "@/components/composite/empty";
 import {
   applyMarketingConsentToggle,
@@ -80,6 +81,7 @@ export default function MyInfoNoticePage() {
       form.setValue("isMarketingConsent", previousFormValues.isMarketingConsent);
       form.setValue("isSmsConsent", previousFormValues.isSmsConsent);
       form.setValue("isEmailConsent", previousFormValues.isEmailConsent);
+      toast.error("설정 저장에 실패했습니다.");
     }
   };
 

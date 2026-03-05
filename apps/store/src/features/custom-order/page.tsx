@@ -277,7 +277,7 @@ export default function OrderPage() {
             sidebar={
               <StickySummary
                 options={watchedValues}
-                totalCost={totalCost}
+                totalCost={grandTotal}
                 sewingCost={sewingCost}
                 fabricCost={fabricCost}
                 isLoggedIn={isLoggedIn}

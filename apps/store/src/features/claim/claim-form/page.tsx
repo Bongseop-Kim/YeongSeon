@@ -73,10 +73,6 @@ const isUserFriendlyClaimError = (message: string): boolean => {
     return false;
   }
 
-  if (normalized.startsWith("클레임 생성 실패:")) {
-    return false;
-  }
-
   return !TECHNICAL_ERROR_PATTERNS.some((pattern) => pattern.test(normalized));
 };
 

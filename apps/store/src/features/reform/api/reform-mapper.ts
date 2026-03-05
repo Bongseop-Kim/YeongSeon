@@ -7,11 +7,13 @@ import type { ImageKitAuth } from "./reform-api";
 function isImageKitAuth(x: unknown): x is ImageKitAuth {
   if (typeof x !== "object" || x === null) return false;
 
-  const obj = x as Record<string, unknown>;
   return (
-    typeof obj.signature === "string" &&
-    typeof obj.token === "string" &&
-    typeof obj.expire === "number"
+    "signature" in x &&
+    typeof (x as { signature?: unknown }).signature === "string" &&
+    "token" in x &&
+    typeof (x as { token?: unknown }).token === "string" &&
+    "expire" in x &&
+    typeof (x as { expire?: unknown }).expire === "number"
   );
 }
 

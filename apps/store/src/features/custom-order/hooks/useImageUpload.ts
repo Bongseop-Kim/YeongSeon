@@ -11,10 +11,10 @@ interface UploadedImage {
 
 export const useImageUpload = () => {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
+  const [activeUploads, setActiveUploads] = useState(0);
 
   const uploadFile = useCallback(async (file: File) => {
-    setIsUploading(true);
+    setActiveUploads((n) => n + 1);
     try {
       const { data, error } = await supabase.functions.invoke("imagekit-auth");
       if (error || !data) {
@@ -51,7 +51,7 @@ export const useImageUpload = () => {
           : "이미지 업로드에 실패했습니다."
       );
     } finally {
-      setIsUploading(false);
+      setActiveUploads((n) => n - 1);
     }
   }, []);
 
@@ -62,6 +62,8 @@ export const useImageUpload = () => {
   const getImageUrls = useCallback(() => {
     return uploadedImages.map((img) => img.url).filter(Boolean);
   }, [uploadedImages]);
+
+  const isUploading = activeUploads > 0;
 
   return {
     uploadedImages,
