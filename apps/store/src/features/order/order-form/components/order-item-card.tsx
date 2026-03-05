@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import type { ProductCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
 
-interface OrderItemCardProps {
+interface OrderFormItemCardProps {
   item: ProductCartItem;
   onChangeCoupon: () => void;
 }
 
-export function OrderItemCard({ item, onChangeCoupon }: OrderItemCardProps) {
+export function OrderFormItemCard({ item, onChangeCoupon }: OrderFormItemCardProps) {
   const itemPrice =
     item.product.price + (item.selectedOption?.additionalPrice ?? 0);
   const discount = calculateDiscount(itemPrice, item.appliedCoupon);

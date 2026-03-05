@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { OrderItemCard } from "@/features/order/order-form/components/order-item-card";
+import { OrderFormItemCard } from "@/features/order/order-form/components/order-item-card";
 import { ReformOrderItemCard } from "@/features/order/order-form/components/reform-order-item-card";
 import React from "react";
 import { useOrderStore } from "@/store/order";
@@ -309,7 +309,7 @@ const OrderFormPage = () => {
               {orderItems.map((item, index) => (
                 <React.Fragment key={item.id}>
                   {item.type === "product" ? (
-                    <OrderItemCard
+                    <OrderFormItemCard
                       item={item}
                       onChangeCoupon={() => handleChangeCoupon(item.id)}
                     />
