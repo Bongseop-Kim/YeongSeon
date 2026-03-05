@@ -4,21 +4,24 @@ import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
 import type { ImageKitAuth } from "./reform-api";
 
+function isImageKitAuth(x: unknown): x is ImageKitAuth {
+  return (
+    typeof x === "object" &&
+    x !== null &&
+    typeof (x as Record<string, unknown>).signature === "string" &&
+    typeof (x as Record<string, unknown>).token === "string" &&
+    typeof (x as Record<string, unknown>).expire === "number"
+  );
+}
+
 export function mapImageKitAuthResponse(data: unknown): ImageKitAuth {
-  if (
-    typeof data !== "object" ||
-    data === null ||
-    typeof (data as Record<string, unknown>).signature !== "string" ||
-    typeof (data as Record<string, unknown>).token !== "string" ||
-    typeof (data as Record<string, unknown>).expire !== "number"
-  ) {
+  if (!isImageKitAuth(data)) {
     throw new Error("ImageKit 인증 응답 형식이 올바르지 않습니다.");
   }
-  const d = data as Record<string, unknown>;
   return {
-    signature: d.signature as string,
-    token: d.token as string,
-    expire: d.expire as number,
+    signature: data.signature,
+    token: data.token,
+    expire: data.expire,
   };
 }
 

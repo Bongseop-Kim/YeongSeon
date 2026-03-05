@@ -36,7 +36,10 @@ export default function MyInfoPage() {
                 <ListItem
                   label="배송지 관리"
                   onClick={() => {
-                    openPopup(`${ROUTES.SHIPPING}?mode=manage`);
+                    const popup = openPopup(`${ROUTES.SHIPPING}?mode=manage`);
+                    if (!popup) {
+                      navigate(`${ROUTES.SHIPPING}?mode=manage`);
+                    }
                   }}
                 />
                 <ListItem

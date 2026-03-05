@@ -50,6 +50,8 @@ export default function MyInfoDetailPage() {
                 onClick={() => {
                   navigate(ROUTES.MY_PAGE_MY_INFO_EMAIL);
                 }}
+                disabled={isLoading || !profile}
+                aria-disabled={isLoading || !profile}
               >
                 이메일 변경
               </Button>

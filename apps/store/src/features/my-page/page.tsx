@@ -9,16 +9,21 @@ import { useNavigate } from "react-router-dom";
 import { AdPanel } from "@/components/composite/ad-panel";
 import { ROUTES } from "@/constants/ROUTES";
 import { useSignOut } from "@/features/auth/api/auth-query";
-import { useProfile } from "@/features/my-page/api/profile-query";
+import { useProfile, profileKeys } from "@/features/my-page/api/profile-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function MypagePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const signOutMutation = useSignOut();
   const { data: profile, isLoading } = useProfile();
 
   const handleSignOut = () => {
     signOutMutation.mutate(undefined, {
-      onSuccess: () => navigate(ROUTES.HOME),
+      onSuccess: () => {
+        queryClient.removeQueries({ queryKey: profileKeys.all });
+        navigate(ROUTES.HOME);
+      },
     });
   };
 

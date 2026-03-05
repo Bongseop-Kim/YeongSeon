@@ -2,7 +2,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { InquiryForm } from "./components/inquiry-form";
 import { InquiryCard } from "./components/inquiry-card";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -42,6 +42,8 @@ export default function InquiryPage() {
       deleteMutation.mutate(id, {
         onSuccess: () => {
           toast.success("문의가 삭제되었습니다.");
+          setEditingInquiryId(null);
+          setIsSheetOpen(false);
         },
         onError: (err) => {
           toast.error(
@@ -129,11 +131,17 @@ export default function InquiryPage() {
     );
   }
 
+  const initialData = useMemo(
+    () =>
+      editingInquiry
+        ? { title: editingInquiry.title, content: editingInquiry.content }
+        : undefined,
+    [editingInquiry?.title, editingInquiry?.content],
+  );
+
   const inquiryFormProps = {
     inquiryId: editingInquiryId,
-    initialData: editingInquiry
-      ? { title: editingInquiry.title, content: editingInquiry.content }
-      : undefined,
+    initialData,
     onSubmit: handleFormSubmit,
     isPending: createMutation.isPending || updateMutation.isPending,
   };

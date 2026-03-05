@@ -60,11 +60,13 @@ export default function CartPage() {
   };
 
   const handleSelectItem = (itemId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedItems([...selectedItems, itemId]);
-    } else {
-      setSelectedItems(selectedItems.filter((id) => id !== itemId));
-    }
+    setSelectedItems((prev) => {
+      if (checked) {
+        return prev.includes(itemId) ? prev : [...prev, itemId];
+      } else {
+        return prev.filter((id) => id !== itemId);
+      }
+    });
   };
 
   const handleRemoveSelected = () => {
@@ -73,9 +75,15 @@ export default function CartPage() {
       return;
     }
 
-    confirm("선택한 상품을 삭제하시겠습니까?", async () => {
-      await Promise.all(selectedItems.map((itemId) => removeFromCart(itemId)));
-      setSelectedItems([]);
+    confirm("선택한 상품을 삭제하시겠습니까?", () => {
+      void (async () => {
+        try {
+          await Promise.all(selectedItems.map((itemId) => removeFromCart(itemId)));
+          setSelectedItems([]);
+        } catch (error) {
+          console.error(error);
+        }
+      })();
     });
   };
 
@@ -116,6 +124,8 @@ export default function CartPage() {
         const newOption = optionId
           ? item.product.options?.find((opt) => opt.id === optionId)
           : undefined;
+
+        if (optionId && !newOption) return;
 
         // 옵션이 변경되지 않고 수량만 변경된 경우
         if (optionId === item.selectedOption?.id) {

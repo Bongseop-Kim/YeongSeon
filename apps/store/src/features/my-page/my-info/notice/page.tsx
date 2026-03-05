@@ -61,6 +61,12 @@ export default function MyInfoNoticePage() {
       { target, checked },
     );
 
+    const previousFormValues = {
+      isMarketingConsent: currentValues.isMarketingConsent,
+      isSmsConsent: currentValues.isSmsConsent,
+      isEmailConsent: currentValues.isEmailConsent,
+    };
+
     form.setValue("isMarketingConsent", nextConsent.all);
     form.setValue("isSmsConsent", nextConsent.channels.sms);
     form.setValue("isEmailConsent", nextConsent.channels.email);
@@ -68,7 +74,11 @@ export default function MyInfoNoticePage() {
     try {
       await updateMarketingConsentMutation.mutateAsync(nextConsent);
     } catch {
-      // rollback은 query mutation onError에서 처리
+      // query cache rollback은 useUpdateMarketingConsent onError에서 처리
+      // form state는 즉시 복원
+      form.setValue("isMarketingConsent", previousFormValues.isMarketingConsent);
+      form.setValue("isSmsConsent", previousFormValues.isSmsConsent);
+      form.setValue("isEmailConsent", previousFormValues.isEmailConsent);
     }
   };
 

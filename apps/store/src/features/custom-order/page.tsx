@@ -105,17 +105,26 @@ export default function OrderPage() {
 
   const { sewingCost, fabricCost, totalCost } = calculateTotalCost(watchedValues);
 
+  const isQuoteMode = watchedValues.quantity >= 100;
+
   const sampleCost =
-    watchedValues.sample && watchedValues.sampleType
+    !isQuoteMode && watchedValues.sample && watchedValues.sampleType
       ? SAMPLE_COST[watchedValues.sampleType]
       : 0;
   const grandTotal = totalCost + sampleCost;
 
-  const isQuoteMode = watchedValues.quantity >= 100;
-
   const wizard = useWizardStep({ steps: WIZARD_STEPS, getValues: form.getValues });
 
-  useRestoreDraft(form, wizard.resetTo);
+  useRestoreDraft(form, (stepIndex, visited) => {
+    let adjustedIndex = 0;
+    for (let i = stepIndex; i >= 0; i--) {
+      if (wizard.shouldShowStep(i)) {
+        adjustedIndex = i;
+        break;
+      }
+    }
+    wizard.resetTo(adjustedIndex, visited);
+  });
   useAutoSave(form, wizard);
 
   const handleNext = () => {

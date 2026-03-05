@@ -36,17 +36,20 @@ export default function MyInfoEmailPage() {
             <CardHeader />
             <CardContent className="space-y-4">
               <div className="space-y-1">
-                <Label className="mb-1">현재 이메일</Label>
+                <p className="text-sm font-medium leading-none">현재 이메일</p>
                 <p className="text-sm text-zinc-500">{profile?.email || "-"}</p>
               </div>
 
-              <Label className="mb-1">이메일</Label>
+              <Label className="mb-1" htmlFor="email-input">
+                이메일
+              </Label>
               <Controller
                 name="email"
                 control={form.control}
                 render={({ field }) => (
                   <div className="flex items-center gap-2">
                     <Input
+                      id="email-input"
                       type="email"
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
@@ -83,12 +86,15 @@ export default function MyInfoEmailPage() {
 
                   {step === "verify" && (
                     <>
-                      <Label className="mb-1">인증번호</Label>
+                      <Label className="mb-1" htmlFor="email-code-input">
+                        인증번호
+                      </Label>
                       <Controller
                         name="emailCode"
                         control={form.control}
                         render={({ field }) => (
                           <Input
+                            id="email-code-input"
                             type="text"
                             value={field.value}
                             onChange={(e) => field.onChange(e.target.value)}
