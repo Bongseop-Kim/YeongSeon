@@ -34,7 +34,7 @@ export const getClaims = async (filters?: ListFilters): Promise<ClaimItem[]> => 
   const { data, error } = await query;
 
   if (error) {
-    throw new Error(`클레임 목록 조회 실패: ${error.message}`);
+    throw new Error("클레임 목록을 불러오는 데 실패했습니다.");
   }
 
   const rows = parseClaimListRows(data);
@@ -65,7 +65,7 @@ export const createClaim = async (
   const { data, error } = await supabase.rpc("create_claim", input);
 
   if (error) {
-    throw new Error(`클레임 생성 실패: ${error.message}`);
+    throw new Error(error.message);
   }
 
   if (!data) {

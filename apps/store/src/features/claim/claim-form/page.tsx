@@ -55,6 +55,30 @@ const getClaimReasons = (type: ClaimType) => {
 };
 
 const VALID_CLAIM_TYPES = ["cancel", "return", "exchange"];
+const TECHNICAL_ERROR_PATTERNS = [
+  /edge function returned a non-2xx status code/i,
+  /failed to fetch/i,
+  /network/i,
+  /timeout/i,
+  /rpc/i,
+  /postgres/i,
+  /sql/i,
+  /syntax/i,
+  /stack/i,
+];
+
+const isUserFriendlyClaimError = (message: string): boolean => {
+  const normalized = message.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  if (normalized.startsWith("클레임 생성 실패:")) {
+    return false;
+  }
+
+  return !TECHNICAL_ERROR_PATTERNS.some((pattern) => pattern.test(normalized));
+};
 
 interface ClaimFormData {
   reason: string;
@@ -190,9 +214,14 @@ const ClaimFormPage = () => {
           navigate(ROUTES.CLAIM_LIST);
         },
         onError: (err) => {
-          const message =
-            err instanceof Error ? err.message : "오류가 발생했습니다.";
-          toast.error(`${claimTypeLabel} 신청 실패: ${message}`);
+          const message = err instanceof Error ? err.message.trim() : "";
+
+          if (isUserFriendlyClaimError(message)) {
+            toast.error(message);
+            return;
+          }
+
+          toast.error(`${claimTypeLabel} 신청에 실패했습니다. 다시 시도해주세요.`);
         },
       },
     );

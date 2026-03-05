@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { FunctionsHttpError } from "@supabase/functions-js";
 import type {
   CreateOrderRequest,
   CreateOrderResponse,
@@ -23,6 +24,28 @@ const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";
 const ORDER_ITEM_VIEW = "order_item_view";
 
+const extractEdgeFunctionErrorMessage = async (
+  error: unknown,
+): Promise<string | null> => {
+  if (!(error instanceof FunctionsHttpError)) {
+    return null;
+  }
+
+  try {
+    const payload = await error.context.json();
+    if (payload && typeof payload === "object" && "error" in payload) {
+      const message = payload.error;
+      if (typeof message === "string" && message.trim()) {
+        return message.trim();
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
 /**
  * 주문 생성
  */
@@ -40,7 +63,10 @@ export const createOrder = async (
     });
 
   if (orderError) {
-    throw new Error(`주문 생성 실패: ${orderError.message}`);
+    const message =
+      (await extractEdgeFunctionErrorMessage(orderError)) ??
+      "주문 생성에 실패했습니다.";
+    throw new Error(message);
   }
 
   if (!orderResult) {
@@ -76,7 +102,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
   const { data: orders, error: ordersError } = await query;
 
   if (ordersError) {
-    throw new Error(`주문 목록 조회 실패: ${ordersError.message}`);
+    throw new Error("주문 목록을 불러오는 데 실패했습니다.");
   }
 
   const orderRows = parseOrderListRows(orders);
@@ -92,7 +118,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     .order("created_at", { ascending: true });
 
   if (itemsError) {
-    throw new Error(`주문 상품 조회 실패: ${itemsError.message}`);
+    throw new Error("주문 목록을 불러오는 데 실패했습니다.");
   }
 
   const itemRows = parseOrderItemRows(items);
@@ -162,7 +188,7 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
     .maybeSingle();
 
   if (orderError) {
-    throw new Error(`주문 조회 실패: ${orderError.message}`);
+    throw new Error("주문을 불러오는 데 실패했습니다.");
   }
 
   if (!order) {
@@ -176,7 +202,7 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
     .order("created_at", { ascending: true });
 
   if (itemsError) {
-    throw new Error(`주문 상품 조회 실패: ${itemsError.message}`);
+    throw new Error("주문을 불러오는 데 실패했습니다.");
   }
 
   const itemRows = parseOrderItemRows(items);
