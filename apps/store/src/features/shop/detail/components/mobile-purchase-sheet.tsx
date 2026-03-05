@@ -83,24 +83,27 @@ export function MobilePurchaseSheet({
     }
 
     setIsAddingToCart(true);
-    const { succeeded, failed, total } = await addItemsToCart(product, {
-      selectedOptions,
-      baseQuantity,
-      hasOptions,
-    });
-    setIsAddingToCart(false);
+    try {
+      const { succeeded, failed, total } = await addItemsToCart(product, {
+        selectedOptions,
+        baseQuantity,
+        hasOptions,
+      });
 
-    if (failed === total) {
-      toast.error("장바구니 추가에 실패했습니다.");
-      return;
+      if (failed === total) {
+        toast.error("장바구니 추가에 실패했습니다.");
+        return;
+      }
+
+      if (failed > 0) {
+        toast.warning(`일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`);
+      }
+
+      resetOptions();
+      onOpenChange(false);
+    } finally {
+      setIsAddingToCart(false);
     }
-
-    if (failed > 0) {
-      toast.warning(`일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`);
-    }
-
-    resetOptions();
-    onOpenChange(false);
   };
 
   const handleOrder = () => {

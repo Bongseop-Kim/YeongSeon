@@ -77,7 +77,7 @@ export function CartRecommendationsCard({
       </CardHeader>
 
       <CardContent>
-        <div className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"}`}>
+        <div className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"} gap-2`}>
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
