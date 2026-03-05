@@ -1,10 +1,6 @@
-import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
+import type { Product } from "@yeongseon/shared/types/view/product";
+import type { SelectedOption } from "@/features/shop/detail/types";
 import { SelectedOptionItem } from "./selected-option-item";
-
-interface SelectedOption {
-  option: ProductOption;
-  quantity: number;
-}
 
 interface SelectedOptionsListProps {
   selectedOptions: SelectedOption[];

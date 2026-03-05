@@ -17,7 +17,7 @@ import {
   type ReformOptionChangeModalRef,
 } from "./reform-option-change-modal";
 import { useCouponSelect } from "@/features/order/order-form/hook/useCouponSelect";
-import { PRODUCTS_DATA } from "@/features/shop/constants/PRODUCTS_DATA";
+import { useProducts } from "@/features/shop/api/products-query";
 import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ROUTES } from "@/constants/ROUTES";
@@ -26,10 +26,6 @@ import { CartSelectionToolbar } from "@/features/cart/components/cart-selection-
 import { CartItemsPanel } from "@/features/cart/components/cart-items-panel";
 import { CartRecommendationsCard } from "@/features/cart/components/cart-recommendations-card";
 import { CartOrderSummaryCard } from "@/features/cart/components/cart-order-summary-card";
-import {
-  getRecommendedProducts,
-  getSelectedCartItems,
-} from "@/features/cart/utils/cart-page";
 
 export const CartContent = () => {
   const { openModal, confirm } = useModalStore();
@@ -47,6 +43,8 @@ export const CartContent = () => {
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const { openCouponSelect } = useCouponSelect();
+
+  const { data: similarProducts = [], isLoading: similarLoading, isError: similarError, refetch: refetchSimilar } = useProducts({ sortOption: "popular", limit: 8 });
 
   useEffect(() => {
     const currentIds = new Set(items.map((item) => item.id));
@@ -201,9 +199,12 @@ export const CartContent = () => {
     }
   };
 
-  const handleOrder = () => {
-    const selectedCartItems = getSelectedCartItems(items, selectedItems);
+  const selectedCartItems = useMemo(
+    () => items.filter((item) => selectedItems.includes(item.id)),
+    [items, selectedItems]
+  );
 
+  const handleOrder = () => {
     if (selectedCartItems.length === 0) {
       confirm("주문할 상품을 선택해주세요.");
       return;
@@ -217,15 +218,11 @@ export const CartContent = () => {
   };
 
   // 선택된 상품의 총액 계산
-  const selectedTotals = useMemo(() => {
-    const selectedCartItems = getSelectedCartItems(items, selectedItems);
-    return calculateOrderSummary(selectedCartItems);
-  }, [items, selectedItems]);
+  const selectedTotals = useMemo(
+    () => calculateOrderSummary(selectedCartItems),
+    [selectedCartItems]
+  );
 
-  // 장바구니 상품 기반 추천 상품 찾기
-  const similarProducts = useMemo(() => {
-    return getRecommendedProducts(items, PRODUCTS_DATA, isMobile ? 6 : 8);
-  }, [items, isMobile]);
 
   const isAllChecked =
     items.length > 0 && selectedItems.length === items.length;
@@ -239,6 +236,9 @@ export const CartContent = () => {
               <CartRecommendationsCard
                 products={similarProducts}
                 isMobile={isMobile}
+                isLoading={similarLoading}
+                isError={similarError}
+                onRetry={refetchSimilar}
               />
             </div>
           }

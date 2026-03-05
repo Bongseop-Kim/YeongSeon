@@ -18,6 +18,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useState } from "react";
+import { useSelectedOptions } from "@/features/shop/detail/hooks/useSelectedOptions";
 import { ProductActionButtons } from "@/features/shop/detail/components/product-action-buttons";
 import { MobilePurchaseSheet } from "@/features/shop/detail/components/mobile-purchase-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
@@ -30,7 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ProductOption, Product } from "@yeongseon/shared/types/view/product";
+import type { Product } from "@yeongseon/shared/types/view/product";
+import type { SelectedOption } from "@/features/shop/detail/types";
 import { Badge } from "@/components/ui/badge";
 import {
   getCategoryLabel,
@@ -43,18 +45,14 @@ import { DataTable } from "@/components/ui/data-table";
 import { HEIGHT_GUIDE } from "@/features/reform/constants/DETAIL";
 import { ProductCard } from "@/features/shop/components/product-card";
 import { useMemo } from "react";
-import { useCart } from "@/features/cart/hooks/useCart";
+import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";
 import { useOrderStore } from "@/store/order";
+import { useModalStore } from "@/store/modal";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { useProduct, useProducts } from "@/features/shop/api/products-query";
 import { useToggleLike } from "@/features/shop/api/likes-query";
-
-interface SelectedOption {
-  option: ProductOption;
-  quantity: number;
-}
 
 /**
  * 주문 처리 및 네비게이션을 수행하는 공통 헬퍼 함수
@@ -107,11 +105,19 @@ export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
-  const { addToCart } = useCart();
+  const { addItemsToCart } = useAddToCartItems();
+  const { openModal } = useModalStore();
   const { setOrderItems } = useOrderStore();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
-  const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
-  const [baseQuantity, setBaseQuantity] = useState(1);
+  const {
+    selectedOptions,
+    baseQuantity,
+    handleSelectOption,
+    handleRemoveOption,
+    handleUpdateQuantity,
+    handleUpdateBaseQuantity,
+    resetOptions,
+  } = useSelectedOptions();
 
   const productId = Number(id);
   const { data: product, isLoading: isProductLoading } = useProduct(productId);
@@ -175,60 +181,40 @@ export default function ShopDetailPage() {
     }
   };
 
-  const handleSelectOption = (option: ProductOption) => {
-    const exists = selectedOptions.find((s) => s.option.id === option.id);
-    if (!exists) {
-      setSelectedOptions([...selectedOptions, { option, quantity: 1 }]);
-    }
-  };
-
-  const handleRemoveOption = (optionId: string) => {
-    setSelectedOptions(selectedOptions.filter((s) => s.option.id !== optionId));
-  };
-
-  const handleUpdateQuantity = (optionId: string, delta: number) => {
-    setSelectedOptions(
-      selectedOptions.map((s) =>
-        s.option.id === optionId
-          ? { ...s, quantity: Math.max(1, s.quantity + delta) }
-          : s
-      )
-    );
-  };
-
-  const handleUpdateBaseQuantity = (delta: number) => {
-    setBaseQuantity(Math.max(1, baseQuantity + delta));
-  };
-
   const handleAddToCart = async () => {
     if (!product) return;
 
-    if (hasOptions) {
-      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
-      if (selectedOptions.length === 0) {
-        toast.warning("옵션을 선택해주세요.");
-        return;
-      }
-
-      // 선택된 각 옵션을 장바구니에 추가
-      await Promise.all(
-        selectedOptions.map((selectedOption) =>
-          addToCart(product, {
-            option: selectedOption.option,
-            quantity: selectedOption.quantity,
-          })
-        )
-      );
-
-      // 옵션 초기화
-      setSelectedOptions([]);
-    } else {
-      // 옵션이 없는 경우: baseQuantity로 추가
-      await addToCart(product, { quantity: baseQuantity });
-
-      // 수량 초기화
-      setBaseQuantity(1);
+    if (hasOptions && selectedOptions.length === 0) {
+      toast.warning("옵션을 선택해주세요.");
+      return;
     }
+
+    const { succeeded, failed, total } = await addItemsToCart(product, {
+      selectedOptions,
+      baseQuantity,
+      hasOptions,
+    });
+
+    if (failed === total) {
+      toast.error("장바구니 추가 중 오류가 발생했습니다.");
+      return;
+    }
+
+    if (failed > 0) {
+      toast.warning(`일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`);
+      return;
+    }
+
+    openModal({
+      title: "장바구니",
+      description: "장바구니에 추가되었습니다.",
+      confirmText: "장바구니 보기",
+      cancelText: "닫기",
+      onConfirm: () => {
+        window.location.href = ROUTES.CART;
+      },
+    });
+    resetOptions();
   };
 
   const handleOrder = () => {
@@ -499,6 +485,13 @@ export default function ShopDetailPage() {
               navigate
             )
           }
+          selectedOptions={selectedOptions}
+          baseQuantity={baseQuantity}
+          handleSelectOption={handleSelectOption}
+          handleRemoveOption={handleRemoveOption}
+          handleUpdateQuantity={handleUpdateQuantity}
+          handleUpdateBaseQuantity={handleUpdateBaseQuantity}
+          resetOptions={resetOptions}
         />
       </MainContent>
     </MainLayout>
