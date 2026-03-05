@@ -47,6 +47,7 @@ import { ProductCard } from "@/features/shop/components/product-card";
 import { useMemo } from "react";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
+import { useModalStore } from "@/store/modal";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
@@ -105,6 +106,7 @@ export default function ShopDetailPage() {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const { addToCart } = useCart();
+  const { openModal } = useModalStore();
   const { setOrderItems } = useOrderStore();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const {
@@ -190,20 +192,27 @@ export default function ShopDetailPage() {
           return;
         }
 
-        // 선택된 각 옵션을 장바구니에 추가
-        await Promise.all(
-          selectedOptions.map((selectedOption) =>
-            addToCart(product, {
-              option: selectedOption.option,
-              quantity: selectedOption.quantity,
-            })
-          )
-        );
+        for (const selectedOption of selectedOptions) {
+          await addToCart(product, {
+            option: selectedOption.option,
+            quantity: selectedOption.quantity,
+            showModal: false,
+          });
+        }
       } else {
         // 옵션이 없는 경우: baseQuantity로 추가
-        await addToCart(product, { quantity: baseQuantity });
+        await addToCart(product, { quantity: baseQuantity, showModal: false });
       }
 
+      openModal({
+        title: "장바구니",
+        description: "장바구니에 추가되었습니다.",
+        confirmText: "장바구니 보기",
+        cancelText: "닫기",
+        onConfirm: () => {
+          window.location.href = ROUTES.CART;
+        },
+      });
       resetOptions();
     } catch (error) {
       console.error(error);
@@ -479,6 +488,13 @@ export default function ShopDetailPage() {
               navigate
             )
           }
+          selectedOptions={selectedOptions}
+          baseQuantity={baseQuantity}
+          handleSelectOption={handleSelectOption}
+          handleRemoveOption={handleRemoveOption}
+          handleUpdateQuantity={handleUpdateQuantity}
+          handleUpdateBaseQuantity={handleUpdateBaseQuantity}
+          resetOptions={resetOptions}
         />
       </MainContent>
     </MainLayout>

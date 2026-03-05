@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { useSelectedOptions } from "@/features/shop/detail/hooks/useSelectedOptions";
 import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -10,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Product } from "@yeongseon/shared/types/view/product";
+import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
 import type { SelectedOption } from "@/features/shop/detail/types";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
@@ -25,6 +24,13 @@ interface MobilePurchaseSheetProps {
     selectedOptions: SelectedOption[],
     baseQuantity: number
   ) => void;
+  selectedOptions: SelectedOption[];
+  baseQuantity: number;
+  handleSelectOption: (option: ProductOption) => void;
+  handleRemoveOption: (optionId: string) => void;
+  handleUpdateQuantity: (optionId: string, delta: number) => void;
+  handleUpdateBaseQuantity: (delta: number) => void;
+  resetOptions: () => void;
 }
 
 export function MobilePurchaseSheet({
@@ -32,17 +38,15 @@ export function MobilePurchaseSheet({
   open,
   onOpenChange,
   onProcessOrder,
+  selectedOptions,
+  baseQuantity,
+  handleSelectOption,
+  handleRemoveOption,
+  handleUpdateQuantity,
+  handleUpdateBaseQuantity,
+  resetOptions,
 }: MobilePurchaseSheetProps) {
   const { addToCart } = useCart();
-  const {
-    selectedOptions,
-    baseQuantity,
-    handleSelectOption,
-    handleRemoveOption,
-    handleUpdateQuantity,
-    handleUpdateBaseQuantity,
-    resetOptions,
-  } = useSelectedOptions();
   const productOptions = product.options ?? [];
 
   const hasOptions = productOptions.length > 0;

@@ -23,6 +23,7 @@ export function CartRecommendationsCard({
 }: CartRecommendationsCardProps) {
   if (isLoading) {
     const cols = isMobile ? 3 : 4;
+    const skeletonCount = isMobile ? 6 : 8;
     return (
       <Card className="bg-zinc-100">
         <CardHeader>
@@ -33,7 +34,7 @@ export function CartRecommendationsCard({
         </CardHeader>
         <CardContent>
           <div className={`grid grid-cols-${cols} gap-2`}>
-            {Array.from({ length: cols }).map((_, i) => (
+            {Array.from({ length: skeletonCount }).map((_, i) => (
               <div key={i} className="animate-pulse rounded-md bg-zinc-200 aspect-square" />
             ))}
           </div>
