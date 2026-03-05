@@ -18,7 +18,7 @@ import {
   toDateString,
   type ListFilters,
 } from "@/features/order/api/list-filters";
-import { useDebouncedValue } from "@/features/order/hooks/use-debounced-value";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export default function ClaimListPage() {
   const navigate = useNavigate();
