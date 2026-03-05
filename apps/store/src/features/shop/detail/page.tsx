@@ -182,29 +182,32 @@ export default function ShopDetailPage() {
   const handleAddToCart = async () => {
     if (!product) return;
 
-    if (hasOptions) {
-      // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
-      if (selectedOptions.length === 0) {
-        toast.warning("옵션을 선택해주세요.");
-        return;
+    try {
+      if (hasOptions) {
+        // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
+        if (selectedOptions.length === 0) {
+          toast.warning("옵션을 선택해주세요.");
+          return;
+        }
+
+        // 선택된 각 옵션을 장바구니에 추가
+        await Promise.all(
+          selectedOptions.map((selectedOption) =>
+            addToCart(product, {
+              option: selectedOption.option,
+              quantity: selectedOption.quantity,
+            })
+          )
+        );
+      } else {
+        // 옵션이 없는 경우: baseQuantity로 추가
+        await addToCart(product, { quantity: baseQuantity });
       }
 
-      // 선택된 각 옵션을 장바구니에 추가
-      await Promise.all(
-        selectedOptions.map((selectedOption) =>
-          addToCart(product, {
-            option: selectedOption.option,
-            quantity: selectedOption.quantity,
-          })
-        )
-      );
-
       resetOptions();
-    } else {
-      // 옵션이 없는 경우: baseQuantity로 추가
-      await addToCart(product, { quantity: baseQuantity });
-
-      resetOptions();
+    } catch (error) {
+      console.error(error);
+      toast.error("장바구니 추가 중 오류가 발생했습니다.");
     }
   };
 

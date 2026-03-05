@@ -44,7 +44,7 @@ export const CartContent = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const { openCouponSelect } = useCouponSelect();
 
-  const { data: similarProducts = [] } = useProducts({ sortOption: "popular", limit: isMobile ? 6 : 8 });
+  const { data: similarProducts = [], isLoading: similarLoading, isError: similarError } = useProducts({ sortOption: "popular", limit: isMobile ? 6 : 8 });
 
   useEffect(() => {
     const currentIds = new Set(items.map((item) => item.id));
@@ -199,9 +199,12 @@ export const CartContent = () => {
     }
   };
 
-  const handleOrder = () => {
-    const selectedCartItems = items.filter((item) => selectedItems.includes(item.id));
+  const selectedCartItems = useMemo(
+    () => items.filter((item) => selectedItems.includes(item.id)),
+    [items, selectedItems]
+  );
 
+  const handleOrder = () => {
     if (selectedCartItems.length === 0) {
       confirm("주문할 상품을 선택해주세요.");
       return;
@@ -215,10 +218,10 @@ export const CartContent = () => {
   };
 
   // 선택된 상품의 총액 계산
-  const selectedTotals = useMemo(() => {
-    const selectedCartItems = items.filter((item) => selectedItems.includes(item.id));
-    return calculateOrderSummary(selectedCartItems);
-  }, [items, selectedItems]);
+  const selectedTotals = useMemo(
+    () => calculateOrderSummary(selectedCartItems),
+    [selectedCartItems]
+  );
 
 
   const isAllChecked =
@@ -233,6 +236,8 @@ export const CartContent = () => {
               <CartRecommendationsCard
                 products={similarProducts}
                 isMobile={isMobile}
+                isLoading={similarLoading}
+                isError={similarError}
               />
             </div>
           }

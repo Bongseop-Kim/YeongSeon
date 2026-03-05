@@ -1,17 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { CartItemViewDTO } from "@yeongseon/shared/types/dto/cart-view";
-import type { Product } from "@yeongseon/shared/types/view/product";
-import { getProductsByIds as fetchProductsByIds } from "@/features/shop/api/products-api";
 import { toCartItemInputDTO, toCartItemView } from "@/features/cart/api/cart-mapper";
 
 const TABLE_NAME = "cart_items";
-
-export async function getProductsByIds(
-  productIds: number[]
-): Promise<Map<number, Product>> {
-  return fetchProductsByIds(productIds);
-}
 
 /**
  * 서버에서 장바구니 아이템 조회
