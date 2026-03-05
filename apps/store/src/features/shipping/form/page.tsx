@@ -39,7 +39,7 @@ const ShippingFormPage = () => {
   const updateMutation = useUpdateShippingAddress();
 
   // 처음 등록인지 확인 (배송지가 0개인 경우)
-  const isFirstAddress = !isEditMode && (!addresses || addresses.length === 0);
+  const isFirstAddress = !isEditMode && !!addresses && addresses.length === 0;
 
   const form = useForm<ShippingAddress>({
     defaultValues: {

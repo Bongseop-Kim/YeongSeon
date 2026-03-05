@@ -250,7 +250,7 @@ const OrderFormPage = () => {
                     <Select
                       value={selectedAddress.deliveryRequest || undefined}
                       onValueChange={(value) => {
-                        if (selectedAddressId && selectedAddress) {
+                        if (selectedAddressId && selectedAddress && selectedAddress.id === selectedAddressId) {
                           const { id, ...addressData } = selectedAddress;
                           updateShippingAddress.mutate({
                             id: selectedAddressId,

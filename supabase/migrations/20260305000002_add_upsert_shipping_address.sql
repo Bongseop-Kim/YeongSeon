@@ -22,12 +22,17 @@ BEGIN
   END IF;
 
   -- 기본 배송지 설정 시 기존 기본 배송지 해제 (트랜잭션 내 원자적 처리)
+  -- UPDATE 대상 행이 존재하는 경우에만 해제하여 기본 배송지가 없는 상태를 방지
   IF p_is_default THEN
-    UPDATE shipping_addresses
-    SET is_default = false
-    WHERE user_id = v_user_id
-      AND is_default = true
-      AND (p_id IS NULL OR id != p_id);
+    IF p_id IS NULL OR EXISTS(
+      SELECT 1 FROM shipping_addresses WHERE id = p_id AND user_id = v_user_id
+    ) THEN
+      UPDATE shipping_addresses
+      SET is_default = false
+      WHERE user_id = v_user_id
+        AND is_default = true
+        AND (p_id IS NULL OR id != p_id);
+    END IF;
   END IF;
 
   IF p_id IS NULL THEN
