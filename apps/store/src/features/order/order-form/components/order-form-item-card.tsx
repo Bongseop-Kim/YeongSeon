@@ -65,7 +65,7 @@ export function OrderFormItemCard({ item, onChangeCoupon }: OrderFormItemCardPro
               {/* 적용된 쿠폰 표시 */}
               {hasCoupon && (
                 <p className="text-xs text-primary font-medium">
-                  {item.appliedCoupon!.coupon.name} 적용
+                  {item.appliedCoupon?.coupon?.name} 적용
                 </p>
               )}
             </div>

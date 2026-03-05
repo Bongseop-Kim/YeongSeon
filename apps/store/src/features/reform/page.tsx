@@ -90,9 +90,8 @@ const ReformPage = () => {
   const uploadTiesIfNeeded = useCallback(
     async (ties: ReformOptions["ties"]) => {
       const hasFileImages = ties.some((tie) => tie.image instanceof File);
-      return hasFileImages
-        ? await uploadTieImagesMutation.mutateAsync(ties)
-        : ties;
+      if (hasFileImages) return await uploadTieImagesMutation.mutateAsync(ties);
+      return ties;
     },
     [uploadTieImagesMutation]
   );

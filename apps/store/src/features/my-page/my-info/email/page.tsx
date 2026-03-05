@@ -1,13 +1,16 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Controller } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/ROUTES";
 import { useEmailChange, EMAIL_CODE_LENGTH } from "@/features/my-page/my-info/email/hooks/use-email-change";
 
 export default function MyInfoEmailPage() {
+  const navigate = useNavigate();
   const {
     profile,
     form,
@@ -33,7 +36,6 @@ export default function MyInfoEmailPage() {
       <MainContent>
         <PageLayout>
           <Card className="max-w-xl">
-            <CardHeader />
             <CardContent className="space-y-4">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">현재 이메일</p>
@@ -137,9 +139,17 @@ export default function MyInfoEmailPage() {
                   )}
 
                   {step === "complete" && (
-                    <Button className="w-full" disabled>
-                      완료
-                    </Button>
+                    <>
+                      <p className="text-sm text-zinc-700">
+                        이메일이 변경되었습니다.
+                      </p>
+                      <Button
+                        className="w-full"
+                        onClick={() => navigate(ROUTES.MY_PAGE_MY_INFO)}
+                      >
+                        완료
+                      </Button>
+                    </>
                   )}
                 </>
               )}

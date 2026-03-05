@@ -5,12 +5,13 @@ import type { TieItem } from "@yeongseon/shared/types/view/reform";
 import type { ImageKitAuth } from "./reform-api";
 
 function isImageKitAuth(x: unknown): x is ImageKitAuth {
+  if (typeof x !== "object" || x === null) return false;
+
+  const obj = x as Record<string, unknown>;
   return (
-    typeof x === "object" &&
-    x !== null &&
-    typeof (x as Record<string, unknown>).signature === "string" &&
-    typeof (x as Record<string, unknown>).token === "string" &&
-    typeof (x as Record<string, unknown>).expire === "number"
+    typeof obj.signature === "string" &&
+    typeof obj.token === "string" &&
+    typeof obj.expire === "number"
   );
 }
 

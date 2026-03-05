@@ -2,7 +2,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { InquiryForm } from "./components/inquiry-form";
 import { InquiryCard } from "./components/inquiry-card";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -54,38 +54,41 @@ export default function InquiryPage() {
     });
   };
 
-  const handleFormSubmit = (data: { title: string; content: string }) => {
-    if (editingInquiryId) {
-      updateMutation.mutate(
-        { id: editingInquiryId, ...data },
-        {
+  const handleFormSubmit = useCallback(
+    (data: { title: string; content: string }) => {
+      if (editingInquiryId) {
+        updateMutation.mutate(
+          { id: editingInquiryId, ...data },
+          {
+            onSuccess: () => {
+              toast.success("문의가 수정되었습니다.");
+              setEditingInquiryId(null);
+              setIsSheetOpen(false);
+            },
+            onError: (err) => {
+              toast.error(
+                err instanceof Error ? err.message : "수정에 실패했습니다.",
+              );
+            },
+          },
+        );
+      } else {
+        createMutation.mutate(data, {
           onSuccess: () => {
-            toast.success("문의가 수정되었습니다.");
+            toast.success("문의가 등록되었습니다.");
             setEditingInquiryId(null);
             setIsSheetOpen(false);
           },
           onError: (err) => {
             toast.error(
-              err instanceof Error ? err.message : "수정에 실패했습니다.",
+              err instanceof Error ? err.message : "등록에 실패했습니다.",
             );
           },
-        },
-      );
-    } else {
-      createMutation.mutate(data, {
-        onSuccess: () => {
-          toast.success("문의가 등록되었습니다.");
-          setEditingInquiryId(null);
-          setIsSheetOpen(false);
-        },
-        onError: (err) => {
-          toast.error(
-            err instanceof Error ? err.message : "등록에 실패했습니다.",
-          );
-        },
-      });
-    }
-  };
+        });
+      }
+    },
+    [editingInquiryId, updateMutation, createMutation],
+  );
 
   const handleFormCancel = () => {
     setEditingInquiryId(null);
@@ -108,6 +111,22 @@ export default function InquiryPage() {
         ? { title: editingInquiry.title, content: editingInquiry.content }
         : undefined,
     [editingInquiry],
+  );
+
+  const inquiryFormProps = useMemo(
+    () => ({
+      inquiryId: editingInquiryId,
+      initialData,
+      onSubmit: handleFormSubmit,
+      isPending: createMutation.isPending || updateMutation.isPending,
+    }),
+    [
+      editingInquiryId,
+      initialData,
+      handleFormSubmit,
+      createMutation.isPending,
+      updateMutation.isPending,
+    ],
   );
 
   if (isLoading) {
@@ -138,13 +157,6 @@ export default function InquiryPage() {
       </MainLayout>
     );
   }
-
-  const inquiryFormProps = {
-    inquiryId: editingInquiryId,
-    initialData,
-    onSubmit: handleFormSubmit,
-    isPending: createMutation.isPending || updateMutation.isPending,
-  };
 
   return (
     <MainLayout>

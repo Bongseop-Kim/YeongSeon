@@ -226,14 +226,14 @@ export default function OrderPage() {
       contactTitle,
       contactMethod,
       contactValue,
-      ...optionsWithoutReferenceImages
+      ...coreOptions
     } = watchedValues;
 
     try {
       await createCustomOrder.mutateAsync({
         ...toCreateCustomOrderInput({
           shippingAddressId: selectedAddressId,
-          options: optionsWithoutReferenceImages,
+          options: coreOptions,
           referenceImageUrls: imageUpload.getImageUrls(),
           additionalNotes,
           sample,
