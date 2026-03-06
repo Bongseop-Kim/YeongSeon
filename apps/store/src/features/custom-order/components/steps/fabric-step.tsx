@@ -6,6 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
@@ -48,6 +50,7 @@ export const FabricStep = () => {
   const { watch, setValue } = useFormContext<QuoteOrderOptions>();
   const currentFabricType = watch("fabricType");
   const currentDesignType = watch("designType");
+  const currentValue = `${currentFabricType}-${currentDesignType}`;
 
   const handleCardClick = (card: FabricCard) => {
     setValue("fabricType", card.fabricType);
@@ -72,32 +75,50 @@ export const FabricStep = () => {
           <CardTitle>원단 조합</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {FABRIC_CARDS.map((card) => (
-              <button
-                key={`${card.fabricType}-${card.designType}`}
-                type="button"
-                aria-pressed={isSelected(card)}
-                onClick={() => handleCardClick(card)}
-              >
-                <Card
-                  className={cn(
-                    "h-full",
-                    isSelected(card)
-                      ? "border-zinc-900 bg-zinc-50"
-                      : "hover:border-zinc-400",
-                  )}
-                >
-                  <CardHeader>
-                    <CardTitle>{card.label}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>{card.description}</CardDescription>
-                  </CardContent>
-                </Card>
-              </button>
-            ))}
-          </div>
+          <RadioGroup
+            value={currentValue}
+            onValueChange={(val) => {
+              const found = FABRIC_CARDS.find(
+                (c) => `${c.fabricType}-${c.designType}` === val,
+              );
+              if (found) handleCardClick(found);
+            }}
+          >
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {FABRIC_CARDS.map((card) => {
+                const cardValue = `${card.fabricType}-${card.designType}`;
+
+                return (
+                  <Label
+                    key={cardValue}
+                    htmlFor={`fabric-${cardValue}`}
+                    className="block h-full cursor-pointer"
+                  >
+                    <RadioGroupItem
+                      value={cardValue}
+                      id={`fabric-${cardValue}`}
+                      className="sr-only"
+                    />
+                    <Card
+                      className={cn(
+                        "h-full",
+                        isSelected(card)
+                          ? "border-zinc-900 bg-zinc-50"
+                          : "hover:border-zinc-400",
+                      )}
+                    >
+                      <CardHeader>
+                        <CardTitle>{card.label}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription>{card.description}</CardDescription>
+                      </CardContent>
+                    </Card>
+                  </Label>
+                );
+              })}
+            </div>
+          </RadioGroup>
         </CardContent>
       </Card>
     </StepLayout>

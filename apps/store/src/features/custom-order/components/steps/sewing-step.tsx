@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useFormContext, type UseFormSetValue } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
@@ -99,92 +101,106 @@ export const SewingStep = () => {
           <CardTitle>봉제 방식</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {(["MANUAL", "AUTO"] as const).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => handleTieTypeChange(type)}
-                aria-pressed={tieType === type}
-              >
-                <Card
-                  className={cn(
-                    "h-full",
-                    tieType === type
-                      ? "border-zinc-900 bg-zinc-50"
-                      : "hover:border-zinc-400",
-                  )}
+          <RadioGroup
+            value={tieType}
+            onValueChange={(v) => handleTieTypeChange(v as "MANUAL" | "AUTO")}
+          >
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {(["MANUAL", "AUTO"] as const).map((type) => (
+                <Label
+                  key={type}
+                  htmlFor={`tie-type-${type}`}
+                  className="block cursor-pointer"
                 >
-                  <CardHeader>
-                    <CardTitle>
-                      {type === "MANUAL" ? "수동 봉제" : "자동 봉제"}
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-              </button>
-            ))}
-          </div>
+                  <RadioGroupItem
+                    value={type}
+                    id={`tie-type-${type}`}
+                    className="sr-only"
+                  />
+                  <Card
+                    className={cn(
+                      "h-full",
+                      tieType === type
+                        ? "border-zinc-900 bg-zinc-50"
+                        : "hover:border-zinc-400",
+                    )}
+                  >
+                    <CardHeader>
+                      <CardTitle>
+                        {type === "MANUAL" ? "수동 봉제" : "자동 봉제"}
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                </Label>
+              ))}
+            </div>
+          </RadioGroup>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="space-y-3 px-[18px] py-[18px]">
-          <div className="space-y-2">
-            {SEWING_STYLES.map((style) => {
-              const isDisabled = style.dimpleOnly && !isDimpleAvailable;
-              const isSelected = currentStyle === style.value;
+        <CardContent className="p-4">
+          <RadioGroup
+            value={currentStyle}
+            onValueChange={(value) => handleStyleChange(value as SewingStyle)}
+          >
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {SEWING_STYLES.map((style) => {
+                const isDisabled = !!(style.dimpleOnly && !isDimpleAvailable);
+                const itemId = `sewing-style-${style.value}`;
+                const isSelected = currentStyle === style.value;
 
-              return (
-                <button
-                  key={style.value}
-                  type="button"
-                  onClick={() => handleStyleChange(style.value)}
-                  disabled={isDisabled}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "w-full rounded-xl px-3 py-3",
-                    isDisabled &&
-                      "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-400",
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="text-left">
-                      <p
-                        className={cn(
-                          "text-sm font-medium",
-                          isDisabled ? "text-zinc-400" : "text-zinc-900",
-                        )}
-                      >
-                        {style.label}
-                      </p>
-                      <p
-                        className={cn(
-                          "mt-0.5 text-xs",
-                          isDisabled ? "text-zinc-400" : "text-zinc-500",
-                        )}
-                      >
-                        {style.description}
-                      </p>
-                      {style.dimpleOnly && !isDimpleAvailable && (
-                        <p className="mt-1 text-xs text-zinc-400">
-                          자동 봉제에서만 선택할 수 있어요
-                        </p>
-                      )}
-                    </div>
-                    <div
-                      className={cn(
-                        "mt-0.5 h-4 w-4 shrink-0 rounded-full border",
-                        isSelected
-                          ? "border-zinc-900 bg-zinc-900"
-                          : "border-zinc-300 bg-white",
-                        isDisabled && "border-zinc-200 bg-zinc-100",
-                      )}
+                return (
+                  <Label
+                    key={style.value}
+                    htmlFor={itemId}
+                    className={cn(
+                      "block cursor-pointer",
+                      isDisabled && "cursor-not-allowed",
+                    )}
+                  >
+                    <RadioGroupItem
+                      value={style.value}
+                      id={itemId}
+                      disabled={isDisabled}
+                      className="sr-only"
                     />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                    <Card
+                      className={cn(
+                        "h-full",
+                        isDisabled
+                          ? "border-zinc-100 bg-zinc-50"
+                          : isSelected
+                          ? "border-zinc-900 bg-zinc-50"
+                          : "hover:border-zinc-400",
+                      )}
+                    >
+                      <CardHeader>
+                        <CardTitle
+                          className={cn(
+                            "text-sm",
+                            isDisabled ? "text-zinc-400" : "text-zinc-900",
+                          )}
+                        >
+                          {style.label}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className={cn("text-xs", isDisabled ? "text-zinc-300" : "text-zinc-500")}>
+                          {style.description}
+                        </p>
+                        {isDisabled && (
+                          <p className="mt-1 text-xs text-zinc-300">
+                            자동 봉제에서만 선택할 수 있어요
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Label>
+                );
+              })}
+            </div>
+          </RadioGroup>
         </CardContent>
       </Card>
     </StepLayout>

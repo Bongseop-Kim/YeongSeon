@@ -2,6 +2,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
@@ -23,22 +24,30 @@ export const SpecStep = () => {
       <Card>
         <CardContent className="space-y-3 px-[18px] py-[18px]">
           <Label>사이즈 타입</Label>
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {(["ADULT", "CHILD"] as const).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setValue("sizeType", type)}
-                className={cn(
-                  "flex h-[42px] items-center justify-center px-3 text-sm",
-                  sizeType === type
-                    ? "font-semibold" : ''
-                )}
-              >
-                {type === "ADULT" ? "성인용" : "아동용"}
-              </button>
-            ))}
-          </div>
+          <RadioGroup
+            value={sizeType}
+            onValueChange={(v) => setValue("sizeType", v as "ADULT" | "CHILD")}
+          >
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {(["ADULT", "CHILD"] as const).map((type) => (
+                <Label
+                  key={type}
+                  htmlFor={`size-type-${type}`}
+                  className={cn(
+                    "flex h-[42px] cursor-pointer items-center justify-center px-3 text-sm",
+                    sizeType === type ? "font-semibold" : ""
+                  )}
+                >
+                  <RadioGroupItem
+                    value={type}
+                    id={`size-type-${type}`}
+                    className="sr-only"
+                  />
+                  {type === "ADULT" ? "성인용" : "아동용"}
+                </Label>
+              ))}
+            </div>
+          </RadioGroup>
         </CardContent>
       </Card>
 
