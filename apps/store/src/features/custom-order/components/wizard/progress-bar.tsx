@@ -6,7 +6,9 @@ interface ProgressBarProps {
   steps: StepConfig[];
   currentStepIndex: number;
   visitedSteps: Set<number>;
+  completedSteps: Set<number>;
   shouldShowStep: (index: number) => boolean;
+  isHiddenStep: (index: number) => boolean;
   onStepClick: (index: number) => void;
 }
 
@@ -25,7 +27,9 @@ export const ProgressBar = ({
   steps,
   currentStepIndex,
   visitedSteps,
+  completedSteps,
   shouldShowStep,
+  isHiddenStep,
   onStepClick,
 }: ProgressBarProps) => {
   const currentStep = steps[currentStepIndex];
@@ -46,7 +50,9 @@ export const ProgressBar = ({
               steps={steps}
               currentStepIndex={currentStepIndex}
               visitedSteps={visitedSteps}
+              completedSteps={completedSteps}
               shouldShowStep={shouldShowStep}
+              isHiddenStep={isHiddenStep}
               onStepClick={onStepClick}
             />
           </div>

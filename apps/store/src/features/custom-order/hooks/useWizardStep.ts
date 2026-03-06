@@ -21,6 +21,7 @@ export interface UseWizardStepReturn {
   forceGoToStep: (index: number) => void;
   resetTo: (stepIndex: number, visited: Set<number>) => void;
   visitedSteps: Set<number>;
+  completedSteps: Set<number>;
   shouldShowStep: (index: number) => boolean;
 }
 
@@ -31,6 +32,9 @@ export const useWizardStep = ({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(
     () => new Set([0])
+  );
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(
+    () => new Set<number>()
   );
 
   const totalSteps = steps.length;
@@ -75,6 +79,13 @@ export const useWizardStep = ({
 
     const nextIndex = findNextVisibleStep(currentStepIndex);
     if (nextIndex !== null) {
+      setCompletedSteps((prev) => {
+        const next = new Set(prev);
+        for (let i = currentStepIndex; i < nextIndex; i++) {
+          next.add(i);
+        }
+        return next;
+      });
       setCurrentStepIndex(nextIndex);
       setVisitedSteps((prev) => new Set([...prev, nextIndex]));
     }
@@ -99,12 +110,12 @@ export const useWizardStep = ({
 
   const forceGoToStep = useCallback(
     (index: number) => {
-      if (index >= 0 && index < steps.length && shouldShowStep(index)) {
+      if (index >= 0 && index < steps.length) {
         setCurrentStepIndex(index);
         setVisitedSteps((prev) => new Set([...prev, index]));
       }
     },
-    [steps.length, shouldShowStep]
+    [steps.length]
   );
 
   const resetTo = useCallback(
@@ -112,6 +123,12 @@ export const useWizardStep = ({
       const clamped = Math.max(0, Math.min(stepIndex, steps.length - 1));
       setCurrentStepIndex(clamped);
       setVisitedSteps(visited);
+      // 복원 시 현재 스텝 이전 인덱스를 모두 completed로 간주
+      const restored = new Set<number>();
+      for (let i = 0; i < clamped; i++) {
+        restored.add(i);
+      }
+      setCompletedSteps(restored);
     },
     [steps.length]
   );
@@ -144,6 +161,7 @@ export const useWizardStep = ({
       forceGoToStep,
       resetTo,
       visitedSteps,
+      completedSteps,
       shouldShowStep,
     }),
     [
@@ -159,6 +177,7 @@ export const useWizardStep = ({
       forceGoToStep,
       resetTo,
       visitedSteps,
+      completedSteps,
       shouldShowStep,
     ]
   );

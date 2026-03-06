@@ -8,7 +8,9 @@ interface StepIndicatorProps {
   steps: BaseStep[];
   currentStepIndex: number;
   visitedSteps: ReadonlySet<number>;
+  completedSteps?: ReadonlySet<number>;
   shouldShowStep: (index: number) => boolean;
+  isHiddenStep?: (index: number) => boolean;
   onStepClick: (index: number) => void;
   className?: string;
   getAriaLabel?: (params: {
@@ -32,7 +34,9 @@ export function StepIndicator({
   steps,
   currentStepIndex,
   visitedSteps,
+  completedSteps,
   shouldShowStep,
+  isHiddenStep,
   onStepClick,
   className,
   getAriaLabel = defaultAriaLabel,
@@ -41,12 +45,15 @@ export function StepIndicator({
     <div className={cn("flex items-center gap-1.5", className)}>
       {steps.map((step, index) => {
         const isVisible = shouldShowStep(index);
+        const isHidden = isHiddenStep?.(index) ?? false;
         const isVisited = visitedSteps.has(index);
         const isCurrent = index === currentStepIndex;
-        const isCompleted = isVisited && !isCurrent;
-        const isClickable = isVisible && isVisited && !isCurrent;
+        const isCompleted = completedSteps
+          ? completedSteps.has(index)
+          : isVisited && !isCurrent;
+        const isClickable = !isHidden && isVisited && !isCurrent;
 
-        if (!isVisible) {
+        if (isHidden) {
           return (
             <span
               key={step.id}
@@ -67,7 +74,11 @@ export function StepIndicator({
             aria-current={isCurrent ? "step" : undefined}
             className={cn(
               "h-1.5 w-7 rounded-full transition-colors",
-              isCurrent || isCompleted ? "bg-zinc-900" : "bg-zinc-200",
+              isCurrent || isCompleted
+                ? "bg-zinc-900"
+                : isVisible
+                  ? "bg-zinc-200"
+                  : "bg-zinc-200/70",
               isClickable && "cursor-pointer hover:bg-zinc-700",
               !isClickable && "cursor-default"
             )}
