@@ -338,6 +338,7 @@ export default function OrderPage() {
                 sewingCost={sewingCost}
                 fabricCost={fabricCost}
                 isLoggedIn={isLoggedIn}
+                isQuoteMode={isQuoteMode}
               />
             }
             sidebarClassName={isMobile ? "pb-24" : ""}

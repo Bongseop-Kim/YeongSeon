@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useFormContext, type UseFormSetValue } from "react-hook-form";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
@@ -13,33 +13,33 @@ const SEWING_STYLES: {
   description: string;
   dimpleOnly?: boolean;
 }[] = [
-    {
-      value: "normal",
-      label: "일반",
-      description: "가장 보편적인 제작 방식이에요",
-    },
-    {
-      value: "dimple",
-      label: "딤플",
-      description: "매듭 아래 자연스러운 주름",
-      dimpleOnly: true,
-    },
-    {
-      value: "spoderato",
-      label: "스포데라토",
-      description: "안감 없이 가볍게 마감",
-    },
-    {
-      value: "fold7",
-      label: "7폴드",
-      description: "한 장의 원단을 7번 접어 제작",
-    },
-  ];
+  {
+    value: "normal",
+    label: "일반",
+    description: "가장 보편적인 제작 방식이에요",
+  },
+  {
+    value: "dimple",
+    label: "딤플",
+    description: "매듭 아래 자연스러운 주름",
+    dimpleOnly: true,
+  },
+  {
+    value: "spoderato",
+    label: "스포데라토",
+    description: "안감 없이 가볍게 마감",
+  },
+  {
+    value: "fold7",
+    label: "7폴드",
+    description: "한 장의 원단을 7번 접어 제작",
+  },
+];
 
 const deriveSewingStyle = (
   dimple: boolean,
   spoderato: boolean,
-  fold7: boolean
+  fold7: boolean,
 ): SewingStyle => {
   if (fold7) return "fold7";
   if (spoderato) return "spoderato";
@@ -49,7 +49,7 @@ const deriveSewingStyle = (
 
 const applySewingStyle = (
   style: SewingStyle,
-  setValue: UseFormSetValue<QuoteOrderOptions>
+  setValue: UseFormSetValue<QuoteOrderOptions>,
 ) => {
   setValue("dimple", style === "dimple");
   setValue("spoderato", style === "spoderato");
@@ -71,7 +71,7 @@ export const SewingStep = () => {
     if (tieType === "MANUAL" && dimple) {
       setValue("dimple", false);
       toast.info(
-        "수동 봉제에서는 딤플을 선택할 수 없어요. 일반으로 변경했어요."
+        "수동 봉제에서는 딤플을 선택할 수 없어요. 일반으로 변경했어요.",
       );
     }
   }, [tieType, dimple, setValue]);
@@ -95,8 +95,10 @@ export const SewingStep = () => {
       ]}
     >
       <Card>
-        <CardContent className="space-y-3 px-[18px] py-[18px]">
-          <p>봉제 방식</p>
+        <CardHeader>
+          <CardTitle>봉제 방식</CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {(["MANUAL", "AUTO"] as const).map((type) => (
               <button
@@ -104,13 +106,21 @@ export const SewingStep = () => {
                 type="button"
                 onClick={() => handleTieTypeChange(type)}
                 aria-pressed={tieType === type}
-                className={cn(
-                  "flex h-[42px] items-center justify-center px-3 text-center text-sm",
-                  tieType === type
-                    ? "font-semibold" : ''
-                )}
               >
-                {type === "MANUAL" ? "수동 봉제" : "자동 봉제"}
+                <Card
+                  className={cn(
+                    "h-full",
+                    tieType === type
+                      ? "border-zinc-900 bg-zinc-50"
+                      : "hover:border-zinc-400",
+                  )}
+                >
+                  <CardHeader>
+                    <CardTitle>
+                      {type === "MANUAL" ? "수동 봉제" : "자동 봉제"}
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
               </button>
             ))}
           </div>
@@ -119,7 +129,6 @@ export const SewingStep = () => {
 
       <Card>
         <CardContent className="space-y-3 px-[18px] py-[18px]">
-          <p>스타일</p>
           <div className="space-y-2">
             {SEWING_STYLES.map((style) => {
               const isDisabled = style.dimpleOnly && !isDimpleAvailable;
@@ -134,8 +143,8 @@ export const SewingStep = () => {
                   aria-pressed={isSelected}
                   className={cn(
                     "w-full rounded-xl px-3 py-3",
-                    isSelected ? '' : '',
-                    isDisabled && "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-400"
+                    isDisabled &&
+                      "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-400",
                   )}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -143,7 +152,7 @@ export const SewingStep = () => {
                       <p
                         className={cn(
                           "text-sm font-medium",
-                          isDisabled ? "text-zinc-400" : "text-zinc-900"
+                          isDisabled ? "text-zinc-400" : "text-zinc-900",
                         )}
                       >
                         {style.label}
@@ -151,7 +160,7 @@ export const SewingStep = () => {
                       <p
                         className={cn(
                           "mt-0.5 text-xs",
-                          isDisabled ? "text-zinc-400" : "text-zinc-500"
+                          isDisabled ? "text-zinc-400" : "text-zinc-500",
                         )}
                       >
                         {style.description}
@@ -168,7 +177,7 @@ export const SewingStep = () => {
                         isSelected
                           ? "border-zinc-900 bg-zinc-900"
                           : "border-zinc-300 bg-white",
-                        isDisabled && "border-zinc-200 bg-zinc-100"
+                        isDisabled && "border-zinc-200 bg-zinc-100",
                       )}
                     />
                   </div>

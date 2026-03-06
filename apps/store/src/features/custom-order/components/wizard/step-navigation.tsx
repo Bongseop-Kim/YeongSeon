@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Card, CardDescription, CardHeader } from "@/components/ui/card";
 
 interface StepNavigationProps {
@@ -33,18 +32,16 @@ export const StepNavigation = ({
           {hintText}
         </CardDescription>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onPrev}
-            disabled={isFirstStep}
-            className={cn(
-              isFirstStep && "invisible"
-            )}
-          >
-            <ChevronLeft />
-            이전
-          </Button>
+          {!isFirstStep && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onPrev}
+            >
+              <ChevronLeft />
+              이전
+            </Button>
+          )}
 
           {isLastStep ? (
             <Button

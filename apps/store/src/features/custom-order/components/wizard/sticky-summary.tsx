@@ -12,6 +12,7 @@ interface StickySummaryProps {
   sewingCost: number;
   fabricCost: number;
   isLoggedIn: boolean;
+  isQuoteMode: boolean;
 }
 
 export const StickySummary = ({
@@ -20,6 +21,7 @@ export const StickySummary = ({
   sewingCost,
   fabricCost,
   isLoggedIn,
+  isQuoteMode,
 }: StickySummaryProps) => {
   const [searchParams] = useSearchParams();
   const canShowCostBreakdown = searchParams.get("showCostBreakdown") === "true";
@@ -48,7 +50,7 @@ export const StickySummary = ({
     ].join(" · ")
     : "미선택";
 
-  const sampleCost = options.sample && options.sampleType
+  const sampleCost = !isQuoteMode && options.sample && options.sampleType
     ? SAMPLE_COST[options.sampleType]
     : 0;
   const grandTotal = totalCost + sampleCost;

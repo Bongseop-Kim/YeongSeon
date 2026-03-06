@@ -5,7 +5,14 @@ import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 
 const buttonGroupVariants = cva(
-  "flex w-fit items-stretch has-[>[data-slot=button-group]]:gap-2 [&>*]:focus-visible:relative [&>*]:focus-visible:z-10 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-md [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
+  [
+    "flex w-fit items-stretch",
+    "has-[>[data-slot=button-group]]:gap-2",            // gap between nested ButtonGroup children
+    "[&>*]:focus-visible:relative [&>*]:focus-visible:z-10", // raise focused child above siblings to show outline
+    "has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-md", // restore right radius on select-trigger when Radix injects a hidden <select> after it
+    "[&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit", // prevent select-trigger from stretching when no explicit width is set
+    "[&>input]:flex-1",                                 // allow input children to grow and fill remaining space
+  ].join(" "),
   {
     variants: {
       orientation: {

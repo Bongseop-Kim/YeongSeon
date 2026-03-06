@@ -1,10 +1,14 @@
 import { useFormContext } from "react-hook-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-import {
-  StepLayout,
-} from "./step-layout";
+import { StepLayout } from "./step-layout";
 
 interface FabricCard {
   fabricType: "POLY" | "SILK";
@@ -65,9 +69,7 @@ export const FabricStep = () => {
     >
       <Card>
         <CardHeader>
-          <CardTitle>
-            원단 조합
-          </CardTitle>
+          <CardTitle>원단 조합</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -83,18 +85,14 @@ export const FabricStep = () => {
                     "h-full",
                     isSelected(card)
                       ? "border-zinc-900 bg-zinc-50"
-                      : "hover:border-zinc-400"
+                      : "hover:border-zinc-400",
                   )}
                 >
                   <CardHeader>
-                    <CardTitle>
-                      {card.label}
-                    </CardTitle>
+                    <CardTitle>{card.label}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription>
-                      {card.description}
-                    </CardDescription>
+                    <CardDescription>{card.description}</CardDescription>
                   </CardContent>
                 </Card>
               </button>

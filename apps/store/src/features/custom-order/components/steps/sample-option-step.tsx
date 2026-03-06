@@ -48,6 +48,7 @@ export const SampleOptionStep = () => {
         <button
           type="button"
           onClick={() => handleSampleToggle(false)}
+          aria-pressed={!sample}
           className={cn(
             "flex h-[88px] flex-col justify-start rounded-xl border-2 px-3.5 py-3",
             !sample ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-400"
@@ -59,6 +60,7 @@ export const SampleOptionStep = () => {
         <button
           type="button"
           onClick={() => handleSampleToggle(true)}
+          aria-pressed={sample}
           className={cn(
             "flex h-[88px] flex-col justify-start rounded-xl border-2 px-3.5 py-3",
             sample ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-400"
