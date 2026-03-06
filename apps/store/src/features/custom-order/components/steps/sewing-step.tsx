@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useFormContext, type UseFormSetValue } from "react-hook-form";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
@@ -91,90 +92,94 @@ export const SewingStep = () => {
         </h2>
       </div>
 
-      {/* Sewing Method Toggle */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-zinc-900">봉제 방식</h3>
-        <div className="flex gap-3">
-          {(["MANUAL", "AUTO"] as const).map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => handleTieTypeChange(type)}
-              className={cn(
-                "flex-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all",
-                tieType === type
-                  ? "border-zinc-900 bg-zinc-50 text-zinc-900"
-                  : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
-              )}
-            >
-              {type === "MANUAL" ? "수동 봉제" : "자동 봉제"}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardContent className="space-y-6 pt-6">
+          {/* Sewing Method Toggle */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-zinc-900">봉제 방식</h3>
+            <div className="flex gap-3">
+              {(["MANUAL", "AUTO"] as const).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleTieTypeChange(type)}
+                  className={cn(
+                    "flex-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all",
+                    tieType === type
+                      ? "border-zinc-900 bg-zinc-50 text-zinc-900"
+                      : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
+                  )}
+                >
+                  {type === "MANUAL" ? "수동 봉제" : "자동 봉제"}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Style Selection */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-zinc-900">스타일</h3>
-        <div className="space-y-3">
-          {SEWING_STYLES.map((style) => {
-            const isDisabled = style.dimpleOnly && !isDimpleAvailable;
-            const isSelected = currentStyle === style.value;
+          {/* Style Selection */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-zinc-900">스타일</h3>
+            <div className="space-y-3">
+              {SEWING_STYLES.map((style) => {
+                const isDisabled = style.dimpleOnly && !isDimpleAvailable;
+                const isSelected = currentStyle === style.value;
 
-            return (
-              <button
-                key={style.value}
-                type="button"
-                onClick={() => handleStyleChange(style.value)}
-                disabled={isDisabled}
-                className={cn(
-                  "w-full text-left p-4 rounded-lg border-2 transition-all",
-                  isSelected
-                    ? "border-zinc-900 bg-zinc-50"
-                    : "border-zinc-200 bg-white",
-                  isDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:border-zinc-400"
-                )}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div
-                      className={cn(
-                        "font-medium",
-                        isDisabled ? "text-zinc-400" : "text-zinc-900"
-                      )}
-                    >
-                      {style.label}
-                    </div>
-                    <div
-                      className={cn(
-                        "text-sm mt-0.5",
-                        isDisabled ? "text-zinc-300" : "text-zinc-500"
-                      )}
-                    >
-                      {style.description}
-                    </div>
-                    {style.dimpleOnly && !isDimpleAvailable && (
-                      <div className="text-xs text-amber-600 mt-1">
-                        자동 봉제에서만 선택할 수 있어요
-                      </div>
+                return (
+                  <button
+                    key={style.value}
+                    type="button"
+                    onClick={() => handleStyleChange(style.value)}
+                    disabled={isDisabled}
+                    className={cn(
+                      "w-full text-left p-4 rounded-lg border-2 transition-all",
+                      isSelected
+                        ? "border-zinc-900 bg-zinc-50"
+                        : "border-zinc-200 bg-white",
+                      isDisabled
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:border-zinc-400"
                     )}
-                  </div>
-                  {isSelected && (
-                    <div className="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center shrink-0 mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-white" />
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div
+                          className={cn(
+                            "font-medium",
+                            isDisabled ? "text-zinc-400" : "text-zinc-900"
+                          )}
+                        >
+                          {style.label}
+                        </div>
+                        <div
+                          className={cn(
+                            "text-sm mt-0.5",
+                            isDisabled ? "text-zinc-300" : "text-zinc-500"
+                          )}
+                        >
+                          {style.description}
+                        </div>
+                        {style.dimpleOnly && !isDimpleAvailable && (
+                          <div className="text-xs text-amber-600 mt-1">
+                            자동 봉제에서만 선택할 수 있어요
+                          </div>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center shrink-0 mt-0.5">
+                          <div className="w-2 h-2 rounded-full bg-white" />
+                        </div>
+                      )}
+                      {!isSelected && !isDisabled && (
+                        <div className="w-5 h-5 rounded-full border-2 border-zinc-300 shrink-0 mt-0.5" />
+                      )}
                     </div>
-                  )}
-                  {!isSelected && !isDisabled && (
-                    <div className="w-5 h-5 rounded-full border-2 border-zinc-300 shrink-0 mt-0.5" />
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

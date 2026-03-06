@@ -1,4 +1,5 @@
 import { useFormContext } from "react-hook-form";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 
@@ -61,27 +62,31 @@ export const FabricStep = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {FABRIC_CARDS.map((card) => (
-          <button
-            key={`${card.fabricType}-${card.designType}`}
-            type="button"
-            aria-pressed={isSelected(card)}
-            onClick={() => handleCardClick(card)}
-            className={cn(
-              "text-left p-5 rounded-lg border-2 transition-all",
-              isSelected(card)
-                ? "border-zinc-900 bg-zinc-50"
-                : "border-zinc-200 hover:border-zinc-400 bg-white"
-            )}
-          >
-            <div className="font-medium text-zinc-900">{card.label}</div>
-            <div className="text-sm text-zinc-500 mt-1">
-              {card.description}
-            </div>
-          </button>
-        ))}
-      </div>
+      <Card>
+        <CardContent className="space-y-6 pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {FABRIC_CARDS.map((card) => (
+              <button
+                key={`${card.fabricType}-${card.designType}`}
+                type="button"
+                aria-pressed={isSelected(card)}
+                onClick={() => handleCardClick(card)}
+                className={cn(
+                  "text-left p-5 rounded-lg border-2 transition-all",
+                  isSelected(card)
+                    ? "border-zinc-900 bg-zinc-50"
+                    : "border-zinc-200 hover:border-zinc-400 bg-white"
+                )}
+              >
+                <div className="font-medium text-zinc-900">{card.label}</div>
+                <div className="text-sm text-zinc-500 mt-1">
+                  {card.description}
+                </div>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
