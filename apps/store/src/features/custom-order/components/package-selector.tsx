@@ -83,7 +83,7 @@ export const PackageSelector = ({
                 )}
               >
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 min-h-6">
+                  <CardTitle className="flex items-center gap-2 min-h-6 justify-between">
                     {preset.name}
                     {preset.badge && (
                       <Badge>
