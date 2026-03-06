@@ -1,7 +1,10 @@
 import { useFormContext } from "react-hook-form";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import {
+  StepLayout,
+} from "./step-layout";
 
 interface FabricCard {
   fabricType: "POLY" | "SILK";
@@ -52,41 +55,53 @@ export const FabricStep = () => {
     currentDesignType === card.designType;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-zinc-900">
-          원단을 선택해주세요
-        </h2>
-        <p className="text-sm text-zinc-500 mt-1">
-          소재와 디자인 방식을 함께 선택합니다
-        </p>
-      </div>
-
+    <StepLayout
+      guideTitle="선택 가이드"
+      guideItems={[
+        "POLY는 경제적, SILK는 광택감",
+        "PRINTING은 선명한 표현",
+        "YARN_DYED는 직조 패턴 강조",
+      ]}
+    >
       <Card>
-        <CardContent className="space-y-6 pt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <CardHeader>
+          <CardTitle>
+            원단 조합
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {FABRIC_CARDS.map((card) => (
               <button
                 key={`${card.fabricType}-${card.designType}`}
                 type="button"
                 aria-pressed={isSelected(card)}
                 onClick={() => handleCardClick(card)}
-                className={cn(
-                  "text-left p-5 rounded-lg border-2 transition-all",
-                  isSelected(card)
-                    ? "border-zinc-900 bg-zinc-50"
-                    : "border-zinc-200 hover:border-zinc-400 bg-white"
-                )}
               >
-                <div className="font-medium text-zinc-900">{card.label}</div>
-                <div className="text-sm text-zinc-500 mt-1">
-                  {card.description}
-                </div>
+                <Card
+                  className={cn(
+                    "h-full",
+                    isSelected(card)
+                      ? "border-zinc-900 bg-zinc-50"
+                      : "hover:border-zinc-400"
+                  )}
+                >
+                  <CardHeader>
+                    <CardTitle>
+                      {card.label}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription>
+                      {card.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
               </button>
             ))}
           </div>
         </CardContent>
       </Card>
-    </div>
+    </StepLayout>
   );
 };

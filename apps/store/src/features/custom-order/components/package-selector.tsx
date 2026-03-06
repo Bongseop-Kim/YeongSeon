@@ -1,9 +1,11 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PACKAGE_PRESETS } from "@/features/custom-order/constants/PACKAGE_PRESETS";
 import { calculateTotalCost } from "@/features/custom-order/utils/pricing";
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface PackageSelectorProps {
   quantity: number;
@@ -26,11 +28,14 @@ export const PackageSelector = ({
   onSelectPackage,
 }: PackageSelectorProps) => {
   return (
-    <div>
-      <h3 className="text-sm font-medium text-zinc-900 mb-3">
-        패키지로 빠르게 시작하기
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          패키지로 빠르게 시작하기
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         {PACKAGE_PRESETS.map((preset) => {
           const isSelected = selectedPackage === preset.id;
 
@@ -71,25 +76,24 @@ export const PackageSelector = ({
             >
               <Card
                 className={cn(
-                  "transition-colors h-full",
+                  "h-full",
                   isSelected
-                    ? "border-zinc-900 ring-1 ring-zinc-900"
+                    ? "border-zinc-900 bg-zinc-50"
                     : "hover:border-zinc-400"
                 )}
               >
-                <CardContent className="pt-4 pb-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-zinc-900">
-                      {preset.name}
-                    </span>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 h-3">
+                    {preset.name}
                     {preset.badge && (
-                      <span className="text-[10px] font-semibold bg-zinc-900 text-white px-1.5 py-0.5 rounded">
+                      <Badge>
                         {preset.badge}
-                      </span>
+                      </Badge>
                     )}
-                  </div>
-
-                  <div className="space-y-1 text-xs text-zinc-500">
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-1 text-xs text-zinc-500 h-20">
                     <p>
                       {OPTION_LABELS.fabricType(preset.values.fabricType)} ·{" "}
                       {OPTION_LABELS.designType(preset.values.designType)}
@@ -107,24 +111,21 @@ export const PackageSelector = ({
                       </p>
                     )}
                   </div>
-
-                  <div className="pt-1 border-t border-zinc-100">
-                    {packageCost !== null ? (
-                      <span className="text-sm font-medium text-zinc-900">
-                        {packageCost.toLocaleString()}원
-                      </span>
-                    ) : (
-                      <span className="text-xs text-zinc-400">
-                        {preset.tagline}
-                      </span>
-                    )}
+                  <Separator />
+                  <div>
+                    <CardTitle>
+                      {packageCost?.toLocaleString()}원
+                    </CardTitle>
+                    <span className="text-xs text-zinc-500">
+                      {preset.tagline}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
             </button>
           );
         })}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

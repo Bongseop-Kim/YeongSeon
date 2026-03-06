@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
 
 interface SummaryRowProps {
   label: string;
@@ -8,20 +7,20 @@ interface SummaryRowProps {
 }
 
 export const SummaryRow = ({ label, value, onEdit }: SummaryRowProps) => (
-  <div className="flex justify-between items-start gap-2 py-3">
-    <div className="flex items-start flex-1 min-w-0 text-sm">
-      <span className="text-zinc-500 w-16 shrink-0">{label}</span>
-      <span className="text-zinc-900 flex-1 min-w-0 break-words">{value}</span>
+  <div className="flex h-10 items-center justify-between gap-2">
+    <div className="flex min-w-0 flex-1 items-center text-sm">
+      <span className="w-16 shrink-0 text-zinc-500">{label}</span>
+      <span className="min-w-0 flex-1 break-words text-zinc-800">{value}</span>
     </div>
     <Button
       type="button"
-      variant="ghost"
+      variant="none"
       size="sm"
       onClick={onEdit}
       aria-label={`${label} 수정`}
-      className="h-7 px-2 text-zinc-400 hover:text-zinc-600"
+      className="h-6 px-1 text-[11px] font-normal text-zinc-400 hover:text-zinc-600"
     >
-      <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+      수정
     </Button>
   </div>
 );

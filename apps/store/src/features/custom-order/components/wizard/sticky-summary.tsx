@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import CostBreakdown from "@/features/custom-order/components/cost-breakdown";
 import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
@@ -30,22 +30,22 @@ export const StickySummary = ({
       ? "재주문"
       : options.fabricType && options.designType
         ? [
-            options.fabricType === "SILK" ? "실크" : "폴리",
-            options.designType === "YARN_DYED" ? "선염" : "날염",
-          ].join(" · ")
+          options.fabricType === "SILK" ? "실크" : "폴리",
+          options.designType === "YARN_DYED" ? "선염" : "날염",
+        ].join(" · ")
         : "미선택";
 
   const sewingLabel = options.tieType
     ? [
-        options.tieType === "AUTO" ? "자동" : "수동",
-        options.dimple
-          ? "딤플"
-          : options.spoderato
-            ? "스포데라토"
-            : options.fold7
-              ? "7폴드"
-              : "일반",
-      ].join(" · ")
+      options.tieType === "AUTO" ? "자동" : "수동",
+      options.dimple
+        ? "딤플"
+        : options.spoderato
+          ? "스포데라토"
+          : options.fold7
+            ? "7폴드"
+            : "일반",
+    ].join(" · ")
     : "미선택";
 
   const sampleCost = options.sample && options.sampleType
@@ -55,8 +55,11 @@ export const StickySummary = ({
   const estimatedDays = getEstimatedDays(options);
 
   return (
-    <Card className="w-full">
-      <CardContent className="space-y-4 pt-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>주문 요약</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-zinc-500">원단</span>

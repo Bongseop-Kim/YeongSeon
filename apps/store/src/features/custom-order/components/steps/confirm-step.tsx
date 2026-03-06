@@ -14,6 +14,7 @@ import type { ShippingAddress } from "@/features/shipping/types/shipping-address
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { WizardStepId } from "@/features/custom-order/types/wizard";
+import { StepLayout } from "./step-layout";
 
 interface ConfirmStepProps {
   selectedAddress: ShippingAddress | null | undefined;
@@ -38,22 +39,22 @@ export const ConfirmStep = ({
       ? "재주문"
       : values.fabricType && values.designType
         ? [
-            values.fabricType === "SILK" ? "실크" : "폴리",
-            values.designType === "YARN_DYED" ? "선염" : "날염",
-          ].join(" · ")
+          values.fabricType === "SILK" ? "실크" : "폴리",
+          values.designType === "YARN_DYED" ? "선염" : "날염",
+        ].join(" · ")
         : "미선택";
 
   const sewingLabel = values.tieType
     ? [
-        values.tieType === "AUTO" ? "자동 봉제" : "수동 봉제",
-        values.dimple
-          ? "딤플"
-          : values.spoderato
-            ? "스포데라토"
-            : values.fold7
-              ? "7폴드"
-              : "일반",
-      ].join(" · ")
+      values.tieType === "AUTO" ? "자동 봉제" : "수동 봉제",
+      values.dimple
+        ? "딤플"
+        : values.spoderato
+          ? "스포데라토"
+          : values.fold7
+            ? "7폴드"
+            : "일반",
+    ].join(" · ")
     : "미선택";
 
   const sizeLabel = values.sizeType === "CHILD" ? "아동용" : values.sizeType ? "성인용" : "미선택";
@@ -87,16 +88,16 @@ export const ConfirmStep = ({
     : 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-zinc-900">
-          주문 내역을 확인해주세요
-        </h2>
-      </div>
-
-      {/* Order Summary */}
+    <StepLayout
+      guideTitle="최종 점검"
+      guideItems={[
+        "수량/옵션/배송지 재확인",
+        "참고자료 누락 여부 확인",
+        "제출 후 주문 내역으로 이동",
+      ]}
+    >
       <Card>
-        <CardContent className="divide-y divide-zinc-100 pt-2">
+        <CardContent className="divide-y divide-zinc-100 px-4 py-2">
           <SummaryRow
             label="수량"
             value={`${values.quantity}개`}
@@ -145,25 +146,24 @@ export const ConfirmStep = ({
           )}
           {(imageUpload.uploadedImages.length > 0 ||
             values.additionalNotes) && (
-            <SummaryRow
-              label="참고 자료"
-              value={[
-                imageUpload.uploadedImages.length > 0
-                  ? `이미지 ${imageUpload.uploadedImages.length}개`
-                  : null,
-                values.additionalNotes ? "요청사항 있음" : null,
-              ]
-                .filter(Boolean)
-                .join(", ")}
-              onEdit={() => goToStepById("attachment")}
-            />
-          )}
+              <SummaryRow
+                label="참고 자료"
+                value={[
+                  imageUpload.uploadedImages.length > 0
+                    ? `이미지 ${imageUpload.uploadedImages.length}개`
+                    : null,
+                  values.additionalNotes ? "요청사항 있음" : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+                onEdit={() => goToStepById("attachment")}
+              />
+            )}
         </CardContent>
       </Card>
 
-      {/* Shipping Address */}
       <Card>
-        <CardHeader className="flex flex-row justify-between items-center">
+        <CardHeader>
           <CardTitle>
             {selectedAddress?.recipientName ?? "배송지 정보"}
           </CardTitle>
@@ -178,7 +178,7 @@ export const ConfirmStep = ({
         </CardHeader>
         <CardContent>
           {selectedAddress ? (
-            <div className="space-y-1 text-sm">
+            <div className="space-y-1 text-sm text-zinc-700">
               <p>
                 ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
                 {selectedAddress.detailAddress}
@@ -186,7 +186,7 @@ export const ConfirmStep = ({
               <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
             </div>
           ) : (
-            <div className="text-center py-4 text-zinc-500 text-sm border-2 border-dashed border-zinc-200 rounded-lg space-y-3">
+            <div className="space-y-3 rounded-lg border-2 border-dashed border-zinc-200 py-4 text-center text-sm text-zinc-500">
               <p>배송지를 추가해주세요.</p>
               <Button
                 type="button"
@@ -201,10 +201,9 @@ export const ConfirmStep = ({
         </CardContent>
       </Card>
 
-      {/* Quote Mode Contact Info */}
       {isQuoteMode && (
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="px-4 py-4">
             <ContactInfoSection
               control={control}
               contactMethod={values.contactMethod}
@@ -212,6 +211,6 @@ export const ConfirmStep = ({
           </CardContent>
         </Card>
       )}
-    </div>
+    </StepLayout>
   );
 };

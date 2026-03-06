@@ -1,7 +1,6 @@
-import { cn } from "@/lib/utils";
 import type { StepConfig } from "@/features/custom-order/types/wizard";
-import { Check } from "lucide-react";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StepIndicator } from "@/components/composite/step-indicator";
 
 interface ProgressBarProps {
   steps: StepConfig[];
@@ -11,6 +10,17 @@ interface ProgressBarProps {
   onStepClick: (index: number) => void;
 }
 
+const STEP_DESCRIPTIONS: Record<string, string> = {
+  quantity: "수량과 시작 방식을 먼저 결정해 주세요",
+  fabric: "소재와 디자인 방식 조합을 선택해 주세요",
+  sewing: "봉제 방식과 스타일을 정합니다",
+  spec: "사이즈와 폭을 실제 착용감 기준으로 결정",
+  finishing: "심지/추가봉제/라벨을 최종 마감 기준으로 설정",
+  sample: "샘플 여부와 유형을 결정합니다",
+  attachment: "이미지/메모를 업로드해 제작 오차를 줄입니다",
+  confirm: "최종 주문 내역을 확인하고 제출합니다",
+};
+
 export const ProgressBar = ({
   steps,
   currentStepIndex,
@@ -18,128 +28,30 @@ export const ProgressBar = ({
   shouldShowStep,
   onStepClick,
 }: ProgressBarProps) => {
-  const { isMobile } = useBreakpoint();
-
-  const visibleCount = steps.filter((_, i) => shouldShowStep(i)).length;
-  const currentVisibleNumber = steps
-    .slice(0, currentStepIndex + 1)
-    .filter((_, i) => shouldShowStep(i)).length;
   const currentStep = steps[currentStepIndex];
+  const currentStepDescription =
+    STEP_DESCRIPTIONS[currentStep.id] ?? "현재 단계를 진행 중입니다.";
 
   return (
-    <div className="w-full py-4 px-2">
-      {isMobile ? (
-        <>
-          <div className="flex items-center justify-between">
-            {steps.map((step, index) => {
-              const isVisible = shouldShowStep(index);
-              const isVisited = visitedSteps.has(index);
-              const isCurrent = index === currentStepIndex;
-              const isCompleted = isVisited && !isCurrent;
-              const isClickable = isVisited && isVisible;
-              const isLast = index === steps.length - 1;
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between">
+          <CardTitle>
+            {`STEP ${currentStepIndex + 1} · ${currentStep.label}`}
+            <CardDescription>{currentStepDescription}</CardDescription>
+          </CardTitle>
 
-              return (
-                <div key={step.id} className="flex items-center flex-1 last:flex-none">
-                  <button
-                    type="button"
-                    onClick={() => isClickable && onStepClick(index)}
-                    disabled={!isClickable}
-                    aria-label={`${index + 1}단계${isCurrent ? ", 현재 단계" : isCompleted ? ", 완료" : ""}`}
-                    aria-current={isCurrent ? "step" : undefined}
-                    className={cn(
-                      "flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-colors shrink-0",
-                      isCurrent && "bg-zinc-900 text-white",
-                      isCompleted && "bg-zinc-200 text-zinc-700 hover:bg-zinc-300",
-                      !isCurrent && !isCompleted && "bg-zinc-100 text-zinc-400",
-                      !isVisible && "border-dashed border-2 border-zinc-200 bg-transparent text-zinc-300",
-                      isClickable && !isCurrent && "cursor-pointer"
-                    )}
-                  >
-                    {!isVisible ? "—" : isCompleted ? <Check className="w-4 h-4" /> : index + 1}
-                  </button>
-
-                  {!isLast && (
-                    <div
-                      className={cn(
-                        "flex-1 h-px mx-2",
-                        !isVisible
-                          ? "border-t border-dashed border-zinc-200"
-                          : isCompleted
-                            ? "bg-zinc-300"
-                            : "bg-zinc-200"
-                      )}
-                    />
-                  )}
-                </div>
-              );
-            })}
+          <div className="flex items-end">
+            <StepIndicator
+              steps={steps}
+              currentStepIndex={currentStepIndex}
+              visitedSteps={visitedSteps}
+              shouldShowStep={shouldShowStep}
+              onStepClick={onStepClick}
+            />
           </div>
-          <p className="mt-1 text-xs text-zinc-500">
-            <span className="font-medium text-zinc-900">
-              {currentVisibleNumber} / {visibleCount}단계
-            </span>
-            {" · "}
-            <span className="font-medium text-zinc-900">{currentStep.label}</span>
-          </p>
-        </>
-      ) : (
-        <div className="flex items-start justify-between">
-          {steps.map((step, index) => {
-            const isVisible = shouldShowStep(index);
-            const isVisited = visitedSteps.has(index);
-            const isCurrent = index === currentStepIndex;
-            const isCompleted = isVisited && !isCurrent;
-            const isClickable = isVisited && isVisible;
-            const isLast = index === steps.length - 1;
-
-            return (
-              <div key={step.id} className="flex flex-col flex-1 last:flex-none min-w-0">
-                <div className="flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => isClickable && onStepClick(index)}
-                    disabled={!isClickable}
-                    aria-label={`${index + 1}단계${isCurrent ? ", 현재 단계" : isCompleted ? ", 완료" : ""}`}
-                    aria-current={isCurrent ? "step" : undefined}
-                    className={cn(
-                      "flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-colors shrink-0",
-                      isCurrent && "bg-zinc-900 text-white",
-                      isCompleted && "bg-zinc-200 text-zinc-700 hover:bg-zinc-300",
-                      !isCurrent && !isCompleted && "bg-zinc-100 text-zinc-400",
-                      !isVisible && "border-dashed border-2 border-zinc-200 bg-transparent text-zinc-300",
-                      isClickable && !isCurrent && "cursor-pointer"
-                    )}
-                  >
-                    {!isVisible ? "—" : isCompleted ? <Check className="w-4 h-4" /> : index + 1}
-                  </button>
-                  {!isLast && (
-                    <div
-                      className={cn(
-                        "flex-1 h-px mx-2",
-                        !isVisible
-                          ? "border-t border-dashed border-zinc-200"
-                          : isCompleted
-                            ? "bg-zinc-300"
-                            : "bg-zinc-200"
-                      )}
-                    />
-                  )}
-                </div>
-                <p
-                  className={cn(
-                    "mt-2 text-xs min-h-4",
-                    isCurrent ? "text-zinc-900 font-medium" : "text-zinc-400",
-                    !isLast && "pr-2"
-                  )}
-                >
-                  {step.label}
-                </p>
-              </div>
-            );
-          })}
         </div>
-      )}
-    </div>
+      </CardHeader>
+    </Card>
   );
 };

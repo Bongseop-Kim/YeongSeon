@@ -1,10 +1,5 @@
 import { useFormContext } from "react-hook-form";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Card, CardContent } from "@/components/ui/card";
 import { SelectField } from "@/components/composite/select-field";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import {
@@ -12,6 +7,7 @@ import {
   INTERLINING_THICKNESS,
 } from "@/features/custom-order/constants/FORM_OPTIONS";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import { StepLayout } from "./step-layout";
 
 export const FinishingStep = () => {
   const { control, watch } = useFormContext<QuoteOrderOptions>();
@@ -41,26 +37,23 @@ export const FinishingStep = () => {
   ].filter(Boolean);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-zinc-900">
-          마감 옵션을 설정해주세요
-        </h2>
-        <p className="text-sm text-zinc-500 mt-1">
-          기본값으로 진행하셔도 좋습니다
-        </p>
-      </div>
-
-      <Accordion type="multiple" defaultValue={["interlining", "stitching"]} className="space-y-3">
-        {/* Interlining Group */}
-        <AccordionItem value="interlining" className="border rounded-lg px-4">
-          <AccordionTrigger className="py-4">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">심지</span>
-              <span className="text-sm text-zinc-500">{interliningLabel}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pb-4 space-y-4">
+    <StepLayout
+      guideTitle="마감 체크"
+      guideItems={[
+        "울 심지는 고급감 증가",
+        "추가 봉제는 내구성 강화",
+        "라벨은 브랜딩 완성도에 영향",
+      ]}
+    >
+      <Card>
+        <CardContent className="space-y-3 px-4 py-4">
+          <div>
+            <p>심지</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              종류: {interliningLabel}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <SelectField
               name="interlining"
               control={control}
@@ -73,22 +66,19 @@ export const FinishingStep = () => {
               label="심지 두께"
               options={INTERLINING_THICKNESS}
             />
-          </AccordionContent>
-        </AccordionItem>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Additional Stitching Group */}
-        <AccordionItem value="stitching" className="border rounded-lg px-4">
-          <AccordionTrigger className="py-4">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">추가 봉제</span>
-              <span className="text-sm text-zinc-500">
-                {stitchLabels.length > 0
-                  ? stitchLabels.join(", ")
-                  : "없음"}
-              </span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pb-4 space-y-3">
+      <Card>
+        <CardContent className="space-y-3 px-4 py-4">
+          <div>
+            <p>추가 봉제</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              {stitchLabels.length > 0 ? stitchLabels.join(", ") : "없음"}
+            </p>
+          </div>
+          <div className="space-y-2">
             <CheckboxField
               name="triangleStitch"
               control={control}
@@ -104,22 +94,19 @@ export const FinishingStep = () => {
               control={control}
               label="바택 처리"
             />
-          </AccordionContent>
-        </AccordionItem>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Label Group */}
-        <AccordionItem value="labels" className="border rounded-lg px-4">
-          <AccordionTrigger className="py-4">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">라벨</span>
-              <span className="text-sm text-zinc-500">
-                {labelLabels.length > 0
-                  ? labelLabels.join(", ")
-                  : "없음"}
-              </span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pb-4 space-y-3">
+      <Card>
+        <CardContent className="space-y-3 px-4 py-4">
+          <div>
+            <p>라벨</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              {labelLabels.length > 0 ? labelLabels.join(", ") : "없음"}
+            </p>
+          </div>
+          <div className="space-y-2">
             <CheckboxField
               name="brandLabel"
               control={control}
@@ -132,9 +119,9 @@ export const FinishingStep = () => {
               label="케어 라벨"
               description="세탁 방법 등의 케어 라벨을 부착합니다"
             />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
+          </div>
+        </CardContent>
+      </Card>
+    </StepLayout>
   );
 };

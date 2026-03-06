@@ -267,12 +267,68 @@ export default function OrderPage() {
 
   const goToStepById = (id: WizardStepId) => {
     const idx = WIZARD_STEPS.findIndex((s) => s.id === id);
-    if (idx !== -1) wizard.goToStep(idx);
+    if (idx !== -1) wizard.forceGoToStep(idx);
+  };
+
+  const fabricGuideLabel = watchedValues.fabricProvided
+    ? "원단 직접 제공"
+    : watchedValues.reorder
+      ? "재주문"
+      : watchedValues.fabricType && watchedValues.designType
+        ? `${watchedValues.fabricType === "SILK" ? "실크" : "폴리"} · ${
+            watchedValues.designType === "YARN_DYED" ? "선염" : "날염"
+          }`
+        : "조합을 선택하세요";
+
+  const sewingGuideLabel = watchedValues.dimple
+    ? "딤플"
+    : watchedValues.spoderato
+      ? "스포데라토"
+      : watchedValues.fold7
+        ? "7폴드"
+        : "일반";
+
+  const sizeGuideLabel = watchedValues.sizeType === "CHILD" ? "아동용" : "성인용";
+
+  const finishingGuideLabel =
+    [
+      watchedValues.triangleStitch && "삼각",
+      watchedValues.sideStitch && "옆선",
+      watchedValues.barTack && "바택",
+    ]
+      .filter(Boolean)
+      .join("/") || "기본 마감";
+
+  const sampleGuideLabel = !watchedValues.sample
+    ? "샘플 미선택"
+    : watchedValues.sampleType === "sewing"
+      ? "봉제 샘플"
+      : watchedValues.sampleType === "fabric"
+        ? "원단 샘플"
+        : watchedValues.sampleType === "fabric_and_sewing"
+          ? "원단 + 봉제 샘플"
+          : "샘플 유형 선택 필요";
+
+  const attachmentGuideLabel = `첨부 상태: 이미지 ${
+    imageUpload.uploadedImages.length
+  }개 / ${
+    watchedValues.additionalNotes?.trim() ? "요청사항 입력됨" : "요청사항 입력 가능"
+  }`;
+
+  const stepNavigationHintById: Record<WizardStepId, string> = {
+    quantity: "최소 주문 수량: 4개",
+    fabric: `추천 조합: ${fabricGuideLabel}`,
+    sewing: `현재 스타일: ${sewingGuideLabel}`,
+    spec: `선택값: ${sizeGuideLabel} / ${watchedValues.tieWidth}cm`,
+    finishing: `현재 마감: ${finishingGuideLabel}`,
+    sample: `선택 유형: ${sampleGuideLabel}`,
+    attachment: attachmentGuideLabel,
+    confirm: "제출 전 마지막 확인 단계",
   };
 
   return (
     <MainLayout>
-      <MainContent className="overflow-visible">
+      <MainContent className="overflow-visible bg-zinc-50">
         <Form {...form}>
           <PageLayout
             sidebar={
@@ -324,6 +380,7 @@ export default function OrderPage() {
                   isQuoteMode={isQuoteMode}
                   isPending={isPending}
                   isSubmitDisabled={isSubmitDisabled}
+                  hintText={stepNavigationHintById[wizard.currentStep.id]}
                   onPrev={wizard.goPrev}
                   onNext={handleNext}
                   onSubmit={handleSubmit}
