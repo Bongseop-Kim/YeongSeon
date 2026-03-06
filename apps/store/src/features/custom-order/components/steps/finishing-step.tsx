@@ -51,7 +51,7 @@ export const FinishingStep = () => {
         </p>
       </div>
 
-      <Accordion type="multiple" defaultValue={["interlining"]} className="space-y-3">
+      <Accordion type="multiple" defaultValue={["interlining", "stitching"]} className="space-y-3">
         {/* Interlining Group */}
         <AccordionItem value="interlining" className="border rounded-lg px-4">
           <AccordionTrigger className="py-4">

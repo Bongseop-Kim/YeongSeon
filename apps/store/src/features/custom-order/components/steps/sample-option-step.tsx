@@ -50,7 +50,7 @@ export const SampleOptionStep = () => {
           type="button"
           onClick={() => handleSampleToggle(false)}
           className={cn(
-            "rounded-lg border p-4 text-left transition-colors",
+            "rounded-lg border-2 p-4 text-left transition-colors",
             !sample
               ? "border-zinc-900 ring-1 ring-zinc-900"
               : "border-zinc-200 hover:border-zinc-400"
@@ -65,7 +65,7 @@ export const SampleOptionStep = () => {
           type="button"
           onClick={() => handleSampleToggle(true)}
           className={cn(
-            "rounded-lg border p-4 text-left transition-colors",
+            "rounded-lg border-2 p-4 text-left transition-colors",
             sample
               ? "border-zinc-900 ring-1 ring-zinc-900"
               : "border-zinc-200 hover:border-zinc-400"
@@ -106,7 +106,7 @@ export const SampleOptionStep = () => {
                 type="button"
                 onClick={() => handleSampleType("fabric")}
                 className={cn(
-                  "w-full rounded-lg border p-4 text-left transition-colors",
+                  "w-full rounded-lg border-2 p-4 text-left transition-colors",
                   sampleType === "fabric"
                     ? "border-zinc-900 ring-1 ring-zinc-900"
                     : "border-zinc-200 hover:border-zinc-400"
@@ -125,7 +125,7 @@ export const SampleOptionStep = () => {
                 type="button"
                 onClick={() => handleSampleType("fabric_and_sewing")}
                 className={cn(
-                  "w-full rounded-lg border p-4 text-left transition-colors",
+                  "w-full rounded-lg border-2 p-4 text-left transition-colors",
                   sampleType === "fabric_and_sewing"
                     ? "border-zinc-900 ring-1 ring-zinc-900"
                     : "border-zinc-200 hover:border-zinc-400"

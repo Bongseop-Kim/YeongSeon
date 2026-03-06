@@ -8,10 +8,10 @@ interface SummaryRowProps {
 }
 
 export const SummaryRow = ({ label, value, onEdit }: SummaryRowProps) => (
-  <div className="flex justify-between items-center">
-    <div>
-      <span className="text-sm text-zinc-500">{label}</span>
-      <span className="text-sm text-zinc-900 ml-3">{value}</span>
+  <div className="flex justify-between items-start gap-2 py-3">
+    <div className="flex items-start flex-1 min-w-0 text-sm">
+      <span className="text-zinc-500 w-16 shrink-0">{label}</span>
+      <span className="text-zinc-900 flex-1 min-w-0 break-words">{value}</span>
     </div>
     <Button
       type="button"

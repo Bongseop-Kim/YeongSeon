@@ -6,7 +6,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { SummaryRow } from "@/features/custom-order/components/summary-row";
@@ -97,83 +96,67 @@ export const ConfirmStep = ({
 
       {/* Order Summary */}
       <Card>
-        <CardContent className="space-y-4 pt-6">
+        <CardContent className="divide-y divide-zinc-100 pt-2">
           <SummaryRow
             label="수량"
             value={`${values.quantity}개`}
             onEdit={() => goToStepById("quantity")}
           />
-          <Separator />
           <SummaryRow
             label="원단"
             value={fabricLabel}
             onEdit={() => goToStepById("fabric")}
           />
-          <Separator />
           <SummaryRow
             label="봉제"
             value={sewingLabel}
             onEdit={() => goToStepById("sewing")}
           />
-          <Separator />
           <SummaryRow
             label="규격"
             value={`${sizeLabel}, 폭 ${values.tieWidth}cm`}
             onEdit={() => goToStepById("spec")}
           />
-          <Separator />
           <SummaryRow
             label="심지"
             value={interliningLabel}
             onEdit={() => goToStepById("finishing")}
           />
           {additionalStitch.length > 0 && (
-            <>
-              <Separator />
-              <SummaryRow
-                label="추가 봉제"
-                value={additionalStitch.join(", ")}
-                onEdit={() => goToStepById("finishing")}
-              />
-            </>
+            <SummaryRow
+              label="추가 봉제"
+              value={additionalStitch.join(", ")}
+              onEdit={() => goToStepById("finishing")}
+            />
           )}
           {labels.length > 0 && (
-            <>
-              <Separator />
-              <SummaryRow
-                label="라벨"
-                value={labels.join(", ")}
-                onEdit={() => goToStepById("finishing")}
-              />
-            </>
+            <SummaryRow
+              label="라벨"
+              value={labels.join(", ")}
+              onEdit={() => goToStepById("finishing")}
+            />
           )}
           {sampleTypeLabel && (
-            <>
-              <Separator />
-              <SummaryRow
-                label="샘플"
-                value={`${sampleTypeLabel} (${sampleCost.toLocaleString()}원)`}
-                onEdit={() => goToStepById("sample")}
-              />
-            </>
+            <SummaryRow
+              label="샘플"
+              value={`${sampleTypeLabel} (${sampleCost.toLocaleString()}원)`}
+              onEdit={() => goToStepById("sample")}
+            />
           )}
           {(imageUpload.uploadedImages.length > 0 ||
             values.additionalNotes) && (
-            <>
-              <Separator />
-              <SummaryRow
-                label="참고 자료"
-                value={[
-                  imageUpload.uploadedImages.length > 0
-                    ? `이미지 ${imageUpload.uploadedImages.length}개`
-                    : null,
-                  values.additionalNotes ? "요청사항 있음" : null,
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
-                onEdit={() => goToStepById("attachment")}
-              />
-            </>
+            <SummaryRow
+              label="참고 자료"
+              value={[
+                imageUpload.uploadedImages.length > 0
+                  ? `이미지 ${imageUpload.uploadedImages.length}개`
+                  : null,
+                values.additionalNotes ? "요청사항 있음" : null,
+              ]
+                .filter(Boolean)
+                .join(", ")}
+              onEdit={() => goToStepById("attachment")}
+            />
           )}
         </CardContent>
       </Card>
@@ -203,8 +186,16 @@ export const ConfirmStep = ({
               <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
             </div>
           ) : (
-            <div className="text-center py-4 text-zinc-500 text-sm border-2 border-dashed border-zinc-200 rounded-lg">
-              배송지를 추가해주세요.
+            <div className="text-center py-4 text-zinc-500 text-sm border-2 border-dashed border-zinc-200 rounded-lg space-y-3">
+              <p>배송지를 추가해주세요.</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onOpenShippingPopup}
+              >
+                배송지 추가
+              </Button>
             </div>
           )}
         </CardContent>
@@ -224,4 +215,3 @@ export const ConfirmStep = ({
     </div>
   );
 };
-

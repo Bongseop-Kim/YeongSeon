@@ -1,8 +1,6 @@
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import CostBreakdown from "@/features/custom-order/components/cost-breakdown";
 import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
 import { getEstimatedDays } from "@/features/custom-order/utils/pricing";
@@ -23,7 +21,8 @@ export const StickySummary = ({
   fabricCost,
   isLoggedIn,
 }: StickySummaryProps) => {
-  const [showDetail, setShowDetail] = useState(false);
+  const [searchParams] = useSearchParams();
+  const canShowCostBreakdown = searchParams.get("showCostBreakdown") === "true";
 
   const fabricLabel = options.fabricProvided
     ? "원단 직접 제공"
@@ -78,20 +77,32 @@ export const StickySummary = ({
         {isLoggedIn ? (
           <>
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-zinc-900">제작 비용</span>
-                <span className="font-medium text-zinc-900">
-                  {totalCost.toLocaleString()}원
-                </span>
-              </div>
               {sampleCost > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-zinc-500">샘플 비용</span>
-                  <span className="text-sm text-zinc-900">
-                    +{sampleCost.toLocaleString()}원
-                  </span>
-                </div>
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-zinc-900">제작 비용</span>
+                    <span className="font-medium text-zinc-900">
+                      {totalCost.toLocaleString()}원
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-zinc-500">샘플 비용</span>
+                    <span className="text-sm text-zinc-900">
+                      +{sampleCost.toLocaleString()}원
+                    </span>
+                  </div>
+                </>
               )}
+              {canShowCostBreakdown && (
+                <CostBreakdown
+                  options={options}
+                  totalCost={totalCost}
+                  sewingCost={sewingCost}
+                  fabricCost={fabricCost}
+                  mode="openCost"
+                />
+              )}
+
               <div className="flex justify-between items-center">
                 <span className="font-medium text-zinc-900">총비용</span>
                 <span className="font-medium text-lg text-zinc-900">
@@ -113,34 +124,6 @@ export const StickySummary = ({
                 </span>
               </div>
             </div>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full text-zinc-500"
-              onClick={() => setShowDetail((prev) => !prev)}
-            >
-              {showDetail ? (
-                <>
-                  상세 비용 접기 <ChevronUp className="w-4 h-4 ml-1" />
-                </>
-              ) : (
-                <>
-                  상세 비용 보기 <ChevronDown className="w-4 h-4 ml-1" />
-                </>
-              )}
-            </Button>
-
-            {showDetail && (
-              <CostBreakdown
-                options={options}
-                totalCost={totalCost}
-                sewingCost={sewingCost}
-                fabricCost={fabricCost}
-                mode="openCost"
-              />
-            )}
           </>
         ) : (
           <div className="space-y-2">

@@ -260,6 +260,7 @@ export default function OrderPage() {
     ? createQuoteRequest.isPending
     : createCustomOrder.isPending;
 
+  // 비로그인 상태에서는 배송지 조건 없이 submit 허용 → 핸들러 내부에서 로그인 리다이렉트 처리
   const isSubmitDisabled = (isLoggedIn && (!selectedAddressId || !selectedAddress)) || isPending || imageUpload.isUploading;
 
   const estimatedDays = getEstimatedDays(watchedValues);

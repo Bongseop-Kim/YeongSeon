@@ -89,15 +89,6 @@ export const QuantityStep = ({
         </CardContent>
       </Card>
 
-      {!fabricProvided && !reorder && (
-        <PackageSelector
-          quantity={quantity}
-          isLoggedIn={isLoggedIn}
-          selectedPackage={selectedPackage}
-          onSelectPackage={onSelectPackage}
-        />
-      )}
-
       <Card>
         <CardContent className="space-y-4 pt-6">
           <Label className="text-sm font-medium text-zinc-900 block">
@@ -120,6 +111,15 @@ export const QuantityStep = ({
           </div>
         </CardContent>
       </Card>
+
+      {!fabricProvided && !reorder && (
+        <PackageSelector
+          quantity={quantity}
+          isLoggedIn={isLoggedIn}
+          selectedPackage={selectedPackage}
+          onSelectPackage={onSelectPackage}
+        />
+      )}
     </div>
   );
 };
