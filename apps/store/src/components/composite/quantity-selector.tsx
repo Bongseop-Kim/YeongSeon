@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Minus, Plus } from "lucide-react";
 
 interface QuantitySelectorProps {
@@ -44,7 +45,18 @@ export function QuantitySelector({
         >
           <Minus className="w-4 h-4" />
         </Button>
-        <span className="w-12 text-center font-medium">{value}</span>
+        <Input
+          type="number"
+          value={value}
+          onChange={(e) => {
+            const next = Number(e.target.value);
+            if (isNaN(next)) return;
+            if (next < min) return onChange(min);
+            if (max !== undefined && next > max) return onChange(max);
+            onChange(next);
+          }}
+          className="w-12 text-center font-medium shadow-none rounded-none border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
         <Button
           variant="none"
           size="icon"

@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
-import { useFormContext } from "react-hook-form";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Controller, useFormContext } from "react-hook-form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckboxField } from "@/components/composite/check-box-field";
-import { QuantitySelector } from "@/features/custom-order/components/quantity-selector";
+import { QuantitySelector } from "@/components/composite/quantity-selector";
 import { PackageSelector } from "@/features/custom-order/components/package-selector";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
-import { cn } from "@/lib/utils";
+import { StepLayout } from "./step-layout";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Button } from "@/components/ui/button";
 
 const QUANTITY_PRESETS = [4, 8, 12, 20, 50, 100] as const;
 
@@ -43,72 +44,78 @@ export const QuantityStep = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-zinc-900">
-          수량을 선택해주세요
-        </h2>
-        <p className="text-sm text-zinc-500 mt-1">
-          최소 4개부터 주문 가능합니다
-        </p>
-      </div>
-
+    <StepLayout
+      guideTitle="결정 가이드"
+      guideItems={[
+        "4개, 8개, 12개처럼 기본 단위 추천",
+        "100개 이상은 견적요청으로 전환",
+        "시작 방식 선택 후 패키지 추천 사용",
+      ]}
+    >
       <Card>
-        <CardContent className="space-y-6 pt-6">
-          <div>
-            <Label className="text-sm font-medium text-zinc-900 mb-3 block">
-              빠른 선택
-            </Label>
-            <div className="flex flex-wrap gap-2">
-              {QUANTITY_PRESETS.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  aria-pressed={quantity === preset}
-                  onClick={() => handlePresetClick(preset)}
-                  className={cn(
-                    "px-4 py-2 rounded-full text-sm font-medium transition-colors border",
-                    quantity === preset
-                      ? "bg-zinc-900 text-white border-zinc-900"
-                      : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-400"
-                  )}
-                >
-                  {preset}개
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <QuantitySelector control={control} />
-
-          {quantity >= 100 && (
-            <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
-              100개 이상은 견적요청으로 진행됩니다. 담당자가 별도 안내해드려요.
-            </div>
-          )}
+        <CardHeader>
+          <CardTitle>
+            시작 방식
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <CheckboxField
+            name="fabricProvided"
+            control={control}
+            label="원단 직접 제공"
+            description="보유한 원단을 보내주시면 봉제만 진행합니다"
+          />
+          <CheckboxField
+            name="reorder"
+            control={control}
+            label="재주문"
+            description="이전에 주문한 동일 디자인으로 재주문합니다"
+            disabled={fabricProvided}
+          />
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="space-y-4 pt-6">
-          <Label className="text-sm font-medium text-zinc-900 block">
-            시작 방식
-          </Label>
-          <div className="space-y-3">
-            <CheckboxField
-              name="fabricProvided"
-              control={control}
-              label="원단 직접 제공"
-              description="보유한 원단을 보내주시면 봉제만 진행합니다"
-            />
-            <CheckboxField
-              name="reorder"
-              control={control}
-              label="재주문"
-              description="이전에 주문한 동일 디자인으로 재주문합니다"
-              disabled={fabricProvided}
-            />
-          </div>
+        <CardHeader>
+          <CardTitle>
+            수량 선택
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <ButtonGroup>
+            {QUANTITY_PRESETS.map((preset) => (
+              <Button
+                key={preset}
+                type="button"
+                variant={quantity === preset ? "default" : "outline"}
+                onClick={() => handlePresetClick(preset)}
+              >
+                {preset}개
+              </Button>
+            ))}
+          </ButtonGroup>
+
+          <Controller
+            name="quantity"
+            control={control}
+            render={({ field }) => (
+              <QuantitySelector
+                value={field.value}
+                onChange={field.onChange}
+                min={4}
+              />
+            )}
+          />
+
+          {quantity >= 100 && (
+            <Card>
+              <CardContent>
+                <CardDescription>
+                  100개 이상은 견적요청으로 진행됩니다. 담당자가 별도 안내해드려요.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          )}
         </CardContent>
       </Card>
 
@@ -120,6 +127,6 @@ export const QuantityStep = ({
           onSelectPackage={onSelectPackage}
         />
       )}
-    </div>
+    </StepLayout>
   );
 };
