@@ -83,7 +83,7 @@ export const PackageSelector = ({
                 )}
               >
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 h-3">
+                  <CardTitle className="flex items-center gap-2 min-h-6">
                     {preset.name}
                     {preset.badge && (
                       <Badge>
@@ -114,7 +114,7 @@ export const PackageSelector = ({
                   <Separator />
                   <div>
                     <CardTitle>
-                      {packageCost?.toLocaleString()}원
+                      {packageCost != null ? `${packageCost.toLocaleString()}원` : "가격 정보 없음"}
                     </CardTitle>
                     <span className="text-xs text-zinc-500">
                       {preset.tagline}

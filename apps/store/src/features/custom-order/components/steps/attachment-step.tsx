@@ -36,12 +36,13 @@ export const AttachmentStep = ({ imageUpload }: AttachmentStepProps) => {
 
       <Card>
         <CardContent className="space-y-2 px-4 py-4">
-          <Label>추가 요청사항</Label>
+          <Label htmlFor="additionalNotes">추가 요청사항</Label>
           <Controller
             name="additionalNotes"
             control={control}
             render={({ field }) => (
               <Textarea
+                id="additionalNotes"
                 placeholder="참고할 내용이 있으면 자유롭게 작성해주세요"
                 maxLength={500}
                 className="min-h-24 rounded-lg border-zinc-300 shadow-none"

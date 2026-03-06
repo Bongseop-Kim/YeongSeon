@@ -48,8 +48,11 @@ export function QuantitySelector({
         <Input
           type="number"
           value={value}
+          step={1}
+          min={min}
+          max={max}
           onChange={(e) => {
-            const next = Number(e.target.value);
+            const next = parseInt(e.target.value, 10);
             if (isNaN(next)) return;
             if (next < min) return onChange(min);
             if (max !== undefined && next > max) return onChange(max);

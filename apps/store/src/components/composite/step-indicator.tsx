@@ -46,6 +46,17 @@ export function StepIndicator({
         const isCompleted = isVisited && !isCurrent;
         const isClickable = isVisible && isVisited && !isCurrent;
 
+        if (!isVisible) {
+          return (
+            <span
+              key={step.id}
+              aria-hidden="true"
+              role="presentation"
+              className="h-1.5 w-7 rounded-full bg-zinc-200/50"
+            />
+          );
+        }
+
         return (
           <button
             key={step.id}
@@ -57,7 +68,6 @@ export function StepIndicator({
             className={cn(
               "h-1.5 w-7 rounded-full transition-colors",
               isCurrent || isCompleted ? "bg-zinc-900" : "bg-zinc-200",
-              !isVisible && "bg-zinc-200/50",
               isClickable && "cursor-pointer hover:bg-zinc-700",
               !isClickable && "cursor-default"
             )}

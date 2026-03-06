@@ -68,11 +68,15 @@ export const MobileNavigation = ({
                 ? "견적요청"
                 : `${grandTotal.toLocaleString()}원 주문하기`}
           </Button>
-          {!selectedAddress && (
+          {!isLoggedIn ? (
+            <p className="text-sm text-center text-zinc-500">
+              로그인 후 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수 있어요
+            </p>
+          ) : !selectedAddress ? (
             <p className="text-sm text-center text-zinc-500">
               배송지를 추가하면 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수 있어요
             </p>
-          )}
+          ) : null}
         </div>
       ) : (
         <div className="flex gap-3">

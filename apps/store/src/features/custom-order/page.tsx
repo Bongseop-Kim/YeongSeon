@@ -267,7 +267,7 @@ export default function OrderPage() {
 
   const goToStepById = (id: WizardStepId) => {
     const idx = WIZARD_STEPS.findIndex((s) => s.id === id);
-    if (idx !== -1) wizard.forceGoToStep(idx);
+    if (idx !== -1 && wizard.shouldShowStep(idx)) wizard.forceGoToStep(idx);
   };
 
   const fabricGuideLabel = watchedValues.fabricProvided
@@ -334,7 +334,7 @@ export default function OrderPage() {
             sidebar={
               <StickySummary
                 options={watchedValues}
-                totalCost={grandTotal}
+                totalCost={totalCost}
                 sewingCost={sewingCost}
                 fabricCost={fabricCost}
                 isLoggedIn={isLoggedIn}
@@ -342,7 +342,6 @@ export default function OrderPage() {
             }
             sidebarClassName={isMobile ? "pb-24" : ""}
           >
-            <>
               <ProgressBar
                 steps={wizard.steps}
                 currentStepIndex={wizard.currentStepIndex}
@@ -386,7 +385,6 @@ export default function OrderPage() {
                   onSubmit={handleSubmit}
                 />
               )}
-            </>
           </PageLayout>
           {isMobile && (
             <MobileNavigation

@@ -36,13 +36,14 @@ export const ImageUpload = ({
         <div className="rounded-lg border-2 border-dashed border-zinc-300 bg-white p-5 text-center transition-colors">
           <input
             ref={inputRef}
+            id="file-upload"
             type="file"
             accept="image/*"
             onChange={handleChange}
-            style={{ display: "none" }}
+            className="sr-only"
           />
           <Label
-            onClick={() => inputRef.current?.click()}
+            htmlFor="file-upload"
             className="cursor-pointer flex flex-col items-center gap-2"
           >
             {isUploading ? (

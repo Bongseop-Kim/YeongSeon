@@ -93,7 +93,7 @@ export const ConfirmStep = ({
       guideItems={[
         "수량/옵션/배송지 재확인",
         "참고자료 누락 여부 확인",
-        "제출 후 주문 내역으로 이동",
+        isQuoteMode ? "제출 후 견적 내역으로 이동" : "제출 후 주문 내역으로 이동",
       ]}
     >
       <Card>

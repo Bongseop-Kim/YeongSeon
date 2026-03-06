@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import type { UseFormGetValues } from "react-hook-form";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-import type { StepConfig } from "@/features/custom-order/types/wizard";
+import type { QuoteOrderOptions } from "../types/order";
+import type { StepConfig } from "../types/wizard";
 
 interface UseWizardStepOptions {
   steps: StepConfig[];
@@ -99,12 +99,12 @@ export const useWizardStep = ({
 
   const forceGoToStep = useCallback(
     (index: number) => {
-      if (index >= 0 && index < steps.length) {
+      if (index >= 0 && index < steps.length && shouldShowStep(index)) {
         setCurrentStepIndex(index);
         setVisitedSteps((prev) => new Set([...prev, index]));
       }
     },
-    [steps.length]
+    [steps.length, shouldShowStep]
   );
 
   const resetTo = useCallback(

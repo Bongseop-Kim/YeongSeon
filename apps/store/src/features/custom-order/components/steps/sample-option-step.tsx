@@ -49,8 +49,8 @@ export const SampleOptionStep = () => {
           type="button"
           onClick={() => handleSampleToggle(false)}
           className={cn(
-            "flex h-[88px] flex-col justify-start px-3.5 py-3",
-            !sample ? "" : ""
+            "flex h-[88px] flex-col justify-start rounded-xl border-2 px-3.5 py-3",
+            !sample ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-400"
           )}
         >
           <p className="text-sm font-semibold text-zinc-900">아니요</p>
@@ -60,8 +60,8 @@ export const SampleOptionStep = () => {
           type="button"
           onClick={() => handleSampleToggle(true)}
           className={cn(
-            "flex h-[88px] flex-col justify-start px-3.5 py-3",
-            sample ? '' : ''
+            "flex h-[88px] flex-col justify-start rounded-xl border-2 px-3.5 py-3",
+            sample ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-400"
           )}
         >
           <p className="text-sm font-semibold text-zinc-900">네, 샘플 필요</p>
@@ -94,9 +94,9 @@ export const SampleOptionStep = () => {
                 type="button"
                 onClick={() => handleSampleType("fabric")}
                 className={cn(
-                  "w-full rounded-xl px-3 py-3",
+                  "w-full rounded-xl border-2 px-3 py-3",
                   sampleType === "fabric"
-                    ? '' : ''
+                    ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-400"
                 )}
               >
                 <p className="text-sm font-medium text-zinc-900">원단 샘플만</p>
@@ -112,9 +112,9 @@ export const SampleOptionStep = () => {
                 type="button"
                 onClick={() => handleSampleType("fabric_and_sewing")}
                 className={cn(
-                  "w-full rounded-xl px-3 py-3",
+                  "w-full rounded-xl border-2 px-3 py-3",
                   sampleType === "fabric_and_sewing"
-                    ? '' : ''
+                    ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-400"
                 )}
               >
                 <p className="text-sm font-medium text-zinc-900">원단 + 봉제 샘플</p>

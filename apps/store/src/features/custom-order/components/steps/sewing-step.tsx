@@ -103,6 +103,7 @@ export const SewingStep = () => {
                 key={type}
                 type="button"
                 onClick={() => handleTieTypeChange(type)}
+                aria-pressed={tieType === type}
                 className={cn(
                   "flex h-[42px] items-center justify-center px-3 text-center text-sm",
                   tieType === type
@@ -130,6 +131,7 @@ export const SewingStep = () => {
                   type="button"
                   onClick={() => handleStyleChange(style.value)}
                   disabled={isDisabled}
+                  aria-pressed={isSelected}
                   className={cn(
                     "w-full rounded-xl px-3 py-3",
                     isSelected ? '' : '',

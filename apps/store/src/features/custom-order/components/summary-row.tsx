@@ -7,8 +7,8 @@ interface SummaryRowProps {
 }
 
 export const SummaryRow = ({ label, value, onEdit }: SummaryRowProps) => (
-  <div className="flex h-10 items-center justify-between gap-2">
-    <div className="flex min-w-0 flex-1 items-center text-sm">
+  <div className="flex min-h-10 items-start justify-between gap-2">
+    <div className="flex min-w-0 flex-1 items-start text-sm">
       <span className="w-16 shrink-0 text-zinc-500">{label}</span>
       <span className="min-w-0 flex-1 break-words text-zinc-800">{value}</span>
     </div>

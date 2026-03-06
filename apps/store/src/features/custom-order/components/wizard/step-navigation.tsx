@@ -29,7 +29,7 @@ export const StepNavigation = ({
   return (
     <Card>
       <CardHeader className="flex items-center justify-between gap-3">
-        <CardDescription>
+        <CardDescription aria-live="polite" aria-atomic="true">
           {hintText}
         </CardDescription>
         <div className="flex items-center gap-2">
