@@ -1,9 +1,8 @@
 import { Controller, useFormContext } from "react-hook-form";
-import { Card, CardContent } from "@/components/ui/card";
+import { RadioCard } from "@/components/composite/radio-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { cn } from "@/lib/utils";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
@@ -22,29 +21,26 @@ export const SpecStep = () => {
       ]}
     >
       <Card>
-        <CardContent className="space-y-3 px-[18px] py-[18px]">
-          <Label>사이즈 타입</Label>
+        <CardHeader>
+          <CardTitle>사이즈 타입</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
           <RadioGroup
             value={sizeType}
             onValueChange={(v) => setValue("sizeType", v as "ADULT" | "CHILD")}
           >
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {(["ADULT", "CHILD"] as const).map((type) => (
-                <Label
+                <RadioCard
                   key={type}
-                  htmlFor={`size-type-${type}`}
-                  className={cn(
-                    "flex h-[42px] cursor-pointer items-center justify-center px-3 text-sm",
-                    sizeType === type ? "font-semibold" : ""
-                  )}
+                  value={type}
+                  id={`size-type-${type}`}
+                  selected={sizeType === type}
                 >
-                  <RadioGroupItem
-                    value={type}
-                    id={`size-type-${type}`}
-                    className="sr-only"
-                  />
-                  {type === "ADULT" ? "성인용" : "아동용"}
-                </Label>
+                  <CardHeader>
+                    <CardTitle>{type === "ADULT" ? "성인용" : "아동용"}</CardTitle>
+                  </CardHeader>
+                </RadioCard>
               ))}
             </div>
           </RadioGroup>
@@ -52,8 +48,10 @@ export const SpecStep = () => {
       </Card>
 
       <Card>
-        <CardContent className="space-y-2 px-[18px] py-[18px]">
-          <Label>넥타이 폭</Label>
+        <CardHeader>
+          <CardTitle>넥타이 폭</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 p-4">
           <Controller
             name="tieWidth"
             control={control}

@@ -1,4 +1,5 @@
 import { useFormContext } from "react-hook-form";
+import { RadioCard } from "@/components/composite/radio-card";
 import {
   Card,
   CardContent,
@@ -6,9 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { cn } from "@/lib/utils";
+import { RadioGroup } from "@/components/ui/radio-group";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
 
@@ -89,32 +88,19 @@ export const FabricStep = () => {
                 const cardValue = `${card.fabricType}-${card.designType}`;
 
                 return (
-                  <Label
+                  <RadioCard
                     key={cardValue}
-                    htmlFor={`fabric-${cardValue}`}
-                    className="block h-full cursor-pointer"
+                    value={cardValue}
+                    id={`fabric-${cardValue}`}
+                    selected={isSelected(card)}
                   >
-                    <RadioGroupItem
-                      value={cardValue}
-                      id={`fabric-${cardValue}`}
-                      className="sr-only"
-                    />
-                    <Card
-                      className={cn(
-                        "h-full",
-                        isSelected(card)
-                          ? "border-zinc-900 bg-zinc-50"
-                          : "hover:border-zinc-400",
-                      )}
-                    >
-                      <CardHeader>
-                        <CardTitle>{card.label}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription>{card.description}</CardDescription>
-                      </CardContent>
-                    </Card>
-                  </Label>
+                    <CardHeader>
+                      <CardTitle>{card.label}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription>{card.description}</CardDescription>
+                    </CardContent>
+                  </RadioCard>
                 );
               })}
             </div>

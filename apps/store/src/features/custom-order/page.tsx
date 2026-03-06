@@ -1,17 +1,11 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Form } from "@/components/ui/form";
 import { calculateTotalCost, getEstimatedDays } from "./utils/pricing";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
-import { ROUTES } from "@/constants/ROUTES";
-import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
-import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
-import { useCreateQuoteRequest } from "@/features/quote-request/api/quote-request-query";
-import { toCreateQuoteRequestInput } from "@/features/quote-request/api/quote-request-mapper";
 import type { QuoteOrderOptions, OrderOptions } from "./types/order";
 import type { PackagePreset, WizardStepId } from "./types/wizard";
 import { WIZARD_STEPS } from "./constants/WIZARD_STEPS";
@@ -19,7 +13,14 @@ import { PACKAGE_PRESETS } from "./constants/PACKAGE_PRESETS";
 import { SAMPLE_COST } from "./constants/SAMPLE_PRICING";
 import { useWizardStep } from "./hooks/useWizardStep";
 import { useWizardDraft, useRestoreDraft, useAutoSave } from "./hooks/useWizardDraft";
+import { useCustomOrderSubmit } from "./hooks/useCustomOrderSubmit";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
+import {
+  getFabricLabel,
+  getSewingStyleLabel,
+  getSizeLabel,
+  getSampleTypeLabel,
+} from "./utils/option-labels";
 import { PageLayout } from "@/components/layout/page-layout";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ProgressBar } from "./components/wizard/progress-bar";
@@ -36,11 +37,8 @@ import { AttachmentStep } from "./components/steps/attachment-step";
 import { ConfirmStep } from "./components/steps/confirm-step";
 
 export default function OrderPage() {
-  const navigate = useNavigate();
   const { user } = useAuthStore();
   const isLoggedIn = !!user;
-  const createCustomOrder = useCreateCustomOrder();
-  const createQuoteRequest = useCreateQuoteRequest();
   const imageUpload = useImageUpload();
   const { clearDraft } = useWizardDraft();
   const { isMobile } = useBreakpoint();
@@ -134,161 +132,31 @@ export default function OrderPage() {
     }
   };
 
-  const handleCreateQuoteRequest = async () => {
-    if (!user) {
-      toast.error("로그인이 필요합니다.");
-      navigate(ROUTES.LOGIN);
-      return;
-    }
-
-    if (!selectedAddressId || !selectedAddress) {
-      toast.error("배송지를 선택해주세요.");
-      return;
-    }
-
-    if (!watchedValues.contactName.trim()) {
-      toast.error("담당자 성함을 입력해주세요.");
-      return;
-    }
-
-    if (!watchedValues.contactValue.trim()) {
-      toast.error("연락처를 입력해주세요.");
-      return;
-    }
-
-    if (imageUpload.isUploading) {
-      toast.error("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.");
-      return;
-    }
-
-    const {
-      referenceImages,
-      additionalNotes,
-      sample,
-      sampleType,
-      contactName,
-      contactTitle,
-      contactMethod,
-      contactValue,
-      ...optionsWithoutExtra
-    } = watchedValues;
-
-    try {
-      await createQuoteRequest.mutateAsync({
-        ...toCreateQuoteRequestInput({
-          shippingAddressId: selectedAddressId,
-          options: optionsWithoutExtra,
-          referenceImageUrls: imageUpload.getImageUrls(),
-          additionalNotes,
-          contactName,
-          contactTitle,
-          contactMethod,
-          contactValue,
-        }),
-      });
-
-      clearDraft();
-      toast.success("견적요청이 완료되었습니다!");
-      form.reset();
-      navigate(ROUTES.ORDER_LIST);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "견적요청 처리 중 오류가 발생했습니다.";
-      toast.error(errorMessage);
-    }
-  };
-
-  const handleCreateOrder = async () => {
-    if (!user) {
-      toast.error("로그인이 필요합니다.");
-      navigate(ROUTES.LOGIN);
-      return;
-    }
-
-    if (!selectedAddressId || !selectedAddress) {
-      toast.error("배송지를 선택해주세요.");
-      return;
-    }
-
-    if (imageUpload.isUploading) {
-      toast.error("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.");
-      return;
-    }
-
-    const {
-      referenceImages,
-      additionalNotes,
-      sample,
-      sampleType,
-      contactName,
-      contactTitle,
-      contactMethod,
-      contactValue,
-      ...coreOptions
-    } = watchedValues;
-
-    try {
-      await createCustomOrder.mutateAsync({
-        ...toCreateCustomOrderInput({
-          shippingAddressId: selectedAddressId,
-          options: coreOptions,
-          referenceImageUrls: imageUpload.getImageUrls(),
-          additionalNotes,
-          sample,
-          sampleType,
-        }),
-      });
-
-      clearDraft();
-      toast.success("주문이 완료되었습니다!");
-      form.reset();
-      navigate(ROUTES.ORDER_LIST);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "주문 처리 중 오류가 발생했습니다.";
-      toast.error(errorMessage);
-    }
-  };
-
-  const handleSubmit = isQuoteMode ? handleCreateQuoteRequest : handleCreateOrder;
-
-  const isPending = isQuoteMode
-    ? createQuoteRequest.isPending
-    : createCustomOrder.isPending;
-
-  // 비로그인 상태에서는 배송지 조건 없이 submit 허용 → 핸들러 내부에서 로그인 리다이렉트 처리
-  const isSubmitDisabled = (isLoggedIn && (!selectedAddressId || !selectedAddress)) || isPending || imageUpload.isUploading;
+  const { handleSubmit, isPending, isSubmitDisabled } = useCustomOrderSubmit({
+    selectedAddressId,
+    selectedAddress: selectedAddress ?? null,
+    imageUpload,
+    watchedValues,
+    clearDraft,
+    formReset: form.reset,
+  });
 
   const estimatedDays = getEstimatedDays(watchedValues);
+  const isFabricHidden = watchedValues.fabricProvided || watchedValues.reorder;
 
   const goToStepById = (id: WizardStepId) => {
     const idx = WIZARD_STEPS.findIndex((s) => s.id === id);
-    if (idx !== -1 && wizard.shouldShowStep(idx)) wizard.forceGoToStep(idx);
+    if (idx === -1) return;
+    if (id === "fabric" && isFabricHidden) return;
+    wizard.forceGoToStep(idx);
   };
 
-  const fabricGuideLabel = watchedValues.fabricProvided
-    ? "원단 직접 제공"
-    : watchedValues.reorder
-      ? "재주문"
-      : watchedValues.fabricType && watchedValues.designType
-        ? `${watchedValues.fabricType === "SILK" ? "실크" : "폴리"} · ${
-            watchedValues.designType === "YARN_DYED" ? "선염" : "날염"
-          }`
-        : "조합을 선택하세요";
+  const isHiddenStep = (index: number) =>
+    WIZARD_STEPS[index]?.id === "fabric" && isFabricHidden;
 
-  const sewingGuideLabel = watchedValues.dimple
-    ? "딤플"
-    : watchedValues.spoderato
-      ? "스포데라토"
-      : watchedValues.fold7
-        ? "7폴드"
-        : "일반";
-
-  const sizeGuideLabel = watchedValues.sizeType === "CHILD" ? "아동용" : "성인용";
+  const fabricGuideLabel = getFabricLabel(watchedValues, "조합을 선택하세요");
+  const sewingGuideLabel = getSewingStyleLabel(watchedValues);
+  const sizeGuideLabel = getSizeLabel(watchedValues.sizeType);
 
   const finishingGuideLabel =
     [
@@ -299,15 +167,7 @@ export default function OrderPage() {
       .filter(Boolean)
       .join("/") || "기본 마감";
 
-  const sampleGuideLabel = !watchedValues.sample
-    ? "샘플 미선택"
-    : watchedValues.sampleType === "sewing"
-      ? "봉제 샘플"
-      : watchedValues.sampleType === "fabric"
-        ? "원단 샘플"
-        : watchedValues.sampleType === "fabric_and_sewing"
-          ? "원단 + 봉제 샘플"
-          : "샘플 유형 선택 필요";
+  const sampleGuideLabel = getSampleTypeLabel(watchedValues) ?? "샘플 미선택";
 
   const attachmentGuideLabel = `첨부 상태: 이미지 ${
     imageUpload.uploadedImages.length
@@ -347,7 +207,9 @@ export default function OrderPage() {
                 steps={wizard.steps}
                 currentStepIndex={wizard.currentStepIndex}
                 visitedSteps={wizard.visitedSteps}
+                completedSteps={wizard.completedSteps}
                 shouldShowStep={wizard.shouldShowStep}
+                isHiddenStep={isHiddenStep}
                 onStepClick={wizard.goToStep}
               />
               {wizard.currentStep.id === "quantity" && (

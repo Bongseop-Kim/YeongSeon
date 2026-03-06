@@ -1,12 +1,11 @@
+import { RadioCard } from "@/components/composite/radio-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { PACKAGE_PRESETS } from "@/features/custom-order/constants/PACKAGE_PRESETS";
 import { calculateTotalCost } from "@/features/custom-order/utils/pricing";
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 
 interface PackageSelectorProps {
@@ -75,65 +74,53 @@ export const PackageSelector = ({
                 : null;
 
               return (
-                <Label
+                <RadioCard
                   key={preset.id}
-                  htmlFor={`package-${preset.id}`}
-                  className="block h-full cursor-pointer text-left"
+                  value={preset.id}
+                  id={`package-${preset.id}`}
+                  selected={isSelected}
+                  className="text-left"
                 >
-                  <RadioGroupItem
-                    value={preset.id}
-                    id={`package-${preset.id}`}
-                    className="sr-only"
-                  />
-                  <Card
-                    className={cn(
-                      "h-full",
-                      isSelected
-                        ? "border-zinc-900 bg-zinc-50"
-                        : "hover:border-zinc-400"
-                    )}
-                  >
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 min-h-6 justify-between">
-                        {preset.name}
-                        {preset.badge && (
-                          <Badge>
-                            {preset.badge}
-                          </Badge>
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-1 text-xs text-zinc-500 h-20">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 min-h-6 justify-between">
+                      {preset.name}
+                      {preset.badge && (
+                        <Badge>
+                          {preset.badge}
+                        </Badge>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1 text-xs text-zinc-500 h-20">
+                      <p>
+                        {OPTION_LABELS.fabricType(preset.values.fabricType)} ·{" "}
+                        {OPTION_LABELS.designType(preset.values.designType)}
+                      </p>
+                      <p>{OPTION_LABELS.tieType(preset.values.tieType)}</p>
+                      <p>{OPTION_LABELS.interlining(preset.values.interlining)}</p>
+                      {(preset.values.brandLabel || preset.values.careLabel) && (
                         <p>
-                          {OPTION_LABELS.fabricType(preset.values.fabricType)} ·{" "}
-                          {OPTION_LABELS.designType(preset.values.designType)}
+                          {[
+                            preset.values.brandLabel && "브랜드 라벨",
+                            preset.values.careLabel && "케어 라벨",
+                          ]
+                            .filter(Boolean)
+                            .join(" + ")}
                         </p>
-                        <p>{OPTION_LABELS.tieType(preset.values.tieType)}</p>
-                        <p>{OPTION_LABELS.interlining(preset.values.interlining)}</p>
-                        {(preset.values.brandLabel || preset.values.careLabel) && (
-                          <p>
-                            {[
-                              preset.values.brandLabel && "브랜드 라벨",
-                              preset.values.careLabel && "케어 라벨",
-                            ]
-                              .filter(Boolean)
-                              .join(" + ")}
-                          </p>
-                        )}
-                      </div>
-                      <Separator />
-                      <div>
-                        <CardTitle>
-                          {packageCost != null ? `${packageCost.toLocaleString()}원` : "가격 정보 없음"}
-                        </CardTitle>
-                        <span className="text-xs text-zinc-500">
-                          {preset.tagline}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Label>
+                      )}
+                    </div>
+                    <Separator />
+                    <div>
+                      <CardTitle>
+                        {packageCost != null ? `${packageCost.toLocaleString()}원` : "가격 정보 없음"}
+                      </CardTitle>
+                      <span className="text-xs text-zinc-500">
+                        {preset.tagline}
+                      </span>
+                    </div>
+                  </CardContent>
+                </RadioCard>
               );
             })}
           </div>

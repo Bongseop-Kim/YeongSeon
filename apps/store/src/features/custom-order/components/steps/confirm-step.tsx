@@ -1,15 +1,18 @@
 import { useFormContext } from "react-hook-form";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { SummaryRow } from "@/features/custom-order/components/summary-row";
 import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
+import {
+  getFabricLabel,
+  getFinishingLabel,
+  getSampleTypeLabel,
+  getSewingStyleLabel,
+  getSizeLabel,
+  getTieTypeLabel,
+} from "@/features/custom-order/utils/option-labels";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
@@ -33,59 +36,27 @@ export const ConfirmStep = ({
   const values = watch();
   const isQuoteMode = values.quantity >= 100;
 
-  const fabricLabel = values.fabricProvided
-    ? "원단 직접 제공"
-    : values.reorder
-      ? "재주문"
-      : values.fabricType && values.designType
-        ? [
-          values.fabricType === "SILK" ? "실크" : "폴리",
-          values.designType === "YARN_DYED" ? "선염" : "날염",
-        ].join(" · ")
-        : "미선택";
+  const fabricLabel = getFabricLabel(values);
 
   const sewingLabel = values.tieType
-    ? [
-      values.tieType === "AUTO" ? "자동 봉제" : "수동 봉제",
-      values.dimple
-        ? "딤플"
-        : values.spoderato
-          ? "스포데라토"
-          : values.fold7
-            ? "7폴드"
-            : "일반",
-    ].join(" · ")
+    ? `${getTieTypeLabel(values.tieType)} · ${getSewingStyleLabel(values)}`
     : "미선택";
 
-  const sizeLabel = values.sizeType === "CHILD" ? "아동용" : values.sizeType ? "성인용" : "미선택";
+  const sizeLabel = getSizeLabel(values.sizeType);
+  const finishingLabel = getFinishingLabel(values);
+  const sampleTypeLabel = getSampleTypeLabel(values);
 
-  const interliningLabel = [
-    values.interlining === "WOOL" ? "울 심지" : values.interlining ? "폴리 심지" : null,
-    values.interliningThickness === "THIN" ? "얇음" : values.interliningThickness ? "두꺼움" : null,
-  ].filter(Boolean).join(", ") || "미선택";
+  const sampleCost =
+    values.sample && values.sampleType ? SAMPLE_COST[values.sampleType] : 0;
 
-  const additionalStitch = [
-    values.triangleStitch && "삼각 봉제",
-    values.sideStitch && "옆선 봉제",
-    values.barTack && "바택 처리",
-  ].filter(Boolean);
-
-  const labels = [
-    values.brandLabel && "브랜드 라벨",
-    values.careLabel && "케어 라벨",
-  ].filter(Boolean);
-
-  const sampleTypeLabel = values.sample && values.sampleType
-    ? values.sampleType === "sewing"
-      ? "봉제 샘플"
-      : values.sampleType === "fabric"
-        ? "원단 샘플"
-        : "원단 + 봉제 샘플"
-    : null;
-
-  const sampleCost = values.sample && values.sampleType
-    ? SAMPLE_COST[values.sampleType]
-    : 0;
+  const attachmentSummary = [
+    imageUpload.uploadedImages.length > 0
+      ? `이미지 ${imageUpload.uploadedImages.length}개`
+      : null,
+    values.additionalNotes ? "요청사항 있음" : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <StepLayout
@@ -93,7 +64,9 @@ export const ConfirmStep = ({
       guideItems={[
         "수량/옵션/배송지 재확인",
         "참고자료 누락 여부 확인",
-        isQuoteMode ? "제출 후 견적 내역으로 이동" : "제출 후 주문 내역으로 이동",
+        isQuoteMode
+          ? "제출 후 견적 내역으로 이동"
+          : "제출 후 주문 내역으로 이동",
       ]}
     >
       <Card>
@@ -114,51 +87,30 @@ export const ConfirmStep = ({
             onEdit={() => goToStepById("sewing")}
           />
           <SummaryRow
-            label="규격"
+            label="사이즈"
             value={`${sizeLabel}, 폭 ${values.tieWidth}cm`}
             onEdit={() => goToStepById("spec")}
           />
           <SummaryRow
-            label="심지"
-            value={interliningLabel}
+            label="상세 옵션"
+            value={finishingLabel}
             onEdit={() => goToStepById("finishing")}
           />
-          {additionalStitch.length > 0 && (
-            <SummaryRow
-              label="추가 봉제"
-              value={additionalStitch.join(", ")}
-              onEdit={() => goToStepById("finishing")}
-            />
-          )}
-          {labels.length > 0 && (
-            <SummaryRow
-              label="라벨"
-              value={labels.join(", ")}
-              onEdit={() => goToStepById("finishing")}
-            />
-          )}
-          {sampleTypeLabel && (
-            <SummaryRow
-              label="샘플"
-              value={`${sampleTypeLabel} (${sampleCost.toLocaleString()}원)`}
-              onEdit={() => goToStepById("sample")}
-            />
-          )}
-          {(imageUpload.uploadedImages.length > 0 ||
-            values.additionalNotes) && (
-              <SummaryRow
-                label="참고 자료"
-                value={[
-                  imageUpload.uploadedImages.length > 0
-                    ? `이미지 ${imageUpload.uploadedImages.length}개`
-                    : null,
-                  values.additionalNotes ? "요청사항 있음" : null,
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
-                onEdit={() => goToStepById("attachment")}
-              />
-            )}
+
+          <SummaryRow
+            label="샘플"
+            value={
+              sampleTypeLabel
+                ? `${sampleTypeLabel} (${sampleCost.toLocaleString()}원)`
+                : "미선택"
+            }
+            onEdit={() => goToStepById("sample")}
+          />
+          <SummaryRow
+            label="참고 자료"
+            value={attachmentSummary || "없음"}
+            onEdit={() => goToStepById("attachment")}
+          />
         </CardContent>
       </Card>
 

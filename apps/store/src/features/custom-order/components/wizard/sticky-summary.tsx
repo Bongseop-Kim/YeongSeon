@@ -3,6 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import CostBreakdown from "@/features/custom-order/components/cost-breakdown";
 import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
+import {
+  getFabricLabel,
+  getSewingStyleLabel,
+  getTieTypeLabel,
+} from "@/features/custom-order/utils/option-labels";
 import { getEstimatedDays } from "@/features/custom-order/utils/pricing";
 import type { OrderOptions } from "@/features/custom-order/types/order";
 
@@ -26,28 +31,10 @@ export const StickySummary = ({
   const [searchParams] = useSearchParams();
   const canShowCostBreakdown = searchParams.get("showCostBreakdown") === "true";
 
-  const fabricLabel = options.fabricProvided
-    ? "원단 직접 제공"
-    : options.reorder
-      ? "재주문"
-      : options.fabricType && options.designType
-        ? [
-          options.fabricType === "SILK" ? "실크" : "폴리",
-          options.designType === "YARN_DYED" ? "선염" : "날염",
-        ].join(" · ")
-        : "미선택";
+  const fabricLabel = getFabricLabel(options);
 
   const sewingLabel = options.tieType
-    ? [
-      options.tieType === "AUTO" ? "자동" : "수동",
-      options.dimple
-        ? "딤플"
-        : options.spoderato
-          ? "스포데라토"
-          : options.fold7
-            ? "7폴드"
-            : "일반",
-    ].join(" · ")
+    ? `${getTieTypeLabel(options.tieType, true)} · ${getSewingStyleLabel(options)}`
     : "미선택";
 
   const sampleCost = !isQuoteMode && options.sample && options.sampleType
