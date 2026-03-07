@@ -432,7 +432,7 @@ begin
         into v_option_additional_price, v_option_stock
         from product_options po
         where po.product_id = v_product_id
-          and po.option_id = v_selected_option_id
+          and po.id::text = v_selected_option_id
         for update;
 
         if not found then
@@ -447,7 +447,7 @@ begin
           update product_options
           set stock = stock - v_quantity
           where product_id = v_product_id
-            and option_id = v_selected_option_id;
+            and id::text = v_selected_option_id;
         end if;
       else
         -- No option selected: check product-level stock

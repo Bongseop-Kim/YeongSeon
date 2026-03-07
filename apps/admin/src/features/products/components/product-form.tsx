@@ -24,6 +24,7 @@ interface ProductFormValues {
   image?: string | null;
   detail_images?: string[] | null;
   options?: AdminProductOption[];
+  option_label?: string | null;
 }
 
 export interface ProductFormProps {
@@ -41,6 +42,9 @@ export function ProductForm({
   imageUpload,
   handleFinish,
 }: ProductFormProps) {
+  const options = Form.useWatch("options", form);
+  const hasOptions = Array.isArray(options) && options.length > 0;
+
   return (
     <Form {...formProps} form={form} layout="vertical" onFinish={handleFinish}>
       {mode === "edit" ? (
@@ -60,7 +64,7 @@ export function ProductForm({
         <InputNumber min={0} style={{ width: "100%" }} />
       </Form.Item>
 
-      <Form.Item label="상품 이미지">
+      <Form.Item label="상품 이미지" style={{ marginBottom: 60 }}>
         <ProductImageUpload
           fileList={imageUpload.fileList}
           uploading={imageUpload.uploading}
@@ -72,25 +76,42 @@ export function ProductForm({
       </Form.Item>
 
       <Form.Item label="카테고리" name="category" rules={[{ required: true }]}>
-        <Select options={PRODUCT_CATEGORIES.map((v) => ({ label: v, value: v }))} />
+        <Select
+          options={PRODUCT_CATEGORIES.map((v) => ({ label: v, value: v }))}
+        />
       </Form.Item>
       <Form.Item label="색상" name="color" rules={[{ required: true }]}>
         <Select options={PRODUCT_COLORS.map((v) => ({ label: v, value: v }))} />
       </Form.Item>
       <Form.Item label="패턴" name="pattern" rules={[{ required: true }]}>
-        <Select options={PRODUCT_PATTERNS.map((v) => ({ label: v, value: v }))} />
+        <Select
+          options={PRODUCT_PATTERNS.map((v) => ({ label: v, value: v }))}
+        />
       </Form.Item>
       <Form.Item label="소재" name="material" rules={[{ required: true }]}>
-        <Select options={PRODUCT_MATERIALS.map((v) => ({ label: v, value: v }))} />
+        <Select
+          options={PRODUCT_MATERIALS.map((v) => ({ label: v, value: v }))}
+        />
       </Form.Item>
       <Form.Item label="상품 정보" name="info" rules={[{ required: true }]}>
         <Input.TextArea rows={4} />
       </Form.Item>
-      <Form.Item label="재고" name="stock" tooltip="비워두면 무제한">
-        <InputNumber min={0} style={{ width: "100%" }} placeholder="비워두면 무제한" />
-      </Form.Item>
+      {!hasOptions && (
+        <Form.Item label="재고" name="stock" tooltip="비워두면 무제한">
+          <InputNumber
+            min={0}
+            style={{ width: "100%" }}
+            placeholder="비워두면 무제한"
+          />
+        </Form.Item>
+      )}
 
       <Card title="옵션" size="small" style={{ marginBottom: 24 }}>
+        {hasOptions && (
+          <Form.Item label="옵션 제목" name="option_label">
+            <Input placeholder="예: 길이, 색상, 사이즈" />
+          </Form.Item>
+        )}
         <Form.List name="options">
           {(fields, { add, remove }) => (
             <>
@@ -101,13 +122,6 @@ export function ProductForm({
                   style={{ display: "flex", marginBottom: 8 }}
                   align="baseline"
                 >
-                  <Form.Item
-                    {...restField}
-                    name={[name, "optionId"]}
-                    rules={[{ required: true, message: "ID" }]}
-                  >
-                    <Input placeholder="옵션 ID" />
-                  </Form.Item>
                   <Form.Item
                     {...restField}
                     name={[name, "name"]}
@@ -124,7 +138,12 @@ export function ProductForm({
                   <MinusCircleOutlined onClick={() => remove(name)} />
                 </Space>
               ))}
-              <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+              <Button
+                type="dashed"
+                onClick={() => add()}
+                block
+                icon={<PlusOutlined />}
+              >
                 옵션 추가
               </Button>
             </>

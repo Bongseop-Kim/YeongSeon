@@ -19,17 +19,18 @@ SELECT
   p.material,
   p.info,
   p.stock,
+  p.option_label AS "optionLabel",
   p.created_at,
   p.updated_at,
   coalesce(
     jsonb_agg(
       jsonb_build_object(
-        'id', po.option_id,
+        'id', po.id::text,
         'name', po.name,
         'additionalPrice', po.additional_price,
         'stock', po.stock
       )
-      order by po.option_id
+      order by po.id
     ) filter (where po.id is not null),
     '[]'::jsonb
   ) AS options,
@@ -41,7 +42,7 @@ LEFT JOIN public.product_like_counts_rpc() lc ON lc.product_id = p.id
 GROUP BY
   p.id, p.code, p.name, p.price, p.image, p.detail_images,
   p.category, p.color, p.pattern, p.material, p.info,
-  p.stock, p.created_at, p.updated_at, lc.likes;
+  p.stock, p.option_label, p.created_at, p.updated_at, lc.likes;
 
 -- ── order_list_view ──────────────────────────────────────────
 CREATE OR REPLACE VIEW public.order_list_view

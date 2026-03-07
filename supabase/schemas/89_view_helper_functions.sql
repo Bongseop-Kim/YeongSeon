@@ -88,11 +88,11 @@ AS $$
     coalesce(
       jsonb_agg(
         jsonb_build_object(
-          'id', po.option_id,
+          'id', po.id::text,
           'name', po.name,
           'additionalPrice', po.additional_price
         )
-        order by po.option_id
+        order by po.id
       ) filter (where po.id is not null),
       '[]'::jsonb
     ) as options,

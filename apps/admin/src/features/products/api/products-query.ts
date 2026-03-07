@@ -28,6 +28,7 @@ interface AdminProductRecord {
   stock: number | null;
   image: string | null;
   detail_images: string[] | null;
+  option_label: string | null;
 }
 
 interface AdminProductFormValues {
@@ -43,10 +44,10 @@ interface AdminProductFormValues {
   image?: string | null;
   detail_images?: string[] | null;
   options?: AdminProductOption[];
+  option_label?: string | null;
 }
 
 interface ProductOptionRecord {
-  option_id: string | null;
   name: string | null;
   additional_price: number | null;
   stock: number | null;
@@ -88,10 +89,6 @@ function toAdminProductOptions(value: unknown): AdminProductOption[] {
         return null;
       }
 
-      const optionId =
-        "optionId" in option && typeof option.optionId === "string"
-          ? option.optionId
-          : "";
       const name =
         "name" in option && typeof option.name === "string"
           ? option.name
@@ -101,7 +98,6 @@ function toAdminProductOptions(value: unknown): AdminProductOption[] {
       const stock = "stock" in option ? toOptionalNumber(option.stock) : null;
 
       return {
-        optionId,
         name,
         additionalPrice,
         stock,
@@ -141,11 +137,17 @@ function normalizeProductSubmit(
   }
 
   const payload = { ...values };
+  const hasOptions = Array.isArray(values.options) && values.options.length > 0;
   delete payload.options;
   delete payload.image;
   delete payload.detail_images;
 
-  return { ...payload, image: urls[0], detail_images: urls };
+  return {
+    ...payload,
+    image: urls[0],
+    detail_images: urls,
+    ...(hasOptions ? { stock: null } : {}),
+  };
 }
 
 export function useAdminProductCreateForm() {

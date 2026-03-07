@@ -21,6 +21,7 @@ export interface Product {
   isLiked?: boolean;
   info: string;
   stock?: number | null;
+  optionLabel?: string | null;
   options?: ProductOption[];
 }
 

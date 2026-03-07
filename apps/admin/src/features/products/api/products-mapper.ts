@@ -16,7 +16,6 @@ interface ProductsTableRow {
 }
 
 interface ProductOptionRow {
-  option_id: string | null;
   name: string | null;
   additional_price: number | null;
   stock: number | null;
@@ -39,7 +38,6 @@ export function toAdminProductListItem(row: ProductsTableRow): AdminProductListI
 
 export function toAdminProductOption(row: ProductOptionRow): AdminProductOption {
   return {
-    optionId: row.option_id ?? "",
     name: row.name ?? "",
     additionalPrice: row.additional_price ?? 0,
     stock: row.stock,
@@ -52,7 +50,6 @@ export function fromAdminProductOption(
 ): ProductOptionRow {
   return {
     product_id: productId,
-    option_id: option.optionId,
     name: option.name,
     additional_price: option.additionalPrice,
     stock: option.stock,
