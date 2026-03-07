@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
-import { SummaryRow } from "@/features/custom-order/components/summary-row";
-import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
+import { SummaryRow } from "../summary-row";
+import { SAMPLE_COST } from "../../constants/SAMPLE_PRICING";
 import {
   getFabricLabel,
   getFinishingLabel,
@@ -14,9 +14,9 @@ import {
   getTieTypeLabel,
 } from "../../utils/option-labels";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
-import type { WizardStepId } from "@/features/custom-order/types/wizard";
+import type { QuoteOrderOptions } from "../../types/order";
+import type { ImageUploadHook } from "../../types/image-upload";
+import type { WizardStepId } from "../../types/wizard";
 import { StepLayout } from "./step-layout";
 
 interface ConfirmStepProps {
