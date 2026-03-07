@@ -1,3 +1,16 @@
+-- ============================================================= 
+-- 93_functions_orders.sql  – Order lifecycle RPC functions 
+-- =============================================================
+-- ── create_order_txn ─────────────────────────────────────────
+-- SECURITY DEFINER: 일반 유저는 orders, order_items, user_coupons 테이블에
+--   직접 INSERT/UPDATE RLS 정책이 없다. 이 함수가 해당 테이블에 원자적으로
+--   쓰기 위해 SECURITY DEFINER가 필요하다.
+--   소유권 보호:
+--     - auth.uid() null 체크로 미인증 호출 차단
+--     - shipping_addresses는 user_id = auth.uid() 소유권 검증
+--     - user_coupons 업데이트 시 WHERE user_id = v_user_id 조건 적용
+--   완화 조치: SET search_path TO 'public'으로 검색 경로 고정,
+--     입력값 유효성 검사(수량, 아이템 타입 등) 포함.
 CREATE OR REPLACE FUNCTION public.create_order_txn(p_shipping_address_id uuid, p_items jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -71,18 +84,6 @@ begin
     raise exception 'Shipping address not found';
   end if;
 
-  SELECT amount INTO v_reform_base_cost
-  FROM custom_order_pricing_constants WHERE key = 'REFORM_BASE_COST';
-  IF v_reform_base_cost IS NULL THEN
-    RAISE EXCEPTION 'Missing pricing constant: REFORM_BASE_COST';
-  END IF;
-
-  SELECT amount INTO v_reform_shipping_cost
-  FROM custom_order_pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
-  IF v_reform_shipping_cost IS NULL THEN
-    RAISE EXCEPTION 'Missing pricing constant: REFORM_SHIPPING_COST';
-  END IF;
-
   for v_item in select * from jsonb_array_elements(p_items)
   loop
     v_item_id := nullif(v_item->>'item_id', '');
@@ -125,7 +126,7 @@ begin
         into v_option_additional_price, v_option_stock
         from product_options po
         where po.product_id = v_product_id
-          and po.option_id = v_selected_option_id
+          and po.id::text = v_selected_option_id
         for update;
 
         if not found then
@@ -140,7 +141,7 @@ begin
           update product_options
           set stock = stock - v_quantity
           where product_id = v_product_id
-            and option_id = v_selected_option_id;
+            and id::text = v_selected_option_id;
         end if;
       else
         -- No option selected: check product-level stock
@@ -159,6 +160,21 @@ begin
       v_product_id := null;
       v_selected_option_id := null;
       v_reform_data := v_item->'reform_data';
+
+      -- reform 아이템이 실제로 있을 때만 pricing constants 조회 (최초 1회)
+      if v_reform_base_cost is null then
+        SELECT amount INTO v_reform_base_cost
+        FROM custom_order_pricing_constants WHERE key = 'REFORM_BASE_COST';
+        IF v_reform_base_cost IS NULL THEN
+          RAISE EXCEPTION 'Missing pricing constant: REFORM_BASE_COST';
+        END IF;
+
+        SELECT amount INTO v_reform_shipping_cost
+        FROM custom_order_pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
+        IF v_reform_shipping_cost IS NULL THEN
+          RAISE EXCEPTION 'Missing pricing constant: REFORM_SHIPPING_COST';
+        END IF;
+      end if;
 
       if v_reform_data is null or v_reform_data = 'null'::jsonb then
         raise exception 'Reform data is required';
@@ -389,10 +405,12 @@ begin
     );
   end if;
 
+  -- 쿠폰을 즉시 'used'로 마킹하지 않고 'reserved'로 예약.
+  -- 결제 확정(confirm_payment_orders) 시 'used'로 전환,
+  -- 결제 실패(unlock_payment_orders) 시 'active'로 복원.
   if array_length(v_used_coupon_ids, 1) is not null then
     update user_coupons
-    set status = 'used',
-        used_at = now(),
+    set status = 'reserved',
         updated_at = now()
     where user_id = v_user_id
       and status = 'active'
@@ -406,3 +424,157 @@ begin
   );
 end;
 $$;
+
+-- ── customer_confirm_purchase ─────────────────────────────────
+-- Allows a customer to manually confirm purchase after delivery.
+-- Earns 2% points. Only callable when status = '배송완료'.
+-- SECURITY DEFINER: needed to INSERT into order_status_logs and points
+--   (neither table has INSERT RLS policy for regular users).
+CREATE OR REPLACE FUNCTION public.customer_confirm_purchase(p_order_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_user_id        uuid;
+  v_current_status text;
+  v_total_price    integer;
+  v_points_earned  integer;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- Lock the row and verify ownership + status
+  select o.status, o.total_price
+  into v_current_status, v_total_price
+  from public.orders o
+  where o.id = p_order_id
+    and o.user_id = v_user_id
+  for update;
+
+  if not found then
+    raise exception 'Order not found or access denied';
+  end if;
+
+  if v_current_status <> '배송완료' then
+    raise exception '구매확정은 배송완료 상태에서만 가능합니다 (현재: %)', v_current_status;
+  end if;
+
+  -- Earn 2% points for manual confirmation
+  v_points_earned := floor(v_total_price * 0.02);
+
+  update public.orders
+  set status       = '완료',
+      confirmed_at = now()
+  where id = p_order_id;
+
+  if v_points_earned > 0 then
+    insert into public.points (user_id, order_id, amount, type, description)
+    values (
+      v_user_id,
+      p_order_id,
+      v_points_earned,
+      'earn',
+      '구매확정 포인트 적립 (직접 확정, 2%)'
+    );
+  end if;
+
+  -- Audit log (changed_by = customer uid)
+  insert into public.order_status_logs (
+    order_id,
+    changed_by,
+    previous_status,
+    new_status,
+    memo
+  )
+  values (
+    p_order_id,
+    v_user_id,
+    '배송완료',
+    '완료',
+    '고객 직접 구매확정'
+  );
+
+  return jsonb_build_object(
+    'success', true,
+    'points_earned', v_points_earned
+  );
+end;
+$$;
+
+
+-- ── auto_confirm_delivered_orders ────────────────────────────
+-- Called by pg_cron daily at 03:00 KST.
+-- Confirms all orders in '배송완료' that have been delivered for 7+ days.
+-- Earns 0.5% points for auto-confirmed orders.
+-- SECURITY DEFINER: runs as a privileged role, restricted to pg_cron/service_role callers only.
+CREATE OR REPLACE FUNCTION public.auto_confirm_delivered_orders()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_order  record;
+  v_points integer;
+  v_count  integer := 0;
+begin
+  -- Only allow pg_cron / service_role (no authenticated user session)
+  if coalesce(current_setting('request.jwt.claim.role', true), '') not in ('', 'service_role') then
+    raise exception 'unauthorized: scheduler-only function';
+  end if;
+
+  for v_order in
+    select id, user_id, total_price
+    from public.orders
+    where status = '배송완료'
+      and delivered_at <= now() - interval '7 days'
+    for update skip locked
+  loop
+    v_points := floor(v_order.total_price * 0.005);
+
+    update public.orders
+    set status       = '완료',
+        confirmed_at = now()
+    where id = v_order.id;
+
+    if v_points > 0 then
+      insert into public.points (user_id, order_id, amount, type, description)
+      values (
+        v_order.user_id,
+        v_order.id,
+        v_points,
+        'earn',
+        '구매확정 포인트 적립 (자동 확정, 0.5%)'
+      );
+    end if;
+
+    -- Audit log (changed_by = NULL indicates automated system action)
+    insert into public.order_status_logs (
+      order_id,
+      changed_by,
+      previous_status,
+      new_status,
+      memo
+    )
+    values (
+      v_order.id,
+      NULL,
+      '배송완료',
+      '완료',
+      '자동 구매확정 (배송완료 후 7일 경과)'
+    );
+
+    v_count := v_count + 1;
+  end loop;
+
+  return jsonb_build_object(
+    'success', true,
+    'confirmed_count', v_count
+  );
+end;
+$$;
+

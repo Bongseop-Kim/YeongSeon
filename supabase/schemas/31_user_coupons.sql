@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.user_coupons (
 
   CONSTRAINT user_coupons_pkey PRIMARY KEY (id),
   CONSTRAINT user_coupons_status_check
-    CHECK (status = ANY (ARRAY['active','used','expired','revoked'])),
+    CHECK (status = ANY (ARRAY['active','used','expired','revoked','reserved'])),
   CONSTRAINT user_coupons_coupon_id_fkey
     FOREIGN KEY (coupon_id) REFERENCES public.coupons (id),
   CONSTRAINT user_coupons_user_id_fkey

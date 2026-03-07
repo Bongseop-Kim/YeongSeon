@@ -137,6 +137,49 @@ $$;
 ALTER FUNCTION "public"."admin_get_email"("uid" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."admin_get_period_stats"("p_order_type" "text", "p_start_date" "date", "p_end_date" "date") RETURNS TABLE("period_order_count" bigint, "period_revenue" numeric)
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
+    AS $$
+begin
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  if p_start_date is null then
+    raise exception 'p_start_date is required';
+  end if;
+
+  if p_end_date is null then
+    raise exception 'p_end_date is required';
+  end if;
+
+  if p_start_date > p_end_date then
+    raise exception 'p_start_date must be <= p_end_date';
+  end if;
+
+  if p_order_type is null or p_order_type not in ('all', 'sale', 'custom', 'repair') then
+    raise exception 'invalid p_order_type: %', p_order_type;
+  end if;
+
+  RETURN QUERY
+  SELECT
+    COUNT(*)::bigint                        AS period_order_count,
+    COALESCE(SUM(total_price), 0)::numeric  AS period_revenue
+  FROM public.orders
+  WHERE created_at >= p_start_date
+    AND created_at <  p_end_date + 1
+    AND (
+      p_order_type = 'all'
+      OR order_type = p_order_type
+    );
+end;
+$$;
+
+
+ALTER FUNCTION "public"."admin_get_period_stats"("p_order_type" "text", "p_start_date" "date", "p_end_date" "date") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."admin_get_today_stats"("p_order_type" "text", "p_date" "text") RETURNS TABLE("today_order_count" bigint, "today_revenue" numeric)
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public'
@@ -377,12 +420,12 @@ CREATE OR REPLACE FUNCTION "public"."admin_update_order_status"("p_order_id" "uu
     SET "search_path" TO 'public'
     AS $$
 declare
-  v_admin_id      uuid;
+  v_admin_id       uuid;
   v_current_status text;
-  v_order_type    text;
-  v_total_price   integer;
-  v_user_id       uuid;
-  v_points_earned integer;
+  v_order_type     text;
+  v_total_price    integer;
+  v_user_id        uuid;
+  v_points_earned  integer;
 begin
   v_admin_id := auth.uid();
   if v_admin_id is null then
@@ -417,12 +460,16 @@ begin
     -- Validate rollback transition by order_type
     -- 배송완료, 완료, 취소 상태는 is_rollback 여부와 무관하게 롤백 불가
     if v_order_type = 'sale' then
-      if not (v_current_status = '진행중' and p_new_status = '대기중') then
+      if not (
+        (v_current_status = '결제중' and p_new_status = '대기중')
+        or (v_current_status = '진행중' and p_new_status = '대기중')
+      ) then
         raise exception 'Invalid rollback from "%" to "%" for sale order', v_current_status, p_new_status;
       end if;
     elsif v_order_type = 'custom' then
       if not (
-        (v_current_status = '접수' and p_new_status = '대기중')
+        (v_current_status = '결제중' and p_new_status = '대기중')
+        or (v_current_status = '접수' and p_new_status = '대기중')
         or (v_current_status = '제작중' and p_new_status = '접수')
         or (v_current_status = '제작완료' and p_new_status = '제작중')
       ) then
@@ -430,7 +477,8 @@ begin
       end if;
     elsif v_order_type = 'repair' then
       if not (
-        (v_current_status = '접수' and p_new_status = '대기중')
+        (v_current_status = '결제중' and p_new_status = '대기중')
+        or (v_current_status = '접수' and p_new_status = '대기중')
         or (v_current_status = '수선중' and p_new_status = '접수')
         or (v_current_status = '수선완료' and p_new_status = '수선중')
       ) then
@@ -447,7 +495,7 @@ begin
         or (v_current_status = '진행중'   and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '진행중', '배송중'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '진행중', '배송중'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for sale order', v_current_status, p_new_status;
       end if;
@@ -459,7 +507,7 @@ begin
         or (v_current_status = '제작완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for custom order', v_current_status, p_new_status;
       end if;
@@ -471,7 +519,7 @@ begin
         or (v_current_status = '수선완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;
@@ -498,7 +546,7 @@ begin
     v_points_earned := floor(v_total_price * 0.02);
 
     update public.orders
-    set status = p_new_status,
+    set status       = p_new_status,
         confirmed_at = now()
     where id = p_order_id;
 
@@ -683,10 +731,15 @@ CREATE OR REPLACE FUNCTION "public"."auto_confirm_delivered_orders"() RETURNS "j
     SET "search_path" TO 'public'
     AS $$
 declare
-  v_order   record;
-  v_points  integer;
-  v_count   integer := 0;
+  v_order  record;
+  v_points integer;
+  v_count  integer := 0;
 begin
+  -- Only allow pg_cron / service_role (no authenticated user session)
+  if coalesce(current_setting('request.jwt.claim.role', true), '') not in ('', 'service_role') then
+    raise exception 'unauthorized: scheduler-only function';
+  end if;
+
   for v_order in
     select id, user_id, total_price
     from public.orders
@@ -765,7 +818,6 @@ begin
 
   v_date_str := to_char(now(), 'YYYYMMDD');
 
-  -- Advisory lock to prevent concurrent sequence gaps
   perform pg_advisory_xact_lock(hashtext('PROD' || v_prefix || v_date_str));
 
   select coalesce(
@@ -999,6 +1051,103 @@ $$;
 ALTER FUNCTION "public"."calculate_custom_order_amounts"("p_options" "jsonb", "p_quantity" integer) OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."confirm_payment_orders"("p_payment_group_id" "uuid", "p_user_id" "uuid", "p_payment_key" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_order record;
+  v_post_status text;
+  v_updated_orders jsonb := '[]'::jsonb;
+  v_count int := 0;
+  v_masked_key text;
+begin
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  -- payment_key 마스킹: 끝 8자리만 유지, 나머지 ****
+  v_masked_key := case
+    when length(p_payment_key) <= 8 then '****'
+    else '****' || right(p_payment_key, 8)
+  end;
+
+  for v_order in
+    select id, user_id, status, order_type
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status != '결제중' then
+      raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
+    end if;
+
+    v_post_status := case v_order.order_type
+      when 'sale' then '진행중'
+      else '접수'
+    end;
+
+    update public.orders
+    set status = v_post_status, updated_at = now()
+    where id = v_order.id;
+
+    insert into public.order_status_logs (
+      order_id, changed_by, previous_status, new_status, memo
+    ) values (
+      v_order.id, p_user_id, v_order.status, v_post_status,
+      'payment confirmed: ' || v_masked_key
+    );
+
+    v_updated_orders := v_updated_orders || jsonb_build_object(
+      'orderId', v_order.id,
+      'orderType', v_order.order_type
+    );
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  -- 결제 확정 후 예약된 쿠폰을 사용 처리
+  update public.user_coupons
+  set status = 'used',
+      used_at = now(),
+      updated_at = now()
+  where user_id = p_user_id
+    and status = 'reserved'
+    and id in (
+      select distinct oi.applied_user_coupon_id
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where o.payment_group_id = p_payment_group_id
+        and oi.applied_user_coupon_id is not null
+    );
+
+  return jsonb_build_object(
+    'success', true,
+    'orders', v_updated_orders
+  );
+end;
+$$;
+
+
+ALTER FUNCTION "public"."confirm_payment_orders"("p_payment_group_id" "uuid", "p_user_id" "uuid", "p_payment_key" "text") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."create_claim"("p_type" "text", "p_order_id" "uuid", "p_item_id" "text", "p_reason" "text", "p_description" "text" DEFAULT NULL::"text", "p_quantity" integer DEFAULT NULL::integer) RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1113,123 +1262,6 @@ $$;
 ALTER FUNCTION "public"."create_claim"("p_type" "text", "p_order_id" "uuid", "p_item_id" "text", "p_reason" "text", "p_description" "text", "p_quantity" integer) OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."create_custom_order_txn"("p_shipping_address_id" "uuid", "p_options" "jsonb", "p_quantity" integer, "p_reference_image_urls" "text"[] DEFAULT '{}'::"text"[], "p_additional_notes" "text" DEFAULT ''::"text", "p_sample" boolean DEFAULT false) RETURNS "jsonb"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-declare
-  v_user_id uuid;
-  v_order_id uuid;
-  v_order_number text;
-  v_sewing_cost integer;
-  v_fabric_cost integer;
-  v_total_cost integer;
-  v_reform_data jsonb;
-begin
-  v_user_id := auth.uid();
-  if v_user_id is null then
-    raise exception 'Unauthorized';
-  end if;
-
-  if p_shipping_address_id is null then
-    raise exception 'Shipping address is required';
-  end if;
-
-  if not exists (
-    select 1
-    from public.shipping_addresses sa
-    where sa.id = p_shipping_address_id
-      and sa.user_id = v_user_id
-  ) then
-    raise exception 'Shipping address not found';
-  end if;
-
-  select
-    amounts.sewing_cost,
-    amounts.fabric_cost,
-    amounts.total_cost
-  into
-    v_sewing_cost,
-    v_fabric_cost,
-    v_total_cost
-  from public.calculate_custom_order_amounts(p_options, p_quantity) as amounts;
-
-  v_order_number := public.generate_order_number();
-
-  insert into public.orders (
-    user_id,
-    order_number,
-    shipping_address_id,
-    total_price,
-    original_price,
-    total_discount,
-    order_type,
-    status
-  )
-  values (
-    v_user_id,
-    v_order_number,
-    p_shipping_address_id,
-    v_total_cost,
-    v_total_cost,
-    0,
-    'custom',
-    '대기중'
-  )
-  returning id into v_order_id;
-
-  v_reform_data := jsonb_build_object(
-    'custom_order', true,
-    'quantity', p_quantity,
-    'options', p_options,
-    'reference_image_urls', to_jsonb(coalesce(p_reference_image_urls, '{}'::text[])),
-    'additional_notes', coalesce(p_additional_notes, ''),
-    'sample', coalesce(p_sample, false),
-    'pricing', jsonb_build_object(
-      'sewing_cost', v_sewing_cost,
-      'fabric_cost', v_fabric_cost,
-      'total_cost', v_total_cost
-    )
-  );
-
-  insert into public.order_items (
-    order_id,
-    item_id,
-    item_type,
-    product_id,
-    selected_option_id,
-    reform_data,
-    quantity,
-    unit_price,
-    discount_amount,
-    line_discount_amount,
-    applied_user_coupon_id
-  )
-  values (
-    v_order_id,
-    'custom-order-' || v_order_id::text,
-    'reform',
-    null,
-    null,
-    v_reform_data,
-    1,
-    v_total_cost,
-    0,
-    0,
-    null
-  );
-
-  return jsonb_build_object(
-    'order_id', v_order_id,
-    'order_number', v_order_number
-  );
-end;
-$$;
-
-
-ALTER FUNCTION "public"."create_custom_order_txn"("p_shipping_address_id" "uuid", "p_options" "jsonb", "p_quantity" integer, "p_reference_image_urls" "text"[], "p_additional_notes" "text", "p_sample" boolean) OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."create_custom_order_txn"("p_shipping_address_id" "uuid", "p_options" "jsonb", "p_quantity" integer, "p_reference_image_urls" "text"[] DEFAULT '{}'::"text"[], "p_additional_notes" "text" DEFAULT ''::"text", "p_sample" boolean DEFAULT false, "p_sample_type" "text" DEFAULT NULL::"text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1339,8 +1371,8 @@ begin
     null,
     null,
     v_reform_data,
-    1,
-    v_total_cost,
+    p_quantity,
+    floor(v_total_cost::numeric / p_quantity)::integer,
     0,
     0,
     null
@@ -1387,10 +1419,22 @@ declare
   v_original_price integer := 0;
   v_total_discount integer := 0;
   v_total_price integer := 0;
-  v_reform_base_cost constant integer := 15000;
+  v_reform_base_cost integer;
+  v_reform_shipping_cost integer;
   v_used_coupon_ids uuid[] := '{}'::uuid[];
   v_coupon record;
   v_order_type text;
+
+  v_payment_group_id uuid;
+  v_group_total_amount integer := 0;
+  v_orders_result jsonb := '[]'::jsonb;
+  v_product_items jsonb := '[]'::jsonb;
+  v_reform_items jsonb := '[]'::jsonb;
+  v_product_original integer := 0;
+  v_product_discount integer := 0;
+  v_reform_original integer := 0;
+  v_reform_discount integer := 0;
+  v_shipping_cost integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -1458,13 +1502,14 @@ begin
         into v_option_additional_price, v_option_stock
         from product_options po
         where po.product_id = v_product_id
-          and po.option_id = v_selected_option_id
+          and po.id::text = v_selected_option_id
         for update;
 
         if not found then
           raise exception 'Selected option not found';
         end if;
 
+        -- Check option stock
         if v_option_stock is not null then
           if v_option_stock < v_quantity then
             raise exception 'Insufficient stock for option';
@@ -1472,9 +1517,10 @@ begin
           update product_options
           set stock = stock - v_quantity
           where product_id = v_product_id
-            and option_id = v_selected_option_id;
+            and id::text = v_selected_option_id;
         end if;
       else
+        -- No option selected: check product-level stock
         if v_product_stock is not null then
           if v_product_stock < v_quantity then
             raise exception 'Insufficient stock';
@@ -1490,6 +1536,21 @@ begin
       v_product_id := null;
       v_selected_option_id := null;
       v_reform_data := v_item->'reform_data';
+
+      -- reform 아이템이 실제로 있을 때만 pricing constants 조회 (최초 1회)
+      if v_reform_base_cost is null then
+        SELECT amount INTO v_reform_base_cost
+        FROM custom_order_pricing_constants WHERE key = 'REFORM_BASE_COST';
+        IF v_reform_base_cost IS NULL THEN
+          RAISE EXCEPTION 'Missing pricing constant: REFORM_BASE_COST';
+        END IF;
+
+        SELECT amount INTO v_reform_shipping_cost
+        FROM custom_order_pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
+        IF v_reform_shipping_cost IS NULL THEN
+          RAISE EXCEPTION 'Missing pricing constant: REFORM_SHIPPING_COST';
+        END IF;
+      end if;
 
       if v_reform_data is null or v_reform_data = 'null'::jsonb then
         raise exception 'Reform data is required';
@@ -1565,6 +1626,7 @@ begin
 
       v_discount_amount := floor(v_capped_line_discount::numeric / v_quantity)::integer;
       v_discount_remainder := v_capped_line_discount % v_quantity;
+      -- Distribute +1 to the first v_discount_remainder units.
       v_line_discount_total := (v_discount_amount * v_quantity) + v_discount_remainder;
       v_used_coupon_ids := array_append(v_used_coupon_ids, v_applied_coupon_id);
     end if;
@@ -1590,77 +1652,141 @@ begin
     );
   end loop;
 
-  v_total_price := v_original_price - v_total_discount;
-  v_order_number := generate_order_number();
-
-  v_order_type := case
-    when exists (
-      select 1 from jsonb_array_elements(v_normalized_items) elem
-      where elem->>'item_type' = 'reform'
-    ) then 'repair'
-    else 'sale'
-  end;
-
-  insert into orders (
-    user_id,
-    order_number,
-    shipping_address_id,
-    total_price,
-    original_price,
-    total_discount,
-    order_type,
-    status
-  )
-  values (
-    v_user_id,
-    v_order_number,
-    p_shipping_address_id,
-    v_total_price,
-    v_original_price,
-    v_total_discount,
-    v_order_type,
-    '대기중'
-  )
-  returning id into v_order_id;
+  -- 아이템 타입별 분류 및 소계 계산
+  v_payment_group_id := gen_random_uuid();
 
   for v_item in select * from jsonb_array_elements(v_normalized_items)
   loop
-    insert into order_items (
-      order_id,
-      item_id,
-      item_type,
-      product_id,
-      selected_option_id,
-      reform_data,
-      quantity,
-      unit_price,
-      discount_amount,
-      line_discount_amount,
-      applied_user_coupon_id
-    )
-    values (
-      v_order_id,
-      v_item->>'item_id',
-      v_item->>'item_type',
-      nullif(v_item->>'product_id', '')::integer,
-      nullif(v_item->>'selected_option_id', ''),
-      case
-        when v_item->'reform_data' is null or v_item->'reform_data' = 'null'::jsonb
-          then null
-        else v_item->'reform_data'
-      end,
-      (v_item->>'quantity')::integer,
-      (v_item->>'unit_price')::integer,
-      (v_item->>'discount_amount')::integer,
-      coalesce((v_item->>'line_discount_amount')::integer, 0),
-      nullif(v_item->>'applied_user_coupon_id', '')::uuid
-    );
+    if v_item->>'item_type' = 'product' then
+      v_product_items := v_product_items || jsonb_build_array(v_item);
+      v_product_original := v_product_original
+        + (v_item->>'unit_price')::integer * (v_item->>'quantity')::integer;
+      v_product_discount := v_product_discount
+        + coalesce((v_item->>'line_discount_amount')::integer, 0);
+    elsif v_item->>'item_type' = 'reform' then
+      v_reform_items := v_reform_items || jsonb_build_array(v_item);
+      v_reform_original := v_reform_original
+        + (v_item->>'unit_price')::integer * (v_item->>'quantity')::integer;
+      v_reform_discount := v_reform_discount
+        + coalesce((v_item->>'line_discount_amount')::integer, 0);
+    end if;
   end loop;
 
+  -- product 주문 생성 (shipping_cost=0)
+  if jsonb_array_length(v_product_items) > 0 then
+    v_order_number := generate_order_number();
+    v_total_price := v_product_original - v_product_discount;
+
+    insert into orders (
+      user_id, order_number, shipping_address_id,
+      total_price, original_price, total_discount,
+      order_type, status, payment_group_id, shipping_cost
+    )
+    values (
+      v_user_id, v_order_number, p_shipping_address_id,
+      v_total_price, v_product_original, v_product_discount,
+      'sale', '대기중', v_payment_group_id, 0
+    )
+    returning id into v_order_id;
+
+    for v_item in select * from jsonb_array_elements(v_product_items)
+    loop
+      insert into order_items (
+        order_id, item_id, item_type, product_id,
+        selected_option_id, reform_data, quantity,
+        unit_price, discount_amount, line_discount_amount,
+        applied_user_coupon_id
+      )
+      values (
+        v_order_id,
+        v_item->>'item_id',
+        v_item->>'item_type',
+        nullif(v_item->>'product_id', '')::integer,
+        nullif(v_item->>'selected_option_id', ''),
+        case
+          when v_item->'reform_data' is null or v_item->'reform_data' = 'null'::jsonb
+            then null
+          else v_item->'reform_data'
+        end,
+        (v_item->>'quantity')::integer,
+        (v_item->>'unit_price')::integer,
+        (v_item->>'discount_amount')::integer,
+        coalesce((v_item->>'line_discount_amount')::integer, 0),
+        nullif(v_item->>'applied_user_coupon_id', '')::uuid
+      );
+    end loop;
+
+    v_group_total_amount := v_group_total_amount + v_total_price;
+    v_orders_result := v_orders_result || jsonb_build_array(
+      jsonb_build_object(
+        'order_id', v_order_id,
+        'order_number', v_order_number,
+        'order_type', 'sale'
+      )
+    );
+  end if;
+
+  -- repair 주문 생성 (shipping_cost=v_reform_shipping_cost)
+  if jsonb_array_length(v_reform_items) > 0 then
+    v_order_number := generate_order_number();
+    v_shipping_cost := v_reform_shipping_cost;
+    v_total_price := v_reform_original - v_reform_discount + v_shipping_cost;
+
+    insert into orders (
+      user_id, order_number, shipping_address_id,
+      total_price, original_price, total_discount,
+      order_type, status, payment_group_id, shipping_cost
+    )
+    values (
+      v_user_id, v_order_number, p_shipping_address_id,
+      v_total_price, v_reform_original, v_reform_discount,
+      'repair', '대기중', v_payment_group_id, v_shipping_cost
+    )
+    returning id into v_order_id;
+
+    for v_item in select * from jsonb_array_elements(v_reform_items)
+    loop
+      insert into order_items (
+        order_id, item_id, item_type, product_id,
+        selected_option_id, reform_data, quantity,
+        unit_price, discount_amount, line_discount_amount,
+        applied_user_coupon_id
+      )
+      values (
+        v_order_id,
+        v_item->>'item_id',
+        v_item->>'item_type',
+        nullif(v_item->>'product_id', '')::integer,
+        nullif(v_item->>'selected_option_id', ''),
+        case
+          when v_item->'reform_data' is null or v_item->'reform_data' = 'null'::jsonb
+            then null
+          else v_item->'reform_data'
+        end,
+        (v_item->>'quantity')::integer,
+        (v_item->>'unit_price')::integer,
+        (v_item->>'discount_amount')::integer,
+        coalesce((v_item->>'line_discount_amount')::integer, 0),
+        nullif(v_item->>'applied_user_coupon_id', '')::uuid
+      );
+    end loop;
+
+    v_group_total_amount := v_group_total_amount + v_total_price;
+    v_orders_result := v_orders_result || jsonb_build_array(
+      jsonb_build_object(
+        'order_id', v_order_id,
+        'order_number', v_order_number,
+        'order_type', 'repair'
+      )
+    );
+  end if;
+
+  -- 쿠폰을 즉시 'used'로 마킹하지 않고 'reserved'로 예약.
+  -- 결제 확정(confirm_payment_orders) 시 'used'로 전환,
+  -- 결제 실패(unlock_payment_orders) 시 'active'로 복원.
   if array_length(v_used_coupon_ids, 1) is not null then
     update user_coupons
-    set status = 'used',
-        used_at = now(),
+    set status = 'reserved',
         updated_at = now()
     where user_id = v_user_id
       and status = 'active'
@@ -1668,8 +1794,9 @@ begin
   end if;
 
   return jsonb_build_object(
-    'order_id', v_order_id,
-    'order_number', v_order_number
+    'payment_group_id', v_payment_group_id,
+    'total_amount', v_group_total_amount,
+    'orders', v_orders_result
   );
 end;
 $$;
@@ -1692,10 +1819,12 @@ begin
     raise exception 'Unauthorized';
   end if;
 
+  -- Quantity validation
   if p_quantity is null or p_quantity < 100 then
     raise exception 'Quantity must be 100 or more';
   end if;
 
+  -- Shipping address validation
   if p_shipping_address_id is null then
     raise exception 'Shipping address is required';
   end if;
@@ -1709,6 +1838,7 @@ begin
     raise exception 'Shipping address not found';
   end if;
 
+  -- Contact field validation
   if p_contact_name is null or trim(p_contact_name) = '' then
     raise exception 'Contact name is required';
   end if;
@@ -1721,6 +1851,7 @@ begin
     raise exception 'Contact value is required';
   end if;
 
+  -- Options validation
   if p_options is null or jsonb_typeof(p_options) <> 'object' then
     raise exception 'Invalid options payload';
   end if;
@@ -1773,10 +1904,10 @@ CREATE OR REPLACE FUNCTION "public"."customer_confirm_purchase"("p_order_id" "uu
     SET "search_path" TO 'public'
     AS $$
 declare
-  v_user_id       uuid;
+  v_user_id        uuid;
   v_current_status text;
-  v_total_price   integer;
-  v_points_earned integer;
+  v_total_price    integer;
+  v_points_earned  integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -1784,8 +1915,8 @@ begin
   end if;
 
   -- Lock the row and verify ownership + status
-  select o.status, o.total_price, o.user_id
-  into v_current_status, v_total_price, v_user_id
+  select o.status, o.total_price
+  into v_current_status, v_total_price
   from public.orders o
   where o.id = p_order_id
     and o.user_id = v_user_id
@@ -1912,6 +2043,9 @@ declare
   seq_num integer;
 begin
   date_str := to_char(now(), 'YYYYMMDD');
+
+  -- Serialize same-day quote number allocation to prevent duplicates.
+  -- Uses 'QUO' prefix in hashtext to avoid collision with other generators.
   perform pg_advisory_xact_lock(hashtext('QUO' || date_str));
 
   select coalesce(max(cast(substring(quote_number from 14) as integer)), 0) + 1
@@ -2046,11 +2180,11 @@ CREATE OR REPLACE FUNCTION "public"."get_products_by_ids"("p_ids" integer[]) RET
     coalesce(
       jsonb_agg(
         jsonb_build_object(
-          'id', po.option_id,
+          'id', po.id::text,
           'name', po.name,
           'additionalPrice', po.additional_price
         )
-        order by po.option_id
+        order by po.id
       ) filter (where po.id is not null),
       '[]'::jsonb
     ) as options,
@@ -2098,6 +2232,88 @@ $$;
 
 
 ALTER FUNCTION "public"."is_admin"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."lock_payment_orders"("p_payment_group_id" "uuid", "p_user_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_order record;
+  v_locked_orders jsonb := '[]'::jsonb;
+  v_count int := 0;
+  v_already_locked boolean := false;
+  v_already_confirmed boolean := false;
+begin
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  for v_order in
+    select id, user_id, status, order_type
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status = '대기중' then
+      -- 정상 경로: 대기중 → 결제중
+      update public.orders
+      set status = '결제중', updated_at = now()
+      where id = v_order.id;
+
+      insert into public.order_status_logs (
+        order_id, changed_by, previous_status, new_status, memo
+      ) values (
+        v_order.id, p_user_id, '대기중', '결제중', 'payment lock'
+      );
+
+    elsif v_order.status = '결제중' then
+      -- 멱등: 이미 lock됨
+      v_already_locked := true;
+
+    elsif v_order.status in ('진행중', '접수') then
+      -- 이미 결제 완료 상태
+      v_already_confirmed := true;
+
+    else
+      raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
+    end if;
+
+    v_locked_orders := v_locked_orders || jsonb_build_object(
+      'orderId', v_order.id,
+      'orderType', v_order.order_type
+    );
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  return jsonb_build_object(
+    'success', true,
+    'orders', v_locked_orders,
+    'already_locked', v_already_locked,
+    'already_confirmed', v_already_confirmed
+  );
+end;
+$$;
+
+
+ALTER FUNCTION "public"."lock_payment_orders"("p_payment_group_id" "uuid", "p_user_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."product_is_liked_rpc"("p_id" integer) RETURNS boolean
@@ -2175,6 +2391,9 @@ begin
   if p_user_id is distinct from auth.uid() then
     raise exception 'unauthorized: cart can only be modified for the current user';
   end if;
+
+  -- 동일 유저의 동시 replace_cart_items 호출을 직렬화하여 DELETE+INSERT 인터리빙 방지
+  PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text)::bigint);
 
   delete from cart_items where user_id = p_user_id;
 
@@ -2257,10 +2476,9 @@ BEGIN
 
   IF jsonb_array_length(p_options) > 0 THEN
     INSERT INTO public.product_options
-      (product_id, option_id, name, additional_price, stock)
+      (product_id, name, additional_price, stock)
     SELECT
       p_product_id,
-      (elem->>'option_id')::varchar(50),
       (elem->>'name')::varchar(255),
       (elem->>'additional_price')::integer,
       CASE WHEN elem->>'stock' IS NULL THEN NULL
@@ -2272,6 +2490,86 @@ $$;
 
 
 ALTER FUNCTION "public"."replace_product_options"("p_product_id" integer, "p_options" "jsonb") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."unlock_payment_orders"("p_payment_group_id" "uuid", "p_user_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_order record;
+  v_count int := 0;
+begin
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  for v_order in
+    select id, user_id, status
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status = '결제중' then
+      update public.orders
+      set status = '대기중', updated_at = now()
+      where id = v_order.id;
+
+      insert into public.order_status_logs (
+        order_id, changed_by, previous_status, new_status, memo
+      ) values (
+        v_order.id, p_user_id, '결제중', '대기중', 'payment unlock: approval failed'
+      );
+
+    elsif v_order.status = '대기중' then
+      -- 멱등: 이미 대기중
+      null;
+
+    elsif v_order.status in ('진행중', '접수') then
+      -- 다른 경로로 이미 confirm됨 — skip
+      null;
+
+    end if;
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  -- 결제 실패 시 예약된 쿠폰을 활성 상태로 복원
+  update public.user_coupons
+  set status = 'active',
+      updated_at = now()
+  where user_id = p_user_id
+    and status = 'reserved'
+    and id in (
+      select distinct oi.applied_user_coupon_id
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where o.payment_group_id = p_payment_group_id
+        and oi.applied_user_coupon_id is not null
+    );
+
+  return jsonb_build_object('success', true);
+end;
+$$;
+
+
+ALTER FUNCTION "public"."unlock_payment_orders"("p_payment_group_id" "uuid", "p_user_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."update_cart_items_updated_at"() RETURNS "trigger"
@@ -2374,9 +2672,12 @@ CREATE TABLE IF NOT EXISTS "public"."orders" (
     "order_type" "text" DEFAULT 'sale'::"text" NOT NULL,
     "delivered_at" timestamp with time zone,
     "confirmed_at" timestamp with time zone,
+    "payment_group_id" "uuid",
+    "shipping_cost" integer DEFAULT 0 NOT NULL,
     CONSTRAINT "orders_order_type_check" CHECK (("order_type" = ANY (ARRAY['sale'::"text", 'custom'::"text", 'repair'::"text"]))),
     CONSTRAINT "orders_original_price_check" CHECK (("original_price" >= 0)),
-    CONSTRAINT "orders_status_check" CHECK (("status" = ANY (ARRAY['대기중'::"text", '진행중'::"text", '배송중'::"text", '배송완료'::"text", '완료'::"text", '취소'::"text", '접수'::"text", '제작중'::"text", '제작완료'::"text", '수선중'::"text", '수선완료'::"text"]))),
+    CONSTRAINT "orders_shipping_cost_check" CHECK (("shipping_cost" >= 0)),
+    CONSTRAINT "orders_status_check" CHECK (("status" = ANY (ARRAY['대기중'::"text", '결제중'::"text", '진행중'::"text", '배송중'::"text", '배송완료'::"text", '완료'::"text", '취소'::"text", '접수'::"text", '제작중'::"text", '제작완료'::"text", '수선중'::"text", '수선완료'::"text"]))),
     CONSTRAINT "orders_total_discount_check" CHECK (("total_discount" >= 0)),
     CONSTRAINT "orders_total_price_check" CHECK (("total_price" >= 0))
 );
@@ -2400,6 +2701,7 @@ CREATE TABLE IF NOT EXISTS "public"."products" (
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "detail_images" "text"[],
     "stock" integer,
+    "option_label" character varying(100),
     CONSTRAINT "products_category_check" CHECK ((("category")::"text" = ANY (ARRAY[('3fold'::character varying)::"text", ('sfolderato'::character varying)::"text", ('knit'::character varying)::"text", ('bowtie'::character varying)::"text"]))),
     CONSTRAINT "products_color_check" CHECK ((("color")::"text" = ANY (ARRAY[('black'::character varying)::"text", ('navy'::character varying)::"text", ('gray'::character varying)::"text", ('wine'::character varying)::"text", ('blue'::character varying)::"text", ('brown'::character varying)::"text", ('beige'::character varying)::"text", ('silver'::character varying)::"text"]))),
     CONSTRAINT "products_material_check" CHECK ((("material")::"text" = ANY (ARRAY[('silk'::character varying)::"text", ('cotton'::character varying)::"text", ('polyester'::character varying)::"text", ('wool'::character varying)::"text"]))),
@@ -2426,7 +2728,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
 ALTER TABLE "public"."profiles" OWNER TO "postgres";
 
 
-CREATE OR REPLACE VIEW "public"."admin_claim_list_view" WITH ("security_invoker"='true') AS
+CREATE OR REPLACE VIEW "public"."admin_claim_list_view" AS
  SELECT "cl"."id",
     "cl"."user_id" AS "userId",
     "cl"."claim_number" AS "claimNumber",
@@ -2477,7 +2779,7 @@ CREATE TABLE IF NOT EXISTS "public"."claim_status_logs" (
 ALTER TABLE "public"."claim_status_logs" OWNER TO "postgres";
 
 
-CREATE OR REPLACE VIEW "public"."admin_claim_status_log_view" WITH ("security_invoker"='true') AS
+CREATE OR REPLACE VIEW "public"."admin_claim_status_log_view" AS
  SELECT "l"."id",
     "l"."claim_id" AS "claimId",
     "l"."changed_by" AS "changedBy",
@@ -2510,7 +2812,7 @@ CREATE TABLE IF NOT EXISTS "public"."shipping_addresses" (
 ALTER TABLE "public"."shipping_addresses" OWNER TO "postgres";
 
 
-CREATE OR REPLACE VIEW "public"."admin_order_detail_view" WITH ("security_invoker"='true') AS
+CREATE OR REPLACE VIEW "public"."admin_order_detail_view" AS
  SELECT "o"."id",
     "o"."user_id" AS "userId",
     "o"."order_number" AS "orderNumber",
@@ -2536,7 +2838,9 @@ CREATE OR REPLACE VIEW "public"."admin_order_detail_view" WITH ("security_invoke
     "sa"."address_detail" AS "shippingAddressDetail",
     "sa"."postal_code" AS "shippingPostalCode",
     "sa"."delivery_memo" AS "deliveryMemo",
-    "sa"."delivery_request" AS "deliveryRequest"
+    "sa"."delivery_request" AS "deliveryRequest",
+    "o"."payment_group_id" AS "paymentGroupId",
+    "o"."shipping_cost" AS "shippingCost"
    FROM (("public"."orders" "o"
      LEFT JOIN "public"."profiles" "p" ON (("p"."id" = "o"."user_id")))
      LEFT JOIN "public"."shipping_addresses" "sa" ON (("sa"."id" = "o"."shipping_address_id")));
@@ -2604,14 +2908,18 @@ CREATE OR REPLACE VIEW "public"."admin_order_list_view" WITH ("security_invoker"
         CASE
             WHEN ("o"."order_type" = 'repair'::"text") THEN ("ri"."item_quantity" || '개 넥타이 수선'::"text")
             ELSE NULL::"text"
-        END AS "reformSummary"
+        END AS "reformSummary",
+    "o"."payment_group_id" AS "paymentGroupId",
+    "o"."shipping_cost" AS "shippingCost"
    FROM (("public"."orders" "o"
      LEFT JOIN "public"."profiles" "p" ON (("p"."id" = "o"."user_id")))
-     LEFT JOIN LATERAL ( SELECT "oi"."reform_data",
-            "oi"."quantity" AS "item_quantity"
+     LEFT JOIN LATERAL ( SELECT ( SELECT "oi2"."reform_data"
+                   FROM "public"."order_items" "oi2"
+                  WHERE (("oi2"."order_id" = "o"."id") AND ("oi2"."item_type" = 'reform'::"text"))
+                 LIMIT 1) AS "reform_data",
+            ("sum"("oi"."quantity"))::integer AS "item_quantity"
            FROM "public"."order_items" "oi"
-          WHERE (("oi"."order_id" = "o"."id") AND ("oi"."item_type" = 'reform'::"text"))
-         LIMIT 1) "ri" ON (("o"."order_type" = ANY (ARRAY['custom'::"text", 'repair'::"text"]))));
+          WHERE (("oi"."order_id" = "o"."id") AND ("oi"."item_type" = 'reform'::"text"))) "ri" ON (("o"."order_type" = ANY (ARRAY['custom'::"text", 'repair'::"text"]))));
 
 
 ALTER TABLE "public"."admin_order_list_view" OWNER TO "postgres";
@@ -2632,7 +2940,7 @@ CREATE TABLE IF NOT EXISTS "public"."order_status_logs" (
 ALTER TABLE "public"."order_status_logs" OWNER TO "postgres";
 
 
-CREATE OR REPLACE VIEW "public"."admin_order_status_log_view" WITH ("security_invoker"='true') AS
+CREATE OR REPLACE VIEW "public"."admin_order_status_log_view" AS
  SELECT "l"."id",
     "l"."order_id" AS "orderId",
     "l"."changed_by" AS "changedBy",
@@ -2786,7 +3094,7 @@ CREATE TABLE IF NOT EXISTS "public"."user_coupons" (
     "used_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "user_coupons_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'used'::"text", 'expired'::"text", 'revoked'::"text"])))
+    CONSTRAINT "user_coupons_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'used'::"text", 'expired'::"text", 'revoked'::"text", 'reserved'::"text"])))
 );
 
 
@@ -2859,7 +3167,6 @@ ALTER TABLE "public"."coupons" OWNER TO "postgres";
 CREATE TABLE IF NOT EXISTS "public"."product_options" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "product_id" integer NOT NULL,
-    "option_id" character varying(50) NOT NULL,
     "name" character varying(255) NOT NULL,
     "additional_price" integer DEFAULT 0 NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
@@ -2884,15 +3191,16 @@ CREATE OR REPLACE VIEW "public"."product_list_view" WITH ("security_invoker"='tr
     "p"."material",
     "p"."info",
     "p"."stock",
+    "p"."option_label" AS "optionLabel",
     "p"."created_at",
     "p"."updated_at",
-    COALESCE("jsonb_agg"("jsonb_build_object"('id', "po"."option_id", 'name', "po"."name", 'additionalPrice', "po"."additional_price", 'stock', "po"."stock") ORDER BY "po"."option_id") FILTER (WHERE ("po"."id" IS NOT NULL)), '[]'::"jsonb") AS "options",
+    COALESCE("jsonb_agg"("jsonb_build_object"('id', ("po"."id")::"text", 'name', "po"."name", 'additionalPrice', "po"."additional_price", 'stock', "po"."stock") ORDER BY "po"."id") FILTER (WHERE ("po"."id" IS NOT NULL)), '[]'::"jsonb") AS "options",
     COALESCE("lc"."likes", 0) AS "likes",
     COALESCE("public"."product_is_liked_rpc"("p"."id"), false) AS "isLiked"
    FROM (("public"."products" "p"
      LEFT JOIN "public"."product_options" "po" ON (("po"."product_id" = "p"."id")))
      LEFT JOIN "public"."product_like_counts_rpc"() "lc"("product_id", "likes") ON (("lc"."product_id" = "p"."id")))
-  GROUP BY "p"."id", "p"."code", "p"."name", "p"."price", "p"."image", "p"."detail_images", "p"."category", "p"."color", "p"."pattern", "p"."material", "p"."info", "p"."stock", "p"."created_at", "p"."updated_at", "lc"."likes";
+  GROUP BY "p"."id", "p"."code", "p"."name", "p"."price", "p"."image", "p"."detail_images", "p"."category", "p"."color", "p"."pattern", "p"."material", "p"."info", "p"."stock", "p"."option_label", "p"."created_at", "p"."updated_at", "lc"."likes";
 
 
 ALTER TABLE "public"."product_list_view" OWNER TO "postgres";
@@ -3005,7 +3313,7 @@ CREATE TABLE IF NOT EXISTS "public"."inquiries" (
 ALTER TABLE "public"."inquiries" OWNER TO "postgres";
 
 
-CREATE OR REPLACE VIEW "public"."order_detail_view" WITH ("security_invoker"='true') AS
+CREATE OR REPLACE VIEW "public"."order_detail_view" AS
  SELECT "o"."id",
     "o"."order_number" AS "orderNumber",
     "to_char"("o"."created_at", 'YYYY-MM-DD'::"text") AS "date",
@@ -3254,11 +3562,6 @@ ALTER TABLE ONLY "public"."product_options"
 
 
 
-ALTER TABLE ONLY "public"."product_options"
-    ADD CONSTRAINT "product_options_product_id_option_id_key" UNIQUE ("product_id", "option_id");
-
-
-
 ALTER TABLE ONLY "public"."products"
     ADD CONSTRAINT "products_code_key" UNIQUE ("code");
 
@@ -3368,6 +3671,10 @@ CREATE INDEX "idx_orders_order_number" ON "public"."orders" USING "btree" ("orde
 
 
 CREATE INDEX "idx_orders_order_type" ON "public"."orders" USING "btree" ("order_type");
+
+
+
+CREATE INDEX "idx_orders_payment_group_id" ON "public"."orders" USING "btree" ("payment_group_id");
 
 
 
@@ -3915,6 +4222,22 @@ CREATE POLICY "Users can view their own quote requests" ON "public"."quote_reque
 ALTER TABLE "public"."admin_settings" ENABLE ROW LEVEL SECURITY;
 
 
+CREATE POLICY "admin_update_fabric_prices" ON "public"."custom_order_fabric_prices" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+
+CREATE POLICY "admin_update_pricing_constants" ON "public"."custom_order_pricing_constants" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+
+CREATE POLICY "allow_public_read_fabric_prices" ON "public"."custom_order_fabric_prices" FOR SELECT TO "authenticated", "anon" USING (true);
+
+
+
+CREATE POLICY "allow_public_read_pricing_constants" ON "public"."custom_order_pricing_constants" FOR SELECT TO "authenticated", "anon" USING (true);
+
+
+
 ALTER TABLE "public"."cart_items" ENABLE ROW LEVEL SECURITY;
 
 
@@ -3997,8 +4320,6 @@ CREATE POLICY "user_coupons_service_all" ON "public"."user_coupons" USING (("aut
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 
 
-SET SESSION AUTHORIZATION "postgres";
-RESET SESSION AUTHORIZATION;
 
 
 
@@ -4201,6 +4522,12 @@ GRANT ALL ON FUNCTION "public"."admin_get_email"("uid" "uuid") TO "service_role"
 
 
 
+GRANT ALL ON FUNCTION "public"."admin_get_period_stats"("p_order_type" "text", "p_start_date" "date", "p_end_date" "date") TO "anon";
+GRANT ALL ON FUNCTION "public"."admin_get_period_stats"("p_order_type" "text", "p_start_date" "date", "p_end_date" "date") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."admin_get_period_stats"("p_order_type" "text", "p_start_date" "date", "p_end_date" "date") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."admin_get_today_stats"("p_order_type" "text", "p_date" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_get_today_stats"("p_order_type" "text", "p_date" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_get_today_stats"("p_order_type" "text", "p_date" "text") TO "service_role";
@@ -4262,17 +4589,14 @@ GRANT ALL ON FUNCTION "public"."calculate_custom_order_amounts"("p_options" "jso
 
 
 
+GRANT ALL ON FUNCTION "public"."confirm_payment_orders"("p_payment_group_id" "uuid", "p_user_id" "uuid", "p_payment_key" "text") TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."create_claim"("p_type" "text", "p_order_id" "uuid", "p_item_id" "text", "p_reason" "text", "p_description" "text", "p_quantity" integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."create_claim"("p_type" "text", "p_order_id" "uuid", "p_item_id" "text", "p_reason" "text", "p_description" "text", "p_quantity" integer) TO "anon";
 GRANT ALL ON FUNCTION "public"."create_claim"("p_type" "text", "p_order_id" "uuid", "p_item_id" "text", "p_reason" "text", "p_description" "text", "p_quantity" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."create_claim"("p_type" "text", "p_order_id" "uuid", "p_item_id" "text", "p_reason" "text", "p_description" "text", "p_quantity" integer) TO "service_role";
-
-
-
-REVOKE ALL ON FUNCTION "public"."create_custom_order_txn"("p_shipping_address_id" "uuid", "p_options" "jsonb", "p_quantity" integer, "p_reference_image_urls" "text"[], "p_additional_notes" "text", "p_sample" boolean) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."create_custom_order_txn"("p_shipping_address_id" "uuid", "p_options" "jsonb", "p_quantity" integer, "p_reference_image_urls" "text"[], "p_additional_notes" "text", "p_sample" boolean) TO "anon";
-GRANT ALL ON FUNCTION "public"."create_custom_order_txn"("p_shipping_address_id" "uuid", "p_options" "jsonb", "p_quantity" integer, "p_reference_image_urls" "text"[], "p_additional_notes" "text", "p_sample" boolean) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."create_custom_order_txn"("p_shipping_address_id" "uuid", "p_options" "jsonb", "p_quantity" integer, "p_reference_image_urls" "text"[], "p_additional_notes" "text", "p_sample" boolean) TO "service_role";
 
 
 
@@ -4345,6 +4669,10 @@ GRANT ALL ON FUNCTION "public"."is_admin"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."lock_payment_orders"("p_payment_group_id" "uuid", "p_user_id" "uuid") TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."product_is_liked_rpc"("p_id" integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."product_is_liked_rpc"("p_id" integer) TO "anon";
 GRANT ALL ON FUNCTION "public"."product_is_liked_rpc"("p_id" integer) TO "authenticated";
@@ -4374,6 +4702,10 @@ GRANT ALL ON FUNCTION "public"."replace_cart_items"("p_user_id" "uuid", "p_items
 GRANT ALL ON FUNCTION "public"."replace_product_options"("p_product_id" integer, "p_options" "jsonb") TO "anon";
 GRANT ALL ON FUNCTION "public"."replace_product_options"("p_product_id" integer, "p_options" "jsonb") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."replace_product_options"("p_product_id" integer, "p_options" "jsonb") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."unlock_payment_orders"("p_payment_group_id" "uuid", "p_user_id" "uuid") TO "service_role";
 
 
 
@@ -4411,28 +4743,8 @@ GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
 
 
 GRANT ALL ON TABLE "public"."claims" TO "anon";
-GRANT ALL ON TABLE "public"."claims" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE ON TABLE "public"."claims" TO "authenticated";
 GRANT ALL ON TABLE "public"."claims" TO "service_role";
-
-
-
-GRANT UPDATE("status") ON TABLE "public"."claims" TO "authenticated";
-
-
-
-GRANT UPDATE("return_courier_company") ON TABLE "public"."claims" TO "authenticated";
-
-
-
-GRANT UPDATE("return_tracking_number") ON TABLE "public"."claims" TO "authenticated";
-
-
-
-GRANT UPDATE("resend_courier_company") ON TABLE "public"."claims" TO "authenticated";
-
-
-
-GRANT UPDATE("resend_tracking_number") ON TABLE "public"."claims" TO "authenticated";
 
 
 
@@ -4443,24 +4755,8 @@ GRANT ALL ON TABLE "public"."order_items" TO "service_role";
 
 
 GRANT ALL ON TABLE "public"."orders" TO "anon";
-GRANT ALL ON TABLE "public"."orders" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE ON TABLE "public"."orders" TO "authenticated";
 GRANT ALL ON TABLE "public"."orders" TO "service_role";
-
-
-
-GRANT UPDATE("status") ON TABLE "public"."orders" TO "authenticated";
-
-
-
-GRANT UPDATE("courier_company") ON TABLE "public"."orders" TO "authenticated";
-
-
-
-GRANT UPDATE("tracking_number") ON TABLE "public"."orders" TO "authenticated";
-
-
-
-GRANT UPDATE("shipped_at") ON TABLE "public"."orders" TO "authenticated";
 
 
 
@@ -4471,28 +4767,8 @@ GRANT ALL ON TABLE "public"."products" TO "service_role";
 
 
 GRANT ALL ON TABLE "public"."profiles" TO "anon";
-GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE ON TABLE "public"."profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."profiles" TO "service_role";
-
-
-
-GRANT UPDATE("name") ON TABLE "public"."profiles" TO "authenticated";
-
-
-
-GRANT UPDATE("phone") ON TABLE "public"."profiles" TO "authenticated";
-
-
-
-GRANT UPDATE("role") ON TABLE "public"."profiles" TO "authenticated";
-
-
-
-GRANT UPDATE("is_active") ON TABLE "public"."profiles" TO "authenticated";
-
-
-
-GRANT UPDATE("birth") ON TABLE "public"."profiles" TO "authenticated";
 
 
 
@@ -4551,24 +4827,8 @@ GRANT ALL ON TABLE "public"."admin_order_status_log_view" TO "service_role";
 
 
 GRANT ALL ON TABLE "public"."quote_requests" TO "anon";
-GRANT ALL ON TABLE "public"."quote_requests" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE ON TABLE "public"."quote_requests" TO "authenticated";
 GRANT ALL ON TABLE "public"."quote_requests" TO "service_role";
-
-
-
-GRANT UPDATE("status") ON TABLE "public"."quote_requests" TO "authenticated";
-
-
-
-GRANT UPDATE("quoted_amount") ON TABLE "public"."quote_requests" TO "authenticated";
-
-
-
-GRANT UPDATE("quote_conditions") ON TABLE "public"."quote_requests" TO "authenticated";
-
-
-
-GRANT UPDATE("admin_memo") ON TABLE "public"."quote_requests" TO "authenticated";
 
 
 
@@ -4657,28 +4917,8 @@ GRANT ALL ON TABLE "public"."custom_order_pricing_constants" TO "service_role";
 
 
 GRANT ALL ON TABLE "public"."inquiries" TO "anon";
-GRANT ALL ON TABLE "public"."inquiries" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE ON TABLE "public"."inquiries" TO "authenticated";
 GRANT ALL ON TABLE "public"."inquiries" TO "service_role";
-
-
-
-GRANT UPDATE("title") ON TABLE "public"."inquiries" TO "authenticated";
-
-
-
-GRANT UPDATE("content") ON TABLE "public"."inquiries" TO "authenticated";
-
-
-
-GRANT UPDATE("status") ON TABLE "public"."inquiries" TO "authenticated";
-
-
-
-GRANT UPDATE("answer") ON TABLE "public"."inquiries" TO "authenticated";
-
-
-
-GRANT UPDATE("answer_date") ON TABLE "public"."inquiries" TO "authenticated";
 
 
 
