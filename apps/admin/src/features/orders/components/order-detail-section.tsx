@@ -19,7 +19,7 @@ import { ShippingAddressSection } from "./shipping-address-section";
 import { TrackingSection } from "./tracking-section";
 import { OrderItemsTable } from "./order-items-table";
 import { StatusLogTable } from "./status-log-table";
-import { RelatedOrdersSection } from "./related-orders-section";
+import { RelatedOrdersSection } from "@/features/orders/components/related-orders-section";
 import type { AdminReformOrderItem } from "../types/admin-order";
 
 const { Title } = Typography;
