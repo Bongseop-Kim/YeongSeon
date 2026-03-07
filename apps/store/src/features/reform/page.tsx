@@ -25,13 +25,12 @@ import {
 } from "@/components/ui/accordion";
 import { Detail } from "./components/detail";
 import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
-import { REFORM_BASE_COST, REFORM_SHIPPING_COST } from "@yeongseon/shared/constants/reform-pricing";
 import { DataTable } from "@/components/ui/data-table";
 import { ReformActionButtons } from "./components/reform-action-buttons";
 import { MobileReformSheet } from "./components/mobile-reform-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { toReformCartItems, toReformData } from "./api/reform-mapper";
-import { useUploadTieImages } from "./api/reform-query";
+import { useReformPricing, useUploadTieImages } from "./api/reform-query";
 
 const DEFAULT_TIE_ITEM = {
   id: "tie-1",
@@ -60,6 +59,7 @@ const ReformPage = () => {
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const isSubmittingRef = useRef(false);
   const uploadTieImagesMutation = useUploadTieImages();
+  const { data: pricing } = useReformPricing();
 
   const form = useForm<ReformOptions>({
     defaultValues: DEFAULT_REFORM_OPTIONS,
@@ -100,11 +100,11 @@ const ReformPage = () => {
     const ties = form.getValues().ties;
     const uploadedTies = await uploadTiesIfNeeded(ties);
 
-    const orderItems = toReformCartItems(uploadedTies);
+    const orderItems = toReformCartItems(uploadedTies, pricing?.baseCost ?? 0);
 
     setOrderItems(orderItems);
     navigate(ROUTES.ORDER_FORM);
-  }, [form, navigate, setOrderItems, uploadTiesIfNeeded]);
+  }, [form, navigate, pricing?.baseCost, setOrderItems, uploadTiesIfNeeded]);
 
   const withSubmitGuard = useCallback(
     async (action: () => Promise<void>) => {
@@ -145,7 +145,7 @@ const ReformPage = () => {
       const ties = form.getValues().ties;
       const uploadedTies = await uploadTiesIfNeeded(ties);
 
-      await addMultipleReformToCart(uploadedTies.map(toReformData));
+      await addMultipleReformToCart(uploadedTies.map((tie) => toReformData(tie, pricing?.baseCost ?? 0)));
 
       form.reset(DEFAULT_REFORM_OPTIONS);
     });
@@ -153,7 +153,7 @@ const ReformPage = () => {
   const calculateTotalCost = () =>
     fields.length === 0
       ? 0
-      : REFORM_BASE_COST * fields.length + REFORM_SHIPPING_COST;
+      : (pricing?.baseCost ?? 0) * fields.length + (pricing?.shippingCost ?? 0);
 
   const handleDelete = () => {
     const checkedIndices = watchedTies
@@ -246,7 +246,7 @@ const ReformPage = () => {
               <ReformActionButtons
                 onAddToCart={handleAddToCart}
                 onOrder={handleDirectOrder}
-                disabled={uploadTieImagesMutation.isPending}
+                disabled={uploadTieImagesMutation.isPending || !pricing}
               />
             }
           >

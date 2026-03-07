@@ -25,6 +25,8 @@ const CONSTANT_LABELS: Record<string, string> = {
   BRAND_LABEL_COST: "브랜드 라벨",
   CARE_LABEL_COST: "케어 라벨",
   YARN_DYED_DESIGN_COST: "선염 디자인 비용",
+  REFORM_BASE_COST: "수선 비용",
+  REFORM_SHIPPING_COST: "수선 택배비",
 };
 
 const CONSTANT_GROUPS: { title: string; keys: string[] }[] = [
@@ -39,6 +41,10 @@ const CONSTANT_GROUPS: { title: string; keys: string[] }[] = [
   {
     title: "부자재",
     keys: ["BAR_TACK_COST", "BRAND_LABEL_COST", "CARE_LABEL_COST", "WOOL_INTERLINING_COST"],
+  },
+  {
+    title: "수선",
+    keys: ["REFORM_BASE_COST", "REFORM_SHIPPING_COST"],
   },
 ];
 
