@@ -2115,6 +2115,12 @@ declare
   v_updated_orders jsonb := '[]'::jsonb;
   v_count int := 0;
 begin
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증
+  if auth.uid() is not null and p_user_id <> auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
   for v_order in
     select id, user_id, status, order_type
     from public.orders
