@@ -1,3 +1,7 @@
+# Language
+
+Always respond in Korean.
+
 ## 빠른 시작
 
 > 패키지 매니저는 **pnpm** 전용 (`npm`/`yarn` 사용 시 preinstall 훅에서 차단됨)
