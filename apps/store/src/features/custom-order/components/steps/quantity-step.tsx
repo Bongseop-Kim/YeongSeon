@@ -1,6 +1,12 @@
 import { useEffect, useRef } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
 import { PackageSelector } from "@/features/custom-order/components/package-selector";
@@ -54,9 +60,7 @@ export const QuantityStep = ({
     >
       <Card>
         <CardHeader>
-          <CardTitle>
-            시작 방식
-          </CardTitle>
+          <CardTitle>시작 방식</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <CheckboxField
@@ -77,9 +81,7 @@ export const QuantityStep = ({
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            수량 선택
-          </CardTitle>
+          <CardTitle>수량 선택</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <ButtonGroup>
@@ -99,11 +101,7 @@ export const QuantityStep = ({
             name="quantity"
             control={control}
             render={({ field }) => (
-              <QuantitySelector
-                value={field.value}
-                onChange={field.onChange}
-                min={4}
-              />
+              <QuantitySelector value={field.value} onChange={field.onChange} />
             )}
           />
 
@@ -111,7 +109,8 @@ export const QuantityStep = ({
             <Card>
               <CardContent>
                 <CardDescription>
-                  100개 이상은 견적요청으로 진행됩니다. 담당자가 별도 안내해드려요.
+                  100개 이상은 견적요청으로 진행됩니다. 담당자가 별도
+                  안내해드려요.
                 </CardDescription>
               </CardContent>
             </Card>

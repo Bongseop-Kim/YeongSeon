@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus } from "lucide-react";
@@ -21,15 +22,25 @@ export function QuantitySelector({
   totalPrice,
   className = "",
 }: QuantitySelectorProps) {
+  const [inputValue, setInputValue] = useState(String(value));
+
+  useEffect(() => {
+    setInputValue(String(value));
+  }, [value]);
+
   const handleDecrease = () => {
     if (value > min) {
-      onChange(value - 1);
+      const next = value - 1;
+      onChange(next);
+      setInputValue(String(next));
     }
   };
 
   const handleIncrease = () => {
-    if (!max || value < max) {
-      onChange(value + 1);
+    if (max === undefined || value < max) {
+      const next = value + 1;
+      onChange(next);
+      setInputValue(String(next));
     }
   };
 
@@ -47,16 +58,21 @@ export function QuantitySelector({
         </Button>
         <Input
           type="number"
-          value={value}
+          value={inputValue}
           step={1}
           min={min}
           max={max}
-          onChange={(e) => {
-            const next = parseInt(e.target.value, 10);
-            if (isNaN(next)) return;
-            if (next < min) return onChange(min);
-            if (max !== undefined && next > max) return onChange(max);
-            onChange(next);
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={() => {
+            const parsed = parseInt(inputValue, 10);
+            const fallback = Number.isNaN(parsed) ? min : parsed;
+            const clamped =
+              max !== undefined
+                ? Math.min(Math.max(fallback, min), max)
+                : Math.max(fallback, min);
+
+            onChange(clamped);
+            setInputValue(String(clamped));
           }}
           className="w-12 text-center font-medium shadow-none rounded-none border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />

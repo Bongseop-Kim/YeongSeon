@@ -81,6 +81,10 @@ export const useWizardStep = ({
     if (nextIndex !== null) {
       setCompletedSteps((prev) => {
         const next = new Set(prev);
+        // 의도된 동작: currentStepIndex ~ nextIndex-1 사이의 스킵된 스텝도 completed로 표시한다.
+        // 사이즈·상세옵션·샘플 스텝은 isSkippable=true이고 기본값이 설정되어 있어,
+        // 사용자가 별도로 진입하지 않아도 기본값으로 주문이 완성된 것으로 간주한다.
+        // 따라서 실제 방문 여부를 따지지 않고 인덱스 범위만으로 일괄 완료 처리하는 것이 맞다.
         for (let i = currentStepIndex; i < nextIndex; i++) {
           next.add(i);
         }
@@ -123,7 +127,9 @@ export const useWizardStep = ({
       const clamped = Math.max(0, Math.min(stepIndex, steps.length - 1));
       setCurrentStepIndex(clamped);
       setVisitedSteps(visited);
-      // 복원 시 현재 스텝 이전 인덱스를 모두 completed로 간주
+      // 의도된 동작: 복원 시 현재 스텝 이전 인덱스를 모두 completed로 간주한다.
+      // 스킵 가능한 스텝(사이즈·상세옵션·샘플)은 기본값이 있으므로 방문 이력 없이도
+      // 완료 상태로 복원하는 것이 올바르다. goNext와 동일한 의도.
       const restored = new Set<number>();
       for (let i = 0; i < clamped; i++) {
         restored.add(i);

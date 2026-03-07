@@ -1,5 +1,5 @@
-export const START_COST = 50000; // 봉제 시작 비용 (기본 시작 인건비)
-export const SEWING_PER_COST = 4000; // 봉제 단가
+export const START_COST = 100000; // 봉제 시작 비용 (기본 시작 인건비)
+export const SEWING_PER_COST = 5000; // 봉제 단가
 
 // 봉제 추가 비용
 export const AUTO_TIE_COST = 1000; // 자동 봉제 추가 비용
