@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import dayjs from "dayjs";
 import { eulo } from "@yeongseon/shared";
 import { useTable } from "@refinedev/antd";
 import {
@@ -47,8 +48,8 @@ export function useAdminOrderTable(
         { field: "orderType", operator: "eq", value: orderType },
       ],
       initial: [
-        { field: "date", operator: "gte", value: initialDateRange[0] },
-        { field: "date", operator: "lte", value: initialDateRange[1] },
+        { field: "created_at", operator: "gte", value: dayjs(initialDateRange[0]).startOf("day").toISOString() },
+        { field: "created_at", operator: "lte", value: dayjs(initialDateRange[1]).endOf("day").toISOString() },
       ],
     },
     syncWithLocation: false,

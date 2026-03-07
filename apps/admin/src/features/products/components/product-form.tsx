@@ -97,7 +97,7 @@ export function ProductForm({
         <Input.TextArea rows={4} />
       </Form.Item>
       {!hasOptions && (
-        <Form.Item label="재고" name="stock" tooltip="비워두면 무제한">
+        <Form.Item label="재고" name="stock" tooltip="비워두면 무제한" preserve={false}>
           <InputNumber
             min={0}
             style={{ width: "100%" }}
@@ -108,7 +108,7 @@ export function ProductForm({
 
       <Card title="옵션" size="small" style={{ marginBottom: 24 }}>
         {hasOptions && (
-          <Form.Item label="옵션 제목" name="option_label">
+          <Form.Item label="옵션 제목" name="option_label" preserve={false}>
             <Input placeholder="예: 길이, 색상, 사이즈" />
           </Form.Item>
         )}

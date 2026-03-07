@@ -35,8 +35,8 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
     setDateRange(range);
     setFilters(
       [
-        { field: "date", operator: "gte", value: range[0].format("YYYY-MM-DD") },
-        { field: "date", operator: "lte", value: range[1].format("YYYY-MM-DD") },
+        { field: "created_at", operator: "gte", value: range[0].startOf("day").toISOString() },
+        { field: "created_at", operator: "lte", value: range[1].endOf("day").toISOString() },
       ],
       "merge"
     );
