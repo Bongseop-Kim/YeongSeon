@@ -22,6 +22,24 @@ const jsonResponse = (status: number, body: Record<string, unknown>) =>
     },
   });
 
+const maskPaymentKey = (key: string): string => {
+  if (key.length <= 8) return "****";
+  return `****${key.slice(-8)}`;
+};
+
+const sanitizeTossResponse = (
+  obj: Record<string, unknown>
+): Record<string, unknown> => {
+  const copy = { ...obj };
+  if (typeof copy.paymentKey === "string") {
+    copy.paymentKey = maskPaymentKey(copy.paymentKey);
+  }
+  if (typeof copy.secret === "string") {
+    copy.secret = "****";
+  }
+  return copy;
+};
+
 const processLogger = (step: string, payload: Record<string, unknown>) => {
   console.log(`[confirm-payment:${step}]`, JSON.stringify(payload));
 };
@@ -121,7 +139,7 @@ Deno.serve(async (req) => {
     userId: user.id,
     paymentGroupId: payload.orderId,
     amount: payload.amount,
-    paymentKey: payload.paymentKey,
+    paymentKey: maskPaymentKey(payload.paymentKey),
   });
 
   // payment_group_id로 주문 그룹 조회
@@ -231,9 +249,9 @@ Deno.serve(async (req) => {
     if (!tossResponse.ok) {
       processLogger("payment_confirm_rejected", {
         paymentGroupId: payload.orderId,
-        paymentKey: payload.paymentKey,
+        paymentKey: maskPaymentKey(payload.paymentKey),
         status: tossResponse.status,
-        response: parsed,
+        response: sanitizeTossResponse(parsed),
       });
 
       return jsonResponse(tossResponse.status, {
@@ -246,7 +264,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     errorLogger("payment_confirm_failed", error, {
       paymentGroupId: payload.orderId,
-      paymentKey: payload.paymentKey,
+      paymentKey: maskPaymentKey(payload.paymentKey),
     });
     return jsonResponse(502, { error: "Failed to confirm payment" });
   }
@@ -262,7 +280,7 @@ Deno.serve(async (req) => {
     errorLogger("order_update_failed", rpcError, {
       paymentGroupId: payload.orderId,
       userId: user.id,
-      paymentKey: payload.paymentKey,
+      paymentKey: maskPaymentKey(payload.paymentKey),
     });
     if (rpcError.message?.includes("not payable")) {
       return jsonResponse(409, {
@@ -299,7 +317,7 @@ Deno.serve(async (req) => {
   processLogger("payment_confirmed", {
     paymentGroupId: payload.orderId,
     userId: user.id,
-    paymentKey: payload.paymentKey,
+    paymentKey: maskPaymentKey(payload.paymentKey),
     amount: totalAmount,
     orderCount: updatedOrders.length,
     paymentStatus: tossResult.status ?? "UNKNOWN",
