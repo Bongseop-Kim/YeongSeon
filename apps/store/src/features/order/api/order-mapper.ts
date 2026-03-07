@@ -360,14 +360,23 @@ export const parseCreateOrderResult = (
     throw new Error("주문 생성 응답이 올바르지 않습니다: 객체가 아닙니다.");
   }
   if (
-    typeof data.order_id !== "string" ||
-    typeof data.order_number !== "string"
+    typeof data.payment_group_id !== "string" ||
+    typeof data.total_amount !== "number" ||
+    !Array.isArray(data.orders)
   ) {
     throw new Error(
-      "주문 생성 응답이 올바르지 않습니다: order_id 또는 order_number 누락."
+      "주문 생성 응답이 올바르지 않습니다: payment_group_id, total_amount, orders 누락."
     );
   }
-  return { order_id: data.order_id, order_number: data.order_number };
+  return {
+    payment_group_id: data.payment_group_id,
+    total_amount: data.total_amount,
+    orders: (data.orders as Array<Record<string, unknown>>).map((o) => ({
+      order_id: o.order_id as string,
+      order_number: o.order_number as string,
+      order_type: o.order_type as string,
+    })),
+  };
 };
 
 export const parseOrderListRows = (data: unknown): OrderListRowDTO[] => {

@@ -28,7 +28,11 @@ export function CartOrderSummaryCard({ summary }: CartOrderSummaryCardProps) {
           )}
           <div className="flex justify-between text-sm">
             <span className="text-zinc-600">배송비</span>
-            <span>무료</span>
+            <span>
+              {summary.shippingCost > 0
+                ? `${summary.shippingCost.toLocaleString()}원`
+                : "무료"}
+            </span>
           </div>
 
           <Separator />

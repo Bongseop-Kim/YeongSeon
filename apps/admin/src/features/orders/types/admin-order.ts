@@ -57,6 +57,8 @@ export interface AdminOrderDetail {
   trackingInfo: AdminTrackingInfo | null;
   deliveredAt: string | null;
   confirmedAt: string | null;
+  paymentGroupId: string | null;
+  shippingCost: number;
 }
 
 // ── Order items (discriminated union) ─────────────────────────

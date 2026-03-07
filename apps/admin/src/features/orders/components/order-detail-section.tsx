@@ -19,6 +19,7 @@ import { ShippingAddressSection } from "./shipping-address-section";
 import { TrackingSection } from "./tracking-section";
 import { OrderItemsTable } from "./order-items-table";
 import { StatusLogTable } from "./status-log-table";
+import { RelatedOrdersSection } from "./related-orders-section";
 import type { AdminReformOrderItem } from "../types/admin-order";
 
 const { Title } = Typography;
@@ -56,6 +57,16 @@ export function OrderDetailSection() {
     <>
       <Title level={5}>주문 정보</Title>
       <OrderInfoSection order={order} />
+
+      {order.paymentGroupId && (
+        <>
+          <Title level={5}>함께 결제된 주문</Title>
+          <RelatedOrdersSection
+            paymentGroupId={order.paymentGroupId}
+            currentOrderId={order.id}
+          />
+        </>
+      )}
 
       <OrderStatusActions
         order={order}

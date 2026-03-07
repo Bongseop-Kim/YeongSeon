@@ -6,6 +6,7 @@ export interface CreateOrderRequest {
 }
 
 export interface CreateOrderResponse {
-  orderId: string;
-  orderNumber: string;
+  paymentGroupId: string;
+  totalAmount: number;
+  orders: Array<{ orderId: string; orderNumber: string; orderType: string }>;
 }

@@ -349,7 +349,9 @@ SELECT
   sa.address_detail   AS "shippingAddressDetail",
   sa.postal_code      AS "shippingPostalCode",
   sa.delivery_memo    AS "deliveryMemo",
-  sa.delivery_request AS "deliveryRequest"
+  sa.delivery_request AS "deliveryRequest",
+  o.payment_group_id  AS "paymentGroupId",
+  o.shipping_cost     AS "shippingCost"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id
 LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id;

@@ -4,6 +4,7 @@ import { calculateDiscount } from "./calculate-discount";
 export interface OrderTotals {
   originalPrice: number;
   totalDiscount: number;
+  shippingCost: number;
   totalPrice: number;
 }
 
@@ -22,7 +23,10 @@ export const getOrderItemPricing = (item: OrderItem) => {
   return { unitPrice, discount };
 };
 
-export const calculateOrderTotals = (items: OrderItem[]): OrderTotals => {
+export const calculateOrderTotals = (
+  items: OrderItem[],
+  shippingCost = 0
+): OrderTotals => {
   let originalPrice = 0;
   let totalDiscount = 0;
 
@@ -37,11 +41,15 @@ export const calculateOrderTotals = (items: OrderItem[]): OrderTotals => {
   return {
     originalPrice,
     totalDiscount,
-    totalPrice: originalPrice - totalDiscount,
+    shippingCost,
+    totalPrice: originalPrice - totalDiscount + shippingCost,
   };
 };
 
-export const calculateOrderSummary = (items: OrderItem[]): OrderSummary => ({
+export const calculateOrderSummary = (
+  items: OrderItem[],
+  shippingCost = 0
+): OrderSummary => ({
   totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
-  ...calculateOrderTotals(items),
+  ...calculateOrderTotals(items, shippingCost),
 });

@@ -19,12 +19,15 @@ CREATE TABLE IF NOT EXISTS public.orders (
   confirmed_at        timestamptz,
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now(),
+  payment_group_id    uuid,
+  shipping_cost       integer     NOT NULL DEFAULT 0,
 
   CONSTRAINT orders_pkey PRIMARY KEY (id),
   CONSTRAINT orders_order_number_key UNIQUE (order_number),
   CONSTRAINT orders_total_price_check    CHECK (total_price >= 0),
   CONSTRAINT orders_original_price_check CHECK (original_price >= 0),
   CONSTRAINT orders_total_discount_check CHECK (total_discount >= 0),
+  CONSTRAINT orders_shipping_cost_check  CHECK (shipping_cost >= 0),
   CONSTRAINT orders_order_type_check
     CHECK (order_type = ANY (ARRAY['sale','custom','repair'])),
   CONSTRAINT orders_status_check
@@ -44,6 +47,7 @@ CREATE INDEX idx_orders_user_id      ON public.orders USING btree (user_id);
 CREATE INDEX idx_orders_order_number ON public.orders USING btree (order_number);
 CREATE INDEX idx_orders_order_type   ON public.orders USING btree (order_type);
 CREATE INDEX idx_orders_pending_confirmation ON public.orders (delivered_at) WHERE status = '배송완료';
+CREATE INDEX idx_orders_payment_group_id     ON public.orders (payment_group_id);
 
 -- Trigger
 CREATE OR REPLACE TRIGGER update_orders_updated_at

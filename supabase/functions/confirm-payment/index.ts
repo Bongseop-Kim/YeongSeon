@@ -4,13 +4,21 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 type ConfirmPaymentRequest = {
   paymentKey: string;
-  orderId: string;
+  orderId: string; // payment_group_id
   amount: number;
 };
 
 type TossConfirmResponse = {
   status?: string;
   [key: string]: unknown;
+};
+
+type OrderRow = {
+  id: string;
+  user_id: string;
+  total_price: number;
+  status: string;
+  order_type: string;
 };
 
 const jsonResponse = (status: number, body: Record<string, unknown>) =>
@@ -119,66 +127,78 @@ Deno.serve(async (req) => {
 
   processLogger("request_received", {
     userId: user.id,
-    orderId: payload.orderId,
+    paymentGroupId: payload.orderId,
     amount: payload.amount,
     paymentKey: payload.paymentKey,
   });
 
-  const { data: order, error: orderError } = await adminClient
+  // payment_group_id로 주문 그룹 조회
+  const { data: orders, error: ordersError } = await adminClient
     .from("orders")
     .select("id, user_id, total_price, status, order_type")
-    .eq("id", payload.orderId)
-    .maybeSingle();
+    .eq("payment_group_id", payload.orderId);
 
-  if (orderError) {
-    errorLogger("order_lookup_failed", orderError, {
-      orderId: payload.orderId,
+  if (ordersError) {
+    errorLogger("orders_lookup_failed", ordersError, {
+      paymentGroupId: payload.orderId,
       userId: user.id,
     });
 
-    if (orderError.code === "22P02") {
-      return jsonResponse(400, { error: "Invalid order id" });
+    if (ordersError.code === "22P02") {
+      return jsonResponse(400, { error: "Invalid payment group id" });
     }
 
-    return jsonResponse(500, { error: "Failed to load order" });
+    return jsonResponse(500, { error: "Failed to load orders" });
   }
 
-  if (!order) {
-    return jsonResponse(404, { error: "Order not found" });
+  if (!orders || orders.length === 0) {
+    return jsonResponse(404, { error: "Orders not found" });
   }
 
+  const typedOrders = orders as OrderRow[];
   const allowedPrePaymentStatuses = new Set(["대기중", "pending", "created"]);
-  if (!allowedPrePaymentStatuses.has(order.status)) {
-    errorLogger("invalid_order_status", new Error("Order is not in payable state"), {
-      orderId: order.id,
-      userId: user.id,
-      orderStatus: order.status,
-    });
-    return jsonResponse(409, {
-      error: "Order is not payable",
-      orderId: order.id,
-    });
+
+  // 소유권 + 상태 검증
+  for (const order of typedOrders) {
+    if (order.user_id !== user.id) {
+      return jsonResponse(403, { error: "Forbidden" });
+    }
+    if (!allowedPrePaymentStatuses.has(order.status)) {
+      errorLogger(
+        "invalid_order_status",
+        new Error("Order is not in payable state"),
+        {
+          orderId: order.id,
+          userId: user.id,
+          orderStatus: order.status,
+        }
+      );
+      return jsonResponse(409, {
+        error: "Order is not payable",
+        orderId: order.id,
+      });
+    }
   }
 
-  if (order.user_id !== user.id) {
-    return jsonResponse(403, { error: "Forbidden" });
-  }
+  // 금액 검증: 전체 주문 합계
+  const totalAmount = typedOrders.reduce(
+    (sum, o) => sum + o.total_price,
+    0
+  );
 
-  if (order.total_price !== payload.amount) {
+  if (totalAmount !== payload.amount) {
     processLogger("amount_mismatch", {
-      orderId: order.id,
+      paymentGroupId: payload.orderId,
       requestedAmount: payload.amount,
-      dbAmount: order.total_price,
+      dbAmount: totalAmount,
       userId: user.id,
     });
 
     return jsonResponse(400, {
       error: "Amount mismatch",
-      orderId: order.id,
+      paymentGroupId: payload.orderId,
     });
   }
-
-  const serverAmount = order.total_price;
 
   const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
 
@@ -195,7 +215,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           paymentKey: payload.paymentKey,
           orderId: payload.orderId,
-          amount: serverAmount,
+          amount: totalAmount,
         }),
       }
     );
@@ -203,14 +223,16 @@ Deno.serve(async (req) => {
     const responseText = await tossResponse.text();
     let parsed: Record<string, unknown> = {};
     try {
-      parsed = responseText ? (JSON.parse(responseText) as Record<string, unknown>) : {};
+      parsed = responseText
+        ? (JSON.parse(responseText) as Record<string, unknown>)
+        : {};
     } catch {
       parsed = { raw: responseText };
     }
 
     if (!tossResponse.ok) {
       processLogger("payment_confirm_rejected", {
-        orderId: payload.orderId,
+        paymentGroupId: payload.orderId,
         paymentKey: payload.paymentKey,
         status: tossResponse.status,
         response: parsed,
@@ -225,61 +247,76 @@ Deno.serve(async (req) => {
     tossResult = parsed as TossConfirmResponse;
   } catch (error) {
     errorLogger("payment_confirm_failed", error, {
-      orderId: payload.orderId,
+      paymentGroupId: payload.orderId,
       paymentKey: payload.paymentKey,
     });
     return jsonResponse(502, { error: "Failed to confirm payment" });
   }
 
-  const postPaymentStatus =
-    order.order_type === "sale" ? "진행중" : "접수";
+  // 각 주문 상태 업데이트
+  const updatedOrders: Array<{ orderId: string; orderType: string }> = [];
 
-  const { data: updatedOrder, error: updateError } = await adminClient
-    .from("orders")
-    .update({
-      status: postPaymentStatus,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", order.id)
-    .eq("user_id", user.id)
-    .eq("status", order.status)
-    .select("id")
-    .maybeSingle();
+  for (const order of typedOrders) {
+    const postPaymentStatus =
+      order.order_type === "sale" ? "진행중" : "접수";
 
-  if (updateError) {
-    errorLogger("order_update_failed", updateError, {
-      orderId: order.id,
-      userId: user.id,
-      paymentKey: payload.paymentKey,
-      originalStatus: order.status,
-    });
-    return jsonResponse(500, { error: "Payment confirmed but order update failed" });
-  }
+    const { data: updatedOrder, error: updateError } = await adminClient
+      .from("orders")
+      .update({
+        status: postPaymentStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id)
+      .eq("user_id", user.id)
+      .eq("status", order.status)
+      .select("id")
+      .maybeSingle();
 
-  if (!updatedOrder) {
-    errorLogger("order_update_conflict", new Error("Order status changed before update"), {
-      orderId: order.id,
-      userId: user.id,
-      expectedStatus: order.status,
-      paymentKey: payload.paymentKey,
-    });
-    return jsonResponse(409, {
-      error: "Payment confirmed but order state changed",
-      orderId: order.id,
-    });
+    if (updateError) {
+      errorLogger("order_update_failed", updateError, {
+        orderId: order.id,
+        userId: user.id,
+        paymentKey: payload.paymentKey,
+        originalStatus: order.status,
+      });
+      return jsonResponse(500, {
+        error: "Payment confirmed but order update failed",
+      });
+    }
+
+    if (!updatedOrder) {
+      errorLogger(
+        "order_update_conflict",
+        new Error("Order status changed before update"),
+        {
+          orderId: order.id,
+          userId: user.id,
+          expectedStatus: order.status,
+          paymentKey: payload.paymentKey,
+        }
+      );
+      return jsonResponse(409, {
+        error: "Payment confirmed but order state changed",
+        orderId: order.id,
+      });
+    }
+
+    updatedOrders.push({ orderId: order.id, orderType: order.order_type });
   }
 
   processLogger("payment_confirmed", {
-    orderId: order.id,
+    paymentGroupId: payload.orderId,
     userId: user.id,
     paymentKey: payload.paymentKey,
-    amount: serverAmount,
+    amount: totalAmount,
+    orderCount: updatedOrders.length,
     paymentStatus: tossResult.status ?? "UNKNOWN",
   });
 
   return jsonResponse(200, {
     paymentKey: payload.paymentKey,
-    orderId: order.id,
+    paymentGroupId: payload.orderId,
+    orders: updatedOrders,
     status: tossResult.status ?? "DONE",
   });
 });

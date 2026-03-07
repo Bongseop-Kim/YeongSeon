@@ -97,6 +97,27 @@ export function useAdminOrderItems(
   return { items };
 }
 
+// ── Related orders ────────────────────────────────────────────
+
+export function useRelatedOrders(
+  paymentGroupId: string | null | undefined,
+  currentOrderId: string
+) {
+  const { query, result } = useList<AdminOrderListRowDTO>({
+    resource: "admin_order_list_view",
+    filters: [
+      { field: "paymentGroupId", operator: "eq", value: paymentGroupId },
+    ],
+    queryOptions: { enabled: !!paymentGroupId },
+  });
+
+  const relatedOrders = result.data
+    .filter((dto) => dto.id !== currentOrderId)
+    .map(toAdminOrderListItem);
+
+  return { relatedOrders, isLoading: query.isLoading };
+}
+
 // ── Status logs ───────────────────────────────────────────────
 
 export function useAdminOrderStatusLogs(orderId: string | undefined) {

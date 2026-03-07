@@ -36,6 +36,8 @@ export interface AdminOrderDetailRowDTO extends Omit<AdminOrderListRowDTO, 'fabr
   shippingPostalCode: string | null;
   deliveryMemo: string | null;
   deliveryRequest: string | null;
+  paymentGroupId: string | null;
+  shippingCost: number;
 }
 
 /** admin_order_status_log_view row */

@@ -25,6 +25,7 @@ import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useAuthStore } from "@/store/auth";
 import { createOrder } from "@/features/order/api/order-api";
+import { useReformPricing } from "@/features/reform/api/reform-query";
 import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/features/payment/components/payment-widget";
@@ -43,6 +44,8 @@ const OrderFormPage = () => {
   const { openCouponSelect } = useCouponSelect();
   const updateShippingAddress = useUpdateShippingAddress();
   const { user } = useAuthStore();
+
+  const { data: reformPricing } = useReformPricing();
 
   const { selectedAddressId, selectedAddress, openShippingPopup } =
     useShippingAddressPopup();
@@ -100,7 +103,6 @@ const OrderFormPage = () => {
         items: orderItems,
         shippingAddressId: selectedAddressId,
       });
-      const orderId = orderResult.orderId;
       const firstItem = orderItems[0];
       const orderName =
         orderItems.length === 1
@@ -110,7 +112,7 @@ const OrderFormPage = () => {
           : `${firstItem.type === "product" ? firstItem.product.name : "수선"} 외 ${orderItems.length - 1}건`;
 
       await paymentWidgetRef.current.requestPayment({
-        orderId,
+        orderId: orderResult.paymentGroupId,
         orderName,
         successUrl: `${window.location.origin}${ROUTES.PAYMENT_SUCCESS}`,
         failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}`,
@@ -135,7 +137,11 @@ const OrderFormPage = () => {
     }
   };
 
-  const totals = calculateOrderTotals(orderItems);
+  const hasReformItems = orderItems.some((item) => item.type === "reform");
+  const estimatedShippingCost = hasReformItems
+    ? (reformPricing?.shippingCost ?? 0)
+    : 0;
+  const totals = calculateOrderTotals(orderItems, estimatedShippingCost);
 
   if (orderItems.length === 0) {
     return (
@@ -177,7 +183,11 @@ const OrderFormPage = () => {
                   )}
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-600">배송비</span>
-                    <span>무료</span>
+                    <span>
+                      {totals.shippingCost > 0
+                        ? `${totals.shippingCost.toLocaleString()}원`
+                        : "무료"}
+                    </span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-base font-semibold">

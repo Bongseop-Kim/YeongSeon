@@ -328,10 +328,22 @@ declare
   v_original_price integer := 0;
   v_total_discount integer := 0;
   v_total_price integer := 0;
-  v_reform_base_cost constant integer := 15000;
+  v_reform_base_cost integer;
+  v_reform_shipping_cost integer;
   v_used_coupon_ids uuid[] := '{}'::uuid[];
   v_coupon record;
   v_order_type text;
+
+  v_payment_group_id uuid;
+  v_group_total_amount integer := 0;
+  v_orders_result jsonb := '[]'::jsonb;
+  v_product_items jsonb := '[]'::jsonb;
+  v_reform_items jsonb := '[]'::jsonb;
+  v_product_original integer := 0;
+  v_product_discount integer := 0;
+  v_reform_original integer := 0;
+  v_reform_discount integer := 0;
+  v_shipping_cost integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -356,6 +368,12 @@ begin
   ) then
     raise exception 'Shipping address not found';
   end if;
+
+  SELECT amount INTO v_reform_base_cost
+  FROM custom_order_pricing_constants WHERE key = 'REFORM_BASE_COST';
+
+  SELECT amount INTO v_reform_shipping_cost
+  FROM custom_order_pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
 
   for v_item in select * from jsonb_array_elements(p_items)
   loop
@@ -534,72 +552,134 @@ begin
     );
   end loop;
 
-  v_total_price := v_original_price - v_total_discount;
-  v_order_number := generate_order_number();
-
-  v_order_type := case
-    when exists (
-      select 1 from jsonb_array_elements(v_normalized_items) elem
-      where elem->>'item_type' = 'reform'
-    ) then 'repair'
-    else 'sale'
-  end;
-
-  insert into orders (
-    user_id,
-    order_number,
-    shipping_address_id,
-    total_price,
-    original_price,
-    total_discount,
-    order_type,
-    status
-  )
-  values (
-    v_user_id,
-    v_order_number,
-    p_shipping_address_id,
-    v_total_price,
-    v_original_price,
-    v_total_discount,
-    v_order_type,
-    '대기중'
-  )
-  returning id into v_order_id;
+  -- 아이템 타입별 분류 및 소계 계산
+  v_payment_group_id := gen_random_uuid();
 
   for v_item in select * from jsonb_array_elements(v_normalized_items)
   loop
-    insert into order_items (
-      order_id,
-      item_id,
-      item_type,
-      product_id,
-      selected_option_id,
-      reform_data,
-      quantity,
-      unit_price,
-      discount_amount,
-      line_discount_amount,
-      applied_user_coupon_id
+    if v_item->>'item_type' = 'product' then
+      v_product_items := v_product_items || jsonb_build_array(v_item);
+      v_product_original := v_product_original
+        + (v_item->>'unit_price')::integer * (v_item->>'quantity')::integer;
+      v_product_discount := v_product_discount
+        + coalesce((v_item->>'line_discount_amount')::integer, 0);
+    elsif v_item->>'item_type' = 'reform' then
+      v_reform_items := v_reform_items || jsonb_build_array(v_item);
+      v_reform_original := v_reform_original
+        + (v_item->>'unit_price')::integer * (v_item->>'quantity')::integer;
+      v_reform_discount := v_reform_discount
+        + coalesce((v_item->>'line_discount_amount')::integer, 0);
+    end if;
+  end loop;
+
+  -- product 주문 생성 (shipping_cost=0)
+  if jsonb_array_length(v_product_items) > 0 then
+    v_order_number := generate_order_number();
+    v_total_price := v_product_original - v_product_discount;
+
+    insert into orders (
+      user_id, order_number, shipping_address_id,
+      total_price, original_price, total_discount,
+      order_type, status, payment_group_id, shipping_cost
     )
     values (
-      v_order_id,
-      v_item->>'item_id',
-      v_item->>'item_type',
-      nullif(v_item->>'product_id', '')::integer,
-      nullif(v_item->>'selected_option_id', ''),
-      case
-        when v_item->'reform_data' is null or v_item->'reform_data' = 'null'::jsonb
-          then null
-        else v_item->'reform_data'
-      end,
-      (v_item->>'quantity')::integer,
-      (v_item->>'unit_price')::integer,
-      (v_item->>'discount_amount')::integer,
-      coalesce((v_item->>'line_discount_amount')::integer, 0),
-      nullif(v_item->>'applied_user_coupon_id', '')::uuid
+      v_user_id, v_order_number, p_shipping_address_id,
+      v_total_price, v_product_original, v_product_discount,
+      'sale', '대기중', v_payment_group_id, 0
+    )
+    returning id into v_order_id;
+
+    for v_item in select * from jsonb_array_elements(v_product_items)
+    loop
+      insert into order_items (
+        order_id, item_id, item_type, product_id,
+        selected_option_id, reform_data, quantity,
+        unit_price, discount_amount, line_discount_amount,
+        applied_user_coupon_id
+      )
+      values (
+        v_order_id,
+        v_item->>'item_id',
+        v_item->>'item_type',
+        nullif(v_item->>'product_id', '')::integer,
+        nullif(v_item->>'selected_option_id', ''),
+        case
+          when v_item->'reform_data' is null or v_item->'reform_data' = 'null'::jsonb
+            then null
+          else v_item->'reform_data'
+        end,
+        (v_item->>'quantity')::integer,
+        (v_item->>'unit_price')::integer,
+        (v_item->>'discount_amount')::integer,
+        coalesce((v_item->>'line_discount_amount')::integer, 0),
+        nullif(v_item->>'applied_user_coupon_id', '')::uuid
+      );
+    end loop;
+
+    v_group_total_amount := v_group_total_amount + v_total_price;
+    v_orders_result := v_orders_result || jsonb_build_array(
+      jsonb_build_object(
+        'order_id', v_order_id,
+        'order_number', v_order_number,
+        'order_type', 'sale'
+      )
     );
-  end loop;
+  end if;
+
+  -- repair 주문 생성 (shipping_cost=v_reform_shipping_cost)
+  if jsonb_array_length(v_reform_items) > 0 then
+    v_order_number := generate_order_number();
+    v_shipping_cost := coalesce(v_reform_shipping_cost, 0);
+    v_total_price := v_reform_original - v_reform_discount + v_shipping_cost;
+
+    insert into orders (
+      user_id, order_number, shipping_address_id,
+      total_price, original_price, total_discount,
+      order_type, status, payment_group_id, shipping_cost
+    )
+    values (
+      v_user_id, v_order_number, p_shipping_address_id,
+      v_total_price, v_reform_original, v_reform_discount,
+      'repair', '대기중', v_payment_group_id, v_shipping_cost
+    )
+    returning id into v_order_id;
+
+    for v_item in select * from jsonb_array_elements(v_reform_items)
+    loop
+      insert into order_items (
+        order_id, item_id, item_type, product_id,
+        selected_option_id, reform_data, quantity,
+        unit_price, discount_amount, line_discount_amount,
+        applied_user_coupon_id
+      )
+      values (
+        v_order_id,
+        v_item->>'item_id',
+        v_item->>'item_type',
+        nullif(v_item->>'product_id', '')::integer,
+        nullif(v_item->>'selected_option_id', ''),
+        case
+          when v_item->'reform_data' is null or v_item->'reform_data' = 'null'::jsonb
+            then null
+          else v_item->'reform_data'
+        end,
+        (v_item->>'quantity')::integer,
+        (v_item->>'unit_price')::integer,
+        (v_item->>'discount_amount')::integer,
+        coalesce((v_item->>'line_discount_amount')::integer, 0),
+        nullif(v_item->>'applied_user_coupon_id', '')::uuid
+      );
+    end loop;
+
+    v_group_total_amount := v_group_total_amount + v_total_price;
+    v_orders_result := v_orders_result || jsonb_build_array(
+      jsonb_build_object(
+        'order_id', v_order_id,
+        'order_number', v_order_number,
+        'order_type', 'repair'
+      )
+    );
+  end if;
 
   if array_length(v_used_coupon_ids, 1) is not null then
     update user_coupons
@@ -612,8 +692,9 @@ begin
   end if;
 
   return jsonb_build_object(
-    'order_id', v_order_id,
-    'order_number', v_order_number
+    'payment_group_id', v_payment_group_id,
+    'total_amount', v_group_total_amount,
+    'orders', v_orders_result
   );
 end;
 $$;
