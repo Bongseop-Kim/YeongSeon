@@ -79,6 +79,21 @@ begin
     raise exception 'No orders found for payment_group_id %', p_payment_group_id;
   end if;
 
+  -- 결제 확정 후 예약된 쿠폰을 사용 처리
+  update public.user_coupons
+  set status = 'used',
+      used_at = now(),
+      updated_at = now()
+  where user_id = p_user_id
+    and status = 'reserved'
+    and id in (
+      select distinct oi.applied_user_coupon_id
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where o.payment_group_id = p_payment_group_id
+        and oi.applied_user_coupon_id is not null
+    );
+
   return jsonb_build_object(
     'success', true,
     'orders', v_updated_orders
@@ -241,6 +256,20 @@ begin
   if v_count = 0 then
     raise exception 'No orders found for payment_group_id %', p_payment_group_id;
   end if;
+
+  -- 결제 실패 시 예약된 쿠폰을 활성 상태로 복원
+  update public.user_coupons
+  set status = 'active',
+      updated_at = now()
+  where user_id = p_user_id
+    and status = 'reserved'
+    and id in (
+      select distinct oi.applied_user_coupon_id
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where o.payment_group_id = p_payment_group_id
+        and oi.applied_user_coupon_id is not null
+    );
 
   return jsonb_build_object('success', true);
 end;

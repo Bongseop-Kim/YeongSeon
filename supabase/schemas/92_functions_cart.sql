@@ -22,6 +22,9 @@ begin
     raise exception 'unauthorized: cart can only be modified for the current user';
   end if;
 
+  -- 동일 유저의 동시 replace_cart_items 호출을 직렬화하여 DELETE+INSERT 인터리빙 방지
+  PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text)::bigint);
+
   delete from cart_items where user_id = p_user_id;
 
   if p_items is not null and jsonb_typeof(p_items) <> 'array' then

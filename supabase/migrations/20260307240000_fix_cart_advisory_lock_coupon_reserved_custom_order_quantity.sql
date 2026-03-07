@@ -1,16 +1,109 @@
--- ============================================================= 
--- 93_functions_orders.sql  – Order lifecycle RPC functions 
 -- =============================================================
--- ── create_order_txn ─────────────────────────────────────────
--- SECURITY DEFINER: 일반 유저는 orders, order_items, user_coupons 테이블에
---   직접 INSERT/UPDATE RLS 정책이 없다. 이 함수가 해당 테이블에 원자적으로
---   쓰기 위해 SECURITY DEFINER가 필요하다.
---   소유권 보호:
---     - auth.uid() null 체크로 미인증 호출 차단
---     - shipping_addresses는 user_id = auth.uid() 소유권 검증
---     - user_coupons 업데이트 시 WHERE user_id = v_user_id 조건 적용
---   완화 조치: SET search_path TO 'public'으로 검색 경로 고정,
---     입력값 유효성 검사(수량, 아이템 타입 등) 포함.
+-- 코드 리뷰 버그픽스 (3건)
+--
+-- 1. replace_cart_items: 동시 호출 인터리빙 방지용 advisory lock 추가
+-- 2. user_coupons: 'reserved' 상태 추가 + 쿠폰 소비 시점을 결제 확정으로 이동
+--    - create_order_txn: 'used' → 'reserved' (주문 생성 시 예약만)
+--    - confirm_payment_orders: 'reserved' → 'used' (결제 확정 시 소비)
+--    - unlock_payment_orders: 'reserved' → 'active' (결제 실패 시 복원)
+-- 3. create_custom_order_txn: order_items.quantity 하드코딩 1 → p_quantity,
+--    unit_price를 총액 대신 단가(floor(total/qty))로 수정
+-- =============================================================
+
+-- ── 1. user_coupons 상태 체크 제약 확장 ───────────────────────
+ALTER TABLE public.user_coupons
+  DROP CONSTRAINT user_coupons_status_check,
+  ADD CONSTRAINT user_coupons_status_check
+    CHECK (status = ANY (ARRAY['active','used','expired','revoked','reserved']));
+
+-- ── 2. replace_cart_items (advisory lock) ────────────────────
+CREATE OR REPLACE FUNCTION public.replace_cart_items(p_user_id uuid, p_items jsonb)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $_$
+declare
+  item_record jsonb;
+  coupon_id_text text;
+  quantity_text text;
+  quantity_value integer;
+begin
+  if auth.uid() is null or p_user_id is null then
+    raise exception 'unauthorized: authentication required';
+  end if;
+
+  if p_user_id is distinct from auth.uid() then
+    raise exception 'unauthorized: cart can only be modified for the current user';
+  end if;
+
+  -- 동일 유저의 동시 replace_cart_items 호출을 직렬화하여 DELETE+INSERT 인터리빙 방지
+  PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text)::bigint);
+
+  delete from cart_items where user_id = p_user_id;
+
+  if p_items is not null and jsonb_typeof(p_items) <> 'array' then
+    raise exception 'invalid p_items: expected a JSON array';
+  end if;
+
+  if p_items is not null and jsonb_array_length(p_items) > 0 then
+    for item_record in select * from jsonb_array_elements(p_items)
+    loop
+      coupon_id_text := coalesce(
+        item_record->'appliedCoupon'->>'id',
+        item_record->>'appliedCouponId'
+      );
+
+      quantity_text := item_record->>'quantity';
+      if quantity_text is null or quantity_text !~ '^[0-9]+$' then
+        raise exception 'invalid quantity: %', coalesce(quantity_text, 'null');
+      end if;
+
+      quantity_value := quantity_text::integer;
+      if quantity_value <= 0 then
+        raise exception 'invalid quantity (must be > 0): %', quantity_text;
+      end if;
+
+      insert into cart_items (
+        user_id,
+        item_id,
+        item_type,
+        product_id,
+        selected_option_id,
+        reform_data,
+        quantity,
+        applied_user_coupon_id
+      )
+      values (
+        p_user_id,
+        item_record->>'id',
+        (item_record->>'type')::text,
+        case
+          when item_record->'product' is null then null
+          when item_record->'product'->>'id' is null or item_record->'product'->>'id' = 'null' then null
+          else (item_record->'product'->>'id')::integer
+        end,
+        case
+          when item_record->'selectedOption' is null then null
+          when item_record->'selectedOption'->>'id' is null or item_record->'selectedOption'->>'id' = '' then null
+          else item_record->'selectedOption'->>'id'
+        end,
+        case
+          when item_record->'reformData' is null or item_record->'reformData' = 'null'::jsonb then null
+          else item_record->'reformData'
+        end,
+        quantity_value,
+        case
+          when coupon_id_text is null or coupon_id_text = '' or coupon_id_text = 'null' then null
+          else coupon_id_text::uuid
+        end
+      );
+    end loop;
+  end if;
+end;
+$_$;
+
+-- ── 3. create_order_txn (쿠폰 'reserved' 예약으로 변경) ───────
 CREATE OR REPLACE FUNCTION public.create_order_txn(p_shipping_address_id uuid, p_items jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -425,156 +518,322 @@ begin
 end;
 $$;
 
--- ── customer_confirm_purchase ─────────────────────────────────
--- Allows a customer to manually confirm purchase after delivery.
--- Earns 2% points. Only callable when status = '배송완료'.
--- SECURITY DEFINER: needed to INSERT into order_status_logs and points
---   (neither table has INSERT RLS policy for regular users).
-CREATE OR REPLACE FUNCTION public.customer_confirm_purchase(p_order_id uuid)
+-- ── 4. confirm_payment_orders (쿠폰 확정) ────────────────────
+CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
+  p_payment_group_id uuid,
+  p_user_id uuid,
+  p_payment_key text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER  -- order_status_logs INSERT에 일반 유저 RLS 없음
+SET search_path TO 'public'
+AS $$
+declare
+  v_order record;
+  v_post_status text;
+  v_updated_orders jsonb := '[]'::jsonb;
+  v_count int := 0;
+  v_masked_key text;
+begin
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  -- payment_key 마스킹: 끝 8자리만 유지, 나머지 ****
+  v_masked_key := case
+    when length(p_payment_key) <= 8 then '****'
+    else '****' || right(p_payment_key, 8)
+  end;
+
+  for v_order in
+    select id, user_id, status, order_type
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status != '결제중' then
+      raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
+    end if;
+
+    v_post_status := case v_order.order_type
+      when 'sale' then '진행중'
+      else '접수'
+    end;
+
+    update public.orders
+    set status = v_post_status, updated_at = now()
+    where id = v_order.id;
+
+    insert into public.order_status_logs (
+      order_id, changed_by, previous_status, new_status, memo
+    ) values (
+      v_order.id, p_user_id, v_order.status, v_post_status,
+      'payment confirmed: ' || v_masked_key
+    );
+
+    v_updated_orders := v_updated_orders || jsonb_build_object(
+      'orderId', v_order.id,
+      'orderType', v_order.order_type
+    );
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  -- 결제 확정 후 예약된 쿠폰을 사용 처리
+  update public.user_coupons
+  set status = 'used',
+      used_at = now(),
+      updated_at = now()
+  where user_id = p_user_id
+    and status = 'reserved'
+    and id in (
+      select distinct oi.applied_user_coupon_id
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where o.payment_group_id = p_payment_group_id
+        and oi.applied_user_coupon_id is not null
+    );
+
+  return jsonb_build_object(
+    'success', true,
+    'orders', v_updated_orders
+  );
+end;
+$$;
+
+-- ── 5. unlock_payment_orders (쿠폰 복원) ─────────────────────
+CREATE OR REPLACE FUNCTION public.unlock_payment_orders(
+  p_payment_group_id uuid,
+  p_user_id uuid
+)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 declare
-  v_user_id        uuid;
-  v_current_status text;
-  v_total_price    integer;
-  v_points_earned  integer;
+  v_order record;
+  v_count int := 0;
+begin
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  for v_order in
+    select id, user_id, status
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status = '결제중' then
+      update public.orders
+      set status = '대기중', updated_at = now()
+      where id = v_order.id;
+
+      insert into public.order_status_logs (
+        order_id, changed_by, previous_status, new_status, memo
+      ) values (
+        v_order.id, p_user_id, '결제중', '대기중', 'payment unlock: approval failed'
+      );
+
+    elsif v_order.status = '대기중' then
+      -- 멱등: 이미 대기중
+      null;
+
+    elsif v_order.status in ('진행중', '접수') then
+      -- 다른 경로로 이미 confirm됨 — skip
+      null;
+
+    end if;
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  -- 결제 실패 시 예약된 쿠폰을 활성 상태로 복원
+  update public.user_coupons
+  set status = 'active',
+      updated_at = now()
+  where user_id = p_user_id
+    and status = 'reserved'
+    and id in (
+      select distinct oi.applied_user_coupon_id
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where o.payment_group_id = p_payment_group_id
+        and oi.applied_user_coupon_id is not null
+    );
+
+  return jsonb_build_object('success', true);
+end;
+$$;
+
+-- unlock_payment_orders: service_role 전용 (권한 재설정)
+REVOKE EXECUTE ON FUNCTION public.unlock_payment_orders(uuid, uuid) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.unlock_payment_orders(uuid, uuid) TO service_role;
+
+-- ── 6. create_custom_order_txn (quantity 및 unit_price 수정) ─
+CREATE OR REPLACE FUNCTION public.create_custom_order_txn(
+  p_shipping_address_id uuid,
+  p_options jsonb,
+  p_quantity integer,
+  p_reference_image_urls text[] DEFAULT '{}'::text[],
+  p_additional_notes text DEFAULT '',
+  p_sample boolean DEFAULT false,
+  p_sample_type text DEFAULT null
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_user_id uuid;
+  v_order_id uuid;
+  v_order_number text;
+  v_sewing_cost integer;
+  v_fabric_cost integer;
+  v_total_cost integer;
+  v_reform_data jsonb;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
     raise exception 'Unauthorized';
   end if;
 
-  -- Lock the row and verify ownership + status
-  select o.status, o.total_price
-  into v_current_status, v_total_price
-  from public.orders o
-  where o.id = p_order_id
-    and o.user_id = v_user_id
-  for update;
-
-  if not found then
-    raise exception 'Order not found or access denied';
+  -- p_sample / p_sample_type 정합성 검증
+  if p_sample is not true and p_sample_type is not null then
+    raise exception 'p_sample_type must be null when p_sample is not true';
   end if;
 
-  if v_current_status <> '배송완료' then
-    raise exception '구매확정은 배송완료 상태에서만 가능합니다 (현재: %)', v_current_status;
+  if p_sample is true and (p_sample_type is null or trim(p_sample_type) = '') then
+    raise exception 'p_sample_type is required when p_sample is true';
   end if;
 
-  -- Earn 2% points for manual confirmation
-  v_points_earned := floor(v_total_price * 0.02);
-
-  update public.orders
-  set status       = '완료',
-      confirmed_at = now()
-  where id = p_order_id;
-
-  if v_points_earned > 0 then
-    insert into public.points (user_id, order_id, amount, type, description)
-    values (
-      v_user_id,
-      p_order_id,
-      v_points_earned,
-      'earn',
-      '구매확정 포인트 적립 (직접 확정, 2%)'
-    );
+  if p_shipping_address_id is null then
+    raise exception 'Shipping address is required';
   end if;
 
-  -- Audit log (changed_by = customer uid)
-  insert into public.order_status_logs (
-    order_id,
-    changed_by,
-    previous_status,
-    new_status,
-    memo
+  if not exists (
+    select 1
+    from public.shipping_addresses sa
+    where sa.id = p_shipping_address_id
+      and sa.user_id = v_user_id
+  ) then
+    raise exception 'Shipping address not found';
+  end if;
+
+  select
+    amounts.sewing_cost,
+    amounts.fabric_cost,
+    amounts.total_cost
+  into
+    v_sewing_cost,
+    v_fabric_cost,
+    v_total_cost
+  from public.calculate_custom_order_amounts(p_options, p_quantity) as amounts;
+
+  v_order_number := public.generate_order_number();
+
+  insert into public.orders (
+    user_id,
+    order_number,
+    shipping_address_id,
+    total_price,
+    original_price,
+    total_discount,
+    order_type,
+    status
   )
   values (
-    p_order_id,
     v_user_id,
-    '배송완료',
-    '완료',
-    '고객 직접 구매확정'
-  );
+    v_order_number,
+    p_shipping_address_id,
+    v_total_cost,
+    v_total_cost,
+    0,
+    'custom',
+    '대기중'
+  )
+  returning id into v_order_id;
 
-  return jsonb_build_object(
-    'success', true,
-    'points_earned', v_points_earned
-  );
-end;
-$$;
-
-
--- ── auto_confirm_delivered_orders ────────────────────────────
--- Called by pg_cron daily at 03:00 KST.
--- Confirms all orders in '배송완료' that have been delivered for 7+ days.
--- Earns 0.5% points for auto-confirmed orders.
--- SECURITY DEFINER: runs as a privileged role, restricted to pg_cron/service_role callers only.
-CREATE OR REPLACE FUNCTION public.auto_confirm_delivered_orders()
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-declare
-  v_order  record;
-  v_points integer;
-  v_count  integer := 0;
-begin
-  -- Only allow pg_cron / service_role (no authenticated user session)
-  if coalesce(current_setting('request.jwt.claim.role', true), '') not in ('', 'service_role') then
-    raise exception 'unauthorized: scheduler-only function';
-  end if;
-
-  for v_order in
-    select id, user_id, total_price
-    from public.orders
-    where status = '배송완료'
-      and delivered_at <= now() - interval '7 days'
-    for update skip locked
-  loop
-    v_points := floor(v_order.total_price * 0.005);
-
-    update public.orders
-    set status       = '완료',
-        confirmed_at = now()
-    where id = v_order.id;
-
-    if v_points > 0 then
-      insert into public.points (user_id, order_id, amount, type, description)
-      values (
-        v_order.user_id,
-        v_order.id,
-        v_points,
-        'earn',
-        '구매확정 포인트 적립 (자동 확정, 0.5%)'
-      );
-    end if;
-
-    -- Audit log (changed_by = NULL indicates automated system action)
-    insert into public.order_status_logs (
-      order_id,
-      changed_by,
-      previous_status,
-      new_status,
-      memo
+  v_reform_data := jsonb_build_object(
+    'custom_order', true,
+    'quantity', p_quantity,
+    'options', p_options,
+    'reference_image_urls', to_jsonb(coalesce(p_reference_image_urls, '{}'::text[])),
+    'additional_notes', coalesce(p_additional_notes, ''),
+    'sample', coalesce(p_sample, false),
+    'sample_type', p_sample_type,
+    'pricing', jsonb_build_object(
+      'sewing_cost', v_sewing_cost,
+      'fabric_cost', v_fabric_cost,
+      'total_cost', v_total_cost
     )
-    values (
-      v_order.id,
-      NULL,
-      '배송완료',
-      '완료',
-      '자동 구매확정 (배송완료 후 7일 경과)'
-    );
+  );
 
-    v_count := v_count + 1;
-  end loop;
+  insert into public.order_items (
+    order_id,
+    item_id,
+    item_type,
+    product_id,
+    selected_option_id,
+    reform_data,
+    quantity,
+    unit_price,
+    discount_amount,
+    line_discount_amount,
+    applied_user_coupon_id
+  )
+  values (
+    v_order_id,
+    'custom-order-' || v_order_id::text,
+    'reform',
+    null,
+    null,
+    v_reform_data,
+    p_quantity,
+    floor(v_total_cost::numeric / p_quantity)::integer,
+    0,
+    0,
+    null
+  );
 
   return jsonb_build_object(
-    'success', true,
-    'confirmed_count', v_count
+    'order_id', v_order_id,
+    'order_number', v_order_number
   );
 end;
 $$;
-

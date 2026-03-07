@@ -328,8 +328,8 @@ begin
     null,
     null,
     v_reform_data,
-    1,
-    v_total_cost,
+    p_quantity,
+    floor(v_total_cost::numeric / p_quantity)::integer,
     0,
     0,
     null
