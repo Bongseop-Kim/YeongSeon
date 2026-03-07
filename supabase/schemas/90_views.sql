@@ -322,7 +322,7 @@ LEFT JOIN LATERAL (
       WHERE oi2.order_id = o.id AND oi2.item_type = 'reform'
       LIMIT 1
     ) AS reform_data,
-    SUM(oi.quantity) AS item_quantity
+    SUM(oi.quantity)::integer AS item_quantity
   FROM public.order_items oi
   WHERE oi.order_id = o.id AND oi.item_type = 'reform'
 ) ri ON o.order_type IN ('custom', 'repair');
