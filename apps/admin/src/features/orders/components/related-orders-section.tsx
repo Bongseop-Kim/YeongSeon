@@ -1,4 +1,4 @@
-import { Table, Tag } from "antd";
+import { Empty, Table, Tag } from "antd";
 import { Link } from "react-router-dom";
 import { useRelatedOrders } from "@/features/orders/api/orders-query";
 import type { AdminOrderListItem } from "@/features/orders/types/admin-order";
@@ -17,9 +17,8 @@ export function RelatedOrdersSection({
     currentOrderId
   );
 
-  if (!paymentGroupId || (!isLoading && relatedOrders.length === 0)) {
-    return null;
-  }
+  const shouldShowEmpty =
+    !isLoading && (!paymentGroupId || relatedOrders.length === 0);
 
   const columns = [
     {
@@ -27,7 +26,7 @@ export function RelatedOrdersSection({
       dataIndex: "orderNumber",
       key: "orderNumber",
       render: (orderNumber: string, record: AdminOrderListItem) => (
-        <Link to={`/orders/${record.id}`}>{orderNumber}</Link>
+        <Link to={`/orders/show/${record.id}`}>{orderNumber}</Link>
       ),
     },
     {
@@ -52,6 +51,10 @@ export function RelatedOrdersSection({
       render: (price: number) => `${price.toLocaleString()}원`,
     },
   ];
+
+  if (shouldShowEmpty) {
+    return <Empty description="함께 결제된 주문이 없습니다." />;
+  }
 
   return (
     <Table<AdminOrderListItem>

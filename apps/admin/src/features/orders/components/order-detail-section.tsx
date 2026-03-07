@@ -58,15 +58,8 @@ export function OrderDetailSection() {
       <Title level={5}>주문 정보</Title>
       <OrderInfoSection order={order} />
 
-      {order.paymentGroupId && (
-        <>
-          <Title level={5}>함께 결제된 주문</Title>
-          <RelatedOrdersSection
-            paymentGroupId={order.paymentGroupId}
-            currentOrderId={order.id}
-          />
-        </>
-      )}
+      <Title level={5}>배송지 정보</Title>
+      <ShippingAddressSection address={order.shippingAddress} />
 
       <OrderStatusActions
         order={order}
@@ -82,11 +75,14 @@ export function OrderDetailSection() {
         isUpdating={isUpdating}
       />
 
+      <Title level={5}>함께 결제된 주문</Title>
+      <RelatedOrdersSection
+        paymentGroupId={order.paymentGroupId}
+        currentOrderId={order.id}
+      />
+
       {orderType === "custom" && <CustomOrderDetail items={reformItems} />}
       {orderType === "repair" && <RepairOrderDetail items={reformItems} />}
-
-      <Title level={5}>배송지 정보</Title>
-      <ShippingAddressSection address={order.shippingAddress} />
 
       <Title level={5}>배송 정보</Title>
       {orderId && (
