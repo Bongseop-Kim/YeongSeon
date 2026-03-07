@@ -309,7 +309,9 @@ SELECT
   CASE WHEN o.order_type IN ('custom', 'repair') THEN ri.item_quantity ELSE NULL END AS "itemQuantity",
   CASE WHEN o.order_type = 'repair' THEN
     ri.item_quantity || '개 넥타이 수선'
-  ELSE NULL END AS "reformSummary"
+  ELSE NULL END AS "reformSummary",
+  o.payment_group_id AS "paymentGroupId",
+  o.shipping_cost    AS "shippingCost"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id
 LEFT JOIN LATERAL (

@@ -1,7 +1,7 @@
 import { Table, Tag } from "antd";
 import { useNavigate } from "react-router-dom";
-import { useRelatedOrders } from "../api/orders-query";
-import type { AdminOrderListItem } from "../types/admin-order";
+import { useRelatedOrders } from "@/features/orders/api/orders-query";
+import type { AdminOrderListItem } from "@/features/orders/types/admin-order";
 
 interface RelatedOrdersSectionProps {
   paymentGroupId: string | null;
