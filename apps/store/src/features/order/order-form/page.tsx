@@ -45,7 +45,8 @@ const OrderFormPage = () => {
   const updateShippingAddress = useUpdateShippingAddress();
   const { user } = useAuthStore();
 
-  const { data: reformPricing } = useReformPricing();
+  const { data: reformPricing, isLoading: isReformPricingLoading } =
+    useReformPricing();
 
   const { selectedAddressId, selectedAddress, openShippingPopup } =
     useShippingAddressPopup();
@@ -103,6 +104,11 @@ const OrderFormPage = () => {
         items: orderItems,
         shippingAddressId: selectedAddressId,
       });
+      if (orderResult.totalAmount !== totals.totalPrice) {
+        throw new Error(
+          `결제 금액이 변경되었습니다(서버: ${orderResult.totalAmount.toLocaleString()}원). 페이지를 새로고침 후 다시 시도해주세요.`
+        );
+      }
       const firstItem = orderItems[0];
       const orderName =
         orderItems.length === 1
@@ -142,6 +148,7 @@ const OrderFormPage = () => {
     ? (reformPricing?.shippingCost ?? 0)
     : 0;
   const totals = calculateOrderTotals(orderItems, estimatedShippingCost);
+  const isPricingReady = !hasReformItems || !isReformPricingLoading;
 
   if (orderItems.length === 0) {
     return (
@@ -198,7 +205,7 @@ const OrderFormPage = () => {
                   </div>
                 </CardContent>
               </Card>
-              {user && (
+              {user && isPricingReady && (
                 <Card>
                   <CardHeader>
                     <CardTitle>결제 수단</CardTitle>
@@ -220,11 +227,15 @@ const OrderFormPage = () => {
                 onClick={handleRequestPayment}
                 className="w-full"
                 size="xl"
-                disabled={!user || !selectedAddress || isPaymentLoading}
+                disabled={
+                  !user || !selectedAddress || isPaymentLoading || !isPricingReady
+                }
               >
                 {isPaymentLoading
                   ? "결제 요청 중..."
-                  : `${totals.totalPrice.toLocaleString()}원 결제하기`}
+                  : !isPricingReady
+                    ? "가격 로딩 중..."
+                    : `${totals.totalPrice.toLocaleString()}원 결제하기`}
               </Button>
               {!selectedAddress && (
                 <p className="text-sm text-center text-zinc-500">
