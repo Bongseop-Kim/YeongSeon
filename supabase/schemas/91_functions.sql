@@ -296,6 +296,15 @@ AS $$
 $$;
 
 -- ── create_order_txn ─────────────────────────────────────────
+-- SECURITY DEFINER: 일반 유저는 orders, order_items, user_coupons 테이블에
+--   직접 INSERT/UPDATE RLS 정책이 없다. 이 함수가 해당 테이블에 원자적으로
+--   쓰기 위해 SECURITY DEFINER가 필요하다.
+--   소유권 보호:
+--     - auth.uid() null 체크로 미인증 호출 차단
+--     - shipping_addresses는 user_id = auth.uid() 소유권 검증
+--     - user_coupons 업데이트 시 WHERE user_id = v_user_id 조건 적용
+--   완화 조치: SET search_path TO 'public'으로 검색 경로 고정,
+--     입력값 유효성 검사(수량, 아이템 타입 등) 포함.
 CREATE OR REPLACE FUNCTION public.create_order_txn(p_shipping_address_id uuid, p_items jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
