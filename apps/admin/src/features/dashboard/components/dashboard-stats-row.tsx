@@ -13,8 +13,8 @@ export function DashboardStatsRow({ stats }: { stats: AdminDashboardStats }) {
       <Col xs={24} sm={12} md={6}>
         <Card>
           <Statistic
-            title="오늘 주문"
-            value={stats.todayOrderCount}
+            title="주문"
+            value={stats.orderCount}
             suffix="건"
             prefix={<ShoppingOutlined />}
           />
@@ -23,8 +23,8 @@ export function DashboardStatsRow({ stats }: { stats: AdminDashboardStats }) {
       <Col xs={24} sm={12} md={6}>
         <Card>
           <Statistic
-            title="오늘 매출"
-            value={stats.todayRevenue}
+            title="매출"
+            value={stats.revenue}
             suffix="원"
             prefix={<DollarOutlined />}
             formatter={(v) => Number(v).toLocaleString()}
