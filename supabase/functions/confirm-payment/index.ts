@@ -277,6 +277,18 @@ Deno.serve(async (req) => {
     });
   }
 
+  if (
+    !rpcResult ||
+    typeof rpcResult !== "object" ||
+    !("orders" in rpcResult) ||
+    !Array.isArray(rpcResult.orders)
+  ) {
+    errorLogger("unexpected_rpc_result", new Error("Invalid rpc result shape"), {
+      paymentGroupId: payload.orderId,
+    });
+    return jsonResponse(500, { error: "Unexpected order update response" });
+  }
+
   const updatedOrders = (
     rpcResult as {
       success: boolean;
