@@ -9,9 +9,10 @@ import type { Attachment } from "@/features/design/types/chat";
 
 interface ChatInputProps {
   onSend: (text: string, attachments: Attachment[]) => void;
+  isLoading?: boolean;
 }
 
-export function ChatInput({ onSend }: ChatInputProps) {
+export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const pendingAttachments = useDesignChatStore((state) => state.pendingAttachments);
   const removeAttachment = useDesignChatStore((state) => state.removeAttachment);
   const [inputText, setInputText] = useState("");
@@ -32,7 +33,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
   const trimmedText = inputText.trim();
 
   const handleSend = () => {
-    if (!trimmedText) {
+    if (!trimmedText || isLoading) {
       return;
     }
 
@@ -94,7 +95,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
             type="button"
             size="icon"
             onClick={handleSend}
-            disabled={!trimmedText}
+            disabled={!trimmedText || isLoading}
           >
             <Send className="size-4" />
           </Button>

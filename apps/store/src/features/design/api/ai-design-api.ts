@@ -1,58 +1,92 @@
 import type { Attachment, ContextChip } from "@/features/design/types/chat";
 import type { DesignContext } from "@/features/design/types/design-context";
+import { supabase } from "@/lib/supabase";
 import {
-  getMessageKeyword,
   getTags,
-  hasCiImageAttachment,
 } from "@/features/design/api/ai-design-mapper";
 
 export interface AiDesignRequest {
   userMessage: string;
   attachments: Attachment[];
   designContext: DesignContext;
+  conversationHistory?: {
+    role: "user" | "ai";
+    content: string;
+  }[];
+  ciImageBase64?: string;
+  ciImageMimeType?: string;
 }
 
 export interface AiDesignResponse {
   aiMessage: string;
-  backgroundColor: string;
+  imageUrl: string | null;
   tags: string[];
   contextChips: ContextChip[];
 }
 
-const SAMPLE_FABRIC_IMAGE = "url(/images/sample-fabric.jpg) center/cover no-repeat";
+const fileToBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
 
-const FOLLOW_UP_CHIPS: ContextChip[] = [
-  { label: "패턴 간격 조절", action: "패턴 좀 더 촘촘하게 해줘" },
-  { label: "색상 비율 조정", action: "골드 비율을 더 늘려줘" },
-  { label: "단체주문 견적", action: "50개 단체주문 견적 내줘" },
-];
+    reader.onload = () => {
+      const result = reader.result;
 
-const CI_CHIPS: ContextChip[] = [
-  { label: "올 패턴으로", action: "올 패턴으로 배치해줘" },
-  { label: "원 포인트로", action: "원 포인트로 하단에 넣어줘" },
-];
+      if (typeof result !== "string") {
+        reject(new Error("CI 이미지 인코딩 결과가 올바르지 않습니다."));
+        return;
+      }
 
-const delay = (ms: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
+      const [, base64 = ""] = result.split(",");
+      resolve(base64);
+    };
+
+    reader.onerror = () => {
+      reject(new Error("CI 이미지 인코딩에 실패했습니다."));
+    };
+
+    reader.readAsDataURL(file);
   });
 
-export async function mockAiDesignApi(
+export async function aiDesignApi(
   request: AiDesignRequest,
 ): Promise<AiDesignResponse> {
-  await delay(1500);
+  const ciImageBase64 = request.designContext.ciImage
+    ? await fileToBase64(request.designContext.ciImage)
+    : undefined;
 
-  const keyword = getMessageKeyword(request.userMessage);
-  const baseMessage = `넥타이 디자인을 생성했습니다. ${keyword}를 반영한 스타일로 제작했어요.`;
-  const hasCi = hasCiImageAttachment(request.attachments);
-  const aiMessage = hasCi
-    ? `${baseMessage} CI 이미지를 확인했습니다. 올 패턴으로 적용할까요, 원 포인트로 적용할까요?`
-    : baseMessage;
+  const serializedAttachments = request.attachments.map((attachment) => ({
+    type: attachment.type,
+    label: attachment.label,
+    value: attachment.value,
+  }));
+
+  const { data, error } = await supabase.functions.invoke("generate-design", {
+    body: {
+      userMessage: request.userMessage,
+      attachments: serializedAttachments,
+      designContext: {
+        colors: request.designContext.colors,
+        pattern: request.designContext.pattern,
+        fabricMethod: request.designContext.fabricMethod,
+      },
+      conversationHistory: request.conversationHistory ?? [],
+      ciImageBase64,
+      ciImageMimeType: request.designContext.ciImage?.type || undefined,
+    },
+  });
+
+  if (error) {
+    throw new Error(`디자인 생성 실패: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("디자인 생성 결과를 받을 수 없습니다.");
+  }
 
   return {
-    aiMessage,
-    backgroundColor: SAMPLE_FABRIC_IMAGE,
+    aiMessage: data.aiMessage,
+    imageUrl: data.imageUrl ?? null,
     tags: getTags(request),
-    contextChips: hasCi ? CI_CHIPS : FOLLOW_UP_CHIPS,
+    contextChips: Array.isArray(data.contextChips) ? data.contextChips : [],
   };
 }

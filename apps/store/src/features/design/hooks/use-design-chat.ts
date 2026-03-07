@@ -23,6 +23,18 @@ export function useDesignChat(): UseDesignChatResult {
   );
   const clearAttachments = useDesignChatStore((state) => state.clearAttachments);
   const mutation = useAiDesignMutation();
+  const toPreviewBackground = (imageUrl: string): string =>
+    `url("${imageUrl}") center/cover no-repeat`;
+
+  const toConversationHistory = (
+    items: Message[],
+  ): { role: "user" | "ai"; content: string }[] =>
+    items
+      .filter((message) => message.content.trim().length > 0)
+      .map((message) => ({
+        role: message.role,
+        content: message.content,
+      }));
 
   const sendMessage = (userText: string, attachments: Attachment[]): void => {
     if (userText.trim().length === 0) {
@@ -46,21 +58,28 @@ export function useDesignChat(): UseDesignChatResult {
         userMessage: userText,
         attachments,
         designContext,
+        conversationHistory: toConversationHistory([...messages, userMessage]),
       },
       {
         onSuccess: (data) => {
+          const previewBackground = data.imageUrl
+            ? toPreviewBackground(data.imageUrl)
+            : undefined;
           const aiMessage: Message = {
             id: crypto.randomUUID(),
             role: "ai",
             content: data.aiMessage,
-            imageUrl: data.backgroundColor,
+            imageUrl: previewBackground,
             contextChips: data.contextChips,
             timestamp: Date.now(),
           };
 
           addMessage(aiMessage);
-          setGeneratedImage(data.backgroundColor, data.tags);
+          if (previewBackground) {
+            setGeneratedImage(previewBackground, data.tags);
+          }
           setGenerationStatus("completed");
+          // TODO: 대화 히스토리 DB 저장 연동
         },
         onError: () => {
           const errorMessage: Message = {
@@ -92,21 +111,28 @@ export function useDesignChat(): UseDesignChatResult {
         userMessage: lastUserMessage.content,
         attachments: lastUserMessage.attachments ?? [],
         designContext,
+        conversationHistory: toConversationHistory(messages),
       },
       {
         onSuccess: (data) => {
+          const previewBackground = data.imageUrl
+            ? toPreviewBackground(data.imageUrl)
+            : undefined;
           const aiMessage: Message = {
             id: crypto.randomUUID(),
             role: "ai",
             content: data.aiMessage,
-            imageUrl: data.backgroundColor,
+            imageUrl: previewBackground,
             contextChips: data.contextChips,
             timestamp: Date.now(),
           };
 
           addMessage(aiMessage);
-          setGeneratedImage(data.backgroundColor, data.tags);
+          if (previewBackground) {
+            setGeneratedImage(previewBackground, data.tags);
+          }
           setGenerationStatus("completed");
+          // TODO: 대화 히스토리 DB 저장 연동
         },
         onError: () => {
           const errorMessage: Message = {

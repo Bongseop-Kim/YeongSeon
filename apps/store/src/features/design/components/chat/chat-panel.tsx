@@ -81,7 +81,7 @@ export function ChatPanel({
         />
       </div>
       <div className="border-t p-2">
-        <ChatInput onSend={sendMessage} />
+        <ChatInput onSend={sendMessage} isLoading={generationStatus === "generating" || generationStatus === "regenerating"} />
       </div>
       <HistoryPanel
         open={showHistory}
