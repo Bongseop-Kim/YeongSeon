@@ -380,9 +380,15 @@ begin
 
   SELECT amount INTO v_reform_base_cost
   FROM custom_order_pricing_constants WHERE key = 'REFORM_BASE_COST';
+  IF v_reform_base_cost IS NULL THEN
+    RAISE EXCEPTION 'Missing pricing constant: REFORM_BASE_COST';
+  END IF;
 
   SELECT amount INTO v_reform_shipping_cost
   FROM custom_order_pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
+  IF v_reform_shipping_cost IS NULL THEN
+    RAISE EXCEPTION 'Missing pricing constant: REFORM_SHIPPING_COST';
+  END IF;
 
   for v_item in select * from jsonb_array_elements(p_items)
   loop
@@ -638,7 +644,7 @@ begin
   -- repair 주문 생성 (shipping_cost=v_reform_shipping_cost)
   if jsonb_array_length(v_reform_items) > 0 then
     v_order_number := generate_order_number();
-    v_shipping_cost := coalesce(v_reform_shipping_cost, 0);
+    v_shipping_cost := v_reform_shipping_cost;
     v_total_price := v_reform_original - v_reform_discount + v_shipping_cost;
 
     insert into orders (
