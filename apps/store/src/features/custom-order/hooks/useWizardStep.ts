@@ -110,12 +110,12 @@ export const useWizardStep = ({
 
   const forceGoToStep = useCallback(
     (index: number) => {
-      if (index >= 0 && index < steps.length) {
+      if (index >= 0 && index < steps.length && shouldShowStep(index)) {
         setCurrentStepIndex(index);
         setVisitedSteps((prev) => new Set([...prev, index]));
       }
     },
-    [steps.length]
+    [steps.length, shouldShowStep]
   );
 
   const resetTo = useCallback(

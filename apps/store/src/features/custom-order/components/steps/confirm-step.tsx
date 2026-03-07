@@ -12,7 +12,7 @@ import {
   getSewingStyleLabel,
   getSizeLabel,
   getTieTypeLabel,
-} from "@/features/custom-order/utils/option-labels";
+} from "../../utils/option-labels";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";

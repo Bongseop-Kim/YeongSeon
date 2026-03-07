@@ -25,7 +25,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const { isMobile } = useBreakpoint();
 
   return (
-    <div className={`max-w-7xl mx-auto ${!isMobile && "pb-4"}`}>
+    <div className={cn("max-w-7xl mx-auto", !isMobile && "pb-4")}>
       <div
         className={cn(
           `flex ${isMobile ? "flex-col" : "flex-row gap-4"}`,
