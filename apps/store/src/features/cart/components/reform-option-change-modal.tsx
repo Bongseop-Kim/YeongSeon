@@ -27,13 +27,13 @@ export const ReformOptionChangeModal = forwardRef<
   ReformOptionChangeModalProps
 >(({ item }, ref) => {
   const [measurementType, setMeasurementType] = useState<"length" | "height">(
-    item.reformData.tie.measurementType || "length"
+    item.reformData.tie.measurementType || "length",
   );
   const [tieLength, setTieLength] = useState<number | undefined>(
-    item.reformData.tie.tieLength
+    item.reformData.tie.tieLength,
   );
   const [wearerHeight, setWearerHeight] = useState<number | undefined>(
-    item.reformData.tie.wearerHeight
+    item.reformData.tie.wearerHeight,
   );
 
   useImperativeHandle(ref, () => ({
@@ -74,7 +74,7 @@ export const ReformOptionChangeModal = forwardRef<
             type="number"
             value={tieLength || ""}
             onChange={(e) => setTieLength(Number(e.target.value))}
-            placeholder="예: 145"
+            placeholder="예: 51"
           />
         </div>
       ) : (

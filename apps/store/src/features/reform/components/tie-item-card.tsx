@@ -121,11 +121,11 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                         {...field}
                         id={`tie-length-${index}`}
                         type="number"
-                        placeholder="예: 145"
+                        placeholder="예: 51"
                         value={field.value || ""}
                         onChange={(e) =>
                           field.onChange(
-                            e.target.value ? Number(e.target.value) : undefined
+                            e.target.value ? Number(e.target.value) : undefined,
                           )
                         }
                         unit="cm"
@@ -157,7 +157,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                         value={field.value || ""}
                         onChange={(e) =>
                           field.onChange(
-                            e.target.value ? Number(e.target.value) : undefined
+                            e.target.value ? Number(e.target.value) : undefined,
                           )
                         }
                         unit="cm"
