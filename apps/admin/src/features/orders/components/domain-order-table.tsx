@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Table } from "antd";
 import { Input, Select, Space } from "antd";
 import { TagField } from "@refinedev/antd";
 import { useNavigation } from "@refinedev/core";
+import dayjs from "dayjs";
 import {
   ORDER_STATUS_OPTIONS,
   ORDER_STATUS_COLORS,
@@ -9,6 +11,7 @@ import {
 import type { OrderType } from "@yeongseon/shared";
 import { useAdminOrderTable } from "../api/orders-query";
 import type { AdminOrderListItem } from "../types/admin-order";
+import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
 
 interface DomainOrderTableProps {
   orderType: OrderType;
@@ -16,8 +19,28 @@ interface DomainOrderTableProps {
 
 export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
   const { show } = useNavigation();
-  const { tableProps, setFilters } = useAdminOrderTable(orderType);
+  const defaultRange: DateRange = [
+    dayjs().startOf("month"),
+    dayjs().endOf("month"),
+  ];
+  const [dateRange, setDateRange] = useState<DateRange>(defaultRange);
+
+  const { tableProps, setFilters } = useAdminOrderTable(orderType, [
+    defaultRange[0].format("YYYY-MM-DD"),
+    defaultRange[1].format("YYYY-MM-DD"),
+  ]);
   const statusOptions = ORDER_STATUS_OPTIONS[orderType];
+
+  const handleDateRangeChange = (range: DateRange) => {
+    setDateRange(range);
+    setFilters(
+      [
+        { field: "date", operator: "gte", value: range[0].format("YYYY-MM-DD") },
+        { field: "date", operator: "lte", value: range[1].format("YYYY-MM-DD") },
+      ],
+      "merge"
+    );
+  };
 
   return (
     <>
@@ -57,6 +80,7 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
           }}
           style={{ width: 120 }}
         />
+        <DateRangeFilter value={dateRange} onChange={handleDateRangeChange} />
       </Space>
 
       <Table<AdminOrderListItem>
