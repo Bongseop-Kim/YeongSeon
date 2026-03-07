@@ -1,20 +1,5 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
-import {
-  START_COST,
-  SEWING_PER_COST,
-  AUTO_TIE_COST,
-  TRIANGLE_STITCH_COST,
-  SIDE_STITCH_COST,
-  DIMPLE_COST,
-  SPODERATO_COST,
-  FOLD7_COST,
-  WOOL_INTERLINING_COST,
-  BRAND_LABEL_COST,
-  CARE_LABEL_COST,
-  YARN_DYED_DESIGN_COST,
-  FABRIC_COST,
-  BAR_TACK_COST,
-} from "@yeongseon/shared/constants/custom-order-pricing";
+import type { PricingConfig } from "@/features/custom-order/types/pricing";
 
 export interface CostCalculation {
   sewingCost: number;
@@ -22,33 +7,41 @@ export interface CostCalculation {
   totalCost: number;
 }
 
-export const calculateSewingCost = (options: OrderOptions): number => {
-  let sewingPerCost = SEWING_PER_COST;
+export const calculateSewingCost = (
+  options: OrderOptions,
+  config: PricingConfig,
+): number => {
+  let sewingPerCost = config.SEWING_PER_COST;
 
-  if (options.tieType === "AUTO") sewingPerCost += AUTO_TIE_COST;
-  if (options.triangleStitch) sewingPerCost += TRIANGLE_STITCH_COST;
-  if (options.sideStitch) sewingPerCost += SIDE_STITCH_COST;
-  if (options.barTack) sewingPerCost += BAR_TACK_COST;
-  if (options.dimple) sewingPerCost = DIMPLE_COST;
-  if (options.spoderato) sewingPerCost = SPODERATO_COST;
-  if (options.fold7) sewingPerCost = FOLD7_COST;
-  if (options.interlining === "WOOL") sewingPerCost += WOOL_INTERLINING_COST;
-  if (options.brandLabel) sewingPerCost += BRAND_LABEL_COST;
-  if (options.careLabel) sewingPerCost += CARE_LABEL_COST;
+  if (options.tieType === "AUTO") sewingPerCost += config.AUTO_TIE_COST;
+  if (options.triangleStitch) sewingPerCost += config.TRIANGLE_STITCH_COST;
+  if (options.sideStitch) sewingPerCost += config.SIDE_STITCH_COST;
+  if (options.barTack) sewingPerCost += config.BAR_TACK_COST;
+  if (options.dimple) sewingPerCost += config.DIMPLE_COST;
+  if (options.spoderato) sewingPerCost += config.SPODERATO_COST;
+  if (options.fold7) sewingPerCost += config.FOLD7_COST;
+  if (options.interlining === "WOOL")
+    sewingPerCost += config.WOOL_INTERLINING_COST;
+  if (options.brandLabel) sewingPerCost += config.BRAND_LABEL_COST;
+  if (options.careLabel) sewingPerCost += config.CARE_LABEL_COST;
 
-  return sewingPerCost * options.quantity + START_COST;
+  return sewingPerCost * options.quantity + config.START_COST;
 };
 
-export const calculateFabricCost = (options: OrderOptions): number => {
+export const calculateFabricCost = (
+  options: OrderOptions,
+  config: PricingConfig,
+): number => {
   if (options.fabricProvided || !options.designType || !options.fabricType)
     return 0;
 
   const designCost =
-    options.designType === "YARN_DYED" ? YARN_DYED_DESIGN_COST : 0;
-  const unitFabricCost = FABRIC_COST[options.designType][options.fabricType];
-  const fabricQuantity = options.quantity / 4;
+    options.designType === "YARN_DYED" ? config.YARN_DYED_DESIGN_COST : 0;
+  const unitFabricCost =
+    config.FABRIC_COST[options.designType][options.fabricType];
+  const fabricCost = Math.round((options.quantity * unitFabricCost) / 4);
 
-  return fabricQuantity * unitFabricCost + designCost;
+  return fabricCost + designCost;
 };
 
 export const getEstimatedDays = (
@@ -59,9 +52,12 @@ export const getEstimatedDays = (
   return "28~42일";
 };
 
-export const calculateTotalCost = (options: OrderOptions): CostCalculation => {
-  const sewingCost = calculateSewingCost(options);
-  const fabricCost = calculateFabricCost(options);
+export const calculateTotalCost = (
+  options: OrderOptions,
+  config: PricingConfig,
+): CostCalculation => {
+  const sewingCost = calculateSewingCost(options, config);
+  const fabricCost = calculateFabricCost(options, config);
   const totalCost = sewingCost + fabricCost;
 
   return {

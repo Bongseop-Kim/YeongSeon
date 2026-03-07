@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PACKAGE_PRESETS } from "@/features/custom-order/constants/PACKAGE_PRESETS";
 import { calculateTotalCost } from "@/features/custom-order/utils/pricing";
 import type { OrderOptions } from "@/features/custom-order/types/order";
+import type { PricingConfig } from "@/features/custom-order/types/pricing";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -13,6 +14,7 @@ interface PackageSelectorProps {
   isLoggedIn: boolean;
   selectedPackage: PackagePreset | null;
   onSelectPackage: (preset: PackagePreset) => void;
+  pricingConfig: PricingConfig | undefined;
 }
 
 const OPTION_LABELS = {
@@ -27,6 +29,7 @@ export const PackageSelector = ({
   isLoggedIn,
   selectedPackage,
   onSelectPackage,
+  pricingConfig,
 }: PackageSelectorProps) => {
   return (
     <Card>
@@ -69,8 +72,8 @@ export const PackageSelector = ({
                 sample: false,
                 sampleType: null,
               };
-              const packageCost = isLoggedIn
-                ? calculateTotalCost(packageOptions).totalCost
+              const packageCost = isLoggedIn && pricingConfig
+                ? calculateTotalCost(packageOptions, pricingConfig).totalCost
                 : null;
 
               return (

@@ -11,6 +11,7 @@ import { CheckboxField } from "@/components/composite/check-box-field";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
 import { PackageSelector } from "@/features/custom-order/components/package-selector";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { PricingConfig } from "@/features/custom-order/types/pricing";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { StepLayout } from "./step-layout";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -22,12 +23,14 @@ interface QuantityStepProps {
   isLoggedIn: boolean;
   selectedPackage: PackagePreset | null;
   onSelectPackage: (preset: PackagePreset) => void;
+  pricingConfig: PricingConfig | undefined;
 }
 
 export const QuantityStep = ({
   isLoggedIn,
   selectedPackage,
   onSelectPackage,
+  pricingConfig,
 }: QuantityStepProps) => {
   const { control, watch, setValue } = useFormContext<QuoteOrderOptions>();
   const quantity = watch("quantity");
@@ -124,6 +127,7 @@ export const QuantityStep = ({
           isLoggedIn={isLoggedIn}
           selectedPackage={selectedPackage}
           onSelectPackage={onSelectPackage}
+          pricingConfig={pricingConfig}
         />
       )}
     </StepLayout>

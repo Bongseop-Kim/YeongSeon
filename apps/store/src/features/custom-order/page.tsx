@@ -23,6 +23,7 @@ import {
 } from "./utils/option-labels";
 import { PageLayout } from "@/components/layout/page-layout";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
 import { ProgressBar } from "./components/wizard/progress-bar";
 import { StepNavigation } from "./components/wizard/step-navigation";
 import { StickySummary } from "./components/wizard/sticky-summary";
@@ -39,6 +40,7 @@ import { ConfirmStep } from "./components/steps/confirm-step";
 export default function OrderPage() {
   const { user } = useAuthStore();
   const isLoggedIn = !!user;
+  const { data: pricingConfig } = usePricingConfig();
   const imageUpload = useImageUpload();
   const { clearDraft } = useWizardDraft();
   const { isMobile } = useBreakpoint();
@@ -101,7 +103,9 @@ export default function OrderPage() {
 
   const watchedValues = form.watch();
 
-  const { sewingCost, fabricCost, totalCost } = calculateTotalCost(watchedValues);
+  const { sewingCost, fabricCost, totalCost } = pricingConfig
+    ? calculateTotalCost(watchedValues, pricingConfig)
+    : { sewingCost: 0, fabricCost: 0, totalCost: 0 };
 
   const isQuoteMode = watchedValues.quantity >= 100;
 
@@ -197,6 +201,7 @@ export default function OrderPage() {
                 totalCost={totalCost}
                 sewingCost={sewingCost}
                 fabricCost={fabricCost}
+                pricingConfig={pricingConfig}
                 isLoggedIn={isLoggedIn}
                 isQuoteMode={isQuoteMode}
               />
@@ -217,6 +222,7 @@ export default function OrderPage() {
                   isLoggedIn={isLoggedIn}
                   selectedPackage={selectedPackage}
                   onSelectPackage={handleSelectPackage}
+                  pricingConfig={pricingConfig}
                 />
               )}
               {wizard.currentStep.id === "fabric" && <FabricStep />}

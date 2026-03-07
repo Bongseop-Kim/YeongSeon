@@ -38,7 +38,6 @@
     "./constants/courier-companies": "./src/constants/courier-companies.ts",
     "./constants/shipping-events": "./src/constants/shipping-events.ts",
     "./constants/reform-pricing": "./src/constants/reform-pricing.ts",
-    "./constants/custom-order-pricing": "./src/constants/custom-order-pricing.ts",
     "./utils/calculate-discount": "./src/utils/calculate-discount.ts",
     "./utils/calculated-order-totals": "./src/utils/calculated-order-totals.ts",
     "./utils/format-coupon-amount": "./src/utils/format-coupon-amount.ts",

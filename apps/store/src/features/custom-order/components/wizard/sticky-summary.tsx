@@ -10,12 +10,14 @@ import {
 } from "@/features/custom-order/utils/option-labels";
 import { getEstimatedDays } from "@/features/custom-order/utils/pricing";
 import type { OrderOptions } from "@/features/custom-order/types/order";
+import type { PricingConfig } from "@/features/custom-order/types/pricing";
 
 interface StickySummaryProps {
   options: OrderOptions;
   totalCost: number;
   sewingCost: number;
   fabricCost: number;
+  pricingConfig: PricingConfig | undefined;
   isLoggedIn: boolean;
   isQuoteMode: boolean;
 }
@@ -25,6 +27,7 @@ export const StickySummary = ({
   totalCost,
   sewingCost,
   fabricCost,
+  pricingConfig,
   isLoggedIn,
   isQuoteMode,
 }: StickySummaryProps) => {
@@ -85,12 +88,13 @@ export const StickySummary = ({
                   </div>
                 </>
               )}
-              {canShowCostBreakdown && (
+              {canShowCostBreakdown && pricingConfig && (
                 <CostBreakdown
                   options={options}
                   totalCost={totalCost}
                   sewingCost={sewingCost}
                   fabricCost={fabricCost}
+                  pricingConfig={pricingConfig}
                   mode="openCost"
                 />
               )}
