@@ -75,11 +75,15 @@ export function OrderDetailSection() {
         isUpdating={isUpdating}
       />
 
-      <Title level={5}>함께 결제된 주문</Title>
-      <RelatedOrdersSection
-        paymentGroupId={order.paymentGroupId}
-        currentOrderId={order.id}
-      />
+      {order.paymentGroupId && (
+        <>
+          <Title level={5}>함께 결제된 주문</Title>
+          <RelatedOrdersSection
+            paymentGroupId={order.paymentGroupId}
+            currentOrderId={order.id}
+          />
+        </>
+      )}
 
       {orderType === "custom" && <CustomOrderDetail items={reformItems} />}
       {orderType === "repair" && <RepairOrderDetail items={reformItems} />}
