@@ -368,14 +368,40 @@ export const parseCreateOrderResult = (
       "주문 생성 응답이 올바르지 않습니다: payment_group_id, total_amount, orders 누락."
     );
   }
+  const parseOrderItem = (
+    item: unknown,
+    index: number
+  ): CreateOrderResultDTO["orders"][number] => {
+    if (!isRecord(item)) {
+      throw new Error(
+        `주문 생성 응답의 orders[${index}]가 올바르지 않습니다: 객체가 아닙니다.`
+      );
+    }
+    if (typeof item.order_id !== "string") {
+      throw new Error(
+        `주문 생성 응답의 orders[${index}].order_id가 올바르지 않습니다: string이 아닙니다.`
+      );
+    }
+    if (typeof item.order_number !== "string") {
+      throw new Error(
+        `주문 생성 응답의 orders[${index}].order_number가 올바르지 않습니다: string이 아닙니다.`
+      );
+    }
+    if (typeof item.order_type !== "string") {
+      throw new Error(
+        `주문 생성 응답의 orders[${index}].order_type이 올바르지 않습니다: string이 아닙니다.`
+      );
+    }
+    return {
+      order_id: item.order_id,
+      order_number: item.order_number,
+      order_type: item.order_type,
+    };
+  };
   return {
     payment_group_id: data.payment_group_id,
     total_amount: data.total_amount,
-    orders: (data.orders as Array<Record<string, unknown>>).map((o) => ({
-      order_id: o.order_id as string,
-      order_number: o.order_number as string,
-      order_type: o.order_type as string,
-    })),
+    orders: data.orders.map((item, index) => parseOrderItem(item, index)),
   };
 };
 

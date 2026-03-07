@@ -1,5 +1,5 @@
 import { Table, Tag } from "antd";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useRelatedOrders } from "@/features/orders/api/orders-query";
 import type { AdminOrderListItem } from "@/features/orders/types/admin-order";
 
@@ -12,7 +12,6 @@ export function RelatedOrdersSection({
   paymentGroupId,
   currentOrderId,
 }: RelatedOrdersSectionProps) {
-  const navigate = useNavigate();
   const { relatedOrders, isLoading } = useRelatedOrders(
     paymentGroupId,
     currentOrderId
@@ -28,7 +27,7 @@ export function RelatedOrdersSection({
       dataIndex: "orderNumber",
       key: "orderNumber",
       render: (orderNumber: string, record: AdminOrderListItem) => (
-        <a onClick={() => navigate(`/orders/${record.id}`)}>{orderNumber}</a>
+        <Link to={`/orders/${record.id}`}>{orderNumber}</Link>
       ),
     },
     {
