@@ -1,10 +1,10 @@
 CREATE OR REPLACE FUNCTION public.upsert_shipping_address(
-  p_id               uuid        DEFAULT NULL,
   p_recipient_name   varchar,
   p_recipient_phone  varchar,
   p_address          text,
-  p_address_detail   varchar     DEFAULT NULL,
   p_postal_code      varchar,
+  p_id               uuid        DEFAULT NULL,
+  p_address_detail   varchar     DEFAULT NULL,
   p_delivery_request text        DEFAULT NULL,
   p_delivery_memo    text        DEFAULT NULL,
   p_is_default       boolean     DEFAULT false

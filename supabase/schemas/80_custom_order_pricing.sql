@@ -21,6 +21,12 @@ CREATE POLICY "custom_order_pricing_constants_service_role_only"
   USING (true)
   WITH CHECK (true);
 
+-- 가격 정보는 비민감 공개 데이터이므로 anon read 허용
+CREATE POLICY "allow_public_read_pricing_constants"
+  ON public.custom_order_pricing_constants
+  FOR SELECT TO anon, authenticated
+  USING (true);
+
 -- Fabric prices (design_type × fabric_type matrix)
 CREATE TABLE IF NOT EXISTS public.custom_order_fabric_prices (
   design_type text        NOT NULL,
@@ -45,3 +51,9 @@ CREATE POLICY "custom_order_fabric_prices_service_role_only"
   TO service_role, postgres
   USING (true)
   WITH CHECK (true);
+
+-- 가격 정보는 비민감 공개 데이터이므로 anon read 허용
+CREATE POLICY "allow_public_read_fabric_prices"
+  ON public.custom_order_fabric_prices
+  FOR SELECT TO anon, authenticated
+  USING (true);
