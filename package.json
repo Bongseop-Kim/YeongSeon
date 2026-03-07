@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "turbo dev",
     "dev:store": "turbo dev --filter=@yeongseon/store -- --host",
-    "dev:admin": "turbo dev --filter=@yeongseon/admin",
+    "dev:admin": "turbo dev --filter=@yeongseon/admin -- --host",
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
@@ -23,6 +23,9 @@
   },
   "packageManager": "pnpm@10.12.1",
   "pnpm": {
-    "onlyBuiltDependencies": ["@swc/core", "esbuild"]
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "esbuild"
+    ]
   }
 }
