@@ -13,14 +13,6 @@ type TossConfirmResponse = {
   [key: string]: unknown;
 };
 
-type OrderRow = {
-  id: string;
-  user_id: string;
-  total_price: number;
-  status: string;
-  order_type: string;
-};
-
 const jsonResponse = (status: number, body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
     status,
@@ -155,7 +147,13 @@ Deno.serve(async (req) => {
     return jsonResponse(404, { error: "Orders not found" });
   }
 
-  const typedOrders = orders as OrderRow[];
+  const typedOrders = orders as Array<{
+    id: string;
+    user_id: string;
+    total_price: number;
+    status: string;
+    order_type: string;
+  }>;
   const allowedPrePaymentStatuses = new Set(["대기중", "pending", "created"]);
 
   // 소유권 + 상태 검증
@@ -253,56 +251,38 @@ Deno.serve(async (req) => {
     return jsonResponse(502, { error: "Failed to confirm payment" });
   }
 
-  // 각 주문 상태 업데이트
-  const updatedOrders: Array<{ orderId: string; orderType: string }> = [];
+  const { data: rpcResult, error: rpcError } = await adminClient
+    .rpc("confirm_payment_orders", {
+      p_payment_group_id: payload.orderId,
+      p_user_id: user.id,
+      p_payment_key: payload.paymentKey,
+    });
 
-  for (const order of typedOrders) {
-    const postPaymentStatus =
-      order.order_type === "sale" ? "진행중" : "접수";
-
-    const { data: updatedOrder, error: updateError } = await adminClient
-      .from("orders")
-      .update({
-        status: postPaymentStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", order.id)
-      .eq("user_id", user.id)
-      .eq("status", order.status)
-      .select("id")
-      .maybeSingle();
-
-    if (updateError) {
-      errorLogger("order_update_failed", updateError, {
-        orderId: order.id,
-        userId: user.id,
-        paymentKey: payload.paymentKey,
-        originalStatus: order.status,
-      });
-      return jsonResponse(500, {
-        error: "Payment confirmed but order update failed",
-      });
-    }
-
-    if (!updatedOrder) {
-      errorLogger(
-        "order_update_conflict",
-        new Error("Order status changed before update"),
-        {
-          orderId: order.id,
-          userId: user.id,
-          expectedStatus: order.status,
-          paymentKey: payload.paymentKey,
-        }
-      );
+  if (rpcError) {
+    errorLogger("order_update_failed", rpcError, {
+      paymentGroupId: payload.orderId,
+      userId: user.id,
+      paymentKey: payload.paymentKey,
+    });
+    if (rpcError.message?.includes("not payable")) {
       return jsonResponse(409, {
         error: "Payment confirmed but order state changed",
-        orderId: order.id,
       });
     }
-
-    updatedOrders.push({ orderId: order.id, orderType: order.order_type });
+    if (rpcError.message?.includes("Forbidden")) {
+      return jsonResponse(403, { error: "Forbidden" });
+    }
+    return jsonResponse(500, {
+      error: "Payment confirmed but order update failed",
+    });
   }
+
+  const updatedOrders = (
+    rpcResult as {
+      success: boolean;
+      orders: Array<{ orderId: string; orderType: string }>;
+    }
+  ).orders;
 
   processLogger("payment_confirmed", {
     paymentGroupId: payload.orderId,
