@@ -174,6 +174,10 @@ Deno.serve(async (req) => {
   }>;
   const allowedPrePaymentStatuses = new Set(["대기중", "pending", "created"]);
 
+  // RPC confirm_payment_orders와 동일한 결제 후 상태 매핑
+  const expectedPostPaymentStatus = (orderType: string): string =>
+    orderType === "sale" ? "진행중" : "접수";
+
   // 1단계: 소유권 검증
   for (const order of typedOrders) {
     if (order.user_id !== user.id) {
@@ -181,9 +185,9 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 2단계: 멱등성 체크 - 전체가 이미 결제 완료 상태인 경우 200 반환
+  // 2단계: 멱등성 체크 - 전체가 order_type별 결제 완료 상태인 경우 200 반환
   const allAlreadyConfirmed = typedOrders.every(
-    (o) => !allowedPrePaymentStatuses.has(o.status)
+    (o) => o.status === expectedPostPaymentStatus(o.order_type)
   );
 
   if (allAlreadyConfirmed) {
