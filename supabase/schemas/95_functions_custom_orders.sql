@@ -227,6 +227,7 @@ declare
   v_user_id uuid;
   v_order_id uuid;
   v_order_number text;
+  v_payment_group_id uuid;
   v_sewing_cost integer;
   v_fabric_cost integer;
   v_total_cost integer;
@@ -270,6 +271,7 @@ begin
   from public.calculate_custom_order_amounts(p_options, p_quantity) as amounts;
 
   v_order_number := public.generate_order_number();
+  v_payment_group_id := gen_random_uuid();
 
   insert into public.orders (
     user_id,
@@ -279,7 +281,8 @@ begin
     original_price,
     total_discount,
     order_type,
-    status
+    status,
+    payment_group_id
   )
   values (
     v_user_id,
@@ -289,7 +292,8 @@ begin
     v_total_cost,
     0,
     'custom',
-    '대기중'
+    '대기중',
+    v_payment_group_id
   )
   returning id into v_order_id;
 
@@ -337,7 +341,8 @@ begin
 
   return jsonb_build_object(
     'order_id', v_order_id,
-    'order_number', v_order_number
+    'order_number', v_order_number,
+    'payment_group_id', v_payment_group_id
   );
 end;
 $$;
