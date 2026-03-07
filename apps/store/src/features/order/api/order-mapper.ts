@@ -347,7 +347,7 @@ const parseAppliedCouponField = (
 };
 
 const ORDER_STATUSES: ReadonlySet<string> = new Set([
-  "진행중", "완료", "배송중", "배송완료", "대기중", "취소",
+  "진행중", "완료", "배송중", "배송완료", "대기중", "결제중", "취소",
   "접수", "제작중", "제작완료", "수선중", "수선완료",
 ]);
 const isOrderStatus = (v: string): v is OrderStatusDTO =>
@@ -360,14 +360,49 @@ export const parseCreateOrderResult = (
     throw new Error("주문 생성 응답이 올바르지 않습니다: 객체가 아닙니다.");
   }
   if (
-    typeof data.order_id !== "string" ||
-    typeof data.order_number !== "string"
+    typeof data.payment_group_id !== "string" ||
+    typeof data.total_amount !== "number" ||
+    !Array.isArray(data.orders)
   ) {
     throw new Error(
-      "주문 생성 응답이 올바르지 않습니다: order_id 또는 order_number 누락."
+      "주문 생성 응답이 올바르지 않습니다: payment_group_id, total_amount, orders 누락."
     );
   }
-  return { order_id: data.order_id, order_number: data.order_number };
+  const parseOrderItem = (
+    item: unknown,
+    index: number
+  ): CreateOrderResultDTO["orders"][number] => {
+    if (!isRecord(item)) {
+      throw new Error(
+        `주문 생성 응답의 orders[${index}]가 올바르지 않습니다: 객체가 아닙니다.`
+      );
+    }
+    if (typeof item.order_id !== "string") {
+      throw new Error(
+        `주문 생성 응답의 orders[${index}].order_id가 올바르지 않습니다: string이 아닙니다.`
+      );
+    }
+    if (typeof item.order_number !== "string") {
+      throw new Error(
+        `주문 생성 응답의 orders[${index}].order_number가 올바르지 않습니다: string이 아닙니다.`
+      );
+    }
+    if (typeof item.order_type !== "string") {
+      throw new Error(
+        `주문 생성 응답의 orders[${index}].order_type이 올바르지 않습니다: string이 아닙니다.`
+      );
+    }
+    return {
+      order_id: item.order_id,
+      order_number: item.order_number,
+      order_type: item.order_type,
+    };
+  };
+  return {
+    payment_group_id: data.payment_group_id,
+    total_amount: data.total_amount,
+    orders: data.orders.map((item, index) => parseOrderItem(item, index)),
+  };
 };
 
 export const parseOrderListRows = (data: unknown): OrderListRowDTO[] => {

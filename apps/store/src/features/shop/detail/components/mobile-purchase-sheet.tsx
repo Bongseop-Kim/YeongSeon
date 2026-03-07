@@ -127,7 +127,7 @@ export function MobilePurchaseSheet({
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="길이를 선택하세요" />
+                <SelectValue placeholder={product.optionLabel ? `${product.optionLabel}을(를) 선택하세요` : "옵션을 선택하세요"} />
               </SelectTrigger>
               <SelectContent>
                 {productOptions

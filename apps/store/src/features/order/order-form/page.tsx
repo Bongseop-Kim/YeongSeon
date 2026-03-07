@@ -25,6 +25,7 @@ import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useAuthStore } from "@/store/auth";
 import { createOrder } from "@/features/order/api/order-api";
+import { useReformPricing } from "@/features/reform/api/reform-query";
 import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/features/payment/components/payment-widget";
@@ -43,6 +44,9 @@ const OrderFormPage = () => {
   const { openCouponSelect } = useCouponSelect();
   const updateShippingAddress = useUpdateShippingAddress();
   const { user } = useAuthStore();
+
+  const { data: reformPricing, isLoading: isReformPricingLoading } =
+    useReformPricing();
 
   const { selectedAddressId, selectedAddress, openShippingPopup } =
     useShippingAddressPopup();
@@ -100,7 +104,11 @@ const OrderFormPage = () => {
         items: orderItems,
         shippingAddressId: selectedAddressId,
       });
-      const orderId = orderResult.orderId;
+      if (orderResult.totalAmount !== totals.totalPrice) {
+        throw new Error(
+          `결제 금액이 변경되었습니다(서버: ${orderResult.totalAmount.toLocaleString()}원). 페이지를 새로고침 후 다시 시도해주세요.`
+        );
+      }
       const firstItem = orderItems[0];
       const orderName =
         orderItems.length === 1
@@ -110,7 +118,7 @@ const OrderFormPage = () => {
           : `${firstItem.type === "product" ? firstItem.product.name : "수선"} 외 ${orderItems.length - 1}건`;
 
       await paymentWidgetRef.current.requestPayment({
-        orderId,
+        orderId: orderResult.paymentGroupId,
         orderName,
         successUrl: `${window.location.origin}${ROUTES.PAYMENT_SUCCESS}`,
         failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}`,
@@ -135,7 +143,12 @@ const OrderFormPage = () => {
     }
   };
 
-  const totals = calculateOrderTotals(orderItems);
+  const hasReformItems = orderItems.some((item) => item.type === "reform");
+  const estimatedShippingCost = hasReformItems
+    ? (reformPricing?.shippingCost ?? 0)
+    : 0;
+  const totals = calculateOrderTotals(orderItems, estimatedShippingCost);
+  const isPricingReady = !hasReformItems || !isReformPricingLoading;
 
   if (orderItems.length === 0) {
     return (
@@ -177,7 +190,11 @@ const OrderFormPage = () => {
                   )}
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-600">배송비</span>
-                    <span>무료</span>
+                    <span>
+                      {totals.shippingCost > 0
+                        ? `${totals.shippingCost.toLocaleString()}원`
+                        : "무료"}
+                    </span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-base font-semibold">
@@ -188,7 +205,7 @@ const OrderFormPage = () => {
                   </div>
                 </CardContent>
               </Card>
-              {user && (
+              {user && isPricingReady && (
                 <Card>
                   <CardHeader>
                     <CardTitle>결제 수단</CardTitle>
@@ -210,11 +227,15 @@ const OrderFormPage = () => {
                 onClick={handleRequestPayment}
                 className="w-full"
                 size="xl"
-                disabled={!user || !selectedAddress || isPaymentLoading}
+                disabled={
+                  !user || !selectedAddress || isPaymentLoading || !isPricingReady
+                }
               >
                 {isPaymentLoading
                   ? "결제 요청 중..."
-                  : `${totals.totalPrice.toLocaleString()}원 결제하기`}
+                  : !isPricingReady
+                    ? "가격 로딩 중..."
+                    : `${totals.totalPrice.toLocaleString()}원 결제하기`}
               </Button>
               {!selectedAddress && (
                 <p className="text-sm text-center text-zinc-500">

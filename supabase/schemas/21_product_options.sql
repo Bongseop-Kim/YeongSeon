@@ -5,14 +5,12 @@
 CREATE TABLE IF NOT EXISTS public.product_options (
   id               uuid         NOT NULL DEFAULT gen_random_uuid(),
   product_id       integer      NOT NULL,
-  option_id        varchar(50)  NOT NULL,
   name             varchar(255) NOT NULL,
   additional_price integer      NOT NULL DEFAULT 0,
   stock            integer,
   created_at       timestamptz  NOT NULL DEFAULT now(),
 
   CONSTRAINT product_options_pkey PRIMARY KEY (id),
-  CONSTRAINT product_options_product_id_option_id_key UNIQUE (product_id, option_id),
   CONSTRAINT product_options_product_id_fkey
     FOREIGN KEY (product_id) REFERENCES public.products (id) ON DELETE CASCADE,
   CONSTRAINT product_options_stock_check
@@ -69,10 +67,9 @@ BEGIN
 
   IF jsonb_array_length(p_options) > 0 THEN
     INSERT INTO public.product_options
-      (product_id, option_id, name, additional_price, stock)
+      (product_id, name, additional_price, stock)
     SELECT
       p_product_id,
-      (elem->>'option_id')::varchar(50),
       (elem->>'name')::varchar(255),
       (elem->>'additional_price')::integer,
       CASE WHEN elem->>'stock' IS NULL THEN NULL

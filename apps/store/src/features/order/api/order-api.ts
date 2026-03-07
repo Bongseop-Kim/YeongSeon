@@ -54,8 +54,13 @@ export const createOrder = async (
   const result = parseCreateOrderResult(orderResult);
 
   return {
-    orderId: result.order_id,
-    orderNumber: result.order_number,
+    paymentGroupId: result.payment_group_id,
+    totalAmount: result.total_amount,
+    orders: result.orders.map((o) => ({
+      orderId: o.order_id,
+      orderNumber: o.order_number,
+      orderType: o.order_type,
+    })),
   };
 };
 

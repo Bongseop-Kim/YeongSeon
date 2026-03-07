@@ -103,6 +103,8 @@ export function toAdminOrderDetail(
     trackingInfo: toTrackingInfo(dto),
     deliveredAt: dto.deliveredAt,
     confirmedAt: dto.confirmedAt,
+    paymentGroupId: dto.paymentGroupId,
+    shippingCost: dto.shippingCost,
   };
 }
 

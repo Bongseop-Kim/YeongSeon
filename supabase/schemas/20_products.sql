@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   updated_at    timestamptz  NOT NULL DEFAULT now(),
   detail_images text[],
   stock         integer,
+  option_label  varchar(100),
 
   CONSTRAINT products_pkey PRIMARY KEY (id),
   CONSTRAINT products_code_key UNIQUE (code),

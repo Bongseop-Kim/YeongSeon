@@ -34,7 +34,7 @@ describe("getOrderItemPricing", () => {
 describe("calculateOrderTotals", () => {
   it("빈 배열은 모두 0을 반환한다", () => {
     const totals = calculateOrderTotals([]);
-    expect(totals).toEqual({ originalPrice: 0, totalDiscount: 0, totalPrice: 0 });
+    expect(totals).toEqual({ originalPrice: 0, totalDiscount: 0, shippingCost: 0, totalPrice: 0 });
   });
 
   it("다중 아이템의 합계를 계산한다", () => {

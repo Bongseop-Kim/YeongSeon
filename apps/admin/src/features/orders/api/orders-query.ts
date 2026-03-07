@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import dayjs from "dayjs";
 import { eulo } from "@yeongseon/shared";
 import { useTable } from "@refinedev/antd";
 import {
@@ -35,13 +36,20 @@ import type {
 // all Refine internal callbacks (onChange, sorter, etc.) operate on column keys,
 // not on the data shape, so the cast is structurally safe at runtime.
 
-export function useAdminOrderTable(orderType: OrderType) {
+export function useAdminOrderTable(
+  orderType: OrderType,
+  initialDateRange: [string, string]
+) {
   const { tableProps: rawTableProps, setFilters } = useTable<AdminOrderListRowDTO>({
     resource: "admin_order_list_view",
     sorters: { initial: [{ field: "created_at", order: "desc" }] },
     filters: {
       permanent: [
         { field: "orderType", operator: "eq", value: orderType },
+      ],
+      initial: [
+        { field: "created_at", operator: "gte", value: dayjs(initialDateRange[0]).startOf("day").toISOString() },
+        { field: "created_at", operator: "lte", value: dayjs(initialDateRange[1]).endOf("day").toISOString() },
       ],
     },
     syncWithLocation: false,
@@ -95,6 +103,27 @@ export function useAdminOrderItems(
   );
 
   return { items };
+}
+
+// ── Related orders ────────────────────────────────────────────
+
+export function useRelatedOrders(
+  paymentGroupId: string | null | undefined,
+  currentOrderId: string
+) {
+  const { query, result } = useList<AdminOrderListRowDTO>({
+    resource: "admin_order_list_view",
+    filters: [
+      { field: "paymentGroupId", operator: "eq", value: paymentGroupId },
+    ],
+    queryOptions: { enabled: !!paymentGroupId },
+  });
+
+  const relatedOrders = result.data
+    .filter((dto) => dto.id !== currentOrderId)
+    .map(toAdminOrderListItem);
+
+  return { relatedOrders, isLoading: query.isLoading };
 }
 
 // ── Status logs ───────────────────────────────────────────────

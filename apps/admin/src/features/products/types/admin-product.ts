@@ -28,7 +28,6 @@ export interface AdminProductListItem {
 }
 
 export interface AdminProductOption {
-  optionId: string;
   name: string;
   additionalPrice: number;
   stock: number | null;

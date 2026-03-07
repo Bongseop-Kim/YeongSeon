@@ -25,6 +25,8 @@ export interface AdminOrderListRowDTO {
   designType: string | null;
   itemQuantity: number | null;
   reformSummary: string | null;
+  paymentGroupId: string | null;
+  shippingCost: number;
 }
 
 /** admin_order_detail_view row (extends list + shipping address, minus list-only fields) */

@@ -19,6 +19,7 @@ import {
 import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
 import { useProducts } from "@/features/shop/api/products-query";
 import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
+import { useReformPricing } from "@/features/reform/api/reform-query";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { ROUTES } from "@/constants/ROUTES";
 import { toast } from "sonner";
@@ -45,6 +46,7 @@ export default function CartPage() {
   const { openCouponSelect } = useCouponSelect();
 
   const { data: similarProducts = [], isLoading: similarLoading, isError: similarError, refetch: refetchSimilar } = useProducts({ sortOption: "popular", limit: 8 });
+  const { data: reformPricing } = useReformPricing();
 
   useEffect(() => {
     const currentIds = new Set(items.map((item) => item.id));
@@ -236,11 +238,16 @@ export default function CartPage() {
     navigate(ROUTES.ORDER_FORM);
   };
 
-  // 선택된 상품의 총액 계산
-  const selectedTotals = useMemo(
-    () => calculateOrderSummary(selectedCartItems),
-    [selectedCartItems]
-  );
+  // 선택된 상품의 총액 계산 (수선 아이템 포함 시 택배비 반영)
+  const selectedTotals = useMemo(() => {
+    const hasReformItems = selectedCartItems.some(
+      (item) => item.type === "reform"
+    );
+    const shippingCost = hasReformItems
+      ? (reformPricing?.shippingCost ?? 0)
+      : 0;
+    return calculateOrderSummary(selectedCartItems, shippingCost);
+  }, [selectedCartItems, reformPricing]);
 
 
   const isAllChecked =

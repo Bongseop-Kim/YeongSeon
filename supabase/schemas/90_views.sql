@@ -19,17 +19,18 @@ SELECT
   p.material,
   p.info,
   p.stock,
+  p.option_label AS "optionLabel",
   p.created_at,
   p.updated_at,
   coalesce(
     jsonb_agg(
       jsonb_build_object(
-        'id', po.option_id,
+        'id', po.id::text,
         'name', po.name,
         'additionalPrice', po.additional_price,
         'stock', po.stock
       )
-      order by po.option_id
+      order by po.id
     ) filter (where po.id is not null),
     '[]'::jsonb
   ) AS options,
@@ -41,7 +42,7 @@ LEFT JOIN public.product_like_counts_rpc() lc ON lc.product_id = p.id
 GROUP BY
   p.id, p.code, p.name, p.price, p.image, p.detail_images,
   p.category, p.color, p.pattern, p.material, p.info,
-  p.stock, p.created_at, p.updated_at, lc.likes;
+  p.stock, p.option_label, p.created_at, p.updated_at, lc.likes;
 
 -- ── order_list_view ──────────────────────────────────────────
 CREATE OR REPLACE VIEW public.order_list_view
@@ -309,14 +310,22 @@ SELECT
   CASE WHEN o.order_type IN ('custom', 'repair') THEN ri.item_quantity ELSE NULL END AS "itemQuantity",
   CASE WHEN o.order_type = 'repair' THEN
     ri.item_quantity || '개 넥타이 수선'
-  ELSE NULL END AS "reformSummary"
+  ELSE NULL END AS "reformSummary",
+  o.payment_group_id AS "paymentGroupId",
+  o.shipping_cost    AS "shippingCost"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id
 LEFT JOIN LATERAL (
-  SELECT oi.reform_data, oi.quantity AS item_quantity
+  SELECT
+    (
+      SELECT oi2.reform_data
+      FROM public.order_items oi2
+      WHERE oi2.order_id = o.id AND oi2.item_type = 'reform'
+      LIMIT 1
+    ) AS reform_data,
+    SUM(oi.quantity)::integer AS item_quantity
   FROM public.order_items oi
   WHERE oi.order_id = o.id AND oi.item_type = 'reform'
-  LIMIT 1
 ) ri ON o.order_type IN ('custom', 'repair');
 
 -- ── admin_order_detail_view ──────────────────────────────
@@ -349,7 +358,9 @@ SELECT
   sa.address_detail   AS "shippingAddressDetail",
   sa.postal_code      AS "shippingPostalCode",
   sa.delivery_memo    AS "deliveryMemo",
-  sa.delivery_request AS "deliveryRequest"
+  sa.delivery_request AS "deliveryRequest",
+  o.payment_group_id  AS "paymentGroupId",
+  o.shipping_cost     AS "shippingCost"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id
 LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id;

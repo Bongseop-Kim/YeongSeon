@@ -71,7 +71,14 @@ const PaymentSuccessPage = () => {
         clearOrderItems();
 
         toast.success("결제가 완료되었습니다!");
-        navigate(`${ROUTES.ORDER_DETAIL}/${paymentResult.orderId}`, { replace: true });
+        if (paymentResult.orders.length === 1) {
+          navigate(
+            `${ROUTES.ORDER_DETAIL}/${paymentResult.orders[0].orderId}`,
+            { replace: true }
+          );
+        } else {
+          navigate(ROUTES.ORDER_LIST, { replace: true });
+        }
       } catch (err) {
         const errorMessage =
           err instanceof Error

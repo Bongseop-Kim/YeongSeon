@@ -296,6 +296,15 @@ AS $$
 $$;
 
 -- ── create_order_txn ─────────────────────────────────────────
+-- SECURITY DEFINER: 일반 유저는 orders, order_items, user_coupons 테이블에
+--   직접 INSERT/UPDATE RLS 정책이 없다. 이 함수가 해당 테이블에 원자적으로
+--   쓰기 위해 SECURITY DEFINER가 필요하다.
+--   소유권 보호:
+--     - auth.uid() null 체크로 미인증 호출 차단
+--     - shipping_addresses는 user_id = auth.uid() 소유권 검증
+--     - user_coupons 업데이트 시 WHERE user_id = v_user_id 조건 적용
+--   완화 조치: SET search_path TO 'public'으로 검색 경로 고정,
+--     입력값 유효성 검사(수량, 아이템 타입 등) 포함.
 CREATE OR REPLACE FUNCTION public.create_order_txn(p_shipping_address_id uuid, p_items jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -328,10 +337,22 @@ declare
   v_original_price integer := 0;
   v_total_discount integer := 0;
   v_total_price integer := 0;
-  v_reform_base_cost constant integer := 15000;
+  v_reform_base_cost integer;
+  v_reform_shipping_cost integer;
   v_used_coupon_ids uuid[] := '{}'::uuid[];
   v_coupon record;
   v_order_type text;
+
+  v_payment_group_id uuid;
+  v_group_total_amount integer := 0;
+  v_orders_result jsonb := '[]'::jsonb;
+  v_product_items jsonb := '[]'::jsonb;
+  v_reform_items jsonb := '[]'::jsonb;
+  v_product_original integer := 0;
+  v_product_discount integer := 0;
+  v_reform_original integer := 0;
+  v_reform_discount integer := 0;
+  v_shipping_cost integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -399,7 +420,7 @@ begin
         into v_option_additional_price, v_option_stock
         from product_options po
         where po.product_id = v_product_id
-          and po.option_id = v_selected_option_id
+          and po.id::text = v_selected_option_id
         for update;
 
         if not found then
@@ -414,7 +435,7 @@ begin
           update product_options
           set stock = stock - v_quantity
           where product_id = v_product_id
-            and option_id = v_selected_option_id;
+            and id::text = v_selected_option_id;
         end if;
       else
         -- No option selected: check product-level stock
@@ -433,6 +454,21 @@ begin
       v_product_id := null;
       v_selected_option_id := null;
       v_reform_data := v_item->'reform_data';
+
+      -- reform 아이템이 실제로 있을 때만 pricing constants 조회 (최초 1회)
+      if v_reform_base_cost is null then
+        SELECT amount INTO v_reform_base_cost
+        FROM custom_order_pricing_constants WHERE key = 'REFORM_BASE_COST';
+        IF v_reform_base_cost IS NULL THEN
+          RAISE EXCEPTION 'Missing pricing constant: REFORM_BASE_COST';
+        END IF;
+
+        SELECT amount INTO v_reform_shipping_cost
+        FROM custom_order_pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
+        IF v_reform_shipping_cost IS NULL THEN
+          RAISE EXCEPTION 'Missing pricing constant: REFORM_SHIPPING_COST';
+        END IF;
+      end if;
 
       if v_reform_data is null or v_reform_data = 'null'::jsonb then
         raise exception 'Reform data is required';
@@ -534,72 +570,134 @@ begin
     );
   end loop;
 
-  v_total_price := v_original_price - v_total_discount;
-  v_order_number := generate_order_number();
-
-  v_order_type := case
-    when exists (
-      select 1 from jsonb_array_elements(v_normalized_items) elem
-      where elem->>'item_type' = 'reform'
-    ) then 'repair'
-    else 'sale'
-  end;
-
-  insert into orders (
-    user_id,
-    order_number,
-    shipping_address_id,
-    total_price,
-    original_price,
-    total_discount,
-    order_type,
-    status
-  )
-  values (
-    v_user_id,
-    v_order_number,
-    p_shipping_address_id,
-    v_total_price,
-    v_original_price,
-    v_total_discount,
-    v_order_type,
-    '대기중'
-  )
-  returning id into v_order_id;
+  -- 아이템 타입별 분류 및 소계 계산
+  v_payment_group_id := gen_random_uuid();
 
   for v_item in select * from jsonb_array_elements(v_normalized_items)
   loop
-    insert into order_items (
-      order_id,
-      item_id,
-      item_type,
-      product_id,
-      selected_option_id,
-      reform_data,
-      quantity,
-      unit_price,
-      discount_amount,
-      line_discount_amount,
-      applied_user_coupon_id
+    if v_item->>'item_type' = 'product' then
+      v_product_items := v_product_items || jsonb_build_array(v_item);
+      v_product_original := v_product_original
+        + (v_item->>'unit_price')::integer * (v_item->>'quantity')::integer;
+      v_product_discount := v_product_discount
+        + coalesce((v_item->>'line_discount_amount')::integer, 0);
+    elsif v_item->>'item_type' = 'reform' then
+      v_reform_items := v_reform_items || jsonb_build_array(v_item);
+      v_reform_original := v_reform_original
+        + (v_item->>'unit_price')::integer * (v_item->>'quantity')::integer;
+      v_reform_discount := v_reform_discount
+        + coalesce((v_item->>'line_discount_amount')::integer, 0);
+    end if;
+  end loop;
+
+  -- product 주문 생성 (shipping_cost=0)
+  if jsonb_array_length(v_product_items) > 0 then
+    v_order_number := generate_order_number();
+    v_total_price := v_product_original - v_product_discount;
+
+    insert into orders (
+      user_id, order_number, shipping_address_id,
+      total_price, original_price, total_discount,
+      order_type, status, payment_group_id, shipping_cost
     )
     values (
-      v_order_id,
-      v_item->>'item_id',
-      v_item->>'item_type',
-      nullif(v_item->>'product_id', '')::integer,
-      nullif(v_item->>'selected_option_id', ''),
-      case
-        when v_item->'reform_data' is null or v_item->'reform_data' = 'null'::jsonb
-          then null
-        else v_item->'reform_data'
-      end,
-      (v_item->>'quantity')::integer,
-      (v_item->>'unit_price')::integer,
-      (v_item->>'discount_amount')::integer,
-      coalesce((v_item->>'line_discount_amount')::integer, 0),
-      nullif(v_item->>'applied_user_coupon_id', '')::uuid
+      v_user_id, v_order_number, p_shipping_address_id,
+      v_total_price, v_product_original, v_product_discount,
+      'sale', '대기중', v_payment_group_id, 0
+    )
+    returning id into v_order_id;
+
+    for v_item in select * from jsonb_array_elements(v_product_items)
+    loop
+      insert into order_items (
+        order_id, item_id, item_type, product_id,
+        selected_option_id, reform_data, quantity,
+        unit_price, discount_amount, line_discount_amount,
+        applied_user_coupon_id
+      )
+      values (
+        v_order_id,
+        v_item->>'item_id',
+        v_item->>'item_type',
+        nullif(v_item->>'product_id', '')::integer,
+        nullif(v_item->>'selected_option_id', ''),
+        case
+          when v_item->'reform_data' is null or v_item->'reform_data' = 'null'::jsonb
+            then null
+          else v_item->'reform_data'
+        end,
+        (v_item->>'quantity')::integer,
+        (v_item->>'unit_price')::integer,
+        (v_item->>'discount_amount')::integer,
+        coalesce((v_item->>'line_discount_amount')::integer, 0),
+        nullif(v_item->>'applied_user_coupon_id', '')::uuid
+      );
+    end loop;
+
+    v_group_total_amount := v_group_total_amount + v_total_price;
+    v_orders_result := v_orders_result || jsonb_build_array(
+      jsonb_build_object(
+        'order_id', v_order_id,
+        'order_number', v_order_number,
+        'order_type', 'sale'
+      )
     );
-  end loop;
+  end if;
+
+  -- repair 주문 생성 (shipping_cost=v_reform_shipping_cost)
+  if jsonb_array_length(v_reform_items) > 0 then
+    v_order_number := generate_order_number();
+    v_shipping_cost := v_reform_shipping_cost;
+    v_total_price := v_reform_original - v_reform_discount + v_shipping_cost;
+
+    insert into orders (
+      user_id, order_number, shipping_address_id,
+      total_price, original_price, total_discount,
+      order_type, status, payment_group_id, shipping_cost
+    )
+    values (
+      v_user_id, v_order_number, p_shipping_address_id,
+      v_total_price, v_reform_original, v_reform_discount,
+      'repair', '대기중', v_payment_group_id, v_shipping_cost
+    )
+    returning id into v_order_id;
+
+    for v_item in select * from jsonb_array_elements(v_reform_items)
+    loop
+      insert into order_items (
+        order_id, item_id, item_type, product_id,
+        selected_option_id, reform_data, quantity,
+        unit_price, discount_amount, line_discount_amount,
+        applied_user_coupon_id
+      )
+      values (
+        v_order_id,
+        v_item->>'item_id',
+        v_item->>'item_type',
+        nullif(v_item->>'product_id', '')::integer,
+        nullif(v_item->>'selected_option_id', ''),
+        case
+          when v_item->'reform_data' is null or v_item->'reform_data' = 'null'::jsonb
+            then null
+          else v_item->'reform_data'
+        end,
+        (v_item->>'quantity')::integer,
+        (v_item->>'unit_price')::integer,
+        (v_item->>'discount_amount')::integer,
+        coalesce((v_item->>'line_discount_amount')::integer, 0),
+        nullif(v_item->>'applied_user_coupon_id', '')::uuid
+      );
+    end loop;
+
+    v_group_total_amount := v_group_total_amount + v_total_price;
+    v_orders_result := v_orders_result || jsonb_build_array(
+      jsonb_build_object(
+        'order_id', v_order_id,
+        'order_number', v_order_number,
+        'order_type', 'repair'
+      )
+    );
+  end if;
 
   if array_length(v_used_coupon_ids, 1) is not null then
     update user_coupons
@@ -612,8 +710,9 @@ begin
   end if;
 
   return jsonb_build_object(
-    'order_id', v_order_id,
-    'order_number', v_order_number
+    'payment_group_id', v_payment_group_id,
+    'total_amount', v_group_total_amount,
+    'orders', v_orders_result
   );
 end;
 $$;
@@ -1329,12 +1428,16 @@ begin
     -- Validate rollback transition by order_type
     -- 배송완료, 완료, 취소 상태는 is_rollback 여부와 무관하게 롤백 불가
     if v_order_type = 'sale' then
-      if not (v_current_status = '진행중' and p_new_status = '대기중') then
+      if not (
+        (v_current_status = '결제중' and p_new_status = '대기중')
+        or (v_current_status = '진행중' and p_new_status = '대기중')
+      ) then
         raise exception 'Invalid rollback from "%" to "%" for sale order', v_current_status, p_new_status;
       end if;
     elsif v_order_type = 'custom' then
       if not (
-        (v_current_status = '접수' and p_new_status = '대기중')
+        (v_current_status = '결제중' and p_new_status = '대기중')
+        or (v_current_status = '접수' and p_new_status = '대기중')
         or (v_current_status = '제작중' and p_new_status = '접수')
         or (v_current_status = '제작완료' and p_new_status = '제작중')
       ) then
@@ -1342,7 +1445,8 @@ begin
       end if;
     elsif v_order_type = 'repair' then
       if not (
-        (v_current_status = '접수' and p_new_status = '대기중')
+        (v_current_status = '결제중' and p_new_status = '대기중')
+        or (v_current_status = '접수' and p_new_status = '대기중')
         or (v_current_status = '수선중' and p_new_status = '접수')
         or (v_current_status = '수선완료' and p_new_status = '수선중')
       ) then
@@ -1359,7 +1463,7 @@ begin
         or (v_current_status = '진행중'   and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '진행중', '배송중'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '진행중', '배송중'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for sale order', v_current_status, p_new_status;
       end if;
@@ -1371,7 +1475,7 @@ begin
         or (v_current_status = '제작완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for custom order', v_current_status, p_new_status;
       end if;
@@ -1383,7 +1487,7 @@ begin
         or (v_current_status = '수선완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '접수'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;
@@ -1781,6 +1885,59 @@ begin
     );
 end;
 $$;
+
+-- ── admin_get_period_stats ───────────────────────────────────
+-- 기간 범위(start~end)의 주문 수와 매출 합계를 집계한다.
+-- admin_get_today_stats 는 단일 날짜 전용으로 유지하고,
+-- 날짜 범위 조회는 이 함수를 사용한다.
+CREATE OR REPLACE FUNCTION public.admin_get_period_stats(
+  p_order_type  text,
+  p_start_date  date,
+  p_end_date    date
+)
+RETURNS TABLE (
+  period_order_count bigint,
+  period_revenue     numeric
+)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+begin
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  if p_start_date is null then
+    raise exception 'p_start_date is required';
+  end if;
+
+  if p_end_date is null then
+    raise exception 'p_end_date is required';
+  end if;
+
+  if p_start_date > p_end_date then
+    raise exception 'p_start_date must be <= p_end_date';
+  end if;
+
+  if p_order_type is null or p_order_type not in ('all', 'sale', 'custom', 'repair') then
+    raise exception 'invalid p_order_type: %', p_order_type;
+  end if;
+
+  RETURN QUERY
+  SELECT
+    COUNT(*)::bigint                        AS period_order_count,
+    COALESCE(SUM(total_price), 0)::numeric  AS period_revenue
+  FROM public.orders
+  WHERE created_at >= p_start_date
+    AND created_at <  p_end_date + 1
+    AND (
+      p_order_type = 'all'
+      OR order_type = p_order_type
+    );
+end;
+$$;
+
 -- ── admin_update_order_tracking ─────────────────────────────────
 CREATE OR REPLACE FUNCTION public.admin_update_order_tracking(
   p_order_id uuid,
@@ -1948,3 +2105,252 @@ begin
   return jsonb_build_object('success', true, 'affected_count', v_affected_count);
 end;
 $$;
+
+-- ── confirm_payment_orders ──────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
+  p_payment_group_id uuid,
+  p_user_id uuid,
+  p_payment_key text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER  -- order_status_logs INSERT에 일반 유저 RLS 없음
+SET search_path TO 'public'
+AS $$
+declare
+  v_order record;
+  v_post_status text;
+  v_updated_orders jsonb := '[]'::jsonb;
+  v_count int := 0;
+  v_masked_key text;
+begin
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  -- payment_key 마스킹: 끝 8자리만 유지, 나머지 ****
+  v_masked_key := case
+    when length(p_payment_key) <= 8 then '****'
+    else '****' || right(p_payment_key, 8)
+  end;
+
+  for v_order in
+    select id, user_id, status, order_type
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status != '결제중' then
+      raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
+    end if;
+
+    v_post_status := case v_order.order_type
+      when 'sale' then '진행중'
+      else '접수'
+    end;
+
+    update public.orders
+    set status = v_post_status, updated_at = now()
+    where id = v_order.id;
+
+    insert into public.order_status_logs (
+      order_id, changed_by, previous_status, new_status, memo
+    ) values (
+      v_order.id, p_user_id, v_order.status, v_post_status,
+      'payment confirmed: ' || v_masked_key
+    );
+
+    v_updated_orders := v_updated_orders || jsonb_build_object(
+      'orderId', v_order.id,
+      'orderType', v_order.order_type
+    );
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  return jsonb_build_object(
+    'success', true,
+    'orders', v_updated_orders
+  );
+end;
+$$;
+
+-- ── lock_payment_orders ──────────────────────────────────────────
+-- Toss 호출 전 주문 그룹을 '대기중' → '결제중'으로 원자적 전환.
+-- SECURITY DEFINER: order_status_logs INSERT에 일반 유저 RLS 없음
+CREATE OR REPLACE FUNCTION public.lock_payment_orders(
+  p_payment_group_id uuid,
+  p_user_id uuid
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_order record;
+  v_locked_orders jsonb := '[]'::jsonb;
+  v_count int := 0;
+  v_already_locked boolean := false;
+  v_already_confirmed boolean := false;
+begin
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  for v_order in
+    select id, user_id, status, order_type
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status = '대기중' then
+      -- 정상 경로: 대기중 → 결제중
+      update public.orders
+      set status = '결제중', updated_at = now()
+      where id = v_order.id;
+
+      insert into public.order_status_logs (
+        order_id, changed_by, previous_status, new_status, memo
+      ) values (
+        v_order.id, p_user_id, '대기중', '결제중', 'payment lock'
+      );
+
+    elsif v_order.status = '결제중' then
+      -- 멱등: 이미 lock됨
+      v_already_locked := true;
+
+    elsif v_order.status in ('진행중', '접수') then
+      -- 이미 결제 완료 상태
+      v_already_confirmed := true;
+
+    else
+      raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
+    end if;
+
+    v_locked_orders := v_locked_orders || jsonb_build_object(
+      'orderId', v_order.id,
+      'orderType', v_order.order_type
+    );
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  return jsonb_build_object(
+    'success', true,
+    'orders', v_locked_orders,
+    'already_locked', v_already_locked,
+    'already_confirmed', v_already_confirmed
+  );
+end;
+$$;
+
+-- lock_payment_orders: service_role 전용
+REVOKE EXECUTE ON FUNCTION public.lock_payment_orders(uuid, uuid) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.lock_payment_orders(uuid, uuid) TO service_role;
+
+-- ── unlock_payment_orders ────────────────────────────────────────
+-- Toss 승인 실패 시 '결제중' → '대기중'으로 복구.
+-- SECURITY DEFINER: order_status_logs INSERT에 일반 유저 RLS 없음
+CREATE OR REPLACE FUNCTION public.unlock_payment_orders(
+  p_payment_group_id uuid,
+  p_user_id uuid
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_order record;
+  v_count int := 0;
+begin
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  for v_order in
+    select id, user_id, status
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status = '결제중' then
+      update public.orders
+      set status = '대기중', updated_at = now()
+      where id = v_order.id;
+
+      insert into public.order_status_logs (
+        order_id, changed_by, previous_status, new_status, memo
+      ) values (
+        v_order.id, p_user_id, '결제중', '대기중', 'payment unlock: approval failed'
+      );
+
+    elsif v_order.status = '대기중' then
+      -- 멱등: 이미 대기중
+      null;
+
+    elsif v_order.status in ('진행중', '접수') then
+      -- 다른 경로로 이미 confirm됨 — skip
+      null;
+
+    end if;
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  return jsonb_build_object('success', true);
+end;
+$$;
+
+-- unlock_payment_orders: service_role 전용
+REVOKE EXECUTE ON FUNCTION public.unlock_payment_orders(uuid, uuid) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.unlock_payment_orders(uuid, uuid) TO service_role;

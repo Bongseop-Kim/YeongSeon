@@ -22,7 +22,7 @@ export interface BulkApplySectionRef {
 const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
   ({ setValue, checkedIndices, onApply }, ref) => {
     const [measurementType, setMeasurementType] = useState<"length" | "height">(
-      "length"
+      "length",
     );
     const [value, setValue_local] = useState<string>("");
 
@@ -74,7 +74,7 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
           </Label>
           <Input
             type="number"
-            placeholder={measurementType === "length" ? "예: 145" : "예: 175"}
+            placeholder={measurementType === "length" ? "예: 51" : "예: 175"}
             className="pr-8"
             value={value}
             onChange={(e) => setValue_local(e.target.value)}
@@ -83,7 +83,7 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
         </FormItem>
       </div>
     );
-  }
+  },
 );
 
 export default BulkApplySection;
