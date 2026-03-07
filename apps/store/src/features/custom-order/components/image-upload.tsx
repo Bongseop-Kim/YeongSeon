@@ -29,32 +29,33 @@ export const ImageUpload = ({
 
   return (
     <div>
-      <Label className="text-sm font-medium text-zinc-900 mb-2 block">
+      <Label className="mb-2 block text-sm font-semibold text-zinc-900">
         참고 이미지
       </Label>
       <div className="space-y-3">
-        <div className="border-2 border-dashed border-stone-200 rounded-sm p-6 text-center transition-colors">
+        <div className="rounded-lg border-2 border-dashed border-zinc-300 bg-white p-5 text-center transition-colors">
           <input
             ref={inputRef}
+            id="file-upload"
             type="file"
             accept="image/*"
             onChange={handleChange}
-            style={{ display: "none" }}
+            className="sr-only"
           />
           <Label
-            onClick={() => inputRef.current?.click()}
+            htmlFor="file-upload"
             className="cursor-pointer flex flex-col items-center gap-2"
           >
             {isUploading ? (
               <>
-                <Loader2 className="w-8 h-8 text-zinc-400 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
                 <span className="text-sm text-zinc-600">
                   업로드 중...
                 </span>
               </>
             ) : (
               <>
-                <Upload className="w-8 h-8 text-zinc-400" />
+                <Upload className="h-8 w-8 text-zinc-400" />
                 <span className="text-sm text-zinc-600">
                   이미지를 업로드하세요
                 </span>
@@ -71,10 +72,10 @@ export const ImageUpload = ({
             {uploadedImages.map((image, index) => (
               <div
                 key={image.url}
-                className="relative border border-stone-200 rounded-lg p-2"
+                className="relative rounded-lg border border-zinc-300 bg-white p-2"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-zinc-100 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded bg-zinc-100">
                     {image.url ? (
                       <img
                         src={image.url}
@@ -93,7 +94,7 @@ export const ImageUpload = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => onRemoveImage(index)}
-                    className="h-6 w-6 p-0 ml-auto flex-shrink-0"
+                    className="ml-auto h-6 w-6 flex-shrink-0 p-0"
                   >
                     <X className="w-3 h-3" />
                   </Button>

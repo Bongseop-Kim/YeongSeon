@@ -25,18 +25,18 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const { isMobile } = useBreakpoint();
 
   return (
-    <div className={`max-w-7xl mx-auto ${isMobile ? "" : "px-8 pb-4"}`}>
+    <div className={cn("max-w-7xl mx-auto", !isMobile && "pb-4")}>
       <div
         className={cn(
-          `flex ${isMobile ? "flex-col" : "flex-row gap-8"}`,
-          className
+          `flex ${isMobile ? "flex-col" : "flex-row gap-4"}`,
+          className,
         )}
       >
         <div
           className={cn(
             "w-full",
-            !isMobile && sidebar ? "flex-1 w-2/3" : "",
-            contentClassName
+            !isMobile && sidebar ? "flex-1 w-2/3 pt-6" : "",
+            contentClassName,
           )}
         >
           {children}
@@ -56,7 +56,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             className={cn(
               isMobile ? "w-full relative" : "w-1/3 sticky top-20 self-start",
               actionBar && (isMobile ? "pb-24" : "pb-0"),
-              sidebarClassName
+              sidebarClassName,
             )}
           >
             {sidebar}

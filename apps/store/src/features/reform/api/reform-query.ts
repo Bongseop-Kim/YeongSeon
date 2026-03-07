@@ -1,4 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
 import { uploadTieImages } from "../utils/upload-tie-images";
 
@@ -20,3 +21,24 @@ export const useUploadTieImages = () => {
     },
   });
 };
+
+export function useReformPricing() {
+  return useQuery({
+    queryKey: ["reform", "pricing"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("custom_order_pricing_constants")
+        .select("key, amount")
+        .in("key", ["REFORM_BASE_COST", "REFORM_SHIPPING_COST"]);
+
+      if (error) throw error;
+
+      const map = Object.fromEntries(data.map((r) => [r.key, r.amount]));
+
+      return {
+        baseCost: map["REFORM_BASE_COST"] as number,
+        shippingCost: map["REFORM_SHIPPING_COST"] as number,
+      };
+    },
+  });
+}

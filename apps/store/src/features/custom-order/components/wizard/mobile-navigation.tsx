@@ -29,75 +29,78 @@ export const MobileNavigation = ({
 }: MobileNavigationProps) => {
   return (
     <div
-      className="z-30 fixed bottom-0 left-0 right-0 px-4 bg-white pt-3 border-t"
+      className="z-30 fixed bottom-0 left-0 right-0 mt-4 px-2 bg-white pt-2 border-t"
       style={{
-        paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0))",
+        paddingBottom:
+          "calc(0.5rem + env(safe-area-inset-bottom, 0))",
       }}
     >
-      <div className="space-y-2">
-        {!wizard.isLastStep && (
-          <div className="flex items-center justify-between text-sm mb-2">
-            {isLoggedIn ? (
-              <span className="text-zinc-900 font-medium">
-                {grandTotal.toLocaleString()}원
-              </span>
-            ) : (
-              <span className="text-zinc-500 text-xs">
-                예상 기간: {estimatedDays}
-              </span>
-            )}
-            {isLoggedIn && (
-              <span className="text-zinc-500">{estimatedDays}</span>
-            )}
-          </div>
-        )}
-        {wizard.isLastStep ? (
-          <div className="space-y-2">
+      {!wizard.isLastStep && (
+        <div className="flex items-center justify-between text-sm mb-2">
+          {isLoggedIn ? (
+            <span className="text-zinc-900 font-medium">
+              {grandTotal.toLocaleString()}원
+            </span>
+          ) : (
+            <span className="text-zinc-500 text-xs">
+              예상 기간: {estimatedDays}
+            </span>
+          )}
+          {isLoggedIn && (
+            <span className="text-zinc-500">{estimatedDays}</span>
+          )}
+        </div>
+      )}
+      {wizard.isLastStep ? (
+        <div className="space-y-2">
+          <Button
+            type="button"
+            onClick={onSubmit}
+            size="xl"
+            className="w-full"
+            disabled={isSubmitDisabled}
+          >
+            {isPending
+              ? isQuoteMode
+                ? "견적요청 처리 중..."
+                : "주문 처리 중..."
+              : isQuoteMode
+                ? "견적요청"
+                : `${grandTotal.toLocaleString()}원 주문하기`}
+          </Button>
+          {!isLoggedIn ? (
+            <p className="text-sm text-center text-zinc-500">
+              로그인 후 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수 있어요
+            </p>
+          ) : !selectedAddress ? (
+            <p className="text-sm text-center text-zinc-500">
+              배송지를 추가하면 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수 있어요
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          {!wizard.isFirstStep && (
             <Button
               type="button"
-              onClick={onSubmit}
-              size="xl"
-              className="w-full"
-              disabled={isSubmitDisabled}
-            >
-              {isPending
-                ? isQuoteMode
-                  ? "견적요청 처리 중..."
-                  : "주문 처리 중..."
-                : isQuoteMode
-                  ? "견적요청"
-                  : `${grandTotal.toLocaleString()}원 주문하기`}
-            </Button>
-            {!selectedAddress && (
-              <p className="text-sm text-center text-zinc-500">
-                배송지를 추가하면 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수 있어요
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="flex gap-3">
-            {!wizard.isFirstStep && (
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={wizard.goPrev}
-                className="flex-none"
-              >
-                이전
-              </Button>
-            )}
-            <Button
-              type="button"
+              variant="outline"
               size="lg"
-              onClick={onNext}
-              className="flex-1"
+              onClick={wizard.goPrev}
+              className="flex-none"
             >
-              다음
+              이전
             </Button>
-          </div>
-        )}
-      </div>
+          )}
+          <Button
+            type="button"
+            size="lg"
+            onClick={onNext}
+            className="flex-1"
+          >
+            다음
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

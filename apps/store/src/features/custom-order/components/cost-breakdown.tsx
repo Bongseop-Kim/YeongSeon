@@ -1,27 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { OrderOptions } from "@/features/custom-order/types/order";
-import {
-  START_COST,
-  SEWING_PER_COST,
-  AUTO_TIE_COST,
-  TRIANGLE_STITCH_COST,
-  SIDE_STITCH_COST,
-  DIMPLE_COST,
-  SPODERATO_COST,
-  FOLD7_COST,
-  WOOL_INTERLINING_COST,
-  BRAND_LABEL_COST,
-  CARE_LABEL_COST,
-  YARN_DYED_DESIGN_COST,
-  FABRIC_COST,
-} from "@yeongseon/shared/constants/custom-order-pricing";
+import type { PricingConfig } from "@/features/custom-order/types/pricing";
 
 interface CostBreakdownProps {
   options: OrderOptions;
   totalCost: number;
   sewingCost: number;
   fabricCost: number;
+  pricingConfig: PricingConfig;
   mode?: string | null;
 }
 
@@ -30,6 +17,7 @@ const CostBreakdown = ({
   totalCost,
   sewingCost,
   fabricCost,
+  pricingConfig,
   mode,
 }: CostBreakdownProps) => {
   const isOpenCostMode = mode === "openCost";
@@ -48,18 +36,18 @@ const CostBreakdown = ({
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-zinc-600">기본 봉제 비용</span>
                   <span className="text-sm">
-                    {SEWING_PER_COST.toLocaleString()}원 × {options.quantity}개
+                    {pricingConfig.SEWING_PER_COST.toLocaleString()}원 × {options.quantity}개
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-zinc-600">봉제 시작 비용</span>
-                  <span className="text-sm">{START_COST.toLocaleString()}원</span>
+                  <span className="text-sm">{pricingConfig.START_COST.toLocaleString()}원</span>
                 </div>
                 {options.tieType === "AUTO" && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-600">자동 봉제 추가</span>
                     <span className="text-sm">
-                      +{AUTO_TIE_COST.toLocaleString()}원 × {options.quantity}개
+                      +{pricingConfig.AUTO_TIE_COST.toLocaleString()}원 × {options.quantity}개
                     </span>
                   </div>
                 )}
@@ -67,7 +55,7 @@ const CostBreakdown = ({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-600">삼각 봉제</span>
                     <span className="text-sm">
-                      +{TRIANGLE_STITCH_COST.toLocaleString()}원 × {options.quantity}개
+                      +{pricingConfig.TRIANGLE_STITCH_COST.toLocaleString()}원 × {options.quantity}개
                     </span>
                   </div>
                 )}
@@ -75,7 +63,7 @@ const CostBreakdown = ({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-600">옆선 봉제</span>
                     <span className="text-sm">
-                      +{SIDE_STITCH_COST.toLocaleString()}원 × {options.quantity}개
+                      +{pricingConfig.SIDE_STITCH_COST.toLocaleString()}원 × {options.quantity}개
                     </span>
                   </div>
                 )}
@@ -83,7 +71,7 @@ const CostBreakdown = ({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-600">딤플</span>
                     <span className="text-sm">
-                      {DIMPLE_COST.toLocaleString()}원 × {options.quantity}개
+                      {pricingConfig.DIMPLE_COST.toLocaleString()}원 × {options.quantity}개
                     </span>
                   </div>
                 )}
@@ -91,7 +79,7 @@ const CostBreakdown = ({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-600">스포데라토</span>
                     <span className="text-sm">
-                      {SPODERATO_COST.toLocaleString()}원 × {options.quantity}개
+                      {pricingConfig.SPODERATO_COST.toLocaleString()}원 × {options.quantity}개
                     </span>
                   </div>
                 )}
@@ -99,7 +87,7 @@ const CostBreakdown = ({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-600">7폴드</span>
                     <span className="text-sm">
-                      {FOLD7_COST.toLocaleString()}원 × {options.quantity}개
+                      {pricingConfig.FOLD7_COST.toLocaleString()}원 × {options.quantity}개
                     </span>
                   </div>
                 )}
@@ -107,7 +95,7 @@ const CostBreakdown = ({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-600">울 심지 추가</span>
                     <span className="text-sm">
-                      +{WOOL_INTERLINING_COST.toLocaleString()}원 × {options.quantity}개
+                      +{pricingConfig.WOOL_INTERLINING_COST.toLocaleString()}원 × {options.quantity}개
                     </span>
                   </div>
                 )}
@@ -115,7 +103,7 @@ const CostBreakdown = ({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-600">브랜드 라벨</span>
                     <span className="text-sm">
-                      +{BRAND_LABEL_COST.toLocaleString()}원 × {options.quantity}개
+                      +{pricingConfig.BRAND_LABEL_COST.toLocaleString()}원 × {options.quantity}개
                     </span>
                   </div>
                 )}
@@ -123,7 +111,7 @@ const CostBreakdown = ({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-600">케어 라벨</span>
                     <span className="text-sm">
-                      +{CARE_LABEL_COST.toLocaleString()}원 × {options.quantity}개
+                      +{pricingConfig.CARE_LABEL_COST.toLocaleString()}원 × {options.quantity}개
                     </span>
                   </div>
                 )}
@@ -145,7 +133,7 @@ const CostBreakdown = ({
                     </span>
                     <span className="text-sm">
                       {options.designType && options.fabricType
-                        ? FABRIC_COST[options.designType][options.fabricType].toLocaleString()
+                        ? pricingConfig.FABRIC_COST[options.designType][options.fabricType].toLocaleString()
                         : 0}
                       원 × {options.quantity / 4}마
                     </span>
@@ -153,7 +141,7 @@ const CostBreakdown = ({
                   {options.designType === "YARN_DYED" && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-zinc-600">선염 디자인 비용</span>
-                      <span className="text-sm">{YARN_DYED_DESIGN_COST.toLocaleString()}원</span>
+                      <span className="text-sm">{pricingConfig.YARN_DYED_DESIGN_COST.toLocaleString()}원</span>
                     </div>
                   )}
                   <Separator />

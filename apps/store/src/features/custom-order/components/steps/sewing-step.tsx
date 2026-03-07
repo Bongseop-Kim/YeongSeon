@@ -1,9 +1,13 @@
 import { useEffect } from "react";
 import { useFormContext, type UseFormSetValue } from "react-hook-form";
+import { RadioCard } from "@/components/composite/radio-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { SewingStyle } from "@/features/custom-order/types/wizard";
+import { StepLayout } from "./step-layout";
 
 const SEWING_STYLES: {
   value: SewingStyle;
@@ -37,7 +41,7 @@ const SEWING_STYLES: {
 const deriveSewingStyle = (
   dimple: boolean,
   spoderato: boolean,
-  fold7: boolean
+  fold7: boolean,
 ): SewingStyle => {
   if (fold7) return "fold7";
   if (spoderato) return "spoderato";
@@ -47,7 +51,7 @@ const deriveSewingStyle = (
 
 const applySewingStyle = (
   style: SewingStyle,
-  setValue: UseFormSetValue<QuoteOrderOptions>
+  setValue: UseFormSetValue<QuoteOrderOptions>,
 ) => {
   setValue("dimple", style === "dimple");
   setValue("spoderato", style === "spoderato");
@@ -69,7 +73,7 @@ export const SewingStep = () => {
     if (tieType === "MANUAL" && dimple) {
       setValue("dimple", false);
       toast.info(
-        "수동 봉제에서는 딤플을 선택할 수 없어요. 일반으로 변경했어요."
+        "수동 봉제에서는 딤플을 선택할 수 없어요. 일반으로 변경했어요.",
       );
     }
   }, [tieType, dimple, setValue]);
@@ -84,97 +88,90 @@ export const SewingStep = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-zinc-900">
-          봉제를 설정해주세요
-        </h2>
-      </div>
+    <StepLayout
+      guideTitle="스타일 가이드"
+      guideItems={[
+        "MANUAL: 기본 생산 안정적",
+        "AUTO: 자동 봉제로 정밀감",
+        "딤플은 AUTO에서만 활성화",
+      ]}
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle>봉제 방식</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup
+            value={tieType}
+            onValueChange={(v) => handleTieTypeChange(v as "MANUAL" | "AUTO")}
+          >
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {(["MANUAL", "AUTO"] as const).map((type) => (
+                <RadioCard
+                  key={type}
+                  value={type}
+                  id={`tie-type-${type}`}
+                  selected={tieType === type}
+                >
+                  <CardHeader>
+                    <CardTitle>
+                      {type === "MANUAL" ? "수동 봉제" : "자동 봉제"}
+                    </CardTitle>
+                  </CardHeader>
+                </RadioCard>
+              ))}
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
 
-      {/* Sewing Method Toggle */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-zinc-900">봉제 방식</h3>
-        <div className="flex gap-3">
-          {(["MANUAL", "AUTO"] as const).map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => handleTieTypeChange(type)}
-              className={cn(
-                "flex-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all",
-                tieType === type
-                  ? "border-zinc-900 bg-zinc-50 text-zinc-900"
-                  : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
-              )}
-            >
-              {type === "MANUAL" ? "수동 봉제" : "자동 봉제"}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-4">
+          <RadioGroup
+            value={currentStyle}
+            onValueChange={(value) => handleStyleChange(value as SewingStyle)}
+          >
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {SEWING_STYLES.map((style) => {
+                const isDisabled = !!(style.dimpleOnly && !isDimpleAvailable);
+                const itemId = `sewing-style-${style.value}`;
+                const isSelected = currentStyle === style.value;
 
-      {/* Style Selection */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-zinc-900">스타일</h3>
-        <div className="space-y-3">
-          {SEWING_STYLES.map((style) => {
-            const isDisabled = style.dimpleOnly && !isDimpleAvailable;
-            const isSelected = currentStyle === style.value;
-
-            return (
-              <button
-                key={style.value}
-                type="button"
-                onClick={() => handleStyleChange(style.value)}
-                disabled={isDisabled}
-                className={cn(
-                  "w-full text-left p-4 rounded-lg border-2 transition-all",
-                  isSelected
-                    ? "border-zinc-900 bg-zinc-50"
-                    : "border-zinc-200 bg-white",
-                  isDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:border-zinc-400"
-                )}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div
-                      className={cn(
-                        "font-medium",
-                        isDisabled ? "text-zinc-400" : "text-zinc-900"
+                return (
+                  <RadioCard
+                    key={style.value}
+                    value={style.value}
+                    id={itemId}
+                    disabled={isDisabled}
+                    selected={isSelected}
+                  >
+                    <CardHeader>
+                      <CardTitle
+                        className={cn(
+                          "text-sm",
+                          isDisabled ? "text-zinc-400" : "text-zinc-900",
+                        )}
+                      >
+                        {style.label}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className={cn("text-xs", isDisabled ? "text-zinc-300" : "text-zinc-500")}>
+                        {style.description}
+                      </p>
+                      {isDisabled && (
+                        <p className="mt-1 text-xs text-zinc-300">
+                          자동 봉제에서만 선택할 수 있어요
+                        </p>
                       )}
-                    >
-                      {style.label}
-                    </div>
-                    <div
-                      className={cn(
-                        "text-sm mt-0.5",
-                        isDisabled ? "text-zinc-300" : "text-zinc-500"
-                      )}
-                    >
-                      {style.description}
-                    </div>
-                    {style.dimpleOnly && !isDimpleAvailable && (
-                      <div className="text-xs text-amber-600 mt-1">
-                        자동 봉제에서만 선택할 수 있어요
-                      </div>
-                    )}
-                  </div>
-                  {isSelected && (
-                    <div className="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center shrink-0 mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-white" />
-                    </div>
-                  )}
-                  {!isSelected && !isDisabled && (
-                    <div className="w-5 h-5 rounded-full border-2 border-zinc-300 shrink-0 mt-0.5" />
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+                    </CardContent>
+                  </RadioCard>
+                );
+              })}
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
+    </StepLayout>
   );
 };
