@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
     status: string;
     order_type: string;
   }>;
-  const allowedPrePaymentStatuses = new Set(["대기중", "pending", "created"]);
+  const allowedPrePaymentStatuses = new Set(["대기중", "결제중"]);
 
   // RPC confirm_payment_orders와 동일한 결제 후 상태 매핑
   const expectedPostPaymentStatus = (orderType: string): string =>
@@ -244,6 +244,46 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Toss 호출 전 주문 그룹을 결제중으로 락
+  const { data: lockResult, error: lockError } = await adminClient.rpc(
+    "lock_payment_orders",
+    {
+      p_payment_group_id: payload.orderId,
+      p_user_id: user.id,
+    }
+  );
+
+  if (lockError) {
+    errorLogger("order_lock_failed", lockError, {
+      paymentGroupId: payload.orderId,
+      userId: user.id,
+    });
+    if (lockError.message?.includes("not payable")) {
+      return jsonResponse(409, { error: "Order is not payable" });
+    }
+    if (lockError.message?.includes("Forbidden")) {
+      return jsonResponse(403, { error: "Forbidden" });
+    }
+    return jsonResponse(500, { error: "Failed to lock orders for payment" });
+  }
+
+  if (lockResult?.already_confirmed) {
+    processLogger("payment_already_confirmed_via_lock", {
+      paymentGroupId: payload.orderId,
+      userId: user.id,
+      paymentKey: maskPaymentKey(payload.paymentKey),
+    });
+    return jsonResponse(200, {
+      paymentKey: payload.paymentKey,
+      paymentGroupId: payload.orderId,
+      orders: typedOrders.map((o) => ({
+        orderId: o.id,
+        orderType: o.order_type,
+      })),
+      status: "DONE",
+    });
+  }
+
   const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
 
   let tossResult: TossConfirmResponse;
@@ -282,6 +322,18 @@ Deno.serve(async (req) => {
         response: sanitizeTossResponse(parsed),
       });
 
+      await adminClient
+        .rpc("unlock_payment_orders", {
+          p_payment_group_id: payload.orderId,
+          p_user_id: user.id,
+        })
+        .catch((unlockErr: unknown) => {
+          errorLogger("order_unlock_failed", unlockErr, {
+            paymentGroupId: payload.orderId,
+            userId: user.id,
+          });
+        });
+
       return jsonResponse(tossResponse.status, {
         error: "Payment confirmation rejected",
         details: parsed,
@@ -294,6 +346,19 @@ Deno.serve(async (req) => {
       paymentGroupId: payload.orderId,
       paymentKey: maskPaymentKey(payload.paymentKey),
     });
+
+    await adminClient
+      .rpc("unlock_payment_orders", {
+        p_payment_group_id: payload.orderId,
+        p_user_id: user.id,
+      })
+      .catch((unlockErr: unknown) => {
+        errorLogger("order_unlock_failed", unlockErr, {
+          paymentGroupId: payload.orderId,
+          userId: user.id,
+        });
+      });
+
     return jsonResponse(502, { error: "Failed to confirm payment" });
   }
 

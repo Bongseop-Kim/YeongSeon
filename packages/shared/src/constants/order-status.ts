@@ -34,6 +34,7 @@ export const ORDER_ROLLBACK_FLOW: Record<OrderType, Record<string, string>> = {
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
   대기중: "default",
+  결제중: "warning",
   진행중: "processing",
   접수: "cyan",
   제작중: "orange",
@@ -53,6 +54,7 @@ export const ORDER_STATUS_OPTIONS: Record<
   sale: [
     { label: "전체", value: "" },
     { label: "대기중", value: "대기중" },
+    { label: "결제중", value: "결제중" },
     { label: "진행중", value: "진행중" },
     { label: "배송중", value: "배송중" },
     { label: "배송완료", value: "배송완료" },
@@ -62,6 +64,7 @@ export const ORDER_STATUS_OPTIONS: Record<
   custom: [
     { label: "전체", value: "" },
     { label: "대기중", value: "대기중" },
+    { label: "결제중", value: "결제중" },
     { label: "접수", value: "접수" },
     { label: "제작중", value: "제작중" },
     { label: "제작완료", value: "제작완료" },
@@ -73,6 +76,7 @@ export const ORDER_STATUS_OPTIONS: Record<
   repair: [
     { label: "전체", value: "" },
     { label: "대기중", value: "대기중" },
+    { label: "결제중", value: "결제중" },
     { label: "접수", value: "접수" },
     { label: "수선중", value: "수선중" },
     { label: "수선완료", value: "수선완료" },

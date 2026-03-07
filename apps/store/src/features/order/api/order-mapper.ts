@@ -347,7 +347,7 @@ const parseAppliedCouponField = (
 };
 
 const ORDER_STATUSES: ReadonlySet<string> = new Set([
-  "진행중", "완료", "배송중", "배송완료", "대기중", "취소",
+  "진행중", "완료", "배송중", "배송완료", "대기중", "결제중", "취소",
   "접수", "제작중", "제작완료", "수선중", "수선완료",
 ]);
 const isOrderStatus = (v: string): v is OrderStatusDTO =>

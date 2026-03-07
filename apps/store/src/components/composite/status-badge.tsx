@@ -4,6 +4,7 @@ import type { ClaimStatus } from "@yeongseon/shared/types/view/claim-item";
 
 const ORDER_STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
   대기중: "bg-gray-100 text-gray-800",
+  결제중: "bg-yellow-50 text-yellow-700",
   진행중: "bg-yellow-100 text-yellow-800",
   접수: "bg-cyan-100 text-cyan-800",
   제작중: "bg-orange-100 text-orange-800",

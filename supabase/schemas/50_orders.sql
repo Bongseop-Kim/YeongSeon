@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     CHECK (order_type = ANY (ARRAY['sale','custom','repair'])),
   CONSTRAINT orders_status_check
     CHECK (status = ANY (ARRAY[
-      '대기중','진행중','배송중','배송완료','완료','취소',
+      '대기중','결제중','진행중','배송중','배송완료','완료','취소',
       '접수','제작중','제작완료',
       '수선중','수선완료'
     ])),
