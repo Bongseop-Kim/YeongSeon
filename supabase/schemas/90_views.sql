@@ -315,10 +315,16 @@ SELECT
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id
 LEFT JOIN LATERAL (
-  SELECT oi.reform_data, oi.quantity AS item_quantity
+  SELECT
+    (
+      SELECT oi2.reform_data
+      FROM public.order_items oi2
+      WHERE oi2.order_id = o.id AND oi2.item_type = 'reform'
+      LIMIT 1
+    ) AS reform_data,
+    SUM(oi.quantity) AS item_quantity
   FROM public.order_items oi
   WHERE oi.order_id = o.id AND oi.item_type = 'reform'
-  LIMIT 1
 ) ri ON o.order_type IN ('custom', 'repair');
 
 -- ── admin_order_detail_view ──────────────────────────────
