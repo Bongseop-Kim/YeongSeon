@@ -13,6 +13,7 @@ import {
   DashboardOutlined,
   SettingOutlined,
   FileTextOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 
 import { authProvider } from "@/providers/auth-provider";
@@ -39,6 +40,7 @@ import InquiryShow from "@/pages/inquiries/show";
 import QuoteRequestList from "@/pages/quote-requests/list";
 import QuoteRequestShow from "@/pages/quote-requests/show";
 import SettingsPage from "@/pages/settings";
+import PricingPage from "@/pages/pricing";
 
 import "@refinedev/antd/dist/reset.css";
 
@@ -110,6 +112,11 @@ export default function App() {
               meta: { label: "문의 관리", icon: <QuestionCircleOutlined /> },
             },
             {
+              name: "pricing",
+              list: "/pricing",
+              meta: { label: "가격 관리", icon: <DollarOutlined /> },
+            },
+            {
               name: "admin_settings",
               list: "/settings",
               meta: { label: "설정", icon: <SettingOutlined /> },
@@ -148,6 +155,7 @@ export default function App() {
               <Route path="/customers/show/:id" element={<CustomerShow />} />
               <Route path="/inquiries" element={<InquiryList />} />
               <Route path="/inquiries/show/:id" element={<InquiryShow />} />
+              <Route path="/pricing" element={<PricingPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             <Route

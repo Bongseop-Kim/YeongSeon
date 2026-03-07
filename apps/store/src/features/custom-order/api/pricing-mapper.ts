@@ -17,7 +17,10 @@ type PricingConstantKey =
   | "WOOL_INTERLINING_COST"
   | "BRAND_LABEL_COST"
   | "CARE_LABEL_COST"
-  | "YARN_DYED_DESIGN_COST";
+  | "YARN_DYED_DESIGN_COST"
+  | "FABRIC_QTY_ADULT"
+  | "FABRIC_QTY_ADULT_FOLD7"
+  | "FABRIC_QTY_CHILD";
 
 const getConstantValue = (
   constantsMap: Partial<Record<PricingConstantKey, number>>,
@@ -70,7 +73,10 @@ export const toPricingConfig = (
       constant.key === "WOOL_INTERLINING_COST" ||
       constant.key === "BRAND_LABEL_COST" ||
       constant.key === "CARE_LABEL_COST" ||
-      constant.key === "YARN_DYED_DESIGN_COST"
+      constant.key === "YARN_DYED_DESIGN_COST" ||
+      constant.key === "FABRIC_QTY_ADULT" ||
+      constant.key === "FABRIC_QTY_ADULT_FOLD7" ||
+      constant.key === "FABRIC_QTY_CHILD"
     ) {
       constantsMap[constant.key] = constant.amount;
     }
@@ -90,6 +96,9 @@ export const toPricingConfig = (
     BRAND_LABEL_COST: getConstantValue(constantsMap, "BRAND_LABEL_COST"),
     CARE_LABEL_COST: getConstantValue(constantsMap, "CARE_LABEL_COST"),
     YARN_DYED_DESIGN_COST: getConstantValue(constantsMap, "YARN_DYED_DESIGN_COST"),
+    FABRIC_QTY_ADULT: getConstantValue(constantsMap, "FABRIC_QTY_ADULT"),
+    FABRIC_QTY_ADULT_FOLD7: getConstantValue(constantsMap, "FABRIC_QTY_ADULT_FOLD7"),
+    FABRIC_QTY_CHILD: getConstantValue(constantsMap, "FABRIC_QTY_CHILD"),
     FABRIC_COST: {
       YARN_DYED: {
         SILK: getFabricUnitPrice(fabricPrices, "YARN_DYED", "SILK"),

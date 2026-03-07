@@ -39,7 +39,17 @@ export const calculateFabricCost = (
     options.designType === "YARN_DYED" ? config.YARN_DYED_DESIGN_COST : 0;
   const unitFabricCost =
     config.FABRIC_COST[options.designType][options.fabricType];
-  const fabricCost = Math.round((options.quantity * unitFabricCost) / 4);
+
+  let qtyPerMa: number;
+  if (options.sizeType === "CHILD") {
+    qtyPerMa = config.FABRIC_QTY_CHILD;
+  } else if (options.fold7) {
+    qtyPerMa = config.FABRIC_QTY_ADULT_FOLD7;
+  } else {
+    qtyPerMa = config.FABRIC_QTY_ADULT;
+  }
+
+  const fabricCost = Math.round((options.quantity * unitFabricCost) / qtyPerMa);
 
   return fabricCost + designCost;
 };

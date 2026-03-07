@@ -12,6 +12,9 @@ export interface PricingConfig {
   BRAND_LABEL_COST: number;
   CARE_LABEL_COST: number;
   YARN_DYED_DESIGN_COST: number;
+  FABRIC_QTY_ADULT: number;
+  FABRIC_QTY_ADULT_FOLD7: number;
+  FABRIC_QTY_CHILD: number;
   FABRIC_COST: {
     YARN_DYED: {
       SILK: number;

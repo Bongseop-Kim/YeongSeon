@@ -1,0 +1,249 @@
+import { useState, useEffect } from "react";
+import { Card, InputNumber, Button, Typography, Space, Spin, Row, Col } from "antd";
+import { message } from "antd";
+import {
+  usePricingConstants,
+  useFabricPrices,
+  useUpdatePricingConstant,
+  useUpdateFabricPrice,
+} from "@/features/pricing/api/pricing-query";
+import type { PricingConstantRow, FabricPriceRow } from "@/features/pricing/types/admin-pricing";
+
+const { Title } = Typography;
+
+const CONSTANT_LABELS: Record<string, string> = {
+  START_COST: "봉제 시작 비용 (기본 세팅비)",
+  SEWING_PER_COST: "봉제 단가",
+  AUTO_TIE_COST: "자동 타이",
+  TRIANGLE_STITCH_COST: "삼각 봉제",
+  SIDE_STITCH_COST: "옆선 봉제",
+  BAR_TACK_COST: "바택",
+  DIMPLE_COST: "딤플",
+  SPODERATO_COST: "스포데라토",
+  FOLD7_COST: "7폴드",
+  WOOL_INTERLINING_COST: "울 심지 추가",
+  BRAND_LABEL_COST: "브랜드 라벨",
+  CARE_LABEL_COST: "케어 라벨",
+  YARN_DYED_DESIGN_COST: "선염 디자인 비용",
+};
+
+const CONSTANT_GROUPS: { title: string; keys: string[] }[] = [
+  {
+    title: "기본 단가",
+    keys: ["SEWING_PER_COST", "START_COST", "YARN_DYED_DESIGN_COST"],
+  },
+  {
+    title: "옵션 봉제",
+    keys: ["DIMPLE_COST", "FOLD7_COST", "SIDE_STITCH_COST", "TRIANGLE_STITCH_COST", "AUTO_TIE_COST", "SPODERATO_COST"],
+  },
+  {
+    title: "부자재",
+    keys: ["BAR_TACK_COST", "BRAND_LABEL_COST", "CARE_LABEL_COST", "WOOL_INTERLINING_COST"],
+  },
+];
+
+const FABRIC_QTY_LABELS: Record<string, string> = {
+  FABRIC_QTY_ADULT: "성인 (일반)",
+  FABRIC_QTY_ADULT_FOLD7: "성인 (7폴드)",
+  FABRIC_QTY_CHILD: "아동",
+};
+const FABRIC_QTY_KEYS = ["FABRIC_QTY_ADULT", "FABRIC_QTY_ADULT_FOLD7", "FABRIC_QTY_CHILD"];
+
+const DESIGN_TYPE_LABELS: Record<string, string> = {
+  YARN_DYED: "선염",
+  PRINTING: "프린팅",
+};
+
+const FABRIC_TYPE_LABELS: Record<string, string> = {
+  SILK: "실크",
+  POLY: "폴리",
+};
+
+export function PricingForm() {
+  const { data: constants, isLoading: loadingConstants, isError: errorConstants } = usePricingConstants();
+  const { data: fabrics, isLoading: loadingFabrics, isError: errorFabrics } = useFabricPrices();
+
+  const updateConstant = useUpdatePricingConstant();
+  const updateFabric = useUpdateFabricPrice();
+
+  const [constantDraft, setConstantDraft] = useState<Record<string, number>>({});
+  const [fabricDraft, setFabricDraft] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (constants) {
+      const draft: Record<string, number> = {};
+      for (const row of constants) {
+        draft[row.key] = row.amount;
+      }
+      setConstantDraft(draft);
+    }
+  }, [constants]);
+
+  useEffect(() => {
+    if (fabrics) {
+      const draft: Record<string, number> = {};
+      for (const row of fabrics) {
+        draft[`${row.design_type}__${row.fabric_type}`] = row.unit_price;
+      }
+      setFabricDraft(draft);
+    }
+  }, [fabrics]);
+
+  const saveAll = async () => {
+    const constantMutations: PricingConstantRow[] = [];
+    for (const row of constants ?? []) {
+      if (constantDraft[row.key] !== row.amount) {
+        constantMutations.push({ key: row.key, amount: constantDraft[row.key] ?? row.amount });
+      }
+    }
+
+    const fabricMutations: FabricPriceRow[] = [];
+    for (const row of fabrics ?? []) {
+      const draftKey = `${row.design_type}__${row.fabric_type}`;
+      if (fabricDraft[draftKey] !== row.unit_price) {
+        fabricMutations.push({
+          design_type: row.design_type,
+          fabric_type: row.fabric_type,
+          unit_price: fabricDraft[draftKey] ?? row.unit_price,
+        });
+      }
+    }
+
+    if (constantMutations.length === 0 && fabricMutations.length === 0) {
+      message.info("변경된 항목이 없습니다.");
+      return;
+    }
+
+    try {
+      await Promise.all([
+        ...constantMutations.map((row) => updateConstant.mutateAsync(row)),
+        ...fabricMutations.map((row) => updateFabric.mutateAsync(row)),
+      ]);
+      message.success("가격이 저장되었습니다.");
+    } catch {
+      // individual errors already shown by mutateAsync onError
+    }
+  };
+
+  const isSaving = updateConstant.isPending || updateFabric.isPending;
+
+  if (loadingConstants || loadingFabrics) {
+    return (
+      <Card>
+        <Spin />
+      </Card>
+    );
+  }
+
+  if (errorConstants || errorFabrics) {
+    return (
+      <Card>
+        <Typography.Text type="danger">가격 정보를 불러오는데 실패했습니다.</Typography.Text>
+      </Card>
+    );
+  }
+
+  return (
+    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Card>
+        <Title level={4}>봉제 비용</Title>
+        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          {CONSTANT_GROUPS.map((group) => (
+            <div key={group.title}>
+              <Typography.Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
+                {group.title}
+              </Typography.Text>
+              <Row gutter={[16, 16]}>
+                {group.keys.map((key) => {
+                  const row = (constants ?? []).find((r) => r.key === key);
+                  if (!row) return null;
+                  return (
+                    <Col key={key} xs={24} sm={12} md={8}>
+                      <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                        <Typography.Text>{CONSTANT_LABELS[key] ?? key}</Typography.Text>
+                        <InputNumber
+                          value={constantDraft[key] ?? row.amount}
+                          min={0}
+                          step={100}
+                          formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                          parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
+                          onChange={(v) =>
+                            setConstantDraft((prev) => ({ ...prev, [key]: v ?? 0 }))
+                          }
+                          style={{ width: "100%" }}
+                          addonAfter="원"
+                        />
+                      </Space>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </div>
+          ))}
+        </Space>
+      </Card>
+
+      <Card>
+        <Title level={4}>1마당 수량</Title>
+        <Row gutter={[16, 16]}>
+          {FABRIC_QTY_KEYS.map((key) => {
+            const row = (constants ?? []).find((r) => r.key === key);
+            if (!row) return null;
+            return (
+              <Col key={key} xs={24} sm={8}>
+                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                  <Typography.Text>{FABRIC_QTY_LABELS[key]}</Typography.Text>
+                  <InputNumber
+                    value={constantDraft[key] ?? row.amount}
+                    min={1}
+                    step={1}
+                    onChange={(v) =>
+                      setConstantDraft((prev) => ({ ...prev, [key]: v ?? 1 }))
+                    }
+                    style={{ width: "100%" }}
+                    addonAfter="장/마"
+                  />
+                </Space>
+              </Col>
+            );
+          })}
+        </Row>
+      </Card>
+
+      <Card>
+        <Title level={4}>원단 비용</Title>
+        <Row gutter={[16, 16]}>
+          {(fabrics ?? []).map((row) => {
+            const draftKey = `${row.design_type}__${row.fabric_type}`;
+            return (
+              <Col key={draftKey} xs={24} sm={12} md={6}>
+                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                  <Typography.Text>
+                    {DESIGN_TYPE_LABELS[row.design_type] ?? row.design_type} /{" "}
+                    {FABRIC_TYPE_LABELS[row.fabric_type] ?? row.fabric_type}
+                  </Typography.Text>
+                  <InputNumber
+                    value={fabricDraft[draftKey] ?? row.unit_price}
+                    min={0}
+                    step={100}
+                    formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                    parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
+                    onChange={(v) =>
+                      setFabricDraft((prev) => ({ ...prev, [draftKey]: v ?? 0 }))
+                    }
+                    style={{ width: "100%" }}
+                    addonAfter="원"
+                  />
+                </Space>
+              </Col>
+            );
+          })}
+        </Row>
+      </Card>
+
+      <Button type="primary" onClick={saveAll} loading={isSaving} disabled={isSaving}>
+        저장
+      </Button>
+    </Space>
+  );
+}
