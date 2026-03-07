@@ -174,11 +174,35 @@ Deno.serve(async (req) => {
   }>;
   const allowedPrePaymentStatuses = new Set(["대기중", "pending", "created"]);
 
-  // 소유권 + 상태 검증
+  // 1단계: 소유권 검증
   for (const order of typedOrders) {
     if (order.user_id !== user.id) {
       return jsonResponse(403, { error: "Forbidden" });
     }
+  }
+
+  // 2단계: 멱등성 체크 - 전체가 이미 결제 완료 상태인 경우 200 반환
+  const allAlreadyConfirmed = typedOrders.every(
+    (o) => !allowedPrePaymentStatuses.has(o.status)
+  );
+
+  if (allAlreadyConfirmed) {
+    processLogger("payment_already_confirmed", {
+      paymentGroupId: payload.orderId,
+      userId: user.id,
+      paymentKey: maskPaymentKey(payload.paymentKey),
+      orderCount: typedOrders.length,
+    });
+    return jsonResponse(200, {
+      paymentKey: payload.paymentKey,
+      paymentGroupId: payload.orderId,
+      orders: typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type })),
+      status: "DONE",
+    });
+  }
+
+  // 3단계: 개별 상태 검증 (일부만 비정상인 경우)
+  for (const order of typedOrders) {
     if (!allowedPrePaymentStatuses.has(order.status)) {
       errorLogger(
         "invalid_order_status",
