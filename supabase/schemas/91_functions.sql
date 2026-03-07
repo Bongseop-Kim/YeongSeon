@@ -378,18 +378,6 @@ begin
     raise exception 'Shipping address not found';
   end if;
 
-  SELECT amount INTO v_reform_base_cost
-  FROM custom_order_pricing_constants WHERE key = 'REFORM_BASE_COST';
-  IF v_reform_base_cost IS NULL THEN
-    RAISE EXCEPTION 'Missing pricing constant: REFORM_BASE_COST';
-  END IF;
-
-  SELECT amount INTO v_reform_shipping_cost
-  FROM custom_order_pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
-  IF v_reform_shipping_cost IS NULL THEN
-    RAISE EXCEPTION 'Missing pricing constant: REFORM_SHIPPING_COST';
-  END IF;
-
   for v_item in select * from jsonb_array_elements(p_items)
   loop
     v_item_id := nullif(v_item->>'item_id', '');
@@ -466,6 +454,21 @@ begin
       v_product_id := null;
       v_selected_option_id := null;
       v_reform_data := v_item->'reform_data';
+
+      -- reform 아이템이 실제로 있을 때만 pricing constants 조회 (최초 1회)
+      if v_reform_base_cost is null then
+        SELECT amount INTO v_reform_base_cost
+        FROM custom_order_pricing_constants WHERE key = 'REFORM_BASE_COST';
+        IF v_reform_base_cost IS NULL THEN
+          RAISE EXCEPTION 'Missing pricing constant: REFORM_BASE_COST';
+        END IF;
+
+        SELECT amount INTO v_reform_shipping_cost
+        FROM custom_order_pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
+        IF v_reform_shipping_cost IS NULL THEN
+          RAISE EXCEPTION 'Missing pricing constant: REFORM_SHIPPING_COST';
+        END IF;
+      end if;
 
       if v_reform_data is null or v_reform_data = 'null'::jsonb then
         raise exception 'Reform data is required';
