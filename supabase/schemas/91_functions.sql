@@ -2114,12 +2114,24 @@ declare
   v_post_status text;
   v_updated_orders jsonb := '[]'::jsonb;
   v_count int := 0;
+  v_masked_key text;
 begin
-  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
-  -- 직접 RPC 호출 시 호출자 신원 검증
-  if auth.uid() is not null and p_user_id <> auth.uid() then
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
     raise exception 'Forbidden';
   end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  -- payment_key 마스킹: 끝 8자리만 유지, 나머지 ****
+  v_masked_key := case
+    when length(p_payment_key) <= 8 then '****'
+    else '****' || right(p_payment_key, 8)
+  end;
 
   for v_order in
     select id, user_id, status, order_type
@@ -2129,7 +2141,8 @@ begin
   loop
     v_count := v_count + 1;
 
-    if v_order.user_id <> p_user_id then
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
       raise exception 'Forbidden: order % not owned by user', v_order.id;
     end if;
 
@@ -2150,7 +2163,7 @@ begin
       order_id, changed_by, previous_status, new_status, memo
     ) values (
       v_order.id, p_user_id, v_order.status, v_post_status,
-      'payment confirmed: ' || p_payment_key
+      'payment confirmed: ' || v_masked_key
     );
 
     v_updated_orders := v_updated_orders || jsonb_build_object(
