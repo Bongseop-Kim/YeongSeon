@@ -55,8 +55,6 @@ export function useDesignChat(): UseDesignChatResult {
       addMessage(aiMessage);
       if (previewBackground) {
         setGeneratedImage(previewBackground, data.tags);
-      } else {
-        setGeneratedImage(null, []);
       }
       setGenerationStatus("completed");
       // TODO: 대화 히스토리 DB 저장 연동

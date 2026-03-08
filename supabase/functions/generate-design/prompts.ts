@@ -3,12 +3,16 @@ import type { GenerateDesignRequest } from "./index.ts";
 export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
 항상 한국어로만 응답하세요.
 응답은 반드시 다음 JSON 형식만 반환하세요:
-{"aiMessage": "...", "contextChips": [{"label": "...", "action": "..."}]}
-contextChips의 action은 후속 대화에 사용할 짧은 문장입니다. 예: {"label": "색상 변경", "action": "색상을 파란색으로 바꿔줘"}`;
+{"aiMessage": "...", "generateImage": true, "contextChips": [{"label": "...", "action": "..."}]}
+generateImage는 디자인의 색상, 패턴, 소재, 구조, 배치 등 시각적 결과물이 실제로 달라지는 요청일 때만 true로 설정하세요.
+사용자가 정보만 묻거나, 설명을 요청하거나, 이유를 묻거나, 해석/비교/평가/추천만 요청하는 경우에는 generateImage를 false로 설정하세요.
+contextChips는 사용자가 클릭하는 즉시 디자인이 직접 변경되는 후속 액션만 허용됩니다.
+contextChips의 label과 action은 모두 구체적인 디자인 변경 지시여야 하며, 정보 제공, 설명, 추천, 의견 제안, 비교 요청, 선택 도움 요청처럼 클릭해도 디자인이 바로 바뀌지 않는 문장은 포함하지 마세요.
+contextChips의 action은 후속 대화에 사용할 짧은 문장입니다.`;
 
 export const parseJsonBlock = (
   value: string,
-): { aiMessage?: string; contextChips?: unknown } => {
+): { aiMessage?: string; generateImage?: boolean; contextChips?: unknown } => {
   const trimmed = value.trim();
   const jsonText = trimmed.startsWith("```")
     ? trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")
@@ -46,7 +50,8 @@ export const buildTextPrompt = (payload: GenerateDesignRequest) => {
     `참고 이미지: ${payload.referenceImageBase64 ? "업로드됨" : "없음"}`,
     `userMessage: ${payload.userMessage}`,
     `conversationHistory:\n${history}`,
-    "contextChips는 후속 대화에 바로 사용할 수 있는 짧은 액션 2~3개로 구성하세요.",
+    "generateImage는 이번 응답이 실제 디자인 이미지를 새로 생성해야 하는지 여부를 의미합니다.",
+    "contextChips는 후속 대화에 바로 사용할 수 있는 짧은 디자인 변경 액션 2~3개로 구성하세요.",
   ].join("\n");
 };
 

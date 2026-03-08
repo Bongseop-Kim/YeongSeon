@@ -147,6 +147,9 @@ const requestGeminiText = async (
     aiMessage: typeof parsed.aiMessage === "string"
       ? parsed.aiMessage
       : "디자인 방향을 반영한 넥타이 시안을 준비했습니다.",
+    generateImage: typeof parsed.generateImage === "boolean"
+      ? parsed.generateImage
+      : true,
     contextChips: Array.isArray(parsed.contextChips)
       ? parsed.contextChips.filter(
         (chip): chip is { label: string; action: string } =>
@@ -309,7 +312,9 @@ Deno.serve(async (req) => {
 
   try {
     const textResult = await requestGeminiText(payload, geminiApiKey);
-    const imageUrl = await requestGeminiImage(payload, geminiApiKey);
+    const imageUrl = textResult.generateImage
+      ? await requestGeminiImage(payload, geminiApiKey)
+      : null;
 
     return jsonResponse(
       200,
