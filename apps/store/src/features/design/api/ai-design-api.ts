@@ -1,4 +1,4 @@
-import type { Attachment, ContextChip } from "@/features/design/types/chat";
+import type { AiModel, Attachment, ContextChip } from "@/features/design/types/chat";
 import type { DesignContext } from "@/features/design/types/design-context";
 import { supabase } from "@/lib/supabase";
 import {
@@ -9,6 +9,7 @@ export interface AiDesignRequest {
   userMessage: string;
   attachments: Attachment[];
   designContext: DesignContext;
+  aiModel: AiModel;
   conversationHistory?: {
     role: "user" | "ai";
     content: string;
@@ -58,7 +59,9 @@ export async function aiDesignApi(
     ? await fileToBase64(request.designContext.referenceImage)
     : undefined;
 
-  const { data, error } = await supabase.functions.invoke("generate-design", {
+  const functionName = request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
+
+  const { data, error } = await supabase.functions.invoke(functionName, {
     body: {
       userMessage: request.userMessage,
       designContext: {

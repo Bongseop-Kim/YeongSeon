@@ -1,5 +1,5 @@
 /**
- * generate-design Edge Function의 프롬프트 빌더 모음
+ * generate-google-api Edge Function의 프롬프트 빌더 모음
  *
  * ─── 이미지 생성 파이프라인 ─────────────────────────────────────────────────
  * 1. buildGeminiImagePrompt()로 이미지 생성 프롬프트 조립

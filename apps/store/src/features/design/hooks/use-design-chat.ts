@@ -25,6 +25,7 @@ const toConversationHistory = (
 export function useDesignChat(): UseDesignChatResult {
   const messages = useDesignChatStore((state) => state.messages);
   const designContext = useDesignChatStore((state) => state.designContext);
+  const aiModel = useDesignChatStore((state) => state.aiModel);
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
   );
@@ -95,6 +96,7 @@ export function useDesignChat(): UseDesignChatResult {
         userMessage: userText,
         attachments,
         designContext,
+        aiModel,
         conversationHistory: toConversationHistory([...messages, userMessage]),
       },
       createMutationCallbacks(
@@ -118,6 +120,7 @@ export function useDesignChat(): UseDesignChatResult {
         userMessage: lastUserMessage.content,
         attachments: lastUserMessage.attachments ?? [],
         designContext: lastUserMessage.designContext ?? designContext,
+        aiModel,
         conversationHistory: toConversationHistory(messages),
       },
       createMutationCallbacks(

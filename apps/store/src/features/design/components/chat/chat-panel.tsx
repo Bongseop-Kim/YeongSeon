@@ -19,6 +19,8 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
   const generationStatus = useDesignChatStore((state) => state.generationStatus);
   const resetConversation = useDesignChatStore((state) => state.resetConversation);
   const pendingAttachments = useDesignChatStore((state) => state.pendingAttachments);
+  const aiModel = useDesignChatStore((state) => state.aiModel);
+  const setAiModel = useDesignChatStore((state) => state.setAiModel);
 
   const handleChipClick = (text: string) => {
     sendMessage(text, pendingAttachments);
@@ -29,6 +31,8 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
       <ChatHeader
         onNewChat={resetConversation}
         tokenCount={tokenCount}
+        aiModel={aiModel}
+        onModelChange={setAiModel}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         {messages.length === 0 ? (
