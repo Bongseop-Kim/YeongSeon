@@ -335,7 +335,7 @@ const requestOpenAIImage = async (
   }
 };
 
-// ─── Supabase client ─────────────────────────────────────────────────────────
+// ─── Supabase clients ────────────────────────────────────────────────────────
 
 const createAuthenticatedSupabaseClient = (authHeader: string) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -351,6 +351,19 @@ const createAuthenticatedSupabaseClient = (authHeader: string) => {
         Authorization: authHeader,
       },
     },
+  });
+};
+
+const createAdminSupabaseClient = () => {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Missing Supabase service role configuration");
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
   });
 };
 
@@ -371,8 +384,10 @@ Deno.serve(async (req) => {
   }
 
   let supabase;
+  let adminClient;
   try {
     supabase = createAuthenticatedSupabaseClient(authHeader);
+    adminClient = createAdminSupabaseClient();
   } catch (error) {
     return jsonResponse(500, {
       error: error instanceof Error
@@ -444,9 +459,69 @@ Deno.serve(async (req) => {
       },
     };
 
-    const imageUrl = textResult.generateImage
-      ? await requestOpenAIImage(imagePayload, openaiApiKey)
-      : null;
+    const requestType = textResult.generateImage
+      ? "text_and_image"
+      : "text_only";
+
+    // 토큰 차감
+    const { data: tokenResult, error: tokenError } = await adminClient.rpc(
+      "use_design_tokens",
+      {
+        p_user_id: user.id,
+        p_ai_model: "openai",
+        p_request_type: requestType,
+      },
+    );
+
+    if (tokenError) {
+      console.error("Token deduction error:", tokenError);
+      return jsonResponse(500, { error: "Token processing failed" });
+    }
+
+    const tokenData = tokenResult as {
+      success: boolean;
+      error?: string;
+      balance: number;
+      cost: number;
+    };
+
+    if (!tokenData.success) {
+      return jsonResponse(403, {
+        error: "insufficient_tokens",
+        balance: tokenData.balance,
+        cost: tokenData.cost,
+      });
+    }
+
+    let imageUrl: string | null = null;
+    let remainingTokens = tokenData.balance;
+
+    if (textResult.generateImage) {
+      imageUrl = await requestOpenAIImage(imagePayload, openaiApiKey);
+
+      // 이미지 생성 실패 시 이미지 비용 환불 (텍스트 비용은 유지)
+      if (imageUrl === null) {
+        const { data: textCostData } = await adminClient
+          .from("admin_settings")
+          .select("value")
+          .eq("key", "design_token_cost_openai_text")
+          .single();
+        const textCost = textCostData
+          ? parseInt(textCostData.value, 10) || 1
+          : 1;
+        const refundAmount = tokenData.cost - textCost;
+
+        if (refundAmount > 0) {
+          await adminClient.rpc("refund_design_tokens", {
+            p_user_id: user.id,
+            p_amount: refundAmount,
+            p_ai_model: "openai",
+            p_request_type: requestType,
+          });
+          remainingTokens = tokenData.balance + refundAmount;
+        }
+      }
+    }
 
     return jsonResponse(
       200,
@@ -454,7 +529,8 @@ Deno.serve(async (req) => {
         aiMessage: textResult.aiMessage,
         contextChips: textResult.contextChips,
         imageUrl,
-      } satisfies GenerateDesignResult,
+        remainingTokens,
+      } satisfies GenerateDesignResult & { remainingTokens: number },
     );
   } catch (error) {
     return jsonResponse(500, {

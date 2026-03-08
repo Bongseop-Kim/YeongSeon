@@ -12,12 +12,12 @@ import type { AiModel } from "@/features/design/types/chat";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
-  tokenCount: number;
+  tokenBalance: number | undefined;
   aiModel: AiModel;
   onModelChange: (model: AiModel) => void;
 }
 
-export function ChatHeader({ onNewChat, tokenCount, aiModel, onModelChange }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, tokenBalance, aiModel, onModelChange }: ChatHeaderProps) {
   return (
     <div className="flex items-center justify-between border-b px-4 py-3">
       <div className="flex items-center gap-3">
@@ -30,7 +30,7 @@ export function ChatHeader({ onNewChat, tokenCount, aiModel, onModelChange }: Ch
             디자인 준비 완료
           </p>
           <p className="font-mono text-xs text-gray-400">
-            {tokenCount.toLocaleString()} tokens
+            {tokenBalance !== undefined ? `${tokenBalance.toLocaleString()} tokens` : "— tokens"}
           </p>
         </div>
       </div>

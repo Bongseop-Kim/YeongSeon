@@ -23,6 +23,17 @@ export interface AiDesignResponse {
   imageUrl: string | null;
   tags: string[];
   contextChips: ContextChip[];
+  remainingTokens?: number;
+}
+
+export class InsufficientTokensError extends Error {
+  constructor(
+    public readonly balance: number,
+    public readonly cost: number,
+  ) {
+    super("insufficient_tokens");
+    this.name = "InsufficientTokensError";
+  }
 }
 
 const fileToBase64 = (file: File): Promise<string> =>
@@ -79,6 +90,18 @@ export async function aiDesignApi(
   });
 
   if (error) {
+    // FunctionsHttpError의 context에서 에러 바디 파싱 시도
+    const context = (error as { context?: unknown }).context;
+    if (context instanceof Response) {
+      try {
+        const body = await context.json() as { error?: string; balance?: number; cost?: number };
+        if (body.error === "insufficient_tokens") {
+          throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
+        }
+      } catch (parseErr) {
+        if (parseErr instanceof InsufficientTokensError) throw parseErr;
+      }
+    }
     throw new Error(`디자인 생성 실패: ${error.message}`);
   }
 
@@ -91,5 +114,16 @@ export async function aiDesignApi(
     imageUrl: data.imageUrl ?? null,
     tags: getTags(request),
     contextChips: Array.isArray(data.contextChips) ? data.contextChips : [],
+    remainingTokens: typeof data.remainingTokens === "number" ? data.remainingTokens : undefined,
   };
+}
+
+export async function getDesignTokenBalance(): Promise<number> {
+  const { data, error } = await supabase.rpc("get_design_token_balance");
+
+  if (error) {
+    throw new Error(`토큰 잔액 조회 실패: ${error.message}`);
+  }
+
+  return (data as number) ?? 0;
 }
