@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { OrderCta } from "@/features/design/components/preview/order-cta";
 import { PreviewHeader } from "@/features/design/components/preview/preview-header";
@@ -12,17 +12,44 @@ interface PreviewPanelProps {
 
 export function PreviewPanel({ className }: PreviewPanelProps) {
   const [unmasked, setUnmasked] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handleChange = () => {
+      setIsFullscreen(document.fullscreenElement === sectionRef.current);
+    };
+    document.addEventListener("fullscreenchange", handleChange);
+    return () => document.removeEventListener("fullscreenchange", handleChange);
+  }, []);
+
+  const handleToggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      sectionRef.current?.requestFullscreen();
+    }
+  };
 
   return (
-    <section className={cn("flex h-full flex-col bg-white p-4", className)}>
-      <PreviewHeader unmasked={unmasked} onToggle={() => setUnmasked((v) => !v)} />
+    <section ref={sectionRef} className={cn("relative flex h-full flex-col bg-white p-4", className)}>
+      {!isFullscreen && (
+        <PreviewHeader unmasked={unmasked} onToggle={() => setUnmasked((v) => !v)} />
+      )}
       <div className="flex flex-1 items-center justify-center overflow-hidden">
         <TieCanvas unmasked={unmasked} />
       </div>
-      <div className="flex flex-col gap-4">
-        <ResultTagBar />
-        <OrderCta />
-      </div>
+      {!isFullscreen && (
+        <div className="flex flex-col gap-4">
+          <ResultTagBar isFullscreen={false} onToggleFullscreen={handleToggleFullscreen} />
+          <OrderCta />
+        </div>
+      )}
+      {isFullscreen && (
+        <div className="absolute bottom-4 right-4">
+          <ResultTagBar isFullscreen={true} onToggleFullscreen={handleToggleFullscreen} />
+        </div>
+      )}
     </section>
   );
 }

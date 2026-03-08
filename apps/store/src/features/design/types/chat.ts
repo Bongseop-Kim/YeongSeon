@@ -27,11 +27,3 @@ export interface Message {
   timestamp: number;
 }
 
-export interface Conversation {
-  id: string;
-  title: string;
-  lastMessage: string;
-  thumbnailUrl?: string;
-  updatedAt: number;
-  messages: Message[];
-}

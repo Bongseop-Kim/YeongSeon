@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type {
   Attachment,
-  Conversation,
   GenerationStatus,
   Message,
 } from "@/features/design/types/chat";
@@ -9,10 +8,10 @@ import type { DesignContext } from "@/features/design/types/design-context";
 
 export interface DesignChatState {
   messages: Message[];
-  conversationId: string;
   designContext: DesignContext;
   generationStatus: GenerationStatus;
   generatedImageUrl: string | null;
+  isImageDownloaded: boolean;
   resultTags: string[];
   pendingAttachments: Attachment[];
   addMessage: (message: Message) => void;
@@ -22,8 +21,8 @@ export interface DesignChatState {
   clearAttachments: () => void;
   setGenerationStatus: (status: GenerationStatus) => void;
   setGeneratedImage: (imageUrl: string, tags: string[]) => void;
+  markImageDownloaded: () => void;
   resetConversation: () => void;
-  loadConversation: (conversation: Conversation) => void;
 }
 
 export const createInitialDesignContext = (): DesignContext => ({
@@ -36,10 +35,10 @@ export const createInitialDesignContext = (): DesignContext => ({
 
 export const useDesignChatStore = create<DesignChatState>((set) => ({
   messages: [],
-  conversationId: crypto.randomUUID(),
   designContext: createInitialDesignContext(),
   generationStatus: "idle",
   generatedImageUrl: null,
+  isImageDownloaded: false,
   resultTags: [],
   pendingAttachments: [],
   addMessage: (message) =>
@@ -74,29 +73,21 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
   setGeneratedImage: (imageUrl, tags) =>
     set({
       generatedImageUrl: imageUrl,
+      isImageDownloaded: false,
       resultTags: tags,
+    }),
+  markImageDownloaded: () =>
+    set({
+      isImageDownloaded: true,
     }),
   resetConversation: () =>
     set({
       messages: [],
-      conversationId: crypto.randomUUID(),
       designContext: createInitialDesignContext(),
       generationStatus: "idle",
       generatedImageUrl: null,
+      isImageDownloaded: false,
       resultTags: [],
       pendingAttachments: [],
     }),
-  loadConversation: (conversation) => {
-    const lastAiMessage = [...conversation.messages].reverse().find(
-      (m) => m.role === "ai" && m.imageUrl,
-    );
-    set({
-      messages: conversation.messages,
-      conversationId: conversation.id,
-      generatedImageUrl: lastAiMessage?.imageUrl ?? null,
-      generationStatus: lastAiMessage?.imageUrl ? "completed" : "idle",
-      resultTags: [],
-      pendingAttachments: [],
-    });
-  },
 }));

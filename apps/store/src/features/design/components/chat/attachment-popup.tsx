@@ -75,22 +75,24 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
     setDesignContext({ colors: [...selectedColorValues, value] });
   };
 
-  const handleSingleSelect = (
-    type: "pattern" | "fabric",
-    label: string,
-    value: string,
-  ) => {
+  const handlePatternSelect = (label: string, value: PatternOption) => {
     removeAttachmentsByFilter(
       pendingAttachments,
       removeAttachment,
-      (attachment) => attachment.type === type,
+      (attachment) => attachment.type === "pattern",
     );
-    addAttachment({ type, label, value });
-    if (type === "pattern") {
-      setDesignContext({ pattern: value as PatternOption });
-    } else {
-      setDesignContext({ fabricMethod: value as FabricMethod });
-    }
+    addAttachment({ type: "pattern", label, value });
+    setDesignContext({ pattern: value });
+  };
+
+  const handleFabricSelect = (label: string, value: FabricMethod) => {
+    removeAttachmentsByFilter(
+      pendingAttachments,
+      removeAttachment,
+      (attachment) => attachment.type === "fabric",
+    );
+    addAttachment({ type: "fabric", label, value });
+    setDesignContext({ fabricMethod: value });
   };
 
   const handleImageSelection = (
@@ -110,6 +112,11 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       (attachment) => attachment.type === "image" && attachment.value === value,
     );
     addAttachment({ type: "image", label, value, file });
+    if (value === "ci") {
+      setDesignContext({ ciImage: file });
+    } else {
+      setDesignContext({ referenceImage: file });
+    }
     event.target.value = "";
     onClose();
   };
@@ -164,7 +171,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                 type="button"
                 size="sm"
                 variant={selectedPattern === option.value ? "default" : "outline"}
-                onClick={() => handleSingleSelect("pattern", option.label, option.value)}
+                onClick={() => handlePatternSelect(option.label, option.value)}
               >
                 {option.label}
               </Button>
@@ -183,7 +190,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                 type="button"
                 size="sm"
                 variant={selectedFabric === option.value ? "default" : "outline"}
-                onClick={() => handleSingleSelect("fabric", option.label, option.value)}
+                onClick={() => handleFabricSelect(option.label, option.value)}
               >
                 {option.label}
               </Button>

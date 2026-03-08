@@ -1,4 +1,4 @@
-import { Maximize2, RefreshCw, Wand2 } from "lucide-react";
+import { Download, Maximize2, Minimize2, RefreshCw } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,12 +6,34 @@ import { useDesignChat } from "@/features/design/hooks/use-design-chat";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import { cn } from "@/lib/utils";
 
-export function ResultTagBar() {
+const extractImageUrl = (background: string): string | null => {
+  const match = /url\("(.+?)"\)/.exec(background);
+  return match?.[1] ?? null;
+};
+
+interface ResultTagBarProps {
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
+}
+
+export function ResultTagBar({ isFullscreen, onToggleFullscreen }: ResultTagBarProps) {
   const generationStatus = useDesignChatStore((state) => state.generationStatus);
   const resultTags = useDesignChatStore((state) => state.resultTags);
+  const generatedImageUrl = useDesignChatStore((state) => state.generatedImageUrl);
+  const markImageDownloaded = useDesignChatStore((state) => state.markImageDownloaded);
   const { regenerate, isLoading } = useDesignChat();
 
   const hidden = generationStatus === "idle" || generationStatus === "generating";
+
+  const handleDownload = () => {
+    const url = extractImageUrl(generatedImageUrl ?? "");
+    if (!url) return;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "design.png";
+    a.click();
+    markImageDownloaded();
+  };
 
   return (
     <div className={cn("flex flex-wrap items-center justify-between gap-3", hidden && "invisible")}>
@@ -39,24 +61,20 @@ export function ResultTagBar() {
           variant="outline"
           size="icon"
           className="size-7"
-          title="현재 디자인 기반으로 다른 느낌의 시안 생성"
-          onClick={() => {
-            // TODO: 변형 플로우 연동
-          }}
+          title="이미지 다운로드"
+          onClick={handleDownload}
         >
-          <Wand2 className="size-3.5" />
+          <Download className="size-3.5" />
         </Button>
         <Button
           type="button"
           variant="outline"
           size="icon"
           className="size-7"
-          title="전체화면"
-          onClick={() => {
-            // TODO: 전체화면
-          }}
+          title={isFullscreen ? "전체화면 종료" : "전체화면"}
+          onClick={onToggleFullscreen}
         >
-          <Maximize2 className="size-3.5" />
+          {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
         </Button>
       </div>
     </div>

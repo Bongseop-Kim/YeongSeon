@@ -54,6 +54,10 @@ export async function aiDesignApi(
     ? await fileToBase64(request.designContext.ciImage)
     : undefined;
 
+  const referenceImageBase64 = request.designContext.referenceImage
+    ? await fileToBase64(request.designContext.referenceImage)
+    : undefined;
+
   const serializedAttachments = request.attachments.map((attachment) => ({
     type: attachment.type,
     label: attachment.label,
@@ -72,6 +76,8 @@ export async function aiDesignApi(
       conversationHistory: request.conversationHistory ?? [],
       ciImageBase64,
       ciImageMimeType: request.designContext.ciImage?.type || undefined,
+      referenceImageBase64,
+      referenceImageMimeType: request.designContext.referenceImage?.type || undefined,
     },
   });
 

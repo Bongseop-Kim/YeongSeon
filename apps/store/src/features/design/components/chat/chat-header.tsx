@@ -1,14 +1,13 @@
-import { History, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 interface ChatHeaderProps {
-  onHistoryClick: () => void;
   onNewChat: () => void;
   tokenCount: number;
 }
 
-export function ChatHeader({ onHistoryClick, onNewChat, tokenCount }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, tokenCount }: ChatHeaderProps) {
   return (
     <div className="flex items-center justify-between border-b px-4 py-3">
       <div className="flex items-center gap-3">
@@ -25,14 +24,9 @@ export function ChatHeader({ onHistoryClick, onNewChat, tokenCount }: ChatHeader
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon-sm" type="button" onClick={onHistoryClick}>
-          <History className="size-4" />
-        </Button>
-        <Button variant="outline" size="sm" type="button" onClick={onNewChat}>
-          신규 대화
-        </Button>
-      </div>
+      <Button variant="outline" size="sm" type="button" onClick={onNewChat}>
+        신규 대화
+      </Button>
     </div>
   );
 }

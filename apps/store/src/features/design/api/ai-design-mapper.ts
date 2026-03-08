@@ -23,17 +23,6 @@ const FABRIC_LABELS: Record<FabricMethod, string> = {
   print: "날염",
 };
 
-export const getMessageKeyword = (userMessage: string): string => {
-  const trimmed = userMessage.trim();
-
-  if (trimmed.length === 0) {
-    return "클래식";
-  }
-
-  const [keyword] = trimmed.split(/\s+/);
-  return keyword ?? "클래식";
-};
-
 const getAttachmentLabels = (
   attachments: Attachment[],
   type: Attachment["type"],
@@ -62,7 +51,3 @@ export const getTags = (request: AiDesignRequest): string[] => {
   return tags.length > 0 ? tags : DEFAULT_TAGS;
 };
 
-export const hasCiImageAttachment = (attachments: Attachment[]): boolean =>
-  attachments.some(
-    (attachment) => attachment.type === "image" && attachment.value === "ci",
-  );

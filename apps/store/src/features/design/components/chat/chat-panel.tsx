@@ -1,50 +1,32 @@
-import { useState } from "react";
 import { Sparkles } from "lucide-react";
 
 import { ChatHeader } from "@/features/design/components/chat/chat-header";
 import { ChatInput } from "@/features/design/components/chat/chat-input";
-import { HistoryPanel } from "@/features/design/components/chat/history-panel";
 import { MessageList } from "@/features/design/components/chat/message-list";
 import { QUICK_CHIPS, WELCOME_MESSAGE } from "@/features/design/constants/welcome";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
-import type { Attachment, Conversation } from "@/features/design/types/chat";
+import type { Attachment } from "@/features/design/types/chat";
 import { cn } from "@/lib/utils";
 
 interface ChatPanelProps {
   className?: string;
   sendMessage: (text: string, attachments: Attachment[]) => void;
-  conversations: Conversation[];
 }
 
-export function ChatPanel({
-  className,
-  sendMessage,
-  conversations,
-}: ChatPanelProps) {
-  const [showHistory, setShowHistory] = useState(false);
+export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
   const messages = useDesignChatStore((state) => state.messages);
   const tokenCount = messages.reduce((sum, m) => sum + Math.ceil(m.content.length / 2), 0);
   const generationStatus = useDesignChatStore((state) => state.generationStatus);
   const resetConversation = useDesignChatStore((state) => state.resetConversation);
-  const loadConversation = useDesignChatStore((state) => state.loadConversation);
-
-  const handleNewChat = () => {
-    resetConversation();
-  };
 
   const handleChipClick = (text: string) => {
     sendMessage(text, []);
   };
 
-  const handleLoadConversation = (conversation: Conversation) => {
-    loadConversation(conversation);
-  };
-
   return (
     <div className={cn("flex h-full flex-col", className)}>
       <ChatHeader
-        onHistoryClick={() => setShowHistory(true)}
-        onNewChat={handleNewChat}
+        onNewChat={resetConversation}
         tokenCount={tokenCount}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -73,22 +55,17 @@ export function ChatPanel({
               </div>
             </div>
           </div>
-        ) : null}
-        <MessageList
-          messages={messages}
-          isTyping={generationStatus === "generating"}
-          onChipClick={handleChipClick}
-        />
+        ) : (
+          <MessageList
+            messages={messages}
+            isTyping={generationStatus === "generating"}
+            onChipClick={handleChipClick}
+          />
+        )}
       </div>
       <div className="border-t p-2">
         <ChatInput onSend={sendMessage} isLoading={generationStatus === "generating" || generationStatus === "regenerating"} />
       </div>
-      <HistoryPanel
-        open={showHistory}
-        conversations={conversations}
-        onSelect={handleLoadConversation}
-        onClose={() => setShowHistory(false)}
-      />
     </div>
   );
 }

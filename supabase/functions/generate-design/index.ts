@@ -2,13 +2,19 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import {
+  buildGeminiImagePrompt,
+  buildTextPrompt,
+  parseJsonBlock,
+  SYSTEM_PROMPT,
+} from "./prompts.ts";
 
 type ConversationTurn = {
   role: "user" | "ai";
   content: string;
 };
 
-type GenerateDesignRequest = {
+export type GenerateDesignRequest = {
   userMessage: string;
   designContext?: {
     colors?: string[];
@@ -18,6 +24,8 @@ type GenerateDesignRequest = {
   conversationHistory?: ConversationTurn[];
   ciImageBase64?: string;
   ciImageMimeType?: string;
+  referenceImageBase64?: string;
+  referenceImageMimeType?: string;
 };
 
 type GeminiTextResponse = {
@@ -30,9 +38,13 @@ type GeminiTextResponse = {
   }>;
 };
 
-type ImagenResponse = {
-  predictions?: Array<{
-    bytesBase64Encoded?: string;
+type GeminiImageResponse = {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        inlineData?: { data?: string; mimeType?: string };
+      }>;
+    };
   }>;
 };
 
@@ -54,70 +66,15 @@ const jsonResponse = (status: number, body: Record<string, unknown>) =>
     },
   });
 
-const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
-항상 한국어로만 응답하세요.
-응답은 반드시 다음 JSON 형식만 반환하세요:
-{"aiMessage": "...", "contextChips": [{"label": "...", "action": "..."}]}`;
-
-const parseJsonBlock = (value: string): { aiMessage?: string; contextChips?: unknown } => {
-  const trimmed = value.trim();
-  const jsonText = trimmed.startsWith("```")
-    ? trimmed.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "")
-    : trimmed;
-
-  return JSON.parse(jsonText);
-};
-
-const buildTextPrompt = (payload: GenerateDesignRequest) => {
-  const colors = payload.designContext?.colors?.join(", ") || "미정";
-  const pattern = payload.designContext?.pattern || "미정";
-  const fabricMethod = payload.designContext?.fabricMethod || "미정";
-  const history =
-    payload.conversationHistory
-      ?.map((item) => `${item.role === "user" ? "사용자" : "AI"}: ${item.content}`)
-      .join("\n") || "없음";
-
-  return [
-    "넥타이 디자인 상담 정보를 바탕으로 다음 응답을 생성하세요.",
-    `designContext.colors: ${colors}`,
-    `designContext.pattern: ${pattern}`,
-    `designContext.fabricMethod: ${fabricMethod}`,
-    `userMessage: ${payload.userMessage}`,
-    `conversationHistory:\n${history}`,
-    "contextChips는 후속 대화에 바로 사용할 수 있는 짧은 액션 2~3개로 구성하세요.",
-  ].join("\n");
-};
-
-const buildImagenPrompt = (payload: GenerateDesignRequest) => {
-  const colors = payload.designContext?.colors?.join(", ") || "세련된 컬러 조합";
-  const pattern = payload.designContext?.pattern || "클래식 패턴";
-  const fabricMethod = payload.designContext?.fabricMethod || "고급 제작 방식";
-
-  return `넥타이 디자인 이미지, ${pattern}, ${colors}, ${fabricMethod}, 실크 재질, 고급스러운 배경, 상품 사진`;
-};
-
-const createAuthenticatedSupabaseClient = (authHeader: string) => {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-
-  if (!supabaseUrl || !anonKey) {
-    throw new Error("Missing Supabase configuration");
-  }
-
-  return createClient(supabaseUrl, anonKey, {
-    global: {
-      headers: {
-        Authorization: authHeader,
-      },
-    },
-  });
-};
+// ─── API requests ────────────────────────────────────────────────────────────
 
 const requestGeminiText = async (
   payload: GenerateDesignRequest,
   apiKey: string,
 ) => {
-  const parts: Array<Record<string, unknown>> = [{ text: buildTextPrompt(payload) }];
+  const parts: Array<Record<string, unknown>> = [{
+    text: buildTextPrompt(payload),
+  }];
 
   if (payload.ciImageBase64) {
     parts.push({
@@ -129,7 +86,7 @@ const requestGeminiText = async (
   }
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: {
@@ -171,61 +128,111 @@ const requestGeminiText = async (
   const parsed = parseJsonBlock(text);
 
   return {
-    aiMessage:
-      typeof parsed.aiMessage === "string"
-        ? parsed.aiMessage
-        : "디자인 방향을 반영한 넥타이 시안을 준비했습니다.",
+    aiMessage: typeof parsed.aiMessage === "string"
+      ? parsed.aiMessage
+      : "디자인 방향을 반영한 넥타이 시안을 준비했습니다.",
     contextChips: Array.isArray(parsed.contextChips)
       ? parsed.contextChips.filter(
-          (chip): chip is { label: string; action: string } =>
-            typeof chip === "object" &&
-            chip !== null &&
-            typeof (chip as { label?: unknown }).label === "string" &&
-            typeof (chip as { action?: unknown }).action === "string",
-        )
+        (chip): chip is { label: string; action: string } =>
+          typeof chip === "object" &&
+          chip !== null &&
+          typeof (chip as { label?: unknown }).label === "string" &&
+          typeof (chip as { action?: unknown }).action === "string",
+      )
       : [],
   };
 };
 
-const requestImagen = async (
+const requestGeminiImage = async (
   payload: GenerateDesignRequest,
   apiKey: string,
-) => {
+): Promise<string | null> => {
   try {
+    const parts: Array<Record<string, unknown>> = [
+      { text: buildGeminiImagePrompt(payload) },
+    ];
+
+    if (payload.ciImageBase64) {
+      parts.push({
+        inlineData: {
+          mimeType: payload.ciImageMimeType || "image/png",
+          data: payload.ciImageBase64,
+        },
+      });
+    }
+
+    if (payload.referenceImageBase64) {
+      parts.push({
+        inlineData: {
+          mimeType: payload.referenceImageMimeType || "image/png",
+          data: payload.referenceImageBase64,
+        },
+      });
+    }
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          instances: [
-            {
-              prompt: buildImagenPrompt(payload),
-            },
-          ],
+          contents: [{ role: "user", parts }],
+          generationConfig: {
+            responseModalities: ["IMAGE"],
+            imageConfig: { aspectRatio: "3:4" },
+          },
         }),
       },
     );
 
     if (!response.ok) {
-      return null;
+      const errorText = await response.text();
+      throw new Error(
+        `Gemini image API failed: ${response.status} ${errorText}`,
+      );
     }
 
-    const result = (await response.json()) as ImagenResponse;
-    const base64 = result.predictions?.[0]?.bytesBase64Encoded;
+    const result = (await response.json()) as GeminiImageResponse;
+    const imagePart = result.candidates?.[0]?.content?.parts?.find(
+      (p) => p.inlineData?.data,
+    );
+    const base64 = imagePart?.inlineData?.data;
 
     if (!base64) {
+      console.error(
+        "Gemini image API: no inlineData in response",
+        JSON.stringify(result),
+      );
       return null;
     }
 
     // TODO: Supabase Storage에 업로드 후 영구 URL 반환으로 교체
     return `data:image/png;base64,${base64}`;
-  } catch {
-    return null;
+  } catch (err) {
+    throw err;
   }
 };
+
+// ─── Supabase client ─────────────────────────────────────────────────────────
+
+const createAuthenticatedSupabaseClient = (authHeader: string) => {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+  if (!supabaseUrl || !anonKey) {
+    throw new Error("Missing Supabase configuration");
+  }
+
+  return createClient(supabaseUrl, anonKey, {
+    global: {
+      headers: {
+        Authorization: authHeader,
+      },
+    },
+  });
+};
+
+// ─── Handler ─────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -246,7 +253,9 @@ Deno.serve(async (req) => {
     supabase = createAuthenticatedSupabaseClient(authHeader);
   } catch (error) {
     return jsonResponse(500, {
-      error: error instanceof Error ? error.message : "Missing Supabase configuration",
+      error: error instanceof Error
+        ? error.message
+        : "Missing Supabase configuration",
     });
   }
 
@@ -277,16 +286,21 @@ Deno.serve(async (req) => {
 
   try {
     const textResult = await requestGeminiText(payload, geminiApiKey);
-    const imageUrl = await requestImagen(payload, geminiApiKey);
+    const imageUrl = await requestGeminiImage(payload, geminiApiKey);
 
-    return jsonResponse(200, {
-      aiMessage: textResult.aiMessage,
-      contextChips: textResult.contextChips,
-      imageUrl,
-    } satisfies GenerateDesignResult);
+    return jsonResponse(
+      200,
+      {
+        aiMessage: textResult.aiMessage,
+        contextChips: textResult.contextChips,
+        imageUrl,
+      } satisfies GenerateDesignResult,
+    );
   } catch (error) {
     return jsonResponse(500, {
-      error: error instanceof Error ? error.message : "Failed to generate design",
+      error: error instanceof Error
+        ? error.message
+        : "Failed to generate design",
     });
   }
 });
