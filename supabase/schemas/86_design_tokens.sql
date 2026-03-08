@@ -10,6 +10,7 @@ CREATE TABLE public.design_tokens (
   ai_model      text,       -- 'openai' | 'gemini' | NULL
   request_type  text,       -- 'text_only' | 'text_and_image' | NULL
   description   text,
+  expires_at    timestamptz,
   created_at    timestamptz NOT NULL DEFAULT now()
 );
 
@@ -49,8 +50,8 @@ BEGIN
     v_amount := 30;
   END IF;
 
-  INSERT INTO public.design_tokens (user_id, amount, type, description)
-  VALUES (NEW.id, v_amount, 'grant', '신규 가입 토큰 지급');
+  INSERT INTO public.design_tokens (user_id, amount, type, description, expires_at)
+  VALUES (NEW.id, v_amount, 'grant', '신규 가입 토큰 지급', now() + interval '90 days');
 
   RETURN NEW;
 END;

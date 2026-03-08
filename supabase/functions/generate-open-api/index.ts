@@ -463,6 +463,13 @@ Deno.serve(async (req) => {
       ? "text_and_image"
       : "text_only";
 
+    // high quality 여부 결정 (이미지 비용 차등 과금)
+    const imageQuality = imagePayload.ciImageBase64 ||
+        imagePayload.referenceImageBase64 ||
+        imagePayload.designContext?.ciPlacement
+      ? "high"
+      : "standard";
+
     // 토큰 차감
     const { data: tokenResult, error: tokenError } = await adminClient.rpc(
       "use_design_tokens",
@@ -470,6 +477,7 @@ Deno.serve(async (req) => {
         p_user_id: user.id,
         p_ai_model: "openai",
         p_request_type: requestType,
+        p_quality: imageQuality,
       },
     );
 
@@ -512,12 +520,18 @@ Deno.serve(async (req) => {
         const refundAmount = tokenData.cost - textCost;
 
         if (refundAmount > 0) {
-          await adminClient.rpc("refund_design_tokens", {
-            p_user_id: user.id,
-            p_amount: refundAmount,
-            p_ai_model: "openai",
-            p_request_type: requestType,
-          });
+          const { error: refundError } = await adminClient.rpc(
+            "refund_design_tokens",
+            {
+              p_user_id: user.id,
+              p_amount: refundAmount,
+              p_ai_model: "openai",
+              p_request_type: requestType,
+            },
+          );
+          if (refundError) {
+            console.error("Token refund failed:", refundError);
+          }
           remainingTokens = tokenData.balance + refundAmount;
         }
       }

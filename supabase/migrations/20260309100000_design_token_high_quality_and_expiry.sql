@@ -1,9 +1,36 @@
--- =============================================================
--- 99_functions_design_tokens.sql  –  Design token RPC functions
--- =============================================================
+-- Design token: high quality 차등 과금 및 유효기간(expires_at) 추가
 
--- ── get_design_token_balance ──────────────────────────────────
--- Returns the current token balance for the authenticated user.
+-- 1. expires_at 컬럼 추가
+ALTER TABLE public.design_tokens
+  ADD COLUMN expires_at timestamptz;
+
+-- 2. 초기 지급 트리거: 무료 토큰 90일 유효기간 설정
+CREATE OR REPLACE FUNCTION public.grant_initial_design_tokens()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_amount integer;
+BEGIN
+  SELECT COALESCE(value::integer, 30)
+    INTO v_amount
+    FROM public.admin_settings
+   WHERE key = 'design_token_initial_grant';
+
+  IF v_amount IS NULL THEN
+    v_amount := 30;
+  END IF;
+
+  INSERT INTO public.design_tokens (user_id, amount, type, description, expires_at)
+  VALUES (NEW.id, v_amount, 'grant', '신규 가입 토큰 지급', now() + interval '90 days');
+
+  RETURN NEW;
+END;
+$$;
+
+-- 3. get_design_token_balance: 만료 토큰 제외
 CREATE OR REPLACE FUNCTION public.get_design_token_balance()
 RETURNS integer
 LANGUAGE sql
@@ -17,10 +44,7 @@ AS $$
     AND (expires_at IS NULL OR expires_at > now());
 $$;
 
--- ── use_design_tokens ─────────────────────────────────────────
--- Deducts tokens for a design generation request.
--- SECURITY DEFINER: service_role 전용 (Edge Function에서 호출)
--- Returns: { success, cost, balance } or { success: false, error: 'insufficient_tokens', balance, cost }
+-- 4. use_design_tokens: p_quality 파라미터 추가, 만료 토큰 제외
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id     uuid,
   p_ai_model    text,             -- 'openai' | 'gemini'
@@ -97,33 +121,7 @@ BEGIN
 END;
 $$;
 
--- ── refund_design_tokens ──────────────────────────────────────
--- Refunds tokens when image generation fails after text succeeds.
--- SECURITY DEFINER: service_role 전용 (Edge Function에서 호출)
-CREATE OR REPLACE FUNCTION public.refund_design_tokens(
-  p_user_id     uuid,
-  p_amount      integer,
-  p_ai_model    text,
-  p_request_type text
-)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-BEGIN
-  IF p_amount <= 0 THEN
-    RETURN;
-  END IF;
-
-  INSERT INTO public.design_tokens (user_id, amount, type, ai_model, request_type, description)
-  VALUES (
-    p_user_id,
-    p_amount,
-    'refund',
-    p_ai_model,
-    p_request_type,
-    '이미지 생성 실패 환불 (' || p_ai_model || ')'
-  );
-END;
-$$;
+-- 5. admin_settings 시드: openai high quality 이미지 비용 추가
+INSERT INTO public.admin_settings (key, value)
+VALUES ('design_token_cost_openai_image_high', '12')
+ON CONFLICT (key) DO NOTHING;

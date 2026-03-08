@@ -479,12 +479,18 @@ Deno.serve(async (req) => {
         const refundAmount = tokenData.cost - textCost;
 
         if (refundAmount > 0) {
-          await adminClient.rpc("refund_design_tokens", {
-            p_user_id: user.id,
-            p_amount: refundAmount,
-            p_ai_model: "gemini",
-            p_request_type: requestType,
-          });
+          const { error: refundError } = await adminClient.rpc(
+            "refund_design_tokens",
+            {
+              p_user_id: user.id,
+              p_amount: refundAmount,
+              p_ai_model: "gemini",
+              p_request_type: requestType,
+            },
+          );
+          if (refundError) {
+            console.error("Token refund failed:", refundError);
+          }
           remainingTokens = tokenData.balance + refundAmount;
         }
       }
