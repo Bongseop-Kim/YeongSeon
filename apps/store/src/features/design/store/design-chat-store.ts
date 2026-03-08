@@ -30,6 +30,7 @@ export const createInitialDesignContext = (): DesignContext => ({
   pattern: null,
   fabricMethod: null,
   ciImage: null,
+  ciPlacement: null,
   referenceImage: null,
 });
 

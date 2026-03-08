@@ -8,7 +8,7 @@ export type GenerationStatus =
   | "regenerating";
 
 export interface Attachment {
-  type: "color" | "pattern" | "fabric" | "image";
+  type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
   label: string;
   value: string;
   file?: File;

@@ -1,7 +1,6 @@
 import type { GenerateDesignRequest } from "./index.ts";
 
-export const SYSTEM_PROMPT =
-  `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
+export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
 항상 한국어로만 응답하세요.
 응답은 반드시 다음 JSON 형식만 반환하세요:
 {"aiMessage": "...", "contextChips": [{"label": "...", "action": "..."}]}
@@ -28,17 +27,23 @@ export const buildTextPrompt = (payload: GenerateDesignRequest) => {
   const colors = payload.designContext?.colors?.join(", ") || "미정";
   const pattern = payload.designContext?.pattern || "미정";
   const fabricMethod = payload.designContext?.fabricMethod || "미정";
-  const history = payload.conversationHistory
-    ?.map((item) =>
-      `${item.role === "user" ? "사용자" : "AI"}: ${item.content}`
-    )
-    .join("\n") || "없음";
+  const history =
+    payload.conversationHistory
+      ?.map(
+        (item) => `${item.role === "user" ? "사용자" : "AI"}: ${item.content}`,
+      )
+      .join("\n") || "없음";
+
+  const ciPlacement = payload.designContext?.ciPlacement ?? "미정";
 
   return [
     "넥타이 디자인 상담 정보를 바탕으로 다음 응답을 생성하세요.",
     `designContext.colors: ${colors}`,
     `designContext.pattern: ${pattern}`,
     `designContext.fabricMethod: ${fabricMethod}`,
+    `CI 배치: ${ciPlacement}`,
+    `CI 이미지: ${payload.ciImageBase64 ? "업로드됨" : "없음"}`,
+    `참고 이미지: ${payload.referenceImageBase64 ? "업로드됨" : "없음"}`,
     `userMessage: ${payload.userMessage}`,
     `conversationHistory:\n${history}`,
     "contextChips는 후속 대화에 바로 사용할 수 있는 짧은 액션 2~3개로 구성하세요.",
@@ -78,29 +83,42 @@ export const PATTERN_MAP: Record<string, string> = {
   floral: "refined floral repeat",
 };
 
+export const buildUserInstructionPrompt = (userMessage: string): string => {
+  if (!userMessage.trim()) return "";
+  return `Apply these specific design adjustments: ${userMessage}`;
+};
+
 export const buildPatternPrompt = (
   pattern: string | null | undefined,
-  userMessage: string,
-  hasReferenceImage: boolean,
 ): string => {
-  if (pattern && pattern !== "custom" && PATTERN_MAP[pattern]) {
+  if (pattern && PATTERN_MAP[pattern]) {
     return `Pattern: ${PATTERN_MAP[pattern]}.`;
-  }
-  if (pattern === "custom") {
-    if (userMessage.trim()) {
-      return `Pattern: infer pattern from this description: ${userMessage}.`;
-    }
-    if (hasReferenceImage) {
-      return "Pattern: infer pattern density and structure from the reference image.";
-    }
-    return "Pattern: classic diagonal stripe repeat with balanced symmetry.";
   }
   return "";
 };
 
+const HEX_TO_COLOR_NAME: Record<string, string> = {
+  "#1a2c5b": "navy",
+  "#8B0000": "burgundy",
+  "#2c5f2e": "forest green",
+  "#c8a96e": "champagne gold",
+  "#4a4a4a": "charcoal",
+  "#e8e8e4": "off-white",
+  "#7b6fa0": "lavender",
+  "#c17f5a": "terracotta",
+  "#4a7fa5": "steel blue",
+  "#2d6a4f": "emerald",
+  "#6b3a5e": "plum",
+  "#b8860b": "dark gold",
+};
+
 export const buildColorPrompt = (colors: string[] | undefined): string => {
   if (!colors || colors.length === 0) return "";
-  const [base, ...rest] = colors;
+  const formatColor = (color: string) => {
+    const colorName = HEX_TO_COLOR_NAME[color];
+    return colorName ? `${colorName} (${color})` : color;
+  };
+  const [base, ...rest] = colors.map(formatColor);
   const accents = rest.length > 0 ? `, ${rest.join(", ")} accents` : "";
   return `Use a ${base} base${accents}.`;
 };
@@ -111,16 +129,37 @@ export const buildReferencePrompt = (
   fabricMethod: string | null | undefined,
 ): string => {
   if (!hasCiImage && !hasReferenceImage) return "";
-  const fabricLabel = fabricMethod === "yarn-dyed"
-    ? "yarn-dyed woven"
-    : fabricMethod === "print"
-    ? "printed"
-    : "fabric";
+  const fabricLabel =
+    fabricMethod === "yarn-dyed"
+      ? "yarn-dyed woven"
+      : fabricMethod === "print"
+        ? "printed"
+        : "fabric";
   return [
     "Use the uploaded image only for color palette and motif shape reference.",
     `The fabric construction method is strictly ${fabricLabel}, regardless of the image style.`,
     "Keep the final result as a clean rectangular fabric swatch.",
   ].join(" ");
+};
+
+export const buildCiPlacementPrompt = (
+  ciPlacement: string | null | undefined,
+  hasCiImage: boolean,
+): string => {
+  if (!ciPlacement) return "";
+  if (ciPlacement === "all-over") {
+    const source = hasCiImage
+      ? "from the uploaded CI image"
+      : "described in the conversation";
+    return `Repeat the motif ${source} as an all-over pattern across the entire fabric surface, maintaining consistent spacing and scale.`;
+  }
+  if (ciPlacement === "one-point") {
+    const source = hasCiImage
+      ? "from the uploaded CI image"
+      : "described in the conversation";
+    return `Place the motif ${source} as a single focal accent in the lower third of the fabric, keeping the rest of the surface as the base pattern.`;
+  }
+  return "";
 };
 
 export const buildClosurePrompt = () =>
@@ -132,17 +171,18 @@ export const buildGeminiImagePrompt = (
   [
     buildBasePrompt(),
     buildFabricPrompt(payload.designContext?.fabricMethod),
-    buildPatternPrompt(
-      payload.designContext?.pattern,
-      payload.userMessage,
-      !!payload.referenceImageBase64,
-    ),
+    buildPatternPrompt(payload.designContext?.pattern),
     buildColorPrompt(payload.designContext?.colors),
     buildReferencePrompt(
       !!payload.ciImageBase64,
       !!payload.referenceImageBase64,
       payload.designContext?.fabricMethod,
     ),
+    buildCiPlacementPrompt(
+      payload.designContext?.ciPlacement,
+      !!payload.ciImageBase64,
+    ),
+    buildUserInstructionPrompt(payload.userMessage),
     buildClosurePrompt(),
   ]
     .filter(Boolean)

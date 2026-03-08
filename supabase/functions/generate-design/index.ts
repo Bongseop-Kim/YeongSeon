@@ -20,6 +20,7 @@ export type GenerateDesignRequest = {
     colors?: string[];
     pattern?: string | null;
     fabricMethod?: string | null;
+    ciPlacement?: string | null;
   };
   conversationHistory?: ConversationTurn[];
   ciImageBase64?: string;
@@ -81,6 +82,15 @@ const requestGeminiText = async (
       inlineData: {
         mimeType: payload.ciImageMimeType || "image/png",
         data: payload.ciImageBase64,
+      },
+    });
+  }
+
+  if (payload.referenceImageBase64) {
+    parts.push({
+      inlineData: {
+        mimeType: payload.referenceImageMimeType || "image/png",
+        data: payload.referenceImageBase64,
       },
     });
   }

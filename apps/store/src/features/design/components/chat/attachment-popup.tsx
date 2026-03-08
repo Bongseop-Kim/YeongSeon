@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
+  CI_PLACEMENT_OPTIONS,
   COLOR_OPTIONS,
   FABRIC_OPTIONS,
   PATTERN_OPTIONS,
 } from "@/features/design/constants/design-options";
 import type {
+  CiPlacement,
   FabricMethod,
   PatternOption,
 } from "@/features/design/types/design-context";
@@ -54,6 +56,9 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   const selectedFabric =
     pendingAttachments.find((attachment) => attachment.type === "fabric")?.value ??
     designContext.fabricMethod;
+  const selectedCiPlacement =
+    pendingAttachments.find((attachment) => attachment.type === "ci-placement")?.value ??
+    designContext.ciPlacement;
 
   const handleColorToggle = (label: string, value: string) => {
     const existingIndex = pendingAttachments.findIndex(
@@ -93,6 +98,16 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
     );
     addAttachment({ type: "fabric", label, value });
     setDesignContext({ fabricMethod: value });
+  };
+
+  const handleCiPlacementSelect = (label: string, value: CiPlacement) => {
+    removeAttachmentsByFilter(
+      pendingAttachments,
+      removeAttachment,
+      (attachment) => attachment.type === "ci-placement",
+    );
+    addAttachment({ type: "ci-placement", label, value });
+    setDesignContext({ ciPlacement: value });
   };
 
   const handleImageSelection = (
@@ -191,6 +206,25 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                 size="sm"
                 variant={selectedFabric === option.value ? "default" : "outline"}
                 onClick={() => handleFabricSelect(option.label, option.value)}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+        </section>
+
+        <Separator />
+
+        <section className="space-y-2">
+          <p className="text-sm font-medium">배치</p>
+          <div className="flex flex-wrap gap-2">
+            {CI_PLACEMENT_OPTIONS.map((option) => (
+              <Button
+                key={option.value}
+                type="button"
+                size="sm"
+                variant={selectedCiPlacement === option.value ? "default" : "outline"}
+                onClick={() => handleCiPlacementSelect(option.label, option.value)}
               >
                 {option.label}
               </Button>

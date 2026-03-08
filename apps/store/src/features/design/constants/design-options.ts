@@ -1,4 +1,5 @@
 import type {
+  CiPlacement,
   FabricMethod,
   PatternOption,
 } from "@/features/design/types/design-context";
@@ -42,7 +43,17 @@ export const PATTERN_OPTIONS: PatternSelectionOption[] = [
   { label: "페이즐리", value: "paisley" },
   { label: "플로럴", value: "floral" },
   { label: "솔리드", value: "plain" },
-  { label: "커스텀", value: "custom" },
+];
+
+export interface CiPlacementOption {
+  label: string;
+  value: CiPlacement;
+  description: string;
+}
+
+export const CI_PLACEMENT_OPTIONS: CiPlacementOption[] = [
+  { label: "올패턴", value: "all-over", description: "CI를 전체에 반복 배치" },
+  { label: "원포인트", value: "one-point", description: "CI를 하단에 포인트 배치" },
 ];
 
 export const FABRIC_OPTIONS: FabricOption[] = [

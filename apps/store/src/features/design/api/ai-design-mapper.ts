@@ -1,5 +1,6 @@
 import type { Attachment } from "@/features/design/types/chat";
 import type {
+  CiPlacement,
   FabricMethod,
   PatternOption,
 } from "@/features/design/types/design-context";
@@ -15,12 +16,16 @@ const PATTERN_LABELS: Record<PatternOption, string> = {
   plain: "솔리드",
   houndstooth: "하운즈투스",
   floral: "플로럴",
-  custom: "커스텀",
 };
 
 const FABRIC_LABELS: Record<FabricMethod, string> = {
   "yarn-dyed": "선염",
   print: "날염",
+};
+
+const CI_PLACEMENT_LABELS: Record<CiPlacement, string> = {
+  "all-over": "올패턴",
+  "one-point": "원포인트",
 };
 
 const getAttachmentLabels = (
@@ -44,7 +49,12 @@ export const getTags = (request: AiDesignRequest): string[] => {
     fabricLabels.push(FABRIC_LABELS[request.designContext.fabricMethod]);
   }
 
-  const tags = [...colorLabels, ...patternLabels, ...fabricLabels]
+  const ciPlacementLabels: string[] = [];
+  if (request.designContext.ciPlacement) {
+    ciPlacementLabels.push(CI_PLACEMENT_LABELS[request.designContext.ciPlacement]);
+  }
+
+  const tags = [...colorLabels, ...patternLabels, ...fabricLabels, ...ciPlacementLabels]
     .filter((tag, index, array) => array.indexOf(tag) === index)
     .slice(0, 3);
 

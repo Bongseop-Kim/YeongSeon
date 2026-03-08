@@ -65,6 +65,7 @@ export async function aiDesignApi(
         colors: request.designContext.colors,
         pattern: request.designContext.pattern,
         fabricMethod: request.designContext.fabricMethod,
+        ciPlacement: request.designContext.ciPlacement,
       },
       conversationHistory: request.conversationHistory ?? [],
       ciImageBase64,
