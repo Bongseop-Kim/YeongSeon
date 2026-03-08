@@ -56,7 +56,7 @@ export const buildTextPrompt = (payload: GenerateDesignRequest) => {
 };
 
 export const buildBasePrompt = () =>
-  "Create a high-quality rectangular silk fabric swatch, full-frame textile-only image, evenly lit, front-facing flat fabric sample, suitable for later masking onto a tie silhouette.";
+  "Create a high-quality rectangular silk fabric swatch, full-frame textile-only image, evenly lit, strict flat-lay: the fabric must lie perfectly flat with absolutely no folds, no creases, no drape, no wrinkles, and no shadows cast by folding. The entire image must be a front-facing flat fabric surface, suitable for later masking onto a tie silhouette.";
 
 export const buildFabricPrompt = (
   fabricMethod: string | null | undefined,
@@ -168,7 +168,7 @@ export const buildCiPlacementPrompt = (
 };
 
 export const buildClosurePrompt = () =>
-  "Show only the fabric surface itself. The entire frame must be filled with textile material only. This image is a rectangular fabric swatch, nothing else.";
+  "Show only the fabric surface itself. The pattern must extend edge-to-edge, filling the entire image frame with no white margins, no padding, no background, and no empty space at any border. This image is a rectangular fabric swatch only.";
 
 export const buildGeminiImagePrompt = (
   payload: GenerateDesignRequest,

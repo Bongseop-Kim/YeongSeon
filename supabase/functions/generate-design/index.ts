@@ -208,7 +208,7 @@ const requestGeminiImage = async (
             contents: [{ role: "user", parts }],
             generationConfig: {
               responseModalities: ["IMAGE"],
-              imageConfig: { aspectRatio: "3:4" },
+              imageConfig: { aspectRatio: "9:16" },
             },
           }),
         },
