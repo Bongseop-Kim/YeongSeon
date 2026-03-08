@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import {
+  buildImageEditPrompt,
   buildGeminiImagePrompt,
   buildTextPrompt,
   parseJsonBlock,
@@ -23,6 +24,8 @@ export type GenerateDesignRequest = {
     ciPlacement?: string | null;
   };
   conversationHistory?: ConversationTurn[];
+  previousImageBase64?: string;
+  previousImageMimeType?: string;
   ciImageBase64?: string;
   ciImageMimeType?: string;
   referenceImageBase64?: string;
@@ -73,27 +76,39 @@ const requestGeminiText = async (
   payload: GenerateDesignRequest,
   apiKey: string,
 ) => {
-  const parts: Array<Record<string, unknown>> = [{
-    text: buildTextPrompt(payload),
-  }];
+  // 대화 히스토리를 Gemini 네이티브 멀티턴 포맷으로 변환
+  const historyContents: Array<Record<string, unknown>> = (
+    payload.conversationHistory ?? []
+  ).map((turn) => ({
+    role: turn.role === "user" ? "user" : "model",
+    parts: [{ text: turn.content }],
+  }));
 
+  // 현재 메시지 (designContext + userMessage + 이미지)
+  const currentParts: Array<Record<string, unknown>> = [
+    { text: buildTextPrompt(payload) },
+  ];
   if (payload.ciImageBase64) {
-    parts.push({
+    currentParts.push({
       inlineData: {
         mimeType: payload.ciImageMimeType || "image/png",
         data: payload.ciImageBase64,
       },
     });
   }
-
   if (payload.referenceImageBase64) {
-    parts.push({
+    currentParts.push({
       inlineData: {
         mimeType: payload.referenceImageMimeType || "image/png",
         data: payload.referenceImageBase64,
       },
     });
   }
+
+  const contents = [
+    ...historyContents,
+    { role: "user", parts: currentParts },
+  ];
 
   const textController = new AbortController();
   const textTimeoutId = setTimeout(() => textController.abort(), 30000);
@@ -112,12 +127,7 @@ const requestGeminiText = async (
           systemInstruction: {
             parts: [{ text: SYSTEM_PROMPT }],
           },
-          contents: [
-            {
-              role: "user",
-              parts,
-            },
-          ],
+          contents,
           generationConfig: {
             temperature: 0.7,
             responseMimeType: "application/json",
@@ -147,6 +157,17 @@ const requestGeminiText = async (
 
   const parsed = parseJsonBlock(text);
 
+  const rawDetected = parsed.detectedDesign as Record<string, unknown> | undefined;
+  const detectedDesign = rawDetected
+    ? {
+      pattern: typeof rawDetected.pattern === "string" ? rawDetected.pattern : null,
+      colors: Array.isArray(rawDetected.colors)
+        ? rawDetected.colors.filter((c): c is string => typeof c === "string")
+        : [],
+      ciPlacement: typeof rawDetected.ciPlacement === "string" ? rawDetected.ciPlacement : null,
+    }
+    : null;
+
   return {
     aiMessage: typeof parsed.aiMessage === "string"
       ? parsed.aiMessage
@@ -163,6 +184,7 @@ const requestGeminiText = async (
           typeof (chip as { action?: unknown }).action === "string",
       )
       : [],
+    detectedDesign,
   };
 };
 
@@ -171,12 +193,9 @@ const requestGeminiImage = async (
   apiKey: string,
 ): Promise<string | null> => {
   try {
-    const parts: Array<Record<string, unknown>> = [
-      { text: buildGeminiImagePrompt(payload) },
-    ];
-
+    const currentParts: Array<Record<string, unknown>> = [];
     if (payload.ciImageBase64) {
-      parts.push({
+      currentParts.push({
         inlineData: {
           mimeType: payload.ciImageMimeType || "image/png",
           data: payload.ciImageBase64,
@@ -185,13 +204,38 @@ const requestGeminiImage = async (
     }
 
     if (payload.referenceImageBase64) {
-      parts.push({
+      currentParts.push({
         inlineData: {
           mimeType: payload.referenceImageMimeType || "image/png",
           data: payload.referenceImageBase64,
         },
       });
     }
+
+    const contents = payload.previousImageBase64
+      ? [
+        {
+          role: "user",
+          parts: [{ text: buildGeminiImagePrompt(payload) }],
+        },
+        {
+          role: "model",
+          parts: [{
+            inlineData: {
+              mimeType: payload.previousImageMimeType || "image/png",
+              data: payload.previousImageBase64,
+            },
+          }],
+        },
+        {
+          role: "user",
+          parts: [{ text: buildImageEditPrompt(payload) }, ...currentParts],
+        },
+      ]
+      : [{
+        role: "user",
+        parts: [{ text: buildGeminiImagePrompt(payload) }, ...currentParts],
+      }];
 
     const imageController = new AbortController();
     const imageTimeoutId = setTimeout(() => imageController.abort(), 30000);
@@ -205,7 +249,7 @@ const requestGeminiImage = async (
           headers: { "Content-Type": "application/json" },
           signal: imageController.signal,
           body: JSON.stringify({
-            contents: [{ role: "user", parts }],
+            contents,
             generationConfig: {
               responseModalities: ["IMAGE"],
               imageConfig: { aspectRatio: "9:16" },
@@ -334,8 +378,25 @@ Deno.serve(async (req) => {
 
   try {
     const textResult = await requestGeminiText(payload, geminiApiKey);
+
+    // 채팅 모드에서 빈 designContext 필드를 텍스트 AI가 추출한 값으로 보완
+    const detected = textResult.detectedDesign;
+    const imagePayload: GenerateDesignRequest = detected
+      ? {
+        ...payload,
+        designContext: {
+          ...payload.designContext,
+          pattern: payload.designContext?.pattern ?? detected.pattern ?? null,
+          colors: (payload.designContext?.colors?.length ?? 0) > 0
+            ? payload.designContext!.colors
+            : (detected.colors.length > 0 ? detected.colors : (payload.designContext?.colors ?? [])),
+          ciPlacement: payload.designContext?.ciPlacement ?? detected.ciPlacement ?? null,
+        },
+      }
+      : payload;
+
     const imageUrl = textResult.generateImage
-      ? await requestGeminiImage(payload, geminiApiKey)
+      ? await requestGeminiImage(imagePayload, geminiApiKey)
       : null;
 
     return jsonResponse(

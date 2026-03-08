@@ -28,7 +28,7 @@ export interface DesignChatState {
 export const createInitialDesignContext = (): DesignContext => ({
   colors: [],
   pattern: null,
-  fabricMethod: null,
+  fabricMethod: "yarn-dyed",
   ciImage: null,
   ciPlacement: null,
   referenceImage: null,

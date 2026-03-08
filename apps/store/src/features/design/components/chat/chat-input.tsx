@@ -4,7 +4,9 @@ import { Plus, Send, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AttachmentPopup } from "@/features/design/components/chat/attachment-popup";
+import { FABRIC_OPTIONS } from "@/features/design/constants/design-options";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import type { FabricMethod } from "@/features/design/types/design-context";
 import type { Attachment } from "@/features/design/types/chat";
 
 interface ChatInputProps {
@@ -13,6 +15,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
+  const designContext = useDesignChatStore((state) => state.designContext);
   const pendingAttachments = useDesignChatStore((state) => state.pendingAttachments);
   const removeAttachment = useDesignChatStore((state) => state.removeAttachment);
   const setDesignContext = useDesignChatStore((state) => state.setDesignContext);
@@ -65,8 +68,6 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                     setDesignContext({ colors: remaining.filter((a) => a.type === "color").map((a) => a.value) });
                   } else if (removed.type === "pattern") {
                     setDesignContext({ pattern: null });
-                  } else if (removed.type === "fabric") {
-                    setDesignContext({ fabricMethod: null });
                   }
                 }}
               >
@@ -94,17 +95,40 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 text-sm outline-none"
         />
         <div className="mt-2 flex items-center justify-between">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="옵션 추가"
-            onClick={() => setShowPopup((prev) => !prev)}
-          >
-            <Plus
-              className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
-            />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="옵션 추가"
+              onClick={() => setShowPopup((prev) => !prev)}
+            >
+              <Plus
+                className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
+              />
+            </Button>
+            <div className="inline-flex rounded-md border bg-muted p-0.5 gap-0.5">
+              {FABRIC_OPTIONS.map((option) => {
+                const isSelected = designContext.fabricMethod === option.value;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={isSelected}
+                    className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
+                      isSelected
+                        ? "bg-background text-foreground shadow-sm"
+                        : "bg-transparent text-muted-foreground hover:text-foreground"
+                    }`}
+                    onClick={() => setDesignContext({ fabricMethod: option.value as FabricMethod })}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <Button
             type="button"
             size="icon"

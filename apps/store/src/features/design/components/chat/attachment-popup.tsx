@@ -7,14 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   CI_PLACEMENT_OPTIONS,
   COLOR_OPTIONS,
-  FABRIC_OPTIONS,
   PATTERN_OPTIONS,
 } from "@/features/design/constants/design-options";
-import type {
-  CiPlacement,
-  FabricMethod,
-  PatternOption,
-} from "@/features/design/types/design-context";
+import type { CiPlacement, PatternOption } from "@/features/design/types/design-context";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
 import { cn } from "@/lib/utils";
@@ -53,9 +48,6 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   const selectedPattern =
     pendingAttachments.find((attachment) => attachment.type === "pattern")?.value ??
     designContext.pattern;
-  const selectedFabric =
-    pendingAttachments.find((attachment) => attachment.type === "fabric")?.value ??
-    designContext.fabricMethod;
   const selectedCiPlacement =
     pendingAttachments.find((attachment) => attachment.type === "ci-placement")?.value ??
     designContext.ciPlacement;
@@ -94,16 +86,6 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
     );
     addAttachment({ type: "pattern", label, value });
     setDesignContext({ pattern: value });
-  };
-
-  const handleFabricSelect = (label: string, value: FabricMethod) => {
-    removeAttachmentsByFilter(
-      pendingAttachments,
-      removeAttachment,
-      (attachment) => attachment.type === "fabric",
-    );
-    addAttachment({ type: "fabric", label, value });
-    setDesignContext({ fabricMethod: value });
   };
 
   const handleCiPlacementSelect = (label: string, value: CiPlacement) => {
@@ -193,25 +175,6 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                 size="sm"
                 variant={selectedPattern === option.value ? "default" : "outline"}
                 onClick={() => handlePatternSelect(option.label, option.value)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-        </section>
-
-        <Separator />
-
-        <section className="space-y-2">
-          <p className="text-sm font-medium">원단</p>
-          <div className="flex flex-wrap gap-2">
-            {FABRIC_OPTIONS.map((option) => (
-              <Button
-                key={option.value}
-                type="button"
-                size="sm"
-                variant={selectedFabric === option.value ? "default" : "outline"}
-                onClick={() => handleFabricSelect(option.label, option.value)}
               >
                 {option.label}
               </Button>
