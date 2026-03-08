@@ -1,73 +1,57 @@
-import { useState } from "react";
-import type { DesignOptions, PatternType } from "./types/design";
-import Preview from "./components/Preview";
-import Option from "./components/Option";
+"use client";
+
+import { useEffect } from "react";
+
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
+import { ChatPanel } from "@/features/design/components/chat/chat-panel";
+import { OnboardingDialog } from "@/features/design/components/onboarding-dialog";
+import { PreviewPanel } from "@/features/design/components/preview/preview-panel";
+import { useDesignChat } from "@/features/design/hooks/use-design-chat";
+import { useOnboarding } from "@/features/design/hooks/use-onboarding";
+import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import { cn } from "@/lib/utils";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
-const DesignPage = () => {
-  const [isPattern, setIsPattern] = useState<boolean>(false);
-  const [horizontalCount, setHorizontalCount] = useState<number>(1);
-  const [verticalCount, setVerticalCount] = useState<number>(1);
-  const [imageSize, setImageSize] = useState<number>(50);
-  const [position, setPosition] = useState<number>(0);
-  const [verticalPosition, setVerticalPosition] = useState<number>(0.5);
-  const [rotation, setRotation] = useState<number>(0);
-  const [patternType, setPatternType] = useState<PatternType>("normal");
-  const [isLinked, setIsLinked] = useState<boolean>(false);
-  const [gap, setGap] = useState<number>(0);
-  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
-  const [selectedFile2, setSelectedFile2] = useState<File | undefined>(
-    undefined
-  );
-  const [color, setColor] = useState<string>("#000000");
-  const [text, setText] = useState<string>("");
+export function DesignPage() {
+  const { isDesktop } = useBreakpoint();
+  const { showOnboarding, completeOnboarding } = useOnboarding();
+  const { sendMessage } = useDesignChat();
+  const generatedImageUrl = useDesignChatStore((state) => state.generatedImageUrl);
+  const isImageDownloaded = useDesignChatStore((state) => state.isImageDownloaded);
 
-  const options: DesignOptions = {
-    isPattern,
-    horizontalCount,
-    verticalCount,
-    imageSize,
-    position,
-    verticalPosition,
-    rotation,
-    patternType,
-    isLinked,
-    gap,
-    selectedFile,
-    selectedFile2,
-    color,
-    text,
-  };
+  const shouldBlock = generatedImageUrl !== null && !isImageDownloaded;
 
-  const stateSetters = {
-    setIsPattern,
-    setHorizontalCount,
-    setVerticalCount,
-    setImageSize,
-    setPosition,
-    setVerticalPosition,
-    setRotation,
-    setPatternType,
-    setIsLinked,
-    setGap,
-    selectedFile: setSelectedFile,
-    selectedFile2: setSelectedFile2,
-    setColor,
-    setText,
-  };
+  useEffect(() => {
+    if (!shouldBlock) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [shouldBlock]);
 
   return (
     <MainLayout>
-      <MainContent className="overflow-visible">
-        <PageLayout
-          sidebar={<Option options={options} stateSetters={stateSetters} />}
+      <MainContent className="overflow-hidden">
+        <div
+          className={cn("flex h-[calc(100vh-4rem)]", isDesktop ? "flex-row" : "flex-col")}
         >
-          <Preview options={options} stateSetters={stateSetters} />
-        </PageLayout>
+          {isDesktop ? (
+            <div className="w-1/2 overflow-hidden border-r">
+              <PreviewPanel className="h-full" />
+            </div>
+          ) : null}
+          <div className={cn(isDesktop ? "w-1/2" : "flex-1 w-full")}>
+            <ChatPanel
+              className="h-full"
+              sendMessage={sendMessage}
+            />
+          </div>
+        </div>
+        <OnboardingDialog open={showOnboarding} onClose={completeOnboarding} />
       </MainContent>
     </MainLayout>
   );
-};
+}
 
 export default DesignPage;
