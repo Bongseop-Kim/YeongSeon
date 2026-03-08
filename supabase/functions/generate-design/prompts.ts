@@ -19,10 +19,11 @@
  */
 import type { GenerateDesignRequest } from "./index.ts";
 
-export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
+export const SYSTEM_PROMPT =
+  `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
 항상 한국어로만 응답하세요.
 응답은 반드시 다음 JSON 형식만 반환하세요:
-{"aiMessage": "...", "generateImage": true, "contextChips": [{"label": "...", "action": "..."}], "detectedDesign": {"pattern": null, "colors": [], "ciPlacement": null}}
+{"aiMessage": "...", "generateImage": true, "contextChips": [{"label": "...", "action": "..."}], "detectedDesign": {"pattern": null, "colors": [], "ciPlacement": null, "scale": null}}
 
 generateImage 판단 기준:
 - true: 사용자가 특정 패턴·모티프·색상·스타일을 언급하거나 디자인 변경을 요청한 경우. "상어 패턴", "스트라이프로", "파란색으로 바꿔줘" 등 시각적 결과물이 달라지는 모든 요청은 true.
@@ -38,6 +39,7 @@ detectedDesign은 사용자 메시지와 대화 전체에서 감지한 디자인
 - pattern: 감지된 패턴. stripe / dot / check / paisley / plain / houndstooth / floral 중 하나. 언급 없으면 null.
 - colors: 감지된 색상 목록. 영어 색상명 배열 (예: ["navy", "burgundy"]). 언급 없으면 [].
 - ciPlacement: 감지된 CI 배치. "all-over" 또는 "one-point". 언급 없으면 null.
+- scale: "large" | "medium" | "small" | null. 패턴 크기 변경 요청이면 감지. 언급 없으면 null.
 이미 designContext에 설정된 값이 있으면 그 값을 우선하고, 사용자 메시지에서 새로 언급된 것만 반영하세요.
 
 contextChips는 사용자가 클릭하는 즉시 디자인이 직접 변경되는 후속 액션만 허용됩니다.
@@ -46,7 +48,12 @@ contextChips의 action은 후속 대화에 사용할 짧은 문장입니다.`;
 
 export const parseJsonBlock = (
   value: string,
-): { aiMessage?: string; generateImage?: boolean; contextChips?: unknown; detectedDesign?: unknown } => {
+): {
+  aiMessage?: string;
+  generateImage?: boolean;
+  contextChips?: unknown;
+  detectedDesign?: unknown;
+} => {
   const trimmed = value.trim();
   const jsonText = trimmed.startsWith("```")
     ? trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")
@@ -123,41 +130,19 @@ export const buildUserInstructionPrompt = (userMessage: string): string => {
   return `Apply these specific design adjustments: ${userMessage}`;
 };
 
-const LARGE_SCALE_RE = /크게|크다|크고|큰|크기\s*크|패턴\s*크|large|big/i;
-const SMALL_SCALE_RE = /작게|작다|작고|작은|크기\s*작|패턴\s*작|small|tiny/i;
-
-type ConversationTurn = { role: string; content: string };
-
-const detectScale = (
-  userMessage: string,
-  history?: ConversationTurn[],
-): "large" | "medium" | "small" => {
-  if (LARGE_SCALE_RE.test(userMessage)) return "large";
-  if (SMALL_SCALE_RE.test(userMessage)) return "small";
-  if (history) {
-    for (let i = history.length - 1; i >= 0; i--) {
-      if (history[i].role !== "user") continue;
-      if (LARGE_SCALE_RE.test(history[i].content)) return "large";
-      if (SMALL_SCALE_RE.test(history[i].content)) return "small";
-    }
-  }
-  return "medium";
-};
-
 export const buildScalePrompt = (
-  userMessage: string,
-  history?: ConversationTurn[],
+  scale: "large" | "medium" | "small",
   pattern?: string | null,
 ): string => {
-  const scale = detectScale(userMessage, history);
-
   // stripe와 plain은 "motifs per row" 개념이 맞지 않으므로 별도 표현 사용
   if (pattern === "plain") return "";
   if (pattern === "stripe") {
-    if (scale === "large")
+    if (scale === "large") {
       return "Stripe scale: wide stripes — each stripe is broad and bold, with only 3-4 stripe pairs visible across the fabric width.";
-    if (scale === "small")
+    }
+    if (scale === "small") {
       return "Stripe scale: very fine pinstripes — extremely narrow stripes densely packed, creating an almost solid-looking surface up close.";
+    }
     return "Stripe scale: narrow classic stripes — thin stripes with about 10-12 stripe pairs visible across the fabric width, giving a dense, traditional necktie appearance.";
   }
 
@@ -217,12 +202,11 @@ export const buildReferencePrompt = (
   fabricMethod: string | null | undefined,
 ): string => {
   if (!hasCiImage && !hasReferenceImage) return "";
-  const fabricLabel =
-    fabricMethod === "yarn-dyed"
-      ? "yarn-dyed woven"
-      : fabricMethod === "print"
-        ? "printed"
-        : "fabric";
+  const fabricLabel = fabricMethod === "yarn-dyed"
+    ? "yarn-dyed woven"
+    : fabricMethod === "print"
+    ? "printed"
+    : "fabric";
   return [
     "Use the uploaded image only for color palette and motif shape reference.",
     "Treat the uploaded image as a purely visual graphic — do not read, reproduce, or render any text or letterforms you see in it. Use only the overall silhouette, outline, and visual form.",
@@ -263,13 +247,10 @@ export const buildGeminiImagePrompt = (
     isOnePoint
       ? "Create a high-quality rectangular silk fabric swatch. The image must be full-frame and textile-only — no tie silhouette, no background, no margins. The fabric lies perfectly flat with no folds, creases, or shadows. Evenly lit from the front."
       : buildBasePrompt(),
-    isOnePoint
-      ? null
-      : buildScalePrompt(
-          payload.userMessage,
-          payload.conversationHistory,
-          payload.designContext?.pattern,
-        ),
+    isOnePoint ? null : buildScalePrompt(
+      payload.designContext?.scale ?? "medium",
+      payload.designContext?.pattern,
+    ),
     buildFabricPrompt(payload.designContext?.fabricMethod),
     buildPatternPrompt(
       payload.designContext?.pattern,

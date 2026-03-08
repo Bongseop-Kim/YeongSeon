@@ -3,8 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import {
-  buildImageEditPrompt,
   buildGeminiImagePrompt,
+  buildImageEditPrompt,
   buildTextPrompt,
   parseJsonBlock,
   SYSTEM_PROMPT,
@@ -22,6 +22,7 @@ export type GenerateDesignRequest = {
     pattern?: string | null;
     fabricMethod?: string | null;
     ciPlacement?: string | null;
+    scale?: "large" | "medium" | "small" | null;
   };
   conversationHistory?: ConversationTurn[];
   previousImageBase64?: string;
@@ -157,14 +158,25 @@ const requestGeminiText = async (
 
   const parsed = parseJsonBlock(text);
 
-  const rawDetected = parsed.detectedDesign as Record<string, unknown> | undefined;
+  const rawDetected = parsed.detectedDesign as
+    | Record<string, unknown>
+    | undefined;
   const detectedDesign = rawDetected
     ? {
-      pattern: typeof rawDetected.pattern === "string" ? rawDetected.pattern : null,
+      pattern: typeof rawDetected.pattern === "string"
+        ? rawDetected.pattern
+        : null,
       colors: Array.isArray(rawDetected.colors)
         ? rawDetected.colors.filter((c): c is string => typeof c === "string")
         : [],
-      ciPlacement: typeof rawDetected.ciPlacement === "string" ? rawDetected.ciPlacement : null,
+      ciPlacement: typeof rawDetected.ciPlacement === "string"
+        ? rawDetected.ciPlacement
+        : null,
+      scale: rawDetected.scale === "large" ||
+          rawDetected.scale === "medium" ||
+          rawDetected.scale === "small"
+        ? rawDetected.scale
+        : null,
     }
     : null;
 
@@ -281,7 +293,9 @@ const requestGeminiImage = async (
       return null;
     }
 
-    return `data:${imagePart?.inlineData?.mimeType ?? "image/png"};base64,${base64}`;
+    return `data:${
+      imagePart?.inlineData?.mimeType ?? "image/png"
+    };base64,${base64}`;
   } catch (err) {
     console.error("Gemini image generation failed:", err);
     return null;
@@ -381,19 +395,21 @@ Deno.serve(async (req) => {
 
     // 채팅 모드에서 빈 designContext 필드를 텍스트 AI가 추출한 값으로 보완
     const detected = textResult.detectedDesign;
-    const imagePayload: GenerateDesignRequest = detected
-      ? {
-        ...payload,
-        designContext: {
-          ...payload.designContext,
-          pattern: payload.designContext?.pattern ?? detected.pattern ?? null,
-          colors: (payload.designContext?.colors?.length ?? 0) > 0
-            ? payload.designContext!.colors
-            : (detected.colors.length > 0 ? detected.colors : (payload.designContext?.colors ?? [])),
-          ciPlacement: payload.designContext?.ciPlacement ?? detected.ciPlacement ?? null,
-        },
-      }
-      : payload;
+    const imagePayload: GenerateDesignRequest = {
+      ...payload,
+      designContext: {
+        ...payload.designContext,
+        pattern: payload.designContext?.pattern ?? detected?.pattern ?? null,
+        colors: (payload.designContext?.colors?.length ?? 0) > 0
+          ? payload.designContext!.colors
+          : (detected?.colors.length ?? 0) > 0
+          ? detected!.colors
+          : (payload.designContext?.colors ?? []),
+        ciPlacement: payload.designContext?.ciPlacement ??
+          detected?.ciPlacement ?? null,
+        scale: payload.designContext?.scale ?? detected?.scale ?? null,
+      },
+    };
 
     const imageUrl = textResult.generateImage
       ? await requestGeminiImage(imagePayload, geminiApiKey)
