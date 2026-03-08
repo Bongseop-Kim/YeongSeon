@@ -72,7 +72,13 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       return;
     }
 
-    if (selectedColors.length >= 2) {
+    // designContext에만 있는 색상(pendingAttachment 없음) 토글 해제
+    if (designContext.colors?.includes(value)) {
+      setDesignContext({ colors: designContext.colors.filter((c) => c !== value) });
+      return;
+    }
+
+    if (selectedColorValues.length >= 2) {
       return;
     }
 
@@ -154,7 +160,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
           <div className="flex flex-wrap gap-2">
             {COLOR_OPTIONS.map((option) => {
               const isSelected = selectedColorValues.includes(option.value);
-              const isDisabled = !isSelected && selectedColors.length >= 2;
+              const isDisabled = !isSelected && selectedColorValues.length >= 2;
 
               return (
                 <button

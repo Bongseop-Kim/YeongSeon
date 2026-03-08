@@ -63,18 +63,18 @@ export function OnboardingDialog({
             ))}
           </div>
           <div className="flex items-center gap-2">
-            {currentPage === 1 && (
+            {currentPage > 0 && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setCurrentPage(0)}
+                onClick={() => setCurrentPage(currentPage - 1)}
               >
                 ← 이전
               </Button>
             )}
-            {currentPage === 0 ? (
-              <Button type="button" size="sm" onClick={() => setCurrentPage(1)}>
+            {currentPage < ONBOARDING_PAGES.length - 1 ? (
+              <Button type="button" size="sm" onClick={() => setCurrentPage(currentPage + 1)}>
                 다음 →
               </Button>
             ) : (
