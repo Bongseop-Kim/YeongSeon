@@ -86,7 +86,7 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           placeholder="원하는 넥타이 스타일을 자유롭게 입력하세요…"
           onChange={(event) => setInputText(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault();
               handleSend();
             }
