@@ -1,3 +1,22 @@
+/**
+ * generate-design Edge Function의 프롬프트 빌더 모음
+ *
+ * ─── 이미지 생성 파이프라인 ─────────────────────────────────────────────────
+ * 1. buildGeminiImagePrompt()로 이미지 생성 프롬프트 조립
+ * 2. Gemini API가 직사각형 패브릭 스워치 이미지를 생성 → base64 data URL로 클라이언트에 반환
+ * 3. 클라이언트에서 data URL을 CSS background 문자열로 변환
+ *    (toPreviewBackground: url("data:...") center/cover no-repeat)
+ * 4. TieCanvas에서 div의 style.background에 주입 → /images/tie.svg 마스크로 넥타이 실루엣으로 클리핑
+ *
+ * ─── 요구 이미지 스펙 ──────────────────────────────────────────────────────
+ * - 직사각형 실크 패브릭 스워치 (넥타이 실루엣 자체는 이미지에 포함하지 않음)
+ * - 이미지가 프레임 전체를 채워야 함 (여백·패딩·배경 없음)
+ *   → CSS cover로 리사이즈되므로 종횡비가 달라도 클리핑되는 구조
+ * - 완전히 평평한 flat-lay (주름·그림자 없음)
+ *   → 마스킹 후 자연스러운 패브릭 텍스처만 보이도록
+ * - 패턴·색상·제직 방식이 이미지 전면에 균일하게 표현되어야 함
+ *   → 마스킹 결과물이 넥타이 어느 부위를 보여줘도 일관된 디자인으로 보임
+ */
 import type { GenerateDesignRequest } from "./index.ts";
 
 export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
@@ -56,7 +75,7 @@ export const buildTextPrompt = (payload: GenerateDesignRequest) => {
 };
 
 export const buildBasePrompt = () =>
-  "Create a high-quality rectangular silk fabric swatch, full-frame textile-only image, evenly lit, strict flat-lay: the fabric must lie perfectly flat with absolutely no folds, no creases, no drape, no wrinkles, and no shadows cast by folding. The entire image must be a front-facing flat fabric surface, suitable for later masking onto a tie silhouette.";
+  "Create a high-quality rectangular silk fabric swatch, full-frame textile-only image, evenly lit, strict flat-lay: the fabric must lie perfectly flat with absolutely no folds, no creases, no drape, no wrinkles, and no shadows cast by folding. The entire image must be a front-facing flat fabric surface, suitable for later masking onto a tie silhouette. All repeating motifs must be rendered at a consistent, small-to-medium textile scale: each individual motif should occupy no more than 10-15% of the image width, ensuring many repetitions are visible across the fabric.";
 
 export const buildFabricPrompt = (
   fabricMethod: string | null | undefined,
@@ -79,13 +98,13 @@ export const buildFabricPrompt = (
 };
 
 export const PATTERN_MAP: Record<string, string> = {
-  stripe: "diagonal stripe repeat",
-  dot: "small repeated dot motif",
-  check: "repeating check grid",
-  paisley: "elegant paisley repeat",
-  plain: "subtle solid fabric with texture emphasis",
-  houndstooth: "classic houndstooth repeat",
-  floral: "refined floral repeat",
+  stripe: "narrow diagonal stripe repeat (each stripe 3-5% of image width)",
+  dot: "small repeated dot motif (each dot 3-5% of image width)",
+  check: "small repeating check grid (each cell 5-8% of image width)",
+  paisley: "small elegant paisley repeat (each motif 8-12% of image width)",
+  plain: "subtle solid fabric with texture emphasis, no repeating motif",
+  houndstooth: "classic small houndstooth repeat (each cell 5-8% of image width)",
+  floral: "refined small floral repeat (each flower 8-12% of image width)",
 };
 
 export const buildUserInstructionPrompt = (userMessage: string): string => {
@@ -156,7 +175,7 @@ export const buildCiPlacementPrompt = (
     const source = hasCiImage
       ? "from the uploaded CI image"
       : "described in the conversation";
-    return `Repeat the motif ${source} as an all-over pattern across the entire fabric surface, maintaining consistent spacing and scale.`;
+    return `Repeat the motif ${source} as a small all-over pattern across the entire fabric surface. Each individual motif must be uniformly sized at approximately 10-15% of the image width — small enough that at least 6-8 motifs are visible across the width of the fabric. Arrange them in a consistent, evenly-spaced grid with equal gaps between each motif. Every motif must be identical in size and orientation throughout the image.`;
   }
   if (ciPlacement === "one-point") {
     const source = hasCiImage

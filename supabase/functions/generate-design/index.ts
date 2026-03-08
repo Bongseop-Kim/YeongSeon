@@ -237,7 +237,6 @@ const requestGeminiImage = async (
       return null;
     }
 
-    // TODO: Supabase Storage에 업로드 후 영구 URL 반환으로 교체
     return `data:${imagePart?.inlineData?.mimeType ?? "image/png"};base64,${base64}`;
   } catch (err) {
     console.error("Gemini image generation failed:", err);
