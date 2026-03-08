@@ -92,6 +92,7 @@ export const buildFabricPrompt = (
       "Fabric construction: yarn-dyed woven silk.",
       "The pattern is formed entirely by interwoven threads — visible weave structure, subtle textile depth, and a genuine woven repeat.",
       "Each motif appears as a single solid thread color against the background, rendered as a clean silhouette.",
+      "The pattern emerges from the thread interlacing itself, not from printing.",
       "The surface has the tactile, slightly textured quality of woven jacquard silk.",
     ].join(" ");
   }
@@ -101,6 +102,7 @@ export const buildFabricPrompt = (
       "The pattern is screen-printed or digitally printed directly onto the fabric surface — crisp edges, vibrant colors, and surface-applied graphics.",
       "Multi-color details within each motif are fully supported: crisp outlines, gradients, fine inner details, and multiple colors per motif.",
       "The surface is smooth and lustrous, with the clean flat quality of printed silk.",
+      "No thread texture, no weave structure, no fiber depth — the surface is as flat and smooth as coated paper.",
     ].join(" ");
   }
   return "This must be a high-quality silk fabric surface with refined textile character.";

@@ -173,7 +173,7 @@
     #818cf8 80%,
     #c7d2fe 100%
   );
-  background-size: 200% auto;
+  background-size: 200% 200%;
   animation: ai-shimmer 2.4s linear infinite;
 }
 
