@@ -268,6 +268,8 @@ export default function AppLayout() {
                   <div className="mb-1">
                     영선산업 | 대표: 김영선 | 사업자등록번호: 305-26-32033
                   </div>
+                  <div>통신판매업 번호: 2017-대전동구-0353</div>
+                  <div>전화번호: 042-626-9055</div>
                   <div>대전 동구 가양2동 408-7</div>
                 </div>
                 <p className="text-xs text-gray-500 text-center">
@@ -281,6 +283,8 @@ export default function AppLayout() {
                   <div className="text-xs text-gray-500 text-center space-y-1">
                     <div>영선산업 | 대표: 김영선</div>
                     <div>주소: 대전 동구 가양2동 408-7</div>
+                    <div>통신판매업 번호: 2017-대전동구-0353</div>
+                    <div>전화번호: 042-626-9055</div>
                     <div>
                       호스팅사업자: 영선산업 | 사업자등록번호: 305-26-32033
                     </div>
