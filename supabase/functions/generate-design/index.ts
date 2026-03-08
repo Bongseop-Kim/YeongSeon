@@ -85,6 +85,9 @@ const requestGeminiText = async (
     });
   }
 
+  const textController = new AbortController();
+  const textTimeoutId = setTimeout(() => textController.abort(), 30000);
+
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
@@ -92,6 +95,7 @@ const requestGeminiText = async (
       headers: {
         "Content-Type": "application/json",
       },
+      signal: textController.signal,
       body: JSON.stringify({
         systemInstruction: {
           parts: [{ text: SYSTEM_PROMPT }],
@@ -109,6 +113,8 @@ const requestGeminiText = async (
       }),
     },
   );
+
+  clearTimeout(textTimeoutId);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -170,11 +176,15 @@ const requestGeminiImage = async (
       });
     }
 
+    const imageController = new AbortController();
+    const imageTimeoutId = setTimeout(() => imageController.abort(), 30000);
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: imageController.signal,
         body: JSON.stringify({
           contents: [{ role: "user", parts }],
           generationConfig: {
@@ -184,6 +194,8 @@ const requestGeminiImage = async (
         }),
       },
     );
+
+    clearTimeout(imageTimeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -207,9 +219,10 @@ const requestGeminiImage = async (
     }
 
     // TODO: Supabase Storage에 업로드 후 영구 URL 반환으로 교체
-    return `data:image/png;base64,${base64}`;
+    return `data:${imagePart?.inlineData?.mimeType ?? "image/png"};base64,${base64}`;
   } catch (err) {
-    throw err;
+    console.error("Gemini image generation failed:", err);
+    return null;
   }
 };
 
@@ -275,7 +288,7 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "Invalid JSON body" });
   }
 
-  if (!payload?.userMessage?.trim()) {
+  if (typeof payload?.userMessage !== "string" || !payload.userMessage.trim()) {
     return jsonResponse(400, { error: "userMessage is required" });
   }
 

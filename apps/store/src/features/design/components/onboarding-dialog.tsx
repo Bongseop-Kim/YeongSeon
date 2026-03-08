@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ONBOARDING_PAGES } from "@/features/design/constants/onboarding";
 
 interface OnboardingDialogProps {
@@ -47,8 +47,8 @@ export function OnboardingDialog({
       <DialogContent className="max-w-sm overflow-hidden p-0" showCloseButton={false}>
         <div className="h-44 w-full" style={previewStyle} />
         <div className="px-6 pb-6 pt-5">
-          <h2 className="mb-2 text-lg font-bold">{page.title}</h2>
-          <p className="text-sm leading-relaxed text-gray-600">{page.description}</p>
+          <DialogTitle className="mb-2 text-lg font-bold">{page.title}</DialogTitle>
+          <DialogDescription className="text-sm leading-relaxed text-gray-600">{page.description}</DialogDescription>
         </div>
         <div className="flex items-center justify-between px-6 pb-6">
           <div className="flex items-center gap-1.5">

@@ -15,6 +15,7 @@ interface ChatInputProps {
 export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const pendingAttachments = useDesignChatStore((state) => state.pendingAttachments);
   const removeAttachment = useDesignChatStore((state) => state.removeAttachment);
+  const setDesignContext = useDesignChatStore((state) => state.setDesignContext);
   const [inputText, setInputText] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const popupWrapperRef = useRef<HTMLDivElement>(null);
@@ -56,7 +57,18 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
               <button
                 type="button"
                 aria-label={`${attachment.label} 제거`}
-                onClick={() => removeAttachment(index)}
+                onClick={() => {
+                  const removed = pendingAttachments[index];
+                  removeAttachment(index);
+                  const remaining = pendingAttachments.filter((_, i) => i !== index);
+                  if (removed.type === "color") {
+                    setDesignContext({ colors: remaining.filter((a) => a.type === "color").map((a) => a.value) });
+                  } else if (removed.type === "pattern") {
+                    setDesignContext({ pattern: null });
+                  } else if (removed.type === "fabric") {
+                    setDesignContext({ fabricMethod: null });
+                  }
+                }}
               >
                 <X className="size-3" />
               </button>
@@ -69,6 +81,7 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
         {showPopup ? <AttachmentPopup onClose={() => setShowPopup(false)} /> : null}
         <textarea
           rows={1}
+          aria-label="디자인 요청 메시지"
           value={inputText}
           placeholder="원하는 넥타이 스타일을 자유롭게 입력하세요…"
           onChange={(event) => setInputText(event.target.value)}
@@ -85,6 +98,7 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
             type="button"
             variant="ghost"
             size="icon"
+            aria-label="옵션 추가"
             onClick={() => setShowPopup((prev) => !prev)}
           >
             <Plus
@@ -94,6 +108,7 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           <Button
             type="button"
             size="icon"
+            aria-label="메시지 전송"
             onClick={handleSend}
             disabled={!trimmedText || isLoading}
           >

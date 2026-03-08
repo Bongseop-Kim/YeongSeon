@@ -18,9 +18,10 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
   const tokenCount = messages.reduce((sum, m) => sum + Math.ceil(m.content.length / 2), 0);
   const generationStatus = useDesignChatStore((state) => state.generationStatus);
   const resetConversation = useDesignChatStore((state) => state.resetConversation);
+  const pendingAttachments = useDesignChatStore((state) => state.pendingAttachments);
 
   const handleChipClick = (text: string) => {
-    sendMessage(text, []);
+    sendMessage(text, pendingAttachments);
   };
 
   return (
@@ -58,7 +59,7 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
         ) : (
           <MessageList
             messages={messages}
-            isTyping={generationStatus === "generating"}
+            isTyping={generationStatus === "generating" || generationStatus === "regenerating"}
             onChipClick={handleChipClick}
           />
         )}

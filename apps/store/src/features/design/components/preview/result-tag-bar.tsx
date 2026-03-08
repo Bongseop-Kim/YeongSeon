@@ -51,6 +51,7 @@ export function ResultTagBar({ isFullscreen, onToggleFullscreen }: ResultTagBarP
           size="icon"
           className="size-7"
           title="같은 조건으로 다시 생성"
+          aria-label="같은 조건으로 다시 생성"
           disabled={isLoading}
           onClick={regenerate}
         >
@@ -62,6 +63,7 @@ export function ResultTagBar({ isFullscreen, onToggleFullscreen }: ResultTagBarP
           size="icon"
           className="size-7"
           title="이미지 다운로드"
+          aria-label="이미지 다운로드"
           onClick={handleDownload}
         >
           <Download className="size-3.5" />
@@ -72,6 +74,7 @@ export function ResultTagBar({ isFullscreen, onToggleFullscreen }: ResultTagBarP
           size="icon"
           className="size-7"
           title={isFullscreen ? "전체화면 종료" : "전체화면"}
+          aria-label={isFullscreen ? "전체화면 종료" : "전체화면"}
           onClick={onToggleFullscreen}
         >
           {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}

@@ -58,16 +58,9 @@ export async function aiDesignApi(
     ? await fileToBase64(request.designContext.referenceImage)
     : undefined;
 
-  const serializedAttachments = request.attachments.map((attachment) => ({
-    type: attachment.type,
-    label: attachment.label,
-    value: attachment.value,
-  }));
-
   const { data, error } = await supabase.functions.invoke("generate-design", {
     body: {
       userMessage: request.userMessage,
-      attachments: serializedAttachments,
       designContext: {
         colors: request.designContext.colors,
         pattern: request.designContext.pattern,

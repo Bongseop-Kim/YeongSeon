@@ -55,6 +55,8 @@ export function useDesignChat(): UseDesignChatResult {
       addMessage(aiMessage);
       if (previewBackground) {
         setGeneratedImage(previewBackground, data.tags);
+      } else {
+        setGeneratedImage(null, []);
       }
       setGenerationStatus("completed");
       // TODO: 대화 히스토리 DB 저장 연동
@@ -83,6 +85,7 @@ export function useDesignChat(): UseDesignChatResult {
       content: userText,
       attachments,
       timestamp: Date.now(),
+      designContext,
     };
 
     addMessage(userMessage);
@@ -116,7 +119,7 @@ export function useDesignChat(): UseDesignChatResult {
       {
         userMessage: lastUserMessage.content,
         attachments: lastUserMessage.attachments ?? [],
-        designContext,
+        designContext: lastUserMessage.designContext ?? designContext,
         conversationHistory: toConversationHistory(messages),
       },
       createMutationCallbacks(

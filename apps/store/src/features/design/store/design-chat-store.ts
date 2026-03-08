@@ -20,7 +20,7 @@ export interface DesignChatState {
   removeAttachment: (index: number) => void;
   clearAttachments: () => void;
   setGenerationStatus: (status: GenerationStatus) => void;
-  setGeneratedImage: (imageUrl: string, tags: string[]) => void;
+  setGeneratedImage: (imageUrl: string | null, tags: string[]) => void;
   markImageDownloaded: () => void;
   resetConversation: () => void;
 }
@@ -71,11 +71,11 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       generationStatus: status,
     }),
   setGeneratedImage: (imageUrl, tags) =>
-    set({
-      generatedImageUrl: imageUrl,
-      isImageDownloaded: false,
-      resultTags: tags,
-    }),
+    set(
+      imageUrl !== null
+        ? { generatedImageUrl: imageUrl, isImageDownloaded: false, resultTags: tags }
+        : { generatedImageUrl: null, resultTags: [] },
+    ),
   markImageDownloaded: () =>
     set({
       isImageDownloaded: true,

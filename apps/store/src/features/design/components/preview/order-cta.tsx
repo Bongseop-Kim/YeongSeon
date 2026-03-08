@@ -11,7 +11,7 @@ export function OrderCta() {
   const isImageDownloaded = useDesignChatStore((state) => state.isImageDownloaded);
   const openModal = useModalStore((state) => state.openModal);
 
-  const hidden = generationStatus === "idle" || generationStatus === "generating";
+  const hidden = generationStatus === "idle" || generationStatus === "generating" || generationStatus === "regenerating";
 
   const handleClick = () => {
     if (!isImageDownloaded) {

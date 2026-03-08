@@ -1,3 +1,5 @@
+import type { DesignContext } from "@/features/design/types/design-context";
+
 export type MessageRole = "user" | "ai";
 export type GenerationStatus =
   | "idle"
@@ -25,5 +27,6 @@ export interface Message {
   attachments?: Attachment[];
   contextChips?: ContextChip[];
   timestamp: number;
+  designContext?: DesignContext;
 }
 
