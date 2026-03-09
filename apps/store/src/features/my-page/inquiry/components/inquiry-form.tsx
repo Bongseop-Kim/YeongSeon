@@ -12,7 +12,7 @@ import {
   type InquiryCategory,
 } from "@/features/my-page/inquiry/types/inquiry-item";
 import { useProductSearchForInquiry } from "@/features/my-page/inquiry/api/inquiry-query";
-import { useDebounce } from "@/hooks/use-debounce";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export interface InquiryFormData {
   category: InquiryCategory;
@@ -40,7 +40,7 @@ export const InquiryForm = ({
 }: InquiryFormProps) => {
   const isEditMode = !!inquiryId;
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedQuery = useDebounce(searchQuery, 300);
+  const debouncedQuery = useDebouncedValue(searchQuery, 300);
 
   const form = useForm<InquiryFormData>({
     defaultValues: initialData ?? { category: "일반", title: "", content: "" },
