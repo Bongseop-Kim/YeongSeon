@@ -36,3 +36,7 @@ CREATE POLICY "Admins can update settings"
   TO authenticated
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
+
+INSERT INTO public.admin_settings (key, value)
+VALUES ('default_courier_company', '')
+ON CONFLICT (key) DO NOTHING;
