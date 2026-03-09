@@ -461,7 +461,7 @@ SELECT
   qr.status,
   qr.options,
   qr.quantity,
-  qr.reference_image_urls AS "referenceImageUrls",
+  qr.reference_images AS "referenceImages",
   qr.additional_notes     AS "additionalNotes",
   qr.contact_name    AS "contactName",
   qr.contact_title   AS "contactTitle",

@@ -1,4 +1,5 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
+import type { ImageRef } from "@yeongseon/shared";
 import { toCreateCustomOrderOptionsInput } from "@/features/custom-order/api/custom-order-mapper";
 import type {
   CreateQuoteRequestRequest,
@@ -11,18 +12,21 @@ type OrderOptionsForMapping = Omit<
   "referenceImages" | "additionalNotes" | "sample" | "sampleType"
 >;
 
-const normalizeReferenceImageUrls = (urls: string[]): string[] => {
+const normalizeReferenceImages = (images: ImageRef[]): ImageRef[] => {
   const seen = new Set<string>();
-  const normalized: string[] = [];
+  const normalized: ImageRef[] = [];
 
-  for (const url of urls) {
-    const trimmed = url.trim();
-    if (!trimmed || seen.has(trimmed)) {
+  for (const image of images) {
+    const url = image.url.trim();
+    if (!url || seen.has(url)) {
       continue;
     }
 
-    seen.add(trimmed);
-    normalized.push(trimmed);
+    seen.add(url);
+    normalized.push({
+      url,
+      fileId: image.fileId.trim(),
+    });
   }
 
   return normalized;
@@ -31,7 +35,7 @@ const normalizeReferenceImageUrls = (urls: string[]): string[] => {
 interface ToCreateQuoteRequestInput {
   shippingAddressId: string;
   options: OrderOptionsForMapping;
-  referenceImageUrls: string[];
+  referenceImages: ImageRef[];
   additionalNotes: string;
   contactName: string;
   contactTitle: string;
@@ -45,7 +49,7 @@ export const toCreateQuoteRequestInput = (
   shippingAddressId: input.shippingAddressId,
   options: toCreateCustomOrderOptionsInput(input.options),
   quantity: input.options.quantity,
-  referenceImageUrls: normalizeReferenceImageUrls(input.referenceImageUrls),
+  referenceImages: normalizeReferenceImages(input.referenceImages),
   additionalNotes: input.additionalNotes.trim(),
   contactName: input.contactName.trim(),
   contactTitle: input.contactTitle.trim(),
@@ -77,7 +81,7 @@ export const toCreateQuoteRequestInputDto = (
     care_label: request.options.careLabel,
   } satisfies CreateCustomOrderOptionsDtoSnakeCase,
   quantity: request.quantity,
-  reference_image_urls: request.referenceImageUrls,
+  reference_images: request.referenceImages,
   additional_notes: request.additionalNotes,
   contact_name: request.contactName,
   contact_title: request.contactTitle,

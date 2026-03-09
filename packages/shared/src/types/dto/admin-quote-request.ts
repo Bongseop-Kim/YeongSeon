@@ -1,3 +1,5 @@
+import type { ImageRef } from "../image-ref";
+
 /** admin_quote_request_list_view row */
 export interface AdminQuoteRequestListRowDTO {
   id: string;
@@ -27,7 +29,7 @@ export interface AdminQuoteRequestDetailRowDTO {
   status: string;
   options: Record<string, unknown>;
   quantity: number;
-  referenceImageUrls: string[];
+  referenceImages: ImageRef[];
   additionalNotes: string;
   contactName: string;
   contactTitle: string;

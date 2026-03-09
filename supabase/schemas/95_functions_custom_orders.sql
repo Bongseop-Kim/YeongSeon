@@ -213,7 +213,7 @@ CREATE OR REPLACE FUNCTION public.create_custom_order_txn(
   p_shipping_address_id uuid,
   p_options jsonb,
   p_quantity integer,
-  p_reference_image_urls text[] DEFAULT '{}'::text[],
+  p_reference_images jsonb DEFAULT '[]'::jsonb,
   p_additional_notes text DEFAULT '',
   p_sample boolean DEFAULT false,
   p_sample_type text DEFAULT null
@@ -301,7 +301,7 @@ begin
     'custom_order', true,
     'quantity', p_quantity,
     'options', p_options,
-    'reference_image_urls', to_jsonb(coalesce(p_reference_image_urls, '{}'::text[])),
+    'reference_images', coalesce(p_reference_images, '[]'::jsonb),
     'additional_notes', coalesce(p_additional_notes, ''),
     'sample', coalesce(p_sample, false),
     'sample_type', p_sample_type,
@@ -346,4 +346,3 @@ begin
   );
 end;
 $$;
-

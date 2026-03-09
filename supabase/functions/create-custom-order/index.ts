@@ -6,7 +6,7 @@ type CreateCustomOrderInput = {
   shipping_address_id: string;
   options: Record<string, unknown>;
   quantity: number;
-  reference_image_urls?: string[];
+  reference_images?: Array<{ url: string; fileId: string }>;
   additional_notes?: string;
   sample?: boolean;
   sample_type?: string | null;
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
       p_shipping_address_id: payload.shipping_address_id,
       p_options: payload.options,
       p_quantity: payload.quantity,
-      p_reference_image_urls: payload.reference_image_urls ?? [],
+      p_reference_images: payload.reference_images ?? [],
       p_additional_notes: payload.additional_notes ?? "",
       p_sample: payload.sample ?? false,
       p_sample_type: payload.sample_type ?? null,

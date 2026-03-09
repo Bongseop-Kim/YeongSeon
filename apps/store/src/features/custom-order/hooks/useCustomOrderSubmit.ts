@@ -85,7 +85,7 @@ export function useCustomOrderSubmit({
           ...toCreateQuoteRequestInput({
             shippingAddressId: selectedAddressId,
             options: coreOptions,
-            referenceImageUrls: imageUpload.getImageUrls(),
+            referenceImages: imageUpload.getImageRefs(),
             additionalNotes,
             contactName,
             contactTitle,
@@ -100,7 +100,7 @@ export function useCustomOrderSubmit({
           ...toCreateCustomOrderInput({
             shippingAddressId: selectedAddressId,
             options: coreOptions,
-            referenceImageUrls: imageUpload.getImageUrls(),
+            referenceImages: imageUpload.getImageRefs(),
             additionalNotes,
             sample,
             sampleType,

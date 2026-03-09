@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.quote_requests (
   shipping_address_id  uuid        NOT NULL,
   options              jsonb       NOT NULL,
   quantity             integer     NOT NULL,
-  reference_image_urls text[]      NOT NULL DEFAULT '{}'::text[],
+  reference_images    jsonb        NOT NULL DEFAULT '[]'::jsonb,
   additional_notes     text        NOT NULL DEFAULT '',
   contact_name         varchar     NOT NULL,
   contact_title        varchar     NOT NULL DEFAULT '',
