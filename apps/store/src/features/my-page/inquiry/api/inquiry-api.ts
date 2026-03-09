@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { InquiryRowDTO } from "@/features/my-page/inquiry/types/dto/inquiry";
+import type { InquiryRowDTO, InquiryProductDTO } from "@/features/my-page/inquiry/types/dto/inquiry";
 import type { InquiryItem, InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-item";
 import { toInquiryView } from "./inquiry-mapper";
 
@@ -64,7 +64,7 @@ export const deleteInquiry = async (id: string): Promise<void> => {
 /** 상품 검색 (문의 폼용) */
 export const searchProductsForInquiry = async (
   query: string
-): Promise<{ id: number; name: string; image: string }[]> => {
+): Promise<InquiryProductDTO[]> => {
   let req = supabase
     .from("products")
     .select("id, name, image")
@@ -77,5 +77,5 @@ export const searchProductsForInquiry = async (
 
   const { data, error } = await req;
   if (error) throw new Error(`상품 검색 실패: ${error.message}`);
-  return (data ?? []) as { id: number; name: string; image: string }[];
+  return (data ?? []) as InquiryProductDTO[];
 };
