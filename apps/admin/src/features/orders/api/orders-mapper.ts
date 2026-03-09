@@ -202,6 +202,14 @@ export function parseRepairReformData(
 
 function toReformData(
   raw: Record<string, unknown> | null,
+  orderType: "custom"
+): CustomOrderReformData | null;
+function toReformData(
+  raw: Record<string, unknown> | null,
+  orderType: "repair"
+): RepairOrderReformData | null;
+function toReformData(
+  raw: Record<string, unknown> | null,
   orderType: "custom" | "repair"
 ): CustomOrderReformData | RepairOrderReformData | null {
   if (!raw) return null;
@@ -231,7 +239,7 @@ export function toAdminOrderItem(
   }
 
   if (dto.itemType === "custom") {
-    const reformData = dto.reformData ? parseCustomReformData(dto.reformData) : null;
+    const customData = toReformData(dto.reformData, "custom");
     const item: AdminCustomOrderItem = {
       type: "custom",
       id: dto.id,
@@ -240,7 +248,7 @@ export function toAdminOrderItem(
       unitPrice: dto.unitPrice,
       discountAmount: dto.discountAmount,
       lineDiscountAmount: dto.lineDiscountAmount,
-      reformData,
+      customData,
     };
     return item;
   }
@@ -256,7 +264,7 @@ export function toAdminOrderItem(
     unitPrice: dto.unitPrice,
     discountAmount: dto.discountAmount,
     lineDiscountAmount: dto.lineDiscountAmount,
-    reformData: reformData as RepairOrderReformData | null,
+    reformData,
   };
   return item;
 }

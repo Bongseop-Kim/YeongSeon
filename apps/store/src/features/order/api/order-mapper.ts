@@ -214,14 +214,18 @@ const parseReformDataField = (
       `주문 상품 행(${idx})의 reformData가 올바르지 않습니다: 객체가 아닙니다.`
     );
   }
-  const cost = typeof v.cost === "number" ? v.cost : (() => {
-    console.warn(`주문 상품 행(${idx})의 reformData에 cost 필드가 없어 0으로 대체합니다.`);
-    return 0;
-  })();
-  const tieRaw = isRecord(v.tie) ? v.tie : (() => {
-    console.warn(`주문 상품 행(${idx})의 reformData에 tie 필드가 없어 빈 객체로 대체합니다.`);
-    return {} as Record<string, unknown>;
-  })();
+  if (typeof v.cost !== "number") {
+    throw new Error(
+      `주문 상품 행(${idx})의 parseReformDataField: cost 필드가 없거나 숫자가 아닙니다.`
+    );
+  }
+  const cost = v.cost;
+  if (!isRecord(v.tie)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 parseReformDataField: tie 필드가 없거나 객체가 아닙니다.`
+    );
+  }
+  const tieRaw = v.tie;
   const measurementType =
     typeof tieRaw.measurementType === "string" && isTieMeasurementType(tieRaw.measurementType)
       ? tieRaw.measurementType

@@ -135,94 +135,96 @@ const parseClaimItemField = (
   }
 
   let reformData: ClaimItemRowDTO["reformData"] = null;
-  if (v.reformData != null) {
-    if (
-      !isRecord(v.reformData) ||
-      typeof v.reformData.cost !== "number" ||
-      !isRecord(v.reformData.tie)
-    ) {
-      throw new Error(
-        `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: 필수 필드 누락.`
-      );
-    }
-    if (
-      v.reformData.tie.image != null &&
-      typeof v.reformData.tie.image !== "string"
-    ) {
-      throw new Error(
-        `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: image 필드 타입 오류.`
-      );
-    }
-    if (v.reformData.tie.measurementType != null) {
-      if (typeof v.reformData.tie.measurementType !== "string") {
+  if (v.type === "reform") {
+    if (v.reformData != null) {
+      if (
+        !isRecord(v.reformData) ||
+        typeof v.reformData.cost !== "number" ||
+        !isRecord(v.reformData.tie)
+      ) {
         throw new Error(
-          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: measurementType 필드 타입 오류.`
+          `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: 필수 필드 누락.`
         );
       }
-      if (!isTieMeasurementType(v.reformData.tie.measurementType)) {
+      if (
+        v.reformData.tie.image != null &&
+        typeof v.reformData.tie.image !== "string"
+      ) {
         throw new Error(
-          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: measurementType 값(${v.reformData.tie.measurementType})이 허용된 값이 아닙니다.`
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: image 필드 타입 오류.`
         );
       }
+      if (v.reformData.tie.measurementType != null) {
+        if (typeof v.reformData.tie.measurementType !== "string") {
+          throw new Error(
+            `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: measurementType 필드 타입 오류.`
+          );
+        }
+        if (!isTieMeasurementType(v.reformData.tie.measurementType)) {
+          throw new Error(
+            `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: measurementType 값(${v.reformData.tie.measurementType})이 허용된 값이 아닙니다.`
+          );
+        }
+      }
+      if (
+        v.reformData.tie.tieLength != null &&
+        typeof v.reformData.tie.tieLength !== "number"
+      ) {
+        throw new Error(
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: tieLength 필드 타입 오류.`
+        );
+      }
+      if (
+        v.reformData.tie.wearerHeight != null &&
+        typeof v.reformData.tie.wearerHeight !== "number"
+      ) {
+        throw new Error(
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: wearerHeight 필드 타입 오류.`
+        );
+      }
+      if (
+        v.reformData.tie.notes != null &&
+        typeof v.reformData.tie.notes !== "string"
+      ) {
+        throw new Error(
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: notes 필드 타입 오류.`
+        );
+      }
+      if (
+        v.reformData.tie.checked != null &&
+        typeof v.reformData.tie.checked !== "boolean"
+      ) {
+        throw new Error(
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: checked 필드 타입 오류.`
+        );
+      }
+      reformData = {
+        cost: v.reformData.cost,
+        tie: {
+          id: typeof v.reformData.tie.id === "string" ? v.reformData.tie.id : undefined,
+          image:
+            typeof v.reformData.tie.image === "string"
+              ? v.reformData.tie.image
+              : undefined,
+          measurementType:
+            typeof v.reformData.tie.measurementType === "string"
+              ? v.reformData.tie.measurementType
+              : undefined,
+          tieLength:
+            typeof v.reformData.tie.tieLength === "number"
+              ? v.reformData.tie.tieLength
+              : undefined,
+          wearerHeight:
+            typeof v.reformData.tie.wearerHeight === "number"
+              ? v.reformData.tie.wearerHeight
+              : undefined,
+          notes:
+            typeof v.reformData.tie.notes === "string"
+              ? v.reformData.tie.notes
+              : undefined,
+        },
+      };
     }
-    if (
-      v.reformData.tie.tieLength != null &&
-      typeof v.reformData.tie.tieLength !== "number"
-    ) {
-      throw new Error(
-        `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: tieLength 필드 타입 오류.`
-      );
-    }
-    if (
-      v.reformData.tie.wearerHeight != null &&
-      typeof v.reformData.tie.wearerHeight !== "number"
-    ) {
-      throw new Error(
-        `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: wearerHeight 필드 타입 오류.`
-      );
-    }
-    if (
-      v.reformData.tie.notes != null &&
-      typeof v.reformData.tie.notes !== "string"
-    ) {
-      throw new Error(
-        `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: notes 필드 타입 오류.`
-      );
-    }
-    if (
-      v.reformData.tie.checked != null &&
-      typeof v.reformData.tie.checked !== "boolean"
-    ) {
-      throw new Error(
-        `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: checked 필드 타입 오류.`
-      );
-    }
-    reformData = {
-      cost: v.reformData.cost,
-      tie: {
-        id: typeof v.reformData.tie.id === "string" ? v.reformData.tie.id : undefined,
-        image:
-          typeof v.reformData.tie.image === "string"
-            ? v.reformData.tie.image
-            : undefined,
-        measurementType:
-          typeof v.reformData.tie.measurementType === "string"
-            ? v.reformData.tie.measurementType
-            : undefined,
-        tieLength:
-          typeof v.reformData.tie.tieLength === "number"
-            ? v.reformData.tie.tieLength
-            : undefined,
-        wearerHeight:
-          typeof v.reformData.tie.wearerHeight === "number"
-            ? v.reformData.tie.wearerHeight
-            : undefined,
-        notes:
-          typeof v.reformData.tie.notes === "string"
-            ? v.reformData.tie.notes
-            : undefined,
-      },
-    };
   }
 
   let appliedCoupon: ClaimItemRowDTO["appliedCoupon"] = null;

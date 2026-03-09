@@ -18,8 +18,10 @@ export const getOrderItemPricing = (item: OrderItem) => {
     unitPrice = item.product.price + (item.selectedOption?.additionalPrice ?? 0);
   } else if (item.type === "custom") {
     unitPrice = item.quantity > 0 ? item.customData.pricing.totalCost / item.quantity : 0;
-  } else {
+  } else if (item.type === "reform") {
     unitPrice = item.reformData.cost;
+  } else {
+    throw new Error(`getOrderItemPricing: 알 수 없는 item.type: ${(item as OrderItem).type}`);
   }
 
   const discount = calculateDiscount(unitPrice, item.appliedCoupon);

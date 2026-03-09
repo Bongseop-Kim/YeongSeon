@@ -85,7 +85,7 @@ export interface AdminCustomOrderItem {
   unitPrice: number;
   discountAmount: number;
   lineDiscountAmount: number;
-  reformData: CustomOrderReformData | null;
+  customData: CustomOrderReformData | null;
 }
 
 export interface AdminReformOrderItem {
