@@ -2,8 +2,10 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { InquiryForm } from "./components/inquiry-form";
+import type { InquiryFormData } from "./components/inquiry-form";
 import { InquiryCard } from "./components/inquiry-card";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
@@ -16,12 +18,15 @@ import {
   useUpdateInquiry,
   useDeleteInquiry,
 } from "@/features/my-page/inquiry/api/inquiry-query";
+import type { InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-item";
 
 export default function InquiryPage() {
   const { confirm } = useModalStore();
   const [editingInquiryId, setEditingInquiryId] = useState<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [initialFormData, setInitialFormData] = useState<InquiryFormData | undefined>(undefined);
   const { isMobile } = useBreakpoint();
+  const [searchParams] = useSearchParams();
 
   const { data: inquiries = [], isLoading, error } = useInquiries();
   const createMutation = useCreateInquiry();
@@ -31,6 +36,23 @@ export default function InquiryPage() {
   const editingInquiry = editingInquiryId
     ? inquiries.find((i) => i.id === editingInquiryId)
     : null;
+
+  useEffect(() => {
+    const category = searchParams.get("category") as InquiryCategory | null;
+    const productId = searchParams.get("productId");
+    const productName = searchParams.get("productName");
+
+    if (category) {
+      setInitialFormData({
+        category,
+        productId: productId ? Number(productId) : undefined,
+        productName: productName ?? undefined,
+        title: "",
+        content: "",
+      });
+      if (isMobile) setIsSheetOpen(true);
+    }
+  }, []); // 마운트 시 1회
 
   const handleEdit = (id: string) => {
     setEditingInquiryId(id);
@@ -55,10 +77,16 @@ export default function InquiryPage() {
   };
 
   const handleFormSubmit = useCallback(
-    (data: { title: string; content: string }) => {
+    (data: InquiryFormData) => {
       if (editingInquiryId) {
         updateMutation.mutate(
-          { id: editingInquiryId, ...data },
+          {
+            id: editingInquiryId,
+            category: data.category,
+            productId: data.productId,
+            title: data.title,
+            content: data.content,
+          },
           {
             onSuccess: () => {
               toast.success("문의가 수정되었습니다.");
@@ -73,18 +101,26 @@ export default function InquiryPage() {
           },
         );
       } else {
-        createMutation.mutate(data, {
-          onSuccess: () => {
-            toast.success("문의가 등록되었습니다.");
-            setEditingInquiryId(null);
-            setIsSheetOpen(false);
+        createMutation.mutate(
+          {
+            category: data.category,
+            productId: data.productId,
+            title: data.title,
+            content: data.content,
           },
-          onError: (err) => {
-            toast.error(
-              err instanceof Error ? err.message : "등록에 실패했습니다.",
-            );
+          {
+            onSuccess: () => {
+              toast.success("문의가 등록되었습니다.");
+              setEditingInquiryId(null);
+              setIsSheetOpen(false);
+            },
+            onError: (err) => {
+              toast.error(
+                err instanceof Error ? err.message : "등록에 실패했습니다.",
+              );
+            },
           },
-        });
+        );
       }
     },
     [editingInquiryId, updateMutation, createMutation],
@@ -105,13 +141,19 @@ export default function InquiryPage() {
     updateMutation.isPending ||
     deleteMutation.isPending;
 
-  const initialData = useMemo(
-    () =>
-      editingInquiry
-        ? { title: editingInquiry.title, content: editingInquiry.content }
-        : undefined,
-    [editingInquiry],
-  );
+  const initialData = useMemo<InquiryFormData | undefined>(() => {
+    if (editingInquiry) {
+      return {
+        category: editingInquiry.category,
+        productId: editingInquiry.product?.id,
+        productName: editingInquiry.product?.name,
+        productImage: editingInquiry.product?.image,
+        title: editingInquiry.title,
+        content: editingInquiry.content,
+      };
+    }
+    return initialFormData;
+  }, [editingInquiry, initialFormData]);
 
   const inquiryFormProps = useMemo(
     () => ({
