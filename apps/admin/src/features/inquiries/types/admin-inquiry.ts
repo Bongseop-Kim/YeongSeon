@@ -9,6 +9,7 @@ export interface AdminInquiryListItem {
   id: string;
   title: string;
   status: InquiryStatus;
+  category: InquiryCategory;
   date: string;
 }
 

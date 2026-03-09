@@ -13,6 +13,7 @@ export function toAdminInquiryListItem(
     id: dto.id,
     title: dto.title,
     status: dto.status,
+    category: (dto.category ?? "일반") as InquiryCategory,
     date: formatDate(dto.created_at),
   };
 }
