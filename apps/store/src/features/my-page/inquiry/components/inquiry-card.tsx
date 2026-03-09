@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Image } from "@imagekit/react";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import {
   INQUIRY_STATUS,
@@ -27,6 +28,9 @@ export function InquiryCard({
         <div className="flex flex-col gap-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
+              {inquiry.category !== "일반" && (
+                <Badge variant="outline" className="text-xs">{inquiry.category}</Badge>
+              )}
               <div className="flex items-center gap-2 mb-1">
                 <Label className="font-bold text-base">{inquiry.title}</Label>
                 <Badge variant="secondary">{inquiry.status}</Badge>
@@ -59,6 +63,17 @@ export function InquiryCard({
           </div>
 
           <div className="flex flex-col gap-2">
+            {inquiry.product && (
+              <div className="flex items-center gap-2 p-2 bg-zinc-50 rounded-md text-sm text-zinc-600">
+                <Image
+                  src={inquiry.product.image}
+                  alt={inquiry.product.name}
+                  className="w-8 h-8 object-cover rounded"
+                  transformation={[{ width: 32, height: 32 }]}
+                />
+                <span>{inquiry.product.name}</span>
+              </div>
+            )}
             <Label className="text-zinc-600 text-sm whitespace-pre-line">
               {inquiry.content}
             </Label>
