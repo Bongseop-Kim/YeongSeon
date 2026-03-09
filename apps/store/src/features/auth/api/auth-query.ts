@@ -6,6 +6,7 @@ import {
   deleteAccount,
 } from "./auth-api";
 import { toast } from "@/lib/toast";
+import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/features/design/api/ai-design-query";
 
 /**
  * 세션 쿼리 키
@@ -65,6 +66,7 @@ export const useSignOut = () => {
       // 세션 쿼리 무효화 및 캐시 초기화
       queryClient.setQueryData(authKeys.session(), null);
       queryClient.invalidateQueries({ queryKey: authKeys.session() });
+      queryClient.removeQueries({ queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY });
     },
     onError: (error) => {
       console.error("Sign out error:", error);

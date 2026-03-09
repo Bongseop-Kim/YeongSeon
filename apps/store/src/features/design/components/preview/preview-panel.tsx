@@ -41,13 +41,21 @@ export function PreviewPanel({ className }: PreviewPanelProps) {
       </div>
       {!isFullscreen && (
         <div className="flex flex-col gap-4">
-          <ResultTagBar isFullscreen={false} onToggleFullscreen={handleToggleFullscreen} />
+          <ResultTagBar
+            isFullscreen={false}
+            onToggleFullscreen={handleToggleFullscreen}
+            unmasked={unmasked}
+          />
           <OrderCta />
         </div>
       )}
       {isFullscreen && (
         <div className="absolute bottom-4 right-4">
-          <ResultTagBar isFullscreen={true} onToggleFullscreen={handleToggleFullscreen} />
+          <ResultTagBar
+            isFullscreen={true}
+            onToggleFullscreen={handleToggleFullscreen}
+            unmasked={unmasked}
+          />
         </div>
       )}
     </section>

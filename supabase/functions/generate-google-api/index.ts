@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { corsHeaders } from "../_shared/cors.ts";
 import {
   buildGeminiImagePrompt,
+  buildImageEditPrompt,
   buildTextPrompt,
   parseJsonBlock,
   SYSTEM_PROMPT,
@@ -21,8 +22,11 @@ export type GenerateDesignRequest = {
     pattern?: string | null;
     fabricMethod?: string | null;
     ciPlacement?: string | null;
+    scale?: "large" | "medium" | "small" | null;
   };
   conversationHistory?: ConversationTurn[];
+  previousImageBase64?: string;
+  previousImageMimeType?: string;
   ciImageBase64?: string;
   ciImageMimeType?: string;
   referenceImageBase64?: string;
@@ -58,6 +62,8 @@ type GenerateDesignResult = {
   imageUrl: string | null;
 };
 
+const MAX_TURN_CONTENT_LENGTH = 10_000;
+
 const jsonResponse = (status: number, body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
     status,
@@ -67,33 +73,56 @@ const jsonResponse = (status: number, body: Record<string, unknown>) =>
     },
   });
 
+const filterValidConversationTurns = (
+  conversationHistory?: ConversationTurn[],
+) =>
+  (conversationHistory ?? []).filter(
+    (turn): turn is ConversationTurn =>
+      (turn.role === "user" || turn.role === "ai") &&
+      typeof turn.content === "string" &&
+      turn.content.trim().length > 0 &&
+      turn.content.length <= MAX_TURN_CONTENT_LENGTH,
+  );
+
 // ─── API requests ────────────────────────────────────────────────────────────
 
 const requestGeminiText = async (
   payload: GenerateDesignRequest,
   apiKey: string,
 ) => {
-  const parts: Array<Record<string, unknown>> = [{
-    text: buildTextPrompt(payload),
-  }];
+  // 대화 히스토리를 Gemini 네이티브 멀티턴 포맷으로 변환
+  const historyContents: Array<Record<string, unknown>> = filterValidConversationTurns(
+    payload.conversationHistory,
+  ).map((turn) => ({
+    role: turn.role === "user" ? "user" : "model",
+    parts: [{ text: turn.content }],
+  }));
 
+  // 현재 메시지 (designContext + userMessage + 이미지)
+  const currentParts: Array<Record<string, unknown>> = [
+    { text: buildTextPrompt(payload) },
+  ];
   if (payload.ciImageBase64) {
-    parts.push({
+    currentParts.push({
       inlineData: {
         mimeType: payload.ciImageMimeType || "image/png",
         data: payload.ciImageBase64,
       },
     });
   }
-
   if (payload.referenceImageBase64) {
-    parts.push({
+    currentParts.push({
       inlineData: {
         mimeType: payload.referenceImageMimeType || "image/png",
         data: payload.referenceImageBase64,
       },
     });
   }
+
+  const contents = [
+    ...historyContents,
+    { role: "user", parts: currentParts },
+  ];
 
   const textController = new AbortController();
   const textTimeoutId = setTimeout(() => textController.abort(), 30000);
@@ -112,12 +141,7 @@ const requestGeminiText = async (
           systemInstruction: {
             parts: [{ text: SYSTEM_PROMPT }],
           },
-          contents: [
-            {
-              role: "user",
-              parts,
-            },
-          ],
+          contents,
           generationConfig: {
             temperature: 0.7,
             responseMimeType: "application/json",
@@ -147,6 +171,28 @@ const requestGeminiText = async (
 
   const parsed = parseJsonBlock(text);
 
+  const rawDetected = parsed.detectedDesign as
+    | Record<string, unknown>
+    | undefined;
+  const detectedDesign = rawDetected
+    ? {
+      pattern: typeof rawDetected.pattern === "string"
+        ? rawDetected.pattern
+        : null,
+      colors: Array.isArray(rawDetected.colors)
+        ? rawDetected.colors.filter((c): c is string => typeof c === "string")
+        : [],
+      ciPlacement: typeof rawDetected.ciPlacement === "string"
+        ? rawDetected.ciPlacement
+        : null,
+      scale: rawDetected.scale === "large" ||
+          rawDetected.scale === "medium" ||
+          rawDetected.scale === "small"
+        ? rawDetected.scale
+        : null,
+    }
+    : null;
+
   return {
     aiMessage: typeof parsed.aiMessage === "string"
       ? parsed.aiMessage
@@ -163,6 +209,7 @@ const requestGeminiText = async (
           typeof (chip as { action?: unknown }).action === "string",
       )
       : [],
+    detectedDesign,
   };
 };
 
@@ -171,12 +218,18 @@ const requestGeminiImage = async (
   apiKey: string,
 ): Promise<string | null> => {
   try {
-    const parts: Array<Record<string, unknown>> = [
-      { text: buildGeminiImagePrompt(payload) },
-    ];
+    const currentParts: Array<Record<string, unknown>> = [];
+    if (payload.referenceImageBase64) {
+      currentParts.push({
+        inlineData: {
+          mimeType: payload.referenceImageMimeType || "image/png",
+          data: payload.referenceImageBase64,
+        },
+      });
+    }
 
     if (payload.ciImageBase64) {
-      parts.push({
+      currentParts.push({
         inlineData: {
           mimeType: payload.ciImageMimeType || "image/png",
           data: payload.ciImageBase64,
@@ -184,14 +237,30 @@ const requestGeminiImage = async (
       });
     }
 
-    if (payload.referenceImageBase64) {
-      parts.push({
-        inlineData: {
-          mimeType: payload.referenceImageMimeType || "image/png",
-          data: payload.referenceImageBase64,
+    const contents = payload.previousImageBase64
+      ? [
+        {
+          role: "user",
+          parts: [{ text: buildGeminiImagePrompt(payload) }],
         },
-      });
-    }
+        {
+          role: "model",
+          parts: [{
+            inlineData: {
+              mimeType: payload.previousImageMimeType || "image/png",
+              data: payload.previousImageBase64,
+            },
+          }],
+        },
+        {
+          role: "user",
+          parts: [{ text: buildImageEditPrompt(payload) }, ...currentParts],
+        },
+      ]
+      : [{
+        role: "user",
+        parts: [{ text: buildGeminiImagePrompt(payload) }, ...currentParts],
+      }];
 
     const imageController = new AbortController();
     const imageTimeoutId = setTimeout(() => imageController.abort(), 30000);
@@ -205,10 +274,10 @@ const requestGeminiImage = async (
           headers: { "Content-Type": "application/json" },
           signal: imageController.signal,
           body: JSON.stringify({
-            contents: [{ role: "user", parts }],
+            contents,
             generationConfig: {
               responseModalities: ["IMAGE"],
-              imageConfig: { aspectRatio: "3:4" },
+              imageConfig: { aspectRatio: "9:16" },
             },
           }),
         },
@@ -237,15 +306,16 @@ const requestGeminiImage = async (
       return null;
     }
 
-    // TODO: Supabase Storage에 업로드 후 영구 URL 반환으로 교체
-    return `data:${imagePart?.inlineData?.mimeType ?? "image/png"};base64,${base64}`;
+    return `data:${
+      imagePart?.inlineData?.mimeType ?? "image/png"
+    };base64,${base64}`;
   } catch (err) {
     console.error("Gemini image generation failed:", err);
     return null;
   }
 };
 
-// ─── Supabase client ─────────────────────────────────────────────────────────
+// ─── Supabase clients ────────────────────────────────────────────────────────
 
 const createAuthenticatedSupabaseClient = (authHeader: string) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -261,6 +331,19 @@ const createAuthenticatedSupabaseClient = (authHeader: string) => {
         Authorization: authHeader,
       },
     },
+  });
+};
+
+const createAdminSupabaseClient = () => {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Missing Supabase service role configuration");
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
   });
 };
 
@@ -281,8 +364,10 @@ Deno.serve(async (req) => {
   }
 
   let supabase;
+  let adminClient;
   try {
     supabase = createAuthenticatedSupabaseClient(authHeader);
+    adminClient = createAdminSupabaseClient();
   } catch (error) {
     return jsonResponse(500, {
       error: error instanceof Error
@@ -290,6 +375,7 @@ Deno.serve(async (req) => {
         : "Missing Supabase configuration",
     });
   }
+  const workId = crypto.randomUUID();
 
   const {
     data: { user },
@@ -318,6 +404,10 @@ Deno.serve(async (req) => {
   if ((payload.conversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
     return jsonResponse(400, { error: "conversationHistory too long" });
   }
+  if ((payload.conversationHistory?.length ?? 0) > 0 &&
+    filterValidConversationTurns(payload.conversationHistory).length === 0) {
+    return jsonResponse(400, { error: "no valid conversationHistory turns" });
+  }
   if (payload.userMessage.length > MAX_MESSAGE_LENGTH) {
     return jsonResponse(413, { error: "userMessage too long" });
   }
@@ -327,6 +417,9 @@ Deno.serve(async (req) => {
   if ((payload.referenceImageBase64?.length ?? 0) > MAX_IMAGE_BASE64_LENGTH) {
     return jsonResponse(413, { error: "referenceImageBase64 too large" });
   }
+  if ((payload.previousImageBase64?.length ?? 0) > MAX_IMAGE_BASE64_LENGTH) {
+    return jsonResponse(413, { error: "previousImageBase64 too large" });
+  }
 
   const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
   if (!geminiApiKey) {
@@ -335,9 +428,101 @@ Deno.serve(async (req) => {
 
   try {
     const textResult = await requestGeminiText(payload, geminiApiKey);
-    const imageUrl = textResult.generateImage
-      ? await requestGeminiImage(payload, geminiApiKey)
-      : null;
+
+    // 채팅 모드에서 빈 designContext 필드를 텍스트 AI가 추출한 값으로 보완
+    const detected = textResult.detectedDesign;
+    const imagePayload: GenerateDesignRequest = {
+      ...payload,
+      designContext: {
+        ...payload.designContext,
+        pattern: payload.designContext?.pattern ?? detected?.pattern ?? null,
+        colors: (payload.designContext?.colors?.length ?? 0) > 0
+          ? payload.designContext!.colors
+          : (detected?.colors.length ?? 0) > 0
+          ? detected!.colors
+          : (payload.designContext?.colors ?? []),
+        ciPlacement: payload.designContext?.ciPlacement ??
+          detected?.ciPlacement ?? null,
+        scale: payload.designContext?.scale ?? detected?.scale ?? null,
+      },
+    };
+
+    const requestType = textResult.generateImage
+      ? "text_and_image"
+      : "text_only";
+
+    // 토큰 차감
+    const { data: tokenResult, error: tokenError } = await adminClient.rpc(
+      "use_design_tokens",
+      {
+        p_user_id: user.id,
+        p_ai_model: "gemini",
+        p_request_type: requestType,
+      },
+    );
+
+    if (tokenError) {
+      console.error("Token deduction error:", tokenError);
+      return jsonResponse(500, { error: "Token processing failed" });
+    }
+
+    const tokenData = tokenResult as {
+      success: boolean;
+      error?: string;
+      balance: number;
+      cost: number;
+    };
+
+    if (!tokenData.success) {
+      return jsonResponse(403, {
+        error: "insufficient_tokens",
+        balance: tokenData.balance,
+        cost: tokenData.cost,
+      });
+    }
+
+    let imageUrl: string | null = null;
+    let remainingTokens = tokenData.balance;
+
+    if (textResult.generateImage) {
+      imageUrl = await requestGeminiImage(imagePayload, geminiApiKey);
+
+      // 이미지 생성 실패 시 이미지 비용 환불 (텍스트 비용은 유지)
+      if (imageUrl === null) {
+        const { data: textCostData, error: textCostError } = await adminClient
+          .from("admin_settings")
+          .select("value")
+          .eq("key", "design_token_cost_gemini_text")
+          .single();
+        if (textCostError || !textCostData) {
+          console.error("admin_settings 'design_token_cost_gemini_text' 조회 실패:", textCostError);
+          console.warn("admin_settings 조회 실패, textCost를 0으로 폴백");
+        }
+        const parsedTextCost = textCostData ? parseInt(textCostData.value, 10) : NaN;
+        const textCost = isNaN(parsedTextCost) || parsedTextCost <= 0
+          ? 0
+          : Math.min(parsedTextCost, tokenData.cost);
+        const refundAmount = Math.max(tokenData.cost - textCost, 0);
+
+        if (refundAmount > 0) {
+          const { error: refundError } = await adminClient.rpc(
+            "refund_design_tokens",
+            {
+              p_user_id: user.id,
+              p_amount: refundAmount,
+              p_ai_model: "gemini",
+              p_request_type: requestType,
+              p_work_id: workId,
+            },
+          );
+          if (refundError) {
+            console.error("Token refund failed:", refundError);
+          } else {
+            remainingTokens = tokenData.balance + refundAmount;
+          }
+        }
+      }
+    }
 
     return jsonResponse(
       200,
@@ -345,7 +530,8 @@ Deno.serve(async (req) => {
         aiMessage: textResult.aiMessage,
         contextChips: textResult.contextChips,
         imageUrl,
-      } satisfies GenerateDesignResult,
+        remainingTokens,
+      } satisfies GenerateDesignResult & { remainingTokens: number },
     );
   } catch (error) {
     return jsonResponse(500, {

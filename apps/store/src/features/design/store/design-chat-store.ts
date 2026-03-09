@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type {
+  AiModel,
   Attachment,
   GenerationStatus,
   Message,
@@ -14,6 +15,7 @@ export interface DesignChatState {
   isImageDownloaded: boolean;
   resultTags: string[];
   pendingAttachments: Attachment[];
+  aiModel: AiModel;
   addMessage: (message: Message) => void;
   setDesignContext: (patch: Partial<DesignContext>) => void;
   addAttachment: (attachment: Attachment) => void;
@@ -23,6 +25,7 @@ export interface DesignChatState {
   setGeneratedImage: (imageUrl: string | null, tags: string[]) => void;
   markImageDownloaded: () => void;
   resetConversation: () => void;
+  setAiModel: (model: AiModel) => void;
 }
 
 export const createInitialDesignContext = (): DesignContext => ({
@@ -42,6 +45,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
   isImageDownloaded: false,
   resultTags: [],
   pendingAttachments: [],
+  aiModel: "openai",
   addMessage: (message) =>
     set((state) => ({
       messages: [...state.messages, message],
@@ -90,5 +94,18 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       isImageDownloaded: false,
       resultTags: [],
       pendingAttachments: [],
+    }),
+  setAiModel: (model) =>
+    set((state) => {
+      if (state.aiModel === model) return {};
+      if (state.generationStatus !== "idle") return {};
+      return {
+        aiModel: model,
+        messages: [],
+        generationStatus: "idle",
+        generatedImageUrl: null,
+        resultTags: [],
+        pendingAttachments: [],
+      };
     }),
 }));

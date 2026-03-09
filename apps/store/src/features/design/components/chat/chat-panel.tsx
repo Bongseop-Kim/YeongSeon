@@ -4,6 +4,7 @@ import { ChatHeader } from "@/features/design/components/chat/chat-header";
 import { ChatInput } from "@/features/design/components/chat/chat-input";
 import { MessageList } from "@/features/design/components/chat/message-list";
 import { QUICK_CHIPS, WELCOME_MESSAGE } from "@/features/design/constants/welcome";
+import { useDesignTokenBalanceQuery } from "@/features/design/api/ai-design-query";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
 import { cn } from "@/lib/utils";
@@ -15,10 +16,12 @@ interface ChatPanelProps {
 
 export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
   const messages = useDesignChatStore((state) => state.messages);
-  const tokenCount = messages.reduce((sum, m) => sum + Math.ceil(m.content.length / 2), 0);
+  const { data: tokenBalance } = useDesignTokenBalanceQuery();
   const generationStatus = useDesignChatStore((state) => state.generationStatus);
   const resetConversation = useDesignChatStore((state) => state.resetConversation);
   const pendingAttachments = useDesignChatStore((state) => state.pendingAttachments);
+  const aiModel = useDesignChatStore((state) => state.aiModel);
+  const setAiModel = useDesignChatStore((state) => state.setAiModel);
 
   const handleChipClick = (text: string) => {
     sendMessage(text, pendingAttachments);
@@ -28,7 +31,9 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
     <div className={cn("flex h-full flex-col", className)}>
       <ChatHeader
         onNewChat={resetConversation}
-        tokenCount={tokenCount}
+        tokenBalance={tokenBalance}
+        aiModel={aiModel}
+        onModelChange={setAiModel}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         {messages.length === 0 ? (

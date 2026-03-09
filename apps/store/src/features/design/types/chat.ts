@@ -1,5 +1,7 @@
 import type { DesignContext } from "@/features/design/types/design-context";
 
+export type AiModel = "openai" | "gemini";
+
 export type MessageRole = "user" | "ai";
 export type GenerationStatus =
   | "idle"
@@ -28,5 +30,6 @@ export interface Message {
   contextChips?: ContextChip[];
   timestamp: number;
   designContext?: DesignContext;
+  uiOnly?: boolean;
 }
 

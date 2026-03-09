@@ -1,13 +1,23 @@
 import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { AiModel } from "@/features/design/types/chat";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
-  tokenCount: number;
+  tokenBalance: number | undefined;
+  aiModel: AiModel;
+  onModelChange: (model: AiModel) => void;
 }
 
-export function ChatHeader({ onNewChat, tokenCount }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, tokenBalance, aiModel, onModelChange }: ChatHeaderProps) {
   return (
     <div className="flex items-center justify-between border-b px-4 py-3">
       <div className="flex items-center gap-3">
@@ -20,13 +30,24 @@ export function ChatHeader({ onNewChat, tokenCount }: ChatHeaderProps) {
             디자인 준비 완료
           </p>
           <p className="font-mono text-xs text-gray-400">
-            {tokenCount.toLocaleString()} tokens
+            {tokenBalance !== undefined ? `${tokenBalance.toLocaleString()} tokens` : "— tokens"}
           </p>
         </div>
       </div>
-      <Button variant="outline" size="sm" type="button" onClick={onNewChat}>
-        신규 대화
-      </Button>
+      <div className="flex items-center gap-2">
+        <Select value={aiModel} onValueChange={(value) => onModelChange(value as AiModel)}>
+          <SelectTrigger size="sm" className="w-28">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="openai">OpenAI</SelectItem>
+            <SelectItem value="gemini">Gemini</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" type="button" onClick={onNewChat}>
+          신규 대화
+        </Button>
+      </div>
     </div>
   );
 }

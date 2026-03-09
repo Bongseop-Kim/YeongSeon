@@ -16,8 +16,12 @@ export function DesignPage() {
   const { isDesktop } = useBreakpoint();
   const { showOnboarding, completeOnboarding } = useOnboarding();
   const { sendMessage } = useDesignChat();
-  const generatedImageUrl = useDesignChatStore((state) => state.generatedImageUrl);
-  const isImageDownloaded = useDesignChatStore((state) => state.isImageDownloaded);
+  const generatedImageUrl = useDesignChatStore(
+    (state) => state.generatedImageUrl,
+  );
+  const isImageDownloaded = useDesignChatStore(
+    (state) => state.isImageDownloaded,
+  );
 
   const shouldBlock = generatedImageUrl !== null && !isImageDownloaded;
 
@@ -34,7 +38,10 @@ export function DesignPage() {
     <MainLayout>
       <MainContent className="overflow-hidden">
         <div
-          className={cn("flex h-[calc(100vh-4rem)]", isDesktop ? "flex-row" : "flex-col")}
+          className={cn(
+            "flex h-[calc(100vh-4rem)]",
+            isDesktop ? "flex-row" : "flex-col",
+          )}
         >
           {isDesktop ? (
             <div className="w-1/2 overflow-hidden border-r">
@@ -42,10 +49,7 @@ export function DesignPage() {
             </div>
           ) : null}
           <div className={cn(isDesktop ? "w-1/2" : "flex-1 w-full")}>
-            <ChatPanel
-              className="h-full"
-              sendMessage={sendMessage}
-            />
+            <ChatPanel className="h-full" sendMessage={sendMessage} />
           </div>
         </div>
         <OnboardingDialog open={showOnboarding} onClose={completeOnboarding} />

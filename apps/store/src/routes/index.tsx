@@ -39,7 +39,7 @@ export default function Router() {
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/shop" element={<ShopPage />} />
       <Route path="/shop/:id" element={<ShopDetailPage />} />
-      <Route path="/design" element={<DesignPage />} />
+      <Route path="/design" element={<ProtectedRoute><DesignPage /></ProtectedRoute>} />
       <Route path="/custom-order" element={<OrderPage />} />
       <Route path="/reform" element={<ReformPage />} />
       <Route path="/cart" element={<CartPage />} />

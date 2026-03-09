@@ -1,5 +1,6 @@
-import { useAiDesignMutation } from "@/features/design/api/ai-design-query";
-import type { AiDesignResponse } from "@/features/design/api/ai-design-api";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAiDesignMutation, DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/features/design/api/ai-design-query";
+import { type AiDesignResponse, InsufficientTokensError } from "@/features/design/api/ai-design-api";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment, Message } from "@/features/design/types/chat";
 
@@ -16,15 +17,17 @@ const toConversationHistory = (
   items: Message[],
 ): { role: "user" | "ai"; content: string }[] =>
   items
-    .filter((message) => message.content.trim().length > 0)
+    .filter((message) => !message.uiOnly && message.content.trim().length > 0)
     .map((message) => ({
       role: message.role,
       content: message.content,
     }));
 
 export function useDesignChat(): UseDesignChatResult {
+  const queryClient = useQueryClient();
   const messages = useDesignChatStore((state) => state.messages);
   const designContext = useDesignChatStore((state) => state.designContext);
+  const aiModel = useDesignChatStore((state) => state.aiModel);
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
   );
@@ -57,18 +60,26 @@ export function useDesignChat(): UseDesignChatResult {
         setGeneratedImage(previewBackground, data.tags);
       }
       setGenerationStatus("completed");
+      void queryClient.invalidateQueries({ queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY });
       // TODO: 대화 히스토리 DB 저장 연동
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let content = errorContent;
+
+      if (error instanceof InsufficientTokensError) {
+        content = `토큰이 부족합니다. 현재 잔액: ${error.balance}토큰, 필요: ${error.cost}토큰`;
+      }
+
       const errorMessage: Message = {
         id: crypto.randomUUID(),
         role: "ai",
-        content: errorContent,
+        content,
         timestamp: Date.now(),
+        uiOnly: true,
       };
 
       addMessage(errorMessage);
-      setGenerationStatus(errorStatus);
+      setGenerationStatus(error instanceof InsufficientTokensError ? "idle" : errorStatus);
     },
   });
 
@@ -95,6 +106,7 @@ export function useDesignChat(): UseDesignChatResult {
         userMessage: userText,
         attachments,
         designContext,
+        aiModel,
         conversationHistory: toConversationHistory([...messages, userMessage]),
       },
       createMutationCallbacks(
@@ -118,6 +130,7 @@ export function useDesignChat(): UseDesignChatResult {
         userMessage: lastUserMessage.content,
         attachments: lastUserMessage.attachments ?? [],
         designContext: lastUserMessage.designContext ?? designContext,
+        aiModel,
         conversationHistory: toConversationHistory(messages),
       },
       createMutationCallbacks(
