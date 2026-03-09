@@ -32,6 +32,7 @@ export function useAdminInquiryTable() {
 export function useAdminInquiryDetail() {
   const { query } = useShow<AdminInquiryRowDTO>({
     resource: "inquiries",
+    meta: { select: "*, products(id, name, image)" },
   });
 
   const rawData = query.data?.data;

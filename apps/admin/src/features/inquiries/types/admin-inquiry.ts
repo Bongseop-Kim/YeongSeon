@@ -1,4 +1,7 @@
 export type InquiryStatus = "답변대기" | "답변완료";
+export type InquiryCategory = "일반" | "상품" | "수선" | "주문제작";
+
+export const INQUIRY_CATEGORIES: InquiryCategory[] = ["일반", "상품", "수선", "주문제작"];
 
 // ── List UI model ──────────────────────────────────────────────
 
@@ -16,6 +19,8 @@ interface AdminInquiryBase {
   title: string;
   content: string;
   date: string;
+  category: InquiryCategory;
+  product?: { id: number; name: string; image: string };
 }
 
 export interface AdminInquiryPending extends AdminInquiryBase {
