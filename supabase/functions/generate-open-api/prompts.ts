@@ -72,7 +72,7 @@ export const buildTextPrompt = (payload: GenerateDesignRequest) => {
   const colors = payload.designContext?.colors?.join(", ") || "미정";
   const pattern = payload.designContext?.pattern || "미정";
   const fabricMethod = payload.designContext?.fabricMethod || "미정";
-  const ciPlacement = payload.designContext?.ciPlacement ?? "미정";
+  const ciPlacement = payload.designContext?.ciPlacement || "미정";
 
   return [
     "현재 넥타이 디자인 상태를 바탕으로 사용자 메시지에 응답하세요.",
@@ -233,7 +233,7 @@ export const buildReferencePrompt = (
       "Keep the final result as a clean rectangular fabric swatch.",
     ].join(" ");
   }
-  return "";
+  throw new Error("unreachable: all hasCiImage/hasReferenceImage combinations are handled above");
 };
 
 export const buildCiPlacementPrompt = (
