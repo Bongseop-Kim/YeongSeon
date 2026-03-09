@@ -4,8 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { InquiryForm } from "./components/inquiry-form";
-import type { InquiryFormData } from "./components/inquiry-form";
+import { InquiryForm, type InquiryFormData } from "@/features/my-page/inquiry/components/inquiry-form";
 import { InquiryCard } from "./components/inquiry-card";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
@@ -45,16 +44,18 @@ export default function InquiryPage() {
       : null;
     const productId = searchParams.get("productId");
     const productName = searchParams.get("productName");
+    const parsedProductId = productId
+      ? Number.isNaN(Number(productId))
+        ? undefined
+        : Number(productId)
+      : undefined;
 
     if (category) {
       setInitialFormData({
         category,
-        productId: productId
-          ? Number.isNaN(Number(productId))
-            ? undefined
-            : Number(productId)
-          : undefined,
-        productName: productName ?? undefined,
+        productId: parsedProductId,
+        productName:
+          parsedProductId !== undefined ? (productName ?? undefined) : undefined,
         title: "",
         content: "",
       });

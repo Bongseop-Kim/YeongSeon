@@ -23,7 +23,15 @@ const formatAmount = (amount: number) => {
   return `${prefix}${amount.toLocaleString()}`;
 };
 
-const formatDate = (value: string) => value.slice(0, 10);
+const formatDate = (value: string) =>
+  new Date(value)
+    .toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    .replaceAll(". ", "-")
+    .replace(".", "");
 
 function TokenHistorySkeleton() {
   return (
@@ -56,11 +64,9 @@ export default function TokenHistoryPage() {
     error: historyError,
   } = useDesignTokenHistoryQuery();
 
-  const errorMessage = balanceError instanceof Error
-    ? balanceError.message
-    : historyError instanceof Error
-      ? historyError.message
-      : "오류가 발생했습니다.";
+  const historyErrorMessage = historyError instanceof Error
+    ? historyError.message
+    : "오류가 발생했습니다.";
 
   return (
     <MainLayout>
@@ -89,10 +95,10 @@ export default function TokenHistoryPage() {
                 <CardTitle>토큰 내역</CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
-                {historyError || balanceError ? (
+                {historyError ? (
                   <Empty
                     title="토큰 내역을 불러올 수 없습니다."
-                    description={errorMessage}
+                    description={historyErrorMessage}
                   />
                 ) : isHistoryLoading ? (
                   <TokenHistorySkeleton />

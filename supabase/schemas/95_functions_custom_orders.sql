@@ -220,6 +220,9 @@ CREATE OR REPLACE FUNCTION public.create_custom_order_txn(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
+-- SECURITY DEFINER: 이 함수는 호출자(authenticated 역할)가 직접 쓰기 권한을 갖지 않는
+-- orders, order_items 테이블에 INSERT를 수행해야 하므로 SECURITY DEFINER가 필요하다.
+-- auth.uid() 소유권 검증 및 shipping_addresses 존재 확인으로 권한 남용을 방지한다.
 SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
@@ -232,6 +235,8 @@ declare
   v_fabric_cost integer;
   v_total_cost integer;
   v_reform_data jsonb;
+  v_elem jsonb;
+  v_idx integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -244,6 +249,20 @@ begin
 
   if p_reference_images is not null and jsonb_typeof(p_reference_images) <> 'array' then
     raise exception 'p_reference_images must be a JSON array';
+  end if;
+
+  v_idx := 0;
+  if p_reference_images is not null then
+    for v_elem in select jsonb_array_elements(p_reference_images) loop
+      if jsonb_typeof(v_elem) <> 'object'
+         or not (v_elem ? 'url')
+         or not (v_elem ? 'fileId')
+         or jsonb_typeof(v_elem->'url') <> 'string'
+         or jsonb_typeof(v_elem->'fileId') <> 'string' then
+        raise exception 'p_reference_images[%] must be an object with string "url" and "fileId" keys', v_idx;
+      end if;
+      v_idx := v_idx + 1;
+    end loop;
   end if;
 
   -- p_sample / p_sample_type 정합성 검증
