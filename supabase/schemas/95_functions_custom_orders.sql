@@ -238,8 +238,12 @@ begin
     raise exception 'Unauthorized';
   end if;
 
-  if p_quantity is null or p_quantity < 1 then
+  if p_quantity is null or p_quantity <= 0 then
     raise exception 'Invalid quantity';
+  end if;
+
+  if p_reference_images is not null and jsonb_typeof(p_reference_images) <> 'array' then
+    raise exception 'p_reference_images must be a JSON array';
   end if;
 
   -- p_sample / p_sample_type 정합성 검증

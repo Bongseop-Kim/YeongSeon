@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button, Space, Table, Tag, Typography } from "antd";
-import { useCustomerTokenBalancesQuery, useCustomerTokenHistoryQuery } from "../api/customers-query";
-import { CustomerTokenFormModal } from "./customer-token-form-modal";
-import type { AdminCustomerTokenRow } from "../types/admin-customer";
+import { useCustomerTokenBalancesQuery, useCustomerTokenHistoryQuery } from "@/features/customers/api/customers-query";
+import { CustomerTokenFormModal } from "@/features/customers/components/customer-token-form-modal";
+import type { AdminCustomerTokenRow } from "@/features/customers/types/admin-customer";
 
 interface Props {
   userId: string;

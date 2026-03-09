@@ -4,8 +4,8 @@ import {
   useAdminCustomerTable,
   useCustomerTokenBalancesQuery,
 } from "@/features/customers/api/customers-query";
-import { ROLE_COLORS } from "../types/admin-customer";
-import type { AdminCustomerListItem } from "../types/admin-customer";
+import { ROLE_COLORS } from "@/features/customers/types/admin-customer";
+import type { AdminCustomerListItem } from "@/features/customers/types/admin-customer";
 
 export function CustomerListTable() {
   const { show } = useNavigation();

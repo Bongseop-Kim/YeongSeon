@@ -3,6 +3,7 @@ import { upload } from "@imagekit/react";
 import { supabase } from "@/lib/supabase";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 import { toast } from "@/lib/toast";
+import type { ImageRef } from "@yeongseon/shared";
 
 interface UploadedImage {
   name: string;
@@ -69,7 +70,7 @@ export const useImageUpload = () => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const getImageRefs = useCallback(() => {
+  const getImageRefs = useCallback((): ImageRef[] => {
     return uploadedImages
       .map((img) => ({
         url: img.url.trim(),

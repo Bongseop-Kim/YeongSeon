@@ -37,6 +37,7 @@ export default function InquiryPage() {
     ? inquiries.find((i) => i.id === editingInquiryId)
     : null;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const rawCategory = searchParams.get("category");
     const category = INQUIRY_CATEGORIES.includes(rawCategory as InquiryCategory)

@@ -74,6 +74,8 @@ export default function TokenHistoryPage() {
               <CardContent>
                 {isBalanceLoading ? (
                   <Skeleton className="h-9 w-32" />
+                ) : balanceError ? (
+                  <p className="text-sm text-red-600">잔액을 불러오는 중 오류가 발생했습니다.</p>
                 ) : (
                   <div className="text-3xl font-semibold tracking-tight text-zinc-900">
                     {balance.toLocaleString()}
