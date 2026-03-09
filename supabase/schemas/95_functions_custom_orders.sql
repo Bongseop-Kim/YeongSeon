@@ -351,7 +351,7 @@ begin
     item_type,
     product_id,
     selected_option_id,
-    reform_data,
+    item_data,
     quantity,
     unit_price,
     discount_amount,

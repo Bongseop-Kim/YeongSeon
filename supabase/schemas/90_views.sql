@@ -109,7 +109,7 @@ SELECT
   END AS "selectedOption",
   oi.quantity,
   CASE
-    WHEN oi.item_type IN ('reform', 'custom') THEN oi.reform_data
+    WHEN oi.item_type IN ('reform', 'custom') THEN oi.item_data
     ELSE null
   END AS "reformData",
   uc.user_coupon AS "appliedCoupon"
@@ -190,7 +190,7 @@ SELECT
     END,
     'quantity', oi.quantity,
     'reformData', CASE
-      WHEN oi.item_type IN ('reform', 'custom') THEN oi.reform_data
+      WHEN oi.item_type IN ('reform', 'custom') THEN oi.item_data
       ELSE null
     END,
     'appliedCoupon', uc.user_coupon
@@ -305,8 +305,8 @@ SELECT
   p.name           AS "customerName",
   p.phone          AS "customerPhone",
   public.admin_get_email(o.user_id) AS "customerEmail",
-  CASE WHEN o.order_type = 'custom' THEN ri.reform_data->'options'->>'fabric_type' ELSE NULL END AS "fabricType",
-  CASE WHEN o.order_type = 'custom' THEN ri.reform_data->'options'->>'design_type' ELSE NULL END AS "designType",
+  CASE WHEN o.order_type = 'custom' THEN ri.item_data->'options'->>'fabric_type' ELSE NULL END AS "fabricType",
+  CASE WHEN o.order_type = 'custom' THEN ri.item_data->'options'->>'design_type' ELSE NULL END AS "designType",
   CASE WHEN o.order_type IN ('custom', 'repair') THEN ri.item_quantity ELSE NULL END AS "itemQuantity",
   CASE WHEN o.order_type = 'repair' THEN
     ri.item_quantity || '개 넥타이 수선'
@@ -318,11 +318,11 @@ LEFT JOIN public.profiles p ON p.id = o.user_id
 LEFT JOIN LATERAL (
   SELECT
     (
-      SELECT oi2.reform_data
+      SELECT oi2.item_data
       FROM public.order_items oi2
       WHERE oi2.order_id = o.id AND oi2.item_type IN ('reform', 'custom')
       LIMIT 1
-    ) AS reform_data,
+    ) AS item_data,
     SUM(oi.quantity)::integer AS item_quantity
   FROM public.order_items oi
   WHERE oi.order_id = o.id AND oi.item_type IN ('reform', 'custom')
@@ -376,7 +376,7 @@ SELECT
   oi.item_type     AS "itemType",
   oi.product_id    AS "productId",
   oi.selected_option_id AS "selectedOptionId",
-  oi.reform_data   AS "reformData",
+  oi.item_data     AS "reformData",
   oi.quantity,
   oi.unit_price    AS "unitPrice",
   oi.discount_amount     AS "discountAmount",
