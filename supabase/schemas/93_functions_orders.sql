@@ -428,8 +428,18 @@ $$;
 -- ── customer_confirm_purchase ─────────────────────────────────
 -- Allows a customer to manually confirm purchase after delivery.
 -- Earns 2% points. Callable when status = '배송완료' or '배송중'.
--- SECURITY DEFINER: needed to INSERT into order_status_logs and points
---   (neither table has INSERT RLS policy for regular users).
+-- SECURITY DEFINER 사용 근거:
+--   이 함수는 authenticated 사용자(고객)가 호출하지만, 세 테이블에 직접 쓰기가 필요하다:
+--     - public.orders        : UPDATE (RLS에 INSERT/UPDATE 정책 없음)
+--     - public.points        : INSERT (RLS에 고객용 INSERT 정책 없음)
+--     - public.order_status_logs : INSERT (RLS에 INSERT 정책 없음)
+--   SECURITY INVOKER + RLS 조합으로는 위 테이블에 쓸 수 없어 SECURITY DEFINER가 필요하다.
+--   SET ROLE 방식은 Supabase 환경에서 사용할 수 없다.
+--   권한 상승 방지를 위한 안전 장치:
+--     1) auth.uid() 검증으로 미인증 호출 즉시 차단
+--     2) FOR UPDATE로 주문 소유권(user_id = auth.uid()) 검증
+--     3) 상태 체크로 허용된 전이만 수행
+--     4) 입력값은 p_order_id(uuid) 하나뿐이며 SQL 인젝션 표면이 없음
 CREATE OR REPLACE FUNCTION public.customer_confirm_purchase(p_order_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
