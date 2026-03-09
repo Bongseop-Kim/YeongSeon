@@ -238,6 +238,10 @@ begin
     raise exception 'Unauthorized';
   end if;
 
+  if p_quantity is null or p_quantity < 1 then
+    raise exception 'Invalid quantity';
+  end if;
+
   -- p_sample / p_sample_type 정합성 검증
   if p_sample is not true and p_sample_type is not null then
     raise exception 'p_sample_type must be null when p_sample is not true';

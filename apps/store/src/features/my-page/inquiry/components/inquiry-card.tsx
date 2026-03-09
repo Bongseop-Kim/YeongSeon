@@ -29,7 +29,7 @@ export function InquiryCard({
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
               {inquiry.category !== "일반" && (
-                <Badge variant="outline" className="text-xs">{inquiry.category}</Badge>
+                <Badge variant="outline" className="mb-1 text-xs">{inquiry.category}</Badge>
               )}
               <div className="flex items-center gap-2 mb-1">
                 <Label className="font-bold text-base">{inquiry.title}</Label>

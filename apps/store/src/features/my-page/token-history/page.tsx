@@ -18,7 +18,7 @@ const TOKEN_TYPE_LABELS: Record<string, string> = {
 };
 
 const formatAmount = (amount: number) => {
-  const prefix = amount > 0 ? "+" : "";
+  const prefix = amount >= 0 ? "+" : "";
 
   return `${prefix}${amount.toLocaleString()}`;
 };

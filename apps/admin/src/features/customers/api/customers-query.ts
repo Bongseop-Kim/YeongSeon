@@ -10,13 +10,13 @@ import {
   toAdminCustomerOrderRow,
   toAdminCustomerCouponRow,
   toAdminCustomerTokenRow,
-} from "./customers-mapper";
-import type { DesignTokenRow, ProfileRow, UserCouponRow } from "./customers-mapper";
+} from "@/features/customers/api/customers-mapper";
+import type { DesignTokenRow, ProfileRow, UserCouponRow } from "@/features/customers/api/customers-mapper";
 import {
   getCustomerTokenBalances,
   getCustomerTokenHistory,
   manageCustomerTokens,
-} from "./customers-api";
+} from "@/features/customers/api/customers-api";
 import type {
   AdminCustomerListItem,
   AdminCustomerDetail,
@@ -24,8 +24,8 @@ import type {
   AdminCustomerCouponRow,
   AdminCustomerTokenBalanceRow,
   AdminCustomerTokenRow,
-} from "../types/admin-customer";
-import type { ManageCustomerTokensParams } from "./customers-api";
+} from "@/features/customers/types/admin-customer";
+import type { ManageCustomerTokensParams } from "@/features/customers/api/customers-api";
 
 const CUSTOMER_TOKEN_BALANCES_KEY = ["customers", "token-balances"] as const;
 const CUSTOMER_TOKEN_HISTORY_KEY = ["customers", "token-history"] as const;

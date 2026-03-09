@@ -90,7 +90,9 @@ Deno.serve(async (req) => {
           typeof image === "object" &&
           image !== null &&
           typeof (image as { url?: unknown }).url === "string" &&
-          typeof (image as { fileId?: unknown }).fileId === "string"
+          typeof (image as { fileId?: unknown }).fileId === "string" &&
+          (image as { url: string }).url.trim().length > 0 &&
+          (image as { fileId: string }).fileId.trim().length > 0
       ))
   ) {
     return jsonResponse(400, {

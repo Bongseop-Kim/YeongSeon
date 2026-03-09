@@ -68,7 +68,6 @@ export function useCustomOrderSubmit({
     }
 
     const {
-      referenceImages,
       additionalNotes,
       sample,
       sampleType,

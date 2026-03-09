@@ -5,7 +5,7 @@ import type {
   AdminCustomerOrderRow,
   AdminCustomerCouponRow,
   AdminCustomerTokenRow,
-} from "../types/admin-customer";
+} from "@/features/customers/types/admin-customer";
 
 // ── 로컬 DTO ───────────────────────────────────────────────────
 
