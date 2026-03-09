@@ -1,33 +1,21 @@
--- =============================================================
--- 99_functions_design_tokens.sql  –  Design token RPC functions
--- =============================================================
+-- Design token: fix dynamic cost-key validation and secure/idempotent refunds
 
--- ── get_design_token_balance ──────────────────────────────────
--- Returns the current token balance for the authenticated user.
-CREATE OR REPLACE FUNCTION public.get_design_token_balance()
-RETURNS integer
-LANGUAGE sql
-STABLE
-SECURITY INVOKER
-SET search_path TO 'public'
-AS $$
-  SELECT COALESCE(SUM(amount), 0)::integer
-  FROM public.design_tokens
-  WHERE user_id = auth.uid()
-    AND (expires_at IS NULL OR expires_at > now());
-$$;
+-- 1. Add work_id for refund idempotency
+ALTER TABLE public.design_tokens
+  ADD COLUMN IF NOT EXISTS work_id text;
 
--- ── use_design_tokens ─────────────────────────────────────────
--- Deducts tokens for a design generation request.
--- SECURITY DEFINER 유지 사유: advisory lock + design_tokens INSERT는 RLS로 허용되지 않음
--- service_role(Edge Function)에서 호출 시 소유권 검증 면제
--- Validates ai_model/request_type/quality against a whitelist and fails closed if cost is missing.
--- Returns: { success, cost, balance } or { success: false, error: 'insufficient_tokens', balance, cost }
+CREATE UNIQUE INDEX IF NOT EXISTS idx_design_tokens_work_id
+  ON public.design_tokens (work_id)
+  WHERE work_id IS NOT NULL;
+
+-- 2. Harden use_design_tokens input validation and fail closed on missing cost
+--    SECURITY DEFINER 유지 사유: advisory lock + design_tokens INSERT는 RLS로 허용되지 않음
+--    service_role(Edge Function)에서 호출 시 소유권 검증 면제
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
-  p_ai_model     text,             -- 'openai' | 'gemini'
-  p_request_type text,            -- 'text_only' | 'text_and_image'
-  p_quality      text DEFAULT 'standard'  -- 'high' | 'standard'
+  p_ai_model     text,
+  p_request_type text,
+  p_quality      text DEFAULT 'standard'
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -117,10 +105,11 @@ BEGIN
 END;
 $$;
 
--- ── refund_design_tokens ──────────────────────────────────────
--- Refunds tokens when image generation fails after text succeeds.
--- SECURITY DEFINER 유지 사유: design_tokens INSERT는 RLS로 허용되지 않음
--- service_role 전용이며 work_id 기반 멱등성으로 중복 환불을 방지함
+-- 3. Replace refund_design_tokens with a service_role-only, idempotent version
+--    SECURITY DEFINER 유지 사유: design_tokens INSERT는 RLS로 허용되지 않음
+--    service_role 전용: 클라이언트가 자신의 토큰을 직접 환불할 수 없도록 차단
+DROP FUNCTION IF EXISTS public.refund_design_tokens(uuid, integer, text, text);
+
 CREATE OR REPLACE FUNCTION public.refund_design_tokens(
   p_user_id      uuid,
   p_amount       integer,

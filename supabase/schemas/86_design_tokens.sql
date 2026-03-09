@@ -11,10 +11,12 @@ CREATE TABLE public.design_tokens (
   request_type  text,       -- 'text_only' | 'text_and_image' | NULL
   description   text,
   expires_at    timestamptz,
-  created_at    timestamptz NOT NULL DEFAULT now()
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  work_id       text
 );
 
 CREATE INDEX idx_design_tokens_user_id ON public.design_tokens (user_id, created_at DESC);
+CREATE UNIQUE INDEX idx_design_tokens_work_id ON public.design_tokens (work_id) WHERE work_id IS NOT NULL;
 
 -- RLS: users can only SELECT their own tokens
 -- INSERT/UPDATE are controlled exclusively by SECURITY DEFINER RPCs

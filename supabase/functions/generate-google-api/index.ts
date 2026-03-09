@@ -362,6 +362,7 @@ Deno.serve(async (req) => {
         : "Missing Supabase configuration",
     });
   }
+  const workId = crypto.randomUUID();
 
   const {
     data: { user },
@@ -486,6 +487,7 @@ Deno.serve(async (req) => {
               p_amount: refundAmount,
               p_ai_model: "gemini",
               p_request_type: requestType,
+              p_work_id: workId,
             },
           );
           if (refundError) {
