@@ -43,7 +43,7 @@ OpenAI 공식 문서도 다음처럼 구분한다:
 ### 참고
 
 - `gpt-image-1.5`가 최신 주력 모델이다.
-- `DALL·E 2`, `DALL·E 3`는 여전히 문서에 남아 있지만 GPT Image 계열이 OpenAI의 현재 권장 축이다.
+- `DALL·E 2`, `DALL·E 3`는 **Deprecated** (지원 종료일: 2026-05-12). 신규 구현에는 사용하지 말 것. GPT Image 계열(`gpt-image-1.5` 등)을 사용할 것.
 - GPT Image 사용 전에는 OpenAI 문서 기준 **API Organization Verification** 이 필요할 수 있다.
 
 ---

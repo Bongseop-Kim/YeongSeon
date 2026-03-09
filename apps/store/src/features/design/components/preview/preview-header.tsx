@@ -18,7 +18,7 @@ export function PreviewHeader({ unmasked, onToggle }: PreviewHeaderProps) {
         title={unmasked ? "넥타이 형태로 보기" : "패턴 전체 보기"}
         aria-label={unmasked ? "넥타이 형태로 보기" : "패턴 전체 보기"}
       >
-        {unmasked ? <Square className="size-4" /> : <Crop className="size-4" />}
+        {unmasked ? <Crop className="size-4" /> : <Square className="size-4" />}
       </Button>
     </div>
   );

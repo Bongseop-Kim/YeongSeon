@@ -125,7 +125,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   };
 
   return (
-    <div className="absolute bottom-full mb-2 w-72 rounded-xl border bg-white p-4 shadow-lg">
+    <div id="attachment-popup" className="absolute bottom-full mb-2 w-72 rounded-xl border bg-white p-4 shadow-lg">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold">첨부 옵션</h3>
         <Button variant="ghost" size="icon-sm" type="button" onClick={onClose}>

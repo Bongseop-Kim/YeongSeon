@@ -101,13 +101,15 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
               variant="ghost"
               size="icon"
               aria-label="옵션 추가"
+              aria-expanded={showPopup}
+              aria-controls="attachment-popup"
               onClick={() => setShowPopup((prev) => !prev)}
             >
               <Plus
                 className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
               />
             </Button>
-            <div className="inline-flex rounded-md border bg-muted p-0.5 gap-0.5">
+            <div role="radiogroup" className="inline-flex rounded-md border bg-muted p-0.5 gap-0.5">
               {FABRIC_OPTIONS.map((option) => {
                 const isSelected = designContext.fabricMethod === option.value;
 
@@ -115,7 +117,8 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                   <button
                     key={option.value}
                     type="button"
-                    aria-pressed={isSelected}
+                    role="radio"
+                    aria-checked={isSelected}
                     className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
                       isSelected
                         ? "bg-background text-foreground shadow-sm"

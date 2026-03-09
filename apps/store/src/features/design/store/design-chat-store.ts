@@ -31,7 +31,7 @@ export interface DesignChatState {
 export const createInitialDesignContext = (): DesignContext => ({
   colors: [],
   pattern: null,
-  fabricMethod: "yarn-dyed",
+  fabricMethod: null,
   ciImage: null,
   ciPlacement: null,
   referenceImage: null,
@@ -98,6 +98,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
   setAiModel: (model) =>
     set((state) => {
       if (state.aiModel === model) return {};
+      if (state.generationStatus !== "idle") return {};
       return {
         aiModel: model,
         messages: [],

@@ -30,5 +30,6 @@ export interface Message {
   contextChips?: ContextChip[];
   timestamp: number;
   designContext?: DesignContext;
+  uiOnly?: boolean;
 }
 

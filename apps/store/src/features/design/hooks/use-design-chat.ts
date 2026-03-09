@@ -17,7 +17,7 @@ const toConversationHistory = (
   items: Message[],
 ): { role: "user" | "ai"; content: string }[] =>
   items
-    .filter((message) => message.content.trim().length > 0)
+    .filter((message) => !message.uiOnly && message.content.trim().length > 0)
     .map((message) => ({
       role: message.role,
       content: message.content,
@@ -75,6 +75,7 @@ export function useDesignChat(): UseDesignChatResult {
         role: "ai",
         content,
         timestamp: Date.now(),
+        uiOnly: true,
       };
 
       addMessage(errorMessage);
