@@ -18,7 +18,7 @@ import {
   useUpdateInquiry,
   useDeleteInquiry,
 } from "@/features/my-page/inquiry/api/inquiry-query";
-import type { InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-item";
+import { INQUIRY_CATEGORIES, type InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-item";
 
 export default function InquiryPage() {
   const { confirm } = useModalStore();
@@ -38,7 +38,10 @@ export default function InquiryPage() {
     : null;
 
   useEffect(() => {
-    const category = searchParams.get("category") as InquiryCategory | null;
+    const rawCategory = searchParams.get("category");
+    const category = INQUIRY_CATEGORIES.includes(rawCategory as InquiryCategory)
+      ? (rawCategory as InquiryCategory)
+      : null;
     const productId = searchParams.get("productId");
     const productName = searchParams.get("productName");
 
@@ -133,6 +136,7 @@ export default function InquiryPage() {
 
   const handleNewInquiry = () => {
     setEditingInquiryId(null);
+    setInitialFormData(undefined);
     setIsSheetOpen(true);
   };
 
