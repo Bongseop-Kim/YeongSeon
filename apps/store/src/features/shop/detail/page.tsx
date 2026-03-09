@@ -248,6 +248,16 @@ export default function ShopDetailPage() {
     );
   };
 
+  const handleInquiry = () => {
+    if (!product) return;
+    const params = new URLSearchParams({
+      category: "상품",
+      productId: String(product.id),
+      productName: product.name,
+    });
+    navigate(`${ROUTES.MY_PAGE_INQUIRY}?${params.toString()}`);
+  };
+
   return (
     <MainLayout>
       <MainContent className="overflow-visible">
@@ -469,6 +479,7 @@ export default function ShopDetailPage() {
               onLikeToggle={handleLikeToggle}
               onAddToCart={handleAddToCart}
               onOrder={handleOrder}
+              onInquiry={handleInquiry}
               disabled={isProductSoldOut}
             />
           }
