@@ -52,6 +52,16 @@ begin
     raise exception '구매확정은 배송중 또는 배송완료 상태에서만 가능합니다 (현재: %)', v_current_status;
   end if;
 
+  if exists (
+    select 1
+    from public.claims c
+    join public.order_items oi on oi.id = c.order_item_id
+    where oi.order_id = p_order_id
+      and c.status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
+  ) then
+    raise exception '진행 중인 클레임이 있는 주문은 구매확정할 수 없습니다';
+  end if;
+
   -- Earn 2% points for manual confirmation
   v_points_earned := floor(v_total_price * 0.02);
 
@@ -181,3 +191,16 @@ $$;
 -- ── Index for '배송중' auto-confirm query ──────────────────────
 CREATE INDEX idx_orders_pending_confirm_shipping
   ON public.orders (shipped_at) WHERE status = '배송중';
+
+-- ── Register pg_cron job ──────────────────────────────────────
+-- Daily at 03:00 KST (= 18:00 UTC). Use unschedule+schedule for idempotency.
+DO $$ BEGIN
+  PERFORM cron.unschedule('auto_confirm_delivered_orders');
+EXCEPTION WHEN others THEN NULL;
+END $$;
+
+SELECT cron.schedule(
+  'auto_confirm_delivered_orders',
+  '0 18 * * *',
+  $$SELECT public.auto_confirm_delivered_orders()$$
+);
