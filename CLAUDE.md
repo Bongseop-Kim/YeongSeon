@@ -21,6 +21,11 @@ pnpm build              # 전체 빌드
 pnpm db:diff            # DB 스키마 diff
 pnpm db:push            # 마이그레이션 push
 supabase migration list # Remote 마이그레이션 목록 확인
+supabase db push        # 마이그레이션 push (supabase CLI 직접)
+
+# Edge Function 배포 (--use-api 필수: 로컬 Deno lockfile v5 호환 문제 우회)
+supabase functions deploy <함수명> --use-api
+supabase functions deploy --use-api   # 전체 배포
 ```
 
 새 feature 파일 위치: `apps/{app}/src/features/{domain}/api/{domain}-api.ts` + `{domain}-mapper.ts`
