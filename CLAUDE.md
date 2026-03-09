@@ -42,6 +42,10 @@ supabase functions deploy --use-api   # 전체 배포
 - 직접 테이블 쓰기는 `cart_items` DELETE만 허용한다. 이 예외는 해당 테이블의 RLS 정책이 `user_id = auth.uid()`로 소유권을 보장하기 때문이다. 다른 테이블에 직접 쓰기 예외를 추가하려면 동일하게 RLS 근거를 명시해야 한다.
 - 주문/클레임 상태 전이는 두 모드로 동작한다. `is_rollback=false`(기본): 순방향 전이만 허용. `is_rollback=true`: 오입력 정정 목적의 역방향 전이를 허용하며 사유(memo) 입력이 필수다. 허용된 롤백 전이는 RPC에서 order_type별로 엄격히 제한된다 (예: sale `진행중→대기중`, custom `제작중→접수` 등). `배송중/완료/취소`, `수거완료/재발송/완료` 상태는 is_rollback 여부와 무관하게 이전 상태로 복원 불가하다.
 
+## AI 에이전트 규칙
+
+- `docs/plans/`에 생성되는 플랜/설계 문서는 커밋하지 않는다. `.gitignore`에 등록되어 있으며 로컬 참고용으로만 사용한다.
+
 ## 프론트엔드 규칙
 
 - API 파일(`*-api.ts`)은 얇게 유지하고, 매핑은 `*-mapper.ts`로 분리한다.
