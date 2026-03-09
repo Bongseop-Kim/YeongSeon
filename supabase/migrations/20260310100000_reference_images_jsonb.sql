@@ -1,3 +1,7 @@
+-- 1) 뷰가 reference_image_urls에 의존하므로 먼저 DROP
+DROP VIEW IF EXISTS public.admin_quote_request_detail_view;
+
+-- 2) quote_requests: text[] → jsonb
 ALTER TABLE public.quote_requests
 DROP COLUMN reference_image_urls;
 
