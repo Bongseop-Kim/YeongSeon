@@ -43,17 +43,20 @@ export function ResultTagBar({
     if (unmasked) {
       try {
         const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch image: ${res.status}`);
+        }
         const blob = await res.blob();
         const objectUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = objectUrl;
         a.download = "design.png";
         a.click();
-        URL.revokeObjectURL(objectUrl);
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        markImageDownloaded();
       } catch {
         window.open(url, "_blank");
       }
-      markImageDownloaded();
       return;
     }
 

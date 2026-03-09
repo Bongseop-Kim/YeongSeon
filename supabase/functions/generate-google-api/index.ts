@@ -62,6 +62,8 @@ type GenerateDesignResult = {
   imageUrl: string | null;
 };
 
+const MAX_TURN_CONTENT_LENGTH = 10_000;
+
 const jsonResponse = (status: number, body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
     status,
@@ -71,6 +73,17 @@ const jsonResponse = (status: number, body: Record<string, unknown>) =>
     },
   });
 
+const filterValidConversationTurns = (
+  conversationHistory?: ConversationTurn[],
+) =>
+  (conversationHistory ?? []).filter(
+    (turn): turn is ConversationTurn =>
+      (turn.role === "user" || turn.role === "ai") &&
+      typeof turn.content === "string" &&
+      turn.content.trim().length > 0 &&
+      turn.content.length <= MAX_TURN_CONTENT_LENGTH,
+  );
+
 // ─── API requests ────────────────────────────────────────────────────────────
 
 const requestGeminiText = async (
@@ -78,8 +91,8 @@ const requestGeminiText = async (
   apiKey: string,
 ) => {
   // 대화 히스토리를 Gemini 네이티브 멀티턴 포맷으로 변환
-  const historyContents: Array<Record<string, unknown>> = (
-    payload.conversationHistory ?? []
+  const historyContents: Array<Record<string, unknown>> = filterValidConversationTurns(
+    payload.conversationHistory,
   ).map((turn) => ({
     role: turn.role === "user" ? "user" : "model",
     parts: [{ text: turn.content }],
@@ -391,6 +404,10 @@ Deno.serve(async (req) => {
   if ((payload.conversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
     return jsonResponse(400, { error: "conversationHistory too long" });
   }
+  if ((payload.conversationHistory?.length ?? 0) > 0 &&
+    filterValidConversationTurns(payload.conversationHistory).length === 0) {
+    return jsonResponse(400, { error: "no valid conversationHistory turns" });
+  }
   if (payload.userMessage.length > MAX_MESSAGE_LENGTH) {
     return jsonResponse(413, { error: "userMessage too long" });
   }
@@ -479,10 +496,11 @@ Deno.serve(async (req) => {
           .single();
         if (textCostError || !textCostData) {
           console.error("admin_settings 'design_token_cost_gemini_text' 조회 실패:", textCostError);
+          console.warn("admin_settings 조회 실패, textCost를 0으로 폴백");
         }
         const parsedTextCost = textCostData ? parseInt(textCostData.value, 10) : NaN;
         const textCost = isNaN(parsedTextCost) || parsedTextCost <= 0
-          ? tokenData.cost
+          ? 0
           : Math.min(parsedTextCost, tokenData.cost);
         const refundAmount = Math.max(tokenData.cost - textCost, 0);
 
