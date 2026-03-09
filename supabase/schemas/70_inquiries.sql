@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
   answer_date timestamptz,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
+  category    text        NOT NULL DEFAULT '일반',
+  product_id  integer,
 
   CONSTRAINT inquiries_pkey PRIMARY KEY (id),
   CONSTRAINT inquiries_title_check
@@ -23,12 +25,20 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
   CONSTRAINT inquiries_answer_pair_check
     CHECK ((answer IS NULL AND answer_date IS NULL) OR (answer IS NOT NULL AND answer_date IS NOT NULL)),
   CONSTRAINT inquiries_user_id_fkey
-    FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE SET NULL,
+  CONSTRAINT inquiries_category_check
+    CHECK (category = ANY (ARRAY['일반','상품','수선','주문제작'])),
+  CONSTRAINT inquiries_product_category_check
+    CHECK (product_id IS NULL OR category = '상품'),
+  CONSTRAINT inquiries_product_id_fkey
+    FOREIGN KEY (product_id) REFERENCES public.products (id) ON DELETE SET NULL
 );
 
 -- Indexes
-CREATE INDEX idx_inquiries_user_id ON public.inquiries USING btree (user_id);
-CREATE INDEX idx_inquiries_status  ON public.inquiries USING btree (status);
+CREATE INDEX idx_inquiries_user_id    ON public.inquiries USING btree (user_id);
+CREATE INDEX idx_inquiries_status     ON public.inquiries USING btree (status);
+CREATE INDEX idx_inquiries_category   ON public.inquiries USING btree (category);
+CREATE INDEX idx_inquiries_product_id ON public.inquiries USING btree (product_id);
 
 -- Trigger
 CREATE OR REPLACE TRIGGER update_inquiries_updated_at
@@ -85,3 +95,4 @@ REVOKE UPDATE ON TABLE public.inquiries FROM authenticated;
 GRANT UPDATE (title, content) ON TABLE public.inquiries TO authenticated;
 -- Admin columns for answering inquiries
 GRANT UPDATE (status, answer, answer_date) ON TABLE public.inquiries TO authenticated;
+GRANT UPDATE (category, product_id) ON TABLE public.inquiries TO authenticated;
