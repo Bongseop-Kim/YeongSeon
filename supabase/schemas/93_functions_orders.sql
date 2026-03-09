@@ -427,7 +427,7 @@ $$;
 
 -- ── customer_confirm_purchase ─────────────────────────────────
 -- Allows a customer to manually confirm purchase after delivery.
--- Earns 2% points. Only callable when status = '배송완료'.
+-- Earns 2% points. Callable when status = '배송완료' or '배송중'.
 -- SECURITY DEFINER: needed to INSERT into order_status_logs and points
 --   (neither table has INSERT RLS policy for regular users).
 CREATE OR REPLACE FUNCTION public.customer_confirm_purchase(p_order_id uuid)
@@ -459,8 +459,8 @@ begin
     raise exception 'Order not found or access denied';
   end if;
 
-  if v_current_status <> '배송완료' then
-    raise exception '구매확정은 배송완료 상태에서만 가능합니다 (현재: %)', v_current_status;
+  if v_current_status not in ('배송완료', '배송중') then
+    raise exception '구매확정은 배송중 또는 배송완료 상태에서만 가능합니다 (현재: %)', v_current_status;
   end if;
 
   -- Earn 2% points for manual confirmation
@@ -493,7 +493,7 @@ begin
   values (
     p_order_id,
     v_user_id,
-    '배송완료',
+    v_current_status,
     '완료',
     '고객 직접 구매확정'
   );
@@ -508,7 +508,8 @@ $$;
 
 -- ── auto_confirm_delivered_orders ────────────────────────────
 -- Called by pg_cron daily at 03:00 KST.
--- Confirms all orders in '배송완료' that have been delivered for 7+ days.
+-- Confirms orders in '배송완료' (7+ days since delivered_at) and
+-- '배송중' (7+ days since shipped_at).
 -- Earns 0.5% points for auto-confirmed orders.
 -- SECURITY DEFINER: runs as a privileged role, restricted to pg_cron/service_role callers only.
 CREATE OR REPLACE FUNCTION public.auto_confirm_delivered_orders()
@@ -528,10 +529,13 @@ begin
   end if;
 
   for v_order in
-    select id, user_id, total_price
+    select id, user_id, total_price, status
     from public.orders
-    where status = '배송완료'
-      and delivered_at <= now() - interval '7 days'
+    where (
+      (status = '배송완료' and delivered_at <= now() - interval '7 days')
+      or
+      (status = '배송중' and shipped_at <= now() - interval '7 days')
+    )
     for update skip locked
   loop
     v_points := floor(v_order.total_price * 0.005);
@@ -563,9 +567,9 @@ begin
     values (
       v_order.id,
       NULL,
-      '배송완료',
+      v_order.status,
       '완료',
-      '자동 구매확정 (배송완료 후 7일 경과)'
+      format('자동 구매확정 (%s 후 7일 경과)', v_order.status)
     );
 
     v_count := v_count + 1;

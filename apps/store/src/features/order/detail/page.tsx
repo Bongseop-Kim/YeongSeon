@@ -59,22 +59,25 @@ const renderClaimButtons = (
   );
 };
 
-/** 배송완료 상태에서 구매확정 버튼과 포인트 안내를 표시 */
+/** 배송중 또는 배송완료 상태에서 구매확정 버튼과 포인트 안내를 표시 */
 const PurchaseConfirmSection = ({
   orderId,
+  shippedAt,
   deliveredAt,
   totalPrice,
 }: {
   orderId: string;
+  shippedAt: string | null;
   deliveredAt: string | null;
   totalPrice: number;
 }) => {
   const { mutate, isPending, isSuccess, isError, error } = useConfirmPurchase(orderId);
 
-  const parsedDeliveredAt = deliveredAt ? Date.parse(deliveredAt) : Number.NaN;
-  const daysRemaining = Number.isNaN(parsedDeliveredAt)
+  const baseDate = deliveredAt ?? shippedAt;
+  const parsedBaseDate = baseDate ? Date.parse(baseDate) : Number.NaN;
+  const daysRemaining = Number.isNaN(parsedBaseDate)
     ? 7
-    : Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - parsedDeliveredAt) / 86_400_000)));
+    : Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - parsedBaseDate) / 86_400_000)));
 
   const manualPoints = Math.floor(totalPrice * 0.02).toLocaleString();
   const autoPoints = Math.floor(totalPrice * 0.005).toLocaleString();
@@ -372,10 +375,11 @@ const OrderDetailPage = () => {
               </CardContent>
 
               {/* 구매확정 */}
-              {order.status === "배송완료" && (
+              {(order.status === "배송완료" || order.status === "배송중") && (
                 <CardContent>
                   <PurchaseConfirmSection
                     orderId={order.id}
+                    shippedAt={order.trackingInfo?.shippedAt ?? null}
                     deliveredAt={order.trackingInfo?.deliveredAt ?? null}
                     totalPrice={order.totalPrice}
                   />
