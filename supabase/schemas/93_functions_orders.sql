@@ -568,6 +568,13 @@ begin
       or
       (status = '배송중' and shipped_at <= now() - interval '7 days')
     )
+    and not exists (
+      select 1
+      from public.claims c
+      join public.order_items oi on oi.id = c.order_item_id
+      where oi.order_id = orders.id
+        and c.status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
+    )
     for update skip locked
   loop
     v_points := floor(v_order.total_price * 0.005);
