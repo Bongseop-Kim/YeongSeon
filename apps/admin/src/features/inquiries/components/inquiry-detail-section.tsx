@@ -8,8 +8,8 @@ import {
 import { IMAGEKIT_URL_ENDPOINT } from "@/lib/imagekit";
 
 export function InquiryDetailSection() {
-  const { detail, isLoading } = useAdminInquiryDetail();
-  const { answer, isPending } = useAnswerInquiry();
+  const { detail, isLoading, refetch } = useAdminInquiryDetail();
+  const { answer, isPending } = useAnswerInquiry(refetch);
   const [answerText, setAnswerText] = useState("");
 
   if (isLoading) return <Spin />;

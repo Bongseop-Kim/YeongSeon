@@ -1,5 +1,5 @@
 export interface TieItemDTO {
-  id: string;
+  id?: string;
   image?: string;
   measurementType?: "length" | "height";
   tieLength?: number;

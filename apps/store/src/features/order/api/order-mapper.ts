@@ -49,21 +49,25 @@ export const toOrderItemInputDTO = (
     item_type: "reform",
     product_id: null,
     selected_option_id: null,
-    reform_data:
-      item.reformData &&
-      item.reformData.tie &&
-      typeof item.reformData.tie === "object"
-        ? {
-            tie: {
-              ...item.reformData.tie,
-              image:
-                typeof item.reformData.tie.image === "string"
-                  ? item.reformData.tie.image
-                  : undefined,
-            },
-            cost: item.reformData.cost,
-          }
-        : null,
+    reform_data: (() => {
+      if (!item.reformData?.tie) return null;
+      const { tie } = item.reformData;
+      if (typeof tie.id !== "string") {
+        throw new Error("수선 주문 생성 시 tie.id는 필수입니다.");
+      }
+      return {
+        tie: {
+          id: tie.id,
+          image: typeof tie.image === "string" ? tie.image : undefined,
+          measurementType: tie.measurementType,
+          tieLength: tie.tieLength,
+          wearerHeight: tie.wearerHeight,
+          notes: tie.notes,
+          checked: tie.checked,
+        },
+        cost: item.reformData.cost,
+      };
+    })(),
   };
 };
 
@@ -204,81 +208,32 @@ const parseReformDataField = (
   idx: number
 ): OrderItemRowDTO["reformData"] => {
   if (v == null) return null;
-  if (!isRecord(v) || typeof v.cost !== "number") {
+  if (!isRecord(v)) {
     throw new Error(
-      `주문 상품 행(${idx})의 reformData가 올바르지 않습니다: cost 필드 누락.`
+      `주문 상품 행(${idx})의 reformData가 올바르지 않습니다: 객체가 아닙니다.`
     );
   }
-  if (!isRecord(v.tie) || typeof v.tie.id !== "string") {
-    throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: id 필드 누락.`
-    );
-  }
-  if (
-    v.tie.image != null &&
-    typeof v.tie.image !== "string"
-  ) {
-    throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: image 필드 타입 오류.`
-    );
-  }
-  if (v.tie.measurementType != null) {
-    if (typeof v.tie.measurementType !== "string") {
-      throw new Error(
-        `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: measurementType 필드 타입 오류.`
-      );
-    }
-    if (!isTieMeasurementType(v.tie.measurementType)) {
-      throw new Error(
-        `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: measurementType 값(${v.tie.measurementType})이 허용된 값이 아닙니다.`
-      );
-    }
-  }
-  if (
-    v.tie.tieLength != null &&
-    typeof v.tie.tieLength !== "number"
-  ) {
-    throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: tieLength 필드 타입 오류.`
-    );
-  }
-  if (
-    v.tie.wearerHeight != null &&
-    typeof v.tie.wearerHeight !== "number"
-  ) {
-    throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: wearerHeight 필드 타입 오류.`
-    );
-  }
-  if (
-    v.tie.notes != null &&
-    typeof v.tie.notes !== "string"
-  ) {
-    throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: notes 필드 타입 오류.`
-    );
-  }
-  if (
-    v.tie.checked != null &&
-    typeof v.tie.checked !== "boolean"
-  ) {
-    throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: checked 필드 타입 오류.`
-    );
-  }
+  const cost = typeof v.cost === "number" ? v.cost : (() => {
+    console.warn(`주문 상품 행(${idx})의 reformData에 cost 필드가 없어 0으로 대체합니다.`);
+    return 0;
+  })();
+  const tieRaw = isRecord(v.tie) ? v.tie : (() => {
+    console.warn(`주문 상품 행(${idx})의 reformData에 tie 필드가 없어 빈 객체로 대체합니다.`);
+    return {} as Record<string, unknown>;
+  })();
+  const measurementType =
+    typeof tieRaw.measurementType === "string" && isTieMeasurementType(tieRaw.measurementType)
+      ? tieRaw.measurementType
+      : undefined;
   return {
-    cost: v.cost,
+    cost,
     tie: {
-      id: v.tie.id,
-      image: typeof v.tie.image === "string" ? v.tie.image : undefined,
-      measurementType:
-        typeof v.tie.measurementType === "string"
-          ? v.tie.measurementType
-          : undefined,
-      tieLength: typeof v.tie.tieLength === "number" ? v.tie.tieLength : undefined,
-      wearerHeight:
-        typeof v.tie.wearerHeight === "number" ? v.tie.wearerHeight : undefined,
-      notes: typeof v.tie.notes === "string" ? v.tie.notes : undefined,
+      id: typeof tieRaw.id === "string" ? tieRaw.id : undefined,
+      image: typeof tieRaw.image === "string" ? tieRaw.image : undefined,
+      measurementType,
+      tieLength: typeof tieRaw.tieLength === "number" ? tieRaw.tieLength : undefined,
+      wearerHeight: typeof tieRaw.wearerHeight === "number" ? tieRaw.wearerHeight : undefined,
+      notes: typeof tieRaw.notes === "string" ? tieRaw.notes : undefined,
     },
   };
 };

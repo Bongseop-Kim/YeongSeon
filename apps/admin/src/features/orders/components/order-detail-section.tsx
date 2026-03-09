@@ -34,7 +34,7 @@ export function OrderDetailSection() {
   const defaultCourier = useDefaultCourier();
 
   const { isUpdating, changeStatus, rollback } = useOrderStatusUpdate(orderId, refetch);
-  const { saveTracking, isPending: trackingPending } = useTrackingSave();
+  const { saveTracking, isPending: trackingPending } = useTrackingSave(refetch);
   const { courierCompany, setCourierCompany, trackingNumber, setTrackingNumber } =
     useTrackingState(order, defaultCourier);
 

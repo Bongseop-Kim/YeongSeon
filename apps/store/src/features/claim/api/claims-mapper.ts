@@ -133,8 +133,7 @@ const parseClaimItemField = (
     if (
       !isRecord(v.reformData) ||
       typeof v.reformData.cost !== "number" ||
-      !isRecord(v.reformData.tie) ||
-      typeof v.reformData.tie.id !== "string"
+      !isRecord(v.reformData.tie)
     ) {
       throw new Error(
         `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: 필수 필드 누락.`
@@ -195,7 +194,7 @@ const parseClaimItemField = (
     reformData = {
       cost: v.reformData.cost,
       tie: {
-        id: v.reformData.tie.id,
+        id: typeof v.reformData.tie.id === "string" ? v.reformData.tie.id : undefined,
         image:
           typeof v.reformData.tie.image === "string"
             ? v.reformData.tie.image

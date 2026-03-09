@@ -54,6 +54,7 @@ import { toast } from "@/lib/toast";
 import { useProduct, useProducts } from "@/features/shop/api/products-query";
 import { useToggleLike } from "@/features/shop/api/likes-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronRightIcon } from "lucide-react";
 
 /**
  * 주문 처리 및 네비게이션을 수행하는 공통 헬퍼 함수
@@ -469,6 +470,14 @@ export default function ShopDetailPage() {
                     </AccordionItem>
                   </Accordion>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleInquiry}
+                  className="focus-visible:border-ring focus-visible:ring-ring/50 flex w-full items-start justify-between gap-4 rounded-sm border-b py-4 text-left text-sm font-medium outline-none transition-all focus-visible:ring-[3px] hover:underline last:border-b-0"
+                >
+                  문의하기
+                  <ChevronRightIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5" />
+                </button>
               </CardContent>
             </Card>
           }
@@ -479,7 +488,6 @@ export default function ShopDetailPage() {
               onLikeToggle={handleLikeToggle}
               onAddToCart={handleAddToCart}
               onOrder={handleOrder}
-              onInquiry={handleInquiry}
               disabled={isProductSoldOut}
             />
           }
