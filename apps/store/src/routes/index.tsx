@@ -23,6 +23,7 @@ import PaymentFailPage from "@/features/payment/fail/page";
 import CartPage from "@/features/cart/page";
 import FaqPage from "@/features/faq/page";
 import InquiryPage from "@/features/my-page/inquiry/page";
+import TokenHistoryPage from "@/features/my-page/token-history/page";
 import NoticePage from "@/features/notice/page";
 import PrivacyPolicyPage from "@/features/privacy-policy/page";
 import TermsOfServicePage from "@/features/terms-of-service/page";
@@ -170,6 +171,14 @@ export default function Router() {
         element={
           <ProtectedRoute>
             <InquiryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page/token-history"
+        element={
+          <ProtectedRoute>
+            <TokenHistoryPage />
           </ProtectedRoute>
         }
       />

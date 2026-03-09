@@ -57,6 +57,7 @@ export default function MypagePage() {
                   { label: "자주 묻는 질문", route: ROUTES.FAQ },
                   { label: "1:1 문의 내역", route: ROUTES.MY_PAGE_INQUIRY },
                   { label: "공지사항", route: ROUTES.NOTICE },
+                  { label: "토큰 내역", route: ROUTES.MY_PAGE_TOKEN_HISTORY },
                 ].map((item) => (
                   <ListItem
                     key={item.route}

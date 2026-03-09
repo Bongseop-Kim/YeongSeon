@@ -4,6 +4,7 @@ import type {
   AdminCustomerDetail,
   AdminCustomerOrderRow,
   AdminCustomerCouponRow,
+  AdminCustomerTokenRow,
 } from "../types/admin-customer";
 
 // ── 로컬 DTO ───────────────────────────────────────────────────
@@ -24,6 +25,18 @@ export interface UserCouponRow {
   status: string | null;
   issued_at: string | null;
   expires_at: string | null;
+}
+
+export interface DesignTokenRow {
+  id: string;
+  user_id: string;
+  amount: number | null;
+  type: string | null;
+  ai_model: string | null;
+  request_type: string | null;
+  description: string | null;
+  expires_at: string | null;
+  created_at: string | null;
 }
 
 // ── 매퍼 ───────────────────────────────────────────────────────
@@ -63,5 +76,18 @@ export function toAdminCustomerCouponRow(row: UserCouponRow): AdminCustomerCoupo
     status: row.status ?? "",
     issuedAt: row.issued_at ?? "",
     expiresAt: row.expires_at,
+  };
+}
+
+export function toAdminCustomerTokenRow(row: DesignTokenRow): AdminCustomerTokenRow {
+  return {
+    id: row.id,
+    amount: row.amount ?? 0,
+    type: row.type ?? "",
+    aiModel: row.ai_model,
+    requestType: row.request_type,
+    description: row.description,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at ?? "",
   };
 }

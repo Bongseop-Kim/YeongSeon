@@ -7,6 +7,7 @@ export interface AdminCustomerListItem {
   role: string;
   isActive: boolean;
   createdAt: string;
+  tokenBalance?: number;
 }
 
 // ── Detail UI model ────────────────────────────────────────────
@@ -31,6 +32,29 @@ export interface AdminCustomerCouponRow {
   status: string;
   issuedAt: string;
   expiresAt: string | null;
+}
+
+export interface AdminCustomerTokenBalanceRow {
+  userId: string;
+  balance: number;
+}
+
+export interface AdminCustomerTokenRow {
+  id: string;
+  amount: number;
+  type: string;
+  aiModel: string | null;
+  requestType: string | null;
+  description: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface AdminTokenManageForm {
+  mode: "grant" | "deduct";
+  amount: number;
+  expiresAt?: string;
+  description: string;
 }
 
 // ── Constants ──────────────────────────────────────────────────

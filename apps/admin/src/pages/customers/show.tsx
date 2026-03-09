@@ -9,6 +9,7 @@ import {
 import { CustomerProfileSection } from "@/features/customers/components/customer-profile-section";
 import { CustomerOrdersTable } from "@/features/customers/components/customer-orders-table";
 import { CustomerCouponsTable } from "@/features/customers/components/customer-coupons-table";
+import { CustomerTokenSection } from "@/features/customers/components/customer-token-section";
 
 const { Title } = Typography;
 
@@ -25,6 +26,8 @@ export default function CustomerShow() {
       <CustomerOrdersTable orders={orders} />
       <Title level={5}>보유 쿠폰</Title>
       <CustomerCouponsTable coupons={coupons} />
+      <Title level={5}>토큰</Title>
+      <CustomerTokenSection userId={id!} />
     </Show>
   );
 }

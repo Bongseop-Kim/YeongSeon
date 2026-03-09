@@ -1,12 +1,21 @@
 import { Table, Tag, Input, Space } from "antd";
 import { useNavigation } from "@refinedev/core";
-import { useAdminCustomerTable } from "../api/customers-query";
+import {
+  useAdminCustomerTable,
+  useCustomerTokenBalancesQuery,
+} from "../api/customers-query";
 import { ROLE_COLORS } from "../types/admin-customer";
 import type { AdminCustomerListItem } from "../types/admin-customer";
 
 export function CustomerListTable() {
   const { show } = useNavigation();
   const { tableProps, setFilters } = useAdminCustomerTable();
+  const userIds = (tableProps.dataSource ?? []).map((customer) => customer.id);
+  const { data: balances, isLoading: isBalancesLoading } =
+    useCustomerTokenBalancesQuery(userIds);
+  const tokenBalanceMap = new Map(
+    (balances ?? []).map((row) => [row.userId, row.balance])
+  );
 
   return (
     <>
@@ -33,6 +42,12 @@ export function CustomerListTable() {
       >
         <Table.Column dataIndex="name" title="이름" />
         <Table.Column dataIndex="phone" title="전화번호" />
+        <Table.Column
+          title="토큰 잔액"
+          render={(_, record: AdminCustomerListItem) =>
+            isBalancesLoading ? "-" : (tokenBalanceMap.get(record.id) ?? 0).toLocaleString()
+          }
+        />
         <Table.Column
           dataIndex="role"
           title="역할"
