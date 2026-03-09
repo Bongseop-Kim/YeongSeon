@@ -172,7 +172,7 @@ export const buildPatternPrompt = (
 
 const HEX_TO_COLOR_NAME: Record<string, string> = {
   "#1a2c5b": "navy",
-  "#8B0000": "burgundy",
+  "#8b0000": "burgundy",
   "#2c5f2e": "forest green",
   "#c8a96e": "champagne gold",
   "#4a4a4a": "charcoal",
@@ -188,7 +188,7 @@ const HEX_TO_COLOR_NAME: Record<string, string> = {
 export const buildColorPrompt = (colors: string[] | undefined): string => {
   if (!colors || colors.length === 0) return "";
   const formatColor = (color: string) => {
-    const colorName = HEX_TO_COLOR_NAME[color];
+    const colorName = HEX_TO_COLOR_NAME[color.toLowerCase()];
     return colorName ? `${colorName} (${color})` : color;
   };
   const [base, ...rest] = colors.map(formatColor);
@@ -280,6 +280,18 @@ export const buildImageEditPrompt = (
     "The previous design is shown above. Apply only the following changes, keeping everything else identical:",
     buildColorPrompt(payload.designContext?.colors),
     buildFabricPrompt(payload.designContext?.fabricMethod),
+    buildPatternPrompt(
+      payload.designContext?.pattern,
+      payload.designContext?.fabricMethod,
+    ),
+    buildScalePrompt(
+      payload.designContext?.scale ?? "medium",
+      payload.designContext?.pattern,
+    ),
+    buildCiPlacementPrompt(
+      payload.designContext?.ciPlacement,
+      !!payload.ciImageBase64,
+    ),
     buildUserInstructionPrompt(payload.userMessage),
     "Preserve the layout, motif shapes, scale, and overall composition unless explicitly changed.",
   ]

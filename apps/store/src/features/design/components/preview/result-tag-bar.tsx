@@ -1,4 +1,5 @@
 import { Download, Maximize2, Minimize2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,11 @@ export function ResultTagBar({
     canvas.height = 600;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      console.error("canvas 2D context 없음");
+      toast.error("다운로드 실패: canvas를 초기화할 수 없습니다.");
+      return;
+    }
 
     const loadImage = async (src: string): Promise<HTMLImageElement> => {
       const image = new Image();
@@ -78,7 +83,9 @@ export function ResultTagBar({
         loadImage("/images/tie.svg"),
         loadImage("/images/tieShadow.png"),
       ]);
-    } catch {
+    } catch (err) {
+      console.error("이미지 로드 실패:", err);
+      toast.error("다운로드 실패: 이미지를 불러올 수 없습니다.");
       return;
     }
 
@@ -105,15 +112,21 @@ export function ResultTagBar({
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, "image/png");
     });
-    if (!blob) return;
+    if (!blob) {
+      console.error("canvas.toBlob 실패: blob이 null");
+      toast.error("다운로드 실패: 이미지를 변환할 수 없습니다.");
+      return;
+    }
 
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
     a.download = "design-masked.png";
     a.click();
-    URL.revokeObjectURL(objectUrl);
-    markImageDownloaded();
+    setTimeout(() => {
+      URL.revokeObjectURL(objectUrl);
+      markImageDownloaded();
+    }, 100);
   };
 
   return (
