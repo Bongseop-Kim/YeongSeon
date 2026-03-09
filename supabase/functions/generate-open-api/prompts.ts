@@ -268,7 +268,7 @@ export const buildImagePrompt = (
     isOnePoint
       ? "Create a high-quality rectangular silk fabric swatch. The image must be full-frame and textile-only — no tie silhouette, no background, no margins. The fabric lies perfectly flat with no folds, creases, or shadows. Evenly lit from the front."
       : buildBasePrompt(),
-    isOnePoint ? null : buildScalePrompt(
+    buildScalePrompt(
       payload.designContext?.scale ?? "medium",
       payload.designContext?.pattern,
     ),
@@ -301,6 +301,18 @@ export const buildImageEditPrompt = (
     "The previous design is shown above. Apply only the following changes, keeping everything else identical:",
     buildColorPrompt(payload.designContext?.colors),
     buildFabricPrompt(payload.designContext?.fabricMethod),
+    buildPatternPrompt(
+      payload.designContext?.pattern,
+      payload.designContext?.fabricMethod,
+    ),
+    buildScalePrompt(
+      payload.designContext?.scale ?? "medium",
+      payload.designContext?.pattern,
+    ),
+    buildCiPlacementPrompt(
+      payload.designContext?.ciPlacement,
+      !!payload.ciImageBase64,
+    ),
     buildUserInstructionPrompt(payload.userMessage),
     "Preserve the layout, motif shapes, scale, and overall composition unless explicitly changed.",
   ]

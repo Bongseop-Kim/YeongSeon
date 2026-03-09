@@ -1,27 +1,14 @@
--- =============================================================
--- 99_functions_design_tokens.sql  –  Design token RPC functions
--- =============================================================
+-- Design token: 보안 강화 (소유권 검증) + Gemini high quality 비용 시드
 
--- ── get_design_token_balance ──────────────────────────────────
--- Returns the current token balance for the authenticated user.
-CREATE OR REPLACE FUNCTION public.get_design_token_balance()
-RETURNS integer
-LANGUAGE sql
-STABLE
-SECURITY INVOKER
-SET search_path TO 'public'
-AS $$
-  SELECT COALESCE(SUM(amount), 0)::integer
-  FROM public.design_tokens
-  WHERE user_id = auth.uid()
-    AND (expires_at IS NULL OR expires_at > now());
-$$;
+-- 1. Gemini high quality 시드
+--    Gemini는 단일 요금제($0.039/장)로 quality 단계 없음 → standard(3토큰)와 동일
+INSERT INTO public.admin_settings (key, value)
+VALUES ('design_token_cost_gemini_image_high', '3')
+ON CONFLICT (key) DO NOTHING;
 
--- ── use_design_tokens ─────────────────────────────────────────
--- Deducts tokens for a design generation request.
--- SECURITY DEFINER 유지 사유: advisory lock + design_tokens INSERT는 RLS로 허용되지 않음
--- service_role(Edge Function)에서 호출 시 소유권 검증 면제
--- Returns: { success, cost, balance } or { success: false, error: 'insufficient_tokens', balance, cost }
+-- 2. use_design_tokens: service_role이 아닌 호출자는 auth.uid() 소유권 검증
+--    SECURITY DEFINER 유지 사유: advisory lock + design_tokens INSERT는 RLS로 허용되지 않음
+--    service_role(Edge Function)에서 호출 시 소유권 검증 면제
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id     uuid,
   p_ai_model    text,             -- 'openai' | 'gemini'
@@ -105,10 +92,7 @@ BEGIN
 END;
 $$;
 
--- ── refund_design_tokens ──────────────────────────────────────
--- Refunds tokens when image generation fails after text succeeds.
--- SECURITY DEFINER 유지 사유: design_tokens INSERT는 RLS로 허용되지 않음
--- service_role(Edge Function)에서 호출 시 소유권 검증 면제
+-- 3. refund_design_tokens: service_role이 아닌 호출자는 auth.uid() 소유권 검증
 CREATE OR REPLACE FUNCTION public.refund_design_tokens(
   p_user_id     uuid,
   p_amount      integer,

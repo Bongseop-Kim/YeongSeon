@@ -218,62 +218,47 @@ const requestOpenAIImage = async (
 
     let response: Response;
     try {
-      const sourceImageBase64 = payload.previousImageBase64 ??
-        payload.ciImageBase64 ??
-        payload.referenceImageBase64;
-      const sourceImageMimeType = payload.previousImageBase64
-        ? payload.previousImageMimeType || "image/png"
-        : payload.ciImageBase64
-        ? payload.ciImageMimeType || "image/png"
-        : payload.referenceImageMimeType || "image/png";
-      const hasAuxiliaryImages = !!(
-        payload.ciImageBase64 || payload.referenceImageBase64
-      );
-      const quality = payload.ciImageBase64 ||
-          payload.referenceImageBase64 ||
-          payload.designContext?.ciPlacement
-        ? "high"
-        : "medium";
+      const quality = (
+        payload.ciImageBase64 ||
+        payload.referenceImageBase64 ||
+        payload.designContext?.ciPlacement
+      ) ? "high" : "medium";
 
-      if (sourceImageBase64) {
+      if (payload.previousImageBase64 || payload.ciImageBase64 || payload.referenceImageBase64) {
         const formData = new FormData();
-        formData.append(
-          "image",
-          base64ToBlob(sourceImageBase64, sourceImageMimeType),
-          "source-image.png",
-        );
-        formData.append(
-          "prompt",
-          payload.previousImageBase64
-            ? buildImageEditPrompt(payload)
-            : buildImagePrompt(payload),
-        );
-        formData.append("model", "gpt-image-1.5");
-        formData.append("size", "1024x1536");
-        formData.append("quality", quality);
 
-        if (payload.ciImageBase64) {
-          formData.append(
-            "image[]",
-            base64ToBlob(
-              payload.ciImageBase64,
-              payload.ciImageMimeType || "image/png",
-            ),
-            "ci-image.png",
-          );
-        }
-        if (payload.referenceImageBase64) {
-          formData.append(
-            "image[]",
-            base64ToBlob(
-              payload.referenceImageBase64,
-              payload.referenceImageMimeType || "image/png",
-            ),
-            "reference-image.png",
-          );
-        }
-        if (sourceImageBase64 && hasAuxiliaryImages) {
-          formData.append("input_fidelity", "high");
+        if (payload.previousImageBase64) {
+          // EDIT MODE: previousImageBase64 as primary, ci/reference as auxiliaries, input_fidelity=high
+          formData.append("image", base64ToBlob(payload.previousImageBase64, payload.previousImageMimeType || "image/png"), "source-image.png");
+          formData.append("prompt", buildImageEditPrompt(payload));
+          formData.append("model", "gpt-image-1.5");
+          formData.append("size", "1024x1536");
+          formData.append("quality", quality);
+          if (payload.ciImageBase64) {
+            formData.append("image[]", base64ToBlob(payload.ciImageBase64, payload.ciImageMimeType || "image/png"), "ci-image.png");
+          }
+          if (payload.referenceImageBase64) {
+            formData.append("image[]", base64ToBlob(payload.referenceImageBase64, payload.referenceImageMimeType || "image/png"), "reference-image.png");
+          }
+          if (payload.ciImageBase64 || payload.referenceImageBase64) {
+            formData.append("input_fidelity", "high");
+          }
+        } else {
+          // GENERATE WITH SOURCE: ci or reference as primary (not duplicated), NO input_fidelity
+          const primaryBase64 = payload.ciImageBase64 ?? payload.referenceImageBase64!;
+          const primaryMime = payload.ciImageBase64
+            ? payload.ciImageMimeType || "image/png"
+            : payload.referenceImageMimeType || "image/png";
+          formData.append("image", base64ToBlob(primaryBase64, primaryMime), "source-image.png");
+          formData.append("prompt", buildImagePrompt(payload));
+          formData.append("model", "gpt-image-1.5");
+          formData.append("size", "1024x1536");
+          formData.append("quality", quality);
+          // Only append reference as auxiliary when both ci AND reference exist (ci is primary, reference is auxiliary)
+          if (payload.ciImageBase64 && payload.referenceImageBase64) {
+            formData.append("image[]", base64ToBlob(payload.referenceImageBase64, payload.referenceImageMimeType || "image/png"), "reference-image.png");
+          }
+          // No input_fidelity in generate mode
         }
 
         response = await fetch(
@@ -302,7 +287,6 @@ const requestOpenAIImage = async (
               prompt: buildImagePrompt(payload),
               size: "1024x1536",
               quality,
-              ...(hasAuxiliaryImages ? { input_fidelity: "high" } : {}),
             }),
           },
         );
@@ -432,6 +416,9 @@ Deno.serve(async (req) => {
   if ((payload.referenceImageBase64?.length ?? 0) > MAX_IMAGE_BASE64_LENGTH) {
     return jsonResponse(413, { error: "referenceImageBase64 too large" });
   }
+  if ((payload.previousImageBase64?.length ?? 0) > MAX_IMAGE_BASE64_LENGTH) {
+    return jsonResponse(413, { error: "previousImageBase64 too large" });
+  }
 
   const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
   if (!openaiApiKey) {
@@ -531,8 +518,9 @@ Deno.serve(async (req) => {
           );
           if (refundError) {
             console.error("Token refund failed:", refundError);
+          } else {
+            remainingTokens = tokenData.balance + refundAmount;
           }
-          remainingTokens = tokenData.balance + refundAmount;
         }
       }
     }
