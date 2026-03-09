@@ -16,7 +16,7 @@ export const getInquiries = async (): Promise<InquiryItem[]> => {
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`문의 목록 조회 실패: ${error.message}`);
-  const rows = (data as InquiryRowDTO[] | null) ?? [];
+  const rows = (data as unknown as InquiryRowDTO[] | null) ?? [];
   return rows.map(toInquiryView);
 };
 
