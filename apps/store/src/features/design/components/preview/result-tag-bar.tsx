@@ -60,15 +60,19 @@ export function ResultTagBar({
       if (!src.startsWith("data:")) {
         image.crossOrigin = "anonymous";
       }
+      const loadPromise = new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+      });
       image.src = src;
 
       try {
         await image.decode();
       } catch {
-        await new Promise<void>((resolve, reject) => {
-          image.onload = () => resolve();
-          image.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-        });
+        if (image.complete && image.naturalWidth > 0) {
+          return image;
+        }
+        await loadPromise;
       }
 
       return image;

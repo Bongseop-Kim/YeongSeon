@@ -469,11 +469,14 @@ Deno.serve(async (req) => {
 
       // 이미지 생성 실패 시 이미지 비용 환불 (텍스트 비용은 유지)
       if (imageUrl === null) {
-        const { data: textCostData } = await adminClient
+        const { data: textCostData, error: textCostError } = await adminClient
           .from("admin_settings")
           .select("value")
           .eq("key", "design_token_cost_gemini_text")
           .single();
+        if (textCostError || !textCostData) {
+          console.error("admin_settings 'design_token_cost_gemini_text' 조회 실패:", textCostError);
+        }
         const textCost = textCostData
           ? parseInt(textCostData.value, 10) || 1
           : 1;

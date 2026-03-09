@@ -247,7 +247,7 @@ export const buildGeminiImagePrompt = (
     isOnePoint
       ? "Create a high-quality rectangular silk fabric swatch. The image must be full-frame and textile-only — no tie silhouette, no background, no margins. The fabric lies perfectly flat with no folds, creases, or shadows. Evenly lit from the front."
       : buildBasePrompt(),
-    isOnePoint ? null : buildScalePrompt(
+    buildScalePrompt(
       payload.designContext?.scale ?? "medium",
       payload.designContext?.pattern,
     ),
