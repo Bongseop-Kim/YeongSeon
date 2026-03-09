@@ -47,6 +47,8 @@ CREATE INDEX idx_orders_user_id      ON public.orders USING btree (user_id);
 CREATE INDEX idx_orders_order_number ON public.orders USING btree (order_number);
 CREATE INDEX idx_orders_order_type   ON public.orders USING btree (order_type);
 CREATE INDEX idx_orders_pending_confirmation ON public.orders (delivered_at) WHERE status = '배송완료';
+CREATE INDEX idx_orders_pending_confirm_shipping
+  ON public.orders (shipped_at) WHERE status = '배송중';
 CREATE INDEX idx_orders_payment_group_id     ON public.orders (payment_group_id);
 
 -- Trigger

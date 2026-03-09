@@ -54,7 +54,7 @@ supabase migration list # Remote 마이그레이션 목록 확인
 
 - `supabase/schemas/*.sql`을 DB 구조의 기준으로 사용한다.
 - 원격에 push된 마이그레이션 파일은 수정하지 않는다. 변경은 새 마이그레이션으로만 반영한다.
-- 마이그레이션 파일 수정/삭제/squash 전 `supabase migration list`로 Remote 존재 여부를 먼저 확인한다.
+- 마이그레이션 파일 수정/삭제/squash 전 `supabase migration list`로 Remote 존재 여부를 먼저 확인한다. 확인 결과를 직접 보기 전까지는 기존 마이그레이션 파일을 절대 수정하지 않는다. 확인 없이 진행해야 하는 상황이라면 이미 적용된 것으로 간주하고 신규 마이그레이션으로만 처리한다.
 - `db push`, `db pull`, `db diff`, `db reset` 실패 시 에러 전문을 그대로 공유한다. 요약/생략 금지.
 - Supabase CLI 실패 후 자동 재시도하지 않는다.
 - `migration repair`, `db reset --linked` 등 상태 변경 복구 명령은 영향 범위를 설명한 뒤 사용자 승인 후 실행한다.

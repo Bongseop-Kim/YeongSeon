@@ -59,22 +59,26 @@ const renderClaimButtons = (
   );
 };
 
-/** 배송완료 상태에서 구매확정 버튼과 포인트 안내를 표시 */
+/** 배송중 또는 배송완료 상태에서 구매확정 버튼과 포인트 안내를 표시 */
 const PurchaseConfirmSection = ({
   orderId,
+  shippedAt,
   deliveredAt,
   totalPrice,
 }: {
   orderId: string;
+  shippedAt: string | null;
   deliveredAt: string | null;
   totalPrice: number;
 }) => {
   const { mutate, isPending, isSuccess, isError, error } = useConfirmPurchase(orderId);
 
-  const parsedDeliveredAt = deliveredAt ? Date.parse(deliveredAt) : Number.NaN;
-  const daysRemaining = Number.isNaN(parsedDeliveredAt)
-    ? 7
-    : Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - parsedDeliveredAt) / 86_400_000)));
+  const baseDate = deliveredAt ?? shippedAt;
+  const parsedBaseDate = baseDate ? Date.parse(baseDate) : null;
+  const daysRemaining =
+    Number.isFinite(parsedBaseDate)
+      ? Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - parsedBaseDate!) / 86_400_000)))
+      : null;
 
   const manualPoints = Math.floor(totalPrice * 0.02).toLocaleString();
   const autoPoints = Math.floor(totalPrice * 0.005).toLocaleString();
@@ -93,10 +97,12 @@ const PurchaseConfirmSection = ({
         지금 구매확정하면{" "}
         <span className="font-semibold text-blue-700">{manualPoints}P (2%)</span> 적립!
       </p>
-      <p className="text-xs text-zinc-500">
-        자동 구매확정까지 <span className="font-medium">{daysRemaining}일</span> 남음
-        (자동 확정 시 {autoPoints}P / 0.5% 적립)
-      </p>
+      {daysRemaining !== null && (
+        <p className="text-xs text-zinc-500">
+          자동 구매확정까지 <span className="font-medium">{daysRemaining}일</span> 남음
+          (자동 확정 시 {autoPoints}P / 0.5% 적립)
+        </p>
+      )}
       {isError && (
         <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800">
           {getOrderErrorDescription(error) || "구매확정에 실패했습니다. 다시 시도해주세요."}
@@ -372,10 +378,11 @@ const OrderDetailPage = () => {
               </CardContent>
 
               {/* 구매확정 */}
-              {order.status === "배송완료" && (
+              {(order.status === "배송완료" || order.status === "배송중") && (
                 <CardContent>
                   <PurchaseConfirmSection
                     orderId={order.id}
+                    shippedAt={order.trackingInfo?.shippedAt ?? null}
                     deliveredAt={order.trackingInfo?.deliveredAt ?? null}
                     totalPrice={order.totalPrice}
                   />
