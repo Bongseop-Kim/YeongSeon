@@ -35,7 +35,7 @@ const normalizeReferenceImages = (images: ImageRef[]): ImageRef[] => {
   const normalized: ImageRef[] = [];
 
   for (const image of images) {
-    const url = image.url.trim();
+    const url = (image.url ?? "").trim();
     if (!url || seen.has(url)) {
       continue;
     }
@@ -43,7 +43,7 @@ const normalizeReferenceImages = (images: ImageRef[]): ImageRef[] => {
     seen.add(url);
     normalized.push({
       url,
-      fileId: image.fileId.trim(),
+      fileId: image.fileId ? image.fileId.trim() : "",
     });
   }
 
@@ -125,7 +125,7 @@ export const toCreateCustomOrderInputDto = (
     care_label: request.options.careLabel,
   } satisfies CreateCustomOrderOptionsDtoSnakeCase,
   quantity: request.quantity,
-  reference_images: normalizeReferenceImages(request.referenceImages).map(toDbImageRef),
+  reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
   sample: request.sample,
   sample_type: request.sampleType,
