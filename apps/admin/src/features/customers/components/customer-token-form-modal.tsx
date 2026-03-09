@@ -43,25 +43,31 @@ export function CustomerTokenFormModal({
   const handleFinish = async (values: CustomerTokenFormValues) => {
     const amount = mode === "deduct" ? -values.amount : values.amount;
 
-    await mutation.mutateAsync({
-      userId,
-      amount,
-      expiresAt:
-        mode === "grant" && values.expiresAt
-          ? dayjs(values.expiresAt).format("YYYY-MM-DD")
-          : undefined,
-      description: values.description,
-    });
+    try {
+      await mutation.mutateAsync({
+        userId,
+        amount,
+        expiresAt:
+          mode === "grant" && values.expiresAt
+            ? dayjs(values.expiresAt).format("YYYY-MM-DD")
+            : undefined,
+        description: values.description,
+      });
 
-    form.resetFields();
-    onClose();
+      form.resetFields();
+      onClose();
+    } catch {
+      // Mutation onError already handles user-facing errors.
+    }
   };
 
   return (
     <Modal
       title={MODAL_TITLE[mode]}
       open={open}
-      onCancel={onClose}
+      closable={!mutation.isPending}
+      maskClosable={!mutation.isPending}
+      onCancel={mutation.isPending ? undefined : onClose}
       footer={null}
       destroyOnHidden
     >

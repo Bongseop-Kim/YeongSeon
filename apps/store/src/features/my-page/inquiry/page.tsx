@@ -48,7 +48,11 @@ export default function InquiryPage() {
     if (category) {
       setInitialFormData({
         category,
-        productId: productId ? Number(productId) : undefined,
+        productId: productId
+          ? Number.isNaN(Number(productId))
+            ? undefined
+            : Number(productId)
+          : undefined,
         productName: productName ?? undefined,
         title: "",
         content: "",

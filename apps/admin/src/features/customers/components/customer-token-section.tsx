@@ -19,9 +19,17 @@ const { Text } = Typography;
 
 export function CustomerTokenSection({ userId }: Props) {
   const [mode, setMode] = useState<"grant" | "deduct" | null>(null);
-  const { data: balances, isLoading: isBalancesLoading } =
+  const {
+    data: balances,
+    isLoading: isBalancesLoading,
+    isError: isBalancesError,
+  } =
     useCustomerTokenBalancesQuery([userId]);
-  const { data: history, isLoading: isHistoryLoading } =
+  const {
+    data: history,
+    isLoading: isHistoryLoading,
+    isError: isHistoryError,
+  } =
     useCustomerTokenHistoryQuery(userId);
 
   const currentBalance = balances?.[0]?.balance ?? 0;
@@ -75,7 +83,11 @@ export function CustomerTokenSection({ userId }: Props) {
         <Space>
           <Text strong>현재 잔액</Text>
           <Tag color="blue">
-            {isBalancesLoading ? "-" : `${currentBalance.toLocaleString()} 토큰`}
+            {isBalancesLoading
+              ? "-"
+              : isBalancesError
+                ? "잔액 조회 오류"
+                : `${currentBalance.toLocaleString()} 토큰`}
           </Tag>
         </Space>
         <Space>
@@ -88,15 +100,21 @@ export function CustomerTokenSection({ userId }: Props) {
         </Space>
       </Space>
 
-      <Table<AdminCustomerTokenRow>
-        dataSource={history ?? []}
-        rowKey="id"
-        loading={isHistoryLoading}
-        pagination={false}
-        size="small"
-        style={{ marginBottom: 24 }}
-        columns={columns}
-      />
+      {isHistoryError ? (
+        <Text type="danger" style={{ marginBottom: 24, display: "block" }}>
+          내역 조회 중 오류가 발생했습니다.
+        </Text>
+      ) : (
+        <Table<AdminCustomerTokenRow>
+          dataSource={history ?? []}
+          rowKey="id"
+          loading={isHistoryLoading}
+          pagination={false}
+          size="small"
+          style={{ marginBottom: 24 }}
+          columns={columns}
+        />
+      )}
 
       {mode && (
         <CustomerTokenFormModal

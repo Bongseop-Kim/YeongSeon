@@ -27,7 +27,7 @@ export default function CustomerShow() {
       <Title level={5}>보유 쿠폰</Title>
       <CustomerCouponsTable coupons={coupons} />
       <Title level={5}>토큰</Title>
-      <CustomerTokenSection userId={id!} />
+      {id && <CustomerTokenSection userId={id} />}
     </Show>
   );
 }

@@ -40,14 +40,18 @@ export const useImageUpload = () => {
       if (!response.url) {
         throw new Error("이미지 URL을 받지 못했습니다.");
       }
+      if (!response.fileId) {
+        throw new Error("파일 ID를 받지 못했습니다.");
+      }
       const uploadedUrl = response.url;
+      const uploadedFileId = response.fileId;
 
       setUploadedImages((prev) => [
         ...prev,
         {
           name: response.name ?? file.name,
           url: uploadedUrl,
-          fileId: response.fileId ?? "",
+          fileId: uploadedFileId,
         },
       ]);
     } catch (error) {
@@ -71,7 +75,7 @@ export const useImageUpload = () => {
         url: img.url.trim(),
         fileId: img.fileId.trim(),
       }))
-      .filter((img) => img.url);
+      .filter((img) => img.url && img.fileId);
   }, [uploadedImages]);
 
   const isUploading = activeUploads > 0;

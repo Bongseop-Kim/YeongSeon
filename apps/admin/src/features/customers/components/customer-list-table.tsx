@@ -3,7 +3,7 @@ import { useNavigation } from "@refinedev/core";
 import {
   useAdminCustomerTable,
   useCustomerTokenBalancesQuery,
-} from "../api/customers-query";
+} from "@/features/customers/api/customers-query";
 import { ROLE_COLORS } from "../types/admin-customer";
 import type { AdminCustomerListItem } from "../types/admin-customer";
 
@@ -45,7 +45,9 @@ export function CustomerListTable() {
         <Table.Column
           title="토큰 잔액"
           render={(_, record: AdminCustomerListItem) =>
-            isBalancesLoading ? "-" : (tokenBalanceMap.get(record.id) ?? 0).toLocaleString()
+            isBalancesLoading
+              ? "-"
+              : tokenBalanceMap.get(record.id)?.toLocaleString() ?? "-"
           }
         />
         <Table.Column

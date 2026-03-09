@@ -144,7 +144,8 @@ export function parseCustomReformData(
           (item): item is { url: string; fileId: string } =>
             item !== null &&
             typeof item === "object" &&
-            typeof item.url === "string"
+            typeof item.url === "string" &&
+            typeof item.fileId === "string"
         )
         .map((item) => item.url)
     : [];
