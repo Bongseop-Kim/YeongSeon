@@ -69,9 +69,18 @@ export function ResultTagBar({
       return image;
     };
 
-    const img = await loadImage(url);
-    const maskImg = await loadImage("/images/tie.svg");
-    const shadowImg = await loadImage("/images/tieShadow.png");
+    let img: HTMLImageElement;
+    let maskImg: HTMLImageElement;
+    let shadowImg: HTMLImageElement;
+    try {
+      [img, maskImg, shadowImg] = await Promise.all([
+        loadImage(url),
+        loadImage("/images/tie.svg"),
+        loadImage("/images/tieShadow.png"),
+      ]);
+    } catch {
+      return;
+    }
 
     const scale = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
     const drawWidth = img.naturalWidth * scale;
