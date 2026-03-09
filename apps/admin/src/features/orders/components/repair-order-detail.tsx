@@ -1,5 +1,4 @@
 import { Card, Descriptions, Image, Space, Typography } from "antd";
-import { isRepairReformData } from "../types/admin-order";
 import type { AdminReformOrderItem } from "../types/admin-order";
 
 const { Title } = Typography;
@@ -9,7 +8,7 @@ interface RepairOrderDetailProps {
 }
 
 export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
-  const repairItems = items.filter((i) => isRepairReformData(i.reformData));
+  const repairItems = items.filter((i) => i.reformData != null);
   if (repairItems.length === 0) return null;
 
   return (
@@ -17,7 +16,7 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
       <Title level={5}>수선 상세</Title>
       <Space direction="vertical" style={{ width: "100%", marginBottom: 24 }}>
         {repairItems.map((item, idx) => {
-          if (!isRepairReformData(item.reformData)) return null;
+          if (!item.reformData) return null;
           const { ties } = item.reformData;
 
           return (

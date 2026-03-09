@@ -24,7 +24,42 @@ export interface ReformOrderItemDTO {
   appliedCoupon?: AppliedCouponDTO;
 }
 
-export type OrderItemDTO = ProductOrderItemDTO | ReformOrderItemDTO;
+export interface CustomOrderDataDTO {
+  options: {
+    tieType: string | null;
+    interlining: string | null;
+    designType: string | null;
+    fabricType: string | null;
+    fabricProvided: boolean;
+    triangleStitch: boolean;
+    sideStitch: boolean;
+    barTack: boolean;
+    dimple: boolean;
+    spoderato: boolean;
+    fold7: boolean;
+    brandLabel: boolean;
+    careLabel: boolean;
+  };
+  pricing: {
+    sewingCost: number;
+    fabricCost: number;
+    totalCost: number;
+  };
+  quantity: number;
+  sample: boolean;
+  referenceImageUrls: string[];
+  additionalNotes: string | null;
+}
+
+export interface CustomOrderItemDTO {
+  id: string;
+  type: "custom";
+  quantity: number;
+  customData: CustomOrderDataDTO;
+  appliedCoupon?: AppliedCouponDTO;
+}
+
+export type OrderItemDTO = ProductOrderItemDTO | ReformOrderItemDTO | CustomOrderItemDTO;
 
 export interface OrderViewDTO {
   id: string;
@@ -69,7 +104,7 @@ export interface OrderDetailRowDTO {
 export interface OrderItemRowDTO {
   order_id: string;
   id: string;
-  type: "product" | "reform";
+  type: "product" | "reform" | "custom";
   product: ProductDTO | null;
   selectedOption: ProductOptionDTO | null;
   quantity: number;
@@ -77,6 +112,7 @@ export interface OrderItemRowDTO {
     tie: TieItemDTO;
     cost: number;
   } | null;
+  customData: CustomOrderDataDTO | null;
   appliedCoupon: AppliedCouponDTO | null;
   created_at: string;
 }

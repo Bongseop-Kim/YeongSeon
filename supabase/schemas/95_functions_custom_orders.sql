@@ -361,7 +361,7 @@ begin
   values (
     v_order_id,
     'custom-order-' || v_order_id::text,
-    'reform',
+    'custom',
     null,
     null,
     v_reform_data,

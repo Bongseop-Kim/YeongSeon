@@ -4,6 +4,7 @@ import type {
   ClaimStatusDTO,
   ClaimTypeDTO,
 } from "@yeongseon/shared/types/dto/claim-view";
+import type { CustomOrderDataDTO } from "@yeongseon/shared/types/dto/order-view";
 import type { CreateClaimInputDTO } from "@yeongseon/shared/types/dto/claim-input";
 import type { CreateClaimResultDTO } from "@yeongseon/shared/types/dto/claim-output";
 import type { OrderItemDTO } from "@yeongseon/shared/types/dto/order-view";
@@ -37,7 +38,7 @@ const parseClaimItemField = (
   }
   if (
     typeof v.id !== "string" ||
-    (v.type !== "product" && v.type !== "reform") ||
+    (v.type !== "product" && v.type !== "reform" && v.type !== "custom") ||
     typeof v.quantity !== "number"
   ) {
     throw new Error(
@@ -52,6 +53,11 @@ const parseClaimItemField = (
   if (v.type === "reform" && v.reformData == null) {
     throw new Error(
       `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 있어야 합니다.`
+    );
+  }
+  if (v.type === "custom" && v.reformData == null) {
+    throw new Error(
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "custom"인 경우 reformData 필드가 있어야 합니다.`
     );
   }
   let product: ClaimItemRowDTO["product"] = null;
@@ -279,6 +285,53 @@ const parseClaimItemField = (
     };
   }
 
+  let customData: ClaimItemRowDTO["customData"] = null;
+  if (v.type === "custom" && v.reformData != null) {
+    const raw = v.reformData;
+    if (isRecord(raw)) {
+      const rawOptions = isRecord(raw.options) ? raw.options : ({} as Record<string, unknown>);
+      const rawPricing = isRecord(raw.pricing) ? raw.pricing : ({} as Record<string, unknown>);
+      const refImages = Array.isArray(raw.reference_images)
+        ? (raw.reference_images as unknown[])
+            .filter(
+              (item): item is { url: string } =>
+                item !== null &&
+                typeof item === "object" &&
+                !Array.isArray(item) &&
+                typeof (item as Record<string, unknown>).url === "string"
+            )
+            .map((item) => item.url)
+        : [];
+      const parsed: CustomOrderDataDTO = {
+        options: {
+          tieType: typeof rawOptions.tie_type === "string" ? rawOptions.tie_type : null,
+          interlining: typeof rawOptions.interlining === "string" ? rawOptions.interlining : null,
+          designType: typeof rawOptions.design_type === "string" ? rawOptions.design_type : null,
+          fabricType: typeof rawOptions.fabric_type === "string" ? rawOptions.fabric_type : null,
+          fabricProvided: rawOptions.fabric_provided === true,
+          triangleStitch: rawOptions.triangle_stitch === true,
+          sideStitch: rawOptions.side_stitch === true,
+          barTack: rawOptions.bar_tack === true,
+          dimple: rawOptions.dimple === true,
+          spoderato: rawOptions.spoderato === true,
+          fold7: rawOptions.fold7 === true,
+          brandLabel: rawOptions.brand_label === true,
+          careLabel: rawOptions.care_label === true,
+        },
+        pricing: {
+          sewingCost: typeof rawPricing.sewing_cost === "number" ? rawPricing.sewing_cost : 0,
+          fabricCost: typeof rawPricing.fabric_cost === "number" ? rawPricing.fabric_cost : 0,
+          totalCost: typeof rawPricing.total_cost === "number" ? rawPricing.total_cost : 0,
+        },
+        quantity: typeof raw.quantity === "number" ? raw.quantity : 0,
+        sample: raw.sample === true,
+        referenceImageUrls: refImages,
+        additionalNotes: typeof raw.additional_notes === "string" ? raw.additional_notes : null,
+      };
+      customData = parsed;
+    }
+  }
+
   return {
     id: v.id,
     type: v.type,
@@ -286,6 +339,7 @@ const parseClaimItemField = (
     product,
     selectedOption,
     reformData,
+    customData,
     appliedCoupon,
   };
 };

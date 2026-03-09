@@ -1,16 +1,15 @@
 import { Descriptions, Image, Space, Typography } from "antd";
-import { isCustomReformData } from "../types/admin-order";
-import type { AdminReformOrderItem } from "../types/admin-order";
+import type { AdminCustomOrderItem } from "../types/admin-order";
 
 const { Title } = Typography;
 
 interface CustomOrderDetailProps {
-  items: AdminReformOrderItem[];
+  items: AdminCustomOrderItem[];
 }
 
 export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
-  const reformItem = items.find((i) => isCustomReformData(i.reformData));
-  if (!reformItem || !isCustomReformData(reformItem.reformData)) return null;
+  const reformItem = items.find((i) => i.reformData != null);
+  if (!reformItem || !reformItem.reformData) return null;
 
   const rd = reformItem.reformData;
   const { options, pricing } = rd;

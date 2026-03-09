@@ -27,8 +27,42 @@ export interface ReformOrderItem {
   appliedCoupon?: AppliedCoupon;
 }
 
-// 주문 아이템 (일반 상품 또는 수선)
-export type OrderItem = ProductOrderItem | ReformOrderItem;
+// 주문 제작 아이템
+export interface CustomOrderItem {
+  id: string;
+  type: "custom";
+  quantity: number;
+  customData: {
+    options: {
+      tieType: string | null;
+      interlining: string | null;
+      designType: string | null;
+      fabricType: string | null;
+      fabricProvided: boolean;
+      triangleStitch: boolean;
+      sideStitch: boolean;
+      barTack: boolean;
+      dimple: boolean;
+      spoderato: boolean;
+      fold7: boolean;
+      brandLabel: boolean;
+      careLabel: boolean;
+    };
+    pricing: {
+      sewingCost: number;
+      fabricCost: number;
+      totalCost: number;
+    };
+    quantity: number;
+    sample: boolean;
+    referenceImageUrls: string[];
+    additionalNotes: string | null;
+  };
+  appliedCoupon?: AppliedCoupon;
+}
+
+// 주문 아이템 (일반 상품, 수선 또는 주문 제작)
+export type OrderItem = ProductOrderItem | ReformOrderItem | CustomOrderItem;
 
 // 배송지 정보
 export interface ShippingInfo {

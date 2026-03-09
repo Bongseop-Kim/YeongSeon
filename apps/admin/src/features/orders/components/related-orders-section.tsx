@@ -1,7 +1,9 @@
 import { Empty, Table, Tag } from "antd";
 import { Link } from "react-router-dom";
+import { ORDER_TYPE_LABELS } from "@yeongseon/shared";
 import { useRelatedOrders } from "@/features/orders/api/orders-query";
 import type { AdminOrderListItem } from "@/features/orders/types/admin-order";
+import type { OrderType } from "@yeongseon/shared";
 
 interface RelatedOrdersSectionProps {
   paymentGroupId: string | null;
@@ -33,10 +35,14 @@ export function RelatedOrdersSection({
       title: "유형",
       dataIndex: "orderType",
       key: "orderType",
-      render: (orderType: string) => {
-        const label = orderType === "sale" ? "일반" : "수선";
-        const color = orderType === "sale" ? "blue" : "purple";
-        return <Tag color={color}>{label}</Tag>;
+      render: (orderType: OrderType) => {
+        const label = ORDER_TYPE_LABELS[orderType] ?? orderType;
+        const colorMap: Record<OrderType, string> = {
+          sale: "blue",
+          custom: "green",
+          repair: "purple",
+        };
+        return <Tag color={colorMap[orderType] ?? "default"}>{label}</Tag>;
       },
     },
     {

@@ -109,7 +109,7 @@ SELECT
   END AS "selectedOption",
   oi.quantity,
   CASE
-    WHEN oi.item_type = 'reform' THEN oi.reform_data
+    WHEN oi.item_type IN ('reform', 'custom') THEN oi.reform_data
     ELSE null
   END AS "reformData",
   uc.user_coupon AS "appliedCoupon"
@@ -190,7 +190,7 @@ SELECT
     END,
     'quantity', oi.quantity,
     'reformData', CASE
-      WHEN oi.item_type = 'reform' THEN oi.reform_data
+      WHEN oi.item_type IN ('reform', 'custom') THEN oi.reform_data
       ELSE null
     END,
     'appliedCoupon', uc.user_coupon
@@ -320,12 +320,12 @@ LEFT JOIN LATERAL (
     (
       SELECT oi2.reform_data
       FROM public.order_items oi2
-      WHERE oi2.order_id = o.id AND oi2.item_type = 'reform'
+      WHERE oi2.order_id = o.id AND oi2.item_type IN ('reform', 'custom')
       LIMIT 1
     ) AS reform_data,
     SUM(oi.quantity)::integer AS item_quantity
   FROM public.order_items oi
-  WHERE oi.order_id = o.id AND oi.item_type = 'reform'
+  WHERE oi.order_id = o.id AND oi.item_type IN ('reform', 'custom')
 ) ri ON o.order_type IN ('custom', 'repair');
 
 -- ── admin_order_detail_view ──────────────────────────────

@@ -7,6 +7,7 @@ import type {
   OrderListRowDTO,
   OrderDetailRowDTO,
   OrderStatusDTO,
+  CustomOrderDataDTO,
 } from "@yeongseon/shared/types/dto/order-view";
 import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-output";
 import type { Order } from "@yeongseon/shared/types/view/order";
@@ -238,6 +239,57 @@ const parseReformDataField = (
   };
 };
 
+const parseCustomDataField = (
+  v: unknown,
+  idx: number
+): CustomOrderDataDTO | null => {
+  if (v == null) return null;
+  if (!isRecord(v)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 reformData(custom)가 올바르지 않습니다: 객체가 아닙니다.`
+    );
+  }
+  const rawOptions = isRecord(v.options) ? v.options : ({} as Record<string, unknown>);
+  const rawPricing = isRecord(v.pricing) ? v.pricing : ({} as Record<string, unknown>);
+  const refImages = Array.isArray(v.reference_images)
+    ? (v.reference_images as unknown[])
+        .filter(
+          (item): item is { url: string; file_id: string | null } =>
+            item !== null &&
+            typeof item === "object" &&
+            !Array.isArray(item) &&
+            typeof (item as Record<string, unknown>).url === "string"
+        )
+        .map((item) => item.url)
+    : [];
+  return {
+    options: {
+      tieType: typeof rawOptions.tie_type === "string" ? rawOptions.tie_type : null,
+      interlining: typeof rawOptions.interlining === "string" ? rawOptions.interlining : null,
+      designType: typeof rawOptions.design_type === "string" ? rawOptions.design_type : null,
+      fabricType: typeof rawOptions.fabric_type === "string" ? rawOptions.fabric_type : null,
+      fabricProvided: rawOptions.fabric_provided === true,
+      triangleStitch: rawOptions.triangle_stitch === true,
+      sideStitch: rawOptions.side_stitch === true,
+      barTack: rawOptions.bar_tack === true,
+      dimple: rawOptions.dimple === true,
+      spoderato: rawOptions.spoderato === true,
+      fold7: rawOptions.fold7 === true,
+      brandLabel: rawOptions.brand_label === true,
+      careLabel: rawOptions.care_label === true,
+    },
+    pricing: {
+      sewingCost: typeof rawPricing.sewing_cost === "number" ? rawPricing.sewing_cost : 0,
+      fabricCost: typeof rawPricing.fabric_cost === "number" ? rawPricing.fabric_cost : 0,
+      totalCost: typeof rawPricing.total_cost === "number" ? rawPricing.total_cost : 0,
+    },
+    quantity: typeof v.quantity === "number" ? v.quantity : 0,
+    sample: v.sample === true,
+    referenceImageUrls: refImages,
+    additionalNotes: typeof v.additional_notes === "string" ? v.additional_notes : null,
+  };
+};
+
 const parseAppliedCouponField = (
   v: unknown,
   idx: number
@@ -416,13 +468,14 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         `주문 상품 행(${i})이 올바르지 않습니다: 필수 필드(id, order_id, quantity, created_at) 누락.`
       );
     }
-    if (row.type !== "product" && row.type !== "reform") {
+    if (row.type !== "product" && row.type !== "reform" && row.type !== "custom") {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product" 또는 "reform"이 아닙니다.`
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product", "reform", "custom" 중 하나가 아닙니다.`
       );
     }
     const product = parseProductField(row.product, i);
-    const reformData = parseReformDataField(row.reformData, i);
+    const reformData = row.type === "reform" ? parseReformDataField(row.reformData, i) : null;
+    const customData = row.type === "custom" ? parseCustomDataField(row.reformData, i) : null;
     if (row.type === "product" && product == null) {
       throw new Error(
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "product"인 경우 product 필드가 필요합니다.`
@@ -433,6 +486,11 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 필요합니다.`
       );
     }
+    if (row.type === "custom" && customData == null) {
+      throw new Error(
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "custom"인 경우 reformData(custom) 필드가 필요합니다.`
+      );
+    }
     return {
       order_id: row.order_id,
       id: row.id,
@@ -441,6 +499,7 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
       selectedOption: parseSelectedOptionField(row.selectedOption, i),
       quantity: row.quantity,
       reformData,
+      customData,
       appliedCoupon: parseAppliedCouponField(row.appliedCoupon, i),
       created_at: row.created_at,
     };

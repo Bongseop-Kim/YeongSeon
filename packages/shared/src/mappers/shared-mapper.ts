@@ -4,7 +4,7 @@ import type { Coupon, AppliedCoupon } from "../types/view/coupon";
 import type { CouponDTO, AppliedCouponDTO } from "../types/dto/coupon";
 import type { TieItem } from "../types/view/reform";
 import type { TieItemDTO } from "../types/dto/reform";
-import type { OrderItemDTO } from "../types/dto/order-view";
+import type { OrderItemDTO, CustomOrderDataDTO } from "../types/dto/order-view";
 import type { OrderItem } from "../types/view/order";
 
 export const toProductOptionView = (option: ProductOptionDTO): ProductOption => ({
@@ -68,11 +68,12 @@ export const toTieItemDTO = (tie: TieItem): TieItemDTO => {
 /** OrderItemRowDTO / ClaimItemRowDTO 공통 nullable 필드 */
 interface NullableItemRow {
   id: string;
-  type: "product" | "reform";
+  type: "product" | "reform" | "custom";
   product: ProductDTO | null;
   selectedOption: ProductOptionDTO | null;
   quantity: number;
   reformData: { tie: TieItemDTO; cost: number } | null;
+  customData: CustomOrderDataDTO | null;
   appliedCoupon: AppliedCouponDTO | null;
 }
 
@@ -93,7 +94,7 @@ const DELETED_PRODUCT_FALLBACK: ProductDTO = {
 };
 
 /**
- * nullable Row → 정규화된 OrderItemDTO (판매/수선 구별 유니언)
+ * nullable Row → 정규화된 OrderItemDTO (판매/수선/주문제작 구별 유니언)
  * order-mapper, claims-mapper 공통 로직
  */
 export const normalizeItemRow = (item: NullableItemRow): OrderItemDTO => {
@@ -104,6 +105,19 @@ export const normalizeItemRow = (item: NullableItemRow): OrderItemDTO => {
       product: item.product ?? DELETED_PRODUCT_FALLBACK,
       selectedOption: item.selectedOption ?? undefined,
       quantity: item.quantity,
+      appliedCoupon: item.appliedCoupon ?? undefined,
+    };
+  }
+
+  if (item.type === "custom") {
+    if (!item.customData) {
+      throw new Error("주문 제작 데이터가 올바르지 않습니다.");
+    }
+    return {
+      id: item.id,
+      type: "custom",
+      quantity: item.quantity,
+      customData: item.customData,
       appliedCoupon: item.appliedCoupon ?? undefined,
     };
   }
@@ -127,9 +141,6 @@ export const normalizeItemRow = (item: NullableItemRow): OrderItemDTO => {
  */
 export const toOrderItemView = (item: OrderItemDTO): OrderItem => {
   if (item.type === "product") {
-    if (!item.product) {
-      throw new Error("Product data is required for product order items.");
-    }
     return {
       ...item,
       product: toProductView(item.product),
@@ -140,8 +151,11 @@ export const toOrderItemView = (item: OrderItemDTO): OrderItem => {
     };
   }
 
-  if (!item.reformData) {
-    throw new Error("Reform data is required for reform order items.");
+  if (item.type === "custom") {
+    return {
+      ...item,
+      appliedCoupon: toAppliedCouponView(item.appliedCoupon),
+    };
   }
 
   return {

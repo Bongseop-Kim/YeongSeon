@@ -1,6 +1,7 @@
 import type { ProductDTO, ProductOptionDTO } from "./product";
 import type { TieItemDTO } from "./reform";
 import type { AppliedCouponDTO } from "./coupon";
+import type { CustomOrderDataDTO } from "./order-view";
 
 export type ClaimStatusDTO = "접수" | "처리중" | "수거요청" | "수거완료" | "재발송" | "완료" | "거부";
 export type ClaimTypeDTO = "cancel" | "return" | "exchange";
@@ -8,11 +9,12 @@ export type ClaimTypeDTO = "cancel" | "return" | "exchange";
 /** claim_list_view의 item jsonb 컬럼 shape */
 export interface ClaimItemRowDTO {
   id: string;
-  type: "product" | "reform";
+  type: "product" | "reform" | "custom";
   product: ProductDTO | null;
   selectedOption: ProductOptionDTO | null;
   quantity: number;
   reformData: { tie: TieItemDTO; cost: number } | null;
+  customData: CustomOrderDataDTO | null;
   appliedCoupon: AppliedCouponDTO | null;
 }
 

@@ -38,7 +38,11 @@ export function OrderItemCard({
       <div className="flex-1 text-left">
         <div className="flex flex-col gap-1">
           <Label className="font-bold">
-            {item.type === "product" ? item.product.name : "넥타이 수선"}
+            {item.type === "product"
+              ? item.product.name
+              : item.type === "custom"
+                ? "주문 제작"
+                : "넥타이 수선"}
           </Label>
           <Label className="text-sm text-zinc-500">
             {getOrderItemDetails(item)}
@@ -60,7 +64,9 @@ export function OrderItemCard({
                           (item.selectedOption?.additionalPrice ?? 0)) *
                         item.quantity
                       ).toLocaleString()
-                    : (item.reformData.cost * item.quantity).toLocaleString()}
+                    : item.type === "custom"
+                      ? item.customData.pricing.totalCost.toLocaleString()
+                      : (item.reformData.cost * item.quantity).toLocaleString()}
                   원
                 </Label>
               )}

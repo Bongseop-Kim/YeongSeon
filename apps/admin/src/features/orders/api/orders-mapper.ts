@@ -9,6 +9,7 @@ import type {
   AdminOrderDetail,
   AdminOrderItem,
   AdminProductOrderItem,
+  AdminCustomOrderItem,
   AdminReformOrderItem,
   AdminShippingAddress,
   AdminTrackingInfo,
@@ -229,8 +230,24 @@ export function toAdminOrderItem(
     return item;
   }
 
+  if (dto.itemType === "custom") {
+    const reformData = dto.reformData ? parseCustomReformData(dto.reformData) : null;
+    const item: AdminCustomOrderItem = {
+      type: "custom",
+      id: dto.id,
+      orderId: dto.orderId,
+      quantity: dto.quantity,
+      unitPrice: dto.unitPrice,
+      discountAmount: dto.discountAmount,
+      lineDiscountAmount: dto.lineDiscountAmount,
+      reformData,
+    };
+    return item;
+  }
+
+  // reform (수선)
   const reformData =
-    orderType === "sale" ? null : toReformData(dto.reformData, orderType);
+    orderType === "sale" ? null : toReformData(dto.reformData, "repair");
   const item: AdminReformOrderItem = {
     type: "reform",
     id: dto.id,
@@ -239,7 +256,7 @@ export function toAdminOrderItem(
     unitPrice: dto.unitPrice,
     discountAmount: dto.discountAmount,
     lineDiscountAmount: dto.lineDiscountAmount,
-    reformData,
+    reformData: reformData as RepairOrderReformData | null,
   };
   return item;
 }

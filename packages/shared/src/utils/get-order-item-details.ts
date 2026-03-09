@@ -8,15 +8,23 @@ export const getOrderItemDetails = (item: OrderItem): string => {
       parts.push(item.selectedOption.name);
     }
     return parts.join(" · ");
-  } else {
-    // reform 타입
-    const { tie } = item.reformData;
-    const details = [];
-    if (tie.measurementType === "length" && tie.tieLength) {
-      details.push(`길이 ${tie.tieLength}cm`);
-    } else if (tie.measurementType === "height" && tie.wearerHeight) {
-      details.push(`신장 ${tie.wearerHeight}cm 기준`);
-    }
-    return details.join(" · ") || "수선";
   }
+
+  if (item.type === "custom") {
+    const { options } = item.customData;
+    const parts: string[] = [];
+    if (options.fabricType) parts.push(options.fabricType);
+    if (options.designType) parts.push(options.designType);
+    return parts.join(" · ") || "주문 제작";
+  }
+
+  // reform 타입
+  const { tie } = item.reformData;
+  const details = [];
+  if (tie.measurementType === "length" && tie.tieLength) {
+    details.push(`길이 ${tie.tieLength}cm`);
+  } else if (tie.measurementType === "height" && tie.wearerHeight) {
+    details.push(`신장 ${tie.wearerHeight}cm 기준`);
+  }
+  return details.join(" · ") || "수선";
 };

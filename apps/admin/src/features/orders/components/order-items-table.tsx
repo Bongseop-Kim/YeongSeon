@@ -15,7 +15,8 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
         dataIndex="productName"
         title="상품명"
         render={(_: unknown, record: AdminOrderItem) => {
-          if (record.type === "reform") return "리폼 상품";
+          if (record.type === "custom") return "주문 제작";
+          if (record.type === "reform") return "넥타이 수선";
           if (!record.productName) return "-";
           if (record.productId != null) {
             const { productId } = record;

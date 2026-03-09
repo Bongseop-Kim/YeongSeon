@@ -20,7 +20,7 @@ import { TrackingSection } from "./tracking-section";
 import { OrderItemsTable } from "./order-items-table";
 import { StatusLogTable } from "./status-log-table";
 import { RelatedOrdersSection } from "@/features/orders/components/related-orders-section";
-import type { AdminReformOrderItem } from "../types/admin-order";
+import type { AdminCustomOrderItem, AdminReformOrderItem } from "../types/admin-order";
 
 const { Title } = Typography;
 
@@ -45,6 +45,9 @@ export function OrderDetailSection() {
   const nextStatus = order?.status ? statusFlow[order.status] : undefined;
   const rollbackStatus = order?.status ? rollbackFlow[order.status] : undefined;
 
+  const customItems = items.filter(
+    (i): i is AdminCustomOrderItem => i.type === "custom"
+  );
   const reformItems = items.filter(
     (i): i is AdminReformOrderItem => i.type === "reform"
   );
@@ -85,7 +88,7 @@ export function OrderDetailSection() {
         </>
       )}
 
-      {orderType === "custom" && <CustomOrderDetail items={reformItems} />}
+      {orderType === "custom" && <CustomOrderDetail items={customItems} />}
       {orderType === "repair" && <RepairOrderDetail items={reformItems} />}
 
       <Title level={5}>배송 정보</Title>

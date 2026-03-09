@@ -77,6 +77,17 @@ export interface AdminProductOrderItem {
   lineDiscountAmount: number;
 }
 
+export interface AdminCustomOrderItem {
+  type: "custom";
+  id: string;
+  orderId: string;
+  quantity: number;
+  unitPrice: number;
+  discountAmount: number;
+  lineDiscountAmount: number;
+  reformData: CustomOrderReformData | null;
+}
+
 export interface AdminReformOrderItem {
   type: "reform";
   id: string;
@@ -85,10 +96,10 @@ export interface AdminReformOrderItem {
   unitPrice: number;
   discountAmount: number;
   lineDiscountAmount: number;
-  reformData: CustomOrderReformData | RepairOrderReformData | null;
+  reformData: RepairOrderReformData | null;
 }
 
-export type AdminOrderItem = AdminProductOrderItem | AdminReformOrderItem;
+export type AdminOrderItem = AdminProductOrderItem | AdminCustomOrderItem | AdminReformOrderItem;
 
 // ── reformData typed structures ────────────────────────────────
 
