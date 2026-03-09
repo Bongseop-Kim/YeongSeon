@@ -207,12 +207,33 @@ export const buildReferencePrompt = (
     : fabricMethod === "print"
     ? "printed"
     : "fabric";
-  return [
-    "Use the uploaded image only for color palette and motif shape reference.",
-    "Treat the uploaded image as a purely visual graphic — do not read, reproduce, or render any text or letterforms you see in it. Use only the overall silhouette, outline, and visual form.",
-    `The fabric construction method is strictly ${fabricLabel}, regardless of the image style.`,
-    "Keep the final result as a clean rectangular fabric swatch.",
-  ].join(" ");
+  if (hasCiImage && hasReferenceImage) {
+    return [
+      "Image 1: base fabric reference (referenceImage). Image 2: CI logo reference (ciImage).",
+      "Preserve fabric appearance from Image 1.",
+      "Use visual silhouette of Image 2 as accent.",
+      "Do not read, reproduce, or render any text or letterforms from Image 2.",
+      `The fabric construction method is strictly ${fabricLabel}, regardless of either image style.`,
+      "Keep the final result as a clean rectangular fabric swatch.",
+    ].join(" ");
+  }
+  if (hasCiImage) {
+    return [
+      "The uploaded image is a CI logo reference.",
+      "Use only its silhouette and outline — do not reproduce text or letterforms.",
+      `The fabric construction method is strictly ${fabricLabel}, regardless of the image style.`,
+      "Keep the final result as a clean rectangular fabric swatch.",
+    ].join(" ");
+  }
+  if (hasReferenceImage) {
+    return [
+      "The uploaded image is a base fabric reference.",
+      "Use it for color palette and motif shape reference only.",
+      `The fabric construction method is strictly ${fabricLabel}, regardless of the image style.`,
+      "Keep the final result as a clean rectangular fabric swatch.",
+    ].join(" ");
+  }
+  throw new Error("unreachable: all hasCiImage/hasReferenceImage combinations are handled above");
 };
 
 export const buildCiPlacementPrompt = (

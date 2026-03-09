@@ -49,6 +49,9 @@ BEGIN
   PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
 
   -- admin_settings에서 비용 조회
+  -- p_quality는 text_and_image/image 요청에만 적용된다.
+  -- text_only 요청은 이미지 생성 없이 텍스트 처리만 하므로
+  -- 품질 등급(standard/high)이 비용에 영향을 주지 않는다(의도적 설계).
   v_cost_key := CASE
     WHEN p_request_type = 'text_and_image' AND p_quality = 'high'
       THEN 'design_token_cost_' || p_ai_model || '_image_high'

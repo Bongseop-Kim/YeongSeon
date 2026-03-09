@@ -12,6 +12,8 @@ const extractImageUrl = (background: string): string | null => {
   return match?.[1] ?? null;
 };
 
+const SHADOW_TOP_OFFSET = -57;
+
 interface ResultTagBarProps {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
@@ -98,11 +100,12 @@ export function ResultTagBar({
     const drawHeight = img.naturalHeight * scale;
     const offsetX = (canvas.width - drawWidth) / 2;
     const offsetY = (canvas.height - drawHeight) / 2;
-    const svgW = 270.3;
-    const svgH = 1283;
-    const maskScale = Math.min(canvas.width / svgW, canvas.height / svgH);
-    const maskW = svgW * maskScale;
-    const maskH = svgH * maskScale;
+    const maskScale = Math.min(
+      canvas.width / maskImg.naturalWidth,
+      canvas.height / maskImg.naturalHeight,
+    );
+    const maskW = maskImg.naturalWidth * maskScale;
+    const maskH = maskImg.naturalHeight * maskScale;
     const maskX = (canvas.width - maskW) / 2;
     const maskY = (canvas.height - maskH) / 2;
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
@@ -111,7 +114,13 @@ export function ResultTagBar({
     ctx.globalCompositeOperation = "source-over";
     // CSS: absolute top-[-57px], width/height 미지정 → 자연 크기(397×864), left=0
     // canvas(316×600)가 오른쪽·위쪽 overflow를 자동 클리핑
-    ctx.drawImage(shadowImg, 0, -57, 397, 864);
+    ctx.drawImage(
+      shadowImg,
+      0,
+      SHADOW_TOP_OFFSET,
+      shadowImg.naturalWidth,
+      shadowImg.naturalHeight,
+    );
 
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, "image/png");
