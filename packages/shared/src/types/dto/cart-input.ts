@@ -1,6 +1,6 @@
 import type { AppliedCouponDTO } from "./coupon";
 import type { ProductDTO, ProductOptionDTO } from "./product";
-import type { TieItemDTO } from "./reform";
+import type { TieItemCreateDTO } from "./reform";
 
 export interface CartItemInputDTO {
   id: string;
@@ -9,7 +9,7 @@ export interface CartItemInputDTO {
   selectedOption?: ProductOptionDTO | null;
   quantity: number;
   reformData: {
-    tie: TieItemDTO;
+    tie: TieItemCreateDTO;
     cost: number;
   } | null;
   appliedCoupon?: AppliedCouponDTO;

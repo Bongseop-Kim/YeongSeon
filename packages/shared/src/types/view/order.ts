@@ -53,7 +53,6 @@ export interface CustomOrderItem {
       fabricCost: number;
       totalCost: number;
     };
-    quantity: number;
     sample: boolean;
     referenceImageUrls: string[];
     additionalNotes: string | null;

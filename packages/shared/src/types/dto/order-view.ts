@@ -45,7 +45,6 @@ export interface CustomOrderDataDTO {
     fabricCost: number;
     totalCost: number;
   };
-  quantity: number;
   sample: boolean;
   referenceImageUrls: string[];
   additionalNotes: string | null;

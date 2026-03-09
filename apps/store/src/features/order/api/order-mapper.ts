@@ -226,6 +226,11 @@ const parseReformDataField = (
     );
   }
   const tieRaw = v.tie;
+  if (typeof tieRaw.id !== "string") {
+    throw new Error(
+      `주문 상품 행(${idx})의 parseReformDataField: tie.id 필드가 없거나 string이 아닙니다.`
+    );
+  }
   const measurementType =
     typeof tieRaw.measurementType === "string" && isTieMeasurementType(tieRaw.measurementType)
       ? tieRaw.measurementType
@@ -233,7 +238,7 @@ const parseReformDataField = (
   return {
     cost,
     tie: {
-      id: typeof tieRaw.id === "string" ? tieRaw.id : undefined,
+      id: tieRaw.id,
       image: typeof tieRaw.image === "string" ? tieRaw.image : undefined,
       measurementType,
       tieLength: typeof tieRaw.tieLength === "number" ? tieRaw.tieLength : undefined,
@@ -287,7 +292,6 @@ const parseCustomDataField = (
       fabricCost: typeof rawPricing.fabric_cost === "number" ? rawPricing.fabric_cost : 0,
       totalCost: typeof rawPricing.total_cost === "number" ? rawPricing.total_cost : 0,
     },
-    quantity: typeof v.quantity === "number" ? v.quantity : 0,
     sample: v.sample === true,
     referenceImageUrls: refImages,
     additionalNotes: typeof v.additional_notes === "string" ? v.additional_notes : null,

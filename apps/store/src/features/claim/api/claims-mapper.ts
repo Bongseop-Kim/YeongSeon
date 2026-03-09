@@ -147,11 +147,12 @@ const parseClaimItemField = (
         );
       }
       if (
+        typeof v.reformData.tie.id !== "string" ||
         v.reformData.tie.image != null &&
         typeof v.reformData.tie.image !== "string"
       ) {
         throw new Error(
-          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: image 필드 타입 오류.`
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: id 또는 image 필드 타입 오류.`
         );
       }
       if (v.reformData.tie.measurementType != null) {
@@ -201,7 +202,7 @@ const parseClaimItemField = (
       reformData = {
         cost: v.reformData.cost,
         tie: {
-          id: typeof v.reformData.tie.id === "string" ? v.reformData.tie.id : undefined,
+          id: v.reformData.tie.id,
           image:
             typeof v.reformData.tie.image === "string"
               ? v.reformData.tie.image
@@ -325,7 +326,6 @@ const parseClaimItemField = (
           fabricCost: typeof rawPricing.fabric_cost === "number" ? rawPricing.fabric_cost : 0,
           totalCost: typeof rawPricing.total_cost === "number" ? rawPricing.total_cost : 0,
         },
-        quantity: typeof raw.quantity === "number" ? raw.quantity : 0,
         sample: raw.sample === true,
         referenceImageUrls: refImages,
         additionalNotes: typeof raw.additional_notes === "string" ? raw.additional_notes : null,

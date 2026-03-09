@@ -3,7 +3,7 @@ import type { ProductDTO, ProductOptionDTO } from "../types/dto/product";
 import type { Coupon, AppliedCoupon } from "../types/view/coupon";
 import type { CouponDTO, AppliedCouponDTO } from "../types/dto/coupon";
 import type { TieItem } from "../types/view/reform";
-import type { TieItemDTO } from "../types/dto/reform";
+import type { TieItemCreateDTO, TieItemDTO } from "../types/dto/reform";
 import type { OrderItemDTO, CustomOrderDataDTO } from "../types/dto/order-view";
 import type { OrderItem } from "../types/view/order";
 
@@ -57,7 +57,7 @@ export const toAppliedCouponDTO = (
       }
     : undefined;
 
-export const toTieItemDTO = (tie: TieItem): TieItemDTO => {
+export const toTieItemDTO = (tie: TieItem): TieItemCreateDTO => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { checked, image, ...rest } = tie;
   return { ...rest, image: typeof image === "string" ? image : undefined };

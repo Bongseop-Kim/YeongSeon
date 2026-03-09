@@ -473,7 +473,7 @@ export default function ShopDetailPage() {
                 <button
                   type="button"
                   onClick={handleInquiry}
-                  className="focus-visible:border-ring focus-visible:ring-ring/50 flex w-full items-start justify-between gap-4 rounded-sm border-b py-4 text-left text-sm font-medium outline-none transition-all focus-visible:ring-[3px] hover:underline last:border-b-0"
+                  className="focus-visible:border-ring focus-visible:ring-ring/50 flex w-full items-start justify-between gap-4 rounded-sm border-b py-4 text-left text-sm font-medium outline-none transition-all focus-visible:ring-[3px] hover:underline"
                 >
                   문의하기
                   <ChevronRightIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5" />
