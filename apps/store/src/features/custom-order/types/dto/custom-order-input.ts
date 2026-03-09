@@ -1,3 +1,5 @@
+import type { ImageRef } from "@yeongseon/shared";
+
 export interface CreateCustomOrderOptionsDto {
   fabricProvided: boolean;
   reorder: boolean;
@@ -16,6 +18,11 @@ export interface CreateCustomOrderOptionsDto {
   spoderato: boolean;
   brandLabel: boolean;
   careLabel: boolean;
+}
+
+export interface DbImageRef {
+  url: string;
+  file_id: string | null;
 }
 
 export interface CreateCustomOrderOptionsDtoSnakeCase {
@@ -42,7 +49,7 @@ export interface CreateCustomOrderRequest {
   shippingAddressId: string;
   options: CreateCustomOrderOptionsDto;
   quantity: number;
-  referenceImageUrls: string[];
+  referenceImages: ImageRef[];
   additionalNotes: string;
   sample: boolean;
   sampleType: "sewing" | "fabric" | "fabric_and_sewing" | null;
@@ -52,7 +59,7 @@ export interface CreateCustomOrderRequestDto {
   shipping_address_id: string;
   options: CreateCustomOrderOptionsDtoSnakeCase;
   quantity: number;
-  reference_image_urls: string[];
+  reference_images: DbImageRef[];
   additional_notes: string;
   sample: boolean;
   sample_type: "sewing" | "fabric" | "fabric_and_sewing" | null;

@@ -1,5 +1,7 @@
 import { useTable } from "@refinedev/antd";
 import { useShow, useList } from "@refinedev/core";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { message } from "antd";
 import type { TableProps } from "antd";
 import type { AdminOrderListRowDTO } from "@yeongseon/shared";
 import {
@@ -7,14 +9,26 @@ import {
   toAdminCustomerDetail,
   toAdminCustomerOrderRow,
   toAdminCustomerCouponRow,
-} from "./customers-mapper";
-import type { ProfileRow, UserCouponRow } from "./customers-mapper";
+  toAdminCustomerTokenRow,
+} from "@/features/customers/api/customers-mapper";
+import type { DesignTokenRow, ProfileRow, UserCouponRow } from "@/features/customers/api/customers-mapper";
+import {
+  getCustomerTokenBalances,
+  getCustomerTokenHistory,
+  manageCustomerTokens,
+} from "@/features/customers/api/customers-api";
 import type {
   AdminCustomerListItem,
   AdminCustomerDetail,
   AdminCustomerOrderRow,
   AdminCustomerCouponRow,
-} from "../types/admin-customer";
+  AdminCustomerTokenBalanceRow,
+  AdminCustomerTokenRow,
+} from "@/features/customers/types/admin-customer";
+import type { ManageCustomerTokensParams } from "@/features/customers/api/customers-api";
+
+const CUSTOMER_TOKEN_BALANCES_KEY = ["customers", "token-balances"] as const;
+const CUSTOMER_TOKEN_HISTORY_KEY = ["customers", "token-history"] as const;
 
 // ── List ───────────────────────────────────────────────────────
 
@@ -82,4 +96,46 @@ export function useAdminCustomerCoupons(customerId: string | undefined) {
   );
 
   return { coupons };
+}
+
+export function useCustomerTokenBalancesQuery(userIds: string[]) {
+  return useQuery({
+    queryKey: [...CUSTOMER_TOKEN_BALANCES_KEY, userIds],
+    queryFn: (): Promise<AdminCustomerTokenBalanceRow[]> =>
+      getCustomerTokenBalances(userIds),
+    enabled: userIds.length > 0,
+  });
+}
+
+export function useCustomerTokenHistoryQuery(userId: string) {
+  return useQuery({
+    queryKey: [...CUSTOMER_TOKEN_HISTORY_KEY, userId],
+    queryFn: async (): Promise<AdminCustomerTokenRow[]> => {
+      const rows: DesignTokenRow[] = await getCustomerTokenHistory(userId);
+      return rows.map(toAdminCustomerTokenRow);
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useManageCustomerTokensMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: ManageCustomerTokensParams) => manageCustomerTokens(params),
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [...CUSTOMER_TOKEN_HISTORY_KEY, variables.userId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: CUSTOMER_TOKEN_BALANCES_KEY,
+        }),
+      ]);
+      message.success("토큰이 처리되었습니다.");
+    },
+    onError: (error: Error) => {
+      message.error(`토큰 처리에 실패했습니다: ${error.message}`);
+    },
+  });
 }

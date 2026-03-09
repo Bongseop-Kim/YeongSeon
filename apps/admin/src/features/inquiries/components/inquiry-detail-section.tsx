@@ -5,6 +5,7 @@ import {
   useAdminInquiryDetail,
   useAnswerInquiry,
 } from "../api/inquiries-query";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/imagekit";
 
 export function InquiryDetailSection() {
   const { detail, isLoading } = useAdminInquiryDetail();
@@ -27,6 +28,19 @@ export function InquiryDetailSection() {
         <Descriptions.Item label="상태">
           <Tag color={INQUIRY_STATUS_COLORS[detail.status]}>{detail.status}</Tag>
         </Descriptions.Item>
+        <Descriptions.Item label="문의 유형">{detail.category}</Descriptions.Item>
+        {detail.category === "상품" && detail.product && (
+          <Descriptions.Item label="상품">
+            <Space>
+              <img
+                src={`${IMAGEKIT_URL_ENDPOINT}${detail.product.image}`}
+                alt={detail.product.name}
+                style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4 }}
+              />
+              {detail.product.name}
+            </Space>
+          </Descriptions.Item>
+        )}
         <Descriptions.Item label="작성일">{detail.date}</Descriptions.Item>
         <Descriptions.Item label="내용">{detail.content}</Descriptions.Item>
         {detail.type === "answered" && (

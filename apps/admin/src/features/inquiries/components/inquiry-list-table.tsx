@@ -36,6 +36,7 @@ export function InquiryListTable() {
         })}
       >
         <Table.Column dataIndex="title" title="제목" />
+        <Table.Column dataIndex="category" title="유형" />
         <Table.Column
           dataIndex="status"
           title="상태"

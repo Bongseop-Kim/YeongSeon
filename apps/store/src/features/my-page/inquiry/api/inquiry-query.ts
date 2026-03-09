@@ -4,29 +4,23 @@ import {
   createInquiry,
   updateInquiry,
   deleteInquiry,
+  searchProductsForInquiry,
 } from "./inquiry-api";
+import type { InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-item";
 import { useAuthStore } from "@/store/auth";
 
-/**
- * 문의 쿼리 키
- */
 export const inquiryKeys = {
   all: ["inquiries"] as const,
   list: (userId?: string) => [...inquiryKeys.all, "list", userId] as const,
+  productSearch: (query: string) => ["inquiry-product-search", query] as const,
 };
 
-/**
- * 문의 목록 조회 쿼리
- */
 export const useInquiries = () => {
   const { user } = useAuthStore();
-
   return useQuery({
     queryKey: inquiryKeys.list(user?.id),
     queryFn: () => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
+      if (!user?.id) throw new Error("로그인이 필요합니다.");
       return getInquiries();
     },
     enabled: !!user?.id,
@@ -36,68 +30,63 @@ export const useInquiries = () => {
   });
 };
 
-/**
- * 문의 등록 뮤테이션
- */
 export const useCreateInquiry = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-
   return useMutation({
-    mutationFn: (params: { title: string; content: string }) => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
+    mutationFn: (params: {
+      category: InquiryCategory;
+      productId?: number;
+      title: string;
+      content: string;
+    }) => {
+      if (!user?.id) throw new Error("로그인이 필요합니다.");
       return createInquiry({ userId: user.id, ...params });
     },
     onSuccess: () => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
-      }
+      if (user?.id) queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
     },
   });
 };
 
-/**
- * 문의 수정 뮤테이션
- */
 export const useUpdateInquiry = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-
   return useMutation({
-    mutationFn: (params: { id: string; title: string; content: string }) => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
+    mutationFn: (params: {
+      id: string;
+      category: InquiryCategory;
+      productId?: number;
+      title: string;
+      content: string;
+    }) => {
+      if (!user?.id) throw new Error("로그인이 필요합니다.");
       return updateInquiry(params);
     },
     onSuccess: () => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
-      }
+      if (user?.id) queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
     },
   });
 };
 
-/**
- * 문의 삭제 뮤테이션
- */
 export const useDeleteInquiry = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-
   return useMutation({
     mutationFn: (id: string) => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
+      if (!user?.id) throw new Error("로그인이 필요합니다.");
       return deleteInquiry(id);
     },
     onSuccess: () => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
-      }
+      if (user?.id) queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
     },
   });
 };
+
+/** 문의 폼 상품 검색 쿼리 */
+export const useProductSearchForInquiry = (query: string) =>
+  useQuery({
+    queryKey: inquiryKeys.productSearch(query),
+    queryFn: () => searchProductsForInquiry(query),
+    staleTime: 1000 * 30,
+  });

@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION public.create_quote_request_txn(
   p_shipping_address_id uuid,
   p_options jsonb,
   p_quantity integer,
-  p_reference_image_urls text[] DEFAULT '{}'::text[],
+  p_reference_images jsonb DEFAULT '[]'::jsonb,
   p_additional_notes text DEFAULT '',
   p_contact_name text DEFAULT '',
   p_contact_title text DEFAULT '',
@@ -73,7 +73,7 @@ begin
     shipping_address_id,
     options,
     quantity,
-    reference_image_urls,
+    reference_images,
     additional_notes,
     contact_name,
     contact_title,
@@ -87,7 +87,7 @@ begin
     p_shipping_address_id,
     p_options,
     p_quantity,
-    coalesce(p_reference_image_urls, '{}'::text[]),
+    coalesce(p_reference_images, '[]'::jsonb),
     coalesce(p_additional_notes, ''),
     trim(p_contact_name),
     coalesce(trim(p_contact_title), ''),
@@ -197,4 +197,3 @@ begin
   );
 end;
 $$;
-

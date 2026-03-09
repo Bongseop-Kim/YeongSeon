@@ -3,10 +3,12 @@ import { upload } from "@imagekit/react";
 import { supabase } from "@/lib/supabase";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 import { toast } from "@/lib/toast";
+import type { ImageRef } from "@yeongseon/shared";
 
 interface UploadedImage {
   name: string;
   url: string;
+  fileId: string;
 }
 
 export const useImageUpload = () => {
@@ -39,10 +41,19 @@ export const useImageUpload = () => {
       if (!response.url) {
         throw new Error("이미지 URL을 받지 못했습니다.");
       }
+      if (!response.fileId) {
+        throw new Error("파일 ID를 받지 못했습니다.");
+      }
+      const uploadedUrl = response.url;
+      const uploadedFileId = response.fileId;
 
       setUploadedImages((prev) => [
         ...prev,
-        { name: response.name ?? file.name, url: response.url! },
+        {
+          name: response.name ?? file.name,
+          url: uploadedUrl,
+          fileId: uploadedFileId,
+        },
       ]);
     } catch (error) {
       toast.error(
@@ -59,8 +70,13 @@ export const useImageUpload = () => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const getImageUrls = useCallback(() => {
-    return uploadedImages.map((img) => img.url).filter(Boolean);
+  const getImageRefs = useCallback((): ImageRef[] => {
+    return uploadedImages
+      .map((img) => ({
+        url: img.url.trim(),
+        fileId: img.fileId.trim(),
+      }))
+      .filter((img) => img.url && img.fileId);
   }, [uploadedImages]);
 
   const isUploading = activeUploads > 0;
@@ -70,6 +86,6 @@ export const useImageUpload = () => {
     isUploading,
     uploadFile,
     removeImage,
-    getImageUrls,
+    getImageRefs,
   };
 };

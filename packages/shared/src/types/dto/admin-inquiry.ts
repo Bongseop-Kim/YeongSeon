@@ -7,6 +7,9 @@ export interface AdminInquiryRowDTO {
   title: string;
   content: string;
   status: InquiryStatusDTO;
+  category: string;
+  product_id: number | null;
+  products: { id: number; name: string; image: string } | null;
   answer: string | null;
   answer_date: string | null;
   created_at: string;

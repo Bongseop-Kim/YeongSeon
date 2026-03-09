@@ -138,8 +138,17 @@ export function parseCustomReformData(
     totalCost: num(rawPricing.total_cost),
   };
 
-  const refImages = Array.isArray(raw.reference_image_urls)
-    ? raw.reference_image_urls.filter((u): u is string => typeof u === "string")
+  const refImages = Array.isArray(raw.reference_images)
+    ? raw.reference_images
+        .filter(
+          (item): item is { url: string; file_id: string | null } =>
+            item !== null &&
+            typeof item === "object" &&
+            typeof item.url === "string" &&
+            "file_id" in item &&
+            (typeof item.file_id === "string" || item.file_id === null)
+        )
+        .map((item) => item.url)
     : [];
 
   return {

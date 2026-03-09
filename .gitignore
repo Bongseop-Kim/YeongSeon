@@ -37,3 +37,6 @@ dist-ssr
 # Git worktrees
 .worktrees/
 .worktrees
+
+# AI agent plan/design docs (local only)
+docs/plans/

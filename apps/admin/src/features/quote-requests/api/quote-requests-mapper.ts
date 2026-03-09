@@ -74,7 +74,7 @@ export function toAdminQuoteRequestDetail(
     status: dto.status,
     quantity: dto.quantity,
     options: toQuoteRequestOptions(dto.options),
-    referenceImageUrls: dto.referenceImageUrls,
+    referenceImageUrls: (dto.referenceImages ?? []).map((img) => img.url),
     additionalNotes: dto.additionalNotes,
     contactName: dto.contactName,
     contactTitle: dto.contactTitle,

@@ -5,6 +5,7 @@ import type {
   PatternOption,
 } from "@/features/design/types/design-context";
 import type { AiDesignRequest } from "@/features/design/api/ai-design-api";
+import type { DesignTokenHistoryItem } from "@/features/design/types/token-history";
 
 const DEFAULT_TAGS = ["클래식", "프리미엄", "넥타이"];
 
@@ -61,3 +62,27 @@ export const getTags = (request: AiDesignRequest): string[] => {
   return tags.length > 0 ? tags : DEFAULT_TAGS;
 };
 
+export interface DesignTokenRow {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: string;
+  ai_model: string | null;
+  request_type: string | null;
+  description: string | null;
+  expires_at: string | null;
+  created_at: string;
+}
+
+export const toDesignTokenHistoryItem = (
+  row: DesignTokenRow,
+): DesignTokenHistoryItem => ({
+  id: row.id,
+  amount: row.amount,
+  type: row.type,
+  aiModel: row.ai_model,
+  requestType: row.request_type,
+  description: row.description,
+  expiresAt: row.expires_at,
+  createdAt: row.created_at,
+});

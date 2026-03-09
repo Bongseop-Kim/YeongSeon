@@ -1,10 +1,15 @@
-import type { CreateCustomOrderOptionsDto, CreateCustomOrderOptionsDtoSnakeCase } from "@/features/custom-order/types/dto/custom-order-input";
+import type { ImageRef } from "@yeongseon/shared";
+import type {
+  CreateCustomOrderOptionsDto,
+  CreateCustomOrderOptionsDtoSnakeCase,
+  DbImageRef,
+} from "@/features/custom-order/types/dto/custom-order-input";
 
 export interface CreateQuoteRequestRequest {
   shippingAddressId: string;
   options: CreateCustomOrderOptionsDto;
   quantity: number;
-  referenceImageUrls: string[];
+  referenceImages: ImageRef[];
   additionalNotes: string;
   contactName: string;
   contactTitle: string;
@@ -16,7 +21,7 @@ export interface CreateQuoteRequestRequestDto {
   shipping_address_id: string;
   options: CreateCustomOrderOptionsDtoSnakeCase;
   quantity: number;
-  reference_image_urls: string[];
+  reference_images: DbImageRef[];
   additional_notes: string;
   contact_name: string;
   contact_title: string;

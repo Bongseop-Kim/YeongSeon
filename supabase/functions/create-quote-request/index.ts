@@ -6,7 +6,7 @@ type CreateQuoteRequestInput = {
   shipping_address_id: string;
   options: Record<string, unknown>;
   quantity: number;
-  reference_image_urls?: string[];
+  reference_images?: Array<{ url: string; fileId: string }>;
   additional_notes?: string;
   contact_name: string;
   contact_title?: string;
@@ -83,14 +83,20 @@ Deno.serve(async (req) => {
   }
 
   if (
-    payload.reference_image_urls !== undefined &&
-    (!Array.isArray(payload.reference_image_urls) ||
-      !payload.reference_image_urls.every(
-        (url: unknown) => typeof url === "string"
+    payload.reference_images !== undefined &&
+    (!Array.isArray(payload.reference_images) ||
+      !payload.reference_images.every(
+        (image: unknown) =>
+          typeof image === "object" &&
+          image !== null &&
+          typeof (image as { url?: unknown }).url === "string" &&
+          typeof (image as { fileId?: unknown }).fileId === "string" &&
+          (image as { url: string }).url.trim().length > 0 &&
+          (image as { fileId: string }).fileId.trim().length > 0
       ))
   ) {
     return jsonResponse(400, {
-      error: "reference_image_urls must be an array of strings",
+      error: "reference_images must be an array of objects with url and fileId",
     });
   }
 
@@ -126,7 +132,7 @@ Deno.serve(async (req) => {
       p_shipping_address_id: payload.shipping_address_id,
       p_options: payload.options,
       p_quantity: payload.quantity,
-      p_reference_image_urls: payload.reference_image_urls ?? [],
+      p_reference_images: payload.reference_images ?? [],
       p_additional_notes: payload.additional_notes ?? "",
       p_contact_name: payload.contact_name,
       p_contact_title: payload.contact_title ?? "",

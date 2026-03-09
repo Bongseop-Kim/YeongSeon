@@ -16,6 +16,7 @@ export type * from "./types/dto/admin-coupon";
 export type * from "./types/dto/admin-settings";
 export type * from "./types/dto/admin-quote-request";
 export type * from "./types/dto/admin-inquiry";
+export type * from "./types/image-ref";
 
 // Types - View
 export type * from "./types/view/product";
