@@ -35,13 +35,24 @@ export function ResultTagBar({
 
   const handleDownload = async () => {
     const url = extractImageUrl(generatedImageUrl ?? "");
-    if (!url) return;
+    if (!url) {
+      toast.error("이미지 URL을 추출할 수 없습니다.");
+      return;
+    }
 
     if (unmasked) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "design.png";
-      a.click();
+      try {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = "design.png";
+        a.click();
+        URL.revokeObjectURL(objectUrl);
+      } catch {
+        window.open(url, "_blank");
+      }
       markImageDownloaded();
       return;
     }

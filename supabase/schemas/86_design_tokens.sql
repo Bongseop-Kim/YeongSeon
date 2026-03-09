@@ -43,11 +43,17 @@ AS $$
 DECLARE
   v_amount integer;
 BEGIN
-  -- COALESCE 외부 래핑: 행이 없을 때(no row)와 값이 NULL일 때 모두 30으로 처리
-  v_amount := COALESCE(
-    (SELECT value::integer FROM public.admin_settings WHERE key = 'design_token_initial_grant'),
-    30
-  );
+  SELECT CASE
+    WHEN value ~ '^[0-9]+$' AND value::integer >= 1 THEN value::integer
+    ELSE 30
+  END
+  INTO v_amount
+  FROM public.admin_settings
+  WHERE key = 'design_token_initial_grant';
+
+  IF v_amount IS NULL THEN
+    v_amount := 30;
+  END IF;
 
   INSERT INTO public.design_tokens (user_id, amount, type, description, expires_at)
   VALUES (NEW.id, v_amount, 'grant', '신규 가입 토큰 지급', now() + interval '90 days');

@@ -206,20 +206,20 @@ const requestGeminiImage = async (
 ): Promise<string | null> => {
   try {
     const currentParts: Array<Record<string, unknown>> = [];
-    if (payload.ciImageBase64) {
-      currentParts.push({
-        inlineData: {
-          mimeType: payload.ciImageMimeType || "image/png",
-          data: payload.ciImageBase64,
-        },
-      });
-    }
-
     if (payload.referenceImageBase64) {
       currentParts.push({
         inlineData: {
           mimeType: payload.referenceImageMimeType || "image/png",
           data: payload.referenceImageBase64,
+        },
+      });
+    }
+
+    if (payload.ciImageBase64) {
+      currentParts.push({
+        inlineData: {
+          mimeType: payload.ciImageMimeType || "image/png",
+          data: payload.ciImageBase64,
         },
       });
     }
@@ -400,6 +400,9 @@ Deno.serve(async (req) => {
   if ((payload.referenceImageBase64?.length ?? 0) > MAX_IMAGE_BASE64_LENGTH) {
     return jsonResponse(413, { error: "referenceImageBase64 too large" });
   }
+  if ((payload.previousImageBase64?.length ?? 0) > MAX_IMAGE_BASE64_LENGTH) {
+    return jsonResponse(413, { error: "previousImageBase64 too large" });
+  }
 
   const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
   if (!geminiApiKey) {
@@ -477,10 +480,11 @@ Deno.serve(async (req) => {
         if (textCostError || !textCostData) {
           console.error("admin_settings 'design_token_cost_gemini_text' 조회 실패:", textCostError);
         }
-        const textCost = textCostData
-          ? parseInt(textCostData.value, 10) || 1
-          : 1;
-        const refundAmount = tokenData.cost - textCost;
+        const parsedTextCost = textCostData ? parseInt(textCostData.value, 10) : NaN;
+        const textCost = isNaN(parsedTextCost) || parsedTextCost <= 0
+          ? tokenData.cost
+          : Math.min(parsedTextCost, tokenData.cost);
+        const refundAmount = Math.max(tokenData.cost - textCost, 0);
 
         if (refundAmount > 0) {
           const { error: refundError } = await adminClient.rpc(
@@ -495,8 +499,9 @@ Deno.serve(async (req) => {
           );
           if (refundError) {
             console.error("Token refund failed:", refundError);
+          } else {
+            remainingTokens = tokenData.balance + refundAmount;
           }
-          remainingTokens = tokenData.balance + refundAmount;
         }
       }
     }
