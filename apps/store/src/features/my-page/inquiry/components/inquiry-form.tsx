@@ -183,7 +183,7 @@ export const InquiryForm = ({
               render={({ fieldState }) =>
                 fieldState.error ? (
                   <p className="text-sm text-red-500">{fieldState.error.message}</p>
-                ) : null
+                ) : <></>
               }
             />
           </div>
