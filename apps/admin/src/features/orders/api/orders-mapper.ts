@@ -141,11 +141,12 @@ export function parseCustomReformData(
   const refImages = Array.isArray(raw.reference_images)
     ? raw.reference_images
         .filter(
-          (item): item is { url: string; fileId: string } =>
+          (item): item is { url: string; file_id: string | null } =>
             item !== null &&
             typeof item === "object" &&
             typeof item.url === "string" &&
-            typeof item.fileId === "string"
+            "file_id" in item &&
+            (typeof item.file_id === "string" || item.file_id === null)
         )
         .map((item) => item.url)
     : [];

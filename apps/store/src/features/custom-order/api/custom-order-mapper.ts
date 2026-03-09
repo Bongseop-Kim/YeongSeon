@@ -2,6 +2,7 @@ import type { OrderOptions } from "@/features/custom-order/types/order";
 import type { ImageRef } from "@yeongseon/shared";
 
 import type {
+  DbImageRef,
   CreateCustomOrderOptionsDto,
   CreateCustomOrderOptionsDtoSnakeCase,
   CreateCustomOrderRequest,
@@ -48,6 +49,11 @@ const normalizeReferenceImages = (images: ImageRef[]): ImageRef[] => {
 
   return normalized;
 };
+
+const toDbImageRef = (image: ImageRef): DbImageRef => ({
+  url: image.url,
+  file_id: image.fileId,
+});
 
 export const toCreateCustomOrderOptionsInput = (
   options: OrderOptionsForCreateCustomOrderOptions
@@ -119,7 +125,7 @@ export const toCreateCustomOrderInputDto = (
     care_label: request.options.careLabel,
   } satisfies CreateCustomOrderOptionsDtoSnakeCase,
   quantity: request.quantity,
-  reference_images: normalizeReferenceImages(request.referenceImages),
+  reference_images: normalizeReferenceImages(request.referenceImages).map(toDbImageRef),
   additional_notes: request.additionalNotes,
   sample: request.sample,
   sample_type: request.sampleType,

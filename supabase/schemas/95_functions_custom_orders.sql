@@ -237,6 +237,8 @@ declare
   v_reform_data jsonb;
   v_elem jsonb;
   v_idx integer;
+  v_base_unit integer;
+  v_remainder integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -256,10 +258,10 @@ begin
     for v_elem in select jsonb_array_elements(p_reference_images) loop
       if jsonb_typeof(v_elem) <> 'object'
          or not (v_elem ? 'url')
-         or not (v_elem ? 'fileId')
+         or not (v_elem ? 'file_id')
          or jsonb_typeof(v_elem->'url') <> 'string'
-         or jsonb_typeof(v_elem->'fileId') <> 'string' then
-        raise exception 'p_reference_images[%] must be an object with string "url" and "fileId" keys', v_idx;
+         or jsonb_typeof(v_elem->'file_id') not in ('string', 'null') then
+        raise exception 'p_reference_images[%] must be an object with string "url" and "file_id" keys, and "file_id" must be a string or null', v_idx;
       end if;
       v_idx := v_idx + 1;
     end loop;
@@ -296,6 +298,9 @@ begin
     v_fabric_cost,
     v_total_cost
   from public.calculate_custom_order_amounts(p_options, p_quantity) as amounts;
+
+  v_base_unit := floor(v_total_cost::numeric / p_quantity)::integer;
+  v_remainder := v_total_cost - v_base_unit * p_quantity;
 
   v_order_number := public.generate_order_number();
   v_payment_group_id := gen_random_uuid();
@@ -335,7 +340,8 @@ begin
     'pricing', jsonb_build_object(
       'sewing_cost', v_sewing_cost,
       'fabric_cost', v_fabric_cost,
-      'total_cost', v_total_cost
+      'total_cost', v_total_cost,
+      'unit_price_remainder', v_remainder
     )
   );
 
@@ -360,7 +366,7 @@ begin
     null,
     v_reform_data,
     p_quantity,
-    floor(v_total_cost::numeric / p_quantity)::integer,
+    v_base_unit,
     0,
     0,
     null

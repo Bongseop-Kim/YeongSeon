@@ -54,15 +54,17 @@ function TokenHistorySkeleton() {
 
 export default function TokenHistoryPage() {
   const {
-    data: balance = 0,
+    data: rawBalance,
     isLoading: isBalanceLoading,
     error: balanceError,
   } = useDesignTokenBalanceQuery();
   const {
-    data: history = [],
+    data: rawHistory,
     isLoading: isHistoryLoading,
     error: historyError,
   } = useDesignTokenHistoryQuery();
+  const balance = rawBalance ?? 0;
+  const history = rawHistory ?? [];
 
   const historyErrorMessage = historyError instanceof Error
     ? historyError.message
@@ -78,9 +80,9 @@ export default function TokenHistoryPage() {
                 <CardTitle>현재 토큰 잔액</CardTitle>
               </CardHeader>
               <CardContent>
-                {isBalanceLoading ? (
+                {isBalanceLoading && rawBalance === undefined ? (
                   <Skeleton className="h-9 w-32" />
-                ) : balanceError ? (
+                ) : balanceError && rawBalance === undefined ? (
                   <p className="text-sm text-red-600">잔액을 불러오는 중 오류가 발생했습니다.</p>
                 ) : (
                   <div className="text-3xl font-semibold tracking-tight text-zinc-900">
@@ -95,13 +97,13 @@ export default function TokenHistoryPage() {
                 <CardTitle>토큰 내역</CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
-                {historyError ? (
+                {rawHistory === undefined && isHistoryLoading ? (
+                  <TokenHistorySkeleton />
+                ) : rawHistory === undefined && historyError ? (
                   <Empty
                     title="토큰 내역을 불러올 수 없습니다."
                     description={historyErrorMessage}
                   />
-                ) : isHistoryLoading ? (
-                  <TokenHistorySkeleton />
                 ) : history.length === 0 ? (
                   <Empty
                     title="토큰 내역이 없습니다."

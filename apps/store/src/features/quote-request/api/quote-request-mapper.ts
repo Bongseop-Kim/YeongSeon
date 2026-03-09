@@ -5,7 +5,10 @@ import type {
   CreateQuoteRequestRequest,
   CreateQuoteRequestRequestDto,
 } from "@/features/quote-request/types/dto/quote-request-input";
-import type { CreateCustomOrderOptionsDtoSnakeCase } from "@/features/custom-order/types/dto/custom-order-input";
+import type {
+  CreateCustomOrderOptionsDtoSnakeCase,
+  DbImageRef,
+} from "@/features/custom-order/types/dto/custom-order-input";
 
 type OrderOptionsForMapping = Omit<
   OrderOptions,
@@ -81,7 +84,9 @@ export const toCreateQuoteRequestInputDto = (
     care_label: request.options.careLabel,
   } satisfies CreateCustomOrderOptionsDtoSnakeCase,
   quantity: request.quantity,
-  reference_images: request.referenceImages,
+  reference_images: request.referenceImages.map(
+    (img): DbImageRef => ({ url: img.url, file_id: img.fileId })
+  ),
   additional_notes: request.additionalNotes,
   contact_name: request.contactName,
   contact_title: request.contactTitle,

@@ -20,6 +20,11 @@ export interface CreateCustomOrderOptionsDto {
   careLabel: boolean;
 }
 
+export interface DbImageRef {
+  url: string;
+  file_id: string | null;
+}
+
 export interface CreateCustomOrderOptionsDtoSnakeCase {
   fabric_provided: boolean;
   reorder: boolean;
@@ -54,7 +59,7 @@ export interface CreateCustomOrderRequestDto {
   shipping_address_id: string;
   options: CreateCustomOrderOptionsDtoSnakeCase;
   quantity: number;
-  reference_images: ImageRef[];
+  reference_images: DbImageRef[];
   additional_notes: string;
   sample: boolean;
   sample_type: "sewing" | "fabric" | "fabric_and_sewing" | null;
