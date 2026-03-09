@@ -76,8 +76,8 @@ const PurchaseConfirmSection = ({
   const baseDate = deliveredAt ?? shippedAt;
   const parsedBaseDate = baseDate ? Date.parse(baseDate) : null;
   const daysRemaining =
-    parsedBaseDate !== null
-      ? Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - parsedBaseDate) / 86_400_000)))
+    Number.isFinite(parsedBaseDate)
+      ? Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - parsedBaseDate!) / 86_400_000)))
       : null;
 
   const manualPoints = Math.floor(totalPrice * 0.02).toLocaleString();

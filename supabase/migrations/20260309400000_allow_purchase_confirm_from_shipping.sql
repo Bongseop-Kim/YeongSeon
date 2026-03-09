@@ -95,6 +95,17 @@ end;
 $$;
 
 -- ── auto_confirm_delivered_orders (updated) ───────────────────
+-- SECURITY DEFINER 사용 근거:
+--   pg_cron 또는 service_role에 의해서만 호출되는 스케줄러 함수로, 세 테이블에 직접 쓰기가 필요하다:
+--     - public.orders        : UPDATE (status → '완료', confirmed_at 갱신)
+--     - public.points        : INSERT (자동확정 포인트 적립)
+--     - public.order_status_logs : INSERT (감사 로그)
+--   SECURITY INVOKER로는 스케줄러 실행 컨텍스트에서 위 테이블에 쓸 수 없어 SECURITY DEFINER가 필요하다.
+--   권한 남용 방지를 위한 안전 장치:
+--     - current_setting('request.jwt.claim.role') 검사로 service_role 또는 pg_cron(JWT 없음 → '')만 허용
+--     - '': pg_cron은 JWT 없이 DB 레벨에서 직접 호출하므로 coalesce(NULL, '') = ''이 됨 (의도된 허용)
+--           이 경우 보안은 DB 접근 제어(네트워크/역할 권한)에 의존하며, 외부 HTTP 경유 호출 불가
+--     - FOR UPDATE SKIP LOCKED로 동시 중복 처리 방지
 CREATE OR REPLACE FUNCTION public.auto_confirm_delivered_orders()
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -106,7 +117,9 @@ declare
   v_points integer;
   v_count  integer := 0;
 begin
-  -- Only allow pg_cron / service_role (no authenticated user session)
+  -- pg_cron 또는 service_role 호출만 허용
+  -- ''는 pg_cron 전용: pg_cron은 JWT 없이 DB 레벨에서 실행되므로 role claim이 NULL → ''로 평가됨
+  -- HTTP를 통한 외부 호출은 반드시 JWT를 포함하므로 ''로 도달할 수 없음
   if coalesce(current_setting('request.jwt.claim.role', true), '') not in ('', 'service_role') then
     raise exception 'unauthorized: scheduler-only function';
   end if;
