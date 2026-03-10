@@ -10,9 +10,10 @@ CREATE TABLE public.images (
   entity_type text        NOT NULL,          -- 'product', 'custom_order', 'quote_request', 'reform'
   entity_id   text        NOT NULL,          -- 연결된 엔티티 ID
   uploaded_by uuid        REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE SET NULL,
-  expires_at  timestamptz,                   -- null = 영구 보관
-  deleted_at  timestamptz,                   -- soft delete (ImageKit 삭제 완료 시각)
-  created_at  timestamptz NOT NULL DEFAULT now()
+  expires_at            timestamptz,           -- null = 영구 보관
+  deletion_claimed_at   timestamptz,           -- ImageKit 삭제 시도 전 claim 시각 (NOT NULL + deleted_at IS NULL = 이전 finalize 실패)
+  deleted_at            timestamptz,           -- soft delete (ImageKit 삭제 완료 시각)
+  created_at            timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_images_entity ON public.images (entity_type, entity_id);

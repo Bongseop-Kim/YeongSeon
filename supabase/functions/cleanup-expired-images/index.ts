@@ -44,12 +44,15 @@ Deno.serve(async (req) => {
 
   const db = createClient(supabaseUrl, serviceRoleKey);
 
-  // 만료된 이미지 조회 (batch)
+  // 만료된 이미지 조회 (batch):
+  // - 새로 만료된 행 (expires_at < now, deleted_at IS NULL, deletion_claimed_at IS NULL)
+  // - 이전 실행에서 claim했으나 finalize 실패한 행 (deletion_claimed_at IS NOT NULL, deleted_at IS NULL)
+  const now = new Date().toISOString();
   const { data: expired, error: fetchError } = await db
     .from("images")
-    .select("id, file_id")
-    .lt("expires_at", new Date().toISOString())
+    .select("id, file_id, deletion_claimed_at")
     .is("deleted_at", null)
+    .or(`expires_at.lt.${now},deletion_claimed_at.not.is.null`)
     .limit(BATCH_LIMIT);
 
   if (fetchError) {
@@ -60,18 +63,45 @@ Deno.serve(async (req) => {
     return jsonResponse(200, { deleted: 0, message: "No expired images found" });
   }
 
-  const withFileId = expired.filter(
-    (img): img is { id: string; file_id: string } =>
+  // 이전 실행에서 claim된 행: ImageKit 삭제 없이 바로 finalize 대상
+  const previouslyClaimed = expired.filter(
+    (img) => img.deletion_claimed_at != null
+  );
+  // 새로 claim할 행
+  const unclaimed = expired.filter(
+    (img) => img.deletion_claimed_at == null
+  );
+
+  // claim 단계: unclaimed 행을 ImageKit 삭제 전에 먼저 DB에 기록한다.
+  // claim이 실패하면 ImageKit 삭제를 진행하지 않는다.
+  if (unclaimed.length > 0) {
+    const { error: claimError } = await db
+      .from("images")
+      .update({ deletion_claimed_at: now })
+      .in("id", unclaimed.map((img) => img.id));
+
+    if (claimError) {
+      return jsonResponse(500, { error: claimError.message });
+    }
+  }
+
+  // previouslyClaimed 행은 이전 실행에서 ImageKit 삭제를 시도했으므로
+  // 재시도 없이 바로 finalize한다 (file_id 유무에 관계없이).
+  const previouslyClaimedIds = previouslyClaimed.map((img) => img.id);
+
+  // 신규 claim 행 중 file_id가 있는 것만 ImageKit 삭제 대상
+  const withFileId = unclaimed.filter(
+    (img): img is { id: string; file_id: string; deletion_claimed_at: null } =>
       typeof img.file_id === "string" && img.file_id.length > 0
   );
-  const withoutFileId = expired.filter(
+  const withoutFileId = unclaimed.filter(
     (img) => !img.file_id
   );
 
   let imagekitDeletedCount = 0;
   let imagekitFailedIds: string[] = [];
 
-  // ImageKit Bulk Delete
+  // ImageKit Bulk Delete (신규 claim 행 중 file_id 있는 것만)
   if (withFileId.length > 0) {
     const credentials = btoa(`${imagekitPrivateKey}:`);
     const controller = new AbortController();
@@ -120,12 +150,16 @@ Deno.serve(async (req) => {
     }
   }
 
-  // soft delete 대상: ImageKit 삭제 성공한 이미지 + file_id 없는 이미지
+  // finalize 대상:
+  // - ImageKit 삭제 성공한 신규 claim 행
+  // - file_id 없는 신규 claim 행
+  // - 이전 실행에서 이미 claim된 행 (이전 finalize 실패 → 재시도)
   const successfulIds = [
     ...withFileId
       .filter((img) => !imagekitFailedIds.includes(img.id))
       .map((img) => img.id),
     ...withoutFileId.map((img) => img.id),
+    ...previouslyClaimedIds,
   ];
 
   if (successfulIds.length > 0) {
@@ -144,5 +178,6 @@ Deno.serve(async (req) => {
     imagekitDeleted: imagekitDeletedCount,
     imagekitFailed: imagekitFailedIds.length,
     legacyDeleted: withoutFileId.length,
+    retriedFromClaim: previouslyClaimedIds.length,
   });
 });
