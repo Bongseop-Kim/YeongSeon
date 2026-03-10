@@ -6,22 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { OrderFormItemCard } from "@/features/order/order-form/components/order-form-item-card";
 import { ReformOrderItemCard } from "@/features/order/order-form/components/reform-order-item-card";
 import React from "react";
 import { useOrderStore } from "@/store/order";
 import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
 import { toast } from "@/lib/toast";
-import { useUpdateShippingAddress } from "@/features/shipping/api/shipping-query";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
+import { getDeliveryRequestLabel } from "@/features/shipping/constants/DELIVERY_REQUEST_OPTIONS";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useAuthStore } from "@/store/auth";
 import { createOrder } from "@/features/order/api/order-api";
@@ -42,7 +34,6 @@ const OrderFormPage = () => {
     updateOrderItemCoupon,
   } = useOrderStore();
   const { openCouponSelect } = useCouponSelect();
-  const updateShippingAddress = useUpdateShippingAddress();
   const { user } = useAuthStore();
 
   const { data: reformPricing, isLoading: isReformPricingLoading } =
@@ -268,48 +259,13 @@ const OrderFormPage = () => {
                       </p>
                       <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
                     </div>
-                    <Select
-                      value={selectedAddress.deliveryRequest || undefined}
-                      onValueChange={(value) => {
-                        if (selectedAddressId && selectedAddress && selectedAddress.id === selectedAddressId) {
-                          const { id, ...addressData } = selectedAddress;
-                          updateShippingAddress.mutate({
-                            id: selectedAddressId,
-                            data: { ...addressData, deliveryRequest: value },
-                          });
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="배송 요청사항 선택" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="DELIVERY_REQUEST_1">
-                          문 앞에 놔주세요.
-                        </SelectItem>
-                        <SelectItem value="DELIVERY_REQUEST_2">
-                          경비실에 맡겨 주세요.
-                        </SelectItem>
-                        <SelectItem value="DELIVERY_REQUEST_3">
-                          택배함에 넣어 주세요.
-                        </SelectItem>
-                        <SelectItem value="DELIVERY_REQUEST_4">
-                          배송 전에 연락 주세요.
-                        </SelectItem>
-                        <SelectItem value="DELIVERY_REQUEST_5">
-                          직접입력
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {selectedAddress.deliveryRequest ===
-                      "DELIVERY_REQUEST_5" && (
-                      <Textarea
-                        placeholder="최대 50자까지 입력 가능합니다."
-                        className="min-h-[100px] resize-none"
-                        maxLength={50}
-                        value={selectedAddress.deliveryMemo || ""}
-                        readOnly
-                      />
+                    {selectedAddress.deliveryRequest && (
+                      <p className="text-sm text-zinc-600">
+                        {getDeliveryRequestLabel(
+                          selectedAddress.deliveryRequest,
+                          selectedAddress.deliveryMemo
+                        )}
+                      </p>
                     )}
                   </>
                 ) : (

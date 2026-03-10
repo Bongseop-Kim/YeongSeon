@@ -4,7 +4,7 @@ export const isMeasurementType = (value: unknown): value is MeasurementType =>
   value === "length" || value === "height";
 
 export interface TieItem {
-  id: string;
+  id?: string;
   image?: File | string; // File: 업로드 시, string: DB에서 복원된 URL
   measurementType?: MeasurementType;
   tieLength?: number;

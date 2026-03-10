@@ -1,18 +1,17 @@
 import { Descriptions, Image, Space, Typography } from "antd";
-import { isCustomReformData } from "../types/admin-order";
-import type { AdminReformOrderItem } from "../types/admin-order";
+import type { AdminCustomOrderItem } from "@/features/orders/types/admin-order";
 
 const { Title } = Typography;
 
 interface CustomOrderDetailProps {
-  items: AdminReformOrderItem[];
+  items: AdminCustomOrderItem[];
 }
 
 export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
-  const reformItem = items.find((i) => isCustomReformData(i.reformData));
-  if (!reformItem || !isCustomReformData(reformItem.reformData)) return null;
+  const reformItem = items.find((i) => i.customData != null);
+  if (!reformItem || !reformItem.customData) return null;
 
-  const rd = reformItem.reformData;
+  const rd = reformItem.customData;
   const { options, pricing } = rd;
 
   return (
@@ -50,8 +49,8 @@ export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
           <Title level={5}>참고 이미지</Title>
           <Image.PreviewGroup>
             <Space wrap style={{ marginBottom: 24 }}>
-              {rd.referenceImageUrls.map((url, idx) => (
-                <Image key={idx} width={120} src={url} />
+              {rd.referenceImageUrls.map((url) => (
+                <Image key={url} width={120} src={url} />
               ))}
             </Space>
           </Image.PreviewGroup>

@@ -187,7 +187,7 @@ export function useOrderStatusUpdate(
 }
 
 // ── Tracking save ─────────────────────────────────────────────
-export function useTrackingSave() {
+export function useTrackingSave(onSuccess?: () => void | Promise<unknown>) {
   const [isPending, setIsPending] = useState(false);
 
   const saveTracking = async (
@@ -199,6 +199,7 @@ export function useTrackingSave() {
     try {
       await updateOrderTracking({ orderId, courierCompany, trackingNumber });
       message.success("배송 정보가 저장되었습니다.");
+      await onSuccess?.();
     } catch (err) {
       message.error(err instanceof Error ? err.message : "배송 정보 저장에 실패했습니다.");
     } finally {

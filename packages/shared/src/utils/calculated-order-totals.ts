@@ -13,10 +13,16 @@ export interface OrderSummary extends OrderTotals {
 }
 
 export const getOrderItemPricing = (item: OrderItem) => {
-  const unitPrice =
-    item.type === "product"
-      ? item.product.price + (item.selectedOption?.additionalPrice ?? 0)
-      : item.reformData.cost;
+  let unitPrice: number;
+  if (item.type === "product") {
+    unitPrice = item.product.price + (item.selectedOption?.additionalPrice ?? 0);
+  } else if (item.type === "custom") {
+    unitPrice = item.quantity > 0 ? item.customData.pricing.totalCost / item.quantity : 0;
+  } else if (item.type === "reform") {
+    unitPrice = item.reformData.cost;
+  } else {
+    throw new Error(`getOrderItemPricing: 알 수 없는 item.type: ${(item as OrderItem).type}`);
+  }
 
   const discount = calculateDiscount(unitPrice, item.appliedCoupon);
 

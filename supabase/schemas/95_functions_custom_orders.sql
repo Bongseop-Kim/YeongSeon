@@ -351,7 +351,7 @@ begin
     item_type,
     product_id,
     selected_option_id,
-    reform_data,
+    item_data,
     quantity,
     unit_price,
     discount_amount,
@@ -361,7 +361,7 @@ begin
   values (
     v_order_id,
     'custom-order-' || v_order_id::text,
-    'reform',
+    'custom',
     null,
     null,
     v_reform_data,

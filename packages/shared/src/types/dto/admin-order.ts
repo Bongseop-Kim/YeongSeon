@@ -57,7 +57,7 @@ export interface AdminOrderItemRowDTO {
   id: string;
   orderId: string;
   itemId: string;
-  itemType: "product" | "reform";
+  itemType: "product" | "reform" | "custom";
   productId: number | null;
   selectedOptionId: string | null;
   reformData: Record<string, unknown> | null;

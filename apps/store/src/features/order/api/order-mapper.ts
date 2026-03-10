@@ -7,11 +7,13 @@ import type {
   OrderListRowDTO,
   OrderDetailRowDTO,
   OrderStatusDTO,
+  CustomOrderDataDTO,
 } from "@yeongseon/shared/types/dto/order-view";
 import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-output";
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   normalizeItemRow,
+  parseCustomOrderData,
   toOrderItemView,
 } from "@yeongseon/shared/mappers/shared-mapper";
 import {
@@ -49,21 +51,25 @@ export const toOrderItemInputDTO = (
     item_type: "reform",
     product_id: null,
     selected_option_id: null,
-    reform_data:
-      item.reformData &&
-      item.reformData.tie &&
-      typeof item.reformData.tie === "object"
-        ? {
-            tie: {
-              ...item.reformData.tie,
-              image:
-                typeof item.reformData.tie.image === "string"
-                  ? item.reformData.tie.image
-                  : undefined,
-            },
-            cost: item.reformData.cost,
-          }
-        : null,
+    reform_data: (() => {
+      if (!item.reformData?.tie) return null;
+      const { tie } = item.reformData;
+      if (typeof tie.id !== "string") {
+        return null;
+      }
+      return {
+        tie: {
+          id: tie.id,
+          image: typeof tie.image === "string" ? tie.image : undefined,
+          measurementType: tie.measurementType,
+          tieLength: tie.tieLength,
+          wearerHeight: tie.wearerHeight,
+          notes: tie.notes,
+          checked: tie.checked,
+        },
+        cost: item.reformData.cost,
+      };
+    })(),
   };
 };
 
@@ -204,83 +210,62 @@ const parseReformDataField = (
   idx: number
 ): OrderItemRowDTO["reformData"] => {
   if (v == null) return null;
-  if (!isRecord(v) || typeof v.cost !== "number") {
+  if (!isRecord(v)) {
     throw new Error(
-      `주문 상품 행(${idx})의 reformData가 올바르지 않습니다: cost 필드 누락.`
+      `주문 상품 행(${idx})의 reformData가 올바르지 않습니다: 객체가 아닙니다.`
     );
   }
-  if (!isRecord(v.tie) || typeof v.tie.id !== "string") {
+  if (typeof v.cost !== "number") {
     throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: id 필드 누락.`
+      `주문 상품 행(${idx})의 parseReformDataField: cost 필드가 없거나 숫자가 아닙니다.`
     );
   }
-  if (
-    v.tie.image != null &&
-    typeof v.tie.image !== "string"
-  ) {
+  const cost = v.cost;
+  if (!isRecord(v.tie)) {
     throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: image 필드 타입 오류.`
+      `주문 상품 행(${idx})의 parseReformDataField: tie 필드가 없거나 객체가 아닙니다.`
     );
   }
-  if (v.tie.measurementType != null) {
-    if (typeof v.tie.measurementType !== "string") {
-      throw new Error(
-        `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: measurementType 필드 타입 오류.`
-      );
-    }
-    if (!isTieMeasurementType(v.tie.measurementType)) {
-      throw new Error(
-        `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: measurementType 값(${v.tie.measurementType})이 허용된 값이 아닙니다.`
-      );
-    }
-  }
-  if (
-    v.tie.tieLength != null &&
-    typeof v.tie.tieLength !== "number"
-  ) {
+  const tieRaw = v.tie;
+  if (typeof tieRaw.id !== "string") {
     throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: tieLength 필드 타입 오류.`
+      `주문 상품 행(${idx})의 parseReformDataField: tie.id 필드가 없거나 string이 아닙니다.`
     );
   }
-  if (
-    v.tie.wearerHeight != null &&
-    typeof v.tie.wearerHeight !== "number"
-  ) {
-    throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: wearerHeight 필드 타입 오류.`
-    );
-  }
-  if (
-    v.tie.notes != null &&
-    typeof v.tie.notes !== "string"
-  ) {
-    throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: notes 필드 타입 오류.`
-    );
-  }
-  if (
-    v.tie.checked != null &&
-    typeof v.tie.checked !== "boolean"
-  ) {
-    throw new Error(
-      `주문 상품 행(${idx})의 reformData.tie가 올바르지 않습니다: checked 필드 타입 오류.`
-    );
-  }
+  const measurementType =
+    typeof tieRaw.measurementType === "string" && isTieMeasurementType(tieRaw.measurementType)
+      ? tieRaw.measurementType
+      : undefined;
   return {
-    cost: v.cost,
+    cost,
     tie: {
-      id: v.tie.id,
-      image: typeof v.tie.image === "string" ? v.tie.image : undefined,
-      measurementType:
-        typeof v.tie.measurementType === "string"
-          ? v.tie.measurementType
-          : undefined,
-      tieLength: typeof v.tie.tieLength === "number" ? v.tie.tieLength : undefined,
-      wearerHeight:
-        typeof v.tie.wearerHeight === "number" ? v.tie.wearerHeight : undefined,
-      notes: typeof v.tie.notes === "string" ? v.tie.notes : undefined,
+      id: tieRaw.id,
+      image: typeof tieRaw.image === "string" ? tieRaw.image : undefined,
+      measurementType,
+      tieLength: typeof tieRaw.tieLength === "number" ? tieRaw.tieLength : undefined,
+      wearerHeight: typeof tieRaw.wearerHeight === "number" ? tieRaw.wearerHeight : undefined,
+      notes: typeof tieRaw.notes === "string" ? tieRaw.notes : undefined,
     },
   };
+};
+
+const parseCustomDataField = (
+  v: unknown,
+  idx: number
+): CustomOrderDataDTO | null => {
+  if (v == null) return null;
+  if (!isRecord(v)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 reformData(custom)가 올바르지 않습니다: 객체가 아닙니다.`
+    );
+  }
+  try {
+    return parseCustomOrderData(v);
+  } catch (err) {
+    throw new Error(
+      `주문 상품 행(${idx}) parseCustomOrderData 실패: ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
 };
 
 const parseAppliedCouponField = (
@@ -461,13 +446,14 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         `주문 상품 행(${i})이 올바르지 않습니다: 필수 필드(id, order_id, quantity, created_at) 누락.`
       );
     }
-    if (row.type !== "product" && row.type !== "reform") {
+    if (row.type !== "product" && row.type !== "reform" && row.type !== "custom") {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product" 또는 "reform"이 아닙니다.`
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product", "reform", "custom" 중 하나가 아닙니다.`
       );
     }
     const product = parseProductField(row.product, i);
-    const reformData = parseReformDataField(row.reformData, i);
+    const reformData = row.type === "reform" ? parseReformDataField(row.reformData, i) : null;
+    const customData = row.type === "custom" ? parseCustomDataField(row.reformData, i) : null;
     if (row.type === "product" && product == null) {
       throw new Error(
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "product"인 경우 product 필드가 필요합니다.`
@@ -478,6 +464,11 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 필요합니다.`
       );
     }
+    if (row.type === "custom" && customData == null) {
+      throw new Error(
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "custom"인 경우 reformData(custom) 필드가 필요합니다.`
+      );
+    }
     return {
       order_id: row.order_id,
       id: row.id,
@@ -486,6 +477,7 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
       selectedOption: parseSelectedOptionField(row.selectedOption, i),
       quantity: row.quantity,
       reformData,
+      customData,
       appliedCoupon: parseAppliedCouponField(row.appliedCoupon, i),
       created_at: row.created_at,
     };

@@ -40,12 +40,12 @@ export function useAdminInquiryDetail() {
     ? toAdminInquiryDetail(rawData)
     : undefined;
 
-  return { detail, isLoading: query.isLoading };
+  return { detail, isLoading: query.isLoading, refetch: query.refetch };
 }
 
 // ── Answer mutation ────────────────────────────────────────────
 
-export function useAnswerInquiry() {
+export function useAnswerInquiry(refetchDetail?: () => void) {
   const invalidate = useInvalidate();
   const [isPending, setIsPending] = useState(false);
 
@@ -57,7 +57,8 @@ export function useAnswerInquiry() {
     try {
       await answerInquiry({ inquiryId, answer: answerText });
       message.success("답변이 등록되었습니다.");
-      invalidate({ resource: "inquiries", invalidates: ["list", "detail"] });
+      invalidate({ resource: "inquiries", invalidates: ["list"] });
+      refetchDetail?.();
       return true;
     } catch (err) {
       message.error(

@@ -9,6 +9,7 @@ import type {
   AdminOrderDetail,
   AdminOrderItem,
   AdminProductOrderItem,
+  AdminCustomOrderItem,
   AdminReformOrderItem,
   AdminShippingAddress,
   AdminTrackingInfo,
@@ -18,7 +19,16 @@ import type {
   CustomOrderPricing,
   RepairOrderReformData,
   RepairTie,
-} from "../types/admin-order";
+} from "@/features/orders/types/admin-order";
+
+// ── ValidationError ────────────────────────────────────────────
+
+class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
 
 // ── runtime helpers ────────────────────────────────────────────
 
@@ -27,9 +37,6 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 
 const str = (v: unknown): string | null =>
   typeof v === "string" ? v : null;
-
-const num = (v: unknown, fallback = 0): number =>
-  typeof v === "number" ? v : fallback;
 
 const bool = (v: unknown): boolean => v === true;
 
@@ -116,6 +123,43 @@ export function parseCustomReformData(
   const rawOptions = isRecord(raw.options) ? raw.options : {};
   const rawPricing = isRecord(raw.pricing) ? raw.pricing : {};
 
+  const rawQuantity = raw.quantity;
+  if (typeof rawQuantity === "undefined") {
+    console.warn(
+      "[parseCustomReformData] quantity 필드가 없습니다. 0으로 대체합니다.",
+      raw
+    );
+  } else if (
+    typeof rawQuantity !== "number" ||
+    !Number.isFinite(rawQuantity) ||
+    rawQuantity <= 0
+  ) {
+    throw new ValidationError(
+      `주문 제작 reformData 검증 실패: quantity가 유한한 양수가 아닙니다 (${rawQuantity}).`
+    );
+  }
+  const quantity = typeof rawQuantity === "number" ? rawQuantity : 0;
+
+  const sewingCost = rawPricing.sewing_cost;
+  const fabricCost = rawPricing.fabric_cost;
+  const totalCost = rawPricing.total_cost;
+
+  if (typeof sewingCost !== "number" || !Number.isFinite(sewingCost)) {
+    throw new ValidationError(
+      `주문 제작 reformData 검증 실패: sewing_cost가 유한한 number가 아닙니다 (${sewingCost}).`
+    );
+  }
+  if (typeof fabricCost !== "number" || !Number.isFinite(fabricCost)) {
+    throw new ValidationError(
+      `주문 제작 reformData 검증 실패: fabric_cost가 유한한 number가 아닙니다 (${fabricCost}).`
+    );
+  }
+  if (typeof totalCost !== "number" || !Number.isFinite(totalCost)) {
+    throw new ValidationError(
+      `주문 제작 reformData 검증 실패: total_cost가 유한한 number가 아닙니다 (${totalCost}).`
+    );
+  }
+
   const options: CustomOrderOptions = {
     tieType: str(rawOptions.tie_type),
     interlining: str(rawOptions.interlining),
@@ -133,9 +177,9 @@ export function parseCustomReformData(
   };
 
   const pricing: CustomOrderPricing = {
-    sewingCost: num(rawPricing.sewing_cost),
-    fabricCost: num(rawPricing.fabric_cost),
-    totalCost: num(rawPricing.total_cost),
+    sewingCost,
+    fabricCost,
+    totalCost,
   };
 
   const refImages = Array.isArray(raw.reference_images)
@@ -155,7 +199,7 @@ export function parseCustomReformData(
     _tag: "custom",
     options,
     pricing,
-    quantity: num(raw.quantity),
+    quantity,
     sample: bool(raw.sample),
     referenceImageUrls: refImages,
     additionalNotes: str(raw.additional_notes),
@@ -201,11 +245,26 @@ export function parseRepairReformData(
 
 function toReformData(
   raw: Record<string, unknown> | null,
+  orderType: "custom"
+): CustomOrderReformData | null;
+function toReformData(
+  raw: Record<string, unknown> | null,
+  orderType: "repair"
+): RepairOrderReformData | null;
+function toReformData(
+  raw: Record<string, unknown> | null,
   orderType: "custom" | "repair"
 ): CustomOrderReformData | RepairOrderReformData | null {
   if (!raw) return null;
-  if (orderType === "custom") return parseCustomReformData(raw);
-  return parseRepairReformData(raw);
+  try {
+    if (orderType === "custom") return parseCustomReformData(raw);
+    return parseRepairReformData(raw);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export function toAdminOrderItem(
@@ -229,19 +288,40 @@ export function toAdminOrderItem(
     return item;
   }
 
-  const reformData =
-    orderType === "sale" ? null : toReformData(dto.reformData, orderType);
-  const item: AdminReformOrderItem = {
-    type: "reform",
-    id: dto.id,
-    orderId: dto.orderId,
-    quantity: dto.quantity,
-    unitPrice: dto.unitPrice,
-    discountAmount: dto.discountAmount,
-    lineDiscountAmount: dto.lineDiscountAmount,
-    reformData,
-  };
-  return item;
+  if (dto.itemType === "custom") {
+    const customData = toReformData(dto.reformData, "custom");
+    const item: AdminCustomOrderItem = {
+      type: "custom",
+      id: dto.id,
+      orderId: dto.orderId,
+      quantity: dto.quantity,
+      unitPrice: dto.unitPrice,
+      discountAmount: dto.discountAmount,
+      lineDiscountAmount: dto.lineDiscountAmount,
+      customData,
+    };
+    return item;
+  }
+
+  if (dto.itemType === "reform") {
+    const reformData =
+      orderType === "sale" ? null : toReformData(dto.reformData, "repair");
+    const item: AdminReformOrderItem = {
+      type: "reform",
+      id: dto.id,
+      orderId: dto.orderId,
+      quantity: dto.quantity,
+      unitPrice: dto.unitPrice,
+      discountAmount: dto.discountAmount,
+      lineDiscountAmount: dto.lineDiscountAmount,
+      reformData,
+    };
+    return item;
+  }
+
+  throw new ValidationError(
+    `toAdminOrderItem: 알 수 없는 itemType "${dto.itemType}" (orderId: ${dto.orderId}, id: ${dto.id})`
+  );
 }
 
 // ── Status log mapper ─────────────────────────────────────────
