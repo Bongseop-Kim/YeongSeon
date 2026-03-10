@@ -8,9 +8,12 @@ const isExpired = (expiresAt?: string | null) => {
 };
 
 // 쿠폰 할인 금액 계산 (발급 쿠폰 상태/만료 검증 포함)
+// qty를 받아 서버(create_order_txn)와 동일하게 라인 단위 캡 적용 후 총 라인 할인액을 반환한다.
+// UI 미리보기 전용: 실제 금액 계산의 기준은 RPC 서버이다.
 export const calculateDiscount = (
   price: number,
-  appliedCoupon: AppliedCoupon | undefined
+  appliedCoupon: AppliedCoupon | undefined,
+  qty = 1
 ): number => {
   if (
     !appliedCoupon ||
@@ -23,18 +26,20 @@ export const calculateDiscount = (
   const coupon = appliedCoupon.coupon;
   if (!coupon) return 0;
 
+  let perUnitDiscount: number;
   if (coupon.discountType === "percentage") {
-    const discountAmount = Math.floor(price * (coupon.discountValue / 100));
-    const cappedAmount =
-      coupon.maxDiscountAmount != null
-        ? Math.min(discountAmount, coupon.maxDiscountAmount)
-        : discountAmount;
-    return Math.min(cappedAmount, price);
+    perUnitDiscount = Math.floor(price * (coupon.discountValue / 100));
   } else {
-    const cappedAmount =
-      coupon.maxDiscountAmount != null
-        ? Math.min(coupon.discountValue, coupon.maxDiscountAmount)
-        : coupon.discountValue;
-    return Math.min(cappedAmount, price);
+    perUnitDiscount = Math.floor(coupon.discountValue);
   }
+  perUnitDiscount = Math.min(perUnitDiscount, price);
+
+  const lineDiscount = perUnitDiscount * qty;
+  const cappedLineDiscount =
+    coupon.maxDiscountAmount != null
+      ? Math.min(lineDiscount, coupon.maxDiscountAmount)
+      : lineDiscount;
+  const finalUnitDiscount = Math.floor(cappedLineDiscount / qty);
+  const remainder = cappedLineDiscount % qty;
+  return finalUnitDiscount * qty + remainder;
 };

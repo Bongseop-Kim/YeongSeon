@@ -24,7 +24,7 @@ export const getOrderItemPricing = (item: OrderItem) => {
     throw new Error(`getOrderItemPricing: 알 수 없는 item.type: ${(item as OrderItem).type}`);
   }
 
-  const discount = calculateDiscount(unitPrice, item.appliedCoupon);
+  const discount = calculateDiscount(unitPrice, item.appliedCoupon, item.quantity);
 
   return { unitPrice, discount };
 };
@@ -41,7 +41,7 @@ export const calculateOrderTotals = (
     const itemOriginalPrice = unitPrice * item.quantity;
     originalPrice += itemOriginalPrice;
 
-    totalDiscount += discount * item.quantity;
+    totalDiscount += discount;
   });
 
   return {
