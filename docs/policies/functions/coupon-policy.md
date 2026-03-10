@@ -36,7 +36,7 @@
 
 ### percentage 쿠폰
 
-```
+```text
 per_unit_discount = floor(unit_price × discount_value / 100)
 capped_line_discount = least(per_unit_discount × qty, max_discount_amount)
 final_unit_discount = floor(capped_line_discount / qty)
@@ -46,7 +46,7 @@ total_line_discount = (final_unit_discount × qty) + line_discount_remainder
 
 ### fixed 쿠폰
 
-```
+```text
 capped_line_discount = least(discount_value × qty, max_discount_amount)
 final_unit_discount = floor(capped_line_discount / qty)
 line_discount_remainder = capped_line_discount % qty

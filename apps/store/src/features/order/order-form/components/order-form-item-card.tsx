@@ -11,10 +11,9 @@ interface OrderFormItemCardProps {
 export function OrderFormItemCard({ item, onChangeCoupon }: OrderFormItemCardProps) {
   const itemPrice =
     item.product.price + (item.selectedOption?.additionalPrice ?? 0);
-  const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-  const discountedPrice = itemPrice - discount;
   const totalPrice = itemPrice * item.quantity;
-  const totalDiscountedPrice = discountedPrice * item.quantity;
+  const totalLineDiscount = calculateDiscount(itemPrice, item.appliedCoupon, item.quantity);
+  const totalDiscountedPrice = totalPrice - totalLineDiscount;
   const hasCoupon = !!item.appliedCoupon;
 
   return (
