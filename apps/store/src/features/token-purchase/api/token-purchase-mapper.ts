@@ -43,8 +43,8 @@ export function mapTokenPlans(rows: Array<{ key: string; value: string }>): Toke
   return PLAN_KEYS.map(({ planKey, priceKey, amountKey }) => ({
     planKey,
     ...PLAN_META[planKey],
-    price:       Number(map[priceKey]  ?? 0),
-    tokenAmount: Number(map[amountKey] ?? 0),
+    price: map[priceKey] != null ? Number(map[priceKey]) : null,
+    tokenAmount: map[amountKey] != null ? Number(map[amountKey]) : null,
   }));
 }
 

@@ -9,13 +9,13 @@ import { useCreateTokenPurchaseMutation, useTokenPlansQuery } from "@/features/t
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
-import type { TokenPlanKey } from "@/features/token-purchase/api/token-purchase-api";
+import type { TokenPlan, TokenPlanKey } from "@/features/token-purchase/api/token-purchase-api";
 
 const TokenPurchasePage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
-  const pendingPlanKeyRef = useRef<TokenPlanKey | null>(null);
+  const pendingRequestIdRef = useRef<number>(0);
   const [selectedPlan, setSelectedPlan] = useState<TokenPlanKey | null>(null);
   const [purchaseInfo, setPurchaseInfo] = useState<{
     paymentGroupId: string;
@@ -26,21 +26,25 @@ const TokenPurchasePage = () => {
 
   const { data: tokenPlans, isLoading: isPlansLoading } = useTokenPlansQuery();
   const { mutateAsync: createTokenPurchase, isPending } = useCreateTokenPurchaseMutation();
+  const validTokenPlans = (tokenPlans ?? []).filter(
+    (plan): plan is TokenPlan & { price: number; tokenAmount: number } =>
+      plan.price != null && plan.tokenAmount != null
+  );
 
   const handlePlanSelect = async (planKey: TokenPlanKey) => {
     if (selectedPlan === planKey && purchaseInfo) return;
 
-    pendingPlanKeyRef.current = planKey;
+    const currentRequestId = ++pendingRequestIdRef.current;
     setSelectedPlan(planKey);
     setPurchaseInfo(null);
 
     try {
       const result = await createTokenPurchase(planKey);
-      if (pendingPlanKeyRef.current === planKey) {
+      if (pendingRequestIdRef.current === currentRequestId) {
         setPurchaseInfo(result);
       }
     } catch (err) {
-      if (pendingPlanKeyRef.current === planKey) {
+      if (pendingRequestIdRef.current === currentRequestId) {
         const message = err instanceof Error ? err.message : "플랜 선택 중 오류가 발생했습니다.";
         toast.error(message);
         setSelectedPlan(null);
@@ -67,7 +71,7 @@ const TokenPurchasePage = () => {
 
     setIsPaymentLoading(true);
     try {
-      const plan = (tokenPlans ?? []).find((p) => p.planKey === selectedPlan);
+      const plan = validTokenPlans.find((p) => p.planKey === selectedPlan);
       const orderName = plan ? `${plan.label} 토큰 ${plan.tokenAmount}개` : "토큰 구매";
 
       await paymentWidgetRef.current.requestPayment({
@@ -134,7 +138,7 @@ const TokenPurchasePage = () => {
               ? Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-80 animate-pulse rounded-2xl bg-zinc-100" />
                 ))
-              : (tokenPlans ?? []).map((plan) => (
+              : validTokenPlans.map((plan) => (
               <PlanCard
                 key={plan.planKey}
                 {...plan}

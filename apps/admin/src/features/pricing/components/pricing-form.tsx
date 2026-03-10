@@ -9,8 +9,7 @@ import {
   useTokenPricing,
   useUpdateTokenPricing,
   TOKEN_PRICING_TIERS,
-  type TokenPricingRow,
-  type TokenPricingKey,
+  type TokenTierUI,
 } from "@/features/pricing/api/pricing-query";
 import type { PricingConstantRow, FabricPriceRow } from "@/features/pricing/types/admin-pricing";
 
@@ -81,7 +80,7 @@ export function PricingForm() {
 
   const [constantDraft, setConstantDraft] = useState<Record<string, number>>({});
   const [fabricDraft, setFabricDraft] = useState<Record<string, number>>({});
-  const [tokenDraft, setTokenDraft] = useState<Record<string, string>>({});
+  const [tokenDraft, setTokenDraft] = useState<Record<string, TokenTierUI>>({});
 
   useEffect(() => {
     if (constants) {
@@ -104,10 +103,10 @@ export function PricingForm() {
   }, [fabrics]);
 
   useEffect(() => {
-    if (tokenSettings && tokenSettings.length > 0) {
-      const draft: Record<string, string> = {};
-      for (const row of tokenSettings) {
-        draft[row.key] = row.value;
+    if (tokenSettings) {
+      const draft: Record<string, TokenTierUI> = {};
+      for (const tier of tokenSettings) {
+        draft[tier.priceKey] = tier;
       }
       setTokenDraft(draft);
     }
@@ -133,9 +132,10 @@ export function PricingForm() {
       }
     }
 
-    const tokenMutations: TokenPricingRow[] = (tokenSettings ?? [])
-      .filter((row) => tokenDraft[row.key] !== undefined && tokenDraft[row.key] !== row.value)
-      .map((row) => ({ key: row.key as TokenPricingKey, value: tokenDraft[row.key] }));
+    const tokenMutations: TokenTierUI[] = (tokenSettings ?? []).filter((tier) => {
+      const draft = tokenDraft[tier.priceKey];
+      return !!draft && (draft.price !== tier.price || draft.amount !== tier.amount);
+    }).map((tier) => tokenDraft[tier.priceKey]);
 
     if (constantMutations.length === 0 && fabricMutations.length === 0 && tokenMutations.length === 0) {
       message.info("변경된 항목이 없습니다.");
@@ -278,44 +278,65 @@ export function PricingForm() {
           많이 살수록 토큰 1개당 단가가 낮아집니다.
         </Typography.Text>
         <Row gutter={[16, 16]}>
-          {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => (
-            <Col key={priceKey} xs={24} sm={8}>
-              <Card size="small" style={{ background: "#fafafa" }}>
-                <Typography.Text strong style={{ display: "block", marginBottom: 12 }}>
-                  {label}
-                </Typography.Text>
-                <Space direction="vertical" size={8} style={{ width: "100%" }}>
-                  <Space direction="vertical" size={2} style={{ width: "100%" }}>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>가격</Typography.Text>
-                    <InputNumber
-                      value={Number.isNaN(Number(tokenDraft[priceKey])) ? undefined : Number(tokenDraft[priceKey])}
-                      min={1}
-                      step={100}
-                      formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                      parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
-                      onChange={(v) =>
-                        setTokenDraft((prev) => ({ ...prev, [priceKey]: String(v ?? "") }))
-                      }
-                      style={{ width: "100%" }}
-                      suffix="원"
-                    />
+          {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => {
+            const tier = tokenDraft[priceKey] ?? tokenSettings?.find((item) => item.priceKey === priceKey);
+            return (
+              <Col key={priceKey} xs={24} sm={8}>
+                <Card size="small" style={{ background: "#fafafa" }}>
+                  <Typography.Text strong style={{ display: "block", marginBottom: 12 }}>
+                    {tier?.label ?? label}
+                  </Typography.Text>
+                  <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                    <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>가격</Typography.Text>
+                      <InputNumber
+                        value={Number.isNaN(Number(tier?.price)) ? undefined : Number(tier?.price)}
+                        min={1}
+                        step={100}
+                        formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                        parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
+                        onChange={(v) =>
+                          setTokenDraft((prev) => ({
+                            ...prev,
+                            [priceKey]: {
+                              label,
+                              priceKey,
+                              amountKey,
+                              price: String(v ?? ""),
+                              amount: prev[priceKey]?.amount ?? tier?.amount ?? "0",
+                            },
+                          }))
+                        }
+                        style={{ width: "100%" }}
+                        suffix="원"
+                      />
+                    </Space>
+                    <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>토큰 수량</Typography.Text>
+                      <InputNumber
+                        value={Number.isNaN(Number(tier?.amount)) ? undefined : Number(tier?.amount)}
+                        min={1}
+                        onChange={(v) =>
+                          setTokenDraft((prev) => ({
+                            ...prev,
+                            [priceKey]: {
+                              label,
+                              priceKey,
+                              amountKey,
+                              price: prev[priceKey]?.price ?? tier?.price ?? "0",
+                              amount: String(v ?? ""),
+                            },
+                          }))
+                        }
+                        style={{ width: "100%" }}
+                        suffix="T"
+                      />
+                    </Space>
                   </Space>
-                  <Space direction="vertical" size={2} style={{ width: "100%" }}>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>토큰 수량</Typography.Text>
-                    <InputNumber
-                      value={Number.isNaN(Number(tokenDraft[amountKey])) ? undefined : Number(tokenDraft[amountKey])}
-                      min={1}
-                      onChange={(v) =>
-                        setTokenDraft((prev) => ({ ...prev, [amountKey]: String(v ?? "") }))
-                      }
-                      style={{ width: "100%" }}
-                      suffix="T"
-                    />
-                  </Space>
-                </Space>
-              </Card>
-            </Col>
-          ))}
+                </Card>
+              </Col>
+            );
+          })}
         </Row>
       </Card>
 

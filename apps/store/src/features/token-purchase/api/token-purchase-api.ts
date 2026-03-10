@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { CreateTokenPurchaseResultDTO } from "@yeongseon/shared";
-import { mapTokenPlans, mapCreateTokenPurchase } from "./token-purchase-mapper";
+import { mapTokenPlans, mapCreateTokenPurchase } from "@/features/token-purchase/api/token-purchase-mapper";
 
 export type TokenPlanKey = "starter" | "popular" | "pro";
 
@@ -13,8 +13,8 @@ export interface CreateTokenPurchaseResult {
 export interface TokenPlan {
   planKey: TokenPlanKey;
   label: string;
-  price: number;
-  tokenAmount: number;
+  price: number | null;
+  tokenAmount: number | null;
   description: string;
   features: string[];
   popular?: boolean;

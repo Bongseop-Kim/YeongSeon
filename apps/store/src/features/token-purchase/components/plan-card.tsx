@@ -6,7 +6,7 @@ import type { TokenPlanKey } from "@/features/token-purchase/api/token-purchase-
 interface PlanCardProps {
   planKey: TokenPlanKey;
   label: string;
-  price: number;
+  price: number | null;
   description: string;
   features: string[];
   popular?: boolean;
@@ -47,7 +47,7 @@ export function PlanCard({
       {/* 가격 */}
       <div className="mt-4 flex items-end gap-1">
         <span className="text-4xl font-bold text-zinc-900">
-          {price.toLocaleString()}
+          {price != null ? price.toLocaleString() : "–"}
         </span>
         <span className="mb-1 text-sm text-zinc-500">원</span>
       </div>
@@ -80,4 +80,3 @@ export function PlanCard({
     </div>
   );
 }
-

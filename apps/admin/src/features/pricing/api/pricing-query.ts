@@ -18,9 +18,17 @@ const TOKEN_PRICING_SETTINGS = [
 
 export type TokenPricingKey = typeof TOKEN_PRICING_SETTINGS[number]["key"];
 
-export interface TokenPricingRow {
+interface TokenPricingRow {
   key: TokenPricingKey;
   value: string;
+}
+
+export interface TokenTierUI {
+  label: string;
+  priceKey: TokenPricingKey;
+  amountKey: TokenPricingKey;
+  price: string;
+  amount: string;
 }
 
 export const TOKEN_PRICING_TIERS: Array<{
@@ -36,14 +44,23 @@ export const TOKEN_PRICING_TIERS: Array<{
 export function useTokenPricing() {
   return useQuery({
     queryKey: TOKEN_PRICING_KEY,
-    queryFn: async (): Promise<TokenPricingRow[]> => {
+    queryFn: async (): Promise<TokenTierUI[]> => {
       const keys = TOKEN_PRICING_SETTINGS.map((s) => s.key);
       const { data, error } = await supabase
         .from("admin_settings")
         .select("key, value")
         .in("key", keys);
       if (error) throw error;
-      return (data ?? []) as TokenPricingRow[];
+      const rows = (data ?? []) as TokenPricingRow[];
+      const rowMap = new Map(rows.map((row) => [row.key, row.value]));
+
+      return TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => ({
+        label,
+        priceKey,
+        amountKey,
+        price: rowMap.get(priceKey) ?? "0",
+        amount: rowMap.get(amountKey) ?? "0",
+      }));
     },
   });
 }
@@ -51,7 +68,11 @@ export function useTokenPricing() {
 export function useUpdateTokenPricing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (rows: TokenPricingRow[]) => {
+    mutationFn: async (tiers: TokenTierUI[]) => {
+      const rows: TokenPricingRow[] = tiers.flatMap(({ priceKey, amountKey, price, amount }) => [
+        { key: priceKey, value: price },
+        { key: amountKey, value: amount },
+      ]);
       const { error } = await supabase
         .from("admin_settings")
         .upsert(rows, { onConflict: "key" });
