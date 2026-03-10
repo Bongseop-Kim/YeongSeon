@@ -13,6 +13,7 @@ import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-out
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   normalizeItemRow,
+  parseCustomOrderData,
   toOrderItemView,
 } from "@yeongseon/shared/mappers/shared-mapper";
 import {
@@ -258,57 +259,11 @@ const parseCustomDataField = (
       `주문 상품 행(${idx})의 reformData(custom)가 올바르지 않습니다: 객체가 아닙니다.`
     );
   }
-  const rawOptions = v.options;
-  const rawPricing = v.pricing;
-
-  if (!isRecord(rawOptions) || !isRecord(rawPricing)) {
+  try {
+    return parseCustomOrderData(v);
+  } catch {
     return null;
   }
-
-  if (
-    typeof rawPricing.sewing_cost !== "number" ||
-    typeof rawPricing.fabric_cost !== "number" ||
-    typeof rawPricing.total_cost !== "number"
-  ) {
-    return null;
-  }
-
-  const refImages = Array.isArray(v.reference_images)
-    ? (v.reference_images as unknown[])
-        .filter(
-          (item): item is { url: string; file_id: string | null } =>
-            item !== null &&
-            typeof item === "object" &&
-            !Array.isArray(item) &&
-            typeof (item as Record<string, unknown>).url === "string"
-        )
-        .map((item) => item.url)
-    : [];
-  return {
-    options: {
-      tieType: typeof rawOptions.tie_type === "string" ? rawOptions.tie_type : null,
-      interlining: typeof rawOptions.interlining === "string" ? rawOptions.interlining : null,
-      designType: typeof rawOptions.design_type === "string" ? rawOptions.design_type : null,
-      fabricType: typeof rawOptions.fabric_type === "string" ? rawOptions.fabric_type : null,
-      fabricProvided: rawOptions.fabric_provided === true,
-      triangleStitch: rawOptions.triangle_stitch === true,
-      sideStitch: rawOptions.side_stitch === true,
-      barTack: rawOptions.bar_tack === true,
-      dimple: rawOptions.dimple === true,
-      spoderato: rawOptions.spoderato === true,
-      fold7: rawOptions.fold7 === true,
-      brandLabel: rawOptions.brand_label === true,
-      careLabel: rawOptions.care_label === true,
-    },
-    pricing: {
-      sewingCost: rawPricing.sewing_cost,
-      fabricCost: rawPricing.fabric_cost,
-      totalCost: rawPricing.total_cost,
-    },
-    sample: v.sample === true,
-    referenceImageUrls: refImages,
-    additionalNotes: typeof v.additional_notes === "string" ? v.additional_notes : null,
-  };
 };
 
 const parseAppliedCouponField = (

@@ -7,6 +7,9 @@ import type { TieItemCreateDTO, TieItemDTO } from "../types/dto/reform";
 import type { OrderItemDTO, CustomOrderDataDTO } from "../types/dto/order-view";
 import type { OrderItem } from "../types/view/order";
 
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
 export const toProductOptionView = (option: ProductOptionDTO): ProductOption => ({
   ...option,
 });
@@ -62,6 +65,84 @@ export const toTieItemDTO = (tie: TieItem): TieItemCreateDTO => {
   const { checked, image, ...rest } = tie;
   return { ...rest, image: typeof image === "string" ? image : undefined };
 };
+
+export function parseCustomOrderData(
+  raw: Record<string, unknown>
+): CustomOrderDataDTO {
+  const rawKeys = Object.keys(raw);
+  const rawOptions = raw.options;
+  const rawPricing = raw.pricing;
+  const invalidFields = [
+    !isRecord(rawOptions) ? "options" : null,
+    !isRecord(rawPricing) ? "pricing" : null,
+  ].filter((field): field is string => field !== null);
+
+  if (!isRecord(rawOptions) || !isRecord(rawPricing)) {
+    throw new Error(
+      `custom order data 검증 실패: ${invalidFields.join(", ")} 필드 오류 (raw keys: ${rawKeys.join(", ")})`
+    );
+  }
+
+  const sewingCost = rawPricing.sewing_cost;
+  const fabricCost = rawPricing.fabric_cost;
+  const totalCost = rawPricing.total_cost;
+  const invalidPricingFields: string[] = [];
+
+  if (typeof sewingCost !== "number") {
+    invalidPricingFields.push("pricing.sewing_cost");
+  }
+  if (typeof fabricCost !== "number") {
+    invalidPricingFields.push("pricing.fabric_cost");
+  }
+  if (typeof totalCost !== "number") {
+    invalidPricingFields.push("pricing.total_cost");
+  }
+
+  if (
+    typeof sewingCost !== "number" ||
+    typeof fabricCost !== "number" ||
+    typeof totalCost !== "number"
+  ) {
+    throw new Error(
+      `custom order data 검증 실패: ${invalidPricingFields.join(", ")} 필드 오류 (raw keys: ${rawKeys.join(", ")})`
+    );
+  }
+
+  const referenceImageUrls = Array.isArray(raw.reference_images)
+    ? raw.reference_images
+        .filter(
+          (item): item is { url: string } =>
+            isRecord(item) && typeof item.url === "string"
+        )
+        .map((item) => item.url)
+    : [];
+
+  return {
+    options: {
+      tieType: typeof rawOptions.tie_type === "string" ? rawOptions.tie_type : null,
+      interlining: typeof rawOptions.interlining === "string" ? rawOptions.interlining : null,
+      designType: typeof rawOptions.design_type === "string" ? rawOptions.design_type : null,
+      fabricType: typeof rawOptions.fabric_type === "string" ? rawOptions.fabric_type : null,
+      fabricProvided: rawOptions.fabric_provided === true,
+      triangleStitch: rawOptions.triangle_stitch === true,
+      sideStitch: rawOptions.side_stitch === true,
+      barTack: rawOptions.bar_tack === true,
+      dimple: rawOptions.dimple === true,
+      spoderato: rawOptions.spoderato === true,
+      fold7: rawOptions.fold7 === true,
+      brandLabel: rawOptions.brand_label === true,
+      careLabel: rawOptions.care_label === true,
+    },
+    pricing: {
+      sewingCost,
+      fabricCost,
+      totalCost,
+    },
+    sample: raw.sample === true,
+    referenceImageUrls,
+    additionalNotes: typeof raw.additional_notes === "string" ? raw.additional_notes : null,
+  };
+}
 
 // ── Item Row 공유 정규화 ─────────────────────────────
 

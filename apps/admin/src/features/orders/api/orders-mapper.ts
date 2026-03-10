@@ -19,7 +19,7 @@ import type {
   CustomOrderPricing,
   RepairOrderReformData,
   RepairTie,
-} from "../types/admin-order";
+} from "@/features/orders/types/admin-order";
 
 // ── ValidationError ────────────────────────────────────────────
 
@@ -246,8 +246,15 @@ function toReformData(
   orderType: "custom" | "repair"
 ): CustomOrderReformData | RepairOrderReformData | null {
   if (!raw) return null;
-  if (orderType === "custom") return parseCustomReformData(raw);
-  return parseRepairReformData(raw);
+  try {
+    if (orderType === "custom") return parseCustomReformData(raw);
+    return parseRepairReformData(raw);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export function toAdminOrderItem(
