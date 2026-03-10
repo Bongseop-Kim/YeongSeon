@@ -23,10 +23,11 @@ Deno.serve(async (req) => {
 
   const cronSecret = Deno.env.get("CRON_SECRET");
 
-  if (
-    cronSecret &&
-    req.headers.get("Authorization") !== `Bearer ${cronSecret}`
-  ) {
+  if (!cronSecret) {
+    return jsonResponse(500, { error: "CRON_SECRET not configured" });
+  }
+
+  if (req.headers.get("Authorization") !== `Bearer ${cronSecret}`) {
     return jsonResponse(401, { error: "Unauthorized" });
   }
 

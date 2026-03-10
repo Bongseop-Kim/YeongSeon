@@ -16,6 +16,7 @@ const TokenPurchasePage = () => {
   const { user } = useAuthStore();
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const pendingRequestIdRef = useRef<number>(0);
+  const isRequestingRef = useRef(false);
   const [selectedPlan, setSelectedPlan] = useState<TokenPlanKey | null>(null);
   const [purchaseInfo, setPurchaseInfo] = useState<{
     paymentGroupId: string;
@@ -24,7 +25,7 @@ const TokenPurchasePage = () => {
   } | null>(null);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
 
-  const { data: tokenPlans, isLoading: isPlansLoading } = useTokenPlansQuery();
+  const { data: tokenPlans, isLoading: isPlansLoading, isError: isPlansError, refetch: refetchPlans } = useTokenPlansQuery();
   const { mutateAsync: createTokenPurchase, isPending } = useCreateTokenPurchaseMutation();
   const validTokenPlans = (tokenPlans ?? []).filter(
     (plan): plan is TokenPlan & { price: number; tokenAmount: number } =>
@@ -59,6 +60,7 @@ const TokenPurchasePage = () => {
   };
 
   const handleRequestPayment = async () => {
+    if (isRequestingRef.current) return;
     if (!user) {
       toast.error("로그인이 필요합니다.");
       navigate(ROUTES.LOGIN);
@@ -75,6 +77,7 @@ const TokenPurchasePage = () => {
       return;
     }
 
+    isRequestingRef.current = true;
     setIsPaymentLoading(true);
     try {
       const plan = validTokenPlans.find((p) => p.planKey === selectedPlan);
@@ -100,6 +103,7 @@ const TokenPurchasePage = () => {
       }
     } finally {
       setIsPaymentLoading(false);
+      isRequestingRef.current = false;
     }
   };
 
@@ -144,15 +148,28 @@ const TokenPurchasePage = () => {
               ? Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-80 animate-pulse rounded-2xl bg-zinc-100" />
                 ))
+              : isPlansError
+              ? (
+                  <div className="col-span-full flex flex-col items-center gap-3 py-12 text-zinc-500">
+                    <p className="text-sm">토큰 플랜을 불러오는데 실패했습니다.</p>
+                    <Button variant="outline" size="sm" onClick={() => refetchPlans()}>다시 시도</Button>
+                  </div>
+                )
+              : validTokenPlans.length === 0
+              ? (
+                  <div className="col-span-full py-12 text-center text-sm text-zinc-400">
+                    현재 이용 가능한 플랜이 없습니다.
+                  </div>
+                )
               : validTokenPlans.map((plan) => (
-              <PlanCard
-                key={plan.planKey}
-                {...plan}
-                selected={selectedPlan === plan.planKey}
-                isPending={isPending && selectedPlan === plan.planKey}
-                onSelect={handlePlanSelect}
-              />
-            ))}
+                  <PlanCard
+                    key={plan.planKey}
+                    {...plan}
+                    selected={selectedPlan === plan.planKey}
+                    isPending={isPending && selectedPlan === plan.planKey}
+                    onSelect={handlePlanSelect}
+                  />
+                ))}
           </div>
 
           {/* 결제 수단 + 버튼 */}

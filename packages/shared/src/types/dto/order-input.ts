@@ -7,6 +7,7 @@ export interface CreateOrderItemInputDTO {
     tie: {
       id: string;
       image?: string;
+      fileId?: string;
       measurementType?: "length" | "height";
       tieLength?: number;
       wearerHeight?: number;

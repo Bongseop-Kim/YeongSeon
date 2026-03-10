@@ -132,10 +132,10 @@ export function PricingForm() {
       }
     }
 
-    const tokenMutations: TokenTierUI[] = (tokenSettings ?? []).filter((tier) => {
-      const draft = tokenDraft[tier.priceKey];
-      return !!draft && (draft.price !== tier.price || draft.amount !== tier.amount);
-    }).map((tier) => tokenDraft[tier.priceKey]);
+    const tokenMutations: TokenTierUI[] = Object.values(tokenDraft).filter((draft) => {
+      const existing = (tokenSettings ?? []).find((t) => t.priceKey === draft.priceKey);
+      return !existing || draft.price !== existing.price || draft.amount !== existing.amount;
+    });
 
     if (constantMutations.length === 0 && fabricMutations.length === 0 && tokenMutations.length === 0) {
       message.info("변경된 항목이 없습니다.");
@@ -158,7 +158,7 @@ export function PricingForm() {
 
   const isSaving = updateConstant.isPending || updateFabric.isPending || updateToken.isPending;
 
-  if (loadingConstants || loadingFabrics || loadingTokens) {
+  if (loadingConstants || loadingFabrics) {
     return (
       <Card>
         <Spin />
@@ -166,7 +166,7 @@ export function PricingForm() {
     );
   }
 
-  if (errorConstants || errorFabrics || errorTokens) {
+  if (errorConstants || errorFabrics) {
     return (
       <Card>
         <Typography.Text type="danger">가격 정보를 불러오는데 실패했습니다.</Typography.Text>
@@ -277,6 +277,11 @@ export function PricingForm() {
         <Typography.Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
           많이 살수록 토큰 1개당 단가가 낮아집니다.
         </Typography.Text>
+        {loadingTokens ? (
+          <Spin size="small" />
+        ) : errorTokens ? (
+          <Typography.Text type="danger">토큰 가격 정보를 불러오는데 실패했습니다.</Typography.Text>
+        ) : (
         <Row gutter={[16, 16]}>
           {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => {
             const tier = tokenDraft[priceKey] ?? tokenSettings?.find((item) => item.priceKey === priceKey);
@@ -338,6 +343,7 @@ export function PricingForm() {
             );
           })}
         </Row>
+        )}
       </Card>
 
       <Button type="primary" onClick={saveAll} loading={isSaving} disabled={isSaving}>
