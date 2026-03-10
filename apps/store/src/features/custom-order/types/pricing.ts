@@ -25,4 +25,7 @@ export interface PricingConfig {
       POLY: number;
     };
   };
+  SAMPLE_SEWING_COST: number;
+  SAMPLE_FABRIC_COST: number;
+  SAMPLE_FABRIC_AND_SEWING_COST: number;
 }

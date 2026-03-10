@@ -24,6 +24,10 @@ export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
         <Descriptions.Item label="원단 유형">{options.fabricType ?? "-"}</Descriptions.Item>
         <Descriptions.Item label="원단 지참">{options.fabricProvided ? "예" : "아니오"}</Descriptions.Item>
         <Descriptions.Item label="수량">{rd.quantity}</Descriptions.Item>
+        <Descriptions.Item label="샘플 여부">{rd.sample ? "예" : "아니오"}</Descriptions.Item>
+        {rd.sampleType && (
+          <Descriptions.Item label="샘플 유형">{rd.sampleType}</Descriptions.Item>
+        )}
       </Descriptions>
 
       <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} style={{ marginBottom: 24 }}>
@@ -35,12 +39,14 @@ export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
         <Descriptions.Item label="7폴드">{options.fold7 ? "O" : "-"}</Descriptions.Item>
         <Descriptions.Item label="브랜드 라벨">{options.brandLabel ? "O" : "-"}</Descriptions.Item>
         <Descriptions.Item label="케어 라벨">{options.careLabel ? "O" : "-"}</Descriptions.Item>
-        <Descriptions.Item label="샘플">{rd.sample ? "O" : "-"}</Descriptions.Item>
       </Descriptions>
 
       <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="봉제비용">{pricing.sewingCost.toLocaleString()}원</Descriptions.Item>
         <Descriptions.Item label="원단비용">{pricing.fabricCost.toLocaleString()}원</Descriptions.Item>
+        {pricing.sampleCost > 0 && (
+          <Descriptions.Item label="샘플비용">{pricing.sampleCost.toLocaleString()}원</Descriptions.Item>
+        )}
         <Descriptions.Item label="합계">{pricing.totalCost.toLocaleString()}원</Descriptions.Item>
       </Descriptions>
 

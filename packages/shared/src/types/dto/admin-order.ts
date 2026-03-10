@@ -27,10 +27,13 @@ export interface AdminOrderListRowDTO {
   reformSummary: string | null;
   paymentGroupId: string | null;
   shippingCost: number;
+  isSample: boolean | null;
+  sampleType: string | null;
 }
 
 /** admin_order_detail_view row (extends list + shipping address, minus list-only fields) */
-export interface AdminOrderDetailRowDTO extends Omit<AdminOrderListRowDTO, 'fabricType' | 'designType' | 'itemQuantity' | 'reformSummary'> {
+export interface AdminOrderDetailRowDTO extends Omit<AdminOrderListRowDTO, 'fabricType' | 'designType' | 'itemQuantity' | 'reformSummary' | 'isSample' | 'sampleType'> {
+  sampleCost: number;
   recipientName: string | null;
   recipientPhone: string | null;
   shippingAddress: string | null;

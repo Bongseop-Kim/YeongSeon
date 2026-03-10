@@ -3,10 +3,9 @@ import { useFormContext } from "react-hook-form";
 import { RadioCard } from "@/components/composite/radio-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup } from "@/components/ui/radio-group";
-import {
-  SAMPLE_COST,
-  SAMPLE_DURATION,
-} from "@/features/custom-order/constants/SAMPLE_PRICING";
+import { SAMPLE_DURATION } from "@/features/custom-order/constants/SAMPLE_PRICING";
+import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
+import { calculateSampleCost } from "@/features/custom-order/utils/pricing";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
 
@@ -30,6 +29,7 @@ const SAMPLE_TYPE_OPTIONS = [
 
 export const SampleOptionStep = () => {
   const { watch, setValue } = useFormContext<QuoteOrderOptions>();
+  const { data: pricingConfig } = usePricingConfig();
   const sample = watch("sample");
   const fabricProvided = watch("fabricProvided");
   const sampleType = watch("sampleType");
@@ -121,7 +121,9 @@ export const SampleOptionStep = () => {
                     보내주신 원단으로 봉제 샘플을 제작합니다
                   </p>
                   <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-500">
-                    <span>{SAMPLE_COST.sewing.toLocaleString()}원</span>
+                    {pricingConfig && (
+                      <span>{calculateSampleCost("sewing", pricingConfig).toLocaleString()}원</span>
+                    )}
                     <span>{SAMPLE_DURATION.sewing}</span>
                   </div>
                 </CardContent>
@@ -151,9 +153,11 @@ export const SampleOptionStep = () => {
                           {option.description}
                         </p>
                         <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-500">
-                          <span>
-                            {SAMPLE_COST[option.value].toLocaleString()}원
-                          </span>
+                          {pricingConfig && (
+                            <span>
+                              {calculateSampleCost(option.value, pricingConfig).toLocaleString()}원
+                            </span>
+                          )}
                           <span>{SAMPLE_DURATION[option.value]}</span>
                         </div>
                       </CardContent>

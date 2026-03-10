@@ -10,7 +10,6 @@ import type { QuoteOrderOptions, OrderOptions } from "./types/order";
 import type { PackagePreset, WizardStepId } from "./types/wizard";
 import { WIZARD_STEPS } from "./constants/WIZARD_STEPS";
 import { PACKAGE_PRESETS } from "./constants/PACKAGE_PRESETS";
-import { SAMPLE_COST } from "./constants/SAMPLE_PRICING";
 import { useWizardStep } from "./hooks/useWizardStep";
 import { useWizardDraft, useRestoreDraft, useAutoSave } from "./hooks/useWizardDraft";
 import { useCustomOrderSubmit } from "./hooks/useCustomOrderSubmit";
@@ -103,17 +102,13 @@ export default function OrderPage() {
 
   const watchedValues = form.watch();
 
-  const { sewingCost, fabricCost, totalCost } = pricingConfig
+  const { sewingCost, fabricCost, sampleCost, totalCost } = pricingConfig
     ? calculateTotalCost(watchedValues, pricingConfig)
-    : { sewingCost: 0, fabricCost: 0, totalCost: 0 };
+    : { sewingCost: 0, fabricCost: 0, sampleCost: 0, totalCost: 0 };
 
   const isQuoteMode = watchedValues.quantity >= 100;
 
-  const sampleCost =
-    !isQuoteMode && watchedValues.sample && watchedValues.sampleType
-      ? SAMPLE_COST[watchedValues.sampleType]
-      : 0;
-  const grandTotal = totalCost + sampleCost;
+  const grandTotal = isQuoteMode ? totalCost - sampleCost : totalCost;
 
   const wizard = useWizardStep({ steps: WIZARD_STEPS, getValues: form.getValues });
 
@@ -201,6 +196,7 @@ export default function OrderPage() {
                 totalCost={totalCost}
                 sewingCost={sewingCost}
                 fabricCost={fabricCost}
+                sampleCost={sampleCost}
                 pricingConfig={pricingConfig}
                 isLoggedIn={isLoggedIn}
                 isQuoteMode={isQuoteMode}

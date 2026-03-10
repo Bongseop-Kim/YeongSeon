@@ -312,7 +312,15 @@ SELECT
     ri.item_quantity || '개 넥타이 수선'
   ELSE NULL END AS "reformSummary",
   o.payment_group_id AS "paymentGroupId",
-  o.shipping_cost    AS "shippingCost"
+  o.shipping_cost    AS "shippingCost",
+  CASE WHEN o.order_type = 'custom'
+    THEN (ri.item_data->>'sample')::boolean
+    ELSE NULL
+  END AS "isSample",
+  CASE WHEN o.order_type = 'custom'
+    THEN ri.item_data->>'sample_type'
+    ELSE NULL
+  END AS "sampleType"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id
 LEFT JOIN LATERAL (
@@ -360,7 +368,8 @@ SELECT
   sa.delivery_memo    AS "deliveryMemo",
   sa.delivery_request AS "deliveryRequest",
   o.payment_group_id  AS "paymentGroupId",
-  o.shipping_cost     AS "shippingCost"
+  o.shipping_cost     AS "shippingCost",
+  o.sample_cost    AS "sampleCost"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id
 LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id;

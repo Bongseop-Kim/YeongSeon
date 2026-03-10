@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   total_discount      integer     NOT NULL DEFAULT 0,
   order_type          text        NOT NULL DEFAULT 'sale',
   status              text        NOT NULL DEFAULT '대기중',
+  sample_cost         integer     NOT NULL DEFAULT 0,
   courier_company     text,
   tracking_number     text,
   shipped_at          timestamptz,
@@ -29,13 +30,16 @@ CREATE TABLE IF NOT EXISTS public.orders (
   CONSTRAINT orders_original_price_check CHECK (original_price >= 0),
   CONSTRAINT orders_total_discount_check CHECK (total_discount >= 0),
   CONSTRAINT orders_shipping_cost_check  CHECK (shipping_cost >= 0),
+  CONSTRAINT orders_sample_cost_check    CHECK (sample_cost >= 0),
   CONSTRAINT orders_order_type_check
     CHECK (order_type = ANY (ARRAY['sale','custom','repair','token'])),
   CONSTRAINT orders_status_check
     CHECK (status = ANY (ARRAY[
       '대기중','결제중','진행중','배송중','배송완료','완료','취소','실패',
       '접수','제작중','제작완료',
-      '수선중','수선완료'
+      '수선중','수선완료',
+      '샘플원단제작중','샘플원단배송중','샘플봉제제작중',
+      '샘플넥타이배송중','샘플배송완료','샘플승인'
     ])),
   CONSTRAINT orders_user_id_fkey
     FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE,

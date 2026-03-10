@@ -118,7 +118,7 @@ export function OrderStatusActions({
             {rollbackStatus}{eulo(rollbackStatus)} 롤백
           </Button>
         )}
-        {!["취소", "완료", "배송완료", "배송중"].includes(order.status) && (
+        {!["취소", "완료", "배송완료", "배송중", "제작완료", "제작중"].includes(order.status) && (
           <Button danger loading={isUpdating} onClick={handleCancelClick}>
             취소 처리
           </Button>

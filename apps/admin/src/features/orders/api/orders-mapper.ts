@@ -59,6 +59,8 @@ export function toAdminOrderListItem(
     fabricType: dto.fabricType,
     designType: dto.designType,
     itemQuantity: dto.itemQuantity,
+    isSample: dto.isSample,
+    sampleType: dto.sampleType,
     reformSummary: dto.reformSummary,
   };
 }
@@ -114,6 +116,7 @@ export function toAdminOrderDetail(
     confirmedAt: dto.confirmedAt,
     paymentGroupId: dto.paymentGroupId,
     shippingCost: dto.shippingCost,
+    sampleCost: dto.sampleCost,
   };
 }
 
@@ -144,6 +147,7 @@ export function parseCustomReformData(
 
   const sewingCost = rawPricing.sewing_cost;
   const fabricCost = rawPricing.fabric_cost;
+  const sampleCost = rawPricing.sample_cost;
   const totalCost = rawPricing.total_cost;
 
   if (typeof sewingCost !== "number" || !Number.isFinite(sewingCost)) {
@@ -181,6 +185,7 @@ export function parseCustomReformData(
   const pricing: CustomOrderPricing = {
     sewingCost,
     fabricCost,
+    sampleCost: typeof sampleCost === "number" && Number.isFinite(sampleCost) ? sampleCost : 0,
     totalCost,
   };
 
@@ -203,6 +208,7 @@ export function parseCustomReformData(
     pricing,
     quantity,
     sample: bool(raw.sample),
+    sampleType: str(raw.sample_type),
     referenceImageUrls: refImages,
     additionalNotes: str(raw.additional_notes),
   };

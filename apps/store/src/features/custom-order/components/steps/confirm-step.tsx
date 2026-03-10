@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { SummaryRow } from "../summary-row";
-import { SAMPLE_COST } from "../../constants/SAMPLE_PRICING";
+import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
+import { calculateSampleCost } from "@/features/custom-order/utils/pricing";
 import {
   getFabricLabel,
   getFinishingLabel,
@@ -33,6 +34,7 @@ export const ConfirmStep = ({
   goToStepById,
 }: ConfirmStepProps) => {
   const { control, watch } = useFormContext<QuoteOrderOptions>();
+  const { data: pricingConfig } = usePricingConfig();
   const values = watch();
   const isQuoteMode = values.quantity >= 100;
 
@@ -47,7 +49,9 @@ export const ConfirmStep = ({
   const sampleTypeLabel = getSampleTypeLabel(values);
 
   const sampleCost =
-    values.sample && values.sampleType ? SAMPLE_COST[values.sampleType] : 0;
+    values.sample && values.sampleType && pricingConfig
+      ? calculateSampleCost(values.sampleType, pricingConfig)
+      : 0;
 
   const attachmentSummary = [
     imageUpload.uploadedImages.length > 0

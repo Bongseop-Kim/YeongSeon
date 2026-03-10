@@ -20,6 +20,8 @@ declare
   v_total_price    integer;
   v_user_id        uuid;
   v_points_earned  integer;
+  v_is_sample      boolean;
+  v_sample_type    text;
 begin
   v_admin_id := auth.uid();
   if v_admin_id is null then
@@ -45,6 +47,18 @@ begin
     raise exception 'Status is already %', p_new_status;
   end if;
 
+  -- custom 주문인 경우 sample 정보 조회
+  if v_order_type = 'custom' then
+    select
+      coalesce((oi.item_data->>'sample')::boolean, false),
+      oi.item_data->>'sample_type'
+    into v_is_sample, v_sample_type
+    from public.order_items oi
+    where oi.order_id = p_order_id and oi.item_type = 'custom'
+    limit 1;
+    v_is_sample := coalesce(v_is_sample, false);
+  end if;
+
   if p_is_rollback then
     -- Rollback requires memo
     if p_memo is null or trim(p_memo) = '' then
@@ -62,10 +76,20 @@ begin
       end if;
     elsif v_order_type = 'custom' then
       if not (
-        (v_current_status = '결제중' and p_new_status = '대기중')
-        or (v_current_status = '접수' and p_new_status = '대기중')
+        -- 기존 rollback
+        (v_current_status = '결제중'   and p_new_status = '대기중')
+        or (v_current_status = '접수'   and p_new_status = '대기중')
         or (v_current_status = '제작중' and p_new_status = '접수')
         or (v_current_status = '제작완료' and p_new_status = '제작중')
+        -- 샘플 rollback
+        or (v_current_status = '샘플원단제작중' and p_new_status = '접수')
+        or (v_current_status = '샘플원단배송중' and p_new_status = '샘플원단제작중')
+        or (v_current_status = '샘플봉제제작중' and p_new_status = '접수'             and v_sample_type = 'sewing')
+        or (v_current_status = '샘플봉제제작중' and p_new_status = '샘플원단배송중'   and v_sample_type = 'fabric_and_sewing')
+        or (v_current_status = '샘플넥타이배송중' and p_new_status = '샘플봉제제작중')
+        or (v_current_status = '샘플배송완료'   and p_new_status = '샘플원단배송중'   and v_sample_type = 'fabric')
+        or (v_current_status = '샘플배송완료'   and p_new_status = '샘플넥타이배송중' and v_sample_type in ('sewing', 'fabric_and_sewing'))
+        or (v_current_status = '샘플승인'       and p_new_status = '샘플배송완료')
       ) then
         raise exception 'Invalid rollback from "%" to "%" for custom order', v_current_status, p_new_status;
       end if;
@@ -102,13 +126,33 @@ begin
       end if;
     elsif v_order_type = 'custom' then
       if not (
+        -- 공통 전이
         (v_current_status = '대기중'   and p_new_status = '접수')
-        or (v_current_status = '접수'     and p_new_status = '제작중')
         or (v_current_status = '제작중'   and p_new_status = '제작완료')
         or (v_current_status = '제작완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
+        -- 취소 (모든 샘플 상태 포함)
+        or (p_new_status = '취소' and v_current_status in (
+          '대기중', '결제중', '접수',
+          '샘플원단제작중', '샘플원단배송중', '샘플봉제제작중',
+          '샘플넥타이배송중', '샘플배송완료', '샘플승인'
+        ))
+        -- 비샘플 경로: 접수 → 제작중
+        or (v_current_status = '접수' and p_new_status = '제작중' and not v_is_sample)
+        -- 샘플 경로 (fabric, fabric_and_sewing)
+        or (v_current_status = '접수'           and p_new_status = '샘플원단제작중'   and v_sample_type in ('fabric', 'fabric_and_sewing'))
+        or (v_current_status = '샘플원단제작중' and p_new_status = '샘플원단배송중')
+        or (v_current_status = '샘플원단배송중' and p_new_status = '샘플배송완료'     and v_sample_type = 'fabric')
+        -- 샘플 경로 (sewing)
+        or (v_current_status = '접수'           and p_new_status = '샘플봉제제작중'   and v_sample_type = 'sewing')
+        -- 샘플 경로 (fabric_and_sewing 중간)
+        or (v_current_status = '샘플원단배송중' and p_new_status = '샘플봉제제작중'   and v_sample_type = 'fabric_and_sewing')
+        -- 샘플 공통 후반
+        or (v_current_status = '샘플봉제제작중'   and p_new_status = '샘플넥타이배송중')
+        or (v_current_status = '샘플넥타이배송중' and p_new_status = '샘플배송완료')
+        or (v_current_status = '샘플배송완료'     and p_new_status = '샘플승인')
+        or (v_current_status = '샘플승인'         and p_new_status = '제작중')
       ) then
         raise exception 'Invalid transition from "%" to "%" for custom order', v_current_status, p_new_status;
       end if;

@@ -58,7 +58,7 @@ begin
   if p_type = 'cancel' then
     if (v_order_type = 'sale'   and v_order_status = '배송중')
     or (v_order_type = 'repair' and v_order_status = '수선중')
-    or (v_order_type = 'custom' and v_order_status = '제작중')
+    or (v_order_type = 'custom' and v_order_status in ('제작중', '제작완료', '배송중', '배송완료', '완료'))
     then
       raise exception '현재 주문 상태에서는 취소할 수 없습니다';
     end if;

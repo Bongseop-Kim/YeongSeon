@@ -28,11 +28,86 @@ export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
   token: { 대기중: "완료" },
 };
 
+// 샘플 주문 sample_type별 순방향 플로우
+export const CUSTOM_SAMPLE_FLOW: Record<string, Record<string, string>> = {
+  fabric: {
+    대기중: "접수",
+    접수: "샘플원단제작중",
+    샘플원단제작중: "샘플원단배송중",
+    샘플원단배송중: "샘플배송완료",
+    샘플배송완료: "샘플승인",
+    샘플승인: "제작중",
+    제작중: "제작완료",
+    제작완료: "배송중",
+    배송중: "배송완료",
+    배송완료: "완료",
+  },
+  sewing: {
+    대기중: "접수",
+    접수: "샘플봉제제작중",
+    샘플봉제제작중: "샘플넥타이배송중",
+    샘플넥타이배송중: "샘플배송완료",
+    샘플배송완료: "샘플승인",
+    샘플승인: "제작중",
+    제작중: "제작완료",
+    제작완료: "배송중",
+    배송중: "배송완료",
+    배송완료: "완료",
+  },
+  fabric_and_sewing: {
+    대기중: "접수",
+    접수: "샘플원단제작중",
+    샘플원단제작중: "샘플원단배송중",
+    샘플원단배송중: "샘플봉제제작중",
+    샘플봉제제작중: "샘플넥타이배송중",
+    샘플넥타이배송중: "샘플배송완료",
+    샘플배송완료: "샘플승인",
+    샘플승인: "제작중",
+    제작중: "제작완료",
+    제작완료: "배송중",
+    배송중: "배송완료",
+    배송완료: "완료",
+  },
+};
+
 export const ORDER_ROLLBACK_FLOW: Record<OrderType, Record<string, string>> = {
   sale: { 진행중: "대기중" },
   custom: { 접수: "대기중", 제작중: "접수", 제작완료: "제작중" },
   repair: { 접수: "대기중", 수선중: "접수", 수선완료: "수선중" },
   token: {},
+};
+
+// 샘플 주문 sample_type별 롤백 플로우
+export const CUSTOM_SAMPLE_ROLLBACK_FLOW: Record<string, Record<string, string>> = {
+  fabric: {
+    접수: "대기중",
+    샘플원단제작중: "접수",
+    샘플원단배송중: "샘플원단제작중",
+    샘플배송완료: "샘플원단배송중",
+    샘플승인: "샘플배송완료",
+    제작중: "접수",
+    제작완료: "제작중",
+  },
+  sewing: {
+    접수: "대기중",
+    샘플봉제제작중: "접수",
+    샘플넥타이배송중: "샘플봉제제작중",
+    샘플배송완료: "샘플넥타이배송중",
+    샘플승인: "샘플배송완료",
+    제작중: "접수",
+    제작완료: "제작중",
+  },
+  fabric_and_sewing: {
+    접수: "대기중",
+    샘플원단제작중: "접수",
+    샘플원단배송중: "샘플원단제작중",
+    샘플봉제제작중: "샘플원단배송중",
+    샘플넥타이배송중: "샘플봉제제작중",
+    샘플배송완료: "샘플넥타이배송중",
+    샘플승인: "샘플배송완료",
+    제작중: "접수",
+    제작완료: "제작중",
+  },
 };
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
@@ -49,6 +124,12 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   완료: "success",
   취소: "error",
   실패: "error",
+  샘플원단제작중: "purple",
+  샘플원단배송중: "purple",
+  샘플봉제제작중: "purple",
+  샘플넥타이배송중: "purple",
+  샘플배송완료: "magenta",
+  샘플승인: "green",
 };
 
 export const ORDER_STATUS_OPTIONS: Record<
@@ -70,6 +151,12 @@ export const ORDER_STATUS_OPTIONS: Record<
     { label: "대기중", value: "대기중" },
     { label: "결제중", value: "결제중" },
     { label: "접수", value: "접수" },
+    { label: "샘플원단제작중", value: "샘플원단제작중" },
+    { label: "샘플원단배송중", value: "샘플원단배송중" },
+    { label: "샘플봉제제작중", value: "샘플봉제제작중" },
+    { label: "샘플넥타이배송중", value: "샘플넥타이배송중" },
+    { label: "샘플배송완료", value: "샘플배송완료" },
+    { label: "샘플승인", value: "샘플승인" },
     { label: "제작중", value: "제작중" },
     { label: "제작완료", value: "제작완료" },
     { label: "배송중", value: "배송중" },

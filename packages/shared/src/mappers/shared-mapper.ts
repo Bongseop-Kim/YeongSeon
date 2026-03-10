@@ -85,6 +85,7 @@ export function parseCustomOrderData(
 
   const sewingCost = rawPricing.sewing_cost;
   const fabricCost = rawPricing.fabric_cost;
+  const sampleCost = rawPricing.sample_cost;
   const totalCost = rawPricing.total_cost;
   const invalidPricingFields: string[] = [];
 
@@ -136,9 +137,11 @@ export function parseCustomOrderData(
     pricing: {
       sewingCost,
       fabricCost,
+      sampleCost: typeof sampleCost === "number" ? sampleCost : 0,
       totalCost,
     },
     sample: raw.sample === true,
+    sampleType: typeof raw.sample_type === "string" ? raw.sample_type : null,
     referenceImageUrls,
     additionalNotes: typeof raw.additional_notes === "string" ? raw.additional_notes : null,
   };
