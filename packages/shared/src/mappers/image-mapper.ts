@@ -6,18 +6,26 @@ export interface DbImageRef {
 }
 
 export const normalizeReferenceImages = (images: ImageRef[]): ImageRef[] => {
-  const seen = new Set<string>();
-  const normalized: ImageRef[] = [];
+  const normalized = new Map<string, ImageRef>();
   for (const image of images) {
     const url = (image.url ?? "").trim();
-    if (!url || seen.has(url)) continue;
-    seen.add(url);
-    normalized.push({ url, fileId: image.fileId ? image.fileId.trim() : "" });
+    const fileId = image.fileId?.trim() ?? "";
+    if (!url) continue;
+
+    const existing = normalized.get(url);
+    if (!existing) {
+      normalized.set(url, { url, fileId });
+      continue;
+    }
+
+    if (!existing.fileId && fileId) {
+      existing.fileId = fileId;
+    }
   }
-  return normalized;
+  return Array.from(normalized.values());
 };
 
 export const toDbImageRef = (image: ImageRef): DbImageRef => ({
   url: image.url,
-  file_id: image.fileId,
+  file_id: image.fileId?.trim() || null,
 });

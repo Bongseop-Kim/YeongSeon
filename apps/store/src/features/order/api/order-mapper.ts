@@ -61,6 +61,7 @@ export const toOrderItemInputDTO = (
         tie: {
           id: tie.id,
           image: typeof tie.image === "string" ? tie.image : undefined,
+          fileId: tie.fileId,
           measurementType: tie.measurementType,
           tieLength: tie.tieLength,
           wearerHeight: tie.wearerHeight,

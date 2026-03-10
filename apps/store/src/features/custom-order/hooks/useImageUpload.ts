@@ -11,18 +11,16 @@ interface UploadedImage {
   fileId: string;
 }
 
-const AUTH_TTL_MS = 25 * 60 * 1000; // 30분 만료 대비 5분 마진
-
 export const useImageUpload = () => {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [activeUploads, setActiveUploads] = useState(0);
-  const authCacheRef = useRef<{ auth: ImageKitAuth; fetchedAt: number } | null>(null);
+  const authCacheRef = useRef<{ auth: ImageKitAuth; expireMs: number } | null>(null);
 
   const getOrFetchAuth = useCallback(async (): Promise<ImageKitAuth> => {
     const cached = authCacheRef.current;
-    if (cached && Date.now() - cached.fetchedAt < AUTH_TTL_MS) return cached.auth;
+    if (cached && Date.now() < cached.expireMs) return cached.auth;
     const auth = await getImageKitAuth();
-    authCacheRef.current = { auth, fetchedAt: Date.now() };
+    authCacheRef.current = { auth, expireMs: auth.expire * 1000 - 30_000 };
     return auth;
   }, []);
 

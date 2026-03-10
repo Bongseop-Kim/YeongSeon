@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
           error,
           ids: withFileId.map((img) => img.id),
         });
-        throw error;
+        return jsonResponse(500, { error: (error as Error).message });
       }
     } finally {
       clearTimeout(timeoutId);
