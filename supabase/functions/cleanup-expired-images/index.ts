@@ -21,6 +21,15 @@ Deno.serve(async (req) => {
     return jsonResponse(405, { error: "Method not allowed" });
   }
 
+  const cronSecret = Deno.env.get("CRON_SECRET");
+
+  if (
+    cronSecret &&
+    req.headers.get("Authorization") !== `Bearer ${cronSecret}`
+  ) {
+    return jsonResponse(401, { error: "Unauthorized" });
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const imagekitPrivateKey = Deno.env.get("IMAGEKIT_PRIVATE_KEY");

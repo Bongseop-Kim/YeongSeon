@@ -242,6 +242,7 @@ const parseReformDataField = (
     tie: {
       id: tieRaw.id,
       image: typeof tieRaw.image === "string" ? tieRaw.image : undefined,
+      fileId: typeof tieRaw.fileId === "string" ? tieRaw.fileId : undefined,
       measurementType,
       tieLength: typeof tieRaw.tieLength === "number" ? tieRaw.tieLength : undefined,
       wearerHeight: typeof tieRaw.wearerHeight === "number" ? tieRaw.wearerHeight : undefined,

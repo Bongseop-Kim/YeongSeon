@@ -33,6 +33,11 @@ const TokenPurchasePage = () => {
 
   const handlePlanSelect = async (planKey: TokenPlanKey) => {
     if (isPending) return;
+    if (!user) {
+      toast.error("로그인이 필요합니다.");
+      navigate(ROUTES.LOGIN);
+      return;
+    }
     if (selectedPlan === planKey && purchaseInfo) return;
 
     const currentRequestId = ++pendingRequestIdRef.current;

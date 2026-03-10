@@ -72,7 +72,7 @@ const FABRIC_TYPE_LABELS: Record<string, string> = {
 export function PricingForm() {
   const { data: constants, isLoading: loadingConstants, isError: errorConstants } = usePricingConstants();
   const { data: fabrics, isLoading: loadingFabrics, isError: errorFabrics } = useFabricPrices();
-  const { data: tokenSettings } = useTokenPricing();
+  const { data: tokenSettings, isLoading: loadingTokens, isError: errorTokens } = useTokenPricing();
 
   const updateConstant = useUpdatePricingConstant();
   const updateFabric = useUpdateFabricPrice();
@@ -158,7 +158,7 @@ export function PricingForm() {
 
   const isSaving = updateConstant.isPending || updateFabric.isPending || updateToken.isPending;
 
-  if (loadingConstants || loadingFabrics) {
+  if (loadingConstants || loadingFabrics || loadingTokens) {
     return (
       <Card>
         <Spin />
@@ -166,7 +166,7 @@ export function PricingForm() {
     );
   }
 
-  if (errorConstants || errorFabrics) {
+  if (errorConstants || errorFabrics || errorTokens) {
     return (
       <Card>
         <Typography.Text type="danger">가격 정보를 불러오는데 실패했습니다.</Typography.Text>
