@@ -372,6 +372,20 @@ begin
     null
   );
 
+  -- images 테이블에 참조 이미지 등록
+  -- SECURITY DEFINER이므로 RLS bypass. RPC 내부에서 이미 v_user_id := auth.uid() 소유권 검증 완료.
+  IF p_reference_images IS NOT NULL AND jsonb_array_length(p_reference_images) > 0 THEN
+    INSERT INTO public.images (url, file_id, folder, entity_type, entity_id, uploaded_by)
+    SELECT
+      elem->>'url',
+      nullif(elem->>'file_id', ''),
+      '/custom-orders',
+      'custom_order',
+      v_order_id::text,
+      v_user_id
+    FROM jsonb_array_elements(p_reference_images) AS elem;
+  END IF;
+
   return jsonb_build_object(
     'order_id', v_order_id,
     'order_number', v_order_number,

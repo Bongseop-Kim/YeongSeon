@@ -1,4 +1,5 @@
-import type { ImageRef } from "@yeongseon/shared";
+import type { ImageRef, DbImageRef } from "@yeongseon/shared";
+export type { DbImageRef } from "@yeongseon/shared";
 
 export interface CreateCustomOrderOptionsDto {
   fabricProvided: boolean;
@@ -18,11 +19,6 @@ export interface CreateCustomOrderOptionsDto {
   spoderato: boolean;
   brandLabel: boolean;
   careLabel: boolean;
-}
-
-export interface DbImageRef {
-  url: string;
-  file_id: string | null;
 }
 
 export interface CreateCustomOrderOptionsDtoSnakeCase {

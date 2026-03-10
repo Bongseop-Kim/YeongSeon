@@ -1,39 +1,17 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import type { ImageRef } from "@yeongseon/shared";
+import { normalizeReferenceImages, toDbImageRef } from "@yeongseon/shared";
 import { toCreateCustomOrderOptionsInput } from "@/features/custom-order/api/custom-order-mapper";
 import type {
   CreateQuoteRequestRequest,
   CreateQuoteRequestRequestDto,
 } from "@/features/quote-request/types/dto/quote-request-input";
-import type {
-  CreateCustomOrderOptionsDtoSnakeCase,
-  DbImageRef,
-} from "@/features/custom-order/types/dto/custom-order-input";
+import type { CreateCustomOrderOptionsDtoSnakeCase } from "@/features/custom-order/types/dto/custom-order-input";
 
 type OrderOptionsForMapping = Omit<
   OrderOptions,
   "referenceImages" | "additionalNotes" | "sample" | "sampleType"
 >;
-
-const normalizeReferenceImages = (images: ImageRef[]): ImageRef[] => {
-  const seen = new Set<string>();
-  const normalized: ImageRef[] = [];
-
-  for (const image of images) {
-    const url = image.url.trim();
-    if (!url || seen.has(url)) {
-      continue;
-    }
-
-    seen.add(url);
-    normalized.push({
-      url,
-      fileId: image.fileId.trim(),
-    });
-  }
-
-  return normalized;
-};
 
 interface ToCreateQuoteRequestInput {
   shippingAddressId: string;
@@ -84,9 +62,7 @@ export const toCreateQuoteRequestInputDto = (
     care_label: request.options.careLabel,
   } satisfies CreateCustomOrderOptionsDtoSnakeCase,
   quantity: request.quantity,
-  reference_images: request.referenceImages.map(
-    (img): DbImageRef => ({ url: img.url, file_id: img.fileId })
-  ),
+  reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
   contact_name: request.contactName,
   contact_title: request.contactTitle,
