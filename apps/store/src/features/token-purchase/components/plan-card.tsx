@@ -7,7 +7,6 @@ interface PlanCardProps {
   planKey: TokenPlanKey;
   label: string;
   price: number;
-  tokenAmount: number;
   description: string;
   features: string[];
   popular?: boolean;

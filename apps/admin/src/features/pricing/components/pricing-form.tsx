@@ -288,7 +288,7 @@ export function PricingForm() {
                   <Space direction="vertical" size={2} style={{ width: "100%" }}>
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>가격</Typography.Text>
                     <InputNumber
-                      value={Number(tokenDraft[priceKey]) || undefined}
+                      value={Number.isNaN(Number(tokenDraft[priceKey])) ? undefined : Number(tokenDraft[priceKey])}
                       min={1}
                       step={100}
                       formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
@@ -303,7 +303,7 @@ export function PricingForm() {
                   <Space direction="vertical" size={2} style={{ width: "100%" }}>
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>토큰 수량</Typography.Text>
                     <InputNumber
-                      value={Number(tokenDraft[amountKey]) || undefined}
+                      value={Number.isNaN(Number(tokenDraft[amountKey])) ? undefined : Number(tokenDraft[amountKey])}
                       min={1}
                       onChange={(v) =>
                         setTokenDraft((prev) => ({ ...prev, [amountKey]: String(v ?? "") }))

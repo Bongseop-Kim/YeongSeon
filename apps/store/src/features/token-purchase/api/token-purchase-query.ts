@@ -13,6 +13,7 @@ export function useTokenPlansQuery() {
   return useQuery<TokenPlan[], Error>({
     queryKey: TOKEN_PLANS_QUERY_KEY,
     queryFn: getTokenPlans,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

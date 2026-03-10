@@ -72,7 +72,7 @@ const PaymentSuccessPage = () => {
 
         toast.success("결제가 완료되었습니다!");
         if (paymentResult.type === "token_purchase") {
-          navigate(ROUTES.ORDER_LIST, { replace: true });
+          navigate(ROUTES.TOKEN_PURCHASE_SUCCESS, { replace: true });
         } else if (paymentResult.orders.length === 1) {
           navigate(
             `${ROUTES.ORDER_DETAIL}/${paymentResult.orders[0].orderId}`,

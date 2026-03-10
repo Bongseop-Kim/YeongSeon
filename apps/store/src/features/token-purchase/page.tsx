@@ -15,6 +15,7 @@ const TokenPurchasePage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
+  const pendingPlanKeyRef = useRef<TokenPlanKey | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<TokenPlanKey | null>(null);
   const [purchaseInfo, setPurchaseInfo] = useState<{
     paymentGroupId: string;
@@ -29,16 +30,21 @@ const TokenPurchasePage = () => {
   const handlePlanSelect = async (planKey: TokenPlanKey) => {
     if (selectedPlan === planKey && purchaseInfo) return;
 
+    pendingPlanKeyRef.current = planKey;
     setSelectedPlan(planKey);
     setPurchaseInfo(null);
 
     try {
       const result = await createTokenPurchase(planKey);
-      setPurchaseInfo(result);
+      if (pendingPlanKeyRef.current === planKey) {
+        setPurchaseInfo(result);
+      }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "플랜 선택 중 오류가 발생했습니다.";
-      toast.error(message);
-      setSelectedPlan(null);
+      if (pendingPlanKeyRef.current === planKey) {
+        const message = err instanceof Error ? err.message : "플랜 선택 중 오류가 발생했습니다.";
+        toast.error(message);
+        setSelectedPlan(null);
+      }
     }
   };
 

@@ -59,7 +59,6 @@ export function useUpdateTokenPricing() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TOKEN_PRICING_KEY });
-      message.success("토큰 가격이 저장되었습니다.");
     },
     onError: (error: Error) => {
       message.error(`저장 실패: ${error.message}`);

@@ -249,13 +249,14 @@ $$;
 
 -- ── create_token_purchase ─────────────────────────────────────
 -- Creates a pending token purchase record for the authenticated user.
--- SECURITY INVOKER: auth.uid() 소유권 검증으로 충분
+-- SECURITY DEFINER 사유: admin_settings RLS가 admin-only이므로 일반 유저 SELECT 불가
+-- auth.uid() 소유권 검증으로 무단 접근 차단
 CREATE OR REPLACE FUNCTION public.create_token_purchase(
   p_plan_key text
 )
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 DECLARE
@@ -385,7 +386,7 @@ BEGIN
     RAISE EXCEPTION 'unauthorized: confirm_token_payment requires service_role';
   END IF;
 
-  SELECT id, user_id, status, plan_key, token_amount
+  SELECT id, user_id, status, plan_key, token_amount, payment_key
     INTO v_rec
     FROM public.token_purchases
    WHERE payment_group_id = p_payment_group_id
@@ -397,6 +398,15 @@ BEGIN
 
   IF v_rec.user_id <> p_user_id THEN
     RAISE EXCEPTION 'Forbidden: user does not own this token purchase';
+  END IF;
+
+  -- 멱등성: 이미 완료된 경우 동일 payment_key면 성공 반환, 다르면 충돌 에러
+  IF v_rec.status = '완료' THEN
+    IF v_rec.payment_key = p_payment_key THEN
+      RETURN jsonb_build_object('success', true, 'token_amount', v_rec.token_amount);
+    ELSE
+      RAISE EXCEPTION 'conflict: already confirmed with different payment_key';
+    END IF;
   END IF;
 
   IF v_rec.status <> '결제중' THEN
