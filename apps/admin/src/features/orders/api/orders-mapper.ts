@@ -124,11 +124,15 @@ export function parseCustomReformData(
   const rawPricing = isRecord(raw.pricing) ? raw.pricing : {};
 
   const rawQuantity = raw.quantity;
-  if (
-    typeof rawQuantity !== "undefined" &&
-    (typeof rawQuantity !== "number" ||
-      !Number.isFinite(rawQuantity) ||
-      rawQuantity <= 0)
+  if (typeof rawQuantity === "undefined") {
+    console.warn(
+      "[parseCustomReformData] quantity 필드가 없습니다. 0으로 대체합니다.",
+      raw
+    );
+  } else if (
+    typeof rawQuantity !== "number" ||
+    !Number.isFinite(rawQuantity) ||
+    rawQuantity <= 0
   ) {
     throw new ValidationError(
       `주문 제작 reformData 검증 실패: quantity가 유한한 양수가 아닙니다 (${rawQuantity}).`
@@ -299,20 +303,25 @@ export function toAdminOrderItem(
     return item;
   }
 
-  // reform (수선)
-  const reformData =
-    orderType === "sale" ? null : toReformData(dto.reformData, "repair");
-  const item: AdminReformOrderItem = {
-    type: "reform",
-    id: dto.id,
-    orderId: dto.orderId,
-    quantity: dto.quantity,
-    unitPrice: dto.unitPrice,
-    discountAmount: dto.discountAmount,
-    lineDiscountAmount: dto.lineDiscountAmount,
-    reformData,
-  };
-  return item;
+  if (dto.itemType === "reform") {
+    const reformData =
+      orderType === "sale" ? null : toReformData(dto.reformData, "repair");
+    const item: AdminReformOrderItem = {
+      type: "reform",
+      id: dto.id,
+      orderId: dto.orderId,
+      quantity: dto.quantity,
+      unitPrice: dto.unitPrice,
+      discountAmount: dto.discountAmount,
+      lineDiscountAmount: dto.lineDiscountAmount,
+      reformData,
+    };
+    return item;
+  }
+
+  throw new ValidationError(
+    `toAdminOrderItem: 알 수 없는 itemType "${dto.itemType}" (orderId: ${dto.orderId}, id: ${dto.id})`
+  );
 }
 
 // ── Status log mapper ─────────────────────────────────────────

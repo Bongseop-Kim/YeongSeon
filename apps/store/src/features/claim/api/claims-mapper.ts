@@ -148,8 +148,8 @@ const parseClaimItemField = (
       }
       if (
         typeof v.reformData.tie.id !== "string" ||
-        v.reformData.tie.image != null &&
-        typeof v.reformData.tie.image !== "string"
+        (v.reformData.tie.image != null &&
+          typeof v.reformData.tie.image !== "string")
       ) {
         throw new Error(
           `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: id 또는 image 필드 타입 오류.`
@@ -291,9 +291,12 @@ const parseClaimItemField = (
   let customData: ClaimItemRowDTO["customData"] = null;
   if (v.type === "custom" && v.reformData != null) {
     const raw = v.reformData;
-    if (isRecord(raw)) {
-      customData = parseCustomOrderData(raw);
+    if (!isRecord(raw)) {
+      throw new Error(
+        `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: custom 타입의 reformData가 객체가 아닙니다 (item id: ${v.id}).`
+      );
     }
+    customData = parseCustomOrderData(raw);
   }
 
   return {
