@@ -59,6 +59,8 @@ declare
   v_reform_original integer := 0;
   v_reform_discount integer := 0;
   v_shipping_cost integer;
+  v_tie_image text;
+  v_tie_file_id text;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -393,6 +395,14 @@ begin
         coalesce((v_item->>'line_discount_amount')::integer, 0),
         nullif(v_item->>'applied_user_coupon_id', '')::uuid
       );
+
+      -- reform 이미지 라이프사이클 추적: tie 이미지를 images 테이블에 등록
+      v_tie_image := nullif(trim(v_item->'reform_data'->'tie'->>'image'), '');
+      v_tie_file_id := nullif(trim(v_item->'reform_data'->'tie'->>'fileId'), '');
+      IF v_tie_image IS NOT NULL THEN
+        INSERT INTO public.images (url, file_id, folder, entity_type, entity_id, uploaded_by)
+        VALUES (v_tie_image, v_tie_file_id, '/reform', 'reform', v_order_id::text, v_user_id);
+      END IF;
     end loop;
 
     v_group_total_amount := v_group_total_amount + v_total_price;

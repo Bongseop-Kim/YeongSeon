@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { AiModel } from "@/features/design/types/chat";
+import { ROUTES } from "@/constants/ROUTES";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
@@ -18,6 +20,8 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ onNewChat, tokenBalance, aiModel, onModelChange }: ChatHeaderProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="flex items-center justify-between border-b px-4 py-3">
       <div className="flex items-center gap-3">
@@ -29,9 +33,18 @@ export function ChatHeader({ onNewChat, tokenBalance, aiModel, onModelChange }: 
             <span className="inline-block size-1.5 rounded-full bg-green-400" />
             디자인 준비 완료
           </p>
-          <p className="font-mono text-xs text-gray-400">
-            {tokenBalance !== undefined ? `${tokenBalance.toLocaleString()} tokens` : "— tokens"}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-mono text-xs text-gray-400">
+              {tokenBalance !== undefined ? `${tokenBalance.toLocaleString()} tokens` : "— tokens"}
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.TOKEN_PURCHASE)}
+              className="text-xs text-blue-500 hover:text-blue-700 underline"
+            >
+              충전
+            </button>
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-2">

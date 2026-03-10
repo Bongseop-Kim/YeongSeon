@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import dayjs, { type Dayjs } from "dayjs";
-import { Button, DatePicker, Form, Input, InputNumber, Modal } from "antd";
+import { Button, Form, Input, InputNumber, Modal } from "antd";
 import { useManageCustomerTokensMutation } from "../api/customers-query";
 import type { AdminTokenManageForm } from "../types/admin-customer";
 
@@ -11,10 +10,7 @@ interface CustomerTokenFormModalProps {
   onClose: () => void;
 }
 
-interface CustomerTokenFormValues
-  extends Omit<AdminTokenManageForm, "expiresAt"> {
-  expiresAt?: Dayjs;
-}
+type CustomerTokenFormValues = AdminTokenManageForm;
 
 const MODAL_TITLE: Record<CustomerTokenFormModalProps["mode"], string> = {
   grant: "토큰 지급",
@@ -47,10 +43,6 @@ export function CustomerTokenFormModal({
       await mutation.mutateAsync({
         userId,
         amount,
-        expiresAt:
-          mode === "grant" && values.expiresAt
-            ? dayjs(values.expiresAt).format("YYYY-MM-DD")
-            : undefined,
         description: values.description,
       });
 
@@ -91,12 +83,6 @@ export function CustomerTokenFormModal({
         >
           <InputNumber min={1} style={{ width: "100%" }} />
         </Form.Item>
-
-        {mode === "grant" && (
-          <Form.Item label="만료일" name="expiresAt">
-            <DatePicker style={{ width: "100%" }} />
-          </Form.Item>
-        )}
 
         <Form.Item
           label="설명"

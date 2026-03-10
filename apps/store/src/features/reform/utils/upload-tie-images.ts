@@ -1,6 +1,7 @@
 import { upload } from "@imagekit/react";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
+import { IMAGE_FOLDERS } from "@yeongseon/shared";
 import { getImageKitAuth } from "../api/reform-api";
 
 /**
@@ -26,14 +27,17 @@ export async function uploadTieImages(ties: TieItem[]): Promise<TieItem[]> {
         token,
         expire,
         publicKey: IMAGEKIT_PUBLIC_KEY,
-        folder: "/reform",
+        folder: IMAGE_FOLDERS.REFORM,
       });
 
       if (!response.url) {
         throw new Error("이미지 URL을 받지 못했습니다.");
       }
+      if (!response.fileId) {
+        throw new Error("파일 ID를 받지 못했습니다.");
+      }
 
-      return { ...tie, image: response.url };
+      return { ...tie, image: response.url, fileId: response.fileId };
     })
   );
 }

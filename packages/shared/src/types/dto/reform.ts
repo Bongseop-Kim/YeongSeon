@@ -1,6 +1,7 @@
 export interface TieItemDTO {
   id: string;
   image?: string;
+  fileId?: string;
   measurementType?: "length" | "height";
   tieLength?: number;
   wearerHeight?: number;
@@ -10,6 +11,7 @@ export interface TieItemDTO {
 export interface TieItemCreateDTO {
   id?: string;
   image?: string;
+  fileId?: string;
   measurementType?: "length" | "height";
   tieLength?: number;
   wearerHeight?: number;

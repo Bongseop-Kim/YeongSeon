@@ -1,9 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { upload } from "@imagekit/react";
-import { supabase } from "@/lib/supabase";
-import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
+import { IMAGEKIT_PUBLIC_KEY, getImageKitAuth } from "@/lib/imagekit";
 import { toast } from "@/lib/toast";
-import type { ImageRef } from "@yeongseon/shared";
+import type { ImageRef, ImageKitAuth } from "@yeongseon/shared";
+import { IMAGE_FOLDERS } from "@yeongseon/shared";
 
 interface UploadedImage {
   name: string;
@@ -14,19 +14,20 @@ interface UploadedImage {
 export const useImageUpload = () => {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [activeUploads, setActiveUploads] = useState(0);
+  const authCacheRef = useRef<{ auth: ImageKitAuth; expireMs: number } | null>(null);
+
+  const getOrFetchAuth = useCallback(async (): Promise<ImageKitAuth> => {
+    const cached = authCacheRef.current;
+    if (cached && Date.now() < cached.expireMs) return cached.auth;
+    const auth = await getImageKitAuth();
+    authCacheRef.current = { auth, expireMs: auth.expire * 1000 - 30_000 };
+    return auth;
+  }, []);
 
   const uploadFile = useCallback(async (file: File) => {
     setActiveUploads((n) => n + 1);
     try {
-      const { data, error } = await supabase.functions.invoke("imagekit-auth");
-      if (error || !data) {
-        throw new Error("ImageKit 인증에 실패했습니다.");
-      }
-      const { signature, token, expire } = data as {
-        signature: string;
-        token: string;
-        expire: number;
-      };
+      const { signature, token, expire } = await getOrFetchAuth();
 
       const response = await upload({
         file,
@@ -35,7 +36,7 @@ export const useImageUpload = () => {
         token,
         expire,
         publicKey: IMAGEKIT_PUBLIC_KEY,
-        folder: "/custom-orders",
+        folder: IMAGE_FOLDERS.CUSTOM_ORDERS,
       });
 
       if (!response.url) {
@@ -64,7 +65,7 @@ export const useImageUpload = () => {
     } finally {
       setActiveUploads((n) => n - 1);
     }
-  }, []);
+  }, [getOrFetchAuth]);
 
   const removeImage = useCallback((index: number) => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));

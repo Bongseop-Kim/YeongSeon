@@ -61,6 +61,7 @@ export const toOrderItemInputDTO = (
         tie: {
           id: tie.id,
           image: typeof tie.image === "string" ? tie.image : undefined,
+          fileId: tie.fileId,
           measurementType: tie.measurementType,
           tieLength: tie.tieLength,
           wearerHeight: tie.wearerHeight,
@@ -241,6 +242,7 @@ const parseReformDataField = (
     tie: {
       id: tieRaw.id,
       image: typeof tieRaw.image === "string" ? tieRaw.image : undefined,
+      fileId: typeof tieRaw.fileId === "string" ? tieRaw.fileId : undefined,
       measurementType,
       tieLength: typeof tieRaw.tieLength === "number" ? tieRaw.tieLength : undefined,
       wearerHeight: typeof tieRaw.wearerHeight === "number" ? tieRaw.wearerHeight : undefined,

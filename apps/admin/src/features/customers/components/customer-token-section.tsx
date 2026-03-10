@@ -13,6 +13,7 @@ const TOKEN_TYPE_LABELS: Record<string, string> = {
   use: "사용",
   refund: "환불",
   admin: "관리자",
+  purchase: "구매",
 };
 
 const { Text } = Typography;
@@ -63,11 +64,6 @@ export function CustomerTokenSection({ userId }: Props) {
       dataIndex: "description",
       title: "설명",
       render: (value: string | null) => value ?? "-",
-    },
-    {
-      dataIndex: "expiresAt",
-      title: "만료일",
-      render: (value: string | null) => value?.slice(0, 10) ?? "-",
     },
   ];
 

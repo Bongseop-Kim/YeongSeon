@@ -5,6 +5,13 @@ import type { UploadFile, RcFile } from "antd/es/upload";
 import { supabase } from "@/lib/supabase";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 
+export interface ImageItem {
+  url: string;
+  fileId?: string;
+}
+
+type UploadFileWithImageItem = UploadFile & { fileId?: string };
+
 export const useImageKitUpload = () => {
   const fileUidRef = useRef(0);
   const activeUploadsRef = useRef(0);
@@ -57,7 +64,7 @@ export const useImageKitUpload = () => {
       setFileList((prev) =>
         prev.map((f) =>
           f.uid === rcFile.uid
-            ? { ...f, status: "done", url: response.url! }
+            ? { ...f, status: "done", url: response.url!, fileId: response.fileId ?? undefined }
             : f
         )
       );
@@ -78,8 +85,14 @@ export const useImageKitUpload = () => {
     ({ fileList: newFileList }: { fileList: UploadFile[] }) => {
       setFileList((prev) =>
         newFileList.map((n) => {
-          const existing = prev.find((p) => p.uid === n.uid);
-          return existing?.url && !n.url ? { ...n, url: existing.url } : n;
+          const existing = prev.find((p) => p.uid === n.uid) as UploadFileWithImageItem | undefined;
+          const nextFile = n as UploadFileWithImageItem;
+
+          return {
+            ...nextFile,
+            url: nextFile.url ?? existing?.url,
+            fileId: nextFile.fileId ?? existing?.fileId,
+          };
         })
       );
     },
@@ -99,6 +112,20 @@ export const useImageKitUpload = () => {
         status: "done" as const,
         url,
         thumbUrl: url,
+      }))
+    );
+  }, []);
+
+  const initFromImageRefs = useCallback((refs: ImageItem[]) => {
+    if (activeUploadsRef.current > 0) return;
+    setFileList(
+      refs.map(({ url, fileId }) => ({
+        uid: `existing-${++fileUidRef.current}`,
+        name: url.split("/").pop() || "image",
+        status: "done" as const,
+        url,
+        thumbUrl: url,
+        fileId,
       }))
     );
   }, []);
@@ -126,6 +153,15 @@ export const useImageKitUpload = () => {
       .map((f) => f.url!);
   }, [fileList]);
 
+  /**
+   * 초기화 함수와 읽기 함수는 반드시 쌍으로 사용해야 합니다.
+   *
+   * - `initFromUrls`   → `getUrls`      : URL 문자열만 필요한 경우 (e.g. 상품 이미지 URL 배열)
+   * - `initFromImageRefs` → (별도 상태로 관리): ImageItem(fileId 포함)이 필요한 경우
+   *
+   * `initFromUrls`로 초기화한 뒤 fileId가 필요한 로직을 수행하면 fileId가 없어
+   * 이미지 생명주기 추적이 불가능해집니다. 두 흐름을 혼용하지 마세요.
+   */
   return {
     fileList,
     uploading,
@@ -133,6 +169,7 @@ export const useImageKitUpload = () => {
     handleChange,
     handleRemove,
     initFromUrls,
+    initFromImageRefs,
     moveFile,
     getUrls,
   };

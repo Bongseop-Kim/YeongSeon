@@ -1,31 +1,6 @@
 import { generateItemId } from "@/lib/utils";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
-import type { ImageKitAuth } from "./reform-api";
-
-function isImageKitAuth(x: unknown): x is ImageKitAuth {
-  if (typeof x !== "object" || x === null) return false;
-
-  return (
-    "signature" in x &&
-    typeof (x as { signature?: unknown }).signature === "string" &&
-    "token" in x &&
-    typeof (x as { token?: unknown }).token === "string" &&
-    "expire" in x &&
-    typeof (x as { expire?: unknown }).expire === "number"
-  );
-}
-
-export function mapImageKitAuthResponse(data: unknown): ImageKitAuth {
-  if (!isImageKitAuth(data)) {
-    throw new Error("ImageKit 인증 응답 형식이 올바르지 않습니다.");
-  }
-  return {
-    signature: data.signature,
-    token: data.token,
-    expire: data.expire,
-  };
-}
 
 export const toReformCartItems = (ties: TieItem[], baseCost: number): CartItem[] =>
   ties.map((tie) => ({
