@@ -33,7 +33,7 @@ export async function uploadTieImages(ties: TieItem[]): Promise<TieItem[]> {
         throw new Error("이미지 URL을 받지 못했습니다.");
       }
 
-      return { ...tie, image: response.url };
+      return { ...tie, image: response.url, fileId: response.fileId ?? undefined };
     })
   );
 }

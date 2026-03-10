@@ -4,6 +4,7 @@ import { message } from "antd";
 import type { UploadFile, RcFile } from "antd/es/upload";
 import { supabase } from "@/lib/supabase";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
+import type { ImageRef } from "@yeongseon/shared";
 
 export const useImageKitUpload = () => {
   const fileUidRef = useRef(0);
@@ -57,7 +58,7 @@ export const useImageKitUpload = () => {
       setFileList((prev) =>
         prev.map((f) =>
           f.uid === rcFile.uid
-            ? { ...f, status: "done", url: response.url! }
+            ? { ...f, status: "done", url: response.url!, fileId: response.fileId ?? undefined }
             : f
         )
       );
@@ -126,6 +127,15 @@ export const useImageKitUpload = () => {
       .map((f) => f.url!);
   }, [fileList]);
 
+  const getImageRefs = useCallback((): ImageRef[] => {
+    return fileList
+      .filter((f) => f.status === "done" && f.url && (f as UploadFile & { fileId?: string }).fileId)
+      .map((f) => ({
+        url: f.url!,
+        fileId: (f as UploadFile & { fileId?: string }).fileId!,
+      }));
+  }, [fileList]);
+
   return {
     fileList,
     uploading,
@@ -135,5 +145,6 @@ export const useImageKitUpload = () => {
     initFromUrls,
     moveFile,
     getUrls,
+    getImageRefs,
   };
 };
