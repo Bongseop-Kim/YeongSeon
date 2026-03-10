@@ -123,12 +123,18 @@ export function parseCustomReformData(
   const rawOptions = isRecord(raw.options) ? raw.options : {};
   const rawPricing = isRecord(raw.pricing) ? raw.pricing : {};
 
-  const quantity = raw.quantity;
-  if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0) {
+  const rawQuantity = raw.quantity;
+  if (
+    typeof rawQuantity !== "undefined" &&
+    (typeof rawQuantity !== "number" ||
+      !Number.isFinite(rawQuantity) ||
+      rawQuantity <= 0)
+  ) {
     throw new ValidationError(
-      `주문 제작 reformData 검증 실패: quantity가 유한한 양수가 아닙니다 (${quantity}).`
+      `주문 제작 reformData 검증 실패: quantity가 유한한 양수가 아닙니다 (${rawQuantity}).`
     );
   }
+  const quantity = typeof rawQuantity === "number" ? rawQuantity : 0;
 
   const sewingCost = rawPricing.sewing_cost;
   const fabricCost = rawPricing.fabric_cost;

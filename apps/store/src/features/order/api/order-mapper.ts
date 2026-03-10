@@ -261,8 +261,10 @@ const parseCustomDataField = (
   }
   try {
     return parseCustomOrderData(v);
-  } catch {
-    return null;
+  } catch (err) {
+    throw new Error(
+      `주문 상품 행(${idx}) parseCustomOrderData 실패: ${err instanceof Error ? err.message : String(err)}`
+    );
   }
 };
 

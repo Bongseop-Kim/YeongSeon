@@ -292,23 +292,7 @@ const parseClaimItemField = (
   if (v.type === "custom" && v.reformData != null) {
     const raw = v.reformData;
     if (isRecord(raw)) {
-      const rawOptions = raw.options;
-      const rawPricing = raw.pricing;
-
-      if (
-        !isRecord(rawOptions) ||
-        !isRecord(rawPricing) ||
-        typeof rawOptions.tie_type !== "string" ||
-        typeof rawPricing.sewing_cost !== "number" ||
-        typeof rawPricing.fabric_cost !== "number" ||
-        typeof rawPricing.total_cost !== "number"
-      ) {
-        throw new Error(
-          `[claims-mapper] custom item customData 파싱 실패: options 또는 pricing 검증 오류 (raw keys: ${Object.keys(raw).join(", ")})`
-        );
-      } else {
-        customData = parseCustomOrderData(raw);
-      }
+      customData = parseCustomOrderData(raw);
     }
   }
 
