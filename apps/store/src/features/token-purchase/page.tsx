@@ -32,6 +32,7 @@ const TokenPurchasePage = () => {
   );
 
   const handlePlanSelect = async (planKey: TokenPlanKey) => {
+    if (isPending) return;
     if (selectedPlan === planKey && purchaseInfo) return;
 
     const currentRequestId = ++pendingRequestIdRef.current;

@@ -20,7 +20,7 @@ export type TokenPricingKey = typeof TOKEN_PRICING_SETTINGS[number]["key"];
 
 interface TokenPricingRow {
   key: TokenPricingKey;
-  value: string;
+  value: string | null;
 }
 
 export interface TokenTierUI {

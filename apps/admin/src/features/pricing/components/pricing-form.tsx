@@ -148,7 +148,7 @@ export function PricingForm() {
         ...fabricMutations.map((row) => updateFabric.mutateAsync(row)),
         ...(tokenMutations.length > 0 ? [updateToken.mutateAsync(tokenMutations)] : []),
       ]);
-      if (constantMutations.length > 0 || fabricMutations.length > 0) {
+      if (constantMutations.length > 0 || fabricMutations.length > 0 || tokenMutations.length > 0) {
         message.success("가격이 저장되었습니다.");
       }
     } catch {
@@ -302,7 +302,7 @@ export function PricingForm() {
                               label,
                               priceKey,
                               amountKey,
-                              price: String(v ?? ""),
+                              price: v == null ? (prev[priceKey]?.price ?? tier?.price ?? "0") : String(v),
                               amount: prev[priceKey]?.amount ?? tier?.amount ?? "0",
                             },
                           }))
@@ -324,7 +324,7 @@ export function PricingForm() {
                               priceKey,
                               amountKey,
                               price: prev[priceKey]?.price ?? tier?.price ?? "0",
-                              amount: String(v ?? ""),
+                              amount: v == null ? (prev[priceKey]?.amount ?? tier?.amount ?? "0") : String(v),
                             },
                           }))
                         }
