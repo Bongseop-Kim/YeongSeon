@@ -17,6 +17,8 @@ SET search_path TO 'public'
 AS $$
 declare
   v_user_id uuid;
+  v_order_type text;
+  v_order_status text;
   v_order_item record;
   v_claim_quantity integer;
   v_claim_number text;
@@ -42,13 +44,24 @@ begin
   end if;
 
   -- 4. Order ownership check
-  if not exists (
-    select 1
-    from orders
-    where id = p_order_id
-      and user_id = v_user_id
-  ) then
+  select o.order_type, o.status
+  into v_order_type, v_order_status
+  from orders o
+  where o.id = p_order_id
+    and o.user_id = v_user_id;
+
+  if not found then
     raise exception 'Order not found';
+  end if;
+
+  -- cancel 상태 가드
+  if p_type = 'cancel' then
+    if (v_order_type = 'sale'   and v_order_status = '배송중')
+    or (v_order_type = 'repair' and v_order_status = '수선중')
+    or (v_order_type = 'custom' and v_order_status = '제작중')
+    then
+      raise exception '현재 주문 상태에서는 취소할 수 없습니다';
+    end if;
   end if;
 
   -- 5. Order item lookup (p_item_id is order_items.item_id text)
@@ -252,4 +265,3 @@ begin
   );
 end;
 $$;
-
