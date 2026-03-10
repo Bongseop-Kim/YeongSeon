@@ -64,24 +64,44 @@ Deno.serve(async (req) => {
   // ImageKit Bulk Delete
   if (withFileId.length > 0) {
     const credentials = btoa(`${imagekitPrivateKey}:`);
-    const deleteRes = await fetch(IMAGEKIT_DELETE_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${credentials}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        fileIds: withFileId.map((img) => img.file_id),
-      }),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
-    if (deleteRes.ok) {
-      imagekitDeletedCount = withFileId.length;
-    } else {
-      // 부분 실패 처리: 삭제 성공한 file_id를 확인할 수 없으므로 모두 실패 처리
-      const errorBody = await deleteRes.text();
-      console.error("ImageKit bulk delete failed:", errorBody);
-      imagekitFailedIds = withFileId.map((img) => img.id);
+    try {
+      const deleteRes = await fetch(IMAGEKIT_DELETE_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileIds: withFileId.map((img) => img.file_id),
+        }),
+        signal: controller.signal,
+      });
+
+      if (deleteRes.ok) {
+        const body = await deleteRes.json();
+        const deletedFileIds: string[] = body.successfullyDeletedFileIds ?? [];
+        imagekitDeletedCount = deletedFileIds.length;
+        imagekitFailedIds = withFileId
+          .filter((img) => !deletedFileIds.includes(img.file_id))
+          .map((img) => img.id);
+      } else {
+        // 부분 실패 처리: 삭제 성공한 file_id를 확인할 수 없으므로 모두 실패 처리
+        const errorBody = await deleteRes.text();
+        console.error("ImageKit bulk delete failed:", errorBody);
+        imagekitFailedIds = withFileId.map((img) => img.id);
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        console.error("ImageKit bulk delete timed out after 30 seconds");
+        imagekitFailedIds = withFileId.map((img) => img.id);
+      } else {
+        throw error;
+      }
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 

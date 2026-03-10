@@ -4,7 +4,13 @@ import { message } from "antd";
 import type { UploadFile, RcFile } from "antd/es/upload";
 import { supabase } from "@/lib/supabase";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
-import type { ImageRef } from "@yeongseon/shared";
+
+export interface ImageItem {
+  url: string;
+  fileId?: string;
+}
+
+type UploadFileWithImageItem = UploadFile & { fileId?: string };
 
 export const useImageKitUpload = () => {
   const fileUidRef = useRef(0);
@@ -79,8 +85,14 @@ export const useImageKitUpload = () => {
     ({ fileList: newFileList }: { fileList: UploadFile[] }) => {
       setFileList((prev) =>
         newFileList.map((n) => {
-          const existing = prev.find((p) => p.uid === n.uid);
-          return existing?.url && !n.url ? { ...n, url: existing.url } : n;
+          const existing = prev.find((p) => p.uid === n.uid) as UploadFileWithImageItem | undefined;
+          const nextFile = n as UploadFileWithImageItem;
+
+          return {
+            ...nextFile,
+            url: nextFile.url ?? existing?.url,
+            fileId: nextFile.fileId ?? existing?.fileId,
+          };
         })
       );
     },
@@ -100,6 +112,20 @@ export const useImageKitUpload = () => {
         status: "done" as const,
         url,
         thumbUrl: url,
+      }))
+    );
+  }, []);
+
+  const initFromImageRefs = useCallback((refs: ImageItem[]) => {
+    if (activeUploadsRef.current > 0) return;
+    setFileList(
+      refs.map(({ url, fileId }) => ({
+        uid: `existing-${++fileUidRef.current}`,
+        name: url.split("/").pop() || "image",
+        status: "done" as const,
+        url,
+        thumbUrl: url,
+        fileId,
       }))
     );
   }, []);
@@ -127,12 +153,12 @@ export const useImageKitUpload = () => {
       .map((f) => f.url!);
   }, [fileList]);
 
-  const getImageRefs = useCallback((): ImageRef[] => {
+  const getImageRefs = useCallback((): ImageItem[] => {
     return fileList
-      .filter((f) => f.status === "done" && f.url && (f as UploadFile & { fileId?: string }).fileId)
+      .filter((f) => f.status === "done" && f.url && (f as UploadFileWithImageItem).fileId)
       .map((f) => ({
         url: f.url!,
-        fileId: (f as UploadFile & { fileId?: string }).fileId!,
+        fileId: (f as UploadFileWithImageItem).fileId!,
       }));
   }, [fileList]);
 
@@ -143,6 +169,7 @@ export const useImageKitUpload = () => {
     handleChange,
     handleRemove,
     initFromUrls,
+    initFromImageRefs,
     moveFile,
     getUrls,
     getImageRefs,
