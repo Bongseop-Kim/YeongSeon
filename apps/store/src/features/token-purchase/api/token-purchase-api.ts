@@ -32,7 +32,7 @@ export async function getTokenPlans(): Promise<TokenPlan[]> {
 export async function createTokenPurchase(
   planKey: TokenPlanKey
 ): Promise<CreateTokenPurchaseResult> {
-  const { data, error } = await supabase.rpc("create_token_purchase", {
+  const { data, error } = await supabase.rpc("create_token_order", {
     p_plan_key: planKey,
   });
 

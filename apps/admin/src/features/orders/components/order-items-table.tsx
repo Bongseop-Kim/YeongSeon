@@ -17,6 +17,10 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
         render={(_: unknown, record: AdminOrderItem) => {
           if (record.type === "custom") return "주문 제작";
           if (record.type === "reform") return "넥타이 수선";
+          if (record.type === "token") {
+            const label = record.planKey ?? "토큰";
+            return `토큰 구매 (${label}, ${record.tokenAmount ?? "-"}개)`;
+          }
           if (!record.productName) return "-";
           if (record.productId != null) {
             const { productId } = record;

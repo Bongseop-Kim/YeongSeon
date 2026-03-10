@@ -78,6 +78,13 @@ begin
       ) then
         raise exception 'Invalid rollback from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;
+    elsif v_order_type = 'token' then
+      -- token 롤백: 결제중 → 대기중 만 허용
+      if not (
+        (v_current_status = '결제중' and p_new_status = '대기중')
+      ) then
+        raise exception 'Invalid rollback from "%" to "%" for token order', v_current_status, p_new_status;
+      end if;
     else
       raise exception 'Unknown order type: %', v_order_type;
     end if;
@@ -116,6 +123,14 @@ begin
         or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'token' then
+      -- token 순방향: 대기중 → 완료, 취소
+      if not (
+        (v_current_status = '대기중' and p_new_status = '완료')
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for token order', v_current_status, p_new_status;
       end if;
     else
       raise exception 'Unknown order type: %', v_order_type;
@@ -210,7 +225,7 @@ begin
     raise exception 'p_date is required';
   end if;
 
-  if p_order_type is null or p_order_type not in ('all', 'sale', 'custom', 'repair') then
+  if p_order_type is null or p_order_type not in ('all', 'sale', 'custom', 'repair', 'token') then
     raise exception 'invalid p_order_type: %', p_order_type;
   end if;
 
@@ -261,7 +276,7 @@ begin
     raise exception 'p_start_date must be <= p_end_date';
   end if;
 
-  if p_order_type is null or p_order_type not in ('all', 'sale', 'custom', 'repair') then
+  if p_order_type is null or p_order_type not in ('all', 'sale', 'custom', 'repair', 'token') then
     raise exception 'invalid p_order_type: %', p_order_type;
   end if;
 

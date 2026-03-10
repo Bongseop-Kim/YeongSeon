@@ -1,9 +1,10 @@
-export type OrderType = "sale" | "custom" | "repair";
+export type OrderType = "sale" | "custom" | "repair" | "token";
 
 export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
   sale: "일반 판매",
   custom: "주문 제작",
   repair: "수선",
+  token: "토큰 구매",
 };
 
 export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
@@ -24,12 +25,14 @@ export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
     배송중: "배송완료",
     배송완료: "완료",
   },
+  token: { 대기중: "완료" },
 };
 
 export const ORDER_ROLLBACK_FLOW: Record<OrderType, Record<string, string>> = {
   sale: { 진행중: "대기중" },
   custom: { 접수: "대기중", 제작중: "접수", 제작완료: "제작중" },
   repair: { 접수: "대기중", 수선중: "접수", 수선완료: "수선중" },
+  token: {},
 };
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
@@ -45,6 +48,7 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   배송완료: "geekblue",
   완료: "success",
   취소: "error",
+  실패: "error",
 };
 
 export const ORDER_STATUS_OPTIONS: Record<
@@ -83,6 +87,14 @@ export const ORDER_STATUS_OPTIONS: Record<
     { label: "배송중", value: "배송중" },
     { label: "배송완료", value: "배송완료" },
     { label: "완료", value: "완료" },
+    { label: "취소", value: "취소" },
+  ],
+  token: [
+    { label: "전체", value: "" },
+    { label: "대기중", value: "대기중" },
+    { label: "결제중", value: "결제중" },
+    { label: "완료", value: "완료" },
+    { label: "실패", value: "실패" },
     { label: "취소", value: "취소" },
   ],
 };

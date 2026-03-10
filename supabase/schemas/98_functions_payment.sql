@@ -18,6 +18,10 @@ declare
   v_updated_orders jsonb := '[]'::jsonb;
   v_count int := 0;
   v_masked_key text;
+  v_token_amount integer;
+  v_plan_key text;
+  v_plan_label text;
+  v_points integer;
 begin
   -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
   if p_user_id is null then
@@ -54,12 +58,13 @@ begin
     end if;
 
     v_post_status := case v_order.order_type
-      when 'sale' then '진행중'
+      when 'sale'  then '진행중'
+      when 'token' then '완료'
       else '접수'
     end;
 
     update public.orders
-    set status = v_post_status, updated_at = now()
+    set status = v_post_status, payment_key = p_payment_key, updated_at = now()
     where id = v_order.id;
 
     insert into public.order_status_logs (
@@ -69,9 +74,50 @@ begin
       'payment confirmed: ' || v_masked_key
     );
 
+    -- token 주문: 토큰 부여 + 포인트 적립 (2%)
+    if v_order.order_type = 'token' then
+      select
+        (oi.item_data->>'token_amount')::integer,
+        oi.item_data->>'plan_key'
+      into v_token_amount, v_plan_key
+      from public.order_items oi
+      where oi.order_id = v_order.id and oi.item_type = 'token'
+      limit 1;
+
+      v_plan_label := case v_plan_key
+        when 'starter' then 'Starter'
+        when 'popular' then 'Popular'
+        when 'pro'     then 'Pro'
+        else v_plan_key
+      end;
+
+      insert into public.design_tokens (user_id, amount, type, description)
+      values (
+        p_user_id,
+        v_token_amount,
+        'purchase',
+        '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)'
+      );
+
+      -- 포인트 적립 (결제 금액의 2%)
+      select o.total_price into v_points
+      from public.orders o
+      where o.id = v_order.id;
+      v_points := floor(v_points * 0.02);
+
+      if v_points > 0 then
+        insert into public.points (user_id, order_id, amount, type, description)
+        values (
+          p_user_id, v_order.id, v_points, 'earn',
+          '토큰 구매 포인트 적립 (2%)'
+        );
+      end if;
+    end if;
+
     v_updated_orders := v_updated_orders || jsonb_build_object(
-      'orderId', v_order.id,
-      'orderType', v_order.order_type
+      'orderId',     v_order.id,
+      'orderType',   v_order.order_type,
+      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end
     );
   end loop;
 
@@ -160,7 +206,7 @@ begin
       -- 멱등: 이미 lock됨
       v_already_locked := true;
 
-    elsif v_order.status in ('진행중', '접수') then
+    elsif v_order.status in ('진행중', '접수', '완료') then
       -- 이미 결제 완료 상태
       v_already_confirmed := true;
 
@@ -246,7 +292,7 @@ begin
       -- 멱등: 이미 대기중
       null;
 
-    elsif v_order.status in ('진행중', '접수') then
+    elsif v_order.status in ('진행중', '접수', '완료') then
       -- 다른 경로로 이미 confirm됨 — skip
       null;
 

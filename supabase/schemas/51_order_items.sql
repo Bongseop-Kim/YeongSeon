@@ -19,14 +19,13 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 
   CONSTRAINT order_items_pkey PRIMARY KEY (id),
   CONSTRAINT order_items_item_type_check
-    CHECK (item_type = ANY (ARRAY['product','reform','custom'])),
+    CHECK (item_type = ANY (ARRAY['product','reform','custom','token'])),
   CONSTRAINT order_items_item_type_content_check
     CHECK (
       (item_type = 'product' AND product_id IS NOT NULL)
-      OR
-      (item_type = 'reform' AND item_data IS NOT NULL)
-      OR
-      (item_type = 'custom' AND item_data IS NOT NULL)
+      OR (item_type = 'reform' AND item_data IS NOT NULL)
+      OR (item_type = 'custom' AND item_data IS NOT NULL)
+      OR (item_type = 'token' AND item_data IS NOT NULL)
     ),
   CONSTRAINT order_items_quantity_check       CHECK (quantity > 0),
   CONSTRAINT order_items_unit_price_check     CHECK (unit_price >= 0),

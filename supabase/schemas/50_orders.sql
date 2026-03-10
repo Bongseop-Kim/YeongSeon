@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   id                  uuid        NOT NULL DEFAULT gen_random_uuid(),
   user_id             uuid        NOT NULL,
   order_number        varchar(50) NOT NULL,
-  shipping_address_id uuid        NOT NULL,
+  shipping_address_id uuid,
   total_price         integer     NOT NULL,
   original_price      integer     NOT NULL,
   total_discount      integer     NOT NULL DEFAULT 0,
@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   updated_at          timestamptz NOT NULL DEFAULT now(),
   payment_group_id    uuid,
   shipping_cost       integer     NOT NULL DEFAULT 0,
+  payment_key         text,
 
   CONSTRAINT orders_pkey PRIMARY KEY (id),
   CONSTRAINT orders_order_number_key UNIQUE (order_number),
@@ -29,10 +30,10 @@ CREATE TABLE IF NOT EXISTS public.orders (
   CONSTRAINT orders_total_discount_check CHECK (total_discount >= 0),
   CONSTRAINT orders_shipping_cost_check  CHECK (shipping_cost >= 0),
   CONSTRAINT orders_order_type_check
-    CHECK (order_type = ANY (ARRAY['sale','custom','repair'])),
+    CHECK (order_type = ANY (ARRAY['sale','custom','repair','token'])),
   CONSTRAINT orders_status_check
     CHECK (status = ANY (ARRAY[
-      '대기중','결제중','진행중','배송중','배송완료','완료','취소',
+      '대기중','결제중','진행중','배송중','배송완료','완료','취소','실패',
       '접수','제작중','제작완료',
       '수선중','수선완료'
     ])),

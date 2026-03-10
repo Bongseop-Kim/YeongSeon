@@ -161,6 +161,19 @@ function getColumnsForType(orderType: OrderType) {
     ];
   }
 
+  if (orderType === "token") {
+    return [
+      ...common,
+      <Table.Column
+        key="customerEmail"
+        dataIndex="customerEmail"
+        title="이메일"
+        render={(value: string | null) => value ?? "-"}
+      />,
+      ...tail,
+    ];
+  }
+
   // repair
   return [
     ...common,

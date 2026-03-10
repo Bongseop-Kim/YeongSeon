@@ -99,7 +99,19 @@ export interface AdminReformOrderItem {
   reformData: RepairOrderReformData | null;
 }
 
-export type AdminOrderItem = AdminProductOrderItem | AdminCustomOrderItem | AdminReformOrderItem;
+export interface AdminTokenOrderItem {
+  type: "token";
+  id: string;
+  orderId: string;
+  planKey: string | null;
+  tokenAmount: number | null;
+  quantity: number;
+  unitPrice: number;
+  discountAmount: number;
+  lineDiscountAmount: number;
+}
+
+export type AdminOrderItem = AdminProductOrderItem | AdminCustomOrderItem | AdminReformOrderItem | AdminTokenOrderItem;
 
 // ── reformData typed structures ────────────────────────────────
 

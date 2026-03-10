@@ -61,8 +61,12 @@ export function OrderDetailSection() {
       <Title level={5}>주문 정보</Title>
       <OrderInfoSection order={order} />
 
-      <Title level={5}>배송지 정보</Title>
-      <ShippingAddressSection address={order.shippingAddress} />
+      {orderType !== "token" && (
+        <>
+          <Title level={5}>배송지 정보</Title>
+          <ShippingAddressSection address={order.shippingAddress} />
+        </>
+      )}
 
       <OrderStatusActions
         order={order}
@@ -91,18 +95,22 @@ export function OrderDetailSection() {
       {orderType === "custom" && <CustomOrderDetail items={customItems} />}
       {orderType === "repair" && <RepairOrderDetail items={reformItems} />}
 
-      <Title level={5}>배송 정보</Title>
-      {orderId && (
-        <TrackingSection
-          orderId={orderId}
-          courierCompany={courierCompany}
-          trackingNumber={trackingNumber}
-          shippedAt={order.trackingInfo?.shippedAt}
-          onCourierChange={setCourierCompany}
-          onTrackingNumberChange={setTrackingNumber}
-          onSave={saveTracking}
-          isPending={trackingPending}
-        />
+      {orderType !== "token" && (
+        <>
+          <Title level={5}>배송 정보</Title>
+          {orderId && (
+            <TrackingSection
+              orderId={orderId}
+              courierCompany={courierCompany}
+              trackingNumber={trackingNumber}
+              shippedAt={order.trackingInfo?.shippedAt}
+              onCourierChange={setCourierCompany}
+              onTrackingNumberChange={setTrackingNumber}
+              onSave={saveTracking}
+              isPending={trackingPending}
+            />
+          )}
+        </>
       )}
 
       <Title level={5}>주문 아이템</Title>

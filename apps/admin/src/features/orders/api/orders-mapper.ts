@@ -3,6 +3,7 @@ import type {
   AdminOrderDetailRowDTO,
   AdminOrderItemRowDTO,
   OrderStatusLogDTO,
+  OrderType,
 } from "@yeongseon/shared";
 import type {
   AdminOrderListItem,
@@ -11,6 +12,7 @@ import type {
   AdminProductOrderItem,
   AdminCustomOrderItem,
   AdminReformOrderItem,
+  AdminTokenOrderItem,
   AdminShippingAddress,
   AdminTrackingInfo,
   AdminStatusLogEntry,
@@ -269,7 +271,7 @@ function toReformData(
 
 export function toAdminOrderItem(
   dto: AdminOrderItemRowDTO,
-  orderType: "sale" | "custom" | "repair"
+  orderType: OrderType
 ): AdminOrderItem {
   if (dto.itemType === "product") {
     const item: AdminProductOrderItem = {
@@ -315,6 +317,24 @@ export function toAdminOrderItem(
       discountAmount: dto.discountAmount,
       lineDiscountAmount: dto.lineDiscountAmount,
       reformData,
+    };
+    return item;
+  }
+
+  if (dto.itemType === "token") {
+    const reformData = isRecord(dto.reformData) ? dto.reformData : null;
+    const item: AdminTokenOrderItem = {
+      type: "token",
+      id: dto.id,
+      orderId: dto.orderId,
+      planKey: reformData ? String(reformData.plan_key ?? "") : null,
+      tokenAmount: reformData && typeof reformData.token_amount === "number"
+        ? reformData.token_amount
+        : null,
+      quantity: dto.quantity,
+      unitPrice: dto.unitPrice,
+      discountAmount: dto.discountAmount,
+      lineDiscountAmount: dto.lineDiscountAmount,
     };
     return item;
   }
