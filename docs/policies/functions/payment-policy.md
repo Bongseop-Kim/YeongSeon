@@ -54,7 +54,7 @@
 | `lock_payment_orders` | `대기중` → `결제중` | 이미 `결제중`이면 멱등 처리 |
 | `lock_token_payment` | `대기중` → `결제중` | service_role 전용 |
 
-쿠폰도 동시에 `active` → `reserved`로 전환된다.
+`lock_payment_orders`는 주문 상태(`대기중` → `결제중`)만 변경한다. 쿠폰 예약(`active` → `reserved`)은 주문 생성 시 `create_order_txn`에서 이미 수행된다.
 
 ---
 
@@ -72,7 +72,7 @@ Toss API 호출 실패 시 자동으로 복구한다.
 
 | RPC | 전환 | 쿠폰 처리 |
 |-----|------|---------|
-| `unlock_payment_orders` | `결제중` → `대기중` | `reserved` → `active` (복원) |
+| `unlock_payment_orders` | `결제중` → `대기중` | 이미 `reserved` 상태인 쿠폰을 `active`로 복원 |
 | `unlock_token_payment` | `결제중` → `대기중` | - |
 
 ---

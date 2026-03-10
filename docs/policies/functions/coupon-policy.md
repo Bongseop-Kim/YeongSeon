@@ -114,4 +114,4 @@ stateDiagram-v2
 |------|------|
 | `supabase/schemas/30_coupons.sql` | 쿠폰 테이블 스키마 |
 | `supabase/schemas/31_user_coupons.sql` | 사용자 쿠폰 테이블 스키마 |
-| `packages/shared/src/utils/calculate-discount.ts` | 프론트 할인 계산 유틸 |
+| `packages/shared/src/utils/calculate-discount.ts` | 프론트 할인 계산 유틸 (UI 미리보기 전용, 실제 금액 계산의 기준은 RPC 서버) |

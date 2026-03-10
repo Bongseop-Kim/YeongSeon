@@ -102,7 +102,7 @@ stateDiagram-v2
 | 매장 원단 선택 | `design_type + fabric_type` 조합으로 단가 조회 |
 | YARN_DYED 디자인 | 추가 비용 발생 |
 
-비용 단가는 `admin_settings` 테이블에서 관리된다.
+원단 단가는 `public.custom_order_fabric_prices` 테이블에서 `design_type + fabric_type` 조합으로 조회한다. 봉제비 상수(`START_COST`, `SEWING_PER_COST` 등)는 `public.custom_order_pricing_constants` 테이블에서 관리된다.
 
 ---
 

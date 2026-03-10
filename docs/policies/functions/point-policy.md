@@ -49,7 +49,7 @@
 ### 구현됨
 - `points` 테이블 스키마
 - `get_user_point_balance()` RPC (잔액 조회)
-- 구매확정 시 포인트 적립 (`confirm_payment_orders` 내 earn 로직)
+- 포인트 적립은 `customer_confirm_purchase` (수동 확정) 및 `auto_confirm_delivered_orders` (자동 확정)에서 수행됨
 
 ### 미구현
 - 프론트엔드 포인트 잔액 표시 UI

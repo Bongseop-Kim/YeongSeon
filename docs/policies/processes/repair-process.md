@@ -75,7 +75,7 @@ stateDiagram-v2
 
 장바구니에 `product` 아이템과 `reform` 아이템이 함께 있을 경우:
 
-```
+```text
 create_order_txn
   ├─ product 아이템 → sale 타입 주문 생성
   └─ reform 아이템 → repair 타입 주문 생성 (별도 주문)
@@ -93,7 +93,7 @@ create_order_txn
 | 기본 수선비 | `REFORM_BASE_COST` | 수선 기본 비용 |
 | 수선 배송비 | `REFORM_SHIPPING_COST` | 수선 주문 전용 배송료 (일반 상품 주문은 0원) |
 
-비용 값은 `admin_settings` 테이블에서 관리된다.
+비용 값은 `public.custom_order_pricing_constants` 테이블에서 관리된다 (`REFORM_BASE_COST`, `REFORM_SHIPPING_COST` 키).
 
 ---
 
@@ -114,7 +114,7 @@ create_order_txn
 ## 8. API 호출 흐름
 
 ### 수선 주문 생성 (혼합 장바구니)
-```
+```text
 프론트 → Edge Function: create-order
   └─ 아이템 배열에 reform 타입 포함
   └─ item_type=reform 이면 reform_data 필수
@@ -126,7 +126,7 @@ create_order_txn
 ```
 
 ### 결제 (일반 주문과 동일)
-```
+```text
 프론트 → Edge Function: confirm-payment
   └─ payment_group_id로 모든 주문(sale + repair) 일괄 처리
   └─ repair 주문: 결제중 → 접수

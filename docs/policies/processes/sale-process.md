@@ -71,8 +71,6 @@ stateDiagram-v2
 
 `배송중`, `배송완료`, `완료` 상태에서는 취소 불가. 반품(return) 또는 교환(exchange) 클레임만 가능.
 
-> **현재 코드 불일치**: `CLAIM_ACTIONS_BY_STATUS`에 `배송중 → cancel`이 매핑되어 있어 UI에서 취소 요청이 가능한 상태. 제거 필요. (`docs/refactoring/processes/sale-process.md` 참조)
-
 자세한 내용은 [claim-process.md](./claim-process.md) 참조.
 
 ---
@@ -100,7 +98,7 @@ stateDiagram-v2
 ## 7. API 호출 흐름
 
 ### 주문 생성
-```
+```text
 프론트 → Edge Function: create-order
   └─ 입력 검증 (item_type별 필수 필드 확인)
   └─ 배송지 소유권 검증
@@ -112,7 +110,7 @@ stateDiagram-v2
 ```
 
 ### 결제
-```
+```text
 프론트 → Toss SDK 결제 UI
 프론트 → Edge Function: confirm-payment
   └─ RPC: lock_payment_orders (대기중 → 결제중)
