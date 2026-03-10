@@ -6,6 +6,7 @@ export default function CouponCreate() {
     resource: "coupons",
     redirect: "list",
   });
+  const discountType = Form.useWatch("discount_type", formProps.form);
 
   return (
     <Create saveButtonProps={saveButtonProps}>
@@ -24,9 +25,15 @@ export default function CouponCreate() {
         <Form.Item label="할인값" name="discount_value" rules={[{ required: true }]}>
           <InputNumber min={0} style={{ width: "100%" }} />
         </Form.Item>
-        <Form.Item label="최대할인금액" name="max_discount_amount">
-          <InputNumber min={0} style={{ width: "100%" }} />
-        </Form.Item>
+        {discountType === "percentage" && (
+          <Form.Item
+            label="최대할인금액"
+            name="max_discount_amount"
+            rules={[{ required: true, message: "최대할인금액을 입력해주세요" }]}
+          >
+            <InputNumber min={0} style={{ width: "100%" }} />
+          </Form.Item>
+        )}
         <Form.Item label="설명" name="description">
           <Input.TextArea rows={2} />
         </Form.Item>
