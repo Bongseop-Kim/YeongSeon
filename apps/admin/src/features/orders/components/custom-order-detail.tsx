@@ -1,5 +1,5 @@
 import { Descriptions, Image, Space, Typography } from "antd";
-import type { AdminCustomOrderItem } from "../types/admin-order";
+import type { AdminCustomOrderItem } from "@/features/orders/types/admin-order";
 
 const { Title } = Typography;
 

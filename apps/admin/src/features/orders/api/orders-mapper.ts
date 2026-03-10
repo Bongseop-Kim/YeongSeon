@@ -21,6 +21,15 @@ import type {
   RepairTie,
 } from "../types/admin-order";
 
+// ── ValidationError ────────────────────────────────────────────
+
+class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
 // ── runtime helpers ────────────────────────────────────────────
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -28,9 +37,6 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 
 const str = (v: unknown): string | null =>
   typeof v === "string" ? v : null;
-
-const num = (v: unknown, fallback = 0): number =>
-  typeof v === "number" ? v : fallback;
 
 const bool = (v: unknown): boolean => v === true;
 
@@ -117,6 +123,33 @@ export function parseCustomReformData(
   const rawOptions = isRecord(raw.options) ? raw.options : {};
   const rawPricing = isRecord(raw.pricing) ? raw.pricing : {};
 
+  const quantity = raw.quantity;
+  if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0) {
+    throw new ValidationError(
+      `주문 제작 reformData 검증 실패: quantity가 유한한 양수가 아닙니다 (${quantity}).`
+    );
+  }
+
+  const sewingCost = rawPricing.sewing_cost;
+  const fabricCost = rawPricing.fabric_cost;
+  const totalCost = rawPricing.total_cost;
+
+  if (typeof sewingCost !== "number" || !Number.isFinite(sewingCost)) {
+    throw new ValidationError(
+      `주문 제작 reformData 검증 실패: sewing_cost가 유한한 number가 아닙니다 (${sewingCost}).`
+    );
+  }
+  if (typeof fabricCost !== "number" || !Number.isFinite(fabricCost)) {
+    throw new ValidationError(
+      `주문 제작 reformData 검증 실패: fabric_cost가 유한한 number가 아닙니다 (${fabricCost}).`
+    );
+  }
+  if (typeof totalCost !== "number" || !Number.isFinite(totalCost)) {
+    throw new ValidationError(
+      `주문 제작 reformData 검증 실패: total_cost가 유한한 number가 아닙니다 (${totalCost}).`
+    );
+  }
+
   const options: CustomOrderOptions = {
     tieType: str(rawOptions.tie_type),
     interlining: str(rawOptions.interlining),
@@ -134,9 +167,9 @@ export function parseCustomReformData(
   };
 
   const pricing: CustomOrderPricing = {
-    sewingCost: num(rawPricing.sewing_cost),
-    fabricCost: num(rawPricing.fabric_cost),
-    totalCost: num(rawPricing.total_cost),
+    sewingCost,
+    fabricCost,
+    totalCost,
   };
 
   const refImages = Array.isArray(raw.reference_images)
@@ -156,7 +189,7 @@ export function parseCustomReformData(
     _tag: "custom",
     options,
     pricing,
-    quantity: num(raw.quantity),
+    quantity,
     sample: bool(raw.sample),
     referenceImageUrls: refImages,
     additionalNotes: str(raw.additional_notes),

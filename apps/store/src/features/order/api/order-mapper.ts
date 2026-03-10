@@ -54,7 +54,7 @@ export const toOrderItemInputDTO = (
       if (!item.reformData?.tie) return null;
       const { tie } = item.reformData;
       if (typeof tie.id !== "string") {
-        throw new Error("수선 주문 생성 시 tie.id는 필수입니다.");
+        return null;
       }
       return {
         tie: {
@@ -258,8 +258,21 @@ const parseCustomDataField = (
       `주문 상품 행(${idx})의 reformData(custom)가 올바르지 않습니다: 객체가 아닙니다.`
     );
   }
-  const rawOptions = isRecord(v.options) ? v.options : ({} as Record<string, unknown>);
-  const rawPricing = isRecord(v.pricing) ? v.pricing : ({} as Record<string, unknown>);
+  const rawOptions = v.options;
+  const rawPricing = v.pricing;
+
+  if (!isRecord(rawOptions) || !isRecord(rawPricing)) {
+    return null;
+  }
+
+  if (
+    typeof rawPricing.sewing_cost !== "number" ||
+    typeof rawPricing.fabric_cost !== "number" ||
+    typeof rawPricing.total_cost !== "number"
+  ) {
+    return null;
+  }
+
   const refImages = Array.isArray(v.reference_images)
     ? (v.reference_images as unknown[])
         .filter(
@@ -288,9 +301,9 @@ const parseCustomDataField = (
       careLabel: rawOptions.care_label === true,
     },
     pricing: {
-      sewingCost: typeof rawPricing.sewing_cost === "number" ? rawPricing.sewing_cost : 0,
-      fabricCost: typeof rawPricing.fabric_cost === "number" ? rawPricing.fabric_cost : 0,
-      totalCost: typeof rawPricing.total_cost === "number" ? rawPricing.total_cost : 0,
+      sewingCost: rawPricing.sewing_cost,
+      fabricCost: rawPricing.fabric_cost,
+      totalCost: rawPricing.total_cost,
     },
     sample: v.sample === true,
     referenceImageUrls: refImages,
