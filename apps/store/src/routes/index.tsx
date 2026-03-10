@@ -20,6 +20,9 @@ import ClaimListPage from "@/features/claim/claim-list/page";
 import ClaimFormPage from "@/features/claim/claim-form/page";
 import PaymentSuccessPage from "@/features/payment/success/page";
 import PaymentFailPage from "@/features/payment/fail/page";
+import TokenPurchasePage from "@/features/token-purchase/page";
+import TokenPurchaseSuccessPage from "@/features/token-purchase/success/page";
+import TokenPurchaseFailPage from "@/features/token-purchase/fail/page";
 import CartPage from "@/features/cart/page";
 import FaqPage from "@/features/faq/page";
 import InquiryPage from "@/features/my-page/inquiry/page";
@@ -179,6 +182,30 @@ export default function Router() {
         element={
           <ProtectedRoute>
             <TokenHistoryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/token/purchase"
+        element={
+          <ProtectedRoute>
+            <TokenPurchasePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/token/purchase/success"
+        element={
+          <ProtectedRoute>
+            <TokenPurchaseSuccessPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/token/purchase/fail"
+        element={
+          <ProtectedRoute>
+            <TokenPurchaseFailPage />
           </ProtectedRoute>
         }
       />

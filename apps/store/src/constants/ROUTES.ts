@@ -28,6 +28,9 @@ export const ROUTES = {
   TERMS_OF_SERVICE: "/terms-of-service", // 이용약관
   REFUND_POLICY: "/refund-policy", // 환불정책
   LOGIN: "/login", // 로그인
+  TOKEN_PURCHASE: "/token/purchase", // 토큰 구매
+  TOKEN_PURCHASE_SUCCESS: "/token/purchase/success", // 토큰 구매 성공
+  TOKEN_PURCHASE_FAIL: "/token/purchase/fail", // 토큰 구매 실패
 } as const;
 
 export type ClaimRouteType = "return" | "exchange" | "cancel";

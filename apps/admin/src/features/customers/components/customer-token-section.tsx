@@ -13,6 +13,7 @@ const TOKEN_TYPE_LABELS: Record<string, string> = {
   use: "사용",
   refund: "환불",
   admin: "관리자",
+  purchase: "구매",
 };
 
 const { Text } = Typography;

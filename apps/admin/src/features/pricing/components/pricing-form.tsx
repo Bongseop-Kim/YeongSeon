@@ -6,6 +6,11 @@ import {
   useFabricPrices,
   useUpdatePricingConstant,
   useUpdateFabricPrice,
+  useTokenPricing,
+  useUpdateTokenPricing,
+  TOKEN_PRICING_TIERS,
+  type TokenPricingRow,
+  type TokenPricingKey,
 } from "@/features/pricing/api/pricing-query";
 import type { PricingConstantRow, FabricPriceRow } from "@/features/pricing/types/admin-pricing";
 
@@ -68,12 +73,15 @@ const FABRIC_TYPE_LABELS: Record<string, string> = {
 export function PricingForm() {
   const { data: constants, isLoading: loadingConstants, isError: errorConstants } = usePricingConstants();
   const { data: fabrics, isLoading: loadingFabrics, isError: errorFabrics } = useFabricPrices();
+  const { data: tokenSettings } = useTokenPricing();
 
   const updateConstant = useUpdatePricingConstant();
   const updateFabric = useUpdateFabricPrice();
+  const updateToken = useUpdateTokenPricing();
 
   const [constantDraft, setConstantDraft] = useState<Record<string, number>>({});
   const [fabricDraft, setFabricDraft] = useState<Record<string, number>>({});
+  const [tokenDraft, setTokenDraft] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (constants) {
@@ -95,6 +103,16 @@ export function PricingForm() {
     }
   }, [fabrics]);
 
+  useEffect(() => {
+    if (tokenSettings && tokenSettings.length > 0) {
+      const draft: Record<string, string> = {};
+      for (const row of tokenSettings) {
+        draft[row.key] = row.value;
+      }
+      setTokenDraft(draft);
+    }
+  }, [tokenSettings]);
+
   const saveAll = async () => {
     const constantMutations: PricingConstantRow[] = [];
     for (const row of constants ?? []) {
@@ -115,7 +133,11 @@ export function PricingForm() {
       }
     }
 
-    if (constantMutations.length === 0 && fabricMutations.length === 0) {
+    const tokenMutations: TokenPricingRow[] = (tokenSettings ?? [])
+      .filter((row) => tokenDraft[row.key] !== undefined && tokenDraft[row.key] !== row.value)
+      .map((row) => ({ key: row.key as TokenPricingKey, value: tokenDraft[row.key] }));
+
+    if (constantMutations.length === 0 && fabricMutations.length === 0 && tokenMutations.length === 0) {
       message.info("변경된 항목이 없습니다.");
       return;
     }
@@ -124,14 +146,17 @@ export function PricingForm() {
       await Promise.all([
         ...constantMutations.map((row) => updateConstant.mutateAsync(row)),
         ...fabricMutations.map((row) => updateFabric.mutateAsync(row)),
+        ...(tokenMutations.length > 0 ? [updateToken.mutateAsync(tokenMutations)] : []),
       ]);
-      message.success("가격이 저장되었습니다.");
+      if (constantMutations.length > 0 || fabricMutations.length > 0) {
+        message.success("가격이 저장되었습니다.");
+      }
     } catch {
       // individual errors already shown by mutateAsync onError
     }
   };
 
-  const isSaving = updateConstant.isPending || updateFabric.isPending;
+  const isSaving = updateConstant.isPending || updateFabric.isPending || updateToken.isPending;
 
   if (loadingConstants || loadingFabrics) {
     return (
@@ -244,6 +269,53 @@ export function PricingForm() {
               </Col>
             );
           })}
+        </Row>
+      </Card>
+
+      <Card>
+        <Title level={4}>토큰 구매 가격</Title>
+        <Typography.Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
+          많이 살수록 토큰 1개당 단가가 낮아집니다.
+        </Typography.Text>
+        <Row gutter={[16, 16]}>
+          {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => (
+            <Col key={priceKey} xs={24} sm={8}>
+              <Card size="small" style={{ background: "#fafafa" }}>
+                <Typography.Text strong style={{ display: "block", marginBottom: 12 }}>
+                  {label}
+                </Typography.Text>
+                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                  <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>가격</Typography.Text>
+                    <InputNumber
+                      value={Number(tokenDraft[priceKey]) || undefined}
+                      min={1}
+                      step={100}
+                      formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                      parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
+                      onChange={(v) =>
+                        setTokenDraft((prev) => ({ ...prev, [priceKey]: String(v ?? "") }))
+                      }
+                      style={{ width: "100%" }}
+                      suffix="원"
+                    />
+                  </Space>
+                  <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>토큰 수량</Typography.Text>
+                    <InputNumber
+                      value={Number(tokenDraft[amountKey]) || undefined}
+                      min={1}
+                      onChange={(v) =>
+                        setTokenDraft((prev) => ({ ...prev, [amountKey]: String(v ?? "") }))
+                      }
+                      style={{ width: "100%" }}
+                      suffix="T"
+                    />
+                  </Space>
+                </Space>
+              </Card>
+            </Col>
+          ))}
         </Row>
       </Card>
 

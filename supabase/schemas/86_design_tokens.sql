@@ -6,7 +6,7 @@ CREATE TABLE public.design_tokens (
   id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   amount        integer     NOT NULL CHECK (amount != 0),
-  type          text        NOT NULL CHECK (type = ANY(ARRAY['grant','use','refund','admin'])),
+  type          text        NOT NULL CHECK (type = ANY(ARRAY['grant','use','refund','admin','purchase'])),
   ai_model      text,       -- 'openai' | 'gemini' | NULL
   request_type  text,       -- 'text_only' | 'text_and_image' | NULL
   description   text,
