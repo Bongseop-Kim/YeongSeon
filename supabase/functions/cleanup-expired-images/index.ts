@@ -98,6 +98,11 @@ Deno.serve(async (req) => {
         console.error("ImageKit bulk delete timed out after 30 seconds");
         imagekitFailedIds = withFileId.map((img) => img.id);
       } else {
+        console.error("ImageKit bulk delete threw an unexpected error", {
+          operation: "ImageKit bulk delete",
+          error,
+          ids: withFileId.map((img) => img.id),
+        });
         throw error;
       }
     } finally {

@@ -153,15 +153,15 @@ export const useImageKitUpload = () => {
       .map((f) => f.url!);
   }, [fileList]);
 
-  const getImageRefs = useCallback((): ImageItem[] => {
-    return fileList
-      .filter((f) => f.status === "done" && f.url && (f as UploadFileWithImageItem).fileId)
-      .map((f) => ({
-        url: f.url!,
-        fileId: (f as UploadFileWithImageItem).fileId!,
-      }));
-  }, [fileList]);
-
+  /**
+   * 초기화 함수와 읽기 함수는 반드시 쌍으로 사용해야 합니다.
+   *
+   * - `initFromUrls`   → `getUrls`      : URL 문자열만 필요한 경우 (e.g. 상품 이미지 URL 배열)
+   * - `initFromImageRefs` → (별도 상태로 관리): ImageItem(fileId 포함)이 필요한 경우
+   *
+   * `initFromUrls`로 초기화한 뒤 fileId가 필요한 로직을 수행하면 fileId가 없어
+   * 이미지 생명주기 추적이 불가능해집니다. 두 흐름을 혼용하지 마세요.
+   */
   return {
     fileList,
     uploading,
@@ -172,6 +172,5 @@ export const useImageKitUpload = () => {
     initFromImageRefs,
     moveFile,
     getUrls,
-    getImageRefs,
   };
 };
