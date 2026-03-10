@@ -65,11 +65,6 @@ export function CustomerTokenSection({ userId }: Props) {
       title: "설명",
       render: (value: string | null) => value ?? "-",
     },
-    {
-      dataIndex: "expiresAt",
-      title: "만료일",
-      render: (value: string | null) => value?.slice(0, 10) ?? "-",
-    },
   ];
 
   return (

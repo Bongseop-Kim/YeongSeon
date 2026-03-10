@@ -35,7 +35,6 @@ export interface DesignTokenRow {
   ai_model: string | null;
   request_type: string | null;
   description: string | null;
-  expires_at: string | null;
   created_at: string | null;
 }
 
@@ -87,7 +86,6 @@ export function toAdminCustomerTokenRow(row: DesignTokenRow): AdminCustomerToken
     aiModel: row.ai_model,
     requestType: row.request_type,
     description: row.description,
-    expiresAt: row.expires_at,
     createdAt: row.created_at ?? "",
   };
 }

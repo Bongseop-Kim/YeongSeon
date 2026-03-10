@@ -13,8 +13,7 @@ SET search_path TO 'public'
 AS $$
   SELECT COALESCE(SUM(amount), 0)::integer
   FROM public.design_tokens
-  WHERE user_id = auth.uid()
-    AND (expires_at IS NULL OR expires_at > now());
+  WHERE user_id = auth.uid();
 $$;
 
 -- ── use_design_tokens ─────────────────────────────────────────
@@ -81,12 +80,11 @@ BEGIN
     RAISE EXCEPTION 'cost not configured for key: %', v_cost_key;
   END IF;
 
-  -- 현재 잔액 조회 (만료된 토큰 제외)
+  -- 현재 잔액 조회
   SELECT COALESCE(SUM(amount), 0)::integer
     INTO v_balance
     FROM public.design_tokens
-   WHERE user_id = p_user_id
-     AND (expires_at IS NULL OR expires_at > now());
+   WHERE user_id = p_user_id;
 
   -- 잔액 부족 검사
   IF v_balance < v_cost THEN
@@ -166,7 +164,6 @@ $$;
 CREATE OR REPLACE FUNCTION public.manage_design_tokens_admin(
   p_user_id uuid,
   p_amount integer,
-  p_expires_at timestamptz DEFAULT NULL,
   p_description text DEFAULT NULL
 )
 RETURNS jsonb
@@ -189,28 +186,21 @@ BEGIN
     RAISE EXCEPTION 'description is required for audit trail';
   END IF;
 
+  SELECT COALESCE(SUM(amount), 0)::integer
+    INTO v_balance
+    FROM public.design_tokens
+   WHERE user_id = p_user_id;
+
   IF p_amount < 0 THEN
     PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
-
-    SELECT COALESCE(SUM(amount), 0)::integer
-      INTO v_balance
-      FROM public.design_tokens
-     WHERE user_id = p_user_id
-       AND (expires_at IS NULL OR expires_at > now());
 
     IF v_balance < abs(p_amount) THEN
       RAISE EXCEPTION 'insufficient_tokens';
     END IF;
-  ELSE
-    SELECT COALESCE(SUM(amount), 0)::integer
-      INTO v_balance
-      FROM public.design_tokens
-     WHERE user_id = p_user_id
-       AND (expires_at IS NULL OR expires_at > now());
   END IF;
 
-  INSERT INTO public.design_tokens (user_id, amount, type, description, expires_at)
-  VALUES (p_user_id, p_amount, 'admin', p_description, p_expires_at);
+  INSERT INTO public.design_tokens (user_id, amount, type, description)
+  VALUES (p_user_id, p_amount, 'admin', p_description);
 
   RETURN jsonb_build_object(
     'success', true,
@@ -426,14 +416,12 @@ BEGIN
     ELSE v_rec.plan_key
   END;
 
-  -- 토큰 지급 (expires_at = NULL: 구매 토큰은 만료 없음)
-  INSERT INTO public.design_tokens (user_id, amount, type, description, expires_at)
+  INSERT INTO public.design_tokens (user_id, amount, type, description)
   VALUES (
     v_rec.user_id,
     v_rec.token_amount,
     'purchase',
-    '토큰 구매 (' || v_plan_label || ', ' || v_rec.token_amount || '개)',
-    NULL
+    '토큰 구매 (' || v_plan_label || ', ' || v_rec.token_amount || '개)'
   );
 
   RETURN jsonb_build_object(
@@ -515,7 +503,6 @@ BEGIN
     FROM public.design_tokens AS dt
     JOIN requested_users AS ru
       ON ru.user_id = dt.user_id
-    WHERE dt.expires_at IS NULL OR dt.expires_at > now()
     GROUP BY dt.user_id
   )
   SELECT ru.user_id, COALESCE(b.balance, 0)::integer AS balance

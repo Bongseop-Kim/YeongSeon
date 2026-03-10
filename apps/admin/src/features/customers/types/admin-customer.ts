@@ -46,14 +46,12 @@ export interface AdminCustomerTokenRow {
   aiModel: string | null;
   requestType: string | null;
   description: string | null;
-  expiresAt: string | null;
   createdAt: string;
 }
 
 export interface AdminTokenManageForm {
   mode: "grant" | "deduct";
   amount: number;
-  expiresAt?: string;
   description: string;
 }
 

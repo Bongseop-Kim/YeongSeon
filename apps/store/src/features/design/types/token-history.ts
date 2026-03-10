@@ -5,6 +5,5 @@ export interface DesignTokenHistoryItem {
   aiModel: string | null;
   requestType: string | null;
   description: string | null;
-  expiresAt: string | null;
   createdAt: string;
 }

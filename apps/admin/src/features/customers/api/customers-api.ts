@@ -5,7 +5,6 @@ import type { DesignTokenRow } from "./customers-mapper";
 export interface ManageCustomerTokensParams {
   userId: string;
   amount: number;
-  expiresAt?: string;
   description: string;
 }
 
@@ -56,13 +55,11 @@ export async function getCustomerTokenHistory(userId: string): Promise<DesignTok
 export async function manageCustomerTokens({
   userId,
   amount,
-  expiresAt,
   description,
 }: ManageCustomerTokensParams): Promise<void> {
   const { error } = await supabase.rpc("manage_design_tokens_admin", {
     p_user_id: userId,
     p_amount: amount,
-    p_expires_at: expiresAt,
     p_description: description,
   });
 
