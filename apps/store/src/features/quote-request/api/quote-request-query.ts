@@ -10,7 +10,7 @@ import { useAuthStore } from "@/store/auth";
 export const quoteRequestKeys = {
   all: ["quote-requests"] as const,
   list: (userId?: string) => [...quoteRequestKeys.all, "list", userId] as const,
-  detail: (id?: string) => ["quoteRequest", id] as const,
+  detail: (id?: string) => [...quoteRequestKeys.all, "detail", id] as const,
 };
 
 export const useQuoteRequests = () => {

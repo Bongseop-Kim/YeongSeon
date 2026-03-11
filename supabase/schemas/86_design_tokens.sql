@@ -76,7 +76,7 @@ CREATE TABLE public.token_refund_requests (
   user_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   order_id           uuid        NOT NULL REFERENCES public.orders(id),
   paid_token_amount  integer     NOT NULL CHECK (paid_token_amount > 0),
-  bonus_token_amount integer     NOT NULL DEFAULT 0,
+  bonus_token_amount integer     NOT NULL DEFAULT 0 CHECK (bonus_token_amount >= 0),
   refund_amount      integer     NOT NULL CHECK (refund_amount > 0),
   status             text        NOT NULL DEFAULT 'pending'
                      CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
