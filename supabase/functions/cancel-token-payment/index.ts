@@ -135,6 +135,20 @@ Deno.serve(async (req) => {
     return jsonResponse(422, { error: "Refund request has invalid refund_data" });
   }
 
+  if (
+    !Number.isFinite(rd.paid_token_amount) ||
+    !Number.isFinite(rd.bonus_token_amount) ||
+    !Number.isFinite(rd.refund_amount) ||
+    rd.paid_token_amount < 0 ||
+    rd.bonus_token_amount < 0 ||
+    rd.refund_amount <= 0
+  ) {
+    errorLogger("invalid_refund_data", new Error("refund_data missing or invalid"), {
+      refundRequestId: payload.refundRequestId,
+    });
+    return jsonResponse(422, { error: "Refund request has invalid refund_data" });
+  }
+
   const refundReq = refundReqData as {
     id: string;
     user_id: string;
@@ -147,7 +161,7 @@ Deno.serve(async (req) => {
     };
   };
 
-  if (refundReq.status !== "접수" && refundReq.status !== "처리중") {
+  if (refundReq.status !== "접수") {
     return jsonResponse(409, {
       error: `Refund request is not processable (status: ${refundReq.status})`,
     });
@@ -287,6 +301,15 @@ Deno.serve(async (req) => {
     }
 
     const verifyText = await tossVerifyResponse.text();
+    if (!tossVerifyResponse.ok) {
+      errorLogger("toss_verify_error", new Error("Toss verify returned non-2xx"), {
+        refundRequestId: payload.refundRequestId,
+        paymentKey: maskPaymentKey(order.payment_key),
+        status: tossVerifyResponse.status,
+      });
+      return jsonResponse(502, { error: "Failed to verify payment cancellation with Toss" });
+    }
+
     let parsedVerify: Record<string, unknown> = {};
     try {
       parsedVerify = verifyText ? (JSON.parse(verifyText) as Record<string, unknown>) : {};

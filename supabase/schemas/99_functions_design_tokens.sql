@@ -218,13 +218,20 @@ CREATE OR REPLACE FUNCTION public.manage_design_tokens_admin(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
+-- 관리자가 다른 사용자의 토큰을 조정해야 하므로 RLS를 일시적으로 우회하기 위해
+-- 이 함수는 SECURITY DEFINER로 실행된다. 이 권한 상승은 관리 토큰 관리(admin)
+-- 목적으로만 제한되며, 관리자(admin role)만 호출 가능하다.
 SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
   v_balance integer;
 BEGIN
-  IF NOT public.is_admin() THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid()
+      AND role = 'admin'
+  ) THEN
     RAISE EXCEPTION 'unauthorized: admin only';
   END IF;
 
@@ -554,14 +561,11 @@ BEGIN
     INTO v_order
     FROM public.orders
    WHERE id = p_order_id
+     AND user_id = v_user_id
      FOR UPDATE;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'order not found';
-  END IF;
-
-  IF v_order.user_id IS DISTINCT FROM v_user_id THEN
-    RAISE EXCEPTION 'Forbidden: order not owned by user';
   END IF;
 
   IF v_order.order_type != 'token' THEN
