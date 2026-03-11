@@ -113,20 +113,13 @@ function RefundDialog({ order, open, onClose }: RefundDialogProps) {
             <span className="text-zinc-500">유료 토큰</span>
             <span className="font-medium">{order.paidTokensGranted.toLocaleString()}개</span>
           </div>
-          {order.bonusTokensGranted > 0 && (
-            <div className="flex justify-between">
-              <span className="text-zinc-500">보너스 토큰 (환불 시 회수)</span>
-              <span className="font-medium text-amber-600">{order.bonusTokensGranted.toLocaleString()}개</span>
-            </div>
-          )}
           <div className="flex justify-between border-t border-zinc-200 pt-3">
             <span className="font-semibold text-zinc-700">환불 금액</span>
             <span className="font-bold text-zinc-900">{order.totalPrice.toLocaleString()}원</span>
           </div>
         </div>
         <p className="text-xs text-zinc-400">
-          * 보너스 토큰은 환불 불가하며 환불 승인 시 자동 회수됩니다.<br />
-          * 유료 토큰을 1개라도 사용한 경우 환불이 불가합니다.
+          * 가장 최근 구매한 토큰을 하나도 사용하지 않은 경우에만 환불이 가능합니다.
         </p>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isPending}>
@@ -169,11 +162,6 @@ function PurchaseRow({ item, refundOrder, onRequestRefund }: PurchaseRowProps) {
         {refundOrder ? (
           <div className="flex flex-wrap gap-3 text-xs text-zinc-500">
             <span>유료 {refundOrder.paidTokensGranted.toLocaleString()}토큰</span>
-            {refundOrder.bonusTokensGranted > 0 && (
-              <span className="text-amber-600">
-                + 보너스 {refundOrder.bonusTokensGranted.toLocaleString()}토큰
-              </span>
-            )}
           </div>
         ) : (
           <p className="break-words text-sm text-zinc-700">

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
+import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PaymentWidget, { type PaymentWidgetRef } from "@/features/payment/components/payment-widget";
@@ -18,6 +19,7 @@ const TokenPurchasePage = () => {
   const pendingRequestIdRef = useRef<number>(0);
   const isRequestingRef = useRef(false);
   const [selectedPlan, setSelectedPlan] = useState<TokenPlanKey | null>(null);
+  const [withdrawalConsent, setWithdrawalConsent] = useState(false);
   const [purchaseInfo, setPurchaseInfo] = useState<{
     paymentGroupId: string;
     price: number;
@@ -61,6 +63,10 @@ const TokenPurchasePage = () => {
 
   const handleRequestPayment = async () => {
     if (isRequestingRef.current) return;
+    if (!withdrawalConsent) {
+      toast.error("청약철회 제한에 동의해주세요.");
+      return;
+    }
     if (!user) {
       toast.error("로그인이 필요합니다.");
       navigate(ROUTES.LOGIN);
@@ -188,11 +194,20 @@ const TokenPurchasePage = () => {
                 </CardContent>
               </Card>
 
+              <ConsentCheckbox
+                id="withdrawal-consent"
+                checked={withdrawalConsent}
+                onCheckedChange={setWithdrawalConsent}
+                label="청약철회 제한 동의"
+                description="토큰은 구매 즉시 사용 가능한 디지털 이용권으로, 이미지 생성에 사용한 후에는 환불되지 않습니다."
+                required
+              />
+
               <Button
                 onClick={handleRequestPayment}
                 className="w-full rounded-full"
                 size="lg"
-                disabled={isPaymentLoading}
+                disabled={isPaymentLoading || !withdrawalConsent}
               >
                 {isPaymentLoading
                   ? "결제 요청 중..."

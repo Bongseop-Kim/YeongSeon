@@ -14,8 +14,8 @@ SET search_path TO 'public'
 AS $$
   SELECT jsonb_build_object(
     'total', COALESCE(SUM(amount), 0)::integer,
-    'paid',  COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0)::integer,
-    'bonus', COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)::integer
+    'paid',  COALESCE(SUM(amount), 0)::integer,
+    'bonus', 0
   )
   FROM public.design_tokens
   WHERE user_id = auth.uid();
@@ -41,11 +41,7 @@ AS $$
 DECLARE
   v_cost_key     text;
   v_cost         integer;
-  v_paid_bal     integer;
-  v_bonus_bal    integer;
   v_total_bal    integer;
-  v_paid_deduct  integer;
-  v_bonus_deduct integer;
   v_caller_role  text;
 BEGIN
   -- 소유권 검증: service_role이 아닌 경우 auth.uid() 일치 확인
@@ -107,15 +103,11 @@ BEGIN
     );
   END IF;
 
-  -- 유료/보너스 잔액 분리 조회
-  SELECT
-    COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0)::integer,
-    COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)::integer
-  INTO v_paid_bal, v_bonus_bal
+  -- 전체 잔액 조회
+  SELECT COALESCE(SUM(amount), 0)::integer
+  INTO v_total_bal
   FROM public.design_tokens
   WHERE user_id = p_user_id;
-
-  v_total_bal := v_paid_bal + v_bonus_bal;
 
   -- 잔액 부족 검사
   IF v_total_bal < v_cost THEN
@@ -127,31 +119,13 @@ BEGIN
     );
   END IF;
 
-  -- 유료 먼저 차감, 부족분은 보너스에서
-  v_paid_deduct  := LEAST(v_cost, v_paid_bal);
-  v_bonus_deduct := v_cost - v_paid_deduct;
-
-  -- 유료 차감
-  IF v_paid_deduct > 0 THEN
-    INSERT INTO public.design_tokens (
-      user_id, amount, type, token_class, ai_model, request_type, description
-    ) VALUES (
-      p_user_id, -v_paid_deduct, 'use', 'paid',
-      p_ai_model, p_request_type,
-      'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ') - 유료'
-    );
-  END IF;
-
-  -- 보너스 차감
-  IF v_bonus_deduct > 0 THEN
-    INSERT INTO public.design_tokens (
-      user_id, amount, type, token_class, ai_model, request_type, description
-    ) VALUES (
-      p_user_id, -v_bonus_deduct, 'use', 'bonus',
-      p_ai_model, p_request_type,
-      'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ') - 보너스'
-    );
-  END IF;
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, ai_model, request_type, description
+  ) VALUES (
+    p_user_id, -v_cost, 'use', 'paid',
+    p_ai_model, p_request_type,
+    'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
+  );
 
   RETURN jsonb_build_object(
     'success', true,
@@ -414,22 +388,15 @@ SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 DECLARE
-  v_user_id  uuid;
-  v_paid_bal integer;
-  v_result   jsonb;
+  v_user_id uuid;
+  v_result  jsonb;
 BEGIN
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'unauthorized: must be logged in';
   END IF;
 
-  -- 현재 유료 토큰 잔액
-  SELECT COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0)::integer
-    INTO v_paid_bal
-    FROM public.design_tokens
-   WHERE user_id = v_user_id;
-
-  WITH all_token_orders AS (
+  WITH completed_token_orders AS (
     SELECT
       o.id                                              AS order_id,
       o.order_number,
@@ -456,71 +423,59 @@ BEGIN
     WHERE o.user_id = v_user_id
       AND o.order_type = 'token'
       AND o.status = '완료'
-  ),
-  running AS (
-    SELECT
-      *,
-      SUM(paid_tokens_granted) OVER (
-        ORDER BY created_at DESC
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-      ) AS cumulative_paid
-    FROM all_token_orders
-    WHERE active_refund_request IS NULL
-  ),
-  refundability AS (
-    -- 진행 중 환불이 있는 주문
-    SELECT
-      ato.order_id,
-      ato.order_number,
-      ato.created_at,
-      ato.total_price,
-      ato.paid_tokens_granted,
-      0::integer                                        AS bonus_tokens_granted,
-      false                                             AS is_refundable,
-      CASE (ato.active_refund_request->>'status')
-        WHEN 'pending'  THEN 'pending_refund'
-        WHEN 'approved' THEN 'approved_refund'
-        ELSE 'active_refund'
-      END                                               AS not_refundable_reason,
-      (ato.active_refund_request->>'id')::uuid          AS pending_request_id
-    FROM all_token_orders ato
-    WHERE ato.active_refund_request IS NOT NULL
-
-    UNION ALL
-
-    -- LIFO 계산 대상 주문
-    SELECT
-      r.order_id,
-      r.order_number,
-      r.created_at,
-      r.total_price,
-      r.paid_tokens_granted,
-      0::integer                                        AS bonus_tokens_granted,
-      (r.cumulative_paid <= v_paid_bal AND r.paid_tokens_granted > 0) AS is_refundable,
-      CASE
-        WHEN r.paid_tokens_granted = 0 THEN 'no_paid_tokens'
-        WHEN r.cumulative_paid > v_paid_bal THEN 'tokens_used'
-        ELSE NULL
-      END                                               AS not_refundable_reason,
-      NULL::uuid                                        AS pending_request_id
-    FROM running r
   )
   SELECT jsonb_agg(
     jsonb_build_object(
-      'order_id',              rf.order_id,
-      'order_number',          rf.order_number,
-      'created_at',            rf.created_at,
-      'total_price',           rf.total_price,
-      'paid_tokens_granted',   rf.paid_tokens_granted,
-      'bonus_tokens_granted',  rf.bonus_tokens_granted,
-      'is_refundable',         rf.is_refundable,
-      'not_refundable_reason', rf.not_refundable_reason,
-      'pending_request_id',    rf.pending_request_id
+      'order_id',              cto.order_id,
+      'order_number',          cto.order_number,
+      'created_at',            cto.created_at,
+      'total_price',           cto.total_price,
+      'paid_tokens_granted',   cto.paid_tokens_granted,
+      'bonus_tokens_granted',  0,
+      'is_refundable',         CASE
+                                 WHEN cto.active_refund_request IS NOT NULL THEN false
+                                 WHEN cto.order_rank = 1
+                                   AND NOT EXISTS (
+                                     SELECT 1
+                                     FROM public.design_tokens dt
+                                     WHERE dt.user_id = v_user_id
+                                       AND dt.type = 'use'
+                                       AND dt.created_at > cto.created_at
+                                   ) THEN true
+                                 ELSE false
+                               END,
+      'not_refundable_reason', CASE
+                                 WHEN cto.active_refund_request IS NOT NULL THEN
+                                   CASE (cto.active_refund_request->>'status')
+                                     WHEN 'pending' THEN 'pending_refund'
+                                     WHEN 'approved' THEN 'approved_refund'
+                                     ELSE 'active_refund'
+                                   END
+                                 WHEN cto.order_rank = 1
+                                   AND NOT EXISTS (
+                                     SELECT 1
+                                     FROM public.design_tokens dt
+                                     WHERE dt.user_id = v_user_id
+                                       AND dt.type = 'use'
+                                       AND dt.created_at > cto.created_at
+                                   ) THEN NULL
+                                 ELSE 'tokens_used'
+                               END,
+      'pending_request_id',    CASE
+                                 WHEN cto.active_refund_request IS NOT NULL
+                                   THEN (cto.active_refund_request->>'id')::uuid
+                                 ELSE NULL::uuid
+                               END
     )
-    ORDER BY rf.created_at DESC
+    ORDER BY cto.created_at DESC
   )
   INTO v_result
-  FROM refundability rf;
+  FROM (
+    SELECT
+      cto.*,
+      RANK() OVER (ORDER BY cto.created_at DESC) AS order_rank
+    FROM completed_token_orders cto
+  ) cto;
 
   RETURN COALESCE(v_result, '[]'::jsonb);
 END;
@@ -541,8 +496,8 @@ AS $$
 DECLARE
   v_user_id       uuid;
   v_order         record;
+  v_latest_order_id uuid;
   v_paid_granted  integer;
-  v_paid_bal      integer;
   v_request_id    uuid;
   v_refund_amount integer;
 BEGIN
@@ -552,7 +507,7 @@ BEGIN
   END IF;
 
   -- 주문 검증: 본인 소유 + 토큰 주문 + 완료 상태
-  SELECT id, user_id, total_price, order_type, status
+  SELECT id, user_id, total_price, order_type, status, created_at
     INTO v_order
     FROM public.orders
    WHERE id = p_order_id
@@ -591,15 +546,27 @@ BEGIN
     RAISE EXCEPTION 'no paid tokens found for this order';
   END IF;
 
-  -- 현재 유료 잔액 조회
-  SELECT COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0)::integer
-    INTO v_paid_bal
-    FROM public.design_tokens
-   WHERE user_id = v_user_id;
+  SELECT id
+    INTO v_latest_order_id
+    FROM public.orders
+   WHERE user_id = v_user_id
+     AND order_type = 'token'
+     AND status = '완료'
+   ORDER BY created_at DESC
+   LIMIT 1;
 
-  -- 전액 환불 가능 여부: 현재 유료 잔액 >= 해당 주문 유료 지급량
-  IF v_paid_bal < v_paid_granted THEN
-    RAISE EXCEPTION 'insufficient paid tokens for refund: balance=%, required=%', v_paid_bal, v_paid_granted;
+  IF v_latest_order_id IS DISTINCT FROM p_order_id THEN
+    RAISE EXCEPTION 'not the latest order';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.design_tokens dt
+    WHERE dt.user_id = v_user_id
+      AND dt.type = 'use'
+      AND dt.created_at > v_order.created_at
+  ) THEN
+    RAISE EXCEPTION 'tokens_used_after_order';
   END IF;
 
   v_refund_amount := v_order.total_price;
@@ -714,18 +681,6 @@ BEGIN
     'refund_' || p_request_id::text || '_paid'
   )
   ON CONFLICT (work_id) DO NOTHING;
-
-  -- 보너스 토큰 회수 (있는 경우만)
-  IF v_req.bonus_token_amount > 0 THEN
-    INSERT INTO public.design_tokens (
-      user_id, amount, type, token_class, description, work_id
-    ) VALUES (
-      v_req.user_id, -v_req.bonus_token_amount, 'refund', 'bonus',
-      '토큰 환불 승인 (보너스)',
-      'refund_' || p_request_id::text || '_bonus'
-    )
-    ON CONFLICT (work_id) DO NOTHING;
-  END IF;
 
   -- 주문 취소 처리 (전액 환불이므로 항상 취소)
   UPDATE public.orders
