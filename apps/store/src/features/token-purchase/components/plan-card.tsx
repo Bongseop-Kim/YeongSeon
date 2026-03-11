@@ -51,7 +51,7 @@ export function PlanCard({
         <span className="text-2xl font-semibold text-zinc-900">
           {tokenAmount != null ? tokenAmount.toLocaleString() : "–"}
         </span>
-        <span className="text-sm text-zinc-500">토큰</span>
+        {tokenAmount != null && <span className="text-sm text-zinc-500">토큰</span>}
       </div>
 
       {/* 가격 */}
@@ -59,7 +59,7 @@ export function PlanCard({
         <span className="text-4xl font-bold text-zinc-900">
           {price != null ? price.toLocaleString() : "–"}
         </span>
-        <span className="mb-1 text-sm text-zinc-500">원</span>
+        {price != null && <span className="mb-1 text-sm text-zinc-500">원</span>}
       </div>
 
       {/* 설명 */}
