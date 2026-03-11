@@ -40,3 +40,5 @@ dist-ssr
 
 # AI agent plan/design docs (local only)
 docs/plans/
+.superpowers/
+docs/superpowers/

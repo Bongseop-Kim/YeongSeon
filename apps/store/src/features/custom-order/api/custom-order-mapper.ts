@@ -37,8 +37,8 @@ export const toCreateCustomOrderOptionsInput = (
   reorder: normalizeBoolean(options.reorder),
   fabricType: normalizeEnum(options.fabricType, ["SILK", "POLY"]),
   designType: normalizeEnum(options.designType, ["PRINTING", "YARN_DYED"]),
-  tieType: normalizeEnum(options.tieType, ["MANUAL", "AUTO"]),
-  interlining: normalizeEnum(options.interlining, ["POLY", "WOOL"]),
+  tieType: normalizeEnum(options.tieType, ["AUTO"]),
+  interlining: normalizeEnum(options.interlining, ["WOOL"]),
   interliningThickness: normalizeEnum(options.interliningThickness, [
     "THICK",
     "THIN",

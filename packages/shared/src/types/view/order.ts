@@ -68,8 +68,20 @@ export interface CustomOrderItem {
   appliedCoupon?: AppliedCoupon;
 }
 
-// 주문 아이템 (일반 상품, 수선 또는 주문 제작)
-export type OrderItem = ProductOrderItem | ReformOrderItem | CustomOrderItem;
+// 토큰 구매 아이템
+export interface TokenOrderItem {
+  id: string;
+  type: "token";
+  quantity: number;
+  appliedCoupon?: AppliedCoupon;
+}
+
+// 주문 아이템 (일반 상품, 수선, 주문 제작 또는 토큰 구매)
+export type OrderItem =
+  | ProductOrderItem
+  | ReformOrderItem
+  | CustomOrderItem
+  | TokenOrderItem;
 
 // 배송지 정보
 export interface ShippingInfo {

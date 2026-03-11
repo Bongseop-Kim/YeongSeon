@@ -65,7 +65,18 @@ export interface CustomOrderItemDTO {
   appliedCoupon?: AppliedCouponDTO;
 }
 
-export type OrderItemDTO = ProductOrderItemDTO | ReformOrderItemDTO | CustomOrderItemDTO;
+export interface TokenOrderItemDTO {
+  id: string;
+  type: "token";
+  quantity: number;
+  appliedCoupon?: AppliedCouponDTO;
+}
+
+export type OrderItemDTO =
+  | ProductOrderItemDTO
+  | ReformOrderItemDTO
+  | CustomOrderItemDTO
+  | TokenOrderItemDTO;
 
 export interface OrderViewDTO {
   id: string;
@@ -110,7 +121,7 @@ export interface OrderDetailRowDTO {
 export interface OrderItemRowDTO {
   order_id: string;
   id: string;
-  type: "product" | "reform" | "custom";
+  type: "product" | "reform" | "custom" | "token";
   product: ProductDTO | null;
   selectedOption: ProductOptionDTO | null;
   quantity: number;

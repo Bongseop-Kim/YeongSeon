@@ -6,8 +6,8 @@ export interface CreateCustomOrderOptionsDto {
   reorder: boolean;
   fabricType: "SILK" | "POLY" | null;
   designType: "PRINTING" | "YARN_DYED" | null;
-  tieType: "MANUAL" | "AUTO" | null;
-  interlining: "POLY" | "WOOL" | null;
+  tieType: "AUTO" | null;
+  interlining: "WOOL" | null;
   interliningThickness: "THICK" | "THIN" | null;
   sizeType: "ADULT" | "CHILD" | null;
   tieWidth: number;
@@ -26,8 +26,8 @@ export interface CreateCustomOrderOptionsDtoSnakeCase {
   reorder: boolean;
   fabric_type: "SILK" | "POLY" | null;
   design_type: "PRINTING" | "YARN_DYED" | null;
-  tie_type: "MANUAL" | "AUTO" | null;
-  interlining: "POLY" | "WOOL" | null;
+  tie_type: "AUTO" | null;
+  interlining: "WOOL" | null;
   interlining_thickness: "THICK" | "THIN" | null;
   size_type: "ADULT" | "CHILD" | null;
   tie_width: number;

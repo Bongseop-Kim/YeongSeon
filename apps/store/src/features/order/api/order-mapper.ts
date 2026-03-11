@@ -448,9 +448,14 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         `주문 상품 행(${i})이 올바르지 않습니다: 필수 필드(id, order_id, quantity, created_at) 누락.`
       );
     }
-    if (row.type !== "product" && row.type !== "reform" && row.type !== "custom") {
+    if (
+      row.type !== "product" &&
+      row.type !== "reform" &&
+      row.type !== "custom" &&
+      row.type !== "token"
+    ) {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product", "reform", "custom" 중 하나가 아닙니다.`
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product", "reform", "custom", "token" 중 하나가 아닙니다.`
       );
     }
     const product = parseProductField(row.product, i);
@@ -470,6 +475,20 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
       throw new Error(
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "custom"인 경우 reformData(custom) 필드가 필요합니다.`
       );
+    }
+    if (row.type === "token") {
+      return {
+        order_id: row.order_id,
+        id: row.id,
+        type: "token",
+        product: null,
+        selectedOption: null,
+        quantity: row.quantity,
+        reformData: null,
+        customData: null,
+        appliedCoupon: parseAppliedCouponField(row.appliedCoupon, i),
+        created_at: row.created_at,
+      };
     }
     return {
       order_id: row.order_id,
@@ -535,4 +554,3 @@ export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
 
 export const fromOrderItemRowDTO = (item: OrderItemRowDTO): OrderItemDTO =>
   normalizeItemRow(item);
-
