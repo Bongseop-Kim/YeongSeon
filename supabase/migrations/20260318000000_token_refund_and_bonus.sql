@@ -1,10 +1,100 @@
 -- =============================================================
--- 99_functions_design_tokens.sql  –  Design token RPC functions
+-- 20260318000000_token_refund_and_bonus.sql
+-- 토큰 환불 정책 + 보너스 토큰 도입
 -- =============================================================
 
--- ── get_design_token_balance ──────────────────────────────────
--- Returns the current token balance breakdown for the authenticated user.
--- Returns: { total, paid, bonus }
+-- ── Phase 1-1: design_tokens에 token_class 컬럼 추가 ──────────
+ALTER TABLE public.design_tokens
+  ADD COLUMN token_class text NOT NULL DEFAULT 'paid'
+    CHECK (token_class IN ('paid', 'bonus', 'free'));
+
+-- 기존 grant 레코드를 'free'로 설정 (신규 가입 무료 지급)
+UPDATE public.design_tokens SET token_class = 'free' WHERE type = 'grant';
+
+-- 성능 인덱스
+CREATE INDEX idx_design_tokens_user_class
+  ON public.design_tokens (user_id, token_class);
+
+-- ── Phase 1-2: token_refund_requests 테이블 생성 ─────────────
+CREATE TABLE public.token_refund_requests (
+  id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  order_id           uuid        NOT NULL REFERENCES public.orders(id),
+  paid_token_amount  integer     NOT NULL CHECK (paid_token_amount > 0),
+  bonus_token_amount integer     NOT NULL DEFAULT 0,
+  refund_amount      integer     NOT NULL CHECK (refund_amount > 0),
+  status             text        NOT NULL DEFAULT 'pending'
+                     CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
+  reason             text,
+  admin_memo         text,
+  processed_by       uuid        REFERENCES auth.users(id),
+  processed_at       timestamptz,
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  updated_at         timestamptz NOT NULL DEFAULT now()
+);
+
+-- 동일 주문에 pending 중복 방지
+CREATE UNIQUE INDEX idx_token_refund_pending_order
+  ON public.token_refund_requests (order_id) WHERE status = 'pending';
+CREATE INDEX idx_token_refund_user
+  ON public.token_refund_requests (user_id, created_at DESC);
+CREATE INDEX idx_token_refund_status
+  ON public.token_refund_requests (status) WHERE status = 'pending';
+
+-- RLS: SELECT(본인+관리자), INSERT/UPDATE는 RPC 전용
+ALTER TABLE public.token_refund_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own refund requests"
+  ON public.token_refund_requests FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all refund requests"
+  ON public.token_refund_requests FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
+-- ── Phase 1-3: admin_settings에 보너스 토큰 키 추가 ──────────
+INSERT INTO public.admin_settings (key, value) VALUES
+  ('token_plan_starter_bonus_amount', '0'),
+  ('token_plan_popular_bonus_amount', '15'),
+  ('token_plan_pro_bonus_amount',     '50')
+ON CONFLICT (key) DO NOTHING;
+
+-- ── Phase 2-1: grant_initial_design_tokens 트리거 함수 수정 ──
+-- token_class='free' 명시
+CREATE OR REPLACE FUNCTION public.grant_initial_design_tokens()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_amount integer;
+BEGIN
+  SELECT CASE
+    WHEN value ~ '^[0-9]+$' AND value::integer >= 1 THEN value::integer
+    ELSE 30
+  END
+  INTO v_amount
+  FROM public.admin_settings
+  WHERE key = 'design_token_initial_grant';
+
+  IF v_amount IS NULL THEN
+    v_amount := 30;
+  END IF;
+
+  INSERT INTO public.design_tokens (user_id, amount, type, token_class, description)
+  VALUES (NEW.id, v_amount, 'grant', 'free', '신규 가입 토큰 지급');
+
+  RETURN NEW;
+END;
+$$;
+
+-- ── Phase 2-2: get_design_token_balance 수정 ─────────────────
+-- total/paid/bonus 분리 반환 (jsonb)
+-- 반환 타입 변경 (integer → jsonb)이므로 DROP 후 재생성
+DROP FUNCTION IF EXISTS public.get_design_token_balance();
 CREATE OR REPLACE FUNCTION public.get_design_token_balance()
 RETURNS jsonb
 LANGUAGE sql
@@ -21,17 +111,13 @@ AS $$
   WHERE user_id = auth.uid();
 $$;
 
--- ── use_design_tokens ─────────────────────────────────────────
--- Deducts tokens for a design generation request.
--- SECURITY DEFINER 유지 사유: advisory lock + design_tokens INSERT는 RLS로 허용되지 않음
--- service_role(Edge Function)에서 호출 시 소유권 검증 면제
--- 차감 순서: 유료 먼저, 부족분은 보너스에서
--- Returns: { success, cost, balance } or { success: false, error: '...', balance, cost }
+-- ── Phase 2-3: use_design_tokens 수정 ────────────────────────
+-- pending 환불 체크 + 유료/보너스 분리 차감
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
-  p_ai_model     text,             -- 'openai' | 'gemini'
-  p_request_type text,            -- 'text_only' | 'text_and_image'
-  p_quality      text DEFAULT 'standard'  -- 'high' | 'standard'
+  p_ai_model     text,
+  p_request_type text,
+  p_quality      text DEFAULT 'standard'
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -39,16 +125,16 @@ SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 DECLARE
-  v_cost_key     text;
-  v_cost         integer;
-  v_paid_bal     integer;
-  v_bonus_bal    integer;
-  v_total_bal    integer;
-  v_paid_deduct  integer;
+  v_cost_key    text;
+  v_cost        integer;
+  v_paid_bal    integer;
+  v_bonus_bal   integer;
+  v_total_bal   integer;
+  v_paid_deduct integer;
   v_bonus_deduct integer;
-  v_caller_role  text;
+  v_caller_role text;
 BEGIN
-  -- 소유권 검증: service_role이 아닌 경우 auth.uid() 일치 확인
+  -- 소유권 검증
   v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
   IF v_caller_role IS DISTINCT FROM 'service_role' AND auth.uid() IS DISTINCT FROM p_user_id THEN
     RAISE EXCEPTION 'unauthorized: caller does not own this resource';
@@ -161,105 +247,7 @@ BEGIN
 END;
 $$;
 
--- ── refund_design_tokens ──────────────────────────────────────
--- Refunds tokens when image generation fails after text succeeds.
--- SECURITY DEFINER 유지 사유: design_tokens INSERT는 RLS로 허용되지 않음
--- service_role 전용이며 work_id 기반 멱등성으로 중복 환불을 방지함
-CREATE OR REPLACE FUNCTION public.refund_design_tokens(
-  p_user_id      uuid,
-  p_amount       integer,
-  p_ai_model     text,
-  p_request_type text,
-  p_work_id      text
-)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-DECLARE
-  v_caller_role text;
-BEGIN
-  -- service_role 전용: 클라이언트 직접 호출 차단
-  v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
-  IF v_caller_role IS DISTINCT FROM 'service_role' THEN
-    RAISE EXCEPTION 'unauthorized: refund requires service_role';
-  END IF;
-
-  IF p_amount <= 0 THEN
-    RETURN;
-  END IF;
-
-  -- work_id 기반 멱등성: 동일 work_id로 이미 환불된 경우 무시
-  INSERT INTO public.design_tokens (user_id, amount, type, token_class, ai_model, request_type, description, work_id)
-  VALUES (
-    p_user_id,
-    p_amount,
-    'refund',
-    'paid',  -- 이미지 생성 실패 환불은 유료 토큰 반환
-    p_ai_model,
-    p_request_type,
-    '이미지 생성 실패 환불 (' || p_ai_model || ')',
-    p_work_id
-  )
-  ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
-END;
-$$;
-
--- ── manage_design_tokens_admin ───────────────────────────────
--- Admin-only grant/deduction for design tokens with audit trail.
-CREATE OR REPLACE FUNCTION public.manage_design_tokens_admin(
-  p_user_id uuid,
-  p_amount integer,
-  p_description text DEFAULT NULL
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-DECLARE
-  v_balance integer;
-BEGIN
-  IF NOT public.is_admin() THEN
-    RAISE EXCEPTION 'unauthorized: admin only';
-  END IF;
-
-  IF p_amount = 0 THEN
-    RAISE EXCEPTION 'amount must not be zero';
-  END IF;
-
-  IF p_description IS NULL OR trim(p_description) = '' THEN
-    RAISE EXCEPTION 'description is required for audit trail';
-  END IF;
-
-  SELECT COALESCE(SUM(amount), 0)::integer
-    INTO v_balance
-    FROM public.design_tokens
-   WHERE user_id = p_user_id;
-
-  IF p_amount < 0 THEN
-    PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
-
-    IF v_balance < abs(p_amount) THEN
-      RAISE EXCEPTION 'insufficient_tokens';
-    END IF;
-  END IF;
-
-  INSERT INTO public.design_tokens (user_id, amount, type, description)
-  VALUES (p_user_id, p_amount, 'admin', p_description);
-
-  RETURN jsonb_build_object(
-    'success', true,
-    'new_balance', v_balance + p_amount
-  );
-END;
-$$;
-
--- ── get_token_plans ───────────────────────────────────────────
--- Returns token plan prices/amounts/bonus for store users.
--- SECURITY DEFINER 사유: admin_settings는 RLS로 일반 유저 접근 불가
--- 토큰 플랜 키만 노출하며 다른 admin_settings 키는 반환하지 않음
+-- ── Phase 2-4: get_token_plans 수정 (보너스 키 포함) ──────────
 CREATE OR REPLACE FUNCTION public.get_token_plans()
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -275,19 +263,16 @@ BEGIN
   INTO v_result
   FROM public.admin_settings
   WHERE key IN (
-    'token_plan_starter_price',  'token_plan_starter_amount',  'token_plan_starter_bonus_amount',
-    'token_plan_popular_price',  'token_plan_popular_amount',  'token_plan_popular_bonus_amount',
-    'token_plan_pro_price',      'token_plan_pro_amount',      'token_plan_pro_bonus_amount'
+    'token_plan_starter_price',        'token_plan_starter_amount',  'token_plan_starter_bonus_amount',
+    'token_plan_popular_price',        'token_plan_popular_amount',  'token_plan_popular_bonus_amount',
+    'token_plan_pro_price',            'token_plan_pro_amount',      'token_plan_pro_bonus_amount'
   );
 
   RETURN COALESCE(v_result, '[]'::jsonb);
 END;
 $$;
 
--- ── create_token_order ────────────────────────────────────────
--- Creates a pending token order in the orders/order_items tables.
--- SECURITY DEFINER 사유: admin_settings RLS가 admin-only이므로 일반 유저 SELECT 불가
--- auth.uid() 소유권 검증으로 무단 접근 차단
+-- ── Phase 2-5: create_token_order 수정 (bonus_amount 저장) ────
 CREATE OR REPLACE FUNCTION public.create_token_order(
   p_plan_key text
 )
@@ -313,12 +298,10 @@ BEGIN
     RAISE EXCEPTION 'unauthorized: must be logged in';
   END IF;
 
-  -- 플랜 화이트리스트 검증
   IF p_plan_key NOT IN ('starter', 'popular', 'pro') THEN
     RAISE EXCEPTION 'invalid plan_key: %', p_plan_key;
   END IF;
 
-  -- admin_settings에서 가격/수량/보너스 조회
   v_price_key  := 'token_plan_' || p_plan_key || '_price';
   v_amount_key := 'token_plan_' || p_plan_key || '_amount';
   v_bonus_key  := 'token_plan_' || p_plan_key || '_bonus_amount';
@@ -372,45 +355,183 @@ BEGIN
 END;
 $$;
 
--- ── get_design_token_balances_admin ──────────────────────────
--- Admin-only batch balance lookup for up to 100 users.
-CREATE OR REPLACE FUNCTION public.get_design_token_balances_admin(
-  p_user_ids uuid[]
+-- ── Phase 2-6: confirm_payment_orders 수정 (유료/보너스 분리) ─
+CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
+  p_payment_group_id uuid,
+  p_user_id uuid,
+  p_payment_key text
 )
-RETURNS TABLE(user_id uuid, balance integer)
+RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = ''
+SET search_path TO 'public'
 AS $$
-BEGIN
-  IF NOT public.is_admin() THEN
-    RAISE EXCEPTION 'unauthorized: admin only';
-  END IF;
+declare
+  v_order record;
+  v_post_status text;
+  v_updated_orders jsonb := '[]'::jsonb;
+  v_count int := 0;
+  v_masked_key text;
+  v_token_amount integer;
+  v_bonus_amount integer;
+  v_plan_key text;
+  v_plan_label text;
+  v_points integer;
+begin
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
 
-  IF array_length(p_user_ids, 1) > 100 THEN
-    RAISE EXCEPTION 'too many user_ids: max 100';
-  END IF;
+  if p_payment_key is null or trim(p_payment_key) = '' then
+    raise exception 'payment_key is required';
+  end if;
 
-  RETURN QUERY
-  WITH requested_users AS (
-    SELECT DISTINCT unnest(COALESCE(p_user_ids, ARRAY[]::uuid[])) AS user_id
-  ),
-  balances AS (
-    SELECT dt.user_id, COALESCE(SUM(dt.amount), 0)::integer AS balance
-    FROM public.design_tokens AS dt
-    JOIN requested_users AS ru
-      ON ru.user_id = dt.user_id
-    GROUP BY dt.user_id
-  )
-  SELECT ru.user_id, COALESCE(b.balance, 0)::integer AS balance
-  FROM requested_users AS ru
-  LEFT JOIN balances AS b
-    ON b.user_id = ru.user_id;
-END;
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  v_masked_key := case
+    when length(p_payment_key) <= 8 then '****'
+    else '****' || right(p_payment_key, 8)
+  end;
+
+  for v_order in
+    select id, user_id, status, order_type
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status != '결제중' then
+      raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
+    end if;
+
+    v_post_status := case v_order.order_type
+      when 'sale'  then '진행중'
+      when 'token' then '완료'
+      else '접수'
+    end;
+
+    update public.orders
+    set status = v_post_status, payment_key = p_payment_key, updated_at = now()
+    where id = v_order.id;
+
+    insert into public.order_status_logs (
+      order_id, changed_by, previous_status, new_status, memo
+    ) values (
+      v_order.id, p_user_id, v_order.status, v_post_status,
+      'payment confirmed: ' || v_masked_key
+    );
+
+    -- token 주문: 유료/보너스 분리 지급 + 포인트 적립 (2%)
+    if v_order.order_type = 'token' then
+      select
+        (oi.item_data->>'token_amount')::integer,
+        COALESCE((oi.item_data->>'bonus_amount')::integer, 0),
+        oi.item_data->>'plan_key'
+      into v_token_amount, v_bonus_amount, v_plan_key
+      from public.order_items oi
+      where oi.order_id = v_order.id and oi.item_type = 'token'
+      limit 1;
+
+      if v_token_amount is null or v_token_amount <= 0 then
+        raise exception 'token order % has no valid token_amount (plan_key: %)', v_order.id, v_plan_key;
+      end if;
+
+      v_plan_label := case v_plan_key
+        when 'starter' then 'Starter'
+        when 'popular' then 'Popular'
+        when 'pro'     then 'Pro'
+        else v_plan_key
+      end;
+
+      -- 유료 토큰 지급
+      insert into public.design_tokens (user_id, amount, type, token_class, description, work_id)
+      values (
+        p_user_id,
+        v_token_amount,
+        'purchase',
+        'paid',
+        '토큰 구매 (' || v_plan_label || ', 유료 ' || v_token_amount || '개)',
+        'order_' || v_order.id::text || '_paid'
+      )
+      on conflict (work_id) do nothing;
+
+      -- 보너스 토큰 지급 (보너스 > 0인 경우만)
+      if v_bonus_amount > 0 then
+        insert into public.design_tokens (user_id, amount, type, token_class, description, work_id)
+        values (
+          p_user_id,
+          v_bonus_amount,
+          'purchase',
+          'bonus',
+          '토큰 구매 보너스 (' || v_plan_label || ', 보너스 ' || v_bonus_amount || '개)',
+          'order_' || v_order.id::text || '_bonus'
+        )
+        on conflict (work_id) do nothing;
+      end if;
+
+      -- 포인트 적립 (결제 금액의 2%)
+      select o.total_price into v_points
+      from public.orders o
+      where o.id = v_order.id;
+      v_points := floor(v_points * 0.02);
+
+      if v_points > 0 then
+        insert into public.points (user_id, order_id, amount, type, description)
+        values (
+          p_user_id, v_order.id, v_points, 'earn',
+          '토큰 구매 포인트 적립 (2%)'
+        )
+        on conflict (order_id, type) do nothing;
+      end if;
+    end if;
+
+    v_updated_orders := v_updated_orders || jsonb_build_object(
+      'orderId',     v_order.id,
+      'orderType',   v_order.order_type,
+      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end,
+      'bonusAmount', case when v_order.order_type = 'token' then v_bonus_amount else null end
+    );
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  -- 결제 확정 후 예약된 쿠폰을 사용 처리
+  update public.user_coupons
+  set status = 'used',
+      used_at = now(),
+      updated_at = now()
+  where user_id = p_user_id
+    and status = 'reserved'
+    and id in (
+      select distinct oi.applied_user_coupon_id
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where o.payment_group_id = p_payment_group_id
+        and oi.applied_user_coupon_id is not null
+    );
+
+  return jsonb_build_object(
+    'success', true,
+    'orders', v_updated_orders
+  );
+end;
 $$;
 
--- ── get_refundable_token_orders ───────────────────────────────
--- 환불 가능한 토큰 주문 목록 조회 (고객용)
+-- confirm_payment_orders: service_role 전용 (권한 재설정)
+REVOKE EXECUTE ON FUNCTION public.confirm_payment_orders(uuid, uuid, text) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.confirm_payment_orders(uuid, uuid, text) TO service_role;
+
+-- ── Phase 2-7: get_refundable_token_orders ────────────────────
+-- 환불 가능한 토큰 주문 목록 조회 (고객용, SECURITY INVOKER)
 -- SECURITY INVOKER: 소유자 데이터만 조회하므로 RLS로 충분
 CREATE OR REPLACE FUNCTION public.get_refundable_token_orders()
 RETURNS jsonb
@@ -420,9 +541,9 @@ SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 DECLARE
-  v_user_id  uuid;
-  v_paid_bal integer;
-  v_result   jsonb;
+  v_user_id    uuid;
+  v_paid_bal   integer;
+  v_result     jsonb;
 BEGIN
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
@@ -480,13 +601,13 @@ BEGIN
   )
   SELECT jsonb_agg(
     jsonb_build_object(
-      'order_id',             r.order_id,
-      'order_number',         r.order_number,
-      'created_at',           r.created_at,
-      'total_price',          r.total_price,
-      'paid_tokens_granted',  r.paid_tokens_granted,
-      'bonus_tokens_granted', r.bonus_tokens_granted,
-      'is_refundable',        (r.cumulative_paid <= v_paid_bal AND r.paid_tokens_granted > 0)
+      'order_id',            r.order_id,
+      'order_number',        r.order_number,
+      'created_at',          r.created_at,
+      'total_price',         r.total_price,
+      'paid_tokens_granted', r.paid_tokens_granted,
+      'bonus_tokens_granted',r.bonus_tokens_granted,
+      'is_refundable',       (r.cumulative_paid <= v_paid_bal AND r.paid_tokens_granted > 0)
     )
     ORDER BY r.created_at DESC
   )
@@ -497,7 +618,7 @@ BEGIN
 END;
 $$;
 
--- ── request_token_refund ──────────────────────────────────────
+-- ── Phase 2-8: request_token_refund ──────────────────────────
 -- 환불 신청 (고객용)
 -- SECURITY DEFINER 사유: token_refund_requests INSERT는 RLS로 허용되지 않음
 CREATE OR REPLACE FUNCTION public.request_token_refund(
@@ -510,13 +631,13 @@ SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 DECLARE
-  v_user_id       uuid;
-  v_order         record;
-  v_paid_granted  integer;
-  v_bonus_granted integer;
-  v_paid_bal      integer;
-  v_request_id    uuid;
-  v_refund_amount integer;
+  v_user_id          uuid;
+  v_order            record;
+  v_paid_granted     integer;
+  v_bonus_granted    integer;
+  v_paid_bal         integer;
+  v_request_id       uuid;
+  v_refund_amount    integer;
 BEGIN
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
@@ -597,15 +718,15 @@ BEGIN
   );
 
   RETURN jsonb_build_object(
-    'request_id',         v_request_id,
-    'refund_amount',      v_refund_amount,
-    'paid_token_amount',  v_paid_granted,
+    'request_id',       v_request_id,
+    'refund_amount',    v_refund_amount,
+    'paid_token_amount', v_paid_granted,
     'bonus_token_amount', v_bonus_granted
   );
 END;
 $$;
 
--- ── cancel_token_refund ───────────────────────────────────────
+-- ── Phase 2-9: cancel_token_refund ───────────────────────────
 -- 환불 취소 (고객용)
 -- SECURITY DEFINER 사유: token_refund_requests UPDATE는 RLS로 허용되지 않음
 CREATE OR REPLACE FUNCTION public.cancel_token_refund(
@@ -649,8 +770,8 @@ BEGIN
 END;
 $$;
 
--- ── approve_token_refund ──────────────────────────────────────
--- 관리자 환불 승인 (service_role 전용, Edge Function에서 Toss 취소 후 호출)
+-- ── Phase 2-10: approve_token_refund ─────────────────────────
+-- 관리자 환불 승인 (service_role 전용, Edge Function에서 호출)
 -- SECURITY DEFINER 사유: design_tokens/orders/points INSERT/UPDATE는 RLS 비허용
 CREATE OR REPLACE FUNCTION public.approve_token_refund(
   p_request_id uuid,
@@ -749,7 +870,7 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.approve_token_refund(uuid, uuid) FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.approve_token_refund(uuid, uuid) TO service_role;
 
--- ── reject_token_refund_admin ─────────────────────────────────
+-- ── Phase 2-11: reject_token_refund_admin ────────────────────
 -- 관리자 환불 거절 (is_admin 검증)
 -- SECURITY DEFINER 사유: token_refund_requests UPDATE는 RLS 비허용
 CREATE OR REPLACE FUNCTION public.reject_token_refund_admin(
@@ -792,7 +913,7 @@ BEGIN
 END;
 $$;
 
--- ── get_token_refund_requests_admin ───────────────────────────
+-- ── Phase 2-12: get_token_refund_requests_admin ───────────────
 -- 관리자 환불 요청 목록 조회 (is_admin 검증)
 -- SECURITY DEFINER 사유: token_refund_requests/orders는 일반 유저 full SELECT 비허용
 CREATE OR REPLACE FUNCTION public.get_token_refund_requests_admin(

@@ -1,5 +1,5 @@
--- ============================================================= 
--- 98_functions_payment.sql  – Payment RPC functions 
+-- =============================================================
+-- 98_functions_payment.sql  – Payment RPC functions
 -- =============================================================
 -- ── confirm_payment_orders ──────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
@@ -19,6 +19,7 @@ declare
   v_count int := 0;
   v_masked_key text;
   v_token_amount integer;
+  v_bonus_amount integer;
   v_plan_key text;
   v_plan_label text;
   v_points integer;
@@ -78,12 +79,13 @@ begin
       'payment confirmed: ' || v_masked_key
     );
 
-    -- token 주문: 토큰 부여 + 포인트 적립 (2%)
+    -- token 주문: 유료/보너스 분리 지급 + 포인트 적립 (2%)
     if v_order.order_type = 'token' then
       select
         (oi.item_data->>'token_amount')::integer,
+        COALESCE((oi.item_data->>'bonus_amount')::integer, 0),
         oi.item_data->>'plan_key'
-      into v_token_amount, v_plan_key
+      into v_token_amount, v_bonus_amount, v_plan_key
       from public.order_items oi
       where oi.order_id = v_order.id and oi.item_type = 'token'
       limit 1;
@@ -99,16 +101,31 @@ begin
         else v_plan_key
       end;
 
-      -- design_tokens: ON CONFLICT (work_id) DO NOTHING으로 TOCTOU 방지
-      insert into public.design_tokens (user_id, amount, type, description, work_id)
+      -- 유료 토큰 지급: ON CONFLICT (work_id) DO NOTHING으로 TOCTOU 방지
+      insert into public.design_tokens (user_id, amount, type, token_class, description, work_id)
       values (
         p_user_id,
         v_token_amount,
         'purchase',
-        '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)',
-        'order_' || v_order.id::text
+        'paid',
+        '토큰 구매 (' || v_plan_label || ', 유료 ' || v_token_amount || '개)',
+        'order_' || v_order.id::text || '_paid'
       )
       on conflict (work_id) do nothing;
+
+      -- 보너스 토큰 지급 (보너스 > 0인 경우만)
+      if v_bonus_amount > 0 then
+        insert into public.design_tokens (user_id, amount, type, token_class, description, work_id)
+        values (
+          p_user_id,
+          v_bonus_amount,
+          'purchase',
+          'bonus',
+          '토큰 구매 보너스 (' || v_plan_label || ', 보너스 ' || v_bonus_amount || '개)',
+          'order_' || v_order.id::text || '_bonus'
+        )
+        on conflict (work_id) do nothing;
+      end if;
 
       -- 포인트 적립 (결제 금액의 2%)
       select o.total_price into v_points
@@ -130,7 +147,8 @@ begin
     v_updated_orders := v_updated_orders || jsonb_build_object(
       'orderId',     v_order.id,
       'orderType',   v_order.order_type,
-      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end
+      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end,
+      'bonusAmount', case when v_order.order_type = 'token' then v_bonus_amount else null end
     );
   end loop;
 

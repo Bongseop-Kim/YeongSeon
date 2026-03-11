@@ -14,6 +14,7 @@ import {
   SettingOutlined,
   FileTextOutlined,
   DollarOutlined,
+  RollbackOutlined,
 } from "@ant-design/icons";
 
 import { authProvider } from "@/providers/auth-provider";
@@ -41,6 +42,7 @@ import QuoteRequestList from "@/pages/quote-requests/list";
 import QuoteRequestShow from "@/pages/quote-requests/show";
 import SettingsPage from "@/pages/settings";
 import PricingPage from "@/pages/pricing";
+import TokenRefundListPage from "@/pages/token-refunds/list";
 
 import "@refinedev/antd/dist/reset.css";
 
@@ -117,6 +119,11 @@ export default function App() {
               meta: { label: "가격 관리", icon: <DollarOutlined /> },
             },
             {
+              name: "token_refund_requests",
+              list: "/token-refunds",
+              meta: { label: "토큰 환불", icon: <RollbackOutlined /> },
+            },
+            {
               name: "admin_settings",
               list: "/settings",
               meta: { label: "설정", icon: <SettingOutlined /> },
@@ -156,6 +163,7 @@ export default function App() {
               <Route path="/inquiries" element={<InquiryList />} />
               <Route path="/inquiries/show/:id" element={<InquiryShow />} />
               <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/token-refunds" element={<TokenRefundListPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             <Route

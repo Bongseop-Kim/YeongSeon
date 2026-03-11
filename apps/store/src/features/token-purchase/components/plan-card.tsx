@@ -7,6 +7,8 @@ interface PlanCardProps {
   planKey: TokenPlanKey;
   label: string;
   price: number | null;
+  tokenAmount: number | null;
+  bonusAmount: number | null;
   description: string;
   features: string[];
   popular?: boolean;
@@ -19,6 +21,8 @@ export function PlanCard({
   planKey,
   label,
   price,
+  tokenAmount,
+  bonusAmount,
   description,
   features,
   popular,
@@ -26,6 +30,8 @@ export function PlanCard({
   isPending,
   onSelect,
 }: PlanCardProps) {
+  const hasBonus = bonusAmount != null && bonusAmount > 0;
+
   return (
     <div
       className={cn(
@@ -41,11 +47,24 @@ export function PlanCard({
         </span>
       )}
 
-      {/* 토큰 수량 (메인 타이틀) */}
+      {/* 플랜 이름 */}
       <p className="text-xl font-bold text-zinc-900">{label}</p>
 
+      {/* 토큰 수량 */}
+      <div className="mt-3 flex items-baseline gap-1.5">
+        <span className="text-2xl font-semibold text-zinc-900">
+          {tokenAmount != null ? tokenAmount.toLocaleString() : "–"}
+        </span>
+        <span className="text-sm text-zinc-500">토큰</span>
+        {hasBonus && (
+          <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+            +{bonusAmount} 보너스
+          </span>
+        )}
+      </div>
+
       {/* 가격 */}
-      <div className="mt-4 flex items-end gap-1">
+      <div className="mt-2 flex items-end gap-1">
         <span className="text-4xl font-bold text-zinc-900">
           {price != null ? price.toLocaleString() : "–"}
         </span>
@@ -76,6 +95,12 @@ export function PlanCard({
             {feature}
           </li>
         ))}
+        {hasBonus && (
+          <li className="flex items-start gap-2.5 text-sm text-amber-700">
+            <Check className="mt-0.5 size-4 shrink-0 text-amber-700" />
+            보너스 {bonusAmount}토큰 추가 지급 (환불 불가)
+          </li>
+        )}
       </ul>
     </div>
   );

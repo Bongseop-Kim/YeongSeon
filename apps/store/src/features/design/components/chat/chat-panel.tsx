@@ -31,7 +31,7 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
     <div className={cn("flex h-full flex-col", className)}>
       <ChatHeader
         onNewChat={resetConversation}
-        tokenBalance={tokenBalance}
+        tokenBalance={tokenBalance?.total}
         aiModel={aiModel}
         onModelChange={setAiModel}
       />

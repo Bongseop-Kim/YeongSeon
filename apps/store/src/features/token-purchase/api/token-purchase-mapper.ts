@@ -1,7 +1,7 @@
 import type { CreateTokenPurchaseResultDTO } from "@yeongseon/shared";
 import type { TokenPlan, TokenPlanKey, CreateTokenPurchaseResult } from "./token-purchase-api";
 
-const PLAN_META: Record<TokenPlanKey, Omit<TokenPlan, "planKey" | "price" | "tokenAmount">> = {
+const PLAN_META: Record<TokenPlanKey, Omit<TokenPlan, "planKey" | "price" | "tokenAmount" | "bonusAmount">> = {
   starter: {
     label: "Starter",
     description: "AI 디자인을 가볍게 시작해보세요",
@@ -32,19 +32,20 @@ const PLAN_META: Record<TokenPlanKey, Omit<TokenPlan, "planKey" | "price" | "tok
   },
 };
 
-const PLAN_KEYS: Array<{ planKey: TokenPlanKey; priceKey: string; amountKey: string }> = [
-  { planKey: "starter", priceKey: "token_plan_starter_price", amountKey: "token_plan_starter_amount" },
-  { planKey: "popular", priceKey: "token_plan_popular_price", amountKey: "token_plan_popular_amount" },
-  { planKey: "pro",     priceKey: "token_plan_pro_price",     amountKey: "token_plan_pro_amount"     },
+const PLAN_KEYS: Array<{ planKey: TokenPlanKey; priceKey: string; amountKey: string; bonusKey: string }> = [
+  { planKey: "starter", priceKey: "token_plan_starter_price", amountKey: "token_plan_starter_amount", bonusKey: "token_plan_starter_bonus_amount" },
+  { planKey: "popular", priceKey: "token_plan_popular_price", amountKey: "token_plan_popular_amount", bonusKey: "token_plan_popular_bonus_amount" },
+  { planKey: "pro",     priceKey: "token_plan_pro_price",     amountKey: "token_plan_pro_amount",     bonusKey: "token_plan_pro_bonus_amount"     },
 ];
 
 export function mapTokenPlans(rows: Array<{ key: string; value: string }>): TokenPlan[] {
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-  return PLAN_KEYS.map(({ planKey, priceKey, amountKey }) => ({
+  return PLAN_KEYS.map(({ planKey, priceKey, amountKey, bonusKey }) => ({
     planKey,
     ...PLAN_META[planKey],
     price: map[priceKey] != null ? Number(map[priceKey]) : null,
     tokenAmount: map[amountKey] != null ? Number(map[amountKey]) : null,
+    bonusAmount: map[bonusKey] != null ? Number(map[bonusKey]) : null,
   }));
 }
 
