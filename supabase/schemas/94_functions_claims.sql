@@ -203,6 +203,11 @@ begin
       if not (v_current_status = '수거요청' and p_new_status = '접수') then
         raise exception 'Invalid rollback from "%" to "%" for exchange claim', v_current_status, p_new_status;
       end if;
+    elsif v_claim_type = 'token_refund' then
+      -- token_refund는 거부→접수 롤백만 허용 (is_rollback=true 공통 허용 로직으로 처리됨)
+      if not (v_current_status = '처리중' and p_new_status = '접수') then
+        raise exception 'Invalid rollback from "%" to "%" for token_refund claim', v_current_status, p_new_status;
+      end if;
     else
       raise exception 'Unknown claim type: %', v_claim_type;
     end if;
@@ -234,6 +239,15 @@ begin
         or (p_new_status = '거부' and v_current_status in ('접수', '수거요청', '수거완료', '재발송'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for exchange claim', v_current_status, p_new_status;
+      end if;
+    elsif v_claim_type = 'token_refund' then
+      -- 수거/재발송 전이 없음: 접수→처리중→완료/거부만 허용
+      if not (
+        (v_current_status = '접수' and p_new_status = '처리중')
+        or (v_current_status = '처리중' and p_new_status = '완료')
+        or (p_new_status = '거부' and v_current_status in ('접수', '처리중'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for token_refund claim', v_current_status, p_new_status;
       end if;
     else
       raise exception 'Unknown claim type: %', v_claim_type;
