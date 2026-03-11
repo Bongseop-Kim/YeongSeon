@@ -112,7 +112,7 @@ export function CustomerTokenSection({ userId }: Props) {
       dataIndex: "netAmount",
       title: "수량",
       render: (value: number) => (
-        <Text type={value > 0 ? "success" : "danger"}>
+        <Text type={value > 0 ? "success" : value < 0 ? "danger" : "secondary"}>
           {value > 0 ? "+" : ""}
           {value.toLocaleString()}
         </Text>
