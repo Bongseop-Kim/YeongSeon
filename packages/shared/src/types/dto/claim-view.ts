@@ -4,12 +4,18 @@ import type { AppliedCouponDTO } from "./coupon";
 import type { CustomOrderDataDTO } from "./order-view";
 
 export type ClaimStatusDTO = "접수" | "처리중" | "수거요청" | "수거완료" | "재발송" | "완료" | "거부";
-export type ClaimTypeDTO = "cancel" | "return" | "exchange";
+export type ClaimTypeDTO = "cancel" | "return" | "exchange" | "token_refund";
+
+export interface TokenRefundDataDTO {
+  paid_token_amount: number;
+  bonus_token_amount: number;
+  refund_amount: number;
+}
 
 /** claim_list_view의 item jsonb 컬럼 shape */
 export interface ClaimItemRowDTO {
   id: string;
-  type: "product" | "reform" | "custom";
+  type: "product" | "reform" | "custom" | "token";
   product: ProductDTO | null;
   selectedOption: ProductOptionDTO | null;
   quantity: number;
@@ -32,4 +38,5 @@ export interface ClaimListRowDTO {
   orderNumber: string;
   orderDate: string;
   item: ClaimItemRowDTO;
+  refund_data: TokenRefundDataDTO | null;
 }
