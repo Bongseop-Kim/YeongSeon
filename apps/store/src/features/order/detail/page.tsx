@@ -18,7 +18,7 @@ import { buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies"
 import {
   type ClaimActionType,
   CLAIM_ACTION_LABEL,
-  getClaimActions,
+  getClaimActionsForItem,
 } from "@yeongseon/shared/constants/claim-actions";
 
 const getOrderErrorDescription = (error: unknown): string => {
@@ -38,7 +38,7 @@ const renderClaimButtons = (
   item: OrderItem,
   onClaim: (type: ClaimActionType, itemId: string) => void,
 ) => {
-  const actions = getClaimActions(status);
+  const actions = getClaimActionsForItem(status, item.type);
   if (actions.length === 0) {
     return null;
   }
@@ -277,10 +277,12 @@ const OrderDetailPage = () => {
                 <CardTitle>결제 정보</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-zinc-600">배송비</span>
-                  <span>무료</span>
-                </div>
+                {order.orderType !== "token" && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-zinc-600">배송비</span>
+                    <span>무료</span>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between text-base font-semibold">
                   <span>총 결제 금액</span>
@@ -322,16 +324,20 @@ const OrderDetailPage = () => {
               </CardContent>
 
               {/* 배송지 정보 */}
-              <CardHeader>
-                <CardTitle>배송지 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1 text-sm">
-                {order.shippingInfo ? (
-                  <ShippingInfoSection info={order.shippingInfo} />
-                ) : (
-                  <p className="text-zinc-500">배송지 정보가 없습니다.</p>
-                )}
-              </CardContent>
+              {order.orderType !== "token" && (
+                <>
+                  <CardHeader>
+                    <CardTitle>배송지 정보</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1 text-sm">
+                    {order.shippingInfo ? (
+                      <ShippingInfoSection info={order.shippingInfo} />
+                    ) : (
+                      <p className="text-zinc-500">배송지 정보가 없습니다.</p>
+                    )}
+                  </CardContent>
+                </>
+              )}
 
               {/* 배송 추적 정보 */}
               {order.trackingInfo && (
@@ -348,12 +354,15 @@ const OrderDetailPage = () => {
                 </>
               )}
 
-              <CardContent>
-                <Separator />
-              </CardContent>
+              {order.orderType !== "token" && (
+                <CardContent>
+                  <Separator />
+                </CardContent>
+              )}
 
               {/* 구매확정 */}
-              {(order.status === "배송완료" || order.status === "배송중") && (
+              {order.orderType !== "token" &&
+                (order.status === "배송완료" || order.status === "배송중") && (
                 <CardContent>
                   <PurchaseConfirmSection
                     orderId={order.id}
