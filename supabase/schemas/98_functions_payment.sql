@@ -88,7 +88,7 @@ begin
       where oi.order_id = v_order.id and oi.item_type = 'token'
       limit 1;
 
-      if v_token_amount is null or v_token_amount = 0 then
+      if v_token_amount is null or v_token_amount <= 0 then
         raise exception 'token order % has no valid token_amount (plan_key: %)', v_order.id, v_plan_key;
       end if;
 
@@ -163,6 +163,10 @@ begin
   );
 end;
 $$;
+
+-- confirm_payment_orders: service_role 전용
+REVOKE EXECUTE ON FUNCTION public.confirm_payment_orders(uuid, uuid, text) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.confirm_payment_orders(uuid, uuid, text) TO service_role;
 
 -- ── lock_payment_orders ──────────────────────────────────────────
 -- Toss 호출 전 주문 그룹을 '대기중' → '결제중'으로 원자적 전환.

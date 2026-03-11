@@ -21,6 +21,15 @@ export type ConfirmPaymentResponse =
   | OrderConfirmPaymentResponse
   | TokenPurchaseConfirmPaymentResponse;
 
+const mapOrderItem = (
+  o: Record<string, unknown>
+): { orderId: string; orderType: string } => {
+  if (typeof o.orderId !== "string" || typeof o.orderType !== "string") {
+    throw new Error("주문 항목 형식이 올바르지 않습니다");
+  }
+  return { orderId: o.orderId, orderType: o.orderType };
+};
+
 export const parseConfirmPaymentResponse = (
   data: unknown
 ): ConfirmPaymentResponse => {
@@ -48,10 +57,7 @@ export const parseConfirmPaymentResponse = (
       type: "token_purchase",
       paymentKey: data.paymentKey,
       paymentGroupId: data.paymentGroupId,
-      orders: (data.orders as Array<Record<string, unknown>>).map((o) => ({
-        orderId: o.orderId as string,
-        orderType: o.orderType as string,
-      })),
+      orders: (data.orders as Array<Record<string, unknown>>).map(mapOrderItem),
       tokenAmount: data.tokenAmount,
       status: data.status,
     };
@@ -59,10 +65,7 @@ export const parseConfirmPaymentResponse = (
   return {
     paymentKey: data.paymentKey,
     paymentGroupId: data.paymentGroupId,
-    orders: (data.orders as Array<Record<string, unknown>>).map((o) => ({
-      orderId: o.orderId as string,
-      orderType: o.orderType as string,
-    })),
+    orders: (data.orders as Array<Record<string, unknown>>).map(mapOrderItem),
     status: data.status,
   };
 };
