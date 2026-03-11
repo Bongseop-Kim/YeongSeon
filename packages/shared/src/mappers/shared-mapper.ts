@@ -158,7 +158,7 @@ export function parseCustomOrderData(
 /** OrderItemRowDTO / ClaimItemRowDTO 공통 nullable 필드 */
 interface NullableItemRow {
   id: string;
-  type: "product" | "reform" | "custom";
+  type: "product" | "reform" | "custom" | "token";
   product: ProductDTO | null;
   selectedOption: ProductOptionDTO | null;
   quantity: number;
@@ -212,6 +212,15 @@ export const normalizeItemRow = (item: NullableItemRow): OrderItemDTO => {
     };
   }
 
+  if (item.type === "token") {
+    return {
+      id: item.id,
+      type: "token",
+      quantity: item.quantity,
+      appliedCoupon: item.appliedCoupon ?? undefined,
+    };
+  }
+
   if (!item.reformData) {
     throw new Error("주문 수선 데이터가 올바르지 않습니다.");
   }
@@ -242,6 +251,13 @@ export const toOrderItemView = (item: OrderItemDTO): OrderItem => {
   }
 
   if (item.type === "custom") {
+    return {
+      ...item,
+      appliedCoupon: toAppliedCouponView(item.appliedCoupon),
+    };
+  }
+
+  if (item.type === "token") {
     return {
       ...item,
       appliedCoupon: toAppliedCouponView(item.appliedCoupon),

@@ -5,15 +5,9 @@ export interface PricingConstantRow {
   amount: number;
 }
 
-export interface FabricPriceRow {
-  design_type: string;
-  fabric_type: string;
-  unit_price: number;
-}
-
 export const fetchPricingConstants = async (): Promise<PricingConstantRow[]> => {
   const { data, error } = await supabase
-    .from("custom_order_pricing_constants")
+    .from("pricing_constants")
     .select("key, amount");
 
   if (error) {
@@ -23,10 +17,11 @@ export const fetchPricingConstants = async (): Promise<PricingConstantRow[]> => 
   return data ?? [];
 };
 
-export const fetchFabricPrices = async (): Promise<FabricPriceRow[]> => {
+export const fetchFabricPrices = async (): Promise<PricingConstantRow[]> => {
   const { data, error } = await supabase
-    .from("custom_order_fabric_prices")
-    .select("design_type, fabric_type, unit_price");
+    .from("pricing_constants")
+    .select("key, amount")
+    .eq("category", "fabric");
 
   if (error) {
     throw error;

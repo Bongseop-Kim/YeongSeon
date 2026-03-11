@@ -458,6 +458,7 @@ Deno.serve(async (req) => {
         p_user_id: user.id,
         p_ai_model: "gemini",
         p_request_type: requestType,
+        p_work_id: workId,
       },
     );
 

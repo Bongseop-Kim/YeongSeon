@@ -166,13 +166,13 @@ begin
       -- reform 아이템이 실제로 있을 때만 pricing constants 조회 (최초 1회)
       if v_reform_base_cost is null then
         SELECT amount INTO v_reform_base_cost
-        FROM custom_order_pricing_constants WHERE key = 'REFORM_BASE_COST';
+        FROM pricing_constants WHERE key = 'REFORM_BASE_COST';
         IF v_reform_base_cost IS NULL THEN
           RAISE EXCEPTION 'Missing pricing constant: REFORM_BASE_COST';
         END IF;
 
         SELECT amount INTO v_reform_shipping_cost
-        FROM custom_order_pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
+        FROM pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
         IF v_reform_shipping_cost IS NULL THEN
           RAISE EXCEPTION 'Missing pricing constant: REFORM_SHIPPING_COST';
         END IF;
@@ -437,11 +437,10 @@ $$;
 
 -- ── customer_confirm_purchase ─────────────────────────────────
 -- Allows a customer to manually confirm purchase after delivery.
--- Earns 2% points. Callable when status = '배송완료' or '배송중'.
+-- Callable when status = '배송완료' or '배송중'.
 -- SECURITY DEFINER 사용 근거:
---   이 함수는 authenticated 사용자(고객)가 호출하지만, 세 테이블에 직접 쓰기가 필요하다:
+--   이 함수는 authenticated 사용자(고객)가 호출하지만, 두 테이블에 직접 쓰기가 필요하다:
 --     - public.orders        : UPDATE (RLS에 INSERT/UPDATE 정책 없음)
---     - public.points        : INSERT (RLS에 고객용 INSERT 정책 없음)
 --     - public.order_status_logs : INSERT (RLS에 INSERT 정책 없음)
 --   SECURITY INVOKER + RLS 조합으로는 위 테이블에 쓸 수 없어 SECURITY DEFINER가 필요하다.
 --   SET ROLE 방식은 Supabase 환경에서 사용할 수 없다.
@@ -459,8 +458,6 @@ AS $$
 declare
   v_user_id        uuid;
   v_current_status text;
-  v_total_price    integer;
-  v_points_earned  integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -468,8 +465,8 @@ begin
   end if;
 
   -- Lock the row and verify ownership + status
-  select o.status, o.total_price
-  into v_current_status, v_total_price
+  select o.status
+  into v_current_status
   from public.orders o
   where o.id = p_order_id
     and o.user_id = v_user_id
@@ -493,24 +490,10 @@ begin
     raise exception '진행 중인 클레임이 있는 주문은 구매확정할 수 없습니다';
   end if;
 
-  -- Earn 2% points for manual confirmation
-  v_points_earned := floor(v_total_price * 0.02);
-
   update public.orders
   set status       = '완료',
       confirmed_at = now()
   where id = p_order_id;
-
-  if v_points_earned > 0 then
-    insert into public.points (user_id, order_id, amount, type, description)
-    values (
-      v_user_id,
-      p_order_id,
-      v_points_earned,
-      'earn',
-      '구매확정 포인트 적립 (직접 확정, 2%)'
-    );
-  end if;
 
   -- Audit log (changed_by = customer uid)
   insert into public.order_status_logs (
@@ -528,10 +511,7 @@ begin
     '고객 직접 구매확정'
   );
 
-  return jsonb_build_object(
-    'success', true,
-    'points_earned', v_points_earned
-  );
+  return jsonb_build_object('success', true);
 end;
 $$;
 
@@ -540,11 +520,9 @@ $$;
 -- Called by pg_cron daily at 03:00 KST.
 -- Confirms orders in '배송완료' (7+ days since delivered_at) and
 -- '배송중' (7+ days since shipped_at).
--- Earns 0.5% points for auto-confirmed orders.
 -- SECURITY DEFINER 사용 근거:
---   pg_cron 또는 service_role에 의해서만 호출되는 스케줄러 함수로, 세 테이블에 직접 쓰기가 필요하다:
+--   pg_cron 또는 service_role에 의해서만 호출되는 스케줄러 함수로, 두 테이블에 직접 쓰기가 필요하다:
 --     - public.orders        : UPDATE (status → '완료', confirmed_at 갱신)
---     - public.points        : INSERT (자동확정 포인트 적립)
 --     - public.order_status_logs : INSERT (감사 로그)
 --   SECURITY INVOKER로는 스케줄러 실행 컨텍스트에서 위 테이블에 쓸 수 없어 SECURITY DEFINER가 필요하다.
 --   권한 남용 방지를 위한 안전 장치:
@@ -560,7 +538,6 @@ SET search_path TO 'public'
 AS $$
 declare
   v_order  record;
-  v_points integer;
   v_count  integer := 0;
 begin
   -- pg_cron 또는 service_role 호출만 허용
@@ -587,23 +564,10 @@ begin
     )
     for update skip locked
   loop
-    v_points := floor(v_order.total_price * 0.005);
-
     update public.orders
     set status       = '완료',
         confirmed_at = now()
     where id = v_order.id;
-
-    if v_points > 0 then
-      insert into public.points (user_id, order_id, amount, type, description)
-      values (
-        v_order.user_id,
-        v_order.id,
-        v_points,
-        'earn',
-        '구매확정 포인트 적립 (자동 확정, 0.5%)'
-      );
-    end if;
 
     -- Audit log (changed_by = NULL indicates automated system action)
     insert into public.order_status_logs (

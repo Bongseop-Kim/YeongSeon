@@ -5,12 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useSearchStore } from "@/store/search";
 import { useEffect, useMemo, useState } from "react";
-import React from "react";
 import { ROUTES } from "@/constants/ROUTES";
 import { useOrders } from "@/features/order/api/order-query";
 import {
@@ -20,8 +20,22 @@ import {
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   CLAIM_ACTION_LABEL,
-  getClaimActions,
+  getClaimActionsForItem,
 } from "@yeongseon/shared/constants/claim-actions";
+import type { Order } from "@yeongseon/shared/types/view/order";
+
+type OrderTypeFilter = "전체" | "일반구매" | "수선" | "주문제작" | "토큰구매";
+
+const ORDER_TYPE_TABS: OrderTypeFilter[] = [
+  "전체", "일반구매", "수선", "주문제작", "토큰구매",
+];
+
+const ORDER_TYPE_MAP: Record<Exclude<OrderTypeFilter, "전체">, Order["orderType"]> = {
+  일반구매: "sale",
+  수선: "repair",
+  주문제작: "custom",
+  토큰구매: "token",
+};
 
 export default function OrderListPage() {
   const navigate = useNavigate();
@@ -36,7 +50,14 @@ export default function OrderListPage() {
     }),
     [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
   );
+  const [activeTab, setActiveTab] = useState<OrderTypeFilter>("전체");
   const { data: orders = [], isLoading, error } = useOrders(queryFilters);
+
+  const filteredOrders = useMemo(() => {
+    if (activeTab === "전체") return orders;
+    const orderType = ORDER_TYPE_MAP[activeTab];
+    return orders.filter((order) => order.orderType === orderType);
+  }, [orders, activeTab]);
 
   useEffect(() => {
     setSearchEnabled(true, {
@@ -94,46 +115,64 @@ export default function OrderListPage() {
     <MainLayout>
       <MainContent>
         <PageLayout>
-            <div>
-              {orders.length === 0 ? (
+          <div className="space-y-6">
+            <section className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold">주문 내역</h2>
+              </div>
+              <div className="flex gap-1 overflow-x-auto pb-1">
+                {ORDER_TYPE_TABS.map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                      activeTab === tab
+                        ? "bg-zinc-900 text-white"
+                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                    )}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+              {filteredOrders.length === 0 ? (
                 <Card>
                   <Empty
-                    title="주문 내역이 없습니다."
-                    description="첫 주문을 시작해보세요!"
+                    title={activeTab === "전체" ? "주문 내역이 없습니다." : `${activeTab} 내역이 없습니다.`}
+                    description={activeTab === "전체" ? "첫 주문을 시작해보세요!" : `${activeTab}에 해당하는 주문이 없습니다.`}
                   />
                 </Card>
               ) : (
-                orders.map((order) => {
-                  const claimActions = getClaimActions(order.status);
-                  return (<Card key={order.id}>
-                    {/* 주문 헤더 */}
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">
-                          {formatDate(order.date)}
-                        </CardTitle>
-                        <OrderStatusBadge status={order.status} />
-                      </div>
-                      <div className="text-sm text-zinc-500 mt-1">
-                        주문번호: {order.orderNumber}
-                      </div>
-                    </CardHeader>
+                filteredOrders.map((order) => {
+                  return (
+                    <Card key={order.id}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">
+                            {formatDate(order.date)}
+                          </CardTitle>
+                          <OrderStatusBadge status={order.status} />
+                        </div>
+                        <div className="mt-1 text-sm text-zinc-500">
+                          주문번호: {order.orderNumber}
+                        </div>
+                      </CardHeader>
 
-                    {/* 주문 상품 목록 */}
-                    <div className="space-y-0">
-                      {order.items.map((item) => (
-                        <React.Fragment key={item.id}>
-                          <CardContent className="py-4">
+                      <div className="space-y-0">
+                        {order.items.map((item) => {
+                          const claimActions = getClaimActionsForItem(order.status, item.type);
+                          return (
+                          <CardContent key={item.id} className="py-4">
                             <OrderItemCard
                               item={item}
                               onClick={() =>
                                 navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
                               }
                               actions={
-                              claimActions.length > 0 ? (
-                                <div className="flex gap-2">
-                                  {claimActions.map(
-                                    (actionType) => (
+                                claimActions.length > 0 ? (
+                                  <div className="flex gap-2">
+                                    {claimActions.map((actionType) => (
                                       <Button
                                         key={actionType}
                                         variant="outline"
@@ -150,31 +189,30 @@ export default function OrderListPage() {
                                       >
                                         {CLAIM_ACTION_LABEL[actionType]}
                                       </Button>
-                                    )
-                                  )}
-                                </div>
-                              ) : undefined
-                            }
+                                    ))}
+                                  </div>
+                                ) : undefined
+                              }
                             />
                           </CardContent>
-                        </React.Fragment>
-                      ))}
-                    </div>
-
-                    {/* 주문 총액 */}
-                    <CardContent className="py-3">
-                      <div className="flex items-center justify-between">
-                        <Label className="font-bold">주문 총액</Label>
-                        <Label className="text-lg font-bold">
-                          {order.totalPrice.toLocaleString()}원
-                        </Label>
+                          );
+                        })}
                       </div>
-                    </CardContent>
-                  </Card>
+
+                      <CardContent className="py-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="font-bold">주문 총액</Label>
+                          <Label className="text-lg font-bold">
+                            {order.totalPrice.toLocaleString()}원
+                          </Label>
+                        </div>
+                      </CardContent>
+                    </Card>
                   );
                 })
               )}
-            </div>
+            </section>
+          </div>
         </PageLayout>
       </MainContent>
     </MainLayout>

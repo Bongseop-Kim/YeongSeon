@@ -14,6 +14,7 @@ const SEGMENT_OPTIONS: { label: string; value: SegmentValue }[] = [
   { label: ORDER_TYPE_LABELS.sale, value: "sale" },
   { label: ORDER_TYPE_LABELS.custom, value: "custom" },
   { label: ORDER_TYPE_LABELS.repair, value: "repair" },
+  { label: ORDER_TYPE_LABELS.token, value: "token" },
 ];
 
 export function DashboardRecentOrders({

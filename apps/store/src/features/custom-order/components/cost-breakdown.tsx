@@ -45,7 +45,7 @@ const CostBreakdown = ({
                 </div>
                 {options.tieType === "AUTO" && (
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-zinc-600">자동 봉제 추가</span>
+                    <span className="text-sm text-zinc-600">자동 타이 추가</span>
                     <span className="text-sm">
                       +{pricingConfig.AUTO_TIE_COST.toLocaleString()}원 × {options.quantity}개
                     </span>

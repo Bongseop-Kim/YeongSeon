@@ -8,6 +8,7 @@ import type { CreateClaimInputDTO } from "@yeongseon/shared/types/dto/claim-inpu
 import type { CreateClaimResultDTO } from "@yeongseon/shared/types/dto/claim-output";
 import type { OrderItemDTO } from "@yeongseon/shared/types/dto/order-view";
 import type { ClaimItem } from "@yeongseon/shared/types/view/claim-item";
+import type { OrderItem } from "@yeongseon/shared/types/view/order";
 import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-input";
 import {
   normalizeItemRow,
@@ -38,7 +39,7 @@ const parseClaimItemField = (
   }
   if (
     typeof v.id !== "string" ||
-    (v.type !== "product" && v.type !== "reform" && v.type !== "custom") ||
+    (v.type !== "product" && v.type !== "reform" && v.type !== "custom" && v.type !== "token") ||
     typeof v.quantity !== "number"
   ) {
     throw new Error(
@@ -317,9 +318,31 @@ const CLAIM_STATUSES: ReadonlySet<string> = new Set([
 const isClaimStatus = (v: string): v is ClaimStatusDTO =>
   CLAIM_STATUSES.has(v);
 
-const CLAIM_TYPES: ReadonlySet<string> = new Set(["cancel", "return", "exchange"]);
+const CLAIM_TYPES: ReadonlySet<string> = new Set(["cancel", "return", "exchange", "token_refund"]);
 const isClaimType = (v: string): v is ClaimTypeDTO =>
   CLAIM_TYPES.has(v);
+
+const parseTokenRefundData = (
+  v: unknown,
+  i: number
+): ClaimListRowDTO["refund_data"] => {
+  if (v == null) return null;
+  if (!isRecord(v)) {
+    throw new Error(`클레임 목록 행(${i})의 refund_data가 올바르지 않습니다: 객체가 아닙니다.`);
+  }
+  if (
+    typeof v.paid_token_amount !== "number" ||
+    typeof v.bonus_token_amount !== "number" ||
+    typeof v.refund_amount !== "number"
+  ) {
+    throw new Error(`클레임 목록 행(${i})의 refund_data 필수 필드 누락.`);
+  }
+  return {
+    paid_token_amount: v.paid_token_amount,
+    bonus_token_amount: v.bonus_token_amount,
+    refund_amount: v.refund_amount,
+  };
+};
 
 export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
   if (data == null) return [];
@@ -369,6 +392,7 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
       orderNumber: row.orderNumber,
       orderDate: row.orderDate,
       item: parseClaimItemField(row.item, i),
+      refund_data: parseTokenRefundData(row.refund_data, i),
     };
   });
 };
@@ -403,6 +427,7 @@ export const fromClaimItemRowDTO = (item: ClaimItemRowDTO): OrderItemDTO =>
  */
 export const toClaimItemView = (row: ClaimListRowDTO): ClaimItem => {
   const itemDTO = normalizeItemRow(row.item);
+  const orderItem: OrderItem = toOrderItemView(itemDTO);
 
   return {
     id: row.id,
@@ -412,8 +437,15 @@ export const toClaimItemView = (row: ClaimListRowDTO): ClaimItem => {
     type: row.type,
     orderId: row.orderId,
     orderNumber: row.orderNumber,
-    item: toOrderItemView(itemDTO),
+    item: orderItem,
     reason: row.reason,
+    refundData: row.refund_data
+      ? {
+          paidTokenAmount: row.refund_data.paid_token_amount,
+          bonusTokenAmount: row.refund_data.bonus_token_amount,
+          refundAmount: row.refund_data.refund_amount,
+        }
+      : null,
   };
 };
 

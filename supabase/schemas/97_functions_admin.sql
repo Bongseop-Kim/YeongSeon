@@ -19,7 +19,6 @@ declare
   v_order_type     text;
   v_total_price    integer;
   v_user_id        uuid;
-  v_points_earned  integer;
   v_is_sample      boolean;
   v_sample_type    text;
   v_token_amount   integer;
@@ -198,9 +197,6 @@ begin
     where id = p_order_id;
 
   elsif p_new_status = '완료' then
-    -- Admin manually confirms purchase: 2% points
-    v_points_earned := floor(v_total_price * 0.02);
-
     -- token 주문: 상태 변경 전 token item 검증 (부분 성공 방지)
     if v_order_type = 'token' then
       if not exists (select 1 from public.design_tokens where work_id = 'order_' || p_order_id::text) then
@@ -239,19 +235,6 @@ begin
         'order_' || p_order_id::text
       )
       on conflict (work_id) do nothing;
-    end if;
-
-    if v_points_earned > 0 then
-      -- ON CONFLICT (order_id, type) DO NOTHING으로 중복 적립 방지 (idx_points_order_earn)
-      insert into public.points (user_id, order_id, amount, type, description)
-      values (
-        v_user_id,
-        p_order_id,
-        v_points_earned,
-        'earn',
-        '구매확정 포인트 적립 (관리자 처리, 2%)'
-      )
-      on conflict (order_id, type) do nothing;
     end if;
 
   else

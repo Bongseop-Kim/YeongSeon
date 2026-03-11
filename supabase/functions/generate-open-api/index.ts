@@ -466,6 +466,7 @@ Deno.serve(async (req) => {
         p_ai_model: "openai",
         p_request_type: requestType,
         p_quality: imageQuality,
+        p_work_id: workId,
       },
     );
 

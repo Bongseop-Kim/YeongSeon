@@ -54,6 +54,7 @@ SELECT
   to_char(o.created_at, 'YYYY-MM-DD') AS date,
   o.status,
   o.total_price   AS "totalPrice",
+  o.order_type    AS "orderType",
   o.created_at
 FROM public.orders o
 WHERE o.user_id = auth.uid();
@@ -68,6 +69,7 @@ SELECT
   to_char(o.created_at, 'YYYY-MM-DD') AS date,
   o.status,
   o.total_price     AS "totalPrice",
+  o.order_type      AS "orderType",
   o.courier_company AS "courierCompany",
   o.tracking_number AS "trackingNumber",
   o.shipped_at      AS "shippedAt",
@@ -194,7 +196,8 @@ SELECT
       ELSE null
     END,
     'appliedCoupon', uc.user_coupon
-  ) AS item
+  ) AS item,
+  cl.refund_data
 FROM public.claims cl
 JOIN public.orders o
   ON o.id = cl.order_id AND o.user_id = auth.uid()
@@ -254,6 +257,29 @@ SELECT
   qr.quoted_amount   AS "quotedAmount",
   qr.contact_name    AS "contactName",
   qr.contact_method  AS "contactMethod",
+  qr.created_at
+FROM public.quote_requests qr
+WHERE qr.user_id = auth.uid();
+
+-- ── quote_request_detail_view ─────────────────────────────────
+CREATE OR REPLACE VIEW public.quote_request_detail_view
+WITH (security_invoker = true)
+AS
+SELECT
+  qr.id,
+  qr.quote_number        AS "quoteNumber",
+  to_char(qr.created_at, 'YYYY-MM-DD') AS date,
+  qr.status,
+  qr.options,
+  qr.quantity,
+  qr.reference_images    AS "referenceImages",
+  qr.additional_notes    AS "additionalNotes",
+  qr.contact_name        AS "contactName",
+  qr.contact_title       AS "contactTitle",
+  qr.contact_method      AS "contactMethod",
+  qr.contact_value       AS "contactValue",
+  qr.quoted_amount       AS "quotedAmount",
+  qr.quote_conditions    AS "quoteConditions",
   qr.created_at
 FROM public.quote_requests qr
 WHERE qr.user_id = auth.uid();
@@ -427,7 +453,8 @@ SELECT
   p.name           AS "customerName",
   p.phone          AS "customerPhone",
   oi.item_type     AS "itemType",
-  pr.name          AS "productName"
+  pr.name          AS "productName",
+  cl.refund_data
 FROM public.claims cl
 JOIN public.orders o ON o.id = cl.order_id
 JOIN public.order_items oi ON oi.id = cl.order_item_id

@@ -42,18 +42,22 @@ export const SewingStep = () => {
 
   const isDimpleAvailable = tieType === "AUTO";
 
-  // Auto-reset dimple when switching to MANUAL
+  // Auto-reset dimple when switching to manual (null)
   useEffect(() => {
-    if (tieType === "MANUAL" && dimple) {
+    if (tieType !== "AUTO" && dimple) {
       setValue("dimple", false);
       toast.info(
-        "수동 봉제에서는 딤플을 선택할 수 없어요. 선택이 해제됐어요.",
+        "수동 타이에서는 딤플을 선택할 수 없어요. 선택이 해제됐어요.",
       );
     }
   }, [tieType, dimple, setValue]);
 
-  const handleTieTypeChange = (newTieType: "MANUAL" | "AUTO") => {
-    setValue("tieType", newTieType);
+  const handleTieTypeChange = (v: string) => {
+    if (v === "MANUAL") {
+      setValue("tieType", null);
+    } else if (v === "AUTO") {
+      setValue("tieType", "AUTO");
+    }
   };
 
   const handleStyleToggle = (key: "dimple" | "spoderato" | "fold7", checked: boolean) => {
@@ -67,32 +71,32 @@ export const SewingStep = () => {
     <StepLayout
       guideTitle="스타일 가이드"
       guideItems={[
-        "MANUAL: 기본 생산 안정적",
-        "AUTO: 자동 봉제로 정밀감",
-        "딤플은 AUTO에서만 활성화",
+        "수동 타이: 손으로 매듭을 묶는 일반 넥타이",
+        "자동 타이: 지퍼로 고정, 매듭 불필요",
+        "딤플은 자동 타이에서만 활성화",
         "스타일 옵션은 중복 선택 가능",
       ]}
     >
       <Card>
         <CardHeader>
-          <CardTitle>봉제 방식</CardTitle>
+          <CardTitle>타이 종류</CardTitle>
         </CardHeader>
         <CardContent>
           <RadioGroup
             value={tieType ?? ""}
-            onValueChange={(v) => handleTieTypeChange(v as "MANUAL" | "AUTO")}
+            onValueChange={handleTieTypeChange}
           >
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {(["MANUAL", "AUTO"] as const).map((type) => (
                 <RadioCard
                   key={type}
                   value={type}
-                  id={`tie-type-${type}`}
-                  selected={tieType === type}
+                  id={`tie-type-${type.toLowerCase()}`}
+                  selected={type === "MANUAL" ? tieType === null : tieType === "AUTO"}
                 >
                   <CardHeader>
                     <CardTitle>
-                      {type === "MANUAL" ? "수동 봉제" : "자동 봉제"}
+                      {type === "AUTO" ? "자동 타이 (지퍼)" : "수동 타이 (손매듭)"}
                     </CardTitle>
                   </CardHeader>
                 </RadioCard>
@@ -137,7 +141,7 @@ export const SewingStep = () => {
                     </p>
                     {isDisabled && (
                       <p className="mt-1 text-xs text-zinc-300">
-                        자동 봉제에서만 선택할 수 있어요
+                        자동 타이에서만 선택할 수 있어요
                       </p>
                     )}
                   </CardContent>

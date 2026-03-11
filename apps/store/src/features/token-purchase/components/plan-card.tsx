@@ -7,6 +7,7 @@ interface PlanCardProps {
   planKey: TokenPlanKey;
   label: string;
   price: number | null;
+  tokenAmount: number | null;
   description: string;
   features: string[];
   popular?: boolean;
@@ -19,6 +20,7 @@ export function PlanCard({
   planKey,
   label,
   price,
+  tokenAmount,
   description,
   features,
   popular,
@@ -41,15 +43,23 @@ export function PlanCard({
         </span>
       )}
 
-      {/* 토큰 수량 (메인 타이틀) */}
+      {/* 플랜 이름 */}
       <p className="text-xl font-bold text-zinc-900">{label}</p>
 
+      {/* 토큰 수량 */}
+      <div className="mt-3 flex items-baseline gap-1.5">
+        <span className="text-2xl font-semibold text-zinc-900">
+          {tokenAmount != null ? tokenAmount.toLocaleString() : "–"}
+        </span>
+        {tokenAmount != null && <span className="text-sm text-zinc-500">토큰</span>}
+      </div>
+
       {/* 가격 */}
-      <div className="mt-4 flex items-end gap-1">
+      <div className="mt-2 flex items-end gap-1">
         <span className="text-4xl font-bold text-zinc-900">
           {price != null ? price.toLocaleString() : "–"}
         </span>
-        <span className="mb-1 text-sm text-zinc-500">원</span>
+        {price != null && <span className="mb-1 text-sm text-zinc-500">원</span>}
       </div>
 
       {/* 설명 */}

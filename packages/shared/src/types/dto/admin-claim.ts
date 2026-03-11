@@ -1,3 +1,5 @@
+import type { TokenRefundDataDTO } from "./claim-view";
+
 /** admin_claim_status_log_view row */
 export interface ClaimStatusLogDTO {
   id: string;
@@ -17,7 +19,7 @@ export interface AdminClaimListRowDTO {
   claimNumber: string;
   date: string;
   status: string;
-  type: "cancel" | "return" | "exchange";
+  type: "cancel" | "return" | "exchange" | "token_refund";
   reason: string;
   description: string | null;
   claimQuantity: number;
@@ -35,6 +37,7 @@ export interface AdminClaimListRowDTO {
   orderShippedAt: string | null;
   customerName: string;
   customerPhone: string | null;
-  itemType: "product" | "reform";
+  itemType: "product" | "reform" | "token";
   productName: string | null;
+  refund_data: TokenRefundDataDTO | null;
 }

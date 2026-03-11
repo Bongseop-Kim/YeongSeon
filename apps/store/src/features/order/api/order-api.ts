@@ -8,7 +8,6 @@ import type { OrderViewDTO } from "@yeongseon/shared/types/dto/order-view";
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   fromOrderItemRowDTO,
-  parseConfirmPurchaseResponse,
   parseCreateOrderResult,
   parseOrderListRows,
   parseOrderItemRows,
@@ -120,6 +119,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     orderNumber: order.orderNumber,
     date: order.date,
     status: order.status,
+    orderType: order.orderType,
     items: itemsByOrderId.get(order.id) ?? [],
     totalPrice: order.totalPrice,
   }));
@@ -136,6 +136,12 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
         if (item.type === "product") {
           return `${item.product.name} ${item.selectedOption?.name ?? ""}`;
         }
+        if (item.type === "custom") {
+          return "주문 제작";
+        }
+        if (item.type === "token") {
+          return "토큰 구매";
+        }
         return "수선";
       })
       .join(" ");
@@ -146,20 +152,18 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
 };
 
 /**
- * 구매확정 (배송완료 상태에서만 가능, 2% 포인트 적립)
+ * 구매확정 (배송완료 상태에서만 가능)
  */
 export const confirmPurchase = async (
   orderId: string
-): Promise<{ pointsEarned: number }> => {
-  const { data, error } = await supabase.rpc("customer_confirm_purchase", {
+): Promise<void> => {
+  const { error } = await supabase.rpc("customer_confirm_purchase", {
     p_order_id: orderId,
   });
 
   if (error) {
     throw new Error(`구매확정 실패: ${error.message}`);
   }
-
-  return parseConfirmPurchaseResponse(data);
 };
 
 /**

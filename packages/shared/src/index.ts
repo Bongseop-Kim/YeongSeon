@@ -27,6 +27,7 @@ export type * from "./types/view/order";
 export type * from "./types/view/claim-item";
 export type * from "./types/view/claim-input";
 export type * from "./types/view/cart";
+export type * from "./types/view/quote-request";
 
 // Constants
 export * from "./constants/image-folders";

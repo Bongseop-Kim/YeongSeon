@@ -21,6 +21,27 @@ export function OrderItemCard({
   className = "",
 }: OrderItemCardProps) {
   const isDeletedProduct = item.type === "product" && item.product.deleted === true;
+  const itemLabel =
+    item.type === "product"
+      ? item.product.name
+      : item.type === "custom"
+        ? "주문 제작"
+        : item.type === "token"
+          ? "토큰 구매"
+          : "넥타이 수선";
+  const itemPrice =
+    item.type === "product"
+      ? isDeletedProduct
+        ? "0원"
+        : `${(
+            (item.product.price + (item.selectedOption?.additionalPrice ?? 0)) *
+            item.quantity
+          ).toLocaleString()}원`
+      : item.type === "custom"
+        ? `${item.customData.pricing.totalCost.toLocaleString()}원`
+        : item.type === "reform"
+          ? `${(item.reformData.cost * item.quantity).toLocaleString()}원`
+          : null;
 
   const content = (
     <div className={`flex gap-3 ${className}`}>
@@ -37,13 +58,7 @@ export function OrderItemCard({
       {/* 상품 상세 정보 */}
       <div className="flex-1 text-left">
         <div className="flex flex-col gap-1">
-          <Label className="font-bold">
-            {item.type === "product"
-              ? item.product.name
-              : item.type === "custom"
-                ? "주문 제작"
-                : "넥타이 수선"}
-          </Label>
+          <Label className="font-bold">{itemLabel}</Label>
           <Label className="text-sm text-zinc-500">
             {getOrderItemDetails(item)}
           </Label>
@@ -54,21 +69,8 @@ export function OrderItemCard({
                   수량: {item.quantity}개
                 </span>
               )}
-              {showPrice && (
-                <Label className="font-bold">
-                  {item.type === "product"
-                    ? isDeletedProduct
-                      ? "0"
-                      : (
-                        (item.product.price +
-                          (item.selectedOption?.additionalPrice ?? 0)) *
-                        item.quantity
-                      ).toLocaleString()
-                    : item.type === "custom"
-                      ? item.customData.pricing.totalCost.toLocaleString()
-                      : (item.reformData.cost * item.quantity).toLocaleString()}
-                  원
-                </Label>
+              {showPrice && itemPrice && (
+                <Label className="font-bold">{itemPrice}</Label>
               )}
             </div>
           )}

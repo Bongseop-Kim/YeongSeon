@@ -68,8 +68,20 @@ export interface CustomOrderItem {
   appliedCoupon?: AppliedCoupon;
 }
 
-// 주문 아이템 (일반 상품, 수선 또는 주문 제작)
-export type OrderItem = ProductOrderItem | ReformOrderItem | CustomOrderItem;
+// 토큰 구매 아이템
+export interface TokenOrderItem {
+  id: string;
+  type: "token";
+  quantity: number;
+  appliedCoupon?: AppliedCoupon;
+}
+
+// 주문 아이템 (일반 상품, 수선, 주문 제작 또는 토큰 구매)
+export type OrderItem =
+  | ProductOrderItem
+  | ReformOrderItem
+  | CustomOrderItem
+  | TokenOrderItem;
 
 // 배송지 정보
 export interface ShippingInfo {
@@ -96,6 +108,7 @@ export interface Order {
   orderNumber: string; // 주문 번호
   date: string; // 주문 날짜
   status: OrderStatus;
+  orderType: "sale" | "custom" | "repair" | "token";
   items: OrderItem[]; // 주문에 포함된 상품들
   totalPrice: number; // 총 주문 금액
   shippingInfo: ShippingInfo | null;

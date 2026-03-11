@@ -37,9 +37,7 @@ export const StickySummary = ({
 
   const fabricLabel = getFabricLabel(options);
 
-  const sewingLabel = options.tieType
-    ? `${getTieTypeLabel(options.tieType, true)} · ${getSewingStyleLabel(options)}`
-    : "미선택";
+  const sewingLabel = `${getTieTypeLabel(options.tieType, true)} · ${getSewingStyleLabel(options)}`;
 
   const effectiveSampleCost = isQuoteMode ? 0 : sampleCost;
   const grandTotal = totalCost;

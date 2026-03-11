@@ -1,7 +1,4 @@
-import type {
-  FabricPriceRow,
-  PricingConstantRow,
-} from "@/features/custom-order/api/pricing-api";
+import type { PricingConstantRow } from "@/features/custom-order/api/pricing-api";
 import type { PricingConfig } from "@/features/custom-order/types/pricing";
 
 type PricingConstantKey =
@@ -39,13 +36,12 @@ const getConstantValue = (
 };
 
 const getFabricUnitPrice = (
-  fabricPrices: FabricPriceRow[],
+  fabricPrices: PricingConstantRow[],
   designType: "YARN_DYED" | "PRINTING",
   fabricType: "SILK" | "POLY",
 ): number => {
-  const priceRow = fabricPrices.find(
-    (row) => row.design_type === designType && row.fabric_type === fabricType,
-  );
+  const targetKey = `FABRIC_${designType}_${fabricType}`;
+  const priceRow = fabricPrices.find((row) => row.key === targetKey);
 
   if (!priceRow) {
     throw new Error(
@@ -53,12 +49,12 @@ const getFabricUnitPrice = (
     );
   }
 
-  return priceRow.unit_price;
+  return priceRow.amount;
 };
 
 export const toPricingConfig = (
   constants: PricingConstantRow[],
-  fabricPrices: FabricPriceRow[],
+  fabricPrices: PricingConstantRow[],
 ): PricingConfig => {
   const constantsMap: Partial<Record<PricingConstantKey, number>> = {};
 

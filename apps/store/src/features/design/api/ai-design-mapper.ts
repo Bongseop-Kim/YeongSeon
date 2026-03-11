@@ -71,6 +71,7 @@ export interface DesignTokenRow {
   request_type: string | null;
   description: string | null;
   created_at: string;
+  work_id: string | null;
 }
 
 export const toDesignTokenHistoryItem = (
@@ -83,4 +84,5 @@ export const toDesignTokenHistoryItem = (
   requestType: row.request_type,
   description: row.description,
   createdAt: row.created_at,
+  workId: row.work_id,
 });

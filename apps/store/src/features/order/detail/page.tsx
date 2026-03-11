@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
+import { CustomOrderOptionsSection } from "@/features/order/components/custom-order-options-section";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
 import React from "react";
@@ -17,7 +18,7 @@ import { buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies"
 import {
   type ClaimActionType,
   CLAIM_ACTION_LABEL,
-  getClaimActions,
+  getClaimActionsForItem,
 } from "@yeongseon/shared/constants/claim-actions";
 
 const getOrderErrorDescription = (error: unknown): string => {
@@ -37,7 +38,7 @@ const renderClaimButtons = (
   item: OrderItem,
   onClaim: (type: ClaimActionType, itemId: string) => void,
 ) => {
-  const actions = getClaimActions(status);
+  const actions = getClaimActionsForItem(status, item.type);
   if (actions.length === 0) {
     return null;
   }
@@ -59,50 +60,24 @@ const renderClaimButtons = (
   );
 };
 
-/** 배송중 또는 배송완료 상태에서 구매확정 버튼과 포인트 안내를 표시 */
+/** 배송중 또는 배송완료 상태에서 구매확정 버튼을 표시 */
 const PurchaseConfirmSection = ({
   orderId,
-  shippedAt,
-  deliveredAt,
-  totalPrice,
 }: {
   orderId: string;
-  shippedAt: string | null;
-  deliveredAt: string | null;
-  totalPrice: number;
 }) => {
   const { mutate, isPending, isSuccess, isError, error } = useConfirmPurchase(orderId);
-
-  const baseDate = deliveredAt ?? shippedAt;
-  const parsedBaseDate = baseDate ? Date.parse(baseDate) : null;
-  const daysRemaining =
-    Number.isFinite(parsedBaseDate)
-      ? Math.max(0, Math.min(7, 7 - Math.floor((Date.now() - parsedBaseDate!) / 86_400_000)))
-      : null;
-
-  const manualPoints = Math.floor(totalPrice * 0.02).toLocaleString();
-  const autoPoints = Math.floor(totalPrice * 0.005).toLocaleString();
 
   if (isSuccess) {
     return (
       <div className="rounded-md bg-green-50 border border-green-200 p-4 text-sm text-green-800">
-        구매확정이 완료되었습니다. 포인트가 적립되었습니다.
+        구매확정이 완료되었습니다.
       </div>
     );
   }
 
   return (
     <div className="rounded-md bg-blue-50 border border-blue-200 p-4 space-y-3">
-      <p className="text-sm text-zinc-700">
-        지금 구매확정하면{" "}
-        <span className="font-semibold text-blue-700">{manualPoints}P (2%)</span> 적립!
-      </p>
-      {daysRemaining !== null && (
-        <p className="text-xs text-zinc-500">
-          자동 구매확정까지 <span className="font-medium">{daysRemaining}일</span> 남음
-          (자동 확정 시 {autoPoints}P / 0.5% 적립)
-        </p>
-      )}
       {isError && (
         <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800">
           {getOrderErrorDescription(error) || "구매확정에 실패했습니다. 다시 시도해주세요."}
@@ -302,10 +277,12 @@ const OrderDetailPage = () => {
                 <CardTitle>결제 정보</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-zinc-600">배송비</span>
-                  <span>무료</span>
-                </div>
+                {order.orderType !== "token" && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-zinc-600">배송비</span>
+                    <span>무료</span>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between text-base font-semibold">
                   <span>총 결제 금액</span>
@@ -347,16 +324,20 @@ const OrderDetailPage = () => {
               </CardContent>
 
               {/* 배송지 정보 */}
-              <CardHeader>
-                <CardTitle>배송지 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1 text-sm">
-                {order.shippingInfo ? (
-                  <ShippingInfoSection info={order.shippingInfo} />
-                ) : (
-                  <p className="text-zinc-500">배송지 정보가 없습니다.</p>
-                )}
-              </CardContent>
+              {order.orderType !== "token" && (
+                <>
+                  <CardHeader>
+                    <CardTitle>배송지 정보</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1 text-sm">
+                    {order.shippingInfo ? (
+                      <ShippingInfoSection info={order.shippingInfo} />
+                    ) : (
+                      <p className="text-zinc-500">배송지 정보가 없습니다.</p>
+                    )}
+                  </CardContent>
+                </>
+              )}
 
               {/* 배송 추적 정보 */}
               {order.trackingInfo && (
@@ -373,18 +354,18 @@ const OrderDetailPage = () => {
                 </>
               )}
 
-              <CardContent>
-                <Separator />
-              </CardContent>
+              {order.orderType !== "token" && (
+                <CardContent>
+                  <Separator />
+                </CardContent>
+              )}
 
               {/* 구매확정 */}
-              {(order.status === "배송완료" || order.status === "배송중") && (
+              {order.orderType !== "token" &&
+                (order.status === "배송완료" || order.status === "배송중") && (
                 <CardContent>
                   <PurchaseConfirmSection
                     orderId={order.id}
-                    shippedAt={order.trackingInfo?.shippedAt ?? null}
-                    deliveredAt={order.trackingInfo?.deliveredAt ?? null}
-                    totalPrice={order.totalPrice}
                   />
                 </CardContent>
               )}
@@ -404,6 +385,24 @@ const OrderDetailPage = () => {
                       actions={renderClaimButtons(order.status, item, handleClaimRequest)}
                     />
                   </CardContent>
+                  {item.type === "custom" && (
+                    <>
+                      <CardContent>
+                        <Separator />
+                      </CardContent>
+                      <CardHeader>
+                        <CardTitle>주문 제작 옵션</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CustomOrderOptionsSection
+                          options={item.customData.options}
+                          referenceImageUrls={item.customData.referenceImageUrls}
+                          additionalNotes={item.customData.additionalNotes}
+                          sampleType={item.customData.sampleType}
+                        />
+                      </CardContent>
+                    </>
+                  )}
                   {index < order.items.length - 1 && (
                     <CardContent>
                       <Separator />

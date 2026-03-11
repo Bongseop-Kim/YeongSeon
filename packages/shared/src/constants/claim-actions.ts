@@ -1,4 +1,4 @@
-import type { OrderStatus } from "../types/view/order";
+import type { OrderItem, OrderStatus } from "../types/view/order";
 
 export type ClaimActionType = "return" | "exchange" | "cancel";
 
@@ -27,3 +27,23 @@ export const CLAIM_ACTION_LABEL: Record<ClaimActionType, string> = {
 
 export const getClaimActions = (status: OrderStatus): ClaimActionType[] =>
   CLAIM_ACTIONS_BY_STATUS[status] ?? [];
+
+export const getClaimActionsForItem = (
+  status: OrderStatus,
+  itemType: OrderItem["type"],
+): ClaimActionType[] => {
+  if (itemType === "token") {
+    return [];
+  }
+
+  const actions = getClaimActions(status);
+
+  if (itemType === "custom" || itemType === "reform") {
+    return actions.filter(
+      (action): action is Exclude<ClaimActionType, "return" | "exchange"> =>
+        action !== "return" && action !== "exchange",
+    );
+  }
+
+  return actions;
+};

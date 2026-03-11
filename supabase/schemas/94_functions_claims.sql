@@ -203,6 +203,9 @@ begin
       if not (v_current_status = '수거요청' and p_new_status = '접수') then
         raise exception 'Invalid rollback from "%" to "%" for exchange claim', v_current_status, p_new_status;
       end if;
+    elsif v_claim_type = 'token_refund' then
+      -- token_refund 롤백: 거부→접수는 공통 로직(위)에서 허용, 나머지 롤백 불가
+      raise exception 'Invalid rollback from "%" to "%" for token_refund claim', v_current_status, p_new_status;
     else
       raise exception 'Unknown claim type: %', v_claim_type;
     end if;
@@ -234,6 +237,14 @@ begin
         or (p_new_status = '거부' and v_current_status in ('접수', '수거요청', '수거완료', '재발송'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for exchange claim', v_current_status, p_new_status;
+      end if;
+    elsif v_claim_type = 'token_refund' then
+      -- token_refund 완료 처리는 approve_token_refund() 전용 (Edge Function 경유 필수)
+      -- 이 RPC에서 완료를 허용하면 design_tokens/orders 부수효과가 누락된다.
+      if not (
+        (v_current_status = '접수' and p_new_status = '거부')
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for token_refund claim', v_current_status, p_new_status;
       end if;
     else
       raise exception 'Unknown claim type: %', v_claim_type;

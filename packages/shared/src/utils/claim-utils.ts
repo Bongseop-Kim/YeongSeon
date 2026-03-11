@@ -8,5 +8,7 @@ export const getClaimTypeLabel = (type: ClaimType) => {
       return "반품";
     case "exchange":
       return "교환";
+    case "token_refund":
+      return "토큰환불";
   }
 };

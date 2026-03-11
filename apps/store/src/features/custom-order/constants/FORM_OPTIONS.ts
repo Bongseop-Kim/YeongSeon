@@ -9,12 +9,10 @@ export const DESIGN_TYPES = [
 ] as const;
 
 export const TIE_TYPES = [
-  { value: "MANUAL", label: "수동 봉제" },
-  { value: "AUTO", label: "자동 봉제" },
+  { value: "AUTO", label: "자동 타이 (지퍼)" },
 ] as const;
 
 export const INTERLINING_TYPES = [
-  { value: "POLY", label: "폴리 심지" },
   { value: "WOOL", label: "울 심지" },
 ] as const;
 

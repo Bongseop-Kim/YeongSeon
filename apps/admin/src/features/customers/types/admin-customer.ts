@@ -47,6 +47,7 @@ export interface AdminCustomerTokenRow {
   requestType: string | null;
   description: string | null;
   createdAt: string;
+  workId: string | null;
 }
 
 export interface AdminTokenManageForm {

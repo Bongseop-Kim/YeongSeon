@@ -20,8 +20,8 @@ interface PackageSelectorProps {
 const OPTION_LABELS = {
   fabricType: (v: OrderOptions["fabricType"] | undefined) => (v === "SILK" ? "실크" : "폴리"),
   designType: (v: OrderOptions["designType"] | undefined) => (v === "YARN_DYED" ? "선염" : "날염"),
-  tieType: (v: OrderOptions["tieType"] | undefined) => (v === "AUTO" ? "자동 봉제" : "수동 봉제"),
-  interlining: (v: OrderOptions["interlining"] | undefined) => (v === "WOOL" ? "울 심지" : "폴리 심지"),
+  tieType: (v: OrderOptions["tieType"] | undefined) => (v === "AUTO" ? "자동 타이 (지퍼)" : "수동 타이 (손매듭)"),
+  interlining: (v: OrderOptions["interlining"] | undefined) => (v === "WOOL" ? "울 심지" : "심지 없음"),
 } as const;
 
 export const PackageSelector = ({
@@ -53,8 +53,8 @@ export const PackageSelector = ({
                 reorder: false,
                 fabricType: preset.values.fabricType ?? "POLY",
                 designType: preset.values.designType ?? "PRINTING",
-                tieType: preset.values.tieType ?? "MANUAL",
-                interlining: preset.values.interlining ?? "POLY",
+                tieType: preset.values.tieType ?? null,
+                interlining: preset.values.interlining ?? null,
                 interliningThickness: preset.values.interliningThickness ?? "THICK",
                 sizeType: "ADULT",
                 tieWidth: 8,

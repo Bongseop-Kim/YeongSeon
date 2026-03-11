@@ -15,8 +15,8 @@ export interface OrderOptions {
   designType: "PRINTING" | "YARN_DYED" | null;
 
   // 제작 옵션
-  tieType: "MANUAL" | "AUTO" | null;
-  interlining: "POLY" | "WOOL" | null;
+  tieType: "AUTO" | null;
+  interlining: "WOOL" | null;
   interliningThickness: "THICK" | "THIN" | null;
   sizeType: "ADULT" | "CHILD" | null;
   tieWidth: number;

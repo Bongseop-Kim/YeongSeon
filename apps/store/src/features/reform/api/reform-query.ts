@@ -27,7 +27,7 @@ export function useReformPricing() {
     queryKey: ["reform", "pricing"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("custom_order_pricing_constants")
+        .from("pricing_constants")
         .select("key, amount")
         .in("key", ["REFORM_BASE_COST", "REFORM_SHIPPING_COST"]);
 
@@ -35,9 +35,19 @@ export function useReformPricing() {
 
       const map = Object.fromEntries(data.map((r) => [r.key, r.amount]));
 
+      const baseCostRaw = map["REFORM_BASE_COST"];
+      const shippingCostRaw = map["REFORM_SHIPPING_COST"];
+
+      if (!Number.isFinite(baseCostRaw)) {
+        throw new Error("pricing_constants에서 REFORM_BASE_COST를 찾을 수 없습니다.");
+      }
+      if (!Number.isFinite(shippingCostRaw)) {
+        throw new Error("pricing_constants에서 REFORM_SHIPPING_COST를 찾을 수 없습니다.");
+      }
+
       return {
-        baseCost: map["REFORM_BASE_COST"] as number,
-        shippingCost: map["REFORM_SHIPPING_COST"] as number,
+        baseCost: baseCostRaw as number,
+        shippingCost: shippingCostRaw as number,
       };
     },
   });

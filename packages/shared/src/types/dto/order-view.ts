@@ -65,13 +65,25 @@ export interface CustomOrderItemDTO {
   appliedCoupon?: AppliedCouponDTO;
 }
 
-export type OrderItemDTO = ProductOrderItemDTO | ReformOrderItemDTO | CustomOrderItemDTO;
+export interface TokenOrderItemDTO {
+  id: string;
+  type: "token";
+  quantity: number;
+  appliedCoupon?: AppliedCouponDTO;
+}
+
+export type OrderItemDTO =
+  | ProductOrderItemDTO
+  | ReformOrderItemDTO
+  | CustomOrderItemDTO
+  | TokenOrderItemDTO;
 
 export interface OrderViewDTO {
   id: string;
   orderNumber: string;
   date: string;
   status: OrderStatusDTO;
+  orderType: "sale" | "custom" | "repair" | "token";
   items: OrderItemDTO[];
   totalPrice: number;
 }
@@ -82,6 +94,7 @@ export interface OrderListRowDTO {
   date: string;
   status: OrderStatusDTO;
   totalPrice: number;
+  orderType: "sale" | "custom" | "repair" | "token";
   created_at: string;
 }
 
@@ -92,6 +105,7 @@ export interface OrderDetailRowDTO {
   date: string;
   status: OrderStatusDTO;
   totalPrice: number;
+  orderType: "sale" | "custom" | "repair" | "token";
   courierCompany: string | null;
   trackingNumber: string | null;
   shippedAt: string | null;
@@ -110,7 +124,7 @@ export interface OrderDetailRowDTO {
 export interface OrderItemRowDTO {
   order_id: string;
   id: string;
-  type: "product" | "reform" | "custom";
+  type: "product" | "reform" | "custom" | "token";
   product: ProductDTO | null;
   selectedOption: ProductOptionDTO | null;
   quantity: number;
