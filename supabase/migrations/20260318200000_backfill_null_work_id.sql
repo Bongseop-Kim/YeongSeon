@@ -5,10 +5,11 @@
 -- =============================================================
 
 -- 각 null work_id 토큰에 대해 가장 가까운 시간의 미매칭 token 주문을 연결
+-- DISTINCT ON (o.id): 주문당 최대 1개의 토큰만 매칭하여 work_id 유니크 인덱스 위반 방지
 UPDATE public.design_tokens dt
 SET    work_id = 'order_' || matched.order_id::text
 FROM (
-  SELECT DISTINCT ON (dt2.id)
+  SELECT DISTINCT ON (o.id)
     dt2.id       AS token_id,
     o.id         AS order_id
   FROM public.design_tokens dt2
@@ -26,7 +27,7 @@ FROM (
     )
   WHERE dt2.work_id IS NULL
     AND dt2.type      = 'purchase'
-  ORDER BY dt2.id,
+  ORDER BY o.id,
            ABS(EXTRACT(EPOCH FROM (dt2.created_at - o.created_at)))
 ) matched
 WHERE dt.id = matched.token_id;
