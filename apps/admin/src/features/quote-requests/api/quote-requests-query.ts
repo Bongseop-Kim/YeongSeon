@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTable } from "@refinedev/antd";
-import { useShow, useList, useInvalidate } from "@refinedev/core";
+import { useShow, useList, useInvalidate, useParsed } from "@refinedev/core";
 import { message } from "antd";
 import type { TableProps } from "antd";
 import type {
@@ -44,8 +44,10 @@ export function useAdminQuoteRequestTable() {
 // ── Detail ────────────────────────────────────────────────────
 
 export function useAdminQuoteRequestDetail() {
+  const { id } = useParsed();
   const { query } = useShow<AdminQuoteRequestDetailRowDTO>({
     resource: "admin_quote_request_detail_view",
+    id,
   });
 
   const rawData = query.data?.data;
@@ -53,7 +55,7 @@ export function useAdminQuoteRequestDetail() {
     ? toAdminQuoteRequestDetail(rawData)
     : undefined;
 
-  return { detail, refetch: query.refetch, isLoading: query.isLoading };
+  return { detail, refetch: query.refetch, isLoading: query.isLoading, error: query.error };
 }
 
 // ── Status logs ────────────────────────────────────────────────

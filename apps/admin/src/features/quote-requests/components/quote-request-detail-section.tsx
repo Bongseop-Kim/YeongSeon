@@ -9,6 +9,8 @@ import {
   InputNumber,
   Input,
   Image,
+  Spin,
+  Alert,
 } from "antd";
 import { useNavigation } from "@refinedev/core";
 import {
@@ -29,7 +31,7 @@ const { TextArea } = Input;
 
 export function QuoteRequestDetailSection() {
   const { show } = useNavigation();
-  const { detail, refetch, isLoading } = useAdminQuoteRequestDetail();
+  const { detail, refetch, isLoading, error } = useAdminQuoteRequestDetail();
   const { logs } = useAdminQuoteRequestStatusLogs(detail?.id);
 
   const {
@@ -47,8 +49,9 @@ export function QuoteRequestDetailSection() {
     () => setStatusMemo("")
   );
 
-  if (isLoading) return null;
-  if (!detail) return null;
+  if (isLoading) return <Spin style={{ display: "block", marginTop: 48 }} />;
+  if (error) return <Alert type="error" message={`데이터를 불러오는 데 실패했습니다: ${error instanceof Error ? error.message : String(error)}`} />;
+  if (!detail) return <Alert type="warning" message="견적 정보를 찾을 수 없습니다." />;
 
   const nextStatus = QUOTE_REQUEST_STATUS_FLOW[detail.status];
 
