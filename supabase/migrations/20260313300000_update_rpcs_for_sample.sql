@@ -6,6 +6,8 @@
 -- 기존 함수(jsonb, integer) 시그니처 제거 후 새 시그니처로 재생성
 DROP FUNCTION IF EXISTS public.calculate_custom_order_amounts(jsonb, integer);
 
+-- SECURITY INVOKER: custom_order_pricing_constants는 anon/authenticated 모두 SELECT 허용
+-- (allow_public_read_pricing_constants 정책)하므로 RLS 우회 불필요.
 CREATE OR REPLACE FUNCTION public.calculate_custom_order_amounts(
   p_options jsonb,
   p_quantity integer,
@@ -14,7 +16,7 @@ CREATE OR REPLACE FUNCTION public.calculate_custom_order_amounts(
 )
 RETURNS TABLE (sewing_cost integer, fabric_cost integer, sample_cost integer, total_cost integer)
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 declare
@@ -432,6 +434,10 @@ end;
 $$;
 
 -- ── 3. admin_update_order_status: 샘플 상태 전이 추가 ──
+-- SECURITY DEFINER 사유: 관리자 전용 함수이나 호출자(authenticated 역할)는 orders 테이블에
+-- 직접 UPDATE 권한이 없고, order_status_logs 테이블에 INSERT 정책이 없어 RLS 우회가 필요하다.
+-- 권한 상승 위험 통제: 함수 내부에서 auth.uid() + is_admin() 이중 검증을 수행하며,
+-- 모든 상태 변경은 order_status_logs에 감사 로그로 기록된다.
 CREATE OR REPLACE FUNCTION public.admin_update_order_status(
   p_order_id uuid,
   p_new_status text,
@@ -677,6 +683,10 @@ end;
 $$;
 
 -- ── 4. create_claim: 제작완료 이후 cancel 차단 추가 ──
+-- SECURITY DEFINER 사유: claims 테이블과 order_status_logs 테이블 모두 일반 유저 INSERT
+-- 정책이 없어 호출자 권한으로는 쓰기가 불가능하다. 최소 권한 원칙 하에 의도적으로 선택된
+-- DEFINER이며, 함수 내부에서 auth.uid() 소유권 검증 및 입력값 유효성 검사를 수행해
+-- 권한 상승 위험을 통제한다. 모든 클레임 생성은 order_status_logs에 감사 로그로 기록된다.
 CREATE OR REPLACE FUNCTION public.create_claim(
   p_type text,
   p_order_id uuid,

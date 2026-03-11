@@ -16,11 +16,11 @@ AS $$
   group by pl.product_id;
 $$;
 
--- Checks if the current user liked a product (SECURITY DEFINER bypasses RLS)
+-- Checks if the current user liked a product
 CREATE OR REPLACE FUNCTION public.product_is_liked_rpc(p_id integer)
 RETURNS boolean
 LANGUAGE sql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
   select exists (
