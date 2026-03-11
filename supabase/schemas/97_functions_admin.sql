@@ -60,6 +60,11 @@ begin
     from public.order_items oi
     where oi.order_id = p_order_id and oi.item_type = 'custom'
     limit 1;
+
+    if not found then
+      raise exception 'custom order has no custom item for order %', p_order_id;
+    end if;
+
     v_is_sample := coalesce(v_is_sample, false);
   end if;
 

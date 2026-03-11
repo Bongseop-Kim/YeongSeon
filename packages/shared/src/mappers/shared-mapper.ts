@@ -85,8 +85,13 @@ export function parseCustomOrderData(
 
   const sewingCost = rawPricing.sewing_cost;
   const fabricCost = rawPricing.fabric_cost;
-  // sample_cost는 샘플 없는 이전 주문에서 누락될 수 있으므로 0으로 fallback
-  const sampleCost = typeof rawPricing.sample_cost === "number" ? rawPricing.sample_cost : 0;
+  const rawSampleCost = rawPricing.sample_cost;
+  if (rawSampleCost !== undefined && rawSampleCost !== null && typeof rawSampleCost !== "number") {
+    throw new Error(
+      `custom order data 검증 실패: pricing.sample_cost 필드 오류 (raw keys: ${rawKeys.join(", ")})`
+    );
+  }
+  const sampleCost = typeof rawSampleCost === "number" ? rawSampleCost : 0;
   const totalCost = rawPricing.total_cost;
   const invalidPricingFields: string[] = [];
 

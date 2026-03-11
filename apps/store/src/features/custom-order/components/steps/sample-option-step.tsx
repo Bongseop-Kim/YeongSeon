@@ -29,7 +29,7 @@ const SAMPLE_TYPE_OPTIONS = [
 
 export const SampleOptionStep = () => {
   const { watch, setValue } = useFormContext<QuoteOrderOptions>();
-  const { data: pricingConfig } = usePricingConfig();
+  const { data: pricingConfig, isLoading, isError } = usePricingConfig();
   const sample = watch("sample");
   const fabricProvided = watch("fabricProvided");
   const sampleType = watch("sampleType");
@@ -42,8 +42,11 @@ export const SampleOptionStep = () => {
     }
   }, [fabricProvided, sample, setValue]);
 
-  if (!pricingConfig) {
+  if (isLoading) {
     return <div className="text-sm text-gray-400">로딩중...</div>;
+  }
+  if (isError || !pricingConfig) {
+    return <div className="text-sm text-red-400">가격 정보를 불러오지 못했습니다.</div>;
   }
 
   const handleSampleToggle = (wantsSample: boolean) => {

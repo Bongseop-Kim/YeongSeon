@@ -212,6 +212,9 @@ Deno.serve(async (req) => {
       const tokenAmount =
         (tokenItem?.item_data as { token_amount?: number } | null)
           ?.token_amount ?? null;
+      if (typeof tokenAmount !== "number") {
+        return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
+      }
       return jsonResponse(200, {
         paymentKey: payload.paymentKey,
         paymentGroupId: payload.orderId,
@@ -309,6 +312,9 @@ Deno.serve(async (req) => {
       const tokenAmountViaLock =
         (tokenItemViaLock?.item_data as { token_amount?: number } | null)
           ?.token_amount ?? null;
+      if (typeof tokenAmountViaLock !== "number") {
+        return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
+      }
       return jsonResponse(200, {
         paymentKey: payload.paymentKey,
         paymentGroupId: payload.orderId,
@@ -469,6 +475,9 @@ Deno.serve(async (req) => {
     updatedOrders.length === 1 && updatedOrders[0].orderType === "token";
   if (isTokenOrder) {
     const tokenAmount = updatedOrders[0].tokenAmount;
+    if (typeof tokenAmount !== "number") {
+      return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
+    }
     return jsonResponse(200, {
       paymentKey: payload.paymentKey,
       paymentGroupId: payload.orderId,

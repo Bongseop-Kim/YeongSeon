@@ -88,6 +88,10 @@ begin
       where oi.order_id = v_order.id and oi.item_type = 'token'
       limit 1;
 
+      if v_token_amount is null or v_token_amount = 0 then
+        raise exception 'token order % has no valid token_amount (plan_key: %)', v_order.id, v_plan_key;
+      end if;
+
       v_plan_label := case v_plan_key
         when 'starter' then 'Starter'
         when 'popular' then 'Popular'
@@ -114,11 +118,16 @@ begin
       v_points := floor(v_points * 0.02);
 
       if v_points > 0 then
-        insert into public.points (user_id, order_id, amount, type, description)
-        values (
-          p_user_id, v_order.id, v_points, 'earn',
-          '토큰 구매 포인트 적립 (2%)'
-        );
+        if not exists (
+          select 1 from public.points
+          where order_id = v_order.id and type = 'earn'
+        ) then
+          insert into public.points (user_id, order_id, amount, type, description)
+          values (
+            p_user_id, v_order.id, v_points, 'earn',
+            '토큰 구매 포인트 적립 (2%)'
+          );
+        end if;
       end if;
     end if;
 
