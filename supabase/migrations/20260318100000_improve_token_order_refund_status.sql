@@ -4,7 +4,7 @@
 -- 환불 불가 주문도 포함하여 이유와 함께 반환
 -- =============================================================
 
-DROP FUNCTION public.get_refundable_token_orders();
+DROP FUNCTION IF EXISTS public.get_refundable_token_orders();
 
 CREATE OR REPLACE FUNCTION public.get_refundable_token_orders()
 RETURNS jsonb
