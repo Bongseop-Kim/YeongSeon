@@ -83,6 +83,7 @@ export interface OrderViewDTO {
   orderNumber: string;
   date: string;
   status: OrderStatusDTO;
+  orderType: "sale" | "custom" | "repair" | "token";
   items: OrderItemDTO[];
   totalPrice: number;
 }
@@ -93,6 +94,7 @@ export interface OrderListRowDTO {
   date: string;
   status: OrderStatusDTO;
   totalPrice: number;
+  orderType: "sale" | "custom" | "repair" | "token";
   created_at: string;
 }
 
@@ -103,6 +105,7 @@ export interface OrderDetailRowDTO {
   date: string;
   status: OrderStatusDTO;
   totalPrice: number;
+  orderType: "sale" | "custom" | "repair" | "token";
   courierCompany: string | null;
   trackingNumber: string | null;
   shippedAt: string | null;

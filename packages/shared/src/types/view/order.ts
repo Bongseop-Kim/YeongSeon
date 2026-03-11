@@ -108,6 +108,7 @@ export interface Order {
   orderNumber: string; // 주문 번호
   date: string; // 주문 날짜
   status: OrderStatus;
+  orderType: "sale" | "custom" | "repair" | "token";
   items: OrderItem[]; // 주문에 포함된 상품들
   totalPrice: number; // 총 주문 금액
   shippingInfo: ShippingInfo | null;
