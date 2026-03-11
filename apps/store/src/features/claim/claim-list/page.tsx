@@ -19,6 +19,19 @@ import {
   type ListFilters,
 } from "@/features/order/utils/list-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
+import { cn } from "@/lib/utils";
+
+type ClaimTypeFilter = "전체" | "취소" | "반품" | "교환" | "토큰환불";
+
+const CLAIM_TYPE_TABS: ClaimTypeFilter[] = ["전체", "취소", "반품", "교환", "토큰환불"];
+
+const CLAIM_TYPE_MAP: Record<Exclude<ClaimTypeFilter, "전체">, ClaimType> = {
+  취소: "cancel",
+  반품: "return",
+  교환: "exchange",
+  토큰환불: "token_refund",
+};
 
 export default function ClaimListPage() {
   const navigate = useNavigate();
@@ -34,10 +47,17 @@ export default function ClaimListPage() {
     [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
   );
   const { data: claims = [], isLoading, error } = useClaims(queryFilters);
+  const [activeTab, setActiveTab] = useState<ClaimTypeFilter>("전체");
+
+  const filteredClaims = useMemo(() => {
+    if (activeTab === "전체") return claims;
+    const claimType = CLAIM_TYPE_MAP[activeTab];
+    return claims.filter((claim) => claim.type === claimType);
+  }, [claims, activeTab]);
 
   useEffect(() => {
     setSearchEnabled(true, {
-      placeholder: "취소/반품/교환 검색...",
+      placeholder: "취소/반품/교환/토큰환불 검색...",
       onSearch: (query, dateFilter) => {
         setSearchFilters({
           keyword: query,
@@ -86,15 +106,31 @@ export default function ClaimListPage() {
       <MainContent>
         <PageLayout>
             <div>
-              {claims.length === 0 ? (
+              <div className="flex gap-1 overflow-x-auto pb-2">
+                {CLAIM_TYPE_TABS.map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                      activeTab === tab
+                        ? "bg-zinc-900 text-white"
+                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                    )}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+              {filteredClaims.length === 0 ? (
                 <Card>
                   <Empty
-                    title="취소/반품/교환 내역이 없습니다."
+                    title="취소/반품/교환/토큰환불 내역이 없습니다."
                     description="문제가 있으시면 고객센터로 문의해주세요."
                   />
                 </Card>
               ) : (
-                claims.map((claim) => (
+                filteredClaims.map((claim) => (
                   <Card key={claim.id}>
                     {/* 클레임 헤더 */}
                     <CardHeader>
@@ -132,6 +168,19 @@ export default function ClaimListPage() {
                           )
                         }
                       />
+
+                      {claim.type === "token_refund" && claim.refundData && (
+                        <div className="p-3 bg-blue-50 rounded-md mt-3 space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-zinc-600">환불 토큰</span>
+                            <span>{claim.refundData.paidTokenAmount}T</span>
+                          </div>
+                          <div className="flex justify-between font-semibold">
+                            <span className="text-zinc-600">환불 금액</span>
+                            <span>{claim.refundData.refundAmount.toLocaleString()}원</span>
+                          </div>
+                        </div>
+                      )}
 
                       {/* 클레임 사유 */}
                       <div className="p-3 bg-zinc-50 rounded-md mt-3">
