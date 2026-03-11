@@ -671,7 +671,7 @@ $$;
 
 -- ── approve_token_refund ──────────────────────────────────────
 -- 관리자 환불 승인 (service_role 전용, Edge Function에서 Toss 취소 후 호출)
--- SECURITY DEFINER 사유: design_tokens/orders/points INSERT/UPDATE는 RLS 비허용
+-- SECURITY DEFINER 사유: design_tokens/orders INSERT/UPDATE는 RLS 비허용
 CREATE OR REPLACE FUNCTION public.approve_token_refund(
   p_request_id uuid,
   p_admin_id   uuid
@@ -684,7 +684,6 @@ AS $$
 DECLARE
   v_caller_role text;
   v_req         record;
-  v_earn_points integer;
 BEGIN
   -- service_role 전용
   v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
@@ -726,21 +725,6 @@ BEGIN
       'refund_' || p_request_id::text || '_bonus'
     )
     ON CONFLICT (work_id) DO NOTHING;
-  END IF;
-
-  -- 포인트 회수: 해당 주문의 earn 포인트 역삽입
-  SELECT COALESCE(SUM(p.amount), 0)::integer
-    INTO v_earn_points
-    FROM public.points p
-   WHERE p.order_id = v_req.order_id AND p.type = 'earn';
-
-  IF v_earn_points > 0 THEN
-    INSERT INTO public.points (user_id, order_id, amount, type, description)
-    VALUES (
-      v_req.user_id, v_req.order_id, -v_earn_points, 'admin',
-      '토큰 환불로 인한 포인트 회수'
-    )
-    ON CONFLICT (order_id, type) DO NOTHING;
   END IF;
 
   -- 주문 취소 처리 (전액 환불이므로 항상 취소)

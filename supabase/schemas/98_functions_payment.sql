@@ -21,7 +21,6 @@ declare
   v_token_amount integer;
   v_plan_key text;
   v_plan_label text;
-  v_points integer;
 begin
   -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
   if p_user_id is null then
@@ -78,7 +77,7 @@ begin
       'payment confirmed: ' || v_masked_key
     );
 
-    -- token 주문: 토큰 지급 + 포인트 적립 (2%)
+    -- token 주문: 토큰 지급
     if v_order.order_type = 'token' then
       select
         (oi.item_data->>'token_amount')::integer,
@@ -110,22 +109,6 @@ begin
         'order_' || v_order.id::text || '_paid'
       )
       on conflict (work_id) do nothing;
-
-      -- 포인트 적립 (결제 금액의 2%)
-      select o.total_price into v_points
-      from public.orders o
-      where o.id = v_order.id;
-      v_points := floor(v_points * 0.02);
-
-      if v_points > 0 then
-        -- ON CONFLICT (order_id, type) DO NOTHING으로 TOCTOU 방지 (idx_points_order_earn)
-        insert into public.points (user_id, order_id, amount, type, description)
-        values (
-          p_user_id, v_order.id, v_points, 'earn',
-          '토큰 구매 포인트 적립 (2%)'
-        )
-        on conflict (order_id, type) do nothing;
-      end if;
     end if;
 
     v_updated_orders := v_updated_orders || jsonb_build_object(

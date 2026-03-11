@@ -536,14 +536,3 @@ export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
 export const fromOrderItemRowDTO = (item: OrderItemRowDTO): OrderItemDTO =>
   normalizeItemRow(item);
 
-export const parseConfirmPurchaseResponse = (
-  data: unknown
-): { pointsEarned: number } => {
-  if (data == null || !isRecord(data)) {
-    throw new Error("구매확정 응답이 올바르지 않습니다: 객체가 아닙니다.");
-  }
-  if (typeof data.points_earned !== "number") {
-    throw new Error("구매확정 응답이 올바르지 않습니다: points_earned 누락.");
-  }
-  return { pointsEarned: data.points_earned };
-};
