@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import DesignPage from "@/features/design/page";
 import HomePage from "@/features/home/page";
@@ -34,6 +35,10 @@ import RefundPolicyPage from "@/features/refund-policy/page";
 import LoginPage from "@/features/auth/login/page";
 import AuthCallbackPage from "@/features/auth/callback/page";
 import { ProtectedRoute } from "@/components/composite/protected-route";
+
+const QuoteRequestListPage = lazy(
+  () => import("@/features/my-page/quote-request/page")
+);
 
 export default function Router() {
   return (
@@ -182,6 +187,16 @@ export default function Router() {
         element={
           <ProtectedRoute>
             <TokenHistoryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page/quote-request"
+        element={
+          <ProtectedRoute>
+            <Suspense fallback={null}>
+              <QuoteRequestListPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
