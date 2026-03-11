@@ -7,6 +7,7 @@ import type {
   AdminClaimOrderShipping,
   AdminClaimCustomer,
   AdminClaimLinkedOrder,
+  AdminTokenRefundInfo,
 } from "../types/admin-claim";
 
 // ── Private helpers ────────────────────────────────────────────
@@ -90,6 +91,13 @@ export function toAdminClaimDetail(
     orderShipping: toOrderShipping(dto),
     returnTracking: toReturnTracking(dto),
     resendTracking: toResendTracking(dto),
+    refundData: dto.refund_data
+      ? {
+          paidTokenAmount: dto.refund_data.paid_token_amount,
+          bonusTokenAmount: dto.refund_data.bonus_token_amount,
+          refundAmount: dto.refund_data.refund_amount,
+        } satisfies AdminTokenRefundInfo
+      : null,
   };
 }
 

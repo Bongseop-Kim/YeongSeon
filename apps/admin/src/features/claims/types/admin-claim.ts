@@ -25,6 +25,12 @@ export interface AdminClaimLinkedOrder {
   orderNumber: string;
 }
 
+export interface AdminTokenRefundInfo {
+  paidTokenAmount: number;
+  bonusTokenAmount: number;
+  refundAmount: number;
+}
+
 // ── List UI model ──────────────────────────────────────────────
 
 export interface AdminClaimListItem {
@@ -50,13 +56,14 @@ export interface AdminClaimDetail {
   reason: string;
   description: string | null;
   claimQuantity: number;
-  itemType: "product" | "reform";
+  itemType: "product" | "reform" | "token";
   productName: string | null;
   customer: AdminClaimCustomer;
   linkedOrder: AdminClaimLinkedOrder;
   orderShipping: AdminClaimOrderShipping;
   returnTracking: AdminClaimTrackingInfo | null;
   resendTracking: AdminClaimTrackingInfo | null;
+  refundData: AdminTokenRefundInfo | null;
 }
 
 // ── Status log ────────────────────────────────────────────────
