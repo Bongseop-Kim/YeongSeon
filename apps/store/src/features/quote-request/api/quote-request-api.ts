@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { isRecord } from "@/lib/type-guard";
 import { toCreateQuoteRequestInputDto } from "@/features/quote-request/api/quote-request-mapper";
 import type { CreateQuoteRequestRequest } from "@/features/quote-request/types/dto/quote-request-input";
 import type {
@@ -34,10 +35,41 @@ export interface QuoteRequestListItem {
   contactMethod: ContactMethod;
 }
 
-export type { CreateQuoteRequestRequest };
+export interface QuoteRequestOptions {
+  tieType: string;
+  interlining: string;
+  designType: string;
+  fabricType: string;
+  fabricProvided: boolean;
+  interliningThickness: string;
+  triangleStitch: boolean;
+  sideStitch: boolean;
+  barTack: boolean;
+  dimple: boolean;
+  spoderato: boolean;
+  fold7: boolean;
+  brandLabel: boolean;
+  careLabel: boolean;
+}
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+export interface QuoteRequestDetail {
+  id: string;
+  quoteNumber: string;
+  date: string;
+  status: QuoteRequestStatus;
+  quantity: number;
+  options: QuoteRequestOptions;
+  referenceImageUrls: string[];
+  additionalNotes: string;
+  contactName: string;
+  contactTitle: string;
+  contactMethod: ContactMethod;
+  contactValue: string;
+  quotedAmount: number | null;
+  quoteConditions: string | null;
+}
+
+export type { CreateQuoteRequestRequest };
 
 const isContactMethod = (value: unknown): value is ContactMethod =>
   value === "email" || value === "kakao" || value === "phone";
@@ -118,6 +150,142 @@ const toQuoteRequestListItem = (
   contactMethod: row.contactMethod,
 });
 
+interface QuoteRequestDetailRowDTO {
+  id: string;
+  quoteNumber: string;
+  date: string;
+  status: QuoteRequestStatus;
+  quantity: number;
+  options: Record<string, unknown>;
+  referenceImages: unknown;
+  additionalNotes: string;
+  contactName: string;
+  contactTitle: string;
+  contactMethod: ContactMethod;
+  contactValue: string;
+  quotedAmount: number | null;
+  quoteConditions: string | null;
+}
+
+const toQuoteRequestOptions = (raw: Record<string, unknown>): QuoteRequestOptions => ({
+  tieType: typeof raw.tie_type === "string" ? raw.tie_type : "",
+  interlining: typeof raw.interlining === "string" ? raw.interlining : "",
+  designType: typeof raw.design_type === "string" ? raw.design_type : "",
+  fabricType: typeof raw.fabric_type === "string" ? raw.fabric_type : "",
+  fabricProvided: raw.fabric_provided === true,
+  interliningThickness:
+    typeof raw.interlining_thickness === "string"
+      ? raw.interlining_thickness
+      : "",
+  triangleStitch: raw.triangle_stitch === true,
+  sideStitch: raw.side_stitch === true,
+  barTack: raw.bar_tack === true,
+  dimple: raw.dimple === true,
+  spoderato: raw.spoderato === true,
+  fold7: raw.fold7 === true,
+  brandLabel: raw.brand_label === true,
+  careLabel: raw.care_label === true,
+});
+
+const toReferenceImageUrls = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((image) =>
+      isRecord(image) && typeof image.url === "string" ? image.url : null
+    )
+    .filter((url): url is string => url !== null);
+};
+
+const parseQuoteRequestDetailRow = (
+  data: unknown
+): QuoteRequestDetailRowDTO | null => {
+  if (data == null) return null;
+
+  if (!isRecord(data)) {
+    throw new Error("견적 요청 상세 응답이 올바르지 않습니다: 객체가 아닙니다.");
+  }
+
+  if (
+    typeof data.id !== "string" ||
+    typeof data.quoteNumber !== "string" ||
+    typeof data.date !== "string" ||
+    typeof data.quantity !== "number" ||
+    typeof data.additionalNotes !== "string" ||
+    typeof data.contactName !== "string" ||
+    typeof data.contactTitle !== "string" ||
+    typeof data.contactValue !== "string"
+  ) {
+    throw new Error(
+      "견적 요청 상세 응답이 올바르지 않습니다: 필수 필드가 누락되었습니다."
+    );
+  }
+
+  if (!isQuoteRequestStatus(data.status)) {
+    throw new Error(
+      `견적 요청 상세 응답이 올바르지 않습니다: status 값(${String(data.status)})이 허용된 상태가 아닙니다.`
+    );
+  }
+
+  if (!isContactMethod(data.contactMethod)) {
+    throw new Error(
+      `견적 요청 상세 응답이 올바르지 않습니다: contactMethod 값(${String(data.contactMethod)})이 허용된 값이 아닙니다.`
+    );
+  }
+
+  if (!isRecord(data.options)) {
+    throw new Error("견적 요청 상세 응답이 올바르지 않습니다: options가 객체가 아닙니다.");
+  }
+
+  if (data.quotedAmount !== null && typeof data.quotedAmount !== "number") {
+    throw new Error(
+      "견적 요청 상세 응답이 올바르지 않습니다: quotedAmount는 숫자 또는 null이어야 합니다."
+    );
+  }
+
+  if (data.quoteConditions !== null && typeof data.quoteConditions !== "string") {
+    throw new Error(
+      "견적 요청 상세 응답이 올바르지 않습니다: quoteConditions는 문자열 또는 null이어야 합니다."
+    );
+  }
+
+  return {
+    id: data.id,
+    quoteNumber: data.quoteNumber,
+    date: data.date,
+    status: data.status,
+    quantity: data.quantity,
+    options: data.options,
+    referenceImages: data.referenceImages,
+    additionalNotes: data.additionalNotes,
+    contactName: data.contactName,
+    contactTitle: data.contactTitle,
+    contactMethod: data.contactMethod,
+    contactValue: data.contactValue,
+    quotedAmount: data.quotedAmount,
+    quoteConditions: data.quoteConditions,
+  };
+};
+
+const toQuoteRequestDetail = (
+  row: QuoteRequestDetailRowDTO
+): QuoteRequestDetail => ({
+  id: row.id,
+  quoteNumber: row.quoteNumber,
+  date: row.date,
+  status: row.status,
+  quantity: row.quantity,
+  options: toQuoteRequestOptions(row.options),
+  referenceImageUrls: toReferenceImageUrls(row.referenceImages),
+  additionalNotes: row.additionalNotes,
+  contactName: row.contactName,
+  contactTitle: row.contactTitle,
+  contactMethod: row.contactMethod,
+  contactValue: row.contactValue,
+  quotedAmount: row.quotedAmount,
+  quoteConditions: row.quoteConditions,
+});
+
 export const createQuoteRequest = async (
   request: CreateQuoteRequestRequest
 ): Promise<CreateQuoteRequestResponse> => {
@@ -156,4 +324,22 @@ export const getQuoteRequests = async (): Promise<QuoteRequestListItem[]> => {
   }
 
   return parseQuoteRequestListRows(data).map(toQuoteRequestListItem);
+};
+
+export const getQuoteRequest = async (
+  id: string
+): Promise<QuoteRequestDetail | null> => {
+  const { data, error } = await supabase
+    .from("quote_request_detail_view")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    throw new Error("견적 요청 상세를 불러오는 데 실패했습니다.");
+  }
+
+  const row = parseQuoteRequestDetailRow(data);
+  return row ? toQuoteRequestDetail(row) : null;
 };

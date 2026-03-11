@@ -2,10 +2,13 @@ import { Empty } from "@/components/composite/empty";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Card } from "@/components/ui/card";
+import { ROUTES } from "@/constants/ROUTES";
 import { useQuoteRequests } from "@/features/quote-request/api/quote-request-query";
 import { QuoteRequestCard } from "@/features/quote-request/components/quote-request-card";
+import { useNavigate } from "react-router-dom";
 
 export default function QuoteRequestListPage() {
+  const navigate = useNavigate();
   const { data: quoteRequests = [], isLoading, error } = useQuoteRequests();
 
   if (isLoading) {
@@ -59,6 +62,14 @@ export default function QuoteRequestListPage() {
                 <QuoteRequestCard
                   key={quoteRequest.id}
                   quoteRequest={quoteRequest}
+                  onClick={() =>
+                    navigate(
+                      ROUTES.MY_PAGE_QUOTE_REQUEST_DETAIL.replace(
+                        ":id",
+                        quoteRequest.id
+                      )
+                    )
+                  }
                 />
               ))
             )}

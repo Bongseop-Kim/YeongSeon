@@ -22,6 +22,7 @@ export const ROUTES = {
   MY_PAGE_MY_INFO_LEAVE: "/my-page/my-info/leave", // 회원 탈퇴
   MY_PAGE_INQUIRY: "/my-page/inquiry", // 문의하기
   MY_PAGE_QUOTE_REQUEST: "/my-page/quote-request", // 견적 요청 내역
+  MY_PAGE_QUOTE_REQUEST_DETAIL: "/my-page/quote-request/:id", // 견적 요청 상세
   MY_PAGE_TOKEN_HISTORY: "/my-page/token-history", // 토큰 내역
   FAQ: "/faq", // 자주 묻는 질문
   NOTICE: "/notice", // 공지사항

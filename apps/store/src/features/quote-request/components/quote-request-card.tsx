@@ -10,9 +10,10 @@ import { formatDate } from "@yeongseon/shared/utils/format-date";
 
 interface QuoteRequestCardProps {
   quoteRequest: QuoteRequestListItem;
+  onClick?: () => void;
 }
 
-const QUOTE_REQUEST_BADGE_CLASS: Record<QuoteRequestStatus, string> = {
+export const QUOTE_REQUEST_BADGE_CLASS: Record<QuoteRequestStatus, string> = {
   요청: "bg-zinc-100 text-zinc-700 border-zinc-200 hover:bg-zinc-100",
   견적발송: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50",
   협의중: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50",
@@ -20,9 +21,15 @@ const QUOTE_REQUEST_BADGE_CLASS: Record<QuoteRequestStatus, string> = {
   종료: "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50",
 };
 
-export function QuoteRequestCard({ quoteRequest }: QuoteRequestCardProps) {
+export function QuoteRequestCard({
+  quoteRequest,
+  onClick,
+}: QuoteRequestCardProps) {
   return (
-    <Card>
+    <Card
+      onClick={onClick}
+      className={cn(onClick && "cursor-pointer transition-colors hover:bg-zinc-50")}
+    >
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-1">

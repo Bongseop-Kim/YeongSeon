@@ -39,6 +39,9 @@ import { ProtectedRoute } from "@/components/composite/protected-route";
 const QuoteRequestListPage = lazy(
   () => import("@/features/my-page/quote-request/page")
 );
+const QuoteRequestDetailPage = lazy(
+  () => import("@/features/my-page/quote-request/detail/page")
+);
 
 export default function Router() {
   return (
@@ -196,6 +199,16 @@ export default function Router() {
           <ProtectedRoute>
             <Suspense fallback={null}>
               <QuoteRequestListPage />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-page/quote-request/:id"
+        element={
+          <ProtectedRoute>
+            <Suspense fallback={null}>
+              <QuoteRequestDetailPage />
             </Suspense>
           </ProtectedRoute>
         }
