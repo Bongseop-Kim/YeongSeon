@@ -54,6 +54,7 @@ SELECT
   to_char(o.created_at, 'YYYY-MM-DD') AS date,
   o.status,
   o.total_price   AS "totalPrice",
+  o.order_type    AS "orderType",
   o.created_at
 FROM public.orders o
 WHERE o.user_id = auth.uid();
@@ -68,6 +69,7 @@ SELECT
   to_char(o.created_at, 'YYYY-MM-DD') AS date,
   o.status,
   o.total_price     AS "totalPrice",
+  o.order_type      AS "orderType",
   o.courier_company AS "courierCompany",
   o.tracking_number AS "trackingNumber",
   o.shipped_at      AS "shippedAt",
