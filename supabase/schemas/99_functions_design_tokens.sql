@@ -42,6 +42,8 @@ DECLARE
   v_cost_key     text;
   v_cost         integer;
   v_total_bal    integer;
+  v_paid_bal     integer;
+  v_bonus_bal    integer;
   v_caller_role  text;
 BEGIN
   -- 소유권 검증: service_role이 아닌 경우 auth.uid() 일치 확인
@@ -105,11 +107,18 @@ BEGIN
     );
   END IF;
 
-  -- 전체 잔액 조회
+  -- 클래스별 잔액 조회
   SELECT COALESCE(SUM(amount), 0)::integer
-  INTO v_total_bal
+  INTO v_paid_bal
   FROM public.design_tokens
-  WHERE user_id = p_user_id;
+  WHERE user_id = p_user_id AND token_class = 'paid';
+
+  SELECT COALESCE(SUM(amount), 0)::integer
+  INTO v_bonus_bal
+  FROM public.design_tokens
+  WHERE user_id = p_user_id AND token_class = 'bonus';
+
+  v_total_bal := v_paid_bal + v_bonus_bal;
 
   -- 잔액 부족 검사
   IF v_total_bal < v_cost THEN
@@ -121,13 +130,35 @@ BEGIN
     );
   END IF;
 
-  INSERT INTO public.design_tokens (
-    user_id, amount, type, token_class, ai_model, request_type, description
-  ) VALUES (
-    p_user_id, -v_cost, 'use', 'paid',
-    p_ai_model, p_request_type,
-    'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
-  );
+  -- paid 먼저 차감, 부족분은 bonus에서 차감
+  IF v_paid_bal >= v_cost THEN
+    INSERT INTO public.design_tokens (
+      user_id, amount, type, token_class, ai_model, request_type, description
+    ) VALUES (
+      p_user_id, -v_cost, 'use', 'paid',
+      p_ai_model, p_request_type,
+      'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
+    );
+  ELSE
+    -- paid 잔액 전부 차감
+    IF v_paid_bal > 0 THEN
+      INSERT INTO public.design_tokens (
+        user_id, amount, type, token_class, ai_model, request_type, description
+      ) VALUES (
+        p_user_id, -v_paid_bal, 'use', 'paid',
+        p_ai_model, p_request_type,
+        'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
+      );
+    END IF;
+    -- 나머지는 bonus에서 차감
+    INSERT INTO public.design_tokens (
+      user_id, amount, type, token_class, ai_model, request_type, description
+    ) VALUES (
+      p_user_id, -(v_cost - v_paid_bal), 'use', 'bonus',
+      p_ai_model, p_request_type,
+      'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
+    );
+  END IF;
 
   RETURN jsonb_build_object(
     'success', true,
