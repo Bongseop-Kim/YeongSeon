@@ -8,15 +8,12 @@ import type { PricingConstantRow } from "@/features/pricing/types/admin-pricing"
 const TOKEN_PRICING_KEY = ["pricing", "token"] as const;
 
 const TOKEN_PRICING_SETTINGS = [
-  { key: "token_plan_starter_price",        label: "Starter", field: "price"       },
-  { key: "token_plan_starter_amount",       label: "Starter", field: "amount"      },
-  { key: "token_plan_starter_bonus_amount", label: "Starter", field: "bonusAmount" },
-  { key: "token_plan_popular_price",        label: "Popular", field: "price"       },
-  { key: "token_plan_popular_amount",       label: "Popular", field: "amount"      },
-  { key: "token_plan_popular_bonus_amount", label: "Popular", field: "bonusAmount" },
-  { key: "token_plan_pro_price",            label: "Pro",     field: "price"       },
-  { key: "token_plan_pro_amount",           label: "Pro",     field: "amount"      },
-  { key: "token_plan_pro_bonus_amount",     label: "Pro",     field: "bonusAmount" },
+  { key: "token_plan_starter_price",  label: "Starter", field: "price"  },
+  { key: "token_plan_starter_amount", label: "Starter", field: "amount" },
+  { key: "token_plan_popular_price",  label: "Popular", field: "price"  },
+  { key: "token_plan_popular_amount", label: "Popular", field: "amount" },
+  { key: "token_plan_pro_price",      label: "Pro",     field: "price"  },
+  { key: "token_plan_pro_amount",     label: "Pro",     field: "amount" },
 ] as const;
 
 export type TokenPricingKey = typeof TOKEN_PRICING_SETTINGS[number]["key"];
@@ -25,21 +22,18 @@ export interface TokenTierUI {
   label: string;
   priceKey: TokenPricingKey;
   amountKey: TokenPricingKey;
-  bonusAmountKey: TokenPricingKey;
   price: number;
   amount: number;
-  bonusAmount: number;
 }
 
 export const TOKEN_PRICING_TIERS: Array<{
   label: string;
   priceKey: TokenPricingKey;
   amountKey: TokenPricingKey;
-  bonusAmountKey: TokenPricingKey;
 }> = [
-  { label: "Starter", priceKey: "token_plan_starter_price", amountKey: "token_plan_starter_amount", bonusAmountKey: "token_plan_starter_bonus_amount" },
-  { label: "Popular", priceKey: "token_plan_popular_price",  amountKey: "token_plan_popular_amount", bonusAmountKey: "token_plan_popular_bonus_amount" },
-  { label: "Pro",     priceKey: "token_plan_pro_price",      amountKey: "token_plan_pro_amount",     bonusAmountKey: "token_plan_pro_bonus_amount"     },
+  { label: "Starter", priceKey: "token_plan_starter_price", amountKey: "token_plan_starter_amount" },
+  { label: "Popular", priceKey: "token_plan_popular_price",  amountKey: "token_plan_popular_amount" },
+  { label: "Pro",     priceKey: "token_plan_pro_price",      amountKey: "token_plan_pro_amount"     },
 ];
 
 export function useTokenPricing() {
@@ -55,14 +49,12 @@ export function useTokenPricing() {
       const rows = (data ?? []) as PricingConstantRow[];
       const rowMap = new Map(rows.map((row) => [row.key, row.amount]));
 
-      return TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey, bonusAmountKey }) => ({
+      return TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => ({
         label,
         priceKey,
         amountKey,
-        bonusAmountKey,
         price: rowMap.get(priceKey) ?? 0,
         amount: rowMap.get(amountKey) ?? 0,
-        bonusAmount: rowMap.get(bonusAmountKey) ?? 0,
       }));
     },
   });
@@ -72,10 +64,9 @@ export function useUpdateTokenPricing() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (tiers: TokenTierUI[]) => {
-      const rows: PricingConstantRow[] = tiers.flatMap(({ priceKey, amountKey, bonusAmountKey, price, amount, bonusAmount }) => [
+      const rows: PricingConstantRow[] = tiers.flatMap(({ priceKey, amountKey, price, amount }) => [
         { key: priceKey, amount: price },
         { key: amountKey, amount: amount },
-        { key: bonusAmountKey, amount: bonusAmount },
       ]);
       for (const { key, amount } of rows) {
         const { error } = await supabase

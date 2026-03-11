@@ -15,7 +15,6 @@ export interface TokenPlan {
   label: string;
   price: number | null;
   tokenAmount: number | null;
-  bonusAmount: number | null;
   description: string;
   features: string[];
   popular?: boolean;

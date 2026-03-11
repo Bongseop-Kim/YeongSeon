@@ -81,10 +81,7 @@ const TokenPurchasePage = () => {
     setIsPaymentLoading(true);
     try {
       const plan = validTokenPlans.find((p) => p.planKey === selectedPlan);
-      const bonusSuffix = plan && plan.bonusAmount && plan.bonusAmount > 0
-        ? ` (+${plan.bonusAmount} 보너스)`
-        : "";
-      const orderName = plan ? `${plan.label} 토큰 ${plan.tokenAmount}개${bonusSuffix}` : "토큰 구매";
+      const orderName = plan ? `${plan.label} 토큰 ${plan.tokenAmount}개` : "토큰 구매";
 
       await paymentWidgetRef.current.requestPayment({
         orderId: purchaseInfo.paymentGroupId,

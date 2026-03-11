@@ -275,9 +275,9 @@ BEGIN
   INTO v_result
   FROM public.pricing_constants
   WHERE key IN (
-    'token_plan_starter_price',  'token_plan_starter_amount',  'token_plan_starter_bonus_amount',
-    'token_plan_popular_price',  'token_plan_popular_amount',  'token_plan_popular_bonus_amount',
-    'token_plan_pro_price',      'token_plan_pro_amount',      'token_plan_pro_bonus_amount'
+    'token_plan_starter_price',  'token_plan_starter_amount',
+    'token_plan_popular_price',  'token_plan_popular_amount',
+    'token_plan_pro_price',      'token_plan_pro_amount'
   );
 
   RETURN COALESCE(v_result, '[]'::jsonb);
@@ -301,10 +301,8 @@ DECLARE
   v_user_id          uuid;
   v_price_key        text;
   v_amount_key       text;
-  v_bonus_key        text;
   v_price            integer;
   v_token_amount     integer;
-  v_bonus_amount     integer;
   v_payment_group_id uuid;
   v_order_number     text;
   v_order_id         uuid;
@@ -319,17 +317,14 @@ BEGIN
     RAISE EXCEPTION 'invalid plan_key: %', p_plan_key;
   END IF;
 
-  -- pricing_constants에서 가격/수량/보너스 조회
+  -- pricing_constants에서 가격/수량 조회
   v_price_key  := 'token_plan_' || p_plan_key || '_price';
   v_amount_key := 'token_plan_' || p_plan_key || '_amount';
-  v_bonus_key  := 'token_plan_' || p_plan_key || '_bonus_amount';
 
   SELECT amount INTO v_price
     FROM public.pricing_constants WHERE key = v_price_key;
   SELECT amount INTO v_token_amount
     FROM public.pricing_constants WHERE key = v_amount_key;
-  SELECT COALESCE(amount, 0) INTO v_bonus_amount
-    FROM public.pricing_constants WHERE key = v_bonus_key;
 
   IF v_price IS NULL OR v_price <= 0 THEN
     RAISE EXCEPTION 'price not configured for plan: %', p_plan_key;
@@ -358,8 +353,7 @@ BEGIN
     v_order_id, p_plan_key, 'token',
     jsonb_build_object(
       'plan_key',     p_plan_key,
-      'token_amount', v_token_amount,
-      'bonus_amount', v_bonus_amount
+      'token_amount', v_token_amount
     ),
     1, v_price
   );
@@ -367,8 +361,7 @@ BEGIN
   RETURN jsonb_build_object(
     'payment_group_id', v_payment_group_id,
     'price',            v_price,
-    'token_amount',     v_token_amount,
-    'bonus_amount',     v_bonus_amount
+    'token_amount',     v_token_amount
   );
 END;
 $$;
@@ -451,14 +444,6 @@ BEGIN
           AND (dt.work_id = 'order_' || o.id::text || '_paid'
                OR dt.work_id = 'order_' || o.id::text)
       ), 0)::integer                                    AS paid_tokens_granted,
-      COALESCE((
-        SELECT SUM(dt.amount)
-        FROM public.design_tokens dt
-        WHERE dt.user_id = v_user_id
-          AND dt.type = 'purchase'
-          AND dt.token_class = 'bonus'
-          AND dt.work_id = 'order_' || o.id::text || '_bonus'
-      ), 0)::integer                                    AS bonus_tokens_granted,
       -- 진행 중인 환불 요청 정보 (pending/approved)
       (
         SELECT jsonb_build_object('id', trr.id, 'status', trr.status)
@@ -490,7 +475,7 @@ BEGIN
       ato.created_at,
       ato.total_price,
       ato.paid_tokens_granted,
-      ato.bonus_tokens_granted,
+      0::integer                                        AS bonus_tokens_granted,
       false                                             AS is_refundable,
       CASE (ato.active_refund_request->>'status')
         WHEN 'pending'  THEN 'pending_refund'
@@ -510,7 +495,7 @@ BEGIN
       r.created_at,
       r.total_price,
       r.paid_tokens_granted,
-      r.bonus_tokens_granted,
+      0::integer                                        AS bonus_tokens_granted,
       (r.cumulative_paid <= v_paid_bal AND r.paid_tokens_granted > 0) AS is_refundable,
       CASE
         WHEN r.paid_tokens_granted = 0 THEN 'no_paid_tokens'
@@ -557,7 +542,6 @@ DECLARE
   v_user_id       uuid;
   v_order         record;
   v_paid_granted  integer;
-  v_bonus_granted integer;
   v_paid_bal      integer;
   v_request_id    uuid;
   v_refund_amount integer;
@@ -590,7 +574,7 @@ BEGIN
     RAISE EXCEPTION 'order is not in completed status (status: %)', v_order.status;
   END IF;
 
-  -- 해당 주문의 유료/보너스 지급량 조회
+  -- 해당 주문의 유료 지급량 조회
   SELECT
     COALESCE((
       SELECT SUM(dt.amount)
@@ -600,16 +584,8 @@ BEGIN
         AND dt.token_class = 'paid'
         AND (dt.work_id = 'order_' || p_order_id::text || '_paid'
              OR dt.work_id = 'order_' || p_order_id::text)
-    ), 0)::integer,
-    COALESCE((
-      SELECT SUM(dt.amount)
-      FROM public.design_tokens dt
-      WHERE dt.user_id = v_user_id
-        AND dt.type = 'purchase'
-        AND dt.token_class = 'bonus'
-        AND dt.work_id = 'order_' || p_order_id::text || '_bonus'
     ), 0)::integer
-  INTO v_paid_granted, v_bonus_granted;
+  INTO v_paid_granted;
 
   IF v_paid_granted <= 0 THEN
     RAISE EXCEPTION 'no paid tokens found for this order';
@@ -636,7 +612,7 @@ BEGIN
     refund_amount, status, reason
   ) VALUES (
     v_request_id, v_user_id, p_order_id,
-    v_paid_granted, v_bonus_granted,
+    v_paid_granted, 0,
     v_refund_amount, 'pending', p_reason
   );
 
@@ -644,7 +620,7 @@ BEGIN
     'request_id',         v_request_id,
     'refund_amount',      v_refund_amount,
     'paid_token_amount',  v_paid_granted,
-    'bonus_token_amount', v_bonus_granted
+    'bonus_token_amount', 0
   );
 END;
 $$;

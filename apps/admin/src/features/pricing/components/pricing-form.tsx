@@ -138,6 +138,7 @@ export function PricingForm() {
       return !existing || draft.price !== existing.price || draft.amount !== existing.amount;
     });
 
+
     if (constantMutations.length === 0 && fabricMutations.length === 0 && tokenMutations.length === 0) {
       message.info("변경된 항목이 없습니다.");
       return;
@@ -293,7 +294,7 @@ export function PricingForm() {
             많이 살수록 토큰 1개당 단가가 낮아집니다.
           </Typography.Text>
           <Row gutter={[16, 16]}>
-            {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey, bonusAmountKey }) => {
+            {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => {
               const tier = tokenDraft[priceKey] ?? tokenSettings?.find((item) => item.priceKey === priceKey);
               const setTier = (patch: Partial<TokenTierUI>) =>
                 setTokenDraft((prev) => ({
@@ -302,10 +303,8 @@ export function PricingForm() {
                     label,
                     priceKey,
                     amountKey,
-                    bonusAmountKey,
                     price: prev[priceKey]?.price ?? tier?.price ?? 0,
                     amount: prev[priceKey]?.amount ?? tier?.amount ?? 0,
-                    bonusAmount: prev[priceKey]?.bonusAmount ?? tier?.bonusAmount ?? 0,
                     ...patch,
                   },
                 }));
@@ -335,16 +334,6 @@ export function PricingForm() {
                           value={tier?.amount}
                           min={1}
                           onChange={(v) => setTier({ amount: v ?? 0 })}
-                          style={{ width: "100%" }}
-                          suffix="T"
-                        />
-                      </Space>
-                      <Space direction="vertical" size={2} style={{ width: "100%" }}>
-                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>보너스 토큰</Typography.Text>
-                        <InputNumber
-                          value={tier?.bonusAmount}
-                          min={0}
-                          onChange={(v) => setTier({ bonusAmount: v ?? 0 })}
                           style={{ width: "100%" }}
                           suffix="T"
                         />
