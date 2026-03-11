@@ -6,4 +6,5 @@ export interface DesignTokenHistoryItem {
   requestType: string | null;
   description: string | null;
   createdAt: string;
+  workId: string | null;
 }

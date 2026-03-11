@@ -410,7 +410,7 @@ END;
 $$;
 
 -- ── get_refundable_token_orders ───────────────────────────────
--- 환불 가능한 토큰 주문 목록 조회 (고객용)
+-- 모든 완료된 토큰 주문 목록 + 환불 가능 여부 + 불가 사유 반환 (고객용)
 -- SECURITY INVOKER: 소유자 데이터만 조회하므로 RLS로 충분
 CREATE OR REPLACE FUNCTION public.get_refundable_token_orders()
 RETURNS jsonb
@@ -435,8 +435,7 @@ BEGIN
     FROM public.design_tokens
    WHERE user_id = v_user_id;
 
-  -- LIFO 방식으로 환불 가능 여부 판정
-  WITH paid_orders AS (
+  WITH all_token_orders AS (
     SELECT
       o.id                                              AS order_id,
       o.order_number,
@@ -458,16 +457,19 @@ BEGIN
           AND dt.type = 'purchase'
           AND dt.token_class = 'bonus'
           AND dt.work_id = 'order_' || o.id::text || '_bonus'
-      ), 0)::integer                                    AS bonus_tokens_granted
+      ), 0)::integer                                    AS bonus_tokens_granted,
+      -- 진행 중인 환불 요청 정보 (pending/approved)
+      (
+        SELECT jsonb_build_object('id', trr.id, 'status', trr.status)
+        FROM public.token_refund_requests trr
+        WHERE trr.order_id = o.id
+          AND trr.status IN ('pending', 'approved')
+        LIMIT 1
+      )                                                 AS active_refund_request
     FROM public.orders o
     WHERE o.user_id = v_user_id
       AND o.order_type = 'token'
       AND o.status = '완료'
-      AND NOT EXISTS (
-        SELECT 1 FROM public.token_refund_requests trr
-        WHERE trr.order_id = o.id
-          AND trr.status IN ('pending', 'approved')
-      )
   ),
   running AS (
     SELECT
@@ -476,22 +478,63 @@ BEGIN
         ORDER BY created_at DESC
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
       ) AS cumulative_paid
-    FROM paid_orders
+    FROM all_token_orders
+    WHERE active_refund_request IS NULL
+  ),
+  refundability AS (
+    -- 진행 중 환불이 있는 주문
+    SELECT
+      ato.order_id,
+      ato.order_number,
+      ato.created_at,
+      ato.total_price,
+      ato.paid_tokens_granted,
+      ato.bonus_tokens_granted,
+      false                                             AS is_refundable,
+      CASE (ato.active_refund_request->>'status')
+        WHEN 'pending'  THEN 'pending_refund'
+        WHEN 'approved' THEN 'approved_refund'
+        ELSE 'active_refund'
+      END                                               AS not_refundable_reason,
+      (ato.active_refund_request->>'id')::uuid          AS pending_request_id
+    FROM all_token_orders ato
+    WHERE ato.active_refund_request IS NOT NULL
+
+    UNION ALL
+
+    -- LIFO 계산 대상 주문
+    SELECT
+      r.order_id,
+      r.order_number,
+      r.created_at,
+      r.total_price,
+      r.paid_tokens_granted,
+      r.bonus_tokens_granted,
+      (r.cumulative_paid <= v_paid_bal AND r.paid_tokens_granted > 0) AS is_refundable,
+      CASE
+        WHEN r.paid_tokens_granted = 0 THEN 'no_paid_tokens'
+        WHEN r.cumulative_paid > v_paid_bal THEN 'tokens_used'
+        ELSE NULL
+      END                                               AS not_refundable_reason,
+      NULL::uuid                                        AS pending_request_id
+    FROM running r
   )
   SELECT jsonb_agg(
     jsonb_build_object(
-      'order_id',             r.order_id,
-      'order_number',         r.order_number,
-      'created_at',           r.created_at,
-      'total_price',          r.total_price,
-      'paid_tokens_granted',  r.paid_tokens_granted,
-      'bonus_tokens_granted', r.bonus_tokens_granted,
-      'is_refundable',        (r.cumulative_paid <= v_paid_bal AND r.paid_tokens_granted > 0)
+      'order_id',              rf.order_id,
+      'order_number',          rf.order_number,
+      'created_at',            rf.created_at,
+      'total_price',           rf.total_price,
+      'paid_tokens_granted',   rf.paid_tokens_granted,
+      'bonus_tokens_granted',  rf.bonus_tokens_granted,
+      'is_refundable',         rf.is_refundable,
+      'not_refundable_reason', rf.not_refundable_reason,
+      'pending_request_id',    rf.pending_request_id
     )
-    ORDER BY r.created_at DESC
+    ORDER BY rf.created_at DESC
   )
   INTO v_result
-  FROM running r;
+  FROM refundability rf;
 
   RETURN COALESCE(v_result, '[]'::jsonb);
 END;

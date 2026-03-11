@@ -21,17 +21,29 @@ import {
 import {
   useRefundableTokenOrdersQuery,
   useRequestTokenRefundMutation,
+  useCancelTokenRefundMutation,
 } from "@/features/my-page/token-history/api/token-refund-query";
-import type { RefundableTokenOrder } from "@/features/my-page/token-history/api/token-refund-api";
+import type {
+  NotRefundableReason,
+  RefundableTokenOrder,
+} from "@/features/my-page/token-history/api/token-refund-api";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 
 const TOKEN_TYPE_LABELS: Record<string, string> = {
-  grant: "지급",
-  use: "사용",
-  refund: "환불",
-  admin: "관리자",
+  grant:    "지급",
+  use:      "사용",
+  refund:   "환불",
+  admin:    "관리자",
   purchase: "구매",
+};
+
+const NOT_REFUNDABLE_MESSAGES: Record<NotRefundableReason, string> = {
+  tokens_used:    "사용된 토큰이 있어 환불 불가",
+  pending_refund: "환불 신청 대기 중",
+  approved_refund:"환불 승인 완료",
+  active_refund:  "환불 진행 중",
+  no_paid_tokens: "유료 토큰 없음",
 };
 
 const formatAmount = (amount: number) => {
@@ -48,6 +60,17 @@ const formatDate = (value: string) =>
     })
     .replaceAll(". ", "-")
     .replace(".", "");
+
+// work_id 에서 order_id 추출
+// 'order_{uuid}_paid' → uuid, 'order_{uuid}' → uuid
+const extractOrderIdFromWorkId = (workId: string | null): string | null => {
+  if (!workId) return null;
+  const paidMatch = workId.match(/^order_([0-9a-f-]{36})_paid$/);
+  if (paidMatch) return paidMatch[1];
+  const plainMatch = workId.match(/^order_([0-9a-f-]{36})$/);
+  if (plainMatch) return plainMatch[1];
+  return null;
+};
 
 function TokenHistorySkeleton() {
   return (
@@ -134,6 +157,77 @@ function RefundDialog({ order, open, onClose }: RefundDialogProps) {
   );
 }
 
+interface RefundActionProps {
+  order: RefundableTokenOrder;
+  onRequestRefund: (order: RefundableTokenOrder) => void;
+}
+
+function RefundAction({ order, onRequestRefund }: RefundActionProps) {
+  const { mutateAsync: cancelRefund, isPending: isCancelling } = useCancelTokenRefundMutation();
+
+  if (order.notRefundableReason === "pending_refund" && order.pendingRequestId) {
+    return (
+      <div className="flex items-center gap-2 pt-1">
+        <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
+          환불 신청 대기 중
+        </Badge>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 px-2 text-xs text-zinc-400 hover:text-red-500"
+          disabled={isCancelling}
+          onClick={async () => {
+            try {
+              await cancelRefund(order.pendingRequestId!);
+              toast.success("환불 신청이 취소되었습니다.");
+            } catch (err) {
+              const message = err instanceof Error ? err.message : "환불 취소 중 오류가 발생했습니다.";
+              toast.error(message);
+            }
+          }}
+        >
+          {isCancelling ? "취소 중..." : "신청 취소"}
+        </Button>
+      </div>
+    );
+  }
+
+  if (order.notRefundableReason === "approved_refund") {
+    return (
+      <div className="pt-1">
+        <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
+          환불 승인 완료
+        </Badge>
+      </div>
+    );
+  }
+
+  if (order.isRefundable) {
+    return (
+      <div className="pt-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs"
+          onClick={() => onRequestRefund(order)}
+        >
+          환불 신청
+        </Button>
+      </div>
+    );
+  }
+
+  if (order.notRefundableReason && order.notRefundableReason !== "no_paid_tokens") {
+    return (
+      <p className="pt-1 text-xs text-zinc-400">
+        {NOT_REFUNDABLE_MESSAGES[order.notRefundableReason]}
+      </p>
+    );
+  }
+
+  return null;
+}
+
 export default function TokenHistoryPage() {
   const [refundTarget, setRefundTarget] = useState<RefundableTokenOrder | null>(null);
 
@@ -153,7 +247,11 @@ export default function TokenHistoryPage() {
 
   const balance = rawBalance ?? { total: 0, paid: 0, bonus: 0 };
   const history = rawHistory ?? [];
-  const refundableList = (refundableOrders ?? []).filter((o) => o.isRefundable);
+
+  // order_id → RefundableTokenOrder 맵
+  const refundOrderMap = new Map(
+    (refundableOrders ?? []).map((o) => [o.orderId, o])
+  );
 
   const historyErrorMessage = historyError instanceof Error
     ? historyError.message
@@ -189,48 +287,6 @@ export default function TokenHistoryPage() {
               </CardContent>
             </Card>
 
-            {/* 환불 가능한 구매 내역 (있는 경우만) */}
-            {refundableList.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>환불 신청 가능한 구매</CardTitle>
-                </CardHeader>
-                <CardContent className="pb-4">
-                  <div className="space-y-3">
-                    {refundableList.map((order) => (
-                      <div
-                        key={order.orderId}
-                        className="flex items-center justify-between gap-4 rounded-lg border border-zinc-100 p-4"
-                      >
-                        <div className="min-w-0 space-y-1">
-                          <p className="text-sm font-medium text-zinc-900">
-                            {order.orderNumber}
-                          </p>
-                          <p className="text-xs text-zinc-500">
-                            {formatDate(order.createdAt)} · 유료 {order.paidTokensGranted}개
-                            {order.bonusTokensGranted > 0 && ` + 보너스 ${order.bonusTokensGranted}개`}
-                          </p>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <p className="text-sm font-semibold text-zinc-900">
-                            {order.totalPrice.toLocaleString()}원
-                          </p>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="mt-1 h-7 text-xs"
-                            onClick={() => setRefundTarget(order)}
-                          >
-                            환불 신청
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* 토큰 내역 카드 */}
             <Card>
               <CardHeader>
@@ -251,33 +307,47 @@ export default function TokenHistoryPage() {
                   />
                 ) : (
                   <div className="space-y-3">
-                    {history.map((item) => (
-                      <Card key={item.id} className="gap-0 py-0 shadow-none">
-                        <CardContent className="flex items-start justify-between gap-4 py-4">
-                          <div className="min-w-0 space-y-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-sm text-zinc-500">
-                                {formatDate(item.createdAt)}
-                              </span>
-                              <Badge variant="outline">
-                                {TOKEN_TYPE_LABELS[item.type] ?? item.type}
-                              </Badge>
+                    {history.map((item) => {
+                      // purchase 타입의 work_id에서 order_id 추출하여 환불 정보 연결
+                      const orderId = item.type === "purchase"
+                        ? extractOrderIdFromWorkId(item.workId ?? null)
+                        : null;
+                      const refundOrder = orderId ? refundOrderMap.get(orderId) : null;
+
+                      return (
+                        <Card key={item.id} className="gap-0 py-0 shadow-none">
+                          <CardContent className="flex items-start justify-between gap-4 py-4">
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm text-zinc-500">
+                                  {formatDate(item.createdAt)}
+                                </span>
+                                <Badge variant="outline">
+                                  {TOKEN_TYPE_LABELS[item.type] ?? item.type}
+                                </Badge>
+                              </div>
+                              <p className="break-words text-sm text-zinc-700">
+                                {item.description ?? "설명이 없습니다."}
+                              </p>
+                              {refundOrder && (
+                                <RefundAction
+                                  order={refundOrder}
+                                  onRequestRefund={setRefundTarget}
+                                />
+                              )}
                             </div>
-                            <p className="break-words text-sm text-zinc-700">
-                              {item.description ?? "설명이 없습니다."}
-                            </p>
-                          </div>
-                          <div
-                            className={cn(
-                              "shrink-0 text-base font-semibold",
-                              item.amount >= 0 ? "text-green-600" : "text-red-600",
-                            )}
-                          >
-                            {formatAmount(item.amount)}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                            <div
+                              className={cn(
+                                "shrink-0 text-base font-semibold",
+                                item.amount >= 0 ? "text-green-600" : "text-red-600",
+                              )}
+                            >
+                              {formatAmount(item.amount)}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
