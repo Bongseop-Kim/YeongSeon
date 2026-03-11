@@ -28,7 +28,22 @@ export function QuoteRequestCard({
   return (
     <Card
       onClick={onClick}
-      className={cn(onClick && "cursor-pointer transition-colors hover:bg-zinc-50")}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      className={cn(
+        onClick &&
+          "cursor-pointer transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+      )}
     >
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
