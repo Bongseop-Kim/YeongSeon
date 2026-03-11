@@ -45,7 +45,7 @@ function mergeUsageItems(items: AdminCustomerTokenRow[]): MergedTokenRow[] {
       } else {
         groupMap.set(baseId, { baseItem: item, net: item.amount });
       }
-    } else if (item.type !== "refund") {
+    } else {
       standalone.push(item);
     }
   }
@@ -85,7 +85,7 @@ export function CustomerTokenSection({ userId }: Props) {
 
   const currentBalance = balances?.[0]?.balance ?? 0;
   const mergedHistory = mergeUsageItems(
-    (history ?? []).filter((item) => item.type !== "purchase"),
+    (history ?? []),
   );
   const columns = [
     {
@@ -102,6 +102,10 @@ export function CustomerTokenSection({ userId }: Props) {
           ? "관리자 지급"
           : record.type === "grant"
             ? `토큰 ${TOKEN_TYPE_LABELS.grant}`
+            : record.type === "refund"
+              ? `토큰 ${TOKEN_TYPE_LABELS.refund}`
+              : record.type === "purchase"
+                ? "토큰 구매"
             : `토큰 ${TOKEN_TYPE_LABELS.use}`),
     },
     {
