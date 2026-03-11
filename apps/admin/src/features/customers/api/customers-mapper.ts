@@ -36,6 +36,7 @@ export interface DesignTokenRow {
   request_type: string | null;
   description: string | null;
   created_at: string | null;
+  work_id: string | null;
 }
 
 // ── 매퍼 ───────────────────────────────────────────────────────
@@ -87,5 +88,6 @@ export function toAdminCustomerTokenRow(row: DesignTokenRow): AdminCustomerToken
     requestType: row.request_type,
     description: row.description,
     createdAt: row.created_at ?? "",
+    workId: row.work_id,
   };
 }
