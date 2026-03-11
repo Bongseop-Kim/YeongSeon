@@ -28,6 +28,10 @@ begin
     raise exception 'Forbidden';
   end if;
 
+  if p_payment_key is null or trim(p_payment_key) = '' then
+    raise exception 'payment_key is required';
+  end if;
+
   -- service role 경유(Edge Function) 시 auth.uid() = null → skip
   -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
   if auth.uid() is not null and p_user_id is distinct from auth.uid() then

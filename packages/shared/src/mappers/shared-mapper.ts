@@ -95,6 +95,9 @@ export function parseCustomOrderData(
   if (typeof fabricCost !== "number") {
     invalidPricingFields.push("pricing.fabric_cost");
   }
+  if (typeof sampleCost !== "number") {
+    invalidPricingFields.push("pricing.sample_cost");
+  }
   if (typeof totalCost !== "number") {
     invalidPricingFields.push("pricing.total_cost");
   }
@@ -102,6 +105,7 @@ export function parseCustomOrderData(
   if (
     typeof sewingCost !== "number" ||
     typeof fabricCost !== "number" ||
+    typeof sampleCost !== "number" ||
     typeof totalCost !== "number"
   ) {
     throw new Error(
@@ -137,7 +141,7 @@ export function parseCustomOrderData(
     pricing: {
       sewingCost,
       fabricCost,
-      sampleCost: typeof sampleCost === "number" ? sampleCost : 0,
+      sampleCost,
       totalCost,
     },
     sample: raw.sample === true,

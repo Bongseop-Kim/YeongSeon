@@ -42,6 +42,9 @@ const str = (v: unknown): string | null =>
 
 const bool = (v: unknown): boolean => v === true;
 
+const isFiniteNumber = (v: unknown): v is number =>
+  typeof v === "number" && Number.isFinite(v);
+
 // ── List mapper ────────────────────────────────────────────────
 
 export function toAdminOrderListItem(
@@ -149,21 +152,37 @@ export function parseCustomReformData(
   const fabricCost = rawPricing.fabric_cost;
   const sampleCost = rawPricing.sample_cost;
   const totalCost = rawPricing.total_cost;
+  const invalidPricingFields: string[] = [];
 
-  if (typeof sewingCost !== "number" || !Number.isFinite(sewingCost)) {
+  const validatedSewingCost = isFiniteNumber(sewingCost) ? sewingCost : null;
+  const validatedFabricCost = isFiniteNumber(fabricCost) ? fabricCost : null;
+  const validatedSampleCost = isFiniteNumber(sampleCost) ? sampleCost : null;
+  const validatedTotalCost = isFiniteNumber(totalCost) ? totalCost : null;
+
+  if (validatedSewingCost === null) {
+    invalidPricingFields.push("pricing.sewing_cost");
+  }
+  if (validatedFabricCost === null) {
+    invalidPricingFields.push("pricing.fabric_cost");
+  }
+  if (validatedSampleCost === null) {
+    invalidPricingFields.push("pricing.sample_cost");
+  }
+  if (validatedTotalCost === null) {
+    invalidPricingFields.push("pricing.total_cost");
+  }
+  if (invalidPricingFields.length > 0) {
     throw new ValidationError(
-      `주문 제작 reformData 검증 실패: sewing_cost가 유한한 number가 아닙니다 (${sewingCost}).`
+      `주문 제작 reformData 검증 실패: 유효하지 않은 pricing 필드 (${invalidPricingFields.join(", ")}).`
     );
   }
-  if (typeof fabricCost !== "number" || !Number.isFinite(fabricCost)) {
-    throw new ValidationError(
-      `주문 제작 reformData 검증 실패: fabric_cost가 유한한 number가 아닙니다 (${fabricCost}).`
-    );
-  }
-  if (typeof totalCost !== "number" || !Number.isFinite(totalCost)) {
-    throw new ValidationError(
-      `주문 제작 reformData 검증 실패: total_cost가 유한한 number가 아닙니다 (${totalCost}).`
-    );
+  if (
+    validatedSewingCost === null ||
+    validatedFabricCost === null ||
+    validatedSampleCost === null ||
+    validatedTotalCost === null
+  ) {
+    throw new ValidationError("주문 제작 reformData 검증 실패: pricing 검증 결과가 일관되지 않습니다.");
   }
 
   const options: CustomOrderOptions = {
@@ -183,10 +202,10 @@ export function parseCustomReformData(
   };
 
   const pricing: CustomOrderPricing = {
-    sewingCost,
-    fabricCost,
-    sampleCost: typeof sampleCost === "number" && Number.isFinite(sampleCost) ? sampleCost : 0,
-    totalCost,
+    sewingCost: validatedSewingCost,
+    fabricCost: validatedFabricCost,
+    sampleCost: validatedSampleCost,
+    totalCost: validatedTotalCost,
   };
 
   const refImages = Array.isArray(raw.reference_images)
@@ -333,7 +352,10 @@ export function toAdminOrderItem(
       type: "token",
       id: dto.id,
       orderId: dto.orderId,
-      planKey: reformData ? String(reformData.plan_key ?? "") : null,
+      planKey:
+        reformData && typeof reformData.plan_key === "string"
+          ? reformData.plan_key
+          : null,
       tokenAmount: reformData && typeof reformData.token_amount === "number"
         ? reformData.token_amount
         : null,

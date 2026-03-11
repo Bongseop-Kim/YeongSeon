@@ -34,6 +34,10 @@ export const SampleOptionStep = () => {
   const fabricProvided = watch("fabricProvided");
   const sampleType = watch("sampleType");
 
+  if (!pricingConfig) {
+    return <div className="text-sm text-gray-400">로딩중...</div>;
+  }
+
   // fabricProvided=true 시 sewing으로 자동 고정
   useEffect(() => {
     if (!sample) return;
@@ -121,9 +125,7 @@ export const SampleOptionStep = () => {
                     보내주신 원단으로 봉제 샘플을 제작합니다
                   </p>
                   <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-500">
-                    {pricingConfig && (
-                      <span>{calculateSampleCost("sewing", pricingConfig).toLocaleString()}원</span>
-                    )}
+                    <span>{calculateSampleCost("sewing", pricingConfig).toLocaleString()}원</span>
                     <span>{SAMPLE_DURATION.sewing}</span>
                   </div>
                 </CardContent>
@@ -153,11 +155,9 @@ export const SampleOptionStep = () => {
                           {option.description}
                         </p>
                         <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-500">
-                          {pricingConfig && (
-                            <span>
-                              {calculateSampleCost(option.value, pricingConfig).toLocaleString()}원
-                            </span>
-                          )}
+                          <span>
+                            {calculateSampleCost(option.value, pricingConfig).toLocaleString()}원
+                          </span>
                           <span>{SAMPLE_DURATION[option.value]}</span>
                         </div>
                       </CardContent>

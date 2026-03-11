@@ -12,6 +12,8 @@ CREATE OR REPLACE FUNCTION public.create_claim(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
+-- SECURITY DEFINER: claims INSERT 시 order_status_logs에 접근 불필요하나
+-- claims 테이블의 RLS가 소유자 외 INSERT를 차단하여 우회 목적으로 사용
 SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
@@ -56,10 +58,11 @@ begin
 
   -- cancel 상태 가드
   if p_type = 'cancel' then
-    if (v_order_type = 'sale'   and v_order_status = '배송중')
-    or (v_order_type = 'repair' and v_order_status = '수선중')
-    or (v_order_type = 'custom' and v_order_status in ('제작중', '제작완료', '배송중', '배송완료', '완료'))
-    then
+    if not (
+      (v_order_type = 'sale'   and v_order_status in ('대기중', '결제중', '진행중'))
+      or (v_order_type = 'custom' and v_order_status in ('대기중', '결제중', '접수', '샘플원단제작중', '샘플원단배송중', '샘플봉제제작중', '샘플넥타이배송중', '샘플배송완료', '샘플승인'))
+      or (v_order_type = 'repair' and v_order_status in ('대기중', '결제중', '접수'))
+    ) then
       raise exception '현재 주문 상태에서는 취소할 수 없습니다';
     end if;
   end if;

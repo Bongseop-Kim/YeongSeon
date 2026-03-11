@@ -85,7 +85,7 @@ export const CUSTOM_SAMPLE_ROLLBACK_FLOW: Record<string, Record<string, string>>
     샘플원단배송중: "샘플원단제작중",
     샘플배송완료: "샘플원단배송중",
     샘플승인: "샘플배송완료",
-    제작중: "접수",
+    제작중: "샘플승인",
     제작완료: "제작중",
   },
   sewing: {
@@ -94,7 +94,7 @@ export const CUSTOM_SAMPLE_ROLLBACK_FLOW: Record<string, Record<string, string>>
     샘플넥타이배송중: "샘플봉제제작중",
     샘플배송완료: "샘플넥타이배송중",
     샘플승인: "샘플배송완료",
-    제작중: "접수",
+    제작중: "샘플승인",
     제작완료: "제작중",
   },
   fabric_and_sewing: {
@@ -105,10 +105,19 @@ export const CUSTOM_SAMPLE_ROLLBACK_FLOW: Record<string, Record<string, string>>
     샘플넥타이배송중: "샘플봉제제작중",
     샘플배송완료: "샘플넥타이배송중",
     샘플승인: "샘플배송완료",
-    제작중: "접수",
+    제작중: "샘플승인",
     제작완료: "제작중",
   },
 };
+
+export const ADMIN_NON_CANCELABLE_STATUSES = [
+  "취소",
+  "완료",
+  "배송완료",
+  "배송중",
+  "제작완료",
+  "제작중",
+] satisfies readonly import("../types/view/order").OrderStatus[];
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
   대기중: "default",

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Create, useForm } from "@refinedev/antd";
 import { Form, Input, InputNumber, Select, DatePicker, Switch } from "antd";
 
@@ -7,6 +8,12 @@ export default function CouponCreate() {
     redirect: "list",
   });
   const discountType = Form.useWatch("discount_type", formProps.form);
+
+  useEffect(() => {
+    if (discountType !== "percentage") {
+      formProps.form?.setFieldsValue({ max_discount_amount: undefined });
+    }
+  }, [discountType, formProps.form]);
 
   return (
     <Create saveButtonProps={saveButtonProps}>

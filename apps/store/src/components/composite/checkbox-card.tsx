@@ -26,16 +26,9 @@ export function CheckboxCard({
       htmlFor={id}
       className={cn("block h-full cursor-pointer", disabled && "cursor-not-allowed")}
     >
-      <Checkbox
-        id={id}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        disabled={disabled}
-        className="sr-only"
-      />
       <Card
         className={cn(
-          "h-full",
+          "h-full focus-within:ring-2 focus-within:ring-zinc-900 focus-within:ring-offset-1",
           disabled
             ? "border-zinc-100 bg-zinc-50"
             : checked
@@ -44,6 +37,13 @@ export function CheckboxCard({
           className,
         )}
       >
+        <Checkbox
+          id={id}
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          disabled={disabled}
+          className="sr-only"
+        />
         {children}
       </Card>
     </Label>

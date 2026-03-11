@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS public.orders (
   CONSTRAINT orders_total_discount_check CHECK (total_discount >= 0),
   CONSTRAINT orders_shipping_cost_check  CHECK (shipping_cost >= 0),
   CONSTRAINT orders_sample_cost_check    CHECK (sample_cost >= 0),
+  CONSTRAINT orders_shipping_address_required
+    CHECK (order_type = 'token' OR shipping_address_id IS NOT NULL),
   CONSTRAINT orders_order_type_check
     CHECK (order_type = ANY (ARRAY['sale','custom','repair','token'])),
   CONSTRAINT orders_status_check

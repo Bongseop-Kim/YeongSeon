@@ -139,6 +139,10 @@ begin
   v_brand_label := coalesce((p_options->>'brand_label')::boolean, false);
   v_care_label := coalesce((p_options->>'care_label')::boolean, false);
 
+  if v_dimple and v_tie_type != 'AUTO' then
+    raise exception '딤플은 자동 봉제(AUTO)에서만 선택 가능합니다';
+  end if;
+
   v_sewing_per_unit := v_sewing_per_cost;
 
   if v_tie_type = 'AUTO' then
@@ -451,6 +455,13 @@ begin
 
   -- custom 주문이 아닌 경우 전액 환불
   if v_order_type != 'custom' then
+    if not (
+      (v_order_type = 'sale'   and v_status in ('대기중', '결제중', '진행중'))
+      or (v_order_type = 'repair' and v_status in ('대기중', '결제중', '접수'))
+      or (v_order_type = 'token'  and v_status in ('대기중', '결제중'))
+    ) then
+      raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다';
+    end if;
     refund_amount := v_total_price;
     deducted_sample_cost := 0;
     return next;

@@ -22,6 +22,9 @@ declare
   v_points_earned  integer;
   v_is_sample      boolean;
   v_sample_type    text;
+  v_token_amount   integer;
+  v_plan_key       text;
+  v_plan_label     text;
 begin
   v_admin_id := auth.uid();
   if v_admin_id is null then
@@ -79,17 +82,13 @@ begin
         -- 기존 rollback
         (v_current_status = '결제중'   and p_new_status = '대기중')
         or (v_current_status = '접수'   and p_new_status = '대기중')
-        or (v_current_status = '제작중' and p_new_status = '접수')
+        or (v_current_status = '제작중' and p_new_status = '접수' and not v_is_sample)
+        or (v_current_status = '제작중' and p_new_status = '샘플승인' and v_is_sample)
         or (v_current_status = '제작완료' and p_new_status = '제작중')
         -- 샘플 rollback
         or (v_current_status = '샘플원단제작중' and p_new_status = '접수')
-        or (v_current_status = '샘플원단배송중' and p_new_status = '샘플원단제작중')
         or (v_current_status = '샘플봉제제작중' and p_new_status = '접수'             and v_sample_type = 'sewing')
         or (v_current_status = '샘플봉제제작중' and p_new_status = '샘플원단배송중'   and v_sample_type = 'fabric_and_sewing')
-        or (v_current_status = '샘플넥타이배송중' and p_new_status = '샘플봉제제작중')
-        or (v_current_status = '샘플배송완료'   and p_new_status = '샘플원단배송중'   and v_sample_type = 'fabric')
-        or (v_current_status = '샘플배송완료'   and p_new_status = '샘플넥타이배송중' and v_sample_type in ('sewing', 'fabric_and_sewing'))
-        or (v_current_status = '샘플승인'       and p_new_status = '샘플배송완료')
       ) then
         raise exception 'Invalid rollback from "%" to "%" for custom order', v_current_status, p_new_status;
       end if;
@@ -202,6 +201,33 @@ begin
     set status       = p_new_status,
         confirmed_at = now()
     where id = p_order_id;
+
+    if v_order_type = 'token' then
+      -- design_tokens 부여 (중복 방지: work_id로 idempotent 처리)
+      if not exists (select 1 from public.design_tokens where work_id = 'order_' || p_order_id::text) then
+        select (oi.item_data->>'token_amount')::integer, oi.item_data->>'plan_key'
+        into v_token_amount, v_plan_key
+        from public.order_items oi
+        where oi.order_id = p_order_id and oi.item_type = 'token'
+        limit 1;
+        v_plan_label := case v_plan_key
+          when 'starter' then 'Starter'
+          when 'popular' then 'Popular'
+          when 'pro'     then 'Pro'
+          else coalesce(v_plan_key, '구매')
+        end;
+        if v_token_amount is not null and v_token_amount > 0 then
+          insert into public.design_tokens (user_id, amount, type, description, work_id)
+          values (
+            v_user_id,
+            v_token_amount,
+            'purchase',
+            '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개, 관리자 확정)',
+            'order_' || p_order_id::text
+          );
+        end if;
+      end if;
+    end if;
 
     if v_points_earned > 0 then
       insert into public.points (user_id, order_id, amount, type, description)
@@ -505,4 +531,3 @@ begin
   return jsonb_build_object('success', true, 'affected_count', v_affected_count);
 end;
 $$;
-

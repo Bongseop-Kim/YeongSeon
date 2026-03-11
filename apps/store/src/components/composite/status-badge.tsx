@@ -15,6 +15,7 @@ const ORDER_STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
   배송완료: "bg-indigo-100 text-indigo-800",
   완료: "bg-green-100 text-green-800",
   취소: "bg-red-100 text-red-800",
+  실패: "bg-red-100 text-red-800",
   샘플원단제작중: "bg-purple-100 text-purple-800",
   샘플원단배송중: "bg-purple-100 text-purple-800",
   샘플봉제제작중: "bg-purple-100 text-purple-800",

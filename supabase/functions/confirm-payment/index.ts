@@ -427,6 +427,7 @@ Deno.serve(async (req) => {
     return jsonResponse(200, {
       paymentKey: payload.paymentKey,
       paymentGroupId: payload.orderId,
+      orders: updatedOrders,
       type: "token_purchase",
       tokenAmount,
       status: tossResult.status ?? "DONE",
