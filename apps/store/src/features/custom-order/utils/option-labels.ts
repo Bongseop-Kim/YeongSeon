@@ -21,10 +21,12 @@ export function getTieTypeLabel(tieType: OrderOptions["tieType"], compact = fals
 export function getSewingStyleLabel(
   opts: Pick<OrderOptions, "dimple" | "spoderato" | "fold7">,
 ): string {
-  if (opts.dimple) return "딤플";
-  if (opts.spoderato) return "스포데라토";
-  if (opts.fold7) return "7폴드";
-  return "일반";
+  const styles = [
+    opts.dimple && "딤플",
+    opts.spoderato && "스포데라토",
+    opts.fold7 && "7폴드",
+  ].filter(Boolean);
+  return styles.length > 0 ? styles.join(", ") : "일반";
 }
 
 export function getSizeLabel(sizeType: OrderOptions["sizeType"]): string {

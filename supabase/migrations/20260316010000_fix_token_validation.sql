@@ -1,7 +1,179 @@
--- ============================================================= 
--- 97_functions_admin.sql  – Admin management RPC functions 
 -- =============================================================
--- ── admin_update_order_status ─────────────────────────────────
+-- 20260315010000_fix_token_validation.sql
+-- 결제 관련 추가 버그 수정 (20260315000000 이후 적용):
+--   A. confirm_payment_orders: v_token_amount = 0 → <= 0 (음수 거부)
+--   B. admin_update_order_status: token 완료 처리 시 상태 변경 전 token item 검증
+--   C. admin_update_order_status: token 순방향 전이 시 공백 payment_key 차단
+-- =============================================================
+
+-- ── A. confirm_payment_orders: token validation 수정 ──
+CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
+  p_payment_group_id uuid,
+  p_user_id uuid,
+  p_payment_key text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER  -- order_status_logs INSERT에 일반 유저 RLS 없음
+SET search_path TO 'public'
+AS $$
+declare
+  v_order record;
+  v_post_status text;
+  v_updated_orders jsonb := '[]'::jsonb;
+  v_count int := 0;
+  v_masked_key text;
+  v_token_amount integer;
+  v_plan_key text;
+  v_plan_label text;
+  v_points integer;
+begin
+  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  if p_payment_key is null or trim(p_payment_key) = '' then
+    raise exception 'payment_key is required';
+  end if;
+
+  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
+  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  -- payment_key 마스킹: 끝 8자리만 유지, 나머지 ****
+  v_masked_key := case
+    when length(p_payment_key) <= 8 then '****'
+    else '****' || right(p_payment_key, 8)
+  end;
+
+  for v_order in
+    select id, user_id, status, order_type
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status != '결제중' then
+      raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
+    end if;
+
+    v_post_status := case v_order.order_type
+      when 'sale'  then '진행중'
+      when 'token' then '완료'
+      else '접수'
+    end;
+
+    update public.orders
+    set status = v_post_status, payment_key = p_payment_key, updated_at = now()
+    where id = v_order.id;
+
+    insert into public.order_status_logs (
+      order_id, changed_by, previous_status, new_status, memo
+    ) values (
+      v_order.id, p_user_id, v_order.status, v_post_status,
+      'payment confirmed: ' || v_masked_key
+    );
+
+    -- token 주문: 토큰 부여 + 포인트 적립 (2%)
+    if v_order.order_type = 'token' then
+      select
+        (oi.item_data->>'token_amount')::integer,
+        oi.item_data->>'plan_key'
+      into v_token_amount, v_plan_key
+      from public.order_items oi
+      where oi.order_id = v_order.id and oi.item_type = 'token'
+      limit 1;
+
+      if v_token_amount is null or v_token_amount <= 0 then
+        raise exception 'token order % has no valid token_amount (plan_key: %)', v_order.id, v_plan_key;
+      end if;
+
+      v_plan_label := case v_plan_key
+        when 'starter' then 'Starter'
+        when 'popular' then 'Popular'
+        when 'pro'     then 'Pro'
+        else v_plan_key
+      end;
+
+      -- 중복 방지: work_id로 idempotent 처리
+      if not exists (select 1 from public.design_tokens where work_id = 'order_' || v_order.id::text) then
+        insert into public.design_tokens (user_id, amount, type, description, work_id)
+        values (
+          p_user_id,
+          v_token_amount,
+          'purchase',
+          '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)',
+          'order_' || v_order.id::text
+        );
+      end if;
+
+      -- 포인트 적립 (결제 금액의 2%)
+      select o.total_price into v_points
+      from public.orders o
+      where o.id = v_order.id;
+      v_points := floor(v_points * 0.02);
+
+      if v_points > 0 then
+        if not exists (
+          select 1 from public.points
+          where order_id = v_order.id and type = 'earn'
+        ) then
+          insert into public.points (user_id, order_id, amount, type, description)
+          values (
+            p_user_id, v_order.id, v_points, 'earn',
+            '토큰 구매 포인트 적립 (2%)'
+          );
+        end if;
+      end if;
+    end if;
+
+    v_updated_orders := v_updated_orders || jsonb_build_object(
+      'orderId',     v_order.id,
+      'orderType',   v_order.order_type,
+      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end
+    );
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  -- 결제 확정 후 예약된 쿠폰을 사용 처리
+  update public.user_coupons
+  set status = 'used',
+      used_at = now(),
+      updated_at = now()
+  where user_id = p_user_id
+    and status = 'reserved'
+    and id in (
+      select distinct oi.applied_user_coupon_id
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where o.payment_group_id = p_payment_group_id
+        and oi.applied_user_coupon_id is not null
+    );
+
+  return jsonb_build_object(
+    'success', true,
+    'orders', v_updated_orders
+  );
+end;
+$$;
+
+-- ── B+C. admin_update_order_status: token 완료 처리 순서 및 payment_key 검증 수정 ──
+-- SECURITY DEFINER 사유: 관리자 전용 함수이나 호출자(authenticated 역할)는 orders 테이블에
+-- 직접 UPDATE 권한이 없고, order_status_logs 테이블에 INSERT 정책이 없어 RLS 우회가 필요하다.
+-- 권한 상승 위험 통제: 함수 내부에서 auth.uid() + is_admin() 이중 검증을 수행하며,
+-- 모든 상태 변경은 order_status_logs에 감사 로그로 기록된다.
 CREATE OR REPLACE FUNCTION public.admin_update_order_status(
   p_order_id uuid,
   p_new_status text,
@@ -172,7 +344,7 @@ begin
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;
     elsif v_order_type = 'token' then
-      -- token 순방향: 대기중 → 완료 (payment_key 필수), 취소
+      -- token 순방향: 대기중 → 완료 (payment_key 필수 + 공백 체크), 취소
       if not (
         (v_current_status = '대기중' and p_new_status = '완료' and v_payment_key is not null and length(btrim(v_payment_key)) > 0)
         or (p_new_status = '취소' and v_current_status in ('대기중', '결제중'))
@@ -229,20 +401,20 @@ begin
     where id = p_order_id;
 
     if v_order_type = 'token' then
-      -- design_tokens: ON CONFLICT (work_id) DO NOTHING으로 TOCTOU 방지
-      insert into public.design_tokens (user_id, amount, type, description, work_id)
-      values (
-        v_user_id,
-        v_token_amount,
-        'purchase',
-        '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개, 관리자 확정)',
-        'order_' || p_order_id::text
-      )
-      on conflict (work_id) do nothing;
+      -- design_tokens 부여 (중복 방지: work_id로 idempotent 처리)
+      if not exists (select 1 from public.design_tokens where work_id = 'order_' || p_order_id::text) then
+        insert into public.design_tokens (user_id, amount, type, description, work_id)
+        values (
+          v_user_id,
+          v_token_amount,
+          'purchase',
+          '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개, 관리자 확정)',
+          'order_' || p_order_id::text
+        );
+      end if;
     end if;
 
     if v_points_earned > 0 then
-      -- ON CONFLICT (order_id, type) DO NOTHING으로 중복 적립 방지 (idx_points_order_earn)
       insert into public.points (user_id, order_id, amount, type, description)
       values (
         v_user_id,
@@ -250,8 +422,7 @@ begin
         v_points_earned,
         'earn',
         '구매확정 포인트 적립 (관리자 처리, 2%)'
-      )
-      on conflict (order_id, type) do nothing;
+      );
     end if;
 
   else
@@ -283,265 +454,5 @@ begin
     'previous_status', v_current_status,
     'new_status', p_new_status
   );
-end;
-$$;
-
-
--- ── admin_get_today_stats ───────────────────────────────────
-CREATE OR REPLACE FUNCTION public.admin_get_today_stats(
-  p_order_type text,
-  p_date text
-)
-RETURNS TABLE (
-  today_order_count bigint,
-  today_revenue numeric
-)
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path TO 'public'
-AS $$
-begin
-  if not public.is_admin() then
-    raise exception 'Admin access required';
-  end if;
-
-  if p_date is null or p_date = '' then
-    raise exception 'p_date is required';
-  end if;
-
-  if p_order_type is null or p_order_type not in ('all', 'sale', 'custom', 'repair', 'token') then
-    raise exception 'invalid p_order_type: %', p_order_type;
-  end if;
-
-  RETURN QUERY
-  SELECT
-    COUNT(*)::bigint AS today_order_count,
-    COALESCE(SUM("totalPrice"), 0)::numeric AS today_revenue
-  FROM public.admin_order_list_view
-  WHERE date = p_date
-    AND (
-      p_order_type = 'all'
-      OR "orderType" = p_order_type
-    );
-end;
-$$;
-
--- ── admin_get_period_stats ───────────────────────────────────
--- 기간 범위(start~end)의 주문 수와 매출 합계를 집계한다.
--- admin_get_today_stats 는 단일 날짜 전용으로 유지하고,
--- 날짜 범위 조회는 이 함수를 사용한다.
-CREATE OR REPLACE FUNCTION public.admin_get_period_stats(
-  p_order_type  text,
-  p_start_date  date,
-  p_end_date    date
-)
-RETURNS TABLE (
-  period_order_count bigint,
-  period_revenue     numeric
-)
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path TO 'public'
-AS $$
-begin
-  if not public.is_admin() then
-    raise exception 'Admin access required';
-  end if;
-
-  if p_start_date is null then
-    raise exception 'p_start_date is required';
-  end if;
-
-  if p_end_date is null then
-    raise exception 'p_end_date is required';
-  end if;
-
-  if p_start_date > p_end_date then
-    raise exception 'p_start_date must be <= p_end_date';
-  end if;
-
-  if p_order_type is null or p_order_type not in ('all', 'sale', 'custom', 'repair', 'token') then
-    raise exception 'invalid p_order_type: %', p_order_type;
-  end if;
-
-  RETURN QUERY
-  SELECT
-    COUNT(*)::bigint                        AS period_order_count,
-    COALESCE(SUM(total_price), 0)::numeric  AS period_revenue
-  FROM public.orders
-  WHERE created_at >= p_start_date
-    AND created_at <  p_end_date + 1
-    AND (
-      p_order_type = 'all'
-      OR order_type = p_order_type
-    );
-end;
-$$;
-
--- ── admin_update_order_tracking ─────────────────────────────────
-CREATE OR REPLACE FUNCTION public.admin_update_order_tracking(
-  p_order_id uuid,
-  p_courier_company text DEFAULT NULL,
-  p_tracking_number text DEFAULT NULL
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path TO 'public'
-AS $$
-declare
-  v_admin_id uuid;
-  v_tracking_number text;
-begin
-  v_admin_id := auth.uid();
-  if v_admin_id is null then
-    raise exception 'Unauthorized';
-  end if;
-
-  if not public.is_admin() then
-    raise exception 'Admin access required';
-  end if;
-
-  v_tracking_number := nullif(trim(p_tracking_number), '');
-
-  update public.orders
-  set
-    courier_company = nullif(trim(p_courier_company), ''),
-    tracking_number = v_tracking_number,
-    shipped_at = case
-      when v_tracking_number is not null then coalesce(shipped_at, now())
-      else shipped_at
-    end
-  where id = p_order_id;
-
-  if not found then
-    raise exception 'Order not found';
-  end if;
-
-  return jsonb_build_object('success', true, 'order_id', p_order_id);
-end;
-$$;
-
--- ── admin_bulk_issue_coupons ────────────────────────────────────
-CREATE OR REPLACE FUNCTION public.admin_bulk_issue_coupons(
-  p_coupon_id uuid,
-  p_user_ids uuid[]
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path TO 'public'
-AS $$
-declare
-  v_admin_id uuid;
-  v_affected_count integer := 0;
-begin
-  v_admin_id := auth.uid();
-  if v_admin_id is null then
-    raise exception 'Unauthorized';
-  end if;
-
-  if not public.is_admin() then
-    raise exception 'Admin access required';
-  end if;
-
-  if p_user_ids is null or coalesce(array_length(p_user_ids, 1), 0) = 0 then
-    return jsonb_build_object('success', true, 'affected_count', 0);
-  end if;
-
-  with target_user_ids as (
-    select distinct t.user_id
-    from unnest(p_user_ids) as t(user_id)
-    where t.user_id is not null
-  ),
-  upserted as (
-    insert into public.user_coupons (user_id, coupon_id, status)
-    select user_id, p_coupon_id, 'active'
-    from target_user_ids
-    on conflict (user_id, coupon_id)
-    do update set status = excluded.status
-    returning 1
-  )
-  select count(*)
-  into v_affected_count
-  from upserted;
-
-  return jsonb_build_object('success', true, 'affected_count', v_affected_count);
-end;
-$$;
-
--- ── admin_revoke_coupons_by_ids ─────────────────────────────────
-CREATE OR REPLACE FUNCTION public.admin_revoke_coupons_by_ids(
-  p_ids uuid[]
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path TO 'public'
-AS $$
-declare
-  v_admin_id uuid;
-  v_affected_count integer := 0;
-begin
-  v_admin_id := auth.uid();
-  if v_admin_id is null then
-    raise exception 'Unauthorized';
-  end if;
-
-  if not public.is_admin() then
-    raise exception 'Admin access required';
-  end if;
-
-  if p_ids is null or coalesce(array_length(p_ids, 1), 0) = 0 then
-    return jsonb_build_object('success', true, 'affected_count', 0);
-  end if;
-
-  update public.user_coupons
-  set status = 'revoked'
-  where id = any(p_ids)
-    and status = 'active';
-
-  get diagnostics v_affected_count = row_count;
-
-  return jsonb_build_object('success', true, 'affected_count', v_affected_count);
-end;
-$$;
-
--- ── admin_revoke_coupons_by_user_ids ────────────────────────────
-CREATE OR REPLACE FUNCTION public.admin_revoke_coupons_by_user_ids(
-  p_coupon_id uuid,
-  p_user_ids uuid[]
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path TO 'public'
-AS $$
-declare
-  v_admin_id uuid;
-  v_affected_count integer := 0;
-begin
-  v_admin_id := auth.uid();
-  if v_admin_id is null then
-    raise exception 'Unauthorized';
-  end if;
-
-  if not public.is_admin() then
-    raise exception 'Admin access required';
-  end if;
-
-  if p_user_ids is null or coalesce(array_length(p_user_ids, 1), 0) = 0 then
-    return jsonb_build_object('success', true, 'affected_count', 0);
-  end if;
-
-  update public.user_coupons
-  set status = 'revoked'
-  where coupon_id = p_coupon_id
-    and user_id = any(p_user_ids)
-    and status = 'active';
-
-  get diagnostics v_affected_count = row_count;
-
-  return jsonb_build_object('success', true, 'affected_count', v_affected_count);
 end;
 $$;

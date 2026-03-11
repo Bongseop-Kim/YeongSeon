@@ -3,6 +3,7 @@ import type {
   AdminOrderDetailRowDTO,
   AdminOrderItemRowDTO,
   OrderStatusLogDTO,
+  OrderType,
 } from "@yeongseon/shared";
 import type {
   AdminOrderListItem,
@@ -11,6 +12,7 @@ import type {
   AdminProductOrderItem,
   AdminCustomOrderItem,
   AdminReformOrderItem,
+  AdminTokenOrderItem,
   AdminShippingAddress,
   AdminTrackingInfo,
   AdminStatusLogEntry,
@@ -40,6 +42,9 @@ const str = (v: unknown): string | null =>
 
 const bool = (v: unknown): boolean => v === true;
 
+const isFiniteNumber = (v: unknown): v is number =>
+  typeof v === "number" && Number.isFinite(v);
+
 // ── List mapper ────────────────────────────────────────────────
 
 export function toAdminOrderListItem(
@@ -57,6 +62,8 @@ export function toAdminOrderListItem(
     fabricType: dto.fabricType,
     designType: dto.designType,
     itemQuantity: dto.itemQuantity,
+    isSample: dto.isSample,
+    sampleType: dto.sampleType,
     reformSummary: dto.reformSummary,
   };
 }
@@ -112,6 +119,7 @@ export function toAdminOrderDetail(
     confirmedAt: dto.confirmedAt,
     paymentGroupId: dto.paymentGroupId,
     shippingCost: dto.shippingCost,
+    sampleCost: dto.sampleCost,
   };
 }
 
@@ -142,22 +150,39 @@ export function parseCustomReformData(
 
   const sewingCost = rawPricing.sewing_cost;
   const fabricCost = rawPricing.fabric_cost;
+  const sampleCost = rawPricing.sample_cost;
   const totalCost = rawPricing.total_cost;
+  const invalidPricingFields: string[] = [];
 
-  if (typeof sewingCost !== "number" || !Number.isFinite(sewingCost)) {
+  const validatedSewingCost = isFiniteNumber(sewingCost) ? sewingCost : null;
+  const validatedFabricCost = isFiniteNumber(fabricCost) ? fabricCost : null;
+  const validatedSampleCost = isFiniteNumber(sampleCost) ? sampleCost : null;
+  const validatedTotalCost = isFiniteNumber(totalCost) ? totalCost : null;
+
+  if (validatedSewingCost === null) {
+    invalidPricingFields.push("pricing.sewing_cost");
+  }
+  if (validatedFabricCost === null) {
+    invalidPricingFields.push("pricing.fabric_cost");
+  }
+  if (validatedSampleCost === null) {
+    invalidPricingFields.push("pricing.sample_cost");
+  }
+  if (validatedTotalCost === null) {
+    invalidPricingFields.push("pricing.total_cost");
+  }
+  if (invalidPricingFields.length > 0) {
     throw new ValidationError(
-      `주문 제작 reformData 검증 실패: sewing_cost가 유한한 number가 아닙니다 (${sewingCost}).`
+      `주문 제작 reformData 검증 실패: 유효하지 않은 pricing 필드 (${invalidPricingFields.join(", ")}).`
     );
   }
-  if (typeof fabricCost !== "number" || !Number.isFinite(fabricCost)) {
-    throw new ValidationError(
-      `주문 제작 reformData 검증 실패: fabric_cost가 유한한 number가 아닙니다 (${fabricCost}).`
-    );
-  }
-  if (typeof totalCost !== "number" || !Number.isFinite(totalCost)) {
-    throw new ValidationError(
-      `주문 제작 reformData 검증 실패: total_cost가 유한한 number가 아닙니다 (${totalCost}).`
-    );
+  if (
+    validatedSewingCost === null ||
+    validatedFabricCost === null ||
+    validatedSampleCost === null ||
+    validatedTotalCost === null
+  ) {
+    throw new ValidationError("주문 제작 reformData 검증 실패: pricing 검증 결과가 일관되지 않습니다.");
   }
 
   const options: CustomOrderOptions = {
@@ -177,9 +202,10 @@ export function parseCustomReformData(
   };
 
   const pricing: CustomOrderPricing = {
-    sewingCost,
-    fabricCost,
-    totalCost,
+    sewingCost: validatedSewingCost,
+    fabricCost: validatedFabricCost,
+    sampleCost: validatedSampleCost,
+    totalCost: validatedTotalCost,
   };
 
   const refImages = Array.isArray(raw.reference_images)
@@ -201,6 +227,7 @@ export function parseCustomReformData(
     pricing,
     quantity,
     sample: bool(raw.sample),
+    sampleType: str(raw.sample_type),
     referenceImageUrls: refImages,
     additionalNotes: str(raw.additional_notes),
   };
@@ -269,7 +296,7 @@ function toReformData(
 
 export function toAdminOrderItem(
   dto: AdminOrderItemRowDTO,
-  orderType: "sale" | "custom" | "repair"
+  orderType: OrderType
 ): AdminOrderItem {
   if (dto.itemType === "product") {
     const item: AdminProductOrderItem = {
@@ -315,6 +342,27 @@ export function toAdminOrderItem(
       discountAmount: dto.discountAmount,
       lineDiscountAmount: dto.lineDiscountAmount,
       reformData,
+    };
+    return item;
+  }
+
+  if (dto.itemType === "token") {
+    const reformData = isRecord(dto.reformData) ? dto.reformData : null;
+    const item: AdminTokenOrderItem = {
+      type: "token",
+      id: dto.id,
+      orderId: dto.orderId,
+      planKey:
+        reformData && typeof reformData.plan_key === "string"
+          ? reformData.plan_key
+          : null,
+      tokenAmount: reformData && typeof reformData.token_amount === "number"
+        ? reformData.token_amount
+        : null,
+      quantity: dto.quantity,
+      unitPrice: dto.unitPrice,
+      discountAmount: dto.discountAmount,
+      lineDiscountAmount: dto.lineDiscountAmount,
     };
     return item;
   }

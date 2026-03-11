@@ -10,6 +10,13 @@ export const CLAIM_ACTIONS_BY_STATUS: Partial<
   배송중: ["return", "exchange"],
   진행중: ["cancel"],
   대기중: ["cancel"],
+  접수: ["cancel"],
+  샘플원단제작중: ["cancel"],
+  샘플원단배송중: ["cancel"],
+  샘플봉제제작중: ["cancel"],
+  샘플넥타이배송중: ["cancel"],
+  샘플배송완료: ["cancel"],
+  샘플승인: ["cancel"],
 };
 
 export const CLAIM_ACTION_LABEL: Record<ClaimActionType, string> = {

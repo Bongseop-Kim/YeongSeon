@@ -20,7 +20,10 @@ type PricingConstantKey =
   | "YARN_DYED_DESIGN_COST"
   | "FABRIC_QTY_ADULT"
   | "FABRIC_QTY_ADULT_FOLD7"
-  | "FABRIC_QTY_CHILD";
+  | "FABRIC_QTY_CHILD"
+  | "SAMPLE_SEWING_COST"
+  | "SAMPLE_FABRIC_COST"
+  | "SAMPLE_FABRIC_AND_SEWING_COST";
 
 const getConstantValue = (
   constantsMap: Partial<Record<PricingConstantKey, number>>,
@@ -76,7 +79,10 @@ export const toPricingConfig = (
       constant.key === "YARN_DYED_DESIGN_COST" ||
       constant.key === "FABRIC_QTY_ADULT" ||
       constant.key === "FABRIC_QTY_ADULT_FOLD7" ||
-      constant.key === "FABRIC_QTY_CHILD"
+      constant.key === "FABRIC_QTY_CHILD" ||
+      constant.key === "SAMPLE_SEWING_COST" ||
+      constant.key === "SAMPLE_FABRIC_COST" ||
+      constant.key === "SAMPLE_FABRIC_AND_SEWING_COST"
     ) {
       constantsMap[constant.key] = constant.amount;
     }
@@ -109,5 +115,8 @@ export const toPricingConfig = (
         POLY: getFabricUnitPrice(fabricPrices, "PRINTING", "POLY"),
       },
     },
+    SAMPLE_SEWING_COST: getConstantValue(constantsMap, "SAMPLE_SEWING_COST"),
+    SAMPLE_FABRIC_COST: getConstantValue(constantsMap, "SAMPLE_FABRIC_COST"),
+    SAMPLE_FABRIC_AND_SEWING_COST: getConstantValue(constantsMap, "SAMPLE_FABRIC_AND_SEWING_COST"),
   };
 };

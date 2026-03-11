@@ -17,6 +17,4 @@ export interface StepConfig {
   isSkippable: (values: OrderOptions) => boolean;
 }
 
-export type SewingStyle = "normal" | "dimple" | "spoderato" | "fold7";
-
 export type PackagePreset = "basic" | "recommended" | "premium";

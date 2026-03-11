@@ -3,10 +3,9 @@ import { useFormContext } from "react-hook-form";
 import { RadioCard } from "@/components/composite/radio-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup } from "@/components/ui/radio-group";
-import {
-  SAMPLE_COST,
-  SAMPLE_DURATION,
-} from "@/features/custom-order/constants/SAMPLE_PRICING";
+import { SAMPLE_DURATION } from "@/features/custom-order/constants/SAMPLE_PRICING";
+import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
+import { calculateSampleCost } from "@/features/custom-order/utils/pricing";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
 
@@ -30,17 +29,25 @@ const SAMPLE_TYPE_OPTIONS = [
 
 export const SampleOptionStep = () => {
   const { watch, setValue } = useFormContext<QuoteOrderOptions>();
+  const { data: pricingConfig, isLoading, isError } = usePricingConfig();
   const sample = watch("sample");
   const fabricProvided = watch("fabricProvided");
   const sampleType = watch("sampleType");
 
-  // fabricProvided=true 시 sewing으로 자동 고정
+  // fabricProvided=true 시 sewing으로 자동 고정 (early return 전에 위치해야 함 - Rules of Hooks)
   useEffect(() => {
     if (!sample) return;
     if (fabricProvided) {
       setValue("sampleType", "sewing");
     }
   }, [fabricProvided, sample, setValue]);
+
+  if (isLoading) {
+    return <div className="text-sm text-gray-400">로딩중...</div>;
+  }
+  if (isError || !pricingConfig) {
+    return <div className="text-sm text-red-400">가격 정보를 불러오지 못했습니다.</div>;
+  }
 
   const handleSampleToggle = (wantsSample: boolean) => {
     setValue("sample", wantsSample);
@@ -121,7 +128,7 @@ export const SampleOptionStep = () => {
                     보내주신 원단으로 봉제 샘플을 제작합니다
                   </p>
                   <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-500">
-                    <span>{SAMPLE_COST.sewing.toLocaleString()}원</span>
+                    <span>{calculateSampleCost("sewing", pricingConfig).toLocaleString()}원</span>
                     <span>{SAMPLE_DURATION.sewing}</span>
                   </div>
                 </CardContent>
@@ -152,7 +159,7 @@ export const SampleOptionStep = () => {
                         </p>
                         <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-500">
                           <span>
-                            {SAMPLE_COST[option.value].toLocaleString()}원
+                            {calculateSampleCost(option.value, pricingConfig).toLocaleString()}원
                           </span>
                           <span>{SAMPLE_DURATION[option.value]}</span>
                         </div>

@@ -2,7 +2,6 @@ import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import CostBreakdown from "@/features/custom-order/components/cost-breakdown";
-import { SAMPLE_COST } from "@/features/custom-order/constants/SAMPLE_PRICING";
 import {
   getFabricLabel,
   getSewingStyleLabel,
@@ -17,6 +16,7 @@ interface StickySummaryProps {
   totalCost: number;
   sewingCost: number;
   fabricCost: number;
+  sampleCost: number;
   pricingConfig: PricingConfig | undefined;
   isLoggedIn: boolean;
   isQuoteMode: boolean;
@@ -27,6 +27,7 @@ export const StickySummary = ({
   totalCost,
   sewingCost,
   fabricCost,
+  sampleCost,
   pricingConfig,
   isLoggedIn,
   isQuoteMode,
@@ -40,10 +41,8 @@ export const StickySummary = ({
     ? `${getTieTypeLabel(options.tieType, true)} · ${getSewingStyleLabel(options)}`
     : "미선택";
 
-  const sampleCost = !isQuoteMode && options.sample && options.sampleType
-    ? SAMPLE_COST[options.sampleType]
-    : 0;
-  const grandTotal = totalCost + sampleCost;
+  const effectiveSampleCost = isQuoteMode ? 0 : sampleCost;
+  const grandTotal = totalCost;
   const estimatedDays = getEstimatedDays(options);
 
   return (
@@ -72,18 +71,18 @@ export const StickySummary = ({
         {isLoggedIn ? (
           <>
             <div className="space-y-2">
-              {sampleCost > 0 && (
+              {effectiveSampleCost > 0 && (
                 <>
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-zinc-900">제작 비용</span>
                     <span className="font-medium text-zinc-900">
-                      {totalCost.toLocaleString()}원
+                      {(totalCost - effectiveSampleCost).toLocaleString()}원
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-zinc-500">샘플 비용</span>
                     <span className="text-sm text-zinc-900">
-                      +{sampleCost.toLocaleString()}원
+                      +{effectiveSampleCost.toLocaleString()}원
                     </span>
                   </div>
                 </>

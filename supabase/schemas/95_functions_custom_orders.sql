@@ -2,10 +2,15 @@
 -- 95_functions_custom_orders.sql  – Custom order RPC functions 
 -- =============================================================
 -- ── calculate_custom_order_amounts ───────────────────────────
-CREATE OR REPLACE FUNCTION public.calculate_custom_order_amounts(p_options jsonb, p_quantity integer)
-RETURNS TABLE (sewing_cost integer, fabric_cost integer, total_cost integer)
+CREATE OR REPLACE FUNCTION public.calculate_custom_order_amounts(
+  p_options jsonb,
+  p_quantity integer,
+  p_sample boolean DEFAULT false,
+  p_sample_type text DEFAULT null
+)
+RETURNS TABLE (sewing_cost integer, fabric_cost integer, sample_cost integer, total_cost integer)
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 declare
@@ -37,7 +42,6 @@ declare
   v_fold7 boolean;
   v_brand_label boolean;
   v_care_label boolean;
-  v_exclusive_style_count integer;
 
   v_sewing_per_unit integer;
   v_unit_fabric_cost integer;
@@ -49,6 +53,14 @@ begin
 
   if p_quantity is null or p_quantity <= 0 then
     raise exception 'Invalid quantity';
+  end if;
+
+  if p_sample and (p_sample_type is null or trim(p_sample_type) = '') then
+    raise exception 'p_sample_type is required when p_sample is true';
+  end if;
+
+  if p_sample and p_sample_type not in ('fabric', 'sewing', 'fabric_and_sewing') then
+    raise exception 'Invalid p_sample_type: %', p_sample_type;
   end if;
 
   select
@@ -118,6 +130,14 @@ begin
   v_fabric_type := nullif(p_options->>'fabric_type', '');
   v_fabric_provided := coalesce((p_options->>'fabric_provided')::boolean, false);
 
+  -- tie_type/interlining 유효값 검증: 미지 값은 조용히 기본처리되지 않고 예외 발생
+  if v_tie_type != '' and v_tie_type != 'AUTO' then
+    raise exception 'Invalid tie_type: %. Allowed values are empty string or AUTO', v_tie_type;
+  end if;
+  if v_interlining != '' and v_interlining != 'WOOL' then
+    raise exception 'Invalid interlining: %. Allowed values are empty string or WOOL', v_interlining;
+  end if;
+
   v_triangle_stitch := coalesce((p_options->>'triangle_stitch')::boolean, false);
   v_side_stitch := coalesce((p_options->>'side_stitch')::boolean, false);
   v_bar_tack := coalesce((p_options->>'bar_tack')::boolean, false);
@@ -126,14 +146,9 @@ begin
   v_fold7 := coalesce((p_options->>'fold7')::boolean, false);
   v_brand_label := coalesce((p_options->>'brand_label')::boolean, false);
   v_care_label := coalesce((p_options->>'care_label')::boolean, false);
-  v_exclusive_style_count :=
-    (case when v_dimple then 1 else 0 end)
-    + (case when v_spoderato then 1 else 0 end)
-    + (case when v_fold7 then 1 else 0 end);
 
-  -- dimple/spoderato/fold7 are treated as mutually exclusive sewing styles.
-  if v_exclusive_style_count > 1 then
-    raise exception 'Only one of dimple, spoderato, or fold7 can be selected';
+  if v_dimple and v_tie_type != 'AUTO' then
+    raise exception '딤플은 자동 봉제(AUTO)에서만 선택 가능합니다';
   end if;
 
   v_sewing_per_unit := v_sewing_per_cost;
@@ -183,7 +198,8 @@ begin
   if v_fabric_provided then
     v_fabric_amount := 0;
   elsif v_design_type is null or v_fabric_type is null then
-    v_fabric_amount := 0;
+    -- fabric_provided=false인데 design_type/fabric_type이 누락된 경우는 데이터 오류
+    raise exception 'fabric_provided=false이지만 design_type 또는 fabric_type이 null입니다';
   else
     select fp.unit_price
     into v_unit_fabric_cost
@@ -202,7 +218,31 @@ begin
   end if;
 
   fabric_cost := v_fabric_amount;
-  total_cost := sewing_cost + fabric_cost;
+
+  -- 샘플 비용 계산
+  if p_sample then
+    if p_sample_type = 'fabric' then
+      select copc.amount into sample_cost
+      from public.custom_order_pricing_constants copc
+      where copc.key = 'SAMPLE_FABRIC_COST';
+    elsif p_sample_type = 'sewing' then
+      select copc.amount into sample_cost
+      from public.custom_order_pricing_constants copc
+      where copc.key = 'SAMPLE_SEWING_COST';
+    else -- fabric_and_sewing
+      select copc.amount into sample_cost
+      from public.custom_order_pricing_constants copc
+      where copc.key = 'SAMPLE_FABRIC_AND_SEWING_COST';
+    end if;
+
+    if sample_cost is null then
+      raise exception 'Sample pricing constants are not configured for type: %', p_sample_type;
+    end if;
+  else
+    sample_cost := 0;
+  end if;
+
+  total_cost := sewing_cost + fabric_cost + sample_cost;
 
   return next;
 end;
@@ -233,6 +273,7 @@ declare
   v_payment_group_id uuid;
   v_sewing_cost integer;
   v_fabric_cost integer;
+  v_sample_cost integer;
   v_total_cost integer;
   v_reform_data jsonb;
   v_elem jsonb;
@@ -292,12 +333,14 @@ begin
   select
     amounts.sewing_cost,
     amounts.fabric_cost,
+    amounts.sample_cost,
     amounts.total_cost
   into
     v_sewing_cost,
     v_fabric_cost,
+    v_sample_cost,
     v_total_cost
-  from public.calculate_custom_order_amounts(p_options, p_quantity) as amounts;
+  from public.calculate_custom_order_amounts(p_options, p_quantity, p_sample, p_sample_type) as amounts;
 
   v_base_unit := floor(v_total_cost::numeric / p_quantity)::integer;
   v_remainder := v_total_cost - v_base_unit * p_quantity;
@@ -314,7 +357,8 @@ begin
     total_discount,
     order_type,
     status,
-    payment_group_id
+    payment_group_id,
+    sample_cost
   )
   values (
     v_user_id,
@@ -325,7 +369,8 @@ begin
     0,
     'custom',
     '대기중',
-    v_payment_group_id
+    v_payment_group_id,
+    v_sample_cost
   )
   returning id into v_order_id;
 
@@ -340,6 +385,7 @@ begin
     'pricing', jsonb_build_object(
       'sewing_cost', v_sewing_cost,
       'fabric_cost', v_fabric_cost,
+      'sample_cost', v_sample_cost,
       'total_cost', v_total_cost,
       'unit_price_remainder', v_remainder
     )
@@ -391,5 +437,65 @@ begin
     'order_number', v_order_number,
     'payment_group_id', v_payment_group_id
   );
+end;
+$$;
+
+-- ── calculate_refund_amount ───────────────────────────────────
+CREATE OR REPLACE FUNCTION public.calculate_refund_amount(p_order_id uuid)
+RETURNS TABLE (refund_amount integer, deducted_sample_cost integer)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+declare
+  v_total_price integer;
+  v_sample_cost integer;
+  v_status text;
+  v_order_type text;
+begin
+  select o.total_price, o.sample_cost, o.status, o.order_type
+  into v_total_price, v_sample_cost, v_status, v_order_type
+  from public.orders o
+  where o.id = p_order_id;
+
+  if not found then
+    raise exception 'Order not found';
+  end if;
+
+  -- custom 주문이 아닌 경우 전액 환불
+  if v_order_type != 'custom' then
+    if not (
+      (v_order_type = 'sale'   and v_status in ('대기중', '결제중', '진행중'))
+      or (v_order_type = 'repair' and v_status in ('대기중', '결제중', '접수'))
+      or (v_order_type = 'token'  and v_status in ('대기중', '결제중'))
+    ) then
+      raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다';
+    end if;
+    refund_amount := v_total_price;
+    deducted_sample_cost := 0;
+    return next;
+    return;
+  end if;
+
+  -- 샘플 진행 중 상태: sample_cost 공제
+  if v_status in (
+    '샘플원단제작중', '샘플원단배송중', '샘플봉제제작중',
+    '샘플넥타이배송중', '샘플배송완료', '샘플승인'
+  ) then
+    refund_amount := v_total_price - v_sample_cost;
+    deducted_sample_cost := v_sample_cost;
+    return next;
+    return;
+  end if;
+
+  -- 대기중, 결제중, 접수: 전액 환불
+  if v_status in ('대기중', '결제중', '접수') then
+    refund_amount := v_total_price;
+    deducted_sample_cost := 0;
+    return next;
+    return;
+  end if;
+
+  raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다: %', v_status;
 end;
 $$;

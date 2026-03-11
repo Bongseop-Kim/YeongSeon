@@ -85,6 +85,13 @@ export function parseCustomOrderData(
 
   const sewingCost = rawPricing.sewing_cost;
   const fabricCost = rawPricing.fabric_cost;
+  const rawSampleCost = rawPricing.sample_cost;
+  if (rawSampleCost !== undefined && rawSampleCost !== null && typeof rawSampleCost !== "number") {
+    throw new Error(
+      `custom order data 검증 실패: pricing.sample_cost 필드 오류 (raw keys: ${rawKeys.join(", ")})`
+    );
+  }
+  const sampleCost = typeof rawSampleCost === "number" ? rawSampleCost : 0;
   const totalCost = rawPricing.total_cost;
   const invalidPricingFields: string[] = [];
 
@@ -136,9 +143,11 @@ export function parseCustomOrderData(
     pricing: {
       sewingCost,
       fabricCost,
+      sampleCost,
       totalCost,
     },
     sample: raw.sample === true,
+    sampleType: typeof raw.sample_type === "string" ? raw.sample_type : null,
     referenceImageUrls,
     additionalNotes: typeof raw.additional_notes === "string" ? raw.additional_notes : null,
   };

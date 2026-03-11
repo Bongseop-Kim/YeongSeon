@@ -1,5 +1,9 @@
 -- =============================================================
--- 87_token_purchases.sql  –  Token purchase ledger
+-- 87_token_purchases.sql  –  Token purchase ledger (DEPRECATED)
+-- 데이터는 20260313000000_integrate_token_into_orders 마이그레이션으로
+-- orders/order_items 테이블로 이관되었습니다.
+-- 새 쓰기는 create_token_order RPC를 통해 orders 테이블에 기록됩니다.
+-- 이 테이블은 레거시 데이터 보존 목적으로 유지됩니다.
 -- =============================================================
 
 CREATE TABLE public.token_purchases (

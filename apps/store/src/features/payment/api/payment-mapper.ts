@@ -12,6 +12,7 @@ export interface TokenPurchaseConfirmPaymentResponse {
   type: "token_purchase";
   paymentKey: string;
   paymentGroupId: string;
+  orders: Array<{ orderId: string; orderType: string }>;
   tokenAmount: number;
   status: string;
 }
@@ -19,6 +20,15 @@ export interface TokenPurchaseConfirmPaymentResponse {
 export type ConfirmPaymentResponse =
   | OrderConfirmPaymentResponse
   | TokenPurchaseConfirmPaymentResponse;
+
+const mapOrderItem = (
+  o: Record<string, unknown>
+): { orderId: string; orderType: string } => {
+  if (typeof o.orderId !== "string" || typeof o.orderType !== "string") {
+    throw new Error("주문 항목 형식이 올바르지 않습니다");
+  }
+  return { orderId: o.orderId, orderType: o.orderType };
+};
 
 export const parseConfirmPaymentResponse = (
   data: unknown
@@ -35,6 +45,19 @@ export const parseConfirmPaymentResponse = (
   if (typeof data.status !== "string") {
     throw new Error("결제 승인 응답이 올바르지 않습니다: status 누락.");
   }
+  if (!Array.isArray(data.orders)) {
+    throw new Error("결제 승인 응답이 올바르지 않습니다: orders 누락.");
+  }
+
+  const mapOrders = (orders: unknown[], label: string) =>
+    orders.map((o, i) => {
+      if (!isRecord(o)) {
+        throw new Error(
+          `결제 승인 응답이 올바르지 않습니다: ${label}[${i}]가 올바른 객체가 아닙니다.`
+        );
+      }
+      return mapOrderItem(o);
+    });
 
   if (data.type === "token_purchase") {
     if (typeof data.tokenAmount !== "number") {
@@ -44,21 +67,15 @@ export const parseConfirmPaymentResponse = (
       type: "token_purchase",
       paymentKey: data.paymentKey,
       paymentGroupId: data.paymentGroupId,
+      orders: mapOrders(data.orders, "orders"),
       tokenAmount: data.tokenAmount,
       status: data.status,
     };
   }
-
-  if (!Array.isArray(data.orders)) {
-    throw new Error("결제 승인 응답이 올바르지 않습니다: orders 누락.");
-  }
   return {
     paymentKey: data.paymentKey,
     paymentGroupId: data.paymentGroupId,
-    orders: (data.orders as Array<Record<string, unknown>>).map((o) => ({
-      orderId: o.orderId as string,
-      orderType: o.orderType as string,
-    })),
+    orders: mapOrders(data.orders, "orders"),
     status: data.status,
   };
 };

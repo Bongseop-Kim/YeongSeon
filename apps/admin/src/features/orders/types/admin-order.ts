@@ -34,6 +34,8 @@ export interface AdminOrderListItem {
   fabricType: string | null;
   designType: string | null;
   itemQuantity: number | null;
+  isSample: boolean | null;
+  sampleType: string | null;
   // repair specific
   reformSummary: string | null;
 }
@@ -59,6 +61,7 @@ export interface AdminOrderDetail {
   confirmedAt: string | null;
   paymentGroupId: string | null;
   shippingCost: number;
+  sampleCost: number;
 }
 
 // ── Order items (discriminated union) ─────────────────────────
@@ -99,7 +102,19 @@ export interface AdminReformOrderItem {
   reformData: RepairOrderReformData | null;
 }
 
-export type AdminOrderItem = AdminProductOrderItem | AdminCustomOrderItem | AdminReformOrderItem;
+export interface AdminTokenOrderItem {
+  type: "token";
+  id: string;
+  orderId: string;
+  planKey: string | null;
+  tokenAmount: number | null;
+  quantity: number;
+  unitPrice: number;
+  discountAmount: number;
+  lineDiscountAmount: number;
+}
+
+export type AdminOrderItem = AdminProductOrderItem | AdminCustomOrderItem | AdminReformOrderItem | AdminTokenOrderItem;
 
 // ── reformData typed structures ────────────────────────────────
 
@@ -122,6 +137,7 @@ export interface CustomOrderOptions {
 export interface CustomOrderPricing {
   sewingCost: number;
   fabricCost: number;
+  sampleCost: number;
   totalCost: number;
 }
 
@@ -131,6 +147,7 @@ export interface CustomOrderReformData {
   pricing: CustomOrderPricing;
   quantity: number;
   sample: boolean;
+  sampleType: string | null;
   referenceImageUrls: string[];
   additionalNotes: string | null;
 }

@@ -22,6 +22,51 @@ const jsonResponse = (status: number, body: Record<string, unknown>) =>
     },
   });
 
+const buildTokenPurchaseResponse = (
+  paymentKey: string,
+  paymentGroupId: string,
+  orders: Array<{ orderId: string; orderType: string }>,
+  tokenAmount: number,
+  status = "DONE"
+) =>
+  jsonResponse(200, {
+    paymentKey,
+    paymentGroupId,
+    orders,
+    type: "token_purchase",
+    tokenAmount,
+    status,
+  });
+
+const fetchTokenAmountAndBuildResponse = async (
+  adminClient: ReturnType<typeof createClient>,
+  orderId: string,
+  paymentKey: string,
+  paymentGroupId: string,
+  orders: Array<{ orderId: string; orderType: string }>
+): Promise<Response> => {
+  const { data: tokenItem, error: tokenItemError } = await adminClient
+    .from("order_items")
+    .select("item_data")
+    .eq("order_id", orderId)
+    .eq("item_type", "token")
+    .single();
+  if (tokenItemError) {
+    errorLogger("token_item_lookup_failed", tokenItemError, {
+      orderId,
+      itemType: "token",
+    });
+    return jsonResponse(500, { error: "Failed to load token item" });
+  }
+  const tokenAmount =
+    (tokenItem?.item_data as { token_amount?: number } | null)
+      ?.token_amount ?? null;
+  if (typeof tokenAmount !== "number") {
+    return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
+  }
+  return buildTokenPurchaseResponse(paymentKey, paymentGroupId, orders, tokenAmount);
+};
+
 const maskPaymentKey = (key: string): string => {
   if (key.length <= 8) return "****";
   return `****${key.slice(-8)}`;
@@ -162,227 +207,7 @@ Deno.serve(async (req) => {
   }
 
   if (!orders || orders.length === 0) {
-    // orders가 없으면 token_purchases 조회
-    const { data: tokenPurchase, error: tokenPurchaseError } = await adminClient
-      .from("token_purchases")
-      .select("id, user_id, price, status, token_amount, plan_key")
-      .eq("payment_group_id", payload.orderId)
-      .maybeSingle();
-
-    if (tokenPurchaseError) {
-      errorLogger("token_purchase_lookup_failed", tokenPurchaseError, {
-        paymentGroupId: payload.orderId,
-        userId: user.id,
-      });
-      if (tokenPurchaseError.code === "22P02") {
-        return jsonResponse(400, { error: "Invalid payment group id" });
-      }
-      return jsonResponse(500, { error: "Failed to load token purchase" });
-    }
-
-    if (!tokenPurchase) {
-      return jsonResponse(404, { error: "Orders not found" });
-    }
-
-    const tp = tokenPurchase as {
-      id: string;
-      user_id: string;
-      price: number;
-      status: string;
-      token_amount: number;
-      plan_key: string;
-    };
-
-    // 소유권 검증
-    if (tp.user_id !== user.id) {
-      return jsonResponse(403, { error: "Forbidden" });
-    }
-
-    // 멱등성 체크
-    if (tp.status === "완료") {
-      processLogger("token_payment_already_confirmed", {
-        paymentGroupId: payload.orderId,
-        userId: user.id,
-        paymentKey: maskPaymentKey(payload.paymentKey),
-      });
-      return jsonResponse(200, {
-        paymentKey: payload.paymentKey,
-        paymentGroupId: payload.orderId,
-        type: "token_purchase",
-        tokenAmount: tp.token_amount,
-        status: "DONE",
-      });
-    }
-
-    // 상태 검증
-    if (!["대기중", "결제중"].includes(tp.status)) {
-      return jsonResponse(409, {
-        error: "Token purchase is not payable",
-        paymentGroupId: payload.orderId,
-      });
-    }
-
-    // 금액 검증
-    if (tp.price !== payload.amount) {
-      processLogger("token_payment_amount_mismatch", {
-        paymentGroupId: payload.orderId,
-        requestedAmount: payload.amount,
-        dbAmount: tp.price,
-        userId: user.id,
-      });
-      return jsonResponse(400, {
-        error: "Amount mismatch",
-        paymentGroupId: payload.orderId,
-      });
-    }
-
-    // lock_token_payment
-    const { data: lockResult, error: lockError } = await adminClient.rpc(
-      "lock_token_payment",
-      { p_payment_group_id: payload.orderId, p_user_id: user.id }
-    );
-
-    if (lockError) {
-      errorLogger("token_payment_lock_failed", lockError, {
-        paymentGroupId: payload.orderId,
-        userId: user.id,
-      });
-      if (lockError.message?.includes("not payable")) {
-        return jsonResponse(409, { error: "Token purchase is not payable" });
-      }
-      if (lockError.message?.includes("Forbidden")) {
-        return jsonResponse(403, { error: "Forbidden" });
-      }
-      return jsonResponse(500, { error: "Failed to lock token purchase for payment" });
-    }
-
-    if (lockResult?.already_confirmed) {
-      return jsonResponse(200, {
-        paymentKey: payload.paymentKey,
-        paymentGroupId: payload.orderId,
-        type: "token_purchase",
-        tokenAmount: tp.token_amount,
-        status: "DONE",
-      });
-    }
-
-    // Toss 결제 승인
-    const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
-    let tossResult: TossConfirmResponse;
-    try {
-      const tossResponse = await fetch(
-        "https://api.tosspayments.com/v1/payments/confirm",
-        {
-          method: "POST",
-          headers: {
-            Authorization: tossAuth,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            paymentKey: payload.paymentKey,
-            orderId: payload.orderId,
-            amount: tp.price,
-          }),
-        }
-      );
-
-      const responseText = await tossResponse.text();
-      let parsed: Record<string, unknown> = {};
-      try {
-        parsed = responseText
-          ? (JSON.parse(responseText) as Record<string, unknown>)
-          : {};
-      } catch {
-        parsed = { raw: responseText };
-      }
-
-      if (!tossResponse.ok) {
-        processLogger("token_payment_confirm_rejected", {
-          paymentGroupId: payload.orderId,
-          paymentKey: maskPaymentKey(payload.paymentKey),
-          status: tossResponse.status,
-          response: sanitizeTossResponse(parsed),
-        });
-
-        await adminClient
-          .rpc("unlock_token_payment", {
-            p_payment_group_id: payload.orderId,
-            p_user_id: user.id,
-          })
-          .catch((unlockErr: unknown) => {
-            errorLogger("token_payment_unlock_failed", unlockErr, {
-              paymentGroupId: payload.orderId,
-              userId: user.id,
-            });
-          });
-
-        return jsonResponse(tossResponse.status, {
-          error: "Payment confirmation rejected",
-          details: parsed,
-        });
-      }
-
-      tossResult = parsed as TossConfirmResponse;
-    } catch (error) {
-      errorLogger("token_payment_confirm_failed", error, {
-        paymentGroupId: payload.orderId,
-        paymentKey: maskPaymentKey(payload.paymentKey),
-      });
-
-      await adminClient
-        .rpc("unlock_token_payment", {
-          p_payment_group_id: payload.orderId,
-          p_user_id: user.id,
-        })
-        .catch((unlockErr: unknown) => {
-          errorLogger("token_payment_unlock_failed", unlockErr, {
-            paymentGroupId: payload.orderId,
-            userId: user.id,
-          });
-        });
-
-      return jsonResponse(502, { error: "Failed to confirm payment" });
-    }
-
-    // confirm_token_payment
-    const { data: confirmResult, error: confirmError } = await adminClient.rpc(
-      "confirm_token_payment",
-      {
-        p_payment_group_id: payload.orderId,
-        p_user_id: user.id,
-        p_payment_key: payload.paymentKey,
-      }
-    );
-
-    if (confirmError) {
-      errorLogger("token_payment_confirm_rpc_failed", confirmError, {
-        paymentGroupId: payload.orderId,
-        userId: user.id,
-        paymentKey: maskPaymentKey(payload.paymentKey),
-      });
-      return jsonResponse(500, {
-        error: "Payment confirmed but token grant failed",
-      });
-    }
-
-    const tokenAmount = (confirmResult as { token_amount?: number })?.token_amount ?? tp.token_amount;
-
-    processLogger("token_payment_confirmed", {
-      paymentGroupId: payload.orderId,
-      userId: user.id,
-      paymentKey: maskPaymentKey(payload.paymentKey),
-      amount: tp.price,
-      tokenAmount,
-      paymentStatus: tossResult.status ?? "UNKNOWN",
-    });
-
-    return jsonResponse(200, {
-      paymentKey: payload.paymentKey,
-      paymentGroupId: payload.orderId,
-      type: "token_purchase",
-      tokenAmount,
-      status: tossResult.status ?? "DONE",
-    });
+    return jsonResponse(404, { error: "Orders not found" });
   }
 
   const typedOrders = orders as Array<{
@@ -395,8 +220,11 @@ Deno.serve(async (req) => {
   const allowedPrePaymentStatuses = new Set(["대기중", "결제중"]);
 
   // RPC confirm_payment_orders와 동일한 결제 후 상태 매핑
-  const expectedPostPaymentStatus = (orderType: string): string =>
-    orderType === "sale" ? "진행중" : "접수";
+  const expectedPostPaymentStatus = (orderType: string): string => {
+    if (orderType === "sale") return "진행중";
+    if (orderType === "token") return "완료";
+    return "접수";
+  };
 
   // 1단계: 소유권 검증
   for (const order of typedOrders) {
@@ -417,6 +245,17 @@ Deno.serve(async (req) => {
       paymentKey: maskPaymentKey(payload.paymentKey),
       orderCount: typedOrders.length,
     });
+    const isTokenOrder =
+      typedOrders.length === 1 && typedOrders[0].order_type === "token";
+    if (isTokenOrder) {
+      return fetchTokenAmountAndBuildResponse(
+        adminClient,
+        typedOrders[0].id,
+        payload.paymentKey,
+        payload.orderId,
+        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type }))
+      );
+    }
     return jsonResponse(200, {
       paymentKey: payload.paymentKey,
       paymentGroupId: payload.orderId,
@@ -493,6 +332,17 @@ Deno.serve(async (req) => {
       userId: user.id,
       paymentKey: maskPaymentKey(payload.paymentKey),
     });
+    const isTokenOrderViaLock =
+      typedOrders.length === 1 && typedOrders[0].order_type === "token";
+    if (isTokenOrderViaLock) {
+      return fetchTokenAmountAndBuildResponse(
+        adminClient,
+        typedOrders[0].id,
+        payload.paymentKey,
+        payload.orderId,
+        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type }))
+      );
+    }
     return jsonResponse(200, {
       paymentKey: payload.paymentKey,
       paymentGroupId: payload.orderId,
@@ -623,7 +473,7 @@ Deno.serve(async (req) => {
   const updatedOrders = (
     rpcResult as {
       success: boolean;
-      orders: Array<{ orderId: string; orderType: string }>;
+      orders: Array<{ orderId: string; orderType: string; tokenAmount: number | null }>;
     }
   ).orders;
 
@@ -635,6 +485,23 @@ Deno.serve(async (req) => {
     orderCount: updatedOrders.length,
     paymentStatus: tossResult.status ?? "UNKNOWN",
   });
+
+  // token 주문: type: "token_purchase" + tokenAmount 포함 응답
+  const isTokenOrder =
+    updatedOrders.length === 1 && updatedOrders[0].orderType === "token";
+  if (isTokenOrder) {
+    const tokenAmount = updatedOrders[0].tokenAmount;
+    if (typeof tokenAmount !== "number") {
+      return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
+    }
+    return buildTokenPurchaseResponse(
+      payload.paymentKey,
+      payload.orderId,
+      updatedOrders,
+      tokenAmount,
+      tossResult.status ?? "DONE"
+    );
+  }
 
   return jsonResponse(200, {
     paymentKey: payload.paymentKey,

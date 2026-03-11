@@ -3,7 +3,13 @@ import type { AppliedCoupon } from "./coupon";
 import type { TieItem } from "./reform";
 
 // 주문 상태
-export type OrderStatus = "진행중" | "완료" | "배송중" | "배송완료" | "대기중" | "결제중" | "취소" | "접수" | "제작중" | "제작완료" | "수선중" | "수선완료";
+export type OrderStatus =
+  | "진행중" | "완료" | "배송중" | "배송완료" | "대기중" | "결제중" | "취소"
+  | "실패"
+  | "접수" | "제작중" | "제작완료"
+  | "수선중" | "수선완료"
+  | "샘플원단제작중" | "샘플원단배송중" | "샘플봉제제작중"
+  | "샘플넥타이배송중" | "샘플배송완료" | "샘플승인";
 
 // 일반 상품 주문 아이템
 export interface ProductOrderItem {
@@ -51,9 +57,11 @@ export interface CustomOrderItem {
     pricing: {
       sewingCost: number;
       fabricCost: number;
+      sampleCost: number;
       totalCost: number;
     };
     sample: boolean;
+    sampleType: string | null;
     referenceImageUrls: string[];
     additionalNotes: string | null;
   };

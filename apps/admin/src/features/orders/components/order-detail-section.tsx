@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Typography, Spin, Result } from "antd";
-import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW } from "@yeongseon/shared";
+import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW, CUSTOM_SAMPLE_FLOW, CUSTOM_SAMPLE_ROLLBACK_FLOW } from "@yeongseon/shared";
 import { useDefaultCourier } from "@/features/settings/api/settings-query";
 import {
   useAdminOrderDetail,
@@ -40,17 +40,22 @@ export function OrderDetailSection() {
 
   const [statusMemo, setStatusMemo] = useState("");
 
-  const statusFlow = ORDER_STATUS_FLOW[orderType];
-  const rollbackFlow = ORDER_ROLLBACK_FLOW[orderType];
-  const nextStatus = order?.status ? statusFlow[order.status] : undefined;
-  const rollbackStatus = order?.status ? rollbackFlow[order.status] : undefined;
-
   const customItems = items.filter(
     (i): i is AdminCustomOrderItem => i.type === "custom"
   );
   const reformItems = items.filter(
     (i): i is AdminReformOrderItem => i.type === "reform"
   );
+
+  const customSampleType = customItems.find((i) => i.customData?.sample)?.customData?.sampleType ?? null;
+  const statusFlow = customSampleType
+    ? (CUSTOM_SAMPLE_FLOW[customSampleType] ?? ORDER_STATUS_FLOW[orderType])
+    : ORDER_STATUS_FLOW[orderType];
+  const rollbackFlow = customSampleType
+    ? (CUSTOM_SAMPLE_ROLLBACK_FLOW[customSampleType] ?? ORDER_ROLLBACK_FLOW[orderType])
+    : ORDER_ROLLBACK_FLOW[orderType];
+  const nextStatus = order?.status ? statusFlow[order.status] : undefined;
+  const rollbackStatus = order?.status ? rollbackFlow[order.status] : undefined;
 
   if (isLoading) return <Spin />;
   if (isError) return <Result status="error" title="오류" subTitle="주문 정보를 불러오는 중 오류가 발생했습니다." />;
@@ -61,8 +66,12 @@ export function OrderDetailSection() {
       <Title level={5}>주문 정보</Title>
       <OrderInfoSection order={order} />
 
-      <Title level={5}>배송지 정보</Title>
-      <ShippingAddressSection address={order.shippingAddress} />
+      {orderType !== "token" && (
+        <>
+          <Title level={5}>배송지 정보</Title>
+          <ShippingAddressSection address={order.shippingAddress} />
+        </>
+      )}
 
       <OrderStatusActions
         order={order}
@@ -91,18 +100,22 @@ export function OrderDetailSection() {
       {orderType === "custom" && <CustomOrderDetail items={customItems} />}
       {orderType === "repair" && <RepairOrderDetail items={reformItems} />}
 
-      <Title level={5}>배송 정보</Title>
-      {orderId && (
-        <TrackingSection
-          orderId={orderId}
-          courierCompany={courierCompany}
-          trackingNumber={trackingNumber}
-          shippedAt={order.trackingInfo?.shippedAt}
-          onCourierChange={setCourierCompany}
-          onTrackingNumberChange={setTrackingNumber}
-          onSave={saveTracking}
-          isPending={trackingPending}
-        />
+      {orderType !== "token" && (
+        <>
+          <Title level={5}>배송 정보</Title>
+          {orderId && (
+            <TrackingSection
+              orderId={orderId}
+              courierCompany={courierCompany}
+              trackingNumber={trackingNumber}
+              shippedAt={order.trackingInfo?.shippedAt}
+              onCourierChange={setCourierCompany}
+              onTrackingNumberChange={setTrackingNumber}
+              onSave={saveTracking}
+              isPending={trackingPending}
+            />
+          )}
+        </>
       )}
 
       <Title level={5}>주문 아이템</Title>
