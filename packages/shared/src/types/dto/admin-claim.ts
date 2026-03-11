@@ -1,8 +1,4 @@
-export interface TokenRefundDataDTO {
-  paid_token_amount: number;
-  bonus_token_amount: number;
-  refund_amount: number;
-}
+import type { TokenRefundDataDTO } from "./claim-view";
 
 /** admin_claim_status_log_view row */
 export interface ClaimStatusLogDTO {

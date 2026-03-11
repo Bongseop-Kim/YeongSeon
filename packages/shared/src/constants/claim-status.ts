@@ -12,12 +12,14 @@ export const CLAIM_STATUS_FLOW: Record<
     수거완료: "재발송",
     재발송: "완료",
   },
+  token_refund: { 접수: "처리중", 처리중: "완료" },
 };
 
 export const CLAIM_ROLLBACK_FLOW: Record<ClaimType, Record<string, string>> = {
   cancel: { 처리중: "접수" },
   return: { 수거요청: "접수" },
   exchange: { 수거요청: "접수" },
+  token_refund: { 처리중: "접수" },
 };
 
 export const CLAIM_REJECT_RESTORE_STATUS = "접수";
@@ -46,6 +48,7 @@ export const CLAIM_TYPE_LABELS: Record<ClaimType, string> = {
   cancel: "취소",
   return: "반품",
   exchange: "교환",
+  token_refund: "토큰 환불",
 };
 
 export const CLAIM_REASON_LABELS: Record<string, string> = {

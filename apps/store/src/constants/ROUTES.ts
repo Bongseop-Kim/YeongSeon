@@ -33,7 +33,7 @@ export const ROUTES = {
   TOKEN_PURCHASE_FAIL: "/token/purchase/fail", // 토큰 구매 실패
 } as const;
 
-export type ClaimRouteType = "return" | "exchange" | "cancel";
+export type ClaimRouteType = "return" | "exchange" | "cancel" | "token_refund";
 
 export const buildClaimDetailRoute = (
   type: ClaimRouteType,
