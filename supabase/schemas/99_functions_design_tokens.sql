@@ -45,6 +45,7 @@ DECLARE
   v_paid_bal     integer;
   v_bonus_bal    integer;
   v_caller_role  text;
+  v_paid_to_use  integer;
 BEGIN
   -- 소유권 검증: service_role이 아닌 경우 auth.uid() 일치 확인
   v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
@@ -61,6 +62,9 @@ BEGIN
   END IF;
   IF p_quality NOT IN ('standard', 'high') THEN
     RAISE EXCEPTION 'invalid quality: %', p_quality;
+  END IF;
+  IF p_request_type = 'text_only' AND p_quality = 'high' THEN
+    RAISE EXCEPTION 'unsupported combination: text_only with high quality is not supported';
   END IF;
 
   -- 동시 요청에 대한 advisory lock (사용자별)
@@ -94,7 +98,7 @@ BEGIN
       AND type = 'token_refund'
       AND status = '접수'
   ) THEN
-    SELECT COALESCE(SUM(amount), 0)::integer
+    SELECT COALESCE(SUM(amount) FILTER (WHERE token_class IN ('paid', 'bonus')), 0)::integer
       INTO v_total_bal
       FROM public.design_tokens
      WHERE user_id = p_user_id;
@@ -131,30 +135,22 @@ BEGIN
   END IF;
 
   -- paid 먼저 차감, 부족분은 bonus에서 차감
-  IF v_paid_bal >= v_cost THEN
+  v_paid_to_use := least(greatest(v_paid_bal, 0), v_cost);
+
+  IF v_paid_to_use > 0 THEN
     INSERT INTO public.design_tokens (
       user_id, amount, type, token_class, ai_model, request_type, description
     ) VALUES (
-      p_user_id, -v_cost, 'use', 'paid',
+      p_user_id, -v_paid_to_use, 'use', 'paid',
       p_ai_model, p_request_type,
       'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
     );
-  ELSE
-    -- paid 잔액 전부 차감
-    IF v_paid_bal > 0 THEN
-      INSERT INTO public.design_tokens (
-        user_id, amount, type, token_class, ai_model, request_type, description
-      ) VALUES (
-        p_user_id, -v_paid_bal, 'use', 'paid',
-        p_ai_model, p_request_type,
-        'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
-      );
-    END IF;
-    -- 나머지는 bonus에서 차감
+  END IF;
+  IF v_cost - v_paid_to_use > 0 THEN
     INSERT INTO public.design_tokens (
       user_id, amount, type, token_class, ai_model, request_type, description
     ) VALUES (
-      p_user_id, -(v_cost - v_paid_bal), 'use', 'bonus',
+      p_user_id, -(v_cost - v_paid_to_use), 'use', 'bonus',
       p_ai_model, p_request_type,
       'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
     );
@@ -253,8 +249,8 @@ BEGIN
     END IF;
   END IF;
 
-  INSERT INTO public.design_tokens (user_id, amount, type, description)
-  VALUES (p_user_id, p_amount, 'admin', p_description);
+  INSERT INTO public.design_tokens (user_id, amount, type, token_class, description)
+  VALUES (p_user_id, p_amount, 'admin', 'paid', p_description);
 
   RETURN jsonb_build_object(
     'success', true,
@@ -516,7 +512,7 @@ BEGIN
   FROM (
     SELECT
       cto.*,
-      RANK() OVER (ORDER BY cto.created_at DESC) AS order_rank
+      RANK() OVER (ORDER BY cto.created_at DESC, cto.order_id DESC) AS order_rank
     FROM completed_token_orders cto
   ) cto;
 
@@ -550,6 +546,8 @@ BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'unauthorized: must be logged in';
   END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtext(v_user_id::text));
 
   -- 주문 검증: 본인 소유 + 토큰 주문 + 완료 상태
   SELECT id, user_id, total_price, order_type, status, created_at
@@ -608,7 +606,7 @@ BEGIN
    WHERE user_id = v_user_id
      AND order_type = 'token'
      AND status = '완료'
-   ORDER BY created_at DESC
+   ORDER BY created_at DESC, id DESC
    LIMIT 1;
 
   IF v_latest_order_id IS DISTINCT FROM p_order_id THEN
@@ -623,6 +621,15 @@ BEGIN
       AND dt.created_at > v_token_granted_at
   ) THEN
     RAISE EXCEPTION 'tokens_used_after_order';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.claims
+    WHERE order_id = p_order_id
+      AND type = 'token_refund'
+      AND status NOT IN ('거부')
+  ) THEN
+    RAISE EXCEPTION 'duplicate_refund_request: active refund already exists for this order';
   END IF;
 
   v_refund_amount := v_order.total_price;
@@ -733,6 +740,7 @@ DECLARE
   v_caller_role       text;
   v_req               record;
   v_paid_token_amount integer;
+  v_order_status      text;
 BEGIN
   -- service_role 전용
   v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
@@ -754,6 +762,8 @@ BEGIN
     RAISE EXCEPTION 'refund request not found';
   END IF;
 
+  PERFORM pg_advisory_xact_lock(hashtext(v_req.user_id::text));
+
   -- 이미 완료된 경우 멱등하게 성공 반환
   IF v_req.status = '완료' THEN
     RETURN;
@@ -766,6 +776,11 @@ BEGIN
 
   v_paid_token_amount := v_req.paid_token_amount;
 
+  SELECT o.status INTO v_order_status
+    FROM public.orders o
+   WHERE o.id = v_req.order_id
+     FOR UPDATE;
+
   -- 유료 토큰 회수
   INSERT INTO public.design_tokens (
     user_id, amount, type, token_class, description, work_id
@@ -774,7 +789,18 @@ BEGIN
     '토큰 환불 승인 (유료)',
     'refund_' || p_request_id::text || '_paid'
   )
-  ON CONFLICT (work_id) DO NOTHING;
+  ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
+
+  IF v_req.bonus_token_amount > 0 THEN
+    INSERT INTO public.design_tokens (
+      user_id, amount, type, token_class, description, work_id
+    ) VALUES (
+      v_req.user_id, -v_req.bonus_token_amount, 'refund', 'bonus',
+      '토큰 환불 승인 (보너스)',
+      'refund_' || p_request_id::text || '_bonus'
+    )
+    ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
+  END IF;
 
   -- 주문 취소 처리 (전액 환불이므로 항상 취소)
   UPDATE public.orders
@@ -784,7 +810,7 @@ BEGIN
   INSERT INTO public.order_status_logs (
     order_id, changed_by, previous_status, new_status, memo
   ) VALUES (
-    v_req.order_id, p_admin_id, '완료', '취소',
+    v_req.order_id, p_admin_id, v_order_status, '취소',
     '토큰 환불 승인 (request_id: ' || p_request_id::text || ')'
   );
 

@@ -182,20 +182,6 @@ Deno.serve(async (req) => {
   let transactionId: string | undefined;
 
   if (refundReq.status === "접수") {
-    const { error: processingError } = await adminClient
-      .from("claims")
-      .update({ status: "처리중", updated_at: new Date().toISOString() })
-      .eq("id", payload.refundRequestId)
-      .eq("type", "token_refund")
-      .eq("status", "접수");
-
-    if (processingError) {
-      errorLogger("set_processing_failed", processingError, {
-        refundRequestId: payload.refundRequestId,
-      });
-      return jsonResponse(500, { error: "Failed to set processing status" });
-    }
-
     // Toss API: 전액 취소 (cancelAmount 생략 = 전액)
     const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
 

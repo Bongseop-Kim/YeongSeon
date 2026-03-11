@@ -39,7 +39,7 @@ export function getInterliningLabel(
 ): string {
   const parts = [
     opts.interlining === "WOOL" ? "울 심지" : null,
-    opts.interliningThickness === "THIN" ? "얇음" : opts.interliningThickness ? "두꺼움" : null,
+    opts.interlining === "WOOL" && opts.interliningThickness === "THIN" ? "얇음" : opts.interlining === "WOOL" && opts.interliningThickness ? "두꺼움" : null,
   ].filter(Boolean);
   return parts.join(", ") || "미선택";
 }
