@@ -13,9 +13,9 @@ SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
   SELECT jsonb_build_object(
-    'total', COALESCE(SUM(amount), 0)::integer,
-    'paid',  COALESCE(SUM(amount), 0)::integer,
-    'bonus', 0
+    'total', (COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0) + COALESCE(SUM(amount) FILTER (WHERE token_class = 'bonus'), 0))::integer,
+    'paid',  COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0)::integer,
+    'bonus', COALESCE(SUM(amount) FILTER (WHERE token_class = 'bonus'), 0)::integer
   )
   FROM public.design_tokens
   WHERE user_id = auth.uid();
@@ -444,6 +444,15 @@ BEGIN
           AND (dt.work_id = 'order_' || o.id::text || '_paid'
                OR dt.work_id = 'order_' || o.id::text)
       ), 0)::integer                                    AS paid_tokens_granted,
+      COALESCE((
+        SELECT MAX(dt.created_at)
+        FROM public.design_tokens dt
+        WHERE dt.user_id = v_user_id
+          AND dt.type = 'purchase'
+          AND dt.token_class = 'paid'
+          AND (dt.work_id = 'order_' || o.id::text || '_paid'
+               OR dt.work_id = 'order_' || o.id::text)
+      ), o.created_at)                                  AS token_granted_at,
       -- 진행 중인 환불 요청 정보 (접수/처리중/완료)
       (
         SELECT jsonb_build_object('id', c.id, 'status', c.status)
@@ -474,7 +483,7 @@ BEGIN
                                      FROM public.design_tokens dt
                                      WHERE dt.user_id = v_user_id
                                        AND dt.type = 'use'
-                                       AND dt.created_at > cto.created_at
+                                       AND dt.created_at > cto.token_granted_at
                                    ) THEN true
                                  ELSE false
                                END,
@@ -492,7 +501,7 @@ BEGIN
                                      FROM public.design_tokens dt
                                      WHERE dt.user_id = v_user_id
                                        AND dt.type = 'use'
-                                       AND dt.created_at > cto.created_at
+                                       AND dt.created_at > cto.token_granted_at
                                    ) THEN NULL
                                  ELSE 'tokens_used'
                                END,
@@ -533,6 +542,7 @@ DECLARE
   v_order           record;
   v_latest_order_id uuid;
   v_paid_granted    integer;
+  v_token_granted_at timestamptz;
   v_refund_amount   integer;
   v_token_item_id   uuid;
   v_claim_id        uuid;
@@ -582,6 +592,17 @@ BEGIN
     RAISE EXCEPTION 'no paid tokens found for this order';
   END IF;
 
+  SELECT MAX(dt.created_at)
+    INTO v_token_granted_at
+    FROM public.design_tokens dt
+   WHERE dt.user_id = v_user_id
+     AND dt.type = 'purchase'
+     AND dt.token_class = 'paid'
+     AND (dt.work_id = 'order_' || p_order_id::text || '_paid'
+          OR dt.work_id = 'order_' || p_order_id::text);
+
+  v_token_granted_at := COALESCE(v_token_granted_at, v_order.created_at);
+
   SELECT id
     INTO v_latest_order_id
     FROM public.orders
@@ -600,7 +621,7 @@ BEGIN
     FROM public.design_tokens dt
     WHERE dt.user_id = v_user_id
       AND dt.type = 'use'
-      AND dt.created_at > v_order.created_at
+      AND dt.created_at > v_token_granted_at
   ) THEN
     RAISE EXCEPTION 'tokens_used_after_order';
   END IF;
