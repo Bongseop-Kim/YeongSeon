@@ -119,6 +119,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     orderNumber: order.orderNumber,
     date: order.date,
     status: order.status,
+    orderType: order.orderType,
     items: itemsByOrderId.get(order.id) ?? [],
     totalPrice: order.totalPrice,
   }));

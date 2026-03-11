@@ -90,6 +90,7 @@ export const toOrderViewFromDetail = (
   orderNumber: detail.orderNumber,
   date: detail.date,
   status: detail.status,
+  orderType: detail.orderType,
   totalPrice: detail.totalPrice,
   items: items.map(toOrderItemView),
   shippingInfo: detail.recipientName
@@ -340,6 +341,10 @@ const ORDER_STATUSES: ReadonlySet<string> = new Set([
 const isOrderStatus = (v: string): v is OrderStatusDTO =>
   ORDER_STATUSES.has(v);
 
+const ORDER_TYPES: ReadonlySet<string> = new Set(["sale", "custom", "repair", "token"]);
+const isOrderType = (v: string): v is OrderListRowDTO["orderType"] =>
+  ORDER_TYPES.has(v);
+
 export const parseCreateOrderResult = (
   data: unknown
 ): CreateOrderResultDTO => {
@@ -418,12 +423,18 @@ export const parseOrderListRows = (data: unknown): OrderListRowDTO[] => {
         `주문 목록 행(${i})이 올바르지 않습니다: status 값(${row.status})이 허용된 상태가 아닙니다.`
       );
     }
+    if (typeof row.orderType !== "string" || !isOrderType(row.orderType)) {
+      throw new Error(
+        `주문 목록 행(${i})이 올바르지 않습니다: orderType 값(${row.orderType})이 허용된 유형이 아닙니다.`
+      );
+    }
     return {
       id: row.id,
       orderNumber: row.orderNumber,
       date: row.date,
       status: row.status,
       totalPrice: row.totalPrice,
+      orderType: row.orderType,
       created_at: row.created_at,
     };
   });
@@ -526,6 +537,11 @@ export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
       `주문 상세 응답이 올바르지 않습니다: status 값(${data.status})이 허용된 상태가 아닙니다.`
     );
   }
+  if (typeof data.orderType !== "string" || !isOrderType(data.orderType)) {
+    throw new Error(
+      `주문 상세 응답이 올바르지 않습니다: orderType 값(${data.orderType})이 허용된 유형이 아닙니다.`
+    );
+  }
   const str = (v: unknown): string | null =>
     typeof v === "string" ? v : null;
   return {
@@ -534,6 +550,7 @@ export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
     date: data.date,
     status: data.status,
     totalPrice: data.totalPrice,
+    orderType: data.orderType,
     courierCompany: str(data.courierCompany),
     trackingNumber: str(data.trackingNumber),
     shippedAt: str(data.shippedAt),
