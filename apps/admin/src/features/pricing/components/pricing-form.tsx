@@ -11,7 +11,7 @@ import {
   TOKEN_PRICING_TIERS,
   type TokenTierUI,
 } from "@/features/pricing/api/pricing-query";
-import type { PricingConstantRow, FabricPriceRow } from "@/features/pricing/types/admin-pricing";
+import type { PricingConstantRow } from "@/features/pricing/types/admin-pricing";
 
 const { Title } = Typography;
 
@@ -69,6 +69,16 @@ const FABRIC_TYPE_LABELS: Record<string, string> = {
   POLY: "폴리",
 };
 
+// "FABRIC_YARN_DYED_SILK" → { designType: "YARN_DYED", fabricType: "SILK" }
+const parseFabricKey = (key: string): { designType: string; fabricType: string } => {
+  const withoutPrefix = key.replace(/^FABRIC_/, "");
+  const lastUnderscoreIdx = withoutPrefix.lastIndexOf("_");
+  return {
+    designType: withoutPrefix.slice(0, lastUnderscoreIdx),
+    fabricType: withoutPrefix.slice(lastUnderscoreIdx + 1),
+  };
+};
+
 export function PricingForm() {
   const { data: constants, isLoading: loadingConstants, isError: errorConstants } = usePricingConstants();
   const { data: fabrics, isLoading: loadingFabrics, isError: errorFabrics } = useFabricPrices();
@@ -96,7 +106,7 @@ export function PricingForm() {
     if (fabrics) {
       const draft: Record<string, number> = {};
       for (const row of fabrics) {
-        draft[`${row.design_type}__${row.fabric_type}`] = row.unit_price;
+        draft[row.key] = row.amount;
       }
       setFabricDraft(draft);
     }
@@ -120,15 +130,10 @@ export function PricingForm() {
       }
     }
 
-    const fabricMutations: FabricPriceRow[] = [];
+    const fabricMutations: PricingConstantRow[] = [];
     for (const row of fabrics ?? []) {
-      const draftKey = `${row.design_type}__${row.fabric_type}`;
-      if (fabricDraft[draftKey] !== row.unit_price) {
-        fabricMutations.push({
-          design_type: row.design_type,
-          fabric_type: row.fabric_type,
-          unit_price: fabricDraft[draftKey] ?? row.unit_price,
-        });
+      if (fabricDraft[row.key] !== row.amount) {
+        fabricMutations.push({ key: row.key, amount: fabricDraft[row.key] ?? row.amount });
       }
     }
 
@@ -245,22 +250,22 @@ export function PricingForm() {
         <Title level={4}>원단 비용</Title>
         <Row gutter={[16, 16]}>
           {(fabrics ?? []).map((row) => {
-            const draftKey = `${row.design_type}__${row.fabric_type}`;
+            const { designType, fabricType } = parseFabricKey(row.key);
             return (
-              <Col key={draftKey} xs={24} sm={12} md={6}>
+              <Col key={row.key} xs={24} sm={12} md={6}>
                 <Space direction="vertical" size={4} style={{ width: "100%" }}>
                   <Typography.Text>
-                    {DESIGN_TYPE_LABELS[row.design_type] ?? row.design_type} /{" "}
-                    {FABRIC_TYPE_LABELS[row.fabric_type] ?? row.fabric_type}
+                    {DESIGN_TYPE_LABELS[designType] ?? designType} /{" "}
+                    {FABRIC_TYPE_LABELS[fabricType] ?? fabricType}
                   </Typography.Text>
                   <InputNumber
-                    value={fabricDraft[draftKey] ?? row.unit_price}
+                    value={fabricDraft[row.key] ?? row.amount}
                     min={0}
                     step={100}
                     formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                     parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
                     onChange={(v) =>
-                      setFabricDraft((prev) => ({ ...prev, [draftKey]: v ?? 0 }))
+                      setFabricDraft((prev) => ({ ...prev, [row.key]: v ?? 0 }))
                     }
                     style={{ width: "100%" }}
                     addonAfter="원"
@@ -295,7 +300,7 @@ export function PricingForm() {
                     <Space direction="vertical" size={2} style={{ width: "100%" }}>
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>가격</Typography.Text>
                       <InputNumber
-                        value={Number.isNaN(Number(tier?.price)) ? undefined : Number(tier?.price)}
+                        value={tier?.price}
                         min={1}
                         step={100}
                         formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
@@ -307,8 +312,8 @@ export function PricingForm() {
                               label,
                               priceKey,
                               amountKey,
-                              price: v == null ? (prev[priceKey]?.price ?? tier?.price ?? "0") : String(v),
-                              amount: prev[priceKey]?.amount ?? tier?.amount ?? "0",
+                              price: v ?? prev[priceKey]?.price ?? tier?.price ?? 0,
+                              amount: prev[priceKey]?.amount ?? tier?.amount ?? 0,
                             },
                           }))
                         }
@@ -319,7 +324,7 @@ export function PricingForm() {
                     <Space direction="vertical" size={2} style={{ width: "100%" }}>
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>토큰 수량</Typography.Text>
                       <InputNumber
-                        value={Number.isNaN(Number(tier?.amount)) ? undefined : Number(tier?.amount)}
+                        value={tier?.amount}
                         min={1}
                         onChange={(v) =>
                           setTokenDraft((prev) => ({
@@ -328,8 +333,8 @@ export function PricingForm() {
                               label,
                               priceKey,
                               amountKey,
-                              price: prev[priceKey]?.price ?? tier?.price ?? "0",
-                              amount: v == null ? (prev[priceKey]?.amount ?? tier?.amount ?? "0") : String(v),
+                              price: prev[priceKey]?.price ?? tier?.price ?? 0,
+                              amount: v ?? prev[priceKey]?.amount ?? tier?.amount ?? 0,
                             },
                           }))
                         }

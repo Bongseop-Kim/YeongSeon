@@ -258,22 +258,22 @@ $$;
 
 -- ── get_token_plans ───────────────────────────────────────────
 -- Returns token plan prices/amounts/bonus for store users.
--- SECURITY DEFINER 사유: admin_settings는 RLS로 일반 유저 접근 불가
--- 토큰 플랜 키만 노출하며 다른 admin_settings 키는 반환하지 않음
+-- pricing_constants는 public read이므로 SECURITY INVOKER로 충분
 CREATE OR REPLACE FUNCTION public.get_token_plans()
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY DEFINER
+STABLE
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 DECLARE
   v_result jsonb;
 BEGIN
   SELECT jsonb_agg(
-    jsonb_build_object('key', key, 'value', value)
+    jsonb_build_object('key', key, 'value', amount::text)
   )
   INTO v_result
-  FROM public.admin_settings
+  FROM public.pricing_constants
   WHERE key IN (
     'token_plan_starter_price',  'token_plan_starter_amount',  'token_plan_starter_bonus_amount',
     'token_plan_popular_price',  'token_plan_popular_amount',  'token_plan_popular_bonus_amount',
@@ -286,7 +286,8 @@ $$;
 
 -- ── create_token_order ────────────────────────────────────────
 -- Creates a pending token order in the orders/order_items tables.
--- SECURITY DEFINER 사유: admin_settings RLS가 admin-only이므로 일반 유저 SELECT 불가
+-- SECURITY DEFINER 사유: orders/order_items INSERT는 RLS로 허용되지 않음
+-- pricing_constants는 public read이므로 별도 권한 불필요
 -- auth.uid() 소유권 검증으로 무단 접근 차단
 CREATE OR REPLACE FUNCTION public.create_token_order(
   p_plan_key text
@@ -318,17 +319,17 @@ BEGIN
     RAISE EXCEPTION 'invalid plan_key: %', p_plan_key;
   END IF;
 
-  -- admin_settings에서 가격/수량/보너스 조회
+  -- pricing_constants에서 가격/수량/보너스 조회
   v_price_key  := 'token_plan_' || p_plan_key || '_price';
   v_amount_key := 'token_plan_' || p_plan_key || '_amount';
   v_bonus_key  := 'token_plan_' || p_plan_key || '_bonus_amount';
 
-  SELECT value::integer INTO v_price
-    FROM public.admin_settings WHERE key = v_price_key;
-  SELECT value::integer INTO v_token_amount
-    FROM public.admin_settings WHERE key = v_amount_key;
-  SELECT COALESCE(value::integer, 0) INTO v_bonus_amount
-    FROM public.admin_settings WHERE key = v_bonus_key;
+  SELECT amount INTO v_price
+    FROM public.pricing_constants WHERE key = v_price_key;
+  SELECT amount INTO v_token_amount
+    FROM public.pricing_constants WHERE key = v_amount_key;
+  SELECT COALESCE(amount, 0) INTO v_bonus_amount
+    FROM public.pricing_constants WHERE key = v_bonus_key;
 
   IF v_price IS NULL OR v_price <= 0 THEN
     RAISE EXCEPTION 'price not configured for plan: %', p_plan_key;

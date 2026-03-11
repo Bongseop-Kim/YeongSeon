@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import { supabase } from "@/lib/supabase";
-import type { PricingConstantRow, FabricPriceRow } from "@/features/pricing/types/admin-pricing";
+import type { PricingConstantRow } from "@/features/pricing/types/admin-pricing";
 
 // ── 토큰 구매 가격 ────────────────────────────────────────────
 
@@ -18,17 +18,12 @@ const TOKEN_PRICING_SETTINGS = [
 
 export type TokenPricingKey = typeof TOKEN_PRICING_SETTINGS[number]["key"];
 
-interface TokenPricingRow {
-  key: TokenPricingKey;
-  value: string | null;
-}
-
 export interface TokenTierUI {
   label: string;
   priceKey: TokenPricingKey;
   amountKey: TokenPricingKey;
-  price: string;
-  amount: string;
+  price: number;
+  amount: number;
 }
 
 export const TOKEN_PRICING_TIERS: Array<{
@@ -47,19 +42,19 @@ export function useTokenPricing() {
     queryFn: async (): Promise<TokenTierUI[]> => {
       const keys = TOKEN_PRICING_SETTINGS.map((s) => s.key);
       const { data, error } = await supabase
-        .from("admin_settings")
-        .select("key, value")
+        .from("pricing_constants")
+        .select("key, amount")
         .in("key", keys);
       if (error) throw error;
-      const rows = (data ?? []) as TokenPricingRow[];
-      const rowMap = new Map(rows.map((row) => [row.key, row.value]));
+      const rows = (data ?? []) as PricingConstantRow[];
+      const rowMap = new Map(rows.map((row) => [row.key, row.amount]));
 
       return TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => ({
         label,
         priceKey,
         amountKey,
-        price: rowMap.get(priceKey) ?? "0",
-        amount: rowMap.get(amountKey) ?? "0",
+        price: rowMap.get(priceKey) ?? 0,
+        amount: rowMap.get(amountKey) ?? 0,
       }));
     },
   });
@@ -69,14 +64,17 @@ export function useUpdateTokenPricing() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (tiers: TokenTierUI[]) => {
-      const rows: TokenPricingRow[] = tiers.flatMap(({ priceKey, amountKey, price, amount }) => [
-        { key: priceKey, value: price },
-        { key: amountKey, value: amount },
+      const rows: PricingConstantRow[] = tiers.flatMap(({ priceKey, amountKey, price, amount }) => [
+        { key: priceKey, amount: price },
+        { key: amountKey, amount: amount },
       ]);
-      const { error } = await supabase
-        .from("admin_settings")
-        .upsert(rows, { onConflict: "key" });
-      if (error) throw error;
+      for (const { key, amount } of rows) {
+        const { error } = await supabase
+          .from("pricing_constants")
+          .update({ amount })
+          .eq("key", key);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TOKEN_PRICING_KEY });
@@ -95,8 +93,9 @@ export function usePricingConstants() {
     queryKey: PRICING_CONSTANTS_KEY,
     queryFn: async (): Promise<PricingConstantRow[]> => {
       const { data, error } = await supabase
-        .from("custom_order_pricing_constants")
+        .from("pricing_constants")
         .select("key, amount")
+        .in("category", ["custom_order", "reform"])
         .order("key");
       if (error) throw error;
       return data;
@@ -107,12 +106,12 @@ export function usePricingConstants() {
 export function useFabricPrices() {
   return useQuery({
     queryKey: FABRIC_PRICES_KEY,
-    queryFn: async (): Promise<FabricPriceRow[]> => {
+    queryFn: async (): Promise<PricingConstantRow[]> => {
       const { data, error } = await supabase
-        .from("custom_order_fabric_prices")
-        .select("design_type, fabric_type, unit_price")
-        .order("design_type")
-        .order("fabric_type");
+        .from("pricing_constants")
+        .select("key, amount")
+        .eq("category", "fabric")
+        .order("key");
       if (error) throw error;
       return data;
     },
@@ -124,7 +123,7 @@ export function useUpdatePricingConstant() {
   return useMutation({
     mutationFn: async ({ key, amount }: PricingConstantRow) => {
       const { error } = await supabase
-        .from("custom_order_pricing_constants")
+        .from("pricing_constants")
         .update({ amount })
         .eq("key", key);
       if (error) throw error;
@@ -141,12 +140,11 @@ export function useUpdatePricingConstant() {
 export function useUpdateFabricPrice() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ design_type, fabric_type, unit_price }: FabricPriceRow) => {
+    mutationFn: async ({ key, amount }: PricingConstantRow) => {
       const { error } = await supabase
-        .from("custom_order_fabric_prices")
-        .update({ unit_price })
-        .eq("design_type", design_type)
-        .eq("fabric_type", fabric_type);
+        .from("pricing_constants")
+        .update({ amount })
+        .eq("key", key);
       if (error) throw error;
     },
     onSuccess: () => {

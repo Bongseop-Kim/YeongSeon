@@ -27,7 +27,7 @@ export function useReformPricing() {
     queryKey: ["reform", "pricing"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("custom_order_pricing_constants")
+        .from("pricing_constants")
         .select("key, amount")
         .in("key", ["REFORM_BASE_COST", "REFORM_SHIPPING_COST"]);
 

@@ -91,7 +91,7 @@ begin
     v_brand_label_cost,
     v_care_label_cost,
     v_yarn_dyed_design_cost
-  from public.custom_order_pricing_constants
+  from public.pricing_constants
   where key = any (array[
     'START_COST',
     'SEWING_PER_COST',
@@ -201,11 +201,10 @@ begin
     -- fabric_provided=false인데 design_type/fabric_type이 누락된 경우는 데이터 오류
     raise exception 'fabric_provided=false이지만 design_type 또는 fabric_type이 null입니다';
   else
-    select fp.unit_price
+    select pc.amount
     into v_unit_fabric_cost
-    from public.custom_order_fabric_prices fp
-    where fp.design_type = v_design_type
-      and fp.fabric_type = v_fabric_type;
+    from public.pricing_constants pc
+    where pc.key = 'FABRIC_' || v_design_type || '_' || v_fabric_type;
 
     if v_unit_fabric_cost is null then
       raise exception 'Unsupported design/fabric option for custom order pricing';
@@ -222,17 +221,17 @@ begin
   -- 샘플 비용 계산
   if p_sample then
     if p_sample_type = 'fabric' then
-      select copc.amount into sample_cost
-      from public.custom_order_pricing_constants copc
-      where copc.key = 'SAMPLE_FABRIC_COST';
+      select pc.amount into sample_cost
+      from public.pricing_constants pc
+      where pc.key = 'SAMPLE_FABRIC_COST';
     elsif p_sample_type = 'sewing' then
-      select copc.amount into sample_cost
-      from public.custom_order_pricing_constants copc
-      where copc.key = 'SAMPLE_SEWING_COST';
+      select pc.amount into sample_cost
+      from public.pricing_constants pc
+      where pc.key = 'SAMPLE_SEWING_COST';
     else -- fabric_and_sewing
-      select copc.amount into sample_cost
-      from public.custom_order_pricing_constants copc
-      where copc.key = 'SAMPLE_FABRIC_AND_SEWING_COST';
+      select pc.amount into sample_cost
+      from public.pricing_constants pc
+      where pc.key = 'SAMPLE_FABRIC_AND_SEWING_COST';
     end if;
 
     if sample_cost is null then
