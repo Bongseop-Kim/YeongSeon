@@ -243,14 +243,16 @@ BEGIN
     RAISE EXCEPTION 'description is required for audit trail';
   END IF;
 
+  IF p_amount < 0 THEN
+    PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
+  END IF;
+
   SELECT COALESCE(SUM(amount), 0)::integer
     INTO v_balance
     FROM public.design_tokens
    WHERE user_id = p_user_id;
 
   IF p_amount < 0 THEN
-    PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
-
     IF v_balance < abs(p_amount) THEN
       RAISE EXCEPTION 'insufficient_tokens';
     END IF;
@@ -706,6 +708,7 @@ BEGIN
     FROM public.claims c
    WHERE c.id = p_request_id
      AND c.type = 'token_refund'
+     AND c.user_id = v_user_id
      FOR UPDATE;
 
   IF NOT FOUND THEN

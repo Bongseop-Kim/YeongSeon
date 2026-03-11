@@ -208,137 +208,71 @@ Deno.serve(async (req) => {
   let transactionKey: string | undefined;
   let transactionId: string | undefined;
 
-  if (refundReq.status === "접수") {
-    // Toss API: 전액 취소 (cancelAmount 생략 = 전액)
-    const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
+  // Toss API: 전액 취소 (cancelAmount 생략 = 전액)
+  const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
 
-    let tossResponse: Response;
-    try {
-      tossResponse = await fetch(
-        `https://api.tosspayments.com/v1/payments/${encodeURIComponent(order.payment_key)}/cancel`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: tossAuth,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            cancelReason: "고객 토큰 환불 요청",
-            ...(refundReq.refund_data.refund_amount < order.total_price
-              ? { cancelAmount: refundReq.refund_data.refund_amount }
-              : {}),
-          }),
-        }
-      );
-    } catch (error) {
-      errorLogger("toss_cancel_failed", error, {
-        refundRequestId: payload.refundRequestId,
-        paymentKey: maskPaymentKey(order.payment_key),
-      });
-      return jsonResponse(502, { error: "Failed to cancel payment via Toss" });
-    }
-
-    const responseText = await tossResponse.text();
-    let parsedToss: Record<string, unknown> = {};
-    try {
-      parsedToss = responseText ? (JSON.parse(responseText) as Record<string, unknown>) : {};
-    } catch {
-      parsedToss = { raw: responseText };
-    }
-
-    transactionKey =
-      typeof parsedToss.transactionKey === "string"
-        ? parsedToss.transactionKey
-        : undefined;
-    transactionId =
-      typeof parsedToss.transactionId === "string"
-        ? parsedToss.transactionId
-        : undefined;
-
-    if (!tossResponse.ok) {
-      processLogger("toss_cancel_rejected", {
-        refundRequestId: payload.refundRequestId,
-        paymentKey: maskPaymentKey(order.payment_key),
-        status: tossResponse.status,
-        transactionKey,
-        response: parsedToss,
-      });
-      return jsonResponse(tossResponse.status, {
-        error: "Toss payment cancellation rejected",
-        details: parsedToss,
-      });
-    }
-
-    processLogger("toss_cancel_success", {
-      refundRequestId: payload.refundRequestId,
-      paymentKey: maskPaymentKey(order.payment_key),
-      transactionKey,
-    });
-  } else {
-    processLogger("retry_processing", {
-      refundRequestId: payload.refundRequestId,
-      orderId: refundReq.order_id,
-      adminId: user.id,
-    });
-
-    // 재시도 경로: Toss에서 실제로 취소됐는지 검증 후 RPC 호출
-    const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
-    let tossVerifyResponse: Response;
-    try {
-      tossVerifyResponse = await fetch(
-        `https://api.tosspayments.com/v1/payments/${encodeURIComponent(order.payment_key)}`,
-        {
-          method: "GET",
-          headers: { Authorization: tossAuth },
-        }
-      );
-    } catch (error) {
-      errorLogger("toss_verify_failed", error, {
-        refundRequestId: payload.refundRequestId,
-        paymentKey: maskPaymentKey(order.payment_key),
-      });
-      return jsonResponse(502, { error: "Failed to verify payment cancellation with Toss" });
-    }
-
-    const verifyText = await tossVerifyResponse.text();
-    if (!tossVerifyResponse.ok) {
-      errorLogger("toss_verify_error", new Error("Toss verify returned non-2xx"), {
-        refundRequestId: payload.refundRequestId,
-        paymentKey: maskPaymentKey(order.payment_key),
-        status: tossVerifyResponse.status,
-      });
-      return jsonResponse(502, { error: "Failed to verify payment cancellation with Toss" });
-    }
-
-    let parsedVerify: Record<string, unknown> = {};
-    try {
-      parsedVerify = verifyText ? (JSON.parse(verifyText) as Record<string, unknown>) : {};
-    } catch {
-      parsedVerify = { raw: verifyText };
-    }
-
-    const cancels = Array.isArray(parsedVerify.cancels) ? parsedVerify.cancels : [];
-    const expectedAmount = refundReq.refund_data.refund_amount;
-    const matchingCancel = (cancels as Record<string, unknown>[]).find(
-      (c) => typeof c.cancelAmount === "number" && c.cancelAmount === expectedAmount
+  let tossResponse: Response;
+  try {
+    tossResponse = await fetch(
+      `https://api.tosspayments.com/v1/payments/${encodeURIComponent(order.payment_key)}/cancel`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: tossAuth,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cancelReason: "고객 토큰 환불 요청",
+          ...(refundReq.refund_data.refund_amount < order.total_price
+            ? { cancelAmount: refundReq.refund_data.refund_amount }
+            : {}),
+        }),
+      }
     );
-
-    if (!matchingCancel) {
-      errorLogger("toss_not_cancelled", new Error("Payment not cancelled according to Toss"), {
-        refundRequestId: payload.refundRequestId,
-        paymentKey: maskPaymentKey(order.payment_key),
-        expectedAmount,
-        cancelsCount: cancels.length,
-      });
-      return jsonResponse(409, { error: "Payment not cancelled according to Toss. Manual intervention required." });
-    }
-
-    processLogger("toss_already_cancelled_verified", {
+  } catch (error) {
+    errorLogger("toss_cancel_failed", error, {
       refundRequestId: payload.refundRequestId,
       paymentKey: maskPaymentKey(order.payment_key),
-      matchedAmount: expectedAmount,
+    });
+    return jsonResponse(502, { error: "Failed to cancel payment via Toss" });
+  }
+
+  const responseText = await tossResponse.text();
+  let parsedToss: Record<string, unknown> = {};
+  try {
+    parsedToss = responseText ? (JSON.parse(responseText) as Record<string, unknown>) : {};
+  } catch {
+    parsedToss = { raw: responseText };
+  }
+
+  transactionKey =
+    typeof parsedToss.transactionKey === "string"
+      ? parsedToss.transactionKey
+      : undefined;
+  transactionId =
+    typeof parsedToss.transactionId === "string"
+      ? parsedToss.transactionId
+      : undefined;
+
+  if (!tossResponse.ok) {
+    processLogger("toss_cancel_rejected", {
+      refundRequestId: payload.refundRequestId,
+      paymentKey: maskPaymentKey(order.payment_key),
+      status: tossResponse.status,
+      transactionKey,
+      response: parsedToss,
+    });
+    return jsonResponse(tossResponse.status, {
+      error: "Toss payment cancellation rejected",
+      details: parsedToss,
     });
   }
+
+  processLogger("toss_cancel_success", {
+    refundRequestId: payload.refundRequestId,
+    paymentKey: maskPaymentKey(order.payment_key),
+    transactionKey,
+  });
 
   // Toss 취소 성공 → approve_token_refund RPC 호출
   const { error: approveError } = await adminClient.rpc("approve_token_refund", {
