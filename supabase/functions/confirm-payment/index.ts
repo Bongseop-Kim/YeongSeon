@@ -200,6 +200,27 @@ Deno.serve(async (req) => {
       paymentKey: maskPaymentKey(payload.paymentKey),
       orderCount: typedOrders.length,
     });
+    const isTokenOrder =
+      typedOrders.length === 1 && typedOrders[0].order_type === "token";
+    if (isTokenOrder) {
+      const { data: tokenItem } = await adminClient
+        .from("order_items")
+        .select("item_data")
+        .eq("order_id", typedOrders[0].id)
+        .eq("item_type", "token")
+        .single();
+      const tokenAmount =
+        (tokenItem?.item_data as { token_amount?: number } | null)
+          ?.token_amount ?? null;
+      return jsonResponse(200, {
+        paymentKey: payload.paymentKey,
+        paymentGroupId: payload.orderId,
+        orders: typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type })),
+        type: "token_purchase",
+        tokenAmount,
+        status: "DONE",
+      });
+    }
     return jsonResponse(200, {
       paymentKey: payload.paymentKey,
       paymentGroupId: payload.orderId,
@@ -276,6 +297,30 @@ Deno.serve(async (req) => {
       userId: user.id,
       paymentKey: maskPaymentKey(payload.paymentKey),
     });
+    const isTokenOrderViaLock =
+      typedOrders.length === 1 && typedOrders[0].order_type === "token";
+    if (isTokenOrderViaLock) {
+      const { data: tokenItemViaLock } = await adminClient
+        .from("order_items")
+        .select("item_data")
+        .eq("order_id", typedOrders[0].id)
+        .eq("item_type", "token")
+        .single();
+      const tokenAmountViaLock =
+        (tokenItemViaLock?.item_data as { token_amount?: number } | null)
+          ?.token_amount ?? null;
+      return jsonResponse(200, {
+        paymentKey: payload.paymentKey,
+        paymentGroupId: payload.orderId,
+        orders: typedOrders.map((o) => ({
+          orderId: o.id,
+          orderType: o.order_type,
+        })),
+        type: "token_purchase",
+        tokenAmount: tokenAmountViaLock,
+        status: "DONE",
+      });
+    }
     return jsonResponse(200, {
       paymentKey: payload.paymentKey,
       paymentGroupId: payload.orderId,

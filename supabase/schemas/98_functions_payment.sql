@@ -95,13 +95,17 @@ begin
         else v_plan_key
       end;
 
-      insert into public.design_tokens (user_id, amount, type, description)
-      values (
-        p_user_id,
-        v_token_amount,
-        'purchase',
-        '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)'
-      );
+      -- 중복 방지: work_id로 idempotent 처리
+      if not exists (select 1 from public.design_tokens where work_id = 'order_' || v_order.id::text) then
+        insert into public.design_tokens (user_id, amount, type, description, work_id)
+        values (
+          p_user_id,
+          v_token_amount,
+          'purchase',
+          '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)',
+          'order_' || v_order.id::text
+        );
+      end if;
 
       -- 포인트 적립 (결제 금액의 2%)
       select o.total_price into v_points

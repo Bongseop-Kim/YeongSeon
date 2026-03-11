@@ -34,17 +34,17 @@ export const SampleOptionStep = () => {
   const fabricProvided = watch("fabricProvided");
   const sampleType = watch("sampleType");
 
-  if (!pricingConfig) {
-    return <div className="text-sm text-gray-400">로딩중...</div>;
-  }
-
-  // fabricProvided=true 시 sewing으로 자동 고정
+  // fabricProvided=true 시 sewing으로 자동 고정 (early return 전에 위치해야 함 - Rules of Hooks)
   useEffect(() => {
     if (!sample) return;
     if (fabricProvided) {
       setValue("sampleType", "sewing");
     }
   }, [fabricProvided, sample, setValue]);
+
+  if (!pricingConfig) {
+    return <div className="text-sm text-gray-400">로딩중...</div>;
+  }
 
   const handleSampleToggle = (wantsSample: boolean) => {
     setValue("sample", wantsSample);

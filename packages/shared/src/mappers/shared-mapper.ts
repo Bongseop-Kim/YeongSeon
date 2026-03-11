@@ -85,7 +85,8 @@ export function parseCustomOrderData(
 
   const sewingCost = rawPricing.sewing_cost;
   const fabricCost = rawPricing.fabric_cost;
-  const sampleCost = rawPricing.sample_cost;
+  // sample_cost는 샘플 없는 이전 주문에서 누락될 수 있으므로 0으로 fallback
+  const sampleCost = typeof rawPricing.sample_cost === "number" ? rawPricing.sample_cost : 0;
   const totalCost = rawPricing.total_cost;
   const invalidPricingFields: string[] = [];
 
@@ -95,9 +96,6 @@ export function parseCustomOrderData(
   if (typeof fabricCost !== "number") {
     invalidPricingFields.push("pricing.fabric_cost");
   }
-  if (typeof sampleCost !== "number") {
-    invalidPricingFields.push("pricing.sample_cost");
-  }
   if (typeof totalCost !== "number") {
     invalidPricingFields.push("pricing.total_cost");
   }
@@ -105,7 +103,6 @@ export function parseCustomOrderData(
   if (
     typeof sewingCost !== "number" ||
     typeof fabricCost !== "number" ||
-    typeof sampleCost !== "number" ||
     typeof totalCost !== "number"
   ) {
     throw new Error(

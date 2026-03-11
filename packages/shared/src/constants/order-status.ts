@@ -1,3 +1,5 @@
+import type { OrderStatus } from "../types/view/order";
+
 export type OrderType = "sale" | "custom" | "repair" | "token";
 
 export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
@@ -117,7 +119,7 @@ export const ADMIN_NON_CANCELABLE_STATUSES = [
   "배송중",
   "제작완료",
   "제작중",
-] satisfies readonly import("../types/view/order").OrderStatus[];
+] satisfies readonly OrderStatus[];
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
   대기중: "default",

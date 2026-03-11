@@ -25,6 +25,7 @@ declare
   v_token_amount   integer;
   v_plan_key       text;
   v_plan_label     text;
+  v_payment_key    text;
 begin
   v_admin_id := auth.uid();
   if v_admin_id is null then
@@ -36,8 +37,8 @@ begin
   end if;
 
   -- Lock the row and get current status, order type, price, user
-  select o.status, o.order_type, o.total_price, o.user_id
-  into v_current_status, v_order_type, v_total_price, v_user_id
+  select o.status, o.order_type, o.total_price, o.user_id, o.payment_key
+  into v_current_status, v_order_type, v_total_price, v_user_id, v_payment_key
   from public.orders o
   where o.id = p_order_id
   for update;
@@ -168,9 +169,9 @@ begin
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;
     elsif v_order_type = 'token' then
-      -- token 순방향: 대기중 → 완료, 취소
+      -- token 순방향: 대기중 → 완료 (payment_key 필수), 취소
       if not (
-        (v_current_status = '대기중' and p_new_status = '완료')
+        (v_current_status = '대기중' and p_new_status = '완료' and v_payment_key is not null)
         or (p_new_status = '취소' and v_current_status in ('대기중', '결제중'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for token order', v_current_status, p_new_status;

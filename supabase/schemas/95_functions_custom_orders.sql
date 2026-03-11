@@ -190,7 +190,8 @@ begin
   if v_fabric_provided then
     v_fabric_amount := 0;
   elsif v_design_type is null or v_fabric_type is null then
-    v_fabric_amount := 0;
+    -- fabric_provided=false인데 design_type/fabric_type이 누락된 경우는 데이터 오류
+    raise exception 'fabric_provided=false이지만 design_type 또는 fabric_type이 null입니다';
   else
     select fp.unit_price
     into v_unit_fabric_cost

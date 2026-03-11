@@ -45,12 +45,13 @@ begin
     raise exception 'Invalid claim reason';
   end if;
 
-  -- 4. Order ownership check
+  -- 4. Order ownership check (FOR UPDATE: 취소 처리 중 동시 상태 변경 방지)
   select o.order_type, o.status
   into v_order_type, v_order_status
-  from orders o
+  from public.orders o
   where o.id = p_order_id
-    and o.user_id = v_user_id;
+    and o.user_id = v_user_id
+  for update;
 
   if not found then
     raise exception 'Order not found';
@@ -62,6 +63,7 @@ begin
       (v_order_type = 'sale'   and v_order_status in ('대기중', '결제중', '진행중'))
       or (v_order_type = 'custom' and v_order_status in ('대기중', '결제중', '접수', '샘플원단제작중', '샘플원단배송중', '샘플봉제제작중', '샘플넥타이배송중', '샘플배송완료', '샘플승인'))
       or (v_order_type = 'repair' and v_order_status in ('대기중', '결제중', '접수'))
+      or (v_order_type = 'token' and v_order_status in ('대기중'))
     ) then
       raise exception '현재 주문 상태에서는 취소할 수 없습니다';
     end if;
@@ -71,7 +73,7 @@ begin
   begin
     select oi.id, oi.quantity
     into strict v_order_item
-    from order_items oi
+    from public.order_items oi
     where oi.item_id = p_item_id
       and oi.order_id = p_order_id;
   exception
@@ -90,7 +92,7 @@ begin
   -- 7. Duplicate claim pre-check (final race-safety enforced by unique index)
   if exists (
     select 1
-    from claims
+    from public.claims
     where order_item_id = v_order_item.id
       and type = p_type
       and status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
@@ -99,10 +101,10 @@ begin
   end if;
 
   -- 8. Generate claim number
-  v_claim_number := generate_claim_number();
+  v_claim_number := public.generate_claim_number();
 
   -- 9. Insert claim (atomic conflict handling via partial unique index)
-  insert into claims (
+  insert into public.claims (
     user_id,
     order_id,
     order_item_id,
