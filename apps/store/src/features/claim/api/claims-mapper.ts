@@ -46,20 +46,6 @@ const parseClaimItemField = (
       `클레임 목록 행(${i})의 item이 올바르지 않습니다: 필수 필드(id, type, quantity) 누락 또는 type 값 오류.`
     );
   }
-  // token 타입: product/reformData 없이 통과
-  if (v.type === "token") {
-    return {
-      id: v.id,
-      type: "token",
-      quantity: v.quantity,
-      product: null,
-      selectedOption: null,
-      reformData: null,
-      customData: null,
-      appliedCoupon: null,
-    };
-  }
-
   if (v.type === "product" && v.product == null) {
     throw new Error(
       `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "product"인 경우 product 필드가 있어야 합니다.`
@@ -440,13 +426,8 @@ export const fromClaimItemRowDTO = (item: ClaimItemRowDTO): OrderItemDTO =>
  * ClaimListRowDTO → ClaimItem (View)
  */
 export const toClaimItemView = (row: ClaimListRowDTO): ClaimItem => {
-  let orderItem: OrderItem;
-  if (row.item.type === "token") {
-    orderItem = { id: row.item.id, type: "token", quantity: row.item.quantity };
-  } else {
-    const itemDTO = normalizeItemRow(row.item);
-    orderItem = toOrderItemView(itemDTO);
-  }
+  const itemDTO = normalizeItemRow(row.item);
+  const orderItem: OrderItem = toOrderItemView(itemDTO);
 
   return {
     id: row.id,

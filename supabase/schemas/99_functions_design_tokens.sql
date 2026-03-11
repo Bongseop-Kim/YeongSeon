@@ -453,13 +453,13 @@ BEGIN
           AND (dt.work_id = 'order_' || o.id::text || '_paid'
                OR dt.work_id = 'order_' || o.id::text)
       ), o.created_at)                                  AS token_granted_at,
-      -- 진행 중인 환불 요청 정보 (접수/처리중/완료)
+      -- 진행 중인 환불 요청 정보 (접수/완료)
       (
         SELECT jsonb_build_object('id', c.id, 'status', c.status)
         FROM public.claims c
         WHERE c.order_id = o.id
           AND c.type = 'token_refund'
-          AND c.status IN ('접수', '처리중', '완료')
+          AND c.status IN ('접수', '완료')
         LIMIT 1
       )                                                 AS active_refund_request
     FROM public.orders o
@@ -491,7 +491,6 @@ BEGIN
                                  WHEN cto.active_refund_request IS NOT NULL THEN
                                    CASE (cto.active_refund_request->>'status')
                                      WHEN '접수' THEN 'pending_refund'
-                                     WHEN '처리중' THEN 'pending_refund'
                                      WHEN '완료' THEN 'approved_refund'
                                      ELSE 'active_refund'
                                    END
@@ -760,8 +759,8 @@ BEGIN
     RETURN;
   END IF;
 
-  -- 접수 또는 처리중만 허용
-  IF v_req.status NOT IN ('접수', '처리중') THEN
+  -- 접수 상태만 허용 (처리중 중간 상태 없음)
+  IF v_req.status != '접수' THEN
     RAISE EXCEPTION 'refund request is not in processable state (status: %)', v_req.status;
   END IF;
 

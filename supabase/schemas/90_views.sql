@@ -196,7 +196,8 @@ SELECT
       ELSE null
     END,
     'appliedCoupon', uc.user_coupon
-  ) AS item
+  ) AS item,
+  cl.refund_data
 FROM public.claims cl
 JOIN public.orders o
   ON o.id = cl.order_id AND o.user_id = auth.uid()
