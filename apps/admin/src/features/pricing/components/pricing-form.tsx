@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, InputNumber, Button, Typography, Space, Spin, Row, Col } from "antd";
+import { Card, InputNumber, Button, Typography, Space, Spin, Row, Col, Tabs } from "antd";
 import { message } from "antd";
 import {
   usePricingConstants,
@@ -13,7 +13,6 @@ import {
 } from "@/features/pricing/api/pricing-query";
 import type { PricingConstantRow } from "@/features/pricing/types/admin-pricing";
 
-const { Title } = Typography;
 
 const CONSTANT_LABELS: Record<string, string> = {
   START_COST: "봉제 시작 비용 (기본 세팅비)",
@@ -33,7 +32,7 @@ const CONSTANT_LABELS: Record<string, string> = {
   REFORM_SHIPPING_COST: "수선 택배비",
 };
 
-const CONSTANT_GROUPS: { title: string; keys: string[] }[] = [
+const SEWING_GROUPS: { title: string; keys: string[] }[] = [
   {
     title: "기본 단가",
     keys: ["SEWING_PER_COST", "START_COST", "YARN_DYED_DESIGN_COST"],
@@ -46,11 +45,9 @@ const CONSTANT_GROUPS: { title: string; keys: string[] }[] = [
     title: "부자재",
     keys: ["BAR_TACK_COST", "BRAND_LABEL_COST", "CARE_LABEL_COST", "WOOL_INTERLINING_COST"],
   },
-  {
-    title: "수선",
-    keys: ["REFORM_BASE_COST", "REFORM_SHIPPING_COST"],
-  },
 ];
+
+const REFORM_KEYS = ["REFORM_BASE_COST", "REFORM_SHIPPING_COST"];
 
 const FABRIC_QTY_LABELS: Record<string, string> = {
   FABRIC_QTY_ADULT: "성인 (일반)",
@@ -69,7 +66,6 @@ const FABRIC_TYPE_LABELS: Record<string, string> = {
   POLY: "폴리",
 };
 
-// "FABRIC_YARN_DYED_SILK" → { designType: "YARN_DYED", fabricType: "SILK" }
 const parseFabricKey = (key: string): { designType: string; fabricType: string } => {
   const withoutPrefix = key.replace(/^FABRIC_/, "");
   const lastUnderscoreIdx = withoutPrefix.lastIndexOf("_");
@@ -153,9 +149,7 @@ export function PricingForm() {
         ...fabricMutations.map((row) => updateFabric.mutateAsync(row)),
         ...(tokenMutations.length > 0 ? [updateToken.mutateAsync(tokenMutations)] : []),
       ]);
-      if (constantMutations.length > 0 || fabricMutations.length > 0 || tokenMutations.length > 0) {
-        message.success("가격이 저장되었습니다.");
-      }
+      message.success("가격이 저장되었습니다.");
     } catch {
       // individual errors already shown by mutateAsync onError
     }
@@ -164,11 +158,7 @@ export function PricingForm() {
   const isSaving = updateConstant.isPending || updateFabric.isPending || updateToken.isPending;
 
   if (loadingConstants || loadingFabrics) {
-    return (
-      <Card>
-        <Spin />
-      </Card>
-    );
+    return <Card><Spin /></Card>;
   }
 
   if (errorConstants || errorFabrics) {
@@ -179,12 +169,31 @@ export function PricingForm() {
     );
   }
 
-  return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <Card>
-        <Title level={4}>봉제 비용</Title>
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
-          {CONSTANT_GROUPS.map((group) => (
+  const renderConstantInput = (key: string, row: PricingConstantRow, addonAfter: string, step = 100, min = 0) => (
+    <Col key={key} xs={24} sm={12} md={8}>
+      <Space direction="vertical" size={4} style={{ width: "100%" }}>
+        <Typography.Text>{CONSTANT_LABELS[key] ?? key}</Typography.Text>
+        <InputNumber
+          value={constantDraft[key] ?? row.amount}
+          min={min}
+          step={step}
+          formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+          parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
+          onChange={(v) => setConstantDraft((prev) => ({ ...prev, [key]: v ?? 0 }))}
+          style={{ width: "100%" }}
+          addonAfter={addonAfter}
+        />
+      </Space>
+    </Col>
+  );
+
+  const tabItems = [
+    {
+      key: "sewing",
+      label: "봉제",
+      children: (
+        <Space direction="vertical" size="large" style={{ width: "100%" }}>
+          {SEWING_GROUPS.map((group) => (
             <div key={group.title}>
               <Typography.Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
                 {group.title}
@@ -193,61 +202,57 @@ export function PricingForm() {
                 {group.keys.map((key) => {
                   const row = (constants ?? []).find((r) => r.key === key);
                   if (!row) return null;
-                  return (
-                    <Col key={key} xs={24} sm={12} md={8}>
-                      <Space direction="vertical" size={4} style={{ width: "100%" }}>
-                        <Typography.Text>{CONSTANT_LABELS[key] ?? key}</Typography.Text>
-                        <InputNumber
-                          value={constantDraft[key] ?? row.amount}
-                          min={0}
-                          step={100}
-                          formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                          parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
-                          onChange={(v) =>
-                            setConstantDraft((prev) => ({ ...prev, [key]: v ?? 0 }))
-                          }
-                          style={{ width: "100%" }}
-                          addonAfter="원"
-                        />
-                      </Space>
-                    </Col>
-                  );
+                  return renderConstantInput(key, row, "원");
                 })}
               </Row>
             </div>
           ))}
+          <div>
+            <Typography.Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
+              원단 수량
+            </Typography.Text>
+            <Row gutter={[16, 16]}>
+              {FABRIC_QTY_KEYS.map((key) => {
+                const row = (constants ?? []).find((r) => r.key === key);
+                if (!row) return null;
+                return (
+                  <Col key={key} xs={24} sm={8}>
+                    <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                      <Typography.Text>{FABRIC_QTY_LABELS[key]}</Typography.Text>
+                      <InputNumber
+                        value={constantDraft[key] ?? row.amount}
+                        min={1}
+                        step={1}
+                        onChange={(v) => setConstantDraft((prev) => ({ ...prev, [key]: v ?? 1 }))}
+                        style={{ width: "100%" }}
+                        addonAfter="장/마"
+                      />
+                    </Space>
+                  </Col>
+                );
+              })}
+            </Row>
+          </div>
         </Space>
-      </Card>
-
-      <Card>
-        <Title level={4}>1마당 수량</Title>
+      ),
+    },
+    {
+      key: "reform",
+      label: "수선",
+      children: (
         <Row gutter={[16, 16]}>
-          {FABRIC_QTY_KEYS.map((key) => {
+          {REFORM_KEYS.map((key) => {
             const row = (constants ?? []).find((r) => r.key === key);
             if (!row) return null;
-            return (
-              <Col key={key} xs={24} sm={8}>
-                <Space direction="vertical" size={4} style={{ width: "100%" }}>
-                  <Typography.Text>{FABRIC_QTY_LABELS[key]}</Typography.Text>
-                  <InputNumber
-                    value={constantDraft[key] ?? row.amount}
-                    min={1}
-                    step={1}
-                    onChange={(v) =>
-                      setConstantDraft((prev) => ({ ...prev, [key]: v ?? 1 }))
-                    }
-                    style={{ width: "100%" }}
-                    addonAfter="장/마"
-                  />
-                </Space>
-              </Col>
-            );
+            return renderConstantInput(key, row, "원");
           })}
         </Row>
-      </Card>
-
-      <Card>
-        <Title level={4}>원단 비용</Title>
+      ),
+    },
+    {
+      key: "fabric",
+      label: "원단",
+      children: (
         <Row gutter={[16, 16]}>
           {(fabrics ?? []).map((row) => {
             const { designType, fabricType } = parseFabricKey(row.key);
@@ -264,9 +269,7 @@ export function PricingForm() {
                     step={100}
                     formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                     parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
-                    onChange={(v) =>
-                      setFabricDraft((prev) => ({ ...prev, [row.key]: v ?? 0 }))
-                    }
+                    onChange={(v) => setFabricDraft((prev) => ({ ...prev, [row.key]: v ?? 0 }))}
                     style={{ width: "100%" }}
                     addonAfter="원"
                   />
@@ -275,82 +278,93 @@ export function PricingForm() {
             );
           })}
         </Row>
-      </Card>
+      ),
+    },
+    {
+      key: "token",
+      label: "토큰",
+      children: loadingTokens ? (
+        <Spin size="small" />
+      ) : errorTokens ? (
+        <Typography.Text type="danger">토큰 가격 정보를 불러오는데 실패했습니다.</Typography.Text>
+      ) : (
+        <>
+          <Typography.Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
+            많이 살수록 토큰 1개당 단가가 낮아집니다.
+          </Typography.Text>
+          <Row gutter={[16, 16]}>
+            {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey, bonusAmountKey }) => {
+              const tier = tokenDraft[priceKey] ?? tokenSettings?.find((item) => item.priceKey === priceKey);
+              const setTier = (patch: Partial<TokenTierUI>) =>
+                setTokenDraft((prev) => ({
+                  ...prev,
+                  [priceKey]: {
+                    label,
+                    priceKey,
+                    amountKey,
+                    bonusAmountKey,
+                    price: prev[priceKey]?.price ?? tier?.price ?? 0,
+                    amount: prev[priceKey]?.amount ?? tier?.amount ?? 0,
+                    bonusAmount: prev[priceKey]?.bonusAmount ?? tier?.bonusAmount ?? 0,
+                    ...patch,
+                  },
+                }));
+              return (
+                <Col key={priceKey} xs={24} sm={8}>
+                  <Card size="small" style={{ background: "#fafafa" }}>
+                    <Typography.Text strong style={{ display: "block", marginBottom: 12 }}>
+                      {tier?.label ?? label}
+                    </Typography.Text>
+                    <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                      <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>가격</Typography.Text>
+                        <InputNumber
+                          value={tier?.price}
+                          min={1}
+                          step={100}
+                          formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                          parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
+                          onChange={(v) => setTier({ price: v ?? 0 })}
+                          style={{ width: "100%" }}
+                          suffix="원"
+                        />
+                      </Space>
+                      <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>토큰 수량</Typography.Text>
+                        <InputNumber
+                          value={tier?.amount}
+                          min={1}
+                          onChange={(v) => setTier({ amount: v ?? 0 })}
+                          style={{ width: "100%" }}
+                          suffix="T"
+                        />
+                      </Space>
+                      <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>보너스 토큰</Typography.Text>
+                        <InputNumber
+                          value={tier?.bonusAmount}
+                          min={0}
+                          onChange={(v) => setTier({ bonusAmount: v ?? 0 })}
+                          style={{ width: "100%" }}
+                          suffix="T"
+                        />
+                      </Space>
+                    </Space>
+                  </Card>
+                </Col>
+              );
+            })}
+          </Row>
+        </>
+      ),
+    },
+  ];
 
+  return (
+    <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card>
-        <Title level={4}>토큰 구매 가격</Title>
-        <Typography.Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
-          많이 살수록 토큰 1개당 단가가 낮아집니다.
-        </Typography.Text>
-        {loadingTokens ? (
-          <Spin size="small" />
-        ) : errorTokens ? (
-          <Typography.Text type="danger">토큰 가격 정보를 불러오는데 실패했습니다.</Typography.Text>
-        ) : (
-        <Row gutter={[16, 16]}>
-          {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => {
-            const tier = tokenDraft[priceKey] ?? tokenSettings?.find((item) => item.priceKey === priceKey);
-            return (
-              <Col key={priceKey} xs={24} sm={8}>
-                <Card size="small" style={{ background: "#fafafa" }}>
-                  <Typography.Text strong style={{ display: "block", marginBottom: 12 }}>
-                    {tier?.label ?? label}
-                  </Typography.Text>
-                  <Space direction="vertical" size={8} style={{ width: "100%" }}>
-                    <Space direction="vertical" size={2} style={{ width: "100%" }}>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>가격</Typography.Text>
-                      <InputNumber
-                        value={tier?.price}
-                        min={1}
-                        step={100}
-                        formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                        parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
-                        onChange={(v) =>
-                          setTokenDraft((prev) => ({
-                            ...prev,
-                            [priceKey]: {
-                              label,
-                              priceKey,
-                              amountKey,
-                              price: v ?? prev[priceKey]?.price ?? tier?.price ?? 0,
-                              amount: prev[priceKey]?.amount ?? tier?.amount ?? 0,
-                            },
-                          }))
-                        }
-                        style={{ width: "100%" }}
-                        suffix="원"
-                      />
-                    </Space>
-                    <Space direction="vertical" size={2} style={{ width: "100%" }}>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>토큰 수량</Typography.Text>
-                      <InputNumber
-                        value={tier?.amount}
-                        min={1}
-                        onChange={(v) =>
-                          setTokenDraft((prev) => ({
-                            ...prev,
-                            [priceKey]: {
-                              label,
-                              priceKey,
-                              amountKey,
-                              price: prev[priceKey]?.price ?? tier?.price ?? 0,
-                              amount: v ?? prev[priceKey]?.amount ?? tier?.amount ?? 0,
-                            },
-                          }))
-                        }
-                        style={{ width: "100%" }}
-                        suffix="T"
-                      />
-                    </Space>
-                  </Space>
-                </Card>
-              </Col>
-            );
-          })}
-        </Row>
-        )}
+        <Tabs items={tabItems} />
       </Card>
-
       <Button type="primary" onClick={saveAll} loading={isSaving} disabled={isSaving}>
         저장
       </Button>
