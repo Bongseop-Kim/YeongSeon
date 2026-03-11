@@ -70,4 +70,4 @@ WHERE (
 ) IS NOT NULL;
 
 -- 5. token_refund_requests 테이블 DROP
-DROP TABLE IF EXISTS public.token_refund_requests;
+DROP TABLE public.token_refund_requests;

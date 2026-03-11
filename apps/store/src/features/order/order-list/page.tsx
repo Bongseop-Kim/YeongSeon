@@ -140,7 +140,7 @@ export default function OrderListPage() {
                 <Card>
                   <Empty
                     title={activeTab === "전체" ? "주문 내역이 없습니다." : `${activeTab} 내역이 없습니다.`}
-                    description="첫 주문을 시작해보세요!"
+                    description={activeTab === "전체" ? "첫 주문을 시작해보세요!" : `${activeTab}에 해당하는 주문이 없습니다.`}
                   />
                 </Card>
               ) : (
