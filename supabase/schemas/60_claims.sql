@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.claims (
   status         text        NOT NULL DEFAULT '접수',
   reason         text        NOT NULL,
   description    text,
+  refund_data    jsonb,
   quantity       integer     NOT NULL,
   return_courier_company  text,
   return_tracking_number  text,
@@ -23,14 +24,14 @@ CREATE TABLE IF NOT EXISTS public.claims (
   CONSTRAINT claims_pkey PRIMARY KEY (id),
   CONSTRAINT claims_claim_number_key UNIQUE (claim_number),
   CONSTRAINT claims_type_check
-    CHECK (type = ANY (ARRAY['cancel','return','exchange'])),
+    CHECK (type = ANY (ARRAY['cancel','return','exchange','token_refund'])),
   CONSTRAINT claims_status_check
     CHECK (status = ANY (ARRAY['접수','처리중','수거요청','수거완료','재발송','완료','거부'])),
   CONSTRAINT claims_reason_check
-    CHECK (reason = ANY (ARRAY[
-      'change_mind','defect','delay','wrong_item',
-      'size_mismatch','color_mismatch','other'
-    ])),
+    CHECK (
+      type = 'token_refund'
+      OR reason = ANY (ARRAY['change_mind','defect','delay','wrong_item','size_mismatch','color_mismatch','other'])
+    ),
   CONSTRAINT claims_quantity_check CHECK (quantity > 0),
   CONSTRAINT claims_user_id_fkey
     FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE,
