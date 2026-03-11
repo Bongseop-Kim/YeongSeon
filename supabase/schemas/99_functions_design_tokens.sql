@@ -734,8 +734,14 @@ BEGIN
     RAISE EXCEPTION 'refund request not found';
   END IF;
 
-  IF v_req.status != '접수' THEN
-    RAISE EXCEPTION 'refund request is not pending (status: %)', v_req.status;
+  -- 이미 완료된 경우 멱등하게 성공 반환
+  IF v_req.status = '완료' THEN
+    RETURN;
+  END IF;
+
+  -- 접수 또는 처리중만 허용
+  IF v_req.status NOT IN ('접수', '처리중') THEN
+    RAISE EXCEPTION 'refund request is not in processable state (status: %)', v_req.status;
   END IF;
 
   v_paid_token_amount := v_req.paid_token_amount;
@@ -774,4 +780,3 @@ $$;
 -- approve_token_refund: service_role 전용
 REVOKE EXECUTE ON FUNCTION public.approve_token_refund(uuid, uuid) FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.approve_token_refund(uuid, uuid) TO service_role;
-

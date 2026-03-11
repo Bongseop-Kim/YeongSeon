@@ -109,9 +109,10 @@ Deno.serve(async (req) => {
 
   // 환불 요청 및 주문 정보 조회
   const { data: refundReqData, error: refundReqError } = await adminClient
-    .from("token_refund_requests")
-    .select("id, user_id, order_id, paid_token_amount, bonus_token_amount, refund_amount, status")
+    .from("claims")
+    .select("id, user_id, order_id, status, refund_data")
     .eq("id", payload.refundRequestId)
+    .eq("type", "token_refund")
     .single();
 
   if (refundReqError || !refundReqData) {
@@ -125,15 +126,17 @@ Deno.serve(async (req) => {
     id: string;
     user_id: string;
     order_id: string;
-    paid_token_amount: number;
-    bonus_token_amount: number;
-    refund_amount: number;
     status: string;
+    refund_data: {
+      paid_token_amount: number;
+      bonus_token_amount: number;
+      refund_amount: number;
+    };
   };
 
-  if (refundReq.status !== "pending") {
+  if (refundReq.status !== "접수" && refundReq.status !== "처리중") {
     return jsonResponse(409, {
-      error: `Refund request is not pending (status: ${refundReq.status})`,
+      error: `Refund request is not processable (status: ${refundReq.status})`,
     });
   }
 
@@ -160,62 +163,98 @@ Deno.serve(async (req) => {
   processLogger("refund_start", {
     refundRequestId: payload.refundRequestId,
     orderId: refundReq.order_id,
-    refundAmount: refundReq.refund_amount,
+    refundAmount: refundReq.refund_data.refund_amount,
     paymentKey: maskPaymentKey(order.payment_key),
     adminId: user.id,
   });
 
-  // Toss API: 전액 취소 (cancelAmount 생략 = 전액)
-  const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
+  let transactionKey: string | undefined;
+  let transactionId: string | undefined;
 
-  let tossResponse: Response;
-  try {
-    tossResponse = await fetch(
-      `https://api.tosspayments.com/v1/payments/${encodeURIComponent(order.payment_key)}/cancel`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: tossAuth,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          cancelReason: "고객 토큰 환불 요청",
-        }),
-      }
-    );
-  } catch (error) {
-    errorLogger("toss_cancel_failed", error, {
+  if (refundReq.status === "접수") {
+    const { error: processingError } = await adminClient
+      .from("claims")
+      .update({ status: "처리중", updated_at: new Date().toISOString() })
+      .eq("id", payload.refundRequestId)
+      .eq("type", "token_refund")
+      .eq("status", "접수");
+
+    if (processingError) {
+      errorLogger("set_processing_failed", processingError, {
+        refundRequestId: payload.refundRequestId,
+      });
+      return jsonResponse(500, { error: "Failed to set processing status" });
+    }
+
+    // Toss API: 전액 취소 (cancelAmount 생략 = 전액)
+    const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
+
+    let tossResponse: Response;
+    try {
+      tossResponse = await fetch(
+        `https://api.tosspayments.com/v1/payments/${encodeURIComponent(order.payment_key)}/cancel`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: tossAuth,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            cancelReason: "고객 토큰 환불 요청",
+          }),
+        }
+      );
+    } catch (error) {
+      errorLogger("toss_cancel_failed", error, {
+        refundRequestId: payload.refundRequestId,
+        paymentKey: maskPaymentKey(order.payment_key),
+      });
+      return jsonResponse(502, { error: "Failed to cancel payment via Toss" });
+    }
+
+    const responseText = await tossResponse.text();
+    let parsedToss: Record<string, unknown> = {};
+    try {
+      parsedToss = responseText ? (JSON.parse(responseText) as Record<string, unknown>) : {};
+    } catch {
+      parsedToss = { raw: responseText };
+    }
+
+    transactionKey =
+      typeof parsedToss.transactionKey === "string"
+        ? parsedToss.transactionKey
+        : undefined;
+    transactionId =
+      typeof parsedToss.transactionId === "string"
+        ? parsedToss.transactionId
+        : undefined;
+
+    if (!tossResponse.ok) {
+      processLogger("toss_cancel_rejected", {
+        refundRequestId: payload.refundRequestId,
+        paymentKey: maskPaymentKey(order.payment_key),
+        status: tossResponse.status,
+        transactionKey,
+        response: parsedToss,
+      });
+      return jsonResponse(tossResponse.status, {
+        error: "Toss payment cancellation rejected",
+        details: parsedToss,
+      });
+    }
+
+    processLogger("toss_cancel_success", {
       refundRequestId: payload.refundRequestId,
       paymentKey: maskPaymentKey(order.payment_key),
+      transactionKey,
     });
-    return jsonResponse(502, { error: "Failed to cancel payment via Toss" });
-  }
-
-  const responseText = await tossResponse.text();
-  let parsedToss: Record<string, unknown> = {};
-  try {
-    parsedToss = responseText ? (JSON.parse(responseText) as Record<string, unknown>) : {};
-  } catch {
-    parsedToss = { raw: responseText };
-  }
-
-  if (!tossResponse.ok) {
-    processLogger("toss_cancel_rejected", {
+  } else {
+    processLogger("retry_processing", {
       refundRequestId: payload.refundRequestId,
-      paymentKey: maskPaymentKey(order.payment_key),
-      status: tossResponse.status,
-      response: parsedToss,
-    });
-    return jsonResponse(tossResponse.status, {
-      error: "Toss payment cancellation rejected",
-      details: parsedToss,
+      orderId: refundReq.order_id,
+      adminId: user.id,
     });
   }
-
-  processLogger("toss_cancel_success", {
-    refundRequestId: payload.refundRequestId,
-    paymentKey: maskPaymentKey(order.payment_key),
-  });
 
   // Toss 취소 성공 → approve_token_refund RPC 호출
   const { error: approveError } = await adminClient.rpc("approve_token_refund", {
@@ -227,11 +266,14 @@ Deno.serve(async (req) => {
     errorLogger("approve_token_refund_failed", approveError, {
       refundRequestId: payload.refundRequestId,
       adminId: user.id,
+      transactionKey,
+      transactionId,
     });
     // Toss는 이미 취소됐으나 DB 처리 실패 — 수동 복구 필요
     return jsonResponse(500, {
       error: "Payment cancelled but DB update failed. Manual intervention required.",
       details: approveError.message,
+      transactionKey,
     });
   }
 
@@ -239,12 +281,12 @@ Deno.serve(async (req) => {
     refundRequestId: payload.refundRequestId,
     orderId: refundReq.order_id,
     adminId: user.id,
-    refundAmount: refundReq.refund_amount,
+    refundAmount: refundReq.refund_data.refund_amount,
   });
 
   return jsonResponse(200, {
     success: true,
     refundRequestId: payload.refundRequestId,
-    refundAmount: refundReq.refund_amount,
+    refundAmount: refundReq.refund_data.refund_amount,
   });
 });
