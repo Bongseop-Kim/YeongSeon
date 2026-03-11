@@ -453,7 +453,8 @@ SELECT
   p.name           AS "customerName",
   p.phone          AS "customerPhone",
   oi.item_type     AS "itemType",
-  pr.name          AS "productName"
+  pr.name          AS "productName",
+  cl.refund_data
 FROM public.claims cl
 JOIN public.orders o ON o.id = cl.order_id
 JOIN public.order_items oi ON oi.id = cl.order_item_id
