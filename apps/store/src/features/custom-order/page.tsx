@@ -58,8 +58,8 @@ export default function OrderPage() {
       designType: "PRINTING",
 
       // 제작 옵션
-      tieType: "MANUAL",
-      interlining: "POLY",
+      tieType: null,
+      interlining: null,
       interliningThickness: "THICK",
       sizeType: "ADULT",
       tieWidth: 8,

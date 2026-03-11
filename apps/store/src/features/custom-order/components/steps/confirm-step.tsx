@@ -40,9 +40,7 @@ export const ConfirmStep = ({
 
   const fabricLabel = getFabricLabel(values);
 
-  const sewingLabel = values.tieType
-    ? `${getTieTypeLabel(values.tieType)} · ${getSewingStyleLabel(values)}`
-    : "미선택";
+  const sewingLabel = `${getTieTypeLabel(values.tieType)} · ${getSewingStyleLabel(values)}`;
 
   const sizeLabel = getSizeLabel(values.sizeType);
   const finishingLabel = getFinishingLabel(values);

@@ -13,9 +13,8 @@ export function getFabricLabel(
 }
 
 export function getTieTypeLabel(tieType: OrderOptions["tieType"], compact = false): string {
-  if (tieType === "AUTO") return compact ? "자동" : "자동 봉제";
-  if (tieType === "MANUAL") return compact ? "수동" : "수동 봉제";
-  return "미선택";
+  if (tieType === "AUTO") return compact ? "자동 타이" : "자동 타이 (지퍼)";
+  return compact ? "수동 타이" : "수동 타이 (손매듭)";
 }
 
 export function getSewingStyleLabel(
@@ -39,7 +38,7 @@ export function getInterliningLabel(
   opts: Pick<OrderOptions, "interlining" | "interliningThickness">,
 ): string {
   const parts = [
-    opts.interlining === "WOOL" ? "울 심지" : opts.interlining ? "폴리 심지" : null,
+    opts.interlining === "WOOL" ? "울 심지" : null,
     opts.interliningThickness === "THIN" ? "얇음" : opts.interliningThickness ? "두꺼움" : null,
   ].filter(Boolean);
   return parts.join(", ") || "미선택";
