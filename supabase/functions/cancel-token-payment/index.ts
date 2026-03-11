@@ -122,6 +122,19 @@ Deno.serve(async (req) => {
     return jsonResponse(404, { error: "Refund request not found" });
   }
 
+  const rd = (refundReqData as Record<string, unknown>).refund_data as Record<string, unknown> | null | undefined;
+  if (
+    !rd ||
+    typeof rd.paid_token_amount !== "number" ||
+    typeof rd.bonus_token_amount !== "number" ||
+    typeof rd.refund_amount !== "number"
+  ) {
+    errorLogger("invalid_refund_data", new Error("refund_data missing or invalid"), {
+      refundRequestId: payload.refundRequestId,
+    });
+    return jsonResponse(422, { error: "Refund request has invalid refund_data" });
+  }
+
   const refundReq = refundReqData as {
     id: string;
     user_id: string;
@@ -282,10 +295,17 @@ Deno.serve(async (req) => {
     }
 
     const cancels = Array.isArray(parsedVerify.cancels) ? parsedVerify.cancels : [];
-    if (cancels.length === 0) {
+    const expectedAmount = refundReq.refund_data.refund_amount;
+    const matchingCancel = (cancels as Record<string, unknown>[]).find(
+      (c) => typeof c.cancelAmount === "number" && c.cancelAmount === expectedAmount
+    );
+
+    if (!matchingCancel) {
       errorLogger("toss_not_cancelled", new Error("Payment not cancelled according to Toss"), {
         refundRequestId: payload.refundRequestId,
         paymentKey: maskPaymentKey(order.payment_key),
+        expectedAmount,
+        cancelsCount: cancels.length,
       });
       return jsonResponse(409, { error: "Payment not cancelled according to Toss. Manual intervention required." });
     }
@@ -293,6 +313,7 @@ Deno.serve(async (req) => {
     processLogger("toss_already_cancelled_verified", {
       refundRequestId: payload.refundRequestId,
       paymentKey: maskPaymentKey(order.payment_key),
+      matchedAmount: expectedAmount,
     });
   }
 
