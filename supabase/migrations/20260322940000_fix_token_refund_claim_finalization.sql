@@ -1,145 +1,20 @@
--- ============================================================= 
--- 94_functions_claims.sql  – Claim RPC functions 
--- =============================================================
--- ── create_claim ─────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION public.create_claim(
-  p_type text,
-  p_order_id uuid,
-  p_item_id text,
-  p_reason text,
-  p_description text DEFAULT NULL,
-  p_quantity integer DEFAULT NULL
-)
-RETURNS jsonb
-LANGUAGE plpgsql
--- SECURITY DEFINER: claims INSERT 시 order_status_logs에 접근 불필요하나
--- claims 테이블의 RLS가 소유자 외 INSERT를 차단하여 우회 목적으로 사용
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-declare
-  v_user_id uuid;
-  v_order_type text;
-  v_order_status text;
-  v_order_item record;
-  v_claim_quantity integer;
-  v_claim_number text;
-  v_claim_id uuid;
-begin
-  -- 1. Auth check
-  v_user_id := auth.uid();
-  if v_user_id is null then
-    raise exception 'Unauthorized';
-  end if;
-
-  -- 2. Type validation
-  if p_type not in ('cancel', 'return', 'exchange') then
-    raise exception 'Invalid claim type';
-  end if;
-
-  -- 3. Reason validation
-  if p_reason not in (
-    'change_mind', 'defect', 'delay', 'wrong_item',
-    'size_mismatch', 'color_mismatch', 'other'
-  ) then
-    raise exception 'Invalid claim reason';
-  end if;
-
-  -- 4. Order ownership check (FOR UPDATE: 취소 처리 중 동시 상태 변경 방지)
-  select o.order_type, o.status
-  into v_order_type, v_order_status
-  from public.orders o
-  where o.id = p_order_id
-    and o.user_id = v_user_id
-  for update;
-
-  if not found then
-    raise exception 'Order not found';
-  end if;
-
-  -- cancel 상태 가드
-  if p_type = 'cancel' then
-    if not (
-      (v_order_type = 'sale'   and v_order_status in ('대기중', '결제중', '진행중'))
-      or (v_order_type = 'custom' and v_order_status in ('대기중', '결제중', '접수', '샘플원단제작중', '샘플원단배송중', '샘플봉제제작중', '샘플넥타이배송중', '샘플배송완료', '샘플승인'))
-      or (v_order_type = 'repair' and v_order_status in ('대기중', '결제중', '접수'))
-      or (v_order_type = 'token' and v_order_status in ('대기중'))
-    ) then
-      raise exception '현재 주문 상태에서는 취소할 수 없습니다';
-    end if;
-  end if;
-
-  -- 5. Order item lookup (p_item_id is order_items.item_id text)
-  begin
-    select oi.id, oi.quantity
-    into strict v_order_item
-    from public.order_items oi
-    where oi.item_id = p_item_id
-      and oi.order_id = p_order_id;
-  exception
-    when no_data_found then
-      raise exception 'Order item not found';
-    when too_many_rows then
-      raise exception 'Multiple order items found for given order_id and item_id';
-  end;
-
-  -- 6. Quantity validation
-  v_claim_quantity := coalesce(p_quantity, v_order_item.quantity);
-  if v_claim_quantity <= 0 or v_claim_quantity > v_order_item.quantity then
-    raise exception 'Invalid claim quantity';
-  end if;
-
-  -- 7. Duplicate claim pre-check (final race-safety enforced by unique index)
-  if exists (
-    select 1
-    from public.claims
-    where order_item_id = v_order_item.id
-      and type = p_type
-      and status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
-  ) then
-    raise exception 'Active claim already exists for this item';
-  end if;
-
-  -- 8. Generate claim number
-  v_claim_number := public.generate_claim_number();
-
-  -- 9. Insert claim (atomic conflict handling via partial unique index)
-  insert into public.claims (
-    user_id,
-    order_id,
-    order_item_id,
-    claim_number,
-    type,
-    reason,
-    description,
-    quantity
-  )
-  values (
-    v_user_id,
-    p_order_id,
-    v_order_item.id,
-    v_claim_number,
-    p_type,
-    p_reason,
-    p_description,
-    v_claim_quantity
-  )
-  on conflict (order_item_id, type) where (status in ('접수', '처리중', '수거요청', '수거완료', '재발송'))
-  do nothing
-  returning id into v_claim_id;
-
-  if v_claim_id is null then
-    raise exception 'Active claim already exists for this item';
-  end if;
-
-  return jsonb_build_object(
-    'claim_id', v_claim_id,
-    'claim_number', v_claim_number
-  );
-end;
-$$;
+-- token_refund 클레임 완료 처리 정책 수정 + approve_token_refund 감사 로그 추가
+--
+-- 1. admin_update_claim_status: token_refund 접수→완료 전이 제거
+--    완료 처리는 approve_token_refund() 전용(Edge Function 경유)으로만 허용.
+--    이 RPC에서 완료를 허용하면 design_tokens/orders 부수효과가 누락된다.
+--
+-- 2. approve_token_refund: claim_status_logs INSERT 추가
+--    완료 전이 시 감사 추적을 위한 로그 레코드를 기록한다.
+--
+-- 3. admin_update_claim_status: SECURITY DEFINER 사유 주석 추가
 
 -- ── admin_update_claim_status ─────────────────────────────────
+-- SECURITY DEFINER 사유: 이 RPC는 관리자 전용 클레임 상태 변경 기능이다.
+-- SECURITY INVOKER로는 관리자가 다른 사용자 소유의 claims 레코드를 수정할 수 없어
+-- RLS 우회를 위해 SECURITY DEFINER를 사용한다.
+-- 함수 내부에서 auth.uid() 및 public.is_admin()으로 호출자 권한을 검증하며,
+-- p_is_rollback 플래그로 추가적인 전이 제한을 강제한다.
 CREATE OR REPLACE FUNCTION public.admin_update_claim_status(
   p_claim_id uuid,
   p_new_status text,
@@ -244,7 +119,7 @@ begin
       if not (
         (v_current_status = '접수' and p_new_status = '거부')
       ) then
-        raise exception 'Invalid transition from "%" to "%" for token_refund claim', v_current_status, p_new_status;
+        raise exception 'Invalid transition from "%" to "%" for token_refund claim. 완료 처리는 approve_token_refund()를 사용하세요.', v_current_status, p_new_status;
       end if;
     else
       raise exception 'Unknown claim type: %', v_claim_type;
@@ -281,3 +156,93 @@ begin
   );
 end;
 $$;
+
+-- ── approve_token_refund ──────────────────────────────────────
+-- 관리자 환불 승인 (service_role 전용, Edge Function에서 Toss 취소 후 호출)
+-- SECURITY DEFINER 사유: design_tokens/orders INSERT/UPDATE는 RLS 비허용
+CREATE OR REPLACE FUNCTION public.approve_token_refund(
+  p_request_id uuid,
+  p_admin_id   uuid
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_caller_role       text;
+  v_req               record;
+  v_paid_token_amount integer;
+BEGIN
+  -- service_role 전용
+  v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
+  IF v_caller_role IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'unauthorized: approve_token_refund requires service_role';
+  END IF;
+
+  SELECT c.id, c.user_id, c.order_id,
+         (c.refund_data->>'paid_token_amount')::int AS paid_token_amount,
+         (c.refund_data->>'bonus_token_amount')::int AS bonus_token_amount,
+         c.status
+    INTO v_req
+    FROM public.claims c
+   WHERE c.id = p_request_id
+     AND c.type = 'token_refund'
+     FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'refund request not found';
+  END IF;
+
+  -- 이미 완료된 경우 멱등하게 성공 반환
+  IF v_req.status = '완료' THEN
+    RETURN;
+  END IF;
+
+  -- 접수 상태만 허용 (처리중 중간 상태 없음)
+  IF v_req.status != '접수' THEN
+    RAISE EXCEPTION 'refund request is not in processable state (status: %)', v_req.status;
+  END IF;
+
+  v_paid_token_amount := v_req.paid_token_amount;
+
+  -- 유료 토큰 회수
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, description, work_id
+  ) VALUES (
+    v_req.user_id, -v_paid_token_amount, 'refund', 'paid',
+    '토큰 환불 승인 (유료)',
+    'refund_' || p_request_id::text || '_paid'
+  )
+  ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
+
+  -- 주문 취소 처리 (전액 환불이므로 항상 취소)
+  UPDATE public.orders
+     SET status = '취소', updated_at = now()
+   WHERE id = v_req.order_id;
+
+  INSERT INTO public.order_status_logs (
+    order_id, changed_by, previous_status, new_status, memo
+  ) VALUES (
+    v_req.order_id, p_admin_id, '완료', '취소',
+    '토큰 환불 승인 (request_id: ' || p_request_id::text || ')'
+  );
+
+  -- claim_status_logs 기록 (상태 전이 감사 추적)
+  INSERT INTO public.claim_status_logs (
+    claim_id, changed_by, previous_status, new_status, memo, is_rollback
+  ) VALUES (
+    p_request_id, p_admin_id, '접수', '완료', '토큰 환불 승인', false
+  );
+
+  -- 환불 요청 상태 업데이트
+  UPDATE public.claims
+     SET status     = '완료',
+         updated_at = now()
+   WHERE id = p_request_id
+     AND type = 'token_refund';
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.approve_token_refund(uuid, uuid) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.approve_token_refund(uuid, uuid) TO service_role;

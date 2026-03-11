@@ -788,6 +788,13 @@ BEGIN
     '토큰 환불 승인 (request_id: ' || p_request_id::text || ')'
   );
 
+  -- claim_status_logs 기록 (상태 전이 감사 추적)
+  INSERT INTO public.claim_status_logs (
+    claim_id, changed_by, previous_status, new_status, memo, is_rollback
+  ) VALUES (
+    p_request_id, p_admin_id, '접수', '완료', '토큰 환불 승인', false
+  );
+
   -- 환불 요청 상태 업데이트
   UPDATE public.claims
      SET status     = '완료',

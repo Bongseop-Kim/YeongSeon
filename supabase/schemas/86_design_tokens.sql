@@ -7,7 +7,7 @@ CREATE TABLE public.design_tokens (
   user_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   amount        integer     NOT NULL CHECK (amount != 0),
   type          text        NOT NULL CHECK (type = ANY(ARRAY['grant','use','refund','admin','purchase'])),
-  token_class   text        NOT NULL DEFAULT 'paid' CHECK (token_class IN ('paid', 'bonus', 'free')),
+  token_class   text        NOT NULL CHECK (token_class IN ('paid', 'bonus', 'free')),
   ai_model      text,       -- 'openai' | 'gemini' | NULL
   request_type  text,       -- 'text_only' | 'text_and_image' | NULL
   description   text,

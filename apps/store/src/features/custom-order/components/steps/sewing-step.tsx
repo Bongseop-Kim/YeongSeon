@@ -47,13 +47,17 @@ export const SewingStep = () => {
     if (tieType !== "AUTO" && dimple) {
       setValue("dimple", false);
       toast.info(
-        "수동 봉제에서는 딤플을 선택할 수 없어요. 선택이 해제됐어요.",
+        "수동 타이에서는 딤플을 선택할 수 없어요. 선택이 해제됐어요.",
       );
     }
   }, [tieType, dimple, setValue]);
 
   const handleTieTypeChange = (v: string) => {
-    setValue("tieType", v === "AUTO" ? "AUTO" : null);
+    if (v === "MANUAL") {
+      setValue("tieType", null);
+    } else if (v === "AUTO") {
+      setValue("tieType", "AUTO");
+    }
   };
 
   const handleStyleToggle = (key: "dimple" | "spoderato" | "fold7", checked: boolean) => {
@@ -83,12 +87,12 @@ export const SewingStep = () => {
             onValueChange={handleTieTypeChange}
           >
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {([null, "AUTO"] as const).map((type) => (
+              {(["MANUAL", "AUTO"] as const).map((type) => (
                 <RadioCard
-                  key={type ?? "manual"}
-                  value={type ?? ""}
-                  id={`tie-type-${type ?? "manual"}`}
-                  selected={tieType === type}
+                  key={type}
+                  value={type}
+                  id={`tie-type-${type.toLowerCase()}`}
+                  selected={type === "MANUAL" ? tieType === null : tieType === "AUTO"}
                 >
                   <CardHeader>
                     <CardTitle>

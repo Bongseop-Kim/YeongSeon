@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
-import { SummaryRow } from "../summary-row";
+import { SummaryRow } from "@/features/custom-order/components/summary-row";
 import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
 import { calculateSampleCost } from "@/features/custom-order/utils/pricing";
 import {

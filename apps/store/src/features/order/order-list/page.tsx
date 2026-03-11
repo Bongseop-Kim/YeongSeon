@@ -20,7 +20,7 @@ import {
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   CLAIM_ACTION_LABEL,
-  getClaimActions,
+  getClaimActionsForItem,
 } from "@yeongseon/shared/constants/claim-actions";
 import type { Order } from "@yeongseon/shared/types/view/order";
 
@@ -113,7 +113,7 @@ export default function OrderListPage() {
 
   return (
     <MainLayout>
-        <MainContent>
+      <MainContent>
         <PageLayout>
           <div className="space-y-6">
             <section className="space-y-4">
@@ -145,8 +145,6 @@ export default function OrderListPage() {
                 </Card>
               ) : (
                 filteredOrders.map((order) => {
-                  const claimActions = order.orderType === "token" ? [] : getClaimActions(order.status);
-
                   return (
                     <Card key={order.id}>
                       <CardHeader>
@@ -162,7 +160,9 @@ export default function OrderListPage() {
                       </CardHeader>
 
                       <div className="space-y-0">
-                        {order.items.map((item) => (
+                        {order.items.map((item) => {
+                          const claimActions = getClaimActionsForItem(order.status, item.type);
+                          return (
                           <CardContent key={item.id} className="py-4">
                             <OrderItemCard
                               item={item}
@@ -195,7 +195,8 @@ export default function OrderListPage() {
                               }
                             />
                           </CardContent>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       <CardContent className="py-3">

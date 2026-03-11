@@ -160,6 +160,16 @@ Deno.serve(async (req) => {
     return jsonResponse(409, { error: "Order has no payment key" });
   }
 
+  if (refundReq.refund_data.refund_amount > order.total_price) {
+    errorLogger("invalid_refund_amount", new Error("refund_amount exceeds total_price"), {
+      refundRequestId: payload.refundRequestId,
+      paymentKey: maskPaymentKey(order.payment_key),
+      refundAmount: refundReq.refund_data.refund_amount,
+      totalPrice: order.total_price,
+    });
+    return jsonResponse(400, { error: "refund_amount exceeds total_price" });
+  }
+
   processLogger("refund_start", {
     refundRequestId: payload.refundRequestId,
     orderId: refundReq.order_id,
@@ -201,6 +211,9 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             cancelReason: "고객 토큰 환불 요청",
+            ...(refundReq.refund_data.refund_amount < order.total_price
+              ? { cancelAmount: refundReq.refund_data.refund_amount }
+              : {}),
           }),
         }
       );
@@ -253,6 +266,47 @@ Deno.serve(async (req) => {
       refundRequestId: payload.refundRequestId,
       orderId: refundReq.order_id,
       adminId: user.id,
+    });
+
+    // 재시도 경로: Toss에서 실제로 취소됐는지 검증 후 RPC 호출
+    const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
+    let tossVerifyResponse: Response;
+    try {
+      tossVerifyResponse = await fetch(
+        `https://api.tosspayments.com/v1/payments/${encodeURIComponent(order.payment_key)}`,
+        {
+          method: "GET",
+          headers: { Authorization: tossAuth },
+        }
+      );
+    } catch (error) {
+      errorLogger("toss_verify_failed", error, {
+        refundRequestId: payload.refundRequestId,
+        paymentKey: maskPaymentKey(order.payment_key),
+      });
+      return jsonResponse(502, { error: "Failed to verify payment cancellation with Toss" });
+    }
+
+    const verifyText = await tossVerifyResponse.text();
+    let parsedVerify: Record<string, unknown> = {};
+    try {
+      parsedVerify = verifyText ? (JSON.parse(verifyText) as Record<string, unknown>) : {};
+    } catch {
+      parsedVerify = { raw: verifyText };
+    }
+
+    const cancels = Array.isArray(parsedVerify.cancels) ? parsedVerify.cancels : [];
+    if (cancels.length === 0) {
+      errorLogger("toss_not_cancelled", new Error("Payment not cancelled according to Toss"), {
+        refundRequestId: payload.refundRequestId,
+        paymentKey: maskPaymentKey(order.payment_key),
+      });
+      return jsonResponse(409, { error: "Payment not cancelled according to Toss. Manual intervention required." });
+    }
+
+    processLogger("toss_already_cancelled_verified", {
+      refundRequestId: payload.refundRequestId,
+      paymentKey: maskPaymentKey(order.payment_key),
     });
   }
 

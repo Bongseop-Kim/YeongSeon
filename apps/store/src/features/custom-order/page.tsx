@@ -2,39 +2,39 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Form } from "@/components/ui/form";
-import { calculateTotalCost, getEstimatedDays } from "./utils/pricing";
+import { calculateTotalCost, getEstimatedDays } from "@/features/custom-order/utils/pricing";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
-import type { QuoteOrderOptions, OrderOptions } from "./types/order";
-import type { PackagePreset, WizardStepId } from "./types/wizard";
-import { WIZARD_STEPS } from "./constants/WIZARD_STEPS";
-import { PACKAGE_PRESETS } from "./constants/PACKAGE_PRESETS";
-import { useWizardStep } from "./hooks/useWizardStep";
-import { useWizardDraft, useRestoreDraft, useAutoSave } from "./hooks/useWizardDraft";
-import { useCustomOrderSubmit } from "./hooks/useCustomOrderSubmit";
+import type { QuoteOrderOptions, OrderOptions } from "@/features/custom-order/types/order";
+import type { PackagePreset, WizardStepId } from "@/features/custom-order/types/wizard";
+import { WIZARD_STEPS } from "@/features/custom-order/constants/WIZARD_STEPS";
+import { PACKAGE_PRESETS } from "@/features/custom-order/constants/PACKAGE_PRESETS";
+import { useWizardStep } from "@/features/custom-order/hooks/useWizardStep";
+import { useWizardDraft, useRestoreDraft, useAutoSave } from "@/features/custom-order/hooks/useWizardDraft";
+import { useCustomOrderSubmit } from "@/features/custom-order/hooks/useCustomOrderSubmit";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import {
   getFabricLabel,
   getSewingStyleLabel,
   getSizeLabel,
   getSampleTypeLabel,
-} from "./utils/option-labels";
+} from "@/features/custom-order/utils/option-labels";
 import { PageLayout } from "@/components/layout/page-layout";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
-import { ProgressBar } from "./components/wizard/progress-bar";
-import { StepNavigation } from "./components/wizard/step-navigation";
-import { StickySummary } from "./components/wizard/sticky-summary";
-import { MobileNavigation } from "./components/wizard/mobile-navigation";
-import { QuantityStep } from "./components/steps/quantity-step";
-import { FabricStep } from "./components/steps/fabric-step";
-import { SewingStep } from "./components/steps/sewing-step";
-import { SpecStep } from "./components/steps/spec-step";
-import { FinishingStep } from "./components/steps/finishing-step";
-import { SampleOptionStep } from "./components/steps/sample-option-step";
-import { AttachmentStep } from "./components/steps/attachment-step";
-import { ConfirmStep } from "./components/steps/confirm-step";
+import { ProgressBar } from "@/features/custom-order/components/wizard/progress-bar";
+import { StepNavigation } from "@/features/custom-order/components/wizard/step-navigation";
+import { StickySummary } from "@/features/custom-order/components/wizard/sticky-summary";
+import { MobileNavigation } from "@/features/custom-order/components/wizard/mobile-navigation";
+import { QuantityStep } from "@/features/custom-order/components/steps/quantity-step";
+import { FabricStep } from "@/features/custom-order/components/steps/fabric-step";
+import { SewingStep } from "@/features/custom-order/components/steps/sewing-step";
+import { SpecStep } from "@/features/custom-order/components/steps/spec-step";
+import { FinishingStep } from "@/features/custom-order/components/steps/finishing-step";
+import { SampleOptionStep } from "@/features/custom-order/components/steps/sample-option-step";
+import { AttachmentStep } from "@/features/custom-order/components/steps/attachment-step";
+import { ConfirmStep } from "@/features/custom-order/components/steps/confirm-step";
 
 export default function OrderPage() {
   const { user } = useAuthStore();

@@ -1,4 +1,4 @@
-import type { OrderOptions } from "../types/order";
+import type { OrderOptions } from "@/features/custom-order/types/order";
 
 export function getFabricLabel(
   opts: Pick<OrderOptions, "fabricProvided" | "reorder" | "fabricType" | "designType">,

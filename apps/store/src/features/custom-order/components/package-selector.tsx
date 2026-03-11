@@ -21,7 +21,7 @@ const OPTION_LABELS = {
   fabricType: (v: OrderOptions["fabricType"] | undefined) => (v === "SILK" ? "실크" : "폴리"),
   designType: (v: OrderOptions["designType"] | undefined) => (v === "YARN_DYED" ? "선염" : "날염"),
   tieType: (v: OrderOptions["tieType"] | undefined) => (v === "AUTO" ? "자동 타이 (지퍼)" : "수동 타이 (손매듭)"),
-  interlining: (v: OrderOptions["interlining"] | undefined) => (v === "WOOL" ? "울 심지" : "폴리 심지"),
+  interlining: (v: OrderOptions["interlining"] | undefined) => (v === "WOOL" ? "울 심지" : "심지 없음"),
 } as const;
 
 export const PackageSelector = ({
