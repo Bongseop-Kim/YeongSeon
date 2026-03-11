@@ -38,6 +38,35 @@ const buildTokenPurchaseResponse = (
     status,
   });
 
+const fetchTokenAmountAndBuildResponse = async (
+  adminClient: ReturnType<typeof createClient>,
+  orderId: string,
+  paymentKey: string,
+  paymentGroupId: string,
+  orders: Array<{ orderId: string; orderType: string }>
+): Promise<Response> => {
+  const { data: tokenItem, error: tokenItemError } = await adminClient
+    .from("order_items")
+    .select("item_data")
+    .eq("order_id", orderId)
+    .eq("item_type", "token")
+    .single();
+  if (tokenItemError) {
+    errorLogger("token_item_lookup_failed", tokenItemError, {
+      orderId,
+      itemType: "token",
+    });
+    return jsonResponse(500, { error: "Failed to load token item" });
+  }
+  const tokenAmount =
+    (tokenItem?.item_data as { token_amount?: number } | null)
+      ?.token_amount ?? null;
+  if (typeof tokenAmount !== "number") {
+    return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
+  }
+  return buildTokenPurchaseResponse(paymentKey, paymentGroupId, orders, tokenAmount);
+};
+
 const maskPaymentKey = (key: string): string => {
   if (key.length <= 8) return "****";
   return `****${key.slice(-8)}`;
@@ -219,30 +248,12 @@ Deno.serve(async (req) => {
     const isTokenOrder =
       typedOrders.length === 1 && typedOrders[0].order_type === "token";
     if (isTokenOrder) {
-      const { data: tokenItem, error: tokenItemError } = await adminClient
-        .from("order_items")
-        .select("item_data")
-        .eq("order_id", typedOrders[0].id)
-        .eq("item_type", "token")
-        .single();
-      if (tokenItemError) {
-        errorLogger("token_item_lookup_failed", tokenItemError, {
-          orderId: typedOrders[0].id,
-          itemType: "token",
-        });
-        return jsonResponse(500, { error: "Failed to load token item" });
-      }
-      const tokenAmount =
-        (tokenItem?.item_data as { token_amount?: number } | null)
-          ?.token_amount ?? null;
-      if (typeof tokenAmount !== "number") {
-        return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
-      }
-      return buildTokenPurchaseResponse(
+      return fetchTokenAmountAndBuildResponse(
+        adminClient,
+        typedOrders[0].id,
         payload.paymentKey,
         payload.orderId,
-        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type })),
-        tokenAmount
+        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type }))
       );
     }
     return jsonResponse(200, {
@@ -324,30 +335,12 @@ Deno.serve(async (req) => {
     const isTokenOrderViaLock =
       typedOrders.length === 1 && typedOrders[0].order_type === "token";
     if (isTokenOrderViaLock) {
-      const { data: tokenItemViaLock, error: tokenItemViaLockError } = await adminClient
-        .from("order_items")
-        .select("item_data")
-        .eq("order_id", typedOrders[0].id)
-        .eq("item_type", "token")
-        .single();
-      if (tokenItemViaLockError) {
-        errorLogger("token_item_lookup_failed", tokenItemViaLockError, {
-          orderId: typedOrders[0].id,
-          itemType: "token",
-        });
-        return jsonResponse(500, { error: "Failed to load token item" });
-      }
-      const tokenAmountViaLock =
-        (tokenItemViaLock?.item_data as { token_amount?: number } | null)
-          ?.token_amount ?? null;
-      if (typeof tokenAmountViaLock !== "number") {
-        return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
-      }
-      return buildTokenPurchaseResponse(
+      return fetchTokenAmountAndBuildResponse(
+        adminClient,
+        typedOrders[0].id,
         payload.paymentKey,
         payload.orderId,
-        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type })),
-        tokenAmountViaLock
+        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type }))
       );
     }
     return jsonResponse(200, {

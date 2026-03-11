@@ -99,17 +99,16 @@ begin
         else v_plan_key
       end;
 
-      -- 중복 방지: work_id로 idempotent 처리
-      if not exists (select 1 from public.design_tokens where work_id = 'order_' || v_order.id::text) then
-        insert into public.design_tokens (user_id, amount, type, description, work_id)
-        values (
-          p_user_id,
-          v_token_amount,
-          'purchase',
-          '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)',
-          'order_' || v_order.id::text
-        );
-      end if;
+      -- design_tokens: ON CONFLICT (work_id) DO NOTHING으로 TOCTOU 방지
+      insert into public.design_tokens (user_id, amount, type, description, work_id)
+      values (
+        p_user_id,
+        v_token_amount,
+        'purchase',
+        '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)',
+        'order_' || v_order.id::text
+      )
+      on conflict (work_id) do nothing;
 
       -- 포인트 적립 (결제 금액의 2%)
       select o.total_price into v_points
@@ -118,16 +117,13 @@ begin
       v_points := floor(v_points * 0.02);
 
       if v_points > 0 then
-        if not exists (
-          select 1 from public.points
-          where order_id = v_order.id and type = 'earn'
-        ) then
-          insert into public.points (user_id, order_id, amount, type, description)
-          values (
-            p_user_id, v_order.id, v_points, 'earn',
-            '토큰 구매 포인트 적립 (2%)'
-          );
-        end if;
+        -- ON CONFLICT (order_id, type) DO NOTHING으로 TOCTOU 방지 (idx_points_order_earn)
+        insert into public.points (user_id, order_id, amount, type, description)
+        values (
+          p_user_id, v_order.id, v_points, 'earn',
+          '토큰 구매 포인트 적립 (2%)'
+        )
+        on conflict (order_id, type) do nothing;
       end if;
     end if;
 

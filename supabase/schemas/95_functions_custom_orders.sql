@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION public.calculate_custom_order_amounts(
 )
 RETURNS TABLE (sewing_cost integer, fabric_cost integer, sample_cost integer, total_cost integer)
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 declare
@@ -129,6 +129,14 @@ begin
   v_design_type := nullif(p_options->>'design_type', '');
   v_fabric_type := nullif(p_options->>'fabric_type', '');
   v_fabric_provided := coalesce((p_options->>'fabric_provided')::boolean, false);
+
+  -- tie_type/interlining 유효값 검증: 미지 값은 조용히 기본처리되지 않고 예외 발생
+  if v_tie_type != '' and v_tie_type != 'AUTO' then
+    raise exception 'Invalid tie_type: %. Allowed values are empty string or AUTO', v_tie_type;
+  end if;
+  if v_interlining != '' and v_interlining != 'WOOL' then
+    raise exception 'Invalid interlining: %. Allowed values are empty string or WOOL', v_interlining;
+  end if;
 
   v_triangle_stitch := coalesce((p_options->>'triangle_stitch')::boolean, false);
   v_side_stitch := coalesce((p_options->>'side_stitch')::boolean, false);

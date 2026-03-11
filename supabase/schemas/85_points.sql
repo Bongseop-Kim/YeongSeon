@@ -15,6 +15,7 @@ CREATE TABLE public.points (
 
 CREATE INDEX idx_points_user_id  ON public.points (user_id, created_at DESC);
 CREATE INDEX idx_points_order_id ON public.points (order_id) WHERE order_id IS NOT NULL;
+CREATE UNIQUE INDEX idx_points_order_earn ON public.points (order_id, type) WHERE order_id IS NOT NULL AND type = 'earn';
 
 -- RLS: users can only SELECT their own points
 -- INSERT/UPDATE are controlled exclusively by SECURITY DEFINER RPCs

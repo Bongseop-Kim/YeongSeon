@@ -201,19 +201,15 @@ begin
     -- Admin manually confirms purchase: 2% points
     v_points_earned := floor(v_total_price * 0.02);
 
-    update public.orders
-    set status       = p_new_status,
-        confirmed_at = now()
-    where id = p_order_id;
-
+    -- token 주문: 상태 변경 전 token item 검증 (부분 성공 방지)
     if v_order_type = 'token' then
-      -- design_tokens 부여 (중복 방지: work_id로 idempotent 처리)
       if not exists (select 1 from public.design_tokens where work_id = 'order_' || p_order_id::text) then
         select (oi.item_data->>'token_amount')::integer, oi.item_data->>'plan_key'
         into v_token_amount, v_plan_key
         from public.order_items oi
         where oi.order_id = p_order_id and oi.item_type = 'token'
         limit 1;
+
         if v_token_amount is null or v_token_amount <= 0 then
           raise exception 'token order % has no valid token item (token_amount: %)', p_order_id, v_token_amount;
         end if;
@@ -224,19 +220,29 @@ begin
           when 'pro'     then 'Pro'
           else coalesce(v_plan_key, '구매')
         end;
-
-        insert into public.design_tokens (user_id, amount, type, description, work_id)
-        values (
-          v_user_id,
-          v_token_amount,
-          'purchase',
-          '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개, 관리자 확정)',
-          'order_' || p_order_id::text
-        );
       end if;
     end if;
 
+    update public.orders
+    set status       = p_new_status,
+        confirmed_at = now()
+    where id = p_order_id;
+
+    if v_order_type = 'token' then
+      -- design_tokens: ON CONFLICT (work_id) DO NOTHING으로 TOCTOU 방지
+      insert into public.design_tokens (user_id, amount, type, description, work_id)
+      values (
+        v_user_id,
+        v_token_amount,
+        'purchase',
+        '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개, 관리자 확정)',
+        'order_' || p_order_id::text
+      )
+      on conflict (work_id) do nothing;
+    end if;
+
     if v_points_earned > 0 then
+      -- ON CONFLICT (order_id, type) DO NOTHING으로 중복 적립 방지 (idx_points_order_earn)
       insert into public.points (user_id, order_id, amount, type, description)
       values (
         v_user_id,
@@ -244,7 +250,8 @@ begin
         v_points_earned,
         'earn',
         '구매확정 포인트 적립 (관리자 처리, 2%)'
-      );
+      )
+      on conflict (order_id, type) do nothing;
     end if;
 
   else
