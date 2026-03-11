@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
+import { CustomOrderOptionsSection } from "@/features/order/components/custom-order-options-section";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
 import React from "react";
@@ -375,6 +376,24 @@ const OrderDetailPage = () => {
                       actions={renderClaimButtons(order.status, item, handleClaimRequest)}
                     />
                   </CardContent>
+                  {item.type === "custom" && (
+                    <>
+                      <CardContent>
+                        <Separator />
+                      </CardContent>
+                      <CardHeader>
+                        <CardTitle>주문 제작 옵션</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CustomOrderOptionsSection
+                          options={item.customData.options}
+                          referenceImageUrls={item.customData.referenceImageUrls}
+                          additionalNotes={item.customData.additionalNotes}
+                          sampleType={item.customData.sampleType}
+                        />
+                      </CardContent>
+                    </>
+                  )}
                   {index < order.items.length - 1 && (
                     <CardContent>
                       <Separator />

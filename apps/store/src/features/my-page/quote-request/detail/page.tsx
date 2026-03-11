@@ -1,5 +1,6 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { DetailRow } from "@/components/composite/detail-row";
 import { Empty } from "@/components/composite/empty";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
@@ -7,40 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROUTES } from "@/constants/ROUTES";
+import { CustomOrderOptionsSection } from "@/features/order/components/custom-order-options-section";
 import { useQuoteRequest } from "@/features/quote-request/api/quote-request-query";
 import { QUOTE_REQUEST_BADGE_CLASS } from "@/features/quote-request/components/quote-request-card";
 import { cn } from "@/lib/utils";
 import { CONTACT_METHOD_LABELS } from "@yeongseon/shared";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-
-const DETAIL_LABEL_CLASS = "text-sm text-zinc-500";
-const DETAIL_VALUE_CLASS = "text-sm font-medium text-zinc-900";
-
-const additionalOptionLabels = [
-  { key: "triangleStitch", label: "삼각봉제" },
-  { key: "sideStitch", label: "옆선봉제" },
-  { key: "barTack", label: "바택" },
-  { key: "dimple", label: "딤플" },
-  { key: "spoderato", label: "스포데라토" },
-  { key: "fold7", label: "7폴드" },
-  { key: "brandLabel", label: "브랜드라벨" },
-  { key: "careLabel", label: "케어라벨" },
-] as const;
-
-function DetailRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-zinc-100 py-3 last:border-b-0 last:pb-0 first:pt-0">
-      <span className={DETAIL_LABEL_CLASS}>{label}</span>
-      <span className={cn(DETAIL_VALUE_CLASS, "text-right")}>{value}</span>
-    </div>
-  );
-}
 
 function QuoteRequestDetailSkeleton() {
   return (
@@ -145,10 +118,6 @@ export default function QuoteRequestDetailPage() {
     );
   }
 
-  const enabledAdditionalOptions = additionalOptionLabels.filter(
-    ({ key }) => quoteRequest.options[key]
-  );
-
   return (
     <MainLayout>
       <MainContent>
@@ -205,79 +174,13 @@ export default function QuoteRequestDetailPage() {
                 <CardTitle>주문 옵션</CardTitle>
               </CardHeader>
               <CardContent>
-                <DetailRow label="넥타이 유형" value={quoteRequest.options.tieType} />
-                <DetailRow label="심지" value={quoteRequest.options.interlining} />
-                <DetailRow
-                  label="디자인 유형"
-                  value={quoteRequest.options.designType}
-                />
-                <DetailRow label="원단 유형" value={quoteRequest.options.fabricType} />
-                <DetailRow
-                  label="원단 지참"
-                  value={quoteRequest.options.fabricProvided ? "예" : "아니오"}
-                />
-                <DetailRow
-                  label="심지 두께"
-                  value={quoteRequest.options.interliningThickness}
+                <CustomOrderOptionsSection
+                  options={quoteRequest.options}
+                  referenceImageUrls={quoteRequest.referenceImageUrls}
+                  additionalNotes={quoteRequest.additionalNotes}
                 />
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>추가 옵션</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {enabledAdditionalOptions.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {enabledAdditionalOptions.map((option) => (
-                      <Badge key={option.key} variant="secondary">
-                        {option.label}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-zinc-500">선택한 추가 옵션이 없습니다.</div>
-                )}
-              </CardContent>
-            </Card>
-
-            {quoteRequest.referenceImageUrls.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>참조 이미지</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                    {quoteRequest.referenceImageUrls.map((imageUrl, index) => (
-                      <div
-                        key={`${imageUrl}-${index}`}
-                        className="overflow-hidden rounded-lg border bg-zinc-50"
-                      >
-                        <img
-                          src={imageUrl}
-                          alt={`참조 이미지 ${index + 1}`}
-                          className="aspect-square h-full w-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {quoteRequest.additionalNotes && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>추가 메모</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-700">
-                    {quoteRequest.additionalNotes}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
 
             {quoteRequest.quotedAmount != null && (
               <Card>
