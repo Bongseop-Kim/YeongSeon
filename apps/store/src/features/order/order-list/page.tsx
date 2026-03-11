@@ -28,6 +28,20 @@ import {
   CLAIM_ACTION_LABEL,
   getClaimActions,
 } from "@yeongseon/shared/constants/claim-actions";
+import type { Order } from "@yeongseon/shared/types/view/order";
+
+type OrderTypeFilter = "전체" | "일반구매" | "수선" | "주문제작" | "토큰구매";
+
+const ORDER_TYPE_TABS: OrderTypeFilter[] = [
+  "전체", "일반구매", "수선", "주문제작", "토큰구매",
+];
+
+const ORDER_TYPE_MAP: Record<Exclude<OrderTypeFilter, "전체">, Order["orderType"]> = {
+  일반구매: "sale",
+  수선: "repair",
+  주문제작: "custom",
+  토큰구매: "token",
+};
 
 const QUOTE_REQUEST_BADGE_CLASS: Record<QuoteRequestStatus, string> = {
   요청: "bg-zinc-100 text-zinc-700 border-zinc-200 hover:bg-zinc-100",
@@ -50,8 +64,15 @@ export default function OrderListPage() {
     }),
     [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
   );
+  const [activeTab, setActiveTab] = useState<OrderTypeFilter>("전체");
   const { data: orders = [], isLoading, error } = useOrders(queryFilters);
   const { data: quoteRequests = [], error: quoteRequestError } = useQuoteRequests();
+
+  const filteredOrders = useMemo(() => {
+    if (activeTab === "전체") return orders;
+    const orderType = ORDER_TYPE_MAP[activeTab];
+    return orders.filter((order) => order.orderType === orderType);
+  }, [orders, activeTab]);
   const showQuoteRequestSection = quoteRequests.length > 0 || !!quoteRequestError;
 
   useEffect(() => {
@@ -115,16 +136,32 @@ export default function OrderListPage() {
               <div>
                 <h2 className="text-lg font-semibold">주문 내역</h2>
               </div>
-              {orders.length === 0 ? (
+              <div className="flex gap-1 overflow-x-auto pb-1">
+                {ORDER_TYPE_TABS.map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                      activeTab === tab
+                        ? "bg-zinc-900 text-white"
+                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                    )}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+              {filteredOrders.length === 0 ? (
                 <Card>
                   <Empty
-                    title="주문 내역이 없습니다."
+                    title={activeTab === "전체" ? "주문 내역이 없습니다." : `${activeTab} 내역이 없습니다.`}
                     description="첫 주문을 시작해보세요!"
                   />
                 </Card>
               ) : (
-                orders.map((order) => {
-                  const claimActions = getClaimActions(order.status);
+                filteredOrders.map((order) => {
+                  const claimActions = order.orderType === "token" ? [] : getClaimActions(order.status);
 
                   return (
                     <Card key={order.id}>
