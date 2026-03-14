@@ -77,7 +77,7 @@ export const useRestoreDraft = (
 ) => {
   const { loadDraft, clearDraft } = useWizardDraft();
   const draftCheckedRef = useRef(false);
-  const toastIdRef = useRef<string | number | undefined>();
+  const toastIdRef = useRef<string | number | undefined>(undefined);
 
   useEffect(() => {
     if (draftCheckedRef.current) return;
