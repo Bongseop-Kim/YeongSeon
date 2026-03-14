@@ -19,9 +19,7 @@ export default tseslint.config([
       ecmaVersion: 2020,
     },
     linterOptions: {
-      // 각 패키지 config의 플러그인 규칙(react-hooks 등)이 루트 config에 없어
-      // 발생하는 "Definition for rule not found" 오류 억제
-      reportUnusedDisableDirectives: "off",
+      reportUnusedDisableDirectives: "error",
     },
     rules: {
       "@typescript-eslint/consistent-type-imports": [
@@ -40,6 +38,13 @@ export default tseslint.config([
         },
       ],
       "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/naming-convention": [
+        "error",
+        { selector: "interface", format: ["PascalCase"] },
+        { selector: "typeAlias", format: ["PascalCase"] },
+        { selector: "enum", format: ["PascalCase"] },
+        { selector: "enumMember", format: ["UPPER_CASE", "PascalCase"] },
+      ],
       // false positive가 많아 off 처리
       "security/detect-object-injection": "off",
     },

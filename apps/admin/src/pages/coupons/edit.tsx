@@ -282,7 +282,7 @@ export default function CouponEdit() {
         }
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [couponId, excludeIssuedUsers],
   );
 

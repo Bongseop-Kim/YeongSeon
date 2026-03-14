@@ -28,4 +28,24 @@ export default tseslint.config([
       ],
     },
   },
+  {
+    files: ["src/components/**/*.{ts,tsx}", "src/hooks/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@yeongseon/shared/mappers/*",
+                "@yeongseon/shared/src/mappers/*",
+              ],
+              message:
+                "매퍼는 API 계층(*-api.ts)에서만 호출하세요. 컴포넌트/훅에서 직접 import 금지.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);

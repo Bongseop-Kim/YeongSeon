@@ -253,7 +253,6 @@ export function useAdminProductEditForm() {
             : [];
       imageUpload.initFromUrls(urls);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryResult?.data?.data, imageUpload.initFromUrls, id]);
 
   const handleFinish = async (values: AdminProductFormValues) => {

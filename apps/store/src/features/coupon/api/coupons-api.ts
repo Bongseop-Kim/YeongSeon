@@ -12,7 +12,7 @@ const COUPON_COLUMNS =
 const USER_COUPON_COLUMNS = `id, user_id, coupon_id, status, issued_at, expires_at, used_at, coupon:coupons(${COUPON_COLUMNS})`;
 
 const applyActiveFilter = <
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- PostgrestFilterBuilder 제네릭은 SDK 타입 제약상 unknown으로 대체 불가
   T extends PostgrestFilterBuilder<any, any, any, any>,
 >(
   query: T,
