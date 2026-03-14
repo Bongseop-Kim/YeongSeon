@@ -97,6 +97,7 @@ export function CartItemCard({
           className="flex-1"
           size="sm"
           onClick={onChangeOption}
+          data-testid={`cart-item-change-option-${item.id}`}
         >
           옵션 변경
         </Button>
@@ -105,6 +106,7 @@ export function CartItemCard({
           className="flex-1"
           size="sm"
           onClick={onChangeCoupon}
+          data-testid={`cart-item-change-coupon-${item.id}`}
         >
           쿠폰 사용
         </Button>

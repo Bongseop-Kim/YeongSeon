@@ -121,7 +121,7 @@ const ClaimFormPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <Card>
+          <Card data-testid="claim-form-root">
             <Empty
               title="잘못된 접근입니다."
               description="올바른 경로로 접근해주세요."
@@ -446,6 +446,7 @@ const ClaimFormPage = () => {
                       type="submit"
                       className="flex-1"
                       disabled={createClaimMutation.isPending}
+                      data-testid="claim-submit-button"
                     >
                       {createClaimMutation.isPending
                         ? "신청 중..."

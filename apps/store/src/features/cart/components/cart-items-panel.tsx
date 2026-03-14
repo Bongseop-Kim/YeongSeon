@@ -37,15 +37,16 @@ export function CartItemsPanel({
   }
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0" data-testid="cart-items-panel">
       {items.map((item, index) => (
         <React.Fragment key={item.id}>
-          <div className="flex gap-3 p-4">
+          <div className="flex gap-3 p-4" data-testid={`cart-item-${item.id}`}>
             <Checkbox
               checked={selectedItems.includes(item.id)}
               onCheckedChange={(checked) =>
                 onSelectItem(item.id, checked === true)
               }
+              data-testid={`cart-item-checkbox-${item.id}`}
             />
             <div className="flex-1">
               {item.type === "product" ? (

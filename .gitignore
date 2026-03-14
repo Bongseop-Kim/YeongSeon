@@ -42,3 +42,7 @@ dist-ssr
 docs/plans/
 .superpowers/
 docs/superpowers/
+
+# Playwright
+e2e/.auth/
+output/playwright/

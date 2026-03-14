@@ -1,0 +1,226 @@
+import {
+  expect,
+  expectAuthenticatedRoute,
+  hasConfiguredAuth,
+  test,
+} from "../fixtures/auth";
+import {
+  type CreateOrderResult,
+  readFixtures,
+  resetStoreCart,
+} from "../utils/store-data";
+import { installMockToss } from "../utils/mock-toss";
+
+const addProductToCart = async (page: Page, productId: number) => {
+  await page.goto(`/shop/${productId}`);
+  await expectAuthenticatedRoute(page);
+  await page.getByTestId("product-add-to-cart").click();
+  await expect(page.getByText("장바구니에 추가되었습니다.")).toBeVisible();
+  await page.getByRole("button", { name: "닫기" }).click();
+  await page.goto("/cart");
+};
+
+const openOrderFormFromCart = async (page: Page) => {
+  await page.goto("/cart");
+  await page.locator('[data-testid^="cart-item-checkbox-"]').first().click();
+  await expect(page.getByTestId("cart-order-button")).toBeEnabled();
+  await page.getByTestId("cart-order-button").click();
+  await expect(page).toHaveURL(/\/order\/order-form$/);
+};
+
+test.describe.serial("Store 주문 플로우", () => {
+  test.skip(
+    !hasConfiguredAuth("store") || !hasConfiguredAuth("admin"),
+    "Store/Admin 테스트 계정 env가 필요합니다.",
+  );
+
+  let fixtures: Awaited<ReturnType<typeof readFixtures>>;
+  let latestOrderId: string | null = null;
+
+  test.beforeAll(async () => {
+    fixtures = await readFixtures();
+  });
+
+  test.beforeEach(async () => {
+    await resetStoreCart();
+  });
+
+  test("상품 → 장바구니 담기", async ({ authenticatedPage }) => {
+    await addProductToCart(authenticatedPage, fixtures.storeProduct.id);
+
+    await expect(
+      authenticatedPage.getByTestId("cart-items-panel"),
+    ).toContainText(fixtures.storeProduct.name);
+    await expect(
+      authenticatedPage.getByTestId("cart-items-panel"),
+    ).toContainText("FREE / 1개");
+  });
+
+  test("장바구니 수정", async ({ authenticatedPage }) => {
+    await addProductToCart(authenticatedPage, fixtures.storeProduct.id);
+
+    await authenticatedPage
+      .locator('[data-testid^="cart-item-change-option-"]')
+      .first()
+      .click();
+    const quantityInput = authenticatedPage
+      .locator('input[type="number"]')
+      .first();
+    await quantityInput.fill("2");
+    await quantityInput.blur();
+    await authenticatedPage.getByRole("button", { name: "변경" }).click();
+    await authenticatedPage.getByTestId("cart-select-all").click();
+
+    await expect(
+      authenticatedPage.getByTestId("cart-order-summary"),
+    ).toContainText("총 2개");
+
+    await expect(
+      authenticatedPage.getByTestId("cart-remove-selected"),
+    ).toBeEnabled();
+    await authenticatedPage.getByTestId("cart-remove-selected").click();
+    await authenticatedPage.getByRole("button", { name: "확인" }).click();
+
+    await expect(
+      authenticatedPage.locator('[data-testid^="cart-item-"]'),
+    ).toHaveCount(0);
+  });
+
+  test("쿠폰 적용", async ({ authenticatedPage }) => {
+    await addProductToCart(authenticatedPage, fixtures.storeProduct.id);
+    await authenticatedPage.getByTestId("cart-select-all").click();
+
+    await authenticatedPage
+      .locator('[data-testid^="cart-item-change-coupon-"]')
+      .first()
+      .click();
+    await authenticatedPage.getByText(fixtures.coupon.name).click();
+    await authenticatedPage.getByRole("button", { name: "적용" }).click();
+    await authenticatedPage.getByRole("button", { name: "확인" }).click();
+
+    await expect(
+      authenticatedPage.getByTestId("cart-items-panel"),
+    ).toContainText(`${fixtures.coupon.name} 적용`);
+    await expect(
+      authenticatedPage.getByTestId("cart-items-panel"),
+    ).toContainText(
+      `${(
+        fixtures.storeProduct.price - fixtures.coupon.discountValue
+      ).toLocaleString()}원`,
+    );
+  });
+
+  test("주문서 작성", async ({ authenticatedPage }) => {
+    await addProductToCart(authenticatedPage, fixtures.storeProduct.id);
+    await openOrderFormFromCart(authenticatedPage);
+
+    await expect(
+      authenticatedPage.getByTestId("order-shipping-card"),
+    ).toContainText(fixtures.shippingAddress.recipientName);
+    await expect(
+      authenticatedPage.getByTestId("order-items-card"),
+    ).toContainText("주문 상품 1개");
+    await expect(
+      authenticatedPage.getByTestId("order-submit-button"),
+    ).toBeEnabled();
+  });
+
+  test("결제 성공 (mock)", async ({ authenticatedPage }) => {
+    await installMockToss(authenticatedPage, "success");
+
+    let createOrderResult: CreateOrderResult | null = null;
+
+    await authenticatedPage.route(
+      "**/functions/v1/create-order",
+      async (route) => {
+        const response = await route.fetch();
+        const payload = (await response.json()) as CreateOrderResult;
+        createOrderResult = payload;
+
+        await route.fulfill({ response });
+      },
+    );
+
+    await authenticatedPage.route(
+      "**/functions/v1/confirm-payment",
+      async (route) => {
+        const request = route.request().postDataJSON() as {
+          paymentKey: string;
+          orderId: string;
+        };
+        if (!createOrderResult) {
+          throw new Error("create-order 응답을 아직 캡처하지 못했습니다.");
+        }
+
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            paymentKey: request.paymentKey,
+            paymentGroupId: request.orderId,
+            status: "DONE",
+            orders: createOrderResult.orders.map((order) => ({
+              orderId: order.order_id,
+              orderType: order.order_type,
+            })),
+          }),
+        });
+      },
+    );
+
+    await addProductToCart(authenticatedPage, fixtures.storeProduct.id);
+    await openOrderFormFromCart(authenticatedPage);
+    await authenticatedPage.getByTestId("order-submit-button").click();
+
+    await expect
+      .poll(() => createOrderResult?.orders[0]?.order_id ?? null)
+      .not.toBeNull();
+    latestOrderId = createOrderResult?.orders[0]?.order_id ?? null;
+
+    await expect(authenticatedPage).toHaveURL(
+      new RegExp(`/order/${latestOrderId}$`),
+    );
+    await expect(
+      authenticatedPage.getByTestId("order-detail-root"),
+    ).toContainText(fixtures.storeProduct.name);
+  });
+
+  test("결제 실패 (mock)", async ({ authenticatedPage }) => {
+    await installMockToss(authenticatedPage, "fail");
+
+    await addProductToCart(authenticatedPage, fixtures.storeProduct.id);
+    await openOrderFormFromCart(authenticatedPage);
+    await authenticatedPage.getByTestId("order-submit-button").click();
+
+    await expect(authenticatedPage).toHaveURL(/\/order\/payment\/fail/);
+    await expect(
+      authenticatedPage.getByText("결제에 실패했습니다"),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("button", { name: "주문서로 돌아가기" }),
+    ).toBeVisible();
+  });
+
+  test("주문 목록/상세 조회", async ({ authenticatedPage }) => {
+    test.skip(!latestOrderId, "성공 주문 ID가 아직 없습니다.");
+
+    await authenticatedPage.goto("/order/order-list");
+    await expectAuthenticatedRoute(authenticatedPage);
+
+    await expect(
+      authenticatedPage.getByTestId(`order-card-${latestOrderId}`),
+    ).toBeVisible();
+
+    await authenticatedPage
+      .locator(`[data-testid^="order-item-link-${latestOrderId}-"]`)
+      .first()
+      .click();
+
+    await expect(authenticatedPage).toHaveURL(
+      new RegExp(`/order/${latestOrderId}$`),
+    );
+    await expect(
+      authenticatedPage.getByTestId("order-detail-root"),
+    ).toContainText(fixtures.storeProduct.name);
+  });
+});
