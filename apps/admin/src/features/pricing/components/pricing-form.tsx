@@ -22,6 +22,7 @@ import {
   type TokenTierUI,
 } from "@/features/pricing/api/pricing-query";
 import type { PricingConstantRow } from "@/features/pricing/types/admin-pricing";
+import { formatWithComma } from "@/utils/format-number";
 
 const CONSTANT_LABELS: Record<string, string> = {
   START_COST: "봉제 시작 비용 (기본 세팅비)",
@@ -251,10 +252,7 @@ export function PricingForm() {
           value={constantDraft[key] ?? row.amount}
           min={min}
           step={step}
-          formatter={(v) =>
-            // eslint-disable-next-line security/detect-unsafe-regex
-            `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-          }
+          formatter={(v) => formatWithComma(v)}
           parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
           onChange={(v) =>
             setConstantDraft((prev) => ({ ...prev, [key]: v ?? 0 }))
@@ -363,10 +361,7 @@ export function PricingForm() {
                     value={fabricDraft[row.key] ?? row.amount}
                     min={0}
                     step={100}
-                    formatter={(v) =>
-                      // eslint-disable-next-line security/detect-unsafe-regex
-                      `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                    }
+                    formatter={(v) => formatWithComma(v)}
                     parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
                     onChange={(v) =>
                       setFabricDraft((prev) => ({ ...prev, [row.key]: v ?? 0 }))
@@ -444,10 +439,7 @@ export function PricingForm() {
                           value={tier?.price}
                           min={1}
                           step={100}
-                          formatter={(v) =>
-                            // eslint-disable-next-line security/detect-unsafe-regex
-                            `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                          }
+                          formatter={(v) => formatWithComma(v)}
                           parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
                           onChange={(v) => setTier({ price: v ?? 0 })}
                           style={{ width: "100%" }}

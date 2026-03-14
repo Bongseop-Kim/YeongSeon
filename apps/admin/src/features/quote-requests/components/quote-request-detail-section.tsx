@@ -25,6 +25,7 @@ import {
   useQuoteRequestStatusUpdate,
 } from "../api/quote-requests-query";
 import { CustomOrderOptionsDetail } from "./custom-order-options-detail";
+import { formatWithComma } from "@/utils/format-number";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -196,10 +197,7 @@ export function QuoteRequestDetailSection() {
           <InputNumber
             value={formValues.quotedAmount}
             onChange={(v) => setQuotedAmount(v)}
-            formatter={(v) =>
-              // eslint-disable-next-line security/detect-unsafe-regex
-              `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-            }
+            formatter={(v) => formatWithComma(v)}
             parser={(v) => Number(v?.replace(/,/g, ""))}
             style={{ width: "100%", marginTop: 4 }}
             min={0}

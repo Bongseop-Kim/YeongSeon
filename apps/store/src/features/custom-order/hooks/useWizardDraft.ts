@@ -77,6 +77,7 @@ export const useRestoreDraft = (
 ) => {
   const { loadDraft, clearDraft } = useWizardDraft();
   const draftCheckedRef = useRef(false);
+  const toastIdRef = useRef<string | number | undefined>();
 
   useEffect(() => {
     if (draftCheckedRef.current) return;
@@ -86,8 +87,6 @@ export const useRestoreDraft = (
     if (!existing) return;
 
     let restored = false;
-    // eslint-disable-next-line prefer-const
-    let toastId: string | number | undefined;
 
     const removeClickListener = () => {
       document.removeEventListener("pointerdown", handleClickOutside, true);
@@ -97,10 +96,10 @@ export const useRestoreDraft = (
       const target = e.target as HTMLElement;
       if (target.closest("[data-sonner-toast]")) return;
       removeClickListener();
-      if (toastId !== undefined) toast.dismiss(toastId);
+      if (toastIdRef.current !== undefined) toast.dismiss(toastIdRef.current);
     };
 
-    toastId = toast.info("이전에 작성 중이던 주문이 있어요", {
+    toastIdRef.current = toast.info("이전에 작성 중이던 주문이 있어요", {
       action: {
         label: "이어서 하기",
         onClick: () => {

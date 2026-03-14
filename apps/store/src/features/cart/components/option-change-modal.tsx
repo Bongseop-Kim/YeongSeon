@@ -52,7 +52,7 @@ export const OptionChangeModal = forwardRef<
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {item.product.options!.map((option) => (
+              {(item.product.options ?? []).map((option) => (
                 <SelectItem key={option.id} value={option.id}>
                   {option.name}
                   {option.additionalPrice > 0 &&

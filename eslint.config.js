@@ -39,6 +39,7 @@ export default tseslint.config([
           ignoreRestSiblings: true,
         },
       ],
+      "@typescript-eslint/no-non-null-assertion": "error",
       // false positive가 많아 off 처리
       "security/detect-object-injection": "off",
     },

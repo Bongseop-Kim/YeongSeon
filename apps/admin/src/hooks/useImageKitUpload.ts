@@ -63,13 +63,15 @@ export const useImageKitUpload = () => {
           throw new Error("이미지 URL을 받지 못했습니다.");
         }
 
+        const uploadedUrl = response.url;
+
         setFileList((prev) =>
           prev.map((f) =>
             f.uid === rcFile.uid
               ? {
                   ...f,
                   status: "done",
-                  url: response.url!,
+                  url: uploadedUrl,
                   fileId: response.fileId ?? undefined,
                 }
               : f,
@@ -160,8 +162,11 @@ export const useImageKitUpload = () => {
 
   const getUrls = useCallback((): string[] => {
     return fileList
-      .filter((f) => f.status === "done" && f.url)
-      .map((f) => f.url!);
+      .filter(
+        (f): f is typeof f & { url: string } =>
+          f.status === "done" && f.url != null,
+      )
+      .map((f) => f.url);
   }, [fileList]);
 
   /**

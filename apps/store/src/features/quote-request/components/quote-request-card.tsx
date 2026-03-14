@@ -13,7 +13,6 @@ interface QuoteRequestCardProps {
   onClick?: () => void;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const QUOTE_REQUEST_BADGE_CLASS: Record<QuoteRequestStatus, string> = {
   요청: "bg-zinc-100 text-zinc-700 border-zinc-200 hover:bg-zinc-100",
   견적발송: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50",

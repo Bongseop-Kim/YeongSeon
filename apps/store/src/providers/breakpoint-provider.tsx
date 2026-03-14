@@ -107,7 +107,6 @@ export function BreakpointProvider({ children }: BreakpointProviderProps) {
  * }
  * ```
  */
-// eslint-disable-next-line react-refresh/only-export-components
 export function useBreakpoint() {
   const context = useContext(BreakpointContext);
   if (!context) {
@@ -120,7 +119,6 @@ export function useBreakpoint() {
  * 기존 코드와의 호환성을 위한 useIsMobile 훅
  * @deprecated useBreakpoint().isMobile 사용 권장
  */
-// eslint-disable-next-line react-refresh/only-export-components
 export function useIsMobile() {
   const { isMobile } = useBreakpoint();
   return isMobile;

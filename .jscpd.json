@@ -1,0 +1,9 @@
+{
+  "reporters": ["console"],
+  "ignore": ["**/node_modules/**", "**/dist/**", "**/*.d.ts"],
+  "absolute": true,
+  "gitignore": true,
+  "minLines": 10,
+  "minTokens": 50,
+  "threshold": 3
+}

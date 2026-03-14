@@ -96,6 +96,5 @@ export {
   HeaderTitle,
   HeaderNav,
   HeaderActions,
-  // eslint-disable-next-line react-refresh/only-export-components
   headerVariants,
 };

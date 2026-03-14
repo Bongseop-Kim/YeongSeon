@@ -15,6 +15,25 @@ export default tseslint.config([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      "react-refresh/only-export-components": [
+        "warn",
+        {
+          allowConstantExport: true,
+          allowExportNames: [
+            "useBreakpoint",
+            "useIsMobile",
+            "useFormField",
+            "badgeVariants",
+            "buttonVariants",
+            "buttonGroupVariants",
+            "footerVariants",
+            "headerVariants",
+            "QUOTE_REQUEST_BADGE_CLASS",
+          ],
+        },
+      ],
+    },
   },
   {
     files: ["src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
