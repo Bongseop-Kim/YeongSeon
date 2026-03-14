@@ -65,6 +65,7 @@ const TokenPurchaseSuccessPage = () => {
     };
 
     processPayment();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only: 토큰 충전 처리는 마운트 시 1회만 실행, deps 추가 시 중복 처리 발생
   }, []);
 
   if (error) {

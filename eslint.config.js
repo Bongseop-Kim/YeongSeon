@@ -18,6 +18,12 @@ export default tseslint.config([
     languageOptions: {
       ecmaVersion: 2020,
     },
+    linterOptions: {
+      // "off"로 명시: ESLint 기본값(warn)이 lint-staged --fix 실행 시 앱 전용 규칙(react-hooks 등)
+      // 비활성화 상태에서 valid한 eslint-disable 주석을 auto-remove하는 것을 방지.
+      // 실제 unused directive 차단은 각 앱 eslint.config.js의 linterOptions로 설정.
+      reportUnusedDisableDirectives: "off",
+    },
     rules: {
       "@typescript-eslint/consistent-type-imports": [
         "error",

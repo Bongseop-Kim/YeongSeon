@@ -70,6 +70,7 @@ export default function InquiryPage() {
       });
       if (isMobile) setIsSheetOpen(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only: 마운트 시 URL 파라미터 1회 파싱, searchParams 변경 추적 불필요
   }, []);
 
   const handleEdit = (id: string) => {

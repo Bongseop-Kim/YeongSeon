@@ -253,6 +253,7 @@ export function useAdminProductEditForm() {
             : [];
       imageUpload.initFromUrls(urls);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- imagesInitialized ref는 deps 불필요, imageUpload.initFromUrls는 비안정 참조
   }, [queryResult?.data?.data, imageUpload.initFromUrls, id]);
 
   const handleFinish = async (values: AdminProductFormValues) => {
