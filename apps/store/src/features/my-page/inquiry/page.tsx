@@ -44,7 +44,6 @@ export default function InquiryPage() {
     ? inquiries.find((i) => i.id === editingInquiryId)
     : null;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const rawCategory = searchParams.get("category");
     const category = INQUIRY_CATEGORIES.includes(rawCategory as InquiryCategory)
@@ -71,8 +70,8 @@ export default function InquiryPage() {
       });
       if (isMobile) setIsSheetOpen(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 마운트 시 1회
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only: 마운트 시 URL 파라미터 1회 파싱, searchParams 변경 추적 불필요
+  }, []);
 
   const handleEdit = (id: string) => {
     setEditingInquiryId(id);

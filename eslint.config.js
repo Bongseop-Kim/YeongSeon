@@ -19,8 +19,9 @@ export default tseslint.config([
       ecmaVersion: 2020,
     },
     linterOptions: {
-      // 각 패키지 config의 플러그인 규칙(react-hooks 등)이 루트 config에 없어
-      // 발생하는 "Definition for rule not found" 오류 억제
+      // "off"로 명시: ESLint 기본값(warn)이 lint-staged --fix 실행 시 앱 전용 규칙(react-hooks 등)
+      // 비활성화 상태에서 valid한 eslint-disable 주석을 auto-remove하는 것을 방지.
+      // 실제 unused directive 차단은 각 앱 eslint.config.js의 linterOptions로 설정.
       reportUnusedDisableDirectives: "off",
     },
     rules: {
@@ -40,6 +41,13 @@ export default tseslint.config([
         },
       ],
       "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/naming-convention": [
+        "error",
+        { selector: "interface", format: ["PascalCase"] },
+        { selector: "typeAlias", format: ["PascalCase"] },
+        { selector: "enum", format: ["PascalCase"] },
+        { selector: "enumMember", format: ["UPPER_CASE", "PascalCase"] },
+      ],
       // false positive가 많아 off 처리
       "security/detect-object-injection": "off",
     },

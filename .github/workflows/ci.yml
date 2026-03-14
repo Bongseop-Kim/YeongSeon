@@ -33,7 +33,6 @@ jobs:
   semgrep:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.event_name == 'pull_request'
     container:
       image: semgrep/semgrep
     steps:

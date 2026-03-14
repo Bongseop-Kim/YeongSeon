@@ -282,7 +282,7 @@ export default function CouponEdit() {
         }
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- API 호출 함수들은 deps에서 의도적으로 제외: couponId/excludeIssuedUsers 변경 시에만 재실행
     [couponId, excludeIssuedUsers],
   );
 
