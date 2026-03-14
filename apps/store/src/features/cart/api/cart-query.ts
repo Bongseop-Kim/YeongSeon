@@ -6,15 +6,9 @@ import {
 } from "@/features/cart/api/cart-api";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import { useAuthStore } from "@/store/auth";
+import { cartKeys } from "@/features/cart/api/cart-keys";
 
-/**
- * 장바구니 쿼리 키
- */
-export const cartKeys = {
-  all: ["cart"] as const,
-  items: (userId?: string) => [...cartKeys.all, "items", userId] as const,
-  guest: () => [...cartKeys.all, "guest"] as const,
-};
+export { cartKeys };
 
 /**
  * 서버 장바구니 조회 쿼리

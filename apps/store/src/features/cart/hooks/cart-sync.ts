@@ -1,5 +1,5 @@
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
-import { cartKeys } from "@/features/cart/api/cart-query";
+import { cartKeys } from "@/features/cart/api/cart-keys";
 
 interface QueryClientLike {
   setQueryData: (key: readonly unknown[], value: CartItem[]) => void;
