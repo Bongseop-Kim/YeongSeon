@@ -176,6 +176,8 @@ function PurchaseRow({ item, refundOrder, onRequestRefund }: PurchaseRowProps) {
     }
   };
 
+  const pendingRequestId = refundOrder?.pendingRequestId ?? null;
+
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border px-4 py-4">
       <div className="min-w-0 flex-1 space-y-1">
@@ -217,7 +219,7 @@ function PurchaseRow({ item, refundOrder, onRequestRefund }: PurchaseRowProps) {
             {formatAmount(item.amount)}
           </span>
         ) : refundOrder.notRefundableReason === "pending_refund" &&
-          refundOrder.pendingRequestId ? (
+          pendingRequestId ? (
           <div className="flex flex-col items-end gap-1.5">
             <Badge className="bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-50">
               환불 신청 중
@@ -225,7 +227,7 @@ function PurchaseRow({ item, refundOrder, onRequestRefund }: PurchaseRowProps) {
             <button
               className="text-xs text-zinc-400 underline-offset-2 hover:text-red-500 hover:underline disabled:opacity-50"
               disabled={isCancelling}
-              onClick={() => handleCancelRefund(refundOrder.pendingRequestId!)}
+              onClick={() => handleCancelRefund(pendingRequestId)}
             >
               {isCancelling ? "취소 중..." : "신청 취소"}
             </button>
