@@ -36,7 +36,9 @@ export async function saveProductOptions({
 }): Promise<void> {
   const { error } = await supabase.rpc("replace_product_options", {
     p_product_id: productId,
-    p_options: options.map((option) => fromAdminProductOption(option, productId)),
+    p_options: options.map((option) =>
+      fromAdminProductOption(option, productId),
+    ),
   });
 
   if (error) {

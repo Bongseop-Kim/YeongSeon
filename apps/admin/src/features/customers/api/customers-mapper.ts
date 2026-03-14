@@ -41,7 +41,9 @@ export interface DesignTokenRow {
 
 // ── 매퍼 ───────────────────────────────────────────────────────
 
-export function toAdminCustomerListItem(row: ProfileRow): AdminCustomerListItem {
+export function toAdminCustomerListItem(
+  row: ProfileRow,
+): AdminCustomerListItem {
   return {
     id: row.id,
     name: row.name ?? "",
@@ -59,7 +61,9 @@ export function toAdminCustomerDetail(row: ProfileRow): AdminCustomerDetail {
   };
 }
 
-export function toAdminCustomerOrderRow(dto: AdminOrderListRowDTO): AdminCustomerOrderRow {
+export function toAdminCustomerOrderRow(
+  dto: AdminOrderListRowDTO,
+): AdminCustomerOrderRow {
   return {
     id: dto.id,
     orderNumber: dto.orderNumber,
@@ -69,7 +73,9 @@ export function toAdminCustomerOrderRow(dto: AdminOrderListRowDTO): AdminCustome
   };
 }
 
-export function toAdminCustomerCouponRow(row: UserCouponRow): AdminCustomerCouponRow {
+export function toAdminCustomerCouponRow(
+  row: UserCouponRow,
+): AdminCustomerCouponRow {
   return {
     id: row.id,
     couponId: row.coupon_id ?? "",
@@ -79,7 +85,9 @@ export function toAdminCustomerCouponRow(row: UserCouponRow): AdminCustomerCoupo
   };
 }
 
-export function toAdminCustomerTokenRow(row: DesignTokenRow): AdminCustomerTokenRow {
+export function toAdminCustomerTokenRow(
+  row: DesignTokenRow,
+): AdminCustomerTokenRow {
   return {
     id: row.id,
     amount: row.amount ?? 0,

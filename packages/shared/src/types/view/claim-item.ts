@@ -1,6 +1,13 @@
 import type { OrderItem } from "./order";
 
-export type ClaimStatus = "접수" | "처리중" | "수거요청" | "수거완료" | "재발송" | "완료" | "거부";
+export type ClaimStatus =
+  | "접수"
+  | "처리중"
+  | "수거요청"
+  | "수거완료"
+  | "재발송"
+  | "완료"
+  | "거부";
 
 export type ClaimType = "cancel" | "return" | "exchange" | "token_refund";
 

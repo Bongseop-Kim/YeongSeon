@@ -88,18 +88,30 @@ export const toPricingConfig = (
     START_COST: getConstantValue(constantsMap, "START_COST"),
     SEWING_PER_COST: getConstantValue(constantsMap, "SEWING_PER_COST"),
     AUTO_TIE_COST: getConstantValue(constantsMap, "AUTO_TIE_COST"),
-    TRIANGLE_STITCH_COST: getConstantValue(constantsMap, "TRIANGLE_STITCH_COST"),
+    TRIANGLE_STITCH_COST: getConstantValue(
+      constantsMap,
+      "TRIANGLE_STITCH_COST",
+    ),
     SIDE_STITCH_COST: getConstantValue(constantsMap, "SIDE_STITCH_COST"),
     BAR_TACK_COST: getConstantValue(constantsMap, "BAR_TACK_COST"),
     DIMPLE_COST: getConstantValue(constantsMap, "DIMPLE_COST"),
     SPODERATO_COST: getConstantValue(constantsMap, "SPODERATO_COST"),
     FOLD7_COST: getConstantValue(constantsMap, "FOLD7_COST"),
-    WOOL_INTERLINING_COST: getConstantValue(constantsMap, "WOOL_INTERLINING_COST"),
+    WOOL_INTERLINING_COST: getConstantValue(
+      constantsMap,
+      "WOOL_INTERLINING_COST",
+    ),
     BRAND_LABEL_COST: getConstantValue(constantsMap, "BRAND_LABEL_COST"),
     CARE_LABEL_COST: getConstantValue(constantsMap, "CARE_LABEL_COST"),
-    YARN_DYED_DESIGN_COST: getConstantValue(constantsMap, "YARN_DYED_DESIGN_COST"),
+    YARN_DYED_DESIGN_COST: getConstantValue(
+      constantsMap,
+      "YARN_DYED_DESIGN_COST",
+    ),
     FABRIC_QTY_ADULT: getConstantValue(constantsMap, "FABRIC_QTY_ADULT"),
-    FABRIC_QTY_ADULT_FOLD7: getConstantValue(constantsMap, "FABRIC_QTY_ADULT_FOLD7"),
+    FABRIC_QTY_ADULT_FOLD7: getConstantValue(
+      constantsMap,
+      "FABRIC_QTY_ADULT_FOLD7",
+    ),
     FABRIC_QTY_CHILD: getConstantValue(constantsMap, "FABRIC_QTY_CHILD"),
     FABRIC_COST: {
       YARN_DYED: {
@@ -113,6 +125,9 @@ export const toPricingConfig = (
     },
     SAMPLE_SEWING_COST: getConstantValue(constantsMap, "SAMPLE_SEWING_COST"),
     SAMPLE_FABRIC_COST: getConstantValue(constantsMap, "SAMPLE_FABRIC_COST"),
-    SAMPLE_FABRIC_AND_SEWING_COST: getConstantValue(constantsMap, "SAMPLE_FABRIC_AND_SEWING_COST"),
+    SAMPLE_FABRIC_AND_SEWING_COST: getConstantValue(
+      constantsMap,
+      "SAMPLE_FABRIC_AND_SEWING_COST",
+    ),
   };
 };

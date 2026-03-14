@@ -24,7 +24,12 @@ export function IssueCouponModal({
   const [keyword, setKeyword] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState<React.Key[]>([]);
 
-  const { users, loading } = usePresetCustomers(couponId, open, selectedPreset, excludeIssuedUsers);
+  const { users, loading } = usePresetCustomers(
+    couponId,
+    open,
+    selectedPreset,
+    excludeIssuedUsers,
+  );
   const filteredUsers = useFilteredUsers(users, keyword);
 
   const handleOk = async () => {

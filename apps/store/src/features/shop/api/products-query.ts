@@ -1,8 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getProducts,
-  getProductById,
-} from "@/features/shop/api/products-api";
+import { getProducts, getProductById } from "@/features/shop/api/products-api";
 import type { ProductFilters } from "@/features/shop/api/products-api";
 
 /**
@@ -11,7 +8,8 @@ import type { ProductFilters } from "@/features/shop/api/products-api";
 export const productKeys = {
   all: ["products"] as const,
   lists: () => [...productKeys.all, "list"] as const,
-  list: (filters?: ProductFilters) => [...productKeys.lists(), filters] as const,
+  list: (filters?: ProductFilters) =>
+    [...productKeys.lists(), filters] as const,
   details: () => [...productKeys.all, "detail"] as const,
   detail: (id: number) => [...productKeys.details(), id] as const,
 };
@@ -21,7 +19,7 @@ export const productKeys = {
  */
 export const useProducts = (
   filters?: ProductFilters,
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ) => {
   return useQuery({
     queryKey: productKeys.list(filters),

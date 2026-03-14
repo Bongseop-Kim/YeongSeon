@@ -93,7 +93,7 @@ const ReformPage = () => {
       if (hasFileImages) return await uploadTieImagesMutation.mutateAsync(ties);
       return ties;
     },
-    [uploadTieImagesMutation]
+    [uploadTieImagesMutation],
   );
 
   const processReformOrder = useCallback(async () => {
@@ -125,7 +125,7 @@ const ReformPage = () => {
         isSubmittingRef.current = false;
       }
     },
-    [fields.length, confirm, form]
+    [fields.length, confirm, form],
   );
 
   const handleDirectOrder = () =>
@@ -137,15 +137,16 @@ const ReformPage = () => {
       await processReformOrder();
     });
 
-  const handleMobileOrder = () =>
-    withSubmitGuard(processReformOrder);
+  const handleMobileOrder = () => withSubmitGuard(processReformOrder);
 
   const handleAddToCart = () =>
     withSubmitGuard(async () => {
       const ties = form.getValues().ties;
       const uploadedTies = await uploadTiesIfNeeded(ties);
 
-      await addMultipleReformToCart(uploadedTies.map((tie) => toReformData(tie, pricing?.baseCost ?? 0)));
+      await addMultipleReformToCart(
+        uploadedTies.map((tie) => toReformData(tie, pricing?.baseCost ?? 0)),
+      );
 
       form.reset(DEFAULT_REFORM_OPTIONS);
     });
@@ -250,114 +251,110 @@ const ReformPage = () => {
               />
             }
           >
-              <Card>
-                <CardContent className="flex items-center justify-between">
-                  <div className="flex gap-4 items-center">
-                    <Checkbox
-                      checked={isAllChecked}
-                      onCheckedChange={handleSelectAll}
-                    />
-                    <Label className="text-md">전체 선택</Label>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      type="button"
-                      size="sm"
-                      onClick={() => {
-                        let bulkApplySectionRef: {
-                          handleBulkApply: () => void;
-                        } | null = null;
-
-                        const checkedIndices = watchedTies
-                          .map((tie, index) => (tie.checked ? index : -1))
-                          .filter((index) => index !== -1);
-
-                        if (checkedIndices.length === 0) {
-                          confirm("적용할 항목을 선택해주세요.");
-                          return;
-                        }
-
-                        openModal({
-                          title: "일괄 적용",
-                          children: (
-                            <BulkApplySection
-                              ref={(ref) => {
-                                bulkApplySectionRef = ref;
-                              }}
-                              setValue={form.setValue}
-                              checkedIndices={checkedIndices}
-                            />
-                          ),
-                          confirmText: "적용",
-                          cancelText: "취소",
-                          onConfirm: () => {
-                            bulkApplySectionRef?.handleBulkApply();
-                          },
-                        });
-                      }}
-                    >
-                      일괄 적용
-                    </Button>
-                    <Button
-                      onClick={() =>
-                        confirm(
-                          "선택한 항목을 삭제하시겠습니까?",
-                          handleDelete,
-                          {
-                            confirmText: "삭제",
-                            cancelText: "취소",
-                          }
-                        )
-                      }
-                      variant="outline"
-                      type="button"
-                      size="sm"
-                    >
-                      삭제
-                    </Button>
-                  </div>
-                </CardContent>
-                <Separator />
-
-                {fields.map((field, index) => (
-                  <React.Fragment key={`${field.id}-${index}`}>
-                    <TieItemCard
-                      index={index}
-                      control={form.control}
-                      onRemove={() =>
-                        confirm(
-                          "정말 삭제하시겠습니까?",
-                          () => removeTie(index),
-                          {
-                            confirmText: "삭제",
-                            cancelText: "취소",
-                          }
-                        )
-                      }
-                    />
-                    {index < fields.length - 1 && <Separator />}
-                  </React.Fragment>
-                ))}
-                {fields.length === 0 && (
-                  <Empty
-                    title="수선할 넥타이가 없습니다."
-                    description="수선할 넥타이를 추가해주세요."
+            <Card>
+              <CardContent className="flex items-center justify-between">
+                <div className="flex gap-4 items-center">
+                  <Checkbox
+                    checked={isAllChecked}
+                    onCheckedChange={handleSelectAll}
                   />
-                )}
-
-                <Separator />
-                <CardContent className="flex justify-end ">
+                  <Label className="text-md">전체 선택</Label>
+                </div>
+                <div className="flex gap-2">
                   <Button
-                    type="button"
-                    onClick={addTie}
                     variant="outline"
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      let bulkApplySectionRef: {
+                        handleBulkApply: () => void;
+                      } | null = null;
+
+                      const checkedIndices = watchedTies
+                        .map((tie, index) => (tie.checked ? index : -1))
+                        .filter((index) => index !== -1);
+
+                      if (checkedIndices.length === 0) {
+                        confirm("적용할 항목을 선택해주세요.");
+                        return;
+                      }
+
+                      openModal({
+                        title: "일괄 적용",
+                        children: (
+                          <BulkApplySection
+                            ref={(ref) => {
+                              bulkApplySectionRef = ref;
+                            }}
+                            setValue={form.setValue}
+                            checkedIndices={checkedIndices}
+                          />
+                        ),
+                        confirmText: "적용",
+                        cancelText: "취소",
+                        onConfirm: () => {
+                          bulkApplySectionRef?.handleBulkApply();
+                        },
+                      });
+                    }}
+                  >
+                    일괄 적용
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      confirm("선택한 항목을 삭제하시겠습니까?", handleDelete, {
+                        confirmText: "삭제",
+                        cancelText: "취소",
+                      })
+                    }
+                    variant="outline"
+                    type="button"
                     size="sm"
                   >
-                    넥타이 추가
+                    삭제
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+              <Separator />
+
+              {fields.map((field, index) => (
+                <React.Fragment key={`${field.id}-${index}`}>
+                  <TieItemCard
+                    index={index}
+                    control={form.control}
+                    onRemove={() =>
+                      confirm(
+                        "정말 삭제하시겠습니까?",
+                        () => removeTie(index),
+                        {
+                          confirmText: "삭제",
+                          cancelText: "취소",
+                        },
+                      )
+                    }
+                  />
+                  {index < fields.length - 1 && <Separator />}
+                </React.Fragment>
+              ))}
+              {fields.length === 0 && (
+                <Empty
+                  title="수선할 넥타이가 없습니다."
+                  description="수선할 넥타이를 추가해주세요."
+                />
+              )}
+
+              <Separator />
+              <CardContent className="flex justify-end ">
+                <Button
+                  type="button"
+                  onClick={addTie}
+                  variant="outline"
+                  size="sm"
+                >
+                  넥타이 추가
+                </Button>
+              </CardContent>
+            </Card>
           </PageLayout>
         </Form>
         <MobileReformSheet

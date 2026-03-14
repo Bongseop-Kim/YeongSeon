@@ -20,7 +20,11 @@ export function CartItemCard({
   const itemPrice =
     item.product.price + (item.selectedOption?.additionalPrice || 0);
   const totalPrice = itemPrice * item.quantity;
-  const totalLineDiscount = calculateDiscount(itemPrice, item.appliedCoupon, item.quantity);
+  const totalLineDiscount = calculateDiscount(
+    itemPrice,
+    item.appliedCoupon,
+    item.quantity,
+  );
   const totalDiscountedPrice = totalPrice - totalLineDiscount;
   const hasCoupon = !!item.appliedCoupon;
 
@@ -72,7 +76,7 @@ export function CartItemCard({
               {/* 적용된 쿠폰 표시 */}
               {hasCoupon && (
                 <p className="text-xs text-primary font-medium">
-                  {item.appliedCoupon!.coupon.name} 적용
+                  {item.appliedCoupon?.coupon.name ?? ""} 적용
                 </p>
               )}
             </div>

@@ -2,7 +2,10 @@ import { PopupLayout } from "@/components/layout/popup-layout";
 import { Button } from "@/components/ui/button";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { ShippingAddress, ShippingAddressInput } from "@/features/shipping/types/shipping-address";
+import type {
+  ShippingAddress,
+  ShippingAddressInput,
+} from "@/features/shipping/types/shipping-address";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +22,10 @@ import {
   useUpdateShippingAddress,
   useShippingAddresses,
 } from "@/features/shipping/api/shipping-query";
-import { extractPhoneNumber, formatPhoneNumber } from "@/features/shipping/utils/phone-format";
+import {
+  extractPhoneNumber,
+  formatPhoneNumber,
+} from "@/features/shipping/utils/phone-format";
 import { toast } from "@/lib/toast";
 import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
 import { usePopupChild } from "@/hooks/usePopup";
@@ -32,7 +38,7 @@ const ShippingFormPage = () => {
   const [showPostcodeSearch, setShowPostcodeSearch] = useState(false);
   const { postMessageAndClose } = usePopupChild();
   const { data: existingAddress, isLoading } = useShippingAddress(
-    addressId || ""
+    addressId || "",
   );
   const { data: addresses } = useShippingAddresses();
   const createMutation = useCreateShippingAddress();
@@ -123,25 +129,22 @@ const ShippingFormPage = () => {
           onSuccess: () => {
             navigate(-1);
           },
-        }
+        },
       );
     } else {
-      createMutation.mutate(
-        inputData,
-        {
-          onSuccess: (newAddress) => {
-            if (isPopupContext) {
-              postMessageAndClose({
-                type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
-                addressId: newAddress.id,
-              });
-              return;
-            }
+      createMutation.mutate(inputData, {
+        onSuccess: (newAddress) => {
+          if (isPopupContext) {
+            postMessageAndClose({
+              type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
+              addressId: newAddress.id,
+            });
+            return;
+          }
 
-            navigate(-1);
-          },
-        }
-      );
+          navigate(-1);
+        },
+      });
     }
   };
 

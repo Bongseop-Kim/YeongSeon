@@ -1,7 +1,13 @@
-import type { CartItem, ReformCartItem } from "@yeongseon/shared/types/view/cart";
+import type {
+  CartItem,
+  ReformCartItem,
+} from "@yeongseon/shared/types/view/cart";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
-import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
+import type {
+  Product,
+  ProductOption,
+} from "@yeongseon/shared/types/view/product";
 
 type GenerateItemId = (productId: string | number, optionId?: string) => string;
 
@@ -114,7 +120,9 @@ export const updateProductCartItemOption = (
     return currentItems;
   }
 
-  const itemsWithoutOld = currentItems.filter((currentItem) => currentItem.id !== itemId);
+  const itemsWithoutOld = currentItems.filter(
+    (currentItem) => currentItem.id !== itemId,
+  );
   const existingItemIndex = itemsWithoutOld.findIndex(
     (currentItem) =>
       currentItem.type === "product" &&

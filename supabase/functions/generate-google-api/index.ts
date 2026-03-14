@@ -91,12 +91,11 @@ const requestGeminiText = async (
   apiKey: string,
 ) => {
   // 대화 히스토리를 Gemini 네이티브 멀티턴 포맷으로 변환
-  const historyContents: Array<Record<string, unknown>> = filterValidConversationTurns(
-    payload.conversationHistory,
-  ).map((turn) => ({
-    role: turn.role === "user" ? "user" : "model",
-    parts: [{ text: turn.content }],
-  }));
+  const historyContents: Array<Record<string, unknown>> =
+    filterValidConversationTurns(payload.conversationHistory).map((turn) => ({
+      role: turn.role === "user" ? "user" : "model",
+      parts: [{ text: turn.content }],
+    }));
 
   // 현재 메시지 (designContext + userMessage + 이미지)
   const currentParts: Array<Record<string, unknown>> = [
@@ -119,10 +118,7 @@ const requestGeminiText = async (
     });
   }
 
-  const contents = [
-    ...historyContents,
-    { role: "user", parts: currentParts },
-  ];
+  const contents = [...historyContents, { role: "user", parts: currentParts }];
 
   const textController = new AbortController();
   const textTimeoutId = setTimeout(() => textController.abort(), 30000);
@@ -176,38 +172,39 @@ const requestGeminiText = async (
     | undefined;
   const detectedDesign = rawDetected
     ? {
-      pattern: typeof rawDetected.pattern === "string"
-        ? rawDetected.pattern
-        : null,
-      colors: Array.isArray(rawDetected.colors)
-        ? rawDetected.colors.filter((c): c is string => typeof c === "string")
-        : [],
-      ciPlacement: typeof rawDetected.ciPlacement === "string"
-        ? rawDetected.ciPlacement
-        : null,
-      scale: rawDetected.scale === "large" ||
+        pattern:
+          typeof rawDetected.pattern === "string" ? rawDetected.pattern : null,
+        colors: Array.isArray(rawDetected.colors)
+          ? rawDetected.colors.filter((c): c is string => typeof c === "string")
+          : [],
+        ciPlacement:
+          typeof rawDetected.ciPlacement === "string"
+            ? rawDetected.ciPlacement
+            : null,
+        scale:
+          rawDetected.scale === "large" ||
           rawDetected.scale === "medium" ||
           rawDetected.scale === "small"
-        ? rawDetected.scale
-        : null,
-    }
+            ? rawDetected.scale
+            : null,
+      }
     : null;
 
   return {
-    aiMessage: typeof parsed.aiMessage === "string"
-      ? parsed.aiMessage
-      : "디자인 방향을 반영한 넥타이 시안을 준비했습니다.",
-    generateImage: typeof parsed.generateImage === "boolean"
-      ? parsed.generateImage
-      : true,
+    aiMessage:
+      typeof parsed.aiMessage === "string"
+        ? parsed.aiMessage
+        : "디자인 방향을 반영한 넥타이 시안을 준비했습니다.",
+    generateImage:
+      typeof parsed.generateImage === "boolean" ? parsed.generateImage : true,
     contextChips: Array.isArray(parsed.contextChips)
       ? parsed.contextChips.filter(
-        (chip): chip is { label: string; action: string } =>
-          typeof chip === "object" &&
-          chip !== null &&
-          typeof (chip as { label?: unknown }).label === "string" &&
-          typeof (chip as { action?: unknown }).action === "string",
-      )
+          (chip): chip is { label: string; action: string } =>
+            typeof chip === "object" &&
+            chip !== null &&
+            typeof (chip as { label?: unknown }).label === "string" &&
+            typeof (chip as { action?: unknown }).action === "string",
+        )
       : [],
     detectedDesign,
   };
@@ -239,28 +236,32 @@ const requestGeminiImage = async (
 
     const contents = payload.previousImageBase64
       ? [
-        {
-          role: "user",
-          parts: [{ text: buildGeminiImagePrompt(payload) }],
-        },
-        {
-          role: "model",
-          parts: [{
-            inlineData: {
-              mimeType: payload.previousImageMimeType || "image/png",
-              data: payload.previousImageBase64,
-            },
-          }],
-        },
-        {
-          role: "user",
-          parts: [{ text: buildImageEditPrompt(payload) }, ...currentParts],
-        },
-      ]
-      : [{
-        role: "user",
-        parts: [{ text: buildGeminiImagePrompt(payload) }, ...currentParts],
-      }];
+          {
+            role: "user",
+            parts: [{ text: buildGeminiImagePrompt(payload) }],
+          },
+          {
+            role: "model",
+            parts: [
+              {
+                inlineData: {
+                  mimeType: payload.previousImageMimeType || "image/png",
+                  data: payload.previousImageBase64,
+                },
+              },
+            ],
+          },
+          {
+            role: "user",
+            parts: [{ text: buildImageEditPrompt(payload) }, ...currentParts],
+          },
+        ]
+      : [
+          {
+            role: "user",
+            parts: [{ text: buildGeminiImagePrompt(payload) }, ...currentParts],
+          },
+        ];
 
     const imageController = new AbortController();
     const imageTimeoutId = setTimeout(() => imageController.abort(), 30000);
@@ -370,9 +371,10 @@ Deno.serve(async (req) => {
     adminClient = createAdminSupabaseClient();
   } catch (error) {
     return jsonResponse(500, {
-      error: error instanceof Error
-        ? error.message
-        : "Missing Supabase configuration",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Missing Supabase configuration",
     });
   }
   const workId = crypto.randomUUID();
@@ -404,8 +406,10 @@ Deno.serve(async (req) => {
   if ((payload.conversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
     return jsonResponse(400, { error: "conversationHistory too long" });
   }
-  if ((payload.conversationHistory?.length ?? 0) > 0 &&
-    filterValidConversationTurns(payload.conversationHistory).length === 0) {
+  if (
+    (payload.conversationHistory?.length ?? 0) > 0 &&
+    filterValidConversationTurns(payload.conversationHistory).length === 0
+  ) {
     return jsonResponse(400, { error: "no valid conversationHistory turns" });
   }
   if (payload.userMessage.length > MAX_MESSAGE_LENGTH) {
@@ -436,13 +440,14 @@ Deno.serve(async (req) => {
       designContext: {
         ...payload.designContext,
         pattern: payload.designContext?.pattern ?? detected?.pattern ?? null,
-        colors: (payload.designContext?.colors?.length ?? 0) > 0
-          ? payload.designContext!.colors
-          : (detected?.colors.length ?? 0) > 0
-          ? detected!.colors
-          : (payload.designContext?.colors ?? []),
-        ciPlacement: payload.designContext?.ciPlacement ??
-          detected?.ciPlacement ?? null,
+        colors:
+          (payload.designContext?.colors?.length ?? 0) > 0
+            ? payload.designContext!.colors
+            : (detected?.colors.length ?? 0) > 0
+              ? detected!.colors
+              : (payload.designContext?.colors ?? []),
+        ciPlacement:
+          payload.designContext?.ciPlacement ?? detected?.ciPlacement ?? null,
         scale: payload.designContext?.scale ?? detected?.scale ?? null,
       },
     };
@@ -496,13 +501,19 @@ Deno.serve(async (req) => {
           .eq("key", "design_token_cost_gemini_text")
           .single();
         if (textCostError || !textCostData) {
-          console.error("admin_settings 'design_token_cost_gemini_text' 조회 실패:", textCostError);
+          console.error(
+            "admin_settings 'design_token_cost_gemini_text' 조회 실패:",
+            textCostError,
+          );
           console.warn("admin_settings 조회 실패, textCost를 0으로 폴백");
         }
-        const parsedTextCost = textCostData ? parseInt(textCostData.value, 10) : NaN;
-        const textCost = isNaN(parsedTextCost) || parsedTextCost <= 0
-          ? 0
-          : Math.min(parsedTextCost, tokenData.cost);
+        const parsedTextCost = textCostData
+          ? parseInt(textCostData.value, 10)
+          : NaN;
+        const textCost =
+          isNaN(parsedTextCost) || parsedTextCost <= 0
+            ? 0
+            : Math.min(parsedTextCost, tokenData.cost);
         const refundAmount = Math.max(tokenData.cost - textCost, 0);
 
         if (refundAmount > 0) {
@@ -525,20 +536,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    return jsonResponse(
-      200,
-      {
-        aiMessage: textResult.aiMessage,
-        contextChips: textResult.contextChips,
-        imageUrl,
-        remainingTokens,
-      } satisfies GenerateDesignResult & { remainingTokens: number },
-    );
+    return jsonResponse(200, {
+      aiMessage: textResult.aiMessage,
+      contextChips: textResult.contextChips,
+      imageUrl,
+      remainingTokens,
+    } satisfies GenerateDesignResult & { remainingTokens: number });
   } catch (error) {
     return jsonResponse(500, {
-      error: error instanceof Error
-        ? error.message
-        : "Failed to generate design",
+      error:
+        error instanceof Error ? error.message : "Failed to generate design",
     });
   }
 });

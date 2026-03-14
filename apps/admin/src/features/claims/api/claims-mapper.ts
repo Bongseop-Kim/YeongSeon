@@ -1,4 +1,7 @@
-import type { AdminClaimListRowDTO, ClaimStatusLogDTO } from "@yeongseon/shared";
+import type {
+  AdminClaimListRowDTO,
+  ClaimStatusLogDTO,
+} from "@yeongseon/shared";
 import type {
   AdminClaimListItem,
   AdminClaimDetail,
@@ -12,7 +15,9 @@ import type {
 
 // ── Private helpers ────────────────────────────────────────────
 
-function toReturnTracking(dto: AdminClaimListRowDTO): AdminClaimTrackingInfo | null {
+function toReturnTracking(
+  dto: AdminClaimListRowDTO,
+): AdminClaimTrackingInfo | null {
   if (!dto.returnCourierCompany || !dto.returnTrackingNumber) return null;
   return {
     courierCompany: dto.returnCourierCompany,
@@ -20,7 +25,9 @@ function toReturnTracking(dto: AdminClaimListRowDTO): AdminClaimTrackingInfo | n
   };
 }
 
-function toResendTracking(dto: AdminClaimListRowDTO): AdminClaimTrackingInfo | null {
+function toResendTracking(
+  dto: AdminClaimListRowDTO,
+): AdminClaimTrackingInfo | null {
   if (!dto.resendCourierCompany || !dto.resendTrackingNumber) return null;
   return {
     courierCompany: dto.resendCourierCompany,
@@ -55,7 +62,7 @@ function toLinkedOrder(dto: AdminClaimListRowDTO): AdminClaimLinkedOrder {
 // ── List mapper ────────────────────────────────────────────────
 
 export function toAdminClaimListItem(
-  dto: AdminClaimListRowDTO
+  dto: AdminClaimListRowDTO,
 ): AdminClaimListItem {
   return {
     id: dto.id,
@@ -73,7 +80,7 @@ export function toAdminClaimListItem(
 // ── Detail mapper ──────────────────────────────────────────────
 
 export function toAdminClaimDetail(
-  dto: AdminClaimListRowDTO
+  dto: AdminClaimListRowDTO,
 ): AdminClaimDetail {
   return {
     id: dto.id,
@@ -92,11 +99,11 @@ export function toAdminClaimDetail(
     returnTracking: toReturnTracking(dto),
     resendTracking: toResendTracking(dto),
     refundData: dto.refund_data
-      ? {
+      ? ({
           paidTokenAmount: dto.refund_data.paid_token_amount,
           bonusTokenAmount: dto.refund_data.bonus_token_amount,
           refundAmount: dto.refund_data.refund_amount,
-        } satisfies AdminTokenRefundInfo
+        } satisfies AdminTokenRefundInfo)
       : null,
   };
 }
@@ -104,7 +111,7 @@ export function toAdminClaimDetail(
 // ── Status log mapper ─────────────────────────────────────────
 
 export function toAdminClaimStatusLogEntry(
-  dto: ClaimStatusLogDTO
+  dto: ClaimStatusLogDTO,
 ): AdminClaimStatusLogEntry {
   return {
     id: dto.id,

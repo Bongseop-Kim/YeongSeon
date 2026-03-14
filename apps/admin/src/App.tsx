@@ -1,7 +1,13 @@
 import { Refine, Authenticated } from "@refinedev/core";
 import { ThemedLayout, useNotificationProvider } from "@refinedev/antd";
 import routerProvider from "@refinedev/react-router";
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Outlet,
+  Navigate,
+} from "react-router-dom";
 import { App as AntdApp } from "antd";
 import {
   ShoppingOutlined,
@@ -130,10 +136,7 @@ export default function App() {
           <Routes>
             <Route
               element={
-                <Authenticated
-                  key="auth"
-                  fallback={<Navigate to="/login" />}
-                >
+                <Authenticated key="auth" fallback={<Navigate to="/login" />}>
                   <AppLayout />
                 </Authenticated>
               }
@@ -148,7 +151,10 @@ export default function App() {
               <Route path="/coupons/create" element={<CouponCreate />} />
               <Route path="/coupons/edit/:id" element={<CouponEdit />} />
               <Route path="/quote-requests" element={<QuoteRequestList />} />
-              <Route path="/quote-requests/show/:id" element={<QuoteRequestShow />} />
+              <Route
+                path="/quote-requests/show/:id"
+                element={<QuoteRequestShow />}
+              />
               <Route path="/claims" element={<ClaimList />} />
               <Route path="/claims/show/:id" element={<ClaimShow />} />
               <Route path="/customers" element={<CustomerList />} />

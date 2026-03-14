@@ -38,7 +38,7 @@ export const usePopup = () => {
       setPopup(win);
       return win;
     },
-    []
+    [],
   );
 
   const closePopup = useCallback(() => {
@@ -50,10 +50,16 @@ export const usePopup = () => {
 };
 
 export const usePopupChild = () => {
-  const postMessageAndClose = useCallback((message: unknown, targetOrigin?: string) => {
-    window.opener?.postMessage(message, targetOrigin || window.location.origin);
-    window.close();
-  }, []);
+  const postMessageAndClose = useCallback(
+    (message: unknown, targetOrigin?: string) => {
+      window.opener?.postMessage(
+        message,
+        targetOrigin || window.location.origin,
+      );
+      window.close();
+    },
+    [],
+  );
 
   return { postMessageAndClose };
 };

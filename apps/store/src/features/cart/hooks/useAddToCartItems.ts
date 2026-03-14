@@ -19,7 +19,7 @@ export function useAddToCartItems() {
 
   async function addItemsToCart(
     product: Product,
-    { selectedOptions, baseQuantity, hasOptions }: AddToCartItemsOptions
+    { selectedOptions, baseQuantity, hasOptions }: AddToCartItemsOptions,
   ): Promise<AddToCartItemsResult> {
     if (hasOptions) {
       const results = await Promise.allSettled(
@@ -28,11 +28,15 @@ export function useAddToCartItems() {
             option: selectedOption.option,
             quantity: selectedOption.quantity,
             showModal: false,
-          })
-        )
+          }),
+        ),
       );
       const failed = results.filter((r) => r.status === "rejected").length;
-      return { succeeded: results.length - failed, failed, total: results.length };
+      return {
+        succeeded: results.length - failed,
+        failed,
+        total: results.length,
+      };
     }
 
     const [result] = await Promise.allSettled([

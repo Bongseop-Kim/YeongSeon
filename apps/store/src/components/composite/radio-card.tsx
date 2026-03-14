@@ -24,17 +24,25 @@ export function RadioCard({
   return (
     <Label
       htmlFor={id}
-      className={cn("block h-full cursor-pointer", disabled && "cursor-not-allowed")}
+      className={cn(
+        "block h-full cursor-pointer",
+        disabled && "cursor-not-allowed",
+      )}
     >
-      <RadioGroupItem value={value} id={id} disabled={disabled} className="sr-only" />
+      <RadioGroupItem
+        value={value}
+        id={id}
+        disabled={disabled}
+        className="sr-only"
+      />
       <Card
         className={cn(
           "h-full",
           disabled
             ? "border-zinc-100 bg-zinc-50"
             : selected
-            ? "border-zinc-900 bg-zinc-50"
-            : "hover:border-zinc-400",
+              ? "border-zinc-900 bg-zinc-50"
+              : "hover:border-zinc-400",
           className,
         )}
       >

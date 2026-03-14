@@ -1,5 +1,8 @@
 import { supabase } from "@/lib/supabase";
-import type { UserProfile, MarketingConsent } from "@/features/my-page/types/profile";
+import type {
+  UserProfile,
+  MarketingConsent,
+} from "@/features/my-page/types/profile";
 import type { ProfileRecord } from "@/features/my-page/types/dto/profile";
 import { isRecord, normalizeMarketingConsent } from "./profile-mapper";
 
@@ -133,7 +136,9 @@ export const updateMarketingConsent = async (
     throw new Error("로그인이 필요합니다.");
   }
 
-  const currentMetadata = isRecord(user.user_metadata) ? user.user_metadata : {};
+  const currentMetadata = isRecord(user.user_metadata)
+    ? user.user_metadata
+    : {};
   const nextConsent = normalizeMarketingConsent(input);
 
   const { data, error } = await supabase.auth.updateUser({

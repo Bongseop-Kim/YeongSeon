@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Typography, Spin, Result } from "antd";
-import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW, CUSTOM_SAMPLE_FLOW, CUSTOM_SAMPLE_ROLLBACK_FLOW } from "@yeongseon/shared";
+import {
+  ORDER_STATUS_FLOW,
+  ORDER_ROLLBACK_FLOW,
+  CUSTOM_SAMPLE_FLOW,
+  CUSTOM_SAMPLE_ROLLBACK_FLOW,
+} from "@yeongseon/shared";
 import { useDefaultCourier } from "@/features/settings/api/settings-query";
 import {
   useAdminOrderDetail,
@@ -20,7 +25,10 @@ import { TrackingSection } from "./tracking-section";
 import { OrderItemsTable } from "./order-items-table";
 import { StatusLogTable } from "./status-log-table";
 import { RelatedOrdersSection } from "@/features/orders/components/related-orders-section";
-import type { AdminCustomOrderItem, AdminReformOrderItem } from "../types/admin-order";
+import type {
+  AdminCustomOrderItem,
+  AdminReformOrderItem,
+} from "../types/admin-order";
 
 const { Title } = Typography;
 
@@ -33,33 +41,57 @@ export function OrderDetailSection() {
   const { logs } = useAdminOrderStatusLogs(orderId);
   const defaultCourier = useDefaultCourier();
 
-  const { isUpdating, changeStatus, rollback } = useOrderStatusUpdate(orderId, refetch);
+  const { isUpdating, changeStatus, rollback } = useOrderStatusUpdate(
+    orderId,
+    refetch,
+  );
   const { saveTracking, isPending: trackingPending } = useTrackingSave(refetch);
-  const { courierCompany, setCourierCompany, trackingNumber, setTrackingNumber } =
-    useTrackingState(order, defaultCourier);
+  const {
+    courierCompany,
+    setCourierCompany,
+    trackingNumber,
+    setTrackingNumber,
+  } = useTrackingState(order, defaultCourier);
 
   const [statusMemo, setStatusMemo] = useState("");
 
   const customItems = items.filter(
-    (i): i is AdminCustomOrderItem => i.type === "custom"
+    (i): i is AdminCustomOrderItem => i.type === "custom",
   );
   const reformItems = items.filter(
-    (i): i is AdminReformOrderItem => i.type === "reform"
+    (i): i is AdminReformOrderItem => i.type === "reform",
   );
 
-  const customSampleType = customItems.find((i) => i.customData?.sample)?.customData?.sampleType ?? null;
+  const customSampleType =
+    customItems.find((i) => i.customData?.sample)?.customData?.sampleType ??
+    null;
   const statusFlow = customSampleType
     ? (CUSTOM_SAMPLE_FLOW[customSampleType] ?? ORDER_STATUS_FLOW[orderType])
     : ORDER_STATUS_FLOW[orderType];
   const rollbackFlow = customSampleType
-    ? (CUSTOM_SAMPLE_ROLLBACK_FLOW[customSampleType] ?? ORDER_ROLLBACK_FLOW[orderType])
+    ? (CUSTOM_SAMPLE_ROLLBACK_FLOW[customSampleType] ??
+      ORDER_ROLLBACK_FLOW[orderType])
     : ORDER_ROLLBACK_FLOW[orderType];
   const nextStatus = order?.status ? statusFlow[order.status] : undefined;
   const rollbackStatus = order?.status ? rollbackFlow[order.status] : undefined;
 
   if (isLoading) return <Spin />;
-  if (isError) return <Result status="error" title="오류" subTitle="주문 정보를 불러오는 중 오류가 발생했습니다." />;
-  if (!order) return <Result status="404" title="주문 없음" subTitle="주문 정보를 찾을 수 없습니다." />;
+  if (isError)
+    return (
+      <Result
+        status="error"
+        title="오류"
+        subTitle="주문 정보를 불러오는 중 오류가 발생했습니다."
+      />
+    );
+  if (!order)
+    return (
+      <Result
+        status="404"
+        title="주문 없음"
+        subTitle="주문 정보를 찾을 수 없습니다."
+      />
+    );
 
   return (
     <>

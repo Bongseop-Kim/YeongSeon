@@ -26,16 +26,25 @@ export function InquiryDetailSection() {
       <Descriptions bordered column={1} style={{ marginBottom: 24 }}>
         <Descriptions.Item label="제목">{detail.title}</Descriptions.Item>
         <Descriptions.Item label="상태">
-          <Tag color={INQUIRY_STATUS_COLORS[detail.status]}>{detail.status}</Tag>
+          <Tag color={INQUIRY_STATUS_COLORS[detail.status]}>
+            {detail.status}
+          </Tag>
         </Descriptions.Item>
-        <Descriptions.Item label="문의 유형">{detail.category}</Descriptions.Item>
+        <Descriptions.Item label="문의 유형">
+          {detail.category}
+        </Descriptions.Item>
         {detail.category === "상품" && detail.product && (
           <Descriptions.Item label="상품">
             <Space>
               <img
                 src={`${IMAGEKIT_URL_ENDPOINT}${detail.product.image}`}
                 alt={detail.product.name}
-                style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4 }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  objectFit: "cover",
+                  borderRadius: 4,
+                }}
               />
               {detail.product.name}
             </Space>

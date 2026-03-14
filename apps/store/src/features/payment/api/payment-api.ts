@@ -36,7 +36,7 @@ const extractEdgeFunctionErrorMessage = async (
 };
 
 export const confirmPayment = async (
-  request: ConfirmPaymentRequest
+  request: ConfirmPaymentRequest,
 ): Promise<ConfirmPaymentResponse> => {
   if (!request.paymentKey || !request.orderId) {
     throw new Error("결제 정보가 올바르지 않습니다.");

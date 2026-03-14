@@ -26,7 +26,7 @@ interface SearchStore {
     options?: {
       placeholder?: string;
       onSearch?: SearchConfig["onSearch"];
-    }
+    },
   ) => void;
   setQuery: (query: string) => void;
   setDatePreset: (preset: DateFilterPreset) => void;

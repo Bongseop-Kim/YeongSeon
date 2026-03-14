@@ -10,7 +10,7 @@ export interface UpdateQuoteRequestStatusParams {
 }
 
 export async function updateQuoteRequestStatus(
-  params: UpdateQuoteRequestStatusParams
+  params: UpdateQuoteRequestStatusParams,
 ): Promise<void> {
   const { error } = await supabase.rpc("admin_update_quote_request_status", {
     p_quote_request_id: params.quoteRequestId,

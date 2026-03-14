@@ -2,12 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { ROUTES } from "@/constants/ROUTES";
-import { useCreateCustomOrder } from "../api/custom-order-query";
-import { toCreateCustomOrderInput } from "../api/custom-order-mapper";
+import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
+import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
 import { useCreateQuoteRequest } from "@/features/quote-request/api/quote-request-query";
 import { toCreateQuoteRequestInput } from "@/features/quote-request/api/quote-request-mapper";
-import type { QuoteOrderOptions } from "../types/order";
-import type { ImageUploadHook } from "../types/image-upload";
+import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
 
 interface UseCustomOrderSubmitParams {

@@ -1,13 +1,7 @@
 import type { Product, ProductOption } from "../types/view/product";
 import type { AppliedCoupon, Coupon } from "../types/view/coupon";
-import type {
-  ProductOrderItem,
-  ReformOrderItem,
-} from "../types/view/order";
-import type {
-  ProductCartItem,
-  ReformCartItem,
-} from "../types/view/cart";
+import type { ProductOrderItem, ReformOrderItem } from "../types/view/order";
+import type { ProductCartItem, ReformCartItem } from "../types/view/cart";
 
 // ── Product ──
 

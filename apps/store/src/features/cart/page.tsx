@@ -45,7 +45,12 @@ export default function CartPage() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const { openCouponSelect } = useCouponSelect();
 
-  const { data: similarProducts = [], isLoading: similarLoading, isError: similarError, refetch: refetchSimilar } = useProducts({ sortOption: "popular", limit: 8 });
+  const {
+    data: similarProducts = [],
+    isLoading: similarLoading,
+    isError: similarError,
+    refetch: refetchSimilar,
+  } = useProducts({ sortOption: "popular", limit: 8 });
   const { data: reformPricing } = useReformPricing();
 
   useEffect(() => {
@@ -80,7 +85,9 @@ export default function CartPage() {
     confirm("선택한 상품을 삭제하시겠습니까?", () => {
       void (async () => {
         try {
-          await Promise.all(selectedItems.map((itemId) => removeFromCart(itemId)));
+          await Promise.all(
+            selectedItems.map((itemId) => removeFromCart(itemId)),
+          );
           setSelectedItems([]);
         } catch (error) {
           console.error(error);
@@ -212,7 +219,7 @@ export default function CartPage() {
       confirm(
         selectedCoupon
           ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`
-          : "쿠폰 사용을 취소했습니다."
+          : "쿠폰 사용을 취소했습니다.",
       );
     } catch (error) {
       console.error(error);
@@ -222,7 +229,7 @@ export default function CartPage() {
 
   const selectedCartItems = useMemo(
     () => items.filter((item) => selectedItems.includes(item.id)),
-    [items, selectedItems]
+    [items, selectedItems],
   );
 
   const handleOrder = () => {
@@ -241,14 +248,13 @@ export default function CartPage() {
   // 선택된 상품의 총액 계산 (수선 아이템 포함 시 택배비 반영)
   const selectedTotals = useMemo(() => {
     const hasReformItems = selectedCartItems.some(
-      (item) => item.type === "reform"
+      (item) => item.type === "reform",
     );
     const shippingCost = hasReformItems
       ? (reformPricing?.shippingCost ?? 0)
       : 0;
     return calculateOrderSummary(selectedCartItems, shippingCost);
   }, [selectedCartItems, reformPricing]);
-
 
   const isAllChecked =
     items.length > 0 && selectedItems.length === items.length;
@@ -293,18 +299,22 @@ export default function CartPage() {
               selectedItems={selectedItems}
               onSelectItem={handleSelectItem}
               onRemoveProductItem={(itemId) => {
-                confirm("상품을 삭제하시겠습니까?", () => {
-                  void (async () => {
-                    try {
-                      await removeFromCart(itemId);
-                    } catch (error) {
-                      console.error(error);
-                    }
-                  })();
-                }, {
-                  confirmText: "삭제",
-                  cancelText: "취소",
-                });
+                confirm(
+                  "상품을 삭제하시겠습니까?",
+                  () => {
+                    void (async () => {
+                      try {
+                        await removeFromCart(itemId);
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    })();
+                  },
+                  {
+                    confirmText: "삭제",
+                    cancelText: "취소",
+                  },
+                );
               }}
               onRemoveReformItem={(itemId) => {
                 confirm(

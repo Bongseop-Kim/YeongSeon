@@ -34,7 +34,7 @@ export function PlanCard({
         "relative flex flex-col rounded-2xl border bg-white p-7 transition-all duration-200",
         popular
           ? "border-zinc-900 shadow-md hover:shadow-lg"
-          : "border-zinc-200 hover:border-zinc-400 hover:shadow-sm"
+          : "border-zinc-200 hover:border-zinc-400 hover:shadow-sm",
       )}
     >
       {popular && (
@@ -51,7 +51,9 @@ export function PlanCard({
         <span className="text-2xl font-semibold text-zinc-900">
           {tokenAmount != null ? tokenAmount.toLocaleString() : "–"}
         </span>
-        {tokenAmount != null && <span className="text-sm text-zinc-500">토큰</span>}
+        {tokenAmount != null && (
+          <span className="text-sm text-zinc-500">토큰</span>
+        )}
       </div>
 
       {/* 가격 */}
@@ -59,7 +61,9 @@ export function PlanCard({
         <span className="text-4xl font-bold text-zinc-900">
           {price != null ? price.toLocaleString() : "–"}
         </span>
-        {price != null && <span className="mb-1 text-sm text-zinc-500">원</span>}
+        {price != null && (
+          <span className="mb-1 text-sm text-zinc-500">원</span>
+        )}
       </div>
 
       {/* 설명 */}
@@ -72,7 +76,11 @@ export function PlanCard({
         disabled={selected && isPending}
         onClick={() => onSelect(planKey)}
       >
-        {selected && isPending ? "준비 중..." : selected ? "선택됨" : "충전하기"}
+        {selected && isPending
+          ? "준비 중..."
+          : selected
+            ? "선택됨"
+            : "충전하기"}
       </Button>
 
       {/* 구분선 */}
@@ -81,7 +89,10 @@ export function PlanCard({
       {/* 특징 리스트 */}
       <ul className="flex flex-col gap-3">
         {features.map((feature) => (
-          <li key={feature} className="flex items-start gap-2.5 text-sm text-zinc-700">
+          <li
+            key={feature}
+            className="flex items-start gap-2.5 text-sm text-zinc-700"
+          >
             <Check className="mt-0.5 size-4 shrink-0 text-zinc-900" />
             {feature}
           </li>

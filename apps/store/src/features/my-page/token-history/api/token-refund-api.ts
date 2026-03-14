@@ -1,7 +1,16 @@
 import { supabase } from "@/lib/supabase";
 
-export type TokenRefundStatus = "pending" | "approved" | "rejected" | "cancelled";
-export type NotRefundableReason = "tokens_used" | "pending_refund" | "approved_refund" | "active_refund" | "no_paid_tokens";
+export type TokenRefundStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "cancelled";
+export type NotRefundableReason =
+  | "tokens_used"
+  | "pending_refund"
+  | "approved_refund"
+  | "active_refund"
+  | "no_paid_tokens";
 
 export interface RefundableTokenOrder {
   orderId: string;
@@ -41,7 +50,9 @@ interface RequestRefundDTO {
   bonus_token_amount: number;
 }
 
-export async function getRefundableTokenOrders(): Promise<RefundableTokenOrder[]> {
+export async function getRefundableTokenOrders(): Promise<
+  RefundableTokenOrder[]
+> {
   const { data, error } = await supabase.rpc("get_refundable_token_orders");
 
   if (error) {
@@ -50,21 +61,21 @@ export async function getRefundableTokenOrders(): Promise<RefundableTokenOrder[]
 
   const rows = (data ?? []) as RefundableOrderDTO[];
   return rows.map((r) => ({
-    orderId:              r.order_id,
-    orderNumber:          r.order_number,
-    createdAt:            r.created_at,
-    totalPrice:           r.total_price,
-    paidTokensGranted:    r.paid_tokens_granted,
-    bonusTokensGranted:   r.bonus_tokens_granted,
-    isRefundable:         r.is_refundable,
-    notRefundableReason:  r.not_refundable_reason,
-    pendingRequestId:     r.pending_request_id,
+    orderId: r.order_id,
+    orderNumber: r.order_number,
+    createdAt: r.created_at,
+    totalPrice: r.total_price,
+    paidTokensGranted: r.paid_tokens_granted,
+    bonusTokensGranted: r.bonus_tokens_granted,
+    isRefundable: r.is_refundable,
+    notRefundableReason: r.not_refundable_reason,
+    pendingRequestId: r.pending_request_id,
   }));
 }
 
 export async function requestTokenRefund(
   orderId: string,
-  reason?: string
+  reason?: string,
 ): Promise<TokenRefundRequest> {
   const { data, error } = await supabase.rpc("request_token_refund", {
     p_order_id: orderId,
@@ -81,9 +92,9 @@ export async function requestTokenRefund(
 
   const dto = data as RequestRefundDTO;
   return {
-    requestId:        dto.request_id,
-    refundAmount:     dto.refund_amount,
-    paidTokenAmount:  dto.paid_token_amount,
+    requestId: dto.request_id,
+    refundAmount: dto.refund_amount,
+    paidTokenAmount: dto.paid_token_amount,
     bonusTokenAmount: dto.bonus_token_amount,
   };
 }

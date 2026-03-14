@@ -55,13 +55,18 @@ export function useAdminQuoteRequestDetail() {
     ? toAdminQuoteRequestDetail(rawData)
     : undefined;
 
-  return { detail, refetch: query.refetch, isLoading: query.isLoading, error: query.error };
+  return {
+    detail,
+    refetch: query.refetch,
+    isLoading: query.isLoading,
+    error: query.error,
+  };
 }
 
 // ── Status logs ────────────────────────────────────────────────
 
 export function useAdminQuoteRequestStatusLogs(
-  quoteRequestId: string | undefined
+  quoteRequestId: string | undefined,
 ) {
   const { result } = useList<QuoteRequestStatusLogDTO>({
     resource: "admin_quote_request_status_log_view",
@@ -73,7 +78,7 @@ export function useAdminQuoteRequestStatusLogs(
   });
 
   const logs: AdminQuoteRequestStatusLog[] = (result.data ?? []).map(
-    toAdminQuoteRequestStatusLog
+    toAdminQuoteRequestStatusLog,
   );
 
   return { logs };
@@ -81,7 +86,9 @@ export function useAdminQuoteRequestStatusLogs(
 
 // ── Form state ─────────────────────────────────────────────────
 
-export function useQuoteRequestFormState(detail: AdminQuoteRequestDetail | undefined) {
+export function useQuoteRequestFormState(
+  detail: AdminQuoteRequestDetail | undefined,
+) {
   const [quotedAmount, setQuotedAmount] = useState<number | null>(null);
   const [quoteConditions, setQuoteConditions] = useState("");
   const [adminMemo, setAdminMemo] = useState("");
@@ -120,7 +127,7 @@ export function useQuoteRequestStatusUpdate(
   detail: AdminQuoteRequestDetail | undefined,
   formValues: QuoteRequestFormValues,
   refetch: () => void,
-  resetStatusMemo: () => void
+  resetStatusMemo: () => void,
 ) {
   const invalidate = useInvalidate();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -148,7 +155,7 @@ export function useQuoteRequestStatusUpdate(
       });
     } catch (err) {
       message.error(
-        `상태 변경 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+        `상태 변경 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
       );
     } finally {
       isUpdatingRef.current = false;

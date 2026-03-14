@@ -44,7 +44,7 @@ export const ImageViewer = React.forwardRef<HTMLDivElement, ImageViewerProps>(
         <div
           className={cn(
             "flex items-center justify-center text-gray-500 w-[107px] h-[129px] border border-dashed border-gray-300",
-            className
+            className,
           )}
         >
           이미지가 없습니다
@@ -74,7 +74,7 @@ export const ImageViewer = React.forwardRef<HTMLDivElement, ImageViewerProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
 ImageViewer.displayName = "ImageViewer";

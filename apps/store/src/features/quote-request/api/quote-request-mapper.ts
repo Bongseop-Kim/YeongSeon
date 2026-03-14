@@ -33,7 +33,7 @@ interface ToCreateQuoteRequestInput {
 }
 
 export const toCreateQuoteRequestInput = (
-  input: ToCreateQuoteRequestInput
+  input: ToCreateQuoteRequestInput,
 ): CreateQuoteRequestRequest => ({
   shippingAddressId: input.shippingAddressId,
   options: toCreateCustomOrderOptionsInput(input.options),
@@ -47,7 +47,7 @@ export const toCreateQuoteRequestInput = (
 });
 
 export const toCreateQuoteRequestInputDto = (
-  request: CreateQuoteRequestRequest
+  request: CreateQuoteRequestRequest,
 ): CreateQuoteRequestRequestDto => ({
   shipping_address_id: request.shippingAddressId,
   options: {
@@ -111,7 +111,7 @@ export const isContactMethod = (value: unknown): value is ContactMethod =>
   value === "email" || value === "kakao" || value === "phone";
 
 export const isQuoteRequestStatus = (
-  value: unknown
+  value: unknown,
 ): value is QuoteRequestStatus =>
   value === "요청" ||
   value === "견적발송" ||
@@ -120,16 +120,20 @@ export const isQuoteRequestStatus = (
   value === "종료";
 
 export const parseQuoteRequestListRows = (
-  data: unknown
+  data: unknown,
 ): QuoteRequestListRowDTO[] => {
   if (data == null) return [];
   if (!Array.isArray(data)) {
-    throw new Error("견적 요청 목록 응답이 올바르지 않습니다: 배열이 아닙니다.");
+    throw new Error(
+      "견적 요청 목록 응답이 올바르지 않습니다: 배열이 아닙니다.",
+    );
   }
 
   return data.map((row, index) => {
     if (!isRecord(row)) {
-      throw new Error(`견적 요청 행(${index})이 올바르지 않습니다: 객체가 아닙니다.`);
+      throw new Error(
+        `견적 요청 행(${index})이 올바르지 않습니다: 객체가 아닙니다.`,
+      );
     }
 
     if (
@@ -141,25 +145,25 @@ export const parseQuoteRequestListRows = (
       typeof row.created_at !== "string"
     ) {
       throw new Error(
-        `견적 요청 행(${index})이 올바르지 않습니다: 필수 필드(id, quoteNumber, date, quantity, contactName, created_at) 누락.`
+        `견적 요청 행(${index})이 올바르지 않습니다: 필수 필드(id, quoteNumber, date, quantity, contactName, created_at) 누락.`,
       );
     }
 
     if (!isQuoteRequestStatus(row.status)) {
       throw new Error(
-        `견적 요청 행(${index})이 올바르지 않습니다: status 값(${String(row.status)})이 허용된 상태가 아닙니다.`
+        `견적 요청 행(${index})이 올바르지 않습니다: status 값(${String(row.status)})이 허용된 상태가 아닙니다.`,
       );
     }
 
     if (!isContactMethod(row.contactMethod)) {
       throw new Error(
-        `견적 요청 행(${index})이 올바르지 않습니다: contactMethod 값(${String(row.contactMethod)})이 허용된 값이 아닙니다.`
+        `견적 요청 행(${index})이 올바르지 않습니다: contactMethod 값(${String(row.contactMethod)})이 허용된 값이 아닙니다.`,
       );
     }
 
     if (row.quotedAmount !== null && typeof row.quotedAmount !== "number") {
       throw new Error(
-        `견적 요청 행(${index})이 올바르지 않습니다: quotedAmount는 숫자 또는 null이어야 합니다.`
+        `견적 요청 행(${index})이 올바르지 않습니다: quotedAmount는 숫자 또는 null이어야 합니다.`,
       );
     }
 
@@ -178,7 +182,7 @@ export const parseQuoteRequestListRows = (
 };
 
 export const toQuoteRequestListItem = (
-  row: QuoteRequestListRowDTO
+  row: QuoteRequestListRowDTO,
 ): QuoteRequestListItem => ({
   id: row.id,
   quoteNumber: row.quoteNumber,
@@ -191,7 +195,7 @@ export const toQuoteRequestListItem = (
 });
 
 export const toQuoteRequestOptions = (
-  raw: Record<string, unknown>
+  raw: Record<string, unknown>,
 ): QuoteRequestOptions => ({
   tieType: typeof raw.tie_type === "string" ? raw.tie_type : "",
   interlining: typeof raw.interlining === "string" ? raw.interlining : "",
@@ -217,18 +221,20 @@ export const toReferenceImageUrls = (value: unknown): string[] => {
 
   return value
     .map((image) =>
-      isRecord(image) && typeof image.url === "string" ? image.url : null
+      isRecord(image) && typeof image.url === "string" ? image.url : null,
     )
     .filter((url): url is string => url !== null);
 };
 
 export const parseQuoteRequestDetailRow = (
-  data: unknown
+  data: unknown,
 ): QuoteRequestDetailRowDTO | null => {
   if (data == null) return null;
 
   if (!isRecord(data)) {
-    throw new Error("견적 요청 상세 응답이 올바르지 않습니다: 객체가 아닙니다.");
+    throw new Error(
+      "견적 요청 상세 응답이 올바르지 않습니다: 객체가 아닙니다.",
+    );
   }
 
   if (
@@ -242,35 +248,40 @@ export const parseQuoteRequestDetailRow = (
     typeof data.contactValue !== "string"
   ) {
     throw new Error(
-      "견적 요청 상세 응답이 올바르지 않습니다: 필수 필드가 누락되었습니다."
+      "견적 요청 상세 응답이 올바르지 않습니다: 필수 필드가 누락되었습니다.",
     );
   }
 
   if (!isQuoteRequestStatus(data.status)) {
     throw new Error(
-      `견적 요청 상세 응답이 올바르지 않습니다: status 값(${String(data.status)})이 허용된 상태가 아닙니다.`
+      `견적 요청 상세 응답이 올바르지 않습니다: status 값(${String(data.status)})이 허용된 상태가 아닙니다.`,
     );
   }
 
   if (!isContactMethod(data.contactMethod)) {
     throw new Error(
-      `견적 요청 상세 응답이 올바르지 않습니다: contactMethod 값(${String(data.contactMethod)})이 허용된 값이 아닙니다.`
+      `견적 요청 상세 응답이 올바르지 않습니다: contactMethod 값(${String(data.contactMethod)})이 허용된 값이 아닙니다.`,
     );
   }
 
   if (!isRecord(data.options)) {
-    throw new Error("견적 요청 상세 응답이 올바르지 않습니다: options가 객체가 아닙니다.");
+    throw new Error(
+      "견적 요청 상세 응답이 올바르지 않습니다: options가 객체가 아닙니다.",
+    );
   }
 
   if (data.quotedAmount !== null && typeof data.quotedAmount !== "number") {
     throw new Error(
-      "견적 요청 상세 응답이 올바르지 않습니다: quotedAmount는 숫자 또는 null이어야 합니다."
+      "견적 요청 상세 응답이 올바르지 않습니다: quotedAmount는 숫자 또는 null이어야 합니다.",
     );
   }
 
-  if (data.quoteConditions !== null && typeof data.quoteConditions !== "string") {
+  if (
+    data.quoteConditions !== null &&
+    typeof data.quoteConditions !== "string"
+  ) {
     throw new Error(
-      "견적 요청 상세 응답이 올바르지 않습니다: quoteConditions는 문자열 또는 null이어야 합니다."
+      "견적 요청 상세 응답이 올바르지 않습니다: quoteConditions는 문자열 또는 null이어야 합니다.",
     );
   }
 
@@ -293,7 +304,7 @@ export const parseQuoteRequestDetailRow = (
 };
 
 export const toQuoteRequestDetail = (
-  row: QuoteRequestDetailRowDTO
+  row: QuoteRequestDetailRowDTO,
 ): QuoteRequestDetail => ({
   id: row.id,
   quoteNumber: row.quoteNumber,

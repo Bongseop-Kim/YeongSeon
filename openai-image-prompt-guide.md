@@ -18,12 +18,12 @@
 
 ## 어떤 API를 쓸지
 
-| 상황 | 권장 API | 이유 |
-|---|---|---|
-| 텍스트 한 번 넣고 이미지 1장 생성 | `Image API` | 가장 단순함 |
-| 기존 이미지를 받아 편집 | `Image API` 또는 `Responses API` | 단발 편집은 Image API로 충분 |
-| "이전 결과에서 색만 바꿔줘" 같은 대화형 수정 | `Responses API` | 멀티턴 컨텍스트 유지 가능 |
-| 디버깅하면서 모델이 실제로 어떤 프롬프트로 재작성했는지 확인 | `Responses API` | `revised_prompt` 확인 가능 |
+| 상황                                                         | 권장 API                         | 이유                         |
+| ------------------------------------------------------------ | -------------------------------- | ---------------------------- |
+| 텍스트 한 번 넣고 이미지 1장 생성                            | `Image API`                      | 가장 단순함                  |
+| 기존 이미지를 받아 편집                                      | `Image API` 또는 `Responses API` | 단발 편집은 Image API로 충분 |
+| "이전 결과에서 색만 바꿔줘" 같은 대화형 수정                 | `Responses API`                  | 멀티턴 컨텍스트 유지 가능    |
+| 디버깅하면서 모델이 실제로 어떤 프롬프트로 재작성했는지 확인 | `Responses API`                  | `revised_prompt` 확인 가능   |
 
 OpenAI 공식 문서도 다음처럼 구분한다:
 
@@ -34,11 +34,11 @@ OpenAI 공식 문서도 다음처럼 구분한다:
 
 ## 모델 선택
 
-| 모델 | 추천도 | 용도 |
-|---|---|---|
-| `gpt-image-1.5` | 가장 추천 | 품질, 지시 이행, 편집 제어 모두 최고 |
-| `gpt-image-1` | 가능 | 이전 세대 GPT Image |
-| `gpt-image-1-mini` | 비용 우선일 때 | 저렴하지만 품질 우선 작업엔 불리 |
+| 모델               | 추천도         | 용도                                 |
+| ------------------ | -------------- | ------------------------------------ |
+| `gpt-image-1.5`    | 가장 추천      | 품질, 지시 이행, 편집 제어 모두 최고 |
+| `gpt-image-1`      | 가능           | 이전 세대 GPT Image                  |
+| `gpt-image-1-mini` | 비용 우선일 때 | 저렴하지만 품질 우선 작업엔 불리     |
 
 ### 참고
 
@@ -224,11 +224,11 @@ Keep the base fabric from Image 1 unchanged.
 
 `Responses API`의 이미지 생성 도구에서는 `action`을 쓸 수 있다.
 
-| 값 | 의미 |
-|---|---|
-| `auto` | 생성/편집을 모델이 판단, 공식 권장 |
-| `generate` | 항상 새 이미지 생성 |
-| `edit` | 반드시 편집 수행, 입력 이미지가 없으면 에러 |
+| 값         | 의미                                        |
+| ---------- | ------------------------------------------- |
+| `auto`     | 생성/편집을 모델이 판단, 공식 권장          |
+| `generate` | 항상 새 이미지 생성                         |
+| `edit`     | 반드시 편집 수행, 입력 이미지가 없으면 에러 |
 
 실무적으로는:
 
@@ -306,23 +306,23 @@ input_fidelity: "high"
 
 OpenAI 공식 문서 기준 GPT Image 출력 옵션:
 
-| 항목 | 값 |
-|---|---|
-| `size` | `1024x1024`, `1536x1024`, `1024x1536`, `auto` |
-| `quality` | `low`, `medium`, `high`, `auto` |
-| `background` | `opaque`, `transparent`, `auto` |
-| `output_format` | `png`, `jpeg`, `webp` |
-| `output_compression` | `jpeg`, `webp`에서 0~100 |
+| 항목                 | 값                                            |
+| -------------------- | --------------------------------------------- |
+| `size`               | `1024x1024`, `1536x1024`, `1024x1536`, `auto` |
+| `quality`            | `low`, `medium`, `high`, `auto`               |
+| `background`         | `opaque`, `transparent`, `auto`               |
+| `output_format`      | `png`, `jpeg`, `webp`                         |
+| `output_compression` | `jpeg`, `webp`에서 0~100                      |
 
 ### 실무 추천
 
-| 용도 | 추천 설정 |
-|---|---|
-| 빠른 초안 | `quality: "low"` |
-| 일반 프로덕션 | `quality: "medium"` |
-| 텍스트 많은 이미지 / 정교한 결과 | `quality: "high"` |
-| 투명 배경 에셋 | `background: "transparent"`, `png` 또는 `webp` |
-| 속도 우선 | `jpeg` |
+| 용도                             | 추천 설정                                      |
+| -------------------------------- | ---------------------------------------------- |
+| 빠른 초안                        | `quality: "low"`                               |
+| 일반 프로덕션                    | `quality: "medium"`                            |
+| 텍스트 많은 이미지 / 정교한 결과 | `quality: "high"`                              |
+| 투명 배경 에셋                   | `background: "transparent"`, `png` 또는 `webp` |
+| 속도 우선                        | `jpeg`                                         |
 
 ### 투명 배경
 
@@ -376,12 +376,12 @@ OpenAI 공식 문서가 명시한 대표 제한:
 
 ### 3. 현재 프롬프트 함수 매핑
 
-| 현재 개념 | OpenAI식 작성 포인트 |
-|---|---|
-| `buildBasePrompt()` | 프레임 전체를 채우는 스워치, 배경 없음, 그림자 없음, 균일 반복 명시 |
-| `buildScalePrompt()` | 숫자 개수보다 `dense micro-print`, `bold oversized repeat` 같은 시각 서술 우선 |
+| 현재 개념                  | OpenAI식 작성 포인트                                                             |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| `buildBasePrompt()`        | 프레임 전체를 채우는 스워치, 배경 없음, 그림자 없음, 균일 반복 명시              |
+| `buildScalePrompt()`       | 숫자 개수보다 `dense micro-print`, `bold oversized repeat` 같은 시각 서술 우선   |
 | `buildCiPlacementPrompt()` | `slightly right of center`, `lower portion`, `small accent`처럼 자연어 위치 지정 |
-| `buildReferencePrompt()` | `Image 1`, `Image 2` 역할 분리 + `input_fidelity: "high"` 결합 |
+| `buildReferencePrompt()`   | `Image 1`, `Image 2` 역할 분리 + `input_fidelity: "high"` 결합                   |
 
 ### 4. CI/참고 이미지가 있을 때
 

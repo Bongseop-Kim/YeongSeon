@@ -22,7 +22,7 @@ export type ConfirmPaymentResponse =
   | TokenPurchaseConfirmPaymentResponse;
 
 const mapOrderItem = (
-  o: Record<string, unknown>
+  o: Record<string, unknown>,
 ): { orderId: string; orderType: string } => {
   if (typeof o.orderId !== "string" || typeof o.orderType !== "string") {
     throw new Error("주문 항목 형식이 올바르지 않습니다");
@@ -31,7 +31,7 @@ const mapOrderItem = (
 };
 
 export const parseConfirmPaymentResponse = (
-  data: unknown
+  data: unknown,
 ): ConfirmPaymentResponse => {
   if (!isRecord(data)) {
     throw new Error("결제 승인 응답이 올바르지 않습니다: 객체가 아닙니다.");
@@ -53,7 +53,7 @@ export const parseConfirmPaymentResponse = (
     orders.map((o, i) => {
       if (!isRecord(o)) {
         throw new Error(
-          `결제 승인 응답이 올바르지 않습니다: ${label}[${i}]가 올바른 객체가 아닙니다.`
+          `결제 승인 응답이 올바르지 않습니다: ${label}[${i}]가 올바른 객체가 아닙니다.`,
         );
       }
       return mapOrderItem(o);

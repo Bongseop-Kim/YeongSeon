@@ -13,7 +13,7 @@ const isExpired = (expiresAt?: string | null) => {
 export const calculateDiscount = (
   price: number,
   appliedCoupon: AppliedCoupon | undefined,
-  qty = 1
+  qty = 1,
 ): number => {
   if (
     !appliedCoupon ||

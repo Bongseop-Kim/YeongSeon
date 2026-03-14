@@ -1,4 +1,8 @@
-import type { AiModel, Attachment, ContextChip } from "@/features/design/types/chat";
+import type {
+  AiModel,
+  Attachment,
+  ContextChip,
+} from "@/features/design/types/chat";
 import type { DesignContext } from "@/features/design/types/design-context";
 import type { DesignTokenHistoryItem } from "@/features/design/types/token-history";
 import { supabase } from "@/lib/supabase";
@@ -73,7 +77,8 @@ export async function aiDesignApi(
     ? await fileToBase64(request.designContext.referenceImage)
     : undefined;
 
-  const functionName = request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
+  const functionName =
+    request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
 
   const { data, error } = await supabase.functions.invoke(functionName, {
     body: {
@@ -88,7 +93,8 @@ export async function aiDesignApi(
       ciImageBase64,
       ciImageMimeType: request.designContext.ciImage?.type || undefined,
       referenceImageBase64,
-      referenceImageMimeType: request.designContext.referenceImage?.type || undefined,
+      referenceImageMimeType:
+        request.designContext.referenceImage?.type || undefined,
     },
   });
 
@@ -97,7 +103,11 @@ export async function aiDesignApi(
     const context = (error as { context?: unknown }).context;
     if (context instanceof Response) {
       try {
-        const body = await context.json() as { error?: string; balance?: number; cost?: number };
+        const body = (await context.json()) as {
+          error?: string;
+          balance?: number;
+          cost?: number;
+        };
         if (body.error === "insufficient_tokens") {
           throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
         }
@@ -117,7 +127,10 @@ export async function aiDesignApi(
     imageUrl: data.imageUrl ?? null,
     tags: getTags(request),
     contextChips: Array.isArray(data.contextChips) ? data.contextChips : [],
-    remainingTokens: typeof data.remainingTokens === "number" ? data.remainingTokens : undefined,
+    remainingTokens:
+      typeof data.remainingTokens === "number"
+        ? data.remainingTokens
+        : undefined,
   };
 }
 
@@ -137,12 +150,14 @@ export async function getDesignTokenBalance(): Promise<DesignTokenBalance> {
   const raw = data as { total?: number; paid?: number; bonus?: number } | null;
   return {
     total: raw?.total ?? 0,
-    paid:  raw?.paid ?? 0,
+    paid: raw?.paid ?? 0,
     bonus: raw?.bonus ?? 0,
   };
 }
 
-export async function getDesignTokenHistory(): Promise<DesignTokenHistoryItem[]> {
+export async function getDesignTokenHistory(): Promise<
+  DesignTokenHistoryItem[]
+> {
   const { data, error } = await supabase
     .from("design_tokens")
     .select("*")
@@ -152,5 +167,7 @@ export async function getDesignTokenHistory(): Promise<DesignTokenHistoryItem[]>
     throw new Error(`토큰 내역 조회 실패: ${error.message}`);
   }
 
-  return ((data as DesignTokenRow[] | null) ?? []).map(toDesignTokenHistoryItem);
+  return ((data as DesignTokenRow[] | null) ?? []).map(
+    toDesignTokenHistoryItem,
+  );
 }

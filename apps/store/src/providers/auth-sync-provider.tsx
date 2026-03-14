@@ -64,7 +64,7 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
         ) {
           console.log("세션이 자동으로 갱신되었습니다.");
         }
-      }
+      },
     );
 
     return () => {

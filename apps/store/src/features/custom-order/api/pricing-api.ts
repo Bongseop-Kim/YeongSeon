@@ -5,7 +5,9 @@ export interface PricingConstantRow {
   amount: number;
 }
 
-export const fetchPricingConstants = async (): Promise<PricingConstantRow[]> => {
+export const fetchPricingConstants = async (): Promise<
+  PricingConstantRow[]
+> => {
   const { data, error } = await supabase
     .from("pricing_constants")
     .select("key, amount");

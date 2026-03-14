@@ -1,6 +1,12 @@
 import { supabase } from "@/lib/supabase";
-import type { InquiryRowDTO, InquiryProductDTO } from "@/features/my-page/inquiry/types/dto/inquiry";
-import type { InquiryItem, InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-item";
+import type {
+  InquiryRowDTO,
+  InquiryProductDTO,
+} from "@/features/my-page/inquiry/types/dto/inquiry";
+import type {
+  InquiryItem,
+  InquiryCategory,
+} from "@/features/my-page/inquiry/types/inquiry-item";
 import { toInquiryView } from "./inquiry-mapper";
 
 const INQUIRY_SELECT = `
@@ -63,7 +69,7 @@ export const deleteInquiry = async (id: string): Promise<void> => {
 
 /** 상품 검색 (문의 폼용) */
 export const searchProductsForInquiry = async (
-  query: string
+  query: string,
 ): Promise<InquiryProductDTO[]> => {
   let req = supabase
     .from("products")

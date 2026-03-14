@@ -36,7 +36,13 @@ export function ProductActionButtons({
             <span className="text-xs text-zinc-600 -mt-1">{likes}</span>
           </div>
         </Button>
-        <Button type="button" onClick={onOrder} size="xl" className="flex-1" disabled={disabled}>
+        <Button
+          type="button"
+          onClick={onOrder}
+          size="xl"
+          className="flex-1"
+          disabled={disabled}
+        >
           {disabled ? "품절" : "구매하기"}
         </Button>
       </div>
@@ -68,7 +74,13 @@ export function ProductActionButtons({
       >
         {disabled ? "품절" : "장바구니"}
       </Button>
-      <Button type="button" onClick={onOrder} size="xl" className="flex-1" disabled={disabled}>
+      <Button
+        type="button"
+        onClick={onOrder}
+        size="xl"
+        className="flex-1"
+        disabled={disabled}
+      >
         {disabled ? "품절" : "주문하기"}
       </Button>
     </div>

@@ -14,11 +14,14 @@ interface TokenBalanceRpcRow {
 }
 
 export async function getCustomerTokenBalances(
-  userIds: string[]
+  userIds: string[],
 ): Promise<AdminCustomerTokenBalanceRow[]> {
-  const { data, error } = await supabase.rpc("get_design_token_balances_admin", {
-    p_user_ids: userIds,
-  });
+  const { data, error } = await supabase.rpc(
+    "get_design_token_balances_admin",
+    {
+      p_user_ids: userIds,
+    },
+  );
 
   if (error) {
     throw new Error(error.message);
@@ -38,7 +41,9 @@ export async function getCustomerTokenBalances(
   });
 }
 
-export async function getCustomerTokenHistory(userId: string): Promise<DesignTokenRow[]> {
+export async function getCustomerTokenHistory(
+  userId: string,
+): Promise<DesignTokenRow[]> {
   const { data, error } = await supabase
     .from("design_tokens")
     .select("*")

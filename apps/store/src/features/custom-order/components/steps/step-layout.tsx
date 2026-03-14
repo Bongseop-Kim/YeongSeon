@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-
 interface StepLayoutProps {
   guideTitle: string;
   guideItems: string[];
@@ -20,9 +19,7 @@ export const StepLayout = ({
     <div className="grid grid-cols-1 lg:grid-cols-[250px_minmax(0,1fr)]">
       <Card>
         <CardHeader>
-          <CardTitle>
-            {guideTitle}
-          </CardTitle>
+          <CardTitle>{guideTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="space-y-1.5">

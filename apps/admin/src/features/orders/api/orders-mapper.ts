@@ -37,8 +37,7 @@ class ValidationError extends Error {
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
-const str = (v: unknown): string | null =>
-  typeof v === "string" ? v : null;
+const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
 
 const bool = (v: unknown): boolean => v === true;
 
@@ -48,7 +47,7 @@ const isFiniteNumber = (v: unknown): v is number =>
 // ── List mapper ────────────────────────────────────────────────
 
 export function toAdminOrderListItem(
-  dto: AdminOrderListRowDTO
+  dto: AdminOrderListRowDTO,
 ): AdminOrderListItem {
   return {
     id: dto.id,
@@ -71,7 +70,7 @@ export function toAdminOrderListItem(
 // ── Detail mapper ──────────────────────────────────────────────
 
 function toShippingAddress(
-  dto: AdminOrderDetailRowDTO
+  dto: AdminOrderDetailRowDTO,
 ): AdminShippingAddress | null {
   if (!dto.recipientName) return null;
   return {
@@ -85,9 +84,7 @@ function toShippingAddress(
   };
 }
 
-function toTrackingInfo(
-  dto: AdminOrderDetailRowDTO
-): AdminTrackingInfo | null {
+function toTrackingInfo(dto: AdminOrderDetailRowDTO): AdminTrackingInfo | null {
   if (!dto.courierCompany || !dto.trackingNumber) return null;
   return {
     courierCompany: dto.courierCompany,
@@ -98,7 +95,7 @@ function toTrackingInfo(
 }
 
 export function toAdminOrderDetail(
-  dto: AdminOrderDetailRowDTO
+  dto: AdminOrderDetailRowDTO,
 ): AdminOrderDetail {
   return {
     id: dto.id,
@@ -126,7 +123,7 @@ export function toAdminOrderDetail(
 // ── Order item mapper ──────────────────────────────────────────
 
 export function parseCustomReformData(
-  raw: Record<string, unknown>
+  raw: Record<string, unknown>,
 ): CustomOrderReformData {
   const rawOptions = isRecord(raw.options) ? raw.options : {};
   const rawPricing = isRecord(raw.pricing) ? raw.pricing : {};
@@ -135,7 +132,7 @@ export function parseCustomReformData(
   if (typeof rawQuantity === "undefined") {
     console.warn(
       "[parseCustomReformData] quantity 필드가 없습니다. 0으로 대체합니다.",
-      raw
+      raw,
     );
   } else if (
     typeof rawQuantity !== "number" ||
@@ -143,7 +140,7 @@ export function parseCustomReformData(
     rawQuantity <= 0
   ) {
     throw new ValidationError(
-      `주문 제작 reformData 검증 실패: quantity가 유한한 양수가 아닙니다 (${rawQuantity}).`
+      `주문 제작 reformData 검증 실패: quantity가 유한한 양수가 아닙니다 (${rawQuantity}).`,
     );
   }
   const quantity = typeof rawQuantity === "number" ? rawQuantity : 0;
@@ -173,7 +170,7 @@ export function parseCustomReformData(
   }
   if (invalidPricingFields.length > 0) {
     throw new ValidationError(
-      `주문 제작 reformData 검증 실패: 유효하지 않은 pricing 필드 (${invalidPricingFields.join(", ")}).`
+      `주문 제작 reformData 검증 실패: 유효하지 않은 pricing 필드 (${invalidPricingFields.join(", ")}).`,
     );
   }
   if (
@@ -182,7 +179,9 @@ export function parseCustomReformData(
     validatedSampleCost === null ||
     validatedTotalCost === null
   ) {
-    throw new ValidationError("주문 제작 reformData 검증 실패: pricing 검증 결과가 일관되지 않습니다.");
+    throw new ValidationError(
+      "주문 제작 reformData 검증 실패: pricing 검증 결과가 일관되지 않습니다.",
+    );
   }
 
   const options: CustomOrderOptions = {
@@ -216,7 +215,7 @@ export function parseCustomReformData(
             typeof item === "object" &&
             typeof item.url === "string" &&
             "file_id" in item &&
-            (typeof item.file_id === "string" || item.file_id === null)
+            (typeof item.file_id === "string" || item.file_id === null),
         )
         .map((item) => item.url)
     : [];
@@ -250,7 +249,9 @@ function parseRepairTie(raw: unknown): RepairTie {
     measurementType === "length" ? r.tieLength : r.wearerHeight;
   const measurementValue =
     str(rawMeasurementValue) ??
-    (typeof rawMeasurementValue === "number" ? String(rawMeasurementValue) : "");
+    (typeof rawMeasurementValue === "number"
+      ? String(rawMeasurementValue)
+      : "");
 
   return {
     imageUrl: typeof r.image === "string" ? r.image : null,
@@ -261,7 +262,7 @@ function parseRepairTie(raw: unknown): RepairTie {
 }
 
 export function parseRepairReformData(
-  raw: Record<string, unknown>
+  raw: Record<string, unknown>,
 ): RepairOrderReformData {
   const ties =
     typeof raw.tie === "object" && raw.tie !== null && !Array.isArray(raw.tie)
@@ -272,15 +273,15 @@ export function parseRepairReformData(
 
 function toReformData(
   raw: Record<string, unknown> | null,
-  orderType: "custom"
+  orderType: "custom",
 ): CustomOrderReformData | null;
 function toReformData(
   raw: Record<string, unknown> | null,
-  orderType: "repair"
+  orderType: "repair",
 ): RepairOrderReformData | null;
 function toReformData(
   raw: Record<string, unknown> | null,
-  orderType: "custom" | "repair"
+  orderType: "custom" | "repair",
 ): CustomOrderReformData | RepairOrderReformData | null {
   if (!raw) return null;
   try {
@@ -296,7 +297,7 @@ function toReformData(
 
 export function toAdminOrderItem(
   dto: AdminOrderItemRowDTO,
-  orderType: OrderType
+  orderType: OrderType,
 ): AdminOrderItem {
   if (dto.itemType === "product") {
     const item: AdminProductOrderItem = {
@@ -356,9 +357,10 @@ export function toAdminOrderItem(
         reformData && typeof reformData.plan_key === "string"
           ? reformData.plan_key
           : null,
-      tokenAmount: reformData && typeof reformData.token_amount === "number"
-        ? reformData.token_amount
-        : null,
+      tokenAmount:
+        reformData && typeof reformData.token_amount === "number"
+          ? reformData.token_amount
+          : null,
       quantity: dto.quantity,
       unitPrice: dto.unitPrice,
       discountAmount: dto.discountAmount,
@@ -368,14 +370,14 @@ export function toAdminOrderItem(
   }
 
   throw new ValidationError(
-    `toAdminOrderItem: 알 수 없는 itemType "${dto.itemType}" (orderId: ${dto.orderId}, id: ${dto.id})`
+    `toAdminOrderItem: 알 수 없는 itemType "${dto.itemType}" (orderId: ${dto.orderId}, id: ${dto.id})`,
   );
 }
 
 // ── Status log mapper ─────────────────────────────────────────
 
 export function toAdminStatusLogEntry(
-  dto: OrderStatusLogDTO
+  dto: OrderStatusLogDTO,
 ): AdminStatusLogEntry {
   return {
     id: dto.id,

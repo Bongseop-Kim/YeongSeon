@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface CheckboxFieldProps<T extends Record<string, any>> {
   name: keyof T;
   control: Control<T>;
@@ -12,6 +13,7 @@ interface CheckboxFieldProps<T extends Record<string, any>> {
   disabled?: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const CheckboxField = <T extends Record<string, any>>({
   name,
   control,
@@ -24,13 +26,15 @@ export const CheckboxField = <T extends Record<string, any>>({
 
   return (
     <Controller
-      name={name as any}
+      name={
+        name as any /* eslint-disable-line @typescript-eslint/no-explicit-any */
+      }
       control={control}
       render={({ field }) => (
         <div
           className={cn(
             "flex gap-2",
-            description ? "items-start" : "items-center"
+            description ? "items-start" : "items-center",
           )}
         >
           <Checkbox

@@ -28,7 +28,7 @@ import {
 import { isRecord } from "@/lib/type-guard";
 
 export const toOrderItemInputDTO = (
-  item: CreateOrderRequest["items"][number]
+  item: CreateOrderRequest["items"][number],
 ): CreateOrderInputDTO["items"][number] => {
   const baseRecord = {
     item_id: item.id,
@@ -121,12 +121,12 @@ export const toOrderViewFromDetail = (
 // JSONB 중첩 필드 검증 헬퍼
 const parseProductField = (
   v: unknown,
-  idx: number
+  idx: number,
 ): OrderItemRowDTO["product"] => {
   if (v == null) return null;
   if (!isRecord(v)) {
     throw new Error(
-      `주문 상품 행(${idx})의 product가 올바르지 않습니다: 객체가 아닙니다.`
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: 객체가 아닙니다.`,
     );
   }
   if (
@@ -143,27 +143,27 @@ const parseProductField = (
     typeof v.info !== "string"
   ) {
     throw new Error(
-      `주문 상품 행(${idx})의 product가 올바르지 않습니다: 필수 필드(id, code, name, price, image, category, color, pattern, material, likes, info) 누락.`
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: 필수 필드(id, code, name, price, image, category, color, pattern, material, likes, info) 누락.`,
     );
   }
   if (!isProductCategory(v.category)) {
     throw new Error(
-      `주문 상품 행(${idx})의 product가 올바르지 않습니다: category 값(${v.category})이 허용된 값이 아닙니다.`
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: category 값(${v.category})이 허용된 값이 아닙니다.`,
     );
   }
   if (!isProductColor(v.color)) {
     throw new Error(
-      `주문 상품 행(${idx})의 product가 올바르지 않습니다: color 값(${v.color})이 허용된 값이 아닙니다.`
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: color 값(${v.color})이 허용된 값이 아닙니다.`,
     );
   }
   if (!isProductPattern(v.pattern)) {
     throw new Error(
-      `주문 상품 행(${idx})의 product가 올바르지 않습니다: pattern 값(${v.pattern})이 허용된 값이 아닙니다.`
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: pattern 값(${v.pattern})이 허용된 값이 아닙니다.`,
     );
   }
   if (!isProductMaterial(v.material)) {
     throw new Error(
-      `주문 상품 행(${idx})의 product가 올바르지 않습니다: material 값(${v.material})이 허용된 값이 아닙니다.`
+      `주문 상품 행(${idx})의 product가 올바르지 않습니다: material 값(${v.material})이 허용된 값이 아닙니다.`,
     );
   }
   return {
@@ -183,12 +183,12 @@ const parseProductField = (
 
 const parseSelectedOptionField = (
   v: unknown,
-  idx: number
+  idx: number,
 ): OrderItemRowDTO["selectedOption"] => {
   if (v == null) return null;
   if (!isRecord(v)) {
     throw new Error(
-      `주문 상품 행(${idx})의 selectedOption이 올바르지 않습니다: 객체가 아닙니다.`
+      `주문 상품 행(${idx})의 selectedOption이 올바르지 않습니다: 객체가 아닙니다.`,
     );
   }
   if (
@@ -197,7 +197,7 @@ const parseSelectedOptionField = (
     typeof v.additionalPrice !== "number"
   ) {
     throw new Error(
-      `주문 상품 행(${idx})의 selectedOption이 올바르지 않습니다: 필수 필드(id, name, additionalPrice) 누락.`
+      `주문 상품 행(${idx})의 selectedOption이 올바르지 않습니다: 필수 필드(id, name, additionalPrice) 누락.`,
     );
   }
   return {
@@ -209,33 +209,34 @@ const parseSelectedOptionField = (
 
 const parseReformDataField = (
   v: unknown,
-  idx: number
+  idx: number,
 ): OrderItemRowDTO["reformData"] => {
   if (v == null) return null;
   if (!isRecord(v)) {
     throw new Error(
-      `주문 상품 행(${idx})의 reformData가 올바르지 않습니다: 객체가 아닙니다.`
+      `주문 상품 행(${idx})의 reformData가 올바르지 않습니다: 객체가 아닙니다.`,
     );
   }
   if (typeof v.cost !== "number") {
     throw new Error(
-      `주문 상품 행(${idx})의 parseReformDataField: cost 필드가 없거나 숫자가 아닙니다.`
+      `주문 상품 행(${idx})의 parseReformDataField: cost 필드가 없거나 숫자가 아닙니다.`,
     );
   }
   const cost = v.cost;
   if (!isRecord(v.tie)) {
     throw new Error(
-      `주문 상품 행(${idx})의 parseReformDataField: tie 필드가 없거나 객체가 아닙니다.`
+      `주문 상품 행(${idx})의 parseReformDataField: tie 필드가 없거나 객체가 아닙니다.`,
     );
   }
   const tieRaw = v.tie;
   if (typeof tieRaw.id !== "string") {
     throw new Error(
-      `주문 상품 행(${idx})의 parseReformDataField: tie.id 필드가 없거나 string이 아닙니다.`
+      `주문 상품 행(${idx})의 parseReformDataField: tie.id 필드가 없거나 string이 아닙니다.`,
     );
   }
   const measurementType =
-    typeof tieRaw.measurementType === "string" && isTieMeasurementType(tieRaw.measurementType)
+    typeof tieRaw.measurementType === "string" &&
+    isTieMeasurementType(tieRaw.measurementType)
       ? tieRaw.measurementType
       : undefined;
   return {
@@ -245,8 +246,12 @@ const parseReformDataField = (
       image: typeof tieRaw.image === "string" ? tieRaw.image : undefined,
       fileId: typeof tieRaw.fileId === "string" ? tieRaw.fileId : undefined,
       measurementType,
-      tieLength: typeof tieRaw.tieLength === "number" ? tieRaw.tieLength : undefined,
-      wearerHeight: typeof tieRaw.wearerHeight === "number" ? tieRaw.wearerHeight : undefined,
+      tieLength:
+        typeof tieRaw.tieLength === "number" ? tieRaw.tieLength : undefined,
+      wearerHeight:
+        typeof tieRaw.wearerHeight === "number"
+          ? tieRaw.wearerHeight
+          : undefined,
       notes: typeof tieRaw.notes === "string" ? tieRaw.notes : undefined,
     },
   };
@@ -254,31 +259,31 @@ const parseReformDataField = (
 
 const parseCustomDataField = (
   v: unknown,
-  idx: number
+  idx: number,
 ): CustomOrderDataDTO | null => {
   if (v == null) return null;
   if (!isRecord(v)) {
     throw new Error(
-      `주문 상품 행(${idx})의 reformData(custom)가 올바르지 않습니다: 객체가 아닙니다.`
+      `주문 상품 행(${idx})의 reformData(custom)가 올바르지 않습니다: 객체가 아닙니다.`,
     );
   }
   try {
     return parseCustomOrderData(v);
   } catch (err) {
     throw new Error(
-      `주문 상품 행(${idx}) parseCustomOrderData 실패: ${err instanceof Error ? err.message : String(err)}`
+      `주문 상품 행(${idx}) parseCustomOrderData 실패: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
 };
 
 const parseAppliedCouponField = (
   v: unknown,
-  idx: number
+  idx: number,
 ): OrderItemRowDTO["appliedCoupon"] => {
   if (v == null) return null;
   if (!isRecord(v)) {
     throw new Error(
-      `주문 상품 행(${idx})의 appliedCoupon이 올바르지 않습니다: 객체가 아닙니다.`
+      `주문 상품 행(${idx})의 appliedCoupon이 올바르지 않습니다: 객체가 아닙니다.`,
     );
   }
   if (
@@ -289,12 +294,16 @@ const parseAppliedCouponField = (
     typeof v.issuedAt !== "string"
   ) {
     throw new Error(
-      `주문 상품 행(${idx})의 appliedCoupon이 올바르지 않습니다: 필수 필드(id, userId, couponId, status, issuedAt) 누락.`
+      `주문 상품 행(${idx})의 appliedCoupon이 올바르지 않습니다: 필수 필드(id, userId, couponId, status, issuedAt) 누락.`,
     );
   }
-  if (!isRecord(v.coupon) || typeof v.coupon.id !== "string" || typeof v.coupon.name !== "string") {
+  if (
+    !isRecord(v.coupon) ||
+    typeof v.coupon.id !== "string" ||
+    typeof v.coupon.name !== "string"
+  ) {
     throw new Error(
-      `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(id, name) 누락.`
+      `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(id, name) 누락.`,
     );
   }
   if (
@@ -303,17 +312,17 @@ const parseAppliedCouponField = (
     typeof v.coupon.expiryDate !== "string"
   ) {
     throw new Error(
-      `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(discountType, discountValue, expiryDate) 누락.`
+      `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(discountType, discountValue, expiryDate) 누락.`,
     );
   }
   if (!isUserCouponStatus(v.status)) {
     throw new Error(
-      `주문 상품 행(${idx})의 appliedCoupon이 올바르지 않습니다: status 값(${v.status})이 허용된 상태가 아닙니다.`
+      `주문 상품 행(${idx})의 appliedCoupon이 올바르지 않습니다: status 값(${v.status})이 허용된 상태가 아닙니다.`,
     );
   }
   if (!isDiscountType(v.coupon.discountType)) {
     throw new Error(
-      `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: discountType 값(${v.coupon.discountType})이 허용된 값이 아닙니다.`
+      `주문 상품 행(${idx})의 appliedCoupon.coupon이 올바르지 않습니다: discountType 값(${v.coupon.discountType})이 허용된 값이 아닙니다.`,
     );
   }
   return {
@@ -335,19 +344,31 @@ const parseAppliedCouponField = (
 };
 
 const ORDER_STATUSES: ReadonlySet<string> = new Set([
-  "진행중", "완료", "배송중", "배송완료", "대기중", "결제중", "취소",
-  "접수", "제작중", "제작완료", "수선중", "수선완료",
+  "진행중",
+  "완료",
+  "배송중",
+  "배송완료",
+  "대기중",
+  "결제중",
+  "취소",
+  "접수",
+  "제작중",
+  "제작완료",
+  "수선중",
+  "수선완료",
 ]);
-const isOrderStatus = (v: string): v is OrderStatusDTO =>
-  ORDER_STATUSES.has(v);
+const isOrderStatus = (v: string): v is OrderStatusDTO => ORDER_STATUSES.has(v);
 
-const ORDER_TYPES: ReadonlySet<string> = new Set(["sale", "custom", "repair", "token"]);
+const ORDER_TYPES: ReadonlySet<string> = new Set([
+  "sale",
+  "custom",
+  "repair",
+  "token",
+]);
 const isOrderType = (v: string): v is OrderListRowDTO["orderType"] =>
   ORDER_TYPES.has(v);
 
-export const parseCreateOrderResult = (
-  data: unknown
-): CreateOrderResultDTO => {
+export const parseCreateOrderResult = (data: unknown): CreateOrderResultDTO => {
   if (!isRecord(data)) {
     throw new Error("주문 생성 응답이 올바르지 않습니다: 객체가 아닙니다.");
   }
@@ -357,31 +378,31 @@ export const parseCreateOrderResult = (
     !Array.isArray(data.orders)
   ) {
     throw new Error(
-      "주문 생성 응답이 올바르지 않습니다: payment_group_id, total_amount, orders 누락."
+      "주문 생성 응답이 올바르지 않습니다: payment_group_id, total_amount, orders 누락.",
     );
   }
   const parseOrderItem = (
     item: unknown,
-    index: number
+    index: number,
   ): CreateOrderResultDTO["orders"][number] => {
     if (!isRecord(item)) {
       throw new Error(
-        `주문 생성 응답의 orders[${index}]가 올바르지 않습니다: 객체가 아닙니다.`
+        `주문 생성 응답의 orders[${index}]가 올바르지 않습니다: 객체가 아닙니다.`,
       );
     }
     if (typeof item.order_id !== "string") {
       throw new Error(
-        `주문 생성 응답의 orders[${index}].order_id가 올바르지 않습니다: string이 아닙니다.`
+        `주문 생성 응답의 orders[${index}].order_id가 올바르지 않습니다: string이 아닙니다.`,
       );
     }
     if (typeof item.order_number !== "string") {
       throw new Error(
-        `주문 생성 응답의 orders[${index}].order_number가 올바르지 않습니다: string이 아닙니다.`
+        `주문 생성 응답의 orders[${index}].order_number가 올바르지 않습니다: string이 아닙니다.`,
       );
     }
     if (typeof item.order_type !== "string") {
       throw new Error(
-        `주문 생성 응답의 orders[${index}].order_type이 올바르지 않습니다: string이 아닙니다.`
+        `주문 생성 응답의 orders[${index}].order_type이 올바르지 않습니다: string이 아닙니다.`,
       );
     }
     return {
@@ -404,7 +425,9 @@ export const parseOrderListRows = (data: unknown): OrderListRowDTO[] => {
   }
   return data.map((row: unknown, i: number): OrderListRowDTO => {
     if (!isRecord(row)) {
-      throw new Error(`주문 목록 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`);
+      throw new Error(
+        `주문 목록 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`,
+      );
     }
     if (
       typeof row.id !== "string" ||
@@ -415,17 +438,17 @@ export const parseOrderListRows = (data: unknown): OrderListRowDTO[] => {
       typeof row.created_at !== "string"
     ) {
       throw new Error(
-        `주문 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, orderNumber, date, status, totalPrice, created_at) 누락.`
+        `주문 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, orderNumber, date, status, totalPrice, created_at) 누락.`,
       );
     }
     if (!isOrderStatus(row.status)) {
       throw new Error(
-        `주문 목록 행(${i})이 올바르지 않습니다: status 값(${row.status})이 허용된 상태가 아닙니다.`
+        `주문 목록 행(${i})이 올바르지 않습니다: status 값(${row.status})이 허용된 상태가 아닙니다.`,
       );
     }
     if (typeof row.orderType !== "string" || !isOrderType(row.orderType)) {
       throw new Error(
-        `주문 목록 행(${i})이 올바르지 않습니다: orderType 값(${row.orderType})이 허용된 유형이 아닙니다.`
+        `주문 목록 행(${i})이 올바르지 않습니다: orderType 값(${row.orderType})이 허용된 유형이 아닙니다.`,
       );
     }
     return {
@@ -447,7 +470,9 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
   }
   return data.map((row: unknown, i: number): OrderItemRowDTO => {
     if (!isRecord(row)) {
-      throw new Error(`주문 상품 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`);
+      throw new Error(
+        `주문 상품 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`,
+      );
     }
     if (
       typeof row.id !== "string" ||
@@ -456,7 +481,7 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
       typeof row.created_at !== "string"
     ) {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: 필수 필드(id, order_id, quantity, created_at) 누락.`
+        `주문 상품 행(${i})이 올바르지 않습니다: 필수 필드(id, order_id, quantity, created_at) 누락.`,
       );
     }
     if (
@@ -466,25 +491,27 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
       row.type !== "token"
     ) {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product", "reform", "custom", "token" 중 하나가 아닙니다.`
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product", "reform", "custom", "token" 중 하나가 아닙니다.`,
       );
     }
     const product = parseProductField(row.product, i);
-    const reformData = row.type === "reform" ? parseReformDataField(row.reformData, i) : null;
-    const customData = row.type === "custom" ? parseCustomDataField(row.reformData, i) : null;
+    const reformData =
+      row.type === "reform" ? parseReformDataField(row.reformData, i) : null;
+    const customData =
+      row.type === "custom" ? parseCustomDataField(row.reformData, i) : null;
     if (row.type === "product" && product == null) {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product"인 경우 product 필드가 필요합니다.`
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product"인 경우 product 필드가 필요합니다.`,
       );
     }
     if (row.type === "reform" && reformData == null) {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 필요합니다.`
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 필요합니다.`,
       );
     }
     if (row.type === "custom" && customData == null) {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: type이 "custom"인 경우 reformData(custom) 필드가 필요합니다.`
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "custom"인 경우 reformData(custom) 필드가 필요합니다.`,
       );
     }
     if (row.type === "token") {
@@ -529,21 +556,20 @@ export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
     typeof data.created_at !== "string"
   ) {
     throw new Error(
-      "주문 상세 응답이 올바르지 않습니다: 필수 필드(id, orderNumber, date, status, totalPrice, created_at) 누락."
+      "주문 상세 응답이 올바르지 않습니다: 필수 필드(id, orderNumber, date, status, totalPrice, created_at) 누락.",
     );
   }
   if (!isOrderStatus(data.status)) {
     throw new Error(
-      `주문 상세 응답이 올바르지 않습니다: status 값(${data.status})이 허용된 상태가 아닙니다.`
+      `주문 상세 응답이 올바르지 않습니다: status 값(${data.status})이 허용된 상태가 아닙니다.`,
     );
   }
   if (typeof data.orderType !== "string" || !isOrderType(data.orderType)) {
     throw new Error(
-      `주문 상세 응답이 올바르지 않습니다: orderType 값(${data.orderType})이 허용된 유형이 아닙니다.`
+      `주문 상세 응답이 올바르지 않습니다: orderType 값(${data.orderType})이 허용된 유형이 아닙니다.`,
     );
   }
-  const str = (v: unknown): string | null =>
-    typeof v === "string" ? v : null;
+  const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
   return {
     id: data.id,
     orderNumber: data.orderNumber,

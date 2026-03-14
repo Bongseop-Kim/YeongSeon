@@ -40,7 +40,9 @@ export function InquiryListTable() {
         <Table.Column
           dataIndex="status"
           title="상태"
-          render={(v: AdminInquiryListItem["status"]) => <Tag color={INQUIRY_STATUS_COLORS[v]}>{v}</Tag>}
+          render={(v: AdminInquiryListItem["status"]) => (
+            <Tag color={INQUIRY_STATUS_COLORS[v]}>{v}</Tag>
+          )}
         />
         <Table.Column dataIndex="date" title="작성일" />
       </Table>

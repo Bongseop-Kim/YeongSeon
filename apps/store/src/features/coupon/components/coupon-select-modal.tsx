@@ -9,7 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { formatCouponAmount } from "@yeongseon/shared/utils/format-coupon-amount";
-import type { AppliedCoupon, UserCoupon } from "@yeongseon/shared/types/view/coupon";
+import type {
+  AppliedCoupon,
+  UserCoupon,
+} from "@yeongseon/shared/types/view/coupon";
 import { Separator } from "@/components/ui/separator";
 import { useUserCoupons } from "@/features/coupon/api/coupons-query";
 
@@ -26,13 +29,13 @@ export const CouponSelectModal = forwardRef<
   CouponSelectModalProps
 >(({ currentCouponId }, ref) => {
   const [selectedCouponId, setSelectedCouponId] = useState<string>(
-    currentCouponId || "none"
+    currentCouponId || "none",
   );
   const { data: coupons, isLoading, isError } = useUserCoupons();
 
   const availableCoupons = useMemo<UserCoupon[]>(
     () => coupons ?? [],
-    [coupons]
+    [coupons],
   );
 
   useEffect(() => {

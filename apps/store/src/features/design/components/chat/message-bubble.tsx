@@ -31,7 +31,12 @@ export function MessageBubble({ message, onChipClick }: MessageBubbleProps) {
   }).format(new Date(message.timestamp));
 
   return (
-    <div className={cn("flex flex-col gap-1", isUser ? "items-end" : "items-start")}>
+    <div
+      className={cn(
+        "flex flex-col gap-1",
+        isUser ? "items-end" : "items-start",
+      )}
+    >
       {isUser && message.attachments && message.attachments.length > 0 ? (
         <div className="flex max-w-[85%] flex-wrap justify-end gap-1">
           {message.attachments.map((attachment, index) => (

@@ -18,10 +18,14 @@ interface PackageSelectorProps {
 }
 
 const OPTION_LABELS = {
-  fabricType: (v: OrderOptions["fabricType"] | undefined) => (v === "SILK" ? "실크" : "폴리"),
-  designType: (v: OrderOptions["designType"] | undefined) => (v === "YARN_DYED" ? "선염" : "날염"),
-  tieType: (v: OrderOptions["tieType"] | undefined) => (v === "AUTO" ? "자동 타이 (지퍼)" : "수동 타이 (손매듭)"),
-  interlining: (v: OrderOptions["interlining"] | undefined) => (v === "WOOL" ? "울 심지" : "심지 없음"),
+  fabricType: (v: OrderOptions["fabricType"] | undefined) =>
+    v === "SILK" ? "실크" : "폴리",
+  designType: (v: OrderOptions["designType"] | undefined) =>
+    v === "YARN_DYED" ? "선염" : "날염",
+  tieType: (v: OrderOptions["tieType"] | undefined) =>
+    v === "AUTO" ? "자동 타이 (지퍼)" : "수동 타이 (손매듭)",
+  interlining: (v: OrderOptions["interlining"] | undefined) =>
+    v === "WOOL" ? "울 심지" : "심지 없음",
 } as const;
 
 export const PackageSelector = ({
@@ -34,9 +38,7 @@ export const PackageSelector = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          패키지로 빠르게 시작하기
-        </CardTitle>
+        <CardTitle>패키지로 빠르게 시작하기</CardTitle>
       </CardHeader>
 
       <CardContent>
@@ -55,7 +57,8 @@ export const PackageSelector = ({
                 designType: preset.values.designType ?? "PRINTING",
                 tieType: preset.values.tieType ?? null,
                 interlining: preset.values.interlining ?? null,
-                interliningThickness: preset.values.interliningThickness ?? "THICK",
+                interliningThickness:
+                  preset.values.interliningThickness ?? "THICK",
                 sizeType: "ADULT",
                 tieWidth: 8,
                 triangleStitch: preset.values.triangleStitch ?? true,
@@ -72,9 +75,10 @@ export const PackageSelector = ({
                 sample: false,
                 sampleType: null,
               };
-              const packageCost = isLoggedIn && pricingConfig
-                ? calculateTotalCost(packageOptions, pricingConfig).totalCost
-                : null;
+              const packageCost =
+                isLoggedIn && pricingConfig
+                  ? calculateTotalCost(packageOptions, pricingConfig).totalCost
+                  : null;
 
               return (
                 <RadioCard
@@ -87,11 +91,7 @@ export const PackageSelector = ({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 min-h-6 justify-between">
                       {preset.name}
-                      {preset.badge && (
-                        <Badge>
-                          {preset.badge}
-                        </Badge>
-                      )}
+                      {preset.badge && <Badge>{preset.badge}</Badge>}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -101,8 +101,11 @@ export const PackageSelector = ({
                         {OPTION_LABELS.designType(preset.values.designType)}
                       </p>
                       <p>{OPTION_LABELS.tieType(preset.values.tieType)}</p>
-                      <p>{OPTION_LABELS.interlining(preset.values.interlining)}</p>
-                      {(preset.values.brandLabel || preset.values.careLabel) && (
+                      <p>
+                        {OPTION_LABELS.interlining(preset.values.interlining)}
+                      </p>
+                      {(preset.values.brandLabel ||
+                        preset.values.careLabel) && (
                         <p>
                           {[
                             preset.values.brandLabel && "브랜드 라벨",
@@ -116,7 +119,9 @@ export const PackageSelector = ({
                     <Separator />
                     <div>
                       <CardTitle>
-                        {packageCost != null ? `${packageCost.toLocaleString()}원` : "가격 정보 없음"}
+                        {packageCost != null
+                          ? `${packageCost.toLocaleString()}원`
+                          : "가격 정보 없음"}
                       </CardTitle>
                       <span className="text-xs text-zinc-500">
                         {preset.tagline}

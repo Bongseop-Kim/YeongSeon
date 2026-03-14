@@ -40,7 +40,9 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
                     </Descriptions.Item>
                   )}
                   <Descriptions.Item label="측정방식">
-                    {tie.measurementType === "length" ? "길이 직접 입력" : "키 입력"}
+                    {tie.measurementType === "length"
+                      ? "길이 직접 입력"
+                      : "키 입력"}
                   </Descriptions.Item>
                   <Descriptions.Item label="측정값">
                     {tie.measurementValue || "-"}
@@ -53,8 +55,14 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
                 </Descriptions>
               ))}
               {ties.length === 0 && (
-                <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} size="small">
-                  <Descriptions.Item label="수량">{item.quantity}</Descriptions.Item>
+                <Descriptions
+                  bordered
+                  column={{ xs: 1, sm: 1, md: 2 }}
+                  size="small"
+                >
+                  <Descriptions.Item label="수량">
+                    {item.quantity}
+                  </Descriptions.Item>
                 </Descriptions>
               )}
             </Card>

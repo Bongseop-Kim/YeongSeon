@@ -12,7 +12,7 @@ import type {
 
 export function useDashboardStats(
   segment: SegmentValue,
-  dateRange: [Dayjs, Dayjs]
+  dateRange: [Dayjs, Dayjs],
 ): AdminDashboardStats {
   const startDate = dateRange[0].format("YYYY-MM-DD");
   const endDate = dateRange[1].format("YYYY-MM-DD");
@@ -45,20 +45,26 @@ export function useDashboardStats(
   return toDashboardStats(
     periodStats ?? { orderCount: 0, revenue: 0 },
     pendingClaimsResult.total ?? 0,
-    pendingInquiriesResult.total ?? 0
+    pendingInquiriesResult.total ?? 0,
   );
 }
 
 export function useDashboardRecentOrders(
   segment: SegmentValue,
-  dateRange: [Dayjs, Dayjs]
+  dateRange: [Dayjs, Dayjs],
 ): AdminDashboardRecentOrder[] {
   const startDate = dateRange[0].format("YYYY-MM-DD");
   const endDate = dateRange[1].format("YYYY-MM-DD");
 
   const orderTypeFilter =
     segment !== "all"
-      ? [{ field: "orderType" as const, operator: "eq" as const, value: segment }]
+      ? [
+          {
+            field: "orderType" as const,
+            operator: "eq" as const,
+            value: segment,
+          },
+        ]
       : [];
 
   const { result: recentOrdersResult } = useList<AdminOrderListRowDTO>({

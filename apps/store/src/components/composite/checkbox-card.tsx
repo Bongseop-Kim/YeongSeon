@@ -24,7 +24,10 @@ export function CheckboxCard({
   return (
     <Label
       htmlFor={id}
-      className={cn("block h-full cursor-pointer", disabled && "cursor-not-allowed")}
+      className={cn(
+        "block h-full cursor-pointer",
+        disabled && "cursor-not-allowed",
+      )}
     >
       <Card
         className={cn(
@@ -32,8 +35,8 @@ export function CheckboxCard({
           disabled
             ? "border-zinc-100 bg-zinc-50"
             : checked
-            ? "border-zinc-900 bg-zinc-50"
-            : "hover:border-zinc-400",
+              ? "border-zinc-900 bg-zinc-50"
+              : "hover:border-zinc-400",
           className,
         )}
       >

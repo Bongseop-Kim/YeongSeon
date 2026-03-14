@@ -13,13 +13,13 @@
 
 ## 2. 토큰 원장 타입
 
-| 타입 | 설명 | 방향 |
-|------|------|------|
-| `grant` | 신규 가입 시 자동 지급 | +잔액 |
-| `purchase` | 패키지 구매 후 충전 | +잔액 |
-| `use` | AI 디자인 생성 사용 | -잔액 |
-| `refund` | 이미지 생성 실패 환불 | +잔액 |
-| `admin` | 관리자 수동 조정 | ±잔액 |
+| 타입       | 설명                   | 방향  |
+| ---------- | ---------------------- | ----- |
+| `grant`    | 신규 가입 시 자동 지급 | +잔액 |
+| `purchase` | 패키지 구매 후 충전    | +잔액 |
+| `use`      | AI 디자인 생성 사용    | -잔액 |
+| `refund`   | 이미지 생성 실패 환불  | +잔액 |
+| `admin`    | 관리자 수동 조정       | ±잔액 |
 
 ---
 
@@ -32,11 +32,11 @@
 
 ## 4. 구매 패키지
 
-| 패키지 | 설정 키 | 설명 |
-|--------|--------|------|
+| 패키지  | 설정 키                | 설명        |
+| ------- | ---------------------- | ----------- |
 | Starter | `token_plan_starter_*` | 소량 패키지 |
 | Popular | `token_plan_popular_*` | 중간 패키지 |
-| Pro | `token_plan_pro_*` | 대량 패키지 |
+| Pro     | `token_plan_pro_*`     | 대량 패키지 |
 
 패키지별 가격과 토큰 수량은 `admin_settings` 테이블에서 관리된다.
 `get_token_plans` RPC로 현재 플랜 목록 조회 가능.
@@ -47,14 +47,14 @@
 
 모델 × 요청 타입 × 품질 조합으로 `admin_settings`에서 관리.
 
-| 설정 키 | 모델 | 요청 타입 | 품질 |
-|---------|------|---------|------|
-| `design_token_cost_openai_text` | OpenAI | text_only | - |
-| `design_token_cost_openai_image` | OpenAI | text_and_image | standard |
-| `design_token_cost_openai_image_high` | OpenAI | text_and_image | high |
-| `design_token_cost_gemini_text` | Gemini | text_only | - |
-| `design_token_cost_gemini_image` | Gemini | text_and_image | standard |
-| `design_token_cost_gemini_image_high` | Gemini | text_and_image | high |
+| 설정 키                               | 모델   | 요청 타입      | 품질     |
+| ------------------------------------- | ------ | -------------- | -------- |
+| `design_token_cost_openai_text`       | OpenAI | text_only      | -        |
+| `design_token_cost_openai_image`      | OpenAI | text_and_image | standard |
+| `design_token_cost_openai_image_high` | OpenAI | text_and_image | high     |
+| `design_token_cost_gemini_text`       | Gemini | text_only      | -        |
+| `design_token_cost_gemini_image`      | Gemini | text_and_image | standard |
+| `design_token_cost_gemini_image_high` | Gemini | text_and_image | high     |
 
 ---
 
@@ -74,14 +74,14 @@
 
 ## 8. 주요 RPC 요약
 
-| RPC | 권한 | 설명 |
-|-----|------|------|
-| `get_design_token_balance` | INVOKER (본인) | 본인 토큰 잔액 조회 |
-| `use_design_tokens` | DEFINER | 토큰 차감 (advisory lock 포함) |
-| `refund_design_tokens` | DEFINER (service_role) | 실패 환불 (work_id 멱등) |
-| `manage_design_tokens_admin` | DEFINER (관리자) | 관리자 수동 조정 |
-| `get_token_plans` | DEFINER | 구매 플랜 목록 조회 |
-| `get_design_token_balances_admin` | DEFINER (관리자) | 다수 사용자 잔액 일괄 조회 |
+| RPC                               | 권한                   | 설명                           |
+| --------------------------------- | ---------------------- | ------------------------------ |
+| `get_design_token_balance`        | INVOKER (본인)         | 본인 토큰 잔액 조회            |
+| `use_design_tokens`               | DEFINER                | 토큰 차감 (advisory lock 포함) |
+| `refund_design_tokens`            | DEFINER (service_role) | 실패 환불 (work_id 멱등)       |
+| `manage_design_tokens_admin`      | DEFINER (관리자)       | 관리자 수동 조정               |
+| `get_token_plans`                 | DEFINER                | 구매 플랜 목록 조회            |
+| `get_design_token_balances_admin` | DEFINER (관리자)       | 다수 사용자 잔액 일괄 조회     |
 
 ---
 
@@ -93,7 +93,7 @@
 
 ## 10. 관련 파일
 
-| 파일 | 역할 |
-|------|------|
-| `supabase/schemas/86_design_tokens.sql` | design_tokens 테이블 + token_purchases 테이블 |
-| `supabase/schemas/99_functions_design_tokens.sql` | 토큰 관련 RPC 전체 |
+| 파일                                              | 역할                                          |
+| ------------------------------------------------- | --------------------------------------------- |
+| `supabase/schemas/86_design_tokens.sql`           | design_tokens 테이블 + token_purchases 테이블 |
+| `supabase/schemas/99_functions_design_tokens.sql` | 토큰 관련 RPC 전체                            |

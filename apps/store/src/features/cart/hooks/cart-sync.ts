@@ -1,5 +1,5 @@
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
-import { cartKeys } from "@/features/cart/api/cart-query";
+import { cartKeys } from "@/features/cart/api/cart-keys";
 
 interface QueryClientLike {
   setQueryData: (key: readonly unknown[], value: CartItem[]) => void;
@@ -76,7 +76,13 @@ export const syncCartItemsWithRollback = async ({
 
     await setGuestItems(nextItems);
   } catch (error) {
-    await rollbackItems(queryClient, isLoggedIn, userId, previousItems, setGuestItems);
+    await rollbackItems(
+      queryClient,
+      isLoggedIn,
+      userId,
+      previousItems,
+      setGuestItems,
+    );
     onError(errorMessage);
     throw error;
   }
@@ -103,7 +109,13 @@ export const clearCartItemsWithRollback = async ({
 
     await clearGuest();
   } catch (error) {
-    await rollbackItems(queryClient, isLoggedIn, userId, previousItems, setGuestItems);
+    await rollbackItems(
+      queryClient,
+      isLoggedIn,
+      userId,
+      previousItems,
+      setGuestItems,
+    );
     onError(errorMessage);
     throw error;
   }

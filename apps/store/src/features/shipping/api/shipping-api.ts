@@ -1,5 +1,8 @@
 import { supabase } from "@/lib/supabase";
-import type { ShippingAddress, ShippingAddressInput } from "@/features/shipping/types/shipping-address";
+import type {
+  ShippingAddress,
+  ShippingAddressInput,
+} from "@/features/shipping/types/shipping-address";
 import type { ShippingAddressRecord } from "@/features/shipping/types/shipping-address-record";
 import {
   toShippingAddressView,
@@ -77,7 +80,7 @@ export const getDefaultShippingAddress =
  * ID로 배송지 조회
  */
 export const getShippingAddressById = async (
-  id: string
+  id: string,
 ): Promise<ShippingAddress | null> => {
   const {
     data: { user },
@@ -112,7 +115,7 @@ export const getShippingAddressById = async (
  * 배송지 생성 (RPC: is_default 토글 원자적 처리)
  */
 export const createShippingAddress = async (
-  data: ShippingAddressInput
+  data: ShippingAddressInput,
 ): Promise<ShippingAddress> => {
   const { data: record, error } = await supabase
     .rpc("upsert_shipping_address", toUpsertShippingAddressParams(null, data))
@@ -130,7 +133,7 @@ export const createShippingAddress = async (
  */
 export const updateShippingAddress = async (
   id: string,
-  data: ShippingAddressInput
+  data: ShippingAddressInput,
 ): Promise<ShippingAddress> => {
   const { data: record, error } = await supabase
     .rpc("upsert_shipping_address", toUpsertShippingAddressParams(id, data))

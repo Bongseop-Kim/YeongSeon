@@ -69,7 +69,8 @@ export const calculateSampleCost = (
 ): number => {
   if (sampleType === "sewing") return config.SAMPLE_SEWING_COST;
   if (sampleType === "fabric") return config.SAMPLE_FABRIC_COST;
-  if (sampleType === "fabric_and_sewing") return config.SAMPLE_FABRIC_AND_SEWING_COST;
+  if (sampleType === "fabric_and_sewing")
+    return config.SAMPLE_FABRIC_AND_SEWING_COST;
   return 0;
 };
 
@@ -79,7 +80,9 @@ export const calculateTotalCost = (
 ): CostCalculation => {
   const sewingCost = calculateSewingCost(options, config);
   const fabricCost = calculateFabricCost(options, config);
-  const sampleCost = options.sample ? calculateSampleCost(options.sampleType, config) : 0;
+  const sampleCost = options.sample
+    ? calculateSampleCost(options.sampleType, config)
+    : 0;
   const totalCost = sewingCost + fabricCost + sampleCost;
 
   return {

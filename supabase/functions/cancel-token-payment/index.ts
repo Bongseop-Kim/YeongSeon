@@ -27,16 +27,18 @@ const processLogger = (step: string, payload: Record<string, unknown>) => {
 const errorLogger = (
   step: string,
   error: unknown,
-  payload: Record<string, unknown> = {}
+  payload: Record<string, unknown> = {},
 ) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error(
     `[cancel-token-payment:${step}]`,
-    JSON.stringify({ ...payload, error: message })
+    JSON.stringify({ ...payload, error: message }),
   );
 };
 
-const isCancelRequest = (payload: unknown): payload is CancelTokenPaymentRequest => {
+const isCancelRequest = (
+  payload: unknown,
+): payload is CancelTokenPaymentRequest => {
   if (!payload || typeof payload !== "object") return false;
   const candidate = payload as Record<string, unknown>;
   return (
@@ -116,23 +118,36 @@ Deno.serve(async (req) => {
     .single();
 
   if (refundReqError || !refundReqData) {
-    errorLogger("refund_request_lookup_failed", refundReqError ?? new Error("not found"), {
-      refundRequestId: payload.refundRequestId,
-    });
+    errorLogger(
+      "refund_request_lookup_failed",
+      refundReqError ?? new Error("not found"),
+      {
+        refundRequestId: payload.refundRequestId,
+      },
+    );
     return jsonResponse(404, { error: "Refund request not found" });
   }
 
-  const rd = (refundReqData as Record<string, unknown>).refund_data as Record<string, unknown> | null | undefined;
+  const rd = (refundReqData as Record<string, unknown>).refund_data as
+    | Record<string, unknown>
+    | null
+    | undefined;
   if (
     !rd ||
     typeof rd.paid_token_amount !== "number" ||
     typeof rd.bonus_token_amount !== "number" ||
     typeof rd.refund_amount !== "number"
   ) {
-    errorLogger("invalid_refund_data", new Error("refund_data missing or invalid"), {
-      refundRequestId: payload.refundRequestId,
+    errorLogger(
+      "invalid_refund_data",
+      new Error("refund_data missing or invalid"),
+      {
+        refundRequestId: payload.refundRequestId,
+      },
+    );
+    return jsonResponse(422, {
+      error: "Refund request has invalid refund_data",
     });
-    return jsonResponse(422, { error: "Refund request has invalid refund_data" });
   }
 
   if (
@@ -143,10 +158,16 @@ Deno.serve(async (req) => {
     rd.bonus_token_amount < 0 ||
     rd.refund_amount <= 0
   ) {
-    errorLogger("invalid_refund_data", new Error("refund_data missing or invalid"), {
-      refundRequestId: payload.refundRequestId,
+    errorLogger(
+      "invalid_refund_data",
+      new Error("refund_data missing or invalid"),
+      {
+        refundRequestId: payload.refundRequestId,
+      },
+    );
+    return jsonResponse(422, {
+      error: "Refund request has invalid refund_data",
     });
-    return jsonResponse(422, { error: "Refund request has invalid refund_data" });
   }
 
   const refundReq = refundReqData as {
@@ -181,19 +202,27 @@ Deno.serve(async (req) => {
     return jsonResponse(404, { error: "Order not found" });
   }
 
-  const order = orderData as { id: string; payment_key: string | null; total_price: number };
+  const order = orderData as {
+    id: string;
+    payment_key: string | null;
+    total_price: number;
+  };
 
   if (!order.payment_key) {
     return jsonResponse(409, { error: "Order has no payment key" });
   }
 
   if (refundReq.refund_data.refund_amount > order.total_price) {
-    errorLogger("invalid_refund_amount", new Error("refund_amount exceeds total_price"), {
-      refundRequestId: payload.refundRequestId,
-      paymentKey: maskPaymentKey(order.payment_key),
-      refundAmount: refundReq.refund_data.refund_amount,
-      totalPrice: order.total_price,
-    });
+    errorLogger(
+      "invalid_refund_amount",
+      new Error("refund_amount exceeds total_price"),
+      {
+        refundRequestId: payload.refundRequestId,
+        paymentKey: maskPaymentKey(order.payment_key),
+        refundAmount: refundReq.refund_data.refund_amount,
+        totalPrice: order.total_price,
+      },
+    );
     return jsonResponse(400, { error: "refund_amount exceeds total_price" });
   }
 
@@ -204,9 +233,6 @@ Deno.serve(async (req) => {
     paymentKey: maskPaymentKey(order.payment_key),
     adminId: user.id,
   });
-
-  let transactionKey: string | undefined;
-  let transactionId: string | undefined;
 
   // Toss API: 전액 취소 (cancelAmount 생략 = 전액)
   const tossAuth = `Basic ${btoa(`${tossSecretKey}:`)}`;
@@ -227,7 +253,7 @@ Deno.serve(async (req) => {
             ? { cancelAmount: refundReq.refund_data.refund_amount }
             : {}),
         }),
-      }
+      },
     );
   } catch (error) {
     errorLogger("toss_cancel_failed", error, {
@@ -240,16 +266,18 @@ Deno.serve(async (req) => {
   const responseText = await tossResponse.text();
   let parsedToss: Record<string, unknown> = {};
   try {
-    parsedToss = responseText ? (JSON.parse(responseText) as Record<string, unknown>) : {};
+    parsedToss = responseText
+      ? (JSON.parse(responseText) as Record<string, unknown>)
+      : {};
   } catch {
     parsedToss = { raw: responseText };
   }
 
-  transactionKey =
+  const transactionKey =
     typeof parsedToss.transactionKey === "string"
       ? parsedToss.transactionKey
       : undefined;
-  transactionId =
+  const transactionId =
     typeof parsedToss.transactionId === "string"
       ? parsedToss.transactionId
       : undefined;
@@ -275,10 +303,13 @@ Deno.serve(async (req) => {
   });
 
   // Toss 취소 성공 → approve_token_refund RPC 호출
-  const { error: approveError } = await adminClient.rpc("approve_token_refund", {
-    p_request_id: payload.refundRequestId,
-    p_admin_id: user.id,
-  });
+  const { error: approveError } = await adminClient.rpc(
+    "approve_token_refund",
+    {
+      p_request_id: payload.refundRequestId,
+      p_admin_id: user.id,
+    },
+  );
 
   if (approveError) {
     errorLogger("approve_token_refund_failed", approveError, {
@@ -289,7 +320,8 @@ Deno.serve(async (req) => {
     });
     // Toss는 이미 취소됐으나 DB 처리 실패 — 수동 복구 필요
     return jsonResponse(500, {
-      error: "Payment cancelled but DB update failed. Manual intervention required.",
+      error:
+        "Payment cancelled but DB update failed. Manual intervention required.",
       details: approveError.message,
       transactionKey,
     });

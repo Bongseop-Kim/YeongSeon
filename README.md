@@ -4,13 +4,13 @@ AI 에이전트와 함께 개발하는 쇼핑몰 프로젝트입니다.
 
 ## Tech Stack
 
-| 영역 | 기술 |
-|------|------|
-| Frontend | React + TypeScript + Vite |
-| Backend | Supabase (RPC, RLS, Edge Functions) |
-| Monorepo | Turborepo + pnpm |
-| Test | Vitest |
-| Payment | 토스페이먼츠 |
+| 영역     | 기술                                |
+| -------- | ----------------------------------- |
+| Frontend | React + TypeScript + Vite           |
+| Backend  | Supabase (RPC, RLS, Edge Functions) |
+| Monorepo | Turborepo + pnpm                    |
+| Test     | Vitest                              |
+| Payment  | 토스페이먼츠                        |
 
 ## 프로젝트 구조
 
@@ -111,12 +111,12 @@ Claude Code + CodeRabbit 기반의 AI 에이전트 개발 워크플로우를 사
 
 ### 사용 도구 요약
 
-| 단계 | 도구 | 역할 |
-|------|------|------|
-| **계획** | Superpowers (Brainstorm, Plans) | 요구사항 분석, 구현 계획 수립 |
-| **구현** | Superpowers (TDD), Frontend Design | 테스트 우선 개발, UI 컴포넌트 구축 |
-| **지원** | Context7, TypeScript LSP | 라이브러리 문서 참조, 실시간 타입 검사 |
-| **검증** | Superpowers (Debug, Verify) | 체계적 디버깅, 완료 전 검증 |
-| **배포** | Commit Commands | 커밋, 푸시, PR 생성 자동화 |
-| **리뷰** | CodeRabbit, Code Review | PR 자동 리뷰, 코드 품질 관리 |
-| **유지보수** | Code Simplifier, Claude MD Management | 코드 정리, 프로젝트 문서 관리 |
+| 단계         | 도구                                  | 역할                                   |
+| ------------ | ------------------------------------- | -------------------------------------- |
+| **계획**     | Superpowers (Brainstorm, Plans)       | 요구사항 분석, 구현 계획 수립          |
+| **구현**     | Superpowers (TDD), Frontend Design    | 테스트 우선 개발, UI 컴포넌트 구축     |
+| **지원**     | Context7, TypeScript LSP              | 라이브러리 문서 참조, 실시간 타입 검사 |
+| **검증**     | Superpowers (Debug, Verify)           | 체계적 디버깅, 완료 전 검증            |
+| **배포**     | Commit Commands                       | 커밋, 푸시, PR 생성 자동화             |
+| **리뷰**     | CodeRabbit, Code Review               | PR 자동 리뷰, 코드 품질 관리           |
+| **유지보수** | Code Simplifier, Claude MD Management | 코드 정리, 프로젝트 문서 관리          |

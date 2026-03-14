@@ -94,7 +94,7 @@ export function useCartAuthSync() {
             // 업로드 실패 시 서버 장바구니 사용
             queryClient.setQueryData(cartKeys.items(userId), serverItems);
             toast.error(
-              "로컬 장바구니를 서버로 업로드하지 못했습니다. 서버 장바구니를 사용합니다."
+              "로컬 장바구니를 서버로 업로드하지 못했습니다. 서버 장바구니를 사용합니다.",
             );
           }
         } else {

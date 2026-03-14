@@ -9,7 +9,10 @@ import {
   COLOR_OPTIONS,
   PATTERN_OPTIONS,
 } from "@/features/design/constants/design-options";
-import type { CiPlacement, PatternOption } from "@/features/design/types/design-context";
+import type {
+  CiPlacement,
+  PatternOption,
+} from "@/features/design/types/design-context";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
 import { cn } from "@/lib/utils";
@@ -33,10 +36,16 @@ function removeAttachmentsByFilter(
 
 export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   const designContext = useDesignChatStore((state) => state.designContext);
-  const pendingAttachments = useDesignChatStore((state) => state.pendingAttachments);
+  const pendingAttachments = useDesignChatStore(
+    (state) => state.pendingAttachments,
+  );
   const addAttachment = useDesignChatStore((state) => state.addAttachment);
-  const removeAttachment = useDesignChatStore((state) => state.removeAttachment);
-  const setDesignContext = useDesignChatStore((state) => state.setDesignContext);
+  const removeAttachment = useDesignChatStore(
+    (state) => state.removeAttachment,
+  );
+  const setDesignContext = useDesignChatStore(
+    (state) => state.setDesignContext,
+  );
   const ciInputRef = useRef<HTMLInputElement | null>(null);
   const referenceInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -44,13 +53,15 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
     (attachment) => attachment.type === "color",
   );
   const selectedColorValues =
-    selectedColors.length > 0 ? selectedColors.map((attachment) => attachment.value) : designContext.colors;
+    selectedColors.length > 0
+      ? selectedColors.map((attachment) => attachment.value)
+      : designContext.colors;
   const selectedPattern =
-    pendingAttachments.find((attachment) => attachment.type === "pattern")?.value ??
-    designContext.pattern;
+    pendingAttachments.find((attachment) => attachment.type === "pattern")
+      ?.value ?? designContext.pattern;
   const selectedCiPlacement =
-    pendingAttachments.find((attachment) => attachment.type === "ci-placement")?.value ??
-    designContext.ciPlacement;
+    pendingAttachments.find((attachment) => attachment.type === "ci-placement")
+      ?.value ?? designContext.ciPlacement;
 
   const handleColorToggle = (label: string, value: string) => {
     const existingIndex = pendingAttachments.findIndex(
@@ -66,7 +77,9 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
 
     // designContext에만 있는 색상(pendingAttachment 없음) 토글 해제
     if (designContext.colors?.includes(value)) {
-      setDesignContext({ colors: designContext.colors.filter((c) => c !== value) });
+      setDesignContext({
+        colors: designContext.colors.filter((c) => c !== value),
+      });
       return;
     }
 
@@ -125,7 +138,10 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   };
 
   return (
-    <div id="attachment-popup" className="absolute bottom-full mb-2 w-72 rounded-xl border bg-white p-4 shadow-lg">
+    <div
+      id="attachment-popup"
+      className="absolute bottom-full mb-2 w-72 rounded-xl border bg-white p-4 shadow-lg"
+    >
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold">첨부 옵션</h3>
         <Button variant="ghost" size="icon-sm" type="button" onClick={onClose}>
@@ -154,7 +170,9 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                   className={cn(
                     "h-8 w-8 rounded-full border-2 transition-opacity",
                     isSelected ? "border-black" : "border-transparent",
-                    isDisabled ? "cursor-not-allowed opacity-40" : "hover:opacity-80",
+                    isDisabled
+                      ? "cursor-not-allowed opacity-40"
+                      : "hover:opacity-80",
                   )}
                   style={{ backgroundColor: option.value }}
                 />
@@ -173,7 +191,9 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                 key={option.value}
                 type="button"
                 size="sm"
-                variant={selectedPattern === option.value ? "default" : "outline"}
+                variant={
+                  selectedPattern === option.value ? "default" : "outline"
+                }
                 onClick={() => handlePatternSelect(option.label, option.value)}
               >
                 {option.label}
@@ -192,8 +212,12 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                 key={option.value}
                 type="button"
                 size="sm"
-                variant={selectedCiPlacement === option.value ? "default" : "outline"}
-                onClick={() => handleCiPlacementSelect(option.label, option.value)}
+                variant={
+                  selectedCiPlacement === option.value ? "default" : "outline"
+                }
+                onClick={() =>
+                  handleCiPlacementSelect(option.label, option.value)
+                }
               >
                 {option.label}
               </Button>
@@ -218,7 +242,9 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
               type="file"
               className="hidden"
               accept="image/*"
-              onChange={(event) => handleImageSelection(event, "참고 이미지", "reference")}
+              onChange={(event) =>
+                handleImageSelection(event, "참고 이미지", "reference")
+              }
             />
             <Button
               type="button"

@@ -10,7 +10,7 @@ export interface CreateCustomOrderResponse {
 export type { CreateCustomOrderRequest };
 
 export const createCustomOrder = async (
-  request: CreateCustomOrderRequest
+  request: CreateCustomOrderRequest,
 ): Promise<CreateCustomOrderResponse> => {
   const requestDto = toCreateCustomOrderInputDto(request);
 
@@ -18,7 +18,7 @@ export const createCustomOrder = async (
     "create-custom-order",
     {
       body: requestDto,
-    }
+    },
   );
 
   if (error) {

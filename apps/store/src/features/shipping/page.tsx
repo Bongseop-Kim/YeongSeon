@@ -33,7 +33,7 @@ const ShippingPage = () => {
     !!window.opener &&
     window.opener !== window;
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null
+    null,
   );
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -177,7 +177,7 @@ const ShippingPage = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(
-                                `${ROUTES.SHIPPING_FORM}?id=${address.id}`
+                                `${ROUTES.SHIPPING_FORM}?id=${address.id}`,
                               );
                             }}
                           >
@@ -209,7 +209,7 @@ const ShippingPage = () => {
                             배송 요청:{" "}
                             {getDeliveryRequestLabel(
                               address.deliveryRequest,
-                              address.deliveryMemo
+                              address.deliveryMemo,
                             )}
                           </p>
                         )}

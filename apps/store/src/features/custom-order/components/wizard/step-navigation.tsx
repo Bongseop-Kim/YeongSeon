@@ -33,11 +33,7 @@ export const StepNavigation = ({
         </CardDescription>
         <div className="flex items-center gap-2">
           {!isFirstStep && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onPrev}
-            >
+            <Button type="button" variant="outline" onClick={onPrev}>
               <ChevronLeft />
               이전
             </Button>
@@ -60,10 +56,7 @@ export const StepNavigation = ({
                   : "주문하기"}
             </Button>
           ) : (
-            <Button
-              type="button"
-              onClick={onNext}
-            >
+            <Button type="button" onClick={onNext}>
               다음
               <ChevronRight />
             </Button>

@@ -72,7 +72,9 @@ export default function CouponEdit() {
   const [issuing, setIssuing] = useState(false);
 
   const [selectedIssuedIds, setSelectedIssuedIds] = useState<React.Key[]>([]);
-  const [selectedIssuedRows, setSelectedIssuedRows] = useState<IssuedCouponRow[]>([]);
+  const [selectedIssuedRows, setSelectedIssuedRows] = useState<
+    IssuedCouponRow[]
+  >([]);
   const [revoking, setRevoking] = useState(false);
 
   const loadIdRef = useRef(0);
@@ -186,7 +188,8 @@ export default function CouponEdit() {
         switch (preset) {
           case "new30":
             presetUsers = allCustomers.filter(
-              (user) => user.created_at && dayjs(user.created_at).isAfter(start30d)
+              (user) =>
+                user.created_at && dayjs(user.created_at).isAfter(start30d),
             );
             break;
 
@@ -206,14 +209,18 @@ export default function CouponEdit() {
           case "purchased": {
             const purchasedUserIds = await loadPurchasedUserIds();
             if (requestId !== loadIdRef.current) return;
-            presetUsers = allCustomers.filter((user) => purchasedUserIds.has(user.id));
+            presetUsers = allCustomers.filter((user) =>
+              purchasedUserIds.has(user.id),
+            );
             break;
           }
 
           case "notPurchased": {
             const purchasedUserIds = await loadPurchasedUserIds();
             if (requestId !== loadIdRef.current) return;
-            presetUsers = allCustomers.filter((user) => !purchasedUserIds.has(user.id));
+            presetUsers = allCustomers.filter(
+              (user) => !purchasedUserIds.has(user.id),
+            );
             break;
           }
 
@@ -257,7 +264,9 @@ export default function CouponEdit() {
         }
 
         if (excludeIssuedUsers) {
-          presetUsers = presetUsers.filter((user) => !alreadyIssued.has(user.id));
+          presetUsers = presetUsers.filter(
+            (user) => !alreadyIssued.has(user.id),
+          );
         }
 
         if (requestId !== loadIdRef.current) return;
@@ -273,7 +282,8 @@ export default function CouponEdit() {
         }
       }
     },
-    [couponId, excludeIssuedUsers]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [couponId, excludeIssuedUsers],
   );
 
   useEffect(() => {
@@ -325,7 +335,7 @@ export default function CouponEdit() {
               coupon_id: couponId,
               status: "active",
             })),
-            { onConflict: "user_id,coupon_id" }
+            { onConflict: "user_id,coupon_id" },
           );
 
           if (error) {
@@ -347,7 +357,9 @@ export default function CouponEdit() {
   };
 
   const revokeCoupons = (rows: IssuedCouponRow[]) => {
-    const targetRows = rows.filter((row) => row && isActiveIssuedStatus(row.status));
+    const targetRows = rows.filter(
+      (row) => row && isActiveIssuedStatus(row.status),
+    );
 
     if (!targetRows.length) {
       message.warning("회수할 항목을 선택해주세요.");
@@ -358,10 +370,18 @@ export default function CouponEdit() {
     const rowsWithoutId = targetRows.filter((row) => !row.id);
 
     const idsToRevoke = Array.from(
-      new Set(rowsWithId.map((row) => row.id).filter((value): value is string => !!value))
+      new Set(
+        rowsWithId
+          .map((row) => row.id)
+          .filter((value): value is string => !!value),
+      ),
     );
     const userIdsToRevoke = Array.from(
-      new Set(rowsWithoutId.map((row) => row.userId).filter((value): value is string => !!value))
+      new Set(
+        rowsWithoutId
+          .map((row) => row.userId)
+          .filter((value): value is string => !!value),
+      ),
     );
 
     modal.confirm({
@@ -403,7 +423,9 @@ export default function CouponEdit() {
             error && typeof error === "object" && "message" in error
               ? String(error.message)
               : "";
-          message.error(`일괄 회수에 실패했습니다.${detail ? ` (${detail})` : ""}`);
+          message.error(
+            `일괄 회수에 실패했습니다.${detail ? ` (${detail})` : ""}`,
+          );
         } finally {
           setRevoking(false);
         }
@@ -418,7 +440,11 @@ export default function CouponEdit() {
         <Form.Item label="쿠폰명" name="name" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
-        <Form.Item label="할인유형" name="discount_type" rules={[{ required: true }]}>
+        <Form.Item
+          label="할인유형"
+          name="discount_type"
+          rules={[{ required: true }]}
+        >
           <Select
             options={[
               { label: "퍼센트(%)", value: "percentage" },
@@ -426,7 +452,11 @@ export default function CouponEdit() {
             ]}
           />
         </Form.Item>
-        <Form.Item label="할인값" name="discount_value" rules={[{ required: true }]}>
+        <Form.Item
+          label="할인값"
+          name="discount_value"
+          rules={[{ required: true }]}
+        >
           <InputNumber min={0} style={{ width: "100%" }} />
         </Form.Item>
         <Form.Item label="최대할인금액" name="max_discount_amount">
@@ -439,8 +469,12 @@ export default function CouponEdit() {
           label="만료일"
           name="expiry_date"
           rules={[{ required: true }]}
-          getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
-          getValueFromEvent={(date: dayjs.Dayjs | null) => date?.format("YYYY-MM-DD") ?? null}
+          getValueProps={(value) => ({
+            value: value ? dayjs(value) : undefined,
+          })}
+          getValueFromEvent={(date: dayjs.Dayjs | null) =>
+            date?.format("YYYY-MM-DD") ?? null
+          }
         >
           <DatePicker style={{ width: "100%" }} />
         </Form.Item>
@@ -535,7 +569,10 @@ export default function CouponEdit() {
         </Space>
 
         <Space style={{ display: "block", marginBottom: 12 }}>
-          <Switch checked={excludeIssuedUsers} onChange={setExcludeIssuedUsers} />
+          <Switch
+            checked={excludeIssuedUsers}
+            onChange={setExcludeIssuedUsers}
+          />
           <span>중복 발급 방지</span>
         </Space>
 

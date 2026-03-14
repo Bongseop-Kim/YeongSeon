@@ -10,14 +10,19 @@ import {
   toClaimItemView,
   toCreateClaimInputDTO,
 } from "@/features/claim/api/claims-mapper";
-import { normalizeKeyword, type ListFilters } from "@/features/order/utils/list-filters";
+import {
+  normalizeKeyword,
+  type ListFilters,
+} from "@/features/order/utils/list-filters";
 
 const CLAIM_LIST_VIEW = "claim_list_view";
 
 /**
  * 클레임 목록 조회
  */
-export const getClaims = async (filters?: ListFilters): Promise<ClaimItem[]> => {
+export const getClaims = async (
+  filters?: ListFilters,
+): Promise<ClaimItem[]> => {
   let query = supabase
     .from(CLAIM_LIST_VIEW)
     .select("*")
@@ -49,7 +54,8 @@ export const getClaims = async (filters?: ListFilters): Promise<ClaimItem[]> => 
       claim.item.type === "product"
         ? `${claim.item.product.name} ${claim.item.selectedOption?.name ?? ""}`
         : "수선";
-    const searchText = `${claim.claimNumber} ${claim.orderNumber} ${claim.reason} ${claim.status} ${claim.type} ${itemText}`.toLowerCase();
+    const searchText =
+      `${claim.claimNumber} ${claim.orderNumber} ${claim.reason} ${claim.status} ${claim.type} ${itemText}`.toLowerCase();
     return searchText.includes(keyword);
   });
 };
@@ -58,7 +64,7 @@ export const getClaims = async (filters?: ListFilters): Promise<ClaimItem[]> => 
  * 클레임 생성
  */
 export const createClaim = async (
-  request: CreateClaimRequest
+  request: CreateClaimRequest,
 ): Promise<CreateClaimResponse> => {
   const input = toCreateClaimInputDTO(request);
 

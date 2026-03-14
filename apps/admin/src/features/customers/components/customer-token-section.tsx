@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Button, Space, Table, Tag, Typography } from "antd";
-import { useCustomerTokenBalancesQuery, useCustomerTokenHistoryQuery } from "@/features/customers/api/customers-query";
+import {
+  useCustomerTokenBalancesQuery,
+  useCustomerTokenHistoryQuery,
+} from "@/features/customers/api/customers-query";
 import { CustomerTokenFormModal } from "@/features/customers/components/customer-token-form-modal";
 import type { AdminCustomerTokenRow } from "@/features/customers/types/admin-customer";
 
@@ -31,7 +34,10 @@ const extractBaseWorkId = (workId: string | null): string | null => {
 };
 
 function mergeUsageItems(items: AdminCustomerTokenRow[]): MergedTokenRow[] {
-  const groupMap = new Map<string, { baseItem: AdminCustomerTokenRow; net: number }>();
+  const groupMap = new Map<
+    string,
+    { baseItem: AdminCustomerTokenRow; net: number }
+  >();
   const standalone: AdminCustomerTokenRow[] = [];
 
   for (const item of items) {
@@ -65,7 +71,9 @@ function mergeUsageItems(items: AdminCustomerTokenRow[]): MergedTokenRow[] {
       createdAt: item.createdAt,
       type: item.type,
     })),
-  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  ].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 }
 
 export function CustomerTokenSection({ userId }: Props) {
@@ -74,19 +82,15 @@ export function CustomerTokenSection({ userId }: Props) {
     data: balances,
     isLoading: isBalancesLoading,
     isError: isBalancesError,
-  } =
-    useCustomerTokenBalancesQuery([userId]);
+  } = useCustomerTokenBalancesQuery([userId]);
   const {
     data: history,
     isLoading: isHistoryLoading,
     isError: isHistoryError,
-  } =
-    useCustomerTokenHistoryQuery(userId);
+  } = useCustomerTokenHistoryQuery(userId);
 
   const currentBalance = balances?.[0]?.balance ?? 0;
-  const mergedHistory = mergeUsageItems(
-    (history ?? []),
-  );
+  const mergedHistory = mergeUsageItems(history ?? []);
   const columns = [
     {
       dataIndex: "createdAt",
@@ -106,7 +110,7 @@ export function CustomerTokenSection({ userId }: Props) {
               ? `토큰 ${TOKEN_TYPE_LABELS.refund}`
               : record.type === "purchase"
                 ? "토큰 구매"
-            : `토큰 ${TOKEN_TYPE_LABELS.use}`),
+                : `토큰 ${TOKEN_TYPE_LABELS.use}`),
     },
     {
       dataIndex: "netAmount",
@@ -116,7 +120,7 @@ export function CustomerTokenSection({ userId }: Props) {
           {value > 0 ? "+" : ""}
           {value.toLocaleString()}
         </Text>
-      )
+      ),
     },
   ];
 

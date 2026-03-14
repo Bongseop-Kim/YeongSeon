@@ -16,7 +16,9 @@ export function CustomerCouponsTable({ coupons }: Props) {
       pagination={false}
       size="small"
       onRow={(record: AdminCustomerCouponRow) => ({
-        onClick: record.couponId ? () => edit("coupons", record.couponId) : undefined,
+        onClick: record.couponId
+          ? () => edit("coupons", record.couponId)
+          : undefined,
         style: { cursor: record.couponId ? "pointer" : "default" },
       })}
     >

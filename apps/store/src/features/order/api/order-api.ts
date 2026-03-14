@@ -17,7 +17,10 @@ import {
   toOrderViewFromDetail,
 } from "@/features/order/api/order-mapper";
 import { extractEdgeFunctionErrorMessage } from "./order-error-mapper";
-import { normalizeKeyword, type ListFilters } from "@/features/order/utils/list-filters";
+import {
+  normalizeKeyword,
+  type ListFilters,
+} from "@/features/order/utils/list-filters";
 
 const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";
@@ -27,7 +30,7 @@ const ORDER_ITEM_VIEW = "order_item_view";
  * 주문 생성
  */
 export const createOrder = async (
-  request: CreateOrderRequest
+  request: CreateOrderRequest,
 ): Promise<CreateOrderResponse> => {
   const input: CreateOrderInputDTO = {
     shipping_address_id: request.shippingAddressId,
@@ -62,7 +65,6 @@ export const createOrder = async (
     })),
   };
 };
-
 
 /**
  * 주문 목록 조회
@@ -146,7 +148,8 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
       })
       .join(" ");
 
-    const searchText = `${order.orderNumber} ${order.status} ${itemText}`.toLowerCase();
+    const searchText =
+      `${order.orderNumber} ${order.status} ${itemText}`.toLowerCase();
     return searchText.includes(keyword);
   });
 };
@@ -154,9 +157,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
 /**
  * 구매확정 (배송완료 상태에서만 가능)
  */
-export const confirmPurchase = async (
-  orderId: string
-): Promise<void> => {
+export const confirmPurchase = async (orderId: string): Promise<void> => {
   const { error } = await supabase.rpc("customer_confirm_purchase", {
     p_order_id: orderId,
   });

@@ -48,13 +48,18 @@ export function OrderStatusActions({
       content: (
         <div>
           <p>
-            현재 상태 <Tag>{order.status}</Tag> → <Tag>{targetStatus}</Tag>{eulo(targetStatus)} 롤백합니다.
+            현재 상태 <Tag>{order.status}</Tag> → <Tag>{targetStatus}</Tag>
+            {eulo(targetStatus)} 롤백합니다.
           </p>
-          <p style={{ marginBottom: 4 }}><strong>사유 (필수)</strong></p>
+          <p style={{ marginBottom: 4 }}>
+            <strong>사유 (필수)</strong>
+          </p>
           <TextArea
             rows={3}
             placeholder="롤백 사유를 입력하세요"
-            onChange={(e) => { rollbackMemoRef.current = e.target.value; }}
+            onChange={(e) => {
+              rollbackMemoRef.current = e.target.value;
+            }}
           />
         </div>
       ),
@@ -111,7 +116,8 @@ export function OrderStatusActions({
             loading={isUpdating}
             onClick={handleNextStatusClick}
           >
-            {nextStatus}{eulo(nextStatus)} 변경
+            {nextStatus}
+            {eulo(nextStatus)} 변경
           </Button>
         )}
         {rollbackStatus && (
@@ -119,7 +125,8 @@ export function OrderStatusActions({
             loading={isUpdating}
             onClick={() => handleRollbackClick(rollbackStatus)}
           >
-            {rollbackStatus}{eulo(rollbackStatus)} 롤백
+            {rollbackStatus}
+            {eulo(rollbackStatus)} 롤백
           </Button>
         )}
         {!NON_CANCELABLE_STATUS_SET.has(order.status) && (

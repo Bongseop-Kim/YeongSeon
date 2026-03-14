@@ -12,10 +12,13 @@ export const toInquiryView = (row: InquiryRowDTO): InquiryItem => ({
   category: INQUIRY_CATEGORIES.includes(row.category as InquiryCategory)
     ? (row.category as InquiryCategory)
     : "일반",
-  product:
-    row.products
-      ? { id: row.products.id, name: row.products.name, image: row.products.image }
-      : undefined,
+  product: row.products
+    ? {
+        id: row.products.id,
+        name: row.products.name,
+        image: row.products.image,
+      }
+    : undefined,
   title: row.title,
   content: row.content,
   answer: row.answer ?? undefined,

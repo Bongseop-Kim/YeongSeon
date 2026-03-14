@@ -2,7 +2,7 @@ import { upload } from "@imagekit/react";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
-import { getImageKitAuth } from "../api/reform-api";
+import { getImageKitAuth } from "@/features/reform/api/reform-api";
 
 /**
  * TieItem 배열의 File 이미지를 ImageKit에 업로드하고 URL 문자열로 교체
@@ -38,6 +38,6 @@ export async function uploadTieImages(ties: TieItem[]): Promise<TieItem[]> {
       }
 
       return { ...tie, image: response.url, fileId: response.fileId };
-    })
+    }),
   );
 }

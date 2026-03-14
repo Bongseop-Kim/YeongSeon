@@ -24,7 +24,8 @@ const footerVariants = cva("w-full border-t bg-gray-50/50", {
 });
 
 export interface FooterProps
-  extends React.HTMLAttributes<HTMLElement>,
+  extends
+    React.HTMLAttributes<HTMLElement>,
     VariantProps<typeof footerVariants> {}
 
 const Footer = React.forwardRef<HTMLElement, FooterProps>(
@@ -36,7 +37,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
         {...props}
       />
     );
-  }
+  },
 );
 Footer.displayName = "Footer";
 
@@ -68,7 +69,7 @@ const FooterTitle = React.forwardRef<
     ref={ref}
     className={cn(
       "text-sm font-semibold tracking-wide text-gray-900 uppercase",
-      className
+      className,
     )}
     {...props}
   />
@@ -83,7 +84,7 @@ const FooterLink = React.forwardRef<
     ref={ref}
     className={cn(
       "text-sm text-gray-600 transition-colors duration-200 block py-1",
-      className
+      className,
     )}
     {...props}
   />

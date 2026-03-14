@@ -10,9 +10,7 @@ export interface ProviderConfig {
   icon: React.ReactNode;
 }
 
-export function isSupportedProvider(
-  id: ProviderId
-): id is SupportedProvider {
+export function isSupportedProvider(id: ProviderId): id is SupportedProvider {
   return id === "kakao" || id === "google";
 }
 

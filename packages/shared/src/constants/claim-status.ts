@@ -1,9 +1,6 @@
 import type { ClaimType } from "../types/view/claim-item";
 
-export const CLAIM_STATUS_FLOW: Record<
-  ClaimType,
-  Record<string, string>
-> = {
+export const CLAIM_STATUS_FLOW: Record<ClaimType, Record<string, string>> = {
   cancel: { 접수: "처리중", 처리중: "완료" },
   return: { 접수: "수거요청", 수거요청: "수거완료", 수거완료: "완료" },
   exchange: {

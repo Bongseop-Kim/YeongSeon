@@ -52,7 +52,7 @@ const GlobalModal = () => {
 
     if (isFullScreen) {
       baseClasses.push(
-        "inset-0 top-0 left-0 translate-x-0 translate-y-0 max-w-full h-full max-h-full rounded-none border-0"
+        "inset-0 top-0 left-0 translate-x-0 translate-y-0 max-w-full h-full max-h-full rounded-none border-0",
       );
     } else {
       baseClasses.push("max-h-[min(600px,80dvh)]");
@@ -74,7 +74,7 @@ const GlobalModal = () => {
           <div
             className={cn(
               "flex-1 overflow-y-auto",
-              modalType === "custom" ? "flex flex-col min-h-0" : "py-4"
+              modalType === "custom" ? "flex flex-col min-h-0" : "py-4",
             )}
           >
             {typeof children === "function" ? children() : children}

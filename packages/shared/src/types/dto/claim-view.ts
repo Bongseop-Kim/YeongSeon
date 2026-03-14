@@ -3,7 +3,14 @@ import type { TieItemDTO } from "./reform";
 import type { AppliedCouponDTO } from "./coupon";
 import type { CustomOrderDataDTO } from "./order-view";
 
-export type ClaimStatusDTO = "접수" | "처리중" | "수거요청" | "수거완료" | "재발송" | "완료" | "거부";
+export type ClaimStatusDTO =
+  | "접수"
+  | "처리중"
+  | "수거요청"
+  | "수거완료"
+  | "재발송"
+  | "완료"
+  | "거부";
 export type ClaimTypeDTO = "cancel" | "return" | "exchange" | "token_refund";
 
 export interface TokenRefundDataDTO {

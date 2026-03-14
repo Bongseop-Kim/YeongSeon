@@ -11,7 +11,11 @@ import {
   toAdminCustomerCouponRow,
   toAdminCustomerTokenRow,
 } from "@/features/customers/api/customers-mapper";
-import type { DesignTokenRow, ProfileRow, UserCouponRow } from "@/features/customers/api/customers-mapper";
+import type {
+  DesignTokenRow,
+  ProfileRow,
+  UserCouponRow,
+} from "@/features/customers/api/customers-mapper";
 import {
   getCustomerTokenBalances,
   getCustomerTokenHistory,
@@ -75,7 +79,7 @@ export function useAdminCustomerOrders(customerId: string | undefined) {
   });
 
   const orders: AdminCustomerOrderRow[] = (result.data ?? []).map(
-    toAdminCustomerOrderRow
+    toAdminCustomerOrderRow,
   );
 
   return { orders };
@@ -92,7 +96,7 @@ export function useAdminCustomerCoupons(customerId: string | undefined) {
   });
 
   const coupons: AdminCustomerCouponRow[] = (result.data ?? []).map(
-    toAdminCustomerCouponRow
+    toAdminCustomerCouponRow,
   );
 
   return { coupons };
@@ -122,7 +126,8 @@ export function useManageCustomerTokensMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: ManageCustomerTokensParams) => manageCustomerTokens(params),
+    mutationFn: (params: ManageCustomerTokensParams) =>
+      manageCustomerTokens(params),
     onSuccess: async (_, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({

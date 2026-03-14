@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     encoder.encode(privateKey),
     { name: "HMAC", hash: "SHA-1" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const data = encoder.encode(token + expire.toString());
   const signatureBuffer = await crypto.subtle.sign("HMAC", key, data);

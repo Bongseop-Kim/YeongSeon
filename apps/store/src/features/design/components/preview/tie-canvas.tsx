@@ -43,14 +43,19 @@ interface TieCanvasProps {
 }
 
 export function TieCanvas({ unmasked = false }: TieCanvasProps) {
-  const generationStatus = useDesignChatStore((state) => state.generationStatus);
-  const generatedImageUrl = useDesignChatStore((state) => state.generatedImageUrl);
+  const generationStatus = useDesignChatStore(
+    (state) => state.generationStatus,
+  );
+  const generatedImageUrl = useDesignChatStore(
+    (state) => state.generatedImageUrl,
+  );
   const designContext = useDesignChatStore((state) => state.designContext);
 
   const isCompleted = generationStatus === "completed";
   const isLoading =
     generationStatus === "generating" || generationStatus === "regenerating";
-  const previewColor = generatedImageUrl ?? designContext.colors[0] ?? "#e5e7eb";
+  const previewColor =
+    generatedImageUrl ?? designContext.colors[0] ?? "#e5e7eb";
 
   return (
     <div className="relative flex flex-col items-center">

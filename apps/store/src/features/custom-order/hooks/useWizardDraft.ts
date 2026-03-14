@@ -19,7 +19,8 @@ const isWizardDraft = (obj: unknown): obj is WizardDraft => {
     typeof d.formValues !== "object" ||
     d.formValues === null ||
     typeof d.currentStepIndex !== "number" ||
-    !Array.isArray(d.visitedSteps) || !d.visitedSteps.every((s) => typeof s === "number") ||
+    !Array.isArray(d.visitedSteps) ||
+    !d.visitedSteps.every((s) => typeof s === "number") ||
     typeof d.savedAt !== "number"
   ) {
     return false;
@@ -45,7 +46,12 @@ export const useWizardDraft = () => {
     try {
       const sanitized: WizardDraft = {
         ...draft,
-        formValues: { ...draft.formValues, referenceImages: null, contactName: "", contactValue: "" },
+        formValues: {
+          ...draft.formValues,
+          referenceImages: null,
+          contactName: "",
+          contactValue: "",
+        },
       };
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify(sanitized));
     } catch {
@@ -67,10 +73,11 @@ interface WizardStepState {
 
 export const useRestoreDraft = (
   form: UseFormReturn<QuoteOrderOptions>,
-  resetTo: (stepIndex: number, visited: Set<number>) => void
+  resetTo: (stepIndex: number, visited: Set<number>) => void,
 ) => {
   const { loadDraft, clearDraft } = useWizardDraft();
   const draftCheckedRef = useRef(false);
+  const toastIdRef = useRef<string | number | undefined>(undefined);
 
   useEffect(() => {
     if (draftCheckedRef.current) return;
@@ -80,7 +87,6 @@ export const useRestoreDraft = (
     if (!existing) return;
 
     let restored = false;
-    let toastId: string | number | undefined;
 
     const removeClickListener = () => {
       document.removeEventListener("pointerdown", handleClickOutside, true);
@@ -90,20 +96,17 @@ export const useRestoreDraft = (
       const target = e.target as HTMLElement;
       if (target.closest("[data-sonner-toast]")) return;
       removeClickListener();
-      if (toastId !== undefined) toast.dismiss(toastId);
+      if (toastIdRef.current !== undefined) toast.dismiss(toastIdRef.current);
     };
 
-    toastId = toast.info("이전에 작성 중이던 주문이 있어요", {
+    toastIdRef.current = toast.info("이전에 작성 중이던 주문이 있어요", {
       action: {
         label: "이어서 하기",
         onClick: () => {
           restored = true;
           removeClickListener();
           form.reset(existing.formValues);
-          resetTo(
-            existing.currentStepIndex,
-            new Set(existing.visitedSteps)
-          );
+          resetTo(existing.currentStepIndex, new Set(existing.visitedSteps));
         },
       },
       onDismiss: () => {
@@ -128,7 +131,7 @@ export const useRestoreDraft = (
 
 export const useAutoSave = (
   form: UseFormReturn<QuoteOrderOptions>,
-  wizard: WizardStepState
+  wizard: WizardStepState,
 ) => {
   const { saveDraft } = useWizardDraft();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

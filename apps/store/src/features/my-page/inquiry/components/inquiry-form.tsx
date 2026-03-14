@@ -47,11 +47,21 @@ export const InquiryForm = ({
   });
 
   const category = useWatch({ control: form.control, name: "category" });
-  const selectedProductId = useWatch({ control: form.control, name: "productId" });
-  const selectedProductName = useWatch({ control: form.control, name: "productName" });
-  const selectedProductImage = useWatch({ control: form.control, name: "productImage" });
+  const selectedProductId = useWatch({
+    control: form.control,
+    name: "productId",
+  });
+  const selectedProductName = useWatch({
+    control: form.control,
+    name: "productName",
+  });
+  const selectedProductImage = useWatch({
+    control: form.control,
+    name: "productImage",
+  });
 
-  const { data: productResults = [] } = useProductSearchForInquiry(debouncedQuery);
+  const { data: productResults = [] } =
+    useProductSearchForInquiry(debouncedQuery);
 
   useEffect(() => {
     if (initialData) {
@@ -71,7 +81,11 @@ export const InquiryForm = ({
     }
   }, [category, form]);
 
-  const handleSelectProduct = (product: { id: number; name: string; image: string }) => {
+  const handleSelectProduct = (product: {
+    id: number;
+    name: string;
+    image: string;
+  }) => {
     form.setValue("productId", product.id);
     form.setValue("productName", product.name);
     form.setValue("productImage", product.image);
@@ -93,7 +107,6 @@ export const InquiryForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-
         {/* 카테고리 선택 */}
         <div className="space-y-2 py-2">
           <Label>문의 유형</Label>
@@ -182,8 +195,12 @@ export const InquiryForm = ({
               }}
               render={({ fieldState }) =>
                 fieldState.error ? (
-                  <p className="text-sm text-red-500">{fieldState.error.message}</p>
-                ) : <></>
+                  <p className="text-sm text-red-500">
+                    {fieldState.error.message}
+                  </p>
+                ) : (
+                  <></>
+                )
               }
             />
           </div>
@@ -198,9 +215,15 @@ export const InquiryForm = ({
             rules={{ required: "제목을 입력해주세요." }}
             render={({ field, fieldState }) => (
               <>
-                <Input placeholder="제목을 입력해주세요." {...field} className="w-full" />
+                <Input
+                  placeholder="제목을 입력해주세요."
+                  {...field}
+                  className="w-full"
+                />
                 {fieldState.error && (
-                  <p className="text-sm text-red-500">{fieldState.error.message}</p>
+                  <p className="text-sm text-red-500">
+                    {fieldState.error.message}
+                  </p>
                 )}
               </>
             )}
@@ -222,7 +245,9 @@ export const InquiryForm = ({
                   {...field}
                 />
                 {fieldState.error && (
-                  <p className="text-sm text-red-500">{fieldState.error.message}</p>
+                  <p className="text-sm text-red-500">
+                    {fieldState.error.message}
+                  </p>
                 )}
               </>
             )}
@@ -231,7 +256,12 @@ export const InquiryForm = ({
 
         <div className="flex gap-2">
           {onCancel && (
-            <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={onCancel}
+            >
               취소
             </Button>
           )}

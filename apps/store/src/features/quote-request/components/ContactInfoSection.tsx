@@ -95,7 +95,8 @@ export const ContactInfoSection = ({
             <Input
               id="contactValue"
               placeholder={
-                CONTACT_METHOD_PLACEHOLDERS[contactMethod] ?? "연락처를 입력해주세요"
+                CONTACT_METHOD_PLACEHOLDERS[contactMethod] ??
+                "연락처를 입력해주세요"
               }
               {...field}
             />

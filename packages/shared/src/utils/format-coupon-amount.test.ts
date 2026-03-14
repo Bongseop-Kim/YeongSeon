@@ -4,7 +4,10 @@ import { formatCouponAmount } from "./format-coupon-amount";
 
 describe("formatCouponAmount", () => {
   it("percentage 타입은 %로 포맷한다", () => {
-    const coupon = createCoupon({ discountType: "percentage", discountValue: 10 });
+    const coupon = createCoupon({
+      discountType: "percentage",
+      discountValue: 10,
+    });
     expect(formatCouponAmount(coupon)).toBe("10%");
   });
 
@@ -14,7 +17,10 @@ describe("formatCouponAmount", () => {
   });
 
   it("큰 금액은 콤마를 포함한다", () => {
-    const coupon = createCoupon({ discountType: "fixed", discountValue: 10000 });
+    const coupon = createCoupon({
+      discountType: "fixed",
+      discountValue: 10000,
+    });
     expect(formatCouponAmount(coupon)).toBe("10,000원");
   });
 });

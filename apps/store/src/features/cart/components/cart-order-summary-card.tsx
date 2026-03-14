@@ -39,7 +39,9 @@ export function CartOrderSummaryCard({ summary }: CartOrderSummaryCardProps) {
 
           <div className="flex justify-between text-base font-semibold">
             <span>총 {summary.totalQuantity}개</span>
-            <span className="text-lg">{summary.totalPrice.toLocaleString()}원</span>
+            <span className="text-lg">
+              {summary.totalPrice.toLocaleString()}원
+            </span>
           </div>
         </div>
       </CardContent>

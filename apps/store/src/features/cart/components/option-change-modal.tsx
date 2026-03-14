@@ -23,7 +23,7 @@ export const OptionChangeModal = forwardRef<
 >(({ item }, ref) => {
   const [quantity, setQuantity] = useState(item.quantity);
   const [selectedOptionId, setSelectedOptionId] = useState(
-    item.selectedOption?.id
+    item.selectedOption?.id,
   );
 
   useImperativeHandle(ref, () => ({
@@ -52,7 +52,7 @@ export const OptionChangeModal = forwardRef<
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {item.product.options!.map((option) => (
+              {(item.product.options ?? []).map((option) => (
                 <SelectItem key={option.id} value={option.id}>
                   {option.name}
                   {option.additionalPrice > 0 &&

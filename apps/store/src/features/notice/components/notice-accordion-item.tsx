@@ -21,8 +21,13 @@ export function NoticeAccordionItem({ notice }: NoticeAccordionItemProps) {
                 중요
               </Badge>
             )}
-            <span className="text-xs text-muted-foreground">{notice.category}</span>
-            <time dateTime={notice.date} className="text-xs text-muted-foreground ml-auto">
+            <span className="text-xs text-muted-foreground">
+              {notice.category}
+            </span>
+            <time
+              dateTime={notice.date}
+              className="text-xs text-muted-foreground ml-auto"
+            >
               {notice.date}
             </time>
           </div>

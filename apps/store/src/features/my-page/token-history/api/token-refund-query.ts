@@ -22,7 +22,9 @@ export function useRequestTokenRefundMutation() {
       requestTokenRefund(orderId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: REFUNDABLE_ORDERS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,
+      });
     },
   });
 }
@@ -33,7 +35,9 @@ export function useCancelTokenRefundMutation() {
     mutationFn: (requestId: string) => cancelTokenRefund(requestId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: REFUNDABLE_ORDERS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,
+      });
     },
   });
 }

@@ -44,24 +44,34 @@ export function CustomOrderOptionsSection({
   sampleType,
 }: CustomOrderOptionsSectionProps) {
   const enabledAdditionalOptions = ADDITIONAL_OPTION_LABELS.filter(
-    ({ key }) => options[key]
+    ({ key }) => options[key],
   );
   const hasReferenceImages =
     Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0;
   const hasAdditionalNotes =
     typeof additionalNotes === "string" && additionalNotes.trim() !== "";
-  const hasSampleType = typeof sampleType === "string" && sampleType.trim() !== "";
+  const hasSampleType =
+    typeof sampleType === "string" && sampleType.trim() !== "";
 
   return (
     <div className="space-y-6">
       <div>
-        <DetailRow label="넥타이 유형" value={formatDetailValue(options.tieType)} />
-        <DetailRow label="심지" value={formatDetailValue(options.interlining)} />
+        <DetailRow
+          label="넥타이 유형"
+          value={formatDetailValue(options.tieType)}
+        />
+        <DetailRow
+          label="심지"
+          value={formatDetailValue(options.interlining)}
+        />
         <DetailRow
           label="디자인 유형"
           value={formatDetailValue(options.designType)}
         />
-        <DetailRow label="원단 유형" value={formatDetailValue(options.fabricType)} />
+        <DetailRow
+          label="원단 유형"
+          value={formatDetailValue(options.fabricType)}
+        />
         <DetailRow
           label="원단 지참"
           value={options.fabricProvided ? "예" : "아니오"}
@@ -86,7 +96,9 @@ export function CustomOrderOptionsSection({
             ))}
           </div>
         ) : (
-          <div className="text-sm text-zinc-500">선택한 추가 옵션이 없습니다.</div>
+          <div className="text-sm text-zinc-500">
+            선택한 추가 옵션이 없습니다.
+          </div>
         )}
       </div>
 

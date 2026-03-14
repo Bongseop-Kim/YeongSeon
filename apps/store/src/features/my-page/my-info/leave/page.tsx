@@ -35,7 +35,9 @@ export default function MyInfoLeavePage() {
             toast.success("회원탈퇴가 완료되었습니다.");
             navigate(ROUTES.HOME);
           } catch {
-            toast.error("로그아웃 중 오류가 발생했습니다. 앱을 재시작해주세요.");
+            toast.error(
+              "로그아웃 중 오류가 발생했습니다. 앱을 재시작해주세요.",
+            );
           }
         },
         onError: (err) => {

@@ -10,7 +10,12 @@ export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
 };
 
 export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
-  sale: { 대기중: "진행중", 진행중: "배송중", 배송중: "배송완료", 배송완료: "완료" },
+  sale: {
+    대기중: "진행중",
+    진행중: "배송중",
+    배송중: "배송완료",
+    배송완료: "완료",
+  },
   custom: {
     대기중: "접수",
     접수: "제작중",
@@ -80,7 +85,10 @@ export const ORDER_ROLLBACK_FLOW: Record<OrderType, Record<string, string>> = {
 };
 
 // 샘플 주문 sample_type별 롤백 플로우
-export const CUSTOM_SAMPLE_ROLLBACK_FLOW: Record<string, Record<string, string>> = {
+export const CUSTOM_SAMPLE_ROLLBACK_FLOW: Record<
+  string,
+  Record<string, string>
+> = {
   fabric: {
     접수: "대기중",
     샘플원단제작중: "접수",

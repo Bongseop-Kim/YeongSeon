@@ -20,7 +20,8 @@ export function OrderItemCard({
   actions,
   className = "",
 }: OrderItemCardProps) {
-  const isDeletedProduct = item.type === "product" && item.product.deleted === true;
+  const isDeletedProduct =
+    item.type === "product" && item.product.deleted === true;
   const itemLabel =
     item.type === "product"
       ? item.product.name

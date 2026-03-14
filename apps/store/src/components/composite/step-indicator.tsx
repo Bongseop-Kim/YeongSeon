@@ -28,7 +28,8 @@ const defaultAriaLabel = ({
   index: number;
   isCurrent: boolean;
   isCompleted: boolean;
-}) => `${index + 1}단계${isCurrent ? ", 현재 단계" : isCompleted ? ", 완료" : ""}`;
+}) =>
+  `${index + 1}단계${isCurrent ? ", 현재 단계" : isCompleted ? ", 완료" : ""}`;
 
 export function StepIndicator({
   steps,
@@ -80,7 +81,7 @@ export function StepIndicator({
                   ? "bg-zinc-200"
                   : "bg-zinc-200/70",
               isClickable && "cursor-pointer hover:bg-zinc-700",
-              !isClickable && "cursor-default"
+              !isClickable && "cursor-default",
             )}
           />
         );

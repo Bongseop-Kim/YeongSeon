@@ -12,9 +12,10 @@ const COUPON_COLUMNS =
 const USER_COUPON_COLUMNS = `id, user_id, coupon_id, status, issued_at, expires_at, used_at, coupon:coupons(${COUPON_COLUMNS})`;
 
 const applyActiveFilter = <
-  T extends PostgrestFilterBuilder<any, any, any, any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends PostgrestFilterBuilder<any, any, any, any>,
 >(
-  query: T
+  query: T,
 ): T => {
   const nowIso = new Date().toISOString();
   return query
@@ -40,7 +41,7 @@ export const getUserCoupons = async (): Promise<UserCoupon[]> => {
       .eq("user_id", user.id)
       .eq("coupon.is_active", true)
       .gte("coupon.expiry_date", today)
-      .order("issued_at", { ascending: false })
+      .order("issued_at", { ascending: false }),
   );
 
   if (error) {
@@ -54,7 +55,7 @@ export const getUserCoupons = async (): Promise<UserCoupon[]> => {
 
 export const getUserCouponsByIds = async (
   ids: string[],
-  options?: { activeOnly?: boolean }
+  options?: { activeOnly?: boolean },
 ): Promise<UserCoupon[]> => {
   if (ids.length === 0) return [];
 
@@ -93,7 +94,7 @@ export const getUserCouponsByIds = async (
 
 export const getUserCouponsByIdsMap = async (
   ids: string[],
-  options?: { activeOnly?: boolean }
+  options?: { activeOnly?: boolean },
 ): Promise<Map<string, UserCoupon>> => {
   if (ids.length === 0) {
     return new Map();

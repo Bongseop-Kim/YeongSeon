@@ -70,10 +70,7 @@ const jsonResponse = (status: number, body: Record<string, unknown>) =>
 
 // ─── API requests ────────────────────────────────────────────────────────────
 
-const base64ToBlob = (
-  base64: string,
-  mimeType: string,
-) => {
+const base64ToBlob = (base64: string, mimeType: string) => {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
 
@@ -126,27 +123,24 @@ const requestOpenAIText = async (
 
   let response: Response;
   try {
-    response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        signal: textController.signal,
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          temperature: 0.7,
-          response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            ...historyMessages,
-            { role: "user", content: [...textParts, ...imageParts] },
-          ],
-        }),
+    response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
       },
-    );
+      signal: textController.signal,
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        temperature: 0.7,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...historyMessages,
+          { role: "user", content: [...textParts, ...imageParts] },
+        ],
+      }),
+    });
   } finally {
     clearTimeout(textTimeoutId);
   }
@@ -171,38 +165,39 @@ const requestOpenAIText = async (
     | undefined;
   const detectedDesign: DetectedDesign | null = rawDetected
     ? {
-      pattern: typeof rawDetected.pattern === "string"
-        ? rawDetected.pattern
-        : null,
-      colors: Array.isArray(rawDetected.colors)
-        ? rawDetected.colors.filter((c): c is string => typeof c === "string")
-        : [],
-      ciPlacement: typeof rawDetected.ciPlacement === "string"
-        ? rawDetected.ciPlacement
-        : null,
-      scale: rawDetected.scale === "large" ||
+        pattern:
+          typeof rawDetected.pattern === "string" ? rawDetected.pattern : null,
+        colors: Array.isArray(rawDetected.colors)
+          ? rawDetected.colors.filter((c): c is string => typeof c === "string")
+          : [],
+        ciPlacement:
+          typeof rawDetected.ciPlacement === "string"
+            ? rawDetected.ciPlacement
+            : null,
+        scale:
+          rawDetected.scale === "large" ||
           rawDetected.scale === "medium" ||
           rawDetected.scale === "small"
-        ? rawDetected.scale
-        : null,
-    }
+            ? rawDetected.scale
+            : null,
+      }
     : null;
 
   return {
-    aiMessage: typeof parsed.aiMessage === "string"
-      ? parsed.aiMessage
-      : "디자인 방향을 반영한 넥타이 시안을 준비했습니다.",
-    generateImage: typeof parsed.generateImage === "boolean"
-      ? parsed.generateImage
-      : true,
+    aiMessage:
+      typeof parsed.aiMessage === "string"
+        ? parsed.aiMessage
+        : "디자인 방향을 반영한 넥타이 시안을 준비했습니다.",
+    generateImage:
+      typeof parsed.generateImage === "boolean" ? parsed.generateImage : true,
     contextChips: Array.isArray(parsed.contextChips)
       ? parsed.contextChips.filter(
-        (chip): chip is { label: string; action: string } =>
-          typeof chip === "object" &&
-          chip !== null &&
-          typeof (chip as { label?: unknown }).label === "string" &&
-          typeof (chip as { action?: unknown }).action === "string",
-      )
+          (chip): chip is { label: string; action: string } =>
+            typeof chip === "object" &&
+            chip !== null &&
+            typeof (chip as { label?: unknown }).label === "string" &&
+            typeof (chip as { action?: unknown }).action === "string",
+        )
       : [],
     detectedDesign,
   };
@@ -218,78 +213,110 @@ const requestOpenAIImage = async (
 
     let response: Response;
     try {
-      const quality = (
+      const quality =
         payload.ciImageBase64 ||
         payload.referenceImageBase64 ||
         payload.designContext?.ciPlacement
-      ) ? "high" : "medium";
+          ? "high"
+          : "medium";
 
-      if (payload.previousImageBase64 || payload.ciImageBase64 || payload.referenceImageBase64) {
+      if (
+        payload.previousImageBase64 ||
+        payload.ciImageBase64 ||
+        payload.referenceImageBase64
+      ) {
         const formData = new FormData();
 
         if (payload.previousImageBase64) {
           // EDIT MODE: previousImageBase64 as primary, ci/reference as auxiliaries, input_fidelity=high
-          formData.append("image", base64ToBlob(payload.previousImageBase64, payload.previousImageMimeType || "image/png"), "source-image.png");
+          formData.append(
+            "image",
+            base64ToBlob(
+              payload.previousImageBase64,
+              payload.previousImageMimeType || "image/png",
+            ),
+            "source-image.png",
+          );
           formData.append("prompt", buildImageEditPrompt(payload));
           formData.append("model", "gpt-image-1.5");
           formData.append("size", "1024x1536");
           formData.append("quality", quality);
           if (payload.ciImageBase64) {
-            formData.append("image[]", base64ToBlob(payload.ciImageBase64, payload.ciImageMimeType || "image/png"), "ci-image.png");
+            formData.append(
+              "image[]",
+              base64ToBlob(
+                payload.ciImageBase64,
+                payload.ciImageMimeType || "image/png",
+              ),
+              "ci-image.png",
+            );
           }
           if (payload.referenceImageBase64) {
-            formData.append("image[]", base64ToBlob(payload.referenceImageBase64, payload.referenceImageMimeType || "image/png"), "reference-image.png");
+            formData.append(
+              "image[]",
+              base64ToBlob(
+                payload.referenceImageBase64,
+                payload.referenceImageMimeType || "image/png",
+              ),
+              "reference-image.png",
+            );
           }
           if (payload.ciImageBase64 || payload.referenceImageBase64) {
             formData.append("input_fidelity", "high");
           }
         } else {
           // GENERATE WITH SOURCE: ci or reference as primary (not duplicated), NO input_fidelity
-          const primaryBase64 = payload.ciImageBase64 ?? payload.referenceImageBase64!;
+          const primaryBase64 =
+            payload.ciImageBase64 ?? payload.referenceImageBase64!;
           const primaryMime = payload.ciImageBase64
             ? payload.ciImageMimeType || "image/png"
             : payload.referenceImageMimeType || "image/png";
-          formData.append("image", base64ToBlob(primaryBase64, primaryMime), "source-image.png");
+          formData.append(
+            "image",
+            base64ToBlob(primaryBase64, primaryMime),
+            "source-image.png",
+          );
           formData.append("prompt", buildImagePrompt(payload));
           formData.append("model", "gpt-image-1.5");
           formData.append("size", "1024x1536");
           formData.append("quality", quality);
           // Only append reference as auxiliary when both ci AND reference exist (ci is primary, reference is auxiliary)
           if (payload.ciImageBase64 && payload.referenceImageBase64) {
-            formData.append("image[]", base64ToBlob(payload.referenceImageBase64, payload.referenceImageMimeType || "image/png"), "reference-image.png");
+            formData.append(
+              "image[]",
+              base64ToBlob(
+                payload.referenceImageBase64,
+                payload.referenceImageMimeType || "image/png",
+              ),
+              "reference-image.png",
+            );
           }
           // No input_fidelity in generate mode
         }
 
-        response = await fetch(
-          "https://api.openai.com/v1/images/edits",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-            },
-            signal: imageController.signal,
-            body: formData,
+        response = await fetch("https://api.openai.com/v1/images/edits", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
           },
-        );
+          signal: imageController.signal,
+          body: formData,
+        });
       } else {
-        response = await fetch(
-          "https://api.openai.com/v1/images/generations",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
-            signal: imageController.signal,
-            body: JSON.stringify({
-              model: "gpt-image-1.5",
-              prompt: buildImagePrompt(payload),
-              size: "1024x1536",
-              quality,
-            }),
+        response = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
           },
-        );
+          signal: imageController.signal,
+          body: JSON.stringify({
+            model: "gpt-image-1.5",
+            prompt: buildImagePrompt(payload),
+            size: "1024x1536",
+            quality,
+          }),
+        });
       }
     } finally {
       clearTimeout(imageTimeoutId);
@@ -374,9 +401,10 @@ Deno.serve(async (req) => {
     adminClient = createAdminSupabaseClient();
   } catch (error) {
     return jsonResponse(500, {
-      error: error instanceof Error
-        ? error.message
-        : "Missing Supabase configuration",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Missing Supabase configuration",
     });
   }
   const workId = crypto.randomUUID();
@@ -436,13 +464,14 @@ Deno.serve(async (req) => {
       designContext: {
         ...payload.designContext,
         pattern: payload.designContext?.pattern ?? detected?.pattern ?? null,
-        colors: (payload.designContext?.colors?.length ?? 0) > 0
-          ? payload.designContext!.colors
-          : (detected?.colors.length ?? 0) > 0
-          ? detected!.colors
-          : (payload.designContext?.colors ?? []),
-        ciPlacement: payload.designContext?.ciPlacement ??
-          detected?.ciPlacement ?? null,
+        colors:
+          (payload.designContext?.colors?.length ?? 0) > 0
+            ? payload.designContext!.colors
+            : (detected?.colors.length ?? 0) > 0
+              ? detected!.colors
+              : (payload.designContext?.colors ?? []),
+        ciPlacement:
+          payload.designContext?.ciPlacement ?? detected?.ciPlacement ?? null,
         scale: payload.designContext?.scale ?? detected?.scale ?? null,
       },
     };
@@ -452,11 +481,12 @@ Deno.serve(async (req) => {
       : "text_only";
 
     // high quality 여부 결정 (이미지 비용 차등 과금)
-    const imageQuality = imagePayload.ciImageBase64 ||
-        imagePayload.referenceImageBase64 ||
-        imagePayload.designContext?.ciPlacement
-      ? "high"
-      : "standard";
+    const imageQuality =
+      imagePayload.ciImageBase64 ||
+      imagePayload.referenceImageBase64 ||
+      imagePayload.designContext?.ciPlacement
+        ? "high"
+        : "standard";
 
     // 토큰 차감
     const { data: tokenResult, error: tokenError } = await adminClient.rpc(
@@ -528,20 +558,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    return jsonResponse(
-      200,
-      {
-        aiMessage: textResult.aiMessage,
-        contextChips: textResult.contextChips,
-        imageUrl,
-        remainingTokens,
-      } satisfies GenerateDesignResult & { remainingTokens: number },
-    );
+    return jsonResponse(200, {
+      aiMessage: textResult.aiMessage,
+      contextChips: textResult.contextChips,
+      imageUrl,
+      remainingTokens,
+    } satisfies GenerateDesignResult & { remainingTokens: number });
   } catch (error) {
     return jsonResponse(500, {
-      error: error instanceof Error
-        ? error.message
-        : "Failed to generate design",
+      error:
+        error instanceof Error ? error.message : "Failed to generate design",
     });
   }
 });

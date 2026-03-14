@@ -1,7 +1,10 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
 
 export function getFabricLabel(
-  opts: Pick<OrderOptions, "fabricProvided" | "reorder" | "fabricType" | "designType">,
+  opts: Pick<
+    OrderOptions,
+    "fabricProvided" | "reorder" | "fabricType" | "designType"
+  >,
   fallback = "미선택",
 ): string {
   if (opts.fabricProvided) return "원단 직접 제공";
@@ -12,7 +15,10 @@ export function getFabricLabel(
   return fallback;
 }
 
-export function getTieTypeLabel(tieType: OrderOptions["tieType"], compact = false): string {
+export function getTieTypeLabel(
+  tieType: OrderOptions["tieType"],
+  compact = false,
+): string {
   if (tieType === "AUTO") return compact ? "자동 타이" : "자동 타이 (지퍼)";
   return compact ? "수동 타이" : "수동 타이 (손매듭)";
 }
@@ -39,7 +45,11 @@ export function getInterliningLabel(
 ): string {
   const parts = [
     opts.interlining === "WOOL" ? "울 심지" : null,
-    opts.interlining === "WOOL" && opts.interliningThickness === "THIN" ? "얇음" : opts.interlining === "WOOL" && opts.interliningThickness ? "두꺼움" : null,
+    opts.interlining === "WOOL" && opts.interliningThickness === "THIN"
+      ? "얇음"
+      : opts.interlining === "WOOL" && opts.interliningThickness
+        ? "두꺼움"
+        : null,
   ].filter(Boolean);
   return parts.join(", ") || "미선택";
 }
@@ -55,7 +65,10 @@ export function getLabelOptionsLabel(
 }
 
 export function getFinishingLabel(
-  opts: Pick<OrderOptions, "interlining" | "interliningThickness" | "brandLabel" | "careLabel">,
+  opts: Pick<
+    OrderOptions,
+    "interlining" | "interliningThickness" | "brandLabel" | "careLabel"
+  >,
 ): string {
   return `${getInterliningLabel(opts)} · ${getLabelOptionsLabel(opts)}`;
 }

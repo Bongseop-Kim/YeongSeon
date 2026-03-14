@@ -23,7 +23,7 @@ export const useCouponSelect = () => {
   const { openModal, closeModal } = useModalStore();
 
   const openCouponSelect = (
-    currentCouponId?: string
+    currentCouponId?: string,
   ): Promise<AppliedCoupon | null> => {
     return new Promise((resolve) => {
       const modalRef: { current: CouponSelectModalRef | null } = {

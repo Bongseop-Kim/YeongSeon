@@ -31,10 +31,10 @@ export default function ShopPage() {
   >([]);
   const [selectedColors, setSelectedColors] = useState<ProductColor[]>([]);
   const [selectedPatterns, setSelectedPatterns] = useState<ProductPattern[]>(
-    []
+    [],
   );
   const [selectedMaterials, setSelectedMaterials] = useState<ProductMaterial[]>(
-    []
+    [],
   );
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>("all");
   const [sortOption, setSortOption] = useState<SortOption>("latest");
@@ -46,13 +46,13 @@ export default function ShopPage() {
     setSelectedCategories((prev) =>
       prev.includes(category)
         ? prev.filter((c) => c !== category)
-        : [...prev, category]
+        : [...prev, category],
     );
   };
 
   const handleColorChange = (color: ProductColor) => {
     setSelectedColors((prev) =>
-      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color],
     );
   };
 
@@ -60,7 +60,7 @@ export default function ShopPage() {
     setSelectedPatterns((prev) =>
       prev.includes(pattern)
         ? prev.filter((p) => p !== pattern)
-        : [...prev, pattern]
+        : [...prev, pattern],
     );
   };
 
@@ -68,7 +68,7 @@ export default function ShopPage() {
     setSelectedMaterials((prev) =>
       prev.includes(material)
         ? prev.filter((m) => m !== material)
-        : [...prev, material]
+        : [...prev, material],
     );
   };
 
@@ -96,7 +96,7 @@ export default function ShopPage() {
     () =>
       PRICE_RANGE_OPTIONS.find((opt) => opt.value === selectedPriceRange) ??
       PRICE_RANGE_OPTIONS[0],
-    [selectedPriceRange]
+    [selectedPriceRange],
   );
 
   const priceMin =
@@ -142,19 +142,22 @@ export default function ShopPage() {
       )}
       <MainContent>
         <PageLayout>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-zinc-800 px-2">
-                  전체 {productList.length}개
-                </span>
-                <SortSelect value={sortOption} onChange={setSortOption} />
-              </div>
-              <ProductGrid products={productList} />
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs text-zinc-800 px-2">
+              전체 {productList.length}개
+            </span>
+            <SortSelect value={sortOption} onChange={setSortOption} />
+          </div>
+          <ProductGrid products={productList} />
         </PageLayout>
       </MainContent>
 
       {/* PC 필터 모달 — ShopPage 내에서 직접 렌더링하여 필터 상태와 동일한 렌더 사이클 공유 */}
       <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
-        <DialogContent className="flex flex-col max-h-[80vh] p-0 gap-0" showCloseButton={false}>
+        <DialogContent
+          className="flex flex-col max-h-[80vh] p-0 gap-0"
+          showCloseButton={false}
+        >
           <DialogHeader className="p-4 border-b">
             <DialogTitle>필터</DialogTitle>
           </DialogHeader>
@@ -175,7 +178,10 @@ export default function ShopPage() {
             />
           </div>
           <div className="p-4 border-t">
-            <Button className="w-full" onClick={() => setIsFilterModalOpen(false)}>
+            <Button
+              className="w-full"
+              onClick={() => setIsFilterModalOpen(false)}
+            >
               적용하기
             </Button>
           </div>

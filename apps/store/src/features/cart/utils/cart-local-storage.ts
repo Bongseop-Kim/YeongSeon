@@ -126,7 +126,7 @@ export const clearGuest = async (): Promise<void> => {
  * 단순화된 장바구니 동기화 전략으로 인해 user cache는 필요하지 않습니다.
  */
 export const getUserCacheItems = async (
-  userId: string
+  userId: string,
 ): Promise<CartItem[]> => {
   const key = buildUserCacheKey(userId);
   const stored = safeLocalStorageGet(key);
@@ -139,7 +139,7 @@ export const getUserCacheItems = async (
  */
 export const setUserCacheItems = async (
   userId: string,
-  items: CartItem[]
+  items: CartItem[],
 ): Promise<void> => {
   if (!isValidCartItems(items)) {
     throw new Error("Invalid cart items");

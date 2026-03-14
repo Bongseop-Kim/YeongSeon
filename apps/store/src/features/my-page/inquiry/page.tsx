@@ -4,7 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { InquiryForm, type InquiryFormData } from "@/features/my-page/inquiry/components/inquiry-form";
+import {
+  InquiryForm,
+  type InquiryFormData,
+} from "@/features/my-page/inquiry/components/inquiry-form";
 import { InquiryCard } from "./components/inquiry-card";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
@@ -17,13 +20,18 @@ import {
   useUpdateInquiry,
   useDeleteInquiry,
 } from "@/features/my-page/inquiry/api/inquiry-query";
-import { INQUIRY_CATEGORIES, type InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-item";
+import {
+  INQUIRY_CATEGORIES,
+  type InquiryCategory,
+} from "@/features/my-page/inquiry/types/inquiry-item";
 
 export default function InquiryPage() {
   const { confirm } = useModalStore();
   const [editingInquiryId, setEditingInquiryId] = useState<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [initialFormData, setInitialFormData] = useState<InquiryFormData | undefined>(undefined);
+  const [initialFormData, setInitialFormData] = useState<
+    InquiryFormData | undefined
+  >(undefined);
   const { isMobile } = useBreakpoint();
   const [searchParams] = useSearchParams();
 
@@ -55,12 +63,15 @@ export default function InquiryPage() {
         category,
         productId: parsedProductId,
         productName:
-          parsedProductId !== undefined ? (productName ?? undefined) : undefined,
+          parsedProductId !== undefined
+            ? (productName ?? undefined)
+            : undefined,
         title: "",
         content: "",
       });
       if (isMobile) setIsSheetOpen(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 마운트 시 1회
 
   const handleEdit = (id: string) => {
@@ -256,7 +267,10 @@ export default function InquiryPage() {
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetContent side="bottom">
               <div className="px-4 pb-4">
-                <InquiryForm {...inquiryFormProps} onCancel={handleFormCancel} />
+                <InquiryForm
+                  {...inquiryFormProps}
+                  onCancel={handleFormCancel}
+                />
               </div>
             </SheetContent>
           </Sheet>

@@ -7,7 +7,7 @@ import type {
 } from "../types/admin-inquiry";
 
 export function toAdminInquiryListItem(
-  dto: AdminInquiryRowDTO
+  dto: AdminInquiryRowDTO,
 ): AdminInquiryListItem {
   return {
     id: dto.id,
@@ -19,11 +19,15 @@ export function toAdminInquiryListItem(
 }
 
 export function toAdminInquiryDetail(
-  dto: AdminInquiryRowDTO
+  dto: AdminInquiryRowDTO,
 ): AdminInquiryDetail {
   const category = (dto.category ?? "일반") as InquiryCategory;
   const product = dto.products
-    ? { id: dto.products.id, name: dto.products.name, image: dto.products.image }
+    ? {
+        id: dto.products.id,
+        name: dto.products.name,
+        image: dto.products.image,
+      }
     : undefined;
 
   if (dto.status === "답변완료" && dto.answer && dto.answer_date) {

@@ -49,9 +49,7 @@ export const ImageUpload = ({
             {isUploading ? (
               <>
                 <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
-                <span className="text-sm text-zinc-600">
-                  업로드 중...
-                </span>
+                <span className="text-sm text-zinc-600">업로드 중...</span>
               </>
             ) : (
               <>

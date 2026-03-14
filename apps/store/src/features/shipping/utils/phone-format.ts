@@ -21,7 +21,7 @@ export const formatPhoneNumber = (phone: string): string => {
     // 11자리 초과 시 앞 11자리만 사용
     return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(
       7,
-      11
+      11,
     )}`;
   }
 };

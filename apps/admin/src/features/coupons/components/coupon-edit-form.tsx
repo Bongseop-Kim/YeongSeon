@@ -12,7 +12,11 @@ export function CouponEditForm({ formProps }: CouponEditFormProps) {
       <Form.Item label="쿠폰명" name="name" rules={[{ required: true }]}>
         <Input />
       </Form.Item>
-      <Form.Item label="할인유형" name="discount_type" rules={[{ required: true }]}>
+      <Form.Item
+        label="할인유형"
+        name="discount_type"
+        rules={[{ required: true }]}
+      >
         <Select
           options={[
             { label: "퍼센트(%)", value: "percentage" },
@@ -20,7 +24,11 @@ export function CouponEditForm({ formProps }: CouponEditFormProps) {
           ]}
         />
       </Form.Item>
-      <Form.Item label="할인값" name="discount_value" rules={[{ required: true }]}>
+      <Form.Item
+        label="할인값"
+        name="discount_value"
+        rules={[{ required: true }]}
+      >
         <InputNumber min={0} style={{ width: "100%" }} />
       </Form.Item>
       <Form.Item label="최대할인금액" name="max_discount_amount">
@@ -34,7 +42,9 @@ export function CouponEditForm({ formProps }: CouponEditFormProps) {
         name="expiry_date"
         rules={[{ required: true }]}
         getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
-        getValueFromEvent={(date: dayjs.Dayjs | null) => date?.format("YYYY-MM-DD") ?? null}
+        getValueFromEvent={(date: dayjs.Dayjs | null) =>
+          date?.format("YYYY-MM-DD") ?? null
+        }
       >
         <DatePicker style={{ width: "100%" }} />
       </Form.Item>

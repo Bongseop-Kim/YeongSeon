@@ -14,7 +14,9 @@ interface UploadedImage {
 export const useImageUpload = () => {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [activeUploads, setActiveUploads] = useState(0);
-  const authCacheRef = useRef<{ auth: ImageKitAuth; expireMs: number } | null>(null);
+  const authCacheRef = useRef<{ auth: ImageKitAuth; expireMs: number } | null>(
+    null,
+  );
 
   const getOrFetchAuth = useCallback(async (): Promise<ImageKitAuth> => {
     const cached = authCacheRef.current;
@@ -24,48 +26,51 @@ export const useImageUpload = () => {
     return auth;
   }, []);
 
-  const uploadFile = useCallback(async (file: File) => {
-    setActiveUploads((n) => n + 1);
-    try {
-      const { signature, token, expire } = await getOrFetchAuth();
+  const uploadFile = useCallback(
+    async (file: File) => {
+      setActiveUploads((n) => n + 1);
+      try {
+        const { signature, token, expire } = await getOrFetchAuth();
 
-      const response = await upload({
-        file,
-        fileName: file.name,
-        signature,
-        token,
-        expire,
-        publicKey: IMAGEKIT_PUBLIC_KEY,
-        folder: IMAGE_FOLDERS.CUSTOM_ORDERS,
-      });
+        const response = await upload({
+          file,
+          fileName: file.name,
+          signature,
+          token,
+          expire,
+          publicKey: IMAGEKIT_PUBLIC_KEY,
+          folder: IMAGE_FOLDERS.CUSTOM_ORDERS,
+        });
 
-      if (!response.url) {
-        throw new Error("이미지 URL을 받지 못했습니다.");
+        if (!response.url) {
+          throw new Error("이미지 URL을 받지 못했습니다.");
+        }
+        if (!response.fileId) {
+          throw new Error("파일 ID를 받지 못했습니다.");
+        }
+        const uploadedUrl = response.url;
+        const uploadedFileId = response.fileId;
+
+        setUploadedImages((prev) => [
+          ...prev,
+          {
+            name: response.name ?? file.name,
+            url: uploadedUrl,
+            fileId: uploadedFileId,
+          },
+        ]);
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "이미지 업로드에 실패했습니다.",
+        );
+      } finally {
+        setActiveUploads((n) => n - 1);
       }
-      if (!response.fileId) {
-        throw new Error("파일 ID를 받지 못했습니다.");
-      }
-      const uploadedUrl = response.url;
-      const uploadedFileId = response.fileId;
-
-      setUploadedImages((prev) => [
-        ...prev,
-        {
-          name: response.name ?? file.name,
-          url: uploadedUrl,
-          fileId: uploadedFileId,
-        },
-      ]);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "이미지 업로드에 실패했습니다."
-      );
-    } finally {
-      setActiveUploads((n) => n - 1);
-    }
-  }, [getOrFetchAuth]);
+    },
+    [getOrFetchAuth],
+  );
 
   const removeImage = useCallback((index: number) => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));

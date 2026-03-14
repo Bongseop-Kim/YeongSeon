@@ -29,7 +29,7 @@ interface BreakpointContextValue {
 }
 
 const BreakpointContext = createContext<BreakpointContextValue | undefined>(
-  undefined
+  undefined,
 );
 
 /**
@@ -37,7 +37,7 @@ const BreakpointContext = createContext<BreakpointContextValue | undefined>(
  */
 function debounce<T extends (...args: unknown[]) => void>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
 

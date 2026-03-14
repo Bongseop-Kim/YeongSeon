@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
   const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
   const { error: deleteError } = await adminClient.auth.admin.deleteUser(
-    user.id
+    user.id,
   );
   if (deleteError) {
     return jsonResponse(500, { error: deleteError.message });

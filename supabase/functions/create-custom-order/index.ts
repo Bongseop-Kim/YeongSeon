@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
       p_additional_notes: payload.additional_notes ?? "",
       p_sample: payload.sample ?? false,
       p_sample_type: payload.sample_type ?? null,
-    }
+    },
   );
 
   if (orderError || !orderResult) {

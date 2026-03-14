@@ -76,6 +76,7 @@ export class AuthErrorBoundary extends Component<Props, State> {
  * 에러 발생 시 표시되는 기본 Fallback UI
  * Error Boundary는 Router 밖에서도 동작할 수 있으므로 window.location을 사용합니다.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 function ErrorFallback({
   error,
   onReset,

@@ -27,7 +27,9 @@ export const SearchBar: React.FC = () => {
       )}
       {isFiltered && (
         <span className="text-xs bg-zinc-900 text-white px-1.5 py-0.5 rounded-full flex-shrink-0">
-          {[hasQuery && "검색", hasDateFilter && "기간"].filter(Boolean).join("+")}
+          {[hasQuery && "검색", hasDateFilter && "기간"]
+            .filter(Boolean)
+            .join("+")}
         </span>
       )}
     </button>

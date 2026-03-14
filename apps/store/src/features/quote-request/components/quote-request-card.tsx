@@ -42,7 +42,7 @@ export function QuoteRequestCard({
       }
       className={cn(
         onClick &&
-          "cursor-pointer transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+          "cursor-pointer transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2",
       )}
     >
       <CardHeader>
@@ -59,7 +59,7 @@ export function QuoteRequestCard({
             variant="outline"
             className={cn(
               "shrink-0",
-              QUOTE_REQUEST_BADGE_CLASS[quoteRequest.status]
+              QUOTE_REQUEST_BADGE_CLASS[quoteRequest.status],
             )}
           >
             {quoteRequest.status}

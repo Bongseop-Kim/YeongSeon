@@ -61,9 +61,7 @@ export function ClaimListTable() {
         <Table.Column
           dataIndex="status"
           title="상태"
-          render={(v: string) => (
-            <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>
-          )}
+          render={(v: string) => <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>}
         />
         <Table.Column dataIndex="orderNumber" title="주문번호" />
         <Table.Column dataIndex="customerName" title="고객명" />

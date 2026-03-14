@@ -19,8 +19,7 @@
  */
 import type { GenerateDesignRequest } from "./index.ts";
 
-export const SYSTEM_PROMPT =
-  `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
+export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
 항상 한국어로만 응답하세요.
 응답은 반드시 다음 JSON 형식만 반환하세요:
 {"aiMessage": "...", "generateImage": true, "contextChips": [{"label": "...", "action": "..."}], "detectedDesign": {"pattern": null, "colors": [], "ciPlacement": null, "scale": null}}
@@ -202,11 +201,12 @@ export const buildReferencePrompt = (
   fabricMethod: string | null | undefined,
 ): string => {
   if (!hasCiImage && !hasReferenceImage) return "";
-  const fabricLabel = fabricMethod === "yarn-dyed"
-    ? "yarn-dyed woven"
-    : fabricMethod === "print"
-    ? "printed"
-    : "fabric";
+  const fabricLabel =
+    fabricMethod === "yarn-dyed"
+      ? "yarn-dyed woven"
+      : fabricMethod === "print"
+        ? "printed"
+        : "fabric";
   if (hasCiImage && hasReferenceImage) {
     return [
       "Image 1: base fabric reference (referenceImage). Image 2: CI logo reference (ciImage).",
@@ -233,7 +233,9 @@ export const buildReferencePrompt = (
       "Keep the final result as a clean rectangular fabric swatch.",
     ].join(" ");
   }
-  throw new Error("unreachable: all hasCiImage/hasReferenceImage combinations are handled above");
+  throw new Error(
+    "unreachable: all hasCiImage/hasReferenceImage combinations are handled above",
+  );
 };
 
 export const buildCiPlacementPrompt = (
@@ -259,9 +261,7 @@ export const buildCiPlacementPrompt = (
 export const buildClosurePrompt = () =>
   "The pattern must extend fully edge-to-edge with no empty space near the borders — the image is cropped directly from the fabric surface mid-repeat.";
 
-export const buildImagePrompt = (
-  payload: GenerateDesignRequest,
-): string => {
+export const buildImagePrompt = (payload: GenerateDesignRequest): string => {
   const isOnePoint = payload.designContext?.ciPlacement === "one-point";
 
   return [

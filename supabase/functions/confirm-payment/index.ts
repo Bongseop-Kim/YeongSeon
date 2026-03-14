@@ -27,7 +27,7 @@ const buildTokenPurchaseResponse = (
   paymentGroupId: string,
   orders: Array<{ orderId: string; orderType: string }>,
   tokenAmount: number,
-  status = "DONE"
+  status = "DONE",
 ) =>
   jsonResponse(200, {
     paymentKey,
@@ -43,7 +43,7 @@ const fetchTokenAmountAndBuildResponse = async (
   orderId: string,
   paymentKey: string,
   paymentGroupId: string,
-  orders: Array<{ orderId: string; orderType: string }>
+  orders: Array<{ orderId: string; orderType: string }>,
 ): Promise<Response> => {
   const { data: tokenItem, error: tokenItemError } = await adminClient
     .from("order_items")
@@ -59,12 +59,17 @@ const fetchTokenAmountAndBuildResponse = async (
     return jsonResponse(500, { error: "Failed to load token item" });
   }
   const tokenAmount =
-    (tokenItem?.item_data as { token_amount?: number } | null)
-      ?.token_amount ?? null;
+    (tokenItem?.item_data as { token_amount?: number } | null)?.token_amount ??
+    null;
   if (typeof tokenAmount !== "number") {
     return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
   }
-  return buildTokenPurchaseResponse(paymentKey, paymentGroupId, orders, tokenAmount);
+  return buildTokenPurchaseResponse(
+    paymentKey,
+    paymentGroupId,
+    orders,
+    tokenAmount,
+  );
 };
 
 const maskPaymentKey = (key: string): string => {
@@ -73,7 +78,7 @@ const maskPaymentKey = (key: string): string => {
 };
 
 const sanitizeTossResponse = (
-  obj: Record<string, unknown>
+  obj: Record<string, unknown>,
 ): Record<string, unknown> => {
   const copy = { ...obj };
   if (typeof copy.paymentKey === "string") {
@@ -92,7 +97,7 @@ const processLogger = (step: string, payload: Record<string, unknown>) => {
 const errorLogger = (
   step: string,
   error: unknown,
-  payload: Record<string, unknown> = {}
+  payload: Record<string, unknown> = {},
 ) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error(
@@ -100,12 +105,12 @@ const errorLogger = (
     JSON.stringify({
       ...payload,
       error: message,
-    })
+    }),
   );
 };
 
 const isConfirmPaymentRequest = (
-  payload: unknown
+  payload: unknown,
 ): payload is ConfirmPaymentRequest => {
   if (!payload || typeof payload !== "object") {
     return false;
@@ -235,7 +240,7 @@ Deno.serve(async (req) => {
 
   // 2단계: 멱등성 체크 - 전체가 order_type별 결제 완료 상태인 경우 200 반환
   const allAlreadyConfirmed = typedOrders.every(
-    (o) => o.status === expectedPostPaymentStatus(o.order_type)
+    (o) => o.status === expectedPostPaymentStatus(o.order_type),
   );
 
   if (allAlreadyConfirmed) {
@@ -253,13 +258,16 @@ Deno.serve(async (req) => {
         typedOrders[0].id,
         payload.paymentKey,
         payload.orderId,
-        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type }))
+        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type })),
       );
     }
     return jsonResponse(200, {
       paymentKey: payload.paymentKey,
       paymentGroupId: payload.orderId,
-      orders: typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type })),
+      orders: typedOrders.map((o) => ({
+        orderId: o.id,
+        orderType: o.order_type,
+      })),
       status: "DONE",
     });
   }
@@ -274,7 +282,7 @@ Deno.serve(async (req) => {
           orderId: order.id,
           userId: user.id,
           orderStatus: order.status,
-        }
+        },
       );
       return jsonResponse(409, {
         error: "Order is not payable",
@@ -284,10 +292,7 @@ Deno.serve(async (req) => {
   }
 
   // 금액 검증: 전체 주문 합계
-  const totalAmount = typedOrders.reduce(
-    (sum, o) => sum + o.total_price,
-    0
-  );
+  const totalAmount = typedOrders.reduce((sum, o) => sum + o.total_price, 0);
 
   if (totalAmount !== payload.amount) {
     processLogger("amount_mismatch", {
@@ -309,7 +314,7 @@ Deno.serve(async (req) => {
     {
       p_payment_group_id: payload.orderId,
       p_user_id: user.id,
-    }
+    },
   );
 
   if (lockError) {
@@ -340,7 +345,7 @@ Deno.serve(async (req) => {
         typedOrders[0].id,
         payload.paymentKey,
         payload.orderId,
-        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type }))
+        typedOrders.map((o) => ({ orderId: o.id, orderType: o.order_type })),
       );
     }
     return jsonResponse(200, {
@@ -371,7 +376,7 @@ Deno.serve(async (req) => {
           orderId: payload.orderId,
           amount: totalAmount,
         }),
-      }
+      },
     );
 
     const responseText = await tossResponse.text();
@@ -432,12 +437,14 @@ Deno.serve(async (req) => {
     return jsonResponse(502, { error: "Failed to confirm payment" });
   }
 
-  const { data: rpcResult, error: rpcError } = await adminClient
-    .rpc("confirm_payment_orders", {
+  const { data: rpcResult, error: rpcError } = await adminClient.rpc(
+    "confirm_payment_orders",
+    {
       p_payment_group_id: payload.orderId,
       p_user_id: user.id,
       p_payment_key: payload.paymentKey,
-    });
+    },
+  );
 
   if (rpcError) {
     errorLogger("order_update_failed", rpcError, {
@@ -464,16 +471,24 @@ Deno.serve(async (req) => {
     !("orders" in rpcResult) ||
     !Array.isArray(rpcResult.orders)
   ) {
-    errorLogger("unexpected_rpc_result", new Error("Invalid rpc result shape"), {
-      paymentGroupId: payload.orderId,
-    });
+    errorLogger(
+      "unexpected_rpc_result",
+      new Error("Invalid rpc result shape"),
+      {
+        paymentGroupId: payload.orderId,
+      },
+    );
     return jsonResponse(500, { error: "Unexpected order update response" });
   }
 
   const updatedOrders = (
     rpcResult as {
       success: boolean;
-      orders: Array<{ orderId: string; orderType: string; tokenAmount: number | null }>;
+      orders: Array<{
+        orderId: string;
+        orderType: string;
+        tokenAmount: number | null;
+      }>;
     }
   ).orders;
 
@@ -499,7 +514,7 @@ Deno.serve(async (req) => {
       payload.orderId,
       updatedOrders,
       tokenAmount,
-      tossResult.status ?? "DONE"
+      tossResult.status ?? "DONE",
     );
   }
 

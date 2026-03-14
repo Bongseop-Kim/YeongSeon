@@ -25,19 +25,22 @@ export const useToggleLike = (productId: number) => {
 
       // 이전 값 저장
       const previousProduct = queryClient.getQueryData(
-        productKeys.detail(productId)
+        productKeys.detail(productId),
       );
 
       // 낙관적 업데이트
       // 제품 상세 정보도 업데이트
-      queryClient.setQueryData(productKeys.detail(productId), (old: Product | undefined) => {
-        if (!old) return old;
-        return {
-          ...old,
-          isLiked: !isLiked,
-          likes: isLiked ? old.likes - 1 : old.likes + 1,
-        };
-      });
+      queryClient.setQueryData(
+        productKeys.detail(productId),
+        (old: Product | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            isLiked: !isLiked,
+            likes: isLiked ? old.likes - 1 : old.likes + 1,
+          };
+        },
+      );
 
       return { previousProduct };
     },
@@ -48,13 +51,13 @@ export const useToggleLike = (productId: number) => {
         | {
             previousProduct: unknown;
           }
-        | undefined
+        | undefined,
     ) => {
       // 에러 발생 시 이전 값으로 롤백
       if (context) {
         queryClient.setQueryData(
           productKeys.detail(productId),
-          context.previousProduct
+          context.previousProduct,
         );
       }
     },

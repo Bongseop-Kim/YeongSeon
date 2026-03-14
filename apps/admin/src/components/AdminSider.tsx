@@ -33,7 +33,9 @@ interface AdminSiderProps {
   Title?: React.FC<{ collapsed: boolean }>;
 }
 
-export const AdminSider: React.FC<AdminSiderProps> = ({ Title: TitleFromProps }) => {
+export const AdminSider: React.FC<AdminSiderProps> = ({
+  Title: TitleFromProps,
+}) => {
   const { token } = theme.useToken();
   const {
     siderCollapsed,
@@ -82,8 +84,9 @@ export const AdminSider: React.FC<AdminSiderProps> = ({ Title: TitleFromProps })
 
       const isSelected = key === selectedKey;
       const isRoute = !(parentName !== undefined && children.length === 0);
-      const linkStyle: CSSProperties =
-        isSelected ? { pointerEvents: "none" } : {};
+      const linkStyle: CSSProperties = isSelected
+        ? { pointerEvents: "none" }
+        : {};
 
       return (
         <CanAccess

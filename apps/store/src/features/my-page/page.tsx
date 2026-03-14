@@ -53,7 +53,10 @@ export default function MypagePage() {
               <div>
                 {[
                   { label: "주문 내역", route: ROUTES.ORDER_LIST },
-                  { label: "견적 요청 내역", route: ROUTES.MY_PAGE_QUOTE_REQUEST },
+                  {
+                    label: "견적 요청 내역",
+                    route: ROUTES.MY_PAGE_QUOTE_REQUEST,
+                  },
                   { label: "취소/반품/교환 내역", route: ROUTES.CLAIM_LIST },
                   { label: "자주 묻는 질문", route: ROUTES.FAQ },
                   { label: "1:1 문의 내역", route: ROUTES.MY_PAGE_INQUIRY },

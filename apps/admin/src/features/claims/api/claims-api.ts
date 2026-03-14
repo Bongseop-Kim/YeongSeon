@@ -8,7 +8,7 @@ export interface UpdateClaimStatusParams {
 }
 
 export async function updateClaimStatus(
-  params: UpdateClaimStatusParams
+  params: UpdateClaimStatusParams,
 ): Promise<void> {
   const { claimId, newStatus, memo, isRollback } = params;
   const { error } = await supabase.rpc("admin_update_claim_status", {

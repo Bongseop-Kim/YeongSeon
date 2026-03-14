@@ -15,7 +15,7 @@ export interface InquiryRowDTO {
   status: InquiryStatusDTO;
   category: string;
   product_id: number | null;
-  products: InquiryProductDTO | null;  // join 결과
+  products: InquiryProductDTO | null; // join 결과
   answer: string | null;
   answer_date: string | null;
   created_at: string;

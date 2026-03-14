@@ -37,7 +37,9 @@ export const PRESET_LABELS: Record<PresetKey, string> = {
   dormant: "휴면 고객",
 };
 
-export function isActiveIssuedStatus(status: string | null | undefined): boolean {
+export function isActiveIssuedStatus(
+  status: string | null | undefined,
+): boolean {
   const normalized = (status ?? "").trim().toLowerCase();
   return (
     normalized === "active" ||

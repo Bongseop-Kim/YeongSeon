@@ -11,9 +11,10 @@ interface ProductCardProps {
 export const ProductCard = ({ product }: ProductCardProps) => {
   const navigate = useNavigate();
   const options = product.options ?? [];
-  const isSoldOut = options.length > 0
-    ? options.every((o) => o.stock === 0)
-    : product.stock === 0;
+  const isSoldOut =
+    options.length > 0
+      ? options.every((o) => o.stock === 0)
+      : product.stock === 0;
 
   const handleClick = () => {
     navigate(`${ROUTES.SHOP}/${product.id}`);
@@ -44,10 +45,11 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         )}
         <div className="absolute bottom-2 right-2">
           <HeartIcon
-            className={`size-5 ${product.isLiked
+            className={`size-5 ${
+              product.isLiked
                 ? "text-red-500 fill-red-500"
                 : "text-white fill-gray-900/50"
-              }`}
+            }`}
           />
         </div>
       </div>

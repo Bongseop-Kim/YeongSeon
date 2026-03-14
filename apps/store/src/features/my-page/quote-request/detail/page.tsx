@@ -74,7 +74,9 @@ export default function QuoteRequestDetailPage() {
               <Empty
                 title="견적 요청 상세를 불러올 수 없습니다."
                 description={
-                  error instanceof Error ? error.message : "오류가 발생했습니다."
+                  error instanceof Error
+                    ? error.message
+                    : "오류가 발생했습니다."
                 }
               />
               <CardContent className="pt-0">
@@ -82,7 +84,9 @@ export default function QuoteRequestDetailPage() {
                   <Button variant="outline" onClick={() => refetch()}>
                     다시 시도
                   </Button>
-                  <Button onClick={() => navigate(ROUTES.MY_PAGE_QUOTE_REQUEST)}>
+                  <Button
+                    onClick={() => navigate(ROUTES.MY_PAGE_QUOTE_REQUEST)}
+                  >
                     목록으로
                   </Button>
                 </div>
@@ -106,7 +110,9 @@ export default function QuoteRequestDetailPage() {
               />
               <CardContent className="pt-0">
                 <div className="flex justify-center">
-                  <Button onClick={() => navigate(ROUTES.MY_PAGE_QUOTE_REQUEST)}>
+                  <Button
+                    onClick={() => navigate(ROUTES.MY_PAGE_QUOTE_REQUEST)}
+                  >
                     목록으로
                   </Button>
                 </div>
@@ -134,7 +140,7 @@ export default function QuoteRequestDetailPage() {
                   variant="outline"
                   className={cn(
                     "shrink-0",
-                    QUOTE_REQUEST_BADGE_CLASS[quoteRequest.status]
+                    QUOTE_REQUEST_BADGE_CLASS[quoteRequest.status],
                   )}
                 >
                   {quoteRequest.status}
@@ -147,7 +153,10 @@ export default function QuoteRequestDetailPage() {
                 <CardTitle>기본 정보</CardTitle>
               </CardHeader>
               <CardContent>
-                <DetailRow label="요청일" value={formatDate(quoteRequest.date)} />
+                <DetailRow
+                  label="요청일"
+                  value={formatDate(quoteRequest.date)}
+                />
                 <DetailRow label="수량" value={`${quoteRequest.quantity}개`} />
               </CardContent>
             </Card>

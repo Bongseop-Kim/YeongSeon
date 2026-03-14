@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import type { UseFormGetValues } from "react-hook-form";
-import type { QuoteOrderOptions } from "../types/order";
-import type { StepConfig } from "../types/wizard";
+import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { StepConfig } from "@/features/custom-order/types/wizard";
 
 interface UseWizardStepOptions {
   steps: StepConfig[];
@@ -31,10 +31,10 @@ export const useWizardStep = ({
 }: UseWizardStepOptions): UseWizardStepReturn => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(
-    () => new Set([0])
+    () => new Set([0]),
   );
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(
-    () => new Set<number>()
+    () => new Set<number>(),
   );
 
   const totalSteps = steps.length;
@@ -45,7 +45,7 @@ export const useWizardStep = ({
       if (!step) return false;
       return !step.isSkippable(getValues());
     },
-    [steps, getValues]
+    [steps, getValues],
   );
 
   const findNextVisibleStep = useCallback(
@@ -55,7 +55,7 @@ export const useWizardStep = ({
       }
       return null;
     },
-    [totalSteps, shouldShowStep]
+    [totalSteps, shouldShowStep],
   );
 
   const findPrevVisibleStep = useCallback(
@@ -65,11 +65,15 @@ export const useWizardStep = ({
       }
       return null;
     },
-    [shouldShowStep]
+    [shouldShowStep],
   );
 
   const goNext = useCallback((): string | null => {
-    if (steps.length === 0 || currentStepIndex < 0 || currentStepIndex >= steps.length) {
+    if (
+      steps.length === 0 ||
+      currentStepIndex < 0 ||
+      currentStepIndex >= steps.length
+    ) {
       return null;
     }
     const values = getValues();
@@ -109,7 +113,7 @@ export const useWizardStep = ({
         setCurrentStepIndex(index);
       }
     },
-    [visitedSteps, shouldShowStep]
+    [visitedSteps, shouldShowStep],
   );
 
   const forceGoToStep = useCallback(
@@ -119,7 +123,7 @@ export const useWizardStep = ({
         setVisitedSteps((prev) => new Set([...prev, index]));
       }
     },
-    [steps.length, shouldShowStep]
+    [steps.length, shouldShowStep],
   );
 
   const resetTo = useCallback(
@@ -136,7 +140,7 @@ export const useWizardStep = ({
       }
       setCompletedSteps(restored);
     },
-    [steps.length]
+    [steps.length],
   );
 
   // steps 배열 변경 시 currentStepIndex가 범위를 벗어나면 자동 보정
@@ -185,6 +189,6 @@ export const useWizardStep = ({
       visitedSteps,
       completedSteps,
       shouldShowStep,
-    ]
+    ],
   );
 };

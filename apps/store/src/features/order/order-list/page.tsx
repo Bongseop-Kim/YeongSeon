@@ -27,10 +27,17 @@ import type { Order } from "@yeongseon/shared/types/view/order";
 type OrderTypeFilter = "전체" | "일반구매" | "수선" | "주문제작" | "토큰구매";
 
 const ORDER_TYPE_TABS: OrderTypeFilter[] = [
-  "전체", "일반구매", "수선", "주문제작", "토큰구매",
+  "전체",
+  "일반구매",
+  "수선",
+  "주문제작",
+  "토큰구매",
 ];
 
-const ORDER_TYPE_MAP: Record<Exclude<OrderTypeFilter, "전체">, Order["orderType"]> = {
+const ORDER_TYPE_MAP: Record<
+  Exclude<OrderTypeFilter, "전체">,
+  Order["orderType"]
+> = {
   일반구매: "sale",
   수선: "repair",
   주문제작: "custom",
@@ -77,7 +84,7 @@ export default function OrderListPage() {
   const handleClaimRequest = (
     type: string,
     orderId: string,
-    itemId: string
+    itemId: string,
   ) => {
     navigate(`${ROUTES.CLAIM_FORM}/${type}/${orderId}/${itemId}`);
   };
@@ -129,7 +136,7 @@ export default function OrderListPage() {
                       "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
                       activeTab === tab
                         ? "bg-zinc-900 text-white"
-                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200",
                     )}
                   >
                     {tab}
@@ -139,8 +146,16 @@ export default function OrderListPage() {
               {filteredOrders.length === 0 ? (
                 <Card>
                   <Empty
-                    title={activeTab === "전체" ? "주문 내역이 없습니다." : `${activeTab} 내역이 없습니다.`}
-                    description={activeTab === "전체" ? "첫 주문을 시작해보세요!" : `${activeTab}에 해당하는 주문이 없습니다.`}
+                    title={
+                      activeTab === "전체"
+                        ? "주문 내역이 없습니다."
+                        : `${activeTab} 내역이 없습니다.`
+                    }
+                    description={
+                      activeTab === "전체"
+                        ? "첫 주문을 시작해보세요!"
+                        : `${activeTab}에 해당하는 주문이 없습니다.`
+                    }
                   />
                 </Card>
               ) : (
@@ -161,40 +176,43 @@ export default function OrderListPage() {
 
                       <div className="space-y-0">
                         {order.items.map((item) => {
-                          const claimActions = getClaimActionsForItem(order.status, item.type);
+                          const claimActions = getClaimActionsForItem(
+                            order.status,
+                            item.type,
+                          );
                           return (
-                          <CardContent key={item.id} className="py-4">
-                            <OrderItemCard
-                              item={item}
-                              onClick={() =>
-                                navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
-                              }
-                              actions={
-                                claimActions.length > 0 ? (
-                                  <div className="flex gap-2">
-                                    {claimActions.map((actionType) => (
-                                      <Button
-                                        key={actionType}
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex-1"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleClaimRequest(
-                                            actionType,
-                                            order.id,
-                                            item.id
-                                          );
-                                        }}
-                                      >
-                                        {CLAIM_ACTION_LABEL[actionType]}
-                                      </Button>
-                                    ))}
-                                  </div>
-                                ) : undefined
-                              }
-                            />
-                          </CardContent>
+                            <CardContent key={item.id} className="py-4">
+                              <OrderItemCard
+                                item={item}
+                                onClick={() =>
+                                  navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
+                                }
+                                actions={
+                                  claimActions.length > 0 ? (
+                                    <div className="flex gap-2">
+                                      {claimActions.map((actionType) => (
+                                        <Button
+                                          key={actionType}
+                                          variant="outline"
+                                          size="sm"
+                                          className="flex-1"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleClaimRequest(
+                                              actionType,
+                                              order.id,
+                                              item.id,
+                                            );
+                                          }}
+                                        >
+                                          {CLAIM_ACTION_LABEL[actionType]}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  ) : undefined
+                                }
+                              />
+                            </CardContent>
                           );
                         })}
                       </div>

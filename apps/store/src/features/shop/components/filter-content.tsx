@@ -106,7 +106,7 @@ export const FilterContent = ({
 
     if (selectedPriceRange && selectedPriceRange !== "all") {
       const option = PRICE_RANGE_OPTIONS.find(
-        (opt) => opt.value === selectedPriceRange
+        (opt) => opt.value === selectedPriceRange,
       );
       if (option) {
         filters.push({

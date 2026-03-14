@@ -1,13 +1,38 @@
-export const PRODUCT_CATEGORIES = ["3fold", "sfolderato", "knit", "bowtie"] as const;
+export const PRODUCT_CATEGORIES = [
+  "3fold",
+  "sfolderato",
+  "knit",
+  "bowtie",
+] as const;
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 
-export const PRODUCT_COLORS = ["black", "navy", "gray", "wine", "blue", "brown", "beige", "silver"] as const;
+export const PRODUCT_COLORS = [
+  "black",
+  "navy",
+  "gray",
+  "wine",
+  "blue",
+  "brown",
+  "beige",
+  "silver",
+] as const;
 export type ProductColor = (typeof PRODUCT_COLORS)[number];
 
-export const PRODUCT_PATTERNS = ["solid", "stripe", "dot", "check", "paisley"] as const;
+export const PRODUCT_PATTERNS = [
+  "solid",
+  "stripe",
+  "dot",
+  "check",
+  "paisley",
+] as const;
 export type ProductPattern = (typeof PRODUCT_PATTERNS)[number];
 
-export const PRODUCT_MATERIALS = ["silk", "cotton", "polyester", "wool"] as const;
+export const PRODUCT_MATERIALS = [
+  "silk",
+  "cotton",
+  "polyester",
+  "wool",
+] as const;
 export type ProductMaterial = (typeof PRODUCT_MATERIALS)[number];
 
 export const CATEGORY_FILTER_OPTIONS = [

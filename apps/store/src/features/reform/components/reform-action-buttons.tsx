@@ -16,7 +16,13 @@ export function ReformActionButtons({
 
   if (isMobile) {
     return (
-      <Button type="button" onClick={onOrder} size="xl" className="w-full" disabled={disabled}>
+      <Button
+        type="button"
+        onClick={onOrder}
+        size="xl"
+        className="w-full"
+        disabled={disabled}
+      >
         {disabled ? "업로드 중..." : "주문하기"}
       </Button>
     );
@@ -34,7 +40,13 @@ export function ReformActionButtons({
       >
         {disabled ? "업로드 중..." : "장바구니"}
       </Button>
-      <Button type="button" onClick={onOrder} size="xl" className="flex-1" disabled={disabled}>
+      <Button
+        type="button"
+        onClick={onOrder}
+        size="xl"
+        className="flex-1"
+        disabled={disabled}
+      >
         {disabled ? "업로드 중..." : "주문하기"}
       </Button>
     </div>

@@ -29,9 +29,9 @@ flowchart TD
 
 ## 3. AI 모델별 Edge Function
 
-| 모델 | Edge Function | 요청 타입 |
-|------|--------------|---------|
-| `openai` | `generate-open-api` | 텍스트 / 이미지 |
+| 모델     | Edge Function         | 요청 타입       |
+| -------- | --------------------- | --------------- |
+| `openai` | `generate-open-api`   | 텍스트 / 이미지 |
 | `gemini` | `generate-google-api` | 텍스트 / 이미지 |
 
 ---
@@ -40,16 +40,17 @@ flowchart TD
 
 토큰 비용은 `admin_settings`에서 모델 × 요청 타입 × 품질 조합으로 관리된다.
 
-| 설정 키 | 설명 |
-|---------|------|
-| `design_token_cost_openai_text` | OpenAI 텍스트 전용 |
-| `design_token_cost_openai_image` | OpenAI 텍스트 + 이미지 (standard) |
+| 설정 키                               | 설명                                  |
+| ------------------------------------- | ------------------------------------- |
+| `design_token_cost_openai_text`       | OpenAI 텍스트 전용                    |
+| `design_token_cost_openai_image`      | OpenAI 텍스트 + 이미지 (standard)     |
 | `design_token_cost_openai_image_high` | OpenAI 텍스트 + 이미지 (high quality) |
-| `design_token_cost_gemini_text` | Gemini 텍스트 전용 |
-| `design_token_cost_gemini_image` | Gemini 텍스트 + 이미지 (standard) |
+| `design_token_cost_gemini_text`       | Gemini 텍스트 전용                    |
+| `design_token_cost_gemini_image`      | Gemini 텍스트 + 이미지 (standard)     |
 | `design_token_cost_gemini_image_high` | Gemini 텍스트 + 이미지 (high quality) |
 
 `use_design_tokens` 파라미터:
+
 - `p_ai_model`: `'openai'` | `'gemini'`
 - `p_request_type`: `'text_only'` | `'text_and_image'`
 - `p_quality`: `'standard'` | `'high'`
@@ -60,9 +61,9 @@ flowchart TD
 
 AI API 호출 실패 시 `refund_design_tokens`를 호출해 차감된 토큰을 환불한다.
 
-| 항목 | 규칙 |
-|------|------|
-| 멱등성 | `work_id` 기반으로 중복 환불 방지 |
+| 항목      | 규칙                                              |
+| --------- | ------------------------------------------------- |
+| 멱등성    | `work_id` 기반으로 중복 환불 방지                 |
 | 호출 권한 | service_role 전용 (Edge Function 내부에서만 호출) |
 
 ---
@@ -94,6 +95,7 @@ AI API 호출 실패 시 `refund_design_tokens`를 호출해 차감된 토큰을
 ```
 
 ### 토큰 잔액 부족 시
+
 ```
 Edge Function → use_design_tokens 실패
   └─ insufficient_tokens 에러 코드 반환
@@ -105,10 +107,10 @@ Edge Function → use_design_tokens 실패
 
 ## 8. 관련 파일
 
-| 파일 | 역할 |
-|------|------|
-| `apps/store/src/features/design/api/ai-design-api.ts` | 프론트 AI 디자인 API 레이어 |
-| `supabase/schemas/86_design_tokens.sql` | 디자인 토큰 테이블 스키마 |
-| `supabase/schemas/99_functions_design_tokens.sql` | 토큰 RPC (use, refund, balance 등) |
+| 파일                                                  | 역할                               |
+| ----------------------------------------------------- | ---------------------------------- |
+| `apps/store/src/features/design/api/ai-design-api.ts` | 프론트 AI 디자인 API 레이어        |
+| `supabase/schemas/86_design_tokens.sql`               | 디자인 토큰 테이블 스키마          |
+| `supabase/schemas/99_functions_design_tokens.sql`     | 토큰 RPC (use, refund, balance 등) |
 
 토큰 정책 상세는 [../functions/token-policy.md](../functions/token-policy.md) 참조.

@@ -1,7 +1,12 @@
 export type InquiryStatus = "답변대기" | "답변완료";
 export type InquiryCategory = "일반" | "상품" | "수선" | "주문제작";
 
-export const INQUIRY_CATEGORIES: InquiryCategory[] = ["일반", "상품", "수선", "주문제작"];
+export const INQUIRY_CATEGORIES: InquiryCategory[] = [
+  "일반",
+  "상품",
+  "수선",
+  "주문제작",
+];
 
 // ── List UI model ──────────────────────────────────────────────
 

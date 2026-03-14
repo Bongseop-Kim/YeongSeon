@@ -50,7 +50,9 @@ export function DashboardContent() {
             label: "견적",
             children: (
               <>
-                <Title level={5} style={{ marginTop: 0 }}>견적 요청</Title>
+                <Title level={5} style={{ marginTop: 0 }}>
+                  견적 요청
+                </Title>
                 <QuoteRequestListTable />
               </>
             ),

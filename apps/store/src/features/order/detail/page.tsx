@@ -11,9 +11,17 @@ import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
 import React from "react";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import { useOrderDetail, useConfirmPurchase } from "@/features/order/api/order-query";
+import {
+  useOrderDetail,
+  useConfirmPurchase,
+} from "@/features/order/api/order-query";
 import { Empty } from "@/components/composite/empty";
-import type { OrderItem, OrderStatus, ShippingInfo, TrackingInfo } from "@yeongseon/shared/types/view/order";
+import type {
+  OrderItem,
+  OrderStatus,
+  ShippingInfo,
+  TrackingInfo,
+} from "@yeongseon/shared/types/view/order";
 import { buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies";
 import {
   type ClaimActionType,
@@ -61,12 +69,9 @@ const renderClaimButtons = (
 };
 
 /** 배송중 또는 배송완료 상태에서 구매확정 버튼을 표시 */
-const PurchaseConfirmSection = ({
-  orderId,
-}: {
-  orderId: string;
-}) => {
-  const { mutate, isPending, isSuccess, isError, error } = useConfirmPurchase(orderId);
+const PurchaseConfirmSection = ({ orderId }: { orderId: string }) => {
+  const { mutate, isPending, isSuccess, isError, error } =
+    useConfirmPurchase(orderId);
 
   if (isSuccess) {
     return (
@@ -80,7 +85,8 @@ const PurchaseConfirmSection = ({
     <div className="rounded-md bg-blue-50 border border-blue-200 p-4 space-y-3">
       {isError && (
         <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800">
-          {getOrderErrorDescription(error) || "구매확정에 실패했습니다. 다시 시도해주세요."}
+          {getOrderErrorDescription(error) ||
+            "구매확정에 실패했습니다. 다시 시도해주세요."}
         </div>
       )}
       <Button
@@ -114,34 +120,34 @@ const OrderDetailSkeleton = () => (
           </Card>
         }
       >
-          <Card className="animate-pulse">
-            <CardHeader className="space-y-3">
-              <div className="h-6 w-32 bg-zinc-200 rounded" />
-              <div className="h-4 w-56 bg-zinc-200 rounded" />
-              <div className="h-4 w-40 bg-zinc-200 rounded" />
-            </CardHeader>
-            <CardContent>
-              <Separator />
-            </CardContent>
-            <CardHeader>
-              <div className="h-6 w-24 bg-zinc-200 rounded" />
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="h-4 w-40 bg-zinc-200 rounded" />
-              <div className="h-4 w-72 bg-zinc-200 rounded" />
-              <div className="h-4 w-28 bg-zinc-200 rounded" />
-            </CardContent>
-            <CardContent>
-              <Separator />
-            </CardContent>
-            <CardHeader>
-              <div className="h-6 w-36 bg-zinc-200 rounded" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="h-24 w-full bg-zinc-200 rounded" />
-              <div className="h-24 w-full bg-zinc-200 rounded" />
-            </CardContent>
-          </Card>
+        <Card className="animate-pulse">
+          <CardHeader className="space-y-3">
+            <div className="h-6 w-32 bg-zinc-200 rounded" />
+            <div className="h-4 w-56 bg-zinc-200 rounded" />
+            <div className="h-4 w-40 bg-zinc-200 rounded" />
+          </CardHeader>
+          <CardContent>
+            <Separator />
+          </CardContent>
+          <CardHeader>
+            <div className="h-6 w-24 bg-zinc-200 rounded" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="h-4 w-40 bg-zinc-200 rounded" />
+            <div className="h-4 w-72 bg-zinc-200 rounded" />
+            <div className="h-4 w-28 bg-zinc-200 rounded" />
+          </CardContent>
+          <CardContent>
+            <Separator />
+          </CardContent>
+          <CardHeader>
+            <div className="h-6 w-36 bg-zinc-200 rounded" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="h-24 w-full bg-zinc-200 rounded" />
+            <div className="h-24 w-full bg-zinc-200 rounded" />
+          </CardContent>
+        </Card>
       </PageLayout>
     </MainContent>
   </MainLayout>
@@ -174,7 +180,10 @@ const ShippingInfoSection = ({ info }: { info: ShippingInfo }) => (
 );
 
 const TrackingInfoSection = ({ info }: { info: TrackingInfo }) => {
-  const trackingUrl = buildTrackingUrl(info.courierCompany, info.trackingNumber);
+  const trackingUrl = buildTrackingUrl(
+    info.courierCompany,
+    info.trackingNumber,
+  );
   return (
     <>
       <p>
@@ -304,113 +313,115 @@ const OrderDetailPage = () => {
             </Button>
           }
         >
-            <Card>
-              {/* 주문 정보 헤더 */}
-              <CardHeader className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <CardTitle>주문 상세</CardTitle>
-                  <div className="text-sm text-zinc-500">
-                    주문번호: {order.orderNumber}
-                  </div>
-                  <div className="text-sm text-zinc-500">
-                    주문일시: {formatDate(order.date)}
-                  </div>
+          <Card>
+            {/* 주문 정보 헤더 */}
+            <CardHeader className="flex justify-between items-center">
+              <div className="space-y-1">
+                <CardTitle>주문 상세</CardTitle>
+                <div className="text-sm text-zinc-500">
+                  주문번호: {order.orderNumber}
                 </div>
-                <OrderStatusBadge status={order.status} />
-              </CardHeader>
+                <div className="text-sm text-zinc-500">
+                  주문일시: {formatDate(order.date)}
+                </div>
+              </div>
+              <OrderStatusBadge status={order.status} />
+            </CardHeader>
 
-              <CardContent>
-                <Separator />
-              </CardContent>
+            <CardContent>
+              <Separator />
+            </CardContent>
 
-              {/* 배송지 정보 */}
-              {order.orderType !== "token" && (
-                <>
-                  <CardHeader>
-                    <CardTitle>배송지 정보</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1 text-sm">
-                    {order.shippingInfo ? (
-                      <ShippingInfoSection info={order.shippingInfo} />
-                    ) : (
-                      <p className="text-zinc-500">배송지 정보가 없습니다.</p>
-                    )}
-                  </CardContent>
-                </>
-              )}
+            {/* 배송지 정보 */}
+            {order.orderType !== "token" && (
+              <>
+                <CardHeader>
+                  <CardTitle>배송지 정보</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm">
+                  {order.shippingInfo ? (
+                    <ShippingInfoSection info={order.shippingInfo} />
+                  ) : (
+                    <p className="text-zinc-500">배송지 정보가 없습니다.</p>
+                  )}
+                </CardContent>
+              </>
+            )}
 
-              {/* 배송 추적 정보 */}
-              {order.trackingInfo && (
-                <>
-                  <CardContent>
-                    <Separator />
-                  </CardContent>
-                  <CardHeader>
-                    <CardTitle>배송 추적</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <TrackingInfoSection info={order.trackingInfo} />
-                  </CardContent>
-                </>
-              )}
-
-              {order.orderType !== "token" && (
+            {/* 배송 추적 정보 */}
+            {order.trackingInfo && (
+              <>
                 <CardContent>
                   <Separator />
                 </CardContent>
-              )}
+                <CardHeader>
+                  <CardTitle>배송 추적</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <TrackingInfoSection info={order.trackingInfo} />
+                </CardContent>
+              </>
+            )}
 
-              {/* 구매확정 */}
-              {order.orderType !== "token" &&
-                (order.status === "배송완료" || order.status === "배송중") && (
+            {order.orderType !== "token" && (
+              <CardContent>
+                <Separator />
+              </CardContent>
+            )}
+
+            {/* 구매확정 */}
+            {order.orderType !== "token" &&
+              (order.status === "배송완료" || order.status === "배송중") && (
                 <CardContent>
-                  <PurchaseConfirmSection
-                    orderId={order.id}
-                  />
+                  <PurchaseConfirmSection orderId={order.id} />
                 </CardContent>
               )}
 
-              {/* 주문 상품 목록 */}
-              <CardHeader>
-                <CardTitle>주문 상품 {order.items.length}개</CardTitle>
-              </CardHeader>
+            {/* 주문 상품 목록 */}
+            <CardHeader>
+              <CardTitle>주문 상품 {order.items.length}개</CardTitle>
+            </CardHeader>
 
-              {order.items.map((item, index) => (
-                <React.Fragment key={item.id}>
-                  <CardContent>
-                    <OrderItemCard
-                      item={item}
-                      showQuantity={true}
-                      showPrice={true}
-                      actions={renderClaimButtons(order.status, item, handleClaimRequest)}
-                    />
-                  </CardContent>
-                  {item.type === "custom" && (
-                    <>
-                      <CardContent>
-                        <Separator />
-                      </CardContent>
-                      <CardHeader>
-                        <CardTitle>주문 제작 옵션</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <CustomOrderOptionsSection
-                          options={item.customData.options}
-                          referenceImageUrls={item.customData.referenceImageUrls}
-                          additionalNotes={item.customData.additionalNotes}
-                          sampleType={item.customData.sampleType}
-                        />
-                      </CardContent>
-                    </>
-                  )}
-                  {index < order.items.length - 1 && (
+            {order.items.map((item, index) => (
+              <React.Fragment key={item.id}>
+                <CardContent>
+                  <OrderItemCard
+                    item={item}
+                    showQuantity={true}
+                    showPrice={true}
+                    actions={renderClaimButtons(
+                      order.status,
+                      item,
+                      handleClaimRequest,
+                    )}
+                  />
+                </CardContent>
+                {item.type === "custom" && (
+                  <>
                     <CardContent>
                       <Separator />
                     </CardContent>
-                  )}
-                </React.Fragment>
-              ))}
-            </Card>
+                    <CardHeader>
+                      <CardTitle>주문 제작 옵션</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CustomOrderOptionsSection
+                        options={item.customData.options}
+                        referenceImageUrls={item.customData.referenceImageUrls}
+                        additionalNotes={item.customData.additionalNotes}
+                        sampleType={item.customData.sampleType}
+                      />
+                    </CardContent>
+                  </>
+                )}
+                {index < order.items.length - 1 && (
+                  <CardContent>
+                    <Separator />
+                  </CardContent>
+                )}
+              </React.Fragment>
+            ))}
+          </Card>
         </PageLayout>
       </MainContent>
     </MainLayout>

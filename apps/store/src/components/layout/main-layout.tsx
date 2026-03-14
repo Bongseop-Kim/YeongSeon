@@ -3,11 +3,9 @@ import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const mainLayoutVariants = cva(
-  "w-full bg-background flex flex-col"
-);
+const mainLayoutVariants = cva("w-full bg-background flex flex-col");
 
-export interface MainLayoutProps extends React.HTMLAttributes<HTMLDivElement> {}
+export type MainLayoutProps = React.HTMLAttributes<HTMLDivElement>;
 
 const MainLayout = React.forwardRef<HTMLDivElement, MainLayoutProps>(
   ({ className, ...props }, ref) => {
@@ -18,7 +16,7 @@ const MainLayout = React.forwardRef<HTMLDivElement, MainLayoutProps>(
         {...props}
       />
     );
-  }
+  },
 );
 MainLayout.displayName = "MainLayout";
 
@@ -46,8 +44,4 @@ const PageTitle = React.forwardRef<
 ));
 PageTitle.displayName = "PageTitle";
 
-export {
-  MainLayout,
-  MainContent,
-  PageTitle,
-};
+export { MainLayout, MainContent, PageTitle };

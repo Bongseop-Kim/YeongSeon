@@ -1,6 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import type { CreateTokenPurchaseResultDTO } from "@yeongseon/shared";
-import { mapTokenPlans, mapCreateTokenPurchase } from "@/features/token-purchase/api/token-purchase-mapper";
+import {
+  mapTokenPlans,
+  mapCreateTokenPurchase,
+} from "@/features/token-purchase/api/token-purchase-mapper";
 
 export type TokenPlanKey = "starter" | "popular" | "pro";
 
@@ -30,7 +33,7 @@ export async function getTokenPlans(): Promise<TokenPlan[]> {
 }
 
 export async function createTokenPurchase(
-  planKey: TokenPlanKey
+  planKey: TokenPlanKey,
 ): Promise<CreateTokenPurchaseResult> {
   const { data, error } = await supabase.rpc("create_token_order", {
     p_plan_key: planKey,

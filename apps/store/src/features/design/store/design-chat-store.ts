@@ -78,7 +78,11 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
   setGeneratedImage: (imageUrl, tags) =>
     set(
       imageUrl !== null
-        ? { generatedImageUrl: imageUrl, isImageDownloaded: false, resultTags: tags }
+        ? {
+            generatedImageUrl: imageUrl,
+            isImageDownloaded: false,
+            resultTags: tags,
+          }
         : { generatedImageUrl: null, resultTags: [] },
     ),
   markImageDownloaded: () =>

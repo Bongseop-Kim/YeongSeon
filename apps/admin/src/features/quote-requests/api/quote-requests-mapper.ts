@@ -23,7 +23,7 @@ function bool(v: unknown): boolean {
 // ── Options ───────────────────────────────────────────────────
 
 export function toQuoteRequestOptions(
-  raw: Record<string, unknown>
+  raw: Record<string, unknown>,
 ): QuoteRequestOptions {
   return {
     tieType: str(raw.tie_type),
@@ -46,7 +46,7 @@ export function toQuoteRequestOptions(
 // ── List ──────────────────────────────────────────────────────
 
 export function toAdminQuoteRequestListItem(
-  dto: AdminQuoteRequestListRowDTO
+  dto: AdminQuoteRequestListRowDTO,
 ): AdminQuoteRequestListItem {
   return {
     id: dto.id,
@@ -64,7 +64,7 @@ export function toAdminQuoteRequestListItem(
 // ── Detail ────────────────────────────────────────────────────
 
 export function toAdminQuoteRequestDetail(
-  dto: AdminQuoteRequestDetailRowDTO
+  dto: AdminQuoteRequestDetailRowDTO,
 ): AdminQuoteRequestDetail {
   return {
     id: dto.id,
@@ -99,7 +99,7 @@ export function toAdminQuoteRequestDetail(
 // ── Status log ────────────────────────────────────────────────
 
 export function toAdminQuoteRequestStatusLog(
-  dto: QuoteRequestStatusLogDTO
+  dto: QuoteRequestStatusLogDTO,
 ): AdminQuoteRequestStatusLog {
   return {
     id: dto.id,
