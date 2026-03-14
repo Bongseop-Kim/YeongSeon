@@ -76,7 +76,7 @@ const PaymentSuccessPage = () => {
         } else if (paymentResult.orders.length === 1) {
           navigate(
             `${ROUTES.ORDER_DETAIL}/${paymentResult.orders[0].orderId}`,
-            { replace: true }
+            { replace: true },
           );
         } else {
           navigate(ROUTES.ORDER_LIST, { replace: true });
@@ -116,9 +116,7 @@ const PaymentSuccessPage = () => {
       <MainContent>
         <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-lg text-zinc-600">
-            결제를 확인하고 있습니다...
-          </p>
+          <p className="text-lg text-zinc-600">결제를 확인하고 있습니다...</p>
         </div>
       </MainContent>
     </MainLayout>

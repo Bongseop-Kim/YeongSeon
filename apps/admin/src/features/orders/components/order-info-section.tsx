@@ -1,9 +1,6 @@
 import { Descriptions, Tag } from "antd";
 import { useNavigation } from "@refinedev/core";
-import {
-  ORDER_TYPE_LABELS,
-  ORDER_STATUS_COLORS,
-} from "@yeongseon/shared";
+import { ORDER_TYPE_LABELS, ORDER_STATUS_COLORS } from "@yeongseon/shared";
 import type { AdminOrderDetail } from "../types/admin-order";
 
 interface OrderInfoSectionProps {
@@ -14,9 +11,17 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
   const { show } = useNavigation();
 
   return (
-    <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
-      <Descriptions.Item label="주문번호">{order.orderNumber}</Descriptions.Item>
-      <Descriptions.Item label="주문일">{new Date(order.date).toLocaleString("ko-KR")}</Descriptions.Item>
+    <Descriptions
+      bordered
+      column={{ xs: 1, sm: 1, md: 2 }}
+      style={{ marginBottom: 24 }}
+    >
+      <Descriptions.Item label="주문번호">
+        {order.orderNumber}
+      </Descriptions.Item>
+      <Descriptions.Item label="주문일">
+        {new Date(order.date).toLocaleString("ko-KR")}
+      </Descriptions.Item>
       <Descriptions.Item label="주문유형">
         <Tag>{ORDER_TYPE_LABELS[order.orderType]}</Tag>
       </Descriptions.Item>
@@ -31,7 +36,12 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
               e.stopPropagation();
               show("profiles", order.userId);
             }}
-            style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
+            style={{
+              cursor: "pointer",
+              background: "none",
+              border: "none",
+              padding: 0,
+            }}
           >
             {order.customerName}
           </button>

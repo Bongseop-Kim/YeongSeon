@@ -9,7 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
+import type {
+  Product,
+  ProductOption,
+} from "@yeongseon/shared/types/view/product";
 import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
@@ -22,7 +25,7 @@ interface MobilePurchaseSheetProps {
   onOpenChange: (open: boolean) => void;
   onProcessOrder: (
     selectedOptions: SelectedOption[],
-    baseQuantity: number
+    baseQuantity: number,
   ) => void;
   selectedOptions: SelectedOption[];
   baseQuantity: number;
@@ -96,7 +99,9 @@ export function MobilePurchaseSheet({
       }
 
       if (failed > 0) {
-        toast.warning(`일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`);
+        toast.warning(
+          `일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`,
+        );
       }
 
       resetOptions();
@@ -127,13 +132,19 @@ export function MobilePurchaseSheet({
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder={product.optionLabel ? `${product.optionLabel}을(를) 선택하세요` : "옵션을 선택하세요"} />
+                <SelectValue
+                  placeholder={
+                    product.optionLabel
+                      ? `${product.optionLabel}을(를) 선택하세요`
+                      : "옵션을 선택하세요"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {productOptions
                   .filter(
                     (option) =>
-                      !selectedOptions.some((s) => s.option.id === option.id)
+                      !selectedOptions.some((s) => s.option.id === option.id),
                   )
                   .map((option) => (
                     <SelectItem key={option.id} value={option.id}>

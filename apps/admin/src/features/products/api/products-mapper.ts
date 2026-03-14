@@ -22,7 +22,9 @@ interface ProductOptionRow {
   product_id: number;
 }
 
-export function toAdminProductListItem(row: ProductsTableRow): AdminProductListItem {
+export function toAdminProductListItem(
+  row: ProductsTableRow,
+): AdminProductListItem {
   return {
     id: row.id,
     image: row.image,
@@ -36,7 +38,9 @@ export function toAdminProductListItem(row: ProductsTableRow): AdminProductListI
   };
 }
 
-export function toAdminProductOption(row: ProductOptionRow): AdminProductOption {
+export function toAdminProductOption(
+  row: ProductOptionRow,
+): AdminProductOption {
   return {
     name: row.name ?? "",
     additionalPrice: row.additional_price ?? 0,
@@ -46,7 +50,7 @@ export function toAdminProductOption(row: ProductOptionRow): AdminProductOption 
 
 export function fromAdminProductOption(
   option: AdminProductOption,
-  productId: number
+  productId: number,
 ): ProductOptionRow {
   return {
     product_id: productId,

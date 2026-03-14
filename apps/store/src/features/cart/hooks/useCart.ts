@@ -1,7 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
-import type { Product, ProductOption } from "@yeongseon/shared/types/view/product";
+import type {
+  Product,
+  ProductOption,
+} from "@yeongseon/shared/types/view/product";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
 import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
@@ -86,13 +89,19 @@ export function useCart() {
         errorMessage: "장바구니 업데이트에 실패했습니다. 다시 시도해주세요.",
       });
     },
-    [isLoggedIn, queryClient, setCartItemsMutation, userId]
+    [isLoggedIn, queryClient, setCartItemsMutation, userId],
   );
 
   const addToCart = useCallback(
     async (product: Product, options: AddToCartOptions = {}) => {
       const { option, quantity = 1, showModal = true } = options;
-      const result = addProductToCart(items, product, option, quantity, generateItemId);
+      const result = addProductToCart(
+        items,
+        product,
+        option,
+        quantity,
+        generateItemId,
+      );
       await syncItems(result.nextItems, items);
 
       if (showModal) {
@@ -109,7 +118,7 @@ export function useCart() {
         });
       }
     },
-    [items, openModal, syncItems]
+    [items, openModal, syncItems],
   );
 
   const addReformToCart = useCallback(
@@ -127,7 +136,7 @@ export function useCart() {
         },
       });
     },
-    [items, openModal, syncItems]
+    [items, openModal, syncItems],
   );
 
   const addMultipleReformToCart = useCallback(
@@ -150,7 +159,7 @@ export function useCart() {
         },
       });
     },
-    [items, openModal, syncItems]
+    [items, openModal, syncItems],
   );
 
   const removeFromCart = useCallback(
@@ -158,7 +167,7 @@ export function useCart() {
       const nextItems = removeCartItem(items, itemId);
       await syncItems(nextItems, items);
     },
-    [items, syncItems]
+    [items, syncItems],
   );
 
   const updateQuantity = useCallback(
@@ -167,7 +176,7 @@ export function useCart() {
       if (nextItems === items) return;
       await syncItems(nextItems, items);
     },
-    [items, syncItems]
+    [items, syncItems],
   );
 
   const updateReformOption = useCallback(
@@ -175,7 +184,7 @@ export function useCart() {
       const nextItems = updateReformCartItemOption(items, itemId, tie);
       await syncItems(nextItems, items);
     },
-    [items, syncItems]
+    [items, syncItems],
   );
 
   const applyCoupon = useCallback(
@@ -183,25 +192,25 @@ export function useCart() {
       const nextItems = applyCartItemCoupon(items, itemId, coupon);
       await syncItems(nextItems, items);
     },
-    [items, syncItems]
+    [items, syncItems],
   );
 
   const updateProductOption = useCallback(
     async (
       itemId: string,
       newOption: ProductOption | undefined,
-      newQuantity: number
+      newQuantity: number,
     ) => {
       const nextItems = updateProductCartItemOption(
         items,
         itemId,
         newOption,
         newQuantity,
-        generateItemId
+        generateItemId,
       );
       await syncItems(nextItems, items);
     },
-    [items, syncItems]
+    [items, syncItems],
   );
 
   const clearCart = useCallback(async () => {

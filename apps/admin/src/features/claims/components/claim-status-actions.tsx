@@ -63,9 +63,12 @@ export function ClaimStatusActions({
       content: (
         <div>
           <p>
-            현재 상태 <Tag>{claim.status}</Tag> → <Tag>{targetStatus}</Tag>(으)로 롤백합니다.
+            현재 상태 <Tag>{claim.status}</Tag> → <Tag>{targetStatus}</Tag>
+            (으)로 롤백합니다.
           </p>
-          <p style={{ marginBottom: 4 }}><strong>사유 (필수)</strong></p>
+          <p style={{ marginBottom: 4 }}>
+            <strong>사유 (필수)</strong>
+          </p>
           <TextArea
             rows={3}
             placeholder="롤백 사유를 입력하세요"

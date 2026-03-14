@@ -29,7 +29,9 @@ export function InquiryCard({
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
               {inquiry.category !== "일반" && (
-                <Badge variant="outline" className="mb-1 text-xs">{inquiry.category}</Badge>
+                <Badge variant="outline" className="mb-1 text-xs">
+                  {inquiry.category}
+                </Badge>
               )}
               <div className="flex items-center gap-2 mb-1">
                 <Label className="font-bold text-base">{inquiry.title}</Label>
@@ -81,8 +83,7 @@ export function InquiryCard({
             {inquiry.answer && (
               <div className="mt-2 p-3 bg-zinc-50 rounded-md">
                 <Label className="text-xs text-zinc-600 mb-1 block">
-                  답변 (
-                  {inquiry.answerDate && formatDate(inquiry.answerDate)})
+                  답변 ({inquiry.answerDate && formatDate(inquiry.answerDate)})
                 </Label>
                 <Label className="text-sm text-zinc-700 whitespace-pre-line">
                   {inquiry.answer}

@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
-import * as React from "react";
+import type * as React from "react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,7 +16,7 @@ export function generateItemId(
   ...parts: (string | number | undefined)[]
 ): string {
   const validParts = parts.filter(
-    (part) => part !== undefined && part !== null
+    (part) => part !== undefined && part !== null,
   );
 
   return validParts.length > 0

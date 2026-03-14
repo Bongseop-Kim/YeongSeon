@@ -35,9 +35,14 @@ export function CartRecommendationsCard({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"} gap-2`}>
+          <div
+            className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"} gap-2`}
+          >
             {Array.from({ length: skeletonCount }).map((_, i) => (
-              <div key={i} className="animate-pulse rounded-md bg-zinc-200 aspect-square" />
+              <div
+                key={i}
+                className="animate-pulse rounded-md bg-zinc-200 aspect-square"
+              />
             ))}
           </div>
         </CardContent>
@@ -52,9 +57,16 @@ export function CartRecommendationsCard({
           <CardTitle>추천 상품</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-zinc-500">추천 상품을 불러오는 중 오류가 발생했습니다.</p>
+          <p className="text-sm text-zinc-500">
+            추천 상품을 불러오는 중 오류가 발생했습니다.
+          </p>
           {onRetry && (
-            <Button variant="outline" size="sm" onClick={onRetry} className="mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRetry}
+              className="mt-2"
+            >
               다시 시도
             </Button>
           )}
@@ -77,7 +89,9 @@ export function CartRecommendationsCard({
       </CardHeader>
 
       <CardContent>
-        <div className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"} gap-2`}>
+        <div
+          className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"} gap-2`}
+        >
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

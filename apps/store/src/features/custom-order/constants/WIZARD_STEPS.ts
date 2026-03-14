@@ -1,5 +1,8 @@
 import type { StepConfig } from "@/features/custom-order/types/wizard";
-import { QUANTITY_CONFIG, TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
+import {
+  QUANTITY_CONFIG,
+  TIE_WIDTH_CONFIG,
+} from "@/features/custom-order/constants/FORM_OPTIONS";
 
 export const WIZARD_STEPS: StepConfig[] = [
   {
@@ -37,7 +40,10 @@ export const WIZARD_STEPS: StepConfig[] = [
     id: "spec",
     label: "규격",
     validate: (values) => {
-      if (values.tieWidth < TIE_WIDTH_CONFIG.min || values.tieWidth > TIE_WIDTH_CONFIG.max) {
+      if (
+        values.tieWidth < TIE_WIDTH_CONFIG.min ||
+        values.tieWidth > TIE_WIDTH_CONFIG.max
+      ) {
         return `넥타이 폭은 ${TIE_WIDTH_CONFIG.min}~${TIE_WIDTH_CONFIG.max}cm 사이여야 합니다`;
       }
       return null;

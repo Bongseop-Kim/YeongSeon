@@ -90,9 +90,7 @@ function toAdminProductOptions(value: unknown): AdminProductOption[] {
       }
 
       const name =
-        "name" in option && typeof option.name === "string"
-          ? option.name
-          : "";
+        "name" in option && typeof option.name === "string" ? option.name : "";
       const additionalPrice =
         "additionalPrice" in option ? toNumber(option.additionalPrice) : 0;
       const stock = "stock" in option ? toOptionalNumber(option.stock) : null;
@@ -107,11 +105,12 @@ function toAdminProductOptions(value: unknown): AdminProductOption[] {
 }
 
 export function useAdminProductTable() {
-  const { tableProps: rawTableProps, setFilters } = useTable<AdminProductListItem>({
-    resource: "products",
-    sorters: { initial: [{ field: "created_at", order: "desc" }] },
-    syncWithLocation: true,
-  });
+  const { tableProps: rawTableProps, setFilters } =
+    useTable<AdminProductListItem>({
+      resource: "products",
+      sorters: { initial: [{ field: "created_at", order: "desc" }] },
+      syncWithLocation: true,
+    });
 
   const tableProps: TableProps<AdminProductListItem> = {
     ...rawTableProps,
@@ -123,7 +122,7 @@ export function useAdminProductTable() {
 
 function normalizeProductSubmit(
   values: AdminProductFormValues,
-  imageUpload: ReturnType<typeof useImageKitUpload>
+  imageUpload: ReturnType<typeof useImageKitUpload>,
 ): AdminProductFormValues | null {
   if (imageUpload.uploading) {
     message.warning("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도하세요.");
@@ -171,7 +170,7 @@ export function useAdminProductCreateForm() {
         }
       } catch (err) {
         message.error(
-          err instanceof Error ? err.message : "옵션 저장에 실패했습니다."
+          err instanceof Error ? err.message : "옵션 저장에 실패했습니다.",
         );
       } finally {
         list("products");
@@ -193,11 +192,13 @@ export function useAdminProductEditForm() {
   const imageUpload = useImageKitUpload();
   const imagesInitialized = useRef(false);
 
-  const { formProps, saveButtonProps, form, id, query: queryResult } = useForm<
-    AdminProductRecord,
-    HttpError,
-    AdminProductFormValues
-  >({
+  const {
+    formProps,
+    saveButtonProps,
+    form,
+    id,
+    query: queryResult,
+  } = useForm<AdminProductRecord, HttpError, AdminProductFormValues>({
     resource: "products",
     redirect: false,
     onMutationSuccess: async () => {
@@ -209,7 +210,7 @@ export function useAdminProductEditForm() {
           await saveProductOptions({ productId, options });
         } catch (err) {
           message.error(
-            err instanceof Error ? err.message : "옵션 저장에 실패했습니다."
+            err instanceof Error ? err.message : "옵션 저장에 실패했습니다.",
           );
           return;
         }
@@ -228,10 +229,7 @@ export function useAdminProductEditForm() {
   useEffect(() => {
     form.setFieldValue("options", []);
     if (optionsData?.data !== undefined) {
-      form.setFieldValue(
-        "options",
-        optionsData.data.map(toAdminProductOption)
-      );
+      form.setFieldValue("options", optionsData.data.map(toAdminProductOption));
     }
   }, [id, optionsData?.data, form]);
 
@@ -241,7 +239,11 @@ export function useAdminProductEditForm() {
 
   useEffect(() => {
     const product = queryResult?.data?.data;
-    if (product && !imagesInitialized.current && product.id === toProductId(id)) {
+    if (
+      product &&
+      !imagesInitialized.current &&
+      product.id === toProductId(id)
+    ) {
       imagesInitialized.current = true;
       const urls =
         product.detail_images && product.detail_images.length > 0
@@ -260,7 +262,7 @@ export function useAdminProductEditForm() {
       await formProps.onFinish?.(payload);
     } catch (err) {
       message.error(
-        err instanceof Error ? err.message : "상품 수정에 실패했습니다."
+        err instanceof Error ? err.message : "상품 수정에 실패했습니다.",
       );
     }
   };

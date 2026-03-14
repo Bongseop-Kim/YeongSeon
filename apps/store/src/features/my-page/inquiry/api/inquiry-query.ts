@@ -44,7 +44,8 @@ export const useCreateInquiry = () => {
       return createInquiry({ userId: user.id, ...params });
     },
     onSuccess: () => {
-      if (user?.id) queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
+      if (user?.id)
+        queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
     },
   });
 };
@@ -64,7 +65,8 @@ export const useUpdateInquiry = () => {
       return updateInquiry(params);
     },
     onSuccess: () => {
-      if (user?.id) queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
+      if (user?.id)
+        queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
     },
   });
 };
@@ -78,7 +80,8 @@ export const useDeleteInquiry = () => {
       return deleteInquiry(id);
     },
     onSuccess: () => {
-      if (user?.id) queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
+      if (user?.id)
+        queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
     },
   });
 };

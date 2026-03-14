@@ -10,7 +10,11 @@ interface MessageListProps {
   onChipClick?: (text: string) => void;
 }
 
-export function MessageList({ messages, isTyping, onChipClick }: MessageListProps) {
+export function MessageList({
+  messages,
+  isTyping,
+  onChipClick,
+}: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -24,7 +28,11 @@ export function MessageList({ messages, isTyping, onChipClick }: MessageListProp
   return (
     <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
       {messages.map((message) => (
-        <MessageBubble key={message.id} message={message} onChipClick={onChipClick} />
+        <MessageBubble
+          key={message.id}
+          message={message}
+          onChipClick={onChipClick}
+        />
       ))}
       {isTyping ? <TypingIndicator /> : null}
       <div ref={bottomRef} />

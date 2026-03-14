@@ -66,7 +66,7 @@ function processOrderAndNavigate(
   selectedOptions: SelectedOption[],
   baseQuantity: number,
   setOrderItems: (items: CartItem[]) => void,
-  navigate: (path: string) => void
+  navigate: (path: string) => void,
 ): void {
   if (hasOptions) {
     // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
@@ -130,28 +130,34 @@ export default function ShopDetailPage() {
   const toggleLikeMutation = useToggleLike(productId);
   const SIMILAR_LIMIT = isMobile ? 3 : 4;
 
-  const { data: categoryProducts = [], isLoading: isCategoryLoading } = useProducts(
-    {
-      categories: product ? [product.category] : [],
-      limit: SIMILAR_LIMIT + 1,
-    },
-    { enabled: !!product }
-  );
+  const { data: categoryProducts = [], isLoading: isCategoryLoading } =
+    useProducts(
+      {
+        categories: product ? [product.category] : [],
+        limit: SIMILAR_LIMIT + 1,
+      },
+      { enabled: !!product },
+    );
 
   const filteredSimilar = useMemo(
     () =>
       categoryProducts
         .filter((p) => p.id !== product?.id)
         .slice(0, SIMILAR_LIMIT),
-    [categoryProducts, product?.id, SIMILAR_LIMIT]
+    [categoryProducts, product?.id, SIMILAR_LIMIT],
   );
   const needsFallback = !isCategoryLoading && filteredSimilar.length === 0;
-  const { data: fallbackProducts = [], isLoading: isFallbackLoading } = useProducts(
-    { sortOption: "latest", limit: SIMILAR_LIMIT },
-    { enabled: !!product && needsFallback }
-  );
-  const similarProducts = filteredSimilar.length > 0 ? filteredSimilar : fallbackProducts.filter((p) => p.id !== product?.id);
-  const isSimilarLoading = isCategoryLoading || (needsFallback && isFallbackLoading);
+  const { data: fallbackProducts = [], isLoading: isFallbackLoading } =
+    useProducts(
+      { sortOption: "latest", limit: SIMILAR_LIMIT },
+      { enabled: !!product && needsFallback },
+    );
+  const similarProducts =
+    filteredSimilar.length > 0
+      ? filteredSimilar
+      : fallbackProducts.filter((p) => p.id !== product?.id);
+  const isSimilarLoading =
+    isCategoryLoading || (needsFallback && isFallbackLoading);
   const showSimilarSection = isSimilarLoading || similarProducts.length > 0;
 
   // 로딩 중이거나 제품이 없을 때 처리
@@ -215,7 +221,9 @@ export default function ShopDetailPage() {
     }
 
     if (failed > 0) {
-      toast.warning(`일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`);
+      toast.warning(
+        `일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`,
+      );
       return;
     }
 
@@ -245,7 +253,7 @@ export default function ShopDetailPage() {
       selectedOptions,
       baseQuantity,
       setOrderItems,
-      navigate
+      navigate,
     );
   };
 
@@ -277,19 +285,25 @@ export default function ShopDetailPage() {
 
                   <CardContent>
                     <div
-                      className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"
-                        }`}
+                      className={`grid ${
+                        isMobile ? "grid-cols-3" : "grid-cols-4"
+                      }`}
                     >
                       {isSimilarLoading
-                        ? Array.from({ length: SIMILAR_LIMIT }).map((_, index) => (
-                          <Skeleton key={`similar-skeleton-${index}`} className="aspect-square w-full" />
-                        ))
+                        ? Array.from({ length: SIMILAR_LIMIT }).map(
+                            (_, index) => (
+                              <Skeleton
+                                key={`similar-skeleton-${index}`}
+                                className="aspect-square w-full"
+                              />
+                            ),
+                          )
                         : similarProducts.map((similarProduct) => (
-                          <ProductCard
-                            key={similarProduct.id}
-                            product={similarProduct}
-                          />
-                        ))}
+                            <ProductCard
+                              key={similarProduct.id}
+                              product={similarProduct}
+                            />
+                          ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -332,12 +346,13 @@ export default function ShopDetailPage() {
               <CardHeader>
                 <CardTitle>{product.name}</CardTitle>
                 <CardDescription>{product.code}</CardDescription>
-                {isProductSoldOut && (
-                  <Badge variant="destructive">품절</Badge>
-                )}
-                {!hasOptions && product.stock != null && product.stock > 0 && product.stock <= 5 && (
-                  <Badge variant="secondary">{product.stock}개 남음</Badge>
-                )}
+                {isProductSoldOut && <Badge variant="destructive">품절</Badge>}
+                {!hasOptions &&
+                  product.stock != null &&
+                  product.stock > 0 &&
+                  product.stock <= 5 && (
+                    <Badge variant="secondary">{product.stock}개 남음</Badge>
+                  )}
 
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="gap-1">
@@ -367,13 +382,21 @@ export default function ShopDetailPage() {
                     }}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={product.optionLabel ? `${product.optionLabel}을(를) 선택하세요` : "옵션을 선택하세요"} />
+                      <SelectValue
+                        placeholder={
+                          product.optionLabel
+                            ? `${product.optionLabel}을(를) 선택하세요`
+                            : "옵션을 선택하세요"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {productOptions
                         .filter(
                           (option) =>
-                            !selectedOptions.some((s) => s.option.id === option.id)
+                            !selectedOptions.some(
+                              (s) => s.option.id === option.id,
+                            ),
                         )
                         .map((option) => (
                           <SelectItem
@@ -385,7 +408,9 @@ export default function ShopDetailPage() {
                             {option.additionalPrice > 0 &&
                               ` (+${option.additionalPrice.toLocaleString()}원)`}
                             {option.stock === 0 && " (품절)"}
-                            {option.stock != null && option.stock > 0 && option.stock <= 5 &&
+                            {option.stock != null &&
+                              option.stock > 0 &&
+                              option.stock <= 5 &&
                               ` (${option.stock}개 남음)`}
                           </SelectItem>
                         ))}
@@ -415,7 +440,7 @@ export default function ShopDetailPage() {
                       quantity: baseQuantity,
                     }}
                     product={product}
-                    onRemove={() => { }}
+                    onRemove={() => {}}
                     onUpdateQuantity={(delta) =>
                       handleUpdateBaseQuantity(delta, product.stock)
                     }
@@ -492,20 +517,20 @@ export default function ShopDetailPage() {
             />
           }
         >
-            <div>
-              <Image
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover"
-                transformation={[
-                  {
-                    width: 800,
-                    height: 800,
-                    quality: 85,
-                  },
-                ]}
-              />
-            </div>
+          <div>
+            <Image
+              src={product.image}
+              alt={product.name}
+              className="w-full h-full object-cover"
+              transformation={[
+                {
+                  width: 800,
+                  height: 800,
+                  quality: 85,
+                },
+              ]}
+            />
+          </div>
         </PageLayout>
         <MobilePurchaseSheet
           product={product}
@@ -518,7 +543,7 @@ export default function ShopDetailPage() {
               selectedOptions,
               baseQuantity,
               setOrderItems,
-              navigate
+              navigate,
             )
           }
           selectedOptions={selectedOptions}

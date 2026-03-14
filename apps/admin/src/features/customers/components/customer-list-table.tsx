@@ -14,7 +14,7 @@ export function CustomerListTable() {
   const { data: balances, isLoading: isBalancesLoading } =
     useCustomerTokenBalancesQuery(userIds);
   const tokenBalanceMap = new Map(
-    (balances ?? []).map((row) => [row.userId, row.balance])
+    (balances ?? []).map((row) => [row.userId, row.balance]),
   );
 
   return (
@@ -25,7 +25,11 @@ export function CustomerListTable() {
           allowClear
           onSearch={(value) => {
             setFilters([
-              { field: "name", operator: "contains", value: value || undefined },
+              {
+                field: "name",
+                operator: "contains",
+                value: value || undefined,
+              },
             ]);
           }}
           style={{ width: 250 }}
@@ -47,7 +51,7 @@ export function CustomerListTable() {
           render={(_, record: AdminCustomerListItem) =>
             isBalancesLoading
               ? "-"
-              : tokenBalanceMap.get(record.id)?.toLocaleString() ?? "-"
+              : (tokenBalanceMap.get(record.id)?.toLocaleString() ?? "-")
           }
         />
         <Table.Column

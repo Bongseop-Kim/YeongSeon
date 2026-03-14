@@ -3,11 +3,24 @@ import type { ProductDTO, ProductOptionDTO } from "./product";
 import type { TieItemDTO } from "./reform";
 
 export type OrderStatusDTO =
-  | "진행중" | "완료" | "배송중" | "배송완료" | "대기중" | "결제중" | "취소"
-  | "접수" | "제작중" | "제작완료"
-  | "수선중" | "수선완료"
-  | "샘플원단제작중" | "샘플원단배송중" | "샘플봉제제작중"
-  | "샘플넥타이배송중" | "샘플배송완료" | "샘플승인";
+  | "진행중"
+  | "완료"
+  | "배송중"
+  | "배송완료"
+  | "대기중"
+  | "결제중"
+  | "취소"
+  | "접수"
+  | "제작중"
+  | "제작완료"
+  | "수선중"
+  | "수선완료"
+  | "샘플원단제작중"
+  | "샘플원단배송중"
+  | "샘플봉제제작중"
+  | "샘플넥타이배송중"
+  | "샘플배송완료"
+  | "샘플승인";
 
 export interface ProductOrderItemDTO {
   id: string;

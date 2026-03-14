@@ -38,6 +38,6 @@ export async function uploadTieImages(ties: TieItem[]): Promise<TieItem[]> {
       }
 
       return { ...tie, image: response.url, fileId: response.fileId };
-    })
+    }),
   );
 }

@@ -19,7 +19,12 @@ interface ChatHeaderProps {
   onModelChange: (model: AiModel) => void;
 }
 
-export function ChatHeader({ onNewChat, tokenBalance, aiModel, onModelChange }: ChatHeaderProps) {
+export function ChatHeader({
+  onNewChat,
+  tokenBalance,
+  aiModel,
+  onModelChange,
+}: ChatHeaderProps) {
   const navigate = useNavigate();
 
   return (
@@ -35,7 +40,9 @@ export function ChatHeader({ onNewChat, tokenBalance, aiModel, onModelChange }: 
           </p>
           <div className="flex items-center gap-1.5">
             <p className="font-mono text-xs text-gray-400">
-              {tokenBalance !== undefined ? `${tokenBalance.toLocaleString()} tokens` : "— tokens"}
+              {tokenBalance !== undefined
+                ? `${tokenBalance.toLocaleString()} tokens`
+                : "— tokens"}
             </p>
             <button
               type="button"
@@ -48,7 +55,10 @@ export function ChatHeader({ onNewChat, tokenBalance, aiModel, onModelChange }: 
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Select value={aiModel} onValueChange={(value) => onModelChange(value as AiModel)}>
+        <Select
+          value={aiModel}
+          onValueChange={(value) => onModelChange(value as AiModel)}
+        >
           <SelectTrigger size="sm" className="w-28">
             <SelectValue />
           </SelectTrigger>

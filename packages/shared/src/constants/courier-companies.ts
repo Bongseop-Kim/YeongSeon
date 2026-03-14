@@ -51,5 +51,8 @@ export function buildTrackingUrl(
 ): string | null {
   const courier = COURIER_COMPANIES.find((c) => c.name === courierName);
   if (!courier) return null;
-  return courier.trackingUrlTemplate.replace("{trackingNumber}", trackingNumber);
+  return courier.trackingUrlTemplate.replace(
+    "{trackingNumber}",
+    trackingNumber,
+  );
 }

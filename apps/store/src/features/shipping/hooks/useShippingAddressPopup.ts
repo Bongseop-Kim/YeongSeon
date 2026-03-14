@@ -39,7 +39,9 @@ const isShippingMessageData = (data: unknown): data is ShippingMessageData => {
     return false;
   }
 
-  return typeof candidate.addressId === "string" && candidate.addressId.length > 0;
+  return (
+    typeof candidate.addressId === "string" && candidate.addressId.length > 0
+  );
 };
 
 export interface UseShippingAddressPopupReturn {
@@ -51,7 +53,9 @@ export interface UseShippingAddressPopupReturn {
 export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
   const { openPopup } = usePopup();
   const queryClient = useQueryClient();
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null,
+  );
   const initializedDefaultAddressRef = useRef(false);
   const userInteractedRef = useRef(false);
 
@@ -60,7 +64,11 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
 
   // 기본 배송지가 있으면 자동 선택 (사용자가 직접 선택한 경우 덮어쓰지 않음)
   useEffect(() => {
-    if (defaultAddress && !initializedDefaultAddressRef.current && !userInteractedRef.current) {
+    if (
+      defaultAddress &&
+      !initializedDefaultAddressRef.current &&
+      !userInteractedRef.current
+    ) {
       setSelectedAddressId(defaultAddress.id);
       initializedDefaultAddressRef.current = true;
     }
@@ -85,8 +93,12 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
 
         case SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED:
         case SHIPPING_MESSAGE_TYPE.ADDRESS_UPDATED:
-          await queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
-          await queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
+          await queryClient.invalidateQueries({
+            queryKey: shippingKeys.list(),
+          });
+          await queryClient.invalidateQueries({
+            queryKey: shippingKeys.default(),
+          });
           setSelectedAddressId(event.data.addressId);
           break;
       }
@@ -97,12 +109,16 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
   }, [queryClient]);
 
   const selectedAddress =
-    (addresses?.find((addr) => addr.id === selectedAddressId) || defaultAddress) ?? undefined;
+    (addresses?.find((addr) => addr.id === selectedAddressId) ||
+      defaultAddress) ??
+    undefined;
 
   const openShippingPopup = () => {
     const win = openPopup(`${ROUTES.SHIPPING}?mode=select`);
     if (!win) {
-      toast.error("팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.");
+      toast.error(
+        "팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.",
+      );
     }
   };
 

@@ -18,16 +18,31 @@ export default function MyInfoDetailPage() {
           <Card>
             <CardContent className="space-y-4">
               {isLoading ? (
-                <div className="text-center py-4" role="status" aria-live="polite" aria-atomic="true">로딩 중...</div>
+                <div
+                  className="text-center py-4"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  로딩 중...
+                </div>
               ) : profile ? (
                 <>
                   <ProfileItem label="이름" value={profile.name || "-"} />
                   <ProfileItem label="생년월일" value={profile.birth || "-"} />
-                  <ProfileItem label="휴대폰번호" value={profile.phone || "-"} />
+                  <ProfileItem
+                    label="휴대폰번호"
+                    value={profile.phone || "-"}
+                  />
                   <ProfileItem label="이메일" value={profile.email || "-"} />
                 </>
               ) : (
-                <div className="text-center py-4 text-red-500" role="alert" aria-live="assertive" aria-atomic="true">
+                <div
+                  className="text-center py-4 text-red-500"
+                  role="alert"
+                  aria-live="assertive"
+                  aria-atomic="true"
+                >
                   프로필을 불러올 수 없습니다.
                 </div>
               )}

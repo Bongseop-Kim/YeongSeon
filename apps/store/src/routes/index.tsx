@@ -37,10 +37,10 @@ import AuthCallbackPage from "@/features/auth/callback/page";
 import { ProtectedRoute } from "@/components/composite/protected-route";
 
 const QuoteRequestListPage = lazy(
-  () => import("@/features/my-page/quote-request/page")
+  () => import("@/features/my-page/quote-request/page"),
 );
 const QuoteRequestDetailPage = lazy(
-  () => import("@/features/my-page/quote-request/detail/page")
+  () => import("@/features/my-page/quote-request/detail/page"),
 );
 
 export default function Router() {
@@ -51,7 +51,14 @@ export default function Router() {
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/shop" element={<ShopPage />} />
       <Route path="/shop/:id" element={<ShopDetailPage />} />
-      <Route path="/design" element={<ProtectedRoute><DesignPage /></ProtectedRoute>} />
+      <Route
+        path="/design"
+        element={
+          <ProtectedRoute>
+            <DesignPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/custom-order" element={<OrderPage />} />
       <Route path="/reform" element={<ReformPage />} />
       <Route path="/cart" element={<CartPage />} />

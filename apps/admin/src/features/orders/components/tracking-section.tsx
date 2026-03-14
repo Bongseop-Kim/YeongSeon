@@ -1,5 +1,8 @@
 import { Button, Flex, Input, Select, Space, Typography } from "antd";
-import { COURIER_COMPANY_NAMES, buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies";
+import {
+  COURIER_COMPANY_NAMES,
+  buildTrackingUrl,
+} from "@yeongseon/shared/constants/courier-companies";
 
 const { Text } = Typography;
 
@@ -10,7 +13,11 @@ interface TrackingSectionProps {
   shippedAt: string | null | undefined;
   onCourierChange: (value: string) => void;
   onTrackingNumberChange: (value: string) => void;
-  onSave: (orderId: string, courierCompany: string, trackingNumber: string) => void;
+  onSave: (
+    orderId: string,
+    courierCompany: string,
+    trackingNumber: string,
+  ) => void;
   isPending: boolean;
 }
 

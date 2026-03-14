@@ -12,12 +12,7 @@ import type { useImageKitUpload } from "@/hooks/useImageKitUpload";
 type ImageUploadHook = ReturnType<typeof useImageKitUpload>;
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ACCEPTED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-];
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
 interface ProductImageUploadProps {
   fileList: ImageUploadHook["fileList"];
@@ -56,10 +51,7 @@ export const ProductImageUpload = ({
     setPreviewOpen(true);
   };
 
-  const itemRender = (
-    originNode: React.ReactElement,
-    file: UploadFile
-  ) => {
+  const itemRender = (originNode: React.ReactElement, file: UploadFile) => {
     const index = fileList.findIndex((f) => f.uid === file.uid);
     const isFirst = index === 0;
     const isLast = index === fileList.length - 1;
@@ -138,11 +130,7 @@ export const ProductImageUpload = ({
         footer={null}
         onCancel={() => setPreviewOpen(false)}
       >
-        <img
-          alt="preview"
-          style={{ width: "100%" }}
-          src={previewImage}
-        />
+        <img alt="preview" style={{ width: "100%" }} src={previewImage} />
       </Modal>
     </>
   );

@@ -19,7 +19,8 @@ const isWizardDraft = (obj: unknown): obj is WizardDraft => {
     typeof d.formValues !== "object" ||
     d.formValues === null ||
     typeof d.currentStepIndex !== "number" ||
-    !Array.isArray(d.visitedSteps) || !d.visitedSteps.every((s) => typeof s === "number") ||
+    !Array.isArray(d.visitedSteps) ||
+    !d.visitedSteps.every((s) => typeof s === "number") ||
     typeof d.savedAt !== "number"
   ) {
     return false;
@@ -45,7 +46,12 @@ export const useWizardDraft = () => {
     try {
       const sanitized: WizardDraft = {
         ...draft,
-        formValues: { ...draft.formValues, referenceImages: null, contactName: "", contactValue: "" },
+        formValues: {
+          ...draft.formValues,
+          referenceImages: null,
+          contactName: "",
+          contactValue: "",
+        },
       };
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify(sanitized));
     } catch {
@@ -67,7 +73,7 @@ interface WizardStepState {
 
 export const useRestoreDraft = (
   form: UseFormReturn<QuoteOrderOptions>,
-  resetTo: (stepIndex: number, visited: Set<number>) => void
+  resetTo: (stepIndex: number, visited: Set<number>) => void,
 ) => {
   const { loadDraft, clearDraft } = useWizardDraft();
   const draftCheckedRef = useRef(false);
@@ -80,6 +86,7 @@ export const useRestoreDraft = (
     if (!existing) return;
 
     let restored = false;
+    // eslint-disable-next-line prefer-const
     let toastId: string | number | undefined;
 
     const removeClickListener = () => {
@@ -100,10 +107,7 @@ export const useRestoreDraft = (
           restored = true;
           removeClickListener();
           form.reset(existing.formValues);
-          resetTo(
-            existing.currentStepIndex,
-            new Set(existing.visitedSteps)
-          );
+          resetTo(existing.currentStepIndex, new Set(existing.visitedSteps));
         },
       },
       onDismiss: () => {
@@ -128,7 +132,7 @@ export const useRestoreDraft = (
 
 export const useAutoSave = (
   form: UseFormReturn<QuoteOrderOptions>,
-  wizard: WizardStepState
+  wizard: WizardStepState,
 ) => {
   const { saveDraft } = useWizardDraft();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

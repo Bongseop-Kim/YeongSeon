@@ -30,35 +30,38 @@ import { isRecord } from "@/lib/type-guard";
 
 const parseClaimItemField = (
   v: unknown,
-  i: number
+  i: number,
 ): ClaimListRowDTO["item"] => {
   if (!isRecord(v)) {
     throw new Error(
-      `클레임 목록 행(${i})이 올바르지 않습니다: item 객체가 아닙니다.`
+      `클레임 목록 행(${i})이 올바르지 않습니다: item 객체가 아닙니다.`,
     );
   }
   if (
     typeof v.id !== "string" ||
-    (v.type !== "product" && v.type !== "reform" && v.type !== "custom" && v.type !== "token") ||
+    (v.type !== "product" &&
+      v.type !== "reform" &&
+      v.type !== "custom" &&
+      v.type !== "token") ||
     typeof v.quantity !== "number"
   ) {
     throw new Error(
-      `클레임 목록 행(${i})의 item이 올바르지 않습니다: 필수 필드(id, type, quantity) 누락 또는 type 값 오류.`
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: 필수 필드(id, type, quantity) 누락 또는 type 값 오류.`,
     );
   }
   if (v.type === "product" && v.product == null) {
     throw new Error(
-      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "product"인 경우 product 필드가 있어야 합니다.`
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "product"인 경우 product 필드가 있어야 합니다.`,
     );
   }
   if (v.type === "reform" && v.reformData == null) {
     throw new Error(
-      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 있어야 합니다.`
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 있어야 합니다.`,
     );
   }
   if (v.type === "custom" && v.reformData == null) {
     throw new Error(
-      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "custom"인 경우 reformData 필드가 있어야 합니다.`
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "custom"인 경우 reformData 필드가 있어야 합니다.`,
     );
   }
   let product: ClaimItemRowDTO["product"] = null;
@@ -78,27 +81,27 @@ const parseClaimItemField = (
       typeof v.product.info !== "string"
     ) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: 필수 필드(id, code, name, price, image, category, color, pattern, material, likes, info) 누락.`
+        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: 필수 필드(id, code, name, price, image, category, color, pattern, material, likes, info) 누락.`,
       );
     }
     if (!isProductCategory(v.product.category)) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: category 값(${v.product.category})이 허용된 값이 아닙니다.`
+        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: category 값(${v.product.category})이 허용된 값이 아닙니다.`,
       );
     }
     if (!isProductColor(v.product.color)) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: color 값(${v.product.color})이 허용된 값이 아닙니다.`
+        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: color 값(${v.product.color})이 허용된 값이 아닙니다.`,
       );
     }
     if (!isProductPattern(v.product.pattern)) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: pattern 값(${v.product.pattern})이 허용된 값이 아닙니다.`
+        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: pattern 값(${v.product.pattern})이 허용된 값이 아닙니다.`,
       );
     }
     if (!isProductMaterial(v.product.material)) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: material 값(${v.product.material})이 허용된 값이 아닙니다.`
+        `클레임 목록 행(${i})의 item.product가 올바르지 않습니다: material 값(${v.product.material})이 허용된 값이 아닙니다.`,
       );
     }
     product = {
@@ -125,7 +128,7 @@ const parseClaimItemField = (
       typeof v.selectedOption.additionalPrice !== "number"
     ) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.selectedOption이 올바르지 않습니다: 필수 필드(id, name, additionalPrice) 누락.`
+        `클레임 목록 행(${i})의 item.selectedOption이 올바르지 않습니다: 필수 필드(id, name, additionalPrice) 누락.`,
       );
     }
     selectedOption = {
@@ -144,7 +147,7 @@ const parseClaimItemField = (
         !isRecord(v.reformData.tie)
       ) {
         throw new Error(
-          `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: 필수 필드 누락.`
+          `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: 필수 필드 누락.`,
         );
       }
       if (
@@ -153,18 +156,18 @@ const parseClaimItemField = (
           typeof v.reformData.tie.image !== "string")
       ) {
         throw new Error(
-          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: id 또는 image 필드 타입 오류.`
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: id 또는 image 필드 타입 오류.`,
         );
       }
       if (v.reformData.tie.measurementType != null) {
         if (typeof v.reformData.tie.measurementType !== "string") {
           throw new Error(
-            `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: measurementType 필드 타입 오류.`
+            `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: measurementType 필드 타입 오류.`,
           );
         }
         if (!isTieMeasurementType(v.reformData.tie.measurementType)) {
           throw new Error(
-            `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: measurementType 값(${v.reformData.tie.measurementType})이 허용된 값이 아닙니다.`
+            `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: measurementType 값(${v.reformData.tie.measurementType})이 허용된 값이 아닙니다.`,
           );
         }
       }
@@ -173,7 +176,7 @@ const parseClaimItemField = (
         typeof v.reformData.tie.tieLength !== "number"
       ) {
         throw new Error(
-          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: tieLength 필드 타입 오류.`
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: tieLength 필드 타입 오류.`,
         );
       }
       if (
@@ -181,7 +184,7 @@ const parseClaimItemField = (
         typeof v.reformData.tie.wearerHeight !== "number"
       ) {
         throw new Error(
-          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: wearerHeight 필드 타입 오류.`
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: wearerHeight 필드 타입 오류.`,
         );
       }
       if (
@@ -189,7 +192,7 @@ const parseClaimItemField = (
         typeof v.reformData.tie.notes !== "string"
       ) {
         throw new Error(
-          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: notes 필드 타입 오류.`
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: notes 필드 타입 오류.`,
         );
       }
       if (
@@ -197,7 +200,7 @@ const parseClaimItemField = (
         typeof v.reformData.tie.checked !== "boolean"
       ) {
         throw new Error(
-          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: checked 필드 타입 오류.`
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: checked 필드 타입 오류.`,
         );
       }
       reformData = {
@@ -243,7 +246,7 @@ const parseClaimItemField = (
       typeof v.appliedCoupon.coupon.name !== "string"
     ) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.appliedCoupon이 올바르지 않습니다: 필수 필드(id, userId, couponId, status, issuedAt, coupon.id, coupon.name) 누락.`
+        `클레임 목록 행(${i})의 item.appliedCoupon이 올바르지 않습니다: 필수 필드(id, userId, couponId, status, issuedAt, coupon.id, coupon.name) 누락.`,
       );
     }
     if (
@@ -252,17 +255,17 @@ const parseClaimItemField = (
       typeof v.appliedCoupon.coupon.expiryDate !== "string"
     ) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(discountType, discountValue, expiryDate) 누락.`
+        `클레임 목록 행(${i})의 item.appliedCoupon.coupon이 올바르지 않습니다: 필수 필드(discountType, discountValue, expiryDate) 누락.`,
       );
     }
     if (!isUserCouponStatus(v.appliedCoupon.status)) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.appliedCoupon이 올바르지 않습니다: status 값(${v.appliedCoupon.status})이 허용된 상태가 아닙니다.`
+        `클레임 목록 행(${i})의 item.appliedCoupon이 올바르지 않습니다: status 값(${v.appliedCoupon.status})이 허용된 상태가 아닙니다.`,
       );
     }
     if (!isDiscountType(v.appliedCoupon.coupon.discountType)) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.appliedCoupon.coupon이 올바르지 않습니다: discountType 값(${v.appliedCoupon.coupon.discountType})이 허용된 값이 아닙니다.`
+        `클레임 목록 행(${i})의 item.appliedCoupon.coupon이 올바르지 않습니다: discountType 값(${v.appliedCoupon.coupon.discountType})이 허용된 값이 아닙니다.`,
       );
     }
     appliedCoupon = {
@@ -294,7 +297,7 @@ const parseClaimItemField = (
     const raw = v.reformData;
     if (!isRecord(raw)) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: custom 타입의 reformData가 객체가 아닙니다 (item id: ${v.id}).`
+        `클레임 목록 행(${i})의 item.reformData가 올바르지 않습니다: custom 타입의 reformData가 객체가 아닙니다 (item id: ${v.id}).`,
       );
     }
     customData = parseCustomOrderData(raw);
@@ -313,22 +316,33 @@ const parseClaimItemField = (
 };
 
 const CLAIM_STATUSES: ReadonlySet<string> = new Set([
-  "접수", "처리중", "수거요청", "수거완료", "재발송", "완료", "거부",
+  "접수",
+  "처리중",
+  "수거요청",
+  "수거완료",
+  "재발송",
+  "완료",
+  "거부",
 ]);
-const isClaimStatus = (v: string): v is ClaimStatusDTO =>
-  CLAIM_STATUSES.has(v);
+const isClaimStatus = (v: string): v is ClaimStatusDTO => CLAIM_STATUSES.has(v);
 
-const CLAIM_TYPES: ReadonlySet<string> = new Set(["cancel", "return", "exchange", "token_refund"]);
-const isClaimType = (v: string): v is ClaimTypeDTO =>
-  CLAIM_TYPES.has(v);
+const CLAIM_TYPES: ReadonlySet<string> = new Set([
+  "cancel",
+  "return",
+  "exchange",
+  "token_refund",
+]);
+const isClaimType = (v: string): v is ClaimTypeDTO => CLAIM_TYPES.has(v);
 
 const parseTokenRefundData = (
   v: unknown,
-  i: number
+  i: number,
 ): ClaimListRowDTO["refund_data"] => {
   if (v == null) return null;
   if (!isRecord(v)) {
-    throw new Error(`클레임 목록 행(${i})의 refund_data가 올바르지 않습니다: 객체가 아닙니다.`);
+    throw new Error(
+      `클레임 목록 행(${i})의 refund_data가 올바르지 않습니다: 객체가 아닙니다.`,
+    );
   }
   if (
     typeof v.paid_token_amount !== "number" ||
@@ -351,7 +365,9 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
   }
   return data.map((row: unknown, i: number): ClaimListRowDTO => {
     if (!isRecord(row)) {
-      throw new Error(`클레임 목록 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`);
+      throw new Error(
+        `클레임 목록 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`,
+      );
     }
     if (
       typeof row.id !== "string" ||
@@ -366,17 +382,17 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
       typeof row.orderDate !== "string"
     ) {
       throw new Error(
-        `클레임 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, claimNumber, date, status, type, reason, claimQuantity, orderId, orderNumber, orderDate) 누락.`
+        `클레임 목록 행(${i})이 올바르지 않습니다: 필수 필드(id, claimNumber, date, status, type, reason, claimQuantity, orderId, orderNumber, orderDate) 누락.`,
       );
     }
     if (!isClaimStatus(row.status)) {
       throw new Error(
-        `클레임 목록 행(${i})이 올바르지 않습니다: status 값(${row.status})이 허용된 상태가 아닙니다.`
+        `클레임 목록 행(${i})이 올바르지 않습니다: status 값(${row.status})이 허용된 상태가 아닙니다.`,
       );
     }
     if (!isClaimType(row.type)) {
       throw new Error(
-        `클레임 목록 행(${i})이 올바르지 않습니다: type 값(${row.type})이 허용된 유형이 아닙니다.`
+        `클레임 목록 행(${i})이 올바르지 않습니다: type 값(${row.type})이 허용된 유형이 아닙니다.`,
       );
     }
     return {
@@ -397,9 +413,7 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
   });
 };
 
-export const parseCreateClaimResult = (
-  data: unknown
-): CreateClaimResultDTO => {
+export const parseCreateClaimResult = (data: unknown): CreateClaimResultDTO => {
   if (!isRecord(data)) {
     throw new Error("클레임 생성 응답이 올바르지 않습니다: 객체가 아닙니다.");
   }
@@ -408,7 +422,7 @@ export const parseCreateClaimResult = (
     typeof data.claim_number !== "string"
   ) {
     throw new Error(
-      "클레임 생성 응답이 올바르지 않습니다: claim_id 또는 claim_number 누락."
+      "클레임 생성 응답이 올바르지 않습니다: claim_id 또는 claim_number 누락.",
     );
   }
   return { claim_id: data.claim_id, claim_number: data.claim_number };
@@ -453,7 +467,7 @@ export const toClaimItemView = (row: ClaimListRowDTO): ClaimItem => {
  * CreateClaimRequest (View) → CreateClaimInputDTO (RPC params)
  */
 export const toCreateClaimInputDTO = (
-  request: CreateClaimRequest
+  request: CreateClaimRequest,
 ): CreateClaimInputDTO => ({
   p_type: request.type,
   p_order_id: request.orderId,

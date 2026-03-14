@@ -23,7 +23,7 @@ export const getSession = async (): Promise<Session | null> => {
  * @returns 구독 해제 함수
  */
 export const onAuthStateChange = (
-  callback: (event: AuthChangeEvent, session: Session | null) => void
+  callback: (event: AuthChangeEvent, session: Session | null) => void,
 ) => {
   const {
     data: { subscription },
@@ -39,7 +39,7 @@ export const onAuthStateChange = (
  * @throws {Error} 로그인 실패 시 에러 발생
  */
 export const signInWithOAuth = async (
-  provider: "kakao" | "google"
+  provider: "kakao" | "google",
 ): Promise<void> => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
@@ -86,7 +86,7 @@ export const deleteAccount = async (): Promise<void> => {
         Authorization: `Bearer ${session.access_token}`,
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   if (!res.ok) {

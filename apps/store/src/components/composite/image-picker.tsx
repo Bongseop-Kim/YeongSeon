@@ -34,7 +34,7 @@ export const ImagePicker = React.forwardRef<HTMLInputElement, ImagePickerProps>(
       id,
       ...props
     },
-    ref
+    ref,
   ) => {
     const inputRef = React.useRef<HTMLInputElement>(null);
     const mergedRef = mergeRefs(ref, inputRef);
@@ -116,8 +116,8 @@ export const ImagePicker = React.forwardRef<HTMLInputElement, ImagePickerProps>(
     const currentCount = multi
       ? previewUrls.length + selectedFiles.length
       : previewUrl || selectedFile
-      ? 1
-      : 0;
+        ? 1
+        : 0;
     const canAddMore = multi ? currentCount < maxFiles : !hasPreview;
 
     return (
@@ -187,7 +187,7 @@ export const ImagePicker = React.forwardRef<HTMLInputElement, ImagePickerProps>(
               "relative  w-[107px] h-[129px]",
               previewUrl || selectedFile
                 ? "bg-zinc-50"
-                : "border border-dashed border-gray-300"
+                : "border border-dashed border-gray-300",
             )}
           >
             {previewUrl ? (
@@ -243,7 +243,7 @@ export const ImagePicker = React.forwardRef<HTMLInputElement, ImagePickerProps>(
         />
       </div>
     );
-  }
+  },
 );
 
 ImagePicker.displayName = "ImagePicker";

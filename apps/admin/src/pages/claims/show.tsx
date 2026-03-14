@@ -25,31 +25,31 @@ export default function ClaimShow() {
   const { logs } = useAdminClaimStatusLogs(claimId);
   const { isUpdating, changeStatus, rollback } = useClaimStatusUpdate(
     claimId,
-    refetch
+    refetch,
   );
   const { saveTracking, isPending: trackingPending } = useClaimTrackingSave();
 
   const returnTrackingState = useClaimTrackingState(
     claim?.returnTracking,
-    claimId
+    claimId,
   );
   const resendTrackingState = useClaimTrackingState(
     claim?.resendTracking,
-    claimId
+    claimId,
   );
 
   const [statusMemo, setStatusMemo] = useState("");
 
   const claimType = claim?.claimType;
   const statusFlow = claimType ? CLAIM_STATUS_FLOW[claimType] : undefined;
-  const nextStatus = claim?.status && statusFlow ? statusFlow[claim.status] : undefined;
+  const nextStatus =
+    claim?.status && statusFlow ? statusFlow[claim.status] : undefined;
 
   const rollbackFlow = claimType ? CLAIM_ROLLBACK_FLOW[claimType] : undefined;
   const rollbackStatus =
     claim?.status && rollbackFlow ? rollbackFlow[claim.status] : undefined;
 
-  const showReturnSection =
-    claimType === "return" || claimType === "exchange";
+  const showReturnSection = claimType === "return" || claimType === "exchange";
   const showResendSection = claimType === "exchange";
 
   return (

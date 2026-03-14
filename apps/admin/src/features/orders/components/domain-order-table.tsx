@@ -4,10 +4,7 @@ import { Input, Select, Space } from "antd";
 import { TagField } from "@refinedev/antd";
 import { useNavigation } from "@refinedev/core";
 import dayjs from "dayjs";
-import {
-  ORDER_STATUS_OPTIONS,
-  ORDER_STATUS_COLORS,
-} from "@yeongseon/shared";
+import { ORDER_STATUS_OPTIONS, ORDER_STATUS_COLORS } from "@yeongseon/shared";
 import type { OrderType } from "@yeongseon/shared";
 import { useAdminOrderTable } from "../api/orders-query";
 import type { AdminOrderListItem } from "../types/admin-order";
@@ -35,10 +32,18 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
     setDateRange(range);
     setFilters(
       [
-        { field: "created_at", operator: "gte", value: range[0].startOf("day").toISOString() },
-        { field: "created_at", operator: "lte", value: range[1].endOf("day").toISOString() },
+        {
+          field: "created_at",
+          operator: "gte",
+          value: range[0].startOf("day").toISOString(),
+        },
+        {
+          field: "created_at",
+          operator: "lte",
+          value: range[1].endOf("day").toISOString(),
+        },
       ],
-      "merge"
+      "merge",
     );
   };
 
@@ -118,7 +123,10 @@ function getColumnsForType(orderType: OrderType) {
       dataIndex="status"
       title="상태"
       render={(value: string) => (
-        <TagField value={value} color={ORDER_STATUS_COLORS[value] ?? "default"} />
+        <TagField
+          value={value}
+          color={ORDER_STATUS_COLORS[value] ?? "default"}
+        />
       )}
     />,
   ];

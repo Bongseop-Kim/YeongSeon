@@ -97,7 +97,12 @@ export function ProductForm({
         <Input.TextArea rows={4} />
       </Form.Item>
       {!hasOptions && (
-        <Form.Item label="재고" name="stock" tooltip="비워두면 무제한" preserve={false}>
+        <Form.Item
+          label="재고"
+          name="stock"
+          tooltip="비워두면 무제한"
+          preserve={false}
+        >
           <InputNumber
             min={0}
             style={{ width: "100%" }}

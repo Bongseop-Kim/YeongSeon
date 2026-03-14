@@ -15,7 +15,7 @@ interface ClaimTrackingSectionProps {
     claimId: string,
     trackingType: "return" | "resend",
     courierCompany: string,
-    trackingNumber: string
+    trackingNumber: string,
   ) => void;
   isPending: boolean;
 }
@@ -58,7 +58,9 @@ export function ClaimTrackingSection({
       />
       <Button
         type="primary"
-        onClick={() => onSave(claimId, trackingType, courierCompany, trackingNumber)}
+        onClick={() =>
+          onSave(claimId, trackingType, courierCompany, trackingNumber)
+        }
         loading={isPending}
       >
         저장

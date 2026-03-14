@@ -8,7 +8,7 @@ interface OrderState {
   setOrderItems: (items: CartItem[]) => void;
   updateOrderItemCoupon: (
     itemId: string,
-    coupon: AppliedCoupon | undefined
+    coupon: AppliedCoupon | undefined,
   ) => void;
   clearOrderItems: () => void;
   hasOrderItems: () => boolean;
@@ -26,7 +26,7 @@ export const useOrderStore = create<OrderState>()(
       updateOrderItemCoupon: (itemId, coupon) => {
         set({
           items: get().items.map((item) =>
-            item.id === itemId ? { ...item, appliedCoupon: coupon } : item
+            item.id === itemId ? { ...item, appliedCoupon: coupon } : item,
           ),
         });
       },
@@ -41,6 +41,6 @@ export const useOrderStore = create<OrderState>()(
     }),
     {
       name: "order-storage", // localStorage 키 이름
-    }
-  )
+    },
+  ),
 );

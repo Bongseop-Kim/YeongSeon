@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
           typeof (image as { url?: unknown }).url === "string" &&
           typeof (image as { fileId?: unknown }).fileId === "string" &&
           (image as { url: string }).url.trim().length > 0 &&
-          (image as { fileId: string }).fileId.trim().length > 0
+          (image as { fileId: string }).fileId.trim().length > 0,
       ))
   ) {
     return jsonResponse(400, {
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
       p_contact_title: payload.contact_title ?? "",
       p_contact_method: payload.contact_method,
       p_contact_value: payload.contact_value,
-    }
+    },
   );
 
   if (rpcError || !result) {

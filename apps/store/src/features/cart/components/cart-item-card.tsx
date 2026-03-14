@@ -20,7 +20,11 @@ export function CartItemCard({
   const itemPrice =
     item.product.price + (item.selectedOption?.additionalPrice || 0);
   const totalPrice = itemPrice * item.quantity;
-  const totalLineDiscount = calculateDiscount(itemPrice, item.appliedCoupon, item.quantity);
+  const totalLineDiscount = calculateDiscount(
+    itemPrice,
+    item.appliedCoupon,
+    item.quantity,
+  );
   const totalDiscountedPrice = totalPrice - totalLineDiscount;
   const hasCoupon = !!item.appliedCoupon;
 

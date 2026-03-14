@@ -62,7 +62,7 @@ const OrderFormPage = () => {
     toast.success(
       selectedCoupon
         ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`
-        : "쿠폰 사용을 취소했습니다."
+        : "쿠폰 사용을 취소했습니다.",
     );
   };
 
@@ -97,7 +97,7 @@ const OrderFormPage = () => {
       });
       if (orderResult.totalAmount !== totals.totalPrice) {
         throw new Error(
-          `결제 금액이 변경되었습니다(서버: ${orderResult.totalAmount.toLocaleString()}원). 페이지를 새로고침 후 다시 시도해주세요.`
+          `결제 금액이 변경되었습니다(서버: ${orderResult.totalAmount.toLocaleString()}원). 페이지를 새로고침 후 다시 시도해주세요.`,
         );
       }
       const firstItem = orderItems[0];
@@ -219,7 +219,10 @@ const OrderFormPage = () => {
                 className="w-full"
                 size="xl"
                 disabled={
-                  !user || !selectedAddress || isPaymentLoading || !isPricingReady
+                  !user ||
+                  !selectedAddress ||
+                  isPaymentLoading ||
+                  !isPricingReady
                 }
               >
                 {isPaymentLoading
@@ -236,70 +239,66 @@ const OrderFormPage = () => {
             </div>
           }
         >
-            <Card>
-              <CardHeader className="flex justify-between items-center">
-                <CardTitle>
-                  {selectedAddress?.recipientName || "배송지 정보"}
-                </CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={openShippingPopup}
-                >
-                  배송지 관리
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {selectedAddress ? (
-                  <>
-                    <div className="space-y-1 text-sm">
-                      <p>
-                        ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
-                        {selectedAddress.detailAddress}
-                      </p>
-                      <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
-                    </div>
-                    {selectedAddress.deliveryRequest && (
-                      <p className="text-sm text-zinc-600">
-                        {getDeliveryRequestLabel(
-                          selectedAddress.deliveryRequest,
-                          selectedAddress.deliveryMemo
-                        )}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-8 text-zinc-500">
-                    배송지를 추가해주세요.
+          <Card>
+            <CardHeader className="flex justify-between items-center">
+              <CardTitle>
+                {selectedAddress?.recipientName || "배송지 정보"}
+              </CardTitle>
+              <Button variant="outline" size="sm" onClick={openShippingPopup}>
+                배송지 관리
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {selectedAddress ? (
+                <>
+                  <div className="space-y-1 text-sm">
+                    <p>
+                      ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
+                      {selectedAddress.detailAddress}
+                    </p>
+                    <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
                   </div>
-                )}
-              </CardContent>
-
-              <CardContent>
-                <Separator />
-              </CardContent>
-
-              <CardHeader>
-                <CardTitle>주문 상품 {orderItems.length}개</CardTitle>
-              </CardHeader>
-
-              {orderItems.map((item, index) => (
-                <React.Fragment key={item.id}>
-                  {item.type === "product" ? (
-                    <OrderFormItemCard
-                      item={item}
-                      onChangeCoupon={() => handleChangeCoupon(item.id)}
-                    />
-                  ) : (
-                    <ReformOrderItemCard
-                      item={item}
-                      onChangeCoupon={() => handleChangeCoupon(item.id)}
-                    />
+                  {selectedAddress.deliveryRequest && (
+                    <p className="text-sm text-zinc-600">
+                      {getDeliveryRequestLabel(
+                        selectedAddress.deliveryRequest,
+                        selectedAddress.deliveryMemo,
+                      )}
+                    </p>
                   )}
-                  {index < orderItems.length - 1 && <Separator />}
-                </React.Fragment>
-              ))}
-            </Card>
+                </>
+              ) : (
+                <div className="text-center py-8 text-zinc-500">
+                  배송지를 추가해주세요.
+                </div>
+              )}
+            </CardContent>
+
+            <CardContent>
+              <Separator />
+            </CardContent>
+
+            <CardHeader>
+              <CardTitle>주문 상품 {orderItems.length}개</CardTitle>
+            </CardHeader>
+
+            {orderItems.map((item, index) => (
+              <React.Fragment key={item.id}>
+                {item.type === "product" ? (
+                  <OrderFormItemCard
+                    item={item}
+                    onChangeCoupon={() => handleChangeCoupon(item.id)}
+                  />
+                ) : (
+                  <ReformOrderItemCard
+                    item={item}
+                    onChangeCoupon={() => handleChangeCoupon(item.id)}
+                  />
+                )}
+                {index < orderItems.length - 1 && <Separator />}
+              </React.Fragment>
+            ))}
+          </Card>
         </PageLayout>
       </MainContent>
     </MainLayout>

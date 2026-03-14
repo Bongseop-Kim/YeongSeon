@@ -60,17 +60,18 @@ Deno.serve(async (req) => {
   }
 
   if (!expired || expired.length === 0) {
-    return jsonResponse(200, { deleted: 0, message: "No expired images found" });
+    return jsonResponse(200, {
+      deleted: 0,
+      message: "No expired images found",
+    });
   }
 
   // 이전 실행에서 claim된 행: ImageKit 삭제 없이 바로 finalize 대상
   const previouslyClaimed = expired.filter(
-    (img) => img.deletion_claimed_at != null
+    (img) => img.deletion_claimed_at != null,
   );
   // 새로 claim할 행
-  const unclaimed = expired.filter(
-    (img) => img.deletion_claimed_at == null
-  );
+  const unclaimed = expired.filter((img) => img.deletion_claimed_at == null);
 
   // claim 단계: unclaimed 행을 ImageKit 삭제 전에 먼저 DB에 기록한다.
   // claim이 실패하면 ImageKit 삭제를 진행하지 않는다.
@@ -78,7 +79,10 @@ Deno.serve(async (req) => {
     const { error: claimError } = await db
       .from("images")
       .update({ deletion_claimed_at: now })
-      .in("id", unclaimed.map((img) => img.id));
+      .in(
+        "id",
+        unclaimed.map((img) => img.id),
+      );
 
     if (claimError) {
       return jsonResponse(500, { error: claimError.message });
@@ -92,11 +96,9 @@ Deno.serve(async (req) => {
   // 신규 claim 행 중 file_id가 있는 것만 ImageKit 삭제 대상
   const withFileId = unclaimed.filter(
     (img): img is { id: string; file_id: string; deletion_claimed_at: null } =>
-      typeof img.file_id === "string" && img.file_id.length > 0
+      typeof img.file_id === "string" && img.file_id.length > 0,
   );
-  const withoutFileId = unclaimed.filter(
-    (img) => !img.file_id
-  );
+  const withoutFileId = unclaimed.filter((img) => !img.file_id);
 
   let imagekitDeletedCount = 0;
   let imagekitFailedIds: string[] = [];

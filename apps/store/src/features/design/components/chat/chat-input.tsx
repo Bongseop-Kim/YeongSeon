@@ -16,9 +16,15 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const designContext = useDesignChatStore((state) => state.designContext);
-  const pendingAttachments = useDesignChatStore((state) => state.pendingAttachments);
-  const removeAttachment = useDesignChatStore((state) => state.removeAttachment);
-  const setDesignContext = useDesignChatStore((state) => state.setDesignContext);
+  const pendingAttachments = useDesignChatStore(
+    (state) => state.pendingAttachments,
+  );
+  const removeAttachment = useDesignChatStore(
+    (state) => state.removeAttachment,
+  );
+  const setDesignContext = useDesignChatStore(
+    (state) => state.setDesignContext,
+  );
   const [inputText, setInputText] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const popupWrapperRef = useRef<HTMLDivElement>(null);
@@ -26,7 +32,10 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   useEffect(() => {
     if (!showPopup) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (popupWrapperRef.current && !popupWrapperRef.current.contains(e.target as Node)) {
+      if (
+        popupWrapperRef.current &&
+        !popupWrapperRef.current.contains(e.target as Node)
+      ) {
         setShowPopup(false);
       }
     };
@@ -63,9 +72,15 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                 onClick={() => {
                   const removed = pendingAttachments[index];
                   removeAttachment(index);
-                  const remaining = pendingAttachments.filter((_, i) => i !== index);
+                  const remaining = pendingAttachments.filter(
+                    (_, i) => i !== index,
+                  );
                   if (removed.type === "color") {
-                    setDesignContext({ colors: remaining.filter((a) => a.type === "color").map((a) => a.value) });
+                    setDesignContext({
+                      colors: remaining
+                        .filter((a) => a.type === "color")
+                        .map((a) => a.value),
+                    });
                   } else if (removed.type === "pattern") {
                     setDesignContext({ pattern: null });
                   }
@@ -78,8 +93,13 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
         </div>
       ) : null}
 
-      <div ref={popupWrapperRef} className="relative rounded-xl border bg-white p-2">
-        {showPopup ? <AttachmentPopup onClose={() => setShowPopup(false)} /> : null}
+      <div
+        ref={popupWrapperRef}
+        className="relative rounded-xl border bg-white p-2"
+      >
+        {showPopup ? (
+          <AttachmentPopup onClose={() => setShowPopup(false)} />
+        ) : null}
         <textarea
           rows={1}
           aria-label="디자인 요청 메시지"
@@ -87,7 +107,11 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           placeholder="원하는 넥타이 스타일을 자유롭게 입력하세요…"
           onChange={(event) => setInputText(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+            if (
+              event.key === "Enter" &&
+              !event.shiftKey &&
+              !event.nativeEvent.isComposing
+            ) {
               event.preventDefault();
               handleSend();
             }
@@ -109,7 +133,10 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                 className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
               />
             </Button>
-            <div role="radiogroup" className="inline-flex rounded-md border bg-muted p-0.5 gap-0.5">
+            <div
+              role="radiogroup"
+              className="inline-flex rounded-md border bg-muted p-0.5 gap-0.5"
+            >
               {FABRIC_OPTIONS.map((option) => {
                 const isSelected = designContext.fabricMethod === option.value;
 
@@ -124,7 +151,11 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                         ? "bg-background text-foreground shadow-sm"
                         : "bg-transparent text-muted-foreground hover:text-foreground"
                     }`}
-                    onClick={() => setDesignContext({ fabricMethod: option.value as FabricMethod })}
+                    onClick={() =>
+                      setDesignContext({
+                        fabricMethod: option.value as FabricMethod,
+                      })
+                    }
                   >
                     {option.label}
                   </button>

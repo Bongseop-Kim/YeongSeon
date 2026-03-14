@@ -1,7 +1,10 @@
 import { supabase } from "@/lib/supabase";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { CartItemViewDTO } from "@yeongseon/shared/types/dto/cart-view";
-import { toCartItemInputDTO, toCartItemView } from "@/features/cart/api/cart-mapper";
+import {
+  toCartItemInputDTO,
+  toCartItemView,
+} from "@/features/cart/api/cart-mapper";
 
 const TABLE_NAME = "cart_items";
 
@@ -18,11 +21,10 @@ export const getCartItems = async (userId: string): Promise<CartItem[]> => {
     throw new Error("세션이 없습니다. 다시 로그인해주세요.");
   }
 
-  const { data, error } = await supabase
-    .rpc("get_cart_items", {
-      p_user_id: userId,
-      p_active_only: true,
-    });
+  const { data, error } = await supabase.rpc("get_cart_items", {
+    p_user_id: userId,
+    p_active_only: true,
+  });
 
   if (error) {
     throw new Error(`장바구니 조회 실패: ${error.message}`);
@@ -41,7 +43,7 @@ export const getCartItems = async (userId: string): Promise<CartItem[]> => {
  */
 export const setCartItems = async (
   userId: string,
-  items: CartItem[]
+  items: CartItem[],
 ): Promise<void> => {
   const {
     data: { session },
@@ -67,7 +69,7 @@ export const setCartItems = async (
  */
 export const removeCartItemsByIds = async (
   userId: string,
-  itemIds: string[]
+  itemIds: string[],
 ): Promise<void> => {
   if (itemIds.length === 0) return;
 
@@ -78,7 +80,9 @@ export const removeCartItemsByIds = async (
     throw new Error("세션이 없습니다. 다시 로그인해주세요.");
   }
   if (session.user.id !== userId) {
-    throw new Error("권한이 없습니다. 로그인한 사용자와 요청한 userId가 일치하지 않습니다.");
+    throw new Error(
+      "권한이 없습니다. 로그인한 사용자와 요청한 userId가 일치하지 않습니다.",
+    );
   }
 
   const { error } = await supabase.rpc("remove_cart_items_by_ids", {

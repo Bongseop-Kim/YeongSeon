@@ -41,7 +41,7 @@ export default function AppLayout() {
     ROUTES.REFUND_POLICY,
   ];
   const showHeader = !hideHeaderPaths.some((path) =>
-    location.pathname.startsWith(path)
+    location.pathname.startsWith(path),
   );
   const { isMobile } = useBreakpoint();
   const { config } = useSearchStore();

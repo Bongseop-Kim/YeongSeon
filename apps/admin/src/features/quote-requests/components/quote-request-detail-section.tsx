@@ -46,12 +46,19 @@ export function QuoteRequestDetailSection() {
     detail,
     formValues,
     refetch,
-    () => setStatusMemo("")
+    () => setStatusMemo(""),
   );
 
   if (isLoading) return <Spin style={{ display: "block", marginTop: 48 }} />;
-  if (error) return <Alert type="error" message={`데이터를 불러오는 데 실패했습니다: ${error instanceof Error ? error.message : String(error)}`} />;
-  if (!detail) return <Alert type="warning" message="견적 정보를 찾을 수 없습니다." />;
+  if (error)
+    return (
+      <Alert
+        type="error"
+        message={`데이터를 불러오는 데 실패했습니다: ${error instanceof Error ? error.message : String(error)}`}
+      />
+    );
+  if (!detail)
+    return <Alert type="warning" message="견적 정보를 찾을 수 없습니다." />;
 
   const nextStatus = QUOTE_REQUEST_STATUS_FLOW[detail.status];
 
@@ -189,7 +196,10 @@ export function QuoteRequestDetailSection() {
           <InputNumber
             value={formValues.quotedAmount}
             onChange={(v) => setQuotedAmount(v)}
-            formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+            formatter={(v) =>
+              // eslint-disable-next-line security/detect-unsafe-regex
+              `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            }
             parser={(v) => Number(v?.replace(/,/g, ""))}
             style={{ width: "100%", marginTop: 4 }}
             min={0}

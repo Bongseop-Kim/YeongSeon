@@ -13,7 +13,11 @@ import {
 } from "./coupons-api";
 import { toAdminIssuedCouponRow } from "./coupons-mapper";
 import { isActiveIssuedStatus } from "../types/admin-coupon";
-import type { AdminCouponUser, AdminIssuedCouponRow, PresetKey } from "../types/admin-coupon";
+import type {
+  AdminCouponUser,
+  AdminIssuedCouponRow,
+  PresetKey,
+} from "../types/admin-coupon";
 
 // ── 발급 내역 조회 ──────────────────────────────────────────────
 
@@ -24,7 +28,9 @@ export function useIssuedCoupons(couponId: string | undefined) {
     queryOptions: { enabled: !!couponId },
   });
 
-  const rows: AdminIssuedCouponRow[] = (result.data ?? []).map(toAdminIssuedCouponRow);
+  const rows: AdminIssuedCouponRow[] = (result.data ?? []).map(
+    toAdminIssuedCouponRow,
+  );
 
   return { rows };
 }
@@ -35,7 +41,7 @@ export function usePresetCustomers(
   couponId: string | undefined,
   isOpen: boolean,
   preset: PresetKey,
-  excludeIssued: boolean
+  excludeIssued: boolean,
 ) {
   const [users, setUsers] = useState<AdminCouponUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,7 +59,9 @@ export function usePresetCustomers(
     try {
       const [allCustomers, alreadyIssued] = await Promise.all([
         fetchCustomers(),
-        excludeIssued ? fetchIssuedUserIds(couponId) : Promise.resolve(new Set<string>()),
+        excludeIssued
+          ? fetchIssuedUserIds(couponId)
+          : Promise.resolve(new Set<string>()),
       ]);
 
       if (requestId !== loadIdRef.current) return;
@@ -67,7 +75,7 @@ export function usePresetCustomers(
       switch (preset) {
         case "new30":
           presetUsers = allCustomers.filter(
-            (user) => user.createdAt && dayjs(user.createdAt).isAfter(start30d)
+            (user) => user.createdAt && dayjs(user.createdAt).isAfter(start30d),
           );
           break;
 
@@ -84,14 +92,18 @@ export function usePresetCustomers(
         case "purchased": {
           const purchasedUserIds = await fetchPurchasedUserIds();
           if (requestId !== loadIdRef.current) return;
-          presetUsers = allCustomers.filter((user) => purchasedUserIds.has(user.id));
+          presetUsers = allCustomers.filter((user) =>
+            purchasedUserIds.has(user.id),
+          );
           break;
         }
 
         case "notPurchased": {
           const purchasedUserIds = await fetchPurchasedUserIds();
           if (requestId !== loadIdRef.current) return;
-          presetUsers = allCustomers.filter((user) => !purchasedUserIds.has(user.id));
+          presetUsers = allCustomers.filter(
+            (user) => !purchasedUserIds.has(user.id),
+          );
           break;
         }
 
@@ -169,7 +181,10 @@ export function useCouponIssue(couponId: string | undefined) {
     try {
       await bulkIssueCoupons(couponId, userIds);
       message.success(`${userIds.length}명 발급 완료`);
-      await invalidate({ resource: "admin_user_coupon_view", invalidates: ["list"] });
+      await invalidate({
+        resource: "admin_user_coupon_view",
+        invalidates: ["list"],
+      });
       return true;
     } catch (err) {
       console.error(err);
@@ -190,7 +205,9 @@ export function useCouponRevoke(couponId: string | undefined) {
   const [revoking, setRevoking] = useState(false);
 
   const revoke = async (rows: AdminIssuedCouponRow[]): Promise<boolean> => {
-    const targetRows = rows.filter((row) => row && isActiveIssuedStatus(row.status));
+    const targetRows = rows.filter(
+      (row) => row && isActiveIssuedStatus(row.status),
+    );
 
     if (!targetRows.length) {
       message.warning("회수할 항목을 선택해주세요.");
@@ -201,10 +218,12 @@ export function useCouponRevoke(couponId: string | undefined) {
     const rowsWithoutId = targetRows.filter((row) => !row.id);
 
     const idsToRevoke = Array.from(
-      new Set(rowsWithId.map((row) => row.id).filter((v): v is string => !!v))
+      new Set(rowsWithId.map((row) => row.id).filter((v): v is string => !!v)),
     );
     const userIdsToRevoke = Array.from(
-      new Set(rowsWithoutId.map((row) => row.userId).filter((v): v is string => !!v))
+      new Set(
+        rowsWithoutId.map((row) => row.userId).filter((v): v is string => !!v),
+      ),
     );
 
     setRevoking(true);
@@ -222,12 +241,14 @@ export function useCouponRevoke(couponId: string | undefined) {
       }
 
       message.success(`${targetRows.length}건 회수 완료`);
-      await invalidate({ resource: "admin_user_coupon_view", invalidates: ["list"] });
+      await invalidate({
+        resource: "admin_user_coupon_view",
+        invalidates: ["list"],
+      });
       return true;
     } catch (err) {
       console.error(err);
-      const detail =
-        err instanceof Error ? err.message : "";
+      const detail = err instanceof Error ? err.message : "";
       message.error(`일괄 회수에 실패했습니다.${detail ? ` (${detail})` : ""}`);
       return false;
     } finally {

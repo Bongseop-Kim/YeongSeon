@@ -20,15 +20,14 @@ export const normalizeMarketingConsent = (value: unknown): MarketingConsent => {
   }
 
   const channelsRaw = isRecord(value.channels) ? value.channels : {};
-  const normalizedChannels = Object.entries(channelsRaw).reduce<Record<string, boolean>>(
-    (acc, [key, channelValue]) => {
-      if (typeof channelValue === "boolean") {
-        acc[key] = channelValue;
-      }
-      return acc;
-    },
-    {},
-  );
+  const normalizedChannels = Object.entries(channelsRaw).reduce<
+    Record<string, boolean>
+  >((acc, [key, channelValue]) => {
+    if (typeof channelValue === "boolean") {
+      acc[key] = channelValue;
+    }
+    return acc;
+  }, {});
 
   const channels = {
     ...DEFAULT_MARKETING_CONSENT.channels,
@@ -39,13 +38,12 @@ export const normalizeMarketingConsent = (value: unknown): MarketingConsent => {
   const all = typeof allRaw === "boolean" ? allRaw : hasEnabledChannel;
 
   if (!all) {
-    const disabledChannels = Object.keys(channels).reduce<Record<string, boolean>>(
-      (acc, key) => {
-        acc[key] = false;
-        return acc;
-      },
-      {},
-    );
+    const disabledChannels = Object.keys(channels).reduce<
+      Record<string, boolean>
+    >((acc, key) => {
+      acc[key] = false;
+      return acc;
+    }, {});
 
     return {
       all: false,
@@ -69,7 +67,9 @@ export const applyMarketingConsentToggle = (
   const base = normalizeMarketingConsent(current);
 
   if (input.target === "all") {
-    const allChannels = Object.keys(base.channels).reduce<Record<string, boolean>>(
+    const allChannels = Object.keys(base.channels).reduce<
+      Record<string, boolean>
+    >(
       (acc, key) => {
         acc[key] = input.checked;
         return acc;

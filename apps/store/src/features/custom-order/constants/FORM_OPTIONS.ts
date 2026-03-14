@@ -12,9 +12,7 @@ export const TIE_TYPES = [
   { value: "AUTO", label: "자동 타이 (지퍼)" },
 ] as const;
 
-export const INTERLINING_TYPES = [
-  { value: "WOOL", label: "울 심지" },
-] as const;
+export const INTERLINING_TYPES = [{ value: "WOOL", label: "울 심지" }] as const;
 
 export const INTERLINING_THICKNESS = [
   { value: "THIN", label: "얇음" },

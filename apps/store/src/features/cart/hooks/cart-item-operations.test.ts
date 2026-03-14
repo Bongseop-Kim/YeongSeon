@@ -36,7 +36,11 @@ describe("cart-item-operations", () => {
   });
 
   it("add: 새 상품은 배열에 추가한다", () => {
-    const newProduct = createProduct({ id: 2, code: "P002", name: "새 넥타이" });
+    const newProduct = createProduct({
+      id: 2,
+      code: "P002",
+      name: "새 넥타이",
+    });
     const result = addProductToCart(
       [baseItem],
       newProduct,
@@ -78,10 +82,26 @@ describe("cart-item-operations", () => {
   });
 
   it("updateOption: 옵션 변경 시 같은 옵션 아이템이 있으면 수량을 합친다", () => {
-    const optionA = createProductOption({ id: "opt-a", name: "옵션A", additionalPrice: 1000 });
-    const optionB = createProductOption({ id: "opt-b", name: "옵션B", additionalPrice: 2000 });
-    const itemA = createCartItem({ id: "1-opt-a", selectedOption: optionA, quantity: 1 });
-    const itemB = createCartItem({ id: "1-opt-b", selectedOption: optionB, quantity: 2 });
+    const optionA = createProductOption({
+      id: "opt-a",
+      name: "옵션A",
+      additionalPrice: 1000,
+    });
+    const optionB = createProductOption({
+      id: "opt-b",
+      name: "옵션B",
+      additionalPrice: 2000,
+    });
+    const itemA = createCartItem({
+      id: "1-opt-a",
+      selectedOption: optionA,
+      quantity: 1,
+    });
+    const itemB = createCartItem({
+      id: "1-opt-b",
+      selectedOption: optionB,
+      quantity: 2,
+    });
 
     const nextItems = updateProductCartItemOption(
       [itemA, itemB],

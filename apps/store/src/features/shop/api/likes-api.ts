@@ -53,8 +53,3 @@ export const removeLike = async (productId: number): Promise<void> => {
     throw new Error(`좋아요 제거 실패: ${error.message}`);
   }
 };
-
-
-
-
-

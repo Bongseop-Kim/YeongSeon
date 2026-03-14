@@ -2,11 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { eulo } from "@yeongseon/shared";
 import { useTable } from "@refinedev/antd";
-import {
-  useShow,
-  useList,
-  useInvalidate,
-} from "@refinedev/core";
+import { useShow, useList, useInvalidate } from "@refinedev/core";
 import { message } from "antd";
 import type { TableProps } from "antd";
 import type {
@@ -38,22 +34,29 @@ import type {
 
 export function useAdminOrderTable(
   orderType: OrderType,
-  initialDateRange: [string, string]
+  initialDateRange: [string, string],
 ) {
-  const { tableProps: rawTableProps, setFilters } = useTable<AdminOrderListRowDTO>({
-    resource: "admin_order_list_view",
-    sorters: { initial: [{ field: "created_at", order: "desc" }] },
-    filters: {
-      permanent: [
-        { field: "orderType", operator: "eq", value: orderType },
-      ],
-      initial: [
-        { field: "created_at", operator: "gte", value: dayjs(initialDateRange[0]).startOf("day").toISOString() },
-        { field: "created_at", operator: "lte", value: dayjs(initialDateRange[1]).endOf("day").toISOString() },
-      ],
-    },
-    syncWithLocation: false,
-  });
+  const { tableProps: rawTableProps, setFilters } =
+    useTable<AdminOrderListRowDTO>({
+      resource: "admin_order_list_view",
+      sorters: { initial: [{ field: "created_at", order: "desc" }] },
+      filters: {
+        permanent: [{ field: "orderType", operator: "eq", value: orderType }],
+        initial: [
+          {
+            field: "created_at",
+            operator: "gte",
+            value: dayjs(initialDateRange[0]).startOf("day").toISOString(),
+          },
+          {
+            field: "created_at",
+            operator: "lte",
+            value: dayjs(initialDateRange[1]).endOf("day").toISOString(),
+          },
+        ],
+      },
+      syncWithLocation: false,
+    });
 
   const tableProps = {
     ...rawTableProps,
@@ -82,7 +85,12 @@ export function useAdminOrderDetail(orderId: string | undefined) {
     ? toAdminOrderDetail(rawOrder)
     : undefined;
 
-  return { order, refetch: query.refetch, isLoading: query.isLoading, isError: query.isError };
+  return {
+    order,
+    refetch: query.refetch,
+    isLoading: query.isLoading,
+    isError: query.isError,
+  };
 }
 
 // ── Items ────────────────────────────────────────────────────
@@ -90,7 +98,7 @@ export function useAdminOrderDetail(orderId: string | undefined) {
 
 export function useAdminOrderItems(
   orderId: string | undefined,
-  orderType: OrderType
+  orderType: OrderType,
 ) {
   const { result } = useList<AdminOrderItemRowDTO>({
     resource: "admin_order_item_view",
@@ -99,7 +107,7 @@ export function useAdminOrderItems(
   });
 
   const items: AdminOrderItem[] = result.data.map((dto) =>
-    toAdminOrderItem(dto, orderType)
+    toAdminOrderItem(dto, orderType),
   );
 
   return { items };
@@ -109,7 +117,7 @@ export function useAdminOrderItems(
 
 export function useRelatedOrders(
   paymentGroupId: string | null | undefined,
-  currentOrderId: string
+  currentOrderId: string,
 ) {
   const { query, result } = useList<AdminOrderListRowDTO>({
     resource: "admin_order_list_view",
@@ -145,7 +153,7 @@ export function useAdminOrderStatusLogs(orderId: string | undefined) {
 
 export function useOrderStatusUpdate(
   orderId: string | undefined,
-  refetch: () => void
+  refetch: () => void,
 ) {
   const invalidate = useInvalidate();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -156,21 +164,30 @@ export function useOrderStatusUpdate(
       invalidates: ["list"],
     });
 
-  const updateStatus = async (newStatus: string, memo: string, isRollback: boolean) => {
+  const updateStatus = async (
+    newStatus: string,
+    memo: string,
+    isRollback: boolean,
+  ) => {
     if (!orderId) return;
     setIsUpdating(true);
     try {
-      await updateOrderStatus({ orderId, newStatus, memo: memo || null, isRollback });
+      await updateOrderStatus({
+        orderId,
+        newStatus,
+        memo: memo || null,
+        isRollback,
+      });
       message.success(
         isRollback
           ? `"${newStatus}"${eulo(newStatus)} 롤백되었습니다.`
-          : `상태가 "${newStatus}"${eulo(newStatus)} 변경되었습니다.`
+          : `상태가 "${newStatus}"${eulo(newStatus)} 변경되었습니다.`,
       );
       refetch();
       invalidateLogs();
     } catch (err) {
       message.error(
-        `${isRollback ? "롤백" : "상태 변경"} 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+        `${isRollback ? "롤백" : "상태 변경"} 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
       );
     } finally {
       setIsUpdating(false);
@@ -193,7 +210,7 @@ export function useTrackingSave(onSuccess?: () => void | Promise<unknown>) {
   const saveTracking = async (
     orderId: string,
     courierCompany: string,
-    trackingNumber: string
+    trackingNumber: string,
   ) => {
     setIsPending(true);
     try {
@@ -201,7 +218,9 @@ export function useTrackingSave(onSuccess?: () => void | Promise<unknown>) {
       message.success("배송 정보가 저장되었습니다.");
       await onSuccess?.();
     } catch (err) {
-      message.error(err instanceof Error ? err.message : "배송 정보 저장에 실패했습니다.");
+      message.error(
+        err instanceof Error ? err.message : "배송 정보 저장에 실패했습니다.",
+      );
     } finally {
       setIsPending(false);
     }
@@ -214,7 +233,7 @@ export function useTrackingSave(onSuccess?: () => void | Promise<unknown>) {
 
 export function useTrackingState(
   order: AdminOrderDetail | undefined,
-  defaultCourier: string | undefined
+  defaultCourier: string | undefined,
 ) {
   const [courierCompany, setCourierCompany] = useState<string>("");
   const [trackingNumber, setTrackingNumber] = useState<string>("");
@@ -224,7 +243,9 @@ export function useTrackingState(
     if (!order) return;
     if (order.id === prevOrderIdRef.current) return;
     prevOrderIdRef.current = order.id;
-    setCourierCompany(order.trackingInfo?.courierCompany ?? defaultCourier ?? "");
+    setCourierCompany(
+      order.trackingInfo?.courierCompany ?? defaultCourier ?? "",
+    );
     setTrackingNumber(order.trackingInfo?.trackingNumber ?? "");
   }, [order, defaultCourier]);
 

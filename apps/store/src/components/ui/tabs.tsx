@@ -25,7 +25,7 @@ function TabsList({
       data-slot="tabs-list"
       className={cn(
         "inline-flex h-9 w-fit items-center justify-start gap-1",
-        className
+        className,
       )}
       {...props}
     />
@@ -41,7 +41,7 @@ function TabsTrigger({
       data-slot="tabs-trigger"
       className={cn(
         "inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 border-transparent text-muted-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:font-bold disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
+        className,
       )}
       {...props}
     />

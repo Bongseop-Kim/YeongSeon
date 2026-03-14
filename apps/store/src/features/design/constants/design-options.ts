@@ -53,7 +53,11 @@ export interface CiPlacementOption {
 
 export const CI_PLACEMENT_OPTIONS: CiPlacementOption[] = [
   { label: "올패턴", value: "all-over", description: "CI를 전체에 반복 배치" },
-  { label: "원포인트", value: "one-point", description: "CI를 하단에 포인트 배치" },
+  {
+    label: "원포인트",
+    value: "one-point",
+    description: "CI를 하단에 포인트 배치",
+  },
 ];
 
 export const FABRIC_OPTIONS: FabricOption[] = [

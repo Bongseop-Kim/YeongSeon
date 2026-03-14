@@ -49,7 +49,7 @@ interface ModalStore extends ModalState {
   confirm: (
     message: string,
     onConfirm?: () => void,
-    options?: { confirmText?: string; cancelText?: string }
+    options?: { confirmText?: string; cancelText?: string },
   ) => void;
 }
 

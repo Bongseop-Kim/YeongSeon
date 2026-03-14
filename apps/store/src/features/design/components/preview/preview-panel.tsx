@@ -32,9 +32,15 @@ export function PreviewPanel({ className }: PreviewPanelProps) {
   };
 
   return (
-    <section ref={sectionRef} className={cn("relative flex h-full flex-col bg-white p-4", className)}>
+    <section
+      ref={sectionRef}
+      className={cn("relative flex h-full flex-col bg-white p-4", className)}
+    >
       {!isFullscreen && (
-        <PreviewHeader unmasked={unmasked} onToggle={() => setUnmasked((v) => !v)} />
+        <PreviewHeader
+          unmasked={unmasked}
+          onToggle={() => setUnmasked((v) => !v)}
+        />
       )}
       <div className="flex flex-1 items-center justify-center overflow-hidden">
         <TieCanvas unmasked={unmasked} />

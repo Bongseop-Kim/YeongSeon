@@ -22,7 +22,7 @@ const NavLink = ({
       "transition-all duration-300 ease-in-out",
       // 포커스 스타일
       "focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:ring-offset-2",
-      className
+      className,
     )}
   >
     {children}

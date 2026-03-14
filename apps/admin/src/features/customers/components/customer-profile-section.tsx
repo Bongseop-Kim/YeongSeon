@@ -8,13 +8,19 @@ interface Props {
 
 export function CustomerProfileSection({ customer }: Props) {
   return (
-    <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
+    <Descriptions
+      bordered
+      column={{ xs: 1, sm: 1, md: 2 }}
+      style={{ marginBottom: 24 }}
+    >
       <Descriptions.Item label="이름">{customer.name}</Descriptions.Item>
       <Descriptions.Item label="전화번호">
         {customer.phone ?? "-"}
       </Descriptions.Item>
       <Descriptions.Item label="역할">
-        <Tag color={ROLE_COLORS[customer.role] ?? "default"}>{customer.role}</Tag>
+        <Tag color={ROLE_COLORS[customer.role] ?? "default"}>
+          {customer.role}
+        </Tag>
       </Descriptions.Item>
       <Descriptions.Item label="활성">
         <Tag color={customer.isActive ? "green" : "default"}>

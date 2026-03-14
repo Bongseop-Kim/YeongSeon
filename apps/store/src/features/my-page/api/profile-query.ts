@@ -1,6 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getProfile, updateMarketingConsent, updateProfile } from "./profile-api";
-import type { MarketingConsent, UserProfile } from "@/features/my-page/types/profile";
+import {
+  getProfile,
+  updateMarketingConsent,
+  updateProfile,
+} from "./profile-api";
+import type {
+  MarketingConsent,
+  UserProfile,
+} from "@/features/my-page/types/profile";
 import { toast } from "@/lib/toast";
 
 /**

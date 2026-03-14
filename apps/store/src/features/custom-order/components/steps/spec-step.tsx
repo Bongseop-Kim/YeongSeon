@@ -38,7 +38,9 @@ export const SpecStep = () => {
                   selected={sizeType === type}
                 >
                   <CardHeader>
-                    <CardTitle>{type === "ADULT" ? "성인용" : "아동용"}</CardTitle>
+                    <CardTitle>
+                      {type === "ADULT" ? "성인용" : "아동용"}
+                    </CardTitle>
                   </CardHeader>
                 </RadioCard>
               ))}
@@ -68,9 +70,15 @@ export const SpecStep = () => {
                     if (raw === "") return;
                     const num = Number(raw);
                     if (Number.isNaN(num)) return;
-                    const clamped = Math.min(TIE_WIDTH_CONFIG.max, Math.max(TIE_WIDTH_CONFIG.min, num));
+                    const clamped = Math.min(
+                      TIE_WIDTH_CONFIG.max,
+                      Math.max(TIE_WIDTH_CONFIG.min, num),
+                    );
                     const offset = clamped - TIE_WIDTH_CONFIG.min;
-                    const normalized = Math.round(offset / TIE_WIDTH_CONFIG.step) * TIE_WIDTH_CONFIG.step + TIE_WIDTH_CONFIG.min;
+                    const normalized =
+                      Math.round(offset / TIE_WIDTH_CONFIG.step) *
+                        TIE_WIDTH_CONFIG.step +
+                      TIE_WIDTH_CONFIG.min;
                     field.onChange(normalized);
                   }}
                   className="h-9 w-[90px] rounded-lg border-zinc-300 text-center shadow-none"

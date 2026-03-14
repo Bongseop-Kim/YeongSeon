@@ -32,7 +32,12 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
                   e.stopPropagation();
                   edit("products", productId);
                 }}
-                style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
+                style={{
+                  cursor: "pointer",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                }}
               >
                 {record.productName}
               </button>

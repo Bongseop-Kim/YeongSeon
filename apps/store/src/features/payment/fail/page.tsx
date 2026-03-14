@@ -17,12 +17,8 @@ const PaymentFailPage = () => {
           <p className="text-red-500 text-lg font-semibold">
             결제에 실패했습니다
           </p>
-          {message && (
-            <p className="text-zinc-600 text-sm">{message}</p>
-          )}
-          {code && (
-            <p className="text-zinc-400 text-xs">에러 코드: {code}</p>
-          )}
+          {message && <p className="text-zinc-600 text-sm">{message}</p>}
+          {code && <p className="text-zinc-400 text-xs">에러 코드: {code}</p>}
           <Button onClick={() => navigate(ROUTES.ORDER_FORM)}>
             주문서로 돌아가기
           </Button>

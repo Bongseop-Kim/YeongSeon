@@ -32,4 +32,3 @@ export interface Message {
   designContext?: DesignContext;
   uiOnly?: boolean;
 }
-

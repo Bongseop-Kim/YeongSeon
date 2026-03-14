@@ -18,10 +18,13 @@ export interface CreateQuoteRequestResponse {
 }
 
 export type { CreateQuoteRequestRequest };
-export type { QuoteRequestDetail, QuoteRequestListItem } from "@yeongseon/shared";
+export type {
+  QuoteRequestDetail,
+  QuoteRequestListItem,
+} from "@yeongseon/shared";
 
 export const createQuoteRequest = async (
-  request: CreateQuoteRequestRequest
+  request: CreateQuoteRequestRequest,
 ): Promise<CreateQuoteRequestResponse> => {
   const requestDto = toCreateQuoteRequestInputDto(request);
 
@@ -29,7 +32,7 @@ export const createQuoteRequest = async (
     "create-quote-request",
     {
       body: requestDto,
-    }
+    },
   );
 
   if (error) {
@@ -61,7 +64,7 @@ export const getQuoteRequests = async (): Promise<QuoteRequestListItem[]> => {
 };
 
 export const getQuoteRequest = async (
-  id: string
+  id: string,
 ): Promise<QuoteRequestDetail | null> => {
   const { data, error } = await supabase
     .from("quote_request_detail_view")

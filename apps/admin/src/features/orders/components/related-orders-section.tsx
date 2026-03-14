@@ -16,7 +16,7 @@ export function RelatedOrdersSection({
 }: RelatedOrdersSectionProps) {
   const { relatedOrders, isLoading } = useRelatedOrders(
     paymentGroupId,
-    currentOrderId
+    currentOrderId,
   );
 
   const shouldShowEmpty =

@@ -90,13 +90,8 @@ export const useUpdateShippingAddress = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: ShippingAddressInput;
-    }) => updateShippingAddress(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ShippingAddressInput }) =>
+      updateShippingAddress(id, data),
     onSuccess: (_, variables) => {
       // 배송지 목록 및 상세 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: shippingKeys.list() });

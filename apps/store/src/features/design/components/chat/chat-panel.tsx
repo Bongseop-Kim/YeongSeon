@@ -3,7 +3,10 @@ import { Sparkles } from "lucide-react";
 import { ChatHeader } from "@/features/design/components/chat/chat-header";
 import { ChatInput } from "@/features/design/components/chat/chat-input";
 import { MessageList } from "@/features/design/components/chat/message-list";
-import { QUICK_CHIPS, WELCOME_MESSAGE } from "@/features/design/constants/welcome";
+import {
+  QUICK_CHIPS,
+  WELCOME_MESSAGE,
+} from "@/features/design/constants/welcome";
 import { useDesignTokenBalanceQuery } from "@/features/design/api/ai-design-query";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
@@ -17,9 +20,15 @@ interface ChatPanelProps {
 export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
   const messages = useDesignChatStore((state) => state.messages);
   const { data: tokenBalance } = useDesignTokenBalanceQuery();
-  const generationStatus = useDesignChatStore((state) => state.generationStatus);
-  const resetConversation = useDesignChatStore((state) => state.resetConversation);
-  const pendingAttachments = useDesignChatStore((state) => state.pendingAttachments);
+  const generationStatus = useDesignChatStore(
+    (state) => state.generationStatus,
+  );
+  const resetConversation = useDesignChatStore(
+    (state) => state.resetConversation,
+  );
+  const pendingAttachments = useDesignChatStore(
+    (state) => state.pendingAttachments,
+  );
   const aiModel = useDesignChatStore((state) => state.aiModel);
   const setAiModel = useDesignChatStore((state) => state.setAiModel);
 
@@ -64,13 +73,22 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
         ) : (
           <MessageList
             messages={messages}
-            isTyping={generationStatus === "generating" || generationStatus === "regenerating"}
+            isTyping={
+              generationStatus === "generating" ||
+              generationStatus === "regenerating"
+            }
             onChipClick={handleChipClick}
           />
         )}
       </div>
       <div className="border-t p-2">
-        <ChatInput onSend={sendMessage} isLoading={generationStatus === "generating" || generationStatus === "regenerating"} />
+        <ChatInput
+          onSend={sendMessage}
+          isLoading={
+            generationStatus === "generating" ||
+            generationStatus === "regenerating"
+          }
+        />
       </div>
     </div>
   );

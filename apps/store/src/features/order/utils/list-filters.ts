@@ -4,7 +4,8 @@ export interface ListFilters {
   dateTo?: string;
 }
 
-export const normalizeKeyword = (keyword?: string) => keyword?.trim().toLowerCase() ?? "";
+export const normalizeKeyword = (keyword?: string) =>
+  keyword?.trim().toLowerCase() ?? "";
 
 export const toDateString = (date?: Date): string | undefined => {
   if (!date || Number.isNaN(date.getTime())) {

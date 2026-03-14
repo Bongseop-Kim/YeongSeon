@@ -1,11 +1,14 @@
 import { supabase } from "@/lib/supabase";
-import { fromTodayStatsRpcRow, fromPeriodStatsRpcRow } from "./dashboard-mapper";
+import {
+  fromTodayStatsRpcRow,
+  fromPeriodStatsRpcRow,
+} from "./dashboard-mapper";
 import type { TodayStatsDTO, PeriodStatsDTO } from "../types/admin-dashboard";
 import type { SegmentValue } from "../types/admin-dashboard";
 
 export async function getTodayStats(
   segment: SegmentValue,
-  date: string
+  date: string,
 ): Promise<TodayStatsDTO> {
   const { data, error } = await supabase.rpc("admin_get_today_stats", {
     p_order_type: segment,
@@ -23,7 +26,7 @@ export async function getTodayStats(
 export async function getPeriodStats(
   segment: SegmentValue,
   startDate: string,
-  endDate: string
+  endDate: string,
 ): Promise<PeriodStatsDTO> {
   const { data, error } = await supabase.rpc("admin_get_period_stats", {
     p_order_type: segment,

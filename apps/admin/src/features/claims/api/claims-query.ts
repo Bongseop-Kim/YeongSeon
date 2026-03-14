@@ -3,7 +3,10 @@ import { useTable } from "@refinedev/antd";
 import { useShow, useList, useUpdate, useInvalidate } from "@refinedev/core";
 import { message } from "antd";
 import type { TableProps } from "antd";
-import type { AdminClaimListRowDTO, ClaimStatusLogDTO } from "@yeongseon/shared";
+import type {
+  AdminClaimListRowDTO,
+  ClaimStatusLogDTO,
+} from "@yeongseon/shared";
 import {
   toAdminClaimListItem,
   toAdminClaimDetail,
@@ -20,11 +23,12 @@ import type {
 // ── List ───────────────────────────────────────────────────────
 
 export function useAdminClaimTable() {
-  const { tableProps: rawTableProps, setFilters } = useTable<AdminClaimListRowDTO>({
-    resource: "admin_claim_list_view",
-    sorters: { initial: [{ field: "created_at", order: "desc" }] },
-    syncWithLocation: true,
-  });
+  const { tableProps: rawTableProps, setFilters } =
+    useTable<AdminClaimListRowDTO>({
+      resource: "admin_claim_list_view",
+      sorters: { initial: [{ field: "created_at", order: "desc" }] },
+      syncWithLocation: true,
+    });
 
   const tableProps = {
     ...rawTableProps,
@@ -63,7 +67,7 @@ export function useAdminClaimStatusLogs(claimId: string | undefined) {
   });
 
   const logs: AdminClaimStatusLogEntry[] = result.data.map(
-    toAdminClaimStatusLogEntry
+    toAdminClaimStatusLogEntry,
   );
 
   return { logs };
@@ -73,7 +77,7 @@ export function useAdminClaimStatusLogs(claimId: string | undefined) {
 
 export function useClaimStatusUpdate(
   claimId: string | undefined,
-  refetch: () => void
+  refetch: () => void,
 ) {
   const invalidate = useInvalidate();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -84,7 +88,10 @@ export function useClaimStatusUpdate(
       invalidates: ["list"],
     });
 
-  const changeStatus = async (newStatus: string, memo: string): Promise<boolean> => {
+  const changeStatus = async (
+    newStatus: string,
+    memo: string,
+  ): Promise<boolean> => {
     if (!claimId) return false;
     setIsUpdating(true);
     try {
@@ -95,7 +102,7 @@ export function useClaimStatusUpdate(
       return true;
     } catch (err) {
       message.error(
-        `상태 변경 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+        `상태 변경 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
       );
       return false;
     } finally {
@@ -118,7 +125,7 @@ export function useClaimStatusUpdate(
       invalidateLogs();
     } catch (err) {
       message.error(
-        `롤백 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`
+        `롤백 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
       );
     } finally {
       setIsUpdating(false);
@@ -137,9 +144,10 @@ export function useClaimTrackingSave() {
     claimId: string,
     trackingType: "return" | "resend",
     courierCompany: string,
-    trackingNumber: string
+    trackingNumber: string,
   ) => {
-    const hasBoth = courierCompany.trim() !== "" && trackingNumber.trim() !== "";
+    const hasBoth =
+      courierCompany.trim() !== "" && trackingNumber.trim() !== "";
     const values =
       trackingType === "return"
         ? {
@@ -164,9 +172,9 @@ export function useClaimTrackingSave() {
           message.error(
             trackingType === "return"
               ? "수거 배송 정보 저장에 실패했습니다."
-              : "재발송 배송 정보 저장에 실패했습니다."
+              : "재발송 배송 정보 저장에 실패했습니다.",
           ),
-      }
+      },
     );
   };
 
@@ -177,7 +185,7 @@ export function useClaimTrackingSave() {
 
 export function useClaimTrackingState(
   tracking: AdminClaimTrackingInfo | null | undefined,
-  claimId: string | undefined
+  claimId: string | undefined,
 ) {
   const [courierCompany, setCourierCompany] = useState<string>("");
   const [trackingNumber, setTrackingNumber] = useState<string>("");

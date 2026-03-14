@@ -1,4 +1,7 @@
-import type { AdminCouponUser, AdminIssuedCouponRow } from "../types/admin-coupon";
+import type {
+  AdminCouponUser,
+  AdminIssuedCouponRow,
+} from "../types/admin-coupon";
 
 // ── 로컬 DTO ───────────────────────────────────────────────────
 
@@ -32,9 +35,15 @@ export function toAdminCouponUser(row: ProfileRow): AdminCouponUser {
   };
 }
 
-export function toAdminIssuedCouponRow(row: IssuedCouponViewRow): AdminIssuedCouponRow {
+export function toAdminIssuedCouponRow(
+  row: IssuedCouponViewRow,
+): AdminIssuedCouponRow {
   return {
-    id: row.id ?? (row.userId != null && row.couponId != null ? `${row.userId}:${row.couponId}` : undefined),
+    id:
+      row.id ??
+      (row.userId != null && row.couponId != null
+        ? `${row.userId}:${row.couponId}`
+        : undefined),
     userId: row.userId ?? null,
     couponId: row.couponId ?? null,
     userName: row.userName ?? null,

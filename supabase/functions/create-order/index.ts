@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     {
       p_shipping_address_id: payload.shipping_address_id,
       p_items: payload.items,
-    }
+    },
   );
 
   if (orderError || !orderResult) {

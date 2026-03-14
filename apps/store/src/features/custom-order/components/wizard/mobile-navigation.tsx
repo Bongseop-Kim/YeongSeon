@@ -31,8 +31,7 @@ export const MobileNavigation = ({
     <div
       className="z-30 fixed bottom-0 left-0 right-0 mt-4 px-2 bg-white pt-2 border-t"
       style={{
-        paddingBottom:
-          "calc(0.5rem + env(safe-area-inset-bottom, 0))",
+        paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0))",
       }}
     >
       {!wizard.isLastStep && (
@@ -46,9 +45,7 @@ export const MobileNavigation = ({
               예상 기간: {estimatedDays}
             </span>
           )}
-          {isLoggedIn && (
-            <span className="text-zinc-500">{estimatedDays}</span>
-          )}
+          {isLoggedIn && <span className="text-zinc-500">{estimatedDays}</span>}
         </div>
       )}
       {wizard.isLastStep ? (
@@ -74,7 +71,8 @@ export const MobileNavigation = ({
             </p>
           ) : !selectedAddress ? (
             <p className="text-sm text-center text-zinc-500">
-              배송지를 추가하면 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수 있어요
+              배송지를 추가하면 {isQuoteMode ? "견적요청" : "주문"}을 진행할 수
+              있어요
             </p>
           ) : null}
         </div>
@@ -91,12 +89,7 @@ export const MobileNavigation = ({
               이전
             </Button>
           )}
-          <Button
-            type="button"
-            size="lg"
-            onClick={onNext}
-            className="flex-1"
-          >
+          <Button type="button" size="lg" onClick={onNext} className="flex-1">
             다음
           </Button>
         </div>

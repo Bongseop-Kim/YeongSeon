@@ -7,7 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
-import { useEmailChange, EMAIL_CODE_LENGTH } from "@/features/my-page/my-info/email/hooks/use-email-change";
+import {
+  useEmailChange,
+  EMAIL_CODE_LENGTH,
+} from "@/features/my-page/my-info/email/hooks/use-email-change";
 
 export default function MyInfoEmailPage() {
   const navigate = useNavigate();
@@ -121,7 +124,9 @@ export default function MyInfoEmailPage() {
                           onClick={handleVerifyCode}
                           disabled={!canVerifyCode}
                         >
-                          {verifyCodeMutation.isPending ? "검증 중" : "코드 검증"}
+                          {verifyCodeMutation.isPending
+                            ? "검증 중"
+                            : "코드 검증"}
                         </Button>
                         <Button
                           type="button"

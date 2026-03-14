@@ -1,5 +1,12 @@
-import type { Coupon, UserCoupon, UserCouponStatus } from "@yeongseon/shared/types/view/coupon";
-import type { UserCouponRecord, CouponRecord } from "@/features/coupon/types/coupon-record";
+import type {
+  Coupon,
+  UserCoupon,
+  UserCouponStatus,
+} from "@yeongseon/shared/types/view/coupon";
+import type {
+  UserCouponRecord,
+  CouponRecord,
+} from "@/features/coupon/types/coupon-record";
 import { isRecord } from "@/lib/type-guard";
 
 // ── parse helpers (런타임 검증) ──────────────────────
@@ -9,7 +16,10 @@ const isDiscountType = (v: string): v is CouponRecord["discount_type"] =>
   DISCOUNT_TYPES.has(v);
 
 const USER_COUPON_STATUSES: ReadonlySet<string> = new Set([
-  "active", "used", "expired", "revoked",
+  "active",
+  "used",
+  "expired",
+  "revoked",
 ]);
 const isUserCouponStatus = (v: string): v is UserCouponStatus =>
   USER_COUPON_STATUSES.has(v);
@@ -18,7 +28,7 @@ const parseCouponRecord = (v: unknown, i: number): CouponRecord | null => {
   if (v == null) return null;
   if (!isRecord(v)) {
     throw new Error(
-      `쿠폰 조회 행(${i})의 coupon이 올바르지 않습니다: 객체가 아닙니다.`
+      `쿠폰 조회 행(${i})의 coupon이 올바르지 않습니다: 객체가 아닙니다.`,
     );
   }
   if (
@@ -29,12 +39,12 @@ const parseCouponRecord = (v: unknown, i: number): CouponRecord | null => {
     typeof v.expiry_date !== "string"
   ) {
     throw new Error(
-      `쿠폰 조회 행(${i})의 coupon이 올바르지 않습니다: 필수 필드(id, name, discount_type, discount_value, expiry_date) 누락.`
+      `쿠폰 조회 행(${i})의 coupon이 올바르지 않습니다: 필수 필드(id, name, discount_type, discount_value, expiry_date) 누락.`,
     );
   }
   if (!isDiscountType(v.discount_type)) {
     throw new Error(
-      `쿠폰 조회 행(${i})의 coupon이 올바르지 않습니다: discount_type 값(${v.discount_type})이 허용된 유형("percentage" | "fixed")이 아닙니다.`
+      `쿠폰 조회 행(${i})의 coupon이 올바르지 않습니다: discount_type 값(${v.discount_type})이 허용된 유형("percentage" | "fixed")이 아닙니다.`,
     );
   }
   return {
@@ -42,26 +52,28 @@ const parseCouponRecord = (v: unknown, i: number): CouponRecord | null => {
     name: v.name,
     discount_type: v.discount_type,
     discount_value: v.discount_value,
-    max_discount_amount: typeof v.max_discount_amount === "number" ? v.max_discount_amount : null,
+    max_discount_amount:
+      typeof v.max_discount_amount === "number" ? v.max_discount_amount : null,
     description: typeof v.description === "string" ? v.description : null,
     expiry_date: v.expiry_date,
-    additional_info: typeof v.additional_info === "string" ? v.additional_info : null,
+    additional_info:
+      typeof v.additional_info === "string" ? v.additional_info : null,
   };
 };
 
 /**
  * Supabase joined 쿼리 응답 → UserCouponRecord[] 런타임 검증
  */
-export const parseUserCouponRecords = (
-  data: unknown
-): UserCouponRecord[] => {
+export const parseUserCouponRecords = (data: unknown): UserCouponRecord[] => {
   if (data == null) return [];
   if (!Array.isArray(data)) {
     throw new Error("쿠폰 조회 응답이 올바르지 않습니다: 배열이 아닙니다.");
   }
   return data.map((row: unknown, i: number): UserCouponRecord => {
     if (!isRecord(row)) {
-      throw new Error(`쿠폰 조회 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`);
+      throw new Error(
+        `쿠폰 조회 행(${i})이 올바르지 않습니다: 객체가 아닙니다.`,
+      );
     }
     if (
       typeof row.id !== "string" ||
@@ -71,12 +83,12 @@ export const parseUserCouponRecords = (
       typeof row.issued_at !== "string"
     ) {
       throw new Error(
-        `쿠폰 조회 행(${i})이 올바르지 않습니다: 필수 필드(id, user_id, coupon_id, status, issued_at) 누락.`
+        `쿠폰 조회 행(${i})이 올바르지 않습니다: 필수 필드(id, user_id, coupon_id, status, issued_at) 누락.`,
       );
     }
     if (!isUserCouponStatus(row.status)) {
       throw new Error(
-        `쿠폰 조회 행(${i})이 올바르지 않습니다: status 값(${row.status})이 허용된 상태가 아닙니다.`
+        `쿠폰 조회 행(${i})이 올바르지 않습니다: status 값(${row.status})이 허용된 상태가 아닙니다.`,
       );
     }
     return {

@@ -53,7 +53,9 @@ export async function fetchPurchasedUserIds(): Promise<Set<string>> {
   return new Set((data ?? []).map((row) => row.user_id).filter(Boolean));
 }
 
-export async function fetchIssuedUserIds(couponId: string): Promise<Set<string>> {
+export async function fetchIssuedUserIds(
+  couponId: string,
+): Promise<Set<string>> {
   const { data, error } = await supabase
     .from("user_coupons")
     .select("user_id")
@@ -80,7 +82,7 @@ export async function fetchCompletedOrderDates(): Promise<
 
   return (data ?? []).filter(
     (row): row is { user_id: string; created_at: string } =>
-      !!row.user_id && !!row.created_at
+      !!row.user_id && !!row.created_at,
   );
 }
 
@@ -88,7 +90,7 @@ export async function fetchCompletedOrderDates(): Promise<
 
 export async function bulkIssueCoupons(
   couponId: string,
-  userIds: string[]
+  userIds: string[],
 ): Promise<void> {
   const { error } = await supabase.rpc("admin_bulk_issue_coupons", {
     p_coupon_id: couponId,
@@ -112,7 +114,7 @@ export async function revokeCouponsByIds(ids: string[]): Promise<void> {
 
 export async function revokeCouponsByUserIds(
   couponId: string,
-  userIds: string[]
+  userIds: string[],
 ): Promise<void> {
   const { error } = await supabase.rpc("admin_revoke_coupons_by_user_ids", {
     p_coupon_id: couponId,

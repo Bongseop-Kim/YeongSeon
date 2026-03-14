@@ -75,7 +75,7 @@ export function fromPeriodStatsRpcRow(row: unknown): PeriodStatsDTO {
 export function toDashboardStats(
   periodStats: PeriodStatsDTO,
   pendingClaimTotal: number,
-  pendingInquiryTotal: number
+  pendingInquiryTotal: number,
 ): AdminDashboardStats {
   return {
     orderCount: periodStats.orderCount,
@@ -86,7 +86,7 @@ export function toDashboardStats(
 }
 
 export function toDashboardRecentOrder(
-  dto: DashboardRecentOrderRowDTO
+  dto: DashboardRecentOrderRowDTO,
 ): AdminDashboardRecentOrder {
   return {
     id: dto.id,

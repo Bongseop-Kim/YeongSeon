@@ -1,4 +1,7 @@
-import type { ShippingAddress, ShippingAddressInput } from "@/features/shipping/types/shipping-address";
+import type {
+  ShippingAddress,
+  ShippingAddressInput,
+} from "@/features/shipping/types/shipping-address";
 import type { ShippingAddressRecord } from "@/features/shipping/types/shipping-address-record";
 
 /**
@@ -8,7 +11,7 @@ import type { ShippingAddressRecord } from "@/features/shipping/types/shipping-a
  * DB 레코드(`string | null`)와 View optional 필드의 의미 차이를 반영한다.
  */
 export const toShippingAddressView = (
-  record: ShippingAddressRecord
+  record: ShippingAddressRecord,
 ): ShippingAddress => ({
   id: record.id,
   recipientName: record.recipient_name,
@@ -26,7 +29,7 @@ export const toShippingAddressView = (
  */
 export const toUpsertShippingAddressParams = (
   id: string | null,
-  data: ShippingAddressInput
+  data: ShippingAddressInput,
 ) => ({
   p_id: id ?? undefined,
   p_recipient_name: data.recipientName,

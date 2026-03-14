@@ -17,7 +17,9 @@ export function IssuedCouponTable({
   onOpenIssueModal,
 }: IssuedCouponTableProps) {
   const [selectedIssuedIds, setSelectedIssuedIds] = useState<React.Key[]>([]);
-  const [selectedIssuedRows, setSelectedIssuedRows] = useState<AdminIssuedCouponRow[]>([]);
+  const [selectedIssuedRows, setSelectedIssuedRows] = useState<
+    AdminIssuedCouponRow[]
+  >([]);
 
   const handleBulkRevoke = () => {
     onRevoke(selectedIssuedRows);
@@ -63,7 +65,7 @@ export function IssuedCouponTable({
         <Table.Column
           dataIndex="status"
           title="상태"
-          render={(v: string | null) => v != null ? <Tag>{v}</Tag> : null}
+          render={(v: string | null) => (v != null ? <Tag>{v}</Tag> : null)}
         />
         <Table.Column dataIndex="issuedAt" title="발급일" />
         <Table.Column

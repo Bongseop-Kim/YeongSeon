@@ -1,5 +1,10 @@
 import type { StepConfig } from "@/features/custom-order/types/wizard";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { StepIndicator } from "@/components/composite/step-indicator";
 
 interface ProgressBarProps {

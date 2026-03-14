@@ -34,7 +34,10 @@ const getAttachmentLabels = (
   type: Attachment["type"],
 ): string[] =>
   attachments
-    .filter((attachment) => attachment.type === type && attachment.label.trim().length > 0)
+    .filter(
+      (attachment) =>
+        attachment.type === type && attachment.label.trim().length > 0,
+    )
     .map((attachment) => attachment.label.trim());
 
 export const getTags = (request: AiDesignRequest): string[] => {
@@ -52,10 +55,17 @@ export const getTags = (request: AiDesignRequest): string[] => {
 
   const ciPlacementLabels: string[] = [];
   if (request.designContext.ciPlacement) {
-    ciPlacementLabels.push(CI_PLACEMENT_LABELS[request.designContext.ciPlacement]);
+    ciPlacementLabels.push(
+      CI_PLACEMENT_LABELS[request.designContext.ciPlacement],
+    );
   }
 
-  const tags = [...colorLabels, ...patternLabels, ...fabricLabels, ...ciPlacementLabels]
+  const tags = [
+    ...colorLabels,
+    ...patternLabels,
+    ...fabricLabels,
+    ...ciPlacementLabels,
+  ]
     .filter((tag, index, array) => array.indexOf(tag) === index)
     .slice(0, 3);
 

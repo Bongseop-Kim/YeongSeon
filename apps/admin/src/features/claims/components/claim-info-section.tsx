@@ -15,8 +15,14 @@ export function ClaimInfoSection({ claim }: ClaimInfoSectionProps) {
   const { show } = useNavigation();
 
   return (
-    <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
-      <Descriptions.Item label="클레임번호">{claim.claimNumber}</Descriptions.Item>
+    <Descriptions
+      bordered
+      column={{ xs: 1, sm: 1, md: 2 }}
+      style={{ marginBottom: 24 }}
+    >
+      <Descriptions.Item label="클레임번호">
+        {claim.claimNumber}
+      </Descriptions.Item>
       <Descriptions.Item label="접수일">{claim.date}</Descriptions.Item>
       <Descriptions.Item label="유형">
         {CLAIM_TYPE_LABELS[claim.claimType]}
@@ -31,7 +37,12 @@ export function ClaimInfoSection({ claim }: ClaimInfoSectionProps) {
             e.stopPropagation();
             show("profiles", claim.customer.userId);
           }}
-          style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
+          style={{
+            cursor: "pointer",
+            background: "none",
+            border: "none",
+            padding: 0,
+          }}
         >
           {claim.customer.name}
         </button>
@@ -46,7 +57,12 @@ export function ClaimInfoSection({ claim }: ClaimInfoSectionProps) {
             e.stopPropagation();
             show("admin_order_list_view", claim.linkedOrder.orderId);
           }}
-          style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
+          style={{
+            cursor: "pointer",
+            background: "none",
+            border: "none",
+            padding: 0,
+          }}
         >
           {claim.linkedOrder.orderNumber}
         </button>

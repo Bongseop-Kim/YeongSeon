@@ -78,7 +78,10 @@ export default function MyInfoNoticePage() {
     } catch {
       // query cache rollback은 useUpdateMarketingConsent onError에서 처리
       // form state는 즉시 복원
-      form.setValue("isMarketingConsent", previousFormValues.isMarketingConsent);
+      form.setValue(
+        "isMarketingConsent",
+        previousFormValues.isMarketingConsent,
+      );
       form.setValue("isSmsConsent", previousFormValues.isSmsConsent);
       form.setValue("isEmailConsent", previousFormValues.isEmailConsent);
       toast.error("설정 저장에 실패했습니다.");

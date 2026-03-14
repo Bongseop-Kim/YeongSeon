@@ -1,5 +1,9 @@
 import { describe, it } from "vitest";
-import type { OrderListRowDTO, OrderViewDTO, OrderDetailRowDTO } from "./order-view";
+import type {
+  OrderListRowDTO,
+  OrderViewDTO,
+  OrderDetailRowDTO,
+} from "./order-view";
 
 const ORDER_TYPE = null as unknown as "sale" | "custom" | "repair" | "token";
 

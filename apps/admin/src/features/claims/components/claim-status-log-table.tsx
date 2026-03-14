@@ -26,16 +26,12 @@ export function ClaimStatusLogTable({ logs }: ClaimStatusLogTableProps) {
       <Table.Column
         dataIndex="previousStatus"
         title="이전 상태"
-        render={(v: string) => (
-          <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>
-        )}
+        render={(v: string) => <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>}
       />
       <Table.Column
         dataIndex="newStatus"
         title="변경 상태"
-        render={(v: string) => (
-          <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>
-        )}
+        render={(v: string) => <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>}
       />
       <Table.Column
         dataIndex="memo"
@@ -45,9 +41,7 @@ export function ClaimStatusLogTable({ logs }: ClaimStatusLogTableProps) {
       <Table.Column
         dataIndex="isRollback"
         title="구분"
-        render={(v: boolean) =>
-          v ? <Tag color="red">롤백</Tag> : null
-        }
+        render={(v: boolean) => (v ? <Tag color="red">롤백</Tag> : null)}
       />
     </Table>
   );

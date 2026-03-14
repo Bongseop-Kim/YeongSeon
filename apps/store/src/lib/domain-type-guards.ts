@@ -7,44 +7,65 @@ import type {
 } from "@yeongseon/shared/types/dto/product";
 
 export const PRODUCT_CATEGORIES: ReadonlySet<string> = new Set([
-  "3fold", "sfolderato", "knit", "bowtie",
+  "3fold",
+  "sfolderato",
+  "knit",
+  "bowtie",
 ]);
 export const isProductCategory = (v: string): v is ProductCategoryDTO =>
   PRODUCT_CATEGORIES.has(v);
 
 export const PRODUCT_COLORS: ReadonlySet<string> = new Set([
-  "black", "navy", "gray", "wine", "blue", "brown", "beige", "silver",
+  "black",
+  "navy",
+  "gray",
+  "wine",
+  "blue",
+  "brown",
+  "beige",
+  "silver",
 ]);
 export const isProductColor = (v: string): v is ProductColorDTO =>
   PRODUCT_COLORS.has(v);
 
 export const PRODUCT_PATTERNS: ReadonlySet<string> = new Set([
-  "solid", "stripe", "dot", "check", "paisley",
+  "solid",
+  "stripe",
+  "dot",
+  "check",
+  "paisley",
 ]);
 export const isProductPattern = (v: string): v is ProductPatternDTO =>
   PRODUCT_PATTERNS.has(v);
 
 export const PRODUCT_MATERIALS: ReadonlySet<string> = new Set([
-  "silk", "cotton", "polyester", "wool",
+  "silk",
+  "cotton",
+  "polyester",
+  "wool",
 ]);
 export const isProductMaterial = (v: string): v is ProductMaterialDTO =>
   PRODUCT_MATERIALS.has(v);
 
 export const TIE_MEASUREMENT_TYPES: ReadonlySet<string> = new Set([
-  "length", "height",
+  "length",
+  "height",
 ]);
-export const isTieMeasurementType = (
-  v: string
-): v is "length" | "height" => TIE_MEASUREMENT_TYPES.has(v);
+export const isTieMeasurementType = (v: string): v is "length" | "height" =>
+  TIE_MEASUREMENT_TYPES.has(v);
 
 export const DISCOUNT_TYPES: ReadonlySet<string> = new Set([
-  "percentage", "fixed",
+  "percentage",
+  "fixed",
 ]);
 export const isDiscountType = (v: string): v is "percentage" | "fixed" =>
   DISCOUNT_TYPES.has(v);
 
 export const USER_COUPON_STATUSES: ReadonlySet<string> = new Set([
-  "active", "used", "expired", "revoked",
+  "active",
+  "used",
+  "expired",
+  "revoked",
 ]);
 export const isUserCouponStatus = (v: string): v is UserCouponStatusDTO =>
   USER_COUPON_STATUSES.has(v);

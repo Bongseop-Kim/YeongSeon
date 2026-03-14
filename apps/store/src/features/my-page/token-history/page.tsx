@@ -28,7 +28,6 @@ import type { RefundableTokenOrder } from "@/features/my-page/token-history/api/
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 
-
 const formatAmount = (amount: number) => {
   const prefix = amount >= 0 ? "+" : "";
   return `${prefix}${amount.toLocaleString()}`;
@@ -61,7 +60,10 @@ function HistorySkeleton() {
   return (
     <div className="space-y-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3">
+        <div
+          key={i}
+          className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3"
+        >
           <div className="space-y-2">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-4 w-48" />
@@ -82,7 +84,8 @@ interface RefundDialogProps {
 }
 
 function RefundDialog({ order, open, onClose }: RefundDialogProps) {
-  const { mutateAsync: requestRefund, isPending } = useRequestTokenRefundMutation();
+  const { mutateAsync: requestRefund, isPending } =
+    useRequestTokenRefundMutation();
 
   const handleConfirm = async () => {
     try {
@@ -90,18 +93,27 @@ function RefundDialog({ order, open, onClose }: RefundDialogProps) {
       toast.success("환불 신청이 완료되었습니다. 관리자 승인 후 처리됩니다.");
       onClose();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "환불 신청 중 오류가 발생했습니다.";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "환불 신청 중 오류가 발생했습니다.";
       toast.error(message);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>환불 신청</DialogTitle>
           <DialogDescription>
-            아래 주문에 대해 환불을 신청합니다. 관리자 승인 후 결제 취소가 진행됩니다.
+            아래 주문에 대해 환불을 신청합니다. 관리자 승인 후 결제 취소가
+            진행됩니다.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 rounded-lg bg-zinc-50 p-4 text-sm">
@@ -111,15 +123,20 @@ function RefundDialog({ order, open, onClose }: RefundDialogProps) {
           </div>
           <div className="flex justify-between">
             <span className="text-zinc-500">유료 토큰</span>
-            <span className="font-medium">{order.paidTokensGranted.toLocaleString()}개</span>
+            <span className="font-medium">
+              {order.paidTokensGranted.toLocaleString()}개
+            </span>
           </div>
           <div className="flex justify-between border-t border-zinc-200 pt-3">
             <span className="font-semibold text-zinc-700">환불 금액</span>
-            <span className="font-bold text-zinc-900">{order.totalPrice.toLocaleString()}원</span>
+            <span className="font-bold text-zinc-900">
+              {order.totalPrice.toLocaleString()}원
+            </span>
           </div>
         </div>
         <p className="text-xs text-zinc-400">
-          * 가장 최근 구매한 토큰을 하나도 사용하지 않은 경우에만 환불이 가능합니다.
+          * 가장 최근 구매한 토큰을 하나도 사용하지 않은 경우에만 환불이
+          가능합니다.
         </p>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isPending}>
@@ -143,14 +160,18 @@ interface PurchaseRowProps {
 }
 
 function PurchaseRow({ item, refundOrder, onRequestRefund }: PurchaseRowProps) {
-  const { mutateAsync: cancelRefund, isPending: isCancelling } = useCancelTokenRefundMutation();
+  const { mutateAsync: cancelRefund, isPending: isCancelling } =
+    useCancelTokenRefundMutation();
 
   const handleCancelRefund = async (pendingRequestId: string) => {
     try {
       await cancelRefund(pendingRequestId);
       toast.success("환불 신청이 취소되었습니다.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "환불 취소 중 오류가 발생했습니다.";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "환불 취소 중 오류가 발생했습니다.";
       toast.error(message);
     }
   };
@@ -158,14 +179,23 @@ function PurchaseRow({ item, refundOrder, onRequestRefund }: PurchaseRowProps) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border px-4 py-4">
       <div className="min-w-0 flex-1 space-y-1">
-        <span className="text-xs text-zinc-400">{formatDate(item.createdAt)}</span>
+        <span className="text-xs text-zinc-400">
+          {formatDate(item.createdAt)}
+        </span>
         {refundOrder ? (
           <div className="flex flex-wrap gap-3 text-xs text-zinc-500">
-            <span>유료 {refundOrder.paidTokensGranted.toLocaleString()}토큰</span>
+            <span>
+              유료 {refundOrder.paidTokensGranted.toLocaleString()}토큰
+            </span>
           </div>
         ) : (
           <p className="break-words text-sm text-zinc-700">
-            {item.description ?? (item.type === "admin" ? "관리자 지급" : item.type === "grant" ? "토큰 지급" : "구매")}
+            {item.description ??
+              (item.type === "admin"
+                ? "관리자 지급"
+                : item.type === "grant"
+                  ? "토큰 지급"
+                  : "구매")}
           </p>
         )}
         {refundOrder ? (
@@ -186,7 +216,8 @@ function PurchaseRow({ item, refundOrder, onRequestRefund }: PurchaseRowProps) {
           >
             {formatAmount(item.amount)}
           </span>
-        ) : refundOrder.notRefundableReason === "pending_refund" && refundOrder.pendingRequestId ? (
+        ) : refundOrder.notRefundableReason === "pending_refund" &&
+          refundOrder.pendingRequestId ? (
           <div className="flex flex-col items-end gap-1.5">
             <Badge className="bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-50">
               환불 신청 중
@@ -214,7 +245,9 @@ function PurchaseRow({ item, refundOrder, onRequestRefund }: PurchaseRowProps) {
           </Button>
         ) : refundOrder.notRefundableReason === "tokens_used" ? (
           <span className="text-xs text-zinc-400 leading-tight">
-            환불 불가<br />(토큰 사용됨)
+            환불 불가
+            <br />
+            (토큰 사용됨)
           </span>
         ) : (
           <span
@@ -238,7 +271,12 @@ interface PurchaseTabProps {
   onRequestRefund: (order: RefundableTokenOrder) => void;
 }
 
-function PurchaseTab({ purchaseItems, refundOrderMap, isLoading, onRequestRefund }: PurchaseTabProps) {
+function PurchaseTab({
+  purchaseItems,
+  refundOrderMap,
+  isLoading,
+  onRequestRefund,
+}: PurchaseTabProps) {
   if (isLoading && purchaseItems.length === 0) {
     return <HistorySkeleton />;
   }
@@ -256,7 +294,9 @@ function PurchaseTab({ purchaseItems, refundOrderMap, isLoading, onRequestRefund
     <div className="space-y-3">
       {purchaseItems.map((item) => {
         const orderId = extractOrderIdFromWorkId(item.workId ?? null);
-        const refundOrder = orderId ? (refundOrderMap.get(orderId) ?? null) : null;
+        const refundOrder = orderId
+          ? (refundOrderMap.get(orderId) ?? null)
+          : null;
         return (
           <PurchaseRow
             key={item.id}
@@ -368,10 +408,7 @@ function UsageTab({ history, isLoading, error }: UsageTabProps) {
 
   if (error && history.length === 0) {
     return (
-      <Empty
-        title="내역을 불러올 수 없습니다."
-        description={error.message}
-      />
+      <Empty title="내역을 불러올 수 없습니다." description={error.message} />
     );
   }
 
@@ -387,12 +424,18 @@ function UsageTab({ history, isLoading, error }: UsageTabProps) {
   return (
     <div className="divide-y">
       {usageItems.map((item) => (
-        <div key={item.id} className="flex items-center justify-between gap-4 py-3">
+        <div
+          key={item.id}
+          className="flex items-center justify-between gap-4 py-3"
+        >
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm text-zinc-700">
-              {item.description ?? (item.type === "grant" ? "토큰 지급" : "토큰 사용")}
+              {item.description ??
+                (item.type === "grant" ? "토큰 지급" : "토큰 사용")}
             </p>
-            <span className="text-xs text-zinc-400">{formatDate(item.createdAt)}</span>
+            <span className="text-xs text-zinc-400">
+              {formatDate(item.createdAt)}
+            </span>
           </div>
           <span
             className={cn(
@@ -411,7 +454,9 @@ function UsageTab({ history, isLoading, error }: UsageTabProps) {
 // ─── 메인 페이지 ──────────────────────────────────────────────────────────────
 
 export default function TokenHistoryPage() {
-  const [refundTarget, setRefundTarget] = useState<RefundableTokenOrder | null>(null);
+  const [refundTarget, setRefundTarget] = useState<RefundableTokenOrder | null>(
+    null,
+  );
 
   const {
     data: rawBalance,
@@ -429,15 +474,17 @@ export default function TokenHistoryPage() {
   const history = rawHistory ?? [];
 
   const purchaseItems = history.filter(
-    (item) => item.type === "purchase" || item.type === "admin" || item.type === "grant",
+    (item) =>
+      item.type === "purchase" ||
+      item.type === "admin" ||
+      item.type === "grant",
   );
   const refundOrderMap = new Map(
-    (refundableOrders ?? []).map((o) => [o.orderId, o])
+    (refundableOrders ?? []).map((o) => [o.orderId, o]),
   );
   const usageHistory = history.filter(
     (item) => item.type === "use" || item.type === "refund",
   );
-
 
   return (
     <MainLayout>
@@ -453,12 +500,16 @@ export default function TokenHistoryPage() {
                 {isBalanceLoading && rawBalance === undefined ? (
                   <BalanceSkeleton />
                 ) : balanceError && rawBalance === undefined ? (
-                  <p className="text-sm text-red-600">잔액을 불러오는 중 오류가 발생했습니다.</p>
+                  <p className="text-sm text-red-600">
+                    잔액을 불러오는 중 오류가 발생했습니다.
+                  </p>
                 ) : (
                   <div className="space-y-1">
                     <div className="text-3xl font-semibold tracking-tight text-zinc-900">
                       {balance.total.toLocaleString()}
-                      <span className="ml-1 text-base font-normal text-zinc-400">토큰</span>
+                      <span className="ml-1 text-base font-normal text-zinc-400">
+                        토큰
+                      </span>
                     </div>
                     <div className="flex gap-3 text-xs text-zinc-500">
                       <span>유료 {balance.paid.toLocaleString()}</span>
@@ -473,8 +524,12 @@ export default function TokenHistoryPage() {
             {/* 탭 */}
             <Tabs defaultValue="purchase">
               <TabsList className="w-full">
-                <TabsTrigger value="purchase" className="flex-1">구매 내역</TabsTrigger>
-                <TabsTrigger value="usage" className="flex-1">사용 내역</TabsTrigger>
+                <TabsTrigger value="purchase" className="flex-1">
+                  구매 내역
+                </TabsTrigger>
+                <TabsTrigger value="usage" className="flex-1">
+                  사용 내역
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="purchase" className="mt-3">

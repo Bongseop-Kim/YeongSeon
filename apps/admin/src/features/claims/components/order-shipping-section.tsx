@@ -13,7 +13,11 @@ export function OrderShippingSection({ shipping }: OrderShippingSectionProps) {
       : null;
 
   return (
-    <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} style={{ marginBottom: 24 }}>
+    <Descriptions
+      bordered
+      column={{ xs: 1, sm: 1, md: 2 }}
+      style={{ marginBottom: 24 }}
+    >
       <Descriptions.Item label="주문상태">
         <Tag color={ORDER_STATUS_COLORS[shipping.orderStatus]}>
           {shipping.orderStatus}

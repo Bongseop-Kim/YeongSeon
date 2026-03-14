@@ -22,7 +22,8 @@ const headerVariants = cva("w-full bg-zinc-900 backdrop-blur-md", {
 });
 
 export interface HeaderProps
-  extends React.HTMLAttributes<HTMLElement>,
+  extends
+    React.HTMLAttributes<HTMLElement>,
     VariantProps<typeof headerVariants> {}
 
 const Header = React.forwardRef<HTMLElement, HeaderProps>(
@@ -34,7 +35,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
         {...props}
       />
     );
-  }
+  },
 );
 Header.displayName = "Header";
 
@@ -46,7 +47,7 @@ const HeaderContent = React.forwardRef<
     ref={ref}
     className={cn(
       "container mx-auto flex h-full max-w-7xl items-center justify-between px-4 lg:px-8",
-      className
+      className,
     )}
     {...props}
   />

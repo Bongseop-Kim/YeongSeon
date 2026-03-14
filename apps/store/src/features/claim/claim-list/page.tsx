@@ -24,7 +24,13 @@ import { cn } from "@/lib/utils";
 
 type ClaimTypeFilter = "전체" | "취소" | "반품" | "교환" | "토큰환불";
 
-const CLAIM_TYPE_TABS: ClaimTypeFilter[] = ["전체", "취소", "반품", "교환", "토큰환불"];
+const CLAIM_TYPE_TABS: ClaimTypeFilter[] = [
+  "전체",
+  "취소",
+  "반품",
+  "교환",
+  "토큰환불",
+];
 
 const CLAIM_TYPE_MAP: Record<Exclude<ClaimTypeFilter, "전체">, ClaimType> = {
   취소: "cancel",
@@ -75,9 +81,7 @@ export default function ClaimListPage() {
       <MainLayout>
         <MainContent>
           <div className="flex items-center justify-center min-h-96">
-            <div className="text-zinc-500">
-              클레임 목록을 불러오는 중...
-            </div>
+            <div className="text-zinc-500">클레임 목록을 불러오는 중...</div>
           </div>
         </MainContent>
       </MainLayout>
@@ -105,94 +109,96 @@ export default function ClaimListPage() {
     <MainLayout>
       <MainContent>
         <PageLayout>
-            <div>
-              <div className="flex gap-1 overflow-x-auto pb-2">
-                {CLAIM_TYPE_TABS.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-                      activeTab === tab
-                        ? "bg-zinc-900 text-white"
-                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                    )}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-              {filteredClaims.length === 0 ? (
-                <Card>
-                  <Empty
-                    title="취소/반품/교환/토큰환불 내역이 없습니다."
-                    description="문제가 있으시면 고객센터로 문의해주세요."
-                  />
-                </Card>
-              ) : (
-                filteredClaims.map((claim) => (
-                  <Card key={claim.id}>
-                    {/* 클레임 헤더 */}
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">
-                          {formatDate(claim.date)}
-                        </CardTitle>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">
-                            {getClaimTypeLabel(claim.type)}
-                          </Badge>
-                          <ClaimStatusBadge status={claim.status} />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-zinc-500 mt-1">
-                        <span>클레임번호: {claim.claimNumber}</span>
-                        <span>·</span>
-                        <span>주문번호: {claim.orderNumber}</span>
-                      </div>
-                    </CardHeader>
-
-                    <Separator />
-
-                    {/* 클레임 상품 정보 */}
-                    <CardContent className="py-4">
-                      <OrderItemCard
-                        item={claim.item}
-                        onClick={() =>
-                          navigate(
-                            buildClaimDetailRoute(
-                              claim.type,
-                              claim.orderId,
-                              claim.item.id,
-                            ),
-                          )
-                        }
-                      />
-
-                      {claim.type === "token_refund" && claim.refundData && (
-                        <div className="p-3 bg-blue-50 rounded-md mt-3 space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-zinc-600">환불 토큰</span>
-                            <span>{claim.refundData.paidTokenAmount}T</span>
-                          </div>
-                          <div className="flex justify-between font-semibold">
-                            <span className="text-zinc-600">환불 금액</span>
-                            <span>{claim.refundData.refundAmount.toLocaleString()}원</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 클레임 사유 */}
-                      <div className="p-3 bg-zinc-50 rounded-md mt-3">
-                        <Label className="text-sm text-zinc-600">
-                          사유: {claim.reason}
-                        </Label>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
+          <div>
+            <div className="flex gap-1 overflow-x-auto pb-2">
+              {CLAIM_TYPE_TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                    activeTab === tab
+                      ? "bg-zinc-900 text-white"
+                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200",
+                  )}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
+            {filteredClaims.length === 0 ? (
+              <Card>
+                <Empty
+                  title="취소/반품/교환/토큰환불 내역이 없습니다."
+                  description="문제가 있으시면 고객센터로 문의해주세요."
+                />
+              </Card>
+            ) : (
+              filteredClaims.map((claim) => (
+                <Card key={claim.id}>
+                  {/* 클레임 헤더 */}
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">
+                        {formatDate(claim.date)}
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">
+                          {getClaimTypeLabel(claim.type)}
+                        </Badge>
+                        <ClaimStatusBadge status={claim.status} />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-zinc-500 mt-1">
+                      <span>클레임번호: {claim.claimNumber}</span>
+                      <span>·</span>
+                      <span>주문번호: {claim.orderNumber}</span>
+                    </div>
+                  </CardHeader>
+
+                  <Separator />
+
+                  {/* 클레임 상품 정보 */}
+                  <CardContent className="py-4">
+                    <OrderItemCard
+                      item={claim.item}
+                      onClick={() =>
+                        navigate(
+                          buildClaimDetailRoute(
+                            claim.type,
+                            claim.orderId,
+                            claim.item.id,
+                          ),
+                        )
+                      }
+                    />
+
+                    {claim.type === "token_refund" && claim.refundData && (
+                      <div className="p-3 bg-blue-50 rounded-md mt-3 space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-zinc-600">환불 토큰</span>
+                          <span>{claim.refundData.paidTokenAmount}T</span>
+                        </div>
+                        <div className="flex justify-between font-semibold">
+                          <span className="text-zinc-600">환불 금액</span>
+                          <span>
+                            {claim.refundData.refundAmount.toLocaleString()}원
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 클레임 사유 */}
+                    <div className="p-3 bg-zinc-50 rounded-md mt-3">
+                      <Label className="text-sm text-zinc-600">
+                        사유: {claim.reason}
+                      </Label>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         </PageLayout>
       </MainContent>
     </MainLayout>

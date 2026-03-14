@@ -51,17 +51,21 @@ const TokenPurchaseSuccessPage = () => {
           queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,
         });
 
-        toast.success(`토큰 ${result.tokenAmount.toLocaleString()}개가 충전되었습니다!`);
+        toast.success(
+          `토큰 ${result.tokenAmount.toLocaleString()}개가 충전되었습니다!`,
+        );
         navigate(ROUTES.DESIGN, { replace: true });
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "결제 처리 중 오류가 발생했습니다.";
+          err instanceof Error
+            ? err.message
+            : "결제 처리 중 오류가 발생했습니다.";
         setError(errorMessage);
       }
     };
 
     processPayment();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (error) {

@@ -74,7 +74,7 @@ export const toast = {
    */
   success: (
     message: string,
-    options?: Parameters<typeof sonnerToast.success>[1]
+    options?: Parameters<typeof sonnerToast.success>[1],
   ) => {
     return sonnerToast.success(message, {
       duration: 3000,
@@ -87,7 +87,7 @@ export const toast = {
    */
   error: (
     message: string | unknown,
-    options?: Parameters<typeof sonnerToast.error>[1]
+    options?: Parameters<typeof sonnerToast.error>[1],
   ) => {
     const errorMessage =
       typeof message === "string" ? message : getErrorMessage(message);
@@ -102,7 +102,7 @@ export const toast = {
    */
   warning: (
     message: string,
-    options?: Parameters<typeof sonnerToast.warning>[1]
+    options?: Parameters<typeof sonnerToast.warning>[1],
   ) => {
     return sonnerToast.warning(message, {
       duration: 3500,
@@ -125,7 +125,7 @@ export const toast = {
    */
   loading: (
     message: string,
-    options?: Parameters<typeof sonnerToast.loading>[1]
+    options?: Parameters<typeof sonnerToast.loading>[1],
   ) => {
     return sonnerToast.loading(message, options);
   },
@@ -139,7 +139,7 @@ export const toast = {
       loading: string;
       success: string | ((data: T) => string);
       error: string | ((error: unknown) => string);
-    }
+    },
   ) => {
     return sonnerToast.promise(promise, data);
   },

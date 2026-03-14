@@ -8,7 +8,7 @@ export const Required = ({
     <p
       className={cn(
         "text-red-500 font-bold top-[-2px] relative mr-1",
-        className
+        className,
       )}
       {...props}
     >

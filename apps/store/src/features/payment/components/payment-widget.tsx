@@ -1,5 +1,14 @@
-import { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
-import { loadTossPayments, type TossPaymentsWidgets } from "@tosspayments/tosspayments-sdk";
+import {
+  useEffect,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+  useState,
+} from "react";
+import {
+  loadTossPayments,
+  type TossPaymentsWidgets,
+} from "@tosspayments/tosspayments-sdk";
 
 const CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY;
 
@@ -33,7 +42,8 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
 
       const init = async () => {
         if (!CLIENT_KEY) {
-          const message = "VITE_TOSS_CLIENT_KEY가 설정되지 않아 결제위젯을 초기화할 수 없습니다.";
+          const message =
+            "VITE_TOSS_CLIENT_KEY가 설정되지 않아 결제위젯을 초기화할 수 없습니다.";
           console.error(`[payment-widget] ${message}`);
           if (!cancelled) {
             setInitError(message);
@@ -48,7 +58,10 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
           const widgets = tossPayments.widgets({ customerKey });
           widgetsRef.current = widgets;
 
-          await widgets.setAmount({ currency: "KRW", value: amountRef.current });
+          await widgets.setAmount({
+            currency: "KRW",
+            value: amountRef.current,
+          });
           if (cancelled) return;
 
           await Promise.all([
@@ -91,24 +104,28 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
       }
     }, [amount, ready]);
 
-    useImperativeHandle(ref, () => ({
-      requestPayment: async (params) => {
-        if (initError) {
-          throw new Error(initError);
-        }
-        if (!widgetsRef.current) {
-          throw new Error("결제위젯이 초기화되지 않았습니다.");
-        }
-        await widgetsRef.current.requestPayment({
-          orderId: params.orderId,
-          orderName: params.orderName,
-          successUrl: params.successUrl,
-          failUrl: params.failUrl,
-          customerName: params.customerName,
-          customerEmail: params.customerEmail,
-        });
-      },
-    }), [initError]);
+    useImperativeHandle(
+      ref,
+      () => ({
+        requestPayment: async (params) => {
+          if (initError) {
+            throw new Error(initError);
+          }
+          if (!widgetsRef.current) {
+            throw new Error("결제위젯이 초기화되지 않았습니다.");
+          }
+          await widgetsRef.current.requestPayment({
+            orderId: params.orderId,
+            orderName: params.orderName,
+            successUrl: params.successUrl,
+            failUrl: params.failUrl,
+            customerName: params.customerName,
+            customerEmail: params.customerEmail,
+          });
+        },
+      }),
+      [initError],
+    );
 
     if (initError) {
       return null;
@@ -120,7 +137,7 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
         <div id="payment-agreement" ref={agreementRef} />
       </div>
     );
-  }
+  },
 );
 
 PaymentWidget.displayName = "PaymentWidget";

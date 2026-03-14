@@ -17,23 +17,17 @@ export function StatusLogTable({ logs }: StatusLogTableProps) {
       <Table.Column
         dataIndex="createdAt"
         title="일시"
-        render={(v: string) =>
-          v ? new Date(v).toLocaleString("ko-KR") : "-"
-        }
+        render={(v: string) => (v ? new Date(v).toLocaleString("ko-KR") : "-")}
       />
       <Table.Column
         dataIndex="previousStatus"
         title="이전 상태"
-        render={(v: string) => (
-          <Tag color={ORDER_STATUS_COLORS[v]}>{v}</Tag>
-        )}
+        render={(v: string) => <Tag color={ORDER_STATUS_COLORS[v]}>{v}</Tag>}
       />
       <Table.Column
         dataIndex="newStatus"
         title="변경 상태"
-        render={(v: string) => (
-          <Tag color={ORDER_STATUS_COLORS[v]}>{v}</Tag>
-        )}
+        render={(v: string) => <Tag color={ORDER_STATUS_COLORS[v]}>{v}</Tag>}
       />
       <Table.Column
         dataIndex="changedBy"
@@ -48,9 +42,7 @@ export function StatusLogTable({ logs }: StatusLogTableProps) {
       <Table.Column
         dataIndex="isRollback"
         title="구분"
-        render={(v: boolean) =>
-          v ? <Tag color="red">롤백</Tag> : null
-        }
+        render={(v: boolean) => (v ? <Tag color="red">롤백</Tag> : null)}
       />
     </Table>
   );

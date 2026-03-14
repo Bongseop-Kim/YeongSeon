@@ -2,16 +2,29 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Form } from "@/components/ui/form";
-import { calculateTotalCost, getEstimatedDays } from "@/features/custom-order/utils/pricing";
+import {
+  calculateTotalCost,
+  getEstimatedDays,
+} from "@/features/custom-order/utils/pricing";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
-import type { QuoteOrderOptions, OrderOptions } from "@/features/custom-order/types/order";
-import type { PackagePreset, WizardStepId } from "@/features/custom-order/types/wizard";
+import type {
+  QuoteOrderOptions,
+  OrderOptions,
+} from "@/features/custom-order/types/order";
+import type {
+  PackagePreset,
+  WizardStepId,
+} from "@/features/custom-order/types/wizard";
 import { WIZARD_STEPS } from "@/features/custom-order/constants/WIZARD_STEPS";
 import { PACKAGE_PRESETS } from "@/features/custom-order/constants/PACKAGE_PRESETS";
 import { useWizardStep } from "@/features/custom-order/hooks/useWizardStep";
-import { useWizardDraft, useRestoreDraft, useAutoSave } from "@/features/custom-order/hooks/useWizardDraft";
+import {
+  useWizardDraft,
+  useRestoreDraft,
+  useAutoSave,
+} from "@/features/custom-order/hooks/useWizardDraft";
 import { useCustomOrderSubmit } from "@/features/custom-order/hooks/useCustomOrderSubmit";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import {
@@ -44,7 +57,9 @@ export default function OrderPage() {
   const { clearDraft } = useWizardDraft();
   const { isMobile } = useBreakpoint();
 
-  const [selectedPackage, setSelectedPackage] = useState<PackagePreset | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<PackagePreset | null>(
+    null,
+  );
 
   const { selectedAddressId, selectedAddress, openShippingPopup } =
     useShippingAddressPopup();
@@ -110,7 +125,10 @@ export default function OrderPage() {
 
   const grandTotal = isQuoteMode ? totalCost - sampleCost : totalCost;
 
-  const wizard = useWizardStep({ steps: WIZARD_STEPS, getValues: form.getValues });
+  const wizard = useWizardStep({
+    steps: WIZARD_STEPS,
+    getValues: form.getValues,
+  });
 
   useRestoreDraft(form, (stepIndex, visited) => {
     let adjustedIndex = 0;
@@ -171,7 +189,9 @@ export default function OrderPage() {
   const attachmentGuideLabel = `첨부 상태: 이미지 ${
     imageUpload.uploadedImages.length
   }개 / ${
-    watchedValues.additionalNotes?.trim() ? "요청사항 입력됨" : "요청사항 입력 가능"
+    watchedValues.additionalNotes?.trim()
+      ? "요청사항 입력됨"
+      : "요청사항 입력 가능"
   }`;
 
   const stepNavigationHintById: Record<WizardStepId, string> = {
@@ -204,52 +224,52 @@ export default function OrderPage() {
             }
             sidebarClassName={isMobile ? "pb-24" : ""}
           >
-              <ProgressBar
-                steps={wizard.steps}
-                currentStepIndex={wizard.currentStepIndex}
-                visitedSteps={wizard.visitedSteps}
-                completedSteps={wizard.completedSteps}
-                shouldShowStep={wizard.shouldShowStep}
-                isHiddenStep={isHiddenStep}
-                onStepClick={wizard.goToStep}
+            <ProgressBar
+              steps={wizard.steps}
+              currentStepIndex={wizard.currentStepIndex}
+              visitedSteps={wizard.visitedSteps}
+              completedSteps={wizard.completedSteps}
+              shouldShowStep={wizard.shouldShowStep}
+              isHiddenStep={isHiddenStep}
+              onStepClick={wizard.goToStep}
+            />
+            {wizard.currentStep.id === "quantity" && (
+              <QuantityStep
+                isLoggedIn={isLoggedIn}
+                selectedPackage={selectedPackage}
+                onSelectPackage={handleSelectPackage}
+                pricingConfig={pricingConfig}
               />
-              {wizard.currentStep.id === "quantity" && (
-                <QuantityStep
-                  isLoggedIn={isLoggedIn}
-                  selectedPackage={selectedPackage}
-                  onSelectPackage={handleSelectPackage}
-                  pricingConfig={pricingConfig}
-                />
-              )}
-              {wizard.currentStep.id === "fabric" && <FabricStep />}
-              {wizard.currentStep.id === "sewing" && <SewingStep />}
-              {wizard.currentStep.id === "spec" && <SpecStep />}
-              {wizard.currentStep.id === "finishing" && <FinishingStep />}
-              {wizard.currentStep.id === "sample" && <SampleOptionStep />}
-              {wizard.currentStep.id === "attachment" && (
-                <AttachmentStep imageUpload={imageUpload} />
-              )}
-              {wizard.currentStep.id === "confirm" && (
-                <ConfirmStep
-                  selectedAddress={selectedAddress}
-                  onOpenShippingPopup={openShippingPopup}
-                  imageUpload={imageUpload}
-                  goToStepById={goToStepById}
-                />
-              )}
-              {!isMobile && (
-                <StepNavigation
-                  isFirstStep={wizard.isFirstStep}
-                  isLastStep={wizard.isLastStep}
-                  isQuoteMode={isQuoteMode}
-                  isPending={isPending}
-                  isSubmitDisabled={isSubmitDisabled}
-                  hintText={stepNavigationHintById[wizard.currentStep.id]}
-                  onPrev={wizard.goPrev}
-                  onNext={handleNext}
-                  onSubmit={handleSubmit}
-                />
-              )}
+            )}
+            {wizard.currentStep.id === "fabric" && <FabricStep />}
+            {wizard.currentStep.id === "sewing" && <SewingStep />}
+            {wizard.currentStep.id === "spec" && <SpecStep />}
+            {wizard.currentStep.id === "finishing" && <FinishingStep />}
+            {wizard.currentStep.id === "sample" && <SampleOptionStep />}
+            {wizard.currentStep.id === "attachment" && (
+              <AttachmentStep imageUpload={imageUpload} />
+            )}
+            {wizard.currentStep.id === "confirm" && (
+              <ConfirmStep
+                selectedAddress={selectedAddress}
+                onOpenShippingPopup={openShippingPopup}
+                imageUpload={imageUpload}
+                goToStepById={goToStepById}
+              />
+            )}
+            {!isMobile && (
+              <StepNavigation
+                isFirstStep={wizard.isFirstStep}
+                isLastStep={wizard.isLastStep}
+                isQuoteMode={isQuoteMode}
+                isPending={isPending}
+                isSubmitDisabled={isSubmitDisabled}
+                hintText={stepNavigationHintById[wizard.currentStep.id]}
+                onPrev={wizard.goPrev}
+                onNext={handleNext}
+                onSubmit={handleSubmit}
+              />
+            )}
           </PageLayout>
           {isMobile && (
             <MobileNavigation

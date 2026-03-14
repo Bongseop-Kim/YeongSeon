@@ -10,7 +10,9 @@ import type { OrderItem } from "../types/view/order";
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
-export const toProductOptionView = (option: ProductOptionDTO): ProductOption => ({
+export const toProductOptionView = (
+  option: ProductOptionDTO,
+): ProductOption => ({
   ...option,
 });
 
@@ -24,7 +26,7 @@ export const toCouponView = (coupon: CouponDTO): Coupon => ({
 });
 
 export const toAppliedCouponView = (
-  coupon?: AppliedCouponDTO
+  coupon?: AppliedCouponDTO,
 ): AppliedCoupon | undefined =>
   coupon
     ? {
@@ -37,7 +39,9 @@ export const toTieItemView = (tie: TieItemDTO): TieItem => ({
   ...tie,
 });
 
-export const toProductOptionDTO = (option: ProductOption): ProductOptionDTO => ({
+export const toProductOptionDTO = (
+  option: ProductOption,
+): ProductOptionDTO => ({
   ...option,
 });
 
@@ -51,7 +55,7 @@ export const toCouponDTO = (coupon: Coupon): CouponDTO => ({
 });
 
 export const toAppliedCouponDTO = (
-  coupon?: AppliedCoupon
+  coupon?: AppliedCoupon,
 ): AppliedCouponDTO | undefined =>
   coupon
     ? {
@@ -67,7 +71,7 @@ export const toTieItemDTO = (tie: TieItem): TieItemCreateDTO => {
 };
 
 export function parseCustomOrderData(
-  raw: Record<string, unknown>
+  raw: Record<string, unknown>,
 ): CustomOrderDataDTO {
   const rawKeys = Object.keys(raw);
   const rawOptions = raw.options;
@@ -79,16 +83,20 @@ export function parseCustomOrderData(
 
   if (!isRecord(rawOptions) || !isRecord(rawPricing)) {
     throw new Error(
-      `custom order data 검증 실패: ${invalidFields.join(", ")} 필드 오류 (raw keys: ${rawKeys.join(", ")})`
+      `custom order data 검증 실패: ${invalidFields.join(", ")} 필드 오류 (raw keys: ${rawKeys.join(", ")})`,
     );
   }
 
   const sewingCost = rawPricing.sewing_cost;
   const fabricCost = rawPricing.fabric_cost;
   const rawSampleCost = rawPricing.sample_cost;
-  if (rawSampleCost !== undefined && rawSampleCost !== null && typeof rawSampleCost !== "number") {
+  if (
+    rawSampleCost !== undefined &&
+    rawSampleCost !== null &&
+    typeof rawSampleCost !== "number"
+  ) {
     throw new Error(
-      `custom order data 검증 실패: pricing.sample_cost 필드 오류 (raw keys: ${rawKeys.join(", ")})`
+      `custom order data 검증 실패: pricing.sample_cost 필드 오류 (raw keys: ${rawKeys.join(", ")})`,
     );
   }
   const sampleCost = typeof rawSampleCost === "number" ? rawSampleCost : 0;
@@ -111,7 +119,7 @@ export function parseCustomOrderData(
     typeof totalCost !== "number"
   ) {
     throw new Error(
-      `custom order data 검증 실패: ${invalidPricingFields.join(", ")} 필드 오류 (raw keys: ${rawKeys.join(", ")})`
+      `custom order data 검증 실패: ${invalidPricingFields.join(", ")} 필드 오류 (raw keys: ${rawKeys.join(", ")})`,
     );
   }
 
@@ -119,17 +127,27 @@ export function parseCustomOrderData(
     ? raw.reference_images
         .filter(
           (item): item is { url: string } =>
-            isRecord(item) && typeof item.url === "string"
+            isRecord(item) && typeof item.url === "string",
         )
         .map((item) => item.url)
     : [];
 
   return {
     options: {
-      tieType: typeof rawOptions.tie_type === "string" ? rawOptions.tie_type : null,
-      interlining: typeof rawOptions.interlining === "string" ? rawOptions.interlining : null,
-      designType: typeof rawOptions.design_type === "string" ? rawOptions.design_type : null,
-      fabricType: typeof rawOptions.fabric_type === "string" ? rawOptions.fabric_type : null,
+      tieType:
+        typeof rawOptions.tie_type === "string" ? rawOptions.tie_type : null,
+      interlining:
+        typeof rawOptions.interlining === "string"
+          ? rawOptions.interlining
+          : null,
+      designType:
+        typeof rawOptions.design_type === "string"
+          ? rawOptions.design_type
+          : null,
+      fabricType:
+        typeof rawOptions.fabric_type === "string"
+          ? rawOptions.fabric_type
+          : null,
       fabricProvided: rawOptions.fabric_provided === true,
       triangleStitch: rawOptions.triangle_stitch === true,
       sideStitch: rawOptions.side_stitch === true,
@@ -149,7 +167,8 @@ export function parseCustomOrderData(
     sample: raw.sample === true,
     sampleType: typeof raw.sample_type === "string" ? raw.sample_type : null,
     referenceImageUrls,
-    additionalNotes: typeof raw.additional_notes === "string" ? raw.additional_notes : null,
+    additionalNotes:
+      typeof raw.additional_notes === "string" ? raw.additional_notes : null,
   };
 }
 

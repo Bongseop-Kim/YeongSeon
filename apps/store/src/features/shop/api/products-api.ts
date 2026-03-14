@@ -19,7 +19,9 @@ export type ProductFilters = {
 /**
  * 모든 제품 조회
  */
-export const getProducts = async (filters?: ProductFilters): Promise<Product[]> => {
+export const getProducts = async (
+  filters?: ProductFilters,
+): Promise<Product[]> => {
   let query = supabase.from(PRODUCT_VIEW).select("*");
 
   if (filters?.categories?.length) {
@@ -58,7 +60,11 @@ export const getProducts = async (filters?: ProductFilters): Promise<Product[]> 
     query = query.order("id", { ascending: false });
   }
 
-  if (typeof filters?.limit === "number" && Number.isInteger(filters.limit) && filters.limit > 0) {
+  if (
+    typeof filters?.limit === "number" &&
+    Number.isInteger(filters.limit) &&
+    filters.limit > 0
+  ) {
     query = query.limit(filters.limit);
   }
 
@@ -98,7 +104,7 @@ export const getProductById = async (id: number): Promise<Product | null> => {
  * IDs로 제품 조회
  */
 export const getProductsByIds = async (
-  productIds: number[]
+  productIds: number[],
 ): Promise<Map<number, Product>> => {
   if (productIds.length === 0) {
     return new Map();
@@ -116,7 +122,7 @@ export const getProductsByIds = async (
 
   const records = (data as ProductDTO[] | null) ?? [];
   const productsById = new Map<number, Product>(
-    records.map((record) => [record.id, toProduct(record)])
+    records.map((record) => [record.id, toProduct(record)]),
   );
 
   return productsById;

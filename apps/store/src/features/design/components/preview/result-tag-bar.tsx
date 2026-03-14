@@ -25,13 +25,20 @@ export function ResultTagBar({
   onToggleFullscreen,
   unmasked,
 }: ResultTagBarProps) {
-  const generationStatus = useDesignChatStore((state) => state.generationStatus);
+  const generationStatus = useDesignChatStore(
+    (state) => state.generationStatus,
+  );
   const resultTags = useDesignChatStore((state) => state.resultTags);
-  const generatedImageUrl = useDesignChatStore((state) => state.generatedImageUrl);
-  const markImageDownloaded = useDesignChatStore((state) => state.markImageDownloaded);
+  const generatedImageUrl = useDesignChatStore(
+    (state) => state.generatedImageUrl,
+  );
+  const markImageDownloaded = useDesignChatStore(
+    (state) => state.markImageDownloaded,
+  );
   const { regenerate, isLoading } = useDesignChat();
 
-  const hidden = generationStatus === "idle" || generationStatus === "generating";
+  const hidden =
+    generationStatus === "idle" || generationStatus === "generating";
 
   const handleDownload = async () => {
     const url = extractImageUrl(generatedImageUrl ?? "");
@@ -109,7 +116,10 @@ export function ResultTagBar({
       return;
     }
 
-    const scale = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+    const scale = Math.max(
+      canvas.width / img.naturalWidth,
+      canvas.height / img.naturalHeight,
+    );
     const drawWidth = img.naturalWidth * scale;
     const drawHeight = img.naturalHeight * scale;
     const offsetX = (canvas.width - drawWidth) / 2;
@@ -157,7 +167,12 @@ export function ResultTagBar({
   };
 
   return (
-    <div className={cn("flex flex-wrap items-center justify-between gap-3", hidden && "invisible")}>
+    <div
+      className={cn(
+        "flex flex-wrap items-center justify-between gap-3",
+        hidden && "invisible",
+      )}
+    >
       <div className="flex flex-wrap items-center gap-2">
         {resultTags.map((tag) => (
           <Badge key={tag} variant="secondary">
@@ -198,7 +213,11 @@ export function ResultTagBar({
           aria-label={isFullscreen ? "전체화면 종료" : "전체화면"}
           onClick={onToggleFullscreen}
         >
-          {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+          {isFullscreen ? (
+            <Minimize2 className="size-3.5" />
+          ) : (
+            <Maximize2 className="size-3.5" />
+          )}
         </Button>
       </div>
     </div>

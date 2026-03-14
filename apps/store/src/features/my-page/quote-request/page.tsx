@@ -32,7 +32,9 @@ export default function QuoteRequestListPage() {
               <Empty
                 title="견적 요청 내역을 불러올 수 없습니다."
                 description={
-                  error instanceof Error ? error.message : "오류가 발생했습니다."
+                  error instanceof Error
+                    ? error.message
+                    : "오류가 발생했습니다."
                 }
               />
             </Card>
@@ -66,8 +68,8 @@ export default function QuoteRequestListPage() {
                     navigate(
                       ROUTES.MY_PAGE_QUOTE_REQUEST_DETAIL.replace(
                         ":id",
-                        quoteRequest.id
-                      )
+                        quoteRequest.id,
+                      ),
                     )
                   }
                 />

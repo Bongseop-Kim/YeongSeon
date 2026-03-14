@@ -15,7 +15,12 @@ export type ProductColorDTO =
   | "brown"
   | "beige"
   | "silver";
-export type ProductPatternDTO = "solid" | "stripe" | "dot" | "check" | "paisley";
+export type ProductPatternDTO =
+  | "solid"
+  | "stripe"
+  | "dot"
+  | "check"
+  | "paisley";
 export type ProductMaterialDTO = "silk" | "cotton" | "polyester" | "wool";
 
 export interface ProductDTO {

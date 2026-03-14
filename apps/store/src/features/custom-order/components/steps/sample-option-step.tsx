@@ -46,7 +46,11 @@ export const SampleOptionStep = () => {
     return <div className="text-sm text-gray-400">로딩중...</div>;
   }
   if (isError || !pricingConfig) {
-    return <div className="text-sm text-red-400">가격 정보를 불러오지 못했습니다.</div>;
+    return (
+      <div className="text-sm text-red-400">
+        가격 정보를 불러오지 못했습니다.
+      </div>
+    );
   }
 
   const handleSampleToggle = (wantsSample: boolean) => {
@@ -83,11 +87,7 @@ export const SampleOptionStep = () => {
             onValueChange={(v) => handleSampleToggle(v === "yes")}
           >
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <RadioCard
-                value="no"
-                id="sample-toggle-no"
-                selected={!sample}
-              >
+              <RadioCard value="no" id="sample-toggle-no" selected={!sample}>
                 <CardHeader>
                   <CardTitle>아니요</CardTitle>
                 </CardHeader>
@@ -95,11 +95,7 @@ export const SampleOptionStep = () => {
                   <p className="text-xs text-zinc-500">바로 본 주문 진행</p>
                 </CardContent>
               </RadioCard>
-              <RadioCard
-                value="yes"
-                id="sample-toggle-yes"
-                selected={sample}
-              >
+              <RadioCard value="yes" id="sample-toggle-yes" selected={sample}>
                 <CardHeader>
                   <CardTitle>네, 샘플 필요</CardTitle>
                 </CardHeader>
@@ -128,7 +124,13 @@ export const SampleOptionStep = () => {
                     보내주신 원단으로 봉제 샘플을 제작합니다
                   </p>
                   <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-500">
-                    <span>{calculateSampleCost("sewing", pricingConfig).toLocaleString()}원</span>
+                    <span>
+                      {calculateSampleCost(
+                        "sewing",
+                        pricingConfig,
+                      ).toLocaleString()}
+                      원
+                    </span>
                     <span>{SAMPLE_DURATION.sewing}</span>
                   </div>
                 </CardContent>
@@ -159,7 +161,11 @@ export const SampleOptionStep = () => {
                         </p>
                         <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-500">
                           <span>
-                            {calculateSampleCost(option.value, pricingConfig).toLocaleString()}원
+                            {calculateSampleCost(
+                              option.value,
+                              pricingConfig,
+                            ).toLocaleString()}
+                            원
                           </span>
                           <span>{SAMPLE_DURATION[option.value]}</span>
                         </div>

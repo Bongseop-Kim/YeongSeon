@@ -13,22 +13,37 @@ class EmailChangeError extends Error {
   }
 }
 
-const toEmailChangeError = (error: unknown, fallback: string): EmailChangeError => {
+const toEmailChangeError = (
+  error: unknown,
+  fallback: string,
+): EmailChangeError => {
   if (error instanceof Error) {
     const message = error.message || fallback;
     const lower = message.toLowerCase();
 
     if (lower.includes("expired")) {
-      return new EmailChangeError("인증번호가 만료되었습니다. 다시 요청해주세요.", "email-code-expired");
+      return new EmailChangeError(
+        "인증번호가 만료되었습니다. 다시 요청해주세요.",
+        "email-code-expired",
+      );
     }
     if (lower.includes("invalid") || lower.includes("otp")) {
-      return new EmailChangeError("인증번호가 올바르지 않습니다.", "email-code-invalid");
+      return new EmailChangeError(
+        "인증번호가 올바르지 않습니다.",
+        "email-code-invalid",
+      );
     }
     if (lower.includes("rate limit")) {
-      return new EmailChangeError("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.", "email-rate-limit");
+      return new EmailChangeError(
+        "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+        "email-rate-limit",
+      );
     }
     if (lower.includes("already") && lower.includes("email")) {
-      return new EmailChangeError("이미 사용 중인 이메일입니다.", "email-already-in-use");
+      return new EmailChangeError(
+        "이미 사용 중인 이메일입니다.",
+        "email-already-in-use",
+      );
     }
 
     return new EmailChangeError(message);
@@ -37,7 +52,8 @@ const toEmailChangeError = (error: unknown, fallback: string): EmailChangeError 
   return new EmailChangeError(fallback);
 };
 
-const getEmailRedirectTo = () => `${window.location.origin}${AUTH_CALLBACK_PATH}`;
+const getEmailRedirectTo = () =>
+  `${window.location.origin}${AUTH_CALLBACK_PATH}`;
 
 const ensureCurrentUser = async () => {
   const {
@@ -56,11 +72,16 @@ const ensureCurrentUser = async () => {
   return user;
 };
 
-export const requestEmailChangeCode = async (nextEmail: string): Promise<void> => {
+export const requestEmailChangeCode = async (
+  nextEmail: string,
+): Promise<void> => {
   const user = await ensureCurrentUser();
 
   if (user.email?.toLowerCase() === nextEmail.toLowerCase()) {
-    throw new EmailChangeError("현재 이메일과 동일합니다.", "email-same-as-current");
+    throw new EmailChangeError(
+      "현재 이메일과 동일합니다.",
+      "email-same-as-current",
+    );
   }
 
   const { error } = await supabase.auth.updateUser(
@@ -73,7 +94,9 @@ export const requestEmailChangeCode = async (nextEmail: string): Promise<void> =
   }
 };
 
-export const resendEmailChangeCode = async (nextEmail: string): Promise<void> => {
+export const resendEmailChangeCode = async (
+  nextEmail: string,
+): Promise<void> => {
   await ensureCurrentUser();
 
   const { error } = await supabase.auth.resend({
@@ -95,7 +118,10 @@ export const verifyEmailChangeCode = async (
 
   const normalizedCode = code.trim();
   if (normalizedCode.length !== EMAIL_CODE_LENGTH) {
-    throw new EmailChangeError("인증번호 6자리를 입력해주세요.", "email-code-length");
+    throw new EmailChangeError(
+      "인증번호 6자리를 입력해주세요.",
+      "email-code-length",
+    );
   }
 
   const { error } = await supabase.auth.verifyOtp({

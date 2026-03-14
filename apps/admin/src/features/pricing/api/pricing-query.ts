@@ -8,15 +8,15 @@ import type { PricingConstantRow } from "@/features/pricing/types/admin-pricing"
 const TOKEN_PRICING_KEY = ["pricing", "token"] as const;
 
 const TOKEN_PRICING_SETTINGS = [
-  { key: "token_plan_starter_price",  label: "Starter", field: "price"  },
+  { key: "token_plan_starter_price", label: "Starter", field: "price" },
   { key: "token_plan_starter_amount", label: "Starter", field: "amount" },
-  { key: "token_plan_popular_price",  label: "Popular", field: "price"  },
+  { key: "token_plan_popular_price", label: "Popular", field: "price" },
   { key: "token_plan_popular_amount", label: "Popular", field: "amount" },
-  { key: "token_plan_pro_price",      label: "Pro",     field: "price"  },
-  { key: "token_plan_pro_amount",     label: "Pro",     field: "amount" },
+  { key: "token_plan_pro_price", label: "Pro", field: "price" },
+  { key: "token_plan_pro_amount", label: "Pro", field: "amount" },
 ] as const;
 
-export type TokenPricingKey = typeof TOKEN_PRICING_SETTINGS[number]["key"];
+export type TokenPricingKey = (typeof TOKEN_PRICING_SETTINGS)[number]["key"];
 
 export interface TokenTierUI {
   label: string;
@@ -31,9 +31,21 @@ export const TOKEN_PRICING_TIERS: Array<{
   priceKey: TokenPricingKey;
   amountKey: TokenPricingKey;
 }> = [
-  { label: "Starter", priceKey: "token_plan_starter_price", amountKey: "token_plan_starter_amount" },
-  { label: "Popular", priceKey: "token_plan_popular_price",  amountKey: "token_plan_popular_amount" },
-  { label: "Pro",     priceKey: "token_plan_pro_price",      amountKey: "token_plan_pro_amount"     },
+  {
+    label: "Starter",
+    priceKey: "token_plan_starter_price",
+    amountKey: "token_plan_starter_amount",
+  },
+  {
+    label: "Popular",
+    priceKey: "token_plan_popular_price",
+    amountKey: "token_plan_popular_amount",
+  },
+  {
+    label: "Pro",
+    priceKey: "token_plan_pro_price",
+    amountKey: "token_plan_pro_amount",
+  },
 ];
 
 export function useTokenPricing() {
@@ -64,10 +76,12 @@ export function useUpdateTokenPricing() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (tiers: TokenTierUI[]) => {
-      const rows: PricingConstantRow[] = tiers.flatMap(({ priceKey, amountKey, price, amount }) => [
-        { key: priceKey, amount: price },
-        { key: amountKey, amount: amount },
-      ]);
+      const rows: PricingConstantRow[] = tiers.flatMap(
+        ({ priceKey, amountKey, price, amount }) => [
+          { key: priceKey, amount: price },
+          { key: amountKey, amount: amount },
+        ],
+      );
       for (const { key, amount } of rows) {
         const { error } = await supabase
           .from("pricing_constants")

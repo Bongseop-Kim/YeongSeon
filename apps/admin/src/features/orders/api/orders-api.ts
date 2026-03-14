@@ -8,7 +8,7 @@ export interface UpdateOrderStatusParams {
 }
 
 export async function updateOrderStatus(
-  params: UpdateOrderStatusParams
+  params: UpdateOrderStatusParams,
 ): Promise<void> {
   const { orderId, newStatus, memo, isRollback } = params;
   const { error } = await supabase.rpc("admin_update_order_status", {
@@ -30,7 +30,7 @@ export interface UpdateOrderTrackingParams {
 }
 
 export async function updateOrderTracking(
-  params: UpdateOrderTrackingParams
+  params: UpdateOrderTrackingParams,
 ): Promise<void> {
   const { orderId, courierCompany, trackingNumber } = params;
   const { error } = await supabase.rpc("admin_update_order_tracking", {

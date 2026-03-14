@@ -17,7 +17,9 @@ export default function CouponList() {
         {...tableProps}
         rowKey="id"
         onRow={(record) => ({
-          onClick: () => { if (record.id != null) edit("coupons", record.id); },
+          onClick: () => {
+            if (record.id != null) edit("coupons", record.id);
+          },
           style: { cursor: "pointer" },
         })}
       >
@@ -25,9 +27,7 @@ export default function CouponList() {
         <Table.Column
           dataIndex="discount_type"
           title="할인유형"
-          render={(v: string) => (
-            <Tag>{v === "percentage" ? "%" : "원"}</Tag>
-          )}
+          render={(v: string) => <Tag>{v === "percentage" ? "%" : "원"}</Tag>}
         />
         <Table.Column
           dataIndex="discount_value"

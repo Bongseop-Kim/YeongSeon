@@ -76,7 +76,13 @@ export const syncCartItemsWithRollback = async ({
 
     await setGuestItems(nextItems);
   } catch (error) {
-    await rollbackItems(queryClient, isLoggedIn, userId, previousItems, setGuestItems);
+    await rollbackItems(
+      queryClient,
+      isLoggedIn,
+      userId,
+      previousItems,
+      setGuestItems,
+    );
     onError(errorMessage);
     throw error;
   }
@@ -103,7 +109,13 @@ export const clearCartItemsWithRollback = async ({
 
     await clearGuest();
   } catch (error) {
-    await rollbackItems(queryClient, isLoggedIn, userId, previousItems, setGuestItems);
+    await rollbackItems(
+      queryClient,
+      isLoggedIn,
+      userId,
+      previousItems,
+      setGuestItems,
+    );
     onError(errorMessage);
     throw error;
   }

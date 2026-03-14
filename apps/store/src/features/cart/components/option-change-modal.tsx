@@ -23,7 +23,7 @@ export const OptionChangeModal = forwardRef<
 >(({ item }, ref) => {
   const [quantity, setQuantity] = useState(item.quantity);
   const [selectedOptionId, setSelectedOptionId] = useState(
-    item.selectedOption?.id
+    item.selectedOption?.id,
   );
 
   useImperativeHandle(ref, () => ({

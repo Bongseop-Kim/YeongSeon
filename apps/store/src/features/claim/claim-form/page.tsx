@@ -217,7 +217,9 @@ const ClaimFormPage = () => {
             return;
           }
 
-          toast.error(`${claimTypeLabel} 신청에 실패했습니다. 다시 시도해주세요.`);
+          toast.error(
+            `${claimTypeLabel} 신청에 실패했습니다. 다시 시도해주세요.`,
+          );
         },
       },
     );
@@ -251,9 +253,7 @@ const ClaimFormPage = () => {
                       <li>
                         상품이 사용되거나 훼손된 경우 반품이 불가능합니다.
                       </li>
-                      <li>
-                        반품 배송비는 고객 부담입니다. (단순 변심의 경우)
-                      </li>
+                      <li>반품 배송비는 고객 부담입니다. (단순 변심의 경우)</li>
                       <li>상품 불량의 경우 배송비는 판매자 부담입니다.</li>
                     </ul>
                   </div>
@@ -284,124 +284,80 @@ const ClaimFormPage = () => {
             </Card>
           }
         >
-            <Card>
-              {/* 헤더 */}
-              <CardHeader>
-                <CardTitle>{claimTypeLabel} 신청</CardTitle>
-                <div className="text-sm text-zinc-500 mt-1">
-                  주문번호: {order.orderNumber}
-                </div>
-                <div className="text-sm text-zinc-500">
-                  주문일시: {formatDate(order.date)}
-                </div>
-              </CardHeader>
+          <Card>
+            {/* 헤더 */}
+            <CardHeader>
+              <CardTitle>{claimTypeLabel} 신청</CardTitle>
+              <div className="text-sm text-zinc-500 mt-1">
+                주문번호: {order.orderNumber}
+              </div>
+              <div className="text-sm text-zinc-500">
+                주문일시: {formatDate(order.date)}
+              </div>
+            </CardHeader>
 
-              <CardContent>
-                <Separator />
-              </CardContent>
+            <CardContent>
+              <Separator />
+            </CardContent>
 
-              {/* 주문 상품 정보 */}
-              <CardHeader>
-                <CardTitle>주문 상품</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <OrderItemCard
-                  item={orderItem}
-                  showQuantity={true}
-                  showPrice={true}
-                />
-              </CardContent>
+            {/* 주문 상품 정보 */}
+            <CardHeader>
+              <CardTitle>주문 상품</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OrderItemCard
+                item={orderItem}
+                showQuantity={true}
+                showPrice={true}
+              />
+            </CardContent>
 
-              <CardContent>
-                <Separator />
-              </CardContent>
+            <CardContent>
+              <Separator />
+            </CardContent>
 
-              {/* 클레임 신청 폼 */}
-              <CardContent>
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(handleSubmit)}
-                    className="space-y-6"
-                  >
-                    {/* 수량 선택 (수량이 1개보다 많은 경우에만 표시) */}
-                    {orderItem.quantity > 1 && (
-                      <div className="space-y-2">
-                        <Label className="text-base font-semibold">
-                          <span className="text-red-500">*</span>수량 선택
-                        </Label>
-                        <Controller
-                          name="quantity"
-                          control={form.control}
-                          rules={{
-                            required: "수량을 선택해주세요.",
-                            min: {
-                              value: 1,
-                              message: "최소 1개 이상 선택해주세요.",
-                            },
-                            max: {
-                              value: orderItem.quantity,
-                              message: `최대 ${orderItem.quantity}개까지 선택 가능합니다.`,
-                            },
-                          }}
-                          render={({ field, fieldState }) => (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between bg-zinc-50 p-4 rounded-sm">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm text-zinc-600">
-                                    전체 수량: {orderItem.quantity}개
-                                  </span>
-                                </div>
-                                <QuantitySelector
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  min={1}
-                                  max={orderItem.quantity}
-                                />
-                              </div>
-                              {fieldState.error && (
-                                <p className="text-sm text-red-500">
-                                  {fieldState.error.message}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        />
-                      </div>
-                    )}
-
-                    <div className="space-y-3">
+            {/* 클레임 신청 폼 */}
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-6"
+                >
+                  {/* 수량 선택 (수량이 1개보다 많은 경우에만 표시) */}
+                  {orderItem.quantity > 1 && (
+                    <div className="space-y-2">
                       <Label className="text-base font-semibold">
-                        <span className="text-red-500">*</span>사유 선택
+                        <span className="text-red-500">*</span>수량 선택
                       </Label>
                       <Controller
-                        name="reason"
+                        name="quantity"
                         control={form.control}
-                        rules={{ required: "사유를 선택해주세요." }}
+                        rules={{
+                          required: "수량을 선택해주세요.",
+                          min: {
+                            value: 1,
+                            message: "최소 1개 이상 선택해주세요.",
+                          },
+                          max: {
+                            value: orderItem.quantity,
+                            message: `최대 ${orderItem.quantity}개까지 선택 가능합니다.`,
+                          },
+                        }}
                         render={({ field, fieldState }) => (
                           <div className="space-y-2">
-                            <RadioGroup
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              className="space-y-2"
-                            >
-                              {reasons.map((reason) => (
-                                <div
-                                  key={reason.value}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <RadioGroupItem
-                                    value={reason.value}
-                                    id={reason.value}
-                                  />
-                                  <Label
-                                    htmlFor={reason.value}
-                                    className="text-sm font-normal cursor-pointer"
-                                  >
-                                    {reason.label}
-                                  </Label>
-                                </div>
-                              ))}
-                            </RadioGroup>
+                            <div className="flex items-center justify-between bg-zinc-50 p-4 rounded-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-zinc-600">
+                                  전체 수량: {orderItem.quantity}개
+                                </span>
+                              </div>
+                              <QuantitySelector
+                                value={field.value}
+                                onChange={field.onChange}
+                                min={1}
+                                max={orderItem.quantity}
+                              />
+                            </div>
                             {fieldState.error && (
                               <p className="text-sm text-red-500">
                                 {fieldState.error.message}
@@ -411,53 +367,95 @@ const ClaimFormPage = () => {
                         )}
                       />
                     </div>
+                  )}
 
-                    <div className="space-y-2">
-                      <Label className="text-base font-semibold">
-                        상세 설명
-                      </Label>
-                      <Controller
-                        name="description"
-                        control={form.control}
-                        render={({ field }) => (
-                          <Textarea
-                            placeholder={`${claimTypeLabel} 사유를 자세히 입력해주세요.`}
-                            className="min-h-[150px] resize-none"
-                            maxLength={500}
-                            {...field}
-                          />
-                        )}
-                      />
-                      <p className="text-xs text-zinc-500">
-                        최대 500자까지 입력 가능합니다.
-                      </p>
-                    </div>
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">
+                      <span className="text-red-500">*</span>사유 선택
+                    </Label>
+                    <Controller
+                      name="reason"
+                      control={form.control}
+                      rules={{ required: "사유를 선택해주세요." }}
+                      render={({ field, fieldState }) => (
+                        <div className="space-y-2">
+                          <RadioGroup
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            className="space-y-2"
+                          >
+                            {reasons.map((reason) => (
+                              <div
+                                key={reason.value}
+                                className="flex items-center space-x-2"
+                              >
+                                <RadioGroupItem
+                                  value={reason.value}
+                                  id={reason.value}
+                                />
+                                <Label
+                                  htmlFor={reason.value}
+                                  className="text-sm font-normal cursor-pointer"
+                                >
+                                  {reason.label}
+                                </Label>
+                              </div>
+                            ))}
+                          </RadioGroup>
+                          {fieldState.error && (
+                            <p className="text-sm text-red-500">
+                              {fieldState.error.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
 
-                    <div className="flex gap-2 pt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() =>
-                          navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`)
-                        }
-                      >
-                        취소
-                      </Button>
-                      <Button
-                        type="submit"
-                        className="flex-1"
-                        disabled={createClaimMutation.isPending}
-                      >
-                        {createClaimMutation.isPending
-                          ? "신청 중..."
-                          : `${claimTypeLabel} 신청하기`}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+                  <div className="space-y-2">
+                    <Label className="text-base font-semibold">상세 설명</Label>
+                    <Controller
+                      name="description"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Textarea
+                          placeholder={`${claimTypeLabel} 사유를 자세히 입력해주세요.`}
+                          className="min-h-[150px] resize-none"
+                          maxLength={500}
+                          {...field}
+                        />
+                      )}
+                    />
+                    <p className="text-xs text-zinc-500">
+                      최대 500자까지 입력 가능합니다.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() =>
+                        navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`)
+                      }
+                    >
+                      취소
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1"
+                      disabled={createClaimMutation.isPending}
+                    >
+                      {createClaimMutation.isPending
+                        ? "신청 중..."
+                        : `${claimTypeLabel} 신청하기`}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </PageLayout>
       </MainContent>
     </MainLayout>

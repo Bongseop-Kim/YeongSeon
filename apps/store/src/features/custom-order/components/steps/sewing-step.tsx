@@ -46,9 +46,7 @@ export const SewingStep = () => {
   useEffect(() => {
     if (tieType !== "AUTO" && dimple) {
       setValue("dimple", false);
-      toast.info(
-        "수동 타이에서는 딤플을 선택할 수 없어요. 선택이 해제됐어요.",
-      );
+      toast.info("수동 타이에서는 딤플을 선택할 수 없어요. 선택이 해제됐어요.");
     }
   }, [tieType, dimple, setValue]);
 
@@ -60,7 +58,10 @@ export const SewingStep = () => {
     }
   };
 
-  const handleStyleToggle = (key: "dimple" | "spoderato" | "fold7", checked: boolean) => {
+  const handleStyleToggle = (
+    key: "dimple" | "spoderato" | "fold7",
+    checked: boolean,
+  ) => {
     if (key === "dimple" && !isDimpleAvailable) return;
     setValue(key, checked);
   };
@@ -82,21 +83,22 @@ export const SewingStep = () => {
           <CardTitle>타이 종류</CardTitle>
         </CardHeader>
         <CardContent>
-          <RadioGroup
-            value={tieType ?? ""}
-            onValueChange={handleTieTypeChange}
-          >
+          <RadioGroup value={tieType ?? ""} onValueChange={handleTieTypeChange}>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {(["MANUAL", "AUTO"] as const).map((type) => (
                 <RadioCard
                   key={type}
                   value={type}
                   id={`tie-type-${type.toLowerCase()}`}
-                  selected={type === "MANUAL" ? tieType === null : tieType === "AUTO"}
+                  selected={
+                    type === "MANUAL" ? tieType === null : tieType === "AUTO"
+                  }
                 >
                   <CardHeader>
                     <CardTitle>
-                      {type === "AUTO" ? "자동 타이 (지퍼)" : "수동 타이 (손매듭)"}
+                      {type === "AUTO"
+                        ? "자동 타이 (지퍼)"
+                        : "수동 타이 (손매듭)"}
                     </CardTitle>
                   </CardHeader>
                 </RadioCard>
@@ -123,7 +125,9 @@ export const SewingStep = () => {
                   id={itemId}
                   disabled={isDisabled}
                   checked={isChecked}
-                  onCheckedChange={(checked) => handleStyleToggle(style.key, !!checked)}
+                  onCheckedChange={(checked) =>
+                    handleStyleToggle(style.key, !!checked)
+                  }
                 >
                   <CardHeader>
                     <CardTitle
@@ -136,7 +140,12 @@ export const SewingStep = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className={cn("text-xs", isDisabled ? "text-zinc-300" : "text-zinc-500")}>
+                    <p
+                      className={cn(
+                        "text-xs",
+                        isDisabled ? "text-zinc-300" : "text-zinc-500",
+                      )}
+                    >
                       {style.description}
                     </p>
                     {isDisabled && (

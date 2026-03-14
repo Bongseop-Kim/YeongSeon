@@ -7,12 +7,12 @@ export const DELIVERY_REQUEST_OPTIONS = [
 ];
 
 const labelMap = new Map(
-  DELIVERY_REQUEST_OPTIONS.map((o) => [o.value, o.label])
+  DELIVERY_REQUEST_OPTIONS.map((o) => [o.value, o.label]),
 );
 
 export const getDeliveryRequestLabel = (
   value: string | undefined | null,
-  memo?: string | null
+  memo?: string | null,
 ): string | undefined => {
   if (!value) return undefined;
   if (value === "DELIVERY_REQUEST_5") return memo || "직접입력";

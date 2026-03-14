@@ -1,6 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useAiDesignMutation, DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/features/design/api/ai-design-query";
-import { type AiDesignResponse, InsufficientTokensError } from "@/features/design/api/ai-design-api";
+import {
+  useAiDesignMutation,
+  DESIGN_TOKEN_BALANCE_QUERY_KEY,
+} from "@/features/design/api/ai-design-query";
+import {
+  type AiDesignResponse,
+  InsufficientTokensError,
+} from "@/features/design/api/ai-design-api";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment, Message } from "@/features/design/types/chat";
 
@@ -38,10 +44,15 @@ export function useDesignChat(): UseDesignChatResult {
   const setGeneratedImage = useDesignChatStore(
     (state) => state.setGeneratedImage,
   );
-  const clearAttachments = useDesignChatStore((state) => state.clearAttachments);
+  const clearAttachments = useDesignChatStore(
+    (state) => state.clearAttachments,
+  );
   const mutation = useAiDesignMutation();
 
-  const createMutationCallbacks = (errorContent: string, errorStatus: "idle" | "completed") => ({
+  const createMutationCallbacks = (
+    errorContent: string,
+    errorStatus: "idle" | "completed",
+  ) => ({
     onSuccess: (data: AiDesignResponse) => {
       const previewBackground = data.imageUrl
         ? toPreviewBackground(data.imageUrl)
@@ -60,7 +71,9 @@ export function useDesignChat(): UseDesignChatResult {
         setGeneratedImage(previewBackground, data.tags);
       }
       setGenerationStatus("completed");
-      void queryClient.invalidateQueries({ queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY });
+      void queryClient.invalidateQueries({
+        queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,
+      });
       // TODO: 대화 히스토리 DB 저장 연동
     },
     onError: (error: Error) => {
@@ -79,7 +92,9 @@ export function useDesignChat(): UseDesignChatResult {
       };
 
       addMessage(errorMessage);
-      setGenerationStatus(error instanceof InsufficientTokensError ? "idle" : errorStatus);
+      setGenerationStatus(
+        error instanceof InsufficientTokensError ? "idle" : errorStatus,
+      );
     },
   });
 
@@ -117,7 +132,9 @@ export function useDesignChat(): UseDesignChatResult {
   };
 
   const regenerate = (): void => {
-    const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+    const lastUserMessage = [...messages]
+      .reverse()
+      .find((m) => m.role === "user");
 
     if (!lastUserMessage) {
       return;
@@ -143,6 +160,7 @@ export function useDesignChat(): UseDesignChatResult {
   return {
     sendMessage,
     regenerate,
-    isLoading: generationStatus === "generating" || generationStatus === "regenerating",
+    isLoading:
+      generationStatus === "generating" || generationStatus === "regenerating",
   };
 }

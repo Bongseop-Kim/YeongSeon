@@ -1,0 +1,7 @@
+dist
+node_modules
+pnpm-lock.yaml
+.turbo
+supabase/functions/**/node_modules
+supabase/functions/**/deno.lock
+supabase/migrations

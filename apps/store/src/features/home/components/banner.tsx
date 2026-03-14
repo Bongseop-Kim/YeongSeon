@@ -28,9 +28,7 @@ export const Banner = () => {
   }, [api]);
 
   return (
-    <section
-      className={`w-full ${isMobile ? "py-4 px-4" : "py-6 px-6"}`}
-    >
+    <section className={`w-full ${isMobile ? "py-4 px-4" : "py-6 px-6"}`}>
       <Carousel
         opts={{
           align: "start",
@@ -56,22 +54,20 @@ export const Banner = () => {
                       <h2 className="text-3xl font-bold mb-2">
                         {banner.title}
                       </h2>
-                      <p className="text-lg opacity-90">
-                        {banner.description}
-                      </p>
+                      <p className="text-lg opacity-90">{banner.description}</p>
                     </div>
                   </div>
                 </div>
               ) : (
                 // PC 레이아웃 - 이미지(왼쪽) : 텍스트(오른쪽) = 1:1
                 <div className="flex w-full gap-8 items-center">
-                <div className="w-1/2">
-                  <img
-                    src={banner.image}
-                    alt={banner.title}
-                    className="w-full h-full object-cover rounded-lg aspect-square"
-                  />
-                </div>
+                  <div className="w-1/2">
+                    <img
+                      src={banner.image}
+                      alt={banner.title}
+                      className="w-full h-full object-cover rounded-lg aspect-square"
+                    />
+                  </div>
                   <div className="w-1/2 flex items-center justify-center p-8">
                     <div className="max-w-md">
                       <h2 className="text-5xl font-bold mb-6 text-gray-900">

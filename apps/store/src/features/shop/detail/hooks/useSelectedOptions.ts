@@ -39,10 +39,15 @@ export function useSelectedOptions() {
     }
   };
 
-  const handleUpdateBaseQuantity = (delta: number, maxStock?: number | null) => {
+  const handleUpdateBaseQuantity = (
+    delta: number,
+    maxStock?: number | null,
+  ) => {
     const nextQuantity = Math.max(1, baseQuantity + delta);
     const isStockExceeded = maxStock != null && nextQuantity > maxStock;
-    const clampedQuantity = isStockExceeded ? Math.max(1, maxStock) : nextQuantity;
+    const clampedQuantity = isStockExceeded
+      ? Math.max(1, maxStock)
+      : nextQuantity;
 
     setBaseQuantity(clampedQuantity);
 

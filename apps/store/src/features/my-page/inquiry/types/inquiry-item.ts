@@ -6,7 +6,12 @@ export const INQUIRY_STATUS = {
   ANSWERED: "답변완료",
 } as const satisfies Record<string, InquiryStatus>;
 
-export const INQUIRY_CATEGORIES: InquiryCategory[] = ["일반", "상품", "수선", "주문제작"];
+export const INQUIRY_CATEGORIES: InquiryCategory[] = [
+  "일반",
+  "상품",
+  "수선",
+  "주문제작",
+];
 
 export interface InquiryProduct {
   id: number;
@@ -19,7 +24,7 @@ export interface InquiryItem {
   date: string;
   status: InquiryStatus;
   category: InquiryCategory;
-  product?: InquiryProduct;   // category='상품'일 때만
+  product?: InquiryProduct; // category='상품'일 때만
   title: string;
   content: string;
   answer?: string;

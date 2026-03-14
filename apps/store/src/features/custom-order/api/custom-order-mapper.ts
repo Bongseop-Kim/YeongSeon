@@ -9,15 +9,19 @@ import type {
   CreateCustomOrderRequestDto,
 } from "@/features/custom-order/types/dto/custom-order-input";
 
-type OrderOptionsForCreateCustomOrderOptions = Omit<OrderOptions, "referenceImages" | "additionalNotes" | "sample" | "sampleType">;
+type OrderOptionsForCreateCustomOrderOptions = Omit<
+  OrderOptions,
+  "referenceImages" | "additionalNotes" | "sample" | "sampleType"
+>;
 const isAllowed = <T extends string>(
   value: unknown,
-  allowed: readonly T[]
-): value is T => typeof value === "string" && allowed.some((candidate) => candidate === value);
+  allowed: readonly T[],
+): value is T =>
+  typeof value === "string" && allowed.some((candidate) => candidate === value);
 
 const normalizeEnum = <T extends string>(
   value: unknown,
-  allowed: readonly T[]
+  allowed: readonly T[],
 ): T | null => (isAllowed(value, allowed) ? value : null);
 
 const normalizeBoolean = (value: unknown): boolean => value === true;
@@ -31,7 +35,7 @@ const normalizeNumber = (value: unknown, fallback: number): number => {
 };
 
 export const toCreateCustomOrderOptionsInput = (
-  options: OrderOptionsForCreateCustomOrderOptions
+  options: OrderOptionsForCreateCustomOrderOptions,
 ): CreateCustomOrderOptionsDto => ({
   fabricProvided: normalizeBoolean(options.fabricProvided),
   reorder: normalizeBoolean(options.reorder),
@@ -65,7 +69,7 @@ interface ToCreateCustomOrderRequestInput {
 }
 
 export const toCreateCustomOrderInput = (
-  input: ToCreateCustomOrderRequestInput
+  input: ToCreateCustomOrderRequestInput,
 ): CreateCustomOrderRequest => ({
   shippingAddressId: input.shippingAddressId,
   options: toCreateCustomOrderOptionsInput(input.options),
@@ -73,11 +77,15 @@ export const toCreateCustomOrderInput = (
   referenceImages: normalizeReferenceImages(input.referenceImages),
   additionalNotes: input.additionalNotes.trim(),
   sample: normalizeBoolean(input.sample),
-  sampleType: normalizeEnum(input.sampleType, ["sewing", "fabric", "fabric_and_sewing"]),
+  sampleType: normalizeEnum(input.sampleType, [
+    "sewing",
+    "fabric",
+    "fabric_and_sewing",
+  ]),
 });
 
 export const toCreateCustomOrderInputDto = (
-  request: CreateCustomOrderRequest
+  request: CreateCustomOrderRequest,
 ): CreateCustomOrderRequestDto => ({
   shipping_address_id: request.shippingAddressId,
   options: {

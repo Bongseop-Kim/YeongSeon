@@ -17,11 +17,19 @@ export default function CouponCreate() {
 
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <Form {...formProps} layout="vertical" initialValues={{ is_active: true }}>
+      <Form
+        {...formProps}
+        layout="vertical"
+        initialValues={{ is_active: true }}
+      >
         <Form.Item label="쿠폰명" name="name" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
-        <Form.Item label="할인유형" name="discount_type" rules={[{ required: true }]}>
+        <Form.Item
+          label="할인유형"
+          name="discount_type"
+          rules={[{ required: true }]}
+        >
           <Select
             options={[
               { label: "퍼센트(%)", value: "percentage" },
@@ -29,7 +37,11 @@ export default function CouponCreate() {
             ]}
           />
         </Form.Item>
-        <Form.Item label="할인값" name="discount_value" rules={[{ required: true }]}>
+        <Form.Item
+          label="할인값"
+          name="discount_value"
+          rules={[{ required: true }]}
+        >
           <InputNumber min={0} style={{ width: "100%" }} />
         </Form.Item>
         {discountType === "percentage" && (
@@ -44,7 +56,11 @@ export default function CouponCreate() {
         <Form.Item label="설명" name="description">
           <Input.TextArea rows={2} />
         </Form.Item>
-        <Form.Item label="만료일" name="expiry_date" rules={[{ required: true }]}>
+        <Form.Item
+          label="만료일"
+          name="expiry_date"
+          rules={[{ required: true }]}
+        >
           <DatePicker style={{ width: "100%" }} />
         </Form.Item>
         <Form.Item label="추가정보" name="additional_info">
