@@ -7,6 +7,13 @@ import tseslint from "typescript-eslint";
 export default tseslint.config([
   ...rootConfig,
   {
+    // 앱 전체 적용: unused eslint-disable 주석을 에러로 차단
+    // 루트 config가 아닌 앱 config에 설정해야 react-hooks 등 앱 전용 규칙과 함께 평가됨
+    linterOptions: {
+      reportUnusedDisableDirectives: "error",
+    },
+  },
+  {
     files: ["**/*.{ts,tsx}"],
     extends: [
       reactHooks.configs["recommended-latest"],

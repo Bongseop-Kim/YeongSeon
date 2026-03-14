@@ -18,9 +18,6 @@ export default tseslint.config([
     languageOptions: {
       ecmaVersion: 2020,
     },
-    linterOptions: {
-      reportUnusedDisableDirectives: "error",
-    },
     rules: {
       "@typescript-eslint/consistent-type-imports": [
         "error",
