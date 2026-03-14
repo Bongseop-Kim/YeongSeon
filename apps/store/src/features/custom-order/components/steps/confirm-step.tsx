@@ -13,11 +13,11 @@ import {
   getSewingStyleLabel,
   getSizeLabel,
   getTieTypeLabel,
-} from "../../utils/option-labels";
+} from "@/features/custom-order/utils/option-labels";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
-import type { QuoteOrderOptions } from "../../types/order";
-import type { ImageUploadHook } from "../../types/image-upload";
-import type { WizardStepId } from "../../types/wizard";
+import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
+import type { WizardStepId } from "@/features/custom-order/types/wizard";
 import { StepLayout } from "./step-layout";
 
 interface ConfirmStepProps {

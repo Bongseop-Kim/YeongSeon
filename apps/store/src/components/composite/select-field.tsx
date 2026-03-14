@@ -1,4 +1,9 @@
-import { Controller, type Control } from "react-hook-form";
+import {
+  Controller,
+  type Control,
+  type FieldValues,
+  type Path,
+} from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -13,15 +18,15 @@ interface SelectOption {
   label: string;
 }
 
-interface SelectFieldProps<T extends Record<string, any>> {
-  name: keyof T;
+interface SelectFieldProps<T extends FieldValues> {
+  name: Path<T>;
   control: Control<T>;
   label: string;
   options: readonly SelectOption[];
   placeholder?: string;
 }
 
-export const SelectField = <T extends Record<string, any>>({
+export const SelectField = <T extends FieldValues>({
   name,
   control,
   label,
@@ -32,7 +37,7 @@ export const SelectField = <T extends Record<string, any>>({
     <div className="space-y-1">
       <Label>{label}</Label>
       <Controller
-        name={name as any}
+        name={name}
         control={control}
         render={({ field }) => (
           <Select

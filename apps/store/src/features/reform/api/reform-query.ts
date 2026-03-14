@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
-import { uploadTieImages } from "../utils/upload-tie-images";
+import { uploadTieImages } from "@/features/reform/utils/upload-tie-images";
 
 export const reformKeys = {
   all: ["reform"] as const,

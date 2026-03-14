@@ -4,6 +4,7 @@ import { globalIgnores } from "eslint/config";
 import prettierConfig from "eslint-config-prettier";
 import security from "eslint-plugin-security";
 import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
 
 export default tseslint.config([
   globalIgnores(["**/dist", "**/node_modules"]),
@@ -43,10 +44,10 @@ export default tseslint.config([
     },
   },
   {
-    // react-hooks 플러그인 규칙명이 루트 config에서 인식되도록 등록
+    // react-hooks, react-refresh 플러그인 규칙명이 루트 config에서 인식되도록 등록
     // (규칙 활성화 없이 등록만 — eslint-disable 주석의 "rule not found" 오류 방지)
     files: ["apps/**/*.{ts,tsx}"],
-    plugins: { "react-hooks": reactHooks },
+    plugins: { "react-hooks": reactHooks, "react-refresh": reactRefresh },
   },
   prettierConfig,
 ]);

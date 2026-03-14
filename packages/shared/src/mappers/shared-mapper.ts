@@ -65,7 +65,6 @@ export const toAppliedCouponDTO = (
     : undefined;
 
 export const toTieItemDTO = (tie: TieItem): TieItemCreateDTO => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { checked, image, ...rest } = tie;
   return { ...rest, image: typeof image === "string" ? image : undefined };
 };

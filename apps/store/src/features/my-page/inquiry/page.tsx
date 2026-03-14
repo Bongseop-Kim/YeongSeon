@@ -71,6 +71,7 @@ export default function InquiryPage() {
       });
       if (isMobile) setIsSheetOpen(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 마운트 시 1회
 
   const handleEdit = (id: string) => {
