@@ -8,6 +8,20 @@ import {
 import { seedClaimOrders } from "../utils/store-data";
 
 type SeededClaimOrders = Awaited<ReturnType<typeof seedClaimOrders>>;
+type ClaimTypeLabel = "취소" | "반품" | "교환";
+
+export const claimTypeLabelToCode = (
+  claimTypeLabel: ClaimTypeLabel,
+): "cancel" | "return" | "exchange" => {
+  switch (claimTypeLabel) {
+    case "취소":
+      return "cancel";
+    case "반품":
+      return "return";
+    case "교환":
+      return "exchange";
+  }
+};
 
 const submitClaimForm = async ({
   page,
@@ -31,12 +45,14 @@ const submitClaimForm = async ({
   await expect(page).toHaveURL(/\/order\/claim-list$/);
 };
 
-const claimCard = (page: Page, orderNumber: string, claimTypeLabel: string) =>
-  page
-    .locator('[data-slot="card"]')
-    .filter({ hasText: orderNumber })
-    .filter({ hasText: claimTypeLabel })
-    .first();
+export const claimCard = (
+  page: Page,
+  orderId: string,
+  claimTypeLabel: ClaimTypeLabel,
+) =>
+  page.locator(
+    `[data-testid^="claim-card-${orderId}-${claimTypeLabelToCode(claimTypeLabel)}-"]`,
+  );
 
 test.describe.serial("Store 클레임 플로우", () => {
   test.skip(
@@ -72,7 +88,7 @@ test.describe.serial("Store 클레임 플로우", () => {
 
     const cancelCard = claimCard(
       authenticatedPage,
-      claimOrders.cancelOrder.orderNumber,
+      claimOrders.cancelOrder.orderId,
       "취소",
     );
     await expect(cancelCard).toContainText("접수");
@@ -101,7 +117,7 @@ test.describe.serial("Store 클레임 플로우", () => {
 
     const returnCard = claimCard(
       authenticatedPage,
-      claimOrders.returnOrder.orderNumber,
+      claimOrders.returnOrder.orderId,
       "반품",
     );
     await expect(returnCard).toContainText("접수");
@@ -130,7 +146,7 @@ test.describe.serial("Store 클레임 플로우", () => {
 
     const exchangeCard = claimCard(
       authenticatedPage,
-      claimOrders.exchangeOrder.orderNumber,
+      claimOrders.exchangeOrder.orderId,
       "교환",
     );
     await expect(exchangeCard).toContainText("접수");
@@ -147,17 +163,17 @@ test.describe.serial("Store 클레임 플로우", () => {
 
     const cancelCard = claimCard(
       authenticatedPage,
-      claimOrders.cancelOrder.orderNumber,
+      claimOrders.cancelOrder.orderId,
       "취소",
     );
     const returnCard = claimCard(
       authenticatedPage,
-      claimOrders.returnOrder.orderNumber,
+      claimOrders.returnOrder.orderId,
       "반품",
     );
     const exchangeCard = claimCard(
       authenticatedPage,
-      claimOrders.exchangeOrder.orderNumber,
+      claimOrders.exchangeOrder.orderId,
       "교환",
     );
 

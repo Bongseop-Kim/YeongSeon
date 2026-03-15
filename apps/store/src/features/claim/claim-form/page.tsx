@@ -121,7 +121,7 @@ const ClaimFormPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <Card data-testid="claim-form-root">
+          <Card data-testid="claim-form-invalid-access">
             <Empty
               title="잘못된 접근입니다."
               description="올바른 경로로 접근해주세요."

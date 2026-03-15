@@ -427,18 +427,18 @@ export const seedClaimOrders = async (): Promise<{
   for (const product of claimProducts) {
     for (let remaining = product.stock; remaining > 0; remaining -= 1) {
       selectedProducts.push({ id: product.id, name: product.name });
-      if (selectedProducts.length === 2) {
+      if (selectedProducts.length === 3) {
         break;
       }
     }
-    if (selectedProducts.length === 2) {
+    if (selectedProducts.length === 3) {
       break;
     }
   }
 
-  if (selectedProducts.length < 2) {
+  if (selectedProducts.length < 3) {
     throw new Error(
-      "Unable to secure enough product stock for claim E2E seed.",
+      "Unable to secure enough product stock for claim E2E seed orders.",
     );
   }
 
@@ -458,7 +458,15 @@ export const seedClaimOrders = async (): Promise<{
   await adminUpdateOrderStatus(returnOrder.orderId, "배송완료");
   returnOrder.status = "배송완료";
 
-  const exchangeOrder = { ...returnOrder };
+  const exchangeOrder = await createStoreOrder({
+    shippingAddressId: fixtures.shippingAddress.id,
+    productId: selectedProducts[2].id,
+    productName: selectedProducts[2].name,
+  });
+  await adminUpdateOrderStatus(exchangeOrder.orderId, "진행중");
+  await adminUpdateOrderStatus(exchangeOrder.orderId, "배송중");
+  await adminUpdateOrderStatus(exchangeOrder.orderId, "배송완료");
+  exchangeOrder.status = "배송완료";
 
   return {
     cancelOrder,

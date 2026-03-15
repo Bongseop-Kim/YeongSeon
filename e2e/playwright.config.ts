@@ -95,7 +95,7 @@ const webServer = [
 
 export default defineConfig({
   testDir: __dirname,
-  fullyParallel: true,
+  fullyParallel: false,
   workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,

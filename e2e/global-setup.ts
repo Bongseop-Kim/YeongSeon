@@ -96,6 +96,23 @@ const buildHeaders = (apiKey: string, accessToken?: string) => ({
 
 const parseDotEnv = (content: string) => {
   const parsed: Record<string, string> = {};
+  const unquoteEnvValue = (value: string) => {
+    if (value.length < 2) {
+      return value;
+    }
+
+    const quote = value[0];
+    const isQuoted = (quote === '"' || quote === "'") && value.at(-1) === quote;
+
+    if (!isQuoted) {
+      return value;
+    }
+
+    const inner = value.slice(1, -1);
+    const escapedQuote = new RegExp(`\\\\${quote}`, "g");
+
+    return inner.replace(/\\\\/g, "\\").replace(escapedQuote, quote);
+  };
 
   for (const rawLine of content.split(/\r?\n/)) {
     const line = rawLine.trim();
@@ -111,7 +128,7 @@ const parseDotEnv = (content: string) => {
     }
 
     const key = line.slice(0, separatorIndex).trim();
-    const value = line.slice(separatorIndex + 1).trim();
+    const value = unquoteEnvValue(line.slice(separatorIndex + 1).trim());
     parsed[key] = value;
   }
 

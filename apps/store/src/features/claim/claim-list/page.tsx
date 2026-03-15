@@ -137,7 +137,7 @@ export default function ClaimListPage() {
               filteredClaims.map((claim) => (
                 <Card
                   key={claim.id}
-                  data-testid={`claim-card-${claim.orderId}-${claim.type}`}
+                  data-testid={`claim-card-${claim.orderId}-${claim.type}-${claim.id}`}
                 >
                   {/* 클레임 헤더 */}
                   <CardHeader>

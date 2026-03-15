@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import {
   expect,
   expectAuthenticatedRoute,
@@ -10,6 +11,17 @@ import {
   resetStoreCart,
 } from "../utils/store-data";
 import { installMockToss } from "../utils/mock-toss";
+
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const expectOrderDetailUrl = async (page: Page, orderId: string | null) => {
+  if (!orderId) {
+    throw new Error("Order ID is required to verify the order detail URL.");
+  }
+
+  await expect(page).toHaveURL(new RegExp(`/order/${escapeRegExp(orderId)}$`));
+};
 
 const addProductToCart = async (page: Page, productId: number) => {
   await page.goto(`/shop/${productId}`);
@@ -177,9 +189,7 @@ test.describe.serial("Store 주문 플로우", () => {
       .not.toBeNull();
     latestOrderId = createOrderResult?.orders[0]?.order_id ?? null;
 
-    await expect(authenticatedPage).toHaveURL(
-      new RegExp(`/order/${latestOrderId}$`),
-    );
+    await expectOrderDetailUrl(authenticatedPage, latestOrderId);
     await expect(
       authenticatedPage.getByTestId("order-detail-root"),
     ).toContainText(fixtures.storeProduct.name);
@@ -216,9 +226,7 @@ test.describe.serial("Store 주문 플로우", () => {
       .first()
       .click();
 
-    await expect(authenticatedPage).toHaveURL(
-      new RegExp(`/order/${latestOrderId}$`),
-    );
+    await expectOrderDetailUrl(authenticatedPage, latestOrderId);
     await expect(
       authenticatedPage.getByTestId("order-detail-root"),
     ).toContainText(fixtures.storeProduct.name);

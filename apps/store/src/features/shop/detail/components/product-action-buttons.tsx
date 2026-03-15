@@ -40,6 +40,7 @@ export function ProductActionButtons({
           type="button"
           onClick={onOrder}
           size="xl"
+          data-testid="product-order-now"
           className="flex-1"
           disabled={disabled}
         >
