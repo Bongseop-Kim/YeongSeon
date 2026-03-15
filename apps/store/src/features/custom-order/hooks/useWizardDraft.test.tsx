@@ -65,6 +65,19 @@ const createStorage = () => {
   };
 };
 
+const useAutoSaveHarness = () => {
+  const form = useForm<QuoteOrderOptions>({
+    defaultValues: createFormValues(),
+  });
+
+  useAutoSave(form, {
+    currentStepIndex: 0,
+    visitedSteps: new Set([0]),
+  });
+
+  return form;
+};
+
 describe("useWizardDraft", () => {
   beforeEach(() => {
     Object.defineProperty(window, "sessionStorage", {
@@ -194,18 +207,7 @@ describe("useRestoreDraft", () => {
 
 describe("useAutoSave", () => {
   it("watch 변경과 step 변경 시 초안을 저장한다", () => {
-    const wrapper = () => {
-      const form = useForm<QuoteOrderOptions>({
-        defaultValues: createFormValues(),
-      });
-      useAutoSave(form, {
-        currentStepIndex: 0,
-        visitedSteps: new Set([0]),
-      });
-      return form;
-    };
-
-    const { result, rerender } = renderHook(wrapper);
+    const { result, rerender } = renderHook(() => useAutoSaveHarness());
 
     act(() => {
       result.current.setValue("quantity", 20);
