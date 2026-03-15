@@ -48,8 +48,6 @@ type SeededClaimOrder = {
   productName: string;
 };
 
-type SeededSaleOrder = SeededClaimOrder;
-
 type CreateClaimResult = {
   claim_id: string;
   claim_number: string;
@@ -79,18 +77,16 @@ let supabaseConfigCache: {
 
 const getSupabaseConfig = async () => {
   if (supabaseConfigCache) return supabaseConfigCache;
-  const fixtures = await Promise.all([
-    fs.readFile(path.resolve(__dirname, "../../apps/store/.env"), "utf8"),
-    fs.readFile(path.resolve(__dirname, "../../apps/admin/.env"), "utf8"),
-  ]).catch(async () => {
-    const storeEnv = await fs.readFile(
-      path.resolve(__dirname, "../../apps/store/.env"),
-      "utf8",
-    );
-    return [storeEnv, ""];
-  });
+  const [storeEnv, adminEnv] = await Promise.all([
+    fs
+      .readFile(path.resolve(__dirname, "../../apps/store/.env"), "utf8")
+      .catch(() => ""),
+    fs
+      .readFile(path.resolve(__dirname, "../../apps/admin/.env"), "utf8")
+      .catch(() => ""),
+  ]);
 
-  const merged = fixtures.join("\n");
+  const merged = [storeEnv, adminEnv].join("\n");
   const entries = Object.fromEntries(
     merged
       .split(/\r?\n/)
@@ -294,7 +290,7 @@ export const seedSaleOrder = async ({
   delivered = false,
 }: {
   delivered?: boolean;
-} = {}): Promise<SeededSaleOrder> => {
+} = {}): Promise<SeededClaimOrder> => {
   const fixtures = await readFixtures();
   const storeMeta = await readAuthMeta("store");
   const products = await supabaseRequest<
@@ -320,9 +316,7 @@ export const seedSaleOrder = async ({
   });
 
   if (delivered) {
-    await adminUpdateOrderStatus(order.orderId, "진행중");
-    await adminUpdateOrderStatus(order.orderId, "배송중");
-    await adminUpdateOrderStatus(order.orderId, "배송완료");
+    await progressOrderToDelivered(order.orderId);
     order.status = "배송완료";
   }
 
@@ -406,6 +400,12 @@ export const adminRollbackOrderStatus = async ({
   return adminUpdateOrderStatus(orderId, targetStatus, memo, true);
 };
 
+const progressOrderToDelivered = async (orderId: string) => {
+  await adminUpdateOrderStatus(orderId, "진행중");
+  await adminUpdateOrderStatus(orderId, "배송중");
+  await adminUpdateOrderStatus(orderId, "배송완료");
+};
+
 export const seedClaimOrders = async (): Promise<{
   cancelOrder: SeededClaimOrder;
   returnOrder: SeededClaimOrder;
@@ -425,15 +425,11 @@ export const seedClaimOrders = async (): Promise<{
 
   const selectedProducts: Array<{ id: number; name: string }> = [];
   for (const product of claimProducts) {
-    for (let remaining = product.stock; remaining > 0; remaining -= 1) {
+    const count = Math.min(product.stock, 3 - selectedProducts.length);
+    for (let i = 0; i < count; i++) {
       selectedProducts.push({ id: product.id, name: product.name });
-      if (selectedProducts.length === 3) {
-        break;
-      }
     }
-    if (selectedProducts.length === 3) {
-      break;
-    }
+    if (selectedProducts.length === 3) break;
   }
 
   if (selectedProducts.length < 3) {
@@ -448,25 +444,26 @@ export const seedClaimOrders = async (): Promise<{
     productName: selectedProducts[0].name,
   });
 
-  const returnOrder = await createStoreOrder({
-    shippingAddressId: fixtures.shippingAddress.id,
-    productId: selectedProducts[1].id,
-    productName: selectedProducts[1].name,
-  });
-  await adminUpdateOrderStatus(returnOrder.orderId, "진행중");
-  await adminUpdateOrderStatus(returnOrder.orderId, "배송중");
-  await adminUpdateOrderStatus(returnOrder.orderId, "배송완료");
-  returnOrder.status = "배송완료";
-
-  const exchangeOrder = await createStoreOrder({
-    shippingAddressId: fixtures.shippingAddress.id,
-    productId: selectedProducts[2].id,
-    productName: selectedProducts[2].name,
-  });
-  await adminUpdateOrderStatus(exchangeOrder.orderId, "진행중");
-  await adminUpdateOrderStatus(exchangeOrder.orderId, "배송중");
-  await adminUpdateOrderStatus(exchangeOrder.orderId, "배송완료");
-  exchangeOrder.status = "배송완료";
+  const [returnOrder, exchangeOrder] = await Promise.all([
+    createStoreOrder({
+      shippingAddressId: fixtures.shippingAddress.id,
+      productId: selectedProducts[1].id,
+      productName: selectedProducts[1].name,
+    }).then(async (order) => {
+      await progressOrderToDelivered(order.orderId);
+      order.status = "배송완료";
+      return order;
+    }),
+    createStoreOrder({
+      shippingAddressId: fixtures.shippingAddress.id,
+      productId: selectedProducts[2].id,
+      productName: selectedProducts[2].name,
+    }).then(async (order) => {
+      await progressOrderToDelivered(order.orderId);
+      order.status = "배송완료";
+      return order;
+    }),
+  ]);
 
   return {
     cancelOrder,

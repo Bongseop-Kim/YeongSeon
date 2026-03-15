@@ -1,4 +1,3 @@
-import type { Page } from "@playwright/test";
 import {
   expect,
   expectAuthenticatedRoute,
@@ -6,22 +5,13 @@ import {
   test,
 } from "../fixtures/auth";
 import { seedClaimOrders } from "../utils/store-data";
+import {
+  type ClaimTypeLabel,
+  claimCard,
+  claimTypeLabelToCode,
+} from "../utils/claim-helpers";
 
 type SeededClaimOrders = Awaited<ReturnType<typeof seedClaimOrders>>;
-type ClaimTypeLabel = "취소" | "반품" | "교환";
-
-export const claimTypeLabelToCode = (
-  claimTypeLabel: ClaimTypeLabel,
-): "cancel" | "return" | "exchange" => {
-  switch (claimTypeLabel) {
-    case "취소":
-      return "cancel";
-    case "반품":
-      return "return";
-    case "교환":
-      return "exchange";
-  }
-};
 
 const submitClaimForm = async ({
   page,
