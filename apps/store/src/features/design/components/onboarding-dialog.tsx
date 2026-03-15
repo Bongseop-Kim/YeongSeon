@@ -45,17 +45,6 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
     }
   }, [open]);
 
-  useEffect(() => {
-    if (!hasPages) {
-      setCurrentPage(0);
-      return;
-    }
-
-    setCurrentPage((prevPage) =>
-      Math.min(prevPage, ONBOARDING_DIALOG_PAGES.length - 1),
-    );
-  }, [hasPages]);
-
   if (!page) {
     return (
       <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -107,7 +96,7 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
                 key={index}
                 className={[
                   "h-1.5 w-1.5 rounded-full transition-colors",
-                  index === currentPage ? "bg-gray-700" : "bg-gray-300",
+                  index === safePageIndex ? "bg-gray-700" : "bg-gray-300",
                 ].join(" ")}
               />
             ))}

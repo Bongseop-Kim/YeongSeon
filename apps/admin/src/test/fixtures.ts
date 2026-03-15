@@ -289,14 +289,14 @@ export const createDesignTokenRow = (
 
 export interface ProductsTableRowFixture {
   id: number;
-  image: string;
+  image: string | null;
   code: string | null;
   name: string;
   category: string;
   color: string;
-  pattern: string;
+  pattern?: string;
   material: string;
-  info: string;
+  info?: string;
   price: number;
   stock: number | null;
 }
@@ -319,23 +319,21 @@ export const createProductsTableRow = (
 });
 
 export interface ProductOptionRowFixture {
-  id: string;
-  name: string;
-  additional_price: number;
+  id?: string;
+  name: string | null;
+  additional_price: number | null;
   stock: number | null;
   product_id: number;
-  created_at: string;
+  created_at?: string;
 }
 
 export const createProductOptionRow = (
   overrides?: Partial<ProductOptionRowFixture>,
 ): ProductOptionRowFixture => ({
-  id: "00000000-0000-0000-0000-000000000001",
   name: "기본 옵션",
   additional_price: 5000,
   stock: 3,
   product_id: 1,
-  created_at: "2026-03-15T09:00:00Z",
   ...overrides,
 });
 

@@ -79,7 +79,7 @@ describe("useShippingAddressPopup", () => {
     expect(openPopup).toHaveBeenCalledWith("/shipping?mode=select");
   });
 
-  it("message 이벤트로 선택/생성/업데이트를 처리한다", async () => {
+  it("ADDRESS_SELECTED 메시지는 선택된 배송지를 반영한다", async () => {
     const { result } = renderHook(() => useShippingAddressPopup());
 
     await act(async () => {
@@ -95,6 +95,11 @@ describe("useShippingAddressPopup", () => {
     });
     expect(result.current.selectedAddressId).toBe("addr-2");
     expect(result.current.selectedAddress).toEqual(addresses[1]);
+  });
+
+  it("ADDRESS_CREATED 메시지는 배송지 목록 캐시를 무효화한다", async () => {
+    renderHook(() => useShippingAddressPopup());
+    invalidateQueries.mockClear();
 
     await act(async () => {
       window.dispatchEvent(
@@ -113,8 +118,13 @@ describe("useShippingAddressPopup", () => {
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["shipping", "default"],
     });
+    expect(invalidateQueries).toHaveBeenCalledTimes(2);
+  });
 
+  it("ADDRESS_UPDATED 메시지는 선택을 갱신하고 배송지 목록 캐시를 무효화한다", async () => {
+    const { result } = renderHook(() => useShippingAddressPopup());
     invalidateQueries.mockClear();
+
     await act(async () => {
       window.dispatchEvent(
         new MessageEvent("message", {
