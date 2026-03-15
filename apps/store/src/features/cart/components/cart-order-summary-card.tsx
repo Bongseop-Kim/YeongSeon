@@ -8,7 +8,7 @@ interface CartOrderSummaryCardProps {
 
 export function CartOrderSummaryCard({ summary }: CartOrderSummaryCardProps) {
   return (
-    <Card>
+    <Card data-testid="cart-order-summary">
       <CardHeader>
         <CardTitle>주문 금액</CardTitle>
       </CardHeader>

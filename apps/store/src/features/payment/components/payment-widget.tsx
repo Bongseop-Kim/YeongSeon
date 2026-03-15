@@ -28,6 +28,21 @@ interface PaymentWidgetProps {
   customerKey: string;
 }
 
+declare global {
+  interface Window {
+    __E2E_MOCK_TOSS__?: {
+      requestPayment?: (params: {
+        orderId: string;
+        orderName: string;
+        successUrl: string;
+        failUrl: string;
+        customerName?: string;
+        customerEmail?: string;
+      }) => Promise<void> | void;
+    };
+  }
+}
+
 const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
   ({ amount, customerKey }, ref) => {
     const widgetsRef = useRef<TossPaymentsWidgets | null>(null);
@@ -41,6 +56,11 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
       let cancelled = false;
 
       const init = async () => {
+        if (window.__E2E_MOCK_TOSS__) {
+          setReady(true);
+          return;
+        }
+
         if (!CLIENT_KEY) {
           const message =
             "VITE_TOSS_CLIENT_KEY가 설정되지 않아 결제위젯을 초기화할 수 없습니다.";
@@ -108,6 +128,11 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
       ref,
       () => ({
         requestPayment: async (params) => {
+          if (window.__E2E_MOCK_TOSS__?.requestPayment) {
+            await window.__E2E_MOCK_TOSS__.requestPayment(params);
+            return;
+          }
+
           if (initError) {
             throw new Error(initError);
           }
@@ -132,7 +157,7 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
     }
 
     return (
-      <div>
+      <div data-testid="payment-widget">
         <div id="payment-method" ref={paymentMethodRef} />
         <div id="payment-agreement" ref={agreementRef} />
       </div>

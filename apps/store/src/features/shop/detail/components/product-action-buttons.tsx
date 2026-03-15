@@ -40,6 +40,7 @@ export function ProductActionButtons({
           type="button"
           onClick={onOrder}
           size="xl"
+          data-testid="product-order-now"
           className="flex-1"
           disabled={disabled}
         >
@@ -69,6 +70,7 @@ export function ProductActionButtons({
         variant="outline"
         size="xl"
         onClick={onAddToCart}
+        data-testid="product-add-to-cart"
         className="flex-1"
         disabled={disabled}
       >
@@ -78,6 +80,7 @@ export function ProductActionButtons({
         type="button"
         onClick={onOrder}
         size="xl"
+        data-testid="product-order-now"
         className="flex-1"
         disabled={disabled}
       >

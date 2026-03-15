@@ -281,6 +281,7 @@ export default function CartPage() {
               onClick={handleOrder}
               size="xl"
               className="w-full"
+              data-testid="cart-order-button"
               disabled={selectedItems.length === 0}
             >
               주문하기

@@ -135,7 +135,10 @@ export default function ClaimListPage() {
               </Card>
             ) : (
               filteredClaims.map((claim) => (
-                <Card key={claim.id}>
+                <Card
+                  key={claim.id}
+                  data-testid={`claim-card-${claim.orderId}-${claim.type}-${claim.id}`}
+                >
                   {/* 클레임 헤더 */}
                   <CardHeader>
                     <div className="flex items-center justify-between">

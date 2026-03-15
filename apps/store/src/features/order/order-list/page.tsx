@@ -161,7 +161,7 @@ export default function OrderListPage() {
               ) : (
                 filteredOrders.map((order) => {
                   return (
-                    <Card key={order.id}>
+                    <Card key={order.id} data-testid={`order-card-${order.id}`}>
                       <CardHeader>
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base">
@@ -181,7 +181,11 @@ export default function OrderListPage() {
                             item.type,
                           );
                           return (
-                            <CardContent key={item.id} className="py-4">
+                            <CardContent
+                              key={item.id}
+                              className="py-4"
+                              data-testid={`order-item-link-${order.id}-${item.id}`}
+                            >
                               <OrderItemCard
                                 item={item}
                                 onClick={() =>

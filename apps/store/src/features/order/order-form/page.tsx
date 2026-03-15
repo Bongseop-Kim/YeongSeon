@@ -218,6 +218,7 @@ const OrderFormPage = () => {
                 onClick={handleRequestPayment}
                 className="w-full"
                 size="xl"
+                data-testid="order-submit-button"
                 disabled={
                   !user ||
                   !selectedAddress ||
@@ -239,12 +240,17 @@ const OrderFormPage = () => {
             </div>
           }
         >
-          <Card>
+          <Card data-testid="order-shipping-card">
             <CardHeader className="flex justify-between items-center">
               <CardTitle>
                 {selectedAddress?.recipientName || "배송지 정보"}
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={openShippingPopup}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openShippingPopup}
+                data-testid="order-shipping-manage"
+              >
                 배송지 관리
               </Button>
             </CardHeader>
@@ -278,7 +284,7 @@ const OrderFormPage = () => {
               <Separator />
             </CardContent>
 
-            <CardHeader>
+            <CardHeader data-testid="order-items-card">
               <CardTitle>주문 상품 {orderItems.length}개</CardTitle>
             </CardHeader>
 

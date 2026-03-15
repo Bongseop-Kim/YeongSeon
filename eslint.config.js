@@ -58,5 +58,13 @@ export default tseslint.config([
     files: ["apps/**/*.{ts,tsx}"],
     plugins: { "react-hooks": reactHooks, "react-refresh": reactRefresh },
   },
+  {
+    // e2e 테스트 코드는 동적 경로/정규식이 불가피하므로 해당 규칙 비활성화
+    files: ["e2e/**/*.{ts,tsx}"],
+    rules: {
+      "security/detect-non-literal-regexp": "off",
+      "security/detect-non-literal-fs-filename": "off",
+    },
+  },
   prettierConfig,
 ]);

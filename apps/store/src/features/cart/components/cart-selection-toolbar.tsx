@@ -20,6 +20,7 @@ export function CartSelectionToolbar({
         <Checkbox
           checked={isAllChecked}
           onCheckedChange={(checked) => onToggleAll(checked === true)}
+          data-testid="cart-select-all"
         />
         <Label className="text-md">전체 선택</Label>
       </div>
@@ -29,6 +30,7 @@ export function CartSelectionToolbar({
           variant="outline"
           type="button"
           size="sm"
+          data-testid="cart-remove-selected"
         >
           삭제
         </Button>

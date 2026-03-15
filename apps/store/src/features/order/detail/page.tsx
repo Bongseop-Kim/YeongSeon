@@ -236,7 +236,7 @@ const OrderDetailPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <Card>
+          <Card data-testid="order-detail-error">
             <Empty
               title="주문 정보를 불러오지 못했습니다."
               description={getOrderErrorDescription(error)}
@@ -313,7 +313,7 @@ const OrderDetailPage = () => {
             </Button>
           }
         >
-          <Card>
+          <Card data-testid="order-detail-root">
             {/* 주문 정보 헤더 */}
             <CardHeader className="flex justify-between items-center">
               <div className="space-y-1">
