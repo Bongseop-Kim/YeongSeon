@@ -6,11 +6,14 @@ describe("toInquiryView", () => {
     expect(
       toInquiryView({
         id: "inq-1",
+        user_id: "user-1",
         created_at: "2026-03-15T09:00:00Z",
+        updated_at: "2026-03-15T09:00:00Z",
         status: "답변완료",
         category: "상품",
         title: "배송 문의",
         content: "언제 오나요?",
+        product_id: 1,
         answer: "오늘 발송됩니다.",
         answer_date: "2026-03-16T10:00:00Z",
         products: {
@@ -40,11 +43,14 @@ describe("toInquiryView", () => {
     expect(
       toInquiryView({
         id: "inq-2",
+        user_id: "user-1",
         created_at: "2026-03-15T09:00:00Z",
-        status: "접수",
+        updated_at: "2026-03-15T09:00:00Z",
+        status: "답변대기",
         category: "unknown",
         title: "문의",
         content: "내용",
+        product_id: null,
         answer: null,
         answer_date: null,
         products: null,

@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
+import { useForm } from "react-hook-form";
 import { describe, expect, it } from "vitest";
 import { useWizardStep } from "@/features/custom-order/hooks/useWizardStep";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
@@ -60,14 +61,21 @@ const steps: StepConfig[] = [
   },
 ];
 
+const useWizardStepHarness = (
+  currentSteps: StepConfig[],
+  defaultValues: QuoteOrderOptions,
+) => {
+  const form = useForm<QuoteOrderOptions>({ defaultValues });
+
+  return useWizardStep({
+    steps: currentSteps,
+    getValues: form.getValues,
+  });
+};
+
 describe("useWizardStep", () => {
   it("스킵 가능한 스텝을 건너뛰며 이동하고 완료 상태를 누적한다", () => {
-    const { result } = renderHook(() =>
-      useWizardStep({
-        steps,
-        getValues: () => values,
-      }),
-    );
+    const { result } = renderHook(() => useWizardStepHarness(steps, values));
 
     expect(result.current.currentStepIndex).toBe(0);
     expect(result.current.isFirstStep).toBe(true);
@@ -101,12 +109,9 @@ describe("useWizardStep", () => {
   it("검증 실패, 잘못된 이동, resetTo, step length 보정을 처리한다", () => {
     const shortValues = { ...values, quantity: 1 };
     const { result, rerender } = renderHook(
-      ({ currentSteps }) =>
-        useWizardStep({
-          steps: currentSteps,
-          getValues: () => shortValues,
-        }),
-      { initialProps: { currentSteps: steps } },
+      ({ currentSteps, currentValues }) =>
+        useWizardStepHarness(currentSteps, currentValues),
+      { initialProps: { currentSteps: steps, currentValues: shortValues } },
     );
 
     act(() => {
@@ -129,7 +134,7 @@ describe("useWizardStep", () => {
     expect(result.current.currentStepIndex).toBe(3);
     expect([...result.current.completedSteps]).toEqual([0, 1, 2]);
 
-    rerender({ currentSteps: steps.slice(0, 2) });
+    rerender({ currentSteps: steps.slice(0, 2), currentValues: shortValues });
     expect(result.current.currentStepIndex).toBe(1);
   });
 });

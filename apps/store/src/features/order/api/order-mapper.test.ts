@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  fromOrderItemRowDTO,
   toOrderItemInputDTO,
   toOrderView,
   toOrderViewFromDetail,
@@ -169,7 +170,7 @@ describe("toOrderViewFromDetail", () => {
   it("배송/추적 정보를 포함한 상세 DTO를 화면 모델로 변환한다", () => {
     expect(
       toOrderViewFromDetail(parseOrderDetailRow(createOrderDetailRowRaw()), [
-        parseOrderItemRows([createOrderItemRowRaw()])[0],
+        fromOrderItemRowDTO(parseOrderItemRows([createOrderItemRowRaw()])[0]),
       ]),
     ).toEqual(
       expect.objectContaining({

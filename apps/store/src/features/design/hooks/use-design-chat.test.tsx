@@ -104,7 +104,7 @@ describe("useDesignChat", () => {
     expect(mutate).not.toHaveBeenCalled();
 
     result.current.sendMessage("새 디자인", [
-      { type: "color", label: "네이비" },
+      { type: "color", label: "네이비", value: "navy" },
     ]);
 
     expect(addMessage).toHaveBeenCalledWith(

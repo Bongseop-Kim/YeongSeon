@@ -9,6 +9,7 @@ describe("toShippingAddressView", () => {
     expect(
       toShippingAddressView({
         id: "addr-1",
+        created_at: "2026-03-15T09:00:00Z",
         recipient_name: "홍길동",
         recipient_phone: "010-1111-2222",
         address: "서울시 강남구",
@@ -17,6 +18,7 @@ describe("toShippingAddressView", () => {
         delivery_request: "빠른 배송",
         delivery_memo: "문 앞",
         is_default: true,
+        user_id: "user-1",
       }),
     ).toEqual({
       id: "addr-1",
@@ -35,6 +37,7 @@ describe("toShippingAddressView", () => {
     expect(
       toShippingAddressView({
         id: "addr-2",
+        created_at: "2026-03-15T09:00:00Z",
         recipient_name: "홍길동",
         recipient_phone: "010-1111-2222",
         address: "서울시 강남구",
@@ -43,6 +46,7 @@ describe("toShippingAddressView", () => {
         delivery_request: "",
         delivery_memo: null,
         is_default: false,
+        user_id: "user-1",
       }),
     ).toEqual(
       expect.objectContaining({

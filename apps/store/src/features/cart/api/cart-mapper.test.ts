@@ -87,7 +87,7 @@ describe("toCartItemView", () => {
           },
           cost: 15000,
         },
-        appliedCoupon: null,
+        appliedCoupon: undefined,
       }),
     ).toEqual(
       expect.objectContaining({
@@ -109,7 +109,7 @@ describe("toCartItemView", () => {
         selectedOption: null,
         quantity: 1,
         reformData: null,
-        appliedCoupon: null,
+        appliedCoupon: undefined,
       }),
     ).toThrow("Product data is required for product cart items.");
   });
@@ -123,7 +123,7 @@ describe("toCartItemView", () => {
         selectedOption: null,
         quantity: 1,
         reformData: null,
-        appliedCoupon: null,
+        appliedCoupon: undefined,
       }),
     ).toThrow("Reform data is required for reform cart items.");
   });

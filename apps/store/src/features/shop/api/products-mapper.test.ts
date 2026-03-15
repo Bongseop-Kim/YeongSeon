@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { ProductDTO } from "@yeongseon/shared/types/dto/product";
 import { toProduct, toProducts } from "@/features/shop/api/products-mapper";
 
-const record = {
+const record: ProductDTO = {
   id: 1,
   code: "P001",
   name: "테스트 넥타이",
