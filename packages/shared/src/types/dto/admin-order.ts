@@ -63,22 +63,52 @@ export interface OrderStatusLogDTO {
   createdAt: string;
 }
 
-/** admin_order_item_view row */
-export interface AdminOrderItemRowDTO {
+interface AdminOrderItemRowBaseDTO {
   id: string;
   orderId: string;
   itemId: string;
-  itemType: "product" | "reform" | "custom";
-  productId: number | null;
-  selectedOptionId: string | null;
-  reformData: Record<string, unknown> | null;
   quantity: number;
   unitPrice: number;
   discountAmount: number;
   lineDiscountAmount: number;
   appliedUserCouponId: string | null;
   created_at: string;
+}
+
+export interface AdminProductOrderItemRowDTO extends AdminOrderItemRowBaseDTO {
+  itemType: "product";
+  productId: number | null;
+  selectedOptionId: string | null;
+  reformData: null;
   productName: string | null;
   productCode: string | null;
   productImage: string | null;
 }
+
+interface AdminNonProductOrderItemRowBaseDTO extends AdminOrderItemRowBaseDTO {
+  productId: null;
+  selectedOptionId: null;
+  reformData: Record<string, unknown> | null;
+  productName: null;
+  productCode: null;
+  productImage: null;
+}
+
+export interface AdminCustomOrderItemRowDTO extends AdminNonProductOrderItemRowBaseDTO {
+  itemType: "custom";
+}
+
+export interface AdminReformOrderItemRowDTO extends AdminNonProductOrderItemRowBaseDTO {
+  itemType: "reform";
+}
+
+export interface AdminTokenOrderItemRowDTO extends AdminNonProductOrderItemRowBaseDTO {
+  itemType: "token";
+}
+
+/** admin_order_item_view row */
+export type AdminOrderItemRowDTO =
+  | AdminProductOrderItemRowDTO
+  | AdminCustomOrderItemRowDTO
+  | AdminReformOrderItemRowDTO
+  | AdminTokenOrderItemRowDTO;

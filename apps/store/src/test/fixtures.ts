@@ -1,111 +1,85 @@
-import type {
-  Product,
-  ProductOption,
-} from "@yeongseon/shared/types/view/product";
-import type {
-  AppliedCoupon,
-  Coupon,
-} from "@yeongseon/shared/types/view/coupon";
-import type {
-  ProductOrderItem,
-  ReformOrderItem,
-} from "@yeongseon/shared/types/view/order";
-import type {
-  ProductCartItem,
-  ReformCartItem,
-} from "@yeongseon/shared/types/view/cart";
+export {
+  createProductOption,
+  createProduct,
+  createCoupon,
+  createAppliedCoupon,
+  createProductOrderItem,
+  createReformOrderItem,
+  createCartItem,
+  createReformCartItem,
+  createCustomOrderData,
+} from "@yeongseon/shared/test/fixtures";
+import type { OrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
 
-// ── Product ──
+// ── OrderSummary ──
 
-export const createProductOption = (
-  overrides?: Partial<ProductOption>,
-): ProductOption => ({
-  id: "opt-1",
-  name: "기본",
-  additionalPrice: 0,
+export const createOrderSummary = (
+  overrides?: Partial<OrderSummary>,
+): OrderSummary => ({
+  originalPrice: 12000,
+  totalDiscount: 2000,
+  shippingCost: 3000,
+  totalPrice: 13000,
+  totalQuantity: 2,
   ...overrides,
 });
 
-export const createProduct = (overrides?: Partial<Product>): Product => ({
-  id: 1,
-  code: "P001",
-  name: "테스트 넥타이",
-  price: 10000,
-  image: "image.jpg",
-  category: "3fold",
-  color: "black",
-  pattern: "solid",
-  material: "silk",
-  likes: 0,
-  info: "테스트 상품",
-  options: [createProductOption()],
-  ...overrides,
-});
-
-// ── Coupon ──
-
-export const createCoupon = (overrides?: Partial<Coupon>): Coupon => ({
-  id: "c-1",
-  name: "500원 할인",
-  discountType: "fixed",
-  discountValue: 500,
-  expiryDate: "2027-01-01",
-  ...overrides,
-});
-
-export const createAppliedCoupon = (
-  overrides?: Partial<AppliedCoupon>,
-): AppliedCoupon => ({
-  id: "uc-1",
-  userId: "u-1",
-  couponId: "c-1",
-  status: "active",
-  issuedAt: "2026-01-01",
-  coupon: createCoupon(overrides?.coupon),
-  ...overrides,
-});
-
-// ── OrderItem ──
-
-export const createProductOrderItem = (
-  overrides?: Partial<ProductOrderItem>,
-): ProductOrderItem => {
-  const product = overrides?.product ?? createProduct();
-  return {
-    id: "item-1",
-    type: "product",
-    product,
-    selectedOption: product.options?.[0],
-    quantity: 1,
-    ...overrides,
-  };
-};
-
-export const createReformOrderItem = (
-  overrides?: Partial<ReformOrderItem>,
-): ReformOrderItem => ({
-  id: "reform-1",
-  type: "reform",
-  quantity: 1,
-  reformData: {
-    tie: { id: "tie-1", measurementType: "length", tieLength: 145 },
-    cost: 15000,
+export const createOrderItemRowRaw = (
+  overrides?: Partial<Record<string, unknown>>,
+): Record<string, unknown> => ({
+  id: "item-1",
+  order_id: "order-1",
+  type: "product",
+  product: {
+    id: 1,
+    code: "P001",
+    name: "테스트 넥타이",
+    price: 10000,
+    image: "image.jpg",
+    category: "3fold",
+    color: "black",
+    pattern: "solid",
+    material: "silk",
+    likes: 0,
+    info: "테스트 상품",
   },
+  selectedOption: {
+    id: "opt-1",
+    name: "기본",
+    additionalPrice: 0,
+  },
+  quantity: 1,
+  reformData: null,
+  appliedCoupon: null,
+  created_at: "2026-03-15T09:00:00Z",
   ...overrides,
 });
 
-// ── CartItem ──
-
-export const createCartItem = (
-  overrides?: Partial<ProductCartItem>,
-): ProductCartItem => ({
-  ...createProductOrderItem(),
+export const createClaimListRowRaw = (
+  overrides?: Partial<Record<string, unknown>>,
+): Record<string, unknown> => ({
+  id: "claim-1",
+  claimNumber: "CLM-001",
+  date: "2026-03-15",
+  status: "접수",
+  type: "cancel",
+  reason: "단순 변심",
+  description: "사이즈 변경",
+  claimQuantity: 1,
+  orderId: "order-1",
+  orderNumber: "ORD-001",
+  orderDate: "2026-03-14",
+  item: createOrderItemRowRaw(),
+  refund_data: null,
   ...overrides,
 });
 
-export const createReformCartItem = (
-  overrides?: Partial<ReformCartItem>,
-): ReformCartItem => ({
-  ...createReformOrderItem(),
+export const createConfirmPaymentResponseRaw = (
+  overrides?: Partial<Record<string, unknown>>,
+): Record<string, unknown> => ({
+  paymentKey: "pay-key",
+  paymentGroupId: "pg-1",
+  orders: [{ orderId: "order-1", orderType: "sale" }],
+  status: "DONE",
   ...overrides,
 });

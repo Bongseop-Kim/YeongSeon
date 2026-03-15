@@ -16,7 +16,11 @@ interface OnboardingDialogProps {
 
 export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
   const [currentPage, setCurrentPage] = useState(0);
-  const page = ONBOARDING_PAGES[currentPage];
+  const hasPages = ONBOARDING_PAGES.length > 0;
+  const safePageIndex = hasPages
+    ? Math.min(currentPage, ONBOARDING_PAGES.length - 1)
+    : 0;
+  const page = ONBOARDING_PAGES[safePageIndex];
 
   useEffect(() => {
     if (open) {
@@ -24,7 +28,30 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
     }
   }, [open]);
 
-  const previewImages = ["/images/yarn-dyed.png", "/images/print.png"];
+  if (!page) {
+    return (
+      <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+        <DialogContent
+          className="max-w-sm overflow-hidden p-0"
+          showCloseButton={false}
+        >
+          <div className="px-6 pb-6 pt-5">
+            <DialogTitle className="mb-2 text-lg font-bold">
+              온보딩 안내
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed text-gray-600">
+              온보딩 정보를 불러오지 못했습니다.
+            </DialogDescription>
+          </div>
+          <div className="flex justify-end px-6 pb-6">
+            <Button type="button" size="sm" onClick={onClose}>
+              닫기
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -33,8 +60,8 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
         showCloseButton={false}
       >
         <img
-          src={previewImages[currentPage]}
-          alt=""
+          src={page.imageSrc}
+          alt={`${page.title} 예시 이미지`}
           className="h-44 w-full object-cover"
         />
         <div className="px-6 pb-6 pt-5">
@@ -52,27 +79,33 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
                 key={index}
                 className={[
                   "h-1.5 w-1.5 rounded-full transition-colors",
-                  index === currentPage ? "bg-gray-700" : "bg-gray-300",
+                  index === safePageIndex ? "bg-gray-700" : "bg-gray-300",
                 ].join(" ")}
               />
             ))}
           </div>
           <div className="flex items-center gap-2">
-            {currentPage > 0 && (
+            {safePageIndex > 0 && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setCurrentPage(currentPage - 1)}
+                onClick={() =>
+                  setCurrentPage((prevPage) => Math.max(prevPage - 1, 0))
+                }
               >
                 ← 이전
               </Button>
             )}
-            {currentPage < ONBOARDING_PAGES.length - 1 ? (
+            {safePageIndex < ONBOARDING_PAGES.length - 1 ? (
               <Button
                 type="button"
                 size="sm"
-                onClick={() => setCurrentPage(currentPage + 1)}
+                onClick={() =>
+                  setCurrentPage((prevPage) =>
+                    Math.min(prevPage + 1, ONBOARDING_PAGES.length - 1),
+                  )
+                }
               >
                 다음 →
               </Button>

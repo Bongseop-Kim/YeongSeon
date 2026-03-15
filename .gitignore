@@ -46,3 +46,6 @@ docs/superpowers/
 # Playwright
 e2e/.auth/
 output/playwright/
+
+# Test coverage
+coverage/
