@@ -37,23 +37,23 @@ describe("useDaumPostcode", () => {
     ) as HTMLScriptElement | null;
 
     expect(script).not.toBeNull();
-    expect(script.src).toContain("postcode.v2.js");
+    const scriptElement = script as HTMLScriptElement;
+    expect(scriptElement.src).toContain("postcode.v2.js");
 
     act(() => {
-      script.onload?.(new Event("load"));
+      scriptElement.onload?.(new Event("load"));
     });
     expect(result.current.isLoaded).toBe(true);
 
     act(() => {
-      script.onerror?.(new Event("error"));
+      scriptElement.onerror?.(new Event("error"));
     });
     expect(errorSpy).toHaveBeenCalledWith(
       "Daum Postcode API 스크립트 로딩에 실패했습니다.",
     );
 
     unmount();
-    expect(script).not.toBeNull();
-    expect(document.head.contains(script as HTMLScriptElement)).toBe(false);
+    expect(document.head.contains(scriptElement)).toBe(false);
     errorSpy.mockRestore();
   });
 });

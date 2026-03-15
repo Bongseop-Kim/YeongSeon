@@ -1,9 +1,24 @@
-import type { Product, ProductOption } from "@/types/view/product";
-import type { AppliedCoupon, Coupon } from "@/types/view/coupon";
-import type { ProductOrderItem, ReformOrderItem } from "@/types/view/order";
-import type { ProductCartItem, ReformCartItem } from "@/types/view/cart";
-import type { CustomOrderDataDTO, OrderItemDTO } from "@/types/dto/order-view";
-import type { NullableItemRow } from "@/mappers/shared-mapper";
+import type {
+  Product,
+  ProductOption,
+} from "@yeongseon/shared/types/view/product";
+import type {
+  AppliedCoupon,
+  Coupon,
+} from "@yeongseon/shared/types/view/coupon";
+import type {
+  ProductOrderItem,
+  ReformOrderItem,
+} from "@yeongseon/shared/types/view/order";
+import type {
+  ProductCartItem,
+  ReformCartItem,
+} from "@yeongseon/shared/types/view/cart";
+import type {
+  CustomOrderDataDTO,
+  OrderItemDTO,
+} from "@yeongseon/shared/types/dto/order-view";
+import type { NullableItemRow } from "@yeongseon/shared/mappers/shared-mapper";
 
 // ── Product ──
 
