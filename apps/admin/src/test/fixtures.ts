@@ -338,7 +338,7 @@ export const createProductOptionRow = (
 });
 
 export interface IssuedCouponViewRowFixture {
-  id: string | null | undefined;
+  id: string | null;
   userId: string | null;
   couponId: string | null;
   userName: string | null;

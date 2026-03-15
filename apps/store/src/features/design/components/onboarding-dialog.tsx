@@ -14,30 +14,13 @@ interface OnboardingDialogProps {
   onClose: () => void;
 }
 
-const ONBOARDING_PAGE_IMAGE_BY_INDEX = [
-  "/images/yarn-dyed.png",
-  "/images/print.png",
-] as const;
-
-const ONBOARDING_DIALOG_PAGES = ONBOARDING_PAGES.map((page, index) => {
-  const imageSrc = ONBOARDING_PAGE_IMAGE_BY_INDEX[index];
-  if (!imageSrc) {
-    throw new Error(`Missing onboarding dialog image for page index ${index}.`);
-  }
-
-  return {
-    ...page,
-    imageSrc,
-  };
-});
-
 export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
   const [currentPage, setCurrentPage] = useState(0);
-  const hasPages = ONBOARDING_DIALOG_PAGES.length > 0;
+  const hasPages = ONBOARDING_PAGES.length > 0;
   const safePageIndex = hasPages
-    ? Math.min(currentPage, ONBOARDING_DIALOG_PAGES.length - 1)
+    ? Math.min(currentPage, ONBOARDING_PAGES.length - 1)
     : 0;
-  const page = ONBOARDING_DIALOG_PAGES[safePageIndex];
+  const page = ONBOARDING_PAGES[safePageIndex];
 
   useEffect(() => {
     if (open) {
@@ -91,7 +74,7 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
         </div>
         <div className="flex items-center justify-between px-6 pb-6">
           <div className="flex items-center gap-1.5">
-            {ONBOARDING_DIALOG_PAGES.map((_, index) => (
+            {ONBOARDING_PAGES.map((_, index) => (
               <span
                 key={index}
                 className={[
@@ -114,13 +97,13 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
                 ← 이전
               </Button>
             )}
-            {safePageIndex < ONBOARDING_DIALOG_PAGES.length - 1 ? (
+            {safePageIndex < ONBOARDING_PAGES.length - 1 ? (
               <Button
                 type="button"
                 size="sm"
                 onClick={() =>
                   setCurrentPage((prevPage) =>
-                    Math.min(prevPage + 1, ONBOARDING_DIALOG_PAGES.length - 1),
+                    Math.min(prevPage + 1, ONBOARDING_PAGES.length - 1),
                   )
                 }
               >
