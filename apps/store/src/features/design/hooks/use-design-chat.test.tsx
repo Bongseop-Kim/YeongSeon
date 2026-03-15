@@ -1,7 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useDesignChat } from "@/features/design/hooks/use-design-chat";
-import { InsufficientTokensError } from "@/features/design/api/ai-design-api";
 
 const {
   invalidateQueries,
@@ -10,6 +9,7 @@ const {
   setGenerationStatus,
   setGeneratedImage,
   clearAttachments,
+  MockInsufficientTokensError,
 } = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
   mutate: vi.fn(),
@@ -17,6 +17,15 @@ const {
   setGenerationStatus: vi.fn(),
   setGeneratedImage: vi.fn(),
   clearAttachments: vi.fn(),
+  MockInsufficientTokensError: class MockInsufficientTokensError extends Error {
+    constructor(
+      public readonly balance: number,
+      public readonly cost: number,
+    ) {
+      super("insufficient_tokens");
+      this.name = "InsufficientTokensError";
+    }
+  },
 }));
 
 const storeState = {
@@ -70,6 +79,10 @@ vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({
     invalidateQueries,
   }),
+}));
+
+vi.mock("@/features/design/api/ai-design-api", () => ({
+  InsufficientTokensError: MockInsufficientTokensError,
 }));
 
 vi.mock("@/features/design/api/ai-design-query", () => ({
@@ -165,7 +178,7 @@ describe("useDesignChat", () => {
     expect(setGenerationStatus).toHaveBeenCalledWith("regenerating");
     const callbacks = mutate.mock.calls[0][1];
 
-    callbacks.onError(new InsufficientTokensError(3, 5));
+    callbacks.onError(new MockInsufficientTokensError(3, 5));
     expect(addMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         uiOnly: true,
