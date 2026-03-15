@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 
 const { upload, getImageKitAuth, error } = vi.hoisted(() => ({
@@ -29,6 +29,10 @@ describe("useImageUpload", () => {
     upload.mockReset();
     getImageKitAuth.mockReset();
     error.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("이미지를 업로드하고 refs를 반환한다", async () => {

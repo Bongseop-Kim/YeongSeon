@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useForm } from "react-hook-form";
 import {
   useAutoSave,
@@ -78,17 +78,23 @@ const useAutoSaveHarness = () => {
   return form;
 };
 
-describe("useWizardDraft", () => {
-  beforeEach(() => {
-    Object.defineProperty(window, "sessionStorage", {
-      configurable: true,
-      value: createStorage(),
-    });
-    vi.useFakeTimers();
-    info.mockReset();
-    dismiss.mockReset();
+beforeEach(() => {
+  Object.defineProperty(window, "sessionStorage", {
+    configurable: true,
+    value: createStorage(),
   });
+  vi.useFakeTimers();
+  info.mockReset();
+  dismiss.mockReset();
+});
 
+afterEach(() => {
+  window.sessionStorage.clear();
+  vi.clearAllTimers();
+  vi.useRealTimers();
+});
+
+describe("useWizardDraft", () => {
   it("초안 저장 시 민감 필드를 비운다", () => {
     const { result } = renderHook(() => useWizardDraft());
 

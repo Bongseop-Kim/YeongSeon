@@ -52,6 +52,20 @@ describe("getTags", () => {
     ).toEqual(["네이비", "스트라이프", "실크"]);
   });
 
+  it("공백만 있는 attachment 라벨은 제외한다", () => {
+    expect(
+      getTags(
+        createAiDesignRequest({
+          attachments: [
+            createAttachment({ type: "color", label: "   " }),
+            createAttachment({ type: "pattern", label: " 스트라이프 " }),
+            createAttachment({ type: "fabric", label: "실크" }),
+          ],
+        }),
+      ),
+    ).toEqual(["스트라이프", "실크"]);
+  });
+
   it("attachment가 없으면 designContext 라벨을 fallback으로 사용한다", () => {
     expect(
       getTags(

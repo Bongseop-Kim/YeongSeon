@@ -1,9 +1,9 @@
-import type { Product, ProductOption } from "../types/view/product";
-import type { AppliedCoupon, Coupon } from "../types/view/coupon";
-import type { ProductOrderItem, ReformOrderItem } from "../types/view/order";
-import type { ProductCartItem, ReformCartItem } from "../types/view/cart";
-import type { CustomOrderDataDTO, OrderItemDTO } from "../types/dto/order-view";
-import type { NullableItemRow } from "../mappers/shared-mapper";
+import type { Product, ProductOption } from "@/types/view/product";
+import type { AppliedCoupon, Coupon } from "@/types/view/coupon";
+import type { ProductOrderItem, ReformOrderItem } from "@/types/view/order";
+import type { ProductCartItem, ReformCartItem } from "@/types/view/cart";
+import type { CustomOrderDataDTO, OrderItemDTO } from "@/types/dto/order-view";
+import type { NullableItemRow } from "@/mappers/shared-mapper";
 
 // ── Product ──
 
@@ -147,10 +147,36 @@ export const createNullableItemRow = (
   ...overrides,
 });
 
-type CreateOrderItemDTOOptions = {
-  type?: OrderItemDTO["type"];
-  overrides?: Partial<OrderItemDTO>;
-};
+type ProductOrderItemDTOOverrides = Partial<
+  Omit<Extract<OrderItemDTO, { type: "product" }>, "type">
+>;
+type CustomOrderItemDTOOverrides = Partial<
+  Omit<Extract<OrderItemDTO, { type: "custom" }>, "type">
+>;
+type TokenOrderItemDTOOverrides = Partial<
+  Omit<Extract<OrderItemDTO, { type: "token" }>, "type">
+>;
+type ReformOrderItemDTOOverrides = Partial<
+  Omit<Extract<OrderItemDTO, { type: "reform" }>, "type">
+>;
+
+type CreateOrderItemDTOOptions =
+  | {
+      type?: "product";
+      overrides?: ProductOrderItemDTOOverrides;
+    }
+  | {
+      type: "custom";
+      overrides?: CustomOrderItemDTOOverrides;
+    }
+  | {
+      type: "token";
+      overrides?: TokenOrderItemDTOOverrides;
+    }
+  | {
+      type: "reform";
+      overrides?: ReformOrderItemDTOOverrides;
+    };
 
 export const createOrderItemDTO = (
   options: CreateOrderItemDTOOptions = {},
@@ -163,8 +189,8 @@ export const createOrderItemDTO = (
       type: "custom",
       quantity: 1,
       customData: createCustomOrderData(),
-      ...(overrides ?? {}),
-    } as OrderItemDTO;
+      ...((overrides ?? {}) as CustomOrderItemDTOOverrides),
+    };
   }
 
   if (type === "token") {
@@ -172,8 +198,8 @@ export const createOrderItemDTO = (
       id: "item-1",
       type: "token",
       quantity: 1,
-      ...(overrides ?? {}),
-    } as OrderItemDTO;
+      ...((overrides ?? {}) as TokenOrderItemDTOOverrides),
+    };
   }
 
   if (type === "reform") {
@@ -185,8 +211,8 @@ export const createOrderItemDTO = (
         tie: { id: "tie-1", measurementType: "length", tieLength: 145 },
         cost: 15000,
       },
-      ...(overrides ?? {}),
-    } as OrderItemDTO;
+      ...((overrides ?? {}) as ReformOrderItemDTOOverrides),
+    };
   }
 
   return {
@@ -195,6 +221,6 @@ export const createOrderItemDTO = (
     product: createProduct(),
     selectedOption: createProductOption(),
     quantity: 1,
-    ...(overrides ?? {}),
-  } as OrderItemDTO;
+    ...((overrides ?? {}) as ProductOrderItemDTOOverrides),
+  };
 };

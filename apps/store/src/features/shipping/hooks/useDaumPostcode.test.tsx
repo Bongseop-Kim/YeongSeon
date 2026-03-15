@@ -1,16 +1,25 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDaumPostcode } from "@/features/shipping/hooks/useDaumPostcode";
+
+beforeEach(() => {
+  Object.defineProperty(window, "daum", {
+    configurable: true,
+    value: {
+      Postcode: vi.fn(),
+    },
+  });
+});
+
+afterEach(() => {
+  Object.defineProperty(window, "daum", {
+    configurable: true,
+    value: undefined,
+  });
+});
 
 describe("useDaumPostcode", () => {
   it("이미 로드된 Postcode API가 있으면 바로 loaded 상태가 된다", () => {
-    Object.defineProperty(window, "daum", {
-      configurable: true,
-      value: {
-        Postcode: vi.fn(),
-      },
-    });
-
     const { result } = renderHook(() => useDaumPostcode());
     expect(result.current.isLoaded).toBe(true);
   });
@@ -23,8 +32,11 @@ describe("useDaumPostcode", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const { result, unmount } = renderHook(() => useDaumPostcode());
-    const script = document.head.lastElementChild as HTMLScriptElement;
+    const script = document.head.querySelector(
+      'script[src*="postcode.v2.js"]',
+    ) as HTMLScriptElement | null;
 
+    expect(script).not.toBeNull();
     expect(script.src).toContain("postcode.v2.js");
 
     act(() => {
@@ -40,7 +52,8 @@ describe("useDaumPostcode", () => {
     );
 
     unmount();
-    expect(document.head.contains(script)).toBe(false);
+    expect(script).not.toBeNull();
+    expect(document.head.contains(script as HTMLScriptElement)).toBe(false);
     errorSpy.mockRestore();
   });
 });

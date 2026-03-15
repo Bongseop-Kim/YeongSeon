@@ -14,16 +14,15 @@ interface OnboardingDialogProps {
   onClose: () => void;
 }
 
-const ONBOARDING_DIALOG_PAGES = [
-  {
-    ...ONBOARDING_PAGES[0],
-    imageSrc: "/images/yarn-dyed.png",
-  },
-  {
-    ...ONBOARDING_PAGES[1],
-    imageSrc: "/images/print.png",
-  },
-];
+const ONBOARDING_PAGE_IMAGE_BY_INDEX = [
+  "/images/yarn-dyed.png",
+  "/images/print.png",
+] as const;
+
+const ONBOARDING_DIALOG_PAGES = ONBOARDING_PAGES.map((page, index) => ({
+  ...page,
+  imageSrc: ONBOARDING_PAGE_IMAGE_BY_INDEX[index] ?? "/images/print.png",
+}));
 
 export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
   const [currentPage, setCurrentPage] = useState(0);

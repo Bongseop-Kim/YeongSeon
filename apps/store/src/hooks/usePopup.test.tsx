@@ -1,6 +1,18 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { usePopup, usePopupChild } from "@/hooks/usePopup";
+
+const originalOpener = window.opener;
+let closeSpy: ReturnType<typeof vi.spyOn> | null = null;
+
+afterEach(() => {
+  Object.defineProperty(window, "opener", {
+    configurable: true,
+    value: originalOpener,
+  });
+  closeSpy?.mockRestore();
+  closeSpy = null;
+});
 
 describe("usePopup", () => {
   it("팝업을 열고 닫는다", () => {
@@ -40,7 +52,7 @@ describe("usePopup", () => {
 describe("usePopupChild", () => {
   it("부모 윈도우에 메시지를 전달하고 닫는다", () => {
     const postMessage = vi.fn();
-    const close = vi.spyOn(window, "close").mockImplementation(() => {});
+    closeSpy = vi.spyOn(window, "close").mockImplementation(() => {});
     Object.defineProperty(window, "opener", {
       configurable: true,
       value: { postMessage },
@@ -56,7 +68,9 @@ describe("usePopupChild", () => {
       { ok: true },
       window.location.origin,
     );
-    expect(close).toHaveBeenCalled();
-    close.mockRestore();
+    expect(closeSpy).toHaveBeenCalled();
+    expect(postMessage.mock.invocationCallOrder[0]).toBeLessThan(
+      closeSpy.mock.invocationCallOrder[0],
+    );
   });
 });

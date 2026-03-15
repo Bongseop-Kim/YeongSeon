@@ -159,18 +159,30 @@ export const createAdminOrderListRowDTO = (
 
 export const createAdminOrderDetailRowDTO = (
   overrides?: Partial<AdminOrderDetailRowDTO>,
-): AdminOrderDetailRowDTO => ({
-  ...createAdminOrderListRowDTO(),
-  sampleCost: 5000,
-  recipientName: "홍길동",
-  recipientPhone: "010-3333-4444",
-  shippingAddress: "서울특별시 강남구 테헤란로 1",
-  shippingAddressDetail: "101호",
-  shippingPostalCode: "06236",
-  deliveryMemo: "문 앞에 놓아주세요",
-  deliveryRequest: "부재 시 연락 바랍니다",
-  ...overrides,
-});
+): AdminOrderDetailRowDTO => {
+  const {
+    fabricType: _fabricType,
+    designType: _designType,
+    itemQuantity: _itemQuantity,
+    reformSummary: _reformSummary,
+    isSample: _isSample,
+    sampleType: _sampleType,
+    ...sharedFields
+  } = createAdminOrderListRowDTO();
+
+  return {
+    ...sharedFields,
+    sampleCost: 5000,
+    recipientName: "홍길동",
+    recipientPhone: "010-3333-4444",
+    shippingAddress: "서울특별시 강남구 테헤란로 1",
+    shippingAddressDetail: "101호",
+    shippingPostalCode: "06236",
+    deliveryMemo: "문 앞에 놓아주세요",
+    deliveryRequest: "부재 시 연락 바랍니다",
+    ...overrides,
+  };
+};
 
 export const createOrderStatusLogDTO = (
   overrides?: Partial<OrderStatusLogDTO>,

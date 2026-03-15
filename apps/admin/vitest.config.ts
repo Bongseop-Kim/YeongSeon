@@ -6,9 +6,28 @@ export default mergeConfig(
   defineConfig({
     test: {
       globals: true,
-      environment: "jsdom",
-      setupFiles: ["./src/test/setup.ts"],
-      include: ["src/**/*.test.{ts,tsx}"],
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: "admin-node",
+            environment: "node",
+            include: [
+              "src/features/**/api/**/*.test.ts",
+              "src/utils/**/*.test.ts",
+            ],
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: "admin-jsdom",
+            environment: "jsdom",
+            setupFiles: ["./src/test/setup.ts"],
+            include: ["src/**/*.test.tsx", "src/hooks/**/*.test.ts"],
+          },
+        },
+      ],
       coverage: {
         provider: "v8",
         reporter: ["text", "html", "lcov", "json-summary"],

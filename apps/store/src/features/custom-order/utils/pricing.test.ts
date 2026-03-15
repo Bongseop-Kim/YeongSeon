@@ -80,7 +80,7 @@ describe("pricing utils", () => {
     ).toBe((1000 + 200 + 10 + 20 + 30 + 40 + 50 + 60 + 70 + 80 + 90) * 3 + 500);
   });
 
-  it("원단비와 예상 제작일을 계산한다", () => {
+  it("원단비를 계산한다", () => {
     expect(calculateFabricCost(baseOptions, config)).toBe(1000);
     expect(
       calculateFabricCost(
@@ -108,6 +108,9 @@ describe("pricing utils", () => {
     expect(
       calculateFabricCost({ ...baseOptions, fabricProvided: true }, config),
     ).toBe(0);
+  });
+
+  it("예상 제작일을 계산한다", () => {
     expect(getEstimatedDays({ fabricProvided: true, reorder: false })).toBe(
       "7~14일",
     );

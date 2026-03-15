@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { eulo } from "./korean-postposition";
+import { eulo } from "@/utils/korean-postposition";
 
 describe("eulo", () => {
   it("받침이 없으면 로를 반환한다", () => {

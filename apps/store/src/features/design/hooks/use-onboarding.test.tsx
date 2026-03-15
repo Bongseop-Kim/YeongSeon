@@ -54,7 +54,7 @@ describe("useOnboarding", () => {
 
   it("localStorage 접근이 실패해도 폴백 동작한다", async () => {
     const getItemSpy = vi
-      .spyOn(Storage.prototype, "getItem")
+      .spyOn(window.localStorage, "getItem")
       .mockImplementationOnce(() => {
         throw new Error("denied");
       });

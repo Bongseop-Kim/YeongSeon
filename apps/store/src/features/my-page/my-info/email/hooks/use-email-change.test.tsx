@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useEmailChange } from "@/features/my-page/my-info/email/hooks/use-email-change";
 
 const {
@@ -47,11 +47,17 @@ vi.mock("@/features/my-page/api/email-query", () => ({
 describe("useEmailChange", () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-15T00:00:00Z"));
     success.mockReset();
     error.mockReset();
     requestMutateAsync.mockReset();
     resendMutateAsync.mockReset();
     verifyMutateAsync.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it("인증번호 요청 성공 후 verify 단계로 이동한다", async () => {
@@ -90,7 +96,7 @@ describe("useEmailChange", () => {
 
     expect(result.current.canResendCode).toBe(false);
     const nowSpy = vi.spyOn(Date, "now");
-    const base = nowSpy.getMockImplementation?.() ? Date.now() : Date.now();
+    const base = Date.now();
     nowSpy.mockImplementationOnce(() => base + 59_000);
     nowSpy.mockImplementationOnce(() => base + 61_000);
     act(() => {
@@ -141,7 +147,7 @@ describe("useEmailChange", () => {
     });
 
     const nowSpy = vi.spyOn(Date, "now");
-    const base = nowSpy.getMockImplementation?.() ? Date.now() : Date.now();
+    const base = Date.now();
     nowSpy.mockImplementationOnce(() => base + 59_000);
     nowSpy.mockImplementationOnce(() => base + 61_000);
     act(() => {

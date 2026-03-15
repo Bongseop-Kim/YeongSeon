@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeReferenceImages, toDbImageRef } from "./image-mapper";
+import { normalizeReferenceImages, toDbImageRef } from "@/mappers/image-mapper";
 
 describe("normalizeReferenceImages", () => {
   it("중복 URL은 제거하고 공백은 정규화한다", () => {

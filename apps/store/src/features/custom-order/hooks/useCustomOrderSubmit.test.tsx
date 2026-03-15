@@ -169,9 +169,30 @@ describe("useCustomOrderSubmit", () => {
       await result.current.handleSubmit();
     });
     expect(createQuoteRequestMutateAsync).toHaveBeenCalled();
+    expect(clearDraft).toHaveBeenCalled();
+    expect(formReset).toHaveBeenCalled();
     expect(success).toHaveBeenCalledWith("견적요청이 완료되었습니다!");
+  });
 
+  it("견적 요청 실패를 처리한다", async () => {
     createQuoteRequestMutateAsync.mockRejectedValueOnce(new Error("견적 실패"));
+    const clearDraft = vi.fn();
+    const formReset = vi.fn();
+
+    const { result } = renderHook(() =>
+      useCustomOrderSubmit({
+        selectedAddressId: "addr-1",
+        selectedAddress: { id: "addr-1" } as never,
+        imageUpload: {
+          isUploading: false,
+          getImageRefs: () => [],
+        } as never,
+        watchedValues: createValues(100),
+        clearDraft,
+        formReset,
+      }),
+    );
+
     await act(async () => {
       await result.current.handleSubmit();
     });

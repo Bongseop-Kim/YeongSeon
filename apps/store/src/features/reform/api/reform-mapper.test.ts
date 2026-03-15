@@ -9,6 +9,10 @@ vi.mock("@/lib/utils", () => ({
 }));
 
 describe("toReformCartItems", () => {
+  it("빈 tie 목록이면 빈 배열을 반환한다", () => {
+    expect(toReformCartItems([], 0)).toEqual([]);
+  });
+
   it("tie 목록을 reform cart item 배열로 변환한다", () => {
     expect(
       toReformCartItems(

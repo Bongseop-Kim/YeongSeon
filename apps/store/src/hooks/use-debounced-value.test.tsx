@@ -36,12 +36,23 @@ describe("useDebouncedValue", () => {
     );
 
     rerender({ value: "b" });
+
+    act(() => {
+      vi.advanceTimersByTime(299);
+    });
+    expect(result.current).toBe("a");
+
     rerender({ value: "c" });
 
     act(() => {
-      vi.advanceTimersByTime(300);
+      vi.advanceTimersByTime(1);
     });
 
+    expect(result.current).toBe("a");
+
+    act(() => {
+      vi.advanceTimersByTime(299);
+    });
     expect(result.current).toBe("c");
   });
 });

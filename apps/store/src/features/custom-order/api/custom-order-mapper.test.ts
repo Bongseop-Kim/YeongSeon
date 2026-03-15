@@ -91,7 +91,9 @@ describe("toCreateCustomOrderOptionsInput", () => {
       careLabel: false,
     });
   });
+});
 
+describe("toCreateCustomOrderInput / toCreateCustomOrderInputDto", () => {
   it("custom order 입력을 request와 DTO로 변환한다", () => {
     const request = toCreateCustomOrderInput({
       shippingAddressId: "addr-1",

@@ -171,7 +171,7 @@ describe("useDesignChat", () => {
     });
   });
 
-  it("재생성과 에러 상태를 처리한다", () => {
+  it("재생성 중 토큰 부족 에러를 처리한다", () => {
     const { result } = renderHook(() => useDesignChat());
     result.current.regenerate();
 
@@ -186,7 +186,13 @@ describe("useDesignChat", () => {
       }),
     );
     expect(setGenerationStatus).toHaveBeenCalledWith("idle");
+  });
 
+  it("재생성 중 일반 에러를 처리한다", () => {
+    const { result } = renderHook(() => useDesignChat());
+    result.current.regenerate();
+
+    const callbacks = mutate.mock.calls[0][1];
     callbacks.onError(new Error("boom"));
     expect(setGenerationStatus).toHaveBeenCalledWith("completed");
   });
