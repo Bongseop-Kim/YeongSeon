@@ -114,6 +114,7 @@ describe("useShippingAddressPopup", () => {
       queryKey: ["shipping", "default"],
     });
 
+    invalidateQueries.mockClear();
     await act(async () => {
       window.dispatchEvent(
         new MessageEvent("message", {
@@ -127,10 +128,18 @@ describe("useShippingAddressPopup", () => {
     });
     expect(result.current.selectedAddressId).toBe("addr-default");
     expect(result.current.selectedAddress).toEqual(defaultAddress);
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["shipping", "list"],
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["shipping", "default"],
+    });
+    expect(invalidateQueries).toHaveBeenCalledTimes(2);
   });
 
   it("잘못된 message는 무시한다", async () => {
-    renderHook(() => useShippingAddressPopup());
+    const { result } = renderHook(() => useShippingAddressPopup());
+    const initialSelected = result.current.selectedAddressId;
 
     await act(async () => {
       window.dispatchEvent(
@@ -150,6 +159,7 @@ describe("useShippingAddressPopup", () => {
       );
     });
     expect(invalidateQueries).not.toHaveBeenCalled();
+    expect(result.current.selectedAddressId).toBe(initialSelected);
   });
 
   it("팝업 차단을 처리한다", () => {

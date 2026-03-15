@@ -4,6 +4,7 @@ import { usePopup, usePopupChild } from "@/hooks/usePopup";
 
 const originalOpener = window.opener;
 let closeSpy: ReturnType<typeof vi.spyOn> | null = null;
+let openSpy: { mockRestore: () => void } | null = null;
 
 afterEach(() => {
   Object.defineProperty(window, "opener", {
@@ -12,12 +13,14 @@ afterEach(() => {
   });
   closeSpy?.mockRestore();
   closeSpy = null;
+  openSpy?.mockRestore();
+  openSpy = null;
 });
 
 describe("usePopup", () => {
   it("팝업을 열고 닫는다", () => {
     const close = vi.fn();
-    const open = vi.spyOn(window, "open").mockReturnValue({
+    openSpy = vi.spyOn(window, "open").mockReturnValue({
       close,
     } as unknown as Window);
 
@@ -32,7 +35,7 @@ describe("usePopup", () => {
       });
     });
 
-    expect(open).toHaveBeenCalledWith(
+    expect(openSpy).toHaveBeenCalledWith(
       "/test",
       "coupon",
       "width=500,height=700,left=200,top=100,scrollbars=no,resizable=yes",
@@ -45,7 +48,6 @@ describe("usePopup", () => {
 
     expect(close).toHaveBeenCalled();
     expect(result.current.popup).toBeNull();
-    open.mockRestore();
   });
 });
 

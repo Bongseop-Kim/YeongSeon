@@ -19,20 +19,67 @@ const ONBOARDING_PAGE_IMAGE_BY_INDEX = [
   "/images/print.png",
 ] as const;
 
-const ONBOARDING_DIALOG_PAGES = ONBOARDING_PAGES.map((page, index) => ({
-  ...page,
-  imageSrc: ONBOARDING_PAGE_IMAGE_BY_INDEX[index] ?? "/images/print.png",
-}));
+const ONBOARDING_DIALOG_PAGES = ONBOARDING_PAGES.map((page, index) => {
+  const imageSrc = ONBOARDING_PAGE_IMAGE_BY_INDEX[index];
+  if (!imageSrc) {
+    throw new Error(`Missing onboarding dialog image for page index ${index}.`);
+  }
+
+  return {
+    ...page,
+    imageSrc,
+  };
+});
 
 export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
   const [currentPage, setCurrentPage] = useState(0);
-  const page = ONBOARDING_DIALOG_PAGES[currentPage];
+  const hasPages = ONBOARDING_DIALOG_PAGES.length > 0;
+  const safePageIndex = hasPages
+    ? Math.min(currentPage, ONBOARDING_DIALOG_PAGES.length - 1)
+    : 0;
+  const page = ONBOARDING_DIALOG_PAGES[safePageIndex];
 
   useEffect(() => {
     if (open) {
       setCurrentPage(0);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!hasPages) {
+      setCurrentPage(0);
+      return;
+    }
+
+    setCurrentPage((prevPage) =>
+      Math.min(prevPage, ONBOARDING_DIALOG_PAGES.length - 1),
+    );
+  }, [hasPages]);
+
+  if (!page) {
+    return (
+      <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+        <DialogContent
+          className="max-w-sm overflow-hidden p-0"
+          showCloseButton={false}
+        >
+          <div className="px-6 pb-6 pt-5">
+            <DialogTitle className="mb-2 text-lg font-bold">
+              온보딩 안내
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed text-gray-600">
+              온보딩 정보를 불러오지 못했습니다.
+            </DialogDescription>
+          </div>
+          <div className="flex justify-end px-6 pb-6">
+            <Button type="button" size="sm" onClick={onClose}>
+              닫기
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -66,21 +113,27 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
             ))}
           </div>
           <div className="flex items-center gap-2">
-            {currentPage > 0 && (
+            {safePageIndex > 0 && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setCurrentPage((prevPage) => prevPage - 1)}
+                onClick={() =>
+                  setCurrentPage((prevPage) => Math.max(prevPage - 1, 0))
+                }
               >
                 ← 이전
               </Button>
             )}
-            {currentPage < ONBOARDING_DIALOG_PAGES.length - 1 ? (
+            {safePageIndex < ONBOARDING_DIALOG_PAGES.length - 1 ? (
               <Button
                 type="button"
                 size="sm"
-                onClick={() => setCurrentPage((prevPage) => prevPage + 1)}
+                onClick={() =>
+                  setCurrentPage((prevPage) =>
+                    Math.min(prevPage + 1, ONBOARDING_DIALOG_PAGES.length - 1),
+                  )
+                }
               >
                 다음 →
               </Button>

@@ -40,11 +40,10 @@ describe("toAdminProductOption", () => {
 
   it("name이 null이면 빈 문자열로 폴백한다", () => {
     expect(
-      toAdminProductOption(
-        createProductOptionRow({
-          name: null,
-        }),
-      ),
+      toAdminProductOption({
+        ...createProductOptionRow(),
+        name: null,
+      }),
     ).toEqual(
       expect.objectContaining({
         name: "",
@@ -54,11 +53,10 @@ describe("toAdminProductOption", () => {
 
   it("additional_price가 null이면 0으로 폴백한다", () => {
     expect(
-      toAdminProductOption(
-        createProductOptionRow({
-          additional_price: null,
-        }),
-      ),
+      toAdminProductOption({
+        ...createProductOptionRow(),
+        additional_price: null,
+      }),
     ).toEqual(
       expect.objectContaining({
         additionalPrice: 0,
