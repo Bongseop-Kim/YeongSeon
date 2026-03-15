@@ -2,6 +2,8 @@ import type { Product, ProductOption } from "../types/view/product";
 import type { AppliedCoupon, Coupon } from "../types/view/coupon";
 import type { ProductOrderItem, ReformOrderItem } from "../types/view/order";
 import type { ProductCartItem, ReformCartItem } from "../types/view/cart";
+import type { CustomOrderDataDTO, OrderItemDTO } from "../types/dto/order-view";
+import type { NullableItemRow } from "../mappers/shared-mapper";
 
 // ── Product ──
 
@@ -97,3 +99,102 @@ export const createReformCartItem = (
   ...createReformOrderItem(),
   ...overrides,
 });
+
+// ── Shared mapper fixtures ────────────────────────────────────
+
+export const createCustomOrderData = (
+  overrides?: Partial<CustomOrderDataDTO>,
+): CustomOrderDataDTO => ({
+  options: {
+    tieType: "3fold",
+    interlining: "wool",
+    designType: "classic",
+    fabricType: "silk",
+    fabricProvided: false,
+    triangleStitch: true,
+    sideStitch: false,
+    barTack: true,
+    dimple: true,
+    spoderato: false,
+    fold7: false,
+    brandLabel: true,
+    careLabel: true,
+  },
+  pricing: {
+    sewingCost: 12000,
+    fabricCost: 8000,
+    sampleCost: 0,
+    totalCost: 20000,
+  },
+  sample: false,
+  sampleType: null,
+  referenceImageUrls: ["https://example.com/reference-1.jpg"],
+  additionalNotes: "샘플 메모",
+  ...overrides,
+});
+
+export const createNullableItemRow = (
+  overrides?: Partial<NullableItemRow>,
+): NullableItemRow => ({
+  id: "item-1",
+  type: "product",
+  product: createProduct(),
+  selectedOption: createProductOption(),
+  quantity: 1,
+  reformData: null,
+  customData: null,
+  appliedCoupon: null,
+  ...overrides,
+});
+
+type CreateOrderItemDTOOptions = {
+  type?: OrderItemDTO["type"];
+  overrides?: Partial<OrderItemDTO>;
+};
+
+export const createOrderItemDTO = (
+  options: CreateOrderItemDTOOptions = {},
+): OrderItemDTO => {
+  const { type = "product", overrides } = options;
+
+  if (type === "custom") {
+    return {
+      id: "item-1",
+      type: "custom",
+      quantity: 1,
+      customData: createCustomOrderData(),
+      ...(overrides ?? {}),
+    } as OrderItemDTO;
+  }
+
+  if (type === "token") {
+    return {
+      id: "item-1",
+      type: "token",
+      quantity: 1,
+      ...(overrides ?? {}),
+    } as OrderItemDTO;
+  }
+
+  if (type === "reform") {
+    return {
+      id: "item-1",
+      type: "reform",
+      quantity: 1,
+      reformData: {
+        tie: { id: "tie-1", measurementType: "length", tieLength: 145 },
+        cost: 15000,
+      },
+      ...(overrides ?? {}),
+    } as OrderItemDTO;
+  }
+
+  return {
+    id: "item-1",
+    type: "product",
+    product: createProduct(),
+    selectedOption: createProductOption(),
+    quantity: 1,
+    ...(overrides ?? {}),
+  } as OrderItemDTO;
+};

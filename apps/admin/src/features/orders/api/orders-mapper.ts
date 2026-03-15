@@ -369,8 +369,10 @@ export function toAdminOrderItem(
     return item;
   }
 
+  const unreachable: never = dto;
+  const d = unreachable as { itemType: unknown; orderId: unknown; id: unknown };
   throw new ValidationError(
-    `toAdminOrderItem: 알 수 없는 itemType "${dto.itemType}" (orderId: ${dto.orderId}, id: ${dto.id})`,
+    `toAdminOrderItem: 알 수 없는 itemType "${d.itemType}" (orderId: ${d.orderId}, id: ${d.id})`,
   );
 }
 

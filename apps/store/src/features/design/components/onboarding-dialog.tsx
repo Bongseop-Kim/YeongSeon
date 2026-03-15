@@ -14,17 +14,26 @@ interface OnboardingDialogProps {
   onClose: () => void;
 }
 
+const ONBOARDING_DIALOG_PAGES = [
+  {
+    ...ONBOARDING_PAGES[0],
+    imageSrc: "/images/yarn-dyed.png",
+  },
+  {
+    ...ONBOARDING_PAGES[1],
+    imageSrc: "/images/print.png",
+  },
+];
+
 export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
   const [currentPage, setCurrentPage] = useState(0);
-  const page = ONBOARDING_PAGES[currentPage];
+  const page = ONBOARDING_DIALOG_PAGES[currentPage];
 
   useEffect(() => {
     if (open) {
       setCurrentPage(0);
     }
   }, [open]);
-
-  const previewImages = ["/images/yarn-dyed.png", "/images/print.png"];
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -33,8 +42,8 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
         showCloseButton={false}
       >
         <img
-          src={previewImages[currentPage]}
-          alt=""
+          src={page.imageSrc}
+          alt={`${page.title} 예시 이미지`}
           className="h-44 w-full object-cover"
         />
         <div className="px-6 pb-6 pt-5">
@@ -47,7 +56,7 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
         </div>
         <div className="flex items-center justify-between px-6 pb-6">
           <div className="flex items-center gap-1.5">
-            {ONBOARDING_PAGES.map((_, index) => (
+            {ONBOARDING_DIALOG_PAGES.map((_, index) => (
               <span
                 key={index}
                 className={[
@@ -63,16 +72,16 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setCurrentPage(currentPage - 1)}
+                onClick={() => setCurrentPage((prevPage) => prevPage - 1)}
               >
                 ← 이전
               </Button>
             )}
-            {currentPage < ONBOARDING_PAGES.length - 1 ? (
+            {currentPage < ONBOARDING_DIALOG_PAGES.length - 1 ? (
               <Button
                 type="button"
                 size="sm"
-                onClick={() => setCurrentPage(currentPage + 1)}
+                onClick={() => setCurrentPage((prevPage) => prevPage + 1)}
               >
                 다음 →
               </Button>

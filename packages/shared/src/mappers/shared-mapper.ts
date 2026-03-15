@@ -174,7 +174,7 @@ export function parseCustomOrderData(
 // ── Item Row 공유 정규화 ─────────────────────────────
 
 /** OrderItemRowDTO / ClaimItemRowDTO 공통 nullable 필드 */
-interface NullableItemRow {
+export interface NullableItemRow {
   id: string;
   type: "product" | "reform" | "custom" | "token";
   product: ProductDTO | null;
