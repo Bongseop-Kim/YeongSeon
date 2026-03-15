@@ -23,12 +23,13 @@ pnpm db:push            # 마이그레이션 push
 supabase migration list # Remote 마이그레이션 목록 확인
 supabase db push        # 마이그레이션 push (supabase CLI 직접)
 
-# Edge Function 배포 (--use-api 필수: 로컬 Deno lockfile v5 호환 문제 우회)
+# Edge Function 배포 (--use-api 필수: Docker 없이 서버 측 번들링을 강제하므로 CI나 Docker 미설치 환경에서 유용)
 supabase functions deploy <함수명> --use-api
 supabase functions deploy --use-api   # 전체 배포
 ```
 
 새 feature 파일 위치: `apps/{app}/src/features/{domain}/api/{domain}-api.ts` + `{domain}-mapper.ts`
+예시: `apps/my-app/src/features/orders/api/orders-api.ts` + `orders-mapper.ts`, `apps/web/src/features/user/api/user-api.ts` + `user-mapper.ts`
 
 ## 하드 가드레일
 
@@ -40,7 +41,16 @@ supabase functions deploy --use-api   # 전체 배포
 - 금액 계산은 RPC 서버 측에서만 수행한다. 쿠폰 캡 공식은 해당 RPC를 참조한다.
 - 새 쓰기 경로는 반드시 `auth.uid()` 소유권 검증과 `SECURITY DEFINER/INVOKER` 명시를 포함한다. `SECURITY INVOKER`를 기본으로 하고, RLS를 우회해야 하는 특수 목적(예: audit log 작성)에만 `SECURITY DEFINER`를 사용하며 이유를 주석으로 명시한다.
 - 직접 테이블 쓰기는 `cart_items` DELETE만 허용한다. 이 예외는 해당 테이블의 RLS 정책이 `user_id = auth.uid()`로 소유권을 보장하기 때문이다. 다른 테이블에 직접 쓰기 예외를 추가하려면 동일하게 RLS 근거를 명시해야 한다.
-- 주문/클레임 상태 전이는 두 모드로 동작한다. `is_rollback=false`(기본): 순방향만 허용. `is_rollback=true`: 역방향 허용, 사유(memo) 필수. 허용된 롤백 전이는 RPC에서 order_type별로 제한된다. `배송중/완료/취소`, `수거완료/재발송/완료`는 rollback 불가.
+- 주문/클레임 상태 전이는 두 모드로 동작한다. `is_rollback=false`(기본): 순방향만 허용. `is_rollback=true`: 역방향 허용, 사유(memo) 필수. 허용된 롤백 전이는 RPC에서 `order_type`별로 제한된다. `배송중/완료/취소`, `수거완료/재발송/완료`는 rollback 불가.
+- 주문/클레임 상태 전이 규칙 빠른 참고:
+
+| order_type       | forward 예시                                                                                                                                 | backward(롤백) 예시                                                                                         | disallowed transition 예시                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 일반 주문        | `대기중 -> 진행중 -> 배송중 -> 배송완료`                                                                                                     | `is_rollback=true` + memo 시 `진행중 -> 대기중` 가능                                                        | `is_rollback=false`에서 `진행중 -> 대기중`, `배송완료 -> 배송중` 불가    |
+| 취소 클레임      | `취소요청 -> 취소처리중 -> 취소완료` 같은 순방향만 허용                                                                                      | 최종 단계 진입 전 일부 직전 단계 복귀만 가능할 수 있음                                                      | `취소완료 -> 취소처리중`, `취소 -> 이전 단계` 불가                       |
+| 반품/교환 클레임 | 반품 `반품요청 -> 수거대기 -> 수거중 -> 수거완료`, 교환 `교환요청 -> 수거대기 -> 수거중 -> 수거완료 -> 재발송대기 -> 재발송중 -> 재발송완료` | `is_rollback=true` + memo 시 `수거중 -> 수거대기`, `재발송대기 -> 수거완료`처럼 준비 단계만 제한적으로 가능 | `수거완료 -> 수거중`, `재발송완료 -> 재발송중`, `완료 -> 이전 단계` 불가 |
+
+상세 해석: `forward/backward` 허용 범위는 RPC가 `order_type`별로 최종 판정한다. 개발자는 새 전이 로직을 추가할 때 "직전 단계 복귀인지", "memo가 강제되는지", "최종 단계(배송중/배송완료/취소/수거완료/재발송/완료) 이후인지"를 먼저 확인한다.
 
 ## AI 에이전트 규칙
 

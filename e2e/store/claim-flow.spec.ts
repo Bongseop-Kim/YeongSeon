@@ -1,15 +1,12 @@
+import type { Page } from "@playwright/test";
 import {
   expect,
   expectAuthenticatedRoute,
   hasConfiguredAuth,
   test,
 } from "../fixtures/auth";
-import { seedClaimOrders } from "../utils/store-data";
-import {
-  type ClaimTypeLabel,
-  claimCard,
-  claimTypeLabelToCode,
-} from "../utils/claim-helpers";
+import { createStoreClaim, seedClaimOrders } from "../utils/store-data";
+import { claimCard } from "../utils/claim-helpers";
 
 type SeededClaimOrders = Awaited<ReturnType<typeof seedClaimOrders>>;
 
@@ -34,15 +31,6 @@ const submitClaimForm = async ({
     .click();
   await expect(page).toHaveURL(/\/order\/claim-list$/);
 };
-
-export const claimCard = (
-  page: Page,
-  orderId: string,
-  claimTypeLabel: ClaimTypeLabel,
-) =>
-  page.locator(
-    `[data-testid^="claim-card-${orderId}-${claimTypeLabelToCode(claimTypeLabel)}-"]`,
-  );
 
 test.describe.serial("Store 클레임 플로우", () => {
   test.skip(
@@ -148,46 +136,80 @@ test.describe.serial("Store 클레임 플로우", () => {
   test("클레임 목록에서 접수 상태와 데이터를 확인한다", async ({
     authenticatedPage,
   }) => {
+    const listVerificationOrders = await seedClaimOrders();
+
+    await Promise.all([
+      createStoreClaim({
+        type: "cancel",
+        orderId: listVerificationOrders.cancelOrder.orderId,
+        itemId: listVerificationOrders.cancelOrder.itemId,
+        reason: "change_mind",
+        description: "E2E cancel claim list verification",
+      }),
+      createStoreClaim({
+        type: "return",
+        orderId: listVerificationOrders.returnOrder.orderId,
+        itemId: listVerificationOrders.returnOrder.itemId,
+        reason: "defect",
+        description: "E2E return claim list verification",
+      }),
+      createStoreClaim({
+        type: "exchange",
+        orderId: listVerificationOrders.exchangeOrder.orderId,
+        itemId: listVerificationOrders.exchangeOrder.itemId,
+        reason: "size_mismatch",
+        description: "E2E exchange claim list verification",
+      }),
+    ]);
+
     await authenticatedPage.goto("/order/claim-list");
     await expectAuthenticatedRoute(authenticatedPage);
 
     const cancelCard = claimCard(
       authenticatedPage,
-      claimOrders.cancelOrder.orderId,
+      listVerificationOrders.cancelOrder.orderId,
       "취소",
     );
     const returnCard = claimCard(
       authenticatedPage,
-      claimOrders.returnOrder.orderId,
+      listVerificationOrders.returnOrder.orderId,
       "반품",
     );
     const exchangeCard = claimCard(
       authenticatedPage,
-      claimOrders.exchangeOrder.orderId,
+      listVerificationOrders.exchangeOrder.orderId,
       "교환",
     );
 
-    await expect(cancelCard).toContainText(claimOrders.cancelOrder.orderNumber);
+    await expect(cancelCard).toContainText(
+      listVerificationOrders.cancelOrder.orderNumber,
+    );
     await expect(cancelCard).toContainText("취소");
     await expect(cancelCard).toContainText("접수");
     await expect(cancelCard).toContainText("change_mind");
 
-    await expect(returnCard).toContainText(claimOrders.returnOrder.orderNumber);
+    await expect(returnCard).toContainText(
+      listVerificationOrders.returnOrder.orderNumber,
+    );
     await expect(returnCard).toContainText("반품");
     await expect(returnCard).toContainText("접수");
     await expect(returnCard).toContainText("defect");
 
     await expect(exchangeCard).toContainText(
-      claimOrders.exchangeOrder.orderNumber,
+      listVerificationOrders.exchangeOrder.orderNumber,
     );
     await expect(exchangeCard).toContainText("교환");
     await expect(exchangeCard).toContainText("접수");
     await expect(exchangeCard).toContainText("size_mismatch");
 
-    await expect(cancelCard).toContainText(claimOrders.cancelOrder.productName);
-    await expect(returnCard).toContainText(claimOrders.returnOrder.productName);
+    await expect(cancelCard).toContainText(
+      listVerificationOrders.cancelOrder.productName,
+    );
+    await expect(returnCard).toContainText(
+      listVerificationOrders.returnOrder.productName,
+    );
     await expect(exchangeCard).toContainText(
-      claimOrders.exchangeOrder.productName,
+      listVerificationOrders.exchangeOrder.productName,
     );
   });
 });

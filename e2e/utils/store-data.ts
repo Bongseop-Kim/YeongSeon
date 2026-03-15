@@ -77,36 +77,49 @@ let supabaseConfigCache: {
 
 const getSupabaseConfig = async () => {
   if (supabaseConfigCache) return supabaseConfigCache;
-  const [storeEnv, adminEnv] = await Promise.all([
-    fs
-      .readFile(path.resolve(__dirname, "../../apps/store/.env"), "utf8")
-      .catch(() => ""),
-    fs
-      .readFile(path.resolve(__dirname, "../../apps/admin/.env"), "utf8")
-      .catch(() => ""),
-  ]);
+  let entries: Record<string, string> = {};
 
-  const merged = [storeEnv, adminEnv].join("\n");
-  const entries = Object.fromEntries(
-    merged
-      .split(/\r?\n/)
-      .filter(Boolean)
-      .filter((line) => !line.startsWith("#") && line.includes("="))
-      .map((line) => {
-        const index = line.indexOf("=");
-        return [line.slice(0, index).trim(), line.slice(index + 1).trim()];
-      }),
-  );
+  const envSupabaseUrl =
+    process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+  const envSupabaseAnonKey =
+    process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!envSupabaseUrl || !envSupabaseAnonKey) {
+    const readEnvFile = async (filePath: string) => {
+      try {
+        return await fs.readFile(filePath, "utf8");
+      } catch (error) {
+        const nodeError = error as NodeJS.ErrnoException;
+
+        if (nodeError.code === "ENOENT") {
+          return "";
+        }
+
+        throw error;
+      }
+    };
+
+    const [storeEnv, adminEnv] = await Promise.all([
+      readEnvFile(path.resolve(__dirname, "../../apps/store/.env")),
+      readEnvFile(path.resolve(__dirname, "../../apps/admin/.env")),
+    ]);
+
+    const merged = [storeEnv, adminEnv].join("\n");
+    entries = Object.fromEntries(
+      merged
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .filter((line) => !line.startsWith("#") && line.includes("="))
+        .map((line) => {
+          const index = line.indexOf("=");
+          return [line.slice(0, index).trim(), line.slice(index + 1).trim()];
+        }),
+    );
+  }
 
   supabaseConfigCache = {
-    supabaseUrl:
-      process.env.SUPABASE_URL ??
-      process.env.VITE_SUPABASE_URL ??
-      entries.VITE_SUPABASE_URL,
-    supabaseAnonKey:
-      process.env.SUPABASE_ANON_KEY ??
-      process.env.VITE_SUPABASE_ANON_KEY ??
-      entries.VITE_SUPABASE_ANON_KEY,
+    supabaseUrl: envSupabaseUrl ?? entries.VITE_SUPABASE_URL,
+    supabaseAnonKey: envSupabaseAnonKey ?? entries.VITE_SUPABASE_ANON_KEY,
   };
   return supabaseConfigCache;
 };
@@ -165,11 +178,13 @@ export const readFixtures = async (): Promise<E2EFixtures> => {
     const storeMeta = await readAuthMeta("store");
     const [products, shippingAddresses, userCoupons] = await Promise.all([
       supabaseRequest<Array<{ id: number; name: string; price: number }>>({
-        path: "/rest/v1/products?select=id,name,price&stock=gt.0&order=id.asc&limit=1",
+        path: "/rest/v1/products?select=id,name,price&stock=gt.0&option_label=is.null&order=id.asc&limit=1",
         accessToken: storeMeta.accessToken,
       }),
-      supabaseRequest<Array<{ id: string; recipient_name: string }>>({
-        path: `/rest/v1/shipping_addresses?select=id,recipient_name&user_id=eq.${storeMeta.userId}&order=created_at.desc&limit=1`,
+      supabaseRequest<
+        Array<{ id: string; recipient_name: string; is_default: boolean }>
+      >({
+        path: `/rest/v1/shipping_addresses?select=id,recipient_name,is_default&user_id=eq.${storeMeta.userId}&order=created_at.desc`,
         accessToken: storeMeta.accessToken,
       }),
       supabaseRequest<
@@ -183,15 +198,19 @@ export const readFixtures = async (): Promise<E2EFixtures> => {
     ]);
 
     const coupon = userCoupons[0]?.coupon;
-    if (!products[0] || !shippingAddresses[0] || !coupon) {
+    const shippingAddress =
+      shippingAddresses.find((address) => address.is_default) ??
+      shippingAddresses[0];
+
+    if (!products[0] || !shippingAddress || !coupon) {
       throw new Error("E2E fixtures are missing and could not be recovered.");
     }
 
     return {
       storeProduct: products[0],
       shippingAddress: {
-        id: shippingAddresses[0].id,
-        recipientName: shippingAddresses[0].recipient_name,
+        id: shippingAddress.id,
+        recipientName: shippingAddress.recipient_name,
       },
       coupon: {
         id: coupon.id,
@@ -220,11 +239,13 @@ const createStoreOrder = async ({
   shippingAddressId,
   productId,
   productName,
+  selectedOptionId,
   quantity = 1,
 }: {
   shippingAddressId: string;
   productId: number;
   productName: string;
+  selectedOptionId?: number | null;
   quantity?: number;
 }) => {
   const { supabaseUrl, supabaseAnonKey } = await getSupabaseConfig();
@@ -232,6 +253,26 @@ const createStoreOrder = async ({
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Missing Supabase env for E2E helper.");
+  }
+
+  if (selectedOptionId == null) {
+    const productDetails = await supabaseRequest<
+      Array<{ id: number; option_label: string | null }>
+    >({
+      path: `/rest/v1/products?select=id,option_label&id=eq.${productId}&limit=1`,
+      accessToken: storeMeta.accessToken,
+    });
+    const product = productDetails[0];
+
+    if (!product) {
+      throw new Error(`Product ${productId} could not be loaded for E2E seed.`);
+    }
+
+    if (product.option_label !== null) {
+      throw new Error(
+        `Product ${productId} requires an option selection, but selectedOptionId was not provided.`,
+      );
+    }
   }
 
   const itemId = `e2e-claim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -245,7 +286,7 @@ const createStoreOrder = async ({
           item_id: itemId,
           item_type: "product",
           product_id: productId,
-          selected_option_id: null,
+          selected_option_id: selectedOptionId ?? null,
           reform_data: null,
           quantity,
           applied_user_coupon_id: null,
@@ -286,6 +327,26 @@ const createStoreOrder = async ({
   } satisfies SeededClaimOrder;
 };
 
+const listSeedableProducts = async (
+  accessToken: string,
+): Promise<Array<{ id: number; name: string; stock: number }>> => {
+  const products = await supabaseRequest<
+    Array<{
+      id: number;
+      name: string;
+      stock: number;
+      option_label: string | null;
+    }>
+  >({
+    path: "/rest/v1/products?select=id,name,stock,option_label&stock=gt.0&order=id.asc&limit=50",
+    accessToken,
+  });
+
+  return products
+    .filter((product) => product.stock > 0 && product.option_label === null)
+    .map(({ id, name, stock }) => ({ id, name, stock }));
+};
+
 export const seedSaleOrder = async ({
   delivered = false,
 }: {
@@ -293,12 +354,7 @@ export const seedSaleOrder = async ({
 } = {}): Promise<SeededClaimOrder> => {
   const fixtures = await readFixtures();
   const storeMeta = await readAuthMeta("store");
-  const products = await supabaseRequest<
-    Array<{ id: number; name: string; stock: number }>
-  >({
-    path: "/rest/v1/products?select=id,name,stock&stock=gt.0&order=id.asc&limit=20",
-    accessToken: storeMeta.accessToken,
-  });
+  const products = await listSeedableProducts(storeMeta.accessToken);
   const product =
     products.find(
       (candidate) =>
@@ -413,12 +469,7 @@ export const seedClaimOrders = async (): Promise<{
 }> => {
   const fixtures = await readFixtures();
   const storeMeta = await readAuthMeta("store");
-  const products = await supabaseRequest<
-    Array<{ id: number; name: string; stock: number }>
-  >({
-    path: "/rest/v1/products?select=id,name,stock&stock=gt.0&order=id.asc&limit=20",
-    accessToken: storeMeta.accessToken,
-  });
+  const products = await listSeedableProducts(storeMeta.accessToken);
   const claimProducts = products.filter(
     (product) => product.id !== fixtures.storeProduct.id,
   );

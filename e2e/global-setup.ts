@@ -381,9 +381,12 @@ const ensureDefaultShippingAddress = async ({
   });
 
   if (existing.length > 0) {
+    const defaultAddress =
+      existing.find((address) => address.is_default) ?? existing[0];
+
     return {
-      id: existing[0].id,
-      recipientName: existing[0].recipient_name,
+      id: defaultAddress.id,
+      recipientName: defaultAddress.recipient_name,
     };
   }
 
