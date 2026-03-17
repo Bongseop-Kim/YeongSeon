@@ -49,3 +49,6 @@ output/playwright/
 
 # Test coverage
 coverage/
+
+# Obsidian
+.obsidian/
