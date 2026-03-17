@@ -1,9 +1,15 @@
+---
+tags:
+  - process
+  - sale
+---
+
 # 일반 상품 주문 프로세스 (Sale)
 
 ## 1. 개요
 
-`sale` 타입 주문은 장바구니에 담긴 상품을 구매하는 일반 주문 흐름이다.
-결제 완료 후 판매자가 배송을 처리하고, 고객이 구매를 확정하면 포인트가 적립된다.
+`sale` 타입 주문은 장바구니 또는 상품 상세에서 바로 주문서로 진입해 구매하는 일반 주문 흐름이다.
+결제 완료 후 판매자가 배송을 처리하고, 고객이 구매를 확정하면 주문이 완료된다.
 
 ---
 
@@ -34,7 +40,6 @@ stateDiagram-v2
     배송중 --> 완료 : 구매확정 (수동/자동, 7일 경과)
     배송완료 --> 완료 : 구매확정 (수동/자동, 7일 경과)
     진행중 --> 취소 : 클레임(cancel) 처리
-    배송중 --> 취소 : 클레임(cancel) 처리
 ```
 
 | 현재 상태  | 다음 상태  | 트리거                                                 |
@@ -71,7 +76,7 @@ stateDiagram-v2
 
 `배송중`, `배송완료`, `완료` 상태에서는 취소 불가. 반품(return) 또는 교환(exchange) 클레임만 가능.
 
-자세한 내용은 [claim-process.md](./claim-process.md) 참조.
+자세한 내용은 [[claim-process]] 참조.
 
 ---
 
@@ -81,7 +86,6 @@ stateDiagram-v2
 
 - 고객이 직접 확정 (`customer_confirm_purchase`)
 - 허용 상태: `배송완료`, `배송중`
-- 포인트 적립: 결제 금액의 **2%**
 - 진행 중인 클레임이 없어야 함
 
 ### 자동 확정
@@ -90,10 +94,7 @@ stateDiagram-v2
 - 두 조건을 **단일 쿼리**로 처리 (cron 1회 실행)
   - `배송완료` 상태에서 `delivered_at` 기준 7일 경과
   - `배송중` 상태에서 `shipped_at` 기준 7일 경과 (관리자가 `배송완료` 처리를 안 해도 자동 확정됨)
-- 포인트 적립: 결제 금액의 **0.5%**
 - 진행 중인 클레임이 없어야 함
-
-포인트 정책 상세는 [../functions/point-policy.md](../functions/point-policy.md) 참조.
 
 ---
 
@@ -123,7 +124,7 @@ stateDiagram-v2
   └─ 실패: RPC: unlock_payment_orders (결제중 → 대기중, 쿠폰 복원)
 ```
 
-결제 정책 상세는 [../functions/payment-policy.md](../functions/payment-policy.md) 참조.
+결제 정책 상세는 [[payment-policy]] 참조.
 
 ---
 

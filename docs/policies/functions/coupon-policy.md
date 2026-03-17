@@ -1,3 +1,9 @@
+---
+tags:
+  - policy
+  - coupon
+---
+
 # 쿠폰 정책 (Coupon Policy)
 
 ## 1. 개요
@@ -103,8 +109,8 @@ stateDiagram-v2
 
 ## 8. 관련 프로세스
 
-- [sale-process.md](../processes/sale-process.md) — 주문 생성 시 쿠폰 예약
-- [payment-policy.md](./payment-policy.md) — 결제 확정/실패 시 쿠폰 상태 전환
+- [[sale-process]] — 주문 생성 시 쿠폰 예약
+- [[payment-policy]] — 결제 확정/실패 시 쿠폰 상태 전환
 
 ---
 

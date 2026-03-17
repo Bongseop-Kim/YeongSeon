@@ -1,3 +1,9 @@
+---
+tags:
+  - flow
+  - quote-request
+---
+
 # Quote Request 플로우
 
 > 진입점: store (견적 요청 페이지) → 수량/옵션/연락처 입력 → 제출
@@ -9,7 +15,6 @@
 | 요청      | 견적발송  | 순방향 | admin 처리 |
 | 견적발송  | 협의중    | 순방향 | admin 처리 |
 | 협의중    | 확정      | 순방향 | admin 처리 |
-| 확정      | 종료      | 순방향 | admin 처리 |
 
 ## 비즈니스 규칙
 
@@ -27,6 +32,10 @@
 | store | 견적 요청 상세 | /my-page/quote-request/:id |
 | admin | 견적 요청 목록 | /quote-requests            |
 | admin | 견적 요청 상세 | /quote-requests/show/:id   |
+
+## 관련 문서
+
+- [[quote-request-process]] — 상세 프로세스, 상태 전이 규칙
 
 ## 미결 사항
 

@@ -1,3 +1,9 @@
+---
+tags:
+  - process
+  - quote-request
+---
+
 # 견적 요청 프로세스 (Quote Request)
 
 ## 1. 개요

@@ -1,3 +1,9 @@
+---
+tags:
+  - policy
+  - payment
+---
+
 # 결제 정책 (Payment Policy)
 
 ## 1. 개요
@@ -92,10 +98,10 @@ Toss API 호출 실패 시 자동으로 복구한다.
 
 ## 10. 관련 프로세스
 
-- [sale-process.md](../processes/sale-process.md)
-- [repair-process.md](../processes/repair-process.md)
-- [custom-order-process.md](../processes/custom-order-process.md)
-- [token-policy.md](./token-policy.md) — 토큰 구매 결제
+- [[sale-process]]
+- [[repair-process]]
+- [[custom-order-process]]
+- [[token-policy]] — 토큰 구매 결제
 
 ---
 

@@ -1,3 +1,9 @@
+---
+tags:
+  - policy
+  - notification
+---
+
 # 알림 정책 (Notification Policy)
 
 ## 1. 개요
@@ -65,9 +71,9 @@
 
 ## 5. 관련 프로세스
 
-- [sale-process.md](../processes/sale-process.md)
-- [repair-process.md](../processes/repair-process.md)
-- [custom-order-process.md](../processes/custom-order-process.md)
-- [claim-process.md](../processes/claim-process.md)
-- [quote-request-process.md](../processes/quote-request-process.md)
-- [design-process.md](../processes/design-process.md)
+- [[sale-process]]
+- [[repair-process]]
+- [[custom-order-process]]
+- [[claim-process]]
+- [[quote-request-process]]
+- [[design-process]]

@@ -1,3 +1,9 @@
+---
+tags:
+  - process
+  - design
+---
+
 # AI 디자인 생성 프로세스 (Design)
 
 ## 1. 개요
@@ -57,14 +63,26 @@ flowchart TD
 
 ---
 
-## 5. 토큰 환불 (실패 처리)
+## 5. 토큰 환불
 
-AI API 호출 실패 시 `refund_design_tokens`를 호출해 차감된 토큰을 환불한다.
+### 자동 환불 (이미지 미생성)
+
+AI가 이미지를 생성하지 않은 경우(데이터 부족 또는 텍스트 전용 응답으로 이미지 생성이 불필요한 케이스) `refund_design_tokens`를 호출해 차감된 토큰을 자동 환불한다.
 
 | 항목      | 규칙                                              |
 | --------- | ------------------------------------------------- |
 | 멱등성    | `work_id` 기반으로 중복 환불 방지                 |
 | 호출 권한 | service_role 전용 (Edge Function 내부에서만 호출) |
+
+### 수동 환불 신청 (고객 요청)
+
+전자거래 규정에 따라 고객이 구매한 `paid` 토큰의 미사용분에 대해 환불을 신청할 수 있다.
+
+| 항목      | 규칙                                      |
+| --------- | ----------------------------------------- |
+| 대상 토큰 | `paid` 토큰만 환불 가능 (`bonus` 불가)    |
+| 중복 신청 | 동일 주문에 `pending` 환불 요청 중복 불가 |
+| 처리      | 관리자 승인 후 환불 처리                  |
 
 ---
 
@@ -113,4 +131,4 @@ Edge Function → use_design_tokens 실패
 | `supabase/schemas/86_design_tokens.sql`               | 디자인 토큰 테이블 스키마          |
 | `supabase/schemas/99_functions_design_tokens.sql`     | 토큰 RPC (use, refund, balance 등) |
 
-토큰 정책 상세는 [../functions/token-policy.md](../functions/token-policy.md) 참조.
+토큰 정책 상세는 [[token-policy]] 참조.

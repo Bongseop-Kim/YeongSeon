@@ -1,3 +1,9 @@
+---
+tags:
+  - process
+  - claim
+---
+
 # 클레임 프로세스 (Claim)
 
 ## 1. 개요
@@ -23,34 +29,37 @@
 | `진행중`         | cancel           |
 | `배송중`         | return, exchange |
 | `배송완료`       | return, exchange |
-| `완료`           | return, exchange |
+| `완료`           | 없음             |
 | `결제중`, `취소` | 없음             |
 
 ### repair 주문
 
-| 주문 상태        | 가능한 클레임    | 비고                             |
-| ---------------- | ---------------- | -------------------------------- |
-| `대기중`         | cancel           |                                  |
-| `접수`           | 없음             | `CLAIM_ACTIONS_BY_STATUS` 미매핑 |
-| `수선중`         | 없음             | `CLAIM_ACTIONS_BY_STATUS` 미매핑 |
-| `수선완료`       | 없음             | `CLAIM_ACTIONS_BY_STATUS` 미매핑 |
-| `배송중`         | return, exchange |                                  |
-| `배송완료`       | return, exchange |                                  |
-| `완료`           | return, exchange |                                  |
-| `결제중`, `취소` | 없음             |                                  |
+| 주문 상태        | 가능한 클레임    | 비고                                      |
+| ---------------- | ---------------- | ----------------------------------------- |
+| `대기중`         | cancel           |                                           |
+| `발송대기`       | cancel           | 미구현 (`CLAIM_ACTIONS_BY_STATUS` 미매핑) |
+| `발송중`         | cancel           | 미구현 (`CLAIM_ACTIONS_BY_STATUS` 미매핑) |
+| `접수`           | 없음             |                                           |
+| `수선중`         | 없음             |                                           |
+| `수선완료`       | 없음             |                                           |
+| `배송중`         | return, exchange |                                           |
+| `배송완료`       | return, exchange |                                           |
+| `완료`           | 없음             |                                           |
+| `결제중`, `취소` | 없음             |                                           |
 
 ### custom 주문
 
-| 주문 상태        | 가능한 클레임    | 비고                             |
-| ---------------- | ---------------- | -------------------------------- |
-| `대기중`         | cancel           |                                  |
-| `접수`           | 없음             | `CLAIM_ACTIONS_BY_STATUS` 미매핑 |
-| `제작중`         | 없음             | `CLAIM_ACTIONS_BY_STATUS` 미매핑 |
-| `제작완료`       | 없음             | `CLAIM_ACTIONS_BY_STATUS` 미매핑 |
-| `배송중`         | return, exchange |                                  |
-| `배송완료`       | return, exchange |                                  |
-| `완료`           | return, exchange |                                  |
-| `결제중`, `취소` | 없음             |                                  |
+| 주문 상태                   | 가능한 클레임    | 비고                                      |
+| --------------------------- | ---------------- | ----------------------------------------- |
+| `대기중`                    | cancel           |                                           |
+| `접수`                      | cancel           | 미구현 (`CLAIM_ACTIONS_BY_STATUS` 미매핑) |
+| `제작중`                    | cancel           | 미구현 (`CLAIM_ACTIONS_BY_STATUS` 미매핑) |
+| `샘플원단제작중`~`샘플승인` | cancel           | 미구현 (`CLAIM_ACTIONS_BY_STATUS` 미매핑) |
+| `제작완료`                  | 없음             |                                           |
+| `배송중`                    | return, exchange |                                           |
+| `배송완료`                  | return, exchange |                                           |
+| `완료`                      | 없음             |                                           |
+| `결제중`, `취소`            | 없음             |                                           |
 
 ### quote-request (클레임 시스템 외부)
 
