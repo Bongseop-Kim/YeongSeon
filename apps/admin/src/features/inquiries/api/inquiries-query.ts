@@ -7,8 +7,8 @@ import type { AdminInquiryRowDTO } from "@yeongseon/shared";
 import {
   toAdminInquiryListItem,
   toAdminInquiryDetail,
-} from "./inquiries-mapper";
-import { answerInquiry } from "./inquiries-api";
+} from "@/features/inquiries/api/inquiries-mapper";
+import { answerInquiry } from "@/features/inquiries/api/inquiries-api";
 import type {
   AdminInquiryListItem,
   AdminInquiryDetail,

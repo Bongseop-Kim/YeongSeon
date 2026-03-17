@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { toAdminCouponUser } from "./coupons-mapper";
+import { toAdminCouponUser } from "@/features/coupons/api/coupons-mapper";
 import type { AdminCouponUser } from "@/features/coupons/types/admin-coupon";
 
 // ── 읽기 ───────────────────────────────────────────────────────

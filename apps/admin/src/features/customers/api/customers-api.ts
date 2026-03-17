@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { AdminCustomerTokenBalanceRow } from "@/features/customers/types/admin-customer";
-import type { DesignTokenRow } from "./customers-mapper";
+import type { DesignTokenRow } from "@/features/customers/api/customers-mapper";
 
 export interface ManageCustomerTokensParams {
   userId: string;

@@ -5,9 +5,9 @@ import {
   useDashboardRecentOrders,
   useDashboardStats,
 } from "@/features/dashboard/api/dashboard-query";
+import { DashboardRecentOrders } from "@/features/dashboard/components/dashboard-recent-orders";
+import { DashboardStatsRow } from "@/features/dashboard/components/dashboard-stats-row";
 import type { SegmentValue } from "@/features/dashboard/types/admin-dashboard";
-import { DashboardRecentOrders } from "./dashboard-recent-orders";
-import { DashboardStatsRow } from "./dashboard-stats-row";
 import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
 import { QuoteRequestListTable } from "@/features/quote-requests/components/quote-request-list-table";
 

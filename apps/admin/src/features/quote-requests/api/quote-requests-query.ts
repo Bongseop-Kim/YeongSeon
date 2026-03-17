@@ -12,8 +12,8 @@ import {
   toAdminQuoteRequestListItem,
   toAdminQuoteRequestDetail,
   toAdminQuoteRequestStatusLog,
-} from "./quote-requests-mapper";
-import { updateQuoteRequestStatus } from "./quote-requests-api";
+} from "@/features/quote-requests/api/quote-requests-mapper";
+import { updateQuoteRequestStatus } from "@/features/quote-requests/api/quote-requests-api";
 import type {
   AdminQuoteRequestListItem,
   AdminQuoteRequestDetail,

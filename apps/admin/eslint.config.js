@@ -36,6 +36,12 @@ export default tseslint.config([
     },
   },
   {
+    files: ["src/features/**/index.ts", "src/components/**/index.ts"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
+  {
     files: ["src/components/**/*.{ts,tsx}", "src/hooks/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [

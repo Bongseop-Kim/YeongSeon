@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import {
   fromTodayStatsRpcRow,
   fromPeriodStatsRpcRow,
-} from "./dashboard-mapper";
+} from "@/features/dashboard/api/dashboard-mapper";
 import type {
   TodayStatsDTO,
   PeriodStatsDTO,

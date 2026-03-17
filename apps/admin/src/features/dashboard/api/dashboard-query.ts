@@ -2,8 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useList } from "@refinedev/core";
 import type { Dayjs } from "dayjs";
 import type { AdminOrderListRowDTO } from "@yeongseon/shared";
-import { getPeriodStats } from "./dashboard-api";
-import { toDashboardRecentOrder, toDashboardStats } from "./dashboard-mapper";
+import { getPeriodStats } from "@/features/dashboard/api/dashboard-api";
+import {
+  toDashboardRecentOrder,
+  toDashboardStats,
+} from "@/features/dashboard/api/dashboard-mapper";
 import type {
   AdminDashboardRecentOrder,
   AdminDashboardStats,

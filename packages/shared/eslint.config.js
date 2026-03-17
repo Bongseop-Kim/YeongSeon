@@ -3,9 +3,4 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config([
   ...rootConfig,
-  {
-    linterOptions: {
-      reportUnusedDisableDirectives: "error",
-    },
-  },
 ]);
