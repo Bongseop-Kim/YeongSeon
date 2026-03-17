@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { AdminCustomerTokenBalanceRow } from "../types/admin-customer";
+import type { AdminCustomerTokenBalanceRow } from "@/features/customers/types/admin-customer";
 import type { DesignTokenRow } from "./customers-mapper";
 
 export interface ManageCustomerTokensParams {

@@ -23,7 +23,7 @@ import {
   useAdminQuoteRequestStatusLogs,
   useQuoteRequestFormState,
   useQuoteRequestStatusUpdate,
-} from "../api/quote-requests-query";
+} from "@/features/quote-requests/api/quote-requests-query";
 import { CustomOrderOptionsDetail } from "./custom-order-options-detail";
 import { formatWithComma } from "@/utils/format-number";
 

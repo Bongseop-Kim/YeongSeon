@@ -1,6 +1,6 @@
 import { Descriptions, Tag } from "antd";
-import { ROLE_COLORS } from "../types/admin-customer";
-import type { AdminCustomerDetail } from "../types/admin-customer";
+import { ROLE_COLORS } from "@/features/customers/types/admin-customer";
+import type { AdminCustomerDetail } from "@/features/customers/types/admin-customer";
 
 interface Props {
   customer: AdminCustomerDetail;

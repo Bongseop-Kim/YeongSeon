@@ -5,8 +5,8 @@ import {
   QUOTE_REQUEST_STATUS_OPTIONS,
   CONTACT_METHOD_LABELS,
 } from "@yeongseon/shared";
-import { useAdminQuoteRequestTable } from "../api/quote-requests-query";
-import type { AdminQuoteRequestListItem } from "../types/admin-quote-request";
+import { useAdminQuoteRequestTable } from "@/features/quote-requests/api/quote-requests-query";
+import type { AdminQuoteRequestListItem } from "@/features/quote-requests/types/admin-quote-request";
 
 export function QuoteRequestListTable() {
   const { show } = useNavigation();

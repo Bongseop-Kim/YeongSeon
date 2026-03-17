@@ -8,8 +8,8 @@ import {
   PRODUCT_COLORS,
   PRODUCT_MATERIALS,
   PRODUCT_PATTERNS,
-} from "../types/admin-product";
-import type { AdminProductOption } from "../types/admin-product";
+} from "@/features/products/types/admin-product";
+import type { AdminProductOption } from "@/features/products/types/admin-product";
 
 interface ProductFormValues {
   code?: string | null;

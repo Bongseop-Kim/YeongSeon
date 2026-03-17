@@ -6,8 +6,8 @@ import { useNavigation } from "@refinedev/core";
 import dayjs from "dayjs";
 import { ORDER_STATUS_OPTIONS, ORDER_STATUS_COLORS } from "@yeongseon/shared";
 import type { OrderType } from "@yeongseon/shared";
-import { useAdminOrderTable } from "../api/orders-query";
-import type { AdminOrderListItem } from "../types/admin-order";
+import { useAdminOrderTable } from "@/features/orders/api/orders-query";
+import type { AdminOrderListItem } from "@/features/orders/types/admin-order";
 import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
 
 interface DomainOrderTableProps {

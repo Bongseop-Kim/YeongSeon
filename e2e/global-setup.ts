@@ -139,6 +139,7 @@ const loadAppEnv = async () => {
   const envFiles = [
     path.join(workspaceRoot, "apps/store/.env"),
     path.join(workspaceRoot, "apps/admin/.env"),
+    path.join(__dirname, ".env"),
   ];
 
   const loaded: Record<string, string> = {};
@@ -153,6 +154,12 @@ const loadAppEnv = async () => {
       if (nodeError.code !== "ENOENT") {
         throw error;
       }
+    }
+  }
+
+  for (const [key, value] of Object.entries(loaded)) {
+    if (process.env[key] === undefined) {
+      process.env[key] = value;
     }
   }
 

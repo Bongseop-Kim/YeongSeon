@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Button, Form, Input, InputNumber, Modal } from "antd";
-import { useManageCustomerTokensMutation } from "../api/customers-query";
-import type { AdminTokenManageForm } from "../types/admin-customer";
+import { useManageCustomerTokensMutation } from "@/features/customers/api/customers-query";
+import type { AdminTokenManageForm } from "@/features/customers/types/admin-customer";
 
 interface CustomerTokenFormModalProps {
   userId: string;

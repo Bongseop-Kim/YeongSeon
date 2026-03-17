@@ -24,7 +24,7 @@ import type {
   AdminOrderDetail,
   AdminOrderItem,
   AdminStatusLogEntry,
-} from "../types/admin-order";
+} from "@/features/orders/types/admin-order";
 
 // ── List ───────────────────────────────────────────────────────
 // useTable returns { tableProps, setFilters } — tableProps.dataSource is TData[]

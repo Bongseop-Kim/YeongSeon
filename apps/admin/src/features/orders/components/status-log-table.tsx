@@ -1,6 +1,6 @@
 import { Table, Tag } from "antd";
 import { ORDER_STATUS_COLORS } from "@yeongseon/shared";
-import type { AdminStatusLogEntry } from "../types/admin-order";
+import type { AdminStatusLogEntry } from "@/features/orders/types/admin-order";
 
 interface StatusLogTableProps {
   logs: AdminStatusLogEntry[];

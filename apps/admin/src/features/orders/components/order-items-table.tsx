@@ -1,6 +1,6 @@
 import { Table } from "antd";
 import { useNavigation } from "@refinedev/core";
-import type { AdminOrderItem } from "../types/admin-order";
+import type { AdminOrderItem } from "@/features/orders/types/admin-order";
 
 interface OrderItemsTableProps {
   items: AdminOrderItem[];

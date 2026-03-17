@@ -1,6 +1,6 @@
 import { Descriptions, Tag, Button, Space } from "antd";
 import { ORDER_STATUS_COLORS, buildTrackingUrl } from "@yeongseon/shared";
-import type { AdminClaimOrderShipping } from "../types/admin-claim";
+import type { AdminClaimOrderShipping } from "@/features/claims/types/admin-claim";
 
 interface OrderShippingSectionProps {
   shipping: AdminClaimOrderShipping;

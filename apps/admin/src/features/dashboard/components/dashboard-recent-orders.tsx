@@ -5,7 +5,7 @@ import { ORDER_STATUS_COLORS, ORDER_TYPE_LABELS } from "@yeongseon/shared";
 import type {
   AdminDashboardRecentOrder,
   SegmentValue,
-} from "../types/admin-dashboard";
+} from "@/features/dashboard/types/admin-dashboard";
 
 const { Title } = Typography;
 

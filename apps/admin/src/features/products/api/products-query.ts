@@ -13,7 +13,7 @@ import {
 import type {
   AdminProductListItem,
   AdminProductOption,
-} from "../types/admin-product";
+} from "@/features/products/types/admin-product";
 
 interface AdminProductRecord {
   id: number;

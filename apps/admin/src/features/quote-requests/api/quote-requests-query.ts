@@ -19,7 +19,7 @@ import type {
   AdminQuoteRequestDetail,
   AdminQuoteRequestStatusLog,
   QuoteRequestFormValues,
-} from "../types/admin-quote-request";
+} from "@/features/quote-requests/types/admin-quote-request";
 
 // ── List ───────────────────────────────────────────────────────
 

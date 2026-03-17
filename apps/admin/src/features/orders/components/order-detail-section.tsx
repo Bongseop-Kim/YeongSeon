@@ -15,7 +15,7 @@ import {
   useOrderStatusUpdate,
   useTrackingSave,
   useTrackingState,
-} from "../api/orders-query";
+} from "@/features/orders/api/orders-query";
 import { OrderInfoSection } from "./order-info-section";
 import { OrderStatusActions } from "./order-status-actions";
 import { CustomOrderDetail } from "./custom-order-detail";
@@ -28,7 +28,7 @@ import { RelatedOrdersSection } from "@/features/orders/components/related-order
 import type {
   AdminCustomOrderItem,
   AdminReformOrderItem,
-} from "../types/admin-order";
+} from "@/features/orders/types/admin-order";
 
 const { Title } = Typography;
 

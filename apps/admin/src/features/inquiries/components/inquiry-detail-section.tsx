@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Descriptions, Tag, Input, Button, Space, Spin } from "antd";
-import { INQUIRY_STATUS_COLORS } from "../types/admin-inquiry";
+import { INQUIRY_STATUS_COLORS } from "@/features/inquiries/types/admin-inquiry";
 import {
   useAdminInquiryDetail,
   useAnswerInquiry,
-} from "../api/inquiries-query";
+} from "@/features/inquiries/api/inquiries-query";
 import { IMAGEKIT_URL_ENDPOINT } from "@/lib/imagekit";
 
 export function InquiryDetailSection() {

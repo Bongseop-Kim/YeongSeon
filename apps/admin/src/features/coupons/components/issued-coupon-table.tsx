@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Space, Table, Tag } from "antd";
-import type { AdminIssuedCouponRow } from "../types/admin-coupon";
-import { isActiveIssuedStatus } from "../types/admin-coupon";
+import type { AdminIssuedCouponRow } from "@/features/coupons/types/admin-coupon";
+import { isActiveIssuedStatus } from "@/features/coupons/types/admin-coupon";
 
 type IssuedCouponTableProps = {
   rows: AdminIssuedCouponRow[];

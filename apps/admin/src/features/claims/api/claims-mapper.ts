@@ -11,7 +11,7 @@ import type {
   AdminClaimCustomer,
   AdminClaimLinkedOrder,
   AdminTokenRefundInfo,
-} from "../types/admin-claim";
+} from "@/features/claims/types/admin-claim";
 
 // ── Private helpers ────────────────────────────────────────────
 

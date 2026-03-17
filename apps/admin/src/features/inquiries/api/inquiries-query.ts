@@ -12,7 +12,7 @@ import { answerInquiry } from "./inquiries-api";
 import type {
   AdminInquiryListItem,
   AdminInquiryDetail,
-} from "../types/admin-inquiry";
+} from "@/features/inquiries/types/admin-inquiry";
 
 // ── List ───────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import { Table, Tag } from "antd";
 import { useNavigation } from "@refinedev/core";
-import type { AdminCustomerCouponRow } from "../types/admin-customer";
+import type { AdminCustomerCouponRow } from "@/features/customers/types/admin-customer";
 
 interface Props {
   coupons: AdminCustomerCouponRow[];

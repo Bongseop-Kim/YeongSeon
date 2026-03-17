@@ -4,7 +4,7 @@ import type {
   AdminInquiryListItem,
   AdminInquiryDetail,
   InquiryCategory,
-} from "../types/admin-inquiry";
+} from "@/features/inquiries/types/admin-inquiry";
 
 export function toAdminInquiryListItem(
   dto: AdminInquiryRowDTO,

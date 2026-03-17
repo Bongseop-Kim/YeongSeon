@@ -8,7 +8,7 @@ import type {
   AdminDashboardRecentOrder,
   AdminDashboardStats,
   SegmentValue,
-} from "../types/admin-dashboard";
+} from "@/features/dashboard/types/admin-dashboard";
 
 export function useDashboardStats(
   segment: SegmentValue,
