@@ -1,19 +1,25 @@
 ---
-tags:
-  - policy
-  - notification
+policy: notification
+status: planned
+affects: [sale, repair, custom-order, claim, quote-request, design]
+last-verified: 2026-03-17
 ---
 
-# 알림 정책 (Notification Policy)
+# 알림 정책 (Notification)
 
-## 1. 개요
+> 주문/클레임/견적 상태 변경 시 사용자 알림. 현재 미구현, 향후 구현 예정.
 
-- **구현 상태**: 미구현
-- **적용 범위**: 주문/클레임/견적 상태 변경 시 사용자 알림 (향후 구현 예정)
+## 핵심 규칙
 
----
+**PR-notification-001**: 알림 발송 시점은 주문 상태 변경 RPC 또는 Edge Function에서 트리거
 
-## 2. 향후 필요 알림 시점
+**PR-notification-002**: 외부 알림 서비스(이메일, SMS) 호출은 Edge Function에서 처리
+
+**PR-notification-003**: 중복 발송 방지를 위해 알림 이력 테이블 + 멱등 키 필요
+
+**PR-notification-004**: 알림 타입별 사용자 수신 on/off 설정 지원 필요
+
+## 알림 시점
 
 ### 주문 알림
 
@@ -47,9 +53,7 @@ tags:
 | 토큰 구매 완료 | 고객 | 중간     |
 | 토큰 잔액 부족 | 고객 | 낮음     |
 
----
-
-## 3. 알림 채널 후보
+## 알림 채널 후보
 
 | 채널      | 설명                |
 | --------- | ------------------- |
@@ -58,22 +62,6 @@ tags:
 | SMS       | 중요 상태 변경 문자 |
 | 인앱 알림 | 웹/앱 내 알림 센터  |
 
----
+## 횡단 참조
 
-## 4. 구현 시 고려사항
-
-- **알림 발송 시점**: 주문 상태 변경 RPC 또는 Edge Function에서 트리거
-- **Edge Function 방식 권장**: 외부 알림 서비스(이메일, SMS) 호출은 Edge Function에서 처리 (Supabase 함수 선택 기준 참조)
-- **중복 발송 방지**: 알림 이력 테이블 + 멱등 키 필요
-- **사용자 수신 설정**: 알림 타입별 on/off 설정 지원 필요
-
----
-
-## 5. 관련 프로세스
-
-- [[sale-process]]
-- [[repair-process]]
-- [[custom-order-process]]
-- [[claim-process]]
-- [[quote-request-process]]
-- [[design-process]]
+- [[sale]], [[repair]], [[custom-order]], [[claim]], [[quote-request]], [[design]]

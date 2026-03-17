@@ -1,44 +1,39 @@
 ---
-tags:
-  - policy
-  - coupon
+policy: coupon
+status: implemented
+affects: [sale, repair, custom-order]
+last-verified: 2026-03-17
 ---
 
-# 쿠폰 정책 (Coupon Policy)
+# 쿠폰 정책 (Coupon)
 
-## 1. 개요
+> sale / repair / custom 주문 생성 시 라인 단위 할인 적용.
 
-- **구현 상태**: 구현됨
-- **적용 범위**: sale / repair / custom 주문 생성 시 라인 단위 할인 적용
-
----
-
-## 2. 할인 타입
+## 할인 타입
 
 | 타입         | 설명                           |
 | ------------ | ------------------------------ |
 | `percentage` | 정률 할인 (단가 × 할인율 %)    |
 | `fixed`      | 정액 할인 (아이템당 고정 금액) |
 
----
+## 핵심 규칙
 
-## 3. 쿠폰 유효성 조건
+**PR-coupon-001**: 쿠폰 유효성 — 다음 4가지 조건 모두 충족 시만 사용 가능
 
-쿠폰이 사용 가능하려면 다음 조건을 모두 충족해야 한다:
+- `user_coupons.status = 'active'`
+- `coupons.is_active = true`
+- `coupons.expiry_date >= current_date`
+- `user_coupons.expires_at IS NULL OR > now()`
 
-| 조건                                         | 설명                    |
-| -------------------------------------------- | ----------------------- |
-| `user_coupons.status = 'active'`             | 사용 가능 상태          |
-| `coupons.is_active = true`                   | 쿠폰 활성화됨           |
-| `coupons.expiry_date >= current_date`        | 쿠폰 자체 만료일 미경과 |
-| `user_coupons.expires_at IS NULL OR > now()` | 개인 만료일 미경과      |
+**PR-coupon-002**: 금액 계산은 라인(주문 아이템) 단위로 수행. 나머지(remainder)는 첫 번째 단위에 보존
 
----
+**PR-coupon-003**: `max_discount_amount`가 설정된 경우 라인 전체 할인액의 상한으로 적용. `NULL`이면 상한 없음
 
-## 4. 할인 계산 규칙 (라인 단위)
+**PR-coupon-004**: 동일 쿠폰 중복 사용 불가. 서로 다른 쿠폰은 라인 아이템별 각각 적용 가능
 
-금액 계산은 라인(주문 아이템) 단위로 수행한다.
-나머지(remainder)는 첫 번째 단위에 보존한다.
+**PR-coupon-005**: 결제 실패 또는 취소 시 `reserved` → `active` 복원
+
+## 할인 계산 공식
 
 ### percentage 쿠폰
 
@@ -59,14 +54,7 @@ line_discount_remainder = capped_line_discount % qty
 total_line_discount = (final_unit_discount × qty) + line_discount_remainder
 ```
 
-### max_discount_amount
-
-- `max_discount_amount`가 설정된 경우 라인 전체 할인액의 상한으로 적용된다.
-- `NULL`이면 상한 없음.
-
----
-
-## 5. 쿠폰 생명주기
+## 쿠폰 생명주기
 
 ```mermaid
 stateDiagram-v2
@@ -86,18 +74,7 @@ stateDiagram-v2
 | `expired`  | 만료                                  |
 | `revoked`  | 관리자 회수                           |
 
----
-
-## 6. 중복 사용 방지
-
-| 규칙                     | 설명                                          |
-| ------------------------ | --------------------------------------------- |
-| 동일 쿠폰 중복 사용 불가 | 한 주문에 같은 쿠폰 ID를 두 번 사용할 수 없음 |
-| 서로 다른 쿠폰           | 라인 아이템별로 각각 적용 가능                |
-
----
-
-## 7. 관리자 기능
+## 관리자 기능
 
 | 기능          | 설명                                |
 | ------------- | ----------------------------------- |
@@ -105,19 +82,15 @@ stateDiagram-v2
 | 쿠폰 회수     | `status = 'revoked'`로 변경         |
 | 프리셋 타겟팅 | 조건에 맞는 사용자 그룹에 일괄 발급 |
 
----
-
-## 8. 관련 프로세스
-
-- [[sale-process]] — 주문 생성 시 쿠폰 예약
-- [[payment-policy]] — 결제 확정/실패 시 쿠폰 상태 전환
-
----
-
-## 9. 관련 파일
+## 관련 파일
 
 | 파일                                              | 역할                                                                       |
 | ------------------------------------------------- | -------------------------------------------------------------------------- |
 | `supabase/schemas/30_coupons.sql`                 | 쿠폰 테이블 스키마                                                         |
 | `supabase/schemas/31_user_coupons.sql`            | 사용자 쿠폰 테이블 스키마                                                  |
 | `packages/shared/src/utils/calculate-discount.ts` | 프론트 할인 계산 유틸 (UI 미리보기 전용, 실제 금액 계산의 기준은 RPC 서버) |
+
+## 횡단 참조
+
+- [[sale]] — 주문 생성 시 쿠폰 예약
+- [[payment]] — 결제 확정/실패 시 쿠폰 상태 전환
