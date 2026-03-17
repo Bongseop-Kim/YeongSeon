@@ -3,7 +3,7 @@ import type {
   AdminDashboardStats,
   TodayStatsDTO,
   PeriodStatsDTO,
-} from "../types/admin-dashboard";
+} from "@/features/dashboard/types/admin-dashboard";
 
 interface TodayStatsRpcRow {
   today_order_count: unknown;

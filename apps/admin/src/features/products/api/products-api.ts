@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { fromAdminProductOption } from "./products-mapper";
-import type { AdminProductOption } from "../types/admin-product";
+import type { AdminProductOption } from "@/features/products/types/admin-product";
 
 /**
  * product_options 테이블 직접 쓰기

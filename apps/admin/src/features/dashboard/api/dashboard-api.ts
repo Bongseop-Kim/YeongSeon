@@ -2,9 +2,12 @@ import { supabase } from "@/lib/supabase";
 import {
   fromTodayStatsRpcRow,
   fromPeriodStatsRpcRow,
-} from "./dashboard-mapper";
-import type { TodayStatsDTO, PeriodStatsDTO } from "../types/admin-dashboard";
-import type { SegmentValue } from "../types/admin-dashboard";
+} from "@/features/dashboard/api/dashboard-mapper";
+import type {
+  TodayStatsDTO,
+  PeriodStatsDTO,
+  SegmentValue,
+} from "@/features/dashboard/types/admin-dashboard";
 
 export async function getTodayStats(
   segment: SegmentValue,

@@ -28,7 +28,7 @@ jobs:
       - run: pnpm cpd
       - run: pnpm type-check
       - run: pnpm format:check
-      - run: pnpm test
+      - run: pnpm test:ci
 
   semgrep:
     runs-on: ubuntu-latest

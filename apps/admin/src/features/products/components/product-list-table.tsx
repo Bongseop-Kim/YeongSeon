@@ -1,9 +1,9 @@
 import React from "react";
 import { useNavigation } from "@refinedev/core";
 import { Image, Select, Space, Table, Tag } from "antd";
-import { useAdminProductTable } from "../api/products-query";
-import { CATEGORY_FILTER_OPTIONS } from "../types/admin-product";
-import type { AdminProductListItem } from "../types/admin-product";
+import { useAdminProductTable } from "@/features/products/api/products-query";
+import { CATEGORY_FILTER_OPTIONS } from "@/features/products/types/admin-product";
+import type { AdminProductListItem } from "@/features/products/types/admin-product";
 
 export function ProductListTable() {
   const { edit } = useNavigation();

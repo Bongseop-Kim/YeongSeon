@@ -1,5 +1,5 @@
 import { Descriptions, Typography } from "antd";
-import type { QuoteRequestOptions } from "../types/admin-quote-request";
+import type { QuoteRequestOptions } from "@/features/quote-requests/types/admin-quote-request";
 
 const { Title } = Typography;
 

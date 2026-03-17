@@ -1,7 +1,7 @@
 import type {
   AdminProductListItem,
   AdminProductOption,
-} from "../types/admin-product";
+} from "@/features/products/types/admin-product";
 
 interface ProductsTableRow {
   id: number;

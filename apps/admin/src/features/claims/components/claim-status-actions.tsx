@@ -1,7 +1,7 @@
 import { Button, Space, Typography, Input, Modal, Tag } from "antd";
 import { message } from "antd";
 import { CLAIM_REJECT_RESTORE_STATUS } from "@yeongseon/shared";
-import type { AdminClaimDetail } from "../types/admin-claim";
+import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
 
 const { Text } = Typography;
 const { TextArea } = Input;

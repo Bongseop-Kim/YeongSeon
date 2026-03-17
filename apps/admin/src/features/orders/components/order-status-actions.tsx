@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { Button, Space, Typography, Input, Modal, Tag } from "antd";
 import { message } from "antd";
 import { ADMIN_NON_CANCELABLE_STATUSES } from "@yeongseon/shared";
-import type { AdminOrderDetail } from "../types/admin-order";
+import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
 import { eulo } from "@yeongseon/shared";
 
 const { Text } = Typography;

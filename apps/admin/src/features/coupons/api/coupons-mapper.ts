@@ -1,7 +1,7 @@
 import type {
   AdminCouponUser,
   AdminIssuedCouponRow,
-} from "../types/admin-coupon";
+} from "@/features/coupons/types/admin-coupon";
 
 // ── 로컬 DTO ───────────────────────────────────────────────────
 

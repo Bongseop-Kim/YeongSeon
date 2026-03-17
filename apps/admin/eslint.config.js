@@ -27,12 +27,18 @@ export default tseslint.config([
         {
           patterns: [
             {
-              group: ["../../*", "../../../*", "../../../../*"],
+              group: ["../*", "../../*", "../../../*", "../../../../*"],
               message: "교차 디렉터리 import는 @/ 절대경로를 사용하세요.",
             },
           ],
         },
       ],
+    },
+  },
+  {
+    files: ["src/features/**/index.ts", "src/components/**/index.ts"],
+    rules: {
+      "no-restricted-imports": "off",
     },
   },
   {

@@ -5,7 +5,7 @@ import {
   CLAIM_TYPE_LABELS,
   CLAIM_REASON_LABELS,
 } from "@yeongseon/shared";
-import type { AdminClaimDetail } from "../types/admin-claim";
+import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
 
 interface ClaimInfoSectionProps {
   claim: AdminClaimDetail;

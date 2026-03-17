@@ -9,6 +9,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
+    "test:ci": "turbo test:ci",
     "test:e2e": "playwright test -c e2e/playwright.config.ts",
     "test:e2e:store": "playwright test -c e2e/playwright.config.ts --project=store",
     "test:e2e:admin": "playwright test -c e2e/playwright.config.ts --project=admin",

@@ -1,6 +1,6 @@
 import { Table, Tag } from "antd";
 import { CLAIM_STATUS_COLORS } from "@yeongseon/shared";
-import type { AdminClaimStatusLogEntry } from "../types/admin-claim";
+import type { AdminClaimStatusLogEntry } from "@/features/claims/types/admin-claim";
 
 interface ClaimStatusLogTableProps {
   logs: AdminClaimStatusLogEntry[];

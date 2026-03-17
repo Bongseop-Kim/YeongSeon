@@ -6,6 +6,8 @@ export default mergeConfig(
   defineConfig({
     test: {
       globals: true,
+      clearMocks: true,
+      restoreMocks: true,
       projects: [
         {
           extends: true,
@@ -27,7 +29,7 @@ export default mergeConfig(
       ],
       coverage: {
         provider: "v8",
-        reporter: ["text", "html", "lcov", "json-summary"],
+        reporter: ["text", "html", "lcov", "json-summary", "json"],
         include: ["src/**/*.{ts,tsx}"],
         exclude: [
           // 테스트/설정
@@ -62,8 +64,8 @@ export default mergeConfig(
         ],
         thresholds: {
           lines: 80,
-          branches: 60,
-          functions: 57,
+          branches: 80,
+          functions: 80,
           statements: 80,
         },
       },

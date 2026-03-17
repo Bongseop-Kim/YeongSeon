@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Modal, Space, Switch, Input, Table, Tag } from "antd";
-import { usePresetCustomers, useFilteredUsers } from "../api/coupons-query";
-import { PRESET_LABELS } from "../types/admin-coupon";
-import type { PresetKey } from "../types/admin-coupon";
+import {
+  usePresetCustomers,
+  useFilteredUsers,
+} from "@/features/coupons/api/coupons-query";
+import { PRESET_LABELS } from "@/features/coupons/types/admin-coupon";
+import type { PresetKey } from "@/features/coupons/types/admin-coupon";
 
 type IssueCouponModalProps = {
   open: boolean;

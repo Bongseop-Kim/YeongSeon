@@ -1,5 +1,5 @@
 import { Card, Descriptions, Image, Space, Typography } from "antd";
-import type { AdminReformOrderItem } from "../types/admin-order";
+import type { AdminReformOrderItem } from "@/features/orders/types/admin-order";
 
 const { Title } = Typography;
 

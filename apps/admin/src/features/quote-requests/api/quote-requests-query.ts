@@ -12,14 +12,14 @@ import {
   toAdminQuoteRequestListItem,
   toAdminQuoteRequestDetail,
   toAdminQuoteRequestStatusLog,
-} from "./quote-requests-mapper";
-import { updateQuoteRequestStatus } from "./quote-requests-api";
+} from "@/features/quote-requests/api/quote-requests-mapper";
+import { updateQuoteRequestStatus } from "@/features/quote-requests/api/quote-requests-api";
 import type {
   AdminQuoteRequestListItem,
   AdminQuoteRequestDetail,
   AdminQuoteRequestStatusLog,
   QuoteRequestFormValues,
-} from "../types/admin-quote-request";
+} from "@/features/quote-requests/types/admin-quote-request";
 
 // ── List ───────────────────────────────────────────────────────
 

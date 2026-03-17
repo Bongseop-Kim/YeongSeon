@@ -1,5 +1,5 @@
 import { Descriptions } from "antd";
-import type { AdminShippingAddress } from "../types/admin-order";
+import type { AdminShippingAddress } from "@/features/orders/types/admin-order";
 
 interface ShippingAddressSectionProps {
   address: AdminShippingAddress | null;

@@ -5,7 +5,7 @@ import {
   ExceptionOutlined,
   QuestionCircleOutlined,
 } from "@ant-design/icons";
-import type { AdminDashboardStats } from "../types/admin-dashboard";
+import type { AdminDashboardStats } from "@/features/dashboard/types/admin-dashboard";
 
 export function DashboardStatsRow({ stats }: { stats: AdminDashboardStats }) {
   return (

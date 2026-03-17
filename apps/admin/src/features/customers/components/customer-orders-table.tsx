@@ -1,7 +1,7 @@
 import { Table, Tag } from "antd";
 import { useNavigation } from "@refinedev/core";
 import { ORDER_STATUS_COLORS } from "@yeongseon/shared";
-import type { AdminCustomerOrderRow } from "../types/admin-customer";
+import type { AdminCustomerOrderRow } from "@/features/customers/types/admin-customer";
 
 interface Props {
   orders: AdminCustomerOrderRow[];

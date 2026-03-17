@@ -8,7 +8,7 @@ import type {
   AdminQuoteRequestListItem,
   AdminQuoteRequestDetail,
   AdminQuoteRequestStatusLog,
-} from "../types/admin-quote-request";
+} from "@/features/quote-requests/types/admin-quote-request";
 
 // ── Runtime helpers ───────────────────────────────────────────
 

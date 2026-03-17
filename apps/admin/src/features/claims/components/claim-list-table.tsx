@@ -5,8 +5,8 @@ import {
   CLAIM_STATUS_OPTIONS,
   CLAIM_TYPE_LABELS,
 } from "@yeongseon/shared";
-import { useAdminClaimTable } from "../api/claims-query";
-import type { AdminClaimListItem } from "../types/admin-claim";
+import { useAdminClaimTable } from "@/features/claims/api/claims-query";
+import type { AdminClaimListItem } from "@/features/claims/types/admin-claim";
 
 export function ClaimListTable() {
   const { show } = useNavigation();

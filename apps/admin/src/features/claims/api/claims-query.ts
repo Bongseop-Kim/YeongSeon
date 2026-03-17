@@ -18,7 +18,7 @@ import type {
   AdminClaimDetail,
   AdminClaimStatusLogEntry,
   AdminClaimTrackingInfo,
-} from "../types/admin-claim";
+} from "@/features/claims/types/admin-claim";
 
 // ── List ───────────────────────────────────────────────────────
 

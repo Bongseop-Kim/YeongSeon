@@ -10,14 +10,14 @@ import {
   bulkIssueCoupons,
   revokeCouponsByIds,
   revokeCouponsByUserIds,
-} from "./coupons-api";
-import { toAdminIssuedCouponRow } from "./coupons-mapper";
-import { isActiveIssuedStatus } from "../types/admin-coupon";
+} from "@/features/coupons/api/coupons-api";
+import { toAdminIssuedCouponRow } from "@/features/coupons/api/coupons-mapper";
+import { isActiveIssuedStatus } from "@/features/coupons/types/admin-coupon";
 import type {
   AdminCouponUser,
   AdminIssuedCouponRow,
   PresetKey,
-} from "../types/admin-coupon";
+} from "@/features/coupons/types/admin-coupon";
 
 // ── 발급 내역 조회 ──────────────────────────────────────────────
 

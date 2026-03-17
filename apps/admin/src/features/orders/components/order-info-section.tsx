@@ -1,7 +1,7 @@
 import { Descriptions, Tag } from "antd";
 import { useNavigation } from "@refinedev/core";
 import { ORDER_TYPE_LABELS, ORDER_STATUS_COLORS } from "@yeongseon/shared";
-import type { AdminOrderDetail } from "../types/admin-order";
+import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
 
 interface OrderInfoSectionProps {
   order: AdminOrderDetail;

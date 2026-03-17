@@ -23,8 +23,8 @@ import {
   useAdminQuoteRequestStatusLogs,
   useQuoteRequestFormState,
   useQuoteRequestStatusUpdate,
-} from "../api/quote-requests-query";
-import { CustomOrderOptionsDetail } from "./custom-order-options-detail";
+} from "@/features/quote-requests/api/quote-requests-query";
+import { CustomOrderOptionsDetail } from "@/features/quote-requests/components/custom-order-options-detail";
 import { formatWithComma } from "@/utils/format-number";
 
 const { Title, Text } = Typography;

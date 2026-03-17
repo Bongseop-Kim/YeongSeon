@@ -3,9 +3,9 @@ import { useNavigation } from "@refinedev/core";
 import {
   INQUIRY_STATUS_COLORS,
   INQUIRY_STATUS_OPTIONS,
-} from "../types/admin-inquiry";
-import { useAdminInquiryTable } from "../api/inquiries-query";
-import type { AdminInquiryListItem } from "../types/admin-inquiry";
+} from "@/features/inquiries/types/admin-inquiry";
+import { useAdminInquiryTable } from "@/features/inquiries/api/inquiries-query";
+import type { AdminInquiryListItem } from "@/features/inquiries/types/admin-inquiry";
 
 export function InquiryListTable() {
   const { show } = useNavigation();
