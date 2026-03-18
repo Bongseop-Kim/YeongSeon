@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
@@ -46,7 +45,7 @@ const ORDER_TYPE_MAP: Record<
 
 export default function OrderListPage() {
   const navigate = useNavigate();
-  const { setSearchEnabled } = useSearchStore();
+  const { setSearchEnabled, setTabsActiveTab } = useSearchStore();
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
   const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
   const queryFilters = useMemo(
@@ -76,10 +75,18 @@ export default function OrderListPage() {
           dateTo: toDateString(dateFilter.customRange?.to),
         });
       },
+      tabs: {
+        items: ORDER_TYPE_TABS,
+        activeTab,
+        onTabChange: (tab) => {
+          setActiveTab(tab as OrderTypeFilter);
+          setTabsActiveTab(tab);
+        },
+      },
     });
 
     return () => setSearchEnabled(false);
-  }, [setSearchEnabled]);
+  }, [setSearchEnabled, setTabsActiveTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClaimRequest = (
     type: string,
@@ -126,22 +133,6 @@ export default function OrderListPage() {
             <section className="space-y-4">
               <div>
                 <h2 className="text-lg font-semibold">주문 내역</h2>
-              </div>
-              <div className="flex gap-1 overflow-x-auto pb-1">
-                {ORDER_TYPE_TABS.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-                      activeTab === tab
-                        ? "bg-zinc-900 text-white"
-                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200",
-                    )}
-                  >
-                    {tab}
-                  </button>
-                ))}
               </div>
               {filteredOrders.length === 0 ? (
                 <Card>

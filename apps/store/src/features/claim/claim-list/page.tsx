@@ -20,7 +20,6 @@ import {
 } from "@/features/order/utils/list-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
-import { cn } from "@/lib/utils";
 
 type ClaimTypeFilter = "전체" | "취소" | "반품" | "교환" | "토큰환불";
 
@@ -41,7 +40,7 @@ const CLAIM_TYPE_MAP: Record<Exclude<ClaimTypeFilter, "전체">, ClaimType> = {
 
 export default function ClaimListPage() {
   const navigate = useNavigate();
-  const { setSearchEnabled } = useSearchStore();
+  const { setSearchEnabled, setTabsActiveTab } = useSearchStore();
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
   const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
   const queryFilters = useMemo(
@@ -71,10 +70,18 @@ export default function ClaimListPage() {
           dateTo: toDateString(dateFilter.customRange?.to),
         });
       },
+      tabs: {
+        items: CLAIM_TYPE_TABS,
+        activeTab,
+        onTabChange: (tab) => {
+          setActiveTab(tab as ClaimTypeFilter);
+          setTabsActiveTab(tab);
+        },
+      },
     });
 
     return () => setSearchEnabled(false);
-  }, [setSearchEnabled]);
+  }, [setSearchEnabled, setTabsActiveTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
     return (
@@ -110,22 +117,6 @@ export default function ClaimListPage() {
       <MainContent>
         <PageLayout>
           <div>
-            <div className="flex gap-1 overflow-x-auto pb-2">
-              {CLAIM_TYPE_TABS.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-                    activeTab === tab
-                      ? "bg-zinc-900 text-white"
-                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200",
-                  )}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
             {filteredClaims.length === 0 ? (
               <Card>
                 <Empty

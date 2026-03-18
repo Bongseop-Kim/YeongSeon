@@ -14,7 +14,7 @@ export const FilterButtons = ({
   mainButton,
 }: FilterButtonsProps) => {
   return (
-    <div className="sticky top-14 z-40 bg-background">
+    <div className="sticky top-0 z-40 bg-background">
       <div className="max-w-7xl mx-auto flex">
         {mainButton ? (
           mainButton

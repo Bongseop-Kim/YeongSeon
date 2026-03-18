@@ -7,6 +7,12 @@ interface DateRange {
   to?: Date;
 }
 
+export interface TabsConfig {
+  items: string[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
+
 interface SearchConfig {
   enabled: boolean;
   placeholder?: string;
@@ -16,6 +22,7 @@ interface SearchConfig {
     customRange?: DateRange;
   };
   onSearch?: (query: string, dateFilter: SearchConfig["dateFilter"]) => void;
+  tabs?: TabsConfig;
 }
 
 interface SearchStore {
@@ -26,12 +33,14 @@ interface SearchStore {
     options?: {
       placeholder?: string;
       onSearch?: SearchConfig["onSearch"];
+      tabs?: TabsConfig;
     },
   ) => void;
   setQuery: (query: string) => void;
   setDatePreset: (preset: DateFilterPreset) => void;
   setCustomDateFrom: (from: string) => void;
   setCustomDateTo: (to: string) => void;
+  setTabsActiveTab: (tab: string) => void;
   openSheet: () => void;
   closeSheet: () => void;
   clearSearch: () => void;
@@ -64,6 +73,7 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
         enabled,
         placeholder: options?.placeholder || "검색...",
         onSearch: options?.onSearch,
+        tabs: enabled ? options?.tabs : undefined,
         query: enabled ? state.config.query : "",
         dateFilter: enabled
           ? state.config.dateFilter
@@ -142,6 +152,17 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
             to: date,
           },
         },
+      },
+    }));
+  },
+
+  setTabsActiveTab: (tab) => {
+    set((state) => ({
+      config: {
+        ...state.config,
+        tabs: state.config.tabs
+          ? { ...state.config.tabs, activeTab: tab }
+          : undefined,
       },
     }));
   },
