@@ -3,14 +3,14 @@ import {
   expectAuthenticatedRoute,
   hasConfiguredAuth,
   test,
-} from "../fixtures/auth";
+} from "@/fixtures/auth";
 import {
   adminRollbackOrderStatus,
   createStoreClaim,
   seedSaleOrder,
   seedShippingOrder,
-} from "../utils/store-data";
-import { statusRow } from "../utils/admin-helpers";
+} from "@/utils/store-data";
+import { statusRow } from "@/utils/admin-helpers";
 
 test.describe.serial("Admin 주문 관리", () => {
   test.skip(

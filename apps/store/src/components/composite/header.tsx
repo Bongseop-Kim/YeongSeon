@@ -46,7 +46,7 @@ const HeaderContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "container mx-auto flex h-14 max-w-7xl items-center justify-between px-4 lg:px-8",
+      "container mx-auto flex min-h-14 max-w-7xl items-center justify-between px-4 lg:px-8",
       className,
     )}
     {...props}

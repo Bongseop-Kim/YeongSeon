@@ -117,9 +117,16 @@ export const getSupabaseConfig = async () => {
     );
   }
 
+  const supabaseUrl = envSupabaseUrl ?? entries.VITE_SUPABASE_URL;
+  const supabaseAnonKey = envSupabaseAnonKey ?? entries.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase env for E2E helper.");
+  }
+
   supabaseConfigCache = {
-    supabaseUrl: envSupabaseUrl ?? entries.VITE_SUPABASE_URL,
-    supabaseAnonKey: envSupabaseAnonKey ?? entries.VITE_SUPABASE_ANON_KEY,
+    supabaseUrl,
+    supabaseAnonKey,
   };
   return supabaseConfigCache;
 };

@@ -3,13 +3,13 @@ import {
   expectAuthenticatedRoute,
   hasConfiguredAuth,
   test,
-} from "../fixtures/auth";
+} from "@/fixtures/auth";
 import {
   type CreateOrderResult,
   adminUpdateOrderStatus,
   seedRepairOrder,
-} from "../utils/store-data";
-import { installMockToss } from "../utils/mock-toss";
+} from "@/utils/store-data";
+import { installMockToss } from "@/utils/mock-toss";
 
 test.describe.serial("Store 수선 주문 플로우", () => {
   test.skip(

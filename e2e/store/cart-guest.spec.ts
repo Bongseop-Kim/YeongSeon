@@ -204,18 +204,46 @@ const clearServerCart = async (
   accessToken: string,
   userId: string,
 ): Promise<void> => {
-  await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/replace_cart_items`, {
-    method: "POST",
-    headers: {
-      apikey: cfg.supabaseAnonKey,
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ p_user_id: userId, p_items: [] }),
-  });
+  try {
+    const response = await fetch(
+      `${cfg.supabaseUrl}/rest/v1/rpc/replace_cart_items`,
+      {
+        method: "POST",
+        headers: {
+          apikey: cfg.supabaseAnonKey,
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ p_user_id: userId, p_items: [] }),
+      },
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`replace_cart_items failed: ${response.status} ${body}`);
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`서버 장바구니 초기화 실패: ${error.message}`);
+    }
+
+    throw new Error(`서버 장바구니 초기화 실패: ${String(error)}`);
+  }
 };
 
 // ─── 테스트 스위트 ──────────────────────────────────────────────────────────
+
+/** 장바구니 페이지로 이동하면서 get_cart_items 응답을 기다림 */
+const gotoCartAndWaitForItems = async (page: Page) => {
+  await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().includes("/rest/v1/rpc/get_cart_items") &&
+        response.status() === 200,
+    ),
+    page.goto("/cart"),
+  ]);
+};
 
 test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
   const hasStoreAuth = Boolean(
@@ -234,9 +262,6 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
       test.skip(true, "fixtures.json 없음 — global-setup이 필요합니다.");
       return;
     }
-
-    // 비인증 상태에서 상품 상세 방문
-    await page.goto(`/shop/${productId}`);
 
     // 장바구니 버튼이 desktop viewport에서만 보임 (mobile에서는 숨겨짐)
     // viewport를 desktop 크기로 설정
@@ -302,7 +327,6 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
     // 아이템 수는 여전히 1개 (새 row가 추가되지 않고 수량만 증가)
     const itemsAfterSecond = await getGuestCartFromStorage(page);
     expect(itemsAfterSecond.length).toBe(1);
-    expect(itemsAfterSecond.length).toBeGreaterThan(0);
     expect(itemsAfterSecond[0]).toEqual(
       expect.objectContaining({ quantity: expect.any(Number) }),
     );
@@ -456,8 +480,7 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
     await injectSession(page, session, storageKey);
 
     // 장바구니 페이지 방문 → 서버 장바구니를 로드
-    await page.goto("/cart");
-    await page.waitForTimeout(2000);
+    await gotoCartAndWaitForItems(page);
 
     // 서버 장바구니 아이템이 표시됨
     await expect(page.getByTestId("cart-items-panel")).toBeVisible();
@@ -505,8 +528,7 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
     // 게스트 아이템은 로그아웃 후에 설정 (현재는 서버 장바구니 사용 중)
 
     // 3. 장바구니 페이지로 이동 (로그인 상태 확인)
-    await page.goto("/cart");
-    await page.waitForTimeout(1500);
+    await gotoCartAndWaitForItems(page);
 
     // 4. 로그아웃: localStorage에서 Supabase 세션 제거
     await page.evaluate((key) => {
@@ -518,7 +540,18 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
 
     // 6. 페이지 새로고침 → useCartAuthSync가 로그아웃을 감지하고 guest 전환
     await page.reload();
-    await page.waitForTimeout(2000);
+    await page.waitForFunction(
+      ({ guestKey, authKey }) => {
+        const guestCart = localStorage.getItem(guestKey);
+        const authSession = localStorage.getItem(authKey);
+        return guestCart !== null && authSession === null;
+      },
+      { guestKey: GUEST_CART_KEY, authKey: storageKey },
+    );
+    await expect(page.getByTestId("cart-items-panel")).toBeVisible();
+    await expect(
+      page.locator('[data-testid^="cart-item-"]').first(),
+    ).toBeVisible();
 
     // 7. 로그인 상태가 아님을 확인 (로그인 버튼 또는 로그인 페이지로 리다이렉트)
     const guestCartRaw = await page.evaluate(

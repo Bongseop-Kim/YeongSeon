@@ -4,15 +4,15 @@ import {
   expectAuthenticatedRoute,
   hasConfiguredAuth,
   test,
-} from "../fixtures/auth";
+} from "@/fixtures/auth";
 import {
   type CreateOrderResult,
   readFixtures,
   resetStoreCart,
   seedSaleOrder,
   seedShippingOrder,
-} from "../utils/store-data";
-import { installMockToss } from "../utils/mock-toss";
+} from "@/utils/store-data";
+import { installMockToss } from "@/utils/mock-toss";
 
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

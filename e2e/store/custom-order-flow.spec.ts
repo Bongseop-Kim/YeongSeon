@@ -3,12 +3,12 @@ import {
   expectAuthenticatedRoute,
   hasConfiguredAuth,
   test,
-} from "../fixtures/auth";
+} from "@/fixtures/auth";
 import {
   adminUpdateOrderStatus,
   seedCustomOrder,
   type SeededClaimOrder,
-} from "../utils/store-data";
+} from "@/utils/store-data";
 
 test.describe.serial("Store 주문 제작 플로우", () => {
   test.skip(

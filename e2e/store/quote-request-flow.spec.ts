@@ -4,12 +4,12 @@ import {
   expectAuthenticatedRoute,
   hasConfiguredAuth,
   test,
-} from "../fixtures/auth";
+} from "@/fixtures/auth";
 import {
   seedQuoteRequest,
   adminUpdateQuoteRequestStatus,
   type SeededQuoteRequest,
-} from "../utils/quote-data";
+} from "@/utils/quote-data";
 
 /**
  * WIZARD_STEPS 단계 정리:
@@ -113,24 +113,14 @@ test.describe.serial("Store 견적요청 플로우", () => {
       name: "견적요청",
     });
     await expect(submitButton).toBeVisible();
+    await expect(submitButton).toBeEnabled();
 
-    // 담당자 성함과 연락처가 비어 있는 상태에서 제출 시도
-    // isSubmitDisabled는 배송지 미선택/업로드 중에만 비활성화됨
-    // 연락처 미입력 시 클릭하면 toast 에러 발생 (배송지 없는 경우에만 버튼 비활성화)
-    // → 배송지가 없는 상태이므로 버튼 비활성화 또는 에러 토스트 중 하나를 확인
-    const isDisabled = await submitButton.isDisabled();
-    if (!isDisabled) {
-      // 배송지가 선택된 경우: 클릭 후 연락처 오류 토스트 확인
-      await submitButton.click();
-      await expect(
-        authenticatedPage.getByText(
-          /담당자 성함을 입력해주세요|연락처를 입력해주세요/,
-        ),
-      ).toBeVisible();
-    } else {
-      // 배송지가 없는 경우: 버튼이 비활성화됨
-      await expect(submitButton).toBeDisabled();
-    }
+    await submitButton.click();
+    await expect(
+      authenticatedPage.getByText(
+        /담당자 성함을 입력해주세요|연락처를 입력해주세요/,
+      ),
+    ).toBeVisible();
   });
 
   // SC-quote-004: 고객 견적 요청 목록 조회

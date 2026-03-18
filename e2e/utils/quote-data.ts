@@ -3,7 +3,7 @@ import {
   buildHeaders,
   getSupabaseConfig,
   supabaseRequest,
-} from "./store-data";
+} from "@/utils/store-data";
 
 export type SeededQuoteRequest = {
   quoteRequestId: string;

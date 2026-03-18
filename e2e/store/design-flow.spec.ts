@@ -15,15 +15,15 @@ import {
   expectAuthenticatedRoute,
   hasConfiguredAuth,
   test,
-} from "../fixtures/auth";
-import { readAuthMeta } from "../utils/store-data";
+} from "@/fixtures/auth";
+import { getSupabaseConfig, readAuthMeta } from "@/utils/store-data";
 import {
   GRANT_TOKEN_UNAVAILABLE,
   getStoreTokenBalance,
   grantTokensToUser,
   resetStoreUserTokens,
-} from "../utils/design-data";
-import { installMockToss } from "../utils/mock-toss";
+} from "@/utils/design-data";
+import { installMockToss } from "@/utils/mock-toss";
 
 // ── 공통 헬퍼 ────────────────────────────────────────────────────────────────
 
@@ -347,6 +347,10 @@ test.describe.serial("Design/Token 플로우", () => {
   test("SC-design-005: 이미지 포함 생성 요청", async ({
     authenticatedPage,
   }) => {
+    test.skip(
+      process.env.RUN_REAL_AI !== "true",
+      "실제 AI 호출 테스트는 RUN_REAL_AI=true 일 때만 실행합니다.",
+    );
     test.slow();
 
     const page = authenticatedPage;
@@ -600,6 +604,9 @@ test.describe.serial("Design/Token 플로우", () => {
     await page.waitForTimeout(2_000);
 
     const pendingBadge = page.getByText("환불 신청 중").first();
+    const pendingCard = pendingBadge.locator(
+      "xpath=ancestor::div[@data-order-id][1]",
+    );
     const hasPending = await pendingBadge
       .isVisible({ timeout: 5_000 })
       .catch(() => false);
@@ -610,6 +617,11 @@ test.describe.serial("Design/Token 플로우", () => {
         "pending 환불 요청이 없습니다. SC-design-010을 먼저 실행하세요.",
       );
       return;
+    }
+    const orderId = await pendingCard.getAttribute("data-order-id");
+
+    if (!orderId) {
+      throw new Error("환불 신청 중 카드에서 order id를 찾을 수 없습니다.");
     }
 
     // admin 앱에서 클레임 목록 확인 (admin baseURL은 playwright config에서 5174)
@@ -622,49 +634,12 @@ test.describe.serial("Design/Token 플로우", () => {
     // admin claims 목록에서 token_refund 클레임 찾기
     // (admin 페이지로 직접 이동하여 UI 확인은 admin project에서 수행)
     // 여기서는 API 레벨에서 승인 처리
-    const { supabaseUrl, supabaseAnonKey } = await (async () => {
-      const { readAuthMeta: _readAuthMeta } =
-        await import("../utils/store-data");
-      const fs = await import("node:fs/promises");
-      const path = await import("node:path");
-      const { fileURLToPath } = await import("node:url");
-
-      const __dir = path.dirname(fileURLToPath(import.meta.url));
-      let url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-      let key =
-        process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
-
-      if (!url || !key) {
-        try {
-          const storeEnv = await fs.readFile(
-            path.resolve(__dir, "../../apps/store/.env"),
-            "utf8",
-          );
-          const entries = Object.fromEntries(
-            storeEnv
-              .split(/\r?\n/)
-              .filter(Boolean)
-              .filter((l) => !l.startsWith("#") && l.includes("="))
-              .map((l) => {
-                const idx = l.indexOf("=");
-                return [l.slice(0, idx).trim(), l.slice(idx + 1).trim()];
-              }),
-          );
-          url = entries.VITE_SUPABASE_URL;
-          key = entries.VITE_SUPABASE_ANON_KEY;
-        } catch {
-          // 무시
-        }
-      }
-      return { supabaseUrl: url ?? "", supabaseAnonKey: key ?? "" };
-    })();
-
-    const storeMeta2 = await readAuthMeta("store");
+    const { supabaseUrl, supabaseAnonKey } = await getSupabaseConfig();
     const adminMeta = await readAuthMeta("admin");
 
     // token_refund 클레임 조회
     const claimsResponse = await fetch(
-      `${supabaseUrl}/rest/v1/claims?select=id,status,order_id&user_id=eq.${storeMeta2.userId}&type=eq.token_refund&status=eq.접수&limit=1`,
+      `${supabaseUrl}/rest/v1/claims?select=id,status,order_id&user_id=eq.${storeMeta.userId}&type=eq.token_refund&status=eq.접수&order_id=eq.${orderId}&limit=1`,
       {
         headers: {
           apikey: supabaseAnonKey,
@@ -723,7 +698,9 @@ test.describe.serial("Design/Token 플로우", () => {
     await page.reload();
     await page.getByRole("tab", { name: "구매 내역" }).click();
     await page.waitForTimeout(2_000);
-    await expect(page.getByText("환불 완료")).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.locator(`[data-order-id="${orderId}"]`).getByText("환불 완료"),
+    ).toBeVisible({ timeout: 10_000 });
   });
 
   // ── SC-design-013: 신규 가입 시 bonus 토큰 지급 (skip) ──────────────────

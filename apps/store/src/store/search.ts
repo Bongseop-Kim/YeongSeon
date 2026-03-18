@@ -68,6 +68,7 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
 
   setSearchEnabled: (enabled, options) => {
     set((state) => ({
+      isSheetOpen: enabled ? state.isSheetOpen : false,
       config: {
         ...state.config,
         enabled,

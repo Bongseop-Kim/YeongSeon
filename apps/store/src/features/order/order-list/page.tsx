@@ -128,9 +128,6 @@ export default function OrderListPage() {
         <PageLayout>
           <div className="space-y-6">
             <section className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold">주문 내역</h2>
-              </div>
               {filteredOrders.length === 0 ? (
                 <Card>
                   <Empty
