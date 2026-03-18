@@ -64,6 +64,10 @@ test.describe.serial("Store 클레임 플로우", () => {
       description: "E2E cancel claim",
     });
 
+    await expect(
+      authenticatedPage.getByText("클레임 목록을 불러올 수 없습니다."),
+    ).not.toBeVisible();
+
     const cancelCard = claimCard(
       authenticatedPage,
       claimOrders.cancelOrder.orderId,

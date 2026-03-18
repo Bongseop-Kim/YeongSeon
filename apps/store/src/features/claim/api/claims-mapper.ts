@@ -59,9 +59,9 @@ const parseClaimItemField = (
       `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "reform"인 경우 reformData 필드가 있어야 합니다.`,
     );
   }
-  if (v.type === "custom" && v.customData == null) {
+  if (v.type === "custom" && v.reformData == null) {
     throw new Error(
-      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "custom"인 경우 customData 필드가 있어야 합니다.`,
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "custom"인 경우 reformData(custom) 필드가 있어야 합니다.`,
     );
   }
   let product: ClaimItemRowDTO["product"] = null;
@@ -293,11 +293,11 @@ const parseClaimItemField = (
   }
 
   let customData: ClaimItemRowDTO["customData"] = null;
-  if (v.type === "custom" && v.customData != null) {
-    const raw = v.customData;
+  if (v.type === "custom" && v.reformData != null) {
+    const raw = v.reformData;
     if (!isRecord(raw)) {
       throw new Error(
-        `클레임 목록 행(${i})의 item.customData가 올바르지 않습니다: custom 타입의 customData가 객체가 아닙니다 (item id: ${v.id}).`,
+        `클레임 목록 행(${i})의 item.reformData(custom)가 올바르지 않습니다: custom 타입의 reformData가 객체가 아닙니다 (item id: ${v.id}).`,
       );
     }
     customData = parseCustomOrderData(raw);

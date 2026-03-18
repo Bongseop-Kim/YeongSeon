@@ -9,6 +9,8 @@ import {
   type CreateOrderResult,
   readFixtures,
   resetStoreCart,
+  seedSaleOrder,
+  seedShippingOrder,
 } from "../utils/store-data";
 import { installMockToss } from "../utils/mock-toss";
 
@@ -48,9 +50,13 @@ test.describe.serial("Store 주문 플로우", () => {
 
   let fixtures: Awaited<ReturnType<typeof readFixtures>>;
   let latestOrderId: string | null = null;
+  let shippingOrderForTest: Awaited<ReturnType<typeof seedShippingOrder>>;
+  let deliveredOrderForTest: Awaited<ReturnType<typeof seedSaleOrder>>;
 
   test.beforeAll(async () => {
-    fixtures = await readFixtures();
+    [fixtures, shippingOrderForTest, deliveredOrderForTest] = await Promise.all(
+      [readFixtures(), seedShippingOrder(), seedSaleOrder({ delivered: true })],
+    );
   });
 
   test.beforeEach(async () => {
@@ -209,6 +215,39 @@ test.describe.serial("Store 주문 플로우", () => {
     await expect(
       authenticatedPage.getByRole("button", { name: "주문서로 돌아가기" }),
     ).toBeVisible();
+  });
+
+  test("배송중 상태에서 취소 버튼이 표시되지 않는다 (SC-sale-019)", async ({
+    authenticatedPage,
+  }) => {
+    await authenticatedPage.goto(`/order/${shippingOrderForTest.orderId}`);
+    await expectAuthenticatedRoute(authenticatedPage);
+    await expect(
+      authenticatedPage.getByRole("button", { name: /취소/ }),
+    ).not.toBeVisible();
+  });
+
+  test("배송완료 상태에서 구매확정하면 완료로 전환된다 (SC-sale-022)", async ({
+    authenticatedPage,
+  }) => {
+    await authenticatedPage.goto(`/order/${deliveredOrderForTest.orderId}`);
+    await expectAuthenticatedRoute(authenticatedPage);
+    await authenticatedPage.getByRole("button", { name: "구매확정" }).click();
+    await expect(
+      authenticatedPage.getByText("완료", { exact: true }),
+    ).toBeVisible();
+  });
+
+  test("상품 상세에서 바로구매 클릭 시 주문서로 이동한다 (SC-sale-023)", async ({
+    authenticatedPage,
+  }) => {
+    await authenticatedPage.goto(`/shop/${fixtures.storeProduct.id}`);
+    await expectAuthenticatedRoute(authenticatedPage);
+    await authenticatedPage.getByTestId("product-order-now").click();
+    await expect(authenticatedPage).toHaveURL(/\/order\/order-form$/);
+    await expect(
+      authenticatedPage.getByTestId("order-items-card"),
+    ).toContainText("주문 상품 1개");
   });
 
   test("주문 목록/상세 조회", async ({ authenticatedPage }) => {

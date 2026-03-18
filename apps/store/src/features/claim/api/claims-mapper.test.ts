@@ -66,8 +66,7 @@ describe("parseClaimListRows", () => {
             quantity: 1,
             product: null,
             selectedOption: null,
-            reformData: null,
-            customData: {
+            reformData: {
               options: {
                 tie_type: "3fold",
               },
@@ -141,7 +140,7 @@ describe("parseClaimListRows", () => {
   });
 
   describe("에러 케이스", () => {
-    it("custom 타입에서 customData가 없으면 에러를 던진다", () => {
+    it("custom 타입에서 reformData가 없으면 에러를 던진다", () => {
       expect(() =>
         parseClaimListRows([
           createClaimListRowRaw({
@@ -152,12 +151,13 @@ describe("parseClaimListRows", () => {
               product: null,
               selectedOption: null,
               reformData: null,
-              customData: null,
               appliedCoupon: null,
             },
           }),
         ]),
-      ).toThrow('type이 "custom"인 경우 customData 필드가 있어야 합니다.');
+      ).toThrow(
+        'type이 "custom"인 경우 reformData(custom) 필드가 있어야 합니다.',
+      );
     });
 
     it("refund_data 필수 값이 없으면 에러를 던진다", () => {
