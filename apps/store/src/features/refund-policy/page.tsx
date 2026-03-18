@@ -9,9 +9,10 @@ export default function RefundPolicyPage() {
     <PolicyPageLayout title="환불정책">
       <PolicySection title="1. 환불 및 교환 안내">
         <p>
-          ESSE SION(이하 "회사")은 고객님의 만족을 최우선으로 생각하며, 구매하신
-          상품에 문제가 있을 경우 신속하고 공정한 환불 및 교환을 진행합니다. 단,
-          상품의 특성상 제작 주문 상품의 경우 환불 및 교환이 제한될 수 있습니다.
+          영선산업(서비스명: ESSE SION, 이하 "회사")은 고객님의 만족을
+          최우선으로 생각하며, 구매하신 상품에 문제가 있을 경우 신속하고 공정한
+          환불 및 교환을 진행합니다. 단, 상품의 특성상 제작 주문 상품의 경우
+          환불 및 교환이 제한될 수 있습니다.
         </p>
       </PolicySection>
 
@@ -23,7 +24,8 @@ export default function RefundPolicyPage() {
             확인이 불가능하여 환불 및 교환이 불가능할 수 있습니다.
           </li>
           <li>
-            제작 주문 상품의 경우, 제작 시작 전까지만 취소 및 환불이 가능합니다.
+            제작 주문 상품의 경우, 제작 진행 단계에 따라 환불 가능 여부 및
+            환불액이 달라질 수 있습니다. 자세한 내용은 제9조를 참조하십시오.
           </li>
         </PolicyList>
       </PolicySection>
@@ -41,15 +43,8 @@ export default function RefundPolicyPage() {
             감소한 경우
           </li>
           <li>
-            복제가 가능한 상품 등의 포장을 훼손한 경우 (CD, DVD, 소프트웨어 등)
-          </li>
-          <li>
-            제작 주문 상품의 경우, 제작이 시작된 이후에는 취소 및 환불이
-            불가능합니다.
-          </li>
-          <li>
-            주문 확인 후 상품의 제작이 시작된 경우, 단순 변심에 의한 취소가
-            불가능합니다.
+            맞춤 제작 상품의 경우, 샘플 승인 이후 제작이 진행된 단계에서는 단순
+            변심에 의한 취소 및 환불이 불가능합니다.
           </li>
         </PolicyList>
       </PolicySection>
@@ -118,22 +113,71 @@ export default function RefundPolicyPage() {
         </PolicyList>
       </PolicySection>
 
-      <PolicySection title="9. 제작 주문 상품의 특별 규정">
-        <p>맞춤 제작 상품의 경우, 다음과 같은 특별 규정이 적용됩니다.</p>
+      <PolicySection title="9. 서비스 유형별 환불 규정">
+        <p>서비스 유형에 따라 다음과 같은 환불 규정이 적용됩니다.</p>
+
+        <p className="mt-3 font-medium">■ 일반 상품 주문</p>
         <PolicyList>
-          <li>제작 시작 전까지는 취소 및 전액 환불이 가능합니다.</li>
+          <li>결제 완료 후 배송 시작 전: 전액 환불</li>
           <li>
-            제작이 시작된 이후에는 취소 및 환불이 불가능하며, 단, 제작 상품에
-            하자가 있는 경우에는 환불 또는 재제작이 가능합니다.
+            배송 시작 후: 반품 후 환불 (반품 배송비 고객 부담, 상품 하자 시 회사
+            부담)
+          </li>
+          <li>배송 완료 후 7일 이내: 반품 접수 후 환불 가능</li>
+        </PolicyList>
+
+        <p className="mt-3 font-medium">■ 수선(Reform) 주문</p>
+        <PolicyList>
+          <li>결제 완료 후 발송 전(대기중/발송대기 상태): 전액 환불</li>
+          <li>발송 중 상태: 반품 배송비를 공제한 금액 환불</li>
+          <li>
+            수선 완료 후: 상품 하자가 있는 경우에 한해 환불 또는 재수선 가능
+          </li>
+        </PolicyList>
+
+        <p className="mt-3 font-medium">■ 맞춤 제작(Custom Order) 주문</p>
+        <PolicyList>
+          <li>접수 단계까지(샘플 제작 시작 전): 전액 환불</li>
+          <li>
+            샘플 제작 단계(샘플원단제작중 ~ 샘플승인): 샘플 제작 비용을 공제한
+            금액 환불
           </li>
           <li>
-            제작 상품의 경우, 고객님의 요청사항에 따라 제작된 상품은 단순 변심에
-            의한 교환이 불가능합니다.
+            샘플 승인 후 제작 진행 중: 단순 변심에 의한 취소 불가. 단, 제작
+            상품에 하자가 있는 경우 환불 또는 재제작 가능
+          </li>
+          <li>
+            맞춤 제작 상품의 경우, 고객님의 요청사항에 따라 제작된 상품은 단순
+            변심에 의한 교환이 불가능합니다.
           </li>
         </PolicyList>
       </PolicySection>
 
-      <PolicySection title="10. 기타">
+      <PolicySection title="10. AI 디자인 토큰 환불 규정">
+        <p>
+          AI 디자인 서비스 이용을 위해 구매하는 디자인 토큰의 환불은 다음 규정에
+          따릅니다.
+        </p>
+        <PolicyList>
+          <li>
+            유료(paid) 토큰: 구매 후 미사용 잔액에 한하여 고객센터를 통해 수동
+            환불 신청이 가능합니다. 전자상거래 등에서의 소비자보호에 관한 법률에
+            따릅니다.
+          </li>
+          <li>
+            무료(bonus) 토큰: 신규 가입 지급, 이벤트 지급 등 무상으로 취득한
+            토큰은 환불 대상이 아닙니다.
+          </li>
+          <li>
+            AI 이미지 생성에 실패한 경우: 차감된 토큰은 자동으로 복원됩니다.
+          </li>
+          <li>
+            사용 완료된 토큰(이미지 생성에 사용된 토큰)은 환불되지 않습니다.
+          </li>
+        </PolicyList>
+      </PolicySection>
+
+      <PolicySection title="11. 기타">
         <p>
           이 환불정책에서 정하지 않은 사항은 관련 법령 및 회사의 이용약관에
           따릅니다. 환불 및 교환에 대한 문의사항이 있으시면 고객센터로
@@ -141,7 +185,7 @@ export default function RefundPolicyPage() {
         </p>
       </PolicySection>
 
-      <PolicySection title="11. 정책의 시행일">
+      <PolicySection title="12. 정책의 시행일">
         <p>
           이 환불정책은 2024년 1월 1일부터 시행되며, 정책의 변경이 있는 경우
           변경된 내용과 시행일을 명시하여 서비스의 초기화면에 그 시행일 7일

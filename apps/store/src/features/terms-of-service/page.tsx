@@ -9,9 +9,9 @@ export default function TermsOfServicePage() {
     <PolicyPageLayout title="이용약관">
       <PolicySection title="1. 목적">
         <p>
-          이 약관은 ESSE SION(이하 "회사")이 운영하는 온라인 쇼핑몰에서 제공하는
-          서비스(이하 "서비스")의 이용과 관련하여 회사와 이용자의 권리, 의무 및
-          책임사항을 규정함을 목적으로 합니다.
+          이 약관은 영선산업(서비스명: ESSE SION, 이하 "회사")이 운영하는 온라인
+          쇼핑몰에서 제공하는 서비스(이하 "서비스")의 이용과 관련하여 회사와
+          이용자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
         </p>
       </PolicySection>
 
@@ -26,8 +26,8 @@ export default function TermsOfServicePage() {
             비회원을 말합니다.
           </li>
           <li>
-            "회원"이란 회사에 개인정보를 제공하여 회원등록을 한 자로서, 회사의
-            정보를 지속적으로 제공받으며, 회사가 제공하는 서비스를 계속적으로
+            "회원"이란 소셜 계정(Google, Kakao 등)을 통해 회원가입을 완료한
+            자로서, 회사의 정보를 지속적으로 제공받으며 서비스를 계속적으로
             이용할 수 있는 자를 말합니다.
           </li>
           <li>
@@ -35,13 +35,9 @@ export default function TermsOfServicePage() {
             자를 말합니다.
           </li>
           <li>
-            "아이디(ID)"란 회원의 식별과 서비스 이용을 위하여 회원이 정하고
-            회사가 승인하는 문자와 숫자의 조합을 의미합니다.
-          </li>
-          <li>
-            "비밀번호"란 회원이 부여받은 아이디와 일치된 회원임을 확인하고
-            회원의 권익 보호를 위하여 회원이 정한 문자와 숫자의 조합을
-            의미합니다.
+            "디자인 토큰"이란 AI 디자인 생성 서비스를 이용하기 위해 사용되는
+            가상의 크레딧으로, 유료(paid) 토큰과 무료(bonus) 토큰으로
+            구분됩니다.
           </li>
         </PolicyList>
       </PolicySection>
@@ -62,6 +58,22 @@ export default function TermsOfServicePage() {
           <li>상품 및 서비스에 대한 정보 제공 및 구매 계약의 체결</li>
           <li>구매 계약이 체결된 상품 또는 서비스의 배송</li>
           <li>
+            수선(Reform) 서비스: 고객이 의뢰한 의류·섬유 제품의 수선 및 관련
+            배송 서비스
+          </li>
+          <li>
+            맞춤 제작(Custom Order) 서비스: 고객 요청에 따른 의류 맞춤 제작
+            서비스 (샘플 제작 포함)
+          </li>
+          <li>
+            AI 디자인 생성 서비스: 디자인 토큰을 사용하여 AI 기반 의류 디자인
+            이미지를 생성하는 서비스
+          </li>
+          <li>
+            디자인 토큰 구매 서비스: AI 디자인 서비스 이용을 위한 토큰 패키지
+            구매
+          </li>
+          <li>
             기타 회사가 추가 개발하거나 제휴계약 등을 통해 회원에게 제공하는
             일체의 서비스
           </li>
@@ -76,16 +88,16 @@ export default function TermsOfServicePage() {
 
       <PolicySection title="5. 회원가입">
         <p>
-          이용자는 회사가 정한 가입 양식에 따라 회원정보를 기입한 후 이 약관에
-          동의한다는 의사표시를 함으로서 회원가입을 신청합니다. 회사는 다음 각
-          호에 해당하는 경우 회원가입을 거부할 수 있습니다.
+          이용자는 소셜 계정(Google, Kakao 등)을 통한 간편 가입 방식으로 회원에
+          가입할 수 있습니다. 회사는 다음 각 호에 해당하는 경우 회원가입을
+          거부할 수 있습니다.
         </p>
         <PolicyList>
           <li>
             가입신청자가 이 약관에 의하여 이전에 회원자격을 상실한 적이 있는
             경우
           </li>
-          <li>실명이 아니거나 타인의 명의를 이용한 경우</li>
+          <li>타인의 소셜 계정을 이용한 경우</li>
           <li>
             허위의 정보를 기재하거나, 회사가 제시하는 내용을 기재하지 않은 경우
           </li>
@@ -99,8 +111,7 @@ export default function TermsOfServicePage() {
       <PolicySection title="6. 회원정보의 변경">
         <p>
           회원은 개인정보관리화면을 통하여 언제든지 본인의 개인정보를 열람하고
-          수정할 수 있습니다. 다만, 서비스 관리를 위해 필요한 실명, 아이디 등은
-          수정이 불가능합니다. 회원은 회원가입신청 시 기재한 사항이 변경되었을
+          수정할 수 있습니다. 회원은 회원가입신청 시 기재한 사항이 변경되었을
           경우 온라인으로 수정을 하거나 전자우편 기타 방법으로 회사에 대하여 그
           변경사항을 알려야 합니다.
         </p>
@@ -122,9 +133,6 @@ export default function TermsOfServicePage() {
           <li>신청 또는 변경 시 허위내용의 등록</li>
           <li>타인의 정보 도용</li>
           <li>회사가 게시한 정보의 변경</li>
-          <li>
-            회사가 정한 정보 이외의 정보(컴퓨터 프로그램 등) 등의 송신 또는 게시
-          </li>
           <li>회사와 기타 제3자의 저작권 등 지적재산권에 대한 침해</li>
           <li>회사 및 기타 제3자의 명예를 손상시키거나 업무를 방해하는 행위</li>
           <li>
@@ -146,7 +154,28 @@ export default function TermsOfServicePage() {
         </p>
       </PolicySection>
 
-      <PolicySection title="10. 계약 해지 및 이용 제한">
+      <PolicySection title="10. 디자인 토큰 서비스 이용">
+        <p>
+          AI 디자인 생성 서비스는 디자인 토큰을 소비하여 이용할 수 있습니다.
+          디자인 토큰의 이용에 관해서는 다음 규정을 따릅니다.
+        </p>
+        <PolicyList>
+          <li>
+            유료(paid) 토큰은 패키지 구매를 통해 취득하며, 미사용 잔액에 한하여
+            환불 신청이 가능합니다.
+          </li>
+          <li>
+            무료(bonus) 토큰은 신규 가입 또는 이벤트 등을 통해 지급되며, 환불
+            대상이 아닙니다.
+          </li>
+          <li>토큰은 유료 토큰이 먼저 소비된 후 무료 토큰이 소비됩니다.</li>
+          <li>
+            AI 이미지 생성에 실패한 경우, 차감된 토큰은 자동으로 복원됩니다.
+          </li>
+        </PolicyList>
+      </PolicySection>
+
+      <PolicySection title="11. 계약 해지 및 이용 제한">
         <p>
           회원은 언제든지 회사에게 회원 탈퇴를 요청할 수 있으며, 회사는 즉시
           회원탈퇴를 처리합니다. 회사는 회원이 이 약관의 의무를 위반하거나
@@ -155,7 +184,7 @@ export default function TermsOfServicePage() {
         </p>
       </PolicySection>
 
-      <PolicySection title="11. 손해배상">
+      <PolicySection title="12. 손해배상">
         <p>
           회사는 무료로 제공되는 서비스와 관련하여 회원에게 어떠한 손해가
           발생하더라도 동 손해가 회사의 중대한 과실에 의한 경우를 제외하고 이에
@@ -165,7 +194,7 @@ export default function TermsOfServicePage() {
         </p>
       </PolicySection>
 
-      <PolicySection title="12. 분쟁의 해결">
+      <PolicySection title="13. 분쟁의 해결">
         <p>
           회사와 이용자 간에 발생한 전자상거래 분쟁에 관한 소송은 제소 당시의
           이용자의 주소에 의하고, 주소가 없는 경우에는 거소를 관할하는
@@ -175,7 +204,7 @@ export default function TermsOfServicePage() {
         </p>
       </PolicySection>
 
-      <PolicySection title="13. 약관의 해석">
+      <PolicySection title="14. 약관의 해석">
         <p>
           이 약관에서 정하지 아니한 사항과 이 약관의 해석에 관하여는
           전자상거래법, 전자상거래 소비자보호에 관한 법률, 약관의 규제 등에 관한
@@ -184,7 +213,7 @@ export default function TermsOfServicePage() {
         </p>
       </PolicySection>
 
-      <PolicySection title="14. 약관의 시행일">
+      <PolicySection title="15. 약관의 시행일">
         <p>
           이 약관은 2024년 1월 1일부터 시행되며, 약관의 변경이 있는 경우 변경된
           약관의 내용과 시행일을 명시하여 현행약관과 함께 서비스의 초기화면에 그
