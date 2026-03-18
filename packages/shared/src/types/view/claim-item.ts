@@ -27,6 +27,7 @@ export interface ClaimItem {
   orderNumber: string;
   item: OrderItem;
   reason: string;
+  description: string | null;
   refundData: TokenRefundData | null;
 }
 

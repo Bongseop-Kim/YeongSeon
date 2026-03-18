@@ -165,15 +165,7 @@ export default function ClaimListPage() {
                   <CardContent className="py-4">
                     <OrderItemCard
                       item={claim.item}
-                      onClick={() =>
-                        navigate(
-                          buildClaimDetailRoute(
-                            claim.type,
-                            claim.orderId,
-                            claim.item.id,
-                          ),
-                        )
-                      }
+                      onClick={() => navigate(buildClaimDetailRoute(claim.id))}
                     />
 
                     {claim.type === "token_refund" && claim.refundData && (

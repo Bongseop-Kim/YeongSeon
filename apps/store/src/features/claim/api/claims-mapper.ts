@@ -453,6 +453,7 @@ export const toClaimItemView = (row: ClaimListRowDTO): ClaimItem => {
     orderNumber: row.orderNumber,
     item: orderItem,
     reason: row.reason,
+    description: row.description,
     refundData: row.refund_data
       ? {
           paidTokenAmount: row.refund_data.paid_token_amount,

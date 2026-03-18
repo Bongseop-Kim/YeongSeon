@@ -19,6 +19,7 @@ import OrderListPage from "@/features/order/order-list/page";
 import OrderDetailPage from "@/features/order/detail/page";
 import ClaimListPage from "@/features/claim/claim-list/page";
 import ClaimFormPage from "@/features/claim/claim-form/page";
+import ClaimDetailPage from "@/features/claim/claim-detail/page";
 import PaymentSuccessPage from "@/features/payment/success/page";
 import PaymentFailPage from "@/features/payment/fail/page";
 import TokenPurchasePage from "@/features/token-purchase/page";
@@ -116,6 +117,14 @@ export default function Router() {
         element={
           <ProtectedRoute>
             <ClaimFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/order/claim-detail/:claimId"
+        element={
+          <ProtectedRoute>
+            <ClaimDetailPage />
           </ProtectedRoute>
         }
       />

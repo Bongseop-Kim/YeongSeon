@@ -164,12 +164,13 @@ stateDiagram-v2
 
 ## 화면 및 진입점
 
-| 앱    | 경로                                  | 설명                     |
-| ----- | ------------------------------------- | ------------------------ |
-| store | `/order/claim/:type/:orderId/:itemId` | 클레임 신청              |
-| store | `/order/claim-list`                   | 클레임 목록              |
-| admin | `/claims`                             | 클레임 목록              |
-| admin | `/claims/show/:claimId`               | 클레임 상세 및 상태 변경 |
+| 앱    | 경로                                  | 설명                                                            |
+| ----- | ------------------------------------- | --------------------------------------------------------------- |
+| store | `/order/claim/:type/:orderId/:itemId` | 클레임 신청 폼 (`ClaimFormPage`)                                |
+| store | `/order/claim-list`                   | 클레임 목록                                                     |
+| store | `/order/claim-detail/:claimId`        | 클레임 상세 (`ClaimDetailPage`, 읽기 전용, 접수 취소 버튼 포함) |
+| admin | `/claims`                             | 클레임 목록                                                     |
+| admin | `/claims/show/:claimId`               | 클레임 상세 및 상태 변경                                        |
 
 ## API 호출 흐름
 
@@ -178,6 +179,11 @@ stateDiagram-v2
   └─ create_claim RPC 호출 (claim_type, order_id, item_id, reason_code, reason_detail)
   └─ 결과: 클레임 레코드 생성 (초기 상태: 접수)
 
+프론트 (클레임 취소 — 접수 상태만)
+  └─ cancel_claim RPC 호출 (p_claim_id)
+  └─ RPC 내부: 소유권·상태 검증 → claims 레코드 삭제 → claim_status_logs CASCADE 삭제
+  └─ token_refund 타입은 직접 취소 불가
+
 프론트 (admin 상태 변경)
   └─ update_claim_status RPC 호출 (claim_id, next_status, is_rollback, memo)
   └─ RPC 내부: 허용 전이 검증 → 상태 업데이트 → 이력 기록
@@ -185,11 +191,13 @@ stateDiagram-v2
 
 ## 관련 파일
 
-| 파일                                             | 설명             |
-| ------------------------------------------------ | ---------------- |
-| `supabase/schemas/94_functions_claims.sql`       | 클레임 RPC 전체  |
-| `packages/shared/src/constants/claim-status.ts`  | 클레임 상태 상수 |
-| `packages/shared/src/constants/claim-actions.ts` | 클레임 액션 상수 |
+| 파일                                                  | 설명                                                                    |
+| ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| `supabase/schemas/94_functions_claims.sql`            | 클레임 RPC 전체 (`create_claim`, `update_claim_status`, `cancel_claim`) |
+| `packages/shared/src/constants/claim-status.ts`       | 클레임 상태 상수                                                        |
+| `packages/shared/src/constants/claim-actions.ts`      | 클레임 액션 상수                                                        |
+| `apps/store/src/features/claim/claim-detail/page.tsx` | 클레임 상세 페이지 (읽기 전용)                                          |
+| `apps/store/src/features/claim/api/claims-api.ts`     | `getClaim`, `cancelClaim` 포함                                          |
 
 ## 횡단 참조
 
