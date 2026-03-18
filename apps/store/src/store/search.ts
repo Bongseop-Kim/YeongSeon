@@ -157,14 +157,16 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
   },
 
   setTabsActiveTab: (tab) => {
-    set((state) => ({
-      config: {
-        ...state.config,
-        tabs: state.config.tabs
-          ? { ...state.config.tabs, activeTab: tab }
-          : undefined,
-      },
-    }));
+    set((state) => {
+      if (!state.config.tabs || state.config.tabs.activeTab === tab)
+        return state;
+      return {
+        config: {
+          ...state.config,
+          tabs: { ...state.config.tabs, activeTab: tab },
+        },
+      };
+    });
   },
 
   openSheet: () => set({ isSheetOpen: true }),

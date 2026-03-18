@@ -40,8 +40,9 @@ const CLAIM_TYPE_MAP: Record<Exclude<ClaimTypeFilter, "전체">, ClaimType> = {
 
 export default function ClaimListPage() {
   const navigate = useNavigate();
-  const { setSearchEnabled, setTabsActiveTab } = useSearchStore();
+  const { setSearchEnabled, setTabsActiveTab, config } = useSearchStore();
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
+  const activeTab = (config.tabs?.activeTab as ClaimTypeFilter) ?? "전체";
   const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
   const queryFilters = useMemo(
     () => ({
@@ -52,7 +53,6 @@ export default function ClaimListPage() {
     [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
   );
   const { data: claims = [], isLoading, error } = useClaims(queryFilters);
-  const [activeTab, setActiveTab] = useState<ClaimTypeFilter>("전체");
 
   const filteredClaims = useMemo(() => {
     if (activeTab === "전체") return claims;
@@ -72,16 +72,13 @@ export default function ClaimListPage() {
       },
       tabs: {
         items: CLAIM_TYPE_TABS,
-        activeTab,
-        onTabChange: (tab) => {
-          setActiveTab(tab as ClaimTypeFilter);
-          setTabsActiveTab(tab);
-        },
+        activeTab: "전체",
+        onTabChange: setTabsActiveTab,
       },
     });
 
     return () => setSearchEnabled(false);
-  }, [setSearchEnabled, setTabsActiveTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [setSearchEnabled, setTabsActiveTab]);
 
   if (isLoading) {
     return (

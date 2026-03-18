@@ -45,8 +45,9 @@ const ORDER_TYPE_MAP: Record<
 
 export default function OrderListPage() {
   const navigate = useNavigate();
-  const { setSearchEnabled, setTabsActiveTab } = useSearchStore();
+  const { setSearchEnabled, setTabsActiveTab, config } = useSearchStore();
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
+  const activeTab = (config.tabs?.activeTab as OrderTypeFilter) ?? "전체";
   const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
   const queryFilters = useMemo(
     () => ({
@@ -56,7 +57,6 @@ export default function OrderListPage() {
     }),
     [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
   );
-  const [activeTab, setActiveTab] = useState<OrderTypeFilter>("전체");
   const { data: orders = [], isLoading, error } = useOrders(queryFilters);
 
   const filteredOrders = useMemo(() => {
@@ -77,16 +77,13 @@ export default function OrderListPage() {
       },
       tabs: {
         items: ORDER_TYPE_TABS,
-        activeTab,
-        onTabChange: (tab) => {
-          setActiveTab(tab as OrderTypeFilter);
-          setTabsActiveTab(tab);
-        },
+        activeTab: "전체",
+        onTabChange: setTabsActiveTab,
       },
     });
 
     return () => setSearchEnabled(false);
-  }, [setSearchEnabled, setTabsActiveTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [setSearchEnabled, setTabsActiveTab]);
 
   const handleClaimRequest = (
     type: string,
