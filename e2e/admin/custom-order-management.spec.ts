@@ -10,6 +10,7 @@ import {
   seedCustomOrder,
   type SeededClaimOrder,
 } from "../utils/store-data";
+import { statusRow } from "../utils/admin-helpers";
 
 test.describe.serial("Admin 주문 제작 관리", () => {
   test.skip(
@@ -111,7 +112,7 @@ test.describe.serial("Admin 주문 제작 관리", () => {
     await authenticatedPage
       .getByRole("button", { name: "샘플봉제제작중으로 변경" })
       .click();
-    await expect(authenticatedPage.getByText("샘플봉제제작중")).toBeVisible();
+    await expect(statusRow(authenticatedPage, "샘플봉제제작중")).toBeVisible();
   });
 
   // SC-custom-006: admin 샘플 단계 순방향 전이
@@ -127,7 +128,9 @@ test.describe.serial("Admin 주문 제작 관리", () => {
     await authenticatedPage
       .getByRole("button", { name: "샘플넥타이배송중으로 변경" })
       .click();
-    await expect(authenticatedPage.getByText("샘플넥타이배송중")).toBeVisible();
+    await expect(
+      statusRow(authenticatedPage, "샘플넥타이배송중"),
+    ).toBeVisible();
 
     // 샘플넥타이배송중 → 샘플배송완료
     await authenticatedPage
@@ -136,7 +139,7 @@ test.describe.serial("Admin 주문 제작 관리", () => {
     await authenticatedPage
       .getByRole("button", { name: "샘플배송완료로 변경" })
       .click();
-    await expect(authenticatedPage.getByText("샘플배송완료")).toBeVisible();
+    await expect(statusRow(authenticatedPage, "샘플배송완료")).toBeVisible();
   });
 
   // SC-custom-007: admin 샘플승인 → 제작중
@@ -152,7 +155,7 @@ test.describe.serial("Admin 주문 제작 관리", () => {
     await authenticatedPage
       .getByRole("button", { name: "샘플승인으로 변경" })
       .click();
-    await expect(authenticatedPage.getByText("샘플승인")).toBeVisible();
+    await expect(statusRow(authenticatedPage, "샘플승인")).toBeVisible();
 
     // 샘플승인 → 제작중
     await authenticatedPage
@@ -186,7 +189,7 @@ test.describe.serial("Admin 주문 제작 관리", () => {
     await authenticatedPage
       .getByRole("button", { name: "제작완료로 변경" })
       .click();
-    await expect(authenticatedPage.getByText("제작완료")).toBeVisible();
+    await expect(statusRow(authenticatedPage, "제작완료")).toBeVisible();
 
     // 제작완료 → 배송중
     await authenticatedPage
@@ -195,7 +198,7 @@ test.describe.serial("Admin 주문 제작 관리", () => {
     await authenticatedPage
       .getByRole("button", { name: "배송중으로 변경" })
       .click();
-    await expect(authenticatedPage.getByText("배송중")).toBeVisible();
+    await expect(statusRow(authenticatedPage, "배송중")).toBeVisible();
   });
 
   // SC-custom-009: admin 제작중 취소 버튼 미노출

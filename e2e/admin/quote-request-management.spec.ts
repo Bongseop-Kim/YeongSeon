@@ -96,8 +96,6 @@ test.describe.serial("Admin 견적요청 관리", () => {
       .getByRole("button", { name: /협의중.*으로 변경/ })
       .click();
 
-    // 업데이트 반영 대기
-    await authenticatedPage.waitForTimeout(500);
     await expect(authenticatedPage.getByText("협의중").first()).toBeVisible();
 
     // 종료 처리 버튼이 협의중 상태에서 표시되는지 확인
@@ -112,7 +110,6 @@ test.describe.serial("Admin 견적요청 관리", () => {
       .getByRole("button", { name: /확정.*으로 변경/ })
       .click();
 
-    await authenticatedPage.waitForTimeout(500);
     await expect(authenticatedPage.getByText("확정").first()).toBeVisible();
 
     // 확정 상태에서는 종료 처리 버튼이 사라짐 (컴포넌트 로직에 따름)

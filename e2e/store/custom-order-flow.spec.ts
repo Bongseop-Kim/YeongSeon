@@ -112,7 +112,6 @@ test.describe.serial("Store 주문 제작 플로우", () => {
 
     // 주문 ID 캡처 완료 후 상세 페이지 이동 확인
     await expect.poll(() => capturedOrderId).not.toBeNull();
-    latestCustomOrderId = capturedOrderId;
   });
 
   // SC-custom-003: 샘플 포함 주문 제작 (seeding 방식으로 상세 페이지 확인)
@@ -145,9 +144,7 @@ test.describe.serial("Store 주문 제작 플로우", () => {
     await authenticatedPage.getByRole("button", { name: "취소 요청" }).click();
 
     await expect(authenticatedPage).toHaveURL(
-      new RegExp(
-        `/order/claim/cancel/${customOrderForCancel.orderId}/${customOrderForCancel.itemId}$`,
-      ),
+      `/order/claim/cancel/${customOrderForCancel.orderId}/${customOrderForCancel.itemId}`,
     );
 
     await expect(

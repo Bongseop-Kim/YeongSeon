@@ -302,6 +302,10 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
     // 아이템 수는 여전히 1개 (새 row가 추가되지 않고 수량만 증가)
     const itemsAfterSecond = await getGuestCartFromStorage(page);
     expect(itemsAfterSecond.length).toBe(1);
+    expect(itemsAfterSecond.length).toBeGreaterThan(0);
+    expect(itemsAfterSecond[0]).toEqual(
+      expect.objectContaining({ quantity: expect.any(Number) }),
+    );
 
     // 수량이 2로 증가됐는지 확인
     const item = itemsAfterSecond[0] as { quantity: number };
@@ -357,8 +361,12 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
 
     // 3. 페이지를 새로고침해 useCartAuthSync가 동기화를 수행하도록 유도
     await page.goto("/cart");
-    // 동기화가 완료될 시간 대기
-    await page.waitForTimeout(3000);
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes("/rest/v1/rpc/get_cart_items") &&
+        response.status() === 200,
+    );
+    await expect(page.getByTestId("cart-items-panel")).toBeVisible();
 
     // 4. 로컬스토리지 guest 장바구니가 삭제됐는지 확인
     const guestItemsAfter = await getGuestCartFromStorage(page);

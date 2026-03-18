@@ -152,9 +152,15 @@ test.describe.serial("Store 수선 주문 플로우", () => {
   }) => {
     await authenticatedPage.goto("/order/order-list");
     await expectAuthenticatedRoute(authenticatedPage);
+    await authenticatedPage.getByRole("tab", { name: "수선" }).click();
+    await expect(
+      authenticatedPage.getByRole("tab", { name: "수선", selected: true }),
+    ).toBeVisible();
 
     await expect(
-      authenticatedPage.getByTestId(`order-card-${repairOrderForList.orderId}`),
+      authenticatedPage
+        .locator('[role="tabpanel"]')
+        .getByTestId(`order-card-${repairOrderForList.orderId}`),
     ).toBeVisible();
   });
 

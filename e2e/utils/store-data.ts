@@ -610,11 +610,18 @@ export const seedRepairOrder = async (): Promise<SeededClaimOrder> => {
     path: `/rest/v1/order_item_view?select=id&order_id=eq.${repairOrder.order_id}`,
     accessToken: storeMeta.accessToken,
   });
+  const fetchedItemId = orderItems[0]?.id;
+
+  if (!fetchedItemId) {
+    throw new Error(
+      `Repair order item id not found for order ${repairOrder.order_id} (query: order_item_view?order_id=eq.${repairOrder.order_id})`,
+    );
+  }
 
   return {
     orderId: repairOrder.order_id,
     orderNumber: repairOrder.order_number,
-    itemId: orderItems[0]?.id ?? "",
+    itemId: fetchedItemId,
     status: "대기중",
     productName: "수선 주문",
   };
@@ -679,11 +686,18 @@ export const seedCustomOrder = async (opts?: {
     path: `/rest/v1/order_item_view?select=id&order_id=eq.${result.order_id}`,
     accessToken: storeMeta.accessToken,
   });
+  const itemId = orderItems[0]?.id;
+
+  if (!itemId) {
+    throw new Error(
+      `Custom order item id not found for order ${result.order_id} (query: order_item_view?order_id=eq.${result.order_id})`,
+    );
+  }
 
   return {
     orderId: result.order_id,
     orderNumber: result.order_number,
-    itemId: orderItems[0]?.id ?? "",
+    itemId,
     status: "대기중",
     productName: "주문 제작",
   };

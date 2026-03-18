@@ -54,9 +54,9 @@ test.describe.serial("Store 주문 플로우", () => {
   let deliveredOrderForTest: Awaited<ReturnType<typeof seedSaleOrder>>;
 
   test.beforeAll(async () => {
-    [fixtures, shippingOrderForTest, deliveredOrderForTest] = await Promise.all(
-      [readFixtures(), seedShippingOrder(), seedSaleOrder({ delivered: true })],
-    );
+    fixtures = await readFixtures();
+    shippingOrderForTest = await seedShippingOrder();
+    deliveredOrderForTest = await seedSaleOrder({ delivered: true });
   });
 
   test.beforeEach(async () => {

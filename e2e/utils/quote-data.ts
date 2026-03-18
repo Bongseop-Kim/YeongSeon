@@ -19,6 +19,7 @@ export const seedQuoteRequest = async (): Promise<SeededQuoteRequest> => {
     Array<{ id: string; is_default: boolean }>
   >({
     path: `/rest/v1/shipping_addresses?select=id,is_default&user_id=eq.${storeMeta.userId}&order=created_at.desc`,
+    method: "GET",
     accessToken: storeMeta.accessToken,
   });
 

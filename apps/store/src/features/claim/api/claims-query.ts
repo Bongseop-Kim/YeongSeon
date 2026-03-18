@@ -79,16 +79,21 @@ export const useCreateClaim = () => {
  */
 export const useClaim = (claimId: string) => {
   const { user } = useAuthStore();
+  const normalizedClaimId = claimId.trim();
+  const hasClaimId = normalizedClaimId.length > 0;
 
   return useQuery({
-    queryKey: claimKeys.detail(claimId),
+    queryKey: claimKeys.detail(normalizedClaimId),
     queryFn: () => {
       if (!user?.id) {
         throw new Error("로그인이 필요합니다.");
       }
-      return getClaim(claimId);
+      if (!hasClaimId) {
+        throw new Error("유효한 클레임 ID가 필요합니다.");
+      }
+      return getClaim(normalizedClaimId);
     },
-    enabled: !!user?.id && !!claimId,
+    enabled: !!user?.id && hasClaimId,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     retry: 1,
@@ -110,8 +115,9 @@ export const useCancelClaim = () => {
       }
       return cancelClaim(claimId);
     },
-    onSuccess: () => {
+    onSuccess: (_data, claimId) => {
       queryClient.invalidateQueries({ queryKey: claimKeys.all });
+      queryClient.invalidateQueries({ queryKey: claimKeys.detail(claimId) });
     },
   });
 };

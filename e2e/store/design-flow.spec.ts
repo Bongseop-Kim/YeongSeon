@@ -3,7 +3,7 @@
  * SC-design-001 ~ SC-design-013
  *
  * 주의:
- *  - SC-design-004/005: 실제 AI API 호출로 느림 → test.slow() 마킹
+ *  - SC-design-004/005: 실제 AI API 호출은 opt-in으로만 실행
  *  - SC-design-006: AI 응답 mock 필요 → 실제 환경에서만 가능, skip 처리
  *  - SC-design-012: admin Edge Function 호출로 cancel-token-payment 필요
  *  - SC-design-013: 신규 계정 필요, 복잡도 높아 skip 처리
@@ -279,6 +279,10 @@ test.describe.serial("Design/Token 플로우", () => {
   // ── SC-design-004: 텍스트 생성 요청 (실제 AI 호출, slow) ─────────────────
 
   test("SC-design-004: 텍스트 생성 요청", async ({ authenticatedPage }) => {
+    test.skip(
+      process.env.RUN_REAL_AI !== "true",
+      "실제 AI 호출 테스트는 RUN_REAL_AI=true 일 때만 실행합니다.",
+    );
     test.slow();
 
     const page = authenticatedPage;
@@ -572,7 +576,9 @@ test.describe.serial("Design/Token 플로우", () => {
     await expect(pendingBadge).toBeVisible();
 
     // 동일 주문에 환불 신청 버튼이 없어야 함
-    const refundButtons = page.getByRole("button", { name: "환불 신청" });
+    const refundButtons = pendingBadge
+      .locator("xpath=ancestor::div[contains(@class,'rounded-lg')][1]")
+      .getByRole("button", { name: "환불 신청" });
     const refundButtonCount = await refundButtons.count();
 
     // pending 상태의 주문에는 환불 신청 버튼이 없어야 함
@@ -657,7 +663,7 @@ test.describe.serial("Design/Token 플로우", () => {
     const adminMeta = await readAuthMeta("admin");
 
     // token_refund 클레임 조회
-    const claims = await fetch(
+    const claimsResponse = await fetch(
       `${supabaseUrl}/rest/v1/claims?select=id,status,order_id&user_id=eq.${storeMeta2.userId}&type=eq.token_refund&status=eq.접수&limit=1`,
       {
         headers: {
@@ -666,12 +672,19 @@ test.describe.serial("Design/Token 플로우", () => {
           "Content-Type": "application/json",
         },
       },
-    ).then(
-      (r) =>
-        r.json() as Promise<
-          Array<{ id: string; status: string; order_id: string }>
-        >,
     );
+
+    if (!claimsResponse.ok) {
+      throw new Error(
+        `claims 조회 실패: ${claimsResponse.status} ${await claimsResponse.text()}`,
+      );
+    }
+
+    const claims = (await claimsResponse.json()) as Array<{
+      id: string;
+      status: string;
+      order_id: string;
+    }>;
 
     if (!claims[0]) {
       test.skip(true, "승인할 pending token_refund 클레임이 없습니다.");
@@ -696,12 +709,9 @@ test.describe.serial("Design/Token 플로우", () => {
 
     if (!approvalResponse.ok) {
       const errorText = await approvalResponse.text();
-      // Edge Function이 없거나 오류인 경우 테스트를 실패시키지 않고 skip
-      test.skip(
-        true,
+      throw new Error(
         `cancel-token-payment Edge Function 오류: ${approvalResponse.status} ${errorText}`,
       );
-      return;
     }
 
     // 토큰 차감 확인

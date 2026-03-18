@@ -32,23 +32,25 @@ const navigateToConfirmStep = async (page: Page, isQuoteMode: boolean) => {
   }
   // quantity → fabric
   await page.getByRole("button", { name: /다음/ }).click();
-  await page.waitForTimeout(300);
+  await expect(page.getByText("원단 조합")).toBeVisible();
 
   // fabric → sewing (기본값 POLY/PRINTING으로 통과)
   await page.getByRole("button", { name: /다음/ }).click();
-  await page.waitForTimeout(300);
+  await expect(page.getByText("봉제 스타일 (중복 선택 가능)")).toBeVisible();
 
   // sewing: 자동 타이 선택 (tieType="AUTO"만 validate 통과)
   await page.getByText("자동 타이 (지퍼)").click();
-  await page.waitForTimeout(200);
+  await expect(page.locator("#tie-type-auto")).toBeChecked();
 
   // sewing → attachment (spec, finishing, sample은 isSkippable=true이므로 스킵)
   await page.getByRole("button", { name: /다음/ }).click();
-  await page.waitForTimeout(300);
+  await expect(page.getByText("참고자료")).toBeVisible();
 
   // attachment → confirm
   await page.getByRole("button", { name: /다음/ }).click();
-  await page.waitForTimeout(300);
+  await expect(
+    page.getByRole("button", { name: isQuoteMode ? "견적요청" : "주문하기" }),
+  ).toBeVisible();
 };
 
 test.describe.serial("Store 견적요청 플로우", () => {

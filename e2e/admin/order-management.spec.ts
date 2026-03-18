@@ -26,14 +26,11 @@ test.describe.serial("Admin 주문 관리", () => {
   let cancelBtnOrder: Awaited<ReturnType<typeof seedShippingOrder>>;
 
   test.beforeAll(async () => {
-    [managedOrder, rollbackOrder, shippingOrder, cancelBtnOrder, claimOrder] =
-      await Promise.all([
-        seedSaleOrder(),
-        seedSaleOrder(),
-        seedShippingOrder(),
-        seedShippingOrder(),
-        seedSaleOrder({ delivered: true }),
-      ]);
+    managedOrder = await seedSaleOrder();
+    rollbackOrder = await seedSaleOrder();
+    shippingOrder = await seedShippingOrder();
+    cancelBtnOrder = await seedShippingOrder();
+    claimOrder = await seedSaleOrder({ delivered: true });
     claimSeed = await createStoreClaim({
       type: "return",
       orderId: claimOrder.orderId,
