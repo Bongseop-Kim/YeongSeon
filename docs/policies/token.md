@@ -15,7 +15,7 @@ last-verified: 2026-03-17
 
 **PR-token-002**: 동시성 제어 — `use_design_tokens` RPC는 `pg_advisory_xact_lock(hashtext(user_id))`로 동일 사용자 동시 요청 직렬화
 
-**PR-token-003**: 환불 멱등성 — `refund_design_tokens`는 `work_id` 기반 중복 환불 방지. 동일 `work_id` 두 번째 요청은 무시
+**PR-token-003**: 토큰 복원 멱등성 — `refund_design_tokens`는 `work_id` 기반 중복 복원 방지. 동일 `work_id` 두 번째 요청은 무시
 
 **PR-token-004**: bonus 토큰은 환불 불가. paid 토큰만 수동 환불 신청 가능 (전자거래 규정)
 
@@ -32,13 +32,13 @@ last-verified: 2026-03-17
 
 ## 원장 타입
 
-| 타입       | 설명                                                | 방향  |
-| ---------- | --------------------------------------------------- | ----- |
-| `grant`    | 신규 가입 시 자동 지급 (bonus)                      | +잔액 |
-| `purchase` | 패키지 구매 후 충전 (paid)                          | +잔액 |
-| `use`      | AI 디자인 생성 사용 (paid 먼저 차감 후 bonus)       | -잔액 |
-| `refund`   | 이미지 미생성 시 자동 환불 또는 고객 수동 환불 신청 | +잔액 |
-| `admin`    | 관리자 수동 조정                                    | ±잔액 |
+| 타입       | 설명                                                            | 방향  |
+| ---------- | --------------------------------------------------------------- | ----- |
+| `grant`    | 신규 가입 시 자동 지급 (bonus)                                  | +잔액 |
+| `purchase` | 패키지 구매 후 충전 (paid)                                      | +잔액 |
+| `use`      | AI 디자인 생성 사용 (paid 먼저 차감 후 bonus)                   | -잔액 |
+| `refund`   | 이미지 미생성 시 선차감 토큰 복원 또는 고객 paid 토큰 환불 신청 | +잔액 |
+| `admin`    | 관리자 수동 조정                                                | ±잔액 |
 
 ## 구매 패키지
 
@@ -63,14 +63,14 @@ last-verified: 2026-03-17
 
 ## 주요 RPC
 
-| RPC                               | 권한                   | 설명                           |
-| --------------------------------- | ---------------------- | ------------------------------ |
-| `get_design_token_balance`        | INVOKER (본인)         | 본인 토큰 잔액 조회            |
-| `use_design_tokens`               | DEFINER                | 토큰 차감 (advisory lock 포함) |
-| `refund_design_tokens`            | DEFINER (service_role) | 실패 환불 (work_id 멱등)       |
-| `manage_design_tokens_admin`      | DEFINER (관리자)       | 관리자 수동 조정               |
-| `get_token_plans`                 | DEFINER                | 구매 플랜 목록 조회            |
-| `get_design_token_balances_admin` | DEFINER (관리자)       | 다수 사용자 잔액 일괄 조회     |
+| RPC                               | 권한                   | 설명                                      |
+| --------------------------------- | ---------------------- | ----------------------------------------- |
+| `get_design_token_balance`        | INVOKER (본인)         | 본인 토큰 잔액 조회                       |
+| `use_design_tokens`               | DEFINER                | 토큰 차감 (advisory lock 포함)            |
+| `refund_design_tokens`            | DEFINER (service_role) | 이미지 미생성 시 토큰 복원 (work_id 멱등) |
+| `manage_design_tokens_admin`      | DEFINER (관리자)       | 관리자 수동 조정                          |
+| `get_token_plans`                 | DEFINER                | 구매 플랜 목록 조회                       |
+| `get_design_token_balances_admin` | DEFINER (관리자)       | 다수 사용자 잔액 일괄 조회                |
 
 ## 관련 파일
 

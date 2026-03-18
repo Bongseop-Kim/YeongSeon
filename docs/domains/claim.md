@@ -153,6 +153,15 @@ stateDiagram-v2
 - **BR-claim-008**: 클레임 이유 코드: `change_mind` / `defect` / `delay` / `wrong_item` / `size_mismatch` / `color_mismatch` / `other`.
 - **BR-claim-009**: quote-request와 design-token은 클레임 시스템 외부. 각자 별도 종료/환불 메커니즘 사용.
 
+  **quote-request 종료**: `admin_update_quote_request_status` RPC로 관리자가 직접 `종료` 상태 전환. 클레임 미생성.
+
+  **design-token 환불 경로 (2가지)**:
+
+  | 상황             | 처리 방법                                                                                        |
+  | ---------------- | ------------------------------------------------------------------------------------------------ |
+  | Toss 결제 실패   | `unlock_token_payment` RPC — `결제중` → `대기중`, 토큰 미지급                                    |
+  | AI 이미지 미생성 | `refund_design_tokens` RPC — 선차감 토큰 복원, `work_id` 기반 멱등, Edge Function 내부 자동 호출 |
+
 ## 화면 및 진입점
 
 | 앱    | 경로                                  | 설명                     |
