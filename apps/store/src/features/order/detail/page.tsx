@@ -28,6 +28,8 @@ import {
   CLAIM_ACTION_LABEL,
 } from "@yeongseon/shared/constants/claim-actions";
 import { getClaimActionsFromCustomerActions } from "@yeongseon/shared";
+import { toast } from "@/lib/toast";
+import { REPAIR_SHIPPING_ADDRESS } from "@/constants/REPAIR_SHIPPING";
 
 const getOrderErrorDescription = (error: unknown): string => {
   if (!(error instanceof Error)) {
@@ -99,6 +101,72 @@ const PurchaseConfirmSection = ({ orderId }: { orderId: string }) => {
       >
         {isPending ? "처리 중..." : "구매확정"}
       </Button>
+    </div>
+  );
+};
+
+/** 발송대기 상태에서 수선품 발송 안내 카드 표시 */
+const RepairShippingPendingSection = ({ orderId }: { orderId: string }) => {
+  const navigate = useNavigate();
+
+  const handleCopyAddress = async () => {
+    try {
+      const text = `${REPAIR_SHIPPING_ADDRESS.recipient} / ${REPAIR_SHIPPING_ADDRESS.address} / ${REPAIR_SHIPPING_ADDRESS.phone}`;
+      await navigator.clipboard.writeText(text);
+      toast.success("주소가 복사되었습니다.");
+    } catch {
+      toast.error("주소 복사에 실패했습니다. 수동으로 복사해주세요.");
+    }
+  };
+
+  return (
+    <div className="rounded-md bg-blue-50 border border-blue-200 p-4 space-y-3">
+      <p className="text-sm font-semibold text-blue-800">📮 수선품 발송 안내</p>
+      <div className="text-sm text-blue-700 bg-white rounded p-2">
+        <p className="font-semibold">{REPAIR_SHIPPING_ADDRESS.recipient}</p>
+        <p>{REPAIR_SHIPPING_ADDRESS.address}</p>
+        <p>{REPAIR_SHIPPING_ADDRESS.phone}</p>
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" onClick={handleCopyAddress}>
+          주소 복사
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => navigate(`${ROUTES.REPAIR_SHIPPING}/${orderId}`)}
+        >
+          송장번호 등록
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+/** 발송중 상태에서 택배사/송장번호 및 배송 조회 링크 표시 */
+const RepairShippingInTransitSection = ({
+  courierCompany,
+  trackingNumber,
+}: {
+  courierCompany: string;
+  trackingNumber: string;
+}) => {
+  const trackingUrl = buildTrackingUrl(courierCompany, trackingNumber);
+  return (
+    <div className="rounded-md bg-zinc-50 border border-zinc-200 p-4 space-y-1 text-sm">
+      <p className="font-semibold">발송 정보</p>
+      <p className="text-zinc-600">
+        {courierCompany} · {trackingNumber}
+      </p>
+      {trackingUrl && (
+        <a
+          href={trackingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline text-xs"
+        >
+          배송 조회 →
+        </a>
+      )}
     </div>
   );
 };
@@ -377,6 +445,25 @@ const OrderDetailPage = () => {
                 <PurchaseConfirmSection orderId={order.id} />
               </CardContent>
             )}
+
+            {/* 수선품 발송 안내 (발송대기) */}
+            {order.status === "발송대기" && (
+              <CardContent>
+                <RepairShippingPendingSection orderId={order.id} />
+              </CardContent>
+            )}
+
+            {/* 수선품 발송 정보 (발송중) */}
+            {order.status === "발송중" &&
+              order.trackingInfo?.courierCompany &&
+              order.trackingInfo?.trackingNumber && (
+                <CardContent>
+                  <RepairShippingInTransitSection
+                    courierCompany={order.trackingInfo.courierCompany}
+                    trackingNumber={order.trackingInfo.trackingNumber}
+                  />
+                </CardContent>
+              )}
 
             {/* 주문 상품 목록 */}
             <CardHeader>
