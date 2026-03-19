@@ -13,6 +13,7 @@ const ORDER_STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
   수선완료: "bg-lime-100 text-lime-800",
   발송대기: "bg-yellow-100 text-yellow-800",
   발송중: "bg-blue-100 text-blue-800",
+  배송대기: "bg-sky-100 text-sky-800",
   배송중: "bg-blue-100 text-blue-800",
   배송완료: "bg-indigo-100 text-indigo-800",
   완료: "bg-green-100 text-green-800",
