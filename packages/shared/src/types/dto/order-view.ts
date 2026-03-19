@@ -7,6 +7,7 @@ import type { CustomerAction } from "../view/order-actions";
 export type OrderStatusDTO =
   | "진행중"
   | "완료"
+  | "배송대기"
   | "배송중"
   | "배송완료"
   | "대기중"
@@ -14,6 +15,8 @@ export type OrderStatusDTO =
   | "취소"
   | "실패"
   | "접수"
+  | "발송대기"
+  | "발송중"
   | "제작중"
   | "제작완료"
   | "수선중"
