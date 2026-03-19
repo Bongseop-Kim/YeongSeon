@@ -42,6 +42,7 @@ export default mergeConfig(
           "src/components/ui/**",
           "src/**/components/**/*.tsx",
           "src/**/page.tsx",
+          "src/**/pages/**/*.tsx",
           // 인프라
           "src/providers/**",
           "src/routes/**",

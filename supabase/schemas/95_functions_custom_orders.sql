@@ -5,7 +5,7 @@
 CREATE OR REPLACE FUNCTION public.calculate_custom_order_amounts(
   p_options jsonb,
   p_quantity integer,
-  p_sample boolean DEFAULT false,
+  p_sample boolean DEFAULT null,
   p_sample_type text DEFAULT null
 )
 RETURNS TABLE (sewing_cost integer, fabric_cost integer, sample_cost integer, total_cost integer)
@@ -47,20 +47,16 @@ declare
   v_unit_fabric_cost integer;
   v_fabric_amount integer;
 begin
+  if p_sample is not null or p_sample_type is not null then
+    raise exception 'Legacy sample parameters (p_sample, p_sample_type) are no longer supported. Use create_sample_order_txn instead.';
+  end if;
+
   if p_options is null or jsonb_typeof(p_options) <> 'object' then
     raise exception 'Invalid options payload';
   end if;
 
   if p_quantity is null or p_quantity <= 0 then
     raise exception 'Invalid quantity';
-  end if;
-
-  if p_sample and (p_sample_type is null or trim(p_sample_type) = '') then
-    raise exception 'p_sample_type is required when p_sample is true';
-  end if;
-
-  if p_sample and p_sample_type not in ('fabric', 'sewing', 'fabric_and_sewing') then
-    raise exception 'Invalid p_sample_type: %', p_sample_type;
   end if;
 
   select
@@ -218,28 +214,7 @@ begin
 
   fabric_cost := v_fabric_amount;
 
-  -- 샘플 비용 계산
-  if p_sample then
-    if p_sample_type = 'fabric' then
-      select pc.amount into sample_cost
-      from public.pricing_constants pc
-      where pc.key = 'SAMPLE_FABRIC_COST';
-    elsif p_sample_type = 'sewing' then
-      select pc.amount into sample_cost
-      from public.pricing_constants pc
-      where pc.key = 'SAMPLE_SEWING_COST';
-    else -- fabric_and_sewing
-      select pc.amount into sample_cost
-      from public.pricing_constants pc
-      where pc.key = 'SAMPLE_FABRIC_AND_SEWING_COST';
-    end if;
-
-    if sample_cost is null then
-      raise exception 'Sample pricing constants are not configured for type: %', p_sample_type;
-    end if;
-  else
-    sample_cost := 0;
-  end if;
+  sample_cost := 0;
 
   total_cost := sewing_cost + fabric_cost + sample_cost;
 
@@ -254,7 +229,7 @@ CREATE OR REPLACE FUNCTION public.create_custom_order_txn(
   p_quantity integer,
   p_reference_images jsonb DEFAULT '[]'::jsonb,
   p_additional_notes text DEFAULT '',
-  p_sample boolean DEFAULT false,
+  p_sample boolean DEFAULT null,
   p_sample_type text DEFAULT null
 )
 RETURNS jsonb
@@ -285,6 +260,10 @@ begin
     raise exception 'Unauthorized';
   end if;
 
+  if p_sample is not null or p_sample_type is not null then
+    raise exception 'Legacy sample parameters (p_sample, p_sample_type) are no longer supported. Use create_sample_order_txn instead.';
+  end if;
+
   if p_quantity is null or p_quantity <= 0 then
     raise exception 'Invalid quantity';
   end if;
@@ -305,15 +284,6 @@ begin
       end if;
       v_idx := v_idx + 1;
     end loop;
-  end if;
-
-  -- p_sample / p_sample_type 정합성 검증
-  if p_sample is not true and p_sample_type is not null then
-    raise exception 'p_sample_type must be null when p_sample is not true';
-  end if;
-
-  if p_sample is true and (p_sample_type is null or trim(p_sample_type) = '') then
-    raise exception 'p_sample_type is required when p_sample is true';
   end if;
 
   if p_shipping_address_id is null then
@@ -339,7 +309,7 @@ begin
     v_fabric_cost,
     v_sample_cost,
     v_total_cost
-  from public.calculate_custom_order_amounts(p_options, p_quantity, p_sample, p_sample_type) as amounts;
+  from public.calculate_custom_order_amounts(p_options, p_quantity) as amounts;
 
   v_base_unit := floor(v_total_cost::numeric / p_quantity)::integer;
   v_remainder := v_total_cost - v_base_unit * p_quantity;
@@ -379,8 +349,6 @@ begin
     'options', p_options,
     'reference_images', coalesce(p_reference_images, '[]'::jsonb),
     'additional_notes', coalesce(p_additional_notes, ''),
-    'sample', coalesce(p_sample, false),
-    'sample_type', p_sample_type,
     'pricing', jsonb_build_object(
       'sewing_cost', v_sewing_cost,
       'fabric_cost', v_fabric_cost,
@@ -461,40 +429,23 @@ begin
     raise exception 'Order not found';
   end if;
 
-  -- custom 주문이 아닌 경우 전액 환불
-  if v_order_type != 'custom' then
-    if not (
-      (v_order_type = 'sale'   and v_status in ('대기중', '결제중', '진행중'))
-      or (v_order_type = 'repair' and v_status in ('대기중', '결제중', '접수'))
-      or (v_order_type = 'token'  and v_status in ('대기중', '결제중'))
-    ) then
-      raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다';
-    end if;
-    refund_amount := v_total_price;
-    deducted_sample_cost := 0;
-    return next;
-    return;
-  end if;
-
-  -- 샘플 진행 중 상태: sample_cost 공제
-  if v_status in (
-    '샘플원단제작중', '샘플원단배송중', '샘플봉제제작중',
-    '샘플넥타이배송중', '샘플배송완료', '샘플승인'
+  if not (
+    (v_order_type = 'sale'   and v_status in ('대기중', '결제중', '진행중'))
+    or (v_order_type = 'custom' and v_status in ('대기중', '결제중', '접수'))
+    or (v_order_type = 'repair' and v_status in ('대기중', '결제중', '접수'))
+    or (v_order_type = 'token'  and v_status in ('대기중', '결제중'))
+    or (v_order_type = 'sample' and v_status in ('대기중', '결제중', '접수'))
   ) then
-    refund_amount := v_total_price - v_sample_cost;
-    deducted_sample_cost := v_sample_cost;
-    return next;
-    return;
+    raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다';
   end if;
 
-  -- 대기중, 결제중, 접수: 전액 환불
-  if v_status in ('대기중', '결제중', '접수') then
+  if v_sample_cost is not null and v_sample_cost > 0 then
+    refund_amount := greatest(v_total_price - v_sample_cost, 0);
+    deducted_sample_cost := v_sample_cost;
+  else
     refund_amount := v_total_price;
     deducted_sample_cost := 0;
-    return next;
-    return;
   end if;
-
-  raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다: %', v_status;
+  return next;
 end;
 $$;

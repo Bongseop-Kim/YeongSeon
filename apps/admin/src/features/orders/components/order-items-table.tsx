@@ -16,6 +16,7 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
         title="상품명"
         render={(_: unknown, record: AdminOrderItem) => {
           if (record.type === "custom") return "주문 제작";
+          if (record.type === "sample") return "샘플 제작";
           if (record.type === "reform") return "넥타이 수선";
           if (record.type === "token") {
             const label = record.planKey ?? "토큰";

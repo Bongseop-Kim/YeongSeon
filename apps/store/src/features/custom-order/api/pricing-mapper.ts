@@ -1,26 +1,34 @@
 import type { PricingConstantRow } from "@/features/custom-order/api/pricing-api";
 import type { PricingConfig } from "@/features/custom-order/types/pricing";
 
-type PricingConstantKey =
-  | "START_COST"
-  | "SEWING_PER_COST"
-  | "AUTO_TIE_COST"
-  | "TRIANGLE_STITCH_COST"
-  | "SIDE_STITCH_COST"
-  | "BAR_TACK_COST"
-  | "DIMPLE_COST"
-  | "SPODERATO_COST"
-  | "FOLD7_COST"
-  | "WOOL_INTERLINING_COST"
-  | "BRAND_LABEL_COST"
-  | "CARE_LABEL_COST"
-  | "YARN_DYED_DESIGN_COST"
-  | "FABRIC_QTY_ADULT"
-  | "FABRIC_QTY_ADULT_FOLD7"
-  | "FABRIC_QTY_CHILD"
-  | "SAMPLE_SEWING_COST"
-  | "SAMPLE_FABRIC_COST"
-  | "SAMPLE_FABRIC_AND_SEWING_COST";
+const ALLOWED_PRICING_KEYS = [
+  "START_COST",
+  "SEWING_PER_COST",
+  "AUTO_TIE_COST",
+  "TRIANGLE_STITCH_COST",
+  "SIDE_STITCH_COST",
+  "BAR_TACK_COST",
+  "DIMPLE_COST",
+  "SPODERATO_COST",
+  "FOLD7_COST",
+  "WOOL_INTERLINING_COST",
+  "BRAND_LABEL_COST",
+  "CARE_LABEL_COST",
+  "YARN_DYED_DESIGN_COST",
+  "FABRIC_QTY_ADULT",
+  "FABRIC_QTY_ADULT_FOLD7",
+  "FABRIC_QTY_CHILD",
+  "SAMPLE_SEWING_COST",
+  "SAMPLE_FABRIC_PRINTING_COST",
+  "SAMPLE_FABRIC_YARN_DYED_COST",
+  "SAMPLE_FABRIC_AND_SEWING_PRINTING_COST",
+  "SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST",
+] as const;
+
+type PricingConstantKey = (typeof ALLOWED_PRICING_KEYS)[number];
+
+const isPricingConstantKey = (key: string): key is PricingConstantKey =>
+  ALLOWED_PRICING_KEYS.includes(key as PricingConstantKey);
 
 const getConstantValue = (
   constantsMap: Partial<Record<PricingConstantKey, number>>,
@@ -59,27 +67,7 @@ export const toPricingConfig = (
   const constantsMap: Partial<Record<PricingConstantKey, number>> = {};
 
   constants.forEach((constant) => {
-    if (
-      constant.key === "START_COST" ||
-      constant.key === "SEWING_PER_COST" ||
-      constant.key === "AUTO_TIE_COST" ||
-      constant.key === "TRIANGLE_STITCH_COST" ||
-      constant.key === "SIDE_STITCH_COST" ||
-      constant.key === "BAR_TACK_COST" ||
-      constant.key === "DIMPLE_COST" ||
-      constant.key === "SPODERATO_COST" ||
-      constant.key === "FOLD7_COST" ||
-      constant.key === "WOOL_INTERLINING_COST" ||
-      constant.key === "BRAND_LABEL_COST" ||
-      constant.key === "CARE_LABEL_COST" ||
-      constant.key === "YARN_DYED_DESIGN_COST" ||
-      constant.key === "FABRIC_QTY_ADULT" ||
-      constant.key === "FABRIC_QTY_ADULT_FOLD7" ||
-      constant.key === "FABRIC_QTY_CHILD" ||
-      constant.key === "SAMPLE_SEWING_COST" ||
-      constant.key === "SAMPLE_FABRIC_COST" ||
-      constant.key === "SAMPLE_FABRIC_AND_SEWING_COST"
-    ) {
+    if (isPricingConstantKey(constant.key)) {
       constantsMap[constant.key] = constant.amount;
     }
   });
@@ -124,10 +112,21 @@ export const toPricingConfig = (
       },
     },
     SAMPLE_SEWING_COST: getConstantValue(constantsMap, "SAMPLE_SEWING_COST"),
-    SAMPLE_FABRIC_COST: getConstantValue(constantsMap, "SAMPLE_FABRIC_COST"),
-    SAMPLE_FABRIC_AND_SEWING_COST: getConstantValue(
+    SAMPLE_FABRIC_PRINTING_COST: getConstantValue(
       constantsMap,
-      "SAMPLE_FABRIC_AND_SEWING_COST",
+      "SAMPLE_FABRIC_PRINTING_COST",
+    ),
+    SAMPLE_FABRIC_YARN_DYED_COST: getConstantValue(
+      constantsMap,
+      "SAMPLE_FABRIC_YARN_DYED_COST",
+    ),
+    SAMPLE_FABRIC_AND_SEWING_PRINTING_COST: getConstantValue(
+      constantsMap,
+      "SAMPLE_FABRIC_AND_SEWING_PRINTING_COST",
+    ),
+    SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST: getConstantValue(
+      constantsMap,
+      "SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST",
     ),
   };
 };

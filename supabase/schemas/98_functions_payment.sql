@@ -1,6 +1,43 @@
 -- =============================================================
 -- 98_functions_payment.sql  – Payment RPC functions
 -- =============================================================
+CREATE OR REPLACE FUNCTION public.get_sample_coupon_and_pricing(
+  p_sample_type text,
+  p_sample_design_type text
+)
+RETURNS TABLE (coupon_name text, pricing_key text)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+begin
+  if p_sample_type = 'sewing' then
+    coupon_name := 'SAMPLE_DISCOUNT_SEWING';
+    pricing_key := 'sample_discount_sewing';
+  elsif p_sample_type = 'fabric' then
+    if p_sample_design_type = 'PRINTING' then
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_PRINTING';
+      pricing_key := 'sample_discount_fabric_printing';
+    else
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_YARN_DYED';
+      pricing_key := 'sample_discount_fabric_yarn_dyed';
+    end if;
+  elsif p_sample_type = 'fabric_and_sewing' then
+    if p_sample_design_type = 'PRINTING' then
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING';
+      pricing_key := 'sample_discount_fabric_and_sewing_printing';
+    else
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED';
+      pricing_key := 'sample_discount_fabric_and_sewing_yarn_dyed';
+    end if;
+  else
+    raise exception 'Unsupported sample_type: %', p_sample_type;
+  end if;
+
+  return next;
+end;
+$$;
+
 -- ── confirm_payment_orders ──────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
   p_payment_group_id uuid,
@@ -21,6 +58,13 @@ declare
   v_token_amount integer;
   v_plan_key text;
   v_plan_label text;
+  v_sample_coupon_id uuid;
+  v_coupon_row_count integer := 0;
+  v_sample_type text;
+  v_sample_design_type text;
+  v_coupon_name text;
+  v_pricing_key text;
+  v_discount_amount integer;
 begin
   -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
   if p_user_id is null then
@@ -63,6 +107,7 @@ begin
     v_post_status := case v_order.order_type
       when 'sale'  then '진행중'
       when 'token' then '완료'
+      when 'sample' then '접수'
       else '접수'
     end;
 
@@ -111,10 +156,59 @@ begin
       on conflict (work_id) do nothing;
     end if;
 
+    v_coupon_row_count := 0;
+    if v_order.order_type = 'sample' then
+      -- order_items에서 sample_type, design_type 추출
+      select oi.item_data->>'sample_type',
+             oi.item_data->'options'->>'design_type'
+      into v_sample_type, v_sample_design_type
+      from public.order_items oi
+      where oi.order_id = v_order.id and oi.item_type = 'sample'
+      limit 1;
+
+      select mapped.coupon_name, mapped.pricing_key
+      into v_coupon_name, v_pricing_key
+      from public.get_sample_coupon_and_pricing(
+        v_sample_type,
+        v_sample_design_type
+      ) as mapped;
+
+      -- ⚠️ 샘플 할인값의 원본은 pricing_constants이며,
+      -- coupons 테이블의 SAMPLE_DISCOUNT_* row는 이 값을 기반으로 자동 동기화됩니다.
+      -- 쿠폰 관리 페이지에서 직접 수정하지 마세요.
+      select pc.amount into v_discount_amount
+      from public.pricing_constants pc
+      where pc.key = v_pricing_key;
+
+      if v_discount_amount is null then
+        raise exception 'Sample discount pricing key % is not configured; coupons_name_unique upsert cannot continue', v_pricing_key;
+      end if;
+
+      -- coupons row 동기화 (user_coupons FK용)
+      insert into public.coupons (name, discount_type, discount_value, max_discount_amount, expiry_date, is_active)
+      values (v_coupon_name, 'fixed', v_discount_amount, v_discount_amount, '2099-12-31', true)
+      on conflict (name)
+      do update set discount_value = excluded.discount_value,
+                   max_discount_amount = excluded.max_discount_amount,
+                   discount_type = excluded.discount_type,
+                   expiry_date = excluded.expiry_date,
+                   is_active = excluded.is_active
+      returning id into v_sample_coupon_id;
+
+      if v_sample_coupon_id is not null then
+        insert into public.user_coupons (user_id, coupon_id, status)
+        values (p_user_id, v_sample_coupon_id, 'active')
+        on conflict (user_id, coupon_id) do nothing;
+
+        get diagnostics v_coupon_row_count = row_count;
+      end if;
+    end if;
+
     v_updated_orders := v_updated_orders || jsonb_build_object(
       'orderId',     v_order.id,
       'orderType',   v_order.order_type,
-      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end
+      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end,
+      'couponIssued', case when v_order.order_type = 'sample' then (v_coupon_row_count > 0) else null end
     );
   end loop;
 

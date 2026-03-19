@@ -169,6 +169,25 @@ function getColumnsForType(orderType: OrderType) {
     ];
   }
 
+  if (orderType === "sample") {
+    return [
+      ...common,
+      <Table.Column
+        key="sampleType"
+        dataIndex="sampleType"
+        title="샘플유형"
+        render={(value: string | null) => value ?? "-"}
+      />,
+      <Table.Column
+        key="itemQuantity"
+        dataIndex="itemQuantity"
+        title="수량"
+        render={(value: number | null) => value ?? "-"}
+      />,
+      ...tail,
+    ];
+  }
+
   if (orderType === "token") {
     return [
       ...common,

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateFabricCost,
-  calculateSampleCost,
   calculateSewingCost,
   calculateTotalCost,
   getEstimatedDays,
@@ -28,9 +27,11 @@ const config = {
   FABRIC_QTY_CHILD: 2,
   FABRIC_QTY_ADULT_FOLD7: 4,
   FABRIC_QTY_ADULT: 3,
-  SAMPLE_SEWING_COST: 7000,
-  SAMPLE_FABRIC_COST: 3000,
-  SAMPLE_FABRIC_AND_SEWING_COST: 9000,
+  SAMPLE_SEWING_COST: 0,
+  SAMPLE_FABRIC_PRINTING_COST: 0,
+  SAMPLE_FABRIC_YARN_DYED_COST: 0,
+  SAMPLE_FABRIC_AND_SEWING_PRINTING_COST: 0,
+  SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST: 0,
 };
 
 const baseOptions = {
@@ -54,8 +55,6 @@ const baseOptions = {
   quantity: 3,
   referenceImages: null,
   additionalNotes: "",
-  sample: false,
-  sampleType: null,
 };
 
 describe("pricing utils", () => {
@@ -122,21 +121,11 @@ describe("pricing utils", () => {
     );
   });
 
-  it("샘플비와 총비용을 계산한다", () => {
-    expect(calculateSampleCost("sewing", config)).toBe(7000);
-    expect(calculateSampleCost("fabric", config)).toBe(3000);
-    expect(calculateSampleCost("fabric_and_sewing", config)).toBe(9000);
-    expect(calculateSampleCost(null, config)).toBe(0);
-    expect(
-      calculateTotalCost(
-        { ...baseOptions, sample: true, sampleType: "fabric" },
-        config,
-      ),
-    ).toEqual({
+  it("총비용을 계산한다", () => {
+    expect(calculateTotalCost(baseOptions, config)).toEqual({
       sewingCost: 3500,
       fabricCost: 1000,
-      sampleCost: 3000,
-      totalCost: 7500,
+      totalCost: 4500,
     });
   });
 });

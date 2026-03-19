@@ -38,7 +38,7 @@ export const getClaimActionsForItem = (
 
   const actions = getClaimActions(status);
 
-  if (itemType === "custom" || itemType === "reform") {
+  if (itemType === "custom" || itemType === "reform" || itemType === "sample") {
     return actions.filter(
       (action): action is Exclude<ClaimActionType, "return" | "exchange"> =>
         action !== "return" && action !== "exchange",

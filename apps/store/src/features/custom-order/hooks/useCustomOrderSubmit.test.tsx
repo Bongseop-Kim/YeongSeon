@@ -8,12 +8,14 @@ const {
   error,
   createCustomOrderMutateAsync,
   createQuoteRequestMutateAsync,
+  requestPayment,
 } = vi.hoisted(() => ({
   navigate: vi.fn(),
   success: vi.fn(),
   error: vi.fn(),
   createCustomOrderMutateAsync: vi.fn(),
   createQuoteRequestMutateAsync: vi.fn(),
+  requestPayment: vi.fn(),
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -68,8 +70,6 @@ const createValues = (quantity: number) => ({
   quantity,
   referenceImages: null,
   additionalNotes: "메모",
-  sample: false,
-  sampleType: null,
   contactName: "홍길동",
   contactTitle: "팀장",
   contactMethod: "email" as const,
@@ -83,12 +83,16 @@ describe("useCustomOrderSubmit", () => {
     error.mockReset();
     createCustomOrderMutateAsync.mockReset();
     createQuoteRequestMutateAsync.mockReset();
+    requestPayment.mockReset();
   });
 
-  it("일반 주문을 생성하고 완료 후 이동한다", async () => {
+  it("일반 주문을 생성하고 토스 결제를 요청한다", async () => {
     const clearDraft = vi.fn();
     const formReset = vi.fn();
-    createCustomOrderMutateAsync.mockResolvedValueOnce(undefined);
+    createCustomOrderMutateAsync.mockResolvedValueOnce({ orderId: "order-1" });
+    requestPayment.mockResolvedValueOnce(undefined);
+
+    const paymentWidgetRef = { current: { requestPayment } };
 
     const { result } = renderHook(() =>
       useCustomOrderSubmit({
@@ -103,6 +107,7 @@ describe("useCustomOrderSubmit", () => {
         watchedValues: createValues(10),
         clearDraft,
         formReset,
+        paymentWidgetRef: paymentWidgetRef as never,
       }),
     );
 
@@ -113,10 +118,68 @@ describe("useCustomOrderSubmit", () => {
     });
 
     expect(createCustomOrderMutateAsync).toHaveBeenCalled();
-    expect(clearDraft).toHaveBeenCalled();
-    expect(formReset).toHaveBeenCalled();
-    expect(success).toHaveBeenCalledWith("주문이 완료되었습니다!");
-    expect(navigate).toHaveBeenCalledWith("/order/order-list");
+    expect(requestPayment).toHaveBeenCalledWith(
+      expect.objectContaining({ orderId: "order-1" }),
+    );
+  });
+
+  it("취소 후 입력값이 바뀌면 새 주문을 다시 생성한다", async () => {
+    const clearDraft = vi.fn();
+    const formReset = vi.fn();
+    createCustomOrderMutateAsync
+      .mockResolvedValueOnce({ orderId: "order-1" })
+      .mockResolvedValueOnce({ orderId: "order-2" });
+    requestPayment.mockRejectedValueOnce({ code: "USER_CANCEL" });
+    requestPayment.mockResolvedValueOnce(undefined);
+
+    const paymentWidgetRef = { current: { requestPayment } };
+    const baseProps = {
+      selectedAddressId: "addr-1",
+      selectedAddress: { id: "addr-1" } as never,
+      imageUpload: {
+        isUploading: false,
+        getImageRefs: () => [
+          { url: "https://example.com/1.jpg", fileId: "file-1" },
+        ],
+      } as never,
+      clearDraft,
+      formReset,
+      paymentWidgetRef: paymentWidgetRef as never,
+    };
+
+    const { result, rerender } = renderHook(
+      ({ watchedValues }) =>
+        useCustomOrderSubmit({
+          ...baseProps,
+          watchedValues,
+        }),
+      {
+        initialProps: {
+          watchedValues: createValues(10),
+        },
+      },
+    );
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    rerender({
+      watchedValues: {
+        ...createValues(10),
+        additionalNotes: "변경된 메모",
+      },
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(createCustomOrderMutateAsync).toHaveBeenCalledTimes(2);
+    expect(requestPayment).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ orderId: "order-2" }),
+    );
   });
 
   it("견적 요청 모드에서 필수 연락처와 업로드 상태를 검증한다", async () => {
@@ -135,6 +198,7 @@ describe("useCustomOrderSubmit", () => {
         },
         clearDraft: vi.fn(),
         formReset: vi.fn(),
+        paymentWidgetRef: { current: null } as never,
       }),
     );
 
@@ -162,6 +226,7 @@ describe("useCustomOrderSubmit", () => {
         watchedValues: createValues(100),
         clearDraft,
         formReset,
+        paymentWidgetRef: { current: null } as never,
       }),
     );
 
@@ -190,6 +255,7 @@ describe("useCustomOrderSubmit", () => {
         watchedValues: createValues(100),
         clearDraft,
         formReset,
+        paymentWidgetRef: { current: null } as never,
       }),
     );
 

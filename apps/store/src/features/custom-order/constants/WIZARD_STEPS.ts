@@ -30,10 +30,7 @@ export const WIZARD_STEPS: StepConfig[] = [
   {
     id: "sewing",
     label: "봉제",
-    validate: (values) => {
-      if (!values.tieType) return "봉제 방식을 선택해주세요";
-      return null;
-    },
+    validate: () => null,
     isSkippable: () => false,
   },
   {
@@ -54,16 +51,6 @@ export const WIZARD_STEPS: StepConfig[] = [
     id: "finishing",
     label: "마감",
     validate: () => null,
-    isSkippable: () => true,
-  },
-  {
-    id: "sample",
-    label: "샘플",
-    validate: (values) => {
-      if (!values.sample) return null;
-      if (!values.sampleType) return "샘플 유형을 선택해주세요";
-      return null;
-    },
     isSkippable: () => true,
   },
   {

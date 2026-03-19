@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Typography, Spin, Result } from "antd";
-import {
-  ORDER_STATUS_FLOW,
-  ORDER_ROLLBACK_FLOW,
-  CUSTOM_SAMPLE_FLOW,
-  CUSTOM_SAMPLE_ROLLBACK_FLOW,
-} from "@yeongseon/shared";
+import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW } from "@yeongseon/shared";
 import { useDefaultCourier } from "@/features/settings/api/settings-query";
 import {
   useAdminOrderDetail,
@@ -28,6 +23,7 @@ import { RelatedOrdersSection } from "@/features/orders/components/related-order
 import type {
   AdminCustomOrderItem,
   AdminReformOrderItem,
+  AdminSampleOrderItem,
 } from "@/features/orders/types/admin-order";
 
 const { Title } = Typography;
@@ -61,17 +57,12 @@ export function OrderDetailSection() {
   const reformItems = items.filter(
     (i): i is AdminReformOrderItem => i.type === "reform",
   );
+  const sampleItems = items.filter(
+    (i): i is AdminSampleOrderItem => i.type === "sample",
+  );
 
-  const customSampleType =
-    customItems.find((i) => i.customData?.sample)?.customData?.sampleType ??
-    null;
-  const statusFlow = customSampleType
-    ? (CUSTOM_SAMPLE_FLOW[customSampleType] ?? ORDER_STATUS_FLOW[orderType])
-    : ORDER_STATUS_FLOW[orderType];
-  const rollbackFlow = customSampleType
-    ? (CUSTOM_SAMPLE_ROLLBACK_FLOW[customSampleType] ??
-      ORDER_ROLLBACK_FLOW[orderType])
-    : ORDER_ROLLBACK_FLOW[orderType];
+  const statusFlow = ORDER_STATUS_FLOW[orderType];
+  const rollbackFlow = ORDER_ROLLBACK_FLOW[orderType];
   const nextStatus = order?.status ? statusFlow[order.status] : undefined;
   const rollbackStatus = order?.status ? rollbackFlow[order.status] : undefined;
 
@@ -130,6 +121,7 @@ export function OrderDetailSection() {
       )}
 
       {orderType === "custom" && <CustomOrderDetail items={customItems} />}
+      {orderType === "sample" && <CustomOrderDetail items={sampleItems} />}
       {orderType === "repair" && <RepairOrderDetail items={reformItems} />}
 
       {orderType !== "token" && (

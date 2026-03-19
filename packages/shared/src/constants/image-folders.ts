@@ -1,5 +1,6 @@
 export const IMAGE_FOLDERS = {
   CUSTOM_ORDERS: "/custom-orders",
+  SAMPLE_ORDERS: "/sample-orders",
   REFORM: "/reform",
   PRODUCTS: "/products",
 } as const;

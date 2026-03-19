@@ -3,6 +3,7 @@ export const ROUTES = {
   SHOP: "/shop", // 스토어
   DESIGN: "/design", // 디자인
   CUSTOM_ORDER: "/custom-order", // 주문 제작
+  SAMPLE_ORDER: "/sample-order", // 샘플 제작
   REFORM: "/reform", // 수선
   CART: "/cart", // 장바구니
   ORDER_FORM: "/order/order-form", // 주문서

@@ -9,6 +9,9 @@ import type {
 import type {
   ProductOrderItem,
   ReformOrderItem,
+  CustomOrderItem,
+  SampleOrderItem,
+  TokenOrderItem,
 } from "@yeongseon/shared/types/view/order";
 import type {
   ProductCartItem,
@@ -17,6 +20,7 @@ import type {
 import type {
   CustomOrderDataDTO,
   OrderItemDTO,
+  SampleOrderItemDTO,
 } from "@yeongseon/shared/types/dto/order-view";
 import type { NullableItemRow } from "@yeongseon/shared/mappers/shared-mapper";
 
@@ -174,6 +178,90 @@ type TokenOrderItemDTOOverrides = Partial<
 type ReformOrderItemDTOOverrides = Partial<
   Omit<Extract<OrderItemDTO, { type: "reform" }>, "type">
 >;
+
+// ── Custom / Sample / Token OrderItem (View) ─────────────────────────────
+
+export const createCustomOrderItem = (
+  overrides?: Partial<CustomOrderItem>,
+): CustomOrderItem => ({
+  id: "custom-1",
+  type: "custom",
+  quantity: 1,
+  customData: {
+    options: {
+      tieType: "3fold",
+      interlining: "wool",
+      designType: "classic",
+      fabricType: "silk",
+      fabricProvided: false,
+      triangleStitch: true,
+      sideStitch: false,
+      barTack: true,
+      dimple: true,
+      spoderato: false,
+      fold7: false,
+      brandLabel: true,
+      careLabel: true,
+    },
+    pricing: {
+      sewingCost: 12000,
+      fabricCost: 8000,
+      sampleCost: 0,
+      totalCost: 20000,
+    },
+    sample: false,
+    sampleType: null,
+    referenceImageUrls: [],
+    additionalNotes: null,
+  },
+  ...overrides,
+});
+
+const createSampleData = () => ({
+  sampleType: "fabric" as const,
+  options: {
+    fabricType: "silk" as const,
+    designType: null,
+    tieType: null,
+    interlining: null,
+  },
+  pricing: {
+    totalCost: 5000,
+  },
+  referenceImageUrls: [],
+  additionalNotes: null,
+});
+
+export const createSampleOrderItem = (
+  overrides?: Partial<SampleOrderItem>,
+): SampleOrderItem => ({
+  id: "sample-1",
+  type: "sample",
+  quantity: 1,
+  sampleData: createSampleData(),
+  ...overrides,
+});
+
+export const createTokenOrderItem = (
+  overrides?: Partial<TokenOrderItem>,
+): TokenOrderItem => ({
+  id: "token-1",
+  type: "token",
+  quantity: 1,
+  ...overrides,
+});
+
+// ── SampleOrderItemDTO ────────────────────────────────────────────────────
+
+export const createSampleOrderItemDTO = (
+  overrides?: Partial<SampleOrderItemDTO>,
+): SampleOrderItemDTO => ({
+  id: "sample-1",
+  type: "sample",
+  quantity: 1,
+  sampleData: createSampleData(),
+  ...overrides,
+});
 
 type CreateOrderItemDTOOptions =
   | {

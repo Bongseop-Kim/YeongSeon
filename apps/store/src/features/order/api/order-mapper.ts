@@ -8,12 +8,14 @@ import type {
   OrderDetailRowDTO,
   OrderStatusDTO,
   CustomOrderDataDTO,
+  SampleOrderDataDTO,
 } from "@yeongseon/shared/types/dto/order-view";
 import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-output";
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
   normalizeItemRow,
   parseCustomOrderData,
+  parseSampleOrderData,
   toOrderItemView,
 } from "@yeongseon/shared/mappers/shared-mapper";
 import {
@@ -276,6 +278,25 @@ const parseCustomDataField = (
   }
 };
 
+const parseSampleDataField = (
+  v: unknown,
+  idx: number,
+): SampleOrderDataDTO | null => {
+  if (v == null) return null;
+  if (!isRecord(v)) {
+    throw new Error(
+      `주문 상품 행(${idx})의 sampleData가 올바르지 않습니다: 객체가 아닙니다.`,
+    );
+  }
+  try {
+    return parseSampleOrderData(v);
+  } catch (err) {
+    throw new Error(
+      `주문 상품 행(${idx}) parseSampleOrderData 실패: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+};
+
 const parseAppliedCouponField = (
   v: unknown,
   idx: number,
@@ -370,6 +391,7 @@ const ORDER_TYPES: ReadonlySet<string> = new Set([
   "custom",
   "repair",
   "token",
+  "sample",
 ]);
 const isOrderType = (v: string): v is OrderListRowDTO["orderType"] =>
   ORDER_TYPES.has(v);
@@ -494,10 +516,11 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
       row.type !== "product" &&
       row.type !== "reform" &&
       row.type !== "custom" &&
-      row.type !== "token"
+      row.type !== "token" &&
+      row.type !== "sample"
     ) {
       throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product", "reform", "custom", "token" 중 하나가 아닙니다.`,
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "product", "reform", "custom", "token", "sample" 중 하나가 아닙니다.`,
       );
     }
     const product = parseProductField(row.product, i);
@@ -505,6 +528,8 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
       row.type === "reform" ? parseReformDataField(row.reformData, i) : null;
     const customData =
       row.type === "custom" ? parseCustomDataField(row.reformData, i) : null;
+    const sampleData =
+      row.type === "sample" ? parseSampleDataField(row.reformData, i) : null;
     if (row.type === "product" && product == null) {
       throw new Error(
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "product"인 경우 product 필드가 필요합니다.`,
@@ -520,6 +545,11 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "custom"인 경우 reformData(custom) 필드가 필요합니다.`,
       );
     }
+    if (row.type === "sample" && sampleData == null) {
+      throw new Error(
+        `주문 상품 행(${i})이 올바르지 않습니다: type이 "sample"인 경우 reformData(sample) 필드가 필요합니다.`,
+      );
+    }
     if (row.type === "token") {
       return {
         order_id: row.order_id,
@@ -530,6 +560,7 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         quantity: row.quantity,
         reformData: null,
         customData: null,
+        sampleData: null,
         appliedCoupon: parseAppliedCouponField(row.appliedCoupon, i),
         created_at: row.created_at,
       };
@@ -543,6 +574,7 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
       quantity: row.quantity,
       reformData,
       customData,
+      sampleData,
       appliedCoupon: parseAppliedCouponField(row.appliedCoupon, i),
       created_at: row.created_at,
     };

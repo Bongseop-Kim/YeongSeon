@@ -6,7 +6,6 @@ export type WizardStepId =
   | "sewing"
   | "spec"
   | "finishing"
-  | "sample"
   | "attachment"
   | "confirm";
 

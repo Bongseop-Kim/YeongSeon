@@ -37,6 +37,4 @@ export interface OrderOptions {
   quantity: number;
   referenceImages: File[] | null;
   additionalNotes: string;
-  sample: boolean;
-  sampleType: "sewing" | "fabric" | "fabric_and_sewing" | null;
 }

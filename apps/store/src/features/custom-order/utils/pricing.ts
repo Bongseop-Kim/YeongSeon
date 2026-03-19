@@ -4,7 +4,6 @@ import type { PricingConfig } from "@/features/custom-order/types/pricing";
 export interface CostCalculation {
   sewingCost: number;
   fabricCost: number;
-  sampleCost: number;
   totalCost: number;
 }
 
@@ -63,32 +62,17 @@ export const getEstimatedDays = (
   return "28~42일";
 };
 
-export const calculateSampleCost = (
-  sampleType: OrderOptions["sampleType"],
-  config: PricingConfig,
-): number => {
-  if (sampleType === "sewing") return config.SAMPLE_SEWING_COST;
-  if (sampleType === "fabric") return config.SAMPLE_FABRIC_COST;
-  if (sampleType === "fabric_and_sewing")
-    return config.SAMPLE_FABRIC_AND_SEWING_COST;
-  return 0;
-};
-
 export const calculateTotalCost = (
   options: OrderOptions,
   config: PricingConfig,
 ): CostCalculation => {
   const sewingCost = calculateSewingCost(options, config);
   const fabricCost = calculateFabricCost(options, config);
-  const sampleCost = options.sample
-    ? calculateSampleCost(options.sampleType, config)
-    : 0;
-  const totalCost = sewingCost + fabricCost + sampleCost;
+  const totalCost = sewingCost + fabricCost;
 
   return {
     sewingCost,
     fabricCost,
-    sampleCost,
     totalCost,
   };
 };

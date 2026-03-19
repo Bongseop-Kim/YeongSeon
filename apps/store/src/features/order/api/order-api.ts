@@ -141,6 +141,9 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
         if (item.type === "custom") {
           return "주문 제작";
         }
+        if (item.type === "sample") {
+          return "샘플 제작";
+        }
         if (item.type === "token") {
           return "토큰 구매";
         }

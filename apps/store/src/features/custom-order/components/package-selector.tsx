@@ -72,8 +72,6 @@ export const PackageSelector = ({
                 quantity,
                 referenceImages: null,
                 additionalNotes: "",
-                sample: false,
-                sampleType: null,
               };
               const packageCost =
                 isLoggedIn && pricingConfig

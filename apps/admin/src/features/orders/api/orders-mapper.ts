@@ -13,6 +13,7 @@ import type {
   AdminCustomOrderItem,
   AdminReformOrderItem,
   AdminTokenOrderItem,
+  AdminSampleOrderItem,
   AdminShippingAddress,
   AdminTrackingInfo,
   AdminStatusLogEntry,
@@ -232,6 +233,55 @@ export function parseCustomReformData(
   };
 }
 
+function parseSampleData(
+  raw: Record<string, unknown>,
+): AdminSampleOrderItem["sampleData"] {
+  const rawOptions = isRecord(raw.options) ? raw.options : {};
+  const rawPricing = isRecord(raw.pricing) ? raw.pricing : {};
+  const sampleType = raw.sample_type;
+  const totalCost = rawPricing.total_cost;
+
+  if (
+    sampleType !== "fabric" &&
+    sampleType !== "sewing" &&
+    sampleType !== "fabric_and_sewing"
+  ) {
+    throw new ValidationError("샘플 주문 sample_type이 올바르지 않습니다.");
+  }
+
+  if (!isFiniteNumber(totalCost)) {
+    throw new ValidationError(
+      "샘플 주문 pricing.total_cost가 올바르지 않습니다.",
+    );
+  }
+
+  const refImages = Array.isArray(raw.reference_images)
+    ? raw.reference_images
+        .filter(
+          (item): item is { url: string } =>
+            item !== null &&
+            typeof item === "object" &&
+            typeof item.url === "string",
+        )
+        .map((item) => item.url)
+    : [];
+
+  return {
+    sampleType,
+    options: {
+      fabricType: str(rawOptions.fabric_type),
+      designType: str(rawOptions.design_type),
+      tieType: str(rawOptions.tie_type),
+      interlining: str(rawOptions.interlining),
+    },
+    pricing: {
+      totalCost,
+    },
+    referenceImageUrls: refImages,
+    additionalNotes: str(raw.additional_notes),
+  };
+}
+
 function parseRepairTie(raw: unknown): RepairTie {
   const r = isRecord(raw) ? raw : {};
   const rawType = str(r.measurementType);
@@ -365,6 +415,30 @@ export function toAdminOrderItem(
       unitPrice: dto.unitPrice,
       discountAmount: dto.discountAmount,
       lineDiscountAmount: dto.lineDiscountAmount,
+    };
+    return item;
+  }
+
+  if (dto.itemType === "sample") {
+    let sampleData: AdminSampleOrderItem["sampleData"] = null;
+    if (isRecord(dto.reformData)) {
+      try {
+        sampleData = parseSampleData(dto.reformData);
+      } catch (error) {
+        if (!(error instanceof ValidationError)) {
+          throw error;
+        }
+      }
+    }
+    const item: AdminSampleOrderItem = {
+      type: "sample",
+      id: dto.id,
+      orderId: dto.orderId,
+      quantity: dto.quantity,
+      unitPrice: dto.unitPrice,
+      discountAmount: dto.discountAmount,
+      lineDiscountAmount: dto.lineDiscountAmount,
+      sampleData,
     };
     return item;
   }

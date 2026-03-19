@@ -23,13 +23,20 @@ import {
 } from "@yeongseon/shared/constants/claim-actions";
 import type { Order } from "@yeongseon/shared/types/view/order";
 
-type OrderTypeFilter = "전체" | "일반구매" | "수선" | "주문제작" | "토큰구매";
+type OrderTypeFilter =
+  | "전체"
+  | "일반구매"
+  | "수선"
+  | "주문제작"
+  | "샘플 제작"
+  | "토큰구매";
 
 const ORDER_TYPE_TABS: OrderTypeFilter[] = [
   "전체",
   "일반구매",
   "수선",
   "주문제작",
+  "샘플 제작",
   "토큰구매",
 ];
 
@@ -40,6 +47,7 @@ const ORDER_TYPE_MAP: Record<
   일반구매: "sale",
   수선: "repair",
   주문제작: "custom",
+  "샘플 제작": "sample",
   토큰구매: "token",
 };
 

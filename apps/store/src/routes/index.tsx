@@ -4,6 +4,7 @@ import DesignPage from "@/features/design/page";
 import HomePage from "@/features/home/page";
 import OrderFormPage from "@/features/order/order-form/page";
 import OrderPage from "@/features/custom-order/page";
+import SampleOrderPage from "@/features/sample-order/pages/SampleOrderPage";
 import ReformPage from "@/features/reform/page";
 import ShopPage from "@/features/shop/page";
 import ShopDetailPage from "@/features/shop/detail/page";
@@ -61,6 +62,7 @@ export default function Router() {
         }
       />
       <Route path="/custom-order" element={<OrderPage />} />
+      <Route path="/sample-order" element={<SampleOrderPage />} />
       <Route path="/reform" element={<ReformPage />} />
       <Route path="/cart" element={<CartPage />} />
 

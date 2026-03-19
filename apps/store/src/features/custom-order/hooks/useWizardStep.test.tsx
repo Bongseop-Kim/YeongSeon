@@ -26,8 +26,6 @@ const values: QuoteOrderOptions = {
   quantity: 10,
   referenceImages: null,
   additionalNotes: "",
-  sample: false,
-  sampleType: null,
   contactName: "홍길동",
   contactTitle: "담당자",
   contactMethod: "email",

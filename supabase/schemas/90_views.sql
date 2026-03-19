@@ -111,9 +111,13 @@ SELECT
   END AS "selectedOption",
   oi.quantity,
   CASE
-    WHEN oi.item_type IN ('reform', 'custom') THEN oi.item_data
+    WHEN oi.item_type IN ('reform', 'custom', 'sample') THEN oi.item_data
     ELSE null
   END AS "reformData",
+  CASE
+    WHEN oi.item_type = 'sample' THEN oi.item_data
+    ELSE null
+  END AS "sampleData",
   uc.user_coupon AS "appliedCoupon"
 FROM public.order_items oi
 JOIN public.orders o
@@ -192,7 +196,11 @@ SELECT
     END,
     'quantity', oi.quantity,
     'reformData', CASE
-      WHEN oi.item_type IN ('reform', 'custom') THEN oi.item_data
+      WHEN oi.item_type IN ('reform', 'custom', 'sample') THEN oi.item_data
+      ELSE null
+    END,
+    'sampleData', CASE
+      WHEN oi.item_type = 'sample' THEN oi.item_data
       ELSE null
     END,
     'appliedCoupon', uc.user_coupon
@@ -333,17 +341,14 @@ SELECT
   public.admin_get_email(o.user_id) AS "customerEmail",
   CASE WHEN o.order_type = 'custom' THEN ri.item_data->'options'->>'fabric_type' ELSE NULL END AS "fabricType",
   CASE WHEN o.order_type = 'custom' THEN ri.item_data->'options'->>'design_type' ELSE NULL END AS "designType",
-  CASE WHEN o.order_type IN ('custom', 'repair') THEN ri.item_quantity ELSE NULL END AS "itemQuantity",
+  CASE WHEN o.order_type IN ('custom', 'repair', 'sample') THEN ri.item_quantity ELSE NULL END AS "itemQuantity",
   CASE WHEN o.order_type = 'repair' THEN
     ri.item_quantity || '개 넥타이 수선'
   ELSE NULL END AS "reformSummary",
   o.payment_group_id AS "paymentGroupId",
   o.shipping_cost    AS "shippingCost",
-  CASE WHEN o.order_type = 'custom'
-    THEN (ri.item_data->>'sample')::boolean
-    ELSE NULL
-  END AS "isSample",
-  CASE WHEN o.order_type = 'custom'
+  CASE WHEN o.order_type = 'sample' THEN true ELSE NULL END AS "isSample",
+  CASE WHEN o.order_type = 'sample'
     THEN ri.item_data->>'sample_type'
     ELSE NULL
   END AS "sampleType"
@@ -354,13 +359,13 @@ LEFT JOIN LATERAL (
     (
       SELECT oi2.item_data
       FROM public.order_items oi2
-      WHERE oi2.order_id = o.id AND oi2.item_type IN ('reform', 'custom')
+      WHERE oi2.order_id = o.id AND oi2.item_type IN ('reform', 'custom', 'sample')
       LIMIT 1
     ) AS item_data,
     SUM(oi.quantity)::integer AS item_quantity
   FROM public.order_items oi
-  WHERE oi.order_id = o.id AND oi.item_type IN ('reform', 'custom')
-) ri ON o.order_type IN ('custom', 'repair');
+  WHERE oi.order_id = o.id AND oi.item_type IN ('reform', 'custom', 'sample')
+) ri ON o.order_type IN ('custom', 'repair', 'sample');
 
 -- ── admin_order_detail_view ──────────────────────────────
 CREATE OR REPLACE VIEW public.admin_order_detail_view

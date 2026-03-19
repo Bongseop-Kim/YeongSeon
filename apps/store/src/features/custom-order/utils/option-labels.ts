@@ -73,9 +73,10 @@ export function getFinishingLabel(
   return `${getInterliningLabel(opts)} · ${getLabelOptionsLabel(opts)}`;
 }
 
-export function getSampleTypeLabel(
-  opts: Pick<OrderOptions, "sample" | "sampleType">,
-): string | null {
+export function getSampleTypeLabel(opts: {
+  sample: boolean;
+  sampleType: "sewing" | "fabric" | "fabric_and_sewing" | null;
+}): string | null {
   if (!opts.sample || !opts.sampleType) return null;
   if (opts.sampleType === "sewing") return "봉제 샘플";
   if (opts.sampleType === "fabric") return "원단 샘플";

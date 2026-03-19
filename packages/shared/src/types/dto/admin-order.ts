@@ -106,9 +106,14 @@ export interface AdminTokenOrderItemRowDTO extends AdminNonProductOrderItemRowBa
   itemType: "token";
 }
 
+export interface AdminSampleOrderItemRowDTO extends AdminNonProductOrderItemRowBaseDTO {
+  itemType: "sample";
+}
+
 /** admin_order_item_view row */
 export type AdminOrderItemRowDTO =
   | AdminProductOrderItemRowDTO
   | AdminCustomOrderItemRowDTO
   | AdminReformOrderItemRowDTO
+  | AdminSampleOrderItemRowDTO
   | AdminTokenOrderItemRowDTO;

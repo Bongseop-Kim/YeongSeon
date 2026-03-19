@@ -4,7 +4,11 @@ export interface OrderConfirmPaymentResponse {
   type?: never;
   paymentKey: string;
   paymentGroupId: string;
-  orders: Array<{ orderId: string; orderType: string }>;
+  orders: Array<{
+    orderId: string;
+    orderType: string;
+    couponIssued?: boolean | null;
+  }>;
   status: string;
 }
 
@@ -12,7 +16,11 @@ export interface TokenPurchaseConfirmPaymentResponse {
   type: "token_purchase";
   paymentKey: string;
   paymentGroupId: string;
-  orders: Array<{ orderId: string; orderType: string }>;
+  orders: Array<{
+    orderId: string;
+    orderType: string;
+    couponIssued?: boolean | null;
+  }>;
   tokenAmount: number;
   status: string;
 }
@@ -23,11 +31,26 @@ export type ConfirmPaymentResponse =
 
 const mapOrderItem = (
   o: Record<string, unknown>,
-): { orderId: string; orderType: string } => {
+): { orderId: string; orderType: string; couponIssued?: boolean | null } => {
   if (typeof o.orderId !== "string" || typeof o.orderType !== "string") {
     throw new Error("주문 항목 형식이 올바르지 않습니다");
   }
-  return { orderId: o.orderId, orderType: o.orderType };
+
+  if (o.couponIssued !== undefined) {
+    const isValidCouponIssued =
+      typeof o.couponIssued === "boolean" || o.couponIssued === null;
+    if (!isValidCouponIssued) {
+      throw new Error(
+        `주문 ${o.orderId}의 couponIssued 값이 올바르지 않습니다: ${String(o.couponIssued)}`,
+      );
+    }
+  }
+
+  return {
+    orderId: o.orderId,
+    orderType: o.orderType,
+    couponIssued: o.couponIssued as boolean | null | undefined,
+  };
 };
 
 export const parseConfirmPaymentResponse = (

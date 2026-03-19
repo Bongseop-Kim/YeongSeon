@@ -82,13 +82,15 @@ export function useUpdateTokenPricing() {
           { key: amountKey, amount: amount },
         ],
       );
-      for (const { key, amount } of rows) {
-        const { error } = await supabase
-          .from("pricing_constants")
-          .update({ amount })
-          .eq("key", key);
-        if (error) throw error;
-      }
+      const { error } = await supabase.from("pricing_constants").upsert(
+        rows.map(({ key, amount }) => ({
+          key,
+          amount,
+          category: "token",
+        })),
+        { onConflict: "key" },
+      );
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TOKEN_PRICING_KEY });
@@ -163,6 +165,62 @@ export function useUpdateFabricPrice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: FABRIC_PRICES_KEY });
+    },
+    onError: (error: Error) => {
+      message.error(`저장 실패: ${error.message}`);
+    },
+  });
+}
+
+// ── 샘플 할인 쿠폰 금액 (타입별 5종) ─────────────────────────
+// ⚠️ 원본은 pricing_constants(category='sample_discount')이며,
+// coupons 테이블의 SAMPLE_DISCOUNT_* row는 RPC가 자동 동기화합니다.
+const SAMPLE_DISCOUNT_QUERY_KEY = ["pricing", "sample-discount"] as const;
+
+export const SAMPLE_DISCOUNT_KEYS = [
+  "sample_discount_sewing",
+  "sample_discount_fabric_printing",
+  "sample_discount_fabric_yarn_dyed",
+  "sample_discount_fabric_and_sewing_printing",
+  "sample_discount_fabric_and_sewing_yarn_dyed",
+] as const;
+
+export type SampleDiscountKey = (typeof SAMPLE_DISCOUNT_KEYS)[number];
+
+export function useSampleCouponAmounts() {
+  return useQuery({
+    queryKey: SAMPLE_DISCOUNT_QUERY_KEY,
+    queryFn: async (): Promise<Record<SampleDiscountKey, number>> => {
+      const { data, error } = await supabase
+        .from("pricing_constants")
+        .select("key, amount")
+        .eq("category", "sample_discount");
+      if (error) throw error;
+      return Object.fromEntries(
+        (data ?? []).map((row) => [row.key, row.amount]),
+      ) as Record<SampleDiscountKey, number>;
+    },
+  });
+}
+
+export function useUpdateSampleCouponAmounts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (
+      mutations: { key: SampleDiscountKey; amount: number }[],
+    ) => {
+      const { error } = await supabase.from("pricing_constants").upsert(
+        mutations.map(({ key, amount }) => ({
+          key,
+          amount,
+          category: "sample_discount",
+        })),
+        { onConflict: "key" },
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SAMPLE_DISCOUNT_QUERY_KEY });
     },
     onError: (error: Error) => {
       message.error(`저장 실패: ${error.message}`);

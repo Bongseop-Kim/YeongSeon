@@ -25,7 +25,10 @@ export interface PricingConfig {
       POLY: number;
     };
   };
+  // sample-order 도메인이 usePricingConfig를 공유해 사용. 추후 sample-order 전용 쿼리로 분리 예정.
   SAMPLE_SEWING_COST: number;
-  SAMPLE_FABRIC_COST: number;
-  SAMPLE_FABRIC_AND_SEWING_COST: number;
+  SAMPLE_FABRIC_PRINTING_COST: number;
+  SAMPLE_FABRIC_YARN_DYED_COST: number;
+  SAMPLE_FABRIC_AND_SEWING_PRINTING_COST: number;
+  SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST: number;
 }
