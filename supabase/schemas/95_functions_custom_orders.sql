@@ -447,8 +447,5 @@ begin
     deducted_sample_cost := 0;
   end if;
   return next;
-  return;
-
-  raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다: %', v_status;
 end;
 $$;

@@ -53,6 +53,46 @@ describe("getImageKitAuth", () => {
     );
   });
 
+  it("응답에서 signature 필드가 누락되면 에러를 던진다", async () => {
+    const invoke = vi.fn().mockResolvedValue({
+      data: { token: "tok", expire: 1234567890 },
+      error: null,
+    });
+    await expect(getImageKitAuth(invoke)).rejects.toThrow(
+      "ImageKit 인증 응답 형식이 올바르지 않습니다.",
+    );
+  });
+
+  it("응답에서 token 필드가 누락되면 에러를 던진다", async () => {
+    const invoke = vi.fn().mockResolvedValue({
+      data: { signature: "sig", expire: 1234567890 },
+      error: null,
+    });
+    await expect(getImageKitAuth(invoke)).rejects.toThrow(
+      "ImageKit 인증 응답 형식이 올바르지 않습니다.",
+    );
+  });
+
+  it("signature가 문자열이 아니면 에러를 던진다", async () => {
+    const invoke = vi.fn().mockResolvedValue({
+      data: { signature: 123, token: "tok", expire: 1234567890 },
+      error: null,
+    });
+    await expect(getImageKitAuth(invoke)).rejects.toThrow(
+      "ImageKit 인증 응답 형식이 올바르지 않습니다.",
+    );
+  });
+
+  it("token이 문자열이 아니면 에러를 던진다", async () => {
+    const invoke = vi.fn().mockResolvedValue({
+      data: { signature: "sig", token: 123, expire: 1234567890 },
+      error: null,
+    });
+    await expect(getImageKitAuth(invoke)).rejects.toThrow(
+      "ImageKit 인증 응답 형식이 올바르지 않습니다.",
+    );
+  });
+
   it("응답이 객체가 아니면 에러를 던진다", async () => {
     const invoke = vi.fn().mockResolvedValue({ data: "invalid", error: null });
     await expect(getImageKitAuth(invoke)).rejects.toThrow(
