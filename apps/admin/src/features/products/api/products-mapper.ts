@@ -3,7 +3,7 @@ import type {
   AdminProductOption,
 } from "@/features/products/types/admin-product";
 
-interface ProductsTableRow {
+export interface ProductsTableRow {
   id: number;
   image: string | null;
   code: string | null;
@@ -13,6 +13,8 @@ interface ProductsTableRow {
   material: string;
   price: number;
   stock: number | null;
+  option_stock_total: number | null;
+  option_count: number;
 }
 
 interface ProductOptionRow {
@@ -35,6 +37,8 @@ export function toAdminProductListItem(
     material: row.material,
     price: row.price,
     stock: row.stock,
+    optionStockTotal: row.option_stock_total,
+    optionCount: row.option_count,
   };
 }
 

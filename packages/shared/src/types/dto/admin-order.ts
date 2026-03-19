@@ -1,4 +1,5 @@
 import type { OrderType } from "../../constants/order-status";
+import type { AdminAction } from "../view/order-actions";
 
 /** admin_order_list_view row */
 export interface AdminOrderListRowDTO {
@@ -49,6 +50,7 @@ export interface AdminOrderDetailRowDTO extends Omit<
   shippingPostalCode: string | null;
   deliveryMemo: string | null;
   deliveryRequest: string | null;
+  adminActions: AdminAction[];
 }
 
 /** admin_order_status_log_view row */

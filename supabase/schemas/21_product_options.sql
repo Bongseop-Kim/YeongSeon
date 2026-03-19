@@ -58,6 +58,10 @@ SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Only admins can modify products';
+  END IF;
+
   DELETE FROM public.product_options
   WHERE product_id = p_product_id;
 
@@ -75,6 +79,11 @@ BEGIN
       CASE WHEN elem->>'stock' IS NULL THEN NULL
            ELSE (elem->>'stock')::integer END
     FROM jsonb_array_elements(p_options) AS elem;
+
+    -- 옵션이 1개 이상이면 products.stock을 NULL로 강제
+    UPDATE public.products
+    SET stock = NULL
+    WHERE id = p_product_id AND stock IS NOT NULL;
   END IF;
 END;
 $$;

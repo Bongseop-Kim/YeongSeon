@@ -1,6 +1,11 @@
 import type { Session, AuthChangeEvent } from "@yeongseon/supabase";
 import { supabase } from "@/lib/supabase";
 
+export interface EmailSignInInput {
+  email: string;
+  password: string;
+}
+
 /**
  * 현재 세션 가져오기
  */
@@ -50,6 +55,24 @@ export const signInWithOAuth = async (
 
   if (error) {
     throw new Error(`OAuth 로그인 실패: ${error.message}`);
+  }
+};
+
+/**
+ * 이메일/비밀번호 로그인
+ * @throws {Error} 로그인 실패 시 에러 발생
+ */
+export const signInWithEmail = async ({
+  email,
+  password,
+}: EmailSignInInput): Promise<void> => {
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    throw new Error(`이메일 로그인 실패: ${error.message}`);
   }
 };
 

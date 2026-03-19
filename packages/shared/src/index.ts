@@ -25,6 +25,7 @@ export type * from "./types/view/product";
 export type * from "./types/view/coupon";
 export type * from "./types/view/reform";
 export type * from "./types/view/order";
+export type * from "./types/view/order-actions";
 export type * from "./types/view/claim-item";
 export type * from "./types/view/claim-input";
 export type * from "./types/view/cart";
@@ -47,6 +48,7 @@ export * from "./utils/claim-utils";
 export * from "./utils/get-order-item-details";
 export * from "./utils/format-date";
 export * from "./utils/korean-postposition";
+export * from "./utils/order-actions";
 
 // Mappers
 export * from "./mappers/shared-mapper";

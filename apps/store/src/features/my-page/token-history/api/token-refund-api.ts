@@ -1,10 +1,5 @@
 import { supabase } from "@/lib/supabase";
 
-export type TokenRefundStatus =
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "cancelled";
 export type NotRefundableReason =
   | "tokens_used"
   | "pending_refund"
@@ -24,13 +19,6 @@ export interface RefundableTokenOrder {
   pendingRequestId: string | null;
 }
 
-export interface TokenRefundRequest {
-  requestId: string;
-  refundAmount: number;
-  paidTokenAmount: number;
-  bonusTokenAmount: number;
-}
-
 interface RefundableOrderDTO {
   order_id: string;
   order_number: string;
@@ -41,13 +29,6 @@ interface RefundableOrderDTO {
   is_refundable: boolean;
   not_refundable_reason: NotRefundableReason | null;
   pending_request_id: string | null;
-}
-
-interface RequestRefundDTO {
-  request_id: string;
-  refund_amount: number;
-  paid_token_amount: number;
-  bonus_token_amount: number;
 }
 
 export async function getRefundableTokenOrders(): Promise<
@@ -73,30 +54,15 @@ export async function getRefundableTokenOrders(): Promise<
   }));
 }
 
-export async function requestTokenRefund(
-  orderId: string,
-  reason?: string,
-): Promise<TokenRefundRequest> {
-  const { data, error } = await supabase.rpc("request_token_refund", {
+export async function requestTokenRefund(orderId: string): Promise<void> {
+  const { error } = await supabase.rpc("request_token_refund", {
     p_order_id: orderId,
-    p_reason: reason ?? null,
+    p_reason: null,
   });
 
   if (error) {
     throw new Error(`환불 신청 실패: ${error.message}`);
   }
-
-  if (!data) {
-    throw new Error("환불 신청 결과를 받을 수 없습니다.");
-  }
-
-  const dto = data as RequestRefundDTO;
-  return {
-    requestId: dto.request_id,
-    refundAmount: dto.refund_amount,
-    paidTokenAmount: dto.paid_token_amount,
-    bonusTokenAmount: dto.bonus_token_amount,
-  };
 }
 
 export async function cancelTokenRefund(requestId: string): Promise<void> {

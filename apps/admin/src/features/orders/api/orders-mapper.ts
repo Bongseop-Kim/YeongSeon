@@ -118,6 +118,7 @@ export function toAdminOrderDetail(
     paymentGroupId: dto.paymentGroupId,
     shippingCost: dto.shippingCost,
     sampleCost: dto.sampleCost,
+    adminActions: Array.isArray(dto.adminActions) ? dto.adminActions : [],
   };
 }
 

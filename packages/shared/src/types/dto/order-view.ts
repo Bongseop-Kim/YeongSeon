@@ -2,6 +2,7 @@ import type { AppliedCouponDTO } from "./coupon";
 import type { ProductDTO, ProductOptionDTO } from "./product";
 import type { TieItemDTO } from "./reform";
 import type { OrderType } from "../../constants/order-status";
+import type { CustomerAction } from "../view/order-actions";
 
 export type OrderStatusDTO =
   | "진행중"
@@ -11,17 +12,12 @@ export type OrderStatusDTO =
   | "대기중"
   | "결제중"
   | "취소"
+  | "실패"
   | "접수"
   | "제작중"
   | "제작완료"
   | "수선중"
-  | "수선완료"
-  | "샘플원단제작중"
-  | "샘플원단배송중"
-  | "샘플봉제제작중"
-  | "샘플넥타이배송중"
-  | "샘플배송완료"
-  | "샘플승인";
+  | "수선완료";
 
 export interface ProductOrderItemDTO {
   id: string;
@@ -124,6 +120,7 @@ export interface OrderViewDTO {
   orderType: OrderType;
   items: OrderItemDTO[];
   totalPrice: number;
+  customerActions: CustomerAction[];
 }
 
 export interface OrderListRowDTO {
@@ -134,6 +131,7 @@ export interface OrderListRowDTO {
   totalPrice: number;
   orderType: OrderType;
   created_at: string;
+  customerActions: CustomerAction[];
 }
 
 /** order_detail_view row (customer order detail with shipping + tracking) */
@@ -157,6 +155,7 @@ export interface OrderDetailRowDTO {
   shippingPostalCode: string | null;
   deliveryMemo: string | null;
   deliveryRequest: string | null;
+  customerActions: CustomerAction[];
 }
 
 export interface OrderItemRowDTO {

@@ -142,7 +142,7 @@ begin
         or (v_current_status = '수선완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;
@@ -192,6 +192,24 @@ begin
           when 'pro'     then 'Pro'
           else coalesce(v_plan_key, '구매')
         end;
+
+        insert into public.design_tokens (
+          user_id,
+          amount,
+          type,
+          token_class,
+          description,
+          work_id
+        )
+        values (
+          v_user_id,
+          v_token_amount,
+          'purchase',
+          'paid',
+          '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개, 관리자 확정)',
+          'order_' || p_order_id::text
+        )
+        on conflict (work_id) do nothing;
       end if;
     end if;
 
@@ -199,19 +217,6 @@ begin
     set status       = p_new_status,
         confirmed_at = now()
     where id = p_order_id;
-
-    if v_order_type = 'token' then
-      -- design_tokens: ON CONFLICT (work_id) DO NOTHING으로 TOCTOU 방지
-      insert into public.design_tokens (user_id, amount, type, description, work_id)
-      values (
-        v_user_id,
-        v_token_amount,
-        'purchase',
-        '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개, 관리자 확정)',
-        'order_' || p_order_id::text
-      )
-      on conflict (work_id) do nothing;
-    end if;
 
   else
     update public.orders

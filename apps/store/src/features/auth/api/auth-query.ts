@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getSession,
+  signInWithEmail,
   signInWithOAuth,
   signOut,
   deleteAccount,
@@ -49,6 +50,28 @@ export const useSignIn = () => {
         error instanceof Error
           ? error.message
           : "로그인에 실패했습니다. 다시 시도해주세요.";
+      toast.error(errorMessage);
+    },
+  });
+};
+
+/**
+ * 이메일 로그인 뮤테이션
+ */
+export const useEmailSignIn = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: signInWithEmail,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: authKeys.session() });
+    },
+    onError: (error) => {
+      console.error("Email sign in error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "이메일 로그인에 실패했습니다. 다시 시도해주세요.";
       toast.error(errorMessage);
     },
   });

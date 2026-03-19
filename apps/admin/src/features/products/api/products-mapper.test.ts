@@ -10,7 +10,7 @@ import {
 } from "@/test/fixtures";
 
 describe("toAdminProductListItem", () => {
-  it("DTO를 UI 모델로 변환한다", () => {
+  it("DTO를 UI 모델로 변환한다 (옵션 없는 상품)", () => {
     expect(toAdminProductListItem(createProductsTableRow())).toEqual(
       expect.objectContaining({
         id: 1,
@@ -22,6 +22,43 @@ describe("toAdminProductListItem", () => {
         material: "silk",
         price: 39000,
         stock: 12,
+        optionStockTotal: null,
+        optionCount: 0,
+      }),
+    );
+  });
+
+  it("옵션 있는 상품의 option_stock_total과 option_count를 매핑한다", () => {
+    expect(
+      toAdminProductListItem(
+        createProductsTableRow({
+          stock: null,
+          option_stock_total: 15,
+          option_count: 3,
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        stock: null,
+        optionStockTotal: 15,
+        optionCount: 3,
+      }),
+    );
+  });
+
+  it("옵션 중 하나가 무제한이면 option_stock_total이 null이다", () => {
+    expect(
+      toAdminProductListItem(
+        createProductsTableRow({
+          stock: null,
+          option_stock_total: null,
+          option_count: 2,
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        optionStockTotal: null,
+        optionCount: 2,
       }),
     );
   });

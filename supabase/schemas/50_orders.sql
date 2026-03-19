@@ -39,9 +39,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     CHECK (status = ANY (ARRAY[
       '대기중','결제중','진행중','배송중','배송완료','완료','취소','실패',
       '접수','제작중','제작완료',
-      '수선중','수선완료',
-      '샘플원단제작중','샘플원단배송중','샘플봉제제작중',
-      '샘플넥타이배송중','샘플배송완료','샘플승인'
+      '수선중','수선완료'
     ])),
   CONSTRAINT orders_user_id_fkey
     FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE,

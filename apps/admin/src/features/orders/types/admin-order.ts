@@ -1,4 +1,4 @@
-import type { OrderType } from "@yeongseon/shared";
+import type { OrderType, AdminAction } from "@yeongseon/shared";
 
 // ── Nested UI types ────────────────────────────────────────────
 
@@ -62,6 +62,7 @@ export interface AdminOrderDetail {
   paymentGroupId: string | null;
   shippingCost: number;
   sampleCost: number;
+  adminActions: AdminAction[];
 }
 
 // ── Order items (discriminated union) ─────────────────────────

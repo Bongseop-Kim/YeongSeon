@@ -1,7 +1,21 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
+import { z } from "zod";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { useSignIn } from "@/features/auth/api/auth-query";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { PwInput } from "@/components/composite/pw-input";
+import { useEmailSignIn, useSignIn } from "@/features/auth/api/auth-query";
 import { ProviderButton } from "@/features/auth/components/provider-button";
 import {
   PROVIDERS,
@@ -20,11 +34,19 @@ const isLocationStateWithFrom = (
   return typeof from === "string" || typeof from === "undefined";
 };
 
+const emailLoginSchema = z.object({
+  email: z.string().trim().email("올바른 이메일 주소를 입력해주세요."),
+  password: z.string().min(1, "비밀번호를 입력해주세요."),
+});
+
+type EmailLoginFormValues = z.infer<typeof emailLoginSchema>;
+
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthStore();
   const signInMutation = useSignIn();
+  const emailSignInMutation = useEmailSignIn();
   const { openPopup } = usePopup();
   const from =
     (isLocationStateWithFrom(location.state)
@@ -32,6 +54,13 @@ const LoginPage = () => {
       : undefined) ||
     sessionStorage.getItem("authRedirect") ||
     ROUTES.HOME;
+  const form = useForm<EmailLoginFormValues>({
+    resolver: zodResolver(emailLoginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -48,6 +77,9 @@ const LoginPage = () => {
     await signInMutation.mutateAsync(provider);
   };
 
+  const isSubmitting =
+    signInMutation.isPending || emailSignInMutation.isPending;
+
   return (
     <MainLayout>
       <MainContent>
@@ -56,8 +88,71 @@ const LoginPage = () => {
             <div className="text-center space-y-2">
               <h1 className="text-2xl font-semibold">로그인</h1>
               <p className="text-sm text-zinc-600">
-                소셜 계정으로 간편하게 로그인하세요
+                이메일 또는 소셜 계정으로 로그인하세요
               </p>
+            </div>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit((values) =>
+                  emailSignInMutation.mutate(values),
+                )}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>이메일</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          id="login-email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="이메일을 입력해주세요."
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>비밀번호</FormLabel>
+                      <FormControl>
+                        <PwInput
+                          {...field}
+                          id="login-password"
+                          autoComplete="current-password"
+                          placeholder="비밀번호를 입력해주세요."
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "로그인 중..." : "이메일로 로그인"}
+                </Button>
+              </form>
+            </Form>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-zinc-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-zinc-500">또는</span>
+              </div>
             </div>
             <div className="space-y-3">
               {PROVIDERS.map((provider) => (
@@ -65,7 +160,7 @@ const LoginPage = () => {
                   key={provider.id}
                   provider={provider}
                   onSignIn={handleSignIn}
-                  isPending={signInMutation.isPending}
+                  isPending={isSubmitting}
                 />
               ))}
             </div>

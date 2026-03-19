@@ -1,0 +1,5 @@
+-- =============================================================
+-- 96_functions_order_actions.sql
+-- Order action helpers moved to 89_view_helper_functions.sql so
+-- view definitions in 90_views.sql can reference them during clean rebuilds.
+-- =============================================================

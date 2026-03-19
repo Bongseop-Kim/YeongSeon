@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { Button, Space, Typography, Input, Modal, Tag } from "antd";
 import { message } from "antd";
-import { getAdminNonCancelableStatuses } from "@yeongseon/shared";
 import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
 import { eulo } from "@yeongseon/shared";
 
@@ -106,7 +105,7 @@ export function OrderStatusActions({
       </Space>
 
       <Space style={{ marginBottom: 24 }}>
-        {nextStatus && (
+        {order.adminActions.includes("advance") && nextStatus && (
           <Button
             type="primary"
             loading={isUpdating}
@@ -116,7 +115,7 @@ export function OrderStatusActions({
             {eulo(nextStatus)} 변경
           </Button>
         )}
-        {rollbackStatus && (
+        {order.adminActions.includes("rollback") && rollbackStatus && (
           <Button
             loading={isUpdating}
             onClick={() => handleRollbackClick(rollbackStatus)}
@@ -125,9 +124,7 @@ export function OrderStatusActions({
             {eulo(rollbackStatus)} 롤백
           </Button>
         )}
-        {!(
-          getAdminNonCancelableStatuses(order.orderType) as readonly string[]
-        ).includes(order.status) && (
+        {order.adminActions.includes("cancel") && (
           <Button danger loading={isUpdating} onClick={handleCancelClick}>
             취소 처리
           </Button>
