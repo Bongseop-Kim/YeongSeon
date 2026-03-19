@@ -296,6 +296,35 @@ WHERE qr.user_id = auth.uid();
 -- Admin Views
 -- =============================================================
 
+-- ── admin_product_list_view ─────────────────────────────────
+CREATE OR REPLACE VIEW public.admin_product_list_view
+WITH (security_invoker = true)
+AS
+SELECT
+  p.id,
+  p.code,
+  p.name,
+  p.price,
+  p.image,
+  p.category,
+  p.color,
+  p.material,
+  p.stock,
+  p.created_at,
+  p.updated_at,
+  COUNT(po.id)::integer AS option_count,
+  CASE
+    WHEN COUNT(po.id) = 0 THEN NULL
+    WHEN bool_or(po.stock IS NULL) THEN NULL
+    ELSE SUM(po.stock)::integer
+  END AS option_stock_total
+FROM public.products p
+LEFT JOIN public.product_options po ON po.product_id = p.id
+GROUP BY
+  p.id, p.code, p.name, p.price, p.image,
+  p.category, p.color, p.material, p.stock,
+  p.created_at, p.updated_at;
+
 -- ── admin_user_coupon_view ──────────────────────────────────
 CREATE OR REPLACE VIEW public.admin_user_coupon_view
 WITH (security_invoker = true)

@@ -9,6 +9,7 @@ import { insertProductOptions, saveProductOptions } from "./products-api";
 import {
   toAdminProductListItem,
   toAdminProductOption,
+  type ProductsTableRow,
 } from "./products-mapper";
 import type {
   AdminProductListItem,
@@ -105,17 +106,16 @@ function toAdminProductOptions(value: unknown): AdminProductOption[] {
 }
 
 export function useAdminProductTable() {
-  const { tableProps: rawTableProps, setFilters } =
-    useTable<AdminProductListItem>({
-      resource: "products",
-      sorters: { initial: [{ field: "created_at", order: "desc" }] },
-      syncWithLocation: true,
-    });
+  const { tableProps: rawTableProps, setFilters } = useTable<ProductsTableRow>({
+    resource: "admin_product_list_view",
+    sorters: { initial: [{ field: "created_at", order: "desc" }] },
+    syncWithLocation: true,
+  });
 
-  const tableProps: TableProps<AdminProductListItem> = {
+  const tableProps = {
     ...rawTableProps,
     dataSource: (rawTableProps.dataSource ?? []).map(toAdminProductListItem),
-  };
+  } as TableProps<AdminProductListItem>;
 
   return { tableProps, setFilters };
 }

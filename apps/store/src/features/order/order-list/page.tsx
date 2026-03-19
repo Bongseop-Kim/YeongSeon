@@ -7,10 +7,12 @@ import { OrderStatusBadge } from "@/components/composite/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
+import { TokenRefundAction } from "@/features/order/components/token-refund-action";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { ROUTES } from "@/constants/ROUTES";
 import { useOrders } from "@/features/order/api/order-query";
+import { useRefundableTokenOrdersQuery } from "@/features/my-page/token-history/api/token-refund-query";
 import {
   toDateString,
   type ListFilters,
@@ -76,6 +78,12 @@ export default function OrderListPage() {
     [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
   );
   const { data: orders = [], isLoading, error } = useOrders(queryFilters);
+  const { data: refundableOrders } = useRefundableTokenOrdersQuery();
+  const refundOrderMap = useMemo(
+    () =>
+      new Map((refundableOrders ?? []).map((order) => [order.orderId, order])),
+    [refundableOrders],
+  );
 
   const filteredOrders = useMemo(() => {
     if (activeTab === "전체") return orders;
@@ -175,7 +183,13 @@ export default function OrderListPage() {
                                   navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
                                 }
                                 actions={
-                                  claimActions.length > 0 ? (
+                                  item.type === "token" ? (
+                                    <TokenRefundAction
+                                      refundOrder={
+                                        refundOrderMap.get(order.id) ?? null
+                                      }
+                                    />
+                                  ) : claimActions.length > 0 ? (
                                     <div className="flex gap-2">
                                       {claimActions.map((actionType) => (
                                         <Button

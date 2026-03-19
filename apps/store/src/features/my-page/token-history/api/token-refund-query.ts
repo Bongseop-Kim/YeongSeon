@@ -18,8 +18,8 @@ export function useRefundableTokenOrdersQuery() {
 export function useRequestTokenRefundMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ orderId, reason }: { orderId: string; reason?: string }) =>
-      requestTokenRefund(orderId, reason),
+    mutationFn: ({ orderId }: { orderId: string }) =>
+      requestTokenRefund(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: REFUNDABLE_ORDERS_QUERY_KEY });
       queryClient.invalidateQueries({

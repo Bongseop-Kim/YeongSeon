@@ -299,6 +299,8 @@ export interface ProductsTableRowFixture {
   info?: string;
   price: number;
   stock: number | null;
+  option_stock_total: number | null;
+  option_count: number;
 }
 
 export const createProductsTableRow = (
@@ -315,6 +317,8 @@ export const createProductsTableRow = (
   info: "테스트 상품 설명",
   price: 39000,
   stock: 12,
+  option_stock_total: null,
+  option_count: 0,
   ...overrides,
 });
 

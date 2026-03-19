@@ -5,6 +5,13 @@ import { useAdminProductTable } from "@/features/products/api/products-query";
 import { CATEGORY_FILTER_OPTIONS } from "@/features/products/types/admin-product";
 import type { AdminProductListItem } from "@/features/products/types/admin-product";
 
+function renderStock(stock: number | null, suffix?: string) {
+  const label = (text: string) => (suffix ? `${text} (${suffix})` : text);
+  if (stock == null) return <Tag>{label("무제한")}</Tag>;
+  if (stock === 0) return <Tag color="red">{label("품절")}</Tag>;
+  return suffix ? `${stock} (${suffix})` : stock;
+}
+
 export function ProductListTable() {
   const { edit } = useNavigation();
   const { tableProps, setFilters } = useAdminProductTable();
@@ -73,12 +80,13 @@ export function ProductListTable() {
           }
         />
         <Table.Column
-          dataIndex="stock"
           title="재고"
-          render={(value: number | null) => {
-            if (value == null) return <Tag>무제한</Tag>;
-            if (value === 0) return <Tag color="red">품절</Tag>;
-            return value;
+          render={(_: unknown, record: AdminProductListItem) => {
+            if (record.optionCount > 0) {
+              const suffix = `${record.optionCount}개 옵션`;
+              return renderStock(record.optionStockTotal, suffix);
+            }
+            return renderStock(record.stock);
           }}
         />
       </Table>

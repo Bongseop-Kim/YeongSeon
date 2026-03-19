@@ -50,6 +50,8 @@ export interface AdminProductListItem {
   material: string;
   price: number;
   stock: number | null;
+  optionStockTotal: number | null;
+  optionCount: number;
 }
 
 export interface AdminProductOption {
