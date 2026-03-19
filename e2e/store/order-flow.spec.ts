@@ -4,16 +4,35 @@ import {
   expectAuthenticatedRoute,
   hasConfiguredAuth,
   test,
-} from "../fixtures/auth";
+} from "@/fixtures/auth";
 import {
   type CreateOrderResult,
   readFixtures,
   resetStoreCart,
-} from "../utils/store-data";
-import { installMockToss } from "../utils/mock-toss";
+  seedSaleOrder,
+  seedShippingOrder,
+} from "@/utils/store-data";
+import { installMockToss } from "@/utils/mock-toss";
 
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+function requireCreateOrderResult(
+  createOrderResult: CreateOrderResult | null,
+): CreateOrderResult {
+  if (!createOrderResult) {
+    throw new Error("create-order 응답을 아직 캡처하지 못했습니다.");
+  }
+
+  if (
+    !Array.isArray(createOrderResult.orders) ||
+    createOrderResult.orders.length === 0
+  ) {
+    throw new Error("create-order 응답의 orders is missing or empty");
+  }
+
+  return createOrderResult;
+}
 
 const expectOrderDetailUrl = async (page: Page, orderId: string | null) => {
   if (!orderId) {
@@ -48,9 +67,13 @@ test.describe.serial("Store 주문 플로우", () => {
 
   let fixtures: Awaited<ReturnType<typeof readFixtures>>;
   let latestOrderId: string | null = null;
+  let shippingOrderForTest: Awaited<ReturnType<typeof seedShippingOrder>>;
+  let deliveredOrderForTest: Awaited<ReturnType<typeof seedSaleOrder>>;
 
   test.beforeAll(async () => {
     fixtures = await readFixtures();
+    shippingOrderForTest = await seedShippingOrder();
+    deliveredOrderForTest = await seedSaleOrder({ delivered: true });
   });
 
   test.beforeEach(async () => {
@@ -160,9 +183,7 @@ test.describe.serial("Store 주문 플로우", () => {
           paymentKey: string;
           orderId: string;
         };
-        if (!createOrderResult) {
-          throw new Error("create-order 응답을 아직 캡처하지 못했습니다.");
-        }
+        const capturedOrderResult = requireCreateOrderResult(createOrderResult);
 
         await route.fulfill({
           status: 200,
@@ -171,7 +192,7 @@ test.describe.serial("Store 주문 플로우", () => {
             paymentKey: request.paymentKey,
             paymentGroupId: request.orderId,
             status: "DONE",
-            orders: createOrderResult.orders.map((order) => ({
+            orders: capturedOrderResult.orders.map((order) => ({
               orderId: order.order_id,
               orderType: order.order_type,
             })),
@@ -187,7 +208,8 @@ test.describe.serial("Store 주문 플로우", () => {
     await expect
       .poll(() => createOrderResult?.orders[0]?.order_id ?? null)
       .not.toBeNull();
-    latestOrderId = createOrderResult?.orders[0]?.order_id ?? null;
+    const completedOrderResult = requireCreateOrderResult(createOrderResult);
+    latestOrderId = completedOrderResult?.orders[0]?.order_id ?? null;
 
     await expectOrderDetailUrl(authenticatedPage, latestOrderId);
     await expect(
@@ -209,6 +231,50 @@ test.describe.serial("Store 주문 플로우", () => {
     await expect(
       authenticatedPage.getByRole("button", { name: "주문서로 돌아가기" }),
     ).toBeVisible();
+  });
+
+  test("배송중 상태에서 취소 버튼이 표시되지 않는다 (SC-sale-019)", async ({
+    authenticatedPage,
+  }) => {
+    await authenticatedPage.goto(`/order/${shippingOrderForTest.orderId}`);
+    await expectAuthenticatedRoute(authenticatedPage);
+    await expect(
+      authenticatedPage.getByTestId("order-detail-root"),
+    ).toContainText(shippingOrderForTest.orderNumber);
+    await expect(
+      authenticatedPage.getByRole("button", { name: /취소/ }),
+    ).not.toBeVisible();
+  });
+
+  test("배송완료 상태에서 구매확정하면 완료로 전환된다 (SC-sale-022)", async ({
+    authenticatedPage,
+  }) => {
+    await authenticatedPage.goto(`/order/${deliveredOrderForTest.orderId}`);
+    await expectAuthenticatedRoute(authenticatedPage);
+    const orderDetailRoot = authenticatedPage.getByTestId("order-detail-root");
+
+    await expect(orderDetailRoot).toContainText(
+      deliveredOrderForTest.orderNumber,
+    );
+    await authenticatedPage.getByRole("button", { name: "구매확정" }).click();
+    await expect(
+      orderDetailRoot.getByText("완료", { exact: true }),
+    ).toBeVisible();
+  });
+
+  test("상품 상세에서 바로구매 클릭 시 주문서로 이동한다 (SC-sale-023)", async ({
+    authenticatedPage,
+  }) => {
+    await authenticatedPage.goto(`/shop/${fixtures.storeProduct.id}`);
+    await expectAuthenticatedRoute(authenticatedPage);
+    await authenticatedPage.getByTestId("product-order-now").click();
+    await expect(authenticatedPage).toHaveURL(/\/order\/order-form$/);
+    await expect(
+      authenticatedPage.getByTestId("order-items-card"),
+    ).toContainText("주문 상품 1개");
+    await expect(
+      authenticatedPage.getByTestId("order-items-card"),
+    ).toContainText(fixtures.storeProduct.name);
   });
 
   test("주문 목록/상세 조회", async ({ authenticatedPage }) => {

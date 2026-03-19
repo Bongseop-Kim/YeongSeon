@@ -10,6 +10,7 @@ export const ROUTES = {
   ORDER_DETAIL: "/order", // 주문 상세
   CLAIM_LIST: "/order/claim-list", // 취소 내역
   CLAIM_FORM: "/order/claim", // 취소 신청
+  CLAIM_DETAIL: "/order/claim-detail", // 클레임 상세
   PAYMENT_SUCCESS: "/order/payment/success", // 결제 성공
   PAYMENT_FAIL: "/order/payment/fail", // 결제 실패
   SHIPPING: "/shipping", // 배송
@@ -37,8 +38,17 @@ export const ROUTES = {
 
 export type ClaimRouteType = "return" | "exchange" | "cancel" | "token_refund";
 
-export const buildClaimDetailRoute = (
+/**
+ * 클레임 신청 폼 경로 생성 (기존 buildClaimDetailRoute에서 rename)
+ */
+export const buildClaimFormRoute = (
   type: ClaimRouteType,
   orderId: string,
   itemId: string,
 ) => `${ROUTES.CLAIM_FORM}/${type}/${orderId}/${itemId}`;
+
+/**
+ * 클레임 상세 페이지 경로 생성
+ */
+export const buildClaimDetailRoute = (claimId: string) =>
+  `${ROUTES.CLAIM_DETAIL}/${claimId}`;

@@ -62,7 +62,9 @@ const getRequestedProjects = () => {
 
 const requestedProjects = getRequestedProjects();
 const shouldRunStoreServer =
-  requestedProjects.size === 0 || requestedProjects.has("store");
+  requestedProjects.size === 0 ||
+  requestedProjects.has("store") ||
+  requestedProjects.has("store-guest");
 const shouldRunAdminServer =
   requestedProjects.size === 0 || requestedProjects.has("admin");
 
@@ -102,6 +104,7 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   globalSetup: path.join(__dirname, "global-setup.ts"),
   outputDir: path.join(process.cwd(), "output/playwright/test-results"),
+  expect: { timeout: 15_000 },
   use: {
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
@@ -114,9 +117,17 @@ export default defineConfig({
     {
       name: "store",
       testMatch: /store\/.*\.spec\.ts$/,
+      testIgnore: /store\/cart-guest\.spec\.ts$/,
       use: {
         baseURL: storeBaseURL,
         storageState: path.join(__dirname, ".auth/store.json"),
+      },
+    },
+    {
+      name: "store-guest",
+      testMatch: /store\/cart-guest\.spec\.ts$/,
+      use: {
+        baseURL: storeBaseURL,
       },
     },
     {

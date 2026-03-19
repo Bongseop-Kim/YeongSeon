@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getClaims, createClaim } from "@/features/claim/api/claims-api";
+import {
+  getClaims,
+  getClaim,
+  createClaim,
+  cancelClaim,
+} from "@/features/claim/api/claims-api";
 import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-input";
 import { useAuthStore } from "@/store/auth";
 import type { ListFilters } from "@/features/order/utils/list-filters";
@@ -19,6 +24,7 @@ export const claimKeys = {
       filters?.dateFrom ?? "",
       filters?.dateTo ?? "",
     ] as const,
+  detail: (claimId: string) => [...claimKeys.all, "detail", claimId] as const,
 };
 
 /**
@@ -64,6 +70,54 @@ export const useCreateClaim = () => {
     },
     onError: (error) => {
       console.error("클레임 생성 실패:", error);
+    },
+  });
+};
+
+/**
+ * 클레임 단건 조회 쿼리
+ */
+export const useClaim = (claimId: string) => {
+  const { user } = useAuthStore();
+  const normalizedClaimId = claimId.trim();
+  const hasClaimId = normalizedClaimId.length > 0;
+
+  return useQuery({
+    queryKey: claimKeys.detail(normalizedClaimId),
+    queryFn: () => {
+      if (!user?.id) {
+        throw new Error("로그인이 필요합니다.");
+      }
+      if (!hasClaimId) {
+        throw new Error("유효한 클레임 ID가 필요합니다.");
+      }
+      return getClaim(normalizedClaimId);
+    },
+    enabled: !!user?.id && hasClaimId,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+};
+
+/**
+ * 클레임 취소 뮤테이션
+ * navigate는 페이지 컴포넌트의 onSuccess 콜백에서 처리한다 (useCreateClaim 패턴과 동일).
+ */
+export const useCancelClaim = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+
+  return useMutation({
+    mutationFn: (claimId: string) => {
+      if (!user?.id) {
+        throw new Error("로그인이 필요합니다.");
+      }
+      return cancelClaim(claimId);
+    },
+    onSuccess: (_data, claimId) => {
+      queryClient.invalidateQueries({ queryKey: claimKeys.all });
+      queryClient.invalidateQueries({ queryKey: claimKeys.detail(claimId) });
     },
   });
 };

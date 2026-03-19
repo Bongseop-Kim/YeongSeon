@@ -40,7 +40,7 @@ export type CreateOrderResult = {
   }>;
 };
 
-type SeededClaimOrder = {
+export type SeededClaimOrder = {
   orderId: string;
   orderNumber: string;
   itemId: string;
@@ -64,7 +64,7 @@ const readJsonFile = async <T>(fileName: string) => {
 export const readAuthMeta = (appName: AppName) =>
   readJsonFile<AuthMeta>(`${appName}.meta.json`);
 
-const buildHeaders = (apiKey: string, accessToken: string) => ({
+export const buildHeaders = (apiKey: string, accessToken: string) => ({
   apikey: apiKey,
   Authorization: `Bearer ${accessToken}`,
   "Content-Type": "application/json",
@@ -75,7 +75,7 @@ let supabaseConfigCache: {
   supabaseAnonKey: string;
 } | null = null;
 
-const getSupabaseConfig = async () => {
+export const getSupabaseConfig = async () => {
   if (supabaseConfigCache) return supabaseConfigCache;
   let entries: Record<string, string> = {};
 
@@ -117,14 +117,21 @@ const getSupabaseConfig = async () => {
     );
   }
 
+  const supabaseUrl = envSupabaseUrl ?? entries.VITE_SUPABASE_URL;
+  const supabaseAnonKey = envSupabaseAnonKey ?? entries.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase env for E2E helper.");
+  }
+
   supabaseConfigCache = {
-    supabaseUrl: envSupabaseUrl ?? entries.VITE_SUPABASE_URL,
-    supabaseAnonKey: envSupabaseAnonKey ?? entries.VITE_SUPABASE_ANON_KEY,
+    supabaseUrl,
+    supabaseAnonKey,
   };
   return supabaseConfigCache;
 };
 
-const supabaseRequest = async <T>({
+export const supabaseRequest = async <T>({
   path: requestPath,
   method = "GET",
   accessToken,
@@ -423,7 +430,7 @@ export const createStoreClaim = async ({
   };
 };
 
-const adminUpdateOrderStatus = async (
+export const adminUpdateOrderStatus = async (
   orderId: string,
   newStatus: string,
   memo?: string | null,
@@ -456,10 +463,21 @@ export const adminRollbackOrderStatus = async ({
   return adminUpdateOrderStatus(orderId, targetStatus, memo, true);
 };
 
-const progressOrderToDelivered = async (orderId: string) => {
+const progressOrderToShipping = async (orderId: string) => {
   await adminUpdateOrderStatus(orderId, "진행중");
   await adminUpdateOrderStatus(orderId, "배송중");
+};
+
+const progressOrderToDelivered = async (orderId: string) => {
+  await progressOrderToShipping(orderId);
   await adminUpdateOrderStatus(orderId, "배송완료");
+};
+
+export const seedShippingOrder = async (): Promise<SeededClaimOrder> => {
+  const order = await seedSaleOrder();
+  await progressOrderToShipping(order.orderId);
+  order.status = "배송중";
+  return order;
 };
 
 export const seedClaimOrders = async (): Promise<{
@@ -521,4 +539,194 @@ export const seedClaimOrders = async (): Promise<{
     returnOrder,
     exchangeOrder,
   };
+};
+
+export type ClaimAdminSeed = {
+  claimId: string;
+  claimNumber: string;
+  orderId: string;
+  orderNumber: string;
+};
+
+export const seedClaimForAdminFlow = async (
+  type: "cancel" | "return" | "exchange",
+): Promise<ClaimAdminSeed> => {
+  const needsDelivered = type === "return" || type === "exchange";
+  const order = await seedSaleOrder({ delivered: needsDelivered });
+
+  const claim = await createStoreClaim({
+    type,
+    orderId: order.orderId,
+    itemId: order.itemId,
+    reason: type === "cancel" ? "change_mind" : "defect",
+    description: `E2E admin ${type} claim`,
+  });
+
+  return {
+    claimId: claim.claimId,
+    claimNumber: claim.claimNumber,
+    orderId: order.orderId,
+    orderNumber: order.orderNumber,
+  };
+};
+
+export const seedRepairOrder = async (): Promise<SeededClaimOrder> => {
+  const { supabaseUrl, supabaseAnonKey } = await getSupabaseConfig();
+  const storeMeta = await readAuthMeta("store");
+  const fixtures = await readFixtures();
+
+  const tieId = `e2e-tie-${Date.now()}`;
+  const itemId = `reform-${tieId}-${Math.random().toString(36).slice(2)}`;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/create-order`, {
+    method: "POST",
+    headers: buildHeaders(supabaseAnonKey, storeMeta.accessToken),
+    body: JSON.stringify({
+      shipping_address_id: fixtures.shippingAddress.id,
+      items: [
+        {
+          item_id: itemId,
+          item_type: "reform",
+          product_id: null,
+          selected_option_id: null,
+          reform_data: {
+            tie: { id: tieId, measurementType: "length", tieLength: 150 },
+            cost: 15000,
+          },
+          quantity: 1,
+          applied_user_coupon_id: null,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `create-order (repair) failed: ${response.status} ${await response.text()}`,
+    );
+  }
+
+  const result = (await response.json()) as CreateOrderResult;
+  const repairOrder = result.orders.find((o) => o.order_type === "repair");
+
+  if (!repairOrder) {
+    throw new Error("Repair order not created by create-order.");
+  }
+
+  const orderItems = await supabaseRequest<Array<{ id: string }>>({
+    path: `/rest/v1/order_item_view?select=id&order_id=eq.${repairOrder.order_id}`,
+    accessToken: storeMeta.accessToken,
+  });
+  const fetchedItemId = orderItems[0]?.id;
+
+  if (!fetchedItemId) {
+    throw new Error(
+      `Repair order item id not found for order ${repairOrder.order_id} (query: order_item_view?order_id=eq.${repairOrder.order_id})`,
+    );
+  }
+
+  return {
+    orderId: repairOrder.order_id,
+    orderNumber: repairOrder.order_number,
+    itemId: fetchedItemId,
+    status: "대기중",
+    productName: "수선 주문",
+  };
+};
+
+export const seedCustomOrder = async (opts?: {
+  sample?: boolean;
+  sampleType?: string | null;
+}): Promise<SeededClaimOrder> => {
+  const { supabaseUrl, supabaseAnonKey } = await getSupabaseConfig();
+  const storeMeta = await readAuthMeta("store");
+  const fixtures = await readFixtures();
+
+  const sample = opts?.sample ?? false;
+  const sampleType = opts?.sampleType ?? null;
+
+  const response = await fetch(
+    `${supabaseUrl}/functions/v1/create-custom-order`,
+    {
+      method: "POST",
+      headers: buildHeaders(supabaseAnonKey, storeMeta.accessToken),
+      body: JSON.stringify({
+        shipping_address_id: fixtures.shippingAddress.id,
+        options: {
+          fabric_provided: false,
+          reorder: false,
+          fabric_type: "POLY",
+          design_type: "PRINTING",
+          tie_type: "AUTO",
+          interlining: null,
+          interlining_thickness: "THICK",
+          size_type: "ADULT",
+          tie_width: 8,
+          triangle_stitch: true,
+          side_stitch: true,
+          bar_tack: false,
+          fold7: false,
+          dimple: false,
+          spoderato: false,
+          brand_label: false,
+          care_label: false,
+        },
+        quantity: 4,
+        sample,
+        sample_type: sampleType,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `create-custom-order failed: ${response.status} ${await response.text()}`,
+    );
+  }
+
+  const result = (await response.json()) as {
+    order_id: string;
+    order_number: string;
+  };
+
+  const orderItems = await supabaseRequest<Array<{ id: string }>>({
+    path: `/rest/v1/order_item_view?select=id&order_id=eq.${result.order_id}`,
+    accessToken: storeMeta.accessToken,
+  });
+  const itemId = orderItems[0]?.id;
+
+  if (!itemId) {
+    throw new Error(
+      `Custom order item id not found for order ${result.order_id} (query: order_item_view?order_id=eq.${result.order_id})`,
+    );
+  }
+
+  return {
+    orderId: result.order_id,
+    orderNumber: result.order_number,
+    itemId,
+    status: "대기중",
+    productName: "주문 제작",
+  };
+};
+
+export const adminUpdateClaimStatus = async (
+  claimId: string,
+  newStatus: string,
+  memo?: string | null,
+  isRollback = false,
+) => {
+  const adminMeta = await readAuthMeta("admin");
+
+  await supabaseRequest({
+    path: "/rest/v1/rpc/admin_update_claim_status",
+    method: "POST",
+    accessToken: adminMeta.accessToken,
+    body: {
+      p_claim_id: claimId,
+      p_new_status: newStatus,
+      p_memo: memo ?? null,
+      p_is_rollback: isRollback,
+    },
+  });
 };

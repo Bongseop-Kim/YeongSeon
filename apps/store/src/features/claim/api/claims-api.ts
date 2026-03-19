@@ -85,3 +85,37 @@ export const createClaim = async (
     claimNumber: result.claim_number,
   };
 };
+
+/**
+ * 클레임 단건 조회
+ * claim_list_view는 auth.uid() 스코프이므로 본인 클레임만 반환된다.
+ * 결과가 없으면 null 반환 (예외 아님).
+ */
+export const getClaim = async (claimId: string): Promise<ClaimItem | null> => {
+  const { data, error } = await supabase
+    .from(CLAIM_LIST_VIEW)
+    .select("*")
+    .eq("id", claimId)
+    .limit(1);
+
+  if (error) {
+    throw new Error("클레임 정보를 불러오는 데 실패했습니다.");
+  }
+
+  const rows = parseClaimListRows(data);
+  if (rows.length === 0) return null;
+  return toClaimItemView(rows[0]);
+};
+
+/**
+ * 클레임 신청 취소 (접수 상태에서만 가능)
+ */
+export const cancelClaim = async (claimId: string): Promise<void> => {
+  const { error } = await supabase.rpc("cancel_claim", {
+    p_claim_id: claimId,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+};

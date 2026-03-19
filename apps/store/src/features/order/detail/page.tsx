@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { buildClaimDetailRoute, ROUTES } from "@/constants/ROUTES";
+import { buildClaimFormRoute, ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -273,7 +273,7 @@ const OrderDetailPage = () => {
   }
 
   const handleClaimRequest = (type: ClaimActionType, itemId: string) => {
-    navigate(buildClaimDetailRoute(type, order.id, itemId));
+    navigate(buildClaimFormRoute(type, order.id, itemId));
   };
 
   return (

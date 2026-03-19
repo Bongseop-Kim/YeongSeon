@@ -179,7 +179,10 @@ function PurchaseRow({ item, refundOrder, onRequestRefund }: PurchaseRowProps) {
   const pendingRequestId = refundOrder?.pendingRequestId ?? null;
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border px-4 py-4">
+    <div
+      className="flex items-center justify-between gap-4 rounded-lg border px-4 py-4"
+      data-order-id={refundOrder?.orderId}
+    >
       <div className="min-w-0 flex-1 space-y-1">
         <span className="text-xs text-zinc-400">
           {formatDate(item.createdAt)}

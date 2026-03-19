@@ -10,8 +10,7 @@ import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
-import { useSearchStore } from "@/store/search";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { buildClaimDetailRoute } from "@/constants/ROUTES";
 import { useClaims } from "@/features/claim/api/claims-query";
 import {
@@ -19,8 +18,8 @@ import {
   type ListFilters,
 } from "@/features/order/utils/list-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useSearchTabs } from "@/hooks/use-search-tabs";
 import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
-import { cn } from "@/lib/utils";
 
 type ClaimTypeFilter = "전체" | "취소" | "반품" | "교환" | "토큰환불";
 
@@ -41,8 +40,19 @@ const CLAIM_TYPE_MAP: Record<Exclude<ClaimTypeFilter, "전체">, ClaimType> = {
 
 export default function ClaimListPage() {
   const navigate = useNavigate();
-  const { setSearchEnabled } = useSearchStore();
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
+  const activeTab = useSearchTabs({
+    tabs: CLAIM_TYPE_TABS,
+    defaultTab: "전체",
+    placeholder: "취소/반품/교환/토큰환불 검색...",
+    onSearch: (query, dateFilter) => {
+      setSearchFilters({
+        keyword: query,
+        dateFrom: toDateString(dateFilter.customRange?.from),
+        dateTo: toDateString(dateFilter.customRange?.to),
+      });
+    },
+  });
   const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
   const queryFilters = useMemo(
     () => ({
@@ -53,28 +63,12 @@ export default function ClaimListPage() {
     [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
   );
   const { data: claims = [], isLoading, error } = useClaims(queryFilters);
-  const [activeTab, setActiveTab] = useState<ClaimTypeFilter>("전체");
 
   const filteredClaims = useMemo(() => {
     if (activeTab === "전체") return claims;
     const claimType = CLAIM_TYPE_MAP[activeTab];
     return claims.filter((claim) => claim.type === claimType);
   }, [claims, activeTab]);
-
-  useEffect(() => {
-    setSearchEnabled(true, {
-      placeholder: "취소/반품/교환/토큰환불 검색...",
-      onSearch: (query, dateFilter) => {
-        setSearchFilters({
-          keyword: query,
-          dateFrom: toDateString(dateFilter.customRange?.from),
-          dateTo: toDateString(dateFilter.customRange?.to),
-        });
-      },
-    });
-
-    return () => setSearchEnabled(false);
-  }, [setSearchEnabled]);
 
   if (isLoading) {
     return (
@@ -110,22 +104,6 @@ export default function ClaimListPage() {
       <MainContent>
         <PageLayout>
           <div>
-            <div className="flex gap-1 overflow-x-auto pb-2">
-              {CLAIM_TYPE_TABS.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    "shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-                    activeTab === tab
-                      ? "bg-zinc-900 text-white"
-                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200",
-                  )}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
             {filteredClaims.length === 0 ? (
               <Card>
                 <Empty
@@ -165,15 +143,7 @@ export default function ClaimListPage() {
                   <CardContent className="py-4">
                     <OrderItemCard
                       item={claim.item}
-                      onClick={() =>
-                        navigate(
-                          buildClaimDetailRoute(
-                            claim.type,
-                            claim.orderId,
-                            claim.item.id,
-                          ),
-                        )
-                      }
+                      onClick={() => navigate(buildClaimDetailRoute(claim.id))}
                     />
 
                     {claim.type === "token_refund" && claim.refundData && (

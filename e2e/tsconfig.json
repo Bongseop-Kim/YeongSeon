@@ -1,7 +1,11 @@
 {
   "extends": "../packages/tsconfig/base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "lib": ["ES2022", "DOM"],
+    "paths": {
+      "@/*": ["./*"]
+    },
     "typeRoots": [
       "../apps/admin/node_modules/@types",
       "../apps/store/node_modules/@types",
