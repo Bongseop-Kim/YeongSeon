@@ -24,6 +24,13 @@ function requireCreateOrderResult(
     throw new Error("create-order 응답을 아직 캡처하지 못했습니다.");
   }
 
+  if (
+    !Array.isArray(createOrderResult.orders) ||
+    createOrderResult.orders.length === 0
+  ) {
+    throw new Error("create-order 응답의 orders is missing or empty");
+  }
+
   return createOrderResult;
 }
 
@@ -244,9 +251,14 @@ test.describe.serial("Store 주문 플로우", () => {
   }) => {
     await authenticatedPage.goto(`/order/${deliveredOrderForTest.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage);
+    const orderDetailRoot = authenticatedPage.getByTestId("order-detail-root");
+
+    await expect(orderDetailRoot).toContainText(
+      deliveredOrderForTest.orderNumber,
+    );
     await authenticatedPage.getByRole("button", { name: "구매확정" }).click();
     await expect(
-      authenticatedPage.getByText("완료", { exact: true }),
+      orderDetailRoot.getByText("완료", { exact: true }),
     ).toBeVisible();
   });
 

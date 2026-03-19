@@ -2,6 +2,9 @@ import { create } from "zustand";
 
 export type DateFilterPreset = "5years" | "1month" | "2months" | "3months";
 
+const DEFAULT_SEARCH_PLACEHOLDER = "검색...";
+const DEFAULT_DATE_FILTER_PRESET: DateFilterPreset = "5years";
+
 interface DateRange {
   from?: Date;
   to?: Date;
@@ -49,6 +52,10 @@ interface SearchStore {
   executeSearch: () => void;
 }
 
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled DateFilterPreset: ${value}`);
+};
+
 function getDateRangeForPreset(preset: DateFilterPreset): DateRange {
   const to = new Date();
   const from = new Date();
@@ -66,6 +73,8 @@ function getDateRangeForPreset(preset: DateFilterPreset): DateRange {
     case "3months":
       from.setMonth(from.getMonth() - 3);
       break;
+    default:
+      assertNever(preset);
   }
 
   return { from, to };
@@ -73,15 +82,15 @@ function getDateRangeForPreset(preset: DateFilterPreset): DateRange {
 
 function createDefaultDateFilter(): SearchDateFilter {
   return {
-    preset: "5years",
-    customRange: getDateRangeForPreset("5years"),
+    preset: DEFAULT_DATE_FILTER_PRESET,
+    customRange: getDateRangeForPreset(DEFAULT_DATE_FILTER_PRESET),
   };
 }
 
 export const useSearchStore = create<SearchStore>((set, get) => ({
   config: {
     enabled: false,
-    placeholder: "검색...",
+    placeholder: DEFAULT_SEARCH_PLACEHOLDER,
     query: "",
     dateFilter: createDefaultDateFilter(),
   },
@@ -93,7 +102,7 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
       config: {
         ...state.config,
         enabled,
-        placeholder: options?.placeholder || "검색...",
+        placeholder: options?.placeholder || DEFAULT_SEARCH_PLACEHOLDER,
         onSearch: options?.onSearch,
         tabs: enabled ? options?.tabs : undefined,
         query: enabled ? state.config.query : "",

@@ -184,7 +184,8 @@ const getServerCartCount = async (
   accessToken: string,
   userId: string,
 ): Promise<number> => {
-  const res = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/get_cart_items`, {
+  const url = `${cfg.supabaseUrl}/rest/v1/rpc/get_cart_items`;
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       apikey: cfg.supabaseAnonKey,
@@ -193,7 +194,13 @@ const getServerCartCount = async (
     },
     body: JSON.stringify({ p_user_id: userId, p_active_only: true }),
   });
-  if (!res.ok) return 0;
+  if (!res.ok) {
+    const body = await res.text();
+    console.warn(
+      `[getServerCartCount] request failed: url=${url} status=${res.status} body=${body}`,
+    );
+    return 0;
+  }
   const data = (await res.json()) as unknown[];
   return Array.isArray(data) ? data.length : 0;
 };
@@ -381,12 +388,7 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
     await injectSession(page, session, storageKey);
 
     // 3. 페이지를 새로고침해 useCartAuthSync가 동기화를 수행하도록 유도
-    await page.goto("/cart");
-    await page.waitForResponse(
-      (response) =>
-        response.url().includes("/rest/v1/rpc/get_cart_items") &&
-        response.status() === 200,
-    );
+    await gotoCartAndWaitForItems(page);
     await expect(page.getByTestId("cart-items-panel")).toBeVisible();
 
     // 4. 로컬스토리지 guest 장바구니가 삭제됐는지 확인
