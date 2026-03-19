@@ -21,8 +21,9 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useSearchTabs } from "@/hooks/use-search-tabs";
 import {
   CLAIM_ACTION_LABEL,
-  getClaimActionsForItem,
-} from "@yeongseon/shared/constants/claim-actions";
+  getClaimActionsFromCustomerActions,
+  type ClaimActionType,
+} from "@yeongseon/shared";
 import type { Order } from "@yeongseon/shared/types/view/order";
 
 type OrderTypeFilter =
@@ -167,10 +168,12 @@ export default function OrderListPage() {
 
                       <div className="space-y-0">
                         {order.items.map((item) => {
-                          const claimActions = getClaimActionsForItem(
-                            order.status,
-                            item.type,
-                          );
+                          const claimActions =
+                            item.type === "token"
+                              ? ([] as ClaimActionType[])
+                              : getClaimActionsFromCustomerActions(
+                                  order.customerActions,
+                                );
                           return (
                             <CardContent
                               key={item.id}

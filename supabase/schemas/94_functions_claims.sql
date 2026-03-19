@@ -61,8 +61,9 @@ begin
   if p_type = 'cancel' then
     if not (
       (v_order_type = 'sale'   and v_order_status in ('대기중', '결제중', '진행중'))
-      or (v_order_type = 'custom' and v_order_status in ('대기중', '결제중', '접수', '샘플원단제작중', '샘플원단배송중', '샘플봉제제작중', '샘플넥타이배송중', '샘플배송완료', '샘플승인'))
-      or (v_order_type = 'repair' and v_order_status in ('대기중', '결제중', '접수'))
+      or (v_order_type = 'custom' and v_order_status in ('대기중', '결제중', '접수'))
+      or (v_order_type = 'repair' and v_order_status in ('대기중', '결제중'))
+      or (v_order_type = 'sample' and v_order_status in ('대기중', '결제중', '접수'))
       or (v_order_type = 'token' and v_order_status in ('대기중'))
     ) then
       raise exception '현재 주문 상태에서는 취소할 수 없습니다';

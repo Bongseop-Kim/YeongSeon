@@ -124,6 +124,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     orderType: order.orderType,
     items: itemsByOrderId.get(order.id) ?? [],
     totalPrice: order.totalPrice,
+    customerActions: order.customerActions,
   }));
 
   const views = records.map(toOrderView);

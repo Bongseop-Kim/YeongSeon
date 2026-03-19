@@ -1,6 +1,7 @@
 import type { Product, ProductOption } from "./product";
 import type { AppliedCoupon } from "./coupon";
 import type { TieItem } from "./reform";
+import type { CustomerAction } from "./order-actions";
 
 // 주문 상태
 export type OrderStatus =
@@ -16,13 +17,7 @@ export type OrderStatus =
   | "제작중"
   | "제작완료"
   | "수선중"
-  | "수선완료"
-  | "샘플원단제작중"
-  | "샘플원단배송중"
-  | "샘플봉제제작중"
-  | "샘플넥타이배송중"
-  | "샘플배송완료"
-  | "샘플승인";
+  | "수선완료";
 
 // 일반 상품 주문 아이템
 export interface ProductOrderItem {
@@ -149,4 +144,5 @@ export interface Order {
   shippingInfo: ShippingInfo | null;
   trackingInfo: TrackingInfo | null;
   confirmedAt: string | null; // 구매확정 시점
+  customerActions: CustomerAction[];
 }

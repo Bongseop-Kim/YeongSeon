@@ -18,16 +18,16 @@ import {
 import { Empty } from "@/components/composite/empty";
 import type {
   OrderItem,
-  OrderStatus,
   ShippingInfo,
   TrackingInfo,
 } from "@yeongseon/shared/types/view/order";
+import type { CustomerAction } from "@yeongseon/shared";
 import { buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies";
 import {
   type ClaimActionType,
   CLAIM_ACTION_LABEL,
-  getClaimActionsForItem,
 } from "@yeongseon/shared/constants/claim-actions";
+import { getClaimActionsFromCustomerActions } from "@yeongseon/shared";
 
 const getOrderErrorDescription = (error: unknown): string => {
   if (!(error instanceof Error)) {
@@ -42,11 +42,12 @@ const getOrderErrorDescription = (error: unknown): string => {
 };
 
 const renderClaimButtons = (
-  status: OrderStatus,
+  customerActions: CustomerAction[],
   item: OrderItem,
   onClaim: (type: ClaimActionType, itemId: string) => void,
 ) => {
-  const actions = getClaimActionsForItem(status, item.type);
+  if (item.type === "token") return null;
+  const actions = getClaimActionsFromCustomerActions(customerActions);
   if (actions.length === 0) {
     return null;
   }
@@ -370,12 +371,11 @@ const OrderDetailPage = () => {
             )}
 
             {/* 구매확정 */}
-            {order.orderType !== "token" &&
-              (order.status === "배송완료" || order.status === "배송중") && (
-                <CardContent>
-                  <PurchaseConfirmSection orderId={order.id} />
-                </CardContent>
-              )}
+            {order.customerActions.some((a) => a === "confirm_purchase") && (
+              <CardContent>
+                <PurchaseConfirmSection orderId={order.id} />
+              </CardContent>
+            )}
 
             {/* 주문 상품 목록 */}
             <CardHeader>
@@ -390,7 +390,7 @@ const OrderDetailPage = () => {
                     showQuantity={true}
                     showPrice={true}
                     actions={renderClaimButtons(
-                      order.status,
+                      order.customerActions,
                       item,
                       handleClaimRequest,
                     )}

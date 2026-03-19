@@ -180,6 +180,7 @@ export const createAdminOrderDetailRowDTO = (
     shippingPostalCode: "06236",
     deliveryMemo: "문 앞에 놓아주세요",
     deliveryRequest: "부재 시 연락 바랍니다",
+    adminActions: [],
     ...overrides,
   };
 };

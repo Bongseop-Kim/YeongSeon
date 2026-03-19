@@ -16,12 +16,6 @@ const ORDER_STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
   완료: "bg-green-100 text-green-800",
   취소: "bg-red-100 text-red-800",
   실패: "bg-red-100 text-red-800",
-  샘플원단제작중: "bg-purple-100 text-purple-800",
-  샘플원단배송중: "bg-purple-100 text-purple-800",
-  샘플봉제제작중: "bg-purple-100 text-purple-800",
-  샘플넥타이배송중: "bg-purple-100 text-purple-800",
-  샘플배송완료: "bg-pink-100 text-pink-800",
-  샘플승인: "bg-green-50 text-green-700",
 };
 
 const CLAIM_STATUS_BADGE_CLASS: Record<ClaimStatus, string> = {

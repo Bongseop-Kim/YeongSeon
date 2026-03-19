@@ -55,7 +55,8 @@ SELECT
   o.status,
   o.total_price   AS "totalPrice",
   o.order_type    AS "orderType",
-  o.created_at
+  o.created_at,
+  public.get_order_customer_actions(o.order_type, o.status) AS "customerActions"
 FROM public.orders o
 WHERE o.user_id = auth.uid();
 
@@ -82,7 +83,8 @@ SELECT
   sa.address_detail   AS "shippingAddressDetail",
   sa.postal_code      AS "shippingPostalCode",
   sa.delivery_memo    AS "deliveryMemo",
-  sa.delivery_request AS "deliveryRequest"
+  sa.delivery_request AS "deliveryRequest",
+  public.get_order_customer_actions(o.order_type, o.status, o.id) AS "customerActions"
 FROM public.orders o
 LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id
 WHERE o.user_id = auth.uid();
@@ -429,7 +431,8 @@ SELECT
   sa.delivery_request AS "deliveryRequest",
   o.payment_group_id  AS "paymentGroupId",
   o.shipping_cost     AS "shippingCost",
-  o.sample_cost    AS "sampleCost"
+  o.sample_cost    AS "sampleCost",
+  public.get_order_admin_actions(o.order_type, o.status) AS "adminActions"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id
 LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id;

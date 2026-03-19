@@ -10,6 +10,7 @@ import type {
   CustomOrderDataDTO,
   SampleOrderDataDTO,
 } from "@yeongseon/shared/types/dto/order-view";
+import type { CustomerAction } from "@yeongseon/shared";
 import type { CreateOrderResultDTO } from "@yeongseon/shared/types/dto/order-output";
 import type { Order } from "@yeongseon/shared/types/view/order";
 import {
@@ -82,6 +83,7 @@ export const toOrderView = (order: OrderViewDTO): Order => ({
   shippingInfo: null,
   trackingInfo: null,
   confirmedAt: null,
+  customerActions: order.customerActions,
 });
 
 export const toOrderViewFromDetail = (
@@ -116,6 +118,7 @@ export const toOrderViewFromDetail = (
         }
       : null,
   confirmedAt: detail.confirmedAt ?? null,
+  customerActions: detail.customerActions,
 });
 
 // ── parse helpers (런타임 검증) ──────────────────────
@@ -364,6 +367,22 @@ const parseAppliedCouponField = (
   };
 };
 
+const CUSTOMER_ACTIONS: ReadonlySet<string> = new Set<CustomerAction>([
+  "claim_cancel",
+  "claim_return",
+  "claim_exchange",
+  "confirm_purchase",
+]);
+const isCustomerAction = (v: string): v is CustomerAction =>
+  CUSTOMER_ACTIONS.has(v);
+
+const parseCustomerActions = (v: unknown): CustomerAction[] => {
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((a): a is string => typeof a === "string")
+    .filter(isCustomerAction);
+};
+
 const ORDER_STATUSES: ReadonlySet<string> = new Set([
   "진행중",
   "완료",
@@ -377,12 +396,6 @@ const ORDER_STATUSES: ReadonlySet<string> = new Set([
   "제작완료",
   "수선중",
   "수선완료",
-  "샘플원단제작중",
-  "샘플원단배송중",
-  "샘플봉제제작중",
-  "샘플넥타이배송중",
-  "샘플배송완료",
-  "샘플승인",
 ]);
 const isOrderStatus = (v: string): v is OrderStatusDTO => ORDER_STATUSES.has(v);
 
@@ -487,6 +500,7 @@ export const parseOrderListRows = (data: unknown): OrderListRowDTO[] => {
       totalPrice: row.totalPrice,
       orderType: row.orderType,
       created_at: row.created_at,
+      customerActions: parseCustomerActions(row.customerActions),
     };
   });
 };
@@ -628,6 +642,7 @@ export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
     shippingPostalCode: str(data.shippingPostalCode),
     deliveryMemo: str(data.deliveryMemo),
     deliveryRequest: str(data.deliveryRequest),
+    customerActions: parseCustomerActions(data.customerActions),
   };
 };
 

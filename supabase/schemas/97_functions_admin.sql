@@ -142,7 +142,7 @@ begin
         or (v_current_status = '수선완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;

@@ -140,6 +140,7 @@ describe("toOrderView", () => {
         status: "진행중",
         orderType: "sale",
         totalPrice: 10000,
+        customerActions: [],
         items: [
           {
             id: "item-1",
@@ -230,6 +231,7 @@ describe("parseOrderListRows", () => {
         totalPrice: 23000,
         orderType: "sale",
         created_at: "2026-03-15T09:00:00Z",
+        customerActions: [],
       },
     ]);
   });
@@ -506,6 +508,7 @@ describe("parseOrderDetailRow", () => {
       shippingPostalCode: "12345",
       deliveryMemo: "문 앞",
       deliveryRequest: "빠른 배송",
+      customerActions: [],
     });
   });
 

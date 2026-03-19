@@ -1,5 +1,3 @@
-import type { OrderStatus } from "../types/view/order";
-
 export type OrderType = "sale" | "custom" | "repair" | "token" | "sample";
 
 export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
@@ -51,31 +49,6 @@ export const ORDER_ROLLBACK_FLOW: Record<OrderType, Record<string, string>> = {
   sample: { 접수: "대기중", 제작중: "접수" },
 };
 
-export const getAdminNonCancelableStatuses = (
-  orderType: OrderType,
-): readonly OrderStatus[] => {
-  switch (orderType) {
-    case "sale":
-      return ["취소", "완료", "배송완료", "배송중"];
-    case "custom":
-      return ["취소", "완료", "배송완료", "배송중", "제작완료"];
-    case "repair":
-      return [
-        "취소",
-        "완료",
-        "배송완료",
-        "배송중",
-        "수선완료",
-        "수선중",
-        "접수",
-      ];
-    case "sample":
-      return ["취소", "완료", "배송완료", "배송중", "제작중"];
-    case "token":
-      return ["취소", "완료"];
-  }
-};
-
 export const ORDER_STATUS_COLORS: Record<string, string> = {
   대기중: "default",
   결제중: "warning",
@@ -90,12 +63,6 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   완료: "success",
   취소: "error",
   실패: "error",
-  샘플원단제작중: "purple",
-  샘플원단배송중: "purple",
-  샘플봉제제작중: "purple",
-  샘플넥타이배송중: "purple",
-  샘플배송완료: "magenta",
-  샘플승인: "green",
 };
 
 export const ORDER_STATUS_OPTIONS: Record<
