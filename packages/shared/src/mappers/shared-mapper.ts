@@ -205,6 +205,17 @@ export function parseSampleOrderData(
         )
         .map((item) => item.url)
     : [];
+  const designType =
+    typeof rawOptions.design_type === "string" ? rawOptions.design_type : null;
+
+  if (
+    (sampleType === "fabric" || sampleType === "fabric_and_sewing") &&
+    designType === null
+  ) {
+    throw new Error(
+      "sample order data 검증 실패: fabric/fabric_and_sewing 샘플은 options.design_type이 필요합니다",
+    );
+  }
 
   return {
     sampleType,
@@ -213,10 +224,7 @@ export function parseSampleOrderData(
         typeof rawOptions.fabric_type === "string"
           ? rawOptions.fabric_type
           : null,
-      designType:
-        typeof rawOptions.design_type === "string"
-          ? rawOptions.design_type
-          : null,
+      designType,
       tieType:
         typeof rawOptions.tie_type === "string" ? rawOptions.tie_type : null,
       interlining:

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { RefObject } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/auth";
@@ -36,6 +36,7 @@ export function useCustomOrderSubmit({
   const { user } = useAuthStore();
   const isLoggedIn = !!user;
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  const pendingOrderIdRef = useRef<string | null>(null);
   const createCustomOrder = useCreateCustomOrder();
   const createQuoteRequest = useCreateQuoteRequest();
 
@@ -119,21 +120,26 @@ export function useCustomOrderSubmit({
 
     setIsPaymentLoading(true);
     try {
-      const { orderId } = await createCustomOrder.mutateAsync({
-        ...toCreateCustomOrderInput({
-          shippingAddressId: selectedAddressId,
-          options: coreOptions,
-          referenceImages: imageUpload.getImageRefs(),
-          additionalNotes,
-        }),
-      });
+      const orderId =
+        pendingOrderIdRef.current ??
+        (
+          await createCustomOrder.mutateAsync({
+            ...toCreateCustomOrderInput({
+              shippingAddressId: selectedAddressId,
+              options: coreOptions,
+              referenceImages: imageUpload.getImageRefs(),
+              additionalNotes,
+            }),
+          })
+        ).orderId;
+      pendingOrderIdRef.current = orderId;
 
       await paymentWidgetRef.current.requestPayment({
         orderId,
         orderName: `주문제작 (수량 ${watchedValues.quantity}개)`,
         successUrl: `${window.location.origin}${ROUTES.PAYMENT_SUCCESS}`,
         failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}`,
-        customerName: user.email ?? undefined,
+        customerName: user.user_metadata?.name ?? undefined,
       });
     } catch (error) {
       const hasStringCode = (e: unknown): e is { code: string } =>

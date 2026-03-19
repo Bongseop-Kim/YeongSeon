@@ -150,7 +150,12 @@ export function PricingForm() {
   const updateToken = useUpdateTokenPricing();
   const updateSampleCoupons = useUpdateSampleCouponAmounts();
 
-  const { data: sampleCouponAmounts } = useSampleCouponAmounts();
+  const {
+    data: sampleCouponAmounts,
+    isLoading: loadingSampleCoupons,
+    isError: errorSampleCoupons,
+    isSuccess: sampleCouponsReady,
+  } = useSampleCouponAmounts();
 
   const [constantDraft, setConstantDraft] = useState<Record<string, number>>(
     {},
@@ -225,10 +230,16 @@ export function PricingForm() {
       },
     );
 
+    if (!sampleCouponsReady) {
+      message.error("샘플 쿠폰 금액 정보를 불러온 뒤 저장할 수 있습니다.");
+      return;
+    }
+
     const couponMutations = SAMPLE_DISCOUNT_KEYS.flatMap((key) => {
       const amount = sampleCouponDraft[key];
-      if (amount === undefined || amount === sampleCouponAmounts?.[key])
+      if (amount === undefined || amount === sampleCouponAmounts?.[key]) {
         return [];
+      }
       return [{ key, amount }];
     });
 
@@ -264,6 +275,7 @@ export function PricingForm() {
     updateFabric.isPending ||
     updateToken.isPending ||
     updateSampleCoupons.isPending;
+  const isSaveDisabled = isSaving || !sampleCouponsReady;
 
   if (loadingConstants || loadingFabrics) {
     return (
@@ -456,38 +468,52 @@ export function PricingForm() {
               수정하지 마세요.
             </Typography.Text>
             <Row gutter={[16, 16]}>
-              {SAMPLE_DISCOUNT_KEYS.map((key) => (
-                <Col key={key} xs={24} sm={12} md={8}>
-                  <Space
-                    direction="vertical"
-                    size={4}
-                    style={{ width: "100%" }}
-                  >
-                    <Typography.Text>
-                      {SAMPLE_COUPON_LABELS[key] ?? key}
-                    </Typography.Text>
-                    <InputNumber
-                      value={
-                        sampleCouponDraft[key] ??
-                        sampleCouponAmounts?.[key] ??
-                        0
-                      }
-                      min={0}
-                      step={1000}
-                      formatter={(v) => formatWithComma(v)}
-                      parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
-                      onChange={(v) =>
-                        setSampleCouponDraft((prev) => ({
-                          ...prev,
-                          [key]: v ?? 0,
-                        }))
-                      }
-                      style={{ width: "100%" }}
-                      addonAfter="원"
-                    />
-                  </Space>
+              {loadingSampleCoupons ? (
+                <Col span={24}>
+                  <Spin size="small" />
                 </Col>
-              ))}
+              ) : errorSampleCoupons ? (
+                <Col span={24}>
+                  <Typography.Text type="danger">
+                    샘플 쿠폰 금액 정보를 불러오는데 실패했습니다.
+                  </Typography.Text>
+                </Col>
+              ) : (
+                SAMPLE_DISCOUNT_KEYS.map((key) => (
+                  <Col key={key} xs={24} sm={12} md={8}>
+                    <Space
+                      direction="vertical"
+                      size={4}
+                      style={{ width: "100%" }}
+                    >
+                      <Typography.Text>
+                        {SAMPLE_COUPON_LABELS[key] ?? key}
+                      </Typography.Text>
+                      <InputNumber
+                        value={
+                          sampleCouponDraft[key] ??
+                          (sampleCouponsReady
+                            ? (sampleCouponAmounts?.[key] ?? 0)
+                            : undefined)
+                        }
+                        min={0}
+                        step={1000}
+                        formatter={(v) => formatWithComma(v)}
+                        parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
+                        onChange={(v) =>
+                          setSampleCouponDraft((prev) => ({
+                            ...prev,
+                            [key]: v ?? 0,
+                          }))
+                        }
+                        style={{ width: "100%" }}
+                        addonAfter="원"
+                        disabled={!sampleCouponsReady}
+                      />
+                    </Space>
+                  </Col>
+                ))
+              )}
             </Row>
           </div>
         </Space>
@@ -602,7 +628,7 @@ export function PricingForm() {
         type="primary"
         onClick={saveAll}
         loading={isSaving}
-        disabled={isSaving}
+        disabled={isSaveDisabled}
       >
         저장
       </Button>

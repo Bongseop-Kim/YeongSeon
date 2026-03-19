@@ -4,10 +4,9 @@ import type { CreateSampleOrderRequest } from "@/features/sample-order/types/sam
 import { useAuthStore } from "@/store/auth";
 
 export const useCreateSampleOrder = () => {
-  const { user } = useAuthStore();
-
   return useMutation({
     mutationFn: (request: CreateSampleOrderRequest) => {
+      const { user } = useAuthStore.getState();
       if (!user?.id) {
         throw new Error("로그인이 필요합니다.");
       }

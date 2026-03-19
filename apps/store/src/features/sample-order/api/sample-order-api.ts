@@ -1,5 +1,8 @@
 import { supabase } from "@/lib/supabase";
-import { toCreateSampleOrderInputDto } from "@/features/sample-order/api/sample-order-mapper";
+import {
+  parseSampleOrderResponse,
+  toCreateSampleOrderInputDto,
+} from "@/features/sample-order/api/sample-order-mapper";
 import type { CreateSampleOrderRequest } from "@/features/sample-order/types/sample-order-input";
 
 export interface CreateSampleOrderResponse {
@@ -35,8 +38,5 @@ export const createSampleOrder = async (
     throw new Error(`샘플 주문 생성 실패: ${data.error}`);
   }
 
-  return {
-    orderId: data.order_id,
-    orderNumber: data.order_number,
-  };
+  return parseSampleOrderResponse(data);
 };

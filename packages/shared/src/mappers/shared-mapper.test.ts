@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   normalizeItemRow,
   parseCustomOrderData,
+  parseSampleOrderData,
   toAppliedCouponDTO,
   toAppliedCouponView,
   toCouponDTO,
@@ -21,6 +22,7 @@ import {
   createOrderItemDTO,
   createProduct,
   createProductOption,
+  createSampleOrderItemDTO,
 } from "../test/fixtures";
 
 describe("normalizeItemRow", () => {
@@ -108,6 +110,26 @@ describe("normalizeItemRow", () => {
     });
   });
 
+  it("sample 타입은 sampleData를 유지한다", () => {
+    const sampleData = createSampleOrderItemDTO().sampleData;
+    expect(
+      normalizeItemRow(
+        createNullableItemRow({
+          type: "sample",
+          product: null,
+          selectedOption: null,
+          sampleData,
+        }),
+      ),
+    ).toEqual({
+      id: "item-1",
+      type: "sample",
+      quantity: 1,
+      sampleData,
+      appliedCoupon: undefined,
+    });
+  });
+
   describe("에러 케이스", () => {
     it("custom 타입에서 customData가 없으면 에러를 던진다", () => {
       expect(() =>
@@ -133,6 +155,19 @@ describe("normalizeItemRow", () => {
           }),
         ),
       ).toThrow("주문 수선 데이터가 올바르지 않습니다.");
+    });
+
+    it("sample 타입에서 sampleData가 없으면 에러를 던진다", () => {
+      expect(() =>
+        normalizeItemRow(
+          createNullableItemRow({
+            type: "sample",
+            product: null,
+            selectedOption: null,
+            sampleData: null,
+          }),
+        ),
+      ).toThrow("샘플 주문 데이터가 올바르지 않습니다.");
     });
   });
 });
@@ -176,6 +211,55 @@ describe("toOrderItemView", () => {
           pricing: expect.objectContaining({ totalCost: 20000 }),
         }),
         appliedCoupon: expect.objectContaining({ id: "uc-1" }),
+      }),
+    );
+  });
+
+  it("product 타입에서 selectedOption이 없으면 undefined로 반환한다", () => {
+    expect(
+      toOrderItemView(
+        createOrderItemDTO({
+          overrides: { selectedOption: undefined },
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        type: "product",
+        selectedOption: undefined,
+      }),
+    );
+  });
+
+  it("sample 타입 DTO를 view 모델로 변환한다", () => {
+    const dto = createSampleOrderItemDTO();
+    expect(toOrderItemView(dto)).toEqual(
+      expect.objectContaining({
+        type: "sample",
+        sampleData: expect.objectContaining({
+          sampleType: "fabric",
+        }),
+        appliedCoupon: undefined,
+      }),
+    );
+  });
+
+  it("token 타입 DTO를 view 모델로 변환한다", () => {
+    expect(toOrderItemView(createOrderItemDTO({ type: "token" }))).toEqual(
+      expect.objectContaining({
+        type: "token",
+        appliedCoupon: undefined,
+      }),
+    );
+  });
+
+  it("reform 타입 DTO를 view 모델로 변환한다", () => {
+    expect(toOrderItemView(createOrderItemDTO({ type: "reform" }))).toEqual(
+      expect.objectContaining({
+        type: "reform",
+        reformData: expect.objectContaining({
+          tie: expect.objectContaining({ id: "tie-1" }),
+        }),
+        appliedCoupon: undefined,
       }),
     );
   });
@@ -345,6 +429,94 @@ describe("parseCustomOrderData", () => {
           },
         }),
       ).toThrow("custom order data 검증 실패: pricing.total_cost 필드 오류");
+    });
+  });
+});
+
+describe("parseSampleOrderData", () => {
+  it("유효한 raw 데이터를 DTO로 변환한다", () => {
+    expect(
+      parseSampleOrderData({
+        sample_type: "fabric",
+        options: {
+          fabric_type: "silk",
+          design_type: "classic",
+          tie_type: "3fold",
+          interlining: "wool",
+        },
+        pricing: { total_cost: 5000 },
+        reference_images: [
+          { url: "https://example.com/1.jpg" },
+          { file_id: "ignored" },
+        ],
+        additional_notes: "샘플 메모",
+      }),
+    ).toEqual({
+      sampleType: "fabric",
+      options: {
+        fabricType: "silk",
+        designType: "classic",
+        tieType: "3fold",
+        interlining: "wool",
+      },
+      pricing: { totalCost: 5000 },
+      referenceImageUrls: ["https://example.com/1.jpg"],
+      additionalNotes: "샘플 메모",
+    });
+  });
+
+  it("options가 객체가 아니면 빈 객체로 처리한다", () => {
+    expect(
+      parseSampleOrderData({
+        sample_type: "sewing",
+        options: "invalid",
+        pricing: { total_cost: 3000 },
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        sampleType: "sewing",
+        options: {
+          fabricType: null,
+          designType: null,
+          tieType: null,
+          interlining: null,
+        },
+        pricing: { totalCost: 3000 },
+      }),
+    );
+  });
+
+  describe("에러 케이스", () => {
+    it("sample_type이 유효하지 않으면 에러를 던진다", () => {
+      expect(() =>
+        parseSampleOrderData({
+          sample_type: "invalid",
+          pricing: { total_cost: 5000 },
+        }),
+      ).toThrow("sample order data 검증 실패: sample_type 필드 오류");
+    });
+
+    it("total_cost가 숫자가 아니면 에러를 던진다", () => {
+      expect(() =>
+        parseSampleOrderData({
+          sample_type: "fabric",
+          pricing: { total_cost: "5000" },
+        }),
+      ).toThrow("sample order data 검증 실패: pricing.total_cost 필드 오류");
+    });
+
+    it("fabric 계열 샘플에 design_type이 없으면 에러를 던진다", () => {
+      expect(() =>
+        parseSampleOrderData({
+          sample_type: "fabric",
+          options: {
+            fabric_type: "silk",
+          },
+          pricing: { total_cost: 5000 },
+        }),
+      ).toThrow(
+        "sample order data 검증 실패: fabric/fabric_and_sewing 샘플은 options.design_type이 필요합니다",
+      );
     });
   });
 });

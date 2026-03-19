@@ -82,13 +82,15 @@ export function useUpdateTokenPricing() {
           { key: amountKey, amount: amount },
         ],
       );
-      const results = await Promise.all(
-        rows.map(({ key, amount }) =>
-          supabase.from("pricing_constants").update({ amount }).eq("key", key),
-        ),
+      const { error } = await supabase.from("pricing_constants").upsert(
+        rows.map(({ key, amount }) => ({
+          key,
+          amount,
+          category: "token",
+        })),
+        { onConflict: "key" },
       );
-      const failed = results.find((r) => r.error);
-      if (failed?.error) throw failed.error;
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TOKEN_PRICING_KEY });
@@ -207,13 +209,15 @@ export function useUpdateSampleCouponAmounts() {
     mutationFn: async (
       mutations: { key: SampleDiscountKey; amount: number }[],
     ) => {
-      const results = await Promise.all(
-        mutations.map(({ key, amount }) =>
-          supabase.from("pricing_constants").update({ amount }).eq("key", key),
-        ),
+      const { error } = await supabase.from("pricing_constants").upsert(
+        mutations.map(({ key, amount }) => ({
+          key,
+          amount,
+          category: "sample_discount",
+        })),
+        { onConflict: "key" },
       );
-      const failed = results.find((r) => r.error);
-      if (failed?.error) throw failed.error;
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SAMPLE_DISCOUNT_QUERY_KEY });

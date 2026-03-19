@@ -64,8 +64,6 @@ interface ToCreateCustomOrderRequestInput {
   options: OrderOptionsForCreateCustomOrderOptions;
   referenceImages: ImageRef[];
   additionalNotes: string;
-  sample?: boolean;
-  sampleType?: "sewing" | "fabric" | "fabric_and_sewing" | null;
 }
 
 export const toCreateCustomOrderInput = (

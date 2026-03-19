@@ -6,7 +6,7 @@ type CreateSampleOrderInput = {
   shipping_address_id: string;
   sample_type: "fabric" | "sewing" | "fabric_and_sewing";
   options: Record<string, unknown>;
-  reference_images?: Array<{ url: string; fileId: string }>;
+  reference_images?: Array<{ url: string; file_id?: string | null }>;
   additional_notes?: string;
 };
 
@@ -85,13 +85,22 @@ Deno.serve(async (req) => {
     return jsonResponse(403, { error: "Shipping address not found" });
   }
 
+  const referenceImages = Array.isArray(payload.reference_images)
+    ? payload.reference_images.map((image) => ({
+        url: image.url,
+        ...(typeof image.file_id === "string" && image.file_id.length > 0
+          ? { file_id: image.file_id }
+          : {}),
+      }))
+    : [];
+
   const { data: orderResult, error: orderError } = await supabase.rpc(
     "create_sample_order_txn",
     {
       p_shipping_address_id: payload.shipping_address_id,
       p_sample_type: payload.sample_type,
       p_options: payload.options,
-      p_reference_images: payload.reference_images ?? [],
+      p_reference_images: referenceImages,
       p_additional_notes: payload.additional_notes ?? "",
     },
   );

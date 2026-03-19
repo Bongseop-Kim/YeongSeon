@@ -39,7 +39,7 @@ const fabricPrices: PricingConstantRow[] = [
 ];
 
 describe("toPricingConfig", () => {
-  it("20개 상수와 4개 원단 가격 조합을 매핑한다", () => {
+  it("21개 상수와 4개 원단 가격 조합을 매핑한다", () => {
     expect(toPricingConfig(pricingConstants, fabricPrices)).toEqual(
       expect.objectContaining({
         START_COST: 10000,

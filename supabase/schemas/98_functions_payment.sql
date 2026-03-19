@@ -165,12 +165,19 @@ begin
       from public.pricing_constants pc
       where pc.key = v_pricing_key;
 
+      if v_discount_amount is null then
+        raise exception 'Sample discount pricing key % is not configured; coupons_sample_discount_unique upsert cannot continue', v_pricing_key;
+      end if;
+
       -- coupons row 동기화 (user_coupons FK용)
       insert into public.coupons (name, discount_type, discount_value, max_discount_amount, expiry_date, is_active)
       values (v_coupon_name, 'fixed', v_discount_amount, v_discount_amount, '2099-12-31', true)
-      on conflict on constraint coupons_sample_discount_unique
+      on conflict (name)
       do update set discount_value = excluded.discount_value,
-                   max_discount_amount = excluded.max_discount_amount;
+                   max_discount_amount = excluded.max_discount_amount,
+                   discount_type = excluded.discount_type,
+                   expiry_date = excluded.expiry_date,
+                   is_active = excluded.is_active;
 
       select c.id into v_sample_coupon_id
       from public.coupons c

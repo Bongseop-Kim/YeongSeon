@@ -18,6 +18,7 @@ export type * from "./types/dto/admin-quote-request";
 export type * from "./types/dto/admin-inquiry";
 export type * from "./types/dto/token-purchase";
 export type * from "./types/image-ref";
+export type * from "./types/type-utils";
 
 // Types - View
 export type * from "./types/view/product";

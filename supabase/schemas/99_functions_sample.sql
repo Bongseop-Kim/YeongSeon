@@ -11,7 +11,7 @@ CREATE OR REPLACE FUNCTION public.create_sample_order_txn(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 declare
@@ -46,6 +46,11 @@ begin
   end if;
 
   v_design_type := p_options->>'design_type';
+
+  if p_sample_type in ('fabric', 'fabric_and_sewing')
+     and v_design_type not in ('PRINTING', 'YARN_DYED') then
+    raise exception 'Invalid design_type for sample order: %', v_design_type;
+  end if;
 
   select pc.amount
   into v_total_cost

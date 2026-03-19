@@ -28,7 +28,7 @@ type OrderTypeFilter =
   | "일반구매"
   | "수선"
   | "주문제작"
-  | "샘플제작"
+  | "샘플 제작"
   | "토큰구매";
 
 const ORDER_TYPE_TABS: OrderTypeFilter[] = [
@@ -36,7 +36,7 @@ const ORDER_TYPE_TABS: OrderTypeFilter[] = [
   "일반구매",
   "수선",
   "주문제작",
-  "샘플제작",
+  "샘플 제작",
   "토큰구매",
 ];
 
@@ -47,7 +47,7 @@ const ORDER_TYPE_MAP: Record<
   일반구매: "sale",
   수선: "repair",
   주문제작: "custom",
-  샘플제작: "sample",
+  "샘플 제작": "sample",
   토큰구매: "token",
 };
 

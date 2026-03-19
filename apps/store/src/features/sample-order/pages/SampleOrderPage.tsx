@@ -85,6 +85,29 @@ const FABRIC_CARDS: {
   },
 ];
 
+const getSamplePrice = (
+  pricingConfig: ReturnType<typeof usePricingConfig>["data"] | undefined,
+  values: SampleOrderFormValues,
+): number => {
+  if (!pricingConfig) {
+    return 0;
+  }
+
+  if (values.sampleType === "sewing") {
+    return pricingConfig.SAMPLE_SEWING_COST;
+  }
+
+  if (values.sampleType === "fabric") {
+    return values.designType === "PRINTING"
+      ? pricingConfig.SAMPLE_FABRIC_PRINTING_COST
+      : pricingConfig.SAMPLE_FABRIC_YARN_DYED_COST;
+  }
+
+  return values.designType === "PRINTING"
+    ? pricingConfig.SAMPLE_FABRIC_AND_SEWING_PRINTING_COST
+    : pricingConfig.SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST;
+};
+
 export default function SampleOrderPage() {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
@@ -112,17 +135,7 @@ export default function SampleOrderPage() {
   const currentFabricValue = `${values.fabricType}-${values.designType}`;
   const isFabricVisible = values.sampleType !== "sewing";
 
-  const samplePrice = pricingConfig
-    ? values.sampleType === "sewing"
-      ? pricingConfig.SAMPLE_SEWING_COST
-      : values.sampleType === "fabric"
-        ? values.designType === "PRINTING"
-          ? pricingConfig.SAMPLE_FABRIC_PRINTING_COST
-          : pricingConfig.SAMPLE_FABRIC_YARN_DYED_COST
-        : values.designType === "PRINTING"
-          ? pricingConfig.SAMPLE_FABRIC_AND_SEWING_PRINTING_COST
-          : pricingConfig.SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST
-    : 0;
+  const samplePrice = getSamplePrice(pricingConfig, values);
 
   const handleSubmit = async () => {
     if (!user) {
@@ -169,7 +182,7 @@ export default function SampleOrderPage() {
         orderName: "샘플 주문",
         successUrl: `${window.location.origin}${ROUTES.PAYMENT_SUCCESS}`,
         failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}`,
-        customerName: user.email ?? undefined,
+        customerName: user.user_metadata?.name ?? undefined,
       });
     } catch (error) {
       const hasStringCode = (e: unknown): e is { code: string } =>

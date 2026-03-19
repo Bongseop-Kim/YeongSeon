@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   createProductOrderItem,
   createReformOrderItem,
+  createCustomOrderItem,
+  createSampleOrderItem,
+  createTokenOrderItem,
   createAppliedCoupon,
   createProduct,
   createProductOption,
@@ -31,6 +34,118 @@ describe("getOrderItemPricing", () => {
     });
     const { unitPrice } = getOrderItemPricing(item);
     expect(unitPrice).toBe(15000);
+  });
+
+  it("주문 제작 아이템은 totalCost / quantity를 반환한다", () => {
+    const item = createCustomOrderItem({
+      quantity: 2,
+      customData: {
+        options: {
+          tieType: null,
+          interlining: null,
+          designType: null,
+          fabricType: null,
+          fabricProvided: false,
+          triangleStitch: false,
+          sideStitch: false,
+          barTack: false,
+          dimple: false,
+          spoderato: false,
+          fold7: false,
+          brandLabel: false,
+          careLabel: false,
+        },
+        pricing: {
+          sewingCost: 0,
+          fabricCost: 0,
+          sampleCost: 0,
+          totalCost: 20000,
+        },
+        referenceImageUrls: [],
+        additionalNotes: null,
+      },
+    });
+    const { unitPrice } = getOrderItemPricing(item);
+    expect(unitPrice).toBe(10000);
+  });
+
+  it("주문 제작 아이템 quantity가 0이면 unitPrice는 0이다", () => {
+    const item = createCustomOrderItem({
+      quantity: 0,
+      customData: {
+        options: {
+          tieType: null,
+          interlining: null,
+          designType: null,
+          fabricType: null,
+          fabricProvided: false,
+          triangleStitch: false,
+          sideStitch: false,
+          barTack: false,
+          dimple: false,
+          spoderato: false,
+          fold7: false,
+          brandLabel: false,
+          careLabel: false,
+        },
+        pricing: {
+          sewingCost: 0,
+          fabricCost: 0,
+          sampleCost: 0,
+          totalCost: 20000,
+        },
+        referenceImageUrls: [],
+        additionalNotes: null,
+      },
+    });
+    const { unitPrice } = getOrderItemPricing(item);
+    expect(unitPrice).toBe(0);
+  });
+
+  it("샘플 아이템은 totalCost / quantity를 반환한다", () => {
+    const item = createSampleOrderItem({
+      quantity: 2,
+      sampleData: {
+        sampleType: "fabric",
+        options: {
+          fabricType: null,
+          designType: null,
+          tieType: null,
+          interlining: null,
+        },
+        pricing: { totalCost: 10000 },
+        referenceImageUrls: [],
+        additionalNotes: null,
+      },
+    });
+    const { unitPrice } = getOrderItemPricing(item);
+    expect(unitPrice).toBe(5000);
+  });
+
+  it("샘플 아이템 quantity가 0이면 unitPrice는 0이다", () => {
+    const item = createSampleOrderItem({
+      quantity: 0,
+      sampleData: {
+        sampleType: "sewing",
+        options: {
+          fabricType: null,
+          designType: null,
+          tieType: null,
+          interlining: null,
+        },
+        pricing: { totalCost: 10000 },
+        referenceImageUrls: [],
+        additionalNotes: null,
+      },
+    });
+    const { unitPrice } = getOrderItemPricing(item);
+    expect(unitPrice).toBe(0);
+  });
+
+  it("토큰 아이템은 unitPrice가 0이다", () => {
+    const item = createTokenOrderItem();
+    const { unitPrice } = getOrderItemPricing(item);
+    expect(unitPrice).toBe(0);
   });
 });
 
@@ -82,6 +197,36 @@ describe("calculateOrderTotals", () => {
     const totals = calculateOrderTotals(items);
     expect(totals.totalDiscount).toBe(3000);
     expect(totals.totalPrice).toBe(27000);
+  });
+
+  it("샘플 아이템을 포함한 합계를 계산한다", () => {
+    const items = [
+      createSampleOrderItem({
+        quantity: 1,
+        sampleData: {
+          sampleType: "fabric",
+          options: {
+            fabricType: null,
+            designType: null,
+            tieType: null,
+            interlining: null,
+          },
+          pricing: { totalCost: 8000 },
+          referenceImageUrls: [],
+          additionalNotes: null,
+        },
+      }),
+    ];
+    const totals = calculateOrderTotals(items);
+    expect(totals.originalPrice).toBe(8000);
+    expect(totals.totalPrice).toBe(8000);
+  });
+
+  it("토큰 아이템은 금액이 0이다", () => {
+    const items = [createTokenOrderItem({ quantity: 1 })];
+    const totals = calculateOrderTotals(items);
+    expect(totals.originalPrice).toBe(0);
+    expect(totals.totalPrice).toBe(0);
   });
 });
 

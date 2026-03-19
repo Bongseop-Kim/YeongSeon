@@ -256,6 +256,10 @@ begin
     raise exception 'Unauthorized';
   end if;
 
+  if p_sample is not null or p_sample_type is not null then
+    raise exception 'Legacy sample parameters (p_sample, p_sample_type) are no longer supported. Use create_sample_order_txn instead.';
+  end if;
+
   if p_quantity is null or p_quantity <= 0 then
     raise exception 'Invalid quantity';
   end if;

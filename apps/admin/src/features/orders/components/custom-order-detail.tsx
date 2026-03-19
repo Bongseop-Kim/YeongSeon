@@ -173,8 +173,8 @@ function ReferenceImages({ urls }: { urls: string[] }) {
       <Title level={5}>참고 이미지</Title>
       <Image.PreviewGroup>
         <Space wrap style={{ marginBottom: 24 }}>
-          {urls.map((url) => (
-            <Image key={url} width={120} src={url} />
+          {urls.map((url, index) => (
+            <Image key={`${url}-${index}`} width={120} src={url} />
           ))}
         </Space>
       </Image.PreviewGroup>

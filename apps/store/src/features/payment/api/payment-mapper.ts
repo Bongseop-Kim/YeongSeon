@@ -35,13 +35,21 @@ const mapOrderItem = (
   if (typeof o.orderId !== "string" || typeof o.orderType !== "string") {
     throw new Error("주문 항목 형식이 올바르지 않습니다");
   }
+
+  if (o.couponIssued !== undefined) {
+    const isValidCouponIssued =
+      typeof o.couponIssued === "boolean" || o.couponIssued === null;
+    if (!isValidCouponIssued) {
+      throw new Error(
+        `주문 ${o.orderId}의 couponIssued 값이 올바르지 않습니다: ${String(o.couponIssued)}`,
+      );
+    }
+  }
+
   return {
     orderId: o.orderId,
     orderType: o.orderType,
-    couponIssued:
-      typeof o.couponIssued === "boolean" || o.couponIssued === null
-        ? o.couponIssued
-        : undefined,
+    couponIssued: o.couponIssued as boolean | null | undefined,
   };
 };
 

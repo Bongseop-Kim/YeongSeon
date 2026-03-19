@@ -70,8 +70,6 @@ const createValues = (quantity: number) => ({
   quantity,
   referenceImages: null,
   additionalNotes: "메모",
-  sample: false,
-  sampleType: null,
   contactName: "홍길동",
   contactTitle: "팀장",
   contactMethod: "email" as const,

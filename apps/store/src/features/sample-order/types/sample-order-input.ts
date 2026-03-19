@@ -1,4 +1,4 @@
-import type { ImageRef, DbImageRef } from "@yeongseon/shared";
+import type { CamelToSnakeCase, DbImageRef, ImageRef } from "@yeongseon/shared";
 
 export interface SampleOrderOptionsDto {
   fabricType: "SILK" | "POLY" | null;
@@ -7,12 +7,8 @@ export interface SampleOrderOptionsDto {
   interlining: "WOOL" | "POLY" | null;
 }
 
-export interface SampleOrderOptionsDtoSnakeCase {
-  fabric_type: "SILK" | "POLY" | null;
-  design_type: "PRINTING" | "YARN_DYED" | null;
-  tie_type: "AUTO" | null;
-  interlining: "WOOL" | "POLY" | null;
-}
+export type SampleOrderOptionsDtoSnakeCase =
+  CamelToSnakeCase<SampleOrderOptionsDto>;
 
 export interface CreateSampleOrderRequest {
   shippingAddressId: string;

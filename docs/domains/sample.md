@@ -42,12 +42,13 @@ stateDiagram-v2
 
 1. 샘플 타입은 `fabric`, `sewing`, `fabric_and_sewing`만 허용한다.
 2. 가격은 sampleType + designType 조합으로 결정된다 (`pricing_constants` 5개 키 참조).
-3. 결제 확정 시 주문 `item_data`의 `sample_type` / `options.design_type`을 읽어 해당 타입의 쿠폰을 자동 발급한다.
-4. 쿠폰 매핑: `sewing` → `SAMPLE_DISCOUNT_SEWING`, `fabric+PRINTING` → `SAMPLE_DISCOUNT_FABRIC_PRINTING`, `fabric+YARN_DYED` → `SAMPLE_DISCOUNT_FABRIC_YARN_DYED`, `fabric_and_sewing+PRINTING` → `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING`, `fabric_and_sewing+YARN_DYED` → `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED`.
-5. 쿠폰은 `user_coupons(user_id, coupon_id)` 유니크 제약으로 사용자당 타입별 1회만 지급한다.
-6. 이미 발급되었거나 사용된 경우 `ON CONFLICT DO NOTHING`으로 조용히 무시한다.
-7. 결제 응답의 `couponIssued`로 프론트에서 발급 여부를 분기 표시한다.
-8. 환불은 `대기중/결제중/접수`에서만 전액 환불 가능하다.
+3. `fabric`, `fabric_and_sewing` 샘플은 `options.design_type`이 반드시 필요하다.
+4. 결제 확정 시 주문 `item_data`의 `sample_type` / `options.design_type`을 읽어 해당 타입의 쿠폰을 자동 발급한다.
+5. 쿠폰 매핑: `sewing` → `SAMPLE_DISCOUNT_SEWING`, `fabric+PRINTING` → `SAMPLE_DISCOUNT_FABRIC_PRINTING`, `fabric+YARN_DYED` → `SAMPLE_DISCOUNT_FABRIC_YARN_DYED`, `fabric_and_sewing+PRINTING` → `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING`, `fabric_and_sewing+YARN_DYED` → `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED`.
+6. 쿠폰은 `user_coupons(user_id, coupon_id)` 유니크 제약으로 사용자당 타입별 1회만 지급한다.
+7. 이미 발급되었거나 사용된 경우 `ON CONFLICT DO NOTHING`으로 조용히 무시한다.
+8. 결제 응답의 `couponIssued`로 프론트에서 발급 여부를 분기 표시한다.
+9. 환불은 `대기중/결제중/접수`에서만 전액 환불 가능하다.
 
 ## 관련 파일
 

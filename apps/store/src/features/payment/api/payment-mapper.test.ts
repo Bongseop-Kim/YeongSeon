@@ -69,5 +69,21 @@ describe("parseConfirmPaymentResponse", () => {
         ),
       ).toThrow("결제 승인 응답이 올바르지 않습니다: status 누락.");
     });
+
+    it("couponIssued 형식이 잘못되면 에러를 던진다", () => {
+      expect(() =>
+        parseConfirmPaymentResponse(
+          createConfirmPaymentResponseRaw({
+            orders: [
+              {
+                orderId: "order-1",
+                orderType: "sample",
+                couponIssued: "yes",
+              },
+            ],
+          }),
+        ),
+      ).toThrow("주문 order-1의 couponIssued 값이 올바르지 않습니다: yes");
+    });
   });
 });

@@ -37,3 +37,33 @@ export const toCreateSampleOrderInputDto = (
   reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
 });
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+export const parseSampleOrderResponse = (
+  data: unknown,
+): { orderId: string; orderNumber: string } => {
+  if (!isRecord(data)) {
+    throw new Error(
+      "샘플 주문 생성 응답이 올바르지 않습니다: 객체가 아닙니다.",
+    );
+  }
+
+  if (typeof data.order_id !== "string" || data.order_id.length === 0) {
+    throw new Error(
+      "샘플 주문 생성 응답이 올바르지 않습니다: order_id가 누락되었거나 형식이 잘못되었습니다.",
+    );
+  }
+
+  if (typeof data.order_number !== "string" || data.order_number.length === 0) {
+    throw new Error(
+      "샘플 주문 생성 응답이 올바르지 않습니다: order_number가 누락되었거나 형식이 잘못되었습니다.",
+    );
+  }
+
+  return {
+    orderId: data.order_id,
+    orderNumber: data.order_number,
+  };
+};

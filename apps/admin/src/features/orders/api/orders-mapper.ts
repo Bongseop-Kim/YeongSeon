@@ -420,9 +420,16 @@ export function toAdminOrderItem(
   }
 
   if (dto.itemType === "sample") {
-    const sampleData = isRecord(dto.reformData)
-      ? parseSampleData(dto.reformData)
-      : null;
+    let sampleData: AdminSampleOrderItem["sampleData"] = null;
+    if (isRecord(dto.reformData)) {
+      try {
+        sampleData = parseSampleData(dto.reformData);
+      } catch (error) {
+        if (!(error instanceof ValidationError)) {
+          throw error;
+        }
+      }
+    }
     const item: AdminSampleOrderItem = {
       type: "sample",
       id: dto.id,

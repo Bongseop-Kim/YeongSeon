@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchStore, type SearchDateFilter } from "@/store/search";
 
 interface UseSearchTabsOptions<T extends string> {
@@ -15,13 +15,19 @@ export function useSearchTabs<T extends string>({
   onSearch,
 }: UseSearchTabsOptions<T>): T {
   const { setSearchEnabled, setTabsActiveTab, config } = useSearchStore();
-  const handleSearch = useEffectEvent(onSearch);
+  const onSearchRef = useRef(onSearch);
   const activeTab = (config.tabs?.activeTab as T | undefined) ?? defaultTab;
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
 
   useEffect(() => {
     setSearchEnabled(true, {
       placeholder,
-      onSearch: handleSearch,
+      onSearch: (query, dateFilter) => {
+        onSearchRef.current(query, dateFilter);
+      },
       tabs: {
         items: [...tabs],
         activeTab: defaultTab,
