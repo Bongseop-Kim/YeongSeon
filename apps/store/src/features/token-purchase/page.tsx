@@ -14,6 +14,7 @@ import {
 } from "@/features/token-purchase/api/token-purchase-query";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
+import { hasStringCode } from "@/lib/type-guard";
 import { Button } from "@/components/ui/button";
 import type {
   TokenPlan,
@@ -115,11 +116,6 @@ const TokenPurchasePage = () => {
         failUrl: `${window.location.origin}${ROUTES.TOKEN_PURCHASE_FAIL}`,
       });
     } catch (error) {
-      const hasStringCode = (e: unknown): e is { code: string } =>
-        typeof e === "object" &&
-        e !== null &&
-        "code" in e &&
-        typeof (e as { code?: unknown }).code === "string";
       const errorCode = hasStringCode(error) ? error.code : "";
       const errorMessage =
         error instanceof Error

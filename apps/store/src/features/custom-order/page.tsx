@@ -26,7 +26,7 @@ import {
   useAutoSave,
 } from "@/features/custom-order/hooks/useWizardDraft";
 import { useCustomOrderSubmit } from "@/features/custom-order/hooks/useCustomOrderSubmit";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/features/payment/components/payment-widget";
@@ -181,10 +181,7 @@ export default function OrderPage() {
                   isLoggedIn={isLoggedIn}
                 />
                 {!isQuoteMode && user && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>결제 수단</CardTitle>
-                    </CardHeader>
+                  <Card className="py-0">
                     <CardContent className="px-0">
                       <PaymentWidget
                         ref={paymentWidgetRef}

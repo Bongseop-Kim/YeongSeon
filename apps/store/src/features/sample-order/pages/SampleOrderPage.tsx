@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
+import { hasStringCode } from "@/lib/type-guard";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 import { ImageUpload } from "@/features/custom-order/components/image-upload";
@@ -27,7 +28,7 @@ import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/features/payment/components/payment-widget";
 import { useCreateSampleOrder } from "@/features/sample-order/api/sample-order-query";
-import { toCreateSampleOrderInput } from "@/features/sample-order/api/sample-order-mapper";
+import type { CreateSampleOrderFormInput } from "@/features/sample-order/api/sample-order-mapper";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 
 interface SampleOrderFormValues {
@@ -88,9 +89,9 @@ const FABRIC_CARDS: {
 const getSamplePrice = (
   pricingConfig: ReturnType<typeof usePricingConfig>["data"] | undefined,
   values: SampleOrderFormValues,
-): number => {
+): number | null => {
   if (!pricingConfig) {
-    return 0;
+    return null;
   }
 
   if (values.sampleType === "sewing") {
@@ -108,9 +109,17 @@ const getSamplePrice = (
     : pricingConfig.SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST;
 };
 
+const serializeSampleOrderInput = (input: CreateSampleOrderFormInput): string =>
+  JSON.stringify({
+    ...input,
+    additionalNotes: input.additionalNotes.trim(),
+  });
+
 export default function SampleOrderPage() {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
+  const pendingOrderIdRef = useRef<string | null>(null);
+  const pendingOrderSnapshotRef = useRef<string | null>(null);
 
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -118,7 +127,11 @@ export default function SampleOrderPage() {
     useShippingAddressPopup();
   const imageUpload = useImageUpload(IMAGE_FOLDERS.SAMPLE_ORDERS);
   const createSampleOrder = useCreateSampleOrder();
-  const { data: pricingConfig } = usePricingConfig();
+  const {
+    data: pricingConfig,
+    isLoading: isPricingLoading,
+    isError: isPricingError,
+  } = usePricingConfig();
 
   const form = useForm<SampleOrderFormValues>({
     defaultValues: {
@@ -136,6 +149,13 @@ export default function SampleOrderPage() {
   const isFabricVisible = values.sampleType !== "sewing";
 
   const samplePrice = getSamplePrice(pricingConfig, values);
+  const isSubmitDisabled =
+    !user ||
+    !selectedAddress ||
+    samplePrice === null ||
+    isPaymentLoading ||
+    createSampleOrder.isPending ||
+    imageUpload.isUploading;
 
   const handleSubmit = async () => {
     if (!user) {
@@ -154,6 +174,15 @@ export default function SampleOrderPage() {
       return;
     }
 
+    if (samplePrice === null) {
+      toast.error(
+        isPricingError
+          ? "샘플 가격 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+          : "샘플 가격 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
+      );
+      return;
+    }
+
     if (!paymentWidgetRef.current) {
       toast.error("결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
       return;
@@ -162,20 +191,33 @@ export default function SampleOrderPage() {
     setIsPaymentLoading(true);
 
     try {
-      const { orderId } = await createSampleOrder.mutateAsync(
-        toCreateSampleOrderInput({
-          shippingAddressId: selectedAddressId,
-          sampleType: values.sampleType,
-          options: {
-            fabricType: isFabricVisible ? values.fabricType : null,
-            designType: isFabricVisible ? values.designType : null,
-            tieType: values.tieType,
-            interlining: values.interlining,
-          },
-          referenceImages: imageUpload.getImageRefs(),
-          additionalNotes: values.additionalNotes,
-        }),
-      );
+      const requestInput: CreateSampleOrderFormInput = {
+        shippingAddressId: selectedAddressId,
+        sampleType: values.sampleType,
+        options: {
+          fabricType: isFabricVisible ? values.fabricType : null,
+          designType: isFabricVisible ? values.designType : null,
+          tieType: values.tieType,
+          interlining: values.interlining,
+        },
+        referenceImages: imageUpload.getImageRefs(),
+        additionalNotes: values.additionalNotes,
+      };
+      const pendingSnapshot = serializeSampleOrderInput(requestInput);
+
+      if (
+        pendingOrderIdRef.current &&
+        pendingOrderSnapshotRef.current !== pendingSnapshot
+      ) {
+        pendingOrderIdRef.current = null;
+        pendingOrderSnapshotRef.current = null;
+      }
+
+      const orderId =
+        pendingOrderIdRef.current ??
+        (await createSampleOrder.mutateAsync(requestInput)).orderId;
+      pendingOrderIdRef.current = orderId;
+      pendingOrderSnapshotRef.current = pendingSnapshot;
 
       await paymentWidgetRef.current.requestPayment({
         orderId,
@@ -184,12 +226,11 @@ export default function SampleOrderPage() {
         failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}`,
         customerName: user.user_metadata?.name ?? undefined,
       });
+      pendingOrderIdRef.current = null;
+      pendingOrderSnapshotRef.current = null;
     } catch (error) {
-      const hasStringCode = (e: unknown): e is { code: string } =>
-        typeof e === "object" &&
-        e !== null &&
-        "code" in e &&
-        typeof (e as { code?: unknown }).code === "string";
+      pendingOrderIdRef.current = null;
+      pendingOrderSnapshotRef.current = null;
       if (hasStringCode(error) && error.code === "USER_CANCEL") return;
       toast.error(
         error instanceof Error
@@ -225,21 +266,39 @@ export default function SampleOrderPage() {
                     </div>
                     <div className="flex justify-between font-semibold">
                       <span>총 결제 금액</span>
-                      <span>{samplePrice.toLocaleString()}원</span>
+                      <span>
+                        {samplePrice === null
+                          ? isPricingError
+                            ? "불러오지 못함"
+                            : "불러오는 중..."
+                          : `${samplePrice.toLocaleString()}원`}
+                      </span>
                     </div>
+                    {samplePrice === null && (
+                      <p className="text-xs text-zinc-500">
+                        {isPricingError
+                          ? "샘플 가격 정보를 불러오지 못해 결제를 진행할 수 없습니다."
+                          : "샘플 가격 정보를 확인한 뒤 결제를 진행할 수 있습니다."}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
                 {user && (
                   <Card>
-                    <CardHeader>
-                      <CardTitle>결제 수단</CardTitle>
-                    </CardHeader>
                     <CardContent className="px-0">
-                      <PaymentWidget
-                        ref={paymentWidgetRef}
-                        amount={samplePrice}
-                        customerKey={user.id}
-                      />
+                      {samplePrice === null ? (
+                        <p className="px-6 py-4 text-sm text-zinc-500">
+                          {isPricingLoading
+                            ? "결제 금액을 불러오는 중입니다."
+                            : "결제 금액을 확인할 수 없어 결제 수단을 표시하지 않습니다."}
+                        </p>
+                      ) : (
+                        <PaymentWidget
+                          ref={paymentWidgetRef}
+                          amount={samplePrice}
+                          customerKey={user.id}
+                        />
+                      )}
                     </CardContent>
                   </Card>
                 )}
@@ -252,16 +311,15 @@ export default function SampleOrderPage() {
                   className="w-full"
                   size="xl"
                   onClick={handleSubmit}
-                  disabled={
-                    !user ||
-                    !selectedAddress ||
-                    isPaymentLoading ||
-                    imageUpload.isUploading
-                  }
+                  disabled={isSubmitDisabled}
                 >
-                  {isPaymentLoading
-                    ? "결제 요청 중..."
-                    : `${samplePrice.toLocaleString()}원 결제하기`}
+                  {samplePrice === null
+                    ? isPricingError
+                      ? "가격 정보를 확인할 수 없습니다"
+                      : "가격 정보 불러오는 중..."
+                    : isPaymentLoading
+                      ? "결제 요청 중..."
+                      : `${samplePrice.toLocaleString()}원 결제하기`}
                 </Button>
                 {!selectedAddress && (
                   <p className="text-sm text-center text-zinc-500">

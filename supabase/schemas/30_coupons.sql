@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.coupons (
   updated_at          timestamptz   NOT NULL DEFAULT now(),
 
   CONSTRAINT coupons_pkey PRIMARY KEY (id),
-  CONSTRAINT coupons_sample_discount_unique UNIQUE (name),
+  CONSTRAINT coupons_name_unique UNIQUE (name),
   CONSTRAINT coupons_discount_type_check
     CHECK (discount_type = ANY (ARRAY['percentage','fixed'])),
   CONSTRAINT coupons_discount_value_check

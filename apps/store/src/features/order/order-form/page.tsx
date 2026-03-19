@@ -12,6 +12,7 @@ import React from "react";
 import { useOrderStore } from "@/store/order";
 import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
 import { toast } from "@/lib/toast";
+import { hasStringCode } from "@/lib/type-guard";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { getDeliveryRequestLabel } from "@/features/shipping/constants/DELIVERY_REQUEST_OPTIONS";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
@@ -116,11 +117,6 @@ const OrderFormPage = () => {
       });
     } catch (error) {
       // 사용자가 결제를 취소한 경우 등
-      const hasStringCode = (e: unknown): e is { code: string } =>
-        typeof e === "object" &&
-        e !== null &&
-        "code" in e &&
-        typeof (e as { code?: unknown }).code === "string";
       const errorCode = hasStringCode(error) ? error.code : "";
       const errorMessage =
         error instanceof Error
@@ -198,9 +194,6 @@ const OrderFormPage = () => {
               </Card>
               {user && isPricingReady && (
                 <Card>
-                  <CardHeader>
-                    <CardTitle>결제 수단</CardTitle>
-                  </CardHeader>
                   <CardContent className="px-0">
                     <PaymentWidget
                       ref={paymentWidgetRef}

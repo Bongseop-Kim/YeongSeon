@@ -3,6 +3,7 @@ import type { RefObject } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
+import { hasStringCode } from "@/lib/type-guard";
 import { ROUTES } from "@/constants/ROUTES";
 import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
 import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
@@ -23,6 +24,20 @@ interface UseCustomOrderSubmitParams {
   paymentWidgetRef: RefObject<PaymentWidgetRef | null>;
 }
 
+type PendingCustomOrderSnapshot = {
+  shippingAddressId: string;
+  options: ReturnType<typeof toCreateCustomOrderInput>["options"];
+  quantity: number;
+  referenceImages: ReturnType<
+    typeof toCreateCustomOrderInput
+  >["referenceImages"];
+  additionalNotes: string;
+};
+
+const serializePendingOrderSnapshot = (
+  snapshot: PendingCustomOrderSnapshot,
+): string => JSON.stringify(snapshot);
+
 export function useCustomOrderSubmit({
   selectedAddressId,
   selectedAddress,
@@ -37,6 +52,7 @@ export function useCustomOrderSubmit({
   const isLoggedIn = !!user;
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const pendingOrderIdRef = useRef<string | null>(null);
+  const pendingOrderSnapshotRef = useRef<string | null>(null);
   const createCustomOrder = useCreateCustomOrder();
   const createQuoteRequest = useCreateQuoteRequest();
 
@@ -120,19 +136,33 @@ export function useCustomOrderSubmit({
 
     setIsPaymentLoading(true);
     try {
+      const request = toCreateCustomOrderInput({
+        shippingAddressId: selectedAddressId,
+        options: coreOptions,
+        referenceImages: imageUpload.getImageRefs(),
+        additionalNotes,
+      });
+      const pendingSnapshot = serializePendingOrderSnapshot({
+        shippingAddressId: request.shippingAddressId,
+        options: request.options,
+        quantity: request.quantity,
+        referenceImages: request.referenceImages,
+        additionalNotes: request.additionalNotes,
+      });
+
+      if (
+        pendingOrderIdRef.current &&
+        pendingOrderSnapshotRef.current !== pendingSnapshot
+      ) {
+        pendingOrderIdRef.current = null;
+        pendingOrderSnapshotRef.current = null;
+      }
+
       const orderId =
         pendingOrderIdRef.current ??
-        (
-          await createCustomOrder.mutateAsync({
-            ...toCreateCustomOrderInput({
-              shippingAddressId: selectedAddressId,
-              options: coreOptions,
-              referenceImages: imageUpload.getImageRefs(),
-              additionalNotes,
-            }),
-          })
-        ).orderId;
+        (await createCustomOrder.mutateAsync(request)).orderId;
       pendingOrderIdRef.current = orderId;
+      pendingOrderSnapshotRef.current = pendingSnapshot;
 
       await paymentWidgetRef.current.requestPayment({
         orderId,
@@ -142,11 +172,6 @@ export function useCustomOrderSubmit({
         customerName: user.user_metadata?.name ?? undefined,
       });
     } catch (error) {
-      const hasStringCode = (e: unknown): e is { code: string } =>
-        typeof e === "object" &&
-        e !== null &&
-        "code" in e &&
-        typeof (e as { code?: unknown }).code === "string";
       if (hasStringCode(error) && error.code === "USER_CANCEL") return;
       toast.error(
         error instanceof Error

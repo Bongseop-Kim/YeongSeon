@@ -7,8 +7,40 @@ import {
   createTokenOrderItem,
   createProduct,
   createProductOption,
-} from "../test/fixtures";
-import { getOrderItemDetails } from "./get-order-item-details";
+} from "@/test/fixtures";
+import { getOrderItemDetails } from "@/utils/get-order-item-details";
+
+const createCustomData = (
+  overrides?: Partial<
+    NonNullable<Parameters<typeof createCustomOrderItem>[0]>["customData"]
+  >,
+) => ({
+  options: {
+    fabricType: "실크",
+    designType: "클래식",
+    tieType: null,
+    interlining: null,
+    fabricProvided: false,
+    triangleStitch: false,
+    sideStitch: false,
+    barTack: false,
+    dimple: false,
+    spoderato: false,
+    fold7: false,
+    brandLabel: false,
+    careLabel: false,
+    ...overrides?.options,
+  },
+  pricing: {
+    sewingCost: 0,
+    fabricCost: 0,
+    sampleCost: 0,
+    totalCost: 0,
+    ...overrides?.pricing,
+  },
+  referenceImageUrls: overrides?.referenceImageUrls ?? [],
+  additionalNotes: overrides?.additionalNotes ?? null,
+});
 
 describe("getOrderItemDetails", () => {
   it("상품+옵션 이름을 중간점으로 연결한다", () => {
@@ -29,78 +61,31 @@ describe("getOrderItemDetails", () => {
 
   it("주문 제작: fabricType과 designType을 중간점으로 연결한다", () => {
     const item = createCustomOrderItem({
-      customData: {
-        options: {
-          fabricType: "실크",
-          designType: "클래식",
-          tieType: null,
-          interlining: null,
-          fabricProvided: false,
-          triangleStitch: false,
-          sideStitch: false,
-          barTack: false,
-          dimple: false,
-          spoderato: false,
-          fold7: false,
-          brandLabel: false,
-          careLabel: false,
-        },
-        pricing: { sewingCost: 0, fabricCost: 0, sampleCost: 0, totalCost: 0 },
-        referenceImageUrls: [],
-        additionalNotes: null,
-      },
+      customData: createCustomData(),
     });
     expect(getOrderItemDetails(item)).toBe("실크 · 클래식");
   });
 
   it("주문 제작: fabricType만 있으면 fabricType만 반환한다", () => {
     const item = createCustomOrderItem({
-      customData: {
+      customData: createCustomData({
         options: {
           fabricType: "울",
           designType: null,
-          tieType: null,
-          interlining: null,
-          fabricProvided: false,
-          triangleStitch: false,
-          sideStitch: false,
-          barTack: false,
-          dimple: false,
-          spoderato: false,
-          fold7: false,
-          brandLabel: false,
-          careLabel: false,
         },
-        pricing: { sewingCost: 0, fabricCost: 0, sampleCost: 0, totalCost: 0 },
-        referenceImageUrls: [],
-        additionalNotes: null,
-      },
+      }),
     });
     expect(getOrderItemDetails(item)).toBe("울");
   });
 
   it("주문 제작: 옵션이 모두 없으면 '주문 제작'을 반환한다", () => {
     const item = createCustomOrderItem({
-      customData: {
+      customData: createCustomData({
         options: {
           fabricType: null,
           designType: null,
-          tieType: null,
-          interlining: null,
-          fabricProvided: false,
-          triangleStitch: false,
-          sideStitch: false,
-          barTack: false,
-          dimple: false,
-          spoderato: false,
-          fold7: false,
-          brandLabel: false,
-          careLabel: false,
         },
-        pricing: { sewingCost: 0, fabricCost: 0, sampleCost: 0, totalCost: 0 },
-        referenceImageUrls: [],
-        additionalNotes: null,
-      },
+      }),
     });
     expect(getOrderItemDetails(item)).toBe("주문 제작");
   });

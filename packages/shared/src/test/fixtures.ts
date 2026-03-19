@@ -217,26 +217,28 @@ export const createCustomOrderItem = (
   ...overrides,
 });
 
+const createSampleData = () => ({
+  sampleType: "fabric" as const,
+  options: {
+    fabricType: "silk" as const,
+    designType: null,
+    tieType: null,
+    interlining: null,
+  },
+  pricing: {
+    totalCost: 5000,
+  },
+  referenceImageUrls: [],
+  additionalNotes: null,
+});
+
 export const createSampleOrderItem = (
   overrides?: Partial<SampleOrderItem>,
 ): SampleOrderItem => ({
   id: "sample-1",
   type: "sample",
   quantity: 1,
-  sampleData: {
-    sampleType: "fabric",
-    options: {
-      fabricType: "silk",
-      designType: null,
-      tieType: null,
-      interlining: null,
-    },
-    pricing: {
-      totalCost: 5000,
-    },
-    referenceImageUrls: [],
-    additionalNotes: null,
-  },
+  sampleData: createSampleData(),
   ...overrides,
 });
 
@@ -257,20 +259,7 @@ export const createSampleOrderItemDTO = (
   id: "sample-1",
   type: "sample",
   quantity: 1,
-  sampleData: {
-    sampleType: "fabric",
-    options: {
-      fabricType: "silk",
-      designType: null,
-      tieType: null,
-      interlining: null,
-    },
-    pricing: {
-      totalCost: 5000,
-    },
-    referenceImageUrls: [],
-    additionalNotes: null,
-  },
+  sampleData: createSampleData(),
   ...overrides,
 });
 

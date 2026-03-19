@@ -17,6 +17,21 @@ interface WizardActionButtonsProps {
   hasAddress: boolean;
 }
 
+const getSubmitLabel = ({
+  isPending,
+  isQuoteMode,
+  grandTotal,
+}: Pick<
+  WizardActionButtonsProps,
+  "isPending" | "isQuoteMode" | "grandTotal"
+>) => {
+  if (isPending) {
+    return isQuoteMode ? "견적요청 처리 중..." : "주문 처리 중...";
+  }
+
+  return isQuoteMode ? "견적요청" : `${grandTotal.toLocaleString()}원 주문하기`;
+};
+
 export function WizardActionButtons({
   isFirstStep,
   isLastStep,
@@ -32,14 +47,7 @@ export function WizardActionButtons({
   hasAddress,
 }: WizardActionButtonsProps) {
   const { isMobile } = useBreakpoint();
-
-  const submitLabel = isPending
-    ? isQuoteMode
-      ? "견적요청 처리 중..."
-      : "주문 처리 중..."
-    : isQuoteMode
-      ? "견적요청"
-      : `${grandTotal.toLocaleString()}원 주문하기`;
+  const submitLabel = getSubmitLabel({ isPending, isQuoteMode, grandTotal });
 
   if (isMobile) {
     if (isLastStep) {
@@ -115,18 +123,10 @@ export function WizardActionButtons({
           type="button"
           size="xl"
           className="flex-1"
-          onClick={() => {
-            if (!isPending) onSubmit();
-          }}
-          disabled={isSubmitDisabled || isPending}
+          onClick={onSubmit}
+          disabled={isSubmitDisabled}
         >
-          {isPending
-            ? isQuoteMode
-              ? "견적요청 처리 중..."
-              : "주문 처리 중..."
-            : isQuoteMode
-              ? "견적요청"
-              : "주문하기"}
+          {submitLabel}
         </Button>
       ) : (
         <Button type="button" size="xl" className="flex-1" onClick={onNext}>

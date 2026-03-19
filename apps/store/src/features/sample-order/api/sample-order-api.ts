@@ -1,9 +1,10 @@
 import { supabase } from "@/lib/supabase";
 import {
   parseSampleOrderResponse,
+  toCreateSampleOrderInput,
   toCreateSampleOrderInputDto,
+  type CreateSampleOrderFormInput,
 } from "@/features/sample-order/api/sample-order-mapper";
-import type { CreateSampleOrderRequest } from "@/features/sample-order/types/sample-order-input";
 
 export interface CreateSampleOrderResponse {
   orderId: string;
@@ -11,8 +12,9 @@ export interface CreateSampleOrderResponse {
 }
 
 export const createSampleOrder = async (
-  request: CreateSampleOrderRequest,
+  input: CreateSampleOrderFormInput,
 ): Promise<CreateSampleOrderResponse> => {
+  const request = toCreateSampleOrderInput(input);
   const requestDto = toCreateSampleOrderInputDto(request);
 
   const { data, error } = await supabase.functions.invoke(

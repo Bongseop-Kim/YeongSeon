@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { getImageKitAuth } from "./imagekit-auth";
+import { getImageKitAuth } from "@/lib/imagekit-auth";
 
 describe("getImageKitAuth", () => {
   it("유효한 응답을 반환한다", async () => {

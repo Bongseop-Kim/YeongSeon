@@ -1,6 +1,43 @@
 -- =============================================================
 -- 98_functions_payment.sql  – Payment RPC functions
 -- =============================================================
+CREATE OR REPLACE FUNCTION public.get_sample_coupon_and_pricing(
+  p_sample_type text,
+  p_sample_design_type text
+)
+RETURNS TABLE (coupon_name text, pricing_key text)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+begin
+  if p_sample_type = 'sewing' then
+    coupon_name := 'SAMPLE_DISCOUNT_SEWING';
+    pricing_key := 'sample_discount_sewing';
+  elsif p_sample_type = 'fabric' then
+    if p_sample_design_type = 'PRINTING' then
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_PRINTING';
+      pricing_key := 'sample_discount_fabric_printing';
+    else
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_YARN_DYED';
+      pricing_key := 'sample_discount_fabric_yarn_dyed';
+    end if;
+  elsif p_sample_type = 'fabric_and_sewing' then
+    if p_sample_design_type = 'PRINTING' then
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING';
+      pricing_key := 'sample_discount_fabric_and_sewing_printing';
+    else
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED';
+      pricing_key := 'sample_discount_fabric_and_sewing_yarn_dyed';
+    end if;
+  else
+    raise exception 'Unsupported sample_type: %', p_sample_type;
+  end if;
+
+  return next;
+end;
+$$;
+
 -- ── confirm_payment_orders ──────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
   p_payment_group_id uuid,
@@ -129,34 +166,12 @@ begin
       where oi.order_id = v_order.id and oi.item_type = 'sample'
       limit 1;
 
-      -- 조합으로 쿠폰 name 및 pricing_constants key 결정
-      v_coupon_name := case v_sample_type
-        when 'sewing' then 'SAMPLE_DISCOUNT_SEWING'
-        when 'fabric' then
-          case v_sample_design_type
-            when 'PRINTING' then 'SAMPLE_DISCOUNT_FABRIC_PRINTING'
-            else 'SAMPLE_DISCOUNT_FABRIC_YARN_DYED'
-          end
-        else
-          case v_sample_design_type
-            when 'PRINTING' then 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING'
-            else 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED'
-          end
-      end;
-
-      v_pricing_key := case v_sample_type
-        when 'sewing' then 'sample_discount_sewing'
-        when 'fabric' then
-          case v_sample_design_type
-            when 'PRINTING' then 'sample_discount_fabric_printing'
-            else 'sample_discount_fabric_yarn_dyed'
-          end
-        else
-          case v_sample_design_type
-            when 'PRINTING' then 'sample_discount_fabric_and_sewing_printing'
-            else 'sample_discount_fabric_and_sewing_yarn_dyed'
-          end
-      end;
+      select mapped.coupon_name, mapped.pricing_key
+      into v_coupon_name, v_pricing_key
+      from public.get_sample_coupon_and_pricing(
+        v_sample_type,
+        v_sample_design_type
+      ) as mapped;
 
       -- ⚠️ 샘플 할인값의 원본은 pricing_constants이며,
       -- coupons 테이블의 SAMPLE_DISCOUNT_* row는 이 값을 기반으로 자동 동기화됩니다.
@@ -166,7 +181,7 @@ begin
       where pc.key = v_pricing_key;
 
       if v_discount_amount is null then
-        raise exception 'Sample discount pricing key % is not configured; coupons_sample_discount_unique upsert cannot continue', v_pricing_key;
+        raise exception 'Sample discount pricing key % is not configured; coupons_name_unique upsert cannot continue', v_pricing_key;
       end if;
 
       -- coupons row 동기화 (user_coupons FK용)
@@ -177,12 +192,8 @@ begin
                    max_discount_amount = excluded.max_discount_amount,
                    discount_type = excluded.discount_type,
                    expiry_date = excluded.expiry_date,
-                   is_active = excluded.is_active;
-
-      select c.id into v_sample_coupon_id
-      from public.coupons c
-      where c.name = v_coupon_name and c.is_active = true
-      limit 1;
+                   is_active = excluded.is_active
+      returning id into v_sample_coupon_id;
 
       if v_sample_coupon_id is not null then
         insert into public.user_coupons (user_id, coupon_id, status)

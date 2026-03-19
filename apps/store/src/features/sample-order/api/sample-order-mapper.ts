@@ -5,7 +5,7 @@ import type {
   SampleOrderOptionsDto,
 } from "@/features/sample-order/types/sample-order-input";
 
-interface ToCreateSampleOrderInput {
+export interface CreateSampleOrderFormInput {
   shippingAddressId: string;
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
   options: SampleOrderOptionsDto;
@@ -14,7 +14,7 @@ interface ToCreateSampleOrderInput {
 }
 
 export const toCreateSampleOrderInput = (
-  input: ToCreateSampleOrderInput,
+  input: CreateSampleOrderFormInput,
 ): CreateSampleOrderRequest => ({
   shippingAddressId: input.shippingAddressId,
   sampleType: input.sampleType,

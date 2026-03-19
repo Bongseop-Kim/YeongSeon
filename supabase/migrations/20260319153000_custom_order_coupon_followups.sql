@@ -1,7 +1,6 @@
--- ============================================================= 
--- 95_functions_custom_orders.sql  – Custom order RPC functions 
--- =============================================================
--- ── calculate_custom_order_amounts ───────────────────────────
+ALTER TABLE public.coupons
+  RENAME CONSTRAINT coupons_sample_discount_unique TO coupons_name_unique;
+
 CREATE OR REPLACE FUNCTION public.calculate_custom_order_amounts(
   p_options jsonb,
   p_quantity integer,
@@ -27,13 +26,11 @@ declare
   v_brand_label_cost integer;
   v_care_label_cost integer;
   v_yarn_dyed_design_cost integer;
-
   v_tie_type text;
   v_interlining text;
   v_design_type text;
   v_fabric_type text;
   v_fabric_provided boolean;
-
   v_triangle_stitch boolean;
   v_side_stitch boolean;
   v_bar_tack boolean;
@@ -42,7 +39,6 @@ declare
   v_fold7 boolean;
   v_brand_label boolean;
   v_care_label boolean;
-
   v_sewing_per_unit integer;
   v_unit_fabric_cost integer;
   v_fabric_amount integer;
@@ -126,7 +122,6 @@ begin
   v_fabric_type := nullif(p_options->>'fabric_type', '');
   v_fabric_provided := coalesce((p_options->>'fabric_provided')::boolean, false);
 
-  -- tie_type/interlining 유효값 검증: 미지 값은 조용히 기본처리되지 않고 예외 발생
   if v_tie_type != '' and v_tie_type != 'AUTO' then
     raise exception 'Invalid tie_type: %. Allowed values are empty string or AUTO', v_tie_type;
   end if;
@@ -194,7 +189,6 @@ begin
   if v_fabric_provided then
     v_fabric_amount := 0;
   elsif v_design_type is null or v_fabric_type is null then
-    -- fabric_provided=false인데 design_type/fabric_type이 누락된 경우는 데이터 오류
     raise exception 'fabric_provided=false이지만 design_type 또는 fabric_type이 null입니다';
   else
     select pc.amount
@@ -213,16 +207,13 @@ begin
   end if;
 
   fabric_cost := v_fabric_amount;
-
   sample_cost := 0;
-
   total_cost := sewing_cost + fabric_cost + sample_cost;
 
   return next;
 end;
 $$;
 
--- ── create_custom_order_txn ──────────────────────────────────
 CREATE OR REPLACE FUNCTION public.create_custom_order_txn(
   p_shipping_address_id uuid,
   p_options jsonb,
@@ -234,9 +225,6 @@ CREATE OR REPLACE FUNCTION public.create_custom_order_txn(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
--- SECURITY DEFINER: 이 함수는 호출자(authenticated 역할)가 직접 쓰기 권한을 갖지 않는
--- orders, order_items 테이블에 INSERT를 수행해야 하므로 SECURITY DEFINER가 필요하다.
--- auth.uid() 소유권 검증 및 shipping_addresses 존재 확인으로 권한 남용을 방지한다.
 SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
@@ -385,8 +373,6 @@ begin
     null
   );
 
-  -- images 테이블에 참조 이미지 등록
-  -- SECURITY DEFINER이므로 RLS bypass. RPC 내부에서 이미 v_user_id := auth.uid() 소유권 검증 완료.
   IF p_reference_images IS NOT NULL AND jsonb_array_length(p_reference_images) > 0 THEN
     INSERT INTO public.images (url, file_id, folder, entity_type, entity_id, uploaded_by)
     SELECT
@@ -407,7 +393,6 @@ begin
 end;
 $$;
 
--- ── calculate_refund_amount ───────────────────────────────────
 CREATE OR REPLACE FUNCTION public.calculate_refund_amount(p_order_id uuid)
 RETURNS TABLE (refund_amount integer, deducted_sample_cost integer)
 LANGUAGE plpgsql
@@ -446,9 +431,230 @@ begin
     refund_amount := v_total_price;
     deducted_sample_cost := 0;
   end if;
-  return next;
-  return;
 
-  raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다: %', v_status;
+  return next;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_sample_coupon_and_pricing(
+  p_sample_type text,
+  p_sample_design_type text
+)
+RETURNS TABLE (coupon_name text, pricing_key text)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+begin
+  if p_sample_type = 'sewing' then
+    coupon_name := 'SAMPLE_DISCOUNT_SEWING';
+    pricing_key := 'sample_discount_sewing';
+  elsif p_sample_type = 'fabric' then
+    if p_sample_design_type = 'PRINTING' then
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_PRINTING';
+      pricing_key := 'sample_discount_fabric_printing';
+    else
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_YARN_DYED';
+      pricing_key := 'sample_discount_fabric_yarn_dyed';
+    end if;
+  elsif p_sample_type = 'fabric_and_sewing' then
+    if p_sample_design_type = 'PRINTING' then
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING';
+      pricing_key := 'sample_discount_fabric_and_sewing_printing';
+    else
+      coupon_name := 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED';
+      pricing_key := 'sample_discount_fabric_and_sewing_yarn_dyed';
+    end if;
+  else
+    raise exception 'Unsupported sample_type: %', p_sample_type;
+  end if;
+
+  return next;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
+  p_payment_group_id uuid,
+  p_user_id uuid,
+  p_payment_key text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_order record;
+  v_post_status text;
+  v_updated_orders jsonb := '[]'::jsonb;
+  v_count int := 0;
+  v_masked_key text;
+  v_token_amount integer;
+  v_plan_key text;
+  v_plan_label text;
+  v_sample_coupon_id uuid;
+  v_coupon_row_count integer := 0;
+  v_sample_type text;
+  v_sample_design_type text;
+  v_coupon_name text;
+  v_pricing_key text;
+  v_discount_amount integer;
+begin
+  if p_user_id is null then
+    raise exception 'Forbidden';
+  end if;
+
+  if p_payment_key is null or trim(p_payment_key) = '' then
+    raise exception 'payment_key is required';
+  end if;
+
+  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+    raise exception 'Forbidden';
+  end if;
+
+  v_masked_key := case
+    when length(p_payment_key) <= 8 then '****'
+    else '****' || right(p_payment_key, 8)
+  end;
+
+  for v_order in
+    select id, user_id, status, order_type
+    from public.orders
+    where payment_group_id = p_payment_group_id
+    for update
+  loop
+    v_count := v_count + 1;
+
+    if v_order.user_id is distinct from p_user_id then
+      raise exception 'Forbidden: order % not owned by user', v_order.id;
+    end if;
+
+    if v_order.status != '결제중' then
+      raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
+    end if;
+
+    v_post_status := case v_order.order_type
+      when 'sale'  then '진행중'
+      when 'token' then '완료'
+      when 'sample' then '접수'
+      else '접수'
+    end;
+
+    update public.orders
+    set status = v_post_status, payment_key = p_payment_key, updated_at = now()
+    where id = v_order.id;
+
+    insert into public.order_status_logs (
+      order_id, changed_by, previous_status, new_status, memo
+    ) values (
+      v_order.id, p_user_id, v_order.status, v_post_status,
+      'payment confirmed: ' || v_masked_key
+    );
+
+    if v_order.order_type = 'token' then
+      select
+        (oi.item_data->>'token_amount')::integer,
+        oi.item_data->>'plan_key'
+      into v_token_amount, v_plan_key
+      from public.order_items oi
+      where oi.order_id = v_order.id and oi.item_type = 'token'
+      limit 1;
+
+      if v_token_amount is null or v_token_amount <= 0 then
+        raise exception 'token order % has no valid token_amount (plan_key: %)', v_order.id, v_plan_key;
+      end if;
+
+      v_plan_label := case v_plan_key
+        when 'starter' then 'Starter'
+        when 'popular' then 'Popular'
+        when 'pro'     then 'Pro'
+        else v_plan_key
+      end;
+
+      insert into public.design_tokens (user_id, amount, type, token_class, description, work_id)
+      values (
+        p_user_id,
+        v_token_amount,
+        'purchase',
+        'paid',
+        '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)',
+        'order_' || v_order.id::text || '_paid'
+      )
+      on conflict (work_id) do nothing;
+    end if;
+
+    v_coupon_row_count := 0;
+    if v_order.order_type = 'sample' then
+      select oi.item_data->>'sample_type',
+             oi.item_data->'options'->>'design_type'
+      into v_sample_type, v_sample_design_type
+      from public.order_items oi
+      where oi.order_id = v_order.id and oi.item_type = 'sample'
+      limit 1;
+
+      select mapped.coupon_name, mapped.pricing_key
+      into v_coupon_name, v_pricing_key
+      from public.get_sample_coupon_and_pricing(
+        v_sample_type,
+        v_sample_design_type
+      ) as mapped;
+
+      select pc.amount into v_discount_amount
+      from public.pricing_constants pc
+      where pc.key = v_pricing_key;
+
+      if v_discount_amount is null then
+        raise exception 'Sample discount pricing key % is not configured; coupons_name_unique upsert cannot continue', v_pricing_key;
+      end if;
+
+      insert into public.coupons (name, discount_type, discount_value, max_discount_amount, expiry_date, is_active)
+      values (v_coupon_name, 'fixed', v_discount_amount, v_discount_amount, '2099-12-31', true)
+      on conflict (name)
+      do update set discount_value = excluded.discount_value,
+                   max_discount_amount = excluded.max_discount_amount,
+                   discount_type = excluded.discount_type,
+                   expiry_date = excluded.expiry_date,
+                   is_active = excluded.is_active
+      returning id into v_sample_coupon_id;
+
+      if v_sample_coupon_id is not null then
+        insert into public.user_coupons (user_id, coupon_id, status)
+        values (p_user_id, v_sample_coupon_id, 'active')
+        on conflict (user_id, coupon_id) do nothing;
+
+        get diagnostics v_coupon_row_count = row_count;
+      end if;
+    end if;
+
+    v_updated_orders := v_updated_orders || jsonb_build_object(
+      'orderId',     v_order.id,
+      'orderType',   v_order.order_type,
+      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end,
+      'couponIssued', case when v_order.order_type = 'sample' then (v_coupon_row_count > 0) else null end
+    );
+  end loop;
+
+  if v_count = 0 then
+    raise exception 'No orders found for payment_group_id %', p_payment_group_id;
+  end if;
+
+  update public.user_coupons
+  set status = 'used',
+      used_at = now(),
+      updated_at = now()
+  where user_id = p_user_id
+    and status = 'reserved'
+    and id in (
+      select distinct oi.applied_user_coupon_id
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where o.payment_group_id = p_payment_group_id
+        and oi.applied_user_coupon_id is not null
+    );
+
+  return jsonb_build_object(
+    'success', true,
+    'orders', v_updated_orders
+  );
 end;
 $$;

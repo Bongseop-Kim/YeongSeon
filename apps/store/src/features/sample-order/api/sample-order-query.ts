@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { createSampleOrder } from "@/features/sample-order/api/sample-order-api";
-import type { CreateSampleOrderRequest } from "@/features/sample-order/types/sample-order-input";
+import type { CreateSampleOrderFormInput } from "@/features/sample-order/api/sample-order-mapper";
 import { useAuthStore } from "@/store/auth";
 
 export const useCreateSampleOrder = () => {
   return useMutation({
-    mutationFn: (request: CreateSampleOrderRequest) => {
+    mutationFn: (request: CreateSampleOrderFormInput) => {
       const { user } = useAuthStore.getState();
       if (!user?.id) {
         throw new Error("로그인이 필요합니다.");
