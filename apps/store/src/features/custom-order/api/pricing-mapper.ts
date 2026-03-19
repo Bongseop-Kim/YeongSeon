@@ -19,8 +19,10 @@ type PricingConstantKey =
   | "FABRIC_QTY_ADULT_FOLD7"
   | "FABRIC_QTY_CHILD"
   | "SAMPLE_SEWING_COST"
-  | "SAMPLE_FABRIC_COST"
-  | "SAMPLE_FABRIC_AND_SEWING_COST";
+  | "SAMPLE_FABRIC_PRINTING_COST"
+  | "SAMPLE_FABRIC_YARN_DYED_COST"
+  | "SAMPLE_FABRIC_AND_SEWING_PRINTING_COST"
+  | "SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST";
 
 const getConstantValue = (
   constantsMap: Partial<Record<PricingConstantKey, number>>,
@@ -77,8 +79,10 @@ export const toPricingConfig = (
       constant.key === "FABRIC_QTY_ADULT_FOLD7" ||
       constant.key === "FABRIC_QTY_CHILD" ||
       constant.key === "SAMPLE_SEWING_COST" ||
-      constant.key === "SAMPLE_FABRIC_COST" ||
-      constant.key === "SAMPLE_FABRIC_AND_SEWING_COST"
+      constant.key === "SAMPLE_FABRIC_PRINTING_COST" ||
+      constant.key === "SAMPLE_FABRIC_YARN_DYED_COST" ||
+      constant.key === "SAMPLE_FABRIC_AND_SEWING_PRINTING_COST" ||
+      constant.key === "SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST"
     ) {
       constantsMap[constant.key] = constant.amount;
     }
@@ -124,10 +128,21 @@ export const toPricingConfig = (
       },
     },
     SAMPLE_SEWING_COST: getConstantValue(constantsMap, "SAMPLE_SEWING_COST"),
-    SAMPLE_FABRIC_COST: getConstantValue(constantsMap, "SAMPLE_FABRIC_COST"),
-    SAMPLE_FABRIC_AND_SEWING_COST: getConstantValue(
+    SAMPLE_FABRIC_PRINTING_COST: getConstantValue(
       constantsMap,
-      "SAMPLE_FABRIC_AND_SEWING_COST",
+      "SAMPLE_FABRIC_PRINTING_COST",
+    ),
+    SAMPLE_FABRIC_YARN_DYED_COST: getConstantValue(
+      constantsMap,
+      "SAMPLE_FABRIC_YARN_DYED_COST",
+    ),
+    SAMPLE_FABRIC_AND_SEWING_PRINTING_COST: getConstantValue(
+      constantsMap,
+      "SAMPLE_FABRIC_AND_SEWING_PRINTING_COST",
+    ),
+    SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST: getConstantValue(
+      constantsMap,
+      "SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST",
     ),
   };
 };

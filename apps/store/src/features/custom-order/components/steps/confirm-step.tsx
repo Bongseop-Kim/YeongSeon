@@ -4,12 +4,9 @@ import { Button } from "@/components/ui/button";
 import { ContactInfoSection } from "@/features/quote-request/components/ContactInfoSection";
 import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
 import { SummaryRow } from "@/features/custom-order/components/summary-row";
-import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
-import { calculateSampleCost } from "@/features/custom-order/utils/pricing";
 import {
   getFabricLabel,
   getFinishingLabel,
-  getSampleTypeLabel,
   getSewingStyleLabel,
   getSizeLabel,
   getTieTypeLabel,
@@ -34,7 +31,6 @@ export const ConfirmStep = ({
   goToStepById,
 }: ConfirmStepProps) => {
   const { control, watch } = useFormContext<QuoteOrderOptions>();
-  const { data: pricingConfig } = usePricingConfig();
   const values = watch();
   const isQuoteMode = values.quantity >= 100;
 
@@ -44,12 +40,6 @@ export const ConfirmStep = ({
 
   const sizeLabel = getSizeLabel(values.sizeType);
   const finishingLabel = getFinishingLabel(values);
-  const sampleTypeLabel = getSampleTypeLabel(values);
-
-  const sampleCost =
-    values.sample && values.sampleType && pricingConfig
-      ? calculateSampleCost(values.sampleType, pricingConfig)
-      : 0;
 
   const attachmentSummary = [
     imageUpload.uploadedImages.length > 0
@@ -99,15 +89,6 @@ export const ConfirmStep = ({
             onEdit={() => goToStepById("finishing")}
           />
 
-          <SummaryRow
-            label="샘플"
-            value={
-              sampleTypeLabel
-                ? `${sampleTypeLabel} (${sampleCost.toLocaleString()}원)`
-                : "미선택"
-            }
-            onEdit={() => goToStepById("sample")}
-          />
           <SummaryRow
             label="참고 자료"
             value={attachmentSummary || "없음"}

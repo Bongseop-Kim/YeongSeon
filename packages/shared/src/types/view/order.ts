@@ -73,8 +73,29 @@ export interface CustomOrderItem {
       sampleCost: number;
       totalCost: number;
     };
-    sample: boolean;
-    sampleType: string | null;
+    sample?: boolean;
+    sampleType?: string | null;
+    referenceImageUrls: string[];
+    additionalNotes: string | null;
+  };
+  appliedCoupon?: AppliedCoupon;
+}
+
+export interface SampleOrderItem {
+  id: string;
+  type: "sample";
+  quantity: number;
+  sampleData: {
+    sampleType: "fabric" | "sewing" | "fabric_and_sewing";
+    options: {
+      fabricType: string | null;
+      designType: string | null;
+      tieType: string | null;
+      interlining: string | null;
+    };
+    pricing: {
+      totalCost: number;
+    };
     referenceImageUrls: string[];
     additionalNotes: string | null;
   };
@@ -94,6 +115,7 @@ export type OrderItem =
   | ProductOrderItem
   | ReformOrderItem
   | CustomOrderItem
+  | SampleOrderItem
   | TokenOrderItem;
 
 // 배송지 정보
@@ -121,7 +143,7 @@ export interface Order {
   orderNumber: string; // 주문 번호
   date: string; // 주문 날짜
   status: OrderStatus;
-  orderType: "sale" | "custom" | "repair" | "token";
+  orderType: "sale" | "custom" | "repair" | "token" | "sample";
   items: OrderItem[]; // 주문에 포함된 상품들
   totalPrice: number; // 총 주문 금액
   shippingInfo: ShippingInfo | null;

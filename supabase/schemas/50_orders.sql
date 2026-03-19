@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   CONSTRAINT orders_shipping_address_required
     CHECK (order_type = 'token' OR shipping_address_id IS NOT NULL),
   CONSTRAINT orders_order_type_check
-    CHECK (order_type = ANY (ARRAY['sale','custom','repair','token'])),
+    CHECK (order_type = ANY (ARRAY['sale','custom','repair','token','sample'])),
   CONSTRAINT orders_status_check
     CHECK (status = ANY (ARRAY[
       '대기중','결제중','진행중','배송중','배송완료','완료','취소','실패',

@@ -3,7 +3,12 @@
 -- =============================================================
 
 -- Single unified pricing table for all pricing data
--- categories: custom_order, fabric, reform, token
+-- categories:
+--   custom_order  - 봉제/수선/샘플 가격
+--   fabric        - 원단 단가
+--   reform        - 수선 가격
+--   token         - 토큰 플랜 가격
+--   sample_discount - 샘플 결제 완료 시 자동 발급되는 할인 쿠폰 금액 (RPC가 coupons row 자동 동기화)
 CREATE TABLE IF NOT EXISTS public.pricing_constants (
   key        text        NOT NULL,
   amount     integer     NOT NULL,
@@ -14,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.pricing_constants (
   CONSTRAINT pricing_constants_pkey PRIMARY KEY (key),
   CONSTRAINT pricing_constants_amount_check CHECK (amount >= 0),
   CONSTRAINT pricing_constants_category_check
-    CHECK (category IN ('custom_order', 'fabric', 'reform', 'token'))
+    CHECK (category IN ('custom_order', 'fabric', 'reform', 'token', 'sample_discount'))
 );
 
 ALTER TABLE public.pricing_constants ENABLE ROW LEVEL SECURITY;

@@ -42,6 +42,7 @@ export function RelatedOrdersSection({
           custom: "green",
           repair: "purple",
           token: "gold",
+          sample: "cyan",
         };
         return <Tag color={colorMap[orderType] ?? "default"}>{label}</Tag>;
       },

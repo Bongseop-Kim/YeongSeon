@@ -6,4 +6,5 @@ export const NAVIGATION_ITEMS = [
   { href: ROUTES.REFORM, label: "수선" },
   { href: ROUTES.DESIGN, label: "디자인" },
   { href: ROUTES.CUSTOM_ORDER, label: "주문 제작" },
+  { href: ROUTES.SAMPLE_ORDER, label: "샘플 제작" },
 ];

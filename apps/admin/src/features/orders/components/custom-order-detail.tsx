@@ -1,14 +1,27 @@
 import { Descriptions, Image, Space, Typography } from "antd";
-import type { AdminCustomOrderItem } from "@/features/orders/types/admin-order";
+import type {
+  AdminCustomOrderItem,
+  AdminSampleOrderItem,
+} from "@/features/orders/types/admin-order";
 
 const { Title } = Typography;
 
 interface CustomOrderDetailProps {
-  items: AdminCustomOrderItem[];
+  items: AdminCustomOrderItem[] | AdminSampleOrderItem[];
 }
 
 export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
-  const reformItem = items.find((i) => i.customData != null);
+  const firstItem = items[0];
+  if (!firstItem) return null;
+
+  if (firstItem.type === "sample") {
+    return <SampleOrderDetail item={firstItem} />;
+  }
+
+  const reformItem = items.find(
+    (i): i is AdminCustomOrderItem =>
+      i.type === "custom" && i.customData != null,
+  );
   if (!reformItem || !reformItem.customData) return null;
 
   const rd = reformItem.customData;
@@ -38,14 +51,6 @@ export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
           {options.fabricProvided ? "예" : "아니오"}
         </Descriptions.Item>
         <Descriptions.Item label="수량">{rd.quantity}</Descriptions.Item>
-        <Descriptions.Item label="샘플 여부">
-          {rd.sample ? "예" : "아니오"}
-        </Descriptions.Item>
-        {rd.sampleType && (
-          <Descriptions.Item label="샘플 유형">
-            {rd.sampleType}
-          </Descriptions.Item>
-        )}
       </Descriptions>
 
       <Descriptions
@@ -90,11 +95,6 @@ export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
         <Descriptions.Item label="원단비용">
           {pricing.fabricCost.toLocaleString()}원
         </Descriptions.Item>
-        {pricing.sampleCost > 0 && (
-          <Descriptions.Item label="샘플비용">
-            {pricing.sampleCost.toLocaleString()}원
-          </Descriptions.Item>
-        )}
         <Descriptions.Item label="합계">
           {pricing.totalCost.toLocaleString()}원
         </Descriptions.Item>
@@ -121,5 +121,73 @@ export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
         </Descriptions>
       )}
     </>
+  );
+}
+
+function SampleOrderDetail({ item }: { item: AdminSampleOrderItem }) {
+  if (!item.sampleData) return null;
+
+  const { sampleData } = item;
+  const { options, pricing } = sampleData;
+
+  return (
+    <>
+      <Title level={5}>샘플 제작 상세</Title>
+      <Descriptions
+        bordered
+        column={{ xs: 1, sm: 1, md: 2 }}
+        style={{ marginBottom: 24 }}
+      >
+        <Descriptions.Item label="샘플 유형">
+          {sampleData.sampleType}
+        </Descriptions.Item>
+        <Descriptions.Item label="수량">{item.quantity}</Descriptions.Item>
+        <Descriptions.Item label="넥타이 유형">
+          {options.tieType ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="심지">
+          {options.interlining ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="디자인 유형">
+          {options.designType ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="원단 유형">
+          {options.fabricType ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="고정 금액">
+          {pricing.totalCost.toLocaleString()}원
+        </Descriptions.Item>
+      </Descriptions>
+
+      <ReferenceImages urls={sampleData.referenceImageUrls} />
+      <AdditionalNotes notes={sampleData.additionalNotes} />
+    </>
+  );
+}
+
+function ReferenceImages({ urls }: { urls: string[] }) {
+  if (urls.length === 0) return null;
+
+  return (
+    <>
+      <Title level={5}>참고 이미지</Title>
+      <Image.PreviewGroup>
+        <Space wrap style={{ marginBottom: 24 }}>
+          {urls.map((url) => (
+            <Image key={url} width={120} src={url} />
+          ))}
+        </Space>
+      </Image.PreviewGroup>
+    </>
+  );
+}
+
+function AdditionalNotes({ notes }: { notes: string | null }) {
+  if (!notes) return null;
+
+  return (
+    <Descriptions bordered column={1} style={{ marginBottom: 24 }}>
+      <Descriptions.Item label="추가 메모">{notes}</Descriptions.Item>
+    </Descriptions>
   );
 }

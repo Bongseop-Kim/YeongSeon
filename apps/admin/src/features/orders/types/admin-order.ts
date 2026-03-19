@@ -114,10 +114,35 @@ export interface AdminTokenOrderItem {
   lineDiscountAmount: number;
 }
 
+export interface AdminSampleOrderItem {
+  type: "sample";
+  id: string;
+  orderId: string;
+  quantity: number;
+  unitPrice: number;
+  discountAmount: number;
+  lineDiscountAmount: number;
+  sampleData: {
+    sampleType: "fabric" | "sewing" | "fabric_and_sewing";
+    options: {
+      fabricType: string | null;
+      designType: string | null;
+      tieType: string | null;
+      interlining: string | null;
+    };
+    pricing: {
+      totalCost: number;
+    };
+    referenceImageUrls: string[];
+    additionalNotes: string | null;
+  } | null;
+}
+
 export type AdminOrderItem =
   | AdminProductOrderItem
   | AdminCustomOrderItem
   | AdminReformOrderItem
+  | AdminSampleOrderItem
   | AdminTokenOrderItem;
 
 // ── reformData typed structures ────────────────────────────────
@@ -150,8 +175,8 @@ export interface CustomOrderReformData {
   options: CustomOrderOptions;
   pricing: CustomOrderPricing;
   quantity: number;
-  sample: boolean;
-  sampleType: string | null;
+  sample?: boolean;
+  sampleType?: string | null;
   referenceImageUrls: string[];
   additionalNotes: string | null;
 }

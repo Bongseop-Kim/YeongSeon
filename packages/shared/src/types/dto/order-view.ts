@@ -1,6 +1,7 @@
 import type { AppliedCouponDTO } from "./coupon";
 import type { ProductDTO, ProductOptionDTO } from "./product";
 import type { TieItemDTO } from "./reform";
+import type { OrderType } from "../../constants/order-status";
 
 export type OrderStatusDTO =
   | "진행중"
@@ -64,8 +65,23 @@ export interface CustomOrderDataDTO {
     sampleCost: number;
     totalCost: number;
   };
-  sample: boolean;
-  sampleType: string | null;
+  sample?: boolean;
+  sampleType?: string | null;
+  referenceImageUrls: string[];
+  additionalNotes: string | null;
+}
+
+export interface SampleOrderDataDTO {
+  sampleType: "fabric" | "sewing" | "fabric_and_sewing";
+  options: {
+    fabricType: string | null;
+    designType: string | null;
+    tieType: string | null;
+    interlining: string | null;
+  };
+  pricing: {
+    totalCost: number;
+  };
   referenceImageUrls: string[];
   additionalNotes: string | null;
 }
@@ -85,10 +101,19 @@ export interface TokenOrderItemDTO {
   appliedCoupon?: AppliedCouponDTO;
 }
 
+export interface SampleOrderItemDTO {
+  id: string;
+  type: "sample";
+  quantity: number;
+  sampleData: SampleOrderDataDTO;
+  appliedCoupon?: AppliedCouponDTO;
+}
+
 export type OrderItemDTO =
   | ProductOrderItemDTO
   | ReformOrderItemDTO
   | CustomOrderItemDTO
+  | SampleOrderItemDTO
   | TokenOrderItemDTO;
 
 export interface OrderViewDTO {
@@ -96,7 +121,7 @@ export interface OrderViewDTO {
   orderNumber: string;
   date: string;
   status: OrderStatusDTO;
-  orderType: "sale" | "custom" | "repair" | "token";
+  orderType: OrderType;
   items: OrderItemDTO[];
   totalPrice: number;
 }
@@ -107,7 +132,7 @@ export interface OrderListRowDTO {
   date: string;
   status: OrderStatusDTO;
   totalPrice: number;
-  orderType: "sale" | "custom" | "repair" | "token";
+  orderType: OrderType;
   created_at: string;
 }
 
@@ -118,7 +143,7 @@ export interface OrderDetailRowDTO {
   date: string;
   status: OrderStatusDTO;
   totalPrice: number;
-  orderType: "sale" | "custom" | "repair" | "token";
+  orderType: OrderType;
   courierCompany: string | null;
   trackingNumber: string | null;
   shippedAt: string | null;
@@ -137,7 +162,7 @@ export interface OrderDetailRowDTO {
 export interface OrderItemRowDTO {
   order_id: string;
   id: string;
-  type: "product" | "reform" | "custom" | "token";
+  type: "product" | "reform" | "custom" | "token" | "sample";
   product: ProductDTO | null;
   selectedOption: ProductOptionDTO | null;
   quantity: number;
@@ -146,6 +171,7 @@ export interface OrderItemRowDTO {
     cost: number;
   } | null;
   customData: CustomOrderDataDTO | null;
+  sampleData?: SampleOrderDataDTO | null;
   appliedCoupon: AppliedCouponDTO | null;
   created_at: string;
 }

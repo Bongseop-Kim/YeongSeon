@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { upload } from "@imagekit/react";
 import { IMAGEKIT_PUBLIC_KEY, getImageKitAuth } from "@/lib/imagekit";
 import { toast } from "@/lib/toast";
-import type { ImageRef, ImageKitAuth } from "@yeongseon/shared";
+import type { ImageRef, ImageKitAuth, ImageFolder } from "@yeongseon/shared";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 
 interface UploadedImage {
@@ -11,7 +11,9 @@ interface UploadedImage {
   fileId: string;
 }
 
-export const useImageUpload = () => {
+export const useImageUpload = (
+  folder: ImageFolder = IMAGE_FOLDERS.CUSTOM_ORDERS,
+) => {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [activeUploads, setActiveUploads] = useState(0);
   const authCacheRef = useRef<{ auth: ImageKitAuth; expireMs: number } | null>(
@@ -39,7 +41,7 @@ export const useImageUpload = () => {
           token,
           expire,
           publicKey: IMAGEKIT_PUBLIC_KEY,
-          folder: IMAGE_FOLDERS.CUSTOM_ORDERS,
+          folder,
         });
 
         if (!response.url) {
@@ -69,7 +71,7 @@ export const useImageUpload = () => {
         setActiveUploads((n) => n - 1);
       }
     },
-    [getOrFetchAuth],
+    [folder, getOrFetchAuth],
   );
 
   const removeImage = useCallback((index: number) => {

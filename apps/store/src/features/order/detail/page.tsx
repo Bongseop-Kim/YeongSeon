@@ -396,20 +396,40 @@ const OrderDetailPage = () => {
                     )}
                   />
                 </CardContent>
-                {item.type === "custom" && (
+                {(item.type === "custom" || item.type === "sample") && (
                   <>
                     <CardContent>
                       <Separator />
                     </CardContent>
                     <CardHeader>
-                      <CardTitle>주문 제작 옵션</CardTitle>
+                      <CardTitle>
+                        {item.type === "sample"
+                          ? "샘플 제작 옵션"
+                          : "주문 제작 옵션"}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <CustomOrderOptionsSection
-                        options={item.customData.options}
-                        referenceImageUrls={item.customData.referenceImageUrls}
-                        additionalNotes={item.customData.additionalNotes}
-                        sampleType={item.customData.sampleType}
+                        options={
+                          item.type === "sample"
+                            ? item.sampleData.options
+                            : item.customData.options
+                        }
+                        referenceImageUrls={
+                          item.type === "sample"
+                            ? item.sampleData.referenceImageUrls
+                            : item.customData.referenceImageUrls
+                        }
+                        additionalNotes={
+                          item.type === "sample"
+                            ? item.sampleData.additionalNotes
+                            : item.customData.additionalNotes
+                        }
+                        sampleType={
+                          item.type === "sample"
+                            ? item.sampleData.sampleType
+                            : null
+                        }
                       />
                     </CardContent>
                   </>

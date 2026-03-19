@@ -121,16 +121,12 @@ describe("toCreateCustomOrderInput / toCreateCustomOrderInputDto", () => {
         { url: " https://example.com/1.jpg ", fileId: " file-1 " },
       ],
       additionalNotes: " 메모 ",
-      sample: true,
-      sampleType: "fabric",
     });
 
     expect(request).toEqual(
       expect.objectContaining({
         quantity: 10,
         additionalNotes: "메모",
-        sample: true,
-        sampleType: "fabric",
       }),
     );
     expect(toCreateCustomOrderInputDto(request)).toEqual(

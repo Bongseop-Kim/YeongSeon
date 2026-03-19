@@ -22,27 +22,8 @@ export function OrderItemCard({
 }: OrderItemCardProps) {
   const isDeletedProduct =
     item.type === "product" && item.product.deleted === true;
-  const itemLabel =
-    item.type === "product"
-      ? item.product.name
-      : item.type === "custom"
-        ? "주문 제작"
-        : item.type === "token"
-          ? "토큰 구매"
-          : "넥타이 수선";
-  const itemPrice =
-    item.type === "product"
-      ? isDeletedProduct
-        ? "0원"
-        : `${(
-            (item.product.price + (item.selectedOption?.additionalPrice ?? 0)) *
-            item.quantity
-          ).toLocaleString()}원`
-      : item.type === "custom"
-        ? `${item.customData.pricing.totalCost.toLocaleString()}원`
-        : item.type === "reform"
-          ? `${(item.reformData.cost * item.quantity).toLocaleString()}원`
-          : null;
+  const itemLabel = getItemLabel(item);
+  const itemPrice = getItemPrice(item, isDeletedProduct);
 
   const content = (
     <div className={`flex gap-3 ${className}`}>
@@ -92,4 +73,43 @@ export function OrderItemCard({
       {actions && actions}
     </div>
   );
+}
+
+function getItemLabel(item: OrderItem): string {
+  switch (item.type) {
+    case "product":
+      return item.product.name;
+    case "custom":
+      return "주문 제작";
+    case "sample":
+      return "샘플 제작";
+    case "token":
+      return "토큰 구매";
+    case "reform":
+      return "넥타이 수선";
+  }
+}
+
+function getItemPrice(
+  item: OrderItem,
+  isDeletedProduct: boolean,
+): string | null {
+  switch (item.type) {
+    case "product":
+      if (isDeletedProduct) {
+        return "0원";
+      }
+      return `${(
+        (item.product.price + (item.selectedOption?.additionalPrice ?? 0)) *
+        item.quantity
+      ).toLocaleString()}원`;
+    case "custom":
+      return `${item.customData.pricing.totalCost.toLocaleString()}원`;
+    case "sample":
+      return `${item.sampleData.pricing.totalCost.toLocaleString()}원`;
+    case "reform":
+      return `${(item.reformData.cost * item.quantity).toLocaleString()}원`;
+    case "token":
+      return null;
+  }
 }

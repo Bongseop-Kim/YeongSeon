@@ -16,10 +16,8 @@ interface StickySummaryProps {
   totalCost: number;
   sewingCost: number;
   fabricCost: number;
-  sampleCost: number;
   pricingConfig: PricingConfig | undefined;
   isLoggedIn: boolean;
-  isQuoteMode: boolean;
 }
 
 export const StickySummary = ({
@@ -27,10 +25,8 @@ export const StickySummary = ({
   totalCost,
   sewingCost,
   fabricCost,
-  sampleCost,
   pricingConfig,
   isLoggedIn,
-  isQuoteMode,
 }: StickySummaryProps) => {
   const [searchParams] = useSearchParams();
   const canShowCostBreakdown = searchParams.get("showCostBreakdown") === "true";
@@ -39,7 +35,6 @@ export const StickySummary = ({
 
   const sewingLabel = `${getTieTypeLabel(options.tieType, true)} · ${getSewingStyleLabel(options)}`;
 
-  const effectiveSampleCost = isQuoteMode ? 0 : sampleCost;
   const grandTotal = totalCost;
   const estimatedDays = getEstimatedDays(options);
 
@@ -69,22 +64,6 @@ export const StickySummary = ({
         {isLoggedIn ? (
           <>
             <div className="space-y-2">
-              {effectiveSampleCost > 0 && (
-                <>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-zinc-900">제작 비용</span>
-                    <span className="font-medium text-zinc-900">
-                      {(totalCost - effectiveSampleCost).toLocaleString()}원
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-zinc-500">샘플 비용</span>
-                    <span className="text-sm text-zinc-900">
-                      +{effectiveSampleCost.toLocaleString()}원
-                    </span>
-                  </div>
-                </>
-              )}
               {canShowCostBreakdown && pricingConfig && (
                 <CostBreakdown
                   options={options}

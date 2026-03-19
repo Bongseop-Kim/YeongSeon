@@ -18,7 +18,11 @@ import {
   useUpdateFabricPrice,
   useTokenPricing,
   useUpdateTokenPricing,
+  useSampleCouponAmounts,
+  useUpdateSampleCouponAmounts,
+  SAMPLE_DISCOUNT_KEYS,
   TOKEN_PRICING_TIERS,
+  type SampleDiscountKey,
   type TokenTierUI,
 } from "@/features/pricing/api/pricing-query";
 import type { PricingConstantRow } from "@/features/pricing/types/admin-pricing";
@@ -40,6 +44,11 @@ const CONSTANT_LABELS: Record<string, string> = {
   YARN_DYED_DESIGN_COST: "선염 디자인 비용",
   REFORM_BASE_COST: "수선 비용",
   REFORM_SHIPPING_COST: "수선 택배비",
+  SAMPLE_SEWING_COST: "봉제 샘플",
+  SAMPLE_FABRIC_PRINTING_COST: "원단 샘플 (날염)",
+  SAMPLE_FABRIC_YARN_DYED_COST: "원단 샘플 (선염)",
+  SAMPLE_FABRIC_AND_SEWING_PRINTING_COST: "원단+봉제 샘플 (날염)",
+  SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST: "원단+봉제 샘플 (선염)",
 };
 
 const SEWING_GROUPS: { title: string; keys: string[] }[] = [
@@ -70,6 +79,22 @@ const SEWING_GROUPS: { title: string; keys: string[] }[] = [
 ];
 
 const REFORM_KEYS = ["REFORM_BASE_COST", "REFORM_SHIPPING_COST"];
+
+const SAMPLE_KEYS = [
+  "SAMPLE_SEWING_COST",
+  "SAMPLE_FABRIC_PRINTING_COST",
+  "SAMPLE_FABRIC_YARN_DYED_COST",
+  "SAMPLE_FABRIC_AND_SEWING_PRINTING_COST",
+  "SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST",
+];
+
+const SAMPLE_COUPON_LABELS: Record<string, string> = {
+  sample_discount_sewing: "봉제 샘플 할인",
+  sample_discount_fabric_printing: "원단 샘플 (날염) 할인",
+  sample_discount_fabric_yarn_dyed: "원단 샘플 (선염) 할인",
+  sample_discount_fabric_and_sewing_printing: "원단+봉제 샘플 (날염) 할인",
+  sample_discount_fabric_and_sewing_yarn_dyed: "원단+봉제 샘플 (선염) 할인",
+};
 
 const FABRIC_QTY_LABELS: Record<string, string> = {
   FABRIC_QTY_ADULT: "성인 (일반)",
@@ -123,12 +148,18 @@ export function PricingForm() {
   const updateConstant = useUpdatePricingConstant();
   const updateFabric = useUpdateFabricPrice();
   const updateToken = useUpdateTokenPricing();
+  const updateSampleCoupons = useUpdateSampleCouponAmounts();
+
+  const { data: sampleCouponAmounts } = useSampleCouponAmounts();
 
   const [constantDraft, setConstantDraft] = useState<Record<string, number>>(
     {},
   );
   const [fabricDraft, setFabricDraft] = useState<Record<string, number>>({});
   const [tokenDraft, setTokenDraft] = useState<Record<string, TokenTierUI>>({});
+  const [sampleCouponDraft, setSampleCouponDraft] = useState<
+    Record<SampleDiscountKey, number>
+  >({} as Record<SampleDiscountKey, number>);
 
   useEffect(() => {
     if (constants) {
@@ -194,10 +225,18 @@ export function PricingForm() {
       },
     );
 
+    const couponMutations = SAMPLE_DISCOUNT_KEYS.flatMap((key) => {
+      const amount = sampleCouponDraft[key];
+      if (amount === undefined || amount === sampleCouponAmounts?.[key])
+        return [];
+      return [{ key, amount }];
+    });
+
     if (
       constantMutations.length === 0 &&
       fabricMutations.length === 0 &&
-      tokenMutations.length === 0
+      tokenMutations.length === 0 &&
+      couponMutations.length === 0
     ) {
       message.info("변경된 항목이 없습니다.");
       return;
@@ -210,6 +249,9 @@ export function PricingForm() {
         ...(tokenMutations.length > 0
           ? [updateToken.mutateAsync(tokenMutations)]
           : []),
+        ...(couponMutations.length > 0
+          ? [updateSampleCoupons.mutateAsync(couponMutations)]
+          : []),
       ]);
       message.success("가격이 저장되었습니다.");
     } catch {
@@ -218,7 +260,10 @@ export function PricingForm() {
   };
 
   const isSaving =
-    updateConstant.isPending || updateFabric.isPending || updateToken.isPending;
+    updateConstant.isPending ||
+    updateFabric.isPending ||
+    updateToken.isPending ||
+    updateSampleCoupons.isPending;
 
   if (loadingConstants || loadingFabrics) {
     return (
@@ -374,6 +419,78 @@ export function PricingForm() {
             );
           })}
         </Row>
+      ),
+    },
+    {
+      key: "sample",
+      label: "샘플",
+      children: (
+        <Space direction="vertical" size="large" style={{ width: "100%" }}>
+          <div>
+            <Typography.Text
+              type="secondary"
+              style={{ display: "block", marginBottom: 12 }}
+            >
+              샘플 가격
+            </Typography.Text>
+            <Row gutter={[16, 16]}>
+              {SAMPLE_KEYS.map((key) => {
+                const row = (constants ?? []).find((r) => r.key === key);
+                if (!row) return null;
+                return renderConstantInput(key, row, "원", 1000);
+              })}
+            </Row>
+          </div>
+          <div>
+            <Typography.Text
+              type="secondary"
+              style={{ display: "block", marginBottom: 4 }}
+            >
+              샘플 결제 시 지급 쿠폰
+            </Typography.Text>
+            <Typography.Text
+              type="warning"
+              style={{ display: "block", marginBottom: 12, fontSize: 12 }}
+            >
+              이 값은 시스템 설정으로 관리됩니다. 쿠폰 관리 페이지에서 별도로
+              수정하지 마세요.
+            </Typography.Text>
+            <Row gutter={[16, 16]}>
+              {SAMPLE_DISCOUNT_KEYS.map((key) => (
+                <Col key={key} xs={24} sm={12} md={8}>
+                  <Space
+                    direction="vertical"
+                    size={4}
+                    style={{ width: "100%" }}
+                  >
+                    <Typography.Text>
+                      {SAMPLE_COUPON_LABELS[key] ?? key}
+                    </Typography.Text>
+                    <InputNumber
+                      value={
+                        sampleCouponDraft[key] ??
+                        sampleCouponAmounts?.[key] ??
+                        0
+                      }
+                      min={0}
+                      step={1000}
+                      formatter={(v) => formatWithComma(v)}
+                      parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
+                      onChange={(v) =>
+                        setSampleCouponDraft((prev) => ({
+                          ...prev,
+                          [key]: v ?? 0,
+                        }))
+                      }
+                      style={{ width: "100%" }}
+                      addonAfter="원"
+                    />
+                  </Space>
+                </Col>
+              ))}
+            </Row>
+          </div>
+        </Space>
       ),
     },
     {

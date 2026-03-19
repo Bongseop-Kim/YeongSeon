@@ -21,6 +21,13 @@ declare
   v_token_amount integer;
   v_plan_key text;
   v_plan_label text;
+  v_sample_coupon_id uuid;
+  v_coupon_row_count integer := 0;
+  v_sample_type text;
+  v_sample_design_type text;
+  v_coupon_name text;
+  v_pricing_key text;
+  v_discount_amount integer;
 begin
   -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
   if p_user_id is null then
@@ -63,6 +70,7 @@ begin
     v_post_status := case v_order.order_type
       when 'sale'  then '진행중'
       when 'token' then '완료'
+      when 'sample' then '접수'
       else '접수'
     end;
 
@@ -111,10 +119,78 @@ begin
       on conflict (work_id) do nothing;
     end if;
 
+    v_coupon_row_count := 0;
+    if v_order.order_type = 'sample' then
+      -- order_items에서 sample_type, design_type 추출
+      select oi.item_data->>'sample_type',
+             oi.item_data->'options'->>'design_type'
+      into v_sample_type, v_sample_design_type
+      from public.order_items oi
+      where oi.order_id = v_order.id and oi.item_type = 'sample'
+      limit 1;
+
+      -- 조합으로 쿠폰 name 및 pricing_constants key 결정
+      v_coupon_name := case v_sample_type
+        when 'sewing' then 'SAMPLE_DISCOUNT_SEWING'
+        when 'fabric' then
+          case v_sample_design_type
+            when 'PRINTING' then 'SAMPLE_DISCOUNT_FABRIC_PRINTING'
+            else 'SAMPLE_DISCOUNT_FABRIC_YARN_DYED'
+          end
+        else
+          case v_sample_design_type
+            when 'PRINTING' then 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING'
+            else 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED'
+          end
+      end;
+
+      v_pricing_key := case v_sample_type
+        when 'sewing' then 'sample_discount_sewing'
+        when 'fabric' then
+          case v_sample_design_type
+            when 'PRINTING' then 'sample_discount_fabric_printing'
+            else 'sample_discount_fabric_yarn_dyed'
+          end
+        else
+          case v_sample_design_type
+            when 'PRINTING' then 'sample_discount_fabric_and_sewing_printing'
+            else 'sample_discount_fabric_and_sewing_yarn_dyed'
+          end
+      end;
+
+      -- ⚠️ 샘플 할인값의 원본은 pricing_constants이며,
+      -- coupons 테이블의 SAMPLE_DISCOUNT_* row는 이 값을 기반으로 자동 동기화됩니다.
+      -- 쿠폰 관리 페이지에서 직접 수정하지 마세요.
+      select pc.amount into v_discount_amount
+      from public.pricing_constants pc
+      where pc.key = v_pricing_key;
+
+      -- coupons row 동기화 (user_coupons FK용)
+      insert into public.coupons (name, discount_type, discount_value, max_discount_amount, expiry_date, is_active)
+      values (v_coupon_name, 'fixed', v_discount_amount, v_discount_amount, '2099-12-31', true)
+      on conflict on constraint coupons_sample_discount_unique
+      do update set discount_value = excluded.discount_value,
+                   max_discount_amount = excluded.max_discount_amount;
+
+      select c.id into v_sample_coupon_id
+      from public.coupons c
+      where c.name = v_coupon_name and c.is_active = true
+      limit 1;
+
+      if v_sample_coupon_id is not null then
+        insert into public.user_coupons (user_id, coupon_id, status)
+        values (p_user_id, v_sample_coupon_id, 'active')
+        on conflict (user_id, coupon_id) do nothing;
+
+        get diagnostics v_coupon_row_count = row_count;
+      end if;
+    end if;
+
     v_updated_orders := v_updated_orders || jsonb_build_object(
       'orderId',     v_order.id,
       'orderType',   v_order.order_type,
-      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end
+      'tokenAmount', case when v_order.order_type = 'token' then v_token_amount else null end,
+      'couponIssued', case when v_order.order_type = 'sample' then (v_coupon_row_count > 0) else null end
     );
   end loop;
 

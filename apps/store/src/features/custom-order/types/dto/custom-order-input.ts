@@ -47,8 +47,6 @@ export interface CreateCustomOrderRequest {
   quantity: number;
   referenceImages: ImageRef[];
   additionalNotes: string;
-  sample: boolean;
-  sampleType: "sewing" | "fabric" | "fabric_and_sewing" | null;
 }
 
 export interface CreateCustomOrderRequestDto {
@@ -57,6 +55,4 @@ export interface CreateCustomOrderRequestDto {
   quantity: number;
   reference_images: DbImageRef[];
   additional_notes: string;
-  sample: boolean;
-  sample_type: "sewing" | "fabric" | "fabric_and_sewing" | null;
 }

@@ -1,16 +1,12 @@
 import { useRef } from "react";
 import { Button, Space, Typography, Input, Modal, Tag } from "antd";
 import { message } from "antd";
-import { ADMIN_NON_CANCELABLE_STATUSES } from "@yeongseon/shared";
+import { getAdminNonCancelableStatuses } from "@yeongseon/shared";
 import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
 import { eulo } from "@yeongseon/shared";
 
 const { Text } = Typography;
 const { TextArea } = Input;
-const NON_CANCELABLE_STATUS_SET: ReadonlySet<string> = new Set(
-  ADMIN_NON_CANCELABLE_STATUSES,
-);
-
 interface OrderStatusActionsProps {
   order: AdminOrderDetail;
   nextStatus: string | undefined;
@@ -129,7 +125,9 @@ export function OrderStatusActions({
             {eulo(rollbackStatus)} 롤백
           </Button>
         )}
-        {!NON_CANCELABLE_STATUS_SET.has(order.status) && (
+        {!(
+          getAdminNonCancelableStatuses(order.orderType) as readonly string[]
+        ).includes(order.status) && (
           <Button danger loading={isUpdating} onClick={handleCancelClick}>
             취소 처리
           </Button>

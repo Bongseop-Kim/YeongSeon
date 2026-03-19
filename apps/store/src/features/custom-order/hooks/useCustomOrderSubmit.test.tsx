@@ -8,12 +8,14 @@ const {
   error,
   createCustomOrderMutateAsync,
   createQuoteRequestMutateAsync,
+  requestPayment,
 } = vi.hoisted(() => ({
   navigate: vi.fn(),
   success: vi.fn(),
   error: vi.fn(),
   createCustomOrderMutateAsync: vi.fn(),
   createQuoteRequestMutateAsync: vi.fn(),
+  requestPayment: vi.fn(),
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -85,10 +87,13 @@ describe("useCustomOrderSubmit", () => {
     createQuoteRequestMutateAsync.mockReset();
   });
 
-  it("일반 주문을 생성하고 완료 후 이동한다", async () => {
+  it("일반 주문을 생성하고 토스 결제를 요청한다", async () => {
     const clearDraft = vi.fn();
     const formReset = vi.fn();
-    createCustomOrderMutateAsync.mockResolvedValueOnce(undefined);
+    createCustomOrderMutateAsync.mockResolvedValueOnce({ orderId: "order-1" });
+    requestPayment.mockResolvedValueOnce(undefined);
+
+    const paymentWidgetRef = { current: { requestPayment } };
 
     const { result } = renderHook(() =>
       useCustomOrderSubmit({
@@ -103,6 +108,7 @@ describe("useCustomOrderSubmit", () => {
         watchedValues: createValues(10),
         clearDraft,
         formReset,
+        paymentWidgetRef: paymentWidgetRef as never,
       }),
     );
 
@@ -113,10 +119,9 @@ describe("useCustomOrderSubmit", () => {
     });
 
     expect(createCustomOrderMutateAsync).toHaveBeenCalled();
-    expect(clearDraft).toHaveBeenCalled();
-    expect(formReset).toHaveBeenCalled();
-    expect(success).toHaveBeenCalledWith("주문이 완료되었습니다!");
-    expect(navigate).toHaveBeenCalledWith("/order/order-list");
+    expect(requestPayment).toHaveBeenCalledWith(
+      expect.objectContaining({ orderId: "order-1" }),
+    );
   });
 
   it("견적 요청 모드에서 필수 연락처와 업로드 상태를 검증한다", async () => {
@@ -135,6 +140,7 @@ describe("useCustomOrderSubmit", () => {
         },
         clearDraft: vi.fn(),
         formReset: vi.fn(),
+        paymentWidgetRef: { current: null } as never,
       }),
     );
 
@@ -162,6 +168,7 @@ describe("useCustomOrderSubmit", () => {
         watchedValues: createValues(100),
         clearDraft,
         formReset,
+        paymentWidgetRef: { current: null } as never,
       }),
     );
 
@@ -190,6 +197,7 @@ describe("useCustomOrderSubmit", () => {
         watchedValues: createValues(100),
         clearDraft,
         formReset,
+        paymentWidgetRef: { current: null } as never,
       }),
     );
 

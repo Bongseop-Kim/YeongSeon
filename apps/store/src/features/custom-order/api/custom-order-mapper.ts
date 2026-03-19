@@ -11,7 +11,7 @@ import type {
 
 type OrderOptionsForCreateCustomOrderOptions = Omit<
   OrderOptions,
-  "referenceImages" | "additionalNotes" | "sample" | "sampleType"
+  "referenceImages" | "additionalNotes"
 >;
 const isAllowed = <T extends string>(
   value: unknown,
@@ -64,8 +64,8 @@ interface ToCreateCustomOrderRequestInput {
   options: OrderOptionsForCreateCustomOrderOptions;
   referenceImages: ImageRef[];
   additionalNotes: string;
-  sample: boolean;
-  sampleType: "sewing" | "fabric" | "fabric_and_sewing" | null;
+  sample?: boolean;
+  sampleType?: "sewing" | "fabric" | "fabric_and_sewing" | null;
 }
 
 export const toCreateCustomOrderInput = (
@@ -76,12 +76,6 @@ export const toCreateCustomOrderInput = (
   quantity: input.options.quantity,
   referenceImages: normalizeReferenceImages(input.referenceImages),
   additionalNotes: input.additionalNotes.trim(),
-  sample: normalizeBoolean(input.sample),
-  sampleType: normalizeEnum(input.sampleType, [
-    "sewing",
-    "fabric",
-    "fabric_and_sewing",
-  ]),
 });
 
 export const toCreateCustomOrderInputDto = (
@@ -110,6 +104,4 @@ export const toCreateCustomOrderInputDto = (
   quantity: request.quantity,
   reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
-  sample: request.sample,
-  sample_type: request.sampleType,
 });

@@ -40,11 +40,6 @@ const PaymentSuccessPage = () => {
         return;
       }
 
-      if (orderItems.length === 0) {
-        setError("주문 데이터를 찾을 수 없습니다.");
-        return;
-      }
-
       try {
         // 1. 결제 승인
         const paymentResult = await confirmPayment({
@@ -53,8 +48,8 @@ const PaymentSuccessPage = () => {
           amount: parsedAmount,
         });
 
-        // 2. 장바구니에서 주문한 아이템 제거
-        if (user?.id) {
+        // 2. 장바구니에서 주문한 아이템 제거 (sample order 등 cart 미사용 주문은 skip)
+        if (user?.id && orderItems.length > 0) {
           try {
             const orderedItemIds = orderItems.map((item) => item.id);
             await removeCartItemsByIds(user.id, orderedItemIds);
@@ -70,7 +65,16 @@ const PaymentSuccessPage = () => {
         // 3. 정리
         clearOrderItems();
 
-        toast.success("결제가 완료되었습니다!");
+        const sampleCouponResult = paymentResult.orders.find(
+          (order) => order.orderType === "sample",
+        );
+        if (sampleCouponResult?.couponIssued === true) {
+          toast.success("결제가 완료되었습니다. 쿠폰이 발급되었습니다.");
+        } else if (sampleCouponResult?.couponIssued === false) {
+          toast.success("결제가 완료되었습니다. 이미 쿠폰을 보유 중입니다.");
+        } else {
+          toast.success("결제가 완료되었습니다!");
+        }
         if (paymentResult.type === "token_purchase") {
           navigate(ROUTES.TOKEN_PURCHASE_SUCCESS, { replace: true });
         } else if (paymentResult.orders.length === 1) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Form } from "@/components/ui/form";
@@ -26,12 +26,15 @@ import {
   useAutoSave,
 } from "@/features/custom-order/hooks/useWizardDraft";
 import { useCustomOrderSubmit } from "@/features/custom-order/hooks/useCustomOrderSubmit";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PaymentWidget, {
+  type PaymentWidgetRef,
+} from "@/features/payment/components/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import {
   getFabricLabel,
   getSewingStyleLabel,
   getSizeLabel,
-  getSampleTypeLabel,
 } from "@/features/custom-order/utils/option-labels";
 import { PageLayout } from "@/components/layout/page-layout";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
@@ -45,11 +48,11 @@ import { FabricStep } from "@/features/custom-order/components/steps/fabric-step
 import { SewingStep } from "@/features/custom-order/components/steps/sewing-step";
 import { SpecStep } from "@/features/custom-order/components/steps/spec-step";
 import { FinishingStep } from "@/features/custom-order/components/steps/finishing-step";
-import { SampleOptionStep } from "@/features/custom-order/components/steps/sample-option-step";
 import { AttachmentStep } from "@/features/custom-order/components/steps/attachment-step";
 import { ConfirmStep } from "@/features/custom-order/components/steps/confirm-step";
 
 export default function OrderPage() {
+  const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const { user } = useAuthStore();
   const isLoggedIn = !!user;
   const { data: pricingConfig } = usePricingConfig();
@@ -95,8 +98,6 @@ export default function OrderPage() {
       quantity: 4,
       referenceImages: null,
       additionalNotes: "",
-      sample: false,
-      sampleType: null,
 
       // 견적요청 연락처
       contactName: "",
@@ -117,13 +118,13 @@ export default function OrderPage() {
 
   const watchedValues = form.watch();
 
-  const { sewingCost, fabricCost, sampleCost, totalCost } = pricingConfig
+  const { sewingCost, fabricCost, totalCost } = pricingConfig
     ? calculateTotalCost(watchedValues, pricingConfig)
-    : { sewingCost: 0, fabricCost: 0, sampleCost: 0, totalCost: 0 };
+    : { sewingCost: 0, fabricCost: 0, totalCost: 0 };
 
   const isQuoteMode = watchedValues.quantity >= 100;
 
-  const grandTotal = isQuoteMode ? totalCost - sampleCost : totalCost;
+  const grandTotal = totalCost;
 
   const wizard = useWizardStep({
     steps: WIZARD_STEPS,
@@ -156,6 +157,7 @@ export default function OrderPage() {
     watchedValues,
     clearDraft,
     formReset: form.reset,
+    paymentWidgetRef,
   });
 
   const estimatedDays = getEstimatedDays(watchedValues);
@@ -184,8 +186,6 @@ export default function OrderPage() {
       .filter(Boolean)
       .join("/") || "기본 마감";
 
-  const sampleGuideLabel = getSampleTypeLabel(watchedValues) ?? "샘플 미선택";
-
   const attachmentGuideLabel = `첨부 상태: 이미지 ${
     imageUpload.uploadedImages.length
   }개 / ${
@@ -200,7 +200,6 @@ export default function OrderPage() {
     sewing: `현재 스타일: ${sewingGuideLabel}`,
     spec: `선택값: ${sizeGuideLabel} / ${watchedValues.tieWidth}cm`,
     finishing: `현재 마감: ${finishingGuideLabel}`,
-    sample: `선택 유형: ${sampleGuideLabel}`,
     attachment: attachmentGuideLabel,
     confirm: "제출 전 마지막 확인 단계",
   };
@@ -211,16 +210,30 @@ export default function OrderPage() {
         <Form {...form}>
           <PageLayout
             sidebar={
-              <StickySummary
-                options={watchedValues}
-                totalCost={totalCost}
-                sewingCost={sewingCost}
-                fabricCost={fabricCost}
-                sampleCost={sampleCost}
-                pricingConfig={pricingConfig}
-                isLoggedIn={isLoggedIn}
-                isQuoteMode={isQuoteMode}
-              />
+              <>
+                <StickySummary
+                  options={watchedValues}
+                  totalCost={totalCost}
+                  sewingCost={sewingCost}
+                  fabricCost={fabricCost}
+                  pricingConfig={pricingConfig}
+                  isLoggedIn={isLoggedIn}
+                />
+                {!isQuoteMode && user && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>결제 수단</CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-0">
+                      <PaymentWidget
+                        ref={paymentWidgetRef}
+                        amount={grandTotal}
+                        customerKey={user.id}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             }
             sidebarClassName={isMobile ? "pb-24" : ""}
           >
@@ -245,7 +258,6 @@ export default function OrderPage() {
             {wizard.currentStep.id === "sewing" && <SewingStep />}
             {wizard.currentStep.id === "spec" && <SpecStep />}
             {wizard.currentStep.id === "finishing" && <FinishingStep />}
-            {wizard.currentStep.id === "sample" && <SampleOptionStep />}
             {wizard.currentStep.id === "attachment" && (
               <AttachmentStep imageUpload={imageUpload} />
             )}

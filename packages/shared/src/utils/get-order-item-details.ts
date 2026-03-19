@@ -18,6 +18,17 @@ export const getOrderItemDetails = (item: OrderItem): string => {
     return parts.join(" · ") || "주문 제작";
   }
 
+  if (item.type === "sample") {
+    const parts: string[] = [item.sampleData.sampleType];
+    if (item.sampleData.options.fabricType) {
+      parts.push(item.sampleData.options.fabricType);
+    }
+    if (item.sampleData.options.tieType) {
+      parts.push(item.sampleData.options.tieType);
+    }
+    return parts.join(" · ") || "샘플 제작";
+  }
+
   if (item.type === "token") {
     return "토큰 구매";
   }

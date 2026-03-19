@@ -30,14 +30,7 @@ export function useSearchTabs<T extends string>({
     });
 
     return () => setSearchEnabled(false);
-  }, [
-    defaultTab,
-    handleSearch,
-    placeholder,
-    setSearchEnabled,
-    setTabsActiveTab,
-    tabs,
-  ]);
+  }, [defaultTab, placeholder, setSearchEnabled, setTabsActiveTab, tabs]);
 
   return activeTab;
 }
