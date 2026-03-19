@@ -39,7 +39,7 @@ export function DesignPage() {
       <MainContent className="overflow-hidden">
         <div
           className={cn(
-            "flex h-[calc(100vh-4rem)]",
+            "flex h-[calc(100vh-4rem)] max-w-7xl mx-auto w-full",
             isDesktop ? "flex-row" : "flex-col",
           )}
         >

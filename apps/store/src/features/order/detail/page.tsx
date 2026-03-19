@@ -46,8 +46,9 @@ const renderClaimButtons = (
   item: OrderItem,
   onClaim: (type: ClaimActionType, itemId: string) => void,
 ) => {
-  if (item.type === "token") return null;
-  const actions = getClaimActionsFromCustomerActions(customerActions);
+  const actions = getClaimActionsFromCustomerActions(customerActions).filter(
+    (actionType) => item.type !== "token" || actionType === "cancel",
+  );
   if (actions.length === 0) {
     return null;
   }

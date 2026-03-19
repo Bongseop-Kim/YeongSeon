@@ -114,12 +114,7 @@ export function TokenRefundAction({ refundOrder }: TokenRefundActionProps) {
     }
   };
 
-  if (
-    refundOrder.notRefundableReason === "pending_refund" &&
-    refundOrder.pendingRequestId
-  ) {
-    const pendingRequestId = refundOrder.pendingRequestId;
-
+  if (refundOrder.notRefundableReason === "pending_refund") {
     return (
       <div className="flex flex-col items-end gap-1.5">
         <Badge className="border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-50">
@@ -128,8 +123,11 @@ export function TokenRefundAction({ refundOrder }: TokenRefundActionProps) {
         <button
           type="button"
           className="text-xs text-zinc-400 underline-offset-2 hover:text-red-500 hover:underline disabled:opacity-50"
-          disabled={isCancelling}
-          onClick={() => handleCancelRefund(pendingRequestId)}
+          disabled={isCancelling || !refundOrder.pendingRequestId}
+          onClick={() => {
+            if (!refundOrder.pendingRequestId) return;
+            void handleCancelRefund(refundOrder.pendingRequestId);
+          }}
         >
           {isCancelling ? "취소 중..." : "신청 취소"}
         </button>

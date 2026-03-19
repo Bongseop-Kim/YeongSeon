@@ -156,6 +156,7 @@ describe("toOrderView", () => {
         shippingInfo: null,
         trackingInfo: null,
         confirmedAt: null,
+        customerActions: [],
         items: [
           expect.objectContaining({
             type: "product",
@@ -249,10 +250,15 @@ describe("parseOrderListRows", () => {
       ).toThrow("orderType 값(invalid)이 허용된 유형이 아닙니다.");
     });
 
-    it("허용되지 않은 status면 에러를 던진다", () => {
-      expect(() =>
+    it("실패 status를 허용한다", () => {
+      expect(
         parseOrderListRows([createOrderListRowRaw({ status: "실패" })]),
-      ).toThrow("status 값(실패)이 허용된 상태가 아닙니다.");
+      ).toEqual([
+        expect.objectContaining({
+          id: "order-1",
+          status: "실패",
+        }),
+      ]);
     });
   });
 });
@@ -528,10 +534,15 @@ describe("parseOrderDetailRow", () => {
     );
   });
 
-  it("허용되지 않은 status면 에러를 던진다", () => {
-    expect(() =>
+  it("실패 status를 허용한다", () => {
+    expect(
       parseOrderDetailRow(createOrderDetailRowRaw({ status: "실패" })),
-    ).toThrow("status 값(실패)이 허용된 상태가 아닙니다.");
+    ).toEqual(
+      expect.objectContaining({
+        id: "order-1",
+        status: "실패",
+      }),
+    );
   });
 
   it("허용되지 않은 orderType이면 에러를 던진다", () => {

@@ -56,7 +56,7 @@ SELECT
   o.total_price   AS "totalPrice",
   o.order_type    AS "orderType",
   o.created_at,
-  public.get_order_customer_actions(o.order_type, o.status) AS "customerActions"
+  public.get_order_customer_actions(o.order_type, o.status, o.id) AS "customerActions"
 FROM public.orders o
 WHERE o.user_id = auth.uid();
 

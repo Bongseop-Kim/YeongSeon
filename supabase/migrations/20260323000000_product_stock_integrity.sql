@@ -22,6 +22,10 @@ SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Only admins can modify products';
+  END IF;
+
   DELETE FROM public.product_options
   WHERE product_id = p_product_id;
 

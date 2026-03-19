@@ -53,7 +53,7 @@ test.describe.serial("Admin 주문 제작 관리", () => {
           o.status = "제작중";
           return o;
         }),
-        // SC-custom-008용: 접수 상태 (테스트 내에서 제작중으로 전이)
+        // SC-custom-008용: 시드 후 제작중까지 선행 전이된 상태
         seedCustomOrder().then(async (o) => {
           await adminUpdateOrderStatus(o.orderId, "접수");
           await adminUpdateOrderStatus(o.orderId, "제작중");

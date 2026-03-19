@@ -5,9 +5,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PwInput } from "@/components/composite/pw-input";
 import { useEmailSignIn, useSignIn } from "@/features/auth/api/auth-query";
 import { ProviderButton } from "@/features/auth/components/provider-button";
@@ -92,39 +98,45 @@ const LoginPage = () => {
                 )}
                 className="space-y-4"
               >
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">이메일</Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="이메일을 입력해주세요."
-                    disabled={isSubmitting}
-                    aria-invalid={!!form.formState.errors.email}
-                    {...form.register("email")}
-                  />
-                  {form.formState.errors.email && (
-                    <p className="text-sm text-red-500">
-                      {form.formState.errors.email.message}
-                    </p>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>이메일</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          id="login-email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="이메일을 입력해주세요."
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">비밀번호</Label>
-                  <PwInput
-                    id="login-password"
-                    autoComplete="current-password"
-                    placeholder="비밀번호를 입력해주세요."
-                    disabled={isSubmitting}
-                    aria-invalid={!!form.formState.errors.password}
-                    {...form.register("password")}
-                  />
-                  {form.formState.errors.password && (
-                    <p className="text-sm text-red-500">
-                      {form.formState.errors.password.message}
-                    </p>
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>비밀번호</FormLabel>
+                      <FormControl>
+                        <PwInput
+                          {...field}
+                          id="login-password"
+                          autoComplete="current-password"
+                          placeholder="비밀번호를 입력해주세요."
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
+                />
                 <Button
                   type="submit"
                   className="w-full"

@@ -111,11 +111,15 @@ export function useAdminProductTable() {
     sorters: { initial: [{ field: "created_at", order: "desc" }] },
     syncWithLocation: true,
   });
+  const { dataSource: rawDataSource } = rawTableProps;
 
-  const tableProps = {
-    ...rawTableProps,
-    dataSource: (rawTableProps.dataSource ?? []).map(toAdminProductListItem),
-  } as TableProps<AdminProductListItem>;
+  const tableProps: TableProps<AdminProductListItem> = {
+    loading: rawTableProps.loading,
+    pagination: rawTableProps.pagination,
+    onChange:
+      rawTableProps.onChange as TableProps<AdminProductListItem>["onChange"],
+    dataSource: (rawDataSource ?? []).map(toAdminProductListItem),
+  };
 
   return { tableProps, setFilters };
 }

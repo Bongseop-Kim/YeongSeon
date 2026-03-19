@@ -391,6 +391,7 @@ const ORDER_STATUSES: ReadonlySet<string> = new Set([
   "대기중",
   "결제중",
   "취소",
+  "실패",
   "접수",
   "제작중",
   "제작완료",
