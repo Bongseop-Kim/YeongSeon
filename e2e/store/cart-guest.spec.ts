@@ -246,10 +246,10 @@ const gotoCartAndWaitForItems = async (page: Page) => {
 };
 
 test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
+  const storeAuthSkipMessage =
+    "Store 계정 env(TEST_STORE_EMAIL/PASSWORD)가 필요합니다.";
   const hasStoreAuth = Boolean(
-    (process.env.TEST_STORE_ACCESS_TOKEN &&
-      process.env.TEST_STORE_REFRESH_TOKEN) ||
-    (process.env.TEST_STORE_EMAIL && process.env.TEST_STORE_PASSWORD),
+    process.env.TEST_STORE_EMAIL && process.env.TEST_STORE_PASSWORD,
   );
 
   // ── SC-cart-001: 비회원 장바구니 추가 ─────────────────────────────────────
@@ -338,10 +338,7 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
 
   // ── SC-cart-002: 로그인 시 로컬 장바구니 서버 동기화 ────────────────────
   test("SC-cart-002: 로그인 시 로컬 장바구니 서버 동기화", async ({ page }) => {
-    test.skip(
-      !hasStoreAuth,
-      "Store 계정 env(TEST_STORE_EMAIL/PASSWORD 또는 ACCESS_TOKEN)가 필요합니다.",
-    );
+    test.skip(!hasStoreAuth, storeAuthSkipMessage);
 
     let productId: number;
     try {
@@ -412,10 +409,7 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
   test("SC-cart-003: 로그인 시 로컬 없으면 서버 장바구니 유지", async ({
     page,
   }) => {
-    test.skip(
-      !hasStoreAuth,
-      "Store 계정 env(TEST_STORE_EMAIL/PASSWORD 또는 ACCESS_TOKEN)가 필요합니다.",
-    );
+    test.skip(!hasStoreAuth, storeAuthSkipMessage);
 
     let productId: number;
     try {
@@ -493,10 +487,7 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
 
   // ── SC-cart-007: 로그아웃 시 게스트 장바구니로 전환 ─────────────────────
   test("SC-cart-007: 로그아웃 시 게스트 장바구니로 전환", async ({ page }) => {
-    test.skip(
-      !hasStoreAuth,
-      "Store 계정 env(TEST_STORE_EMAIL/PASSWORD 또는 ACCESS_TOKEN)가 필요합니다.",
-    );
+    test.skip(!hasStoreAuth, storeAuthSkipMessage);
 
     const cfg = await getSupabaseConfig();
     const storageKey = getStorageKey(cfg.supabaseUrl);

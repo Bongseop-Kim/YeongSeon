@@ -7,6 +7,11 @@ interface DateRange {
   to?: Date;
 }
 
+export interface SearchDateFilter {
+  preset?: DateFilterPreset;
+  customRange?: DateRange;
+}
+
 export interface TabsConfig {
   items: string[];
   activeTab: string;
@@ -17,11 +22,8 @@ interface SearchConfig {
   enabled: boolean;
   placeholder?: string;
   query: string;
-  dateFilter: {
-    preset?: DateFilterPreset;
-    customRange?: DateRange;
-  };
-  onSearch?: (query: string, dateFilter: SearchConfig["dateFilter"]) => void;
+  dateFilter: SearchDateFilter;
+  onSearch?: (query: string, dateFilter: SearchDateFilter) => void;
   tabs?: TabsConfig;
 }
 
@@ -47,22 +49,41 @@ interface SearchStore {
   executeSearch: () => void;
 }
 
-const getDefaultDateRange = (): DateRange => {
+function getDateRangeForPreset(preset: DateFilterPreset): DateRange {
   const to = new Date();
   const from = new Date();
-  from.setFullYear(from.getFullYear() - 5); // 기본 5년
+
+  switch (preset) {
+    case "5years":
+      from.setFullYear(from.getFullYear() - 5);
+      break;
+    case "1month":
+      from.setMonth(from.getMonth() - 1);
+      break;
+    case "2months":
+      from.setMonth(from.getMonth() - 2);
+      break;
+    case "3months":
+      from.setMonth(from.getMonth() - 3);
+      break;
+  }
+
   return { from, to };
-};
+}
+
+function createDefaultDateFilter(): SearchDateFilter {
+  return {
+    preset: "5years",
+    customRange: getDateRangeForPreset("5years"),
+  };
+}
 
 export const useSearchStore = create<SearchStore>((set, get) => ({
   config: {
     enabled: false,
     placeholder: "검색...",
     query: "",
-    dateFilter: {
-      preset: "5years",
-      customRange: getDefaultDateRange(),
-    },
+    dateFilter: createDefaultDateFilter(),
   },
   isSheetOpen: false,
 
@@ -78,10 +99,7 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
         query: enabled ? state.config.query : "",
         dateFilter: enabled
           ? state.config.dateFilter
-          : {
-              preset: "5years",
-              customRange: getDefaultDateRange(),
-            },
+          : createDefaultDateFilter(),
       },
     }));
   },
@@ -96,30 +114,12 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
   },
 
   setDatePreset: (preset) => {
-    const to = new Date();
-    const from = new Date();
-
-    switch (preset) {
-      case "5years":
-        from.setFullYear(from.getFullYear() - 5);
-        break;
-      case "1month":
-        from.setMonth(from.getMonth() - 1);
-        break;
-      case "2months":
-        from.setMonth(from.getMonth() - 2);
-        break;
-      case "3months":
-        from.setMonth(from.getMonth() - 3);
-        break;
-    }
-
     set((state) => ({
       config: {
         ...state.config,
         dateFilter: {
           preset,
-          customRange: { from, to },
+          customRange: getDateRangeForPreset(preset),
         },
       },
     }));
@@ -178,10 +178,7 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
       config: {
         ...state.config,
         query: "",
-        dateFilter: {
-          preset: "5years",
-          customRange: getDefaultDateRange(),
-        },
+        dateFilter: createDefaultDateFilter(),
       },
     }));
   },

@@ -17,6 +17,16 @@ import { installMockToss } from "@/utils/mock-toss";
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+function requireCreateOrderResult(
+  createOrderResult: CreateOrderResult | null,
+): CreateOrderResult {
+  if (!createOrderResult) {
+    throw new Error("create-order 응답을 아직 캡처하지 못했습니다.");
+  }
+
+  return createOrderResult;
+}
+
 const expectOrderDetailUrl = async (page: Page, orderId: string | null) => {
   if (!orderId) {
     throw new Error("Order ID is required to verify the order detail URL.");
@@ -166,9 +176,7 @@ test.describe.serial("Store 주문 플로우", () => {
           paymentKey: string;
           orderId: string;
         };
-        if (!createOrderResult) {
-          throw new Error("create-order 응답을 아직 캡처하지 못했습니다.");
-        }
+        const capturedOrderResult = requireCreateOrderResult(createOrderResult);
 
         await route.fulfill({
           status: 200,
@@ -177,7 +185,7 @@ test.describe.serial("Store 주문 플로우", () => {
             paymentKey: request.paymentKey,
             paymentGroupId: request.orderId,
             status: "DONE",
-            orders: createOrderResult.orders.map((order) => ({
+            orders: capturedOrderResult.orders.map((order) => ({
               orderId: order.order_id,
               orderType: order.order_type,
             })),
@@ -193,7 +201,8 @@ test.describe.serial("Store 주문 플로우", () => {
     await expect
       .poll(() => createOrderResult?.orders[0]?.order_id ?? null)
       .not.toBeNull();
-    latestOrderId = createOrderResult?.orders[0]?.order_id ?? null;
+    const completedOrderResult = requireCreateOrderResult(createOrderResult);
+    latestOrderId = completedOrderResult?.orders[0]?.order_id ?? null;
 
     await expectOrderDetailUrl(authenticatedPage, latestOrderId);
     await expect(
@@ -223,6 +232,9 @@ test.describe.serial("Store 주문 플로우", () => {
     await authenticatedPage.goto(`/order/${shippingOrderForTest.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage);
     await expect(
+      authenticatedPage.getByTestId("order-detail-root"),
+    ).toContainText(shippingOrderForTest.orderNumber);
+    await expect(
       authenticatedPage.getByRole("button", { name: /취소/ }),
     ).not.toBeVisible();
   });
@@ -248,6 +260,9 @@ test.describe.serial("Store 주문 플로우", () => {
     await expect(
       authenticatedPage.getByTestId("order-items-card"),
     ).toContainText("주문 상품 1개");
+    await expect(
+      authenticatedPage.getByTestId("order-items-card"),
+    ).toContainText(fixtures.storeProduct.name);
   });
 
   test("주문 목록/상세 조회", async ({ authenticatedPage }) => {

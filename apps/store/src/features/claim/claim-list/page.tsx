@@ -10,8 +10,7 @@ import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
-import { useSearchStore } from "@/store/search";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { buildClaimDetailRoute } from "@/constants/ROUTES";
 import { useClaims } from "@/features/claim/api/claims-query";
 import {
@@ -19,6 +18,7 @@ import {
   type ListFilters,
 } from "@/features/order/utils/list-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useSearchTabs } from "@/hooks/use-search-tabs";
 import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
 
 type ClaimTypeFilter = "전체" | "취소" | "반품" | "교환" | "토큰환불";
@@ -40,9 +40,19 @@ const CLAIM_TYPE_MAP: Record<Exclude<ClaimTypeFilter, "전체">, ClaimType> = {
 
 export default function ClaimListPage() {
   const navigate = useNavigate();
-  const { setSearchEnabled, setTabsActiveTab, config } = useSearchStore();
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
-  const activeTab = (config.tabs?.activeTab as ClaimTypeFilter) ?? "전체";
+  const activeTab = useSearchTabs({
+    tabs: CLAIM_TYPE_TABS,
+    defaultTab: "전체",
+    placeholder: "취소/반품/교환/토큰환불 검색...",
+    onSearch: (query, dateFilter) => {
+      setSearchFilters({
+        keyword: query,
+        dateFrom: toDateString(dateFilter.customRange?.from),
+        dateTo: toDateString(dateFilter.customRange?.to),
+      });
+    },
+  });
   const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
   const queryFilters = useMemo(
     () => ({
@@ -59,26 +69,6 @@ export default function ClaimListPage() {
     const claimType = CLAIM_TYPE_MAP[activeTab];
     return claims.filter((claim) => claim.type === claimType);
   }, [claims, activeTab]);
-
-  useEffect(() => {
-    setSearchEnabled(true, {
-      placeholder: "취소/반품/교환/토큰환불 검색...",
-      onSearch: (query, dateFilter) => {
-        setSearchFilters({
-          keyword: query,
-          dateFrom: toDateString(dateFilter.customRange?.from),
-          dateTo: toDateString(dateFilter.customRange?.to),
-        });
-      },
-      tabs: {
-        items: CLAIM_TYPE_TABS,
-        activeTab: "전체",
-        onTabChange: setTabsActiveTab,
-      },
-    });
-
-    return () => setSearchEnabled(false);
-  }, [setSearchEnabled, setTabsActiveTab]);
 
   if (isLoading) {
     return (

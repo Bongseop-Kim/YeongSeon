@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { useNavigate } from "react-router-dom";
-import { useSearchStore } from "@/store/search";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ROUTES } from "@/constants/ROUTES";
 import { useOrders } from "@/features/order/api/order-query";
 import {
@@ -17,6 +16,7 @@ import {
   type ListFilters,
 } from "@/features/order/utils/list-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useSearchTabs } from "@/hooks/use-search-tabs";
 import {
   CLAIM_ACTION_LABEL,
   getClaimActionsForItem,
@@ -45,9 +45,19 @@ const ORDER_TYPE_MAP: Record<
 
 export default function OrderListPage() {
   const navigate = useNavigate();
-  const { setSearchEnabled, setTabsActiveTab, config } = useSearchStore();
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
-  const activeTab = (config.tabs?.activeTab as OrderTypeFilter) ?? "전체";
+  const activeTab = useSearchTabs({
+    tabs: ORDER_TYPE_TABS,
+    defaultTab: "전체",
+    placeholder: "주문 검색...",
+    onSearch: (query, dateFilter) => {
+      setSearchFilters({
+        keyword: query,
+        dateFrom: toDateString(dateFilter.customRange?.from),
+        dateTo: toDateString(dateFilter.customRange?.to),
+      });
+    },
+  });
   const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
   const queryFilters = useMemo(
     () => ({
@@ -64,26 +74,6 @@ export default function OrderListPage() {
     const orderType = ORDER_TYPE_MAP[activeTab];
     return orders.filter((order) => order.orderType === orderType);
   }, [orders, activeTab]);
-
-  useEffect(() => {
-    setSearchEnabled(true, {
-      placeholder: "주문 검색...",
-      onSearch: (query, dateFilter) => {
-        setSearchFilters({
-          keyword: query,
-          dateFrom: toDateString(dateFilter.customRange?.from),
-          dateTo: toDateString(dateFilter.customRange?.to),
-        });
-      },
-      tabs: {
-        items: ORDER_TYPE_TABS,
-        activeTab: "전체",
-        onTabChange: setTabsActiveTab,
-      },
-    });
-
-    return () => setSearchEnabled(false);
-  }, [setSearchEnabled, setTabsActiveTab]);
 
   const handleClaimRequest = (
     type: string,

@@ -159,7 +159,7 @@ test.describe.serial("Admin 주문 관리", () => {
     await authenticatedPage.goto(`/orders/show/${cancelBtnOrder.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
     await expect(
-      authenticatedPage.getByRole("button", { name: /취소/ }),
+      authenticatedPage.getByRole("button", { name: "취소 처리" }),
     ).not.toBeVisible();
   });
 
@@ -188,7 +188,6 @@ test.describe.serial("Admin 주문 관리", () => {
     await authenticatedPage
       .getByRole("button", { name: "수거요청 으로 변경" })
       .click();
-
-    await expect(authenticatedPage.getByText("수거요청")).toBeVisible();
+    await expect(statusRow(authenticatedPage, "수거요청")).toBeVisible();
   });
 });
