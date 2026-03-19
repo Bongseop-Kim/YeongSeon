@@ -367,12 +367,13 @@ const parseAppliedCouponField = (
   };
 };
 
-const CUSTOMER_ACTIONS: ReadonlySet<string> = new Set<CustomerAction>([
+const CUSTOMER_ACTIONS_ARRAY = [
   "claim_cancel",
   "claim_return",
   "claim_exchange",
   "confirm_purchase",
-]);
+] as const satisfies readonly CustomerAction[];
+const CUSTOMER_ACTIONS: ReadonlySet<string> = new Set(CUSTOMER_ACTIONS_ARRAY);
 const isCustomerAction = (v: string): v is CustomerAction =>
   CUSTOMER_ACTIONS.has(v);
 

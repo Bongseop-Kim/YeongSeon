@@ -10,7 +10,7 @@ import {
   toAdminProductListItem,
   toAdminProductOption,
   type ProductsTableRow,
-} from "./products-mapper";
+} from "@/features/products/api/products-mapper";
 import type {
   AdminProductListItem,
   AdminProductOption,
