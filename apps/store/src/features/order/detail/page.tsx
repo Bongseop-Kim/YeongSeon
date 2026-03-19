@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { CustomOrderOptionsSection } from "@/features/order/components/custom-order-options-section";
+import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
 import React from "react";
@@ -28,8 +29,6 @@ import {
   CLAIM_ACTION_LABEL,
 } from "@yeongseon/shared/constants/claim-actions";
 import { getClaimActionsFromCustomerActions } from "@yeongseon/shared";
-import { toast } from "@/lib/toast";
-import { REPAIR_SHIPPING_ADDRESS } from "@/constants/REPAIR_SHIPPING";
 
 const getOrderErrorDescription = (error: unknown): string => {
   if (!(error instanceof Error)) {
@@ -108,41 +107,16 @@ const PurchaseConfirmSection = ({ orderId }: { orderId: string }) => {
 /** 발송대기 상태에서 수선품 발송 안내 카드 표시 */
 const RepairShippingPendingSection = ({ orderId }: { orderId: string }) => {
   const navigate = useNavigate();
-
-  const handleCopyAddress = async () => {
-    try {
-      const text = `${REPAIR_SHIPPING_ADDRESS.recipient} / ${REPAIR_SHIPPING_ADDRESS.address} / ${REPAIR_SHIPPING_ADDRESS.phone}`;
-      await navigator.clipboard.writeText(text);
-      toast.success("주소가 복사되었습니다.");
-    } catch {
-      toast.error("주소 복사에 실패했습니다. 수동으로 복사해주세요.");
-    }
-  };
-
   return (
-    <div className="rounded-md bg-blue-50 border border-blue-200 p-4 space-y-3">
-      <p className="text-sm font-semibold text-blue-800">📮 수선품 발송 안내</p>
-      <div className="text-sm text-blue-700 bg-white rounded p-2">
-        <p className="font-semibold">{REPAIR_SHIPPING_ADDRESS.recipient}</p>
-        <p>{REPAIR_SHIPPING_ADDRESS.address}</p>
-        <p>{REPAIR_SHIPPING_ADDRESS.phone}</p>
-      </div>
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={handleCopyAddress}>
-          주소 복사
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => navigate(`${ROUTES.REPAIR_SHIPPING}/${orderId}`)}
-        >
-          송장번호 등록
-        </Button>
-      </div>
-    </div>
+    <RepairShippingAddressBanner
+      onRegisterTracking={() =>
+        navigate(`${ROUTES.REPAIR_SHIPPING}/${orderId}`)
+      }
+    />
   );
 };
 
-/** 발송중 상태에서 택배사/송장번호 및 배송 조회 링크 표시 */
+/** 발송중 상태에서 택배사/송장번호 및 배송 조회 링크 표시 (TrackingInfoSection 패턴) */
 const RepairShippingInTransitSection = ({
   courierCompany,
   trackingNumber,
@@ -152,22 +126,24 @@ const RepairShippingInTransitSection = ({
 }) => {
   const trackingUrl = buildTrackingUrl(courierCompany, trackingNumber);
   return (
-    <div className="rounded-md bg-zinc-50 border border-zinc-200 p-4 space-y-1 text-sm">
-      <p className="font-semibold">발송 정보</p>
-      <p className="text-zinc-600">
-        {courierCompany} · {trackingNumber}
+    <>
+      <p className="text-sm">
+        <span className="text-zinc-500">택배사:</span> {courierCompany}
+      </p>
+      <p className="text-sm">
+        <span className="text-zinc-500">송장번호:</span> {trackingNumber}
       </p>
       {trackingUrl && (
         <a
           href={trackingUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 underline text-xs"
+          className="inline-block mt-1 text-blue-600 underline"
         >
-          배송 조회 →
+          배송조회
         </a>
       )}
-    </div>
+    </>
   );
 };
 
@@ -419,7 +395,7 @@ const OrderDetailPage = () => {
             )}
 
             {/* 배송 추적 정보 */}
-            {order.trackingInfo && (
+            {order.trackingInfo && order.orderType !== "repair" && (
               <>
                 <CardContent>
                   <Separator />

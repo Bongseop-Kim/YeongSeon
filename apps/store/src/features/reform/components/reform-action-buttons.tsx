@@ -5,12 +5,14 @@ interface ReformActionButtonsProps {
   onAddToCart: () => void;
   onOrder: () => void;
   disabled?: boolean;
+  isUploading?: boolean;
 }
 
 export function ReformActionButtons({
   onAddToCart,
   onOrder,
   disabled,
+  isUploading,
 }: ReformActionButtonsProps) {
   const { isMobile } = useBreakpoint();
 
@@ -23,7 +25,7 @@ export function ReformActionButtons({
         className="w-full"
         disabled={disabled}
       >
-        {disabled ? "업로드 중..." : "주문하기"}
+        {isUploading ? "업로드 중..." : "주문하기"}
       </Button>
     );
   }
@@ -38,7 +40,7 @@ export function ReformActionButtons({
         className="flex-1"
         disabled={disabled}
       >
-        {disabled ? "업로드 중..." : "장바구니"}
+        {isUploading ? "업로드 중..." : "장바구니"}
       </Button>
       <Button
         type="button"
@@ -47,7 +49,7 @@ export function ReformActionButtons({
         className="flex-1"
         disabled={disabled}
       >
-        {disabled ? "업로드 중..." : "주문하기"}
+        {isUploading ? "업로드 중..." : "주문하기"}
       </Button>
     </div>
   );

@@ -9,15 +9,15 @@ import {
 } from "@/features/design/api/ai-design-api";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment, Message } from "@/features/design/types/chat";
+import { uploadGeneratedImage } from "@/features/design/api/imagekit-upload";
+import { useSaveDesignSessionMutation } from "@/features/design/api/design-session-query";
+import { toPreviewBackground } from "@/features/design/utils";
 
 interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
   regenerate: () => void;
   isLoading: boolean;
 }
-
-const toPreviewBackground = (imageUrl: string): string =>
-  `url("${imageUrl}") center/cover no-repeat`;
 
 const toConversationHistory = (
   items: Message[],
@@ -47,18 +47,28 @@ export function useDesignChat(): UseDesignChatResult {
   const clearAttachments = useDesignChatStore(
     (state) => state.clearAttachments,
   );
+  const currentSessionId = useDesignChatStore(
+    (state) => state.currentSessionId,
+  );
+  const setCurrentSessionId = useDesignChatStore(
+    (state) => state.setCurrentSessionId,
+  );
   const mutation = useAiDesignMutation();
+  const saveSessionMutation = useSaveDesignSessionMutation();
 
   const createMutationCallbacks = (
     errorContent: string,
     errorStatus: "idle" | "completed",
+    sessionId: string,
   ) => ({
     onSuccess: (data: AiDesignResponse) => {
       const previewBackground = data.imageUrl
         ? toPreviewBackground(data.imageUrl)
         : undefined;
+
+      const aiMessageId = crypto.randomUUID();
       const aiMessage: Message = {
-        id: crypto.randomUUID(),
+        id: aiMessageId,
         role: "ai",
         content: data.aiMessage,
         imageUrl: previewBackground,
@@ -74,7 +84,47 @@ export function useDesignChat(): UseDesignChatResult {
       void queryClient.invalidateQueries({
         queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,
       });
-      // TODO: 대화 히스토리 DB 저장 연동
+
+      // ImageKit 업로드 + 세션 저장 (백그라운드, 실패해도 채팅에 영향 없음)
+      const doSave = async () => {
+        let rawImageUrl: string | null = null;
+        let rawImageFileId: string | null = null;
+
+        if (data.imageUrl) {
+          const uploaded = await uploadGeneratedImage(data.imageUrl);
+          rawImageUrl = uploaded?.url ?? null;
+          rawImageFileId = uploaded?.fileId ?? null;
+        }
+
+        const { messages: allMessages, aiModel: currentAiModel } =
+          useDesignChatStore.getState();
+        const firstUserMsg = allMessages.find(
+          (m) => m.role === "user" && !m.uiOnly,
+        );
+
+        const savableMessages = allMessages
+          .filter((m) => !m.uiOnly)
+          .map((m, idx) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            imageUrl:
+              m.id === aiMessageId ? rawImageUrl : (m.rawImageUrl ?? null),
+            imageFileId: m.id === aiMessageId ? rawImageFileId : null,
+            sequenceNumber: idx,
+          }));
+
+        saveSessionMutation.mutate({
+          sessionId,
+          aiModel: currentAiModel,
+          firstMessage: firstUserMsg?.content ?? "",
+          lastImageUrl: rawImageUrl,
+          lastImageFileId: rawImageFileId,
+          messages: savableMessages,
+        });
+      };
+
+      void doSave();
     },
     onError: (error: Error) => {
       let content = errorContent;
@@ -103,6 +153,11 @@ export function useDesignChat(): UseDesignChatResult {
       return;
     }
 
+    const sessionId = currentSessionId ?? crypto.randomUUID();
+    if (!currentSessionId) {
+      setCurrentSessionId(sessionId);
+    }
+
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
@@ -127,6 +182,7 @@ export function useDesignChat(): UseDesignChatResult {
       createMutationCallbacks(
         "죄송합니다. 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
         "idle",
+        sessionId,
       ),
     );
   };
@@ -138,6 +194,11 @@ export function useDesignChat(): UseDesignChatResult {
 
     if (!lastUserMessage) {
       return;
+    }
+
+    const sessionId = currentSessionId ?? crypto.randomUUID();
+    if (!currentSessionId) {
+      setCurrentSessionId(sessionId);
     }
 
     setGenerationStatus("regenerating");
@@ -153,6 +214,7 @@ export function useDesignChat(): UseDesignChatResult {
       createMutationCallbacks(
         "죄송합니다. 디자인 재생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
         "completed",
+        sessionId,
       ),
     );
   };

@@ -3,6 +3,14 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Loader2 } from "lucide-react";
 import { REPAIR_SHIPPING_ADDRESS } from "@/constants/REPAIR_SHIPPING";
@@ -99,68 +107,61 @@ const RepairShippingPage = () => {
   return (
     <MainLayout>
       <MainContent>
-        <div className="max-w-lg mx-auto py-8 px-4 space-y-6">
-          {/* 결제 완료 헤더 */}
-          <div className="text-center">
-            <p className="text-2xl mb-1">✅</p>
-            <h1 className="text-xl font-bold">결제가 완료되었습니다</h1>
-            <p className="text-sm text-zinc-500 mt-1">
-              수선품을 아래 주소로 발송해 주세요
-            </p>
+        <div className="max-w-lg mx-auto py-8 px-4 space-y-4">
+          {/* 결제 완료 배너 (PurchaseConfirmSection 성공 상태와 동일 스타일) */}
+          <div className="rounded-md bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+            결제가 완료되었습니다.
           </div>
 
-          {/* 발송 안내 카드 */}
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base text-blue-800">
-                📮 수선품 발송 주소
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="rounded-md bg-white p-3 text-sm">
-                <p className="font-semibold">
-                  {REPAIR_SHIPPING_ADDRESS.recipient}
-                </p>
-                <p className="text-zinc-600 mt-0.5">
-                  {REPAIR_SHIPPING_ADDRESS.address}
-                </p>
-                <p className="text-zinc-600">{REPAIR_SHIPPING_ADDRESS.phone}</p>
+          {/* 발송 주소 카드 (ShippingInfoSection 라벨-값 패턴) */}
+          <Card>
+            <CardHeader>
+              <div className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">발송 주소</CardTitle>
+                <Button variant="outline" size="sm" onClick={handleCopyAddress}>
+                  주소 복사
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={handleCopyAddress}
-              >
-                주소 복사
-              </Button>
+            </CardHeader>
+            <CardContent className="space-y-1 text-sm">
+              <p>
+                <span className="text-zinc-500">받는분:</span>{" "}
+                {REPAIR_SHIPPING_ADDRESS.recipient}
+              </p>
+              <p>
+                <span className="text-zinc-500">주소:</span>{" "}
+                {REPAIR_SHIPPING_ADDRESS.address}
+              </p>
+              <p>
+                <span className="text-zinc-500">연락처:</span>{" "}
+                {REPAIR_SHIPPING_ADDRESS.phone}
+              </p>
             </CardContent>
           </Card>
 
-          {/* 송장번호 등록 폼 */}
+          {/* 송장번호 등록 카드 */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">송장번호 등록</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <select
-                value={courierCompany}
-                onChange={(e) => setCourierCompany(e.target.value)}
-                className="w-full text-sm rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2"
-              >
-                <option value="">택배사 선택</option>
-                {COURIER_COMPANIES.map((c) => (
-                  <option key={c.code} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <input
+              <Select value={courierCompany} onValueChange={setCourierCompany}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="택배사 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COURIER_COMPANIES.map((c) => (
+                    <SelectItem key={c.code} value={c.name}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
                 type="text"
                 placeholder="송장번호를 입력해주세요"
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
-                className="w-full text-sm rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2"
               />
               <Button
                 className="w-full"
@@ -178,22 +179,17 @@ const RepairShippingPage = () => {
                   "발송 완료 등록"
                 )}
               </Button>
+              <div className="text-center pt-1">
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.ORDER_LIST)}
+                  className="text-sm text-zinc-500 underline"
+                >
+                  나중에 주문 상세에서 등록하기
+                </button>
+              </div>
             </CardContent>
           </Card>
-
-          {/* 나중에 등록 */}
-          <div className="text-center">
-            <p className="text-xs text-zinc-400 mb-2">
-              나중에 주문 상세에서도 등록할 수 있어요
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate(ROUTES.ORDER_LIST)}
-              className="text-sm text-zinc-500 underline"
-            >
-              주문 내역 보기
-            </button>
-          </div>
         </div>
       </MainContent>
     </MainLayout>

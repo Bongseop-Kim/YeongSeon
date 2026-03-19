@@ -28,6 +28,7 @@ import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
 import { DataTable } from "@/components/ui/data-table";
 import { ReformActionButtons } from "./components/reform-action-buttons";
 import { MobileReformSheet } from "./components/mobile-reform-sheet";
+import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { toReformCartItems, toReformData } from "./api/reform-mapper";
 import { useReformPricing, useUploadTieImages } from "./api/reform-query";
@@ -57,6 +58,7 @@ const ReformPage = () => {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
+  const [cancellationConsent, setCancellationConsent] = useState(false);
   const isSubmittingRef = useRef(false);
   const uploadTieImagesMutation = useUploadTieImages();
   const { data: pricing } = useReformPricing();
@@ -241,13 +243,26 @@ const ReformPage = () => {
                     </Accordion>
                   </div>
                 </CardContent>
+                <ConsentCheckbox
+                  id="cancellation-consent"
+                  checked={cancellationConsent}
+                  onCheckedChange={setCancellationConsent}
+                  label="취소/환불 불가 동의"
+                  description="판매자가 수선물을 수령(접수)한 이후부터 취소 및 환불이 불가능합니다."
+                  required
+                />
               </Card>
             }
             actionBar={
               <ReformActionButtons
                 onAddToCart={handleAddToCart}
                 onOrder={handleDirectOrder}
-                disabled={uploadTieImagesMutation.isPending || !pricing}
+                disabled={
+                  !cancellationConsent ||
+                  uploadTieImagesMutation.isPending ||
+                  !pricing
+                }
+                isUploading={uploadTieImagesMutation.isPending}
               />
             }
           >

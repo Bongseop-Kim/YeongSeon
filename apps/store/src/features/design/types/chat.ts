@@ -26,6 +26,7 @@ export interface Message {
   role: MessageRole;
   content: string;
   imageUrl?: string;
+  rawImageUrl?: string;
   attachments?: Attachment[];
   contextChips?: ContextChip[];
   timestamp: number;

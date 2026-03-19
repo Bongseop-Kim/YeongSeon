@@ -43,11 +43,13 @@ import { SpecStep } from "@/features/custom-order/components/steps/spec-step";
 import { FinishingStep } from "@/features/custom-order/components/steps/finishing-step";
 import { AttachmentStep } from "@/features/custom-order/components/steps/attachment-step";
 import { ConfirmStep } from "@/features/custom-order/components/steps/confirm-step";
+import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
 
 export default function OrderPage() {
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const { user } = useAuthStore();
   const isLoggedIn = !!user;
+  const [cancellationConsent, setCancellationConsent] = useState(false);
   const { data: pricingConfig } = usePricingConfig();
   const imageUpload = useImageUpload();
   const { clearDraft } = useWizardDraft();
@@ -188,6 +190,15 @@ export default function OrderPage() {
                         amount={grandTotal}
                         customerKey={user.id}
                       />
+
+                      <ConsentCheckbox
+                        id="cancellation-consent"
+                        checked={cancellationConsent}
+                        onCheckedChange={setCancellationConsent}
+                        label="취소/환불 불가 동의"
+                        description="주문제작(견적요청)은 진행 후 중도 취소 및 환불이 불가능합니다."
+                        required
+                      />
                     </CardContent>
                   </Card>
                 )}
@@ -201,7 +212,10 @@ export default function OrderPage() {
                 onNext={handleNext}
                 onSubmit={handleSubmit}
                 isPending={isPending}
-                isSubmitDisabled={isSubmitDisabled}
+                isSubmitDisabled={
+                  isSubmitDisabled ||
+                  (wizard.isLastStep && !cancellationConsent)
+                }
                 isQuoteMode={isQuoteMode}
                 grandTotal={grandTotal}
                 estimatedDays={estimatedDays}

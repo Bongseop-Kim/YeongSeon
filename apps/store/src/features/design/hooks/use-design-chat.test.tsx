@@ -5,18 +5,22 @@ import { useDesignChat } from "@/features/design/hooks/use-design-chat";
 const {
   invalidateQueries,
   mutate,
+  saveSessionMutate,
   addMessage,
   setGenerationStatus,
   setGeneratedImage,
   clearAttachments,
+  setCurrentSessionId,
   MockInsufficientTokensError,
 } = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
   mutate: vi.fn(),
+  saveSessionMutate: vi.fn(),
   addMessage: vi.fn(),
   setGenerationStatus: vi.fn(),
   setGeneratedImage: vi.fn(),
   clearAttachments: vi.fn(),
+  setCurrentSessionId: vi.fn(),
   MockInsufficientTokensError: class MockInsufficientTokensError extends Error {
     constructor(
       public readonly balance: number,
@@ -69,10 +73,12 @@ const storeState = {
   },
   aiModel: "openai",
   generationStatus: "idle",
+  currentSessionId: null,
   addMessage,
   setGenerationStatus,
   setGeneratedImage,
   clearAttachments,
+  setCurrentSessionId,
 };
 
 vi.mock("@tanstack/react-query", () => ({
@@ -92,9 +98,24 @@ vi.mock("@/features/design/api/ai-design-query", () => ({
   }),
 }));
 
+vi.mock("@/features/design/api/design-session-query", () => ({
+  useSaveDesignSessionMutation: () => ({
+    mutate: saveSessionMutate,
+  }),
+}));
+
+vi.mock("@/features/design/api/imagekit-upload", () => ({
+  uploadGeneratedImage: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock("@/features/design/store/design-chat-store", () => ({
-  useDesignChatStore: (selector: (state: typeof storeState) => unknown) =>
-    selector(storeState),
+  useDesignChatStore: Object.assign(
+    (selector: (state: typeof storeState) => unknown) => selector(storeState),
+    {
+      getState: () => storeState,
+      setState: vi.fn(),
+    },
+  ),
 }));
 
 describe("useDesignChat", () => {
@@ -104,10 +125,12 @@ describe("useDesignChat", () => {
     });
     invalidateQueries.mockReset();
     mutate.mockReset();
+    saveSessionMutate.mockReset();
     addMessage.mockReset();
     setGenerationStatus.mockReset();
     setGeneratedImage.mockReset();
     clearAttachments.mockReset();
+    setCurrentSessionId.mockReset();
   });
 
   it("빈 메시지는 무시하고 일반 메시지는 mutation을 호출한다", () => {

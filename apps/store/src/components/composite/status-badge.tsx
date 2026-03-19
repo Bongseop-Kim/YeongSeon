@@ -1,39 +1,45 @@
 import { Badge } from "@/components/ui/badge";
+import { ORDER_STATUS_COLORS } from "@yeongseon/shared/constants/order-status";
+import { CLAIM_STATUS_COLORS } from "@yeongseon/shared/constants/claim-status";
 import type { OrderStatus } from "@yeongseon/shared/types/view/order";
 import type { ClaimStatus } from "@yeongseon/shared/types/view/claim-item";
 
-const ORDER_STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
-  대기중: "bg-gray-100 text-gray-800",
-  결제중: "bg-yellow-50 text-yellow-700",
-  진행중: "bg-yellow-100 text-yellow-800",
-  접수: "bg-cyan-100 text-cyan-800",
-  제작중: "bg-orange-100 text-orange-800",
-  제작완료: "bg-lime-100 text-lime-800",
-  수선중: "bg-orange-100 text-orange-800",
-  수선완료: "bg-lime-100 text-lime-800",
-  발송대기: "bg-yellow-100 text-yellow-800",
-  발송중: "bg-blue-100 text-blue-800",
-  배송중: "bg-blue-100 text-blue-800",
-  배송완료: "bg-indigo-100 text-indigo-800",
-  완료: "bg-green-100 text-green-800",
-  취소: "bg-red-100 text-red-800",
-  실패: "bg-red-100 text-red-800",
+const COLOR_TO_DOT: Record<string, string> = {
+  default: "bg-gray-400",
+  warning: "bg-yellow-400",
+  processing: "bg-blue-400",
+  cyan: "bg-cyan-400",
+  orange: "bg-orange-400",
+  lime: "bg-lime-400",
+  blue: "bg-blue-400",
+  geekblue: "bg-indigo-400",
+  success: "bg-green-500",
+  error: "bg-red-400",
 };
 
-const CLAIM_STATUS_BADGE_CLASS: Record<ClaimStatus, string> = {
-  접수: "bg-gray-100 text-gray-800",
-  처리중: "bg-blue-100 text-blue-800",
-  수거요청: "bg-orange-100 text-orange-800",
-  수거완료: "bg-lime-100 text-lime-800",
-  재발송: "bg-blue-100 text-blue-800",
-  완료: "bg-green-100 text-green-800",
-  거부: "bg-red-100 text-red-800",
-};
+const BASE_BADGE_CLASS =
+  "bg-white border border-zinc-200 text-zinc-700 text-xs font-medium flex items-center gap-1.5";
+
+function StatusBadge({
+  status,
+  colorMap,
+}: {
+  status: string;
+  colorMap: Record<string, string>;
+}) {
+  const dotClass = COLOR_TO_DOT[colorMap[status] ?? "default"] ?? "bg-gray-400";
+  return (
+    <Badge className={BASE_BADGE_CLASS}>
+      <span className={`inline-block w-2 h-2 rounded-full ${dotClass}`} />
+      {status}
+    </Badge>
+  );
+}
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  return <Badge className={ORDER_STATUS_BADGE_CLASS[status]}>{status}</Badge>;
+  return <StatusBadge status={status} colorMap={ORDER_STATUS_COLORS} />;
 }
 
 export function ClaimStatusBadge({ status }: { status: ClaimStatus }) {
-  return <Badge className={CLAIM_STATUS_BADGE_CLASS[status]}>{status}</Badge>;
+  return <StatusBadge status={status} colorMap={CLAIM_STATUS_COLORS} />;
 }

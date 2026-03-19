@@ -22,7 +22,7 @@ export const ConsentCheckbox = ({
   className,
 }: ConsentCheckboxProps) => {
   return (
-    <div className={cn("flex gap-2 items-start", className)}>
+    <div className={cn("flex gap-2 items-start px-6 pb-6", className)}>
       <Checkbox
         id={id}
         checked={checked}
@@ -30,7 +30,7 @@ export const ConsentCheckbox = ({
         className="mt-1"
       />
       <Label htmlFor={id} subLabel={description}>
-        {required ? `(필수) ${label}` : label}
+        {required ? `[필수] ${label}` : label}
       </Label>
     </div>
   );
