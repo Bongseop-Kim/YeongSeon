@@ -389,7 +389,7 @@ begin
       -- 멱등: 이미 대기중
       null;
 
-    elsif v_order.status in ('진행중', '발송대기', '접수', '완료') then
+    elsif v_order.status in ('진행중', '발송대기', '발송중', '접수', '완료') then
       -- 다른 경로로 이미 confirm됨 — skip
       null;
 
@@ -441,6 +441,7 @@ declare
   v_user_id uuid;
   v_order record;
   v_courier_code text;
+  v_tracking_number text;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -459,6 +460,8 @@ begin
   if p_tracking_number is null or trim(p_tracking_number) = '' then
     raise exception '송장번호를 입력해주세요';
   end if;
+
+  v_tracking_number := trim(p_tracking_number);
 
   select id, user_id, status
   into v_order
@@ -482,7 +485,7 @@ begin
   set
     status          = '발송중',
     courier_company = v_courier_code,
-    tracking_number = p_tracking_number,
+    tracking_number = v_tracking_number,
     shipped_at      = now(),
     updated_at      = now()
   where id = p_order_id;
@@ -491,7 +494,7 @@ begin
     order_id, changed_by, previous_status, new_status, memo
   ) values (
     p_order_id, v_user_id, '발송대기', '발송중',
-    '고객 발송 처리: ' || v_courier_code || ' ' || p_tracking_number
+    '고객 발송 처리: ' || v_courier_code || ' ' || v_tracking_number
   );
 end;
 $$;

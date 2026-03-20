@@ -377,6 +377,7 @@ const ReformPage = () => {
           open={isPurchaseSheetOpen}
           onOpenChange={setIsPurchaseSheetOpen}
           cancellationConsent={cancellationConsent}
+          onCancellationConsentChange={setCancellationConsent}
           onAddToCart={handleAddToCart}
           onOrder={handleMobileOrder}
           tieCount={fields.length}
