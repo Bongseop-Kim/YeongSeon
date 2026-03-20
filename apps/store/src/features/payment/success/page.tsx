@@ -67,15 +67,13 @@ const PaymentSuccessPage = () => {
           (order) => order.orderType === "repair",
         );
 
+        const reformItem = repairOrder
+          ? orderItems.find((item) => item.type === "reform")
+          : undefined;
         const prefilledTracking = repairOrder
-          ? (() => {
-              const reformItem = orderItems.find(
-                (item) => item.type === "reform",
-              );
-              return reformItem
-                ? useOrderStore.getState().getTrackingInfo(reformItem.id)
-                : undefined;
-            })()
+          ? reformItem
+            ? useOrderStore.getState().getTrackingInfo(reformItem.id)
+            : undefined
           : undefined;
 
         clearOrderItems();

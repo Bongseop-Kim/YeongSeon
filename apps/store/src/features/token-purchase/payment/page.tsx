@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Check, ChevronLeft } from "lucide-react";
 import { ROUTES } from "@/constants/ROUTES";
@@ -15,17 +15,13 @@ import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { hasStringCode } from "@/lib/type-guard";
 import type { TokenPlanKey } from "@/features/token-purchase/api/token-purchase-api";
+import { useTokenPlansQuery } from "@/features/token-purchase/api/token-purchase-query";
 
 interface TokenPaymentPageState {
   purchaseInfo: {
     paymentGroupId: string;
-    price: number;
-    tokenAmount: number;
   };
   planKey: TokenPlanKey;
-  label: string;
-  features: string[];
-  popular: boolean;
 }
 
 const TokenPaymentPage = () => {
@@ -36,8 +32,18 @@ const TokenPaymentPage = () => {
   const isRequestingRef = useRef(false);
   const [withdrawalConsent, setWithdrawalConsent] = useState(false);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  const {
+    data: tokenPlans,
+    isLoading: isPlansLoading,
+    isError: isPlansError,
+    refetch: refetchPlans,
+  } = useTokenPlansQuery();
 
   const state = location.state as TokenPaymentPageState | null;
+  const selectedPlan = useMemo(
+    () => tokenPlans?.find((plan) => plan.planKey === state?.planKey),
+    [tokenPlans, state?.planKey],
+  );
 
   useEffect(() => {
     if (!state?.purchaseInfo) {
@@ -45,9 +51,49 @@ const TokenPaymentPage = () => {
     }
   }, [state, navigate]);
 
+  useEffect(() => {
+    if (!state?.purchaseInfo) return;
+    if (!isPlansLoading && tokenPlans && !selectedPlan) {
+      navigate(ROUTES.TOKEN_PURCHASE, { replace: true });
+    }
+  }, [isPlansLoading, navigate, state, tokenPlans, selectedPlan]);
+
   if (!state?.purchaseInfo || !user) return null;
 
-  const { purchaseInfo, label, features, popular } = state;
+  const { purchaseInfo } = state;
+
+  if (isPlansLoading || !selectedPlan) {
+    return (
+      <MainLayout>
+        <MainContent className="overflow-visible bg-zinc-50">
+          <div className="mx-auto max-w-3xl px-4 py-12">
+            {isPlansError ? (
+              <div className="flex flex-col items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-6 py-10 text-center">
+                <p className="text-sm text-zinc-500">
+                  토큰 결제 정보를 다시 불러오지 못했습니다.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchPlans()}
+                >
+                  다시 시도
+                </Button>
+              </div>
+            ) : (
+              <div className="h-64 animate-pulse rounded-2xl bg-zinc-100" />
+            )}
+          </div>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  if (selectedPlan.price == null || selectedPlan.tokenAmount == null) {
+    return null;
+  }
+
+  const { label, features, popular = false, price, tokenAmount } = selectedPlan;
 
   const handleRequestPayment = async () => {
     if (isRequestingRef.current) return;
@@ -65,7 +111,7 @@ const TokenPaymentPage = () => {
     try {
       await paymentWidgetRef.current.requestPayment({
         orderId: purchaseInfo.paymentGroupId,
-        orderName: `${label} 토큰 ${purchaseInfo.tokenAmount}개`,
+        orderName: `${label} 토큰 ${tokenAmount}개`,
         successUrl: `${window.location.origin}${ROUTES.TOKEN_PURCHASE_SUCCESS}`,
         failUrl: `${window.location.origin}${ROUTES.TOKEN_PURCHASE_FAIL}`,
       });
@@ -103,13 +149,13 @@ const TokenPaymentPage = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-500">토큰</span>
                     <span className="font-medium text-zinc-900">
-                      {purchaseInfo.tokenAmount.toLocaleString()}개
+                      {tokenAmount.toLocaleString()}개
                     </span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold">
                     <span>합계</span>
-                    <span>{purchaseInfo.price.toLocaleString()}원</span>
+                    <span>{price.toLocaleString()}원</span>
                   </div>
                 </CardContent>
               </Card>
@@ -121,7 +167,7 @@ const TokenPaymentPage = () => {
                 <CardContent className="px-0">
                   <PaymentWidget
                     ref={paymentWidgetRef}
-                    amount={purchaseInfo.price}
+                    amount={price}
                     customerKey={user.id}
                   />
                   <ConsentCheckbox
@@ -131,6 +177,7 @@ const TokenPaymentPage = () => {
                     label="청약철회 제한 동의"
                     description="토큰은 구매 즉시 사용 가능한 디지털 이용권으로, 이미지 생성에 사용한 후에는 환불되지 않습니다."
                     required
+                    className="px-6 pb-6"
                   />
                 </CardContent>
               </Card>
@@ -145,7 +192,7 @@ const TokenPaymentPage = () => {
             >
               {isPaymentLoading
                 ? "결제 요청 중..."
-                : `${purchaseInfo.price.toLocaleString()}원 결제하기`}
+                : `${price.toLocaleString()}원 결제하기`}
             </Button>
           }
         >
@@ -162,12 +209,12 @@ const TokenPaymentPage = () => {
                   </p>
                   <div className="mt-1 flex items-baseline gap-1.5">
                     <span className="text-4xl font-bold">
-                      {purchaseInfo.tokenAmount.toLocaleString()}
+                      {tokenAmount.toLocaleString()}
                     </span>
                     <span className="text-sm text-zinc-400">토큰</span>
                   </div>
                   <p className="mt-2 text-2xl font-semibold">
-                    {purchaseInfo.price.toLocaleString()}원
+                    {price.toLocaleString()}원
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">

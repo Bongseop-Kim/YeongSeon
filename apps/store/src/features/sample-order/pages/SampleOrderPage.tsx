@@ -309,6 +309,7 @@ export default function SampleOrderPage() {
                         label="취소/환불 불가 동의"
                         description="샘플 주문은 결제 후 중도 취소 및 환불이 불가능합니다."
                         required
+                        className="px-6 pb-6"
                       />
                     </CardContent>
                   </Card>

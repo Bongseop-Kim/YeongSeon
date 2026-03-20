@@ -121,12 +121,15 @@ export default function AppLayout() {
                   <span className="sr-only">뒤로가기</span>
                 </button>
               )}
-              <span
-                className="text-zinc-50"
+              <button
+                type="button"
+                className="border-0 bg-transparent p-0 font-inherit text-zinc-50 disabled:cursor-default disabled:opacity-100"
                 onClick={() => !isMobile && navigate(ROUTES.HOME)}
+                disabled={isMobile}
+                aria-disabled={isMobile}
               >
                 {getCurrentPageName()}
-              </span>
+              </button>
             </HeaderTitle>
 
             {/* 데스크톱 네비게이션 */}

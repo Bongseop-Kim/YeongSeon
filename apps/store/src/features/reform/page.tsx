@@ -250,6 +250,7 @@ const ReformPage = () => {
                   label="취소/환불 불가 동의"
                   description="판매자가 수선물을 수령(접수)한 이후부터 취소 및 환불이 불가능합니다."
                   required
+                  className="px-6 pb-6"
                 />
               </Card>
             }

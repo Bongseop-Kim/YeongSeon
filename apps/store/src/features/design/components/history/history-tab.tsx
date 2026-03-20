@@ -7,7 +7,13 @@ interface HistoryTabProps {
 }
 
 export function HistoryTab({ onSessionSelect }: HistoryTabProps) {
-  const { data: sessions = [], isLoading } = useDesignSessionsQuery();
+  const {
+    data: sessions = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useDesignSessionsQuery();
 
   if (isLoading) {
     return (
@@ -15,6 +21,26 @@ export function HistoryTab({ onSessionSelect }: HistoryTabProps) {
         {[1, 2, 3].map((i) => (
           <div key={i} className="h-14 animate-pulse rounded-lg bg-gray-100" />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <p className="text-sm text-gray-500">
+          저장된 디자인 기록을 불러오지 못했습니다.
+        </p>
+        {error instanceof Error ? (
+          <p className="text-xs text-gray-400">{error.message}</p>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+        >
+          다시 시도
+        </button>
       </div>
     );
   }

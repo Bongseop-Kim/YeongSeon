@@ -26,7 +26,7 @@ export function SessionCard({ session, onClick }: SessionCardProps) {
       )}
       onClick={() => onClick(session)}
     >
-      <div className="h-11 w-11 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+      <div className="h-11 w-11 shrink-0 overflow-hidden rounded bg-gray-100">
         {session.lastImageUrl ? (
           <img
             src={session.lastImageUrl}

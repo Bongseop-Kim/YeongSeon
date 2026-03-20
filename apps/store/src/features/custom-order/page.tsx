@@ -117,6 +117,7 @@ export default function OrderPage() {
     : { sewingCost: 0, fabricCost: 0, totalCost: 0 };
 
   const isQuoteMode = watchedValues.quantity >= 100;
+  const shouldRequireCancellationConsent = !isQuoteMode && !!user;
 
   const grandTotal = totalCost;
 
@@ -182,7 +183,7 @@ export default function OrderPage() {
                   pricingConfig={pricingConfig}
                   isLoggedIn={isLoggedIn}
                 />
-                {!isQuoteMode && user && (
+                {shouldRequireCancellationConsent && (
                   <Card className="py-0">
                     <CardContent className="px-0">
                       <PaymentWidget
@@ -198,6 +199,7 @@ export default function OrderPage() {
                         label="취소/환불 불가 동의"
                         description="주문제작(견적요청)은 진행 후 중도 취소 및 환불이 불가능합니다."
                         required
+                        className="px-6 pb-6"
                       />
                     </CardContent>
                   </Card>
@@ -214,7 +216,9 @@ export default function OrderPage() {
                 isPending={isPending}
                 isSubmitDisabled={
                   isSubmitDisabled ||
-                  (wizard.isLastStep && !cancellationConsent)
+                  (wizard.isLastStep &&
+                    shouldRequireCancellationConsent &&
+                    !cancellationConsent)
                 }
                 isQuoteMode={isQuoteMode}
                 grandTotal={grandTotal}

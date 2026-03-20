@@ -81,11 +81,11 @@ export function MessageBubble({
           />
         </div>
       ) : null}
-      {!isUser && message.imageUrl && !isMobile ? (
+      {!isUser && message.imageUrl && !isMobile && onImageIndicatorClick ? (
         <button
           type="button"
           className="inline-flex items-center gap-1.5 rounded border border-green-200 bg-green-50 px-2 py-1 text-xs text-green-700 transition-colors hover:bg-green-100"
-          onClick={() => onImageIndicatorClick?.(message.imageUrl ?? "")}
+          onClick={() => onImageIndicatorClick(message.imageUrl ?? "")}
         >
           <span>🖼</span>
           <span>이미지 생성됨 · 우측 프리뷰 확인</span>

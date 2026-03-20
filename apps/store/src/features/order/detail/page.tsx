@@ -23,7 +23,10 @@ import type {
   TrackingInfo,
 } from "@yeongseon/shared/types/view/order";
 import type { CustomerAction } from "@yeongseon/shared";
-import { buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies";
+import {
+  buildTrackingUrl,
+  getCourierCompanyLabel,
+} from "@yeongseon/shared/constants/courier-companies";
 import {
   type ClaimActionType,
   CLAIM_ACTION_LABEL,
@@ -128,7 +131,8 @@ const RepairShippingInTransitSection = ({
   return (
     <>
       <p className="text-sm">
-        <span className="text-zinc-500">택배사:</span> {courierCompany}
+        <span className="text-zinc-500">택배사:</span>{" "}
+        {getCourierCompanyLabel(courierCompany)}
       </p>
       <p className="text-sm">
         <span className="text-zinc-500">송장번호:</span> {trackingNumber}
@@ -233,7 +237,8 @@ const TrackingInfoSection = ({ info }: { info: TrackingInfo }) => {
   return (
     <>
       <p>
-        <span className="text-zinc-500">택배사:</span> {info.courierCompany}
+        <span className="text-zinc-500">택배사:</span>{" "}
+        {getCourierCompanyLabel(info.courierCompany)}
       </p>
       <p>
         <span className="text-zinc-500">송장번호:</span> {info.trackingNumber}
@@ -423,14 +428,15 @@ const OrderDetailPage = () => {
             )}
 
             {/* 수선품 발송 안내 (발송대기) */}
-            {order.status === "발송대기" && (
+            {order.orderType === "repair" && order.status === "발송대기" && (
               <CardContent>
                 <RepairShippingPendingSection orderId={order.id} />
               </CardContent>
             )}
 
             {/* 수선품 발송 정보 (발송중) */}
-            {order.status === "발송중" &&
+            {order.orderType === "repair" &&
+              order.status === "발송중" &&
               order.trackingInfo?.courierCompany &&
               order.trackingInfo?.trackingNumber && (
                 <CardContent>

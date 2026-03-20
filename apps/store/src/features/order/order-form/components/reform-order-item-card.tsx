@@ -36,9 +36,12 @@ export function ReformOrderItemCard({
   const hasCoupon = !!item.appliedCoupon;
 
   useEffect(() => {
-    if (courierCompany && trackingNumber) {
-      updateOrderItemTracking(item.id, { courierCompany, trackingNumber });
-    }
+    updateOrderItemTracking(
+      item.id,
+      courierCompany || trackingNumber
+        ? { courierCompany, trackingNumber }
+        : undefined,
+    );
   }, [courierCompany, trackingNumber, item.id, updateOrderItemTracking]);
 
   return (
@@ -116,7 +119,7 @@ export function ReformOrderItemCard({
               </SelectTrigger>
               <SelectContent>
                 {COURIER_COMPANIES.map((c) => (
-                  <SelectItem key={c.code} value={c.name}>
+                  <SelectItem key={c.code} value={c.code}>
                     {c.name}
                   </SelectItem>
                 ))}

@@ -48,7 +48,7 @@ const RepairShippingPage = () => {
 
   // 발송대기 아닌 상태면 주문 상세로 리다이렉트
   useEffect(() => {
-    if (!isLoading && order && order.status !== "발송대기") {
+    if (!isLoading && (!order || order.status !== "발송대기")) {
       navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`, { replace: true });
     }
   }, [order, isLoading, navigate, orderId]);
@@ -104,6 +104,10 @@ const RepairShippingPage = () => {
     );
   }
 
+  if (!order || order.status !== "발송대기") {
+    return null;
+  }
+
   return (
     <MainLayout>
       <MainContent>
@@ -151,7 +155,7 @@ const RepairShippingPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {COURIER_COMPANIES.map((c) => (
-                    <SelectItem key={c.code} value={c.name}>
+                    <SelectItem key={c.code} value={c.code}>
                       {c.name}
                     </SelectItem>
                   ))}
@@ -182,7 +186,7 @@ const RepairShippingPage = () => {
               <div className="text-center pt-1">
                 <button
                   type="button"
-                  onClick={() => navigate(ROUTES.ORDER_LIST)}
+                  onClick={() => navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`)}
                   className="text-sm text-zinc-500 underline"
                 >
                   나중에 주문 상세에서 등록하기

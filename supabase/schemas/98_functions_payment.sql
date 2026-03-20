@@ -303,7 +303,7 @@ begin
       -- 멱등: 이미 lock됨
       v_already_locked := true;
 
-    elsif v_order.status in ('진행중', '접수', '완료') then
+    elsif v_order.status in ('진행중', '발송대기', '접수', '완료') then
       -- 이미 결제 완료 상태
       v_already_confirmed := true;
 
@@ -389,7 +389,7 @@ begin
       -- 멱등: 이미 대기중
       null;
 
-    elsif v_order.status in ('진행중', '접수', '완료') then
+    elsif v_order.status in ('진행중', '발송대기', '접수', '완료') then
       -- 다른 경로로 이미 confirm됨 — skip
       null;
 

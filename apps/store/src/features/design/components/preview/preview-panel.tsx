@@ -41,6 +41,11 @@ export function PreviewPanel({ className }: PreviewPanelProps) {
 
   useEffect(() => {
     if (!restoringSessionId || !sessionMessages) return;
+    if (sessionMessages.length === 0) {
+      setRestoringSessionId(null);
+      setTab("preview");
+      return;
+    }
 
     restoreMessages(sessionMessages.map(sessionMessageToMessage));
     setCurrentSessionId(restoringSessionId);
