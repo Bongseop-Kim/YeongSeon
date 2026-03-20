@@ -1,14 +1,10 @@
 import type { AdminInquiryRowDTO } from "@yeongseon/shared";
-import { formatDate } from "@yeongseon/shared";
+import { formatDate, isInquiryCategory } from "@yeongseon/shared";
 import {
-  INQUIRY_CATEGORIES,
   type AdminInquiryListItem,
   type AdminInquiryDetail,
   type InquiryCategory,
 } from "@/features/inquiries/types/admin-inquiry";
-
-const isInquiryCategory = (v: string): v is InquiryCategory =>
-  (INQUIRY_CATEGORIES as readonly string[]).includes(v);
 
 const toInquiryCategory = (v: string | null): InquiryCategory => {
   if (v !== null && isInquiryCategory(v)) return v;

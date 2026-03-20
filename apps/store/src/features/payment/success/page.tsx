@@ -5,16 +5,16 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { useConfirmPayment } from "@/features/payment/api/payment-query";
 import { useOrderStore } from "@/store/order";
 import { removeCartItemsByIds } from "@/features/cart/api/cart-api";
-import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { Loader2 } from "lucide-react";
+import { useRequiredUser } from "@/hooks/use-required-user";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { mutateAsync: confirmPaymentMutation } = useConfirmPayment();
   const { items: orderItems, clearOrderItems } = useOrderStore();
-  const { user } = useAuthStore();
+  const userId = useRequiredUser();
   const [error, setError] = useState<string | null>(null);
   const processedRef = useRef(false);
 
@@ -47,10 +47,10 @@ const PaymentSuccessPage = () => {
         });
 
         // 2. 장바구니에서 주문한 아이템 제거 (sample order 등 cart 미사용 주문은 skip)
-        if (user?.id && orderItems.length > 0) {
+        if (orderItems.length > 0) {
           try {
             const orderedItemIds = orderItems.map((item) => item.id);
-            await removeCartItemsByIds(user.id, orderedItemIds);
+            await removeCartItemsByIds(userId, orderedItemIds);
           } catch (cartErr) {
             // 장바구니 업데이트 실패는 주문 실패로 처리하지 않음
             console.warn("장바구니 아이템 제거 실패:", cartErr);

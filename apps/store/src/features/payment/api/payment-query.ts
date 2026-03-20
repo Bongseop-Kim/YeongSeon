@@ -5,18 +5,16 @@ import type {
   ConfirmPaymentResponse,
 } from "@/features/payment/api/payment-api";
 import { cartKeys } from "@/features/cart/api/cart-keys";
-import { useAuthStore } from "@/store/auth";
+import { useRequiredUser } from "@/hooks/use-required-user";
 
 export const useConfirmPayment = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  const userId = useRequiredUser();
 
   return useMutation<ConfirmPaymentResponse, Error, ConfirmPaymentRequest>({
     mutationFn: confirmPayment,
     onSuccess: () => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: cartKeys.items(user.id) });
-      }
+      queryClient.invalidateQueries({ queryKey: cartKeys.items(userId) });
     },
   });
 };

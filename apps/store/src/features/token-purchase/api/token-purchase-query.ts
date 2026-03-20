@@ -7,7 +7,6 @@ import {
   type TokenPlan,
 } from "@/features/token-purchase/api/token-purchase-api";
 import { confirmPayment } from "@/features/payment/api/payment-api";
-import type { ConfirmPaymentRequest } from "@/features/payment/api/payment-api";
 import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/features/design/api/ai-design-query";
 
 export const TOKEN_PLANS_QUERY_KEY = ["token-plans"] as const;
@@ -30,7 +29,7 @@ export const useConfirmTokenPurchase = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: ConfirmPaymentRequest) => confirmPayment(request),
+    mutationFn: confirmPayment,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,

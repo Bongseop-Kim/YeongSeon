@@ -57,7 +57,6 @@ export const useClearCartItems = () => {
     onSuccess: () => {
       // 쿼리 캐시 초기화
       queryClient.setQueryData(cartKeys.items(userId), []);
-      queryClient.invalidateQueries({ queryKey: cartKeys.items(userId) });
     },
     onError: (error) => {
       console.error("장바구니 초기화 실패:", error);

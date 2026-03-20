@@ -1,12 +1,6 @@
+import { isInquiryCategory } from "@yeongseon/shared";
 import type { InquiryRowDTO } from "@/features/my-page/inquiry/types/dto/inquiry";
-import {
-  INQUIRY_CATEGORIES,
-  type InquiryItem,
-  type InquiryCategory,
-} from "@/features/my-page/inquiry/types/inquiry-item";
-
-const isInquiryCategory = (v: string): v is InquiryCategory =>
-  (INQUIRY_CATEGORIES as readonly string[]).includes(v);
+import { type InquiryItem } from "@/features/my-page/inquiry/types/inquiry-item";
 
 export const toInquiryView = (row: InquiryRowDTO): InquiryItem => ({
   id: row.id,
