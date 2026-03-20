@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 interface MobileReformSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  cancellationConsent: boolean;
   onAddToCart: () => void;
   onOrder: () => void;
   tieCount: number;
@@ -13,11 +14,14 @@ interface MobileReformSheetProps {
 export function MobileReformSheet({
   open,
   onOpenChange,
+  cancellationConsent,
   onAddToCart,
   onOrder,
   tieCount,
   totalCost,
 }: MobileReformSheetProps) {
+  const isActionDisabled = tieCount === 0 || !cancellationConsent;
+
   const handleAddToCart = () => {
     onAddToCart();
     onOpenChange(false);
@@ -45,7 +49,7 @@ export function MobileReformSheet({
               size="lg"
               variant="outline"
               onClick={handleAddToCart}
-              disabled={tieCount === 0}
+              disabled={isActionDisabled}
               className="flex-1"
             >
               장바구니
@@ -54,7 +58,7 @@ export function MobileReformSheet({
               type="button"
               size="lg"
               onClick={handleOrder}
-              disabled={tieCount === 0}
+              disabled={isActionDisabled}
               className="flex-1"
             >
               주문하기

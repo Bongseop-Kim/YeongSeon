@@ -376,6 +376,7 @@ const ReformPage = () => {
         <MobileReformSheet
           open={isPurchaseSheetOpen}
           onOpenChange={setIsPurchaseSheetOpen}
+          cancellationConsent={cancellationConsent}
           onAddToCart={handleAddToCart}
           onOrder={handleMobileOrder}
           tieCount={fields.length}

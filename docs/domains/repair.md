@@ -75,7 +75,6 @@ stateDiagram-v2
 
 | 현재 상태  | 롤백 대상  | 조건                        |
 | ---------- | ---------- | --------------------------- |
-| `발송대기` | `대기중`   | is_rollback=true, memo 필수 |
 | `발송중`   | `발송대기` | is_rollback=true, memo 필수 |
 | `접수`     | `발송중`   | is_rollback=true, memo 필수 |
 | `수선중`   | `접수`     | is_rollback=true, memo 필수 |

@@ -303,7 +303,7 @@ begin
       -- 멱등: 이미 lock됨
       v_already_locked := true;
 
-    elsif v_order.status in ('진행중', '발송대기', '접수', '완료') then
+    elsif v_order.status in ('진행중', '발송대기', '발송중', '접수', '완료') then
       -- 이미 결제 완료 상태
       v_already_confirmed := true;
 
@@ -440,6 +440,7 @@ AS $$
 declare
   v_user_id uuid;
   v_order record;
+  v_courier_code text;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -448,6 +449,11 @@ begin
 
   if p_courier_company is null or trim(p_courier_company) = '' then
     raise exception '택배사를 선택해주세요';
+  end if;
+
+  v_courier_code := lower(trim(p_courier_company));
+  if v_courier_code not in ('cj', 'hanjin', 'logen', 'epost', 'lotte', 'kyungdong') then
+    raise exception '지원하지 않는 택배사 코드입니다: % (허용 값: cj, hanjin, logen, epost, lotte, kyungdong)', p_courier_company;
   end if;
 
   if p_tracking_number is null or trim(p_tracking_number) = '' then
@@ -475,7 +481,7 @@ begin
   update public.orders
   set
     status          = '발송중',
-    courier_company = p_courier_company,
+    courier_company = v_courier_code,
     tracking_number = p_tracking_number,
     shipped_at      = now(),
     updated_at      = now()
@@ -485,7 +491,7 @@ begin
     order_id, changed_by, previous_status, new_status, memo
   ) values (
     p_order_id, v_user_id, '발송대기', '발송중',
-    '고객 발송 처리: ' || p_courier_company || ' ' || p_tracking_number
+    '고객 발송 처리: ' || v_courier_code || ' ' || p_tracking_number
   );
 end;
 $$;
