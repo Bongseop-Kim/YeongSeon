@@ -16,6 +16,7 @@ export interface DesignChatState {
   resultTags: string[];
   pendingAttachments: Attachment[];
   aiModel: AiModel;
+  currentSessionId: string | null;
   addMessage: (message: Message) => void;
   setDesignContext: (patch: Partial<DesignContext>) => void;
   addAttachment: (attachment: Attachment) => void;
@@ -24,8 +25,10 @@ export interface DesignChatState {
   setGenerationStatus: (status: GenerationStatus) => void;
   setGeneratedImage: (imageUrl: string | null, tags: string[]) => void;
   markImageDownloaded: () => void;
+  restoreMessages: (messages: Message[]) => void;
   resetConversation: () => void;
   setAiModel: (model: AiModel) => void;
+  setCurrentSessionId: (id: string) => void;
 }
 
 export const createInitialDesignContext = (): DesignContext => ({
@@ -46,6 +49,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
   resultTags: [],
   pendingAttachments: [],
   aiModel: "openai",
+  currentSessionId: null,
   addMessage: (message) =>
     set((state) => ({
       messages: [...state.messages, message],
@@ -98,7 +102,10 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       isImageDownloaded: false,
       resultTags: [],
       pendingAttachments: [],
+      currentSessionId: null,
     }),
+  restoreMessages: (messages) => set({ messages }),
+  setCurrentSessionId: (id) => set({ currentSessionId: id }),
   setAiModel: (model) =>
     set((state) => {
       if (state.aiModel === model) return {};

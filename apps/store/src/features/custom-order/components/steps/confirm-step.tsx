@@ -98,7 +98,7 @@ export const ConfirmStep = ({
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex justify-between items-center">
           <CardTitle>
             {selectedAddress?.recipientName ?? "배송지 정보"}
           </CardTitle>

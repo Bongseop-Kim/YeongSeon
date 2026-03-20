@@ -63,6 +63,19 @@ const PaymentSuccessPage = () => {
         }
 
         // 3. 정리
+        const repairOrder = paymentResult.orders.find(
+          (order) => order.orderType === "repair",
+        );
+
+        const reformItem = repairOrder
+          ? orderItems.find((item) => item.type === "reform")
+          : undefined;
+        const prefilledTracking = repairOrder
+          ? reformItem
+            ? useOrderStore.getState().getTrackingInfo(reformItem.id)
+            : undefined
+          : undefined;
+
         clearOrderItems();
 
         const sampleCouponResult = paymentResult.orders.find(
@@ -75,7 +88,12 @@ const PaymentSuccessPage = () => {
         } else {
           toast.success("결제가 완료되었습니다!");
         }
-        if (paymentResult.type === "token_purchase") {
+        if (repairOrder) {
+          navigate(`${ROUTES.REPAIR_SHIPPING}/${repairOrder.orderId}`, {
+            replace: true,
+            state: { prefilledTracking: prefilledTracking ?? null },
+          });
+        } else if (paymentResult.type === "token_purchase") {
           navigate(ROUTES.TOKEN_PURCHASE_SUCCESS, { replace: true });
         } else if (paymentResult.orders.length === 1) {
           navigate(

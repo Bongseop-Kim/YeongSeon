@@ -30,6 +30,7 @@ import PaymentWidget, {
 import { useCreateSampleOrder } from "@/features/sample-order/api/sample-order-query";
 import type { CreateSampleOrderFormInput } from "@/features/sample-order/api/sample-order-mapper";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
+import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
@@ -117,6 +118,7 @@ const serializeSampleOrderInput = (input: CreateSampleOrderFormInput): string =>
 
 export default function SampleOrderPage() {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  const [cancellationConsent, setCancellationConsent] = useState(false);
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const pendingOrderIdRef = useRef<string | null>(null);
   const pendingOrderSnapshotRef = useRef<string | null>(null);
@@ -155,7 +157,8 @@ export default function SampleOrderPage() {
     samplePrice === null ||
     isPaymentLoading ||
     createSampleOrder.isPending ||
-    imageUpload.isUploading;
+    imageUpload.isUploading ||
+    !cancellationConsent;
 
   const handleSubmit = async () => {
     if (!user) {
@@ -299,6 +302,15 @@ export default function SampleOrderPage() {
                           customerKey={user.id}
                         />
                       )}
+                      <ConsentCheckbox
+                        id="cancellation-consent"
+                        checked={cancellationConsent}
+                        onCheckedChange={setCancellationConsent}
+                        label="취소/환불 불가 동의"
+                        description="샘플 주문은 결제 후 중도 취소 및 환불이 불가능합니다."
+                        required
+                        className="px-6 pb-6"
+                      />
                     </CardContent>
                   </Card>
                 )}
@@ -481,7 +493,7 @@ export default function SampleOrderPage() {
 
             {/* 배송지 */}
             <Card>
-              <CardHeader>
+              <CardHeader className="flex justify-between items-center">
                 <CardTitle>
                   {selectedAddress?.recipientName ?? "배송지 정보"}
                 </CardTitle>

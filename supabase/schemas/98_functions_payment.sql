@@ -104,10 +104,12 @@ begin
       raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
     end if;
 
+    -- repair → 발송대기 (기존: else '접수')
     v_post_status := case v_order.order_type
-      when 'sale'  then '진행중'
-      when 'token' then '완료'
+      when 'sale'   then '진행중'
+      when 'token'  then '완료'
       when 'sample' then '접수'
+      when 'repair' then '발송대기'
       else '접수'
     end;
 
@@ -301,7 +303,7 @@ begin
       -- 멱등: 이미 lock됨
       v_already_locked := true;
 
-    elsif v_order.status in ('진행중', '접수', '완료') then
+    elsif v_order.status in ('진행중', '발송대기', '발송중', '접수', '완료') then
       -- 이미 결제 완료 상태
       v_already_confirmed := true;
 
@@ -387,7 +389,7 @@ begin
       -- 멱등: 이미 대기중
       null;
 
-    elsif v_order.status in ('진행중', '접수', '완료') then
+    elsif v_order.status in ('진행중', '발송대기', '발송중', '접수', '완료') then
       -- 다른 경로로 이미 confirm됨 — skip
       null;
 
@@ -419,3 +421,82 @@ $$;
 -- unlock_payment_orders: service_role 전용
 REVOKE EXECUTE ON FUNCTION public.unlock_payment_orders(uuid, uuid) FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.unlock_payment_orders(uuid, uuid) TO service_role;
+
+-- ── submit_repair_tracking ────────────────────────────────────────
+-- 고객이 직접 수선품 발송 후 송장번호를 등록하는 RPC.
+-- 발송대기 → 발송중 전이.
+-- SECURITY DEFINER: order_status_logs는 INSERT RLS 정책이 없으므로 audit log 작성을 위해 DEFINER 필요.
+-- 소유권 검증은 auth.uid()와 orders.user_id 비교로 수행.
+CREATE OR REPLACE FUNCTION public.submit_repair_tracking(
+  p_order_id uuid,
+  p_courier_company text,
+  p_tracking_number text
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_user_id uuid;
+  v_order record;
+  v_courier_code text;
+  v_tracking_number text;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  if p_courier_company is null or trim(p_courier_company) = '' then
+    raise exception '택배사를 선택해주세요';
+  end if;
+
+  v_courier_code := lower(trim(p_courier_company));
+  if v_courier_code not in ('cj', 'hanjin', 'logen', 'epost', 'lotte', 'kyungdong') then
+    raise exception '지원하지 않는 택배사 코드입니다: % (허용 값: cj, hanjin, logen, epost, lotte, kyungdong)', p_courier_company;
+  end if;
+
+  if p_tracking_number is null or trim(p_tracking_number) = '' then
+    raise exception '송장번호를 입력해주세요';
+  end if;
+
+  v_tracking_number := trim(p_tracking_number);
+
+  select id, user_id, status
+  into v_order
+  from public.orders
+  where id = p_order_id
+  for update;
+
+  if not found then
+    raise exception '주문을 찾을 수 없습니다';
+  end if;
+
+  if v_order.user_id is distinct from v_user_id then
+    raise exception 'Forbidden';
+  end if;
+
+  if v_order.status != '발송대기' then
+    raise exception '발송대기 상태에서만 송장번호를 등록할 수 있습니다 (현재 상태: %)', v_order.status;
+  end if;
+
+  update public.orders
+  set
+    status          = '발송중',
+    courier_company = v_courier_code,
+    tracking_number = v_tracking_number,
+    shipped_at      = now(),
+    updated_at      = now()
+  where id = p_order_id;
+
+  insert into public.order_status_logs (
+    order_id, changed_by, previous_status, new_status, memo
+  ) values (
+    p_order_id, v_user_id, '발송대기', '발송중',
+    '고객 발송 처리: ' || v_courier_code || ' ' || v_tracking_number
+  );
+end;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.submit_repair_tracking(uuid, text, text) TO authenticated;

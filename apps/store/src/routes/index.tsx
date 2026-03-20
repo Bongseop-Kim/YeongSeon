@@ -18,12 +18,14 @@ import MyInfoNoticePage from "@/features/my-page/my-info/notice/page";
 import MyInfoLeavePage from "@/features/my-page/my-info/leave/page";
 import OrderListPage from "@/features/order/order-list/page";
 import OrderDetailPage from "@/features/order/detail/page";
+import RepairShippingPage from "@/features/order/repair-shipping/page";
 import ClaimListPage from "@/features/claim/claim-list/page";
 import ClaimFormPage from "@/features/claim/claim-form/page";
 import ClaimDetailPage from "@/features/claim/claim-detail/page";
 import PaymentSuccessPage from "@/features/payment/success/page";
 import PaymentFailPage from "@/features/payment/fail/page";
 import TokenPurchasePage from "@/features/token-purchase/page";
+import TokenPaymentPage from "@/features/token-purchase/payment/page";
 import TokenPurchaseSuccessPage from "@/features/token-purchase/success/page";
 import TokenPurchaseFailPage from "@/features/token-purchase/fail/page";
 import CartPage from "@/features/cart/page";
@@ -79,6 +81,14 @@ export default function Router() {
         element={
           <ProtectedRoute>
             <OrderListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/order/repair-shipping/:orderId"
+        element={
+          <ProtectedRoute>
+            <RepairShippingPage />
           </ProtectedRoute>
         }
       />
@@ -236,6 +246,14 @@ export default function Router() {
         element={
           <ProtectedRoute>
             <TokenPurchasePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/token/purchase/payment"
+        element={
+          <ProtectedRoute>
+            <TokenPaymentPage />
           </ProtectedRoute>
         }
       />

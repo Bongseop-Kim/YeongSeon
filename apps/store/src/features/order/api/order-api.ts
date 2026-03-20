@@ -207,3 +207,22 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
   const detailRow = parseOrderDetailRow(order);
   return toOrderViewFromDetail(detailRow, mappedItems);
 };
+
+/**
+ * 수선품 발송 완료 처리 (발송대기 → 발송중)
+ */
+export const submitRepairTracking = async (
+  orderId: string,
+  courierCompany: string,
+  trackingNumber: string,
+): Promise<void> => {
+  const { error } = await supabase.rpc("submit_repair_tracking", {
+    p_order_id: orderId,
+    p_courier_company: courierCompany,
+    p_tracking_number: trackingNumber,
+  });
+
+  if (error) {
+    throw new Error(error.message || "발송 처리에 실패했습니다.");
+  }
+};

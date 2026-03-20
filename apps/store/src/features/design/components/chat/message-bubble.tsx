@@ -19,9 +19,14 @@ const tiePreviewStyle: CSSProperties = {
 interface MessageBubbleProps {
   message: Message;
   onChipClick?: (text: string) => void;
+  onImageIndicatorClick?: (imageUrl: string) => void;
 }
 
-export function MessageBubble({ message, onChipClick }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  onChipClick,
+  onImageIndicatorClick,
+}: MessageBubbleProps) {
   const isUser = message.role === "user";
   const { isMobile } = useBreakpoint();
   const timestamp = new Intl.DateTimeFormat("ko-KR", {
@@ -75,6 +80,16 @@ export function MessageBubble({ message, onChipClick }: MessageBubbleProps) {
             className="pointer-events-none absolute inset-0 h-full w-full object-contain"
           />
         </div>
+      ) : null}
+      {!isUser && message.imageUrl && !isMobile && onImageIndicatorClick ? (
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 rounded border border-green-200 bg-green-50 px-2 py-1 text-xs text-green-700 transition-colors hover:bg-green-100"
+          onClick={() => onImageIndicatorClick(message.imageUrl ?? "")}
+        >
+          <span>🖼</span>
+          <span>이미지 생성됨 · 우측 프리뷰 확인</span>
+        </button>
       ) : null}
       {!isUser && message.contextChips && message.contextChips.length > 0 ? (
         <div className="flex flex-wrap gap-1.5 pt-1">

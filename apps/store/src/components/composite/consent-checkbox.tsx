@@ -30,7 +30,7 @@ export const ConsentCheckbox = ({
         className="mt-1"
       />
       <Label htmlFor={id} subLabel={description}>
-        {required ? `(필수) ${label}` : label}
+        {required ? `[필수] ${label}` : label}
       </Label>
     </div>
   );

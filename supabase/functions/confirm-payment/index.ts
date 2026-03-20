@@ -228,6 +228,7 @@ Deno.serve(async (req) => {
   const expectedPostPaymentStatus = (orderType: string): string => {
     if (orderType === "sale") return "진행중";
     if (orderType === "token") return "완료";
+    if (orderType === "repair") return "발송대기";
     return "접수";
   };
 

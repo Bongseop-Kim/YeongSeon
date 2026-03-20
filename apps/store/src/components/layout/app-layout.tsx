@@ -121,7 +121,15 @@ export default function AppLayout() {
                   <span className="sr-only">뒤로가기</span>
                 </button>
               )}
-              <span className="text-zinc-50">{getCurrentPageName()}</span>
+              <button
+                type="button"
+                className="border-0 bg-transparent p-0 font-inherit text-zinc-50 disabled:cursor-default disabled:opacity-100"
+                onClick={() => !isMobile && navigate(ROUTES.HOME)}
+                disabled={isMobile}
+                aria-disabled={isMobile}
+              >
+                {getCurrentPageName()}
+              </button>
             </HeaderTitle>
 
             {/* 데스크톱 네비게이션 */}
@@ -258,7 +266,7 @@ export default function AppLayout() {
                     <div>대전 동구 가양2동 408-7</div>
                   </div>
                   <p className="text-xs text-gray-500 text-center">
-                    © 2024 ESSE SION. All rights reserved.
+                    © 2026 ESSE SION. All rights reserved.
                   </p>
                 </div>
               ) : (
@@ -275,7 +283,7 @@ export default function AppLayout() {
                       </div>
                     </div>
                     <p className="text-xs text-gray-500 text-center">
-                      © 2024 ESSE SION. All rights reserved.
+                      © 2026 ESSE SION. All rights reserved.
                     </p>
                   </div>
                 </div>

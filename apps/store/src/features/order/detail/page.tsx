@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { CustomOrderOptionsSection } from "@/features/order/components/custom-order-options-section";
+import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
 import { OrderItemCard } from "@/features/order/components/order-item-card";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
 import React from "react";
@@ -22,7 +23,10 @@ import type {
   TrackingInfo,
 } from "@yeongseon/shared/types/view/order";
 import type { CustomerAction } from "@yeongseon/shared";
-import { buildTrackingUrl } from "@yeongseon/shared/constants/courier-companies";
+import {
+  buildTrackingUrl,
+  getCourierCompanyLabel,
+} from "@yeongseon/shared/constants/courier-companies";
 import {
   type ClaimActionType,
   CLAIM_ACTION_LABEL,
@@ -100,6 +104,50 @@ const PurchaseConfirmSection = ({ orderId }: { orderId: string }) => {
         {isPending ? "처리 중..." : "구매확정"}
       </Button>
     </div>
+  );
+};
+
+/** 발송대기 상태에서 수선품 발송 안내 카드 표시 */
+const RepairShippingPendingSection = ({ orderId }: { orderId: string }) => {
+  const navigate = useNavigate();
+  return (
+    <RepairShippingAddressBanner
+      onRegisterTracking={() =>
+        navigate(`${ROUTES.REPAIR_SHIPPING}/${orderId}`)
+      }
+    />
+  );
+};
+
+/** 발송중 상태에서 택배사/송장번호 및 배송 조회 링크 표시 (TrackingInfoSection 패턴) */
+const RepairShippingInTransitSection = ({
+  courierCompany,
+  trackingNumber,
+}: {
+  courierCompany: string;
+  trackingNumber: string;
+}) => {
+  const trackingUrl = buildTrackingUrl(courierCompany, trackingNumber);
+  return (
+    <>
+      <p className="text-sm">
+        <span className="text-zinc-500">택배사:</span>{" "}
+        {getCourierCompanyLabel(courierCompany)}
+      </p>
+      <p className="text-sm">
+        <span className="text-zinc-500">송장번호:</span> {trackingNumber}
+      </p>
+      {trackingUrl && (
+        <a
+          href={trackingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-1 text-blue-600 underline"
+        >
+          배송조회
+        </a>
+      )}
+    </>
   );
 };
 
@@ -189,7 +237,8 @@ const TrackingInfoSection = ({ info }: { info: TrackingInfo }) => {
   return (
     <>
       <p>
-        <span className="text-zinc-500">택배사:</span> {info.courierCompany}
+        <span className="text-zinc-500">택배사:</span>{" "}
+        {getCourierCompanyLabel(info.courierCompany)}
       </p>
       <p>
         <span className="text-zinc-500">송장번호:</span> {info.trackingNumber}
@@ -351,7 +400,7 @@ const OrderDetailPage = () => {
             )}
 
             {/* 배송 추적 정보 */}
-            {order.trackingInfo && (
+            {order.trackingInfo && order.orderType !== "repair" && (
               <>
                 <CardContent>
                   <Separator />
@@ -377,6 +426,26 @@ const OrderDetailPage = () => {
                 <PurchaseConfirmSection orderId={order.id} />
               </CardContent>
             )}
+
+            {/* 수선품 발송 안내 (발송대기) */}
+            {order.orderType === "repair" && order.status === "발송대기" && (
+              <CardContent>
+                <RepairShippingPendingSection orderId={order.id} />
+              </CardContent>
+            )}
+
+            {/* 수선품 발송 정보 (발송중) */}
+            {order.orderType === "repair" &&
+              order.status === "발송중" &&
+              order.trackingInfo?.courierCompany &&
+              order.trackingInfo?.trackingNumber && (
+                <CardContent>
+                  <RepairShippingInTransitSection
+                    courierCompany={order.trackingInfo.courierCompany}
+                    trackingNumber={order.trackingInfo.trackingNumber}
+                  />
+                </CardContent>
+              )}
 
             {/* 주문 상품 목록 */}
             <CardHeader>

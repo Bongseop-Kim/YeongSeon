@@ -1,12 +1,7 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
-import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import PaymentWidget, {
-  type PaymentWidgetRef,
-} from "@/features/payment/components/payment-widget";
 import { PlanCard } from "@/features/token-purchase/components/plan-card";
 import {
   useCreateTokenPurchaseMutation,
@@ -14,7 +9,6 @@ import {
 } from "@/features/token-purchase/api/token-purchase-query";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
-import { hasStringCode } from "@/lib/type-guard";
 import { Button } from "@/components/ui/button";
 import type {
   TokenPlan,
@@ -24,17 +18,8 @@ import type {
 const TokenPurchasePage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const pendingRequestIdRef = useRef<number>(0);
-  const isRequestingRef = useRef(false);
   const [selectedPlan, setSelectedPlan] = useState<TokenPlanKey | null>(null);
-  const [withdrawalConsent, setWithdrawalConsent] = useState(false);
-  const [purchaseInfo, setPurchaseInfo] = useState<{
-    paymentGroupId: string;
-    price: number;
-    tokenAmount: number;
-  } | null>(null);
-  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
 
   const {
     data: tokenPlans,
@@ -44,6 +29,7 @@ const TokenPurchasePage = () => {
   } = useTokenPlansQuery();
   const { mutateAsync: createTokenPurchase, isPending } =
     useCreateTokenPurchaseMutation();
+
   const validTokenPlans = (tokenPlans ?? []).filter(
     (plan): plan is TokenPlan & { price: number; tokenAmount: number } =>
       plan.price != null && plan.tokenAmount != null,
@@ -56,17 +42,24 @@ const TokenPurchasePage = () => {
       navigate(ROUTES.LOGIN);
       return;
     }
-    if (selectedPlan === planKey && purchaseInfo) return;
 
     const currentRequestId = ++pendingRequestIdRef.current;
     setSelectedPlan(planKey);
-    setPurchaseInfo(null);
 
     try {
-      const result = await createTokenPurchase(planKey);
-      if (pendingRequestIdRef.current === currentRequestId) {
-        setPurchaseInfo(result);
-      }
+      const purchaseInfo = await createTokenPurchase(planKey);
+      if (pendingRequestIdRef.current !== currentRequestId) return;
+
+      const planData = validTokenPlans.find((p) => p.planKey === planKey);
+      navigate(ROUTES.TOKEN_PURCHASE_PAYMENT, {
+        state: {
+          purchaseInfo,
+          planKey,
+          label: planData?.label ?? planKey,
+          features: planData?.features ?? [],
+          popular: planData?.popular ?? false,
+        },
+      });
     } catch (err) {
       if (pendingRequestIdRef.current === currentRequestId) {
         const message =
@@ -79,67 +72,14 @@ const TokenPurchasePage = () => {
     }
   };
 
-  const handleRequestPayment = async () => {
-    if (isRequestingRef.current) return;
-    if (!withdrawalConsent) {
-      toast.error("청약철회 제한에 동의해주세요.");
-      return;
-    }
-    if (!user) {
-      toast.error("로그인이 필요합니다.");
-      navigate(ROUTES.LOGIN);
-      return;
-    }
-
-    if (!selectedPlan || !purchaseInfo) {
-      toast.error("플랜을 선택해주세요.");
-      return;
-    }
-
-    if (!paymentWidgetRef.current) {
-      toast.error("결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
-      return;
-    }
-
-    isRequestingRef.current = true;
-    setIsPaymentLoading(true);
-    try {
-      const plan = validTokenPlans.find((p) => p.planKey === selectedPlan);
-      const orderName = plan
-        ? `${plan.label} 토큰 ${plan.tokenAmount}개`
-        : "토큰 구매";
-
-      await paymentWidgetRef.current.requestPayment({
-        orderId: purchaseInfo.paymentGroupId,
-        orderName,
-        successUrl: `${window.location.origin}${ROUTES.TOKEN_PURCHASE_SUCCESS}`,
-        failUrl: `${window.location.origin}${ROUTES.TOKEN_PURCHASE_FAIL}`,
-      });
-    } catch (error) {
-      const errorCode = hasStringCode(error) ? error.code : "";
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "결제 요청 중 오류가 발생했습니다.";
-      if (errorCode !== "USER_CANCEL") {
-        toast.error(errorMessage);
-      }
-    } finally {
-      setIsPaymentLoading(false);
-      isRequestingRef.current = false;
-    }
-  };
-
   return (
     <MainLayout>
       <MainContent>
         <div className="mx-auto max-w-5xl py-12 px-4">
-          {/* 헤더 */}
           <div className="mb-10 text-center">
             <h1 className="text-3xl font-bold text-zinc-900">토큰 충전</h1>
           </div>
 
-          {/* 토큰 사용 안내 */}
           <div className="mb-10 rounded-2xl border border-zinc-100 bg-zinc-50 px-6 py-5">
             <p className="mb-3 text-sm font-semibold text-zinc-700">
               토큰 사용 안내
@@ -188,7 +128,6 @@ const TokenPurchasePage = () => {
             </p>
           </div>
 
-          {/* 플랜 카드 */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {isPlansLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
@@ -224,44 +163,6 @@ const TokenPurchasePage = () => {
               ))
             )}
           </div>
-
-          {/* 결제 수단 + 버튼 */}
-          {purchaseInfo && user && (
-            <div className="mt-10 space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">결제 수단</CardTitle>
-                </CardHeader>
-                <CardContent className="px-0">
-                  <PaymentWidget
-                    ref={paymentWidgetRef}
-                    amount={purchaseInfo.price}
-                    customerKey={user.id}
-                  />
-                </CardContent>
-              </Card>
-
-              <ConsentCheckbox
-                id="withdrawal-consent"
-                checked={withdrawalConsent}
-                onCheckedChange={setWithdrawalConsent}
-                label="청약철회 제한 동의"
-                description="토큰은 구매 즉시 사용 가능한 디지털 이용권으로, 이미지 생성에 사용한 후에는 환불되지 않습니다."
-                required
-              />
-
-              <Button
-                onClick={handleRequestPayment}
-                className="w-full rounded-full"
-                size="lg"
-                disabled={isPaymentLoading || !withdrawalConsent}
-              >
-                {isPaymentLoading
-                  ? "결제 요청 중..."
-                  : `${purchaseInfo.price.toLocaleString()}원 결제하기`}
-              </Button>
-            </div>
-          )}
         </div>
       </MainContent>
     </MainLayout>

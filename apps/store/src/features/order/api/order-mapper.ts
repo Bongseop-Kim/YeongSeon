@@ -398,6 +398,8 @@ const ORDER_STATUSES: ReadonlySet<string> = new Set([
   "제작완료",
   "수선중",
   "수선완료",
+  "발송대기",
+  "발송중",
 ]);
 const isOrderStatus = (v: string): v is OrderStatusDTO => ORDER_STATUSES.has(v);
 

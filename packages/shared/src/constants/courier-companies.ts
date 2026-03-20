@@ -45,11 +45,23 @@ export const COURIER_COMPANIES: CourierCompany[] = [
 
 export const COURIER_COMPANY_NAMES = COURIER_COMPANIES.map((c) => c.name);
 
+export function getCourierCompany(
+  courierCodeOrName: string,
+): CourierCompany | undefined {
+  return COURIER_COMPANIES.find(
+    (c) => c.code === courierCodeOrName || c.name === courierCodeOrName,
+  );
+}
+
+export function getCourierCompanyLabel(courierCodeOrName: string): string {
+  return getCourierCompany(courierCodeOrName)?.name ?? courierCodeOrName;
+}
+
 export function buildTrackingUrl(
-  courierName: string,
+  courierCodeOrName: string,
   trackingNumber: string,
 ): string | null {
-  const courier = COURIER_COMPANIES.find((c) => c.name === courierName);
+  const courier = getCourierCompany(courierCodeOrName);
   if (!courier) return null;
   return courier.trackingUrlTemplate.replace(
     "{trackingNumber}",
