@@ -9,6 +9,7 @@ import {
 } from "./shipping-api";
 import type { ShippingAddressInput } from "@/features/shipping/types/shipping-address";
 import { toast } from "@/lib/toast";
+import { useRequiredUser } from "@/hooks/use-required-user";
 
 /**
  * 배송지 쿼리 키
@@ -25,6 +26,8 @@ export const shippingKeys = {
  * 현재 사용자의 모든 배송지 조회 쿼리
  */
 export const useShippingAddresses = () => {
+  useRequiredUser();
+
   return useQuery({
     queryKey: shippingKeys.list(),
     queryFn: getShippingAddresses,
@@ -37,6 +40,8 @@ export const useShippingAddresses = () => {
  * 기본 배송지 조회 쿼리
  */
 export const useDefaultShippingAddress = () => {
+  useRequiredUser();
+
   return useQuery({
     queryKey: shippingKeys.default(),
     queryFn: getDefaultShippingAddress,
@@ -49,6 +54,8 @@ export const useDefaultShippingAddress = () => {
  * ID로 배송지 조회 쿼리
  */
 export const useShippingAddress = (id: string) => {
+  useRequiredUser();
+
   return useQuery({
     queryKey: shippingKeys.detail(id),
     queryFn: () => getShippingAddressById(id),

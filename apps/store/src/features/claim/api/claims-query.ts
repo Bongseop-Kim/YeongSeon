@@ -9,6 +9,7 @@ import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-inpu
 import { useAuthStore } from "@/store/auth";
 import type { ListFilters } from "@/features/order/utils/list-filters";
 import { orderKeys } from "@/features/order/api/order-query";
+import { useRequiredUser } from "@/hooks/use-required-user";
 
 /**
  * 클레임 쿼리 키
@@ -31,17 +32,11 @@ export const claimKeys = {
  * 클레임 목록 조회 쿼리
  */
 export const useClaims = (filters?: ListFilters) => {
-  const { user } = useAuthStore();
+  const userId = useRequiredUser();
 
   return useQuery({
-    queryKey: claimKeys.list(user?.id, filters),
-    queryFn: () => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
-      return getClaims(filters);
-    },
-    enabled: !!user?.id,
+    queryKey: claimKeys.list(userId, filters),
+    queryFn: () => getClaims(filters),
     staleTime: 1000 * 60 * 5, // 5분
     refetchOnWindowFocus: false,
     retry: 1,
@@ -78,22 +73,19 @@ export const useCreateClaim = () => {
  * 클레임 단건 조회 쿼리
  */
 export const useClaim = (claimId: string) => {
-  const { user } = useAuthStore();
+  useRequiredUser();
   const normalizedClaimId = claimId.trim();
   const hasClaimId = normalizedClaimId.length > 0;
 
   return useQuery({
     queryKey: claimKeys.detail(normalizedClaimId),
     queryFn: () => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
       if (!hasClaimId) {
         throw new Error("유효한 클레임 ID가 필요합니다.");
       }
       return getClaim(normalizedClaimId);
     },
-    enabled: !!user?.id && hasClaimId,
+    enabled: hasClaimId,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     retry: 1,

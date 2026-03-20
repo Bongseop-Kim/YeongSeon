@@ -30,12 +30,13 @@ export function useAdminClaimTable() {
       syncWithLocation: true,
     });
 
-  const tableProps = {
-    ...rawTableProps,
-    dataSource: (
-      (rawTableProps.dataSource ?? []) as AdminClaimListRowDTO[]
-    ).map(toAdminClaimListItem),
-  } as TableProps<AdminClaimListItem>;
+  const tableProps: TableProps<AdminClaimListItem> = {
+    loading: rawTableProps.loading,
+    pagination: rawTableProps.pagination,
+    onChange:
+      rawTableProps.onChange as TableProps<AdminClaimListItem>["onChange"],
+    dataSource: (rawTableProps.dataSource ?? []).map(toAdminClaimListItem),
+  };
 
   return { tableProps, setFilters };
 }

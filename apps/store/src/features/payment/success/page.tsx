@@ -2,19 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { confirmPayment } from "@/features/payment/api/payment-api";
+import { useConfirmPayment } from "@/features/payment/api/payment-query";
 import { useOrderStore } from "@/store/order";
-import { cartKeys } from "@/features/cart/api/cart-query";
 import { removeCartItemsByIds } from "@/features/cart/api/cart-api";
 import { useAuthStore } from "@/store/auth";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
 import { Loader2 } from "lucide-react";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { mutateAsync: confirmPaymentMutation } = useConfirmPayment();
   const { items: orderItems, clearOrderItems } = useOrderStore();
   const { user } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +40,7 @@ const PaymentSuccessPage = () => {
 
       try {
         // 1. 결제 승인
-        const paymentResult = await confirmPayment({
+        const paymentResult = await confirmPaymentMutation({
           paymentKey,
           orderId,
           amount: parsedAmount,
@@ -53,9 +51,6 @@ const PaymentSuccessPage = () => {
           try {
             const orderedItemIds = orderItems.map((item) => item.id);
             await removeCartItemsByIds(user.id, orderedItemIds);
-            await queryClient.invalidateQueries({
-              queryKey: cartKeys.items(user.id),
-            });
           } catch (cartErr) {
             // 장바구니 업데이트 실패는 주문 실패로 처리하지 않음
             console.warn("장바구니 아이템 제거 실패:", cartErr);

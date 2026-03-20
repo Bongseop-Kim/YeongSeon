@@ -2,16 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { confirmPayment } from "@/features/payment/api/payment-api";
-import { useQueryClient } from "@tanstack/react-query";
+import { useConfirmTokenPurchase } from "@/features/token-purchase/api/token-purchase-query";
 import { toast } from "@/lib/toast";
 import { Loader2 } from "lucide-react";
-import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/features/design/api/ai-design-query";
 
 const TokenPurchaseSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { mutate: confirmTokenPurchase } = useConfirmTokenPurchase();
   const [error, setError] = useState<string | null>(null);
   const processedRef = useRef(false);
 
@@ -23,48 +21,40 @@ const TokenPurchaseSuccessPage = () => {
     if (processedRef.current) return;
     processedRef.current = true;
 
-    const processPayment = async () => {
-      if (!paymentKey || !orderId || !amount) {
-        setError("결제 정보가 올바르지 않습니다.");
-        return;
-      }
+    if (!paymentKey || !orderId || !amount) {
+      setError("결제 정보가 올바르지 않습니다.");
+      return;
+    }
 
-      const parsedAmount = Number(amount);
-      if (Number.isNaN(parsedAmount)) {
-        setError("결제 금액이 올바르지 않습니다.");
-        return;
-      }
+    const parsedAmount = Number(amount);
+    if (Number.isNaN(parsedAmount)) {
+      setError("결제 금액이 올바르지 않습니다.");
+      return;
+    }
 
-      try {
-        const result = await confirmPayment({
-          paymentKey,
-          orderId,
-          amount: parsedAmount,
-        });
+    confirmTokenPurchase(
+      { paymentKey, orderId, amount: parsedAmount },
+      {
+        onSuccess: (result) => {
+          if (result.type !== "token_purchase") {
+            setError("올바르지 않은 결제 응답입니다.");
+            return;
+          }
 
-        if (result.type !== "token_purchase") {
-          setError("올바르지 않은 결제 응답입니다.");
-          return;
-        }
-
-        await queryClient.invalidateQueries({
-          queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,
-        });
-
-        toast.success(
-          `토큰 ${result.tokenAmount.toLocaleString()}개가 충전되었습니다!`,
-        );
-        navigate(ROUTES.DESIGN, { replace: true });
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "결제 처리 중 오류가 발생했습니다.";
-        setError(errorMessage);
-      }
-    };
-
-    processPayment();
+          toast.success(
+            `토큰 ${result.tokenAmount.toLocaleString()}개가 충전되었습니다!`,
+          );
+          navigate(ROUTES.DESIGN, { replace: true });
+        },
+        onError: (err) => {
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : "결제 처리 중 오류가 발생했습니다.";
+          setError(errorMessage);
+        },
+      },
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only: 토큰 충전 처리는 마운트 시 1회만 실행, deps 추가 시 중복 처리 발생
   }, []);
 

@@ -60,7 +60,8 @@ export async function getDesignSessions(): Promise<DesignSession[]> {
     throw new Error(`세션 목록 조회 실패: ${error.message}`);
   }
 
-  return ((data as DesignSessionRow[] | null) ?? []).map(toDesignSession);
+  const rows: DesignSessionRow[] = data ?? [];
+  return rows.map(toDesignSession);
 }
 
 export async function getDesignSessionMessages(
@@ -76,7 +77,6 @@ export async function getDesignSessionMessages(
     throw new Error(`세션 메시지 조회 실패: ${error.message}`);
   }
 
-  return ((data as DesignSessionMessageRow[] | null) ?? []).map(
-    toDesignSessionMessage,
-  );
+  const rows: DesignSessionMessageRow[] = data ?? [];
+  return rows.map(toDesignSessionMessage);
 }

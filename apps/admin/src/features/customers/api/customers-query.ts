@@ -43,10 +43,13 @@ export function useAdminCustomerTable() {
     syncWithLocation: true,
   });
 
-  const tableProps = {
-    ...rawTableProps,
+  const tableProps: TableProps<AdminCustomerListItem> = {
+    loading: rawTableProps.loading,
+    pagination: rawTableProps.pagination,
+    onChange:
+      rawTableProps.onChange as TableProps<AdminCustomerListItem>["onChange"],
     dataSource: (rawTableProps.dataSource ?? []).map(toAdminCustomerListItem),
-  } as TableProps<AdminCustomerListItem>;
+  };
 
   return { tableProps, setFilters };
 }

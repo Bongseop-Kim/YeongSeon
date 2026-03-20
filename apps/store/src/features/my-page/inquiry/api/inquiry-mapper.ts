@@ -5,13 +5,14 @@ import {
   type InquiryCategory,
 } from "@/features/my-page/inquiry/types/inquiry-item";
 
+const isInquiryCategory = (v: string): v is InquiryCategory =>
+  (INQUIRY_CATEGORIES as readonly string[]).includes(v);
+
 export const toInquiryView = (row: InquiryRowDTO): InquiryItem => ({
   id: row.id,
   date: row.created_at.slice(0, 10),
   status: row.status,
-  category: INQUIRY_CATEGORIES.includes(row.category as InquiryCategory)
-    ? (row.category as InquiryCategory)
-    : "일반",
+  category: isInquiryCategory(row.category) ? row.category : "일반",
   product: row.products
     ? {
         id: row.products.id,

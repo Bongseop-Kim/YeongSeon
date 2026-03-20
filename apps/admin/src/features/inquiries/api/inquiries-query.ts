@@ -24,12 +24,13 @@ export function useAdminInquiryTable() {
       syncWithLocation: true,
     });
 
-  const tableProps = {
-    ...rawTableProps,
-    dataSource: ((rawTableProps.dataSource ?? []) as AdminInquiryRowDTO[]).map(
-      toAdminInquiryListItem,
-    ),
-  } as TableProps<AdminInquiryListItem>;
+  const tableProps: TableProps<AdminInquiryListItem> = {
+    loading: rawTableProps.loading,
+    pagination: rawTableProps.pagination,
+    onChange:
+      rawTableProps.onChange as TableProps<AdminInquiryListItem>["onChange"],
+    dataSource: (rawTableProps.dataSource ?? []).map(toAdminInquiryListItem),
+  };
 
   return { tableProps, setFilters };
 }

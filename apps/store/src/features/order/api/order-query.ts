@@ -8,6 +8,7 @@ import {
 import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
 import { useAuthStore } from "@/store/auth";
 import type { ListFilters } from "@/features/order/utils/list-filters";
+import { useRequiredUser } from "@/hooks/use-required-user";
 
 /**
  * 주문 쿼리 키
@@ -30,17 +31,11 @@ export const orderKeys = {
  * 주문 목록 조회 쿼리
  */
 export const useOrders = (filters?: ListFilters) => {
-  const { user } = useAuthStore();
+  const userId = useRequiredUser();
 
   return useQuery({
-    queryKey: orderKeys.list(user?.id, filters),
-    queryFn: () => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
-      return getOrders(filters);
-    },
-    enabled: !!user?.id,
+    queryKey: orderKeys.list(userId, filters),
+    queryFn: () => getOrders(filters),
     staleTime: 1000 * 60 * 5, // 5분
     refetchOnWindowFocus: false,
     retry: 1,
@@ -51,17 +46,12 @@ export const useOrders = (filters?: ListFilters) => {
  * 주문 상세 조회 쿼리
  */
 export const useOrder = (orderId: string) => {
-  const { user } = useAuthStore();
+  useRequiredUser();
 
   return useQuery({
     queryKey: orderKeys.detail(orderId),
-    queryFn: () => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
-      return getOrder(orderId);
-    },
-    enabled: !!user?.id && !!orderId,
+    queryFn: () => getOrder(orderId),
+    enabled: !!orderId,
     staleTime: 1000 * 60 * 5, // 5분
     refetchOnWindowFocus: false,
     retry: 1,
