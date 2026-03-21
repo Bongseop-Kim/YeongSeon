@@ -35,12 +35,21 @@ export const useSetCartItems = () => {
 
   return useMutation({
     mutationFn: (items: CartItem[]) => setCartItems(userId, items),
-    onSuccess: (_, items) => {
-      // 쿼리 캐시 업데이트
+    onMutate: async (items: CartItem[]) => {
+      await queryClient.cancelQueries({ queryKey: cartKeys.items(userId) });
+      const previous = queryClient.getQueryData<CartItem[]>(
+        cartKeys.items(userId),
+      );
       queryClient.setQueryData(cartKeys.items(userId), items);
+      return { previous };
     },
-    onError: (error) => {
-      console.error("장바구니 저장 실패:", error);
+    onError: (_error, _items, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(cartKeys.items(userId), context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: cartKeys.items(userId) });
     },
   });
 };
@@ -54,12 +63,21 @@ export const useClearCartItems = () => {
 
   return useMutation({
     mutationFn: () => clearCartItems(userId),
-    onSuccess: () => {
-      // 쿼리 캐시 초기화
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: cartKeys.items(userId) });
+      const previous = queryClient.getQueryData<CartItem[]>(
+        cartKeys.items(userId),
+      );
       queryClient.setQueryData(cartKeys.items(userId), []);
+      return { previous };
     },
-    onError: (error) => {
-      console.error("장바구니 초기화 실패:", error);
+    onError: (_error, _variables, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(cartKeys.items(userId), context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: cartKeys.items(userId) });
     },
   });
 };
