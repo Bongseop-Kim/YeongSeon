@@ -5,7 +5,7 @@ import {
   type ConfirmPaymentResponse,
 } from "@/features/payment/api/payment-mapper";
 
-interface ConfirmPaymentRequest {
+export interface ConfirmPaymentRequest {
   paymentKey: string;
   orderId: string;
   amount: number;

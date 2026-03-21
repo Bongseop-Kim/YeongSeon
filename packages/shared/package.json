@@ -35,6 +35,7 @@
     "./types/view/claim-item": "./src/types/view/claim-item.ts",
     "./types/view/claim-input": "./src/types/view/claim-input.ts",
     "./types/view/cart": "./src/types/view/cart.ts",
+    "./types/view/inquiry": "./src/types/view/inquiry.ts",
     "./constants/order-status": "./src/constants/order-status.ts",
     "./constants/claim-status": "./src/constants/claim-status.ts",
     "./constants/claim-actions": "./src/constants/claim-actions.ts",

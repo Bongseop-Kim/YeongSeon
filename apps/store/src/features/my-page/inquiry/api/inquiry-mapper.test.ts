@@ -39,6 +39,24 @@ describe("toInquiryView", () => {
     });
   });
 
+  it("알 수 없는 category는 '일반'으로 폴백한다", () => {
+    const result = toInquiryView({
+      id: "inq-3",
+      user_id: "user-1",
+      created_at: "2026-03-15T09:00:00Z",
+      updated_at: "2026-03-15T09:00:00Z",
+      status: "답변대기",
+      category: "알수없는카테고리",
+      title: "문의",
+      content: "내용",
+      product_id: null,
+      answer: null,
+      answer_date: null,
+      products: null,
+    });
+    expect(result.category).toBe("일반");
+  });
+
   it("알 수 없는 카테고리와 nullable 필드를 기본값으로 정규화한다", () => {
     expect(
       toInquiryView({

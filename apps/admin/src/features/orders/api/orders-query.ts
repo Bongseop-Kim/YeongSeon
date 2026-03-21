@@ -58,12 +58,13 @@ export function useAdminOrderTable(
       syncWithLocation: false,
     });
 
-  const tableProps = {
-    ...rawTableProps,
-    dataSource: (
-      (rawTableProps.dataSource ?? []) as AdminOrderListRowDTO[]
-    ).map(toAdminOrderListItem),
-  } as TableProps<AdminOrderListItem>;
+  const tableProps: TableProps<AdminOrderListItem> = {
+    loading: rawTableProps.loading,
+    pagination: rawTableProps.pagination,
+    onChange:
+      rawTableProps.onChange as TableProps<AdminOrderListItem>["onChange"],
+    dataSource: (rawTableProps.dataSource ?? []).map(toAdminOrderListItem),
+  };
 
   return {
     tableProps,

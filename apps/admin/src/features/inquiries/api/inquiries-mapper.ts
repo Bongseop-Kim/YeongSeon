@@ -1,10 +1,15 @@
 import type { AdminInquiryRowDTO } from "@yeongseon/shared";
-import { formatDate } from "@yeongseon/shared";
-import type {
-  AdminInquiryListItem,
-  AdminInquiryDetail,
-  InquiryCategory,
+import { formatDate, isInquiryCategory } from "@yeongseon/shared";
+import {
+  type AdminInquiryListItem,
+  type AdminInquiryDetail,
+  type InquiryCategory,
 } from "@/features/inquiries/types/admin-inquiry";
+
+const toInquiryCategory = (v: string | null): InquiryCategory => {
+  if (v !== null && isInquiryCategory(v)) return v;
+  return "일반";
+};
 
 export function toAdminInquiryListItem(
   dto: AdminInquiryRowDTO,
@@ -13,7 +18,7 @@ export function toAdminInquiryListItem(
     id: dto.id,
     title: dto.title,
     status: dto.status,
-    category: (dto.category ?? "일반") as InquiryCategory,
+    category: toInquiryCategory(dto.category),
     date: formatDate(dto.created_at),
   };
 }
@@ -21,7 +26,7 @@ export function toAdminInquiryListItem(
 export function toAdminInquiryDetail(
   dto: AdminInquiryRowDTO,
 ): AdminInquiryDetail {
-  const category = (dto.category ?? "일반") as InquiryCategory;
+  const category = toInquiryCategory(dto.category);
   const product = dto.products
     ? {
         id: dto.products.id,

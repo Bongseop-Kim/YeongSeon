@@ -8,6 +8,7 @@ import {
 } from "./inquiry-api";
 import type { InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-item";
 import { useAuthStore } from "@/store/auth";
+import { useRequiredUser } from "@/hooks/use-required-user";
 
 export const inquiryKeys = {
   all: ["inquiries"] as const,
@@ -16,14 +17,10 @@ export const inquiryKeys = {
 };
 
 export const useInquiries = () => {
-  const { user } = useAuthStore();
+  const userId = useRequiredUser();
   return useQuery({
-    queryKey: inquiryKeys.list(user?.id),
-    queryFn: () => {
-      if (!user?.id) throw new Error("로그인이 필요합니다.");
-      return getInquiries();
-    },
-    enabled: !!user?.id,
+    queryKey: inquiryKeys.list(userId),
+    queryFn: () => getInquiries(),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     retry: 1,

@@ -31,12 +31,15 @@ export function useAdminQuoteRequestTable() {
       syncWithLocation: true,
     });
 
-  const tableProps = {
-    ...rawTableProps,
-    dataSource: (
-      (rawTableProps.dataSource ?? []) as AdminQuoteRequestListRowDTO[]
-    ).map(toAdminQuoteRequestListItem),
-  } as TableProps<AdminQuoteRequestListItem>;
+  const tableProps: TableProps<AdminQuoteRequestListItem> = {
+    loading: rawTableProps.loading,
+    pagination: rawTableProps.pagination,
+    onChange:
+      rawTableProps.onChange as TableProps<AdminQuoteRequestListItem>["onChange"],
+    dataSource: (rawTableProps.dataSource ?? []).map(
+      toAdminQuoteRequestListItem,
+    ),
+  };
 
   return { tableProps, setFilters };
 }

@@ -74,7 +74,7 @@ export const getProducts = async (
     throw new Error(`제품 조회 실패: ${error.message}`);
   }
 
-  const records = (data as ProductDTO[]) ?? [];
+  const records: ProductDTO[] = data ?? [];
   if (records.length === 0) {
     return [];
   }
@@ -96,7 +96,7 @@ export const getProductById = async (id: number): Promise<Product | null> => {
     throw new Error(`제품 조회 실패: ${error.message}`);
   }
 
-  const record = (data as ProductDTO | null) ?? null;
+  const record: ProductDTO | null = data ?? null;
   return record ? toProduct(record) : null;
 };
 
@@ -120,7 +120,7 @@ export const getProductsByIds = async (
     throw new Error(`상품 정보를 불러올 수 없습니다: ${error.message}`);
   }
 
-  const records = (data as ProductDTO[] | null) ?? [];
+  const records: ProductDTO[] = data ?? [];
   const productsById = new Map<number, Product>(
     records.map((record) => [record.id, toProduct(record)]),
   );

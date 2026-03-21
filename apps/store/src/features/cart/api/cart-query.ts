@@ -5,7 +5,7 @@ import {
   clearCartItems,
 } from "@/features/cart/api/cart-api";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
-import { useAuthStore } from "@/store/auth";
+import { useRequiredUser } from "@/hooks/use-required-user";
 import { cartKeys } from "@/features/cart/api/cart-keys";
 
 export { cartKeys };
@@ -15,17 +15,11 @@ export { cartKeys };
  * 로그인 상태에서만 사용
  */
 export const useCartItems = () => {
-  const { user } = useAuthStore();
+  const userId = useRequiredUser();
 
   return useQuery({
-    queryKey: cartKeys.items(user?.id),
-    queryFn: () => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
-      return getCartItems(user.id);
-    },
-    enabled: !!user?.id,
+    queryKey: cartKeys.items(userId),
+    queryFn: () => getCartItems(userId),
     staleTime: 1000 * 60 * 5, // 5분
     refetchOnWindowFocus: false,
     retry: 1,
@@ -37,23 +31,25 @@ export const useCartItems = () => {
  */
 export const useSetCartItems = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  const userId = useRequiredUser();
 
   return useMutation({
-    mutationFn: (items: CartItem[]) => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
-      return setCartItems(user.id, items);
+    mutationFn: (items: CartItem[]) => setCartItems(userId, items),
+    onMutate: async (items: CartItem[]) => {
+      await queryClient.cancelQueries({ queryKey: cartKeys.items(userId) });
+      const previous = queryClient.getQueryData<CartItem[]>(
+        cartKeys.items(userId),
+      );
+      queryClient.setQueryData(cartKeys.items(userId), items);
+      return { previous };
     },
-    onSuccess: (_, items) => {
-      // 쿼리 캐시 업데이트
-      if (user?.id) {
-        queryClient.setQueryData(cartKeys.items(user.id), items);
+    onError: (_error, _items, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(cartKeys.items(userId), context.previous);
       }
     },
-    onError: (error) => {
-      console.error("장바구니 저장 실패:", error);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: cartKeys.items(userId) });
     },
   });
 };
@@ -63,24 +59,25 @@ export const useSetCartItems = () => {
  */
 export const useClearCartItems = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  const userId = useRequiredUser();
 
   return useMutation({
-    mutationFn: () => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
-      return clearCartItems(user.id);
+    mutationFn: () => clearCartItems(userId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: cartKeys.items(userId) });
+      const previous = queryClient.getQueryData<CartItem[]>(
+        cartKeys.items(userId),
+      );
+      queryClient.setQueryData(cartKeys.items(userId), []);
+      return { previous };
     },
-    onSuccess: () => {
-      // 쿼리 캐시 초기화
-      if (user?.id) {
-        queryClient.setQueryData(cartKeys.items(user.id), []);
-        queryClient.invalidateQueries({ queryKey: cartKeys.items(user.id) });
+    onError: (_error, _variables, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(cartKeys.items(userId), context.previous);
       }
     },
-    onError: (error) => {
-      console.error("장바구니 초기화 실패:", error);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: cartKeys.items(userId) });
     },
   });
 };

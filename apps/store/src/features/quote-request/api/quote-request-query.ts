@@ -6,6 +6,7 @@ import {
   getQuoteRequests,
 } from "@/features/quote-request/api/quote-request-api";
 import { useAuthStore } from "@/store/auth";
+import { useRequiredUser } from "@/hooks/use-required-user";
 
 export const quoteRequestKeys = {
   all: ["quote-requests"] as const,
@@ -14,17 +15,11 @@ export const quoteRequestKeys = {
 };
 
 export const useQuoteRequests = () => {
-  const { user } = useAuthStore();
+  const userId = useRequiredUser();
 
   return useQuery({
-    queryKey: quoteRequestKeys.list(user?.id),
-    queryFn: () => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
-      return getQuoteRequests();
-    },
-    enabled: !!user?.id,
+    queryKey: quoteRequestKeys.list(userId),
+    queryFn: () => getQuoteRequests(),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     retry: 1,
@@ -48,20 +43,17 @@ export const useCreateQuoteRequest = () => {
 };
 
 export const useQuoteRequest = (id?: string) => {
-  const { user } = useAuthStore();
+  useRequiredUser();
 
   return useQuery({
     queryKey: quoteRequestKeys.detail(id),
     queryFn: () => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
       if (!id) {
         throw new Error("견적 요청 ID가 필요합니다.");
       }
       return getQuoteRequest(id);
     },
-    enabled: !!user?.id && !!id,
+    enabled: !!id,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     retry: 1,

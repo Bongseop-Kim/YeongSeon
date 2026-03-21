@@ -147,7 +147,7 @@ export async function getDesignTokenBalance(): Promise<DesignTokenBalance> {
     throw new Error(`토큰 잔액 조회 실패: ${error.message}`);
   }
 
-  const raw = data as { total?: number; paid?: number; bonus?: number } | null;
+  const raw: { total?: number; paid?: number; bonus?: number } | null = data;
   return {
     total: raw?.total ?? 0,
     paid: raw?.paid ?? 0,
@@ -167,7 +167,6 @@ export async function getDesignTokenHistory(): Promise<
     throw new Error(`토큰 내역 조회 실패: ${error.message}`);
   }
 
-  return ((data as DesignTokenRow[] | null) ?? []).map(
-    toDesignTokenHistoryItem,
-  );
+  const rows: DesignTokenRow[] = data ?? [];
+  return rows.map(toDesignTokenHistoryItem);
 }

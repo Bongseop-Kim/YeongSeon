@@ -33,6 +33,7 @@ export type * from "./types/view/quote-request";
 
 // Constants
 export * from "./constants/image-folders";
+export * from "./types/view/inquiry";
 export * from "./constants/claim-actions";
 export * from "./constants/claim-status";
 export * from "./constants/shipping-events";

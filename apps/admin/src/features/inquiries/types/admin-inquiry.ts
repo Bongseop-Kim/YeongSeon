@@ -1,12 +1,8 @@
-export type InquiryStatus = "답변대기" | "답변완료";
-export type InquiryCategory = "일반" | "상품" | "수선" | "주문제작";
+import { INQUIRY_CATEGORIES, type InquiryCategory } from "@yeongseon/shared";
 
-export const INQUIRY_CATEGORIES: InquiryCategory[] = [
-  "일반",
-  "상품",
-  "수선",
-  "주문제작",
-];
+export type InquiryStatus = "답변대기" | "답변완료";
+export type { InquiryCategory };
+export { INQUIRY_CATEGORIES };
 
 // ── List UI model ──────────────────────────────────────────────
 

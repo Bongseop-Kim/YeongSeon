@@ -1,17 +1,12 @@
+import { isInquiryCategory } from "@yeongseon/shared";
 import type { InquiryRowDTO } from "@/features/my-page/inquiry/types/dto/inquiry";
-import {
-  INQUIRY_CATEGORIES,
-  type InquiryItem,
-  type InquiryCategory,
-} from "@/features/my-page/inquiry/types/inquiry-item";
+import { type InquiryItem } from "@/features/my-page/inquiry/types/inquiry-item";
 
 export const toInquiryView = (row: InquiryRowDTO): InquiryItem => ({
   id: row.id,
   date: row.created_at.slice(0, 10),
   status: row.status,
-  category: INQUIRY_CATEGORIES.includes(row.category as InquiryCategory)
-    ? (row.category as InquiryCategory)
-    : "일반",
+  category: isInquiryCategory(row.category) ? row.category : "일반",
   product: row.products
     ? {
         id: row.products.id,
