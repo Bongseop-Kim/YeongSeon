@@ -2,7 +2,7 @@ import type {
   DesignSession,
   DesignSessionMessage,
 } from "@/features/design/types/session";
-import type { Message } from "@/features/design/types/chat";
+import type { GenerationStatus, Message } from "@/features/design/types/chat";
 import { toPreviewBackground } from "@/features/design/utils";
 
 export interface DesignSessionRow {
@@ -32,6 +32,13 @@ const AI_MODELS = ["openai", "gemini"] as const;
 const MESSAGE_ROLES = ["user", "ai"] as const;
 const AI_MODEL_SET: ReadonlySet<string> = new Set(AI_MODELS);
 const MESSAGE_ROLE_SET: ReadonlySet<string> = new Set(MESSAGE_ROLES);
+
+export interface RestoredDesignSessionState {
+  messages: Message[];
+  generatedImageUrl: string | null;
+  resultTags: string[];
+  generationStatus: GenerationStatus;
+}
 
 function isAiModel(value: string): value is DesignSession["aiModel"] {
   return AI_MODEL_SET.has(value);
@@ -85,5 +92,24 @@ export function sessionMessageToMessage(m: DesignSessionMessage): Message {
     imageUrl: m.imageUrl ? toPreviewBackground(m.imageUrl) : undefined,
     rawImageUrl: m.imageUrl ?? undefined,
     timestamp: new Date(m.createdAt).getTime(),
+  };
+}
+
+export function toRestoredDesignSessionState(
+  messages: DesignSessionMessage[],
+): RestoredDesignSessionState {
+  const restoredMessages = messages.map(sessionMessageToMessage);
+  const lastImageMessage = [...messages]
+    .reverse()
+    .find((message) => message.imageUrl);
+  const generatedImageUrl = lastImageMessage?.imageUrl
+    ? toPreviewBackground(lastImageMessage.imageUrl)
+    : null;
+
+  return {
+    messages: restoredMessages,
+    generatedImageUrl,
+    resultTags: [],
+    generationStatus: generatedImageUrl ? "completed" : "idle",
   };
 }

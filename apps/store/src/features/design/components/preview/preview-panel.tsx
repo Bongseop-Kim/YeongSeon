@@ -5,12 +5,9 @@ import { PreviewHeader } from "@/features/design/components/preview/preview-head
 import { ResultTagBar } from "@/features/design/components/preview/result-tag-bar";
 import { TieCanvas } from "@/features/design/components/preview/tie-canvas";
 import { HistoryTab } from "@/features/design/components/history/history-tab";
-import { useDesignChatStore } from "@/features/design/store/design-chat-store";
-import { useDesignSessionMessagesQuery } from "@/features/design/api/design-session-query";
-import { sessionMessageToMessage } from "@/features/design/api/design-session-mapper";
+import { useSessionRestore } from "@/features/design/hooks/use-session-restore";
 import type { DesignSession } from "@/features/design/types/session";
 import { cn } from "@/lib/utils";
-import { toPreviewBackground } from "@/features/design/utils";
 
 type PreviewTab = "preview" | "history";
 
@@ -22,50 +19,10 @@ export function PreviewPanel({ className }: PreviewPanelProps) {
   const [tab, setTab] = useState<PreviewTab>("preview");
   const [unmasked, setUnmasked] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [restoringSessionId, setRestoringSessionId] = useState<string | null>(
-    null,
-  );
   const sectionRef = useRef<HTMLElement>(null);
-
-  const restoreMessages = useDesignChatStore((state) => state.restoreMessages);
-  const setGeneratedImage = useDesignChatStore(
-    (state) => state.setGeneratedImage,
-  );
-  const setCurrentSessionId = useDesignChatStore(
-    (state) => state.setCurrentSessionId,
-  );
-
-  const { data: sessionMessages } = useDesignSessionMessagesQuery(
-    restoringSessionId ?? "",
-  );
-
-  useEffect(() => {
-    if (!restoringSessionId || !sessionMessages) return;
-    if (sessionMessages.length === 0) {
-      setRestoringSessionId(null);
-      setTab("preview");
-      return;
-    }
-
-    restoreMessages(sessionMessages.map(sessionMessageToMessage));
-    setCurrentSessionId(restoringSessionId);
-
-    const lastImage = [...sessionMessages]
-      .reverse()
-      .find((m) => m.imageUrl != null);
-    if (lastImage?.imageUrl) {
-      setGeneratedImage(toPreviewBackground(lastImage.imageUrl), []);
-    }
-
-    setRestoringSessionId(null);
-    setTab("preview");
-  }, [
-    restoringSessionId,
-    sessionMessages,
-    restoreMessages,
-    setCurrentSessionId,
-    setGeneratedImage,
-  ]);
+  const { restoreSession } = useSessionRestore({
+    onRestored: () => setTab("preview"),
+  });
 
   useEffect(() => {
     const handleChange = () => {
@@ -84,7 +41,7 @@ export function PreviewPanel({ className }: PreviewPanelProps) {
   };
 
   const handleSessionSelect = (session: DesignSession) => {
-    setRestoringSessionId(session.id);
+    restoreSession(session);
   };
 
   return (

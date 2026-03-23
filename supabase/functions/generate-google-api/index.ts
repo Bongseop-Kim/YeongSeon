@@ -2,6 +2,7 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { logGeneration } from "../_shared/log-generation.ts";
 import {
   buildGeminiImagePrompt,
   buildImageEditPrompt,
@@ -378,6 +379,7 @@ Deno.serve(async (req) => {
     });
   }
   const workId = crypto.randomUUID();
+  const requestStartTime = Date.now();
 
   const {
     data: { user },
@@ -430,22 +432,25 @@ Deno.serve(async (req) => {
     return jsonResponse(500, { error: "Missing Gemini configuration" });
   }
 
+  let textLatencyMs: number | null = null;
+  let imageLatencyMs: number | null = null;
+  let refundAmount = 0;
+
   try {
+    const textStartTime = Date.now();
     const textResult = await requestGeminiText(payload, geminiApiKey);
+    textLatencyMs = Date.now() - textStartTime;
 
     // 채팅 모드에서 빈 designContext 필드를 텍스트 AI가 추출한 값으로 보완
     const detected = textResult.detectedDesign;
+    const payloadColors = payload.designContext?.colors ?? [];
+    const detectedColors = detected?.colors ?? [];
     const imagePayload: GenerateDesignRequest = {
       ...payload,
       designContext: {
         ...payload.designContext,
         pattern: payload.designContext?.pattern ?? detected?.pattern ?? null,
-        colors:
-          (payload.designContext?.colors?.length ?? 0) > 0
-            ? payload.designContext!.colors
-            : (detected?.colors.length ?? 0) > 0
-              ? detected!.colors
-              : (payload.designContext?.colors ?? []),
+        colors: payloadColors.length > 0 ? payloadColors : detectedColors,
         ciPlacement:
           payload.designContext?.ciPlacement ?? detected?.ciPlacement ?? null,
         scale: payload.designContext?.scale ?? detected?.scale ?? null,
@@ -491,7 +496,9 @@ Deno.serve(async (req) => {
     let remainingTokens = tokenData.balance;
 
     if (textResult.generateImage) {
+      const imageStartTime = Date.now();
       imageUrl = await requestGeminiImage(imagePayload, geminiApiKey);
+      imageLatencyMs = Date.now() - imageStartTime;
 
       // 이미지 생성 실패 시 이미지 비용 환불 (텍스트 비용은 유지)
       if (imageUrl === null) {
@@ -514,7 +521,7 @@ Deno.serve(async (req) => {
           isNaN(parsedTextCost) || parsedTextCost <= 0
             ? 0
             : Math.min(parsedTextCost, tokenData.cost);
-        const refundAmount = Math.max(tokenData.cost - textCost, 0);
+        refundAmount = Math.max(tokenData.cost - textCost, 0);
 
         if (refundAmount > 0) {
           const { error: refundError } = await adminClient.rpc(
@@ -536,6 +543,31 @@ Deno.serve(async (req) => {
       }
     }
 
+    await logGeneration(adminClient, {
+      work_id: workId,
+      user_id: user.id,
+      ai_model: "gemini",
+      request_type: requestType,
+      user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
+      design_context: payload.designContext ?? null,
+      conversation_turn: filterValidConversationTurns(
+        payload.conversationHistory,
+      ).length,
+      has_ci_image: !!payload.ciImageBase64,
+      has_reference_image: !!payload.referenceImageBase64,
+      has_previous_image: !!payload.previousImageBase64,
+      ai_message: textResult.aiMessage,
+      generate_image: textResult.generateImage,
+      image_generated: imageUrl !== null,
+      detected_design: textResult.detectedDesign,
+      tokens_charged: tokenData.cost,
+      tokens_refunded: refundAmount,
+      text_latency_ms: textLatencyMs,
+      image_latency_ms: textResult.generateImage ? imageLatencyMs : null,
+      total_latency_ms: Date.now() - requestStartTime,
+    });
+
     return jsonResponse(200, {
       aiMessage: textResult.aiMessage,
       contextChips: textResult.contextChips,
@@ -543,6 +575,26 @@ Deno.serve(async (req) => {
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });
   } catch (error) {
+    await logGeneration(adminClient, {
+      work_id: workId,
+      user_id: user.id,
+      ai_model: "gemini",
+      request_type: null,
+      user_message: payload?.userMessage ?? "",
+      prompt_length: payload?.userMessage?.length ?? 0,
+      design_context: payload?.designContext ?? null,
+      conversation_turn: 0,
+      has_ci_image: !!payload?.ciImageBase64,
+      has_reference_image: !!payload?.referenceImageBase64,
+      has_previous_image: !!payload?.previousImageBase64,
+      image_generated: false,
+      tokens_charged: 0,
+      tokens_refunded: 0,
+      text_latency_ms: textLatencyMs,
+      total_latency_ms: Date.now() - requestStartTime,
+      error_type: "generation_failed",
+      error_message: error instanceof Error ? error.message : "Unknown error",
+    });
     return jsonResponse(500, {
       error:
         error instanceof Error ? error.message : "Failed to generate design",

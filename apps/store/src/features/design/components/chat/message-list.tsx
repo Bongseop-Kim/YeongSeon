@@ -8,12 +8,14 @@ interface MessageListProps {
   messages: Message[];
   isTyping: boolean;
   onChipClick?: (text: string) => void;
+  onTiePreviewClick?: (imageUrl: string) => void;
 }
 
 export function MessageList({
   messages,
   isTyping,
   onChipClick,
+  onTiePreviewClick,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -26,12 +28,13 @@ export function MessageList({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
       {messages.map((message) => (
         <MessageBubble
           key={message.id}
           message={message}
           onChipClick={onChipClick}
+          onTiePreviewClick={onTiePreviewClick}
         />
       ))}
       {isTyping ? <TypingIndicator /> : null}

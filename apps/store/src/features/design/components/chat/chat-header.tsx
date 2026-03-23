@@ -1,7 +1,13 @@
-import { Sparkles } from "lucide-react";
+import { MoreHorizontal, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -11,9 +17,11 @@ import {
 } from "@/components/ui/select";
 import type { AiModel } from "@/features/design/types/chat";
 import { ROUTES } from "@/constants/ROUTES";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
+  onOpenHistory: () => void;
   tokenBalance: number | undefined;
   aiModel: AiModel;
   onModelChange: (model: AiModel) => void;
@@ -21,11 +29,13 @@ interface ChatHeaderProps {
 
 export function ChatHeader({
   onNewChat,
+  onOpenHistory,
   tokenBalance,
   aiModel,
   onModelChange,
 }: ChatHeaderProps) {
   const navigate = useNavigate();
+  const { isDesktop } = useBreakpoint();
 
   return (
     <div className="flex items-center justify-between border-b px-4 py-3">
@@ -47,7 +57,7 @@ export function ChatHeader({
             <button
               type="button"
               onClick={() => navigate(ROUTES.TOKEN_PURCHASE)}
-              className="text-xs text-blue-500 hover:text-blue-700 underline"
+              className="text-xs text-blue-500 underline hover:text-blue-700"
             >
               충전
             </button>
@@ -67,9 +77,25 @@ export function ChatHeader({
             <SelectItem value="gemini">Gemini</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" size="sm" type="button" onClick={onNewChat}>
-          신규 대화
-        </Button>
+        {isDesktop ? (
+          <Button variant="outline" size="sm" type="button" onClick={onNewChat}>
+            신규 대화
+          </Button>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" type="button">
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onOpenHistory}>
+                기록 보기
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onNewChat}>신규 대화</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );

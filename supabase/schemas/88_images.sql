@@ -7,7 +7,7 @@ CREATE TABLE public.images (
   url         text        NOT NULL,
   file_id     text,                          -- ImageKit fileId (null = 레거시)
   folder      text        NOT NULL,          -- '/products', '/custom-orders', '/reform'
-  entity_type text        NOT NULL,          -- 'product', 'custom_order', 'quote_request', 'reform'
+  entity_type text        NOT NULL,          -- 'product', 'custom_order', 'quote_request', 'reform', 'design_message'
   entity_id   text        NOT NULL,          -- 연결된 엔티티 ID
   uploaded_by uuid        REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE SET NULL,
   expires_at            timestamptz,           -- null = 영구 보관
@@ -126,6 +126,7 @@ GRANT EXECUTE ON FUNCTION public.register_image(text, text, text, text, text, ti
 -- | custom_order  | 주문 완료/취소 시 트리거       | +90일 |
 -- | quote_request | 견적 종료/확정 시 트리거       | +90일 |
 -- | reform        | 주문 완료/취소 시 트리거       | +90일 |
+-- | design_message | 설정 안 함 (영구)             | -     |
 
 -- 견적 종료/확정 시 이미지 만료 설정 (+90일)
 -- SECURITY DEFINER: admin이 상태를 변경하는 경우 RLS bypass 필요

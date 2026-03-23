@@ -31,7 +31,8 @@ CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
   p_ai_model     text,             -- 'openai' | 'gemini'
   p_request_type text,            -- 'text_only' | 'text_and_image'
-  p_quality      text DEFAULT 'standard'  -- 'high' | 'standard'
+  p_quality      text DEFAULT 'standard',  -- 'high' | 'standard'
+  p_work_id      text DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -45,7 +46,8 @@ DECLARE
   v_paid_bal     integer;
   v_bonus_bal    integer;
   v_caller_role  text;
-  v_paid_to_use  integer;
+  v_paid_deduct  integer;
+  v_bonus_deduct integer;
 BEGIN
   -- 소유권 검증: service_role이 아닌 경우 auth.uid() 일치 확인
   v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
@@ -62,9 +64,6 @@ BEGIN
   END IF;
   IF p_quality NOT IN ('standard', 'high') THEN
     RAISE EXCEPTION 'invalid quality: %', p_quality;
-  END IF;
-  IF p_request_type = 'text_only' AND p_quality = 'high' THEN
-    RAISE EXCEPTION 'unsupported combination: text_only with high quality is not supported';
   END IF;
 
   -- 동시 요청에 대한 advisory lock (사용자별)
@@ -98,7 +97,7 @@ BEGIN
       AND type = 'token_refund'
       AND status = '접수'
   ) THEN
-    SELECT COALESCE(SUM(amount) FILTER (WHERE token_class IN ('paid', 'bonus')), 0)::integer
+    SELECT COALESCE(SUM(amount), 0)::integer
       INTO v_total_bal
       FROM public.design_tokens
      WHERE user_id = p_user_id;
@@ -112,15 +111,12 @@ BEGIN
   END IF;
 
   -- 클래스별 잔액 조회
-  SELECT COALESCE(SUM(amount), 0)::integer
-  INTO v_paid_bal
+  SELECT
+    COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0)::integer,
+    COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)::integer
+  INTO v_paid_bal, v_bonus_bal
   FROM public.design_tokens
-  WHERE user_id = p_user_id AND token_class = 'paid';
-
-  SELECT COALESCE(SUM(amount), 0)::integer
-  INTO v_bonus_bal
-  FROM public.design_tokens
-  WHERE user_id = p_user_id AND token_class = 'bonus';
+  WHERE user_id = p_user_id;
 
   v_total_bal := v_paid_bal + v_bonus_bal;
 
@@ -135,25 +131,31 @@ BEGIN
   END IF;
 
   -- paid 먼저 차감, 부족분은 bonus에서 차감
-  v_paid_to_use := least(greatest(v_paid_bal, 0), v_cost);
+  v_paid_deduct  := LEAST(v_cost, v_paid_bal);
+  v_bonus_deduct := v_cost - v_paid_deduct;
 
-  IF v_paid_to_use > 0 THEN
+  IF v_paid_deduct > 0 THEN
     INSERT INTO public.design_tokens (
-      user_id, amount, type, token_class, ai_model, request_type, description
+      user_id, amount, type, token_class, ai_model, request_type, description, work_id
     ) VALUES (
-      p_user_id, -v_paid_to_use, 'use', 'paid',
+      p_user_id, -v_paid_deduct, 'use', 'paid',
       p_ai_model, p_request_type,
-      'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
-    );
+      'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ') - 유료',
+      CASE WHEN p_work_id IS NOT NULL THEN p_work_id || '_use_paid' ELSE NULL END
+    )
+    ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
   END IF;
-  IF v_cost - v_paid_to_use > 0 THEN
+
+  IF v_bonus_deduct > 0 THEN
     INSERT INTO public.design_tokens (
-      user_id, amount, type, token_class, ai_model, request_type, description
+      user_id, amount, type, token_class, ai_model, request_type, description, work_id
     ) VALUES (
-      p_user_id, -(v_cost - v_paid_to_use), 'use', 'bonus',
+      p_user_id, -v_bonus_deduct, 'use', 'bonus',
       p_ai_model, p_request_type,
-      'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
-    );
+      'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ') - 보너스',
+      CASE WHEN p_work_id IS NOT NULL THEN p_work_id || '_use_bonus' ELSE NULL END
+    )
+    ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
   END IF;
 
   RETURN jsonb_build_object(
