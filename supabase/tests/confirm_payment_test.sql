@@ -48,6 +48,8 @@ BEGIN
   );
 END $setup$;
 
+SELECT test_helpers.set_service_role();
+
 -- ── 테스트 1: 정상 확정 - 예외 없이 실행 ───────────────────
 SELECT lives_ok(
   $$
