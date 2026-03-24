@@ -18,24 +18,26 @@ import {
   createAdminTokenOrderItemRowDTO,
 } from "@/test/fixtures";
 
-const baseSampleRowDTO: AdminSampleOrderItemRowDTO = {
-  id: "row-sample-1",
-  orderId: "order-1",
-  itemId: "item-sample-1",
-  itemType: "sample",
-  productId: null,
-  selectedOptionId: null,
-  reformData: null,
-  quantity: 1,
-  unitPrice: 5000,
-  discountAmount: 0,
-  lineDiscountAmount: 0,
-  appliedUserCouponId: null,
-  created_at: "2026-03-15T09:00:00Z",
-  productName: null,
-  productCode: null,
-  productImage: null,
-};
+function createSampleRowDTO(): AdminSampleOrderItemRowDTO {
+  return {
+    id: "row-sample-1",
+    orderId: "order-1",
+    itemId: "item-sample-1",
+    itemType: "sample",
+    productId: null,
+    selectedOptionId: null,
+    reformData: null,
+    quantity: 1,
+    unitPrice: 5000,
+    discountAmount: 0,
+    lineDiscountAmount: 0,
+    appliedUserCouponId: null,
+    created_at: "2026-03-15T09:00:00Z",
+    productName: null,
+    productCode: null,
+    productImage: null,
+  };
+}
 
 describe("parseCustomReformData", () => {
   it("유효한 custom reformData를 파싱한다", () => {
@@ -269,7 +271,7 @@ describe("toAdminOrderItem", () => {
   });
 
   it("sample 아이템을 reformData 없이 매핑한다", () => {
-    expect(toAdminOrderItem(baseSampleRowDTO, "sale")).toEqual(
+    expect(toAdminOrderItem(createSampleRowDTO(), "sale")).toEqual(
       expect.objectContaining({
         type: "sample",
         sampleData: null,
@@ -279,7 +281,7 @@ describe("toAdminOrderItem", () => {
 
   it("sample 아이템을 유효한 reformData와 함께 매핑한다", () => {
     const dto: AdminSampleOrderItemRowDTO = {
-      ...baseSampleRowDTO,
+      ...createSampleRowDTO(),
       reformData: {
         sample_type: "fabric",
         pricing: { total_cost: 8000 },
@@ -307,7 +309,7 @@ describe("toAdminOrderItem", () => {
 
   it("sample 아이템에서 reformData가 유효하지 않으면 sampleData가 null이다", () => {
     const dto: AdminSampleOrderItemRowDTO = {
-      ...baseSampleRowDTO,
+      ...createSampleRowDTO(),
       reformData: { sample_type: "invalid_type" },
     };
     const result = toAdminOrderItem(dto, "sale");

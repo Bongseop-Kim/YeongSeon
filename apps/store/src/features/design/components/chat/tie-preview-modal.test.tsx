@@ -29,7 +29,7 @@ describe("TiePreviewModal", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it("넥타이 컨테이너 클릭도 onClose를 호출한다", async () => {
+  it("넥타이 컨테이너 클릭은 onClose를 호출하지 않는다", async () => {
     const onClose = vi.fn();
     render(
       <TiePreviewModal
@@ -39,6 +39,6 @@ describe("TiePreviewModal", () => {
     );
 
     await userEvent.click(screen.getByTestId("tie-preview-container"));
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

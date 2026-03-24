@@ -35,6 +35,7 @@ export function useGenerationLogsQuery(params: {
 } {
   const startDate = params.dateRange[0].format("YYYY-MM-DD");
   const endDate = params.dateRange[1].format("YYYY-MM-DD");
+  const normalizedPage = Math.max(1, Math.floor(Number(params.page) || 1));
 
   const query = useQuery({
     queryKey: [
@@ -43,7 +44,7 @@ export function useGenerationLogsQuery(params: {
       startDate,
       endDate,
       params.aiModel,
-      params.page,
+      normalizedPage,
     ],
     queryFn: () =>
       getGenerationLogs({
@@ -51,7 +52,7 @@ export function useGenerationLogsQuery(params: {
         endDate,
         aiModel: params.aiModel,
         limit: PAGE_SIZE + 1,
-        offset: (params.page - 1) * PAGE_SIZE,
+        offset: (normalizedPage - 1) * PAGE_SIZE,
       }),
   });
 

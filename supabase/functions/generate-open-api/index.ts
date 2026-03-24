@@ -2,7 +2,10 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 
 import { corsHeaders } from "../_shared/cors.ts";
-import { logGeneration } from "../_shared/log-generation.ts";
+import {
+  logGeneration,
+  type AiGenerationLogInsert,
+} from "../_shared/log-generation.ts";
 import {
   buildImagePrompt,
   buildImageEditPrompt,
@@ -268,7 +271,7 @@ const requestOpenAIImage = async (
         } else {
           // GENERATE WITH SOURCE: ci or reference as primary (not duplicated), NO input_fidelity
           const primaryBase64 =
-            payload.ciImageBase64 ?? payload.referenceImageBase64;
+            payload.ciImageBase64 || payload.referenceImageBase64;
           if (!primaryBase64) {
             throw new Error("Source image is required for edit mode");
           }
@@ -463,10 +466,43 @@ Deno.serve(async (req) => {
   let imageLatencyMs: number | null = null;
   let refundAmount = 0;
   let imageQuality = "standard";
+  const conversationTurn = payload.conversationHistory?.length ?? 0;
+  let requestType: "text_only" | "text_and_image" | null = null;
+  let textResult: Awaited<ReturnType<typeof requestOpenAIText>> | null = null;
+
+  const emitGenerationLog = async (
+    overrides: Partial<AiGenerationLogInsert> = {},
+  ) => {
+    await logGeneration(adminClient, {
+      work_id: workId,
+      user_id: user.id,
+      ai_model: "openai",
+      request_type: requestType,
+      quality: imageQuality,
+      user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
+      design_context: payload.designContext ?? null,
+      conversation_turn: conversationTurn,
+      has_ci_image: !!payload.ciImageBase64,
+      has_reference_image: !!payload.referenceImageBase64,
+      has_previous_image: !!payload.previousImageBase64,
+      ai_message: textResult?.aiMessage ?? null,
+      generate_image: textResult?.generateImage ?? null,
+      image_generated: false,
+      detected_design: textResult?.detectedDesign ?? null,
+      tokens_charged: 0,
+      tokens_refunded: refundAmount,
+      text_latency_ms: textLatencyMs,
+      image_latency_ms:
+        requestType === "text_and_image" ? imageLatencyMs : null,
+      total_latency_ms: Date.now() - requestStartTime,
+      ...overrides,
+    });
+  };
 
   try {
     const textStartTime = Date.now();
-    const textResult = await requestOpenAIText(payload, openaiApiKey);
+    textResult = await requestOpenAIText(payload, openaiApiKey);
     textLatencyMs = Date.now() - textStartTime;
 
     // 채팅 모드에서 빈 designContext 필드를 텍스트 AI가 추출한 값으로 보완
@@ -485,9 +521,7 @@ Deno.serve(async (req) => {
       },
     };
 
-    const requestType = textResult.generateImage
-      ? "text_and_image"
-      : "text_only";
+    requestType = textResult.generateImage ? "text_and_image" : "text_only";
 
     // high quality 여부 결정 (이미지 비용 차등 과금)
     imageQuality =
@@ -569,28 +603,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    await logGeneration(adminClient, {
-      work_id: workId,
-      user_id: user.id,
-      ai_model: "openai",
-      request_type: requestType,
-      quality: imageQuality,
-      user_message: payload.userMessage,
-      prompt_length: payload.userMessage.length,
-      design_context: payload.designContext ?? null,
-      conversation_turn: (payload.conversationHistory ?? []).length,
-      has_ci_image: !!payload.ciImageBase64,
-      has_reference_image: !!payload.referenceImageBase64,
-      has_previous_image: !!payload.previousImageBase64,
+    await emitGenerationLog({
       ai_message: textResult.aiMessage,
       generate_image: textResult.generateImage,
       image_generated: imageUrl !== null,
       detected_design: textResult.detectedDesign,
       tokens_charged: tokenData.cost,
       tokens_refunded: refundAmount,
-      text_latency_ms: textLatencyMs,
       image_latency_ms: textResult.generateImage ? imageLatencyMs : null,
-      total_latency_ms: Date.now() - requestStartTime,
     });
 
     return jsonResponse(200, {
@@ -600,24 +620,7 @@ Deno.serve(async (req) => {
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });
   } catch (error) {
-    await logGeneration(adminClient, {
-      work_id: workId,
-      user_id: user.id,
-      ai_model: "openai",
-      request_type: null,
-      quality: imageQuality,
-      user_message: payload?.userMessage ?? "",
-      prompt_length: payload?.userMessage?.length ?? 0,
-      design_context: payload?.designContext ?? null,
-      conversation_turn: 0,
-      has_ci_image: !!payload?.ciImageBase64,
-      has_reference_image: !!payload?.referenceImageBase64,
-      has_previous_image: !!payload?.previousImageBase64,
-      image_generated: false,
-      tokens_charged: 0,
-      tokens_refunded: 0,
-      text_latency_ms: textLatencyMs,
-      total_latency_ms: Date.now() - requestStartTime,
+    await emitGenerationLog({
       error_type: "generation_failed",
       error_message: error instanceof Error ? error.message : "Unknown error",
     });

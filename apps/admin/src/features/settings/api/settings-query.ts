@@ -1,6 +1,12 @@
 import { useOne, useUpdate, type HttpError } from "@refinedev/core";
 import { message } from "antd";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import type { AdminSettingRowDTO } from "@yeongseon/shared";
 
 import {
@@ -105,10 +111,16 @@ export function useDefaultCourier(): string | undefined {
 }
 
 export function useDefaultCourierForm() {
+  const fromDTO = useCallback(
+    (dto: AdminSettingRowDTO | undefined) =>
+      toDefaultCourierSetting(dto).courierCompany,
+    [],
+  );
+
   const form = useAdminSettingForm({
     key: DEFAULT_COURIER_COMPANY_KEY,
     initialValue: "",
-    fromDTO: (dto) => toDefaultCourierSetting(dto).courierCompany,
+    fromDTO,
     toDTOValue: (courierCompany) => courierCompany,
   });
 
@@ -125,10 +137,16 @@ export function useDefaultCourierForm() {
 }
 
 export function useDesignTokenInitialGrantForm() {
+  const fromDTO = useCallback(
+    (dto: AdminSettingRowDTO | undefined) =>
+      toDesignTokenInitialGrantSetting(dto).amount,
+    [],
+  );
+
   const form = useAdminSettingForm({
     key: DESIGN_TOKEN_INITIAL_GRANT_KEY,
     initialValue: DEFAULT_DESIGN_TOKEN_INITIAL_GRANT,
-    fromDTO: (dto) => toDesignTokenInitialGrantSetting(dto).amount,
+    fromDTO,
     toDTOValue: (amount) =>
       String(sanitizeDesignTokenInitialGrant(Number(amount))),
   });
