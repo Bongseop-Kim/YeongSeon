@@ -8,11 +8,11 @@ import type {
 export const DEFAULT_DESIGN_TOKEN_INITIAL_GRANT = 30;
 
 export function sanitizeDesignTokenInitialGrantAmount(value: number): number {
-  if (!Number.isFinite(value)) {
+  if (!Number.isFinite(value) || !Number.isInteger(value) || value <= 0) {
     return DEFAULT_DESIGN_TOKEN_INITIAL_GRANT;
   }
 
-  return Math.max(1, Math.round(value));
+  return value;
 }
 
 export function toDefaultCourierSetting(
