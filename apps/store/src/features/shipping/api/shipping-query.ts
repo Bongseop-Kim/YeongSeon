@@ -9,7 +9,7 @@ import {
 } from "./shipping-api";
 import type { ShippingAddressInput } from "@/features/shipping/types/shipping-address";
 import { toast } from "@/lib/toast";
-import { useRequiredUser } from "@/hooks/use-required-user";
+import { useAuthStore } from "@/store/auth";
 
 /**
  * 배송지 쿼리 키
@@ -26,11 +26,12 @@ export const shippingKeys = {
  * 현재 사용자의 모든 배송지 조회 쿼리
  */
 export const useShippingAddresses = () => {
-  useRequiredUser();
+  const { user, initialized } = useAuthStore();
 
   return useQuery({
     queryKey: shippingKeys.list(),
     queryFn: getShippingAddresses,
+    enabled: initialized && !!user?.id,
     staleTime: 1000 * 60 * 5, // 5분
     retry: 1,
   });
@@ -40,11 +41,12 @@ export const useShippingAddresses = () => {
  * 기본 배송지 조회 쿼리
  */
 export const useDefaultShippingAddress = () => {
-  useRequiredUser();
+  const { user, initialized } = useAuthStore();
 
   return useQuery({
     queryKey: shippingKeys.default(),
     queryFn: getDefaultShippingAddress,
+    enabled: initialized && !!user?.id,
     staleTime: 1000 * 60 * 5, // 5분
     retry: 1,
   });
@@ -54,12 +56,12 @@ export const useDefaultShippingAddress = () => {
  * ID로 배송지 조회 쿼리
  */
 export const useShippingAddress = (id: string) => {
-  useRequiredUser();
+  const { user, initialized } = useAuthStore();
 
   return useQuery({
     queryKey: shippingKeys.detail(id),
     queryFn: () => getShippingAddressById(id),
-    enabled: !!id,
+    enabled: initialized && !!user?.id && !!id,
     staleTime: 1000 * 60 * 5, // 5분
     retry: 1,
   });
