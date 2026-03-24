@@ -159,7 +159,7 @@ begin
         'purchase',
         'paid',
         '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)',
-        'order_' || v_order.id::text || '_paid'
+        'order_' || v_order.id::text
       )
       on conflict (work_id) where work_id is not null do nothing;
     end if;

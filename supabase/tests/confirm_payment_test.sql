@@ -6,7 +6,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(9);
+SELECT plan(10);
 
 -- ── 픽스처 UUIDs ────────────────────────────────────────────
 -- user A: 토큰 주문 소유자
@@ -74,7 +74,7 @@ SELECT is(
    WHERE user_id  = 'ca000001-0000-0000-0000-000000000001'::uuid
      AND type       = 'purchase'
      AND token_class = 'paid'
-     AND work_id    = 'order_ca100001-aaaa-0000-0000-000000000001_paid'),
+     AND work_id    = 'order_ca100001-aaaa-0000-0000-000000000001'),
   1,
   '토큰 지급 ledger가 design_tokens에 삽입됨'
 );
@@ -101,7 +101,23 @@ SELECT throws_ok(
   'null user_id로 호출 시 Forbidden 예외 발생'
 );
 
--- ── 테스트 6: null payment_key → payment_key is required ────
+SELECT set_config('request.jwt.claims', '{"role":"anon"}', true);
+
+SELECT throws_ok(
+  $$
+    SELECT public.confirm_payment_orders(
+      'ca000001-bbbb-0000-0000-000000000001'::uuid,
+      'ca000001-0000-0000-0000-000000000001'::uuid,
+      'anon-key'
+    )
+  $$,
+  'P0001', NULL,
+  'anon + auth.uid() null 호출 시 Forbidden 예외 발생'
+);
+
+SELECT test_helpers.set_service_role();
+
+-- ── 테스트 7: null payment_key → payment_key is required ────
 SELECT throws_ok(
   $$
     SELECT public.confirm_payment_orders(
@@ -114,7 +130,7 @@ SELECT throws_ok(
   'null payment_key로 호출 시 예외 발생'
 );
 
--- ── 테스트 7: 존재하지 않는 payment_group_id → 예외 ─────────
+-- ── 테스트 8: 존재하지 않는 payment_group_id → 예외 ─────────
 SELECT throws_ok(
   $$
     SELECT public.confirm_payment_orders(
@@ -127,7 +143,7 @@ SELECT throws_ok(
   '존재하지 않는 payment_group_id로 호출 시 예외 발생'
 );
 
--- ── 테스트 8: 소유자 불일치 → Forbidden ─────────────────────
+-- ── 테스트 9: 소유자 불일치 → Forbidden ─────────────────────
 -- order_3은 user_b 소유, user_a ID로 확정 시도
 SELECT throws_ok(
   $$
@@ -141,7 +157,7 @@ SELECT throws_ok(
   '주문 소유자가 아닌 user_id로 호출 시 Forbidden 예외 발생'
 );
 
--- ── 테스트 9: 결제중 아닌 주문 확정 시도 → 예외 ─────────────
+-- ── 테스트 10: 결제중 아닌 주문 확정 시도 → 예외 ────────────
 -- order_2는 이미 완료 상태
 SELECT throws_ok(
   $$
