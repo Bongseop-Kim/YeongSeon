@@ -145,7 +145,7 @@ begin
         else v_plan_key
       end;
 
-      -- 토큰 지급: ON CONFLICT (work_id) DO NOTHING으로 TOCTOU 방지
+      -- 토큰 지급: ON CONFLICT partial index 조건 명시 (TOCTOU 방지)
       insert into public.design_tokens (user_id, amount, type, token_class, description, work_id)
       values (
         p_user_id,
@@ -155,7 +155,7 @@ begin
         '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)',
         'order_' || v_order.id::text || '_paid'
       )
-      on conflict (work_id) do nothing;
+      on conflict (work_id) where work_id is not null do nothing;
     end if;
 
     v_coupon_row_count := 0;

@@ -47,7 +47,6 @@ declare
   v_reform_shipping_cost integer;
   v_used_coupon_ids uuid[] := '{}'::uuid[];
   v_coupon record;
-  v_order_type text;
 
   v_payment_group_id uuid;
   v_group_total_amount integer := 0;
