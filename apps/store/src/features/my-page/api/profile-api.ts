@@ -60,6 +60,9 @@ export const getProfile = async (): Promise<UserProfile> => {
             ? user.user_metadata[MARKETING_CONSENT_KEY]
             : undefined,
         ),
+        phoneVerified: newProfile.phone_verified ?? false,
+        notificationConsent: newProfile.notification_consent ?? false,
+        notificationEnabled: newProfile.notification_enabled ?? true,
       };
     }
     throw new Error(`프로필 조회 실패: ${profileError.message}`);
@@ -76,6 +79,9 @@ export const getProfile = async (): Promise<UserProfile> => {
         ? user.user_metadata[MARKETING_CONSENT_KEY]
         : undefined,
     ),
+    phoneVerified: profile.phone_verified ?? false,
+    notificationConsent: profile.notification_consent ?? false,
+    notificationEnabled: profile.notification_enabled ?? true,
   };
 };
 

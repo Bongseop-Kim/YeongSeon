@@ -13,6 +13,7 @@ import {
   toAdminClaimStatusLogEntry,
 } from "./claims-mapper";
 import { updateClaimStatus } from "./claims-api";
+import { supabase } from "@/lib/supabase";
 import type {
   AdminClaimListItem,
   AdminClaimDetail,
@@ -98,6 +99,29 @@ export function useClaimStatusUpdate(
     try {
       await updateClaimStatus({ claimId, newStatus, memo: memo || null });
       message.success(`상태가 "${newStatus}"(으)로 변경되었습니다.`);
+      supabase.auth
+        .getSession()
+        .then(({ data: { session } }) => {
+          if (session?.access_token) {
+            fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-claim`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ claimId }),
+              },
+            ).catch((err) =>
+              console.warn(
+                "[notify-claim] 발송 실패 (클레임 처리에 영향 없음)",
+                err,
+              ),
+            );
+          }
+        })
+        .catch(() => {});
       refetch();
       invalidateLogs();
       return true;

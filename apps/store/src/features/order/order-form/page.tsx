@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,8 @@ import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/components/composite/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
-import { useState } from "react";
+import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
+import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
 
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
@@ -67,7 +68,7 @@ const OrderFormPage = () => {
     );
   };
 
-  const handleRequestPayment = async () => {
+  const proceedToPayment = async () => {
     if (!user) {
       toast.error("로그인이 필요합니다. 로그인 후 결제를 진행해주세요.");
       navigate(ROUTES.LOGIN);
@@ -130,6 +131,9 @@ const OrderFormPage = () => {
     }
   };
 
+  const { initiateWithConsentCheck: handleRequestPayment, consentFlow } =
+    useNotificationConsentFlow(proceedToPayment);
+
   const hasReformItems = orderItems.some((item) => item.type === "reform");
   const estimatedShippingCost = hasReformItems
     ? (reformPricing?.shippingCost ?? 0)
@@ -153,154 +157,157 @@ const OrderFormPage = () => {
   }
 
   return (
-    <MainLayout>
-      <MainContent className="overflow-visible">
-        <PageLayout
-          sidebar={
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>결제 금액</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-600">상품 금액</span>
-                    <span>{totals.originalPrice.toLocaleString()}원</span>
-                  </div>
-                  {totals.totalDiscount > 0 && (
+    <>
+      <MainLayout>
+        <MainContent className="overflow-visible">
+          <PageLayout
+            sidebar={
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>결제 금액</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-zinc-600">할인 금액</span>
-                      <span className="text-red-500">
-                        -{totals.totalDiscount.toLocaleString()}원
+                      <span className="text-zinc-600">상품 금액</span>
+                      <span>{totals.originalPrice.toLocaleString()}원</span>
+                    </div>
+                    {totals.totalDiscount > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-zinc-600">할인 금액</span>
+                        <span className="text-red-500">
+                          -{totals.totalDiscount.toLocaleString()}원
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-zinc-600">배송비</span>
+                      <span>
+                        {totals.shippingCost > 0
+                          ? `${totals.shippingCost.toLocaleString()}원`
+                          : "무료"}
                       </span>
                     </div>
-                  )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-600">배송비</span>
-                    <span>
-                      {totals.shippingCost > 0
-                        ? `${totals.shippingCost.toLocaleString()}원`
-                        : "무료"}
-                    </span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between text-base font-semibold">
-                    <span>총 결제 금액</span>
-                    <span className="text-blue-600">
-                      {totals.totalPrice.toLocaleString()}원
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-              {user && isPricingReady && (
-                <Card>
-                  <CardContent className="px-0">
-                    <PaymentWidget
-                      ref={paymentWidgetRef}
-                      amount={totals.totalPrice}
-                      customerKey={user.id}
-                    />
+                    <Separator />
+                    <div className="flex justify-between text-base font-semibold">
+                      <span>총 결제 금액</span>
+                      <span className="text-blue-600">
+                        {totals.totalPrice.toLocaleString()}원
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
-              )}
-            </>
-          }
-          actionBar={
-            <div className="space-y-2">
-              <Button
-                onClick={handleRequestPayment}
-                className="w-full"
-                size="xl"
-                data-testid="order-submit-button"
-                disabled={
-                  !user ||
-                  !selectedAddress ||
-                  isPaymentLoading ||
-                  !isPricingReady
-                }
-              >
-                {isPaymentLoading
-                  ? "결제 요청 중..."
-                  : !isPricingReady
-                    ? "가격 로딩 중..."
-                    : `${totals.totalPrice.toLocaleString()}원 결제하기`}
-              </Button>
-              {!selectedAddress && (
-                <p className="text-sm text-center text-zinc-500">
-                  배송지를 추가하면 주문을 진행할 수 있어요
-                </p>
-              )}
-            </div>
-          }
-        >
-          <Card data-testid="order-shipping-card">
-            <CardHeader className="flex justify-between items-center">
-              <CardTitle>
-                {selectedAddress?.recipientName || "배송지 정보"}
-              </CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={openShippingPopup}
-                data-testid="order-shipping-manage"
-              >
-                배송지 관리
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {selectedAddress ? (
-                <>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
-                      {selectedAddress.detailAddress}
-                    </p>
-                    <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
-                  </div>
-                  {selectedAddress.deliveryRequest && (
-                    <p className="text-sm text-zinc-600">
-                      {getDeliveryRequestLabel(
-                        selectedAddress.deliveryRequest,
-                        selectedAddress.deliveryMemo,
-                      )}
-                    </p>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8 text-zinc-500">
-                  배송지를 추가해주세요.
-                </div>
-              )}
-            </CardContent>
-
-            <CardContent>
-              <Separator />
-            </CardContent>
-
-            <CardHeader data-testid="order-items-card">
-              <CardTitle>주문 상품 {orderItems.length}개</CardTitle>
-            </CardHeader>
-
-            {orderItems.map((item, index) => (
-              <React.Fragment key={item.id}>
-                {item.type === "product" ? (
-                  <OrderFormItemCard
-                    item={item}
-                    onChangeCoupon={() => handleChangeCoupon(item.id)}
-                  />
-                ) : (
-                  <ReformOrderItemCard
-                    item={item}
-                    onChangeCoupon={() => handleChangeCoupon(item.id)}
-                  />
+                {user && isPricingReady && (
+                  <Card>
+                    <CardContent className="px-0">
+                      <PaymentWidget
+                        ref={paymentWidgetRef}
+                        amount={totals.totalPrice}
+                        customerKey={user.id}
+                      />
+                    </CardContent>
+                  </Card>
                 )}
-                {index < orderItems.length - 1 && <Separator />}
-              </React.Fragment>
-            ))}
-          </Card>
-        </PageLayout>
-      </MainContent>
-    </MainLayout>
+              </>
+            }
+            actionBar={
+              <div className="space-y-2">
+                <Button
+                  onClick={handleRequestPayment}
+                  className="w-full"
+                  size="xl"
+                  data-testid="order-submit-button"
+                  disabled={
+                    !user ||
+                    !selectedAddress ||
+                    isPaymentLoading ||
+                    !isPricingReady
+                  }
+                >
+                  {isPaymentLoading
+                    ? "결제 요청 중..."
+                    : !isPricingReady
+                      ? "가격 로딩 중..."
+                      : `${totals.totalPrice.toLocaleString()}원 결제하기`}
+                </Button>
+                {!selectedAddress && (
+                  <p className="text-sm text-center text-zinc-500">
+                    배송지를 추가하면 주문을 진행할 수 있어요
+                  </p>
+                )}
+              </div>
+            }
+          >
+            <Card data-testid="order-shipping-card">
+              <CardHeader className="flex justify-between items-center">
+                <CardTitle>
+                  {selectedAddress?.recipientName || "배송지 정보"}
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={openShippingPopup}
+                  data-testid="order-shipping-manage"
+                >
+                  배송지 관리
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {selectedAddress ? (
+                  <>
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
+                        {selectedAddress.detailAddress}
+                      </p>
+                      <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
+                    </div>
+                    {selectedAddress.deliveryRequest && (
+                      <p className="text-sm text-zinc-600">
+                        {getDeliveryRequestLabel(
+                          selectedAddress.deliveryRequest,
+                          selectedAddress.deliveryMemo,
+                        )}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-zinc-500">
+                    배송지를 추가해주세요.
+                  </div>
+                )}
+              </CardContent>
+
+              <CardContent>
+                <Separator />
+              </CardContent>
+
+              <CardHeader data-testid="order-items-card">
+                <CardTitle>주문 상품 {orderItems.length}개</CardTitle>
+              </CardHeader>
+
+              {orderItems.map((item, index) => (
+                <React.Fragment key={item.id}>
+                  {item.type === "product" ? (
+                    <OrderFormItemCard
+                      item={item}
+                      onChangeCoupon={() => handleChangeCoupon(item.id)}
+                    />
+                  ) : (
+                    <ReformOrderItemCard
+                      item={item}
+                      onChangeCoupon={() => handleChangeCoupon(item.id)}
+                    />
+                  )}
+                  {index < orderItems.length - 1 && <Separator />}
+                </React.Fragment>
+              ))}
+            </Card>
+          </PageLayout>
+        </MainContent>
+      </MainLayout>
+      <NotificationConsentFlowModals consentFlow={consentFlow} />
+    </>
   );
 };
 

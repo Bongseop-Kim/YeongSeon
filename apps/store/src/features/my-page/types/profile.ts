@@ -19,4 +19,7 @@ export interface UserProfile {
   birth: string | null;
   email: string;
   marketingConsent: MarketingConsent;
+  phoneVerified: boolean;
+  notificationConsent: boolean;
+  notificationEnabled: boolean;
 }

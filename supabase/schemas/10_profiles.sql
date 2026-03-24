@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   role       public.user_role NOT NULL DEFAULT 'customer',
   is_active  boolean     NOT NULL DEFAULT true,
   birth      date,
+  phone_verified        boolean     NOT NULL DEFAULT false,
+  notification_consent  boolean     NOT NULL DEFAULT false,
+  notification_enabled  boolean     NOT NULL DEFAULT true,
 
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_id_fkey
@@ -73,4 +76,5 @@ CREATE POLICY "Admins can update profiles"
 
 -- Privilege hardening
 REVOKE UPDATE ON TABLE public.profiles FROM authenticated;
-GRANT UPDATE (name, phone, birth) ON TABLE public.profiles TO authenticated;
+GRANT UPDATE (name, phone, birth, notification_consent, notification_enabled)
+  ON TABLE public.profiles TO authenticated;

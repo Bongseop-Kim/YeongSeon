@@ -7,6 +7,7 @@ import {
 } from "@/functions/_shared/response.ts";
 import { createLogger } from "@/functions/_shared/logger.ts";
 import { maskPaymentKey } from "@/functions/_shared/payment.ts";
+import { sendAlimtalk } from "@/functions/_shared/solapi.ts";
 
 type ConfirmPaymentRequest = {
   paymentKey: string;
@@ -507,10 +508,48 @@ Deno.serve(async (req) => {
     );
   }
 
-  return jsonResponse(200, {
+  const response = jsonResponse(200, {
     paymentKey: payload.paymentKey,
     paymentGroupId: payload.orderId,
     orders: updatedOrders,
     status: tossResult.status ?? "DONE",
   });
+
+  // 알림 발송 — 응답 반환 후 백그라운드에서 실행 (실패해도 결제 응답에 영향 없음)
+  EdgeRuntime.waitUntil(
+    (async () => {
+      try {
+        const { data: notifyProfile } = await adminClient
+          .from("profiles")
+          .select(
+            "phone, phone_verified, notification_consent, notification_enabled",
+          )
+          .eq("id", user.id)
+          .single();
+
+        if (
+          notifyProfile?.notification_consent &&
+          notifyProfile?.phone_verified &&
+          notifyProfile?.notification_enabled &&
+          notifyProfile?.phone
+        ) {
+          await sendAlimtalk({
+            to: notifyProfile.phone,
+            templateId: Deno.env.get("SOLAPI_TEMPLATE_PAYMENT_DONE") ?? "",
+            variables: {
+              "#{주문번호}": payload.orderId,
+              "#{결제금액}": totalAmount.toLocaleString("ko-KR"),
+            },
+            fallbackContent: `[영선] 주문이 완료되었습니다.\n주문번호: ${payload.orderId}\n결제금액: ${totalAmount.toLocaleString("ko-KR")}원`,
+          });
+        }
+      } catch (notifyErr) {
+        errorLogger("notify_failed", notifyErr, {
+          paymentGroupId: payload.orderId,
+        });
+      }
+    })(),
+  );
+
+  return response;
 });

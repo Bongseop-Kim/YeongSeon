@@ -1,10 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PageLayout } from "@/components/layout/page-layout";
 import { useModalStore } from "@/store/modal";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
@@ -16,6 +23,10 @@ import {
   ReformOptionChangeModal,
   type ReformOptionChangeModalRef,
 } from "./components/reform-option-change-modal";
+import type {
+  ProductCartItem,
+  ReformCartItem,
+} from "@yeongseon/shared/types/view/cart";
 import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
 import { useProducts } from "@/features/shop/api/products-query";
 import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
@@ -29,7 +40,7 @@ import { CartRecommendationsCard } from "@/features/cart/components/cart-recomme
 import { CartOrderSummaryCard } from "@/features/cart/components/cart-order-summary-card";
 
 export default function CartPage() {
-  const { openModal, confirm } = useModalStore();
+  const { confirm } = useModalStore();
   const navigate = useNavigate();
 
   const {
@@ -43,7 +54,16 @@ export default function CartPage() {
   const { setOrderItems } = useOrderStore();
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const { openCouponSelect } = useCouponSelect();
+  const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
+
+  const optionChangeRef = useRef<OptionChangeModalRef | null>(null);
+  const reformOptionChangeRef = useRef<ReformOptionChangeModalRef | null>(null);
+  const [optionDialogItemId, setOptionDialogItemId] = useState<string | null>(
+    null,
+  );
+  const [reformDialogItemId, setReformDialogItemId] = useState<string | null>(
+    null,
+  );
 
   const {
     data: similarProducts = [],
@@ -99,105 +119,73 @@ export default function CartPage() {
   const handleChangeOption = (itemId: string) => {
     const item = items.find((i) => i.id === itemId);
     if (!item || item.type !== "product") return;
+    setOptionDialogItemId(itemId);
+  };
 
-    const modalRef: { current: OptionChangeModalRef | null } = {
-      current: null,
-    };
+  const handleConfirmOptionChange = async () => {
+    const item = items.find((i) => i.id === optionDialogItemId);
+    if (!item || item.type !== "product" || !optionChangeRef.current) return;
 
-    openModal({
-      title: "옵션/수량 변경",
-      children: (
-        <OptionChangeModal
-          ref={(ref) => {
-            modalRef.current = ref;
-          }}
-          item={item}
-        />
-      ),
-      confirmText: "변경",
-      cancelText: "취소",
-      onConfirm: async () => {
-        if (!modalRef.current) return;
+    const { quantity, optionId } = optionChangeRef.current.getValues();
+    const hasChanges =
+      quantity !== item.quantity || optionId !== item.selectedOption?.id;
 
-        const { quantity, optionId } = modalRef.current.getValues();
+    if (!hasChanges) {
+      toast.warning("변경 사항이 없습니다.");
+      setOptionDialogItemId(null);
+      return;
+    }
 
-        // 옵션이나 수량이 변경되었는지 확인
-        const hasChanges =
-          quantity !== item.quantity || optionId !== item.selectedOption?.id;
+    const newOption = optionId
+      ? item.product.options?.find((opt) => opt.id === optionId)
+      : undefined;
 
-        if (!hasChanges) {
-          confirm("변경 사항이 없습니다.");
-          return;
-        }
+    if (optionId && !newOption) return;
 
-        const newOption = optionId
-          ? item.product.options?.find((opt) => opt.id === optionId)
-          : undefined;
-
-        if (optionId && !newOption) return;
-
-        try {
-          // 옵션이 변경되지 않고 수량만 변경된 경우
-          if (optionId === item.selectedOption?.id) {
-            await updateQuantity(itemId, quantity);
-            return;
-          }
-
-          // 옵션이 변경된 경우: 원자적으로 기존 아이템을 제거하고 새 옵션으로 교체
-          await updateProductOption(itemId, newOption, quantity);
-        } catch (error) {
-          toast.error("변경에 실패했습니다.");
-          console.error(error);
-        }
-      },
-    });
+    try {
+      if (optionId === item.selectedOption?.id) {
+        await updateQuantity(item.id, quantity);
+      } else {
+        await updateProductOption(item.id, newOption, quantity);
+      }
+      setOptionDialogItemId(null);
+    } catch (error) {
+      toast.error("변경에 실패했습니다.");
+      console.error(error);
+    }
   };
 
   const handleChangeReformOption = (itemId: string) => {
     const item = items.find((i) => i.id === itemId);
     if (!item || item.type !== "reform") return;
+    setReformDialogItemId(itemId);
+  };
 
-    const modalRef: { current: ReformOptionChangeModalRef | null } = {
-      current: null,
-    };
+  const handleConfirmReformOptionChange = async () => {
+    const item = items.find((i) => i.id === reformDialogItemId);
+    if (!item || item.type !== "reform" || !reformOptionChangeRef.current)
+      return;
 
-    openModal({
-      title: "수선 옵션 변경",
-      children: (
-        <ReformOptionChangeModal
-          ref={(ref) => {
-            modalRef.current = ref;
-          }}
-          item={item}
-        />
-      ),
-      confirmText: "변경",
-      cancelText: "취소",
-      onConfirm: async () => {
-        if (!modalRef.current) return;
+    const updatedTie = reformOptionChangeRef.current.getValues();
+    const hasChanges =
+      updatedTie.measurementType !== item.reformData.tie.measurementType ||
+      updatedTie.tieLength !== item.reformData.tie.tieLength ||
+      updatedTie.wearerHeight !== item.reformData.tie.wearerHeight;
 
-        const updatedTie = modalRef.current.getValues();
+    if (!hasChanges) {
+      toast.warning("변경 사항이 없습니다.");
+      setReformDialogItemId(null);
+      return;
+    }
 
-        // 옵션이 변경되었는지 확인
-        const hasChanges =
-          updatedTie.measurementType !== item.reformData.tie.measurementType ||
-          updatedTie.tieLength !== item.reformData.tie.tieLength ||
-          updatedTie.wearerHeight !== item.reformData.tie.wearerHeight;
-
-        if (!hasChanges) {
-          confirm("변경 사항이 없습니다.");
-          return;
-        }
-
-        try {
-          await updateReformOption(itemId, updatedTie);
-          toast.success("수선 옵션이 변경되었습니다.");
-        } catch (error) {
-          toast.error("수선 옵션 변경에 실패했습니다.");
-          console.error(error);
-        }
-      },
-    });
+    try {
+      await updateReformOption(item.id, updatedTie);
+      toast.success("수선 옵션이 변경되었습니다.");
+      setReformDialogItemId(null);
+    } catch (error) {
+      toast.error("수선 옵션 변경에 실패했습니다.");
+      console.error(error);
+    }
   };
 
   const handleChangeCoupon = async (itemId: string) => {
@@ -207,23 +195,20 @@ export default function CartPage() {
 
       const selectedCoupon = await openCouponSelect(item.appliedCoupon?.id);
 
-      // 취소된 경우 (null 반환) 처리하지 않음
-      // 쿠폰을 명시적으로 제거하려면 모달에서 "쿠폰 없음"을 선택하고 확인해야 함
       if (selectedCoupon === null) {
         return;
       }
-      // 쿠폰 적용 (null이면 쿠폰 제거)
+
       await applyCoupon(itemId, selectedCoupon ?? undefined);
 
-      // 성공 메시지 표시
-      confirm(
+      toast.success(
         selectedCoupon
           ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`
           : "쿠폰 사용을 취소했습니다.",
       );
     } catch (error) {
       console.error(error);
-      confirm("쿠폰 변경에 실패했습니다.");
+      toast.error("쿠폰 변경에 실패했습니다.");
     }
   };
 
@@ -238,14 +223,10 @@ export default function CartPage() {
       return;
     }
 
-    // 선택된 상품들을 주문 store에 저장
     setOrderItems(selectedCartItems);
-
-    // 주문 페이지로 이동
     navigate(ROUTES.ORDER_FORM);
   };
 
-  // 선택된 상품의 총액 계산 (수선 아이템 포함 시 택배비 반영)
   const selectedTotals = useMemo(() => {
     const hasReformItems = selectedCartItems.some(
       (item) => item.type === "reform",
@@ -259,89 +240,163 @@ export default function CartPage() {
   const isAllChecked =
     items.length > 0 && selectedItems.length === items.length;
 
+  const optionDialogItem = optionDialogItemId
+    ? ((items.find(
+        (i) => i.id === optionDialogItemId && i.type === "product",
+      ) as ProductCartItem | undefined) ?? null)
+    : null;
+
+  const reformDialogItem = reformDialogItemId
+    ? ((items.find(
+        (i) => i.id === reformDialogItemId && i.type === "reform",
+      ) as ReformCartItem | undefined) ?? null)
+    : null;
+
   return (
-    <MainLayout>
-      <MainContent className="overflow-visible">
-        <PageLayout
-          detail={
-            <div>
-              <CartRecommendationsCard
-                products={similarProducts}
-                isMobile={isMobile}
-                isLoading={similarLoading}
-                isError={similarError}
-                onRetry={refetchSimilar}
+    <>
+      <MainLayout>
+        <MainContent className="overflow-visible">
+          <PageLayout
+            detail={
+              <div>
+                <CartRecommendationsCard
+                  products={similarProducts}
+                  isMobile={isMobile}
+                  isLoading={similarLoading}
+                  isError={similarError}
+                  onRetry={refetchSimilar}
+                />
+              </div>
+            }
+            sidebar={<CartOrderSummaryCard summary={selectedTotals} />}
+            actionBar={
+              <Button
+                type="button"
+                onClick={handleOrder}
+                size="xl"
+                className="w-full"
+                data-testid="cart-order-button"
+                disabled={selectedItems.length === 0}
+              >
+                주문하기
+              </Button>
+            }
+          >
+            <Card>
+              <CartSelectionToolbar
+                isAllChecked={isAllChecked}
+                onToggleAll={handleSelectAll}
+                onRemoveSelected={handleRemoveSelected}
               />
-            </div>
-          }
-          sidebar={<CartOrderSummaryCard summary={selectedTotals} />}
-          actionBar={
-            <Button
-              type="button"
-              onClick={handleOrder}
-              size="xl"
-              className="w-full"
-              data-testid="cart-order-button"
-              disabled={selectedItems.length === 0}
-            >
-              주문하기
-            </Button>
-          }
+              <Separator />
+              <CartItemsPanel
+                items={items}
+                selectedItems={selectedItems}
+                onSelectItem={handleSelectItem}
+                onRemoveProductItem={(itemId) => {
+                  confirm(
+                    "상품을 삭제하시겠습니까?",
+                    () => {
+                      void (async () => {
+                        try {
+                          await removeFromCart(itemId);
+                        } catch (error) {
+                          console.error(error);
+                        }
+                      })();
+                    },
+                    {
+                      confirmText: "삭제",
+                      cancelText: "취소",
+                    },
+                  );
+                }}
+                onRemoveReformItem={(itemId) => {
+                  confirm(
+                    "수선 요청을 삭제하시겠습니까?",
+                    () => {
+                      void (async () => {
+                        try {
+                          await removeFromCart(itemId);
+                        } catch (error) {
+                          console.error(error);
+                        }
+                      })();
+                    },
+                    {
+                      confirmText: "삭제",
+                      cancelText: "취소",
+                    },
+                  );
+                }}
+                onChangeProductOption={handleChangeOption}
+                onChangeReformOption={handleChangeReformOption}
+                onChangeCoupon={handleChangeCoupon}
+              />
+            </Card>
+          </PageLayout>
+        </MainContent>
+      </MainLayout>
+
+      {optionDialogItem && (
+        <Dialog
+          open
+          onOpenChange={(open) => !open && setOptionDialogItemId(null)}
         >
-          <Card>
-            <CartSelectionToolbar
-              isAllChecked={isAllChecked}
-              onToggleAll={handleSelectAll}
-              onRemoveSelected={handleRemoveSelected}
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>옵션/수량 변경</DialogTitle>
+            </DialogHeader>
+            <OptionChangeModal ref={optionChangeRef} item={optionDialogItem} />
+            <DialogFooter>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setOptionDialogItemId(null)}
+              >
+                취소
+              </Button>
+              <Button className="flex-1" onClick={handleConfirmOptionChange}>
+                변경
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {reformDialogItem && (
+        <Dialog
+          open
+          onOpenChange={(open) => !open && setReformDialogItemId(null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>수선 옵션 변경</DialogTitle>
+            </DialogHeader>
+            <ReformOptionChangeModal
+              ref={reformOptionChangeRef}
+              item={reformDialogItem}
             />
-            <Separator />
-            <CartItemsPanel
-              items={items}
-              selectedItems={selectedItems}
-              onSelectItem={handleSelectItem}
-              onRemoveProductItem={(itemId) => {
-                confirm(
-                  "상품을 삭제하시겠습니까?",
-                  () => {
-                    void (async () => {
-                      try {
-                        await removeFromCart(itemId);
-                      } catch (error) {
-                        console.error(error);
-                      }
-                    })();
-                  },
-                  {
-                    confirmText: "삭제",
-                    cancelText: "취소",
-                  },
-                );
-              }}
-              onRemoveReformItem={(itemId) => {
-                confirm(
-                  "수선 요청을 삭제하시겠습니까?",
-                  () => {
-                    void (async () => {
-                      try {
-                        await removeFromCart(itemId);
-                      } catch (error) {
-                        console.error(error);
-                      }
-                    })();
-                  },
-                  {
-                    confirmText: "삭제",
-                    cancelText: "취소",
-                  },
-                );
-              }}
-              onChangeProductOption={handleChangeOption}
-              onChangeReformOption={handleChangeReformOption}
-              onChangeCoupon={handleChangeCoupon}
-            />
-          </Card>
-        </PageLayout>
-      </MainContent>
-    </MainLayout>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setReformDialogItemId(null)}
+              >
+                취소
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleConfirmReformOptionChange}
+              >
+                변경
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {couponDialog}
+    </>
   );
 }

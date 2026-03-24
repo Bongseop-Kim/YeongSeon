@@ -184,11 +184,13 @@ export default function OrderListPage() {
                                 }
                                 actions={
                                   item.type === "token" ? (
-                                    <TokenRefundAction
-                                      refundOrder={
-                                        refundOrderMap.get(order.id) ?? null
-                                      }
-                                    />
+                                    <div className="flex gap-2">
+                                      <TokenRefundAction
+                                        refundOrder={
+                                          refundOrderMap.get(order.id) ?? null
+                                        }
+                                      />
+                                    </div>
                                   ) : claimActions.length > 0 ? (
                                     <div className="flex gap-2">
                                       {claimActions.map((actionType) => (

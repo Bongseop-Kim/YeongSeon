@@ -82,7 +82,7 @@ function TokenRefundDialog({ order, open, onClose }: TokenRefundDialogProps) {
             취소
           </Button>
           <Button onClick={handleConfirm} disabled={isPending}>
-            {isPending ? "신청 중..." : "환불 신청"}
+            {isPending ? "신청 중..." : "취소 요청"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -157,10 +157,10 @@ export function TokenRefundAction({ refundOrder }: TokenRefundActionProps) {
         <Button
           size="sm"
           variant="outline"
-          className="text-xs"
+          className="flex-1"
           onClick={() => setDialogOpen(true)}
         >
-          환불 신청
+          취소 요청
         </Button>
         <TokenRefundDialog
           order={refundOrder}
