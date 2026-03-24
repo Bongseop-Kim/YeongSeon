@@ -1,6 +1,8 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { createJsonResponse } from "@/functions/_shared/response.ts";
+import { isJsonPayloadWithinLimit } from "@/functions/_shared/validation.ts";
 
 type OrderItemInput = {
   item_id: string;
@@ -29,14 +31,8 @@ type CreateOrderInput = {
   items: OrderItemInput[];
 };
 
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
+const MAX_ITEMS = 50;
+const MAX_REFORM_SIZE_BYTES = 64 * 1024;
 
 const validateItemShape = (item: OrderItemInput) => {
   if (!item.item_id || !item.item_type) {
@@ -57,6 +53,9 @@ const validateItemShape = (item: OrderItemInput) => {
 };
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -105,9 +104,22 @@ Deno.serve(async (req) => {
   if (payload.items.length === 0) {
     return jsonResponse(400, { error: "Order items are required" });
   }
+  if (payload.items.length > MAX_ITEMS) {
+    return jsonResponse(400, { error: "Too many order items" });
+  }
 
   try {
     for (const item of payload.items) {
+      if (!item || typeof item !== "object") {
+        throw new Error("Invalid order item");
+      }
+      if (
+        "reform_data" in item &&
+        item.reform_data !== null &&
+        !isJsonPayloadWithinLimit(item.reform_data, MAX_REFORM_SIZE_BYTES)
+      ) {
+        return jsonResponse(400, { error: "reform_data too large" });
+      }
       validateItemShape(item);
     }
   } catch (error) {

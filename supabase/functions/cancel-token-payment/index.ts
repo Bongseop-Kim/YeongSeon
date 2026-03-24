@@ -1,40 +1,15 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { createJsonResponse } from "@/functions/_shared/response.ts";
+import { createLogger } from "@/functions/_shared/logger.ts";
+import { maskPaymentKey } from "@/functions/_shared/payment.ts";
 
 type CancelTokenPaymentRequest = {
   refundRequestId: string;
 };
 
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
-
-const maskPaymentKey = (key: string): string => {
-  if (key.length <= 8) return "****";
-  return `****${key.slice(-8)}`;
-};
-
-const processLogger = (step: string, payload: Record<string, unknown>) => {
-  console.log(`[cancel-token-payment:${step}]`, JSON.stringify(payload));
-};
-
-const errorLogger = (
-  step: string,
-  error: unknown,
-  payload: Record<string, unknown> = {},
-) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(
-    `[cancel-token-payment:${step}]`,
-    JSON.stringify({ ...payload, error: message }),
-  );
-};
+const { processLogger, errorLogger } = createLogger("cancel-token-payment");
 
 const isCancelRequest = (
   payload: unknown,
@@ -48,6 +23,9 @@ const isCancelRequest = (
 };
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -84,15 +62,19 @@ Deno.serve(async (req) => {
     return jsonResponse(401, { error: "Unauthorized" });
   }
 
-  // is_admin 확인
-  const { data: profileData, error: profileError } = await userClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  // is_admin 확인 (admin + manager 역할 모두 허용)
+  const { data: isAdmin, error: adminCheckError } =
+    await userClient.rpc("is_admin");
 
-  if (profileError || !profileData || profileData.role !== "admin") {
-    return jsonResponse(403, { error: "Forbidden: admin only" });
+  if (adminCheckError) {
+    errorLogger("admin_check_failed", adminCheckError, { userId: user.id });
+    return jsonResponse(500, { error: "Internal Server Error" });
+  }
+
+  if (isAdmin !== true) {
+    return jsonResponse(403, {
+      error: "Forbidden: admin or manager only",
+    });
   }
 
   let payload: CancelTokenPaymentRequest;
@@ -240,7 +222,9 @@ Deno.serve(async (req) => {
   let tossResponse: Response;
   try {
     tossResponse = await fetch(
-      `https://api.tosspayments.com/v1/payments/${encodeURIComponent(order.payment_key)}/cancel`,
+      `https://api.tosspayments.com/v1/payments/${encodeURIComponent(
+        order.payment_key,
+      )}/cancel`,
       {
         method: "POST",
         headers: {
@@ -292,7 +276,10 @@ Deno.serve(async (req) => {
     });
     return jsonResponse(tossResponse.status, {
       error: "Toss payment cancellation rejected",
-      details: parsedToss,
+      ...(typeof parsedToss.code === "string" && { code: parsedToss.code }),
+      ...(typeof parsedToss.message === "string" && {
+        message: parsedToss.message,
+      }),
     });
   }
 

@@ -1,6 +1,8 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { createJsonResponse } from "../_shared/response.ts";
+import { isJsonPayloadWithinLimit } from "../_shared/validation.ts";
 
 type CreateQuoteRequestInput = {
   shipping_address_id: string;
@@ -14,16 +16,10 @@ type CreateQuoteRequestInput = {
   contact_value: string;
 };
 
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
-
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -76,6 +72,10 @@ Deno.serve(async (req) => {
     Array.isArray(payload.options)
   ) {
     return jsonResponse(400, { error: "Options must be a non-null object" });
+  }
+
+  if (!isJsonPayloadWithinLimit(payload.options)) {
+    return jsonResponse(413, { error: "Options payload too large" });
   }
 
   if (!Number.isInteger(payload.quantity) || payload.quantity < 100) {

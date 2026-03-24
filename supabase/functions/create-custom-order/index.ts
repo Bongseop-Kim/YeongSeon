@@ -1,6 +1,8 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { createJsonResponse } from "../_shared/response.ts";
+import { isJsonPayloadWithinLimit } from "../_shared/validation.ts";
 
 type CreateCustomOrderInput = {
   shipping_address_id: string;
@@ -10,16 +12,10 @@ type CreateCustomOrderInput = {
   additional_notes?: string;
 };
 
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
-
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -64,6 +60,10 @@ Deno.serve(async (req) => {
 
   if (!payload?.shipping_address_id || !payload.options) {
     return jsonResponse(400, { error: "Invalid request payload" });
+  }
+
+  if (!isJsonPayloadWithinLimit(payload.options)) {
+    return jsonResponse(413, { error: "Options payload too large" });
   }
 
   if (!Number.isInteger(payload.quantity) || payload.quantity <= 0) {

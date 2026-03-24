@@ -1,0 +1,39 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@supabase/functions-js@^0.0.0-automated": "0.0.0-jsr-test.1",
+    "jsr:@supabase/supabase-js@2.97.0": "2.97.0"
+  },
+  "jsr": {
+    "@supabase/functions-js@0.0.0-jsr-test.1": {
+      "integrity": "b1b37924af1f0011b4753201e1585a37b030e996c6682492e02575eb27d902b2"
+    },
+    "@supabase/supabase-js@2.97.0": {
+      "integrity": "b14a91e5ec731a82f2709dc8434f8320e15931c563167e09754814cc94a0391d",
+      "dependencies": [
+        "jsr:@supabase/functions-js"
+      ]
+    }
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@eslint/js@^9.30.1",
+        "npm:@playwright/test@^1.58.2",
+        "npm:dependency-cruiser@^17.3.9",
+        "npm:eslint-config-prettier@^10.1.8",
+        "npm:eslint-plugin-react-hooks@^5.2.0",
+        "npm:eslint-plugin-react-refresh@~0.4.20",
+        "npm:eslint-plugin-security@4",
+        "npm:eslint@^9.30.1",
+        "npm:husky@^9.1.7",
+        "npm:jscpd@^4.0.8",
+        "npm:knip@^6.0.4",
+        "npm:lint-staged@^16.4.0",
+        "npm:prettier@^3.8.1",
+        "npm:turbo@2",
+        "npm:typescript-eslint@^8.35.1"
+      ]
+    }
+  }
+}

@@ -1,6 +1,8 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { createJsonResponse } from "@/functions/_shared/response.ts";
+import { isJsonPayloadWithinLimit } from "@/functions/_shared/validation.ts";
 
 type CreateSampleOrderInput = {
   shipping_address_id: string;
@@ -10,16 +12,10 @@ type CreateSampleOrderInput = {
   additional_notes?: string;
 };
 
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
-
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -70,6 +66,10 @@ Deno.serve(async (req) => {
       payload.sample_type !== "fabric_and_sewing")
   ) {
     return jsonResponse(400, { error: "Invalid request payload" });
+  }
+
+  if (!isJsonPayloadWithinLimit(payload.options)) {
+    return jsonResponse(413, { error: "Options payload too large" });
   }
 
   const { data: shippingAddress, error: shippingError } = await supabase

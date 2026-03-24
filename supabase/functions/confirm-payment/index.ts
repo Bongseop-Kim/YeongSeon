@@ -1,6 +1,12 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import {
+  createJsonResponse,
+  type JsonResponseFn,
+} from "@/functions/_shared/response.ts";
+import { createLogger } from "@/functions/_shared/logger.ts";
+import { maskPaymentKey } from "@/functions/_shared/payment.ts";
 
 type ConfirmPaymentRequest = {
   paymentKey: string;
@@ -13,16 +19,8 @@ type TossConfirmResponse = {
   [key: string]: unknown;
 };
 
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
-
 const buildTokenPurchaseResponse = (
+  jsonResponse: JsonResponseFn,
   paymentKey: string,
   paymentGroupId: string,
   orders: Array<{ orderId: string; orderType: string }>,
@@ -39,13 +37,14 @@ const buildTokenPurchaseResponse = (
   });
 
 const fetchTokenAmountAndBuildResponse = async (
-  adminClient: ReturnType<typeof createClient>,
+  jsonResponse: JsonResponseFn,
+  adminClient: SupabaseClient,
   orderId: string,
   paymentKey: string,
   paymentGroupId: string,
   orders: Array<{ orderId: string; orderType: string }>,
 ): Promise<Response> => {
-  const { data: tokenItem, error: tokenItemError } = await adminClient
+  const { data: rawTokenItem, error: tokenItemError } = await adminClient
     .from("order_items")
     .select("item_data")
     .eq("order_id", orderId)
@@ -58,6 +57,7 @@ const fetchTokenAmountAndBuildResponse = async (
     });
     return jsonResponse(500, { error: "Failed to load token item" });
   }
+  const tokenItem = rawTokenItem as { item_data?: unknown } | null;
   const tokenAmount =
     (tokenItem?.item_data as { token_amount?: number } | null)?.token_amount ??
     null;
@@ -65,6 +65,7 @@ const fetchTokenAmountAndBuildResponse = async (
     return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
   }
   return buildTokenPurchaseResponse(
+    jsonResponse,
     paymentKey,
     paymentGroupId,
     orders,
@@ -72,10 +73,7 @@ const fetchTokenAmountAndBuildResponse = async (
   );
 };
 
-const maskPaymentKey = (key: string): string => {
-  if (key.length <= 8) return "****";
-  return `****${key.slice(-8)}`;
-};
+const { processLogger, errorLogger } = createLogger("confirm-payment");
 
 const sanitizeTossResponse = (
   obj: Record<string, unknown>,
@@ -88,25 +86,6 @@ const sanitizeTossResponse = (
     copy.secret = "****";
   }
   return copy;
-};
-
-const processLogger = (step: string, payload: Record<string, unknown>) => {
-  console.log(`[confirm-payment:${step}]`, JSON.stringify(payload));
-};
-
-const errorLogger = (
-  step: string,
-  error: unknown,
-  payload: Record<string, unknown> = {},
-) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(
-    `[confirm-payment:${step}]`,
-    JSON.stringify({
-      ...payload,
-      error: message,
-    }),
-  );
 };
 
 const isConfirmPaymentRequest = (
@@ -128,6 +107,9 @@ const isConfirmPaymentRequest = (
 };
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -255,6 +237,7 @@ Deno.serve(async (req) => {
       typedOrders.length === 1 && typedOrders[0].order_type === "token";
     if (isTokenOrder) {
       return fetchTokenAmountAndBuildResponse(
+        jsonResponse,
         adminClient,
         typedOrders[0].id,
         payload.paymentKey,
@@ -342,6 +325,7 @@ Deno.serve(async (req) => {
       typedOrders.length === 1 && typedOrders[0].order_type === "token";
     if (isTokenOrderViaLock) {
       return fetchTokenAmountAndBuildResponse(
+        jsonResponse,
         adminClient,
         typedOrders[0].id,
         payload.paymentKey,
@@ -403,7 +387,7 @@ Deno.serve(async (req) => {
           p_payment_group_id: payload.orderId,
           p_user_id: user.id,
         })
-        .catch((unlockErr: unknown) => {
+        .then(undefined, (unlockErr: unknown) => {
           errorLogger("order_unlock_failed", unlockErr, {
             paymentGroupId: payload.orderId,
             userId: user.id,
@@ -411,8 +395,11 @@ Deno.serve(async (req) => {
         });
 
       return jsonResponse(tossResponse.status, {
-        error: "Payment confirmation rejected",
-        details: parsed,
+        error:
+          typeof parsed.message === "string"
+            ? parsed.message
+            : "Payment confirmation rejected",
+        ...(typeof parsed.code === "string" && { code: parsed.code }),
       });
     }
 
@@ -428,7 +415,7 @@ Deno.serve(async (req) => {
         p_payment_group_id: payload.orderId,
         p_user_id: user.id,
       })
-      .catch((unlockErr: unknown) => {
+      .then(undefined, (unlockErr: unknown) => {
         errorLogger("order_unlock_failed", unlockErr, {
           paymentGroupId: payload.orderId,
           userId: user.id,
@@ -511,6 +498,7 @@ Deno.serve(async (req) => {
       return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
     }
     return buildTokenPurchaseResponse(
+      jsonResponse,
       payload.paymentKey,
       payload.orderId,
       updatedOrders,

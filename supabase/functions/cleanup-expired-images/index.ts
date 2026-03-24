@@ -1,18 +1,21 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/cors.ts";
-
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { createJsonResponse } from "../_shared/response.ts";
 
 const IMAGEKIT_DELETE_URL =
   "https://api.imagekit.io/v1/files/batch/deleteByFileIds";
 const BATCH_LIMIT = 100;
 
+type ImageRow = {
+  id: string;
+  file_id: string | null;
+  deletion_claimed_at: string | null;
+};
+
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -59,7 +62,9 @@ Deno.serve(async (req) => {
     return jsonResponse(500, { error: fetchError.message });
   }
 
-  if (!expired || expired.length === 0) {
+  const images = (expired ?? []) as ImageRow[];
+
+  if (images.length === 0) {
     return jsonResponse(200, {
       deleted: 0,
       message: "No expired images found",
@@ -67,11 +72,11 @@ Deno.serve(async (req) => {
   }
 
   // 이전 실행에서 claim된 행: ImageKit 삭제 없이 바로 finalize 대상
-  const previouslyClaimed = expired.filter(
+  const previouslyClaimed = images.filter(
     (img) => img.deletion_claimed_at != null,
   );
   // 새로 claim할 행
-  const unclaimed = expired.filter((img) => img.deletion_claimed_at == null);
+  const unclaimed = images.filter((img) => img.deletion_claimed_at == null);
 
   // claim 단계: unclaimed 행을 ImageKit 삭제 전에 먼저 DB에 기록한다.
   // claim이 실패하면 ImageKit 삭제를 진행하지 않는다.
