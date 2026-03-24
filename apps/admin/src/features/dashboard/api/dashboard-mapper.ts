@@ -1,14 +1,8 @@
 import type {
   AdminDashboardRecentOrder,
   AdminDashboardStats,
-  TodayStatsDTO,
   PeriodStatsDTO,
 } from "@/features/dashboard/types/admin-dashboard";
-
-interface TodayStatsRpcRow {
-  today_order_count: unknown;
-  today_revenue: unknown;
-}
 
 interface PeriodStatsRpcRow {
   period_order_count: unknown;
@@ -36,30 +30,12 @@ function toNumber(value: unknown): number {
   return 0;
 }
 
-function isTodayStatsRpcRow(value: unknown): value is TodayStatsRpcRow {
-  if (!value || typeof value !== "object") return false;
-  return (
-    Object.prototype.hasOwnProperty.call(value, "today_order_count") &&
-    Object.prototype.hasOwnProperty.call(value, "today_revenue")
-  );
-}
-
 function isPeriodStatsRpcRow(value: unknown): value is PeriodStatsRpcRow {
   if (!value || typeof value !== "object") return false;
   return (
     Object.prototype.hasOwnProperty.call(value, "period_order_count") &&
     Object.prototype.hasOwnProperty.call(value, "period_revenue")
   );
-}
-
-export function fromTodayStatsRpcRow(row: unknown): TodayStatsDTO {
-  if (!isTodayStatsRpcRow(row)) {
-    return { todayOrderCount: 0, todayRevenue: 0 };
-  }
-  return {
-    todayOrderCount: toNumber(row.today_order_count),
-    todayRevenue: toNumber(row.today_revenue),
-  };
 }
 
 export function fromPeriodStatsRpcRow(row: unknown): PeriodStatsDTO {

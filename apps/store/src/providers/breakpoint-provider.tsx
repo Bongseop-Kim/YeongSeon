@@ -114,12 +114,3 @@ export function useBreakpoint() {
   }
   return context;
 }
-
-/**
- * 기존 코드와의 호환성을 위한 useIsMobile 훅
- * @deprecated useBreakpoint().isMobile 사용 권장
- */
-export function useIsMobile() {
-  const { isMobile } = useBreakpoint();
-  return isMobile;
-}

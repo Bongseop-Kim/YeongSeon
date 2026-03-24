@@ -1,20 +1,6 @@
 import { toast as sonnerToast } from "sonner";
 
 /**
- * Toast 타입 정의
- */
-export type ToastType = "success" | "error" | "warning" | "info";
-
-/**
- * 에러 타입 정의
- */
-export interface AppError {
-  message: string;
-  code?: string;
-  type?: ToastType;
-}
-
-/**
  * 에러 메시지 매핑
  */
 const ERROR_MESSAGES: Record<string, string> = {
@@ -40,7 +26,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 /**
  * 에러를 사용자 친화적인 메시지로 변환
  */
-export const getErrorMessage = (error: unknown): string => {
+const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
     // AppError의 code 속성이 있는 경우 우선적으로 사용
     if ("code" in error && typeof error.code === "string" && error.code) {

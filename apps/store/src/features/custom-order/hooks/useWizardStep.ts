@@ -8,7 +8,7 @@ interface UseWizardStepOptions {
   getValues: UseFormGetValues<QuoteOrderOptions>;
 }
 
-export interface UseWizardStepReturn {
+interface UseWizardStepReturn {
   currentStepIndex: number;
   currentStep: StepConfig;
   steps: StepConfig[];

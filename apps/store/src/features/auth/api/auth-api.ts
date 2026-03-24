@@ -1,7 +1,7 @@
-import type { Session, AuthChangeEvent } from "@yeongseon/supabase";
+import type { Session } from "@yeongseon/supabase";
 import { supabase } from "@/lib/supabase";
 
-export interface EmailSignInInput {
+interface EmailSignInInput {
   email: string;
   password: string;
 }
@@ -20,23 +20,6 @@ export const getSession = async (): Promise<Session | null> => {
   }
 
   return session;
-};
-
-/**
- * 인증 상태 변경 감지 구독
- * @param callback 세션 변경 시 호출될 콜백 함수
- * @returns 구독 해제 함수
- */
-export const onAuthStateChange = (
-  callback: (event: AuthChangeEvent, session: Session | null) => void,
-) => {
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange(callback);
-
-  return () => {
-    subscription.unsubscribe();
-  };
 };
 
 /**

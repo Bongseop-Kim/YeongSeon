@@ -9,9 +9,9 @@ import {
 import { toast } from "@/lib/toast";
 
 export const EMAIL_CODE_LENGTH = 6;
-export const RESEND_COOLDOWN_SECONDS = 60;
+const RESEND_COOLDOWN_SECONDS = 60;
 
-export type EmailChangeStep = "request" | "verify" | "complete";
+type EmailChangeStep = "request" | "verify" | "complete";
 
 const isValidEmail = (email: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);

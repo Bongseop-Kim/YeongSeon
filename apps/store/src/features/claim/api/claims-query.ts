@@ -14,7 +14,7 @@ import { useRequiredUser } from "@/hooks/use-required-user";
 /**
  * 클레임 쿼리 키
  */
-export const claimKeys = {
+const claimKeys = {
   all: ["claims"] as const,
   list: (userId?: string, filters?: ListFilters) =>
     [

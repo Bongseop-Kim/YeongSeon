@@ -1,7 +1,7 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import type { PricingConfig } from "@/features/custom-order/types/pricing";
 
-export interface CostCalculation {
+interface CostCalculation {
   sewingCost: number;
   fabricCost: number;
   totalCost: number;

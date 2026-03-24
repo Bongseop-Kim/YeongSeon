@@ -8,7 +8,7 @@ import type {
 import type { RestoredDesignSessionState } from "@/features/design/api/design-session-mapper";
 import type { DesignContext } from "@/features/design/types/design-context";
 
-export interface DesignChatState {
+interface DesignChatState {
   messages: Message[];
   designContext: DesignContext;
   generationStatus: GenerationStatus;
@@ -36,7 +36,7 @@ export interface DesignChatState {
   setCurrentSessionId: (id: string) => void;
 }
 
-export const createInitialDesignContext = (): DesignContext => ({
+const createInitialDesignContext = (): DesignContext => ({
   colors: [],
   pattern: null,
   fabricMethod: "yarn-dyed",

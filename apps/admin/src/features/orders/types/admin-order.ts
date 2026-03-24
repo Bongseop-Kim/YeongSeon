@@ -194,20 +194,6 @@ export interface RepairOrderReformData {
   ties: RepairTie[];
 }
 
-// ── type guards ────────────────────────────────────────────────
-
-export function isCustomReformData(
-  value: CustomOrderReformData | RepairOrderReformData | null | undefined,
-): value is CustomOrderReformData {
-  return value?._tag === "custom";
-}
-
-export function isRepairReformData(
-  value: CustomOrderReformData | RepairOrderReformData | null | undefined,
-): value is RepairOrderReformData {
-  return value?._tag === "repair";
-}
-
 // ── Status log ────────────────────────────────────────────────
 
 export interface AdminStatusLogEntry {

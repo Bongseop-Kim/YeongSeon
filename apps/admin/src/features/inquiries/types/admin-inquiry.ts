@@ -1,8 +1,7 @@
-import { INQUIRY_CATEGORIES, type InquiryCategory } from "@yeongseon/shared";
+import type { InquiryCategory } from "@yeongseon/shared";
 
 export type InquiryStatus = "답변대기" | "답변완료";
 export type { InquiryCategory };
-export { INQUIRY_CATEGORIES };
 
 // ── List UI model ──────────────────────────────────────────────
 

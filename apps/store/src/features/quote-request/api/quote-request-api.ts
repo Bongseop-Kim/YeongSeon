@@ -12,16 +12,13 @@ import type {
   QuoteRequestListItem,
 } from "@yeongseon/shared";
 
-export interface CreateQuoteRequestResponse {
+interface CreateQuoteRequestResponse {
   quoteRequestId: string;
   quoteNumber: string;
 }
 
 export type { CreateQuoteRequestRequest };
-export type {
-  QuoteRequestDetail,
-  QuoteRequestListItem,
-} from "@yeongseon/shared";
+export type { QuoteRequestListItem } from "@yeongseon/shared";
 
 export const createQuoteRequest = async (
   request: CreateQuoteRequestRequest,

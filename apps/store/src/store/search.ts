@@ -15,7 +15,7 @@ export interface SearchDateFilter {
   customRange?: DateRange;
 }
 
-export interface TabsConfig {
+interface TabsConfig {
   items: string[];
   activeTab: string;
   onTabChange: (tab: string) => void;

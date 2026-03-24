@@ -44,7 +44,7 @@ const isShippingMessageData = (data: unknown): data is ShippingMessageData => {
   );
 };
 
-export interface UseShippingAddressPopupReturn {
+interface UseShippingAddressPopupReturn {
   selectedAddressId: string | null;
   selectedAddress: ShippingAddress | undefined;
   openShippingPopup: () => void;

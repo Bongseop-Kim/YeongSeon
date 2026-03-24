@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export interface UpdateOrderStatusParams {
+interface UpdateOrderStatusParams {
   orderId: string;
   newStatus: string;
   memo: string | null;
@@ -23,7 +23,7 @@ export async function updateOrderStatus(
   }
 }
 
-export interface UpdateOrderTrackingParams {
+interface UpdateOrderTrackingParams {
   orderId: string;
   courierCompany: string;
   trackingNumber: string;

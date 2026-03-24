@@ -39,7 +39,7 @@ export const ROUTES = {
   REPAIR_SHIPPING: "/order/repair-shipping", // 수선품 발송
 } as const;
 
-export type ClaimRouteType = "return" | "exchange" | "cancel" | "token_refund";
+type ClaimRouteType = "return" | "exchange" | "cancel" | "token_refund";
 
 /**
  * 클레임 신청 폼 경로 생성 (기존 buildClaimDetailRoute에서 rename)

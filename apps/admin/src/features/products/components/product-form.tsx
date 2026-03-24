@@ -27,7 +27,7 @@ interface ProductFormValues {
   option_label?: string | null;
 }
 
-export interface ProductFormProps {
+interface ProductFormProps {
   mode: "create" | "edit";
   formProps: FormProps<ProductFormValues>;
   form: FormInstance<ProductFormValues>;

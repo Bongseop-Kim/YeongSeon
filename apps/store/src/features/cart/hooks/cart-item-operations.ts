@@ -11,7 +11,7 @@ import type {
 
 type GenerateItemId = (productId: string | number, optionId?: string) => string;
 
-export interface AddProductToCartResult {
+interface AddProductToCartResult {
   nextItems: CartItem[];
   wasExistingItem: boolean;
 }

@@ -5,7 +5,7 @@ import { toast } from "@/lib/toast";
 
 const DRAFT_KEY = "custom-order-draft";
 
-export interface WizardDraft {
+interface WizardDraft {
   formValues: QuoteOrderOptions;
   currentStepIndex: number;
   visitedSteps: number[];

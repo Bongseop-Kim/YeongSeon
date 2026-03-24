@@ -1,4 +1,4 @@
-export interface OnboardingPage {
+interface OnboardingPage {
   title: string;
   description: string;
   emoji: string;

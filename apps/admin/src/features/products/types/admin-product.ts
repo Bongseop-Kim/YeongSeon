@@ -4,7 +4,6 @@ export const PRODUCT_CATEGORIES = [
   "knit",
   "bowtie",
 ] as const;
-export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 
 export const PRODUCT_COLORS = [
   "black",
@@ -16,7 +15,6 @@ export const PRODUCT_COLORS = [
   "beige",
   "silver",
 ] as const;
-export type ProductColor = (typeof PRODUCT_COLORS)[number];
 
 export const PRODUCT_PATTERNS = [
   "solid",
@@ -25,7 +23,6 @@ export const PRODUCT_PATTERNS = [
   "check",
   "paisley",
 ] as const;
-export type ProductPattern = (typeof PRODUCT_PATTERNS)[number];
 
 export const PRODUCT_MATERIALS = [
   "silk",
@@ -33,7 +30,6 @@ export const PRODUCT_MATERIALS = [
   "polyester",
   "wool",
 ] as const;
-export type ProductMaterial = (typeof PRODUCT_MATERIALS)[number];
 
 export const CATEGORY_FILTER_OPTIONS = [
   { label: "전체", value: "" },

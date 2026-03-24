@@ -134,7 +134,7 @@ export async function aiDesignApi(
   };
 }
 
-export interface DesignTokenBalance {
+interface DesignTokenBalance {
   total: number;
   paid: number;
   bonus: number;

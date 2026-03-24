@@ -6,7 +6,7 @@ import {
   type CreateSampleOrderFormInput,
 } from "@/features/sample-order/api/sample-order-mapper";
 
-export interface CreateSampleOrderResponse {
+interface CreateSampleOrderResponse {
   orderId: string;
   orderNumber: string;
 }

@@ -84,7 +84,7 @@ export function toDesignSessionMessage(
   };
 }
 
-export function sessionMessageToMessage(m: DesignSessionMessage): Message {
+function sessionMessageToMessage(m: DesignSessionMessage): Message {
   return {
     id: m.id,
     role: m.role,
