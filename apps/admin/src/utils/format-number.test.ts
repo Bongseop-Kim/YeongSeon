@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { formatWithComma } from "@/utils/format-number";
+import {
+  formatWithComma,
+  formatNullableLocaleNumber,
+} from "@/utils/format-number";
 
 describe("formatWithComma", () => {
   it("숫자를 콤마 포맷으로 변환한다", () => {
@@ -20,5 +23,25 @@ describe("formatWithComma", () => {
 
   it("NaN 문자열이면 NaN 문자열을 반환한다", () => {
     expect(formatWithComma("NaN")).toBe("NaN");
+  });
+});
+
+describe("formatNullableLocaleNumber", () => {
+  it("null이면 '-'를 반환한다", () => {
+    expect(formatNullableLocaleNumber(null)).toBe("-");
+  });
+
+  it("undefined이면 '-'를 반환한다", () => {
+    expect(formatNullableLocaleNumber(undefined)).toBe("-");
+  });
+
+  it("숫자를 로케일 문자열로 변환한다", () => {
+    expect(formatNullableLocaleNumber(1234567)).toBe(
+      (1234567).toLocaleString("ko-KR"),
+    );
+  });
+
+  it("0을 정상 처리한다", () => {
+    expect(formatNullableLocaleNumber(0)).toBe("0");
   });
 });

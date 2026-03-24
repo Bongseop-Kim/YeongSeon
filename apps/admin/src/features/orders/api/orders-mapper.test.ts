@@ -1,3 +1,4 @@
+import type { AdminSampleOrderItemRowDTO } from "@yeongseon/shared";
 import { describe, expect, it, vi } from "vitest";
 import {
   parseCustomReformData,
@@ -16,6 +17,27 @@ import {
   createOrderStatusLogDTO,
   createAdminTokenOrderItemRowDTO,
 } from "@/test/fixtures";
+
+function createSampleRowDTO(): AdminSampleOrderItemRowDTO {
+  return {
+    id: "row-sample-1",
+    orderId: "order-1",
+    itemId: "item-sample-1",
+    itemType: "sample",
+    productId: null,
+    selectedOptionId: null,
+    reformData: null,
+    quantity: 1,
+    unitPrice: 5000,
+    discountAmount: 0,
+    lineDiscountAmount: 0,
+    appliedUserCouponId: null,
+    created_at: "2026-03-15T09:00:00Z",
+    productName: null,
+    productCode: null,
+    productImage: null,
+  };
+}
 
 describe("parseCustomReformData", () => {
   it("유효한 custom reformData를 파싱한다", () => {
@@ -229,6 +251,72 @@ describe("toAdminOrderItem", () => {
         type: "token",
         planKey: "starter",
         tokenAmount: 30,
+      }),
+    );
+  });
+
+  it("token 아이템에서 reformData가 null이면 planKey와 tokenAmount가 null이다", () => {
+    expect(
+      toAdminOrderItem(
+        createAdminTokenOrderItemRowDTO({ reformData: null }),
+        "sale",
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        type: "token",
+        planKey: null,
+        tokenAmount: null,
+      }),
+    );
+  });
+
+  it("sample 아이템을 reformData 없이 매핑한다", () => {
+    expect(toAdminOrderItem(createSampleRowDTO(), "sale")).toEqual(
+      expect.objectContaining({
+        type: "sample",
+        sampleData: null,
+      }),
+    );
+  });
+
+  it("sample 아이템을 유효한 reformData와 함께 매핑한다", () => {
+    const dto: AdminSampleOrderItemRowDTO = {
+      ...createSampleRowDTO(),
+      reformData: {
+        sample_type: "fabric",
+        pricing: { total_cost: 8000 },
+        options: {
+          fabric_type: "silk",
+          design_type: "classic",
+          tie_type: "3fold",
+          interlining: "wool",
+        },
+        reference_images: [],
+        additional_notes: null,
+      },
+    };
+    const result = toAdminOrderItem(dto, "sale");
+    expect(result).toEqual(
+      expect.objectContaining({
+        type: "sample",
+        sampleData: expect.objectContaining({
+          sampleType: "fabric",
+          pricing: { totalCost: 8000 },
+        }),
+      }),
+    );
+  });
+
+  it("sample 아이템에서 reformData가 유효하지 않으면 sampleData가 null이다", () => {
+    const dto: AdminSampleOrderItemRowDTO = {
+      ...createSampleRowDTO(),
+      reformData: { sample_type: "invalid_type" },
+    };
+    const result = toAdminOrderItem(dto, "sale");
+    expect(result).toEqual(
+      expect.objectContaining({
+        type: "sample",
+        sampleData: null,
       }),
     );
   });

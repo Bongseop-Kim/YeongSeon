@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 
 import { ChatHeader } from "@/features/design/components/chat/chat-header";
+import { TiePreviewModal } from "@/features/design/components/chat/tie-preview-modal";
 import { ChatInput } from "@/features/design/components/chat/chat-input";
 import { MessageList } from "@/features/design/components/chat/message-list";
 import {
@@ -15,9 +17,14 @@ import { cn } from "@/lib/utils";
 interface ChatPanelProps {
   className?: string;
   sendMessage: (text: string, attachments: Attachment[]) => void;
+  onOpenHistory: () => void;
 }
 
-export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
+export function ChatPanel({
+  className,
+  sendMessage,
+  onOpenHistory,
+}: ChatPanelProps) {
   const messages = useDesignChatStore((state) => state.messages);
   const { data: tokenBalance } = useDesignTokenBalanceQuery();
   const generationStatus = useDesignChatStore(
@@ -32,21 +39,33 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
   const aiModel = useDesignChatStore((state) => state.aiModel);
   const setAiModel = useDesignChatStore((state) => state.setAiModel);
 
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedImageUrl) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedImageUrl]);
+
   const handleChipClick = (text: string) => {
     sendMessage(text, pendingAttachments);
   };
 
   return (
-    <div className={cn("flex h-full flex-col", className)}>
+    <div className={cn("flex h-full min-h-0 flex-col", className)}>
       <ChatHeader
         onNewChat={resetConversation}
+        onOpenHistory={onOpenHistory}
         tokenBalance={tokenBalance?.total}
         aiModel={aiModel}
         onModelChange={setAiModel}
       />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {messages.length === 0 ? (
-          <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
             <div className="flex items-start gap-2.5">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-gray-900">
                 <Sparkles className="size-3.5 text-white" />
@@ -78,10 +97,17 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
               generationStatus === "regenerating"
             }
             onChipClick={handleChipClick}
+            onTiePreviewClick={(url) => setSelectedImageUrl(url)}
           />
         )}
       </div>
-      <div className="border-t p-2">
+      {selectedImageUrl && (
+        <TiePreviewModal
+          imageUrl={selectedImageUrl}
+          onClose={() => setSelectedImageUrl(null)}
+        />
+      )}
+      <div className="shrink-0 border-t p-2">
         <ChatInput
           onSend={sendMessage}
           isLoading={

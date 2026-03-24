@@ -1,31 +1,21 @@
-import type { CSSProperties } from "react";
-
 import { Badge } from "@/components/ui/badge";
+import { TieMask } from "@/features/design/components/preview/tie-mask";
 import type { Message } from "@/features/design/types/chat";
 import { cn } from "@/lib/utils";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-
-const tiePreviewStyle: CSSProperties = {
-  maskImage: "url(/images/tie.svg)",
-  maskSize: "contain",
-  maskPosition: "center",
-  maskRepeat: "no-repeat",
-  WebkitMaskImage: "url(/images/tie.svg)",
-  WebkitMaskSize: "contain",
-  WebkitMaskPosition: "center",
-  WebkitMaskRepeat: "no-repeat",
-};
 
 interface MessageBubbleProps {
   message: Message;
   onChipClick?: (text: string) => void;
   onImageIndicatorClick?: (imageUrl: string) => void;
+  onTiePreviewClick?: (imageUrl: string) => void;
 }
 
 export function MessageBubble({
   message,
   onChipClick,
   onImageIndicatorClick,
+  onTiePreviewClick,
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const { isMobile } = useBreakpoint();
@@ -65,22 +55,33 @@ export function MessageBubble({
       >
         {message.content}
       </div>
-      {!isUser && message.imageUrl && isMobile ? (
-        <div className="relative h-[244px] w-[128px] overflow-hidden">
-          <div
-            className="absolute inset-0"
-            style={{
-              ...tiePreviewStyle,
-              background: message.imageUrl,
+      {!isUser &&
+        message.imageUrl &&
+        isMobile &&
+        (onTiePreviewClick ? (
+          <button
+            type="button"
+            aria-label="넥타이 프리뷰 확대"
+            className="cursor-pointer"
+            onClick={() => {
+              if (message.imageUrl) onTiePreviewClick(message.imageUrl);
             }}
+          >
+            <TieMask
+              imageUrl={message.imageUrl}
+              width={128}
+              height={244}
+              shadowClassName="top-[-22px]"
+            />
+          </button>
+        ) : (
+          <TieMask
+            imageUrl={message.imageUrl}
+            width={128}
+            height={244}
+            shadowClassName="top-[-22px]"
           />
-          <img
-            src="/images/tieShadow.png"
-            alt=""
-            className="pointer-events-none absolute inset-0 h-full w-full object-contain"
-          />
-        </div>
-      ) : null}
+        ))}
       {!isUser && message.imageUrl && !isMobile && onImageIndicatorClick ? (
         <button
           type="button"

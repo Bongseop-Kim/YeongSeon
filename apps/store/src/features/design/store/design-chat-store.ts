@@ -5,6 +5,7 @@ import type {
   GenerationStatus,
   Message,
 } from "@/features/design/types/chat";
+import type { RestoredDesignSessionState } from "@/features/design/api/design-session-mapper";
 import type { DesignContext } from "@/features/design/types/design-context";
 
 export interface DesignChatState {
@@ -26,6 +27,10 @@ export interface DesignChatState {
   setGeneratedImage: (imageUrl: string | null, tags: string[]) => void;
   markImageDownloaded: () => void;
   restoreMessages: (messages: Message[]) => void;
+  restoreSessionState: (
+    sessionId: string,
+    sessionState: RestoredDesignSessionState,
+  ) => void;
   resetConversation: () => void;
   setAiModel: (model: AiModel) => void;
   setCurrentSessionId: (id: string) => void;
@@ -34,7 +39,7 @@ export interface DesignChatState {
 export const createInitialDesignContext = (): DesignContext => ({
   colors: [],
   pattern: null,
-  fabricMethod: null,
+  fabricMethod: "yarn-dyed",
   ciImage: null,
   ciPlacement: null,
   referenceImage: null,
@@ -105,6 +110,13 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       currentSessionId: null,
     }),
   restoreMessages: (messages) => set({ messages }),
+  restoreSessionState: (sessionId, sessionState) =>
+    set({
+      ...sessionState,
+      currentSessionId: sessionId,
+      isImageDownloaded: false,
+      pendingAttachments: [],
+    }),
   setCurrentSessionId: (id) => set({ currentSessionId: id }),
   setAiModel: (model) =>
     set((state) => {

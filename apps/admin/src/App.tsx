@@ -20,6 +20,7 @@ import {
   SettingOutlined,
   FileTextOutlined,
   DollarOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 
 import { authProvider } from "@/providers/auth-provider";
@@ -47,6 +48,7 @@ import QuoteRequestList from "@/pages/quote-requests/list";
 import QuoteRequestShow from "@/pages/quote-requests/show";
 import SettingsPage from "@/pages/settings";
 import PricingPage from "@/pages/pricing";
+import GenerationLogList from "@/pages/generation-logs/list";
 
 import "@refinedev/antd/dist/reset.css";
 
@@ -123,6 +125,11 @@ export default function App() {
               meta: { label: "가격 관리", icon: <DollarOutlined /> },
             },
             {
+              name: "ai_generation_logs",
+              list: "/generation-logs",
+              meta: { label: "AI 생성 로그", icon: <RobotOutlined /> },
+            },
+            {
               name: "admin_settings",
               list: "/settings",
               meta: { label: "설정", icon: <SettingOutlined /> },
@@ -162,6 +169,7 @@ export default function App() {
               <Route path="/inquiries" element={<InquiryList />} />
               <Route path="/inquiries/show/:id" element={<InquiryShow />} />
               <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/generation-logs" element={<GenerationLogList />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             <Route
