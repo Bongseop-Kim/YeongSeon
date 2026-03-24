@@ -554,37 +554,36 @@ Deno.serve(async (req) => {
           .eq("key", "design_token_cost_gemini_text")
           .single();
         if (textCostError || !textCostData) {
+          // admin_settings 조회 실패 시 환불 생략 (textCost=0 폴백으로 전액 환불되는 과다 환불 방지)
           console.error(
-            "admin_settings 'design_token_cost_gemini_text' 조회 실패:",
+            "CRITICAL: admin_settings 'design_token_cost_gemini_text' 조회 실패 — 이미지 비용 환불 생략",
             textCostError,
           );
-          console.warn("admin_settings 조회 실패, textCost를 0으로 폴백");
-        }
-        const parsedTextCost = textCostData
-          ? parseInt(textCostData.value, 10)
-          : NaN;
-        const textCost =
-          isNaN(parsedTextCost) || parsedTextCost <= 0
-            ? 0
-            : Math.min(parsedTextCost, tokenData.cost);
-        const requestedRefundAmount = Math.max(tokenData.cost - textCost, 0);
+        } else {
+          const parsedTextCost = parseInt(textCostData.value, 10);
+          const textCost =
+            isNaN(parsedTextCost) || parsedTextCost <= 0
+              ? 0
+              : Math.min(parsedTextCost, tokenData.cost);
+          const requestedRefundAmount = Math.max(tokenData.cost - textCost, 0);
 
-        if (requestedRefundAmount > 0) {
-          const { error: refundError } = await adminClient.rpc(
-            "refund_design_tokens",
-            {
-              p_user_id: user.id,
-              p_amount: requestedRefundAmount,
-              p_ai_model: "gemini",
-              p_request_type: requestType,
-              p_work_id: workId,
-            },
-          );
-          if (refundError) {
-            console.error("Token refund failed:", refundError);
-          } else {
-            refundAmount = requestedRefundAmount;
-            remainingTokens = tokenData.balance + requestedRefundAmount;
+          if (requestedRefundAmount > 0) {
+            const { error: refundError } = await adminClient.rpc(
+              "refund_design_tokens",
+              {
+                p_user_id: user.id,
+                p_amount: requestedRefundAmount,
+                p_ai_model: "gemini",
+                p_request_type: requestType,
+                p_work_id: workId,
+              },
+            );
+            if (refundError) {
+              console.error("Token refund failed:", refundError);
+            } else {
+              refundAmount = requestedRefundAmount;
+              remainingTokens = tokenData.balance + requestedRefundAmount;
+            }
           }
         }
       }

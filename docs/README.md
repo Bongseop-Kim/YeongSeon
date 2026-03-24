@@ -48,13 +48,14 @@ docs/
 
 | 파일                 | 시나리오 수 |
 | -------------------- | ----------- |
-| [[qa/sale]]          | 23          |
-| [[qa/repair]]        | 12          |
-| [[qa/custom-order]]  | 14          |
-| [[qa/claim]]         | 15          |
-| [[qa/quote-request]] | 8           |
-| [[qa/design]]        | 9           |
-| [[qa/cart]]          | 7           |
+| [[qa/sale]]          | 28          |
+| [[qa/repair]]        | 18          |
+| [[qa/custom-order]]  | 9           |
+| [[qa/claim]]         | 22          |
+| [[qa/quote-request]] | 10          |
+| [[qa/design]]        | 17          |
+| [[qa/cart]]          | 11          |
+| [[qa/sample]]        | 8           |
 
 ---
 

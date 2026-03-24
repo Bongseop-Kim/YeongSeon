@@ -37,6 +37,18 @@ last-verified: 2026-03-19
 
 ## SC-sample-006: 발급된 쿠폰으로 주문제작 결제
 
-- Given: 사용자가 `SAMPLE_DISCOUNT` 쿠폰을 보유 중이다
+- Given: 사용자가 샘플 타입에 해당하는 쿠폰(예: SAMPLE_DISCOUNT_SEWING)을 보유 중이다
 - When: custom 주문 결제에 쿠폰을 적용한다
-- Then: 10만원 고정 할인으로 적용된다
+- Then: 해당 쿠폰의 고정 할인금액이 적용된다
+
+## SC-sample-007: 샘플 타입별 정확한 쿠폰 발급
+
+- Given: 5가지 샘플 타입+옵션 조합(sewing / fabric+PRINTING / fabric+YARN_DYED / fabric_and_sewing+PRINTING / fabric_and_sewing+YARN_DYED) 각각에 대해 결제 확정하는 상태
+- When: 각 조합별로 샘플 주문을 결제 완료한다
+- Then: 각 타입에 맞는 쿠폰(SAMPLE_DISCOUNT_SEWING / SAMPLE_DISCOUNT_FABRIC_PRINTING 등)이 정확히 발급된다
+
+## SC-sample-008: 샘플 쿠폰 중복 발급 방지
+
+- Given: 사용자가 동일한 샘플 타입 주문을 두 번 결제 완료한 상태
+- When: 두 번째 결제 확정 후 응답을 확인한다
+- Then: couponIssued = false로 반환되고 user_coupons 테이블에 중복 행이 없다

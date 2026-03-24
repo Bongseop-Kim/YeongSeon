@@ -12,8 +12,7 @@ CREATE OR REPLACE FUNCTION public.create_claim(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
--- SECURITY DEFINER: claims INSERT 시 order_status_logs에 접근 불필요하나
--- claims 테이블의 RLS가 소유자 외 INSERT를 차단하여 우회 목적으로 사용
+-- SECURITY DEFINER: claims 테이블의 RLS가 소유자 외 INSERT를 차단하여 우회 목적으로 사용
 SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
@@ -45,7 +44,7 @@ begin
     raise exception 'Invalid claim reason';
   end if;
 
-  -- 4. Order ownership check (FOR UPDATE: 취소 처리 중 동시 상태 변경 방지)
+  -- 4. Order ownership check (FOR UPDATE: 처리 중 동시 상태 변경 방지)
   select o.order_type, o.status
   into v_order_type, v_order_status
   from public.orders o
@@ -57,7 +56,7 @@ begin
     raise exception 'Order not found';
   end if;
 
-  -- cancel 상태 가드
+  -- 5. 상태 가드: cancel (BR-claim-002, BR-claim-003, BR-claim-004)
   if p_type = 'cancel' then
     if not (
       (v_order_type = 'sale'   and v_order_status in ('대기중', '결제중', '진행중'))
@@ -70,7 +69,17 @@ begin
     end if;
   end if;
 
-  -- 5. Order item lookup (p_item_id is order_items.item_id text)
+  -- 6. 상태 가드: return/exchange (BR-claim-007: 배송중/배송완료에서만 허용)
+  if p_type in ('return', 'exchange') then
+    if not (
+      v_order_status in ('배송중', '배송완료')
+      and v_order_type in ('sale', 'repair', 'custom')
+    ) then
+      raise exception '현재 주문 상태에서는 반품/교환할 수 없습니다';
+    end if;
+  end if;
+
+  -- 7. Order item lookup (p_item_id is order_items.item_id text)
   begin
     select oi.id, oi.quantity
     into strict v_order_item
@@ -84,27 +93,18 @@ begin
       raise exception 'Multiple order items found for given order_id and item_id';
   end;
 
-  -- 6. Quantity validation
+  -- 8. Quantity validation
   v_claim_quantity := coalesce(p_quantity, v_order_item.quantity);
   if v_claim_quantity <= 0 or v_claim_quantity > v_order_item.quantity then
     raise exception 'Invalid claim quantity';
   end if;
 
-  -- 7. Duplicate claim pre-check (final race-safety enforced by unique index)
-  if exists (
-    select 1
-    from public.claims
-    where order_item_id = v_order_item.id
-      and type = p_type
-      and status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
-  ) then
-    raise exception 'Active claim already exists for this item';
-  end if;
-
-  -- 8. Generate claim number
+  -- 9. Generate claim number
   v_claim_number := public.generate_claim_number();
 
-  -- 9. Insert claim (atomic conflict handling via partial unique index)
+  -- 10. Insert claim
+  --     중복 감지는 partial unique index(idx_claims_active_per_item)와
+  --     ON CONFLICT ... DO NOTHING + v_claim_id IS NULL 체크로 원자적으로 처리한다.
   insert into public.claims (
     user_id,
     order_id,
@@ -125,7 +125,7 @@ begin
     p_description,
     v_claim_quantity
   )
-  on conflict (order_item_id, type) where (status in ('접수', '처리중', '수거요청', '수거완료', '재발송'))
+  on conflict (order_item_id, type) where (status in ('접수', '처리중', '수거요청', '수거완료', '재발송', '완료'))
   do nothing
   returning id into v_claim_id;
 

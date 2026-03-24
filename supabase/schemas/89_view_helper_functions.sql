@@ -125,6 +125,7 @@ CREATE OR REPLACE FUNCTION public.get_order_customer_actions(
 RETURNS text[]
 LANGUAGE plpgsql
 STABLE
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 declare
@@ -140,7 +141,7 @@ begin
     v_actions := v_actions || ARRAY['claim_cancel'];
   END IF;
 
-  IF p_order_type = 'sale' AND p_status IN ('배송중', '배송완료', '완료') THEN
+  IF p_order_type = 'sale' AND p_status IN ('배송중', '배송완료') THEN
     v_actions := v_actions || ARRAY['claim_return', 'claim_exchange'];
   END IF;
 
