@@ -3,11 +3,8 @@ export {
   createProduct,
   createCoupon,
   createAppliedCoupon,
-  createProductOrderItem,
-  createReformOrderItem,
   createCartItem,
   createReformCartItem,
-  createCustomOrderData,
 } from "@yeongseon/shared/test/fixtures";
 import type { OrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
 

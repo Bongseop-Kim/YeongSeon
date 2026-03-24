@@ -4,24 +4,12 @@ import {
   mapTokenPlans,
   mapCreateTokenPurchase,
 } from "@/features/token-purchase/api/token-purchase-mapper";
-
-export type TokenPlanKey = "starter" | "popular" | "pro";
-
-export interface CreateTokenPurchaseResult {
-  paymentGroupId: string;
-  price: number;
-  tokenAmount: number;
-}
-
-export interface TokenPlan {
-  planKey: TokenPlanKey;
-  label: string;
-  price: number | null;
-  tokenAmount: number | null;
-  description: string;
-  features: string[];
-  popular?: boolean;
-}
+import type {
+  TokenPlanKey,
+  TokenPlan,
+  CreateTokenPurchaseResult,
+} from "@/features/token-purchase/api/token-purchase-types";
+export type { TokenPlanKey, TokenPlan, CreateTokenPurchaseResult };
 
 export async function getTokenPlans(): Promise<TokenPlan[]> {
   const { data, error } = await supabase.rpc("get_token_plans");

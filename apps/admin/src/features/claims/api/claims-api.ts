@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export interface UpdateClaimStatusParams {
+interface UpdateClaimStatusParams {
   claimId: string;
   newStatus: string;
   memo: string | null;

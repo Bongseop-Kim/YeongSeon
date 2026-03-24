@@ -6,7 +6,7 @@ import {
 } from "@/features/my-page/token-history/api/token-refund-api";
 import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/features/design/api/ai-design-query";
 
-export const REFUNDABLE_ORDERS_QUERY_KEY = ["refundable-token-orders"] as const;
+const REFUNDABLE_ORDERS_QUERY_KEY = ["refundable-token-orders"] as const;
 
 export function useRefundableTokenOrdersQuery() {
   return useQuery({

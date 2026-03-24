@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 
-export interface TrackingInfo {
+interface TrackingInfo {
   courierCompany: string;
   trackingNumber: string;
 }

@@ -18,6 +18,7 @@
     "lint": {},
     "test": {},
     "test:ci": {},
-    "type-check": {}
+    "type-check": {},
+    "depcruise": { "cache": false }
   }
 }

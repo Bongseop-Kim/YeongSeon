@@ -4,17 +4,17 @@ import type {
   PatternOption,
 } from "@/features/design/types/design-context";
 
-export interface ColorOption {
+interface ColorOption {
   label: string;
   value: string;
 }
 
-export interface PatternSelectionOption {
+interface PatternSelectionOption {
   label: string;
   value: PatternOption;
 }
 
-export interface FabricOption {
+interface FabricOption {
   label: string;
   value: FabricMethod;
   description: string;
@@ -45,7 +45,7 @@ export const PATTERN_OPTIONS: PatternSelectionOption[] = [
   { label: "솔리드", value: "plain" },
 ];
 
-export interface CiPlacementOption {
+interface CiPlacementOption {
   label: string;
   value: CiPlacement;
   description: string;

@@ -1,5 +1,5 @@
 import type { Product } from "@yeongseon/shared/types/view/product";
-import { ProductCard } from "./product-card";
+import { ProductCard } from "@/components/composite/product-card";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 interface ProductGridProps {

@@ -5,7 +5,7 @@ import type { UploadFile, RcFile } from "antd/es/upload";
 import { supabase } from "@/lib/supabase";
 import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
 
-export interface ImageItem {
+interface ImageItem {
   url: string;
   fileId?: string;
 }

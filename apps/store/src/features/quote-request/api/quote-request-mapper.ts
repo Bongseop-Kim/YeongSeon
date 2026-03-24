@@ -78,7 +78,7 @@ export const toCreateQuoteRequestInputDto = (
   contact_value: request.contactValue,
 });
 
-export interface QuoteRequestListRowDTO {
+interface QuoteRequestListRowDTO {
   id: string;
   quoteNumber: string;
   date: string;
@@ -90,7 +90,7 @@ export interface QuoteRequestListRowDTO {
   created_at: string;
 }
 
-export interface QuoteRequestDetailRowDTO {
+interface QuoteRequestDetailRowDTO {
   id: string;
   quoteNumber: string;
   date: string;
@@ -107,12 +107,10 @@ export interface QuoteRequestDetailRowDTO {
   quoteConditions: string | null;
 }
 
-export const isContactMethod = (value: unknown): value is ContactMethod =>
+const isContactMethod = (value: unknown): value is ContactMethod =>
   value === "email" || value === "kakao" || value === "phone";
 
-export const isQuoteRequestStatus = (
-  value: unknown,
-): value is QuoteRequestStatus =>
+const isQuoteRequestStatus = (value: unknown): value is QuoteRequestStatus =>
   value === "요청" ||
   value === "견적발송" ||
   value === "협의중" ||

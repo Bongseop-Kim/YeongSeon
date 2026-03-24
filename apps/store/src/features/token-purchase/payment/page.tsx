@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import PaymentWidget, {
   type PaymentWidgetRef,
-} from "@/features/payment/components/payment-widget";
+} from "@/components/composite/payment-widget";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { hasStringCode } from "@/lib/type-guard";

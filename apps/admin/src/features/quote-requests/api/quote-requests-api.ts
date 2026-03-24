@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export interface UpdateQuoteRequestStatusParams {
+interface UpdateQuoteRequestStatusParams {
   quoteRequestId: string;
   newStatus: string;
   quotedAmount: number | null;

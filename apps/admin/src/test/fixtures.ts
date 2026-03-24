@@ -288,7 +288,7 @@ export const createDesignTokenRow = (
   ...overrides,
 });
 
-export interface ProductsTableRowFixture {
+interface ProductsTableRowFixture {
   id: number;
   image: string | null;
   code: string | null;
@@ -323,7 +323,7 @@ export const createProductsTableRow = (
   ...overrides,
 });
 
-export interface ProductOptionRowFixture {
+interface ProductOptionRowFixture {
   id?: string;
   name: string | null;
   additional_price: number | null;
@@ -339,29 +339,6 @@ export const createProductOptionRow = (
   additional_price: 5000,
   stock: 3,
   product_id: 1,
-  ...overrides,
-});
-
-export interface IssuedCouponViewRowFixture {
-  id: string | null;
-  userId: string | null;
-  couponId: string | null;
-  userName: string | null;
-  userEmail: string | null;
-  status: string | null;
-  issuedAt: string | null;
-}
-
-export const createIssuedCouponViewRow = (
-  overrides?: Partial<IssuedCouponViewRowFixture>,
-): IssuedCouponViewRowFixture => ({
-  id: "issued-1",
-  userId: "user-1",
-  couponId: "coupon-1",
-  userName: "홍길동",
-  userEmail: "hong@example.com",
-  status: "active",
-  issuedAt: "2026-03-15T09:00:00Z",
   ...overrides,
 });
 

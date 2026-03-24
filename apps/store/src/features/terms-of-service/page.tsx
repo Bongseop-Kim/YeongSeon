@@ -2,7 +2,7 @@ import {
   PolicyPageLayout,
   PolicySection,
   PolicyList,
-} from "@/features/policy/components/policy-components";
+} from "@/components/composite/policy-components";
 
 export default function TermsOfServicePage() {
   return (

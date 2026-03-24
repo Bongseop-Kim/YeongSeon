@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  normalizeKeyword,
-  toDateString,
-} from "@/features/order/utils/list-filters";
+import { normalizeKeyword, toDateString } from "@/lib/list-filters";
 
 describe("list-filters", () => {
   it("키워드를 trim하고 소문자로 정규화한다", () => {

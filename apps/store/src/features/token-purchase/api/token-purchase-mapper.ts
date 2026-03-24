@@ -3,7 +3,7 @@ import type {
   TokenPlan,
   TokenPlanKey,
   CreateTokenPurchaseResult,
-} from "./token-purchase-api";
+} from "@/features/token-purchase/api/token-purchase-types";
 
 const PLAN_META: Record<
   TokenPlanKey,

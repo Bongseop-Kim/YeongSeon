@@ -9,7 +9,7 @@ import {
 import { confirmPayment } from "@/features/payment/api/payment-api";
 import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/features/design/api/ai-design-query";
 
-export const TOKEN_PLANS_QUERY_KEY = ["token-plans"] as const;
+const TOKEN_PLANS_QUERY_KEY = ["token-plans"] as const;
 
 export function useTokenPlansQuery() {
   return useQuery<TokenPlan[], Error>({

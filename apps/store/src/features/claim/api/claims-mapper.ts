@@ -6,7 +6,6 @@ import type {
 } from "@yeongseon/shared/types/dto/claim-view";
 import type { CreateClaimInputDTO } from "@yeongseon/shared/types/dto/claim-input";
 import type { CreateClaimResultDTO } from "@yeongseon/shared/types/dto/claim-output";
-import type { OrderItemDTO } from "@yeongseon/shared/types/dto/order-view";
 import type { ClaimItem } from "@yeongseon/shared/types/view/claim-item";
 import type { OrderItem } from "@yeongseon/shared/types/view/order";
 import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-input";
@@ -429,12 +428,6 @@ export const parseCreateClaimResult = (data: unknown): CreateClaimResultDTO => {
 };
 
 // ── row → DTO 변환 ──────────────────────────────────
-
-/**
- * claim_list_view의 item jsonb → 정규화된 OrderItemDTO
- */
-export const fromClaimItemRowDTO = (item: ClaimItemRowDTO): OrderItemDTO =>
-  normalizeItemRow(item);
 
 /**
  * ClaimListRowDTO → ClaimItem (View)

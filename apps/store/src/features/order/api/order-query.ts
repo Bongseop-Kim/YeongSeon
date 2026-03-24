@@ -1,13 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  createOrder,
   getOrders,
   getOrder,
   confirmPurchase,
 } from "@/features/order/api/order-api";
-import type { CreateOrderRequest } from "@/features/order/types/view/order-input";
-import { useAuthStore } from "@/store/auth";
-import type { ListFilters } from "@/features/order/utils/list-filters";
+import type { ListFilters } from "@/lib/list-filters";
 import { useRequiredUser } from "@/hooks/use-required-user";
 
 /**
@@ -45,7 +42,7 @@ export const useOrders = (filters?: ListFilters) => {
 /**
  * 주문 상세 조회 쿼리
  */
-export const useOrder = (orderId: string) => {
+const useOrder = (orderId: string) => {
   useRequiredUser();
 
   return useQuery({
@@ -70,34 +67,6 @@ export const useOrderDetail = (orderId?: string) => {
     isNotFound:
       !!orderId && !query.isLoading && !query.isError && query.data === null,
   };
-};
-
-/**
- * 주문 생성 뮤테이션
- */
-export const useCreateOrder = () => {
-  const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-
-  return useMutation({
-    mutationFn: (request: CreateOrderRequest) => {
-      if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
-      }
-      return createOrder(request);
-    },
-    onSuccess: () => {
-      // 주문 목록 쿼리 무효화
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: orderKeys.all });
-      }
-      // 장바구니 쿼리 무효화 (주문 완료 후 장바구니 비우기)
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-    },
-    onError: (error) => {
-      console.error("주문 생성 실패:", error);
-    },
-  });
 };
 
 /**

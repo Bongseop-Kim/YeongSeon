@@ -6,9 +6,9 @@ import {
   type SaveDesignSessionParams,
 } from "@/features/design/api/design-session-api";
 
-export const DESIGN_SESSIONS_QUERY_KEY = ["design-sessions"] as const;
+const DESIGN_SESSIONS_QUERY_KEY = ["design-sessions"] as const;
 
-export const designSessionMessagesQueryKey = (sessionId: string) =>
+const designSessionMessagesQueryKey = (sessionId: string) =>
   ["design-session-messages", sessionId] as const;
 
 export function useDesignSessionsQuery() {

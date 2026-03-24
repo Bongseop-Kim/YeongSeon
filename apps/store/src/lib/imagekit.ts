@@ -2,8 +2,6 @@ import { getImageKitAuth as _getImageKitAuth } from "@yeongseon/shared";
 import type { ImageKitAuth } from "@yeongseon/shared";
 import { supabase } from "@/lib/supabase";
 
-export type { ImageKitAuth };
-
 export const IMAGEKIT_URL_ENDPOINT =
   import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT || "";
 

@@ -17,7 +17,6 @@ declare
   v_admin_id       uuid;
   v_current_status text;
   v_order_type     text;
-  v_total_price    integer;
   v_user_id        uuid;
   v_token_amount   integer;
   v_plan_key       text;
@@ -33,9 +32,9 @@ begin
     raise exception 'Admin access required';
   end if;
 
-  -- Lock the row and get current status, order type, price, user
-  select o.status, o.order_type, o.total_price, o.user_id, o.payment_key
-  into v_current_status, v_order_type, v_total_price, v_user_id, v_payment_key
+  -- Lock the row and get current status, order type, user
+  select o.status, o.order_type, o.user_id, o.payment_key
+  into v_current_status, v_order_type, v_user_id, v_payment_key
   from public.orders o
   where o.id = p_order_id
   for update;
@@ -83,7 +82,8 @@ begin
     elsif v_order_type = 'repair' then
       if not (
         (v_current_status = '결제중' and p_new_status = '대기중')
-        or (v_current_status = '접수' and p_new_status = '대기중')
+        or (v_current_status = '발송중' and p_new_status = '발송대기')
+        or (v_current_status = '접수' and p_new_status = '발송중')
         or (v_current_status = '수선중' and p_new_status = '접수')
         or (v_current_status = '수선완료' and p_new_status = '수선중')
       ) then
@@ -137,12 +137,14 @@ begin
     elsif v_order_type = 'repair' then
       if not (
         (v_current_status = '대기중'   and p_new_status = '접수')
-        or (v_current_status = '접수'     and p_new_status = '수선중')
+        or (v_current_status = '발송대기' and p_new_status = '발송중')
+        or (v_current_status = '발송중' and p_new_status = '접수')
+        or (v_current_status = '접수' and p_new_status = '수선중')
         or (v_current_status = '수선중'   and p_new_status = '수선완료')
         or (v_current_status = '수선완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '발송대기', '발송중'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;
@@ -209,7 +211,7 @@ begin
           '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개, 관리자 확정)',
           'order_' || p_order_id::text
         )
-        on conflict (work_id) do nothing;
+        on conflict (work_id) where work_id is not null do nothing;
       end if;
     end if;
 

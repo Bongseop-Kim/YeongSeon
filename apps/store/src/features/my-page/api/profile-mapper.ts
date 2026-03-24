@@ -2,6 +2,7 @@ import type {
   MarketingConsent,
   MarketingConsentToggleInput,
 } from "@/features/my-page/types/profile";
+import { isRecord } from "@/lib/type-guard";
 
 export const DEFAULT_MARKETING_CONSENT: MarketingConsent = {
   all: false,
@@ -10,9 +11,6 @@ export const DEFAULT_MARKETING_CONSENT: MarketingConsent = {
     email: false,
   },
 };
-
-export const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
 
 export const normalizeMarketingConsent = (value: unknown): MarketingConsent => {
   if (!isRecord(value)) {

@@ -1,29 +1,13 @@
-import type {
-  AiModel,
-  Attachment,
-  ContextChip,
-} from "@/features/design/types/chat";
-import type { DesignContext } from "@/features/design/types/design-context";
+import type { ContextChip } from "@/features/design/types/chat";
 import type { DesignTokenHistoryItem } from "@/features/design/types/token-history";
+import type { AiDesignRequest } from "@/features/design/types/ai-design-request";
 import { supabase } from "@/lib/supabase";
 import {
   getTags,
   toDesignTokenHistoryItem,
   type DesignTokenRow,
 } from "@/features/design/api/ai-design-mapper";
-
-export interface AiDesignRequest {
-  userMessage: string;
-  attachments: Attachment[];
-  designContext: DesignContext;
-  aiModel: AiModel;
-  conversationHistory?: {
-    role: "user" | "ai";
-    content: string;
-  }[];
-  ciImageBase64?: string;
-  ciImageMimeType?: string;
-}
+export type { AiDesignRequest };
 
 export interface AiDesignResponse {
   aiMessage: string;
@@ -69,13 +53,14 @@ const fileToBase64 = (file: File): Promise<string> =>
 export async function aiDesignApi(
   request: AiDesignRequest,
 ): Promise<AiDesignResponse> {
-  const ciImageBase64 = request.designContext.ciImage
-    ? await fileToBase64(request.designContext.ciImage)
-    : undefined;
-
-  const referenceImageBase64 = request.designContext.referenceImage
-    ? await fileToBase64(request.designContext.referenceImage)
-    : undefined;
+  const [ciImageBase64, referenceImageBase64] = await Promise.all([
+    request.designContext.ciImage
+      ? fileToBase64(request.designContext.ciImage)
+      : Promise.resolve(undefined),
+    request.designContext.referenceImage
+      ? fileToBase64(request.designContext.referenceImage)
+      : Promise.resolve(undefined),
+  ]);
 
   const functionName =
     request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
@@ -134,7 +119,7 @@ export async function aiDesignApi(
   };
 }
 
-export interface DesignTokenBalance {
+interface DesignTokenBalance {
   total: number;
   paid: number;
   bonus: number;

@@ -17,10 +17,7 @@ import {
   toOrderViewFromDetail,
 } from "@/features/order/api/order-mapper";
 import { extractEdgeFunctionErrorMessage } from "./order-error-mapper";
-import {
-  normalizeKeyword,
-  type ListFilters,
-} from "@/features/order/utils/list-filters";
+import { normalizeKeyword, type ListFilters } from "@/lib/list-filters";
 
 const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";

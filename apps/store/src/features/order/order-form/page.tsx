@@ -13,15 +13,15 @@ import { useOrderStore } from "@/store/order";
 import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
 import { toast } from "@/lib/toast";
 import { hasStringCode } from "@/lib/type-guard";
-import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
-import { getDeliveryRequestLabel } from "@/features/shipping/constants/DELIVERY_REQUEST_OPTIONS";
+import { formatPhoneNumber } from "@/lib/phone-format";
+import { getDeliveryRequestLabel } from "@/constants/DELIVERY_REQUEST_OPTIONS";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useAuthStore } from "@/store/auth";
 import { createOrder } from "@/features/order/api/order-api";
 import { useReformPricing } from "@/features/reform/api/reform-query";
 import PaymentWidget, {
   type PaymentWidgetRef,
-} from "@/features/payment/components/payment-widget";
+} from "@/components/composite/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useState } from "react";
 

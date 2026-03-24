@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { toCreateCustomOrderInputDto } from "@/features/custom-order/api/custom-order-mapper";
 import type { CreateCustomOrderRequest } from "@/features/custom-order/types/dto/custom-order-input";
 
-export interface CreateCustomOrderResponse {
+interface CreateCustomOrderResponse {
   orderId: string;
   orderNumber: string;
 }

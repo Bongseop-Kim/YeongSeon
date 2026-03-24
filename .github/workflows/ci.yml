@@ -25,10 +25,30 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - run: pnpm depcruise
+      - run: pnpm knip
       - run: pnpm cpd
       - run: pnpm type-check
       - run: pnpm format:check
       - run: pnpm test:ci
+
+  db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.78.1
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/supabase
+          key: supabase-${{ hashFiles('supabase/config.toml') }}
+      - run: supabase start -x edge-runtime,imgproxy,logflare,vector,studio
+      - run: supabase db lint --level warning
+      - run: supabase test db
+      - run: supabase stop
+        if: always()
 
   semgrep:
     runs-on: ubuntu-latest

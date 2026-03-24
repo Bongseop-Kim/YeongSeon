@@ -10,7 +10,7 @@ import type { InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-i
 import { useAuthStore } from "@/store/auth";
 import { useRequiredUser } from "@/hooks/use-required-user";
 
-export const inquiryKeys = {
+const inquiryKeys = {
   all: ["inquiries"] as const,
   list: (userId?: string) => [...inquiryKeys.all, "list", userId] as const,
   productSearch: (query: string) => ["inquiry-product-search", query] as const,

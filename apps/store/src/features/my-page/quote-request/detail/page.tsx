@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROUTES } from "@/constants/ROUTES";
-import { CustomOrderOptionsSection } from "@/features/order/components/custom-order-options-section";
+import { CustomOrderOptionsSection } from "@/components/composite/custom-order-options-section";
 import { useQuoteRequest } from "@/features/quote-request/api/quote-request-query";
 import { QUOTE_REQUEST_BADGE_CLASS } from "@/features/quote-request/components/quote-request-card";
 import { cn } from "@/lib/utils";

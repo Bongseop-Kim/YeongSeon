@@ -3,7 +3,7 @@ import {
   PolicySection,
   PolicyList,
   PolicyInfoBox,
-} from "@/features/policy/components/policy-components";
+} from "@/components/composite/policy-components";
 
 export default function PrivacyPolicyPage() {
   return (

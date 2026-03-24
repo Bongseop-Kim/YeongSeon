@@ -22,6 +22,8 @@ declare
   v_user_id uuid;
   v_quote_id uuid;
   v_quote_number text;
+  v_elem jsonb;
+  v_idx integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -63,6 +65,24 @@ begin
   -- Options validation
   if p_options is null or jsonb_typeof(p_options) <> 'object' then
     raise exception 'Invalid options payload';
+  end if;
+
+  if p_reference_images is not null and jsonb_typeof(p_reference_images) <> 'array' then
+    raise exception 'p_reference_images must be a JSON array';
+  end if;
+
+  v_idx := 0;
+  if p_reference_images is not null then
+    for v_elem in select jsonb_array_elements(p_reference_images) loop
+      if jsonb_typeof(v_elem) <> 'object'
+         or not (v_elem ? 'url')
+         or jsonb_typeof(v_elem->'url') <> 'string'
+         or btrim(coalesce(v_elem->>'url', '')) = ''
+         or ((v_elem ? 'file_id') and jsonb_typeof(v_elem->'file_id') not in ('string', 'null')) then
+        raise exception 'p_reference_images[%] must be an object with a non-empty string "url" and optional string/null "file_id"', v_idx;
+      end if;
+      v_idx := v_idx + 1;
+    end loop;
   end if;
 
   v_quote_number := public.generate_quote_number();

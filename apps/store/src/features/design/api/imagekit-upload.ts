@@ -2,7 +2,7 @@ import { upload } from "@imagekit/react";
 import { IMAGEKIT_PUBLIC_KEY, getImageKitAuth } from "@/lib/imagekit";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 
-export interface UploadedImageRef {
+interface UploadedImageRef {
   url: string;
   fileId: string;
 }

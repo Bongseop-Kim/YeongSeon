@@ -3,8 +3,8 @@ import type {
   UserProfile,
   MarketingConsent,
 } from "@/features/my-page/types/profile";
-import type { ProfileRecord } from "@/features/my-page/types/dto/profile";
-import { isRecord, normalizeMarketingConsent } from "./profile-mapper";
+import { isRecord } from "@/lib/type-guard";
+import { normalizeMarketingConsent } from "./profile-mapper";
 
 const TABLE_NAME = "profiles";
 const MARKETING_CONSENT_KEY = "marketingConsent";
@@ -77,43 +77,6 @@ export const getProfile = async (): Promise<UserProfile> => {
         : undefined,
     ),
   };
-};
-
-/**
- * 프로필 정보 업데이트
- */
-export const updateProfile = async (data: {
-  name?: string;
-  phone?: string | null;
-  birth?: string | null;
-}): Promise<void> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
-  const updateData: Partial<ProfileRecord> = {};
-  if (data.name !== undefined) updateData.name = data.name;
-  if (data.phone !== undefined) updateData.phone = data.phone;
-  if (data.birth !== undefined) updateData.birth = data.birth;
-
-  const { data: updatedProfile, error } = await supabase
-    .from(TABLE_NAME)
-    .update(updateData)
-    .eq("id", user.id)
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`프로필 업데이트 실패: ${error.message}`);
-  }
-
-  if (!updatedProfile) {
-    throw new Error("프로필이 존재하지 않습니다.");
-  }
 };
 
 /**

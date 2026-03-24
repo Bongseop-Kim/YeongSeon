@@ -9,7 +9,7 @@ import {
 } from "@/features/design/api/ai-design-api";
 
 export const DESIGN_TOKEN_BALANCE_QUERY_KEY = ["design-token-balance"] as const;
-export const DESIGN_TOKEN_HISTORY_QUERY_KEY = ["design-token-history"] as const;
+const DESIGN_TOKEN_HISTORY_QUERY_KEY = ["design-token-history"] as const;
 
 export function useDesignTokenBalanceQuery() {
   return useQuery({

@@ -1,31 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   fromPeriodStatsRpcRow,
-  fromTodayStatsRpcRow,
   toDashboardRecentOrder,
   toDashboardStats,
 } from "@/features/dashboard/api/dashboard-mapper";
-
-describe("fromTodayStatsRpcRow", () => {
-  it("비객체 입력이면 기본값을 반환한다", () => {
-    expect(fromTodayStatsRpcRow(null)).toEqual({
-      todayOrderCount: 0,
-      todayRevenue: 0,
-    });
-  });
-
-  it("문자열 숫자를 number로 변환한다", () => {
-    expect(
-      fromTodayStatsRpcRow({
-        today_order_count: "12",
-        today_revenue: "34000",
-      }),
-    ).toEqual({
-      todayOrderCount: 12,
-      todayRevenue: 34000,
-    });
-  });
-});
 
 describe("fromPeriodStatsRpcRow", () => {
   it("비객체 입력이면 기본값을 반환한다", () => {

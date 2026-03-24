@@ -7,14 +7,14 @@ import {
 } from "@/features/claim/api/claims-api";
 import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-input";
 import { useAuthStore } from "@/store/auth";
-import type { ListFilters } from "@/features/order/utils/list-filters";
+import type { ListFilters } from "@/lib/list-filters";
 import { orderKeys } from "@/features/order/api/order-query";
 import { useRequiredUser } from "@/hooks/use-required-user";
 
 /**
  * 클레임 쿼리 키
  */
-export const claimKeys = {
+const claimKeys = {
   all: ["claims"] as const,
   list: (userId?: string, filters?: ListFilters) =>
     [

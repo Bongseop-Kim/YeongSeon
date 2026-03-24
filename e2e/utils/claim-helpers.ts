@@ -1,8 +1,8 @@
 import type { Page } from "@playwright/test";
 
-export type ClaimTypeLabel = "취소" | "반품" | "교환";
+type ClaimTypeLabel = "취소" | "반품" | "교환";
 
-export const claimTypeLabelToCode = (
+const claimTypeLabelToCode = (
   claimTypeLabel: ClaimTypeLabel,
 ): "cancel" | "return" | "exchange" => {
   switch (claimTypeLabel) {

@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export interface AnswerInquiryParams {
+interface AnswerInquiryParams {
   inquiryId: string;
   answer: string;
 }

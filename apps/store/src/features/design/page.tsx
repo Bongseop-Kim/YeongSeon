@@ -14,7 +14,7 @@ import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import { cn } from "@/lib/utils";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 
-export function DesignPage() {
+function DesignPage() {
   const { isDesktop } = useBreakpoint();
   const { showOnboarding, completeOnboarding } = useOnboarding();
   const { sendMessage } = useDesignChat();
