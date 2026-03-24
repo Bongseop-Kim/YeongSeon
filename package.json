@@ -18,6 +18,8 @@
     "db:reset": "supabase db reset",
     "db:diff": "supabase db diff",
     "db:push": "supabase db push",
+    "db:lint": "supabase db lint --level warning",
+    "db:test": "supabase test db",
     "preinstall": "npx only-allow pnpm",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
