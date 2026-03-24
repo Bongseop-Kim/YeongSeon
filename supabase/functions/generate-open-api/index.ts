@@ -462,6 +462,7 @@ Deno.serve(async (req) => {
   let textLatencyMs: number | null = null;
   let imageLatencyMs: number | null = null;
   let refundAmount = 0;
+  let imageQuality = "standard";
 
   try {
     const textStartTime = Date.now();
@@ -489,7 +490,7 @@ Deno.serve(async (req) => {
       : "text_only";
 
     // high quality 여부 결정 (이미지 비용 차등 과금)
-    const imageQuality =
+    imageQuality =
       imagePayload.ciImageBase64 ||
       imagePayload.referenceImageBase64 ||
       imagePayload.designContext?.ciPlacement

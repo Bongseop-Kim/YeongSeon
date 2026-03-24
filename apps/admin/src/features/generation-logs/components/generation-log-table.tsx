@@ -20,6 +20,7 @@ interface GenerationLogTableProps {
   data: AdminGenerationLogItem[];
   loading: boolean;
   page: number;
+  hasMore: boolean;
   onPageChange: (page: number) => void;
   aiModel: string | null;
   onAiModelChange: (model: string | null) => void;
@@ -29,6 +30,7 @@ export function GenerationLogTable({
   data,
   loading,
   page,
+  hasMore,
   onPageChange,
   aiModel,
   onAiModelChange,
@@ -166,6 +168,9 @@ export function GenerationLogTable({
         pagination={{
           current: page,
           pageSize: GENERATION_LOG_PAGE_SIZE,
+          total: hasMore
+            ? page * GENERATION_LOG_PAGE_SIZE + 1
+            : (page - 1) * GENERATION_LOG_PAGE_SIZE + data.length,
           onChange: onPageChange,
           showSizeChanger: false,
           simple: true,
@@ -249,14 +254,14 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
       )}
       {log.designContext && (
         <Descriptions.Item label="디자인 컨텍스트" span={2}>
-          <Text code style={{ fontSize: 11 }}>
+          <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
             {JSON.stringify(log.designContext, null, 2)}
           </Text>
         </Descriptions.Item>
       )}
       {log.detectedDesign && (
         <Descriptions.Item label="감지된 디자인" span={2}>
-          <Text code style={{ fontSize: 11 }}>
+          <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
             {JSON.stringify(log.detectedDesign, null, 2)}
           </Text>
         </Descriptions.Item>

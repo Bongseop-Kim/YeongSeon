@@ -28,11 +28,15 @@ export function useGenerationLogsQuery(params: {
   dateRange: [Dayjs, Dayjs];
   aiModel: string | null;
   page: number;
-}): { data: AdminGenerationLogItem[] | undefined; isLoading: boolean } {
+}): {
+  data: AdminGenerationLogItem[] | undefined;
+  hasMore: boolean;
+  isLoading: boolean;
+} {
   const startDate = params.dateRange[0].format("YYYY-MM-DD");
   const endDate = params.dateRange[1].format("YYYY-MM-DD");
 
-  return useQuery({
+  const query = useQuery({
     queryKey: [
       "generation-logs",
       "list",
@@ -46,10 +50,18 @@ export function useGenerationLogsQuery(params: {
         startDate,
         endDate,
         aiModel: params.aiModel,
-        limit: PAGE_SIZE,
+        limit: PAGE_SIZE + 1,
         offset: (params.page - 1) * PAGE_SIZE,
       }),
   });
+
+  const rawData = query.data;
+
+  return {
+    data: rawData?.slice(0, PAGE_SIZE),
+    hasMore: (rawData?.length ?? 0) > PAGE_SIZE,
+    isLoading: query.isLoading,
+  };
 }
 
 export { PAGE_SIZE as GENERATION_LOG_PAGE_SIZE };

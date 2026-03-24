@@ -3,4 +3,4 @@ export const formatWithComma = (v: number | string | undefined): string =>
 
 export const formatNullableLocaleNumber = (
   v: number | null | undefined,
-): string => (v == null ? "-" : v.toLocaleString());
+): string => (v == null ? "-" : v.toLocaleString("ko-KR"));

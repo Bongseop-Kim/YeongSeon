@@ -1,12 +1,6 @@
 import { useOne, useUpdate, type HttpError } from "@refinedev/core";
 import { message } from "antd";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { AdminSettingRowDTO } from "@yeongseon/shared";
 
 import {
@@ -62,16 +56,10 @@ function useAdminSettingForm<TValue>({
   const { mutate: updateSetting, mutation } = useUpdate();
 
   const [value, setValue] = useState<TValue>(initialValue);
-  const initialized = useRef(false);
 
   useEffect(() => {
-    if (result !== undefined && !initialized.current) {
-      initialized.current = true;
+    if (result !== undefined) {
       setValue(fromDTO(result));
-    }
-
-    if (!result) {
-      initialized.current = false;
     }
   }, [fromDTO, result]);
 

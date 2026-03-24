@@ -27,7 +27,11 @@ export default function GenerationLogList() {
 
   const { data: statsData, isLoading: statsLoading } =
     useGenerationStatsQuery(dateRange);
-  const { data: logsData, isLoading: logsLoading } = useGenerationLogsQuery({
+  const {
+    data: logsData,
+    hasMore: logsHasMore,
+    isLoading: logsLoading,
+  } = useGenerationLogsQuery({
     dateRange,
     aiModel,
     page,
@@ -80,6 +84,7 @@ export default function GenerationLogList() {
           data={logsData ?? []}
           loading={logsLoading}
           page={page}
+          hasMore={logsHasMore}
           onPageChange={setPage}
           aiModel={aiModel}
           onAiModelChange={handleAiModelChange}

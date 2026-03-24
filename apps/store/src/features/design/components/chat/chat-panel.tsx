@@ -43,9 +43,10 @@ export function ChatPanel({
 
   useEffect(() => {
     if (!selectedImageUrl) return;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, [selectedImageUrl]);
 
