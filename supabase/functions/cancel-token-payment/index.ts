@@ -1,32 +1,15 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { getCorsHeaders } from "../_shared/cors.ts";
-import { createJsonResponse } from "../_shared/response.ts";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { createJsonResponse } from "@/functions/_shared/response.ts";
+import { createLogger } from "@/functions/_shared/logger.ts";
+import { maskPaymentKey } from "@/functions/_shared/payment.ts";
 
 type CancelTokenPaymentRequest = {
   refundRequestId: string;
 };
 
-const maskPaymentKey = (key: string): string => {
-  if (key.length <= 8) return "****";
-  return `****${key.slice(-8)}`;
-};
-
-const processLogger = (step: string, payload: Record<string, unknown>) => {
-  console.log(`[cancel-token-payment:${step}]`, JSON.stringify(payload));
-};
-
-const errorLogger = (
-  step: string,
-  error: unknown,
-  payload: Record<string, unknown> = {},
-) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(
-    `[cancel-token-payment:${step}]`,
-    JSON.stringify({ ...payload, error: message }),
-  );
-};
+const { processLogger, errorLogger } = createLogger("cancel-token-payment");
 
 const isCancelRequest = (
   payload: unknown,
@@ -83,8 +66,15 @@ Deno.serve(async (req) => {
   const { data: isAdmin, error: adminCheckError } =
     await userClient.rpc("is_admin");
 
-  if (adminCheckError || isAdmin !== true) {
-    return jsonResponse(403, { error: "Forbidden: admin only" });
+  if (adminCheckError) {
+    errorLogger("admin_check_failed", adminCheckError, { userId: user.id });
+    return jsonResponse(500, { error: "Internal Server Error" });
+  }
+
+  if (isAdmin !== true) {
+    return jsonResponse(403, {
+      error: "Forbidden: admin or manager only",
+    });
   }
 
   let payload: CancelTokenPaymentRequest;
@@ -232,7 +222,9 @@ Deno.serve(async (req) => {
   let tossResponse: Response;
   try {
     tossResponse = await fetch(
-      `https://api.tosspayments.com/v1/payments/${encodeURIComponent(order.payment_key)}/cancel`,
+      `https://api.tosspayments.com/v1/payments/${encodeURIComponent(
+        order.payment_key,
+      )}/cancel`,
       {
         method: "POST",
         headers: {

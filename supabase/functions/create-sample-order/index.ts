@@ -1,8 +1,8 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { getCorsHeaders } from "../_shared/cors.ts";
-import { createJsonResponse } from "../_shared/response.ts";
-import { isJsonPayloadWithinLimit } from "../_shared/validation.ts";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { createJsonResponse } from "@/functions/_shared/response.ts";
+import { isJsonPayloadWithinLimit } from "@/functions/_shared/validation.ts";
 
 type CreateSampleOrderInput = {
   shipping_address_id: string;

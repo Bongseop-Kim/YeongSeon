@@ -1,10 +1,12 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "@supabase/supabase-js";
-import { getCorsHeaders } from "../_shared/cors.ts";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
 import {
   createJsonResponse,
   type JsonResponseFn,
-} from "../_shared/response.ts";
+} from "@/functions/_shared/response.ts";
+import { createLogger } from "@/functions/_shared/logger.ts";
+import { maskPaymentKey } from "@/functions/_shared/payment.ts";
 
 type ConfirmPaymentRequest = {
   paymentKey: string;
@@ -36,7 +38,7 @@ const buildTokenPurchaseResponse = (
 
 const fetchTokenAmountAndBuildResponse = async (
   jsonResponse: JsonResponseFn,
-  adminClient: ReturnType<typeof createClient>,
+  adminClient: SupabaseClient,
   orderId: string,
   paymentKey: string,
   paymentGroupId: string,
@@ -71,10 +73,7 @@ const fetchTokenAmountAndBuildResponse = async (
   );
 };
 
-const maskPaymentKey = (key: string): string => {
-  if (key.length <= 8) return "****";
-  return `****${key.slice(-8)}`;
-};
+const { processLogger, errorLogger } = createLogger("confirm-payment");
 
 const sanitizeTossResponse = (
   obj: Record<string, unknown>,
@@ -87,25 +86,6 @@ const sanitizeTossResponse = (
     copy.secret = "****";
   }
   return copy;
-};
-
-const processLogger = (step: string, payload: Record<string, unknown>) => {
-  console.log(`[confirm-payment:${step}]`, JSON.stringify(payload));
-};
-
-const errorLogger = (
-  step: string,
-  error: unknown,
-  payload: Record<string, unknown> = {},
-) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(
-    `[confirm-payment:${step}]`,
-    JSON.stringify({
-      ...payload,
-      error: message,
-    }),
-  );
 };
 
 const isConfirmPaymentRequest = (
@@ -415,9 +395,11 @@ Deno.serve(async (req) => {
         });
 
       return jsonResponse(tossResponse.status, {
-        error: "Payment confirmation rejected",
+        error:
+          typeof parsed.message === "string"
+            ? parsed.message
+            : "Payment confirmation rejected",
         ...(typeof parsed.code === "string" && { code: parsed.code }),
-        ...(typeof parsed.message === "string" && { message: parsed.message }),
       });
     }
 

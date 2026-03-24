@@ -1,15 +1,15 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 
-import { getCorsHeaders } from "../_shared/cors.ts";
-import { createJsonResponse } from "../_shared/response.ts";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { createJsonResponse } from "@/functions/_shared/response.ts";
 import {
-  filterValidConversationTurns,
   type ConversationTurn,
   type DetectedDesign,
-} from "../_shared/conversation.ts";
-import { logGeneration } from "../_shared/log-generation.ts";
-import type { AiGenerationLogInsert } from "../_shared/log-generation.ts";
+  filterValidConversationTurns,
+} from "@/functions/_shared/conversation.ts";
+import { logGeneration } from "@/functions/_shared/log-generation.ts";
+import type { AiGenerationLogInsert } from "@/functions/_shared/log-generation.ts";
 import {
   buildGeminiImagePrompt,
   buildImageEditPrompt,
@@ -70,13 +70,15 @@ type GenerateDesignResult = {
 const requestGeminiText = async (
   payload: GenerateDesignRequest,
   apiKey: string,
+  conversationTurns: ConversationTurn[],
 ) => {
   // 대화 히스토리를 Gemini 네이티브 멀티턴 포맷으로 변환
-  const historyContents: Array<Record<string, unknown>> =
-    filterValidConversationTurns(payload.conversationHistory).map((turn) => ({
+  const historyContents: Array<Record<string, unknown>> = conversationTurns.map(
+    (turn) => ({
       role: turn.role === "user" ? "user" : "model",
       parts: [{ text: turn.content }],
-    }));
+    }),
+  );
 
   // 현재 메시지 (designContext + userMessage + 이미지)
   const currentParts: Array<Record<string, unknown>> = [
@@ -387,13 +389,25 @@ Deno.serve(async (req) => {
   const MAX_HISTORY_TURNS = 20;
   const MAX_MESSAGE_LENGTH = 2000;
   const MAX_IMAGE_BASE64_LENGTH = 5_000_000; // ~3.7MB decoded
+  const rawConversationHistory = payload.conversationHistory;
 
-  if ((payload.conversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
+  if (
+    rawConversationHistory !== undefined &&
+    !Array.isArray(rawConversationHistory)
+  ) {
+    return jsonResponse(400, { error: "conversationHistory must be an array" });
+  }
+
+  const conversationTurns = filterValidConversationTurns(
+    rawConversationHistory,
+  );
+
+  if ((rawConversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
     return jsonResponse(400, { error: "conversationHistory too long" });
   }
   if (
-    (payload.conversationHistory?.length ?? 0) > 0 &&
-    filterValidConversationTurns(payload.conversationHistory).length === 0
+    (rawConversationHistory?.length ?? 0) > 0 &&
+    conversationTurns.length === 0
   ) {
     return jsonResponse(400, { error: "no valid conversationHistory turns" });
   }
@@ -419,9 +433,6 @@ Deno.serve(async (req) => {
   let imageLatencyMs: number | null = null;
   let refundAmount = 0;
   let chargedTokens = 0;
-  const conversationTurns = filterValidConversationTurns(
-    payload.conversationHistory,
-  );
   let requestType: "text_only" | "text_and_image" | null = null;
   let textResult: Awaited<ReturnType<typeof requestGeminiText>> | null = null;
 
@@ -457,7 +468,11 @@ Deno.serve(async (req) => {
   try {
     const textStartTime = Date.now();
     try {
-      textResult = await requestGeminiText(payload, geminiApiKey);
+      textResult = await requestGeminiText(
+        payload,
+        geminiApiKey,
+        conversationTurns,
+      );
     } finally {
       textLatencyMs = Date.now() - textStartTime;
     }
@@ -523,6 +538,23 @@ Deno.serve(async (req) => {
     let imageUrl: string | null = null;
     let remainingTokens = tokenData.balance;
 
+    const refundTokens = async (amount: number) => {
+      if (amount <= 0) return;
+      const { error } = await adminClient.rpc("refund_design_tokens", {
+        p_user_id: user.id,
+        p_amount: amount,
+        p_ai_model: "gemini",
+        p_request_type: requestType,
+        p_work_id: workId,
+      });
+      if (error) {
+        console.error("Token refund failed:", error);
+        return;
+      }
+      refundAmount = amount;
+      remainingTokens = tokenData.balance + amount;
+    };
+
     if (textResult.generateImage) {
       const imageStartTime = Date.now();
       imageUrl = await requestGeminiImage(imagePayload, geminiApiKey);
@@ -547,26 +579,7 @@ Deno.serve(async (req) => {
             isNaN(parsedTextCost) || parsedTextCost <= 0
               ? 0
               : Math.min(parsedTextCost, tokenData.cost);
-          const requestedRefundAmount = Math.max(tokenData.cost - textCost, 0);
-
-          if (requestedRefundAmount > 0) {
-            const { error: refundError } = await adminClient.rpc(
-              "refund_design_tokens",
-              {
-                p_user_id: user.id,
-                p_amount: requestedRefundAmount,
-                p_ai_model: "gemini",
-                p_request_type: requestType,
-                p_work_id: workId,
-              },
-            );
-            if (refundError) {
-              console.error("Token refund failed:", refundError);
-            } else {
-              refundAmount = requestedRefundAmount;
-              remainingTokens = tokenData.balance + requestedRefundAmount;
-            }
-          }
+          await refundTokens(Math.max(tokenData.cost - textCost, 0));
         }
       }
     }

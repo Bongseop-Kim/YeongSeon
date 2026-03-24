@@ -1,20 +1,20 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { getCorsHeaders } from "../_shared/cors.ts";
-import { createJsonResponse } from "../_shared/response.ts";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { createJsonResponse } from "@/functions/_shared/response.ts";
 import {
-  filterValidConversationTurns,
   type ConversationTurn,
   type DetectedDesign,
-} from "../_shared/conversation.ts";
+  filterValidConversationTurns,
+} from "@/functions/_shared/conversation.ts";
 import {
-  logGeneration,
   type AiGenerationLogInsert,
-} from "../_shared/log-generation.ts";
+  logGeneration,
+} from "@/functions/_shared/log-generation.ts";
 import {
-  buildImagePrompt,
   buildImageEditPrompt,
+  buildImagePrompt,
   buildTextPrompt,
   parseJsonBlock,
   SYSTEM_PROMPT,
@@ -82,12 +82,14 @@ const base64ToBlob = (base64: string, mimeType: string) => {
 const requestOpenAIText = async (
   payload: GenerateDesignRequest,
   apiKey: string,
+  conversationTurns: ConversationTurn[],
 ) => {
-  const historyMessages: Array<Record<string, unknown>> =
-    filterValidConversationTurns(payload.conversationHistory).map((turn) => ({
+  const historyMessages: Array<Record<string, unknown>> = conversationTurns.map(
+    (turn) => ({
       role: turn.role === "user" ? "user" : "assistant",
       content: turn.content,
-    }));
+    }),
+  );
 
   const textParts: Array<Record<string, unknown>> = [
     { type: "text", text: buildTextPrompt(payload) },
@@ -98,9 +100,9 @@ const requestOpenAIText = async (
     imageParts.push({
       type: "image_url",
       image_url: {
-        url: `data:${payload.ciImageMimeType || "image/png"};base64,${
-          payload.ciImageBase64
-        }`,
+        url: `data:${
+          payload.ciImageMimeType || "image/png"
+        };base64,${payload.ciImageBase64}`,
       },
     });
   }
@@ -108,9 +110,9 @@ const requestOpenAIText = async (
     imageParts.push({
       type: "image_url",
       image_url: {
-        url: `data:${payload.referenceImageMimeType || "image/png"};base64,${
-          payload.referenceImageBase64
-        }`,
+        url: `data:${
+          payload.referenceImageMimeType || "image/png"
+        };base64,${payload.referenceImageBase64}`,
       },
     });
   }
@@ -482,13 +484,25 @@ Deno.serve(async (req) => {
   const MAX_HISTORY_TURNS = 20;
   const MAX_MESSAGE_LENGTH = 2000;
   const MAX_IMAGE_BASE64_LENGTH = 5_000_000; // ~3.7MB decoded
+  const rawConversationHistory = payload.conversationHistory;
 
-  if ((payload.conversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
+  if (
+    rawConversationHistory !== undefined &&
+    !Array.isArray(rawConversationHistory)
+  ) {
+    return jsonResponse(400, { error: "conversationHistory must be an array" });
+  }
+
+  const conversationTurns = filterValidConversationTurns(
+    rawConversationHistory,
+  );
+
+  if ((rawConversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
     return jsonResponse(400, { error: "conversationHistory too long" });
   }
   if (
-    (payload.conversationHistory?.length ?? 0) > 0 &&
-    filterValidConversationTurns(payload.conversationHistory).length === 0
+    (rawConversationHistory?.length ?? 0) > 0 &&
+    conversationTurns.length === 0
   ) {
     return jsonResponse(400, { error: "no valid conversationHistory turns" });
   }
@@ -516,7 +530,7 @@ Deno.serve(async (req) => {
   let chargedTokens = 0;
   let imageQuality: AiGenerationLogInsert["quality"] =
     PREAUTHORIZED_IMAGE_QUALITY;
-  const conversationTurn = payload.conversationHistory?.length ?? 0;
+  const conversationTurn = conversationTurns.length;
   let requestType: "text_only" | "text_and_image" | null = null;
   let textResult: Awaited<ReturnType<typeof requestOpenAIText>> | null = null;
   let remainingTokens: number | null = null;
@@ -551,7 +565,12 @@ Deno.serve(async (req) => {
     });
   };
 
-  const refundTokens = async (amount: number, reason: string) => {
+  type RefundReason =
+    | "image_failed_refund"
+    | "settlement_refund"
+    | "generation_failed_refund";
+
+  const refundTokens = async (amount: number, reason: RefundReason) => {
     if (amount <= 0) {
       return;
     }
@@ -618,7 +637,11 @@ Deno.serve(async (req) => {
 
     const textStartTime = Date.now();
     try {
-      textResult = await requestOpenAIText(payload, openaiApiKey);
+      textResult = await requestOpenAIText(
+        payload,
+        openaiApiKey,
+        conversationTurns,
+      );
     } finally {
       textLatencyMs = Date.now() - textStartTime;
     }
@@ -644,24 +667,29 @@ Deno.serve(async (req) => {
       ? getOpenAIImageQuality(imagePayload)
       : null;
 
-    let finalCost = await getTokenCostFromSettings(
-      adminClient,
-      getOpenAITokenCostSettingKey(requestType, imageQuality ?? "standard"),
-    );
     let imageUrl: string | null = null;
+    let finalCost: number;
 
     if (textResult.generateImage) {
+      // 이미지 성공/실패 두 경우의 비용을 미리 병렬로 조회
+      const [combinedCost, textOnlyCost] = await Promise.all([
+        getTokenCostFromSettings(
+          adminClient,
+          getOpenAITokenCostSettingKey(requestType, imageQuality ?? "standard"),
+        ),
+        getTokenCostFromSettings(adminClient, "design_token_cost_openai_text"),
+      ]);
+
       const imageStartTime = Date.now();
       imageUrl = await requestOpenAIImage(imagePayload, openaiApiKey);
       imageLatencyMs = Date.now() - imageStartTime;
 
-      // 이미지 생성 실패 시 이미지 비용 환불 (텍스트 비용은 유지)
-      if (imageUrl === null) {
-        finalCost = await getTokenCostFromSettings(
-          adminClient,
-          "design_token_cost_openai_text",
-        );
-      }
+      finalCost = imageUrl !== null ? combinedCost : textOnlyCost;
+    } else {
+      finalCost = await getTokenCostFromSettings(
+        adminClient,
+        getOpenAITokenCostSettingKey(requestType, imageQuality ?? "standard"),
+      );
     }
 
     await refundTokens(

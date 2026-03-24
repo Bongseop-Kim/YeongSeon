@@ -1,7 +1,8 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { getCorsHeaders } from "../_shared/cors.ts";
-import { createJsonResponse } from "../_shared/response.ts";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { createJsonResponse } from "@/functions/_shared/response.ts";
+import { isJsonPayloadWithinLimit } from "@/functions/_shared/validation.ts";
 
 type OrderItemInput = {
   item_id: string;
@@ -29,6 +30,9 @@ type CreateOrderInput = {
   shipping_address_id: string;
   items: OrderItemInput[];
 };
+
+const MAX_ITEMS = 50;
+const MAX_REFORM_SIZE_BYTES = 64 * 1024;
 
 const validateItemShape = (item: OrderItemInput) => {
   if (!item.item_id || !item.item_type) {
@@ -99,6 +103,18 @@ Deno.serve(async (req) => {
   }
   if (payload.items.length === 0) {
     return jsonResponse(400, { error: "Order items are required" });
+  }
+  if (payload.items.length > MAX_ITEMS) {
+    return jsonResponse(400, { error: "Too many order items" });
+  }
+
+  for (const item of payload.items) {
+    if (
+      item.reform_data !== null &&
+      !isJsonPayloadWithinLimit(item.reform_data, MAX_REFORM_SIZE_BYTES)
+    ) {
+      return jsonResponse(400, { error: "reform_data too large" });
+    }
   }
 
   try {
