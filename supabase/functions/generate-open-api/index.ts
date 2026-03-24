@@ -18,7 +18,7 @@ import {
   buildTextPrompt,
   parseJsonBlock,
   SYSTEM_PROMPT,
-} from "./prompts.ts";
+} from "@/functions/generate-open-api/prompts.ts";
 
 export type GenerateDesignRequest = {
   userMessage: string;
@@ -79,6 +79,16 @@ const base64ToBlob = (base64: string, mimeType: string) => {
   return new Blob([bytes], { type: mimeType });
 };
 
+/**
+ * OpenAI 텍스트 생성 요청을 전송하고 파싱된 응답을 반환합니다.
+ *
+ * @param payload 원본 사용자 요청 전체 객체입니다. 이미지/디자인 컨텍스트를 포함할 수 있습니다.
+ * @param apiKey OpenAI 인증에 사용할 API 키 문자열입니다.
+ * @param conversationTurns 전송 전에 이미 정제된 대화 턴 목록입니다.
+ * @returns AI 메시지, 이미지 생성 여부, 감지된 디자인 정보, 컨텍스트 칩을 담은 Promise 결과를 반환합니다.
+ *
+ * OpenAI Chat Completions API 를 호출하며, 네트워크 실패나 응답 파싱 실패 시 예외를 던질 수 있습니다.
+ */
 const requestOpenAIText = async (
   payload: GenerateDesignRequest,
   apiKey: string,
@@ -191,7 +201,7 @@ const requestOpenAIText = async (
       typeof parsed.generateImage === "boolean" ? parsed.generateImage : true,
     contextChips: Array.isArray(parsed.contextChips)
       ? parsed.contextChips.filter(
-          (chip): chip is { label: string; action: string } =>
+          (chip: unknown): chip is { label: string; action: string } =>
             typeof chip === "object" &&
             chip !== null &&
             typeof (chip as { label?: unknown }).label === "string" &&
@@ -485,12 +495,26 @@ Deno.serve(async (req) => {
   const MAX_MESSAGE_LENGTH = 2000;
   const MAX_IMAGE_BASE64_LENGTH = 5_000_000; // ~3.7MB decoded
   const rawConversationHistory = payload.conversationHistory;
+  const optionalStringFields = [
+    ["ciImageBase64", payload.ciImageBase64],
+    ["ciImageMimeType", payload.ciImageMimeType],
+    ["referenceImageBase64", payload.referenceImageBase64],
+    ["referenceImageMimeType", payload.referenceImageMimeType],
+    ["previousImageBase64", payload.previousImageBase64],
+    ["previousImageMimeType", payload.previousImageMimeType],
+  ] as const;
 
   if (
     rawConversationHistory !== undefined &&
     !Array.isArray(rawConversationHistory)
   ) {
     return jsonResponse(400, { error: "conversationHistory must be an array" });
+  }
+
+  for (const [field, value] of optionalStringFields) {
+    if (value !== undefined && typeof value !== "string") {
+      return jsonResponse(400, { error: `${field} must be a string` });
+    }
   }
 
   if ((rawConversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
