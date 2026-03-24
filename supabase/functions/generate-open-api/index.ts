@@ -604,6 +604,7 @@ Deno.serve(async (req) => {
       user_id: user.id,
       ai_model: "openai",
       request_type: null,
+      quality: imageQuality,
       user_message: payload?.userMessage ?? "",
       prompt_length: payload?.userMessage?.length ?? 0,
       design_context: payload?.designContext ?? null,

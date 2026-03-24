@@ -6,6 +6,21 @@ import type {
   PatternStats,
   ErrorDistribution,
 } from "@/features/generation-logs/types/admin-generation-log";
+import { formatNullableLocaleNumber } from "@/utils/format-number";
+
+function formatNullableFixed(
+  v: number | null | undefined,
+  digits: number,
+): string {
+  return v == null ? "-" : v.toFixed(digits);
+}
+
+function formatNullablePercent(
+  v: number | null | undefined,
+  digits: number,
+): string {
+  return v == null ? "-" : `${v.toFixed(digits)}%`;
+}
 
 // ── 모델별 통계 ───────────────────────────────────────────────
 
@@ -16,35 +31,35 @@ const modelColumns: ColumnsType<ModelStats> = [
     dataIndex: "requestCount",
     key: "requestCount",
     align: "right",
-    render: (v: number) => v.toLocaleString(),
+    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
   },
   {
     title: "텍스트 API 평균(ms)",
     dataIndex: "avgTextLatencyMs",
     key: "avgTextLatencyMs",
     align: "right",
-    render: (v: number) => v.toLocaleString(),
+    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
   },
   {
     title: "이미지 API 평균(ms)",
     dataIndex: "avgImageLatencyMs",
     key: "avgImageLatencyMs",
     align: "right",
-    render: (v: number) => v.toLocaleString(),
+    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
   },
   {
     title: "평균 토큰 비용",
     dataIndex: "avgTokenCost",
     key: "avgTokenCost",
     align: "right",
-    render: (v: number) => v.toFixed(1),
+    render: (v: number | null | undefined) => formatNullableFixed(v, 1),
   },
   {
     title: "이미지 성공률",
     dataIndex: "imageSuccessRate",
     key: "imageSuccessRate",
     align: "right",
-    render: (v: number) => `${v.toFixed(1)}%`,
+    render: (v: number | null | undefined) => formatNullablePercent(v, 1),
   },
 ];
 
@@ -57,28 +72,28 @@ const inputTypeColumns: ColumnsType<InputTypeStats> = [
     dataIndex: "requestCount",
     key: "requestCount",
     align: "right",
-    render: (v: number) => v.toLocaleString(),
+    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
   },
   {
     title: "이미지 성공률",
     dataIndex: "imageSuccessRate",
     key: "imageSuccessRate",
     align: "right",
-    render: (v: number) => `${v.toFixed(1)}%`,
+    render: (v: number | null | undefined) => formatNullablePercent(v, 1),
   },
   {
     title: "평균 레이턴시(ms)",
     dataIndex: "avgLatencyMs",
     key: "avgLatencyMs",
     align: "right",
-    render: (v: number) => v.toLocaleString(),
+    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
   },
   {
     title: "평균 토큰 비용",
     dataIndex: "avgTokenCost",
     key: "avgTokenCost",
     align: "right",
-    render: (v: number) => v.toFixed(1),
+    render: (v: number | null | undefined) => formatNullableFixed(v, 1),
   },
 ];
 
@@ -91,21 +106,21 @@ const patternColumns: ColumnsType<PatternStats> = [
     dataIndex: "requestCount",
     key: "requestCount",
     align: "right",
-    render: (v: number) => v.toLocaleString(),
+    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
   },
   {
     title: "이미지 성공률",
     dataIndex: "imageSuccessRate",
     key: "imageSuccessRate",
     align: "right",
-    render: (v: number) => `${v.toFixed(1)}%`,
+    render: (v: number | null | undefined) => formatNullablePercent(v, 1),
   },
   {
     title: "평균 토큰 비용",
     dataIndex: "avgTokenCost",
     key: "avgTokenCost",
     align: "right",
-    render: (v: number) => v.toFixed(1),
+    render: (v: number | null | undefined) => formatNullableFixed(v, 1),
   },
 ];
 
@@ -118,7 +133,7 @@ const errorColumns: ColumnsType<ErrorDistribution> = [
     dataIndex: "count",
     key: "count",
     align: "right",
-    render: (v: number) => v.toLocaleString(),
+    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
   },
 ];
 

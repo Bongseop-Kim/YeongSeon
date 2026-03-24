@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { logGeneration } from "../_shared/log-generation.ts";
+import type { AiGenerationLogInsert } from "../_shared/log-generation.ts";
 import {
   buildGeminiImagePrompt,
   buildImageEditPrompt,
@@ -435,11 +436,49 @@ Deno.serve(async (req) => {
   let textLatencyMs: number | null = null;
   let imageLatencyMs: number | null = null;
   let refundAmount = 0;
+  let chargedTokens = 0;
+  const conversationTurns = filterValidConversationTurns(
+    payload.conversationHistory,
+  );
+  let requestType: "text_only" | "text_and_image" | null = null;
+  let textResult: Awaited<ReturnType<typeof requestGeminiText>> | null = null;
+
+  const emitGenerationLog = async (
+    overrides: Partial<AiGenerationLogInsert> = {},
+  ) => {
+    await logGeneration(adminClient, {
+      work_id: workId,
+      user_id: user.id,
+      ai_model: "gemini",
+      request_type: requestType,
+      user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
+      design_context: payload.designContext ?? null,
+      conversation_turn: conversationTurns.length,
+      has_ci_image: !!payload.ciImageBase64,
+      has_reference_image: !!payload.referenceImageBase64,
+      has_previous_image: !!payload.previousImageBase64,
+      ai_message: textResult?.aiMessage ?? null,
+      generate_image: textResult?.generateImage ?? null,
+      image_generated: overrides.image_generated ?? false,
+      detected_design: textResult?.detectedDesign ?? null,
+      tokens_charged: chargedTokens,
+      tokens_refunded: refundAmount,
+      text_latency_ms: textLatencyMs,
+      image_latency_ms:
+        requestType === "text_and_image" ? imageLatencyMs : null,
+      total_latency_ms: Date.now() - requestStartTime,
+      ...overrides,
+    });
+  };
 
   try {
     const textStartTime = Date.now();
-    const textResult = await requestGeminiText(payload, geminiApiKey);
-    textLatencyMs = Date.now() - textStartTime;
+    try {
+      textResult = await requestGeminiText(payload, geminiApiKey);
+    } finally {
+      textLatencyMs = Date.now() - textStartTime;
+    }
 
     // 채팅 모드에서 빈 designContext 필드를 텍스트 AI가 추출한 값으로 보완
     const detected = textResult.detectedDesign;
@@ -457,9 +496,7 @@ Deno.serve(async (req) => {
       },
     };
 
-    const requestType = textResult.generateImage
-      ? "text_and_image"
-      : "text_only";
+    requestType = textResult.generateImage ? "text_and_image" : "text_only";
 
     // 토큰 차감
     const { data: tokenResult, error: tokenError } = await adminClient.rpc(
@@ -474,6 +511,10 @@ Deno.serve(async (req) => {
 
     if (tokenError) {
       console.error("Token deduction error:", tokenError);
+      await emitGenerationLog({
+        error_type: "token_processing_failed",
+        error_message: tokenError.message,
+      });
       return jsonResponse(500, { error: "Token processing failed" });
     }
 
@@ -485,6 +526,10 @@ Deno.serve(async (req) => {
     };
 
     if (!tokenData.success) {
+      await emitGenerationLog({
+        error_type: tokenData.error ?? "insufficient_tokens",
+        error_message: tokenData.error ?? "Token deduction was rejected",
+      });
       return jsonResponse(403, {
         error: "insufficient_tokens",
         balance: tokenData.balance,
@@ -492,6 +537,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    chargedTokens = tokenData.cost;
     let imageUrl: string | null = null;
     let remainingTokens = tokenData.balance;
 
@@ -521,14 +567,14 @@ Deno.serve(async (req) => {
           isNaN(parsedTextCost) || parsedTextCost <= 0
             ? 0
             : Math.min(parsedTextCost, tokenData.cost);
-        refundAmount = Math.max(tokenData.cost - textCost, 0);
+        const requestedRefundAmount = Math.max(tokenData.cost - textCost, 0);
 
-        if (refundAmount > 0) {
+        if (requestedRefundAmount > 0) {
           const { error: refundError } = await adminClient.rpc(
             "refund_design_tokens",
             {
               p_user_id: user.id,
-              p_amount: refundAmount,
+              p_amount: requestedRefundAmount,
               p_ai_model: "gemini",
               p_request_type: requestType,
               p_work_id: workId,
@@ -537,35 +583,15 @@ Deno.serve(async (req) => {
           if (refundError) {
             console.error("Token refund failed:", refundError);
           } else {
-            remainingTokens = tokenData.balance + refundAmount;
+            refundAmount = requestedRefundAmount;
+            remainingTokens = tokenData.balance + requestedRefundAmount;
           }
         }
       }
     }
 
-    await logGeneration(adminClient, {
-      work_id: workId,
-      user_id: user.id,
-      ai_model: "gemini",
-      request_type: requestType,
-      user_message: payload.userMessage,
-      prompt_length: payload.userMessage.length,
-      design_context: payload.designContext ?? null,
-      conversation_turn: filterValidConversationTurns(
-        payload.conversationHistory,
-      ).length,
-      has_ci_image: !!payload.ciImageBase64,
-      has_reference_image: !!payload.referenceImageBase64,
-      has_previous_image: !!payload.previousImageBase64,
-      ai_message: textResult.aiMessage,
-      generate_image: textResult.generateImage,
+    await emitGenerationLog({
       image_generated: imageUrl !== null,
-      detected_design: textResult.detectedDesign,
-      tokens_charged: tokenData.cost,
-      tokens_refunded: refundAmount,
-      text_latency_ms: textLatencyMs,
-      image_latency_ms: textResult.generateImage ? imageLatencyMs : null,
-      total_latency_ms: Date.now() - requestStartTime,
     });
 
     return jsonResponse(200, {
@@ -575,23 +601,8 @@ Deno.serve(async (req) => {
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });
   } catch (error) {
-    await logGeneration(adminClient, {
-      work_id: workId,
-      user_id: user.id,
-      ai_model: "gemini",
-      request_type: null,
-      user_message: payload?.userMessage ?? "",
-      prompt_length: payload?.userMessage?.length ?? 0,
-      design_context: payload?.designContext ?? null,
-      conversation_turn: 0,
-      has_ci_image: !!payload?.ciImageBase64,
-      has_reference_image: !!payload?.referenceImageBase64,
-      has_previous_image: !!payload?.previousImageBase64,
+    await emitGenerationLog({
       image_generated: false,
-      tokens_charged: 0,
-      tokens_refunded: 0,
-      text_latency_ms: textLatencyMs,
-      total_latency_ms: Date.now() - requestStartTime,
       error_type: "generation_failed",
       error_message: error instanceof Error ? error.message : "Unknown error",
     });

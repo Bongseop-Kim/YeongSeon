@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { toRestoredDesignSessionState } from "@/features/design/api/design-session-mapper";
 import { useDesignSessionMessagesQuery } from "@/features/design/api/design-session-query";
@@ -26,10 +26,15 @@ export function useSessionRestore(
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+  const onRestoredRef = useRef(onRestored);
 
   const { data: sessionMessages } = useDesignSessionMessagesQuery(
     pendingSessionId ?? "",
   );
+
+  useEffect(() => {
+    onRestoredRef.current = onRestored;
+  }, [onRestored]);
 
   useEffect(() => {
     if (!pendingSessionId || !sessionMessages) {
@@ -42,8 +47,8 @@ export function useSessionRestore(
     );
 
     setPendingSessionId(null);
-    onRestored?.();
-  }, [onRestored, pendingSessionId, restoreSessionState, sessionMessages]);
+    onRestoredRef.current?.();
+  }, [pendingSessionId, restoreSessionState, sessionMessages]);
 
   const openHistory = () => {
     setIsHistoryOpen(true);

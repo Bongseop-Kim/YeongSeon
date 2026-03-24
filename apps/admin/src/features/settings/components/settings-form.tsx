@@ -9,6 +9,7 @@ import {
 } from "antd";
 import { COURIER_COMPANY_NAMES } from "@yeongseon/shared/constants/courier-companies";
 
+import { DEFAULT_DESIGN_TOKEN_INITIAL_GRANT } from "@/features/settings/api/settings-mapper";
 import {
   useDefaultCourierForm,
   useDesignTokenInitialGrantForm,
@@ -59,7 +60,7 @@ export function SettingsForm() {
     isSaving: isTokenGrantSaving,
   } = useDesignTokenInitialGrantForm();
 
-  if (isLoading || isTokenGrantLoading) {
+  if (isLoading) {
     return (
       <Card>
         <Spin />
@@ -72,15 +73,6 @@ export function SettingsForm() {
       <SettingsErrorCard
         errorMessage={error?.message ?? "알 수 없는 오류"}
         onRetry={() => void refetch()}
-      />
-    );
-  }
-
-  if (isTokenGrantError) {
-    return (
-      <SettingsErrorCard
-        errorMessage={tokenGrantError?.message ?? "알 수 없는 오류"}
-        onRetry={() => void refetchTokenGrant()}
       />
     );
   }
@@ -116,23 +108,34 @@ export function SettingsForm() {
       <Title level={5} style={SECTION_TITLE_STYLE}>
         신규 가입 토큰 지급량
       </Title>
-      <Space>
-        <InputNumber
-          value={amount}
-          min={1}
-          step={1}
-          precision={0}
-          onChange={(value) => setAmount(value ?? 30)}
+      {isTokenGrantLoading ? (
+        <Spin />
+      ) : isTokenGrantError ? (
+        <SettingsErrorCard
+          errorMessage={tokenGrantError?.message ?? "알 수 없는 오류"}
+          onRetry={() => void refetchTokenGrant()}
         />
-        <Button
-          type="primary"
-          onClick={saveTokenGrant}
-          loading={isTokenGrantSaving}
-          disabled={isTokenGrantSaving}
-        >
-          저장
-        </Button>
-      </Space>
+      ) : (
+        <Space>
+          <InputNumber
+            value={amount}
+            min={1}
+            step={1}
+            precision={0}
+            onChange={(value) =>
+              setAmount(value ?? DEFAULT_DESIGN_TOKEN_INITIAL_GRANT)
+            }
+          />
+          <Button
+            type="primary"
+            onClick={saveTokenGrant}
+            loading={isTokenGrantSaving}
+            disabled={isTokenGrantSaving}
+          >
+            저장
+          </Button>
+        </Space>
+      )}
     </Card>
   );
 }

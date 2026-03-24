@@ -55,23 +55,33 @@ export function MessageBubble({
       >
         {message.content}
       </div>
-      {!isUser && message.imageUrl && isMobile ? (
-        <button
-          type="button"
-          aria-label="넥타이 프리뷰 확대"
-          className="cursor-pointer"
-          onClick={() => {
-            if (message.imageUrl) onTiePreviewClick?.(message.imageUrl);
-          }}
-        >
+      {!isUser &&
+        message.imageUrl &&
+        isMobile &&
+        (onTiePreviewClick ? (
+          <button
+            type="button"
+            aria-label="넥타이 프리뷰 확대"
+            className="cursor-pointer"
+            onClick={() => {
+              if (message.imageUrl) onTiePreviewClick(message.imageUrl);
+            }}
+          >
+            <TieMask
+              imageUrl={message.imageUrl}
+              width={128}
+              height={244}
+              shadowClassName="top-[-22px]"
+            />
+          </button>
+        ) : (
           <TieMask
             imageUrl={message.imageUrl}
             width={128}
             height={244}
             shadowClassName="top-[-22px]"
           />
-        </button>
-      ) : null}
+        ))}
       {!isUser && message.imageUrl && !isMobile && onImageIndicatorClick ? (
         <button
           type="button"

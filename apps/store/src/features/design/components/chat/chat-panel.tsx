@@ -100,12 +100,12 @@ export function ChatPanel({
           />
         )}
       </div>
-      {selectedImageUrl ? (
+      {selectedImageUrl && (
         <TiePreviewModal
           imageUrl={selectedImageUrl}
           onClose={() => setSelectedImageUrl(null)}
         />
-      ) : null}
+      )}
       <div className="shrink-0 border-t p-2">
         <ChatInput
           onSend={sendMessage}

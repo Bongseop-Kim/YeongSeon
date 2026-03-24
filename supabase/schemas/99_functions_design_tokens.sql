@@ -23,7 +23,13 @@ $$;
 
 -- ── use_design_tokens ─────────────────────────────────────────
 -- Deducts tokens for a design generation request.
--- SECURITY DEFINER 유지 사유: advisory lock + design_tokens INSERT는 RLS로 허용되지 않음
+-- SECURITY DEFINER 유지 사유:
+-- design_tokens는 INSERT RLS를 직접 열지 않고 RPC 전용 쓰기 진입점으로만 관리한다.
+-- 따라서 advisory lock 이후 차감 ledger INSERT를 수행하려면 함수 owner 권한이 필요하다.
+-- 다만 호출자 권한 상승을 그대로 신뢰하지 않고, service_role이 아닌 경우 auth.uid() = p_user_id를
+-- 함수 내부에서 다시 검증해 소유권을 강제한다. owner 역할은 최소 권한 원칙에 따라 이 함수가
+-- 필요한 테이블에만 쓰기 가능해야 하며, 차감/환불 내역은 design_tokens 원장으로 모두 감사 가능하다.
+-- SET search_path TO 'public'는 SECURITY DEFINER 환경에서 search_path 오염을 막기 위한 고정 설정이다.
 -- service_role(Edge Function)에서 호출 시 소유권 검증 면제
 -- 차감 순서: 유료 먼저, 부족분은 보너스에서
 -- Returns: { success, cost, balance } or { success: false, error: '...', balance, cost }
@@ -119,6 +125,20 @@ BEGIN
   WHERE user_id = p_user_id;
 
   v_total_bal := v_paid_bal + v_bonus_bal;
+
+  -- work_id 기반 멱등성: 이미 같은 차감 ledger가 있으면 현재 잔액 기준으로 성공 처리
+  IF p_work_id IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM public.design_tokens
+    WHERE user_id = p_user_id
+      AND work_id IN (p_work_id || '_use_paid', p_work_id || '_use_bonus')
+  ) THEN
+    RETURN jsonb_build_object(
+      'success', true,
+      'cost', 0,
+      'balance', v_total_bal
+    );
+  END IF;
 
   -- 잔액 부족 검사
   IF v_total_bal < v_cost THEN

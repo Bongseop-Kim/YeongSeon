@@ -10,6 +10,7 @@ import {
 import type { AdminSettingRowDTO } from "@yeongseon/shared";
 
 import {
+  DEFAULT_DESIGN_TOKEN_INITIAL_GRANT,
   toDefaultCourierSetting,
   toDesignTokenInitialGrantSetting,
 } from "@/features/settings/api/settings-mapper";
@@ -19,6 +20,14 @@ const DESIGN_TOKEN_INITIAL_GRANT_KEY = "design_token_initial_grant";
 const SETTING_RESOURCE = "admin_settings";
 const SETTING_ID_META = { idColumnName: "key" } as const;
 const SETTING_SAVE_SUCCESS_MESSAGE = "설정이 저장되었습니다.";
+
+function sanitizeDesignTokenInitialGrant(value: number): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_DESIGN_TOKEN_INITIAL_GRANT;
+  }
+
+  return Math.max(1, Math.round(value));
+}
 
 interface AdminSettingFormOptions<TValue> {
   key: string;
@@ -130,14 +139,21 @@ export function useDefaultCourierForm() {
 export function useDesignTokenInitialGrantForm() {
   const form = useAdminSettingForm({
     key: DESIGN_TOKEN_INITIAL_GRANT_KEY,
-    initialValue: 30,
+    initialValue: DEFAULT_DESIGN_TOKEN_INITIAL_GRANT,
     fromDTO: (dto) => toDesignTokenInitialGrantSetting(dto).amount,
-    toDTOValue: (amount) => String(amount),
+    toDTOValue: (amount) =>
+      String(sanitizeDesignTokenInitialGrant(Number(amount))),
   });
 
   return {
     amount: form.value,
-    setAmount: form.setValue,
+    setAmount: (value: SetStateAction<number>) => {
+      form.setValue((currentValue) => {
+        const nextValue =
+          typeof value === "function" ? value(currentValue) : value;
+        return sanitizeDesignTokenInitialGrant(nextValue);
+      });
+    },
     save: form.save,
     isLoading: form.isLoading,
     isError: form.isError,

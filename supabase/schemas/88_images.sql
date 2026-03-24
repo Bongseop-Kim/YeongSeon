@@ -105,6 +105,16 @@ BEGIN
     ) THEN
       RAISE EXCEPTION 'You do not own %:%', p_entity_type, p_entity_id;
     END IF;
+  ELSIF p_entity_type = 'design_message' THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM public.design_chat_messages m
+      JOIN public.design_chat_sessions s ON s.id = m.session_id
+      WHERE m.id::text = p_entity_id
+        AND s.user_id = v_user_id
+    ) THEN
+      RAISE EXCEPTION 'You do not own %:%', p_entity_type, p_entity_id;
+    END IF;
   ELSE
     RAISE EXCEPTION 'Unsupported entity_type: %', p_entity_type;
   END IF;

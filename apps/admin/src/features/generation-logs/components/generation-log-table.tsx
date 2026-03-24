@@ -10,6 +10,8 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
+import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/api/generation-logs-query";
+import { formatNullableLocaleNumber } from "@/utils/format-number";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
 
 const { Text } = Typography;
@@ -123,7 +125,7 @@ export function GenerationLogTable({
       key: "totalLatencyMs",
       width: 90,
       align: "right",
-      render: (v: number | null) => (v !== null ? v.toLocaleString() : "-"),
+      render: (v: number | null) => formatNullableLocaleNumber(v),
     },
     {
       title: "상태",
@@ -163,7 +165,7 @@ export function GenerationLogTable({
         })}
         pagination={{
           current: page,
-          pageSize: 50,
+          pageSize: GENERATION_LOG_PAGE_SIZE,
           onChange: onPageChange,
           showSizeChanger: false,
           simple: true,
