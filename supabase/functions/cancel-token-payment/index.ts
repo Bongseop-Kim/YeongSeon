@@ -1,19 +1,11 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { createJsonResponse } from "../_shared/response.ts";
 
 type CancelTokenPaymentRequest = {
   refundRequestId: string;
 };
-
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
 
 const maskPaymentKey = (key: string): string => {
   if (key.length <= 8) return "****";
@@ -48,6 +40,9 @@ const isCancelRequest = (
 };
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -84,14 +79,11 @@ Deno.serve(async (req) => {
     return jsonResponse(401, { error: "Unauthorized" });
   }
 
-  // is_admin 확인
-  const { data: profileData, error: profileError } = await userClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  // is_admin 확인 (admin + manager 역할 모두 허용)
+  const { data: isAdmin, error: adminCheckError } =
+    await userClient.rpc("is_admin");
 
-  if (profileError || !profileData || profileData.role !== "admin") {
+  if (adminCheckError || isAdmin !== true) {
     return jsonResponse(403, { error: "Forbidden: admin only" });
   }
 
@@ -292,7 +284,10 @@ Deno.serve(async (req) => {
     });
     return jsonResponse(tossResponse.status, {
       error: "Toss payment cancellation rejected",
-      details: parsedToss,
+      ...(typeof parsedToss.code === "string" && { code: parsedToss.code }),
+      ...(typeof parsedToss.message === "string" && {
+        message: parsedToss.message,
+      }),
     });
   }
 

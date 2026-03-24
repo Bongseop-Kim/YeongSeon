@@ -74,4 +74,3 @@ CREATE POLICY "Admins can update profiles"
 -- Privilege hardening
 REVOKE UPDATE ON TABLE public.profiles FROM authenticated;
 GRANT UPDATE (name, phone, birth) ON TABLE public.profiles TO authenticated;
-GRANT UPDATE (role, is_active) ON TABLE public.profiles TO authenticated;

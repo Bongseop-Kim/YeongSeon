@@ -1,7 +1,13 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { createJsonResponse } from "../_shared/response.ts";
+import {
+  filterValidConversationTurns,
+  type ConversationTurn,
+  type DetectedDesign,
+} from "../_shared/conversation.ts";
 import { logGeneration } from "../_shared/log-generation.ts";
 import type { AiGenerationLogInsert } from "../_shared/log-generation.ts";
 import {
@@ -11,11 +17,6 @@ import {
   parseJsonBlock,
   SYSTEM_PROMPT,
 } from "./prompts.ts";
-
-type ConversationTurn = {
-  role: "user" | "ai";
-  content: string;
-};
 
 export type GenerateDesignRequest = {
   userMessage: string;
@@ -63,28 +64,6 @@ type GenerateDesignResult = {
   }>;
   imageUrl: string | null;
 };
-
-const MAX_TURN_CONTENT_LENGTH = 10_000;
-
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
-
-const filterValidConversationTurns = (
-  conversationHistory?: ConversationTurn[],
-) =>
-  (conversationHistory ?? []).filter(
-    (turn): turn is ConversationTurn =>
-      (turn.role === "user" || turn.role === "ai") &&
-      typeof turn.content === "string" &&
-      turn.content.trim().length > 0 &&
-      turn.content.length <= MAX_TURN_CONTENT_LENGTH,
-  );
 
 // ─── API requests ────────────────────────────────────────────────────────────
 
@@ -172,7 +151,7 @@ const requestGeminiText = async (
   const rawDetected = parsed.detectedDesign as
     | Record<string, unknown>
     | undefined;
-  const detectedDesign = rawDetected
+  const detectedDesign: DetectedDesign | null = rawDetected
     ? {
         pattern:
           typeof rawDetected.pattern === "string" ? rawDetected.pattern : null,
@@ -353,6 +332,9 @@ const createAdminSupabaseClient = () => {
 // ─── Handler ─────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

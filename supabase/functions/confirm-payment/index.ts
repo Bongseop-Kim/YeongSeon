@@ -1,6 +1,10 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import {
+  createJsonResponse,
+  type JsonResponseFn,
+} from "../_shared/response.ts";
 
 type ConfirmPaymentRequest = {
   paymentKey: string;
@@ -13,16 +17,8 @@ type TossConfirmResponse = {
   [key: string]: unknown;
 };
 
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
-
 const buildTokenPurchaseResponse = (
+  jsonResponse: JsonResponseFn,
   paymentKey: string,
   paymentGroupId: string,
   orders: Array<{ orderId: string; orderType: string }>,
@@ -39,13 +35,14 @@ const buildTokenPurchaseResponse = (
   });
 
 const fetchTokenAmountAndBuildResponse = async (
+  jsonResponse: JsonResponseFn,
   adminClient: ReturnType<typeof createClient>,
   orderId: string,
   paymentKey: string,
   paymentGroupId: string,
   orders: Array<{ orderId: string; orderType: string }>,
 ): Promise<Response> => {
-  const { data: tokenItem, error: tokenItemError } = await adminClient
+  const { data: rawTokenItem, error: tokenItemError } = await adminClient
     .from("order_items")
     .select("item_data")
     .eq("order_id", orderId)
@@ -58,6 +55,7 @@ const fetchTokenAmountAndBuildResponse = async (
     });
     return jsonResponse(500, { error: "Failed to load token item" });
   }
+  const tokenItem = rawTokenItem as { item_data?: unknown } | null;
   const tokenAmount =
     (tokenItem?.item_data as { token_amount?: number } | null)?.token_amount ??
     null;
@@ -65,6 +63,7 @@ const fetchTokenAmountAndBuildResponse = async (
     return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
   }
   return buildTokenPurchaseResponse(
+    jsonResponse,
     paymentKey,
     paymentGroupId,
     orders,
@@ -128,6 +127,9 @@ const isConfirmPaymentRequest = (
 };
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -255,6 +257,7 @@ Deno.serve(async (req) => {
       typedOrders.length === 1 && typedOrders[0].order_type === "token";
     if (isTokenOrder) {
       return fetchTokenAmountAndBuildResponse(
+        jsonResponse,
         adminClient,
         typedOrders[0].id,
         payload.paymentKey,
@@ -342,6 +345,7 @@ Deno.serve(async (req) => {
       typedOrders.length === 1 && typedOrders[0].order_type === "token";
     if (isTokenOrderViaLock) {
       return fetchTokenAmountAndBuildResponse(
+        jsonResponse,
         adminClient,
         typedOrders[0].id,
         payload.paymentKey,
@@ -403,7 +407,7 @@ Deno.serve(async (req) => {
           p_payment_group_id: payload.orderId,
           p_user_id: user.id,
         })
-        .catch((unlockErr: unknown) => {
+        .then(undefined, (unlockErr: unknown) => {
           errorLogger("order_unlock_failed", unlockErr, {
             paymentGroupId: payload.orderId,
             userId: user.id,
@@ -412,7 +416,8 @@ Deno.serve(async (req) => {
 
       return jsonResponse(tossResponse.status, {
         error: "Payment confirmation rejected",
-        details: parsed,
+        ...(typeof parsed.code === "string" && { code: parsed.code }),
+        ...(typeof parsed.message === "string" && { message: parsed.message }),
       });
     }
 
@@ -428,7 +433,7 @@ Deno.serve(async (req) => {
         p_payment_group_id: payload.orderId,
         p_user_id: user.id,
       })
-      .catch((unlockErr: unknown) => {
+      .then(undefined, (unlockErr: unknown) => {
         errorLogger("order_unlock_failed", unlockErr, {
           paymentGroupId: payload.orderId,
           userId: user.id,
@@ -511,6 +516,7 @@ Deno.serve(async (req) => {
       return jsonResponse(500, { error: "Missing or invalid tokenAmount" });
     }
     return buildTokenPurchaseResponse(
+      jsonResponse,
       payload.paymentKey,
       payload.orderId,
       updatedOrders,

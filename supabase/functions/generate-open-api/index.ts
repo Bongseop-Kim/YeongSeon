@@ -1,7 +1,13 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { createJsonResponse } from "../_shared/response.ts";
+import {
+  filterValidConversationTurns,
+  type ConversationTurn,
+  type DetectedDesign,
+} from "../_shared/conversation.ts";
 import {
   logGeneration,
   type AiGenerationLogInsert,
@@ -13,11 +19,6 @@ import {
   parseJsonBlock,
   SYSTEM_PROMPT,
 } from "./prompts.ts";
-
-type ConversationTurn = {
-  role: "user" | "ai";
-  content: string;
-};
 
 export type GenerateDesignRequest = {
   userMessage: string;
@@ -47,13 +48,6 @@ type OpenAIImageResponse = {
   data?: Array<{ b64_json?: string }>;
 };
 
-type DetectedDesign = {
-  pattern: string | null;
-  colors: string[];
-  ciPlacement: string | null;
-  scale: "large" | "medium" | "small" | null;
-};
-
 type GenerateDesignResult = {
   aiMessage: string;
   contextChips: Array<{
@@ -72,15 +66,6 @@ type UseDesignTokensResult = {
   cost: number;
 };
 
-const jsonResponse = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
-
 // ─── API requests ────────────────────────────────────────────────────────────
 
 const base64ToBlob = (base64: string, mimeType: string) => {
@@ -98,12 +83,11 @@ const requestOpenAIText = async (
   payload: GenerateDesignRequest,
   apiKey: string,
 ) => {
-  const historyMessages: Array<Record<string, unknown>> = (
-    payload.conversationHistory ?? []
-  ).map((turn) => ({
-    role: turn.role === "user" ? "user" : "assistant",
-    content: turn.content,
-  }));
+  const historyMessages: Array<Record<string, unknown>> =
+    filterValidConversationTurns(payload.conversationHistory).map((turn) => ({
+      role: turn.role === "user" ? "user" : "assistant",
+      content: turn.content,
+    }));
 
   const textParts: Array<Record<string, unknown>> = [
     { type: "text", text: buildTextPrompt(payload) },
@@ -443,6 +427,9 @@ const createAdminSupabaseClient = () => {
 // ─── Handler ─────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+  const jsonResponse = createJsonResponse(corsHeaders);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -498,6 +485,12 @@ Deno.serve(async (req) => {
 
   if ((payload.conversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
     return jsonResponse(400, { error: "conversationHistory too long" });
+  }
+  if (
+    (payload.conversationHistory?.length ?? 0) > 0 &&
+    filterValidConversationTurns(payload.conversationHistory).length === 0
+  ) {
+    return jsonResponse(400, { error: "no valid conversationHistory turns" });
   }
   if (payload.userMessage.length > MAX_MESSAGE_LENGTH) {
     return jsonResponse(413, { error: "userMessage too long" });

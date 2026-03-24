@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS public.shipping_addresses (
     ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE INDEX idx_shipping_addresses_user_id
+  ON public.shipping_addresses USING btree (user_id);
+
 -- RLS
 ALTER TABLE public.shipping_addresses ENABLE ROW LEVEL SECURITY;
 

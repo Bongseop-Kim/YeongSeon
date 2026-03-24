@@ -5,6 +5,7 @@
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS trigger
 LANGUAGE plpgsql
+SET search_path TO 'public'
 AS $$
 BEGIN
   NEW.updated_at = now();
@@ -15,6 +16,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.update_cart_items_updated_at()
 RETURNS trigger
 LANGUAGE plpgsql
+SET search_path TO 'public'
 AS $$
 BEGIN
   NEW.updated_at = NOW();
