@@ -152,7 +152,7 @@ const TokenPaymentPage = () => {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-zinc-500">플랜</span>
+                      <span className="text-zinc-500">패키지</span>
                       <span className="font-medium text-zinc-900">{label}</span>
                     </div>
                     <div className="flex justify-between text-sm">
