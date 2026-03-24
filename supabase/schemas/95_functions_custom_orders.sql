@@ -277,10 +277,10 @@ begin
     for v_elem in select jsonb_array_elements(p_reference_images) loop
       if jsonb_typeof(v_elem) <> 'object'
          or not (v_elem ? 'url')
-         or not (v_elem ? 'file_id')
          or jsonb_typeof(v_elem->'url') <> 'string'
-         or jsonb_typeof(v_elem->'file_id') not in ('string', 'null') then
-        raise exception 'p_reference_images[%] must be an object with string "url" and "file_id" keys, and "file_id" must be a string or null', v_idx;
+         or btrim(coalesce(v_elem->>'url', '')) = ''
+         or ((v_elem ? 'file_id') and jsonb_typeof(v_elem->'file_id') not in ('string', 'null')) then
+        raise exception 'p_reference_images[%] must be an object with a non-empty string "url" and optional string/null "file_id"', v_idx;
       end if;
       v_idx := v_idx + 1;
     end loop;

@@ -82,7 +82,8 @@ begin
     elsif v_order_type = 'repair' then
       if not (
         (v_current_status = '결제중' and p_new_status = '대기중')
-        or (v_current_status = '접수' and p_new_status = '대기중')
+        or (v_current_status = '발송중' and p_new_status = '발송대기')
+        or (v_current_status = '접수' and p_new_status = '발송중')
         or (v_current_status = '수선중' and p_new_status = '접수')
         or (v_current_status = '수선완료' and p_new_status = '수선중')
       ) then
@@ -136,12 +137,14 @@ begin
     elsif v_order_type = 'repair' then
       if not (
         (v_current_status = '대기중'   and p_new_status = '접수')
-        or (v_current_status = '접수'     and p_new_status = '수선중')
+        or (v_current_status = '발송대기' and p_new_status = '발송중')
+        or (v_current_status = '발송중' and p_new_status = '접수')
+        or (v_current_status = '접수' and p_new_status = '수선중')
         or (v_current_status = '수선중'   and p_new_status = '수선완료')
         or (v_current_status = '수선완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '발송대기', '발송중'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;

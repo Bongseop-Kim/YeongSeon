@@ -1,5 +1,8 @@
 const { forbidden } = require("../../.dependency-cruiser.base.cjs");
 
+const normalizeToArray = (value) =>
+  Array.isArray(value) ? value : value ? [value] : [];
+
 const adminForbidden = forbidden.map((rule) => {
   if (rule.name !== "no-cross-feature-imports") return rule;
   return {
@@ -7,11 +10,7 @@ const adminForbidden = forbidden.map((rule) => {
     from: {
       ...rule.from,
       pathNot: [
-        ...(Array.isArray(rule.from.pathNot)
-          ? rule.from.pathNot
-          : rule.from.pathNot
-            ? [rule.from.pathNot]
-            : []),
+        ...normalizeToArray(rule.from.pathNot),
         "^src/features/(orders|dashboard)/",
       ],
     },

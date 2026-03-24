@@ -2,7 +2,6 @@
 -- confirm_payment_test.sql  –  confirm_payment_orders RPC 테스트
 -- 커버 범위:
 --   - token 주문 결제 확정 (상태 전이, 토큰 지급, 로그)
---   - custom 주문 결제 확정
 --   - 에러: null user_id, null payment_key, 없는 그룹, 소유자 불일치, 상태 불일치
 -- =============================================================
 

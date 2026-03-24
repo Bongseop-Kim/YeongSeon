@@ -46,7 +46,7 @@ $$;
 CREATE OR REPLACE FUNCTION test_helpers.clear_auth()
 RETURNS void LANGUAGE plpgsql AS $$
 BEGIN
-  PERFORM set_config('request.jwt.claims', '', true);
+  PERFORM set_config('request.jwt.claims', '{}', true);
 END;
 $$;
 
@@ -209,7 +209,7 @@ $$;
 
 -- ── admin_settings 헬퍼 ────────────────────────────────────
 
--- ensure_admin_setting: admin_settings에 테스트용 설정 삽입 (없으면 생성, 있으면 값 유지)
+-- ensure_admin_setting: admin_settings에 테스트용 설정 삽입 (없으면 생성, 있으면 값 갱신)
 CREATE OR REPLACE FUNCTION test_helpers.ensure_admin_setting(
   p_key   text,
   p_value text

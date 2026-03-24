@@ -44,7 +44,7 @@ SELECT is(
   '관리자 토큰 지급 시 success=true 반환'
 );
 
--- ── 테스트 2: 지급 후 new_balance = 100 ────────────────────
+-- ── 테스트 2: 두 번째 지급 후 new_balance = 200 ─────────────
 SELECT is(
   (SELECT (public.manage_design_tokens_admin(
     'cc000001-0000-0000-0000-000000000002'::uuid,

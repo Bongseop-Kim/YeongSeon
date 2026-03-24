@@ -54,6 +54,7 @@ declare
   v_post_status text;
   v_updated_orders jsonb := '[]'::jsonb;
   v_count int := 0;
+  v_caller_role text;
   v_masked_key text;
   v_token_amount integer;
   v_plan_key text;
@@ -75,9 +76,14 @@ begin
     raise exception 'payment_key is required';
   end if;
 
-  -- service role 경유(Edge Function) 시 auth.uid() = null → skip
-  -- 직접 RPC 호출 시 호출자 신원 검증 (IS DISTINCT FROM: NULL 안전 비교)
-  if auth.uid() is not null and p_user_id is distinct from auth.uid() then
+  v_caller_role := auth.role();
+
+  -- service_role만 auth.uid() = null 상태로 우회 가능
+  if auth.uid() is null then
+    if v_caller_role is distinct from 'service_role' then
+      raise exception 'Forbidden';
+    end if;
+  elsif p_user_id is distinct from auth.uid() then
     raise exception 'Forbidden';
   end if;
 
