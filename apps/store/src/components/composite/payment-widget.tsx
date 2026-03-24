@@ -117,7 +117,6 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
       amountRef.current = amount;
     }, [amount]);
 
-    // 금액 변경 시 업데이트
     useEffect(() => {
       if (widgetsRef.current && ready) {
         widgetsRef.current.setAmount({ currency: "KRW", value: amount });

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { OrderItemCard } from "@/features/order/components/order-item-card";
+import { OrderItemCard } from "@/components/composite/order-item-card";
 import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { Form } from "@/components/ui/form";

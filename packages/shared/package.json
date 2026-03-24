@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
+    "depcruise": "depcruise src --config .dependency-cruiser.cjs",
     "test": "vitest",
     "test:ci": "vitest run --coverage"
   },

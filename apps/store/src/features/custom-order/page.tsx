@@ -29,7 +29,7 @@ import { useCustomOrderSubmit } from "@/features/custom-order/hooks/useCustomOrd
 import { Card, CardContent } from "@/components/ui/card";
 import PaymentWidget, {
   type PaymentWidgetRef,
-} from "@/features/payment/components/payment-widget";
+} from "@/components/composite/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { PageLayout } from "@/components/layout/page-layout";
 import { usePricingConfig } from "@/features/custom-order/api/pricing-query";

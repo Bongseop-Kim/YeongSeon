@@ -8,15 +8,12 @@ import { Empty } from "@/components/composite/empty";
 import { ClaimStatusBadge } from "@/components/composite/status-badge";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import { OrderItemCard } from "@/features/order/components/order-item-card";
+import { OrderItemCard } from "@/components/composite/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { buildClaimDetailRoute } from "@/constants/ROUTES";
 import { useClaims } from "@/features/claim/api/claims-query";
-import {
-  toDateString,
-  type ListFilters,
-} from "@/features/order/utils/list-filters";
+import { toDateString, type ListFilters } from "@/lib/list-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useSearchTabs } from "@/hooks/use-search-tabs";
 import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";

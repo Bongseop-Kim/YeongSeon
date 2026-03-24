@@ -10,10 +10,7 @@ import {
   toClaimItemView,
   toCreateClaimInputDTO,
 } from "@/features/claim/api/claims-mapper";
-import {
-  normalizeKeyword,
-  type ListFilters,
-} from "@/features/order/utils/list-filters";
+import { normalizeKeyword, type ListFilters } from "@/lib/list-filters";
 
 const CLAIM_LIST_VIEW = "claim_list_view";
 

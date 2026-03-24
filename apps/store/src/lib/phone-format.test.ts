@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  extractPhoneNumber,
-  formatPhoneNumber,
-} from "@/features/shipping/utils/phone-format";
+import { extractPhoneNumber, formatPhoneNumber } from "@/lib/phone-format";
 
 describe("phone-format", () => {
   it("숫자만 추출한다", () => {

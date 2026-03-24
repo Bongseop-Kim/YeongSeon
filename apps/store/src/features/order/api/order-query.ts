@@ -4,7 +4,7 @@ import {
   getOrder,
   confirmPurchase,
 } from "@/features/order/api/order-api";
-import type { ListFilters } from "@/features/order/utils/list-filters";
+import type { ListFilters } from "@/lib/list-filters";
 import { useRequiredUser } from "@/hooks/use-required-user";
 
 /**

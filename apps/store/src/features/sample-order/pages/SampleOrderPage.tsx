@@ -22,11 +22,11 @@ import { hasStringCode } from "@/lib/type-guard";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 import { ImageUpload } from "@/features/custom-order/components/image-upload";
-import { formatPhoneNumber } from "@/features/shipping/utils/phone-format";
+import { formatPhoneNumber } from "@/lib/phone-format";
 import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
 import PaymentWidget, {
   type PaymentWidgetRef,
-} from "@/features/payment/components/payment-widget";
+} from "@/components/composite/payment-widget";
 import { useCreateSampleOrder } from "@/features/sample-order/api/sample-order-query";
 import type { CreateSampleOrderFormInput } from "@/features/sample-order/api/sample-order-mapper";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";

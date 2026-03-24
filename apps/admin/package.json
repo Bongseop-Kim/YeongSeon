@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ci": "vitest run --coverage",
-    "type-check": "tsc -b --noEmit"
+    "type-check": "tsc -b --noEmit",
+    "depcruise": "depcruise src --config .dependency-cruiser.cjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

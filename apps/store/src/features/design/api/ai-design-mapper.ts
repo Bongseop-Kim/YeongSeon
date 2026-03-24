@@ -4,7 +4,7 @@ import type {
   FabricMethod,
   PatternOption,
 } from "@/features/design/types/design-context";
-import type { AiDesignRequest } from "@/features/design/api/ai-design-api";
+import type { AiDesignRequest } from "@/features/design/types/ai-design-request";
 import type { DesignTokenHistoryItem } from "@/features/design/types/token-history";
 
 const DEFAULT_TAGS = ["클래식", "프리미엄", "넥타이"];

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "type-check": "tsc -b --noEmit",
-    "test:ci": "vitest run --coverage"
+    "test:ci": "vitest run --coverage",
+    "depcruise": "depcruise src --config .dependency-cruiser.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

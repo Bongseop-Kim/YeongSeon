@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import type { RefundableTokenOrder } from "@/features/my-page/token-history/api/token-refund-api";
-import { TokenRefundAction } from "@/features/order/components/token-refund-action";
+import { TokenRefundAction } from "@/components/composite/token-refund-action";
 
 const baseOrder: RefundableTokenOrder = {
   orderId: "order-1",

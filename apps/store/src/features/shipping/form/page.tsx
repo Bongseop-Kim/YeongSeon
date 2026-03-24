@@ -10,7 +10,7 @@ import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectField } from "@/components/composite/select-field";
-import { DELIVERY_REQUEST_OPTIONS } from "@/features/shipping/constants/DELIVERY_REQUEST_OPTIONS";
+import { DELIVERY_REQUEST_OPTIONS } from "@/constants/DELIVERY_REQUEST_OPTIONS";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import { PostcodeSearch } from "@/features/shipping/components/PostcodeSearch";
@@ -22,10 +22,7 @@ import {
   useUpdateShippingAddress,
   useShippingAddresses,
 } from "@/features/shipping/api/shipping-query";
-import {
-  extractPhoneNumber,
-  formatPhoneNumber,
-} from "@/features/shipping/utils/phone-format";
+import { extractPhoneNumber, formatPhoneNumber } from "@/lib/phone-format";
 import { toast } from "@/lib/toast";
 import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
 import { usePopupChild } from "@/hooks/usePopup";

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { OrderItemCard } from "@/features/order/components/order-item-card";
+import { OrderItemCard } from "@/components/composite/order-item-card";
 import { ClaimStatusBadge } from "@/components/composite/status-badge";
 import { Empty } from "@/components/composite/empty";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
