@@ -108,10 +108,10 @@ SC-design-010,design,high,paid 토큰 수동 환불 신청,paid 토큰 미사용
 SC-design-011,design,high,동일 주문 수동 환불 중복 신청 시도,이미 pending 환불 요청이 있는 상태,동일 주문으로 다시 환불 신청을 한다,중복 신청 불가 안내가 표시된다,store /design,,,
 SC-design-012,design,high,관리자 수동 환불 요청 승인,admin에서 고객의 수동 환불 요청이 pending 상태인 상태,관리자가 환불을 승인한다,paid 토큰 미사용분이 환불 처리되고 고객 잔액에서 차감된다,admin 토큰 환불 관리 화면,,,
 SC-design-013,design,high,신규 가입 시 bonus 토큰 지급,신규 계정을 생성한 상태,store 디자인 생성 페이지(/design)에 진입한다,토큰 잔액이 30개(bonus)로 표시된다,store /design,,,
-SC-design-014,design,critical,동일 사용자 다중 탭 동시 생성 요청,"store /design 페이지를 2개 이상의 탭에서 열고 충분한 토큰(100개)이 있는 상태",탭1과 탭2에서 동시에(0.1초 이내) 생성 버튼을 클릭한다,"한 탭은 성공하고 다른 탭은 토큰 부족으로 실패한다. 최종 토큰 차감은 1회분만 된다",store /design,,,
+SC-design-014,design,critical,동일 사용자 다중 탭 동시 생성 요청,"store /design 페이지를 2개 이상의 탭에서 열고 잔액이 요청 1회 비용 이상 2회 비용 미만인 상태",탭1과 탭2에서 동시에(0.1초 이내) 생성 버튼을 클릭한다,"한 탭은 성공하고 다른 탭은 토큰 부족으로 실패한다. 최종 토큰 차감은 1회분만 된다",store /design,,,
 SC-design-015,design,critical,이미지 미생성 시 이미지 비용만 환불,store /design에서 text_and_image를 요청했으나 Gemini AI가 텍스트만 반환한 상태,생성 결과가 반환된다,이미지 비용만 환불되고 텍스트 비용은 그대로 차감 유지된다,store /design,,,수정됨: generate-google-api/index.ts에서 admin_settings 조회 실패 시 환불 생략으로 변경 (textCost=0 폴백 없음)
 SC-design-016,design,medium,토큰 부족 시 필요 수량 상세 안내,store /design에서 현재 토큰이 5개인 상태,20토큰이 필요한 생성 버튼을 클릭한다,"현재: 5토큰, 필요: 20토큰 상세 안내가 표시된다",store /design,,,
-SC-design-017,design,critical,토큰 결제 실패 후 주문 상태 복구,store 토큰 구매 페이지에서 결제를 시도한 상태,Toss 결제가 실패하여 /token-purchase/fail 페이지로 이동한다,토큰 잔액 변화가 없고 토큰 주문 상태가 대기중으로 복구된다,store /token-purchase/fail,,,"/token-purchase/fail 페이지 복구 동작 검증 (SC-design-002는 결제 실패 자체의 잔액 무변화 검증으로 구분)"
+SC-design-017,design,critical,토큰 결제 실패 후 주문 상태 복구,store 토큰 구매 페이지에서 결제를 시도한 상태,Toss 결제가 실패하여 /token-purchase/fail 페이지로 이동한다,토큰 잔액 변화가 없고 토큰 주문 상태가 대기중으로 복구된다,store /token-purchase/fail,,,"/token-purchase/fail 페이지는 결과 표시만 담당 — 실제 복구(unlock/상태 복원)는 confirm-payment Edge Function이 수행. SC-design-002는 결제 실패 자체의 잔액 무변화 검증으로 구분"
 SC-quote-001,quote-request,critical,견적 요청 제출,store 견적 요청 페이지에서 100개 이상 수량과 연락처를 입력한 상태,제출 버튼을 클릭한다,요청 상태로 견적 요청 목록에 표시된다,store 견적 요청 페이지,,,
 SC-quote-002,quote-request,critical,수량 100개 미만 제출 시도,store 견적 요청 페이지에서 수량을 99개로 입력한 상태,제출 버튼을 클릭한다,제출이 불가하고 오류 메시지가 표시된다,store 견적 요청 페이지,,,
 SC-quote-003,quote-request,critical,연락처 미입력 제출 시도,store 견적 요청 페이지에서 연락처 없이 다른 정보를 입력한 상태,제출 버튼을 클릭한다,제출이 불가하고 오류 메시지가 표시된다,store 견적 요청 페이지,,,
