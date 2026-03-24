@@ -176,7 +176,7 @@ last-verified: 2026-03-17
 
 **경로**: `store /design`
 **결과**: untested
-**이슈**: admin_settings 조회 실패 시 textCost=0으로 폴백되어 전액 환불되는 버그 위험
+**이슈**: ~~admin_settings 조회 실패 시 textCost=0으로 폴백되어 전액 환불되는 버그 위험~~ → 수정됨: `generate-google-api/index.ts`에서 admin_settings 조회 실패 시 환불을 생략하도록 변경 (textCost=0 폴백 없음, 자동 환불 없음)
 
 ---
 

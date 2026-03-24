@@ -125,6 +125,7 @@ CREATE OR REPLACE FUNCTION public.get_order_customer_actions(
 RETURNS text[]
 LANGUAGE plpgsql
 STABLE
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 declare

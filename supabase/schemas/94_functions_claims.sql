@@ -125,7 +125,7 @@ begin
     p_description,
     v_claim_quantity
   )
-  on conflict (order_item_id, type) where (status in ('접수', '처리중', '수거요청', '수거완료', '재발송'))
+  on conflict (order_item_id, type) where (status in ('접수', '처리중', '수거요청', '수거완료', '재발송', '완료'))
   do nothing
   returning id into v_claim_id;
 
