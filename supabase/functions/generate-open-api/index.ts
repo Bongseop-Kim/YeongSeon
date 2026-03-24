@@ -493,13 +493,14 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "conversationHistory must be an array" });
   }
 
+  if ((rawConversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
+    return jsonResponse(400, { error: "conversationHistory too long" });
+  }
+
   const conversationTurns = filterValidConversationTurns(
     rawConversationHistory,
   );
 
-  if ((rawConversationHistory?.length ?? 0) > MAX_HISTORY_TURNS) {
-    return jsonResponse(400, { error: "conversationHistory too long" });
-  }
   if (
     (rawConversationHistory?.length ?? 0) > 0 &&
     conversationTurns.length === 0

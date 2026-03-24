@@ -108,17 +108,18 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "Too many order items" });
   }
 
-  for (const item of payload.items) {
-    if (
-      item.reform_data !== null &&
-      !isJsonPayloadWithinLimit(item.reform_data, MAX_REFORM_SIZE_BYTES)
-    ) {
-      return jsonResponse(400, { error: "reform_data too large" });
-    }
-  }
-
   try {
     for (const item of payload.items) {
+      if (!item || typeof item !== "object") {
+        throw new Error("Invalid order item");
+      }
+      if (
+        "reform_data" in item &&
+        item.reform_data !== null &&
+        !isJsonPayloadWithinLimit(item.reform_data, MAX_REFORM_SIZE_BYTES)
+      ) {
+        return jsonResponse(400, { error: "reform_data too large" });
+      }
       validateItemShape(item);
     }
   } catch (error) {
