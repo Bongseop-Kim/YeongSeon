@@ -10,8 +10,8 @@ const adminForbidden = forbidden.map((rule) => {
         ...(Array.isArray(rule.from.pathNot)
           ? rule.from.pathNot
           : rule.from.pathNot
-          ? [rule.from.pathNot]
-          : []),
+            ? [rule.from.pathNot]
+            : []),
         "^src/features/(orders|dashboard)/",
       ],
     },
@@ -33,7 +33,8 @@ const adminAllowed = [
   {
     name: "no-cross-feature-admin-dashboard",
     severity: "error",
-    comment: "admin dashboard는 견적 목록 표시를 위해 quote-requests만 참조 허용",
+    comment:
+      "admin dashboard는 견적 목록 표시를 위해 quote-requests만 참조 허용",
     from: { path: "^src/features/dashboard/" },
     to: {
       path: "^src/features/([^/]+)/",

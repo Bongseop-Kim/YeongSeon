@@ -38,7 +38,8 @@ const forbidden = [
     comment: "별도 규칙이 없는 feature는 다른 feature를 직접 import할 수 없다.",
     from: {
       path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(order|cart|custom-order|claim|quote-request|my-page|home|payment|auth|token-purchase|shop|sample-order|reform)/",
+      pathNot:
+        "^src/features/(order|cart|custom-order|claim|quote-request|my-page|home|payment|auth|token-purchase|shop|sample-order|reform)/",
     },
     to: {
       path: "^src/features/([^/]+)/",
@@ -49,11 +50,13 @@ const forbidden = [
   {
     name: "no-cross-feature-order-ecosystem",
     severity: "error",
-    comment: "order/cart/custom-order는 주문 흐름 보조 feature(shipping·coupon·reform·quote-request·shop·my-page)만 참조 허용",
+    comment:
+      "order/cart/custom-order는 주문 흐름 보조 feature(shipping·coupon·reform·quote-request·shop·my-page)만 참조 허용",
     from: { path: "^src/features/(order|cart|custom-order)/" },
     to: {
       path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(order|cart|custom-order|shipping|coupon|reform|quote-request|shop|my-page)/",
+      pathNot:
+        "^src/features/(order|cart|custom-order|shipping|coupon|reform|quote-request|shop|my-page)/",
     },
   },
   // 3. claim → order 단방향 허용
@@ -82,7 +85,8 @@ const forbidden = [
   {
     name: "no-cross-feature-my-page",
     severity: "error",
-    comment: "my-page는 사용자 정보(auth)·디자인토큰(design)·견적(quote-request)만 참조 허용",
+    comment:
+      "my-page는 사용자 정보(auth)·디자인토큰(design)·견적(quote-request)만 참조 허용",
     from: { path: "^src/features/my-page/" },
     to: {
       path: "^src/features/([^/]+)/",
@@ -115,7 +119,8 @@ const forbidden = [
   {
     name: "no-cross-feature-auth",
     severity: "error",
-    comment: "auth는 로그인 상태 변경 시 design 토큰 캐시 무효화를 위해 design만 참조 허용",
+    comment:
+      "auth는 로그인 상태 변경 시 design 토큰 캐시 무효화를 위해 design만 참조 허용",
     from: { path: "^src/features/auth/" },
     to: {
       path: "^src/features/([^/]+)/",
@@ -126,7 +131,8 @@ const forbidden = [
   {
     name: "no-cross-feature-token-purchase",
     severity: "error",
-    comment: "token-purchase는 결제(payment)·디자인토큰 잔액 갱신(design)만 참조 허용",
+    comment:
+      "token-purchase는 결제(payment)·디자인토큰 잔액 갱신(design)만 참조 허용",
     from: { path: "^src/features/token-purchase/" },
     to: {
       path: "^src/features/([^/]+)/",
@@ -148,7 +154,8 @@ const forbidden = [
   {
     name: "no-cross-feature-sample-order",
     severity: "error",
-    comment: "sample-order는 배송지(shipping)·이미지 업로드 및 가격 설정(custom-order)만 참조 허용",
+    comment:
+      "sample-order는 배송지(shipping)·이미지 업로드 및 가격 설정(custom-order)만 참조 허용",
     from: { path: "^src/features/sample-order/" },
     to: {
       path: "^src/features/([^/]+)/",
@@ -197,11 +204,7 @@ const forbidden = [
       "Supabase 클라이언트 직접 호출은 features/*/api/, lib/, providers/에서만 허용",
     from: {
       path: "^src/",
-      pathNot: [
-        "^src/features/[^/]+/api/",
-        "^src/lib/",
-        "^src/providers/",
-      ],
+      pathNot: ["^src/features/[^/]+/api/", "^src/lib/", "^src/providers/"],
     },
     to: { path: "@yeongseon/supabase" },
   },
