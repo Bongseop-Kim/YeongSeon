@@ -3,6 +3,7 @@ import { message } from "antd";
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type Dispatch,
   type SetStateAction,
@@ -11,7 +12,9 @@ import type { AdminSettingRowDTO } from "@yeongseon/shared";
 
 import {
   DEFAULT_DESIGN_TOKEN_INITIAL_GRANT,
+  sanitizeDesignTokenInitialGrantAmount,
   toDefaultCourierSetting,
+  toDesignTokenInitialGrantDTOValue,
   toDesignTokenInitialGrantSetting,
 } from "@/features/settings/api/settings-mapper";
 
@@ -20,14 +23,6 @@ const DESIGN_TOKEN_INITIAL_GRANT_KEY = "design_token_initial_grant";
 const SETTING_RESOURCE = "admin_settings";
 const SETTING_ID_META = { idColumnName: "key" } as const;
 const SETTING_SAVE_SUCCESS_MESSAGE = "설정이 저장되었습니다.";
-
-function sanitizeDesignTokenInitialGrant(value: number): number {
-  if (!Number.isFinite(value)) {
-    return DEFAULT_DESIGN_TOKEN_INITIAL_GRANT;
-  }
-
-  return Math.max(1, Math.round(value));
-}
 
 interface AdminSettingFormOptions<TValue> {
   key: string;
@@ -62,12 +57,21 @@ function useAdminSettingForm<TValue>({
   const { mutate: updateSetting, mutation } = useUpdate();
 
   const [value, setValue] = useState<TValue>(initialValue);
+  const isDirtyRef = useRef(false);
+
+  const setDirtyValue = useCallback<Dispatch<SetStateAction<TValue>>>(
+    (nextValue) => {
+      isDirtyRef.current = true;
+      setValue(nextValue);
+    },
+    [],
+  );
 
   useEffect(() => {
-    if (result !== undefined) {
+    if (!isDirtyRef.current && result !== undefined) {
       setValue(fromDTO(result));
     }
-  }, [fromDTO, result]);
+  }, [fromDTO, result, setValue]);
 
   const save = () => {
     updateSetting(
@@ -79,6 +83,7 @@ function useAdminSettingForm<TValue>({
       },
       {
         onSuccess: () => {
+          isDirtyRef.current = false;
           message.success(SETTING_SAVE_SUCCESS_MESSAGE);
         },
         onError: (error) => {
@@ -90,7 +95,7 @@ function useAdminSettingForm<TValue>({
 
   return {
     value,
-    setValue,
+    setValue: setDirtyValue,
     save,
     isLoading: query.isLoading,
     isError: query.isError,
@@ -147,8 +152,7 @@ export function useDesignTokenInitialGrantForm() {
     key: DESIGN_TOKEN_INITIAL_GRANT_KEY,
     initialValue: DEFAULT_DESIGN_TOKEN_INITIAL_GRANT,
     fromDTO,
-    toDTOValue: (amount) =>
-      String(sanitizeDesignTokenInitialGrant(Number(amount))),
+    toDTOValue: toDesignTokenInitialGrantDTOValue,
   });
 
   return {
@@ -157,7 +161,7 @@ export function useDesignTokenInitialGrantForm() {
       form.setValue((currentValue) => {
         const nextValue =
           typeof value === "function" ? value(currentValue) : value;
-        return sanitizeDesignTokenInitialGrant(nextValue);
+        return sanitizeDesignTokenInitialGrantAmount(nextValue);
       });
     },
     save: form.save,

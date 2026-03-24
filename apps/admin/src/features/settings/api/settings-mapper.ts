@@ -7,6 +7,14 @@ import type {
 
 export const DEFAULT_DESIGN_TOKEN_INITIAL_GRANT = 30;
 
+export function sanitizeDesignTokenInitialGrantAmount(value: number): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_DESIGN_TOKEN_INITIAL_GRANT;
+  }
+
+  return Math.max(1, Math.round(value));
+}
+
 export function toDefaultCourierSetting(
   dto: AdminSettingRowDTO | undefined,
 ): DefaultCourierSetting {
@@ -18,9 +26,10 @@ export function toDesignTokenInitialGrantSetting(
 ): DesignTokenInitialGrantSetting {
   const parsed = Number(dto?.value);
   return {
-    amount:
-      Number.isInteger(parsed) && parsed >= 1
-        ? parsed
-        : DEFAULT_DESIGN_TOKEN_INITIAL_GRANT,
+    amount: sanitizeDesignTokenInitialGrantAmount(parsed),
   };
+}
+
+export function toDesignTokenInitialGrantDTOValue(value: number): string {
+  return String(sanitizeDesignTokenInitialGrantAmount(value));
 }

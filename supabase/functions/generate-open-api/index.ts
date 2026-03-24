@@ -1,5 +1,5 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import {
@@ -61,6 +61,15 @@ type GenerateDesignResult = {
     action: string;
   }>;
   imageUrl: string | null;
+};
+
+type GenerationRequestType = NonNullable<AiGenerationLogInsert["request_type"]>;
+type ImageQuality = Exclude<AiGenerationLogInsert["quality"], null | undefined>;
+type UseDesignTokensResult = {
+  success: boolean;
+  error?: string;
+  balance: number;
+  cost: number;
 };
 
 const jsonResponse = (status: number, body: Record<string, unknown>) =>
@@ -353,6 +362,52 @@ const requestOpenAIImage = async (
   }
 };
 
+const PREAUTHORIZED_REQUEST_TYPE: GenerationRequestType = "text_and_image";
+const PREAUTHORIZED_IMAGE_QUALITY: ImageQuality = "high";
+
+const getOpenAIImageQuality = (payload: GenerateDesignRequest): ImageQuality =>
+  payload.ciImageBase64 ||
+  payload.referenceImageBase64 ||
+  payload.designContext?.ciPlacement
+    ? "high"
+    : "standard";
+
+const getOpenAITokenCostSettingKey = (
+  requestType: GenerationRequestType,
+  quality: ImageQuality,
+) => {
+  if (requestType === "text_and_image" && quality === "high") {
+    return "design_token_cost_openai_image_high";
+  }
+
+  return `design_token_cost_openai_${
+    requestType === "text_and_image" ? "image" : "text"
+  }`;
+};
+
+const getTokenCostFromSettings = async (
+  adminClient: SupabaseClient,
+  key: string,
+) => {
+  const { data, error } = await adminClient
+    .from("admin_settings")
+    .select("value")
+    .eq("key", key)
+    .single();
+
+  if (error || !data) {
+    console.error(`admin_settings '${key}' 조회 실패:`, error);
+    throw new Error(`Token cost setting is missing: ${key}`);
+  }
+
+  const parsedCost = parseInt(data.value, 10);
+  if (isNaN(parsedCost) || parsedCost <= 0) {
+    throw new Error(`Invalid token cost setting: ${key}`);
+  }
+
+  return parsedCost;
+};
+
 // ─── Supabase clients ────────────────────────────────────────────────────────
 
 const createAuthenticatedSupabaseClient = (authHeader: string) => {
@@ -465,10 +520,13 @@ Deno.serve(async (req) => {
   let textLatencyMs: number | null = null;
   let imageLatencyMs: number | null = null;
   let refundAmount = 0;
-  let imageQuality = "standard";
+  let chargedTokens = 0;
+  let imageQuality: AiGenerationLogInsert["quality"] =
+    PREAUTHORIZED_IMAGE_QUALITY;
   const conversationTurn = payload.conversationHistory?.length ?? 0;
   let requestType: "text_only" | "text_and_image" | null = null;
   let textResult: Awaited<ReturnType<typeof requestOpenAIText>> | null = null;
+  let remainingTokens: number | null = null;
 
   const emitGenerationLog = async (
     overrides: Partial<AiGenerationLogInsert> = {},
@@ -490,7 +548,7 @@ Deno.serve(async (req) => {
       generate_image: textResult?.generateImage ?? null,
       image_generated: false,
       detected_design: textResult?.detectedDesign ?? null,
-      tokens_charged: 0,
+      tokens_charged: chargedTokens,
       tokens_refunded: refundAmount,
       text_latency_ms: textLatencyMs,
       image_latency_ms:
@@ -500,10 +558,77 @@ Deno.serve(async (req) => {
     });
   };
 
+  const refundTokens = async (amount: number, reason: string) => {
+    if (amount <= 0) {
+      return;
+    }
+
+    const { error } = await adminClient.rpc("refund_design_tokens", {
+      p_user_id: user.id,
+      p_amount: amount,
+      p_ai_model: "openai",
+      p_request_type: requestType ?? PREAUTHORIZED_REQUEST_TYPE,
+      p_work_id: `${workId}_${reason}`,
+    });
+
+    if (error) {
+      console.error("Token refund failed:", error);
+      return;
+    }
+
+    refundAmount += amount;
+    if (remainingTokens !== null) {
+      remainingTokens += amount;
+    }
+  };
+
   try {
+    requestType = PREAUTHORIZED_REQUEST_TYPE;
+    imageQuality = PREAUTHORIZED_IMAGE_QUALITY;
+
+    const { data: tokenResult, error: tokenError } = await adminClient.rpc(
+      "use_design_tokens",
+      {
+        p_user_id: user.id,
+        p_ai_model: "openai",
+        p_request_type: requestType,
+        p_quality: imageQuality,
+        p_work_id: workId,
+      },
+    );
+
+    if (tokenError) {
+      console.error("Token deduction error:", tokenError);
+      await emitGenerationLog({
+        error_type: "token_processing_failed",
+        error_message: tokenError.message,
+      });
+      return jsonResponse(500, { error: "Token processing failed" });
+    }
+
+    const tokenData = tokenResult as UseDesignTokensResult;
+
+    if (!tokenData.success) {
+      await emitGenerationLog({
+        error_type: tokenData.error ?? "insufficient_tokens",
+        error_message: tokenData.error ?? "Token deduction was rejected",
+      });
+      return jsonResponse(403, {
+        error: "insufficient_tokens",
+        balance: tokenData.balance,
+        cost: tokenData.cost,
+      });
+    }
+
+    chargedTokens = tokenData.cost;
+    remainingTokens = tokenData.balance;
+
     const textStartTime = Date.now();
-    textResult = await requestOpenAIText(payload, openaiApiKey);
-    textLatencyMs = Date.now() - textStartTime;
+    try {
+      textResult = await requestOpenAIText(payload, openaiApiKey);
+    } finally {
+      textLatencyMs = Date.now() - textStartTime;
+    }
 
     // 채팅 모드에서 빈 designContext 필드를 텍스트 AI가 추출한 값으로 보완
     const detected = textResult.detectedDesign;
@@ -522,49 +647,15 @@ Deno.serve(async (req) => {
     };
 
     requestType = textResult.generateImage ? "text_and_image" : "text_only";
+    imageQuality = textResult.generateImage
+      ? getOpenAIImageQuality(imagePayload)
+      : null;
 
-    // high quality 여부 결정 (이미지 비용 차등 과금)
-    imageQuality =
-      imagePayload.ciImageBase64 ||
-      imagePayload.referenceImageBase64 ||
-      imagePayload.designContext?.ciPlacement
-        ? "high"
-        : "standard";
-
-    // 토큰 차감
-    const { data: tokenResult, error: tokenError } = await adminClient.rpc(
-      "use_design_tokens",
-      {
-        p_user_id: user.id,
-        p_ai_model: "openai",
-        p_request_type: requestType,
-        p_quality: imageQuality,
-        p_work_id: workId,
-      },
+    let finalCost = await getTokenCostFromSettings(
+      adminClient,
+      getOpenAITokenCostSettingKey(requestType, imageQuality ?? "standard"),
     );
-
-    if (tokenError) {
-      console.error("Token deduction error:", tokenError);
-      return jsonResponse(500, { error: "Token processing failed" });
-    }
-
-    const tokenData = tokenResult as {
-      success: boolean;
-      error?: string;
-      balance: number;
-      cost: number;
-    };
-
-    if (!tokenData.success) {
-      return jsonResponse(403, {
-        error: "insufficient_tokens",
-        balance: tokenData.balance,
-        cost: tokenData.cost,
-      });
-    }
-
     let imageUrl: string | null = null;
-    let remainingTokens = tokenData.balance;
 
     if (textResult.generateImage) {
       const imageStartTime = Date.now();
@@ -573,43 +664,25 @@ Deno.serve(async (req) => {
 
       // 이미지 생성 실패 시 이미지 비용 환불 (텍스트 비용은 유지)
       if (imageUrl === null) {
-        const { data: textCostData } = await adminClient
-          .from("admin_settings")
-          .select("value")
-          .eq("key", "design_token_cost_openai_text")
-          .single();
-        const textCost = textCostData
-          ? parseInt(textCostData.value, 10) || 1
-          : 1;
-        refundAmount = tokenData.cost - textCost;
-
-        if (refundAmount > 0) {
-          const { error: refundError } = await adminClient.rpc(
-            "refund_design_tokens",
-            {
-              p_user_id: user.id,
-              p_amount: refundAmount,
-              p_ai_model: "openai",
-              p_request_type: requestType,
-              p_work_id: workId,
-            },
-          );
-          if (refundError) {
-            console.error("Token refund failed:", refundError);
-          } else {
-            remainingTokens = tokenData.balance + refundAmount;
-          }
-        }
+        finalCost = await getTokenCostFromSettings(
+          adminClient,
+          "design_token_cost_openai_text",
+        );
       }
     }
+
+    await refundTokens(
+      Math.max(chargedTokens - finalCost, 0),
+      textResult.generateImage && imageUrl === null
+        ? "image_failed_refund"
+        : "settlement_refund",
+    );
 
     await emitGenerationLog({
       ai_message: textResult.aiMessage,
       generate_image: textResult.generateImage,
       image_generated: imageUrl !== null,
       detected_design: textResult.detectedDesign,
-      tokens_charged: tokenData.cost,
-      tokens_refunded: refundAmount,
       image_latency_ms: textResult.generateImage ? imageLatencyMs : null,
     });
 
@@ -620,6 +693,10 @@ Deno.serve(async (req) => {
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });
   } catch (error) {
+    await refundTokens(
+      Math.max(chargedTokens - refundAmount, 0),
+      "generation_failed_refund",
+    );
     await emitGenerationLog({
       error_type: "generation_failed",
       error_message: error instanceof Error ? error.message : "Unknown error",
