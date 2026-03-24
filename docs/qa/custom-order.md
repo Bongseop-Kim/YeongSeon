@@ -40,3 +40,21 @@ last-verified: 2026-03-19
 - Given: admin 또는 store에서 custom 주문이 `제작중` 상태다
 - When: 주문 상세를 조회한다
 - Then: 취소 버튼이 표시되지 않는다
+
+## SC-custom-007: 마법사 중간 이탈 후 재진입 시 임시 저장 복원
+
+- Given: store `/custom-order`에서 마법사 Step 4(스펙)까지 입력한 상태
+- When: 브라우저를 새로고침하거나 다른 페이지로 이동 후 다시 진입한다
+- Then: 이전에 작성 중이던 주문 복원 안내가 표시되고 이어서 하기 시 Step 4로 복원된다. 단, referenceImages와 연락처는 제거되어 있다
+
+## SC-custom-008: 마법사 단계별 필수 항목 미입력 시 다음 단계 진행 불가
+
+- Given: store `/custom-order`에서 마법사 진행 중인 상태
+- When: fabricProvided=false 인데 fabricType을 선택하지 않은 채 다음 단계를 시도한다
+- Then: 버튼이 비활성화되거나 필수 입력 안내가 표시되고 다음 단계로 진행되지 않는다
+
+## SC-custom-009: 옵션 가격 클라이언트 미리보기와 서버 계산 일치 검증
+
+- Given: custom-order 마법사에서 여러 옵션(수량, 원단제공여부, 봉제, 심지 등)을 선택한 상태
+- When: 마법사 확인 단계에서 예상 금액을 확인한다
+- Then: 클라이언트에서 표시하는 예상 금액과 실제 주문 생성 후 서버에서 반환하는 금액이 일치한다

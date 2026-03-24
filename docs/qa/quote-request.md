@@ -90,3 +90,25 @@ last-verified: 2026-03-17
 
 - 경로: admin `/quote-requests/show/:id`
 - BR: BR-quote-005
+
+---
+
+### SC-quote-009: 단방향 전이 강제 — 역방향 시도 불가 [high]
+
+**Given** admin `/quote-requests/show/:id`에서 견적 요청이 협의중 상태인 상태
+**When** 상태를 견적발송(이전 상태)으로 변경하려 한다
+**Then** 변경이 불가하고 UI 버튼이 표시되지 않거나 에러가 반환된다
+
+- 경로: admin `/quote-requests/show/:id`
+- BR: BR-quote-005 (모든 전이는 단방향, 롤백 불가)
+
+---
+
+### SC-quote-010: 연락처 방법 유효성 검증 [medium]
+
+**Given** store 견적 요청 페이지에서 연락처 방법을 선택하는 상태
+**When** 지원되지 않는 방법으로 제출을 시도한다
+**Then** 제출이 불가하고 허용된 연락처 방법만 선택 가능하다
+
+- 경로: store 견적 요청 페이지
+- BR: BR-quote-002

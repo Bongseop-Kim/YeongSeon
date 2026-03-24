@@ -96,7 +96,7 @@ begin
     from public.claims
     where order_item_id = v_order_item.id
       and type = p_type
-      and status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
+      and status in ('접수', '처리중', '수거요청', '수거완료', '재발송', '완료')
   ) then
     raise exception 'Active claim already exists for this item';
   end if;

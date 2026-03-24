@@ -91,8 +91,9 @@ export function useCartAuthSync() {
             await clearGuest();
           } catch (error) {
             console.error("로컬 장바구니 업로드 실패:", error);
-            // 업로드 실패 시 서버 장바구니 사용
+            // 업로드 실패 시 서버 장바구니 사용, 로컬 장바구니 제거 (재로그인 시 재시도 방지)
             queryClient.setQueryData(cartKeys.items(userId), serverItems);
+            await clearGuest();
             toast.error(
               "로컬 장바구니를 서버로 업로드하지 못했습니다. 서버 장바구니를 사용합니다.",
             );
