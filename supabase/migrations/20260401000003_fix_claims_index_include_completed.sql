@@ -6,7 +6,7 @@
 -- 수정: 인덱스 WHERE 조건과 ON CONFLICT WHERE 조건에 '완료' 추가.
 
 -- 1. 기존 인덱스 교체 (원래 마이그레이션에서 생성된 인덱스 재정의)
-DROP INDEX IF EXISTS public.idx_claims_active_per_item;
+DROP INDEX public.idx_claims_active_per_item;
 
 CREATE UNIQUE INDEX idx_claims_active_per_item
   ON public.claims USING btree (order_item_id, type)
