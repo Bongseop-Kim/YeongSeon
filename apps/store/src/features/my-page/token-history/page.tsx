@@ -16,7 +16,6 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useSearch } from "@/hooks/use-search";
 import { toDateString, type ListFilters } from "@/lib/list-filters";
 import { cn } from "@/lib/utils";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 const formatAmount = (amount: number) => {
   const prefix = amount >= 0 ? "+" : "";
@@ -227,7 +226,6 @@ function UsageTab({ history, isLoading, error }: UsageTabProps) {
 
 export default function TokenHistoryPage() {
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
-  const { isMobile } = useBreakpoint();
 
   useSearch({
     placeholder: "토큰 내역 검색...",
@@ -255,6 +253,7 @@ export default function TokenHistoryPage() {
 
   const balance = rawBalance ?? { total: 0, paid: 0, bonus: 0 };
   const history = rawHistory ?? [];
+  const { dateFrom, dateTo } = searchFilters;
 
   const usageHistory = useMemo(() => {
     let result = history.filter(
@@ -268,7 +267,6 @@ export default function TokenHistoryPage() {
       );
     }
 
-    const { dateFrom, dateTo } = searchFilters;
     if (dateFrom) {
       result = result.filter((item) => item.createdAt.slice(0, 10) >= dateFrom);
     }
@@ -278,7 +276,7 @@ export default function TokenHistoryPage() {
     }
 
     return result;
-  }, [history, debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo]);
+  }, [history, debouncedKeyword, dateFrom, dateTo]);
   const balanceProps: BalanceSummaryProps = {
     total: balance.total,
     paid: balance.paid,
@@ -298,17 +296,15 @@ export default function TokenHistoryPage() {
               description="현재 보유 토큰과 사용, 환불 변동 이력을 확인합니다."
             />
 
-            {isMobile ? (
-              <div className="px-4">
-                <UtilityPageAside
-                  title="현재 토큰 잔액"
-                  description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
-                  tone="muted"
-                >
-                  <BalanceSummary {...balanceProps} />
-                </UtilityPageAside>
-              </div>
-            ) : null}
+            <div className="px-4 lg:hidden">
+              <UtilityPageAside
+                title="현재 토큰 잔액"
+                description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
+                tone="muted"
+              >
+                <BalanceSummary {...balanceProps} />
+              </UtilityPageAside>
+            </div>
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-12">
               <div className="min-w-0 space-y-8">
@@ -324,17 +320,15 @@ export default function TokenHistoryPage() {
                 </UtilityPageSection>
               </div>
 
-              {!isMobile ? (
-                <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
-                  <UtilityPageAside
-                    title="현재 토큰 잔액"
-                    description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
-                    tone="muted"
-                  >
-                    <BalanceSummary {...balanceProps} />
-                  </UtilityPageAside>
-                </div>
-              ) : null}
+              <div className="hidden min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:block lg:self-start lg:px-0">
+                <UtilityPageAside
+                  title="현재 토큰 잔액"
+                  description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
+                  tone="muted"
+                >
+                  <BalanceSummary {...balanceProps} />
+                </UtilityPageAside>
+              </div>
             </div>
           </div>
         </PageLayout>

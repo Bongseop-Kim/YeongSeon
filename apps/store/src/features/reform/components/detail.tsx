@@ -100,9 +100,9 @@ export const Detail = () => {
           </h2>
 
           <div className="flex flex-col items-center gap-4">
-            {FEATURES.map((feature, index) => (
+            {FEATURES.map((feature) => (
               <div
-                key={index}
+                key={feature.id}
                 className="flex w-full max-w-4xl items-start gap-4 rounded-2xl border border-border/70 bg-surface px-5 py-4"
               >
                 <div className="rounded-full bg-surface-muted p-1.5">
