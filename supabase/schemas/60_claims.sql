@@ -112,8 +112,25 @@ CREATE TABLE IF NOT EXISTS public.claim_status_logs (
 CREATE INDEX idx_claim_status_logs_claim_id
   ON public.claim_status_logs USING btree (claim_id, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS public.claim_notification_logs (
+  id         uuid        NOT NULL DEFAULT gen_random_uuid(),
+  claim_id    uuid       NOT NULL,
+  status      text       NOT NULL,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT claim_notification_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT claim_notification_logs_claim_id_fkey
+    FOREIGN KEY (claim_id) REFERENCES public.claims (id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT claim_notification_logs_claim_id_status_key UNIQUE (claim_id, status)
+);
+
+CREATE INDEX idx_claim_notification_logs_claim_id
+  ON public.claim_notification_logs USING btree (claim_id, created_at DESC);
+
 -- RLS
 ALTER TABLE public.claim_status_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.claim_notification_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view logs of their own claims"
   ON public.claim_status_logs FOR SELECT
@@ -131,4 +148,53 @@ CREATE POLICY "Admins can view all claim status logs"
   TO authenticated
   USING (public.is_admin());
 
+CREATE POLICY "Users can view logs of their own claim notifications"
+  ON public.claim_notification_logs FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.claims c
+      WHERE c.id = claim_id
+        AND c.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Admins can view all claim notifications"
+  ON public.claim_notification_logs FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
 -- No INSERT policy: audit logs are written exclusively by SECURITY DEFINER RPCs.
+
+-- SECURITY DEFINER 사유: pg_cron 또는 service_role이
+-- claim_notification_logs 정리 작업을 수행할 수 있어야 한다.
+CREATE OR REPLACE FUNCTION public.delete_old_claim_notification_logs(
+  p_retention interval DEFAULT interval '90 days'
+)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_deleted_count integer;
+begin
+  if p_retention <= interval '0 seconds' then
+    raise exception 'retention must be positive';
+  end if;
+
+  if coalesce(current_setting('request.jwt.claim.role', true), '') not in ('', 'service_role') then
+    raise exception 'unauthorized: scheduler-only function';
+  end if;
+
+  with deleted_rows as (
+    delete from public.claim_notification_logs
+    where created_at < now() - p_retention
+    returning 1
+  )
+  select count(*) into v_deleted_count
+  from deleted_rows;
+
+  return v_deleted_count;
+end;
+$$;

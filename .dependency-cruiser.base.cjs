@@ -56,7 +56,7 @@ const forbidden = [
     to: {
       path: "^src/features/([^/]+)/",
       pathNot:
-        "^src/features/(order|cart|custom-order|shipping|coupon|reform|quote-request|shop|my-page)/",
+        "^src/features/(order|cart|custom-order|shipping|coupon|reform|quote-request|shop|my-page|notification)/",
     },
   },
   // 3. claim → order 단방향 허용
@@ -90,7 +90,8 @@ const forbidden = [
     from: { path: "^src/features/my-page/" },
     to: {
       path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(my-page|auth|design|quote-request)/",
+      pathNot:
+        "^src/features/(my-page|auth|design|quote-request|notification)/",
     },
   },
   // 6. home → shop 허용
@@ -159,7 +160,8 @@ const forbidden = [
     from: { path: "^src/features/sample-order/" },
     to: {
       path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(sample-order|shipping|custom-order)/",
+      pathNot:
+        "^src/features/(sample-order|shipping|custom-order|notification)/",
     },
   },
   // 12. reform → cart 허용 (리폼 주문 시 장바구니 연동)

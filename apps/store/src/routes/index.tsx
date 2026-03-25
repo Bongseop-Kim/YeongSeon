@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import DesignPage from "@/features/design/page";
 import HomePage from "@/features/home/page";
@@ -39,6 +39,8 @@ import RefundPolicyPage from "@/features/refund-policy/page";
 import LoginPage from "@/features/auth/login/page";
 import AuthCallbackPage from "@/features/auth/callback/page";
 import { ProtectedRoute } from "@/components/composite/protected-route";
+import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
+import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
 
 const QuoteRequestListPage = lazy(
   () => import("@/features/my-page/quote-request/page"),
@@ -46,6 +48,41 @@ const QuoteRequestListPage = lazy(
 const QuoteRequestDetailPage = lazy(
   () => import("@/features/my-page/quote-request/detail/page"),
 );
+
+function TokenPaymentRoute() {
+  const proceedToPaymentRef = useRef<() => Promise<void>>(async () => {});
+  const isMountedRef = useRef(true);
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+    },
+    [],
+  );
+  const { initiateWithConsentCheck, consentFlow } = useNotificationConsentFlow(
+    async () => {
+      if (isMountedRef.current) {
+        await proceedToPaymentRef.current();
+      }
+    },
+  );
+
+  const registerProceedToPayment = useCallback(
+    (handler: () => Promise<void>) => {
+      proceedToPaymentRef.current = handler;
+    },
+    [],
+  );
+
+  return (
+    <>
+      <TokenPaymentPage
+        onRequestPayment={initiateWithConsentCheck}
+        registerProceedToPayment={registerProceedToPayment}
+      />
+      <NotificationConsentFlowModals consentFlow={consentFlow} />
+    </>
+  );
+}
 
 export default function Router() {
   return (
@@ -253,7 +290,7 @@ export default function Router() {
         path="/token/purchase/payment"
         element={
           <ProtectedRoute>
-            <TokenPaymentPage />
+            <TokenPaymentRoute />
           </ProtectedRoute>
         }
       />

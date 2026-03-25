@@ -8,6 +8,8 @@ import {
 } from "@/features/custom-order/utils/pricing";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
+import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
+import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 import type {
   QuoteOrderOptions,
@@ -155,6 +157,11 @@ export default function OrderPage() {
     paymentWidgetRef,
   });
 
+  const {
+    initiateWithConsentCheck: handleSubmitWithConsentCheck,
+    consentFlow,
+  } = useNotificationConsentFlow(handleSubmit);
+
   const estimatedDays = getEstimatedDays(watchedValues);
   const isFabricHidden = watchedValues.fabricProvided || watchedValues.reorder;
 
@@ -169,100 +176,103 @@ export default function OrderPage() {
     WIZARD_STEPS[index]?.id === "fabric" && isFabricHidden;
 
   return (
-    <MainLayout>
-      <MainContent className="overflow-visible bg-zinc-50">
-        <Form {...form}>
-          <PageLayout
-            sidebar={
-              <>
-                <StickySummary
-                  options={watchedValues}
-                  totalCost={totalCost}
-                  sewingCost={sewingCost}
-                  fabricCost={fabricCost}
-                  pricingConfig={pricingConfig}
-                  isLoggedIn={isLoggedIn}
-                />
-                {shouldRequireCancellationConsent && (
-                  <Card className="py-0">
-                    <CardContent className="px-0">
-                      <PaymentWidget
-                        ref={paymentWidgetRef}
-                        amount={grandTotal}
-                        customerKey={user.id}
-                      />
+    <>
+      <MainLayout>
+        <MainContent className="overflow-visible bg-zinc-50">
+          <Form {...form}>
+            <PageLayout
+              sidebar={
+                <>
+                  <StickySummary
+                    options={watchedValues}
+                    totalCost={totalCost}
+                    sewingCost={sewingCost}
+                    fabricCost={fabricCost}
+                    pricingConfig={pricingConfig}
+                    isLoggedIn={isLoggedIn}
+                  />
+                  {shouldRequireCancellationConsent && (
+                    <Card className="py-0">
+                      <CardContent className="px-0">
+                        <PaymentWidget
+                          ref={paymentWidgetRef}
+                          amount={grandTotal}
+                          customerKey={user.id}
+                        />
 
-                      <ConsentCheckbox
-                        id="cancellation-consent"
-                        checked={cancellationConsent}
-                        onCheckedChange={setCancellationConsent}
-                        label="취소/환불 불가 동의"
-                        description="주문제작(견적요청)은 진행 후 중도 취소 및 환불이 불가능합니다."
-                        required
-                        className="px-6 pb-6"
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-              </>
-            }
-            actionBar={
-              <WizardActionButtons
-                isFirstStep={wizard.isFirstStep}
-                isLastStep={wizard.isLastStep}
-                onPrev={wizard.goPrev}
-                onNext={handleNext}
-                onSubmit={handleSubmit}
-                isPending={isPending}
-                isSubmitDisabled={
-                  isSubmitDisabled ||
-                  (wizard.isLastStep &&
-                    shouldRequireCancellationConsent &&
-                    !cancellationConsent)
-                }
-                isQuoteMode={isQuoteMode}
-                grandTotal={grandTotal}
-                estimatedDays={estimatedDays}
-                isLoggedIn={isLoggedIn}
-                hasAddress={!!selectedAddress}
+                        <ConsentCheckbox
+                          id="cancellation-consent"
+                          checked={cancellationConsent}
+                          onCheckedChange={setCancellationConsent}
+                          label="취소/환불 불가 동의"
+                          description="주문제작(견적요청)은 진행 후 중도 취소 및 환불이 불가능합니다."
+                          required
+                          className="px-6 pb-6"
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              }
+              actionBar={
+                <WizardActionButtons
+                  isFirstStep={wizard.isFirstStep}
+                  isLastStep={wizard.isLastStep}
+                  onPrev={wizard.goPrev}
+                  onNext={handleNext}
+                  onSubmit={handleSubmitWithConsentCheck}
+                  isPending={isPending}
+                  isSubmitDisabled={
+                    isSubmitDisabled ||
+                    (wizard.isLastStep &&
+                      shouldRequireCancellationConsent &&
+                      !cancellationConsent)
+                  }
+                  isQuoteMode={isQuoteMode}
+                  grandTotal={grandTotal}
+                  estimatedDays={estimatedDays}
+                  isLoggedIn={isLoggedIn}
+                  hasAddress={!!selectedAddress}
+                />
+              }
+            >
+              <ProgressBar
+                steps={wizard.steps}
+                currentStepIndex={wizard.currentStepIndex}
+                visitedSteps={wizard.visitedSteps}
+                completedSteps={wizard.completedSteps}
+                shouldShowStep={wizard.shouldShowStep}
+                isHiddenStep={isHiddenStep}
+                onStepClick={wizard.goToStep}
               />
-            }
-          >
-            <ProgressBar
-              steps={wizard.steps}
-              currentStepIndex={wizard.currentStepIndex}
-              visitedSteps={wizard.visitedSteps}
-              completedSteps={wizard.completedSteps}
-              shouldShowStep={wizard.shouldShowStep}
-              isHiddenStep={isHiddenStep}
-              onStepClick={wizard.goToStep}
-            />
-            {wizard.currentStep.id === "quantity" && (
-              <QuantityStep
-                isLoggedIn={isLoggedIn}
-                selectedPackage={selectedPackage}
-                onSelectPackage={handleSelectPackage}
-                pricingConfig={pricingConfig}
-              />
-            )}
-            {wizard.currentStep.id === "fabric" && <FabricStep />}
-            {wizard.currentStep.id === "sewing" && <SewingStep />}
-            {wizard.currentStep.id === "spec" && <SpecStep />}
-            {wizard.currentStep.id === "finishing" && <FinishingStep />}
-            {wizard.currentStep.id === "attachment" && (
-              <AttachmentStep imageUpload={imageUpload} />
-            )}
-            {wizard.currentStep.id === "confirm" && (
-              <ConfirmStep
-                selectedAddress={selectedAddress}
-                onOpenShippingPopup={openShippingPopup}
-                imageUpload={imageUpload}
-                goToStepById={goToStepById}
-              />
-            )}
-          </PageLayout>
-        </Form>
-      </MainContent>
-    </MainLayout>
+              {wizard.currentStep.id === "quantity" && (
+                <QuantityStep
+                  isLoggedIn={isLoggedIn}
+                  selectedPackage={selectedPackage}
+                  onSelectPackage={handleSelectPackage}
+                  pricingConfig={pricingConfig}
+                />
+              )}
+              {wizard.currentStep.id === "fabric" && <FabricStep />}
+              {wizard.currentStep.id === "sewing" && <SewingStep />}
+              {wizard.currentStep.id === "spec" && <SpecStep />}
+              {wizard.currentStep.id === "finishing" && <FinishingStep />}
+              {wizard.currentStep.id === "attachment" && (
+                <AttachmentStep imageUpload={imageUpload} />
+              )}
+              {wizard.currentStep.id === "confirm" && (
+                <ConfirmStep
+                  selectedAddress={selectedAddress}
+                  onOpenShippingPopup={openShippingPopup}
+                  imageUpload={imageUpload}
+                  goToStepById={goToStepById}
+                />
+              )}
+            </PageLayout>
+          </Form>
+        </MainContent>
+      </MainLayout>
+      <NotificationConsentFlowModals consentFlow={consentFlow} />
+    </>
   );
 }

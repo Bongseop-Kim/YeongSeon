@@ -157,7 +157,7 @@ export function TokenRefundAction({ refundOrder }: TokenRefundActionProps) {
         <Button
           size="sm"
           variant="outline"
-          className="text-xs"
+          className="flex-1"
           onClick={() => setDialogOpen(true)}
         >
           환불 신청

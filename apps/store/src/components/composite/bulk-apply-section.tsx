@@ -3,6 +3,7 @@ import { type UseFormSetValue } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
+import { toast } from "sonner";
 import {
   isMeasurementType,
   type ReformOptions,
@@ -16,7 +17,7 @@ interface BulkApplySectionProps {
 }
 
 export interface BulkApplySectionRef {
-  handleBulkApply: () => void;
+  handleBulkApply: () => boolean | Promise<boolean>;
 }
 
 const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
@@ -27,8 +28,21 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
     const [value, setValue_local] = useState<string>("");
 
     const handleBulkApply = () => {
+      if (checkedIndices.length === 0) {
+        toast.error("적용할 항목을 선택해주세요.");
+        return false;
+      }
+
+      if (value.trim() === "" || Number.isNaN(Number(value))) {
+        toast.error("유효한 숫자를 입력해주세요.");
+        return false;
+      }
+
       const numValue = Number(value);
-      if (!numValue || numValue <= 0) return;
+      if (numValue <= 0) {
+        toast.error("0보다 큰 값을 입력해주세요.");
+        return false;
+      }
 
       // 체크된 넥타이에만 일괄 적용
       checkedIndices.forEach((i) => {
@@ -44,6 +58,7 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
       });
 
       onApply?.();
+      return true;
     };
 
     useImperativeHandle(ref, () => ({

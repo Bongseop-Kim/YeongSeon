@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { createJsonResponse } from "../_shared/response.ts";
 import { isJsonPayloadWithinLimit } from "../_shared/validation.ts";
+import { sendAlimtalk } from "../_shared/solapi.ts";
 
 type CreateQuoteRequestInput = {
   shipping_address_id: string;
@@ -148,5 +149,43 @@ Deno.serve(async (req) => {
     });
   }
 
-  return jsonResponse(200, result);
+  const response = jsonResponse(200, result);
+
+  // 견적 접수 알림 — 응답 반환 후 백그라운드에서 실행 (실패해도 응답에 영향 없음)
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (serviceRoleKey) {
+    EdgeRuntime.waitUntil(
+      (async () => {
+        try {
+          const adminClient = createClient(supabaseUrl, serviceRoleKey);
+          const { data: notifyProfile } = await adminClient
+            .from("profiles")
+            .select(
+              "phone, phone_verified, notification_consent, notification_enabled",
+            )
+            .eq("id", user.id)
+            .single();
+
+          if (
+            notifyProfile?.notification_consent &&
+            notifyProfile?.phone_verified &&
+            notifyProfile?.notification_enabled &&
+            notifyProfile?.phone
+          ) {
+            await sendAlimtalk({
+              to: notifyProfile.phone,
+              templateId: Deno.env.get("SOLAPI_TEMPLATE_QUOTE_RECEIVED") ?? "",
+              variables: {},
+              fallbackContent:
+                "[ESSE SION] 견적 요청이 접수되었습니다.\n담당자가 순차적으로 연락드리겠습니다.",
+            });
+          }
+        } catch (notifyErr) {
+          console.error("[create-quote-request:notify_failed]", notifyErr);
+        }
+      })(),
+    );
+  }
+
+  return response;
 });

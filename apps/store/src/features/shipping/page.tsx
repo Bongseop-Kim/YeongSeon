@@ -56,7 +56,7 @@ const ShippingPage = () => {
 
     openModal({
       title: "배송지 삭제",
-      children: <div>정말 이 배송지를 삭제하시겠습니까?</div>,
+      description: "정말 이 배송지를 삭제하시겠습니까?",
       confirmText: "삭제",
       cancelText: "취소",
       onConfirm: () => {

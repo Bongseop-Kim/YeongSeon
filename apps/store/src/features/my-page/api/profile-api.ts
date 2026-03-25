@@ -4,10 +4,13 @@ import type {
   MarketingConsent,
 } from "@/features/my-page/types/profile";
 import { isRecord } from "@/lib/type-guard";
-import { normalizeMarketingConsent } from "./profile-mapper";
+import {
+  MARKETING_CONSENT_KEY,
+  normalizeMarketingConsent,
+  toUserProfile,
+} from "./profile-mapper";
 
 const TABLE_NAME = "profiles";
-const MARKETING_CONSENT_KEY = "marketingConsent";
 
 /**
  * 현재 사용자의 프로필 조회
@@ -49,34 +52,12 @@ export const getProfile = async (): Promise<UserProfile> => {
         throw new Error(`프로필 생성 실패: ${createError.message}`);
       }
 
-      return {
-        id: newProfile.id,
-        name: newProfile.name,
-        phone: newProfile.phone,
-        birth: newProfile.birth,
-        email: user.email || "",
-        marketingConsent: normalizeMarketingConsent(
-          isRecord(user.user_metadata)
-            ? user.user_metadata[MARKETING_CONSENT_KEY]
-            : undefined,
-        ),
-      };
+      return toUserProfile(newProfile, user);
     }
     throw new Error(`프로필 조회 실패: ${profileError.message}`);
   }
 
-  return {
-    id: profile.id,
-    name: profile.name,
-    phone: profile.phone,
-    birth: profile.birth,
-    email: user.email || "",
-    marketingConsent: normalizeMarketingConsent(
-      isRecord(user.user_metadata)
-        ? user.user_metadata[MARKETING_CONSENT_KEY]
-        : undefined,
-    ),
-  };
+  return toUserProfile(profile, user);
 };
 
 /**
