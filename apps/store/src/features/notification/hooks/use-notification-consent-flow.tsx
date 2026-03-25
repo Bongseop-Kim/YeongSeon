@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { saveNotificationConsent } from "@/features/notification/api/notification-api";
-import { useProfile } from "@/features/my-page/api/profile-query";
+import { useNotificationStatus } from "@/features/notification/api/notification-status-query";
 
 export interface NotificationConsentFlowState {
   showConsentModal: boolean;
@@ -14,10 +14,11 @@ export interface NotificationConsentFlowState {
 export function useNotificationConsentFlow(onProceed: () => Promise<void>) {
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const { data: profile, refetch: refetchProfile } = useProfile();
+  const { data: notificationStatus, refetch: refetchStatus } =
+    useNotificationStatus();
 
   const initiateWithConsentCheck = async () => {
-    if (!profile?.notificationConsent) {
+    if (!notificationStatus?.notificationConsent) {
       setShowConsentModal(true);
       return;
     }
@@ -27,12 +28,12 @@ export function useNotificationConsentFlow(onProceed: () => Promise<void>) {
   const handleConsent = async (agreed: boolean) => {
     setShowConsentModal(false);
     if (agreed) {
-      if (!profile?.phoneVerified) {
+      if (!notificationStatus?.phoneVerified) {
         setShowVerifyModal(true);
         return;
       }
       await saveNotificationConsent(true);
-      await refetchProfile();
+      await refetchStatus();
     }
     await onProceed();
   };
@@ -49,7 +50,7 @@ export function useNotificationConsentFlow(onProceed: () => Promise<void>) {
 
   const onVerified = async () => {
     await saveNotificationConsent(true);
-    await refetchProfile();
+    await refetchStatus();
     setShowVerifyModal(false);
     await onProceed();
   };

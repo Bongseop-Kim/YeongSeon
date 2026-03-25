@@ -1,58 +1,119 @@
-import { renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
+import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 
-const openModal = vi.fn();
-const closeModal = vi.fn();
-
-vi.mock("@/store/modal", () => ({
-  useModalStore: () => ({
-    openModal,
-    closeModal,
-  }),
+const { mockGetSelectedCoupon } = vi.hoisted(() => ({
+  mockGetSelectedCoupon: vi.fn<() => AppliedCoupon | undefined>(),
 }));
 
-vi.mock("@/features/coupon/components/coupon-select-modal", () => ({
-  CouponSelectModal: "coupon-select-modal",
+vi.mock("@/features/coupon/components/coupon-select-modal", async () => {
+  const { forwardRef: fRef, useImperativeHandle: uIH } = await import("react");
+  return {
+    CouponSelectModal: fRef((_props: unknown, ref: unknown) => {
+      uIH(
+        ref as React.Ref<{
+          getSelectedCoupon: () => AppliedCoupon | undefined;
+        }>,
+        () => ({
+          getSelectedCoupon: mockGetSelectedCoupon,
+        }),
+      );
+      return null;
+    }),
+  };
+});
+
+vi.mock("@/components/ui/dialog", () => ({
+  Dialog: ({
+    children,
+    open,
+  }: {
+    children: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+  }) => (open ? <>{children}</> : null),
+  DialogContent: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  DialogHeader: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  DialogTitle: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  DialogFooter: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
+
+function TestWrapper({
+  onResult,
+  couponId,
+}: {
+  onResult: (v: AppliedCoupon | null | undefined) => void;
+  couponId?: string;
+}) {
+  const { openCouponSelect, dialog } = useCouponSelect();
+  return (
+    <>
+      <button onClick={() => void openCouponSelect(couponId).then(onResult)}>
+        열기
+      </button>
+      {dialog}
+    </>
+  );
+}
 
 describe("useCouponSelect", () => {
   beforeEach(() => {
-    openModal.mockClear();
-    closeModal.mockClear();
+    mockGetSelectedCoupon.mockReturnValue(undefined);
   });
 
-  it("선택된 쿠폰을 resolve한다", async () => {
-    const { result } = renderHook(() => useCouponSelect());
-
-    const promise = result.current.openCouponSelect("uc-1");
-    expect(openModal).toHaveBeenCalledTimes(1);
-    const modalConfig = openModal.mock.calls[0][0];
-    modalConfig.children.props.ref({
-      getSelectedCoupon: () => ({ id: "uc-1", couponId: "coupon-1" }),
-    });
-
-    expect(modalConfig.title).toBe("쿠폰 사용");
-    expect(modalConfig.children.props.currentCouponId).toBe("uc-1");
-
-    modalConfig.onConfirm();
-
-    await expect(promise).resolves.toEqual({
+  it("쿠폰 선택 후 적용 시 해당 쿠폰을 resolve한다", async () => {
+    const user = userEvent.setup();
+    const onResult = vi.fn();
+    const coupon = {
       id: "uc-1",
       couponId: "coupon-1",
-    });
-    expect(closeModal).toHaveBeenCalledTimes(1);
+    } as unknown as AppliedCoupon;
+    mockGetSelectedCoupon.mockReturnValue(coupon);
+
+    render(<TestWrapper onResult={onResult} couponId="uc-1" />);
+
+    await user.click(screen.getByRole("button", { name: "열기" }));
+    await user.click(screen.getByRole("button", { name: "적용" }));
+
+    expect(onResult).toHaveBeenCalledWith(coupon);
   });
 
-  it("취소 시 null을 resolve한다", async () => {
-    const { result } = renderHook(() => useCouponSelect());
+  it("사용 안 함 선택 후 적용 시 undefined를 resolve한다", async () => {
+    const user = userEvent.setup();
+    const onResult = vi.fn();
+    mockGetSelectedCoupon.mockReturnValue(undefined);
 
-    const promise = result.current.openCouponSelect();
-    expect(openModal).toHaveBeenCalledTimes(1);
-    const modalConfig = openModal.mock.calls[0][0];
-    modalConfig.onCancel();
+    render(<TestWrapper onResult={onResult} couponId="uc-1" />);
 
-    await expect(promise).resolves.toBeNull();
-    expect(closeModal).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "열기" }));
+    await user.click(screen.getByRole("button", { name: "적용" }));
+
+    expect(onResult).toHaveBeenCalledWith(undefined);
+  });
+
+  it("취소 버튼 클릭 시 null을 resolve한다", async () => {
+    const user = userEvent.setup();
+    const onResult = vi.fn();
+
+    render(<TestWrapper onResult={onResult} />);
+
+    await user.click(screen.getByRole("button", { name: "열기" }));
+    await user.click(screen.getByRole("button", { name: "취소" }));
+
+    expect(onResult).toHaveBeenCalledWith(null);
+  });
+
+  it("openCouponSelect 호출 전에는 dialog 버튼이 없다", () => {
+    render(<TestWrapper onResult={vi.fn()} />);
+    expect(screen.queryByRole("button", { name: "적용" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "취소" })).toBeNull();
   });
 });

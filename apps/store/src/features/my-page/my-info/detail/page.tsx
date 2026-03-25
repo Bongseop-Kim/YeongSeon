@@ -11,18 +11,21 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "@/constants/ROUTES";
 import { useProfile } from "@/features/my-page/api/profile-query";
 import {
   saveNotificationConsent,
   updateNotificationEnabled,
 } from "@/features/notification/api/notification-api";
+import { notificationStatusKeys } from "@/features/notification/api/notification-status-query";
 import { PhoneVerificationForm } from "@/features/notification/components/phone-verification-form";
 import { toast } from "@/lib/toast";
 import { ProfileItem } from "./components/profile-item";
 
 export default function MyInfoDetailPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: profile, isLoading, refetch } = useProfile();
   const [showVerifyModal, setShowVerifyModal] = useState(false);
 
@@ -41,6 +44,9 @@ export default function MyInfoDetailPage() {
 
       await updateNotificationEnabled(val);
       await refetch();
+      void queryClient.invalidateQueries({
+        queryKey: notificationStatusKeys.detail(),
+      });
     } catch (error) {
       const message =
         error instanceof Error
@@ -110,6 +116,9 @@ export default function MyInfoDetailPage() {
                       await updateNotificationEnabled(true);
                       setShowVerifyModal(false);
                       refetch();
+                      void queryClient.invalidateQueries({
+                        queryKey: notificationStatusKeys.detail(),
+                      });
                     } catch (error) {
                       const message =
                         error instanceof Error

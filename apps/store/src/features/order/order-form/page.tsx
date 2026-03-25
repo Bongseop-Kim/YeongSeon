@@ -58,10 +58,11 @@ const OrderFormPage = () => {
 
     const selectedCoupon = await openCouponSelect(item.appliedCoupon?.id);
 
-    // 쿠폰 적용 (null이면 쿠폰 제거)
-    updateOrderItemCoupon(itemId, selectedCoupon ?? undefined);
+    if (selectedCoupon === null) return;
 
-    // 성공 메시지 표시
+    // undefined이면 쿠폰 제거, 객체이면 쿠폰 적용
+    updateOrderItemCoupon(itemId, selectedCoupon);
+
     toast.success(
       selectedCoupon
         ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`

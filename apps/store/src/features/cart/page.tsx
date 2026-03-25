@@ -221,7 +221,7 @@ export default function CartPage() {
         return;
       }
 
-      await applyCoupon(itemId, selectedCoupon ?? undefined);
+      await applyCoupon(itemId, selectedCoupon);
 
       toast.success(
         selectedCoupon

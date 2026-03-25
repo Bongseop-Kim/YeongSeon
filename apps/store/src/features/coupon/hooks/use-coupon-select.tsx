@@ -21,9 +21,8 @@ import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
  *
  * const handleChangeCoupon = async (itemId: string) => {
  *   const selectedCoupon = await openCouponSelect(currentCouponId);
- *   if (selectedCoupon !== null) {
- *     await applyCoupon(itemId, selectedCoupon);
- *   }
+ *   if (selectedCoupon === null) return; // 취소
+ *   await applyCoupon(itemId, selectedCoupon); // undefined이면 쿠폰 제거, 객체이면 쿠폰 적용
  * };
  *
  * // JSX:
@@ -32,20 +31,20 @@ import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 export const useCouponSelect = () => {
   const couponRef = useRef<CouponSelectModalRef | null>(null);
   const [state, setState] = useState<{
-    resolve: (value: AppliedCoupon | null) => void;
+    resolve: (value: AppliedCoupon | null | undefined) => void;
     currentCouponId?: string;
   } | null>(null);
 
   const openCouponSelect = (
     currentCouponId?: string,
-  ): Promise<AppliedCoupon | null> => {
+  ): Promise<AppliedCoupon | null | undefined> => {
     return new Promise((resolve) => {
       setState({ resolve, currentCouponId });
     });
   };
 
   const handleConfirm = () => {
-    const selectedCoupon = couponRef.current?.getSelectedCoupon() ?? null;
+    const selectedCoupon = couponRef.current?.getSelectedCoupon();
     state?.resolve(selectedCoupon);
     setState(null);
   };

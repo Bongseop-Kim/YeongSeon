@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useRef } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import DesignPage from "@/features/design/page";
 import HomePage from "@/features/home/page";
@@ -51,9 +51,18 @@ const QuoteRequestDetailPage = lazy(
 
 function TokenPaymentRoute() {
   const proceedToPaymentRef = useRef<() => Promise<void>>(async () => {});
+  const isMountedRef = useRef(true);
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+    },
+    [],
+  );
   const { initiateWithConsentCheck, consentFlow } = useNotificationConsentFlow(
     async () => {
-      await proceedToPaymentRef.current();
+      if (isMountedRef.current) {
+        await proceedToPaymentRef.current();
+      }
     },
   );
 
