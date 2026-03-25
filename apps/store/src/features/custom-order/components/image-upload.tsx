@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { Label } from "@/components/ui/label";
 import { Upload, X, Loader2, ImageOff } from "lucide-react";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";

@@ -1,7 +1,7 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 
 const PaymentFailPage = () => {
   const [searchParams] = useSearchParams();

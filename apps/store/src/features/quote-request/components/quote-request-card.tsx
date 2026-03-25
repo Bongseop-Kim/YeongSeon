@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { QuoteRequestListItem } from "@/features/quote-request/api/quote-request-api";
 import {
@@ -26,7 +25,7 @@ export function QuoteRequestCard({
   onClick,
 }: QuoteRequestCardProps) {
   return (
-    <Card
+    <article
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -43,14 +42,15 @@ export function QuoteRequestCard({
       className={cn(
         onClick &&
           "cursor-pointer transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2",
+        "border-b border-stone-200 px-4 py-5 lg:px-0",
       )}
     >
-      <CardHeader>
+      <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-1">
-            <CardTitle className="text-base">
+            <p className="text-base font-semibold text-zinc-950">
               견적번호: {quoteRequest.quoteNumber}
-            </CardTitle>
+            </p>
             <div className="text-sm text-zinc-500">
               요청일: {formatDate(quoteRequest.date)}
             </div>
@@ -65,29 +65,30 @@ export function QuoteRequestCard({
             {quoteRequest.status}
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-2 text-sm text-zinc-700">
-        <div className="flex items-center justify-between gap-3">
-          <span>수량</span>
-          <span>{quoteRequest.quantity}개</span>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span>담당자</span>
-          <span>{quoteRequest.contactName}</span>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span>연락 방법</span>
-          <span>{CONTACT_METHOD_LABELS[quoteRequest.contactMethod]}</span>
-        </div>
-        {quoteRequest.quotedAmount != null && (
+
+        <div className="space-y-2 text-sm text-zinc-700">
           <div className="flex items-center justify-between gap-3">
-            <span>견적 금액</span>
-            <span className="font-semibold text-zinc-900">
-              {quoteRequest.quotedAmount.toLocaleString()}원
-            </span>
+            <span>수량</span>
+            <span>{quoteRequest.quantity}개</span>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="flex items-center justify-between gap-3">
+            <span>담당자</span>
+            <span>{quoteRequest.contactName}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span>연락 방법</span>
+            <span>{CONTACT_METHOD_LABELS[quoteRequest.contactMethod]}</span>
+          </div>
+          {quoteRequest.quotedAmount != null && (
+            <div className="flex items-center justify-between gap-3">
+              <span>견적 금액</span>
+              <span className="font-semibold text-zinc-900">
+                {quoteRequest.quotedAmount.toLocaleString()}원
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }

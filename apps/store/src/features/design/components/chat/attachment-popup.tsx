@@ -2,7 +2,7 @@ import { useRef, type ChangeEvent } from "react";
 import { X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { Separator } from "@/components/ui/separator";
 import {
   CI_PLACEMENT_OPTIONS,

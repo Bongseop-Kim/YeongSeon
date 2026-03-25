@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 interface ReformActionButtonsProps {

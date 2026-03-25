@@ -5,20 +5,20 @@ import type { OrderStatus } from "@yeongseon/shared/types/view/order";
 import type { ClaimStatus } from "@yeongseon/shared/types/view/claim-item";
 
 const COLOR_TO_DOT: Record<string, string> = {
-  default: "bg-gray-400",
-  warning: "bg-yellow-400",
-  processing: "bg-blue-400",
-  cyan: "bg-cyan-400",
-  orange: "bg-orange-400",
-  lime: "bg-lime-400",
-  blue: "bg-blue-400",
-  geekblue: "bg-indigo-400",
-  success: "bg-green-500",
-  error: "bg-red-400",
+  default: "bg-foreground-muted",
+  warning: "bg-warning",
+  processing: "bg-info",
+  cyan: "bg-info",
+  orange: "bg-warning",
+  lime: "bg-success",
+  blue: "bg-info",
+  geekblue: "bg-info",
+  success: "bg-success",
+  error: "bg-destructive",
 };
 
 const BASE_BADGE_CLASS =
-  "bg-white border border-zinc-200 text-zinc-700 text-xs font-medium flex items-center gap-1.5";
+  "flex items-center gap-1.5 border-border/80 bg-surface px-2.5 py-1 text-xs font-medium text-foreground-subtle shadow-none";
 
 function StatusBadge({
   status,
@@ -27,7 +27,8 @@ function StatusBadge({
   status: string;
   colorMap: Record<string, string>;
 }) {
-  const dotClass = COLOR_TO_DOT[colorMap[status] ?? "default"] ?? "bg-gray-400";
+  const dotClass =
+    COLOR_TO_DOT[colorMap[status] ?? "default"] ?? "bg-foreground-muted";
   return (
     <Badge className={BASE_BADGE_CLASS}>
       <span className={`inline-block w-2 h-2 rounded-full ${dotClass}`} />

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Image } from "@imagekit/react";
 import {
@@ -30,7 +30,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui-extended/select";
 import type { Product } from "@yeongseon/shared/types/view/product";
 import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 import { Badge } from "@/components/ui/badge";

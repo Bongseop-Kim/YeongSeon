@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -14,12 +14,14 @@ import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { ROUTES } from "@/constants/ROUTES";
 import { toast } from "@/lib/toast";
 import { useClaim, useCancelClaim } from "@/features/claim/api/claims-query";
+import { useModalStore } from "@/store/modal";
 
 export default function ClaimDetailPage() {
   const { claimId } = useParams<{ claimId: string }>();
   const navigate = useNavigate();
   const { data: claim, isLoading, isError, error } = useClaim(claimId ?? "");
   const cancelClaimMutation = useCancelClaim();
+  const confirm = useModalStore((state) => state.confirm);
 
   if (!claimId) {
     return (
@@ -99,17 +101,18 @@ export default function ClaimDetailPage() {
   }
 
   const handleCancelClaim = () => {
-    if (!window.confirm("클레임 신청을 취소하시겠습니까?")) return;
-    cancelClaimMutation.mutate(claimId, {
-      onSuccess: () => {
-        toast.success("클레임 신청이 취소되었습니다.");
-        navigate(ROUTES.CLAIM_LIST);
-      },
-      onError: (err) => {
-        toast.error(
-          err instanceof Error ? err.message : "클레임 취소에 실패했습니다.",
-        );
-      },
+    confirm("클레임 신청을 취소하시겠습니까?", () => {
+      cancelClaimMutation.mutate(claimId, {
+        onSuccess: () => {
+          toast.success("클레임 신청이 취소되었습니다.");
+          navigate(ROUTES.CLAIM_LIST);
+        },
+        onError: (err) => {
+          toast.error(
+            err instanceof Error ? err.message : "클레임 취소에 실패했습니다.",
+          );
+        },
+      });
     });
   };
 

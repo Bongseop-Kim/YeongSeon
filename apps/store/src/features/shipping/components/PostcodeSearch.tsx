@@ -3,9 +3,9 @@ import {
   useDaumPostcode,
   type DaumPostcodeData,
 } from "@/features/shipping/hooks/useDaumPostcode";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui-extended/dialog";
 import { PageTitle } from "@/components/layout/main-layout";
-import CloseButton from "@/components/ui/close";
+import CloseButton from "@/components/ui-extended/close";
 
 interface PostcodeSearchProps {
   onComplete: (data: DaumPostcodeData) => void;

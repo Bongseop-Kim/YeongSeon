@@ -1,7 +1,7 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Form } from "@/components/ui/form";

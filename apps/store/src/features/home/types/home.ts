@@ -1,12 +1,8 @@
-export interface BannerSlide {
-  id: number;
-  image: string;
-  title: string;
+export interface ManufacturingStep {
+  step: number;
+  label: string;
   description: string;
-}
-
-export interface InstagramImage {
-  id: number;
-  src: string;
-  alt: string;
+  imageSrc: string;
+  imageAlt?: string;
+  eyebrow?: string;
 }

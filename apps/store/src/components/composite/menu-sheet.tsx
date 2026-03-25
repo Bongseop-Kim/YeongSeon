@@ -1,8 +1,12 @@
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui-extended/sheet";
 import { Menu } from "lucide-react";
 import { NAVIGATION_ITEMS } from "@/constants/NAVIGATION_ITEMS";
 import NavLink from "@/components/ui/nav-link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { useState } from "react";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { useAuthStore } from "@/store/auth";

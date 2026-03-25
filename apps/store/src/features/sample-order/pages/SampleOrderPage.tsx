@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { Form } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup } from "@/components/ui/radio-group";

@@ -1,126 +1,134 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/components/ui/data-table";
+import { useState } from "react";
 import { XIcon } from "lucide-react";
+
+import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
 import {
-  getShuffledBannerImages,
   FEATURES,
   TARGET_CUSTOMERS,
   TESTIMONIALS,
+  getShuffledBannerImages,
 } from "@/features/reform/constants/DETAIL";
-import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { useState } from "react";
 
 export const Detail = () => {
   const { isMobile } = useBreakpoint();
   const [bannerImages] = useState(getShuffledBannerImages);
 
   return (
-    <div className="bg-gray-50">
-      {/* Hero Section */}
-      <section className="bg-zinc-700 text-zinc-50 py-28">
-        <h1 className="text-xl md:text-2xl font-bold mb-12 text-center">
-          30년 넥타이 장인이 직접 만들어요
-        </h1>
-
-        <div className="relative">
-          <p className="absolute right-4 bottom-[16%] z-0 text-6xl text-brand-yellow">
-            Premium
+    <div className="bg-background text-foreground">
+      <section className="overflow-hidden bg-brand-surface text-brand-paper">
+        <div className="mx-auto max-w-6xl px-4 py-24">
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.3em] text-brand-gold">
+            Heritage Repair
           </p>
-          <p className="absolute left-4 bottom-1/3 z-20 text-6xl text-brand-yellow">
-            Craftsmanship
-          </p>
-          <p className="absolute left-4 top-[12.5%] z-0 text-6xl text-brand-yellow">
-            Heritage
-          </p>
+          <h1 className="mt-6 text-center text-3xl font-bold md:text-4xl">
+            30년 넥타이 장인이 직접 만들어요
+          </h1>
 
-          <img
-            src="/images/detail/fabric.png"
-            alt="hero"
-            className="w-2/3 h-full relative z-10 mx-auto"
-            style={{
-              maskImage: "url('/images/detail/tie.svg')",
-              WebkitMaskImage: "url('/images/detail/tie.svg')",
-              maskSize: "contain",
-              maskRepeat: "no-repeat",
-              maskPosition: "center",
-            }}
-          />
-        </div>
+          <div className="relative mt-14">
+            <p className="absolute bottom-[16%] right-4 z-0 text-4xl text-brand-gold/60 md:text-6xl">
+              Premium
+            </p>
+            <p className="absolute left-4 bottom-1/3 z-20 text-4xl text-brand-gold/85 md:text-6xl">
+              Craftsmanship
+            </p>
+            <p className="absolute left-4 top-[12.5%] z-0 text-4xl text-brand-gold/60 md:text-6xl">
+              Heritage
+            </p>
 
-        <div className="max-w-6xl mx-auto px-4 mt-12">
-          <div className="text-center">
-            <p className="text-xl md:text-2xl mb-4 flex justify-center items-center gap-1">
+            <img
+              src="/images/detail/fabric.png"
+              alt="넥타이 원단"
+              className="relative z-10 mx-auto h-full w-2/3"
+              style={{
+                maskImage: "url('/images/detail/tie.svg')",
+                WebkitMaskImage: "url('/images/detail/tie.svg')",
+                maskSize: "contain",
+                maskRepeat: "no-repeat",
+                maskPosition: "center",
+              }}
+            />
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="flex items-center justify-center gap-1 text-xl md:text-2xl">
               매일 아침 3분이{" "}
-              <span className="text-brand-yellow font-bold text-2xl">
-                5초로
-              </span>
+              <span className="text-2xl font-bold text-brand-gold">5초로</span>
               줄어들어요
             </p>
-            <p className="text-lg mb-8 text-zinc-50">
+            <p className="mt-4 text-lg text-brand-paper/78">
               넥타이 못 매도 괜찮아요. 5초면 완벽하게 끝나거든요
             </p>
-            <div className="flex flex-wrap justify-center gap-4 mb-8">
-              <Badge variant="outline" className="text-zinc-50 border-white">
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <Badge
+                variant="outline"
+                className="border-white/20 bg-white/5 text-brand-paper"
+              >
                 30년 장인 기술
               </Badge>
-              <Badge variant="outline" className="text-zinc-50 border-white">
+              <Badge
+                variant="outline"
+                className="border-white/20 bg-white/5 text-brand-paper"
+              >
                 3개월 무료 A/S
               </Badge>
             </div>
           </div>
-        </div>
 
-        <div className="overflow-hidden max-w-6xl mx-auto mt-12">
-          <div className="flex animate-scroll gap-4">
-            {bannerImages.map((image, index) => (
-              <img
-                key={index}
-                src={image.src}
-                alt={image.alt}
-                className="rounded-sm w-1/3 flex-shrink-0"
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Service Introduction */}
-      <section className="py-16 bg-white">
-        <div className="gap-12 items-center">
-          <div>
-            <h2 className="text-3xl font-bold mb-6 text-center">
-              매일 아침이 지겹나요?
-            </h2>
-
-            <div className="flex flex-col items-center gap-4">
-              {FEATURES.map((feature, index) => (
-                <div key={index} className="flex items-center gap-4 w-5/6">
-                  <div className="bg-zinc-200 rounded-full p-1">
-                    <XIcon className="w-3 h-3 text-zinc-700" />
-                  </div>
-                  <div>
-                    <div className="font-semibold">{feature.title}</div>
-                    <div className="text-sm text-gray-600">
-                      {feature.description}
-                    </div>
-                  </div>
-                </div>
+          <div className="mx-auto mt-12 max-w-6xl overflow-hidden">
+            <div className="flex animate-scroll gap-4">
+              {bannerImages.map((image, index) => (
+                <img
+                  key={image.src ?? index}
+                  src={image.src}
+                  alt={image.alt}
+                  className="w-1/3 flex-shrink-0 rounded-xl border border-white/10"
+                />
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Expertise Section */}
-      <section className="py-16 bg-zinc-100">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12 w-5/6 mx-auto">
-            <h2 className="text-3xl font-bold mb-4">
+      <section className="bg-background py-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <h2 className="mb-6 text-center text-3xl font-bold">
+            매일 아침이 지겹나요?
+          </h2>
+
+          <div className="flex flex-col items-center gap-4">
+            {FEATURES.map((feature) => (
+              <div
+                key={feature.id}
+                className="flex w-full max-w-4xl items-start gap-4 rounded-2xl border border-border/70 bg-surface px-5 py-4"
+              >
+                <div className="rounded-full bg-surface-muted p-1.5">
+                  <XIcon className="h-3 w-3 text-foreground-subtle" />
+                </div>
+                <div>
+                  <div className="font-semibold text-foreground">
+                    {feature.title}
+                  </div>
+                  <div className="text-sm text-foreground-muted">
+                    {feature.description}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-surface py-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="mx-auto mb-12 w-5/6 text-center">
+            <h2 className="mb-4 text-3xl font-bold">
               넥타이 전문 공장에서 직접 하는 전문 수선
             </h2>
-            <p className="text-lg text-gray-700">
+            <p className="text-lg text-foreground-subtle">
               30년 전문성으로 시중 어디에서도 찾을 수 없는 품질을 제공합니다
             </p>
           </div>
@@ -131,114 +139,104 @@ export const Detail = () => {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className="h-full w-full rounded-[1.75rem] border border-border/70 object-cover shadow-[0_28px_80px_-48px_rgba(15,23,42,0.45)]"
           />
         </div>
 
-        <div className="max-w-6xl mx-auto mt-12">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
+        <div className="mx-auto mt-12 max-w-6xl px-4">
+          <div className="text-center">
+            <h2 className="mb-4 text-3xl font-bold">
               이런 분들이 주로 찾아주세요
             </h2>
-            <p className="text-lg text-gray-700">
+            <p className="text-lg text-foreground-subtle">
               혹시 여러분도 이런 고민 있으신가요?
             </p>
           </div>
 
           <div
-            className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-4"} gap-6 mb-12`}
+            className={`mb-12 mt-10 grid ${isMobile ? "grid-cols-2" : "grid-cols-4"} gap-6`}
           >
             {TARGET_CUSTOMERS.map((customer, index) => (
-              <div key={index} className="text-center">
-                <div className="p-6">
-                  <h3 className="font-bold mb-2">{customer.title}</h3>
-                  <p className="text-sm text-gray-600">
-                    {customer.description}
-                  </p>
-                </div>
+              <div
+                key={index}
+                className="rounded-2xl border border-border/70 bg-background p-6 text-center"
+              >
+                <h3 className="mb-2 font-bold text-foreground">
+                  {customer.title}
+                </h3>
+                <p className="text-sm text-foreground-muted">
+                  {customer.description}
+                </p>
               </div>
             ))}
           </div>
 
-          <div className="bg-zinc-700 p-8">
-            <h3 className="text-xl font-bold mb-6 text-center text-zinc-50">
+          <div className="rounded-[1.75rem] bg-brand-surface px-6 py-8 text-brand-paper">
+            <h3 className="mb-6 text-center text-xl font-bold">
               실제 주문 고객 현황
             </h3>
             <div
               className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-4"} gap-4`}
             >
-              <div className="text-center">
-                <div className="text-3xl font-bold text-brand-yellow">40%</div>
-                <div className="text-sm text-zinc-50">학생 (해외, 국내)</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-brand-yellow">20%</div>
-                <div className="text-sm text-zinc-50">기업 단체</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-brand-yellow">35%</div>
-                <div className="text-sm text-zinc-50">직장인</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-brand-yellow">5%</div>
-                <div className="text-sm text-zinc-50">기타</div>
-              </div>
+              {[
+                ["40%", "학생 (해외, 국내)"],
+                ["20%", "기업 단체"],
+                ["35%", "직장인"],
+                ["5%", "기타"],
+              ].map(([value, label]) => (
+                <div key={label} className="text-center">
+                  <div className="text-3xl font-bold text-brand-gold">
+                    {value}
+                  </div>
+                  <div className="mt-1 text-sm text-brand-paper/78">
+                    {label}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Process Section */}
-      <section className="py-16 bg-gray-100">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
+      <section className="bg-background py-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center">
+            <h2 className="mb-4 text-3xl font-bold">
               어떻게 진행되는지 궁금하시죠?
             </h2>
-            <p className="text-lg text-gray-700">
+            <p className="text-lg text-foreground-subtle">
               생각보다 간단해요. 4단계면 끝이에요
             </p>
           </div>
 
           <div
-            className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-4"} gap-6 mb-12`}
+            className={`mb-12 mt-10 grid ${isMobile ? "grid-cols-1" : "grid-cols-4"} gap-6`}
           >
-            <div className="text-center">
-              <div className="bg-zinc-600 text-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                1
+            {[
+              ["1", "키만 알려주세요", "키에 맞는 길이로 딱 맞게 만들어드려요"],
+              [
+                "2",
+                "넥타이만 보내주세요",
+                "수거 신청 또는 택배로 보내시면 돼요",
+              ],
+              [
+                "3",
+                "장인이 손수 작업해요",
+                "30년 경력으로 꼼꼼하게 (10일 정도 걸려요)",
+              ],
+              ["4", "집까지 배송해드려요", "5초 넥타이로 변신해서 도착해요"],
+            ].map(([step, title, description]) => (
+              <div
+                key={step}
+                className="rounded-2xl border border-border/70 bg-surface p-6 text-center"
+              >
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-surface text-xl font-bold text-brand-paper">
+                  {step}
+                </div>
+                <h3 className="mb-2 font-bold text-foreground">{title}</h3>
+                <p className="text-sm text-foreground-muted">{description}</p>
               </div>
-              <h3 className="font-bold mb-2">키만 알려주세요</h3>
-              <p className="text-sm text-gray-600">
-                키에 맞는 길이로 딱 맞게 만들어드려요
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="bg-zinc-600 text-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                2
-              </div>
-              <h3 className="font-bold mb-2">넥타이만 보내주세요</h3>
-              <p className="text-sm text-gray-600">
-                수거 신청 또는 택배로 보내시면 돼요
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="bg-zinc-600 text-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                3
-              </div>
-              <h3 className="font-bold mb-2">장인이 손수 작업해요</h3>
-              <p className="text-sm text-gray-600">
-                30년 경력으로 꼼꼼하게 (10일 정도 걸려요)
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="bg-zinc-600 text-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                4
-              </div>
-              <h3 className="font-bold mb-2">집까지 배송해드려요</h3>
-              <p className="text-sm text-gray-600">
-                5초 넥타이로 변신해서 도착해요
-              </p>
-            </div>
+            ))}
           </div>
 
           <Card>
@@ -260,18 +258,17 @@ export const Detail = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">실제 사용자 생생 후기</h2>
-            <p className="text-lg text-gray-700">
+      <section className="bg-background py-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center">
+            <h2 className="mb-4 text-3xl font-bold">실제 사용자 생생 후기</h2>
+            <p className="text-lg text-foreground-subtle">
               고객님들의 만족도 100% 후기입니다
             </p>
           </div>
 
           <div
-            className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-3"} gap-6`}
+            className={`mt-10 grid ${isMobile ? "grid-cols-1" : "grid-cols-3"} gap-6`}
           >
             {TESTIMONIALS.map((testimonial, index) => (
               <Card key={index}>
@@ -279,8 +276,10 @@ export const Detail = () => {
                   <Badge className="w-fit">{testimonial.category}</Badge>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 mb-4">"{testimonial.content}"</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="mb-4 text-foreground-subtle">
+                    "{testimonial.content}"
+                  </p>
+                  <p className="text-sm text-foreground-muted">
                     - {testimonial.author}
                   </p>
                 </CardContent>
@@ -290,50 +289,42 @@ export const Detail = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br bg-zinc-700 text-zinc-50">
-        <div className="max-w-4xl text-center">
-          <h2 className="text-2xl font-bold mb-4">Heritage</h2>
-          <div className="relative">
+      <section className="bg-brand-surface py-20 text-brand-paper">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <h2 className="mb-4 text-2xl font-bold">Heritage</h2>
+          <div className="relative overflow-hidden rounded-[1.75rem] border border-white/10">
             <img
               src="/images/detail/product1.png"
-              alt="product1"
-              className="w-full object-cover rounded-lg"
+              alt="수선 넥타이"
+              className="w-full object-cover"
             />
-
-            {/* 그림자 오버레이 */}
-            <div className="absolute inset-0 bg-black opacity-50"></div>
-
-            {/* 텍스트 오버레이 */}
+            <div className="absolute inset-0 bg-black/45" />
             <div className="absolute inset-0 p-8">
-              <div className="h-full flex flex-col justify-between">
-                {/* 상단 좌측 */}
+              <div className="flex h-full flex-col justify-between">
                 <div className="flex justify-start">
-                  <div className="text-white">
-                    <div className="text-5xl md:text-6xl font-bold mb-1">
+                  <div className="text-left text-white">
+                    <div className="mb-1 text-5xl font-bold md:text-6xl">
                       30년째
                     </div>
-                    <div className="text-lg md:text-xl mb-2">오직 넥타이만</div>
+                    <div className="text-lg md:text-xl">오직 넥타이만</div>
                   </div>
                 </div>
 
-                {/* 중앙 우측 */}
-                <div className="flex justify-end items-center">
-                  <div className="text-white text-right">
-                    <div className="text-4xl md:text-5xl font-bold mb-1">
+                <div className="flex items-center justify-end">
+                  <div className="text-right text-white">
+                    <div className="mb-1 text-4xl font-bold md:text-5xl">
                       키만 말하면
                     </div>
-                    <div className="text-lg md:text-xl mb-2">딱 맞게</div>
+                    <div className="text-lg md:text-xl">딱 맞게</div>
                   </div>
                 </div>
 
-                {/* 하단 중앙 */}
                 <div className="flex justify-center">
-                  <div className="text-white text-center">
-                    <div className="text-4xl md:text-5xl font-bold mb-1 text-brand-yellow">
+                  <div className="text-center text-white">
+                    <div className="mb-1 text-4xl font-bold text-brand-gold md:text-5xl">
                       5초면 끝
                     </div>
-                    <div className="text-lg md:text-xl mb-2">
+                    <div className="text-lg md:text-xl">
                       매일 아침이 편해져요
                     </div>
                   </div>
@@ -341,9 +332,9 @@ export const Detail = () => {
               </div>
             </div>
           </div>
-          <div className="text-zinc-50 text-lg px-12 py-4 font-semibold">
+          <div className="px-12 py-4 text-lg font-semibold text-brand-paper">
             한번 체험해보실래요?
-            <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm ">
+            <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-brand-paper/80">
               <span>✓ 전국 배송 가능</span>
               <span>✓ 무상 A/S</span>
               <span>✓ 대량 주문 환영</span>

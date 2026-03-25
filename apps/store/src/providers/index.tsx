@@ -1,4 +1,4 @@
-import GlobalModal from "@/components/ui/modal";
+import GlobalModal from "@/components/ui-extended/modal";
 import { Toaster } from "@/components/ui/sonner";
 import { BreakpointProvider } from "./breakpoint-provider";
 import { ScrollToTop } from "./scroll-to-top";

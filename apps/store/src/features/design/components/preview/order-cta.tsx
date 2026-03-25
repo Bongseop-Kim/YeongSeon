@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { ROUTES } from "@/constants/ROUTES";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import { useModalStore } from "@/store/modal";

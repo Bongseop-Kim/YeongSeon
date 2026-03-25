@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Plus, Send, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { AttachmentPopup } from "@/features/design/components/chat/attachment-popup";
 import { FABRIC_OPTIONS } from "@/features/design/constants/design-options";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";

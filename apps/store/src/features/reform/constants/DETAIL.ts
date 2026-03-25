@@ -19,25 +19,30 @@ export const TESTIMONIALS = [
 
 export const FEATURES = [
   {
+    id: "save-morning-time",
     title: "매일 아침 3분이 5초로 줄어들어요",
     description: "넥타이 못 매도 괜찮아요. 5초면 완벽하게 끝나거든요",
   },
   {
+    id: "artisan-made",
     title: "30년 장인이 직접 만들어요",
     description:
       "넥타이 전문 제조공장에서 하는 거라 다르거든요. 다른 곳에서는 못 받는 전문 기술이에요",
   },
   {
+    id: "free-after-service",
     title: "걱정 마세요, A/S 해드려요",
     description:
       "30년 경험이니까 자신 있게 약속드려요. 부품 고장 시 무료로 수리해드려요",
   },
   {
+    id: "nationwide-delivery",
     title: "전국 어디든 보내드려요",
     description:
       "제주도든 울릉도든 상관없어요. 택배 배송으로 안전하게 받으실 수 있어요",
   },
   {
+    id: "tailored-length",
     title: "키에 맞춰서 딱 맞게 만들어드려요",
     description:
       "150cm부터 190cm까지 괜찮아요. 키에 맞는 길이로 딱 맞게 만들어드려요",

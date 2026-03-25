@@ -1,5 +1,5 @@
 import { PageTitle } from "@/components/layout/main-layout";
-import CloseButton from "@/components/ui/close";
+import CloseButton from "@/components/ui-extended/close";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 

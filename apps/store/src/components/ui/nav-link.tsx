@@ -16,12 +16,9 @@ const NavLink = ({
     to={to}
     onClick={onClick}
     className={cn(
-      // 기본 스타일
-      "inline-flex items-center px-4 py-2 text-sm font-medium text-zinc-50",
-      // 모던 미니멀 스타일
+      "inline-flex items-center px-4 py-2 text-sm font-medium text-white/88 hover:text-white",
       "transition-all duration-300 ease-in-out",
-      // 포커스 스타일
-      "focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:ring-offset-2",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/55 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-surface-strong",
       className,
     )}
   >

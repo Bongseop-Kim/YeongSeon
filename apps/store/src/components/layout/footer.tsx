@@ -4,12 +4,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const footerVariants = cva("w-full border-t bg-gray-50/50", {
+const footerVariants = cva("w-full border-t bg-surface/70", {
   variants: {
     variant: {
-      default: "border-gray-200/60",
+      default: "border-border/70",
       ghost: "border-transparent",
-      solid: "bg-gray-50 border-gray-200",
+      solid: "bg-surface border-border",
     },
     size: {
       sm: "py-8",
@@ -68,7 +68,7 @@ const FooterTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-sm font-semibold tracking-wide text-gray-900 uppercase",
+      "text-sm font-semibold tracking-wide text-foreground uppercase",
       className,
     )}
     {...props}
@@ -83,7 +83,7 @@ const FooterLink = React.forwardRef<
   <a
     ref={ref}
     className={cn(
-      "text-sm text-gray-600 transition-colors duration-200 block py-1",
+      "block py-1 text-sm text-foreground-muted transition-colors duration-200 hover:text-foreground",
       className,
     )}
     {...props}
@@ -97,7 +97,7 @@ const FooterText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-gray-600 leading-relaxed", className)}
+    className={cn("text-sm leading-relaxed text-foreground-muted", className)}
     {...props}
   />
 ));

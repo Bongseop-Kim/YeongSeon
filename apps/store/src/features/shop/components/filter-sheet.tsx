@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@/components/ui-extended/sheet";
 import { FilterContent } from "./filter-content";
 import { FilterButtons } from "./filter-buttons";
 import { SlidersHorizontal } from "lucide-react";

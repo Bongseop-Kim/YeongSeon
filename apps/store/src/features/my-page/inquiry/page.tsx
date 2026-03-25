@@ -1,29 +1,33 @@
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Empty } from "@/components/composite/empty";
+import {
+  UtilityPageAside,
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
+import { MainContent, MainLayout } from "@/components/layout/main-layout";
+import { PageLayout } from "@/components/layout/page-layout";
+import { Button } from "@/components/ui-extended/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   InquiryForm,
   type InquiryFormData,
 } from "@/features/my-page/inquiry/components/inquiry-form";
-import { InquiryCard } from "./components/inquiry-card";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { useModalStore } from "@/store/modal";
-import { toast } from "@/lib/toast";
-import { Empty } from "@/components/composite/empty";
+import { InquiryCard } from "@/features/my-page/inquiry/components/inquiry-card";
 import {
-  useInquiries,
   useCreateInquiry,
-  useUpdateInquiry,
   useDeleteInquiry,
+  useInquiries,
+  useUpdateInquiry,
 } from "@/features/my-page/inquiry/api/inquiry-query";
 import {
   INQUIRY_CATEGORIES,
   type InquiryCategory,
 } from "@/features/my-page/inquiry/types/inquiry-item";
+import { toast } from "@/lib/toast";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { useModalStore } from "@/store/modal";
 
 export default function InquiryPage() {
   const { confirm } = useModalStore();
@@ -70,8 +74,7 @@ export default function InquiryPage() {
       });
       if (isMobile) setIsSheetOpen(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only: 마운트 시 URL 파라미터 1회 파싱, searchParams 변경 추적 불필요
-  }, []);
+  }, [isMobile, searchParams]);
 
   const handleEdit = (id: string) => {
     setEditingInquiryId(id);
@@ -195,7 +198,7 @@ export default function InquiryPage() {
     return (
       <MainLayout>
         <MainContent>
-          <div className="flex items-center justify-center min-h-96">
+          <div className="flex min-h-96 items-center justify-center">
             <div className="text-zinc-500">문의 목록을 불러오는 중...</div>
           </div>
         </MainContent>
@@ -207,14 +210,14 @@ export default function InquiryPage() {
     return (
       <MainLayout>
         <MainContent>
-          <Card>
+          <div className="px-4 lg:px-0">
             <Empty
               title="문의 목록을 불러올 수 없습니다."
               description={
                 error instanceof Error ? error.message : "오류가 발생했습니다."
               }
             />
-          </Card>
+          </div>
         </MainContent>
       </MainLayout>
     );
@@ -225,11 +228,17 @@ export default function InquiryPage() {
       <MainContent>
         <PageLayout
           sidebar={
-            <Card>
-              <CardContent>
-                <InquiryForm {...inquiryFormProps} />
-              </CardContent>
-            </Card>
+            !isMobile ? (
+              <UtilityPageAside
+                title={editingInquiryId ? "문의 수정" : "문의 등록"}
+                description="문의 유형을 선택하고 필요한 내용을 작성해 주세요."
+                tone="muted"
+              >
+                <div className="pt-1">
+                  <InquiryForm {...inquiryFormProps} />
+                </div>
+              </UtilityPageAside>
+            ) : undefined
           }
           actionBar={
             isMobile ? (
@@ -238,30 +247,41 @@ export default function InquiryPage() {
               </Button>
             ) : undefined
           }
+          contentClassName="py-4 lg:py-8"
         >
-          <>
-            {inquiries.length === 0 ? (
-              <Card>
-                <Empty
-                  title="문의 내역이 없습니다."
-                  description="궁금한 점이 있으시면 문의를 등록해주세요."
-                />
-              </Card>
-            ) : (
-              inquiries.map((inquiry) => (
-                <InquiryCard
-                  key={inquiry.id}
-                  inquiry={inquiry}
-                  isMutating={isMutating}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))
-            )}
-          </>
+          <div className="space-y-8 lg:space-y-10">
+            <UtilityPageIntro
+              eyebrow="Inquiry"
+              title="1:1 문의 내역"
+              description="등록한 문의와 답변 상태를 확인하고, 필요한 경우 새 문의를 작성합니다."
+            />
+
+            <UtilityPageSection
+              title="문의 목록"
+              description="답변 대기 중인 문의는 수정과 삭제가 가능합니다."
+            >
+              {inquiries.length === 0 ? (
+                <div className="px-4 lg:px-0">
+                  <Empty
+                    title="문의 내역이 없습니다."
+                    description="궁금한 점이 있으시면 문의를 등록해주세요."
+                  />
+                </div>
+              ) : (
+                inquiries.map((inquiry) => (
+                  <InquiryCard
+                    key={inquiry.id}
+                    inquiry={inquiry}
+                    isMutating={isMutating}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))
+              )}
+            </UtilityPageSection>
+          </div>
         </PageLayout>
 
-        {/* 모바일 전용 Sheet */}
         {isMobile && (
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetContent side="bottom">

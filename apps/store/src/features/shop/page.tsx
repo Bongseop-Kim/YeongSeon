@@ -15,7 +15,7 @@ import type {
 } from "@yeongseon/shared/types/view/product";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import type { FilterTab } from "@/features/shop/types/filter";
 import {
@@ -23,7 +23,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui-extended/dialog";
 
 export default function ShopPage() {
   const [selectedCategories, setSelectedCategories] = useState<

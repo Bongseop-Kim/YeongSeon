@@ -1,8 +1,8 @@
 import { CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
-import CloseButton from "@/components/ui/close";
+import CloseButton from "@/components/ui-extended/close";
 import { Package } from "lucide-react";
 
 interface ReformCartItemCardProps {
@@ -63,7 +63,7 @@ export function ReformCartItemCard({
               {/* 적용된 쿠폰 표시 */}
               {hasCoupon && (
                 <p className="text-xs text-primary font-medium">
-                  {item.appliedCoupon?.coupon.name} 적용
+                  {item.appliedCoupon?.coupon.name ?? ""} 적용
                 </p>
               )}
             </div>

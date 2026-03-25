@@ -47,6 +47,7 @@ docs/superpowers/
 e2e/.auth/
 output/playwright/
 test-results/
+.playwright-cli/
 
 # Test coverage
 coverage/

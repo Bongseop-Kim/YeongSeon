@@ -41,6 +41,7 @@ docs/
 | [[coupon]]       | 쿠폰 할인 계산, 생명주기, max_discount_amount  | sale, repair, custom-order         | implemented |
 | [[token]]        | 토큰 원장, 구매 패키지, 소비 단가, 동시성 제어 | design                             | implemented |
 | [[notification]] | 알림 이벤트 정의, 채널 후보 (향후 구현 예정)   | 전체                               | planned     |
+| [[ui-surface]]   | 운영형 페이지 레이아웃, 카드 사용 기준         | store UI                           | implemented |
 
 ---
 

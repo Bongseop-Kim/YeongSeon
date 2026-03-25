@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { ProductCard } from "@/components/composite/product-card";
 import type { Product } from "@yeongseon/shared/types/view/product";
 
