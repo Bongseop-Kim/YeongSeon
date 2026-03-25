@@ -1,14 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
-export interface NotificationStatus {
+interface NotificationStatus {
   phoneVerified: boolean;
   notificationConsent: boolean;
 }
 
 interface NotificationStatusRow {
-  phone_verified: boolean | null;
-  notification_consent: boolean | null;
+  phone_verified: boolean;
+  notification_consent: boolean;
 }
 
 const getNotificationStatus = async (): Promise<NotificationStatus> => {
@@ -31,8 +31,8 @@ const getNotificationStatus = async (): Promise<NotificationStatus> => {
   }
 
   return {
-    phoneVerified: data.phone_verified ?? false,
-    notificationConsent: data.notification_consent ?? false,
+    phoneVerified: data.phone_verified,
+    notificationConsent: data.notification_consent,
   };
 };
 

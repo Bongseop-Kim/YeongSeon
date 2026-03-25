@@ -115,8 +115,8 @@ export default function MyInfoDetailPage() {
                       await saveNotificationConsent(true);
                       await updateNotificationEnabled(true);
                       setShowVerifyModal(false);
-                      refetch();
-                      void queryClient.invalidateQueries({
+                      await refetch();
+                      await queryClient.invalidateQueries({
                         queryKey: notificationStatusKeys.detail(),
                       });
                     } catch (error) {
