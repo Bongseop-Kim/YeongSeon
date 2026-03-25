@@ -519,19 +519,32 @@ Deno.serve(async (req) => {
   EdgeRuntime.waitUntil(
     (async () => {
       try {
-        const { data: notifyProfile } = await adminClient
-          .from("profiles")
-          .select(
-            "phone, phone_verified, notification_consent, notification_enabled",
-          )
-          .eq("id", user.id)
-          .single();
+        const { data: notifyProfile, error: notifyProfileError } =
+          await adminClient
+            .from("profiles")
+            .select(
+              "phone, phone_verified, notification_consent, notification_enabled",
+            )
+            .eq("id", user.id)
+            .single();
+
+        if (notifyProfileError || !notifyProfile) {
+          errorLogger(
+            "notify_profile_lookup_failed",
+            notifyProfileError ?? new Error("Profile not found"),
+            {
+              paymentGroupId: payload.orderId,
+              userId: user.id,
+            },
+          );
+          return;
+        }
 
         if (
-          notifyProfile?.notification_consent &&
-          notifyProfile?.phone_verified &&
-          notifyProfile?.notification_enabled &&
-          notifyProfile?.phone
+          notifyProfile.notification_consent &&
+          notifyProfile.phone_verified &&
+          notifyProfile.notification_enabled &&
+          notifyProfile.phone
         ) {
           await sendAlimtalk({
             to: notifyProfile.phone,

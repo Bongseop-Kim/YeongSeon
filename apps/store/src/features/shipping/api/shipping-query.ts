@@ -6,7 +6,7 @@ import {
   createShippingAddress,
   updateShippingAddress,
   deleteShippingAddress,
-} from "./shipping-api";
+} from "@/features/shipping/api/shipping-api";
 import type { ShippingAddressInput } from "@/features/shipping/types/shipping-address";
 import { toast } from "@/lib/toast";
 import { useAuthStore } from "@/store/auth";

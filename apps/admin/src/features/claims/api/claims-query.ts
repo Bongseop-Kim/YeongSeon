@@ -101,7 +101,7 @@ export function useClaimStatusUpdate(
       message.success(`상태가 "${newStatus}"(으)로 변경되었습니다.`);
       supabase.auth
         .getSession()
-        .then(({ data: { session } }) => {
+        .then(async ({ data: { session } }) => {
           if (session?.access_token) {
             fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-claim`,
@@ -113,15 +113,34 @@ export function useClaimStatusUpdate(
                 },
                 body: JSON.stringify({ claimId }),
               },
-            ).catch((err) =>
-              console.warn(
-                "[notify-claim] 발송 실패 (클레임 처리에 영향 없음)",
-                err,
-              ),
-            );
+            )
+              .then(async (response) => {
+                if (!response.ok) {
+                  const responseText = await response.text().catch(() => "");
+                  console.warn(
+                    "[notify-claim] 응답 실패 (클레임 처리에 영향 없음)",
+                    {
+                      status: response.status,
+                      statusText: response.statusText,
+                      body: responseText,
+                    },
+                  );
+                }
+              })
+              .catch((err) =>
+                console.warn(
+                  "[notify-claim] 발송 실패 (클레임 처리에 영향 없음)",
+                  err,
+                ),
+              );
           }
         })
-        .catch(() => {});
+        .catch((err) =>
+          console.warn(
+            "[notify-claim] 세션 조회 실패 (클레임 처리에 영향 없음)",
+            err,
+          ),
+        );
       refetch();
       invalidateLogs();
       return true;

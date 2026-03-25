@@ -35,7 +35,7 @@ const OrderFormPage = () => {
     hasOrderItems,
     updateOrderItemCoupon,
   } = useOrderStore();
-  const { openCouponSelect } = useCouponSelect();
+  const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
   const { user } = useAuthStore();
 
   const { data: reformPricing, isLoading: isReformPricingLoading } =
@@ -69,30 +69,33 @@ const OrderFormPage = () => {
   };
 
   const proceedToPayment = async () => {
-    if (!user) {
-      toast.error("로그인이 필요합니다. 로그인 후 결제를 진행해주세요.");
-      navigate(ROUTES.LOGIN);
-      return;
-    }
-
-    if (!selectedAddressId || !selectedAddress) {
-      toast.error("배송지를 선택해주세요.");
-      return;
-    }
-
-    if (orderItems.length === 0) {
-      toast.error("주문할 상품이 없습니다.");
-      return;
-    }
-
-    if (!paymentWidgetRef.current) {
-      toast.error("결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
-      return;
-    }
-
+    if (isPaymentLoading) return;
     setIsPaymentLoading(true);
 
     try {
+      if (!user) {
+        toast.error("로그인이 필요합니다. 로그인 후 결제를 진행해주세요.");
+        navigate(ROUTES.LOGIN);
+        return;
+      }
+
+      if (!selectedAddressId || !selectedAddress) {
+        toast.error("배송지를 선택해주세요.");
+        return;
+      }
+
+      if (orderItems.length === 0) {
+        toast.error("주문할 상품이 없습니다.");
+        return;
+      }
+
+      if (!paymentWidgetRef.current) {
+        toast.error(
+          "결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.",
+        );
+        return;
+      }
+
       const orderResult = await createOrder({
         items: orderItems,
         shippingAddressId: selectedAddressId,
@@ -306,6 +309,7 @@ const OrderFormPage = () => {
           </PageLayout>
         </MainContent>
       </MainLayout>
+      {couponDialog}
       <NotificationConsentFlowModals consentFlow={consentFlow} />
     </>
   );

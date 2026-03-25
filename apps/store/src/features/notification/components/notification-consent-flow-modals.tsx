@@ -18,10 +18,15 @@ export function NotificationConsentFlowModals({ consentFlow }: Props) {
       <NotificationConsentModal
         isOpen={consentFlow.showConsentModal}
         onConsent={consentFlow.handleConsent}
+        onDismiss={consentFlow.dismissConsentModal}
       />
       <Dialog
         open={consentFlow.showVerifyModal}
-        onOpenChange={(open) => !open && consentFlow.closeVerifyModal()}
+        onOpenChange={(open) => {
+          if (!open) {
+            void consentFlow.closeVerifyModal();
+          }
+        }}
       >
         <DialogContent>
           <DialogHeader>

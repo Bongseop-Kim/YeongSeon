@@ -79,10 +79,13 @@ export const sendAlimtalk = async (
     return false;
   }
 
+  const messageType: SolapiMessageType = "ATA";
   const body = {
     message: {
       to: params.to,
       from: senderNumber,
+      text: params.fallbackContent,
+      type: messageType,
       kakaoOptions: {
         pfId,
         templateId: params.templateId,
@@ -130,12 +133,13 @@ export const sendSms = async (
     return false;
   }
 
+  const messageType: SolapiMessageType = "SMS";
   const body = {
     message: {
       to,
       from: senderNumber,
       text: content,
-      type: "SMS",
+      type: messageType,
     },
   };
 

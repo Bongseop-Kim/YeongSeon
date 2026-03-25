@@ -356,7 +356,12 @@ export default function CartPage() {
               >
                 취소
               </Button>
-              <Button className="flex-1" onClick={handleConfirmOptionChange}>
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  void handleConfirmOptionChange();
+                }}
+              >
                 변경
               </Button>
             </DialogFooter>
@@ -387,7 +392,9 @@ export default function CartPage() {
               </Button>
               <Button
                 className="flex-1"
-                onClick={handleConfirmReformOptionChange}
+                onClick={() => {
+                  void handleConfirmReformOptionChange();
+                }}
               >
                 변경
               </Button>

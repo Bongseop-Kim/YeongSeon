@@ -46,7 +46,7 @@ last-verified: 2026-03-25
 
 ### 구매 시 진입점
 
-```
+```text
 구매 진행
   └─ notification_consent = true?
        ├─ Yes → 결제 진행 (알림 수신 설정 완료 상태)
@@ -61,7 +61,7 @@ last-verified: 2026-03-25
 
 ### 동의 팝업 문구
 
-```
+```text
 주문 진행 상황을 문자/카카오톡으로 안내해드립니다.
 이를 위해 휴대폰 번호를 수집합니다.
 
@@ -95,7 +95,8 @@ last-verified: 2026-03-25
 | 항목        | 내용                               |
 | ----------- | ---------------------------------- |
 | 수신자      | 고객                               |
-| 트리거      | `confirm-payment` Edge Function    |
+| 트리거      | `payment_completed`                |
+| 구현        | `confirm-payment` Edge Function    |
 | 대상 도메인 | sale, repair, custom-order, sample |
 
 **도메인별 전이**
@@ -109,7 +110,7 @@ last-verified: 2026-03-25
 
 **메시지 예시**
 
-```
+```text
 [영선] 주문이 완료되었습니다.
 주문번호: {order_id}
 결제금액: {amount}원
@@ -119,17 +120,18 @@ last-verified: 2026-03-25
 
 ### 2. 견적 요청 접수
 
-| 항목        | 내용                       |
-| ----------- | -------------------------- |
-| 수신자      | 고객                       |
-| 트리거      | `create_quote_request` RPC |
-| 대상 도메인 | quote-request              |
+| 항목        | 내용                                 |
+| ----------- | ------------------------------------ |
+| 수신자      | 고객                                 |
+| 트리거      | `create_quote_request` RPC           |
+| 구현        | `notify-quote-request` Edge Function |
+| 대상 도메인 | quote-request                        |
 
 > 접수 확인 용도. 이후 관리자가 직접 연락처(이메일/카카오/전화)로 고객과 협의한다.
 
 **메시지 예시**
 
-```
+```text
 [영선] 견적 요청이 접수되었습니다.
 담당자가 순차적으로 연락드리겠습니다.
 ```
@@ -142,19 +144,20 @@ last-verified: 2026-03-25
 | ----------- | ------------------------------ |
 | 수신자      | 고객                           |
 | 트리거      | `update_claim_status` RPC      |
+| 구현        | `notify-claim` Edge Function   |
 | 발송 시점   | `→ 완료` 또는 `→ 거부` 전이 시 |
 | 대상 도메인 | claim                          |
 
 **완료 메시지 예시**
 
-```
+```text
 [영선] 클레임이 처리 완료되었습니다.
 처리 유형: {claim_type}
 ```
 
 **거부 메시지 예시**
 
-```
+```text
 [영선] 클레임 요청이 거부되었습니다.
 자세한 내용은 앱에서 확인해주세요.
 ```
@@ -163,12 +166,13 @@ last-verified: 2026-03-25
 
 ## 구현 위치
 
-| 이벤트           | 발송 위치                                                        |
-| ---------------- | ---------------------------------------------------------------- |
-| 결제 완료        | `supabase/functions/confirm-payment/index.ts` (기존 함수에 추가) |
-| 견적 요청 접수   | `supabase/functions/notify-quote-request/index.ts` (신규)        |
-| 클레임 처리 결과 | `supabase/functions/notify-claim/index.ts` (신규)                |
-| 인증번호 발송    | `supabase/functions/send-phone-verification/index.ts` (신규)     |
+| 이벤트           | 트리거                       | 구현                                                  |
+| ---------------- | ---------------------------- | ----------------------------------------------------- |
+| 결제 완료        | `payment_completed`          | `supabase/functions/confirm-payment/index.ts`         |
+| 견적 요청 접수   | `create_quote_request` RPC   | `supabase/functions/notify-quote-request/index.ts`    |
+| 클레임 처리 결과 | `update_claim_status` RPC    | `supabase/functions/notify-claim/index.ts`            |
+| 인증번호 발송    | `send_phone_verification` UI | `supabase/functions/send-phone-verification/index.ts` |
+| 번호 인증 완료   | `verify_phone` UI            | `supabase/functions/verify-phone/index.ts`            |
 
 > 견적/클레임 알림은 RPC 내부에서 Edge Function을 호출하거나 DB webhook으로 트리거한다.
 

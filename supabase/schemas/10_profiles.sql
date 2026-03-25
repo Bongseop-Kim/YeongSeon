@@ -20,6 +20,32 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS public.phone_verifications (
+  id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  phone      varchar     NOT NULL,
+  code       varchar(6)  NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL DEFAULT (now() + interval '5 minutes'),
+  verified   boolean     NOT NULL DEFAULT false
+);
+
+CREATE INDEX IF NOT EXISTS phone_verifications_user_id_idx
+  ON public.phone_verifications (user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS public.notification_preference_logs (
+  id                             uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id                        uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  previous_notification_consent  boolean     NOT NULL,
+  new_notification_consent       boolean     NOT NULL,
+  previous_notification_enabled  boolean     NOT NULL,
+  new_notification_enabled       boolean     NOT NULL,
+  created_at                     timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS notification_preference_logs_user_id_idx
+  ON public.notification_preference_logs (user_id, created_at DESC);
+
 -- Admin role check (SECURITY DEFINER bypasses RLS to avoid infinite recursion on profiles)
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
@@ -36,6 +62,8 @@ $$;
 
 -- RLS
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.phone_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notification_preference_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own profile"
   ON public.profiles FOR SELECT
@@ -74,7 +102,29 @@ CREATE POLICY "Admins can update profiles"
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
 
+CREATE POLICY "Users can view their own phone verifications"
+  ON public.phone_verifications FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Service role can manage phone verifications"
+  ON public.phone_verifications FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "Users can view their own notification preference logs"
+  ON public.notification_preference_logs FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all notification preference logs"
+  ON public.notification_preference_logs FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
 -- Privilege hardening
 REVOKE UPDATE ON TABLE public.profiles FROM authenticated;
-GRANT UPDATE (name, phone, birth, notification_consent, notification_enabled)
-  ON TABLE public.profiles TO authenticated;
+GRANT UPDATE (name, phone, birth) ON TABLE public.profiles TO authenticated;
+GRANT SELECT ON TABLE public.phone_verifications TO authenticated;
+REVOKE INSERT, UPDATE, DELETE ON TABLE public.phone_verifications FROM authenticated;

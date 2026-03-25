@@ -13,7 +13,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import TieItemCard from "./components/tie-item-card";
-import BulkApplySection from "@/components/composite/bulk-apply-section";
+import BulkApplySection, {
+  type BulkApplySectionRef,
+} from "@/components/composite/bulk-apply-section";
 import type { ReformOptions } from "@yeongseon/shared/types/view/reform";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -70,9 +72,7 @@ const ReformPage = () => {
   const [checkedIndicesForBulk, setCheckedIndicesForBulk] = useState<number[]>(
     [],
   );
-  const bulkApplySectionRef = useRef<{ handleBulkApply: () => void } | null>(
-    null,
-  );
+  const bulkApplySectionRef = useRef<BulkApplySectionRef | null>(null);
   const isSubmittingRef = useRef(false);
   const uploadTieImagesMutation = useUploadTieImages();
   const { data: pricing } = useReformPricing();
@@ -334,7 +334,7 @@ const ReformPage = () => {
                 <Separator />
 
                 {fields.map((field, index) => (
-                  <React.Fragment key={`${field.id}-${index}`}>
+                  <React.Fragment key={field.id}>
                     <TieItemCard
                       index={index}
                       control={form.control}
@@ -409,9 +409,12 @@ const ReformPage = () => {
             </Button>
             <Button
               className="flex-1"
-              onClick={() => {
-                bulkApplySectionRef.current?.handleBulkApply();
-                setBulkDialogOpen(false);
+              onClick={async () => {
+                const didApply =
+                  await bulkApplySectionRef.current?.handleBulkApply();
+                if (didApply) {
+                  setBulkDialogOpen(false);
+                }
               }}
             >
               적용

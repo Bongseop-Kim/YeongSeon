@@ -10,15 +10,23 @@ import { Button } from "@/components/ui/button";
 
 interface NotificationConsentModalProps {
   isOpen: boolean;
-  onConsent: (agreed: boolean) => void;
+  onConsent: (agreed: boolean) => void | Promise<void>;
+  onDismiss: () => void;
 }
 
 export const NotificationConsentModal = ({
   isOpen,
   onConsent,
+  onDismiss,
 }: NotificationConsentModalProps) => {
+  const handleConsent = (agreed: boolean) => {
+    void Promise.resolve(onConsent(agreed)).catch((error) => {
+      console.error("Failed to handle notification consent:", error);
+    });
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onConsent(false)}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onDismiss()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>알림 수신 동의</DialogTitle>
@@ -28,12 +36,12 @@ export const NotificationConsentModal = ({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button onClick={() => onConsent(true)} className="w-full">
+          <Button onClick={() => handleConsent(true)} className="w-full">
             동의하고 계속
           </Button>
           <Button
             variant="outline"
-            onClick={() => onConsent(false)}
+            onClick={() => handleConsent(false)}
             className="w-full"
           >
             동의 없이 계속

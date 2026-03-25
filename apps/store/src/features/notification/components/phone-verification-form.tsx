@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { usePhoneVerification } from "@/features/notification/hooks/use-phone-verification";
 
 interface PhoneVerificationFormProps {
-  onVerified: () => void;
+  onVerified: () => Promise<void>;
 }
 
 export const PhoneVerificationForm = ({

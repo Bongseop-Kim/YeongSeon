@@ -12,8 +12,11 @@ const isValidKoreanPhone = (phone: string): boolean =>
 
 const normalizePhone = (phone: string): string => phone.replace(/-/g, "");
 
-const generateOtp = (): string =>
-  Math.floor(100000 + Math.random() * 900000).toString();
+const generateOtp = (): string => {
+  const randomBuffer = new Uint32Array(1);
+  crypto.getRandomValues(randomBuffer);
+  return (randomBuffer[0] % 1_000_000).toString().padStart(6, "0");
+};
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req.headers.get("Origin"));

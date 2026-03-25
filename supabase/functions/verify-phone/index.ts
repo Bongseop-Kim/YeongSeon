@@ -1,10 +1,12 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
+import { timingSafeEqual } from "node:crypto";
 import { getCorsHeaders } from "@/functions/_shared/cors.ts";
 import { createJsonResponse } from "@/functions/_shared/response.ts";
 import { createLogger } from "@/functions/_shared/logger.ts";
 
 const { processLogger, errorLogger } = createLogger("verify-phone");
+const DUMMY_CODE_BUFFER = new TextEncoder().encode("000000");
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
@@ -75,7 +77,15 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "인증번호가 만료되었습니다" });
   }
 
-  if (verification.code !== code) {
+  const verificationCodeBuffer = new TextEncoder().encode(verification.code);
+  const inputCodeBuffer = new TextEncoder().encode(code);
+
+  if (verificationCodeBuffer.length !== inputCodeBuffer.length) {
+    timingSafeEqual(DUMMY_CODE_BUFFER, DUMMY_CODE_BUFFER);
+    return jsonResponse(400, { error: "인증번호가 일치하지 않습니다" });
+  }
+
+  if (!timingSafeEqual(verificationCodeBuffer, inputCodeBuffer)) {
     return jsonResponse(400, { error: "인증번호가 일치하지 않습니다" });
   }
 

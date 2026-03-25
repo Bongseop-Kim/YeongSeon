@@ -6,7 +6,7 @@ import {
 
 type Step = "input" | "verify" | "done";
 
-export const usePhoneVerification = (onVerified: () => void) => {
+export const usePhoneVerification = (onVerified: () => Promise<void>) => {
   const [step, setStep] = useState<Step>("input");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -31,8 +31,8 @@ export const usePhoneVerification = (onVerified: () => void) => {
     setIsLoading(true);
     try {
       await verifyPhone(phone, code);
+      await onVerified();
       setStep("done");
-      onVerified();
     } catch (e) {
       setError(e instanceof Error ? e.message : "인증 실패");
     } finally {

@@ -16,7 +16,7 @@ interface BulkApplySectionProps {
 }
 
 export interface BulkApplySectionRef {
-  handleBulkApply: () => void;
+  handleBulkApply: () => boolean | Promise<boolean>;
 }
 
 const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
@@ -28,7 +28,7 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
 
     const handleBulkApply = () => {
       const numValue = Number(value);
-      if (!numValue || numValue <= 0) return;
+      if (!numValue || numValue <= 0) return false;
 
       // 체크된 넥타이에만 일괄 적용
       checkedIndices.forEach((i) => {
@@ -44,6 +44,7 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
       });
 
       onApply?.();
+      return true;
     };
 
     useImperativeHandle(ref, () => ({

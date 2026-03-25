@@ -91,6 +91,29 @@ Deno.serve(async (req) => {
     return jsonResponse(200, { message: "알림 수신 비활성화 상태" });
   }
 
+  const { data: notificationLog, error: notificationLogError } =
+    await adminClient
+      .from("claim_notification_logs")
+      .insert({
+        claim_id: claimId,
+        status: claim.status,
+      })
+      .select("id")
+      .maybeSingle();
+
+  if (notificationLogError) {
+    if (notificationLogError.code === "23505") {
+      processLogger("duplicate_skipped", { claimId, status: claim.status });
+      return jsonResponse(200, { message: "이미 발송된 상태 알림" });
+    }
+
+    errorLogger("notification_log_failed", notificationLogError, {
+      claimId,
+      status: claim.status,
+    });
+    return jsonResponse(500, { error: "Notification log insert failed" });
+  }
+
   const isDone = claim.status === "완료";
   const templateId = isDone
     ? (Deno.env.get("SOLAPI_TEMPLATE_CLAIM_DONE") ?? "")
@@ -109,9 +132,14 @@ Deno.serve(async (req) => {
   if (!sent) {
     errorLogger("send_failed", new Error("sendAlimtalk returned false"), {
       claimId,
+      notificationLogId: notificationLog?.id ?? null,
     });
   }
 
-  processLogger("notified", { claimId, status: claim.status });
+  processLogger("notified", {
+    claimId,
+    status: claim.status,
+    notificationLogId: notificationLog?.id ?? null,
+  });
   return jsonResponse(200, { message: "알림 발송 완료" });
 });

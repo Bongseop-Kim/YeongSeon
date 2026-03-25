@@ -112,8 +112,25 @@ CREATE TABLE IF NOT EXISTS public.claim_status_logs (
 CREATE INDEX idx_claim_status_logs_claim_id
   ON public.claim_status_logs USING btree (claim_id, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS public.claim_notification_logs (
+  id         uuid        NOT NULL DEFAULT gen_random_uuid(),
+  claim_id    uuid       NOT NULL,
+  status      text       NOT NULL,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT claim_notification_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT claim_notification_logs_claim_id_fkey
+    FOREIGN KEY (claim_id) REFERENCES public.claims (id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT claim_notification_logs_claim_id_status_key UNIQUE (claim_id, status)
+);
+
+CREATE INDEX idx_claim_notification_logs_claim_id
+  ON public.claim_notification_logs USING btree (claim_id, created_at DESC);
+
 -- RLS
 ALTER TABLE public.claim_status_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.claim_notification_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view logs of their own claims"
   ON public.claim_status_logs FOR SELECT
@@ -128,6 +145,22 @@ CREATE POLICY "Users can view logs of their own claims"
 
 CREATE POLICY "Admins can view all claim status logs"
   ON public.claim_status_logs FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
+CREATE POLICY "Users can view logs of their own claim notifications"
+  ON public.claim_notification_logs FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.claims c
+      WHERE c.id = claim_id
+        AND c.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Admins can view all claim notifications"
+  ON public.claim_notification_logs FOR SELECT
   TO authenticated
   USING (public.is_admin());
 

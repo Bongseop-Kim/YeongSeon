@@ -13,7 +13,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { useProfile } from "@/features/my-page/api/profile-query";
-import { updateNotificationEnabled } from "@/features/notification/api/notification-api";
+import {
+  saveNotificationConsent,
+  updateNotificationEnabled,
+} from "@/features/notification/api/notification-api";
 import { PhoneVerificationForm } from "@/features/notification/components/phone-verification-form";
 import { toast } from "@/lib/toast";
 import { ProfileItem } from "./components/profile-item";
@@ -47,18 +50,20 @@ export default function MyInfoDetailPage() {
                     value={profile.phone || "-"}
                   />
                   <ProfileItem label="이메일" value={profile.email || "-"} />
-                  {profile.notificationConsent && (
-                    <div className="flex items-center justify-between py-3 border-b">
-                      <span className="text-sm">알림 수신</span>
-                      <Switch
-                        checked={profile.notificationEnabled}
-                        onCheckedChange={async (val) => {
-                          if (val && !profile.phoneVerified) {
+                  <div className="flex items-center justify-between py-3 border-b">
+                    <span className="text-sm">알림 수신</span>
+                    <Switch
+                      checked={profile.notificationEnabled}
+                      onCheckedChange={async (val) => {
+                        if (val && !profile.notificationConsent) {
+                          if (!profile.phoneVerified) {
                             setShowVerifyModal(true);
                             return;
                           }
+
                           try {
-                            await updateNotificationEnabled(val);
+                            await saveNotificationConsent(true);
+                            await updateNotificationEnabled(true);
                             refetch();
                           } catch (error) {
                             const message =
@@ -66,15 +71,36 @@ export default function MyInfoDetailPage() {
                                 ? error.message
                                 : "알림 설정 변경에 실패했습니다.";
                             console.error(
-                              "Failed to update notification setting:",
+                              "Failed to start notification consent flow:",
                               error,
                             );
                             toast.error(message);
                           }
-                        }}
-                      />
-                    </div>
-                  )}
+                          return;
+                        }
+
+                        if (val && !profile.phoneVerified) {
+                          setShowVerifyModal(true);
+                          return;
+                        }
+
+                        try {
+                          await updateNotificationEnabled(val);
+                          refetch();
+                        } catch (error) {
+                          const message =
+                            error instanceof Error
+                              ? error.message
+                              : "알림 설정 변경에 실패했습니다.";
+                          console.error(
+                            "Failed to update notification setting:",
+                            error,
+                          );
+                          toast.error(message);
+                        }
+                      }}
+                    />
+                  </div>
                 </>
               ) : (
                 <div
@@ -99,6 +125,7 @@ export default function MyInfoDetailPage() {
                 <PhoneVerificationForm
                   onVerified={async () => {
                     try {
+                      await saveNotificationConsent(true);
                       await updateNotificationEnabled(true);
                       setShowVerifyModal(false);
                       refetch();

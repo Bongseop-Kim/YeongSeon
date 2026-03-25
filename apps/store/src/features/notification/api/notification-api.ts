@@ -45,25 +45,22 @@ export const verifyPhone = async (
   }
 };
 
-// profiles 직접 UPDATE 예외: notification_consent, notification_enabled는
-// GRANT UPDATE 및 RLS("id = auth.uid()")로 소유권이 보장되어 있어 직접 쓰기 허용.
-const updateNotificationField = async (patch: {
+const updateNotificationPreferences = async (patch: {
   notification_consent?: boolean;
   notification_enabled?: boolean;
 }): Promise<void> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("로그인이 필요합니다");
-  const { error } = await supabase
-    .from("profiles")
-    .update(patch)
-    .eq("id", user.id);
-  if (error) throw error;
+  const { error } = await supabase.rpc("set_notification_preferences", {
+    p_notification_consent: patch.notification_consent ?? null,
+    p_notification_enabled: patch.notification_enabled ?? null,
+  });
+
+  if (error) {
+    throw error;
+  }
 };
 
 export const saveNotificationConsent = (consent: boolean) =>
-  updateNotificationField({ notification_consent: consent });
+  updateNotificationPreferences({ notification_consent: consent });
 
 export const updateNotificationEnabled = (enabled: boolean) =>
-  updateNotificationField({ notification_enabled: enabled });
+  updateNotificationPreferences({ notification_enabled: enabled });
