@@ -90,7 +90,8 @@ const forbidden = [
     from: { path: "^src/features/my-page/" },
     to: {
       path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(my-page|auth|design|quote-request|notification)/",
+      pathNot:
+        "^src/features/(my-page|auth|design|quote-request|notification)/",
     },
   },
   // 6. home → shop 허용
@@ -159,7 +160,8 @@ const forbidden = [
     from: { path: "^src/features/sample-order/" },
     to: {
       path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(sample-order|shipping|custom-order|notification)/",
+      pathNot:
+        "^src/features/(sample-order|shipping|custom-order|notification)/",
     },
   },
   // 12. reform → cart 허용 (리폼 주문 시 장바구니 연동)
