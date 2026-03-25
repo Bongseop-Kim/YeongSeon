@@ -50,12 +50,15 @@ export default mergeConfig(
           "src/**/store/**",
           // 타입 전용
           "src/**/types/**",
-          // 외부 서비스 초기화
+          // 타입 전용 파일 (런타임 코드 없음)
+          "src/**/*-types.ts",
+          // 외부 서비스 초기화/래퍼
           "src/lib/supabase.ts",
           "src/lib/imagekit.ts",
           "src/lib/query-client.ts",
           "src/lib/toast.ts",
           "src/lib/utils.ts",
+          "src/features/design/api/imagekit-upload.ts",
           // API 레이어 (Supabase 직접 호출)
           "src/**/*-api.ts",
           "src/**/*-query.ts",
