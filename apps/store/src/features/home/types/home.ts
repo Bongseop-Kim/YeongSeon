@@ -1,12 +1,13 @@
-export interface BannerSlide {
+export interface ServiceCard {
   id: number;
-  image: string;
   title: string;
   description: string;
+  href: string;
+  badge?: string;
 }
 
-export interface InstagramImage {
-  id: number;
-  src: string;
-  alt: string;
+export interface ManufacturingStep {
+  step: number;
+  label: string;
+  description: string;
 }

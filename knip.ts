@@ -15,7 +15,8 @@ const config: KnipConfig = {
 
     "apps/store": {
       // shadcn/ui 컴포넌트는 모든 sub-parts를 export하는 관례 → entry로 등록해 public API 처리
-      entry: ["src/components/**/*.{ts,tsx}"],
+      // model-viewer.d.ts: @google/model-viewer는 React JSX 타입을 제공하지 않으므로 별도 선언 필요
+      entry: ["src/components/**/*.{ts,tsx}", "src/model-viewer.d.ts"],
       project: ["src/**/*.{ts,tsx}"],
     },
 

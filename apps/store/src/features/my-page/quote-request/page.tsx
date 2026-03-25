@@ -1,15 +1,18 @@
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Empty } from "@/components/composite/empty";
+import {
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { Card } from "@/components/ui/card";
 import { ROUTES } from "@/constants/ROUTES";
 import { useQuoteRequests } from "@/features/quote-request/api/quote-request-query";
 import { QuoteRequestCard } from "@/features/quote-request/components/quote-request-card";
-import { toDateString, type ListFilters } from "@/lib/list-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useSearch } from "@/hooks/use-search";
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { toDateString, type ListFilters } from "@/lib/list-filters";
 
 export default function QuoteRequestListPage() {
   const navigate = useNavigate();
@@ -27,7 +30,6 @@ export default function QuoteRequestListPage() {
   });
 
   const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
-
   const { data: quoteRequests = [], isLoading, error } = useQuoteRequests();
 
   const filteredQuoteRequests = useMemo(() => {
@@ -42,13 +44,12 @@ export default function QuoteRequestListPage() {
       );
     }
 
-    if (searchFilters.dateFrom) {
-      const dateFrom = searchFilters.dateFrom;
+    const { dateFrom, dateTo } = searchFilters;
+    if (dateFrom) {
       result = result.filter((q) => q.date >= dateFrom);
     }
 
-    if (searchFilters.dateTo) {
-      const dateTo = searchFilters.dateTo;
+    if (dateTo) {
       result = result.filter((q) => q.date <= dateTo);
     }
 
@@ -76,8 +77,8 @@ export default function QuoteRequestListPage() {
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout>
-            <Card>
+          <PageLayout contentClassName="py-4 lg:py-8">
+            <div className="px-4 lg:px-0">
               <Empty
                 title="견적 요청 내역을 불러올 수 없습니다."
                 description={
@@ -86,7 +87,7 @@ export default function QuoteRequestListPage() {
                     : "오류가 발생했습니다."
                 }
               />
-            </Card>
+            </div>
           </PageLayout>
         </MainContent>
       </MainLayout>
@@ -96,32 +97,43 @@ export default function QuoteRequestListPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout>
-          <section className="space-y-4">
-            {filteredQuoteRequests.length === 0 ? (
-              <Card>
-                <Empty
-                  title="견적 요청 내역이 없습니다."
-                  description="필요한 상품의 견적을 요청해보세요."
-                />
-              </Card>
-            ) : (
-              filteredQuoteRequests.map((quoteRequest) => (
-                <QuoteRequestCard
-                  key={quoteRequest.id}
-                  quoteRequest={quoteRequest}
-                  onClick={() =>
-                    navigate(
-                      ROUTES.MY_PAGE_QUOTE_REQUEST_DETAIL.replace(
-                        ":id",
-                        quoteRequest.id,
-                      ),
-                    )
-                  }
-                />
-              ))
-            )}
-          </section>
+        <PageLayout contentClassName="py-4 lg:py-8">
+          <div className="space-y-8 lg:space-y-10">
+            <UtilityPageIntro
+              eyebrow="Quote Requests"
+              title="견적 요청 내역"
+              description="주문 제작 상담과 견적 응답 상태를 시간순으로 확인합니다."
+            />
+
+            <UtilityPageSection
+              title="요청 목록"
+              description="검색과 기간 필터는 상단 공용 검색 도구를 사용합니다."
+            >
+              {filteredQuoteRequests.length === 0 ? (
+                <div className="px-4 lg:px-0">
+                  <Empty
+                    title="견적 요청 내역이 없습니다."
+                    description="필요한 상품의 견적을 요청해보세요."
+                  />
+                </div>
+              ) : (
+                filteredQuoteRequests.map((quoteRequest) => (
+                  <QuoteRequestCard
+                    key={quoteRequest.id}
+                    quoteRequest={quoteRequest}
+                    onClick={() =>
+                      navigate(
+                        ROUTES.MY_PAGE_QUOTE_REQUEST_DETAIL.replace(
+                          ":id",
+                          quoteRequest.id,
+                        ),
+                      )
+                    }
+                  />
+                ))
+              )}
+            </UtilityPageSection>
+          </div>
         </PageLayout>
       </MainContent>
     </MainLayout>

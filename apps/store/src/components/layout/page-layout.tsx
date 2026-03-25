@@ -65,7 +65,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               <div
                 className={
                   isMobile
-                    ? "z-30 fixed bottom-0 left-0 right-0 mt-4 px-2 bg-white pt-2 border-t"
+                    ? "fixed bottom-0 left-0 right-0 z-30 mt-4 border-t border-border bg-background/96 px-2 pt-2 backdrop-blur"
                     : "relative mt-4"
                 }
                 style={

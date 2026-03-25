@@ -1,27 +1,7 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { buildClaimFormRoute, ROUTES } from "@/constants/ROUTES";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui-extended/button";
-import { Separator } from "@/components/ui/separator";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { CustomOrderOptionsSection } from "@/components/composite/custom-order-options-section";
-import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
-import { OrderItemCard } from "@/components/composite/order-item-card";
-import { OrderStatusBadge } from "@/components/composite/status-badge";
-import React from "react";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import {
-  useOrderDetail,
-  useConfirmPurchase,
-} from "@/features/order/api/order-query";
-import { Empty } from "@/components/composite/empty";
-import type {
-  OrderItem,
-  ShippingInfo,
-  TrackingInfo,
-} from "@yeongseon/shared/types/view/order";
+import { getClaimActionsFromCustomerActions } from "@yeongseon/shared";
 import type { CustomerAction } from "@yeongseon/shared";
 import {
   buildTrackingUrl,
@@ -31,7 +11,31 @@ import {
   type ClaimActionType,
   CLAIM_ACTION_LABEL,
 } from "@yeongseon/shared/constants/claim-actions";
-import { getClaimActionsFromCustomerActions } from "@yeongseon/shared";
+import type {
+  OrderItem,
+  ShippingInfo,
+  TrackingInfo,
+} from "@yeongseon/shared/types/view/order";
+
+import { CustomOrderOptionsSection } from "@/components/composite/custom-order-options-section";
+import { Empty } from "@/components/composite/empty";
+import { OrderItemCard } from "@/components/composite/order-item-card";
+import { OrderStatusBadge } from "@/components/composite/status-badge";
+import { MainContent, MainLayout } from "@/components/layout/main-layout";
+import { PageLayout } from "@/components/layout/page-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui-extended/button";
+import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
+import {
+  useConfirmPurchase,
+  useOrderDetail,
+} from "@/features/order/api/order-query";
+import { buildClaimFormRoute, ROUTES } from "@/constants/ROUTES";
+
+const detailRowLabelClass =
+  "shrink-0 text-sm font-medium text-foreground-muted";
+const detailRowValueClass = "text-sm text-foreground";
 
 const getOrderErrorDescription = (error: unknown): string => {
   if (!(error instanceof Error)) {
@@ -45,6 +49,36 @@ const getOrderErrorDescription = (error: unknown): string => {
   return error.message;
 };
 
+const DetailRow = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) => (
+  <p className="flex flex-wrap gap-x-2 gap-y-1">
+    <span className={detailRowLabelClass}>{label}</span>
+    <span className={detailRowValueClass}>{value}</span>
+  </p>
+);
+
+const InlineActionLink = ({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="mt-1 inline-block text-sm font-medium text-info underline underline-offset-4"
+  >
+    {children}
+  </a>
+);
+
 const renderClaimButtons = (
   customerActions: CustomerAction[],
   item: OrderItem,
@@ -53,12 +87,13 @@ const renderClaimButtons = (
   const actions = getClaimActionsFromCustomerActions(customerActions).filter(
     (actionType) => item.type !== "token" || actionType === "cancel",
   );
+
   if (actions.length === 0) {
     return null;
   }
 
   return (
-    <div className="flex gap-2 mt-3">
+    <div className="mt-3 flex gap-2">
       {actions.map((actionType) => (
         <Button
           key={actionType}
@@ -74,26 +109,44 @@ const renderClaimButtons = (
   );
 };
 
-/** 배송중 또는 배송완료 상태에서 구매확정 버튼을 표시 */
+const StateCallout = ({
+  tone,
+  children,
+}: {
+  tone: "info" | "success" | "destructive";
+  children: React.ReactNode;
+}) => {
+  const toneClass =
+    tone === "success"
+      ? "border-success/20 bg-success-muted text-success"
+      : tone === "destructive"
+        ? "border-destructive/20 bg-destructive/8 text-destructive"
+        : "border-info/20 bg-info-muted text-info";
+
+  return (
+    <div className={`rounded-xl border p-4 text-sm ${toneClass}`}>
+      {children}
+    </div>
+  );
+};
+
 const PurchaseConfirmSection = ({ orderId }: { orderId: string }) => {
   const { mutate, isPending, isSuccess, isError, error } =
     useConfirmPurchase(orderId);
 
   if (isSuccess) {
     return (
-      <div className="rounded-md bg-green-50 border border-green-200 p-4 text-sm text-green-800">
-        구매확정이 완료되었습니다.
-      </div>
+      <StateCallout tone="success">구매확정이 완료되었습니다.</StateCallout>
     );
   }
 
   return (
-    <div className="rounded-md bg-blue-50 border border-blue-200 p-4 space-y-3">
+    <div className="space-y-3 rounded-xl border border-info/20 bg-info-muted p-4">
       {isError && (
-        <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+        <StateCallout tone="destructive">
           {getOrderErrorDescription(error) ||
             "구매확정에 실패했습니다. 다시 시도해주세요."}
-        </div>
+        </StateCallout>
       )}
       <Button
         onClick={() => mutate()}
@@ -107,9 +160,9 @@ const PurchaseConfirmSection = ({ orderId }: { orderId: string }) => {
   );
 };
 
-/** 발송대기 상태에서 수선품 발송 안내 카드 표시 */
 const RepairShippingPendingSection = ({ orderId }: { orderId: string }) => {
   const navigate = useNavigate();
+
   return (
     <RepairShippingAddressBanner
       onRegisterTracking={() =>
@@ -119,7 +172,6 @@ const RepairShippingPendingSection = ({ orderId }: { orderId: string }) => {
   );
 };
 
-/** 발송중 상태에서 택배사/송장번호 및 배송 조회 링크 표시 (TrackingInfoSection 패턴) */
 const RepairShippingInTransitSection = ({
   courierCompany,
   trackingNumber,
@@ -128,26 +180,18 @@ const RepairShippingInTransitSection = ({
   trackingNumber: string;
 }) => {
   const trackingUrl = buildTrackingUrl(courierCompany, trackingNumber);
+
   return (
-    <>
-      <p className="text-sm">
-        <span className="text-zinc-500">택배사:</span>{" "}
-        {getCourierCompanyLabel(courierCompany)}
-      </p>
-      <p className="text-sm">
-        <span className="text-zinc-500">송장번호:</span> {trackingNumber}
-      </p>
+    <div className="space-y-2">
+      <DetailRow
+        label="택배사:"
+        value={getCourierCompanyLabel(courierCompany)}
+      />
+      <DetailRow label="송장번호:" value={trackingNumber} />
       {trackingUrl && (
-        <a
-          href={trackingUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-1 text-blue-600 underline"
-        >
-          배송조회
-        </a>
+        <InlineActionLink href={trackingUrl}>배송조회</InlineActionLink>
       )}
-    </>
+    </div>
   );
 };
 
@@ -158,44 +202,44 @@ const OrderDetailSkeleton = () => (
         sidebar={
           <Card className="animate-pulse">
             <CardHeader>
-              <div className="h-6 w-20 bg-zinc-200 rounded" />
+              <div className="h-6 w-20 rounded bg-surface-muted" />
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="h-4 w-full bg-zinc-200 rounded" />
-              <div className="h-4 w-full bg-zinc-200 rounded" />
-              <div className="h-4 w-full bg-zinc-200 rounded" />
+              <div className="h-4 w-full rounded bg-surface-muted" />
+              <div className="h-4 w-full rounded bg-surface-muted" />
+              <div className="h-4 w-full rounded bg-surface-muted" />
               <Separator />
-              <div className="h-6 w-full bg-zinc-200 rounded" />
+              <div className="h-6 w-full rounded bg-surface-muted" />
             </CardContent>
           </Card>
         }
       >
         <Card className="animate-pulse">
           <CardHeader className="space-y-3">
-            <div className="h-6 w-32 bg-zinc-200 rounded" />
-            <div className="h-4 w-56 bg-zinc-200 rounded" />
-            <div className="h-4 w-40 bg-zinc-200 rounded" />
+            <div className="h-6 w-32 rounded bg-surface-muted" />
+            <div className="h-4 w-56 rounded bg-surface-muted" />
+            <div className="h-4 w-40 rounded bg-surface-muted" />
           </CardHeader>
           <CardContent>
             <Separator />
           </CardContent>
           <CardHeader>
-            <div className="h-6 w-24 bg-zinc-200 rounded" />
+            <div className="h-6 w-24 rounded bg-surface-muted" />
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="h-4 w-40 bg-zinc-200 rounded" />
-            <div className="h-4 w-72 bg-zinc-200 rounded" />
-            <div className="h-4 w-28 bg-zinc-200 rounded" />
+            <div className="h-4 w-40 rounded bg-surface-muted" />
+            <div className="h-4 w-72 rounded bg-surface-muted" />
+            <div className="h-4 w-28 rounded bg-surface-muted" />
           </CardContent>
           <CardContent>
             <Separator />
           </CardContent>
           <CardHeader>
-            <div className="h-6 w-36 bg-zinc-200 rounded" />
+            <div className="h-6 w-36 rounded bg-surface-muted" />
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="h-24 w-full bg-zinc-200 rounded" />
-            <div className="h-24 w-full bg-zinc-200 rounded" />
+            <div className="h-24 w-full rounded bg-surface-muted" />
+            <div className="h-24 w-full rounded bg-surface-muted" />
           </CardContent>
         </Card>
       </PageLayout>
@@ -204,29 +248,25 @@ const OrderDetailSkeleton = () => (
 );
 
 const ShippingInfoSection = ({ info }: { info: ShippingInfo }) => (
-  <>
-    <p>
-      <span className="text-zinc-500">수령인:</span> {info.recipientName}
-    </p>
-    <p>
-      <span className="text-zinc-500">연락처:</span> {info.recipientPhone}
-    </p>
-    <p>
-      <span className="text-zinc-500">주소:</span> ({info.postalCode}){" "}
-      {info.address}
-      {info.addressDetail && ` ${info.addressDetail}`}
-    </p>
+  <div className="space-y-2">
+    <DetailRow label="수령인:" value={info.recipientName} />
+    <DetailRow label="연락처:" value={info.recipientPhone} />
+    <DetailRow
+      label="주소:"
+      value={
+        <>
+          ({info.postalCode}) {info.address}
+          {info.addressDetail && ` ${info.addressDetail}`}
+        </>
+      }
+    />
     {info.deliveryMemo && (
-      <p>
-        <span className="text-zinc-500">배송메모:</span> {info.deliveryMemo}
-      </p>
+      <DetailRow label="배송메모:" value={info.deliveryMemo} />
     )}
     {info.deliveryRequest && (
-      <p>
-        <span className="text-zinc-500">배송요청:</span> {info.deliveryRequest}
-      </p>
+      <DetailRow label="배송요청:" value={info.deliveryRequest} />
     )}
-  </>
+  </div>
 );
 
 const TrackingInfoSection = ({ info }: { info: TrackingInfo }) => {
@@ -234,32 +274,21 @@ const TrackingInfoSection = ({ info }: { info: TrackingInfo }) => {
     info.courierCompany,
     info.trackingNumber,
   );
+
   return (
-    <>
-      <p>
-        <span className="text-zinc-500">택배사:</span>{" "}
-        {getCourierCompanyLabel(info.courierCompany)}
-      </p>
-      <p>
-        <span className="text-zinc-500">송장번호:</span> {info.trackingNumber}
-      </p>
+    <div className="space-y-2">
+      <DetailRow
+        label="택배사:"
+        value={getCourierCompanyLabel(info.courierCompany)}
+      />
+      <DetailRow label="송장번호:" value={info.trackingNumber} />
       {info.shippedAt && (
-        <p>
-          <span className="text-zinc-500">발송일시:</span>{" "}
-          {formatDate(info.shippedAt)}
-        </p>
+        <DetailRow label="발송일시:" value={formatDate(info.shippedAt)} />
       )}
       {trackingUrl && (
-        <a
-          href={trackingUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-1 text-blue-600 underline"
-        >
-          배송조회
-        </a>
+        <InlineActionLink href={trackingUrl}>배송조회</InlineActionLink>
       )}
-    </>
+    </div>
   );
 };
 
@@ -339,14 +368,14 @@ const OrderDetailPage = () => {
               <CardContent className="space-y-3">
                 {order.orderType !== "token" && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-zinc-600">배송비</span>
-                    <span>무료</span>
+                    <span className="text-foreground-muted">배송비</span>
+                    <span className="text-foreground">무료</span>
                   </div>
                 )}
                 <Separator />
                 <div className="flex justify-between text-base font-semibold">
                   <span>총 결제 금액</span>
-                  <span className="text-blue-600">
+                  <span className="text-info">
                     {order.totalPrice.toLocaleString()}원
                   </span>
                 </div>
@@ -365,14 +394,13 @@ const OrderDetailPage = () => {
           }
         >
           <Card data-testid="order-detail-root">
-            {/* 주문 정보 헤더 */}
-            <CardHeader className="flex justify-between items-center">
+            <CardHeader className="flex items-center justify-between">
               <div className="space-y-1">
                 <CardTitle>주문 상세</CardTitle>
-                <div className="text-sm text-zinc-500">
+                <div className="text-sm text-foreground-muted">
                   주문번호: {order.orderNumber}
                 </div>
-                <div className="text-sm text-zinc-500">
+                <div className="text-sm text-foreground-muted">
                   주문일시: {formatDate(order.date)}
                 </div>
               </div>
@@ -383,23 +411,23 @@ const OrderDetailPage = () => {
               <Separator />
             </CardContent>
 
-            {/* 배송지 정보 */}
             {order.orderType !== "token" && (
               <>
                 <CardHeader>
                   <CardTitle>배송지 정보</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-1 text-sm">
+                <CardContent className="space-y-1">
                   {order.shippingInfo ? (
                     <ShippingInfoSection info={order.shippingInfo} />
                   ) : (
-                    <p className="text-zinc-500">배송지 정보가 없습니다.</p>
+                    <p className="text-sm text-foreground-muted">
+                      배송지 정보가 없습니다.
+                    </p>
                   )}
                 </CardContent>
               </>
             )}
 
-            {/* 배송 추적 정보 */}
             {order.trackingInfo && order.orderType !== "repair" && (
               <>
                 <CardContent>
@@ -408,7 +436,7 @@ const OrderDetailPage = () => {
                 <CardHeader>
                   <CardTitle>배송 추적</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+                <CardContent>
                   <TrackingInfoSection info={order.trackingInfo} />
                 </CardContent>
               </>
@@ -420,21 +448,18 @@ const OrderDetailPage = () => {
               </CardContent>
             )}
 
-            {/* 구매확정 */}
             {order.customerActions.some((a) => a === "confirm_purchase") && (
               <CardContent>
                 <PurchaseConfirmSection orderId={order.id} />
               </CardContent>
             )}
 
-            {/* 수선품 발송 안내 (발송대기) */}
             {order.orderType === "repair" && order.status === "발송대기" && (
               <CardContent>
                 <RepairShippingPendingSection orderId={order.id} />
               </CardContent>
             )}
 
-            {/* 수선품 발송 정보 (발송중) */}
             {order.orderType === "repair" &&
               order.status === "발송중" &&
               order.trackingInfo?.courierCompany &&
@@ -447,7 +472,6 @@ const OrderDetailPage = () => {
                 </CardContent>
               )}
 
-            {/* 주문 상품 목록 */}
             <CardHeader>
               <CardTitle>주문 상품 {order.items.length}개</CardTitle>
             </CardHeader>

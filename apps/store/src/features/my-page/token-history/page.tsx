@@ -1,17 +1,22 @@
+import { useMemo, useState } from "react";
+import { Empty } from "@/components/composite/empty";
+import {
+  UtilityPageAside,
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { Empty } from "@/components/composite/empty";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useDesignTokenBalanceQuery,
   useDesignTokenHistoryQuery,
 } from "@/features/design/api/ai-design-query";
-import { toDateString, type ListFilters } from "@/lib/list-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useSearch } from "@/hooks/use-search";
+import { toDateString, type ListFilters } from "@/lib/list-filters";
 import { cn } from "@/lib/utils";
-import { useMemo, useState } from "react";
+import { useBreakpoint } from "@/providers/breakpoint-provider";
 
 const formatAmount = (amount: number) => {
   const prefix = amount >= 0 ? "+" : "";
@@ -39,9 +44,9 @@ function BalanceSkeleton() {
 
 function HistorySkeleton() {
   return (
-    <div className="divide-y px-6">
+    <div className="divide-y divide-stone-200">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between gap-4 py-3">
+        <div key={i} className="flex items-center justify-between gap-4 py-4">
           <div className="space-y-1.5">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-3 w-20" />
@@ -53,7 +58,47 @@ function HistorySkeleton() {
   );
 }
 
-// ─── 사용 내역 탭 ─────────────────────────────────────────────────────────────
+interface BalanceSummaryProps {
+  total: number;
+  paid: number;
+  bonus: number;
+  isLoading: boolean;
+  hasError: boolean;
+}
+
+function BalanceSummary({
+  total,
+  paid,
+  bonus,
+  isLoading,
+  hasError,
+}: BalanceSummaryProps) {
+  if (isLoading) {
+    return <BalanceSkeleton />;
+  }
+
+  if (hasError) {
+    return (
+      <p className="text-sm text-red-600">
+        잔액을 불러오는 중 오류가 발생했습니다.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="text-3xl font-semibold tracking-tight text-zinc-900">
+        {total.toLocaleString()}
+        <span className="ml-1 text-base font-normal text-zinc-400">토큰</span>
+      </div>
+      <div className="flex gap-3 text-xs text-zinc-500">
+        <span>유료 {paid.toLocaleString()}</span>
+        <span>·</span>
+        <span>보너스/무료 {bonus.toLocaleString()}</span>
+      </div>
+    </div>
+  );
+}
 
 type HistoryItem = {
   id: string;
@@ -72,22 +117,11 @@ interface MergedUsageItem {
   type: string;
 }
 
-/**
- * work_id 패턴에서 base UUID 추출
- * 'abc_use_paid' → 'abc', 'abc_use_bonus' → 'abc', 'abc' → 'abc', null → null
- */
 const extractBaseWorkId = (workId: string | null): string | null => {
   if (!workId) return null;
   return workId.replace(/_use_paid$|_use_bonus$/, "");
 };
 
-/**
- * use + refund 쌍을 base workId 기준으로 합산해 순 차감량만 노출.
- * - 이미지 성공: use(-3) → -3 표시
- * - 이미지 실패: use(-3) + refund(+2) → -1 표시
- * - grant / admin 항목은 그대로 유지.
- * - workId 없는 refund(구매 환불)는 제외 (주문 목록에서 토큰 환불로 처리).
- */
 function mergeUsageItems(items: HistoryItem[]): MergedUsageItem[] {
   const groupMap = new Map<string, { baseItem: HistoryItem; net: number }>();
   const standalone: HistoryItem[] = [];
@@ -99,16 +133,13 @@ function mergeUsageItems(items: HistoryItem[]): MergedUsageItem[] {
       const entry = groupMap.get(baseId);
       if (entry) {
         entry.net += item.amount;
-        // use 항목을 대표 항목으로 유지 (description, createdAt 기준)
         if (item.type === "use") entry.baseItem = item;
       } else {
         groupMap.set(baseId, { baseItem: item, net: item.amount });
       }
     } else if (item.type !== "refund") {
-      // workId 없는 use(레거시) 또는 grant/admin → 단독 노출
       standalone.push(item);
     }
-    // workId 없는 refund는 구매 환불이므로 제외
   }
 
   const merged: MergedUsageItem[] = [
@@ -146,68 +177,57 @@ function UsageTab({ history, isLoading, error }: UsageTabProps) {
   const usageItems = mergeUsageItems(rawUsageItems);
 
   if (isLoading && history.length === 0) {
-    return (
-      <Card>
-        <HistorySkeleton />
-      </Card>
-    );
+    return <HistorySkeleton />;
   }
 
   if (error && history.length === 0) {
     return (
-      <Card>
-        <Empty title="내역을 불러올 수 없습니다." description={error.message} />
-      </Card>
+      <Empty title="내역을 불러올 수 없습니다." description={error.message} />
     );
   }
 
   if (usageItems.length === 0) {
     return (
-      <Card>
-        <Empty
-          title="사용 내역이 없습니다."
-          description="토큰이 사용되거나 지급되면 이곳에서 확인할 수 있습니다."
-        />
-      </Card>
+      <Empty
+        title="사용 내역이 없습니다."
+        description="토큰이 사용되거나 지급되면 이곳에서 확인할 수 있습니다."
+      />
     );
   }
 
   return (
-    <Card>
-      <div className="divide-y px-6">
-        {usageItems.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center justify-between gap-4 py-3"
-          >
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-zinc-700">
-                {item.description ??
-                  (item.type === "grant" ? "토큰 지급" : "토큰 사용")}
-              </p>
-              <span className="text-xs text-zinc-400">
-                {formatDate(item.createdAt)}
-              </span>
-            </div>
-            <span
-              className={cn(
-                "shrink-0 text-sm font-semibold tabular-nums",
-                item.netAmount >= 0 ? "text-green-600" : "text-zinc-700",
-              )}
-            >
-              {formatAmount(item.netAmount)}
+    <div className="divide-y divide-stone-200">
+      {usageItems.map((item) => (
+        <div
+          key={item.id}
+          className="flex items-center justify-between gap-4 px-4 py-4 lg:px-0"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm text-zinc-700">
+              {item.description ??
+                (item.type === "grant" ? "토큰 지급" : "토큰 사용")}
+            </p>
+            <span className="text-xs text-zinc-400">
+              {formatDate(item.createdAt)}
             </span>
           </div>
-        ))}
-      </div>
-    </Card>
+          <span
+            className={cn(
+              "shrink-0 text-sm font-semibold tabular-nums",
+              item.netAmount >= 0 ? "text-green-600" : "text-zinc-700",
+            )}
+          >
+            {formatAmount(item.netAmount)}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }
 
-// ─── 메인 페이지 ──────────────────────────────────────────────────────────────
-
 export default function TokenHistoryPage() {
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
+  const { isMobile } = useBreakpoint();
 
   useSearch({
     placeholder: "토큰 내역 검색...",
@@ -248,13 +268,12 @@ export default function TokenHistoryPage() {
       );
     }
 
-    if (searchFilters.dateFrom) {
-      const dateFrom = searchFilters.dateFrom;
+    const { dateFrom, dateTo } = searchFilters;
+    if (dateFrom) {
       result = result.filter((item) => item.createdAt.slice(0, 10) >= dateFrom);
     }
 
-    if (searchFilters.dateTo) {
-      const dateTo = searchFilters.dateTo;
+    if (dateTo) {
       result = result.filter((item) => item.createdAt.slice(0, 10) <= dateTo);
     }
 
@@ -264,43 +283,66 @@ export default function TokenHistoryPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout>
-          <div className="space-y-4">
-            {/* 잔액 카드 */}
-            <Card>
-              <CardHeader>
-                <CardTitle>현재 토큰 잔액</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isBalanceLoading && rawBalance === undefined ? (
-                  <BalanceSkeleton />
-                ) : balanceError && rawBalance === undefined ? (
-                  <p className="text-sm text-red-600">
-                    잔액을 불러오는 중 오류가 발생했습니다.
-                  </p>
-                ) : (
-                  <div className="space-y-1">
-                    <div className="text-3xl font-semibold tracking-tight text-zinc-900">
-                      {balance.total.toLocaleString()}
-                      <span className="ml-1 text-base font-normal text-zinc-400">
-                        토큰
-                      </span>
-                    </div>
-                    <div className="flex gap-3 text-xs text-zinc-500">
-                      <span>유료 {balance.paid.toLocaleString()}</span>
-                      <span>·</span>
-                      <span>보너스/무료 {balance.bonus.toLocaleString()}</span>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <UsageTab
-              history={usageHistory}
-              isLoading={isHistoryLoading}
-              error={historyError instanceof Error ? historyError : null}
+        <PageLayout contentClassName="py-4 lg:py-8">
+          <div className="space-y-8 lg:space-y-10">
+            <UtilityPageIntro
+              eyebrow="Token History"
+              title="토큰 내역"
+              description="현재 보유 토큰과 사용, 환불 변동 이력을 확인합니다."
             />
+
+            {isMobile ? (
+              <div className="px-4">
+                <UtilityPageAside
+                  title="현재 토큰 잔액"
+                  description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
+                  tone="muted"
+                >
+                  <BalanceSummary
+                    total={balance.total}
+                    paid={balance.paid}
+                    bonus={balance.bonus}
+                    isLoading={isBalanceLoading && rawBalance === undefined}
+                    hasError={Boolean(balanceError && rawBalance === undefined)}
+                  />
+                </UtilityPageAside>
+              </div>
+            ) : null}
+
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-12">
+              <div className="min-w-0 space-y-8">
+                <UtilityPageSection
+                  title="사용 및 환불 이력"
+                  description="검색과 기간 필터는 상단 공용 검색 도구를 사용합니다."
+                >
+                  <UsageTab
+                    history={usageHistory}
+                    isLoading={isHistoryLoading}
+                    error={historyError instanceof Error ? historyError : null}
+                  />
+                </UtilityPageSection>
+              </div>
+
+              {!isMobile ? (
+                <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
+                  <UtilityPageAside
+                    title="현재 토큰 잔액"
+                    description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
+                    tone="muted"
+                  >
+                    <BalanceSummary
+                      total={balance.total}
+                      paid={balance.paid}
+                      bonus={balance.bonus}
+                      isLoading={isBalanceLoading && rawBalance === undefined}
+                      hasError={Boolean(
+                        balanceError && rawBalance === undefined,
+                      )}
+                    />
+                  </UtilityPageAside>
+                </div>
+              ) : null}
+            </div>
           </div>
         </PageLayout>
       </MainContent>

@@ -1,7 +1,10 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { BellRingIcon, UserRoundIcon } from "lucide-react";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui-extended/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "@/constants/ROUTES";
 import { useProfile } from "@/features/my-page/api/profile-query";
 import {
@@ -21,7 +21,12 @@ import {
 import { notificationStatusKeys } from "@/features/notification/api/notification-status-query";
 import { PhoneVerificationForm } from "@/features/notification/components/phone-verification-form";
 import { toast } from "@/lib/toast";
-import { ProfileItem } from "./components/profile-item";
+import {
+  UtilityKeyValueRow,
+  UtilityPageAside,
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
 
 export default function MyInfoDetailPage() {
   const navigate = useNavigate();
@@ -60,46 +65,121 @@ export default function MyInfoDetailPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout>
-          <Card>
-            <CardContent className="space-y-4">
-              {isLoading ? (
-                <div
-                  className="text-center py-4"
-                  role="status"
-                  aria-live="polite"
-                  aria-atomic="true"
+        <PageLayout contentClassName="py-4 lg:py-8">
+          <div className="space-y-8 lg:space-y-10">
+            <UtilityPageIntro
+              eyebrow="Profile Detail"
+              title="회원정보 변경"
+              description="현재 계정에 저장된 기본 정보를 확인하고 알림 상태를 조정합니다."
+            />
+
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.8fr)] lg:gap-12">
+              <div className="min-w-0 space-y-8 px-4 lg:px-0">
+                <UtilityPageSection
+                  icon={UserRoundIcon}
+                  title="기본 정보"
+                  description="주문과 알림에 사용되는 현재 저장 정보를 보여줍니다."
                 >
-                  로딩 중...
-                </div>
-              ) : profile ? (
-                <>
-                  <ProfileItem label="이름" value={profile.name || "-"} />
-                  <ProfileItem label="생년월일" value={profile.birth || "-"} />
-                  <ProfileItem
-                    label="휴대폰번호"
-                    value={profile.phone || "-"}
-                  />
-                  <ProfileItem label="이메일" value={profile.email || "-"} />
-                  <div className="flex items-center justify-between py-3 border-b">
-                    <span className="text-sm">알림 수신</span>
+                  {isLoading ? (
+                    <div
+                      className="py-8 text-sm text-zinc-500"
+                      role="status"
+                      aria-live="polite"
+                      aria-atomic="true"
+                    >
+                      프로필 정보를 불러오는 중입니다.
+                    </div>
+                  ) : profile ? (
+                    <dl>
+                      <UtilityKeyValueRow
+                        label="이름"
+                        value={profile.name || "-"}
+                      />
+                      <UtilityKeyValueRow
+                        label="생년월일"
+                        value={profile.birth || "-"}
+                      />
+                      <UtilityKeyValueRow
+                        label="휴대폰 번호"
+                        value={profile.phone || "-"}
+                      />
+                      <UtilityKeyValueRow
+                        label="이메일"
+                        value={profile.email || "-"}
+                      />
+                    </dl>
+                  ) : (
+                    <div
+                      className="py-8 text-sm text-red-500"
+                      role="alert"
+                      aria-live="assertive"
+                      aria-atomic="true"
+                    >
+                      프로필을 불러올 수 없습니다.
+                    </div>
+                  )}
+                </UtilityPageSection>
+
+                <UtilityPageSection
+                  icon={BellRingIcon}
+                  title="알림 수신"
+                  description="주문 변경과 상태 알림 수신 여부를 설정합니다."
+                >
+                  <div className="flex items-center justify-between border-b border-stone-200 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-zinc-950">
+                        푸시 알림
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        주문 상태와 주요 서비스 알림을 받습니다.
+                      </p>
+                    </div>
                     <Switch
-                      checked={profile.notificationEnabled}
+                      checked={profile?.notificationEnabled ?? false}
                       onCheckedChange={handleNotificationToggle}
+                      disabled={!profile}
                     />
                   </div>
-                </>
-              ) : (
-                <div
-                  className="text-center py-4 text-red-500"
-                  role="alert"
-                  aria-live="assertive"
-                  aria-atomic="true"
+
+                  <div className="pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(ROUTES.MY_PAGE_MY_INFO_NOTICE)}
+                    >
+                      수신 동의 상세 설정
+                    </Button>
+                  </div>
+                </UtilityPageSection>
+              </div>
+
+              <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
+                <UtilityPageAside
+                  title="다음 작업"
+                  description="자주 사용하는 정보 변경 경로입니다."
+                  tone="muted"
                 >
-                  프로필을 불러올 수 없습니다.
-                </div>
-              )}
-            </CardContent>
+                  <div className="space-y-3">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-center"
+                      disabled
+                      aria-disabled="true"
+                      title="준비 중인 기능입니다."
+                    >
+                      회원정보 변경 준비 중
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-center"
+                      onClick={() => navigate(ROUTES.MY_PAGE_MY_INFO_EMAIL)}
+                      disabled={isLoading || !profile}
+                    >
+                      이메일 변경
+                    </Button>
+                  </div>
+                </UtilityPageAside>
+              </div>
+            </div>
 
             <Dialog
               open={showVerifyModal}
@@ -131,31 +211,7 @@ export default function MyInfoDetailPage() {
                 />
               </DialogContent>
             </Dialog>
-
-            <div className="flex gap-2 mt-4 px-4">
-              <Button
-                variant="outline"
-                className="flex-1"
-                disabled
-                aria-disabled="true"
-                title="준비 중인 기능입니다."
-              >
-                회원정보 변경
-              </Button>
-
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  navigate(ROUTES.MY_PAGE_MY_INFO_EMAIL);
-                }}
-                disabled={isLoading || !profile}
-                aria-disabled={isLoading || !profile}
-              >
-                이메일 변경
-              </Button>
-            </div>
-          </Card>
+          </div>
         </PageLayout>
       </MainContent>
     </MainLayout>

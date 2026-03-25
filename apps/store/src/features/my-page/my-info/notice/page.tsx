@@ -1,13 +1,17 @@
 import { useEffect } from "react";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Empty } from "@/components/composite/empty";
+import { MainContent, MainLayout } from "@/components/layout/main-layout";
+import { PageLayout } from "@/components/layout/page-layout";
+import {
+  UtilityPageAside,
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import {
   applyMarketingConsentToggle,
   DEFAULT_MARKETING_CONSENT,
@@ -76,8 +80,6 @@ export default function MyInfoNoticePage() {
     try {
       await updateMarketingConsentMutation.mutateAsync(nextConsent);
     } catch {
-      // query cache rollback은 useUpdateMarketingConsent onError에서 처리
-      // form state는 즉시 복원
       form.setValue(
         "isMarketingConsent",
         previousFormValues.isMarketingConsent,
@@ -92,11 +94,9 @@ export default function MyInfoNoticePage() {
     return (
       <MainLayout>
         <MainContent>
-          <Card>
-            <CardContent className="py-12 text-center text-zinc-500">
-              수신 동의 정보를 불러오는 중...
-            </CardContent>
-          </Card>
+          <div className="px-4 py-12 text-center text-zinc-500 lg:px-0">
+            수신 동의 정보를 불러오는 중...
+          </div>
         </MainContent>
       </MainLayout>
     );
@@ -106,7 +106,7 @@ export default function MyInfoNoticePage() {
     return (
       <MainLayout>
         <MainContent>
-          <Card>
+          <div className="px-4 lg:px-0">
             <Empty
               title="수신 동의 정보를 불러오지 못했습니다."
               description={
@@ -115,7 +115,7 @@ export default function MyInfoNoticePage() {
                   : "잠시 후 다시 시도해주세요."
               }
             />
-          </Card>
+          </div>
         </MainContent>
       </MainLayout>
     );
@@ -124,85 +124,100 @@ export default function MyInfoNoticePage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout>
-          <Card>
-            <CardHeader className="flex items-center justify-between">
-              <CardTitle>
-                마케팅 목적의 개인정보 수집 및 이용 동의 (선택)
-              </CardTitle>
-              <Controller
-                name="isMarketingConsent"
-                control={form.control}
-                render={({ field }) => (
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={(checked) => {
-                      void handleToggle("all", checked);
-                    }}
-                    disabled={isSaving}
-                  />
-                )}
-              />
-            </CardHeader>
-            <Separator />
+        <PageLayout contentClassName="py-4 lg:py-8">
+          <div className="space-y-8 lg:space-y-10">
+            <UtilityPageIntro
+              eyebrow="Consent Settings"
+              title="마케팅 수신 동의"
+              description="혜택, 이벤트, 프로모션 알림에 대한 채널별 동의 상태를 관리합니다."
+            />
 
-            <CardContent className="space-y-4">
-              <Label
-                className="font-bold text-base"
-                subLabel="다양한 혜택과 이벤트 알림"
-              >
-                문자/이메일
-              </Label>
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-12">
+              <div className="min-w-0 px-4 lg:px-0">
+                <UtilityPageSection
+                  title="수신 채널 설정"
+                  description="전체 동의를 켜면 문자와 이메일 채널이 함께 반영됩니다."
+                >
+                  <div className="space-y-5">
+                    <div className="flex items-start justify-between gap-4 border-b border-stone-200 py-3">
+                      <div>
+                        <p className="text-sm font-medium text-zinc-950">
+                          전체 동의
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-500">
+                          마케팅 목적의 개인정보 수집 및 이용 동의(선택)
+                        </p>
+                      </div>
+                      <Controller
+                        name="isMarketingConsent"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              void handleToggle("all", checked);
+                            }}
+                            disabled={isSaving}
+                          />
+                        )}
+                      />
+                    </div>
 
-              <div className="flex items-center justify-between">
-                <Label className="font-bold">문자</Label>
-                <Controller
-                  name="isSmsConsent"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={(checked) => {
-                        void handleToggle("sms", checked);
-                      }}
-                      disabled={isSaving}
-                    />
-                  )}
-                />
+                    <div className="flex items-center justify-between border-b border-stone-200 py-3">
+                      <Label className="font-bold">문자</Label>
+                      <Controller
+                        name="isSmsConsent"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              void handleToggle("sms", checked);
+                            }}
+                            disabled={isSaving}
+                          />
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between border-b border-stone-200 py-3">
+                      <Label className="font-bold">이메일</Label>
+                      <Controller
+                        name="isEmailConsent"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              void handleToggle("email", checked);
+                            }}
+                            disabled={isSaving}
+                          />
+                        )}
+                      />
+                    </div>
+                  </div>
+                </UtilityPageSection>
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label className="font-bold">이메일</Label>
-                <Controller
-                  name="isEmailConsent"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={(checked) => {
-                        void handleToggle("email", checked);
-                      }}
-                      disabled={isSaving}
-                    />
-                  )}
-                />
+              <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
+                <UtilityPageAside
+                  title="알림 안내"
+                  description="서비스 운영에 필요한 알림은 마케팅 동의와 별도로 발송됩니다."
+                  tone="muted"
+                >
+                  <div className="space-y-3 text-sm text-zinc-600">
+                    <p>서비스 알림은 수신설정과 관계없이 발송됩니다.</p>
+                    <Separator />
+                    <p>푸시 알림은 앱 내 알림 설정 상태에 따라 발송됩니다.</p>
+                    <p className="text-zinc-500">
+                      앱 &gt; 마이 &gt; 설정 &gt; 알림설정
+                    </p>
+                  </div>
+                </UtilityPageAside>
               </div>
-
-              <Separator />
-
-              <Label
-                subLabel={
-                  <>
-                    <p>서비스 알림은 수신설정에 상관없이 발송됩니다.</p>
-                    <p>푸시 알림은 설정에 따라 발송됩니다.</p>
-                    <p>{`[푸시 설정 확인 : 앱 > 마이 > 설정 > 알림설정]`}</p>
-                  </>
-                }
-              >
-                알림 안내
-              </Label>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </PageLayout>
       </MainContent>
     </MainLayout>

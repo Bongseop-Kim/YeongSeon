@@ -1,10 +1,12 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
 import { Button } from "@/components/ui-extended/button";
+import {
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/components/composite/order-item-card";
 import { TokenRefundAction } from "@/components/composite/token-refund-action";
@@ -113,14 +115,18 @@ export default function OrderListPage() {
     return (
       <MainLayout>
         <MainContent>
-          <Card>
-            <Empty
-              title="주문 목록을 불러올 수 없습니다."
-              description={
-                error instanceof Error ? error.message : "오류가 발생했습니다."
-              }
-            />
-          </Card>
+          <PageLayout contentClassName="py-4 lg:py-8">
+            <div className="px-4 lg:px-0">
+              <Empty
+                title="주문 목록을 불러올 수 없습니다."
+                description={
+                  error instanceof Error
+                    ? error.message
+                    : "오류가 발생했습니다."
+                }
+              />
+            </div>
+          </PageLayout>
         </MainContent>
       </MainLayout>
     );
@@ -129,11 +135,20 @@ export default function OrderListPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout>
-          <div className="space-y-6">
-            <section className="space-y-4">
+        <PageLayout contentClassName="py-4 lg:py-8">
+          <div className="space-y-8 lg:space-y-10">
+            <UtilityPageIntro
+              eyebrow="Orders"
+              title="주문 내역"
+              description="결제 이후 진행 상태, 상품 구성, 클레임 가능 동작을 확인합니다."
+            />
+
+            <UtilityPageSection
+              title="주문 목록"
+              description="검색과 기간 필터, 주문 유형 탭은 상단 공용 도구를 사용합니다."
+            >
               {filteredOrders.length === 0 ? (
-                <Card>
+                <div className="px-4 lg:px-0">
                   <Empty
                     title={
                       activeTab === "전체"
@@ -146,24 +161,41 @@ export default function OrderListPage() {
                         : `${activeTab}에 해당하는 주문이 없습니다.`
                     }
                   />
-                </Card>
+                </div>
               ) : (
-                filteredOrders.map((order) => {
-                  return (
-                    <Card key={order.id} data-testid={`order-card-${order.id}`}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">
-                            {formatDate(order.date)}
-                          </CardTitle>
-                          <OrderStatusBadge status={order.status} />
+                filteredOrders.map((order) => (
+                  <article
+                    key={order.id}
+                    data-testid={`order-card-${order.id}`}
+                    className="border-b border-stone-200 px-4 py-5 lg:px-0"
+                  >
+                    <div className="flex flex-col gap-5">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-base font-semibold text-zinc-950">
+                              {formatDate(order.date)}
+                            </p>
+                            <OrderStatusBadge status={order.status} />
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+                            <span>주문번호: {order.orderNumber}</span>
+                            <span className="text-stone-300">/</span>
+                            <span>상품 {order.items.length}개</span>
+                          </div>
                         </div>
-                        <div className="mt-1 text-sm text-zinc-500">
-                          주문번호: {order.orderNumber}
-                        </div>
-                      </CardHeader>
 
-                      <div className="space-y-0">
+                        <div className="text-left lg:text-right">
+                          <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+                            Total
+                          </p>
+                          <p className="mt-1 text-lg font-semibold text-zinc-950">
+                            {order.totalPrice.toLocaleString()}원
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="divide-y divide-stone-200">
                         {order.items.map((item) => {
                           const claimActions =
                             item.type === "token"
@@ -171,10 +203,11 @@ export default function OrderListPage() {
                               : getClaimActionsFromCustomerActions(
                                   order.customerActions,
                                 );
+
                           return (
-                            <CardContent
+                            <div
                               key={item.id}
-                              className="py-4"
+                              className="py-4 first:pt-0 last:pb-0"
                               data-testid={`order-item-link-${order.id}-${item.id}`}
                             >
                               <OrderItemCard
@@ -215,24 +248,15 @@ export default function OrderListPage() {
                                   ) : undefined
                                 }
                               />
-                            </CardContent>
+                            </div>
                           );
                         })}
                       </div>
-
-                      <CardContent className="py-3">
-                        <div className="flex items-center justify-between">
-                          <Label className="font-bold">주문 총액</Label>
-                          <Label className="text-lg font-bold">
-                            {order.totalPrice.toLocaleString()}원
-                          </Label>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
+                    </div>
+                  </article>
+                ))
               )}
-            </section>
+            </UtilityPageSection>
           </div>
         </PageLayout>
       </MainContent>
