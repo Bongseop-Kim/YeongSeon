@@ -1,6 +1,7 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui-extended/button";
 import { Empty } from "@/components/composite/empty";
 import { ClaimStatusBadge } from "@/components/composite/status-badge";
 import {
@@ -60,7 +61,12 @@ export default function ClaimListPage() {
     }),
     [debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo],
   );
-  const { data: claims = [], isLoading, error } = useClaims(queryFilters);
+  const {
+    data: claims = [],
+    isLoading,
+    error,
+    refetch,
+  } = useClaims(queryFilters);
 
   const filteredClaims = useMemo(() => {
     if (activeTab === "전체") return claims;
@@ -94,6 +100,11 @@ export default function ClaimListPage() {
                     : "오류가 발생했습니다."
                 }
               />
+              <div className="mt-4 flex justify-center">
+                <Button variant="outline" onClick={() => void refetch()}>
+                  다시 시도
+                </Button>
+              </div>
             </div>
           </PageLayout>
         </MainContent>

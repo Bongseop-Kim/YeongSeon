@@ -26,6 +26,58 @@ export default function MyInfoPage() {
   const { openPopup } = usePopup();
   const { data: profile, isLoading } = useProfile();
   const displayName = isLoading ? "로딩 중..." : profile?.name || "사용자";
+  const introMeta = isLoading ? (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-400">
+      <span className="inline-flex items-center gap-2">
+        <CircleCheckIcon className="size-4" />
+        연락처 인증
+        <span className="font-medium text-zinc-500">확인 중...</span>
+      </span>
+      <span className="inline-flex items-center gap-2">
+        <BellRingIcon className="size-4" />
+        알림 수신
+        <span className="font-medium text-zinc-500">확인 중...</span>
+      </span>
+    </div>
+  ) : (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-600">
+      <span className="inline-flex items-center gap-2">
+        <CircleCheckIcon className="size-4 text-emerald-600" />
+        연락처 인증
+        <span className="font-medium text-zinc-950">
+          {profile?.phoneVerified ? "완료" : "확인 필요"}
+        </span>
+      </span>
+      <span className="inline-flex items-center gap-2">
+        <BellRingIcon className="size-4 text-zinc-500" />
+        알림 수신
+        <span className="font-medium text-zinc-950">
+          {profile?.notificationEnabled ? "활성" : "비활성"}
+        </span>
+      </span>
+    </div>
+  );
+  const asideItems = [
+    {
+      id: "email",
+      label: "이메일",
+      value: isLoading ? "불러오는 중..." : profile?.email || "-",
+    },
+    {
+      id: "phone",
+      label: "휴대폰 번호",
+      value: isLoading ? "불러오는 중..." : profile?.phone || "등록되지 않음",
+    },
+    {
+      id: "marketing",
+      label: "마케팅 동의",
+      value: isLoading
+        ? "확인 중..."
+        : profile?.marketingConsent.all
+          ? "동의"
+          : "미동의",
+    },
+  ];
 
   const identityLinks = [
     {
@@ -71,24 +123,7 @@ export default function MyInfoPage() {
               eyebrow="Profile Settings"
               title={displayName}
               description="계정 정보, 배송지, 알림 설정을 정리하는 화면입니다. 자주 바꾸는 항목부터 아래 순서대로 배치했습니다."
-              meta={
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-600">
-                  <span className="inline-flex items-center gap-2">
-                    <CircleCheckIcon className="size-4 text-emerald-600" />
-                    연락처 인증
-                    <span className="font-medium text-zinc-950">
-                      {profile?.phoneVerified ? "완료" : "확인 필요"}
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <BellRingIcon className="size-4 text-zinc-500" />
-                    알림 수신
-                    <span className="font-medium text-zinc-950">
-                      {profile?.notificationEnabled ? "활성" : "비활성"}
-                    </span>
-                  </span>
-                </div>
-              }
+              meta={introMeta}
             />
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.8fr)] lg:gap-12">
@@ -154,24 +189,7 @@ export default function MyInfoPage() {
                   description="지금 저장된 정보만 빠르게 확인합니다."
                   tone="muted"
                 >
-                  <UtilityStatList
-                    items={[
-                      {
-                        label: "이메일",
-                        value: profile?.email || "-",
-                      },
-                      {
-                        label: "휴대폰 번호",
-                        value: profile?.phone || "등록되지 않음",
-                      },
-                      {
-                        label: "마케팅 동의",
-                        value: profile?.marketingConsent.all
-                          ? "동의"
-                          : "미동의",
-                      },
-                    ]}
-                  />
+                  <UtilityStatList items={asideItems} />
                 </UtilityPageAside>
               </div>
             </div>

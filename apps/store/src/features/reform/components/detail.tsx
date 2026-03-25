@@ -82,7 +82,7 @@ export const Detail = () => {
             <div className="flex animate-scroll gap-4">
               {bannerImages.map((image, index) => (
                 <img
-                  key={index}
+                  key={image.src ?? index}
                   src={image.src}
                   alt={image.alt}
                   className="w-1/3 flex-shrink-0 rounded-xl border border-white/10"

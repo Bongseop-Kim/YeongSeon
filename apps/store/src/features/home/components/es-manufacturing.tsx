@@ -54,14 +54,14 @@ export const EsManufacturing = () => {
                   </p>
                   <div className="relative min-h-[180px] overflow-hidden rounded-[18px] bg-white/4 lg:min-h-[220px] lg:w-[18rem]">
                     <img
-                      src="/images/detail/product1.png"
-                      alt="넥타이 설계와 샘플 디테일"
+                      src={step.imageSrc}
+                      alt={step.imageAlt ?? step.label}
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,18,30,0.04),rgba(16,18,30,0.5))]" />
                     <div className="absolute inset-x-0 bottom-0 px-5 pb-5 pt-16">
                       <p className="font-mono text-[11px] uppercase tracking-[0.35em] text-brand-accent">
-                        Online order
+                        {step.eyebrow ?? "Online order"}
                       </p>
                     </div>
                   </div>

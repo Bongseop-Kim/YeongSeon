@@ -1,11 +1,26 @@
-import "@google/model-viewer";
+import { useEffect, useState } from "react";
 
 import { HomeSectionContainer } from "@/features/home/components/home-section-container";
 
-const TEST_MODEL_SRC =
-  "https://modelviewer.dev/shared-assets/models/RobotExpressive.glb";
+const MOLD_MODEL_SRC = import.meta.env.VITE_ES_MOLD_SRC;
 
 export const EsMoldViewer = () => {
+  const [isModelViewerReady, setIsModelViewerReady] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    void import("@google/model-viewer").then(() => {
+      if (isMounted) {
+        setIsModelViewerReady(true);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <section className="bg-brand-paper py-20 lg:py-28">
       <HomeSectionContainer>
@@ -24,18 +39,26 @@ export const EsMoldViewer = () => {
 
         <div className="overflow-hidden rounded-[var(--radius-showcase-panel)] border border-black/6 bg-[radial-gradient(circle_at_top,rgba(79,195,247,0.12),transparent_24%),linear-gradient(180deg,rgba(18,19,30,0.02),rgba(18,19,30,0.08))] shadow-[0_30px_80px_rgba(18,19,30,0.08)]">
           <div className="relative">
-            <model-viewer
-              src={TEST_MODEL_SRC}
-              alt="테스트용 3D 모델"
-              auto-rotate=""
-              auto-rotate-delay="0"
-              rotation-per-second="18deg"
-              shadow-intensity="1"
-              exposure="1.05"
-              interaction-prompt="none"
-              camera-orbit="35deg 72deg 2.8m"
-              className="h-[440px] w-full bg-transparent lg:h-[560px]"
-            />
+            {isModelViewerReady && MOLD_MODEL_SRC ? (
+              <model-viewer
+                src={MOLD_MODEL_SRC}
+                alt="에세시온 몰드 3D 모델"
+                auto-rotate={true}
+                auto-rotate-delay="0"
+                rotation-per-second="18deg"
+                shadow-intensity="1"
+                exposure="1.05"
+                interaction-prompt="none"
+                camera-controls={true}
+                camera-orbit="35deg 72deg 2.8m"
+                className="h-[440px] w-full bg-transparent lg:h-[560px]"
+              />
+            ) : (
+              <div className="flex h-[440px] w-full items-center justify-center px-6 text-center text-sm text-brand-heading/60 lg:h-[560px]">
+                3D 몰드 모델은 준비 중입니다. 배포 환경에서는
+                `VITE_ES_MOLD_SRC`를 설정해 주세요.
+              </div>
+            )}
           </div>
         </div>
       </HomeSectionContainer>

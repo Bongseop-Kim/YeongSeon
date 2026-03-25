@@ -1,8 +1,5 @@
 import { ROUTES } from "@/constants/ROUTES";
-import type {
-  ManufacturingStep,
-  ServiceCard,
-} from "@/features/home/types/home";
+import type { ManufacturingStep } from "@/features/home/types/home";
 
 export const HERO_CONTENT = {
   headline: ["자동 넥타이를", "다시 설계했습니다"],
@@ -13,34 +10,6 @@ export const HERO_CONTENT = {
   ctaPrimary: { label: "어떻게 만드나요", href: "#manufacturing" },
   ctaSecondary: { label: "제품 보기", href: ROUTES.SHOP },
 } as const;
-
-export const SERVICES_CONTENT: ServiceCard[] = [
-  {
-    id: 1,
-    title: "수선",
-    description: "기존 수동 넥타이를 자동 넥타이 구조로 다시 만듭니다.",
-    href: ROUTES.REFORM,
-  },
-  {
-    id: 2,
-    title: "AI 원단 디자인",
-    description: "패턴을 고르고 다듬으면서 완성 이미지를 바로 확인합니다.",
-    href: ROUTES.DESIGN,
-  },
-  {
-    id: 3,
-    title: "자동 넥타이",
-    description: "직접 만든 자동 넥타이를 바로 주문하고 받아볼 수 있습니다.",
-    href: ROUTES.SHOP,
-  },
-  {
-    id: 4,
-    title: "기술 도전",
-    description: "출력 공정과 부자재 구조를 계속 실험하며 완성도를 높입니다.",
-    href: "#brand-story",
-    badge: "실험 중",
-  },
-];
 
 export const AI_DESIGN_CONTENT = {
   headline: "원단 디자인, 프리뷰로 바로 확인",
@@ -71,21 +40,33 @@ export const MANUFACTURING_STEPS: ManufacturingStep[] = [
     step: 1,
     label: "AI 디자인",
     description: "GPT·Gemini 기반 AI로 채팅하듯 원단 패턴을 디자인합니다.",
+    imageSrc: "/images/detail/product1.png",
+    imageAlt: "AI 디자인으로 원단 패턴을 설계하는 장면",
+    eyebrow: "AI Design",
   },
   {
     step: 2,
     label: "간편한 주문",
     description: "원하는 옵션을 선택해 PC·모바일 어디서나 주문합니다.",
+    imageSrc: "/images/detail/product1.png",
+    imageAlt: "주문 옵션을 선택하는 화면",
+    eyebrow: "Easy Order",
   },
   {
     step: 3,
     label: "전자 결제",
     description: "카드·간편결제 등 다양한 결제 수단을 지원합니다.",
+    imageSrc: "/images/detail/product1.png",
+    imageAlt: "온라인 결제 단계를 보여주는 화면",
+    eyebrow: "Payment",
   },
   {
     step: 4,
     label: "제작 & 배송",
     description: "2~3주 내 제작 완료 후 바로 배송됩니다.",
+    imageSrc: "/images/detail/product1.png",
+    imageAlt: "제작 완료 후 배송 준비된 넥타이",
+    eyebrow: "Production",
   },
 ];
 
@@ -124,9 +105,7 @@ export const CTA_CONTENT = {
       href: ROUTES.SHOP,
     },
   ],
-  buttons: [
-    { label: "원단 디자인하기", href: ROUTES.DESIGN, primary: true },
-    { label: "수선 문의하기", href: ROUTES.REFORM, primary: false },
-  ],
-  kakaoChannelHref: "https://pf.kakao.com/_placeholder",
+  primary: { label: "원단 디자인하기", href: ROUTES.DESIGN },
+  secondary: { label: "수선 문의하기", href: ROUTES.REFORM },
+  kakaoChannelHref: import.meta.env.VITE_KAKAO_CHANNEL_URL || ROUTES.REFORM,
 } as const;

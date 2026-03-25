@@ -24,15 +24,15 @@ export function generateItemId(
     : uuidv4();
 }
 
+export function padZero(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
 /**
  * 여러 ref를 하나로 병합합니다.
  * @param refs 병합할 ref들
  * @returns 병합된 ref 콜백
  */
-export function padZero(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
 export function mergeRefs<T = unknown>(
   ...refs: Array<React.Ref<T> | null | undefined>
 ): React.RefCallback<T> {

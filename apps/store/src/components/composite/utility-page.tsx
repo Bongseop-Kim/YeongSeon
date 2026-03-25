@@ -180,6 +180,7 @@ export function UtilityLinkList({ children, className }: UtilityLinkListProps) {
 
 interface UtilityStatListProps {
   items: Array<{
+    id?: string;
     label: string;
     value: string;
   }>;
@@ -190,7 +191,7 @@ export function UtilityStatList({ items, className }: UtilityStatListProps) {
   return (
     <dl className={cn("space-y-4", className)}>
       {items.map((item, index) => (
-        <div key={item.label}>
+        <div key={item.id ?? `${item.label}-${index}`}>
           {index > 0 ? <Separator className="mb-4" /> : null}
           <dt className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
             {item.label}

@@ -9,6 +9,8 @@ interface InputProps extends React.ComponentProps<"input"> {
 
 function Input({ className, type, unit, icon, ...props }: InputProps) {
   if (unit || icon) {
+    const hasBothTrailingAddons = Boolean(unit && icon);
+
     return (
       <div className="relative">
         <input
@@ -18,21 +20,19 @@ function Input({ className, type, unit, icon, ...props }: InputProps) {
             "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-sm border bg-transparent py-1 shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:border-0 file:bg-transparent file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 text-sm",
             "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
             "pl-3 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-            "pr-12",
+            hasBothTrailingAddons ? "pr-20" : "pr-12",
             className,
           )}
           {...props}
         />
-        {icon && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {icon}
-          </div>
-        )}
-        {unit && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-            {unit}
-          </span>
-        )}
+        <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2 text-muted-foreground">
+          {icon}
+          {unit ? (
+            <span className="pointer-events-none text-xs text-muted-foreground">
+              {unit}
+            </span>
+          ) : null}
+        </div>
       </div>
     );
   }

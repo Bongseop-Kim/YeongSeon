@@ -34,6 +34,10 @@ const HEADER_SCROLL_THRESHOLD = 24;
 const HEADER_BTN_CLASS =
   "border-white/18 bg-white/10 text-white hover:bg-white hover:text-black";
 
+function isActiveNavItem(pathname: string, href: string) {
+  return href === ROUTES.HOME ? pathname === href : pathname.startsWith(href);
+}
+
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -191,11 +195,7 @@ export default function AppLayout() {
                     key={item.href}
                     to={item.href}
                     className={
-                      (
-                        item.href !== ROUTES.HOME
-                          ? location.pathname.startsWith(item.href)
-                          : location.pathname === item.href
-                      )
+                      isActiveNavItem(location.pathname, item.href)
                         ? "text-white"
                         : "text-white/58"
                     }

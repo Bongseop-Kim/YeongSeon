@@ -1,35 +1,36 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 /* Pretendard */
 @font-face {
-  font-family: "Pretendard";
+  font-family: Pretendard;
   src: url("/fonts/Pretendard-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Pretendard";
+  font-family: Pretendard;
   src: url("/fonts/Pretendard-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Pretendard";
+  font-family: Pretendard;
   src: url("/fonts/Pretendard-SemiBold.woff2") format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Pretendard";
+  font-family: Pretendard;
   src: url("/fonts/Pretendard-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Pretendard";
+  font-family: Pretendard;
   src: url("/fonts/Pretendard-ExtraBold.woff2") format("woff2");
   font-weight: 800;
   font-style: normal;
@@ -65,12 +66,10 @@
   font-style: normal;
   font-display: swap;
 }
-@import "tw-animate-css";
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Pretendard", sans-serif;
+  --font-sans: Pretendard, sans-serif;
   --font-display: var(--font-sans);
   --font-mono: "JetBrains Mono", monospace;
   --radius-sm: calc(var(--radius) - 4px);

@@ -6,7 +6,12 @@ export const scrollToSection =
       return;
     }
 
-    const target = document.querySelector<HTMLElement>(hash);
+    const targetId = hash.slice(1);
+    if (!targetId) {
+      return;
+    }
+
+    const target = document.getElementById(targetId);
 
     if (!target) {
       return;

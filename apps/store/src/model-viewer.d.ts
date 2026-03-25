@@ -1,5 +1,7 @@
 import type * as React from "react";
 
+declare module "@google/model-viewer";
+
 declare module "react" {
   namespace JSX {
     interface IntrinsicElements {
@@ -15,8 +17,8 @@ declare module "react" {
         reveal?: string;
         "shadow-intensity"?: string;
         "shadow-softness"?: string;
-        "camera-controls"?: string;
-        "auto-rotate"?: string;
+        "camera-controls"?: boolean | string;
+        "auto-rotate"?: boolean | string;
         "auto-rotate-delay"?: string;
         "rotation-per-second"?: string;
         "interaction-prompt"?: string;
@@ -25,7 +27,7 @@ declare module "react" {
         "max-camera-orbit"?: string;
         "environment-image"?: string;
         "touch-action"?: string;
-        ar?: string;
+        ar?: boolean | string;
       };
     }
   }

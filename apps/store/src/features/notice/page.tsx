@@ -6,7 +6,7 @@ import {
   UtilityPageSection,
 } from "@/components/composite/utility-page";
 import { NOTICE_DATA } from "@/features/notice/constants/NOTICE";
-import { NoticeAccordionItem } from "./components/notice-accordion-item";
+import { NoticeAccordionItem } from "@/features/notice/components/notice-accordion-item";
 
 export default function NoticePage() {
   return (

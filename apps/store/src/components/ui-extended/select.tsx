@@ -15,15 +15,15 @@ export {
   SelectScrollDownButton,
 } from "@/components/ui/select";
 
-function SelectTrigger({
-  className,
-  variant = "default",
-  ...props
-}: React.ComponentProps<typeof BaseSelectTrigger> & {
-  variant?: "default" | "borderless";
-}) {
+const SelectTrigger = React.forwardRef<
+  React.ElementRef<typeof BaseSelectTrigger>,
+  React.ComponentPropsWithoutRef<typeof BaseSelectTrigger> & {
+    variant?: "default" | "borderless";
+  }
+>(({ className, variant = "default", ...props }, ref) => {
   return (
     <BaseSelectTrigger
+      ref={ref}
       className={cn(
         variant === "borderless" && "border-0 shadow-none",
         className,
@@ -31,6 +31,8 @@ function SelectTrigger({
       {...props}
     />
   );
-}
+});
+
+SelectTrigger.displayName = "SelectTrigger";
 
 export { SelectTrigger };

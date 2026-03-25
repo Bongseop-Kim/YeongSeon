@@ -81,7 +81,9 @@ export function InquiryCard({
           {inquiry.answer && (
             <div className="border-l-2 border-stone-300 bg-stone-50/70 px-4 py-3">
               <Label className="mb-1 block text-xs text-zinc-600">
-                답변 ({inquiry.answerDate && formatDate(inquiry.answerDate)})
+                {inquiry.answerDate
+                  ? `답변 (${formatDate(inquiry.answerDate)})`
+                  : "답변"}
               </Label>
               <Label className="whitespace-pre-line text-sm text-zinc-700">
                 {inquiry.answer}

@@ -279,6 +279,13 @@ export default function TokenHistoryPage() {
 
     return result;
   }, [history, debouncedKeyword, searchFilters.dateFrom, searchFilters.dateTo]);
+  const balanceProps: BalanceSummaryProps = {
+    total: balance.total,
+    paid: balance.paid,
+    bonus: balance.bonus,
+    isLoading: isBalanceLoading && rawBalance === undefined,
+    hasError: Boolean(balanceError && rawBalance === undefined),
+  };
 
   return (
     <MainLayout>
@@ -298,13 +305,7 @@ export default function TokenHistoryPage() {
                   description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
                   tone="muted"
                 >
-                  <BalanceSummary
-                    total={balance.total}
-                    paid={balance.paid}
-                    bonus={balance.bonus}
-                    isLoading={isBalanceLoading && rawBalance === undefined}
-                    hasError={Boolean(balanceError && rawBalance === undefined)}
-                  />
+                  <BalanceSummary {...balanceProps} />
                 </UtilityPageAside>
               </div>
             ) : null}
@@ -330,15 +331,7 @@ export default function TokenHistoryPage() {
                     description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
                     tone="muted"
                   >
-                    <BalanceSummary
-                      total={balance.total}
-                      paid={balance.paid}
-                      bonus={balance.bonus}
-                      isLoading={isBalanceLoading && rawBalance === undefined}
-                      hasError={Boolean(
-                        balanceError && rawBalance === undefined,
-                      )}
-                    />
+                    <BalanceSummary {...balanceProps} />
                   </UtilityPageAside>
                 </div>
               ) : null}

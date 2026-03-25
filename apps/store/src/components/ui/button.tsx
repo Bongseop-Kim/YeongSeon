@@ -18,7 +18,7 @@ const buttonVariants = cva(
         ghost: "bg-accent text-accent-foreground dark:bg-accent/50",
         link: "text-primary underline underline-offset-4 decoration-primary/30",
         text: "text-foreground underline underline-offset-4",
-        none: "border-transparent bg-transparent shadow-none",
+        none: "border-none bg-transparent shadow-none",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

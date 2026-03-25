@@ -6,8 +6,7 @@ import { HomeSectionContainer } from "@/features/home/components/home-section-co
 import { CTA_CONTENT } from "@/features/home/constants/HOME_CONTENT";
 
 export const EsCta = () => {
-  const [primaryButton, secondaryButton] = CTA_CONTENT.buttons;
-  const { quickStarts } = CTA_CONTENT;
+  const { primary, secondary, quickStarts } = CTA_CONTENT;
 
   return (
     <section className="bg-brand-surface py-24 text-brand-paper lg:py-32">
@@ -50,7 +49,7 @@ export const EsCta = () => {
               size="lg"
               className="rounded-[var(--radius-pill)] bg-white px-7 font-semibold text-brand-heading hover:bg-zinc-100"
             >
-              <Link to={primaryButton.href}>{primaryButton.label}</Link>
+              <Link to={primary.href}>{primary.label}</Link>
             </Button>
             <Button
               asChild
@@ -58,7 +57,7 @@ export const EsCta = () => {
               size="lg"
               className="rounded-[var(--radius-pill)] border-white/12 bg-transparent px-7 text-white hover:bg-white/8 hover:text-white"
             >
-              <Link to={secondaryButton.href}>{secondaryButton.label}</Link>
+              <Link to={secondary.href}>{secondary.label}</Link>
             </Button>
             <Button
               asChild
