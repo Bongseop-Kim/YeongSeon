@@ -6,6 +6,9 @@ import {
 
 type Step = "input" | "verify" | "done";
 
+const isValidKoreanPhone = (value: string): boolean =>
+  /^01[0-9]{8,9}$/.test(value);
+
 export const usePhoneVerification = (onVerified: () => Promise<void>) => {
   const [step, setStep] = useState<Step>("input");
   const [phone, setPhone] = useState("");
@@ -15,6 +18,10 @@ export const usePhoneVerification = (onVerified: () => Promise<void>) => {
 
   const handleSend = async () => {
     setError(null);
+    if (!isValidKoreanPhone(phone)) {
+      setError("유효한 휴대폰 번호를 입력해주세요.");
+      return;
+    }
     setIsLoading(true);
     try {
       await sendPhoneVerification(phone);
@@ -28,6 +35,14 @@ export const usePhoneVerification = (onVerified: () => Promise<void>) => {
 
   const handleVerify = async () => {
     setError(null);
+    if (!isValidKoreanPhone(phone)) {
+      setError("유효한 휴대폰 번호를 입력해주세요.");
+      return;
+    }
+    if (!/^\d{6}$/.test(code)) {
+      setError("6자리 인증번호를 입력해주세요.");
+      return;
+    }
     setIsLoading(true);
     try {
       await verifyPhone(phone, code);

@@ -4,13 +4,17 @@ export const sendPhoneVerification = async (phone: string): Promise<void> => {
   const {
     data: { session },
   } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
   const res = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-phone-verification`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.access_token ?? ""}`,
+        Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({ phone }),
     },

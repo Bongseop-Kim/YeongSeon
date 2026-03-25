@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { extractPhoneNumber } from "@/lib/phone-format";
 import { usePhoneVerification } from "@/features/notification/hooks/use-phone-verification";
 
 interface PhoneVerificationFormProps {
@@ -23,6 +24,10 @@ export const PhoneVerificationForm = ({
     handleResend,
   } = usePhoneVerification(onVerified);
 
+  const handlePhoneChange = (value: string) => {
+    setPhone(extractPhoneNumber(value).slice(0, 11));
+  };
+
   if (step === "done") {
     return (
       <div className="text-center py-4">
@@ -43,8 +48,10 @@ export const PhoneVerificationForm = ({
             type="tel"
             placeholder="01012345678"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => handlePhoneChange(e.target.value)}
             disabled={isLoading}
+            inputMode="numeric"
+            autoComplete="tel"
           />
           <Button onClick={handleSend} disabled={isLoading || !phone}>
             {isLoading ? "발송 중..." : "인증번호 받기"}
@@ -63,8 +70,11 @@ export const PhoneVerificationForm = ({
             placeholder="6자리 입력"
             maxLength={6}
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={(e) =>
+              setCode(extractPhoneNumber(e.target.value).slice(0, 6))
+            }
             disabled={isLoading}
+            inputMode="numeric"
           />
           <div className="flex gap-2">
             <Button

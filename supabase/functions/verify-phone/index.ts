@@ -93,11 +93,12 @@ Deno.serve(async (req) => {
   const { error: otpUpdateError } = await adminClient
     .from("phone_verifications")
     .update({ verified: true })
-    .eq("id", verification.id);
+    .eq("id", verification.id)
+    .eq("verified", false);
 
   if (otpUpdateError) {
     errorLogger("otp_mark_failed", otpUpdateError, { userId: user.id });
-    // 계속 진행: OTP 무효화 실패해도 인증 자체는 완료 처리
+    return jsonResponse(500, { error: "인증 상태 업데이트에 실패했습니다" });
   }
 
   // profiles 업데이트 (phone + phone_verified)

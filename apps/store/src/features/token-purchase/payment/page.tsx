@@ -48,63 +48,34 @@ const TokenPaymentPage = ({
   } = useTokenPlansQuery();
 
   const state = location.state as TokenPaymentPageState | null;
+  const purchaseInfo = state?.purchaseInfo ?? null;
   const selectedPlan = useMemo(
     () => tokenPlans?.find((plan) => plan.planKey === state?.planKey),
     [tokenPlans, state?.planKey],
   );
 
   useEffect(() => {
-    if (!state?.purchaseInfo) {
+    if (!purchaseInfo) {
       navigate(ROUTES.TOKEN_PURCHASE, { replace: true });
     }
-  }, [state, navigate]);
+  }, [purchaseInfo, navigate]);
 
   useEffect(() => {
-    if (!state?.purchaseInfo) return;
+    if (!purchaseInfo) return;
     if (!isPlansLoading && tokenPlans && !selectedPlan) {
       navigate(ROUTES.TOKEN_PURCHASE, { replace: true });
     }
-  }, [isPlansLoading, navigate, state, tokenPlans, selectedPlan]);
+  }, [isPlansLoading, navigate, purchaseInfo, tokenPlans, selectedPlan]);
 
-  if (!state?.purchaseInfo || !user) return null;
-
-  const { purchaseInfo } = state;
-
-  if (isPlansLoading || !selectedPlan) {
-    return (
-      <MainLayout>
-        <MainContent className="overflow-visible bg-zinc-50">
-          <div className="mx-auto max-w-3xl px-4 py-12">
-            {isPlansError ? (
-              <div className="flex flex-col items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-6 py-10 text-center">
-                <p className="text-sm text-zinc-500">
-                  토큰 결제 정보를 다시 불러오지 못했습니다.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => refetchPlans()}
-                >
-                  다시 시도
-                </Button>
-              </div>
-            ) : (
-              <div className="h-64 animate-pulse rounded-2xl bg-zinc-100" />
-            )}
-          </div>
-        </MainContent>
-      </MainLayout>
-    );
-  }
-
-  if (selectedPlan.price == null || selectedPlan.tokenAmount == null) {
-    return null;
-  }
-
-  const { label, features, popular = false, price, tokenAmount } = selectedPlan;
+  const label = selectedPlan?.label ?? "";
+  const features = selectedPlan?.features ?? [];
+  const popular = selectedPlan?.popular ?? false;
+  const price = selectedPlan?.price;
+  const tokenAmount = selectedPlan?.tokenAmount;
 
   const proceedToPayment = useCallback(async () => {
     if (isRequestingRef.current) return;
+    if (!purchaseInfo || !selectedPlan || !user) return;
     if (!withdrawalConsent) {
       toast.error("청약철회 제한에 동의해주세요.");
       return;
@@ -136,11 +107,44 @@ const TokenPaymentPage = ({
       setIsPaymentLoading(false);
       isRequestingRef.current = false;
     }
-  }, [withdrawalConsent, purchaseInfo.paymentGroupId, label, tokenAmount]);
+  }, [withdrawalConsent, purchaseInfo, selectedPlan, user, label, tokenAmount]);
 
   useEffect(() => {
     registerProceedToPayment(proceedToPayment);
   }, [proceedToPayment, registerProceedToPayment]);
+
+  if (!purchaseInfo || !user) return null;
+
+  if (isPlansLoading || !selectedPlan) {
+    return (
+      <MainLayout>
+        <MainContent className="overflow-visible bg-zinc-50">
+          <div className="mx-auto max-w-3xl px-4 py-12">
+            {isPlansError ? (
+              <div className="flex flex-col items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-6 py-10 text-center">
+                <p className="text-sm text-zinc-500">
+                  토큰 결제 정보를 다시 불러오지 못했습니다.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchPlans()}
+                >
+                  다시 시도
+                </Button>
+              </div>
+            ) : (
+              <div className="h-64 animate-pulse rounded-2xl bg-zinc-100" />
+            )}
+          </div>
+        </MainContent>
+      </MainLayout>
+    );
+  }
+
+  if (price == null || tokenAmount == null) {
+    return null;
+  }
 
   return (
     <MainLayout>

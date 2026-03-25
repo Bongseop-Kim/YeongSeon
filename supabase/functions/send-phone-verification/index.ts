@@ -64,54 +64,47 @@ Deno.serve(async (req) => {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  // 재전송 간격(1분) + 일일 횟수(5회) 체크 병렬 실행
-  const [{ data: recent }, { count }] = await Promise.all([
-    adminClient
-      .from("phone_verifications")
-      .select("created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    adminClient
-      .from("phone_verifications")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .gte("created_at", todayStart.toISOString()),
-  ]);
+  const { data: verificationResult, error: verificationError } =
+    await userClient.rpc("create_phone_verification", {
+      p_phone: normalizedPhone,
+      p_today_start: todayStart.toISOString(),
+      p_code: generateOtp(),
+    });
 
-  if (recent) {
-    const elapsedSeconds =
-      (Date.now() - new Date(recent.created_at).getTime()) / 1000;
-    if (elapsedSeconds < 60) {
-      return jsonResponse(429, { error: "1분 후 재전송 가능합니다" });
+  if (verificationError || !verificationResult) {
+    const message =
+      verificationError?.message ?? "인증번호 생성에 실패했습니다";
+    if (
+      message === "1분 후 재전송 가능합니다" ||
+      message === "오늘 인증 시도 횟수를 초과했습니다"
+    ) {
+      return jsonResponse(429, { error: message });
     }
+
+    errorLogger("create_verification_failed", verificationError, {
+      userId: user.id,
+    });
+    return jsonResponse(500, { error: "인증번호 생성에 실패했습니다" });
   }
 
-  if ((count ?? 0) >= 5) {
-    return jsonResponse(429, { error: "오늘 인증 시도 횟수를 초과했습니다" });
-  }
+  const verification = verificationResult as {
+    id?: string;
+    code?: string;
+  } | null;
+  const verificationId = verification?.id ?? null;
+  const code = verification?.code ?? null;
 
-  const code = generateOtp();
-
-  const { data: insertData, error: insertError } = await adminClient
-    .from("phone_verifications")
-    .insert({
-      user_id: user.id,
-      phone: normalizedPhone,
-      code,
-    })
-    .select("id")
-    .single();
-
-  if (insertError || !insertData) {
-    errorLogger("insert_failed", insertError, { userId: user.id });
+  if (!verificationId || !code) {
+    errorLogger("create_verification_invalid_response", null, {
+      userId: user.id,
+      verificationResult,
+    });
     return jsonResponse(500, { error: "인증번호 생성에 실패했습니다" });
   }
 
   const sent = await sendSms(
     normalizedPhone,
-    `[영선] 인증번호는 [${code}]입니다. 5분 내에 입력해주세요.`,
+    `[ESSE SION] 인증번호는 [${code}]입니다. 5분 내에 입력해주세요.`,
   );
 
   if (!sent) {
@@ -119,7 +112,7 @@ Deno.serve(async (req) => {
     await adminClient
       .from("phone_verifications")
       .delete()
-      .eq("id", insertData.id);
+      .eq("id", verificationId);
     errorLogger("sms_failed", new Error("SMS send failed"), {
       userId: user.id,
     });

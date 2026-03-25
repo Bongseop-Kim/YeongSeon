@@ -69,6 +69,7 @@ const ReformPage = () => {
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const [cancellationConsent, setCancellationConsent] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const selectAllCheckboxId = "reform-select-all";
   const [checkedIndicesForBulk, setCheckedIndicesForBulk] = useState<number[]>(
     [],
   );
@@ -286,10 +287,17 @@ const ReformPage = () => {
                 <CardContent className="flex items-center justify-between">
                   <div className="flex gap-4 items-center">
                     <Checkbox
+                      id={selectAllCheckboxId}
                       checked={isAllChecked}
                       onCheckedChange={handleSelectAll}
+                      aria-checked={isAllChecked}
                     />
-                    <Label className="text-md">전체 선택</Label>
+                    <Label
+                      htmlFor={selectAllCheckboxId}
+                      className="text-md cursor-pointer"
+                    >
+                      전체 선택
+                    </Label>
                   </div>
                   <div className="flex gap-2">
                     <Button

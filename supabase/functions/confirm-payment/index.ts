@@ -553,7 +553,7 @@ Deno.serve(async (req) => {
               "#{주문번호}": payload.orderId,
               "#{결제금액}": totalAmount.toLocaleString("ko-KR"),
             },
-            fallbackContent: `[영선] 주문이 완료되었습니다.\n주문번호: ${payload.orderId}\n결제금액: ${totalAmount.toLocaleString("ko-KR")}원`,
+            fallbackContent: `[ESSE SION] 주문이 완료되었습니다.\n주문번호: ${payload.orderId}\n결제금액: ${totalAmount.toLocaleString("ko-KR")}원\nhttps://essesion.shop/order/order-list`,
           });
         }
       } catch (notifyErr) {

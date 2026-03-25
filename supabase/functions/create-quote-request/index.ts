@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
               templateId: Deno.env.get("SOLAPI_TEMPLATE_QUOTE_RECEIVED") ?? "",
               variables: {},
               fallbackContent:
-                "[영선] 견적 요청이 접수되었습니다.\n담당자가 순차적으로 연락드리겠습니다.",
+                "[ESSE SION] 견적 요청이 접수되었습니다.\n담당자가 순차적으로 연락드리겠습니다.",
             });
           }
         } catch (notifyErr) {

@@ -7,8 +7,12 @@ import { sendAlimtalk } from "@/functions/_shared/solapi.ts";
 
 const { processLogger, errorLogger } = createLogger("notify-claim");
 
-// 관리자만 호출 가능
-Deno.serve(async (req) => {
+/**
+ * 클레임 처리 결과 알림 요청을 처리한다.
+ * @param {Request} req Authorization 헤더와 `{ claimId: string }` JSON 본문을 포함한 HTTP 요청
+ * @returns {Promise<Response>} 클레임 알림 처리 결과를 담은 JSON 응답
+ */
+export async function handleRequest(req: Request): Promise<Response> {
   const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
   const jsonResponse = createJsonResponse(corsHeaders);
 
@@ -39,11 +43,18 @@ Deno.serve(async (req) => {
   if (authError || !user) return jsonResponse(401, { error: "Unauthorized" });
 
   // 관리자 권한 확인
-  const { data: adminProfile } = await adminClient
+  const { data: adminProfile, error: adminProfileError } = await adminClient
     .from("profiles")
     .select("role")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  if (adminProfileError) {
+    errorLogger("admin_profile_lookup_failed", adminProfileError, {
+      userId: user.id,
+    });
+    return jsonResponse(500, { error: "Internal server error" });
+  }
 
   if (!["admin", "manager"].includes(adminProfile?.role ?? "")) {
     return jsonResponse(403, { error: "Forbidden" });
@@ -60,11 +71,19 @@ Deno.serve(async (req) => {
   if (!claimId) return jsonResponse(400, { error: "claimId is required" });
 
   // 클레임 + 주문 소유자 + 상태 조회
-  const { data: claim } = await adminClient
+  const { data: claim, error: claimError } = await adminClient
     .from("claims")
-    .select("status, order_id, orders(user_id)")
+    .select("status, type, order_id, orders(user_id)")
     .eq("id", claimId)
-    .single();
+    .maybeSingle();
+
+  if (claimError) {
+    errorLogger("claim_lookup_failed", claimError, {
+      claimId,
+      userId: user.id,
+    });
+    return jsonResponse(500, { error: "Internal server error" });
+  }
 
   if (!claim) return jsonResponse(404, { error: "Claim not found" });
 
@@ -76,11 +95,22 @@ Deno.serve(async (req) => {
   const customerId = (claim.orders as { user_id: string } | null)?.user_id;
   if (!customerId) return jsonResponse(200, { message: "고객 ID 없음" });
 
-  const { data: customerProfile } = await adminClient
-    .from("profiles")
-    .select("phone, phone_verified, notification_consent, notification_enabled")
-    .eq("id", customerId)
-    .single();
+  const { data: customerProfile, error: customerProfileError } =
+    await adminClient
+      .from("profiles")
+      .select(
+        "phone, phone_verified, notification_consent, notification_enabled",
+      )
+      .eq("id", customerId)
+      .maybeSingle();
+
+  if (customerProfileError) {
+    errorLogger("customer_profile_lookup_failed", customerProfileError, {
+      claimId,
+      customerId,
+    });
+    return jsonResponse(500, { error: "Internal server error" });
+  }
 
   if (
     !customerProfile?.notification_consent ||
@@ -89,6 +119,49 @@ Deno.serve(async (req) => {
     !customerProfile?.phone
   ) {
     return jsonResponse(200, { message: "알림 수신 비활성화 상태" });
+  }
+
+  const { data: existingLog, error: existingLogError } = await adminClient
+    .from("claim_notification_logs")
+    .select("id")
+    .eq("claim_id", claimId)
+    .eq("status", claim.status)
+    .maybeSingle();
+
+  if (existingLogError) {
+    errorLogger("notification_log_lookup_failed", existingLogError, {
+      claimId,
+      status: claim.status,
+    });
+    return jsonResponse(500, { error: "Internal server error" });
+  }
+
+  if (existingLog) {
+    processLogger("duplicate_skipped", { claimId, status: claim.status });
+    return jsonResponse(200, { message: "이미 발송된 상태 알림" });
+  }
+
+  const isDone = claim.status === "완료";
+  const templateId = isDone
+    ? (Deno.env.get("SOLAPI_TEMPLATE_CLAIM_DONE") ?? "")
+    : (Deno.env.get("SOLAPI_TEMPLATE_CLAIM_REJECTED") ?? "");
+  const fallbackContent = isDone
+    ? `[ESSE SION] 클레임이 처리 완료되었습니다.\nhttps://essesion.shop/order/claim-list`
+    : `[ESSE SION] 클레임 요청이 거부되었습니다. 자세한 내용은 아래 링크에서 확인해주세요.\nhttps://essesion.shop/order/claim-list`;
+
+  const sent = await sendAlimtalk({
+    to: customerProfile.phone,
+    templateId,
+    variables: isDone ? { "#{처리유형}": claim.type } : {},
+    fallbackContent,
+  });
+
+  if (!sent) {
+    errorLogger("send_failed", new Error("sendAlimtalk returned false"), {
+      claimId,
+      status: claim.status,
+    });
+    return jsonResponse(502, { error: "Notification delivery failed" });
   }
 
   const { data: notificationLog, error: notificationLogError } =
@@ -114,32 +187,12 @@ Deno.serve(async (req) => {
     return jsonResponse(500, { error: "Notification log insert failed" });
   }
 
-  const isDone = claim.status === "완료";
-  const templateId = isDone
-    ? (Deno.env.get("SOLAPI_TEMPLATE_CLAIM_DONE") ?? "")
-    : (Deno.env.get("SOLAPI_TEMPLATE_CLAIM_REJECTED") ?? "");
-  const fallbackContent = isDone
-    ? `[영선] 클레임이 처리 완료되었습니다.`
-    : `[영선] 클레임 요청이 거부되었습니다. 자세한 내용은 앱에서 확인해주세요.`;
-
-  const sent = await sendAlimtalk({
-    to: customerProfile.phone,
-    templateId,
-    variables: {},
-    fallbackContent,
-  });
-
-  if (!sent) {
-    errorLogger("send_failed", new Error("sendAlimtalk returned false"), {
-      claimId,
-      notificationLogId: notificationLog?.id ?? null,
-    });
-  }
-
   processLogger("notified", {
     claimId,
     status: claim.status,
     notificationLogId: notificationLog?.id ?? null,
   });
   return jsonResponse(200, { message: "알림 발송 완료" });
-});
+}
+
+Deno.serve(handleRequest);

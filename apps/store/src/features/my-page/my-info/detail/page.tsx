@@ -26,6 +26,31 @@ export default function MyInfoDetailPage() {
   const { data: profile, isLoading, refetch } = useProfile();
   const [showVerifyModal, setShowVerifyModal] = useState(false);
 
+  const handleNotificationToggle = async (val: boolean) => {
+    if (!profile) return;
+
+    if (val && !profile.phoneVerified) {
+      setShowVerifyModal(true);
+      return;
+    }
+
+    try {
+      if (val && !profile.notificationConsent) {
+        await saveNotificationConsent(true);
+      }
+
+      await updateNotificationEnabled(val);
+      await refetch();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "알림 설정 변경에 실패했습니다.";
+      console.error("Failed to update notification setting:", error);
+      toast.error(message);
+    }
+  };
+
   return (
     <MainLayout>
       <MainContent>
@@ -54,51 +79,7 @@ export default function MyInfoDetailPage() {
                     <span className="text-sm">알림 수신</span>
                     <Switch
                       checked={profile.notificationEnabled}
-                      onCheckedChange={async (val) => {
-                        if (val && !profile.notificationConsent) {
-                          if (!profile.phoneVerified) {
-                            setShowVerifyModal(true);
-                            return;
-                          }
-
-                          try {
-                            await saveNotificationConsent(true);
-                            await updateNotificationEnabled(true);
-                            refetch();
-                          } catch (error) {
-                            const message =
-                              error instanceof Error
-                                ? error.message
-                                : "알림 설정 변경에 실패했습니다.";
-                            console.error(
-                              "Failed to start notification consent flow:",
-                              error,
-                            );
-                            toast.error(message);
-                          }
-                          return;
-                        }
-
-                        if (val && !profile.phoneVerified) {
-                          setShowVerifyModal(true);
-                          return;
-                        }
-
-                        try {
-                          await updateNotificationEnabled(val);
-                          refetch();
-                        } catch (error) {
-                          const message =
-                            error instanceof Error
-                              ? error.message
-                              : "알림 설정 변경에 실패했습니다.";
-                          console.error(
-                            "Failed to update notification setting:",
-                            error,
-                          );
-                          toast.error(message);
-                        }
-                      }}
+                      onCheckedChange={handleNotificationToggle}
                     />
                   </div>
                 </>

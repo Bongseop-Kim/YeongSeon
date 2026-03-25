@@ -165,3 +165,36 @@ CREATE POLICY "Admins can view all claim notifications"
   USING (public.is_admin());
 
 -- No INSERT policy: audit logs are written exclusively by SECURITY DEFINER RPCs.
+
+-- SECURITY DEFINER 사유: pg_cron 또는 service_role이
+-- claim_notification_logs 정리 작업을 수행할 수 있어야 한다.
+CREATE OR REPLACE FUNCTION public.delete_old_claim_notification_logs(
+  p_retention interval DEFAULT interval '90 days'
+)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_deleted_count integer;
+begin
+  if p_retention <= interval '0 seconds' then
+    raise exception 'retention must be positive';
+  end if;
+
+  if coalesce(current_setting('request.jwt.claim.role', true), '') not in ('', 'service_role') then
+    raise exception 'unauthorized: scheduler-only function';
+  end if;
+
+  with deleted_rows as (
+    delete from public.claim_notification_logs
+    where created_at < now() - p_retention
+    returning 1
+  )
+  select count(*) into v_deleted_count
+  from deleted_rows;
+
+  return v_deleted_count;
+end;
+$$;

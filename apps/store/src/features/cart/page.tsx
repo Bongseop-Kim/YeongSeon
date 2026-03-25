@@ -64,6 +64,8 @@ export default function CartPage() {
   const [reformDialogItemId, setReformDialogItemId] = useState<string | null>(
     null,
   );
+  const [isOptionSubmitting, setIsOptionSubmitting] = useState(false);
+  const [isReformSubmitting, setIsReformSubmitting] = useState(false);
 
   const {
     data: similarProducts = [],
@@ -123,6 +125,8 @@ export default function CartPage() {
   };
 
   const handleConfirmOptionChange = async () => {
+    if (isOptionSubmitting) return;
+
     const item = items.find((i) => i.id === optionDialogItemId);
     if (!item || item.type !== "product" || !optionChangeRef.current) return;
 
@@ -140,18 +144,30 @@ export default function CartPage() {
       ? item.product.options?.find((opt) => opt.id === optionId)
       : undefined;
 
-    if (optionId && !newOption) return;
+    if (optionId && !newOption) {
+      toast.error("선택한 옵션을 찾을 수 없습니다.");
+      console.error("Cart option mismatch", {
+        itemId: item.id,
+        optionId,
+        availableOptionIds: item.product.options?.map((opt) => opt.id) ?? [],
+      });
+      return;
+    }
 
     try {
+      setIsOptionSubmitting(true);
       if (optionId === item.selectedOption?.id) {
         await updateQuantity(item.id, quantity);
       } else {
         await updateProductOption(item.id, newOption, quantity);
       }
+      toast.success("옵션이 변경되었습니다.");
       setOptionDialogItemId(null);
     } catch (error) {
       toast.error("변경에 실패했습니다.");
       console.error(error);
+    } finally {
+      setIsOptionSubmitting(false);
     }
   };
 
@@ -162,6 +178,8 @@ export default function CartPage() {
   };
 
   const handleConfirmReformOptionChange = async () => {
+    if (isReformSubmitting) return;
+
     const item = items.find((i) => i.id === reformDialogItemId);
     if (!item || item.type !== "reform" || !reformOptionChangeRef.current)
       return;
@@ -179,12 +197,15 @@ export default function CartPage() {
     }
 
     try {
+      setIsReformSubmitting(true);
       await updateReformOption(item.id, updatedTie);
       toast.success("수선 옵션이 변경되었습니다.");
       setReformDialogItemId(null);
     } catch (error) {
       toast.error("수선 옵션 변경에 실패했습니다.");
       console.error(error);
+    } finally {
+      setIsReformSubmitting(false);
     }
   };
 
@@ -361,8 +382,9 @@ export default function CartPage() {
                 onClick={() => {
                   void handleConfirmOptionChange();
                 }}
+                disabled={isOptionSubmitting}
               >
-                변경
+                {isOptionSubmitting ? "변경 중..." : "변경"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -395,8 +417,9 @@ export default function CartPage() {
                 onClick={() => {
                   void handleConfirmReformOptionChange();
                 }}
+                disabled={isReformSubmitting}
               >
-                변경
+                {isReformSubmitting ? "변경 중..." : "변경"}
               </Button>
             </DialogFooter>
           </DialogContent>

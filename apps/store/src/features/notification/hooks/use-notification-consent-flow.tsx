@@ -37,7 +37,15 @@ export function useNotificationConsentFlow(onProceed: () => Promise<void>) {
     await onProceed();
   };
 
-  const dismissConsentModal = () => setShowConsentModal(false);
+  const proceedWithoutConsent = async () => {
+    setShowConsentModal(false);
+    setShowVerifyModal(false);
+    await onProceed();
+  };
+
+  const dismissConsentModal = () => {
+    void proceedWithoutConsent();
+  };
 
   const onVerified = async () => {
     await saveNotificationConsent(true);
@@ -47,8 +55,7 @@ export function useNotificationConsentFlow(onProceed: () => Promise<void>) {
   };
 
   const closeVerifyModal = async () => {
-    setShowVerifyModal(false);
-    await onProceed();
+    await proceedWithoutConsent();
   };
 
   const consentFlow: NotificationConsentFlowState = {

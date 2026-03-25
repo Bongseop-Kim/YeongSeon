@@ -29,6 +29,7 @@ import { NotificationConsentFlowModals } from "@/features/notification/component
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
+  const isPaymentProcessingRef = useRef(false);
   const navigate = useNavigate();
   const {
     items: orderItems,
@@ -69,7 +70,8 @@ const OrderFormPage = () => {
   };
 
   const proceedToPayment = async () => {
-    if (isPaymentLoading) return;
+    if (isPaymentProcessingRef.current) return;
+    isPaymentProcessingRef.current = true;
     setIsPaymentLoading(true);
 
     try {
@@ -130,6 +132,7 @@ const OrderFormPage = () => {
         toast.error(errorMessage);
       }
     } finally {
+      isPaymentProcessingRef.current = false;
       setIsPaymentLoading(false);
     }
   };

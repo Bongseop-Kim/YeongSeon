@@ -123,8 +123,8 @@ last-verified: 2026-03-25
 | 항목        | 내용                                 |
 | ----------- | ------------------------------------ |
 | 수신자      | 고객                                 |
-| 트리거      | `create_quote_request` RPC           |
-| 구현        | `notify-quote-request` Edge Function |
+| 트리거      | `create-quote-request` Edge Function |
+| 구현        | `create-quote-request` Edge Function |
 | 대상 도메인 | quote-request                        |
 
 > 접수 확인 용도. 이후 관리자가 직접 연락처(이메일/카카오/전화)로 고객과 협의한다.
@@ -169,7 +169,7 @@ last-verified: 2026-03-25
 | 이벤트           | 트리거                       | 구현                                                  |
 | ---------------- | ---------------------------- | ----------------------------------------------------- |
 | 결제 완료        | `payment_completed`          | `supabase/functions/confirm-payment/index.ts`         |
-| 견적 요청 접수   | `create_quote_request` RPC   | `supabase/functions/notify-quote-request/index.ts`    |
+| 견적 요청 접수   | `create-quote-request` 호출  | `supabase/functions/create-quote-request/index.ts`    |
 | 클레임 처리 결과 | `update_claim_status` RPC    | `supabase/functions/notify-claim/index.ts`            |
 | 인증번호 발송    | `send_phone_verification` UI | `supabase/functions/send-phone-verification/index.ts` |
 | 번호 인증 완료   | `verify_phone` UI            | `supabase/functions/verify-phone/index.ts`            |
