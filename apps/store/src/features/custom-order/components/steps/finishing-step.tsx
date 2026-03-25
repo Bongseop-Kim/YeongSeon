@@ -1,5 +1,5 @@
 import { useFormContext } from "react-hook-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UtilityPagePanel } from "@/components/composite/utility-page";
 import { SelectField } from "@/components/composite/select-field";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import {
@@ -21,70 +21,58 @@ export const FinishingStep = () => {
         "라벨은 브랜딩 완성도에 영향",
       ]}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>심지</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <SelectField
-              name="interlining"
-              control={control}
-              label="심지 종류"
-              options={INTERLINING_TYPES}
-            />
-            <SelectField
-              name="interliningThickness"
-              control={control}
-              label="심지 두께"
-              options={INTERLINING_THICKNESS}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <UtilityPagePanel
+        title="심지"
+        description="형태 유지감과 완성 톤을 결정하는 기본 마감입니다."
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <SelectField
+            name="interlining"
+            control={control}
+            label="심지 종류"
+            options={INTERLINING_TYPES}
+          />
+          <SelectField
+            name="interliningThickness"
+            control={control}
+            label="심지 두께"
+            options={INTERLINING_THICKNESS}
+          />
+        </div>
+      </UtilityPagePanel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>추가 봉제</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <CheckboxField
-              name="triangleStitch"
-              control={control}
-              label="삼각 봉제"
-            />
-            <CheckboxField
-              name="sideStitch"
-              control={control}
-              label="옆선 봉제"
-            />
-            <CheckboxField name="barTack" control={control} label="바택 처리" />
-          </div>
-        </CardContent>
-      </Card>
+      <UtilityPagePanel title="추가 봉제">
+        <div className="space-y-3">
+          <CheckboxField
+            name="triangleStitch"
+            control={control}
+            label="삼각 봉제"
+          />
+          <CheckboxField
+            name="sideStitch"
+            control={control}
+            label="옆선 봉제"
+          />
+          <CheckboxField name="barTack" control={control} label="바택 처리" />
+        </div>
+      </UtilityPagePanel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>라벨</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <CheckboxField
-              name="brandLabel"
-              control={control}
-              label="브랜드 라벨"
-              description="고객의 브랜드 라벨을 부착합니다"
-            />
-            <CheckboxField
-              name="careLabel"
-              control={control}
-              label="케어 라벨"
-              description="세탁 방법 등의 케어 라벨을 부착합니다"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <UtilityPagePanel title="라벨">
+        <div className="space-y-2">
+          <CheckboxField
+            name="brandLabel"
+            control={control}
+            label="브랜드 라벨"
+            description="고객의 브랜드 라벨을 부착합니다"
+          />
+          <CheckboxField
+            name="careLabel"
+            control={control}
+            label="케어 라벨"
+            description="세탁 방법 등의 케어 라벨을 부착합니다"
+          />
+        </div>
+      </UtilityPagePanel>
     </StepLayout>
   );
 };

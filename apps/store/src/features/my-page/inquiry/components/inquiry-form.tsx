@@ -106,10 +106,14 @@ export const InquiryForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        {/* 카테고리 선택 */}
-        <div className="space-y-2 py-2">
-          <Label>문의 유형</Label>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="space-y-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+              Category
+            </p>
+            <Label className="mt-2 block">문의 유형</Label>
+          </div>
           <Controller
             name="category"
             control={form.control}
@@ -120,10 +124,10 @@ export const InquiryForm = ({
                     key={cat}
                     type="button"
                     onClick={() => field.onChange(cat)}
-                    className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                    className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
                       field.value === cat
-                        ? "bg-zinc-900 text-white border-zinc-900"
-                        : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500"
+                        ? "border-zinc-900 bg-zinc-900 text-white"
+                        : "border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500"
                     }`}
                   >
                     {cat}
@@ -134,58 +138,72 @@ export const InquiryForm = ({
           />
         </div>
 
-        {/* 상품 선택 (category='상품'일 때만) */}
         {category === "상품" && (
-          <div className="space-y-2">
-            <Label>상품 선택</Label>
+          <div className="space-y-3 border-t border-stone-200 pt-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                Product
+              </p>
+              <Label className="mt-2 block">상품 선택</Label>
+              <p className="mt-1 text-sm text-zinc-500">
+                상품 문의일 경우 정확한 상품을 선택해 주세요.
+              </p>
+            </div>
 
-            {/* 선택된 상품 칩 */}
             {selectedProductId && selectedProductName ? (
-              <div className="flex items-center gap-2 p-2 bg-zinc-50 rounded-md border">
+              <div className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 px-3 py-3">
                 {selectedProductImage && (
                   <Image
                     src={selectedProductImage}
                     alt={selectedProductName}
-                    className="w-10 h-10 object-cover rounded"
+                    className="h-12 w-12 rounded-md object-cover"
                     transformation={[{ width: 40, height: 40 }]}
                   />
                 )}
-                <span className="text-sm flex-1">{selectedProductName}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+                    선택됨
+                  </p>
+                  <span className="block truncate text-sm text-zinc-800">
+                    {selectedProductName}
+                  </span>
+                </div>
                 <button type="button" onClick={handleClearProduct}>
                   <X className="w-4 h-4 text-zinc-400 hover:text-zinc-700" />
                 </button>
               </div>
             ) : (
-              <>
+              <div className="space-y-3">
                 <Input
                   placeholder="상품명으로 검색하세요"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 {productResults.length > 0 && (
-                  <div className="border rounded-md overflow-hidden">
+                  <div className="overflow-hidden rounded-xl border border-stone-200">
                     {productResults.map((product) => (
                       <button
                         key={product.id}
                         type="button"
                         onClick={() => handleSelectProduct(product)}
-                        className="flex items-center gap-2 w-full p-2 hover:bg-zinc-50 border-b last:border-b-0 text-left"
+                        className="flex w-full items-center gap-3 border-b border-stone-200 px-3 py-3 text-left transition-colors hover:bg-stone-50 last:border-b-0"
                       >
                         <Image
                           src={product.image}
                           alt={product.name}
-                          className="w-10 h-10 object-cover rounded"
+                          className="h-10 w-10 rounded-md object-cover"
                           transformation={[{ width: 40, height: 40 }]}
                         />
-                        <span className="text-sm">{product.name}</span>
+                        <span className="text-sm text-zinc-700">
+                          {product.name}
+                        </span>
                       </button>
                     ))}
                   </div>
                 )}
-              </>
+              </div>
             )}
 
-            {/* category='상품'일 때 productId 필수 검증 */}
             <Controller
               name="productId"
               control={form.control}
@@ -206,9 +224,13 @@ export const InquiryForm = ({
           </div>
         )}
 
-        {/* 제목 */}
-        <div className="space-y-2 py-2">
-          <Label>제목</Label>
+        <div className="space-y-3 border-t border-stone-200 pt-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+              Subject
+            </p>
+            <Label className="mt-2 block">제목</Label>
+          </div>
           <Controller
             name="title"
             control={form.control}
@@ -230,9 +252,16 @@ export const InquiryForm = ({
           />
         </div>
 
-        {/* 내용 */}
-        <div className="space-y-2">
-          <Label>문의 내용</Label>
+        <div className="space-y-3 border-t border-stone-200 pt-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+              Message
+            </p>
+            <Label className="mt-2 block">문의 내용</Label>
+            <p className="mt-1 text-sm text-zinc-500">
+              주문 정보나 원하는 처리 내용을 구체적으로 적어 주세요.
+            </p>
+          </div>
           <Controller
             name="content"
             control={form.control}
@@ -241,7 +270,7 @@ export const InquiryForm = ({
               <>
                 <Textarea
                   placeholder="문의 내용을 입력해주세요."
-                  className="min-h-[200px] resize-none"
+                  className="min-h-[220px] resize-none"
                   {...field}
                 />
                 {fieldState.error && (
@@ -254,7 +283,7 @@ export const InquiryForm = ({
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 border-t border-stone-200 pt-5">
           {onCancel && (
             <Button
               type="button"

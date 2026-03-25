@@ -5,13 +5,6 @@ import { Button } from "@/components/ui-extended/button";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Image } from "@imagekit/react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -40,7 +33,6 @@ import {
   getMaterialLabel,
   getPatternLabel,
 } from "@/features/shop/constants/PRODUCT_LABELS";
-import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/ui/data-table";
 import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
 import { ProductCard } from "@/components/composite/product-card";
@@ -55,6 +47,10 @@ import { useProduct, useProducts } from "@/features/shop/api/products-query";
 import { useToggleLike } from "@/features/shop/api/likes-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRightIcon } from "lucide-react";
+import {
+  UtilityPageAside,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
 
 /**
  * 주문 처리 및 네비게이션을 수행하는 공통 헬퍼 함수
@@ -271,21 +267,18 @@ export default function ShopDetailPage() {
     <MainLayout>
       <MainContent className="overflow-visible">
         <PageLayout
+          contentClassName="py-4 lg:py-6"
+          sidebarClassName="px-4 lg:px-0"
           detail={
-            <div>
-              {/* 유사한 상품 섹션 */}
+            <div className="space-y-10 pt-8">
               {showSimilarSection && (
-                <Card className="bg-zinc-100">
-                  <CardHeader>
-                    <CardTitle>유사한 상품</CardTitle>
-                    <CardDescription>
-                      이 상품과 비슷한 다른 상품들을 확인해보세요
-                    </CardDescription>
-                  </CardHeader>
-
-                  <CardContent>
+                <UtilityPageSection
+                  title="유사한 상품"
+                  description="같은 결의 소재와 무드를 가진 제품을 더 둘러볼 수 있습니다."
+                >
+                  <div className="border-t border-stone-200 pt-5">
                     <div
-                      className={`grid ${
+                      className={`grid gap-2 ${
                         isMobile ? "grid-cols-3" : "grid-cols-4"
                       }`}
                     >
@@ -305,56 +298,69 @@ export default function ShopDetailPage() {
                             />
                           ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </UtilityPageSection>
               )}
 
-              {/* 상세 이미지들 */}
-              {product.detailImages && product.detailImages.length > 0 ? (
-                product.detailImages.map((detailImage, index) => (
-                  <Image
-                    key={index}
-                    src={detailImage}
-                    alt={`${product.name} 상세 이미지 ${index + 1}`}
-                    className="w-full h-auto object-contain"
-                    transformation={[
-                      {
-                        width: 1200,
-                        quality: 90,
-                      },
-                    ]}
-                  />
-                ))
-              ) : (
-                // detailImages가 없을 경우 기본 이미지 표시 (하위 호환성)
-                <Image
-                  src={product.image}
-                  alt={`${product.name} 상세 이미지`}
-                  className="w-full h-auto object-contain"
-                  transformation={[
-                    {
-                      width: 1200,
-                      quality: 90,
-                    },
-                  ]}
-                />
-              )}
+              <UtilityPageSection
+                title="상품 정보"
+                description="실제 결을 확인할 수 있는 상세 이미지와 가이드를 제공합니다."
+              >
+                <div className="border-t border-stone-200 pt-5">
+                  {product.detailImages && product.detailImages.length > 0 ? (
+                    product.detailImages.map((detailImage, index) => (
+                      <Image
+                        key={index}
+                        src={detailImage}
+                        alt={`${product.name} 상세 이미지 ${index + 1}`}
+                        className="w-full h-auto object-contain"
+                        transformation={[
+                          {
+                            width: 1200,
+                            quality: 90,
+                          },
+                        ]}
+                      />
+                    ))
+                  ) : (
+                    <Image
+                      src={product.image}
+                      alt={`${product.name} 상세 이미지`}
+                      className="w-full h-auto object-contain"
+                      transformation={[
+                        {
+                          width: 1200,
+                          quality: 90,
+                        },
+                      ]}
+                    />
+                  )}
+                </div>
+              </UtilityPageSection>
             </div>
           }
           sidebar={
-            <Card>
-              <CardHeader>
-                <CardTitle>{product.name}</CardTitle>
-                <CardDescription>{product.code}</CardDescription>
-                {isProductSoldOut && <Badge variant="destructive">품절</Badge>}
-                {!hasOptions &&
+            <div className="space-y-5">
+              <div className="border-b border-stone-200 pb-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                  {product.code}
+                </p>
+                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-950">
+                  {product.name}
+                </h1>
+                <p className="mt-4 text-2xl font-semibold tracking-tight text-zinc-950">
+                  {product.price.toLocaleString()}원
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {isProductSoldOut ? (
+                    <Badge variant="destructive">품절</Badge>
+                  ) : null}
+                  {!hasOptions &&
                   product.stock != null &&
                   product.stock > 0 &&
-                  product.stock <= 5 && (
+                  product.stock <= 5 ? (
                     <Badge variant="secondary">{product.stock}개 남음</Badge>
-                  )}
-
-                <div className="flex items-center gap-2">
+                  ) : null}
                   <Badge variant="outline" className="gap-1">
                     #{getCategoryLabel(product.category)}
                   </Badge>
@@ -368,133 +374,136 @@ export default function ShopDetailPage() {
                     #{getMaterialLabel(product.material)}
                   </Badge>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* 옵션 선택 */}
-                {hasOptions && (
-                  <Select
-                    value=""
-                    onValueChange={(value) => {
-                      const option = productOptions.find((o) => o.id === value);
-                      if (option) {
-                        handleSelectOption(option);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder={
-                          product.optionLabel
-                            ? `${product.optionLabel}을(를) 선택하세요`
-                            : "옵션을 선택하세요"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {productOptions
-                        .filter(
-                          (option) =>
-                            !selectedOptions.some(
-                              (s) => s.option.id === option.id,
-                            ),
-                        )
-                        .map((option) => (
-                          <SelectItem
-                            key={option.id}
-                            value={option.id}
-                            disabled={option.stock === 0}
-                          >
-                            {option.name}
-                            {option.additionalPrice > 0 &&
-                              ` (+${option.additionalPrice.toLocaleString()}원)`}
-                            {option.stock === 0 && " (품절)"}
-                            {option.stock != null &&
-                              option.stock > 0 &&
-                              option.stock <= 5 &&
-                              ` (${option.stock}개 남음)`}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                )}
-
-                {/* 선택된 옵션 목록 (옵션이 있을 때) */}
-                {hasOptions && (
-                  <SelectedOptionsList
-                    selectedOptions={selectedOptions}
-                    product={product}
-                    onRemoveOption={handleRemoveOption}
-                    onUpdateQuantity={handleUpdateQuantity}
-                  />
-                )}
-
-                {/* 수량 선택 (옵션이 없을 때) */}
-                {!hasOptions && (
-                  <SelectedOptionItem
-                    item={{
-                      option: {
-                        id: "base",
-                        name: product.name,
-                        additionalPrice: 0,
-                      },
-                      quantity: baseQuantity,
-                    }}
-                    product={product}
-                    onRemove={() => {}}
-                    onUpdateQuantity={(delta) =>
-                      handleUpdateBaseQuantity(delta, product.stock)
-                    }
-                    showCloseButton={false}
-                  />
-                )}
-
-                <Separator />
-                <CardDescription className="whitespace-pre-line">
+                <p className="mt-5 whitespace-pre-line text-sm leading-6 text-zinc-600">
                   {product.info}
-                </CardDescription>
-                <Separator />
+                </p>
+              </div>
 
-                <div>
-                  <Accordion type="single" collapsible>
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger>내게 맞는 넥타이 길이</AccordionTrigger>
-                      <AccordionContent className="text-zinc-600">
-                        <DataTable
-                          headers={["키", "권장 길이"]}
-                          data={HEIGHT_GUIDE.map((guide) => ({
-                            키: guide.height,
-                            "권장 길이": guide.length,
-                          }))}
-                          size="sm"
+              <UtilityPageAside
+                title="구매 옵션"
+                description="옵션과 수량을 정한 뒤 장바구니 또는 주문으로 이어집니다."
+                tone="muted"
+                className="rounded-2xl"
+              >
+                <div className="space-y-4">
+                  {hasOptions && (
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        const option = productOptions.find(
+                          (o) => o.id === value,
+                        );
+                        if (option) {
+                          handleSelectOption(option);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue
+                          placeholder={
+                            product.optionLabel
+                              ? `${product.optionLabel}을(를) 선택하세요`
+                              : "옵션을 선택하세요"
+                          }
                         />
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {productOptions
+                          .filter(
+                            (option) =>
+                              !selectedOptions.some(
+                                (s) => s.option.id === option.id,
+                              ),
+                          )
+                          .map((option) => (
+                            <SelectItem
+                              key={option.id}
+                              value={option.id}
+                              disabled={option.stock === 0}
+                            >
+                              {option.name}
+                              {option.additionalPrice > 0 &&
+                                ` (+${option.additionalPrice.toLocaleString()}원)`}
+                              {option.stock === 0 && " (품절)"}
+                              {option.stock != null &&
+                                option.stock > 0 &&
+                                option.stock <= 5 &&
+                                ` (${option.stock}개 남음)`}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  )}
 
-                  <Accordion type="single" collapsible>
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger>유의사항</AccordionTrigger>
-                      <AccordionContent className="text-zinc-600">
-                        <p>
-                          • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
-                          부과됩니다.
-                        </p>
-                        <p>
-                          • 예상 수선 기간은 넥타이 확인 후 영업일 기준
-                          10일입니다.
-                        </p>
-                        <p>
-                          • 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이
-                          불가능합니다.
-                        </p>
-                        <p>
-                          • 수선 진행 전 취소 시, 택배비 3,000원을 제외한 금액을
-                          환불해드립니다.
-                        </p>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                  {hasOptions ? (
+                    <SelectedOptionsList
+                      selectedOptions={selectedOptions}
+                      product={product}
+                      onRemoveOption={handleRemoveOption}
+                      onUpdateQuantity={handleUpdateQuantity}
+                    />
+                  ) : (
+                    <SelectedOptionItem
+                      item={{
+                        option: {
+                          id: "base",
+                          name: product.name,
+                          additionalPrice: 0,
+                        },
+                        quantity: baseQuantity,
+                      }}
+                      product={product}
+                      onRemove={() => {}}
+                      onUpdateQuantity={(delta) =>
+                        handleUpdateBaseQuantity(delta, product.stock)
+                      }
+                      showCloseButton={false}
+                    />
+                  )}
                 </div>
+              </UtilityPageAside>
+
+              <div className="border-t border-stone-200 pt-2">
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="length-guide">
+                    <AccordionTrigger>내게 맞는 넥타이 길이</AccordionTrigger>
+                    <AccordionContent className="text-zinc-600">
+                      <DataTable
+                        headers={["키", "권장 길이"]}
+                        data={HEIGHT_GUIDE.map((guide) => ({
+                          키: guide.height,
+                          "권장 길이": guide.length,
+                        }))}
+                        size="sm"
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="notes">
+                    <AccordionTrigger>유의사항</AccordionTrigger>
+                    <AccordionContent className="space-y-1 text-zinc-600">
+                      <p>
+                        • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
+                        부과됩니다.
+                      </p>
+                      <p>
+                        • 예상 수선 기간은 넥타이 확인 후 영업일 기준
+                        10일입니다.
+                      </p>
+                      <p>
+                        • 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이
+                        불가능합니다.
+                      </p>
+                      <p>
+                        • 수선 진행 전 취소 시, 택배비 3,000원을 제외한 금액을
+                        환불해드립니다.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
                 <button
                   type="button"
                   onClick={handleInquiry}
@@ -503,8 +512,8 @@ export default function ShopDetailPage() {
                   문의하기
                   <ChevronRightIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5" />
                 </button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           }
           actionBar={
             <ProductActionButtons

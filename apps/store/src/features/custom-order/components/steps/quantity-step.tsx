@@ -1,12 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
 import { PackageSelector } from "@/features/custom-order/components/package-selector";
@@ -61,11 +54,16 @@ export const QuantityStep = ({
         "시작 방식 선택 후 패키지 추천 사용",
       ]}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>시작 방식</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <section>
+        <div className="max-w-2xl">
+          <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
+            시작 방식
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            원단 보유 여부와 재주문 여부를 먼저 정하면 이후 단계가 간결해집니다.
+          </p>
+        </div>
+        <div className="mt-5 space-y-3 border-y border-stone-200 py-4">
           <CheckboxField
             name="fabricProvided"
             control={control}
@@ -79,14 +77,19 @@ export const QuantityStep = ({
             description="이전에 주문한 동일 디자인으로 재주문합니다"
             disabled={fabricProvided}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>수량 선택</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <section className="border-t border-stone-200 pt-8">
+        <div className="max-w-2xl">
+          <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
+            수량 선택
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            기본 단위로 빠르게 선택하거나 직접 조절해 예상 단가를 확인하세요.
+          </p>
+        </div>
+        <div className="mt-5 space-y-4">
           <ButtonGroup>
             {QUANTITY_PRESETS.map((preset) => (
               <Button
@@ -109,17 +112,15 @@ export const QuantityStep = ({
           />
 
           {quantity >= 100 && (
-            <Card>
-              <CardContent>
-                <CardDescription>
-                  100개 이상은 견적요청으로 진행됩니다. 담당자가 별도
-                  안내해드려요.
-                </CardDescription>
-              </CardContent>
-            </Card>
+            <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                100개 이상은 견적요청으로 전환됩니다. 수량 확정 후 담당자가 세부
+                사양과 일정을 안내합니다.
+              </p>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {!fabricProvided && !reorder && (
         <PackageSelector

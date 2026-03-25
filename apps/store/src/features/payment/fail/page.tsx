@@ -2,6 +2,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui-extended/button";
+import { AlertTriangle, ReceiptText } from "lucide-react";
 
 const PaymentFailPage = () => {
   const [searchParams] = useSearchParams();
@@ -13,15 +14,37 @@ const PaymentFailPage = () => {
   return (
     <MainLayout>
       <MainContent>
-        <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
-          <p className="text-red-500 text-lg font-semibold">
+        <div className="mx-auto flex min-h-[28rem] max-w-2xl flex-col justify-center px-4 py-10 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+            <AlertTriangle className="h-7 w-7 text-red-500" />
+          </div>
+          <h1 className="mt-6 text-3xl font-semibold tracking-tight text-zinc-950">
             결제에 실패했습니다
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">
+            입력한 결제 정보와 한도, 카드사 인증 상태를 다시 확인해주세요.
           </p>
-          {message && <p className="text-zinc-600 text-sm">{message}</p>}
-          {code && <p className="text-zinc-400 text-xs">에러 코드: {code}</p>}
-          <Button onClick={() => navigate(ROUTES.ORDER_FORM)}>
-            주문서로 돌아가기
-          </Button>
+          {message ? (
+            <div className="mt-8 rounded-2xl border border-stone-200 px-5 py-4 text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                Message
+              </p>
+              <p className="mt-2 text-sm text-zinc-700">{message}</p>
+              {code ? (
+                <p className="mt-3 flex items-center gap-2 text-xs text-zinc-400">
+                  <ReceiptText className="h-3.5 w-3.5" />
+                  에러 코드: {code}
+                </p>
+              ) : null}
+            </div>
+          ) : code ? (
+            <p className="mt-6 text-xs text-zinc-400">에러 코드: {code}</p>
+          ) : null}
+          <div className="mt-8 flex justify-center">
+            <Button onClick={() => navigate(ROUTES.ORDER_FORM)}>
+              주문서로 돌아가기
+            </Button>
+          </div>
         </div>
       </MainContent>
     </MainLayout>

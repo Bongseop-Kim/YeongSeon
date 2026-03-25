@@ -1,5 +1,4 @@
 import { useFormContext } from "react-hook-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui-extended/button";
 import { ContactInfoSection } from "@/components/composite/ContactInfoSection";
 import { formatPhoneNumber } from "@/lib/phone-format";
@@ -61,8 +60,16 @@ export const ConfirmStep = ({
           : "제출 후 주문 내역으로 이동",
       ]}
     >
-      <Card>
-        <CardContent className="divide-y divide-zinc-100 px-4 py-2">
+      <section>
+        <div className="max-w-2xl">
+          <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
+            주문 옵션 확인
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            수정이 필요한 항목만 바로 돌아가서 조정할 수 있습니다.
+          </p>
+        </div>
+        <div className="mt-5 divide-y divide-zinc-100 border-y border-stone-200 py-2">
           <SummaryRow
             label="수량"
             value={`${values.quantity}개`}
@@ -94,14 +101,19 @@ export const ConfirmStep = ({
             value={attachmentSummary || "없음"}
             onEdit={() => goToStepById("attachment")}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader className="flex justify-between items-center">
-          <CardTitle>
-            {selectedAddress?.recipientName ?? "배송지 정보"}
-          </CardTitle>
+      <section className="border-t border-stone-200 pt-8">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
+              배송지 정보
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              수령인과 연락처를 확인한 뒤 최종 제출합니다.
+            </p>
+          </div>
           <Button
             type="button"
             variant="outline"
@@ -110,10 +122,13 @@ export const ConfirmStep = ({
           >
             배송지 관리
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="mt-5 border-y border-stone-200 py-4">
           {selectedAddress ? (
             <div className="space-y-1 text-sm text-zinc-700">
+              <p className="font-medium text-zinc-950">
+                {selectedAddress.recipientName}
+              </p>
               <p>
                 ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
                 {selectedAddress.detailAddress}
@@ -133,18 +148,27 @@ export const ConfirmStep = ({
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {isQuoteMode && (
-        <Card>
-          <CardContent className="px-4 py-4">
+        <section className="border-t border-stone-200 pt-8">
+          <div className="max-w-2xl">
+            <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
+              견적 안내 연락처
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              대량 주문은 확인 후 별도 안내가 진행되므로 담당자 연락처를 남겨
+              주세요.
+            </p>
+          </div>
+          <div className="mt-5">
             <ContactInfoSection
               control={control}
               contactMethod={values.contactMethod}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
     </StepLayout>
   );

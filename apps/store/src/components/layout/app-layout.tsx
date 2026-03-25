@@ -144,7 +144,7 @@ export default function AppLayout() {
     : "relative z-30 h-auto";
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-x-hidden">
+    <div className="relative flex h-dvh flex-col overflow-x-auto">
       {showHeader && (
         <Header
           size="sm"
@@ -267,7 +267,10 @@ export default function AppLayout() {
         </Header>
       )}
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-x-auto overflow-y-auto"
+      >
         <Router />
         {/* 모바일에서는 홈 페이지에서만 footer 표시 */}
         {(!isMobile || location.pathname === ROUTES.HOME) && (

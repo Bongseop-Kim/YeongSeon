@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { UtilityPageSection } from "@/components/composite/utility-page";
 import { Button } from "@/components/ui-extended/button";
 import { ProductCard } from "@/components/composite/product-card";
 import type { Product } from "@yeongseon/shared/types/view/product";
@@ -27,14 +21,12 @@ export function CartRecommendationsCard({
   if (isLoading) {
     const skeletonCount = isMobile ? 6 : 8;
     return (
-      <Card className="bg-zinc-100">
-        <CardHeader>
-          <CardTitle>추천 상품</CardTitle>
-          <CardDescription>
-            이 상품과 함께 보면 좋은 추천 상품들을 확인해보세요
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <UtilityPageSection
+        title="추천 상품"
+        description="지금 장바구니에 담긴 상품과 결이 비슷한 제품입니다."
+        className="pt-8"
+      >
+        <div className="border-t border-stone-200 pt-5">
           <div
             className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"} gap-2`}
           >
@@ -45,18 +37,19 @@ export function CartRecommendationsCard({
               />
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </UtilityPageSection>
     );
   }
 
   if (isError) {
     return (
-      <Card className="bg-zinc-100">
-        <CardHeader>
-          <CardTitle>추천 상품</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <UtilityPageSection
+        title="추천 상품"
+        description="추천 목록을 불러오지 못했습니다."
+        className="pt-8"
+      >
+        <div className="border-t border-stone-200 pt-5">
           <p className="text-sm text-zinc-500">
             추천 상품을 불러오는 중 오류가 발생했습니다.
           </p>
@@ -70,8 +63,8 @@ export function CartRecommendationsCard({
               다시 시도
             </Button>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </UtilityPageSection>
     );
   }
 
@@ -80,15 +73,12 @@ export function CartRecommendationsCard({
   }
 
   return (
-    <Card className="bg-zinc-100">
-      <CardHeader>
-        <CardTitle>추천 상품</CardTitle>
-        <CardDescription>
-          이 상품과 함께 보면 좋은 추천 상품들을 확인해보세요
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent>
+    <UtilityPageSection
+      title="추천 상품"
+      description="함께 보면 선택 폭이 넓어지는 제품을 추렸습니다."
+      className="pt-8"
+    >
+      <div className="border-t border-stone-200 pt-5">
         <div
           className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"} gap-2`}
         >
@@ -96,7 +86,7 @@ export function CartRecommendationsCard({
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </UtilityPageSection>
   );
 }

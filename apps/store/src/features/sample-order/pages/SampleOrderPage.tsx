@@ -3,7 +3,6 @@ import { Controller, useForm } from "react-hook-form";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -19,6 +18,7 @@ import { ROUTES } from "@/constants/ROUTES";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { hasStringCode } from "@/lib/type-guard";
+import { cn } from "@/lib/utils";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 import { ImageUpload } from "@/features/custom-order/components/image-upload";
@@ -33,6 +33,12 @@ import { IMAGE_FOLDERS } from "@yeongseon/shared";
 import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
 import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
 import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
+import {
+  UtilityKeyValueRow,
+  UtilityPageAside,
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
@@ -153,6 +159,37 @@ export default function SampleOrderPage() {
   const isFabricVisible = values.sampleType !== "sewing";
 
   const samplePrice = getSamplePrice(pricingConfig, values);
+  const selectedSampleLabel =
+    SAMPLE_TYPE_CARDS.find((o) => o.value === values.sampleType)?.label ?? "-";
+  const selectedFabricLabel = isFabricVisible
+    ? (FABRIC_CARDS.find(
+        (card) =>
+          card.fabricType === values.fabricType &&
+          card.designType === values.designType,
+      )?.label ?? "-")
+    : "봉제 전용";
+  const paymentStatus = !user
+    ? "로그인 필요"
+    : !selectedAddress
+      ? "배송지 필요"
+      : samplePrice === null
+        ? isPricingError
+          ? "가격 확인 실패"
+          : "가격 계산 중"
+        : !cancellationConsent
+          ? "동의 필요"
+          : "결제 가능";
+  const paymentStatusDescription = !user
+    ? "로그인 후 샘플 주문을 진행할 수 있습니다."
+    : !selectedAddress
+      ? "배송지를 추가하면 바로 결제를 진행할 수 있습니다."
+      : samplePrice === null
+        ? isPricingError
+          ? "가격 정보를 다시 불러와야 합니다."
+          : "샘플 금액을 계산하고 있습니다."
+        : !cancellationConsent
+          ? "취소 및 환불 제한 동의가 필요합니다."
+          : "결제 준비가 완료되었습니다.";
   const isSubmitDisabled =
     !user ||
     !selectedAddress ||
@@ -256,69 +293,90 @@ export default function SampleOrderPage() {
         <MainContent className="overflow-visible bg-zinc-50">
           <Form {...form}>
             <PageLayout
+              contentClassName="space-y-8"
+              sidebarClassName="space-y-4"
               sidebar={
                 <>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>결제 금액</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-zinc-500">샘플 유형</span>
-                        <span>
-                          {
-                            SAMPLE_TYPE_CARDS.find(
-                              (o) => o.value === values.sampleType,
-                            )?.label
-                          }
-                        </span>
-                      </div>
-                      <div className="flex justify-between font-semibold">
-                        <span>총 결제 금액</span>
-                        <span>
+                  <UtilityPageAside
+                    title="결제 상태"
+                    description="선택한 구성과 주문 준비 상태를 한 번에 확인합니다."
+                    tone="muted"
+                    className="py-5"
+                  >
+                    <div className="rounded-2xl bg-white px-4 py-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                        Status
+                      </p>
+                      <div className="mt-2 flex items-end justify-between gap-3">
+                        <p className="text-lg font-semibold tracking-tight text-zinc-950">
+                          {paymentStatus}
+                        </p>
+                        <p className="text-right text-2xl font-semibold tracking-tight text-zinc-950">
                           {samplePrice === null
+                            ? isPricingError
+                              ? "-"
+                              : "..."
+                            : `${samplePrice.toLocaleString()}원`}
+                        </p>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-zinc-600">
+                        {paymentStatusDescription}
+                      </p>
+                    </div>
+
+                    <dl className="mt-4">
+                      <UtilityKeyValueRow
+                        label="샘플 유형"
+                        value={selectedSampleLabel}
+                      />
+                      <UtilityKeyValueRow
+                        label="구성"
+                        value={selectedFabricLabel}
+                      />
+                      <UtilityKeyValueRow
+                        label="총 결제 금액"
+                        value={
+                          samplePrice === null
                             ? isPricingError
                               ? "불러오지 못함"
                               : "불러오는 중..."
-                            : `${samplePrice.toLocaleString()}원`}
-                        </span>
-                      </div>
-                      {samplePrice === null && (
-                        <p className="text-xs text-zinc-500">
-                          {isPricingError
-                            ? "샘플 가격 정보를 불러오지 못해 결제를 진행할 수 없습니다."
-                            : "샘플 가격 정보를 확인한 뒤 결제를 진행할 수 있습니다."}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
+                            : `${samplePrice.toLocaleString()}원`
+                        }
+                      />
+                    </dl>
+                  </UtilityPageAside>
                   {user && (
-                    <Card>
-                      <CardContent className="px-0">
-                        {samplePrice === null ? (
-                          <p className="px-6 py-4 text-sm text-zinc-500">
-                            {isPricingLoading
-                              ? "결제 금액을 불러오는 중입니다."
-                              : "결제 금액을 확인할 수 없어 결제 수단을 표시하지 않습니다."}
-                          </p>
-                        ) : (
+                    <UtilityPageAside
+                      title="결제 수단"
+                      description="결제 준비가 완료되면 바로 샘플 주문을 진행할 수 있습니다."
+                      tone="muted"
+                      className="py-5"
+                    >
+                      {samplePrice === null ? (
+                        <p className="text-sm text-zinc-500">
+                          {isPricingLoading
+                            ? "결제 금액을 불러오는 중입니다."
+                            : "결제 금액을 확인할 수 없어 결제 수단을 표시하지 않습니다."}
+                        </p>
+                      ) : (
+                        <div className="-mx-5">
                           <PaymentWidget
                             ref={paymentWidgetRef}
                             amount={samplePrice}
                             customerKey={user.id}
                           />
-                        )}
-                        <ConsentCheckbox
-                          id="cancellation-consent"
-                          checked={cancellationConsent}
-                          onCheckedChange={setCancellationConsent}
-                          label="취소/환불 불가 동의"
-                          description="샘플 주문은 결제 후 중도 취소 및 환불이 불가능합니다."
-                          required
-                          className="px-6 pb-6"
-                        />
-                      </CardContent>
-                    </Card>
+                        </div>
+                      )}
+                      <ConsentCheckbox
+                        id="cancellation-consent"
+                        checked={cancellationConsent}
+                        onCheckedChange={setCancellationConsent}
+                        label="취소/환불 불가 동의"
+                        description="샘플 주문은 결제 후 중도 취소 및 환불이 불가능합니다."
+                        required
+                        className="pt-4"
+                      />
+                    </UtilityPageAside>
                   )}
                 </>
               }
@@ -326,7 +384,7 @@ export default function SampleOrderPage() {
                 <div className="space-y-2">
                   <Button
                     type="button"
-                    className="w-full"
+                    className="w-full rounded-xl disabled:opacity-100"
                     size="xl"
                     onClick={handleSubmit}
                     disabled={isSubmitDisabled}
@@ -339,211 +397,278 @@ export default function SampleOrderPage() {
                         ? "결제 요청 중..."
                         : `${samplePrice.toLocaleString()}원 결제하기`}
                   </Button>
-                  {!selectedAddress && (
-                    <p className="text-sm text-center text-zinc-500">
-                      배송지를 추가하면 주문을 진행할 수 있어요
-                    </p>
-                  )}
+                  <p className="text-sm text-center text-zinc-500">
+                    {paymentStatusDescription}
+                  </p>
                 </div>
               }
             >
-              {/* 샘플 유형 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>샘플 유형</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <UtilityPageIntro
+                eyebrow="Sample Order"
+                title="샘플 주문"
+                description="확인하고 싶은 원단과 봉제 사양을 정리한 뒤 결제를 진행하세요."
+                meta={
+                  <div className="flex flex-wrap gap-x-6 gap-y-3 border-t border-stone-200 pt-5">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                        Sample Type
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-zinc-950">
+                        {selectedSampleLabel}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                        Material
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-zinc-950">
+                        {selectedFabricLabel}
+                      </p>
+                    </div>
+                  </div>
+                }
+              />
+
+              <UtilityPageSection
+                title="샘플 유형"
+                description="확인하려는 범위를 먼저 정하면 필요한 옵션만 노출됩니다."
+                className="border-b border-stone-200 pb-8"
+              >
+                <RadioGroup
+                  value={values.sampleType}
+                  onValueChange={(v) =>
+                    form.setValue(
+                      "sampleType",
+                      v as SampleOrderFormValues["sampleType"],
+                    )
+                  }
+                >
+                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                    {SAMPLE_TYPE_CARDS.map((card) => (
+                      <RadioCard
+                        key={card.value}
+                        value={card.value}
+                        id={`sample-type-${card.value}`}
+                        selected={values.sampleType === card.value}
+                        className={cn(
+                          "min-h-32",
+                          values.sampleType === card.value && "bg-stone-50/60",
+                        )}
+                      >
+                        <CardHeader className="px-5 pt-4">
+                          <CardTitle className="text-lg">
+                            {card.label}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-5 pb-5">
+                          <CardDescription className="leading-6">
+                            {card.description}
+                          </CardDescription>
+                        </CardContent>
+                      </RadioCard>
+                    ))}
+                  </div>
+                </RadioGroup>
+              </UtilityPageSection>
+
+              {isFabricVisible && (
+                <UtilityPageSection
+                  title="원단 조합"
+                  description="소재와 직조 방식을 선택하면 샘플 구성과 가격이 결정됩니다."
+                >
                   <RadioGroup
-                    value={values.sampleType}
-                    onValueChange={(v) =>
-                      form.setValue(
-                        "sampleType",
-                        v as SampleOrderFormValues["sampleType"],
-                      )
-                    }
+                    value={currentFabricValue}
+                    onValueChange={(val) => {
+                      const found = FABRIC_CARDS.find(
+                        (c) => `${c.fabricType}-${c.designType}` === val,
+                      );
+                      if (found) {
+                        form.setValue("fabricType", found.fabricType);
+                        form.setValue("designType", found.designType);
+                      }
+                    }}
                   >
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                      {SAMPLE_TYPE_CARDS.map((card) => (
-                        <RadioCard
-                          key={card.value}
-                          value={card.value}
-                          id={`sample-type-${card.value}`}
-                          selected={values.sampleType === card.value}
-                        >
-                          <CardHeader>
-                            <CardTitle>{card.label}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <CardDescription>
-                              {card.description}
-                            </CardDescription>
-                          </CardContent>
-                        </RadioCard>
-                      ))}
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                      {FABRIC_CARDS.map((card) => {
+                        const cardValue = `${card.fabricType}-${card.designType}`;
+                        return (
+                          <RadioCard
+                            key={cardValue}
+                            value={cardValue}
+                            id={`fabric-${cardValue}`}
+                            selected={currentFabricValue === cardValue}
+                            className={cn(
+                              "min-h-28",
+                              currentFabricValue === cardValue &&
+                                "bg-stone-50/60",
+                            )}
+                          >
+                            <CardHeader className="px-5 pt-4">
+                              <CardTitle>{card.label}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-5 pb-5">
+                              <CardDescription className="leading-6">
+                                {card.description}
+                              </CardDescription>
+                            </CardContent>
+                          </RadioCard>
+                        );
+                      })}
                     </div>
                   </RadioGroup>
-                </CardContent>
-              </Card>
-
-              {/* 원단 조합 — 봉제 샘플만 선택 시 숨김 */}
-              {isFabricVisible && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>원단 조합</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <RadioGroup
-                      value={currentFabricValue}
-                      onValueChange={(val) => {
-                        const found = FABRIC_CARDS.find(
-                          (c) => `${c.fabricType}-${c.designType}` === val,
-                        );
-                        if (found) {
-                          form.setValue("fabricType", found.fabricType);
-                          form.setValue("designType", found.designType);
-                        }
-                      }}
-                    >
-                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                        {FABRIC_CARDS.map((card) => {
-                          const cardValue = `${card.fabricType}-${card.designType}`;
-                          return (
-                            <RadioCard
-                              key={cardValue}
-                              value={cardValue}
-                              id={`fabric-${cardValue}`}
-                              selected={currentFabricValue === cardValue}
-                            >
-                              <CardHeader>
-                                <CardTitle>{card.label}</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <CardDescription>
-                                  {card.description}
-                                </CardDescription>
-                              </CardContent>
-                            </RadioCard>
-                          );
-                        })}
-                      </div>
-                    </RadioGroup>
-                  </CardContent>
-                </Card>
+                </UtilityPageSection>
               )}
 
-              {/* 봉제 방식 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>봉제 방식</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <RadioGroup
-                    value={values.tieType ?? "MANUAL"}
-                    onValueChange={(v) =>
-                      form.setValue("tieType", v === "AUTO" ? "AUTO" : null)
-                    }
-                  >
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                      <RadioCard
-                        value="AUTO"
-                        id="tie-type-auto"
-                        selected={values.tieType === "AUTO"}
-                      >
-                        <CardHeader>
-                          <CardTitle>자동 타이 (지퍼)</CardTitle>
-                        </CardHeader>
-                      </RadioCard>
-                      <RadioCard
-                        value="MANUAL"
-                        id="tie-type-manual"
-                        selected={values.tieType === null}
-                      >
-                        <CardHeader>
-                          <CardTitle>수동 타이 (손매듭)</CardTitle>
-                        </CardHeader>
-                      </RadioCard>
+              <UtilityPageSection
+                title="봉제 사양"
+                description="타이 방식과 심지 구성을 정하면 샘플의 완성도가 달라집니다."
+              >
+                <div className="space-y-6 border-y border-stone-200 py-4">
+                  <section>
+                    <div className="mb-3">
+                      <h3 className="text-sm font-semibold text-zinc-950">
+                        타이 방식
+                      </h3>
                     </div>
-                  </RadioGroup>
+                    <RadioGroup
+                      value={values.tieType ?? "MANUAL"}
+                      onValueChange={(v) =>
+                        form.setValue("tieType", v === "AUTO" ? "AUTO" : null)
+                      }
+                    >
+                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                        <RadioCard
+                          value="AUTO"
+                          id="tie-type-auto"
+                          selected={values.tieType === "AUTO"}
+                        >
+                          <CardHeader>
+                            <CardTitle>자동 타이 (지퍼)</CardTitle>
+                          </CardHeader>
+                        </RadioCard>
+                        <RadioCard
+                          value="MANUAL"
+                          id="tie-type-manual"
+                          selected={values.tieType === null}
+                        >
+                          <CardHeader>
+                            <CardTitle>수동 타이 (손매듭)</CardTitle>
+                          </CardHeader>
+                        </RadioCard>
+                      </div>
+                    </RadioGroup>
+                  </section>
 
-                  <RadioGroup
-                    value={values.interlining}
-                    onValueChange={(v) =>
-                      form.setValue(
-                        "interlining",
-                        v as SampleOrderFormValues["interlining"],
-                      )
-                    }
-                  >
-                    <CardTitle className="text-sm text-zinc-600">
-                      심지
-                    </CardTitle>
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                      <RadioCard
-                        value="WOOL"
-                        id="interlining-wool"
-                        selected={values.interlining === "WOOL"}
-                      >
-                        <CardHeader>
-                          <CardTitle>울 심지</CardTitle>
-                        </CardHeader>
-                      </RadioCard>
-                      <RadioCard
-                        value="POLY"
-                        id="interlining-poly"
-                        selected={values.interlining === "POLY"}
-                      >
-                        <CardHeader>
-                          <CardTitle>폴리 심지</CardTitle>
-                        </CardHeader>
-                      </RadioCard>
-                    </div>
-                  </RadioGroup>
-                </CardContent>
-              </Card>
-
-              {/* 배송지 */}
-              <Card>
-                <CardHeader className="flex justify-between items-center">
-                  <CardTitle>
-                    {selectedAddress?.recipientName ?? "배송지 정보"}
-                  </CardTitle>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={openShippingPopup}
-                  >
-                    배송지 관리
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  {selectedAddress ? (
-                    <div className="space-y-1 text-sm text-zinc-700">
-                      <p>
-                        ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
-                        {selectedAddress.detailAddress}
+                  <section className="border-t border-stone-200 pt-6">
+                    <div className="mb-3">
+                      <h3 className="text-sm font-semibold text-zinc-950">
+                        심지
+                      </h3>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        착용감과 형태 유지 기준으로 선택하세요.
                       </p>
-                      <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
                     </div>
-                  ) : (
-                    <div className="space-y-3 rounded-lg border-2 border-dashed border-zinc-200 py-4 text-center text-sm text-zinc-500">
-                      <p>배송지를 추가해주세요.</p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={openShippingPopup}
-                      >
-                        배송지 추가
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <RadioGroup
+                      value={values.interlining}
+                      onValueChange={(v) =>
+                        form.setValue(
+                          "interlining",
+                          v as SampleOrderFormValues["interlining"],
+                        )
+                      }
+                    >
+                      <CardTitle className="text-sm text-zinc-600">
+                        심지
+                      </CardTitle>
+                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                        <RadioCard
+                          value="WOOL"
+                          id="interlining-wool"
+                          selected={values.interlining === "WOOL"}
+                        >
+                          <CardHeader>
+                            <CardTitle>울 심지</CardTitle>
+                          </CardHeader>
+                        </RadioCard>
+                        <RadioCard
+                          value="POLY"
+                          id="interlining-poly"
+                          selected={values.interlining === "POLY"}
+                        >
+                          <CardHeader>
+                            <CardTitle>폴리 심지</CardTitle>
+                          </CardHeader>
+                        </RadioCard>
+                      </div>
+                    </RadioGroup>
+                  </section>
+                </div>
+              </UtilityPageSection>
 
-              {/* 참고 이미지 + 메모 */}
-              <Card>
-                <CardContent className="space-y-4 px-4 py-4">
+              <UtilityPageSection
+                title="배송 및 참고 자료"
+                description="수령 정보와 참고 이미지를 함께 전달하면 제작 오차를 줄일 수 있습니다."
+              >
+                <section className="border-y border-stone-200 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-zinc-950">
+                        배송지
+                      </h3>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        최종 결제 전 수령 정보를 확인합니다.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={openShippingPopup}
+                    >
+                      배송지 관리
+                    </Button>
+                  </div>
+
+                  <div className="mt-4">
+                    {selectedAddress ? (
+                      <div className="space-y-1 text-sm text-zinc-700">
+                        <p className="font-medium text-zinc-950">
+                          {selectedAddress.recipientName}
+                        </p>
+                        <p>
+                          ({selectedAddress.postalCode}){" "}
+                          {selectedAddress.address}{" "}
+                          {selectedAddress.detailAddress}
+                        </p>
+                        <p>
+                          {formatPhoneNumber(selectedAddress.recipientPhone)}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 rounded-lg border-2 border-dashed border-zinc-200 py-4 text-center text-sm text-zinc-500">
+                        <p>배송지를 추가해주세요.</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={openShippingPopup}
+                        >
+                          배송지 추가
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                <section className="border-b border-stone-200 py-6">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-zinc-950">
+                      참고 이미지 및 요청사항
+                    </h3>
+                    <p className="mt-1 text-sm text-zinc-500">
+                      패턴, 컬러, 봉제 디테일을 이미지와 메모로 전달해 주세요.
+                    </p>
+                  </div>
                   <ImageUpload
                     uploadedImages={imageUpload.uploadedImages}
                     isUploading={imageUpload.isUploading}
@@ -563,8 +688,8 @@ export default function SampleOrderPage() {
                       />
                     )}
                   />
-                </CardContent>
-              </Card>
+                </section>
+              </UtilityPageSection>
             </PageLayout>
           </Form>
         </MainContent>

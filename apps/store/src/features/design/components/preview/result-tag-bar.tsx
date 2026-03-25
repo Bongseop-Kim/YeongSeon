@@ -136,15 +136,13 @@ export function ResultTagBar({
     ctx.globalCompositeOperation = "destination-in";
     ctx.drawImage(maskImg, maskX, maskY, maskW, maskH);
     ctx.globalCompositeOperation = "source-over";
-    // CSS: absolute top-[-57px], width/height 미지정 → 자연 크기(397×864), left=0
-    // canvas(316×600)가 오른쪽·위쪽 overflow를 자동 클리핑
-    ctx.drawImage(
-      shadowImg,
-      0,
-      SHADOW_TOP_OFFSET,
-      shadowImg.naturalWidth,
-      shadowImg.naturalHeight,
-    );
+    // CSS: Tailwind preflight의 max-width: 100%가 img에 적용되어
+    // shadow가 컨테이너 너비(316px)에 맞게 축소되고 height: auto로 비율 유지
+    // canvas에서도 동일하게 너비 기준으로 scale
+    const shadowScale = canvas.width / shadowImg.naturalWidth;
+    const shadowW = canvas.width;
+    const shadowH = shadowImg.naturalHeight * shadowScale;
+    ctx.drawImage(shadowImg, 0, SHADOW_TOP_OFFSET, shadowW, shadowH);
 
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, "image/png");

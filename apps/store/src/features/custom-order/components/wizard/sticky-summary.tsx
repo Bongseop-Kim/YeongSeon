@@ -1,6 +1,8 @@
 import { useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import {
+  UtilityKeyValueRow,
+  UtilityPageAside,
+} from "@/components/composite/utility-page";
 import CostBreakdown from "@/features/custom-order/components/cost-breakdown";
 import {
   getFabricLabel,
@@ -39,78 +41,69 @@ export const StickySummary = ({
   const estimatedDays = getEstimatedDays(options);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>주문 요약</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-zinc-500">원단</span>
-            <span className="text-zinc-900">{fabricLabel}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-zinc-500">봉제</span>
-            <span className="text-zinc-900">{sewingLabel}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-zinc-500">수량</span>
-            <span className="text-zinc-900">{options.quantity}개</span>
-          </div>
-        </div>
+    <UtilityPageAside
+      title="주문 요약"
+      description="현재 선택한 사양을 기준으로 제작 방식과 예상 비용을 확인합니다."
+      tone="muted"
+      className="overflow-hidden"
+    >
+      <dl>
+        <UtilityKeyValueRow label="원단" value={fabricLabel} />
+        <UtilityKeyValueRow label="봉제" value={sewingLabel} />
+        <UtilityKeyValueRow label="수량" value={`${options.quantity}개`} />
+      </dl>
 
-        <Separator />
+      {isLoggedIn ? (
+        <div className="mt-5 space-y-3">
+          {canShowCostBreakdown && pricingConfig ? (
+            <CostBreakdown
+              options={options}
+              totalCost={totalCost}
+              sewingCost={sewingCost}
+              fabricCost={fabricCost}
+              pricingConfig={pricingConfig}
+              mode="openCost"
+            />
+          ) : null}
 
-        {isLoggedIn ? (
-          <>
-            <div className="space-y-2">
-              {canShowCostBreakdown && pricingConfig && (
-                <CostBreakdown
-                  options={options}
-                  totalCost={totalCost}
-                  sewingCost={sewingCost}
-                  fabricCost={fabricCost}
-                  pricingConfig={pricingConfig}
-                  mode="openCost"
-                />
-              )}
-
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-zinc-900">총비용</span>
-                <span className="font-medium text-lg text-zinc-900">
-                  {grandTotal.toLocaleString()}원
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-zinc-500">단가</span>
-                <span className="text-sm text-zinc-900">
+          <div className="border-t border-stone-200 pt-4">
+            <div className="flex items-end justify-between gap-3">
+              <span className="text-sm font-medium text-zinc-900">
+                예상 총비용
+              </span>
+              <span className="text-2xl font-semibold tracking-tight text-zinc-950">
+                {grandTotal.toLocaleString()}원
+              </span>
+            </div>
+            <div className="mt-3 space-y-1 text-sm text-zinc-600">
+              <div className="flex items-center justify-between gap-3">
+                <span>단가</span>
+                <span className="text-zinc-900">
                   {options.quantity > 0
                     ? `${Math.round(totalCost / options.quantity).toLocaleString()}원/개`
                     : "-"}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-zinc-500">예상 제작 기간</span>
-                <span className="text-sm font-medium text-zinc-900">
+              <div className="flex items-center justify-between gap-3">
+                <span>예상 제작 기간</span>
+                <span className="font-medium text-zinc-900">
                   {estimatedDays}
                 </span>
               </div>
             </div>
-          </>
-        ) : (
-          <div className="space-y-2">
-            <p className="text-sm text-zinc-500">
-              로그인하면 예상 비용을 확인할 수 있어요
-            </p>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-zinc-500">예상 제작 기간</span>
-              <span className="text-sm font-medium text-zinc-900">
-                {estimatedDays}
-              </span>
-            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      ) : (
+        <div className="mt-5 border-t border-stone-200 pt-4">
+          <p className="text-sm text-zinc-500">
+            로그인하면 예상 비용을 확인할 수 있어요
+          </p>
+          <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+            <span className="text-zinc-500">예상 제작 기간</span>
+            <span className="font-medium text-zinc-900">{estimatedDays}</span>
+          </div>
+        </div>
+      )}
+    </UtilityPageAside>
   );
 };

@@ -23,9 +23,22 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   detail,
 }) => {
   const { isMobile } = useBreakpoint();
+  const mobileActionBar =
+    isMobile && actionBar ? (
+      <div
+        className="fixed bottom-0 left-0 right-0 z-30 mt-4 border-t border-border bg-background/96 px-2 pt-2 backdrop-blur"
+        style={{
+          paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0))",
+        }}
+      >
+        {actionBar}
+      </div>
+    ) : null;
 
   return (
-    <div className={cn("max-w-7xl mx-auto", !isMobile && "pb-4")}>
+    <div
+      className={cn("mx-auto max-w-7xl lg:px-6 xl:px-8", !isMobile && "pb-4")}
+    >
       <div
         className={cn(
           `flex ${isMobile ? "flex-col" : "flex-row gap-4"}`,
@@ -37,6 +50,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             "w-full",
             !isMobile && sidebar ? "flex-1 w-2/3 pt-6" : "",
             contentClassName,
+            isMobile && actionBar ? "pb-24" : "",
           )}
         >
           {children}
@@ -61,24 +75,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           >
             {sidebar}
 
-            {actionBar && (
-              <div
-                className={
-                  isMobile
-                    ? "fixed bottom-0 left-0 right-0 z-30 mt-4 border-t border-border bg-background/96 px-2 pt-2 backdrop-blur"
-                    : "relative mt-4"
-                }
-                style={
-                  isMobile
-                    ? {
-                        paddingBottom:
-                          "calc(0.5rem + env(safe-area-inset-bottom, 0))",
-                      }
-                    : undefined
-                }
-              >
-                {actionBar}
-              </div>
+            {actionBar && !isMobile && (
+              <div className="relative mt-4">{actionBar}</div>
             )}
           </div>
         )}
@@ -91,6 +89,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           </div>
         )}
       </div>
+
+      {mobileActionBar}
     </div>
   );
 };

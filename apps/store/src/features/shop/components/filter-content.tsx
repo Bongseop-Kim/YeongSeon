@@ -135,10 +135,14 @@ export const FilterContent = ({
   return (
     <>
       {hasFilters && (
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hidden">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-200 px-1 pb-4">
+          <div className="flex items-center gap-2 flex-1 flex-wrap">
             {selectedFilters.map((filter, index) => (
-              <Badge variant="secondary" className="gap-1" key={index}>
+              <Badge
+                variant="outline"
+                className="gap-1 rounded-full border-zinc-200 bg-zinc-50 px-3 py-1 text-zinc-700"
+                key={index}
+              >
                 <span>{filter.label}</span>
                 <button
                   onClick={(e) => {
@@ -152,7 +156,12 @@ export const FilterContent = ({
               </Badge>
             ))}
           </div>
-          <Button variant="text" size="sm" onClick={onReset}>
+          <Button
+            variant="none"
+            size="sm"
+            className="h-8 rounded-full border border-zinc-200 px-3 text-zinc-600 shadow-none"
+            onClick={onReset}
+          >
             초기화
           </Button>
         </div>
@@ -161,9 +170,9 @@ export const FilterContent = ({
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as FilterTab)}
-        className="flex-1 flex flex-col overflow-hidden"
+        className="flex flex-1 flex-col overflow-hidden"
       >
-        <TabsList className="w-full justify-start overflow-x-auto scrollbar-hidden border-b">
+        <TabsList className="w-full justify-start overflow-x-auto scrollbar-hidden border-b border-zinc-200 bg-transparent px-0">
           <TabsTrigger value="category">카테고리</TabsTrigger>
           <TabsTrigger value="price">가격</TabsTrigger>
           <TabsTrigger value="color">색상</TabsTrigger>
@@ -171,7 +180,7 @@ export const FilterContent = ({
           <TabsTrigger value="material">소재</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="category">
+        <TabsContent value="category" className="px-0 py-3">
           <FilterOptionList
             options={CATEGORY_OPTIONS}
             checked={(value) =>
@@ -184,7 +193,7 @@ export const FilterContent = ({
           />
         </TabsContent>
 
-        <TabsContent value="price">
+        <TabsContent value="price" className="px-0 py-3">
           <FilterOptionList
             options={PRICE_RANGE_OPTIONS}
             checked={(value) => selectedPriceRange === value}
@@ -193,7 +202,7 @@ export const FilterContent = ({
           />
         </TabsContent>
 
-        <TabsContent value="color">
+        <TabsContent value="color" className="px-0 py-3">
           <FilterOptionList
             options={COLOR_OPTIONS}
             checked={(value) => selectedColors.includes(value as ProductColor)}
@@ -202,7 +211,7 @@ export const FilterContent = ({
           />
         </TabsContent>
 
-        <TabsContent value="pattern">
+        <TabsContent value="pattern" className="px-0 py-3">
           <FilterOptionList
             options={PATTERN_OPTIONS}
             checked={(value) =>
@@ -215,7 +224,7 @@ export const FilterContent = ({
           />
         </TabsContent>
 
-        <TabsContent value="material">
+        <TabsContent value="material" className="px-0 py-3">
           <FilterOptionList
             options={MATERIAL_OPTIONS}
             checked={(value) =>
@@ -230,8 +239,8 @@ export const FilterContent = ({
       </Tabs>
 
       {showApplyButton && onApply && (
-        <div className="sticky bottom-0 bg-background p-2 border-t">
-          <Button className="w-full" onClick={onApply}>
+        <div className="sticky bottom-0 border-t border-zinc-200 bg-background px-1 pt-4 pb-2">
+          <Button className="h-11 w-full rounded-full" onClick={onApply}>
             적용하기
           </Button>
         </div>

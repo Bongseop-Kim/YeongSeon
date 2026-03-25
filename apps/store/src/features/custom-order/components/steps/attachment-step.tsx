@@ -1,5 +1,5 @@
 import { Controller, useFormContext } from "react-hook-form";
-import { Card, CardContent } from "@/components/ui/card";
+import { UtilityPagePanel } from "@/components/composite/utility-page";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/features/custom-order/components/image-upload";
@@ -23,35 +23,38 @@ export const AttachmentStep = ({ imageUpload }: AttachmentStepProps) => {
         "요청사항은 번호로 정리",
       ]}
     >
-      <Card>
-        <CardContent className="px-4 py-4">
-          <ImageUpload
-            uploadedImages={imageUpload.uploadedImages}
-            isUploading={imageUpload.isUploading}
-            onFileSelect={imageUpload.uploadFile}
-            onRemoveImage={imageUpload.removeImage}
-          />
-        </CardContent>
-      </Card>
+      <UtilityPagePanel
+        title="참고 이미지"
+        description="패턴, 색상, 봉제 디테일이 보이는 이미지를 함께 전달해 주세요."
+      >
+        <ImageUpload
+          uploadedImages={imageUpload.uploadedImages}
+          isUploading={imageUpload.isUploading}
+          onFileSelect={imageUpload.uploadFile}
+          onRemoveImage={imageUpload.removeImage}
+        />
+      </UtilityPagePanel>
 
-      <Card>
-        <CardContent className="space-y-2 px-4 py-4">
-          <Label htmlFor="additionalNotes">추가 요청사항</Label>
-          <Controller
-            name="additionalNotes"
-            control={control}
-            render={({ field }) => (
-              <Textarea
-                id="additionalNotes"
-                placeholder="참고할 내용이 있으면 자유롭게 작성해주세요"
-                maxLength={500}
-                className="min-h-24 rounded-lg border-zinc-300 shadow-none"
-                {...field}
-              />
-            )}
-          />
-        </CardContent>
-      </Card>
+      <UtilityPagePanel
+        title="추가 요청사항"
+        description="제작 시 반드시 반영해야 할 내용을 짧게 정리해 주세요."
+        contentClassName="space-y-2"
+      >
+        <Label htmlFor="additionalNotes">추가 요청사항</Label>
+        <Controller
+          name="additionalNotes"
+          control={control}
+          render={({ field }) => (
+            <Textarea
+              id="additionalNotes"
+              placeholder="참고할 내용이 있으면 자유롭게 작성해주세요"
+              maxLength={500}
+              className="min-h-24 rounded-lg border-zinc-300 shadow-none"
+              {...field}
+            />
+          )}
+        />
+      </UtilityPagePanel>
     </StepLayout>
   );
 };

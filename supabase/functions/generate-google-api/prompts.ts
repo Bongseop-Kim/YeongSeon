@@ -137,22 +137,21 @@ export const buildScalePrompt = (
   if (pattern === "plain") return "";
   if (pattern === "stripe") {
     if (scale === "large") {
-      return "Stripe scale: wide stripes — each stripe is broad and bold, with only 3-4 stripe pairs visible across the fabric width.";
+      return "Stripe scale: refined narrow stripes — about 8-9 stripe pairs visible across the fabric width. The repeat should feel clearly smaller and denser than a typical large stripe.";
     }
     if (scale === "small") {
-      return "Stripe scale: very fine pinstripes — extremely narrow stripes densely packed, creating an almost solid-looking surface up close.";
+      return "Stripe scale: ultra-fine pinstripes — about 16-17 stripe pairs visible across the fabric width. The stripes should be extremely narrow, tightly packed, and noticeably finer than a standard pinstripe.";
     }
-    return "Stripe scale: narrow classic stripes — thin stripes with about 10-12 stripe pairs visible across the fabric width, giving a dense, traditional necktie appearance.";
+    return "Stripe scale: fine classic stripes — about 12-13 stripe pairs visible across the fabric width. The stripes should read as clearly smaller and more closely repeated than a conventional necktie stripe.";
   }
 
   if (scale === "large") {
-    return "Motif scale: large and bold. Each motif is big and prominent — only about 5-6 fit across the fabric width, with roughly 50 motifs covering the full surface. The repeat feels open and spacious, like a bold statement print. This is intentionally large-scale.";
+    return "Motif scale: moderately compact. Each motif should be reduced so about 8-9 motifs fit across the fabric width. The repeat should still read as the largest option, but clearly denser and smaller than a typical large-scale print.";
   }
   if (scale === "small") {
-    return "Motif scale: very fine micro-print. Each motif is tiny — about 13-14 fit across the fabric width, with 250 or more motifs covering the full surface. The fabric reads as a rich, dense texture from a distance yet reveals individual motifs up close, like a Liberty micro-print.";
+    return "Motif scale: ultra-fine micro-print. Each motif is tiny — about 16-17 motifs fit across the fabric width, with a very dense repeat covering the full surface. The fabric should read almost like a rich texture from a distance while individual motifs remain visible up close.";
   }
-  // 기본: 최소 100개 보장을 명시
-  return "Motif scale: densely packed, with at least 100 motifs covering the full fabric surface. Each motif is small — about 8-9 fit across the fabric width. The pattern feels abundant and richly populated, like a classic printed silk foulard. Never sparse, never large.";
+  return "Motif scale: fine and dense. About 12-13 motifs should fit across the fabric width, creating a noticeably tighter repeat than the previous default. The pattern should feel abundant, closely repeated, and never sparse.";
 };
 
 export const buildPatternPrompt = (

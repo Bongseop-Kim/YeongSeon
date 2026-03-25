@@ -6,8 +6,9 @@ import { useConfirmPayment } from "@/features/payment/api/payment-query";
 import { useOrderStore } from "@/store/order";
 import { removeCartItemsByIds } from "@/features/cart/api/cart-api";
 import { toast } from "@/lib/toast";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, ReceiptText, Truck } from "lucide-react";
 import { useRequiredUser } from "@/hooks/use-required-user";
+import { Button } from "@/components/ui-extended/button";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
@@ -115,14 +116,19 @@ const PaymentSuccessPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
-            <p className="text-red-500 text-lg">{error}</p>
-            <button
-              onClick={() => navigate(ROUTES.ORDER_FORM)}
-              className="text-blue-600 underline"
-            >
-              주문서로 돌아가기
-            </button>
+          <div className="mx-auto flex min-h-[28rem] max-w-2xl flex-col justify-center px-4 py-10 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+              <ReceiptText className="h-7 w-7 text-red-500" />
+            </div>
+            <h1 className="mt-6 text-3xl font-semibold tracking-tight text-zinc-950">
+              결제 확인에 실패했습니다
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-zinc-600">{error}</p>
+            <div className="mt-8 flex justify-center">
+              <Button onClick={() => navigate(ROUTES.ORDER_FORM)}>
+                주문서로 돌아가기
+              </Button>
+            </div>
           </div>
         </MainContent>
       </MainLayout>
@@ -132,9 +138,39 @@ const PaymentSuccessPage = () => {
   return (
     <MainLayout>
       <MainContent>
-        <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-lg text-zinc-600">결제를 확인하고 있습니다...</p>
+        <div className="mx-auto flex min-h-[28rem] max-w-2xl flex-col justify-center px-4 py-10 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
+            <CheckCircle2 className="h-7 w-7 text-green-600" />
+          </div>
+          <h1 className="mt-6 text-3xl font-semibold tracking-tight text-zinc-950">
+            결제가 완료되었습니다
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">
+            주문 정보를 정리한 뒤 다음 화면으로 이동하고 있습니다.
+          </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-stone-200 px-4 py-4 text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                Next
+              </p>
+              <p className="mt-2 text-sm font-medium text-zinc-950">
+                주문 상세 또는 후속 화면으로 이동
+              </p>
+            </div>
+            <div className="rounded-2xl border border-stone-200 px-4 py-4 text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                Status
+              </p>
+              <p className="mt-2 flex items-center gap-2 text-sm font-medium text-zinc-950">
+                <Truck className="h-4 w-4 text-zinc-500" />
+                결제 승인과 주문 정리를 진행 중입니다
+              </p>
+            </div>
+          </div>
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-zinc-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            잠시만 기다려주세요
+          </div>
         </div>
       </MainContent>
     </MainLayout>
