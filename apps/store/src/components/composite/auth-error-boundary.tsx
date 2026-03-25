@@ -1,6 +1,6 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { ROUTES } from "@/constants/ROUTES";
 
 interface Props {

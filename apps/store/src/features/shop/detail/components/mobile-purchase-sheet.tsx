@@ -1,6 +1,10 @@
 import { useState, useMemo } from "react";
-import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+} from "@/components/ui-extended/sheet";
+import { Button } from "@/components/ui-extended/button";
 import { Separator } from "@/components/ui/separator";
 import {
   Select,
@@ -8,7 +12,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui-extended/select";
 import type {
   Product,
   ProductOption,

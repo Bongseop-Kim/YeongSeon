@@ -1,6 +1,6 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,

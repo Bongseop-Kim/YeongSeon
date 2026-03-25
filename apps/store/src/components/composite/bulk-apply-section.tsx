@@ -1,6 +1,6 @@
 import { useState, useImperativeHandle, forwardRef } from "react";
 import { type UseFormSetValue } from "react-hook-form";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui-extended/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { toast } from "sonner";

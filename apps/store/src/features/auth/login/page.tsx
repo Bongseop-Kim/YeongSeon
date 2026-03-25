@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import {
   Form,
   FormControl,
@@ -13,7 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui-extended/input";
 import { PwInput } from "@/components/composite/pw-input";
 import { useEmailSignIn, useSignIn } from "@/features/auth/api/auth-query";
 import { ProviderButton } from "@/features/auth/components/provider-button";

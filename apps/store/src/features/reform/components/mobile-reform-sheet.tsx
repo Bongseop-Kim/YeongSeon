@@ -1,5 +1,9 @@
-import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+} from "@/components/ui-extended/sheet";
+import { Button } from "@/components/ui-extended/button";
 import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
 
 interface MobileReformSheetProps {

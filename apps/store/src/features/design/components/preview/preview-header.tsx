@@ -1,6 +1,6 @@
 import { Crop, Square } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 
 interface PreviewHeaderProps {
   unmasked: boolean;

@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { ContactInfoSection } from "@/components/composite/ContactInfoSection";
 import { formatPhoneNumber } from "@/lib/phone-format";
 import { SummaryRow } from "@/features/custom-order/components/summary-row";

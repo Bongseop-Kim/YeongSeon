@@ -9,7 +9,7 @@ import {
 } from "@/features/token-purchase/api/token-purchase-query";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import type {
   TokenPlan,
   TokenPlanKey,

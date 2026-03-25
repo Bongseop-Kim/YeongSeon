@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import type { FilterTab } from "@/features/shop/types/filter";
 

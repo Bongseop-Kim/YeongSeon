@@ -1,5 +1,5 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type {
@@ -7,7 +7,7 @@ import type {
   ShippingAddressInput,
 } from "@/features/shipping/types/shipping-address";
 import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui-extended/input";
 import { Label } from "@/components/ui/label";
 import { SelectField } from "@/components/composite/select-field";
 import { DELIVERY_REQUEST_OPTIONS } from "@/constants/DELIVERY_REQUEST_OPTIONS";

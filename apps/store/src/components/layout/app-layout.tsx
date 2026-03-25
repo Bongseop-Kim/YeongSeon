@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import Router from "@/routes";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { ChevronLeft, ShoppingBagIcon } from "lucide-react";
 import { NAVIGATION_ITEMS } from "@/constants/NAVIGATION_ITEMS";
 import {

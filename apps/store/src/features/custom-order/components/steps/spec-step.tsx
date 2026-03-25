@@ -1,7 +1,7 @@
 import { Controller, useFormContext } from "react-hook-form";
 import { RadioCard } from "@/components/composite/radio-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui-extended/input";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";

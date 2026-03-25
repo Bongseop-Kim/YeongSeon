@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui-extended/button";
+import { Input } from "@/components/ui-extended/input";
 import {
   Select,
   SelectContent,

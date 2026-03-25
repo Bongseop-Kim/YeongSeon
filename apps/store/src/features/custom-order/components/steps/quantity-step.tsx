@@ -15,7 +15,7 @@ import type { PricingConfig } from "@/features/custom-order/types/pricing";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { StepLayout } from "./step-layout";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 
 const QUANTITY_PRESETS = [4, 8, 12, 20, 50, 100] as const;
 

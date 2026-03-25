@@ -1,6 +1,6 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui-extended/button";
+import { Input } from "@/components/ui-extended/input";
 import { ROUTES } from "@/constants/ROUTES";
 import { Search } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";

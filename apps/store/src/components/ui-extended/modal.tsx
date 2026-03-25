@@ -5,8 +5,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui-extended/dialog";
+import { Button } from "@/components/ui-extended/button";
 import { useModalStore } from "@/store/modal";
 
 const GlobalModal = () => {

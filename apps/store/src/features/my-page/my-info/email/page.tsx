@@ -1,8 +1,8 @@
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui-extended/input";
 import { Label } from "@/components/ui/label";
 import { Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";

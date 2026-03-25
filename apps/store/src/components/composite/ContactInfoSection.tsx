@@ -1,7 +1,7 @@
 import { Controller } from "react-hook-form";
 import type { Control } from "react-hook-form";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui-extended/input";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { FormSection } from "@/components/ui/form-section";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Empty } from "@/components/composite/empty";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/components/composite/order-item-card";
 import { TokenRefundAction } from "@/components/composite/token-refund-action";

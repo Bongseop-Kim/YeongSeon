@@ -1,5 +1,5 @@
 import { Copy, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { Separator } from "@/components/ui/separator";
 import { REPAIR_SHIPPING_ADDRESS } from "@/constants/REPAIR_SHIPPING";
 import { toast } from "@/lib/toast";

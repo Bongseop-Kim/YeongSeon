@@ -1,5 +1,5 @@
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui-extended/input";
+import { Button } from "@/components/ui-extended/button";
 import { Label } from "@/components/ui/label";
 import { extractPhoneNumber } from "@/lib/phone-format";
 import { usePhoneVerification } from "@/features/notification/hooks/use-phone-verification";

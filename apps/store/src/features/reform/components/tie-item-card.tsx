@@ -1,6 +1,6 @@
 import { type Control } from "react-hook-form";
 import { CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui-extended/input";
 import { RadioGroup } from "@/components/ui/radio-group";
 import {
   FormField,
@@ -15,7 +15,7 @@ import {
 } from "@yeongseon/shared/types/view/reform";
 import { ImagePicker } from "@/components/composite/image-picker";
 import { Checkbox } from "@/components/ui/checkbox";
-import CloseButton from "@/components/ui/close";
+import CloseButton from "@/components/ui-extended/close";
 import { Required } from "@/components/ui/required";
 
 interface TieItemCardProps {

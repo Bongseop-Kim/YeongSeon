@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronRightIcon } from "lucide-react";
 import { ListItem } from "./components/list-item";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import { useNavigate } from "react-router-dom";
 import { AdPanel } from "@/components/composite/ad-panel";
 import { ROUTES } from "@/constants/ROUTES";

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui-extended/input";
 import { Label } from "@/components/ui/label";
 
 interface ReformOptionChangeModalProps {

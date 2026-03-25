@@ -1,6 +1,6 @@
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui-extended/sheet";
+import { Input } from "@/components/ui-extended/input";
+import { Button } from "@/components/ui-extended/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Search, XCircle } from "lucide-react";

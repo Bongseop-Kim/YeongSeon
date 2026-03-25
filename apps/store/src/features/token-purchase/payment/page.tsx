@@ -7,7 +7,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-extended/button";
 import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/components/composite/payment-widget";
