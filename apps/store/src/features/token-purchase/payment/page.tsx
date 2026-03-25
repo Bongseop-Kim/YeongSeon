@@ -29,6 +29,8 @@ interface TokenPaymentPageProps {
   registerProceedToPayment: (handler: () => Promise<void>) => void;
 }
 
+const noopProceedToPayment = async () => {};
+
 const TokenPaymentPage = ({
   onRequestPayment,
   registerProceedToPayment,
@@ -111,6 +113,9 @@ const TokenPaymentPage = ({
 
   useEffect(() => {
     registerProceedToPayment(proceedToPayment);
+    return () => {
+      registerProceedToPayment(noopProceedToPayment);
+    };
   }, [proceedToPayment, registerProceedToPayment]);
 
   if (!purchaseInfo || !user) return null;

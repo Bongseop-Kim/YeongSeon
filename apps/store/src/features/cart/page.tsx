@@ -158,10 +158,11 @@ export default function CartPage() {
       setIsOptionSubmitting(true);
       if (optionId === item.selectedOption?.id) {
         await updateQuantity(item.id, quantity);
+        toast.success("수량이 변경되었습니다.");
       } else {
         await updateProductOption(item.id, newOption, quantity);
+        toast.success("옵션이 변경되었습니다.");
       }
-      toast.success("옵션이 변경되었습니다.");
       setOptionDialogItemId(null);
     } catch (error) {
       toast.error("변경에 실패했습니다.");
@@ -279,15 +280,13 @@ export default function CartPage() {
         <MainContent className="overflow-visible">
           <PageLayout
             detail={
-              <div>
-                <CartRecommendationsCard
-                  products={similarProducts}
-                  isMobile={isMobile}
-                  isLoading={similarLoading}
-                  isError={similarError}
-                  onRetry={refetchSimilar}
-                />
-              </div>
+              <CartRecommendationsCard
+                products={similarProducts}
+                isMobile={isMobile}
+                isLoading={similarLoading}
+                isError={similarError}
+                onRetry={refetchSimilar}
+              />
             }
             sidebar={<CartOrderSummaryCard summary={selectedTotals} />}
             actionBar={
@@ -362,7 +361,9 @@ export default function CartPage() {
       {optionDialogItem && (
         <Dialog
           open
-          onOpenChange={(open) => !open && setOptionDialogItemId(null)}
+          onOpenChange={(open) =>
+            !open && !isOptionSubmitting && setOptionDialogItemId(null)
+          }
         >
           <DialogContent>
             <DialogHeader>
@@ -374,6 +375,7 @@ export default function CartPage() {
                 variant="outline"
                 className="flex-1"
                 onClick={() => setOptionDialogItemId(null)}
+                disabled={isOptionSubmitting}
               >
                 취소
               </Button>
@@ -394,7 +396,9 @@ export default function CartPage() {
       {reformDialogItem && (
         <Dialog
           open
-          onOpenChange={(open) => !open && setReformDialogItemId(null)}
+          onOpenChange={(open) =>
+            !open && !isReformSubmitting && setReformDialogItemId(null)
+          }
         >
           <DialogContent>
             <DialogHeader>
@@ -409,6 +413,7 @@ export default function CartPage() {
                 variant="outline"
                 className="flex-1"
                 onClick={() => setReformDialogItemId(null)}
+                disabled={isReformSubmitting}
               >
                 취소
               </Button>
