@@ -23,9 +23,26 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   detail,
 }) => {
   const { isMobile } = useBreakpoint();
+  const mobileActionBar =
+    isMobile && actionBar ? (
+      <div
+        className="fixed bottom-0 left-0 right-0 z-30 mt-4 border-t border-border bg-background/96 px-2 pt-2 backdrop-blur"
+        style={{
+          paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0))",
+        }}
+      >
+        {actionBar}
+      </div>
+    ) : null;
 
   return (
-    <div className={cn("max-w-7xl mx-auto", !isMobile && "pb-4")}>
+    <div
+      className={cn(
+        "mx-auto max-w-7xl lg:px-6 xl:px-8",
+        !isMobile && "pb-4",
+        isMobile && actionBar && "pb-24",
+      )}
+    >
       <div
         className={cn(
           `flex ${isMobile ? "flex-col" : "flex-row gap-4"}`,
@@ -42,12 +59,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           {children}
           {sidebar && isMobile && <Separator />}
 
-          {/* Detail section - appears below children on desktop */}
           {detail && !isMobile && (
-            <div>
+            <>
               <Separator />
               {detail}
-            </div>
+            </>
           )}
         </div>
 
@@ -55,35 +71,17 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           <div
             className={cn(
               isMobile ? "w-full relative" : "w-1/3 sticky top-20 self-start",
-              actionBar && (isMobile ? "pb-24" : "pb-0"),
               sidebarClassName,
             )}
           >
             {sidebar}
 
-            {actionBar && (
-              <div
-                className={
-                  isMobile
-                    ? "fixed bottom-0 left-0 right-0 z-30 mt-4 border-t border-border bg-background/96 px-2 pt-2 backdrop-blur"
-                    : "relative mt-4"
-                }
-                style={
-                  isMobile
-                    ? {
-                        paddingBottom:
-                          "calc(0.5rem + env(safe-area-inset-bottom, 0))",
-                      }
-                    : undefined
-                }
-              >
-                {actionBar}
-              </div>
+            {actionBar && !isMobile && (
+              <div className="relative mt-4">{actionBar}</div>
             )}
           </div>
         )}
 
-        {/* Detail section - appears below sidebar on mobile */}
         {detail && isMobile && (
           <div className="w-full">
             <Separator />
@@ -91,6 +89,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           </div>
         )}
       </div>
+
+      {mobileActionBar}
     </div>
   );
 };

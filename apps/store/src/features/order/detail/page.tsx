@@ -21,9 +21,14 @@ import { CustomOrderOptionsSection } from "@/components/composite/custom-order-o
 import { Empty } from "@/components/composite/empty";
 import { OrderItemCard } from "@/components/composite/order-item-card";
 import { OrderStatusBadge } from "@/components/composite/status-badge";
+import {
+  UtilityKeyValueRow,
+  UtilityPageAside,
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui-extended/button";
 import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
@@ -34,7 +39,7 @@ import {
 import { buildClaimFormRoute, ROUTES } from "@/constants/ROUTES";
 
 const detailRowLabelClass =
-  "shrink-0 text-sm font-medium text-foreground-muted";
+  "shrink-0 text-sm font-medium text-muted-foreground";
 const detailRowValueClass = "text-sm text-foreground";
 
 const getOrderErrorDescription = (error: unknown): string => {
@@ -199,49 +204,25 @@ const OrderDetailSkeleton = () => (
   <MainLayout>
     <MainContent>
       <PageLayout
-        sidebar={
-          <Card className="animate-pulse">
-            <CardHeader>
-              <div className="h-6 w-20 rounded bg-surface-muted" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="h-4 w-full rounded bg-surface-muted" />
-              <div className="h-4 w-full rounded bg-surface-muted" />
-              <div className="h-4 w-full rounded bg-surface-muted" />
-              <Separator />
-              <div className="h-6 w-full rounded bg-surface-muted" />
-            </CardContent>
-          </Card>
-        }
+        contentClassName="py-4 lg:py-8"
+        sidebarClassName="px-4 lg:px-0"
       >
-        <Card className="animate-pulse">
-          <CardHeader className="space-y-3">
-            <div className="h-6 w-32 rounded bg-surface-muted" />
-            <div className="h-4 w-56 rounded bg-surface-muted" />
-            <div className="h-4 w-40 rounded bg-surface-muted" />
-          </CardHeader>
-          <CardContent>
-            <Separator />
-          </CardContent>
-          <CardHeader>
-            <div className="h-6 w-24 rounded bg-surface-muted" />
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="h-4 w-40 rounded bg-surface-muted" />
-            <div className="h-4 w-72 rounded bg-surface-muted" />
-            <div className="h-4 w-28 rounded bg-surface-muted" />
-          </CardContent>
-          <CardContent>
-            <Separator />
-          </CardContent>
-          <CardHeader>
-            <div className="h-6 w-36 rounded bg-surface-muted" />
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="h-24 w-full rounded bg-surface-muted" />
-            <div className="h-24 w-full rounded bg-surface-muted" />
-          </CardContent>
-        </Card>
+        <div className="animate-pulse space-y-8 px-4 lg:px-0">
+          <div className="space-y-3 border-b border-stone-200 pb-6">
+            <div className="h-4 w-20 rounded bg-zinc-200" />
+            <div className="h-10 w-56 rounded bg-zinc-200" />
+            <div className="h-4 w-72 rounded bg-zinc-200" />
+          </div>
+          <div className="space-y-4 border-t border-stone-200 pt-5">
+            <div className="h-6 w-28 rounded bg-zinc-200" />
+            <div className="h-20 w-full rounded bg-zinc-100" />
+          </div>
+          <div className="space-y-4 border-t border-stone-200 pt-5">
+            <div className="h-6 w-32 rounded bg-zinc-200" />
+            <div className="h-24 w-full rounded bg-zinc-100" />
+            <div className="h-24 w-full rounded bg-zinc-100" />
+          </div>
+        </div>
       </PageLayout>
     </MainContent>
   </MainLayout>
@@ -316,13 +297,16 @@ const OrderDetailPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <Card data-testid="order-detail-error">
-            <Empty
-              title="주문 정보를 불러오지 못했습니다."
-              description={getOrderErrorDescription(error)}
-            />
-            <CardContent className="pt-0">
-              <div className="flex justify-center gap-2">
+          <PageLayout contentClassName="py-6 lg:py-10">
+            <div
+              className="mx-auto max-w-2xl px-4 lg:px-0"
+              data-testid="order-detail-error"
+            >
+              <Empty
+                title="주문 정보를 불러오지 못했습니다."
+                description={getOrderErrorDescription(error)}
+              />
+              <div className="mt-6 flex justify-center gap-2">
                 <Button variant="outline" onClick={() => refetch()}>
                   다시 시도
                 </Button>
@@ -330,8 +314,8 @@ const OrderDetailPage = () => {
                   주문 목록으로
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </PageLayout>
         </MainContent>
       </MainLayout>
     );
@@ -341,12 +325,14 @@ const OrderDetailPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <Card>
-            <Empty
-              title="주문 정보를 찾을 수 없습니다."
-              description="주문 목록에서 다시 확인해주세요."
-            />
-          </Card>
+          <PageLayout contentClassName="py-6 lg:py-10">
+            <div className="mx-auto max-w-2xl px-4 lg:px-0">
+              <Empty
+                title="주문 정보를 찾을 수 없습니다."
+                description="주문 목록에서 다시 확인해주세요."
+              />
+            </div>
+          </PageLayout>
         </MainContent>
       </MainLayout>
     );
@@ -355,32 +341,72 @@ const OrderDetailPage = () => {
   const handleClaimRequest = (type: ClaimActionType, itemId: string) => {
     navigate(buildClaimFormRoute(type, order.id, itemId));
   };
+  const canConfirmPurchase = order.customerActions.some(
+    (action) => action === "confirm_purchase",
+  );
+  const isRepairShippingPending =
+    order.orderType === "repair" && order.status === "발송대기";
+  const isRepairWithTracking =
+    order.orderType === "repair" &&
+    !!order.trackingInfo?.courierCompany &&
+    !!order.trackingInfo?.trackingNumber;
+  const showTaskSection =
+    canConfirmPurchase || isRepairShippingPending || isRepairWithTracking;
 
   return (
     <MainLayout>
       <MainContent>
         <PageLayout
+          contentClassName="py-4 lg:py-8"
+          sidebarClassName="px-4 lg:px-0"
           sidebar={
-            <Card>
-              <CardHeader>
-                <CardTitle>결제 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {order.orderType !== "token" && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-foreground-muted">배송비</span>
-                    <span className="text-foreground">무료</span>
+            <div className="space-y-5">
+              <UtilityPageAside
+                title="결제 정보"
+                description="주문에 반영된 결제 금액입니다."
+                tone="muted"
+                className="rounded-2xl"
+              >
+                {order.orderType !== "token" ? (
+                  <UtilityKeyValueRow label="배송비" value="무료" />
+                ) : null}
+                <UtilityKeyValueRow
+                  className="pt-5"
+                  label="총 결제 금액"
+                  value={
+                    <span className="text-base font-semibold tracking-tight text-info">
+                      {order.totalPrice.toLocaleString()}원
+                    </span>
+                  }
+                />
+              </UtilityPageAside>
+
+              {showTaskSection && (
+                <UtilityPageAside
+                  title="현재 할 일"
+                  description="주문 상태에 따라 지금 처리할 수 있는 작업입니다."
+                  tone="muted"
+                  className="rounded-2xl"
+                >
+                  <div className="space-y-3">
+                    {canConfirmPurchase ? (
+                      <PurchaseConfirmSection orderId={order.id} />
+                    ) : null}
+
+                    {isRepairShippingPending ? (
+                      <RepairShippingPendingSection orderId={order.id} />
+                    ) : null}
+
+                    {isRepairWithTracking && order.trackingInfo ? (
+                      <RepairShippingInTransitSection
+                        courierCompany={order.trackingInfo.courierCompany}
+                        trackingNumber={order.trackingInfo.trackingNumber}
+                      />
+                    ) : null}
                   </div>
-                )}
-                <Separator />
-                <div className="flex justify-between text-base font-semibold">
-                  <span>총 결제 금액</span>
-                  <span className="text-info">
-                    {order.totalPrice.toLocaleString()}원
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+                </UtilityPageAside>
+              )}
+            </div>
           }
           actionBar={
             <Button
@@ -393,149 +419,136 @@ const OrderDetailPage = () => {
             </Button>
           }
         >
-          <Card data-testid="order-detail-root">
-            <CardHeader className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle>주문 상세</CardTitle>
-                <div className="text-sm text-foreground-muted">
-                  주문번호: {order.orderNumber}
+          <div className="space-y-8" data-testid="order-detail-root">
+            <UtilityPageIntro
+              eyebrow="Order Detail"
+              title="주문 상세"
+              description="주문 상태, 배송 정보, 상품 구성과 후속 작업을 확인합니다."
+              meta={
+                <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-600">
+                  <span>주문번호 {order.orderNumber}</span>
+                  <span className="text-stone-300">/</span>
+                  <span>{formatDate(order.date)}</span>
+                  <span className="text-stone-300">/</span>
+                  <OrderStatusBadge status={order.status} />
                 </div>
-                <div className="text-sm text-foreground-muted">
-                  주문일시: {formatDate(order.date)}
-                </div>
-              </div>
-              <OrderStatusBadge status={order.status} />
-            </CardHeader>
+              }
+            />
 
-            <CardContent>
-              <Separator />
-            </CardContent>
-
-            {order.orderType !== "token" && (
-              <>
-                <CardHeader>
-                  <CardTitle>배송지 정보</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-1">
+            {order.orderType !== "token" ? (
+              <UtilityPageSection
+                title="배송지 정보"
+                description="수령인과 배송 요청 사항을 확인합니다."
+              >
+                <div className="border-t border-stone-200 py-5">
                   {order.shippingInfo ? (
                     <ShippingInfoSection info={order.shippingInfo} />
                   ) : (
-                    <p className="text-sm text-foreground-muted">
+                    <p className="text-sm text-zinc-500">
                       배송지 정보가 없습니다.
                     </p>
                   )}
-                </CardContent>
-              </>
-            )}
+                </div>
+              </UtilityPageSection>
+            ) : null}
 
-            {order.trackingInfo && order.orderType !== "repair" && (
-              <>
-                <CardContent>
-                  <Separator />
-                </CardContent>
-                <CardHeader>
-                  <CardTitle>배송 추적</CardTitle>
-                </CardHeader>
-                <CardContent>
+            {order.trackingInfo &&
+            (order.orderType !== "repair" || isRepairWithTracking) ? (
+              <UtilityPageSection
+                title="배송 추적"
+                description="출고 이후 배송 흐름을 확인합니다."
+              >
+                <div className="border-t border-stone-200 py-5">
                   <TrackingInfoSection info={order.trackingInfo} />
-                </CardContent>
-              </>
-            )}
+                </div>
+              </UtilityPageSection>
+            ) : null}
 
-            {order.orderType !== "token" && (
-              <CardContent>
-                <Separator />
-              </CardContent>
-            )}
+            <UtilityPageSection
+              title={`주문 상품 ${order.items.length}개`}
+              description="상품 구성과 클레임 가능 동작을 확인합니다."
+            >
+              <div className="border-t border-stone-200">
+                {order.items.map((item, index) => (
+                  <React.Fragment key={item.id}>
+                    {(() => {
+                      const isSample = item.type === "sample";
+                      const isCustomizableItem =
+                        item.type === "custom" || isSample;
 
-            {order.customerActions.some((a) => a === "confirm_purchase") && (
-              <CardContent>
-                <PurchaseConfirmSection orderId={order.id} />
-              </CardContent>
-            )}
+                      if (!isCustomizableItem) {
+                        return (
+                          <>
+                            <div className="py-5">
+                              <OrderItemCard
+                                item={item}
+                                showQuantity={true}
+                                showPrice={true}
+                                actions={renderClaimButtons(
+                                  order.customerActions,
+                                  item,
+                                  handleClaimRequest,
+                                )}
+                              />
+                            </div>
+                            {index < order.items.length - 1 ? (
+                              <Separator />
+                            ) : null}
+                          </>
+                        );
+                      }
 
-            {order.orderType === "repair" && order.status === "발송대기" && (
-              <CardContent>
-                <RepairShippingPendingSection orderId={order.id} />
-              </CardContent>
-            )}
+                      const orderData = isSample
+                        ? item.sampleData
+                        : item.customData;
 
-            {order.orderType === "repair" &&
-              order.status === "발송중" &&
-              order.trackingInfo?.courierCompany &&
-              order.trackingInfo?.trackingNumber && (
-                <CardContent>
-                  <RepairShippingInTransitSection
-                    courierCompany={order.trackingInfo.courierCompany}
-                    trackingNumber={order.trackingInfo.trackingNumber}
-                  />
-                </CardContent>
-              )}
-
-            <CardHeader>
-              <CardTitle>주문 상품 {order.items.length}개</CardTitle>
-            </CardHeader>
-
-            {order.items.map((item, index) => (
-              <React.Fragment key={item.id}>
-                <CardContent>
-                  <OrderItemCard
-                    item={item}
-                    showQuantity={true}
-                    showPrice={true}
-                    actions={renderClaimButtons(
-                      order.customerActions,
-                      item,
-                      handleClaimRequest,
-                    )}
-                  />
-                </CardContent>
-                {(item.type === "custom" || item.type === "sample") && (
-                  <>
-                    <CardContent>
-                      <Separator />
-                    </CardContent>
-                    <CardHeader>
-                      <CardTitle>
-                        {item.type === "sample"
-                          ? "샘플 제작 옵션"
-                          : "주문 제작 옵션"}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CustomOrderOptionsSection
-                        options={
-                          item.type === "sample"
-                            ? item.sampleData.options
-                            : item.customData.options
-                        }
-                        referenceImageUrls={
-                          item.type === "sample"
-                            ? item.sampleData.referenceImageUrls
-                            : item.customData.referenceImageUrls
-                        }
-                        additionalNotes={
-                          item.type === "sample"
-                            ? item.sampleData.additionalNotes
-                            : item.customData.additionalNotes
-                        }
-                        sampleType={
-                          item.type === "sample"
-                            ? item.sampleData.sampleType
-                            : null
-                        }
-                      />
-                    </CardContent>
-                  </>
-                )}
-                {index < order.items.length - 1 && (
-                  <CardContent>
-                    <Separator />
-                  </CardContent>
-                )}
-              </React.Fragment>
-            ))}
-          </Card>
+                      return (
+                        <>
+                          <div className="py-5">
+                            <OrderItemCard
+                              item={item}
+                              showQuantity={true}
+                              showPrice={true}
+                              actions={renderClaimButtons(
+                                order.customerActions,
+                                item,
+                                handleClaimRequest,
+                              )}
+                            />
+                          </div>
+                          <Separator />
+                          <div className="py-5">
+                            <p className="text-base font-semibold tracking-tight text-zinc-950">
+                              {isSample ? "샘플 제작 옵션" : "주문 제작 옵션"}
+                            </p>
+                            <p className="mt-1 text-sm text-zinc-500">
+                              제작 조건과 참조 이미지를 확인합니다.
+                            </p>
+                            <div className="mt-4">
+                              <CustomOrderOptionsSection
+                                options={orderData.options}
+                                referenceImageUrls={
+                                  orderData.referenceImageUrls
+                                }
+                                additionalNotes={orderData.additionalNotes}
+                                hasSample={isSample}
+                                sampleType={
+                                  isSample ? item.sampleData.sampleType : null
+                                }
+                              />
+                            </div>
+                          </div>
+                          {index < order.items.length - 1 ? (
+                            <Separator />
+                          ) : null}
+                        </>
+                      );
+                    })()}
+                  </React.Fragment>
+                ))}
+              </div>
+            </UtilityPageSection>
+          </div>
         </PageLayout>
       </MainContent>
     </MainLayout>

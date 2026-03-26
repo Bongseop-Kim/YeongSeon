@@ -1,6 +1,7 @@
 import { Controller, useFormContext } from "react-hook-form";
 import { RadioCard } from "@/components/composite/radio-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardHeader, CardTitle } from "@/components/ui/card";
+import { UtilityPagePanel } from "@/components/composite/utility-page";
 import { Input } from "@/components/ui-extended/input";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
@@ -20,79 +21,73 @@ export const SpecStep = () => {
         "최소/최대 범위 내 조정",
       ]}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>사이즈 타입</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <RadioGroup
-            value={sizeType}
-            onValueChange={(v) => setValue("sizeType", v as "ADULT" | "CHILD")}
-          >
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {(["ADULT", "CHILD"] as const).map((type) => (
-                <RadioCard
-                  key={type}
-                  value={type}
-                  id={`size-type-${type}`}
-                  selected={sizeType === type}
-                >
-                  <CardHeader>
-                    <CardTitle>
-                      {type === "ADULT" ? "성인용" : "아동용"}
-                    </CardTitle>
-                  </CardHeader>
-                </RadioCard>
-              ))}
-            </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
+      <UtilityPagePanel title="사이즈 타입" contentClassName="px-0">
+        <RadioGroup
+          value={sizeType}
+          onValueChange={(v) => setValue("sizeType", v as "ADULT" | "CHILD")}
+        >
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {(["ADULT", "CHILD"] as const).map((type) => (
+              <RadioCard
+                key={type}
+                value={type}
+                id={`size-type-${type}`}
+                selected={sizeType === type}
+              >
+                <CardHeader>
+                  <CardTitle>
+                    {type === "ADULT" ? "성인용" : "아동용"}
+                  </CardTitle>
+                </CardHeader>
+              </RadioCard>
+            ))}
+          </div>
+        </RadioGroup>
+      </UtilityPagePanel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>넥타이 폭</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 p-4">
-          <Controller
-            name="tieWidth"
-            control={control}
-            render={({ field }) => (
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={TIE_WIDTH_CONFIG.min}
-                  max={TIE_WIDTH_CONFIG.max}
-                  step={TIE_WIDTH_CONFIG.step}
-                  value={field.value}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === "") return;
-                    const num = Number(raw);
-                    if (Number.isNaN(num)) return;
-                    const clamped = Math.min(
-                      TIE_WIDTH_CONFIG.max,
-                      Math.max(TIE_WIDTH_CONFIG.min, num),
-                    );
-                    const offset = clamped - TIE_WIDTH_CONFIG.min;
-                    const normalized =
-                      Math.round(offset / TIE_WIDTH_CONFIG.step) *
-                        TIE_WIDTH_CONFIG.step +
-                      TIE_WIDTH_CONFIG.min;
-                    field.onChange(normalized);
-                  }}
-                  className="h-9 w-[90px] rounded-lg border-zinc-300 text-center shadow-none"
-                />
-                <span className="text-xs text-zinc-500">cm</span>
-              </div>
-            )}
-          />
-          <p className="text-xs text-zinc-500">
-            허용 범위: {TIE_WIDTH_CONFIG.min}~{TIE_WIDTH_CONFIG.max}cm (
-            {TIE_WIDTH_CONFIG.step} 단위)
-          </p>
-        </CardContent>
-      </Card>
+      <UtilityPagePanel
+        title="넥타이 폭"
+        description="실제 착용감과 스타일 기준으로 폭을 조절합니다."
+        contentClassName="space-y-2"
+      >
+        <Controller
+          name="tieWidth"
+          control={control}
+          render={({ field }) => (
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={TIE_WIDTH_CONFIG.min}
+                max={TIE_WIDTH_CONFIG.max}
+                step={TIE_WIDTH_CONFIG.step}
+                value={field.value}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") return;
+                  const num = Number(raw);
+                  if (Number.isNaN(num)) return;
+                  const clamped = Math.min(
+                    TIE_WIDTH_CONFIG.max,
+                    Math.max(TIE_WIDTH_CONFIG.min, num),
+                  );
+                  const offset = clamped - TIE_WIDTH_CONFIG.min;
+                  const normalized =
+                    Math.round(offset / TIE_WIDTH_CONFIG.step) *
+                      TIE_WIDTH_CONFIG.step +
+                    TIE_WIDTH_CONFIG.min;
+                  field.onChange(normalized);
+                }}
+                className="h-9 w-[90px] rounded-lg border-zinc-300 text-center shadow-none"
+              />
+              <span className="text-xs text-zinc-500">cm</span>
+            </div>
+          )}
+        />
+        <p className="text-xs text-zinc-500">
+          허용 범위: {TIE_WIDTH_CONFIG.min}~{TIE_WIDTH_CONFIG.max}cm (
+          {TIE_WIDTH_CONFIG.step} 단위)
+        </p>
+      </UtilityPagePanel>
     </StepLayout>
   );
 };

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui-extended/button";
 import { Input } from "@/components/ui-extended/input";
@@ -45,8 +44,7 @@ export function ReformOrderItemCard({
   }, [courierCompany, trackingNumber, item.id, updateOrderItemTracking]);
 
   return (
-    <CardContent>
-      {/* 아이템 정보 */}
+    <div className="py-5">
       <div className="flex gap-4">
         <div className="w-24 h-24 flex-shrink-0 bg-zinc-100 rounded-sm overflow-hidden flex items-center justify-center">
           {typeof item.reformData.tie.image === "string" ? (
@@ -89,7 +87,6 @@ export function ReformOrderItemCard({
         </div>
       </div>
 
-      {/* 쿠폰 버튼 */}
       <div className="flex gap-2 mt-2">
         <Button
           variant="outline"
@@ -103,10 +100,8 @@ export function ReformOrderItemCard({
 
       <Separator className="my-3" />
 
-      {/* 발송 주소 */}
       <RepairShippingAddressBanner />
 
-      {/* 송장번호 미리 입력 */}
       <div className="space-y-2 mt-4">
         <p className="text-sm font-semibold text-zinc-700">
           이미 발송하셨나요?
@@ -135,6 +130,6 @@ export function ReformOrderItemCard({
           />
         </div>
       </div>
-    </CardContent>
+    </div>
   );
 }

@@ -31,6 +31,7 @@ interface FilterSheetProps {
   onPriceRangeChange: (range: string) => void;
   onReset: () => void;
   initialTab?: FilterTab;
+  activeCounts?: Partial<Record<FilterTab, number>>;
 }
 
 export const FilterSheet = ({
@@ -46,6 +47,7 @@ export const FilterSheet = ({
   onPriceRangeChange,
   onReset,
   initialTab = "category",
+  activeCounts,
 }: FilterSheetProps) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
@@ -65,10 +67,16 @@ export const FilterSheet = ({
     <Sheet open={open} onOpenChange={setOpen}>
       <FilterButtons
         onFilterClick={handleFilterButtonClick}
+        activeCounts={activeCounts}
         mainButton={
           <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2 ml-2 mt-2">
+            <Button
+              variant="none"
+              size="sm"
+              className="h-9 gap-2 rounded-full border border-zinc-200 bg-white px-3 text-zinc-700 shadow-none"
+            >
               <SlidersHorizontal />
+              필터
             </Button>
           </SheetTrigger>
         }

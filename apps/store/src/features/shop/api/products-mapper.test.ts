@@ -28,8 +28,10 @@ describe("products-mapper", () => {
       color: "black",
       pattern: "solid",
       material: "silk",
+      materialLabel: "실크",
       likes: 0,
       info: "테스트 상품",
+      categoryLabel: "3 Fold",
       options: undefined,
     });
   });
@@ -46,8 +48,10 @@ describe("products-mapper", () => {
         color: "black",
         pattern: "solid",
         material: "silk",
+        materialLabel: "실크",
         likes: 0,
         info: "테스트 상품",
+        categoryLabel: "3 Fold",
         options: undefined,
       },
       {
@@ -60,8 +64,10 @@ describe("products-mapper", () => {
         color: "black",
         pattern: "solid",
         material: "silk",
+        materialLabel: "실크",
         likes: 0,
         info: "테스트 상품",
+        categoryLabel: "3 Fold",
         options: undefined,
       },
     ]);

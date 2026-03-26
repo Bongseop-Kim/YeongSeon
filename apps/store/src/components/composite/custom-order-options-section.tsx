@@ -12,25 +12,28 @@ const ADDITIONAL_OPTION_LABELS = [
   { key: "careLabel", label: "케어라벨" },
 ] as const;
 
+type CustomOrderOptions = Partial<{
+  tieType: string | null;
+  interlining: string | null;
+  designType: string | null;
+  fabricType: string | null;
+  fabricProvided: boolean | null;
+  interliningThickness: string | null;
+  triangleStitch: boolean;
+  sideStitch: boolean;
+  barTack: boolean;
+  dimple: boolean;
+  spoderato: boolean;
+  fold7: boolean;
+  brandLabel: boolean;
+  careLabel: boolean;
+}>;
+
 interface CustomOrderOptionsSectionProps {
-  options: {
-    tieType?: string | null;
-    interlining?: string | null;
-    designType?: string | null;
-    fabricType?: string | null;
-    fabricProvided?: boolean;
-    interliningThickness?: string | null;
-    triangleStitch?: boolean;
-    sideStitch?: boolean;
-    barTack?: boolean;
-    dimple?: boolean;
-    spoderato?: boolean;
-    fold7?: boolean;
-    brandLabel?: boolean;
-    careLabel?: boolean;
-  };
+  options?: CustomOrderOptions | null;
   referenceImageUrls?: string[];
   additionalNotes?: string | null;
+  hasSample?: boolean;
   sampleType?: string | null;
 }
 
@@ -41,45 +44,55 @@ export function CustomOrderOptionsSection({
   options,
   referenceImageUrls,
   additionalNotes,
+  hasSample = false,
   sampleType,
 }: CustomOrderOptionsSectionProps) {
+  const safeOptions = options ?? {};
   const enabledAdditionalOptions = ADDITIONAL_OPTION_LABELS.filter(
-    ({ key }) => options[key],
+    ({ key }) => safeOptions[key],
   );
   const hasReferenceImages =
     Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0;
   const hasAdditionalNotes =
     typeof additionalNotes === "string" && additionalNotes.trim() !== "";
+  const isSampleOrder = hasSample;
   const hasSampleType =
     typeof sampleType === "string" && sampleType.trim() !== "";
+  const fabricProvidedLabel =
+    safeOptions.fabricProvided === true
+      ? "예"
+      : safeOptions.fabricProvided === false
+        ? "아니오"
+        : "-";
 
   return (
     <div className="space-y-6">
       <div>
         <DetailRow
           label="넥타이 유형"
-          value={formatDetailValue(options.tieType)}
+          value={formatDetailValue(safeOptions.tieType)}
         />
         <DetailRow
           label="심지"
-          value={formatDetailValue(options.interlining)}
+          value={formatDetailValue(safeOptions.interlining)}
         />
         <DetailRow
           label="디자인 유형"
-          value={formatDetailValue(options.designType)}
+          value={formatDetailValue(safeOptions.designType)}
         />
         <DetailRow
           label="원단 유형"
-          value={formatDetailValue(options.fabricType)}
+          value={formatDetailValue(safeOptions.fabricType)}
         />
-        <DetailRow
-          label="원단 지참"
-          value={options.fabricProvided ? "예" : "아니오"}
-        />
-        <DetailRow
-          label="심지 두께"
-          value={formatDetailValue(options.interliningThickness)}
-        />
+        {!isSampleOrder ? (
+          <>
+            <DetailRow label="원단 지참" value={fabricProvidedLabel} />
+            <DetailRow
+              label="심지 두께"
+              value={formatDetailValue(safeOptions.interliningThickness)}
+            />
+          </>
+        ) : null}
         {hasSampleType && (
           <DetailRow label="샘플 유형" value={formatDetailValue(sampleType)} />
         )}

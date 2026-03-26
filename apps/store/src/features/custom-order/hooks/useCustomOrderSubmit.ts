@@ -19,7 +19,6 @@ interface UseCustomOrderSubmitParams {
   selectedAddress: ShippingAddress | null;
   imageUpload: ImageUploadHook;
   watchedValues: QuoteOrderOptions;
-  clearDraft: () => void;
   formReset: () => void;
   paymentWidgetRef: RefObject<PaymentWidgetRef | null>;
 }
@@ -43,7 +42,6 @@ export function useCustomOrderSubmit({
   selectedAddress,
   imageUpload,
   watchedValues,
-  clearDraft,
   formReset,
   paymentWidgetRef,
 }: UseCustomOrderSubmitParams) {
@@ -114,7 +112,6 @@ export function useCustomOrderSubmit({
             contactValue,
           }),
         });
-        clearDraft();
         toast.success("견적요청이 완료되었습니다!");
         formReset();
         navigate(ROUTES.ORDER_LIST);

@@ -8,13 +8,9 @@ import { SheetPortal, SheetOverlay } from "@/components/ui/sheet";
 export {
   Sheet,
   SheetTrigger,
-  SheetClose,
-  SheetPortal,
-  SheetOverlay,
   SheetHeader,
   SheetFooter,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
 
 const SheetContent = React.forwardRef<

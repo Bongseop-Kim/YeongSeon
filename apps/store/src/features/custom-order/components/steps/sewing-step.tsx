@@ -2,8 +2,9 @@ import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { RadioCard } from "@/components/composite/radio-card";
 import { CheckboxCard } from "@/components/composite/checkbox-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup } from "@/components/ui/radio-group";
+import { UtilityPagePanel } from "@/components/composite/utility-page";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
@@ -78,88 +79,82 @@ export const SewingStep = () => {
         "스타일 옵션은 중복 선택 가능",
       ]}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>타이 종류</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup value={tieType ?? ""} onValueChange={handleTieTypeChange}>
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {(["MANUAL", "AUTO"] as const).map((type) => (
-                <RadioCard
-                  key={type}
-                  value={type}
-                  id={`tie-type-${type.toLowerCase()}`}
-                  selected={
-                    type === "MANUAL" ? tieType === null : tieType === "AUTO"
-                  }
-                >
-                  <CardHeader>
-                    <CardTitle>
-                      {type === "AUTO"
-                        ? "자동 타이 (지퍼)"
-                        : "수동 타이 (손매듭)"}
-                    </CardTitle>
-                  </CardHeader>
-                </RadioCard>
-              ))}
-            </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>봉제 스타일 (중복 선택 가능)</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
+      <UtilityPagePanel title="타이 종류">
+        <RadioGroup value={tieType ?? ""} onValueChange={handleTieTypeChange}>
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {SEWING_STYLES.map((style) => {
-              const isDisabled = !!(style.dimpleOnly && !isDimpleAvailable);
-              const isChecked = currentValues[style.key];
-              const itemId = `sewing-style-${style.key}`;
-
-              return (
-                <CheckboxCard
-                  key={style.key}
-                  id={itemId}
-                  disabled={isDisabled}
-                  checked={isChecked}
-                  onCheckedChange={(checked) =>
-                    handleStyleToggle(style.key, !!checked)
-                  }
-                >
-                  <CardHeader>
-                    <CardTitle
-                      className={cn(
-                        "text-sm",
-                        isDisabled ? "text-zinc-400" : "text-zinc-900",
-                      )}
-                    >
-                      {style.label}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p
-                      className={cn(
-                        "text-xs",
-                        isDisabled ? "text-zinc-300" : "text-zinc-500",
-                      )}
-                    >
-                      {style.description}
-                    </p>
-                    {isDisabled && (
-                      <p className="mt-1 text-xs text-zinc-300">
-                        자동 타이에서만 선택할 수 있어요
-                      </p>
-                    )}
-                  </CardContent>
-                </CheckboxCard>
-              );
-            })}
+            {(["MANUAL", "AUTO"] as const).map((type) => (
+              <RadioCard
+                key={type}
+                value={type}
+                id={`tie-type-${type.toLowerCase()}`}
+                selected={
+                  type === "MANUAL" ? tieType === null : tieType === "AUTO"
+                }
+              >
+                <CardHeader>
+                  <CardTitle>
+                    {type === "AUTO"
+                      ? "자동 타이 (지퍼)"
+                      : "수동 타이 (손매듭)"}
+                  </CardTitle>
+                </CardHeader>
+              </RadioCard>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </RadioGroup>
+      </UtilityPagePanel>
+
+      <UtilityPagePanel
+        title="봉제 스타일"
+        description="필요한 디테일만 추가해 제작 완성도를 조절합니다. 중복 선택 가능합니다."
+        contentClassName="px-0"
+      >
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {SEWING_STYLES.map((style) => {
+            const isDisabled = !!(style.dimpleOnly && !isDimpleAvailable);
+            const isChecked = currentValues[style.key];
+            const itemId = `sewing-style-${style.key}`;
+
+            return (
+              <CheckboxCard
+                key={style.key}
+                id={itemId}
+                disabled={isDisabled}
+                checked={isChecked}
+                onCheckedChange={(checked) =>
+                  handleStyleToggle(style.key, !!checked)
+                }
+              >
+                <CardHeader>
+                  <CardTitle
+                    className={cn(
+                      "text-sm",
+                      isDisabled ? "text-zinc-400" : "text-zinc-900",
+                    )}
+                  >
+                    {style.label}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p
+                    className={cn(
+                      "text-xs",
+                      isDisabled ? "text-zinc-300" : "text-zinc-500",
+                    )}
+                  >
+                    {style.description}
+                  </p>
+                  {isDisabled && (
+                    <p className="mt-1 text-xs text-zinc-300">
+                      자동 타이에서만 선택할 수 있어요
+                    </p>
+                  )}
+                </CardContent>
+              </CheckboxCard>
+            );
+          })}
+        </div>
+      </UtilityPagePanel>
     </StepLayout>
   );
 };

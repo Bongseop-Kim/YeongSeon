@@ -1,5 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import {
+  UtilityKeyValueRow,
+  UtilityPageAside,
+} from "@/components/composite/utility-page";
 import type { OrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
 
 interface CartOrderSummaryCardProps {
@@ -8,43 +10,45 @@ interface CartOrderSummaryCardProps {
 
 export function CartOrderSummaryCard({ summary }: CartOrderSummaryCardProps) {
   return (
-    <Card data-testid="cart-order-summary">
-      <CardHeader>
-        <CardTitle>주문 금액</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-zinc-600">상품 금액</span>
-            <span>{summary.originalPrice.toLocaleString()}원</span>
-          </div>
-          {summary.totalDiscount > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-zinc-600">할인 금액</span>
+    <UtilityPageAside
+      title="주문 금액"
+      description="선택한 상품 기준 예상 결제 금액입니다."
+      tone="muted"
+      className="rounded-2xl"
+    >
+      <div data-testid="cart-order-summary">
+        <UtilityKeyValueRow
+          label="상품 금액"
+          value={`${summary.originalPrice.toLocaleString()}원`}
+        />
+        {summary.totalDiscount > 0 ? (
+          <UtilityKeyValueRow
+            label="할인 금액"
+            value={
               <span className="text-red-500">
                 -{summary.totalDiscount.toLocaleString()}원
               </span>
-            </div>
-          )}
-          <div className="flex justify-between text-sm">
-            <span className="text-zinc-600">배송비</span>
-            <span>
-              {summary.shippingCost > 0
-                ? `${summary.shippingCost.toLocaleString()}원`
-                : "무료"}
-            </span>
-          </div>
-
-          <Separator />
-
-          <div className="flex justify-between text-base font-semibold">
-            <span>총 {summary.totalQuantity}개</span>
-            <span className="text-lg">
+            }
+          />
+        ) : null}
+        <UtilityKeyValueRow
+          label="배송비"
+          value={
+            summary.shippingCost > 0
+              ? `${summary.shippingCost.toLocaleString()}원`
+              : "무료"
+          }
+        />
+        <UtilityKeyValueRow
+          className="pt-5"
+          label={`총 ${summary.totalQuantity}개`}
+          value={
+            <span className="text-base font-semibold tracking-tight">
               {summary.totalPrice.toLocaleString()}원
             </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+          }
+        />
+      </div>
+    </UtilityPageAside>
   );
 }

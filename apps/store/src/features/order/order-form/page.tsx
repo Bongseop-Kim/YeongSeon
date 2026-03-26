@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui-extended/button";
 import { Separator } from "@/components/ui/separator";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
@@ -25,9 +24,17 @@ import PaymentWidget, {
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
 import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
+import {
+  UtilityKeyValueRow,
+  UtilityPageAside,
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/components/composite/utility-page";
+import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
 
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  const [cancellationConsent, setCancellationConsent] = useState(false);
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const isPaymentProcessingRef = useRef(false);
   const navigate = useNavigate();
@@ -168,54 +175,82 @@ const OrderFormPage = () => {
       <MainLayout>
         <MainContent className="overflow-visible">
           <PageLayout
+            contentClassName="py-4 lg:py-8"
+            sidebarClassName="px-4 lg:px-0"
             sidebar={
-              <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>결제 금액</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-zinc-600">상품 금액</span>
-                      <span>{totals.originalPrice.toLocaleString()}원</span>
-                    </div>
-                    {totals.totalDiscount > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-zinc-600">할인 금액</span>
+              <div className="space-y-5">
+                <UtilityPageAside
+                  title="결제 금액"
+                  description="주문서에 반영된 할인과 배송비를 포함한 예상 결제 금액입니다."
+                  tone="muted"
+                  className="rounded-2xl"
+                >
+                  <UtilityKeyValueRow
+                    label="상품 금액"
+                    value={`${totals.originalPrice.toLocaleString()}원`}
+                  />
+                  {totals.totalDiscount > 0 ? (
+                    <UtilityKeyValueRow
+                      label="할인 금액"
+                      value={
                         <span className="text-red-500">
                           -{totals.totalDiscount.toLocaleString()}원
                         </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-zinc-600">배송비</span>
-                      <span>
-                        {totals.shippingCost > 0
-                          ? `${totals.shippingCost.toLocaleString()}원`
-                          : "무료"}
-                      </span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between text-base font-semibold">
-                      <span>총 결제 금액</span>
-                      <span className="text-blue-600">
+                      }
+                    />
+                  ) : null}
+                  <UtilityKeyValueRow
+                    label="배송비"
+                    value={
+                      totals.shippingCost > 0
+                        ? `${totals.shippingCost.toLocaleString()}원`
+                        : "무료"
+                    }
+                  />
+                  <UtilityKeyValueRow
+                    className="pt-5"
+                    label="총 결제 금액"
+                    value={
+                      <span className="text-base font-semibold tracking-tight text-blue-600">
                         {totals.totalPrice.toLocaleString()}원
                       </span>
-                    </div>
-                  </CardContent>
-                </Card>
+                    }
+                  />
+                </UtilityPageAside>
                 {user && isPricingReady && (
-                  <Card>
-                    <CardContent className="px-0">
+                  <UtilityPageAside
+                    title="결제 수단"
+                    description="결제 방식과 약관 동의를 확인합니다."
+                    tone="muted"
+                    className="rounded-2xl"
+                  >
+                    <div className="-mx-4 lg:-mx-5">
                       <PaymentWidget
                         ref={paymentWidgetRef}
                         amount={totals.totalPrice}
                         customerKey={user.id}
                       />
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </UtilityPageAside>
                 )}
-              </>
+                {hasReformItems && (
+                  <UtilityPageAside
+                    title="동의"
+                    description="주문 진행을 위해 취소 및 환불 기준 동의가 필요합니다."
+                    tone="muted"
+                    className="rounded-2xl"
+                  >
+                    <ConsentCheckbox
+                      id="order-form-cancellation-consent"
+                      checked={cancellationConsent}
+                      onCheckedChange={setCancellationConsent}
+                      label="취소/환불 불가 동의"
+                      description="판매자가 수선물을 수령(접수)한 이후부터 취소 및 환불이 불가능합니다."
+                      required
+                    />
+                  </UtilityPageAside>
+                )}
+              </div>
             }
             actionBar={
               <div className="space-y-2">
@@ -228,7 +263,8 @@ const OrderFormPage = () => {
                     !user ||
                     !selectedAddress ||
                     isPaymentLoading ||
-                    !isPricingReady
+                    !isPricingReady ||
+                    (hasReformItems && !cancellationConsent)
                   }
                 >
                   {isPaymentLoading
@@ -245,71 +281,111 @@ const OrderFormPage = () => {
               </div>
             }
           >
-            <Card data-testid="order-shipping-card">
-              <CardHeader className="flex justify-between items-center">
-                <CardTitle>
-                  {selectedAddress?.recipientName || "배송지 정보"}
-                </CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={openShippingPopup}
-                  data-testid="order-shipping-manage"
+            <div className="space-y-8">
+              <UtilityPageIntro
+                eyebrow="Order"
+                title="주문서"
+                description="배송지와 쿠폰을 확인한 뒤 결제를 진행합니다."
+                meta={
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-600">
+                    <span>
+                      주문 상품{" "}
+                      <span className="font-medium text-zinc-950">
+                        {orderItems.length}개
+                      </span>
+                    </span>
+                    <span className="text-stone-300">/</span>
+                    <span>
+                      예상 결제{" "}
+                      <span className="font-medium text-zinc-950">
+                        {totals.totalPrice.toLocaleString()}원
+                      </span>
+                    </span>
+                  </div>
+                }
+              />
+
+              <UtilityPageSection
+                title="배송지"
+                description="결제 전에 배송지와 요청 사항을 마지막으로 확인합니다."
+              >
+                <div
+                  className="border-t border-stone-200"
+                  data-testid="order-shipping-card"
                 >
-                  배송지 관리
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {selectedAddress ? (
-                  <>
-                    <div className="space-y-1 text-sm">
+                  <div className="flex items-center justify-between gap-4 py-4">
+                    <div>
+                      <p className="text-lg font-semibold tracking-tight text-zinc-950">
+                        {selectedAddress?.recipientName || "배송지 정보"}
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        기본 배송지와 수령 요청 사항을 확인합니다.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={openShippingPopup}
+                      data-testid="order-shipping-manage"
+                    >
+                      배송지 관리
+                    </Button>
+                  </div>
+
+                  <Separator />
+
+                  {selectedAddress ? (
+                    <div className="space-y-2 py-5 text-sm">
                       <p>
                         ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
                         {selectedAddress.detailAddress}
                       </p>
                       <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
+                      {selectedAddress.deliveryRequest ? (
+                        <p className="text-zinc-600">
+                          {getDeliveryRequestLabel(
+                            selectedAddress.deliveryRequest,
+                            selectedAddress.deliveryMemo,
+                          )}
+                        </p>
+                      ) : null}
                     </div>
-                    {selectedAddress.deliveryRequest && (
-                      <p className="text-sm text-zinc-600">
-                        {getDeliveryRequestLabel(
-                          selectedAddress.deliveryRequest,
-                          selectedAddress.deliveryMemo,
-                        )}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-8 text-zinc-500">
-                    배송지를 추가해주세요.
-                  </div>
-                )}
-              </CardContent>
-
-              <CardContent>
-                <Separator />
-              </CardContent>
-
-              <CardHeader data-testid="order-items-card">
-                <CardTitle>주문 상품 {orderItems.length}개</CardTitle>
-              </CardHeader>
-
-              {orderItems.map((item, index) => (
-                <React.Fragment key={item.id}>
-                  {item.type === "product" ? (
-                    <OrderFormItemCard
-                      item={item}
-                      onChangeCoupon={() => handleChangeCoupon(item.id)}
-                    />
                   ) : (
-                    <ReformOrderItemCard
-                      item={item}
-                      onChangeCoupon={() => handleChangeCoupon(item.id)}
-                    />
+                    <div className="py-8 text-center text-zinc-500">
+                      배송지를 추가해주세요.
+                    </div>
                   )}
-                  {index < orderItems.length - 1 && <Separator />}
-                </React.Fragment>
-              ))}
-            </Card>
+                </div>
+              </UtilityPageSection>
+
+              <UtilityPageSection
+                title={`주문 상품 ${orderItems.length}개`}
+                description="상품별 쿠폰과 수선 접수 정보를 확인합니다."
+                className="pb-2"
+              >
+                <div
+                  className="border-t border-stone-200"
+                  data-testid="order-items-card"
+                >
+                  {orderItems.map((item, index) => (
+                    <React.Fragment key={item.id}>
+                      {item.type === "product" ? (
+                        <OrderFormItemCard
+                          item={item}
+                          onChangeCoupon={() => handleChangeCoupon(item.id)}
+                        />
+                      ) : (
+                        <ReformOrderItemCard
+                          item={item}
+                          onChangeCoupon={() => handleChangeCoupon(item.id)}
+                        />
+                      )}
+                      {index < orderItems.length - 1 ? <Separator /> : null}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </UtilityPageSection>
+            </div>
           </PageLayout>
         </MainContent>
       </MainLayout>

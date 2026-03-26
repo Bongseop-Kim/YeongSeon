@@ -1,4 +1,3 @@
-import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui-extended/button";
 import type { ProductCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
@@ -24,9 +23,8 @@ export function OrderFormItemCard({
   const hasCoupon = !!item.appliedCoupon;
 
   return (
-    <CardContent>
+    <div className="py-5">
       <div className="flex gap-4">
-        {/* 상품 이미지 */}
         <div className="w-24 h-24 flex-shrink-0 bg-zinc-100 rounded-sm overflow-hidden">
           <img
             src={item.product.image}
@@ -35,7 +33,6 @@ export function OrderFormItemCard({
           />
         </div>
 
-        {/* 상품 정보 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1 min-w-0">
@@ -44,7 +41,6 @@ export function OrderFormItemCard({
               </h3>
               <p className="text-sm text-zinc-500">{item.product.code}</p>
 
-              {/* 선택된 옵션 */}
               <p className="text-sm text-zinc-500">
                 {item.selectedOption && item.selectedOption.id !== "base"
                   ? item.selectedOption.name
@@ -52,7 +48,6 @@ export function OrderFormItemCard({
                 / {item.quantity}개
               </p>
 
-              {/* 가격 표시 */}
               {hasCoupon ? (
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium line-through text-zinc-400">
@@ -68,7 +63,6 @@ export function OrderFormItemCard({
                 </p>
               )}
 
-              {/* 적용된 쿠폰 표시 */}
               {hasCoupon && (
                 <p className="text-xs text-primary font-medium">
                   {item.appliedCoupon?.coupon?.name} 적용
@@ -79,7 +73,6 @@ export function OrderFormItemCard({
         </div>
       </div>
 
-      {/* 액션 버튼 */}
       <div className="flex gap-2 mt-4">
         <Button
           variant="outline"
@@ -90,6 +83,6 @@ export function OrderFormItemCard({
           {hasCoupon ? "쿠폰 변경" : "쿠폰 사용"}
         </Button>
       </div>
-    </CardContent>
+    </div>
   );
 }

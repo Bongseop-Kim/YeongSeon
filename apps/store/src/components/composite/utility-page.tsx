@@ -2,7 +2,18 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { ChevronRightIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { StepIndicator } from "@/components/composite/step-indicator";
 import { cn } from "@/lib/utils";
+
+interface UtilityPageProgressProps {
+  currentStepIndex: number;
+  steps: Array<{ id: string }>;
+  visitedSteps: ReadonlySet<number>;
+  completedSteps?: ReadonlySet<number>;
+  shouldShowStep: (index: number) => boolean;
+  isHiddenStep?: (index: number) => boolean;
+  onStepClick: (index: number) => void;
+}
 
 interface UtilityPageIntroProps {
   eyebrow?: string;
@@ -10,6 +21,7 @@ interface UtilityPageIntroProps {
   description?: string;
   meta?: ReactNode;
   actions?: ReactNode;
+  progress?: UtilityPageProgressProps;
   className?: string;
 }
 
@@ -19,8 +31,22 @@ export function UtilityPageIntro({
   description,
   meta,
   actions,
+  progress,
   className,
 }: UtilityPageIntroProps) {
+  const [visibleStepCount, currentDisplayStep] = progress
+    ? progress.steps.reduce(
+        ([count, display], _, index) => {
+          if (!progress.shouldShowStep(index)) return [count, display];
+          return [
+            count + 1,
+            index <= progress.currentStepIndex ? display + 1 : display,
+          ];
+        },
+        [0, 0],
+      )
+    : [0, 0];
+
   return (
     <section
       className={cn(
@@ -48,7 +74,34 @@ export function UtilityPageIntro({
         {actions ? <div className="shrink-0">{actions}</div> : null}
       </div>
 
-      {meta ? <div className="mt-5">{meta}</div> : null}
+      {meta || progress ? (
+        <div className="mt-5 border-t border-stone-200 pt-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            {meta ? <div className="min-w-0">{meta}</div> : null}
+            {progress ? (
+              <div
+                className={cn(
+                  "flex flex-col items-start gap-3 lg:items-end",
+                  !meta && "lg:ml-auto",
+                )}
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                  Step {currentDisplayStep} of {visibleStepCount}
+                </p>
+                <StepIndicator
+                  steps={progress.steps}
+                  currentStepIndex={progress.currentStepIndex}
+                  visitedSteps={progress.visitedSteps}
+                  completedSteps={progress.completedSteps}
+                  shouldShowStep={progress.shouldShowStep}
+                  isHiddenStep={progress.isHiddenStep}
+                  onStepClick={progress.onStepClick}
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -59,6 +112,14 @@ interface UtilityPageSectionProps {
   description?: string;
   children: ReactNode;
   className?: string;
+}
+
+interface UtilityPagePanelProps {
+  title?: string;
+  description?: string;
+  children: ReactNode;
+  className?: string;
+  contentClassName?: string;
 }
 
 export function UtilityPageSection({
@@ -82,6 +143,34 @@ export function UtilityPageSection({
         </p>
       ) : null}
       <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+export function UtilityPagePanel({
+  title,
+  description,
+  children,
+  className,
+  contentClassName,
+}: UtilityPagePanelProps) {
+  return (
+    <section
+      className={cn("border-y border-stone-200 py-4 lg:py-5", className)}
+    >
+      {title ? (
+        <div className="max-w-2xl">
+          <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
+            {title}
+          </h3>
+          {description ? (
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              {description}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      <div className={cn(title && "mt-5", contentClassName)}>{children}</div>
     </section>
   );
 }

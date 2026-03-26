@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui-extended/button";
-import { CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
@@ -15,7 +14,7 @@ export function CartSelectionToolbar({
   onRemoveSelected,
 }: CartSelectionToolbarProps) {
   return (
-    <CardContent className="flex items-center justify-between">
+    <div className="flex items-center justify-between border-b border-stone-200 py-4">
       <div className="flex gap-4 items-center">
         <Checkbox
           checked={isAllChecked}
@@ -35,6 +34,6 @@ export function CartSelectionToolbar({
           삭제
         </Button>
       </div>
-    </CardContent>
+    </div>
   );
 }

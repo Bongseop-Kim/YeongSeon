@@ -1,13 +1,13 @@
 import { useFormContext } from "react-hook-form";
 import { RadioCard } from "@/components/composite/radio-card";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { RadioGroup } from "@/components/ui/radio-group";
+import { UtilityPagePanel } from "@/components/composite/utility-page";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
 
@@ -69,44 +69,42 @@ export const FabricStep = () => {
         "YARN_DYED는 직조 패턴 강조",
       ]}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>원단 조합</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup
-            value={currentValue}
-            onValueChange={(val) => {
-              const found = FABRIC_CARDS.find(
-                (c) => `${c.fabricType}-${c.designType}` === val,
-              );
-              if (found) handleCardClick(found);
-            }}
-          >
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {FABRIC_CARDS.map((card) => {
-                const cardValue = `${card.fabricType}-${card.designType}`;
+      <UtilityPagePanel
+        title="원단 조합"
+        description="소재와 직조 방식 조합을 정하면 이후 봉제와 마감 선택 기준이 선명해집니다."
+      >
+        <RadioGroup
+          value={currentValue}
+          onValueChange={(val) => {
+            const found = FABRIC_CARDS.find(
+              (c) => `${c.fabricType}-${c.designType}` === val,
+            );
+            if (found) handleCardClick(found);
+          }}
+        >
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {FABRIC_CARDS.map((card) => {
+              const cardValue = `${card.fabricType}-${card.designType}`;
 
-                return (
-                  <RadioCard
-                    key={cardValue}
-                    value={cardValue}
-                    id={`fabric-${cardValue}`}
-                    selected={isSelected(card)}
-                  >
-                    <CardHeader>
-                      <CardTitle>{card.label}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription>{card.description}</CardDescription>
-                    </CardContent>
-                  </RadioCard>
-                );
-              })}
-            </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
+              return (
+                <RadioCard
+                  key={cardValue}
+                  value={cardValue}
+                  id={`fabric-${cardValue}`}
+                  selected={isSelected(card)}
+                >
+                  <CardHeader>
+                    <CardTitle>{card.label}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription>{card.description}</CardDescription>
+                  </CardContent>
+                </RadioCard>
+              );
+            })}
+          </div>
+        </RadioGroup>
+      </UtilityPagePanel>
     </StepLayout>
   );
 };

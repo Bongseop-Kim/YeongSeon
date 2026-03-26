@@ -4,13 +4,9 @@ import {
   SheetFooter,
 } from "@/components/ui-extended/sheet";
 import { Button } from "@/components/ui-extended/button";
-import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
-
 interface MobileReformSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cancellationConsent: boolean;
-  onCancellationConsentChange: (value: boolean) => void;
   onAddToCart: () => void;
   onOrder: () => void;
   tieCount: number;
@@ -20,14 +16,12 @@ interface MobileReformSheetProps {
 export function MobileReformSheet({
   open,
   onOpenChange,
-  cancellationConsent,
-  onCancellationConsentChange,
   onAddToCart,
   onOrder,
   tieCount,
   totalCost,
 }: MobileReformSheetProps) {
-  const isActionDisabled = tieCount === 0 || !cancellationConsent;
+  const isActionDisabled = tieCount === 0;
 
   const handleAddToCart = () => {
     onAddToCart();
@@ -47,14 +41,6 @@ export function MobileReformSheet({
             <span>총 {tieCount}개</span>
             <span>{totalCost.toLocaleString()}원</span>
           </div>
-          <ConsentCheckbox
-            id="mobile-cancellation-consent"
-            checked={cancellationConsent}
-            onCheckedChange={onCancellationConsentChange}
-            label="취소/환불 불가 동의"
-            description="판매자가 수선물을 수령(접수)한 이후부터 취소 및 환불이 불가능합니다."
-            required
-          />
         </div>
 
         <SheetFooter className="shrink-0">

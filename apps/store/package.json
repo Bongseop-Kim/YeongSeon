@@ -39,6 +39,7 @@
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.525.0",
+    "motion": "^12.38.0",
     "overlayscrollbars": "^2.13.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -53,6 +54,7 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
+    "dependency-cruiser": "^17.3.9",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.1.0",

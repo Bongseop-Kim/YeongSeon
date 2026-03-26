@@ -87,7 +87,6 @@ describe("useCustomOrderSubmit", () => {
   });
 
   it("일반 주문을 생성하고 토스 결제를 요청한다", async () => {
-    const clearDraft = vi.fn();
     const formReset = vi.fn();
     createCustomOrderMutateAsync.mockResolvedValueOnce({ orderId: "order-1" });
     requestPayment.mockResolvedValueOnce(undefined);
@@ -105,7 +104,6 @@ describe("useCustomOrderSubmit", () => {
           ],
         } as never,
         watchedValues: createValues(10),
-        clearDraft,
         formReset,
         paymentWidgetRef: paymentWidgetRef as never,
       }),
@@ -124,7 +122,6 @@ describe("useCustomOrderSubmit", () => {
   });
 
   it("취소 후 입력값이 바뀌면 새 주문을 다시 생성한다", async () => {
-    const clearDraft = vi.fn();
     const formReset = vi.fn();
     createCustomOrderMutateAsync
       .mockResolvedValueOnce({ orderId: "order-1" })
@@ -142,7 +139,6 @@ describe("useCustomOrderSubmit", () => {
           { url: "https://example.com/1.jpg", fileId: "file-1" },
         ],
       } as never,
-      clearDraft,
       formReset,
       paymentWidgetRef: paymentWidgetRef as never,
     };
@@ -196,7 +192,6 @@ describe("useCustomOrderSubmit", () => {
           contactName: "",
           contactValue: "",
         },
-        clearDraft: vi.fn(),
         formReset: vi.fn(),
         paymentWidgetRef: { current: null } as never,
       }),
@@ -212,7 +207,6 @@ describe("useCustomOrderSubmit", () => {
 
   it("견적 요청 성공과 실패를 처리한다", async () => {
     createQuoteRequestMutateAsync.mockResolvedValueOnce(undefined);
-    const clearDraft = vi.fn();
     const formReset = vi.fn();
 
     const { result } = renderHook(() =>
@@ -224,7 +218,6 @@ describe("useCustomOrderSubmit", () => {
           getImageRefs: () => [],
         } as never,
         watchedValues: createValues(100),
-        clearDraft,
         formReset,
         paymentWidgetRef: { current: null } as never,
       }),
@@ -234,14 +227,12 @@ describe("useCustomOrderSubmit", () => {
       await result.current.handleSubmit();
     });
     expect(createQuoteRequestMutateAsync).toHaveBeenCalled();
-    expect(clearDraft).toHaveBeenCalled();
     expect(formReset).toHaveBeenCalled();
     expect(success).toHaveBeenCalledWith("견적요청이 완료되었습니다!");
   });
 
   it("견적 요청 실패를 처리한다", async () => {
     createQuoteRequestMutateAsync.mockRejectedValueOnce(new Error("견적 실패"));
-    const clearDraft = vi.fn();
     const formReset = vi.fn();
 
     const { result } = renderHook(() =>
@@ -253,7 +244,6 @@ describe("useCustomOrderSubmit", () => {
           getImageRefs: () => [],
         } as never,
         watchedValues: createValues(100),
-        clearDraft,
         formReset,
         paymentWidgetRef: { current: null } as never,
       }),

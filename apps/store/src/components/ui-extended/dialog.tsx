@@ -7,10 +7,6 @@ import { DialogPortal, DialogOverlay } from "@/components/ui/dialog";
 
 export {
   Dialog,
-  DialogTrigger,
-  DialogPortal,
-  DialogClose,
-  DialogOverlay,
   DialogHeader,
   DialogFooter,
   DialogTitle,

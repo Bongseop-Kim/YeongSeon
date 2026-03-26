@@ -1,13 +1,10 @@
 import type { StepConfig } from "@/features/custom-order/types/wizard";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { StepIndicator } from "@/components/composite/step-indicator";
+import { UtilityPageIntro } from "@/components/composite/utility-page";
 
 interface ProgressBarProps {
+  eyebrow: string;
+  pageTitle: string;
+  pageDescription: string;
   steps: StepConfig[];
   currentStepIndex: number;
   visitedSteps: Set<number>;
@@ -29,6 +26,9 @@ const STEP_DESCRIPTIONS: Record<string, string> = {
 };
 
 export const ProgressBar = ({
+  eyebrow,
+  pageTitle,
+  pageDescription,
   steps,
   currentStepIndex,
   visitedSteps,
@@ -42,27 +42,34 @@ export const ProgressBar = ({
     STEP_DESCRIPTIONS[currentStep.id] ?? "현재 단계를 진행 중입니다.";
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between">
-          <CardTitle>
-            {`STEP ${currentStepIndex + 1} · ${currentStep.label}`}
-            <CardDescription>{currentStepDescription}</CardDescription>
-          </CardTitle>
-
-          <div className="flex items-end">
-            <StepIndicator
-              steps={steps}
-              currentStepIndex={currentStepIndex}
-              visitedSteps={visitedSteps}
-              completedSteps={completedSteps}
-              shouldShowStep={shouldShowStep}
-              isHiddenStep={isHiddenStep}
-              onStepClick={onStepClick}
-            />
+    <UtilityPageIntro
+      eyebrow={eyebrow}
+      title={pageTitle}
+      description={pageDescription}
+      meta={
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+              Current Step
+            </p>
+            <p className="mt-1 text-2xl font-semibold tracking-tight text-zinc-950">
+              {currentStep.label}
+            </p>
           </div>
+          <p className="max-w-xl text-sm leading-6 text-zinc-600">
+            {currentStepDescription}
+          </p>
         </div>
-      </CardHeader>
-    </Card>
+      }
+      progress={{
+        currentStepIndex,
+        steps,
+        visitedSteps,
+        completedSteps,
+        shouldShowStep,
+        isHiddenStep,
+        onStepClick,
+      }}
+    />
   );
 };

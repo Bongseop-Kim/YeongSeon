@@ -23,17 +23,17 @@ export function RepairShippingAddressBanner({
   };
 
   return (
-    <div className="rounded-xl border bg-card p-6 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="rounded-2xl border border-stone-200 bg-stone-50/70 p-5">
+      <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-full">
-            <MapPin className="w-4 h-4 text-primary" />
+          <div className="rounded-full bg-white p-2">
+            <MapPin className="h-4 w-4 text-zinc-700" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-foreground">
+            <h4 className="text-sm font-semibold text-zinc-950">
               수선품 보내실 곳
             </h4>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="mt-0.5 text-xs text-zinc-500">
               택배 발송 시 아래 주소를 이용해 주세요.
             </p>
           </div>
@@ -42,7 +42,7 @@ export function RepairShippingAddressBanner({
           <Button
             size="sm"
             onClick={onRegisterTracking}
-            className="h-8 text-xs shrink-0 font-semibold"
+            className="h-8 shrink-0 text-xs font-semibold"
           >
             송장번호 등록하기
           </Button>
@@ -51,22 +51,22 @@ export function RepairShippingAddressBanner({
 
       <div className="space-y-4 text-sm">
         <div className="flex justify-between items-center px-1">
-          <span className="text-muted-foreground shrink-0">받는 사람</span>
-          <span className="font-medium text-right text-foreground">
+          <span className="shrink-0 text-zinc-500">받는 사람</span>
+          <span className="text-right font-medium text-zinc-950">
             {REPAIR_SHIPPING_ADDRESS.recipient}
           </span>
         </div>
-        <Separator className="bg-border/50" />
+        <Separator className="bg-stone-200" />
         <div className="flex justify-between items-start gap-8 px-1">
-          <span className="text-muted-foreground shrink-0">주소</span>
-          <span className="font-medium text-right leading-relaxed break-keep text-foreground">
+          <span className="shrink-0 text-zinc-500">주소</span>
+          <span className="break-keep text-right font-medium leading-relaxed text-zinc-950">
             {REPAIR_SHIPPING_ADDRESS.address}
           </span>
         </div>
-        <Separator className="bg-border/50" />
+        <Separator className="bg-stone-200" />
         <div className="flex justify-between items-center px-1">
-          <span className="text-muted-foreground shrink-0">연락처</span>
-          <span className="font-medium text-right text-foreground">
+          <span className="shrink-0 text-zinc-500">연락처</span>
+          <span className="text-right font-medium text-zinc-950">
             {REPAIR_SHIPPING_ADDRESS.phone}
           </span>
         </div>
@@ -76,9 +76,9 @@ export function RepairShippingAddressBanner({
         variant="secondary"
         size="sm"
         onClick={handleCopyAddress}
-        className="w-full mt-6 h-9 text-xs font-semibold flex items-center gap-2 bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+        className="mt-6 flex h-9 w-full items-center gap-2 bg-white text-xs font-semibold text-zinc-600 transition-all hover:bg-white hover:text-zinc-950"
       >
-        <Copy className="w-3.5 h-3.5" />
+        <Copy className="h-3.5 w-3.5" />
         주소 정보 전체 복사
       </Button>
     </div>
