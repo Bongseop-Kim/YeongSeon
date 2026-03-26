@@ -4,10 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import type { Product } from "@yeongseon/shared/types/view/product";
 import { Image } from "@imagekit/react";
-import {
-  getCategoryLabel,
-  getMaterialLabel,
-} from "@/features/shop/constants/PRODUCT_LABELS";
 
 interface ProductCardProps {
   product: Product;
@@ -55,7 +51,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         )}
         <div className="absolute left-3 top-3 flex items-center gap-2">
           <span className="bg-white/88 px-2 py-1 text-[10px] font-medium tracking-[0.24em] text-zinc-700 backdrop-blur">
-            {getCategoryLabel(product.category)}
+            {product.categoryLabel ?? product.category}
           </span>
         </div>
         {product.likes > 0 ? (
@@ -73,7 +69,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       </div>
       <div className="border-b border-zinc-200 pb-4 pt-4">
         <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.24em] text-zinc-400">
-          <span>{getMaterialLabel(product.material)}</span>
+          <span>{product.materialLabel ?? product.material}</span>
           <span>{product.code}</span>
         </div>
         <p className="mt-3 line-clamp-2 min-h-11 text-[15px] font-medium leading-6 text-zinc-900">

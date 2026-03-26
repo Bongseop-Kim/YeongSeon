@@ -117,21 +117,21 @@ const ReformPage = () => {
     [uploadTieImagesMutation],
   );
 
-  const processReformOrder = useCallback(async () => {
+  const uploadValidatedTies = useCallback(async () => {
     const ties = form.getValues().ties;
     const uploadedTies = await uploadTiesIfNeeded(ties);
-
-    const orderItems = toReformCartItems(uploadedTies, pricing?.baseCost ?? 0);
-
-    setOrderItems(orderItems);
-    navigate(ROUTES.ORDER_FORM);
-  }, [form, navigate, pricing?.baseCost, setOrderItems, uploadTiesIfNeeded]);
+    return uploadedTies;
+  }, [form, uploadTiesIfNeeded]);
 
   const withSubmitGuard = useCallback(
-    async (action: () => Promise<void>) => {
+    async (action: (baseCost: number) => Promise<void>) => {
       if (isSubmittingRef.current) return;
       if (fields.length === 0) {
         confirm("수선할 넥타이를 추가해주세요.");
+        return;
+      }
+      if (!agreedToRefundPolicy) {
+        confirm("취소 및 환불 제한 내용에 동의해주세요.");
         return;
       }
       isSubmittingRef.current = true;
@@ -140,33 +140,50 @@ const ReformPage = () => {
         isSubmittingRef.current = false;
         return;
       }
+      const baseCost = pricing?.baseCost;
+      if (typeof baseCost !== "number" || Number.isNaN(baseCost)) {
+        confirm(
+          "수선 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+        );
+        isSubmittingRef.current = false;
+        return;
+      }
       try {
-        await action();
+        await action(baseCost);
       } finally {
         isSubmittingRef.current = false;
       }
     },
-    [fields.length, confirm, form],
+    [agreedToRefundPolicy, fields.length, confirm, form, pricing?.baseCost],
   );
 
   const handleDirectOrder = () =>
-    withSubmitGuard(async () => {
+    withSubmitGuard(async (baseCost) => {
       if (isMobile) {
         setIsPurchaseSheetOpen(true);
         return;
       }
-      await processReformOrder();
+
+      const uploadedTies = await uploadValidatedTies();
+      const orderItems = toReformCartItems(uploadedTies, baseCost);
+      setOrderItems(orderItems);
+      navigate(ROUTES.ORDER_FORM);
     });
 
-  const handleMobileOrder = () => withSubmitGuard(processReformOrder);
+  const handleMobileOrder = () =>
+    withSubmitGuard(async (baseCost) => {
+      const uploadedTies = await uploadValidatedTies();
+      const orderItems = toReformCartItems(uploadedTies, baseCost);
+      setOrderItems(orderItems);
+      navigate(ROUTES.ORDER_FORM);
+    });
 
   const handleAddToCart = () =>
-    withSubmitGuard(async () => {
-      const ties = form.getValues().ties;
-      const uploadedTies = await uploadTiesIfNeeded(ties);
+    withSubmitGuard(async (baseCost) => {
+      const uploadedTies = await uploadValidatedTies();
 
       await addMultipleReformToCart(
-        uploadedTies.map((tie) => toReformData(tie, pricing?.baseCost ?? 0)),
+        uploadedTies.map((tie) => toReformData(tie, baseCost)),
       );
 
       form.reset(DEFAULT_REFORM_OPTIONS);
@@ -194,14 +211,18 @@ const ReformPage = () => {
       });
   };
 
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = (checked: boolean | "indeterminate") => {
+    const nextChecked = checked === true;
+
     fields.forEach((_, index) => {
-      form.setValue(`ties.${index}.checked`, checked);
+      form.setValue(`ties.${index}.checked`, nextChecked);
     });
   };
 
   const isAllChecked =
     watchedTies.length > 0 && watchedTies.every((tie) => tie.checked);
+  const isSomeChecked = watchedTies.some((tie) => tie.checked);
+  const isIndeterminate = isSomeChecked && !isAllChecked;
   const isActionDisabled =
     !agreedToRefundPolicy || uploadTieImagesMutation.isPending || !pricing;
 
@@ -320,9 +341,11 @@ const ReformPage = () => {
                     <div className="flex items-center gap-4">
                       <Checkbox
                         id={selectAllCheckboxId}
-                        checked={isAllChecked}
+                        checked={
+                          isIndeterminate ? "indeterminate" : isAllChecked
+                        }
                         onCheckedChange={handleSelectAll}
-                        aria-checked={isAllChecked}
+                        aria-checked={isIndeterminate ? "mixed" : isAllChecked}
                       />
                       <Label
                         htmlFor={selectAllCheckboxId}

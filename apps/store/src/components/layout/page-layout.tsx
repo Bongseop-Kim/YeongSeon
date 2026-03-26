@@ -71,7 +71,6 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           <div
             className={cn(
               isMobile ? "w-full relative" : "w-1/3 sticky top-20 self-start",
-              actionBar && !isMobile && "pb-0",
               sidebarClassName,
             )}
           >

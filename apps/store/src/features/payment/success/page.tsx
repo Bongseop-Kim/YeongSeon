@@ -6,7 +6,7 @@ import { useConfirmPayment } from "@/features/payment/api/payment-query";
 import { useOrderStore } from "@/store/order";
 import { removeCartItemsByIds } from "@/features/cart/api/cart-api";
 import { toast } from "@/lib/toast";
-import { CheckCircle2, Loader2, ReceiptText, Truck } from "lucide-react";
+import { Clock3, Loader2, ReceiptText, Truck } from "lucide-react";
 import { useRequiredUser } from "@/hooks/use-required-user";
 import { Button } from "@/components/ui-extended/button";
 
@@ -140,7 +140,10 @@ const PaymentSuccessPage = () => {
       <MainContent>
         <div className="mx-auto flex min-h-[28rem] max-w-2xl flex-col justify-center px-4 py-10 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
-            <CheckCircle2 className="h-7 w-7 text-green-600" />
+            <Clock3
+              className="h-7 w-7 text-green-600"
+              aria-label="Processing payment"
+            />
           </div>
           <h1 className="mt-6 text-3xl font-semibold tracking-tight text-zinc-950">
             결제 확인 중입니다

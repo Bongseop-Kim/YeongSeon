@@ -10,20 +10,20 @@ interface FilterButtonsProps {
   activeCounts?: Partial<Record<FilterTab, number>>;
 }
 
+const TABS: Array<{ key: FilterTab; label: string }> = [
+  { key: "category", label: "카테고리" },
+  { key: "price", label: "가격" },
+  { key: "color", label: "색상" },
+  { key: "pattern", label: "패턴" },
+  { key: "material", label: "소재" },
+];
+
 export const FilterButtons = ({
   onFilterClick,
   onMainButtonClick,
   mainButton,
   activeCounts,
 }: FilterButtonsProps) => {
-  const tabs: Array<{ key: FilterTab; label: string }> = [
-    { key: "category", label: "카테고리" },
-    { key: "price", label: "가격" },
-    { key: "color", label: "색상" },
-    { key: "pattern", label: "패턴" },
-    { key: "material", label: "소재" },
-  ];
-
   return (
     <div className="w-full">
       <div className="flex items-center gap-2">
@@ -41,7 +41,7 @@ export const FilterButtons = ({
           </Button>
         ) : null}
         <div className="flex flex-1 gap-2 overflow-x-auto scrollbar-hidden">
-          {tabs.map((tab) => {
+          {TABS.map((tab) => {
             const count = activeCounts?.[tab.key] ?? 0;
 
             return (

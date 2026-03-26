@@ -38,8 +38,9 @@ import {
 } from "@/features/order/api/order-query";
 import { buildClaimFormRoute, ROUTES } from "@/constants/ROUTES";
 
-const detailRowLabelClass = "shrink-0 text-sm font-medium text-zinc-500";
-const detailRowValueClass = "text-sm text-zinc-950";
+const detailRowLabelClass =
+  "shrink-0 text-sm font-medium text-muted-foreground";
+const detailRowValueClass = "text-sm text-foreground";
 
 const getOrderErrorDescription = (error: unknown): string => {
   if (!(error instanceof Error)) {
@@ -470,58 +471,78 @@ const OrderDetailPage = () => {
               <div className="border-t border-stone-200">
                 {order.items.map((item, index) => (
                   <React.Fragment key={item.id}>
-                    <div className="py-5">
-                      <OrderItemCard
-                        item={item}
-                        showQuantity={true}
-                        showPrice={true}
-                        actions={renderClaimButtons(
-                          order.customerActions,
-                          item,
-                          handleClaimRequest,
-                        )}
-                      />
-                    </div>
-                    {(item.type === "custom" || item.type === "sample") && (
-                      <>
-                        <Separator />
-                        <div className="py-5">
-                          <p className="text-base font-semibold tracking-tight text-zinc-950">
-                            {item.type === "sample"
-                              ? "샘플 제작 옵션"
-                              : "주문 제작 옵션"}
-                          </p>
-                          <p className="mt-1 text-sm text-zinc-500">
-                            제작 조건과 참조 이미지를 확인합니다.
-                          </p>
-                          <div className="mt-4">
-                            <CustomOrderOptionsSection
-                              options={
-                                item.type === "sample"
-                                  ? item.sampleData.options
-                                  : item.customData.options
-                              }
-                              referenceImageUrls={
-                                item.type === "sample"
-                                  ? item.sampleData.referenceImageUrls
-                                  : item.customData.referenceImageUrls
-                              }
-                              additionalNotes={
-                                item.type === "sample"
-                                  ? item.sampleData.additionalNotes
-                                  : item.customData.additionalNotes
-                              }
-                              sampleType={
-                                item.type === "sample"
-                                  ? item.sampleData.sampleType
-                                  : null
-                              }
+                    {(() => {
+                      const isSample = item.type === "sample";
+                      const isCustomizableItem =
+                        item.type === "custom" || isSample;
+
+                      if (!isCustomizableItem) {
+                        return (
+                          <>
+                            <div className="py-5">
+                              <OrderItemCard
+                                item={item}
+                                showQuantity={true}
+                                showPrice={true}
+                                actions={renderClaimButtons(
+                                  order.customerActions,
+                                  item,
+                                  handleClaimRequest,
+                                )}
+                              />
+                            </div>
+                            {index < order.items.length - 1 ? (
+                              <Separator />
+                            ) : null}
+                          </>
+                        );
+                      }
+
+                      const orderData = isSample
+                        ? item.sampleData
+                        : item.customData;
+
+                      return (
+                        <>
+                          <div className="py-5">
+                            <OrderItemCard
+                              item={item}
+                              showQuantity={true}
+                              showPrice={true}
+                              actions={renderClaimButtons(
+                                order.customerActions,
+                                item,
+                                handleClaimRequest,
+                              )}
                             />
                           </div>
-                        </div>
-                      </>
-                    )}
-                    {index < order.items.length - 1 ? <Separator /> : null}
+                          <Separator />
+                          <div className="py-5">
+                            <p className="text-base font-semibold tracking-tight text-zinc-950">
+                              {isSample ? "샘플 제작 옵션" : "주문 제작 옵션"}
+                            </p>
+                            <p className="mt-1 text-sm text-zinc-500">
+                              제작 조건과 참조 이미지를 확인합니다.
+                            </p>
+                            <div className="mt-4">
+                              <CustomOrderOptionsSection
+                                options={orderData.options}
+                                referenceImageUrls={
+                                  orderData.referenceImageUrls
+                                }
+                                additionalNotes={orderData.additionalNotes}
+                                sampleType={
+                                  isSample ? item.sampleData.sampleType : null
+                                }
+                              />
+                            </div>
+                          </div>
+                          {index < order.items.length - 1 ? (
+                            <Separator />
+                          ) : null}
+                        </>
+                      );
+                    })()}
                   </React.Fragment>
                 ))}
               </div>

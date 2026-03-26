@@ -121,6 +121,11 @@ export default function InquiryPage() {
   const handleFormSubmit = useCallback(
     (data: InquiryFormData) => {
       if (isEditingInquiry) {
+        if (typeof editingInquiryId !== "string") {
+          toast.error("수정할 문의 정보를 찾을 수 없습니다.");
+          return;
+        }
+
         updateMutation.mutate(
           {
             id: editingInquiryId,

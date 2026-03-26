@@ -22,6 +22,8 @@ export interface Product {
   info: string;
   stock?: number | null;
   optionLabel?: string | null;
+  categoryLabel?: string;
+  materialLabel?: string;
   options?: ProductOption[];
 }
 

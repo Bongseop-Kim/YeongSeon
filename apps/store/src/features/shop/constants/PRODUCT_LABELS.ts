@@ -9,7 +9,7 @@ import type {
  * 카테고리 키-값 매핑
  */
 const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  "3fold": "3FOLD",
+  "3fold": "3 Fold",
   sfolderato: "SFOLDERATO",
   knit: "KNITTED",
   bowtie: "BOW TIE",

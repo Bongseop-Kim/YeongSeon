@@ -2,7 +2,7 @@ const { forbidden } = require("../../.dependency-cruiser.base.cjs");
 
 // packages/supabase는 feature 분리 규칙 불필요 — 순환 의존성과 devDep 혼입만 검사
 const supabaseForbidden = forbidden.filter((rule) =>
-  ["no-circular", "no-dev-deps-in-production"].includes(rule.name)
+  ["no-circular", "no-dev-deps-in-production"].includes(rule.name),
 );
 
 /** @type {import('dependency-cruiser').IConfiguration} */

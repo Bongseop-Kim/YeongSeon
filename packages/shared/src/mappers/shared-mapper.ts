@@ -50,7 +50,21 @@ export const toProductOptionDTO = (
 });
 
 export const toProductDTO = (product: Product): ProductDTO => ({
-  ...product,
+  id: product.id,
+  code: product.code,
+  name: product.name,
+  price: product.price,
+  image: product.image,
+  deleted: product.deleted,
+  detailImages: product.detailImages,
+  category: product.category,
+  color: product.color,
+  pattern: product.pattern,
+  material: product.material,
+  likes: product.likes,
+  isLiked: product.isLiked,
+  info: product.info,
+  stock: product.stock,
   options: product.options?.map(toProductOptionDTO),
 });
 
