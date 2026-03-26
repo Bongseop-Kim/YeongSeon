@@ -188,6 +188,7 @@ export default function QuoteRequestDetailPage() {
                     options={quoteRequest.options}
                     referenceImageUrls={quoteRequest.referenceImageUrls}
                     additionalNotes={quoteRequest.additionalNotes}
+                    hasSample={false}
                   />
                 </UtilityPageSection>
               </div>

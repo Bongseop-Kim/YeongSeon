@@ -52,7 +52,7 @@ export default function InquiryPage() {
     InquiryFormData | undefined
   >(undefined);
   const { isMobile } = useBreakpoint();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { data: inquiries = [], isLoading, error } = useInquiries();
   const createMutation = useCreateInquiry();
@@ -90,12 +90,19 @@ export default function InquiryPage() {
         content: "",
       });
       if (isMobile) {
+        setEditingInquiryId(null);
         setIsSheetOpen(true);
       } else {
         setEditingInquiryId("new");
       }
+
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete("category");
+      nextSearchParams.delete("productId");
+      nextSearchParams.delete("productName");
+      setSearchParams(nextSearchParams, { replace: true });
     }
-  }, [isMobile, searchParams]);
+  }, [isMobile, searchParams, setSearchParams]);
 
   const handleEdit = (id: string) => {
     setEditingInquiryId(id);
@@ -105,10 +112,12 @@ export default function InquiryPage() {
   const handleDelete = (id: string) => {
     confirm("문의를 삭제하시겠습니까?", () => {
       deleteMutation.mutate(id, {
-        onSuccess: () => {
+        onSuccess: (_, deletedInquiryId) => {
           toast.success("문의가 삭제되었습니다.");
-          setEditingInquiryId(null);
-          setIsSheetOpen(false);
+          if (deletedInquiryId === editingInquiryId) {
+            setEditingInquiryId(null);
+            setIsSheetOpen(false);
+          }
         },
         onError: (err) => {
           toast.error(

@@ -33,6 +33,7 @@ interface CustomOrderOptionsSectionProps {
   options?: CustomOrderOptions | null;
   referenceImageUrls?: string[];
   additionalNotes?: string | null;
+  hasSample?: boolean;
   sampleType?: string | null;
 }
 
@@ -43,6 +44,7 @@ export function CustomOrderOptionsSection({
   options,
   referenceImageUrls,
   additionalNotes,
+  hasSample = false,
   sampleType,
 }: CustomOrderOptionsSectionProps) {
   const safeOptions = options ?? {};
@@ -53,9 +55,15 @@ export function CustomOrderOptionsSection({
     Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0;
   const hasAdditionalNotes =
     typeof additionalNotes === "string" && additionalNotes.trim() !== "";
-  const isSampleOrder = sampleType != null;
+  const isSampleOrder = hasSample;
   const hasSampleType =
     typeof sampleType === "string" && sampleType.trim() !== "";
+  const fabricProvidedLabel =
+    safeOptions.fabricProvided === true
+      ? "예"
+      : safeOptions.fabricProvided === false
+        ? "아니오"
+        : "-";
 
   return (
     <div className="space-y-6">
@@ -78,10 +86,7 @@ export function CustomOrderOptionsSection({
         />
         {!isSampleOrder ? (
           <>
-            <DetailRow
-              label="원단 지참"
-              value={safeOptions.fabricProvided === true ? "예" : "아니오"}
-            />
+            <DetailRow label="원단 지참" value={fabricProvidedLabel} />
             <DetailRow
               label="심지 두께"
               value={formatDetailValue(safeOptions.interliningThickness)}

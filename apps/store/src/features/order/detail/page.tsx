@@ -531,6 +531,7 @@ const OrderDetailPage = () => {
                                   orderData.referenceImageUrls
                                 }
                                 additionalNotes={orderData.additionalNotes}
+                                hasSample={isSample}
                                 sampleType={
                                   isSample ? item.sampleData.sampleType : null
                                 }

@@ -123,6 +123,10 @@ const ReformPage = () => {
     return uploadedTies;
   }, [form, uploadTiesIfNeeded]);
 
+  const hasValidPricing =
+    Number.isFinite(pricing?.baseCost) &&
+    Number.isFinite(pricing?.shippingCost);
+
   const withSubmitGuard = useCallback(
     async (action: (baseCost: number) => Promise<void>) => {
       if (isSubmittingRef.current) return;
@@ -140,8 +144,7 @@ const ReformPage = () => {
         isSubmittingRef.current = false;
         return;
       }
-      const baseCost = pricing?.baseCost;
-      if (typeof baseCost !== "number" || Number.isNaN(baseCost)) {
+      if (!hasValidPricing || !pricing) {
         confirm(
           "수선 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
         );
@@ -149,12 +152,19 @@ const ReformPage = () => {
         return;
       }
       try {
-        await action(baseCost);
+        await action(pricing.baseCost);
       } finally {
         isSubmittingRef.current = false;
       }
     },
-    [agreedToRefundPolicy, fields.length, confirm, form, pricing?.baseCost],
+    [
+      agreedToRefundPolicy,
+      fields.length,
+      confirm,
+      form,
+      pricing?.baseCost,
+      pricing?.shippingCost,
+    ],
   );
 
   const handleDirectOrder = () =>
@@ -187,11 +197,12 @@ const ReformPage = () => {
       );
 
       form.reset(DEFAULT_REFORM_OPTIONS);
+      setIsPurchaseSheetOpen(false);
     });
 
-  const hasTies = fields.length > 0;
-  const baseCost = hasTies ? (pricing?.baseCost ?? 0) : 0;
-  const estimatedShipping = hasTies ? (pricing?.shippingCost ?? 0) : 0;
+  const hasTies = fields.length > 0 && hasValidPricing;
+  const baseCost = hasTies && pricing ? pricing.baseCost : 0;
+  const estimatedShipping = hasTies && pricing ? pricing.shippingCost : 0;
   const totalCost = hasTies ? baseCost * fields.length + estimatedShipping : 0;
 
   const selectedTieIndices = useMemo(
@@ -227,7 +238,7 @@ const ReformPage = () => {
     !hasTies ||
     !agreedToRefundPolicy ||
     uploadTieImagesMutation.isPending ||
-    !pricing;
+    !hasValidPricing;
 
   return (
     <>
