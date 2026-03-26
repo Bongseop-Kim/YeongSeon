@@ -2,10 +2,7 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { Form } from "@/components/ui/form";
-import {
-  calculateTotalCost,
-  getEstimatedDays,
-} from "@/features/custom-order/utils/pricing";
+import { calculateTotalCost } from "@/features/custom-order/utils/pricing";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
@@ -23,9 +20,7 @@ import { WIZARD_STEPS } from "@/features/custom-order/constants/WIZARD_STEPS";
 import { PACKAGE_PRESETS } from "@/features/custom-order/constants/PACKAGE_PRESETS";
 import { useWizardStep } from "@/features/custom-order/hooks/useWizardStep";
 import { useCustomOrderSubmit } from "@/features/custom-order/hooks/useCustomOrderSubmit";
-import PaymentWidget, {
-  type PaymentWidgetRef,
-} from "@/components/composite/payment-widget";
+import { type PaymentWidgetRef } from "@/components/composite/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { PageLayout } from "@/components/layout/page-layout";
 import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
@@ -39,8 +34,7 @@ import { SpecStep } from "@/features/custom-order/components/steps/spec-step";
 import { FinishingStep } from "@/features/custom-order/components/steps/finishing-step";
 import { AttachmentStep } from "@/features/custom-order/components/steps/attachment-step";
 import { ConfirmStep } from "@/features/custom-order/components/steps/confirm-step";
-import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
-import { UtilityPageAside } from "@/components/composite/utility-page";
+import { PaymentWidgetAside } from "@/components/composite/payment-widget-aside";
 
 export default function OrderPage() {
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
@@ -143,7 +137,6 @@ export default function OrderPage() {
     consentFlow,
   } = useNotificationConsentFlow(handleSubmit);
 
-  const estimatedDays = getEstimatedDays(watchedValues);
   const isFabricHidden = watchedValues.fabricProvided || watchedValues.reorder;
 
   const goToStepById = (id: WizardStepId) => {
@@ -175,30 +168,22 @@ export default function OrderPage() {
                     isLoggedIn={isLoggedIn}
                   />
                   {shouldRequireCancellationConsent && (
-                    <UtilityPageAside
+                    <PaymentWidgetAside
                       title="결제 수단"
                       description="결제 진행 전 주문제작 취소 및 환불 제한에 동의해야 합니다."
-                      tone="muted"
+                      paymentWidgetRef={paymentWidgetRef}
+                      amount={grandTotal}
+                      customerKey={user.id}
+                      consent={{
+                        id: "cancellation-consent",
+                        checked: cancellationConsent,
+                        onCheckedChange: setCancellationConsent,
+                        label: "취소/환불 불가 동의",
+                        description:
+                          "주문제작(견적요청)은 진행 후 중도 취소 및 환불이 불가능합니다.",
+                      }}
                       className="py-5"
-                    >
-                      <div className="-mx-5">
-                        <PaymentWidget
-                          ref={paymentWidgetRef}
-                          amount={grandTotal}
-                          customerKey={user.id}
-                        />
-                      </div>
-
-                      <ConsentCheckbox
-                        id="cancellation-consent"
-                        checked={cancellationConsent}
-                        onCheckedChange={setCancellationConsent}
-                        label="취소/환불 불가 동의"
-                        description="주문제작(견적요청)은 진행 후 중도 취소 및 환불이 불가능합니다."
-                        required
-                        className="pt-4"
-                      />
-                    </UtilityPageAside>
+                    />
                   )}
                 </>
               }
@@ -218,7 +203,6 @@ export default function OrderPage() {
                   }
                   isQuoteMode={isQuoteMode}
                   grandTotal={grandTotal}
-                  estimatedDays={estimatedDays}
                   isLoggedIn={isLoggedIn}
                   hasAddress={!!selectedAddress}
                 />

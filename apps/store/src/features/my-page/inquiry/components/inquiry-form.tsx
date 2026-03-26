@@ -2,8 +2,9 @@ import { Button } from "@/components/ui-extended/button";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui-extended/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { InputField } from "@/components/composite/input-field";
+import { TextareaField } from "@/components/composite/textarea-field";
+import { FieldError, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Image } from "@imagekit/react";
@@ -112,7 +113,9 @@ export const InquiryForm = ({
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
               Category
             </p>
-            <Label className="mt-2 block">문의 유형</Label>
+            <FieldLabel className="mt-2 block">
+              <FieldTitle>문의 유형</FieldTitle>
+            </FieldLabel>
           </div>
           <Controller
             name="category"
@@ -144,7 +147,9 @@ export const InquiryForm = ({
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
                 Product
               </p>
-              <Label className="mt-2 block">상품 선택</Label>
+              <FieldLabel className="mt-2 block">
+                <FieldTitle>상품 선택</FieldTitle>
+              </FieldLabel>
               <p className="mt-1 text-sm text-zinc-500">
                 상품 문의일 경우 정확한 상품을 선택해 주세요.
               </p>
@@ -212,43 +217,22 @@ export const InquiryForm = ({
                   category !== "상품" || !!val || "상품을 선택해주세요.",
               }}
               render={({ fieldState }) => (
-                <>
-                  {fieldState.error ? (
-                    <p className="text-sm text-red-500">
-                      {fieldState.error.message}
-                    </p>
-                  ) : null}
-                </>
+                <FieldError errors={[fieldState.error]} />
               )}
             />
           </div>
         )}
 
         <div className="space-y-3 border-t border-stone-200 pt-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-              Subject
-            </p>
-            <Label className="mt-2 block">제목</Label>
-          </div>
-          <Controller
-            name="title"
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+            Subject
+          </p>
+          <InputField
             control={form.control}
+            name="title"
+            label="제목"
+            placeholder="제목을 입력해주세요."
             rules={{ required: "제목을 입력해주세요." }}
-            render={({ field, fieldState }) => (
-              <>
-                <Input
-                  placeholder="제목을 입력해주세요."
-                  {...field}
-                  className="w-full"
-                />
-                {fieldState.error && (
-                  <p className="text-sm text-red-500">
-                    {fieldState.error.message}
-                  </p>
-                )}
-              </>
-            )}
           />
         </div>
 
@@ -257,29 +241,17 @@ export const InquiryForm = ({
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
               Message
             </p>
-            <Label className="mt-2 block">문의 내용</Label>
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-zinc-500">
               주문 정보나 원하는 처리 내용을 구체적으로 적어 주세요.
             </p>
           </div>
-          <Controller
-            name="content"
+          <TextareaField
             control={form.control}
+            name="content"
+            label="문의 내용"
+            placeholder="문의 내용을 입력해주세요."
+            textareaClassName="min-h-[220px] resize-none"
             rules={{ required: "문의 내용을 입력해주세요." }}
-            render={({ field, fieldState }) => (
-              <>
-                <Textarea
-                  placeholder="문의 내용을 입력해주세요."
-                  className="min-h-[220px] resize-none"
-                  {...field}
-                />
-                {fieldState.error && (
-                  <p className="text-sm text-red-500">
-                    {fieldState.error.message}
-                  </p>
-                )}
-              </>
-            )}
           />
         </div>
 

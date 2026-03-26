@@ -316,14 +316,11 @@ export const normalizeItemRow = (item: NullableItemRow): OrderItemDTO => {
   }
 
   if (item.type === "sample") {
-    if (!item.sampleData) {
-      throw new Error("샘플 주문 데이터가 올바르지 않습니다.");
-    }
     return {
       id: item.id,
       type: "sample",
       quantity: item.quantity,
-      sampleData: item.sampleData,
+      sampleData: item.sampleData ?? null,
       appliedCoupon: item.appliedCoupon ?? undefined,
     };
   }

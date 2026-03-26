@@ -19,6 +19,7 @@ export const getOrderItemDetails = (item: OrderItem): string => {
   }
 
   if (item.type === "sample") {
+    if (!item.sampleData) return "샘플 제작";
     const parts: string[] = [item.sampleData.sampleType];
     if (item.sampleData.options.fabricType) {
       parts.push(item.sampleData.options.fabricType);

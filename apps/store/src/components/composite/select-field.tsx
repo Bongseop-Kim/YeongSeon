@@ -1,10 +1,10 @@
+import { useId } from "react";
 import {
   Controller,
   type Control,
   type FieldValues,
   type Path,
 } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,6 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui-extended/select";
+import {
+  Field,
+  FieldContent,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 
 interface SelectOption {
   value: string;
@@ -33,30 +39,36 @@ export const SelectField = <T extends FieldValues>({
   options,
   placeholder = "선택하세요",
 }: SelectFieldProps<T>) => {
+  const id = useId();
+
   return (
-    <div className="space-y-1">
-      <Label>{label}</Label>
-      <Controller
-        name={name}
-        control={control}
-        render={({ field }) => (
-          <Select
-            value={(field.value as string) || ""}
-            onValueChange={field.onChange}
-          >
-            <SelectTrigger className="w-full bg-white">
-              <SelectValue placeholder={placeholder} />
-            </SelectTrigger>
-            <SelectContent className="bg-white">
-              {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      />
-    </div>
+    <Field orientation="vertical">
+      <FieldLabel htmlFor={id}>
+        <FieldTitle>{label}</FieldTitle>
+      </FieldLabel>
+      <FieldContent>
+        <Controller
+          name={name}
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={(field.value as string) || ""}
+              onValueChange={field.onChange}
+            >
+              <SelectTrigger id={id} className="w-full bg-white">
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                {options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </FieldContent>
+    </Field>
   );
 };

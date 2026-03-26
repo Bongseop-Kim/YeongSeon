@@ -1,7 +1,13 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui-extended/button";
-import { Label } from "@/components/ui/label";
 import { Upload, X, Loader2, ImageOff } from "lucide-react";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 
 interface ImageUploadProps {
@@ -28,11 +34,12 @@ export const ImageUpload = ({
   };
 
   return (
-    <div>
-      <Label className="mb-2 block text-sm font-semibold text-zinc-900">
-        참고 이미지
-      </Label>
-      <div className="space-y-3">
+    <Field orientation="vertical">
+      <FieldLabel>
+        <FieldTitle>참고 이미지</FieldTitle>
+      </FieldLabel>
+      <FieldDescription>PNG, JPG, GIF 파일 지원</FieldDescription>
+      <FieldContent className="space-y-3">
         <div className="rounded-lg border-2 border-dashed border-zinc-300 bg-white p-5 text-center transition-colors">
           <input
             ref={inputRef}
@@ -42,7 +49,7 @@ export const ImageUpload = ({
             onChange={handleChange}
             className="sr-only"
           />
-          <Label
+          <label
             htmlFor="file-upload"
             className="cursor-pointer flex flex-col items-center gap-2"
           >
@@ -57,12 +64,9 @@ export const ImageUpload = ({
                 <span className="text-sm text-zinc-600">
                   이미지를 업로드하세요
                 </span>
-                <span className="text-xs text-zinc-500">
-                  PNG, JPG, GIF 파일 지원
-                </span>
               </>
             )}
-          </Label>
+          </label>
         </div>
 
         {uploadedImages.length > 0 && (
@@ -101,7 +105,7 @@ export const ImageUpload = ({
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </FieldContent>
+    </Field>
   );
 };

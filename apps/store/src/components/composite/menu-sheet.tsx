@@ -1,6 +1,7 @@
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui-extended/sheet";
 import { Menu } from "lucide-react";
@@ -42,6 +43,7 @@ export default function MenuSheet() {
         </button>
       </SheetTrigger>
       <SheetContent className="bg-zinc-900 pt-10">
+        <SheetTitle className="sr-only">메뉴</SheetTitle>
         <nav className="space-y-4 flex flex-col">
           {NAVIGATION_ITEMS.map((item) => (
             <div key={item.href} onClick={() => setIsSheetOpen(false)}>

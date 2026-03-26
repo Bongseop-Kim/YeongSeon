@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { motion } from "motion/react";
 import { FilterSheet } from "./components/filter-sheet";
 import { FilterButtons } from "./components/filter-buttons";
 import { FilterContent } from "./components/filter-content";
@@ -171,12 +170,7 @@ export default function ShopPage() {
       <MainContent>
         <PageLayout>
           <div className="pb-16">
-            <motion.section
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="border-b border-zinc-200 pb-8 pt-8 lg:pb-10 lg:pt-10"
-            >
+            <section className="border-b border-zinc-200 pb-8 pt-8 lg:pb-10 lg:pt-10">
               <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
                 <div className="max-w-2xl">
                   <p className="text-[11px] uppercase tracking-[0.35em] text-zinc-500">
@@ -217,13 +211,7 @@ export default function ShopPage() {
               </div>
 
               {selectedFilterLabels.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.22 }}
-                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  className="mt-6 flex flex-wrap items-center gap-2"
-                >
+                <div className="mt-6 flex flex-wrap items-center gap-2">
                   {selectedFilterLabels.map((label) => (
                     <Badge
                       key={label}
@@ -233,9 +221,9 @@ export default function ShopPage() {
                       {label}
                     </Badge>
                   ))}
-                </motion.div>
+                </div>
               ) : null}
-            </motion.section>
+            </section>
 
             <section className="sticky top-0 z-30 border-b border-zinc-200 bg-background/92 backdrop-blur">
               <div className="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
@@ -276,15 +264,9 @@ export default function ShopPage() {
               </div>
             </section>
 
-            <motion.section
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.22 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="pt-8 lg:pt-10"
-            >
+            <section className="pt-8 lg:pt-10">
               <ProductGrid products={productList} isLoading={isLoading} />
-            </motion.section>
+            </section>
           </div>
         </PageLayout>
       </MainContent>

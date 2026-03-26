@@ -38,7 +38,7 @@ export function ChatHeader({
   const { isDesktop } = useBreakpoint();
 
   return (
-    <div className="flex items-center justify-between border-b px-4 py-3">
+    <div className="flex h-15 items-center justify-between border-b px-4">
       <div className="flex items-center gap-3">
         <div className="flex size-8 items-center justify-center rounded-full bg-gray-900">
           <Sparkles className="size-4 text-white" />

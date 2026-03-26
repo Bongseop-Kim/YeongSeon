@@ -40,7 +40,7 @@ export function CartItemsPanel({
     <div className="space-y-0" data-testid="cart-items-panel">
       {items.map((item, index) => (
         <React.Fragment key={item.id}>
-          <div className="flex gap-3 p-4" data-testid={`cart-item-${item.id}`}>
+          <div className="flex gap-3 py-5" data-testid={`cart-item-${item.id}`}>
             <Checkbox
               checked={selectedItems.includes(item.id)}
               onCheckedChange={(checked) =>

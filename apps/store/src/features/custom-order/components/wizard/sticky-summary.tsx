@@ -45,7 +45,7 @@ export const StickySummary = ({
       title="주문 요약"
       description="현재 선택한 사양을 기준으로 제작 방식과 예상 비용을 확인합니다."
       tone="muted"
-      className="overflow-hidden"
+      className="rounded-2xl"
     >
       <dl>
         <UtilityKeyValueRow label="원단" value={fabricLabel} />

@@ -1,41 +1,19 @@
 import * as React from "react";
-import * as LabelPrimitive from "@radix-ui/react-label";
+import { Label as LabelPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
-interface LabelProps extends React.ComponentProps<typeof LabelPrimitive.Root> {
-  subLabel?: string | React.ReactNode;
-}
-
-const baseClassName =
-  "flex text-zinc-900 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50";
-
-function Label({ className, subLabel, ...props }: LabelProps) {
-  const labelId = React.useId();
-
-  if (subLabel) {
-    return (
-      <div className="space-y-1">
-        <LabelPrimitive.Root
-          data-slot="label"
-          className={cn(baseClassName, className)}
-          {...props}
-        />
-        <p
-          className="text-xs text-zinc-500 mt-1"
-          id={`${labelId}-sublabel`}
-          aria-describedby={props.htmlFor}
-        >
-          {subLabel}
-        </p>
-      </div>
-    );
-  }
-
+function Label({
+  className,
+  ...props
+}: React.ComponentProps<typeof LabelPrimitive.Root>) {
   return (
     <LabelPrimitive.Root
       data-slot="label"
-      className={cn(baseClassName, className)}
+      className={cn(
+        "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+        className,
+      )}
       {...props}
     />
   );

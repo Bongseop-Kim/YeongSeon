@@ -54,6 +54,14 @@ supabase functions deploy --use-api   # 전체 배포
 
 - 커밋은 항상 사용자가 직접 한다. AI가 임의로 `git commit`을 실행하지 않는다. 명시적으로 커밋을 요청받은 경우에만 실행한다.
 
+## Store 앱 스타일 규칙
+
+- `apps/store/src/index.css`는 Tailwind CSS 테마 변수, 커스텀 유틸리티, 전역 스타일의 단일 소스 오브 트루스다.
+- 새 CSS 변수(색상, 간격, 반지름 등)가 필요하면 인라인 스타일이나 별도 파일 대신 `index.css`의 `:root` 블록과 `@theme inline` 블록에 추가한다.
+- 컴포넌트에서 색상·간격·폰트·반지름을 지정할 때 Tailwind 유틸리티 클래스(`bg-brand-ink`, `text-foreground-muted` 등)를 우선 사용한다. `index.css`에 정의된 변수에 매핑된 클래스가 없으면 먼저 `@theme inline`에 추가한다.
+- 새 애니메이션(`@keyframes`)이나 커스텀 유틸리티가 여러 컴포넌트에서 재사용된다면 컴포넌트 내 인라인 스타일 대신 `index.css`에 추가한다.
+- 다크 모드 색상 오버라이드는 `index.css`의 `.dark` 블록에서만 관리한다.
+
 ## 프론트엔드 규칙
 
 - API 파일(`*-api.ts`)은 얇게 유지하고, 매핑은 `*-mapper.ts`로 분리한다.

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { Button } from "@/components/ui-extended/button";
 import { Separator } from "@/components/ui/separator";
+import { PaymentActionBar } from "@/components/composite/payment-action-bar";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { OrderFormItemCard } from "@/features/order/order-form/components/order-form-item-card";
@@ -18,19 +19,18 @@ import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-t
 import { useAuthStore } from "@/store/auth";
 import { createOrder } from "@/features/order/api/order-api";
 import { useReformPricing } from "@/features/reform/api/reform-query";
-import PaymentWidget, {
-  type PaymentWidgetRef,
-} from "@/components/composite/payment-widget";
+import { type PaymentWidgetRef } from "@/components/composite/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
 import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
 import {
-  UtilityKeyValueRow,
   UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/components/composite/utility-page";
+import { OrderPriceSummaryAside } from "@/components/composite/order-price-summary-aside";
 import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
+import { PaymentWidgetAside } from "@/components/composite/payment-widget-aside";
 
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
@@ -178,60 +178,25 @@ const OrderFormPage = () => {
             contentClassName="py-4 lg:py-8"
             sidebarClassName="px-4 lg:px-0"
             sidebar={
-              <div className="space-y-5">
-                <UtilityPageAside
+              <div className="space-y-4">
+                <OrderPriceSummaryAside
                   title="결제 금액"
                   description="주문서에 반영된 할인과 배송비를 포함한 예상 결제 금액입니다."
-                  tone="muted"
-                  className="rounded-2xl"
-                >
-                  <UtilityKeyValueRow
-                    label="상품 금액"
-                    value={`${totals.originalPrice.toLocaleString()}원`}
-                  />
-                  {totals.totalDiscount > 0 ? (
-                    <UtilityKeyValueRow
-                      label="할인 금액"
-                      value={
-                        <span className="text-red-500">
-                          -{totals.totalDiscount.toLocaleString()}원
-                        </span>
-                      }
-                    />
-                  ) : null}
-                  <UtilityKeyValueRow
-                    label="배송비"
-                    value={
-                      totals.shippingCost > 0
-                        ? `${totals.shippingCost.toLocaleString()}원`
-                        : "무료"
-                    }
-                  />
-                  <UtilityKeyValueRow
-                    className="pt-5"
-                    label="총 결제 금액"
-                    value={
-                      <span className="text-base font-semibold tracking-tight text-blue-600">
-                        {totals.totalPrice.toLocaleString()}원
-                      </span>
-                    }
-                  />
-                </UtilityPageAside>
+                  originalPrice={totals.originalPrice}
+                  totalDiscount={totals.totalDiscount}
+                  shippingCost={totals.shippingCost}
+                  totalPrice={totals.totalPrice}
+                  totalClassName="text-blue-600"
+                />
                 {user && isPricingReady && (
-                  <UtilityPageAside
+                  <PaymentWidgetAside
                     title="결제 수단"
                     description="결제 방식과 약관 동의를 확인합니다."
-                    tone="muted"
+                    paymentWidgetRef={paymentWidgetRef}
+                    amount={totals.totalPrice}
+                    customerKey={user.id}
                     className="rounded-2xl"
-                  >
-                    <div className="-mx-4 lg:-mx-5">
-                      <PaymentWidget
-                        ref={paymentWidgetRef}
-                        amount={totals.totalPrice}
-                        customerKey={user.id}
-                      />
-                    </div>
-                  </UtilityPageAside>
+                  />
                 )}
                 {hasReformItems && (
                   <UtilityPageAside
@@ -253,32 +218,25 @@ const OrderFormPage = () => {
               </div>
             }
             actionBar={
-              <div className="space-y-2">
-                <Button
-                  onClick={handleRequestPayment}
-                  className="w-full"
-                  size="xl"
-                  data-testid="order-submit-button"
-                  disabled={
-                    !user ||
-                    !selectedAddress ||
-                    isPaymentLoading ||
-                    !isPricingReady ||
-                    (hasReformItems && !cancellationConsent)
-                  }
-                >
-                  {isPaymentLoading
-                    ? "결제 요청 중..."
-                    : !isPricingReady
-                      ? "가격 로딩 중..."
-                      : `${totals.totalPrice.toLocaleString()}원 결제하기`}
-                </Button>
-                {!selectedAddress && (
-                  <p className="text-sm text-center text-zinc-500">
-                    배송지를 추가하면 주문을 진행할 수 있어요
-                  </p>
-                )}
-              </div>
+              <PaymentActionBar
+                amount={totals.totalPrice}
+                onClick={handleRequestPayment}
+                isLoading={isPaymentLoading}
+                isPriceReady={isPricingReady}
+                disabled={
+                  !user ||
+                  !selectedAddress ||
+                  (hasReformItems && !cancellationConsent)
+                }
+                data-testid="order-submit-button"
+                helperText={
+                  !selectedAddress ? (
+                    <p className="text-sm text-center text-zinc-500">
+                      배송지를 추가하면 주문을 진행할 수 있어요
+                    </p>
+                  ) : null
+                }
+              />
             }
           >
             <div className="space-y-8">

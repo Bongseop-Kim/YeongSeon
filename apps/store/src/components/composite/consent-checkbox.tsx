@@ -1,5 +1,11 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
 interface ConsentCheckboxProps {
@@ -22,16 +28,24 @@ export const ConsentCheckbox = ({
   className,
 }: ConsentCheckboxProps) => {
   return (
-    <div className={cn("flex gap-2 items-start", className)}>
+    <Field
+      orientation="horizontal"
+      className={cn("gap-2 items-start", className)}
+    >
       <Checkbox
         id={id}
         checked={checked}
         onCheckedChange={(nextChecked) => onCheckedChange(nextChecked === true)}
         className="mt-1"
       />
-      <Label htmlFor={id} subLabel={description}>
-        {required ? `[필수] ${label}` : label}
-      </Label>
-    </div>
+      <FieldContent className="gap-1">
+        <FieldLabel htmlFor={id}>
+          <FieldTitle>{required ? `[필수] ${label}` : label}</FieldTitle>
+        </FieldLabel>
+        {description ? (
+          <FieldDescription className="mt-0">{description}</FieldDescription>
+        ) : null}
+      </FieldContent>
+    </Field>
   );
 };

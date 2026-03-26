@@ -80,7 +80,7 @@ export const QuantityStep = ({
         </div>
       </section>
 
-      <section className="border-t border-stone-200 pt-8">
+      <section>
         <div className="max-w-2xl">
           <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
             수량 선택

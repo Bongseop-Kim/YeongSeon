@@ -2,15 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Check, ChevronLeft } from "lucide-react";
 import { ROUTES } from "@/constants/ROUTES";
-import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui-extended/button";
-import PaymentWidget, {
-  type PaymentWidgetRef,
-} from "@/components/composite/payment-widget";
+import { type PaymentWidgetRef } from "@/components/composite/payment-widget";
+import { UtilityPageIntro } from "@/components/composite/utility-page";
+import { OrderSummaryAside } from "@/components/composite/order-summary-aside";
+import { PaymentActionBar } from "@/components/composite/payment-action-bar";
+import { PaymentWidgetAside } from "@/components/composite/payment-widget-aside";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
 import { hasStringCode } from "@/lib/type-guard";
@@ -155,68 +154,59 @@ const TokenPaymentPage = ({
     <MainLayout>
       <MainContent className="overflow-visible bg-zinc-50">
         <PageLayout
-          contentClassName="pt-6"
+          contentClassName="space-y-8"
+          sidebarClassName="space-y-4 pt-6"
           sidebar={
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">결제 금액</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">패키지</span>
-                    <span className="font-medium text-zinc-900">{label}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">토큰</span>
-                    <span className="font-medium text-zinc-900">
-                      {tokenAmount.toLocaleString()}개
-                    </span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-semibold">
-                    <span>합계</span>
-                    <span>{price.toLocaleString()}원</span>
-                  </div>
-                </CardContent>
-              </Card>
+            <>
+              <OrderSummaryAside
+                title="결제 금액"
+                rows={[
+                  { label: "패키지", value: label },
+                  { label: "토큰", value: `${tokenAmount.toLocaleString()}개` },
+                  {
+                    label: "합계",
+                    value: (
+                      <span className="text-base font-semibold tracking-tight">
+                        {price.toLocaleString()}원
+                      </span>
+                    ),
+                    className: "pt-5",
+                  },
+                ]}
+              />
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">결제 수단</CardTitle>
-                </CardHeader>
-                <CardContent className="px-0">
-                  <PaymentWidget
-                    ref={paymentWidgetRef}
-                    amount={price}
-                    customerKey={user.id}
-                  />
-                  <ConsentCheckbox
-                    id="withdrawal-consent"
-                    checked={withdrawalConsent}
-                    onCheckedChange={setWithdrawalConsent}
-                    label="청약철회 제한 동의"
-                    description="토큰은 구매 즉시 사용 가능한 디지털 이용권으로, 이미지 생성에 사용한 후에는 환불되지 않습니다."
-                    required
-                    className="px-6 pb-6"
-                  />
-                </CardContent>
-              </Card>
-            </div>
+              <PaymentWidgetAside
+                title="결제 수단"
+                paymentWidgetRef={paymentWidgetRef}
+                amount={price}
+                customerKey={user.id}
+                consent={{
+                  id: "withdrawal-consent",
+                  checked: withdrawalConsent,
+                  onCheckedChange: setWithdrawalConsent,
+                  label: "청약철회 제한 동의",
+                  description:
+                    "토큰은 구매 즉시 사용 가능한 디지털 이용권으로, 이미지 생성에 사용한 후에는 환불되지 않습니다.",
+                }}
+                className="rounded-2xl"
+              />
+            </>
           }
           actionBar={
-            <Button
+            <PaymentActionBar
+              amount={price}
               onClick={onRequestPayment}
-              className="w-full"
-              size="xl"
-              disabled={isPaymentLoading || !withdrawalConsent}
-            >
-              {isPaymentLoading
-                ? "결제 요청 중..."
-                : `${price.toLocaleString()}원 결제하기`}
-            </Button>
+              isLoading={isPaymentLoading}
+              disabled={!withdrawalConsent}
+            />
           }
         >
+          <UtilityPageIntro
+            eyebrow="Token"
+            title="토큰 결제"
+            description="선택한 토큰 패키지를 확인하고 결제를 진행합니다."
+          />
+
           <div className="rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
             <div className="bg-zinc-900 px-6 py-6 text-white">
               <div className="flex items-start justify-between">

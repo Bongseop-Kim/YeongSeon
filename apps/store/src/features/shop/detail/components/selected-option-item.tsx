@@ -19,7 +19,7 @@ export function SelectedOptionItem({
   showCloseButton = true,
 }: SelectedOptionItemProps) {
   return (
-    <div className="relative flex justify-between items-start gap-4 p-3 border rounded-sm bg-zinc-100">
+    <div className="relative flex justify-between items-start gap-4 py-3">
       <div className="flex flex-col gap-2 flex-1">
         <p className="text-sm font-semibold">{item.option.name}</p>
         <QuantitySelector

@@ -95,7 +95,7 @@ export interface SampleOrderItem {
     };
     referenceImageUrls: string[];
     additionalNotes: string | null;
-  };
+  } | null;
   appliedCoupon?: AppliedCoupon;
 }
 

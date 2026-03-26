@@ -22,7 +22,9 @@ export const getOrderItemPricing = (item: OrderItem) => {
       item.quantity > 0 ? item.customData.pricing.totalCost / item.quantity : 0;
   } else if (item.type === "sample") {
     unitPrice =
-      item.quantity > 0 ? item.sampleData.pricing.totalCost / item.quantity : 0;
+      item.sampleData && item.quantity > 0
+        ? item.sampleData.pricing.totalCost / item.quantity
+        : 0;
   } else if (item.type === "reform") {
     unitPrice = item.reformData.cost;
   } else if (item.type === "token") {

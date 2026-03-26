@@ -6,6 +6,7 @@ interface ModalState {
   description?: string;
   confirmText: string;
   cancelText: string;
+  hideCancelButton: boolean;
   confirmVariant:
     | "default"
     | "destructive"
@@ -23,6 +24,7 @@ interface ModalStore extends ModalState {
     description?: string;
     confirmText?: string;
     cancelText?: string;
+    hideCancelButton?: boolean;
     confirmVariant?:
       | "default"
       | "destructive"
@@ -39,6 +41,7 @@ interface ModalStore extends ModalState {
     onConfirm?: () => void,
     options?: { confirmText?: string; cancelText?: string },
   ) => void;
+  alert: (message: string) => void;
 }
 
 export const useModalStore = create<ModalStore>((set, get) => ({
@@ -47,6 +50,7 @@ export const useModalStore = create<ModalStore>((set, get) => ({
   description: "",
   confirmText: "확인",
   cancelText: "취소",
+  hideCancelButton: false,
   confirmVariant: "default",
   onConfirm: undefined,
   onCancel: undefined,
@@ -58,6 +62,7 @@ export const useModalStore = create<ModalStore>((set, get) => ({
       description: config.description,
       confirmText: config.confirmText || "확인",
       cancelText: config.cancelText || "취소",
+      hideCancelButton: config.hideCancelButton ?? false,
       confirmVariant: config.confirmVariant || "default",
       onConfirm: config.onConfirm,
       onCancel: config.onCancel,
@@ -71,6 +76,7 @@ export const useModalStore = create<ModalStore>((set, get) => ({
       description: "",
       confirmText: "확인",
       cancelText: "취소",
+      hideCancelButton: false,
       confirmVariant: "default",
       onConfirm: undefined,
       onCancel: undefined,
@@ -84,6 +90,15 @@ export const useModalStore = create<ModalStore>((set, get) => ({
       confirmText: options?.confirmText || "확인",
       cancelText: options?.cancelText || "취소",
       onConfirm,
+    });
+  },
+
+  alert: (message) => {
+    get().openModal({
+      title: "알림",
+      description: message,
+      confirmText: "확인",
+      hideCancelButton: true,
     });
   },
 }));
