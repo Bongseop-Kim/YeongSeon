@@ -41,6 +41,7 @@ const sectionMotion = {
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.35, ease: "easeOut" as const },
 };
+const MAX_INQUIRY_CARD_DELAY = 0.72;
 
 export default function InquiryPage() {
   const { confirm } = useModalStore();
@@ -120,12 +121,7 @@ export default function InquiryPage() {
 
   const handleFormSubmit = useCallback(
     (data: InquiryFormData) => {
-      if (isEditingInquiry) {
-        if (typeof editingInquiryId !== "string") {
-          toast.error("수정할 문의 정보를 찾을 수 없습니다.");
-          return;
-        }
-
+      if (isEditingInquiry && editingInquiryId) {
         updateMutation.mutate(
           {
             id: editingInquiryId,
@@ -214,10 +210,15 @@ export default function InquiryPage() {
     ).length;
     const answeredCount = inquiries.length - pendingCount;
     const latestAnsweredInquiry = inquiries
-      .filter((item) => item.answerDate)
-      .reduce<(typeof inquiries)[number] | undefined>((latest, item) => {
-        if (!latest?.answerDate) return item;
-        return new Date(item.answerDate ?? "").getTime() >
+      .filter(
+        (item): item is (typeof inquiries)[number] & { answerDate: string } =>
+          typeof item.answerDate === "string",
+      )
+      .reduce<
+        ((typeof inquiries)[number] & { answerDate: string }) | undefined
+      >((latest, item) => {
+        if (!latest) return item;
+        return new Date(item.answerDate).getTime() >
           new Date(latest.answerDate).getTime()
           ? item
           : latest;
@@ -378,7 +379,7 @@ export default function InquiryPage() {
                         transition={{
                           duration: 0.28,
                           ease: "easeOut",
-                          delay: index * 0.03,
+                          delay: Math.min(index * 0.03, MAX_INQUIRY_CARD_DELAY),
                         }}
                       >
                         <InquiryCard

@@ -189,10 +189,10 @@ const ReformPage = () => {
       form.reset(DEFAULT_REFORM_OPTIONS);
     });
 
-  const totalCost =
-    fields.length === 0
-      ? 0
-      : (pricing?.baseCost ?? 0) * fields.length + (pricing?.shippingCost ?? 0);
+  const hasTies = fields.length > 0;
+  const baseCost = hasTies ? (pricing?.baseCost ?? 0) : 0;
+  const estimatedShipping = hasTies ? (pricing?.shippingCost ?? 0) : 0;
+  const totalCost = hasTies ? baseCost * fields.length + estimatedShipping : 0;
 
   const selectedTieIndices = useMemo(
     () =>
@@ -224,7 +224,10 @@ const ReformPage = () => {
   const isSomeChecked = watchedTies.some((tie) => tie.checked);
   const isIndeterminate = isSomeChecked && !isAllChecked;
   const isActionDisabled =
-    !agreedToRefundPolicy || uploadTieImagesMutation.isPending || !pricing;
+    !hasTies ||
+    !agreedToRefundPolicy ||
+    uploadTieImagesMutation.isPending ||
+    !pricing;
 
   return (
     <>
@@ -247,11 +250,11 @@ const ReformPage = () => {
                       />
                       <UtilityKeyValueRow
                         label="기본 수선비"
-                        value={`${(pricing?.baseCost ?? 0).toLocaleString()}원 / 개`}
+                        value={`${baseCost.toLocaleString()}원 / 개`}
                       />
                       <UtilityKeyValueRow
                         label="예상 배송비"
-                        value={`${(pricing?.shippingCost ?? 0).toLocaleString()}원`}
+                        value={`${estimatedShipping.toLocaleString()}원`}
                       />
                       <UtilityKeyValueRow
                         label="예상 결제"

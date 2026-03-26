@@ -346,13 +346,12 @@ const OrderDetailPage = () => {
   );
   const isRepairShippingPending =
     order.orderType === "repair" && order.status === "발송대기";
-  const isRepairInTransit =
+  const isRepairWithTracking =
     order.orderType === "repair" &&
-    order.status === "발송중" &&
     !!order.trackingInfo?.courierCompany &&
     !!order.trackingInfo?.trackingNumber;
   const showTaskSection =
-    canConfirmPurchase || isRepairShippingPending || isRepairInTransit;
+    canConfirmPurchase || isRepairShippingPending || isRepairWithTracking;
 
   return (
     <MainLayout>
@@ -398,7 +397,7 @@ const OrderDetailPage = () => {
                       <RepairShippingPendingSection orderId={order.id} />
                     ) : null}
 
-                    {isRepairInTransit && order.trackingInfo ? (
+                    {isRepairWithTracking && order.trackingInfo ? (
                       <RepairShippingInTransitSection
                         courierCompany={order.trackingInfo.courierCompany}
                         trackingNumber={order.trackingInfo.trackingNumber}
@@ -453,7 +452,8 @@ const OrderDetailPage = () => {
               </UtilityPageSection>
             ) : null}
 
-            {order.trackingInfo && order.orderType !== "repair" ? (
+            {order.trackingInfo &&
+            (order.orderType !== "repair" || isRepairWithTracking) ? (
               <UtilityPageSection
                 title="배송 추적"
                 description="출고 이후 배송 흐름을 확인합니다."

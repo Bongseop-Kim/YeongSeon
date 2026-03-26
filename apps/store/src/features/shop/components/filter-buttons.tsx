@@ -10,13 +10,18 @@ interface FilterButtonsProps {
   activeCounts?: Partial<Record<FilterTab, number>>;
 }
 
-const TABS: Array<{ key: FilterTab; label: string }> = [
-  { key: "category", label: "카테고리" },
-  { key: "price", label: "가격" },
-  { key: "color", label: "색상" },
-  { key: "pattern", label: "패턴" },
-  { key: "material", label: "소재" },
-];
+const LABELS: Record<FilterTab, string> = {
+  category: "카테고리",
+  price: "가격",
+  color: "색상",
+  pattern: "패턴",
+  material: "소재",
+};
+
+const TABS = (Object.keys(LABELS) as FilterTab[]).map((key) => ({
+  key,
+  label: LABELS[key],
+}));
 
 export const FilterButtons = ({
   onFilterClick,
