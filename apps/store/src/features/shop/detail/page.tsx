@@ -32,7 +32,7 @@ import {
   getColorLabel,
   getMaterialLabel,
   getPatternLabel,
-} from "@/features/shop/constants/PRODUCT_LABELS";
+} from "@/lib/product/product-labels";
 import { DataTable } from "@/components/ui/data-table";
 import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
 import { ProductCard } from "@/components/composite/product-card";

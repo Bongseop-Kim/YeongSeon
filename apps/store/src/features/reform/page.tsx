@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import TieItemCard from "./components/tie-item-card";
+import TieItemCard from "@/features/reform/components/tie-item-card";
 import BulkApplySection, {
   type BulkApplySectionRef,
 } from "@/components/composite/bulk-apply-section";
@@ -42,7 +42,10 @@ import {
   UtilityPageIntro,
 } from "@/components/composite/utility-page";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { toReformCartItems, toReformData } from "./api/reform-mapper";
+import {
+  toReformCartItems,
+  toReformData,
+} from "@/features/reform/api/reform-mapper";
 import { useReformPricing, useUploadTieImages } from "./api/reform-query";
 
 const DEFAULT_TIE_ITEM = {
@@ -162,8 +165,8 @@ const ReformPage = () => {
       fields.length,
       confirm,
       form,
-      pricing?.baseCost,
-      pricing?.shippingCost,
+      hasValidPricing,
+      pricing,
     ],
   );
 

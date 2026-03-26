@@ -2,7 +2,7 @@ import type { Product } from "@yeongseon/shared/types/view/product";
 import {
   getCategoryLabel,
   getMaterialLabel,
-} from "@/features/shop/constants/PRODUCT_LABELS";
+} from "@/lib/product/product-labels";
 
 export const enrichProductForStore = (product: Product): Product => {
   return {

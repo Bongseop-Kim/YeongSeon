@@ -218,20 +218,19 @@ export default function InquiryPage() {
       (item) => item.status === "답변대기",
     ).length;
     const answeredCount = inquiries.length - pendingCount;
-    const latestAnsweredInquiry = inquiries
-      .filter(
-        (item): item is (typeof inquiries)[number] & { answerDate: string } =>
-          typeof item.answerDate === "string",
-      )
-      .reduce<
-        ((typeof inquiries)[number] & { answerDate: string }) | undefined
-      >((latest, item) => {
-        if (!latest) return item;
-        return new Date(item.answerDate).getTime() >
+    type AnsweredInquiry = (typeof inquiries)[number] & { answerDate: string };
+    const latestAnsweredInquiry = inquiries.reduce<AnsweredInquiry | undefined>(
+      (latest, item) => {
+        if (typeof item.answerDate !== "string") return latest;
+        const answeredItem = item as AnsweredInquiry;
+        if (!latest) return answeredItem;
+        return new Date(answeredItem.answerDate).getTime() >
           new Date(latest.answerDate).getTime()
-          ? item
+          ? answeredItem
           : latest;
-      }, undefined);
+      },
+      undefined,
+    );
     return [
       { label: "전체", value: `${inquiries.length}건` },
       { label: "답변 대기", value: `${pendingCount}건` },
@@ -298,7 +297,7 @@ export default function InquiryPage() {
       <MainContent>
         <PageLayout
           sidebar={
-            !isMobile && isDesktopComposerOpen ? (
+            isDesktopComposerOpen ? (
               <motion.div
                 initial={{ opacity: 0, x: 18 }}
                 animate={{ opacity: 1, x: 0 }}
