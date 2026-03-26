@@ -124,6 +124,60 @@ const serializeSampleOrderInput = (input: CreateSampleOrderFormInput): string =>
     additionalNotes: input.additionalNotes.trim(),
   });
 
+const getPaymentState = ({
+  user,
+  selectedAddress,
+  samplePrice,
+  isPricingError,
+  cancellationConsent,
+}: {
+  user: ReturnType<typeof useAuthStore.getState>["user"];
+  selectedAddress: ReturnType<
+    typeof useShippingAddressPopup
+  >["selectedAddress"];
+  samplePrice: number | null;
+  isPricingError: boolean;
+  cancellationConsent: boolean;
+}) => {
+  if (!user) {
+    return {
+      status: "로그인 필요",
+      description: "로그인 후 샘플 주문을 진행할 수 있습니다.",
+    };
+  }
+
+  if (!selectedAddress) {
+    return {
+      status: "배송지 필요",
+      description: "배송지를 추가하면 바로 결제를 진행할 수 있습니다.",
+    };
+  }
+
+  if (samplePrice === null) {
+    return isPricingError
+      ? {
+          status: "가격 확인 실패",
+          description: "가격 정보를 다시 불러와야 합니다.",
+        }
+      : {
+          status: "가격 계산 중",
+          description: "샘플 금액을 계산하고 있습니다.",
+        };
+  }
+
+  if (!cancellationConsent) {
+    return {
+      status: "동의 필요",
+      description: "취소 및 환불 제한 동의가 필요합니다.",
+    };
+  }
+
+  return {
+    status: "결제 가능",
+    description: "결제 준비가 완료되었습니다.",
+  };
+};
+
 export default function SampleOrderPage() {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [cancellationConsent, setCancellationConsent] = useState(false);
@@ -168,28 +222,14 @@ export default function SampleOrderPage() {
           card.designType === values.designType,
       )?.label ?? "-")
     : "봉제 전용";
-  const paymentStatus = !user
-    ? "로그인 필요"
-    : !selectedAddress
-      ? "배송지 필요"
-      : samplePrice === null
-        ? isPricingError
-          ? "가격 확인 실패"
-          : "가격 계산 중"
-        : !cancellationConsent
-          ? "동의 필요"
-          : "결제 가능";
-  const paymentStatusDescription = !user
-    ? "로그인 후 샘플 주문을 진행할 수 있습니다."
-    : !selectedAddress
-      ? "배송지를 추가하면 바로 결제를 진행할 수 있습니다."
-      : samplePrice === null
-        ? isPricingError
-          ? "가격 정보를 다시 불러와야 합니다."
-          : "샘플 금액을 계산하고 있습니다."
-        : !cancellationConsent
-          ? "취소 및 환불 제한 동의가 필요합니다."
-          : "결제 준비가 완료되었습니다.";
+  const { status: paymentStatus, description: paymentStatusDescription } =
+    getPaymentState({
+      user,
+      selectedAddress,
+      samplePrice,
+      isPricingError,
+      cancellationConsent,
+    });
   const isSubmitDisabled =
     !user ||
     !selectedAddress ||
@@ -577,9 +617,6 @@ export default function SampleOrderPage() {
                         )
                       }
                     >
-                      <CardTitle className="text-sm text-zinc-600">
-                        심지
-                      </CardTitle>
                       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                         <RadioCard
                           value="WOOL"

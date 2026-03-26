@@ -24,7 +24,7 @@ import { useModalStore } from "@/store/modal";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Empty } from "@/components/composite/empty";
 import {
   Accordion,
@@ -71,7 +71,9 @@ const ReformPage = () => {
   const { isMobile } = useBreakpoint();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [agreedToRefundPolicy, setAgreedToRefundPolicy] = useState(false);
   const selectAllCheckboxId = "reform-select-all";
+  const refundPolicyCheckboxId = "reform-refund-policy";
   const [checkedIndicesForBulk, setCheckedIndicesForBulk] = useState<number[]>(
     [],
   );
@@ -170,20 +172,26 @@ const ReformPage = () => {
       form.reset(DEFAULT_REFORM_OPTIONS);
     });
 
-  const calculateTotalCost = () =>
+  const totalCost =
     fields.length === 0
       ? 0
       : (pricing?.baseCost ?? 0) * fields.length + (pricing?.shippingCost ?? 0);
 
-  const handleDelete = () => {
-    const checkedIndices = watchedTies
-      .map((tie, index) => (tie.checked ? index : -1))
-      .filter((index) => index !== -1)
-      .sort((a, b) => b - a);
+  const selectedTieIndices = useMemo(
+    () =>
+      watchedTies
+        .map((tie, index) => (tie.checked ? index : -1))
+        .filter((index) => index !== -1),
+    [watchedTies],
+  );
 
-    checkedIndices.forEach((index) => {
-      remove(index);
-    });
+  const handleDelete = () => {
+    selectedTieIndices
+      .slice()
+      .sort((a, b) => b - a)
+      .forEach((index) => {
+        remove(index);
+      });
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -194,6 +202,8 @@ const ReformPage = () => {
 
   const isAllChecked =
     watchedTies.length > 0 && watchedTies.every((tie) => tie.checked);
+  const isActionDisabled =
+    !agreedToRefundPolicy || uploadTieImagesMutation.isPending || !pricing;
 
   return (
     <>
@@ -224,7 +234,7 @@ const ReformPage = () => {
                       />
                       <UtilityKeyValueRow
                         label="예상 결제"
-                        value={`${calculateTotalCost().toLocaleString()}원`}
+                        value={`${totalCost.toLocaleString()}원`}
                         className="pt-4"
                       />
                     </dl>
@@ -270,6 +280,21 @@ const ReformPage = () => {
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
+                    <div className="mt-4 flex items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 px-3 py-3">
+                      <Checkbox
+                        id={refundPolicyCheckboxId}
+                        checked={agreedToRefundPolicy}
+                        onCheckedChange={(checked) =>
+                          setAgreedToRefundPolicy(checked === true)
+                        }
+                      />
+                      <Label
+                        htmlFor={refundPolicyCheckboxId}
+                        className="cursor-pointer text-sm leading-5 text-zinc-700"
+                      >
+                        취소 및 환불 제한 내용을 확인했고 이에 동의합니다.
+                      </Label>
+                    </div>
                   </UtilityPageAside>
                 </div>
               }
@@ -277,7 +302,7 @@ const ReformPage = () => {
                 <ReformActionButtons
                   onAddToCart={handleAddToCart}
                   onOrder={handleDirectOrder}
-                  disabled={uploadTieImagesMutation.isPending || !pricing}
+                  disabled={isActionDisabled}
                   isUploading={uploadTieImagesMutation.isPending}
                 />
               }
@@ -312,23 +337,23 @@ const ReformPage = () => {
                         type="button"
                         size="sm"
                         onClick={() => {
-                          const checkedIndices = watchedTies
-                            .map((tie, index) => (tie.checked ? index : -1))
-                            .filter((index) => index !== -1);
-
-                          if (checkedIndices.length === 0) {
+                          if (selectedTieIndices.length === 0) {
                             confirm("적용할 항목을 선택해주세요.");
                             return;
                           }
 
-                          setCheckedIndicesForBulk(checkedIndices);
+                          setCheckedIndicesForBulk(selectedTieIndices);
                           setBulkDialogOpen(true);
                         }}
                       >
                         일괄 적용
                       </Button>
                       <Button
-                        onClick={() =>
+                        onClick={() => {
+                          if (selectedTieIndices.length === 0) {
+                            return;
+                          }
+
                           confirm(
                             "선택한 항목을 삭제하시겠습니까?",
                             handleDelete,
@@ -336,11 +361,12 @@ const ReformPage = () => {
                               confirmText: "삭제",
                               cancelText: "취소",
                             },
-                          )
-                        }
+                          );
+                        }}
                         variant="outline"
                         type="button"
                         size="sm"
+                        disabled={selectedTieIndices.length === 0}
                       >
                         삭제
                       </Button>
@@ -394,7 +420,7 @@ const ReformPage = () => {
             onAddToCart={handleAddToCart}
             onOrder={handleMobileOrder}
             tieCount={fields.length}
-            totalCost={calculateTotalCost()}
+            totalCost={totalCost}
           />
         </MainContent>
       </MainLayout>

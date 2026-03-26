@@ -29,12 +29,6 @@ export function RadioCard({
         disabled && "cursor-not-allowed",
       )}
     >
-      <RadioGroupItem
-        value={value}
-        id={id}
-        disabled={disabled}
-        className="sr-only"
-      />
       <Card
         className={cn(
           "relative h-full overflow-hidden rounded-[18px] border border-stone-200 bg-white shadow-none transition-[transform,border-color,background-color,box-shadow] duration-200 focus-within:ring-2 focus-within:ring-zinc-900/10 focus-within:ring-offset-1 focus-within:ring-offset-white",
@@ -46,6 +40,12 @@ export function RadioCard({
           className,
         )}
       >
+        <RadioGroupItem
+          value={value}
+          id={id}
+          disabled={disabled}
+          className="sr-only"
+        />
         <div
           aria-hidden="true"
           className={cn(

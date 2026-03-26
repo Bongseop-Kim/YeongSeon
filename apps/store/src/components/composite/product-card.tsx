@@ -26,10 +26,11 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   };
 
   return (
-    <motion.div
+    <motion.button
+      type="button"
       whileHover={isSoldOut ? undefined : { y: -6 }}
       transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-      className={`group cursor-pointer ${isSoldOut ? "opacity-60 pointer-events-none" : ""}`}
+      className={`group w-full cursor-pointer text-left ${isSoldOut ? "opacity-60" : ""}`}
       onClick={handleClick}
     >
       <div className="relative aspect-[4/4.9] overflow-hidden bg-zinc-100">
@@ -82,6 +83,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           {product.price.toLocaleString()}원
         </p>
       </div>
-    </motion.div>
+    </motion.button>
   );
 };

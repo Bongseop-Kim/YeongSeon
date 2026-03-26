@@ -1,0 +1,31 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": [],
+      "project": []
+    },
+    "apps/store": {
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignore": ["src/components/ui/**", "src/model-viewer.d.ts"]
+    },
+    "apps/admin": {
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/shared": {
+      "entry": [
+        "src/types/dto/*.ts",
+        "src/types/view/*.ts",
+        "src/constants/*.ts",
+        "src/utils/*.ts",
+        "src/mappers/*.ts"
+      ],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/supabase": {
+      "project": ["src/**/*.ts"]
+    }
+  },
+  "ignoreDependencies": ["dependency-cruiser"],
+  "ignoreBinaries": ["supabase", "only-allow"]
+}

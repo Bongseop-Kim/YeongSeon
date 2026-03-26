@@ -45,20 +45,20 @@ export function StepIndicator({
 }: StepIndicatorProps) {
   const visibleSteps = steps
     .map((step, index) => ({ step, index }))
-    .filter(({ index }) => shouldShowStep(index));
+    .filter(({ index }) => {
+      if (!shouldShowStep(index)) return false;
+      return !(isHiddenStep?.(index) ?? false);
+    });
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
       {visibleSteps.map(({ step, index }, visibleIndex) => {
-        const isHidden = isHiddenStep?.(index) ?? false;
         const isVisited = visitedSteps.has(index);
         const isCurrent = index === currentStepIndex;
         const isCompleted = completedSteps
           ? completedSteps.has(index)
           : isVisited && !isCurrent;
-        const isClickable = !isHidden && isVisited && !isCurrent;
-
-        if (isHidden) return null;
+        const isClickable = isVisited && !isCurrent;
 
         return (
           <button

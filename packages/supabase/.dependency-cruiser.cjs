@@ -1,15 +1,13 @@
 const { forbidden } = require("../../.dependency-cruiser.base.cjs");
 
-// packages/shared는 라이브러리 패키지 — named exports 파일들이 외부 앱에서 참조되므로
-// no-orphans를 warn으로 낮춰 false positive 방지
-const sharedForbidden = forbidden.map((rule) => {
-  if (rule.name !== "no-orphans") return rule;
-  return { ...rule, severity: "warn" };
-});
+// packages/supabase는 feature 분리 규칙 불필요 — 순환 의존성과 devDep 혼입만 검사
+const supabaseForbidden = forbidden.filter((rule) =>
+  ["no-circular", "no-dev-deps-in-production"].includes(rule.name)
+);
 
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
-  forbidden: sharedForbidden,
+  forbidden: supabaseForbidden,
   options: {
     doNotFollow: { path: "node_modules" },
     tsPreCompilationDeps: true,

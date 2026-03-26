@@ -5,14 +5,9 @@ import { SelectTrigger as BaseSelectTrigger } from "@/components/ui/select";
 
 export {
   Select,
-  SelectGroup,
   SelectValue,
   SelectContent,
-  SelectLabel,
   SelectItem,
-  SelectSeparator,
-  SelectScrollUpButton,
-  SelectScrollDownButton,
 } from "@/components/ui/select";
 
 const SelectTrigger = React.forwardRef<

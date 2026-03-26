@@ -37,7 +37,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
   return (
     <div
-      className={cn("mx-auto max-w-7xl lg:px-6 xl:px-8", !isMobile && "pb-4")}
+      className={cn(
+        "mx-auto max-w-7xl lg:px-6 xl:px-8",
+        !isMobile && "pb-4",
+        isMobile && actionBar && "pb-24",
+      )}
     >
       <div
         className={cn(
@@ -50,18 +54,16 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             "w-full",
             !isMobile && sidebar ? "flex-1 w-2/3 pt-6" : "",
             contentClassName,
-            isMobile && actionBar ? "pb-24" : "",
           )}
         >
           {children}
           {sidebar && isMobile && <Separator />}
 
-          {/* Detail section - appears below children on desktop */}
           {detail && !isMobile && (
-            <div>
+            <>
               <Separator />
               {detail}
-            </div>
+            </>
           )}
         </div>
 
@@ -69,7 +71,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           <div
             className={cn(
               isMobile ? "w-full relative" : "w-1/3 sticky top-20 self-start",
-              actionBar && (isMobile ? "pb-24" : "pb-0"),
+              actionBar && !isMobile && "pb-0",
               sidebarClassName,
             )}
           >
@@ -81,7 +83,6 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           </div>
         )}
 
-        {/* Detail section - appears below sidebar on mobile */}
         {detail && isMobile && (
           <div className="w-full">
             <Separator />

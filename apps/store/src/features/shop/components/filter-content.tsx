@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui-extended/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import FilterOptionList from "./filter-option-list";
+import FilterOptionList from "@/features/shop/components/filter-option-list";
 import { X } from "lucide-react";
 import {
   type ProductCategory,

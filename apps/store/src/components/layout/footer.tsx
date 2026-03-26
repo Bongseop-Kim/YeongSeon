@@ -23,7 +23,7 @@ const footerVariants = cva("w-full border-t bg-surface/70", {
   },
 });
 
-export interface FooterProps
+interface FooterProps
   extends
     React.HTMLAttributes<HTMLElement>,
     VariantProps<typeof footerVariants> {}
@@ -91,23 +91,4 @@ const FooterLink = React.forwardRef<
 ));
 FooterLink.displayName = "FooterLink";
 
-const FooterText = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn("text-sm leading-relaxed text-foreground-muted", className)}
-    {...props}
-  />
-));
-
-export {
-  Footer,
-  FooterContent,
-  FooterSection,
-  FooterTitle,
-  FooterLink,
-  FooterText,
-  footerVariants,
-};
+export { Footer, FooterContent, FooterSection, FooterTitle, FooterLink };

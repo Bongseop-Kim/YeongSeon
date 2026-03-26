@@ -1,23 +1,5 @@
-/**
- * generate-design Edge Function의 프롬프트 빌더 모음
- *
- * ─── 이미지 생성 파이프라인 ─────────────────────────────────────────────────
- * 1. buildImagePrompt()로 이미지 생성 프롬프트 조립
- * 2. Gemini API가 직사각형 패브릭 스워치 이미지를 생성 → base64 data URL로 클라이언트에 반환
- * 3. 클라이언트에서 data URL을 CSS background 문자열로 변환
- *    (toPreviewBackground: url("data:...") center/cover no-repeat)
- * 4. TieCanvas에서 div의 style.background에 주입 → /images/tie.svg 마스크로 넥타이 실루엣으로 클리핑
- *
- * ─── 요구 이미지 스펙 ──────────────────────────────────────────────────────
- * - 직사각형 실크 패브릭 스워치 (넥타이 실루엣 자체는 이미지에 포함하지 않음)
- * - 이미지가 프레임 전체를 채워야 함 (여백·패딩·배경 없음)
- *   → CSS cover로 리사이즈되므로 종횡비가 달라도 클리핑되는 구조
- * - 완전히 평평한 flat-lay (주름·그림자 없음)
- *   → 마스킹 후 자연스러운 패브릭 텍스처만 보이도록
- * - 패턴·색상·제직 방식이 이미지 전면에 균일하게 표현되어야 함
- *   → 마스킹 결과물이 넥타이 어느 부위를 보여줘도 일관된 디자인으로 보임
- */
-import type { GenerateDesignRequest } from "./index.ts";
+import type { GenerateDesignRequest } from "./design-request.ts";
+import { SCALE_META } from "./scale-meta.ts";
 
 export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
 항상 한국어로만 응답하세요.
@@ -71,7 +53,7 @@ export const buildTextPrompt = (payload: GenerateDesignRequest) => {
   const colors = payload.designContext?.colors?.join(", ") || "미정";
   const pattern = payload.designContext?.pattern || "미정";
   const fabricMethod = payload.designContext?.fabricMethod || "미정";
-  const ciPlacement = payload.designContext?.ciPlacement || "미정";
+  const ciPlacement = payload.designContext?.ciPlacement ?? "미정";
 
   return [
     "현재 넥타이 디자인 상태를 바탕으로 사용자 메시지에 응답하세요.",
@@ -137,21 +119,21 @@ export const buildScalePrompt = (
   if (pattern === "plain") return "";
   if (pattern === "stripe") {
     if (scale === "large") {
-      return "Stripe scale: refined narrow stripes — about 8-9 stripe pairs visible across the fabric width. The repeat should feel clearly smaller and denser than a typical large stripe.";
+      return `Stripe scale: about ${SCALE_META.large.stripeRange} stripe pairs visible across the fabric width. This is the ${SCALE_META.large.stripeDescription}`;
     }
     if (scale === "small") {
-      return "Stripe scale: ultra-fine pinstripes — about 16-17 stripe pairs visible across the fabric width. The stripes should be extremely narrow, tightly packed, and noticeably finer than a standard pinstripe.";
+      return `Stripe scale: about ${SCALE_META.small.stripeRange} stripe pairs visible across the fabric width. The stripes should read as ${SCALE_META.small.stripeDescription}`;
     }
-    return "Stripe scale: fine classic stripes — about 12-13 stripe pairs visible across the fabric width. The stripes should read as clearly smaller and more closely repeated than a conventional necktie stripe.";
+    return `Stripe scale: about ${SCALE_META.medium.stripeRange} stripe pairs visible across the fabric width. The stripes should read as ${SCALE_META.medium.stripeDescription}`;
   }
 
   if (scale === "large") {
-    return "Motif scale: moderately compact. Each motif should be reduced so about 8-9 motifs fit across the fabric width. The repeat should still read as the largest option, but clearly denser and smaller than a typical large-scale print.";
+    return `Motif scale: about ${SCALE_META.large.motifRange} motifs fit across the fabric width. This is the ${SCALE_META.large.motifDescription}`;
   }
   if (scale === "small") {
-    return "Motif scale: ultra-fine micro-print. Each motif is tiny — about 16-17 motifs fit across the fabric width, with a very dense repeat covering the full surface. The fabric should read almost like a rich texture from a distance while individual motifs remain visible up close.";
+    return `Motif scale: about ${SCALE_META.small.motifRange} motifs fit across the fabric width. The pattern should read as ${SCALE_META.small.motifDescription}`;
   }
-  return "Motif scale: fine and dense. About 12-13 motifs should fit across the fabric width, creating a noticeably tighter repeat than the previous default. The pattern should feel abundant, closely repeated, and never sparse.";
+  return `Motif scale: about ${SCALE_META.medium.motifRange} motifs fit across the fabric width. The pattern should read as ${SCALE_META.medium.motifDescription}`;
 };
 
 export const buildPatternPrompt = (

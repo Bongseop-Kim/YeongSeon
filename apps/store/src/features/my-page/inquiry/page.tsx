@@ -58,10 +58,11 @@ export default function InquiryPage() {
   const updateMutation = useUpdateInquiry();
   const deleteMutation = useDeleteInquiry();
 
-  const editingInquiry =
-    editingInquiryId && editingInquiryId !== "new"
-      ? inquiries.find((i) => i.id === editingInquiryId)
-      : null;
+  const isEditingInquiry =
+    editingInquiryId != null && editingInquiryId !== "new";
+  const editingInquiry = isEditingInquiry
+    ? inquiries.find((i) => i.id === editingInquiryId)
+    : null;
 
   useEffect(() => {
     const rawCategory = searchParams.get("category");
@@ -119,7 +120,7 @@ export default function InquiryPage() {
 
   const handleFormSubmit = useCallback(
     (data: InquiryFormData) => {
-      if (editingInquiryId && editingInquiryId !== "new") {
+      if (isEditingInquiry) {
         updateMutation.mutate(
           {
             id: editingInquiryId,
@@ -164,7 +165,7 @@ export default function InquiryPage() {
         );
       }
     },
-    [editingInquiryId, updateMutation, createMutation],
+    [isEditingInquiry, editingInquiryId, updateMutation, createMutation],
   );
 
   const handleFormCancel = () => {
@@ -207,13 +208,15 @@ export default function InquiryPage() {
       (item) => item.status === "답변대기",
     ).length;
     const answeredCount = inquiries.length - pendingCount;
-    const latestAnsweredInquiry = [...inquiries]
+    const latestAnsweredInquiry = inquiries
       .filter((item) => item.answerDate)
-      .sort((a, b) => {
-        const aTime = a.answerDate ? new Date(a.answerDate).getTime() : 0;
-        const bTime = b.answerDate ? new Date(b.answerDate).getTime() : 0;
-        return bTime - aTime;
-      })[0];
+      .reduce<(typeof inquiries)[number] | undefined>((latest, item) => {
+        if (!latest?.answerDate) return item;
+        return new Date(item.answerDate ?? "").getTime() >
+          new Date(latest.answerDate).getTime()
+          ? item
+          : latest;
+      }, undefined);
     return [
       { label: "전체", value: `${inquiries.length}건` },
       { label: "답변 대기", value: `${pendingCount}건` },
@@ -287,7 +290,7 @@ export default function InquiryPage() {
                 transition={{ duration: 0.32, ease: "easeOut" }}
               >
                 <UtilityPageAside
-                  title={editingInquiryId ? "문의 수정" : "문의 등록"}
+                  title={isEditingInquiry ? "문의 수정" : "문의 등록"}
                   description="문의 유형과 내용을 정리해 등록하세요."
                   tone="muted"
                 >
@@ -393,7 +396,7 @@ export default function InquiryPage() {
             <SheetContent side="bottom" className="h-[92svh] rounded-t-3xl">
               <SheetHeader className="px-4 pt-5">
                 <SheetTitle>
-                  {editingInquiryId ? "문의 수정" : "새 문의 작성"}
+                  {isEditingInquiry ? "문의 수정" : "새 문의 작성"}
                 </SheetTitle>
                 <SheetDescription>
                   문의 유형과 내용을 입력하면 답변 상태를 이 화면에서 계속

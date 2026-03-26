@@ -340,6 +340,18 @@ const OrderDetailPage = () => {
   const handleClaimRequest = (type: ClaimActionType, itemId: string) => {
     navigate(buildClaimFormRoute(type, order.id, itemId));
   };
+  const canConfirmPurchase = order.customerActions.some(
+    (action) => action === "confirm_purchase",
+  );
+  const isRepairShippingPending =
+    order.orderType === "repair" && order.status === "발송대기";
+  const isRepairInTransit =
+    order.orderType === "repair" &&
+    order.status === "발송중" &&
+    !!order.trackingInfo?.courierCompany &&
+    !!order.trackingInfo?.trackingNumber;
+  const showTaskSection =
+    canConfirmPurchase || isRepairShippingPending || isRepairInTransit;
 
   return (
     <MainLayout>
@@ -369,12 +381,7 @@ const OrderDetailPage = () => {
                 />
               </UtilityPageAside>
 
-              {(order.customerActions.some((a) => a === "confirm_purchase") ||
-                (order.orderType === "repair" && order.status === "발송대기") ||
-                (order.orderType === "repair" &&
-                  order.status === "발송중" &&
-                  order.trackingInfo?.courierCompany &&
-                  order.trackingInfo?.trackingNumber)) && (
+              {showTaskSection && (
                 <UtilityPageAside
                   title="현재 할 일"
                   description="주문 상태에 따라 지금 처리할 수 있는 작업입니다."
@@ -382,21 +389,15 @@ const OrderDetailPage = () => {
                   className="rounded-2xl"
                 >
                   <div className="space-y-3">
-                    {order.customerActions.some(
-                      (a) => a === "confirm_purchase",
-                    ) ? (
+                    {canConfirmPurchase ? (
                       <PurchaseConfirmSection orderId={order.id} />
                     ) : null}
 
-                    {order.orderType === "repair" &&
-                    order.status === "발송대기" ? (
+                    {isRepairShippingPending ? (
                       <RepairShippingPendingSection orderId={order.id} />
                     ) : null}
 
-                    {order.orderType === "repair" &&
-                    order.status === "발송중" &&
-                    order.trackingInfo?.courierCompany &&
-                    order.trackingInfo?.trackingNumber ? (
+                    {isRepairInTransit && order.trackingInfo ? (
                       <RepairShippingInTransitSection
                         courierCompany={order.trackingInfo.courierCompany}
                         trackingNumber={order.trackingInfo.trackingNumber}

@@ -211,15 +211,15 @@ export const InquiryForm = ({
                 validate: (val) =>
                   category !== "상품" || !!val || "상품을 선택해주세요.",
               }}
-              render={({ fieldState }) =>
-                fieldState.error ? (
-                  <p className="text-sm text-red-500">
-                    {fieldState.error.message}
-                  </p>
-                ) : (
-                  <></>
-                )
-              }
+              render={({ fieldState }) => (
+                <>
+                  {fieldState.error ? (
+                    <p className="text-sm text-red-500">
+                      {fieldState.error.message}
+                    </p>
+                  ) : null}
+                </>
+              )}
             />
           </div>
         )}

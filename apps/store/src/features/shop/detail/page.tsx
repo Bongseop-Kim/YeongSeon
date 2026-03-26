@@ -310,7 +310,7 @@ export default function ShopDetailPage() {
                   {product.detailImages && product.detailImages.length > 0 ? (
                     product.detailImages.map((detailImage, index) => (
                       <Image
-                        key={index}
+                        key={detailImage}
                         src={detailImage}
                         alt={`${product.name} 상세 이미지 ${index + 1}`}
                         className="w-full h-auto object-contain"

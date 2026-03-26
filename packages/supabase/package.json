@@ -7,12 +7,14 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "depcruise": "depcruise src --config .dependency-cruiser.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0"
   },
   "devDependencies": {
+    "dependency-cruiser": "^17.3.9",
     "eslint": "^9.30.1"
   }
 }

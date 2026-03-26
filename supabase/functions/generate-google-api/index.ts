@@ -10,31 +10,16 @@ import {
 } from "@/functions/_shared/conversation.ts";
 import { logGeneration } from "@/functions/_shared/log-generation.ts";
 import type { AiGenerationLogInsert } from "@/functions/_shared/log-generation.ts";
+import type { GenerateDesignRequest } from "@/functions/_shared/design-request.ts";
 import {
-  buildGeminiImagePrompt,
+  buildImagePrompt,
   buildImageEditPrompt,
   buildTextPrompt,
   parseJsonBlock,
   SYSTEM_PROMPT,
-} from "./prompts.ts";
+} from "@/functions/_shared/prompt-builders.ts";
 
-export type GenerateDesignRequest = {
-  userMessage: string;
-  designContext?: {
-    colors?: string[];
-    pattern?: string | null;
-    fabricMethod?: string | null;
-    ciPlacement?: string | null;
-    scale?: "large" | "medium" | "small" | null;
-  };
-  conversationHistory?: ConversationTurn[];
-  previousImageBase64?: string;
-  previousImageMimeType?: string;
-  ciImageBase64?: string;
-  ciImageMimeType?: string;
-  referenceImageBase64?: string;
-  referenceImageMimeType?: string;
-};
+export type { GenerateDesignRequest };
 
 type GeminiTextResponse = {
   candidates?: Array<{
@@ -221,7 +206,7 @@ const requestGeminiImage = async (
       ? [
           {
             role: "user",
-            parts: [{ text: buildGeminiImagePrompt(payload) }],
+            parts: [{ text: buildImagePrompt(payload) }],
           },
           {
             role: "model",
@@ -242,7 +227,7 @@ const requestGeminiImage = async (
       : [
           {
             role: "user",
-            parts: [{ text: buildGeminiImagePrompt(payload) }, ...currentParts],
+            parts: [{ text: buildImagePrompt(payload) }, ...currentParts],
           },
         ];
 

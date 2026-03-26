@@ -39,9 +39,7 @@ export const FilterButtons = ({
             <SlidersHorizontal />
             필터
           </Button>
-        ) : (
-          <div />
-        )}
+        ) : null}
         <div className="flex flex-1 gap-2 overflow-x-auto scrollbar-hidden">
           {tabs.map((tab) => {
             const count = activeCounts?.[tab.key] ?? 0;

@@ -31,7 +31,7 @@ const headerVariants = cva(
   },
 );
 
-export interface HeaderProps
+interface HeaderProps
   extends
     React.HTMLAttributes<HTMLElement>,
     VariantProps<typeof headerVariants> {}
@@ -100,11 +100,4 @@ const HeaderActions = React.forwardRef<
 ));
 HeaderActions.displayName = "HeaderActions";
 
-export {
-  Header,
-  HeaderContent,
-  HeaderTitle,
-  HeaderNav,
-  HeaderActions,
-  headerVariants,
-};
+export { Header, HeaderContent, HeaderTitle, HeaderNav, HeaderActions };

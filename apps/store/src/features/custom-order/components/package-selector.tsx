@@ -148,7 +148,7 @@ export const PackageSelector = ({
 
                     <div className="shrink-0 border-t border-stone-200 pt-4 md:min-w-40 md:border-t-0 md:border-l md:pl-6 md:pt-0 md:text-right">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
-                        Estimated
+                        예상
                       </p>
                       <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950">
                         {packageCost != null

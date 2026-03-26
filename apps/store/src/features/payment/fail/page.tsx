@@ -27,7 +27,7 @@ const PaymentFailPage = () => {
           {message ? (
             <div className="mt-8 rounded-2xl border border-stone-200 px-5 py-4 text-left">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-                Message
+                메시지
               </p>
               <p className="mt-2 text-sm text-zinc-700">{message}</p>
               {code ? (

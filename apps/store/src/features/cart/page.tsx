@@ -1,11 +1,5 @@
 import { Button } from "@/components/ui-extended/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { CartEditDialog } from "@/features/cart/components/cart-edit-dialog";
 import { PageLayout } from "@/components/layout/page-layout";
 import { useModalStore } from "@/store/modal";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
@@ -120,6 +114,25 @@ export default function CartPage() {
     });
   };
 
+  const confirmAndRemove = (itemId: string, message: string) => {
+    confirm(
+      message,
+      () => {
+        void (async () => {
+          try {
+            await removeFromCart(itemId);
+          } catch (error) {
+            console.error(error);
+          }
+        })();
+      },
+      {
+        confirmText: "삭제",
+        cancelText: "취소",
+      },
+    );
+  };
+
   const handleChangeOption = (itemId: string) => {
     const item = items.find((i) => i.id === itemId);
     if (!item || item.type !== "product") return;
@@ -129,8 +142,8 @@ export default function CartPage() {
   const handleConfirmOptionChange = async () => {
     if (isOptionSubmitting) return;
 
-    const item = items.find((i) => i.id === optionDialogItemId);
-    if (!item || item.type !== "product" || !optionChangeRef.current) return;
+    const item = optionDialogItem;
+    if (!item || !optionChangeRef.current) return;
 
     const { quantity, optionId } = optionChangeRef.current.getValues();
     const hasChanges =
@@ -183,9 +196,8 @@ export default function CartPage() {
   const handleConfirmReformOptionChange = async () => {
     if (isReformSubmitting) return;
 
-    const item = items.find((i) => i.id === reformDialogItemId);
-    if (!item || item.type !== "reform" || !reformOptionChangeRef.current)
-      return;
+    const item = reformDialogItem;
+    if (!item || !reformOptionChangeRef.current) return;
 
     const updatedTie = reformOptionChangeRef.current.getValues();
     const hasChanges =
@@ -350,42 +362,12 @@ export default function CartPage() {
                     items={items}
                     selectedItems={selectedItems}
                     onSelectItem={handleSelectItem}
-                    onRemoveProductItem={(itemId) => {
-                      confirm(
-                        "상품을 삭제하시겠습니까?",
-                        () => {
-                          void (async () => {
-                            try {
-                              await removeFromCart(itemId);
-                            } catch (error) {
-                              console.error(error);
-                            }
-                          })();
-                        },
-                        {
-                          confirmText: "삭제",
-                          cancelText: "취소",
-                        },
-                      );
-                    }}
-                    onRemoveReformItem={(itemId) => {
-                      confirm(
-                        "수선 요청을 삭제하시겠습니까?",
-                        () => {
-                          void (async () => {
-                            try {
-                              await removeFromCart(itemId);
-                            } catch (error) {
-                              console.error(error);
-                            }
-                          })();
-                        },
-                        {
-                          confirmText: "삭제",
-                          cancelText: "취소",
-                        },
-                      );
-                    }}
+                    onRemoveProductItem={(itemId) =>
+                      confirmAndRemove(itemId, "상품을 삭제하시겠습니까?")
+                    }
+                    onRemoveReformItem={(itemId) =>
+                      confirmAndRemove(itemId, "수선 요청을 삭제하시겠습니까?")
+                    }
                     onChangeProductOption={handleChangeOption}
                     onChangeReformOption={handleChangeReformOption}
                     onChangeCoupon={handleChangeCoupon}
@@ -397,78 +379,32 @@ export default function CartPage() {
         </MainContent>
       </MainLayout>
 
-      {optionDialogItem && (
-        <Dialog
-          open
-          onOpenChange={(open) =>
-            !open && !isOptionSubmitting && setOptionDialogItemId(null)
-          }
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>옵션/수량 변경</DialogTitle>
-            </DialogHeader>
-            <OptionChangeModal ref={optionChangeRef} item={optionDialogItem} />
-            <DialogFooter>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setOptionDialogItemId(null)}
-                disabled={isOptionSubmitting}
-              >
-                취소
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={() => {
-                  void handleConfirmOptionChange();
-                }}
-                disabled={isOptionSubmitting}
-              >
-                {isOptionSubmitting ? "변경 중..." : "변경"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <CartEditDialog
+        open={!!optionDialogItem}
+        title="옵션/수량 변경"
+        isSubmitting={isOptionSubmitting}
+        onClose={() => setOptionDialogItemId(null)}
+        onConfirm={() => void handleConfirmOptionChange()}
+      >
+        {optionDialogItem && (
+          <OptionChangeModal ref={optionChangeRef} item={optionDialogItem} />
+        )}
+      </CartEditDialog>
 
-      {reformDialogItem && (
-        <Dialog
-          open
-          onOpenChange={(open) =>
-            !open && !isReformSubmitting && setReformDialogItemId(null)
-          }
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>수선 옵션 변경</DialogTitle>
-            </DialogHeader>
-            <ReformOptionChangeModal
-              ref={reformOptionChangeRef}
-              item={reformDialogItem}
-            />
-            <DialogFooter>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setReformDialogItemId(null)}
-                disabled={isReformSubmitting}
-              >
-                취소
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={() => {
-                  void handleConfirmReformOptionChange();
-                }}
-                disabled={isReformSubmitting}
-              >
-                {isReformSubmitting ? "변경 중..." : "변경"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <CartEditDialog
+        open={!!reformDialogItem}
+        title="수선 옵션 변경"
+        isSubmitting={isReformSubmitting}
+        onClose={() => setReformDialogItemId(null)}
+        onConfirm={() => void handleConfirmReformOptionChange()}
+      >
+        {reformDialogItem && (
+          <ReformOptionChangeModal
+            ref={reformOptionChangeRef}
+            item={reformDialogItem}
+          />
+        )}
+      </CartEditDialog>
 
       {couponDialog}
     </>

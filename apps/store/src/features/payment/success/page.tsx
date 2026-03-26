@@ -143,7 +143,7 @@ const PaymentSuccessPage = () => {
             <CheckCircle2 className="h-7 w-7 text-green-600" />
           </div>
           <h1 className="mt-6 text-3xl font-semibold tracking-tight text-zinc-950">
-            결제가 완료되었습니다
+            결제 확인 중입니다
           </h1>
           <p className="mt-3 text-sm leading-6 text-zinc-600">
             주문 정보를 정리한 뒤 다음 화면으로 이동하고 있습니다.
