@@ -123,7 +123,7 @@ const ReformPage = () => {
     ties.forEach((tie, index) => {
       if (tie.checked) {
         selectedIndices.push(index);
-        selectedTies.push(tie);
+        selectedTies.push(structuredClone(tie));
       }
     });
     return { selectedIndices, selectedTies };
@@ -222,10 +222,12 @@ const ReformPage = () => {
   const selectedCount = selectedTieIndices.length;
   const baseCost = hasValidPricing && pricing ? pricing.baseCost : undefined;
   const estimatedShipping =
-    selectedCount > 0 && pricing ? pricing.shippingCost : undefined;
+    hasValidPricing && selectedCount > 0 && pricing
+      ? pricing.shippingCost
+      : undefined;
   const totalCost =
-    selectedCount > 0 && pricing && baseCost !== undefined
-      ? baseCost * selectedCount + pricing.shippingCost
+    hasValidPricing && selectedCount > 0 && pricing
+      ? pricing.baseCost * selectedCount + pricing.shippingCost
       : undefined;
 
   const handleDelete = () => {
