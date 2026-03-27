@@ -116,33 +116,46 @@ const ReformPage = () => {
     [watchedTies],
   );
 
-  const uploadValidatedTies = useCallback(async () => {
-    const selectedSet = new Set(selectedTieIndices);
-    const ties = form
-      .getValues()
-      .ties.filter((_, index) => selectedSet.has(index));
-    const uploadedTies = await uploadTiesIfNeeded(ties);
-    return uploadedTies;
-  }, [form, selectedTieIndices, uploadTiesIfNeeded]);
+  const getSelectedTiesSnapshot = useCallback(() => {
+    const ties = form.getValues("ties");
+    const selectedIndices: number[] = [];
+    const selectedTies: ReformOptions["ties"] = [];
+    ties.forEach((tie, index) => {
+      if (tie.checked) {
+        selectedIndices.push(index);
+        selectedTies.push(tie);
+      }
+    });
+    return { selectedIndices, selectedTies };
+  }, [form]);
 
   const hasValidPricing =
     Number.isFinite(pricing?.baseCost) &&
     Number.isFinite(pricing?.shippingCost);
 
   const withSubmitGuard = useCallback(
-    async (action: (baseCost: number) => Promise<void>) => {
+    async (
+      action: (
+        baseCost: number,
+        selectedTies: ReformOptions["ties"],
+      ) => Promise<void>,
+    ) => {
       if (isSubmittingRef.current) return;
       if (fields.length === 0) {
         confirm("수선할 넥타이를 추가해주세요.");
         return;
       }
-      if (selectedTieIndices.length === 0) {
-        confirm("접수할 넥타이를 선택해주세요.");
+
+      const { selectedIndices, selectedTies } = getSelectedTiesSnapshot();
+
+      if (selectedIndices.length === 0) {
+        alert("접수할 넥타이를 선택해주세요.");
         return;
       }
+
       isSubmittingRef.current = true;
       const isValid = await form.trigger(
-        selectedTieIndices.map((index) => `ties.${index}` as const),
+        selectedIndices.map((index) => `ties.${index}` as const),
       );
       if (!isValid) {
         isSubmittingRef.current = false;
@@ -156,45 +169,46 @@ const ReformPage = () => {
         return;
       }
       try {
-        await action(pricing.baseCost);
+        await action(pricing.baseCost, selectedTies);
       } finally {
         isSubmittingRef.current = false;
       }
     },
     [
-      fields.length,
+      alert,
       confirm,
+      fields.length,
       form,
+      getSelectedTiesSnapshot,
       hasValidPricing,
       pricing,
-      selectedTieIndices,
     ],
   );
 
   const handleDirectOrder = () =>
-    withSubmitGuard(async (baseCost) => {
+    withSubmitGuard(async (baseCost, selectedTies) => {
       if (isMobile) {
         setIsPurchaseSheetOpen(true);
         return;
       }
 
-      const uploadedTies = await uploadValidatedTies();
+      const uploadedTies = await uploadTiesIfNeeded(selectedTies);
       const orderItems = toReformCartItems(uploadedTies, baseCost);
       setOrderItems(orderItems);
       navigate(ROUTES.ORDER_FORM);
     });
 
   const handleMobileOrder = () =>
-    withSubmitGuard(async (baseCost) => {
-      const uploadedTies = await uploadValidatedTies();
+    withSubmitGuard(async (baseCost, selectedTies) => {
+      const uploadedTies = await uploadTiesIfNeeded(selectedTies);
       const orderItems = toReformCartItems(uploadedTies, baseCost);
       setOrderItems(orderItems);
       navigate(ROUTES.ORDER_FORM);
     });
 
   const handleAddToCart = () =>
-    withSubmitGuard(async (baseCost) => {
-      const uploadedTies = await uploadValidatedTies();
+    withSubmitGuard(async (baseCost, selectedTies) => {
+      const uploadedTies = await uploadTiesIfNeeded(selectedTies);
 
       await addMultipleReformToCart(
         uploadedTies.map((tie) => toReformData(tie, baseCost)),

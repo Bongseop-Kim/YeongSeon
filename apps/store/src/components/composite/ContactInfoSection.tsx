@@ -1,4 +1,4 @@
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 import type { Control } from "react-hook-form";
 import { Input } from "@/components/ui-extended/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -27,13 +27,14 @@ const CONTACT_METHOD_PLACEHOLDERS: Record<ContactMethod, string> = {
 
 interface ContactInfoSectionProps {
   control: Control<QuoteOrderOptions>;
-  contactMethod: ContactMethod;
 }
 
-export const ContactInfoSection = ({
-  control,
-  contactMethod,
-}: ContactInfoSectionProps) => {
+export const ContactInfoSection = ({ control }: ContactInfoSectionProps) => {
+  const currentContactMethod = useWatch({
+    control,
+    name: "contactMethod",
+  });
+
   return (
     <FieldSet className="gap-4">
       <FieldLegend>담당자 연락처</FieldLegend>
@@ -118,8 +119,9 @@ export const ContactInfoSection = ({
               <Input
                 id="contactValue"
                 placeholder={
-                  CONTACT_METHOD_PLACEHOLDERS[contactMethod] ??
-                  "연락처를 입력해주세요"
+                  CONTACT_METHOD_PLACEHOLDERS[
+                    currentContactMethod ?? "phone"
+                  ] ?? "연락처를 입력해주세요"
                 }
                 {...field}
               />

@@ -163,10 +163,7 @@ export const ConfirmStep = ({
             </p>
           </div>
           <div className="mt-5">
-            <ContactInfoSection
-              control={control}
-              contactMethod={values.contactMethod}
-            />
+            <ContactInfoSection control={control} />
           </div>
         </section>
       )}

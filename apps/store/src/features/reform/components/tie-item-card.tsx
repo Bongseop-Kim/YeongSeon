@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { type Control, Controller } from "react-hook-form";
+import { type Control, Controller, useWatch } from "react-hook-form";
 import {
   Field,
   FieldContent,
@@ -28,6 +28,10 @@ interface TieItemCardProps {
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   const tieLengthId = useId();
   const wearerHeightId = useId();
+  const currentMeasurementType = useWatch({
+    control,
+    name: `ties.${index}.measurementType`,
+  });
 
   return (
     <div className="py-4">
@@ -131,34 +135,26 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
             )}
           />
 
-          <Controller
-            control={control}
-            name={`ties.${index}.measurementType`}
-            render={({ field: measurementField }) => {
-              const currentMeasurementType = measurementField.value || "length";
-
-              return currentMeasurementType === "length" ? (
-                <MeasurementInputField
-                  control={control}
-                  name={`ties.${index}.tieLength`}
-                  id={tieLengthId}
-                  label="넥타이 길이"
-                  description="(매듭 포함)"
-                  placeholder="예: 51"
-                  requiredMessage="넥타이 길이를 입력해주세요"
-                />
-              ) : (
-                <MeasurementInputField
-                  control={control}
-                  name={`ties.${index}.wearerHeight`}
-                  id={wearerHeightId}
-                  label="착용자 키"
-                  placeholder="예: 175"
-                  requiredMessage="착용자 키를 입력해주세요"
-                />
-              );
-            }}
-          />
+          {(currentMeasurementType ?? "length") === "length" ? (
+            <MeasurementInputField
+              control={control}
+              name={`ties.${index}.tieLength`}
+              id={tieLengthId}
+              label="넥타이 길이"
+              description="(매듭 포함)"
+              placeholder="예: 51"
+              requiredMessage="넥타이 길이를 입력해주세요"
+            />
+          ) : (
+            <MeasurementInputField
+              control={control}
+              name={`ties.${index}.wearerHeight`}
+              id={wearerHeightId}
+              label="착용자 키"
+              placeholder="예: 175"
+              requiredMessage="착용자 키를 입력해주세요"
+            />
+          )}
         </div>
       </div>
     </div>

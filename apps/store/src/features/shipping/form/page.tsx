@@ -309,13 +309,21 @@ const ShippingFormPage = () => {
               name="detailAddress"
               control={form.control}
               render={({ field }) => (
-                <Input
-                  type="text"
-                  placeholder="상세주소를 입력해주세요. (선택사항)"
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value)}
-                  className="w-full"
-                />
+                <Field orientation="vertical">
+                  <FieldLabel htmlFor="detailAddress">
+                    <FieldTitle>상세주소 (선택사항)</FieldTitle>
+                  </FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="detailAddress"
+                      type="text"
+                      placeholder="상세주소를 입력해주세요. (선택사항)"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      className="w-full"
+                    />
+                  </FieldContent>
+                </Field>
               )}
             />
           </FieldSet>
