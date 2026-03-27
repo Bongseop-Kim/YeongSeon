@@ -3,7 +3,11 @@ import {
   useDaumPostcode,
   type DaumPostcodeData,
 } from "@/features/shipping/hooks/useDaumPostcode";
-import { Dialog, DialogContent } from "@/components/ui-extended/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui-extended/dialog";
 import { PageTitle } from "@/components/layout/main-layout";
 import CloseButton from "@/components/ui-extended/close";
 
@@ -52,6 +56,7 @@ export const PostcodeSearch = ({
         showCloseButton={false}
         className="max-w-lg w-full h-full rounded-none p-0 gap-0"
       >
+        <DialogTitle className="sr-only">우편번호 검색</DialogTitle>
         <div className="bg-zinc-100 px-2 flex items-center justify-between">
           <PageTitle>우편번호 검색</PageTitle>
 

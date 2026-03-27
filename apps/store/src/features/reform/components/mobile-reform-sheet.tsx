@@ -2,6 +2,7 @@ import {
   Sheet,
   SheetContent,
   SheetFooter,
+  SheetTitle,
 } from "@/components/ui-extended/sheet";
 import { Button } from "@/components/ui-extended/button";
 interface MobileReformSheetProps {
@@ -36,6 +37,7 @@ export function MobileReformSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[40vh]">
+        <SheetTitle className="sr-only">주문 요약</SheetTitle>
         <div className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4">
           <div className="flex justify-between text-sm font-semibold">
             <span>총 {tieCount}개</span>

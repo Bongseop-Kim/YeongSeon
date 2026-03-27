@@ -1,11 +1,5 @@
 import { useFormContext } from "react-hook-form";
-import { RadioCard } from "@/components/composite/radio-card";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { RadioChoiceField } from "@/components/composite/radio-choice-field";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { UtilityPagePanel } from "@/components/composite/utility-page";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
@@ -17,6 +11,13 @@ interface FabricCard {
   label: string;
   description: string;
 }
+
+const FABRIC_META_LABELS = {
+  POLY: "경제형 베이스",
+  SILK: "광택 중심",
+  PRINTING: "선명한 발색",
+  YARN_DYED: "직조 패턴",
+} as const;
 
 const FABRIC_CARDS: FabricCard[] = [
   {
@@ -87,19 +88,24 @@ export const FabricStep = () => {
               const cardValue = `${card.fabricType}-${card.designType}`;
 
               return (
-                <RadioCard
+                <RadioChoiceField
                   key={cardValue}
                   value={cardValue}
                   id={`fabric-${cardValue}`}
                   selected={isSelected(card)}
-                >
-                  <CardHeader>
-                    <CardTitle>{card.label}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>{card.description}</CardDescription>
-                  </CardContent>
-                </RadioCard>
+                  variant="row"
+                  title={card.label}
+                  description={card.description}
+                  meta={
+                    <>
+                      <span>{FABRIC_META_LABELS[card.fabricType]}</span>
+                      <span aria-hidden="true" className="text-zinc-300">
+                        ·
+                      </span>
+                      <span>{FABRIC_META_LABELS[card.designType]}</span>
+                    </>
+                  }
+                />
               );
             })}
           </div>

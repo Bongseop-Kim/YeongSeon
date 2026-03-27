@@ -23,7 +23,7 @@ export function ReformCartItemCard({
   const hasCoupon = !!item.appliedCoupon;
 
   return (
-    <div className="py-5">
+    <div>
       <div className="flex gap-4">
         <div className="w-24 h-24 flex-shrink-0 bg-zinc-100 rounded-sm overflow-hidden flex items-center justify-center">
           <Package className="w-12 h-12 text-zinc-400" />

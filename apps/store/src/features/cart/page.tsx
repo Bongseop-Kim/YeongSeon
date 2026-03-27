@@ -30,10 +30,7 @@ import { CartSelectionToolbar } from "@/features/cart/components/cart-selection-
 import { CartItemsPanel } from "@/features/cart/components/cart-items-panel";
 import { CartRecommendationsCard } from "@/features/cart/components/cart-recommendations-card";
 import { CartOrderSummaryCard } from "@/features/cart/components/cart-order-summary-card";
-import {
-  UtilityPageIntro,
-  UtilityPageSection,
-} from "@/components/composite/utility-page";
+import { UtilityPageIntro } from "@/components/composite/utility-page";
 
 export default function CartPage() {
   const { confirm } = useModalStore();
@@ -320,61 +317,31 @@ export default function CartPage() {
               </Button>
             }
           >
-            <div className="space-y-8">
-              <UtilityPageIntro
-                eyebrow="Cart"
-                title="장바구니"
-                description="지금 주문할 상품을 고르고 옵션과 쿠폰을 정리합니다."
-                meta={
-                  items.length > 0 ? (
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-600">
-                      <span>
-                        전체{" "}
-                        <span className="font-medium text-zinc-950">
-                          {items.length}
-                        </span>
-                        건
-                      </span>
-                      <span className="text-stone-300">/</span>
-                      <span>
-                        선택{" "}
-                        <span className="font-medium text-zinc-950">
-                          {selectedItems.length}
-                        </span>
-                        건
-                      </span>
-                    </div>
-                  ) : null
-                }
-              />
+            <UtilityPageIntro
+              eyebrow="Cart"
+              title="장바구니"
+              description="지금 주문할 상품을 고르고 옵션과 쿠폰을 정리합니다."
+            />
 
-              <UtilityPageSection
-                title="선택 상품"
-                description="체크한 상품만 주문 대상으로 계산됩니다."
-              >
-                <div className="border-t border-stone-200">
-                  <CartSelectionToolbar
-                    isAllChecked={isAllChecked}
-                    onToggleAll={handleSelectAll}
-                    onRemoveSelected={handleRemoveSelected}
-                  />
-                  <CartItemsPanel
-                    items={items}
-                    selectedItems={selectedItems}
-                    onSelectItem={handleSelectItem}
-                    onRemoveProductItem={(itemId) =>
-                      confirmAndRemove(itemId, "상품을 삭제하시겠습니까?")
-                    }
-                    onRemoveReformItem={(itemId) =>
-                      confirmAndRemove(itemId, "수선 요청을 삭제하시겠습니까?")
-                    }
-                    onChangeProductOption={handleChangeOption}
-                    onChangeReformOption={handleChangeReformOption}
-                    onChangeCoupon={handleChangeCoupon}
-                  />
-                </div>
-              </UtilityPageSection>
-            </div>
+            <CartSelectionToolbar
+              isAllChecked={isAllChecked}
+              onToggleAll={handleSelectAll}
+              onRemoveSelected={handleRemoveSelected}
+            />
+            <CartItemsPanel
+              items={items}
+              selectedItems={selectedItems}
+              onSelectItem={handleSelectItem}
+              onRemoveProductItem={(itemId) =>
+                confirmAndRemove(itemId, "상품을 삭제하시겠습니까?")
+              }
+              onRemoveReformItem={(itemId) =>
+                confirmAndRemove(itemId, "수선 요청을 삭제하시겠습니까?")
+              }
+              onChangeProductOption={handleChangeOption}
+              onChangeReformOption={handleChangeReformOption}
+              onChangeCoupon={handleChangeCoupon}
+            />
           </PageLayout>
         </MainContent>
       </MainLayout>

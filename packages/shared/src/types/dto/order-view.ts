@@ -103,7 +103,7 @@ export interface SampleOrderItemDTO {
   id: string;
   type: "sample";
   quantity: number;
-  sampleData: SampleOrderDataDTO;
+  sampleData: SampleOrderDataDTO | null;
   appliedCoupon?: AppliedCouponDTO;
 }
 

@@ -1,14 +1,19 @@
 import { useState, useImperativeHandle, forwardRef } from "react";
 import { type UseFormSetValue } from "react-hook-form";
 import { Input } from "@/components/ui-extended/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup } from "@/components/ui/radio-group";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import {
   isMeasurementType,
   type ReformOptions,
 } from "@yeongseon/shared/types/view/reform";
-import { FormItem } from "@/components/ui/form";
 
 interface BulkApplySectionProps {
   setValue: UseFormSetValue<ReformOptions>;
@@ -67,27 +72,53 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
 
     return (
       <div className="space-y-6">
-        <FormItem className="flex">
-          <Label>측정 방식</Label>
+        <Field orientation="vertical" className="gap-3">
+          <FieldContent className="gap-2">
+            <FieldLabel>
+              <FieldTitle>측정 방식</FieldTitle>
+            </FieldLabel>
+          </FieldContent>
           <RadioGroup
             value={measurementType}
             onValueChange={(value) =>
               setMeasurementType(isMeasurementType(value) ? value : "length")
             }
-            options={[
-              { value: "length", label: "넥타이 길이" },
-              { value: "height", label: "착용자 키" },
-            ]}
-          />
-        </FormItem>
-
-        <FormItem className="flex">
-          <Label
-            subLabel={measurementType === "length" ? "(매듭 포함)" : undefined}
+            className="gap-2"
           >
-            {measurementType === "length" ? "넥타이 길이" : "착용자 키"}
-          </Label>
+            <FieldLabel htmlFor="bulk-measurement-length">
+              <Field orientation="horizontal" className="items-center gap-3">
+                <FieldContent className="gap-0">
+                  <FieldTitle>넥타이 길이</FieldTitle>
+                </FieldContent>
+                <RadioGroupItem value="length" id="bulk-measurement-length" />
+              </Field>
+            </FieldLabel>
+            <FieldLabel htmlFor="bulk-measurement-height">
+              <Field orientation="horizontal" className="items-center gap-3">
+                <FieldContent className="gap-0">
+                  <FieldTitle>착용자 키</FieldTitle>
+                </FieldContent>
+                <RadioGroupItem value="height" id="bulk-measurement-height" />
+              </Field>
+            </FieldLabel>
+          </RadioGroup>
+        </Field>
+
+        <Field orientation="vertical" className="gap-2">
+          <FieldContent className="gap-1">
+            <FieldLabel htmlFor="bulk-measurement-value">
+              <FieldTitle>
+                {measurementType === "length" ? "넥타이 길이" : "착용자 키"}
+              </FieldTitle>
+            </FieldLabel>
+            {measurementType === "length" ? (
+              <FieldDescription className="mt-0 text-xs">
+                (매듭 포함)
+              </FieldDescription>
+            ) : null}
+          </FieldContent>
           <Input
+            id="bulk-measurement-value"
             type="number"
             placeholder={measurementType === "length" ? "예: 51" : "예: 175"}
             className="pr-8"
@@ -95,7 +126,7 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
             onChange={(e) => setValue_local(e.target.value)}
             unit="cm"
           />
-        </FormItem>
+        </Field>
       </div>
     );
   },

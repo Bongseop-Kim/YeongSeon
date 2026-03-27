@@ -16,6 +16,7 @@ const GlobalModal = () => {
     description,
     confirmText,
     cancelText,
+    hideCancelButton,
     confirmVariant,
     onConfirm,
     onCancel,
@@ -36,13 +37,17 @@ const GlobalModal = () => {
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
       <DialogContent>
         <DialogHeader>
-          {title && <DialogTitle>{title}</DialogTitle>}
+          <DialogTitle className={title ? undefined : "sr-only"}>
+            {title || "알림"}
+          </DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" className="flex-1" onClick={handleCancel}>
-            {cancelText}
-          </Button>
+          {!hideCancelButton && (
+            <Button variant="outline" className="flex-1" onClick={handleCancel}>
+              {cancelText}
+            </Button>
+          )}
           <Button
             variant={confirmVariant}
             className="flex-1"

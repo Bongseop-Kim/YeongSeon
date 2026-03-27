@@ -1,20 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useId } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui-extended/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui-extended/input";
+import { Form } from "@/components/ui/form";
+import { InputField } from "@/components/composite/input-field";
 import { PwInput } from "@/components/composite/pw-input";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { useEmailSignIn, useSignIn } from "@/features/auth/api/auth-query";
 import { ProviderButton } from "@/features/auth/components/provider-button";
 import {
@@ -44,6 +44,7 @@ type EmailLoginFormValues = z.infer<typeof emailLoginSchema>;
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const passwordId = useId();
   const { user } = useAuthStore();
   const signInMutation = useSignIn();
   const emailSignInMutation = useEmailSignIn();
@@ -98,43 +99,34 @@ const LoginPage = () => {
                 )}
                 className="space-y-4"
               >
-                <FormField
+                <InputField
                   control={form.control}
                   name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>이메일</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          id="login-email"
-                          type="email"
-                          autoComplete="email"
-                          placeholder="이메일을 입력해주세요."
-                          disabled={isSubmitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="이메일"
+                  type="email"
+                  placeholder="이메일을 입력해주세요."
+                  disabled={isSubmitting}
                 />
-                <FormField
+                <Controller
                   control={form.control}
                   name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>비밀번호</FormLabel>
-                      <FormControl>
+                  render={({ field, fieldState }) => (
+                    <Field orientation="vertical">
+                      <FieldLabel htmlFor={passwordId}>
+                        <FieldTitle>비밀번호</FieldTitle>
+                      </FieldLabel>
+                      <FieldContent>
                         <PwInput
                           {...field}
-                          id="login-password"
+                          id={passwordId}
                           autoComplete="current-password"
                           placeholder="비밀번호를 입력해주세요."
                           disabled={isSubmitting}
+                          aria-invalid={!!fieldState.error}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                        <FieldError errors={[fieldState.error]} />
+                      </FieldContent>
+                    </Field>
                   )}
                 />
                 <Button

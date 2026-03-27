@@ -563,11 +563,6 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "custom"인 경우 reformData(custom) 필드가 필요합니다.`,
       );
     }
-    if (row.type === "sample" && sampleData == null) {
-      throw new Error(
-        `주문 상품 행(${i})이 올바르지 않습니다: type이 "sample"인 경우 reformData(sample) 필드가 필요합니다.`,
-      );
-    }
     if (row.type === "token") {
       return {
         order_id: row.order_id,

@@ -3,6 +3,7 @@ import {
   Sheet,
   SheetContent,
   SheetFooter,
+  SheetTitle,
 } from "@/components/ui-extended/sheet";
 import { Button } from "@/components/ui-extended/button";
 import { Separator } from "@/components/ui/separator";
@@ -123,6 +124,7 @@ export function MobilePurchaseSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[60vh]">
+        <SheetTitle className="sr-only">상품 구매</SheetTitle>
         <div className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4">
           {/* 옵션 선택 */}
           {hasOptions && (

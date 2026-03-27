@@ -12,7 +12,6 @@ interface WizardActionButtonsProps {
   isSubmitDisabled: boolean;
   isQuoteMode: boolean;
   grandTotal: number;
-  estimatedDays: string;
   isLoggedIn: boolean;
   hasAddress: boolean;
 }
@@ -42,7 +41,6 @@ export function WizardActionButtons({
   isSubmitDisabled,
   isQuoteMode,
   grandTotal,
-  estimatedDays,
   isLoggedIn,
   hasAddress,
 }: WizardActionButtonsProps) {
@@ -77,35 +75,22 @@ export function WizardActionButtons({
     }
 
     return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm mb-2">
-          {isLoggedIn ? (
-            <span className="text-zinc-900 font-medium">
-              {grandTotal.toLocaleString()}원
-            </span>
-          ) : (
-            <span className="text-zinc-500 text-xs">
-              예상 기간: {estimatedDays}
-            </span>
-          )}
-          {isLoggedIn && <span className="text-zinc-500">{estimatedDays}</span>}
-        </div>
-        <div className="flex gap-2 items-center">
-          {!isFirstStep && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onPrev}
-              className="size-12 shrink-0"
-            >
-              <ChevronLeft />
-            </Button>
-          )}
-          <Button type="button" size="xl" onClick={onNext} className="flex-1">
-            다음
+      <div className="flex gap-2 items-center">
+        {!isFirstStep && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onPrev}
+            className="size-12 shrink-0"
+            aria-label="이전 단계"
+          >
+            <ChevronLeft />
           </Button>
-        </div>
+        )}
+        <Button type="button" size="xl" onClick={onNext} className="flex-1">
+          다음
+        </Button>
       </div>
     );
   }

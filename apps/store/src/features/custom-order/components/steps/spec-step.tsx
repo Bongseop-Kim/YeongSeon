@@ -1,6 +1,5 @@
 import { Controller, useFormContext } from "react-hook-form";
-import { RadioCard } from "@/components/composite/radio-card";
-import { CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioChoiceField } from "@/components/composite/radio-choice-field";
 import { UtilityPagePanel } from "@/components/composite/utility-page";
 import { Input } from "@/components/ui-extended/input";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -28,18 +27,24 @@ export const SpecStep = () => {
         >
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {(["ADULT", "CHILD"] as const).map((type) => (
-              <RadioCard
+              <RadioChoiceField
                 key={type}
                 value={type}
                 id={`size-type-${type}`}
                 selected={sizeType === type}
-              >
-                <CardHeader>
-                  <CardTitle>
-                    {type === "ADULT" ? "성인용" : "아동용"}
-                  </CardTitle>
-                </CardHeader>
-              </RadioCard>
+                variant="row"
+                title={type === "ADULT" ? "성인용" : "아동용"}
+                description={
+                  type === "ADULT"
+                    ? "가장 일반적인 행사·유니폼 기준 폭과 길이를 적용합니다."
+                    : "폭과 길이를 줄여 아동 착용 비율에 맞춘 규격입니다."
+                }
+                meta={
+                  <span>
+                    {type === "ADULT" ? "기본 8cm 권장" : "폭 6~7cm 권장"}
+                  </span>
+                }
+              />
             ))}
           </div>
         </RadioGroup>

@@ -106,7 +106,9 @@ function getItemPrice(
     case "custom":
       return `${item.customData.pricing.totalCost.toLocaleString()}원`;
     case "sample":
-      return `${item.sampleData.pricing.totalCost.toLocaleString()}원`;
+      return item.sampleData
+        ? `${item.sampleData.pricing.totalCost.toLocaleString()}원`
+        : null;
     case "reform":
       return `${(item.reformData.cost * item.quantity).toLocaleString()}원`;
     case "token":

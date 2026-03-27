@@ -1,18 +1,26 @@
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 import type { Control } from "react-hook-form";
-import { Label } from "@/components/ui/label";
+import { useId } from "react";
 import { Input } from "@/components/ui-extended/input";
-import { RadioGroup } from "@/components/ui/radio-group";
-import { FormSection } from "@/components/ui/form-section";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Field,
+  FieldContent,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { ContactMethod } from "@yeongseon/shared";
 
 const CONTACT_METHOD_OPTIONS = [
   { value: "phone", label: "전화" },
   { value: "kakao", label: "카카오톡" },
   { value: "email", label: "이메일" },
-];
+] as const satisfies ReadonlyArray<{ value: ContactMethod; label: string }>;
 
-const CONTACT_METHOD_PLACEHOLDERS: Record<string, string> = {
+const CONTACT_METHOD_PLACEHOLDERS: Record<ContactMethod, string> = {
   phone: "010-1234-5678",
   kakao: "카카오톡 ID",
   email: "example@email.com",
@@ -20,89 +28,110 @@ const CONTACT_METHOD_PLACEHOLDERS: Record<string, string> = {
 
 interface ContactInfoSectionProps {
   control: Control<QuoteOrderOptions>;
-  contactMethod: "email" | "kakao" | "phone";
 }
 
-export const ContactInfoSection = ({
-  control,
-  contactMethod,
-}: ContactInfoSectionProps) => {
+export const ContactInfoSection = ({ control }: ContactInfoSectionProps) => {
+  const contactMethodTitleId = useId();
+  const currentContactMethod = useWatch({
+    control,
+    name: "contactMethod",
+  });
+
   return (
-    <FormSection title="담당자 연락처">
+    <FieldSet className="gap-4">
+      <FieldLegend>담당자 연락처</FieldLegend>
+
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label
-            htmlFor="contactName"
-            className="text-sm font-medium text-zinc-900 mb-2 block"
-          >
-            담당자 성함 <span className="text-red-500">*</span>
-          </Label>
-          <Controller
-            name="contactName"
-            control={control}
-            render={({ field }) => (
-              <Input id="contactName" placeholder="홍길동" {...field} />
-            )}
-          />
-        </div>
-        <div>
-          <Label
-            htmlFor="contactTitle"
-            className="text-sm font-medium text-zinc-900 mb-2 block"
-          >
-            직책
-          </Label>
-          <Controller
-            name="contactTitle"
-            control={control}
-            render={({ field }) => (
-              <Input id="contactTitle" placeholder="대리" {...field} />
-            )}
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label className="text-sm font-medium text-zinc-900 mb-2 block">
-          연락 방법 <span className="text-red-500">*</span>
-        </Label>
         <Controller
-          name="contactMethod"
+          name="contactName"
           control={control}
           render={({ field }) => (
-            <RadioGroup
-              options={CONTACT_METHOD_OPTIONS}
-              value={field.value}
-              onValueChange={field.onChange}
-              namePrefix="contactMethod"
-              className="flex flex-row gap-4"
-            />
+            <Field orientation="vertical">
+              <FieldLabel htmlFor="contactName">
+                <FieldTitle>
+                  담당자 성함 <span className="text-red-500">*</span>
+                </FieldTitle>
+              </FieldLabel>
+              <FieldContent>
+                <Input id="contactName" placeholder="홍길동" {...field} />
+              </FieldContent>
+            </Field>
+          )}
+        />
+        <Controller
+          name="contactTitle"
+          control={control}
+          render={({ field }) => (
+            <Field orientation="vertical">
+              <FieldLabel htmlFor="contactTitle">
+                <FieldTitle>직책</FieldTitle>
+              </FieldLabel>
+              <FieldContent>
+                <Input id="contactTitle" placeholder="대리" {...field} />
+              </FieldContent>
+            </Field>
           )}
         />
       </div>
 
-      <div>
-        <Label
-          htmlFor="contactValue"
-          className="text-sm font-medium text-zinc-900 mb-2 block"
-        >
-          연락처 <span className="text-red-500">*</span>
-        </Label>
-        <Controller
-          name="contactValue"
-          control={control}
-          render={({ field }) => (
-            <Input
-              id="contactValue"
-              placeholder={
-                CONTACT_METHOD_PLACEHOLDERS[contactMethod] ??
-                "연락처를 입력해주세요"
-              }
-              {...field}
-            />
-          )}
-        />
-      </div>
-    </FormSection>
+      <Controller
+        name="contactMethod"
+        control={control}
+        render={({ field }) => (
+          <Field orientation="vertical">
+            <FieldLabel>
+              <FieldTitle id={contactMethodTitleId}>
+                연락 방법 <span className="text-red-500">*</span>
+              </FieldTitle>
+            </FieldLabel>
+            <FieldContent>
+              <RadioGroup
+                aria-labelledby={contactMethodTitleId}
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex flex-row gap-4"
+              >
+                {CONTACT_METHOD_OPTIONS.map((option) => {
+                  const itemId = `contact-method-${option.value}`;
+                  return (
+                    <Field key={option.value} orientation="horizontal">
+                      <RadioGroupItem value={option.value} id={itemId} />
+                      <FieldLabel htmlFor={itemId}>
+                        <FieldTitle>{option.label}</FieldTitle>
+                      </FieldLabel>
+                    </Field>
+                  );
+                })}
+              </RadioGroup>
+            </FieldContent>
+          </Field>
+        )}
+      />
+
+      <Controller
+        name="contactValue"
+        control={control}
+        render={({ field }) => (
+          <Field orientation="vertical">
+            <FieldLabel htmlFor="contactValue">
+              <FieldTitle>
+                연락처 <span className="text-red-500">*</span>
+              </FieldTitle>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                id="contactValue"
+                placeholder={
+                  CONTACT_METHOD_PLACEHOLDERS[
+                    currentContactMethod ?? "phone"
+                  ] ?? "연락처를 입력해주세요"
+                }
+                {...field}
+              />
+            </FieldContent>
+          </Field>
+        )}
+      />
+    </FieldSet>
   );
 };

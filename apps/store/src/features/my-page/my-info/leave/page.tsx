@@ -4,7 +4,13 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui-extended/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { ROUTES } from "@/constants/ROUTES";
 import { signOut } from "@/features/auth/api/auth-api";
 import { useDeleteAccount } from "@/features/auth/api/auth-query";
@@ -40,14 +46,21 @@ function LeaveConfirmationBlock({
         name="agree"
         control={control}
         render={({ field }) => (
-          <div className="flex items-start gap-3">
+          <Field orientation="horizontal" className="items-start gap-3">
             <Checkbox
               id="agree"
               checked={field.value}
               onCheckedChange={field.onChange}
             />
-            <Label subLabel="유의사항을 확인하였으며, 이에 동의합니다." />
-          </div>
+            <FieldContent className="gap-1">
+              <FieldLabel htmlFor="agree">
+                <FieldTitle>탈퇴 동의</FieldTitle>
+              </FieldLabel>
+              <FieldDescription className="mt-0">
+                유의사항을 확인하였으며, 이에 동의합니다.
+              </FieldDescription>
+            </FieldContent>
+          </Field>
         )}
       />
 

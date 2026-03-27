@@ -1,6 +1,6 @@
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { CircleAlertIcon, ReceiptTextIcon } from "lucide-react";
+import { ReceiptTextIcon } from "lucide-react";
 import { ROUTES } from "@/constants/ROUTES";
 import { Button } from "@/components/ui-extended/button";
 import { Separator } from "@/components/ui/separator";
@@ -26,21 +26,11 @@ import { useOrderStore } from "@/store/order";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Empty } from "@/components/composite/empty";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
-import { DataTable } from "@/components/ui/data-table";
-import { ReformActionButtons } from "./components/reform-action-buttons";
-import { MobileReformSheet } from "./components/mobile-reform-sheet";
-import {
-  UtilityKeyValueRow,
-  UtilityPageAside,
-  UtilityPageIntro,
-} from "@/components/composite/utility-page";
+import { TieLengthGuideAccordion } from "@/components/composite/tie-length-guide-accordion";
+import { MobileReformSheet } from "@/features/reform/components/mobile-reform-sheet";
+import { UtilityPageIntro } from "@/components/composite/utility-page";
+import { OrderSummaryAside } from "@/components/composite/order-summary-aside";
+import { ShopActionBar } from "@/components/composite/shop-action-bar";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import {
   toReformCartItems,
@@ -67,16 +57,14 @@ const DEFAULT_REFORM_OPTIONS: ReformOptions = {
 };
 
 const ReformPage = () => {
-  const { confirm } = useModalStore();
+  const { confirm, alert } = useModalStore();
   const { addMultipleReformToCart } = useCart();
   const { setOrderItems } = useOrderStore();
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
-  const [agreedToRefundPolicy, setAgreedToRefundPolicy] = useState(false);
   const selectAllCheckboxId = "reform-select-all";
-  const refundPolicyCheckboxId = "reform-refund-policy";
   const [checkedIndicesForBulk, setCheckedIndicesForBulk] = useState<number[]>(
     [],
   );
@@ -94,7 +82,7 @@ const ReformPage = () => {
     name: "ties",
   });
 
-  const watchedTies = form.watch("ties");
+  const watchedTies = useWatch({ control: form.control, name: "ties" });
 
   const addTie = () => {
     append({
@@ -120,80 +108,105 @@ const ReformPage = () => {
     [uploadTieImagesMutation],
   );
 
-  const uploadValidatedTies = useCallback(async () => {
-    const ties = form.getValues().ties;
-    const uploadedTies = await uploadTiesIfNeeded(ties);
-    return uploadedTies;
-  }, [form, uploadTiesIfNeeded]);
+  const selectedTieIndices = useMemo(
+    () =>
+      watchedTies
+        .map((tie, index) => (tie.checked ? index : -1))
+        .filter((index) => index !== -1),
+    [watchedTies],
+  );
+
+  const getSelectedTiesSnapshot = useCallback(() => {
+    const ties = form.getValues("ties");
+    const selectedIndices: number[] = [];
+    const selectedTies: ReformOptions["ties"] = [];
+    ties.forEach((tie, index) => {
+      if (tie.checked) {
+        selectedIndices.push(index);
+        selectedTies.push(structuredClone(tie));
+      }
+    });
+    return { selectedIndices, selectedTies };
+  }, [form]);
 
   const hasValidPricing =
     Number.isFinite(pricing?.baseCost) &&
     Number.isFinite(pricing?.shippingCost);
 
   const withSubmitGuard = useCallback(
-    async (action: (baseCost: number) => Promise<void>) => {
+    async (
+      action: (
+        baseCost: number,
+        selectedTies: ReformOptions["ties"],
+      ) => Promise<void>,
+    ) => {
       if (isSubmittingRef.current) return;
       if (fields.length === 0) {
         confirm("수선할 넥타이를 추가해주세요.");
         return;
       }
-      if (!agreedToRefundPolicy) {
-        confirm("취소 및 환불 제한 내용에 동의해주세요.");
+
+      const { selectedIndices, selectedTies } = getSelectedTiesSnapshot();
+
+      if (selectedIndices.length === 0) {
+        alert("접수할 넥타이를 선택해주세요.");
         return;
       }
+
       isSubmittingRef.current = true;
-      const isValid = await form.trigger("ties");
-      if (!isValid) {
-        isSubmittingRef.current = false;
-        return;
-      }
-      if (!hasValidPricing || !pricing) {
-        confirm(
-          "수선 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
-        );
-        isSubmittingRef.current = false;
-        return;
-      }
       try {
-        await action(pricing.baseCost);
+        const isValid = await form.trigger(
+          selectedIndices.map((index) => `ties.${index}` as const),
+        );
+        if (!isValid) {
+          return;
+        }
+        if (!hasValidPricing || !pricing) {
+          confirm(
+            "수선 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+          );
+          return;
+        }
+        await action(pricing.baseCost, selectedTies);
       } finally {
         isSubmittingRef.current = false;
       }
     },
     [
-      agreedToRefundPolicy,
-      fields.length,
+      alert,
       confirm,
+      fields.length,
       form,
+      getSelectedTiesSnapshot,
       hasValidPricing,
       pricing,
     ],
   );
 
   const handleDirectOrder = () =>
-    withSubmitGuard(async (baseCost) => {
+    withSubmitGuard(async (baseCost, selectedTies) => {
       if (isMobile) {
         setIsPurchaseSheetOpen(true);
         return;
       }
 
-      const uploadedTies = await uploadValidatedTies();
+      const uploadedTies = await uploadTiesIfNeeded(selectedTies);
       const orderItems = toReformCartItems(uploadedTies, baseCost);
       setOrderItems(orderItems);
       navigate(ROUTES.ORDER_FORM);
     });
 
   const handleMobileOrder = () =>
-    withSubmitGuard(async (baseCost) => {
-      const uploadedTies = await uploadValidatedTies();
+    withSubmitGuard(async (baseCost, selectedTies) => {
+      const uploadedTies = await uploadTiesIfNeeded(selectedTies);
       const orderItems = toReformCartItems(uploadedTies, baseCost);
       setOrderItems(orderItems);
       navigate(ROUTES.ORDER_FORM);
     });
 
   const handleAddToCart = () =>
-    withSubmitGuard(async (baseCost) => {
-      const uploadedTies = await uploadValidatedTies();
+    withSubmitGuard(async (baseCost, selectedTies) => {
+      const uploadedTies = await uploadTiesIfNeeded(selectedTies);
 
       await addMultipleReformToCart(
         uploadedTies.map((tie) => toReformData(tie, baseCost)),
@@ -203,18 +216,19 @@ const ReformPage = () => {
       setIsPurchaseSheetOpen(false);
     });
 
-  const hasTies = fields.length > 0 && hasValidPricing;
-  const baseCost = hasTies && pricing ? pricing.baseCost : 0;
-  const estimatedShipping = hasTies && pricing ? pricing.shippingCost : 0;
-  const totalCost = hasTies ? baseCost * fields.length + estimatedShipping : 0;
+  const formatCost = (cost: number | undefined, suffix = "원") =>
+    cost !== undefined ? `${cost.toLocaleString()}${suffix}` : "-";
 
-  const selectedTieIndices = useMemo(
-    () =>
-      watchedTies
-        .map((tie, index) => (tie.checked ? index : -1))
-        .filter((index) => index !== -1),
-    [watchedTies],
-  );
+  const selectedCount = selectedTieIndices.length;
+  const baseCost = hasValidPricing && pricing ? pricing.baseCost : undefined;
+  const estimatedShipping =
+    hasValidPricing && selectedCount > 0 && pricing
+      ? pricing.shippingCost
+      : undefined;
+  const totalCost =
+    hasValidPricing && selectedCount > 0 && pricing
+      ? pricing.baseCost * selectedCount + pricing.shippingCost
+      : undefined;
 
   const handleDelete = () => {
     selectedTieIndices
@@ -238,8 +252,8 @@ const ReformPage = () => {
   const isSomeChecked = watchedTies.some((tie) => tie.checked);
   const isIndeterminate = isSomeChecked && !isAllChecked;
   const isActionDisabled =
-    !hasTies ||
-    !agreedToRefundPolicy ||
+    fields.length === 0 ||
+    selectedCount === 0 ||
     uploadTieImagesMutation.isPending ||
     !hasValidPricing;
 
@@ -250,98 +264,56 @@ const ReformPage = () => {
           <Form {...form}>
             <PageLayout
               sidebar={
-                <div className="border-t border-stone-200">
-                  <UtilityPageAside
-                    icon={ReceiptTextIcon}
-                    title="접수 요약"
-                    description="현재 접수 수량과 예상 결제를 확인합니다."
-                    className="px-0 pt-0"
-                  >
-                    <dl>
-                      <UtilityKeyValueRow
-                        label="수선 수량"
-                        value={`총 ${fields.length}개`}
-                      />
-                      <UtilityKeyValueRow
-                        label="기본 수선비"
-                        value={`${baseCost.toLocaleString()}원 / 개`}
-                      />
-                      <UtilityKeyValueRow
-                        label="예상 배송비"
-                        value={`${estimatedShipping.toLocaleString()}원`}
-                      />
-                      <UtilityKeyValueRow
-                        label="예상 결제"
-                        value={`${totalCost.toLocaleString()}원`}
-                        className="pt-4"
-                      />
-                    </dl>
-                  </UtilityPageAside>
-
-                  <UtilityPageAside
-                    icon={CircleAlertIcon}
-                    title="진행 전 확인"
-                    description="입력 중 확인할 정보만 정리했습니다."
-                    className="px-0"
-                  >
-                    <Accordion type="single" collapsible>
-                      <AccordionItem value="length-guide">
-                        <AccordionTrigger>
-                          내게 맞는 넥타이 길이
-                        </AccordionTrigger>
-                        <AccordionContent className="text-zinc-600">
-                          <DataTable
-                            headers={["키", "권장 길이"]}
-                            data={HEIGHT_GUIDE.map((guide) => ({
-                              키: guide.height,
-                              "권장 길이": guide.length,
-                            }))}
-                            size="sm"
-                          />
-                        </AccordionContent>
-                      </AccordionItem>
-                      <AccordionItem value="notice">
-                        <AccordionTrigger>유의사항</AccordionTrigger>
-                        <AccordionContent className="space-y-2 text-zinc-600">
-                          <p>
-                            제주/도서산간 지역은 배송비 3,000원이 추가됩니다.
-                          </p>
-                          <p>
-                            예상 수선 기간은 넥타이 확인 후 영업일 기준
-                            10일입니다.
-                          </p>
-                          <p>접수 이후에는 취소 및 환불이 불가능합니다.</p>
-                          <p>
-                            접수 전 취소 시 택배비 3,000원을 제외하고
-                            환불됩니다.
-                          </p>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                    <div className="mt-4 flex items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 px-3 py-3">
-                      <Checkbox
-                        id={refundPolicyCheckboxId}
-                        checked={agreedToRefundPolicy}
-                        onCheckedChange={(checked) =>
-                          setAgreedToRefundPolicy(checked === true)
-                        }
-                      />
-                      <Label
-                        htmlFor={refundPolicyCheckboxId}
-                        className="cursor-pointer text-sm leading-5 text-zinc-700"
-                      >
-                        취소 및 환불 제한 내용을 확인했고 이에 동의합니다.
-                      </Label>
-                    </div>
-                  </UtilityPageAside>
-                </div>
+                <OrderSummaryAside
+                  icon={ReceiptTextIcon}
+                  title="접수 요약"
+                  description="현재 접수 수량과 예상 결제를 확인합니다."
+                  rows={[
+                    {
+                      id: "selected-count",
+                      label: "수선 수량",
+                      value: `총 ${selectedCount}개`,
+                    },
+                    {
+                      id: "base-cost",
+                      label: "기본 수선비",
+                      value: formatCost(baseCost, "원 / 개"),
+                    },
+                    {
+                      id: "shipping-cost",
+                      label: "예상 배송비",
+                      value: formatCost(estimatedShipping),
+                    },
+                    {
+                      id: "total-cost",
+                      label: "예상 결제",
+                      value: formatCost(totalCost),
+                      className: "pt-4",
+                    },
+                  ]}
+                  footer={
+                    <TieLengthGuideAccordion
+                      notices={[
+                        "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
+                        "예상 수선 기간은 넥타이 확인 후 영업일 기준 10일입니다.",
+                        "접수 이후에는 취소 및 환불이 불가능합니다.",
+                        "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
+                      ]}
+                      className="mt-4"
+                    />
+                  }
+                />
               }
               actionBar={
-                <ReformActionButtons
+                <ShopActionBar
                   onAddToCart={handleAddToCart}
                   onOrder={handleDirectOrder}
                   disabled={isActionDisabled}
-                  isUploading={uploadTieImagesMutation.isPending}
+                  disabledLabel={
+                    uploadTieImagesMutation.isPending
+                      ? "업로드 중..."
+                      : undefined
+                  }
                 />
               }
             >
@@ -378,7 +350,7 @@ const ReformPage = () => {
                         size="sm"
                         onClick={() => {
                           if (selectedTieIndices.length === 0) {
-                            confirm("적용할 항목을 선택해주세요.");
+                            alert("적용할 항목을 선택해주세요.");
                             return;
                           }
 
@@ -459,8 +431,8 @@ const ReformPage = () => {
             onOpenChange={setIsPurchaseSheetOpen}
             onAddToCart={handleAddToCart}
             onOrder={handleMobileOrder}
-            tieCount={fields.length}
-            totalCost={totalCost}
+            tieCount={selectedCount}
+            totalCost={totalCost ?? 0}
           />
         </MainContent>
       </MainLayout>

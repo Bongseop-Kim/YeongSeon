@@ -516,28 +516,36 @@ const OrderDetailPage = () => {
                               )}
                             />
                           </div>
-                          <Separator />
-                          <div className="py-5">
-                            <p className="text-base font-semibold tracking-tight text-zinc-950">
-                              {isSample ? "샘플 제작 옵션" : "주문 제작 옵션"}
-                            </p>
-                            <p className="mt-1 text-sm text-zinc-500">
-                              제작 조건과 참조 이미지를 확인합니다.
-                            </p>
-                            <div className="mt-4">
-                              <CustomOrderOptionsSection
-                                options={orderData.options}
-                                referenceImageUrls={
-                                  orderData.referenceImageUrls
-                                }
-                                additionalNotes={orderData.additionalNotes}
-                                hasSample={isSample}
-                                sampleType={
-                                  isSample ? item.sampleData.sampleType : null
-                                }
-                              />
-                            </div>
-                          </div>
+                          {orderData && (
+                            <>
+                              <Separator />
+                              <div className="py-5">
+                                <p className="text-base font-semibold tracking-tight text-zinc-950">
+                                  {isSample
+                                    ? "샘플 제작 옵션"
+                                    : "주문 제작 옵션"}
+                                </p>
+                                <p className="mt-1 text-sm text-zinc-500">
+                                  제작 조건과 참조 이미지를 확인합니다.
+                                </p>
+                                <div className="mt-4">
+                                  <CustomOrderOptionsSection
+                                    options={orderData.options}
+                                    referenceImageUrls={
+                                      orderData.referenceImageUrls
+                                    }
+                                    additionalNotes={orderData.additionalNotes}
+                                    hasSample={isSample}
+                                    sampleType={
+                                      isSample
+                                        ? (item.sampleData?.sampleType ?? null)
+                                        : null
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </>
+                          )}
                           {index < order.items.length - 1 ? (
                             <Separator />
                           ) : null}

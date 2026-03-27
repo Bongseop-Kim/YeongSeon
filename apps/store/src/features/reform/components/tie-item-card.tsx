@@ -1,13 +1,15 @@
-import { type Control } from "react-hook-form";
-import { Input } from "@/components/ui-extended/input";
-import { RadioGroup } from "@/components/ui/radio-group";
+import { useId } from "react";
+import { type Control, Controller, useWatch } from "react-hook-form";
 import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui-extended/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   isMeasurementType,
   type ReformOptions,
@@ -24,20 +26,30 @@ interface TieItemCardProps {
 }
 
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
+  const tieLengthId = useId();
+  const wearerHeightId = useId();
+  const currentMeasurementType = useWatch({
+    control,
+    name: `ties.${index}.measurementType`,
+  });
+
   return (
     <div className="py-4">
       <div className="flex items-start justify-between gap-3">
-        <FormField
+        <Controller
           control={control}
           name={`ties.${index}.checked`}
           render={({ field }) => (
-            <label className="flex items-center gap-3 text-sm font-medium text-zinc-900">
+            <Field orientation="horizontal" className="gap-3 items-center">
               <Checkbox
+                id={`tie-checked-${index}`}
                 checked={field.value || false}
                 onCheckedChange={field.onChange}
               />
-              <span>항목 {index + 1}</span>
-            </label>
+              <FieldLabel htmlFor={`tie-checked-${index}`}>
+                <FieldTitle>항목 {index + 1}</FieldTitle>
+              </FieldLabel>
+            </Field>
           )}
         />
 
@@ -49,13 +61,18 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       </div>
 
       <div className="mt-3 grid gap-4 md:grid-cols-[140px_minmax(0,1fr)] md:items-start">
-        <FormField
+        <Controller
           control={control}
           name={`ties.${index}.image`}
           render={({ field }) => (
-            <FormItem>
-              <FormLabel subLabel="(선택사항)">넥타이 사진</FormLabel>
-              <FormControl>
+            <Field orientation="vertical">
+              <FieldLabel>
+                <FieldTitle>넥타이 사진</FieldTitle>
+              </FieldLabel>
+              <FieldDescription className="-mt-1 text-xs">
+                (선택사항)
+              </FieldDescription>
+              <FieldContent>
                 <ImagePicker
                   selectedFile={
                     field.value instanceof File ? field.value : undefined
@@ -70,120 +87,149 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                     field.onChange(url ?? undefined);
                   }}
                 />
-              </FormControl>
-            </FormItem>
+              </FieldContent>
+            </Field>
           )}
         />
 
         <div className="space-y-4">
-          <FormField
+          <Controller
             control={control}
             name={`ties.${index}.measurementType`}
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>측정 방식</FormLabel>
-                <FormControl>
+              <Field orientation="vertical">
+                <FieldLabel>
+                  <FieldTitle>측정 방식</FieldTitle>
+                </FieldLabel>
+                <FieldContent>
                   <RadioGroup
                     value={field.value || "length"}
-                    onValueChange={(value) => {
+                    onValueChange={(value: string) => {
                       field.onChange(
                         isMeasurementType(value) ? value : "length",
                       );
                     }}
-                    options={[
-                      { value: "length", label: "넥타이 길이" },
-                      { value: "height", label: "착용자 키" },
-                    ]}
-                    namePrefix={`measurement-${index}`}
-                  />
-                </FormControl>
-              </FormItem>
+                    className="gap-2"
+                  >
+                    <Field orientation="horizontal">
+                      <RadioGroupItem
+                        value="length"
+                        id={`measurement-${index}-length`}
+                      />
+                      <FieldLabel htmlFor={`measurement-${index}-length`}>
+                        <FieldTitle>넥타이 길이</FieldTitle>
+                      </FieldLabel>
+                    </Field>
+                    <Field orientation="horizontal">
+                      <RadioGroupItem
+                        value="height"
+                        id={`measurement-${index}-height`}
+                      />
+                      <FieldLabel htmlFor={`measurement-${index}-height`}>
+                        <FieldTitle>착용자 키</FieldTitle>
+                      </FieldLabel>
+                    </Field>
+                  </RadioGroup>
+                </FieldContent>
+              </Field>
             )}
           />
 
-          <FormField
-            control={control}
-            name={`ties.${index}.measurementType`}
-            render={({ field: measurementField }) => {
-              const currentMeasurementType = measurementField.value || "length";
-
-              return currentMeasurementType === "length" ? (
-                <FormField
-                  control={control}
-                  name={`ties.${index}.tieLength`}
-                  rules={{
-                    required: "넥타이 길이를 입력해주세요",
-                  }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel
-                        htmlFor={`tie-length-${index}`}
-                        subLabel="(매듭 포함)"
-                      >
-                        <Required />
-                        넥타이 길이
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          id={`tie-length-${index}`}
-                          type="number"
-                          placeholder="예: 51"
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value
-                                ? Number(e.target.value)
-                                : undefined,
-                            )
-                          }
-                          unit="cm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <FormField
-                  control={control}
-                  name={`ties.${index}.wearerHeight`}
-                  rules={{
-                    required: "착용자 키를 입력해주세요",
-                  }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor={`wearer-height-${index}`}>
-                        <Required />
-                        착용자 키
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          id={`wearer-height-${index}`}
-                          type="number"
-                          placeholder="예: 175"
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value
-                                ? Number(e.target.value)
-                                : undefined,
-                            )
-                          }
-                          unit="cm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              );
-            }}
-          />
+          {(currentMeasurementType ?? "length") === "length" ? (
+            <MeasurementInputField
+              control={control}
+              name={`ties.${index}.tieLength`}
+              id={tieLengthId}
+              label="넥타이 길이"
+              description="(매듭 포함)"
+              placeholder="예: 51"
+              requiredMessage="넥타이 길이를 입력해주세요"
+            />
+          ) : (
+            <MeasurementInputField
+              control={control}
+              name={`ties.${index}.wearerHeight`}
+              id={wearerHeightId}
+              label="착용자 키"
+              placeholder="예: 175"
+              requiredMessage="착용자 키를 입력해주세요"
+            />
+          )}
         </div>
       </div>
     </div>
+  );
+};
+
+interface MeasurementInputFieldProps {
+  control: Control<ReformOptions>;
+  name: `ties.${number}.tieLength` | `ties.${number}.wearerHeight`;
+  id: string;
+  label: string;
+  description?: string;
+  placeholder?: string;
+  requiredMessage: string;
+}
+
+const MeasurementInputField = ({
+  control,
+  name,
+  id,
+  label,
+  description,
+  placeholder,
+  requiredMessage,
+}: MeasurementInputFieldProps) => {
+  const errorId = `${id}-error`;
+
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={{
+        required: requiredMessage,
+        validate: (value) =>
+          value != null && Number.isFinite(value) && value > 0
+            ? true
+            : "0보다 큰 숫자를 입력해주세요.",
+      }}
+      render={({ field, fieldState }) => (
+        <Field orientation="vertical">
+          <FieldLabel htmlFor={id}>
+            <FieldTitle>
+              <Required />
+              {label}
+            </FieldTitle>
+          </FieldLabel>
+          {description && (
+            <FieldDescription className="-mt-1 text-xs">
+              {description}
+            </FieldDescription>
+          )}
+          <FieldContent>
+            <Input
+              {...field}
+              id={id}
+              type="number"
+              placeholder={placeholder}
+              value={field.value ?? ""}
+              onChange={(e) => {
+                const num = Number(e.target.value);
+                field.onChange(
+                  e.target.value === "" || !Number.isFinite(num)
+                    ? undefined
+                    : num,
+                );
+              }}
+              unit="cm"
+              aria-invalid={!!fieldState.error}
+              aria-describedby={fieldState.error ? errorId : undefined}
+            />
+            <FieldError id={errorId} errors={[fieldState.error]} />
+          </FieldContent>
+        </Field>
+      )}
+    />
   );
 };
 

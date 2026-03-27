@@ -9,9 +9,15 @@ import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { Form } from "@/components/ui/form";
 import { useForm, Controller } from "react-hook-form";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { TextareaField } from "@/components/composite/textarea-field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { QuantitySelector } from "@/components/composite/quantity-selector";
 import { ROUTES } from "@/constants/ROUTES";
 import { toast } from "@/lib/toast";
@@ -325,32 +331,32 @@ const ClaimFormPage = () => {
                 >
                   {/* 수량 선택 (수량이 1개보다 많은 경우에만 표시) */}
                   {orderItem.quantity > 1 && (
-                    <div className="space-y-2">
-                      <Label className="text-base font-semibold">
-                        <span className="text-red-500">*</span>수량 선택
-                      </Label>
-                      <Controller
-                        name="quantity"
-                        control={form.control}
-                        rules={{
-                          required: "수량을 선택해주세요.",
-                          min: {
-                            value: 1,
-                            message: "최소 1개 이상 선택해주세요.",
-                          },
-                          max: {
-                            value: orderItem.quantity,
-                            message: `최대 ${orderItem.quantity}개까지 선택 가능합니다.`,
-                          },
-                        }}
-                        render={({ field, fieldState }) => (
-                          <div className="space-y-2">
+                    <Controller
+                      name="quantity"
+                      control={form.control}
+                      rules={{
+                        required: "수량을 선택해주세요.",
+                        min: {
+                          value: 1,
+                          message: "최소 1개 이상 선택해주세요.",
+                        },
+                        max: {
+                          value: orderItem.quantity,
+                          message: `최대 ${orderItem.quantity}개까지 선택 가능합니다.`,
+                        },
+                      }}
+                      render={({ field, fieldState }) => (
+                        <Field orientation="vertical">
+                          <FieldLabel>
+                            <FieldTitle>
+                              <span className="text-red-500">*</span>수량 선택
+                            </FieldTitle>
+                          </FieldLabel>
+                          <FieldContent>
                             <div className="flex items-center justify-between bg-zinc-50 p-4 rounded-sm">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-zinc-600">
-                                  전체 수량: {orderItem.quantity}개
-                                </span>
-                              </div>
+                              <span className="text-sm text-zinc-600">
+                                전체 수량: {orderItem.quantity}개
+                              </span>
                               <QuantitySelector
                                 value={field.value}
                                 onChange={field.onChange}
@@ -358,78 +364,65 @@ const ClaimFormPage = () => {
                                 max={orderItem.quantity}
                               />
                             </div>
-                            {fieldState.error && (
-                              <p className="text-sm text-red-500">
-                                {fieldState.error.message}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      />
-                    </div>
+                            <FieldError errors={[fieldState.error]} />
+                          </FieldContent>
+                        </Field>
+                      )}
+                    />
                   )}
 
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold">
-                      <span className="text-red-500">*</span>사유 선택
-                    </Label>
-                    <Controller
-                      name="reason"
-                      control={form.control}
-                      rules={{ required: "사유를 선택해주세요." }}
-                      render={({ field, fieldState }) => (
-                        <div className="space-y-2">
+                  <Controller
+                    name="reason"
+                    control={form.control}
+                    rules={{ required: "사유를 선택해주세요." }}
+                    render={({ field, fieldState }) => (
+                      <Field orientation="vertical">
+                        <FieldLabel>
+                          <FieldTitle>
+                            <span className="text-red-500">*</span>사유 선택
+                          </FieldTitle>
+                        </FieldLabel>
+                        <FieldContent>
                           <RadioGroup
                             value={field.value}
                             onValueChange={field.onChange}
                             className="space-y-2"
                           >
                             {reasons.map((reason) => (
-                              <div
+                              <Field
                                 key={reason.value}
-                                className="flex items-center space-x-2"
+                                orientation="horizontal"
                               >
                                 <RadioGroupItem
                                   value={reason.value}
                                   id={reason.value}
                                 />
-                                <Label
+                                <FieldLabel
                                   htmlFor={reason.value}
-                                  className="text-sm font-normal cursor-pointer"
+                                  className="font-normal cursor-pointer"
                                 >
-                                  {reason.label}
-                                </Label>
-                              </div>
+                                  <FieldTitle className="font-normal">
+                                    {reason.label}
+                                  </FieldTitle>
+                                </FieldLabel>
+                              </Field>
                             ))}
                           </RadioGroup>
-                          {fieldState.error && (
-                            <p className="text-sm text-red-500">
-                              {fieldState.error.message}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    />
-                  </div>
+                          <FieldError errors={[fieldState.error]} />
+                        </FieldContent>
+                      </Field>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label className="text-base font-semibold">상세 설명</Label>
-                    <Controller
-                      name="description"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Textarea
-                          placeholder={`${claimTypeLabel} 사유를 자세히 입력해주세요.`}
-                          className="min-h-[150px] resize-none"
-                          maxLength={500}
-                          {...field}
-                        />
-                      )}
-                    />
-                    <p className="text-xs text-zinc-500">
-                      최대 500자까지 입력 가능합니다.
-                    </p>
-                  </div>
+                  <TextareaField
+                    control={form.control}
+                    name="description"
+                    label="상세 설명"
+                    placeholder={`${claimTypeLabel} 사유를 자세히 입력해주세요.`}
+                    description="최대 500자까지 입력 가능합니다."
+                    textareaClassName="min-h-[150px] resize-none"
+                    maxLength={500}
+                  />
 
                   <div className="flex gap-2 pt-4">
                     <Button

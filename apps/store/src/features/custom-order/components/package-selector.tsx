@@ -1,4 +1,4 @@
-import { RadioCard } from "@/components/composite/radio-card";
+import { RadioChoiceField } from "@/components/composite/radio-choice-field";
 import { PACKAGE_PRESETS } from "@/features/custom-order/constants/PACKAGE_PRESETS";
 import { calculateTotalCost } from "@/features/custom-order/utils/pricing";
 import type { OrderOptions } from "@/features/custom-order/types/order";
@@ -47,7 +47,7 @@ export const PackageSelector = ({
       <div className="mt-5">
         <RadioGroup
           value={selectedPackage ?? ""}
-          onValueChange={(v) => onSelectPackage(v as PackagePreset)}
+          onValueChange={(v: string) => onSelectPackage(v as PackagePreset)}
         >
           <div className="grid grid-cols-1 gap-3">
             {PACKAGE_PRESETS.map((preset) => {
@@ -82,85 +82,68 @@ export const PackageSelector = ({
                   : null;
 
               return (
-                <RadioCard
+                <RadioChoiceField
                   key={preset.id}
                   value={preset.id}
                   id={`package-${preset.id}`}
                   selected={isSelected}
+                  variant="panel"
                   className="text-left"
-                >
-                  <div className="flex flex-col gap-4 p-5 md:flex-row md:items-start md:justify-between">
-                    <div className="min-w-0 space-y-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-base font-semibold text-zinc-950">
-                          {preset.name}
-                        </h4>
-                        {preset.badge ? (
-                          <Badge className="rounded-full px-2 py-0.5 text-[11px]">
-                            {preset.badge}
-                          </Badge>
-                        ) : null}
+                  title={preset.name}
+                  description={preset.tagline}
+                  badge={
+                    preset.badge ? (
+                      <Badge className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground shadow-none">
+                        {preset.badge}
+                      </Badge>
+                    ) : null
+                  }
+                  meta={
+                    <>
+                      <span>
+                        소재{" "}
+                        {OPTION_LABELS.fabricType(preset.values.fabricType)} ·{" "}
+                        {OPTION_LABELS.designType(preset.values.designType)}
+                      </span>
+                      <span>
+                        타이 종류 {OPTION_LABELS.tieType(preset.values.tieType)}
+                      </span>
+                      <span>
+                        심지{" "}
+                        {OPTION_LABELS.interlining(preset.values.interlining)}
+                      </span>
+                      {(preset.values.brandLabel ||
+                        preset.values.careLabel) && (
+                        <span>
+                          라벨{" "}
+                          {[
+                            preset.values.brandLabel && "브랜드",
+                            preset.values.careLabel && "케어",
+                          ]
+                            .filter(Boolean)
+                            .join(" + ")}
+                        </span>
+                      )}
+                    </>
+                  }
+                  footer={
+                    <div className="flex items-end justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-medium text-foreground-muted">
+                          예상
+                        </p>
+                        <p className="mt-1 text-xs text-foreground-muted">
+                          {quantity}개 기준
+                        </p>
                       </div>
-
-                      <p className="text-sm leading-6 text-zinc-600">
-                        {preset.tagline}
-                      </p>
-
-                      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-zinc-500">
-                        <p>
-                          소재{" "}
-                          <span className="text-zinc-700">
-                            {OPTION_LABELS.fabricType(preset.values.fabricType)}{" "}
-                            ·{" "}
-                            {OPTION_LABELS.designType(preset.values.designType)}
-                          </span>
-                        </p>
-                        <p>
-                          봉제{" "}
-                          <span className="text-zinc-700">
-                            {OPTION_LABELS.tieType(preset.values.tieType)}
-                          </span>
-                        </p>
-                        <p>
-                          심지{" "}
-                          <span className="text-zinc-700">
-                            {OPTION_LABELS.interlining(
-                              preset.values.interlining,
-                            )}
-                          </span>
-                        </p>
-                        {(preset.values.brandLabel ||
-                          preset.values.careLabel) && (
-                          <p>
-                            라벨{" "}
-                            <span className="text-zinc-700">
-                              {[
-                                preset.values.brandLabel && "브랜드",
-                                preset.values.careLabel && "케어",
-                              ]
-                                .filter(Boolean)
-                                .join(" + ")}
-                            </span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="shrink-0 border-t border-stone-200 pt-4 md:min-w-40 md:border-t-0 md:border-l md:pl-6 md:pt-0 md:text-right">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
-                        예상
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950">
+                      <p className="text-right text-xl font-semibold text-foreground">
                         {packageCost != null
                           ? `${packageCost.toLocaleString()}원`
                           : "가격 정보 없음"}
                       </p>
-                      <p className="mt-1 text-xs text-zinc-500">
-                        {quantity}개 기준
-                      </p>
                     </div>
-                  </div>
-                </RadioCard>
+                  }
+                />
               );
             })}
           </div>

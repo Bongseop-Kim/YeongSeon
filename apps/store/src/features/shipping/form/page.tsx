@@ -1,6 +1,6 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
 import { Button } from "@/components/ui-extended/button";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type {
   ShippingAddress,
@@ -8,11 +8,23 @@ import type {
 } from "@/features/shipping/types/shipping-address";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui-extended/input";
-import { Label } from "@/components/ui/label";
 import { SelectField } from "@/components/composite/select-field";
-import { DELIVERY_REQUEST_OPTIONS } from "@/constants/DELIVERY_REQUEST_OPTIONS";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  CUSTOM_DELIVERY_REQUEST,
+  DELIVERY_REQUEST_OPTIONS,
+} from "@/constants/DELIVERY_REQUEST_OPTIONS";
 import { CheckboxField } from "@/components/composite/check-box-field";
+import { InputField } from "@/components/composite/input-field";
+import { TextareaField } from "@/components/composite/textarea-field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLegend,
+  FieldLabel,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field";
 import { PostcodeSearch } from "@/features/shipping/components/PostcodeSearch";
 import { useState, useEffect } from "react";
 import type { DaumPostcodeData } from "@/features/shipping/hooks/useDaumPostcode";
@@ -84,10 +96,23 @@ const ShippingFormPage = () => {
   const canUncheckDefault = !isEditMode || (addresses && addresses.length > 1);
 
   const { handleSubmit } = form;
+  const deliveryRequest = useWatch({
+    control: form.control,
+    name: "deliveryRequest",
+  });
   const isPopupContext =
     typeof window !== "undefined" &&
     !!window.opener &&
     window.opener !== window;
+
+  useEffect(() => {
+    if (
+      deliveryRequest !== CUSTOM_DELIVERY_REQUEST &&
+      form.getValues("deliveryMemo") !== undefined
+    ) {
+      form.setValue("deliveryMemo", undefined);
+    }
+  }, [deliveryRequest, form]);
 
   const onSubmit = (data: ShippingAddress) => {
     // 필수값 검증
@@ -174,53 +199,44 @@ const ShippingFormPage = () => {
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-4"
         >
-          <div className="space-y-2">
-            <Label>
-              이름 <span className="text-red-500">*</span>
-            </Label>
-            <Controller
-              name="recipientName"
-              control={form.control}
-              rules={{ required: "이름을 입력해주세요." }}
-              render={({ field, fieldState }) => (
-                <>
-                  <Input
-                    type="text"
-                    placeholder="받는 분의 이름을 입력해주세요."
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    className="w-full"
-                  />
-                  {fieldState.error && (
-                    <p className="text-sm text-red-500">
-                      {fieldState.error.message}
-                    </p>
-                  )}
-                </>
-              )}
-            />
-          </div>
+          <InputField
+            control={form.control}
+            name="recipientName"
+            label={
+              <>
+                이름 <span className="text-red-500">*</span>
+              </>
+            }
+            type="text"
+            placeholder="받는 분의 이름을 입력해주세요."
+            rules={{ required: "이름을 입력해주세요." }}
+          />
 
-          <div className="space-y-2">
-            <Label>
-              휴대폰번호 <span className="text-red-500">*</span>
-            </Label>
-            <Controller
-              name="recipientPhone"
-              control={form.control}
-              rules={{
-                required: "휴대폰번호를 입력해주세요.",
-                validate: (value) => {
-                  const numbers = extractPhoneNumber(value);
-                  if (numbers.length < 10 || numbers.length > 11) {
-                    return "올바른 휴대폰번호를 입력해주세요.";
-                  }
-                  return true;
-                },
-              }}
-              render={({ field, fieldState }) => (
-                <>
+          <Controller
+            name="recipientPhone"
+            control={form.control}
+            rules={{
+              required: "휴대폰번호를 입력해주세요.",
+              validate: (value) => {
+                const numbers = extractPhoneNumber(value);
+                if (numbers.length < 10 || numbers.length > 11) {
+                  return "올바른 휴대폰번호를 입력해주세요.";
+                }
+                return true;
+              },
+            }}
+            render={({ field, fieldState }) => (
+              <Field orientation="vertical">
+                <FieldLabel htmlFor="recipientPhone">
+                  <FieldTitle>
+                    휴대폰번호 <span className="text-red-500">*</span>
+                  </FieldTitle>
+                </FieldLabel>
+                <FieldContent>
                   <Input
+                    {...field}
+                    id="recipientPhone"
+                    name={field.name}
                     type="tel"
                     inputMode="numeric"
                     placeholder="휴대폰번호를 입력해주세요."
@@ -232,22 +248,21 @@ const ShippingFormPage = () => {
                         field.onChange(numbers);
                       }
                     }}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
                     className="w-full"
+                    aria-invalid={!!fieldState.error}
                   />
-                  {fieldState.error && (
-                    <p className="text-sm text-red-500">
-                      {fieldState.error.message}
-                    </p>
-                  )}
-                </>
-              )}
-            />
-          </div>
+                  <FieldError errors={[fieldState.error]} />
+                </FieldContent>
+              </Field>
+            )}
+          />
 
-          <div className="space-y-2">
-            <Label>
+          <FieldSet className="gap-3">
+            <FieldLegend variant="label">
               주소 <span className="text-red-500">*</span>
-            </Label>
+            </FieldLegend>
             <div className="flex items-center gap-2">
               <Controller
                 name="postalCode"
@@ -294,47 +309,30 @@ const ShippingFormPage = () => {
               }}
               onClose={() => setShowPostcodeSearch(false)}
             />
-            <Controller
+            <InputField
+              control={form.control}
               name="detailAddress"
-              control={form.control}
-              render={({ field }) => (
-                <Input
-                  type="text"
-                  placeholder="상세주소를 입력해주세요. (선택사항)"
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value)}
-                  className="w-full"
-                />
-              )}
+              label="상세주소 (선택사항)"
+              placeholder="상세주소를 입력해주세요. (선택사항)"
             />
-          </div>
+          </FieldSet>
 
-          <div className="space-y-2">
-            <SelectField<ShippingAddress>
-              name="deliveryRequest"
+          <SelectField<ShippingAddress>
+            name="deliveryRequest"
+            control={form.control}
+            label="배송 요청사항"
+            options={DELIVERY_REQUEST_OPTIONS}
+          />
+          {deliveryRequest === CUSTOM_DELIVERY_REQUEST && (
+            <TextareaField<ShippingAddress>
+              name="deliveryMemo"
               control={form.control}
-              label="배송 요청사항"
-              options={DELIVERY_REQUEST_OPTIONS}
+              label="배송 메모"
+              placeholder="최대 50자까지 입력 가능합니다."
+              maxLength={50}
+              textareaClassName="min-h-[100px] resize-none"
             />
-            {form.watch("deliveryRequest") === "DELIVERY_REQUEST_5" && (
-              <Controller
-                name="deliveryMemo"
-                control={form.control}
-                render={({ field }) => (
-                  <Textarea
-                    placeholder="최대 50자까지 입력 가능합니다."
-                    className="min-h-[100px] resize-none"
-                    maxLength={50}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                  />
-                )}
-              />
-            )}
-          </div>
+          )}
 
           <CheckboxField<ShippingAddress>
             name="isDefault"

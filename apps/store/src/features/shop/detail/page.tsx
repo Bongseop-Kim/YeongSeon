@@ -4,15 +4,9 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui-extended/button";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Image } from "@imagekit/react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { useState } from "react";
 import { useSelectedOptions } from "@/features/shop/detail/hooks/useSelectedOptions";
-import { ProductActionButtons } from "@/features/shop/detail/components/product-action-buttons";
+import { ShopActionBar } from "@/components/composite/shop-action-bar";
 import { MobilePurchaseSheet } from "@/features/shop/detail/components/mobile-purchase-sheet";
 import { useBreakpoint } from "@/providers/breakpoint-provider";
 import { SelectedOptionItem } from "@/features/shop/detail/components/selected-option-item";
@@ -33,8 +27,7 @@ import {
   getMaterialLabel,
   getPatternLabel,
 } from "@/lib/product/product-labels";
-import { DataTable } from "@/components/ui/data-table";
-import { HEIGHT_GUIDE } from "@/constants/HEIGHT_GUIDE";
+import { TieLengthGuideAccordion } from "@/components/composite/tie-length-guide-accordion";
 import { ProductCard } from "@/components/composite/product-card";
 import { useMemo } from "react";
 import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";
@@ -47,10 +40,7 @@ import { useProduct, useProducts } from "@/features/shop/api/products-query";
 import { useToggleLike } from "@/features/shop/api/likes-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRightIcon } from "lucide-react";
-import {
-  UtilityPageAside,
-  UtilityPageSection,
-} from "@/components/composite/utility-page";
+import { UtilityPageSection } from "@/components/composite/utility-page";
 
 /**
  * 주문 처리 및 네비게이션을 수행하는 공통 헬퍼 함수
@@ -340,7 +330,7 @@ export default function ShopDetailPage() {
             </div>
           }
           sidebar={
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div className="border-b border-stone-200 pb-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
                   {product.code}
@@ -379,13 +369,14 @@ export default function ShopDetailPage() {
                 </p>
               </div>
 
-              <UtilityPageAside
-                title="구매 옵션"
-                description="옵션과 수량을 정한 뒤 장바구니 또는 주문으로 이어집니다."
-                tone="muted"
-                className="rounded-2xl"
-              >
-                <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-950">
+                  구매 옵션
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-zinc-500">
+                  옵션과 수량을 정한 뒤 장바구니 또는 주문으로 이어집니다.
+                </p>
+                <div className="mt-3 space-y-4">
                   {hasOptions && (
                     <Select
                       value=""
@@ -461,48 +452,17 @@ export default function ShopDetailPage() {
                     />
                   )}
                 </div>
-              </UtilityPageAside>
+              </div>
 
               <div className="border-t border-stone-200 pt-2">
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="length-guide">
-                    <AccordionTrigger>내게 맞는 넥타이 길이</AccordionTrigger>
-                    <AccordionContent className="text-zinc-600">
-                      <DataTable
-                        headers={["키", "권장 길이"]}
-                        data={HEIGHT_GUIDE.map((guide) => ({
-                          키: guide.height,
-                          "권장 길이": guide.length,
-                        }))}
-                        size="sm"
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="notes">
-                    <AccordionTrigger>유의사항</AccordionTrigger>
-                    <AccordionContent className="space-y-1 text-zinc-600">
-                      <p>
-                        • 제주/도서산간 지역 배송 시 추가 배송비 3,000원이
-                        부과됩니다.
-                      </p>
-                      <p>
-                        • 예상 수선 기간은 넥타이 확인 후 영업일 기준
-                        10일입니다.
-                      </p>
-                      <p>
-                        • 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이
-                        불가능합니다.
-                      </p>
-                      <p>
-                        • 수선 진행 전 취소 시, 택배비 3,000원을 제외한 금액을
-                        환불해드립니다.
-                      </p>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                <TieLengthGuideAccordion
+                  notices={[
+                    "• 제주/도서산간 지역 배송 시 추가 배송비 3,000원이 부과됩니다.",
+                    "• 예상 수선 기간은 넥타이 확인 후 영업일 기준 10일입니다.",
+                    "• 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이 불가능합니다.",
+                    "• 수선 진행 전 취소 시, 택배비 3,000원을 제외한 금액을 환불해드립니다.",
+                  ]}
+                />
 
                 <button
                   type="button"
@@ -516,13 +476,15 @@ export default function ShopDetailPage() {
             </div>
           }
           actionBar={
-            <ProductActionButtons
-              likes={likeCount}
-              isLiked={isLiked}
-              onLikeToggle={handleLikeToggle}
+            <ShopActionBar
+              like={{ count: likeCount, isLiked, onToggle: handleLikeToggle }}
               onAddToCart={handleAddToCart}
               onOrder={handleOrder}
               disabled={isProductSoldOut}
+              orderLabel="구매하기"
+              disabledLabel="품절"
+              data-testid="product-order-now"
+              data-cart-testid="product-add-to-cart"
             />
           }
         >

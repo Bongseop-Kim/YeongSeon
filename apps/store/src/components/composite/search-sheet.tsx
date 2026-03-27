@@ -1,4 +1,8 @@
-import { Sheet, SheetContent } from "@/components/ui-extended/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from "@/components/ui-extended/sheet";
 import { Input } from "@/components/ui-extended/input";
 import { Button } from "@/components/ui-extended/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -35,6 +39,7 @@ export default function SearchSheet() {
   return (
     <Sheet open={isSheetOpen} onOpenChange={closeSheet}>
       <SheetContent className="bg-zinc-200 px-4 pt-4 pb-4" side="top">
+        <SheetTitle className="sr-only">검색</SheetTitle>
         {/* 검색어 입력 */}
 
         <Input

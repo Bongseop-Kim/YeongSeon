@@ -1,11 +1,9 @@
 import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
-import { RadioCard } from "@/components/composite/radio-card";
-import { CheckboxCard } from "@/components/composite/checkbox-card";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioChoiceField } from "@/components/composite/radio-choice-field";
+import { CheckboxChoiceField } from "@/components/composite/checkbox-choice-field";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { UtilityPagePanel } from "@/components/composite/utility-page";
-import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
@@ -80,25 +78,40 @@ export const SewingStep = () => {
       ]}
     >
       <UtilityPagePanel title="타이 종류">
-        <RadioGroup value={tieType ?? ""} onValueChange={handleTieTypeChange}>
+        <RadioGroup
+          value={tieType ?? "MANUAL"}
+          onValueChange={handleTieTypeChange}
+        >
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {(["MANUAL", "AUTO"] as const).map((type) => (
-              <RadioCard
+              <RadioChoiceField
                 key={type}
                 value={type}
                 id={`tie-type-${type.toLowerCase()}`}
                 selected={
                   type === "MANUAL" ? tieType === null : tieType === "AUTO"
                 }
-              >
-                <CardHeader>
-                  <CardTitle>
-                    {type === "AUTO"
-                      ? "자동 타이 (지퍼)"
-                      : "수동 타이 (손매듭)"}
-                  </CardTitle>
-                </CardHeader>
-              </RadioCard>
+                variant="row"
+                title={
+                  type === "AUTO" ? "자동 타이 (지퍼)" : "수동 타이 (손매듭)"
+                }
+                description={
+                  type === "AUTO"
+                    ? "행사 운영과 단체 착용처럼 빠른 착용이 필요한 경우에 적합합니다."
+                    : "매듭 표현과 전통적인 실루엣을 직접 조절할 수 있습니다."
+                }
+                meta={
+                  <>
+                    <span>{type === "AUTO" ? "딤플 가능" : "수동 매듭"}</span>
+                    <span aria-hidden="true" className="text-zinc-300">
+                      ·
+                    </span>
+                    <span>
+                      {type === "AUTO" ? "착용 속도 우선" : "표현 자유도 우선"}
+                    </span>
+                  </>
+                }
+              />
             ))}
           </div>
         </RadioGroup>
@@ -116,7 +129,7 @@ export const SewingStep = () => {
             const itemId = `sewing-style-${style.key}`;
 
             return (
-              <CheckboxCard
+              <CheckboxChoiceField
                 key={style.key}
                 id={itemId}
                 disabled={isDisabled}
@@ -124,33 +137,14 @@ export const SewingStep = () => {
                 onCheckedChange={(checked) =>
                   handleStyleToggle(style.key, !!checked)
                 }
-              >
-                <CardHeader>
-                  <CardTitle
-                    className={cn(
-                      "text-sm",
-                      isDisabled ? "text-zinc-400" : "text-zinc-900",
-                    )}
-                  >
-                    {style.label}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p
-                    className={cn(
-                      "text-xs",
-                      isDisabled ? "text-zinc-300" : "text-zinc-500",
-                    )}
-                  >
-                    {style.description}
-                  </p>
-                  {isDisabled && (
-                    <p className="mt-1 text-xs text-zinc-300">
-                      자동 타이에서만 선택할 수 있어요
-                    </p>
-                  )}
-                </CardContent>
-              </CheckboxCard>
+                title={style.label}
+                description={style.description}
+                meta={
+                  isDisabled ? (
+                    <span>자동 타이에서만 선택할 수 있어요</span>
+                  ) : undefined
+                }
+              />
             );
           })}
         </div>

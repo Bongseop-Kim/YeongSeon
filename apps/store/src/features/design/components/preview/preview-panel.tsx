@@ -50,13 +50,13 @@ export function PreviewPanel({ className }: PreviewPanelProps) {
       className={cn("relative flex h-full flex-col bg-white", className)}
     >
       {!isFullscreen && (
-        <div className="flex border-b border-gray-200">
+        <div className="flex h-16 border-b border-gray-200">
           {(["preview", "history"] as PreviewTab[]).map((t) => (
             <button
               key={t}
               type="button"
               className={cn(
-                "flex-1 py-2.5 text-sm transition-colors",
+                "flex-1 text-sm transition-colors",
                 tab === t
                   ? "border-b-2 border-gray-900 font-semibold text-gray-900"
                   : "text-gray-400 hover:text-gray-600",
