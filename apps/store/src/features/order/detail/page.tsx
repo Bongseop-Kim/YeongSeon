@@ -203,11 +203,8 @@ const RepairShippingInTransitSection = ({
 const OrderDetailSkeleton = () => (
   <MainLayout>
     <MainContent>
-      <PageLayout
-        contentClassName="py-4 lg:py-8"
-        sidebarClassName="px-4 lg:px-0"
-      >
-        <div className="animate-pulse space-y-8 px-4 lg:px-0">
+      <PageLayout contentClassName="py-4 lg:py-8">
+        <div className="animate-pulse space-y-8">
           <div className="space-y-3 border-b border-stone-200 pb-6">
             <div className="h-4 w-20 rounded bg-zinc-200" />
             <div className="h-10 w-56 rounded bg-zinc-200" />
@@ -298,10 +295,7 @@ const OrderDetailPage = () => {
       <MainLayout>
         <MainContent>
           <PageLayout contentClassName="py-6 lg:py-10">
-            <div
-              className="mx-auto max-w-2xl px-4 lg:px-0"
-              data-testid="order-detail-error"
-            >
+            <div className="mx-auto max-w-2xl" data-testid="order-detail-error">
               <Empty
                 title="주문 정보를 불러오지 못했습니다."
                 description={getOrderErrorDescription(error)}
@@ -326,7 +320,7 @@ const OrderDetailPage = () => {
       <MainLayout>
         <MainContent>
           <PageLayout contentClassName="py-6 lg:py-10">
-            <div className="mx-auto max-w-2xl px-4 lg:px-0">
+            <div className="mx-auto max-w-2xl">
               <Empty
                 title="주문 정보를 찾을 수 없습니다."
                 description="주문 목록에서 다시 확인해주세요."
@@ -358,7 +352,6 @@ const OrderDetailPage = () => {
       <MainContent>
         <PageLayout
           contentClassName="py-4 lg:py-8"
-          sidebarClassName="px-4 lg:px-0"
           sidebar={
             <div className="space-y-5">
               <UtilityPageAside

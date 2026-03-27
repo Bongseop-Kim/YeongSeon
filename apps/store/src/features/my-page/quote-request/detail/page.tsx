@@ -24,7 +24,7 @@ function QuoteRequestDetailSkeleton() {
     <MainLayout>
       <MainContent>
         <PageLayout contentClassName="py-4 lg:py-8">
-          <div className="space-y-4 px-4 lg:px-0">
+          <div className="space-y-4">
             <div className="h-8 w-52 rounded bg-zinc-200" />
             <div className="h-5 w-80 rounded bg-zinc-200" />
             {Array.from({ length: 4 }).map((_, index) => (
@@ -68,7 +68,7 @@ export default function QuoteRequestDetailPage() {
       <MainLayout>
         <MainContent>
           <PageLayout contentClassName="py-4 lg:py-8">
-            <div className="px-4 lg:px-0">
+            <div>
               <Empty
                 title="견적 요청 상세를 불러올 수 없습니다."
                 description={
@@ -97,7 +97,7 @@ export default function QuoteRequestDetailPage() {
       <MainLayout>
         <MainContent>
           <PageLayout contentClassName="py-4 lg:py-8">
-            <div className="px-4 lg:px-0">
+            <div>
               <Empty
                 title="견적 요청 정보를 찾을 수 없습니다."
                 description="목록에서 다시 확인해주세요."
@@ -137,7 +137,7 @@ export default function QuoteRequestDetailPage() {
             />
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:gap-12">
-              <div className="min-w-0 space-y-8 px-4 lg:px-0">
+              <div className="min-w-0 space-y-8">
                 <UtilityPageSection
                   title="기본 정보"
                   description="요청 시점과 수량 정보를 보여줍니다."
@@ -193,7 +193,7 @@ export default function QuoteRequestDetailPage() {
                 </UtilityPageSection>
               </div>
 
-              <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
+              <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
                 <UtilityPageAside
                   title="요약"
                   description="견적 진행 상태를 빠르게 확인합니다."

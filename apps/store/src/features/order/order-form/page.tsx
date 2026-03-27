@@ -29,7 +29,7 @@ import {
   UtilityPageSection,
 } from "@/components/composite/utility-page";
 import { OrderPriceSummaryAside } from "@/components/composite/order-price-summary-aside";
-import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
+import { CheckboxInput } from "@/components/composite/checkbox-input";
 import { PaymentWidgetAside } from "@/components/composite/payment-widget-aside";
 
 const OrderFormPage = () => {
@@ -53,7 +53,6 @@ const OrderFormPage = () => {
     useShippingAddressPopup();
 
   useEffect(() => {
-    // 주문 아이템이 없으면 장바구니로 리다이렉트
     if (!hasOrderItems()) {
       navigate(ROUTES.CART);
     }
@@ -205,7 +204,7 @@ const OrderFormPage = () => {
                     tone="muted"
                     className="rounded-2xl"
                   >
-                    <ConsentCheckbox
+                    <CheckboxInput
                       id="order-form-cancellation-consent"
                       checked={cancellationConsent}
                       onCheckedChange={setCancellationConsent}

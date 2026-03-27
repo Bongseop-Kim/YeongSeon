@@ -18,8 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui-extended/select";
-import type { Product } from "@yeongseon/shared/types/view/product";
-import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 import { Badge } from "@/components/ui/badge";
 import {
   getCategoryLabel,
@@ -33,61 +31,13 @@ import { useMemo } from "react";
 import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";
 import { useOrderStore } from "@/store/order";
 import { useModalStore } from "@/store/modal";
-import type { CartItem } from "@yeongseon/shared/types/view/cart";
-import { generateItemId } from "@/lib/utils";
 import { toast } from "@/lib/toast";
+import { processOrderAndNavigate } from "@/features/shop/detail/utils/process-order";
 import { useProduct, useProducts } from "@/features/shop/api/products-query";
 import { useToggleLike } from "@/features/shop/api/likes-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRightIcon } from "lucide-react";
 import { UtilityPageSection } from "@/components/composite/utility-page";
-
-/**
- * 주문 처리 및 네비게이션을 수행하는 공통 헬퍼 함수
- * CartItem 변환, 옵션 검증, 주문 상태 설정, 네비게이션을 처리합니다.
- */
-function processOrderAndNavigate(
-  product: Product,
-  hasOptions: boolean,
-  selectedOptions: SelectedOption[],
-  baseQuantity: number,
-  setOrderItems: (items: CartItem[]) => void,
-  navigate: (path: string) => void,
-): void {
-  if (hasOptions) {
-    // 옵션이 있는 경우: 선택된 옵션이 있는지 확인
-    if (selectedOptions.length === 0) {
-      toast.warning("옵션을 선택해주세요.");
-      return;
-    }
-
-    // SelectedOption[]을 CartItem[]로 변환
-    const orderItems: CartItem[] = selectedOptions.map((selectedOption) => ({
-      id: generateItemId(product.id, selectedOption.option.id),
-      type: "product",
-      product,
-      selectedOption: selectedOption.option,
-      quantity: selectedOption.quantity,
-    }));
-
-    setOrderItems(orderItems);
-  } else {
-    // 옵션이 없는 경우
-    const orderItems: CartItem[] = [
-      {
-        id: generateItemId(product.id, "base"),
-        type: "product",
-        product,
-        selectedOption: undefined,
-        quantity: baseQuantity,
-      },
-    ];
-
-    setOrderItems(orderItems);
-  }
-
-  navigate(ROUTES.ORDER_FORM);
-}
 
 export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -235,7 +185,6 @@ export default function ShopDetailPage() {
 
     processOrderAndNavigate(
       product,
-      hasOptions,
       selectedOptions,
       baseQuantity,
       setOrderItems,
@@ -258,7 +207,6 @@ export default function ShopDetailPage() {
       <MainContent className="overflow-visible">
         <PageLayout
           contentClassName="py-4 lg:py-6"
-          sidebarClassName="px-4 lg:px-0"
           detail={
             <div className="space-y-10 pt-8">
               {showSimilarSection && (
@@ -507,23 +455,6 @@ export default function ShopDetailPage() {
           product={product}
           open={isPurchaseSheetOpen}
           onOpenChange={setIsPurchaseSheetOpen}
-          onProcessOrder={(selectedOptions, baseQuantity) =>
-            processOrderAndNavigate(
-              product,
-              hasOptions,
-              selectedOptions,
-              baseQuantity,
-              setOrderItems,
-              navigate,
-            )
-          }
-          selectedOptions={selectedOptions}
-          baseQuantity={baseQuantity}
-          handleSelectOption={handleSelectOption}
-          handleRemoveOption={handleRemoveOption}
-          handleUpdateQuantity={handleUpdateQuantity}
-          handleUpdateBaseQuantity={handleUpdateBaseQuantity}
-          resetOptions={resetOptions}
         />
       </MainContent>
     </MainLayout>

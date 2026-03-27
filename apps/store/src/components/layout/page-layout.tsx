@@ -38,7 +38,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   return (
     <div
       className={cn(
-        "mx-auto max-w-7xl lg:px-6 xl:px-8",
+        "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8",
         !isMobile && "pb-4",
         isMobile && actionBar && "pb-24",
       )}

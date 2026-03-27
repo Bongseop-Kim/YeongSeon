@@ -94,7 +94,7 @@ export default function MyInfoNoticePage() {
     return (
       <MainLayout>
         <MainContent>
-          <div className="px-4 py-12 text-center text-zinc-500 lg:px-0">
+          <div className="px-4 py-12 text-center text-zinc-500">
             수신 동의 정보를 불러오는 중...
           </div>
         </MainContent>
@@ -106,7 +106,7 @@ export default function MyInfoNoticePage() {
     return (
       <MainLayout>
         <MainContent>
-          <div className="px-4 lg:px-0">
+          <PageLayout contentClassName="py-4 lg:py-8">
             <Empty
               title="수신 동의 정보를 불러오지 못했습니다."
               description={
@@ -115,7 +115,7 @@ export default function MyInfoNoticePage() {
                   : "잠시 후 다시 시도해주세요."
               }
             />
-          </div>
+          </PageLayout>
         </MainContent>
       </MainLayout>
     );
@@ -133,7 +133,7 @@ export default function MyInfoNoticePage() {
             />
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-12">
-              <div className="min-w-0 px-4 lg:px-0">
+              <div className="min-w-0">
                 <UtilityPageSection
                   title="수신 채널 설정"
                   description="전체 동의를 켜면 문자와 이메일 채널이 함께 반영됩니다."
@@ -200,7 +200,7 @@ export default function MyInfoNoticePage() {
                 </UtilityPageSection>
               </div>
 
-              <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
+              <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
                 <UtilityPageAside
                   title="알림 안내"
                   description="서비스 운영에 필요한 알림은 마케팅 동의와 별도로 발송됩니다."

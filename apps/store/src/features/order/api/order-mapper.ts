@@ -547,7 +547,7 @@ export const parseOrderItemRows = (data: unknown): OrderItemRowDTO[] => {
     const customData =
       row.type === "custom" ? parseCustomDataField(row.reformData, i) : null;
     const sampleData =
-      row.type === "sample" ? parseSampleDataField(row.reformData, i) : null;
+      row.type === "sample" ? parseSampleDataField(row.sampleData, i) : null;
     if (row.type === "product" && product == null) {
       throw new Error(
         `주문 상품 행(${i})이 올바르지 않습니다: type이 "product"인 경우 product 필드가 필요합니다.`,

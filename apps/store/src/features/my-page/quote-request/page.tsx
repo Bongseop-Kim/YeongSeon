@@ -78,7 +78,7 @@ export default function QuoteRequestListPage() {
       <MainLayout>
         <MainContent>
           <PageLayout contentClassName="py-4 lg:py-8">
-            <div className="px-4 lg:px-0">
+            <div>
               <Empty
                 title="견적 요청 내역을 불러올 수 없습니다."
                 description={

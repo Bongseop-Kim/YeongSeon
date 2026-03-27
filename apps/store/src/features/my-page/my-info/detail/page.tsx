@@ -74,7 +74,7 @@ export default function MyInfoDetailPage() {
             />
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.8fr)] lg:gap-12">
-              <div className="min-w-0 space-y-8 px-4 lg:px-0">
+              <div className="min-w-0 space-y-8">
                 <UtilityPageSection
                   icon={UserRoundIcon}
                   title="기본 정보"
@@ -152,7 +152,7 @@ export default function MyInfoDetailPage() {
                 </UtilityPageSection>
               </div>
 
-              <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
+              <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
                 <UtilityPageAside
                   title="다음 작업"
                   description="자주 사용하는 정보 변경 경로입니다."

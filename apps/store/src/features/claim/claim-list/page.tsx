@@ -91,7 +91,7 @@ export default function ClaimListPage() {
       <MainLayout>
         <MainContent>
           <PageLayout contentClassName="py-4 lg:py-8">
-            <div className="px-4 lg:px-0">
+            <div>
               <Empty
                 title="클레임 목록을 불러올 수 없습니다."
                 description={
@@ -128,7 +128,7 @@ export default function ClaimListPage() {
               description="검색과 기간 필터, 클레임 유형 탭은 상단 공용 도구를 사용합니다."
             >
               {filteredClaims.length === 0 ? (
-                <div className="px-4 lg:px-0">
+                <div>
                   <Empty
                     title="취소/반품/교환/토큰환불 내역이 없습니다."
                     description="문제가 있으시면 고객센터로 문의해주세요."
@@ -139,7 +139,7 @@ export default function ClaimListPage() {
                   <article
                     key={claim.id}
                     data-testid={`claim-card-${claim.orderId}-${claim.type}-${claim.id}`}
-                    className="border-b border-stone-200 px-4 py-5 lg:px-0"
+                    className="border-b border-stone-200 py-5"
                   >
                     <div className="flex flex-col gap-5">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">

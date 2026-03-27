@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui-extended/button";
 import { Separator } from "@/components/ui/separator";
+import { FieldTitle } from "@/components/ui/field";
 import {
   CI_PLACEMENT_OPTIONS,
   COLOR_OPTIONS,
@@ -26,12 +27,11 @@ function removeAttachmentsByFilter(
   removeAttachment: (index: number) => void,
   predicate: (attachment: Attachment) => boolean,
 ) {
-  [...attachments].reverse().forEach((attachment, reverseIndex) => {
-    const index = attachments.length - 1 - reverseIndex;
-    if (predicate(attachment)) {
-      removeAttachment(index);
+  for (let i = attachments.length - 1; i >= 0; i--) {
+    if (predicate(attachments[i])) {
+      removeAttachment(i);
     }
-  });
+  }
 }
 
 export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
@@ -143,7 +143,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       className="absolute z-20 bottom-full mb-2 w-72 rounded-xl border bg-white p-4 shadow-lg"
     >
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold">첨부 옵션</h3>
+        <FieldTitle>첨부 옵션</FieldTitle>
         <Button variant="ghost" size="icon-sm" type="button" onClick={onClose}>
           <X className="size-4" />
         </Button>
@@ -152,7 +152,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       <div className="space-y-4">
         <section className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">색상</p>
+            <FieldTitle>색상</FieldTitle>
             <Badge variant="outline">{selectedColorValues.length}/2</Badge>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -184,7 +184,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
         <Separator />
 
         <section className="space-y-2">
-          <p className="text-sm font-medium">패턴</p>
+          <FieldTitle>패턴</FieldTitle>
           <div className="flex flex-wrap gap-2">
             {PATTERN_OPTIONS.map((option) => (
               <Button
@@ -205,7 +205,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
         <Separator />
 
         <section className="space-y-2">
-          <p className="text-sm font-medium">배치</p>
+          <FieldTitle>배치</FieldTitle>
           <div className="flex flex-wrap gap-2">
             {CI_PLACEMENT_OPTIONS.map((option) => (
               <Button
@@ -228,7 +228,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
         <Separator />
 
         <section className="space-y-2">
-          <p className="text-sm font-medium">이미지 업로드</p>
+          <FieldTitle>이미지 업로드</FieldTitle>
           <div className="flex flex-col gap-2">
             <input
               ref={ciInputRef}

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
-interface SelectableFieldProps {
+interface ChoicePanelProps {
   id: string;
   selected: boolean;
   disabled?: boolean;
@@ -24,7 +24,7 @@ interface SelectableFieldProps {
   children?: ReactNode;
 }
 
-export function SelectableField({
+export function ChoicePanel({
   id,
   selected,
   disabled,
@@ -38,7 +38,7 @@ export function SelectableField({
   footer,
   control,
   children,
-}: SelectableFieldProps) {
+}: ChoicePanelProps) {
   return (
     <FieldLabel
       htmlFor={id}

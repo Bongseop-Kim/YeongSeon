@@ -50,7 +50,7 @@ export default function MyInfoEmailPage() {
             />
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-12">
-              <div className="min-w-0 space-y-8 px-4 lg:px-0">
+              <div className="min-w-0 space-y-8">
                 <UtilityPageSection
                   title="인증 진행"
                   description="새 이메일을 입력하고 인증번호를 받아 검증을 완료해 주세요."
@@ -187,7 +187,7 @@ export default function MyInfoEmailPage() {
                 </UtilityPageSection>
               </div>
 
-              <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
+              <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
                 <UtilityPageAside
                   title="안내"
                   description="이메일이 바뀌면 이후 로그인과 안내 메일 수신 주소도 함께 변경됩니다."

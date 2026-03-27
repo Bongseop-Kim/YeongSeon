@@ -28,6 +28,7 @@ import {
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/components/composite/utility-page";
+import { Field, FieldTitle, FieldDescription } from "@/components/ui/field";
 import { OrderSummaryAside } from "@/components/composite/order-summary-aside";
 import { PaymentActionBar } from "@/components/composite/payment-action-bar";
 
@@ -452,11 +453,9 @@ export default function SampleOrderPage() {
               >
                 <div className="space-y-6 border-y border-stone-200 py-4">
                   <section>
-                    <div className="mb-3">
-                      <h3 className="text-sm font-semibold text-zinc-950">
-                        타이 방식
-                      </h3>
-                    </div>
+                    <Field className="mb-3">
+                      <FieldTitle>타이 방식</FieldTitle>
+                    </Field>
                     <RadioGroup
                       value={values.tieType ?? "MANUAL"}
                       onValueChange={(v) =>
@@ -509,14 +508,12 @@ export default function SampleOrderPage() {
                   </section>
 
                   <section className="border-t border-stone-200 pt-6">
-                    <div className="mb-3">
-                      <h3 className="text-sm font-semibold text-zinc-950">
-                        심지
-                      </h3>
-                      <p className="mt-1 text-sm text-zinc-500">
+                    <Field className="mb-3">
+                      <FieldTitle>심지</FieldTitle>
+                      <FieldDescription>
                         착용감과 형태 유지 기준으로 선택하세요.
-                      </p>
-                    </div>
+                      </FieldDescription>
+                    </Field>
                     <RadioGroup
                       value={values.interlining}
                       onValueChange={(v) =>
@@ -557,14 +554,12 @@ export default function SampleOrderPage() {
               >
                 <section className="border-y border-stone-200 py-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-sm font-semibold text-zinc-950">
-                        배송지
-                      </h3>
-                      <p className="mt-1 text-sm text-zinc-500">
+                    <Field>
+                      <FieldTitle>배송지</FieldTitle>
+                      <FieldDescription>
                         최종 결제 전 수령 정보를 확인합니다.
-                      </p>
-                    </div>
+                      </FieldDescription>
+                    </Field>
                     <Button
                       type="button"
                       variant="outline"
@@ -607,20 +602,17 @@ export default function SampleOrderPage() {
                 </section>
 
                 <section className="border-b border-stone-200 py-6">
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-zinc-950">
-                      참고 이미지 및 요청사항
-                    </h3>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      패턴, 컬러, 봉제 디테일을 이미지와 메모로 전달해 주세요.
-                    </p>
-                  </div>
                   <ImageUpload
                     uploadedImages={imageUpload.uploadedImages}
                     isUploading={imageUpload.isUploading}
                     onFileSelect={imageUpload.uploadFile}
                     onRemoveImage={imageUpload.removeImage}
                   />
+
+                  <Field className="py-6">
+                    <FieldTitle>요청사항</FieldTitle>
+                    <FieldDescription>메모로 전달해 주세요.</FieldDescription>
+                  </Field>
                   <Controller
                     name="additionalNotes"
                     control={form.control}

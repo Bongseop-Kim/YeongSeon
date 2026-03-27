@@ -9,6 +9,7 @@ import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { StepLayout } from "./step-layout";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Button } from "@/components/ui-extended/button";
+import { Field, FieldTitle, FieldDescription } from "@/components/ui/field";
 
 const QUANTITY_PRESETS = [4, 8, 12, 20, 50, 100] as const;
 
@@ -55,14 +56,12 @@ export const QuantityStep = ({
       ]}
     >
       <section>
-        <div className="max-w-2xl">
-          <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
-            시작 방식
-          </h3>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
+        <Field>
+          <FieldTitle>시작 방식</FieldTitle>
+          <FieldDescription>
             원단 보유 여부와 재주문 여부를 먼저 정하면 이후 단계가 간결해집니다.
-          </p>
-        </div>
+          </FieldDescription>
+        </Field>
         <div className="mt-5 space-y-3 border-y border-stone-200 py-4">
           <CheckboxField
             name="fabricProvided"
@@ -81,14 +80,12 @@ export const QuantityStep = ({
       </section>
 
       <section>
-        <div className="max-w-2xl">
-          <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
-            수량 선택
-          </h3>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
+        <Field>
+          <FieldTitle>수량 선택</FieldTitle>
+          <FieldDescription>
             기본 단위로 빠르게 선택하거나 직접 조절해 예상 단가를 확인하세요.
-          </p>
-        </div>
+          </FieldDescription>
+        </Field>
         <div className="mt-5 space-y-4">
           <ButtonGroup>
             {QUANTITY_PRESETS.map((preset) => (

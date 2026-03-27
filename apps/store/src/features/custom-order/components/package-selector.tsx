@@ -6,6 +6,7 @@ import type { PricingConfig } from "@/features/custom-order/types/pricing";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup } from "@/components/ui/radio-group";
+import { Field, FieldTitle, FieldDescription } from "@/components/ui/field";
 
 interface PackageSelectorProps {
   quantity: number;
@@ -35,14 +36,12 @@ export const PackageSelector = ({
 }: PackageSelectorProps) => {
   return (
     <section className="border-t border-stone-200 pt-8">
-      <div className="max-w-2xl">
-        <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
-          패키지로 빠르게 시작하기
-        </h3>
-        <p className="mt-2 text-sm leading-6 text-zinc-600">
+      <Field className="max-w-2xl">
+        <FieldTitle>패키지로 빠르게 시작하기</FieldTitle>
+        <FieldDescription>
           자주 선택하는 구성을 먼저 고른 뒤 세부 옵션만 조정할 수 있습니다.
-        </p>
-      </div>
+        </FieldDescription>
+      </Field>
 
       <div className="mt-5">
         <RadioGroup

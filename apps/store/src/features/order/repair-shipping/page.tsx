@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Loader2 } from "lucide-react";
 import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
 import { submitRepairTracking } from "@/features/order/api/order-api";
@@ -89,9 +90,11 @@ const RepairShippingPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <div className="flex items-center justify-center min-h-96">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          </div>
+          <PageLayout>
+            <div className="flex items-center justify-center min-h-96">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          </PageLayout>
         </MainContent>
       </MainLayout>
     );
@@ -104,88 +107,92 @@ const RepairShippingPage = () => {
   return (
     <MainLayout>
       <MainContent>
-        <div className="mx-auto max-w-3xl px-4 py-6 lg:px-0 lg:py-10">
-          <div className="space-y-8">
-            <UtilityPageIntro
-              eyebrow="Repair Shipping"
-              title="수선품 발송 등록"
-              description="결제가 완료되었습니다. 발송 주소를 확인한 뒤 송장번호를 등록해주세요."
-              meta={
-                <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-                  결제가 완료되었습니다. 수선품을 보내신 뒤 송장 정보를 남기면
-                  접수가 바로 이어집니다.
+        <PageLayout>
+          <div className="mx-auto max-w-3xl py-6 lg:py-10">
+            <div className="space-y-8">
+              <UtilityPageIntro
+                eyebrow="Repair Shipping"
+                title="수선품 발송 등록"
+                description="결제가 완료되었습니다. 발송 주소를 확인한 뒤 송장번호를 등록해주세요."
+                meta={
+                  <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                    결제가 완료되었습니다. 수선품을 보내신 뒤 송장 정보를 남기면
+                    접수가 바로 이어집니다.
+                  </div>
+                }
+              />
+
+              <UtilityPageSection
+                title="발송 주소"
+                description="수선품을 보낼 때 아래 주소를 그대로 사용하면 됩니다."
+              >
+                <div className="border-t border-stone-200 pt-5">
+                  <RepairShippingAddressBanner />
                 </div>
-              }
-            />
+              </UtilityPageSection>
 
-            <UtilityPageSection
-              title="발송 주소"
-              description="수선품을 보낼 때 아래 주소를 그대로 사용하면 됩니다."
-            >
-              <div className="border-t border-stone-200 pt-5">
-                <RepairShippingAddressBanner />
-              </div>
-            </UtilityPageSection>
-
-            <UtilityPageSection
-              title="송장번호 등록"
-              description="택배사를 선택하고 송장번호를 입력하면 발송 접수가 완료됩니다."
-            >
-              <div className="border-t border-stone-200 pt-5">
-                <div className="space-y-3">
-                  <Select
-                    value={courierCompany}
-                    onValueChange={setCourierCompany}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="택배사 선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COURIER_COMPANIES.map((c) => (
-                        <SelectItem key={c.code} value={c.code}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    type="text"
-                    placeholder="송장번호를 입력해주세요"
-                    value={trackingNumber}
-                    onChange={(e) => setTrackingNumber(e.target.value)}
-                  />
-                  <Button
-                    className="w-full"
-                    onClick={handleSubmit}
-                    disabled={
-                      isSubmitting || !courierCompany || !trackingNumber.trim()
-                    }
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        처리 중...
-                      </>
-                    ) : (
-                      "발송 완료 등록"
-                    )}
-                  </Button>
-                  <div className="pt-1 text-center">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`)
-                      }
-                      className="text-sm text-zinc-500 underline"
+              <UtilityPageSection
+                title="송장번호 등록"
+                description="택배사를 선택하고 송장번호를 입력하면 발송 접수가 완료됩니다."
+              >
+                <div className="border-t border-stone-200 pt-5">
+                  <div className="space-y-3">
+                    <Select
+                      value={courierCompany}
+                      onValueChange={setCourierCompany}
                     >
-                      나중에 주문 상세에서 등록하기
-                    </button>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="택배사 선택" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COURIER_COMPANIES.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="text"
+                      placeholder="송장번호를 입력해주세요"
+                      value={trackingNumber}
+                      onChange={(e) => setTrackingNumber(e.target.value)}
+                    />
+                    <Button
+                      className="w-full"
+                      onClick={handleSubmit}
+                      disabled={
+                        isSubmitting ||
+                        !courierCompany ||
+                        !trackingNumber.trim()
+                      }
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          처리 중...
+                        </>
+                      ) : (
+                        "발송 완료 등록"
+                      )}
+                    </Button>
+                    <div className="pt-1 text-center">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`)
+                        }
+                        className="text-sm text-zinc-500 underline"
+                      >
+                        나중에 주문 상세에서 등록하기
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </UtilityPageSection>
+              </UtilityPageSection>
+            </div>
           </div>
-        </div>
+        </PageLayout>
       </MainContent>
     </MainLayout>
   );

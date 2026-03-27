@@ -162,7 +162,6 @@ export default function ShopPage() {
     sortOption,
   });
 
-  const productList = isLoading ? [] : products;
   const selectedFilterCount = selectedFilterLabels.length;
 
   return (
@@ -257,7 +256,7 @@ export default function ShopPage() {
                   <div className="text-sm text-zinc-500">
                     {isLoading
                       ? "상품을 찾는 중"
-                      : `총 ${productList.length}개 상품`}
+                      : `총 ${products.length}개 상품`}
                   </div>
                   <SortSelect value={sortOption} onChange={setSortOption} />
                 </div>
@@ -265,7 +264,7 @@ export default function ShopPage() {
             </section>
 
             <section className="pt-8 lg:pt-10">
-              <ProductGrid products={productList} isLoading={isLoading} />
+              <ProductGrid products={products} isLoading={isLoading} />
             </section>
           </div>
         </PageLayout>

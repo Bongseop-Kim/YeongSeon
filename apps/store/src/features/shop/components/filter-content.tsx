@@ -19,6 +19,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { FilterTab } from "@/features/shop/types/filter";
 
+function appendFilterItems<T extends string>(
+  filters: Array<{ label: string; onRemove: () => void }>,
+  selected: T[],
+  options: ReadonlyArray<{ readonly value: T; readonly label: string }>,
+  onChange: (value: T) => void,
+) {
+  selected.forEach((value) => {
+    const option = options.find((opt) => opt.value === value);
+    if (option) {
+      filters.push({ label: option.label, onRemove: () => onChange(value) });
+    }
+  });
+}
+
 interface FilterContentProps {
   selectedCategories: ProductCategory[];
   selectedColors: ProductColor[];
@@ -54,55 +68,32 @@ export const FilterContent = ({
 }: FilterContentProps) => {
   const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
 
-  // initialTab이 변경되면 activeTab도 업데이트
   useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
+    setActiveTab(initialTab);
   }, [initialTab]);
 
   const selectedFilters = useMemo(() => {
     const filters: Array<{ label: string; onRemove: () => void }> = [];
 
-    selectedCategories.forEach((category) => {
-      const option = CATEGORY_OPTIONS.find((opt) => opt.value === category);
-      if (option) {
-        filters.push({
-          label: option.label,
-          onRemove: () => onCategoryChange(category),
-        });
-      }
-    });
-
-    selectedColors.forEach((color) => {
-      const option = COLOR_OPTIONS.find((opt) => opt.value === color);
-      if (option) {
-        filters.push({
-          label: option.label,
-          onRemove: () => onColorChange(color),
-        });
-      }
-    });
-
-    selectedPatterns.forEach((pattern) => {
-      const option = PATTERN_OPTIONS.find((opt) => opt.value === pattern);
-      if (option) {
-        filters.push({
-          label: option.label,
-          onRemove: () => onPatternChange(pattern),
-        });
-      }
-    });
-
-    selectedMaterials.forEach((material) => {
-      const option = MATERIAL_OPTIONS.find((opt) => opt.value === material);
-      if (option) {
-        filters.push({
-          label: option.label,
-          onRemove: () => onMaterialChange(material),
-        });
-      }
-    });
+    appendFilterItems(
+      filters,
+      selectedCategories,
+      CATEGORY_OPTIONS,
+      onCategoryChange,
+    );
+    appendFilterItems(filters, selectedColors, COLOR_OPTIONS, onColorChange);
+    appendFilterItems(
+      filters,
+      selectedPatterns,
+      PATTERN_OPTIONS,
+      onPatternChange,
+    );
+    appendFilterItems(
+      filters,
+      selectedMaterials,
+      MATERIAL_OPTIONS,
+      onMaterialChange,
+    );
 
     if (selectedPriceRange && selectedPriceRange !== "all") {
       const option = PRICE_RANGE_OPTIONS.find(
@@ -137,11 +128,11 @@ export const FilterContent = ({
       {hasFilters && (
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-200 px-1 pb-4">
           <div className="flex items-center gap-2 flex-1 flex-wrap">
-            {selectedFilters.map((filter, index) => (
+            {selectedFilters.map((filter) => (
               <Badge
                 variant="outline"
                 className="gap-1 rounded-full border-zinc-200 bg-zinc-50 px-3 py-1 text-zinc-700"
-                key={index}
+                key={filter.label}
               >
                 <span>{filter.label}</span>
                 <button

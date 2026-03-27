@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui-extended/button";
 import {
   Sheet,
@@ -51,12 +51,6 @@ export const FilterSheet = ({
 }: FilterSheetProps) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
-
-  useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
-  }, [initialTab]);
 
   const handleFilterButtonClick = (tab: FilterTab) => {
     setActiveTab(tab);

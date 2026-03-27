@@ -279,14 +279,14 @@ export default function InquiryPage() {
     return (
       <MainLayout>
         <MainContent>
-          <div className="px-4 lg:px-0">
+          <PageLayout contentClassName="py-4 lg:py-8">
             <Empty
               title="문의 목록을 불러올 수 없습니다."
               description={
                 error instanceof Error ? error.message : "오류가 발생했습니다."
               }
             />
-          </div>
+          </PageLayout>
         </MainContent>
       </MainLayout>
     );
@@ -371,12 +371,10 @@ export default function InquiryPage() {
                 description="답변 대기 상태의 문의만 수정하거나 삭제할 수 있습니다."
               >
                 {inquiries.length === 0 ? (
-                  <div className="px-4 lg:px-0">
-                    <Empty
-                      title="문의 내역이 없습니다."
-                      description="궁금한 점이 생기면 새 문의를 등록해 주세요."
-                    />
-                  </div>
+                  <Empty
+                    title="문의 내역이 없습니다."
+                    description="궁금한 점이 생기면 새 문의를 등록해 주세요."
+                  />
                 ) : (
                   <div className="divide-y divide-stone-200">
                     {inquiries.map((inquiry, index) => (
