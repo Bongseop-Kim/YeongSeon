@@ -154,21 +154,19 @@ const ReformPage = () => {
       }
 
       isSubmittingRef.current = true;
-      const isValid = await form.trigger(
-        selectedIndices.map((index) => `ties.${index}` as const),
-      );
-      if (!isValid) {
-        isSubmittingRef.current = false;
-        return;
-      }
-      if (!hasValidPricing || !pricing) {
-        confirm(
-          "수선 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
-        );
-        isSubmittingRef.current = false;
-        return;
-      }
       try {
+        const isValid = await form.trigger(
+          selectedIndices.map((index) => `ties.${index}` as const),
+        );
+        if (!isValid) {
+          return;
+        }
+        if (!hasValidPricing || !pricing) {
+          confirm(
+            "수선 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+          );
+          return;
+        }
         await action(pricing.baseCost, selectedTies);
       } finally {
         isSubmittingRef.current = false;
@@ -218,15 +216,17 @@ const ReformPage = () => {
       setIsPurchaseSheetOpen(false);
     });
 
-  const hasTies = fields.length > 0 && hasValidPricing;
+  const formatCost = (cost: number | undefined, suffix = "원") =>
+    cost !== undefined ? `${cost.toLocaleString()}${suffix}` : "-";
+
   const selectedCount = selectedTieIndices.length;
-  const baseCost = hasValidPricing && pricing ? pricing.baseCost : 0;
+  const baseCost = hasValidPricing && pricing ? pricing.baseCost : undefined;
   const estimatedShipping =
-    selectedCount > 0 && pricing ? pricing.shippingCost : 0;
+    selectedCount > 0 && pricing ? pricing.shippingCost : undefined;
   const totalCost =
-    selectedCount > 0 && pricing
+    selectedCount > 0 && pricing && baseCost !== undefined
       ? baseCost * selectedCount + pricing.shippingCost
-      : 0;
+      : undefined;
 
   const handleDelete = () => {
     selectedTieIndices
@@ -250,7 +250,7 @@ const ReformPage = () => {
   const isSomeChecked = watchedTies.some((tie) => tie.checked);
   const isIndeterminate = isSomeChecked && !isAllChecked;
   const isActionDisabled =
-    !hasTies ||
+    fields.length === 0 ||
     selectedCount === 0 ||
     uploadTieImagesMutation.isPending ||
     !hasValidPricing;
@@ -275,17 +275,17 @@ const ReformPage = () => {
                     {
                       id: "base-cost",
                       label: "기본 수선비",
-                      value: `${baseCost.toLocaleString()}원 / 개`,
+                      value: formatCost(baseCost, "원 / 개"),
                     },
                     {
                       id: "shipping-cost",
                       label: "예상 배송비",
-                      value: `${estimatedShipping.toLocaleString()}원`,
+                      value: formatCost(estimatedShipping),
                     },
                     {
                       id: "total-cost",
                       label: "예상 결제",
-                      value: `${totalCost.toLocaleString()}원`,
+                      value: formatCost(totalCost),
                       className: "pt-4",
                     },
                   ]}
@@ -430,7 +430,7 @@ const ReformPage = () => {
             onAddToCart={handleAddToCart}
             onOrder={handleMobileOrder}
             tieCount={selectedCount}
-            totalCost={totalCost}
+            totalCost={totalCost ?? 0}
           />
         </MainContent>
       </MainLayout>
