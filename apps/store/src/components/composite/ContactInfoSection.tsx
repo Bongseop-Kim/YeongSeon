@@ -1,5 +1,6 @@
 import { Controller, useWatch } from "react-hook-form";
 import type { Control } from "react-hook-form";
+import { useId } from "react";
 import { Input } from "@/components/ui-extended/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -30,6 +31,7 @@ interface ContactInfoSectionProps {
 }
 
 export const ContactInfoSection = ({ control }: ContactInfoSectionProps) => {
+  const contactMethodTitleId = useId();
   const currentContactMethod = useWatch({
     control,
     name: "contactMethod",
@@ -78,12 +80,13 @@ export const ContactInfoSection = ({ control }: ContactInfoSectionProps) => {
         render={({ field }) => (
           <Field orientation="vertical">
             <FieldLabel>
-              <FieldTitle>
+              <FieldTitle id={contactMethodTitleId}>
                 연락 방법 <span className="text-red-500">*</span>
               </FieldTitle>
             </FieldLabel>
             <FieldContent>
               <RadioGroup
+                aria-labelledby={contactMethodTitleId}
                 value={field.value}
                 onValueChange={field.onChange}
                 className="flex flex-row gap-4"

@@ -27,7 +27,7 @@ import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Empty } from "@/components/composite/empty";
 import { TieLengthGuideAccordion } from "@/components/composite/tie-length-guide-accordion";
-import { MobileReformSheet } from "./components/mobile-reform-sheet";
+import { MobileReformSheet } from "@/features/reform/components/mobile-reform-sheet";
 import { UtilityPageIntro } from "@/components/composite/utility-page";
 import { OrderSummaryAside } from "@/components/composite/order-summary-aside";
 import { ShopActionBar } from "@/components/composite/shop-action-bar";
@@ -347,16 +347,12 @@ const ReformPage = () => {
                         type="button"
                         size="sm"
                         onClick={() => {
-                          const currentTies = form.getValues("ties");
-                          const currentChecked = currentTies
-                            .map((tie, index) => (tie.checked ? index : -1))
-                            .filter((index) => index !== -1);
-                          if (currentChecked.length === 0) {
+                          if (selectedTieIndices.length === 0) {
                             alert("적용할 항목을 선택해주세요.");
                             return;
                           }
 
-                          setCheckedIndicesForBulk(currentChecked);
+                          setCheckedIndicesForBulk(selectedTieIndices);
                           setBulkDialogOpen(true);
                         }}
                       >

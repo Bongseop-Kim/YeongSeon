@@ -234,7 +234,9 @@ const ShippingFormPage = () => {
                 </FieldLabel>
                 <FieldContent>
                   <Input
+                    {...field}
                     id="recipientPhone"
+                    name={field.name}
                     type="tel"
                     inputMode="numeric"
                     placeholder="휴대폰번호를 입력해주세요."
@@ -246,6 +248,8 @@ const ShippingFormPage = () => {
                         field.onChange(numbers);
                       }
                     }}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
                     className="w-full"
                     aria-invalid={!!fieldState.error}
                   />
@@ -305,26 +309,11 @@ const ShippingFormPage = () => {
               }}
               onClose={() => setShowPostcodeSearch(false)}
             />
-            <Controller
-              name="detailAddress"
+            <InputField
               control={form.control}
-              render={({ field }) => (
-                <Field orientation="vertical">
-                  <FieldLabel htmlFor="detailAddress">
-                    <FieldTitle>상세주소 (선택사항)</FieldTitle>
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="detailAddress"
-                      type="text"
-                      placeholder="상세주소를 입력해주세요. (선택사항)"
-                      value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      className="w-full"
-                    />
-                  </FieldContent>
-                </Field>
-              )}
+              name="detailAddress"
+              label="상세주소 (선택사항)"
+              placeholder="상세주소를 입력해주세요. (선택사항)"
             />
           </FieldSet>
 
