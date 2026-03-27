@@ -75,7 +75,7 @@ export const InquiryForm = ({
   // 카테고리가 '상품'이 아닌 경우 상품 선택 초기화
   useEffect(() => {
     if (category !== "상품") {
-      form.setValue("productId", undefined);
+      form.setValue("productId", undefined, { shouldValidate: true });
       form.setValue("productName", undefined);
       form.setValue("productImage", undefined);
       setSearchQuery("");
@@ -87,14 +87,14 @@ export const InquiryForm = ({
     name: string;
     image: string;
   }) => {
-    form.setValue("productId", product.id);
+    form.setValue("productId", product.id, { shouldValidate: true });
     form.setValue("productName", product.name);
     form.setValue("productImage", product.image);
     setSearchQuery("");
   };
 
   const handleClearProduct = () => {
-    form.setValue("productId", undefined);
+    form.setValue("productId", undefined, { shouldValidate: true });
     form.setValue("productName", undefined);
     form.setValue("productImage", undefined);
   };

@@ -100,7 +100,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                 <FieldContent>
                   <RadioGroup
                     value={field.value || "length"}
-                    onValueChange={(value) => {
+                    onValueChange={(value: string) => {
                       field.onChange(
                         isMeasurementType(value) ? value : "length",
                       );
@@ -190,7 +190,13 @@ const MeasurementInputField = ({
     <Controller
       control={control}
       name={name}
-      rules={{ required: requiredMessage }}
+      rules={{
+        required: requiredMessage,
+        validate: (value) =>
+          value != null && Number.isFinite(value) && value > 0
+            ? true
+            : "0보다 큰 숫자를 입력해주세요.",
+      }}
       render={({ field, fieldState }) => (
         <Field orientation="vertical">
           <FieldLabel htmlFor={id}>
@@ -210,12 +216,15 @@ const MeasurementInputField = ({
               id={id}
               type="number"
               placeholder={placeholder}
-              value={field.value || ""}
-              onChange={(e) =>
+              value={field.value ?? ""}
+              onChange={(e) => {
+                const num = Number(e.target.value);
                 field.onChange(
-                  e.target.value ? Number(e.target.value) : undefined,
-                )
-              }
+                  e.target.value === "" || !Number.isFinite(num)
+                    ? undefined
+                    : num,
+                );
+              }}
               unit="cm"
               aria-invalid={!!fieldState.error}
               aria-describedby={fieldState.error ? errorId : undefined}

@@ -11,14 +11,15 @@ import {
   FieldTitle,
 } from "@/components/ui/field";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { ContactMethod } from "@yeongseon/shared";
 
 const CONTACT_METHOD_OPTIONS = [
   { value: "phone", label: "전화" },
   { value: "kakao", label: "카카오톡" },
   { value: "email", label: "이메일" },
-];
+] as const satisfies ReadonlyArray<{ value: ContactMethod; label: string }>;
 
-const CONTACT_METHOD_PLACEHOLDERS: Record<string, string> = {
+const CONTACT_METHOD_PLACEHOLDERS: Record<ContactMethod, string> = {
   phone: "010-1234-5678",
   kakao: "카카오톡 ID",
   email: "example@email.com",
@@ -26,7 +27,7 @@ const CONTACT_METHOD_PLACEHOLDERS: Record<string, string> = {
 
 interface ContactInfoSectionProps {
   control: Control<QuoteOrderOptions>;
-  contactMethod: "email" | "kakao" | "phone";
+  contactMethod: ContactMethod;
 }
 
 export const ContactInfoSection = ({

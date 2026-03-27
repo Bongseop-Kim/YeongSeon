@@ -47,7 +47,7 @@ export const PackageSelector = ({
       <div className="mt-5">
         <RadioGroup
           value={selectedPackage ?? ""}
-          onValueChange={(v) => onSelectPackage(v as PackagePreset)}
+          onValueChange={(v: string) => onSelectPackage(v as PackagePreset)}
         >
           <div className="grid grid-cols-1 gap-3">
             {PACKAGE_PRESETS.map((preset) => {
@@ -106,7 +106,7 @@ export const PackageSelector = ({
                         {OPTION_LABELS.designType(preset.values.designType)}
                       </span>
                       <span>
-                        봉제 {OPTION_LABELS.tieType(preset.values.tieType)}
+                        타이 종류 {OPTION_LABELS.tieType(preset.values.tieType)}
                       </span>
                       <span>
                         심지{" "}

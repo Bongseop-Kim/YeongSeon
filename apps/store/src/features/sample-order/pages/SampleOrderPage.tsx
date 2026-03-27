@@ -277,9 +277,18 @@ export default function SampleOrderPage() {
                     title="주문 요약"
                     description="선택한 샘플 구성과 예상 결제 금액을 확인합니다."
                     rows={[
-                      { label: "샘플 유형", value: selectedSampleLabel },
-                      { label: "구성", value: selectedFabricLabel },
                       {
+                        id: "sample-type",
+                        label: "샘플 유형",
+                        value: selectedSampleLabel,
+                      },
+                      {
+                        id: "sample-config",
+                        label: "구성",
+                        value: selectedFabricLabel,
+                      },
+                      {
+                        id: "sample-total",
                         label: "총 결제 금액",
                         value:
                           samplePrice === null

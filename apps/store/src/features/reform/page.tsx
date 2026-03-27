@@ -108,11 +108,22 @@ const ReformPage = () => {
     [uploadTieImagesMutation],
   );
 
+  const selectedTieIndices = useMemo(
+    () =>
+      watchedTies
+        .map((tie, index) => (tie.checked ? index : -1))
+        .filter((index) => index !== -1),
+    [watchedTies],
+  );
+
   const uploadValidatedTies = useCallback(async () => {
-    const ties = form.getValues().ties;
+    const selectedSet = new Set(selectedTieIndices);
+    const ties = form
+      .getValues()
+      .ties.filter((_, index) => selectedSet.has(index));
     const uploadedTies = await uploadTiesIfNeeded(ties);
     return uploadedTies;
-  }, [form, uploadTiesIfNeeded]);
+  }, [form, selectedTieIndices, uploadTiesIfNeeded]);
 
   const hasValidPricing =
     Number.isFinite(pricing?.baseCost) &&
@@ -125,8 +136,14 @@ const ReformPage = () => {
         confirm("수선할 넥타이를 추가해주세요.");
         return;
       }
+      if (selectedTieIndices.length === 0) {
+        confirm("접수할 넥타이를 선택해주세요.");
+        return;
+      }
       isSubmittingRef.current = true;
-      const isValid = await form.trigger("ties");
+      const isValid = await form.trigger(
+        selectedTieIndices.map((index) => `ties.${index}` as const),
+      );
       if (!isValid) {
         isSubmittingRef.current = false;
         return;
@@ -144,7 +161,14 @@ const ReformPage = () => {
         isSubmittingRef.current = false;
       }
     },
-    [fields.length, confirm, form, hasValidPricing, pricing],
+    [
+      fields.length,
+      confirm,
+      form,
+      hasValidPricing,
+      pricing,
+      selectedTieIndices,
+    ],
   );
 
   const handleDirectOrder = () =>
@@ -180,14 +204,6 @@ const ReformPage = () => {
       setIsPurchaseSheetOpen(false);
     });
 
-  const selectedTieIndices = useMemo(
-    () =>
-      watchedTies
-        .map((tie, index) => (tie.checked ? index : -1))
-        .filter((index) => index !== -1),
-    [watchedTies],
-  );
-
   const hasTies = fields.length > 0 && hasValidPricing;
   const selectedCount = selectedTieIndices.length;
   const baseCost = hasValidPricing && pricing ? pricing.baseCost : 0;
@@ -220,7 +236,10 @@ const ReformPage = () => {
   const isSomeChecked = watchedTies.some((tie) => tie.checked);
   const isIndeterminate = isSomeChecked && !isAllChecked;
   const isActionDisabled =
-    !hasTies || uploadTieImagesMutation.isPending || !hasValidPricing;
+    !hasTies ||
+    selectedCount === 0 ||
+    uploadTieImagesMutation.isPending ||
+    !hasValidPricing;
 
   return (
     <>
@@ -234,16 +253,23 @@ const ReformPage = () => {
                   title="접수 요약"
                   description="현재 접수 수량과 예상 결제를 확인합니다."
                   rows={[
-                    { label: "수선 수량", value: `총 ${selectedCount}개` },
                     {
+                      id: "selected-count",
+                      label: "수선 수량",
+                      value: `총 ${selectedCount}개`,
+                    },
+                    {
+                      id: "base-cost",
                       label: "기본 수선비",
                       value: `${baseCost.toLocaleString()}원 / 개`,
                     },
                     {
+                      id: "shipping-cost",
                       label: "예상 배송비",
                       value: `${estimatedShipping.toLocaleString()}원`,
                     },
                     {
+                      id: "total-cost",
                       label: "예상 결제",
                       value: `${totalCost.toLocaleString()}원`,
                       className: "pt-4",
@@ -393,7 +419,7 @@ const ReformPage = () => {
             onOpenChange={setIsPurchaseSheetOpen}
             onAddToCart={handleAddToCart}
             onOrder={handleMobileOrder}
-            tieCount={fields.length}
+            tieCount={selectedCount}
             totalCost={totalCost}
           />
         </MainContent>

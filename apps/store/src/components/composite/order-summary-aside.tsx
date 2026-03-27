@@ -6,6 +6,7 @@ import {
 } from "@/components/composite/utility-page";
 
 interface SummaryRow {
+  id: string | number;
   label: string;
   value: ReactNode;
   className?: string;
@@ -37,9 +38,9 @@ export function OrderSummaryAside({
       className={className ?? "rounded-2xl"}
     >
       <dl>
-        {rows.map((row, index) => (
+        {rows.map((row) => (
           <UtilityKeyValueRow
-            key={index}
+            key={row.id}
             label={row.label}
             value={row.value}
             className={row.className}

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { Button } from "@/components/ui-extended/button";
 import { Upload, X, Loader2, ImageOff } from "lucide-react";
 import {
@@ -24,6 +24,7 @@ export const ImageUpload = ({
   onRemoveImage,
 }: ImageUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,14 +44,14 @@ export const ImageUpload = ({
         <div className="rounded-lg border-2 border-dashed border-zinc-300 bg-white p-5 text-center transition-colors">
           <input
             ref={inputRef}
-            id="file-upload"
+            id={inputId}
             type="file"
             accept="image/*"
             onChange={handleChange}
             className="sr-only"
           />
           <label
-            htmlFor="file-upload"
+            htmlFor={inputId}
             className="cursor-pointer flex flex-col items-center gap-2"
           >
             {isUploading ? (

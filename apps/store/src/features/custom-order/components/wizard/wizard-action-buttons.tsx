@@ -83,6 +83,7 @@ export function WizardActionButtons({
             size="icon"
             onClick={onPrev}
             className="size-12 shrink-0"
+            aria-label="이전 단계"
           >
             <ChevronLeft />
           </Button>

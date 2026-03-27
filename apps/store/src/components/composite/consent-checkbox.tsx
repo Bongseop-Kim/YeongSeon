@@ -30,13 +30,19 @@ export const ConsentCheckbox = ({
   return (
     <Field
       orientation="horizontal"
-      className={cn("gap-2 items-start", className)}
+      className={cn(
+        "gap-2",
+        description ? "items-start" : "items-center",
+        className,
+      )}
     >
       <Checkbox
         id={id}
         checked={checked}
-        onCheckedChange={(nextChecked) => onCheckedChange(nextChecked === true)}
-        className="mt-1"
+        onCheckedChange={(nextChecked: boolean | "indeterminate") =>
+          onCheckedChange(nextChecked === true)
+        }
+        className={description ? "mt-1" : undefined}
       />
       <FieldContent className="gap-1">
         <FieldLabel htmlFor={id}>

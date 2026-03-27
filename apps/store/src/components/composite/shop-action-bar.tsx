@@ -21,6 +21,8 @@ interface ShopActionBarProps {
 }
 
 function LikeButton({ like }: { like: LikeProps }) {
+  const ariaLabel = like.isLiked ? "좋아요 취소" : "좋아요";
+
   return (
     <Button
       type="button"
@@ -28,6 +30,8 @@ function LikeButton({ like }: { like: LikeProps }) {
       size="icon"
       onClick={like.onToggle}
       className="size-12 shrink-0"
+      aria-label={ariaLabel}
+      aria-pressed={like.isLiked}
     >
       <div className="flex flex-col items-center gap-1">
         <Heart className={like.isLiked ? "fill-red-500 text-red-500" : ""} />

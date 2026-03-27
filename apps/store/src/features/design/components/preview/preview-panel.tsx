@@ -50,7 +50,7 @@ export function PreviewPanel({ className }: PreviewPanelProps) {
       className={cn("relative flex h-full flex-col bg-white", className)}
     >
       {!isFullscreen && (
-        <div className="flex h-15 border-b border-gray-200">
+        <div className="flex h-16 border-b border-gray-200">
           {(["preview", "history"] as PreviewTab[]).map((t) => (
             <button
               key={t}

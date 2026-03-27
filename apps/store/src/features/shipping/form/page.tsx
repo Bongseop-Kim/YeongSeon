@@ -1,6 +1,6 @@
 import { PopupLayout } from "@/components/layout/popup-layout";
 import { Button } from "@/components/ui-extended/button";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type {
   ShippingAddress,
@@ -9,7 +9,10 @@ import type {
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui-extended/input";
 import { SelectField } from "@/components/composite/select-field";
-import { DELIVERY_REQUEST_OPTIONS } from "@/constants/DELIVERY_REQUEST_OPTIONS";
+import {
+  CUSTOM_DELIVERY_REQUEST,
+  DELIVERY_REQUEST_OPTIONS,
+} from "@/constants/DELIVERY_REQUEST_OPTIONS";
 import { CheckboxField } from "@/components/composite/check-box-field";
 import { InputField } from "@/components/composite/input-field";
 import { TextareaField } from "@/components/composite/textarea-field";
@@ -17,7 +20,9 @@ import {
   Field,
   FieldContent,
   FieldError,
+  FieldLegend,
   FieldLabel,
+  FieldSet,
   FieldTitle,
 } from "@/components/ui/field";
 import { PostcodeSearch } from "@/features/shipping/components/PostcodeSearch";
@@ -91,10 +96,23 @@ const ShippingFormPage = () => {
   const canUncheckDefault = !isEditMode || (addresses && addresses.length > 1);
 
   const { handleSubmit } = form;
+  const deliveryRequest = useWatch({
+    control: form.control,
+    name: "deliveryRequest",
+  });
   const isPopupContext =
     typeof window !== "undefined" &&
     !!window.opener &&
     window.opener !== window;
+
+  useEffect(() => {
+    if (
+      deliveryRequest !== CUSTOM_DELIVERY_REQUEST &&
+      form.getValues("deliveryMemo") !== undefined
+    ) {
+      form.setValue("deliveryMemo", undefined);
+    }
+  }, [deliveryRequest, form]);
 
   const onSubmit = (data: ShippingAddress) => {
     // 필수값 검증
@@ -209,13 +227,14 @@ const ShippingFormPage = () => {
             }}
             render={({ field, fieldState }) => (
               <Field orientation="vertical">
-                <FieldLabel>
+                <FieldLabel htmlFor="recipientPhone">
                   <FieldTitle>
                     휴대폰번호 <span className="text-red-500">*</span>
                   </FieldTitle>
                 </FieldLabel>
                 <FieldContent>
                   <Input
+                    id="recipientPhone"
                     type="tel"
                     inputMode="numeric"
                     placeholder="휴대폰번호를 입력해주세요."
@@ -236,12 +255,10 @@ const ShippingFormPage = () => {
             )}
           />
 
-          <Field orientation="vertical">
-            <FieldLabel>
-              <FieldTitle>
-                주소 <span className="text-red-500">*</span>
-              </FieldTitle>
-            </FieldLabel>
+          <FieldSet className="gap-3">
+            <FieldLegend variant="label">
+              주소 <span className="text-red-500">*</span>
+            </FieldLegend>
             <div className="flex items-center gap-2">
               <Controller
                 name="postalCode"
@@ -301,7 +318,7 @@ const ShippingFormPage = () => {
                 />
               )}
             />
-          </Field>
+          </FieldSet>
 
           <SelectField<ShippingAddress>
             name="deliveryRequest"
@@ -309,7 +326,7 @@ const ShippingFormPage = () => {
             label="배송 요청사항"
             options={DELIVERY_REQUEST_OPTIONS}
           />
-          {form.watch("deliveryRequest") === "DELIVERY_REQUEST_5" && (
+          {deliveryRequest === CUSTOM_DELIVERY_REQUEST && (
             <TextareaField<ShippingAddress>
               name="deliveryMemo"
               control={form.control}

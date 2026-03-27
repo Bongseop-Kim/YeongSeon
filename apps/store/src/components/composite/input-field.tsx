@@ -44,6 +44,7 @@ export const InputField = <T extends FieldValues>({
   className,
 }: InputFieldProps<T>) => {
   const id = useId();
+  const descriptionId = `${id}-description`;
   const errorId = `${id}-error`;
 
   return (
@@ -51,30 +52,41 @@ export const InputField = <T extends FieldValues>({
       name={name}
       control={control}
       rules={rules}
-      render={({ field, fieldState }) => (
-        <Field orientation="vertical" className={className}>
-          <FieldLabel htmlFor={id}>
-            <FieldTitle>{label}</FieldTitle>
-          </FieldLabel>
-          {description ? (
-            <FieldDescription>{description}</FieldDescription>
-          ) : null}
-          <FieldContent>
-            <Input
-              {...field}
-              id={id}
-              type={type}
-              placeholder={placeholder}
-              unit={unit}
-              disabled={disabled}
-              required={required}
-              aria-invalid={!!fieldState.error}
-              aria-describedby={fieldState.error ? errorId : undefined}
-            />
-            <FieldError id={errorId} errors={[fieldState.error]} />
-          </FieldContent>
-        </Field>
-      )}
+      render={({ field, fieldState }) => {
+        const describedBy = [
+          description ? descriptionId : undefined,
+          fieldState.error ? errorId : undefined,
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+        return (
+          <Field orientation="vertical" className={className}>
+            <FieldLabel htmlFor={id}>
+              <FieldTitle>{label}</FieldTitle>
+            </FieldLabel>
+            {description ? (
+              <FieldDescription id={descriptionId}>
+                {description}
+              </FieldDescription>
+            ) : null}
+            <FieldContent>
+              <Input
+                {...field}
+                id={id}
+                type={type}
+                placeholder={placeholder}
+                unit={unit}
+                disabled={disabled}
+                required={required}
+                aria-invalid={!!fieldState.error}
+                aria-describedby={describedBy || undefined}
+              />
+              <FieldError id={errorId} errors={[fieldState.error]} />
+            </FieldContent>
+          </Field>
+        );
+      }}
     />
   );
 };

@@ -161,9 +161,14 @@ const TokenPaymentPage = ({
               <OrderSummaryAside
                 title="결제 금액"
                 rows={[
-                  { label: "패키지", value: label },
-                  { label: "토큰", value: `${tokenAmount.toLocaleString()}개` },
+                  { id: "token-package", label: "패키지", value: label },
                   {
+                    id: "token-amount",
+                    label: "토큰",
+                    value: `${tokenAmount.toLocaleString()}개`,
+                  },
+                  {
+                    id: "token-total",
                     label: "합계",
                     value: (
                       <span className="text-base font-semibold tracking-tight">
