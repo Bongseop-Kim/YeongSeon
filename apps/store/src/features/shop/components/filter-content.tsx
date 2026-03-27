@@ -126,7 +126,7 @@ export const FilterContent = ({
   return (
     <>
       {hasFilters && (
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-200 px-1 pb-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 px-4">
           <div className="flex items-center gap-2 flex-1 flex-wrap">
             {selectedFilters.map((filter) => (
               <Badge
@@ -163,7 +163,7 @@ export const FilterContent = ({
         onValueChange={(value) => setActiveTab(value as FilterTab)}
         className="flex flex-1 flex-col overflow-hidden"
       >
-        <TabsList className="w-full justify-start overflow-x-auto scrollbar-hidden border-b border-zinc-200 bg-transparent px-0">
+        <TabsList className="w-full justify-start overflow-x-auto scrollbar-hidden border-b border-zinc-200 bg-transparent px-2">
           <TabsTrigger value="category">카테고리</TabsTrigger>
           <TabsTrigger value="price">가격</TabsTrigger>
           <TabsTrigger value="color">색상</TabsTrigger>
@@ -230,8 +230,8 @@ export const FilterContent = ({
       </Tabs>
 
       {showApplyButton && onApply && (
-        <div className="sticky bottom-0 border-t border-zinc-200 bg-background px-1 pt-4 pb-2">
-          <Button className="h-11 w-full rounded-full" onClick={onApply}>
+        <div className="sticky bottom-0 border-t border-zinc-200 bg-background px-2 pt-4 pb-2">
+          <Button size="xl" type="button" className="w-full" onClick={onApply}>
             적용하기
           </Button>
         </div>

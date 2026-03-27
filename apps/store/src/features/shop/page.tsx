@@ -276,10 +276,10 @@ export default function ShopPage() {
           className="flex max-h-[80vh] flex-col gap-0 p-0"
           showCloseButton={false}
         >
-          <DialogHeader className="border-b border-zinc-200 p-5">
+          <DialogHeader className="border-zinc-200 p-5">
             <DialogTitle>필터</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-5">
+          <div className="flex-1 overflow-y-auto">
             <FilterContent
               selectedCategories={selectedCategories}
               selectedColors={selectedColors}
@@ -297,7 +297,9 @@ export default function ShopPage() {
           </div>
           <div className="border-t border-zinc-200 p-5">
             <Button
-              className="h-11 w-full rounded-full"
+              type="button"
+              className="w-full"
+              size="xl"
               onClick={() => setIsFilterModalOpen(false)}
             >
               적용하기

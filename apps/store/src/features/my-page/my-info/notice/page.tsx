@@ -9,7 +9,7 @@ import {
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/components/composite/utility-page";
-import { Label } from "@/components/ui/label";
+import { FieldTitle } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -94,7 +94,7 @@ export default function MyInfoNoticePage() {
     return (
       <MainLayout>
         <MainContent>
-          <div className="px-4 py-12 text-center text-zinc-500">
+          <div className="py-12 text-center text-zinc-500">
             수신 동의 정보를 불러오는 중...
           </div>
         </MainContent>
@@ -164,7 +164,7 @@ export default function MyInfoNoticePage() {
                     </div>
 
                     <div className="flex items-center justify-between border-b border-stone-200 py-3">
-                      <Label className="font-bold">문자</Label>
+                      <FieldTitle className="font-bold">문자</FieldTitle>
                       <Controller
                         name="isSmsConsent"
                         control={form.control}
@@ -181,7 +181,7 @@ export default function MyInfoNoticePage() {
                     </div>
 
                     <div className="flex items-center justify-between border-b border-stone-200 py-3">
-                      <Label className="font-bold">이메일</Label>
+                      <FieldTitle className="font-bold">이메일</FieldTitle>
                       <Controller
                         name="isEmailConsent"
                         control={form.control}

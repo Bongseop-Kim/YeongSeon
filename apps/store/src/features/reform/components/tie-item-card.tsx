@@ -53,7 +53,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         />
       </div>
 
-      <div className="mt-3 grid gap-4 md:grid-cols-[140px_minmax(0,1fr)] md:items-start">
+      <div className="mt-3 grid grid-cols-[107px_minmax(0,1fr)] items-start gap-4">
         <Controller
           control={control}
           name={`ties.${index}.image`}
@@ -67,6 +67,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
               </FieldDescription>
               <FieldContent>
                 <ImagePicker
+                  id={`tie-image-${index}`}
                   selectedFile={
                     field.value instanceof File ? field.value : undefined
                   }

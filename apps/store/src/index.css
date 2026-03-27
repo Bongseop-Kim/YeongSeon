@@ -318,6 +318,11 @@
 }
 
 @layer utilities {
+  .token-purchase-panel {
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 48px -36px rgb(15 23 42 / 0.28);
+  }
+
   /* Chrome, Safari and Opera */
   .scrollbar-hidden::-webkit-scrollbar {
     display: none;

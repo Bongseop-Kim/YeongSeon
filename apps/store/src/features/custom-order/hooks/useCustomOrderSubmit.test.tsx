@@ -2,21 +2,14 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useCustomOrderSubmit } from "@/features/custom-order/hooks/useCustomOrderSubmit";
 
-const {
-  navigate,
-  success,
-  error,
-  createCustomOrderMutateAsync,
-  createQuoteRequestMutateAsync,
-  requestPayment,
-} = vi.hoisted(() => ({
-  navigate: vi.fn(),
-  success: vi.fn(),
-  error: vi.fn(),
-  createCustomOrderMutateAsync: vi.fn(),
-  createQuoteRequestMutateAsync: vi.fn(),
-  requestPayment: vi.fn(),
-}));
+const { navigate, success, error, createQuoteRequestMutateAsync } = vi.hoisted(
+  () => ({
+    navigate: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    createQuoteRequestMutateAsync: vi.fn(),
+  }),
+);
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => navigate,
@@ -33,13 +26,6 @@ vi.mock("@/lib/toast", () => ({
     success,
     error,
   },
-}));
-
-vi.mock("@/features/custom-order/api/custom-order-query", () => ({
-  useCreateCustomOrder: () => ({
-    isPending: false,
-    mutateAsync: createCustomOrderMutateAsync,
-  }),
 }));
 
 vi.mock("@/features/quote-request/api/quote-request-query", () => ({
@@ -81,18 +67,10 @@ describe("useCustomOrderSubmit", () => {
     navigate.mockReset();
     success.mockReset();
     error.mockReset();
-    createCustomOrderMutateAsync.mockReset();
     createQuoteRequestMutateAsync.mockReset();
-    requestPayment.mockReset();
   });
 
-  it("일반 주문을 생성하고 토스 결제를 요청한다", async () => {
-    const formReset = vi.fn();
-    createCustomOrderMutateAsync.mockResolvedValueOnce({ orderId: "order-1" });
-    requestPayment.mockResolvedValueOnce(undefined);
-
-    const paymentWidgetRef = { current: { requestPayment } };
-
+  it("즉시주문(수량 < 100) 시 결제 페이지로 navigate한다", async () => {
     const { result } = renderHook(() =>
       useCustomOrderSubmit({
         selectedAddressId: "addr-1",
@@ -104,8 +82,8 @@ describe("useCustomOrderSubmit", () => {
           ],
         } as never,
         watchedValues: createValues(10),
-        formReset,
-        paymentWidgetRef: paymentWidgetRef as never,
+        formReset: vi.fn(),
+        totalCost: 10000,
       }),
     );
 
@@ -115,66 +93,14 @@ describe("useCustomOrderSubmit", () => {
       await result.current.handleSubmit();
     });
 
-    expect(createCustomOrderMutateAsync).toHaveBeenCalled();
-    expect(requestPayment).toHaveBeenCalledWith(
-      expect.objectContaining({ orderId: "order-1" }),
-    );
-  });
-
-  it("취소 후 입력값이 바뀌면 새 주문을 다시 생성한다", async () => {
-    const formReset = vi.fn();
-    createCustomOrderMutateAsync
-      .mockResolvedValueOnce({ orderId: "order-1" })
-      .mockResolvedValueOnce({ orderId: "order-2" });
-    requestPayment.mockRejectedValueOnce({ code: "USER_CANCEL" });
-    requestPayment.mockResolvedValueOnce(undefined);
-
-    const paymentWidgetRef = { current: { requestPayment } };
-    const baseProps = {
-      selectedAddressId: "addr-1",
-      selectedAddress: { id: "addr-1" } as never,
-      imageUpload: {
-        isUploading: false,
-        getImageRefs: () => [
-          { url: "https://example.com/1.jpg", fileId: "file-1" },
-        ],
-      } as never,
-      formReset,
-      paymentWidgetRef: paymentWidgetRef as never,
-    };
-
-    const { result, rerender } = renderHook(
-      ({ watchedValues }) =>
-        useCustomOrderSubmit({
-          ...baseProps,
-          watchedValues,
+    expect(navigate).toHaveBeenCalledWith(
+      "/order/custom-payment",
+      expect.objectContaining({
+        state: expect.objectContaining({
+          orderType: "custom",
+          totalCost: 10000,
         }),
-      {
-        initialProps: {
-          watchedValues: createValues(10),
-        },
-      },
-    );
-
-    await act(async () => {
-      await result.current.handleSubmit();
-    });
-
-    rerender({
-      watchedValues: {
-        ...createValues(10),
-        additionalNotes: "변경된 메모",
-      },
-    });
-
-    await act(async () => {
-      await result.current.handleSubmit();
-    });
-
-    expect(createCustomOrderMutateAsync).toHaveBeenCalledTimes(2);
-    expect(requestPayment).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ orderId: "order-2" }),
+      }),
     );
   });
 
@@ -193,7 +119,7 @@ describe("useCustomOrderSubmit", () => {
           contactValue: "",
         },
         formReset: vi.fn(),
-        paymentWidgetRef: { current: null } as never,
+        totalCost: 0,
       }),
     );
 
@@ -219,7 +145,7 @@ describe("useCustomOrderSubmit", () => {
         } as never,
         watchedValues: createValues(100),
         formReset,
-        paymentWidgetRef: { current: null } as never,
+        totalCost: 0,
       }),
     );
 
@@ -245,7 +171,7 @@ describe("useCustomOrderSubmit", () => {
         } as never,
         watchedValues: createValues(100),
         formReset,
-        paymentWidgetRef: { current: null } as never,
+        totalCost: 0,
       }),
     );
 

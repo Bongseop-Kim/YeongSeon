@@ -37,6 +37,7 @@ export const ROUTES = {
   TOKEN_PURCHASE_SUCCESS: "/token/purchase/success", // 토큰 구매 성공
   TOKEN_PURCHASE_FAIL: "/token/purchase/fail", // 토큰 구매 실패
   REPAIR_SHIPPING: "/order/repair-shipping", // 수선품 발송
+  CUSTOM_PAYMENT: "/order/custom-payment", // 주문제작·샘플 결제
 } as const;
 
 type ClaimRouteType = "return" | "exchange" | "cancel" | "token_refund";

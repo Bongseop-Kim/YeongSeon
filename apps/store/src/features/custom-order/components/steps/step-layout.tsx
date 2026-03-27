@@ -22,7 +22,6 @@ export const StepLayout = ({
           title={guideTitle}
           description="현재 단계에서 판단 기준이 되는 핵심만 정리했습니다."
           tone="muted"
-          className="border border-stone-200 bg-stone-50/55 p-4 lg:p-5"
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
             Guide

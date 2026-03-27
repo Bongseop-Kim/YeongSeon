@@ -50,7 +50,7 @@ export function UtilityPageIntro({
   return (
     <section
       className={cn(
-        "border-b border-stone-200 px-4 pb-6 pt-2 lg:px-0 lg:pb-8 lg:pt-4",
+        "border-b border-stone-200 pb-6 pt-2 lg:pb-8 lg:pt-4",
         className,
       )}
     >
@@ -130,7 +130,7 @@ export function UtilityPageSection({
   className,
 }: UtilityPageSectionProps) {
   return (
-    <section className={cn("px-4 lg:px-0", className)}>
+    <section className={className}>
       <div className="flex items-center gap-2">
         {Icon ? <Icon className="size-4 text-zinc-500" /> : null}
         <h2 className="text-lg font-semibold tracking-tight text-zinc-950">
@@ -186,8 +186,8 @@ interface UtilityPageAsideProps {
 
 const asideToneClassName = {
   default: "border-b border-stone-200 bg-transparent",
-  muted: "rounded-xl border border-stone-200 bg-stone-50/70",
-  danger: "rounded-xl border border-red-200 bg-red-50/80",
+  muted: "lg:rounded-xl lg:border lg:border-stone-200 lg:bg-stone-50/70",
+  danger: "lg:rounded-xl lg:border lg:border-red-200 lg:bg-red-50/80",
 } as const;
 
 export function UtilityPageAside({
@@ -199,7 +199,7 @@ export function UtilityPageAside({
   className,
 }: UtilityPageAsideProps) {
   return (
-    <aside className={cn("p-4 lg:p-5", asideToneClassName[tone], className)}>
+    <aside className={cn("pt-4 lg:p-5", asideToneClassName[tone], className)}>
       <div className="flex items-center gap-2">
         {Icon ? <Icon className="size-4 text-zinc-500" /> : null}
         <h3 className="text-base font-semibold text-zinc-950">{title}</h3>

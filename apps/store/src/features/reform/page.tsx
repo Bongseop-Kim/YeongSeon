@@ -19,7 +19,7 @@ import BulkApplySection, {
 import type { ReformOptions } from "@yeongseon/shared/types/view/reform";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { useModalStore } from "@/store/modal";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useOrderStore } from "@/store/order";
@@ -325,103 +325,101 @@ const ReformPage = () => {
                   className="pb-4 lg:pb-5"
                 />
 
-                <div className="px-4 lg:px-0">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 py-2">
-                    <div className="flex items-center gap-4">
-                      <Checkbox
-                        id={selectAllCheckboxId}
-                        checked={
-                          isIndeterminate ? "indeterminate" : isAllChecked
-                        }
-                        onCheckedChange={handleSelectAll}
-                        aria-checked={isIndeterminate ? "mixed" : isAllChecked}
-                      />
-                      <Label
-                        htmlFor={selectAllCheckboxId}
-                        className="cursor-pointer text-sm font-medium text-zinc-900"
-                      >
-                        전체 선택
-                      </Label>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        type="button"
-                        size="sm"
-                        onClick={() => {
-                          if (selectedTieIndices.length === 0) {
-                            alert("적용할 항목을 선택해주세요.");
-                            return;
-                          }
-
-                          setCheckedIndicesForBulk(selectedTieIndices);
-                          setBulkDialogOpen(true);
-                        }}
-                      >
-                        일괄 적용
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          if (selectedTieIndices.length === 0) {
-                            return;
-                          }
-
-                          confirm(
-                            "선택한 항목을 삭제하시겠습니까?",
-                            handleDelete,
-                            {
-                              confirmText: "삭제",
-                              cancelText: "취소",
-                            },
-                          );
-                        }}
-                        variant="outline"
-                        type="button"
-                        size="sm"
-                        disabled={selectedTieIndices.length === 0}
-                      >
-                        삭제
-                      </Button>
-                    </div>
-                  </div>
-
-                  {fields.map((field, index) => (
-                    <React.Fragment key={field.id}>
-                      <TieItemCard
-                        index={index}
-                        control={form.control}
-                        onRemove={() =>
-                          confirm(
-                            "정말 삭제하시겠습니까?",
-                            () => removeTie(index),
-                            {
-                              confirmText: "삭제",
-                              cancelText: "취소",
-                            },
-                          )
-                        }
-                      />
-                      {index < fields.length - 1 && <Separator />}
-                    </React.Fragment>
-                  ))}
-
-                  {fields.length === 0 && (
-                    <Empty
-                      title="수선할 넥타이가 없습니다."
-                      description="새 항목을 추가해 접수를 시작해주세요."
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 py-2">
+                  <Field orientation="horizontal" className="w-auto gap-4">
+                    <Checkbox
+                      id={selectAllCheckboxId}
+                      checked={isIndeterminate ? "indeterminate" : isAllChecked}
+                      onCheckedChange={handleSelectAll}
+                      aria-checked={isIndeterminate ? "mixed" : isAllChecked}
                     />
-                  )}
-
-                  <div className="flex justify-end border-t border-stone-200 py-3">
-                    <Button
-                      type="button"
-                      onClick={addTie}
-                      variant="outline"
-                      size="sm"
+                    <FieldLabel
+                      htmlFor={selectAllCheckboxId}
+                      className="cursor-pointer"
                     >
-                      넥타이 추가
+                      <FieldTitle className="text-zinc-900">
+                        전체 선택
+                      </FieldTitle>
+                    </FieldLabel>
+                  </Field>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        if (selectedTieIndices.length === 0) {
+                          alert("적용할 항목을 선택해주세요.");
+                          return;
+                        }
+
+                        setCheckedIndicesForBulk(selectedTieIndices);
+                        setBulkDialogOpen(true);
+                      }}
+                    >
+                      일괄 적용
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (selectedTieIndices.length === 0) {
+                          return;
+                        }
+
+                        confirm(
+                          "선택한 항목을 삭제하시겠습니까?",
+                          handleDelete,
+                          {
+                            confirmText: "삭제",
+                            cancelText: "취소",
+                          },
+                        );
+                      }}
+                      variant="outline"
+                      type="button"
+                      size="sm"
+                      disabled={selectedTieIndices.length === 0}
+                    >
+                      삭제
                     </Button>
                   </div>
+                </div>
+
+                {fields.map((field, index) => (
+                  <React.Fragment key={field.id}>
+                    <TieItemCard
+                      index={index}
+                      control={form.control}
+                      onRemove={() =>
+                        confirm(
+                          "정말 삭제하시겠습니까?",
+                          () => removeTie(index),
+                          {
+                            confirmText: "삭제",
+                            cancelText: "취소",
+                          },
+                        )
+                      }
+                    />
+                    {index < fields.length - 1 && <Separator />}
+                  </React.Fragment>
+                ))}
+
+                {fields.length === 0 && (
+                  <Empty
+                    title="수선할 넥타이가 없습니다."
+                    description="새 항목을 추가해 접수를 시작해주세요."
+                  />
+                )}
+
+                <div className="flex justify-end border-t border-stone-200 py-3">
+                  <Button
+                    type="button"
+                    onClick={addTie}
+                    variant="outline"
+                    size="sm"
+                  >
+                    넥타이 추가
+                  </Button>
                 </div>
               </div>
             </PageLayout>

@@ -12,7 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui-extended/select";
-import type { Product } from "@yeongseon/shared/types/view/product";
+import type {
+  Product,
+  ProductOption,
+} from "@yeongseon/shared/types/view/product";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
 import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";
@@ -20,36 +23,40 @@ import { useModalStore } from "@/store/modal";
 import { useOrderStore } from "@/store/order";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/lib/toast";
-import { useSelectedOptions } from "@/features/shop/detail/hooks/useSelectedOptions";
 import { processOrderAndNavigate } from "@/features/shop/detail/utils/process-order";
 import { ROUTES } from "@/constants/ROUTES";
 import { useState } from "react";
+import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 
 interface MobilePurchaseSheetProps {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  selectedOptions: SelectedOption[];
+  baseQuantity: number;
+  handleSelectOption: (option: ProductOption) => void;
+  handleRemoveOption: (optionId: string) => void;
+  handleUpdateQuantity: (optionId: string, delta: number) => void;
+  handleUpdateBaseQuantity: (delta: number, maxStock?: number | null) => void;
+  resetOptions: () => void;
 }
 
 export function MobilePurchaseSheet({
   product,
   open,
   onOpenChange,
+  selectedOptions,
+  baseQuantity,
+  handleSelectOption,
+  handleRemoveOption,
+  handleUpdateQuantity,
+  handleUpdateBaseQuantity,
+  resetOptions,
 }: MobilePurchaseSheetProps) {
   const { addItemsToCart } = useAddToCartItems();
   const { openModal } = useModalStore();
   const { setOrderItems } = useOrderStore();
   const navigate = useNavigate();
-  const {
-    selectedOptions,
-    baseQuantity,
-    handleSelectOption,
-    handleRemoveOption,
-    handleUpdateQuantity,
-    handleUpdateBaseQuantity,
-    resetOptions,
-  } = useSelectedOptions();
-
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const productOptions = product.options ?? [];
@@ -90,7 +97,7 @@ export function MobilePurchaseSheet({
         confirmText: "장바구니 보기",
         cancelText: "닫기",
         onConfirm: () => {
-          window.location.href = ROUTES.CART;
+          navigate(ROUTES.CART);
         },
       });
     } finally {

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui-extended/input";
 import { InputField } from "@/components/composite/input-field";
 import { TextareaField } from "@/components/composite/textarea-field";
 import {
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldTitle,
@@ -108,9 +109,7 @@ export const InquiryForm = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="space-y-2">
-          <div>
-            <FieldTitle>문의 유형</FieldTitle>
-          </div>
+          <FieldTitle>문의 유형</FieldTitle>
           <Controller
             name="category"
             control={form.control}
@@ -137,12 +136,12 @@ export const InquiryForm = ({
 
         {category === "상품" && (
           <div className="space-y-3 border-t border-stone-200 pt-5">
-            <div>
+            <FieldContent>
               <FieldTitle>상품 선택</FieldTitle>
               <FieldDescription>
                 상품 문의일 경우 정확한 상품을 선택해 주세요.
               </FieldDescription>
-            </div>
+            </FieldContent>
 
             {selectedProductId && selectedProductName ? (
               <div className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 px-3 py-3">
@@ -223,13 +222,11 @@ export const InquiryForm = ({
         </div>
 
         <div className="space-y-3 border-t border-stone-200 pt-5">
-          <FieldDescription>
-            주문 정보나 원하는 처리 내용을 구체적으로 적어 주세요.
-          </FieldDescription>
           <TextareaField
             control={form.control}
             name="content"
             label="문의 내용"
+            description="주문 정보나 원하는 처리 내용을 구체적으로 적어 주세요."
             placeholder="문의 내용을 입력해주세요."
             textareaClassName="min-h-[220px] resize-none"
             rules={{ required: "문의 내용을 입력해주세요." }}

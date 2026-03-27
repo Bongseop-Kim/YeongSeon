@@ -1,5 +1,6 @@
 import { type LucideIcon } from "lucide-react";
 import { type ReactNode } from "react";
+import { cn } from "@/lib/utils";
 import {
   UtilityKeyValueRow,
   UtilityPageAside,
@@ -17,6 +18,8 @@ interface OrderSummaryAsideProps {
   description?: string;
   icon?: LucideIcon;
   rows: SummaryRow[];
+  totalAmount?: number;
+  totalLabel?: string;
   footer?: ReactNode;
   className?: string;
 }
@@ -26,6 +29,8 @@ export function OrderSummaryAside({
   description,
   icon,
   rows,
+  totalAmount,
+  totalLabel = "총 결제 금액",
   footer,
   className,
 }: OrderSummaryAsideProps) {
@@ -35,7 +40,7 @@ export function OrderSummaryAside({
       description={description}
       icon={icon}
       tone="muted"
-      className={className ?? "rounded-2xl"}
+      className={cn("lg:rounded-2xl", className)}
     >
       <dl>
         {rows.map((row) => (
@@ -46,6 +51,17 @@ export function OrderSummaryAside({
             className={row.className}
           />
         ))}
+        {totalAmount !== undefined && (
+          <UtilityKeyValueRow
+            className="pt-5"
+            label={totalLabel}
+            value={
+              <span className="text-base font-semibold tracking-tight text-blue-600">
+                {totalAmount.toLocaleString()}원
+              </span>
+            }
+          />
+        )}
       </dl>
       {footer}
     </UtilityPageAside>

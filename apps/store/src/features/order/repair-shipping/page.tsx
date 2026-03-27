@@ -92,7 +92,7 @@ const RepairShippingPage = () => {
         <MainContent>
           <PageLayout>
             <div className="flex items-center justify-center min-h-96">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-info" />
             </div>
           </PageLayout>
         </MainContent>
@@ -115,7 +115,7 @@ const RepairShippingPage = () => {
                 title="수선품 발송 등록"
                 description="결제가 완료되었습니다. 발송 주소를 확인한 뒤 송장번호를 등록해주세요."
                 meta={
-                  <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                  <div className="rounded-xl border border-success/20 bg-success-muted px-4 py-3 text-sm text-success">
                     결제가 완료되었습니다. 수선품을 보내신 뒤 송장 정보를 남기면
                     접수가 바로 이어집니다.
                   </div>

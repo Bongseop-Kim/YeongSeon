@@ -91,7 +91,7 @@ const TokenPurchasePage = () => {
               </p>
             </div>
 
-            <div className="mb-10 rounded-[1.5rem] border border-border/70 bg-surface px-6 py-5 shadow-[0_20px_48px_-36px_rgba(15,23,42,0.28)]">
+            <div className="token-purchase-panel mb-10 border border-border/70 bg-surface px-6 py-5">
               <p className="mb-3 text-sm font-semibold text-foreground">
                 토큰 사용 안내
               </p>
@@ -152,7 +152,7 @@ const TokenPurchasePage = () => {
                 Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-80 animate-pulse rounded-[1.5rem] bg-surface-muted"
+                    className="token-purchase-panel h-80 animate-pulse bg-surface-muted"
                   />
                 ))
               ) : isPlansError ? (

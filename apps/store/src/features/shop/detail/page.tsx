@@ -206,7 +206,6 @@ export default function ShopDetailPage() {
     <MainLayout>
       <MainContent className="overflow-visible">
         <PageLayout
-          contentClassName="py-4 lg:py-6"
           detail={
             <div className="space-y-10 pt-8">
               {showSimilarSection && (
@@ -415,7 +414,7 @@ export default function ShopDetailPage() {
                 <button
                   type="button"
                   onClick={handleInquiry}
-                  className="focus-visible:border-ring focus-visible:ring-ring/50 flex w-full items-start justify-between gap-4 rounded-sm border-b py-4 text-left text-sm font-medium outline-none transition-all focus-visible:ring-[3px] hover:underline"
+                  className="focus-visible:border-ring focus-visible:ring-ring/50 flex w-full items-start justify-between gap-4 border-b py-4 text-left text-sm font-medium outline-none transition-all focus-visible:ring-[3px] hover:underline"
                 >
                   문의하기
                   <ChevronRightIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5" />
@@ -436,7 +435,7 @@ export default function ShopDetailPage() {
             />
           }
         >
-          <div>
+          <div className={isMobile ? "-mx-4" : undefined}>
             <Image
               src={product.image}
               alt={product.name}
@@ -455,6 +454,13 @@ export default function ShopDetailPage() {
           product={product}
           open={isPurchaseSheetOpen}
           onOpenChange={setIsPurchaseSheetOpen}
+          selectedOptions={selectedOptions}
+          baseQuantity={baseQuantity}
+          handleSelectOption={handleSelectOption}
+          handleRemoveOption={handleRemoveOption}
+          handleUpdateQuantity={handleUpdateQuantity}
+          handleUpdateBaseQuantity={handleUpdateBaseQuantity}
+          resetOptions={resetOptions}
         />
       </MainContent>
     </MainLayout>

@@ -46,6 +46,7 @@ export function RadioGroupField<T extends FieldValues>({
             <RadioGroup
               value={field.value}
               onValueChange={field.onChange}
+              onBlur={field.onBlur}
               className={radioGroupClassName}
             >
               {children}

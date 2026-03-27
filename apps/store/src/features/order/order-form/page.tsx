@@ -24,12 +24,10 @@ import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAd
 import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
 import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
 import {
-  UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/components/composite/utility-page";
 import { OrderPriceSummaryAside } from "@/components/composite/order-price-summary-aside";
-import { CheckboxInput } from "@/components/composite/checkbox-input";
 import { PaymentWidgetAside } from "@/components/composite/payment-widget-aside";
 
 const OrderFormPage = () => {
@@ -175,7 +173,6 @@ const OrderFormPage = () => {
         <MainContent className="overflow-visible">
           <PageLayout
             contentClassName="py-4 lg:py-8"
-            sidebarClassName="px-4 lg:px-0"
             sidebar={
               <div className="space-y-4">
                 <OrderPriceSummaryAside
@@ -195,24 +192,19 @@ const OrderFormPage = () => {
                     amount={totals.totalPrice}
                     customerKey={user.id}
                     className="rounded-2xl"
+                    consent={
+                      hasReformItems
+                        ? {
+                            id: "order-form-cancellation-consent",
+                            checked: cancellationConsent,
+                            onCheckedChange: setCancellationConsent,
+                            label: "취소/환불 불가 동의",
+                            description:
+                              "판매자가 수선물을 수령(접수)한 이후부터 취소 및 환불이 불가능합니다.",
+                          }
+                        : undefined
+                    }
                   />
-                )}
-                {hasReformItems && (
-                  <UtilityPageAside
-                    title="동의"
-                    description="주문 진행을 위해 취소 및 환불 기준 동의가 필요합니다."
-                    tone="muted"
-                    className="rounded-2xl"
-                  >
-                    <CheckboxInput
-                      id="order-form-cancellation-consent"
-                      checked={cancellationConsent}
-                      onCheckedChange={setCancellationConsent}
-                      label="취소/환불 불가 동의"
-                      description="판매자가 수선물을 수령(접수)한 이후부터 취소 및 환불이 불가능합니다."
-                      required
-                    />
-                  </UtilityPageAside>
                 )}
               </div>
             }

@@ -1,18 +1,13 @@
-import { useRef, useState } from "react";
-import type { RefObject } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
-import { hasStringCode } from "@/lib/type-guard";
 import { ROUTES } from "@/constants/ROUTES";
-import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
-import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
 import { useCreateQuoteRequest } from "@/features/quote-request/api/quote-request-query";
 import { toCreateQuoteRequestInput } from "@/features/quote-request/api/quote-request-mapper";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
-import type { PaymentWidgetRef } from "@/components/composite/payment-widget";
+import type { CustomPaymentState } from "@/features/order/custom-payment/types";
 
 interface UseCustomOrderSubmitParams {
   selectedAddressId: string | null;
@@ -20,22 +15,8 @@ interface UseCustomOrderSubmitParams {
   imageUpload: ImageUploadHook;
   watchedValues: QuoteOrderOptions;
   formReset: () => void;
-  paymentWidgetRef: RefObject<PaymentWidgetRef | null>;
+  totalCost: number;
 }
-
-type PendingCustomOrderSnapshot = {
-  shippingAddressId: string;
-  options: ReturnType<typeof toCreateCustomOrderInput>["options"];
-  quantity: number;
-  referenceImages: ReturnType<
-    typeof toCreateCustomOrderInput
-  >["referenceImages"];
-  additionalNotes: string;
-};
-
-const serializePendingOrderSnapshot = (
-  snapshot: PendingCustomOrderSnapshot,
-): string => JSON.stringify(snapshot);
 
 export function useCustomOrderSubmit({
   selectedAddressId,
@@ -43,23 +24,17 @@ export function useCustomOrderSubmit({
   imageUpload,
   watchedValues,
   formReset,
-  paymentWidgetRef,
+  totalCost,
 }: UseCustomOrderSubmitParams) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const isLoggedIn = !!user;
-  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const pendingOrderIdRef = useRef<string | null>(null);
-  const pendingOrderSnapshotRef = useRef<string | null>(null);
-  const createCustomOrder = useCreateCustomOrder();
   const createQuoteRequest = useCreateQuoteRequest();
 
   const isQuoteMode = watchedValues.quantity >= 100;
-  const isPending = isQuoteMode
-    ? createQuoteRequest.isPending
-    : createCustomOrder.isPending || isPaymentLoading;
+  const isPending = createQuoteRequest.isPending;
   const isSubmitDisabled =
-    (isLoggedIn && (!selectedAddressId || !selectedAddress)) ||
+    (isLoggedIn && isQuoteMode && (!selectedAddressId || !selectedAddress)) ||
     isPending ||
     imageUpload.isUploading;
 
@@ -69,7 +44,7 @@ export function useCustomOrderSubmit({
       navigate(ROUTES.LOGIN);
       return;
     }
-    if (!selectedAddressId || !selectedAddress) {
+    if (isQuoteMode && (!selectedAddressId || !selectedAddress)) {
       toast.error("배송지를 선택해주세요.");
       return;
     }
@@ -99,6 +74,7 @@ export function useCustomOrderSubmit({
 
     // 견적요청 경로 (수량 >= 100)
     if (isQuoteMode) {
+      if (!selectedAddressId) return;
       try {
         await createQuoteRequest.mutateAsync({
           ...toCreateQuoteRequestInput({
@@ -125,59 +101,15 @@ export function useCustomOrderSubmit({
       return;
     }
 
-    // 즉시주문 경로 (수량 < 100) — 토스 결제
-    if (!paymentWidgetRef.current) {
-      toast.error("결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
-      return;
-    }
-
-    setIsPaymentLoading(true);
-    try {
-      const request = toCreateCustomOrderInput({
-        shippingAddressId: selectedAddressId,
-        options: coreOptions,
-        referenceImages: imageUpload.getImageRefs(),
-        additionalNotes,
-      });
-      const pendingSnapshot = serializePendingOrderSnapshot({
-        shippingAddressId: request.shippingAddressId,
-        options: request.options,
-        quantity: request.quantity,
-        referenceImages: request.referenceImages,
-        additionalNotes: request.additionalNotes,
-      });
-
-      if (
-        pendingOrderIdRef.current &&
-        pendingOrderSnapshotRef.current !== pendingSnapshot
-      ) {
-        pendingOrderIdRef.current = null;
-        pendingOrderSnapshotRef.current = null;
-      }
-
-      const orderId =
-        pendingOrderIdRef.current ??
-        (await createCustomOrder.mutateAsync(request)).orderId;
-      pendingOrderIdRef.current = orderId;
-      pendingOrderSnapshotRef.current = pendingSnapshot;
-
-      await paymentWidgetRef.current.requestPayment({
-        orderId,
-        orderName: `주문제작 (수량 ${watchedValues.quantity}개)`,
-        successUrl: `${window.location.origin}${ROUTES.PAYMENT_SUCCESS}`,
-        failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}`,
-        customerName: user.user_metadata?.name ?? undefined,
-      });
-    } catch (error) {
-      if (hasStringCode(error) && error.code === "USER_CANCEL") return;
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "주문 처리 중 오류가 발생했습니다.",
-      );
-    } finally {
-      setIsPaymentLoading(false);
-    }
+    // 즉시주문 경로 (수량 < 100) — 결제 페이지로 이동
+    const state: CustomPaymentState = {
+      orderType: "custom",
+      coreOptions,
+      imageRefs: imageUpload.getImageRefs(),
+      additionalNotes,
+      totalCost,
+    };
+    navigate(ROUTES.CUSTOM_PAYMENT, { state });
   };
 
   return { handleSubmit, isPending, isSubmitDisabled };

@@ -41,7 +41,7 @@ export const ImageUpload = ({
       </FieldLabel>
       <FieldDescription>PNG, JPG, GIF 파일 지원</FieldDescription>
       <FieldContent className="space-y-3">
-        <div className="rounded-lg border-2 border-dashed border-zinc-300 p-5 text-center transition-colors">
+        <div className="rounded-lg border-2 border-dashed border-border p-5 text-center transition-colors">
           <input
             ref={inputRef}
             id={inputId}

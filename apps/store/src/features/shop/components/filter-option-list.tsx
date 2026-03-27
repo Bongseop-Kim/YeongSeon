@@ -20,12 +20,9 @@ function FilterOptionList<T extends string>({
   idPrefix,
 }: FilterOptionListProps<T>) {
   return (
-    <div className="grid grid-cols-1 gap-x-6 gap-y-4 px-1 py-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-x-6 gap-y-4 px-4 sm:grid-cols-2">
       {options.map((option) => (
-        <div
-          key={option.value}
-          className="flex min-h-11 items-center gap-3 border-b border-zinc-100 pb-4"
-        >
+        <div key={option.value} className="flex items-center gap-3 pb-4">
           <Checkbox
             id={`${idPrefix}-${option.value}`}
             checked={checked(option.value)}
