@@ -19,7 +19,7 @@ import type {
   ProductCartItem,
   ReformCartItem,
 } from "@yeongseon/shared/types/view/cart";
-import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
+import { useCouponSelect } from "@/features/coupon";
 import { useProducts } from "@/features/shop/api/products-query";
 import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useReformPricing } from "@/features/reform/api/reform-query";

@@ -10,7 +10,7 @@ import { OrderFormItemCard } from "@/features/order/order-form/components/order-
 import { ReformOrderItemCard } from "@/features/order/order-form/components/reform-order-item-card";
 import React from "react";
 import { useOrderStore } from "@/store/order";
-import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
+import { useCouponSelect } from "@/features/coupon";
 import { toast } from "@/lib/toast";
 import { hasStringCode } from "@/lib/type-guard";
 import { formatPhoneNumber } from "@/lib/phone-format";

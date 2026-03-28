@@ -1,9 +1,10 @@
 import { supabase } from "@/lib/supabase";
 import {
   parseCreateCustomOrderResponse,
+  toCreateCustomOrderInput,
   toCreateCustomOrderInputDto,
+  type CreateCustomOrderFormInput,
 } from "@/features/custom-order/api/custom-order-mapper";
-import type { CreateCustomOrderRequest } from "@/features/custom-order/types/dto/custom-order-input";
 
 interface CreateCustomOrderResponse {
   orderId: string;
@@ -11,11 +12,12 @@ interface CreateCustomOrderResponse {
   totalAmount: number;
 }
 
-export type { CreateCustomOrderRequest };
+export type { CreateCustomOrderFormInput };
 
 export const createCustomOrder = async (
-  request: CreateCustomOrderRequest,
+  input: CreateCustomOrderFormInput,
 ): Promise<CreateCustomOrderResponse> => {
+  const request = toCreateCustomOrderInput(input);
   const requestDto = toCreateCustomOrderInputDto(request);
 
   const { data, error } = await supabase.functions.invoke(

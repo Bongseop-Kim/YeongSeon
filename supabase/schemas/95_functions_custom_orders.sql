@@ -230,7 +230,8 @@ CREATE OR REPLACE FUNCTION public.create_custom_order_txn(
   p_reference_images jsonb DEFAULT '[]'::jsonb,
   p_additional_notes text DEFAULT '',
   p_sample boolean DEFAULT null,
-  p_sample_type text DEFAULT null
+  p_sample_type text DEFAULT null,
+  p_user_coupon_id uuid DEFAULT null
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -254,6 +255,14 @@ declare
   v_idx integer;
   v_base_unit integer;
   v_remainder integer;
+
+  -- 쿠폰 관련 변수
+  v_coupon record;
+  v_discount_amount integer := 0;
+  v_capped_line_discount integer := 0;
+  v_discount_remainder integer := 0;
+  v_line_discount_total integer := 0;
+  v_total_price integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -314,6 +323,57 @@ begin
   v_base_unit := floor(v_total_cost::numeric / p_quantity)::integer;
   v_remainder := v_total_cost - v_base_unit * p_quantity;
 
+  -- 쿠폰 검증 및 할인 계산
+  if p_user_coupon_id is not null then
+    select
+      uc.id, uc.status, uc.expires_at,
+      c.discount_type, c.discount_value, c.max_discount_amount,
+      c.expiry_date, c.is_active
+    into v_coupon
+    from public.user_coupons uc
+    join public.coupons c on c.id = uc.coupon_id
+    where uc.id = p_user_coupon_id
+      and uc.user_id = v_user_id
+    for update;
+
+    if not found then
+      raise exception 'Coupon not found';
+    end if;
+    if v_coupon.status <> 'active' then
+      raise exception 'Coupon is not available';
+    end if;
+    if v_coupon.expires_at is not null and v_coupon.expires_at <= now() then
+      raise exception 'Coupon has expired';
+    end if;
+    if coalesce(v_coupon.is_active, false) is not true then
+      raise exception 'Coupon is not active';
+    end if;
+    if v_coupon.expiry_date is not null and v_coupon.expiry_date < current_date then
+      raise exception 'Coupon has expired';
+    end if;
+
+    -- unit_price = v_base_unit, qty = p_quantity (create_order_txn 동일 패턴)
+    if v_coupon.discount_type = 'percentage' then
+      v_discount_amount := floor(v_base_unit * (v_coupon.discount_value::numeric / 100.0))::integer;
+    elsif v_coupon.discount_type = 'fixed' then
+      v_discount_amount := floor(v_coupon.discount_value::numeric)::integer;
+    else
+      raise exception 'Invalid coupon type';
+    end if;
+
+    v_discount_amount := greatest(0, least(v_discount_amount, v_base_unit));
+    v_capped_line_discount := v_discount_amount * p_quantity;
+    if v_coupon.max_discount_amount is not null then
+      v_capped_line_discount := least(v_capped_line_discount, v_coupon.max_discount_amount);
+    end if;
+
+    v_discount_amount := floor(v_capped_line_discount::numeric / p_quantity)::integer;
+    v_discount_remainder := v_capped_line_discount % p_quantity;
+    v_line_discount_total := (v_discount_amount * p_quantity) + v_discount_remainder;
+  end if;
+
+  v_total_price := v_total_cost - v_line_discount_total;
+
   v_order_number := public.generate_order_number();
   v_payment_group_id := gen_random_uuid();
 
@@ -333,30 +393,15 @@ begin
     v_user_id,
     v_order_number,
     p_shipping_address_id,
+    v_total_price,
     v_total_cost,
-    v_total_cost,
-    0,
+    v_line_discount_total,
     'custom',
     '대기중',
     v_payment_group_id,
     v_sample_cost
   )
   returning id into v_order_id;
-
-  v_reform_data := jsonb_build_object(
-    'custom_order', true,
-    'quantity', p_quantity,
-    'options', p_options,
-    'reference_images', coalesce(p_reference_images, '[]'::jsonb),
-    'additional_notes', coalesce(p_additional_notes, ''),
-    'pricing', jsonb_build_object(
-      'sewing_cost', v_sewing_cost,
-      'fabric_cost', v_fabric_cost,
-      'sample_cost', v_sample_cost,
-      'total_cost', v_total_cost,
-      'unit_price_remainder', v_remainder
-    )
-  );
 
   insert into public.order_items (
     order_id,
@@ -377,12 +422,25 @@ begin
     'custom',
     null,
     null,
-    v_reform_data,
+    jsonb_build_object(
+      'custom_order', true,
+      'quantity', p_quantity,
+      'options', p_options,
+      'reference_images', coalesce(p_reference_images, '[]'::jsonb),
+      'additional_notes', coalesce(p_additional_notes, ''),
+      'pricing', jsonb_build_object(
+        'sewing_cost', v_sewing_cost,
+        'fabric_cost', v_fabric_cost,
+        'sample_cost', v_sample_cost,
+        'total_cost', v_total_cost,
+        'unit_price_remainder', v_remainder
+      )
+    ),
     p_quantity,
     v_base_unit,
-    0,
-    0,
-    null
+    v_discount_amount,
+    v_line_discount_total,
+    p_user_coupon_id
   );
 
   -- images 테이블에 참조 이미지 등록
@@ -398,6 +456,16 @@ begin
       v_user_id
     FROM jsonb_array_elements(p_reference_images) AS elem;
   END IF;
+
+  -- 쿠폰 reserved 처리
+  if p_user_coupon_id is not null then
+    update public.user_coupons
+    set status = 'reserved',
+        updated_at = now()
+    where id = p_user_coupon_id
+      and user_id = v_user_id
+      and status = 'active';
+  end if;
 
   return jsonb_build_object(
     'order_id', v_order_id,

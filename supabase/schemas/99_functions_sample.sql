@@ -2,16 +2,19 @@
 -- 99_functions_sample.sql  – Sample order RPC functions
 -- =============================================================
 
+-- SECURITY DEFINER 사용 근거: user_coupons UPDATE(쿠폰 reserved 처리)를 위해 필요.
+-- auth.uid() 소유권 검증 및 shipping_addresses 존재 확인으로 권한 남용을 방지한다.
 CREATE OR REPLACE FUNCTION public.create_sample_order_txn(
   p_shipping_address_id uuid,
   p_sample_type text,
   p_options jsonb,
   p_reference_images jsonb DEFAULT '[]'::jsonb,
-  p_additional_notes text DEFAULT ''
+  p_additional_notes text DEFAULT '',
+  p_user_coupon_id uuid DEFAULT null
 )
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 declare
@@ -24,6 +27,12 @@ declare
   v_design_type text;
   v_elem jsonb;
   v_idx integer;
+
+  -- 쿠폰 관련 변수
+  v_coupon record;
+  v_discount_amount integer := 0;
+  v_line_discount_total integer := 0;
+  v_total_price integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -93,6 +102,53 @@ begin
     raise exception 'Sample pricing constant is not configured';
   end if;
 
+  -- 쿠폰 검증 및 할인 계산 (unit_price = v_total_cost, qty = 1)
+  if p_user_coupon_id is not null then
+    select
+      uc.id, uc.status, uc.expires_at,
+      c.discount_type, c.discount_value, c.max_discount_amount,
+      c.expiry_date, c.is_active
+    into v_coupon
+    from public.user_coupons uc
+    join public.coupons c on c.id = uc.coupon_id
+    where uc.id = p_user_coupon_id
+      and uc.user_id = v_user_id
+    for update;
+
+    if not found then
+      raise exception 'Coupon not found';
+    end if;
+    if v_coupon.status <> 'active' then
+      raise exception 'Coupon is not available';
+    end if;
+    if v_coupon.expires_at is not null and v_coupon.expires_at <= now() then
+      raise exception 'Coupon has expired';
+    end if;
+    if coalesce(v_coupon.is_active, false) is not true then
+      raise exception 'Coupon is not active';
+    end if;
+    if v_coupon.expiry_date is not null and v_coupon.expiry_date < current_date then
+      raise exception 'Coupon has expired';
+    end if;
+
+    -- qty=1이므로 라인 할인 = 단위 할인
+    if v_coupon.discount_type = 'percentage' then
+      v_discount_amount := floor(v_total_cost * (v_coupon.discount_value::numeric / 100.0))::integer;
+    elsif v_coupon.discount_type = 'fixed' then
+      v_discount_amount := floor(v_coupon.discount_value::numeric)::integer;
+    else
+      raise exception 'Invalid coupon type';
+    end if;
+
+    v_discount_amount := greatest(0, least(v_discount_amount, v_total_cost));
+    v_line_discount_total := v_discount_amount;
+    if v_coupon.max_discount_amount is not null then
+      v_line_discount_total := least(v_line_discount_total, v_coupon.max_discount_amount);
+    end if;
+  end if;
+
+  v_total_price := v_total_cost - v_line_discount_total;
+
   v_order_number := public.generate_order_number();
   v_payment_group_id := gen_random_uuid();
 
@@ -112,9 +168,9 @@ begin
     v_user_id,
     v_order_number,
     p_shipping_address_id,
+    v_total_price,
     v_total_cost,
-    v_total_cost,
-    0,
+    v_line_discount_total,
     'sample',
     '대기중',
     v_payment_group_id,
@@ -154,9 +210,9 @@ begin
     v_item_data,
     1,
     v_total_cost,
-    0,
-    0,
-    null
+    v_line_discount_total,
+    v_line_discount_total,
+    p_user_coupon_id
   );
 
   IF p_reference_images IS NOT NULL AND jsonb_array_length(p_reference_images) > 0 THEN
@@ -170,6 +226,16 @@ begin
       v_user_id
     FROM jsonb_array_elements(p_reference_images) AS elem;
   END IF;
+
+  -- 쿠폰 reserved 처리
+  if p_user_coupon_id is not null then
+    update public.user_coupons
+    set status = 'reserved',
+        updated_at = now()
+    where id = p_user_coupon_id
+      and user_id = v_user_id
+      and status = 'active';
+  end if;
 
   return jsonb_build_object(
     'order_id', v_order_id,

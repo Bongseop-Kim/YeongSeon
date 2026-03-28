@@ -2,7 +2,10 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 import { getCorsHeaders } from "@/functions/_shared/cors.ts";
 import { createJsonResponse } from "@/functions/_shared/response.ts";
-import { isJsonPayloadWithinLimit } from "@/functions/_shared/validation.ts";
+import {
+  isJsonPayloadWithinLimit,
+  normalizeOptionalUuid,
+} from "@/functions/_shared/validation.ts";
 
 type CreateSampleOrderInput = {
   shipping_address_id: string;
@@ -10,6 +13,7 @@ type CreateSampleOrderInput = {
   options: Record<string, unknown>;
   reference_images?: Array<{ url: string; file_id?: string | null }>;
   additional_notes?: string;
+  user_coupon_id?: string;
 };
 
 Deno.serve(async (req) => {
@@ -72,6 +76,13 @@ Deno.serve(async (req) => {
     return jsonResponse(413, { error: "Options payload too large" });
   }
 
+  const normalizedCouponId = normalizeOptionalUuid(payload.user_coupon_id);
+  if (!normalizedCouponId.isValid) {
+    return jsonResponse(400, {
+      error: "user_coupon_id must be a valid UUID",
+    });
+  }
+
   const { data: shippingAddress, error: shippingError } = await supabase
     .from("shipping_addresses")
     .select("id")
@@ -102,6 +113,7 @@ Deno.serve(async (req) => {
       p_options: payload.options,
       p_reference_images: referenceImages,
       p_additional_notes: payload.additional_notes ?? "",
+      p_user_coupon_id: normalizedCouponId.value,
     },
   );
 

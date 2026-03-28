@@ -15,7 +15,6 @@ import { type PaymentWidgetRef } from "@/components/composite/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useAuthStore } from "@/store/auth";
 import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
-import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
 import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
 import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
 import { ROUTES } from "@/constants/ROUTES";
@@ -31,6 +30,11 @@ import {
   getTieTypeLabel,
 } from "@/features/custom-order/utils/option-labels";
 import { isCustomOrderPaymentState } from "@/features/order/custom-payment/types";
+import { useCouponSelect } from "@/features/coupon";
+import { OrderPriceSummaryAside } from "@/components/composite/order-price-summary-aside";
+import { CouponSection } from "@/components/composite/coupon-section";
+import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
+import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 
 export default function CustomPaymentPage() {
   const location = useLocation();
@@ -41,6 +45,10 @@ export default function CustomPaymentPage() {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [cancellationConsent, setCancellationConsent] = useState(false);
   const [serverAmount, setServerAmount] = useState<number | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | undefined>(
+    undefined,
+  );
+  const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const pendingOrderIdRef = useRef<string | null>(null);
   const pendingSnapshotRef = useRef<string | null>(null);
@@ -56,6 +64,26 @@ export default function CustomPaymentPage() {
     if (state) return;
     navigate(ROUTES.CUSTOM_ORDER, { replace: true });
   }, [navigate, state]);
+
+  const resetPendingOrderState = () => {
+    setServerAmount(null);
+    pendingOrderIdRef.current = null;
+    pendingSnapshotRef.current = null;
+  };
+
+  const handleChangeCoupon = async () => {
+    const selected = await openCouponSelect(appliedCoupon?.id);
+    if (selected === null) return;
+    if (selected && selected.id === appliedCoupon?.id) return;
+
+    setAppliedCoupon(selected ?? undefined);
+    resetPendingOrderState();
+    if (selected) {
+      toast.success(`${selected.coupon.name}이(가) 적용되었습니다.`);
+    } else {
+      toast.success("쿠폰 사용을 취소했습니다.");
+    }
+  };
 
   const proceedToPayment = async () => {
     if (!state) return;
@@ -79,6 +107,7 @@ export default function CustomPaymentPage() {
       const snapshot = JSON.stringify({
         ...state,
         shippingAddressId: selectedAddressId,
+        userCouponId: appliedCoupon?.id,
       });
 
       if (
@@ -91,13 +120,13 @@ export default function CustomPaymentPage() {
 
       let orderId = pendingOrderIdRef.current;
       if (!orderId) {
-        const request = toCreateCustomOrderInput({
+        const response = await createCustomOrder.mutateAsync({
           shippingAddressId: selectedAddressId,
           options: state.coreOptions,
           referenceImages: state.imageRefs,
           additionalNotes: state.additionalNotes,
+          userCouponId: appliedCoupon?.id,
         });
-        const response = await createCustomOrder.mutateAsync(request);
         orderId = response.orderId;
         orderCreated = true;
         setServerAmount(response.totalAmount);
@@ -142,7 +171,13 @@ export default function CustomPaymentPage() {
 
   if (!state) return null;
 
-  const amount = serverAmount ?? state.totalCost;
+  const unitPrice = Math.floor(state.totalCost / state.coreOptions.quantity);
+  const discountAmount = calculateDiscount(
+    unitPrice,
+    appliedCoupon,
+    state.coreOptions.quantity,
+  );
+  const amount = serverAmount ?? state.totalCost - discountAmount;
 
   const isSubmitDisabled =
     !user || !selectedAddress || !cancellationConsent || isPaymentLoading;
@@ -168,11 +203,22 @@ export default function CustomPaymentPage() {
             contentClassName="py-4 lg:py-8"
             sidebar={
               <div className="space-y-4">
-                <OrderSummaryAside
-                  title="결제 금액"
-                  rows={summaryRows}
-                  totalAmount={amount}
-                />
+                {appliedCoupon ? (
+                  <OrderPriceSummaryAside
+                    title="결제 금액"
+                    originalPrice={state.totalCost}
+                    totalDiscount={discountAmount}
+                    shippingCost={0}
+                    totalPrice={amount}
+                    totalClassName="text-blue-600"
+                  />
+                ) : (
+                  <OrderSummaryAside
+                    title="결제 금액"
+                    rows={summaryRows}
+                    totalAmount={amount}
+                  />
+                )}
                 {user && (
                   <PaymentWidgetAside
                     title="결제 수단"
@@ -303,6 +349,12 @@ export default function CustomPaymentPage() {
                 </div>
               </UtilityPageSection>
 
+              <CouponSection
+                appliedCoupon={appliedCoupon}
+                discountAmount={discountAmount}
+                onChangeCoupon={handleChangeCoupon}
+              />
+
               <UtilityPageSection
                 title="배송지"
                 description="결제 전에 수령 정보를 마지막으로 확인합니다."
@@ -356,6 +408,7 @@ export default function CustomPaymentPage() {
         </MainContent>
       </MainLayout>
       <NotificationConsentFlowModals consentFlow={consentFlow} />
+      {couponDialog}
     </>
   );
 }

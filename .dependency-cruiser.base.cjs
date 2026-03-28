@@ -151,17 +151,17 @@ const forbidden = [
       pathNot: "^src/features/(shop|cart)/",
     },
   },
-  // 11. sample-order → shipping/custom-order 허용 (샘플 주문 흐름)
+  // 11. sample-order → shipping/custom-order/coupon 허용 (샘플 주문 흐름)
   {
     name: "no-cross-feature-sample-order",
     severity: "error",
     comment:
-      "sample-order는 배송지(shipping)·이미지 업로드 및 가격 설정(custom-order)만 참조 허용",
+      "sample-order는 배송지(shipping)·이미지 업로드 및 가격 설정(custom-order)·쿠폰(coupon)만 참조 허용",
     from: { path: "^src/features/sample-order/" },
     to: {
       path: "^src/features/([^/]+)/",
       pathNot:
-        "^src/features/(sample-order|shipping|custom-order|notification)/",
+        "^src/features/(sample-order|shipping|custom-order|notification|coupon)/",
     },
   },
   // 12. reform → cart 허용 (리폼 주문 시 장바구니 연동)
@@ -173,6 +173,21 @@ const forbidden = [
     to: {
       path: "^src/features/([^/]+)/",
       pathNot: "^src/features/(reform|cart)/",
+    },
+  },
+  // 13. coupon 내부 경로는 coupon 피처 내에서만 허용 (외부는 index.ts만 참조 가능)
+  {
+    name: "no-coupon-internals",
+    severity: "error",
+    comment:
+      "coupon 피처 내부 경로는 coupon 내에서만 참조 허용. 외부 피처는 index.ts를 통해서만 접근한다.",
+    from: {
+      path: "^src/features/",
+      pathNot: "^src/features/coupon/",
+    },
+    to: {
+      path: "^src/features/coupon/",
+      pathNot: "^src/features/coupon/index\\.ts$",
     },
   },
   {

@@ -2,7 +2,10 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { createJsonResponse } from "../_shared/response.ts";
-import { isJsonPayloadWithinLimit } from "../_shared/validation.ts";
+import {
+  isJsonPayloadWithinLimit,
+  normalizeOptionalUuid,
+} from "../_shared/validation.ts";
 
 type CreateCustomOrderInput = {
   shipping_address_id: string;
@@ -10,6 +13,7 @@ type CreateCustomOrderInput = {
   quantity: number;
   reference_images?: Array<{ url: string; fileId: string }>;
   additional_notes?: string;
+  user_coupon_id?: string;
 };
 
 Deno.serve(async (req) => {
@@ -70,6 +74,13 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "Invalid quantity" });
   }
 
+  const normalizedCouponId = normalizeOptionalUuid(payload.user_coupon_id);
+  if (!normalizedCouponId.isValid) {
+    return jsonResponse(400, {
+      error: "user_coupon_id must be a valid UUID",
+    });
+  }
+
   // 배송지 소유 검증
   const { data: shippingAddress, error: shippingError } = await supabase
     .from("shipping_addresses")
@@ -92,6 +103,7 @@ Deno.serve(async (req) => {
       p_quantity: payload.quantity,
       p_reference_images: payload.reference_images ?? [],
       p_additional_notes: payload.additional_notes ?? "",
+      p_user_coupon_id: normalizedCouponId.value,
     },
   );
 
