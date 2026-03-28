@@ -4,8 +4,6 @@ import {
   type CreateCustomOrderFormInput,
 } from "@/features/custom-order/api/custom-order-api";
 
-export type { CreateCustomOrderFormInput };
-
 export const useCreateCustomOrder = () => {
   return useMutation({
     mutationFn: (input: CreateCustomOrderFormInput) => createCustomOrder(input),

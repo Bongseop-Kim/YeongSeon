@@ -74,6 +74,8 @@ export default function CustomPaymentPage() {
   const handleChangeCoupon = async () => {
     const selected = await openCouponSelect(appliedCoupon?.id);
     if (selected === null) return;
+    if (selected && selected.id === appliedCoupon?.id) return;
+
     setAppliedCoupon(selected ?? undefined);
     resetPendingOrderState();
     if (selected) {
