@@ -31,7 +31,7 @@ import {
   getTieTypeLabel,
 } from "@/features/custom-order/utils/option-labels";
 import { isCustomOrderPaymentState } from "@/features/order/custom-payment/types";
-import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
+import { useCouponSelect } from "@/features/coupon";
 import { OrderPriceSummaryAside } from "@/components/composite/order-price-summary-aside";
 import { CouponSection } from "@/components/composite/coupon-section";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";

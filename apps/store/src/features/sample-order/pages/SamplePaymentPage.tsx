@@ -26,7 +26,7 @@ import { toast } from "@/lib/toast";
 import { hasStringCode } from "@/lib/type-guard";
 import { formatPhoneNumber } from "@/lib/phone-format";
 import { getDeliveryRequestLabel } from "@/constants/DELIVERY_REQUEST_OPTIONS";
-import { useCouponSelect } from "@/features/coupon/hooks/use-coupon-select";
+import { useCouponSelect } from "@/features/coupon";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 

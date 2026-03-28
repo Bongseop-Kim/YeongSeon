@@ -175,6 +175,21 @@ const forbidden = [
       pathNot: "^src/features/(reform|cart)/",
     },
   },
+  // 13. coupon 내부 경로는 coupon 피처 내에서만 허용 (외부는 index.ts만 참조 가능)
+  {
+    name: "no-coupon-internals",
+    severity: "error",
+    comment:
+      "coupon 피처 내부 경로는 coupon 내에서만 참조 허용. 외부 피처는 index.ts를 통해서만 접근한다.",
+    from: {
+      path: "^src/features/",
+      pathNot: "^src/features/coupon/",
+    },
+    to: {
+      path: "^src/features/coupon/",
+      pathNot: "^src/features/coupon/index\\.ts$",
+    },
+  },
   {
     name: "no-shared-to-apps",
     severity: "error",
