@@ -14,29 +14,22 @@ import {
 import { type PaymentWidgetRef } from "@/components/composite/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useAuthStore } from "@/store/auth";
-import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
-import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
+import { useCreateSampleOrder } from "@/features/sample-order/api/sample-order-query";
 import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
 import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
+import { getTieTypeLabel } from "@/features/custom-order/utils/option-labels";
+import { isSampleOrderPaymentState } from "@/lib/custom-payment-state";
 import { ROUTES } from "@/constants/ROUTES";
 import { toast } from "@/lib/toast";
 import { hasStringCode } from "@/lib/type-guard";
 import { formatPhoneNumber } from "@/lib/phone-format";
 import { getDeliveryRequestLabel } from "@/constants/DELIVERY_REQUEST_OPTIONS";
-import {
-  getFabricLabel,
-  getFinishingLabel,
-  getSewingStyleLabel,
-  getSizeLabel,
-  getTieTypeLabel,
-} from "@/features/custom-order/utils/option-labels";
-import { isCustomOrderPaymentState } from "@/features/order/custom-payment/types";
 
-export default function CustomPaymentPage() {
+export default function SamplePaymentPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const rawState = location.state;
-  const state = isCustomOrderPaymentState(rawState) ? rawState : null;
+  const state = isSampleOrderPaymentState(rawState) ? rawState : null;
 
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [cancellationConsent, setCancellationConsent] = useState(false);
@@ -50,11 +43,11 @@ export default function CustomPaymentPage() {
     useShippingAddressPopup({
       initialSelectedAddressId: state?.shippingAddressId ?? null,
     });
-  const createCustomOrder = useCreateCustomOrder();
+  const createSampleOrder = useCreateSampleOrder();
 
   useEffect(() => {
     if (state) return;
-    navigate(ROUTES.CUSTOM_ORDER, { replace: true });
+    navigate(ROUTES.SAMPLE_ORDER, { replace: true });
   }, [navigate, state]);
 
   const proceedToPayment = async () => {
@@ -90,13 +83,13 @@ export default function CustomPaymentPage() {
 
       let orderId = pendingOrderIdRef.current;
       if (!orderId) {
-        const request = toCreateCustomOrderInput({
+        const response = await createSampleOrder.mutateAsync({
           shippingAddressId: selectedAddressId,
-          options: state.coreOptions,
+          sampleType: state.sampleType,
+          options: state.options,
           referenceImages: state.imageRefs,
           additionalNotes: state.additionalNotes,
         });
-        const response = await createCustomOrder.mutateAsync(request);
         orderId = response.orderId;
         setServerAmount(response.totalAmount);
         await paymentWidgetRef.current.setAmount(response.totalAmount);
@@ -108,7 +101,7 @@ export default function CustomPaymentPage() {
 
       await paymentWidgetRef.current.requestPayment({
         orderId,
-        orderName: `주문제작 (수량 ${state.coreOptions.quantity}개)`,
+        orderName: "샘플 주문",
         successUrl: `${window.location.origin}${ROUTES.PAYMENT_SUCCESS}`,
         failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}`,
         customerName: user.user_metadata?.name ?? undefined,
@@ -135,23 +128,10 @@ export default function CustomPaymentPage() {
 
   if (!state) return null;
 
-  const amount = serverAmount ?? state.totalCost;
+  const amount = serverAmount ?? state.samplePrice;
 
   const isSubmitDisabled =
     !user || !selectedAddress || !cancellationConsent || isPaymentLoading;
-
-  const summaryRows = [
-    {
-      id: "amount",
-      label: "상품 금액",
-      value: `${amount.toLocaleString()}원`,
-    },
-    {
-      id: "quantity",
-      label: "수량",
-      value: `${state.coreOptions.quantity}개`,
-    },
-  ];
 
   return (
     <>
@@ -163,7 +143,13 @@ export default function CustomPaymentPage() {
               <div className="space-y-4">
                 <OrderSummaryAside
                   title="결제 금액"
-                  rows={summaryRows}
+                  rows={[
+                    {
+                      id: "amount",
+                      label: "상품 금액",
+                      value: `${amount.toLocaleString()}원`,
+                    },
+                  ]}
                   totalAmount={amount}
                 />
                 {user && (
@@ -179,7 +165,7 @@ export default function CustomPaymentPage() {
                       onCheckedChange: setCancellationConsent,
                       label: "취소/환불 불가 동의",
                       description:
-                        "주문제작은 진행 후 중도 취소 및 환불이 불가능합니다.",
+                        "샘플 주문은 결제 후 중도 취소 및 환불이 불가능합니다.",
                     }}
                     className="rounded-2xl"
                   />
@@ -205,15 +191,15 @@ export default function CustomPaymentPage() {
           >
             <div className="space-y-8">
               <UtilityPageIntro
-                eyebrow="Custom Order"
-                title="주문제작 결제"
+                eyebrow="Sample Order"
+                title="샘플 주문 결제"
                 description="배송지를 확인하고 결제 수단을 선택한 뒤 결제를 진행합니다."
                 meta={
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground-subtle">
                     <span>
-                      주문제작{" "}
+                      샘플 주문{" "}
                       <span className="font-medium text-foreground">
-                        {state.coreOptions.quantity}개
+                        {state.sampleLabel}
                       </span>
                     </span>
                     <span className="text-border">/</span>
@@ -228,40 +214,36 @@ export default function CustomPaymentPage() {
               />
 
               <UtilityPageSection
-                title="주문 옵션 확인"
+                title="샘플 옵션 확인"
                 description="수정이 필요한 항목이 있으면 이전 페이지로 돌아가 조정할 수 있습니다."
               >
                 <div className="divide-y divide-border/70 border-y border-border py-2 text-sm">
                   <div className="flex items-center justify-between py-3">
-                    <span className="text-foreground-muted">수량</span>
+                    <span className="text-foreground-muted">샘플 유형</span>
+                    <span className="text-foreground">{state.sampleLabel}</span>
+                  </div>
+                  {state.options.fabricType && (
+                    <div className="flex items-center justify-between py-3">
+                      <span className="text-foreground-muted">원단 조합</span>
+                      <span className="text-foreground">
+                        {state.fabricLabel}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between py-3">
+                    <span className="text-foreground-muted">타이 방식</span>
                     <span className="text-foreground">
-                      {state.coreOptions.quantity}개
+                      {getTieTypeLabel(state.options.tieType)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between py-3">
-                    <span className="text-foreground-muted">원단</span>
+                    <span className="text-foreground-muted">심지</span>
                     <span className="text-foreground">
-                      {getFabricLabel(state.coreOptions)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3">
-                    <span className="text-foreground-muted">봉제</span>
-                    <span className="text-foreground">
-                      {getTieTypeLabel(state.coreOptions.tieType)} ·{" "}
-                      {getSewingStyleLabel(state.coreOptions)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3">
-                    <span className="text-foreground-muted">사이즈</span>
-                    <span className="text-foreground">
-                      {getSizeLabel(state.coreOptions.sizeType)}, 폭{" "}
-                      {state.coreOptions.tieWidth}cm
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3">
-                    <span className="text-foreground-muted">상세 옵션</span>
-                    <span className="text-foreground">
-                      {getFinishingLabel(state.coreOptions)}
+                      {state.options.interlining === "WOOL"
+                        ? "울 심지"
+                        : state.options.interlining === "POLY"
+                          ? "폴리 심지"
+                          : "미지정"}
                     </span>
                   </div>
                   <div className="py-3">

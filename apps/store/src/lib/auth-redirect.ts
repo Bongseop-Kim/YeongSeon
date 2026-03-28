@@ -16,7 +16,10 @@ export const consumeAuthRedirect = (): {
 
   sessionStorage.removeItem(AUTH_REDIRECT_STORAGE_KEY);
 
-  if (redirectPath !== ROUTES.CUSTOM_PAYMENT) {
+  if (
+    redirectPath !== ROUTES.CUSTOM_PAYMENT &&
+    redirectPath !== ROUTES.SAMPLE_PAYMENT
+  ) {
     return { redirectPath };
   }
 

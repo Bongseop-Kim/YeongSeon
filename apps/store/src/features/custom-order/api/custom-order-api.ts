@@ -5,6 +5,7 @@ import type { CreateCustomOrderRequest } from "@/features/custom-order/types/dto
 interface CreateCustomOrderResponse {
   orderId: string;
   orderNumber: string;
+  totalAmount: number;
 }
 
 export type { CreateCustomOrderRequest };
@@ -40,5 +41,6 @@ export const createCustomOrder = async (
   return {
     orderId: data.order_id,
     orderNumber: data.order_number,
+    totalAmount: data.total_amount,
   };
 };

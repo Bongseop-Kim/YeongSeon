@@ -11,13 +11,17 @@ const { navigate, success, error, createQuoteRequestMutateAsync } = vi.hoisted(
   }),
 );
 
+const authState = vi.hoisted(() => ({
+  user: { id: "user-1" } as { id: string } | null,
+}));
+
 vi.mock("react-router-dom", () => ({
   useNavigate: () => navigate,
 }));
 
 vi.mock("@/store/auth", () => ({
   useAuthStore: () => ({
-    user: { id: "user-1" },
+    user: authState.user,
   }),
 }));
 
@@ -64,6 +68,7 @@ const createValues = (quantity: number) => ({
 
 describe("useCustomOrderSubmit", () => {
   beforeEach(() => {
+    authState.user = { id: "user-1" };
     navigate.mockReset();
     success.mockReset();
     error.mockReset();
@@ -102,6 +107,41 @@ describe("useCustomOrderSubmit", () => {
           coreOptions: expect.any(Object),
           imageRefs: expect.any(Array),
           additionalNotes: "메모",
+        }),
+      }),
+    );
+  });
+
+  it("즉시주문에서는 로그인과 배송지 선택 가드 없이 결제 페이지로 이동한다", async () => {
+    authState.user = null;
+
+    const { result } = renderHook(() =>
+      useCustomOrderSubmit({
+        selectedAddressId: null,
+        selectedAddress: null,
+        imageUpload: {
+          isUploading: false,
+          getImageRefs: () => [],
+        } as never,
+        watchedValues: createValues(10),
+        formReset: vi.fn(),
+        totalCost: 10000,
+      }),
+    );
+
+    expect(result.current.isSubmitDisabled).toBe(false);
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(error).not.toHaveBeenCalledWith("로그인이 필요합니다.");
+    expect(error).not.toHaveBeenCalledWith("배송지를 선택해주세요.");
+    expect(navigate).toHaveBeenCalledWith(
+      "/order/custom-payment",
+      expect.objectContaining({
+        state: expect.objectContaining({
+          orderType: "custom",
         }),
       }),
     );

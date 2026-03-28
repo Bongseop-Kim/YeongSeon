@@ -13,6 +13,7 @@ import {
 const CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY;
 
 export interface PaymentWidgetRef {
+  setAmount: (amount: number) => Promise<void>;
   requestPayment: (params: {
     orderId: string;
     orderName: string;
@@ -126,6 +127,15 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
     useImperativeHandle(
       ref,
       () => ({
+        setAmount: async (nextAmount) => {
+          amountRef.current = nextAmount;
+          if (widgetsRef.current) {
+            await widgetsRef.current.setAmount({
+              currency: "KRW",
+              value: nextAmount,
+            });
+          }
+        },
         requestPayment: async (params) => {
           if (window.__E2E_MOCK_TOSS__?.requestPayment) {
             await window.__E2E_MOCK_TOSS__.requestPayment(params);

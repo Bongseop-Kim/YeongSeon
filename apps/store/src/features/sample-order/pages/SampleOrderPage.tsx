@@ -20,7 +20,7 @@ import {
 import { Field, FieldTitle, FieldDescription } from "@/components/ui/field";
 import { OrderSummaryAside } from "@/components/composite/order-summary-aside";
 import { PaymentActionBar } from "@/components/composite/payment-action-bar";
-import type { CustomPaymentState } from "@/lib/custom-payment-state";
+import type { SampleOrderPaymentState } from "@/lib/custom-payment-state";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
@@ -161,7 +161,7 @@ export default function SampleOrderPage() {
       return;
     }
 
-    const state: CustomPaymentState = {
+    const state: SampleOrderPaymentState = {
       orderType: "sample",
       sampleType: values.sampleType,
       options: {
@@ -176,7 +176,7 @@ export default function SampleOrderPage() {
       sampleLabel: selectedSampleLabel,
       fabricLabel: selectedFabricLabel,
     };
-    navigate(ROUTES.CUSTOM_PAYMENT, { state });
+    navigate(ROUTES.SAMPLE_PAYMENT, { state });
   };
 
   return (

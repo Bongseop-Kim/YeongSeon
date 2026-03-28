@@ -13,10 +13,10 @@ const validCustomState = {
     reorder: false,
     fabricType: "SILK",
     designType: "PRINTING",
-    tieType: "STANDARD",
+    tieType: "AUTO",
     interlining: "WOOL",
-    interliningThickness: "STANDARD",
-    sizeType: "STANDARD",
+    interliningThickness: "THICK",
+    sizeType: "ADULT",
     tieWidth: 8,
     triangleStitch: true,
     sideStitch: false,
@@ -118,6 +118,18 @@ describe("isCustomPaymentState", () => {
     ).toBe(false);
   });
 
+  it("custom 상태에서 허용되지 않은 enum 값이면 false", () => {
+    expect(
+      isCustomPaymentState({
+        ...validCustomState,
+        coreOptions: {
+          ...validCustomState.coreOptions,
+          tieType: "STANDARD",
+        },
+      }),
+    ).toBe(false);
+  });
+
   it("sample 상태에서 sampleType이 잘못되면 false", () => {
     expect(
       isCustomPaymentState({ ...validSampleState, sampleType: "invalid" }),
@@ -127,5 +139,17 @@ describe("isCustomPaymentState", () => {
   it("sample 상태에서 samplePrice가 없으면 false", () => {
     const { samplePrice: _, ...rest } = validSampleState;
     expect(isCustomPaymentState(rest)).toBe(false);
+  });
+
+  it("sample 상태에서 허용되지 않은 enum 값이면 false", () => {
+    expect(
+      isCustomPaymentState({
+        ...validSampleState,
+        options: {
+          ...validSampleState.options,
+          interlining: "COTTON",
+        },
+      }),
+    ).toBe(false);
   });
 });

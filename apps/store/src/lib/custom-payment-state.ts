@@ -28,14 +28,39 @@ export type SampleOrderPaymentInput = {
   shippingAddressId?: string;
 };
 
+export type CustomOrderPaymentState = {
+  orderType: "custom";
+} & CustomOrderPaymentInput;
+export type SampleOrderPaymentState = {
+  orderType: "sample";
+} & SampleOrderPaymentInput;
+
 export type CustomPaymentState =
-  | ({ orderType: "custom" } & CustomOrderPaymentInput)
-  | ({ orderType: "sample" } & SampleOrderPaymentInput);
+  | CustomOrderPaymentState
+  | SampleOrderPaymentState;
 
 const isImageRef = (value: unknown): value is ImageRef =>
   isRecord(value) &&
   typeof value.url === "string" &&
   typeof value.fileId === "string";
+
+const SHARED_FABRIC_TYPES = ["SILK", "POLY"] as const;
+const SHARED_DESIGN_TYPES = ["PRINTING", "YARN_DYED"] as const;
+const SHARED_TIE_TYPES = ["AUTO"] as const;
+const CUSTOM_ORDER_INTERLININGS = ["WOOL"] as const;
+const CUSTOM_ORDER_INTERLINING_THICKNESSES = ["THICK", "THIN"] as const;
+const CUSTOM_ORDER_SIZE_TYPES = ["ADULT", "CHILD"] as const;
+const SAMPLE_ORDER_INTERLININGS = ["WOOL", "POLY"] as const;
+
+const isOneOf = <T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+): value is T => typeof value === "string" && allowed.includes(value as T);
+
+const isNullableOneOf = <T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+): value is T | null => value === null || isOneOf(value, allowed);
 
 const isCustomOrderOptions = (
   value: unknown,
@@ -43,13 +68,15 @@ const isCustomOrderOptions = (
   isRecord(value) &&
   typeof value.fabricProvided === "boolean" &&
   typeof value.reorder === "boolean" &&
-  (typeof value.fabricType === "string" || value.fabricType === null) &&
-  (typeof value.designType === "string" || value.designType === null) &&
-  (typeof value.tieType === "string" || value.tieType === null) &&
-  (typeof value.interlining === "string" || value.interlining === null) &&
-  (typeof value.interliningThickness === "string" ||
-    value.interliningThickness === null) &&
-  (typeof value.sizeType === "string" || value.sizeType === null) &&
+  isNullableOneOf(value.fabricType, SHARED_FABRIC_TYPES) &&
+  isNullableOneOf(value.designType, SHARED_DESIGN_TYPES) &&
+  isNullableOneOf(value.tieType, SHARED_TIE_TYPES) &&
+  isNullableOneOf(value.interlining, CUSTOM_ORDER_INTERLININGS) &&
+  isNullableOneOf(
+    value.interliningThickness,
+    CUSTOM_ORDER_INTERLINING_THICKNESSES,
+  ) &&
+  isNullableOneOf(value.sizeType, CUSTOM_ORDER_SIZE_TYPES) &&
   typeof value.tieWidth === "number" &&
   typeof value.triangleStitch === "boolean" &&
   typeof value.sideStitch === "boolean" &&
@@ -63,14 +90,18 @@ const isCustomOrderOptions = (
 
 const isSampleOrderOptions = (value: unknown): value is SampleOrderOptions =>
   isRecord(value) &&
-  (typeof value.fabricType === "string" || value.fabricType === null) &&
-  (typeof value.designType === "string" || value.designType === null) &&
-  (typeof value.tieType === "string" || value.tieType === null) &&
-  (typeof value.interlining === "string" || value.interlining === null);
+  isNullableOneOf(value.fabricType, SHARED_FABRIC_TYPES) &&
+  isNullableOneOf(value.designType, SHARED_DESIGN_TYPES) &&
+  isNullableOneOf(value.tieType, SHARED_TIE_TYPES) &&
+  isNullableOneOf(value.interlining, SAMPLE_ORDER_INTERLININGS);
 
-export const isCustomPaymentState = (
+const isBasePaymentState = (
   state: unknown,
-): state is CustomPaymentState => {
+): state is Record<string, unknown> & {
+  imageRefs: ImageRef[];
+  additionalNotes: string;
+  shippingAddressId?: string;
+} => {
   if (!isRecord(state)) return false;
   if (!Array.isArray(state.imageRefs) || !state.imageRefs.every(isImageRef)) {
     return false;
@@ -82,25 +113,39 @@ export const isCustomPaymentState = (
   ) {
     return false;
   }
-
-  if (state.orderType === "custom") {
-    return (
-      typeof state.totalCost === "number" &&
-      isCustomOrderOptions(state.coreOptions)
-    );
-  }
-
-  if (state.orderType === "sample") {
-    return (
-      (state.sampleType === "fabric" ||
-        state.sampleType === "sewing" ||
-        state.sampleType === "fabric_and_sewing") &&
-      typeof state.samplePrice === "number" &&
-      typeof state.sampleLabel === "string" &&
-      typeof state.fabricLabel === "string" &&
-      isSampleOrderOptions(state.options)
-    );
-  }
-
-  return false;
+  return true;
 };
+
+export const isCustomOrderPaymentState = (
+  state: unknown,
+): state is CustomOrderPaymentState => {
+  if (!isBasePaymentState(state)) return false;
+
+  return (
+    state.orderType === "custom" &&
+    typeof state.totalCost === "number" &&
+    isCustomOrderOptions(state.coreOptions)
+  );
+};
+
+export const isSampleOrderPaymentState = (
+  state: unknown,
+): state is SampleOrderPaymentState => {
+  if (!isBasePaymentState(state)) return false;
+
+  return (
+    state.orderType === "sample" &&
+    (state.sampleType === "fabric" ||
+      state.sampleType === "sewing" ||
+      state.sampleType === "fabric_and_sewing") &&
+    typeof state.samplePrice === "number" &&
+    typeof state.sampleLabel === "string" &&
+    typeof state.fabricLabel === "string" &&
+    isSampleOrderOptions(state.options)
+  );
+};
+
+export const isCustomPaymentState = (
+  state: unknown,
+): state is CustomPaymentState =>
+  isCustomOrderPaymentState(state) || isSampleOrderPaymentState(state);

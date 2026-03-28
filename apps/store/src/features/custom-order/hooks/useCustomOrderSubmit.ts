@@ -7,7 +7,7 @@ import { toCreateQuoteRequestInput } from "@/features/quote-request/api/quote-re
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
-import type { CustomPaymentState } from "@/features/order/custom-payment/types";
+import type { CustomOrderPaymentState } from "@/features/order/custom-payment/types";
 
 interface UseCustomOrderSubmitParams {
   selectedAddressId: string | null;
@@ -35,19 +35,21 @@ export function useCustomOrderSubmit({
   const isPending = createQuoteRequest.isPending;
   const hasSelectedAddress = !!selectedAddressId && !!selectedAddress;
   const isSubmitDisabled =
-    (isLoggedIn && !hasSelectedAddress) || isPending || imageUpload.isUploading;
+    (isQuoteMode && isLoggedIn && !hasSelectedAddress) ||
+    isPending ||
+    imageUpload.isUploading;
 
   const handleSubmit = async () => {
-    if (!user) {
-      toast.error("로그인이 필요합니다.");
-      navigate(ROUTES.LOGIN);
-      return;
-    }
-    if (!hasSelectedAddress) {
-      toast.error("배송지를 선택해주세요.");
-      return;
-    }
     if (isQuoteMode) {
+      if (!user) {
+        toast.error("로그인이 필요합니다.");
+        navigate(ROUTES.LOGIN);
+        return;
+      }
+      if (!hasSelectedAddress) {
+        toast.error("배송지를 선택해주세요.");
+        return;
+      }
       if (!watchedValues.contactName.trim()) {
         toast.error("담당자 성함을 입력해주세요.");
         return;
@@ -72,10 +74,15 @@ export function useCustomOrderSubmit({
 
     // 견적요청 경로 (수량 >= 100)
     if (isQuoteMode) {
+      if (!selectedAddressId) {
+        toast.error("배송지를 선택해주세요.");
+        return;
+      }
+      const shippingAddressId = selectedAddressId;
       try {
         await createQuoteRequest.mutateAsync({
           ...toCreateQuoteRequestInput({
-            shippingAddressId: selectedAddressId,
+            shippingAddressId,
             options: coreOptions,
             referenceImages: imageUpload.getImageRefs(),
             additionalNotes,
@@ -99,13 +106,13 @@ export function useCustomOrderSubmit({
     }
 
     // 즉시주문 경로 (수량 < 100) — 결제 페이지로 이동
-    const state: CustomPaymentState = {
+    const state: CustomOrderPaymentState = {
       orderType: "custom",
       coreOptions,
       imageRefs: imageUpload.getImageRefs(),
       additionalNotes,
       totalCost,
-      shippingAddressId: selectedAddressId,
+      ...(selectedAddressId ? { shippingAddressId: selectedAddressId } : {}),
     };
     navigate(ROUTES.CUSTOM_PAYMENT, { state });
   };

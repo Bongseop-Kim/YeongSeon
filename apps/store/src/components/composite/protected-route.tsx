@@ -2,7 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useSession } from "@/features/auth/api/auth-query";
 import { useAuthStore } from "@/store/auth";
 import { ROUTES } from "@/constants/ROUTES";
-import { isCustomPaymentState } from "@/features/order/custom-payment/types";
+import { isCustomPaymentState } from "@/lib/custom-payment-state";
 import { saveCustomPaymentState } from "@/features/order/custom-payment/storage";
 import { AUTH_REDIRECT_STORAGE_KEY } from "@/lib/auth-redirect";
 
@@ -37,7 +37,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (!session) {
     const redirectPath = location.pathname + location.search;
     if (
-      location.pathname === ROUTES.CUSTOM_PAYMENT &&
+      (location.pathname === ROUTES.CUSTOM_PAYMENT ||
+        location.pathname === ROUTES.SAMPLE_PAYMENT) &&
       isCustomPaymentState(location.state)
     ) {
       saveCustomPaymentState(location.state);

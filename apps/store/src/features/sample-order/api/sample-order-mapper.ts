@@ -43,7 +43,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 export const parseSampleOrderResponse = (
   data: unknown,
-): { orderId: string; orderNumber: string } => {
+): { orderId: string; orderNumber: string; totalAmount: number } => {
   if (!isRecord(data)) {
     throw new Error(
       "샘플 주문 생성 응답이 올바르지 않습니다: 객체가 아닙니다.",
@@ -61,9 +61,18 @@ export const parseSampleOrderResponse = (
       "샘플 주문 생성 응답이 올바르지 않습니다: order_number가 누락되었거나 형식이 잘못되었습니다.",
     );
   }
+  if (
+    typeof data.total_amount !== "number" ||
+    !Number.isFinite(data.total_amount)
+  ) {
+    throw new Error(
+      "샘플 주문 생성 응답이 올바르지 않습니다: total_amount가 누락되었거나 형식이 잘못되었습니다.",
+    );
+  }
 
   return {
     orderId: data.order_id,
     orderNumber: data.order_number,
+    totalAmount: data.total_amount,
   };
 };

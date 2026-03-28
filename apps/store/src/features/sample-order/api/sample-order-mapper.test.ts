@@ -109,14 +109,16 @@ describe("toCreateSampleOrderInputDto", () => {
 });
 
 describe("parseSampleOrderResponse", () => {
-  it("유효한 응답에서 orderId와 orderNumber를 반환한다", () => {
+  it("유효한 응답에서 orderId와 orderNumber, totalAmount를 반환한다", () => {
     const result = parseSampleOrderResponse({
       order_id: "order-uuid-1",
       order_number: "SAMPLE-001",
+      total_amount: 30000,
     });
     expect(result).toEqual({
       orderId: "order-uuid-1",
       orderNumber: "SAMPLE-001",
+      totalAmount: 30000,
     });
   });
 
@@ -128,19 +130,49 @@ describe("parseSampleOrderResponse", () => {
 
   it("order_id가 누락되거나 빈 문자열이면 에러를 던진다", () => {
     expect(() =>
-      parseSampleOrderResponse({ order_number: "SAMPLE-001" }),
+      parseSampleOrderResponse({
+        order_number: "SAMPLE-001",
+        total_amount: 30000,
+      }),
     ).toThrow("order_id");
     expect(() =>
-      parseSampleOrderResponse({ order_id: "", order_number: "SAMPLE-001" }),
+      parseSampleOrderResponse({
+        order_id: "",
+        order_number: "SAMPLE-001",
+        total_amount: 30000,
+      }),
     ).toThrow("order_id");
   });
 
   it("order_number가 누락되거나 빈 문자열이면 에러를 던진다", () => {
     expect(() =>
-      parseSampleOrderResponse({ order_id: "order-uuid-1" }),
+      parseSampleOrderResponse({
+        order_id: "order-uuid-1",
+        total_amount: 30000,
+      }),
     ).toThrow("order_number");
     expect(() =>
-      parseSampleOrderResponse({ order_id: "order-uuid-1", order_number: "" }),
+      parseSampleOrderResponse({
+        order_id: "order-uuid-1",
+        order_number: "",
+        total_amount: 30000,
+      }),
     ).toThrow("order_number");
+  });
+
+  it("total_amount가 누락되거나 숫자가 아니면 에러를 던진다", () => {
+    expect(() =>
+      parseSampleOrderResponse({
+        order_id: "order-uuid-1",
+        order_number: "SAMPLE-001",
+      }),
+    ).toThrow("total_amount");
+    expect(() =>
+      parseSampleOrderResponse({
+        order_id: "order-uuid-1",
+        order_number: "SAMPLE-001",
+        total_amount: "30000",
+      }),
+    ).toThrow("total_amount");
   });
 });
