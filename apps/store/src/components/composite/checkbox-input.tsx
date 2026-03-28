@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
-interface ConsentCheckboxProps {
+interface CheckboxInputProps {
   id: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
@@ -18,7 +18,7 @@ interface ConsentCheckboxProps {
   className?: string;
 }
 
-export const ConsentCheckbox = ({
+export const CheckboxInput = ({
   id,
   checked,
   onCheckedChange,
@@ -26,7 +26,7 @@ export const ConsentCheckbox = ({
   description,
   required = false,
   className,
-}: ConsentCheckboxProps) => {
+}: CheckboxInputProps) => {
   return (
     <Field
       orientation="horizontal"

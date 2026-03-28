@@ -1,8 +1,6 @@
-import { useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { MainContent, MainLayout } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
-import { Button } from "@/components/ui-extended/button";
 import { Form } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -11,25 +9,18 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/ROUTES";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/lib/toast";
-import { hasStringCode } from "@/lib/type-guard";
-import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
 import { ImageUpload } from "@/features/custom-order/components/image-upload";
-import { formatPhoneNumber } from "@/lib/phone-format";
 import { usePricingConfig } from "@/features/custom-order/api/pricing-query";
-import { type PaymentWidgetRef } from "@/components/composite/payment-widget";
-import { useCreateSampleOrder } from "@/features/sample-order/api/sample-order-query";
-import type { CreateSampleOrderFormInput } from "@/features/sample-order/api/sample-order-mapper";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
-import { PaymentWidgetAside } from "@/components/composite/payment-widget-aside";
-import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
-import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
 import {
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/components/composite/utility-page";
+import { Field, FieldTitle, FieldDescription } from "@/components/ui/field";
 import { OrderSummaryAside } from "@/components/composite/order-summary-aside";
 import { PaymentActionBar } from "@/components/composite/payment-action-bar";
+import type { SampleOrderPaymentState } from "@/lib/custom-payment-state";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
@@ -116,30 +107,11 @@ const getSamplePrice = (
     : pricingConfig.SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST;
 };
 
-const serializeSampleOrderInput = (input: CreateSampleOrderFormInput): string =>
-  JSON.stringify({
-    ...input,
-    additionalNotes: input.additionalNotes.trim(),
-  });
-
 export default function SampleOrderPage() {
-  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const [cancellationConsent, setCancellationConsent] = useState(false);
-  const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
-  const pendingOrderIdRef = useRef<string | null>(null);
-  const pendingOrderSnapshotRef = useRef<string | null>(null);
-
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { selectedAddressId, selectedAddress, openShippingPopup } =
-    useShippingAddressPopup();
   const imageUpload = useImageUpload(IMAGE_FOLDERS.SAMPLE_ORDERS);
-  const createSampleOrder = useCreateSampleOrder();
-  const {
-    data: pricingConfig,
-    isLoading: isPricingLoading,
-    isError: isPricingError,
-  } = usePricingConfig();
+  const { data: pricingConfig, isError: isPricingError } = usePricingConfig();
 
   const form = useForm<SampleOrderFormValues>({
     defaultValues: {
@@ -166,32 +138,20 @@ export default function SampleOrderPage() {
           card.designType === values.designType,
       )?.label ?? "-")
     : "봉제 전용";
-  const isSubmitDisabled =
-    !user ||
-    !selectedAddress ||
-    samplePrice === null ||
-    isPaymentLoading ||
-    createSampleOrder.isPending ||
-    imageUpload.isUploading ||
-    !cancellationConsent;
 
-  const proceedToPayment = async () => {
+  const isSubmitDisabled =
+    !user || samplePrice === null || imageUpload.isUploading;
+
+  const handleNavigateToPayment = async () => {
     if (!user) {
       toast.error("로그인이 필요합니다.");
       navigate(ROUTES.LOGIN);
       return;
     }
-
-    if (!selectedAddressId || !selectedAddress) {
-      toast.error("배송지를 선택해주세요.");
-      return;
-    }
-
     if (imageUpload.isUploading) {
       toast.error("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.");
       return;
     }
-
     if (samplePrice === null) {
       toast.error(
         isPricingError
@@ -201,136 +161,64 @@ export default function SampleOrderPage() {
       return;
     }
 
-    if (!paymentWidgetRef.current) {
-      toast.error("결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
-      return;
-    }
-
-    setIsPaymentLoading(true);
-
-    try {
-      const requestInput: CreateSampleOrderFormInput = {
-        shippingAddressId: selectedAddressId,
-        sampleType: values.sampleType,
-        options: {
-          fabricType: isFabricVisible ? values.fabricType : null,
-          designType: isFabricVisible ? values.designType : null,
-          tieType: values.tieType,
-          interlining: values.interlining,
-        },
-        referenceImages: imageUpload.getImageRefs(),
-        additionalNotes: values.additionalNotes,
-      };
-      const pendingSnapshot = serializeSampleOrderInput(requestInput);
-
-      if (
-        pendingOrderIdRef.current &&
-        pendingOrderSnapshotRef.current !== pendingSnapshot
-      ) {
-        pendingOrderIdRef.current = null;
-        pendingOrderSnapshotRef.current = null;
-      }
-
-      const orderId =
-        pendingOrderIdRef.current ??
-        (await createSampleOrder.mutateAsync(requestInput)).orderId;
-      pendingOrderIdRef.current = orderId;
-      pendingOrderSnapshotRef.current = pendingSnapshot;
-
-      await paymentWidgetRef.current.requestPayment({
-        orderId,
-        orderName: "샘플 주문",
-        successUrl: `${window.location.origin}${ROUTES.PAYMENT_SUCCESS}`,
-        failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}`,
-        customerName: user.user_metadata?.name ?? undefined,
-      });
-      pendingOrderIdRef.current = null;
-      pendingOrderSnapshotRef.current = null;
-    } catch (error) {
-      pendingOrderIdRef.current = null;
-      pendingOrderSnapshotRef.current = null;
-      if (hasStringCode(error) && error.code === "USER_CANCEL") return;
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "결제 요청 중 오류가 발생했습니다.",
-      );
-    } finally {
-      setIsPaymentLoading(false);
-    }
+    const state: SampleOrderPaymentState = {
+      orderType: "sample",
+      sampleType: values.sampleType,
+      options: {
+        fabricType: isFabricVisible ? values.fabricType : null,
+        designType: isFabricVisible ? values.designType : null,
+        tieType: values.tieType,
+        interlining: values.interlining,
+      },
+      imageRefs: imageUpload.getImageRefs(),
+      additionalNotes: values.additionalNotes,
+      samplePrice,
+      sampleLabel: selectedSampleLabel,
+      fabricLabel: selectedFabricLabel,
+    };
+    navigate(ROUTES.SAMPLE_PAYMENT, { state });
   };
-
-  const { initiateWithConsentCheck: handleSubmit, consentFlow } =
-    useNotificationConsentFlow(proceedToPayment);
 
   return (
     <>
       <MainLayout>
-        <MainContent className="overflow-visible bg-zinc-50">
+        <MainContent className="overflow-visible">
           <Form {...form}>
             <PageLayout
               contentClassName="space-y-8"
               sidebarClassName="space-y-4"
               sidebar={
-                <>
-                  <OrderSummaryAside
-                    title="주문 요약"
-                    description="선택한 샘플 구성과 예상 결제 금액을 확인합니다."
-                    rows={[
-                      {
-                        id: "sample-type",
-                        label: "샘플 유형",
-                        value: selectedSampleLabel,
-                      },
-                      {
-                        id: "sample-config",
-                        label: "구성",
-                        value: selectedFabricLabel,
-                      },
-                      {
-                        id: "sample-total",
-                        label: "총 결제 금액",
-                        value:
-                          samplePrice === null
-                            ? isPricingError
-                              ? "불러오지 못함"
-                              : "불러오는 중..."
-                            : `${samplePrice.toLocaleString()}원`,
-                      },
-                    ]}
-                  />
-                  {user && (
-                    <PaymentWidgetAside
-                      title="결제 수단"
-                      description="결제 준비가 완료되면 바로 샘플 주문을 진행할 수 있습니다."
-                      paymentWidgetRef={paymentWidgetRef}
-                      amount={samplePrice}
-                      customerKey={user.id}
-                      priceFallback={
-                        <p className="text-sm text-zinc-500">
-                          {isPricingLoading
-                            ? "결제 금액을 불러오는 중입니다."
-                            : "결제 금액을 확인할 수 없어 결제 수단을 표시하지 않습니다."}
-                        </p>
-                      }
-                      consent={{
-                        id: "cancellation-consent",
-                        checked: cancellationConsent,
-                        onCheckedChange: setCancellationConsent,
-                        label: "취소/환불 불가 동의",
-                        description:
-                          "샘플 주문은 결제 후 중도 취소 및 환불이 불가능합니다.",
-                      }}
-                      className="rounded-2xl"
-                    />
-                  )}
-                </>
+                <OrderSummaryAside
+                  title="주문 요약"
+                  description="선택한 샘플 구성과 예상 결제 금액을 확인합니다."
+                  rows={[
+                    {
+                      id: "sample-type",
+                      label: "샘플 유형",
+                      value: selectedSampleLabel,
+                    },
+                    {
+                      id: "sample-config",
+                      label: "구성",
+                      value: selectedFabricLabel,
+                    },
+                    {
+                      id: "sample-total",
+                      label: "총 결제 금액",
+                      value:
+                        samplePrice === null
+                          ? isPricingError
+                            ? "불러오지 못함"
+                            : "불러오는 중..."
+                          : `${samplePrice.toLocaleString()}원`,
+                    },
+                  ]}
+                />
               }
               actionBar={
                 <PaymentActionBar
                   amount={samplePrice}
-                  onClick={handleSubmit}
-                  isLoading={isPaymentLoading}
+                  onClick={handleNavigateToPayment}
                   isPriceReady={samplePrice !== null}
                   isPriceError={isPricingError && samplePrice === null}
                   disabled={isSubmitDisabled}
@@ -338,10 +226,6 @@ export default function SampleOrderPage() {
                     !user ? (
                       <p className="text-sm text-center text-zinc-500">
                         로그인 후 샘플 주문을 진행할 수 있습니다.
-                      </p>
-                    ) : !selectedAddress ? (
-                      <p className="text-sm text-center text-zinc-500">
-                        배송지를 추가하면 바로 결제를 진행할 수 있습니다.
                       </p>
                     ) : null
                   }
@@ -452,11 +336,9 @@ export default function SampleOrderPage() {
               >
                 <div className="space-y-6 border-y border-stone-200 py-4">
                   <section>
-                    <div className="mb-3">
-                      <h3 className="text-sm font-semibold text-zinc-950">
-                        타이 방식
-                      </h3>
-                    </div>
+                    <Field className="mb-3">
+                      <FieldTitle>타이 방식</FieldTitle>
+                    </Field>
                     <RadioGroup
                       value={values.tieType ?? "MANUAL"}
                       onValueChange={(v) =>
@@ -509,14 +391,12 @@ export default function SampleOrderPage() {
                   </section>
 
                   <section className="border-t border-stone-200 pt-6">
-                    <div className="mb-3">
-                      <h3 className="text-sm font-semibold text-zinc-950">
-                        심지
-                      </h3>
-                      <p className="mt-1 text-sm text-zinc-500">
+                    <Field className="mb-3">
+                      <FieldTitle>심지</FieldTitle>
+                      <FieldDescription>
                         착용감과 형태 유지 기준으로 선택하세요.
-                      </p>
-                    </div>
+                      </FieldDescription>
+                    </Field>
                     <RadioGroup
                       value={values.interlining}
                       onValueChange={(v) =>
@@ -552,75 +432,21 @@ export default function SampleOrderPage() {
               </UtilityPageSection>
 
               <UtilityPageSection
-                title="배송 및 참고 자료"
-                description="수령 정보와 참고 이미지를 함께 전달하면 제작 오차를 줄일 수 있습니다."
+                title="참고 자료"
+                description="참고 이미지를 함께 전달하면 제작 오차를 줄일 수 있습니다."
               >
-                <section className="border-y border-stone-200 py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-sm font-semibold text-zinc-950">
-                        배송지
-                      </h3>
-                      <p className="mt-1 text-sm text-zinc-500">
-                        최종 결제 전 수령 정보를 확인합니다.
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={openShippingPopup}
-                    >
-                      배송지 관리
-                    </Button>
-                  </div>
-
-                  <div className="mt-4">
-                    {selectedAddress ? (
-                      <div className="space-y-1 text-sm text-zinc-700">
-                        <p className="font-medium text-zinc-950">
-                          {selectedAddress.recipientName}
-                        </p>
-                        <p>
-                          ({selectedAddress.postalCode}){" "}
-                          {selectedAddress.address}{" "}
-                          {selectedAddress.detailAddress}
-                        </p>
-                        <p>
-                          {formatPhoneNumber(selectedAddress.recipientPhone)}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 rounded-lg border-2 border-dashed border-zinc-200 py-4 text-center text-sm text-zinc-500">
-                        <p>배송지를 추가해주세요.</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={openShippingPopup}
-                        >
-                          배송지 추가
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </section>
-
                 <section className="border-b border-stone-200 py-6">
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-zinc-950">
-                      참고 이미지 및 요청사항
-                    </h3>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      패턴, 컬러, 봉제 디테일을 이미지와 메모로 전달해 주세요.
-                    </p>
-                  </div>
                   <ImageUpload
                     uploadedImages={imageUpload.uploadedImages}
                     isUploading={imageUpload.isUploading}
                     onFileSelect={imageUpload.uploadFile}
                     onRemoveImage={imageUpload.removeImage}
                   />
+
+                  <Field className="py-6">
+                    <FieldTitle>요청사항</FieldTitle>
+                    <FieldDescription>메모로 전달해 주세요.</FieldDescription>
+                  </Field>
                   <Controller
                     name="additionalNotes"
                     control={form.control}
@@ -640,7 +466,6 @@ export default function SampleOrderPage() {
           </Form>
         </MainContent>
       </MainLayout>
-      <NotificationConsentFlowModals consentFlow={consentFlow} />
     </>
   );
 }

@@ -19,6 +19,8 @@ import MyInfoLeavePage from "@/features/my-page/my-info/leave/page";
 import OrderListPage from "@/features/order/order-list/page";
 import OrderDetailPage from "@/features/order/detail/page";
 import RepairShippingPage from "@/features/order/repair-shipping/page";
+import CustomPaymentPage from "@/features/order/custom-payment/page";
+import SamplePaymentPage from "@/features/sample-order/pages/SamplePaymentPage";
 import ClaimListPage from "@/features/claim/claim-list/page";
 import ClaimFormPage from "@/features/claim/claim-form/page";
 import ClaimDetailPage from "@/features/claim/claim-detail/page";
@@ -110,6 +112,22 @@ export default function Router() {
         element={
           <ProtectedRoute>
             <OrderFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/order/custom-payment"
+        element={
+          <ProtectedRoute>
+            <CustomPaymentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/order/sample-payment"
+        element={
+          <ProtectedRoute>
+            <SamplePaymentPage />
           </ProtectedRoute>
         }
       />

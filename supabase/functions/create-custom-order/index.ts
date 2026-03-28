@@ -102,5 +102,39 @@ Deno.serve(async (req) => {
     });
   }
 
-  return jsonResponse(200, orderResult);
+  const orderId =
+    typeof orderResult === "object" &&
+    orderResult !== null &&
+    "order_id" in orderResult &&
+    typeof orderResult.order_id === "string"
+      ? orderResult.order_id
+      : null;
+
+  if (!orderId) {
+    return jsonResponse(500, { error: "Missing order_id in RPC response" });
+  }
+
+  const { data: createdOrder, error: createdOrderError } = await supabase
+    .from("orders")
+    .select("total_price")
+    .eq("id", orderId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (createdOrderError) {
+    return jsonResponse(500, {
+      error: "Failed to load created order amount",
+    });
+  }
+
+  if (!createdOrder || typeof createdOrder.total_price !== "number") {
+    return jsonResponse(500, {
+      error: "Created order amount is missing or invalid",
+    });
+  }
+
+  return jsonResponse(200, {
+    ...orderResult,
+    total_amount: createdOrder.total_price,
+  });
 });

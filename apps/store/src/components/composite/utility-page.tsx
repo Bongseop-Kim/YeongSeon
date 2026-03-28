@@ -2,26 +2,15 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { ChevronRightIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { StepIndicator } from "@/components/composite/step-indicator";
 import { cn } from "@/lib/utils";
-
-interface UtilityPageProgressProps {
-  currentStepIndex: number;
-  steps: Array<{ id: string }>;
-  visitedSteps: ReadonlySet<number>;
-  completedSteps?: ReadonlySet<number>;
-  shouldShowStep: (index: number) => boolean;
-  isHiddenStep?: (index: number) => boolean;
-  onStepClick: (index: number) => void;
-}
 
 interface UtilityPageIntroProps {
   eyebrow?: string;
-  title: string;
+  title: ReactNode;
   description?: string;
   meta?: ReactNode;
+  trailing?: ReactNode;
   actions?: ReactNode;
-  progress?: UtilityPageProgressProps;
   className?: string;
 }
 
@@ -30,27 +19,14 @@ export function UtilityPageIntro({
   title,
   description,
   meta,
+  trailing,
   actions,
-  progress,
   className,
 }: UtilityPageIntroProps) {
-  const [visibleStepCount, currentDisplayStep] = progress
-    ? progress.steps.reduce(
-        ([count, display], _, index) => {
-          if (!progress.shouldShowStep(index)) return [count, display];
-          return [
-            count + 1,
-            index <= progress.currentStepIndex ? display + 1 : display,
-          ];
-        },
-        [0, 0],
-      )
-    : [0, 0];
-
   return (
     <section
       className={cn(
-        "border-b border-stone-200 px-4 pb-6 pt-2 lg:px-0 lg:pb-8 lg:pt-4",
+        "border-b border-stone-200 pb-6 pt-2 lg:pb-8 lg:pt-4",
         className,
       )}
     >
@@ -61,7 +37,7 @@ export function UtilityPageIntro({
               {eyebrow}
             </p>
           ) : null}
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-zinc-950 lg:text-5xl">
+          <h1 className="mt-2 text-5xl font-semibold tracking-tight text-zinc-950">
             {title}
           </h1>
           {description ? (
@@ -74,30 +50,12 @@ export function UtilityPageIntro({
         {actions ? <div className="shrink-0">{actions}</div> : null}
       </div>
 
-      {meta || progress ? (
+      {meta || trailing ? (
         <div className="mt-5 border-t border-stone-200 pt-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             {meta ? <div className="min-w-0">{meta}</div> : null}
-            {progress ? (
-              <div
-                className={cn(
-                  "flex flex-col items-start gap-3 lg:items-end",
-                  !meta && "lg:ml-auto",
-                )}
-              >
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
-                  Step {currentDisplayStep} of {visibleStepCount}
-                </p>
-                <StepIndicator
-                  steps={progress.steps}
-                  currentStepIndex={progress.currentStepIndex}
-                  visitedSteps={progress.visitedSteps}
-                  completedSteps={progress.completedSteps}
-                  shouldShowStep={progress.shouldShowStep}
-                  isHiddenStep={progress.isHiddenStep}
-                  onStepClick={progress.onStepClick}
-                />
-              </div>
+            {trailing ? (
+              <div className={cn(!meta && "lg:ml-auto")}>{trailing}</div>
             ) : null}
           </div>
         </div>
@@ -130,7 +88,7 @@ export function UtilityPageSection({
   className,
 }: UtilityPageSectionProps) {
   return (
-    <section className={cn("px-4 lg:px-0", className)}>
+    <section className={className}>
       <div className="flex items-center gap-2">
         {Icon ? <Icon className="size-4 text-zinc-500" /> : null}
         <h2 className="text-lg font-semibold tracking-tight text-zinc-950">
@@ -199,7 +157,7 @@ export function UtilityPageAside({
   className,
 }: UtilityPageAsideProps) {
   return (
-    <aside className={cn("p-4 lg:p-5", asideToneClassName[tone], className)}>
+    <aside className={cn("p-4", asideToneClassName[tone], className)}>
       <div className="flex items-center gap-2">
         {Icon ? <Icon className="size-4 text-zinc-500" /> : null}
         <h3 className="text-base font-semibold text-zinc-950">{title}</h3>

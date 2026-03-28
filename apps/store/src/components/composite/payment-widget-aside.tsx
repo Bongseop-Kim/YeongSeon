@@ -3,7 +3,7 @@ import { UtilityPageAside } from "@/components/composite/utility-page";
 import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/components/composite/payment-widget";
-import { ConsentCheckbox } from "@/components/composite/consent-checkbox";
+import { CheckboxInput } from "@/components/composite/checkbox-input";
 
 interface ConsentProps {
   id: string;
@@ -53,7 +53,7 @@ export function PaymentWidgetAside({
         (priceFallback ?? null)
       )}
       {consent ? (
-        <ConsentCheckbox
+        <CheckboxInput
           id={consent.id}
           checked={consent.checked}
           onCheckedChange={consent.onCheckedChange}

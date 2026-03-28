@@ -1,6 +1,7 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import type { ImageRef } from "@yeongseon/shared";
 import { normalizeReferenceImages, toDbImageRef } from "@yeongseon/shared";
+import { isRecord } from "@/lib/type-guard";
 
 import type {
   CreateCustomOrderOptionsDto,
@@ -103,3 +104,38 @@ export const toCreateCustomOrderInputDto = (
   reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
 });
+
+export const parseCreateCustomOrderResponse = (
+  data: unknown,
+): { orderId: string; orderNumber: string; totalAmount: number } => {
+  if (!isRecord(data)) {
+    throw new Error("주문제작 생성 응답이 올바르지 않습니다: 객체가 아닙니다.");
+  }
+
+  if (typeof data.order_id !== "string" || data.order_id.length === 0) {
+    throw new Error(
+      "주문제작 생성 응답이 올바르지 않습니다: order_id가 누락되었거나 형식이 잘못되었습니다.",
+    );
+  }
+
+  if (typeof data.order_number !== "string" || data.order_number.length === 0) {
+    throw new Error(
+      "주문제작 생성 응답이 올바르지 않습니다: order_number가 누락되었거나 형식이 잘못되었습니다.",
+    );
+  }
+
+  if (
+    typeof data.total_amount !== "number" ||
+    !Number.isFinite(data.total_amount)
+  ) {
+    throw new Error(
+      "주문제작 생성 응답이 올바르지 않습니다: total_amount가 누락되었거나 형식이 잘못되었습니다.",
+    );
+  }
+
+  return {
+    orderId: data.order_id,
+    orderNumber: data.order_number,
+    totalAmount: data.total_amount,
+  };
+};

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@/features/auth/api/auth-query";
 import { ROUTES } from "@/constants/ROUTES";
+import { consumeAuthRedirect } from "@/lib/auth-redirect";
 
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
@@ -30,11 +31,12 @@ const AuthCallbackPage = () => {
 
     // 세션이 있으면 원래 가려던 페이지 또는 홈으로 리다이렉트
     if (session) {
-      // ProtectedRoute에서 저장한 원래 경로 확인
-      const redirectPath = sessionStorage.getItem("authRedirect");
-      if (redirectPath) {
-        sessionStorage.removeItem("authRedirect");
-        navigate(redirectPath, { replace: true });
+      const redirect = consumeAuthRedirect();
+      if (redirect) {
+        navigate(redirect.redirectPath, {
+          replace: true,
+          state: redirect.state,
+        });
       } else {
         navigate(ROUTES.HOME, { replace: true });
       }

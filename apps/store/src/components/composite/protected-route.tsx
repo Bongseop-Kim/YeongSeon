@@ -2,6 +2,12 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useSession } from "@/features/auth/api/auth-query";
 import { useAuthStore } from "@/store/auth";
 import { ROUTES } from "@/constants/ROUTES";
+import { isCustomPaymentState } from "@/lib/custom-payment-state";
+import {
+  removeCustomPaymentState,
+  saveCustomPaymentState,
+} from "@/features/order/custom-payment/storage";
+import { AUTH_REDIRECT_STORAGE_KEY } from "@/lib/auth-redirect";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -33,8 +39,17 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // session이 있으면 user도 존재하므로 session만 확인
   if (!session) {
     const redirectPath = location.pathname + location.search;
+    if (
+      (location.pathname === ROUTES.CUSTOM_PAYMENT ||
+        location.pathname === ROUTES.SAMPLE_PAYMENT) &&
+      isCustomPaymentState(location.state)
+    ) {
+      saveCustomPaymentState(location.state);
+    } else {
+      removeCustomPaymentState();
+    }
     // OAuth 콜백 후에도 경로를 복원할 수 있도록 sessionStorage에 저장
-    sessionStorage.setItem("authRedirect", redirectPath);
+    sessionStorage.setItem(AUTH_REDIRECT_STORAGE_KEY, redirectPath);
     return (
       <Navigate to={ROUTES.LOGIN} state={{ from: redirectPath }} replace />
     );

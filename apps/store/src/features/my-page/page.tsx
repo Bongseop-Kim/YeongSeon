@@ -183,7 +183,7 @@ export default function MypagePage() {
                 </UtilityPageSection>
               </div>
 
-              <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
+              <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
                 <UtilityPageAside
                   icon={ShieldCheckIcon}
                   title="현재 상태"

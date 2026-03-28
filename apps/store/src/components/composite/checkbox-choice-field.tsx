@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SelectableField } from "@/components/composite/selectable-field";
+import { ChoicePanel } from "@/components/composite/choice-panel";
 
 interface CheckboxChoiceFieldProps {
   id: string;
@@ -28,7 +28,7 @@ export function CheckboxChoiceField({
   children,
 }: CheckboxChoiceFieldProps) {
   return (
-    <SelectableField
+    <ChoicePanel
       id={id}
       selected={checked}
       disabled={disabled}
@@ -48,6 +48,6 @@ export function CheckboxChoiceField({
       }
     >
       {children}
-    </SelectableField>
+    </ChoicePanel>
   );
 }

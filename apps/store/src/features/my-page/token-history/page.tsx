@@ -296,7 +296,7 @@ export default function TokenHistoryPage() {
               description="현재 보유 토큰과 사용, 환불 변동 이력을 확인합니다."
             />
 
-            <div className="px-4 lg:hidden">
+            <div className="lg:hidden">
               <UtilityPageAside
                 title="현재 토큰 잔액"
                 description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
@@ -320,7 +320,7 @@ export default function TokenHistoryPage() {
                 </UtilityPageSection>
               </div>
 
-              <div className="hidden min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:block lg:self-start lg:px-0">
+              <div className="hidden min-w-0 space-y-5 lg:sticky lg:top-24 lg:block lg:self-start">
                 <UtilityPageAside
                   title="현재 토큰 잔액"
                   description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."

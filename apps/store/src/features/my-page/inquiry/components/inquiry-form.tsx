@@ -4,7 +4,12 @@ import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui-extended/input";
 import { InputField } from "@/components/composite/input-field";
 import { TextareaField } from "@/components/composite/textarea-field";
-import { FieldError, FieldLabel, FieldTitle } from "@/components/ui/field";
+import {
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldTitle,
+} from "@/components/ui/field";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Image } from "@imagekit/react";
@@ -47,18 +52,14 @@ export const InquiryForm = ({
     defaultValues: initialData ?? { category: "일반", title: "", content: "" },
   });
 
-  const category = useWatch({ control: form.control, name: "category" });
-  const selectedProductId = useWatch({
+  const [
+    category,
+    selectedProductId,
+    selectedProductName,
+    selectedProductImage,
+  ] = useWatch({
     control: form.control,
-    name: "productId",
-  });
-  const selectedProductName = useWatch({
-    control: form.control,
-    name: "productName",
-  });
-  const selectedProductImage = useWatch({
-    control: form.control,
-    name: "productImage",
+    name: ["category", "productId", "productName", "productImage"],
   });
 
   const { data: productResults = [] } =
@@ -72,7 +73,6 @@ export const InquiryForm = ({
     }
   }, [initialData, form]);
 
-  // 카테고리가 '상품'이 아닌 경우 상품 선택 초기화
   useEffect(() => {
     if (category !== "상품") {
       form.setValue("productId", undefined, { shouldValidate: true });
@@ -109,14 +109,7 @@ export const InquiryForm = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="space-y-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-              Category
-            </p>
-            <FieldLabel className="mt-2 block">
-              <FieldTitle>문의 유형</FieldTitle>
-            </FieldLabel>
-          </div>
+          <FieldTitle>문의 유형</FieldTitle>
           <Controller
             name="category"
             control={form.control}
@@ -143,17 +136,12 @@ export const InquiryForm = ({
 
         {category === "상품" && (
           <div className="space-y-3 border-t border-stone-200 pt-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-                Product
-              </p>
-              <FieldLabel className="mt-2 block">
-                <FieldTitle>상품 선택</FieldTitle>
-              </FieldLabel>
-              <p className="mt-1 text-sm text-zinc-500">
+            <FieldContent>
+              <FieldTitle>상품 선택</FieldTitle>
+              <FieldDescription>
                 상품 문의일 경우 정확한 상품을 선택해 주세요.
-              </p>
-            </div>
+              </FieldDescription>
+            </FieldContent>
 
             {selectedProductId && selectedProductName ? (
               <div className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 px-3 py-3">
@@ -224,9 +212,6 @@ export const InquiryForm = ({
         )}
 
         <div className="space-y-3 border-t border-stone-200 pt-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-            Subject
-          </p>
           <InputField
             control={form.control}
             name="title"
@@ -237,18 +222,11 @@ export const InquiryForm = ({
         </div>
 
         <div className="space-y-3 border-t border-stone-200 pt-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-              Message
-            </p>
-            <p className="mt-2 text-sm text-zinc-500">
-              주문 정보나 원하는 처리 내용을 구체적으로 적어 주세요.
-            </p>
-          </div>
           <TextareaField
             control={form.control}
             name="content"
             label="문의 내용"
+            description="주문 정보나 원하는 처리 내용을 구체적으로 적어 주세요."
             placeholder="문의 내용을 입력해주세요."
             textareaClassName="min-h-[220px] resize-none"
             rules={{ required: "문의 내용을 입력해주세요." }}

@@ -1,23 +1,18 @@
-import { useId } from "react";
 import { type Control, Controller, useWatch } from "react-hook-form";
 import {
   Field,
   FieldContent,
   FieldDescription,
-  FieldError,
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui-extended/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  isMeasurementType,
-  type ReformOptions,
-} from "@yeongseon/shared/types/view/reform";
+import { RadioGroupItem } from "@/components/ui/radio-group";
+import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
 import { ImagePicker } from "@/components/composite/image-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import CloseButton from "@/components/ui-extended/close";
-import { Required } from "@/components/ui/required";
+import { RadioGroupField } from "@/components/composite/radio-group-field";
+import { MeasurementField } from "@/components/composite/measurement-field";
 
 interface TieItemCardProps {
   index: number;
@@ -26,8 +21,6 @@ interface TieItemCardProps {
 }
 
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
-  const tieLengthId = useId();
-  const wearerHeightId = useId();
   const currentMeasurementType = useWatch({
     control,
     name: `ties.${index}.measurementType`,
@@ -60,7 +53,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         />
       </div>
 
-      <div className="mt-3 grid gap-4 md:grid-cols-[140px_minmax(0,1fr)] md:items-start">
+      <div className="mt-3 grid grid-cols-[107px_minmax(0,1fr)] items-start gap-4">
         <Controller
           control={control}
           name={`ties.${index}.image`}
@@ -74,6 +67,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
               </FieldDescription>
               <FieldContent>
                 <ImagePicker
+                  id={`tie-image-${index}`}
                   selectedFile={
                     field.value instanceof File ? field.value : undefined
                   }
@@ -93,63 +87,45 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         />
 
         <div className="space-y-4">
-          <Controller
+          <RadioGroupField
             control={control}
             name={`ties.${index}.measurementType`}
-            render={({ field }) => (
-              <Field orientation="vertical">
-                <FieldLabel>
-                  <FieldTitle>측정 방식</FieldTitle>
-                </FieldLabel>
-                <FieldContent>
-                  <RadioGroup
-                    value={field.value || "length"}
-                    onValueChange={(value: string) => {
-                      field.onChange(
-                        isMeasurementType(value) ? value : "length",
-                      );
-                    }}
-                    className="gap-2"
-                  >
-                    <Field orientation="horizontal">
-                      <RadioGroupItem
-                        value="length"
-                        id={`measurement-${index}-length`}
-                      />
-                      <FieldLabel htmlFor={`measurement-${index}-length`}>
-                        <FieldTitle>넥타이 길이</FieldTitle>
-                      </FieldLabel>
-                    </Field>
-                    <Field orientation="horizontal">
-                      <RadioGroupItem
-                        value="height"
-                        id={`measurement-${index}-height`}
-                      />
-                      <FieldLabel htmlFor={`measurement-${index}-height`}>
-                        <FieldTitle>착용자 키</FieldTitle>
-                      </FieldLabel>
-                    </Field>
-                  </RadioGroup>
-                </FieldContent>
-              </Field>
-            )}
-          />
+            label="측정 방식"
+            radioGroupClassName="gap-2"
+          >
+            <Field orientation="horizontal">
+              <RadioGroupItem
+                value="length"
+                id={`measurement-${index}-length`}
+              />
+              <FieldLabel htmlFor={`measurement-${index}-length`}>
+                <FieldTitle>넥타이 길이</FieldTitle>
+              </FieldLabel>
+            </Field>
+            <Field orientation="horizontal">
+              <RadioGroupItem
+                value="height"
+                id={`measurement-${index}-height`}
+              />
+              <FieldLabel htmlFor={`measurement-${index}-height`}>
+                <FieldTitle>착용자 키</FieldTitle>
+              </FieldLabel>
+            </Field>
+          </RadioGroupField>
 
           {(currentMeasurementType ?? "length") === "length" ? (
-            <MeasurementInputField
+            <MeasurementField
               control={control}
               name={`ties.${index}.tieLength`}
-              id={tieLengthId}
               label="넥타이 길이"
               description="(매듭 포함)"
               placeholder="예: 51"
               requiredMessage="넥타이 길이를 입력해주세요"
             />
           ) : (
-            <MeasurementInputField
+            <MeasurementField
               control={control}
               name={`ties.${index}.wearerHeight`}
-              id={wearerHeightId}
               label="착용자 키"
               placeholder="예: 175"
               requiredMessage="착용자 키를 입력해주세요"
@@ -158,78 +134,6 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         </div>
       </div>
     </div>
-  );
-};
-
-interface MeasurementInputFieldProps {
-  control: Control<ReformOptions>;
-  name: `ties.${number}.tieLength` | `ties.${number}.wearerHeight`;
-  id: string;
-  label: string;
-  description?: string;
-  placeholder?: string;
-  requiredMessage: string;
-}
-
-const MeasurementInputField = ({
-  control,
-  name,
-  id,
-  label,
-  description,
-  placeholder,
-  requiredMessage,
-}: MeasurementInputFieldProps) => {
-  const errorId = `${id}-error`;
-
-  return (
-    <Controller
-      control={control}
-      name={name}
-      rules={{
-        required: requiredMessage,
-        validate: (value) =>
-          value != null && Number.isFinite(value) && value > 0
-            ? true
-            : "0보다 큰 숫자를 입력해주세요.",
-      }}
-      render={({ field, fieldState }) => (
-        <Field orientation="vertical">
-          <FieldLabel htmlFor={id}>
-            <FieldTitle>
-              <Required />
-              {label}
-            </FieldTitle>
-          </FieldLabel>
-          {description && (
-            <FieldDescription className="-mt-1 text-xs">
-              {description}
-            </FieldDescription>
-          )}
-          <FieldContent>
-            <Input
-              {...field}
-              id={id}
-              type="number"
-              placeholder={placeholder}
-              value={field.value ?? ""}
-              onChange={(e) => {
-                const num = Number(e.target.value);
-                field.onChange(
-                  e.target.value === "" || !Number.isFinite(num)
-                    ? undefined
-                    : num,
-                );
-              }}
-              unit="cm"
-              aria-invalid={!!fieldState.error}
-              aria-describedby={fieldState.error ? errorId : undefined}
-            />
-            <FieldError id={errorId} errors={[fieldState.error]} />
-          </FieldContent>
-        </Field>
-      )}
-    />
   );
 };
 

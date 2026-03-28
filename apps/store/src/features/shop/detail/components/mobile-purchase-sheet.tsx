@@ -1,4 +1,3 @@
-import { useState, useMemo } from "react";
 import {
   Sheet,
   SheetContent,
@@ -6,7 +5,6 @@ import {
   SheetTitle,
 } from "@/components/ui-extended/sheet";
 import { Button } from "@/components/ui-extended/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -18,20 +16,22 @@ import type {
   Product,
   ProductOption,
 } from "@yeongseon/shared/types/view/product";
-import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
 import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";
+import { useModalStore } from "@/store/modal";
+import { useOrderStore } from "@/store/order";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@/lib/toast";
+import { processOrderAndNavigate } from "@/features/shop/detail/utils/process-order";
+import { ROUTES } from "@/constants/ROUTES";
+import { useState } from "react";
+import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 
 interface MobilePurchaseSheetProps {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onProcessOrder: (
-    selectedOptions: SelectedOption[],
-    baseQuantity: number,
-  ) => void;
   selectedOptions: SelectedOption[];
   baseQuantity: number;
   handleSelectOption: (option: ProductOption) => void;
@@ -45,7 +45,6 @@ export function MobilePurchaseSheet({
   product,
   open,
   onOpenChange,
-  onProcessOrder,
   selectedOptions,
   baseQuantity,
   handleSelectOption,
@@ -55,32 +54,13 @@ export function MobilePurchaseSheet({
   resetOptions,
 }: MobilePurchaseSheetProps) {
   const { addItemsToCart } = useAddToCartItems();
-  const productOptions = product.options ?? [];
-
-  const hasOptions = productOptions.length > 0;
-
-  // 장바구니에 추가 중인지 여부
+  const { openModal } = useModalStore();
+  const { setOrderItems } = useOrderStore();
+  const navigate = useNavigate();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const totalAmount = useMemo(() => {
-    if (!hasOptions) {
-      return product.price * baseQuantity;
-    }
-
-    return selectedOptions.reduce((sum, item) => {
-      const optionPrice = product.price + item.option.additionalPrice;
-      return sum + optionPrice * item.quantity;
-    }, 0);
-  }, [product.price, selectedOptions, hasOptions, baseQuantity]);
-
-  const totalQuantity = useMemo(() => {
-    if (!hasOptions) {
-      return baseQuantity;
-    }
-    return selectedOptions.reduce((sum, item) => sum + item.quantity, 0);
-  }, [selectedOptions, hasOptions, baseQuantity]);
-
-  const grandTotal = totalAmount;
+  const productOptions = product.options ?? [];
+  const hasOptions = productOptions.length > 0;
 
   const handleAddToCart = async () => {
     if (isAddingToCart) return;
@@ -111,6 +91,15 @@ export function MobilePurchaseSheet({
 
       resetOptions();
       onOpenChange(false);
+      openModal({
+        title: "장바구니",
+        description: "장바구니에 추가되었습니다.",
+        confirmText: "장바구니 보기",
+        cancelText: "닫기",
+        onConfirm: () => {
+          navigate(ROUTES.CART);
+        },
+      });
     } finally {
       setIsAddingToCart(false);
     }
@@ -118,7 +107,13 @@ export function MobilePurchaseSheet({
 
   const handleOrder = () => {
     onOpenChange(false);
-    onProcessOrder(selectedOptions, baseQuantity);
+    processOrderAndNavigate(
+      product,
+      selectedOptions,
+      baseQuantity,
+      setOrderItems,
+      navigate,
+    );
   };
 
   return (
@@ -126,7 +121,6 @@ export function MobilePurchaseSheet({
       <SheetContent side="bottom" className="max-h-[60vh]">
         <SheetTitle className="sr-only">상품 구매</SheetTitle>
         <div className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4">
-          {/* 옵션 선택 */}
           {hasOptions && (
             <Select
               value=""
@@ -163,7 +157,6 @@ export function MobilePurchaseSheet({
             </Select>
           )}
 
-          {/* 선택된 옵션 목록 (옵션이 있을 때) */}
           {hasOptions && (
             <SelectedOptionsList
               selectedOptions={selectedOptions}
@@ -173,7 +166,6 @@ export function MobilePurchaseSheet({
             />
           )}
 
-          {/* 수량 선택 (옵션이 없을 때) */}
           {!hasOptions && (
             <div className="space-y-3">
               <SelectedOptionItem
@@ -194,16 +186,6 @@ export function MobilePurchaseSheet({
               />
             </div>
           )}
-
-          <Separator />
-
-          {/* 금액 정보 */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm font-semibold">
-              <span>총 {totalQuantity}개</span>
-              <span>{grandTotal.toLocaleString()}원</span>
-            </div>
-          </div>
         </div>
 
         <SheetFooter className="shrink-0">

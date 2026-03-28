@@ -19,6 +19,25 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { FilterTab } from "@/features/shop/types/filter";
 
+function appendFilterItems<T extends string>(
+  filters: Array<{ key: string; label: string; onRemove: () => void }>,
+  selected: T[],
+  options: ReadonlyArray<{ readonly value: T; readonly label: string }>,
+  type: string,
+  onChange: (value: T) => void,
+) {
+  selected.forEach((value) => {
+    const option = options.find((opt) => opt.value === value);
+    if (option) {
+      filters.push({
+        key: `${type}:${value}`,
+        label: option.label,
+        onRemove: () => onChange(value),
+      });
+    }
+  });
+}
+
 interface FilterContentProps {
   selectedCategories: ProductCategory[];
   selectedColors: ProductColor[];
@@ -54,55 +73,42 @@ export const FilterContent = ({
 }: FilterContentProps) => {
   const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
 
-  // initialTab이 변경되면 activeTab도 업데이트
   useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
+    setActiveTab(initialTab);
   }, [initialTab]);
 
   const selectedFilters = useMemo(() => {
-    const filters: Array<{ label: string; onRemove: () => void }> = [];
+    const filters: Array<{ key: string; label: string; onRemove: () => void }> =
+      [];
 
-    selectedCategories.forEach((category) => {
-      const option = CATEGORY_OPTIONS.find((opt) => opt.value === category);
-      if (option) {
-        filters.push({
-          label: option.label,
-          onRemove: () => onCategoryChange(category),
-        });
-      }
-    });
-
-    selectedColors.forEach((color) => {
-      const option = COLOR_OPTIONS.find((opt) => opt.value === color);
-      if (option) {
-        filters.push({
-          label: option.label,
-          onRemove: () => onColorChange(color),
-        });
-      }
-    });
-
-    selectedPatterns.forEach((pattern) => {
-      const option = PATTERN_OPTIONS.find((opt) => opt.value === pattern);
-      if (option) {
-        filters.push({
-          label: option.label,
-          onRemove: () => onPatternChange(pattern),
-        });
-      }
-    });
-
-    selectedMaterials.forEach((material) => {
-      const option = MATERIAL_OPTIONS.find((opt) => opt.value === material);
-      if (option) {
-        filters.push({
-          label: option.label,
-          onRemove: () => onMaterialChange(material),
-        });
-      }
-    });
+    appendFilterItems(
+      filters,
+      selectedCategories,
+      CATEGORY_OPTIONS,
+      "category",
+      onCategoryChange,
+    );
+    appendFilterItems(
+      filters,
+      selectedColors,
+      COLOR_OPTIONS,
+      "color",
+      onColorChange,
+    );
+    appendFilterItems(
+      filters,
+      selectedPatterns,
+      PATTERN_OPTIONS,
+      "pattern",
+      onPatternChange,
+    );
+    appendFilterItems(
+      filters,
+      selectedMaterials,
+      MATERIAL_OPTIONS,
+      "material",
+      onMaterialChange,
+    );
 
     if (selectedPriceRange && selectedPriceRange !== "all") {
       const option = PRICE_RANGE_OPTIONS.find(
@@ -110,6 +116,7 @@ export const FilterContent = ({
       );
       if (option) {
         filters.push({
+          key: `price:${option.value}`,
           label: option.label,
           onRemove: () => onPriceRangeChange("all"),
         });
@@ -135,13 +142,13 @@ export const FilterContent = ({
   return (
     <>
       {hasFilters && (
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-200 px-1 pb-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 px-4">
           <div className="flex items-center gap-2 flex-1 flex-wrap">
-            {selectedFilters.map((filter, index) => (
+            {selectedFilters.map((filter) => (
               <Badge
                 variant="outline"
                 className="gap-1 rounded-full border-zinc-200 bg-zinc-50 px-3 py-1 text-zinc-700"
-                key={index}
+                key={filter.key}
               >
                 <span>{filter.label}</span>
                 <button
@@ -172,7 +179,7 @@ export const FilterContent = ({
         onValueChange={(value) => setActiveTab(value as FilterTab)}
         className="flex flex-1 flex-col overflow-hidden"
       >
-        <TabsList className="w-full justify-start overflow-x-auto scrollbar-hidden border-b border-zinc-200 bg-transparent px-0">
+        <TabsList className="w-full justify-start overflow-x-auto scrollbar-hidden border-b border-zinc-200 bg-transparent px-2">
           <TabsTrigger value="category">카테고리</TabsTrigger>
           <TabsTrigger value="price">가격</TabsTrigger>
           <TabsTrigger value="color">색상</TabsTrigger>
@@ -239,8 +246,8 @@ export const FilterContent = ({
       </Tabs>
 
       {showApplyButton && onApply && (
-        <div className="sticky bottom-0 border-t border-zinc-200 bg-background px-1 pt-4 pb-2">
-          <Button className="h-11 w-full rounded-full" onClick={onApply}>
+        <div className="sticky bottom-0 border-t border-zinc-200 bg-background px-2 pt-4 pb-2">
+          <Button size="xl" type="button" className="w-full" onClick={onApply}>
             적용하기
           </Button>
         </div>

@@ -68,15 +68,15 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             </div>
           ) : null}
         </div>
-        <div className="border-b border-zinc-200 pb-4 pt-4">
-          <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.24em] text-zinc-400">
+        <div className="border-b border-zinc-200 pb-2 px-1">
+          <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.24em] text-zinc-400">
             <span>{product.materialLabel ?? product.material}</span>
             <span>{product.code}</span>
           </div>
-          <p className="mt-3 line-clamp-2 min-h-11 text-[15px] font-medium leading-6 text-zinc-900">
+          <p className="line-clamp-2 min-h-8 text-[15px] font-medium leading-6 text-zinc-900">
             {product.name}
           </p>
-          <p className="mt-3 text-base font-semibold tracking-[-0.02em] text-zinc-900">
+          <p className="text-base font-semibold tracking-[-0.02em] text-zinc-900">
             {product.price.toLocaleString()}원
           </p>
         </div>

@@ -122,7 +122,7 @@ const TokenPaymentPage = ({
   if (isPlansLoading || !selectedPlan) {
     return (
       <MainLayout>
-        <MainContent className="overflow-visible bg-zinc-50">
+        <MainContent className="overflow-visible">
           <div className="mx-auto max-w-3xl px-4 py-12">
             {isPlansError ? (
               <div className="flex flex-col items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-6 py-10 text-center">
@@ -152,7 +152,7 @@ const TokenPaymentPage = ({
 
   return (
     <MainLayout>
-      <MainContent className="overflow-visible bg-zinc-50">
+      <MainContent className="overflow-visible">
         <PageLayout
           contentClassName="space-y-8"
           sidebarClassName="space-y-4 pt-6"

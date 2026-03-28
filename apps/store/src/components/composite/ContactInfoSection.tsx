@@ -1,8 +1,7 @@
 import { Controller, useWatch } from "react-hook-form";
 import type { Control } from "react-hook-form";
-import { useId } from "react";
 import { Input } from "@/components/ui-extended/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Field,
   FieldContent,
@@ -11,6 +10,7 @@ import {
   FieldSet,
   FieldTitle,
 } from "@/components/ui/field";
+import { RadioGroupField } from "@/components/composite/radio-group-field";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { ContactMethod } from "@yeongseon/shared";
 
@@ -31,7 +31,6 @@ interface ContactInfoSectionProps {
 }
 
 export const ContactInfoSection = ({ control }: ContactInfoSectionProps) => {
-  const contactMethodTitleId = useId();
   const currentContactMethod = useWatch({
     control,
     name: "contactMethod",
@@ -74,39 +73,28 @@ export const ContactInfoSection = ({ control }: ContactInfoSectionProps) => {
         />
       </div>
 
-      <Controller
+      <RadioGroupField
         name="contactMethod"
         control={control}
-        render={({ field }) => (
-          <Field orientation="vertical">
-            <FieldLabel>
-              <FieldTitle id={contactMethodTitleId}>
-                연락 방법 <span className="text-red-500">*</span>
-              </FieldTitle>
-            </FieldLabel>
-            <FieldContent>
-              <RadioGroup
-                aria-labelledby={contactMethodTitleId}
-                value={field.value}
-                onValueChange={field.onChange}
-                className="flex flex-row gap-4"
-              >
-                {CONTACT_METHOD_OPTIONS.map((option) => {
-                  const itemId = `contact-method-${option.value}`;
-                  return (
-                    <Field key={option.value} orientation="horizontal">
-                      <RadioGroupItem value={option.value} id={itemId} />
-                      <FieldLabel htmlFor={itemId}>
-                        <FieldTitle>{option.label}</FieldTitle>
-                      </FieldLabel>
-                    </Field>
-                  );
-                })}
-              </RadioGroup>
-            </FieldContent>
-          </Field>
-        )}
-      />
+        label={
+          <>
+            연락 방법 <span className="text-red-500">*</span>
+          </>
+        }
+        radioGroupClassName="flex flex-row gap-4"
+      >
+        {CONTACT_METHOD_OPTIONS.map((option) => {
+          const itemId = `contact-method-${option.value}`;
+          return (
+            <Field key={option.value} orientation="horizontal">
+              <RadioGroupItem value={option.value} id={itemId} />
+              <FieldLabel htmlFor={itemId}>
+                <FieldTitle>{option.label}</FieldTitle>
+              </FieldLabel>
+            </Field>
+          );
+        })}
+      </RadioGroupField>
 
       <Controller
         name="contactValue"

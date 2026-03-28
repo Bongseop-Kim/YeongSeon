@@ -9,7 +9,8 @@ import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { Form } from "@/components/ui/form";
 import { useForm, Controller } from "react-hook-form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { RadioGroupItem } from "@/components/ui/radio-group";
+import { RadioGroupField } from "@/components/composite/radio-group-field";
 import { TextareaField } from "@/components/composite/textarea-field";
 import {
   Field,
@@ -27,7 +28,6 @@ import { useCreateClaim } from "@/features/claim/api/claims-query";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { useEffect, useMemo } from "react";
 
-// 클레임 사유 옵션
 const getClaimReasons = (type: ClaimType) => {
   switch (type) {
     case "cancel":
@@ -115,7 +115,6 @@ const ClaimFormPage = () => {
     },
   });
 
-  // 주문 아이템 로드 시 수량 기본값 설정
   useEffect(() => {
     if (orderItem) {
       form.setValue("quantity", orderItem.quantity);
@@ -371,48 +370,34 @@ const ClaimFormPage = () => {
                     />
                   )}
 
-                  <Controller
+                  <RadioGroupField
                     name="reason"
                     control={form.control}
+                    label={
+                      <>
+                        <span className="text-red-500">*</span>사유 선택
+                      </>
+                    }
                     rules={{ required: "사유를 선택해주세요." }}
-                    render={({ field, fieldState }) => (
-                      <Field orientation="vertical">
-                        <FieldLabel>
-                          <FieldTitle>
-                            <span className="text-red-500">*</span>사유 선택
+                    radioGroupClassName="space-y-2"
+                  >
+                    {reasons.map((reason) => (
+                      <Field key={reason.value} orientation="horizontal">
+                        <RadioGroupItem
+                          value={reason.value}
+                          id={reason.value}
+                        />
+                        <FieldLabel
+                          htmlFor={reason.value}
+                          className="font-normal cursor-pointer"
+                        >
+                          <FieldTitle className="font-normal">
+                            {reason.label}
                           </FieldTitle>
                         </FieldLabel>
-                        <FieldContent>
-                          <RadioGroup
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            className="space-y-2"
-                          >
-                            {reasons.map((reason) => (
-                              <Field
-                                key={reason.value}
-                                orientation="horizontal"
-                              >
-                                <RadioGroupItem
-                                  value={reason.value}
-                                  id={reason.value}
-                                />
-                                <FieldLabel
-                                  htmlFor={reason.value}
-                                  className="font-normal cursor-pointer"
-                                >
-                                  <FieldTitle className="font-normal">
-                                    {reason.label}
-                                  </FieldTitle>
-                                </FieldLabel>
-                              </Field>
-                            ))}
-                          </RadioGroup>
-                          <FieldError errors={[fieldState.error]} />
-                        </FieldContent>
                       </Field>
-                    )}
-                  />
+                    ))}
+                  </RadioGroupField>
 
                   <TextareaField
                     control={form.control}

@@ -18,6 +18,7 @@
     "db:reset": "supabase db reset",
     "db:diff": "supabase db diff",
     "db:push": "supabase db push",
+    "db:migrations": "supabase migration list",
     "db:lint": "supabase db lint --level warning",
     "db:test": "supabase test db",
     "preinstall": "npx only-allow pnpm",

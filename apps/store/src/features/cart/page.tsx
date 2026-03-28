@@ -290,8 +290,6 @@ export default function CartPage() {
       <MainLayout>
         <MainContent className="overflow-visible">
           <PageLayout
-            contentClassName="py-4 lg:py-8"
-            sidebarClassName="px-4 lg:px-0"
             detail={
               <CartRecommendationsCard
                 products={similarProducts}

@@ -131,7 +131,7 @@ export default function MyInfoLeavePage() {
             />
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:gap-12">
-              <div className="min-w-0 px-4 lg:px-0">
+              <div className="min-w-0">
                 <div className="space-y-5">
                   <div className="border-b border-stone-200 pb-4">
                     <p className="text-sm font-semibold text-zinc-950">
@@ -184,7 +184,7 @@ export default function MyInfoLeavePage() {
               </div>
 
               {!isMobile ? (
-                <div className="min-w-0 space-y-5 px-4 lg:sticky lg:top-24 lg:self-start lg:px-0">
+                <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
                   <LeaveConfirmationBlock
                     agree={agree}
                     isPending={deleteAccount.isPending}

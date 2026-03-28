@@ -116,11 +116,11 @@ SELECT
     WHEN oi.item_type IN ('reform', 'custom', 'sample') THEN oi.item_data
     ELSE null
   END AS "reformData",
+  uc.user_coupon AS "appliedCoupon",
   CASE
     WHEN oi.item_type = 'sample' THEN oi.item_data
     ELSE null
-  END AS "sampleData",
-  uc.user_coupon AS "appliedCoupon"
+  END AS "sampleData"
 FROM public.order_items oi
 JOIN public.orders o
   ON o.id = oi.order_id AND o.user_id = auth.uid()

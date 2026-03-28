@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import type { StepConfig } from "@/features/custom-order/types/wizard";
 import { UtilityPageIntro } from "@/components/composite/utility-page";
+import { StepIndicator } from "@/components/composite/step-indicator";
 
 interface ProgressBarProps {
   eyebrow: string;
@@ -41,6 +43,20 @@ export const ProgressBar = ({
   const currentStepDescription =
     STEP_DESCRIPTIONS[currentStep.id] ?? "현재 단계를 진행 중입니다.";
 
+  const [visibleStepCount, currentDisplayStep] = useMemo(
+    () =>
+      steps.reduce(
+        ([count, display], _, index) => {
+          if (!shouldShowStep(index) || isHiddenStep(index)) {
+            return [count, display];
+          }
+          return [count + 1, index <= currentStepIndex ? display + 1 : display];
+        },
+        [0, 0],
+      ),
+    [steps, currentStepIndex, shouldShowStep, isHiddenStep],
+  );
+
   return (
     <UtilityPageIntro
       eyebrow={eyebrow}
@@ -61,15 +77,22 @@ export const ProgressBar = ({
           </p>
         </div>
       }
-      progress={{
-        currentStepIndex,
-        steps,
-        visitedSteps,
-        completedSteps,
-        shouldShowStep,
-        isHiddenStep,
-        onStepClick,
-      }}
+      trailing={
+        <div className="flex flex-col items-start gap-3 lg:items-end">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+            Step {currentDisplayStep} of {visibleStepCount}
+          </p>
+          <StepIndicator
+            steps={steps}
+            currentStepIndex={currentStepIndex}
+            visitedSteps={visitedSteps}
+            completedSteps={completedSteps}
+            shouldShowStep={shouldShowStep}
+            isHiddenStep={isHiddenStep}
+            onStepClick={onStepClick}
+          />
+        </div>
+      }
     />
   );
 };

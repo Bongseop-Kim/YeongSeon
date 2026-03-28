@@ -116,7 +116,7 @@ export default function OrderListPage() {
       <MainLayout>
         <MainContent>
           <PageLayout contentClassName="py-4 lg:py-8">
-            <div className="px-4 lg:px-0">
+            <div>
               <Empty
                 title="주문 목록을 불러올 수 없습니다."
                 description={
@@ -148,7 +148,7 @@ export default function OrderListPage() {
               description="검색과 기간 필터, 주문 유형 탭은 상단 공용 도구를 사용합니다."
             >
               {filteredOrders.length === 0 ? (
-                <div className="px-4 lg:px-0">
+                <div>
                   <Empty
                     title={
                       activeTab === "전체"
@@ -167,7 +167,7 @@ export default function OrderListPage() {
                   <article
                     key={order.id}
                     data-testid={`order-card-${order.id}`}
-                    className="border-b border-stone-200 px-4 py-5 lg:px-0"
+                    className="border-b border-stone-200 py-5"
                   >
                     <div className="flex flex-col gap-5">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">

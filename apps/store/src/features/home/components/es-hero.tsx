@@ -105,6 +105,7 @@ export const EsHero = () => {
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(232,197,71,0.12),transparent_30%),radial-gradient(circle_at_72%_18%,rgba(79,195,247,0.14),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_24%)]" />
       <div className="absolute inset-y-0 right-[-12%] hidden w-[44%] bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.08),transparent_62%)] blur-3xl lg:block" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[image:var(--gradient-brand-hero-bottom)] lg:h-52" />
       <div className="mx-auto flex min-h-[100svh] max-w-[1600px] flex-col px-[var(--space-showcase-section-x)] pb-10 pt-20 lg:min-h-[100svh] lg:flex-row lg:items-center lg:px-[var(--space-showcase-section-x-lg)] lg:pb-20 lg:pt-24">
         <motion.div
           style={{ y: contentY }}
@@ -391,7 +392,7 @@ export const EsHero = () => {
         </motion.div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-6 hidden justify-center lg:flex">
+      <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 hidden justify-center lg:flex">
         <motion.div
           animate={
             shouldReduceMotion

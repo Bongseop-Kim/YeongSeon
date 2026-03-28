@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui-extended/button";
 import {
   Sheet,
@@ -53,9 +53,7 @@ export const FilterSheet = ({
   const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
 
   useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
+    setActiveTab(initialTab);
   }, [initialTab]);
 
   const handleFilterButtonClick = (tab: FilterTab) => {
@@ -70,11 +68,7 @@ export const FilterSheet = ({
         activeCounts={activeCounts}
         mainButton={
           <SheetTrigger asChild>
-            <Button
-              variant="none"
-              size="sm"
-              className="h-9 gap-2 rounded-full border border-zinc-200 bg-white px-3 text-zinc-700 shadow-none"
-            >
+            <Button variant="none" size="sm">
               <SlidersHorizontal />
               필터
             </Button>
@@ -82,7 +76,7 @@ export const FilterSheet = ({
         }
       />
       <SheetContent className="flex flex-col h-[70vh]" side="bottom">
-        <SheetHeader>
+        <SheetHeader className="sr-only">
           <SheetTitle>필터</SheetTitle>
         </SheetHeader>
         <FilterContent

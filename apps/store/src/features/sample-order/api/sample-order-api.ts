@@ -9,6 +9,7 @@ import {
 interface CreateSampleOrderResponse {
   orderId: string;
   orderNumber: string;
+  totalAmount: number;
 }
 
 export const createSampleOrder = async (

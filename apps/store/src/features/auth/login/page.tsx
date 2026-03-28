@@ -24,6 +24,10 @@ import {
 import { ROUTES } from "@/constants/ROUTES";
 import { usePopup } from "@/hooks/usePopup";
 import { useAuthStore } from "@/store/auth";
+import {
+  consumeAuthRedirect,
+  AUTH_REDIRECT_STORAGE_KEY,
+} from "@/lib/auth-redirect";
 
 const isLocationStateWithFrom = (
   value: unknown,
@@ -53,7 +57,7 @@ const LoginPage = () => {
     (isLocationStateWithFrom(location.state)
       ? location.state?.from
       : undefined) ||
-    sessionStorage.getItem("authRedirect") ||
+    sessionStorage.getItem(AUTH_REDIRECT_STORAGE_KEY) ||
     ROUTES.HOME;
   const form = useForm<EmailLoginFormValues>({
     resolver: zodResolver(emailLoginSchema),
@@ -65,10 +69,12 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    const redirectPath = sessionStorage.getItem("authRedirect");
-    if (redirectPath) {
-      sessionStorage.removeItem("authRedirect");
-      navigate(redirectPath, { replace: true });
+    const redirect = consumeAuthRedirect();
+    if (redirect) {
+      navigate(redirect.redirectPath, {
+        replace: true,
+        state: redirect.state,
+      });
       return;
     }
     navigate(from, { replace: true });

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { RadioGroupItem } from "@/components/ui/radio-group";
-import { SelectableField } from "@/components/composite/selectable-field";
+import { ChoicePanel } from "@/components/composite/choice-panel";
 
 interface RadioChoiceFieldProps {
   value: string;
@@ -34,7 +34,7 @@ export function RadioChoiceField({
   children,
 }: RadioChoiceFieldProps) {
   return (
-    <SelectableField
+    <ChoicePanel
       id={id}
       selected={selected}
       disabled={disabled}
@@ -56,6 +56,6 @@ export function RadioChoiceField({
       }
     >
       {children}
-    </SelectableField>
+    </ChoicePanel>
   );
 }
