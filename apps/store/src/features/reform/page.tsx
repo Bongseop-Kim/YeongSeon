@@ -44,7 +44,7 @@ const DEFAULT_TIE_ITEM = {
   measurementType: "length" as const,
   tieLength: undefined,
   wearerHeight: undefined,
-  checked: false,
+  checked: true,
 };
 
 const DEFAULT_REFORM_OPTIONS: ReformOptions = {
@@ -91,7 +91,7 @@ const ReformPage = () => {
       measurementType: "length",
       tieLength: undefined,
       wearerHeight: undefined,
-      checked: false,
+      checked: true,
     });
   };
 
@@ -263,6 +263,7 @@ const ReformPage = () => {
         <MainContent className="overflow-visible">
           <Form {...form}>
             <PageLayout
+              contentClassName="pt-0"
               sidebar={
                 <OrderSummaryAside
                   icon={ReceiptTextIcon}
@@ -325,7 +326,7 @@ const ReformPage = () => {
                   className="pb-4 lg:pb-5"
                 />
 
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 py-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-2">
                   <Field orientation="horizontal" className="w-auto gap-4">
                     <Checkbox
                       id={selectAllCheckboxId}
@@ -337,7 +338,7 @@ const ReformPage = () => {
                       htmlFor={selectAllCheckboxId}
                       className="cursor-pointer"
                     >
-                      <FieldTitle className="text-zinc-900">
+                      <FieldTitle className="text-foreground">
                         전체 선택
                       </FieldTitle>
                     </FieldLabel>
@@ -411,7 +412,7 @@ const ReformPage = () => {
                   />
                 )}
 
-                <div className="flex justify-end border-t border-stone-200 py-3">
+                <div className="flex justify-end border-t border-border py-3">
                   <Button
                     type="button"
                     onClick={addTie}

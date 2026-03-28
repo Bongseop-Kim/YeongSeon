@@ -24,6 +24,7 @@ import {
 import { ROUTES } from "@/constants/ROUTES";
 import { usePopup } from "@/hooks/usePopup";
 import { useAuthStore } from "@/store/auth";
+import { consumeCustomPaymentState } from "@/features/order/custom-payment/storage";
 
 const isLocationStateWithFrom = (
   value: unknown,
@@ -68,7 +69,11 @@ const LoginPage = () => {
     const redirectPath = sessionStorage.getItem("authRedirect");
     if (redirectPath) {
       sessionStorage.removeItem("authRedirect");
-      navigate(redirectPath, { replace: true });
+      const state =
+        redirectPath === ROUTES.CUSTOM_PAYMENT
+          ? consumeCustomPaymentState()
+          : undefined;
+      navigate(redirectPath, { replace: true, state });
       return;
     }
     navigate(from, { replace: true });

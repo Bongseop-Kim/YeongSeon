@@ -20,15 +20,20 @@ import { Badge } from "@/components/ui/badge";
 import type { FilterTab } from "@/features/shop/types/filter";
 
 function appendFilterItems<T extends string>(
-  filters: Array<{ label: string; onRemove: () => void }>,
+  filters: Array<{ key: string; label: string; onRemove: () => void }>,
   selected: T[],
   options: ReadonlyArray<{ readonly value: T; readonly label: string }>,
+  type: string,
   onChange: (value: T) => void,
 ) {
   selected.forEach((value) => {
     const option = options.find((opt) => opt.value === value);
     if (option) {
-      filters.push({ label: option.label, onRemove: () => onChange(value) });
+      filters.push({
+        key: `${type}:${value}`,
+        label: option.label,
+        onRemove: () => onChange(value),
+      });
     }
   });
 }
@@ -73,25 +78,35 @@ export const FilterContent = ({
   }, [initialTab]);
 
   const selectedFilters = useMemo(() => {
-    const filters: Array<{ label: string; onRemove: () => void }> = [];
+    const filters: Array<{ key: string; label: string; onRemove: () => void }> =
+      [];
 
     appendFilterItems(
       filters,
       selectedCategories,
       CATEGORY_OPTIONS,
+      "category",
       onCategoryChange,
     );
-    appendFilterItems(filters, selectedColors, COLOR_OPTIONS, onColorChange);
+    appendFilterItems(
+      filters,
+      selectedColors,
+      COLOR_OPTIONS,
+      "color",
+      onColorChange,
+    );
     appendFilterItems(
       filters,
       selectedPatterns,
       PATTERN_OPTIONS,
+      "pattern",
       onPatternChange,
     );
     appendFilterItems(
       filters,
       selectedMaterials,
       MATERIAL_OPTIONS,
+      "material",
       onMaterialChange,
     );
 
@@ -101,6 +116,7 @@ export const FilterContent = ({
       );
       if (option) {
         filters.push({
+          key: `price:${option.value}`,
           label: option.label,
           onRemove: () => onPriceRangeChange("all"),
         });
@@ -132,7 +148,7 @@ export const FilterContent = ({
               <Badge
                 variant="outline"
                 className="gap-1 rounded-full border-zinc-200 bg-zinc-50 px-3 py-1 text-zinc-700"
-                key={filter.label}
+                key={filter.key}
               >
                 <span>{filter.label}</span>
                 <button

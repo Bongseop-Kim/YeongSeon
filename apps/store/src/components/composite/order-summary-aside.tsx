@@ -56,7 +56,7 @@ export function OrderSummaryAside({
             className="pt-5"
             label={totalLabel}
             value={
-              <span className="text-base font-semibold tracking-tight text-blue-600">
+              <span className="text-base font-semibold tracking-tight text-foreground">
                 {totalAmount.toLocaleString()}원
               </span>
             }

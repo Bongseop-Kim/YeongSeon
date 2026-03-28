@@ -99,6 +99,9 @@ describe("useCustomOrderSubmit", () => {
         state: expect.objectContaining({
           orderType: "custom",
           totalCost: 10000,
+          coreOptions: expect.any(Object),
+          imageRefs: expect.any(Array),
+          additionalNotes: "메모",
         }),
       }),
     );

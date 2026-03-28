@@ -294,10 +294,13 @@
     @apply border-border outline-ring/50;
   }
   html {
-    @apply font-sans antialiased;
+    @apply h-full font-sans antialiased;
   }
   body {
-    @apply bg-background text-foreground overflow-x-hidden;
+    @apply h-full overflow-hidden bg-background text-foreground;
+  }
+  #root {
+    @apply h-full;
   }
   a {
     @apply transition-colors;

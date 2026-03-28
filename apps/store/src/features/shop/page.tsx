@@ -32,6 +32,10 @@ import {
   DialogTitle,
 } from "@/components/ui-extended/dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  UtilityPageIntro,
+  UtilityKeyValueRow,
+} from "@/components/composite/utility-page";
 
 export default function ShopPage() {
   const [selectedCategories, setSelectedCategories] = useState<
@@ -167,65 +171,56 @@ export default function ShopPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout>
+        <PageLayout contentClassName="pt-0 lg:py-8" wrapperClassName="px-0">
           <div className="pb-16">
-            <section className="border-b border-zinc-200 pb-8 pt-8 lg:pb-10 lg:pt-10">
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
-                <div className="max-w-2xl">
-                  <p className="text-[11px] uppercase tracking-[0.35em] text-zinc-500">
-                    YeongSeon Store
-                  </p>
-                  <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-zinc-950 lg:text-5xl">
-                    바로 구매 가능한
-                    <br />
-                    넥타이 컬렉션
-                  </h1>
-                  <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-600 lg:text-base">
-                    제작이 끝난 제품을 카테고리, 색상, 패턴 기준으로 빠르게
-                    추려볼 수 있습니다. 첫 선택은 단순하게, 비교는 편하게
-                    구성했습니다.
-                  </p>
-                </div>
-
-                <div className="border-t border-zinc-200">
-                  <div className="flex items-center justify-between border-b border-zinc-200 py-3 text-sm">
-                    <span className="text-zinc-500">현재 상품 수</span>
-                    <span className="font-medium text-zinc-900">
-                      {isLoading ? "불러오는 중" : `${products.length}개`}
-                    </span>
+            <UtilityPageIntro
+              eyebrow="YeongSeon Store"
+              title={
+                <>
+                  바로 구매 가능한
+                  <br />
+                  넥타이 컬렉션
+                </>
+              }
+              description="제작이 끝난 제품을 카테고리, 색상, 패턴 기준으로 빠르게 추려볼 수 있습니다. 첫 선택은 단순하게, 비교는 편하게 구성했습니다."
+              actions={
+                <dl className="hidden w-[280px] border-t border-stone-200 lg:block">
+                  <UtilityKeyValueRow
+                    label="현재 상품 수"
+                    value={isLoading ? "불러오는 중" : `${products.length}개`}
+                  />
+                  <UtilityKeyValueRow
+                    label="선택된 필터"
+                    value={`${selectedFilterCount}개`}
+                  />
+                  <UtilityKeyValueRow
+                    label="기본 정렬"
+                    value={
+                      SORT_OPTIONS.find((o) => o.value === sortOption)?.label ??
+                      ""
+                    }
+                  />
+                </dl>
+              }
+              meta={
+                selectedFilterLabels.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {selectedFilterLabels.map((label) => (
+                      <Badge
+                        key={label}
+                        variant="outline"
+                        className="rounded-full border-zinc-200 bg-zinc-50 px-3 py-1 text-zinc-700"
+                      >
+                        {label}
+                      </Badge>
+                    ))}
                   </div>
-                  <div className="flex items-center justify-between border-b border-zinc-200 py-3 text-sm">
-                    <span className="text-zinc-500">선택된 필터</span>
-                    <span className="font-medium text-zinc-900">
-                      {selectedFilterCount}개
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3 text-sm">
-                    <span className="text-zinc-500">기본 정렬</span>
-                    <span className="font-medium text-zinc-900">
-                      {SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {selectedFilterLabels.length > 0 ? (
-                <div className="mt-6 flex flex-wrap items-center gap-2">
-                  {selectedFilterLabels.map((label) => (
-                    <Badge
-                      key={label}
-                      variant="outline"
-                      className="rounded-full border-zinc-200 bg-zinc-50 px-3 py-1 text-zinc-700"
-                    >
-                      {label}
-                    </Badge>
-                  ))}
-                </div>
-              ) : null}
-            </section>
+                ) : undefined
+              }
+            />
 
             <section className="sticky top-0 z-30 border-b border-zinc-200 bg-background/92 backdrop-blur">
-              <div className="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-2 py-2 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-w-0">
                   {isMobile ? (
                     <FilterSheet
@@ -252,7 +247,7 @@ export default function ShopPage() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between gap-3 lg:justify-end">
+                <div className="flex items-center justify-between gap-3 lg:justify-end px-2">
                   <div className="text-sm text-zinc-500">
                     {isLoading
                       ? "상품을 찾는 중"
@@ -263,7 +258,7 @@ export default function ShopPage() {
               </div>
             </section>
 
-            <section className="pt-8 lg:pt-10">
+            <section className="lg:pt-10">
               <ProductGrid products={products} isLoading={isLoading} />
             </section>
           </div>

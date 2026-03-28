@@ -33,10 +33,9 @@ export function useCustomOrderSubmit({
 
   const isQuoteMode = watchedValues.quantity >= 100;
   const isPending = createQuoteRequest.isPending;
+  const hasSelectedAddress = !!selectedAddressId && !!selectedAddress;
   const isSubmitDisabled =
-    (isLoggedIn && isQuoteMode && (!selectedAddressId || !selectedAddress)) ||
-    isPending ||
-    imageUpload.isUploading;
+    (isLoggedIn && !hasSelectedAddress) || isPending || imageUpload.isUploading;
 
   const handleSubmit = async () => {
     if (!user) {
@@ -44,7 +43,7 @@ export function useCustomOrderSubmit({
       navigate(ROUTES.LOGIN);
       return;
     }
-    if (isQuoteMode && (!selectedAddressId || !selectedAddress)) {
+    if (!hasSelectedAddress) {
       toast.error("배송지를 선택해주세요.");
       return;
     }
@@ -62,7 +61,6 @@ export function useCustomOrderSubmit({
       toast.error("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.");
       return;
     }
-
     const {
       additionalNotes,
       contactName,
@@ -74,7 +72,6 @@ export function useCustomOrderSubmit({
 
     // 견적요청 경로 (수량 >= 100)
     if (isQuoteMode) {
-      if (!selectedAddressId) return;
       try {
         await createQuoteRequest.mutateAsync({
           ...toCreateQuoteRequestInput({

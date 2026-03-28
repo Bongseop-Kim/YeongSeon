@@ -31,12 +31,13 @@ import {
   getSizeLabel,
   getTieTypeLabel,
 } from "@/features/custom-order/utils/option-labels";
-import type { CustomPaymentState } from "@/features/order/custom-payment/types";
+import { isCustomPaymentState } from "@/features/order/custom-payment/types";
 
 export default function CustomPaymentPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const state = location.state as CustomPaymentState | null;
+  const rawState = location.state;
+  const state = isCustomPaymentState(rawState) ? rawState : null;
 
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [cancellationConsent, setCancellationConsent] = useState(false);
@@ -120,9 +121,9 @@ export default function CustomPaymentPage() {
       pendingOrderIdRef.current = null;
       pendingSnapshotRef.current = null;
     } catch (error) {
+      if (hasStringCode(error) && error.code === "USER_CANCEL") return;
       pendingOrderIdRef.current = null;
       pendingSnapshotRef.current = null;
-      if (hasStringCode(error) && error.code === "USER_CANCEL") return;
       toast.error(
         error instanceof Error
           ? error.message
@@ -209,7 +210,7 @@ export default function CustomPaymentPage() {
                 amount={amount}
                 onClick={handleRequestPayment}
                 isLoading={isPaymentLoading}
-                isPriceReady={amount !== null}
+                isPriceReady={true}
                 disabled={isSubmitDisabled}
                 helperText={
                   !selectedAddress ? (

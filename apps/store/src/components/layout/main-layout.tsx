@@ -3,7 +3,7 @@ import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const mainLayoutVariants = cva("w-full bg-background flex flex-col");
+const mainLayoutVariants = cva("flex min-h-0 w-full flex-col bg-background");
 
 type MainLayoutProps = React.HTMLAttributes<HTMLDivElement>;
 
@@ -26,7 +26,7 @@ const MainContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <main
     ref={ref}
-    className={cn("flex-1 overflow-x-hidden overflow-y-auto", className)}
+    className={cn("min-h-0 flex-1 overflow-x-hidden", className)}
     {...props}
   />
 ));

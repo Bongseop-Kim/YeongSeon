@@ -19,6 +19,7 @@ interface UseWizardStepReturn {
   goPrev: () => void;
   goToStep: (index: number) => void;
   forceGoToStep: (index: number) => void;
+  skipToStep: (index: number) => void;
   resetTo: (stepIndex: number, visited: Set<number>) => void;
   visitedSteps: Set<number>;
   completedSteps: Set<number>;
@@ -126,6 +127,24 @@ export const useWizardStep = ({
     [steps.length, shouldShowStep],
   );
 
+  const skipToStep = useCallback(
+    (index: number) => {
+      if (index < 0 || index >= steps.length) return;
+      setCurrentStepIndex(index);
+      setVisitedSteps((prev) => {
+        const next = new Set(prev);
+        for (let i = 0; i <= index; i++) next.add(i);
+        return next;
+      });
+      setCompletedSteps((prev) => {
+        const next = new Set(prev);
+        for (let i = 0; i < index; i++) next.add(i);
+        return next;
+      });
+    },
+    [steps.length],
+  );
+
   const resetTo = useCallback(
     (stepIndex: number, visited: Set<number>) => {
       const clamped = Math.max(0, Math.min(stepIndex, steps.length - 1));
@@ -169,6 +188,7 @@ export const useWizardStep = ({
       goPrev,
       goToStep,
       forceGoToStep,
+      skipToStep,
       resetTo,
       visitedSteps,
       completedSteps,
@@ -185,6 +205,7 @@ export const useWizardStep = ({
       goPrev,
       goToStep,
       forceGoToStep,
+      skipToStep,
       resetTo,
       visitedSteps,
       completedSteps,

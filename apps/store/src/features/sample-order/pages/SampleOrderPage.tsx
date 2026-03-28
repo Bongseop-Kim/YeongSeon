@@ -182,7 +182,7 @@ export default function SampleOrderPage() {
   return (
     <>
       <MainLayout>
-        <MainContent className="overflow-visible bg-zinc-50">
+        <MainContent className="overflow-visible">
           <Form {...form}>
             <PageLayout
               contentClassName="space-y-8"

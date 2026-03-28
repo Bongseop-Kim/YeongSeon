@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@/features/auth/api/auth-query";
 import { ROUTES } from "@/constants/ROUTES";
+import { consumeCustomPaymentState } from "@/features/order/custom-payment/storage";
 
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
@@ -34,7 +35,11 @@ const AuthCallbackPage = () => {
       const redirectPath = sessionStorage.getItem("authRedirect");
       if (redirectPath) {
         sessionStorage.removeItem("authRedirect");
-        navigate(redirectPath, { replace: true });
+        const state =
+          redirectPath === ROUTES.CUSTOM_PAYMENT
+            ? consumeCustomPaymentState()
+            : undefined;
+        navigate(redirectPath, { replace: true, state });
       } else {
         navigate(ROUTES.HOME, { replace: true });
       }

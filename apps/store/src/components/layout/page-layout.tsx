@@ -11,6 +11,7 @@ interface PageLayoutProps {
   className?: string;
   actionBar?: React.ReactNode;
   detail?: React.ReactNode;
+  wrapperClassName?: string;
 }
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
@@ -21,6 +22,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   className,
   actionBar,
   detail,
+  wrapperClassName,
 }) => {
   const { isMobile } = useBreakpoint();
   const mobileActionBar =
@@ -39,6 +41,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
     <div
       className={cn(
         "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8",
+        wrapperClassName,
         !isMobile && "pb-4",
         isMobile && actionBar && "pb-24",
       )}
@@ -52,7 +55,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <div
           className={cn(
             "w-full",
-            !isMobile && sidebar ? "flex-1 w-2/3 pt-6" : "",
+            !isMobile && sidebar ? "flex-1 w-2/3 pt-6" : "pt-4",
             contentClassName,
           )}
         >

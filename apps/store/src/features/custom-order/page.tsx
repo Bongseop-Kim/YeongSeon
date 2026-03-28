@@ -97,6 +97,16 @@ export default function OrderPage() {
   });
 
   const handleNext = () => {
+    if (wizard.currentStep.id === "quantity" && selectedPackage !== null) {
+      const values = form.getValues();
+      const error = WIZARD_STEPS[0].validate(values);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      wizard.skipToStep(WIZARD_STEPS.length - 1);
+      return;
+    }
     const error = wizard.goNext();
     if (error) {
       toast.error(error);
