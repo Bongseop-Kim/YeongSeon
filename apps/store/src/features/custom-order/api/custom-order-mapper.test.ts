@@ -138,6 +138,31 @@ describe("toCreateCustomOrderInput / toCreateCustomOrderInputDto — 쿠폰", ()
     const dto = toCreateCustomOrderInputDto(request);
     expect(dto.user_coupon_id).toBeUndefined();
   });
+
+  it("공백뿐인 userCouponId는 request와 DTO에서 제외한다", () => {
+    const request = toCreateCustomOrderInput({
+      ...baseInput,
+      userCouponId: "   ",
+    });
+    expect(request.userCouponId).toBeUndefined();
+
+    const dto = toCreateCustomOrderInputDto({
+      ...request,
+      userCouponId: "   ",
+    });
+    expect(dto.user_coupon_id).toBeUndefined();
+  });
+
+  it("userCouponId 앞뒤 공백을 trim해서 전달한다", () => {
+    const request = toCreateCustomOrderInput({
+      ...baseInput,
+      userCouponId: "  coupon-uuid-1  ",
+    });
+    expect(request.userCouponId).toBe("coupon-uuid-1");
+
+    const dto = toCreateCustomOrderInputDto(request);
+    expect(dto.user_coupon_id).toBe("coupon-uuid-1");
+  });
 });
 
 describe("toCreateCustomOrderInput / toCreateCustomOrderInputDto", () => {

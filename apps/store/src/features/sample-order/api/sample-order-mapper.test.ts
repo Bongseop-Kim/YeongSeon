@@ -127,6 +127,31 @@ describe("toCreateSampleOrderInput / toCreateSampleOrderInputDto — 쿠폰", ()
     const dto = toCreateSampleOrderInputDto(result);
     expect(dto.user_coupon_id).toBeUndefined();
   });
+
+  it("공백뿐인 userCouponId는 input과 DTO에서 제외한다", () => {
+    const result = toCreateSampleOrderInput({
+      ...baseRequest,
+      userCouponId: "   ",
+    });
+    expect(result.userCouponId).toBeUndefined();
+
+    const dto = toCreateSampleOrderInputDto({
+      ...result,
+      userCouponId: "   ",
+    });
+    expect(dto.user_coupon_id).toBeUndefined();
+  });
+
+  it("userCouponId 앞뒤 공백을 trim해서 전달한다", () => {
+    const result = toCreateSampleOrderInput({
+      ...baseRequest,
+      userCouponId: "  coupon-uuid-1  ",
+    });
+    expect(result.userCouponId).toBe("coupon-uuid-1");
+
+    const dto = toCreateSampleOrderInputDto(result);
+    expect(dto.user_coupon_id).toBe("coupon-uuid-1");
+  });
 });
 
 describe("parseSampleOrderResponse", () => {

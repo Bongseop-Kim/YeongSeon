@@ -50,6 +50,7 @@ export * from "./utils/get-order-item-details";
 export * from "./utils/format-date";
 export * from "./utils/korean-postposition";
 export * from "./utils/order-actions";
+export * from "./utils/normalize-coupon-id";
 
 // Mappers
 export * from "./mappers/shared-mapper";

@@ -151,17 +151,17 @@ const forbidden = [
       pathNot: "^src/features/(shop|cart)/",
     },
   },
-  // 11. sample-order → shipping/custom-order 허용 (샘플 주문 흐름)
+  // 11. sample-order → shipping/custom-order/coupon 허용 (샘플 주문 흐름)
   {
     name: "no-cross-feature-sample-order",
     severity: "error",
     comment:
-      "sample-order는 배송지(shipping)·이미지 업로드 및 가격 설정(custom-order)만 참조 허용",
+      "sample-order는 배송지(shipping)·이미지 업로드 및 가격 설정(custom-order)·쿠폰(coupon)만 참조 허용",
     from: { path: "^src/features/sample-order/" },
     to: {
       path: "^src/features/([^/]+)/",
       pathNot:
-        "^src/features/(sample-order|shipping|custom-order|notification)/",
+        "^src/features/(sample-order|shipping|custom-order|notification|coupon)/",
     },
   },
   // 12. reform → cart 허용 (리폼 주문 시 장바구니 연동)

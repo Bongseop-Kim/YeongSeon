@@ -1,6 +1,10 @@
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import type { ImageRef } from "@yeongseon/shared";
-import { normalizeReferenceImages, toDbImageRef } from "@yeongseon/shared";
+import {
+  normalizeCouponId,
+  normalizeReferenceImages,
+  toDbImageRef,
+} from "@yeongseon/shared";
 import { isRecord } from "@/lib/type-guard";
 
 import type {
@@ -70,45 +74,51 @@ interface ToCreateCustomOrderRequestInput {
 
 export const toCreateCustomOrderInput = (
   input: ToCreateCustomOrderRequestInput,
-): CreateCustomOrderRequest => ({
-  shippingAddressId: input.shippingAddressId,
-  options: toCreateCustomOrderOptionsInput(input.options),
-  quantity: input.options.quantity,
-  referenceImages: normalizeReferenceImages(input.referenceImages),
-  additionalNotes: input.additionalNotes.trim(),
-  ...(input.userCouponId !== undefined && { userCouponId: input.userCouponId }),
-});
+): CreateCustomOrderRequest => {
+  const normalizedCouponId = normalizeCouponId(input.userCouponId);
+
+  return {
+    shippingAddressId: input.shippingAddressId,
+    options: toCreateCustomOrderOptionsInput(input.options),
+    quantity: input.options.quantity,
+    referenceImages: normalizeReferenceImages(input.referenceImages),
+    additionalNotes: input.additionalNotes.trim(),
+    ...(normalizedCouponId ? { userCouponId: normalizedCouponId } : {}),
+  };
+};
 
 export const toCreateCustomOrderInputDto = (
   request: CreateCustomOrderRequest,
-): CreateCustomOrderRequestDto => ({
-  shipping_address_id: request.shippingAddressId,
-  options: {
-    fabric_provided: request.options.fabricProvided,
-    reorder: request.options.reorder,
-    fabric_type: request.options.fabricType,
-    design_type: request.options.designType,
-    tie_type: request.options.tieType,
-    interlining: request.options.interlining,
-    interlining_thickness: request.options.interliningThickness,
-    size_type: request.options.sizeType,
-    tie_width: request.options.tieWidth,
-    triangle_stitch: request.options.triangleStitch,
-    side_stitch: request.options.sideStitch,
-    bar_tack: request.options.barTack,
-    fold7: request.options.fold7,
-    dimple: request.options.dimple,
-    spoderato: request.options.spoderato,
-    brand_label: request.options.brandLabel,
-    care_label: request.options.careLabel,
-  } satisfies CreateCustomOrderOptionsDtoSnakeCase,
-  quantity: request.quantity,
-  reference_images: request.referenceImages.map(toDbImageRef),
-  additional_notes: request.additionalNotes,
-  ...(request.userCouponId !== undefined && {
-    user_coupon_id: request.userCouponId,
-  }),
-});
+): CreateCustomOrderRequestDto => {
+  const normalizedCouponId = normalizeCouponId(request.userCouponId);
+
+  return {
+    shipping_address_id: request.shippingAddressId,
+    options: {
+      fabric_provided: request.options.fabricProvided,
+      reorder: request.options.reorder,
+      fabric_type: request.options.fabricType,
+      design_type: request.options.designType,
+      tie_type: request.options.tieType,
+      interlining: request.options.interlining,
+      interlining_thickness: request.options.interliningThickness,
+      size_type: request.options.sizeType,
+      tie_width: request.options.tieWidth,
+      triangle_stitch: request.options.triangleStitch,
+      side_stitch: request.options.sideStitch,
+      bar_tack: request.options.barTack,
+      fold7: request.options.fold7,
+      dimple: request.options.dimple,
+      spoderato: request.options.spoderato,
+      brand_label: request.options.brandLabel,
+      care_label: request.options.careLabel,
+    } satisfies CreateCustomOrderOptionsDtoSnakeCase,
+    quantity: request.quantity,
+    reference_images: request.referenceImages.map(toDbImageRef),
+    additional_notes: request.additionalNotes,
+    ...(normalizedCouponId ? { user_coupon_id: normalizedCouponId } : {}),
+  };
+};
 
 export const parseCreateCustomOrderResponse = (
   data: unknown,
