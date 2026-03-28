@@ -3,7 +3,10 @@ import { useSession } from "@/features/auth/api/auth-query";
 import { useAuthStore } from "@/store/auth";
 import { ROUTES } from "@/constants/ROUTES";
 import { isCustomPaymentState } from "@/lib/custom-payment-state";
-import { saveCustomPaymentState } from "@/features/order/custom-payment/storage";
+import {
+  removeCustomPaymentState,
+  saveCustomPaymentState,
+} from "@/features/order/custom-payment/storage";
 import { AUTH_REDIRECT_STORAGE_KEY } from "@/lib/auth-redirect";
 
 interface ProtectedRouteProps {
@@ -42,6 +45,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       isCustomPaymentState(location.state)
     ) {
       saveCustomPaymentState(location.state);
+    } else {
+      removeCustomPaymentState();
     }
     // OAuth 콜백 후에도 경로를 복원할 수 있도록 sessionStorage에 저장
     sessionStorage.setItem(AUTH_REDIRECT_STORAGE_KEY, redirectPath);

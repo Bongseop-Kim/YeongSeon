@@ -62,6 +62,12 @@ const isNullableOneOf = <T extends string>(
   allowed: readonly T[],
 ): value is T | null => value === null || isOneOf(value, allowed);
 
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+const isPositiveInteger = (value: unknown): value is number =>
+  isFiniteNumber(value) && Number.isInteger(value) && value > 0;
+
 const isCustomOrderOptions = (
   value: unknown,
 ): value is CustomOrderPaymentInput["coreOptions"] =>
@@ -77,7 +83,7 @@ const isCustomOrderOptions = (
     CUSTOM_ORDER_INTERLINING_THICKNESSES,
   ) &&
   isNullableOneOf(value.sizeType, CUSTOM_ORDER_SIZE_TYPES) &&
-  typeof value.tieWidth === "number" &&
+  isFiniteNumber(value.tieWidth) &&
   typeof value.triangleStitch === "boolean" &&
   typeof value.sideStitch === "boolean" &&
   typeof value.barTack === "boolean" &&
@@ -86,7 +92,7 @@ const isCustomOrderOptions = (
   typeof value.spoderato === "boolean" &&
   typeof value.brandLabel === "boolean" &&
   typeof value.careLabel === "boolean" &&
-  typeof value.quantity === "number";
+  isPositiveInteger(value.quantity);
 
 const isSampleOrderOptions = (value: unknown): value is SampleOrderOptions =>
   isRecord(value) &&
@@ -123,7 +129,7 @@ export const isCustomOrderPaymentState = (
 
   return (
     state.orderType === "custom" &&
-    typeof state.totalCost === "number" &&
+    isFiniteNumber(state.totalCost) &&
     isCustomOrderOptions(state.coreOptions)
   );
 };
@@ -138,7 +144,7 @@ export const isSampleOrderPaymentState = (
     (state.sampleType === "fabric" ||
       state.sampleType === "sewing" ||
       state.sampleType === "fabric_and_sewing") &&
-    typeof state.samplePrice === "number" &&
+    isFiniteNumber(state.samplePrice) &&
     typeof state.sampleLabel === "string" &&
     typeof state.fabricLabel === "string" &&
     isSampleOrderOptions(state.options)

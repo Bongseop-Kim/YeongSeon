@@ -67,6 +67,7 @@ export default function SamplePaymentPage() {
     }
 
     setIsPaymentLoading(true);
+    let orderCreated = false;
     try {
       const snapshot = JSON.stringify({
         ...state,
@@ -91,6 +92,7 @@ export default function SamplePaymentPage() {
           additionalNotes: state.additionalNotes,
         });
         orderId = response.orderId;
+        orderCreated = true;
         setServerAmount(response.totalAmount);
         await paymentWidgetRef.current.setAmount(response.totalAmount);
         pendingOrderIdRef.current = orderId;
@@ -110,9 +112,14 @@ export default function SamplePaymentPage() {
       pendingOrderIdRef.current = null;
       pendingSnapshotRef.current = null;
     } catch (error) {
-      if (hasStringCode(error) && error.code === "USER_CANCEL") return;
-      pendingOrderIdRef.current = null;
-      pendingSnapshotRef.current = null;
+      if (hasStringCode(error) && error.code === "USER_CANCEL") {
+        return;
+      }
+
+      if (!pendingOrderIdRef.current && !orderCreated) {
+        pendingSnapshotRef.current = null;
+      }
+
       toast.error(
         error instanceof Error
           ? error.message

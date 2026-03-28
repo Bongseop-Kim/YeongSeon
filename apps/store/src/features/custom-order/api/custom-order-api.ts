@@ -1,5 +1,8 @@
 import { supabase } from "@/lib/supabase";
-import { toCreateCustomOrderInputDto } from "@/features/custom-order/api/custom-order-mapper";
+import {
+  parseCreateCustomOrderResponse,
+  toCreateCustomOrderInputDto,
+} from "@/features/custom-order/api/custom-order-mapper";
 import type { CreateCustomOrderRequest } from "@/features/custom-order/types/dto/custom-order-input";
 
 interface CreateCustomOrderResponse {
@@ -38,9 +41,5 @@ export const createCustomOrder = async (
     throw new Error(`주문제작 생성 실패: ${data.error}`);
   }
 
-  return {
-    orderId: data.order_id,
-    orderNumber: data.order_number,
-    totalAmount: data.total_amount,
-  };
+  return parseCreateCustomOrderResponse(data);
 };

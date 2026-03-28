@@ -8,3 +8,7 @@ export const saveCustomPaymentState = (state: CustomPaymentState) => {
     JSON.stringify(state),
   );
 };
+
+export const removeCustomPaymentState = () => {
+  sessionStorage.removeItem(CUSTOM_PAYMENT_STATE_STORAGE_KEY);
+};
