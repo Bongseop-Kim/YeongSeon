@@ -105,6 +105,7 @@ export function useCustomOrderSubmit({
       imageRefs: imageUpload.getImageRefs(),
       additionalNotes,
       totalCost,
+      shippingAddressId: selectedAddressId,
     };
     navigate(ROUTES.CUSTOM_PAYMENT, { state });
   };

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@/features/auth/api/auth-query";
 import { ROUTES } from "@/constants/ROUTES";
-import { consumeCustomPaymentState } from "@/features/order/custom-payment/storage";
+import { consumeAuthRedirect } from "@/lib/auth-redirect";
 
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
@@ -31,15 +31,12 @@ const AuthCallbackPage = () => {
 
     // 세션이 있으면 원래 가려던 페이지 또는 홈으로 리다이렉트
     if (session) {
-      // ProtectedRoute에서 저장한 원래 경로 확인
-      const redirectPath = sessionStorage.getItem("authRedirect");
-      if (redirectPath) {
-        sessionStorage.removeItem("authRedirect");
-        const state =
-          redirectPath === ROUTES.CUSTOM_PAYMENT
-            ? consumeCustomPaymentState()
-            : undefined;
-        navigate(redirectPath, { replace: true, state });
+      const redirect = consumeAuthRedirect();
+      if (redirect) {
+        navigate(redirect.redirectPath, {
+          replace: true,
+          state: redirect.state,
+        });
       } else {
         navigate(ROUTES.HOME, { replace: true });
       }

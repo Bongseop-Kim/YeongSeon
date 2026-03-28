@@ -47,12 +47,14 @@ export const ProgressBar = ({
     () =>
       steps.reduce(
         ([count, display], _, index) => {
-          if (!shouldShowStep(index)) return [count, display];
+          if (!shouldShowStep(index) || isHiddenStep(index)) {
+            return [count, display];
+          }
           return [count + 1, index <= currentStepIndex ? display + 1 : display];
         },
         [0, 0],
       ),
-    [steps, currentStepIndex, shouldShowStep],
+    [steps, currentStepIndex, shouldShowStep, isHiddenStep],
   );
 
   return (

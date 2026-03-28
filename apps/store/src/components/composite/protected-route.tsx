@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/auth";
 import { ROUTES } from "@/constants/ROUTES";
 import { isCustomPaymentState } from "@/features/order/custom-payment/types";
 import { saveCustomPaymentState } from "@/features/order/custom-payment/storage";
+import { AUTH_REDIRECT_STORAGE_KEY } from "@/lib/auth-redirect";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -42,7 +43,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       saveCustomPaymentState(location.state);
     }
     // OAuth 콜백 후에도 경로를 복원할 수 있도록 sessionStorage에 저장
-    sessionStorage.setItem("authRedirect", redirectPath);
+    sessionStorage.setItem(AUTH_REDIRECT_STORAGE_KEY, redirectPath);
     return (
       <Navigate to={ROUTES.LOGIN} state={{ from: redirectPath }} replace />
     );

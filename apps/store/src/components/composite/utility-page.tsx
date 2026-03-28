@@ -26,7 +26,7 @@ export function UtilityPageIntro({
   return (
     <section
       className={cn(
-        "hidden border-b border-stone-200 pb-6 pt-2 lg:block lg:pb-8 lg:pt-4",
+        "border-b border-stone-200 pb-6 pt-2 lg:pb-8 lg:pt-4",
         className,
       )}
     >

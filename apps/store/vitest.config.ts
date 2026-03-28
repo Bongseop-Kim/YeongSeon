@@ -59,6 +59,9 @@ export default mergeConfig(
           "src/lib/toast.ts",
           "src/lib/utils.ts",
           "src/features/design/api/imagekit-upload.ts",
+          // 얇은 래퍼 / re-export 전용
+          "src/features/order/custom-payment/storage.ts",
+          "src/features/order/custom-payment/types.ts",
           // API 레이어 (Supabase 직접 호출)
           "src/**/*-api.ts",
           "src/**/*-query.ts",

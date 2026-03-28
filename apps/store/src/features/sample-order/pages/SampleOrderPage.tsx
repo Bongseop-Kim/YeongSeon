@@ -20,7 +20,7 @@ import {
 import { Field, FieldTitle, FieldDescription } from "@/components/ui/field";
 import { OrderSummaryAside } from "@/components/composite/order-summary-aside";
 import { PaymentActionBar } from "@/components/composite/payment-action-bar";
-import type { CustomPaymentState } from "@/features/order/custom-payment/types";
+import type { CustomPaymentState } from "@/lib/custom-payment-state";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";

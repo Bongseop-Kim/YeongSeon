@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MainLayout, MainContent } from "@/components/layout/main-layout";
 import { PageLayout } from "@/components/layout/page-layout";
@@ -47,9 +47,16 @@ export default function CustomPaymentPage() {
 
   const { user } = useAuthStore();
   const { selectedAddressId, selectedAddress, openShippingPopup } =
-    useShippingAddressPopup();
+    useShippingAddressPopup({
+      initialSelectedAddressId: state?.shippingAddressId ?? null,
+    });
   const createCustomOrder = useCreateCustomOrder();
   const createSampleOrder = useCreateSampleOrder();
+
+  useEffect(() => {
+    if (state) return;
+    navigate(ROUTES.CUSTOM_ORDER, { replace: true });
+  }, [navigate, state]);
 
   const proceedToPayment = async () => {
     if (!state) return;
@@ -137,10 +144,7 @@ export default function CustomPaymentPage() {
   const { initiateWithConsentCheck: handleRequestPayment, consentFlow } =
     useNotificationConsentFlow(proceedToPayment);
 
-  if (!state) {
-    navigate(ROUTES.CUSTOM_ORDER, { replace: true });
-    return null;
-  }
+  if (!state) return null;
 
   const amount =
     state.orderType === "custom" ? state.totalCost : state.samplePrice;

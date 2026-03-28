@@ -131,13 +131,13 @@ export const useWizardStep = ({
     (index: number) => {
       if (index < 0 || index >= steps.length) return;
       setCurrentStepIndex(index);
-      setVisitedSteps((prev) => {
-        const next = new Set(prev);
+      setVisitedSteps(() => {
+        const next = new Set<number>();
         for (let i = 0; i <= index; i++) next.add(i);
         return next;
       });
-      setCompletedSteps((prev) => {
-        const next = new Set(prev);
+      setCompletedSteps(() => {
+        const next = new Set<number>();
         for (let i = 0; i < index; i++) next.add(i);
         return next;
       });

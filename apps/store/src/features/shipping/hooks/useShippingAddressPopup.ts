@@ -50,11 +50,17 @@ interface UseShippingAddressPopupReturn {
   openShippingPopup: () => void;
 }
 
-export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
+interface UseShippingAddressPopupOptions {
+  initialSelectedAddressId?: string | null;
+}
+
+export const useShippingAddressPopup = ({
+  initialSelectedAddressId = null,
+}: UseShippingAddressPopupOptions = {}): UseShippingAddressPopupReturn => {
   const { openPopup } = usePopup();
   const queryClient = useQueryClient();
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null,
+    initialSelectedAddressId,
   );
   const initializedDefaultAddressRef = useRef(false);
   const userInteractedRef = useRef(false);
@@ -64,6 +70,11 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
 
   // 기본 배송지가 있으면 자동 선택 (사용자가 직접 선택한 경우 덮어쓰지 않음)
   useEffect(() => {
+    if (initialSelectedAddressId) {
+      initializedDefaultAddressRef.current = true;
+      return;
+    }
+
     if (
       defaultAddress &&
       !initializedDefaultAddressRef.current &&
@@ -72,7 +83,7 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
       setSelectedAddressId(defaultAddress.id);
       initializedDefaultAddressRef.current = true;
     }
-  }, [defaultAddress]);
+  }, [defaultAddress, initialSelectedAddressId]);
 
   // 팝업에서 배송지 선택/생성/업데이트 시 처리
   useEffect(() => {
@@ -108,10 +119,9 @@ export const useShippingAddressPopup = (): UseShippingAddressPopupReturn => {
     return () => window.removeEventListener("message", handleMessage);
   }, [queryClient]);
 
-  const selectedAddress =
-    (addresses?.find((addr) => addr.id === selectedAddressId) ||
-      defaultAddress) ??
-    undefined;
+  const selectedAddress = selectedAddressId
+    ? addresses?.find((addr) => addr.id === selectedAddressId)
+    : (defaultAddress ?? undefined);
 
   const openShippingPopup = () => {
     const win = openPopup(`${ROUTES.SHIPPING}?mode=select`);

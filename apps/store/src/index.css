@@ -139,7 +139,12 @@
   --space-showcase-panel-y: var(--spacing-showcase-panel-y);
   --radius-showcase-panel: var(--radius-showcase-panel);
   --radius-showcase-card: var(--radius-showcase-card);
+  --radius-showcase-media: var(--radius-showcase-media);
   --radius-pill: var(--radius-pill);
+  --color-brand-overlay-soft: var(--brand-overlay-soft);
+  --color-brand-overlay-subtle: var(--brand-overlay-subtle);
+  --color-brand-overlay-muted: var(--brand-overlay-muted);
+  --color-brand-overlay-panel: var(--brand-overlay-panel);
 }
 
 :root {
@@ -207,6 +212,7 @@
   --spacing-showcase-panel-y: 1.25rem;
   --radius-showcase-panel: 1rem;
   --radius-showcase-card: 0.625rem;
+  --radius-showcase-media: 1.125rem;
   --radius-pill: 1rem;
   --gradient-brand-hero-stage: linear-gradient(
     150deg,
@@ -226,6 +232,38 @@
       transparent 24%
     ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 30%);
+  --gradient-brand-hero-bottom: linear-gradient(
+    180deg,
+    rgba(18, 19, 30, 0) 0%,
+    rgba(17, 20, 31, 0.52) 42%,
+    rgba(16, 20, 30, 0.94) 100%
+  );
+  --gradient-brand-manufacturing-stage:
+    radial-gradient(
+      circle at 14% 0%,
+      rgba(232, 197, 71, 0.08),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 82% 16%,
+      rgba(79, 195, 247, 0.1),
+      transparent 24%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.02),
+      transparent 22%,
+      rgba(7, 10, 16, 0.28) 100%
+    );
+  --gradient-brand-manufacturing-card-overlay: linear-gradient(
+    180deg,
+    rgba(16, 18, 30, 0.04),
+    rgba(16, 18, 30, 0.5)
+  );
+  --brand-overlay-soft: rgba(255, 255, 255, 0.07);
+  --brand-overlay-subtle: rgba(255, 255, 255, 0.08);
+  --brand-overlay-muted: rgba(255, 255, 255, 0.06);
+  --brand-overlay-panel: rgba(255, 255, 255, 0.03);
   --gradient-brand-showcase-stage: linear-gradient(
     140deg,
     #1a1f36 0%,
