@@ -47,6 +47,7 @@ export interface CreateCustomOrderRequest {
   quantity: number;
   referenceImages: ImageRef[];
   additionalNotes: string;
+  userCouponId?: string;
 }
 
 export interface CreateCustomOrderRequestDto {
@@ -55,4 +56,5 @@ export interface CreateCustomOrderRequestDto {
   quantity: number;
   reference_images: DbImageRef[];
   additional_notes: string;
+  user_coupon_id?: string;
 }

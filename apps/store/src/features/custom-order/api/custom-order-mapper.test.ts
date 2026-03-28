@@ -93,6 +93,53 @@ describe("toCreateCustomOrderOptionsInput", () => {
   });
 });
 
+describe("toCreateCustomOrderInput / toCreateCustomOrderInputDto — 쿠폰", () => {
+  const baseInput = {
+    shippingAddressId: "addr-1",
+    options: {
+      fabricProvided: false,
+      reorder: false,
+      fabricType: "SILK" as const,
+      designType: "PRINTING" as const,
+      tieType: "AUTO" as const,
+      interlining: "WOOL" as const,
+      interliningThickness: "THICK" as const,
+      sizeType: "ADULT" as const,
+      tieWidth: 8,
+      triangleStitch: false,
+      sideStitch: false,
+      barTack: false,
+      fold7: false,
+      dimple: false,
+      spoderato: false,
+      brandLabel: false,
+      careLabel: false,
+      quantity: 5,
+    },
+    referenceImages: [],
+    additionalNotes: "",
+  };
+
+  it("userCouponId가 주어지면 request와 DTO에 포함된다", () => {
+    const request = toCreateCustomOrderInput({
+      ...baseInput,
+      userCouponId: "coupon-uuid-1",
+    });
+    expect(request.userCouponId).toBe("coupon-uuid-1");
+
+    const dto = toCreateCustomOrderInputDto(request);
+    expect(dto.user_coupon_id).toBe("coupon-uuid-1");
+  });
+
+  it("userCouponId가 없으면 request와 DTO에 포함되지 않는다", () => {
+    const request = toCreateCustomOrderInput(baseInput);
+    expect(request.userCouponId).toBeUndefined();
+
+    const dto = toCreateCustomOrderInputDto(request);
+    expect(dto.user_coupon_id).toBeUndefined();
+  });
+});
+
 describe("toCreateCustomOrderInput / toCreateCustomOrderInputDto", () => {
   it("custom order 입력을 request와 DTO로 변환한다", () => {
     const request = toCreateCustomOrderInput({

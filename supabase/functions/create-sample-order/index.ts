@@ -10,6 +10,7 @@ type CreateSampleOrderInput = {
   options: Record<string, unknown>;
   reference_images?: Array<{ url: string; file_id?: string | null }>;
   additional_notes?: string;
+  user_coupon_id?: string;
 };
 
 Deno.serve(async (req) => {
@@ -102,6 +103,7 @@ Deno.serve(async (req) => {
       p_options: payload.options,
       p_reference_images: referenceImages,
       p_additional_notes: payload.additional_notes ?? "",
+      p_user_coupon_id: payload.user_coupon_id ?? null,
     },
   );
 

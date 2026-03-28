@@ -65,6 +65,7 @@ interface ToCreateCustomOrderRequestInput {
   options: OrderOptionsForCreateCustomOrderOptions;
   referenceImages: ImageRef[];
   additionalNotes: string;
+  userCouponId?: string;
 }
 
 export const toCreateCustomOrderInput = (
@@ -75,6 +76,7 @@ export const toCreateCustomOrderInput = (
   quantity: input.options.quantity,
   referenceImages: normalizeReferenceImages(input.referenceImages),
   additionalNotes: input.additionalNotes.trim(),
+  ...(input.userCouponId !== undefined && { userCouponId: input.userCouponId }),
 });
 
 export const toCreateCustomOrderInputDto = (
@@ -103,6 +105,9 @@ export const toCreateCustomOrderInputDto = (
   quantity: request.quantity,
   reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
+  ...(request.userCouponId !== undefined && {
+    user_coupon_id: request.userCouponId,
+  }),
 });
 
 export const parseCreateCustomOrderResponse = (

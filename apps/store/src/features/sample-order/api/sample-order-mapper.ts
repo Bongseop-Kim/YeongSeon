@@ -11,6 +11,7 @@ export interface CreateSampleOrderFormInput {
   options: SampleOrderOptionsDto;
   referenceImages: CreateSampleOrderRequest["referenceImages"];
   additionalNotes: string;
+  userCouponId?: string;
 }
 
 export const toCreateSampleOrderInput = (
@@ -21,6 +22,7 @@ export const toCreateSampleOrderInput = (
   options: input.options,
   referenceImages: normalizeReferenceImages(input.referenceImages),
   additionalNotes: input.additionalNotes.trim(),
+  ...(input.userCouponId !== undefined && { userCouponId: input.userCouponId }),
 });
 
 export const toCreateSampleOrderInputDto = (
@@ -36,6 +38,9 @@ export const toCreateSampleOrderInputDto = (
   },
   reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
+  ...(request.userCouponId !== undefined && {
+    user_coupon_id: request.userCouponId,
+  }),
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

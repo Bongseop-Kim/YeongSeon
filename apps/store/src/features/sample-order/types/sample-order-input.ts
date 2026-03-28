@@ -16,6 +16,7 @@ export interface CreateSampleOrderRequest {
   options: SampleOrderOptionsDto;
   referenceImages: ImageRef[];
   additionalNotes: string;
+  userCouponId?: string;
 }
 
 export interface CreateSampleOrderRequestDto {
@@ -24,4 +25,5 @@ export interface CreateSampleOrderRequestDto {
   options: SampleOrderOptionsDtoSnakeCase;
   reference_images: DbImageRef[];
   additional_notes: string;
+  user_coupon_id?: string;
 }

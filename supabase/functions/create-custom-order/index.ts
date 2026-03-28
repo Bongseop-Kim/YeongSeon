@@ -10,6 +10,7 @@ type CreateCustomOrderInput = {
   quantity: number;
   reference_images?: Array<{ url: string; fileId: string }>;
   additional_notes?: string;
+  user_coupon_id?: string;
 };
 
 Deno.serve(async (req) => {
@@ -92,6 +93,7 @@ Deno.serve(async (req) => {
       p_quantity: payload.quantity,
       p_reference_images: payload.reference_images ?? [],
       p_additional_notes: payload.additional_notes ?? "",
+      p_user_coupon_id: payload.user_coupon_id ?? null,
     },
   );
 

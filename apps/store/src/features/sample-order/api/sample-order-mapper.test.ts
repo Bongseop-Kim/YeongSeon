@@ -108,6 +108,27 @@ describe("toCreateSampleOrderInputDto", () => {
   });
 });
 
+describe("toCreateSampleOrderInput / toCreateSampleOrderInputDto — 쿠폰", () => {
+  it("userCouponId가 주어지면 input과 DTO에 포함된다", () => {
+    const result = toCreateSampleOrderInput({
+      ...baseRequest,
+      userCouponId: "coupon-uuid-1",
+    });
+    expect(result.userCouponId).toBe("coupon-uuid-1");
+
+    const dto = toCreateSampleOrderInputDto(result);
+    expect(dto.user_coupon_id).toBe("coupon-uuid-1");
+  });
+
+  it("userCouponId가 없으면 input과 DTO에 포함되지 않는다", () => {
+    const result = toCreateSampleOrderInput(baseRequest);
+    expect(result.userCouponId).toBeUndefined();
+
+    const dto = toCreateSampleOrderInputDto(result);
+    expect(dto.user_coupon_id).toBeUndefined();
+  });
+});
+
 describe("parseSampleOrderResponse", () => {
   it("유효한 응답에서 orderId와 orderNumber, totalAmount를 반환한다", () => {
     const result = parseSampleOrderResponse({
