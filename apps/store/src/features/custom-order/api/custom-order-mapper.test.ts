@@ -139,17 +139,14 @@ describe("toCreateCustomOrderInput / toCreateCustomOrderInputDto — 쿠폰", ()
     expect(dto.user_coupon_id).toBeUndefined();
   });
 
-  it("공백뿐인 userCouponId는 request와 DTO에서 제외한다", () => {
+  it("공백뿐인 userCouponId는 request에서 제외한다", () => {
     const request = toCreateCustomOrderInput({
       ...baseInput,
       userCouponId: "   ",
     });
     expect(request.userCouponId).toBeUndefined();
 
-    const dto = toCreateCustomOrderInputDto({
-      ...request,
-      userCouponId: "   ",
-    });
+    const dto = toCreateCustomOrderInputDto(request);
     expect(dto.user_coupon_id).toBeUndefined();
   });
 

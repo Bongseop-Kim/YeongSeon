@@ -64,7 +64,7 @@ export const toCreateCustomOrderOptionsInput = (
   careLabel: normalizeBoolean(options.careLabel),
 });
 
-interface ToCreateCustomOrderRequestInput {
+export interface CreateCustomOrderFormInput {
   shippingAddressId: string;
   options: OrderOptionsForCreateCustomOrderOptions;
   referenceImages: ImageRef[];
@@ -73,7 +73,7 @@ interface ToCreateCustomOrderRequestInput {
 }
 
 export const toCreateCustomOrderInput = (
-  input: ToCreateCustomOrderRequestInput,
+  input: CreateCustomOrderFormInput,
 ): CreateCustomOrderRequest => {
   const normalizedCouponId = normalizeCouponId(input.userCouponId);
 
@@ -89,36 +89,32 @@ export const toCreateCustomOrderInput = (
 
 export const toCreateCustomOrderInputDto = (
   request: CreateCustomOrderRequest,
-): CreateCustomOrderRequestDto => {
-  const normalizedCouponId = normalizeCouponId(request.userCouponId);
-
-  return {
-    shipping_address_id: request.shippingAddressId,
-    options: {
-      fabric_provided: request.options.fabricProvided,
-      reorder: request.options.reorder,
-      fabric_type: request.options.fabricType,
-      design_type: request.options.designType,
-      tie_type: request.options.tieType,
-      interlining: request.options.interlining,
-      interlining_thickness: request.options.interliningThickness,
-      size_type: request.options.sizeType,
-      tie_width: request.options.tieWidth,
-      triangle_stitch: request.options.triangleStitch,
-      side_stitch: request.options.sideStitch,
-      bar_tack: request.options.barTack,
-      fold7: request.options.fold7,
-      dimple: request.options.dimple,
-      spoderato: request.options.spoderato,
-      brand_label: request.options.brandLabel,
-      care_label: request.options.careLabel,
-    } satisfies CreateCustomOrderOptionsDtoSnakeCase,
-    quantity: request.quantity,
-    reference_images: request.referenceImages.map(toDbImageRef),
-    additional_notes: request.additionalNotes,
-    ...(normalizedCouponId ? { user_coupon_id: normalizedCouponId } : {}),
-  };
-};
+): CreateCustomOrderRequestDto => ({
+  shipping_address_id: request.shippingAddressId,
+  options: {
+    fabric_provided: request.options.fabricProvided,
+    reorder: request.options.reorder,
+    fabric_type: request.options.fabricType,
+    design_type: request.options.designType,
+    tie_type: request.options.tieType,
+    interlining: request.options.interlining,
+    interlining_thickness: request.options.interliningThickness,
+    size_type: request.options.sizeType,
+    tie_width: request.options.tieWidth,
+    triangle_stitch: request.options.triangleStitch,
+    side_stitch: request.options.sideStitch,
+    bar_tack: request.options.barTack,
+    fold7: request.options.fold7,
+    dimple: request.options.dimple,
+    spoderato: request.options.spoderato,
+    brand_label: request.options.brandLabel,
+    care_label: request.options.careLabel,
+  } satisfies CreateCustomOrderOptionsDtoSnakeCase,
+  quantity: request.quantity,
+  reference_images: request.referenceImages.map(toDbImageRef),
+  additional_notes: request.additionalNotes,
+  ...(request.userCouponId ? { user_coupon_id: request.userCouponId } : {}),
+});
 
 export const parseCreateCustomOrderResponse = (
   data: unknown,

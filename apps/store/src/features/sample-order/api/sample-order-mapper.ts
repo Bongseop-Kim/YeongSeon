@@ -3,6 +3,7 @@ import {
   normalizeReferenceImages,
   toDbImageRef,
 } from "@yeongseon/shared";
+import { isRecord } from "@/lib/type-guard";
 import type {
   CreateSampleOrderRequest,
   CreateSampleOrderRequestDto,
@@ -52,9 +53,6 @@ export const toCreateSampleOrderInputDto = (
     ...(normalizedCouponId ? { user_coupon_id: normalizedCouponId } : {}),
   };
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
 
 export const parseSampleOrderResponse = (
   data: unknown,

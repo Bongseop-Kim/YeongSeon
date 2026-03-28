@@ -59,10 +59,17 @@ export default function SamplePaymentPage() {
     navigate(ROUTES.SAMPLE_ORDER, { replace: true });
   }, [navigate, state]);
 
+  const resetPendingOrderState = () => {
+    setServerAmount(null);
+    pendingOrderIdRef.current = null;
+    pendingSnapshotRef.current = null;
+  };
+
   const handleChangeCoupon = async () => {
     const selected = await openCouponSelect(appliedCoupon?.id);
     if (selected === null) return;
     setAppliedCoupon(selected ?? undefined);
+    resetPendingOrderState();
     if (selected) {
       toast.success(`${selected.coupon.name}이(가) 적용되었습니다.`);
     } else {

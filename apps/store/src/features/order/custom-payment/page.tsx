@@ -15,7 +15,6 @@ import { type PaymentWidgetRef } from "@/components/composite/payment-widget";
 import { useShippingAddressPopup } from "@/features/shipping/hooks/useShippingAddressPopup";
 import { useAuthStore } from "@/store/auth";
 import { useCreateCustomOrder } from "@/features/custom-order/api/custom-order-query";
-import { toCreateCustomOrderInput } from "@/features/custom-order/api/custom-order-mapper";
 import { useNotificationConsentFlow } from "@/features/notification/hooks/use-notification-consent-flow";
 import { NotificationConsentFlowModals } from "@/features/notification/components/notification-consent-flow-modals";
 import { ROUTES } from "@/constants/ROUTES";
@@ -66,10 +65,17 @@ export default function CustomPaymentPage() {
     navigate(ROUTES.CUSTOM_ORDER, { replace: true });
   }, [navigate, state]);
 
+  const resetPendingOrderState = () => {
+    setServerAmount(null);
+    pendingOrderIdRef.current = null;
+    pendingSnapshotRef.current = null;
+  };
+
   const handleChangeCoupon = async () => {
     const selected = await openCouponSelect(appliedCoupon?.id);
     if (selected === null) return;
     setAppliedCoupon(selected ?? undefined);
+    resetPendingOrderState();
     if (selected) {
       toast.success(`${selected.coupon.name}이(가) 적용되었습니다.`);
     } else {
@@ -112,14 +118,13 @@ export default function CustomPaymentPage() {
 
       let orderId = pendingOrderIdRef.current;
       if (!orderId) {
-        const request = toCreateCustomOrderInput({
+        const response = await createCustomOrder.mutateAsync({
           shippingAddressId: selectedAddressId,
           options: state.coreOptions,
           referenceImages: state.imageRefs,
           additionalNotes: state.additionalNotes,
           userCouponId: appliedCoupon?.id,
         });
-        const response = await createCustomOrder.mutateAsync(request);
         orderId = response.orderId;
         orderCreated = true;
         setServerAmount(response.totalAmount);
