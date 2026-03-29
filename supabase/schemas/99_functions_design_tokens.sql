@@ -115,12 +115,12 @@ BEGIN
     );
   END IF;
 
-  -- paid 잔량: 레거시(source_order_id IS NULL, 만료 없음) + 비만료 배치
+  -- paid 잔량: 만료되지 않은 paid 토큰 전체(만료 없음 포함)
   SELECT COALESCE(SUM(amount), 0)::integer INTO v_paid_bal
   FROM public.design_tokens
   WHERE user_id = p_user_id
     AND token_class = 'paid'
-    AND (source_order_id IS NULL OR expires_at > now());
+    AND (expires_at IS NULL OR expires_at > now());
 
   SELECT COALESCE(SUM(amount), 0)::integer INTO v_bonus_bal
   FROM public.design_tokens
@@ -510,6 +510,7 @@ BEGIN
           AND (
             dt.source_order_id = o.id
             OR dt.work_id = 'order_' || o.id::text
+            OR dt.work_id = 'order_' || o.id::text || '_paid'
           )
       ), 0)::integer                                    AS paid_tokens_granted,
       COALESCE((
@@ -521,6 +522,7 @@ BEGIN
           AND (
             dt.source_order_id = o.id
             OR dt.work_id = 'order_' || o.id::text
+            OR dt.work_id = 'order_' || o.id::text || '_paid'
           )
       ), o.created_at)                                  AS token_granted_at,
       (
@@ -532,6 +534,7 @@ BEGIN
           AND (
             dt.source_order_id = o.id
             OR dt.work_id = 'order_' || o.id::text
+            OR dt.work_id = 'order_' || o.id::text || '_paid'
           )
       )                                                 AS token_expires_at,
       -- 진행 중인 환불 요청 정보 (접수/완료)
@@ -860,6 +863,7 @@ BEGIN
      AND (
        dt.source_order_id = v_req.order_id
        OR dt.work_id = 'order_' || v_req.order_id::text
+       OR dt.work_id = 'order_' || v_req.order_id::text || '_paid'
      )
    ORDER BY dt.created_at DESC
    LIMIT 1;

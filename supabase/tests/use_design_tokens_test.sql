@@ -8,7 +8,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(14);
+SELECT plan(16);
 
 -- ── 픽스처 설정 ─────────────────────────────────────────────
 
@@ -139,6 +139,8 @@ DECLARE
   v_user_c  uuid := 'dd000001-0000-0000-0000-000000000003';
   v_order_1 uuid := 'eeeeeeee-0000-0000-0000-000000000001';
   v_order_2 uuid := 'eeeeeeee-0000-0000-0000-000000000002';
+  v_user_e  uuid := 'dd000001-0000-0000-0000-000000000005';
+  v_order_e uuid := 'eeeeeeee-0000-0000-0000-000000000005';
 BEGIN
   PERFORM test_helpers.create_test_user(v_user_c);
 
@@ -174,6 +176,25 @@ BEGIN
     v_user_c, 30, 'purchase', 'paid',
     v_order_2, now() + interval '1 year',
     '유효한 토큰 (테스트)', 'order_' || v_order_2::text
+  );
+
+  PERFORM test_helpers.create_test_user(v_user_e);
+
+  INSERT INTO public.orders (
+    id, user_id, order_number, shipping_address_id,
+    total_price, original_price, total_discount,
+    order_type, status, payment_group_id, shipping_cost
+  ) VALUES (
+    v_order_e, v_user_e, 'TKN-LEG-001', NULL,
+    2900, 2900, 0, 'token', '완료', gen_random_uuid(), 0
+  );
+
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, source_order_id, expires_at, description, work_id
+  ) VALUES (
+    v_user_e, 20, 'purchase', 'paid',
+    v_order_e, NULL,
+    '만료일 없는 유상 토큰(레거시)', 'legacy-null-expiry-token'
   );
 END $expiry_setup$;
 
@@ -251,6 +272,25 @@ SELECT ok(
      AND type = 'use'
      AND work_id = 'work-expiry-test-001_use_paid_0'),
   'use 항목의 expires_at이 배치의 expires_at(1년 후)과 일치'
+);
+
+-- ── 테스트 15: source_order_id가 있는 expires_at NULL paid 토큰도 차감 가능 ──
+SELECT is(
+  (SELECT (public.use_design_tokens(
+    'dd000001-0000-0000-0000-000000000005'::uuid,
+    'openai', 'text_only', 'standard', 'work-legacy-null-expiry-001'
+  ))->>'success'),
+  'true',
+  'source_order_id가 있고 expires_at이 NULL인 paid 토큰도 use_design_tokens가 사용한다'
+);
+
+-- ── 테스트 16: 위 차감 후 잔액이 감소함 ─────────────────────────────────
+SELECT is(
+  (SELECT COALESCE(SUM(amount), 0)::int
+   FROM public.design_tokens
+   WHERE user_id = 'dd000001-0000-0000-0000-000000000005'::uuid),
+  15,
+  'expires_at이 NULL인 paid 토큰 차감 후 총 잔액이 감소한다'
 );
 
 SELECT * FROM finish();

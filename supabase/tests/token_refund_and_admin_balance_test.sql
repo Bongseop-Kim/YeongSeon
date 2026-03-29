@@ -7,7 +7,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(5);
+SELECT plan(9);
 
 DO $setup$
 DECLARE
@@ -20,11 +20,19 @@ DECLARE
   v_refundable_user uuid := 'fa000001-0000-0000-0000-000000000004';
   v_refundable_order uuid := 'fc100001-0000-0000-0000-000000000001';
   v_refundable_group uuid := 'fc200001-0000-0000-0000-000000000001';
+  v_refundable_legacy_user uuid := 'fa000001-0000-0000-0000-000000000005';
+  v_refundable_legacy_order uuid := 'fc100002-0000-0000-0000-000000000001';
+  v_refundable_legacy_group uuid := 'fc200001-0000-0000-0000-000000000002';
   v_refund_user     uuid := 'fa000001-0000-0000-0000-000000000003';
   v_refund_order    uuid := 'fa100001-0000-0000-0000-000000000001';
   v_refund_group    uuid := 'fa200001-0000-0000-0000-000000000001';
   v_refund_claim    uuid := 'fa300001-0000-0000-0000-000000000001';
   v_refund_item_id  uuid;
+  v_refund_paid_user uuid := 'fa000001-0000-0000-0000-000000000006';
+  v_refund_paid_order uuid := 'fa100002-0000-0000-0000-000000000001';
+  v_refund_paid_group uuid := 'fa200001-0000-0000-0000-000000000002';
+  v_refund_paid_claim uuid := 'fa300001-0000-0000-0000-000000000002';
+  v_refund_paid_item_id uuid;
 BEGIN
   PERFORM test_helpers.create_test_user(v_admin_user);
   PERFORM test_helpers.create_test_profile(v_admin_user, 'admin', '관리자');
@@ -73,6 +81,22 @@ BEGIN
     'canonical 구매 토큰', 'order_' || v_refundable_order::text
   );
 
+  PERFORM test_helpers.create_test_user(v_refundable_legacy_user);
+  PERFORM test_helpers.create_test_profile(v_refundable_legacy_user, 'customer', '레거시 환불 가능 사용자');
+
+  PERFORM test_helpers.create_token_order(
+    v_refundable_legacy_user, '완료', 25, 'starter', 'legacy-paid-payment-key',
+    v_refundable_legacy_order, v_refundable_legacy_group
+  );
+
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, source_order_id, expires_at, description, work_id
+  ) VALUES (
+    v_refundable_legacy_user, 25, 'purchase', 'paid',
+    NULL, now() + interval '1 year',
+    'legacy _paid 구매 토큰', 'order_' || v_refundable_legacy_order::text || '_paid'
+  );
+
   PERFORM test_helpers.create_test_user(v_refund_user);
   PERFORM test_helpers.create_test_profile(v_refund_user, 'customer', '환불 사용자');
 
@@ -113,6 +137,50 @@ BEGIN
       'refund_amount', 10000
     )
   );
+
+  PERFORM test_helpers.create_test_user(v_refund_paid_user);
+  PERFORM test_helpers.create_test_profile(v_refund_paid_user, 'customer', '레거시 _paid 환불 사용자');
+
+  PERFORM test_helpers.create_token_order(
+    v_refund_paid_user, '완료', 25, 'starter', 'legacy-paid-refund-key',
+    v_refund_paid_order, v_refund_paid_group
+  );
+
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, source_order_id, expires_at, description, work_id
+  ) VALUES (
+    v_refund_paid_user, 25, 'purchase', 'paid',
+    NULL, now() + interval '1 year',
+    '레거시 _paid 환불 구매 토큰', 'order_' || v_refund_paid_order::text || '_paid'
+  );
+
+  SELECT id
+    INTO v_refund_paid_item_id
+    FROM public.order_items
+   WHERE order_id = v_refund_paid_order
+     AND item_type = 'token'
+   LIMIT 1;
+
+  INSERT INTO public.claims (
+    id, user_id, order_id, order_item_id,
+    claim_number, type, status,
+    reason, quantity, refund_data
+  ) VALUES (
+    v_refund_paid_claim,
+    v_refund_paid_user,
+    v_refund_paid_order,
+    v_refund_paid_item_id,
+    'TKR-TEST-LEGACY-0002',
+    'token_refund',
+    '접수',
+    '레거시 _paid 환불 테스트',
+    1,
+    jsonb_build_object(
+      'paid_token_amount', 25,
+      'bonus_token_amount', 0,
+      'refund_amount', 10000
+    )
+  );
 END $setup$;
 
 SELECT test_helpers.set_auth('fa000001-0000-0000-0000-000000000001'::uuid);
@@ -146,6 +214,23 @@ SELECT is(
   '최신 토큰 주문이고 사용 이력이 없으면 환불 불가 사유가 없다'
 );
 
+SELECT test_helpers.set_auth('fa000001-0000-0000-0000-000000000005'::uuid);
+
+SELECT is(
+  (
+    SELECT ((public.get_refundable_token_orders() -> 0) ->> 'paid_tokens_granted')::integer
+  ),
+  25,
+  'get_refundable_token_orders는 legacy work_id(order_<id>_paid) 기반 지급 토큰도 조회한다'
+);
+
+SELECT ok(
+  (
+    SELECT ((public.get_refundable_token_orders() -> 0) ->> 'token_expires_at') IS NOT NULL
+  ),
+  'get_refundable_token_orders는 legacy work_id(order_<id>_paid)의 만료일도 반환한다'
+);
+
 SELECT test_helpers.set_service_role();
 
 SELECT lives_ok(
@@ -166,6 +251,29 @@ SELECT is(
   ),
   'fa100001-0000-0000-0000-000000000001'::uuid,
   'approve_token_refund는 레거시 purchase ledger에도 환불 ledger의 source_order_id를 주문 ID로 남긴다'
+);
+
+SELECT lives_ok(
+  $$
+    SELECT public.approve_token_refund(
+      'fa300001-0000-0000-0000-000000000002'::uuid,
+      'fa000001-0000-0000-0000-000000000001'::uuid
+    )
+  $$,
+  'legacy work_id(order_<id>_paid) purchase ledger가 있어도 approve_token_refund는 예외 없이 실행된다'
+);
+
+SELECT ok(
+  (
+    SELECT refund_dt.expires_at = purchase_dt.expires_at
+    FROM public.design_tokens AS refund_dt
+    JOIN public.design_tokens AS purchase_dt
+      ON purchase_dt.user_id = refund_dt.user_id
+     AND purchase_dt.type = 'purchase'
+     AND purchase_dt.work_id = 'order_fa100002-0000-0000-0000-000000000001_paid'
+    WHERE refund_dt.work_id = 'refund_fa300001-0000-0000-0000-000000000002_paid'
+  ),
+  'approve_token_refund는 legacy work_id(order_<id>_paid) purchase ledger의 expires_at을 환불 ledger에 유지한다'
 );
 
 SELECT * FROM finish();
