@@ -1,21 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { MainLayout, MainContent } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
-import { Button } from "@/shared/ui-extended/button";
-import { Separator } from "@/shared/ui/separator";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
 import { OrderPriceSummaryAside } from "@/shared/composite/order-price-summary-aside";
-import { CouponSection } from "@/shared/composite/coupon-section";
 import {
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
-import { type PaymentWidgetRef } from "@/shared/composite/payment-widget";
-import { useShippingAddressPopup } from "@/features/shipping";
-import { useAuthStore } from "@/shared/store/auth";
 import { useCreateSampleOrder } from "@/entities/sample-order";
 import {
   useNotificationConsentFlow,
@@ -26,60 +20,42 @@ import { isSampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { toast } from "@/shared/lib/toast";
 import { hasStringCode } from "@/shared/lib/type-guard";
-import { formatPhoneNumber } from "@/shared/lib/phone-format";
-import { getDeliveryRequestLabel } from "@/shared/constants/DELIVERY_REQUEST_OPTIONS";
-import { useCouponSelect } from "@/features/coupon";
+import { useCheckoutPageState } from "../model/use-checkout-page-state";
+import { CheckoutBodySections } from "./CheckoutBodySections";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
-import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 
 export function SampleOrderCheckoutPage() {
   const location = useLocation();
-  const navigate = useNavigate();
   const rawState = location.state;
   const state = isSampleOrderPaymentState(rawState) ? rawState : null;
-
-  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const [cancellationConsent, setCancellationConsent] = useState(false);
-  const [serverAmount, setServerAmount] = useState<number | null>(null);
-  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | undefined>(
-    undefined,
-  );
-  const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
-  const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
-  const pendingOrderIdRef = useRef<string | null>(null);
-  const pendingSnapshotRef = useRef<string | null>(null);
-
-  const { user } = useAuthStore();
-  const { selectedAddressId, selectedAddress, openShippingPopup } =
-    useShippingAddressPopup({
-      initialSelectedAddressId: state?.shippingAddressId ?? null,
-    });
   const createSampleOrder = useCreateSampleOrder();
+
+  const {
+    navigate,
+    isPaymentLoading,
+    setIsPaymentLoading,
+    cancellationConsent,
+    setCancellationConsent,
+    serverAmount,
+    setServerAmount,
+    appliedCoupon,
+    couponDialog,
+    paymentWidgetRef,
+    pendingOrderIdRef,
+    pendingSnapshotRef,
+    user,
+    selectedAddressId,
+    selectedAddress,
+    openShippingPopup,
+    handleChangeCoupon,
+  } = useCheckoutPageState({
+    initialShippingAddressId: state?.shippingAddressId ?? null,
+  });
 
   useEffect(() => {
     if (state) return;
     navigate(ROUTES.SAMPLE_ORDER, { replace: true });
   }, [navigate, state]);
-
-  const resetPendingOrderState = () => {
-    setServerAmount(null);
-    pendingOrderIdRef.current = null;
-    pendingSnapshotRef.current = null;
-  };
-
-  const handleChangeCoupon = async () => {
-    const selected = await openCouponSelect(appliedCoupon?.id);
-    if (selected === null) return;
-    if (selected && selected.id === appliedCoupon?.id) return;
-
-    setAppliedCoupon(selected ?? undefined);
-    resetPendingOrderState();
-    if (selected) {
-      toast.success(`${selected.coupon.name}이(가) 적용되었습니다.`);
-    } else {
-      toast.success("쿠폰 사용을 취소했습니다.");
-    }
-  };
 
   const proceedToPayment = async () => {
     if (!state) return;
@@ -330,60 +306,13 @@ export function SampleOrderCheckoutPage() {
                 </div>
               </UtilityPageSection>
 
-              <CouponSection
+              <CheckoutBodySections
                 appliedCoupon={appliedCoupon}
                 discountAmount={discountAmount}
                 onChangeCoupon={handleChangeCoupon}
+                selectedAddress={selectedAddress ?? null}
+                onOpenShippingPopup={openShippingPopup}
               />
-
-              <UtilityPageSection
-                title="배송지"
-                description="결제 전에 수령 정보를 마지막으로 확인합니다."
-              >
-                <div className="border-t border-border">
-                  <div className="flex items-center justify-between gap-4 py-4">
-                    <div>
-                      <p className="text-lg font-semibold tracking-tight text-foreground">
-                        {selectedAddress?.recipientName || "배송지 정보"}
-                      </p>
-                      <p className="mt-1 text-sm text-foreground-muted">
-                        기본 배송지와 수령 요청 사항을 확인합니다.
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={openShippingPopup}
-                    >
-                      배송지 관리
-                    </Button>
-                  </div>
-
-                  <Separator />
-
-                  {selectedAddress ? (
-                    <div className="space-y-2 py-5 text-sm">
-                      <p>
-                        ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
-                        {selectedAddress.detailAddress}
-                      </p>
-                      <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
-                      {selectedAddress.deliveryRequest ? (
-                        <p className="text-foreground-subtle">
-                          {getDeliveryRequestLabel(
-                            selectedAddress.deliveryRequest,
-                            selectedAddress.deliveryMemo,
-                          )}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-foreground-muted">
-                      배송지를 추가해주세요.
-                    </div>
-                  )}
-                </div>
-              </UtilityPageSection>
             </div>
           </PageLayout>
         </MainContent>

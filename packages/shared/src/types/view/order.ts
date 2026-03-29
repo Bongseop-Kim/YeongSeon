@@ -2,6 +2,8 @@ import type { Product, ProductOption } from "./product";
 import type { AppliedCoupon } from "./coupon";
 import type { TieItem } from "./reform";
 import type { CustomerAction } from "./order-actions";
+import type { CustomOrderData, SampleOrderData } from "../order-data";
+export type { CustomOrderData, SampleOrderData } from "../order-data";
 
 // 주문 상태
 export type OrderStatus =
@@ -48,33 +50,7 @@ export interface CustomOrderItem {
   id: string;
   type: "custom";
   quantity: number;
-  customData: {
-    options: {
-      tieType: string | null;
-      interlining: string | null;
-      designType: string | null;
-      fabricType: string | null;
-      fabricProvided: boolean;
-      triangleStitch: boolean;
-      sideStitch: boolean;
-      barTack: boolean;
-      dimple: boolean;
-      spoderato: boolean;
-      fold7: boolean;
-      brandLabel: boolean;
-      careLabel: boolean;
-    };
-    pricing: {
-      sewingCost: number;
-      fabricCost: number;
-      sampleCost: number;
-      totalCost: number;
-    };
-    sample?: boolean;
-    sampleType?: string | null;
-    referenceImageUrls: string[];
-    additionalNotes: string | null;
-  };
+  customData: CustomOrderData;
   appliedCoupon?: AppliedCoupon;
 }
 
@@ -82,20 +58,7 @@ export interface SampleOrderItem {
   id: string;
   type: "sample";
   quantity: number;
-  sampleData: {
-    sampleType: "fabric" | "sewing" | "fabric_and_sewing";
-    options: {
-      fabricType: string | null;
-      designType: string | null;
-      tieType: string | null;
-      interlining: string | null;
-    };
-    pricing: {
-      totalCost: number;
-    };
-    referenceImageUrls: string[];
-    additionalNotes: string | null;
-  } | null;
+  sampleData: SampleOrderData | null;
   appliedCoupon?: AppliedCoupon;
 }
 

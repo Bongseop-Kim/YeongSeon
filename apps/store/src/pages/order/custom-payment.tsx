@@ -1,1 +1,1 @@
-export { OrderCheckoutPage as default } from "@/widgets/order-checkout";
+export { OrderCheckoutPage as default } from "@/widgets/checkout";
