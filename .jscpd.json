@@ -1,6 +1,17 @@
 {
   "reporters": ["console"],
-  "ignore": ["**/node_modules/**", "**/dist/**", "**/*.d.ts"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/*.d.ts",
+    "**/lib/supabase.ts",
+    "**/*.sql",
+    "**/*.yaml",
+    "**/*.yml",
+    "**/*.html",
+    "**/*.xml",
+    "**/*.md"
+  ],
   "absolute": true,
   "gitignore": true,
   "minLines": 10,

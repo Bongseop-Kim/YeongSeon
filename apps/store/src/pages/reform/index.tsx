@@ -17,9 +17,9 @@ import {
   TieItemCard,
   toReformCartItems,
   toReformData,
-  useReformPricing,
   useUploadTieImages,
 } from "@/features/reform";
+import { useReformPricing } from "@/entities/reform";
 import BulkApplySection, {
   type BulkApplySectionRef,
 } from "@/shared/composite/bulk-apply-section";

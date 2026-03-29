@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
+import { getDesignTokenBalance } from "@/entities/design/api/ai-design-api";
 import {
   aiDesignApi,
-  getDesignTokenBalance,
   type AiDesignRequest,
   type AiDesignResponse,
 } from "@/features/design/api/ai-design-api";

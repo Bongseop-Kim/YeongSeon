@@ -113,24 +113,3 @@ export async function aiDesignApi(
         : undefined,
   };
 }
-
-interface DesignTokenBalance {
-  total: number;
-  paid: number;
-  bonus: number;
-}
-
-export async function getDesignTokenBalance(): Promise<DesignTokenBalance> {
-  const { data, error } = await supabase.rpc("get_design_token_balance");
-
-  if (error) {
-    throw new Error(`토큰 잔액 조회 실패: ${error.message}`);
-  }
-
-  const raw: { total?: number; paid?: number; bonus?: number } | null = data;
-  return {
-    total: raw?.total ?? 0,
-    paid: raw?.paid ?? 0,
-    bonus: raw?.bonus ?? 0,
-  };
-}
