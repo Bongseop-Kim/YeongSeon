@@ -1,8 +1,8 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import { TieMask } from "@/features/design/components/preview/tie-mask";
 import type { Message } from "@/features/design/types/chat";
-import { cn } from "@/lib/utils";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { cn } from "@/shared/lib/utils";
+import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 
 interface MessageBubbleProps {
   message: Message;

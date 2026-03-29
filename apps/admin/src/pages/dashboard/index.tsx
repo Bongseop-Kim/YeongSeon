@@ -1,4 +1,4 @@
-import { DashboardContent } from "@/features/dashboard/components/dashboard-content";
+import { DashboardContent } from "@/widgets/dashboard";
 
 export default function DashboardPage() {
   return <DashboardContent />;

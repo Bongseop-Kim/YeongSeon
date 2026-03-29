@@ -42,7 +42,6 @@ export interface AdminOrderDetailRowDTO extends Omit<
   | "isSample"
   | "sampleType"
 > {
-  sampleCost: number;
   recipientName: string | null;
   recipientPhone: string | null;
   shippingAddress: string | null;

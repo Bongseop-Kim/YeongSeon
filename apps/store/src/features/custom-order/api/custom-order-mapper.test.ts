@@ -3,7 +3,7 @@ import {
   toCreateCustomOrderInput,
   toCreateCustomOrderInputDto,
   toCreateCustomOrderOptionsInput,
-} from "@/features/custom-order/api/custom-order-mapper";
+} from "@/entities/custom-order";
 
 describe("toCreateCustomOrderOptionsInput", () => {
   it("유효한 enum/boolean/number 값을 정규화한다", () => {

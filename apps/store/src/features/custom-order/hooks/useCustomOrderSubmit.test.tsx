@@ -19,24 +19,25 @@ vi.mock("react-router-dom", () => ({
   useNavigate: () => navigate,
 }));
 
-vi.mock("@/store/auth", () => ({
+vi.mock("@/shared/store/auth", () => ({
   useAuthStore: () => ({
     user: authState.user,
   }),
 }));
 
-vi.mock("@/lib/toast", () => ({
+vi.mock("@/shared/lib/toast", () => ({
   toast: {
     success,
     error,
   },
 }));
 
-vi.mock("@/features/quote-request/api/quote-request-query", () => ({
+vi.mock("@/entities/quote-request", () => ({
   useCreateQuoteRequest: () => ({
     isPending: false,
     mutateAsync: createQuoteRequestMutateAsync,
   }),
+  toCreateQuoteRequestInput: vi.fn((value) => value),
 }));
 
 const createValues = (quantity: number) => ({

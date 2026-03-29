@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 
-import { Button } from "@/components/ui-extended/button";
+import { Button } from "@/shared/ui-extended/button";
 import { HomeSectionContainer } from "@/features/home/components/home-section-container";
 import { REFORM_CONTENT } from "@/features/home/constants/HOME_CONTENT";
 import {
@@ -9,7 +9,7 @@ import {
   homeViewport,
   staggerContainerVariants,
 } from "@/features/home/components/home-motion";
-import { padZero } from "@/lib/utils";
+import { padZero } from "@/shared/lib/utils";
 
 export const EsReformHighlight = () => {
   return (

@@ -1,30 +1,19 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetTitle,
-} from "@/components/ui-extended/sheet";
-import { Button } from "@/components/ui-extended/button";
+import { Sheet, SheetContent, SheetTitle } from "@/shared/ui-extended/sheet";
+import { SheetActionFooter } from "@/shared/composite/sheet-action-footer";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui-extended/select";
+} from "@/shared/ui-extended/select";
 import type {
   Product,
   ProductOption,
 } from "@yeongseon/shared/types/view/product";
 import { SelectedOptionsList } from "./selected-options-list";
 import { SelectedOptionItem } from "./selected-option-item";
-import { useAddToCartItems } from "@/features/cart/hooks/useAddToCartItems";
-import { useModalStore } from "@/store/modal";
-import { useOrderStore } from "@/store/order";
-import { useNavigate } from "react-router-dom";
-import { toast } from "@/lib/toast";
-import { processOrderAndNavigate } from "@/features/shop/detail/utils/process-order";
-import { ROUTES } from "@/constants/ROUTES";
+import { toast } from "@/shared/lib/toast";
 import { useState } from "react";
 import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
 
@@ -39,6 +28,9 @@ interface MobilePurchaseSheetProps {
   handleUpdateQuantity: (optionId: string, delta: number) => void;
   handleUpdateBaseQuantity: (delta: number, maxStock?: number | null) => void;
   resetOptions: () => void;
+  isAddingToCart: boolean;
+  onAddToCart: () => Promise<void>;
+  onOrder: () => void;
 }
 
 export function MobilePurchaseSheet({
@@ -52,12 +44,11 @@ export function MobilePurchaseSheet({
   handleUpdateQuantity,
   handleUpdateBaseQuantity,
   resetOptions,
+  isAddingToCart,
+  onAddToCart,
+  onOrder,
 }: MobilePurchaseSheetProps) {
-  const { addItemsToCart } = useAddToCartItems();
-  const { openModal } = useModalStore();
-  const { setOrderItems } = useOrderStore();
-  const navigate = useNavigate();
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
   const productOptions = product.options ?? [];
   const hasOptions = productOptions.length > 0;
@@ -70,50 +61,19 @@ export function MobilePurchaseSheet({
       return;
     }
 
-    setIsAddingToCart(true);
+    setIsSubmittingOrder(true);
     try {
-      const { succeeded, failed, total } = await addItemsToCart(product, {
-        selectedOptions,
-        baseQuantity,
-        hasOptions,
-      });
-
-      if (failed === total) {
-        toast.error("장바구니 추가에 실패했습니다.");
-        return;
-      }
-
-      if (failed > 0) {
-        toast.warning(
-          `일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`,
-        );
-      }
-
+      await onAddToCart();
       resetOptions();
       onOpenChange(false);
-      openModal({
-        title: "장바구니",
-        description: "장바구니에 추가되었습니다.",
-        confirmText: "장바구니 보기",
-        cancelText: "닫기",
-        onConfirm: () => {
-          navigate(ROUTES.CART);
-        },
-      });
     } finally {
-      setIsAddingToCart(false);
+      setIsSubmittingOrder(false);
     }
   };
 
   const handleOrder = () => {
     onOpenChange(false);
-    processOrderAndNavigate(
-      product,
-      selectedOptions,
-      baseQuantity,
-      setOrderItems,
-      navigate,
-    );
+    onOrder();
   };
 
   return (
@@ -188,31 +148,19 @@ export function MobilePurchaseSheet({
           )}
         </div>
 
-        <SheetFooter className="shrink-0">
-          <div className="flex gap-2 w-full">
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              onClick={handleAddToCart}
-              disabled={
-                isAddingToCart || (hasOptions && selectedOptions.length === 0)
-              }
-              className="flex-1"
-            >
-              {isAddingToCart ? "추가 중..." : "장바구니"}
-            </Button>
-            <Button
-              type="button"
-              size="lg"
-              onClick={handleOrder}
-              disabled={hasOptions && selectedOptions.length === 0}
-              className="flex-1"
-            >
-              주문하기
-            </Button>
-          </div>
-        </SheetFooter>
+        <SheetActionFooter
+          onPrimary={handleAddToCart}
+          onOrder={handleOrder}
+          primaryLabel={
+            isAddingToCart || isSubmittingOrder ? "추가 중..." : "장바구니"
+          }
+          primaryDisabled={
+            isAddingToCart ||
+            isSubmittingOrder ||
+            (hasOptions && selectedOptions.length === 0)
+          }
+          orderDisabled={hasOptions && selectedOptions.length === 0}
+        />
       </SheetContent>
     </Sheet>
   );

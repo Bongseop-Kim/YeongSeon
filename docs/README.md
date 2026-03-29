@@ -25,8 +25,10 @@ docs/
 | ----------------- | ----------------------------------------------------------- | ----------- |
 | [[sale]]          | 일반 상품 주문 — 장바구니/바로구매 → 결제 → 배송 → 구매확정 | implemented |
 | [[repair]]        | 수선 주문 — reform 아이템, 혼합 장바구니, 발송 흐름         | partial     |
-| [[custom-order]]  | 주문 제작 — 마법사 UI, 샘플 단계 분기, 옵션 가격 계산       | partial     |
+| [[custom-order]]  | 주문 제작 — 마법사 UI, 전용 결제, 옵션 가격 계산            | partial     |
+| [[sample]]        | 샘플 제작 — 전용 주문, 전용 결제, 타입별 쿠폰 발급          | partial     |
 | [[claim]]         | 취소/반품/교환 클레임 — 타입별 상태 전이, 거부 복원         | partial     |
+| [[token-refund]]  | 유상 토큰 환불 — claims 기반 신청/취소/승인 흐름            | implemented |
 | [[quote-request]] | 대량 견적 요청 — B2B, 단방향 전이, 클레임 시스템 외부       | implemented |
 | [[design]]        | AI 디자인 생성 — 토큰 차감/환불, 멀티턴 대화                | implemented |
 | [[cart]]          | 장바구니 — 회원/비회원, 로그인 동기화, reform 아이템        | implemented |
@@ -35,13 +37,13 @@ docs/
 
 ## 정책 문서 (`policies/`)
 
-| 문서             | 설명                                           | 영향 도메인                        | 상태        |
-| ---------------- | ---------------------------------------------- | ---------------------------------- | ----------- |
-| [[payment]]      | Toss 결제 흐름, 멱등성, 실패 복구, 에러 코드   | sale, repair, custom-order, design | implemented |
-| [[coupon]]       | 쿠폰 할인 계산, 생명주기, max_discount_amount  | sale, repair, custom-order         | implemented |
-| [[token]]        | 토큰 원장, 구매 패키지, 소비 단가, 동시성 제어 | design                             | implemented |
-| [[notification]] | 알림 이벤트 정의, 채널 후보 (향후 구현 예정)   | 전체                               | planned     |
-| [[ui-surface]]   | 운영형 페이지 레이아웃, 카드 사용 기준         | store UI                           | implemented |
+| 문서             | 설명                                           | 영향 도메인                                | 상태        |
+| ---------------- | ---------------------------------------------- | ------------------------------------------ | ----------- |
+| [[payment]]      | Toss 결제 흐름, 멱등성, 실패 복구, 에러 코드   | sale, repair, custom-order, sample, design | implemented |
+| [[coupon]]       | 쿠폰 할인 계산, 생명주기, max_discount_amount  | sale, repair, custom-order, sample         | implemented |
+| [[token]]        | 토큰 원장, 구매 패키지, 소비 단가, 동시성 제어 | design, token-refund                       | implemented |
+| [[notification]] | 알림 이벤트 정의, 채널 후보 (향후 구현 예정)   | 전체                                       | planned     |
+| [[ui-surface]]   | 운영형 페이지 레이아웃, 카드 사용 기준         | store UI                                   | implemented |
 
 ---
 
@@ -50,13 +52,14 @@ docs/
 | 파일                 | 시나리오 수 |
 | -------------------- | ----------- |
 | [[qa/sale]]          | 28          |
-| [[qa/repair]]        | 18          |
-| [[qa/custom-order]]  | 9           |
-| [[qa/claim]]         | 22          |
+| [[qa/repair]]        | 20          |
+| [[qa/custom-order]]  | 11          |
+| [[qa/claim]]         | 24          |
 | [[qa/quote-request]] | 10          |
 | [[qa/design]]        | 17          |
 | [[qa/cart]]          | 11          |
-| [[qa/sample]]        | 8           |
+| [[qa/sample]]        | 9           |
+| [[qa/token-refund]]  | 5           |
 
 ---
 
@@ -66,7 +69,7 @@ docs/
 
 1. **해당 도메인 문서** (`domains/{domain}.md`) — 경계·상태 전이·비즈니스 규칙
 2. **횡단 정책** (`policies/payment.md`, `policies/coupon.md` 등) — 해당되는 경우
-3. **CLAUDE.md 하드 가드레일** — 항상
+3. **AGENTS.md 하드 가드레일** — 항상
 
 ### 상태 전이 코드 작성 시
 
@@ -85,9 +88,13 @@ docs/
 ```
 cart ──────────────────────────▶ sale (주문 진입점)
 cart ──────────────────────────▶ repair (reform 아이템)
-sale, repair, custom-order ───▶ payment (결제 흐름)
-sale, repair, custom-order ───▶ coupon (할인 적용)
-sale, repair, custom-order ◀──▶ claim (취소/반품/교환)
+sale, repair ─────────────────▶ /order/order-form
+custom-order ────────────────▶ /order/custom-payment
+sample ──────────────────────▶ /order/sample-payment
+sale, repair, custom-order, sample ─▶ payment (결제 흐름)
+sale, repair, custom-order, sample ─▶ coupon (할인 적용)
+sale, repair, custom-order, sample ◀▶ claim (취소/반품/교환)
 design ────────────────────────▶ token (토큰 소비)
 design ────────────────────────▶ payment (토큰 구매 결제)
+token ─────────────────────────▶ token-refund (유상 토큰 환불)
 ```

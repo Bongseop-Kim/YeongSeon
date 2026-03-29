@@ -103,6 +103,20 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
 }
 
 function getColumnsForType(orderType: OrderType) {
+  const renderNullableValue = (value: string | number | null) => value ?? "-";
+  const createNullableColumn = (
+    key: string,
+    dataIndex: string,
+    title: string,
+  ) => (
+    <Table.Column
+      key={key}
+      dataIndex={dataIndex}
+      title={title}
+      render={renderNullableValue}
+    />
+  );
+
   const common = [
     <Table.Column key="orderNumber" dataIndex="orderNumber" title="주문번호" />,
     <Table.Column key="date" dataIndex="date" title="주문일" />,
@@ -134,12 +148,7 @@ function getColumnsForType(orderType: OrderType) {
   if (orderType === "sale") {
     return [
       ...common,
-      <Table.Column
-        key="customerEmail"
-        dataIndex="customerEmail"
-        title="이메일"
-        render={(value: string | null) => value ?? "-"}
-      />,
+      createNullableColumn("customerEmail", "customerEmail", "이메일"),
       ...tail,
     ];
   }
@@ -147,24 +156,9 @@ function getColumnsForType(orderType: OrderType) {
   if (orderType === "custom") {
     return [
       ...common,
-      <Table.Column
-        key="fabricType"
-        dataIndex="fabricType"
-        title="원단유형"
-        render={(value: string | null) => value ?? "-"}
-      />,
-      <Table.Column
-        key="designType"
-        dataIndex="designType"
-        title="디자인유형"
-        render={(value: string | null) => value ?? "-"}
-      />,
-      <Table.Column
-        key="itemQuantity"
-        dataIndex="itemQuantity"
-        title="수량"
-        render={(value: number | null) => value ?? "-"}
-      />,
+      createNullableColumn("fabricType", "fabricType", "원단유형"),
+      createNullableColumn("designType", "designType", "디자인유형"),
+      createNullableColumn("itemQuantity", "itemQuantity", "수량"),
       ...tail,
     ];
   }
@@ -172,18 +166,8 @@ function getColumnsForType(orderType: OrderType) {
   if (orderType === "sample") {
     return [
       ...common,
-      <Table.Column
-        key="sampleType"
-        dataIndex="sampleType"
-        title="샘플유형"
-        render={(value: string | null) => value ?? "-"}
-      />,
-      <Table.Column
-        key="itemQuantity"
-        dataIndex="itemQuantity"
-        title="수량"
-        render={(value: number | null) => value ?? "-"}
-      />,
+      createNullableColumn("sampleType", "sampleType", "샘플유형"),
+      createNullableColumn("itemQuantity", "itemQuantity", "수량"),
       ...tail,
     ];
   }
@@ -191,12 +175,7 @@ function getColumnsForType(orderType: OrderType) {
   if (orderType === "token") {
     return [
       ...common,
-      <Table.Column
-        key="customerEmail"
-        dataIndex="customerEmail"
-        title="이메일"
-        render={(value: string | null) => value ?? "-"}
-      />,
+      createNullableColumn("customerEmail", "customerEmail", "이메일"),
       ...tail,
     ];
   }
@@ -204,12 +183,7 @@ function getColumnsForType(orderType: OrderType) {
   // repair
   return [
     ...common,
-    <Table.Column
-      key="reformSummary"
-      dataIndex="reformSummary"
-      title="수선요약"
-      render={(value: string | null) => value ?? "-"}
-    />,
+    createNullableColumn("reformSummary", "reformSummary", "수선요약"),
     ...tail,
   ];
 }

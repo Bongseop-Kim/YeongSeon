@@ -1,6 +1,13 @@
 import { useCart } from "@/features/cart/hooks/useCart";
-import type { Product } from "@yeongseon/shared/types/view/product";
-import type { SelectedOption } from "@/features/shop/detail/types";
+import type {
+  Product,
+  ProductOption,
+} from "@yeongseon/shared/types/view/product";
+
+interface SelectedOption {
+  option: ProductOption;
+  quantity: number;
+}
 
 interface AddToCartItemsOptions {
   selectedOptions: SelectedOption[];

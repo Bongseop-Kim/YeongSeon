@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/shared/lib/supabase";
 import {
   toDesignSession,
   toDesignSessionMessage,
@@ -25,6 +25,12 @@ export interface SaveDesignSessionParams {
     sequenceNumber: number;
   }[];
 }
+
+const DESIGN_SESSION_SELECT_FIELDS =
+  "id, user_id, ai_model, first_message, last_image_url, last_image_file_id, image_count, created_at, updated_at";
+
+const DESIGN_SESSION_MESSAGE_SELECT_FIELDS =
+  "id, session_id, role, content, image_url, image_file_id, sequence_number, created_at";
 
 export async function saveDesignSession(
   params: SaveDesignSessionParams,
@@ -53,7 +59,7 @@ export async function saveDesignSession(
 export async function getDesignSessions(): Promise<DesignSession[]> {
   const { data, error } = await supabase
     .from("design_chat_sessions")
-    .select("*")
+    .select(DESIGN_SESSION_SELECT_FIELDS)
     .order("updated_at", { ascending: false });
 
   if (error) {
@@ -69,7 +75,7 @@ export async function getDesignSessionMessages(
 ): Promise<DesignSessionMessage[]> {
   const { data, error } = await supabase
     .from("design_chat_messages")
-    .select("*")
+    .select(DESIGN_SESSION_MESSAGE_SELECT_FIELDS)
     .eq("session_id", sessionId)
     .order("sequence_number", { ascending: true });
 

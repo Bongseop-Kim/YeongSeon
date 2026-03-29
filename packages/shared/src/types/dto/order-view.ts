@@ -3,6 +3,7 @@ import type { ProductDTO, ProductOptionDTO } from "./product";
 import type { TieItemDTO } from "./reform";
 import type { OrderType } from "../../constants/order-status";
 import type { CustomerAction } from "../view/order-actions";
+import type { CustomOrderData, SampleOrderData } from "../order-data";
 
 export type OrderStatusDTO =
   | "진행중"
@@ -41,48 +42,9 @@ export interface ReformOrderItemDTO {
   appliedCoupon?: AppliedCouponDTO;
 }
 
-export interface CustomOrderDataDTO {
-  options: {
-    tieType: string | null;
-    interlining: string | null;
-    designType: string | null;
-    fabricType: string | null;
-    fabricProvided: boolean;
-    triangleStitch: boolean;
-    sideStitch: boolean;
-    barTack: boolean;
-    dimple: boolean;
-    spoderato: boolean;
-    fold7: boolean;
-    brandLabel: boolean;
-    careLabel: boolean;
-  };
-  pricing: {
-    sewingCost: number;
-    fabricCost: number;
-    sampleCost: number;
-    totalCost: number;
-  };
-  sample?: boolean;
-  sampleType?: string | null;
-  referenceImageUrls: string[];
-  additionalNotes: string | null;
-}
+export type CustomOrderDataDTO = CustomOrderData;
 
-export interface SampleOrderDataDTO {
-  sampleType: "fabric" | "sewing" | "fabric_and_sewing";
-  options: {
-    fabricType: string | null;
-    designType: string | null;
-    tieType: string | null;
-    interlining: string | null;
-  };
-  pricing: {
-    totalCost: number;
-  };
-  referenceImageUrls: string[];
-  additionalNotes: string | null;
-}
+export type SampleOrderDataDTO = SampleOrderData;
 
 export interface CustomOrderItemDTO {
   id: string;

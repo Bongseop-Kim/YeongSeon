@@ -58,7 +58,6 @@ describe("getOrderItemPricing", () => {
         pricing: {
           sewingCost: 0,
           fabricCost: 0,
-          sampleCost: 0,
           totalCost: 20000,
         },
         referenceImageUrls: [],
@@ -91,7 +90,6 @@ describe("getOrderItemPricing", () => {
         pricing: {
           sewingCost: 0,
           fabricCost: 0,
-          sampleCost: 0,
           totalCost: 20000,
         },
         referenceImageUrls: [],

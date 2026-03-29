@@ -12,12 +12,12 @@ vi.mock("@imagekit/react", () => ({
   upload,
 }));
 
-vi.mock("@/lib/imagekit", () => ({
+vi.mock("@/shared/lib/imagekit", () => ({
   IMAGEKIT_PUBLIC_KEY: "public-key",
   getImageKitAuth,
 }));
 
-vi.mock("@/lib/toast", () => ({
+vi.mock("@/shared/lib/toast", () => ({
   toast: {
     error,
   },

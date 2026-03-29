@@ -56,7 +56,6 @@ export const createAdminCustomOrderItemRowDTO = (
     pricing: {
       sewing_cost: 12000,
       fabric_cost: 8000,
-      sample_cost: 0,
       total_cost: 20000,
     },
   },
@@ -172,7 +171,6 @@ export const createAdminOrderDetailRowDTO = (
 
   return {
     ...sharedFields,
-    sampleCost: 5000,
     recipientName: "홍길동",
     recipientPhone: "010-3333-4444",
     shippingAddress: "서울특별시 강남구 테헤란로 1",

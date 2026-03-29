@@ -1,1 +1,1 @@
-export { getImageKitAuth } from "@/lib/imagekit";
+export { getImageKitAuth } from "@/shared/lib/imagekit";

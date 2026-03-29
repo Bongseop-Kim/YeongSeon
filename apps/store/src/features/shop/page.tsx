@@ -12,7 +12,7 @@ import {
   PRICE_RANGE_OPTIONS,
   SORT_OPTIONS,
 } from "./constants/FILTER_OPTIONS";
-import { useProducts } from "./api/products-query";
+import { useProducts } from "@/entities/shop";
 import type {
   ProductCategory,
   ProductColor,
@@ -20,22 +20,22 @@ import type {
   ProductMaterial,
   SortOption,
 } from "@yeongseon/shared/types/view/product";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Button } from "@/components/ui-extended/button";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { Button } from "@/shared/ui-extended/button";
+import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import type { FilterTab } from "@/features/shop/types/filter";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui-extended/dialog";
-import { Badge } from "@/components/ui/badge";
+} from "@/shared/ui-extended/dialog";
+import { Badge } from "@/shared/ui/badge";
 import {
   UtilityPageIntro,
   UtilityKeyValueRow,
-} from "@/components/composite/utility-page";
+} from "@/shared/composite/utility-page";
 
 export default function ShopPage() {
   const [selectedCategories, setSelectedCategories] = useState<

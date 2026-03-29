@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  parseClaimListRows,
-  toClaimItemView,
-} from "@/features/claim/api/claims-mapper";
+import { parseClaimListRows, toClaimItemView } from "@/entities/claim";
 import { createClaimListRowRaw } from "@/test/fixtures";
 import type { ClaimListRowDTO } from "@yeongseon/shared/types/dto/claim-view";
 

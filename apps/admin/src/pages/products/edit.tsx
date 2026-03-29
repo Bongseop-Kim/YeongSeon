@@ -1,6 +1,5 @@
 import { Edit } from "@refinedev/antd";
-import { useAdminProductEditForm } from "@/features/products/api/products-query";
-import { ProductForm } from "@/features/products/components/product-form";
+import { useAdminProductEditForm, ProductForm } from "@/features/products";
 
 export default function ProductEdit() {
   const formHook = useAdminProductEditForm();

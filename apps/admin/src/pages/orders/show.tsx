@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { OrderDetailSection } from "@/features/orders/components/order-detail-section";
+import { OrderDetailSection } from "@/features/orders";
 
 export default function OrderShow() {
   return (

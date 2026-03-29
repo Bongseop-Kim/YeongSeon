@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Check, ChevronLeft } from "lucide-react";
-import { ROUTES } from "@/constants/ROUTES";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Button } from "@/components/ui-extended/button";
-import { type PaymentWidgetRef } from "@/components/composite/payment-widget";
-import { UtilityPageIntro } from "@/components/composite/utility-page";
-import { OrderSummaryAside } from "@/components/composite/order-summary-aside";
-import { PaymentActionBar } from "@/components/composite/payment-action-bar";
-import { PaymentWidgetAside } from "@/components/composite/payment-widget-aside";
-import { useAuthStore } from "@/store/auth";
-import { toast } from "@/lib/toast";
-import { hasStringCode } from "@/lib/type-guard";
-import type { TokenPlanKey } from "@/features/token-purchase/api/token-purchase-api";
-import { useTokenPlansQuery } from "@/features/token-purchase/api/token-purchase-query";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { Button } from "@/shared/ui-extended/button";
+import { type PaymentWidgetRef } from "@/shared/composite/payment-widget";
+import { UtilityPageIntro } from "@/shared/composite/utility-page";
+import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
+import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
+import { useAuthStore } from "@/shared/store/auth";
+import { toast } from "@/shared/lib/toast";
+import { hasStringCode } from "@/shared/lib/type-guard";
+import type { TokenPlanKey } from "@/entities/token-purchase";
+import { useTokenPlansQuery } from "@/entities/token-purchase";
 
 interface TokenPaymentPageState {
   purchaseInfo: {
@@ -40,6 +40,8 @@ const TokenPaymentPage = ({
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const isRequestingRef = useRef(false);
   const [withdrawalConsent, setWithdrawalConsent] = useState(false);
+  const withdrawalConsentRef = useRef(false);
+  withdrawalConsentRef.current = withdrawalConsent;
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const {
     data: tokenPlans,
@@ -75,9 +77,17 @@ const TokenPaymentPage = ({
   const tokenAmount = selectedPlan?.tokenAmount;
 
   const proceedToPayment = useCallback(async () => {
+    console.log("[proceedToPayment] called", {
+      isRequesting: isRequestingRef.current,
+      hasPurchaseInfo: !!purchaseInfo,
+      hasSelectedPlan: !!selectedPlan,
+      hasUser: !!user,
+      withdrawalConsent: withdrawalConsentRef.current,
+      hasPaymentWidget: !!paymentWidgetRef.current,
+    });
     if (isRequestingRef.current) return;
     if (!purchaseInfo || !selectedPlan || !user) return;
-    if (!withdrawalConsent) {
+    if (!withdrawalConsentRef.current) {
       toast.error("청약철회 제한에 동의해주세요.");
       return;
     }
@@ -108,7 +118,7 @@ const TokenPaymentPage = ({
       setIsPaymentLoading(false);
       isRequestingRef.current = false;
     }
-  }, [withdrawalConsent, purchaseInfo, selectedPlan, user, label, tokenAmount]);
+  }, [purchaseInfo, selectedPlan, user, label, tokenAmount]);
 
   useEffect(() => {
     registerProceedToPayment(proceedToPayment);

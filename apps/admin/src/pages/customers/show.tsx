@@ -5,11 +5,11 @@ import {
   useAdminCustomerDetail,
   useAdminCustomerOrders,
   useAdminCustomerCoupons,
-} from "@/features/customers/api/customers-query";
-import { CustomerProfileSection } from "@/features/customers/components/customer-profile-section";
-import { CustomerOrdersTable } from "@/features/customers/components/customer-orders-table";
-import { CustomerCouponsTable } from "@/features/customers/components/customer-coupons-table";
-import { CustomerTokenSection } from "@/features/customers/components/customer-token-section";
+  CustomerProfileSection,
+  CustomerOrdersTable,
+  CustomerCouponsTable,
+  CustomerTokenSection,
+} from "@/features/customers";
 
 const { Title } = Typography;
 

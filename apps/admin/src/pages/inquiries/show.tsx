@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { InquiryDetailSection } from "@/features/inquiries/components/inquiry-detail-section";
+import { InquiryDetailSection } from "@/features/inquiries";
 
 export default function InquiryShow() {
   return (

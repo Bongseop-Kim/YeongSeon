@@ -3,7 +3,7 @@ const forbidden = [
   {
     name: "no-circular",
     severity: "error",
-    comment: "순환 의존성 감지",
+    comment: "순환 의존성 금지",
     from: {},
     to: { circular: true },
   },
@@ -14,7 +14,7 @@ const forbidden = [
     from: {
       orphan: true,
       pathNot: [
-        "(^|/)\\.[^/]+", // dotfiles
+        "(^|/)\\.[^/]+",
         "\\.d\\.ts$",
         "(^|/)tsconfig",
         "(^|/)vite\\.config",
@@ -31,165 +31,102 @@ const forbidden = [
     },
     to: {},
   },
-  // 1. 기본: 특수 처리 feature 외 모든 feature에서 cross-feature import 금지
+
   {
-    name: "no-cross-feature-imports",
+    name: "fsd-shared-no-upper-layers",
     severity: "error",
-    comment: "별도 규칙이 없는 feature는 다른 feature를 직접 import할 수 없다.",
-    from: {
-      path: "^src/features/([^/]+)/",
-      pathNot:
-        "^src/features/(order|cart|custom-order|claim|quote-request|my-page|home|payment|auth|token-purchase|shop|sample-order|reform)/",
-    },
+    comment: "shared 레이어는 다른 레이어를 import할 수 없다",
+    from: { path: "^src/shared/" },
+    to: { path: "^src/(app|pages|widgets|features|entities)/" },
+  },
+  {
+    name: "fsd-entities-no-upper-layers",
+    severity: "error",
+    comment: "entities는 features/widgets/pages/app을 import할 수 없다",
+    from: { path: "^src/entities/" },
+    to: { path: "^src/(app|pages|widgets|features)/" },
+  },
+  {
+    name: "fsd-features-no-upper-layers",
+    severity: "error",
+    comment: "features는 widgets/pages/app을 import할 수 없다",
+    from: { path: "^src/features/" },
+    to: { path: "^src/(app|pages|widgets)/" },
+  },
+  {
+    name: "fsd-widgets-no-upper-layers",
+    severity: "error",
+    comment: "widgets는 pages/app을 import할 수 없다",
+    from: { path: "^src/widgets/" },
+    to: { path: "^src/(app|pages)/" },
+  },
+  {
+    name: "fsd-pages-no-app-layer",
+    severity: "error",
+    comment: "pages는 app 레이어를 import할 수 없다",
+    from: { path: "^src/pages/" },
+    to: { path: "^src/app/" },
+  },
+
+  {
+    name: "fsd-features-no-cross-slice",
+    severity: "error",
+    comment: "features 레이어 내 다른 feature slice를 직접 import 금지",
+    from: { path: "^src/features/([^/]+)/" },
     to: {
-      path: "^src/features/([^/]+)/",
+      path: "^src/features/",
       pathNot: "^src/features/$1/",
     },
   },
-  // 2. 주문 생태계: order/cart/custom-order는 shipping/coupon/reform/quote-request/shop/my-page만 참조 허용
   {
-    name: "no-cross-feature-order-ecosystem",
+    name: "fsd-widgets-no-cross-slice",
+    severity: "error",
+    comment: "widgets 레이어 내 다른 widget slice를 import 금지",
+    from: { path: "^src/widgets/([^/]+)/" },
+    to: {
+      path: "^src/widgets/",
+      pathNot: "^src/widgets/$1/",
+    },
+  },
+  {
+    name: "fsd-entities-no-cross-slice",
     severity: "error",
     comment:
-      "order/cart/custom-order는 주문 흐름 보조 feature(shipping·coupon·reform·quote-request·shop·my-page)만 참조 허용",
-    from: { path: "^src/features/(order|cart|custom-order)/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot:
-        "^src/features/(order|cart|custom-order|shipping|coupon|reform|quote-request|shop|my-page|notification)/",
-    },
-  },
-  // 3. claim → order 단방향 허용
-  {
-    name: "no-cross-feature-claim",
-    severity: "error",
-    comment: "claim은 order에만 단방향 의존 허용",
-    from: { path: "^src/features/claim/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(claim|order)/",
-    },
-  },
-  // 4. quote-request → custom-order 단방향 허용
-  {
-    name: "no-cross-feature-quote-request",
-    severity: "error",
-    comment: "quote-request는 custom-order 데이터 변환을 위해 단방향 의존 허용",
-    from: { path: "^src/features/quote-request/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(quote-request|custom-order)/",
-    },
-  },
-  // 5. my-page → auth/design/quote-request 허용 (aggregator)
-  {
-    name: "no-cross-feature-my-page",
-    severity: "error",
-    comment:
-      "my-page는 사용자 정보(auth)·디자인토큰(design)·견적(quote-request)만 참조 허용",
-    from: { path: "^src/features/my-page/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot:
-        "^src/features/(my-page|auth|design|quote-request|notification)/",
-    },
-  },
-  // 6. home → shop 허용
-  {
-    name: "no-cross-feature-home",
-    severity: "error",
-    comment: "home 페이지는 상품 목록 표시를 위해 shop만 참조 허용",
-    from: { path: "^src/features/home/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(home|shop)/",
-    },
-  },
-  // 7. payment → cart 허용 (결제 성공 후 장바구니 초기화)
-  {
-    name: "no-cross-feature-payment",
-    severity: "error",
-    comment: "payment는 결제 성공 후 cart 초기화를 위해 cart만 참조 허용",
-    from: { path: "^src/features/payment/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(payment|cart)/",
-    },
-  },
-  // 8. auth → design 허용 (로그인/로그아웃 시 디자인 토큰 캐시 무효화)
-  {
-    name: "no-cross-feature-auth",
-    severity: "error",
-    comment:
-      "auth는 로그인 상태 변경 시 design 토큰 캐시 무효화를 위해 design만 참조 허용",
-    from: { path: "^src/features/auth/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(auth|design)/",
-    },
-  },
-  // 9. token-purchase → payment/design 허용 (토큰 구매 흐름)
-  {
-    name: "no-cross-feature-token-purchase",
-    severity: "error",
-    comment:
-      "token-purchase는 결제(payment)·디자인토큰 잔액 갱신(design)만 참조 허용",
-    from: { path: "^src/features/token-purchase/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(token-purchase|payment|design)/",
-    },
-  },
-  // 10. shop → cart 허용 (상품 상세에서 장바구니 담기)
-  {
-    name: "no-cross-feature-shop",
-    severity: "error",
-    comment: "shop은 장바구니 담기를 위해 cart만 참조 허용",
-    from: { path: "^src/features/shop/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(shop|cart)/",
-    },
-  },
-  // 11. sample-order → shipping/custom-order/coupon 허용 (샘플 주문 흐름)
-  {
-    name: "no-cross-feature-sample-order",
-    severity: "error",
-    comment:
-      "sample-order는 배송지(shipping)·이미지 업로드 및 가격 설정(custom-order)·쿠폰(coupon)만 참조 허용",
-    from: { path: "^src/features/sample-order/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot:
-        "^src/features/(sample-order|shipping|custom-order|notification|coupon)/",
-    },
-  },
-  // 12. reform → cart 허용 (리폼 주문 시 장바구니 연동)
-  {
-    name: "no-cross-feature-reform",
-    severity: "error",
-    comment: "reform은 장바구니 연동을 위해 cart만 참조 허용",
-    from: { path: "^src/features/reform/" },
-    to: {
-      path: "^src/features/([^/]+)/",
-      pathNot: "^src/features/(reform|cart)/",
-    },
-  },
-  // 13. coupon 내부 경로는 coupon 피처 내에서만 허용 (외부는 index.ts만 참조 가능)
-  {
-    name: "no-coupon-internals",
-    severity: "error",
-    comment:
-      "coupon 피처 내부 경로는 coupon 내에서만 참조 허용. 외부 피처는 index.ts를 통해서만 접근한다.",
+      "entities 내 cross-slice 금지. 허용: quote-request→custom-order, auth→design, token-purchase→{payment,design}, my-page→{auth,design}, claim→order",
     from: {
-      path: "^src/features/",
-      pathNot: "^src/features/coupon/",
+      path: "^src/entities/([^/]+)/",
+      pathNot:
+        "^src/entities/(quote-request|auth|token-purchase|my-page|claim)/",
     },
     to: {
-      path: "^src/features/coupon/",
-      pathNot: "^src/features/coupon/index\\.ts$",
+      path: "^src/entities/",
+      pathNot: "^src/entities/$1/",
     },
   },
+
+  {
+    name: "fsd-entities-public-api",
+    severity: "error",
+    comment: "entities 내부 파일은 index.ts를 통해서만 접근",
+    from: {
+      path: "^src/",
+      pathNot: "^src/entities/",
+    },
+    to: {
+      path: "^src/entities/([^/]+)/(?!index\\.ts)",
+    },
+  },
+  {
+    name: "fsd-features-public-api",
+    severity: "error",
+    comment:
+      "features 내부 파일은 index.ts를 통해서만 접근 (widgets, pages, app에서)",
+    from: { path: "^src/(widgets|pages|app)/" },
+    to: {
+      path: "^src/features/([^/]+)/(?!index\\.ts)",
+    },
+  },
+
   {
     name: "no-shared-to-apps",
     severity: "error",
@@ -218,10 +155,15 @@ const forbidden = [
     name: "no-supabase-outside-api-layer",
     severity: "error",
     comment:
-      "Supabase 클라이언트 직접 호출은 features/*/api/, lib/, providers/에서만 허용",
+      "Supabase 클라이언트 직접 호출은 entities/*/api/, features/*/api/, shared/lib/, app/providers/ 에서만 허용",
     from: {
       path: "^src/",
-      pathNot: ["^src/features/[^/]+/api/", "^src/lib/", "^src/providers/"],
+      pathNot: [
+        "^src/entities/[^/]+/api/",
+        "^src/features/[^/]+/api/",
+        "^src/shared/lib/",
+        "^src/app/providers/",
+      ],
     },
     to: { path: "@yeongseon/supabase" },
   },

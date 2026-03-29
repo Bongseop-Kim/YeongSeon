@@ -2,8 +2,8 @@ import type { FullConfig } from "@playwright/test";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-type AppName = "store" | "admin";
+import type { AppName, AuthMeta, E2EFixtures } from "@/utils/auth-support";
+import { buildHeaders } from "@/utils/auth-support";
 
 type SessionPayload = {
   access_token: string;
@@ -34,32 +34,6 @@ type StorageState = {
   }>;
 };
 
-type AuthMeta = {
-  appName: AppName;
-  baseURL: string;
-  accessToken: string;
-  refreshToken: string;
-  userId: string;
-  email?: string;
-};
-
-type E2EFixtures = {
-  storeProduct: {
-    id: number;
-    name: string;
-    price: number;
-  };
-  shippingAddress: {
-    id: string;
-    recipientName: string;
-  };
-  coupon: {
-    id: string;
-    name: string;
-    discountValue: number;
-  };
-};
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const authDir = path.join(__dirname, ".auth");
 const fixturesFile = path.join(authDir, "fixtures.json");
@@ -87,12 +61,6 @@ const getSupabaseProjectRef = (supabaseUrl: string) =>
 
 const getStorageKey = (supabaseUrl: string) =>
   `sb-${getSupabaseProjectRef(supabaseUrl)}-auth-token`;
-
-const buildHeaders = (apiKey: string, accessToken?: string) => ({
-  apikey: apiKey,
-  Authorization: `Bearer ${accessToken ?? apiKey}`,
-  "Content-Type": "application/json",
-});
 
 const parseDotEnv = (content: string) => {
   const parsed: Record<string, string> = {};
@@ -332,9 +300,13 @@ const resolveSession = async (
 const getStoreProductFixture = async ({
   supabaseUrl,
   anonKey,
+  serviceRoleKey,
+  adminAccessToken,
 }: {
   supabaseUrl: string;
   anonKey: string;
+  serviceRoleKey?: string;
+  adminAccessToken?: string;
 }) => {
   const withoutOptions = await supabaseRequest<
     Array<{ id: number; name: string; price: number }>
@@ -356,11 +328,43 @@ const getStoreProductFixture = async ({
     path: "/rest/v1/products?select=id,name,price&stock=gt.0&order=id.asc&limit=1",
   });
 
-  if (fallback.length === 0) {
+  if (fallback.length > 0) {
+    return fallback[0];
+  }
+
+  if (!serviceRoleKey && !adminAccessToken) {
     throw new Error("No in-stock product found for E2E tests.");
   }
 
-  return fallback[0];
+  const restockTarget = await supabaseRequest<
+    Array<{ id: number; name: string; price: number }>
+  >({
+    supabaseUrl,
+    anonKey,
+    path: "/rest/v1/products?select=id,name,price&option_label=is.null&order=id.asc&limit=1",
+  });
+
+  if (restockTarget.length === 0) {
+    throw new Error("No seedable product found for E2E tests.");
+  }
+
+  const restocked = await supabaseRequest<
+    Array<{ id: number; name: string; price: number }>
+  >({
+    supabaseUrl,
+    anonKey: serviceRoleKey ?? anonKey,
+    accessToken: adminAccessToken,
+    method: "PATCH",
+    path: `/rest/v1/products?id=eq.${restockTarget[0].id}`,
+    body: { stock: 100 },
+    preferRepresentation: true,
+  });
+
+  if (restocked.length === 0) {
+    throw new Error("Failed to restock product for E2E tests.");
+  }
+
+  return restocked[0];
 };
 
 const ensureDefaultShippingAddress = async ({
@@ -563,6 +567,10 @@ export default async function globalSetup(config: FullConfig) {
       getStoreProductFixture({
         supabaseUrl,
         anonKey: supabaseAnonKey,
+        serviceRoleKey:
+          process.env.SUPABASE_SERVICE_ROLE_KEY ??
+          process.env.SUPABASE_SERVICE_ROLE,
+        adminAccessToken: adminContext.session.access_token,
       }),
       ensureDefaultShippingAddress({
         supabaseUrl,

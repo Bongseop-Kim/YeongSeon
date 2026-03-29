@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { upload } from "@imagekit/react";
-import { IMAGEKIT_PUBLIC_KEY, getImageKitAuth } from "@/lib/imagekit";
-import { toast } from "@/lib/toast";
+import { IMAGEKIT_PUBLIC_KEY, getImageKitAuth } from "@/shared/lib/imagekit";
+import { toast } from "@/shared/lib/toast";
 import type { ImageRef, ImageKitAuth, ImageFolder } from "@yeongseon/shared";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 

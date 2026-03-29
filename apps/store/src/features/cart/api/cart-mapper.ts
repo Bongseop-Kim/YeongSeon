@@ -11,7 +11,7 @@ import {
   toTieItemDTO,
   toTieItemView,
 } from "@yeongseon/shared/mappers/shared-mapper";
-import { enrichProductForStore } from "@/lib/product/enrich-product-for-store";
+import { enrichProductForStore } from "@/shared/lib/product/enrich-product-for-store";
 
 export const toCartItemView = (record: CartItemViewDTO): CartItem => {
   if (record.type === "product") {

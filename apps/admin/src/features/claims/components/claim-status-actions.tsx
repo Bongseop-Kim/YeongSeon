@@ -1,10 +1,8 @@
-import { Button, Space, Typography, Input, Modal, Tag } from "antd";
-import { message } from "antd";
+import { Button, Modal, Space, message } from "antd";
 import { CLAIM_REJECT_RESTORE_STATUS } from "@yeongseon/shared";
 import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
-
-const { Text } = Typography;
-const { TextArea } = Input;
+import { confirmRollback } from "@/components/confirm-rollback";
+import { StatusMemo } from "@/components/status-memo";
 
 interface ClaimStatusActionsProps {
   claim: AdminClaimDetail;
@@ -56,59 +54,16 @@ export function ClaimStatusActions({
   };
 
   const handleRollbackClick = (targetStatus: string) => {
-    let rollbackMemoValue = "";
-
-    Modal.confirm({
-      title: "상태 롤백",
-      content: (
-        <div>
-          <p>
-            현재 상태 <Tag>{claim.status}</Tag> → <Tag>{targetStatus}</Tag>
-            (으)로 롤백합니다.
-          </p>
-          <p style={{ marginBottom: 4 }}>
-            <strong>사유 (필수)</strong>
-          </p>
-          <TextArea
-            rows={3}
-            placeholder="롤백 사유를 입력하세요"
-            onChange={(e) => {
-              rollbackMemoValue = e.target.value;
-            }}
-          />
-        </div>
-      ),
-      okText: "롤백",
-      cancelText: "취소",
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        if (!rollbackMemoValue.trim()) {
-          message.error("롤백 사유를 입력해주세요.");
-          throw new Error("memo required");
-        }
-        try {
-          await onRollback(targetStatus, rollbackMemoValue);
-        } catch {
-          message.error("롤백 처리에 실패했습니다.");
-        }
-      },
+    confirmRollback({
+      currentStatus: claim.status,
+      targetStatus,
+      onRollback,
     });
   };
 
   return (
     <>
-      <Space direction="vertical" style={{ width: "100%", marginBottom: 16 }}>
-        <div>
-          <Text strong>상태 변경 메모</Text>
-          <TextArea
-            value={statusMemo}
-            onChange={(e) => onMemoChange(e.target.value)}
-            rows={2}
-            placeholder="상태 변경 사유 (이력에 기록됨)"
-            style={{ marginTop: 4 }}
-          />
-        </div>
-      </Space>
+      <StatusMemo value={statusMemo} onChange={onMemoChange} />
 
       <Space style={{ marginBottom: 24 }}>
         {nextStatus && (

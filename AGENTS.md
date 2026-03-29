@@ -28,8 +28,13 @@ supabase functions deploy <함수명> --use-api
 supabase functions deploy --use-api   # 전체 배포
 ```
 
-새 feature 파일 위치: `apps/{app}/src/features/{domain}/api/{domain}-api.ts` + `{domain}-mapper.ts`
-예시: `apps/store/src/features/order/api/order-api.ts` + `order-mapper.ts`
+새 파일 위치:
+
+- API/타입: `apps/{app}/src/entities/{domain}/api/{domain}-api.ts` + `{domain}-mapper.ts`
+- 도메인 모델: `apps/{app}/src/entities/{domain}/model/`
+- UI/훅: `apps/{app}/src/features/{domain}/`
+- 조합 UI: `apps/{app}/src/widgets/{widget-name}/`
+- 페이지 엔트리: `apps/{app}/src/pages/{route}/`
 
 ## 하드 가드레일
 
@@ -65,7 +70,6 @@ supabase functions deploy --use-api   # 전체 배포
 - 런타임 검증 없이 non-null 단언(`!`)을 사용하지 않는다.
 - import 경로: 절대 경로(`@/`)만 사용한다.
 - 단, index.ts barrel re-export는 예외로 상대 경로 허용.
-- 모달: 텍스트 confirm/alert → `useModalStore`; 폼·복잡한 UI → 로컬 `Dialog`. Zustand에 ReactNode 저장 금지. 훅은 상태만 반환하고 렌더링은 전용 컴포넌트(`*-modals.tsx`)가 담당한다.
 
 ## Supabase 작업 안전 규칙
 

@@ -1,23 +1,23 @@
-import { PopupLayout } from "@/components/layout/popup-layout";
-import { Button } from "@/components/ui-extended/button";
-import { Input } from "@/components/ui-extended/input";
-import { ROUTES } from "@/constants/ROUTES";
+import { PopupLayout } from "@/shared/layout/popup-layout";
+import { Button } from "@/shared/ui-extended/button";
+import { Input } from "@/shared/ui-extended/input";
+import { ROUTES } from "@/shared/constants/ROUTES";
 import { Search } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   useShippingAddresses,
   useDeleteShippingAddress,
-} from "./api/shipping-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useModalStore } from "@/store/modal";
+} from "@/entities/shipping";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
+import { useModalStore } from "@/shared/store/modal";
 import { useState } from "react";
-import { toast } from "@/lib/toast";
-import { formatPhoneNumber } from "@/lib/phone-format";
-import { getDeliveryRequestLabel } from "@/constants/DELIVERY_REQUEST_OPTIONS";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "@/shared/lib/toast";
+import { formatPhoneNumber } from "@/shared/lib/phone-format";
+import { getDeliveryRequestLabel } from "@/shared/constants/DELIVERY_REQUEST_OPTIONS";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
-import { usePopupChild } from "@/hooks/usePopup";
+import { usePopupChild } from "@/shared/hooks/usePopup";
 
 const ShippingPage = () => {
   const navigate = useNavigate();

@@ -1,7 +1,8 @@
 import { useFormContext } from "react-hook-form";
-import { Button } from "@/components/ui-extended/button";
-import { ContactInfoSection } from "@/components/composite/ContactInfoSection";
-import { formatPhoneNumber } from "@/lib/phone-format";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
+import { Button } from "@/shared/ui-extended/button";
+import { ContactInfoSection } from "@/features/custom-order/components/contact-info-section";
+import { formatPhoneNumber } from "@/shared/lib/phone-format";
 import { SummaryRow } from "@/features/custom-order/components/summary-row";
 import {
   getFabricLabel,
@@ -10,8 +11,7 @@ import {
   getSizeLabel,
   getTieTypeLabel,
 } from "@/features/custom-order/utils/option-labels";
-import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { ShippingAddress } from "@/entities/shipping";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { WizardStepId } from "@/features/custom-order/types/wizard";
 import { StepLayout } from "./step-layout";

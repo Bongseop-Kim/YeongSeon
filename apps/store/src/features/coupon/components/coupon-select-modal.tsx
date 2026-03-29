@@ -5,16 +5,16 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/shared/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
+import { Label } from "@/shared/ui/label";
 import { formatCouponAmount } from "@yeongseon/shared/utils/format-coupon-amount";
 import type {
   AppliedCoupon,
   UserCoupon,
 } from "@yeongseon/shared/types/view/coupon";
-import { Separator } from "@/components/ui/separator";
-import { useUserCoupons } from "@/features/coupon/api/coupons-query";
+import { Separator } from "@/shared/ui/separator";
+import { useUserCoupons } from "@/entities/coupon";
 
 export interface CouponSelectModalRef {
   getSelectedCoupon: () => AppliedCoupon | undefined;

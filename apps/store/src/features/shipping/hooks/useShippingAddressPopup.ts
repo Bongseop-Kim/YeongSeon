@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePopup } from "@/hooks/usePopup";
-import { ROUTES } from "@/constants/ROUTES";
-import { toast } from "@/lib/toast";
+import { usePopup } from "@/shared/hooks/usePopup";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { toast } from "@/shared/lib/toast";
 import {
   useDefaultShippingAddress,
   useShippingAddresses,
   shippingKeys,
-} from "@/features/shipping/api/shipping-query";
+} from "@/entities/shipping";
 import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
-import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
+import type { ShippingAddress } from "@/entities/shipping";
 
 type ShippingMessageTypeValue =
   (typeof SHIPPING_MESSAGE_TYPE)[keyof typeof SHIPPING_MESSAGE_TYPE];

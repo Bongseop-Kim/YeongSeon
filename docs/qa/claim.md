@@ -1,6 +1,6 @@
 ---
 domain: claim
-last-verified: 2026-03-17
+last-verified: 2026-03-29
 ---
 
 # Claim QA 시나리오
@@ -235,6 +235,28 @@ last-verified: 2026-03-17
 
 - 경로: store `/order/:orderId`
 - BR: BR-claim-003
+
+---
+
+### SC-claim-023: sample 주문 접수 상태에서 취소 신청 가능 [high]
+
+**Given** store `/order/:orderId`에서 sample 주문이 접수 상태인 상태
+**When** 취소 버튼을 클릭한다
+**Then** 취소 클레임이 접수된다
+
+- 경로: store `/order/:orderId`
+- BR: BR-claim-009
+
+---
+
+### SC-claim-024: sample 주문 배송완료 상태에서 반품/교환 버튼 미노출 [high]
+
+**Given** store `/order/:orderId`에서 sample 주문이 배송완료 상태인 상태
+**When** 주문 상세 페이지를 조회한다
+**Then** 반품/교환 버튼이 표시되지 않는다
+
+- 경로: store `/order/:orderId`
+- BR: BR-claim-007, BR-claim-009
 
 ---
 

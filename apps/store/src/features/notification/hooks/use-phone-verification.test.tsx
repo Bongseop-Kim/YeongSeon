@@ -7,7 +7,7 @@ const { sendPhoneVerification, verifyPhone } = vi.hoisted(() => ({
   verifyPhone: vi.fn(),
 }));
 
-vi.mock("@/features/notification/api/notification-api", () => ({
+vi.mock("@/entities/notification", () => ({
   sendPhoneVerification,
   verifyPhone,
 }));

@@ -54,8 +54,7 @@ describe("parseCustomReformData", () => {
         pricing: {
           sewing_cost: 12000,
           fabric_cost: 8000,
-          sample_cost: 2000,
-          total_cost: 22000,
+          total_cost: 20000,
         },
         sample: true,
         sample_type: "paper",
@@ -78,8 +77,7 @@ describe("parseCustomReformData", () => {
         pricing: {
           sewingCost: 12000,
           fabricCost: 8000,
-          sampleCost: 2000,
-          totalCost: 22000,
+          totalCost: 20000,
         },
         sample: true,
         sampleType: "paper",
@@ -97,7 +95,6 @@ describe("parseCustomReformData", () => {
         pricing: {
           sewing_cost: 12000,
           fabric_cost: 8000,
-          sample_cost: 0,
           total_cost: 20000,
         },
       }),
@@ -112,7 +109,6 @@ describe("parseCustomReformData", () => {
         pricing: {
           sewing_cost: 12000,
           fabric_cost: 8000,
-          sample_cost: 0,
           total_cost: 20000,
         },
       }),
@@ -130,9 +126,7 @@ describe("parseCustomReformData", () => {
           total_cost: 20000,
         },
       }),
-    ).toThrow(
-      "유효하지 않은 pricing 필드 (pricing.fabric_cost, pricing.sample_cost)",
-    );
+    ).toThrow("유효하지 않은 pricing 필드 (pricing.fabric_cost)");
   });
 });
 
@@ -174,7 +168,6 @@ describe("toAdminOrderItem", () => {
           shippedAt: "2026-03-15T10:00:00Z",
           deliveredAt: null,
         },
-        sampleCost: 5000,
       }),
     );
   });

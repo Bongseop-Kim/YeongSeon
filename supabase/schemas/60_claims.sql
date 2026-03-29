@@ -61,12 +61,12 @@ ALTER TABLE public.claims ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own claims"
   ON public.claims FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can create their own claims"
   ON public.claims FOR INSERT
   TO authenticated
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((SELECT auth.uid()) = user_id);
 
 -- Admin policies
 CREATE POLICY "Admins can view all claims"
@@ -139,7 +139,7 @@ CREATE POLICY "Users can view logs of their own claims"
     EXISTS (
       SELECT 1 FROM public.claims c
       WHERE c.id = claim_id
-        AND c.user_id = auth.uid()
+        AND c.user_id = (SELECT auth.uid())
     )
   );
 
@@ -155,7 +155,7 @@ CREATE POLICY "Users can view logs of their own claim notifications"
     EXISTS (
       SELECT 1 FROM public.claims c
       WHERE c.id = claim_id
-        AND c.user_id = auth.uid()
+        AND c.user_id = (SELECT auth.uid())
     )
   );
 

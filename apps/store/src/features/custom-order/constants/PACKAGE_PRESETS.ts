@@ -1,4 +1,4 @@
-import type { OrderOptions } from "@/features/custom-order/types/order";
+import type { OrderOptions } from "@/entities/custom-order";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 
 interface PackagePresetConfig {

@@ -7,7 +7,7 @@
     },
     "apps/store": {
       "project": ["src/**/*.{ts,tsx}"],
-      "ignore": ["src/components/ui/**", "src/model-viewer.d.ts"]
+      "ignore": ["src/shared/ui/**", "src/model-viewer.d.ts"]
     },
     "apps/admin": {
       "project": ["src/**/*.{ts,tsx}"]

@@ -161,8 +161,7 @@ begin
     total_discount,
     order_type,
     status,
-    payment_group_id,
-    sample_cost
+    payment_group_id
   )
   values (
     v_user_id,
@@ -173,8 +172,7 @@ begin
     v_line_discount_total,
     'sample',
     '대기중',
-    v_payment_group_id,
-    0
+    v_payment_group_id
   )
   returning id into v_order_id;
 

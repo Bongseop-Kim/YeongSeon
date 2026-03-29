@@ -1,7 +1,7 @@
 ---
 domain: quote-request
 status: implemented
-last-verified: 2026-03-17
+last-verified: 2026-03-29
 ---
 
 # Quote Request (견적 요청)

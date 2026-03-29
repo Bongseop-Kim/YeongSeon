@@ -1,5 +1,5 @@
 import { useId, useRef } from "react";
-import { Button } from "@/components/ui-extended/button";
+import { Button } from "@/shared/ui-extended/button";
 import { Upload, X, Loader2, ImageOff } from "lucide-react";
 import {
   Field,
@@ -7,7 +7,7 @@ import {
   FieldDescription,
   FieldLabel,
   FieldTitle,
-} from "@/components/ui/field";
+} from "@/shared/ui/field";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 
 interface ImageUploadProps {

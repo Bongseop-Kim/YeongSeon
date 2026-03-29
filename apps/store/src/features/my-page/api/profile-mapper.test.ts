@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyMarketingConsentToggle,
   normalizeMarketingConsent,
-} from "@/features/my-page/api/profile-mapper";
+} from "@/entities/my-page";
 
 describe("normalizeMarketingConsent", () => {
   it("비객체 입력이면 기본값을 반환한다", () => {

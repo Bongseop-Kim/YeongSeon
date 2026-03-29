@@ -1,6 +1,6 @@
+import { buildHeaders } from "@/utils/auth-support";
 import {
   readAuthMeta,
-  buildHeaders,
   getSupabaseConfig,
   supabaseRequest,
 } from "@/utils/store-data";

@@ -1,7 +1,7 @@
 import React from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Empty } from "@/components/composite/empty";
-import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Empty } from "@/shared/composite/empty";
+import { Separator } from "@/shared/ui/separator";
 import { CartItemCard } from "@/features/cart/components/cart-item-card";
 import { ReformCartItemCard } from "@/features/cart/components/reform-cart-item-card";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";

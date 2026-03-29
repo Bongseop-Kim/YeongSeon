@@ -34,15 +34,18 @@ CREATE POLICY "Enable users to view their own data only"
 
 CREATE POLICY "Enable insert for users based on user_id"
   ON public.shipping_addresses FOR INSERT
+  TO authenticated
   WITH CHECK ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Enable update for users based on user_id"
   ON public.shipping_addresses FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Enable delete for users based on user_id"
   ON public.shipping_addresses FOR DELETE
+  TO authenticated
   USING ((SELECT auth.uid()) = user_id);
 
 -- Admin policies

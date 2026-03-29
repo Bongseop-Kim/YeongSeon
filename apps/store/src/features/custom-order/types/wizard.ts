@@ -1,4 +1,4 @@
-import type { OrderOptions, QuoteOrderOptions } from "./order";
+import type { OrderOptions, QuoteOrderOptions } from "@/entities/custom-order";
 
 export type WizardStepId =
   | "quantity"

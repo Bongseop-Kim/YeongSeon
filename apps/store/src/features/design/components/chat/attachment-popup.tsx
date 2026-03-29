@@ -1,10 +1,10 @@
 import { useRef, type ChangeEvent } from "react";
 import { X } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui-extended/button";
-import { Separator } from "@/components/ui/separator";
-import { FieldTitle } from "@/components/ui/field";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui-extended/button";
+import { Separator } from "@/shared/ui/separator";
+import { FieldTitle } from "@/shared/ui/field";
 import {
   CI_PLACEMENT_OPTIONS,
   COLOR_OPTIONS,
@@ -16,7 +16,7 @@ import type {
 } from "@/features/design/types/design-context";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 interface AttachmentPopupProps {
   onClose: () => void;

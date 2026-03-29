@@ -9,12 +9,12 @@ import {
   useClaimStatusUpdate,
   useClaimTrackingSave,
   useClaimTrackingState,
-} from "@/features/claims/api/claims-query";
-import { ClaimInfoSection } from "@/features/claims/components/claim-info-section";
-import { OrderShippingSection } from "@/features/claims/components/order-shipping-section";
-import { ClaimTrackingSection } from "@/features/claims/components/claim-tracking-section";
-import { ClaimStatusActions } from "@/features/claims/components/claim-status-actions";
-import { ClaimStatusLogTable } from "@/features/claims/components/claim-status-log-table";
+  ClaimInfoSection,
+  OrderShippingSection,
+  ClaimTrackingSection,
+  ClaimStatusActions,
+  ClaimStatusLogTable,
+} from "@/features/claims";
 
 const { Title } = Typography;
 

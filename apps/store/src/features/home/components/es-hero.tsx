@@ -10,10 +10,10 @@ import {
 } from "motion/react";
 import { Link } from "react-router-dom";
 
-import { Button } from "@/components/ui-extended/button";
+import { Button } from "@/shared/ui-extended/button";
 import { HERO_CONTENT } from "@/features/home/constants/HOME_CONTENT";
 import { scrollToSection } from "@/features/home/utils/scroll-to-section";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 
 const HERO_VARIANTS = [
   {

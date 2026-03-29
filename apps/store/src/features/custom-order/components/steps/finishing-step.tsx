@@ -1,12 +1,12 @@
 import { useFormContext } from "react-hook-form";
-import { UtilityPagePanel } from "@/components/composite/utility-page";
-import { SelectField } from "@/components/composite/select-field";
-import { CheckboxField } from "@/components/composite/check-box-field";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
+import { UtilityPagePanel } from "@/shared/composite/utility-page";
+import { SelectField } from "@/shared/composite/select-field";
+import { CheckboxField } from "@/shared/composite/check-box-field";
 import {
   INTERLINING_TYPES,
   INTERLINING_THICKNESS,
 } from "@/features/custom-order/constants/FORM_OPTIONS";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
 
 export const FinishingStep = () => {

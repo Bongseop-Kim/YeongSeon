@@ -1,4 +1,4 @@
-import { generateItemId } from "@/lib/utils";
+import { generateItemId } from "@/shared/lib/utils";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
 

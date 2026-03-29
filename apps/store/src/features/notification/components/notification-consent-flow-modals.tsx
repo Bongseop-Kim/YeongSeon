@@ -3,7 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui-extended/dialog";
+} from "@/shared/ui-extended/dialog";
 import { NotificationConsentModal } from "@/features/notification/components/notification-consent-modal";
 import { PhoneVerificationForm } from "@/features/notification/components/phone-verification-form";
 import type { NotificationConsentFlowState } from "@/features/notification/hooks/use-notification-consent-flow";

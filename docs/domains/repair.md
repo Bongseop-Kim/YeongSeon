@@ -1,7 +1,7 @@
 ---
 domain: repair
 status: partial
-last-verified: 2026-03-17
+last-verified: 2026-03-29
 ---
 
 # Repair (수선 주문)
@@ -61,7 +61,7 @@ stateDiagram-v2
 | `결제중`   | `발송대기` | `confirm_payment_orders`                               |
 | `결제중`   | `대기중`   | `unlock_payment_orders` (Toss 실패)                    |
 | `발송대기` | `발송중`   | 고객 발송 처리                                         |
-| `발송중`   | `접수`     | 판매자 수령 확인                                       |
+| `발송중`   | `접수`     | 관리자 수령 확인                                       |
 | `접수`     | `수선중`   | 관리자 처리                                            |
 | `수선중`   | `수선완료` | 관리자 처리                                            |
 | `수선완료` | `배송중`   | 관리자 배송 처리                                       |
@@ -73,12 +73,11 @@ stateDiagram-v2
 
 `is_rollback=true` + `memo`(사유) 필수. 오입력 정정 목적으로만 사용한다.
 
-| 현재 상태  | 롤백 대상  | 조건                        |
-| ---------- | ---------- | --------------------------- |
-| `발송중`   | `발송대기` | is_rollback=true, memo 필수 |
-| `접수`     | `발송중`   | is_rollback=true, memo 필수 |
-| `수선중`   | `접수`     | is_rollback=true, memo 필수 |
-| `수선완료` | `수선중`   | is_rollback=true, memo 필수 |
+| 현재 상태  | 롤백 대상 | 조건                        |
+| ---------- | --------- | --------------------------- |
+| `접수`     | `발송중`  | is_rollback=true, memo 필수 |
+| `수선중`   | `접수`    | is_rollback=true, memo 필수 |
+| `수선완료` | `수선중`  | is_rollback=true, memo 필수 |
 
 ### 전이 불가
 
@@ -94,18 +93,20 @@ stateDiagram-v2
 
 1. **BR-repair-001**: 결제 완료 시 repair 주문은 `결제중` → `발송대기`로 전이
 2. **BR-repair-002**: Toss 결제 실패 시 `결제중` → `대기중` 자동 복구
-3. **BR-repair-003**: 롤백 가능 상태: `발송대기` → `대기중`, `발송중` → `발송대기`, `접수` → `발송중`, `수선중` → `접수`, `수선완료` → `수선중`. memo 필수
+3. **BR-repair-003**: 관리자 롤백 가능 상태: `접수` → `발송중`, `수선중` → `접수`, `수선완료` → `수선중`. `is_rollback=true`와 memo가 필수다
 4. **BR-repair-004**: `배송중`/`배송완료`/`완료`/`취소`는 롤백 불가
 5. **BR-repair-005**: 취소 불가 범위는 `접수` 이후(`접수`, `수선중`, `수선완료`, `배송중`, `배송완료`, `완료`). `발송대기`, `발송중`은 취소 가능
 6. **BR-repair-006**: 취소 환불 규칙 — `대기중`/`발송대기`: 전액 환불. `발송중`: 반품 택배비(`REFORM_SHIPPING_COST`) 공제 후 환불
 7. **BR-repair-007**: reform 아이템이 포함된 장바구니 결제 시 `create_order_txn`에서 자동으로 별도 repair 주문 생성. `payment_group_id`로 sale 주문과 묶임
 8. **BR-repair-008**: 수선 비용(`REFORM_BASE_COST`, `REFORM_SHIPPING_COST`)은 `custom_order_pricing_constants` 테이블에서 관리. 서버 측 계산만 허용
+9. **BR-repair-009**: 액션 주체를 구분한다. 결제 시스템은 `대기중` → `결제중` → `발송대기`, 고객은 `발송대기` → `발송중`, 관리자는 `발송중` 이후 상태만 직접 변경한다. `대기중`/`결제중`/`발송대기`에서는 관리자 확인과 취소만 가능하다
 
 ## 화면 및 진입점
 
 | 앱    | 화면      | 경로                            | 관련 상태        |
 | ----- | --------- | ------------------------------- | ---------------- |
 | store | 수선 주문 | /reform                         | 대기중           |
+| store | 주문서    | /order/order-form               | 대기중           |
 | store | 주문 목록 | /order/order-list               | 전체 상태        |
 | store | 주문 상세 | /order/:orderId                 | 전체 상태        |
 | store | 발송 안내 | /order/repair-shipping/:orderId | 발송대기, 발송중 |
@@ -114,7 +115,7 @@ stateDiagram-v2
 
 **진입점**
 
-- store `/reform` → 수선 아이템 추가 → 주문하기 → 결제 → 주문 상세
+- store `/reform` → 수선 아이템 추가 → 주문서(`/order/order-form`) → 결제 → 주문 상세
 
 **혼합 장바구니 진입점**
 

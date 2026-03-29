@@ -5,14 +5,14 @@ import {
   FieldDescription,
   FieldLabel,
   FieldTitle,
-} from "@/components/ui/field";
-import { RadioGroupItem } from "@/components/ui/radio-group";
+} from "@/shared/ui/field";
+import { RadioGroupItem } from "@/shared/ui/radio-group";
 import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
-import { ImagePicker } from "@/components/composite/image-picker";
-import { Checkbox } from "@/components/ui/checkbox";
-import CloseButton from "@/components/ui-extended/close";
-import { RadioGroupField } from "@/components/composite/radio-group-field";
-import { MeasurementField } from "@/components/composite/measurement-field";
+import { ImagePicker } from "@/shared/composite/image-picker";
+import { Checkbox } from "@/shared/ui/checkbox";
+import CloseButton from "@/shared/ui-extended/close";
+import { RadioGroupField } from "@/shared/composite/radio-group-field";
+import { MeasurementField } from "@/shared/composite/measurement-field";
 
 interface TieItemCardProps {
   index: number;

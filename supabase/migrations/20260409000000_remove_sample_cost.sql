@@ -1,0 +1,781 @@
+BEGIN;
+
+DROP VIEW public.admin_order_detail_view;
+ALTER TABLE public.orders DROP CONSTRAINT orders_sample_cost_check;
+ALTER TABLE public.orders DROP COLUMN sample_cost;
+
+DROP FUNCTION public.calculate_custom_order_amounts(jsonb, integer, boolean, text);
+DROP FUNCTION public.calculate_refund_amount(uuid);
+
+CREATE FUNCTION public.calculate_custom_order_amounts(
+  p_options jsonb,
+  p_quantity integer,
+  p_sample boolean DEFAULT null,
+  p_sample_type text DEFAULT null
+)
+RETURNS TABLE (sewing_cost integer, fabric_cost integer, total_cost integer)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+declare
+  v_start_cost integer;
+  v_sewing_per_cost integer;
+  v_auto_tie_cost integer;
+  v_triangle_stitch_cost integer;
+  v_side_stitch_cost integer;
+  v_bar_tack_cost integer;
+  v_dimple_cost integer;
+  v_spoderato_cost integer;
+  v_fold7_cost integer;
+  v_wool_interlining_cost integer;
+  v_brand_label_cost integer;
+  v_care_label_cost integer;
+  v_yarn_dyed_design_cost integer;
+
+  v_tie_type text;
+  v_interlining text;
+  v_design_type text;
+  v_fabric_type text;
+  v_fabric_provided boolean;
+
+  v_triangle_stitch boolean;
+  v_side_stitch boolean;
+  v_bar_tack boolean;
+  v_dimple boolean;
+  v_spoderato boolean;
+  v_fold7 boolean;
+  v_brand_label boolean;
+  v_care_label boolean;
+
+  v_sewing_per_unit integer;
+  v_unit_fabric_cost integer;
+  v_fabric_amount integer;
+begin
+  if p_sample is not null or p_sample_type is not null then
+    raise exception 'Legacy sample parameters (p_sample, p_sample_type) are no longer supported. Use create_sample_order_txn instead.';
+  end if;
+
+  if p_options is null or jsonb_typeof(p_options) <> 'object' then
+    raise exception 'Invalid options payload';
+  end if;
+
+  if p_quantity is null or p_quantity <= 0 then
+    raise exception 'Invalid quantity';
+  end if;
+
+  select
+    max(case when key = 'START_COST' then amount end),
+    max(case when key = 'SEWING_PER_COST' then amount end),
+    max(case when key = 'AUTO_TIE_COST' then amount end),
+    max(case when key = 'TRIANGLE_STITCH_COST' then amount end),
+    max(case when key = 'SIDE_STITCH_COST' then amount end),
+    max(case when key = 'BAR_TACK_COST' then amount end),
+    max(case when key = 'DIMPLE_COST' then amount end),
+    max(case when key = 'SPODERATO_COST' then amount end),
+    max(case when key = 'FOLD7_COST' then amount end),
+    max(case when key = 'WOOL_INTERLINING_COST' then amount end),
+    max(case when key = 'BRAND_LABEL_COST' then amount end),
+    max(case when key = 'CARE_LABEL_COST' then amount end),
+    max(case when key = 'YARN_DYED_DESIGN_COST' then amount end)
+  into
+    v_start_cost,
+    v_sewing_per_cost,
+    v_auto_tie_cost,
+    v_triangle_stitch_cost,
+    v_side_stitch_cost,
+    v_bar_tack_cost,
+    v_dimple_cost,
+    v_spoderato_cost,
+    v_fold7_cost,
+    v_wool_interlining_cost,
+    v_brand_label_cost,
+    v_care_label_cost,
+    v_yarn_dyed_design_cost
+  from public.pricing_constants
+  where key = any (array[
+    'START_COST',
+    'SEWING_PER_COST',
+    'AUTO_TIE_COST',
+    'TRIANGLE_STITCH_COST',
+    'SIDE_STITCH_COST',
+    'BAR_TACK_COST',
+    'DIMPLE_COST',
+    'SPODERATO_COST',
+    'FOLD7_COST',
+    'WOOL_INTERLINING_COST',
+    'BRAND_LABEL_COST',
+    'CARE_LABEL_COST',
+    'YARN_DYED_DESIGN_COST'
+  ]);
+
+  if v_start_cost is null
+    or v_sewing_per_cost is null
+    or v_auto_tie_cost is null
+    or v_triangle_stitch_cost is null
+    or v_side_stitch_cost is null
+    or v_bar_tack_cost is null
+    or v_dimple_cost is null
+    or v_spoderato_cost is null
+    or v_fold7_cost is null
+    or v_wool_interlining_cost is null
+    or v_brand_label_cost is null
+    or v_care_label_cost is null
+    or v_yarn_dyed_design_cost is null then
+    raise exception 'Custom order pricing constants are not configured';
+  end if;
+
+  v_tie_type := coalesce(p_options->>'tie_type', '');
+  v_interlining := coalesce(p_options->>'interlining', '');
+  v_design_type := nullif(p_options->>'design_type', '');
+  v_fabric_type := nullif(p_options->>'fabric_type', '');
+  v_fabric_provided := coalesce((p_options->>'fabric_provided')::boolean, false);
+
+  if v_tie_type != '' and v_tie_type != 'AUTO' then
+    raise exception 'Invalid tie_type: %. Allowed values are empty string or AUTO', v_tie_type;
+  end if;
+  if v_interlining != '' and v_interlining != 'WOOL' then
+    raise exception 'Invalid interlining: %. Allowed values are empty string or WOOL', v_interlining;
+  end if;
+
+  v_triangle_stitch := coalesce((p_options->>'triangle_stitch')::boolean, false);
+  v_side_stitch := coalesce((p_options->>'side_stitch')::boolean, false);
+  v_bar_tack := coalesce((p_options->>'bar_tack')::boolean, false);
+  v_dimple := coalesce((p_options->>'dimple')::boolean, false);
+  v_spoderato := coalesce((p_options->>'spoderato')::boolean, false);
+  v_fold7 := coalesce((p_options->>'fold7')::boolean, false);
+  v_brand_label := coalesce((p_options->>'brand_label')::boolean, false);
+  v_care_label := coalesce((p_options->>'care_label')::boolean, false);
+
+  if v_dimple and v_tie_type != 'AUTO' then
+    raise exception '딤플은 자동 봉제(AUTO)에서만 선택 가능합니다';
+  end if;
+
+  v_sewing_per_unit := v_sewing_per_cost;
+
+  if v_tie_type = 'AUTO' then
+    v_sewing_per_unit := v_sewing_per_unit + v_auto_tie_cost;
+  end if;
+
+  if v_triangle_stitch then
+    v_sewing_per_unit := v_sewing_per_unit + v_triangle_stitch_cost;
+  end if;
+
+  if v_side_stitch then
+    v_sewing_per_unit := v_sewing_per_unit + v_side_stitch_cost;
+  end if;
+
+  if v_bar_tack then
+    v_sewing_per_unit := v_sewing_per_unit + v_bar_tack_cost;
+  end if;
+
+  if v_dimple then
+    v_sewing_per_unit := v_sewing_per_unit + v_dimple_cost;
+  end if;
+
+  if v_spoderato then
+    v_sewing_per_unit := v_sewing_per_unit + v_spoderato_cost;
+  end if;
+
+  if v_fold7 then
+    v_sewing_per_unit := v_sewing_per_unit + v_fold7_cost;
+  end if;
+
+  if v_interlining = 'WOOL' then
+    v_sewing_per_unit := v_sewing_per_unit + v_wool_interlining_cost;
+  end if;
+
+  if v_brand_label then
+    v_sewing_per_unit := v_sewing_per_unit + v_brand_label_cost;
+  end if;
+
+  if v_care_label then
+    v_sewing_per_unit := v_sewing_per_unit + v_care_label_cost;
+  end if;
+
+  sewing_cost := (v_sewing_per_unit * p_quantity) + v_start_cost;
+
+  if v_fabric_provided then
+    v_fabric_amount := 0;
+  elsif v_design_type is null or v_fabric_type is null then
+    raise exception 'fabric_provided=false이지만 design_type 또는 fabric_type이 null입니다';
+  else
+    select pc.amount
+    into v_unit_fabric_cost
+    from public.pricing_constants pc
+    where pc.key = 'FABRIC_' || v_design_type || '_' || v_fabric_type;
+
+    if v_unit_fabric_cost is null then
+      raise exception 'Unsupported design/fabric option for custom order pricing';
+    end if;
+
+    v_fabric_amount := round(
+      (p_quantity::numeric * v_unit_fabric_cost::numeric) / 4
+    )::integer
+      + case when v_design_type = 'YARN_DYED' then v_yarn_dyed_design_cost else 0 end;
+  end if;
+
+  fabric_cost := v_fabric_amount;
+  total_cost := sewing_cost + fabric_cost;
+
+  return next;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION public.create_custom_order_txn(
+  p_shipping_address_id uuid,
+  p_options jsonb,
+  p_quantity integer,
+  p_reference_images jsonb DEFAULT '[]'::jsonb,
+  p_additional_notes text DEFAULT '',
+  p_sample boolean DEFAULT null,
+  p_sample_type text DEFAULT null,
+  p_user_coupon_id uuid DEFAULT null
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+-- SECURITY DEFINER: 이 함수는 호출자(authenticated 역할)가 직접 쓰기 권한을 갖지 않는
+-- orders, order_items 테이블에 INSERT를 수행해야 하므로 SECURITY DEFINER가 필요하다.
+-- auth.uid() 소유권 검증 및 shipping_addresses 존재 확인으로 권한 남용을 방지한다.
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_user_id uuid;
+  v_order_id uuid;
+  v_order_number text;
+  v_payment_group_id uuid;
+  v_sewing_cost integer;
+  v_fabric_cost integer;
+  v_total_cost integer;
+  v_reform_data jsonb;
+  v_elem jsonb;
+  v_idx integer;
+  v_base_unit integer;
+  v_remainder integer;
+
+  -- 쿠폰 관련 변수
+  v_coupon record;
+  v_discount_amount integer := 0;
+  v_capped_line_discount integer := 0;
+  v_discount_remainder integer := 0;
+  v_line_discount_total integer := 0;
+  v_total_price integer;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  if p_sample is not null or p_sample_type is not null then
+    raise exception 'Legacy sample parameters (p_sample, p_sample_type) are no longer supported. Use create_sample_order_txn instead.';
+  end if;
+
+  if p_quantity is null or p_quantity <= 0 then
+    raise exception 'Invalid quantity';
+  end if;
+
+  if p_reference_images is not null and jsonb_typeof(p_reference_images) <> 'array' then
+    raise exception 'p_reference_images must be a JSON array';
+  end if;
+
+  v_idx := 0;
+  if p_reference_images is not null then
+    for v_elem in select jsonb_array_elements(p_reference_images) loop
+      if jsonb_typeof(v_elem) <> 'object'
+         or not (v_elem ? 'url')
+         or jsonb_typeof(v_elem->'url') <> 'string'
+         or btrim(coalesce(v_elem->>'url', '')) = ''
+         or ((v_elem ? 'file_id') and jsonb_typeof(v_elem->'file_id') not in ('string', 'null')) then
+        raise exception 'p_reference_images[%] must be an object with a non-empty string "url" and optional string/null "file_id"', v_idx;
+      end if;
+      v_idx := v_idx + 1;
+    end loop;
+  end if;
+
+  if p_shipping_address_id is null then
+    raise exception 'Shipping address is required';
+  end if;
+
+  if not exists (
+    select 1
+    from public.shipping_addresses sa
+    where sa.id = p_shipping_address_id
+      and sa.user_id = v_user_id
+  ) then
+    raise exception 'Shipping address not found';
+  end if;
+
+  select
+    amounts.sewing_cost,
+    amounts.fabric_cost,
+    amounts.total_cost
+  into
+    v_sewing_cost,
+    v_fabric_cost,
+    v_total_cost
+  from public.calculate_custom_order_amounts(p_options, p_quantity) as amounts;
+
+  v_base_unit := floor(v_total_cost::numeric / p_quantity)::integer;
+  v_remainder := v_total_cost - v_base_unit * p_quantity;
+
+  -- 쿠폰 검증 및 할인 계산
+  if p_user_coupon_id is not null then
+    select
+      uc.id, uc.status, uc.expires_at,
+      c.discount_type, c.discount_value, c.max_discount_amount,
+      c.expiry_date, c.is_active
+    into v_coupon
+    from public.user_coupons uc
+    join public.coupons c on c.id = uc.coupon_id
+    where uc.id = p_user_coupon_id
+      and uc.user_id = v_user_id
+    for update;
+
+    if not found then
+      raise exception 'Coupon not found';
+    end if;
+    if v_coupon.status <> 'active' then
+      raise exception 'Coupon is not available';
+    end if;
+    if v_coupon.expires_at is not null and v_coupon.expires_at <= now() then
+      raise exception 'Coupon has expired';
+    end if;
+    if coalesce(v_coupon.is_active, false) is not true then
+      raise exception 'Coupon is not active';
+    end if;
+    if v_coupon.expiry_date is not null and v_coupon.expiry_date < current_date then
+      raise exception 'Coupon has expired';
+    end if;
+
+    -- unit_price = v_base_unit, qty = p_quantity (create_order_txn 동일 패턴)
+    if v_coupon.discount_type = 'percentage' then
+      v_discount_amount := floor(v_base_unit * (v_coupon.discount_value::numeric / 100.0))::integer;
+    elsif v_coupon.discount_type = 'fixed' then
+      v_discount_amount := floor(v_coupon.discount_value::numeric)::integer;
+    else
+      raise exception 'Invalid coupon type';
+    end if;
+
+    v_discount_amount := greatest(0, least(v_discount_amount, v_base_unit));
+    v_capped_line_discount := v_discount_amount * p_quantity;
+    if v_coupon.max_discount_amount is not null then
+      v_capped_line_discount := least(v_capped_line_discount, v_coupon.max_discount_amount);
+    end if;
+
+    v_discount_amount := floor(v_capped_line_discount::numeric / p_quantity)::integer;
+    v_discount_remainder := v_capped_line_discount % p_quantity;
+    v_line_discount_total := (v_discount_amount * p_quantity) + v_discount_remainder;
+  end if;
+
+  v_total_price := v_total_cost - v_line_discount_total;
+
+  v_order_number := public.generate_order_number();
+  v_payment_group_id := gen_random_uuid();
+
+  insert into public.orders (
+    user_id,
+    order_number,
+    shipping_address_id,
+    total_price,
+    original_price,
+    total_discount,
+    order_type,
+    status,
+    payment_group_id
+  )
+  values (
+    v_user_id,
+    v_order_number,
+    p_shipping_address_id,
+    v_total_price,
+    v_total_cost,
+    v_line_discount_total,
+    'custom',
+    '대기중',
+    v_payment_group_id
+  )
+  returning id into v_order_id;
+
+  insert into public.order_items (
+    order_id,
+    item_id,
+    item_type,
+    product_id,
+    selected_option_id,
+    item_data,
+    quantity,
+    unit_price,
+    discount_amount,
+    line_discount_amount,
+    applied_user_coupon_id
+  )
+  values (
+    v_order_id,
+    'custom-order-' || v_order_id::text,
+    'custom',
+    null,
+    null,
+    jsonb_build_object(
+      'custom_order', true,
+      'quantity', p_quantity,
+      'options', p_options,
+      'reference_images', coalesce(p_reference_images, '[]'::jsonb),
+      'additional_notes', coalesce(p_additional_notes, ''),
+      'pricing', jsonb_build_object(
+        'sewing_cost', v_sewing_cost,
+        'fabric_cost', v_fabric_cost,
+        'total_cost', v_total_cost,
+        'unit_price_remainder', v_remainder
+      )
+    ),
+    p_quantity,
+    v_base_unit,
+    v_discount_amount,
+    v_line_discount_total,
+    p_user_coupon_id
+  );
+
+  -- images 테이블에 참조 이미지 등록
+  -- SECURITY DEFINER이므로 RLS bypass. RPC 내부에서 이미 v_user_id := auth.uid() 소유권 검증 완료.
+  IF p_reference_images IS NOT NULL AND jsonb_array_length(p_reference_images) > 0 THEN
+    INSERT INTO public.images (url, file_id, folder, entity_type, entity_id, uploaded_by)
+    SELECT
+      elem->>'url',
+      nullif(elem->>'file_id', ''),
+      '/custom-orders',
+      'custom_order',
+      v_order_id::text,
+      v_user_id
+    FROM jsonb_array_elements(p_reference_images) AS elem;
+  END IF;
+
+  -- 쿠폰 reserved 처리
+  if p_user_coupon_id is not null then
+    update public.user_coupons
+    set status = 'reserved',
+        updated_at = now()
+    where id = p_user_coupon_id
+      and user_id = v_user_id
+      and status = 'active';
+  end if;
+
+  return jsonb_build_object(
+    'order_id', v_order_id,
+    'order_number', v_order_number,
+    'payment_group_id', v_payment_group_id
+  );
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION public.calculate_refund_amount(p_order_id uuid)
+RETURNS TABLE (refund_amount integer)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+declare
+  v_total_price integer;
+  v_status text;
+  v_order_type text;
+begin
+  select o.total_price, o.status, o.order_type
+  into v_total_price, v_status, v_order_type
+  from public.orders o
+  where o.id = p_order_id;
+
+  if not found then
+    raise exception 'Order not found';
+  end if;
+
+  if not (
+    (v_order_type = 'sale'   and v_status in ('대기중', '결제중', '진행중'))
+    or (v_order_type = 'custom' and v_status in ('대기중', '결제중', '접수'))
+    or (v_order_type = 'repair' and v_status in ('대기중', '결제중', '접수'))
+    or (v_order_type = 'token'  and v_status in ('대기중', '결제중'))
+    or (v_order_type = 'sample' and v_status in ('대기중', '결제중', '접수'))
+  ) then
+    raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다';
+  end if;
+
+  refund_amount := v_total_price;
+  return next;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION public.create_sample_order_txn(
+  p_shipping_address_id uuid,
+  p_sample_type text,
+  p_options jsonb,
+  p_reference_images jsonb DEFAULT '[]'::jsonb,
+  p_additional_notes text DEFAULT '',
+  p_user_coupon_id uuid DEFAULT null
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_user_id uuid;
+  v_order_id uuid;
+  v_order_number text;
+  v_payment_group_id uuid;
+  v_total_cost integer;
+  v_item_data jsonb;
+  v_design_type text;
+  v_elem jsonb;
+  v_idx integer;
+
+  -- 쿠폰 관련 변수
+  v_coupon record;
+  v_discount_amount integer := 0;
+  v_line_discount_total integer := 0;
+  v_total_price integer;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  if p_sample_type not in ('fabric', 'sewing', 'fabric_and_sewing') then
+    raise exception 'Invalid p_sample_type: %', p_sample_type;
+  end if;
+
+  if p_shipping_address_id is null then
+    raise exception 'Shipping address is required';
+  end if;
+
+  if p_reference_images is not null and jsonb_typeof(p_reference_images) <> 'array' then
+    raise exception 'p_reference_images must be a JSON array';
+  end if;
+
+  v_idx := 0;
+  if p_reference_images is not null then
+    for v_elem in select jsonb_array_elements(p_reference_images) loop
+      if jsonb_typeof(v_elem) <> 'object'
+         or not (v_elem ? 'url')
+         or jsonb_typeof(v_elem->'url') <> 'string'
+         or btrim(coalesce(v_elem->>'url', '')) = ''
+         or ((v_elem ? 'file_id') and jsonb_typeof(v_elem->'file_id') not in ('string', 'null')) then
+        raise exception 'p_reference_images[%] must be an object with a non-empty string "url" and optional string/null "file_id"', v_idx;
+      end if;
+      v_idx := v_idx + 1;
+    end loop;
+  end if;
+
+  if not exists (
+    select 1
+    from public.shipping_addresses sa
+    where sa.id = p_shipping_address_id
+      and sa.user_id = v_user_id
+  ) then
+    raise exception 'Shipping address not found';
+  end if;
+
+  v_design_type := p_options->>'design_type';
+
+  if p_sample_type in ('fabric', 'fabric_and_sewing')
+     and v_design_type not in ('PRINTING', 'YARN_DYED') then
+    raise exception 'Invalid design_type for sample order: %', v_design_type;
+  end if;
+
+  select pc.amount
+  into v_total_cost
+  from public.pricing_constants pc
+  where pc.key = case p_sample_type
+    when 'sewing' then 'SAMPLE_SEWING_COST'
+    when 'fabric' then
+      case v_design_type
+        when 'PRINTING' then 'SAMPLE_FABRIC_PRINTING_COST'
+        else                 'SAMPLE_FABRIC_YARN_DYED_COST'
+      end
+    else -- fabric_and_sewing
+      case v_design_type
+        when 'PRINTING' then 'SAMPLE_FABRIC_AND_SEWING_PRINTING_COST'
+        else                 'SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST'
+      end
+  end;
+
+  if v_total_cost is null then
+    raise exception 'Sample pricing constant is not configured';
+  end if;
+
+  -- 쿠폰 검증 및 할인 계산 (unit_price = v_total_cost, qty = 1)
+  if p_user_coupon_id is not null then
+    select
+      uc.id, uc.status, uc.expires_at,
+      c.discount_type, c.discount_value, c.max_discount_amount,
+      c.expiry_date, c.is_active
+    into v_coupon
+    from public.user_coupons uc
+    join public.coupons c on c.id = uc.coupon_id
+    where uc.id = p_user_coupon_id
+      and uc.user_id = v_user_id
+    for update;
+
+    if not found then
+      raise exception 'Coupon not found';
+    end if;
+    if v_coupon.status <> 'active' then
+      raise exception 'Coupon is not available';
+    end if;
+    if v_coupon.expires_at is not null and v_coupon.expires_at <= now() then
+      raise exception 'Coupon has expired';
+    end if;
+    if coalesce(v_coupon.is_active, false) is not true then
+      raise exception 'Coupon is not active';
+    end if;
+    if v_coupon.expiry_date is not null and v_coupon.expiry_date < current_date then
+      raise exception 'Coupon has expired';
+    end if;
+
+    if v_coupon.discount_type = 'percentage' then
+      v_discount_amount := floor(v_total_cost * (v_coupon.discount_value::numeric / 100.0))::integer;
+    elsif v_coupon.discount_type = 'fixed' then
+      v_discount_amount := floor(v_coupon.discount_value::numeric)::integer;
+    else
+      raise exception 'Invalid coupon type';
+    end if;
+
+    v_discount_amount := greatest(0, least(v_discount_amount, v_total_cost));
+    v_line_discount_total := v_discount_amount;
+    if v_coupon.max_discount_amount is not null then
+      v_line_discount_total := least(v_line_discount_total, v_coupon.max_discount_amount);
+    end if;
+  end if;
+
+  v_total_price := v_total_cost - v_line_discount_total;
+
+  v_order_number := public.generate_order_number();
+  v_payment_group_id := gen_random_uuid();
+
+  insert into public.orders (
+    user_id,
+    order_number,
+    shipping_address_id,
+    total_price,
+    original_price,
+    total_discount,
+    order_type,
+    status,
+    payment_group_id
+  )
+  values (
+    v_user_id,
+    v_order_number,
+    p_shipping_address_id,
+    v_total_price,
+    v_total_cost,
+    v_line_discount_total,
+    'sample',
+    '대기중',
+    v_payment_group_id
+  )
+  returning id into v_order_id;
+
+  v_item_data := jsonb_build_object(
+    'sample_type', p_sample_type,
+    'options', coalesce(p_options, '{}'::jsonb),
+    'reference_images', coalesce(p_reference_images, '[]'::jsonb),
+    'additional_notes', coalesce(p_additional_notes, ''),
+    'pricing', jsonb_build_object(
+      'total_cost', v_total_cost
+    )
+  );
+
+  insert into public.order_items (
+    order_id,
+    item_id,
+    item_type,
+    product_id,
+    selected_option_id,
+    item_data,
+    quantity,
+    unit_price,
+    discount_amount,
+    line_discount_amount,
+    applied_user_coupon_id
+  )
+  values (
+    v_order_id,
+    'sample-order-' || v_order_id::text,
+    'sample',
+    null,
+    null,
+    v_item_data,
+    1,
+    v_total_cost,
+    v_line_discount_total,
+    v_line_discount_total,
+    p_user_coupon_id
+  );
+
+  IF p_reference_images IS NOT NULL AND jsonb_array_length(p_reference_images) > 0 THEN
+    INSERT INTO public.images (url, file_id, folder, entity_type, entity_id, uploaded_by)
+    SELECT
+      elem->>'url',
+      nullif(elem->>'file_id', ''),
+      '/sample-orders',
+      'sample_order',
+      v_order_id::text,
+      v_user_id
+    FROM jsonb_array_elements(p_reference_images) AS elem;
+  END IF;
+
+  -- 쿠폰 reserved 처리
+  if p_user_coupon_id is not null then
+    update public.user_coupons
+    set status = 'reserved',
+        updated_at = now()
+    where id = p_user_coupon_id
+      and user_id = v_user_id
+      and status = 'active';
+  end if;
+
+  return jsonb_build_object(
+    'order_id', v_order_id,
+    'order_number', v_order_number,
+    'payment_group_id', v_payment_group_id
+  );
+end;
+$$;
+
+CREATE OR REPLACE VIEW public.admin_order_detail_view
+WITH (security_invoker = true)
+AS
+SELECT
+  o.id,
+  o.user_id        AS "userId",
+  o.order_number   AS "orderNumber",
+  to_char(o.created_at, 'YYYY-MM-DD') AS date,
+  o.order_type     AS "orderType",
+  o.status,
+  o.total_price    AS "totalPrice",
+  o.original_price AS "originalPrice",
+  o.total_discount AS "totalDiscount",
+  o.courier_company  AS "courierCompany",
+  o.tracking_number  AS "trackingNumber",
+  o.shipped_at       AS "shippedAt",
+  o.delivered_at     AS "deliveredAt",
+  o.confirmed_at     AS "confirmedAt",
+  o.created_at,
+  o.updated_at,
+  p.name           AS "customerName",
+  p.phone          AS "customerPhone",
+  public.admin_get_email(o.user_id) AS "customerEmail",
+  sa.recipient_name   AS "recipientName",
+  sa.recipient_phone  AS "recipientPhone",
+  sa.address          AS "shippingAddress",
+  sa.address_detail   AS "shippingAddressDetail",
+  sa.postal_code      AS "shippingPostalCode",
+  sa.delivery_memo    AS "deliveryMemo",
+  sa.delivery_request AS "deliveryRequest",
+  o.payment_group_id  AS "paymentGroupId",
+  o.shipping_cost     AS "shippingCost",
+  public.get_order_admin_actions(o.order_type, o.status) AS "adminActions"
+FROM public.orders o
+LEFT JOIN public.profiles p ON p.id = o.user_id
+LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id;
+
+COMMIT;

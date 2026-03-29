@@ -1,8 +1,8 @@
 import { Copy, MapPin } from "lucide-react";
-import { Button } from "@/components/ui-extended/button";
-import { Separator } from "@/components/ui/separator";
-import { REPAIR_SHIPPING_ADDRESS } from "@/constants/REPAIR_SHIPPING";
-import { toast } from "@/lib/toast";
+import { Button } from "@/shared/ui-extended/button";
+import { Separator } from "@/shared/ui/separator";
+import { REPAIR_SHIPPING_ADDRESS } from "@/shared/constants/REPAIR_SHIPPING";
+import { toast } from "@/shared/lib/toast";
 
 interface RepairShippingAddressBannerProps {
   /** 제공 시 "송장번호 등록" 버튼 노출 */

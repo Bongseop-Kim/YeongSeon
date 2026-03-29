@@ -4,7 +4,7 @@ import {
   toReformData,
 } from "@/features/reform/api/reform-mapper";
 
-vi.mock("@/lib/utils", () => ({
+vi.mock("@/shared/lib/utils", () => ({
   generateItemId: vi.fn((type: string, id: string) => `${type}-${id}`),
 }));
 

@@ -1,7 +1,7 @@
 import { Image } from "@imagekit/react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui-extended/button";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui-extended/button";
+import { Label } from "@/shared/ui/label";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import {
   INQUIRY_STATUS,

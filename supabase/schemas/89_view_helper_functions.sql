@@ -83,7 +83,7 @@ AS $$
     END
 
     WHEN p_order_type = 'sample' THEN CASE p_status
-      WHEN '대기중'   THEN ARRAY['advance', 'cancel']
+      WHEN '대기중'   THEN ARRAY['cancel']
       WHEN '결제중'   THEN ARRAY['rollback', 'cancel']
       WHEN '접수'     THEN ARRAY['advance', 'rollback', 'cancel']
       WHEN '제작중'   THEN ARRAY['advance', 'rollback']
@@ -93,8 +93,10 @@ AS $$
     END
 
     WHEN p_order_type = 'repair' THEN CASE p_status
-      WHEN '대기중'   THEN ARRAY['advance', 'cancel']
-      WHEN '결제중'   THEN ARRAY['rollback', 'cancel']
+      WHEN '대기중'   THEN ARRAY['cancel']
+      WHEN '결제중'   THEN ARRAY['cancel']
+      WHEN '발송대기' THEN ARRAY['cancel']
+      WHEN '발송중'   THEN ARRAY['advance', 'cancel']
       WHEN '접수'     THEN ARRAY['advance', 'rollback']
       WHEN '수선중'   THEN ARRAY['advance', 'rollback']
       WHEN '수선완료' THEN ARRAY['advance', 'rollback']

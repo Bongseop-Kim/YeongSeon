@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
-import { RadioChoiceField } from "@/components/composite/radio-choice-field";
-import { CheckboxChoiceField } from "@/components/composite/checkbox-choice-field";
-import { RadioGroup } from "@/components/ui/radio-group";
-import { UtilityPagePanel } from "@/components/composite/utility-page";
-import { toast } from "@/lib/toast";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
+import { CheckboxChoiceField } from "@/shared/composite/checkbox-choice-field";
+import { UtilityPagePanel } from "@/shared/composite/utility-page";
+import { toast } from "@/shared/lib/toast";
+import { RadioChoiceOptionGrid } from "@/features/custom-order/components/radio-choice-option-grid";
 import { StepLayout } from "./step-layout";
 
 const SEWING_STYLES: {
@@ -78,43 +77,31 @@ export const SewingStep = () => {
       ]}
     >
       <UtilityPagePanel title="타이 종류">
-        <RadioGroup
+        <RadioChoiceOptionGrid
           value={tieType ?? "MANUAL"}
           onValueChange={handleTieTypeChange}
-        >
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {(["MANUAL", "AUTO"] as const).map((type) => (
-              <RadioChoiceField
-                key={type}
-                value={type}
-                id={`tie-type-${type.toLowerCase()}`}
-                selected={
-                  type === "MANUAL" ? tieType === null : tieType === "AUTO"
-                }
-                variant="row"
-                title={
-                  type === "AUTO" ? "자동 타이 (지퍼)" : "수동 타이 (손매듭)"
-                }
-                description={
-                  type === "AUTO"
-                    ? "행사 운영과 단체 착용처럼 빠른 착용이 필요한 경우에 적합합니다."
-                    : "매듭 표현과 전통적인 실루엣을 직접 조절할 수 있습니다."
-                }
-                meta={
-                  <>
-                    <span>{type === "AUTO" ? "딤플 가능" : "수동 매듭"}</span>
-                    <span aria-hidden="true" className="text-zinc-300">
-                      ·
-                    </span>
-                    <span>
-                      {type === "AUTO" ? "착용 속도 우선" : "표현 자유도 우선"}
-                    </span>
-                  </>
-                }
-              />
-            ))}
-          </div>
-        </RadioGroup>
+          options={(["MANUAL", "AUTO"] as const).map((type) => ({
+            value: type,
+            id: `tie-type-${type.toLowerCase()}`,
+            selected: type === "MANUAL" ? tieType === null : tieType === "AUTO",
+            title: type === "AUTO" ? "자동 타이 (지퍼)" : "수동 타이 (손매듭)",
+            description:
+              type === "AUTO"
+                ? "행사 운영과 단체 착용처럼 빠른 착용이 필요한 경우에 적합합니다."
+                : "매듭 표현과 전통적인 실루엣을 직접 조절할 수 있습니다.",
+            meta: (
+              <>
+                <span>{type === "AUTO" ? "딤플 가능" : "수동 매듭"}</span>
+                <span aria-hidden="true" className="text-zinc-300">
+                  ·
+                </span>
+                <span>
+                  {type === "AUTO" ? "착용 속도 우선" : "표현 자유도 우선"}
+                </span>
+              </>
+            ),
+          }))}
+        />
       </UtilityPagePanel>
 
       <UtilityPagePanel

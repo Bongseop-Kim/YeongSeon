@@ -1,13 +1,12 @@
 import { mergeConfig, defineConfig } from "vitest/config";
 import viteConfig from "./vite.config";
+import { baseVitestTestConfig } from "../../vitest.base.js";
 
 export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
-      globals: true,
-      clearMocks: true,
-      restoreMocks: true,
+      ...baseVitestTestConfig,
       projects: [
         {
           extends: true,
@@ -43,6 +42,7 @@ export default mergeConfig(
           "src/App.tsx",
           // UI
           "src/**/components/**/*.tsx",
+          "src/widgets/**",
           "src/pages/**",
           // 타입 전용
           "src/**/types/**",

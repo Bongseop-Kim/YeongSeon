@@ -431,7 +431,6 @@ SELECT
   sa.delivery_request AS "deliveryRequest",
   o.payment_group_id  AS "paymentGroupId",
   o.shipping_cost     AS "shippingCost",
-  o.sample_cost    AS "sampleCost",
   public.get_order_admin_actions(o.order_type, o.status) AS "adminActions"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id

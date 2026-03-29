@@ -1,0 +1,351 @@
+import { PopupLayout } from "@/shared/layout/popup-layout";
+import { Button } from "@/shared/ui-extended/button";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import type {
+  ShippingAddress,
+  ShippingAddressInput,
+} from "@/entities/shipping";
+import { Form } from "@/shared/ui/form";
+import { Input } from "@/shared/ui-extended/input";
+import { SelectField } from "@/shared/composite/select-field";
+import {
+  CUSTOM_DELIVERY_REQUEST,
+  DELIVERY_REQUEST_OPTIONS,
+} from "@/shared/constants/DELIVERY_REQUEST_OPTIONS";
+import { CheckboxField } from "@/shared/composite/check-box-field";
+import { InputField } from "@/shared/composite/input-field";
+import { TextareaField } from "@/shared/composite/textarea-field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLegend,
+  FieldLabel,
+  FieldSet,
+  FieldTitle,
+} from "@/shared/ui/field";
+import { PostcodeSearch, type DaumPostcodeData } from "@/features/shipping";
+import { useState, useEffect } from "react";
+import {
+  useShippingAddress,
+  useCreateShippingAddress,
+  useUpdateShippingAddress,
+  useShippingAddresses,
+} from "@/entities/shipping";
+import {
+  extractPhoneNumber,
+  formatPhoneNumber,
+} from "@/shared/lib/phone-format";
+import { toast } from "@/shared/lib/toast";
+import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
+import { usePopupChild } from "@/shared/hooks/usePopup";
+
+const ShippingFormPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const addressId = searchParams.get("id");
+  const isEditMode = !!addressId;
+  const [showPostcodeSearch, setShowPostcodeSearch] = useState(false);
+  const { postMessageAndClose } = usePopupChild();
+  const { data: existingAddress, isLoading } = useShippingAddress(
+    addressId || "",
+  );
+  const { data: addresses } = useShippingAddresses();
+  const createMutation = useCreateShippingAddress();
+  const updateMutation = useUpdateShippingAddress();
+
+  // 처음 등록인지 확인 (배송지가 0개인 경우)
+  const isFirstAddress = !isEditMode && !!addresses && addresses.length === 0;
+
+  const form = useForm<ShippingAddress>({
+    defaultValues: {
+      recipientName: "",
+      recipientPhone: "",
+      address: "",
+      detailAddress: "",
+      postalCode: "",
+      deliveryRequest: undefined,
+      deliveryMemo: undefined,
+      isDefault: isFirstAddress, // 처음 등록 시 자동으로 기본 배송지 설정
+    },
+  });
+
+  // 수정 모드일 때 기존 데이터 로드
+  useEffect(() => {
+    if (isEditMode && existingAddress) {
+      form.reset({
+        recipientName: existingAddress.recipientName,
+        recipientPhone: existingAddress.recipientPhone,
+        address: existingAddress.address,
+        detailAddress: existingAddress.detailAddress,
+        postalCode: existingAddress.postalCode,
+        deliveryRequest: existingAddress.deliveryRequest,
+        deliveryMemo: existingAddress.deliveryMemo,
+        isDefault: existingAddress.isDefault,
+      });
+    }
+  }, [isEditMode, existingAddress, form]);
+
+  // 처음 등록 시 기본 배송지 자동 설정
+  useEffect(() => {
+    if (isFirstAddress) {
+      form.setValue("isDefault", true);
+    }
+  }, [isFirstAddress, form]);
+
+  // 배송지가 1개만 있을 때 기본 배송지 체크 해제 불가
+  const canUncheckDefault = !isEditMode || (addresses && addresses.length > 1);
+
+  const { handleSubmit } = form;
+  const deliveryRequest = useWatch({
+    control: form.control,
+    name: "deliveryRequest",
+  });
+  const isPopupContext =
+    typeof window !== "undefined" &&
+    !!window.opener &&
+    window.opener !== window;
+
+  useEffect(() => {
+    if (
+      deliveryRequest !== CUSTOM_DELIVERY_REQUEST &&
+      form.getValues("deliveryMemo") !== undefined
+    ) {
+      form.setValue("deliveryMemo", undefined);
+    }
+  }, [deliveryRequest, form]);
+
+  const onSubmit = (data: ShippingAddress) => {
+    // 필수값 검증
+    if (!data.recipientName.trim()) {
+      toast.error("이름을 입력해주세요.");
+      return;
+    }
+    if (!data.recipientPhone.trim()) {
+      toast.error("휴대폰번호를 입력해주세요.");
+      return;
+    }
+    if (!data.address.trim() || !data.postalCode.trim()) {
+      toast.error("주소를 입력해주세요.");
+      return;
+    }
+    // 상세주소는 선택사항이므로 빈 문자열도 허용
+
+    // 전화번호는 숫자만 저장
+    const phoneNumber = extractPhoneNumber(data.recipientPhone);
+
+    const inputData: ShippingAddressInput = {
+      recipientName: data.recipientName,
+      recipientPhone: phoneNumber,
+      address: data.address,
+      detailAddress: data.detailAddress || undefined,
+      postalCode: data.postalCode,
+      deliveryRequest: data.deliveryRequest,
+      deliveryMemo: data.deliveryMemo,
+      isDefault: isFirstAddress ? true : data.isDefault,
+    };
+
+    if (isEditMode && addressId) {
+      updateMutation.mutate(
+        { id: addressId, data: inputData },
+        {
+          onSuccess: () => {
+            navigate(-1);
+          },
+        },
+      );
+    } else {
+      createMutation.mutate(inputData, {
+        onSuccess: (newAddress) => {
+          if (isPopupContext) {
+            postMessageAndClose({
+              type: SHIPPING_MESSAGE_TYPE.ADDRESS_CREATED,
+              addressId: newAddress.id,
+            });
+            return;
+          }
+
+          navigate(-1);
+        },
+      });
+    }
+  };
+
+  if (isEditMode && isLoading) {
+    return (
+      <PopupLayout title="배송지 수정" onClose={() => navigate(-1)}>
+        <div className="text-center py-8 text-zinc-500">로딩 중...</div>
+      </PopupLayout>
+    );
+  }
+
+  return (
+    <PopupLayout
+      title={isEditMode ? "배송지 수정" : "배송지 추가"}
+      onClose={() => navigate(-1)}
+      footer={
+        <Button
+          type="submit"
+          form="shipping-form"
+          className="w-full"
+          disabled={createMutation.isPending || updateMutation.isPending}
+        >
+          저장하기
+        </Button>
+      }
+    >
+      <Form {...form}>
+        <form
+          id="shipping-form"
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
+          <InputField
+            control={form.control}
+            name="recipientName"
+            label={
+              <>
+                이름 <span className="text-red-500">*</span>
+              </>
+            }
+            type="text"
+            placeholder="받는 분의 이름을 입력해주세요."
+            rules={{ required: "이름을 입력해주세요." }}
+          />
+
+          <Controller
+            name="recipientPhone"
+            control={form.control}
+            rules={{
+              required: "휴대폰번호를 입력해주세요.",
+              validate: (value) => {
+                const numbers = extractPhoneNumber(value);
+                if (numbers.length < 10 || numbers.length > 11) {
+                  return "올바른 휴대폰번호를 입력해주세요.";
+                }
+                return true;
+              },
+            }}
+            render={({ field, fieldState }) => (
+              <Field orientation="vertical">
+                <FieldLabel htmlFor="recipientPhone">
+                  <FieldTitle>
+                    휴대폰번호 <span className="text-red-500">*</span>
+                  </FieldTitle>
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...field}
+                    id="recipientPhone"
+                    name={field.name}
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="휴대폰번호를 입력해주세요."
+                    value={formatPhoneNumber(field.value ?? "")}
+                    onChange={(e) => {
+                      const numbers = extractPhoneNumber(e.target.value);
+                      // 최대 11자리까지만 입력 가능
+                      if (numbers.length <= 11) {
+                        field.onChange(numbers);
+                      }
+                    }}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                    className="w-full"
+                    aria-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={[fieldState.error]} />
+                </FieldContent>
+              </Field>
+            )}
+          />
+
+          <FieldSet className="gap-3">
+            <FieldLegend variant="label">
+              주소 <span className="text-red-500">*</span>
+            </FieldLegend>
+            <div className="flex items-center gap-2">
+              <Controller
+                name="postalCode"
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    type="text"
+                    placeholder="우편번호를 입력해주세요."
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    className="w-full"
+                    disabled
+                  />
+                )}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowPostcodeSearch(true)}
+              >
+                우편번호 검색
+              </Button>
+            </div>
+            <Controller
+              name="address"
+              control={form.control}
+              render={({ field }) => (
+                <Input
+                  type="text"
+                  placeholder="주소를 입력해주세요."
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  className="w-full"
+                  disabled
+                />
+              )}
+            />
+            <PostcodeSearch
+              isOpen={showPostcodeSearch}
+              onComplete={(data: DaumPostcodeData) => {
+                form.setValue("postalCode", data.zonecode);
+                form.setValue("address", data.roadAddress || data.jibunAddress);
+                setShowPostcodeSearch(false);
+              }}
+              onClose={() => setShowPostcodeSearch(false)}
+            />
+            <InputField
+              control={form.control}
+              name="detailAddress"
+              label="상세주소 (선택사항)"
+              placeholder="상세주소를 입력해주세요. (선택사항)"
+            />
+          </FieldSet>
+
+          <SelectField<ShippingAddress>
+            name="deliveryRequest"
+            control={form.control}
+            label="배송 요청사항"
+            options={DELIVERY_REQUEST_OPTIONS}
+          />
+          {deliveryRequest === CUSTOM_DELIVERY_REQUEST && (
+            <TextareaField<ShippingAddress>
+              name="deliveryMemo"
+              control={form.control}
+              label="배송 메모"
+              placeholder="최대 50자까지 입력 가능합니다."
+              maxLength={50}
+              textareaClassName="min-h-[100px] resize-none"
+            />
+          )}
+
+          <CheckboxField<ShippingAddress>
+            name="isDefault"
+            control={form.control}
+            label="기본 배송지"
+            disabled={isFirstAddress || !canUncheckDefault}
+          />
+        </form>
+      </Form>
+    </PopupLayout>
+  );
+};
+
+export default ShippingFormPage;

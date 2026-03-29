@@ -1,12 +1,17 @@
+## 모달 규칙
+
+- 텍스트 confirm/alert → `useModalStore`; 폼·복잡한 UI → 로컬 `Dialog`. Zustand에 ReactNode 저장 금지.
+- 훅은 상태만 반환하고 렌더링은 전용 컴포넌트(`*-modals.tsx`)가 담당한다.
+
 ## 폼 컴포넌트 규칙
 
-- 폼 필드의 레이블·설명·에러 마크업은 `@/components/ui/field`의 `Field`, `FieldTitle`, `FieldDescription`, `FieldLabel`, `FieldContent`, `FieldError`를 사용한다. raw HTML(`<h3>`, `<p>`, `<div>` 등)로 직접 구성하지 않는다.
+- 폼 필드의 레이블·설명·에러 마크업은 `@/shared/ui/field`의 `Field`, `FieldTitle`, `FieldDescription`, `FieldLabel`, `FieldContent`, `FieldError`를 사용한다. raw HTML(`<h3>`, `<p>`, `<div>` 등)로 직접 구성하지 않는다.
 
 ## 레이아웃 여백 규칙
 
 좌우 여백은 `PageLayout`이 단일 소스 오브 트루스다. 페이지가 직접 `px-*`로 여백을 설정하지 않는다.
 
-**PageLayout 기준값**: `src/components/layout/page-layout.tsx` 참조
+**PageLayout 기준값**: `src/shared/layout/page-layout.tsx` 참조
 
 페이지 유형별 사용 방식:
 
@@ -30,3 +35,33 @@
 - 컴포넌트에서 색상·간격·폰트·반지름을 지정할 때 Tailwind 유틸리티 클래스(`bg-brand-ink`, `text-foreground-muted` 등)를 우선 사용한다. `index.css`에 정의된 변수에 매핑된 클래스가 없으면 먼저 `@theme inline`에 추가한다.
 - 새 애니메이션(`@keyframes`)이나 커스텀 유틸리티가 여러 컴포넌트에서 재사용된다면 컴포넌트 내 인라인 스타일 대신 `index.css`에 추가한다.
 - 다크 모드 색상 오버라이드는 `index.css`의 `.dark` 블록에서만 관리한다.
+
+## FSD 레이어 구조 (apps/store/src/)
+
+레이어 의존 방향: `app -> pages -> widgets -> features -> entities -> shared`
+
+| 레이어   | 위치            | 포함                                                | 금지                                 |
+| -------- | --------------- | --------------------------------------------------- | ------------------------------------ |
+| app      | `src/app/`      | providers, router, 전역 엔트리                      | 하위 레이어 역참조                   |
+| pages    | `src/pages/`    | 라우트 컴포넌트                                     | `app` import, 직접 API 호출          |
+| widgets  | `src/widgets/`  | cross-feature 조합 UI                               | `pages`, `app` import                |
+| features | `src/features/` | 단일 도메인 UI, hooks, 상호작용                     | cross-slice 조합, 상위 레이어 import |
+| entities | `src/entities/` | API, mapper, 도메인 타입                            | UI(`.tsx`), 상위 레이어 import       |
+| shared   | `src/shared/`   | ui, composite, layout, lib, hooks, constants, store | 상위 레이어 import                   |
+
+### FSD 규칙
+
+- 모든 `entities/`, `features/`, `widgets/` slice는 `index.ts`를 public API로 둔다.
+- `entities/`, `features/`, `widgets/`의 `index.ts`는 슬라이스 public API로 사용하므로 얇은 re-export를 허용한다.
+- 상위 레이어(`pages`, 다른 슬라이스)는 슬라이스 내부 구현 파일이 아니라 해당 슬라이스의 public API(`index.ts`)를 통해 import한다.
+- `entities`에는 UI를 두지 않는다. 새 `.tsx` 파일 추가 금지.
+- cross-feature 조합이 필요하면 `features`에 억지로 넣지 말고 `widgets`로 올린다.
+- Supabase 직접 호출은 `entities/*/api/`, `features/*/api/`, `shared/lib/`, `app/providers/` 에서만 허용한다.
+- `pages/` 파일은 실제 UI 코드를 가져야 한다. 다른 레이어를 단순 re-export하는 1줄 wrapper 파일은 금지한다. router(app 레이어)는 `pages`를 반드시 경유하지 않아도 되며, `widgets`나 `features`에서 직접 import할 수 있다.
+
+새 파일 위치:
+
+- API/타입: `src/entities/{domain}/api/`, `src/entities/{domain}/model/`
+- UI/훅: `src/features/{domain}/`
+- 조합 UI: `src/widgets/{widget-name}/`
+- 페이지: `src/pages/{route}/`

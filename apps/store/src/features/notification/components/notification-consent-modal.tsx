@@ -5,8 +5,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui-extended/dialog";
-import { Button } from "@/components/ui-extended/button";
+} from "@/shared/ui-extended/dialog";
+import { Button } from "@/shared/ui-extended/button";
 
 interface NotificationConsentModalProps {
   isOpen: boolean;

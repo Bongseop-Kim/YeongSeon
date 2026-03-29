@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS public.orders (
   total_discount      integer     NOT NULL DEFAULT 0,
   order_type          text        NOT NULL DEFAULT 'sale',
   status              text        NOT NULL DEFAULT '대기중',
-  sample_cost         integer     NOT NULL DEFAULT 0,
   courier_company     text,
   tracking_number     text,
   shipped_at          timestamptz,
@@ -30,7 +29,6 @@ CREATE TABLE IF NOT EXISTS public.orders (
   CONSTRAINT orders_original_price_check CHECK (original_price >= 0),
   CONSTRAINT orders_total_discount_check CHECK (total_discount >= 0),
   CONSTRAINT orders_shipping_cost_check  CHECK (shipping_cost >= 0),
-  CONSTRAINT orders_sample_cost_check    CHECK (sample_cost >= 0),
   CONSTRAINT orders_shipping_address_required
     CHECK (order_type = 'token' OR shipping_address_id IS NOT NULL),
   CONSTRAINT orders_order_type_check
@@ -67,11 +65,13 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own orders"
   ON public.orders FOR SELECT
-  USING (auth.uid() = user_id);
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can create their own orders"
   ON public.orders FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  TO authenticated
+  WITH CHECK ((SELECT auth.uid()) = user_id);
 
 -- Admin policies
 CREATE POLICY "Admins can view all orders"
@@ -125,7 +125,7 @@ CREATE POLICY "Users can view logs of their own orders"
     EXISTS (
       SELECT 1 FROM public.orders o
       WHERE o.id = order_id
-        AND o.user_id = auth.uid()
+        AND o.user_id = (SELECT auth.uid())
     )
   );
 

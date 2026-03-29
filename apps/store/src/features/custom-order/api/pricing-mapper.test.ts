@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toPricingConfig } from "@/features/custom-order/api/pricing-mapper";
+import { toPricingConfig } from "@/entities/custom-order";
 import type { PricingConstantRow } from "@/features/custom-order/api/pricing-api";
 
 const createConstant = (key: string, amount: number): PricingConstantRow => ({

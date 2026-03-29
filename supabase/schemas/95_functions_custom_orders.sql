@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION public.calculate_custom_order_amounts(
   p_sample boolean DEFAULT null,
   p_sample_type text DEFAULT null
 )
-RETURNS TABLE (sewing_cost integer, fabric_cost integer, sample_cost integer, total_cost integer)
+RETURNS TABLE (sewing_cost integer, fabric_cost integer, total_cost integer)
 LANGUAGE plpgsql
 SECURITY INVOKER
 SET search_path TO 'public'
@@ -214,9 +214,7 @@ begin
 
   fabric_cost := v_fabric_amount;
 
-  sample_cost := 0;
-
-  total_cost := sewing_cost + fabric_cost + sample_cost;
+  total_cost := sewing_cost + fabric_cost;
 
   return next;
 end;
@@ -248,7 +246,6 @@ declare
   v_payment_group_id uuid;
   v_sewing_cost integer;
   v_fabric_cost integer;
-  v_sample_cost integer;
   v_total_cost integer;
   v_reform_data jsonb;
   v_elem jsonb;
@@ -311,12 +308,10 @@ begin
   select
     amounts.sewing_cost,
     amounts.fabric_cost,
-    amounts.sample_cost,
     amounts.total_cost
   into
     v_sewing_cost,
     v_fabric_cost,
-    v_sample_cost,
     v_total_cost
   from public.calculate_custom_order_amounts(p_options, p_quantity) as amounts;
 
@@ -386,8 +381,7 @@ begin
     total_discount,
     order_type,
     status,
-    payment_group_id,
-    sample_cost
+    payment_group_id
   )
   values (
     v_user_id,
@@ -398,8 +392,7 @@ begin
     v_line_discount_total,
     'custom',
     '대기중',
-    v_payment_group_id,
-    v_sample_cost
+    v_payment_group_id
   )
   returning id into v_order_id;
 
@@ -431,7 +424,6 @@ begin
       'pricing', jsonb_build_object(
         'sewing_cost', v_sewing_cost,
         'fabric_cost', v_fabric_cost,
-        'sample_cost', v_sample_cost,
         'total_cost', v_total_cost,
         'unit_price_remainder', v_remainder
       )
@@ -477,19 +469,18 @@ $$;
 
 -- ── calculate_refund_amount ───────────────────────────────────
 CREATE OR REPLACE FUNCTION public.calculate_refund_amount(p_order_id uuid)
-RETURNS TABLE (refund_amount integer, deducted_sample_cost integer)
+RETURNS TABLE (refund_amount integer)
 LANGUAGE plpgsql
 SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 declare
   v_total_price integer;
-  v_sample_cost integer;
   v_status text;
   v_order_type text;
 begin
-  select o.total_price, o.sample_cost, o.status, o.order_type
-  into v_total_price, v_sample_cost, v_status, v_order_type
+  select o.total_price, o.status, o.order_type
+  into v_total_price, v_status, v_order_type
   from public.orders o
   where o.id = p_order_id;
 
@@ -507,13 +498,7 @@ begin
     raise exception '현재 주문 상태에서는 환불 계산을 할 수 없습니다';
   end if;
 
-  if v_sample_cost is not null and v_sample_cost > 0 then
-    refund_amount := greatest(v_total_price - v_sample_cost, 0);
-    deducted_sample_cost := v_sample_cost;
-  else
-    refund_amount := v_total_price;
-    deducted_sample_cost := 0;
-  end if;
+  refund_amount := v_total_price;
   return next;
 end;
 $$;

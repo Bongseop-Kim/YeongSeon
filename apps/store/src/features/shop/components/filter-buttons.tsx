@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui-extended/button";
+import { Button } from "@/shared/ui-extended/button";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import type { FilterTab } from "@/features/shop/types/filter";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 interface FilterButtonsProps {
   onFilterClick: (tab: FilterTab) => void;

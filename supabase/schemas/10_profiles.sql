@@ -67,25 +67,28 @@ ALTER TABLE public.notification_preference_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own profile"
   ON public.profiles FOR SELECT
-  USING (auth.uid() = id);
+  TO authenticated
+  USING ((SELECT auth.uid()) = id);
 
 CREATE POLICY "Users can insert their own profile"
   ON public.profiles FOR INSERT
+  TO authenticated
   WITH CHECK (
-    auth.uid() = id
+    (SELECT auth.uid()) = id
     AND role = 'customer'
     AND is_active = true
   );
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
+  TO authenticated
   USING (
-    auth.uid() = id
+    (SELECT auth.uid()) = id
     AND role = 'customer'
     AND is_active = true
   )
   WITH CHECK (
-    auth.uid() = id
+    (SELECT auth.uid()) = id
     AND role = 'customer'
     AND is_active = true
   );
@@ -105,7 +108,7 @@ CREATE POLICY "Admins can update profiles"
 CREATE POLICY "Users can view their own phone verifications"
   ON public.phone_verifications FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Service role can manage phone verifications"
   ON public.phone_verifications FOR ALL
@@ -116,7 +119,7 @@ CREATE POLICY "Service role can manage phone verifications"
 CREATE POLICY "Users can view their own notification preference logs"
   ON public.notification_preference_logs FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Admins can view all notification preference logs"
   ON public.notification_preference_logs FOR SELECT

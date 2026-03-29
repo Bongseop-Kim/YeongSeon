@@ -1,4 +1,8 @@
-import type { OrderType, AdminAction } from "@yeongseon/shared";
+import type {
+  OrderType,
+  AdminAction,
+  SampleOrderData,
+} from "@yeongseon/shared";
 
 // ── Nested UI types ────────────────────────────────────────────
 
@@ -61,7 +65,6 @@ export interface AdminOrderDetail {
   confirmedAt: string | null;
   paymentGroupId: string | null;
   shippingCost: number;
-  sampleCost: number;
   adminActions: AdminAction[];
 }
 
@@ -123,20 +126,7 @@ export interface AdminSampleOrderItem {
   unitPrice: number;
   discountAmount: number;
   lineDiscountAmount: number;
-  sampleData: {
-    sampleType: "fabric" | "sewing" | "fabric_and_sewing";
-    options: {
-      fabricType: string | null;
-      designType: string | null;
-      tieType: string | null;
-      interlining: string | null;
-    };
-    pricing: {
-      totalCost: number;
-    };
-    referenceImageUrls: string[];
-    additionalNotes: string | null;
-  } | null;
+  sampleData: SampleOrderData | null;
 }
 
 export type AdminOrderItem =
@@ -167,7 +157,6 @@ export interface CustomOrderOptions {
 export interface CustomOrderPricing {
   sewingCost: number;
   fabricCost: number;
-  sampleCost: number;
   totalCost: number;
 }
 

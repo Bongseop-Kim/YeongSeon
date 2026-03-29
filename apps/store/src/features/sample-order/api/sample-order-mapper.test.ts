@@ -3,11 +3,11 @@ import {
   toCreateSampleOrderInput,
   toCreateSampleOrderInputDto,
   parseSampleOrderResponse,
-} from "@/features/sample-order/api/sample-order-mapper";
+} from "@/entities/sample-order";
 import type {
   CreateSampleOrderRequest,
   SampleOrderOptionsDto,
-} from "@/features/sample-order/types/sample-order-input";
+} from "@/entities/sample-order";
 
 const baseOptions: SampleOrderOptionsDto = {
   fabricType: "SILK",

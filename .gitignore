@@ -54,3 +54,6 @@ coverage/
 
 # Obsidian
 .obsidian/
+
+# Report
+report/

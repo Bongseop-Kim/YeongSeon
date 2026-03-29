@@ -22,6 +22,12 @@ function formatNullablePercent(
   return v == null ? "-" : `${v.toFixed(digits)}%`;
 }
 
+const renderNumber = formatNullableLocaleNumber;
+const renderFixed = (digits: number) => (v: number | null | undefined) =>
+  formatNullableFixed(v, digits);
+const renderPercent = (digits: number) => (v: number | null | undefined) =>
+  formatNullablePercent(v, digits);
+
 // ── 모델별 통계 ───────────────────────────────────────────────
 
 const modelColumns: ColumnsType<ModelStats> = [
@@ -31,35 +37,35 @@ const modelColumns: ColumnsType<ModelStats> = [
     dataIndex: "requestCount",
     key: "requestCount",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
+    render: renderNumber,
   },
   {
     title: "텍스트 API 평균(ms)",
     dataIndex: "avgTextLatencyMs",
     key: "avgTextLatencyMs",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
+    render: renderNumber,
   },
   {
     title: "이미지 API 평균(ms)",
     dataIndex: "avgImageLatencyMs",
     key: "avgImageLatencyMs",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
+    render: renderNumber,
   },
   {
     title: "평균 토큰 비용",
     dataIndex: "avgTokenCost",
     key: "avgTokenCost",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableFixed(v, 1),
+    render: renderFixed(1),
   },
   {
     title: "이미지 성공률",
     dataIndex: "imageSuccessRate",
     key: "imageSuccessRate",
     align: "right",
-    render: (v: number | null | undefined) => formatNullablePercent(v, 1),
+    render: renderPercent(1),
   },
 ];
 
@@ -72,28 +78,28 @@ const inputTypeColumns: ColumnsType<InputTypeStats> = [
     dataIndex: "requestCount",
     key: "requestCount",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
+    render: renderNumber,
   },
   {
     title: "이미지 성공률",
     dataIndex: "imageSuccessRate",
     key: "imageSuccessRate",
     align: "right",
-    render: (v: number | null | undefined) => formatNullablePercent(v, 1),
+    render: renderPercent(1),
   },
   {
     title: "평균 레이턴시(ms)",
     dataIndex: "avgLatencyMs",
     key: "avgLatencyMs",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
+    render: renderNumber,
   },
   {
     title: "평균 토큰 비용",
     dataIndex: "avgTokenCost",
     key: "avgTokenCost",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableFixed(v, 1),
+    render: renderFixed(1),
   },
 ];
 
@@ -106,21 +112,21 @@ const patternColumns: ColumnsType<PatternStats> = [
     dataIndex: "requestCount",
     key: "requestCount",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
+    render: renderNumber,
   },
   {
     title: "이미지 성공률",
     dataIndex: "imageSuccessRate",
     key: "imageSuccessRate",
     align: "right",
-    render: (v: number | null | undefined) => formatNullablePercent(v, 1),
+    render: renderPercent(1),
   },
   {
     title: "평균 토큰 비용",
     dataIndex: "avgTokenCost",
     key: "avgTokenCost",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableFixed(v, 1),
+    render: renderFixed(1),
   },
 ];
 
@@ -133,7 +139,7 @@ const errorColumns: ColumnsType<ErrorDistribution> = [
     dataIndex: "count",
     key: "count",
     align: "right",
-    render: (v: number | null | undefined) => formatNullableLocaleNumber(v),
+    render: renderNumber,
   },
 ];
 

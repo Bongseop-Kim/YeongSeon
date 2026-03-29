@@ -20,15 +20,12 @@ test.describe.serial("Store 주문 제작 플로우", () => {
   let customOrderForShipping: SeededClaimOrder;
   test.beforeAll(async () => {
     [customOrderForCancel, customOrderForShipping] = await Promise.all([
-      // SC-custom-011용: 샘플봉제제작중 상태
-      seedCustomOrder({ sample: true, sampleType: "sewing" }).then(
-        async (o) => {
-          await adminUpdateOrderStatus(o.orderId, "접수");
-          await adminUpdateOrderStatus(o.orderId, "샘플봉제제작중");
-          o.status = "샘플봉제제작중";
-          return o;
-        },
-      ),
+      // SC-custom-011용: 접수 상태 (마지막 취소 가능 상태)
+      seedCustomOrder().then(async (o) => {
+        await adminUpdateOrderStatus(o.orderId, "접수");
+        o.status = "접수";
+        return o;
+      }),
       // SC-custom-012용: 배송중 상태
       seedCustomOrder().then(async (o) => {
         await adminUpdateOrderStatus(o.orderId, "접수");
@@ -69,25 +66,10 @@ test.describe.serial("Store 주문 제작 플로우", () => {
     ).toBeVisible();
   });
 
-  // SC-custom-002: 샘플 없이 주문 완료 (custom order는 결제 없이 직접 주문)
-  test("주문 제작 주문하기 후 주문 목록 페이지로 이동한다 (SC-custom-002)", async ({
+  // SC-custom-002: 마법사 완료 후 결제 페이지로 이동
+  test("주문 제작 주문하기 후 결제 페이지로 이동한다 (SC-custom-002)", async ({
     authenticatedPage,
   }) => {
-    let capturedOrderId: string | null = null;
-
-    await authenticatedPage.route(
-      "**/functions/v1/create-custom-order",
-      async (route) => {
-        const response = await route.fetch();
-        const payload = (await response.json()) as {
-          order_id: string;
-          order_number: string;
-        };
-        capturedOrderId = payload.order_id;
-        await route.fulfill({ response });
-      },
-    );
-
     await authenticatedPage.goto("/custom-order");
     await expectAuthenticatedRoute(authenticatedPage);
 
@@ -107,23 +89,17 @@ test.describe.serial("Store 주문 제작 플로우", () => {
     // 확인 단계: 주문하기 클릭
     await authenticatedPage.getByRole("button", { name: "주문하기" }).click();
 
-    // 주문 목록 페이지로 이동 확인
-    await expect(authenticatedPage).toHaveURL(/\/order\/order-list$/);
-
-    // 주문 ID 캡처 완료 후 상세 페이지 이동 확인
-    await expect.poll(() => capturedOrderId).not.toBeNull();
+    // 결제 페이지로 이동 확인
+    await expect(authenticatedPage).toHaveURL(/\/order\/custom-payment$/);
   });
 
-  // SC-custom-003: 샘플 포함 주문 제작 (seeding 방식으로 상세 페이지 확인)
-  test("샘플 포함 주문 제작 주문 상세 페이지가 표시된다 (SC-custom-003)", async ({
+  // SC-custom-003: 주문 제작 상세 페이지 확인 (seeding 방식)
+  test("주문 제작 주문 상세 페이지가 표시된다 (SC-custom-003)", async ({
     authenticatedPage,
   }) => {
-    const sampleOrder = await seedCustomOrder({
-      sample: true,
-      sampleType: "sewing",
-    });
+    const customOrder = await seedCustomOrder();
 
-    await authenticatedPage.goto(`/order/${sampleOrder.orderId}`);
+    await authenticatedPage.goto(`/order/${customOrder.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage);
 
     await expect(
@@ -131,8 +107,8 @@ test.describe.serial("Store 주문 제작 플로우", () => {
     ).toBeVisible();
   });
 
-  // SC-custom-011: 고객 샘플 단계 취소 요청
-  test("샘플봉제제작중 상태 주문에서 취소 요청을 하면 취소 클레임이 접수된다 (SC-custom-011)", async ({
+  // SC-custom-011: 고객 취소 요청 (접수 상태)
+  test("접수 상태 주문에서 취소 요청을 하면 취소 클레임이 접수된다 (SC-custom-011)", async ({
     authenticatedPage,
   }) => {
     await authenticatedPage.goto(`/order/${customOrderForCancel.orderId}`);

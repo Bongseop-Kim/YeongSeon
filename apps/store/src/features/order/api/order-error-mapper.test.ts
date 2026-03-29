@@ -9,7 +9,7 @@ vi.mock("@yeongseon/supabase", () => ({
 }));
 
 import { FunctionsHttpError } from "@yeongseon/supabase";
-import { extractEdgeFunctionErrorMessage } from "@/features/order/api/order-error-mapper";
+import { extractEdgeFunctionErrorMessage } from "@/entities/order";
 
 describe("extractEdgeFunctionErrorMessage", () => {
   it("FunctionsHttpError가 아니면 null을 반환한다", async () => {

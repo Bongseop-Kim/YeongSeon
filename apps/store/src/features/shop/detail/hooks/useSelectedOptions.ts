@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ProductOption } from "@yeongseon/shared/types/view/product";
 import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
-import { toast } from "@/lib/toast";
+import { toast } from "@/shared/lib/toast";
 
 export function useSelectedOptions() {
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);

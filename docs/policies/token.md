@@ -2,12 +2,14 @@
 policy: token
 status: implemented
 affects: [design]
-last-verified: 2026-03-17
+last-verified: 2026-03-29
 ---
 
 # 디자인 토큰 정책 (Token)
 
 > AI 디자인 생성 서비스의 이용 단위. 신규 가입 시 자동 지급되거나 패키지 구매로 충전. 모든 잔액 변경은 `design_tokens` 테이블에 원장 형식으로 기록.
+
+토큰 구매 결제는 `/token/purchase/payment`에서 진행하고, 성공/실패는 `/token/purchase/success`, `/token/purchase/fail`로 분기한다. 유상 토큰 환불 신청/승인 흐름은 [[token-refund]] 도메인에서 관리한다.
 
 ## 핵심 규칙
 
@@ -83,3 +85,4 @@ last-verified: 2026-03-17
 
 - [[design]] — AI 디자인 생성 시 토큰 사용
 - [[payment]] — 토큰 구매 결제 흐름
+- [[token-refund]] — 유상 토큰 환불 신청/승인 흐름

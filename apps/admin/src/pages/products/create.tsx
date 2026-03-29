@@ -1,6 +1,5 @@
 import { Create } from "@refinedev/antd";
-import { useAdminProductCreateForm } from "@/features/products/api/products-query";
-import { ProductForm } from "@/features/products/components/product-form";
+import { useAdminProductCreateForm, ProductForm } from "@/features/products";
 
 export default function ProductCreate() {
   const formHook = useAdminProductCreateForm();

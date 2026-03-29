@@ -24,8 +24,6 @@ export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
     배송완료: "완료",
   },
   repair: {
-    대기중: "발송대기",
-    발송대기: "발송중",
     발송중: "접수",
     접수: "수선중",
     수선중: "수선완료",
@@ -35,7 +33,6 @@ export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
   },
   token: { 대기중: "완료" },
   sample: {
-    대기중: "접수",
     접수: "제작중",
     제작중: "배송중",
     배송중: "배송완료",
@@ -47,8 +44,6 @@ export const ORDER_ROLLBACK_FLOW: Record<OrderType, Record<string, string>> = {
   sale: { 진행중: "대기중" },
   custom: { 접수: "대기중", 제작중: "접수", 제작완료: "제작중" },
   repair: {
-    발송대기: "대기중",
-    발송중: "발송대기",
     접수: "발송중",
     수선중: "접수",
     수선완료: "수선중",

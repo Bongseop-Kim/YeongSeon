@@ -1,7 +1,7 @@
 ---
 domain: claim
 status: partial
-last-verified: 2026-03-17
+last-verified: 2026-03-29
 ---
 
 # Claim (취소 / 반품 / 교환)
@@ -10,11 +10,11 @@ last-verified: 2026-03-17
 
 ## 경계
 
-| 구분      | 내용                                                                                                                                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Always do | 클레임 생성 가능 여부는 프론트 `CLAIM_ACTIONS_BY_STATUS`에서 제어. 거부 → 접수 복원은 항상 허용(오거부 복원). `create_claim` RPC는 주문 상태를 검증하지 않으므로 프론트 UI 제어 필수. |
-| Ask first | 클레임 가능 주문 상태 범위 확대. 수거완료/재발송/완료 이후 추가 전이 허용.                                                                                                            |
-| Never do  | 수거완료/재발송/완료 상태에서 롤백. quote-request/design-token에 클레임 생성. 클레임 생성 시 주문 상태 서버 검증 없이 진행 가정.                                                      |
+| 구분      | 내용                                                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Always do | 클레임 생성 가능 여부는 프론트 액션 노출과 `create_claim` RPC의 서버 검증을 함께 기준으로 본다. 거부 → 접수 복원은 항상 허용(오거부 복원). |
+| Ask first | 클레임 가능 주문 상태 범위 확대. 수거완료/재발송/완료 이후 추가 전이 허용.                                                                 |
+| Never do  | 수거완료/재발송/완료 상태에서 롤백. quote-request/design-token에 클레임 생성. 현재 서버가 허용하지 않는 주문 상태에서 클레임 생성 가정.    |
 
 ## 상태 전이
 
@@ -143,15 +143,16 @@ stateDiagram-v2
 
 ## 비즈니스 규칙
 
-- **BR-claim-001**: 클레임 생성 가능 여부는 프론트 `CLAIM_ACTIONS_BY_STATUS`에서만 제어. `create_claim` RPC는 주문 상태 미검증.
-- **BR-claim-002**: `sale` 주문 — 대기중/진행중: cancel. 배송중/배송완료: return/exchange. 완료: 없음.
-- **BR-claim-003**: `repair` 주문 — 대기중: cancel. 발송대기/발송중: cancel (미구현). 배송중/배송완료: return/exchange.
-- **BR-claim-004**: `custom` 주문 — 대기중: cancel. 접수/제작중/샘플 단계: cancel (미구현). 배송중/배송완료: return/exchange.
+- **BR-claim-001**: 클레임 생성 가능 여부는 프론트 액션 노출과 `create_claim` RPC의 서버 검증을 함께 따른다.
+- **BR-claim-002**: `sale` 주문 — `대기중/결제중/진행중`: cancel. `배송중/배송완료`: return/exchange. `완료`: 없음.
+- **BR-claim-003**: `repair` 주문 — `대기중/결제중`: cancel. `배송중/배송완료`: return/exchange.
+- **BR-claim-004**: `custom` 주문 — `대기중/결제중/접수`: cancel. `배송중/배송완료`: return/exchange.
 - **BR-claim-005**: 거부 → 접수 복원은 항상 가능 (오거부 복원 목적).
 - **BR-claim-006**: 수거완료/재발송/완료는 `is_rollback` 여부 무관하게 이전 상태 복원 불가.
-- **BR-claim-007**: 반품/교환은 배송중/배송완료 주문 상태에서만 신청 가능. 완료 상태에서 불가.
+- **BR-claim-007**: 반품/교환은 `sale`, `repair`, `custom`의 `배송중/배송완료`에서만 신청 가능하다. `sample`은 반품/교환 대상이 아니다.
 - **BR-claim-008**: 클레임 이유 코드: `change_mind` / `defect` / `delay` / `wrong_item` / `size_mismatch` / `color_mismatch` / `other`.
-- **BR-claim-009**: quote-request와 design-token은 클레임 시스템 외부. 각자 별도 종료/환불 메커니즘 사용.
+- **BR-claim-009**: `sample` 주문 — `대기중/결제중/접수`: cancel만 가능. return/exchange는 지원하지 않는다.
+- **BR-claim-010**: quote-request와 design-token은 클레임 시스템 외부. 각자 별도 종료/환불 메커니즘 사용.
 
   **quote-request 종료**: `admin_update_quote_request_status` RPC로 관리자가 직접 `종료` 상태 전환. 클레임 미생성.
 
@@ -203,10 +204,10 @@ stateDiagram-v2
 
 - [[sale]] — sale 주문의 클레임 가능 상태 범위
 - [[repair]] — repair 주문의 클레임 가능 상태 범위
-- [[custom-order]] — custom 주문의 클레임 가능 상태 범위 (일부 미구현)
+- [[custom-order]] — custom 주문의 클레임 가능 상태 범위
+- [[sample]] — sample 주문의 취소 가능 상태 범위
 
 ## 미결 사항
 
-- repair 주문의 발송대기/발송중 단계에서 cancel 클레임 처리 미구현 (BR-claim-003)
-- custom 주문의 접수/제작중/샘플 단계에서 cancel 클레임 처리 미구현 (BR-claim-004)
-- `create_claim` RPC에 주문 상태 서버 검증 추가 여부 검토 필요 (현재 프론트 UI 제어에만 의존)
+- 클레임 가능 주문 상태 범위를 변경하려면 `create_claim` RPC와 고객 액션 노출 규칙을 함께 수정해야 한다
+- sample 주문에 반품/교환을 도입하려면 주문 후처리와 환불 정책을 별도로 정의해야 한다

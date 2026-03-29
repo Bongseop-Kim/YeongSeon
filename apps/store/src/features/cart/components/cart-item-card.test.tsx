@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { createAppliedCoupon, createCartItem } from "@/test/fixtures";
 import { CartItemCard } from "@/features/cart/components/cart-item-card";
 
-vi.mock("@/components/ui-extended/close", () => ({
+vi.mock("@/shared/ui-extended/close", () => ({
   default: ({ onRemove }: { onRemove: () => void }) => (
     <button type="button" onClick={onRemove} aria-label="닫기">
       X

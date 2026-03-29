@@ -1,5 +1,5 @@
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Label } from "@/shared/ui/label";
 
 interface FilterOptionListProps<T extends string> {
   options: ReadonlyArray<{

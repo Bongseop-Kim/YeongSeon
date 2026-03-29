@@ -1,15 +1,15 @@
-import { Button } from "@/components/ui-extended/button";
+import { Button } from "@/shared/ui-extended/button";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui-extended/input";
-import { InputField } from "@/components/composite/input-field";
-import { TextareaField } from "@/components/composite/textarea-field";
+import { Form } from "@/shared/ui/form";
+import { Input } from "@/shared/ui-extended/input";
+import { InputField } from "@/shared/composite/input-field";
+import { TextareaField } from "@/shared/composite/textarea-field";
 import {
   FieldContent,
   FieldDescription,
   FieldError,
   FieldTitle,
-} from "@/components/ui/field";
+} from "@/shared/ui/field";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Image } from "@imagekit/react";
@@ -18,7 +18,7 @@ import {
   type InquiryCategory,
 } from "@/features/my-page/inquiry/types/inquiry-item";
 import { useProductSearchForInquiry } from "@/features/my-page/inquiry/api/inquiry-query";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 
 export interface InquiryFormData {
   category: InquiryCategory;

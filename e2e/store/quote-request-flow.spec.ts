@@ -27,7 +27,7 @@ const navigateToConfirmStep = async (page: Page, isQuoteMode: boolean) => {
     // 수량 100개 클릭
     await page.getByRole("button", { name: "100개" }).click();
     await expect(
-      page.getByText("100개 이상은 견적요청으로 진행됩니다"),
+      page.getByText("100개 이상은 견적요청으로 전환됩니다"),
     ).toBeVisible();
   }
   // quantity → fabric
@@ -36,7 +36,7 @@ const navigateToConfirmStep = async (page: Page, isQuoteMode: boolean) => {
 
   // fabric → sewing (기본값 POLY/PRINTING으로 통과)
   await page.getByRole("button", { name: /다음/ }).click();
-  await expect(page.getByText("봉제 스타일 (중복 선택 가능)")).toBeVisible();
+  await expect(page.getByText("봉제 스타일")).toBeVisible();
 
   // sewing: 자동 타이 선택 (tieType="AUTO"만 validate 통과)
   await page.getByText("자동 타이 (지퍼)").click();
@@ -44,7 +44,7 @@ const navigateToConfirmStep = async (page: Page, isQuoteMode: boolean) => {
 
   // sewing → attachment (spec, finishing, sample은 isSkippable=true이므로 스킵)
   await page.getByRole("button", { name: /다음/ }).click();
-  await expect(page.getByText("참고자료")).toBeVisible();
+  await expect(page.getByText("참고 이미지").first()).toBeVisible();
 
   // attachment → confirm
   await page.getByRole("button", { name: /다음/ }).click();
@@ -150,18 +150,18 @@ test.describe.serial("Store 견적요청 플로우", () => {
 
     // 견적번호 확인
     await expect(
-      authenticatedPage.getByText(
-        `견적번호: ${seededQuoteRequest.quoteNumber}`,
-      ),
+      authenticatedPage.getByText(`견적번호 ${seededQuoteRequest.quoteNumber}`),
     ).toBeVisible();
 
     // 상태가 "요청"임을 확인
     await expect(
-      authenticatedPage.getByText("요청", { exact: true }),
+      authenticatedPage.getByRole("definition").filter({ hasText: "요청" }),
     ).toBeVisible();
 
-    // 견적 정보 섹션(견적 금액)이 표시되지 않아야 함
-    await expect(authenticatedPage.getByText("견적 정보")).not.toBeVisible();
+    // 요약 aside에는 상태만 노출되고, 견적 금액은 아직 표시되지 않아야 함
+    await expect(
+      authenticatedPage.getByRole("heading", { name: "요약" }),
+    ).toBeVisible();
     await expect(authenticatedPage.getByText("견적 금액")).not.toBeVisible();
   });
 
@@ -184,13 +184,13 @@ test.describe.serial("Store 견적요청 플로우", () => {
 
     // 견적번호 확인
     await expect(
-      authenticatedPage.getByText(
-        `견적번호: ${seededQuoteRequest.quoteNumber}`,
-      ),
+      authenticatedPage.getByText(`견적번호 ${seededQuoteRequest.quoteNumber}`),
     ).toBeVisible();
 
-    // 견적 정보 섹션이 표시되어야 함
-    await expect(authenticatedPage.getByText("견적 정보")).toBeVisible();
+    // 요약 aside에 견적 금액이 표시되어야 함
+    await expect(
+      authenticatedPage.getByRole("heading", { name: "요약" }),
+    ).toBeVisible();
 
     // 견적 금액이 표시되어야 함
     await expect(authenticatedPage.getByText(/500,000원/)).toBeVisible();

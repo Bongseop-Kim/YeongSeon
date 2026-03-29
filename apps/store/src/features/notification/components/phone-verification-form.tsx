@@ -1,7 +1,7 @@
-import { Input } from "@/components/ui-extended/input";
-import { Button } from "@/components/ui-extended/button";
-import { Label } from "@/components/ui/label";
-import { extractPhoneNumber } from "@/lib/phone-format";
+import { Input } from "@/shared/ui-extended/input";
+import { Button } from "@/shared/ui-extended/button";
+import { Label } from "@/shared/ui/label";
+import { extractPhoneNumber } from "@/shared/lib/phone-format";
 import { usePhoneVerification } from "@/features/notification/hooks/use-phone-verification";
 
 interface PhoneVerificationFormProps {

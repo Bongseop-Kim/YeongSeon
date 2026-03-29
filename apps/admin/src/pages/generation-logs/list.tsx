@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Typography, Card, Spin } from "antd";
 import dayjs from "dayjs";
 import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
-import { GenerationLogStats } from "@/features/generation-logs/components/generation-log-stats";
-import { DesignContextStats } from "@/features/generation-logs/components/design-context-stats";
-import { GenerationLogTable } from "@/features/generation-logs/components/generation-log-table";
 import {
+  GenerationLogStats,
+  DesignContextStats,
+  GenerationLogTable,
   useGenerationStatsQuery,
   useGenerationLogsQuery,
-} from "@/features/generation-logs/api/generation-logs-query";
+} from "@/features/generation-logs";
 
 const EMPTY_SUMMARY = {
   totalRequests: 0,

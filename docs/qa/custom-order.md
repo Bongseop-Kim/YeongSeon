@@ -1,6 +1,6 @@
 ---
 domain: custom-order
-last-verified: 2026-03-19
+last-verified: 2026-03-29
 ---
 
 # Custom Order QA
@@ -58,3 +58,15 @@ last-verified: 2026-03-19
 - Given: custom-order 마법사에서 여러 옵션(수량, 원단제공여부, 봉제, 심지 등)을 선택한 상태
 - When: 마법사 확인 단계에서 예상 금액을 확인한다
 - Then: 클라이언트에서 표시하는 예상 금액과 실제 주문 생성 후 서버에서 반환하는 금액이 일치한다
+
+## SC-custom-010: 주문제작 쿠폰 예약
+
+- Given: 사용 가능한 쿠폰을 가진 사용자가 store `/custom-order`에서 주문 정보를 모두 입력한 상태
+- When: 쿠폰을 적용해 주문을 생성하고 `/order/custom-payment`로 진입한다
+- Then: 해당 `user_coupons.status`는 `reserved`가 된다
+
+## SC-custom-011: 주문제작 결제 실패 또는 취소 시 쿠폰 복원
+
+- Given: 주문제작 주문 생성 후 적용 쿠폰이 `reserved` 상태다
+- When: 결제에 실패하거나 주문을 취소한다
+- Then: 해당 쿠폰은 `active`로 복원된다

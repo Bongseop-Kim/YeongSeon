@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/shared/ui/badge";
+import { cn } from "@/shared/lib/utils";
 import type { QuoteRequestListItem } from "@/features/quote-request/api/quote-request-api";
 import {
   CONTACT_METHOD_LABELS,

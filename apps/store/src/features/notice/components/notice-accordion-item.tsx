@@ -2,8 +2,8 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
+} from "@/shared/ui/accordion";
+import { Badge } from "@/shared/ui/badge";
 import type { NoticeItem } from "@/features/notice/types/notice-types";
 
 interface NoticeAccordionItemProps {

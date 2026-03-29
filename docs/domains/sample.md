@@ -1,15 +1,18 @@
 ---
 domain: sample
 status: partial
-last-verified: 2026-03-19
+last-verified: 2026-03-29
 ---
 
 # Sample (샘플 제작)
 
-> 샘플 제작은 `order_type='sample'` 전용 주문 도메인이다. 주문제작과 상태머신을 분리하고, 결제 확정 시 사용자당 타입별 1회 샘플 할인 쿠폰을 자동 지급한다.
+> 샘플 제작은 `order_type='sample'` 전용 주문 도메인이다. 주문제작과 상태머신을 분리하고, `/order/sample-payment`에서 결제를 진행하며, 결제 확정 시 사용자당 타입별 1회 샘플 할인 쿠폰을 자동 지급한다.
 
 ## 경계
 
+- 사용자 진입: `/sample-order`
+- 결제 경로: `/order/sample-payment`
+- 결제 성공 처리: `/order/payment/success`에서 승인 확인 후 샘플 주문이면 `couponIssued` 결과에 따라 쿠폰 발급 안내를 분기한다
 - 생성 경로: `create-sample-order` Edge Function -> `create_sample_order_txn`
 - 타입별 가격: `pricing_constants`의 5개 키 (`SAMPLE_SEWING_COST`, `SAMPLE_FABRIC_PRINTING_COST`, `SAMPLE_FABRIC_YARN_DYED_COST`, `SAMPLE_FABRIC_AND_SEWING_PRINTING_COST`, `SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST`)
 - 쿠폰: 타입별 5종 (`SAMPLE_DISCOUNT_SEWING`, `SAMPLE_DISCOUNT_FABRIC_PRINTING`, `SAMPLE_DISCOUNT_FABRIC_YARN_DYED`, `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING`, `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED`)
@@ -34,6 +37,7 @@ stateDiagram-v2
 
 ### 롤백
 
+- `결제중 -> 대기중`
 - `접수 -> 대기중`
 - `제작중 -> 접수`
 - 공통 조건: `is_rollback=true`, `memo` 필수
@@ -43,12 +47,13 @@ stateDiagram-v2
 1. 샘플 타입은 `fabric`, `sewing`, `fabric_and_sewing`만 허용한다.
 2. 가격은 sampleType + designType 조합으로 결정된다 (`pricing_constants` 5개 키 참조).
 3. `fabric`, `fabric_and_sewing` 샘플은 `options.design_type`이 반드시 필요하다.
-4. 결제 확정 시 주문 `item_data`의 `sample_type` / `options.design_type`을 읽어 해당 타입의 쿠폰을 자동 발급한다.
-5. 쿠폰 매핑: `sewing` → `SAMPLE_DISCOUNT_SEWING`, `fabric+PRINTING` → `SAMPLE_DISCOUNT_FABRIC_PRINTING`, `fabric+YARN_DYED` → `SAMPLE_DISCOUNT_FABRIC_YARN_DYED`, `fabric_and_sewing+PRINTING` → `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING`, `fabric_and_sewing+YARN_DYED` → `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED`.
-6. 쿠폰은 `user_coupons(user_id, coupon_id)` 유니크 제약으로 사용자당 타입별 1회만 지급한다.
-7. 이미 발급되었거나 사용된 경우 `ON CONFLICT DO NOTHING`으로 조용히 무시한다.
-8. 결제 응답의 `couponIssued`로 프론트에서 발급 여부를 분기 표시한다.
-9. 환불은 `대기중/결제중/접수`에서만 전액 환불 가능하다.
+4. 결제 시스템이 `결제중 -> 접수`로 상태를 전이한다. 관리자 수동 순방향 전이는 `접수 -> 제작중`부터 시작한다.
+5. 결제 확정 시 주문 `item_data`의 `sample_type` / `options.design_type`을 읽어 해당 타입의 쿠폰을 자동 발급한다.
+6. 결제 성공 화면은 `couponIssued` 결과에 따라 신규 발급 또는 기존 보유 안내를 분기한다.
+7. 쿠폰 매핑: `sewing` → `SAMPLE_DISCOUNT_SEWING`, `fabric+PRINTING` → `SAMPLE_DISCOUNT_FABRIC_PRINTING`, `fabric+YARN_DYED` → `SAMPLE_DISCOUNT_FABRIC_YARN_DYED`, `fabric_and_sewing+PRINTING` → `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING`, `fabric_and_sewing+YARN_DYED` → `SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED`.
+8. 쿠폰은 `user_coupons(user_id, coupon_id)` 유니크 제약으로 사용자당 타입별 1회만 지급한다.
+9. 이미 발급되었거나 사용된 경우 `ON CONFLICT DO NOTHING`으로 조용히 무시한다.
+10. 환불은 `대기중/결제중/접수`에서만 전액 환불 가능하다.
 
 ## 관련 파일
 
@@ -56,6 +61,8 @@ stateDiagram-v2
 - `supabase/schemas/99_functions_sample.sql`
 - `supabase/functions/create-sample-order/index.ts`
 - `supabase/schemas/98_functions_payment.sql`
+- `apps/store/src/pages/sample-order/payment.tsx`
+- `apps/store/src/pages/payment/success.tsx`
 - `supabase/schemas/97_functions_admin.sql`
 - `apps/store/src/features/sample-order/`
 

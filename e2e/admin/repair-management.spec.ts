@@ -5,9 +5,8 @@ import {
   test,
 } from "../fixtures/auth";
 import {
-  adminUpdateOrderStatus,
   adminRollbackOrderStatus,
-  seedRepairOrder,
+  seedRepairOrderInStatus,
   type SeededClaimOrder,
 } from "../utils/store-data";
 import { statusRow } from "../utils/admin-helpers";
@@ -27,30 +26,11 @@ test.describe.serial("Admin 수선 주문 관리", () => {
     // 4개 수선 주문을 동시에 생성
     [forwardOrder, rollbackOrder, cancelBtnOrder, noRollbackOrder] =
       await Promise.all([
-        seedRepairOrder(),
-        seedRepairOrder(),
-        seedRepairOrder(),
-        seedRepairOrder(),
+        seedRepairOrderInStatus("접수"),
+        seedRepairOrderInStatus("수선중"),
+        seedRepairOrderInStatus("수선중"),
+        seedRepairOrderInStatus("배송중"),
       ]);
-
-    // 각각 필요한 상태로 사전 전이
-    await Promise.all([
-      // forwardOrder: 접수 상태로 (004~007 연속 테스트용)
-      adminUpdateOrderStatus(forwardOrder.orderId, "접수"),
-      // rollbackOrder: 수선중 상태로 (SC-repair-009용)
-      adminUpdateOrderStatus(rollbackOrder.orderId, "접수").then(() =>
-        adminUpdateOrderStatus(rollbackOrder.orderId, "수선중"),
-      ),
-      // cancelBtnOrder: 수선중 상태로 (SC-repair-008용)
-      adminUpdateOrderStatus(cancelBtnOrder.orderId, "접수").then(() =>
-        adminUpdateOrderStatus(cancelBtnOrder.orderId, "수선중"),
-      ),
-      // noRollbackOrder: 배송중 상태로 (SC-repair-010용)
-      adminUpdateOrderStatus(noRollbackOrder.orderId, "접수")
-        .then(() => adminUpdateOrderStatus(noRollbackOrder.orderId, "수선중"))
-        .then(() => adminUpdateOrderStatus(noRollbackOrder.orderId, "수선완료"))
-        .then(() => adminUpdateOrderStatus(noRollbackOrder.orderId, "배송중")),
-    ]);
   });
 
   // SC-repair-004: 접수 → 수선중

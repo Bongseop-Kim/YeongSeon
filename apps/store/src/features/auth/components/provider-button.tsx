@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui-extended/button";
+import { Button } from "@/shared/ui-extended/button";
 import {
   isSupportedProvider,
   type ProviderConfig,

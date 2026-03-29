@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/shared/store/auth";
 import { cartKeys, useSetCartItems } from "@/features/cart/api/cart-query";
 import { getCartItems } from "@/features/cart/api/cart-api";
 import {
@@ -9,7 +9,7 @@ import {
   clearUserCache,
   getGuestItems,
 } from "@/features/cart/utils/cart-local-storage";
-import { toast } from "@/lib/toast";
+import { toast } from "@/shared/lib/toast";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 
 /**

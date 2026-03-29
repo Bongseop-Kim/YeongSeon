@@ -12,11 +12,8 @@ const notificationStatus = {
   phoneVerified: false,
 };
 
-vi.mock("@/features/notification/api/notification-api", () => ({
+vi.mock("@/entities/notification", () => ({
   saveNotificationConsent,
-}));
-
-vi.mock("@/features/notification/api/notification-status-query", () => ({
   useNotificationStatus: () => ({
     data: notificationStatus,
     refetch: refetchStatus,

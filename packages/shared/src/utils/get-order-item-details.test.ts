@@ -34,7 +34,6 @@ const createCustomData = (
   pricing: {
     sewingCost: 0,
     fabricCost: 0,
-    sampleCost: 0,
     totalCost: 0,
     ...overrides?.pricing,
   },

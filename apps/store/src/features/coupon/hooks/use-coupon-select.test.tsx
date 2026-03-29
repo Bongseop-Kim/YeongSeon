@@ -25,7 +25,7 @@ vi.mock("@/features/coupon/components/coupon-select-modal", async () => {
   };
 });
 
-vi.mock("@/components/ui/dialog", () => ({
+vi.mock("@/shared/ui/dialog", () => ({
   Dialog: ({
     children,
     open,

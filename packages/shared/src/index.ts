@@ -51,6 +51,14 @@ export * from "./utils/format-date";
 export * from "./utils/korean-postposition";
 export * from "./utils/order-actions";
 export * from "./utils/normalize-coupon-id";
+export {
+  extractBaseWorkId,
+  mergeTokenUsageItems,
+} from "./utils/merge-token-usage";
+export type {
+  TokenUsageItem,
+  MergedTokenItem,
+} from "./utils/merge-token-usage";
 
 // Mappers
 export * from "./mappers/shared-mapper";

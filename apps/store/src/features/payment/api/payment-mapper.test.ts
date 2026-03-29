@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseConfirmPaymentResponse } from "@/features/payment/api/payment-mapper";
+import { parseConfirmPaymentResponse } from "@/entities/payment";
 import { createConfirmPaymentResponseRaw } from "@/test/fixtures";
 
 describe("parseConfirmPaymentResponse", () => {

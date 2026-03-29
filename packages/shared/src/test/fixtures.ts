@@ -142,7 +142,6 @@ export const createCustomOrderData = (
   pricing: {
     sewingCost: 12000,
     fabricCost: 8000,
-    sampleCost: 0,
     totalCost: 20000,
   },
   sample: false,
@@ -206,7 +205,6 @@ export const createCustomOrderItem = (
     pricing: {
       sewingCost: 12000,
       fabricCost: 8000,
-      sampleCost: 0,
       totalCost: 20000,
     },
     sample: false,

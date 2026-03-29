@@ -1,15 +1,14 @@
 import { useEffect, useRef } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import { CheckboxField } from "@/components/composite/check-box-field";
-import { QuantitySelector } from "@/components/composite/quantity-selector";
+import type { PricingConfig, QuoteOrderOptions } from "@/entities/custom-order";
+import { CheckboxField } from "@/shared/composite/check-box-field";
+import { QuantitySelector } from "@/shared/composite/quantity-selector";
 import { PackageSelector } from "@/features/custom-order/components/package-selector";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-import type { PricingConfig } from "@/features/custom-order/types/pricing";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { StepLayout } from "./step-layout";
-import { ButtonGroup } from "@/components/ui/button-group";
-import { Button } from "@/components/ui-extended/button";
-import { Field, FieldTitle, FieldDescription } from "@/components/ui/field";
+import { ButtonGroup } from "@/shared/ui/button-group";
+import { Button } from "@/shared/ui-extended/button";
+import { Field, FieldTitle, FieldDescription } from "@/shared/ui/field";
 
 const QUANTITY_PRESETS = [4, 8, 12, 20, 50, 100] as const;
 

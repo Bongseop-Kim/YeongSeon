@@ -2,15 +2,15 @@ import type { Product } from "@yeongseon/shared/types/view/product";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 
-import { ROUTES } from "@/constants/ROUTES";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { Skeleton } from "@/shared/ui/skeleton";
 import { HomeSectionContainer } from "@/features/home/components/home-section-container";
 import {
   fadeUpVariants,
   homeViewport,
   staggerContainerVariants,
 } from "@/features/home/components/home-motion";
-import { padZero } from "@/lib/utils";
+import { padZero } from "@/shared/lib/utils";
 
 interface EsProductGridProps {
   items: Product[];

@@ -82,24 +82,27 @@ SELECT is(
   'order_status_logs에 상태 전이 기록이 삽입됨'
 );
 
--- ── 테스트 4: token 주문 완료 전이 + design_tokens 지급 ──────
-SELECT is(
-  (SELECT (public.admin_update_order_status(
-    (SELECT id FROM public.orders WHERE order_number = 'TST-TOKEN-AO001'),
-    '완료'
-  ))->>'success'),
-  'true',
-  'token 주문 대기중 → 완료 전이 성공'
+-- ── 테스트 4: token 주문 관리자 완료 전이 차단 ───────────────
+-- token 완료는 confirm_payment 흐름에서만 허용. 관리자 수동 완료 불가.
+SELECT throws_ok(
+  $$
+    SELECT public.admin_update_order_status(
+      (SELECT id FROM public.orders WHERE order_number = 'TST-TOKEN-AO001'),
+      '완료'
+    )
+  $$,
+  'P0001', NULL,
+  'token 주문 관리자 완료 전이 시 예외 발생'
 );
 
--- ── 테스트 5: token 완료 후 design_tokens 지급 확인 ──────────
+-- ── 테스트 5: token 완료 차단 후 design_tokens 미지급 확인 ───
 SELECT is(
   (SELECT COUNT(*)::int FROM public.design_tokens
    WHERE user_id = 'a0000001-0000-0000-0000-000000000002'::uuid
      AND type = 'purchase'
      AND work_id = 'order_' || (SELECT id FROM public.orders WHERE order_number = 'TST-TOKEN-AO001')::text),
-  1,
-  'token 주문 완료 시 design_tokens 지급 행이 삽입됨'
+  0,
+  'token 주문 관리자 완료 차단 시 design_tokens 미지급'
 );
 
 -- ── 테스트 6: 롤백 전이 (custom 제작중 → 접수, 사유 있음) ────
@@ -108,7 +111,8 @@ SELECT is(
     (SELECT id FROM public.orders WHERE order_number = 'TST-CUSTOM-AO001'),
     '접수',
     '고객 요청으로 롤백',
-    true  -- is_rollback = true
+    NULL,  -- p_payment_key
+    true   -- p_is_rollback = true
   ))->>'success'),
   'true',
   'custom 주문 제작중 → 접수 롤백 전이 성공'
@@ -121,8 +125,9 @@ SELECT throws_ok(
     SELECT public.admin_update_order_status(
       (SELECT id FROM public.orders WHERE order_number = 'TST-CUSTOM-AO001'),
       '대기중',
-      NULL,  -- memo 없음
-      true   -- is_rollback = true
+      NULL,  -- p_memo 없음
+      NULL,  -- p_payment_key
+      true   -- p_is_rollback = true
     )
   $$,
   'P0001', NULL,

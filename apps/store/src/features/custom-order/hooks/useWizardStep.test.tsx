@@ -1,8 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 import { describe, expect, it } from "vitest";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { useWizardStep } from "@/features/custom-order/hooks/useWizardStep";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { StepConfig } from "@/features/custom-order/types/wizard";
 
 const values: QuoteOrderOptions = {
