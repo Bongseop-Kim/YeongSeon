@@ -11,6 +11,9 @@ interface DesignTokenBalance {
   bonus: number;
 }
 
+const DESIGN_TOKEN_SELECT_FIELDS =
+  "id, user_id, amount, type, ai_model, request_type, description, created_at, work_id";
+
 export async function getDesignTokenBalance(): Promise<DesignTokenBalance> {
   const { data, error } = await supabase.rpc("get_design_token_balance");
 
@@ -31,7 +34,7 @@ export async function getDesignTokenHistory(): Promise<
 > {
   const { data, error } = await supabase
     .from("design_tokens")
-    .select("*")
+    .select(DESIGN_TOKEN_SELECT_FIELDS)
     .order("created_at", { ascending: false });
 
   if (error) {

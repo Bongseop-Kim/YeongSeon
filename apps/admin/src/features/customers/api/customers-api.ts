@@ -13,6 +13,9 @@ interface TokenBalanceRpcRow {
   balance: number | null;
 }
 
+const DESIGN_TOKEN_SELECT_FIELDS =
+  "id, user_id, amount, type, ai_model, request_type, description, created_at, work_id";
+
 export async function getCustomerTokenBalances(
   userIds: string[],
 ): Promise<AdminCustomerTokenBalanceRow[]> {
@@ -46,7 +49,7 @@ export async function getCustomerTokenHistory(
 ): Promise<DesignTokenRow[]> {
   const { data, error } = await supabase
     .from("design_tokens")
-    .select("*")
+    .select(DESIGN_TOKEN_SELECT_FIELDS)
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 

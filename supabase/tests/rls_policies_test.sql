@@ -7,7 +7,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(16);
+SELECT plan(19);
 
 -- ── 픽스처 ───────────────────────────────────────────────────
 DO $setup$
@@ -160,6 +160,59 @@ SELECT is((SELECT COUNT(*)::int FROM public.orders), 1, 'authenticated(user_b): 
 SELECT is((SELECT COUNT(*)::int FROM public.profiles), 1, 'authenticated(user_b): 자기 profile 1개만 조회');
 
 RESET ROLE;
+
+-- ── 13. coupons 정책 목록 검증 ──────────────────────────────────
+SELECT policies_are(
+  'public',
+  'coupons',
+  ARRAY[
+    'Allow read access to coupons',
+    'service_role_select_coupons',
+    'service_role_insert_coupons',
+    'service_role_update_coupons',
+    'service_role_delete_coupons',
+    'Admins can insert coupons',
+    'Admins can update coupons',
+    'Admins can delete coupons'
+  ],
+  'coupons 정책 목록이 의도한 8개와 일치해야 함'
+);
+
+-- ── 14. user_coupons 정책 목록 검증 ──────────────────────────────
+SELECT policies_are(
+  'public',
+  'user_coupons',
+  ARRAY[
+    'user_coupons_select_own',
+    'service_role_select_user_coupons',
+    'service_role_insert_user_coupons',
+    'service_role_update_user_coupons',
+    'service_role_delete_user_coupons',
+    'Admins can view all user coupons',
+    'Admins can insert user coupons',
+    'Admins can update user coupons'
+  ],
+  'user_coupons 정책 목록이 의도한 8개와 일치해야 함'
+);
+
+-- ── 15. inquiries 정책 목록 검증 ──────────────────────────────
+SELECT policies_are(
+  'public',
+  'inquiries',
+  ARRAY[
+    'Users can view their own inquiries',
+    'Users can create their own inquiries',
+    'Users can update their own pending inquiries',
+    'Users can delete their own pending inquiries',
+    'Admins can view all inquiries',
+    'Admins can answer inquiries',
+    'service_role_select_inquiries',
+    'service_role_insert_inquiries',
+    'service_role_update_inquiries',
+    'service_role_delete_inquiries'
+  ],
+  'inquiries 정책 목록이 의도한 10개와 일치해야 함'
+);
 
 SELECT * FROM finish();
 ROLLBACK;

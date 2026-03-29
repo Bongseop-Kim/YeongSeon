@@ -53,17 +53,17 @@ ALTER TABLE public.quote_requests ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own quote requests"
   ON public.quote_requests FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can insert their own quote requests"
   ON public.quote_requests FOR INSERT
   TO authenticated
   WITH CHECK (
-    auth.uid() = user_id
+    (SELECT auth.uid()) = user_id
     AND EXISTS (
       SELECT 1 FROM public.shipping_addresses sa
       WHERE sa.id = shipping_address_id
-        AND sa.user_id = auth.uid()
+        AND sa.user_id = (SELECT auth.uid())
     )
   );
 

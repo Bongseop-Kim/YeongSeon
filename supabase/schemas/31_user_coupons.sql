@@ -41,10 +41,21 @@ CREATE POLICY "user_coupons_select_own"
   TO authenticated
   USING ((SELECT auth.uid()) = user_id);
 
-CREATE POLICY "user_coupons_service_all"
-  ON public.user_coupons
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+CREATE POLICY "service_role_select_user_coupons"
+  ON public.user_coupons FOR SELECT
+  TO service_role USING (true);
+
+CREATE POLICY "service_role_insert_user_coupons"
+  ON public.user_coupons FOR INSERT
+  TO service_role WITH CHECK (true);
+
+CREATE POLICY "service_role_update_user_coupons"
+  ON public.user_coupons FOR UPDATE
+  TO service_role USING (true) WITH CHECK (true);
+
+CREATE POLICY "service_role_delete_user_coupons"
+  ON public.user_coupons FOR DELETE
+  TO service_role USING (true);
 
 -- Admin policies
 CREATE POLICY "Admins can view all user coupons"

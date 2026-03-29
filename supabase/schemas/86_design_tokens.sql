@@ -26,7 +26,7 @@ ALTER TABLE public.design_tokens ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own design tokens"
   ON public.design_tokens FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Admins can view all design tokens"
   ON public.design_tokens FOR SELECT

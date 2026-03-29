@@ -46,7 +46,7 @@ ALTER TABLE public.ai_generation_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own generation logs"
   ON public.ai_generation_logs FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Admins can view all generation logs"
   ON public.ai_generation_logs FOR SELECT

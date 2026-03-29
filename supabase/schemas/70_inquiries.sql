@@ -51,23 +51,33 @@ ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own inquiries"
   ON public.inquiries FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can create their own inquiries"
   ON public.inquiries FOR INSERT
   TO authenticated
-  WITH CHECK (auth.uid() = user_id AND status = '답변대기' AND answer IS NULL AND answer_date IS NULL);
+  WITH CHECK (
+    (SELECT auth.uid()) = user_id
+    AND status = '답변대기'
+    AND answer IS NULL
+    AND answer_date IS NULL
+  );
 
 CREATE POLICY "Users can update their own pending inquiries"
   ON public.inquiries FOR UPDATE
   TO authenticated
-  USING (auth.uid() = user_id AND status = '답변대기')
-  WITH CHECK (auth.uid() = user_id AND status = '답변대기' AND answer IS NULL AND answer_date IS NULL);
+  USING ((SELECT auth.uid()) = user_id AND status = '답변대기')
+  WITH CHECK (
+    (SELECT auth.uid()) = user_id
+    AND status = '답변대기'
+    AND answer IS NULL
+    AND answer_date IS NULL
+  );
 
 CREATE POLICY "Users can delete their own pending inquiries"
   ON public.inquiries FOR DELETE
   TO authenticated
-  USING (auth.uid() = user_id AND status = '답변대기');
+  USING ((SELECT auth.uid()) = user_id AND status = '답변대기');
 
 CREATE POLICY "Admins can view all inquiries"
   ON public.inquiries FOR SELECT
@@ -85,10 +95,21 @@ CREATE POLICY "Admins can answer inquiries"
     AND answer_date IS NOT NULL
   );
 
-CREATE POLICY "inquiries_service_all"
-  ON public.inquiries
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+CREATE POLICY "service_role_select_inquiries"
+  ON public.inquiries FOR SELECT
+  TO service_role USING (true);
+
+CREATE POLICY "service_role_insert_inquiries"
+  ON public.inquiries FOR INSERT
+  TO service_role WITH CHECK (true);
+
+CREATE POLICY "service_role_update_inquiries"
+  ON public.inquiries FOR UPDATE
+  TO service_role USING (true) WITH CHECK (true);
+
+CREATE POLICY "service_role_delete_inquiries"
+  ON public.inquiries FOR DELETE
+  TO service_role USING (true);
 
 -- Privilege hardening for user updates
 REVOKE UPDATE ON TABLE public.inquiries FROM authenticated;

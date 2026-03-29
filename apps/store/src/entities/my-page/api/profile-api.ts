@@ -11,6 +11,8 @@ import {
 } from "./profile-mapper";
 
 const TABLE_NAME = "profiles";
+const PROFILE_SELECT_FIELDS =
+  "id, name, phone, birth, phone_verified, notification_consent, notification_enabled";
 
 /**
  * 현재 사용자의 프로필 조회
@@ -28,7 +30,7 @@ export const getProfile = async (): Promise<UserProfile> => {
   // 프로필 정보 조회
   const { data: profile, error: profileError } = await supabase
     .from(TABLE_NAME)
-    .select("*")
+    .select(PROFILE_SELECT_FIELDS)
     .eq("id", user.id)
     .single();
 
@@ -45,7 +47,7 @@ export const getProfile = async (): Promise<UserProfile> => {
           phone: null,
           birth: null,
         })
-        .select()
+        .select(PROFILE_SELECT_FIELDS)
         .single();
 
       if (createError) {

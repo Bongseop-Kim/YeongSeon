@@ -39,10 +39,21 @@ CREATE POLICY "Allow read access to coupons"
   ON public.coupons FOR SELECT
   USING (true);
 
-CREATE POLICY "Allow service role full access to coupons"
-  ON public.coupons
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+CREATE POLICY "service_role_select_coupons"
+  ON public.coupons FOR SELECT
+  TO service_role USING (true);
+
+CREATE POLICY "service_role_insert_coupons"
+  ON public.coupons FOR INSERT
+  TO service_role WITH CHECK (true);
+
+CREATE POLICY "service_role_update_coupons"
+  ON public.coupons FOR UPDATE
+  TO service_role USING (true) WITH CHECK (true);
+
+CREATE POLICY "service_role_delete_coupons"
+  ON public.coupons FOR DELETE
+  TO service_role USING (true);
 
 -- Admin policies
 CREATE POLICY "Admins can insert coupons"

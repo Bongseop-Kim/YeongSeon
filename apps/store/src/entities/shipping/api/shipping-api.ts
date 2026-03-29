@@ -11,6 +11,8 @@ import {
 } from "@/entities/shipping/api/shipping-mapper";
 
 const TABLE_NAME = "shipping_addresses";
+const SHIPPING_ADDRESS_SELECT_FIELDS =
+  "id, created_at, recipient_name, recipient_phone, address, address_detail, postal_code, delivery_request, delivery_memo, is_default, user_id";
 
 const mapUpsertedAddress = (record: ShippingAddressRecord | null) => {
   if (!record) {
@@ -28,7 +30,7 @@ export const getShippingAddresses = async (): Promise<ShippingAddress[]> => {
 
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select("*")
+    .select(SHIPPING_ADDRESS_SELECT_FIELDS)
     .eq("user_id", userId)
     .order("is_default", { ascending: false })
     .order("created_at", { ascending: false });
@@ -74,7 +76,7 @@ export const getDefaultShippingAddress =
 
     const { data, error } = await supabase
       .from(TABLE_NAME)
-      .select("*")
+      .select(SHIPPING_ADDRESS_SELECT_FIELDS)
       .eq("user_id", userId)
       .eq("is_default", true)
       .single();
@@ -104,7 +106,7 @@ export const getShippingAddressById = async (
 
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select("*")
+    .select(SHIPPING_ADDRESS_SELECT_FIELDS)
     .eq("id", id)
     .eq("user_id", userId)
     .single();

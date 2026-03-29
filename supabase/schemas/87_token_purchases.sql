@@ -28,4 +28,4 @@ ALTER TABLE public.token_purchases ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own token purchases"
   ON public.token_purchases FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
