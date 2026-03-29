@@ -466,6 +466,7 @@ BEGIN
     FROM public.design_tokens AS dt
     JOIN requested_users AS ru
       ON ru.user_id = dt.user_id
+    WHERE dt.expires_at IS NULL OR dt.expires_at > now()
     GROUP BY dt.user_id
   )
   SELECT ru.user_id, COALESCE(b.balance, 0)::integer AS balance
@@ -508,7 +509,6 @@ BEGIN
           AND dt.token_class = 'paid'
           AND (
             dt.source_order_id = o.id
-            OR dt.work_id = 'order_' || o.id::text || '_paid'
             OR dt.work_id = 'order_' || o.id::text
           )
       ), 0)::integer                                    AS paid_tokens_granted,
@@ -520,7 +520,6 @@ BEGIN
           AND dt.token_class = 'paid'
           AND (
             dt.source_order_id = o.id
-            OR dt.work_id = 'order_' || o.id::text || '_paid'
             OR dt.work_id = 'order_' || o.id::text
           )
       ), o.created_at)                                  AS token_granted_at,
@@ -532,7 +531,6 @@ BEGIN
           AND dt.token_class = 'paid'
           AND (
             dt.source_order_id = o.id
-            OR dt.work_id = 'order_' || o.id::text || '_paid'
             OR dt.work_id = 'order_' || o.id::text
           )
       )                                                 AS token_expires_at,
@@ -865,6 +863,8 @@ BEGIN
      )
    ORDER BY dt.created_at DESC
    LIMIT 1;
+
+  v_source_order_id := COALESCE(v_source_order_id, v_req.order_id);
 
   -- 이미 완료된 경우 멱등하게 성공 반환
   IF v_req.status = '완료' THEN
