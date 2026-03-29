@@ -1,9 +1,9 @@
 import { supabase } from "@/shared/lib/supabase";
-import { FunctionsHttpError } from "@yeongseon/supabase";
 import {
   parseConfirmPaymentResponse,
   type ConfirmPaymentResponse,
 } from "@/entities/payment/api/payment-mapper";
+import { extractEdgeFunctionErrorMessage } from "@/shared/lib/edge-function-error";
 
 export interface ConfirmPaymentRequest {
   paymentKey: string;
@@ -12,28 +12,6 @@ export interface ConfirmPaymentRequest {
 }
 
 export type { ConfirmPaymentResponse };
-
-const extractEdgeFunctionErrorMessage = async (
-  error: unknown,
-): Promise<string | null> => {
-  if (!(error instanceof FunctionsHttpError)) {
-    return null;
-  }
-
-  try {
-    const payload = await error.context.json();
-    if (payload && typeof payload === "object" && "error" in payload) {
-      const message = payload.error;
-      if (typeof message === "string" && message.trim()) {
-        return message.trim();
-      }
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-};
 
 export const confirmPayment = async (
   request: ConfirmPaymentRequest,

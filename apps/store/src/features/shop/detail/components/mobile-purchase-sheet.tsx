@@ -1,10 +1,5 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetTitle,
-} from "@/shared/ui-extended/sheet";
-import { Button } from "@/shared/ui-extended/button";
+import { Sheet, SheetContent, SheetTitle } from "@/shared/ui-extended/sheet";
+import { SheetActionFooter } from "@/shared/composite/sheet-action-footer";
 import {
   Select,
   SelectContent,
@@ -153,33 +148,19 @@ export function MobilePurchaseSheet({
           )}
         </div>
 
-        <SheetFooter className="shrink-0">
-          <div className="flex gap-2 w-full">
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              onClick={handleAddToCart}
-              disabled={
-                isAddingToCart ||
-                isSubmittingOrder ||
-                (hasOptions && selectedOptions.length === 0)
-              }
-              className="flex-1"
-            >
-              {isAddingToCart || isSubmittingOrder ? "추가 중..." : "장바구니"}
-            </Button>
-            <Button
-              type="button"
-              size="lg"
-              onClick={handleOrder}
-              disabled={hasOptions && selectedOptions.length === 0}
-              className="flex-1"
-            >
-              주문하기
-            </Button>
-          </div>
-        </SheetFooter>
+        <SheetActionFooter
+          onPrimary={handleAddToCart}
+          onOrder={handleOrder}
+          primaryLabel={
+            isAddingToCart || isSubmittingOrder ? "추가 중..." : "장바구니"
+          }
+          primaryDisabled={
+            isAddingToCart ||
+            isSubmittingOrder ||
+            (hasOptions && selectedOptions.length === 0)
+          }
+          orderDisabled={hasOptions && selectedOptions.length === 0}
+        />
       </SheetContent>
     </Sheet>
   );

@@ -16,7 +16,11 @@ import {
   toOrderViewFromDetail,
 } from "@/entities/order/api/order-mapper";
 import { extractEdgeFunctionErrorMessage } from "./order-error-mapper";
-import { normalizeKeyword, type ListFilters } from "@/shared/lib/list-filters";
+import {
+  applyDateFilters,
+  normalizeKeyword,
+  type ListFilters,
+} from "@/shared/lib/list-filters";
 
 const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";
@@ -122,14 +126,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
     .select(ORDER_LIST_SELECT_COLUMNS)
     .order("created_at", { ascending: false })
     .limit(200);
-
-  if (filters?.dateFrom) {
-    query = query.gte("date", filters.dateFrom);
-  }
-
-  if (filters?.dateTo) {
-    query = query.lte("date", filters.dateTo);
-  }
+  query = applyDateFilters(query, filters);
 
   const { data: orders, error: ordersError } = await query;
 

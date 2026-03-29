@@ -1,5 +1,6 @@
 import type { ProductCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
+import { ItemPriceDisplay } from "@/shared/ui/item-price-display";
 
 interface ProductItemInfoProps {
   item: ProductCartItem;
@@ -15,7 +16,6 @@ export function ProductItemInfo({ item }: ProductItemInfoProps) {
     item.quantity,
   );
   const totalDiscountedPrice = totalPrice - totalLineDiscount;
-  const hasCoupon = !!item.appliedCoupon;
 
   return (
     <div className="flex gap-4">
@@ -36,25 +36,11 @@ export function ProductItemInfo({ item }: ProductItemInfoProps) {
             : "FREE"}{" "}
           / {item.quantity}개
         </p>
-
-        {hasCoupon ? (
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-zinc-400 line-through">
-              {totalPrice.toLocaleString()}원
-            </p>
-            <p className="text-sm font-bold text-red-600">
-              {totalDiscountedPrice.toLocaleString()}원
-            </p>
-          </div>
-        ) : (
-          <p className="text-sm font-medium">{totalPrice.toLocaleString()}원</p>
-        )}
-
-        {hasCoupon ? (
-          <p className="text-xs font-medium text-primary">
-            {item.appliedCoupon?.coupon.name ?? ""} 적용
-          </p>
-        ) : null}
+        <ItemPriceDisplay
+          basePrice={totalPrice}
+          discountedPrice={totalDiscountedPrice}
+          couponName={item.appliedCoupon?.coupon.name}
+        />
       </div>
     </div>
   );

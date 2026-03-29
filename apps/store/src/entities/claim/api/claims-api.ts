@@ -10,7 +10,11 @@ import {
   toClaimItemView,
   toCreateClaimInputDTO,
 } from "@/entities/claim/api/claims-mapper";
-import { normalizeKeyword, type ListFilters } from "@/shared/lib/list-filters";
+import {
+  applyDateFilters,
+  normalizeKeyword,
+  type ListFilters,
+} from "@/shared/lib/list-filters";
 
 const CLAIM_LIST_VIEW = "claim_list_view";
 const CLAIM_LIST_SELECT_COLUMNS = [
@@ -40,14 +44,7 @@ export const getClaims = async (
     .select(CLAIM_LIST_SELECT_COLUMNS)
     .order("date", { ascending: false })
     .limit(200);
-
-  if (filters?.dateFrom) {
-    query = query.gte("date", filters.dateFrom);
-  }
-
-  if (filters?.dateTo) {
-    query = query.lte("date", filters.dateTo);
-  }
+  query = applyDateFilters(query, filters);
 
   const { data, error } = await query;
 

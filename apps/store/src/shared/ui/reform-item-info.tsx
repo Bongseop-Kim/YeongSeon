@@ -1,6 +1,7 @@
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
 import { Package } from "lucide-react";
+import { ItemPriceDisplay } from "@/shared/ui/item-price-display";
 
 interface ReformItemInfoProps {
   item: ReformCartItem;
@@ -11,7 +12,6 @@ export function ReformItemInfo({ item, image }: ReformItemInfoProps) {
   const itemPrice = item.reformData.cost;
   const discount = calculateDiscount(itemPrice, item.appliedCoupon);
   const discountedPrice = itemPrice - discount;
-  const hasCoupon = !!item.appliedCoupon;
 
   return (
     <div className="flex gap-4">
@@ -34,27 +34,12 @@ export function ReformItemInfo({ item, image }: ReformItemInfoProps) {
             ? `길이: ${item.reformData.tie.tieLength}cm`
             : `키: ${item.reformData.tie.wearerHeight}cm`}
         </p>
-
-        {hasCoupon ? (
-          <div className="mt-2 flex items-center gap-2">
-            <p className="text-sm font-medium text-zinc-400 line-through">
-              {itemPrice.toLocaleString()}원
-            </p>
-            <p className="text-sm font-bold text-red-600">
-              {discountedPrice.toLocaleString()}원
-            </p>
-          </div>
-        ) : (
-          <p className="mt-2 text-sm font-medium">
-            {itemPrice.toLocaleString()}원
-          </p>
-        )}
-
-        {hasCoupon ? (
-          <p className="text-xs font-medium text-primary">
-            {item.appliedCoupon?.coupon.name ?? ""} 적용
-          </p>
-        ) : null}
+        <ItemPriceDisplay
+          basePrice={itemPrice}
+          discountedPrice={discountedPrice}
+          couponName={item.appliedCoupon?.coupon.name}
+          className="mt-2"
+        />
       </div>
     </div>
   );

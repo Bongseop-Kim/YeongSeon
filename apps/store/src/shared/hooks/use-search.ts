@@ -4,9 +4,18 @@ import { useSearchStore, type SearchDateFilter } from "@/shared/store/search";
 interface UseSearchOptions {
   placeholder: string;
   onSearch: (query: string, dateFilter: SearchDateFilter) => void;
+  tabs?: {
+    items: readonly string[];
+    defaultTab: string;
+    onTabChange: (tab: string) => void;
+  };
 }
 
-export function useSearch({ placeholder, onSearch }: UseSearchOptions): void {
+export function useSearch({
+  placeholder,
+  onSearch,
+  tabs,
+}: UseSearchOptions): void {
   const { setSearchEnabled } = useSearchStore();
   const onSearchRef = useRef(onSearch);
 
@@ -20,8 +29,23 @@ export function useSearch({ placeholder, onSearch }: UseSearchOptions): void {
       onSearch: (query, dateFilter) => {
         onSearchRef.current(query, dateFilter);
       },
+      ...(tabs
+        ? {
+            tabs: {
+              items: [...tabs.items],
+              activeTab: tabs.defaultTab,
+              onTabChange: tabs.onTabChange,
+            },
+          }
+        : {}),
     });
 
     return () => setSearchEnabled(false);
-  }, [placeholder, setSearchEnabled]);
+  }, [
+    placeholder,
+    setSearchEnabled,
+    tabs?.defaultTab,
+    tabs?.items,
+    tabs?.onTabChange,
+  ]);
 }

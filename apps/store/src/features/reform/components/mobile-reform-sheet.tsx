@@ -1,10 +1,5 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetTitle,
-} from "@/shared/ui-extended/sheet";
-import { Button } from "@/shared/ui-extended/button";
+import { Sheet, SheetContent, SheetTitle } from "@/shared/ui-extended/sheet";
+import { SheetActionFooter } from "@/shared/composite/sheet-action-footer";
 interface MobileReformSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -45,29 +40,12 @@ export function MobileReformSheet({
           </div>
         </div>
 
-        <SheetFooter className="shrink-0">
-          <div className="flex gap-2 w-full">
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              onClick={handleAddToCart}
-              disabled={isActionDisabled}
-              className="flex-1"
-            >
-              장바구니
-            </Button>
-            <Button
-              type="button"
-              size="lg"
-              onClick={handleOrder}
-              disabled={isActionDisabled}
-              className="flex-1"
-            >
-              주문하기
-            </Button>
-          </div>
-        </SheetFooter>
+        <SheetActionFooter
+          onPrimary={handleAddToCart}
+          onOrder={handleOrder}
+          primaryDisabled={isActionDisabled}
+          orderDisabled={isActionDisabled}
+        />
       </SheetContent>
     </Sheet>
   );

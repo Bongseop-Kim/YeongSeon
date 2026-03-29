@@ -1,20 +1,12 @@
-import { useId, type ReactNode } from "react";
-import {
-  Controller,
-  type Control,
-  type FieldValues,
-  type Path,
-  type RegisterOptions,
+import type { ReactNode } from "react";
+import type {
+  Control,
+  FieldValues,
+  Path,
+  RegisterOptions,
 } from "react-hook-form";
 import { Input } from "@/shared/ui-extended/input";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/shared/ui/field";
+import { FormFieldWrapper } from "@/shared/composite/form-field-wrapper";
 
 interface InputFieldProps<T extends FieldValues> {
   name: Path<T>;
@@ -31,62 +23,21 @@ interface InputFieldProps<T extends FieldValues> {
 }
 
 export const InputField = <T extends FieldValues>({
-  name,
-  control,
-  label,
-  description,
-  required,
   type,
   placeholder,
   unit,
-  rules,
-  disabled,
-  className,
-}: InputFieldProps<T>) => {
-  const id = useId();
-  const descriptionId = `${id}-description`;
-  const errorId = `${id}-error`;
-
-  return (
-    <Controller
-      name={name}
-      control={control}
-      rules={rules}
-      render={({ field, fieldState }) => {
-        const describedBy = [
-          description ? descriptionId : undefined,
-          fieldState.error ? errorId : undefined,
-        ]
-          .filter(Boolean)
-          .join(" ");
-
-        return (
-          <Field orientation="vertical" className={className}>
-            <FieldLabel htmlFor={id}>
-              <FieldTitle>{label}</FieldTitle>
-            </FieldLabel>
-            {description ? (
-              <FieldDescription id={descriptionId}>
-                {description}
-              </FieldDescription>
-            ) : null}
-            <FieldContent>
-              <Input
-                {...field}
-                id={id}
-                type={type}
-                placeholder={placeholder}
-                unit={unit}
-                disabled={disabled}
-                required={required}
-                aria-invalid={!!fieldState.error}
-                aria-describedby={describedBy || undefined}
-              />
-              <FieldError id={errorId} errors={[fieldState.error]} />
-            </FieldContent>
-          </Field>
-        );
-      }}
-    />
-  );
-};
+  ...rest
+}: InputFieldProps<T>) => (
+  <FormFieldWrapper
+    {...rest}
+    renderInput={({ field, ...renderProps }) => (
+      <Input
+        {...field}
+        {...renderProps}
+        type={type}
+        placeholder={placeholder}
+        unit={unit}
+      />
+    )}
+  />
+);

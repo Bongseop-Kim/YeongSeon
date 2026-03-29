@@ -1,10 +1,8 @@
-import { Button, Space, Typography, Input, Modal } from "antd";
+import { Button, Modal, Space } from "antd";
 import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
 import { eulo } from "@yeongseon/shared";
 import { confirmRollback } from "@/components/confirm-rollback";
-
-const { Text } = Typography;
-const { TextArea } = Input;
+import { StatusMemo } from "@/components/status-memo";
 interface OrderStatusActionsProps {
   order: AdminOrderDetail;
   nextStatus: string | undefined;
@@ -61,18 +59,7 @@ export function OrderStatusActions({
 
   return (
     <>
-      <Space direction="vertical" style={{ width: "100%", marginBottom: 16 }}>
-        <div>
-          <Text strong>상태 변경 메모</Text>
-          <TextArea
-            value={statusMemo}
-            onChange={(e) => onMemoChange(e.target.value)}
-            rows={2}
-            placeholder="상태 변경 사유 (이력에 기록됨)"
-            style={{ marginTop: 4 }}
-          />
-        </div>
-      </Space>
+      <StatusMemo value={statusMemo} onChange={onMemoChange} />
 
       <Space style={{ marginBottom: 24 }}>
         {order.adminActions.includes("advance") && nextStatus && (

@@ -64,6 +64,28 @@ export const toCreateCustomOrderOptionsInput = (
   careLabel: normalizeBoolean(options.careLabel),
 });
 
+export const toCustomOrderOptionsDtoSnakeCase = (
+  options: CreateCustomOrderOptionsDto,
+): CreateCustomOrderOptionsDtoSnakeCase => ({
+  fabric_provided: options.fabricProvided,
+  reorder: options.reorder,
+  fabric_type: options.fabricType,
+  design_type: options.designType,
+  tie_type: options.tieType,
+  interlining: options.interlining,
+  interlining_thickness: options.interliningThickness,
+  size_type: options.sizeType,
+  tie_width: options.tieWidth,
+  triangle_stitch: options.triangleStitch,
+  side_stitch: options.sideStitch,
+  bar_tack: options.barTack,
+  fold7: options.fold7,
+  dimple: options.dimple,
+  spoderato: options.spoderato,
+  brand_label: options.brandLabel,
+  care_label: options.careLabel,
+});
+
 export interface CreateCustomOrderFormInput {
   shippingAddressId: string;
   options: OrderOptionsForCreateCustomOrderOptions;
@@ -94,25 +116,7 @@ export const toCreateCustomOrderInputDto = (
 
   return {
     shipping_address_id: request.shippingAddressId,
-    options: {
-      fabric_provided: request.options.fabricProvided,
-      reorder: request.options.reorder,
-      fabric_type: request.options.fabricType,
-      design_type: request.options.designType,
-      tie_type: request.options.tieType,
-      interlining: request.options.interlining,
-      interlining_thickness: request.options.interliningThickness,
-      size_type: request.options.sizeType,
-      tie_width: request.options.tieWidth,
-      triangle_stitch: request.options.triangleStitch,
-      side_stitch: request.options.sideStitch,
-      bar_tack: request.options.barTack,
-      fold7: request.options.fold7,
-      dimple: request.options.dimple,
-      spoderato: request.options.spoderato,
-      brand_label: request.options.brandLabel,
-      care_label: request.options.careLabel,
-    } satisfies CreateCustomOrderOptionsDtoSnakeCase,
+    options: toCustomOrderOptionsDtoSnakeCase(request.options),
     quantity: request.quantity,
     reference_images: request.referenceImages.map(toDbImageRef),
     additional_notes: request.additionalNotes,

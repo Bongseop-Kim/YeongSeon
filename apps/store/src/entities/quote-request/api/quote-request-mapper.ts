@@ -1,11 +1,11 @@
-import type {
-  CreateCustomOrderOptionsDtoSnakeCase,
-  OrderOptions,
-} from "@/entities/custom-order";
+import type { OrderOptions } from "@/entities/custom-order";
 import { isRecord } from "@/shared/lib/type-guard";
 import type { ImageRef } from "@yeongseon/shared";
 import { normalizeReferenceImages, toDbImageRef } from "@yeongseon/shared";
-import { toCreateCustomOrderOptionsInput } from "@/entities/custom-order";
+import {
+  toCreateCustomOrderOptionsInput,
+  toCustomOrderOptionsDtoSnakeCase,
+} from "@/entities/custom-order";
 import type {
   CreateQuoteRequestRequest,
   CreateQuoteRequestRequestDto,
@@ -52,25 +52,7 @@ export const toCreateQuoteRequestInputDto = (
   request: CreateQuoteRequestRequest,
 ): CreateQuoteRequestRequestDto => ({
   shipping_address_id: request.shippingAddressId,
-  options: {
-    fabric_provided: request.options.fabricProvided,
-    reorder: request.options.reorder,
-    fabric_type: request.options.fabricType,
-    design_type: request.options.designType,
-    tie_type: request.options.tieType,
-    interlining: request.options.interlining,
-    interlining_thickness: request.options.interliningThickness,
-    size_type: request.options.sizeType,
-    tie_width: request.options.tieWidth,
-    triangle_stitch: request.options.triangleStitch,
-    side_stitch: request.options.sideStitch,
-    bar_tack: request.options.barTack,
-    fold7: request.options.fold7,
-    dimple: request.options.dimple,
-    spoderato: request.options.spoderato,
-    brand_label: request.options.brandLabel,
-    care_label: request.options.careLabel,
-  } satisfies CreateCustomOrderOptionsDtoSnakeCase,
+  options: toCustomOrderOptionsDtoSnakeCase(request.options),
   quantity: request.quantity,
   reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
