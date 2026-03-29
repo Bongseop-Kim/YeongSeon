@@ -21,7 +21,7 @@ import {
   type ChangeEvent,
 } from "react";
 import dayjs from "dayjs";
-import { CouponForm } from "@/features/coupons/components/coupon-form";
+import { CouponForm } from "@/features/coupons";
 
 type CouponUser = {
   id: string;

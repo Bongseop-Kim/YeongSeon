@@ -16,6 +16,7 @@ import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 import { useSearch } from "@/shared/hooks/use-search";
 import { toDateString, type ListFilters } from "@/shared/lib/list-filters";
 import { cn } from "@/shared/lib/utils";
+import { mergeTokenUsageItems } from "@yeongseon/shared";
 
 const formatAmount = (amount: number) => {
   const prefix = amount >= 0 ? "+" : "";
@@ -108,61 +109,6 @@ type HistoryItem = {
   workId: string | null;
 };
 
-interface MergedUsageItem {
-  id: string;
-  netAmount: number;
-  description: string | null;
-  createdAt: string;
-  type: string;
-}
-
-const extractBaseWorkId = (workId: string | null): string | null => {
-  if (!workId) return null;
-  return workId.replace(/_use_paid$|_use_bonus$/, "");
-};
-
-function mergeUsageItems(items: HistoryItem[]): MergedUsageItem[] {
-  const groupMap = new Map<string, { baseItem: HistoryItem; net: number }>();
-  const standalone: HistoryItem[] = [];
-
-  for (const item of items) {
-    const baseId = extractBaseWorkId(item.workId ?? null);
-
-    if ((item.type === "use" || item.type === "refund") && baseId) {
-      const entry = groupMap.get(baseId);
-      if (entry) {
-        entry.net += item.amount;
-        if (item.type === "use") entry.baseItem = item;
-      } else {
-        groupMap.set(baseId, { baseItem: item, net: item.amount });
-      }
-    } else if (item.type !== "refund") {
-      standalone.push(item);
-    }
-  }
-
-  const merged: MergedUsageItem[] = [
-    ...Array.from(groupMap.values()).map(({ baseItem, net }) => ({
-      id: baseItem.id,
-      netAmount: net,
-      description: baseItem.description,
-      createdAt: baseItem.createdAt,
-      type: baseItem.type,
-    })),
-    ...standalone.map((item) => ({
-      id: item.id,
-      netAmount: item.amount,
-      description: item.description,
-      createdAt: item.createdAt,
-      type: item.type,
-    })),
-  ];
-
-  return merged.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
-}
-
 interface UsageTabProps {
   history: HistoryItem[];
   isLoading: boolean;
@@ -173,7 +119,7 @@ function UsageTab({ history, isLoading, error }: UsageTabProps) {
   const rawUsageItems = history.filter(
     (item) => item.type === "use" || item.type === "refund",
   );
-  const usageItems = mergeUsageItems(rawUsageItems);
+  const usageItems = mergeTokenUsageItems(rawUsageItems);
 
   if (isLoading && history.length === 0) {
     return <HistorySkeleton />;

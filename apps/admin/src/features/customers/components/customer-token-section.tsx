@@ -5,7 +5,7 @@ import {
   useCustomerTokenHistoryQuery,
 } from "@/features/customers/api/customers-query";
 import { CustomerTokenFormModal } from "@/features/customers/components/customer-token-form-modal";
-import type { AdminCustomerTokenRow } from "@/features/customers/types/admin-customer";
+import { mergeTokenUsageItems, type MergedTokenItem } from "@yeongseon/shared";
 
 interface Props {
   userId: string;
@@ -19,62 +19,6 @@ const TOKEN_TYPE_LABELS: Record<string, string> = {
 };
 
 const { Text } = Typography;
-
-interface MergedTokenRow {
-  id: string;
-  netAmount: number;
-  description: string | null;
-  createdAt: string;
-  type: string;
-}
-
-const extractBaseWorkId = (workId: string | null): string | null => {
-  if (!workId) return null;
-  return workId.replace(/_use_paid$|_use_bonus$/, "");
-};
-
-function mergeUsageItems(items: AdminCustomerTokenRow[]): MergedTokenRow[] {
-  const groupMap = new Map<
-    string,
-    { baseItem: AdminCustomerTokenRow; net: number }
-  >();
-  const standalone: AdminCustomerTokenRow[] = [];
-
-  for (const item of items) {
-    const baseId = extractBaseWorkId(item.workId);
-
-    if ((item.type === "use" || item.type === "refund") && baseId) {
-      const entry = groupMap.get(baseId);
-      if (entry) {
-        entry.net += item.amount;
-        if (item.type === "use") entry.baseItem = item;
-      } else {
-        groupMap.set(baseId, { baseItem: item, net: item.amount });
-      }
-    } else {
-      standalone.push(item);
-    }
-  }
-
-  return [
-    ...Array.from(groupMap.values()).map(({ baseItem, net }) => ({
-      id: baseItem.id,
-      netAmount: net,
-      description: baseItem.description,
-      createdAt: baseItem.createdAt,
-      type: baseItem.type,
-    })),
-    ...standalone.map((item) => ({
-      id: item.id,
-      netAmount: item.amount,
-      description: item.description,
-      createdAt: item.createdAt,
-      type: item.type,
-    })),
-  ].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
-}
 
 export function CustomerTokenSection({ userId }: Props) {
   const [mode, setMode] = useState<"grant" | "deduct" | null>(null);
@@ -90,7 +34,7 @@ export function CustomerTokenSection({ userId }: Props) {
   } = useCustomerTokenHistoryQuery(userId);
 
   const currentBalance = balances?.[0]?.balance ?? 0;
-  const mergedHistory = mergeUsageItems(history ?? []);
+  const mergedHistory = mergeTokenUsageItems(history ?? []);
   const columns = [
     {
       dataIndex: "createdAt",
@@ -100,7 +44,7 @@ export function CustomerTokenSection({ userId }: Props) {
     {
       dataIndex: "description",
       title: "설명",
-      render: (value: string | null, record: MergedTokenRow) =>
+      render: (value: string | null, record: MergedTokenItem) =>
         value ??
         (record.type === "admin"
           ? "관리자 지급"
@@ -158,7 +102,7 @@ export function CustomerTokenSection({ userId }: Props) {
           내역 조회 중 오류가 발생했습니다.
         </Text>
       ) : (
-        <Table<MergedTokenRow>
+        <Table<MergedTokenItem>
           dataSource={mergedHistory}
           rowKey="id"
           loading={isHistoryLoading}

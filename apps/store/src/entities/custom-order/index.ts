@@ -10,4 +10,3 @@ export { toPricingConfig } from "./api/pricing-mapper";
 export type { OrderOptions, QuoteOrderOptions } from "./model/order";
 export type { PricingConfig } from "./model/pricing";
 export type { ImageUploadHook } from "./model/image-upload";
-export type { CreateCustomOrderOptionsDtoSnakeCase } from "./model/dto/custom-order-input";

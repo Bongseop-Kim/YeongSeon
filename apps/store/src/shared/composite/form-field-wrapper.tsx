@@ -16,7 +16,7 @@ import {
   FieldTitle,
 } from "@/shared/ui/field";
 
-export interface FieldInputRenderProps<T extends FieldValues> {
+interface FieldInputRenderProps<T extends FieldValues> {
   field: ControllerRenderProps<T, Path<T>>;
   id: string;
   required: boolean | undefined;

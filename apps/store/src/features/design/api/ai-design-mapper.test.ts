@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toDesignTokenHistoryItem } from "@/entities/design/api/ai-design-mapper";
+import { toDesignTokenHistoryItem } from "@/entities/design";
 import { getTags } from "@/features/design/api/ai-design-mapper";
 import type { AiDesignRequest } from "@/features/design/api/ai-design-api";
 import type { Attachment } from "@/features/design/types/chat";

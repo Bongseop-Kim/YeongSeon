@@ -1,6 +1,6 @@
 import { Create, useForm } from "@refinedev/antd";
 import { Form } from "antd";
-import { CouponForm } from "@/features/coupons/components/coupon-form";
+import { CouponForm } from "@/features/coupons";
 
 export default function CouponCreate() {
   const { formProps, saveButtonProps } = useForm({

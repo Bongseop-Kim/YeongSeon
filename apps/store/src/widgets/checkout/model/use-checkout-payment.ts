@@ -6,7 +6,7 @@ import { hasStringCode } from "@/shared/lib/type-guard";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
 import { useCheckoutPageState } from "./use-checkout-page-state";
 
-export interface UseCheckoutPaymentOptions {
+interface UseCheckoutPaymentOptions {
   state: { shippingAddressId?: string | null } | null;
   fallbackRoute: string;
   pricePerUnit: number;

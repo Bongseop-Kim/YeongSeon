@@ -47,6 +47,8 @@
 ### FSD 규칙
 
 - 모든 `entities/`, `features/`, `widgets/` slice는 `index.ts`를 public API로 둔다.
+- `entities/`, `features/`, `widgets/`의 `index.ts`는 슬라이스 public API로 사용하므로 얇은 re-export를 허용한다.
+- 상위 레이어(`pages`, 다른 슬라이스)는 슬라이스 내부 구현 파일이 아니라 해당 슬라이스의 public API(`index.ts`)를 통해 import한다.
 - `entities`에는 UI를 두지 않는다. 새 `.tsx` 파일 추가 금지.
 - cross-feature 조합이 필요하면 `features`에 억지로 넣지 말고 `widgets`로 올린다.
 - Supabase 직접 호출은 `entities/*/api/`, `features/*/api/`, `shared/lib/`, `app/providers/` 에서만 허용한다.

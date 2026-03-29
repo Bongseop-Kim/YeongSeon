@@ -77,9 +77,7 @@ export function CheckoutOptionRow({ label, value }: CheckoutOptionRowProps) {
   );
 }
 
-export function CheckoutReferenceImages({
-  imageRefs,
-}: CheckoutReferenceImagesProps) {
+function CheckoutReferenceImages({ imageRefs }: CheckoutReferenceImagesProps) {
   return (
     <div className="py-3">
       <span className="text-foreground-muted">참고 이미지</span>
@@ -105,9 +103,7 @@ export function CheckoutReferenceImages({
   );
 }
 
-export function CheckoutAdditionalNotes({
-  notes,
-}: CheckoutAdditionalNotesProps) {
+function CheckoutAdditionalNotes({ notes }: CheckoutAdditionalNotesProps) {
   if (!notes) return null;
 
   return (

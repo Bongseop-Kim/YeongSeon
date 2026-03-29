@@ -2,8 +2,8 @@ import type { FullConfig } from "@playwright/test";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AppName, AuthMeta, E2EFixtures } from "@/e2e/utils/auth-support";
-import { buildHeaders } from "@/e2e/utils/auth-support";
+import type { AppName, AuthMeta, E2EFixtures } from "@/utils/auth-support";
+import { buildHeaders } from "@/utils/auth-support";
 
 type SessionPayload = {
   access_token: string;
