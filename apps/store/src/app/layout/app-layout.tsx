@@ -264,7 +264,7 @@ export default function AppLayout() {
       >
         <Router />
 
-        {showHeader && location.pathname === ROUTES.HOME ? (
+        {showHeader && (isHomePage || !isMobile) ? (
           <Footer>
             <FooterContent>
               <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
