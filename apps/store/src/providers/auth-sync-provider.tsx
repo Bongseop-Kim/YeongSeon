@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/shared/lib/supabase";
 import type { AuthChangeEvent, Session } from "@yeongseon/supabase";
 import { authKeys } from "@/features/auth/api/auth-query";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/shared/store/auth";
 
 /**
  * 인증 상태 변경을 감지하여 TanStack Query 캐시와 Zustand store를 동기화하는 Provider

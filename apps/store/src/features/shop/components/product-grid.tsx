@@ -1,5 +1,5 @@
 import type { Product } from "@yeongseon/shared/types/view/product";
-import { ProductCard } from "@/components/composite/product-card";
+import { ProductCard } from "@/shared/composite/product-card";
 
 interface ProductGridProps {
   products: Product[];

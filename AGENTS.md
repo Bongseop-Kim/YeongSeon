@@ -28,8 +28,13 @@ supabase functions deploy <함수명> --use-api
 supabase functions deploy --use-api   # 전체 배포
 ```
 
-새 feature 파일 위치: `apps/{app}/src/features/{domain}/api/{domain}-api.ts` + `{domain}-mapper.ts`
-예시: `apps/store/src/features/order/api/order-api.ts` + `order-mapper.ts`
+새 파일 위치:
+
+- API/타입: `apps/{app}/src/entities/{domain}/api/{domain}-api.ts` + `{domain}-mapper.ts`
+- 도메인 모델: `apps/{app}/src/entities/{domain}/model/`
+- UI/훅: `apps/{app}/src/features/{domain}/`
+- 조합 UI: `apps/{app}/src/widgets/{widget-name}/`
+- 페이지 엔트리: `apps/{app}/src/pages/{route}/`
 
 ## 하드 가드레일
 

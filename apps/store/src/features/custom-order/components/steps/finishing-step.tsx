@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
-import { UtilityPagePanel } from "@/components/composite/utility-page";
-import { SelectField } from "@/components/composite/select-field";
-import { CheckboxField } from "@/components/composite/check-box-field";
+import { UtilityPagePanel } from "@/shared/composite/utility-page";
+import { SelectField } from "@/shared/composite/select-field";
+import { CheckboxField } from "@/shared/composite/check-box-field";
 import {
   INTERLINING_TYPES,
   INTERLINING_THICKNESS,

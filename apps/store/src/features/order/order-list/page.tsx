@@ -1,23 +1,23 @@
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Empty } from "@/components/composite/empty";
-import { OrderStatusBadge } from "@/components/composite/status-badge";
-import { Button } from "@/components/ui-extended/button";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { Empty } from "@/shared/composite/empty";
+import { OrderStatusBadge } from "@/shared/composite/status-badge";
+import { Button } from "@/shared/ui-extended/button";
 import {
   UtilityPageIntro,
   UtilityPageSection,
-} from "@/components/composite/utility-page";
+} from "@/shared/composite/utility-page";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import { OrderItemCard } from "@/components/composite/order-item-card";
-import { TokenRefundAction } from "@/components/composite/token-refund-action";
+import { OrderItemCard } from "@/shared/composite/order-item-card";
+import { TokenRefundAction } from "@/features/order/components/token-refund-action";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
-import { ROUTES } from "@/constants/ROUTES";
-import { useOrders } from "@/features/order/api/order-query";
-import { useRefundableTokenOrdersQuery } from "@/features/my-page/token-history/api/token-refund-query";
-import { toDateString, type ListFilters } from "@/lib/list-filters";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import { useSearchTabs } from "@/hooks/use-search-tabs";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { useOrders } from "@/entities/order";
+import { useRefundableTokenOrdersQuery } from "@/entities/my-page";
+import { toDateString, type ListFilters } from "@/shared/lib/list-filters";
+import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
+import { useSearchTabs } from "@/shared/hooks/use-search-tabs";
 import {
   CLAIM_ACTION_LABEL,
   getClaimActionsFromCustomerActions,

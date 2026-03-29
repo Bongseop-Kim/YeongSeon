@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { confirmPayment } from "@/features/payment/api/payment-api";
+import { confirmPayment } from "@/entities/payment";
 import type {
   ConfirmPaymentRequest,
   ConfirmPaymentResponse,
-} from "@/features/payment/api/payment-api";
-import { cartKeys } from "@/features/cart/api/cart-keys";
-import { useRequiredUser } from "@/hooks/use-required-user";
+} from "@/entities/payment";
+import { cartKeys } from "@/entities/cart";
+import { useRequiredUser } from "@/shared/hooks/use-required-user";
 
 export const useConfirmPayment = () => {
   const queryClient = useQueryClient();

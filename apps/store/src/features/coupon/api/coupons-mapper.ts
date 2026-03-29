@@ -7,7 +7,7 @@ import type {
   UserCouponRecord,
   CouponRecord,
 } from "@/features/coupon/types/coupon-record";
-import { isRecord } from "@/lib/type-guard";
+import { isRecord } from "@/shared/lib/type-guard";
 
 // ── parse helpers (런타임 검증) ──────────────────────
 

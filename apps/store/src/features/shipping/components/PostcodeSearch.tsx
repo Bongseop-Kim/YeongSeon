@@ -7,9 +7,9 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from "@/components/ui-extended/dialog";
-import { PageTitle } from "@/components/layout/main-layout";
-import CloseButton from "@/components/ui-extended/close";
+} from "@/shared/ui-extended/dialog";
+import { PageTitle } from "@/shared/layout/main-layout";
+import CloseButton from "@/shared/ui-extended/close";
 
 interface PostcodeSearchProps {
   onComplete: (data: DaumPostcodeData) => void;

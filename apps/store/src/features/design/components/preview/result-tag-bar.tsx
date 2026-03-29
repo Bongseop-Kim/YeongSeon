@@ -1,11 +1,11 @@
 import { Download, Maximize2, Minimize2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui-extended/button";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui-extended/button";
 import { useDesignChat } from "@/features/design/hooks/use-design-chat";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 const extractImageUrl = (background: string): string | null => {
   const match = /url\("(.+?)"\)/.exec(background);

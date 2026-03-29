@@ -1,22 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { useSearchParams } from "react-router-dom";
-import { Empty } from "@/components/composite/empty";
+import { Empty } from "@/shared/composite/empty";
 import {
   UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
-} from "@/components/composite/utility-page";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Button } from "@/components/ui-extended/button";
+} from "@/shared/composite/utility-page";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { Button } from "@/shared/ui-extended/button";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@/shared/ui/sheet";
 import {
   InquiryForm,
   type InquiryFormData,
@@ -32,9 +32,9 @@ import {
   INQUIRY_CATEGORIES,
   type InquiryCategory,
 } from "@/features/my-page/inquiry/types/inquiry-item";
-import { toast } from "@/lib/toast";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
-import { useModalStore } from "@/store/modal";
+import { toast } from "@/shared/lib/toast";
+import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
+import { useModalStore } from "@/shared/store/modal";
 
 const sectionMotion = {
   initial: { opacity: 0, y: 18 },

@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/shared/lib/supabase";
 import { FunctionsHttpError } from "@yeongseon/supabase";
 import {
   parseConfirmPaymentResponse,

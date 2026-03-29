@@ -6,8 +6,8 @@ import {
   signOut,
   deleteAccount,
 } from "./auth-api";
-import { toast } from "@/lib/toast";
-import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/features/design/api/ai-design-query";
+import { toast } from "@/shared/lib/toast";
+import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/entities/design";
 
 /**
  * 세션 쿼리 키

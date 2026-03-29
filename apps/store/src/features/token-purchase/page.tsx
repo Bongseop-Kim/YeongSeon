@@ -1,20 +1,17 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/constants/ROUTES";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
 import { PlanCard } from "@/features/token-purchase/components/plan-card";
 import {
   useCreateTokenPurchaseMutation,
   useTokenPlansQuery,
-} from "@/features/token-purchase/api/token-purchase-query";
-import { useAuthStore } from "@/store/auth";
-import { toast } from "@/lib/toast";
-import { Button } from "@/components/ui-extended/button";
-import type {
-  TokenPlan,
-  TokenPlanKey,
-} from "@/features/token-purchase/api/token-purchase-api";
+} from "@/entities/token-purchase";
+import { useAuthStore } from "@/shared/store/auth";
+import { toast } from "@/shared/lib/toast";
+import { Button } from "@/shared/ui-extended/button";
+import type { TokenPlan, TokenPlanKey } from "@/entities/token-purchase";
 
 const TokenPurchasePage = () => {
   const navigate = useNavigate();

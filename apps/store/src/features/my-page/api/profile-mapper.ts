@@ -3,7 +3,7 @@ import type {
   MarketingConsentToggleInput,
   UserProfile,
 } from "@/features/my-page/types/profile";
-import { isRecord } from "@/lib/type-guard";
+import { isRecord } from "@/shared/lib/type-guard";
 
 export const DEFAULT_MARKETING_CONSENT: MarketingConsent = {
   all: false,

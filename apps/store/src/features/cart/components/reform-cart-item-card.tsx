@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui-extended/button";
+import { Button } from "@/shared/ui-extended/button";
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
-import CloseButton from "@/components/ui-extended/close";
+import CloseButton from "@/shared/ui-extended/close";
 import { Package } from "lucide-react";
 
 interface ReformCartItemCardProps {

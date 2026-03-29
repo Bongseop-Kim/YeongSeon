@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui-extended/button";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { Button } from "@/shared/ui-extended/button";
+import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 
 interface WizardActionButtonsProps {
   isFirstStep: boolean;

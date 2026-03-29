@@ -7,7 +7,7 @@ import { TieCanvas } from "@/features/design/components/preview/tie-canvas";
 import { HistoryTab } from "@/features/design/components/history/history-tab";
 import { useSessionRestore } from "@/features/design/hooks/use-session-restore";
 import type { DesignSession } from "@/features/design/types/session";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 type PreviewTab = "preview" | "history";
 

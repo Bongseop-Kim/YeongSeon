@@ -3,31 +3,31 @@ import { useEffect, useId } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { Button } from "@/components/ui-extended/button";
-import { Form } from "@/components/ui/form";
-import { InputField } from "@/components/composite/input-field";
-import { PwInput } from "@/components/composite/pw-input";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { Button } from "@/shared/ui-extended/button";
+import { Form } from "@/shared/ui/form";
+import { InputField } from "@/shared/composite/input-field";
+import { PwInput } from "@/shared/composite/pw-input";
 import {
   Field,
   FieldContent,
   FieldError,
   FieldLabel,
   FieldTitle,
-} from "@/components/ui/field";
-import { useEmailSignIn, useSignIn } from "@/features/auth/api/auth-query";
+} from "@/shared/ui/field";
+import { useEmailSignIn, useSignIn } from "@/entities/auth";
 import { ProviderButton } from "@/features/auth/components/provider-button";
 import {
   PROVIDERS,
   type SupportedProvider,
 } from "@/features/auth/constants/providers";
-import { ROUTES } from "@/constants/ROUTES";
-import { usePopup } from "@/hooks/usePopup";
-import { useAuthStore } from "@/store/auth";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { usePopup } from "@/shared/hooks/usePopup";
+import { useAuthStore } from "@/shared/store/auth";
 import {
   consumeAuthRedirect,
   AUTH_REDIRECT_STORAGE_KEY,
-} from "@/lib/auth-redirect";
+} from "@/shared/lib/auth-redirect";
 
 const isLocationStateWithFrom = (
   value: unknown,

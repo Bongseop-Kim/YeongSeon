@@ -27,8 +27,8 @@ import {
   isProductPattern,
   isTieMeasurementType,
   isUserCouponStatus,
-} from "@/lib/domain-type-guards";
-import { isRecord } from "@/lib/type-guard";
+} from "@/shared/lib/domain-type-guards";
+import { isRecord } from "@/shared/lib/type-guard";
 
 export const toOrderItemInputDTO = (
   item: CreateOrderRequest["items"][number],

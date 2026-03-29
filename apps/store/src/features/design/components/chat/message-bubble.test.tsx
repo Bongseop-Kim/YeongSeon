@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MessageBubble } from "@/features/design/components/chat/message-bubble";
 
 // useBreakpoint mock
-vi.mock("@/providers/breakpoint-provider", () => ({
+vi.mock("@/shared/lib/breakpoint-provider", () => ({
   useBreakpoint: () => ({ isMobile: true, isDesktop: false }),
 }));
 

@@ -1,4 +1,4 @@
-import { OrderPriceSummaryAside } from "@/components/composite/order-price-summary-aside";
+import { OrderPriceSummaryAside } from "@/shared/composite/order-price-summary-aside";
 import type { OrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
 
 interface CartOrderSummaryCardProps {

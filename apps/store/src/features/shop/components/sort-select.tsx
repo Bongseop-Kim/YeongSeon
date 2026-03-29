@@ -4,7 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui-extended/select";
+} from "@/shared/ui-extended/select";
 import { SORT_OPTIONS } from "@/features/shop/constants/FILTER_OPTIONS";
 import type { SortOption } from "@yeongseon/shared/types/view/product";
 

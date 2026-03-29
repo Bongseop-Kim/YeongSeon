@@ -12,7 +12,7 @@ import {
 import { useDesignTokenBalanceQuery } from "@/features/design/api/ai-design-query";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 interface ChatPanelProps {
   className?: string;

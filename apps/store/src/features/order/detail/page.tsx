@@ -17,26 +17,23 @@ import type {
   TrackingInfo,
 } from "@yeongseon/shared/types/view/order";
 
-import { CustomOrderOptionsSection } from "@/components/composite/custom-order-options-section";
-import { Empty } from "@/components/composite/empty";
-import { OrderItemCard } from "@/components/composite/order-item-card";
-import { OrderStatusBadge } from "@/components/composite/status-badge";
+import { CustomOrderOptionsSection } from "@/shared/composite/custom-order-options-section";
+import { Empty } from "@/shared/composite/empty";
+import { OrderItemCard } from "@/shared/composite/order-item-card";
+import { OrderStatusBadge } from "@/shared/composite/status-badge";
 import {
   UtilityKeyValueRow,
   UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
-} from "@/components/composite/utility-page";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui-extended/button";
+} from "@/shared/composite/utility-page";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { Separator } from "@/shared/ui/separator";
+import { Button } from "@/shared/ui-extended/button";
 import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
-import {
-  useConfirmPurchase,
-  useOrderDetail,
-} from "@/features/order/api/order-query";
-import { buildClaimFormRoute, ROUTES } from "@/constants/ROUTES";
+import { useConfirmPurchase, useOrderDetail } from "@/entities/order";
+import { buildClaimFormRoute, ROUTES } from "@/shared/constants/ROUTES";
 
 const detailRowLabelClass =
   "shrink-0 text-sm font-medium text-muted-foreground";

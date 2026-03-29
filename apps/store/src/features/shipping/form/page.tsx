@@ -1,21 +1,21 @@
-import { PopupLayout } from "@/components/layout/popup-layout";
-import { Button } from "@/components/ui-extended/button";
+import { PopupLayout } from "@/shared/layout/popup-layout";
+import { Button } from "@/shared/ui-extended/button";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type {
   ShippingAddress,
   ShippingAddressInput,
 } from "@/features/shipping/types/shipping-address";
-import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui-extended/input";
-import { SelectField } from "@/components/composite/select-field";
+import { Form } from "@/shared/ui/form";
+import { Input } from "@/shared/ui-extended/input";
+import { SelectField } from "@/shared/composite/select-field";
 import {
   CUSTOM_DELIVERY_REQUEST,
   DELIVERY_REQUEST_OPTIONS,
-} from "@/constants/DELIVERY_REQUEST_OPTIONS";
-import { CheckboxField } from "@/components/composite/check-box-field";
-import { InputField } from "@/components/composite/input-field";
-import { TextareaField } from "@/components/composite/textarea-field";
+} from "@/shared/constants/DELIVERY_REQUEST_OPTIONS";
+import { CheckboxField } from "@/shared/composite/check-box-field";
+import { InputField } from "@/shared/composite/input-field";
+import { TextareaField } from "@/shared/composite/textarea-field";
 import {
   Field,
   FieldContent,
@@ -24,7 +24,7 @@ import {
   FieldLabel,
   FieldSet,
   FieldTitle,
-} from "@/components/ui/field";
+} from "@/shared/ui/field";
 import { PostcodeSearch } from "@/features/shipping/components/PostcodeSearch";
 import { useState, useEffect } from "react";
 import type { DaumPostcodeData } from "@/features/shipping/hooks/useDaumPostcode";
@@ -34,10 +34,13 @@ import {
   useUpdateShippingAddress,
   useShippingAddresses,
 } from "@/features/shipping/api/shipping-query";
-import { extractPhoneNumber, formatPhoneNumber } from "@/lib/phone-format";
-import { toast } from "@/lib/toast";
+import {
+  extractPhoneNumber,
+  formatPhoneNumber,
+} from "@/shared/lib/phone-format";
+import { toast } from "@/shared/lib/toast";
 import { SHIPPING_MESSAGE_TYPE } from "@yeongseon/shared/constants/shipping-events";
-import { usePopupChild } from "@/hooks/usePopup";
+import { usePopupChild } from "@/shared/hooks/usePopup";
 
 const ShippingFormPage = () => {
   const navigate = useNavigate();

@@ -7,8 +7,8 @@ import {
   searchProductsForInquiry,
 } from "./inquiry-api";
 import type { InquiryCategory } from "@/features/my-page/inquiry/types/inquiry-item";
-import { useAuthStore } from "@/store/auth";
-import { useRequiredUser } from "@/hooks/use-required-user";
+import { useAuthStore } from "@/shared/store/auth";
+import { useRequiredUser } from "@/shared/hooks/use-required-user";
 
 const inquiryKeys = {
   all: ["inquiries"] as const,

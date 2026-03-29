@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui-extended/button";
-import { Input } from "@/components/ui-extended/input";
+import { Separator } from "@/shared/ui/separator";
+import { Button } from "@/shared/ui-extended/button";
+import { Input } from "@/shared/ui-extended/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
 import { Package } from "lucide-react";
 import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
-import { useOrderStore } from "@/store/order";
+import { useOrderStore } from "@/shared/store/order";
 import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
 
 interface ReformOrderItemCardProps {

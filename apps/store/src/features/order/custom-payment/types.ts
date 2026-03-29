@@ -1,2 +1,2 @@
-export type { CustomOrderPaymentState } from "@/lib/custom-payment-state";
-export { isCustomOrderPaymentState } from "@/lib/custom-payment-state";
+export type { CustomOrderPaymentState } from "@/shared/lib/custom-payment-state";
+export { isCustomOrderPaymentState } from "@/shared/lib/custom-payment-state";

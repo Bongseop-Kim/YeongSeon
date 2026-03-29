@@ -16,20 +16,17 @@ const {
   verifyMutateAsync: vi.fn(),
 }));
 
-vi.mock("@/lib/toast", () => ({
+vi.mock("@/shared/lib/toast", () => ({
   toast: {
     success,
     error,
   },
 }));
 
-vi.mock("@/features/my-page/api/profile-query", () => ({
+vi.mock("@/entities/my-page", () => ({
   useProfile: () => ({
     data: { email: "current@example.com" },
   }),
-}));
-
-vi.mock("@/features/my-page/api/email-query", () => ({
   useRequestEmailChangeCode: () => ({
     isPending: false,
     mutateAsync: requestMutateAsync,

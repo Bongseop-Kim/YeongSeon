@@ -2,7 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   UtilityKeyValueRow,
   UtilityPageAside,
-} from "@/components/composite/utility-page";
+} from "@/shared/composite/utility-page";
 import CostBreakdown from "@/features/custom-order/components/cost-breakdown";
 import {
   getFabricLabel,

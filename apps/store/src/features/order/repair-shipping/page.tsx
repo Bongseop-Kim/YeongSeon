@@ -1,26 +1,26 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ROUTES } from "@/constants/ROUTES";
-import { Button } from "@/components/ui-extended/button";
-import { Input } from "@/components/ui-extended/input";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { Button } from "@/shared/ui-extended/button";
+import { Input } from "@/shared/ui-extended/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
+} from "@/shared/ui/select";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
 import { Loader2 } from "lucide-react";
 import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
-import { submitRepairTracking } from "@/features/order/api/order-api";
-import { useOrderDetail } from "@/features/order/api/order-query";
-import { toast } from "@/lib/toast";
+import { submitRepairTracking } from "@/entities/order";
+import { useOrderDetail } from "@/entities/order";
+import { toast } from "@/shared/lib/toast";
 import {
   UtilityPageIntro,
   UtilityPageSection,
-} from "@/components/composite/utility-page";
+} from "@/shared/composite/utility-page";
 import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
 
 interface PrefilledTracking {

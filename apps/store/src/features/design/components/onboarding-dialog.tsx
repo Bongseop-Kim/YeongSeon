@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui-extended/button";
+import { Button } from "@/shared/ui-extended/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "@/components/ui-extended/dialog";
+} from "@/shared/ui-extended/dialog";
 import { ONBOARDING_PAGES } from "@/features/design/constants/onboarding";
 
 interface OnboardingDialogProps {

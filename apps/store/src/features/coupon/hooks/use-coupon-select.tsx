@@ -5,8 +5,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui-extended/button";
+} from "@/shared/ui/dialog";
+import { Button } from "@/shared/ui-extended/button";
 import {
   CouponSelectModal,
   type CouponSelectModalRef,

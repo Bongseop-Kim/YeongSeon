@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import type { RefundableTokenOrder } from "@/features/my-page/token-history/api/token-refund-api";
-import { TokenRefundAction } from "@/components/composite/token-refund-action";
+import type { RefundableTokenOrder } from "@/entities/my-page";
+import { TokenRefundAction } from "@/features/order/components/token-refund-action";
 
 const baseOrder: RefundableTokenOrder = {
   orderId: "order-1",
@@ -15,7 +15,7 @@ const baseOrder: RefundableTokenOrder = {
   pendingRequestId: null,
 };
 
-vi.mock("@/features/my-page/token-history/api/token-refund-query", () => ({
+vi.mock("@/entities/my-page", () => ({
   useRequestTokenRefundMutation: () => ({
     mutateAsync: vi.fn(),
     isPending: false,

@@ -1,5 +1,5 @@
 import { upload } from "@imagekit/react";
-import { IMAGEKIT_PUBLIC_KEY, getImageKitAuth } from "@/lib/imagekit";
+import { IMAGEKIT_PUBLIC_KEY, getImageKitAuth } from "@/shared/lib/imagekit";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 
 interface UploadedImageRef {

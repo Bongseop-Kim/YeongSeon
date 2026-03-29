@@ -1,9 +1,9 @@
 import type { Product } from "@yeongseon/shared/types/view/product";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
-import { ROUTES } from "@/constants/ROUTES";
-import { generateItemId } from "@/lib/utils";
-import { toast } from "@/lib/toast";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { generateItemId } from "@/shared/lib/utils";
+import { toast } from "@/shared/lib/toast";
 
 export function processOrderAndNavigate(
   product: Product,

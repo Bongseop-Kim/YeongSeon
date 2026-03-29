@@ -2,7 +2,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/shared/ui/accordion";
 import type { FAQItem } from "@/features/faq/types/faq-types";
 
 interface FaqAccordionItemProps {

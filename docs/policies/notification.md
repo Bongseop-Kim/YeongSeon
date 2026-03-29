@@ -2,7 +2,7 @@
 policy: notification
 status: implemented
 affects: [sale, repair, custom-order, sample, claim, quote-request]
-last-verified: 2026-03-25
+last-verified: 2026-03-29
 ---
 
 # 알림 정책 (Notification)

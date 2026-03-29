@@ -1,7 +1,7 @@
 import { Controller, useFormContext } from "react-hook-form";
-import { UtilityPagePanel } from "@/components/composite/utility-page";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { UtilityPagePanel } from "@/shared/composite/utility-page";
+import { Textarea } from "@/shared/ui/textarea";
+import { Label } from "@/shared/ui/label";
 import { ImageUpload } from "@/features/custom-order/components/image-upload";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";

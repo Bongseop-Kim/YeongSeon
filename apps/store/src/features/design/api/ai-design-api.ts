@@ -1,7 +1,7 @@
 import type { ContextChip } from "@/features/design/types/chat";
 import type { DesignTokenHistoryItem } from "@/features/design/types/token-history";
 import type { AiDesignRequest } from "@/features/design/types/ai-design-request";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/shared/lib/supabase";
 import {
   getTags,
   toDesignTokenHistoryItem,

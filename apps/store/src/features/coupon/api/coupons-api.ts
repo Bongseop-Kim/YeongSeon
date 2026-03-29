@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/shared/lib/supabase";
 import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
 import type { UserCoupon } from "@yeongseon/shared/types/view/coupon";
 import {

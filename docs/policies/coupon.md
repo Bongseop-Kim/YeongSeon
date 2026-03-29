@@ -1,13 +1,22 @@
 ---
 policy: coupon
 status: implemented
-affects: [sale, repair, custom-order]
-last-verified: 2026-03-17
+affects: [sale, repair, custom-order, sample]
+last-verified: 2026-03-29
 ---
 
 # 쿠폰 정책 (Coupon)
 
-> sale / repair / custom 주문 생성 시 라인 단위 할인 적용.
+> sale / repair / custom-order / sample 주문에서 쿠폰을 적용한다. 일반 구매와 수선은 아이템 단위, 주문제작과 샘플은 주문 단위 할인으로 동작한다.
+
+## 적용 표면
+
+| 표면                                  | 대상            | 적용 단위   |
+| ------------------------------------- | --------------- | ----------- |
+| 장바구니 `/cart`                      | 일반 구매, 수선 | 아이템 단위 |
+| 주문서 `/order/order-form`            | 일반 구매, 수선 | 아이템 단위 |
+| 주문제작 결제 `/order/custom-payment` | custom-order    | 주문 단위   |
+| 샘플 결제 `/order/sample-payment`     | sample          | 주문 단위   |
 
 ## 할인 타입
 
@@ -32,6 +41,8 @@ last-verified: 2026-03-17
 **PR-coupon-004**: 동일 쿠폰 중복 사용 불가. 서로 다른 쿠폰은 라인 아이템별 각각 적용 가능
 
 **PR-coupon-005**: 결제 실패 또는 취소 시 `reserved` → `active` 복원
+
+**PR-coupon-006**: 샘플 주문 결제 성공 시 타입별 샘플 할인 쿠폰을 자동 발급할 수 있다. 이미 동일 쿠폰을 보유 중이면 중복 발급하지 않는다
 
 ## 할인 계산 공식
 
@@ -93,4 +104,6 @@ stateDiagram-v2
 ## 횡단 참조
 
 - [[sale]] — 주문 생성 시 쿠폰 예약
+- [[repair]] — 수선 주문의 아이템 단위 쿠폰 적용
 - [[payment]] — 결제 확정/실패 시 쿠폰 상태 전환
+- [[sample]] — 샘플 주문 결제 후 쿠폰 자동 발급

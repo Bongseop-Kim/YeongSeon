@@ -1,23 +1,23 @@
 import { MoreHorizontal, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { Button } from "@/components/ui-extended/button";
+import { Button } from "@/shared/ui-extended/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import type { AiModel } from "@/features/design/types/chat";
-import { ROUTES } from "@/constants/ROUTES";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 
 interface ChatHeaderProps {
   onNewChat: () => void;

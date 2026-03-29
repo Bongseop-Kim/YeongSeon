@@ -1,9 +1,9 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/shared/lib/supabase";
 import type {
   UserProfile,
   MarketingConsent,
 } from "@/features/my-page/types/profile";
-import { isRecord } from "@/lib/type-guard";
+import { isRecord } from "@/shared/lib/type-guard";
 import {
   MARKETING_CONSENT_KEY,
   normalizeMarketingConsent,

@@ -8,16 +8,16 @@ import type {
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
 import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
-import { useModalStore } from "@/store/modal";
-import { generateItemId } from "@/lib/utils";
-import { ROUTES } from "@/constants/ROUTES";
+import { useModalStore } from "@/shared/store/modal";
+import { generateItemId } from "@/shared/lib/utils";
+import { ROUTES } from "@/shared/constants/ROUTES";
 import {
   clearGuest,
   getGuestItems,
   setGuestItems,
 } from "@/features/cart/utils/cart-local-storage";
-import { useAuthStore } from "@/store/auth";
-import { toast } from "@/lib/toast";
+import { useAuthStore } from "@/shared/store/auth";
+import { toast } from "@/shared/lib/toast";
 import {
   cartKeys,
   useCartItems,

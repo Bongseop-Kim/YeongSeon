@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useProfile } from "@/features/my-page/api/profile-query";
 import {
+  useProfile,
   useRequestEmailChangeCode,
   useResendEmailChangeCode,
   useVerifyEmailChangeCode,
-} from "@/features/my-page/api/email-query";
-import { toast } from "@/lib/toast";
+} from "@/entities/my-page";
+import { toast } from "@/shared/lib/toast";
 
 export const EMAIL_CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;

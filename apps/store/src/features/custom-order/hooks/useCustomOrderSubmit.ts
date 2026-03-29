@@ -1,13 +1,17 @@
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/store/auth";
-import { toast } from "@/lib/toast";
-import { ROUTES } from "@/constants/ROUTES";
-import { useCreateQuoteRequest } from "@/features/quote-request/api/quote-request-query";
-import { toCreateQuoteRequestInput } from "@/features/quote-request/api/quote-request-mapper";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
-import type { ShippingAddress } from "@/features/shipping/types/shipping-address";
-import type { CustomOrderPaymentState } from "@/features/order/custom-payment/types";
+import { useAuthStore } from "@/shared/store/auth";
+import { toast } from "@/shared/lib/toast";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import {
+  toCreateQuoteRequestInput,
+  useCreateQuoteRequest,
+} from "@/entities/quote-request";
+import type {
+  QuoteOrderOptions,
+  ImageUploadHook,
+} from "@/entities/custom-order";
+import type { ShippingAddress } from "@/entities/shipping";
+import type { CustomOrderPaymentState } from "@/shared/lib/custom-payment-state";
 
 interface UseCustomOrderSubmitParams {
   selectedAddressId: string | null;

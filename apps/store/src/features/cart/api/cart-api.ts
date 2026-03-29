@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/shared/lib/supabase";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { CartItemViewDTO } from "@yeongseon/shared/types/dto/cart-view";
 import {

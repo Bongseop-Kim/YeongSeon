@@ -5,7 +5,7 @@ import {
   verifyEmailChangeCode,
 } from "@/features/my-page/api/email-api";
 import { profileKeys } from "@/features/my-page/api/profile-query";
-import { authKeys } from "@/features/auth/api/auth-query";
+import { authKeys } from "@/entities/auth";
 
 export const useRequestEmailChangeCode = () => {
   return useMutation({

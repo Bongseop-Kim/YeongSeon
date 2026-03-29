@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/shared/lib/supabase";
 import type {
   CreateClaimRequest,
   CreateClaimResponse,
@@ -10,7 +10,7 @@ import {
   toClaimItemView,
   toCreateClaimInputDTO,
 } from "@/features/claim/api/claims-mapper";
-import { normalizeKeyword, type ListFilters } from "@/lib/list-filters";
+import { normalizeKeyword, type ListFilters } from "@/shared/lib/list-filters";
 
 const CLAIM_LIST_VIEW = "claim_list_view";
 

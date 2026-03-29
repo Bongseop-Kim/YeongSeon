@@ -1,3 +1,1 @@
-import type { useImageUpload } from "@/features/custom-order/hooks/useImageUpload";
-
-export type ImageUploadHook = ReturnType<typeof useImageUpload>;
+export type { ImageUploadHook } from "@/entities/custom-order";

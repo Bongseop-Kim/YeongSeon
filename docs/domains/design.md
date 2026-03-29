@@ -1,7 +1,7 @@
 ---
 domain: design
 status: implemented
-last-verified: 2026-03-17
+last-verified: 2026-03-29
 ---
 
 # Design (AI 디자인 생성)
@@ -10,11 +10,11 @@ last-verified: 2026-03-17
 
 ## 경계
 
-| 구분      | 내용                                                                                                                                           |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Always do | 토큰 차감 전 잔액 확인. 환불 대기(pending) 중 생성 요청 차단. paid 토큰 먼저 차감 후 bonus 차감. work_id 기반 멱등 처리로 중복 토큰 복원 방지. |
-| Ask first | 토큰 비용 변경. bonus 토큰 환불 허용.                                                                                                          |
-| Never do  | bonus 토큰 수동 환불 허용. 동일 주문 환불 중복 신청 허용. text_only에 high 품질 적용. 프론트에서 토큰 잔액 계산.                               |
+| 구분      | 내용                                                                                                                                                       |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Always do | 토큰 차감 전 잔액 확인. `token_refund`가 접수 상태인 동안 생성 요청 차단. paid 토큰 먼저 차감 후 bonus 차감. work_id 기반 멱등 처리로 중복 토큰 복원 방지. |
+| Ask first | 토큰 비용 변경. bonus 토큰 환불 허용.                                                                                                                      |
+| Never do  | bonus 토큰 수동 환불 허용. 동일 주문 환불 중복 신청 허용. text_only에 high 품질 적용. 프론트에서 토큰 잔액 계산.                                           |
 
 ## 상태 전이
 
@@ -54,11 +54,11 @@ flowchart TD
 ## 비즈니스 규칙
 
 - **BR-design-001**: 토큰 차감 순서 — paid 먼저 차감, 이후 bonus 차감.
-- **BR-design-002**: 환불 대기(pending) 중에는 토큰 사용 불가.
+- **BR-design-002**: `token_refund`가 접수 상태인 동안에는 토큰 사용 불가.
 - **BR-design-003**: `text_only`는 high 품질 미지원.
 - **BR-design-004**: 이미지 미생성 시(데이터 부족 또는 텍스트 전용 응답) 선차감된 토큰을 `refund_design_tokens` RPC로 복원. `work_id` 기반 멱등 처리로 중복 복원 방지.
 - **BR-design-005**: paid 토큰 미사용분은 전자거래 규정에 따라 고객이 수동 환불 신청 가능. bonus 불가.
-- **BR-design-006**: 동일 주문에 pending 환불 요청 중복 신청 불가.
+- **BR-design-006**: 동일 주문에 `접수` 또는 `완료` 상태의 `token_refund`가 있으면 중복 신청 불가.
 - **BR-design-007**: 신규 가입 시 bonus 토큰 30개 자동 지급.
 - **BR-design-008**: 토큰 비용은 `admin_settings`에서 모델×요청 타입×품질 조합으로 관리 (`design_token_cost_openai_text` 등 6개 키).
 - **BR-design-009**: 멀티턴 대화 지원 — 프론트에서 `conversation_history` 유지해 이전 맥락 Edge Function에 전달.
@@ -94,6 +94,7 @@ flowchart TD
 ## 횡단 참조
 
 - [[token]] — 토큰 구매, 유형별 정책 (paid 환불 / 이미지 미생성 시 복원)
+- [[token-refund]] — 유상 토큰 환불 신청/승인 흐름
 
 ## 미결 사항
 

@@ -1,5 +1,5 @@
 import type { DesignSession } from "@/features/design/types/session";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
   month: "short",

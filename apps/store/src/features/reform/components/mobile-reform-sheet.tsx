@@ -3,8 +3,8 @@ import {
   SheetContent,
   SheetFooter,
   SheetTitle,
-} from "@/components/ui-extended/sheet";
-import { Button } from "@/components/ui-extended/button";
+} from "@/shared/ui-extended/sheet";
+import { Button } from "@/shared/ui-extended/button";
 interface MobileReformSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

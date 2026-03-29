@@ -1,20 +1,20 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui-extended/button";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { OrderItemCard } from "@/components/composite/order-item-card";
-import { ClaimStatusBadge } from "@/components/composite/status-badge";
-import { Empty } from "@/components/composite/empty";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui-extended/button";
+import { Badge } from "@/shared/ui/badge";
+import { Label } from "@/shared/ui/label";
+import { Separator } from "@/shared/ui/separator";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { OrderItemCard } from "@/shared/composite/order-item-card";
+import { ClaimStatusBadge } from "@/shared/composite/status-badge";
+import { Empty } from "@/shared/composite/empty";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import { ROUTES } from "@/constants/ROUTES";
-import { toast } from "@/lib/toast";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { toast } from "@/shared/lib/toast";
 import { useClaim, useCancelClaim } from "@/features/claim/api/claims-query";
-import { useModalStore } from "@/store/modal";
+import { useModalStore } from "@/shared/store/modal";
 
 export default function ClaimDetailPage() {
   const { claimId } = useParams<{ claimId: string }>();

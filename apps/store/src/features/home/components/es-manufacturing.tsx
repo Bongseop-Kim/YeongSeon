@@ -10,7 +10,7 @@ import {
   homeViewport,
   staggerContainerVariants,
 } from "@/features/home/components/home-motion";
-import { padZero } from "@/lib/utils";
+import { padZero } from "@/shared/lib/utils";
 
 export const EsManufacturing = () => {
   return (

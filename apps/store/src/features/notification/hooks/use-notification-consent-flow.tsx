@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { saveNotificationConsent } from "@/features/notification/api/notification-api";
-import { useNotificationStatus } from "@/features/notification/api/notification-status-query";
+import {
+  saveNotificationConsent,
+  useNotificationStatus,
+} from "@/entities/notification";
 
 export interface NotificationConsentFlowState {
   showConsentModal: boolean;
@@ -18,10 +20,16 @@ export function useNotificationConsentFlow(onProceed: () => Promise<void>) {
     useNotificationStatus();
 
   const initiateWithConsentCheck = async () => {
+    console.log(
+      "[initiateWithConsentCheck] called, notificationConsent:",
+      notificationStatus?.notificationConsent,
+    );
     if (!notificationStatus?.notificationConsent) {
+      console.log("[initiateWithConsentCheck] showing consent modal");
       setShowConsentModal(true);
       return;
     }
+    console.log("[initiateWithConsentCheck] calling onProceed directly");
     await onProceed();
   };
 

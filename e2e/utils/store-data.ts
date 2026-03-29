@@ -70,6 +70,56 @@ export const buildHeaders = (apiKey: string, accessToken: string) => ({
   "Content-Type": "application/json",
 });
 
+const sleep = (ms: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+const isRetriableFetchError = (error: unknown) => {
+  if (!(error instanceof Error)) return false;
+
+  const cause = error.cause as { code?: string } | undefined;
+  return (
+    error.message.includes("fetch failed") &&
+    (cause?.code === "ETIMEDOUT" ||
+      cause?.code === "ECONNRESET" ||
+      cause?.code === "UND_ERR_CONNECT_TIMEOUT")
+  );
+};
+
+const fetchWithRetry = async (
+  input: string,
+  init: RequestInit,
+  retries = 4,
+): Promise<Response> => {
+  let attempt = 0;
+
+  while (true) {
+    try {
+      const response = await fetch(input, init);
+
+      if (
+        response.status !== 408 &&
+        response.status !== 429 &&
+        response.status < 500
+      ) {
+        return response;
+      }
+
+      if (attempt >= retries) {
+        return response;
+      }
+    } catch (error) {
+      if (!isRetriableFetchError(error) || attempt >= retries) {
+        throw error;
+      }
+    }
+
+    attempt += 1;
+    await sleep(750 * attempt);
+  }
+};
+
 let supabaseConfigCache: {
   supabaseUrl: string;
   supabaseAnonKey: string;
@@ -136,11 +186,13 @@ export const supabaseRequest = async <T>({
   method = "GET",
   accessToken,
   body,
+  preferRepresentation = false,
 }: {
   path: string;
   method?: string;
   accessToken: string;
   body?: unknown;
+  preferRepresentation?: boolean;
 }) => {
   const { supabaseUrl, supabaseAnonKey } = await getSupabaseConfig();
 
@@ -148,9 +200,12 @@ export const supabaseRequest = async <T>({
     throw new Error("Missing Supabase env for E2E helper.");
   }
 
-  const response = await fetch(`${supabaseUrl}${requestPath}`, {
+  const response = await fetchWithRetry(`${supabaseUrl}${requestPath}`, {
     method,
-    headers: buildHeaders(supabaseAnonKey, accessToken),
+    headers: {
+      ...buildHeaders(supabaseAnonKey, accessToken),
+      ...(preferRepresentation ? { Prefer: "return=representation" } : {}),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
@@ -283,24 +338,27 @@ const createStoreOrder = async ({
   }
 
   const itemId = `e2e-claim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const response = await fetch(`${supabaseUrl}/functions/v1/create-order`, {
-    method: "POST",
-    headers: buildHeaders(supabaseAnonKey, storeMeta.accessToken),
-    body: JSON.stringify({
-      shipping_address_id: shippingAddressId,
-      items: [
-        {
-          item_id: itemId,
-          item_type: "product",
-          product_id: productId,
-          selected_option_id: selectedOptionId ?? null,
-          reform_data: null,
-          quantity,
-          applied_user_coupon_id: null,
-        },
-      ],
-    }),
-  });
+  const response = await fetchWithRetry(
+    `${supabaseUrl}/functions/v1/create-order`,
+    {
+      method: "POST",
+      headers: buildHeaders(supabaseAnonKey, storeMeta.accessToken),
+      body: JSON.stringify({
+        shipping_address_id: shippingAddressId,
+        items: [
+          {
+            item_id: itemId,
+            item_type: "product",
+            product_id: productId,
+            selected_option_id: selectedOptionId ?? null,
+            reform_data: null,
+            quantity,
+            applied_user_coupon_id: null,
+          },
+        ],
+      }),
+    },
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -362,11 +420,15 @@ export const seedSaleOrder = async ({
   const fixtures = await readFixtures();
   const storeMeta = await readAuthMeta("store");
   const products = await listSeedableProducts(storeMeta.accessToken);
-  const product =
-    products.find(
-      (candidate) =>
-        candidate.id !== fixtures.storeProduct.id && candidate.stock > 0,
-    ) ?? products.find((candidate) => candidate.stock > 0);
+  const product = products.find(
+    (candidate) =>
+      candidate.id !== fixtures.storeProduct.id && candidate.stock > 0,
+  ) ??
+    products.find((candidate) => candidate.stock > 0) ?? {
+      id: fixtures.storeProduct.id,
+      name: fixtures.storeProduct.name,
+      stock: 1,
+    };
 
   if (!product) {
     throw new Error("No sale product with stock available for E2E seed.");
@@ -488,9 +550,10 @@ export const seedClaimOrders = async (): Promise<{
   const fixtures = await readFixtures();
   const storeMeta = await readAuthMeta("store");
   const products = await listSeedableProducts(storeMeta.accessToken);
-  const claimProducts = products.filter(
-    (product) => product.id !== fixtures.storeProduct.id,
-  );
+  const claimProducts = [
+    ...products.filter((product) => product.id !== fixtures.storeProduct.id),
+    ...products.filter((product) => product.id === fixtures.storeProduct.id),
+  ];
 
   const selectedProducts: Array<{ id: number; name: string }> = [];
   for (const product of claimProducts) {
@@ -578,27 +641,30 @@ export const seedRepairOrder = async (): Promise<SeededClaimOrder> => {
   const tieId = `e2e-tie-${Date.now()}`;
   const itemId = `reform-${tieId}-${Math.random().toString(36).slice(2)}`;
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/create-order`, {
-    method: "POST",
-    headers: buildHeaders(supabaseAnonKey, storeMeta.accessToken),
-    body: JSON.stringify({
-      shipping_address_id: fixtures.shippingAddress.id,
-      items: [
-        {
-          item_id: itemId,
-          item_type: "reform",
-          product_id: null,
-          selected_option_id: null,
-          reform_data: {
-            tie: { id: tieId, measurementType: "length", tieLength: 150 },
-            cost: 15000,
+  const response = await fetchWithRetry(
+    `${supabaseUrl}/functions/v1/create-order`,
+    {
+      method: "POST",
+      headers: buildHeaders(supabaseAnonKey, storeMeta.accessToken),
+      body: JSON.stringify({
+        shipping_address_id: fixtures.shippingAddress.id,
+        items: [
+          {
+            item_id: itemId,
+            item_type: "reform",
+            product_id: null,
+            selected_option_id: null,
+            reform_data: {
+              tie: { id: tieId, measurementType: "length", tieLength: 150 },
+              cost: 15000,
+            },
+            quantity: 1,
+            applied_user_coupon_id: null,
           },
-          quantity: 1,
-          applied_user_coupon_id: null,
-        },
-      ],
-    }),
-  });
+        ],
+      }),
+    },
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -634,6 +700,103 @@ export const seedRepairOrder = async (): Promise<SeededClaimOrder> => {
   };
 };
 
+export const seedRepairOrderInStatus = async (
+  status: "접수" | "수선중" | "배송중",
+): Promise<SeededClaimOrder> => {
+  const storeMeta = await readAuthMeta("store");
+  const fixtures = await readFixtures();
+
+  const orderNumber = `E2E-REPAIR-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)
+    .toUpperCase()}`;
+  const tieId = `seed-tie-${Date.now()}`;
+  const itemId = `reform-${tieId}-${Math.random().toString(36).slice(2)}`;
+  const trackingNumber = `E2E-${Date.now()}`;
+  const shippedStatuses = new Set(["수선중", "배송중"]);
+
+  const insertedOrders = await supabaseRequest<
+    Array<{ id: string; order_number: string }>
+  >({
+    path: "/rest/v1/orders?select=id,order_number",
+    method: "POST",
+    accessToken: storeMeta.accessToken,
+    preferRepresentation: true,
+    body: {
+      user_id: storeMeta.userId,
+      order_number: orderNumber,
+      shipping_address_id: fixtures.shippingAddress.id,
+      total_price: 18000,
+      original_price: 18000,
+      total_discount: 0,
+      order_type: "repair",
+      status,
+      shipping_cost: 3000,
+      payment_group_id: crypto.randomUUID(),
+      ...(shippedStatuses.has(status)
+        ? {
+            courier_company: "cj",
+            tracking_number: trackingNumber,
+            shipped_at: new Date().toISOString(),
+          }
+        : {}),
+    },
+  });
+
+  const order = insertedOrders[0];
+  if (!order) {
+    throw new Error(
+      `Failed to insert seeded repair order with status ${status}.`,
+    );
+  }
+
+  await supabaseRequest({
+    path: "/rest/v1/order_items",
+    method: "POST",
+    accessToken: storeMeta.accessToken,
+    body: {
+      order_id: order.id,
+      item_id: itemId,
+      item_type: "reform",
+      item_data: {
+        tie: { id: tieId, measurementType: "length", tieLength: 150 },
+        cost: 15000,
+      },
+      quantity: 1,
+      unit_price: 15000,
+      discount_amount: 0,
+      line_discount_amount: 0,
+    },
+  });
+
+  return {
+    orderId: order.id,
+    orderNumber: order.order_number,
+    itemId,
+    status,
+    productName: "수선 주문",
+  };
+};
+
+export const submitRepairTrackingForStore = async (
+  orderId: string,
+  courierCompany = "cj",
+  trackingNumber = `E2E-${Date.now()}`,
+) => {
+  const storeMeta = await readAuthMeta("store");
+
+  await supabaseRequest({
+    path: "/rest/v1/rpc/submit_repair_tracking",
+    method: "POST",
+    accessToken: storeMeta.accessToken,
+    body: {
+      p_order_id: orderId,
+      p_courier_company: courierCompany,
+      p_tracking_number: trackingNumber,
+    },
+  });
+};
+
 export const seedCustomOrder = async (opts?: {
   sample?: boolean;
   sampleType?: string | null;
@@ -645,7 +808,7 @@ export const seedCustomOrder = async (opts?: {
   const sample = opts?.sample ?? false;
   const sampleType = opts?.sampleType ?? null;
 
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${supabaseUrl}/functions/v1/create-custom-order`,
     {
       method: "POST",

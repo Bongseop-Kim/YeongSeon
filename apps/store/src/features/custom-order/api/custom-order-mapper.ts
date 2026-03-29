@@ -5,7 +5,7 @@ import {
   normalizeReferenceImages,
   toDbImageRef,
 } from "@yeongseon/shared";
-import { isRecord } from "@/lib/type-guard";
+import { isRecord } from "@/shared/lib/type-guard";
 
 import type {
   CreateCustomOrderOptionsDto,

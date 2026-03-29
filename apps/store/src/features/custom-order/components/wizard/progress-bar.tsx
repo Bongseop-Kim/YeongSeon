@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { StepConfig } from "@/features/custom-order/types/wizard";
-import { UtilityPageIntro } from "@/components/composite/utility-page";
-import { StepIndicator } from "@/components/composite/step-indicator";
+import { UtilityPageIntro } from "@/shared/composite/utility-page";
+import { StepIndicator } from "@/shared/composite/step-indicator";
 
 interface ProgressBarProps {
   eyebrow: string;

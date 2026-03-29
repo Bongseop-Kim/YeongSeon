@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { UtilityPageAside } from "@/components/composite/utility-page";
-import { cn } from "@/lib/utils";
+import { UtilityPageAside } from "@/shared/composite/utility-page";
+import { cn } from "@/shared/lib/utils";
 
 interface StepLayoutProps {
   guideTitle: string;

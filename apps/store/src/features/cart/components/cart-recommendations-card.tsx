@@ -1,6 +1,6 @@
-import { UtilityPageSection } from "@/components/composite/utility-page";
-import { Button } from "@/components/ui-extended/button";
-import { ProductCard } from "@/components/composite/product-card";
+import { UtilityPageSection } from "@/shared/composite/utility-page";
+import { Button } from "@/shared/ui-extended/button";
+import { ProductCard } from "@/shared/composite/product-card";
 import type { Product } from "@yeongseon/shared/types/view/product";
 
 interface CartRecommendationsCardProps {

@@ -1,8 +1,8 @@
 ---
 policy: payment
 status: implemented
-affects: [sale, repair, custom-order, design]
-last-verified: 2026-03-17
+affects: [sale, repair, custom-order, sample, design]
+last-verified: 2026-03-29
 ---
 
 # 결제 정책 (Payment)
@@ -11,10 +11,19 @@ last-verified: 2026-03-17
 
 ## 결제 경로
 
-| 경로           | 대상                        | 결제 확정 후 상태                   |
-| -------------- | --------------------------- | ----------------------------------- |
-| 주문 결제      | sale / repair / custom 주문 | sale→`진행중`, repair/custom→`접수` |
-| 토큰 구매 결제 | 디자인 토큰 패키지 구매     | `완료` + 토큰 지급                  |
+| 결제 경로                 | 대상                    | 결제 확정 후 상태                   |
+| ------------------------- | ----------------------- | ----------------------------------- |
+| `/order/order-form`       | 일반 구매, 수선         | 일반 구매→`진행중`, 수선→`발송대기` |
+| `/order/custom-payment`   | 주문제작                | `접수`                              |
+| `/order/sample-payment`   | 샘플 주문               | `접수`                              |
+| `/token/purchase/payment` | 디자인 토큰 패키지 구매 | `완료` + 토큰 지급                  |
+
+## 성공/실패 리다이렉트
+
+| 구분           | 성공                      | 실패                   |
+| -------------- | ------------------------- | ---------------------- |
+| 주문 계열 결제 | `/order/payment/success`  | `/order/payment/fail`  |
+| 토큰 구매 결제 | `/token/purchase/success` | `/token/purchase/fail` |
 
 ## 핵심 규칙
 
@@ -29,6 +38,8 @@ last-verified: 2026-03-17
 **PR-payment-005**: 실패 복구 — Toss API 호출 실패 시 `결제중` → `대기중` 자동 복구. 쿠폰 `reserved` → `active` 복원
 
 **PR-payment-006**: paymentKey는 로그에서 마스킹 처리
+
+**PR-payment-007**: 주문 계열 성공 경로에서는 결제 승인 확인 후 주문 유형에 따라 다음 화면으로 분기한다. 토큰 구매는 별도 성공 경로로 이동한다
 
 ## 상태 잠금 RPC
 

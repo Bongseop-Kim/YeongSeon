@@ -4,8 +4,8 @@ import {
   getOrder,
   confirmPurchase,
 } from "@/features/order/api/order-api";
-import type { ListFilters } from "@/lib/list-filters";
-import { useRequiredUser } from "@/hooks/use-required-user";
+import type { ListFilters } from "@/shared/lib/list-filters";
+import { useRequiredUser } from "@/shared/hooks/use-required-user";
 
 /**
  * 주문 쿼리 키

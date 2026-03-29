@@ -1,8 +1,5 @@
 import { useState } from "react";
-import {
-  sendPhoneVerification,
-  verifyPhone,
-} from "@/features/notification/api/notification-api";
+import { sendPhoneVerification, verifyPhone } from "@/entities/notification";
 
 type Step = "input" | "verify" | "done";
 

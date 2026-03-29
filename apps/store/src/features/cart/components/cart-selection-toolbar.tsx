@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui-extended/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/shared/ui-extended/button";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Label } from "@/shared/ui/label";
 
 interface CartSelectionToolbarProps {
   isAllChecked: boolean;

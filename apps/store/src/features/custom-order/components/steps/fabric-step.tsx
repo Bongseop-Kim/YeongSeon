@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
-import { RadioChoiceField } from "@/components/composite/radio-choice-field";
-import { RadioGroup } from "@/components/ui/radio-group";
-import { UtilityPagePanel } from "@/components/composite/utility-page";
+import { RadioChoiceField } from "@/shared/composite/radio-choice-field";
+import { RadioGroup } from "@/shared/ui/radio-group";
+import { UtilityPagePanel } from "@/shared/composite/utility-page";
 import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
 

@@ -5,8 +5,8 @@ import {
   getQuoteRequest,
   getQuoteRequests,
 } from "@/features/quote-request/api/quote-request-api";
-import { useAuthStore } from "@/store/auth";
-import { useRequiredUser } from "@/hooks/use-required-user";
+import { useAuthStore } from "@/shared/store/auth";
+import { useRequiredUser } from "@/shared/hooks/use-required-user";
 
 const quoteRequestKeys = {
   all: ["quote-requests"] as const,

@@ -6,8 +6,7 @@ import {
 } from "@/fixtures/auth";
 import {
   type CreateOrderResult,
-  adminUpdateOrderStatus,
-  seedRepairOrder,
+  seedRepairOrderInStatus,
 } from "@/utils/store-data";
 import { installMockToss } from "@/utils/mock-toss";
 
@@ -25,25 +24,9 @@ test.describe.serial("Store 수선 주문 플로우", () => {
   test.beforeAll(async () => {
     [repairOrderForList, repairOrderAtReceived, repairOrderAtInProgress] =
       await Promise.all([
-        // SC-repair-003용: 접수 상태
-        seedRepairOrder().then(async (o) => {
-          await adminUpdateOrderStatus(o.orderId, "접수");
-          o.status = "접수";
-          return o;
-        }),
-        // SC-repair-011용: 접수 상태
-        seedRepairOrder().then(async (o) => {
-          await adminUpdateOrderStatus(o.orderId, "접수");
-          o.status = "접수";
-          return o;
-        }),
-        // SC-repair-012용: 수선중 상태
-        seedRepairOrder().then(async (o) => {
-          await adminUpdateOrderStatus(o.orderId, "접수");
-          await adminUpdateOrderStatus(o.orderId, "수선중");
-          o.status = "수선중";
-          return o;
-        }),
+        seedRepairOrderInStatus("접수"),
+        seedRepairOrderInStatus("접수"),
+        seedRepairOrderInStatus("수선중"),
       ]);
   });
 
@@ -119,8 +102,19 @@ test.describe.serial("Store 수선 주문 플로우", () => {
     await authenticatedPage.getByRole("button", { name: "주문하기" }).click();
     await expect(authenticatedPage).toHaveURL(/\/order\/order-form$/);
 
+    // 취소/환불 불가 동의 체크 (hasReformItems=true 일 때 필수)
+    await authenticatedPage.locator("#order-form-cancellation-consent").click();
+
     // 주문 제출
     await authenticatedPage.getByTestId("order-submit-button").click();
+
+    // 알림 수신 동의 모달이 뜨면 "동의 없이 계속" 클릭
+    const noConsentButton = authenticatedPage.getByRole("button", {
+      name: "동의 없이 계속",
+    });
+    if (await noConsentButton.isVisible()) {
+      await noConsentButton.click();
+    }
 
     // repair 주문 ID 캡처
     await expect
@@ -152,44 +146,27 @@ test.describe.serial("Store 수선 주문 플로우", () => {
   }) => {
     await authenticatedPage.goto("/order/order-list");
     await expectAuthenticatedRoute(authenticatedPage);
-    await authenticatedPage.getByRole("tab", { name: "수선" }).click();
-    await expect(
-      authenticatedPage.getByRole("tab", { name: "수선", selected: true }),
-    ).toBeVisible();
 
     await expect(
-      authenticatedPage
-        .locator('[role="tabpanel"]')
-        .getByTestId(`order-card-${repairOrderForList.orderId}`),
+      authenticatedPage.getByTestId(`order-card-${repairOrderForList.orderId}`),
     ).toBeVisible();
   });
 
-  // SC-repair-011: 고객 접수 상태 취소 요청
-  test("접수 상태 수선 주문에서 취소 요청을 하면 취소 클레임이 접수된다 (SC-repair-011)", async ({
+  // SC-repair-011: 고객 접수 상태 취소 버튼 미노출
+  test("접수 상태 수선 주문에서 취소 요청 버튼이 표시되지 않는다 (SC-repair-011)", async ({
     authenticatedPage,
   }) => {
     await authenticatedPage.goto(`/order/${repairOrderAtReceived.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage);
-
-    await authenticatedPage.getByRole("button", { name: "취소 요청" }).click();
-
     await expect(authenticatedPage).toHaveURL(
-      new RegExp(
-        `/order/claim/cancel/${repairOrderAtReceived.orderId}/${repairOrderAtReceived.itemId}$`,
-      ),
+      new RegExp(`/order/${repairOrderAtReceived.orderId}$`),
     );
-
     await expect(
-      authenticatedPage.getByText("취소 신청", { exact: true }),
-    ).toBeVisible();
-    await authenticatedPage.getByLabel("단순 변심").click();
-    await authenticatedPage
-      .getByPlaceholder(/사유를 자세히 입력해주세요\./)
-      .fill("E2E repair cancel claim");
-    await authenticatedPage
-      .getByRole("button", { name: "취소 신청하기" })
-      .click();
-    await expect(authenticatedPage).toHaveURL(/\/order\/claim-list$/);
+      authenticatedPage.getByTestId("order-detail-root"),
+    ).toContainText(repairOrderAtReceived.orderNumber);
+    await expect(
+      authenticatedPage.getByRole("button", { name: "취소 요청" }),
+    ).not.toBeVisible();
   });
 
   // SC-repair-012: 고객 수선중 상태 취소 버튼 미노출

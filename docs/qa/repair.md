@@ -1,6 +1,6 @@
 ---
 domain: repair
-last-verified: 2026-03-17
+last-verified: 2026-03-29
 ---
 
 # Repair QA
@@ -314,5 +314,39 @@ last-verified: 2026-03-17
 **경로**: `store /order/:orderId`
 **결과**: untested
 **이슈**: ~~BR-repair-005와 실제 구현 간 불일치 의심~~ → 해소됨: BR-repair-005와 `get_order_customer_actions` 구현 모두 접수 상태에서 cancel 액션 미반환으로 일치. SC-repair-011도 동일하게 수정됨
+
+---
+
+### SC-repair-019: admin 발송대기 상태에서 상태 변경 버튼 미노출
+
+- **참조 규칙**: BR-repair-009
+- **우선순위**: high
+
+| 단계  | 내용                                                             |
+| ----- | ---------------------------------------------------------------- |
+| Given | admin /orders/show/:id에서 주문이 발송대기 상태인 상태           |
+| When  | 주문 상세 페이지를 조회한다                                      |
+| Then  | 상태 변경(advance/rollback) 버튼이 표시되지 않고 취소만 가능하다 |
+
+**경로**: `admin /orders/show/:id`
+**결과**: untested
+**이슈**: -
+
+---
+
+### SC-repair-020: admin 발송중 상태에서 접수 상태 변경 가능
+
+- **참조 규칙**: BR-repair-009
+- **우선순위**: high
+
+| 단계  | 내용                                                 |
+| ----- | ---------------------------------------------------- |
+| Given | admin /orders/show/:id에서 주문이 발송중 상태인 상태 |
+| When  | 접수로 상태를 변경한다                               |
+| Then  | 상태가 접수로 변경된다                               |
+
+**경로**: `admin /orders/show/:id`
+**결과**: untested
+**이슈**: -
 
 ---

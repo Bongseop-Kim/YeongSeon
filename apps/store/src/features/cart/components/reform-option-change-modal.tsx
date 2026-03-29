@@ -10,9 +10,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui-extended/input";
-import { Label } from "@/components/ui/label";
+} from "@/shared/ui/select";
+import { Input } from "@/shared/ui-extended/input";
+import { Label } from "@/shared/ui/label";
 
 interface ReformOptionChangeModalProps {
   item: ReformCartItem;

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { Button } from "@/components/ui-extended/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/shared/ui-extended/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui/tabs";
 import FilterOptionList from "@/features/shop/components/filter-option-list";
 import { X } from "lucide-react";
 import {
@@ -16,7 +16,7 @@ import {
   MATERIAL_OPTIONS,
   PRICE_RANGE_OPTIONS,
 } from "@/features/shop/constants/FILTER_OPTIONS";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import type { FilterTab } from "@/features/shop/types/filter";
 
 function appendFilterItems<T extends string>(

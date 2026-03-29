@@ -6,8 +6,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { QuantitySelector } from "@/components/composite/quantity-selector";
+} from "@/shared/ui/select";
+import { QuantitySelector } from "@/shared/composite/quantity-selector";
 
 interface OptionChangeModalProps {
   item: ProductCartItem;

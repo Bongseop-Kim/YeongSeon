@@ -1,10 +1,10 @@
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Accordion } from "@/components/ui/accordion";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { Accordion } from "@/shared/ui/accordion";
 import {
   UtilityPageIntro,
   UtilityPageSection,
-} from "@/components/composite/utility-page";
+} from "@/shared/composite/utility-page";
 import { NOTICE_DATA } from "@/features/notice/constants/NOTICE";
 import { NoticeAccordionItem } from "@/features/notice/components/notice-accordion-item";
 

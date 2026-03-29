@@ -1,6 +1,6 @@
 ---
 domain: cart
-last-verified: 2026-03-17
+last-verified: 2026-03-29
 ---
 
 # Cart QA 시나리오

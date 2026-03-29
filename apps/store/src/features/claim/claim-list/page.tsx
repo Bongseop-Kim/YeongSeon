@@ -1,23 +1,23 @@
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui-extended/button";
-import { Empty } from "@/components/composite/empty";
-import { ClaimStatusBadge } from "@/components/composite/status-badge";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui-extended/button";
+import { Empty } from "@/shared/composite/empty";
+import { ClaimStatusBadge } from "@/shared/composite/status-badge";
 import {
   UtilityPageIntro,
   UtilityPageSection,
-} from "@/components/composite/utility-page";
+} from "@/shared/composite/utility-page";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import { OrderItemCard } from "@/components/composite/order-item-card";
+import { OrderItemCard } from "@/shared/composite/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
-import { buildClaimDetailRoute } from "@/constants/ROUTES";
+import { buildClaimDetailRoute } from "@/shared/constants/ROUTES";
 import { useClaims } from "@/features/claim/api/claims-query";
-import { toDateString, type ListFilters } from "@/lib/list-filters";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import { useSearchTabs } from "@/hooks/use-search-tabs";
+import { toDateString, type ListFilters } from "@/shared/lib/list-filters";
+import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
+import { useSearchTabs } from "@/shared/hooks/use-search-tabs";
 import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
 
 type ClaimTypeFilter = "전체" | "취소" | "반품" | "교환" | "토큰환불";

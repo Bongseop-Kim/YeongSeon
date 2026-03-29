@@ -81,9 +81,7 @@ begin
       end if;
     elsif v_order_type = 'repair' then
       if not (
-        (v_current_status = '결제중' and p_new_status = '대기중')
-        or (v_current_status = '발송중' and p_new_status = '발송대기')
-        or (v_current_status = '접수' and p_new_status = '발송중')
+        (v_current_status = '접수' and p_new_status = '발송중')
         or (v_current_status = '수선중' and p_new_status = '접수')
         or (v_current_status = '수선완료' and p_new_status = '수선중')
       ) then
@@ -125,8 +123,7 @@ begin
       end if;
     elsif v_order_type = 'sample' then
       if not (
-        (v_current_status = '대기중' and p_new_status = '접수')
-        or (v_current_status = '접수' and p_new_status = '제작중')
+        (v_current_status = '접수' and p_new_status = '제작중')
         or (v_current_status = '제작중' and p_new_status = '배송중')
         or (v_current_status = '배송중' and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
@@ -136,9 +133,7 @@ begin
       end if;
     elsif v_order_type = 'repair' then
       if not (
-        (v_current_status = '대기중'   and p_new_status = '접수')
-        or (v_current_status = '발송대기' and p_new_status = '발송중')
-        or (v_current_status = '발송중' and p_new_status = '접수')
+        (v_current_status = '발송중' and p_new_status = '접수')
         or (v_current_status = '접수' and p_new_status = '수선중')
         or (v_current_status = '수선중'   and p_new_status = '수선완료')
         or (v_current_status = '수선완료' and p_new_status = '배송중')

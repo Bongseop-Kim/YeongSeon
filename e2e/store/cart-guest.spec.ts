@@ -391,17 +391,29 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
     await gotoCartAndWaitForItems(page);
     await expect(page.getByTestId("cart-items-panel")).toBeVisible();
 
-    // 4. 로컬스토리지 guest 장바구니가 삭제됐는지 확인
-    const guestItemsAfter = await getGuestCartFromStorage(page);
-    expect(guestItemsAfter.length).toBe(0);
+    // 4. 동기화 완료 시점까지 대기
+    await expect
+      .poll(
+        async () => {
+          const [guestItemsAfter, serverCount] = await Promise.all([
+            getGuestCartFromStorage(page),
+            getServerCartCount(cfg, session.access_token, userId),
+          ]);
 
-    // 5. 서버에 아이템이 동기화됐는지 확인
-    const serverCount = await getServerCartCount(
-      cfg,
-      session.access_token,
-      userId,
-    );
-    expect(serverCount).toBeGreaterThan(0);
+          return {
+            guestCount: guestItemsAfter.length,
+            serverCount,
+          };
+        },
+        {
+          timeout: 15_000,
+          message: "게스트 장바구니 삭제 및 서버 동기화가 완료되어야 합니다.",
+        },
+      )
+      .toEqual({
+        guestCount: 0,
+        serverCount: 1,
+      });
 
     // 사후 정리: 서버 장바구니 비우기
     await clearServerCart(cfg, session.access_token, userId);

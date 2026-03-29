@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { createSampleOrder } from "@/features/sample-order/api/sample-order-api";
 import type { CreateSampleOrderFormInput } from "@/features/sample-order/api/sample-order-mapper";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/shared/store/auth";
 
 export const useCreateSampleOrder = () => {
   return useMutation({

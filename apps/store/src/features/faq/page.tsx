@@ -1,10 +1,10 @@
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Accordion } from "@/components/ui/accordion";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { Accordion } from "@/shared/ui/accordion";
 import {
   UtilityPageIntro,
   UtilityPageSection,
-} from "@/components/composite/utility-page";
+} from "@/shared/composite/utility-page";
 import { FAQ_DATA } from "@/features/faq/constants/FAQ";
 import { FaqAccordionItem } from "./components/faq-accordion-item";
 

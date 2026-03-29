@@ -9,7 +9,7 @@ vi.mock("@imagekit/react", () => ({
   upload,
 }));
 
-vi.mock("@/lib/imagekit", () => ({
+vi.mock("@/shared/lib/imagekit", () => ({
   IMAGEKIT_PUBLIC_KEY: "public-key",
 }));
 

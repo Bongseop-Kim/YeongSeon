@@ -23,19 +23,19 @@ vi.mock("@tanstack/react-query", () => ({
   }),
 }));
 
-vi.mock("@/hooks/usePopup", () => ({
+vi.mock("@/shared/hooks/usePopup", () => ({
   usePopup: () => ({
     openPopup,
   }),
 }));
 
-vi.mock("@/lib/toast", () => ({
+vi.mock("@/shared/lib/toast", () => ({
   toast: {
     error,
   },
 }));
 
-vi.mock("@/features/shipping/api/shipping-query", () => ({
+vi.mock("@/entities/shipping", () => ({
   shippingKeys: {
     list: () => ["shipping", "list"],
     default: () => ["shipping", "default"],

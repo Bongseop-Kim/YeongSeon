@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui-extended/button";
+import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui-extended/button";
 import type { TokenPlanKey } from "@/features/token-purchase/api/token-purchase-api";
 
 interface PlanCardProps {

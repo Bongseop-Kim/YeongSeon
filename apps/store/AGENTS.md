@@ -30,3 +30,30 @@
 - 컴포넌트에서 색상·간격·폰트·반지름을 지정할 때 Tailwind 유틸리티 클래스(`bg-brand-ink`, `text-foreground-muted` 등)를 우선 사용한다. `index.css`에 정의된 변수에 매핑된 클래스가 없으면 먼저 `@theme inline`에 추가한다.
 - 새 애니메이션(`@keyframes`)이나 커스텀 유틸리티가 여러 컴포넌트에서 재사용된다면 컴포넌트 내 인라인 스타일 대신 `index.css`에 추가한다.
 - 다크 모드 색상 오버라이드는 `index.css`의 `.dark` 블록에서만 관리한다.
+
+## FSD 레이어 구조 (apps/store/src/)
+
+레이어 의존 방향: `app -> pages -> widgets -> features -> entities -> shared`
+
+| 레이어   | 위치            | 포함                                                | 금지                                 |
+| -------- | --------------- | --------------------------------------------------- | ------------------------------------ |
+| app      | `src/app/`      | providers, router, 전역 엔트리                      | 하위 레이어 역참조                   |
+| pages    | `src/pages/`    | 라우트 컴포넌트                                     | `app` import, 직접 API 호출          |
+| widgets  | `src/widgets/`  | cross-feature 조합 UI                               | `pages`, `app` import                |
+| features | `src/features/` | 단일 도메인 UI, hooks, 상호작용                     | cross-slice 조합, 상위 레이어 import |
+| entities | `src/entities/` | API, mapper, 도메인 타입                            | UI(`.tsx`), 상위 레이어 import       |
+| shared   | `src/shared/`   | ui, composite, layout, lib, hooks, constants, store | 상위 레이어 import                   |
+
+### FSD 규칙
+
+- 모든 `entities/`, `features/`, `widgets/` slice는 `index.ts`를 public API로 둔다.
+- `entities`에는 UI를 두지 않는다. 새 `.tsx` 파일 추가 금지.
+- cross-feature 조합이 필요하면 `features`에 억지로 넣지 말고 `widgets`로 올린다.
+- Supabase 직접 호출은 `entities/*/api/`, `features/*/api/`, `shared/lib/`, `app/providers/` 에서만 허용한다.
+
+새 파일 위치:
+
+- API/타입: `src/entities/{domain}/api/`, `src/entities/{domain}/model/`
+- UI/훅: `src/features/{domain}/`
+- 조합 UI: `src/widgets/{widget-name}/`
+- 페이지: `src/pages/{route}/`

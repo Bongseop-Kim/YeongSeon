@@ -6,8 +6,8 @@ import {
   type CreateTokenPurchaseResult,
   type TokenPlan,
 } from "@/features/token-purchase/api/token-purchase-api";
-import { confirmPayment } from "@/features/payment/api/payment-api";
-import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/features/design/api/ai-design-query";
+import { confirmPayment } from "@/entities/payment";
+import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/entities/design";
 
 const TOKEN_PLANS_QUERY_KEY = ["token-plans"] as const;
 

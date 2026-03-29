@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/shared/lib/supabase";
 import type {
   CreateOrderRequest,
   CreateOrderResponse,
@@ -17,7 +17,7 @@ import {
   toOrderViewFromDetail,
 } from "@/features/order/api/order-mapper";
 import { extractEdgeFunctionErrorMessage } from "./order-error-mapper";
-import { normalizeKeyword, type ListFilters } from "@/lib/list-filters";
+import { normalizeKeyword, type ListFilters } from "@/shared/lib/list-filters";
 
 const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";
@@ -156,7 +156,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
 };
 
 /**
- * 구매확정 (배송완료 상태에서만 가능)
+ * 구매확정 (배송중 또는 배송완료 상태에서 가능)
  */
 export const confirmPurchase = async (orderId: string): Promise<void> => {
   const { error } = await supabase.rpc("customer_confirm_purchase", {

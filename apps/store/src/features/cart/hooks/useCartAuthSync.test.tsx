@@ -40,7 +40,7 @@ vi.mock("@tanstack/react-query", () => ({
   }),
 }));
 
-vi.mock("@/store/auth", () => ({
+vi.mock("@/shared/store/auth", () => ({
   useAuthStore: (selector: (state: typeof authState) => unknown) =>
     selector(authState),
 }));
@@ -66,7 +66,7 @@ vi.mock("@/features/cart/utils/cart-local-storage", () => ({
   getGuestItems,
 }));
 
-vi.mock("@/lib/toast", () => ({
+vi.mock("@/shared/lib/toast", () => ({
   toast: {
     error,
   },

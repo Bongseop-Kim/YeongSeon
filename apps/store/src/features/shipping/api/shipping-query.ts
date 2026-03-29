@@ -8,8 +8,8 @@ import {
   deleteShippingAddress,
 } from "@/features/shipping/api/shipping-api";
 import type { ShippingAddressInput } from "@/features/shipping/types/shipping-address";
-import { toast } from "@/lib/toast";
-import { useAuthStore } from "@/store/auth";
+import { toast } from "@/shared/lib/toast";
+import { useAuthStore } from "@/shared/store/auth";
 
 /**
  * 배송지 쿼리 키

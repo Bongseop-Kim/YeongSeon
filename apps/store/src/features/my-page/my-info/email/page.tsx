@@ -1,16 +1,16 @@
 import { Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { Button } from "@/components/ui-extended/button";
-import { Input } from "@/components/ui-extended/input";
-import { Label } from "@/components/ui/label";
-import { ROUTES } from "@/constants/ROUTES";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { Button } from "@/shared/ui-extended/button";
+import { Input } from "@/shared/ui-extended/input";
+import { Label } from "@/shared/ui/label";
+import { ROUTES } from "@/shared/constants/ROUTES";
 import {
   UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
-} from "@/components/composite/utility-page";
+} from "@/shared/composite/utility-page";
 import {
   EMAIL_CODE_LENGTH,
   useEmailChange,

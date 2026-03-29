@@ -1,29 +1,29 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui-extended/button";
-import { Separator } from "@/components/ui/separator";
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
-import { PageLayout } from "@/components/layout/page-layout";
-import { OrderItemCard } from "@/components/composite/order-item-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui-extended/button";
+import { Separator } from "@/shared/ui/separator";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import { OrderItemCard } from "@/shared/composite/order-item-card";
 import type { ClaimType } from "@yeongseon/shared/types/view/claim-item";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import { Form } from "@/components/ui/form";
+import { Form } from "@/shared/ui/form";
 import { useForm, Controller } from "react-hook-form";
-import { RadioGroupItem } from "@/components/ui/radio-group";
-import { RadioGroupField } from "@/components/composite/radio-group-field";
-import { TextareaField } from "@/components/composite/textarea-field";
+import { RadioGroupItem } from "@/shared/ui/radio-group";
+import { RadioGroupField } from "@/shared/composite/radio-group-field";
+import { TextareaField } from "@/shared/composite/textarea-field";
 import {
   Field,
   FieldContent,
   FieldError,
   FieldLabel,
   FieldTitle,
-} from "@/components/ui/field";
-import { QuantitySelector } from "@/components/composite/quantity-selector";
-import { ROUTES } from "@/constants/ROUTES";
-import { toast } from "@/lib/toast";
-import { Empty } from "@/components/composite/empty";
-import { useOrderDetail } from "@/features/order/api/order-query";
+} from "@/shared/ui/field";
+import { QuantitySelector } from "@/shared/composite/quantity-selector";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { toast } from "@/shared/lib/toast";
+import { Empty } from "@/shared/composite/empty";
+import { useOrderDetail } from "@/entities/order";
 import { useCreateClaim } from "@/features/claim/api/claims-query";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { useEffect, useMemo } from "react";

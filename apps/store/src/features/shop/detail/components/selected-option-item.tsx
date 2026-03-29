@@ -1,7 +1,7 @@
 import type { Product } from "@yeongseon/shared/types/view/product";
 import type { SelectedOption } from "@/features/shop/detail/types/selected-option";
-import CloseButton from "@/components/ui-extended/close";
-import { QuantitySelector } from "@/components/composite/quantity-selector";
+import CloseButton from "@/shared/ui-extended/close";
+import { QuantitySelector } from "@/shared/composite/quantity-selector";
 
 interface SelectedOptionItemProps {
   item: SelectedOption;

@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Separator } from "@/shared/ui/separator";
 import type { OrderOptions } from "@/features/custom-order/types/order";
 import type { PricingConfig } from "@/features/custom-order/types/pricing";
 

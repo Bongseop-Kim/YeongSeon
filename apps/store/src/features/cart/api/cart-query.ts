@@ -5,7 +5,7 @@ import {
   clearCartItems,
 } from "@/features/cart/api/cart-api";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/shared/store/auth";
 import { cartKeys } from "@/features/cart/api/cart-keys";
 
 export { cartKeys };

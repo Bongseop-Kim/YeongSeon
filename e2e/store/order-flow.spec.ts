@@ -131,7 +131,6 @@ test.describe.serial("Store 주문 플로우", () => {
       .click();
     await authenticatedPage.getByText(fixtures.coupon.name).click();
     await authenticatedPage.getByRole("button", { name: "적용" }).click();
-    await authenticatedPage.getByRole("button", { name: "확인" }).click();
 
     await expect(
       authenticatedPage.getByTestId("cart-items-panel"),
@@ -150,11 +149,14 @@ test.describe.serial("Store 주문 플로우", () => {
     await openOrderFormFromCart(authenticatedPage);
 
     await expect(
+      authenticatedPage.getByRole("heading", { name: "주문 상품 1개" }),
+    ).toBeVisible();
+    await expect(
       authenticatedPage.getByTestId("order-shipping-card"),
     ).toContainText(fixtures.shippingAddress.recipientName);
     await expect(
       authenticatedPage.getByTestId("order-items-card"),
-    ).toContainText("주문 상품 1개");
+    ).toContainText(fixtures.storeProduct.name);
     await expect(
       authenticatedPage.getByTestId("order-submit-button"),
     ).toBeEnabled();
@@ -204,6 +206,12 @@ test.describe.serial("Store 주문 플로우", () => {
     await addProductToCart(authenticatedPage, fixtures.storeProduct.id);
     await openOrderFormFromCart(authenticatedPage);
     await authenticatedPage.getByTestId("order-submit-button").click();
+    await authenticatedPage
+      .getByRole("button", { name: "동의 없이 계속" })
+      .click({ timeout: 5_000 })
+      .catch(() => {
+        /* 모달이 뜨지 않으면 무시 */
+      });
 
     await expect
       .poll(() => createOrderResult?.orders[0]?.order_id ?? null)
@@ -220,9 +228,23 @@ test.describe.serial("Store 주문 플로우", () => {
   test("결제 실패 (mock)", async ({ authenticatedPage }) => {
     await installMockToss(authenticatedPage, "fail");
 
+    await authenticatedPage.route(
+      "**/functions/v1/create-order",
+      async (route) => {
+        const response = await route.fetch();
+        await route.fulfill({ response });
+      },
+    );
+
     await addProductToCart(authenticatedPage, fixtures.storeProduct.id);
     await openOrderFormFromCart(authenticatedPage);
     await authenticatedPage.getByTestId("order-submit-button").click();
+    await authenticatedPage
+      .getByRole("button", { name: "동의 없이 계속" })
+      .click({ timeout: 5_000 })
+      .catch(() => {
+        /* 모달이 뜨지 않으면 무시 */
+      });
 
     await expect(authenticatedPage).toHaveURL(/\/order\/payment\/fail/);
     await expect(
@@ -270,8 +292,8 @@ test.describe.serial("Store 주문 플로우", () => {
     await authenticatedPage.getByTestId("product-order-now").click();
     await expect(authenticatedPage).toHaveURL(/\/order\/order-form$/);
     await expect(
-      authenticatedPage.getByTestId("order-items-card"),
-    ).toContainText("주문 상품 1개");
+      authenticatedPage.getByRole("heading", { name: "주문 상품 1개" }),
+    ).toBeVisible();
     await expect(
       authenticatedPage.getByTestId("order-items-card"),
     ).toContainText(fixtures.storeProduct.name);

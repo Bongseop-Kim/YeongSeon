@@ -6,7 +6,7 @@ const { warning } = vi.hoisted(() => ({
   warning: vi.fn(),
 }));
 
-vi.mock("@/lib/toast", () => ({
+vi.mock("@/shared/lib/toast", () => ({
   toast: {
     warning,
   },

@@ -1,5 +1,5 @@
 import { upload } from "@imagekit/react";
-import { IMAGEKIT_PUBLIC_KEY } from "@/lib/imagekit";
+import { IMAGEKIT_PUBLIC_KEY } from "@/shared/lib/imagekit";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 import { getImageKitAuth } from "@/features/reform/api/reform-api";

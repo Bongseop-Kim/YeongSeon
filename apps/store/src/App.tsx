@@ -1,7 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
-import { Providers } from "./providers";
-import AppLayout from "./components/layout/app-layout";
-import { AuthErrorBoundary } from "./components/composite/auth-error-boundary";
+import { Providers } from "@/app/providers";
+import AppLayout from "@/app/layout/app-layout";
+import { AuthErrorBoundary } from "@/shared/composite/auth-error-boundary";
 
 function App() {
   return (

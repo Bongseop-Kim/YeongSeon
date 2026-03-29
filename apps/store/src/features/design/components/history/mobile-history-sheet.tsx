@@ -1,8 +1,4 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-} from "@/components/ui-extended/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/shared/ui-extended/sheet";
 import { HistoryTab } from "@/features/design/components/history/history-tab";
 import type { DesignSession } from "@/features/design/types/session";
 

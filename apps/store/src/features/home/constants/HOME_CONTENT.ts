@@ -1,4 +1,4 @@
-import { ROUTES } from "@/constants/ROUTES";
+import { ROUTES } from "@/shared/constants/ROUTES";
 import type { ManufacturingStep } from "@/features/home/types/home";
 
 export const HERO_CONTENT = {

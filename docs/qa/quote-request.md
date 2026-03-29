@@ -1,6 +1,6 @@
 ---
 domain: quote-request
-last-verified: 2026-03-17
+last-verified: 2026-03-29
 ---
 
 # Quote Request QA 시나리오

@@ -4,7 +4,7 @@ import type {
   MarketingConsent,
   UserProfile,
 } from "@/features/my-page/types/profile";
-import { toast } from "@/lib/toast";
+import { toast } from "@/shared/lib/toast";
 
 /**
  * 프로필 쿼리 키

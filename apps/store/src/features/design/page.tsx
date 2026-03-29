@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { MainContent, MainLayout } from "@/components/layout/main-layout";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { ChatPanel } from "@/features/design/components/chat/chat-panel";
 import { MobileHistorySheet } from "@/features/design/components/history/mobile-history-sheet";
 import { OnboardingDialog } from "@/features/design/components/onboarding-dialog";
@@ -11,8 +11,8 @@ import { useDesignChat } from "@/features/design/hooks/use-design-chat";
 import { useOnboarding } from "@/features/design/hooks/use-onboarding";
 import { useSessionRestore } from "@/features/design/hooks/use-session-restore";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
-import { cn } from "@/lib/utils";
-import { useBreakpoint } from "@/providers/breakpoint-provider";
+import { cn } from "@/shared/lib/utils";
+import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 
 function DesignPage() {
   const { isDesktop } = useBreakpoint();
