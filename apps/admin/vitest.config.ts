@@ -1,13 +1,12 @@
 import { mergeConfig, defineConfig } from "vitest/config";
 import viteConfig from "./vite.config";
+import { baseVitestTestConfig } from "../../vitest.base.js";
 
 export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
-      globals: true,
-      clearMocks: true,
-      restoreMocks: true,
+      ...baseVitestTestConfig,
       projects: [
         {
           extends: true,

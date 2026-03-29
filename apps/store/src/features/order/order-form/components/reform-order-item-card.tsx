@@ -10,11 +10,10 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
-import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
-import { Package } from "lucide-react";
 import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
 import { useOrderStore } from "@/shared/store/order";
 import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
+import { ReformItemInfo } from "@/shared/ui/reform-item-info";
 
 interface ReformOrderItemCardProps {
   item: ReformCartItem;
@@ -29,10 +28,11 @@ export function ReformOrderItemCard({
   const [trackingNumber, setTrackingNumber] = useState("");
   const { updateOrderItemTracking } = useOrderStore();
 
-  const itemPrice = item.reformData.cost;
-  const discount = calculateDiscount(itemPrice, item.appliedCoupon);
-  const discountedPrice = itemPrice - discount;
   const hasCoupon = !!item.appliedCoupon;
+  const tieImage =
+    typeof item.reformData.tie.image === "string"
+      ? item.reformData.tie.image
+      : null;
 
   useEffect(() => {
     updateOrderItemTracking(
@@ -45,49 +45,9 @@ export function ReformOrderItemCard({
 
   return (
     <div className="py-5">
-      <div className="flex gap-4">
-        <div className="w-24 h-24 flex-shrink-0 bg-zinc-100 rounded-sm overflow-hidden flex items-center justify-center">
-          {typeof item.reformData.tie.image === "string" ? (
-            <img
-              src={item.reformData.tie.image}
-              alt="넥타이"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <Package className="w-12 h-12 text-zinc-400" />
-          )}
-        </div>
+      <ReformItemInfo item={item} image={tieImage} />
 
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-base">넥타이 수선</h3>
-          <p className="text-sm text-zinc-500">
-            {item.reformData.tie.measurementType === "length"
-              ? `길이: ${item.reformData.tie.tieLength}cm`
-              : `키: ${item.reformData.tie.wearerHeight}cm`}
-          </p>
-          {hasCoupon ? (
-            <div className="flex items-center gap-2 mt-2">
-              <p className="text-sm font-medium line-through text-zinc-400">
-                {itemPrice.toLocaleString()}원
-              </p>
-              <p className="text-sm font-bold text-red-600">
-                {discountedPrice.toLocaleString()}원
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm font-medium mt-2">
-              {itemPrice.toLocaleString()}원
-            </p>
-          )}
-          {hasCoupon && (
-            <p className="text-xs text-primary font-medium">
-              {item.appliedCoupon?.coupon.name} 적용
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="flex gap-2 mt-2">
+      <div className="mt-2 flex gap-2">
         <Button
           variant="outline"
           className="w-full"

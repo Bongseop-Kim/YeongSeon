@@ -1,21 +1,10 @@
 import { supabase } from "@/shared/lib/supabase";
+import { requireUserId } from "@/shared/lib/require-user-id";
 
 // CLAUDE.md 직접 테이블 쓰기 예외: product_likes INSERT/DELETE
 // 근거: supabase/schemas/22_product_likes.sql에서 RLS 정책
 //   "user_id = auth.uid()" 로 소유권이 보장되므로 직접 쓰기 허용.
 const TABLE_NAME = "product_likes";
-
-const requireUserId = async (): Promise<string> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
-  return user.id;
-};
 
 /**
  * 제품에 좋아요 추가

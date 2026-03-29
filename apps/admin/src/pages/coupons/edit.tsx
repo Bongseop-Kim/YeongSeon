@@ -2,21 +2,26 @@ import { Edit, useForm } from "@refinedev/antd";
 import {
   Form,
   Input,
-  InputNumber,
-  Select,
-  DatePicker,
-  Switch,
   Button,
   Modal,
   Table,
   Tag,
   Space,
   message,
+  Switch,
 } from "antd";
 import { useInvalidate, useList } from "@refinedev/core";
 import { supabase } from "@/lib/supabase";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import dayjs from "dayjs";
+import { CouponForm } from "@/features/coupons/components/coupon-form";
 
 type CouponUser = {
   id: string;
@@ -437,53 +442,16 @@ export default function CouponEdit() {
     <Edit saveButtonProps={saveButtonProps}>
       {modalContextHolder}
       <Form {...formProps} layout="vertical">
-        <Form.Item label="쿠폰명" name="name" rules={[{ required: true }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="할인유형"
-          name="discount_type"
-          rules={[{ required: true }]}
-        >
-          <Select
-            options={[
-              { label: "퍼센트(%)", value: "percentage" },
-              { label: "고정금액(원)", value: "fixed" },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item
-          label="할인값"
-          name="discount_value"
-          rules={[{ required: true }]}
-        >
-          <InputNumber min={0} style={{ width: "100%" }} />
-        </Form.Item>
-        <Form.Item label="최대할인금액" name="max_discount_amount">
-          <InputNumber min={0} style={{ width: "100%" }} />
-        </Form.Item>
-        <Form.Item label="설명" name="description">
-          <Input.TextArea rows={2} />
-        </Form.Item>
-        <Form.Item
-          label="만료일"
-          name="expiry_date"
-          rules={[{ required: true }]}
-          getValueProps={(value) => ({
-            value: value ? dayjs(value) : undefined,
-          })}
-          getValueFromEvent={(date: dayjs.Dayjs | null) =>
-            date?.format("YYYY-MM-DD") ?? null
-          }
-        >
-          <DatePicker style={{ width: "100%" }} />
-        </Form.Item>
-        <Form.Item label="추가정보" name="additional_info">
-          <Input.TextArea rows={2} />
-        </Form.Item>
-        <Form.Item label="활성" name="is_active" valuePropName="checked">
-          <Switch />
-        </Form.Item>
+        <CouponForm
+          form={formProps.form}
+          expiryDateItemProps={{
+            getValueProps: (value) => ({
+              value: value ? dayjs(value) : undefined,
+            }),
+            getValueFromEvent: (date: dayjs.Dayjs | null) =>
+              date?.format("YYYY-MM-DD") ?? null,
+          }}
+        />
       </Form>
 
       <Space size={12} style={{ marginTop: 16, marginBottom: 16 }}>
@@ -579,7 +547,9 @@ export default function CouponEdit() {
         <Input.Search
           value={keyword}
           placeholder="고객명 검색"
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setKeyword(e.target.value)
+          }
           style={{ marginBottom: 12 }}
           allowClear
         />

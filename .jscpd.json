@@ -1,6 +1,7 @@
 {
   "reporters": ["console"],
   "ignore": [
+    "**/.worktrees/**",
     "**/node_modules/**",
     "**/dist/**",
     "**/*.d.ts",

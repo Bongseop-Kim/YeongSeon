@@ -72,6 +72,24 @@ const validState = {
 
 import { useCheckoutPayment } from "./use-checkout-payment";
 
+const defaultArgs = {
+  state: validState,
+  fallbackRoute: "/fallback",
+  pricePerUnit: 50000,
+  orderName: "테스트 주문",
+} as const;
+
+const renderCheckoutHook = (
+  overrides: Partial<Parameters<typeof useCheckoutPayment>[0]> = {},
+) =>
+  renderHook(() =>
+    useCheckoutPayment({
+      ...defaultArgs,
+      createOrder: vi.fn(),
+      ...overrides,
+    }),
+  );
+
 describe("useCheckoutPayment", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -82,16 +100,7 @@ describe("useCheckoutPayment", () => {
   it("amount와 discountAmount를 올바르게 계산한다", () => {
     mockCalculateDiscount.mockReturnValue(5000);
 
-    const { result } = renderHook(() =>
-      useCheckoutPayment({
-        state: validState,
-        fallbackRoute: "/fallback",
-        pricePerUnit: 50000,
-        quantity: 2,
-        createOrder: vi.fn(),
-        orderName: "테스트 주문",
-      }),
-    );
+    const { result } = renderCheckoutHook({ quantity: 2 });
 
     expect(mockCalculateDiscount).toHaveBeenCalledWith(50000, undefined, 2);
     expect(result.current.discountAmount).toBe(5000);
@@ -103,44 +112,27 @@ describe("useCheckoutPayment", () => {
       makePageState({ serverAmount: 80000 }),
     );
 
-    const { result } = renderHook(() =>
-      useCheckoutPayment({
-        state: validState,
-        fallbackRoute: "/fallback",
-        pricePerUnit: 50000,
-        quantity: 2,
-        createOrder: vi.fn(),
-        orderName: "테스트 주문",
-      }),
-    );
+    const { result } = renderCheckoutHook({ quantity: 2 });
 
     expect(result.current.amount).toBe(80000);
   });
 
   it("state가 null이면 fallbackRoute로 리다이렉트한다", () => {
-    renderHook(() =>
-      useCheckoutPayment({
-        state: null,
-        fallbackRoute: "/custom-order",
-        pricePerUnit: 0,
-        createOrder: vi.fn(),
-        orderName: "",
-      }),
-    );
+    renderCheckoutHook({
+      state: null,
+      fallbackRoute: "/custom-order",
+      pricePerUnit: 0,
+      orderName: "",
+    });
 
     expect(navigate).toHaveBeenCalledWith("/custom-order", { replace: true });
   });
 
   it("state가 있으면 리다이렉트하지 않는다", () => {
-    renderHook(() =>
-      useCheckoutPayment({
-        state: validState,
-        fallbackRoute: "/custom-order",
-        pricePerUnit: 50000,
-        orderName: "테스트",
-        createOrder: vi.fn(),
-      }),
-    );
+    renderCheckoutHook({
+      fallbackRoute: "/custom-order",
+      orderName: "테스트",
+    });
 
     expect(navigate).not.toHaveBeenCalled();
   });
@@ -149,15 +141,7 @@ describe("useCheckoutPayment", () => {
     it("user가 없으면 true", () => {
       mockUseCheckoutPageState.mockReturnValue(makePageState({ user: null }));
 
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder: vi.fn(),
-          orderName: "테스트",
-        }),
-      );
+      const { result } = renderCheckoutHook({ orderName: "테스트" });
 
       expect(result.current.isSubmitDisabled).toBe(true);
     });
@@ -167,15 +151,7 @@ describe("useCheckoutPayment", () => {
         makePageState({ selectedAddress: null }),
       );
 
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder: vi.fn(),
-          orderName: "테스트",
-        }),
-      );
+      const { result } = renderCheckoutHook({ orderName: "테스트" });
 
       expect(result.current.isSubmitDisabled).toBe(true);
     });
@@ -185,15 +161,7 @@ describe("useCheckoutPayment", () => {
         makePageState({ cancellationConsent: false }),
       );
 
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder: vi.fn(),
-          orderName: "테스트",
-        }),
-      );
+      const { result } = renderCheckoutHook({ orderName: "테스트" });
 
       expect(result.current.isSubmitDisabled).toBe(true);
     });
@@ -203,29 +171,13 @@ describe("useCheckoutPayment", () => {
         makePageState({ isPaymentLoading: true }),
       );
 
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder: vi.fn(),
-          orderName: "테스트",
-        }),
-      );
+      const { result } = renderCheckoutHook({ orderName: "테스트" });
 
       expect(result.current.isSubmitDisabled).toBe(true);
     });
 
     it("모든 조건 충족 시 false", () => {
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder: vi.fn(),
-          orderName: "테스트",
-        }),
-      );
+      const { result } = renderCheckoutHook({ orderName: "테스트" });
 
       expect(result.current.isSubmitDisabled).toBe(false);
     });
@@ -240,15 +192,7 @@ describe("useCheckoutPayment", () => {
     it("user 없으면 toast.error 후 로그인 페이지로 이동", async () => {
       mockUseCheckoutPageState.mockReturnValue(makePageState({ user: null }));
 
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder: vi.fn(),
-          orderName: "테스트 주문",
-        }),
-      );
+      const { result } = renderCheckoutHook();
 
       await act(async () => {
         await result.current.handleRequestPayment();
@@ -264,15 +208,7 @@ describe("useCheckoutPayment", () => {
         makePageState({ selectedAddressId: null, selectedAddress: null }),
       );
 
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder: vi.fn(),
-          orderName: "테스트 주문",
-        }),
-      );
+      const { result } = renderCheckoutHook();
 
       await act(async () => {
         await result.current.handleRequestPayment();
@@ -282,15 +218,7 @@ describe("useCheckoutPayment", () => {
     });
 
     it("paymentWidget 없으면 toast.error", async () => {
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder: vi.fn(),
-          orderName: "테스트 주문",
-        }),
-      );
+      const { result } = renderCheckoutHook();
 
       await act(async () => {
         await result.current.handleRequestPayment();
@@ -310,16 +238,7 @@ describe("useCheckoutPayment", () => {
       const widget = makePaymentWidget();
       mockUseCheckoutPageState.mockReturnValue(pageState);
 
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          quantity: 2,
-          createOrder,
-          orderName: "테스트 주문",
-        }),
-      );
+      const { result } = renderCheckoutHook({ quantity: 2, createOrder });
 
       pageState.paymentWidgetRef.current = widget;
 
@@ -343,15 +262,10 @@ describe("useCheckoutPayment", () => {
       const widget = makePaymentWidget();
       mockUseCheckoutPageState.mockReturnValue(pageState);
 
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder,
-          orderName: "테스트",
-        }),
-      );
+      const { result } = renderCheckoutHook({
+        createOrder,
+        orderName: "테스트",
+      });
 
       pageState.paymentWidgetRef.current = widget;
 
@@ -368,15 +282,10 @@ describe("useCheckoutPayment", () => {
       const widget = makePaymentWidget();
       mockUseCheckoutPageState.mockReturnValue(pageState);
 
-      const { result } = renderHook(() =>
-        useCheckoutPayment({
-          state: validState,
-          fallbackRoute: "/fallback",
-          pricePerUnit: 50000,
-          createOrder,
-          orderName: "테스트",
-        }),
-      );
+      const { result } = renderCheckoutHook({
+        createOrder,
+        orderName: "테스트",
+      });
 
       pageState.paymentWidgetRef.current = widget;
 

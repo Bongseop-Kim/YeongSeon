@@ -27,12 +27,15 @@ ALTER TABLE public.product_likes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own likes"
   ON public.product_likes FOR SELECT
+  TO authenticated
   USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can insert their own likes"
   ON public.product_likes FOR INSERT
+  TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own likes"
   ON public.product_likes FOR DELETE
+  TO authenticated
   USING (auth.uid() = user_id);

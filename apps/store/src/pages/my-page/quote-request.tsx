@@ -31,6 +31,7 @@ export default function QuoteRequestListPage() {
 
   const debouncedKeyword = useDebouncedValue(searchFilters.keyword ?? "", 300);
   const { data: quoteRequests = [], isLoading, error } = useQuoteRequests();
+  const { dateFrom, dateTo } = searchFilters;
 
   const filteredQuoteRequests = useMemo(() => {
     let result = quoteRequests;
@@ -44,7 +45,6 @@ export default function QuoteRequestListPage() {
       );
     }
 
-    const { dateFrom, dateTo } = searchFilters;
     if (dateFrom) {
       result = result.filter((q) => q.date >= dateFrom);
     }
@@ -54,12 +54,7 @@ export default function QuoteRequestListPage() {
     }
 
     return result;
-  }, [
-    quoteRequests,
-    debouncedKeyword,
-    searchFilters.dateFrom,
-    searchFilters.dateTo,
-  ]);
+  }, [quoteRequests, debouncedKeyword, dateFrom, dateTo]);
 
   if (isLoading) {
     return (

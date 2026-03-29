@@ -1,34 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-type AppName = "store" | "admin";
-
-type AuthMeta = {
-  appName: AppName;
-  baseURL: string;
-  accessToken: string;
-  refreshToken: string;
-  userId: string;
-  email?: string;
-};
-
-type E2EFixtures = {
-  storeProduct: {
-    id: number;
-    name: string;
-    price: number;
-  };
-  shippingAddress: {
-    id: string;
-    recipientName: string;
-  };
-  coupon: {
-    id: string;
-    name: string;
-    discountValue: number;
-  };
-};
+import type { AppName, AuthMeta, E2EFixtures } from "@/e2e/utils/auth-support";
+import { buildHeaders } from "@/e2e/utils/auth-support";
 
 export type CreateOrderResult = {
   payment_group_id: string;
@@ -63,12 +37,6 @@ const readJsonFile = async <T>(fileName: string) => {
 
 export const readAuthMeta = (appName: AppName) =>
   readJsonFile<AuthMeta>(`${appName}.meta.json`);
-
-export const buildHeaders = (apiKey: string, accessToken: string) => ({
-  apikey: apiKey,
-  Authorization: `Bearer ${accessToken}`,
-  "Content-Type": "application/json",
-});
 
 const sleep = (ms: number) =>
   new Promise((resolve) => {

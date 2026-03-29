@@ -1,10 +1,9 @@
 import { Controller, useFormContext } from "react-hook-form";
 import type { QuoteOrderOptions } from "@/entities/custom-order";
-import { RadioChoiceField } from "@/shared/composite/radio-choice-field";
 import { UtilityPagePanel } from "@/shared/composite/utility-page";
 import { Input } from "@/shared/ui-extended/input";
-import { RadioGroup } from "@/shared/ui/radio-group";
 import { TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
+import { RadioChoiceOptionGrid } from "@/features/custom-order/components/radio-choice-option-grid";
 import { StepLayout } from "./step-layout";
 
 export const SpecStep = () => {
@@ -21,33 +20,25 @@ export const SpecStep = () => {
       ]}
     >
       <UtilityPagePanel title="사이즈 타입" contentClassName="px-0">
-        <RadioGroup
+        <RadioChoiceOptionGrid
           value={sizeType}
           onValueChange={(v) => setValue("sizeType", v as "ADULT" | "CHILD")}
-        >
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {(["ADULT", "CHILD"] as const).map((type) => (
-              <RadioChoiceField
-                key={type}
-                value={type}
-                id={`size-type-${type}`}
-                selected={sizeType === type}
-                variant="row"
-                title={type === "ADULT" ? "성인용" : "아동용"}
-                description={
-                  type === "ADULT"
-                    ? "가장 일반적인 행사·유니폼 기준 폭과 길이를 적용합니다."
-                    : "폭과 길이를 줄여 아동 착용 비율에 맞춘 규격입니다."
-                }
-                meta={
-                  <span>
-                    {type === "ADULT" ? "기본 8cm 권장" : "폭 6~7cm 권장"}
-                  </span>
-                }
-              />
-            ))}
-          </div>
-        </RadioGroup>
+          options={(["ADULT", "CHILD"] as const).map((type) => ({
+            value: type,
+            id: `size-type-${type}`,
+            selected: sizeType === type,
+            title: type === "ADULT" ? "성인용" : "아동용",
+            description:
+              type === "ADULT"
+                ? "가장 일반적인 행사·유니폼 기준 폭과 길이를 적용합니다."
+                : "폭과 길이를 줄여 아동 착용 비율에 맞춘 규격입니다.",
+            meta: (
+              <span>
+                {type === "ADULT" ? "기본 8cm 권장" : "폭 6~7cm 권장"}
+              </span>
+            ),
+          }))}
+        />
       </UtilityPagePanel>
 
       <UtilityPagePanel

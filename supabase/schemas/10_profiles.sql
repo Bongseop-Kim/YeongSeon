@@ -67,10 +67,12 @@ ALTER TABLE public.notification_preference_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own profile"
   ON public.profiles FOR SELECT
+  TO authenticated
   USING (auth.uid() = id);
 
 CREATE POLICY "Users can insert their own profile"
   ON public.profiles FOR INSERT
+  TO authenticated
   WITH CHECK (
     auth.uid() = id
     AND role = 'customer'
@@ -79,6 +81,7 @@ CREATE POLICY "Users can insert their own profile"
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
+  TO authenticated
   USING (
     auth.uid() = id
     AND role = 'customer'

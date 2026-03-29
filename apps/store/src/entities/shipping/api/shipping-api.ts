@@ -1,4 +1,5 @@
 import { supabase } from "@/shared/lib/supabase";
+import { requireUserId } from "@/shared/lib/require-user-id";
 import type {
   ShippingAddress,
   ShippingAddressInput,
@@ -10,18 +11,6 @@ import {
 } from "@/entities/shipping/api/shipping-mapper";
 
 const TABLE_NAME = "shipping_addresses";
-
-const requireUserId = async (): Promise<string> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
-  return user.id;
-};
 
 const mapUpsertedAddress = (record: ShippingAddressRecord | null) => {
   if (!record) {

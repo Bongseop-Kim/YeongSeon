@@ -2,8 +2,8 @@ import type { FullConfig } from "@playwright/test";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-type AppName = "store" | "admin";
+import type { AppName, AuthMeta, E2EFixtures } from "@/e2e/utils/auth-support";
+import { buildHeaders } from "@/e2e/utils/auth-support";
 
 type SessionPayload = {
   access_token: string;
@@ -34,32 +34,6 @@ type StorageState = {
   }>;
 };
 
-type AuthMeta = {
-  appName: AppName;
-  baseURL: string;
-  accessToken: string;
-  refreshToken: string;
-  userId: string;
-  email?: string;
-};
-
-type E2EFixtures = {
-  storeProduct: {
-    id: number;
-    name: string;
-    price: number;
-  };
-  shippingAddress: {
-    id: string;
-    recipientName: string;
-  };
-  coupon: {
-    id: string;
-    name: string;
-    discountValue: number;
-  };
-};
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const authDir = path.join(__dirname, ".auth");
 const fixturesFile = path.join(authDir, "fixtures.json");
@@ -87,12 +61,6 @@ const getSupabaseProjectRef = (supabaseUrl: string) =>
 
 const getStorageKey = (supabaseUrl: string) =>
   `sb-${getSupabaseProjectRef(supabaseUrl)}-auth-token`;
-
-const buildHeaders = (apiKey: string, accessToken?: string) => ({
-  apikey: apiKey,
-  Authorization: `Bearer ${accessToken ?? apiKey}`,
-  "Content-Type": "application/json",
-});
 
 const parseDotEnv = (content: string) => {
   const parsed: Record<string, string> = {};

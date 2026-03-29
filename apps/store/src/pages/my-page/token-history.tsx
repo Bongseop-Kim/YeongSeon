@@ -252,10 +252,10 @@ export default function TokenHistoryPage() {
   } = useDesignTokenHistoryQuery();
 
   const balance = rawBalance ?? { total: 0, paid: 0, bonus: 0 };
-  const history = rawHistory ?? [];
   const { dateFrom, dateTo } = searchFilters;
 
   const usageHistory = useMemo(() => {
+    const history = rawHistory ?? [];
     let result = history.filter(
       (item) => item.type === "use" || item.type === "refund",
     );
@@ -276,7 +276,7 @@ export default function TokenHistoryPage() {
     }
 
     return result;
-  }, [history, debouncedKeyword, dateFrom, dateTo]);
+  }, [rawHistory, debouncedKeyword, dateFrom, dateTo]);
   const balanceProps: BalanceSummaryProps = {
     total: balance.total,
     paid: balance.paid,

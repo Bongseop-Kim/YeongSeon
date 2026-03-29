@@ -38,6 +38,7 @@ ALTER TABLE public.user_coupons ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "user_coupons_select_own"
   ON public.user_coupons FOR SELECT
+  TO authenticated
   USING (auth.uid() = user_id);
 
 CREATE POLICY "user_coupons_service_all"

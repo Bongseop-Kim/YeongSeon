@@ -10,8 +10,8 @@ import {
   CheckoutOptionList,
   CheckoutOptionRow,
   CheckoutSupplementaryDetails,
-  createAmountSummaryRow,
 } from "./CheckoutOptionPrimitives";
+import { createAmountSummaryRow } from "./checkout-summary";
 
 export function SampleOrderCheckoutPage() {
   const location = useLocation();

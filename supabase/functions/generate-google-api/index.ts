@@ -1,8 +1,10 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "@supabase/supabase-js";
-
 import { getCorsHeaders } from "@/functions/_shared/cors.ts";
 import { createJsonResponse } from "@/functions/_shared/response.ts";
+import {
+  createAdminSupabaseClient,
+  createAuthenticatedSupabaseClient,
+} from "@/functions/_shared/supabase-clients.ts";
 import {
   type ConversationTurn,
   type DetectedDesign,
@@ -285,36 +287,6 @@ const requestGeminiImage = async (
 };
 
 // ─── Supabase clients ────────────────────────────────────────────────────────
-
-const createAuthenticatedSupabaseClient = (authHeader: string) => {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-
-  if (!supabaseUrl || !anonKey) {
-    throw new Error("Missing Supabase configuration");
-  }
-
-  return createClient(supabaseUrl, anonKey, {
-    global: {
-      headers: {
-        Authorization: authHeader,
-      },
-    },
-  });
-};
-
-const createAdminSupabaseClient = () => {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing Supabase service role configuration");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
-};
 
 // ─── Handler ─────────────────────────────────────────────────────────────────
 
