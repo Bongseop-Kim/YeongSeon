@@ -138,7 +138,7 @@ BEGIN
         p_work_id || '_use_bonus'
       )
   ) THEN
-    RETURN jsonb_build_object('success', true, 'cost', 0, 'balance', v_total_bal);
+    RETURN jsonb_build_object('success', true, 'cost', v_cost, 'balance', v_total_bal);
   END IF;
 
   -- 잔액 부족
@@ -271,6 +271,7 @@ $$;
 
 -- ── manage_design_tokens_admin ───────────────────────────────
 -- Admin-only grant/deduction for design tokens with audit trail.
+-- Related storefront RPCs: get_token_plans(), create_token_order()
 CREATE OR REPLACE FUNCTION public.manage_design_tokens_admin(
   p_user_id uuid,
   p_amount integer,
@@ -685,7 +686,12 @@ BEGIN
   v_token_granted_at := COALESCE(v_token_granted_at, v_order.created_at);
 
   IF v_token_expires_at IS NOT NULL AND v_token_expires_at <= now() THEN
-    RAISE EXCEPTION 'token_order_expired: refund period has passed';
+    RAISE EXCEPTION USING
+      MESSAGE = 'token_order_expired',
+      DETAIL = jsonb_build_object(
+        'code', 'token_order_expired',
+        'message', 'refund period has passed'
+      )::text;
   END IF;
 
   SELECT id

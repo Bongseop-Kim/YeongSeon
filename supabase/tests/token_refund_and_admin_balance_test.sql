@@ -7,7 +7,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(9);
+SELECT plan(12);
 
 DO $setup$
 DECLARE
@@ -33,12 +33,27 @@ DECLARE
   v_refund_paid_group uuid := 'fa200001-0000-0000-0000-000000000002';
   v_refund_paid_claim uuid := 'fa300001-0000-0000-0000-000000000002';
   v_refund_paid_item_id uuid;
+  v_expired_refund_user uuid := 'fa000001-0000-0000-0000-000000000007';
+  v_expired_refund_order uuid := 'fa100003-0000-0000-0000-000000000001';
+  v_expired_refund_group uuid := 'fa200001-0000-0000-0000-000000000003';
 BEGIN
   PERFORM test_helpers.create_test_user(v_admin_user);
   PERFORM test_helpers.create_test_profile(v_admin_user, 'admin', '관리자');
 
   PERFORM test_helpers.create_test_user(v_balance_user);
   PERFORM test_helpers.create_test_profile(v_balance_user, 'customer', '잔액 사용자');
+
+  INSERT INTO public.pricing_constants (key, amount, category)
+  VALUES
+    ('token_plan_starter_price', 2900, 'token'),
+    ('token_plan_starter_amount', 30, 'token'),
+    ('token_plan_popular_price', 9900, 'token'),
+    ('token_plan_popular_amount', 120, 'token'),
+    ('token_plan_pro_price', 19900, 'token'),
+    ('token_plan_pro_amount', 300, 'token')
+  ON CONFLICT (key) DO UPDATE
+  SET amount = EXCLUDED.amount,
+      category = EXCLUDED.category;
 
   PERFORM test_helpers.create_token_order(
     v_balance_user, '완료', 50, 'starter', 'expired-balance-payment', v_balance_order_1, v_balance_group_1
@@ -181,6 +196,22 @@ BEGIN
       'refund_amount', 10000
     )
   );
+
+  PERFORM test_helpers.create_test_user(v_expired_refund_user);
+  PERFORM test_helpers.create_test_profile(v_expired_refund_user, 'customer', '만료 환불 사용자');
+
+  PERFORM test_helpers.create_token_order(
+    v_expired_refund_user, '완료', 15, 'starter', 'expired-refund-key',
+    v_expired_refund_order, v_expired_refund_group
+  );
+
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, source_order_id, expires_at, description, work_id
+  ) VALUES (
+    v_expired_refund_user, 15, 'purchase', 'paid',
+    v_expired_refund_order, now() - interval '1 hour',
+    '만료된 환불 대상 토큰', 'order_' || v_expired_refund_order::text || '_paid'
+  );
 END $setup$;
 
 SELECT test_helpers.set_auth('fa000001-0000-0000-0000-000000000001'::uuid);
@@ -274,6 +305,33 @@ SELECT ok(
     WHERE refund_dt.work_id = 'refund_fa300001-0000-0000-0000-000000000002_paid'
   ),
   'approve_token_refund는 legacy work_id(order_<id>_paid) purchase ledger의 expires_at을 환불 ledger에 유지한다'
+);
+
+SELECT test_helpers.set_auth('fa000001-0000-0000-0000-000000000004'::uuid);
+
+SELECT ok(
+  jsonb_typeof(public.get_token_plans()) = 'array',
+  'get_token_plans 함수가 마이그레이션 기준 DB에도 존재한다'
+);
+
+SELECT lives_ok(
+  $$
+    SELECT public.create_token_order('starter')
+  $$,
+  'create_token_order 함수가 마이그레이션 기준 DB에도 존재하고 호출 가능하다'
+);
+
+SELECT test_helpers.set_auth('fa000001-0000-0000-0000-000000000007'::uuid);
+
+SELECT throws_ok(
+  $$
+    SELECT public.request_token_refund(
+      'fa100003-0000-0000-0000-000000000001'::uuid
+    )
+  $$,
+  'P0001',
+  'token_order_expired',
+  'request_token_refund는 만료된 토큰 주문에 대해 기계 판독 가능한 오류 코드를 던진다'
 );
 
 SELECT * FROM finish();

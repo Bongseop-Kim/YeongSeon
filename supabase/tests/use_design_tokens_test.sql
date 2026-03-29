@@ -66,14 +66,14 @@ SELECT is(
 );
 
 -- ── 테스트 4: work_id 멱등성 - 이미 처리된 work_id 재호출 ──
--- work-test-0001은 테스트1에서 이미 처리됨 → cost=0 반환
+-- work-test-0001은 테스트1에서 이미 처리됨 → 원래 비용(cost=5) 유지
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000001'::uuid,
     'openai', 'text_only', 'standard', 'work-test-0001'
   ))->>'cost'),
-  '0',
-  '이미 처리된 work_id 재호출 시 cost=0 반환 (멱등성)'
+  '5',
+  '이미 처리된 work_id 재호출 시 원래 cost를 반환한다 (멱등성)'
 );
 
 -- ── 테스트 5: 멱등 호출 후 잔액 변경 없음 ──────────────────

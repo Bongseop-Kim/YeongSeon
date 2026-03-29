@@ -9,7 +9,12 @@ export interface Coupon {
   additionalInfo?: string | null;
 }
 
-export type UserCouponStatus = "active" | "used" | "expired" | "revoked";
+export type UserCouponStatus =
+  | "active"
+  | "used"
+  | "expired"
+  | "revoked"
+  | "reserved";
 
 export interface UserCoupon {
   id: string; // user_coupons.id
