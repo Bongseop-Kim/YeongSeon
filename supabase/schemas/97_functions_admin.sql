@@ -39,7 +39,7 @@ begin
   end if;
 
   if p_is_rollback and (p_memo is null or btrim(p_memo) = '') then
-    raise exception 'memo is required when rollback';
+    raise exception '롤백 시 사유 입력 필수';
   end if;
 
   if p_is_rollback then
