@@ -6,10 +6,10 @@ import OrderFormPage from "@/pages/order/order-form";
 import OrderPage from "@/pages/custom-order";
 import SampleOrderPage from "@/pages/sample-order";
 import ReformPage from "@/pages/reform";
-import ShopPage from "@/pages/shop";
+import { ShopPage } from "@/features/shop";
 import ShopDetailPage from "@/pages/shop/detail";
 import ShippingFormPage from "@/pages/shipping/form";
-import ShippingPage from "@/pages/shipping";
+import { ShippingPage } from "@/features/shipping";
 import MypagePage from "@/pages/my-page";
 import MyInfoPage from "@/pages/my-page/my-info";
 import MyInfoDetailPage from "@/pages/my-page/my-info/detail";
@@ -19,18 +19,19 @@ import MyInfoLeavePage from "@/pages/my-page/my-info/leave";
 import OrderListPage from "@/pages/order/order-list";
 import OrderDetailPage from "@/pages/order/detail";
 import RepairShippingPage from "@/pages/order/repair-shipping";
-import CustomPaymentPage from "@/pages/order/custom-payment";
-import SamplePaymentPage from "@/pages/sample-order/payment";
+import { OrderCheckoutPage as CustomPaymentPage } from "@/widgets/checkout";
+import { SampleOrderCheckoutPage as SamplePaymentPage } from "@/widgets/checkout";
 import ClaimListPage from "@/pages/claim/list";
 import ClaimFormPage from "@/pages/claim/form";
 import ClaimDetailPage from "@/pages/claim/detail";
 import PaymentSuccessPage from "@/pages/payment/success";
 import PaymentFailPage from "@/pages/payment/fail";
 import TokenPurchasePage from "@/pages/token-purchase";
+import { TokenPaymentWidget as TokenPurchasePaymentPage } from "@/widgets/token-payment";
 import TokenPurchaseSuccessPage from "@/pages/token-purchase/success";
 import TokenPurchaseFailPage from "@/pages/token-purchase/fail";
-import CartPage from "@/pages/cart";
-import FaqPage from "@/pages/faq";
+import { CartCheckoutPage as CartPage } from "@/widgets/cart-checkout";
+import { FaqPage } from "@/features/faq";
 import InquiryPage from "@/pages/my-page/inquiry";
 import TokenHistoryPage from "@/pages/my-page/token-history";
 import NoticePage from "@/pages/notice";
@@ -39,7 +40,6 @@ import TermsOfServicePage from "@/pages/terms-of-service";
 import RefundPolicyPage from "@/pages/refund-policy";
 import LoginPage from "@/pages/auth/login";
 import AuthCallbackPage from "@/pages/auth/callback";
-import { TokenPaymentWidget } from "@/widgets/token-payment";
 import { ProtectedRoute } from "@/app/router/protected-route";
 
 const QuoteRequestListPage = lazy(
@@ -271,7 +271,7 @@ export default function Router() {
         path="/token/purchase/payment"
         element={
           <ProtectedRoute>
-            <TokenPaymentWidget />
+            <TokenPurchasePaymentPage />
           </ProtectedRoute>
         }
       />
