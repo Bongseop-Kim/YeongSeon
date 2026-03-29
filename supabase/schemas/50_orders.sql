@@ -125,7 +125,7 @@ CREATE POLICY "Users can view logs of their own orders"
     EXISTS (
       SELECT 1 FROM public.orders o
       WHERE o.id = order_id
-        AND o.user_id = auth.uid()
+        AND o.user_id = (SELECT auth.uid())
     )
   );
 

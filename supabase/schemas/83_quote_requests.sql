@@ -117,7 +117,7 @@ CREATE POLICY "Users can view logs of their own quote requests"
     EXISTS (
       SELECT 1 FROM public.quote_requests qr
       WHERE qr.id = quote_request_id
-        AND qr.user_id = auth.uid()
+        AND qr.user_id = (SELECT auth.uid())
     )
   );
 

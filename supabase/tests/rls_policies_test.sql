@@ -7,7 +7,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(19);
+SELECT plan(24);
 
 -- ── 픽스처 ───────────────────────────────────────────────────
 DO $setup$
@@ -212,6 +212,67 @@ SELECT policies_are(
     'service_role_delete_inquiries'
   ],
   'inquiries 정책 목록이 의도한 10개와 일치해야 함'
+);
+
+-- ── 16. order_items 정책 목록 검증 ─────────────────────────────
+SELECT policies_are(
+  'public',
+  'order_items',
+  ARRAY[
+    'Users can view their own order items',
+    'Users can create their own order items',
+    'Admins can view all order items'
+  ],
+  'order_items 정책 목록이 의도한 3개와 일치해야 함'
+);
+
+-- ── 17. order_status_logs 정책 목록 검증 ────────────────────────
+SELECT policies_are(
+  'public',
+  'order_status_logs',
+  ARRAY[
+    'Users can view logs of their own orders',
+    'Admins can view all order status logs'
+  ],
+  'order_status_logs 정책 목록이 의도한 2개와 일치해야 함'
+);
+
+-- ── 18. claim_status_logs 정책 목록 검증 ────────────────────────
+SELECT policies_are(
+  'public',
+  'claim_status_logs',
+  ARRAY[
+    'Users can view logs of their own claims',
+    'Admins can view all claim status logs'
+  ],
+  'claim_status_logs 정책 목록이 의도한 2개와 일치해야 함'
+);
+
+-- ── 19. claims 정책 목록 검증 ────────────────────────────────────
+SELECT policies_are(
+  'public',
+  'claims',
+  ARRAY[
+    'Users can view their own claims',
+    'Users can create their own claims',
+    'Admins can view all claims',
+    'Admins can update claim status'
+  ],
+  'claims 정책 목록이 의도한 4개와 일치해야 함'
+);
+
+-- ── 20. shipping_addresses 정책 목록 검증 ───────────────────────
+SELECT policies_are(
+  'public',
+  'shipping_addresses',
+  ARRAY[
+    'Enable users to view their own data only',
+    'Enable insert for users based on user_id',
+    'Enable update for users based on user_id',
+    'Enable delete for users based on user_id',
+    'Admins can view all shipping addresses'
+  ],
+  'shipping_addresses 정책 목록이 의도한 5개와 일치해야 함'
 );
 
 SELECT * FROM finish();

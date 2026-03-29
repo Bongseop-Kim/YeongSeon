@@ -139,7 +139,7 @@ CREATE POLICY "Users can view logs of their own claims"
     EXISTS (
       SELECT 1 FROM public.claims c
       WHERE c.id = claim_id
-        AND c.user_id = auth.uid()
+        AND c.user_id = (SELECT auth.uid())
     )
   );
 
@@ -155,7 +155,7 @@ CREATE POLICY "Users can view logs of their own claim notifications"
     EXISTS (
       SELECT 1 FROM public.claims c
       WHERE c.id = claim_id
-        AND c.user_id = auth.uid()
+        AND c.user_id = (SELECT auth.uid())
     )
   );
 
