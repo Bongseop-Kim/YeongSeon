@@ -42,6 +42,7 @@ export default mergeConfig(
           "src/App.tsx",
           // UI
           "src/**/components/**/*.tsx",
+          "src/widgets/**",
           "src/pages/**",
           // 타입 전용
           "src/**/types/**",
