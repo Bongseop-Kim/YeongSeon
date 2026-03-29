@@ -19,6 +19,35 @@ interface CreateQuoteRequestResponse {
 
 export type { CreateQuoteRequestRequest };
 
+const QUOTE_REQUEST_LIST_SELECT_COLUMNS = [
+  "id",
+  '"quoteNumber"',
+  "date",
+  "status",
+  "quantity",
+  '"quotedAmount"',
+  '"contactName"',
+  '"contactMethod"',
+  "created_at",
+].join(", ");
+const QUOTE_REQUEST_DETAIL_SELECT_COLUMNS = [
+  "id",
+  '"quoteNumber"',
+  "date",
+  "status",
+  "options",
+  "quantity",
+  '"referenceImages"',
+  '"additionalNotes"',
+  '"contactName"',
+  '"contactTitle"',
+  '"contactMethod"',
+  '"contactValue"',
+  '"quotedAmount"',
+  '"quoteConditions"',
+  "created_at",
+].join(", ");
+
 export const createQuoteRequest = async (
   request: CreateQuoteRequestRequest,
 ): Promise<CreateQuoteRequestResponse> => {
@@ -48,8 +77,9 @@ export const createQuoteRequest = async (
 export const getQuoteRequests = async (): Promise<QuoteRequestListItem[]> => {
   const { data, error } = await supabase
     .from("quote_request_list_view")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select(QUOTE_REQUEST_LIST_SELECT_COLUMNS)
+    .order("created_at", { ascending: false })
+    .limit(200);
 
   if (error) {
     console.error(error);
@@ -64,7 +94,7 @@ export const getQuoteRequest = async (
 ): Promise<QuoteRequestDetail | null> => {
   const { data, error } = await supabase
     .from("quote_request_detail_view")
-    .select("*")
+    .select(QUOTE_REQUEST_DETAIL_SELECT_COLUMNS)
     .eq("id", id)
     .maybeSingle();
 

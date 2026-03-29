@@ -40,8 +40,8 @@ CREATE POLICY "Enable insert for users based on user_id"
 CREATE POLICY "Enable update for users based on user_id"
   ON public.shipping_addresses FOR UPDATE
   TO authenticated
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Enable delete for users based on user_id"
   ON public.shipping_addresses FOR DELETE

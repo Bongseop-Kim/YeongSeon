@@ -21,6 +21,50 @@ import { normalizeKeyword, type ListFilters } from "@/shared/lib/list-filters";
 const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";
 const ORDER_ITEM_VIEW = "order_item_view";
+const ORDER_LIST_SELECT_COLUMNS = [
+  "id",
+  '"orderNumber"',
+  "date",
+  "status",
+  '"totalPrice"',
+  '"orderType"',
+  "created_at",
+  '"customerActions"',
+].join(", ");
+const ORDER_DETAIL_SELECT_COLUMNS = [
+  "id",
+  '"orderNumber"',
+  "date",
+  "status",
+  '"totalPrice"',
+  '"orderType"',
+  '"courierCompany"',
+  '"trackingNumber"',
+  '"shippedAt"',
+  '"deliveredAt"',
+  '"confirmedAt"',
+  "created_at",
+  '"recipientName"',
+  '"recipientPhone"',
+  '"shippingAddress"',
+  '"shippingAddressDetail"',
+  '"shippingPostalCode"',
+  '"deliveryMemo"',
+  '"deliveryRequest"',
+  '"customerActions"',
+].join(", ");
+const ORDER_ITEM_SELECT_COLUMNS = [
+  "order_id",
+  "created_at",
+  "id",
+  "type",
+  "product",
+  '"selectedOption"',
+  "quantity",
+  '"reformData"',
+  '"appliedCoupon"',
+  '"sampleData"',
+].join(", ");
 
 const getSupabase = async () => {
   const { supabase } = await import("@/shared/lib/supabase");
@@ -75,8 +119,9 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
   const supabase = await getSupabase();
   let query = supabase
     .from(ORDER_LIST_VIEW)
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select(ORDER_LIST_SELECT_COLUMNS)
+    .order("created_at", { ascending: false })
+    .limit(200);
 
   if (filters?.dateFrom) {
     query = query.gte("date", filters.dateFrom);
@@ -101,7 +146,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
   const orderIds = orderRows.map((row) => row.id);
   const { data: items, error: itemsError } = await supabase
     .from(ORDER_ITEM_VIEW)
-    .select("*")
+    .select(ORDER_ITEM_SELECT_COLUMNS)
     .in("order_id", orderIds)
     .order("created_at", { ascending: true });
 
@@ -182,7 +227,7 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
   const supabase = await getSupabase();
   const { data: order, error: orderError } = await supabase
     .from(ORDER_DETAIL_VIEW)
-    .select("*")
+    .select(ORDER_DETAIL_SELECT_COLUMNS)
     .eq("id", orderId)
     .maybeSingle();
 
@@ -197,7 +242,7 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
 
   const { data: items, error: itemsError } = await supabase
     .from(ORDER_ITEM_VIEW)
-    .select("*")
+    .select(ORDER_ITEM_SELECT_COLUMNS)
     .eq("order_id", orderId)
     .order("created_at", { ascending: true });
 

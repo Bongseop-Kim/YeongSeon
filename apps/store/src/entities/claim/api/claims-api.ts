@@ -13,6 +13,21 @@ import {
 import { normalizeKeyword, type ListFilters } from "@/shared/lib/list-filters";
 
 const CLAIM_LIST_VIEW = "claim_list_view";
+const CLAIM_LIST_SELECT_COLUMNS = [
+  "id",
+  '"claimNumber"',
+  "date",
+  "status",
+  "type",
+  "reason",
+  "description",
+  '"claimQuantity"',
+  '"orderId"',
+  '"orderNumber"',
+  '"orderDate"',
+  "item",
+  "refund_data",
+].join(", ");
 
 /**
  * 클레임 목록 조회
@@ -22,8 +37,9 @@ export const getClaims = async (
 ): Promise<ClaimItem[]> => {
   let query = supabase
     .from(CLAIM_LIST_VIEW)
-    .select("*")
-    .order("date", { ascending: false });
+    .select(CLAIM_LIST_SELECT_COLUMNS)
+    .order("date", { ascending: false })
+    .limit(200);
 
   if (filters?.dateFrom) {
     query = query.gte("date", filters.dateFrom);
@@ -91,7 +107,7 @@ export const createClaim = async (
 export const getClaim = async (claimId: string): Promise<ClaimItem | null> => {
   const { data, error } = await supabase
     .from(CLAIM_LIST_VIEW)
-    .select("*")
+    .select(CLAIM_LIST_SELECT_COLUMNS)
     .eq("id", claimId)
     .limit(1);
 

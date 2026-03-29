@@ -26,19 +26,36 @@ ALTER TABLE public.images ENABLE ROW LEVEL SECURITY;
 -- 자신이 업로드한 이미지 조회
 CREATE POLICY "Users can view own images" ON public.images
   FOR SELECT TO authenticated
-  USING (uploaded_by = auth.uid());
+  USING (uploaded_by = (SELECT auth.uid()));
 
 CREATE POLICY "Users can insert own images" ON public.images
   FOR INSERT TO authenticated
-  WITH CHECK (uploaded_by = auth.uid());
+  WITH CHECK (uploaded_by = (SELECT auth.uid()));
 
 -- 상품 이미지 공개 조회
 CREATE POLICY "Public product images" ON public.images
   FOR SELECT USING (entity_type = 'product');
 
 -- Admin 전체 접근 (is_admin() 함수 활용)
-CREATE POLICY "Admin full access" ON public.images
-  FOR ALL TO authenticated
+CREATE POLICY "Admins can select images"
+  ON public.images FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
+CREATE POLICY "Admins can insert images"
+  ON public.images FOR INSERT
+  TO authenticated
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admins can update images"
+  ON public.images FOR UPDATE
+  TO authenticated
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admins can delete images"
+  ON public.images FOR DELETE
+  TO authenticated
   USING (public.is_admin());
 
 -- RPC: register_image
