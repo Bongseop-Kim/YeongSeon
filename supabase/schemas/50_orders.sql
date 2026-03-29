@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS public.orders (
   total_discount      integer     NOT NULL DEFAULT 0,
   order_type          text        NOT NULL DEFAULT 'sale',
   status              text        NOT NULL DEFAULT '대기중',
-  sample_cost         integer     NOT NULL DEFAULT 0,
   courier_company     text,
   tracking_number     text,
   shipped_at          timestamptz,
@@ -30,7 +29,6 @@ CREATE TABLE IF NOT EXISTS public.orders (
   CONSTRAINT orders_original_price_check CHECK (original_price >= 0),
   CONSTRAINT orders_total_discount_check CHECK (total_discount >= 0),
   CONSTRAINT orders_shipping_cost_check  CHECK (shipping_cost >= 0),
-  CONSTRAINT orders_sample_cost_check    CHECK (sample_cost >= 0),
   CONSTRAINT orders_shipping_address_required
     CHECK (order_type = 'token' OR shipping_address_id IS NOT NULL),
   CONSTRAINT orders_order_type_check

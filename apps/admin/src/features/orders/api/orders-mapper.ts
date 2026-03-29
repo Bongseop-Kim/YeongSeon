@@ -117,7 +117,6 @@ export function toAdminOrderDetail(
     confirmedAt: dto.confirmedAt,
     paymentGroupId: dto.paymentGroupId,
     shippingCost: dto.shippingCost,
-    sampleCost: dto.sampleCost,
     adminActions: Array.isArray(dto.adminActions) ? dto.adminActions : [],
   };
 }
@@ -149,13 +148,11 @@ export function parseCustomReformData(
 
   const sewingCost = rawPricing.sewing_cost;
   const fabricCost = rawPricing.fabric_cost;
-  const sampleCost = rawPricing.sample_cost;
   const totalCost = rawPricing.total_cost;
   const invalidPricingFields: string[] = [];
 
   const validatedSewingCost = isFiniteNumber(sewingCost) ? sewingCost : null;
   const validatedFabricCost = isFiniteNumber(fabricCost) ? fabricCost : null;
-  const validatedSampleCost = isFiniteNumber(sampleCost) ? sampleCost : null;
   const validatedTotalCost = isFiniteNumber(totalCost) ? totalCost : null;
 
   if (validatedSewingCost === null) {
@@ -163,9 +160,6 @@ export function parseCustomReformData(
   }
   if (validatedFabricCost === null) {
     invalidPricingFields.push("pricing.fabric_cost");
-  }
-  if (validatedSampleCost === null) {
-    invalidPricingFields.push("pricing.sample_cost");
   }
   if (validatedTotalCost === null) {
     invalidPricingFields.push("pricing.total_cost");
@@ -178,7 +172,6 @@ export function parseCustomReformData(
   if (
     validatedSewingCost === null ||
     validatedFabricCost === null ||
-    validatedSampleCost === null ||
     validatedTotalCost === null
   ) {
     throw new ValidationError(
@@ -205,7 +198,6 @@ export function parseCustomReformData(
   const pricing: CustomOrderPricing = {
     sewingCost: validatedSewingCost,
     fabricCost: validatedFabricCost,
-    sampleCost: validatedSampleCost,
     totalCost: validatedTotalCost,
   };
 

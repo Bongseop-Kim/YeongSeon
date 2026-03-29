@@ -65,7 +65,6 @@ export interface AdminOrderDetail {
   confirmedAt: string | null;
   paymentGroupId: string | null;
   shippingCost: number;
-  sampleCost: number;
   adminActions: AdminAction[];
 }
 
@@ -158,7 +157,6 @@ export interface CustomOrderOptions {
 export interface CustomOrderPricing {
   sewingCost: number;
   fabricCost: number;
-  sampleCost: number;
   totalCost: number;
 }
 

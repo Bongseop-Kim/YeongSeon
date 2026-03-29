@@ -364,7 +364,6 @@ describe("parseCustomOrderData", () => {
       pricing: {
         sewingCost: 12000,
         fabricCost: 8000,
-        sampleCost: 0,
         totalCost: 20000,
       },
       sample: true,
@@ -377,24 +376,6 @@ describe("parseCustomOrderData", () => {
     });
   });
 
-  it("sample_cost가 null이면 0으로 fallback한다", () => {
-    expect(
-      parseCustomOrderData({
-        options: {},
-        pricing: {
-          sewing_cost: 12000,
-          fabric_cost: 8000,
-          sample_cost: null,
-          total_cost: 20000,
-        },
-      }),
-    ).toEqual(
-      expect.objectContaining({
-        pricing: expect.objectContaining({ sampleCost: 0 }),
-      }),
-    );
-  });
-
   describe("에러 케이스", () => {
     it("options 또는 pricing이 객체가 아니면 에러를 던진다", () => {
       expect(() =>
@@ -403,20 +384,6 @@ describe("parseCustomOrderData", () => {
           pricing: {},
         }),
       ).toThrow("custom order data 검증 실패: options 필드 오류");
-    });
-
-    it("sample_cost 타입이 잘못되면 에러를 던진다", () => {
-      expect(() =>
-        parseCustomOrderData({
-          options: {},
-          pricing: {
-            sewing_cost: 12000,
-            fabric_cost: 8000,
-            sample_cost: "1000",
-            total_cost: 20000,
-          },
-        }),
-      ).toThrow("custom order data 검증 실패: pricing.sample_cost 필드 오류");
     });
 
     it("필수 pricing 값이 빠지면 에러를 던진다", () => {

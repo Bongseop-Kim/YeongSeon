@@ -17,7 +17,6 @@ export interface CustomOrderData {
   pricing: {
     sewingCost: number;
     fabricCost: number;
-    sampleCost: number;
     totalCost: number;
   };
   sample?: boolean;
