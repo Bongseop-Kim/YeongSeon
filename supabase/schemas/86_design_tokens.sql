@@ -3,21 +3,29 @@
 -- =============================================================
 
 CREATE TABLE public.design_tokens (
-  id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  amount        integer     NOT NULL CHECK (amount != 0),
-  type          text        NOT NULL CHECK (type = ANY(ARRAY['grant','use','refund','admin','purchase'])),
-  token_class   text        NOT NULL CHECK (token_class IN ('paid', 'bonus', 'free')),
-  ai_model      text,       -- 'openai' | 'gemini' | NULL
-  request_type  text,       -- 'text_only' | 'text_and_image' | NULL
-  description   text,
-  created_at    timestamptz NOT NULL DEFAULT now(),
-  work_id       text
+  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  amount          integer     NOT NULL CHECK (amount != 0),
+  type            text        NOT NULL CHECK (type = ANY(ARRAY['grant','use','refund','admin','purchase'])),
+  token_class     text        NOT NULL CHECK (token_class IN ('paid', 'bonus', 'free')),
+  ai_model        text,       -- 'openai' | 'gemini' | NULL
+  request_type    text,       -- 'text_only' | 'text_and_image' | NULL
+  description     text,
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  work_id         text,
+  source_order_id uuid        REFERENCES public.orders(id) ON DELETE SET NULL,
+  expires_at      timestamptz
 );
 
 CREATE INDEX idx_design_tokens_user_id ON public.design_tokens (user_id, created_at DESC);
 CREATE UNIQUE INDEX idx_design_tokens_work_id ON public.design_tokens (work_id) WHERE work_id IS NOT NULL;
 CREATE INDEX idx_design_tokens_user_class ON public.design_tokens (user_id, token_class);
+CREATE INDEX idx_design_tokens_source_order_id
+  ON public.design_tokens (source_order_id)
+  WHERE source_order_id IS NOT NULL;
+CREATE INDEX idx_design_tokens_user_paid_expiry
+  ON public.design_tokens (user_id, expires_at)
+  WHERE token_class = 'paid' AND expires_at IS NOT NULL;
 
 -- RLS: users can only SELECT their own tokens
 -- INSERT/UPDATE are controlled exclusively by SECURITY DEFINER RPCs

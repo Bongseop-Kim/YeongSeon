@@ -57,6 +57,7 @@ export default function AppLayout() {
   const { openPopup } = usePopup();
   const isHomePage = location.pathname === ROUTES.HOME;
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+  const shouldHideFooter = showHeader && !isHomePage && isMobile;
 
   const handleSignOut = async () => {
     try {
@@ -264,8 +265,12 @@ export default function AppLayout() {
       >
         <Router />
 
-        {showHeader && location.pathname === ROUTES.HOME ? (
-          <Footer>
+        {showHeader ? (
+          <Footer
+            className={shouldHideFooter ? "hidden lg:block" : undefined}
+            data-hidden={shouldHideFooter ? "true" : "false"}
+            data-mobile={isMobile ? "true" : "false"}
+          >
             <FooterContent>
               <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
                 <FooterSection>

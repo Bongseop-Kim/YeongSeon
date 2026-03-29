@@ -151,15 +151,20 @@ begin
         else v_plan_key
       end;
 
-      -- 토큰 지급: ON CONFLICT partial index 조건 명시 (TOCTOU 방지)
-      insert into public.design_tokens (user_id, amount, type, token_class, description, work_id)
+      -- 토큰 지급: source_order_id + expires_at 설정 (만료: 구매 시점 + 1년)
+      insert into public.design_tokens (
+        user_id, amount, type, token_class, description, work_id,
+        source_order_id, expires_at
+      )
       values (
         p_user_id,
         v_token_amount,
         'purchase',
         'paid',
         '토큰 구매 (' || v_plan_label || ', ' || v_token_amount || '개)',
-        'order_' || v_order.id::text
+        'order_' || v_order.id::text,
+        v_order.id,
+        now() + interval '1 year'
       )
       on conflict (work_id) where work_id is not null do nothing;
     end if;

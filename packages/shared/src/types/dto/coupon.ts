@@ -9,7 +9,12 @@ export interface CouponDTO {
   additionalInfo?: string | null;
 }
 
-export type UserCouponStatusDTO = "active" | "used" | "expired" | "revoked";
+export type UserCouponStatusDTO =
+  | "active"
+  | "used"
+  | "expired"
+  | "revoked"
+  | "reserved";
 
 export interface UserCouponDTO {
   id: string;

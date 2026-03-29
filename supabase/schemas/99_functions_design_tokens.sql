@@ -13,9 +13,18 @@ SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
   SELECT jsonb_build_object(
-    'total', (COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0) + COALESCE(SUM(amount) FILTER (WHERE token_class = 'bonus'), 0))::integer,
-    'paid',  COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0)::integer,
-    'bonus', COALESCE(SUM(amount) FILTER (WHERE token_class = 'bonus'), 0)::integer
+    'total', (
+      COALESCE(SUM(amount) FILTER (
+        WHERE token_class = 'paid'
+          AND (expires_at IS NULL OR expires_at > now())
+      ), 0) +
+      COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)
+    )::integer,
+    'paid',  COALESCE(SUM(amount) FILTER (
+               WHERE token_class = 'paid'
+                 AND (expires_at IS NULL OR expires_at > now())
+             ), 0)::integer,
+    'bonus', COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)::integer
   )
   FROM public.design_tokens
   WHERE user_id = auth.uid();
@@ -46,14 +55,18 @@ SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 DECLARE
-  v_cost_key     text;
-  v_cost         integer;
-  v_total_bal    integer;
-  v_paid_bal     integer;
-  v_bonus_bal    integer;
-  v_caller_role  text;
-  v_paid_deduct  integer;
-  v_bonus_deduct integer;
+  v_cost_key       text;
+  v_cost           integer;
+  v_total_bal      integer;
+  v_paid_bal       integer;
+  v_bonus_bal      integer;
+  v_caller_role    text;
+  v_paid_deduct    integer;
+  v_bonus_deduct   integer;
+  v_remaining_paid integer;
+  v_batch_consume  integer;
+  v_batch_idx      integer;
+  v_batch_row      RECORD;
 BEGIN
   -- 소유권 검증: service_role이 아닌 경우 auth.uid() 일치 확인
   v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
@@ -72,98 +85,127 @@ BEGIN
     RAISE EXCEPTION 'invalid quality: %', p_quality;
   END IF;
 
-  -- 동시 요청에 대한 advisory lock (사용자별)
+  -- 동시 요청 advisory lock (사용자별)
   PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
 
-  -- admin_settings에서 비용 조회
+  -- 비용 조회
   v_cost_key := CASE
     WHEN p_request_type = 'text_and_image' AND p_quality = 'high'
       THEN 'design_token_cost_' || p_ai_model || '_image_high'
     ELSE
       'design_token_cost_' || p_ai_model || '_' ||
-      CASE p_request_type
-        WHEN 'text_and_image' THEN 'image'
-        ELSE 'text'
-      END
+      CASE p_request_type WHEN 'text_and_image' THEN 'image' ELSE 'text' END
   END;
 
-  SELECT value::integer
-    INTO v_cost
-    FROM public.admin_settings
-   WHERE key = v_cost_key;
-
+  SELECT value::integer INTO v_cost FROM public.admin_settings WHERE key = v_cost_key;
   IF v_cost IS NULL OR v_cost <= 0 THEN
     RAISE EXCEPTION 'cost not configured for key: %', v_cost_key;
   END IF;
 
-  -- pending 환불 체크 (환불 신청 후 토큰 사용 차단)
+  -- pending 환불 체크
   IF EXISTS (
     SELECT 1 FROM public.claims
     WHERE user_id = p_user_id
-      AND type = 'token_refund'
-      AND status = '접수'
+      AND type = 'token_refund' AND status = '접수'
   ) THEN
-    SELECT COALESCE(SUM(amount), 0)::integer
-      INTO v_total_bal
-      FROM public.design_tokens
-     WHERE user_id = p_user_id;
-
+    SELECT COALESCE(SUM(amount) FILTER (WHERE expires_at IS NULL OR expires_at > now()), 0)::integer
+      INTO v_total_bal FROM public.design_tokens WHERE user_id = p_user_id;
     RETURN jsonb_build_object(
-      'success', false,
-      'error', 'refund_pending',
-      'balance', v_total_bal,
-      'cost', v_cost
+      'success', false, 'error', 'refund_pending', 'balance', v_total_bal, 'cost', v_cost
     );
   END IF;
 
-  -- 클래스별 잔액 조회
-  SELECT
-    COALESCE(SUM(amount) FILTER (WHERE token_class = 'paid'), 0)::integer,
-    COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)::integer
-  INTO v_paid_bal, v_bonus_bal
+  -- paid 잔량: 만료되지 않은 paid 토큰 전체(만료 없음 포함)
+  SELECT COALESCE(SUM(amount), 0)::integer INTO v_paid_bal
   FROM public.design_tokens
-  WHERE user_id = p_user_id;
+  WHERE user_id = p_user_id
+    AND token_class = 'paid'
+    AND (expires_at IS NULL OR expires_at > now());
 
+  SELECT COALESCE(SUM(amount), 0)::integer INTO v_bonus_bal
+  FROM public.design_tokens
+  WHERE user_id = p_user_id AND token_class IN ('bonus', 'free');
   v_total_bal := v_paid_bal + v_bonus_bal;
 
-  -- work_id 기반 멱등성: 이미 같은 차감 ledger가 있으면 현재 잔액 기준으로 성공 처리
+  -- 구 포맷(_use_paid) + 신 포맷(_use_paid_0, _use_paid_legacy) 모두 인식
   IF p_work_id IS NOT NULL AND EXISTS (
-    SELECT 1
-    FROM public.design_tokens
+    SELECT 1 FROM public.design_tokens
     WHERE user_id = p_user_id
-      AND work_id IN (p_work_id || '_use_paid', p_work_id || '_use_bonus')
+      AND work_id IN (
+        p_work_id || '_use_paid',
+        p_work_id || '_use_paid_0',
+        p_work_id || '_use_paid_legacy',
+        p_work_id || '_use_bonus'
+      )
   ) THEN
-    RETURN jsonb_build_object(
-      'success', true,
-      'cost', 0,
-      'balance', v_total_bal
-    );
+    RETURN jsonb_build_object('success', true, 'cost', v_cost, 'balance', v_total_bal);
   END IF;
 
-  -- 잔액 부족 검사
+  -- 잔액 부족
   IF v_total_bal < v_cost THEN
     RETURN jsonb_build_object(
-      'success', false,
-      'error', 'insufficient_tokens',
-      'balance', v_total_bal,
-      'cost', v_cost
+      'success', false, 'error', 'insufficient_tokens', 'balance', v_total_bal, 'cost', v_cost
     );
   END IF;
 
-  -- paid 먼저 차감, 부족분은 bonus에서 차감
+  -- paid/bonus 차감량 분배
   v_paid_deduct  := LEAST(v_cost, v_paid_bal);
   v_bonus_deduct := v_cost - v_paid_deduct;
 
   IF v_paid_deduct > 0 THEN
-    INSERT INTO public.design_tokens (
-      user_id, amount, type, token_class, ai_model, request_type, description, work_id
-    ) VALUES (
-      p_user_id, -v_paid_deduct, 'use', 'paid',
-      p_ai_model, p_request_type,
-      'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ') - 유료',
-      CASE WHEN p_work_id IS NOT NULL THEN p_work_id || '_use_paid' ELSE NULL END
-    )
-    ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
+    v_remaining_paid := v_paid_deduct;
+    v_batch_idx := 0;
+
+    FOR v_batch_row IN
+      SELECT source_order_id, expires_at, SUM(amount)::integer AS remaining
+      FROM public.design_tokens
+      WHERE user_id = p_user_id
+        AND token_class = 'paid'
+        AND source_order_id IS NOT NULL
+        AND expires_at > now()
+      GROUP BY source_order_id, expires_at
+      HAVING SUM(amount) > 0
+      ORDER BY expires_at ASC
+    LOOP
+      EXIT WHEN v_remaining_paid <= 0;
+
+      v_batch_consume := LEAST(v_remaining_paid, v_batch_row.remaining);
+
+      INSERT INTO public.design_tokens (
+        user_id, amount, type, token_class,
+        source_order_id, expires_at,
+        ai_model, request_type, description, work_id
+      ) VALUES (
+        p_user_id, -v_batch_consume, 'use', 'paid',
+        v_batch_row.source_order_id, v_batch_row.expires_at,
+        p_ai_model, p_request_type,
+        'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ') - 유료',
+        CASE WHEN p_work_id IS NOT NULL
+          THEN p_work_id || '_use_paid_' || v_batch_idx
+          ELSE NULL END
+      )
+      ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
+
+      v_remaining_paid := v_remaining_paid - v_batch_consume;
+      v_batch_idx := v_batch_idx + 1;
+    END LOOP;
+
+    IF v_remaining_paid > 0 THEN
+      INSERT INTO public.design_tokens (
+        user_id, amount, type, token_class,
+        source_order_id, expires_at,
+        ai_model, request_type, description, work_id
+      ) VALUES (
+        p_user_id, -v_remaining_paid, 'use', 'paid',
+        NULL, NULL,
+        p_ai_model, p_request_type,
+        'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ') - 유료 (레거시)',
+        CASE WHEN p_work_id IS NOT NULL
+          THEN p_work_id || '_use_paid_legacy'
+          ELSE NULL END
+      )
+      ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
+    END IF;
   END IF;
 
   IF v_bonus_deduct > 0 THEN
@@ -178,11 +220,7 @@ BEGIN
     ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
   END IF;
 
-  RETURN jsonb_build_object(
-    'success', true,
-    'cost', v_cost,
-    'balance', v_total_bal - v_cost
-  );
+  RETURN jsonb_build_object('success', true, 'cost', v_cost, 'balance', v_total_bal - v_cost);
 END;
 $$;
 
@@ -233,6 +271,7 @@ $$;
 
 -- ── manage_design_tokens_admin ───────────────────────────────
 -- Admin-only grant/deduction for design tokens with audit trail.
+-- Related storefront RPCs: get_token_plans(), create_token_order()
 CREATE OR REPLACE FUNCTION public.manage_design_tokens_admin(
   p_user_id uuid,
   p_amount integer,
@@ -269,7 +308,7 @@ BEGIN
     PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
   END IF;
 
-  SELECT COALESCE(SUM(amount), 0)::integer
+  SELECT COALESCE(SUM(amount) FILTER (WHERE expires_at IS NULL OR expires_at > now()), 0)::integer
     INTO v_balance
     FROM public.design_tokens
    WHERE user_id = p_user_id;
@@ -428,6 +467,7 @@ BEGIN
     FROM public.design_tokens AS dt
     JOIN requested_users AS ru
       ON ru.user_id = dt.user_id
+    WHERE dt.expires_at IS NULL OR dt.expires_at > now()
     GROUP BY dt.user_id
   )
   SELECT ru.user_id, COALESCE(b.balance, 0)::integer AS balance
@@ -468,8 +508,11 @@ BEGIN
         WHERE dt.user_id = v_user_id
           AND dt.type = 'purchase'
           AND dt.token_class = 'paid'
-          AND (dt.work_id = 'order_' || o.id::text || '_paid'
-               OR dt.work_id = 'order_' || o.id::text)
+          AND (
+            dt.source_order_id = o.id
+            OR dt.work_id = 'order_' || o.id::text
+            OR dt.work_id = 'order_' || o.id::text || '_paid'
+          )
       ), 0)::integer                                    AS paid_tokens_granted,
       COALESCE((
         SELECT MAX(dt.created_at)
@@ -477,9 +520,24 @@ BEGIN
         WHERE dt.user_id = v_user_id
           AND dt.type = 'purchase'
           AND dt.token_class = 'paid'
-          AND (dt.work_id = 'order_' || o.id::text || '_paid'
-               OR dt.work_id = 'order_' || o.id::text)
+          AND (
+            dt.source_order_id = o.id
+            OR dt.work_id = 'order_' || o.id::text
+            OR dt.work_id = 'order_' || o.id::text || '_paid'
+          )
       ), o.created_at)                                  AS token_granted_at,
+      (
+        SELECT MAX(dt.expires_at)
+        FROM public.design_tokens dt
+        WHERE dt.user_id = v_user_id
+          AND dt.type = 'purchase'
+          AND dt.token_class = 'paid'
+          AND (
+            dt.source_order_id = o.id
+            OR dt.work_id = 'order_' || o.id::text
+            OR dt.work_id = 'order_' || o.id::text || '_paid'
+          )
+      )                                                 AS token_expires_at,
       -- 진행 중인 환불 요청 정보 (접수/완료)
       (
         SELECT jsonb_build_object('id', c.id, 'status', c.status)
@@ -502,7 +560,10 @@ BEGIN
       'total_price',           cto.total_price,
       'paid_tokens_granted',   cto.paid_tokens_granted,
       'bonus_tokens_granted',  0,
+      'token_expires_at',      cto.token_expires_at,
       'is_refundable',         CASE
+                                 WHEN cto.token_expires_at IS NOT NULL
+                                   AND cto.token_expires_at <= now() THEN false
                                  WHEN cto.active_refund_request IS NOT NULL THEN false
                                  WHEN cto.order_rank = 1
                                    AND NOT EXISTS (
@@ -515,6 +576,8 @@ BEGIN
                                  ELSE false
                                END,
       'not_refundable_reason', CASE
+                                 WHEN cto.token_expires_at IS NOT NULL
+                                   AND cto.token_expires_at <= now() THEN 'expired'
                                  WHEN cto.active_refund_request IS NOT NULL THEN
                                    CASE (cto.active_refund_request->>'status')
                                      WHEN '접수' THEN 'pending_refund'
@@ -569,6 +632,7 @@ DECLARE
   v_latest_order_id uuid;
   v_paid_granted    integer;
   v_token_granted_at timestamptz;
+  v_token_expires_at timestamptz;
   v_refund_amount   integer;
   v_token_item_id   uuid;
   v_claim_id        uuid;
@@ -600,33 +664,35 @@ BEGIN
     RAISE EXCEPTION 'order is not in completed status (status: %)', v_order.status;
   END IF;
 
-  -- 해당 주문의 유료 지급량 조회
   SELECT
-    COALESCE((
-      SELECT SUM(dt.amount)
-      FROM public.design_tokens dt
-      WHERE dt.user_id = v_user_id
-        AND dt.type = 'purchase'
-        AND dt.token_class = 'paid'
-        AND (dt.work_id = 'order_' || p_order_id::text || '_paid'
-             OR dt.work_id = 'order_' || p_order_id::text)
-    ), 0)::integer
-  INTO v_paid_granted;
+    COALESCE(SUM(dt.amount), 0)::integer,
+    MAX(dt.created_at),
+    MAX(dt.expires_at)
+  INTO v_paid_granted, v_token_granted_at, v_token_expires_at
+  FROM public.design_tokens dt
+  WHERE dt.user_id = v_user_id
+    AND dt.type = 'purchase'
+    AND dt.token_class = 'paid'
+    AND (
+      dt.source_order_id = p_order_id
+      OR dt.work_id = 'order_' || p_order_id::text || '_paid'
+      OR dt.work_id = 'order_' || p_order_id::text
+    );
 
   IF v_paid_granted <= 0 THEN
     RAISE EXCEPTION 'no paid tokens found for this order';
   END IF;
 
-  SELECT MAX(dt.created_at)
-    INTO v_token_granted_at
-    FROM public.design_tokens dt
-   WHERE dt.user_id = v_user_id
-     AND dt.type = 'purchase'
-     AND dt.token_class = 'paid'
-     AND (dt.work_id = 'order_' || p_order_id::text || '_paid'
-          OR dt.work_id = 'order_' || p_order_id::text);
-
   v_token_granted_at := COALESCE(v_token_granted_at, v_order.created_at);
+
+  IF v_token_expires_at IS NOT NULL AND v_token_expires_at <= now() THEN
+    RAISE EXCEPTION USING
+      MESSAGE = 'token_order_expired',
+      DETAIL = jsonb_build_object(
+        'code', 'token_order_expired',
+        'message', 'refund period has passed'
+      )::text;
+  END IF;
 
   SELECT id
     INTO v_latest_order_id
@@ -770,6 +836,8 @@ DECLARE
   v_req               record;
   v_paid_token_amount integer;
   v_order_status      text;
+  v_source_order_id   uuid;
+  v_purchase_expires_at timestamptz;
 BEGIN
   -- service_role 전용
   v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
@@ -793,6 +861,21 @@ BEGIN
 
   PERFORM pg_advisory_xact_lock(hashtext(v_req.user_id::text));
 
+  SELECT dt.source_order_id, dt.expires_at
+    INTO v_source_order_id, v_purchase_expires_at
+    FROM public.design_tokens dt
+   WHERE dt.user_id = v_req.user_id
+     AND dt.type = 'purchase'
+     AND (
+       dt.source_order_id = v_req.order_id
+       OR dt.work_id = 'order_' || v_req.order_id::text
+       OR dt.work_id = 'order_' || v_req.order_id::text || '_paid'
+     )
+   ORDER BY dt.created_at DESC
+   LIMIT 1;
+
+  v_source_order_id := COALESCE(v_source_order_id, v_req.order_id);
+
   -- 이미 완료된 경우 멱등하게 성공 반환
   IF v_req.status = '완료' THEN
     RETURN;
@@ -812,9 +895,12 @@ BEGIN
 
   -- 유료 토큰 회수
   INSERT INTO public.design_tokens (
-    user_id, amount, type, token_class, description, work_id
+    user_id, amount, type, token_class,
+    source_order_id, expires_at,
+    description, work_id
   ) VALUES (
     v_req.user_id, -v_paid_token_amount, 'refund', 'paid',
+    v_source_order_id, v_purchase_expires_at,
     '토큰 환불 승인 (유료)',
     'refund_' || p_request_id::text || '_paid'
   )

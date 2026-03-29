@@ -8,7 +8,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(9);
+SELECT plan(16);
 
 -- ── 픽스처 설정 ─────────────────────────────────────────────
 
@@ -66,14 +66,14 @@ SELECT is(
 );
 
 -- ── 테스트 4: work_id 멱등성 - 이미 처리된 work_id 재호출 ──
--- work-test-0001은 테스트1에서 이미 처리됨 → cost=0 반환
+-- work-test-0001은 테스트1에서 이미 처리됨 → 원래 비용(cost=5) 유지
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000001'::uuid,
     'openai', 'text_only', 'standard', 'work-test-0001'
   ))->>'cost'),
-  '0',
-  '이미 처리된 work_id 재호출 시 cost=0 반환 (멱등성)'
+  '5',
+  '이미 처리된 work_id 재호출 시 원래 cost를 반환한다 (멱등성)'
 );
 
 -- ── 테스트 5: 멱등 호출 후 잔액 변경 없음 ──────────────────
@@ -131,6 +131,166 @@ SELECT throws_ok(
   $$,
   'P0001', NULL,
   '유효하지 않은 request_type 파라미터로 호출 시 예외 발생'
+);
+
+-- ── 테스트 픽스처: 만료 테스트용 사용자 + 주문 + 토큰 설정 ──────────────
+DO $expiry_setup$
+DECLARE
+  v_user_c  uuid := 'dd000001-0000-0000-0000-000000000003';
+  v_order_1 uuid := 'eeeeeeee-0000-0000-0000-000000000001';
+  v_order_2 uuid := 'eeeeeeee-0000-0000-0000-000000000002';
+  v_user_e  uuid := 'dd000001-0000-0000-0000-000000000005';
+  v_order_e uuid := 'eeeeeeee-0000-0000-0000-000000000005';
+BEGIN
+  PERFORM test_helpers.create_test_user(v_user_c);
+
+  INSERT INTO public.orders (
+    id, user_id, order_number, shipping_address_id,
+    total_price, original_price, total_discount,
+    order_type, status, payment_group_id, shipping_cost
+  ) VALUES (
+    v_order_1, v_user_c, 'TKN-EXP-001', NULL,
+    2900, 2900, 0, 'token', '완료', gen_random_uuid(), 0
+  );
+
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, source_order_id, expires_at, description, work_id
+  ) VALUES (
+    v_user_c, 50, 'purchase', 'paid',
+    v_order_1, now() - interval '1 second',
+    '만료된 토큰 (테스트)', 'order_' || v_order_1::text
+  );
+
+  INSERT INTO public.orders (
+    id, user_id, order_number, shipping_address_id,
+    total_price, original_price, total_discount,
+    order_type, status, payment_group_id, shipping_cost
+  ) VALUES (
+    v_order_2, v_user_c, 'TKN-VALID-001', NULL,
+    2900, 2900, 0, 'token', '완료', gen_random_uuid(), 0
+  );
+
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, source_order_id, expires_at, description, work_id
+  ) VALUES (
+    v_user_c, 30, 'purchase', 'paid',
+    v_order_2, now() + interval '1 year',
+    '유효한 토큰 (테스트)', 'order_' || v_order_2::text
+  );
+
+  PERFORM test_helpers.create_test_user(v_user_e);
+
+  INSERT INTO public.orders (
+    id, user_id, order_number, shipping_address_id,
+    total_price, original_price, total_discount,
+    order_type, status, payment_group_id, shipping_cost
+  ) VALUES (
+    v_order_e, v_user_e, 'TKN-LEG-001', NULL,
+    2900, 2900, 0, 'token', '완료', gen_random_uuid(), 0
+  );
+
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, source_order_id, expires_at, description, work_id
+  ) VALUES (
+    v_user_e, 20, 'purchase', 'paid',
+    v_order_e, NULL,
+    '만료일 없는 유상 토큰(레거시)', 'legacy-null-expiry-token'
+  );
+END $expiry_setup$;
+
+-- ── 테스트 10: 만료된 배치는 잔액에 포함되지 않음 ────────────────────────
+SELECT is(
+  (SELECT COALESCE(SUM(amount) FILTER (
+    WHERE token_class = 'paid' AND (expires_at IS NULL OR expires_at > now())
+  ), 0)::integer
+   FROM public.design_tokens
+   WHERE user_id = 'dd000001-0000-0000-0000-000000000003'::uuid),
+  30,
+  '만료된 배치(50)는 잔액 계산에서 제외되고 유효 배치(30)만 집계됨'
+);
+
+-- ── 테스트 11: 만료 토큰만 있을 때 use_design_tokens insufficient_tokens ──
+DO $expired_only_setup$
+DECLARE
+  v_user_d  uuid := 'dd000001-0000-0000-0000-000000000004';
+  v_order_d uuid := 'eeeeeeee-0000-0000-0000-000000000004';
+BEGIN
+  PERFORM test_helpers.create_test_user(v_user_d);
+  INSERT INTO public.orders (
+    id, user_id, order_number, shipping_address_id,
+    total_price, original_price, total_discount,
+    order_type, status, payment_group_id, shipping_cost
+  ) VALUES (
+    v_order_d, v_user_d, 'TKN-EXP-002', NULL,
+    2900, 2900, 0, 'token', '완료', gen_random_uuid(), 0
+  );
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, source_order_id, expires_at, description, work_id
+  ) VALUES (
+    v_user_d, 100, 'purchase', 'paid',
+    v_order_d, now() - interval '1 day',
+    '만료 전용 테스트', 'order_' || v_order_d::text
+  );
+END $expired_only_setup$;
+
+SELECT is(
+  (SELECT (public.use_design_tokens(
+    'dd000001-0000-0000-0000-000000000004'::uuid,
+    'openai', 'text_only'
+  ))->>'error'),
+  'insufficient_tokens',
+  '만료 토큰만 있는 사용자: use_design_tokens → insufficient_tokens'
+);
+
+-- ── 테스트 12: 유효 배치에서 FIFO 소비 → source_order_id 기록 확인 ─────────
+SELECT lives_ok(
+  $$
+    SELECT public.use_design_tokens(
+      'dd000001-0000-0000-0000-000000000003'::uuid,
+      'openai', 'text_only', 'standard', 'work-expiry-test-001'
+    )
+  $$,
+  '유효 배치에서 paid 토큰 차감 예외 없이 실행'
+);
+
+-- ── 테스트 13: use 항목의 source_order_id가 배치 주문 ID와 일치 ─────────────
+SELECT is(
+  (SELECT source_order_id::text
+   FROM public.design_tokens
+   WHERE user_id = 'dd000001-0000-0000-0000-000000000003'::uuid
+     AND type = 'use'
+     AND work_id = 'work-expiry-test-001_use_paid_0'),
+  'eeeeeeee-0000-0000-0000-000000000002',
+  'use 항목의 source_order_id가 유효 배치(order_2) ID와 일치'
+);
+
+-- ── 테스트 14: use 항목의 expires_at이 배치 expires_at과 일치 ───────────────
+SELECT ok(
+  (SELECT (expires_at - now()) > interval '364 days'
+   FROM public.design_tokens
+   WHERE user_id = 'dd000001-0000-0000-0000-000000000003'::uuid
+     AND type = 'use'
+     AND work_id = 'work-expiry-test-001_use_paid_0'),
+  'use 항목의 expires_at이 배치의 expires_at(1년 후)과 일치'
+);
+
+-- ── 테스트 15: source_order_id가 있는 expires_at NULL paid 토큰도 차감 가능 ──
+SELECT is(
+  (SELECT (public.use_design_tokens(
+    'dd000001-0000-0000-0000-000000000005'::uuid,
+    'openai', 'text_only', 'standard', 'work-legacy-null-expiry-001'
+  ))->>'success'),
+  'true',
+  'source_order_id가 있고 expires_at이 NULL인 paid 토큰도 use_design_tokens가 사용한다'
+);
+
+-- ── 테스트 16: 위 차감 후 잔액이 감소함 ─────────────────────────────────
+SELECT is(
+  (SELECT COALESCE(SUM(amount), 0)::int
+   FROM public.design_tokens
+   WHERE user_id = 'dd000001-0000-0000-0000-000000000005'::uuid),
+  15,
+  'expires_at이 NULL인 paid 토큰 차감 후 총 잔액이 감소한다'
 );
 
 SELECT * FROM finish();

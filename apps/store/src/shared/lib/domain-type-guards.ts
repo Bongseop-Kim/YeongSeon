@@ -63,6 +63,7 @@ const USER_COUPON_STATUSES: ReadonlySet<string> = new Set([
   "used",
   "expired",
   "revoked",
+  "reserved",
 ]);
 export const isUserCouponStatus = (v: string): v is UserCouponStatusDTO =>
   USER_COUPON_STATUSES.has(v);

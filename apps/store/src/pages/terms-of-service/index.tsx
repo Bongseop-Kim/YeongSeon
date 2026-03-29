@@ -172,6 +172,15 @@ export default function TermsOfServicePage() {
           <li>
             AI 이미지 생성에 실패한 경우, 차감된 토큰은 자동으로 복원됩니다.
           </li>
+          <li>
+            충전된 유료 토큰의 이용기간 및 환불 가능기간은 결제 시점으로부터 1년
+            이내로 제한됩니다.
+          </li>
+          <li>
+            토큰은 구매한 계정에서만 사용 가능하며, 다른 사용자에게 양도할 수
+            없습니다.
+          </li>
+          <li>1회 충전 금액은 100,000원 이하로 제한됩니다.</li>
         </PolicyList>
       </PolicySection>
 

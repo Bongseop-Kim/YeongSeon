@@ -63,6 +63,18 @@ describe("parseUserCouponRecords", () => {
     );
   });
 
+  it("reserved 상태 쿠폰도 허용한다", () => {
+    expect(
+      parseUserCouponRecords([
+        createUserCouponRecordRaw({ status: "reserved" }),
+      ]),
+    ).toEqual([
+      expect.objectContaining({
+        status: "reserved",
+      }),
+    ]);
+  });
+
   describe("에러 케이스", () => {
     it("배열이 아니면 에러를 던진다", () => {
       expect(() => parseUserCouponRecords({})).toThrow(

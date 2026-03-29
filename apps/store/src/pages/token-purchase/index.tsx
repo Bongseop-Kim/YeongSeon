@@ -140,7 +140,9 @@ const TokenPurchasePage = () => {
               </div>
               <p className="mt-3 text-xs text-foreground-muted">
                 이미지 생성 실패 시 채팅 토큰(1 token)만 차감됩니다. 구매 토큰은
-                만료 없이 사용할 수 있습니다.
+                결제 시점으로부터{" "}
+                <span className="font-semibold text-foreground">1년 이내</span>{" "}
+                사용할 수 있습니다.
               </p>
             </div>
 
