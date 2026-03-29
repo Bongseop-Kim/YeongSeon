@@ -1,12 +1,17 @@
+## 모달 규칙
+
+- 텍스트 confirm/alert → `useModalStore`; 폼·복잡한 UI → 로컬 `Dialog`. Zustand에 ReactNode 저장 금지.
+- 훅은 상태만 반환하고 렌더링은 전용 컴포넌트(`*-modals.tsx`)가 담당한다.
+
 ## 폼 컴포넌트 규칙
 
-- 폼 필드의 레이블·설명·에러 마크업은 `@/components/ui/field`의 `Field`, `FieldTitle`, `FieldDescription`, `FieldLabel`, `FieldContent`, `FieldError`를 사용한다. raw HTML(`<h3>`, `<p>`, `<div>` 등)로 직접 구성하지 않는다.
+- 폼 필드의 레이블·설명·에러 마크업은 `@/shared/ui/field`의 `Field`, `FieldTitle`, `FieldDescription`, `FieldLabel`, `FieldContent`, `FieldError`를 사용한다. raw HTML(`<h3>`, `<p>`, `<div>` 등)로 직접 구성하지 않는다.
 
 ## 레이아웃 여백 규칙
 
 좌우 여백은 `PageLayout`이 단일 소스 오브 트루스다. 페이지가 직접 `px-*`로 여백을 설정하지 않는다.
 
-**PageLayout 기준값**: `src/components/layout/page-layout.tsx` 참조
+**PageLayout 기준값**: `src/shared/layout/page-layout.tsx` 참조
 
 페이지 유형별 사용 방식:
 
