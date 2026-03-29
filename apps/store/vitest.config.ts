@@ -7,6 +7,10 @@ export default mergeConfig(
   defineConfig({
     test: {
       ...baseVitestTestConfig,
+      env: {
+        VITE_SUPABASE_URL: "https://placeholder.supabase.co",
+        VITE_SUPABASE_ANON_KEY: "placeholder-anon-key",
+      },
       projects: [
         {
           extends: true,
