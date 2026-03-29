@@ -1,4 +1,5 @@
 import { useFormContext } from "react-hook-form";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { Button } from "@/shared/ui-extended/button";
 import { ContactInfoSection } from "@/features/custom-order/components/contact-info-section";
 import { formatPhoneNumber } from "@/shared/lib/phone-format";
@@ -11,7 +12,6 @@ import {
   getTieTypeLabel,
 } from "@/features/custom-order/utils/option-labels";
 import type { ShippingAddress } from "@/entities/shipping";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 import type { WizardStepId } from "@/features/custom-order/types/wizard";
 import { StepLayout } from "./step-layout";

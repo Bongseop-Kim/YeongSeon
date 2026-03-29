@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   toShippingAddressView,
   toUpsertShippingAddressParams,
-} from "@/features/shipping/api/shipping-mapper";
+} from "@/entities/shipping";
 
 describe("toShippingAddressView", () => {
   it("레코드를 view 타입으로 변환한다", () => {

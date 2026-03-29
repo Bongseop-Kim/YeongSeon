@@ -1,4 +1,3 @@
-import { supabase } from "@/shared/lib/supabase";
 import type {
   CreateOrderRequest,
   CreateOrderResponse,
@@ -23,12 +22,18 @@ const ORDER_LIST_VIEW = "order_list_view";
 const ORDER_DETAIL_VIEW = "order_detail_view";
 const ORDER_ITEM_VIEW = "order_item_view";
 
+const getSupabase = async () => {
+  const { supabase } = await import("@/shared/lib/supabase");
+  return supabase;
+};
+
 /**
  * 주문 생성
  */
 export const createOrder = async (
   request: CreateOrderRequest,
 ): Promise<CreateOrderResponse> => {
+  const supabase = await getSupabase();
   const input: CreateOrderInputDTO = {
     shipping_address_id: request.shippingAddressId,
     items: request.items.map(toOrderItemInputDTO),
@@ -67,6 +72,7 @@ export const createOrder = async (
  * 주문 목록 조회
  */
 export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
+  const supabase = await getSupabase();
   let query = supabase
     .from(ORDER_LIST_VIEW)
     .select("*")
@@ -159,6 +165,7 @@ export const getOrders = async (filters?: ListFilters): Promise<Order[]> => {
  * 구매확정 (배송중 또는 배송완료 상태에서 가능)
  */
 export const confirmPurchase = async (orderId: string): Promise<void> => {
+  const supabase = await getSupabase();
   const { error } = await supabase.rpc("customer_confirm_purchase", {
     p_order_id: orderId,
   });
@@ -172,6 +179,7 @@ export const confirmPurchase = async (orderId: string): Promise<void> => {
  * 주문 상세 조회
  */
 export const getOrder = async (orderId: string): Promise<Order | null> => {
+  const supabase = await getSupabase();
   const { data: order, error: orderError } = await supabase
     .from(ORDER_DETAIL_VIEW)
     .select("*")
@@ -213,6 +221,7 @@ export const submitRepairTracking = async (
   courierCompany: string,
   trackingNumber: string,
 ): Promise<void> => {
+  const supabase = await getSupabase();
   const { error } = await supabase.rpc("submit_repair_tracking", {
     p_order_id: orderId,
     p_courier_company: courierCompany,

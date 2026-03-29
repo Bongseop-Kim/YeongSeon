@@ -5,10 +5,7 @@ import { supabase } from "@/shared/lib/supabase";
 //   "user_id = auth.uid()" 로 소유권이 보장되므로 직접 쓰기 허용.
 const TABLE_NAME = "product_likes";
 
-/**
- * 제품에 좋아요 추가
- */
-export const addLike = async (productId: number): Promise<void> => {
+const requireUserId = async (): Promise<string> => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -17,8 +14,17 @@ export const addLike = async (productId: number): Promise<void> => {
     throw new Error("로그인이 필요합니다.");
   }
 
+  return user.id;
+};
+
+/**
+ * 제품에 좋아요 추가
+ */
+export const addLike = async (productId: number): Promise<void> => {
+  const userId = await requireUserId();
+
   const { error } = await supabase.from(TABLE_NAME).insert({
-    user_id: user.id,
+    user_id: userId,
     product_id: productId,
   });
 
@@ -35,18 +41,12 @@ export const addLike = async (productId: number): Promise<void> => {
  * 제품 좋아요 제거
  */
 export const removeLike = async (productId: number): Promise<void> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
+  const userId = await requireUserId();
 
   const { error } = await supabase
     .from(TABLE_NAME)
     .delete()
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("product_id", productId);
 
   if (error) {

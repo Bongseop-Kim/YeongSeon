@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   useShippingAddresses,
   useDeleteShippingAddress,
-} from "./api/shipping-query";
+} from "@/entities/shipping";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { useModalStore } from "@/shared/store/modal";

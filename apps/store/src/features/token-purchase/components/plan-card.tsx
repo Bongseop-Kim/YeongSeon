@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
+import type { TokenPlanKey } from "@/entities/token-purchase";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui-extended/button";
-import type { TokenPlanKey } from "@/features/token-purchase/api/token-purchase-api";
 
 interface PlanCardProps {
   planKey: TokenPlanKey;

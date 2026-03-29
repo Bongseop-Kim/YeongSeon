@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import type { UseFormGetValues } from "react-hook-form";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
 import type { StepConfig } from "@/features/custom-order/types/wizard";
 
 interface UseWizardStepOptions {

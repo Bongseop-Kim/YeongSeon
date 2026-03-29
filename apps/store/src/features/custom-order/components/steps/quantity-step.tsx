@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react";
 import { Controller, useFormContext } from "react-hook-form";
+import type { PricingConfig, QuoteOrderOptions } from "@/entities/custom-order";
 import { CheckboxField } from "@/shared/composite/check-box-field";
 import { QuantitySelector } from "@/shared/composite/quantity-selector";
 import { PackageSelector } from "@/features/custom-order/components/package-selector";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
-import type { PricingConfig } from "@/features/custom-order/types/pricing";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { StepLayout } from "./step-layout";
 import { ButtonGroup } from "@/shared/ui/button-group";

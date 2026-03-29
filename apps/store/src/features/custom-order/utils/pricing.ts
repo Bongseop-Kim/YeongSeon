@@ -1,5 +1,4 @@
-import type { OrderOptions } from "@/features/custom-order/types/order";
-import type { PricingConfig } from "@/features/custom-order/types/pricing";
+import type { OrderOptions, PricingConfig } from "@/entities/custom-order";
 
 interface CostCalculation {
   sewingCost: number;

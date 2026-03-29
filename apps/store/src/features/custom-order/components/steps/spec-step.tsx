@@ -1,10 +1,10 @@
 import { Controller, useFormContext } from "react-hook-form";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { RadioChoiceField } from "@/shared/composite/radio-choice-field";
 import { UtilityPagePanel } from "@/shared/composite/utility-page";
 import { Input } from "@/shared/ui-extended/input";
 import { RadioGroup } from "@/shared/ui/radio-group";
 import { TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
 
 export const SpecStep = () => {

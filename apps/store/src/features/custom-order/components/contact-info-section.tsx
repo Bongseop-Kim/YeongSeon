@@ -1,5 +1,6 @@
 import { Controller, useWatch } from "react-hook-form";
 import type { Control } from "react-hook-form";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { Input } from "@/shared/ui-extended/input";
 import { RadioGroupItem } from "@/shared/ui/radio-group";
 import {
@@ -11,7 +12,6 @@ import {
   FieldTitle,
 } from "@/shared/ui/field";
 import { RadioGroupField } from "@/shared/composite/radio-group-field";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import type { ContactMethod } from "@yeongseon/shared";
 
 const CONTACT_METHOD_OPTIONS = [

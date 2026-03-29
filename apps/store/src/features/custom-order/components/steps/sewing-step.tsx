@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { RadioChoiceField } from "@/shared/composite/radio-choice-field";
 import { CheckboxChoiceField } from "@/shared/composite/checkbox-choice-field";
 import { RadioGroup } from "@/shared/ui/radio-group";
 import { UtilityPagePanel } from "@/shared/composite/utility-page";
 import { toast } from "@/shared/lib/toast";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
 
 const SEWING_STYLES: {

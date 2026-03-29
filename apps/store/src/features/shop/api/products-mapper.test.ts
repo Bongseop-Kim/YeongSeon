@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ProductDTO } from "@yeongseon/shared/types/dto/product";
-import { toProduct, toProducts } from "@/features/shop/api/products-mapper";
+import { toProduct, toProducts } from "@/entities/shop";
 
 const record: ProductDTO = {
   id: 1,

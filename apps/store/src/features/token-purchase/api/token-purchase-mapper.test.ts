@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   mapCreateTokenPurchase,
   mapTokenPlans,
-} from "@/features/token-purchase/api/token-purchase-mapper";
+} from "@/entities/token-purchase";
 
 describe("mapTokenPlans", () => {
   it("설정 행을 starter/popular/pro plan으로 매핑한다", () => {

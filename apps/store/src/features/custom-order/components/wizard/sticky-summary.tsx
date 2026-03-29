@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import type { OrderOptions, PricingConfig } from "@/entities/custom-order";
 import {
   UtilityKeyValueRow,
   UtilityPageAside,
@@ -10,8 +11,6 @@ import {
   getTieTypeLabel,
 } from "@/features/custom-order/utils/option-labels";
 import { getEstimatedDays } from "@/features/custom-order/utils/pricing";
-import type { OrderOptions } from "@/features/custom-order/types/order";
-import type { PricingConfig } from "@/features/custom-order/types/pricing";
 
 interface StickySummaryProps {
   options: OrderOptions;

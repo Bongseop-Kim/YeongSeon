@@ -11,10 +11,7 @@ import {
 
 const TABLE_NAME = "shipping_addresses";
 
-/**
- * 현재 사용자의 모든 배송지 조회
- */
-export const getShippingAddresses = async (): Promise<ShippingAddress[]> => {
+const requireUserId = async (): Promise<string> => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -23,10 +20,27 @@ export const getShippingAddresses = async (): Promise<ShippingAddress[]> => {
     throw new Error("로그인이 필요합니다.");
   }
 
+  return user.id;
+};
+
+const mapUpsertedAddress = (record: ShippingAddressRecord | null) => {
+  if (!record) {
+    throw new Error("배송지 저장 결과를 받을 수 없습니다.");
+  }
+
+  return toShippingAddressView(record);
+};
+
+/**
+ * 현재 사용자의 모든 배송지 조회
+ */
+export const getShippingAddresses = async (): Promise<ShippingAddress[]> => {
+  const userId = await requireUserId();
+
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("is_default", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -42,22 +56,37 @@ export const getShippingAddresses = async (): Promise<ShippingAddress[]> => {
 };
 
 /**
+ * 배송지 삭제
+ *
+ * 직접 테이블 쓰기 예외: shipping_addresses DELETE
+ * 근거: supabase/schemas/11_shipping_addresses.sql RLS 정책
+ *   "user_id = auth.uid()" 로 소유권이 보장되며, 단일 원자 연산이므로 직접 삭제 허용.
+ */
+export const deleteShippingAddress = async (id: string): Promise<void> => {
+  const userId = await requireUserId();
+
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw new Error(`배송지 삭제 실패: ${error.message}`);
+  }
+};
+
+/**
  * 기본 배송지 조회
  */
 export const getDefaultShippingAddress =
   async (): Promise<ShippingAddress | null> => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error("로그인이 필요합니다.");
-    }
+    const userId = await requireUserId();
 
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("is_default", true)
       .single();
 
@@ -82,19 +111,13 @@ export const getDefaultShippingAddress =
 export const getShippingAddressById = async (
   id: string,
 ): Promise<ShippingAddress | null> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
+  const userId = await requireUserId();
 
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select("*")
     .eq("id", id)
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .single();
 
   if (error) {
@@ -125,7 +148,7 @@ export const createShippingAddress = async (
     throw new Error(`배송지 생성 실패: ${error.message}`);
   }
 
-  return toShippingAddressView(record as ShippingAddressRecord);
+  return mapUpsertedAddress(record as ShippingAddressRecord | null);
 };
 
 /**
@@ -143,5 +166,5 @@ export const updateShippingAddress = async (
     throw new Error(`배송지 업데이트 실패: ${error.message}`);
   }
 
-  return toShippingAddressView(record as ShippingAddressRecord);
+  return mapUpsertedAddress(record as ShippingAddressRecord | null);
 };

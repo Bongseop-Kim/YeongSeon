@@ -3,7 +3,7 @@ import {
   mapRecordToCoupon,
   mapRecordToUserCoupon,
   parseUserCouponRecords,
-} from "@/features/coupon/api/coupons-mapper";
+} from "@/entities/coupon";
 
 const createUserCouponRecordRaw = (
   overrides?: Partial<Record<string, unknown>>,

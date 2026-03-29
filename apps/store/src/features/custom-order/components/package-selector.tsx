@@ -1,8 +1,7 @@
+import type { OrderOptions, PricingConfig } from "@/entities/custom-order";
 import { RadioChoiceField } from "@/shared/composite/radio-choice-field";
 import { PACKAGE_PRESETS } from "@/features/custom-order/constants/PACKAGE_PRESETS";
 import { calculateTotalCost } from "@/features/custom-order/utils/pricing";
-import type { OrderOptions } from "@/features/custom-order/types/order";
-import type { PricingConfig } from "@/features/custom-order/types/pricing";
 import type { PackagePreset } from "@/features/custom-order/types/wizard";
 import { Badge } from "@/shared/ui/badge";
 import { RadioGroup } from "@/shared/ui/radio-group";

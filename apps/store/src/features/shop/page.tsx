@@ -12,7 +12,7 @@ import {
   PRICE_RANGE_OPTIONS,
   SORT_OPTIONS,
 } from "./constants/FILTER_OPTIONS";
-import { useProducts } from "./api/products-query";
+import { useProducts } from "@/entities/shop";
 import type {
   ProductCategory,
   ProductColor,

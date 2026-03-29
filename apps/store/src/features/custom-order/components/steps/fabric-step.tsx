@@ -1,8 +1,8 @@
 import { useFormContext } from "react-hook-form";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { RadioChoiceField } from "@/shared/composite/radio-choice-field";
 import { RadioGroup } from "@/shared/ui/radio-group";
 import { UtilityPagePanel } from "@/shared/composite/utility-page";
-import type { QuoteOrderOptions } from "@/features/custom-order/types/order";
 import { StepLayout } from "./step-layout";
 
 interface FabricCard {

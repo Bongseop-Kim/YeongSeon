@@ -14,7 +14,7 @@ export { WIZARD_STEPS } from "./constants/WIZARD_STEPS";
 export { useImageUpload } from "./hooks/useImageUpload";
 export { useCustomOrderSubmit } from "./hooks/useCustomOrderSubmit";
 export { useWizardStep } from "./hooks/useWizardStep";
-export type { OrderOptions, QuoteOrderOptions } from "./types/order";
+export type { OrderOptions, QuoteOrderOptions } from "@/entities/custom-order";
 export type { PackagePreset, WizardStepId } from "./types/wizard";
 export { calculateTotalCost } from "./utils/pricing";
 export {

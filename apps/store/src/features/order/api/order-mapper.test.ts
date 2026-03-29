@@ -8,7 +8,7 @@ import {
   parseOrderDetailRow,
   parseOrderItemRows,
   parseOrderListRows,
-} from "@/features/order/api/order-mapper";
+} from "@/entities/order";
 import {
   createAppliedCoupon,
   createProduct,
