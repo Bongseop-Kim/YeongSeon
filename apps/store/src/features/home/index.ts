@@ -1,4 +1,3 @@
-export { default as HomePage } from "./page";
 export { EsAiDesign } from "./components/es-ai-design";
 export { EsBrandStory } from "./components/es-brand-story";
 export { EsCta } from "./components/es-cta";

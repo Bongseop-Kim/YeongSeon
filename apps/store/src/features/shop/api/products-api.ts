@@ -8,7 +8,7 @@ import type {
   SortOption,
 } from "@yeongseon/shared/types/view/product";
 import type { ProductDTO } from "@yeongseon/shared/types/dto/product";
-import { toProduct, toProducts } from "@/features/shop/api/products-mapper";
+import { toProducts } from "@/features/shop/api/products-mapper";
 
 const PRODUCT_VIEW = "product_list_view";
 
@@ -87,22 +87,4 @@ export const getProducts = async (
   }
 
   return toProducts(records);
-};
-
-/**
- * ID로 제품 조회
- */
-export const getProductById = async (id: number): Promise<Product | null> => {
-  const { data, error } = await supabase
-    .from(PRODUCT_VIEW)
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`제품 조회 실패: ${error.message}`);
-  }
-
-  const record: ProductDTO | null = data ?? null;
-  return record ? toProduct(record) : null;
 };

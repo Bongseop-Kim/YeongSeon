@@ -95,7 +95,8 @@ const forbidden = [
       "entities 내 cross-slice 금지. 허용: quote-request→custom-order, auth→design, token-purchase→{payment,design}, my-page→{auth,design}, claim→order",
     from: {
       path: "^src/entities/([^/]+)/",
-      pathNot: "^src/entities/(quote-request|auth|token-purchase|my-page|claim)/",
+      pathNot:
+        "^src/entities/(quote-request|auth|token-purchase|my-page|claim)/",
     },
     to: {
       path: "^src/entities/",
@@ -118,7 +119,8 @@ const forbidden = [
   {
     name: "fsd-features-public-api",
     severity: "error",
-    comment: "features 내부 파일은 index.ts를 통해서만 접근 (widgets, pages, app에서)",
+    comment:
+      "features 내부 파일은 index.ts를 통해서만 접근 (widgets, pages, app에서)",
     from: { path: "^src/(widgets|pages|app)/" },
     to: {
       path: "^src/features/([^/]+)/(?!index\\.ts)",

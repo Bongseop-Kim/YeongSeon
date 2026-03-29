@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Typography, Spin, Result } from "antd";
 import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW } from "@yeongseon/shared";
-import { useDefaultCourier } from "@/features/settings/api/settings-query";
+import { useDefaultCourier } from "@/entities/settings";
 import {
   useAdminOrderDetail,
   useAdminOrderItems,

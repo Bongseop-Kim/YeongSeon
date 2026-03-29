@@ -5,7 +5,6 @@ import {
   getShippingAddressById,
   createShippingAddress,
   updateShippingAddress,
-  deleteShippingAddress,
 } from "@/entities/shipping/api/shipping-api";
 import type { ShippingAddressInput } from "@/entities/shipping/model/shipping-address";
 import { toast } from "@/shared/lib/toast";
@@ -116,31 +115,6 @@ export const useUpdateShippingAddress = () => {
         error instanceof Error
           ? error.message
           : "배송지 수정에 실패했습니다. 다시 시도해주세요.";
-      toast.error(errorMessage);
-    },
-  });
-};
-
-/**
- * 배송지 삭제 뮤테이션
- */
-export const useDeleteShippingAddress = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteShippingAddress,
-    onSuccess: () => {
-      // 배송지 목록 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
-      queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
-      toast.success("배송지가 삭제되었습니다.");
-    },
-    onError: (error) => {
-      console.error("Shipping address deletion error:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "배송지 삭제에 실패했습니다. 다시 시도해주세요.";
       toast.error(errorMessage);
     },
   });

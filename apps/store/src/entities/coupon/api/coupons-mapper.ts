@@ -106,7 +106,7 @@ export const parseUserCouponRecords = (data: unknown): UserCouponRecord[] => {
 
 // ── record → view 변환 ──────────────────────────────
 
-export const mapRecordToCoupon = (record: CouponRecord): Coupon => ({
+const mapRecordToCoupon = (record: CouponRecord): Coupon => ({
   id: record.id,
   name: record.name,
   discountType: record.discount_type,

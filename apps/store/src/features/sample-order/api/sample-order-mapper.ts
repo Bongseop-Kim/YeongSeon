@@ -10,7 +10,7 @@ import type {
   SampleOrderOptionsDto,
 } from "@/features/sample-order/types/sample-order-input";
 
-export interface CreateSampleOrderFormInput {
+interface CreateSampleOrderFormInput {
   shippingAddressId: string;
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
   options: SampleOrderOptionsDto;

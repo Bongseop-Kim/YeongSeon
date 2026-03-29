@@ -145,30 +145,3 @@ export const updateShippingAddress = async (
 
   return toShippingAddressView(record as ShippingAddressRecord);
 };
-
-/**
- * 배송지 삭제
- *
- * 직접 테이블 쓰기 예외: shipping_addresses DELETE
- * 근거: supabase/schemas/11_shipping_addresses.sql RLS 정책
- *   "user_id = auth.uid()" 로 소유권이 보장되며, 단일 원자 연산이므로 직접 삭제 허용.
- */
-export const deleteShippingAddress = async (id: string): Promise<void> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
-  const { error } = await supabase
-    .from(TABLE_NAME)
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user.id);
-
-  if (error) {
-    throw new Error(`배송지 삭제 실패: ${error.message}`);
-  }
-};

@@ -6,7 +6,6 @@ export {
 export {
   DEFAULT_MARKETING_CONSENT,
   applyMarketingConsentToggle,
-  toUserProfile,
 } from "./api/profile-mapper";
 export {
   useRequestEmailChangeCode,
@@ -18,17 +17,4 @@ export {
   useRequestTokenRefundMutation,
   useCancelTokenRefundMutation,
 } from "./api/token-refund-query";
-export {
-  getRefundableTokenOrders,
-  requestTokenRefund,
-  cancelTokenRefund,
-} from "./api/token-refund-api";
-export type {
-  NotRefundableReason,
-  RefundableTokenOrder,
-} from "./api/token-refund-api";
-export type {
-  MarketingConsent,
-  MarketingConsentToggleInput,
-  UserProfile,
-} from "./model/profile";
+export type { RefundableTokenOrder } from "./api/token-refund-api";

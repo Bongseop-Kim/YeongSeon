@@ -8,4 +8,3 @@ export {
   notificationStatusKeys,
   useNotificationStatus,
 } from "./api/notification-status-query";
-export type { NotificationStatus } from "./model/notification-status";

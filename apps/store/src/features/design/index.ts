@@ -1,4 +1,3 @@
-export { default as DesignPage } from "./page";
 export { ChatPanel } from "./components/chat/chat-panel";
 export { MobileHistorySheet } from "./components/history/mobile-history-sheet";
 export { OnboardingDialog } from "./components/onboarding-dialog";

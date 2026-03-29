@@ -1,12 +1,7 @@
 import type { ContextChip } from "@/features/design/types/chat";
-import type { DesignTokenHistoryItem } from "@/features/design/types/token-history";
 import type { AiDesignRequest } from "@/features/design/types/ai-design-request";
 import { supabase } from "@/shared/lib/supabase";
-import {
-  getTags,
-  toDesignTokenHistoryItem,
-  type DesignTokenRow,
-} from "@/features/design/api/ai-design-mapper";
+import { getTags } from "@/features/design/api/ai-design-mapper";
 export type { AiDesignRequest };
 
 export interface AiDesignResponse {
@@ -138,20 +133,4 @@ export async function getDesignTokenBalance(): Promise<DesignTokenBalance> {
     paid: raw?.paid ?? 0,
     bonus: raw?.bonus ?? 0,
   };
-}
-
-export async function getDesignTokenHistory(): Promise<
-  DesignTokenHistoryItem[]
-> {
-  const { data, error } = await supabase
-    .from("design_tokens")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error(`토큰 내역 조회 실패: ${error.message}`);
-  }
-
-  const rows: DesignTokenRow[] = data ?? [];
-  return rows.map(toDesignTokenHistoryItem);
 }

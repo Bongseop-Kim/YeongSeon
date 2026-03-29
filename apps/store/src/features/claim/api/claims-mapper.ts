@@ -4,11 +4,8 @@ import type {
   ClaimStatusDTO,
   ClaimTypeDTO,
 } from "@yeongseon/shared/types/dto/claim-view";
-import type { CreateClaimInputDTO } from "@yeongseon/shared/types/dto/claim-input";
-import type { CreateClaimResultDTO } from "@yeongseon/shared/types/dto/claim-output";
 import type { ClaimItem } from "@yeongseon/shared/types/view/claim-item";
 import type { OrderItem } from "@yeongseon/shared/types/view/order";
-import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-input";
 import {
   normalizeItemRow,
   parseCustomOrderData,
@@ -412,21 +409,6 @@ export const parseClaimListRows = (data: unknown): ClaimListRowDTO[] => {
   });
 };
 
-export const parseCreateClaimResult = (data: unknown): CreateClaimResultDTO => {
-  if (!isRecord(data)) {
-    throw new Error("클레임 생성 응답이 올바르지 않습니다: 객체가 아닙니다.");
-  }
-  if (
-    typeof data.claim_id !== "string" ||
-    typeof data.claim_number !== "string"
-  ) {
-    throw new Error(
-      "클레임 생성 응답이 올바르지 않습니다: claim_id 또는 claim_number 누락.",
-    );
-  }
-  return { claim_id: data.claim_id, claim_number: data.claim_number };
-};
-
 // ── row → DTO 변환 ──────────────────────────────────
 
 /**
@@ -456,17 +438,3 @@ export const toClaimItemView = (row: ClaimListRowDTO): ClaimItem => {
       : null,
   };
 };
-
-/**
- * CreateClaimRequest (View) → CreateClaimInputDTO (RPC params)
- */
-export const toCreateClaimInputDTO = (
-  request: CreateClaimRequest,
-): CreateClaimInputDTO => ({
-  p_type: request.type,
-  p_order_id: request.orderId,
-  p_item_id: request.itemId,
-  p_reason: request.reason,
-  p_description: request.description ?? null,
-  p_quantity: request.quantity ?? null,
-});

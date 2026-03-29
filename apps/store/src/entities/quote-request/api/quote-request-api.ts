@@ -18,7 +18,6 @@ interface CreateQuoteRequestResponse {
 }
 
 export type { CreateQuoteRequestRequest };
-export type { QuoteRequestListItem } from "@yeongseon/shared";
 
 export const createQuoteRequest = async (
   request: CreateQuoteRequestRequest,

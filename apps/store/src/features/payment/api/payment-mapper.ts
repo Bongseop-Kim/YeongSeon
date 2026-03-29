@@ -1,6 +1,6 @@
 import { isRecord } from "@/shared/lib/type-guard";
 
-export interface OrderConfirmPaymentResponse {
+interface OrderConfirmPaymentResponse {
   type?: never;
   paymentKey: string;
   paymentGroupId: string;
@@ -12,7 +12,7 @@ export interface OrderConfirmPaymentResponse {
   status: string;
 }
 
-export interface TokenPurchaseConfirmPaymentResponse {
+interface TokenPurchaseConfirmPaymentResponse {
   type: "token_purchase";
   paymentKey: string;
   paymentGroupId: string;
@@ -25,7 +25,7 @@ export interface TokenPurchaseConfirmPaymentResponse {
   status: string;
 }
 
-export type ConfirmPaymentResponse =
+type ConfirmPaymentResponse =
   | OrderConfirmPaymentResponse
   | TokenPurchaseConfirmPaymentResponse;
 

@@ -1,5 +1,5 @@
 import { List } from "@refinedev/antd";
-import { ClaimListTable } from "@/features/claims/components/claim-list-table";
+import { ClaimListTable } from "@/features/claims";
 
 export default function ClaimList() {
   return (

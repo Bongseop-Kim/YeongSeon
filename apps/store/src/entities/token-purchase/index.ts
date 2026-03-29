@@ -3,8 +3,4 @@ export {
   useCreateTokenPurchaseMutation,
   useConfirmTokenPurchase,
 } from "./api/token-purchase-query";
-export type {
-  TokenPlan,
-  TokenPlanKey,
-  CreateTokenPurchaseResult,
-} from "./api/token-purchase-api";
+export type { TokenPlan, TokenPlanKey } from "./api/token-purchase-api";

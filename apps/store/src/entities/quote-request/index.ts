@@ -13,5 +13,3 @@ export {
   parseQuoteRequestDetailRow,
   toQuoteRequestDetail,
 } from "./api/quote-request-mapper";
-export type { CreateQuoteRequestRequest } from "./api/quote-request-api";
-export type { CreateQuoteRequestRequestDto } from "./model/dto/quote-request-input";

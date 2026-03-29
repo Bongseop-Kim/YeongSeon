@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { getProducts, getProductById } from "@/features/shop/api/products-api";
+import { getProducts } from "@/features/shop/api/products-api";
 import type { ProductFilters } from "@/features/shop/api/products-api";
 
 /**
  * 제품 쿼리 키
  */
-export const productKeys = {
+const productKeys = {
   all: ["products"] as const,
   lists: () => [...productKeys.all, "list"] as const,
   list: (filters?: ProductFilters) =>
@@ -28,19 +28,5 @@ export const useProducts = (
     refetchOnWindowFocus: false,
     retry: 1,
     enabled: options?.enabled !== false,
-  });
-};
-
-/**
- * ID로 제품 조회 쿼리
- */
-export const useProduct = (id: number) => {
-  return useQuery({
-    queryKey: productKeys.detail(id),
-    queryFn: () => getProductById(id),
-    enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5분
-    refetchOnWindowFocus: false,
-    retry: 1,
   });
 };

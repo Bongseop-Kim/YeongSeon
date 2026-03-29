@@ -72,7 +72,7 @@ export const getTags = (request: AiDesignRequest): string[] => {
   return tags.length > 0 ? tags : DEFAULT_TAGS;
 };
 
-export interface DesignTokenRow {
+interface DesignTokenRow {
   id: string;
   user_id: string;
   amount: number;

@@ -105,16 +105,6 @@ function useAdminSettingForm<TValue>({
   };
 }
 
-export function useDefaultCourier(): string | undefined {
-  const { result } = useOne<AdminSettingRowDTO>({
-    resource: SETTING_RESOURCE,
-    id: DEFAULT_COURIER_COMPANY_KEY,
-    meta: SETTING_ID_META,
-  });
-
-  return result?.value ?? undefined;
-}
-
 export function useDefaultCourierForm() {
   const fromDTO = useCallback(
     (dto: AdminSettingRowDTO | undefined) =>

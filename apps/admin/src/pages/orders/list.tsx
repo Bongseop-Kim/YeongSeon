@@ -4,7 +4,7 @@ import { useGo } from "@refinedev/core";
 import { useSearchParams } from "react-router-dom";
 import { ORDER_TYPE_LABELS } from "@yeongseon/shared";
 import type { OrderType } from "@yeongseon/shared";
-import { DomainOrderTable } from "@/features/orders/components/domain-order-table";
+import { DomainOrderTable } from "@/features/orders";
 
 const VALID_ORDER_TYPES = Object.keys(ORDER_TYPE_LABELS) as OrderType[];
 
