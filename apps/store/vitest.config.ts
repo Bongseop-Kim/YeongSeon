@@ -39,29 +39,42 @@ export default mergeConfig(
           "src/main.tsx",
           "src/App.tsx",
           // UI (컴포넌트 테스트는 별도 측정 가능)
-          "src/components/ui/**",
+          "src/shared/ui/**",
+          "src/shared/composite/**",
+          "src/shared/layout/**",
           "src/**/components/**/*.tsx",
           "src/**/page.tsx",
           "src/**/pages/**/*.tsx",
+          "src/pages/**",
+          "src/widgets/**",
           // 인프라
-          "src/providers/**",
-          "src/routes/**",
+          "src/app/layout/**",
+          "src/app/providers/**",
+          "src/app/router/**",
           "src/store/**",
           "src/**/store/**",
+          // 타입 선언 파일
+          "src/**/*.d.ts",
           // 타입 전용
           "src/**/types/**",
+          "src/**/model/**",
           // 타입 전용 파일 (런타임 코드 없음)
           "src/**/*-types.ts",
+          // FSD public API 배럴 (re-export 전용)
+          "src/**/index.ts",
           // 외부 서비스 초기화/래퍼
-          "src/lib/supabase.ts",
-          "src/lib/imagekit.ts",
-          "src/lib/query-client.ts",
-          "src/lib/toast.ts",
-          "src/lib/utils.ts",
+          "src/shared/lib/supabase.ts",
+          "src/shared/lib/imagekit.ts",
+          "src/shared/lib/query-client.ts",
+          "src/shared/lib/toast.ts",
+          "src/shared/lib/utils.ts",
+          "src/shared/lib/type-guard.ts",
+          "src/shared/ui-extended/**",
           "src/features/design/api/imagekit-upload.ts",
           // 얇은 래퍼 / re-export 전용
-          "src/features/order/custom-payment/storage.ts",
           "src/features/order/custom-payment/types.ts",
+          // entities 레이어 (API 파일과 함께 인프라 레이어로 처리 — features에 동등한 mapper가 별도 존재)
+          "src/entities/**",
           // API 레이어 (Supabase 직접 호출)
           "src/**/*-api.ts",
           "src/**/*-query.ts",
