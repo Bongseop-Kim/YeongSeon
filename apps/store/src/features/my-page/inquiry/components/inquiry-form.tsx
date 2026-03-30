@@ -16,8 +16,8 @@ import { Image } from "@imagekit/react";
 import {
   INQUIRY_CATEGORIES,
   type InquiryCategory,
-} from "@/features/my-page/inquiry/types/inquiry-item";
-import { useProductSearchForInquiry } from "@/features/my-page/inquiry/api/inquiry-query";
+  useProductSearchForInquiry,
+} from "@/entities/inquiry";
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 
 export interface InquiryFormData {

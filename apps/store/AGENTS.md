@@ -56,7 +56,7 @@
 - 상위 레이어(`pages`, 다른 슬라이스)는 슬라이스 내부 구현 파일이 아니라 해당 슬라이스의 public API(`index.ts`)를 통해 import한다.
 - `entities`에는 UI를 두지 않는다. 새 `.tsx` 파일 추가 금지.
 - cross-feature 조합이 필요하면 `features`에 억지로 넣지 말고 `widgets`로 올린다.
-- Supabase 직접 호출은 `entities/*/api/`, `features/*/api/`, `shared/lib/`, `app/providers/` 에서만 허용한다.
+- Supabase 직접 호출은 `entities/*/api/`, `shared/lib/`, `app/providers/` 에서만 허용한다.
 - `pages/` 파일은 실제 UI 코드를 가져야 한다. 다른 레이어를 단순 re-export하는 1줄 wrapper 파일은 금지한다. router(app 레이어)는 `pages`를 반드시 경유하지 않아도 되며, `widgets`나 `features`에서 직접 import할 수 있다.
 
 새 파일 위치:

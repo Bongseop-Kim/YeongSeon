@@ -1,4 +1,4 @@
-export { useUploadTieImages } from "./api/reform-query";
-export { toReformCartItems, toReformData } from "./api/reform-mapper";
+export { useUploadTieImages } from "./hooks/useUploadTieImages";
+export { toReformCartItems, toReformData } from "@/entities/reform";
 export { default as TieItemCard } from "./components/tie-item-card";
 export { MobileReformSheet } from "./components/mobile-reform-sheet";

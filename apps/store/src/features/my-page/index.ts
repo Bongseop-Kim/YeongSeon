@@ -8,11 +8,8 @@ export {
   useDeleteInquiry,
   useInquiries,
   useUpdateInquiry,
-} from "./inquiry/api/inquiry-query";
-export {
-  INQUIRY_CATEGORIES,
-  type InquiryCategory,
-} from "./inquiry/types/inquiry-item";
+} from "@/entities/inquiry";
+export { INQUIRY_CATEGORIES, type InquiryCategory } from "@/entities/inquiry";
 export {
   EMAIL_CODE_LENGTH,
   useEmailChange,

@@ -9,7 +9,7 @@ import {
   QUICK_CHIPS,
   WELCOME_MESSAGE,
 } from "@/features/design/constants/welcome";
-import { useDesignTokenBalanceQuery } from "@/features/design/api/ai-design-query";
+import { useDesignTokenBalanceQuery } from "@/features/design/hooks/ai-design-query";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
 import { cn } from "@/shared/lib/utils";

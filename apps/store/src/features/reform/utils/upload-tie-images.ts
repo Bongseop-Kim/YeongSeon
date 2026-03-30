@@ -1,8 +1,7 @@
 import { upload } from "@imagekit/react";
-import { IMAGEKIT_PUBLIC_KEY } from "@/shared/lib/imagekit";
-import type { TieItem } from "@yeongseon/shared/types/view/reform";
+import { getImageKitAuth, IMAGEKIT_PUBLIC_KEY } from "@/shared/lib/imagekit";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
-import { getImageKitAuth } from "@/features/reform/api/reform-api";
+import type { TieItem } from "@yeongseon/shared/types/view/reform";
 
 /**
  * TieItem 배열의 File 이미지를 ImageKit에 업로드하고 URL 문자열로 교체

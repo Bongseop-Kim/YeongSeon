@@ -2,16 +2,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useAiDesignMutation,
   DESIGN_TOKEN_BALANCE_QUERY_KEY,
-} from "@/features/design/api/ai-design-query";
+} from "@/features/design/hooks/ai-design-query";
 import {
   type AiDesignResponse,
   InsufficientTokensError,
-} from "@/features/design/api/ai-design-api";
+} from "@/entities/design";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment, Message } from "@/features/design/types/chat";
-import { uploadGeneratedImage } from "@/features/design/api/imagekit-upload";
-import { useSaveDesignSessionMutation } from "@/features/design/api/design-session-query";
-import { toPreviewBackground } from "@/features/design/utils";
+import { toPreviewBackground } from "@/shared/lib/to-preview-background";
+import { uploadGeneratedImage } from "@/features/design/utils/imagekit-upload";
+import { useSaveDesignSessionMutation } from "@/features/design/hooks/design-session-query";
 
 interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
@@ -71,7 +71,7 @@ export function useDesignChat(): UseDesignChatResult {
         id: aiMessageId,
         role: "ai",
         content: data.aiMessage,
-        imageUrl: previewBackground,
+        imageUrl: data.imageUrl ?? undefined,
         contextChips: data.contextChips,
         timestamp: Date.now(),
       };
@@ -108,8 +108,7 @@ export function useDesignChat(): UseDesignChatResult {
             id: m.id,
             role: m.role,
             content: m.content,
-            imageUrl:
-              m.id === aiMessageId ? rawImageUrl : (m.rawImageUrl ?? null),
+            imageUrl: m.id === aiMessageId ? rawImageUrl : (m.imageUrl ?? null),
             imageFileId: m.id === aiMessageId ? rawImageFileId : null,
             sequenceNumber: idx,
           }));

@@ -198,7 +198,7 @@ stateDiagram-v2
 | `packages/shared/src/constants/claim-status.ts`       | 클레임 상태 상수                                                        |
 | `packages/shared/src/constants/claim-actions.ts`      | 클레임 액션 상수                                                        |
 | `apps/store/src/features/claim/claim-detail/page.tsx` | 클레임 상세 페이지 (읽기 전용)                                          |
-| `apps/store/src/features/claim/api/claims-api.ts`     | `getClaim`, `cancelClaim` 포함                                          |
+| `apps/store/src/entities/claim/api/claims-api.ts`     | `getClaim`, `cancelClaim` 포함                                          |
 
 ## 횡단 참조
 

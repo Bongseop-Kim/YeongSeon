@@ -45,7 +45,7 @@ vi.mock("@/shared/store/auth", () => ({
     selector(authState),
 }));
 
-vi.mock("@/features/cart/api/cart-query", () => ({
+vi.mock("@/entities/cart", () => ({
   cartKeys: {
     items: (userId?: string) => ["cart", "items", userId],
     guest: () => ["cart", "guest"],
@@ -53,9 +53,6 @@ vi.mock("@/features/cart/api/cart-query", () => ({
   useSetCartItems: () => ({
     mutateAsync,
   }),
-}));
-
-vi.mock("@/features/cart/api/cart-api", () => ({
   getCartItems,
 }));
 

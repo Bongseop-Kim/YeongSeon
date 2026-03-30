@@ -3,6 +3,7 @@ import { TieMask } from "@/features/design/components/preview/tie-mask";
 import type { Message } from "@/features/design/types/chat";
 import { cn } from "@/shared/lib/utils";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
+import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 
 interface MessageBubbleProps {
   message: Message;
@@ -19,6 +20,9 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const { isMobile } = useBreakpoint();
+  const previewBackground = message.imageUrl
+    ? toPreviewBackground(message.imageUrl)
+    : undefined;
   const timestamp = new Intl.DateTimeFormat("ko-KR", {
     hour: "2-digit",
     minute: "2-digit",
@@ -56,7 +60,7 @@ export function MessageBubble({
         {message.content}
       </div>
       {!isUser &&
-        message.imageUrl &&
+        previewBackground &&
         isMobile &&
         (onTiePreviewClick ? (
           <button
@@ -64,11 +68,11 @@ export function MessageBubble({
             aria-label="넥타이 프리뷰 확대"
             className="cursor-pointer"
             onClick={() => {
-              if (message.imageUrl) onTiePreviewClick(message.imageUrl);
+              onTiePreviewClick(previewBackground);
             }}
           >
             <TieMask
-              imageUrl={message.imageUrl}
+              imageUrl={previewBackground}
               width={128}
               height={244}
               shadowClassName="top-[-22px]"
@@ -76,17 +80,17 @@ export function MessageBubble({
           </button>
         ) : (
           <TieMask
-            imageUrl={message.imageUrl}
+            imageUrl={previewBackground}
             width={128}
             height={244}
             shadowClassName="top-[-22px]"
           />
         ))}
-      {!isUser && message.imageUrl && !isMobile && onImageIndicatorClick ? (
+      {!isUser && previewBackground && !isMobile && onImageIndicatorClick ? (
         <button
           type="button"
           className="inline-flex items-center gap-1.5 rounded border border-green-200 bg-green-50 px-2 py-1 text-xs text-green-700 transition-colors hover:bg-green-100"
-          onClick={() => onImageIndicatorClick(message.imageUrl ?? "")}
+          onClick={() => onImageIndicatorClick(previewBackground)}
         >
           <span>🖼</span>
           <span>이미지 생성됨 · 우측 프리뷰 확인</span>

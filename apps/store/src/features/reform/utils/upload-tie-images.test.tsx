@@ -11,9 +11,6 @@ vi.mock("@imagekit/react", () => ({
 
 vi.mock("@/shared/lib/imagekit", () => ({
   IMAGEKIT_PUBLIC_KEY: "public-key",
-}));
-
-vi.mock("@/features/reform/api/reform-api", () => ({
   getImageKitAuth,
 }));
 

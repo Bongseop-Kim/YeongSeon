@@ -1,6 +1,6 @@
 import { Badge } from "@/shared/ui/badge";
 import { cn } from "@/shared/lib/utils";
-import type { QuoteRequestListItem } from "@/features/quote-request/api/quote-request-api";
+import type { QuoteRequestListItem } from "@yeongseon/shared";
 import {
   CONTACT_METHOD_LABELS,
   type QuoteRequestStatus,

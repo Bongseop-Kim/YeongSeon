@@ -73,7 +73,11 @@ export default mergeConfig(
           "src/shared/lib/utils.ts",
           "src/shared/lib/type-guard.ts",
           "src/shared/ui-extended/**",
-          "src/features/design/api/imagekit-upload.ts",
+          "src/features/design/utils/imagekit-upload.ts",
+          // 애니메이션 상수 전용 (런타임 로직 없음)
+          "src/features/home/components/home-motion.ts",
+          // 얇은 React Query mutation 래퍼
+          "src/features/reform/hooks/useUploadTieImages.ts",
           // 얇은 래퍼 / re-export 전용
           "src/features/order/custom-payment/types.ts",
           // entities 레이어 (API 파일과 함께 인프라 레이어로 처리 — features에 동등한 mapper가 별도 존재)

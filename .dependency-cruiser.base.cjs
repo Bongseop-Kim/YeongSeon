@@ -155,12 +155,11 @@ const forbidden = [
     name: "no-supabase-outside-api-layer",
     severity: "error",
     comment:
-      "Supabase 클라이언트 직접 호출은 entities/*/api/, features/*/api/, shared/lib/, app/providers/ 에서만 허용",
+      "Supabase 클라이언트 직접 호출은 entities/*/api/, shared/lib/, app/providers/ 에서만 허용",
     from: {
       path: "^src/",
       pathNot: [
         "^src/entities/[^/]+/api/",
-        "^src/features/[^/]+/api/",
         "^src/shared/lib/",
         "^src/app/providers/",
       ],
