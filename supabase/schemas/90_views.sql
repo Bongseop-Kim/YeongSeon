@@ -162,7 +162,11 @@ LEFT JOIN LATERAL (
   JOIN public.coupons c ON c.id = uc1.coupon_id
   WHERE uc1.id = oi.applied_user_coupon_id
   LIMIT 1
-) uc ON true;
+) uc ON true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.claims cl
+  WHERE cl.order_item_id = oi.id
+);
 
 -- ── claim_list_view ──────────────────────────────────────────
 CREATE OR REPLACE VIEW public.claim_list_view

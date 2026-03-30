@@ -87,9 +87,14 @@ export default function OrderListPage() {
   );
 
   const filteredOrders = useMemo(() => {
-    if (activeTab === "전체") return orders;
-    const orderType = ORDER_TYPE_MAP[activeTab];
-    return orders.filter((order) => order.orderType === orderType);
+    const byType =
+      activeTab === "전체"
+        ? orders
+        : orders.filter(
+            (order) => order.orderType === ORDER_TYPE_MAP[activeTab],
+          );
+
+    return byType.filter((order) => order.items.length > 0);
   }, [orders, activeTab]);
 
   const handleClaimRequest = (
@@ -122,20 +127,18 @@ export default function OrderListPage() {
                 description="검색과 기간 필터, 주문 유형 탭은 상단 공용 도구를 사용합니다."
               >
                 {filteredOrders.length === 0 ? (
-                  <div>
-                    <Empty
-                      title={
-                        activeTab === "전체"
-                          ? "주문 내역이 없습니다."
-                          : `${activeTab} 내역이 없습니다.`
-                      }
-                      description={
-                        activeTab === "전체"
-                          ? "첫 주문을 시작해보세요!"
-                          : `${activeTab}에 해당하는 주문이 없습니다.`
-                      }
-                    />
-                  </div>
+                  <Empty
+                    title={
+                      activeTab === "전체"
+                        ? "주문 내역이 없습니다."
+                        : `${activeTab} 내역이 없습니다.`
+                    }
+                    description={
+                      activeTab === "전체"
+                        ? "첫 주문을 시작해보세요!"
+                        : `${activeTab}에 해당하는 주문이 없습니다.`
+                    }
+                  />
                 ) : (
                   filteredOrders.map((order) => (
                     <article
