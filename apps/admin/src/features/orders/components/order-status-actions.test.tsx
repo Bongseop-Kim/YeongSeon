@@ -33,7 +33,7 @@ function createOrder(
 
 describe("OrderStatusActions", () => {
   it("롤백 모달에서 사유를 입력해야 롤백이 실행된다", async () => {
-    const onRollback = vi.fn().mockResolvedValue(undefined);
+    const onRollback = vi.fn().mockResolvedValue(true);
 
     render(
       <App>
@@ -58,10 +58,58 @@ describe("OrderStatusActions", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "롤백" }));
 
-    await waitFor(() => {
-      expect(onRollback).not.toHaveBeenCalled();
-    });
+    expect(onRollback).not.toHaveBeenCalled();
 
+    fireEvent.change(screen.getByPlaceholderText("롤백 사유 (필수)"), {
+      target: { value: "관리자 확인 후 롤백" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "롤백" }));
+
+    expect(onRollback).toHaveBeenCalledWith("대기중", "관리자 확인 후 롤백");
+  });
+
+  it("상태 변경 실패 시 모달을 닫지 않는다", async () => {
+    const onStatusChange = vi.fn().mockResolvedValue(false);
+
+    render(
+      <App>
+        <OrderStatusActions
+          order={createOrder()}
+          nextStatus="진행중"
+          rollbackStatus="대기중"
+          onStatusChange={onStatusChange}
+          onRollback={vi.fn().mockResolvedValue(true)}
+          isUpdating={false}
+        />
+      </App>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "진행중으로 변경" }));
+    fireEvent.click(screen.getByRole("button", { name: "변경" }));
+
+    await waitFor(() => {
+      expect(onStatusChange).toHaveBeenCalledWith("진행중", "");
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+  });
+
+  it("롤백 실패 시 모달을 닫지 않는다", async () => {
+    const onRollback = vi.fn().mockResolvedValue(false);
+
+    render(
+      <App>
+        <OrderStatusActions
+          order={createOrder()}
+          nextStatus="진행중"
+          rollbackStatus="대기중"
+          onStatusChange={vi.fn().mockResolvedValue(true)}
+          onRollback={onRollback}
+          isUpdating={false}
+        />
+      </App>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "대기중으로 롤백" }));
     fireEvent.change(screen.getByPlaceholderText("롤백 사유 (필수)"), {
       target: { value: "관리자 확인 후 롤백" },
     });
@@ -69,6 +117,32 @@ describe("OrderStatusActions", () => {
 
     await waitFor(() => {
       expect(onRollback).toHaveBeenCalledWith("대기중", "관리자 확인 후 롤백");
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+  });
+
+  it("취소 실패 시 모달을 닫지 않는다", async () => {
+    const onStatusChange = vi.fn().mockResolvedValue(false);
+
+    render(
+      <App>
+        <OrderStatusActions
+          order={createOrder()}
+          nextStatus="진행중"
+          rollbackStatus="대기중"
+          onStatusChange={onStatusChange}
+          onRollback={vi.fn().mockResolvedValue(true)}
+          isUpdating={false}
+        />
+      </App>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "취소 처리" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "취소 처리" })[1]);
+
+    await waitFor(() => {
+      expect(onStatusChange).toHaveBeenCalledWith("취소", "");
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
   });
 });

@@ -33,6 +33,7 @@ export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
   },
   token: { 대기중: "완료" },
   sample: {
+    대기중: "접수",
     접수: "제작중",
     제작중: "배송중",
     배송중: "배송완료",

@@ -44,42 +44,68 @@ vi.mock("@refinedev/antd", async () => {
   };
 });
 
+function createFixture(overrides?: {
+  isMobile?: boolean;
+  menuItems?: Array<{
+    key: string;
+    name: string;
+    label: string;
+    children: [];
+    meta: Record<string, never>;
+    list: string;
+  }>;
+  selectedKey?: string;
+  defaultOpenKeys?: string[];
+}) {
+  const menuItems = overrides?.menuItems ?? [
+    {
+      key: "orders",
+      name: "orders",
+      label: "주문 관리",
+      children: [],
+      meta: {},
+      list: "/orders",
+    },
+  ];
+
+  return {
+    isMobile: overrides?.isMobile ?? false,
+    menuData: {
+      menuItems,
+      selectedKey: overrides?.selectedKey ?? "orders",
+      defaultOpenKeys: overrides?.defaultOpenKeys ?? [],
+    },
+  };
+}
+
 describe("AdminSider", () => {
-  it("선택된 메뉴도 다시 클릭할 수 있다", () => {
-    useIsMobileMock.mockReturnValue(false);
-    useMenuMock.mockReturnValue({
-      menuItems: [
-        {
-          key: "orders",
-          name: "orders",
-          label: "주문 관리",
-          children: [],
-          meta: {},
-          list: "/orders",
-        },
-      ],
-      selectedKey: "orders",
-      defaultOpenKeys: [],
-    });
-    useLinkMock.mockReturnValue(
-      ({
-        to,
-        children,
-        style,
-      }: {
-        to: string;
-        children: ReactNode;
-        style?: CSSProperties;
-      }) => (
-        <a href={to} style={style}>
-          {children}
-        </a>
-      ),
+  it("선택된 메뉴도 다시 클릭할 수 있다", async () => {
+    const fixture = createFixture();
+
+    useIsMobileMock.mockImplementation(() => fixture.isMobile);
+    useMenuMock.mockImplementation(() => fixture.menuData);
+    useLinkMock.mockImplementation(
+      () =>
+        ({
+          to,
+          children,
+          style,
+        }: {
+          to: string;
+          children: ReactNode;
+          style?: CSSProperties;
+        }) => (
+          <a href={to} style={style}>
+            {children}
+          </a>
+        ),
     );
 
     render(<AdminSider />);
 
-    expect(screen.getByRole("link", { name: "주문 관리" })).not.toHaveStyle({
+    expect(
+      await screen.findByRole("link", { name: "주문 관리" }),
+    ).not.toHaveStyle({
       pointerEvents: "none",
     });
   });

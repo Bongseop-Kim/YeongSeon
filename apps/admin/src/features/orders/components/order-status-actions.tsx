@@ -12,8 +12,8 @@ interface OrderStatusActionsProps {
   order: AdminOrderDetail;
   nextStatus: string | undefined;
   rollbackStatus: string | undefined;
-  onStatusChange: (newStatus: string, memo: string) => Promise<void>;
-  onRollback: (targetStatus: string, memo: string) => Promise<void>;
+  onStatusChange: (newStatus: string, memo: string) => Promise<boolean>;
+  onRollback: (targetStatus: string, memo: string) => Promise<boolean>;
   isUpdating: boolean;
 }
 
@@ -36,13 +36,17 @@ export function OrderStatusActions({
 
   const handleAdvanceConfirm = async () => {
     if (!nextStatus) return;
-    await onStatusChange(nextStatus, memo);
-    closeModal();
+    const ok = await onStatusChange(nextStatus, memo);
+    if (ok) {
+      closeModal();
+    }
   };
 
   const handleCancelConfirm = async () => {
-    await onStatusChange("취소", memo);
-    closeModal();
+    const ok = await onStatusChange("취소", memo);
+    if (ok) {
+      closeModal();
+    }
   };
 
   const handleRollbackConfirm = async () => {
@@ -51,8 +55,10 @@ export function OrderStatusActions({
       return;
     }
     if (!rollbackStatus) return;
-    await onRollback(rollbackStatus, memo);
-    closeModal();
+    const ok = await onRollback(rollbackStatus, memo);
+    if (ok) {
+      closeModal();
+    }
   };
 
   return (
