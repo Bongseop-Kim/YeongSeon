@@ -450,7 +450,14 @@ const OrderDetailPage = () => {
             ) : null}
 
             {canConfirmPurchase && (
-              <PurchaseConfirmSection orderId={order.id} />
+              <UtilityPageSection
+                title="구매확정"
+                description="상품 수령이 끝났다면 구매를 확정합니다."
+              >
+                <div className="border-t border-stone-200 py-5">
+                  <PurchaseConfirmSection orderId={order.id} />
+                </div>
+              </UtilityPageSection>
             )}
 
             <UtilityPageSection

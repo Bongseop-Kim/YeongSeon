@@ -251,4 +251,66 @@ describe("OrderDetailPage", () => {
     expect(detailEq).toHaveBeenCalledWith("id", "order-1");
     expect(itemEq).toHaveBeenCalledWith("order_id", "order-1");
   });
+
+  it("구매확정 가능 주문은 전용 섹션 제목과 액션 버튼을 함께 표시한다", async () => {
+    const detailMaybeSingle = vi.fn().mockResolvedValue({
+      data: createOrderDetailRowRaw({
+        customerActions: ["confirm_purchase"],
+      }),
+      error: null,
+    });
+    const detailEq = vi.fn(() => ({
+      maybeSingle: detailMaybeSingle,
+    }));
+    const detailSelect = vi.fn(() => ({
+      eq: detailEq,
+    }));
+    const itemOrder = vi.fn().mockResolvedValue({ data: [], error: null });
+    const itemEq = vi.fn(() => ({
+      order: itemOrder,
+    }));
+    const itemSelect = vi.fn(() => ({
+      eq: itemEq,
+    }));
+
+    fromMock.mockImplementation((table: string) => {
+      if (table === "order_detail_view") {
+        return {
+          select: detailSelect,
+        };
+      }
+
+      if (table === "order_item_view") {
+        return {
+          select: itemSelect,
+        };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+        mutations: {
+          retry: false,
+        },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <OrderDetailPage />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "구매확정" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "구매확정" }),
+    ).toBeInTheDocument();
+  });
 });
