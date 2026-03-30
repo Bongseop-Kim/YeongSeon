@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildInvokePayload,
   getTags,
+  normalizeInvokeResponse,
   toDesignTokenHistoryItem,
 } from "@/entities/design/api/ai-design-mapper";
 import type { AiDesignRequest } from "@/entities/design/model/ai-design-request";
@@ -112,6 +114,87 @@ describe("toDesignTokenHistoryItem", () => {
       description: "AI 시안 생성",
       createdAt: "2026-03-15T09:00:00Z",
       workId: "work-1",
+    });
+  });
+});
+
+describe("buildInvokePayload", () => {
+  it("invoke body 구성을 request와 인코딩 결과로 분리한다", () => {
+    const request = createAiDesignRequest({
+      conversationHistory: [{ role: "user", content: "이전 요청" }],
+      designContext: createDesignContext({
+        colors: ["navy"],
+        pattern: "stripe",
+        fabricMethod: "print",
+        ciPlacement: "one-point",
+        ciImage: { type: "image/png" } as File,
+        referenceImage: { type: "image/jpeg" } as File,
+      }),
+    });
+
+    expect(
+      buildInvokePayload(request, {
+        ciImageBase64: "ci-base64",
+        referenceImageBase64: "ref-base64",
+      }),
+    ).toEqual({
+      userMessage: "테스트 요청",
+      designContext: {
+        colors: ["navy"],
+        pattern: "stripe",
+        fabricMethod: "print",
+        ciPlacement: "one-point",
+      },
+      conversationHistory: [{ role: "user", content: "이전 요청" }],
+      ciImageBase64: "ci-base64",
+      ciImageMimeType: "image/png",
+      referenceImageBase64: "ref-base64",
+      referenceImageMimeType: "image/jpeg",
+    });
+  });
+});
+
+describe("normalizeInvokeResponse", () => {
+  it("invoke 응답을 UI 응답 모델로 정규화한다", () => {
+    const request = createAiDesignRequest({
+      attachments: [createAttachment({ type: "color", label: "네이비" })],
+    });
+
+    expect(
+      normalizeInvokeResponse(
+        {
+          aiMessage: "시안을 만들었습니다.",
+          imageUrl: "https://example.com/design.png",
+          contextChips: [{ type: "color", label: "네이비", value: "navy" }],
+          remainingTokens: 4,
+        },
+        request,
+      ),
+    ).toEqual({
+      aiMessage: "시안을 만들었습니다.",
+      imageUrl: "https://example.com/design.png",
+      tags: ["네이비"],
+      contextChips: [{ type: "color", label: "네이비", value: "navy" }],
+      remainingTokens: 4,
+    });
+  });
+
+  it("비정상 응답 필드는 안전한 기본값으로 정규화한다", () => {
+    expect(
+      normalizeInvokeResponse(
+        {
+          aiMessage: "응답",
+          contextChips: "invalid",
+          remainingTokens: "invalid",
+        },
+        createAiDesignRequest(),
+      ),
+    ).toEqual({
+      aiMessage: "응답",
+      imageUrl: null,
+      tags: ["클래식", "프리미엄", "넥타이"],
+      contextChips: [],
+      remainingTokens: undefined,
     });
   });
 });

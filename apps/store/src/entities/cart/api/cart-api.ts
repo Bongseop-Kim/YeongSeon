@@ -8,14 +8,22 @@ import {
 
 const TABLE_NAME = "cart_items";
 
-export const getCartItems = async (userId: string): Promise<CartItem[]> => {
+async function assertOwnership(userId: string): Promise<void> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-
   if (!session) {
     throw new Error("세션이 없습니다. 다시 로그인해주세요.");
   }
+  if (session.user.id !== userId) {
+    throw new Error(
+      "권한이 없습니다. 로그인한 사용자와 요청한 userId가 일치하지 않습니다.",
+    );
+  }
+}
+
+export const getCartItems = async (userId: string): Promise<CartItem[]> => {
+  await assertOwnership(userId);
 
   const { data, error } = await supabase.rpc("get_cart_items", {
     p_user_id: userId,
@@ -37,12 +45,7 @@ export const setCartItems = async (
   userId: string,
   items: CartItem[],
 ): Promise<void> => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) {
-    throw new Error("세션이 없습니다. 다시 로그인해주세요.");
-  }
+  await assertOwnership(userId);
 
   const { error } = await supabase.rpc("replace_cart_items", {
     p_user_id: userId,
@@ -55,12 +58,7 @@ export const setCartItems = async (
 };
 
 export const clearCartItems = async (userId: string): Promise<void> => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) {
-    throw new Error("세션이 없습니다. 다시 로그인해주세요.");
-  }
+  await assertOwnership(userId);
 
   const { error } = await supabase
     .from(TABLE_NAME)
@@ -81,17 +79,7 @@ export const removeCartItemsByIds = async (
 ): Promise<void> => {
   if (itemIds.length === 0) return;
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) {
-    throw new Error("세션이 없습니다. 다시 로그인해주세요.");
-  }
-  if (session.user.id !== userId) {
-    throw new Error(
-      "권한이 없습니다. 로그인한 사용자와 요청한 userId가 일치하지 않습니다.",
-    );
-  }
+  await assertOwnership(userId);
 
   const { error } = await supabase.rpc("remove_cart_items_by_ids", {
     p_user_id: userId,

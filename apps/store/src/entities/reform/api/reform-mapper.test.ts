@@ -1,8 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  toReformCartItems,
-  toReformData,
-} from "@/entities/reform/api/reform-mapper";
+import { toReformCartItems, toReformData } from "@/entities/reform";
 
 vi.mock("@/shared/lib/utils", () => ({
   generateItemId: vi.fn((type: string, id: string) => `${type}-${id}`),

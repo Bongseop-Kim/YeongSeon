@@ -4,6 +4,8 @@ import {
   getDesignSessions,
   saveDesignSession,
   type SaveDesignSessionParams,
+  toRestoredDesignSessionState,
+  type RestoredDesignSessionState,
 } from "@/entities/design";
 
 const DESIGN_SESSIONS_QUERY_KEY = ["design-sessions"] as const;
@@ -22,7 +24,8 @@ export function useDesignSessionsQuery() {
 export function useDesignSessionMessagesQuery(sessionId: string) {
   return useQuery({
     queryKey: designSessionMessagesQueryKey(sessionId),
-    queryFn: () => getDesignSessionMessages(sessionId),
+    queryFn: async (): Promise<RestoredDesignSessionState> =>
+      toRestoredDesignSessionState(await getDesignSessionMessages(sessionId)),
     enabled: sessionId.length > 0,
   });
 }

@@ -8,15 +8,22 @@ const { restoreSessionState, mockQueryData } = vi.hoisted(() => ({
   mockQueryData: {
     data: undefined as
       | {
-          id: string;
-          sessionId: string;
-          role: "user" | "ai";
-          content: string;
-          imageUrl: string | null;
-          imageFileId: string | null;
-          sequenceNumber: number;
-          createdAt: string;
-        }[]
+          messages: {
+            id: string;
+            role: "user" | "ai";
+            content: string;
+            imageUrl?: string;
+            rawImageUrl?: string;
+            timestamp: number;
+          }[];
+          generatedImageUrl: string | null;
+          resultTags: string[];
+          generationStatus:
+            | "idle"
+            | "completed"
+            | "generating"
+            | "regenerating";
+        }
       | undefined,
   },
 }));
@@ -43,18 +50,22 @@ describe("useSessionRestore", () => {
   });
 
   it("세션 복원 시 메시지와 프리뷰 상태를 함께 스토어에 반영한다", async () => {
-    mockQueryData.data = [
-      {
-        id: "msg-1",
-        sessionId: "session-1",
-        role: "ai",
-        content: "생성 완료",
-        imageUrl: "https://example.com/tie.png",
-        imageFileId: "file-1",
-        sequenceNumber: 0,
-        createdAt: "2026-03-19T10:00:00Z",
-      },
-    ];
+    mockQueryData.data = {
+      messages: [
+        {
+          id: "msg-1",
+          role: "ai",
+          content: "생성 완료",
+          imageUrl: 'url("https://example.com/tie.png") center/cover no-repeat',
+          rawImageUrl: "https://example.com/tie.png",
+          timestamp: new Date("2026-03-19T10:00:00Z").getTime(),
+        },
+      ],
+      generatedImageUrl:
+        'url("https://example.com/tie.png") center/cover no-repeat',
+      resultTags: [],
+      generationStatus: "completed",
+    };
 
     const onRestored = vi.fn();
     const { result } = renderHook(() => useSessionRestore({ onRestored }));
@@ -92,18 +103,19 @@ describe("useSessionRestore", () => {
   });
 
   it("이미지가 없는 세션은 프리뷰를 비운 상태로 복원한다", async () => {
-    mockQueryData.data = [
-      {
-        id: "msg-1",
-        sessionId: "session-2",
-        role: "user",
-        content: "텍스트만",
-        imageUrl: null,
-        imageFileId: null,
-        sequenceNumber: 0,
-        createdAt: "2026-03-19T10:00:00Z",
-      },
-    ];
+    mockQueryData.data = {
+      messages: [
+        {
+          id: "msg-1",
+          role: "user",
+          content: "텍스트만",
+          timestamp: new Date("2026-03-19T10:00:00Z").getTime(),
+        },
+      ],
+      generatedImageUrl: null,
+      resultTags: [],
+      generationStatus: "idle",
+    };
 
     const { result } = renderHook(() => useSessionRestore());
 

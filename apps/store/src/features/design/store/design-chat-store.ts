@@ -5,7 +5,7 @@ import type {
   GenerationStatus,
   Message,
 } from "@/features/design/types/chat";
-import type { RestoredDesignSessionState } from "@/features/design/utils/design-session-mapper";
+import type { RestoredDesignSessionState } from "@/entities/design";
 import type { DesignContext } from "@/features/design/types/design-context";
 
 interface DesignChatState {

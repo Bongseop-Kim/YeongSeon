@@ -3,7 +3,8 @@ import type { ContextChip } from "@/entities/design/model/ai-design-types";
 import type { DesignTokenHistoryItem } from "@/entities/design/model/token-history";
 import { supabase } from "@/shared/lib/supabase";
 import {
-  getTags,
+  buildInvokePayload,
+  normalizeInvokeResponse,
   toDesignTokenHistoryItem,
   type DesignTokenRow,
 } from "@/entities/design/api/ai-design-mapper";
@@ -104,21 +105,10 @@ export async function aiDesignApi(
     request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
 
   const { data, error } = await supabase.functions.invoke(functionName, {
-    body: {
-      userMessage: request.userMessage,
-      designContext: {
-        colors: request.designContext.colors,
-        pattern: request.designContext.pattern,
-        fabricMethod: request.designContext.fabricMethod,
-        ciPlacement: request.designContext.ciPlacement,
-      },
-      conversationHistory: request.conversationHistory ?? [],
+    body: buildInvokePayload(request, {
       ciImageBase64,
-      ciImageMimeType: request.designContext.ciImage?.type || undefined,
       referenceImageBase64,
-      referenceImageMimeType:
-        request.designContext.referenceImage?.type || undefined,
-    },
+    }),
   });
 
   if (error) {
@@ -147,14 +137,5 @@ export async function aiDesignApi(
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }
 
-  return {
-    aiMessage: data.aiMessage,
-    imageUrl: data.imageUrl ?? null,
-    tags: getTags(request),
-    contextChips: Array.isArray(data.contextChips) ? data.contextChips : [],
-    remainingTokens:
-      typeof data.remainingTokens === "number"
-        ? data.remainingTokens
-        : undefined,
-  };
+  return normalizeInvokeResponse(data, request);
 }

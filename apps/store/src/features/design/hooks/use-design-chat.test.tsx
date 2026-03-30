@@ -87,7 +87,7 @@ vi.mock("@tanstack/react-query", () => ({
   }),
 }));
 
-vi.mock("@/entities/design/api/ai-design-api", () => ({
+vi.mock("@/entities/design", () => ({
   InsufficientTokensError: MockInsufficientTokensError,
 }));
 

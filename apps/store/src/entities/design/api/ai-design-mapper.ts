@@ -1,6 +1,7 @@
 import type { DesignTokenHistoryItem } from "@/entities/design/model/token-history";
 import type { AiDesignRequest } from "@/entities/design/model/ai-design-request";
 import type { Attachment } from "@/entities/design/model/ai-design-types";
+import type { AiDesignResponse } from "@/entities/design/api/ai-design-api";
 import type {
   CiPlacement,
   FabricMethod,
@@ -86,13 +87,64 @@ export const getTags = (request: AiDesignRequest): string[] => {
   }
 
   const tags = [
-    ...colorLabels,
-    ...patternLabels,
-    ...fabricLabels,
-    ...ciPlacementLabels,
-  ]
-    .filter((tag, index, array) => array.indexOf(tag) === index)
-    .slice(0, 3);
+    ...new Set([
+      ...colorLabels,
+      ...patternLabels,
+      ...fabricLabels,
+      ...ciPlacementLabels,
+    ]),
+  ].slice(0, 3);
 
   return tags.length > 0 ? tags : DEFAULT_TAGS;
 };
+
+export interface InvokePayloadInput {
+  ciImageBase64?: string;
+  referenceImageBase64?: string;
+}
+
+export interface InvokeResponseBody {
+  aiMessage: string;
+  imageUrl?: string | null;
+  contextChips?: unknown;
+  remainingTokens?: unknown;
+}
+
+export function buildInvokePayload(
+  request: AiDesignRequest,
+  input: InvokePayloadInput = {},
+) {
+  return {
+    userMessage: request.userMessage,
+    designContext: {
+      colors: request.designContext.colors,
+      pattern: request.designContext.pattern,
+      fabricMethod: request.designContext.fabricMethod,
+      ciPlacement: request.designContext.ciPlacement,
+    },
+    conversationHistory: request.conversationHistory ?? [],
+    ciImageBase64: input.ciImageBase64,
+    ciImageMimeType: request.designContext.ciImage?.type || undefined,
+    referenceImageBase64: input.referenceImageBase64,
+    referenceImageMimeType:
+      request.designContext.referenceImage?.type || undefined,
+  };
+}
+
+export function normalizeInvokeResponse(
+  response: InvokeResponseBody,
+  request: AiDesignRequest,
+): AiDesignResponse {
+  return {
+    aiMessage: response.aiMessage,
+    imageUrl: response.imageUrl ?? null,
+    tags: getTags(request),
+    contextChips: Array.isArray(response.contextChips)
+      ? response.contextChips
+      : [],
+    remainingTokens:
+      typeof response.remainingTokens === "number"
+        ? response.remainingTokens
+        : undefined,
+  };
+}

@@ -14,6 +14,10 @@ export {
   saveDesignSession,
 } from "./api/design-session-api";
 export type { SaveDesignSessionParams } from "./api/design-session-api";
+export {
+  toRestoredDesignSessionState,
+  type RestoredDesignSessionState,
+} from "./api/design-session-state-mapper";
 export type { AiDesignRequest } from "./model/ai-design-request";
 export type { AiModel, Attachment, ContextChip } from "./model/ai-design-types";
 export type {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toRestoredDesignSessionState } from "@/features/design/utils/design-session-mapper";
+import { toRestoredDesignSessionState } from "@/entities/design";
 
 describe("toRestoredDesignSessionState", () => {
   it("마지막 이미지 메시지를 프리뷰 상태로 복원한다", () => {
