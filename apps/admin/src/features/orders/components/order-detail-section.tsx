@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Typography, Spin, Result } from "antd";
 import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW } from "@yeongseon/shared";
@@ -49,8 +48,6 @@ export function OrderDetailSection() {
     setTrackingNumber,
   } = useTrackingState(order, defaultCourier);
 
-  const [statusMemo, setStatusMemo] = useState("");
-
   const customItems = items.filter(
     (i): i is AdminCustomOrderItem => i.type === "custom",
   );
@@ -100,12 +97,7 @@ export function OrderDetailSection() {
         order={order}
         nextStatus={nextStatus}
         rollbackStatus={rollbackStatus}
-        statusMemo={statusMemo}
-        onMemoChange={setStatusMemo}
-        onStatusChange={async (newStatus, memo) => {
-          await changeStatus(newStatus, memo);
-          setStatusMemo("");
-        }}
+        onStatusChange={changeStatus}
         onRollback={rollback}
         isUpdating={isUpdating}
       />

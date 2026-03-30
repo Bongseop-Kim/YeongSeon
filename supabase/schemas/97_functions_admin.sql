@@ -257,6 +257,10 @@ end;
 $$;
 
 -- ── admin_update_order_tracking ─────────────────────────────────
+-- SECURITY DEFINER 사용 근거:
+--   스키마에서 authenticated 역할의 orders 테이블 직접 UPDATE가
+--   REVOKE UPDATE ... FROM authenticated 로 제한되어 있다.
+--   is_admin() 검증으로 관리자만 호출 가능하므로 SECURITY DEFINER가 적합하다.
 CREATE OR REPLACE FUNCTION public.admin_update_order_tracking(
   p_order_id uuid,
   p_courier_company text DEFAULT NULL,
@@ -264,7 +268,7 @@ CREATE OR REPLACE FUNCTION public.admin_update_order_tracking(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 declare
