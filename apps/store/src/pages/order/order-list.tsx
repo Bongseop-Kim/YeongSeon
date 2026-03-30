@@ -87,14 +87,9 @@ export default function OrderListPage() {
   );
 
   const filteredOrders = useMemo(() => {
-    const byType =
-      activeTab === "전체"
-        ? orders
-        : orders.filter(
-            (order) => order.orderType === ORDER_TYPE_MAP[activeTab],
-          );
-
-    return byType.filter((order) => order.items.length > 0);
+    return activeTab === "전체"
+      ? orders
+      : orders.filter((order) => order.orderType === ORDER_TYPE_MAP[activeTab]);
   }, [orders, activeTab]);
 
   const handleClaimRequest = (

@@ -1,22 +1,16 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, beforeEach, vi } from "vitest";
-import type { Order } from "@yeongseon/shared/types/view/order";
-import { createProductOrderItem } from "@yeongseon/shared/test/fixtures";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import OrderListPage from "@/pages/order/order-list";
+import { createOrderItemRowRaw } from "@/test/fixtures";
+import { useAuthStore } from "@/shared/store/auth";
+import { useSearchStore } from "@/shared/store/search";
 
-const mockNavigate = vi.hoisted(() => vi.fn());
-const mockUseOrders = vi.hoisted(() => vi.fn());
-const mockUseRefundableTokenOrdersQuery = vi.hoisted(() => vi.fn());
-const mockUseSearchTabs = vi.hoisted(() => vi.fn());
-
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
-
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
+const { fromMock, rpcMock } = vi.hoisted(() => ({
+  fromMock: vi.fn(),
+  rpcMock: vi.fn(),
+}));
 
 vi.mock("@/shared/layout/main-layout", () => ({
   MainLayout: ({ children }: { children: React.ReactNode }) => (
@@ -99,62 +93,119 @@ vi.mock("@/features/order", () => ({
   TokenRefundAction: () => <div>token-refund-action</div>,
 }));
 
-vi.mock("@/entities/order", () => ({
-  useOrders: mockUseOrders,
-}));
-
-vi.mock("@/entities/my-page", () => ({
-  useRefundableTokenOrdersQuery: mockUseRefundableTokenOrdersQuery,
-}));
-
-vi.mock("@/shared/hooks/use-search-tabs", () => ({
-  useSearchTabs: mockUseSearchTabs,
-}));
-
 vi.mock("@/shared/hooks/use-debounced-value", () => ({
   useDebouncedValue: (value: string) => value,
 }));
 
-const createOrder = (overrides?: Partial<Order>): Order => ({
+vi.mock("@/shared/lib/supabase", () => ({
+  supabase: {
+    from: fromMock,
+    rpc: rpcMock,
+  },
+}));
+
+const createOrderListRowRaw = (
+  overrides?: Partial<Record<string, unknown>>,
+): Record<string, unknown> => ({
   id: "order-1",
   orderNumber: "ORD-001",
   date: "2026-03-15",
   status: "진행중",
+  totalPrice: 23000,
   orderType: "sale",
-  items: [createProductOrderItem()],
-  totalPrice: 10000,
-  shippingInfo: null,
-  trackingInfo: null,
-  confirmedAt: null,
+  created_at: "2026-03-15T09:00:00Z",
   customerActions: [],
   ...overrides,
 });
 
 describe("OrderListPage", () => {
   beforeEach(() => {
-    mockNavigate.mockReset();
-    mockUseSearchTabs.mockReturnValue("전체");
-    mockUseRefundableTokenOrdersQuery.mockReturnValue({ data: [] });
-    mockUseOrders.mockReturnValue({
-      data: [
-        createOrder({ id: "visible-order", orderNumber: "ORD-VISIBLE" }),
-        createOrder({
-          id: "claimed-order",
-          orderNumber: "ORD-CLAIMED",
-          items: [],
-        }),
-      ],
-      isLoading: false,
-      error: null,
+    fromMock.mockReset();
+    rpcMock.mockReset();
+    rpcMock.mockResolvedValue({ data: [], error: null });
+    useAuthStore.setState({
+      initialized: true,
+      user: { id: "user-1" } as never,
     });
+    useSearchStore.setState((state) => ({
+      ...state,
+      config: {
+        ...state.config,
+        enabled: false,
+        query: "",
+        tabs: undefined,
+      },
+    }));
   });
 
-  it("클레임으로 아이템이 0개가 된 주문 카드는 목록에서 숨긴다", () => {
-    render(<OrderListPage />);
+  it("실제 주문 조회 경로에서 빈 주문이 제외된 결과만 렌더링한다", async () => {
+    const listLimit = vi.fn().mockResolvedValue({
+      data: [
+        createOrderListRowRaw({
+          id: "visible-order",
+          orderNumber: "ORD-VISIBLE",
+        }),
+      ],
+      error: null,
+    });
+    const listOrder = vi.fn(() => ({
+      limit: listLimit,
+    }));
+    const listSelect = vi.fn(() => ({
+      order: listOrder,
+    }));
+    const itemOrder = vi.fn().mockResolvedValue({
+      data: [
+        createOrderItemRowRaw({
+          id: "visible-item",
+          order_id: "visible-order",
+        }),
+      ],
+      error: null,
+    });
+    const itemIn = vi.fn(() => ({
+      order: itemOrder,
+    }));
+    const itemSelect = vi.fn(() => ({
+      in: itemIn,
+    }));
 
-    expect(screen.getByTestId("order-card-visible-order")).toBeInTheDocument();
+    fromMock.mockImplementation((table: string) => {
+      if (table === "order_list_view") {
+        return {
+          select: listSelect,
+        };
+      }
+
+      if (table === "order_item_view") {
+        return {
+          select: itemSelect,
+        };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <OrderListPage />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+
     expect(
-      screen.queryByTestId("order-card-claimed-order"),
-    ).not.toBeInTheDocument();
+      await screen.findByTestId("order-card-visible-order"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("ORD-CLAIMED")).not.toBeInTheDocument();
+    expect(itemIn).toHaveBeenCalledWith("order_id", ["visible-order"]);
   });
 });

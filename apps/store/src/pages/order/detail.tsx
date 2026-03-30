@@ -466,7 +466,7 @@ const OrderDetailPage = () => {
                 {order.items.length === 0 ? (
                   <div className="py-5">
                     <p className="text-sm text-zinc-500">
-                      모든 상품이 클레임 처리 중입니다.{" "}
+                      표시할 주문 상품이 없습니다.{" "}
                       <button
                         type="button"
                         className="font-medium text-info underline underline-offset-4"

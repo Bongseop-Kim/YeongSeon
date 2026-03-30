@@ -1,13 +1,15 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Order } from "@yeongseon/shared/types/view/order";
-import { createProductOrderItem } from "@yeongseon/shared/test/fixtures";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import OrderDetailPage from "@/pages/order/detail";
+import { useAuthStore } from "@/shared/store/auth";
 
 const mockNavigate = vi.hoisted(() => vi.fn());
-const mockUseOrderDetail = vi.hoisted(() => vi.fn());
-const mockUseConfirmPurchase = vi.hoisted(() => vi.fn());
+const { fromMock, rpcMock } = vi.hoisted(() => ({
+  fromMock: vi.fn(),
+  rpcMock: vi.fn(),
+}));
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
@@ -137,22 +139,35 @@ vi.mock("@/features/order", () => ({
   RepairShippingAddressBanner: () => <div>repair-shipping-banner</div>,
 }));
 
-vi.mock("@/entities/order", () => ({
-  useOrderDetail: mockUseOrderDetail,
-  useConfirmPurchase: mockUseConfirmPurchase,
+vi.mock("@/shared/lib/supabase", () => ({
+  supabase: {
+    from: fromMock,
+    rpc: rpcMock,
+  },
 }));
 
-const createOrder = (overrides?: Partial<Order>): Order => ({
+const createOrderDetailRowRaw = (
+  overrides?: Partial<Record<string, unknown>>,
+): Record<string, unknown> => ({
   id: "order-1",
   orderNumber: "ORD-001",
   date: "2026-03-15",
   status: "진행중",
-  orderType: "sale",
-  items: [createProductOrderItem()],
   totalPrice: 10000,
-  shippingInfo: null,
-  trackingInfo: null,
+  orderType: "sale",
+  courierCompany: null,
+  trackingNumber: null,
+  shippedAt: null,
+  deliveredAt: null,
   confirmedAt: null,
+  created_at: "2026-03-15T09:00:00Z",
+  recipientName: null,
+  recipientPhone: null,
+  shippingAddress: null,
+  shippingAddressDetail: null,
+  shippingPostalCode: null,
+  deliveryMemo: null,
+  deliveryRequest: null,
   customerActions: [],
   ...overrides,
 });
@@ -160,29 +175,69 @@ const createOrder = (overrides?: Partial<Order>): Order => ({
 describe("OrderDetailPage", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
-    mockUseConfirmPurchase.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-      isSuccess: false,
-      isError: false,
-      error: null,
-    });
-    mockUseOrderDetail.mockReturnValue({
-      order: createOrder({ items: [] }),
-      isLoading: false,
-      isError: false,
-      error: null,
-      isNotFound: false,
-      refetch: vi.fn(),
+    fromMock.mockReset();
+    rpcMock.mockReset();
+    rpcMock.mockResolvedValue({ error: null });
+    useAuthStore.setState({
+      initialized: true,
+      user: { id: "user-1" } as never,
     });
   });
 
-  it("주문 아이템이 없으면 클레임 목록 안내를 표시하고 이동 버튼을 제공한다", () => {
-    render(<OrderDetailPage />);
+  it("주문 아이템이 없으면 실제 상세 조회 경로를 거쳐 중립 안내 문구와 이동 버튼을 표시한다", async () => {
+    const detailMaybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: createOrderDetailRowRaw(), error: null });
+    const detailEq = vi.fn(() => ({
+      maybeSingle: detailMaybeSingle,
+    }));
+    const detailSelect = vi.fn(() => ({
+      eq: detailEq,
+    }));
+    const itemOrder = vi.fn().mockResolvedValue({ data: [], error: null });
+    const itemEq = vi.fn(() => ({
+      order: itemOrder,
+    }));
+    const itemSelect = vi.fn(() => ({
+      eq: itemEq,
+    }));
+
+    fromMock.mockImplementation((table: string) => {
+      if (table === "order_detail_view") {
+        return {
+          select: detailSelect,
+        };
+      }
+
+      if (table === "order_item_view") {
+        return {
+          select: itemSelect,
+        };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+        mutations: {
+          retry: false,
+        },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <OrderDetailPage />
+      </QueryClientProvider>,
+    );
 
     expect(
-      screen.getByText((content) =>
-        content.includes("모든 상품이 클레임 처리 중입니다."),
+      await screen.findByText((content) =>
+        content.includes("표시할 주문 상품이 없습니다."),
       ),
     ).toBeInTheDocument();
 
@@ -193,5 +248,7 @@ describe("OrderDetailPage", () => {
     fireEvent.click(button);
 
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.CLAIM_LIST);
+    expect(detailEq).toHaveBeenCalledWith("id", "order-1");
+    expect(itemEq).toHaveBeenCalledWith("order_id", "order-1");
   });
 });
