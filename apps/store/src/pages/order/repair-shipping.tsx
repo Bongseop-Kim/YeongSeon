@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { Button } from "@/shared/ui-extended/button";
 import { Input } from "@/shared/ui-extended/input";
@@ -14,7 +15,7 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { Loader2 } from "lucide-react";
 import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
-import { submitRepairTracking } from "@/entities/order";
+import { submitRepairTracking, orderKeys } from "@/entities/order";
 import { useOrderDetail } from "@/entities/order";
 import { toast } from "@/shared/lib/toast";
 import {
@@ -48,6 +49,7 @@ const RepairShippingPage = () => {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const queryClient = useQueryClient();
   const { order, isLoading } = useOrderDetail(orderId);
 
   // 발송대기 아닌 상태면 주문 상세로 리다이렉트
@@ -75,6 +77,9 @@ const RepairShippingPage = () => {
         courierCompany,
         trackingNumber.trim(),
       );
+      await queryClient.refetchQueries({
+        queryKey: orderKeys.detail(orderId),
+      });
       toast.success("발송 처리가 완료되었습니다.");
       navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`, { replace: true });
     } catch (err) {
