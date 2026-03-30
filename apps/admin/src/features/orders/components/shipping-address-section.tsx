@@ -1,4 +1,5 @@
 import { Descriptions } from "antd";
+import { getDeliveryRequestLabel } from "@yeongseon/shared";
 import type { AdminShippingAddress } from "@/features/orders/types/admin-order";
 
 interface ShippingAddressSectionProps {
@@ -32,7 +33,12 @@ export function ShippingAddressSection({
         {address?.deliveryMemo ?? "-"}
       </Descriptions.Item>
       <Descriptions.Item label="배송요청사항">
-        {address?.deliveryRequest ?? "-"}
+        {address?.deliveryRequest
+          ? (getDeliveryRequestLabel(
+              address.deliveryRequest,
+              address.deliveryMemo,
+            ) ?? address.deliveryRequest)
+          : "-"}
       </Descriptions.Item>
     </Descriptions>
   );
