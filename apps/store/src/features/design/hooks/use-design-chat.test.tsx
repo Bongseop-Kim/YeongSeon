@@ -180,8 +180,7 @@ describe("useDesignChat", () => {
       expect.objectContaining({
         role: "ai",
         content: "시안을 만들었습니다.",
-        imageUrl:
-          'url("https://example.com/design.jpg") center/cover no-repeat',
+        imageUrl: "https://example.com/design.jpg",
       }),
     );
     expect(setGeneratedImage).toHaveBeenCalledWith(

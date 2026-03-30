@@ -9,9 +9,9 @@ import {
 } from "@/entities/design";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment, Message } from "@/features/design/types/chat";
+import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { uploadGeneratedImage } from "@/features/design/utils/imagekit-upload";
 import { useSaveDesignSessionMutation } from "@/features/design/hooks/design-session-query";
-import { toPreviewBackground } from "@/features/design/utils";
 
 interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
@@ -71,7 +71,7 @@ export function useDesignChat(): UseDesignChatResult {
         id: aiMessageId,
         role: "ai",
         content: data.aiMessage,
-        imageUrl: previewBackground,
+        imageUrl: data.imageUrl ?? undefined,
         contextChips: data.contextChips,
         timestamp: Date.now(),
       };
@@ -108,8 +108,7 @@ export function useDesignChat(): UseDesignChatResult {
             id: m.id,
             role: m.role,
             content: m.content,
-            imageUrl:
-              m.id === aiMessageId ? rawImageUrl : (m.rawImageUrl ?? null),
+            imageUrl: m.id === aiMessageId ? rawImageUrl : (m.imageUrl ?? null),
             imageFileId: m.id === aiMessageId ? rawImageFileId : null,
             sequenceNumber: idx,
           }));

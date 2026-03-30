@@ -18,7 +18,7 @@ const baseMessage = {
 describe("MessageBubble — 모바일 넥타이 프리뷰", () => {
   it("imageUrl이 있을 때 모바일에서 넥타이 프리뷰를 탭하면 onTiePreviewClick을 호출한다", async () => {
     const onTiePreviewClick = vi.fn();
-    const imageUrl = "linear-gradient(to bottom, red, blue)";
+    const imageUrl = "https://example.com/tie.png";
     render(
       <MessageBubble
         message={{ ...baseMessage, imageUrl }}
@@ -30,7 +30,9 @@ describe("MessageBubble — 모바일 넥타이 프리뷰", () => {
     await userEvent.click(preview);
 
     expect(onTiePreviewClick).toHaveBeenCalledOnce();
-    expect(onTiePreviewClick).toHaveBeenCalledWith(imageUrl);
+    expect(onTiePreviewClick).toHaveBeenCalledWith(
+      'url("https://example.com/tie.png") center/cover no-repeat',
+    );
   });
 
   it("imageUrl이 없으면 넥타이 프리뷰 버튼이 렌더링되지 않는다", () => {

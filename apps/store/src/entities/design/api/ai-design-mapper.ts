@@ -1,7 +1,7 @@
 import type { DesignTokenHistoryItem } from "@/entities/design/model/token-history";
 import type { AiDesignRequest } from "@/entities/design/model/ai-design-request";
+import type { AiDesignResponse } from "@/entities/design/model/ai-design-response";
 import type { Attachment } from "@/entities/design/model/ai-design-types";
-import type { AiDesignResponse } from "@/entities/design/api/ai-design-api";
 import type {
   CiPlacement,
   FabricMethod,
@@ -98,12 +98,12 @@ export const getTags = (request: AiDesignRequest): string[] => {
   return tags.length > 0 ? tags : DEFAULT_TAGS;
 };
 
-export interface InvokePayloadInput {
+interface InvokePayloadInput {
   ciImageBase64?: string;
   referenceImageBase64?: string;
 }
 
-export interface InvokeResponseBody {
+interface InvokeResponseBody {
   aiMessage: string;
   imageUrl?: string | null;
   contextChips?: unknown;

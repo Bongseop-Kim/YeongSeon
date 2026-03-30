@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearCartItems,
   getCartItems,
+  removeCartItemsByIds,
   setCartItems,
 } from "@/entities/cart/api/cart-api";
 
@@ -69,5 +70,13 @@ describe("cart-api ownership checks", () => {
 
     expect(deleteFn).not.toHaveBeenCalled();
     expect(eq).not.toHaveBeenCalled();
+  });
+
+  it("removeCartItemsByIds는 itemIds가 비어 있어도 세션 사용자와 다른 userId를 거부한다", async () => {
+    await expect(removeCartItemsByIds("other-user", [])).rejects.toThrow(
+      "권한이 없습니다. 로그인한 사용자와 요청한 userId가 일치하지 않습니다.",
+    );
+
+    expect(rpc).not.toHaveBeenCalled();
   });
 });

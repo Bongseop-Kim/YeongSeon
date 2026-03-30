@@ -33,16 +33,13 @@ describe("toRestoredDesignSessionState", () => {
           role: "user",
           content: "네이비 스트라이프",
           imageUrl: undefined,
-          rawImageUrl: undefined,
           timestamp: new Date("2026-03-19T10:00:00Z").getTime(),
         },
         {
           id: "msg-2",
           role: "ai",
           content: "시안을 만들었습니다.",
-          imageUrl:
-            'url("https://example.com/design.png") center/cover no-repeat',
-          rawImageUrl: "https://example.com/design.png",
+          imageUrl: "https://example.com/design.png",
           timestamp: new Date("2026-03-19T10:01:00Z").getTime(),
         },
       ],

@@ -13,7 +13,6 @@ const { restoreSessionState, mockQueryData } = vi.hoisted(() => ({
             role: "user" | "ai";
             content: string;
             imageUrl?: string;
-            rawImageUrl?: string;
             timestamp: number;
           }[];
           generatedImageUrl: string | null;
@@ -56,8 +55,7 @@ describe("useSessionRestore", () => {
           id: "msg-1",
           role: "ai",
           content: "생성 완료",
-          imageUrl: 'url("https://example.com/tie.png") center/cover no-repeat',
-          rawImageUrl: "https://example.com/tie.png",
+          imageUrl: "https://example.com/tie.png",
           timestamp: new Date("2026-03-19T10:00:00Z").getTime(),
         },
       ],
@@ -88,9 +86,7 @@ describe("useSessionRestore", () => {
         messages: [
           expect.objectContaining({
             id: "msg-1",
-            imageUrl:
-              'url("https://example.com/tie.png") center/cover no-repeat',
-            rawImageUrl: "https://example.com/tie.png",
+            imageUrl: "https://example.com/tie.png",
           }),
         ],
         generatedImageUrl:

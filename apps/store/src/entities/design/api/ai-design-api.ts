@@ -1,5 +1,5 @@
 import type { AiDesignRequest } from "@/entities/design/model/ai-design-request";
-import type { ContextChip } from "@/entities/design/model/ai-design-types";
+import type { AiDesignResponse } from "@/entities/design/model/ai-design-response";
 import type { DesignTokenHistoryItem } from "@/entities/design/model/token-history";
 import { supabase } from "@/shared/lib/supabase";
 import {
@@ -13,14 +13,6 @@ interface DesignTokenBalance {
   total: number;
   paid: number;
   bonus: number;
-}
-
-export interface AiDesignResponse {
-  aiMessage: string;
-  imageUrl: string | null;
-  tags: string[];
-  contextChips: ContextChip[];
-  remainingTokens?: number;
 }
 
 export class InsufficientTokensError extends Error {
@@ -114,19 +106,13 @@ export async function aiDesignApi(
   if (error) {
     const context = (error as { context?: unknown }).context;
     if (context instanceof Response) {
-      try {
-        const body = (await context.json()) as {
-          error?: string;
-          balance?: number;
-          cost?: number;
-        };
-        if (body.error === "insufficient_tokens") {
-          throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
-        }
-      } catch (parseErr) {
-        if (parseErr instanceof InsufficientTokensError) {
-          throw parseErr;
-        }
+      const body = (await context.json()) as {
+        error?: string;
+        balance?: number;
+        cost?: number;
+      };
+      if (body.error === "insufficient_tokens") {
+        throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
       }
     }
 

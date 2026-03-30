@@ -1,6 +1,6 @@
 import type { DesignSessionMessage } from "@/entities/design/model/design-session";
-import type { GenerationStatus, Message } from "@/features/design/types/chat";
-import { toPreviewBackground } from "@/features/design/utils";
+import type { GenerationStatus, Message } from "@/entities/design/model/chat";
+import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 
 export interface RestoredDesignSessionState {
   messages: Message[];
@@ -14,10 +14,7 @@ function sessionMessageToMessage(message: DesignSessionMessage): Message {
     id: message.id,
     role: message.role,
     content: message.content,
-    imageUrl: message.imageUrl
-      ? toPreviewBackground(message.imageUrl)
-      : undefined,
-    rawImageUrl: message.imageUrl ?? undefined,
+    imageUrl: message.imageUrl ?? undefined,
     timestamp: new Date(message.createdAt).getTime(),
   };
 }

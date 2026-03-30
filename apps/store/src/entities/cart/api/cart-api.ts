@@ -57,6 +57,10 @@ export const setCartItems = async (
   }
 };
 
+/**
+ * 장바구니를 전체 초기화 (결제 성공 후 사용)
+ * cart_items 테이블 직접 DELETE는 RLS가 user_id = auth.uid()로 소유권을 보장하므로 허용.
+ */
 export const clearCartItems = async (userId: string): Promise<void> => {
   await assertOwnership(userId);
 
@@ -77,9 +81,9 @@ export const removeCartItemsByIds = async (
   userId: string,
   itemIds: string[],
 ): Promise<void> => {
-  if (itemIds.length === 0) return;
-
   await assertOwnership(userId);
+
+  if (itemIds.length === 0) return;
 
   const { error } = await supabase.rpc("remove_cart_items_by_ids", {
     p_user_id: userId,
