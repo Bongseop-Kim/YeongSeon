@@ -124,11 +124,7 @@ export function useCheckoutPayment({
         pendingSnapshotRef.current = null;
       }
 
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "결제 요청 중 오류가 발생했습니다.",
-      );
+      toast.error("결제 요청 중 오류가 발생했습니다.");
     } finally {
       setIsPaymentLoading(false);
     }

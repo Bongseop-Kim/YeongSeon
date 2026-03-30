@@ -17,6 +17,7 @@ import {
   QUOTE_REQUEST_STATUS_FLOW,
   QUOTE_REQUEST_STATUS_COLORS,
   CONTACT_METHOD_LABELS,
+  getDeliveryRequestLabel,
 } from "@yeongseon/shared";
 import {
   useAdminQuoteRequestDetail,
@@ -182,7 +183,12 @@ export function QuoteRequestDetailSection() {
           {detail.deliveryMemo ?? "-"}
         </Descriptions.Item>
         <Descriptions.Item label="배송요청사항">
-          {detail.deliveryRequest ?? "-"}
+          {detail.deliveryRequest
+            ? (getDeliveryRequestLabel(
+                detail.deliveryRequest,
+                detail.deliveryMemo,
+              ) ?? detail.deliveryRequest)
+            : "-"}
         </Descriptions.Item>
       </Descriptions>
 

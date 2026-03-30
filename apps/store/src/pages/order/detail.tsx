@@ -34,6 +34,7 @@ import { Button } from "@/shared/ui-extended/button";
 import { RepairShippingAddressBanner } from "@/features/order";
 import { useConfirmPurchase, useOrderDetail } from "@/entities/order";
 import { buildClaimFormRoute, ROUTES } from "@/shared/constants/ROUTES";
+import { getDeliveryRequestLabel } from "@/shared/constants/DELIVERY_REQUEST_OPTIONS";
 
 const detailRowLabelClass =
   "shrink-0 text-sm font-medium text-muted-foreground";
@@ -239,7 +240,10 @@ const ShippingInfoSection = ({ info }: { info: ShippingInfo }) => (
       <DetailRow label="배송메모:" value={info.deliveryMemo} />
     )}
     {info.deliveryRequest && (
-      <DetailRow label="배송요청:" value={info.deliveryRequest} />
+      <DetailRow
+        label="배송요청:"
+        value={getDeliveryRequestLabel(info.deliveryRequest, info.deliveryMemo)}
+      />
     )}
   </div>
 );

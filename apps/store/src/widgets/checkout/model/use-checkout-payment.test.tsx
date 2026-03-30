@@ -276,8 +276,10 @@ describe("useCheckoutPayment", () => {
       expect(errorFn).not.toHaveBeenCalled();
     });
 
-    it("그 외 에러는 toast.error를 노출한다", async () => {
-      const createOrder = vi.fn().mockRejectedValue(new Error("서버 오류"));
+    it("그 외 에러는 고정 한글 toast.error를 노출한다", async () => {
+      const createOrder = vi
+        .fn()
+        .mockRejectedValue(new Error("Unexpected english error"));
       const pageState = makePageState();
       const widget = makePaymentWidget();
       mockUseCheckoutPageState.mockReturnValue(pageState);
@@ -293,7 +295,7 @@ describe("useCheckoutPayment", () => {
         await result.current.handleRequestPayment();
       });
 
-      expect(errorFn).toHaveBeenCalledWith("서버 오류");
+      expect(errorFn).toHaveBeenCalledWith("결제 요청 중 오류가 발생했습니다.");
     });
   });
 });

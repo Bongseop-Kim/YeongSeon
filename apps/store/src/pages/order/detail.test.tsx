@@ -1,14 +1,13 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Order } from "@yeongseon/shared/types/view/order";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import OrderDetailPage from "@/pages/order/detail";
-import { useAuthStore } from "@/shared/store/auth";
 
 const mockNavigate = vi.hoisted(() => vi.fn());
-const { fromMock, rpcMock } = vi.hoisted(() => ({
-  fromMock: vi.fn(),
-  rpcMock: vi.fn(),
+const { useOrderDetailMock, useConfirmPurchaseMock } = vi.hoisted(() => ({
+  useOrderDetailMock: vi.fn(),
+  useConfirmPurchaseMock: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -49,7 +48,12 @@ vi.mock("@/shared/layout/page-layout", () => ({
 }));
 
 vi.mock("@/shared/composite/empty", () => ({
-  Empty: ({ title }: { title: string }) => <div>{title}</div>,
+  Empty: ({ title, description }: { title: string; description?: string }) => (
+    <div>
+      <div>{title}</div>
+      {description ? <div>{description}</div> : null}
+    </div>
+  ),
 }));
 
 vi.mock("@/shared/composite/status-badge", () => ({
@@ -139,101 +143,59 @@ vi.mock("@/features/order", () => ({
   RepairShippingAddressBanner: () => <div>repair-shipping-banner</div>,
 }));
 
-vi.mock("@/shared/lib/supabase", () => ({
-  supabase: {
-    from: fromMock,
-    rpc: rpcMock,
-  },
+vi.mock("@/entities/order", () => ({
+  useOrderDetail: () => useOrderDetailMock(),
+  useConfirmPurchase: () => useConfirmPurchaseMock(),
 }));
 
-const createOrderDetailRowRaw = (
-  overrides?: Partial<Record<string, unknown>>,
-): Record<string, unknown> => ({
+const createOrder = (overrides?: Partial<Order>): Order => ({
   id: "order-1",
   orderNumber: "ORD-001",
-  date: "2026-03-15",
+  date: "2026-03-15T09:00:00Z",
   status: "진행중",
-  totalPrice: 10000,
   orderType: "sale",
-  courierCompany: null,
-  trackingNumber: null,
-  shippedAt: null,
-  deliveredAt: null,
+  totalPrice: 10000,
+  shippingInfo: {
+    recipientName: "홍길동",
+    recipientPhone: "01012345678",
+    postalCode: "12345",
+    address: "서울시 종로구 세종대로 1",
+    addressDetail: "101호",
+    deliveryMemo: null,
+    deliveryRequest: null,
+  },
+  trackingInfo: null,
   confirmedAt: null,
-  created_at: "2026-03-15T09:00:00Z",
-  recipientName: null,
-  recipientPhone: null,
-  shippingAddress: null,
-  shippingAddressDetail: null,
-  shippingPostalCode: null,
-  deliveryMemo: null,
-  deliveryRequest: null,
   customerActions: [],
+  items: [],
   ...overrides,
 });
 
 describe("OrderDetailPage", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
-    fromMock.mockReset();
-    rpcMock.mockReset();
-    rpcMock.mockResolvedValue({ error: null });
-    useAuthStore.setState({
-      initialized: true,
-      user: { id: "user-1" } as never,
+    useOrderDetailMock.mockReset();
+    useConfirmPurchaseMock.mockReset();
+
+    useConfirmPurchaseMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      error: null,
+    });
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder(),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
     });
   });
 
-  it("주문 아이템이 없으면 실제 상세 조회 경로를 거쳐 중립 안내 문구와 이동 버튼을 표시한다", async () => {
-    const detailMaybeSingle = vi
-      .fn()
-      .mockResolvedValue({ data: createOrderDetailRowRaw(), error: null });
-    const detailEq = vi.fn(() => ({
-      maybeSingle: detailMaybeSingle,
-    }));
-    const detailSelect = vi.fn(() => ({
-      eq: detailEq,
-    }));
-    const itemOrder = vi.fn().mockResolvedValue({ data: [], error: null });
-    const itemEq = vi.fn(() => ({
-      order: itemOrder,
-    }));
-    const itemSelect = vi.fn(() => ({
-      eq: itemEq,
-    }));
-
-    fromMock.mockImplementation((table: string) => {
-      if (table === "order_detail_view") {
-        return {
-          select: detailSelect,
-        };
-      }
-
-      if (table === "order_item_view") {
-        return {
-          select: itemSelect,
-        };
-      }
-
-      throw new Error(`Unexpected table: ${table}`);
-    });
-
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-        mutations: {
-          retry: false,
-        },
-      },
-    });
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <OrderDetailPage />
-      </QueryClientProvider>,
-    );
+  it("주문 아이템이 없으면 중립 안내 문구와 이동 버튼을 표시한다", async () => {
+    render(<OrderDetailPage />);
 
     expect(
       await screen.findByText((content) =>
@@ -248,7 +210,51 @@ describe("OrderDetailPage", () => {
     fireEvent.click(button);
 
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.CLAIM_LIST);
-    expect(detailEq).toHaveBeenCalledWith("id", "order-1");
-    expect(itemEq).toHaveBeenCalledWith("order_id", "order-1");
+  });
+
+  it("배송요청 코드를 한글 레이블로 표시한다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        shippingInfo: {
+          recipientName: "홍길동",
+          recipientPhone: "01012345678",
+          postalCode: "12345",
+          address: "서울시 종로구 세종대로 1",
+          addressDetail: "101호",
+          deliveryMemo: null,
+          deliveryRequest: "DELIVERY_REQUEST_4",
+        },
+        items: [
+          {
+            id: "item-1",
+            type: "product",
+            product: {
+              id: 1,
+              code: "P-001",
+              name: "상품명",
+              image: "",
+              price: 10000,
+              category: "3fold",
+              color: "navy",
+              pattern: "solid",
+              material: "silk",
+              likes: 0,
+              info: "",
+            },
+            quantity: 1,
+          },
+        ],
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(screen.getByText("배송 전에 연락 주세요.")).toBeInTheDocument();
+    expect(screen.queryByText("DELIVERY_REQUEST_4")).not.toBeInTheDocument();
   });
 });
