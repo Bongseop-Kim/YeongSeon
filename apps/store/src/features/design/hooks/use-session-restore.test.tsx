@@ -21,7 +21,7 @@ const { restoreSessionState, mockQueryData } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/features/design/api/design-session-query", () => ({
+vi.mock("@/features/design/hooks/design-session-query", () => ({
   useDesignSessionMessagesQuery: () => mockQueryData,
 }));
 

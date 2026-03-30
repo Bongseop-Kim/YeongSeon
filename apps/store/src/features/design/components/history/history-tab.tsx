@@ -1,4 +1,4 @@
-import { useDesignSessionsQuery } from "@/features/design/api/design-session-query";
+import { useDesignSessionsQuery } from "@/features/design/hooks/design-session-query";
 import { SessionCard } from "@/features/design/components/history/session-card";
 import type { DesignSession } from "@/features/design/types/session";
 

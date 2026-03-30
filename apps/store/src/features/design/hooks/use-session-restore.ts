@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { toRestoredDesignSessionState } from "@/features/design/api/design-session-mapper";
-import { useDesignSessionMessagesQuery } from "@/features/design/api/design-session-query";
+import { toRestoredDesignSessionState } from "@/features/design/utils/design-session-mapper";
+import { useDesignSessionMessagesQuery } from "@/features/design/hooks/design-session-query";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { DesignSession } from "@/features/design/types/session";
 

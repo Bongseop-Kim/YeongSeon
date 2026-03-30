@@ -10,3 +10,4 @@ export { toPricingConfig } from "./api/pricing-mapper";
 export type { OrderOptions, QuoteOrderOptions } from "./model/order";
 export type { PricingConfig } from "./model/pricing";
 export type { ImageUploadHook } from "./model/image-upload";
+export type { PricingConstantRow } from "./api/pricing-api";

@@ -1,29 +1,16 @@
-import type { DesignContext } from "@/features/design/types/design-context";
+import type { Attachment, ContextChip, DesignContext } from "@/entities/design";
 
-export type AiModel = "openai" | "gemini";
+export type { AiModel, Attachment, ContextChip } from "@/entities/design";
 
-export type MessageRole = "user" | "ai";
 export type GenerationStatus =
   | "idle"
   | "generating"
   | "completed"
   | "regenerating";
 
-export interface Attachment {
-  type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
-  label: string;
-  value: string;
-  file?: File;
-}
-
-export interface ContextChip {
-  label: string;
-  action: string;
-}
-
 export interface Message {
   id: string;
-  role: MessageRole;
+  role: "user" | "ai";
   content: string;
   imageUrl?: string;
   rawImageUrl?: string;

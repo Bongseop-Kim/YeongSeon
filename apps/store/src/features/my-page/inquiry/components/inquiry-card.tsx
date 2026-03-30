@@ -3,10 +3,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui-extended/button";
 import { Label } from "@/shared/ui/label";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
-import {
-  INQUIRY_STATUS,
-  type InquiryItem,
-} from "@/features/my-page/inquiry/types/inquiry-item";
+import { INQUIRY_STATUS, type InquiryItem } from "@/entities/inquiry";
 
 interface InquiryCardProps {
   inquiry: InquiryItem;

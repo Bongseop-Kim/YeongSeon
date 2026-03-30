@@ -87,7 +87,7 @@ flowchart TD
 
 | 파일                                                  | 설명                                 |
 | ----------------------------------------------------- | ------------------------------------ |
-| `apps/store/src/features/design/api/ai-design-api.ts` | 프론트 AI 디자인 API 레이어          |
+| `apps/store/src/entities/design/api/ai-design-api.ts` | 프론트 AI 디자인 API 레이어          |
 | `supabase/schemas/86_design_tokens.sql`               | 디자인 토큰 테이블 스키마            |
 | `supabase/schemas/99_functions_design_tokens.sql`     | 토큰 RPC (use / refund / balance 등) |
 

@@ -2,15 +2,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useAiDesignMutation,
   DESIGN_TOKEN_BALANCE_QUERY_KEY,
-} from "@/features/design/api/ai-design-query";
+} from "@/features/design/hooks/ai-design-query";
 import {
   type AiDesignResponse,
   InsufficientTokensError,
-} from "@/features/design/api/ai-design-api";
+} from "@/entities/design";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment, Message } from "@/features/design/types/chat";
-import { uploadGeneratedImage } from "@/features/design/api/imagekit-upload";
-import { useSaveDesignSessionMutation } from "@/features/design/api/design-session-query";
+import { uploadGeneratedImage } from "@/features/design/utils/imagekit-upload";
+import { useSaveDesignSessionMutation } from "@/features/design/hooks/design-session-query";
 import { toPreviewBackground } from "@/features/design/utils";
 
 interface UseDesignChatResult {

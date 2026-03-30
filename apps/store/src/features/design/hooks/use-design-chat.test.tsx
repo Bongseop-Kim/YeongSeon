@@ -87,24 +87,24 @@ vi.mock("@tanstack/react-query", () => ({
   }),
 }));
 
-vi.mock("@/features/design/api/ai-design-api", () => ({
+vi.mock("@/entities/design/api/ai-design-api", () => ({
   InsufficientTokensError: MockInsufficientTokensError,
 }));
 
-vi.mock("@/features/design/api/ai-design-query", () => ({
+vi.mock("@/features/design/hooks/ai-design-query", () => ({
   DESIGN_TOKEN_BALANCE_QUERY_KEY: ["design-token-balance"],
   useAiDesignMutation: () => ({
     mutate,
   }),
 }));
 
-vi.mock("@/features/design/api/design-session-query", () => ({
+vi.mock("@/features/design/hooks/design-session-query", () => ({
   useSaveDesignSessionMutation: () => ({
     mutate: saveSessionMutate,
   }),
 }));
 
-vi.mock("@/features/design/api/imagekit-upload", () => ({
+vi.mock("@/features/design/utils/imagekit-upload", () => ({
   uploadGeneratedImage: vi.fn().mockResolvedValue(null),
 }));
 

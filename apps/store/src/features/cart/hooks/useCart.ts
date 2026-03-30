@@ -20,10 +20,10 @@ import { useAuthStore } from "@/shared/store/auth";
 import { toast } from "@/shared/lib/toast";
 import {
   cartKeys,
-  useCartItems,
   useClearCartItems,
+  useCartItems,
   useSetCartItems,
-} from "@/features/cart/api/cart-query";
+} from "@/entities/cart";
 import {
   addProductToCart,
   addReformToCart as addReformItemToCart,
