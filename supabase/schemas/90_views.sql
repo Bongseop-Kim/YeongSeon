@@ -58,7 +58,17 @@ SELECT
   o.created_at,
   public.get_order_customer_actions(o.order_type, o.status, o.id) AS "customerActions"
 FROM public.orders o
-WHERE o.user_id = auth.uid();
+WHERE o.user_id = auth.uid()
+  AND EXISTS (
+    SELECT 1
+    FROM public.order_items oi
+    WHERE oi.order_id = o.id
+      AND NOT EXISTS (
+        SELECT 1
+        FROM public.claims cl
+        WHERE cl.order_item_id = oi.id
+      )
+  );
 
 -- ── order_detail_view ───────────────────────────────────────
 CREATE OR REPLACE VIEW public.order_detail_view
@@ -162,7 +172,11 @@ LEFT JOIN LATERAL (
   JOIN public.coupons c ON c.id = uc1.coupon_id
   WHERE uc1.id = oi.applied_user_coupon_id
   LIMIT 1
-) uc ON true;
+) uc ON true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.claims cl
+  WHERE cl.order_item_id = oi.id
+);
 
 -- ── claim_list_view ──────────────────────────────────────────
 CREATE OR REPLACE VIEW public.claim_list_view

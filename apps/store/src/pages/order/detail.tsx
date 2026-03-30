@@ -455,18 +455,40 @@ const OrderDetailPage = () => {
             ) : null}
 
             <UtilityPageSection
-              title={`주문 상품 ${order.items.length}개`}
+              title={
+                order.items.length === 0
+                  ? "주문 상품"
+                  : `주문 상품 ${order.items.length}개`
+              }
               description="상품 구성과 클레임 가능 동작을 확인합니다."
             >
               <div className="border-t border-stone-200">
-                {order.items.map((item, index) => (
-                  <React.Fragment key={item.id}>
-                    {(() => {
-                      const isSample = item.type === "sample";
-                      const isCustomizableItem =
-                        item.type === "custom" || isSample;
+                {order.items.length === 0 ? (
+                  <div className="py-5">
+                    <p className="text-sm text-zinc-500">
+                      표시할 주문 상품이 없습니다.{" "}
+                      <button
+                        type="button"
+                        className="font-medium text-info underline underline-offset-4"
+                        onClick={() => navigate(ROUTES.CLAIM_LIST)}
+                      >
+                        클레임 목록에서 확인하세요.
+                      </button>
+                    </p>
+                  </div>
+                ) : (
+                  order.items.map((item, index) => (
+                    <React.Fragment key={item.id}>
+                      {(() => {
+                        const isSample = item.type === "sample";
+                        const isCustomizableItem =
+                          item.type === "custom" || isSample;
+                        const orderData = isCustomizableItem
+                          ? isSample
+                            ? item.sampleData
+                            : item.customData
+                          : null;
 
-                      if (!isCustomizableItem) {
                         return (
                           <>
                             <div className="py-5">
@@ -481,69 +503,48 @@ const OrderDetailPage = () => {
                                 )}
                               />
                             </div>
+                            {orderData && (
+                              <>
+                                <Separator />
+                                <div className="py-5">
+                                  <p className="text-base font-semibold tracking-tight text-zinc-950">
+                                    {isSample
+                                      ? "샘플 제작 옵션"
+                                      : "주문 제작 옵션"}
+                                  </p>
+                                  <p className="mt-1 text-sm text-zinc-500">
+                                    제작 조건과 참조 이미지를 확인합니다.
+                                  </p>
+                                  <div className="mt-4">
+                                    <CustomOrderOptionsSection
+                                      options={orderData.options}
+                                      referenceImageUrls={
+                                        orderData.referenceImageUrls
+                                      }
+                                      additionalNotes={
+                                        orderData.additionalNotes
+                                      }
+                                      hasSample={isSample}
+                                      sampleType={
+                                        isSample
+                                          ? (item.sampleData?.sampleType ??
+                                            null)
+                                          : null
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            )}
                             {index < order.items.length - 1 ? (
                               <Separator />
                             ) : null}
                           </>
                         );
-                      }
-
-                      const orderData = isSample
-                        ? item.sampleData
-                        : item.customData;
-
-                      return (
-                        <>
-                          <div className="py-5">
-                            <OrderItemCard
-                              item={item}
-                              showQuantity={true}
-                              showPrice={true}
-                              actions={renderClaimButtons(
-                                order.customerActions,
-                                item,
-                                handleClaimRequest,
-                              )}
-                            />
-                          </div>
-                          {orderData && (
-                            <>
-                              <Separator />
-                              <div className="py-5">
-                                <p className="text-base font-semibold tracking-tight text-zinc-950">
-                                  {isSample
-                                    ? "샘플 제작 옵션"
-                                    : "주문 제작 옵션"}
-                                </p>
-                                <p className="mt-1 text-sm text-zinc-500">
-                                  제작 조건과 참조 이미지를 확인합니다.
-                                </p>
-                                <div className="mt-4">
-                                  <CustomOrderOptionsSection
-                                    options={orderData.options}
-                                    referenceImageUrls={
-                                      orderData.referenceImageUrls
-                                    }
-                                    additionalNotes={orderData.additionalNotes}
-                                    hasSample={isSample}
-                                    sampleType={
-                                      isSample
-                                        ? (item.sampleData?.sampleType ?? null)
-                                        : null
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            </>
-                          )}
-                          {index < order.items.length - 1 ? (
-                            <Separator />
-                          ) : null}
-                        </>
-                      );
-                    })()}
-                  </React.Fragment>
-                ))}
+                      })()}
+                    </React.Fragment>
+                  ))
+                )}
               </div>
             </UtilityPageSection>
           </div>
