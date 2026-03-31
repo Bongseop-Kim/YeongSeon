@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, type UseFormReturn, useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProfile, useUpdateMarketingConsent } from "@/entities/my-page";
 import {
   notificationStatusKeys,
-  saveNotificationConsent,
-  updateNotificationEnabled,
+  setNotificationPreferences,
 } from "@/entities/notification";
 import { PhoneVerificationForm } from "@/features/notification";
 import { Empty } from "@/shared/composite/empty";
@@ -37,11 +36,32 @@ interface NoticeFormValues {
   notificationEnabled: boolean;
 }
 
+async function applyNotificationUpdateRollback(params: {
+  previousValue: boolean;
+  form: UseFormReturn<NoticeFormValues>;
+  queryClient: ReturnType<typeof useQueryClient>;
+  refetch: () => Promise<unknown>;
+  error: unknown;
+}) {
+  await params.refetch();
+  await params.queryClient.invalidateQueries({
+    queryKey: notificationStatusKeys.detail(),
+  });
+  params.form.setValue("notificationEnabled", params.previousValue);
+
+  const message =
+    params.error instanceof Error
+      ? params.error.message
+      : "알림 설정 변경에 실패했습니다.";
+  toast.error(message);
+}
+
 export default function MyInfoNoticePage() {
   const { data: profile, isLoading, isError, error, refetch } = useProfile();
   const updateMarketingConsentMutation = useUpdateMarketingConsent();
   const queryClient = useQueryClient();
   const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [isSavingNotification, setIsSavingNotification] = useState(false);
 
   const form = useForm<NoticeFormValues>({
     defaultValues: { kakaoSms: false, notificationEnabled: false },
@@ -66,7 +86,7 @@ export default function MyInfoNoticePage() {
   };
 
   const handleNotificationToggle = async (checked: boolean) => {
-    if (!profile) return;
+    if (!profile || isSavingNotification) return;
 
     if (checked && !profile.phoneVerified) {
       setShowVerifyModal(true);
@@ -75,23 +95,27 @@ export default function MyInfoNoticePage() {
 
     const previousValue = form.getValues("notificationEnabled");
     form.setValue("notificationEnabled", checked);
+    setIsSavingNotification(true);
 
     try {
-      if (checked && !profile.notificationConsent) {
-        await saveNotificationConsent(true);
-      }
-      await updateNotificationEnabled(checked);
+      await setNotificationPreferences({
+        notificationConsent: checked,
+        notificationEnabled: checked,
+      });
       await refetch();
       await queryClient.invalidateQueries({
         queryKey: notificationStatusKeys.detail(),
       });
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "알림 설정 변경에 실패했습니다.";
-      form.setValue("notificationEnabled", previousValue);
-      toast.error(message);
+      await applyNotificationUpdateRollback({
+        previousValue,
+        form,
+        queryClient,
+        refetch,
+        error,
+      });
+    } finally {
+      setIsSavingNotification(false);
     }
   };
 
@@ -170,7 +194,7 @@ export default function MyInfoNoticePage() {
                           onCheckedChange={(checked) => {
                             void handleNotificationToggle(checked);
                           }}
-                          disabled={!profile}
+                          disabled={!profile || isSavingNotification}
                         />
                       )}
                     />
@@ -246,24 +270,32 @@ export default function MyInfoNoticePage() {
               </DialogHeader>
               <PhoneVerificationForm
                 onVerified={async () => {
+                  if (isSavingNotification) return;
+
                   const previousValue = form.getValues("notificationEnabled");
                   form.setValue("notificationEnabled", true);
+                  setIsSavingNotification(true);
 
                   try {
-                    await saveNotificationConsent(true);
-                    await updateNotificationEnabled(true);
+                    await setNotificationPreferences({
+                      notificationConsent: true,
+                      notificationEnabled: true,
+                    });
                     setShowVerifyModal(false);
                     await refetch();
                     await queryClient.invalidateQueries({
                       queryKey: notificationStatusKeys.detail(),
                     });
                   } catch (error) {
-                    const message =
-                      error instanceof Error
-                        ? error.message
-                        : "알림 활성화에 실패했습니다.";
-                    form.setValue("notificationEnabled", previousValue);
-                    toast.error(message);
+                    await applyNotificationUpdateRollback({
+                      previousValue,
+                      form,
+                      queryClient,
+                      refetch,
+                      error,
+                    });
+                  } finally {
+                    setIsSavingNotification(false);
                   }
                 }}
               />
