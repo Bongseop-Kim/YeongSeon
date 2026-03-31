@@ -33,6 +33,10 @@ export const signInWithOAuth = async (
     provider,
     options: {
       redirectTo: `${window.location.origin}/auth/callback`,
+      scopes:
+        provider === "kakao"
+          ? "profile_nickname account_email"
+          : "openid email",
     },
   });
 
