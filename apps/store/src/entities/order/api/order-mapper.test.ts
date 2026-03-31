@@ -42,6 +42,9 @@ const createOrderDetailRowRaw = (
   trackingNumber: "1234567890",
   shippedAt: "2026-03-15T10:00:00Z",
   deliveredAt: null,
+  companyCourierCompany: null,
+  companyTrackingNumber: null,
+  companyShippedAt: null,
   confirmedAt: null,
   created_at: "2026-03-15T09:00:00Z",
   recipientName: "홍길동",
@@ -190,20 +193,56 @@ describe("toOrderViewFromDetail", () => {
           trackingNumber: "1234567890",
           shippedAt: "2026-03-15T10:00:00Z",
           deliveredAt: null,
+          companyCourierCompany: null,
+          companyTrackingNumber: null,
+          companyShippedAt: null,
         },
         confirmedAt: null,
       }),
     );
   });
 
-  it("수령인이나 운송장 정보가 없으면 null로 변환한다", () => {
+  it("수선 주문의 업체 발송 정보만 있어도 trackingInfo를 유지한다", () => {
+    expect(
+      toOrderViewFromDetail(
+        parseOrderDetailRow(
+          createOrderDetailRowRaw({
+            orderType: "repair",
+            courierCompany: null,
+            trackingNumber: null,
+            shippedAt: null,
+            companyCourierCompany: "한진택배",
+            companyTrackingNumber: "COMPANY-123",
+            companyShippedAt: "2026-03-16T10:00:00Z",
+          }),
+        ),
+        [],
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        trackingInfo: {
+          courierCompany: null,
+          trackingNumber: null,
+          shippedAt: null,
+          deliveredAt: null,
+          companyCourierCompany: "한진택배",
+          companyTrackingNumber: "COMPANY-123",
+          companyShippedAt: "2026-03-16T10:00:00Z",
+        },
+      }),
+    );
+  });
+
+  it("고객/업체 운송장 정보가 모두 없으면 null로 변환한다", () => {
     expect(
       toOrderViewFromDetail(
         parseOrderDetailRow(
           createOrderDetailRowRaw({
             recipientName: null,
-            courierCompany: "CJ대한통운",
+            courierCompany: null,
             trackingNumber: null,
+            companyCourierCompany: null,
+            companyTrackingNumber: null,
           }),
         ),
         [],
@@ -505,6 +544,9 @@ describe("parseOrderDetailRow", () => {
       trackingNumber: "1234567890",
       shippedAt: "2026-03-15T10:00:00Z",
       deliveredAt: null,
+      companyCourierCompany: null,
+      companyTrackingNumber: null,
+      companyShippedAt: null,
       confirmedAt: null,
       created_at: "2026-03-15T09:00:00Z",
       recipientName: "홍길동",
@@ -524,12 +566,16 @@ describe("parseOrderDetailRow", () => {
         createOrderDetailRowRaw({
           courierCompany: 123,
           trackingNumber: undefined,
+          companyCourierCompany: 123,
+          companyTrackingNumber: undefined,
         }),
       ),
     ).toEqual(
       expect.objectContaining({
         courierCompany: null,
         trackingNumber: null,
+        companyCourierCompany: null,
+        companyTrackingNumber: null,
       }),
     );
   });

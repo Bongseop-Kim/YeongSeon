@@ -91,10 +91,13 @@ export interface ShippingInfo {
 
 // 배송 추적 정보
 export interface TrackingInfo {
-  courierCompany: string;
-  trackingNumber: string;
+  courierCompany: string | null;
+  trackingNumber: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  companyCourierCompany: string | null;
+  companyTrackingNumber: string | null;
+  companyShippedAt: string | null;
 }
 
 // 주문 (한 주문에 여러 상품이 포함됨)

@@ -86,12 +86,20 @@ function toShippingAddress(
 }
 
 function toTrackingInfo(dto: AdminOrderDetailRowDTO): AdminTrackingInfo | null {
-  if (!dto.courierCompany || !dto.trackingNumber) return null;
+  const hasCustomerTracking = dto.courierCompany || dto.trackingNumber;
+  const hasCompanyTracking =
+    dto.companyCourierCompany || dto.companyTrackingNumber;
+
+  if (!hasCustomerTracking && !hasCompanyTracking) return null;
+
   return {
-    courierCompany: dto.courierCompany,
-    trackingNumber: dto.trackingNumber,
-    shippedAt: dto.shippedAt,
-    deliveredAt: dto.deliveredAt,
+    courierCompany: dto.courierCompany ?? null,
+    trackingNumber: dto.trackingNumber ?? null,
+    shippedAt: dto.shippedAt ?? null,
+    deliveredAt: dto.deliveredAt ?? null,
+    companyCourierCompany: dto.companyCourierCompany ?? null,
+    companyTrackingNumber: dto.companyTrackingNumber ?? null,
+    companyShippedAt: dto.companyShippedAt ?? null,
   };
 }
 

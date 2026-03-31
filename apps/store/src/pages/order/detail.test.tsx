@@ -40,9 +40,9 @@ vi.mock("@/shared/layout/page-layout", () => ({
     actionBar?: React.ReactNode;
   }) => (
     <div>
-      <div>{sidebar}</div>
-      <div>{children}</div>
-      <div>{actionBar}</div>
+      <div data-testid="page-layout-sidebar">{sidebar}</div>
+      <div data-testid="page-layout-content">{children}</div>
+      <div data-testid="page-layout-action-bar">{actionBar}</div>
     </div>
   ),
 }));
@@ -256,6 +256,123 @@ describe("OrderDetailPage", () => {
 
     expect(screen.getByText("배송 전에 연락 주세요.")).toBeInTheDocument();
     expect(screen.queryByText("DELIVERY_REQUEST_4")).not.toBeInTheDocument();
+  });
+
+  it("수선 주문의 현재 할 일 카드를 메인 영역에만 표시한다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        orderType: "repair",
+        status: "발송대기",
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "현재 할 일" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("repair-shipping-banner")).toBeInTheDocument();
+  });
+
+  it("수선 주문의 배송 추적 섹션이 보이면 현재 할 일 카드에 같은 추적 정보를 중복 표시하지 않는다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        orderType: "repair",
+        status: "배송중",
+        trackingInfo: {
+          courierCompany: "cj",
+          trackingNumber: "1234567890",
+          shippedAt: "2026-03-15T09:00:00Z",
+          deliveredAt: null,
+          companyCourierCompany: null,
+          companyTrackingNumber: null,
+          companyShippedAt: null,
+        },
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(
+      screen.queryByRole("heading", { name: "현재 할 일" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "배송 추적" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1234567890")).toBeInTheDocument();
+  });
+
+  it("수선 주문에 업체 발송 정보가 있으면 별도 섹션을 표시한다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        orderType: "repair",
+        status: "배송중",
+        trackingInfo: {
+          courierCompany: null,
+          trackingNumber: null,
+          shippedAt: null,
+          deliveredAt: null,
+          companyCourierCompany: "hanjin",
+          companyTrackingNumber: "COMPANY-123",
+          companyShippedAt: "2026-03-16T10:00:00Z",
+        },
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "배송 추적" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("업체 발송 정보")).toBeInTheDocument();
+    expect(screen.getByText("COMPANY-123")).toBeInTheDocument();
+  });
+
+  it("수선 주문의 고객 배송조회 링크와 업체 배송조회 링크를 서로 다른 접근성 이름으로 노출한다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        orderType: "repair",
+        status: "배송중",
+        trackingInfo: {
+          courierCompany: "cj",
+          trackingNumber: "1234567890",
+          shippedAt: "2026-03-15T09:00:00Z",
+          deliveredAt: null,
+          companyCourierCompany: "hanjin",
+          companyTrackingNumber: "COMPANY-123",
+          companyShippedAt: "2026-03-16T10:00:00Z",
+        },
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(
+      screen.getByRole("link", { name: "고객 배송 정보 배송조회" }),
+    ).toHaveAttribute("href");
+    expect(
+      screen.getByRole("link", { name: "업체 발송 정보 배송조회" }),
+    ).toHaveAttribute("href");
   });
 
   it("구매확정 가능 주문은 전용 섹션 제목과 액션 버튼을 함께 표시한다", async () => {

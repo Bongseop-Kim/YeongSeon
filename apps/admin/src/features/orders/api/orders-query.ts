@@ -212,18 +212,28 @@ export function useTrackingSave(onSuccess?: () => void | Promise<unknown>) {
 
   const saveTracking = async (
     orderId: string,
-    courierCompany: string,
-    trackingNumber: string,
-  ) => {
+    courierCompany?: string,
+    trackingNumber?: string,
+    companyCourierCompany?: string,
+    companyTrackingNumber?: string,
+  ): Promise<boolean> => {
     setIsPending(true);
     try {
-      await updateOrderTracking({ orderId, courierCompany, trackingNumber });
+      await updateOrderTracking({
+        orderId,
+        courierCompany,
+        trackingNumber,
+        companyCourierCompany,
+        companyTrackingNumber,
+      });
       message.success("배송 정보가 저장되었습니다.");
       await onSuccess?.();
+      return true;
     } catch (err) {
       message.error(
         err instanceof Error ? err.message : "배송 정보 저장에 실패했습니다.",
       );
+      return false;
     } finally {
       setIsPending(false);
     }
@@ -240,6 +250,10 @@ export function useTrackingState(
 ) {
   const [courierCompany, setCourierCompany] = useState<string>("");
   const [trackingNumber, setTrackingNumber] = useState<string>("");
+  const [companyCourierCompany, setCompanyCourierCompany] =
+    useState<string>("");
+  const [companyTrackingNumber, setCompanyTrackingNumber] =
+    useState<string>("");
   const prevOrderIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -250,6 +264,8 @@ export function useTrackingState(
       order.trackingInfo?.courierCompany ?? defaultCourier ?? "",
     );
     setTrackingNumber(order.trackingInfo?.trackingNumber ?? "");
+    setCompanyCourierCompany(order.trackingInfo?.companyCourierCompany ?? "");
+    setCompanyTrackingNumber(order.trackingInfo?.companyTrackingNumber ?? "");
   }, [order, defaultCourier]);
 
   return {
@@ -257,5 +273,9 @@ export function useTrackingState(
     setCourierCompany,
     trackingNumber,
     setTrackingNumber,
+    companyCourierCompany,
+    setCompanyCourierCompany,
+    companyTrackingNumber,
+    setCompanyTrackingNumber,
   };
 }

@@ -12,7 +12,6 @@ import {
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
 import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
 import { useOrderStore } from "@/shared/store/order";
-import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
 import { ReformItemInfo } from "@/shared/ui/reform-item-info";
 
 interface ReformOrderItemCardProps {
@@ -29,10 +28,6 @@ export function ReformOrderItemCard({
   const { updateOrderItemTracking } = useOrderStore();
 
   const hasCoupon = !!item.appliedCoupon;
-  const tieImage =
-    typeof item.reformData.tie.image === "string"
-      ? item.reformData.tie.image
-      : null;
 
   useEffect(() => {
     updateOrderItemTracking(
@@ -45,7 +40,7 @@ export function ReformOrderItemCard({
 
   return (
     <div className="py-5">
-      <ReformItemInfo item={item} image={tieImage} />
+      <ReformItemInfo item={item} image={item.reformData.tie.image} />
 
       <div className="mt-2 flex gap-2">
         <Button
@@ -59,9 +54,6 @@ export function ReformOrderItemCard({
       </div>
 
       <Separator className="my-3" />
-
-      <RepairShippingAddressBanner />
-
       <div className="space-y-2 mt-4">
         <p className="text-sm font-semibold text-zinc-700">
           이미 발송하셨나요?

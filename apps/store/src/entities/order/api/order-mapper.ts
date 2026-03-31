@@ -89,37 +89,48 @@ export const toOrderView = (order: OrderViewDTO): Order => ({
 export const toOrderViewFromDetail = (
   detail: OrderDetailRowDTO,
   items: OrderItemDTO[],
-): Order => ({
-  id: detail.id,
-  orderNumber: detail.orderNumber,
-  date: detail.date,
-  status: detail.status,
-  orderType: detail.orderType,
-  totalPrice: detail.totalPrice,
-  items: items.map(toOrderItemView),
-  shippingInfo: detail.recipientName
-    ? {
-        recipientName: detail.recipientName,
-        recipientPhone: detail.recipientPhone ?? "",
-        address: detail.shippingAddress ?? "",
-        addressDetail: detail.shippingAddressDetail ?? null,
-        postalCode: detail.shippingPostalCode ?? "",
-        deliveryMemo: detail.deliveryMemo ?? null,
-        deliveryRequest: detail.deliveryRequest ?? null,
-      }
-    : null,
-  trackingInfo:
-    detail.courierCompany && detail.trackingNumber
+): Order => {
+  const hasCustomerTracking =
+    detail.courierCompany !== null || detail.trackingNumber !== null;
+  const hasCompanyTracking =
+    detail.companyCourierCompany !== null ||
+    detail.companyTrackingNumber !== null;
+
+  return {
+    id: detail.id,
+    orderNumber: detail.orderNumber,
+    date: detail.date,
+    status: detail.status,
+    orderType: detail.orderType,
+    totalPrice: detail.totalPrice,
+    items: items.map(toOrderItemView),
+    shippingInfo: detail.recipientName
       ? {
-          courierCompany: detail.courierCompany,
-          trackingNumber: detail.trackingNumber,
-          shippedAt: detail.shippedAt ?? null,
-          deliveredAt: detail.deliveredAt ?? null,
+          recipientName: detail.recipientName,
+          recipientPhone: detail.recipientPhone ?? "",
+          address: detail.shippingAddress ?? "",
+          addressDetail: detail.shippingAddressDetail ?? null,
+          postalCode: detail.shippingPostalCode ?? "",
+          deliveryMemo: detail.deliveryMemo ?? null,
+          deliveryRequest: detail.deliveryRequest ?? null,
         }
       : null,
-  confirmedAt: detail.confirmedAt ?? null,
-  customerActions: detail.customerActions,
-});
+    trackingInfo:
+      hasCustomerTracking || hasCompanyTracking
+        ? {
+            courierCompany: detail.courierCompany ?? null,
+            trackingNumber: detail.trackingNumber ?? null,
+            shippedAt: detail.shippedAt ?? null,
+            deliveredAt: detail.deliveredAt ?? null,
+            companyCourierCompany: detail.companyCourierCompany ?? null,
+            companyTrackingNumber: detail.companyTrackingNumber ?? null,
+            companyShippedAt: detail.companyShippedAt ?? null,
+          }
+        : null,
+    confirmedAt: detail.confirmedAt ?? null,
+    customerActions: detail.customerActions,
+  };
+};
 
 // ── parse helpers (런타임 검증) ──────────────────────
 
@@ -632,6 +643,9 @@ export const parseOrderDetailRow = (data: unknown): OrderDetailRowDTO => {
     trackingNumber: str(data.trackingNumber),
     shippedAt: str(data.shippedAt),
     deliveredAt: str(data.deliveredAt),
+    companyCourierCompany: str(data.companyCourierCompany),
+    companyTrackingNumber: str(data.companyTrackingNumber),
+    companyShippedAt: str(data.companyShippedAt),
     confirmedAt: str(data.confirmedAt),
     created_at: data.created_at,
     recipientName: str(data.recipientName),

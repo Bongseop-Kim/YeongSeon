@@ -9,10 +9,12 @@ import { toast } from "@/shared/lib/toast";
 import { Clock3, Loader2, ReceiptText, Truck } from "lucide-react";
 import { useRequiredUser } from "@/shared/hooks/use-required-user";
 import { Button } from "@/shared/ui-extended/button";
+import { useModalStore } from "@/shared/store/modal";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const openModal = useModalStore((state) => state.openModal);
   const { mutateAsync: confirmPaymentMutation } = useConfirmPayment();
   const { items: orderItems, clearOrderItems } = useOrderStore();
   const userId = useRequiredUser();
@@ -84,18 +86,27 @@ const PaymentSuccessPage = () => {
         } else {
           toast.success("결제가 완료되었습니다!");
         }
-        if (repairOrder) {
-          navigate(`${ROUTES.REPAIR_SHIPPING}/${repairOrder.orderId}`, {
-            replace: true,
-            state: { prefilledTracking: prefilledTracking ?? null },
-          });
-        } else if (paymentResult.type === "token_purchase") {
+        if (paymentResult.type === "token_purchase") {
           navigate(ROUTES.TOKEN_PURCHASE_SUCCESS, { replace: true });
-        } else if (paymentResult.orders.length === 1) {
-          navigate(
-            `${ROUTES.ORDER_DETAIL}/${paymentResult.orders[0].orderId}`,
-            { replace: true },
-          );
+        } else if (repairOrder) {
+          openModal({
+            title: "수선 주문 배송 정보 안내",
+            description:
+              "방금 완료된 수선 주문에 배송 정보가 입력되지 않았습니다. 수선 주문 상세 페이지에서 발송 정보를 등록해주세요.",
+            confirmText: "수선 주문으로 이동",
+            cancelText: "주문 목록으로",
+            onConfirm: () => {
+              navigate(`${ROUTES.REPAIR_SHIPPING}/${repairOrder.orderId}`, {
+                replace: true,
+                state: {
+                  prefilledTracking: prefilledTracking ?? null,
+                },
+              });
+            },
+            onCancel: () => {
+              navigate(ROUTES.ORDER_LIST, { replace: true });
+            },
+          });
         } else {
           navigate(ROUTES.ORDER_LIST, { replace: true });
         }

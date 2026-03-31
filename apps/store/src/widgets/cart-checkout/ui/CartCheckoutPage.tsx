@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/shared/ui-extended/button";
 import {
   CartEditDialog,
@@ -29,10 +30,13 @@ import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { toast } from "sonner";
 import { UtilityPageIntro } from "@/shared/composite/utility-page";
+import { cartKeys, removeCartItemsByIds } from "@/entities/cart";
+import { useAuthStore } from "@/shared/store/auth";
 
 export function CartCheckoutPage() {
   const { confirm } = useModalStore();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     items,
@@ -43,6 +47,7 @@ export function CartCheckoutPage() {
     applyCoupon,
   } = useCart();
   const { setOrderItems } = useOrderStore();
+  const userId = useAuthStore((state) => state.user?.id);
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
@@ -98,9 +103,16 @@ export function CartCheckoutPage() {
     confirm("선택한 상품을 삭제하시겠습니까?", () => {
       void (async () => {
         try {
-          await Promise.all(
-            selectedItems.map((itemId) => removeFromCart(itemId)),
-          );
+          if (userId) {
+            await removeCartItemsByIds(userId, selectedItems);
+            await queryClient.invalidateQueries({
+              queryKey: cartKeys.items(userId),
+            });
+          } else {
+            await Promise.all(
+              selectedItems.map((itemId) => removeFromCart(itemId)),
+            );
+          }
           setSelectedItems([]);
         } catch (error) {
           console.error(error);

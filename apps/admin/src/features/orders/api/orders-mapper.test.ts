@@ -167,6 +167,36 @@ describe("toAdminOrderItem", () => {
           trackingNumber: "1234567890",
           shippedAt: "2026-03-15T10:00:00Z",
           deliveredAt: null,
+          companyCourierCompany: null,
+          companyTrackingNumber: null,
+          companyShippedAt: null,
+        },
+      }),
+    );
+  });
+
+  it("회사→고객 배송 정보만 있어도 trackingInfo를 매핑한다", () => {
+    expect(
+      toAdminOrderDetail(
+        createAdminOrderDetailRowDTO({
+          courierCompany: null,
+          trackingNumber: null,
+          shippedAt: null,
+          companyCourierCompany: "한진택배",
+          companyTrackingNumber: "COMPANY-123",
+          companyShippedAt: "2026-03-16T10:00:00Z",
+        } as never),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        trackingInfo: {
+          courierCompany: null,
+          trackingNumber: null,
+          shippedAt: null,
+          deliveredAt: null,
+          companyCourierCompany: "한진택배",
+          companyTrackingNumber: "COMPANY-123",
+          companyShippedAt: "2026-03-16T10:00:00Z",
         },
       }),
     );
@@ -178,7 +208,8 @@ describe("toAdminOrderItem", () => {
         createAdminOrderDetailRowDTO({
           recipientName: null,
           courierCompany: null,
-          trackingNumber: "1234567890",
+          trackingNumber: null,
+          shippedAt: null,
         }),
       ),
     ).toEqual(

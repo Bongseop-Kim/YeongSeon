@@ -21,7 +21,7 @@ export function ReformCartItemCard({
       onChangeOption={onChangeOption}
       onChangeCoupon={onChangeCoupon}
     >
-      <ReformItemInfo item={item} />
+      <ReformItemInfo item={item} image={item.reformData.tie.image} />
     </BaseCartItemCard>
   );
 }
