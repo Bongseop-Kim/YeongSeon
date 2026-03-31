@@ -257,4 +257,26 @@ describe("OrderDetailPage", () => {
     expect(screen.getByText("배송 전에 연락 주세요.")).toBeInTheDocument();
     expect(screen.queryByText("DELIVERY_REQUEST_4")).not.toBeInTheDocument();
   });
+
+  it("구매확정 가능 주문은 전용 섹션 제목과 액션 버튼을 함께 표시한다", async () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        customerActions: ["confirm_purchase"],
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(
+      await screen.findByRole("heading", { name: "구매확정" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "구매확정" }),
+    ).toBeInTheDocument();
+  });
 });

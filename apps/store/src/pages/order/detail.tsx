@@ -144,7 +144,7 @@ const PurchaseConfirmSection = ({ orderId }: { orderId: string }) => {
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-info/20 bg-info-muted p-4">
+    <div className="space-y-3">
       {isError && (
         <StateCallout tone="destructive">
           {getOrderErrorDescription(error) ||
@@ -345,8 +345,7 @@ const OrderDetailPage = () => {
     order.orderType === "repair" &&
     !!order.trackingInfo?.courierCompany &&
     !!order.trackingInfo?.trackingNumber;
-  const showTaskSection =
-    canConfirmPurchase || isRepairShippingPending || isRepairWithTracking;
+  const showTaskSection = isRepairShippingPending || isRepairWithTracking;
 
   return (
     <MainLayout>
@@ -383,10 +382,6 @@ const OrderDetailPage = () => {
                   className="rounded-2xl"
                 >
                   <div className="space-y-3">
-                    {canConfirmPurchase ? (
-                      <PurchaseConfirmSection orderId={order.id} />
-                    ) : null}
-
                     {isRepairShippingPending ? (
                       <RepairShippingPendingSection orderId={order.id} />
                     ) : null}
@@ -457,6 +452,17 @@ const OrderDetailPage = () => {
                 </div>
               </UtilityPageSection>
             ) : null}
+
+            {canConfirmPurchase && (
+              <UtilityPageSection
+                title="구매확정"
+                description="상품 수령이 끝났다면 구매를 확정합니다."
+              >
+                <div className="border-t border-stone-200 py-5">
+                  <PurchaseConfirmSection orderId={order.id} />
+                </div>
+              </UtilityPageSection>
+            )}
 
             <UtilityPageSection
               title={
