@@ -6,7 +6,11 @@ import { Separator } from "@/shared/ui/separator";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
-import { OrderFormItemCard, ReformOrderItemCard } from "@/features/order";
+import {
+  OrderFormItemCard,
+  ReformOrderItemCard,
+  RepairShippingAddressBanner,
+} from "@/features/order";
 import React from "react";
 import { useOrderStore } from "@/shared/store/order";
 import { useCouponSelect } from "@/features/coupon";
@@ -30,8 +34,6 @@ import {
 } from "@/shared/composite/utility-page";
 import { OrderPriceSummaryAside } from "@/shared/composite/order-price-summary-aside";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
-import { RepairShippingAddressBanner } from "@/features/order";
-
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [cancellationConsent, setCancellationConsent] = useState(false);
@@ -318,7 +320,7 @@ const OrderFormPage = () => {
                   className="border-t border-stone-200"
                   data-testid="order-items-card"
                 >
-                  {orderItems.some((item) => item.type !== "product") && (
+                  {hasReformItems && (
                     <div className="py-5">
                       <RepairShippingAddressBanner />
                       <Separator className="mt-5" />

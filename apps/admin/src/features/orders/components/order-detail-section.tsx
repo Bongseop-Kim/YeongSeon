@@ -85,13 +85,48 @@ export function OrderDetailSection() {
       />
     );
 
-  const handleChangeStatus = (newStatus: string, memoText: string) => {
-    if (
-      newStatus === "배송완료" &&
-      (!courierCompany.trim() || !trackingNumber.trim())
-    ) {
-      message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
-      return Promise.resolve(false);
+  const handleChangeStatus = async (newStatus: string, memoText: string) => {
+    if (newStatus !== "배송완료") {
+      return changeStatus(newStatus, memoText);
+    }
+
+    const isRepairOrder = orderType === "repair";
+    const persistedCourierCompany = isRepairOrder
+      ? (order.trackingInfo?.companyCourierCompany?.trim() ?? "")
+      : (order.trackingInfo?.courierCompany?.trim() ?? "");
+    const persistedTrackingNumber = isRepairOrder
+      ? (order.trackingInfo?.companyTrackingNumber?.trim() ?? "")
+      : (order.trackingInfo?.trackingNumber?.trim() ?? "");
+    const draftCourierCompany = isRepairOrder
+      ? companyCourierCompany.trim()
+      : courierCompany.trim();
+    const draftTrackingNumber = isRepairOrder
+      ? companyTrackingNumber.trim()
+      : trackingNumber.trim();
+
+    if (!persistedCourierCompany || !persistedTrackingNumber) {
+      if (!draftCourierCompany || !draftTrackingNumber) {
+        message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
+        return false;
+      }
+
+      const saved = isRepairOrder
+        ? await saveTracking(
+            order.id,
+            undefined,
+            undefined,
+            draftCourierCompany,
+            draftTrackingNumber,
+          )
+        : await saveTracking(
+            order.id,
+            draftCourierCompany,
+            draftTrackingNumber,
+          );
+
+      if (!saved) {
+        return false;
+      }
     }
 
     return changeStatus(newStatus, memoText);
@@ -148,7 +183,13 @@ export function OrderDetailSection() {
               shippedAt={order.trackingInfo?.shippedAt}
               onCourierChange={setCourierCompany}
               onTrackingNumberChange={setTrackingNumber}
-              onSave={saveTracking}
+              onSave={(targetOrderId, nextCourierCompany, nextTrackingNumber) =>
+                void saveTracking(
+                  targetOrderId,
+                  nextCourierCompany,
+                  nextTrackingNumber,
+                )
+              }
               isPending={trackingPending}
             />
           )}
@@ -184,10 +225,10 @@ export function OrderDetailSection() {
               onCourierChange={setCompanyCourierCompany}
               onTrackingNumberChange={setCompanyTrackingNumber}
               onSave={(targetOrderId, compCourier, compTracking) =>
-                saveTracking(
+                void saveTracking(
                   targetOrderId,
-                  order.trackingInfo?.courierCompany ?? "",
-                  order.trackingInfo?.trackingNumber ?? "",
+                  undefined,
+                  undefined,
                   compCourier,
                   compTracking,
                 )

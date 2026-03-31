@@ -28,10 +28,6 @@ export function ReformOrderItemCard({
   const { updateOrderItemTracking } = useOrderStore();
 
   const hasCoupon = !!item.appliedCoupon;
-  const tieImage =
-    typeof item.reformData.tie.image === "string"
-      ? item.reformData.tie.image
-      : null;
 
   useEffect(() => {
     updateOrderItemTracking(
@@ -44,7 +40,7 @@ export function ReformOrderItemCard({
 
   return (
     <div className="py-5">
-      <ReformItemInfo item={item} image={tieImage} />
+      <ReformItemInfo item={item} image={item.reformData.tie.image} />
 
       <div className="mt-2 flex gap-2">
         <Button

@@ -100,6 +100,37 @@ describe("toCartItemView", () => {
     );
   });
 
+  it("reform 장바구니 항목의 tie.image를 문자열이 아니면 제거한다", () => {
+    expect(
+      toCartItemView({
+        id: "item-2",
+        type: "reform",
+        product: null,
+        selectedOption: null,
+        quantity: 1,
+        reformData: {
+          tie: {
+            id: "tie-1",
+            image: 123 as unknown as string,
+            measurementType: "length",
+            tieLength: 145,
+          },
+          cost: 15000,
+        },
+        appliedCoupon: undefined,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        reformData: expect.objectContaining({
+          tie: expect.objectContaining({
+            id: "tie-1",
+            image: undefined,
+          }),
+        }),
+      }),
+    );
+  });
+
   it("product 타입에서 product가 없으면 에러를 던진다", () => {
     expect(() =>
       toCartItemView({

@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/shared/ui-extended/button";
 import {
   CartEditDialog,
@@ -29,12 +30,13 @@ import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { toast } from "sonner";
 import { UtilityPageIntro } from "@/shared/composite/utility-page";
-import { removeCartItemsByIds } from "@/entities/cart/api/cart-api";
+import { cartKeys, removeCartItemsByIds } from "@/entities/cart";
 import { useAuthStore } from "@/shared/store/auth";
 
 export function CartCheckoutPage() {
   const { confirm } = useModalStore();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     items,
@@ -103,6 +105,9 @@ export function CartCheckoutPage() {
         try {
           if (userId) {
             await removeCartItemsByIds(userId, selectedItems);
+            await queryClient.invalidateQueries({
+              queryKey: cartKeys.items(userId),
+            });
           } else {
             await Promise.all(
               selectedItems.map((itemId) => removeFromCart(itemId)),

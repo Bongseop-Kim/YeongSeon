@@ -414,12 +414,7 @@ LEFT JOIN LATERAL (
   FROM public.order_items oi
   WHERE oi.order_id = o.id AND oi.item_type IN ('reform', 'custom', 'sample')
 ) ri ON o.order_type IN ('custom', 'repair', 'sample')
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.claims c
-  WHERE c.order_id = o.id
-    AND c.type = 'cancel'
-    AND c.status IN ('접수', '처리중')
-);
+;
 
 -- ── admin_order_detail_view ──────────────────────────────
 CREATE OR REPLACE VIEW public.admin_order_detail_view

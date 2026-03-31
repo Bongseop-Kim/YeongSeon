@@ -63,7 +63,7 @@ stateDiagram-v2
 | **회사→고객** | `company_courier_company`, `company_tracking_number`, `company_shipped_at` | 관리자 (`admin_update_order_tracking` RPC) | `수선완료` → `배송중` 전환 후 |
 
 - 고객→회사 정보는 관리자 화면에서 읽기 전용으로만 표시된다.
-- 회사→고객 정보는 관리자가 `수선완료` ~ `배송중` 구간에서 입력한다. `배송완료` 이후에는 수정 불가.
+- 회사→고객 정보는 관리자가 `수선완료` ~ `배송중` 구간에서 입력한다. `배송완료`/`완료`/`취소` 이후에는 수정 불가.
 - `admin_update_order_tracking`에 `p_company_courier_company`, `p_company_tracking_number` 파라미터로 전달한다.
 
 ### 순방향

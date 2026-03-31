@@ -273,12 +273,40 @@ describe("OrderDetailPage", () => {
 
     render(<OrderDetailPage />);
 
-    expect(screen.getByTestId("page-layout-content")).toHaveTextContent(
-      "현재 할 일",
-    );
-    expect(screen.getByTestId("page-layout-sidebar")).not.toHaveTextContent(
-      "현재 할 일",
-    );
+    expect(
+      screen.getByRole("heading", { name: "현재 할 일" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("repair-shipping-banner")).toBeInTheDocument();
+  });
+
+  it("수선 주문의 배송 추적 섹션이 보이면 현재 할 일 카드에 같은 추적 정보를 중복 표시하지 않는다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        orderType: "repair",
+        status: "배송중",
+        trackingInfo: {
+          courierCompany: "cj",
+          trackingNumber: "1234567890",
+          shippedAt: "2026-03-15T09:00:00Z",
+          deliveredAt: null,
+        },
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(
+      screen.queryByRole("heading", { name: "현재 할 일" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "배송 추적" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1234567890")).toBeInTheDocument();
   });
 
   it("구매확정 가능 주문은 전용 섹션 제목과 액션 버튼을 함께 표시한다", async () => {

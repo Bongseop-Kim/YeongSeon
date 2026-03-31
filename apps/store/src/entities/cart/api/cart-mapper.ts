@@ -35,12 +35,17 @@ export const toCartItemView = (record: CartItemViewDTO): CartItem => {
     throw new Error("Reform data is required for reform cart items.");
   }
 
+  const tie = toTieItemView(record.reformData.tie);
+
   return {
     id: record.id,
     type: "reform",
     quantity: record.quantity,
     reformData: {
-      tie: toTieItemView(record.reformData.tie),
+      tie: {
+        ...tie,
+        image: typeof tie.image === "string" ? tie.image : undefined,
+      },
       cost: record.reformData.cost,
     },
     appliedCoupon: toAppliedCouponView(record.appliedCoupon),

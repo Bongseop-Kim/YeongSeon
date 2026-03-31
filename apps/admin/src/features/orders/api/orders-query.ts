@@ -212,11 +212,11 @@ export function useTrackingSave(onSuccess?: () => void | Promise<unknown>) {
 
   const saveTracking = async (
     orderId: string,
-    courierCompany: string,
-    trackingNumber: string,
+    courierCompany?: string,
+    trackingNumber?: string,
     companyCourierCompany?: string,
     companyTrackingNumber?: string,
-  ) => {
+  ): Promise<boolean> => {
     setIsPending(true);
     try {
       await updateOrderTracking({
@@ -228,10 +228,12 @@ export function useTrackingSave(onSuccess?: () => void | Promise<unknown>) {
       });
       message.success("배송 정보가 저장되었습니다.");
       await onSuccess?.();
+      return true;
     } catch (err) {
       message.error(
         err instanceof Error ? err.message : "배송 정보 저장에 실패했습니다.",
       );
+      return false;
     } finally {
       setIsPending(false);
     }

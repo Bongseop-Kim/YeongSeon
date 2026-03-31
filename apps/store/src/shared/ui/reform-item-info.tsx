@@ -5,20 +5,21 @@ import { ItemPriceDisplay } from "@/shared/ui/item-price-display";
 
 interface ReformItemInfoProps {
   item: ReformCartItem;
-  image?: string | null;
+  image?: ReformCartItem["reformData"]["tie"]["image"] | null;
 }
 
 export function ReformItemInfo({ item, image }: ReformItemInfoProps) {
   const itemPrice = item.reformData.cost;
   const discount = calculateDiscount(itemPrice, item.appliedCoupon);
   const discountedPrice = itemPrice - discount;
+  const imageUrl = typeof image === "string" ? image : null;
 
   return (
     <div className="flex gap-4">
       <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center overflow-hidden rounded-sm bg-zinc-100">
-        {image ? (
+        {imageUrl ? (
           <img
-            src={image}
+            src={imageUrl}
             alt="넥타이"
             className="h-full w-full object-cover"
           />

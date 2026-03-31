@@ -81,7 +81,8 @@ GRANT ALL ON FUNCTION public.admin_update_order_tracking(
   text
 ) TO service_role;
 
-CREATE OR REPLACE VIEW public.admin_order_list_view
+DROP VIEW IF EXISTS public.admin_order_list_view CASCADE;
+CREATE VIEW public.admin_order_list_view
 WITH (security_invoker = true)
 AS
 SELECT
@@ -141,7 +142,8 @@ WHERE NOT EXISTS (
     AND c.status IN ('접수', '처리중')
 );
 
-CREATE OR REPLACE VIEW public.admin_order_detail_view
+DROP VIEW IF EXISTS public.admin_order_detail_view CASCADE;
+CREATE VIEW public.admin_order_detail_view
 WITH (security_invoker = true)
 AS
 SELECT

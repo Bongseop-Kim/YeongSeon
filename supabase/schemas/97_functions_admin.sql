@@ -275,6 +275,7 @@ SET search_path TO 'public'
 AS $$
 declare
   v_admin_id uuid;
+  v_order_status text;
   v_tracking_number text;
   v_company_tracking_number text;
 begin
@@ -290,26 +291,53 @@ begin
   v_tracking_number := nullif(trim(p_tracking_number), '');
   v_company_tracking_number := nullif(trim(p_company_tracking_number), '');
 
-  update public.orders
-  set
-    courier_company = nullif(trim(p_courier_company), ''),
-    tracking_number = v_tracking_number,
-    shipped_at = case
-      when v_tracking_number is not null then coalesce(shipped_at, now())
-      else shipped_at
-    end,
-    company_courier_company = nullif(trim(p_company_courier_company), ''),
-    company_tracking_number = v_company_tracking_number,
-    company_shipped_at = case
-      when v_company_tracking_number is not null
-        then coalesce(company_shipped_at, now())
-      else company_shipped_at
-    end
+  select status
+  into v_order_status
+  from public.orders
   where id = p_order_id;
 
   if not found then
     raise exception 'Order not found';
   end if;
+
+  if v_order_status in ('배송완료', '완료', '취소') then
+    raise exception 'Tracking cannot be updated for order status: %', v_order_status;
+  end if;
+
+  update public.orders
+  set
+    courier_company = case
+      when p_courier_company is not null
+        then nullif(trim(p_courier_company), '')
+      else courier_company
+    end,
+    tracking_number = case
+      when p_tracking_number is not null
+        then v_tracking_number
+      else tracking_number
+    end,
+    shipped_at = case
+      when p_tracking_number is not null and v_tracking_number is not null
+        then coalesce(shipped_at, now())
+      else shipped_at
+    end,
+    company_courier_company = case
+      when p_company_courier_company is not null
+        then nullif(trim(p_company_courier_company), '')
+      else company_courier_company
+    end,
+    company_tracking_number = case
+      when p_company_tracking_number is not null
+        then v_company_tracking_number
+      else company_tracking_number
+    end,
+    company_shipped_at = case
+      when p_company_tracking_number is not null
+        and v_company_tracking_number is not null
+        then coalesce(company_shipped_at, now())
+      else company_shipped_at
+    end
+  where id = p_order_id;
 
   return jsonb_build_object('success', true, 'order_id', p_order_id);
 end;

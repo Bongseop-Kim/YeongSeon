@@ -175,29 +175,6 @@ const RepairShippingPendingSection = ({ orderId }: { orderId: string }) => {
   );
 };
 
-const RepairShippingInTransitSection = ({
-  courierCompany,
-  trackingNumber,
-}: {
-  courierCompany: string;
-  trackingNumber: string;
-}) => {
-  const trackingUrl = buildTrackingUrl(courierCompany, trackingNumber);
-
-  return (
-    <div className="space-y-2">
-      <DetailRow
-        label="택배사:"
-        value={getCourierCompanyLabel(courierCompany)}
-      />
-      <DetailRow label="송장번호:" value={trackingNumber} />
-      {trackingUrl && (
-        <InlineActionLink href={trackingUrl}>배송조회</InlineActionLink>
-      )}
-    </div>
-  );
-};
-
 const OrderDetailSkeleton = () => (
   <MainLayout>
     <MainContent>
@@ -341,11 +318,14 @@ const OrderDetailPage = () => {
   );
   const isRepairShippingPending =
     order.orderType === "repair" && order.status === "발송대기";
+  const trackingInfo = order.trackingInfo;
   const isRepairWithTracking =
     order.orderType === "repair" &&
-    !!order.trackingInfo?.courierCompany &&
-    !!order.trackingInfo?.trackingNumber;
-  const showTaskSection = isRepairShippingPending || isRepairWithTracking;
+    !!trackingInfo?.courierCompany &&
+    !!trackingInfo?.trackingNumber;
+  const showTrackingSection =
+    !!trackingInfo && (order.orderType !== "repair" || isRepairWithTracking);
+  const showTaskSection = isRepairShippingPending;
 
   return (
     <MainLayout>
@@ -413,13 +393,6 @@ const OrderDetailPage = () => {
                   {isRepairShippingPending ? (
                     <RepairShippingPendingSection orderId={order.id} />
                   ) : null}
-
-                  {isRepairWithTracking && order.trackingInfo ? (
-                    <RepairShippingInTransitSection
-                      courierCompany={order.trackingInfo.courierCompany}
-                      trackingNumber={order.trackingInfo.trackingNumber}
-                    />
-                  ) : null}
                 </div>
               </UtilityPageAside>
             )}
@@ -441,14 +414,13 @@ const OrderDetailPage = () => {
               </UtilityPageSection>
             ) : null}
 
-            {order.trackingInfo &&
-            (order.orderType !== "repair" || isRepairWithTracking) ? (
+            {showTrackingSection && trackingInfo ? (
               <UtilityPageSection
                 title="배송 추적"
                 description="출고 이후 배송 흐름을 확인합니다."
               >
                 <div className="border-t border-stone-200 py-5">
-                  <TrackingInfoSection info={order.trackingInfo} />
+                  <TrackingInfoSection info={trackingInfo} />
                 </div>
               </UtilityPageSection>
             ) : null}

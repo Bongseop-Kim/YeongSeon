@@ -518,7 +518,7 @@ $$;
 -- ── auto_confirm_delivered_orders ────────────────────────────
 -- Called by pg_cron daily at 03:00 KST.
 -- Confirms orders in '배송완료' (7+ days since delivered_at) and
--- '배송중' (7+ days since shipped_at).
+-- '배송중' (7+ days since shipped_at, or repair orders use company_shipped_at).
 -- SECURITY DEFINER 사용 근거:
 --   pg_cron 또는 service_role에 의해서만 호출되는 스케줄러 함수로, 두 테이블에 직접 쓰기가 필요하다:
 --     - public.orders        : UPDATE (status → '완료', confirmed_at 갱신)
@@ -552,7 +552,14 @@ begin
     where (
       (status = '배송완료' and delivered_at <= now() - interval '7 days')
       or
-      (status = '배송중' and shipped_at <= now() - interval '7 days')
+      (
+        status = '배송중'
+        and (
+          (order_type = 'repair' and company_shipped_at <= now() - interval '7 days')
+          or
+          (order_type <> 'repair' and shipped_at <= now() - interval '7 days')
+        )
+      )
     )
     and not exists (
       select 1

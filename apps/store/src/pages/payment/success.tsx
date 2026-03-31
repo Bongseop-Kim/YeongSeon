@@ -9,28 +9,16 @@ import { toast } from "@/shared/lib/toast";
 import { Clock3, Loader2, ReceiptText, Truck } from "lucide-react";
 import { useRequiredUser } from "@/shared/hooks/use-required-user";
 import { Button } from "@/shared/ui-extended/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui-extended/dialog";
+import { useModalStore } from "@/shared/store/modal";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const openModal = useModalStore((state) => state.openModal);
   const { mutateAsync: confirmPaymentMutation } = useConfirmPayment();
   const { items: orderItems, clearOrderItems } = useOrderStore();
   const userId = useRequiredUser();
   const [error, setError] = useState<string | null>(null);
-  const [showRepairModal, setShowRepairModal] = useState(false);
-  const [repairOrderId, setRepairOrderId] = useState<string | null>(null);
-  const [repairPrefilledTracking, setRepairPrefilledTracking] = useState<{
-    courierCompany: string;
-    trackingNumber: string;
-  } | null>(null);
   const processedRef = useRef(false);
 
   const paymentKey = searchParams.get("paymentKey");
@@ -101,9 +89,24 @@ const PaymentSuccessPage = () => {
         if (paymentResult.type === "token_purchase") {
           navigate(ROUTES.TOKEN_PURCHASE_SUCCESS, { replace: true });
         } else if (repairOrder) {
-          setRepairOrderId(repairOrder.orderId);
-          setRepairPrefilledTracking(prefilledTracking ?? null);
-          setShowRepairModal(true);
+          openModal({
+            title: "수선 주문 배송 정보 안내",
+            description:
+              "방금 완료된 수선 주문에 배송 정보가 입력되지 않았습니다. 수선 주문 상세 페이지에서 발송 정보를 등록해주세요.",
+            confirmText: "수선 주문으로 이동",
+            cancelText: "주문 목록으로",
+            onConfirm: () => {
+              navigate(`${ROUTES.REPAIR_SHIPPING}/${repairOrder.orderId}`, {
+                replace: true,
+                state: {
+                  prefilledTracking: prefilledTracking ?? null,
+                },
+              });
+            },
+            onCancel: () => {
+              navigate(ROUTES.ORDER_LIST, { replace: true });
+            },
+          });
         } else {
           navigate(ROUTES.ORDER_LIST, { replace: true });
         }
@@ -183,51 +186,6 @@ const PaymentSuccessPage = () => {
             잠시만 기다려주세요
           </div>
         </div>
-        {showRepairModal && repairOrderId && (
-          <Dialog
-            open={showRepairModal}
-            onOpenChange={(open) => {
-              setShowRepairModal(open);
-              if (!open) {
-                navigate(ROUTES.ORDER_LIST, { replace: true });
-              }
-            }}
-          >
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>수선 주문 배송 정보 안내</DialogTitle>
-                <DialogDescription>
-                  방금 완료된 수선 주문에 배송 정보가 입력되지 않았습니다. 수선
-                  주문 상세 페이지에서 발송 정보를 등록해주세요.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="flex-col gap-2 sm:flex-row">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowRepairModal(false);
-                    navigate(ROUTES.ORDER_LIST, { replace: true });
-                  }}
-                >
-                  주문 목록으로
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowRepairModal(false);
-                    navigate(`${ROUTES.REPAIR_SHIPPING}/${repairOrderId}`, {
-                      replace: true,
-                      state: {
-                        prefilledTracking: repairPrefilledTracking,
-                      },
-                    });
-                  }}
-                >
-                  수선 주문으로 이동
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
       </MainContent>
     </MainLayout>
   );
