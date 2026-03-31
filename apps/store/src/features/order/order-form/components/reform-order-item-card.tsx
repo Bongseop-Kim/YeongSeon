@@ -12,7 +12,6 @@ import {
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
 import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
 import { useOrderStore } from "@/shared/store/order";
-import { RepairShippingAddressBanner } from "@/features/order/components/repair-shipping-address-banner";
 import { ReformItemInfo } from "@/shared/ui/reform-item-info";
 
 interface ReformOrderItemCardProps {
@@ -59,9 +58,6 @@ export function ReformOrderItemCard({
       </div>
 
       <Separator className="my-3" />
-
-      <RepairShippingAddressBanner />
-
       <div className="space-y-2 mt-4">
         <p className="text-sm font-semibold text-zinc-700">
           이미 발송하셨나요?

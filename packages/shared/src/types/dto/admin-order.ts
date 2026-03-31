@@ -17,6 +17,9 @@ export interface AdminOrderListRowDTO {
   shippedAt: string | null;
   deliveredAt: string | null;
   confirmedAt: string | null;
+  companyCourierCompany: string | null;
+  companyTrackingNumber: string | null;
+  companyShippedAt: string | null;
   created_at: string;
   updated_at: string;
   customerName: string;

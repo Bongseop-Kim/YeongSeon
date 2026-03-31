@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Typography, Spin, Result } from "antd";
+import { Typography, Spin, Result, message } from "antd";
 import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW } from "@yeongseon/shared";
 import { useDefaultCourier } from "@/entities/settings";
 import {
@@ -46,6 +46,10 @@ export function OrderDetailSection() {
     setCourierCompany,
     trackingNumber,
     setTrackingNumber,
+    companyCourierCompany,
+    setCompanyCourierCompany,
+    companyTrackingNumber,
+    setCompanyTrackingNumber,
   } = useTrackingState(order, defaultCourier);
 
   const customItems = items.filter(
@@ -81,6 +85,18 @@ export function OrderDetailSection() {
       />
     );
 
+  const handleChangeStatus = (newStatus: string, memoText: string) => {
+    if (
+      newStatus === "배송완료" &&
+      (!courierCompany.trim() || !trackingNumber.trim())
+    ) {
+      message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
+      return Promise.resolve(false);
+    }
+
+    return changeStatus(newStatus, memoText);
+  };
+
   return (
     <>
       <Title level={5}>주문 정보</Title>
@@ -97,7 +113,7 @@ export function OrderDetailSection() {
         order={order}
         nextStatus={nextStatus}
         rollbackStatus={rollbackStatus}
-        onStatusChange={changeStatus}
+        onStatusChange={handleChangeStatus}
         onRollback={rollback}
         isUpdating={isUpdating}
       />
@@ -116,11 +132,16 @@ export function OrderDetailSection() {
       {orderType === "sample" && <CustomOrderDetail items={sampleItems} />}
       {orderType === "repair" && <RepairOrderDetail items={reformItems} />}
 
-      {orderType !== "token" && (
+      {orderType !== "token" && orderType !== "repair" && (
         <>
           <Title level={5}>배송 정보</Title>
           {orderId && (
             <TrackingSection
+              isReadOnly={
+                order.status === "배송완료" ||
+                order.status === "완료" ||
+                order.status === "취소"
+              }
               orderId={orderId}
               courierCompany={courierCompany}
               trackingNumber={trackingNumber}
@@ -131,6 +152,49 @@ export function OrderDetailSection() {
               isPending={trackingPending}
             />
           )}
+        </>
+      )}
+
+      {orderType === "repair" && orderId && (
+        <>
+          <Title level={5}>배송 정보</Title>
+          <div style={{ marginBottom: 24 }}>
+            <Typography.Title level={5} type="secondary">
+              고객→회사 배송 정보
+            </Typography.Title>
+            <TrackingSection
+              isReadOnly
+              orderId={orderId}
+              courierCompany={order.trackingInfo?.courierCompany ?? ""}
+              trackingNumber={order.trackingInfo?.trackingNumber ?? ""}
+              shippedAt={order.trackingInfo?.shippedAt ?? null}
+            />
+          </div>
+
+          <div>
+            <Typography.Title level={5} type="secondary">
+              회사→고객 배송 정보
+            </Typography.Title>
+            <TrackingSection
+              isReadOnly={!["수선완료", "배송중"].includes(order.status)}
+              orderId={orderId}
+              courierCompany={companyCourierCompany}
+              trackingNumber={companyTrackingNumber}
+              shippedAt={order.trackingInfo?.companyShippedAt ?? null}
+              onCourierChange={setCompanyCourierCompany}
+              onTrackingNumberChange={setCompanyTrackingNumber}
+              onSave={(targetOrderId, compCourier, compTracking) =>
+                saveTracking(
+                  targetOrderId,
+                  order.trackingInfo?.courierCompany ?? "",
+                  order.trackingInfo?.trackingNumber ?? "",
+                  compCourier,
+                  compTracking,
+                )
+              }
+              isPending={trackingPending}
+            />
+          </div>
         </>
       )}
 

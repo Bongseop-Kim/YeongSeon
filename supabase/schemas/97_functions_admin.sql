@@ -264,7 +264,9 @@ $$;
 CREATE OR REPLACE FUNCTION public.admin_update_order_tracking(
   p_order_id uuid,
   p_courier_company text DEFAULT NULL,
-  p_tracking_number text DEFAULT NULL
+  p_tracking_number text DEFAULT NULL,
+  p_company_courier_company text DEFAULT NULL,
+  p_company_tracking_number text DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -274,6 +276,7 @@ AS $$
 declare
   v_admin_id uuid;
   v_tracking_number text;
+  v_company_tracking_number text;
 begin
   v_admin_id := auth.uid();
   if v_admin_id is null then
@@ -285,6 +288,7 @@ begin
   end if;
 
   v_tracking_number := nullif(trim(p_tracking_number), '');
+  v_company_tracking_number := nullif(trim(p_company_tracking_number), '');
 
   update public.orders
   set
@@ -293,6 +297,13 @@ begin
     shipped_at = case
       when v_tracking_number is not null then coalesce(shipped_at, now())
       else shipped_at
+    end,
+    company_courier_company = nullif(trim(p_company_courier_company), ''),
+    company_tracking_number = v_company_tracking_number,
+    company_shipped_at = case
+      when v_company_tracking_number is not null
+        then coalesce(company_shipped_at, now())
+      else company_shipped_at
     end
   where id = p_order_id;
 

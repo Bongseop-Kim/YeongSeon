@@ -17,10 +17,13 @@ export interface AdminShippingAddress {
 }
 
 export interface AdminTrackingInfo {
-  courierCompany: string;
-  trackingNumber: string;
+  courierCompany: string | null;
+  trackingNumber: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  companyCourierCompany: string | null;
+  companyTrackingNumber: string | null;
+  companyShippedAt: string | null;
 }
 
 // ── List UI model ──────────────────────────────────────────────

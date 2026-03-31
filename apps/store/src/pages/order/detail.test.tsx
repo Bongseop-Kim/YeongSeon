@@ -40,9 +40,9 @@ vi.mock("@/shared/layout/page-layout", () => ({
     actionBar?: React.ReactNode;
   }) => (
     <div>
-      <div>{sidebar}</div>
-      <div>{children}</div>
-      <div>{actionBar}</div>
+      <div data-testid="page-layout-sidebar">{sidebar}</div>
+      <div data-testid="page-layout-content">{children}</div>
+      <div data-testid="page-layout-action-bar">{actionBar}</div>
     </div>
   ),
 }));
@@ -256,6 +256,29 @@ describe("OrderDetailPage", () => {
 
     expect(screen.getByText("배송 전에 연락 주세요.")).toBeInTheDocument();
     expect(screen.queryByText("DELIVERY_REQUEST_4")).not.toBeInTheDocument();
+  });
+
+  it("수선 주문의 현재 할 일 카드를 메인 영역에만 표시한다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        orderType: "repair",
+        status: "발송대기",
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(screen.getByTestId("page-layout-content")).toHaveTextContent(
+      "현재 할 일",
+    );
+    expect(screen.getByTestId("page-layout-sidebar")).not.toHaveTextContent(
+      "현재 할 일",
+    );
   });
 
   it("구매확정 가능 주문은 전용 섹션 제목과 액션 버튼을 함께 표시한다", async () => {

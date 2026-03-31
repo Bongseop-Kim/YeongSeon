@@ -65,7 +65,7 @@ export function StatusLogTable<T extends StatusLogEntryBase>({
         dataIndex="isRollback"
         title="구분"
         render={(value: boolean) =>
-          value ? <Tag color="red">롤백</Tag> : null
+          value ? <Tag color="red">롤백</Tag> : <Tag color="default">정상</Tag>
         }
       />
     </Table>

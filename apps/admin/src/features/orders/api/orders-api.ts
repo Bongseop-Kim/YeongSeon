@@ -27,16 +27,26 @@ interface UpdateOrderTrackingParams {
   orderId: string;
   courierCompany: string;
   trackingNumber: string;
+  companyCourierCompany?: string;
+  companyTrackingNumber?: string;
 }
 
 export async function updateOrderTracking(
   params: UpdateOrderTrackingParams,
 ): Promise<void> {
-  const { orderId, courierCompany, trackingNumber } = params;
+  const {
+    orderId,
+    courierCompany,
+    trackingNumber,
+    companyCourierCompany,
+    companyTrackingNumber,
+  } = params;
   const { error } = await supabase.rpc("admin_update_order_tracking", {
     p_order_id: orderId,
     p_courier_company: courierCompany || null,
     p_tracking_number: trackingNumber || null,
+    p_company_courier_company: companyCourierCompany ?? null,
+    p_company_tracking_number: companyTrackingNumber ?? null,
   });
 
   if (error) {

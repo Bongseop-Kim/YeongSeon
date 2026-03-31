@@ -11,14 +11,15 @@ interface TrackingSectionProps {
   courierCompany: string;
   trackingNumber: string;
   shippedAt: string | null | undefined;
-  onCourierChange: (value: string) => void;
-  onTrackingNumberChange: (value: string) => void;
-  onSave: (
+  onCourierChange?: (value: string) => void;
+  onTrackingNumberChange?: (value: string) => void;
+  onSave?: (
     orderId: string,
     courierCompany: string,
     trackingNumber: string,
   ) => void;
-  isPending: boolean;
+  isPending?: boolean;
+  isReadOnly?: boolean;
 }
 
 export function TrackingSection({
@@ -30,6 +31,7 @@ export function TrackingSection({
   onTrackingNumberChange,
   onSave,
   isPending,
+  isReadOnly = false,
 }: TrackingSectionProps) {
   const trackingUrl =
     courierCompany && trackingNumber
@@ -40,6 +42,7 @@ export function TrackingSection({
     <Space direction="vertical" style={{ width: "100%", marginBottom: 24 }}>
       <Flex wrap="wrap" gap={8}>
         <Select
+          disabled={isReadOnly}
           value={courierCompany || undefined}
           placeholder="택배사 선택"
           onChange={onCourierChange}
@@ -51,18 +54,21 @@ export function TrackingSection({
           allowClear
         />
         <Input
+          disabled={isReadOnly}
           value={trackingNumber}
           placeholder="송장번호"
-          onChange={(e) => onTrackingNumberChange(e.target.value)}
+          onChange={(e) => onTrackingNumberChange?.(e.target.value)}
           style={{ flex: 1, minWidth: 140 }}
         />
-        <Button
-          type="primary"
-          onClick={() => onSave(orderId, courierCompany, trackingNumber)}
-          loading={isPending}
-        >
-          저장
-        </Button>
+        {!isReadOnly && (
+          <Button
+            type="primary"
+            onClick={() => onSave?.(orderId, courierCompany, trackingNumber)}
+            loading={isPending}
+          >
+            저장
+          </Button>
+        )}
         {trackingUrl && (
           <Button href={trackingUrl} target="_blank" rel="noopener noreferrer">
             배송추적

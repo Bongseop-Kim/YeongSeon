@@ -15,13 +15,18 @@ export function ReformCartItemCard({
   onChangeOption,
   onChangeCoupon,
 }: ReformCartItemCardProps) {
+  const tieImage =
+    typeof item.reformData?.tie?.image === "string"
+      ? item.reformData.tie.image
+      : null;
+
   return (
     <BaseCartItemCard
       onRemove={onRemove}
       onChangeOption={onChangeOption}
       onChangeCoupon={onChangeCoupon}
     >
-      <ReformItemInfo item={item} />
+      <ReformItemInfo item={item} image={tieImage} />
     </BaseCartItemCard>
   );
 }

@@ -30,6 +30,7 @@ import {
 } from "@/shared/composite/utility-page";
 import { OrderPriceSummaryAside } from "@/shared/composite/order-price-summary-aside";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
+import { RepairShippingAddressBanner } from "@/features/order";
 
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
@@ -317,6 +318,12 @@ const OrderFormPage = () => {
                   className="border-t border-stone-200"
                   data-testid="order-items-card"
                 >
+                  {orderItems.some((item) => item.type !== "product") && (
+                    <div className="py-5">
+                      <RepairShippingAddressBanner />
+                      <Separator className="mt-5" />
+                    </div>
+                  )}
                   {orderItems.map((item, index) => (
                     <React.Fragment key={item.id}>
                       {item.type === "product" ? (

@@ -373,28 +373,6 @@ const OrderDetailPage = () => {
                   }
                 />
               </UtilityPageAside>
-
-              {showTaskSection && (
-                <UtilityPageAside
-                  title="현재 할 일"
-                  description="주문 상태에 따라 지금 처리할 수 있는 작업입니다."
-                  tone="muted"
-                  className="rounded-2xl"
-                >
-                  <div className="space-y-3">
-                    {isRepairShippingPending ? (
-                      <RepairShippingPendingSection orderId={order.id} />
-                    ) : null}
-
-                    {isRepairWithTracking && order.trackingInfo ? (
-                      <RepairShippingInTransitSection
-                        courierCompany={order.trackingInfo.courierCompany}
-                        trackingNumber={order.trackingInfo.trackingNumber}
-                      />
-                    ) : null}
-                  </div>
-                </UtilityPageAside>
-              )}
             </div>
           }
           actionBar={
@@ -423,6 +401,28 @@ const OrderDetailPage = () => {
                 </div>
               }
             />
+
+            {showTaskSection && (
+              <UtilityPageAside
+                title="현재 할 일"
+                description="주문 상태에 따라 지금 처리할 수 있는 작업입니다."
+                tone="muted"
+                className="rounded-2xl"
+              >
+                <div className="space-y-3">
+                  {isRepairShippingPending ? (
+                    <RepairShippingPendingSection orderId={order.id} />
+                  ) : null}
+
+                  {isRepairWithTracking && order.trackingInfo ? (
+                    <RepairShippingInTransitSection
+                      courierCompany={order.trackingInfo.courierCompany}
+                      trackingNumber={order.trackingInfo.trackingNumber}
+                    />
+                  ) : null}
+                </div>
+              </UtilityPageAside>
+            )}
 
             {order.orderType !== "token" ? (
               <UtilityPageSection
