@@ -10,6 +10,12 @@ import {
 } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldTitle,
+} from "@/shared/ui/field";
 import { Separator } from "@/shared/ui/separator";
 import { Switch } from "@/shared/ui/switch";
 
@@ -93,14 +99,14 @@ export default function MyInfoNoticePage() {
                   description="카카오톡 마케팅 알림 수신 여부를 설정합니다. 카카오톡 발송 실패 시 문자로 대체됩니다."
                 >
                   <div className="flex items-center justify-between border-b border-stone-200 py-3">
-                    <div>
-                      <p className="text-sm font-medium text-zinc-950">
-                        카카오톡/문자
-                      </p>
-                      <p className="mt-1 text-sm text-zinc-500">
-                        마케팅 목적의 개인정보 수집 및 이용 동의 (선택)
-                      </p>
-                    </div>
+                    <Field className="gap-0">
+                      <FieldContent className="gap-1">
+                        <FieldTitle>카카오톡/문자</FieldTitle>
+                        <FieldDescription>
+                          마케팅 목적의 개인정보 수집 및 이용 동의 (선택)
+                        </FieldDescription>
+                      </FieldContent>
+                    </Field>
                     <Controller
                       name="kakaoSms"
                       control={form.control}

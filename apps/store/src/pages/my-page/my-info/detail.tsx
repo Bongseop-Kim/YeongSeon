@@ -131,7 +131,8 @@ export default function MyInfoDetailPage() {
                         카카오톡/문자 알림
                       </p>
                       <p className="mt-1 text-sm text-zinc-500">
-                        주문·수선·제작 등 서비스 알림을 카카오톡으로 받습니다.
+                        주문·수선·제작 등 서비스 알림을 카카오톡/문자로
+                        받습니다.
                       </p>
                     </div>
                     <Switch

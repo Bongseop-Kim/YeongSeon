@@ -39,6 +39,14 @@ describe("toUserProfile", () => {
     expect(result.marketingConsent.kakaoSms).toBe(false);
   });
 
+  it("undefined면 kakaoSms가 false 기본값이다", () => {
+    const result = toUserProfile(
+      { ...baseProfileRow, marketing_kakao_sms_consent: undefined },
+      baseUser,
+    );
+    expect(result.marketingConsent.kakaoSms).toBe(false);
+  });
+
   it("이메일을 user에서 가져온다", () => {
     const result = toUserProfile(baseProfileRow, {
       email: "other@example.com",

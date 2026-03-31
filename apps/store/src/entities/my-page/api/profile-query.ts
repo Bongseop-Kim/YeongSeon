@@ -3,8 +3,11 @@ import type {
   MarketingConsent,
   UserProfile,
 } from "@/entities/my-page/model/profile";
+import {
+  getProfile,
+  updateMarketingConsent,
+} from "@/entities/my-page/api/profile-api";
 import { toast } from "@/shared/lib/toast";
-import { getProfile, updateMarketingConsent } from "./profile-api";
 
 export const profileKeys = {
   all: ["profile"] as const,
