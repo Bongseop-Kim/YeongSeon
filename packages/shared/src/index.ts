@@ -40,6 +40,7 @@ export * from "./constants/shipping-events";
 export * from "./constants/courier-companies";
 export * from "./constants/order-status";
 export * from "./constants/quote-request-status";
+export * from "./constants/delivery-request-options";
 
 // Utils
 export * from "./utils/calculate-discount";
