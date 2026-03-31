@@ -14,7 +14,6 @@ import {
 import type {
   OrderItem,
   ShippingInfo,
-  TrackingInfo,
 } from "@yeongseon/shared/types/view/order";
 
 import { CustomOrderOptionsSection } from "@/shared/composite/custom-order-options-section";
@@ -225,21 +224,37 @@ const ShippingInfoSection = ({ info }: { info: ShippingInfo }) => (
   </div>
 );
 
-const TrackingInfoSection = ({ info }: { info: TrackingInfo }) => {
-  const trackingUrl = buildTrackingUrl(
-    info.courierCompany,
-    info.trackingNumber,
-  );
+const TrackingInfoSection = ({
+  title,
+  courierCompany,
+  trackingNumber,
+  shippedAt,
+}: {
+  title?: string;
+  courierCompany: string | null;
+  trackingNumber: string | null;
+  shippedAt: string | null;
+}) => {
+  if (!courierCompany || !trackingNumber) {
+    return null;
+  }
+
+  const trackingUrl = buildTrackingUrl(courierCompany, trackingNumber);
 
   return (
     <div className="space-y-2">
+      {title ? (
+        <p className="text-sm font-semibold tracking-tight text-zinc-950">
+          {title}
+        </p>
+      ) : null}
       <DetailRow
         label="택배사:"
-        value={getCourierCompanyLabel(info.courierCompany)}
+        value={getCourierCompanyLabel(courierCompany)}
       />
-      <DetailRow label="송장번호:" value={info.trackingNumber} />
-      {info.shippedAt && (
-        <DetailRow label="발송일시:" value={formatDate(info.shippedAt)} />
+      <DetailRow label="송장번호:" value={trackingNumber} />
+      {shippedAt && (
+        <DetailRow label="발송일시:" value={formatDate(shippedAt)} />
       )}
       {trackingUrl && (
         <InlineActionLink href={trackingUrl}>배송조회</InlineActionLink>
@@ -319,12 +334,16 @@ const OrderDetailPage = () => {
   const isRepairShippingPending =
     order.orderType === "repair" && order.status === "발송대기";
   const trackingInfo = order.trackingInfo;
+  const hasCustomerTracking =
+    !!trackingInfo?.courierCompany && !!trackingInfo?.trackingNumber;
+  const hasCompanyTracking =
+    !!trackingInfo?.companyCourierCompany &&
+    !!trackingInfo?.companyTrackingNumber;
   const isRepairWithTracking =
-    order.orderType === "repair" &&
-    !!trackingInfo?.courierCompany &&
-    !!trackingInfo?.trackingNumber;
+    order.orderType === "repair" && (hasCustomerTracking || hasCompanyTracking);
   const showTrackingSection =
-    !!trackingInfo && (order.orderType !== "repair" || isRepairWithTracking);
+    !!trackingInfo &&
+    (order.orderType === "repair" ? isRepairWithTracking : hasCustomerTracking);
   const showTaskSection = isRepairShippingPending;
 
   return (
@@ -390,9 +409,9 @@ const OrderDetailPage = () => {
                 className="rounded-2xl"
               >
                 <div className="space-y-3">
-                  {isRepairShippingPending ? (
+                  {isRepairShippingPending && (
                     <RepairShippingPendingSection orderId={order.id} />
-                  ) : null}
+                  )}
                 </div>
               </UtilityPageAside>
             )}
@@ -419,8 +438,29 @@ const OrderDetailPage = () => {
                 title="배송 추적"
                 description="출고 이후 배송 흐름을 확인합니다."
               >
-                <div className="border-t border-stone-200 py-5">
-                  <TrackingInfoSection info={trackingInfo} />
+                <div className="space-y-4 border-t border-stone-200 py-5">
+                  {order.orderType === "repair" ? (
+                    <>
+                      <TrackingInfoSection
+                        title="고객 배송 정보"
+                        courierCompany={trackingInfo.courierCompany}
+                        trackingNumber={trackingInfo.trackingNumber}
+                        shippedAt={trackingInfo.shippedAt}
+                      />
+                      <TrackingInfoSection
+                        title="업체 발송 정보"
+                        courierCompany={trackingInfo.companyCourierCompany}
+                        trackingNumber={trackingInfo.companyTrackingNumber}
+                        shippedAt={trackingInfo.companyShippedAt}
+                      />
+                    </>
+                  ) : (
+                    <TrackingInfoSection
+                      courierCompany={trackingInfo.courierCompany}
+                      trackingNumber={trackingInfo.trackingNumber}
+                      shippedAt={trackingInfo.shippedAt}
+                    />
+                  )}
                 </div>
               </UtilityPageSection>
             ) : null}

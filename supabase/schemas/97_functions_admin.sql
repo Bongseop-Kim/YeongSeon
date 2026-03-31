@@ -291,19 +291,6 @@ begin
   v_tracking_number := nullif(trim(p_tracking_number), '');
   v_company_tracking_number := nullif(trim(p_company_tracking_number), '');
 
-  select status
-  into v_order_status
-  from public.orders
-  where id = p_order_id;
-
-  if not found then
-    raise exception 'Order not found';
-  end if;
-
-  if v_order_status in ('배송완료', '완료', '취소') then
-    raise exception 'Tracking cannot be updated for order status: %', v_order_status;
-  end if;
-
   update public.orders
   set
     courier_company = case
@@ -319,6 +306,8 @@ begin
     shipped_at = case
       when p_tracking_number is not null and v_tracking_number is not null
         then coalesce(shipped_at, now())
+      when p_tracking_number is not null and v_tracking_number is null
+        then null
       else shipped_at
     end,
     company_courier_company = case
@@ -335,9 +324,27 @@ begin
       when p_company_tracking_number is not null
         and v_company_tracking_number is not null
         then coalesce(company_shipped_at, now())
+      when p_company_tracking_number is not null
+        and v_company_tracking_number is null
+        then null
       else company_shipped_at
     end
-  where id = p_order_id;
+  where id = p_order_id
+    and status not in ('배송완료', '완료', '취소')
+  returning status into v_order_status;
+
+  if not found then
+    select status
+    into v_order_status
+    from public.orders
+    where id = p_order_id;
+
+    if not found then
+      raise exception 'Order not found';
+    end if;
+
+    raise exception 'Tracking cannot be updated for order status: %', v_order_status;
+  end if;
 
   return jsonb_build_object('success', true, 'order_id', p_order_id);
 end;

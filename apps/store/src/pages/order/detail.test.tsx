@@ -289,6 +289,9 @@ describe("OrderDetailPage", () => {
           trackingNumber: "1234567890",
           shippedAt: "2026-03-15T09:00:00Z",
           deliveredAt: null,
+          companyCourierCompany: null,
+          companyTrackingNumber: null,
+          companyShippedAt: null,
         },
       }),
       isLoading: false,
@@ -307,6 +310,37 @@ describe("OrderDetailPage", () => {
       screen.getByRole("heading", { name: "배송 추적" }),
     ).toBeInTheDocument();
     expect(screen.getByText("1234567890")).toBeInTheDocument();
+  });
+
+  it("수선 주문에 업체 발송 정보가 있으면 별도 섹션을 표시한다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        orderType: "repair",
+        status: "배송중",
+        trackingInfo: {
+          courierCompany: null,
+          trackingNumber: null,
+          shippedAt: null,
+          deliveredAt: null,
+          companyCourierCompany: "hanjin",
+          companyTrackingNumber: "COMPANY-123",
+          companyShippedAt: "2026-03-16T10:00:00Z",
+        },
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "배송 추적" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("업체 발송 정보")).toBeInTheDocument();
+    expect(screen.getByText("COMPANY-123")).toBeInTheDocument();
   });
 
   it("구매확정 가능 주문은 전용 섹션 제목과 액션 버튼을 함께 표시한다", async () => {

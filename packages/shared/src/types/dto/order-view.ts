@@ -110,6 +110,9 @@ export interface OrderDetailRowDTO {
   trackingNumber: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  companyCourierCompany: string | null;
+  companyTrackingNumber: string | null;
+  companyShippedAt: string | null;
   confirmedAt: string | null;
   created_at: string;
   recipientName: string | null;
