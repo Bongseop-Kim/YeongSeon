@@ -107,6 +107,19 @@ describe("useCheckoutPayment", () => {
     expect(result.current.amount).toBe(95000);
   });
 
+  it("주문제작 결제는 totalCost 기준으로 할인 계산을 요청한다", () => {
+    mockCalculateDiscount.mockReturnValue(1000);
+
+    renderCheckoutHook({
+      state: {
+        shippingAddressId: "addr-1",
+      },
+      pricePerUnit: 40000,
+    });
+
+    expect(mockCalculateDiscount).toHaveBeenCalledWith(40000, undefined, 1);
+  });
+
   it("serverAmount가 있으면 서버 금액을 우선한다", () => {
     mockUseCheckoutPageState.mockReturnValue(
       makePageState({ serverAmount: 80000 }),
@@ -252,6 +265,34 @@ describe("useCheckoutPayment", () => {
         expect.objectContaining({
           orderId: "order-123",
           orderName: "테스트 주문",
+        }),
+      );
+    });
+
+    it("결제 실패 복귀 경로를 failUrl returnTo 파라미터로 전달한다", async () => {
+      const createOrder = vi.fn().mockResolvedValue({
+        orderId: "order-123",
+        totalAmount: 95000,
+      });
+      const pageState = makePageState();
+      const widget = makePaymentWidget();
+      mockUseCheckoutPageState.mockReturnValue(pageState);
+
+      const { result } = renderCheckoutHook({
+        createOrder,
+        fallbackRoute: "/order/custom",
+      });
+
+      pageState.paymentWidgetRef.current = widget;
+
+      await act(async () => {
+        await result.current.handleRequestPayment();
+      });
+
+      expect(widget.requestPayment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          failUrl:
+            "http://localhost:3000/order/payment/fail?returnTo=%2Forder%2Fcustom",
         }),
       );
     });

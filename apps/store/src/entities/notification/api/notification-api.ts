@@ -63,8 +63,14 @@ const updateNotificationPreferences = async (patch: {
   }
 };
 
+export const setNotificationPreferences = (preferences: {
+  notificationConsent?: boolean | null;
+  notificationEnabled?: boolean | null;
+}) =>
+  updateNotificationPreferences({
+    notification_consent: preferences.notificationConsent ?? undefined,
+    notification_enabled: preferences.notificationEnabled ?? undefined,
+  });
+
 export const saveNotificationConsent = (consent: boolean) =>
   updateNotificationPreferences({ notification_consent: consent });
-
-export const updateNotificationEnabled = (enabled: boolean) =>
-  updateNotificationPreferences({ notification_enabled: enabled });

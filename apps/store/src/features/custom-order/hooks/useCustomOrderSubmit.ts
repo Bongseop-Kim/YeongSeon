@@ -98,7 +98,7 @@ export function useCustomOrderSubmit({
         });
         toast.success("견적요청이 완료되었습니다!");
         formReset();
-        navigate(ROUTES.ORDER_LIST);
+        navigate(ROUTES.MY_PAGE_QUOTE_REQUEST);
       } catch (error) {
         toast.error(
           error instanceof Error
