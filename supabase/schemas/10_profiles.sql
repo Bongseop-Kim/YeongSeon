@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   phone_verified        boolean     NOT NULL DEFAULT false,
   notification_consent  boolean     NOT NULL DEFAULT false,
   notification_enabled  boolean     NOT NULL DEFAULT true,
+  marketing_kakao_sms_consent boolean NOT NULL DEFAULT false,
 
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_id_fkey
@@ -128,6 +129,6 @@ CREATE POLICY "Admins can view all notification preference logs"
 
 -- Privilege hardening
 REVOKE UPDATE ON TABLE public.profiles FROM authenticated;
-GRANT UPDATE (name, phone, birth) ON TABLE public.profiles TO authenticated;
+GRANT UPDATE (name, phone, birth, marketing_kakao_sms_consent) ON TABLE public.profiles TO authenticated;
 GRANT SELECT ON TABLE public.phone_verifications TO authenticated;
 REVOKE INSERT, UPDATE, DELETE ON TABLE public.phone_verifications FROM authenticated;

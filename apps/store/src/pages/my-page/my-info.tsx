@@ -73,7 +73,7 @@ export default function MyInfoPage() {
       label: "마케팅 동의",
       value: isLoading
         ? "확인 중..."
-        : profile?.marketingConsent.all
+        : profile?.marketingConsent.kakaoSms
           ? "동의"
           : "미동의",
     },

@@ -1,88 +1,51 @@
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@/shared/lib/toast";
+import { useProfile, useUpdateMarketingConsent } from "@/entities/my-page";
 import { Empty } from "@/shared/composite/empty";
-import { MainContent, MainLayout } from "@/shared/layout/main-layout";
-import { PageLayout } from "@/shared/layout/page-layout";
 import {
   UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
-import { FieldTitle } from "@/shared/ui/field";
+import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageLayout } from "@/shared/layout/page-layout";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from "@/shared/ui/field";
 import { Separator } from "@/shared/ui/separator";
 import { Switch } from "@/shared/ui/switch";
-import {
-  applyMarketingConsentToggle,
-  DEFAULT_MARKETING_CONSENT,
-} from "@/entities/my-page";
-import { useProfile, useUpdateMarketingConsent } from "@/entities/my-page";
 
 interface NoticeFormValues {
-  isMarketingConsent: boolean;
-  isSmsConsent: boolean;
-  isEmailConsent: boolean;
+  kakaoSms: boolean;
 }
 
 export default function MyInfoNoticePage() {
-  const { data: profile, isLoading, isError, error } = useProfile();
+  const { data: profile, isLoading, isError, error, refetch } = useProfile();
   const updateMarketingConsentMutation = useUpdateMarketingConsent();
 
   const form = useForm<NoticeFormValues>({
-    defaultValues: {
-      isMarketingConsent: false,
-      isSmsConsent: false,
-      isEmailConsent: false,
-    },
+    defaultValues: { kakaoSms: false },
   });
   const isSaving = updateMarketingConsentMutation.isPending;
 
   useEffect(() => {
-    const marketingConsent =
-      profile?.marketingConsent ?? DEFAULT_MARKETING_CONSENT;
     form.reset({
-      isMarketingConsent: marketingConsent.all,
-      isSmsConsent: marketingConsent.channels.sms,
-      isEmailConsent: marketingConsent.channels.email,
+      kakaoSms: profile?.marketingConsent.kakaoSms ?? false,
     });
   }, [form, profile]);
 
-  const handleToggle = async (
-    target: "all" | "sms" | "email",
-    checked: boolean,
-  ) => {
-    const currentValues = form.getValues();
-    const nextConsent = applyMarketingConsentToggle(
-      {
-        all: currentValues.isMarketingConsent,
-        channels: {
-          ...(profile?.marketingConsent?.channels ?? {}),
-          sms: currentValues.isSmsConsent,
-          email: currentValues.isEmailConsent,
-        },
-      },
-      { target, checked },
-    );
-
-    const previousFormValues = {
-      isMarketingConsent: currentValues.isMarketingConsent,
-      isSmsConsent: currentValues.isSmsConsent,
-      isEmailConsent: currentValues.isEmailConsent,
-    };
-
-    form.setValue("isMarketingConsent", nextConsent.all);
-    form.setValue("isSmsConsent", nextConsent.channels.sms);
-    form.setValue("isEmailConsent", nextConsent.channels.email);
+  const handleToggle = async (checked: boolean) => {
+    form.setValue("kakaoSms", checked);
 
     try {
-      await updateMarketingConsentMutation.mutateAsync(nextConsent);
+      await updateMarketingConsentMutation.mutateAsync({ kakaoSms: checked });
     } catch {
-      form.setValue(
-        "isMarketingConsent",
-        previousFormValues.isMarketingConsent,
-      );
-      form.setValue("isSmsConsent", previousFormValues.isSmsConsent);
-      form.setValue("isEmailConsent", previousFormValues.isEmailConsent);
+      await refetch();
       toast.error("설정 저장에 실패했습니다.");
     }
   };
@@ -126,73 +89,45 @@ export default function MyInfoNoticePage() {
             <UtilityPageIntro
               eyebrow="Consent Settings"
               title="마케팅 수신 동의"
-              description="혜택, 이벤트, 프로모션 알림에 대한 채널별 동의 상태를 관리합니다."
+              description="혜택, 이벤트, 프로모션 알림에 대한 수신 동의를 관리합니다."
             />
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-12">
               <div className="min-w-0">
                 <UtilityPageSection
                   title="수신 채널 설정"
-                  description="전체 동의를 켜면 문자와 이메일 채널이 함께 반영됩니다."
+                  description="카카오톡 마케팅 알림 수신 여부를 설정합니다. 카카오톡 발송 실패 시 문자로 대체됩니다."
                 >
-                  <div className="space-y-5">
-                    <div className="flex items-start justify-between gap-4 border-b border-stone-200 py-3">
-                      <div>
-                        <p className="text-sm font-medium text-zinc-950">
-                          전체 동의
-                        </p>
-                        <p className="mt-1 text-sm text-zinc-500">
-                          마케팅 목적의 개인정보 수집 및 이용 동의(선택)
-                        </p>
-                      </div>
-                      <Controller
-                        name="isMarketingConsent"
-                        control={form.control}
-                        render={({ field }) => (
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              void handleToggle("all", checked);
-                            }}
-                            disabled={isSaving}
-                          />
-                        )}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between border-b border-stone-200 py-3">
-                      <FieldTitle className="font-bold">문자</FieldTitle>
-                      <Controller
-                        name="isSmsConsent"
-                        control={form.control}
-                        render={({ field }) => (
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              void handleToggle("sms", checked);
-                            }}
-                            disabled={isSaving}
-                          />
-                        )}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between border-b border-stone-200 py-3">
-                      <FieldTitle className="font-bold">이메일</FieldTitle>
-                      <Controller
-                        name="isEmailConsent"
-                        control={form.control}
-                        render={({ field }) => (
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              void handleToggle("email", checked);
-                            }}
-                            disabled={isSaving}
-                          />
-                        )}
-                      />
-                    </div>
+                  <div className="flex items-center justify-between border-b border-stone-200 py-3">
+                    <Field className="gap-0">
+                      <FieldContent className="gap-1">
+                        <FieldLabel
+                          id="kakao-sms-switch-label"
+                          htmlFor="kakao-sms-switch"
+                          className="block"
+                        >
+                          <FieldTitle>카카오톡/문자</FieldTitle>
+                        </FieldLabel>
+                        <FieldDescription>
+                          마케팅 목적의 개인정보 수집 및 이용 동의 (선택)
+                        </FieldDescription>
+                      </FieldContent>
+                    </Field>
+                    <Controller
+                      name="kakaoSms"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Switch
+                          id="kakao-sms-switch"
+                          aria-labelledby="kakao-sms-switch-label"
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            void handleToggle(checked);
+                          }}
+                          disabled={isSaving}
+                        />
+                      )}
+                    />
                   </div>
                 </UtilityPageSection>
               </div>
@@ -206,9 +141,9 @@ export default function MyInfoNoticePage() {
                   <div className="space-y-3 text-sm text-zinc-600">
                     <p>서비스 알림은 수신설정과 관계없이 발송됩니다.</p>
                     <Separator />
-                    <p>푸시 알림은 앱 내 알림 설정 상태에 따라 발송됩니다.</p>
-                    <p className="text-zinc-500">
-                      앱 &gt; 마이 &gt; 설정 &gt; 알림설정
+                    <p>
+                      서비스 알림 수신 설정은 회원정보 변경 페이지에서
+                      관리합니다.
                     </p>
                   </div>
                 </UtilityPageAside>

@@ -1,108 +1,57 @@
 import { describe, expect, it } from "vitest";
-import {
-  applyMarketingConsentToggle,
-  normalizeMarketingConsent,
-} from "@/entities/my-page";
+import { toUserProfile } from "./profile-mapper";
 
-describe("normalizeMarketingConsent", () => {
-  it("비객체 입력이면 기본값을 반환한다", () => {
-    expect(normalizeMarketingConsent(null)).toEqual({
-      all: false,
-      channels: {
-        sms: false,
-        email: false,
-      },
-    });
+describe("toUserProfile", () => {
+  const baseProfileRow = {
+    id: "user-1",
+    name: "홍길동",
+    phone: "010-1234-5678",
+    birth: "1990-01-01",
+    phone_verified: true,
+    notification_consent: true,
+    notification_enabled: true,
+    marketing_kakao_sms_consent: false,
+  };
+
+  const baseUser = { email: "test@example.com", user_metadata: {} };
+
+  it("marketing_kakao_sms_consent가 true면 kakaoSms가 true다", () => {
+    const result = toUserProfile(
+      { ...baseProfileRow, marketing_kakao_sms_consent: true },
+      baseUser,
+    );
+    expect(result.marketingConsent.kakaoSms).toBe(true);
   });
 
-  it("채널 중 하나라도 true면 all을 true로 정규화한다", () => {
-    expect(
-      normalizeMarketingConsent({
-        channels: {
-          sms: true,
-          email: false,
-        },
-      }),
-    ).toEqual({
-      all: true,
-      channels: {
-        sms: true,
-        email: false,
-      },
-    });
+  it("marketing_kakao_sms_consent가 false면 kakaoSms가 false다", () => {
+    const result = toUserProfile(
+      { ...baseProfileRow, marketing_kakao_sms_consent: false },
+      baseUser,
+    );
+    expect(result.marketingConsent.kakaoSms).toBe(false);
   });
 
-  it("all이 false면 모든 채널을 false로 강제한다", () => {
-    expect(
-      normalizeMarketingConsent({
-        all: false,
-        channels: {
-          sms: true,
-          email: true,
-        },
-      }),
-    ).toEqual({
-      all: false,
-      channels: {
-        sms: false,
-        email: false,
-      },
-    });
-  });
-});
-
-describe("applyMarketingConsentToggle", () => {
-  it("all 토글은 모든 채널에 반영된다", () => {
-    expect(
-      applyMarketingConsentToggle(
-        {
-          all: false,
-          channels: { sms: false, email: false },
-        },
-        { target: "all", checked: true },
-      ),
-    ).toEqual({
-      all: true,
-      channels: {
-        sms: true,
-        email: true,
-      },
-    });
+  it("null이면 kakaoSms가 false 기본값이다", () => {
+    const result = toUserProfile(
+      { ...baseProfileRow, marketing_kakao_sms_consent: null },
+      baseUser,
+    );
+    expect(result.marketingConsent.kakaoSms).toBe(false);
   });
 
-  it("개별 채널 토글은 all 상태를 재계산한다", () => {
-    const current = {
-      all: true,
-      channels: {
-        sms: true,
-        email: true,
-      },
-    };
+  it("undefined면 kakaoSms가 false 기본값이다", () => {
+    const result = toUserProfile(
+      { ...baseProfileRow, marketing_kakao_sms_consent: undefined },
+      baseUser,
+    );
+    expect(result.marketingConsent.kakaoSms).toBe(false);
+  });
 
-    expect(
-      applyMarketingConsentToggle(current, { target: "sms", checked: false }),
-    ).toEqual({
-      all: true,
-      channels: {
-        sms: false,
-        email: true,
-      },
+  it("이메일을 user에서 가져온다", () => {
+    const result = toUserProfile(baseProfileRow, {
+      email: "other@example.com",
+      user_metadata: {},
     });
-
-    expect(
-      applyMarketingConsentToggle(
-        {
-          all: true,
-          channels: { sms: false, email: true },
-        },
-        { target: "email", checked: false },
-      ),
-    ).toEqual({
-      all: false,
-      channels: {
-        sms: false,
-        email: false,
-      },
-    });
+    expect(result.email).toBe("other@example.com");
   });
 });
