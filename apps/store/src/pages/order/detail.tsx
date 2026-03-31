@@ -244,7 +244,7 @@ const TrackingInfoSection = ({
   return (
     <div className="space-y-2">
       {title ? (
-        <p className="text-sm font-semibold tracking-tight text-zinc-950">
+        <p className="text-sm font-semibold tracking-tight text-foreground">
           {title}
         </p>
       ) : null}
