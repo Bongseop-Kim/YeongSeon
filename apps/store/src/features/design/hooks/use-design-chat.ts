@@ -6,6 +6,7 @@ import {
 import {
   type AiDesignResponse,
   InsufficientTokensError,
+  setGenerationLogImageUrl,
 } from "@/entities/design";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment, Message } from "@/features/design/types/chat";
@@ -94,6 +95,10 @@ export function useDesignChat(): UseDesignChatResult {
           const uploaded = await uploadGeneratedImage(data.imageUrl);
           rawImageUrl = uploaded?.url ?? null;
           rawImageFileId = uploaded?.fileId ?? null;
+
+          if (data.workId && rawImageUrl) {
+            void setGenerationLogImageUrl(data.workId, rawImageUrl);
+          }
         }
 
         const { messages: allMessages, aiModel: currentAiModel } =

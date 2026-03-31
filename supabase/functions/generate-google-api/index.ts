@@ -50,6 +50,7 @@ type GenerateDesignResult = {
     action: string;
   }>;
   imageUrl: string | null;
+  workId: string;
 };
 
 // ─── API requests ────────────────────────────────────────────────────────────
@@ -549,6 +550,7 @@ Deno.serve(async (req) => {
       aiMessage: textResult.aiMessage,
       contextChips: textResult.contextChips,
       imageUrl,
+      workId,
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });
   } catch (error) {

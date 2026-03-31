@@ -44,6 +44,7 @@ type GenerateDesignResult = {
     action: string;
   }>;
   imageUrl: string | null;
+  workId: string;
 };
 
 type GenerationRequestType = NonNullable<AiGenerationLogInsert["request_type"]>;
@@ -695,6 +696,7 @@ Deno.serve(async (req) => {
       aiMessage: textResult.aiMessage,
       contextChips: textResult.contextChips,
       imageUrl,
+      workId,
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });
   } catch (error) {

@@ -21,6 +21,7 @@ export interface AdminGenerationLogItem {
   aiMessage: string | null;
   generateImage: boolean | null;
   imageGenerated: boolean;
+  generatedImageUrl: string | null;
   detectedDesign: Record<string, unknown> | null;
   tokensCharged: number;
   tokensRefunded: number;

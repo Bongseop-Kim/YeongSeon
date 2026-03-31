@@ -49,6 +49,7 @@ type GenerationLogRow = {
   ai_message: unknown;
   generate_image: unknown;
   image_generated: unknown;
+  generated_image_url: unknown;
   detected_design: unknown;
   tokens_charged: unknown;
   tokens_refunded: unknown;
@@ -98,6 +99,7 @@ export function toAdminGenerationLogItem(
     generateImage:
       typeof row.generate_image === "boolean" ? row.generate_image : null,
     imageGenerated: toBoolean(row.image_generated),
+    generatedImageUrl: toString(row.generated_image_url),
     detectedDesign: isRecord(row.detected_design)
       ? (row.detected_design as Record<string, unknown>)
       : null,

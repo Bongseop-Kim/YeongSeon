@@ -81,6 +81,20 @@ export async function getDesignTokenHistory(): Promise<
   return rows.map(toDesignTokenHistoryItem);
 }
 
+export async function setGenerationLogImageUrl(
+  workId: string,
+  imageUrl: string,
+): Promise<void> {
+  const { error } = await supabase.rpc("set_generation_log_image_url", {
+    p_work_id: workId,
+    p_image_url: imageUrl,
+  });
+
+  if (error) {
+    console.error("생성 로그 이미지 URL 업데이트 실패:", error);
+  }
+}
+
 export async function aiDesignApi(
   request: AiDesignRequest,
 ): Promise<AiDesignResponse> {

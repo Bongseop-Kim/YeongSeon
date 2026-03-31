@@ -2,6 +2,7 @@ export {
   aiDesignApi,
   getDesignTokenBalance,
   InsufficientTokensError,
+  setGenerationLogImageUrl,
 } from "./api/ai-design-api";
 export type { AiDesignResponse } from "./model/ai-design-response";
 export {

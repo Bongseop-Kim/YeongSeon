@@ -106,6 +106,7 @@ interface InvokePayloadInput {
 interface InvokeResponseBody {
   aiMessage: string;
   imageUrl?: string | null;
+  workId?: string;
   contextChips?: unknown;
   remainingTokens?: unknown;
 }
@@ -138,6 +139,7 @@ export function normalizeInvokeResponse(
   return {
     aiMessage: response.aiMessage,
     imageUrl: response.imageUrl ?? null,
+    workId: response.workId,
     tags: getTags(request),
     contextChips: Array.isArray(response.contextChips)
       ? response.contextChips

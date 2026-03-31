@@ -252,6 +252,15 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
           </Text>
         </Descriptions.Item>
       )}
+      {log.generatedImageUrl && (
+        <Descriptions.Item label="생성된 이미지" span={2}>
+          <img
+            src={log.generatedImageUrl}
+            alt="생성된 디자인"
+            style={{ maxWidth: "100%", maxHeight: 400, objectFit: "contain" }}
+          />
+        </Descriptions.Item>
+      )}
       {log.designContext && (
         <Descriptions.Item label="디자인 컨텍스트" span={2}>
           <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
