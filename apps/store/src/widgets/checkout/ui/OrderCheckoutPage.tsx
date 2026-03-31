@@ -25,10 +25,6 @@ export function OrderCheckoutPage() {
   const state = isCustomOrderPaymentState(rawState) ? rawState : null;
   const createCustomOrder = useCreateCustomOrder();
 
-  const pricePerUnit = state
-    ? Math.floor(state.totalCost / state.coreOptions.quantity)
-    : 0;
-
   const createOrder = async (
     shippingAddressId: string,
     userCouponId: string | undefined,
@@ -49,8 +45,7 @@ export function OrderCheckoutPage() {
   const checkout = useCheckoutPayment({
     state,
     fallbackRoute: ROUTES.CUSTOM_ORDER,
-    pricePerUnit,
-    quantity: state?.coreOptions.quantity ?? 1,
+    pricePerUnit: state?.totalCost ?? 0,
     createOrder,
     orderName: `주문제작 (수량 ${state?.coreOptions.quantity ?? 0}개)`,
   });

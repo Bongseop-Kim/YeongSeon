@@ -2,6 +2,7 @@ import { Input } from "@/shared/ui-extended/input";
 import { Button } from "@/shared/ui-extended/button";
 import { Label } from "@/shared/ui/label";
 import { extractPhoneNumber } from "@/shared/lib/phone-format";
+import { padZero } from "@/shared/lib/utils";
 import { usePhoneVerification } from "@/features/notification/hooks/use-phone-verification";
 
 interface PhoneVerificationFormProps {
@@ -19,6 +20,8 @@ export const PhoneVerificationForm = ({
     setCode,
     isLoading,
     error,
+    countdown,
+    isCountdownExpired,
     handleSend,
     handleVerify,
     handleResend,
@@ -60,9 +63,18 @@ export const PhoneVerificationForm = ({
       )}
       {step === "verify" && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground">
-            {phone}으로 인증번호를 발송했습니다.
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              {phone}으로 인증번호를 발송했습니다.
+            </p>
+            {countdown > 0 ? (
+              <span className="text-sm tabular-nums text-zinc-500">
+                {padZero(Math.floor(countdown / 60))}:{padZero(countdown % 60)}
+              </span>
+            ) : (
+              <span className="text-sm text-red-500">만료됨</span>
+            )}
+          </div>
           <Label htmlFor="code">인증번호</Label>
           <Input
             id="code"
@@ -80,14 +92,14 @@ export const PhoneVerificationForm = ({
             <Button
               variant="outline"
               onClick={handleResend}
-              disabled={isLoading}
+              disabled={isLoading || !isCountdownExpired}
               className="flex-1"
             >
               재전송
             </Button>
             <Button
               onClick={handleVerify}
-              disabled={isLoading || code.length !== 6}
+              disabled={isLoading || code.length !== 6 || isCountdownExpired}
               className="flex-1"
             >
               {isLoading ? "확인 중..." : "확인"}

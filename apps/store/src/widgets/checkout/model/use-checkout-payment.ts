@@ -109,7 +109,7 @@ export function useCheckoutPayment({
         orderId,
         orderName,
         successUrl: `${window.location.origin}${ROUTES.PAYMENT_SUCCESS}`,
-        failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}`,
+        failUrl: `${window.location.origin}${ROUTES.PAYMENT_FAIL}?returnTo=${encodeURIComponent(fallbackRoute)}`,
         customerName: user.user_metadata?.name ?? undefined,
       });
 

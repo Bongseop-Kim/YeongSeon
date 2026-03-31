@@ -4,12 +4,22 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { Button } from "@/shared/ui-extended/button";
 import { AlertTriangle, ReceiptText } from "lucide-react";
 
+const BACK_LABELS: Record<string, string> = {
+  [ROUTES.SAMPLE_ORDER]: "샘플 주문으로 돌아가기",
+  [ROUTES.CUSTOM_ORDER]: "주문제작으로 돌아가기",
+  [ROUTES.ORDER_FORM]: "주문서로 돌아가기",
+};
+
 const PaymentFailPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const code = searchParams.get("code");
   const message = searchParams.get("message");
+  const returnTo = searchParams.get("returnTo");
+  const backRoute =
+    returnTo && returnTo in BACK_LABELS ? returnTo : ROUTES.ORDER_FORM;
+  const backLabel = BACK_LABELS[backRoute] ?? "이전 페이지로 돌아가기";
 
   return (
     <MainLayout>
@@ -41,9 +51,7 @@ const PaymentFailPage = () => {
             <p className="mt-6 text-xs text-zinc-400">에러 코드: {code}</p>
           ) : null}
           <div className="mt-8 flex justify-center">
-            <Button onClick={() => navigate(ROUTES.ORDER_FORM)}>
-              주문서로 돌아가기
-            </Button>
+            <Button onClick={() => navigate(backRoute)}>{backLabel}</Button>
           </div>
         </div>
       </MainContent>

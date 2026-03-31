@@ -142,4 +142,22 @@ describe("calculateDiscount", () => {
     // total=3333*3+1=10000
     expect(calculateDiscount(10000, coupon, 3)).toBe(10000);
   });
+
+  it("quantity=4, totalCost=40000, 정액1000 쿠폰 적용 시 discountAmount가 1000이다", () => {
+    const coupon = createAppliedCoupon({
+      coupon: {
+        id: "c-1",
+        name: "할인",
+        discountType: "fixed",
+        discountValue: 1000,
+        maxDiscountAmount: null,
+        expiryDate: "2027-01-01",
+      },
+      expiresAt: null,
+      status: "active",
+    });
+
+    expect(calculateDiscount(40000, coupon, 1)).toBe(1000);
+    expect(calculateDiscount(10000, coupon, 4)).toBe(4000);
+  });
 });
