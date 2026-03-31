@@ -56,6 +56,44 @@ async function applyNotificationUpdateRollback(params: {
   toast.error(message);
 }
 
+async function updateNotificationPreference(params: {
+  desiredValues: {
+    notificationConsent: boolean;
+    notificationEnabled: boolean;
+  };
+  previousValue: boolean;
+  form: UseFormReturn<NoticeFormValues>;
+  queryClient: ReturnType<typeof useQueryClient>;
+  refetch: () => Promise<unknown>;
+  setIsSavingNotification: (isSaving: boolean) => void;
+  setShowVerifyModal?: (open: boolean) => void;
+}) {
+  params.form.setValue(
+    "notificationEnabled",
+    params.desiredValues.notificationEnabled,
+  );
+  params.setIsSavingNotification(true);
+
+  try {
+    await setNotificationPreferences(params.desiredValues);
+    params.setShowVerifyModal?.(false);
+    await params.refetch();
+    await params.queryClient.invalidateQueries({
+      queryKey: notificationStatusKeys.detail(),
+    });
+  } catch (error) {
+    await applyNotificationUpdateRollback({
+      previousValue: params.previousValue,
+      form: params.form,
+      queryClient: params.queryClient,
+      refetch: params.refetch,
+      error,
+    });
+  } finally {
+    params.setIsSavingNotification(false);
+  }
+}
+
 export default function MyInfoNoticePage() {
   const { data: profile, isLoading, isError, error, refetch } = useProfile();
   const updateMarketingConsentMutation = useUpdateMarketingConsent();
@@ -94,29 +132,17 @@ export default function MyInfoNoticePage() {
     }
 
     const previousValue = form.getValues("notificationEnabled");
-    form.setValue("notificationEnabled", checked);
-    setIsSavingNotification(true);
-
-    try {
-      await setNotificationPreferences({
+    await updateNotificationPreference({
+      desiredValues: {
         notificationConsent: checked,
         notificationEnabled: checked,
-      });
-      await refetch();
-      await queryClient.invalidateQueries({
-        queryKey: notificationStatusKeys.detail(),
-      });
-    } catch (error) {
-      await applyNotificationUpdateRollback({
-        previousValue,
-        form,
-        queryClient,
-        refetch,
-        error,
-      });
-    } finally {
-      setIsSavingNotification(false);
-    }
+      },
+      previousValue,
+      form,
+      queryClient,
+      refetch,
+      setIsSavingNotification,
+    });
   };
 
   if (isLoading) {
@@ -273,30 +299,18 @@ export default function MyInfoNoticePage() {
                   if (isSavingNotification) return;
 
                   const previousValue = form.getValues("notificationEnabled");
-                  form.setValue("notificationEnabled", true);
-                  setIsSavingNotification(true);
-
-                  try {
-                    await setNotificationPreferences({
+                  await updateNotificationPreference({
+                    desiredValues: {
                       notificationConsent: true,
                       notificationEnabled: true,
-                    });
-                    setShowVerifyModal(false);
-                    await refetch();
-                    await queryClient.invalidateQueries({
-                      queryKey: notificationStatusKeys.detail(),
-                    });
-                  } catch (error) {
-                    await applyNotificationUpdateRollback({
-                      previousValue,
-                      form,
-                      queryClient,
-                      refetch,
-                      error,
-                    });
-                  } finally {
-                    setIsSavingNotification(false);
-                  }
+                    },
+                    previousValue,
+                    form,
+                    queryClient,
+                    refetch,
+                    setIsSavingNotification,
+                    setShowVerifyModal,
+                  });
                 }}
               />
             </DialogContent>

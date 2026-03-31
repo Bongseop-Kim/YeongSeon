@@ -74,6 +74,3 @@ export const setNotificationPreferences = (preferences: {
 
 export const saveNotificationConsent = (consent: boolean) =>
   updateNotificationPreferences({ notification_consent: consent });
-
-export const updateNotificationEnabled = (enabled: boolean) =>
-  updateNotificationPreferences({ notification_enabled: enabled });

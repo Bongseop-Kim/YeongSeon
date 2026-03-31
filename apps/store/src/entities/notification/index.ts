@@ -3,7 +3,6 @@ export {
   verifyPhone,
   setNotificationPreferences,
   saveNotificationConsent,
-  updateNotificationEnabled,
 } from "./api/notification-api";
 export {
   notificationStatusKeys,
