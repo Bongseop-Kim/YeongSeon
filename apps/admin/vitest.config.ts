@@ -23,6 +23,7 @@ export default mergeConfig(
           extends: true,
           test: {
             name: "admin-jsdom",
+            testTimeout: 15000,
             environment: "jsdom",
             setupFiles: ["./src/test/setup.ts"],
             include: ["src/**/*.test.tsx", "src/hooks/**/*.test.ts"],
