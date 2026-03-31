@@ -66,13 +66,16 @@ const DetailRow = ({
 
 const InlineActionLink = ({
   href,
+  ariaLabel,
   children,
 }: {
   href: string;
+  ariaLabel?: string;
   children: React.ReactNode;
 }) => (
   <a
     href={href}
+    aria-label={ariaLabel}
     target="_blank"
     rel="noopener noreferrer"
     className="mt-1 inline-block text-sm font-medium text-info underline underline-offset-4"
@@ -240,6 +243,7 @@ const TrackingInfoSection = ({
   }
 
   const trackingUrl = buildTrackingUrl(courierCompany, trackingNumber);
+  const trackingLinkLabel = title ? `${title} 배송조회` : "배송조회";
 
   return (
     <div className="space-y-2">
@@ -257,7 +261,9 @@ const TrackingInfoSection = ({
         <DetailRow label="발송일시:" value={formatDate(shippedAt)} />
       )}
       {trackingUrl && (
-        <InlineActionLink href={trackingUrl}>배송조회</InlineActionLink>
+        <InlineActionLink href={trackingUrl} ariaLabel={trackingLinkLabel}>
+          배송조회
+        </InlineActionLink>
       )}
     </div>
   );
