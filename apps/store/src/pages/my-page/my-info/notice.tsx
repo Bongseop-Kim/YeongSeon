@@ -14,6 +14,7 @@ import {
   Field,
   FieldContent,
   FieldDescription,
+  FieldLabel,
   FieldTitle,
 } from "@/shared/ui/field";
 import { Separator } from "@/shared/ui/separator";
@@ -24,7 +25,7 @@ interface NoticeFormValues {
 }
 
 export default function MyInfoNoticePage() {
-  const { data: profile, isLoading, isError, error } = useProfile();
+  const { data: profile, isLoading, isError, error, refetch } = useProfile();
   const updateMarketingConsentMutation = useUpdateMarketingConsent();
 
   const form = useForm<NoticeFormValues>({
@@ -39,13 +40,12 @@ export default function MyInfoNoticePage() {
   }, [form, profile]);
 
   const handleToggle = async (checked: boolean) => {
-    const previous = form.getValues();
     form.setValue("kakaoSms", checked);
 
     try {
       await updateMarketingConsentMutation.mutateAsync({ kakaoSms: checked });
     } catch {
-      form.setValue("kakaoSms", previous.kakaoSms);
+      await refetch();
       toast.error("설정 저장에 실패했습니다.");
     }
   };
@@ -101,7 +101,13 @@ export default function MyInfoNoticePage() {
                   <div className="flex items-center justify-between border-b border-stone-200 py-3">
                     <Field className="gap-0">
                       <FieldContent className="gap-1">
-                        <FieldTitle>카카오톡/문자</FieldTitle>
+                        <FieldLabel
+                          id="kakao-sms-switch-label"
+                          htmlFor="kakao-sms-switch"
+                          className="block"
+                        >
+                          <FieldTitle>카카오톡/문자</FieldTitle>
+                        </FieldLabel>
                         <FieldDescription>
                           마케팅 목적의 개인정보 수집 및 이용 동의 (선택)
                         </FieldDescription>
@@ -112,6 +118,8 @@ export default function MyInfoNoticePage() {
                       control={form.control}
                       render={({ field }) => (
                         <Switch
+                          id="kakao-sms-switch"
+                          aria-labelledby="kakao-sms-switch-label"
                           checked={field.value}
                           onCheckedChange={(checked) => {
                             void handleToggle(checked);
