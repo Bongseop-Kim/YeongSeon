@@ -84,9 +84,7 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
 
       const isSelected = key === selectedKey;
       const isRoute = !(parentName !== undefined && children.length === 0);
-      const linkStyle: CSSProperties = isSelected
-        ? { pointerEvents: "none" }
-        : {};
+      const linkStyle: CSSProperties = {};
 
       return (
         <CanAccess

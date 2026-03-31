@@ -169,8 +169,8 @@ export function useOrderStatusUpdate(
     newStatus: string,
     memo: string,
     isRollback: boolean,
-  ) => {
-    if (!orderId) return;
+  ): Promise<boolean> => {
+    if (!orderId) return false;
     setIsUpdating(true);
     try {
       await updateOrderStatus({
@@ -186,10 +186,12 @@ export function useOrderStatusUpdate(
       );
       refetch();
       invalidateLogs();
+      return true;
     } catch (err) {
       message.error(
         `${isRollback ? "롤백" : "상태 변경"} 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
       );
+      return false;
     } finally {
       setIsUpdating(false);
     }

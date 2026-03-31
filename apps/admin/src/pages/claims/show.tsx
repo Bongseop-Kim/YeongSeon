@@ -1,6 +1,5 @@
 import { Show } from "@refinedev/antd";
 import { useParams } from "react-router-dom";
-import { useState } from "react";
 import { Typography } from "antd";
 import { CLAIM_STATUS_FLOW, CLAIM_ROLLBACK_FLOW } from "@yeongseon/shared";
 import {
@@ -37,8 +36,6 @@ export default function ClaimShow() {
     claim?.resendTracking,
     claimId,
   );
-
-  const [statusMemo, setStatusMemo] = useState("");
 
   const claimType = claim?.claimType;
   const statusFlow = claimType ? CLAIM_STATUS_FLOW[claimType] : undefined;
@@ -97,12 +94,7 @@ export default function ClaimShow() {
           claim={claim}
           nextStatus={nextStatus}
           rollbackStatus={rollbackStatus}
-          statusMemo={statusMemo}
-          onMemoChange={setStatusMemo}
-          onStatusChange={async (newStatus, memo) => {
-            const ok = await changeStatus(newStatus, memo);
-            if (ok) setStatusMemo("");
-          }}
+          onStatusChange={changeStatus}
           onRollback={rollback}
           isUpdating={isUpdating}
         />
