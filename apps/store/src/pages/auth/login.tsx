@@ -153,7 +153,9 @@ const LoginPage = () => {
                 <div className="w-full border-t border-zinc-200" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-zinc-500">또는</span>
+                <span className="bg-white px-2 text-foreground-muted">
+                  또는
+                </span>
               </div>
             </div>
             <div className="space-y-3">
@@ -168,7 +170,7 @@ const LoginPage = () => {
                     }
                   />
                   {isInAppBrowser && provider.id === "google" ? (
-                    <p className="mt-1 text-center text-xs text-zinc-500">
+                    <p className="mt-1 text-center text-xs text-foreground-muted">
                       카카오톡 인앱 브라우저에서는 구글 로그인을 사용할 수
                       없습니다.
                       <br />
@@ -178,7 +180,7 @@ const LoginPage = () => {
                 </div>
               ))}
             </div>
-            <div className="text-center text-xs text-zinc-500 pt-4">
+            <div className="text-center pt-4 text-xs text-foreground-muted">
               <p>
                 로그인 시{" "}
                 <a

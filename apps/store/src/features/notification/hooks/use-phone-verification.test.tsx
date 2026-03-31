@@ -198,6 +198,31 @@ describe("usePhoneVerification", () => {
     vi.useRealTimers();
   });
 
+  it("재발송 시 카운트다운을 300으로 초기화한다", async () => {
+    vi.useFakeTimers();
+    sendPhoneVerification.mockResolvedValue(undefined);
+    const { result } = renderHook(() => usePhoneVerification(onVerified));
+
+    await act(async () => {
+      result.current.setPhone("01012345678");
+    });
+    await act(async () => {
+      await result.current.handleSend();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(5_000);
+    });
+    expect(result.current.countdown).toBe(295);
+
+    await act(async () => {
+      await result.current.handleResend();
+    });
+
+    expect(result.current.countdown).toBe(300);
+    vi.useRealTimers();
+  });
+
   it("카운트다운이 0이면 isCountdownExpired가 true다", async () => {
     vi.useFakeTimers();
     sendPhoneVerification.mockResolvedValueOnce(undefined);

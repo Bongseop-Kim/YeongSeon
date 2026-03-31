@@ -73,6 +73,9 @@ export default function MyInfoNoticePage() {
       return;
     }
 
+    const previousValue = form.getValues("notificationEnabled");
+    form.setValue("notificationEnabled", checked);
+
     try {
       if (checked && !profile.notificationConsent) {
         await saveNotificationConsent(true);
@@ -87,6 +90,7 @@ export default function MyInfoNoticePage() {
         error instanceof Error
           ? error.message
           : "알림 설정 변경에 실패했습니다.";
+      form.setValue("notificationEnabled", previousValue);
       toast.error(message);
     }
   };
@@ -242,6 +246,9 @@ export default function MyInfoNoticePage() {
               </DialogHeader>
               <PhoneVerificationForm
                 onVerified={async () => {
+                  const previousValue = form.getValues("notificationEnabled");
+                  form.setValue("notificationEnabled", true);
+
                   try {
                     await saveNotificationConsent(true);
                     await updateNotificationEnabled(true);
@@ -255,6 +262,7 @@ export default function MyInfoNoticePage() {
                       error instanceof Error
                         ? error.message
                         : "알림 활성화에 실패했습니다.";
+                    form.setValue("notificationEnabled", previousValue);
                     toast.error(message);
                   }
                 }}

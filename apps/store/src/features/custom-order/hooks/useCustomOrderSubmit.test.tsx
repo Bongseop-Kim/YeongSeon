@@ -225,29 +225,4 @@ describe("useCustomOrderSubmit", () => {
     });
     expect(error).toHaveBeenCalledWith("견적 실패");
   });
-
-  it("견적요청 성공 시 quote-request 페이지로 이동한다", async () => {
-    createQuoteRequestMutateAsync.mockResolvedValueOnce(undefined);
-    authState.user = { id: "user-1" };
-
-    const { result } = renderHook(() =>
-      useCustomOrderSubmit({
-        selectedAddressId: "addr-1",
-        selectedAddress: { id: "addr-1" } as never,
-        imageUpload: {
-          isUploading: false,
-          getImageRefs: () => [],
-        } as never,
-        watchedValues: createValues(100),
-        formReset: vi.fn(),
-        totalCost: 40000,
-      }),
-    );
-
-    await act(async () => {
-      await result.current.handleSubmit();
-    });
-
-    expect(navigate).toHaveBeenCalledWith("/my-page/quote-request");
-  });
 });

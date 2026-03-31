@@ -141,6 +141,17 @@ function renderPage() {
   );
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+}
+
 describe("MyInfoNoticePage", () => {
   beforeEach(() => {
     profileState.marketingConsent.kakaoSms = false;
@@ -214,6 +225,95 @@ describe("MyInfoNoticePage", () => {
       expect(saveNotificationConsentMock).toHaveBeenCalledWith(true);
       expect(updateNotificationEnabledMock).toHaveBeenCalledWith(true);
     });
+  });
+
+  it("서비스 알림 토글은 저장 중에도 낙관적으로 스위치 상태를 반영한다", async () => {
+    const user = userEvent.setup();
+    const deferred = createDeferred<void>();
+    profileState.phoneVerified = true;
+    updateNotificationEnabledMock.mockReturnValueOnce(deferred.promise);
+    renderPage();
+
+    const toggle = screen.getByRole("switch", { name: "카카오톡/문자 알림" });
+    expect(toggle).not.toBeChecked();
+
+    await user.click(toggle);
+
+    expect(toggle).toBeChecked();
+
+    deferred.resolve(undefined);
+
+    await waitFor(() => {
+      expect(updateNotificationEnabledMock).toHaveBeenCalledWith(true);
+    });
+  });
+
+  it("서비스 알림 저장 실패 시 스위치 상태를 이전 값으로 되돌린다", async () => {
+    const user = userEvent.setup();
+    profileState.phoneVerified = true;
+    updateNotificationEnabledMock.mockRejectedValueOnce(
+      new Error("알림 저장 실패"),
+    );
+    renderPage();
+
+    const toggle = screen.getByRole("switch", { name: "카카오톡/문자 알림" });
+
+    await user.click(toggle);
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith("알림 저장 실패");
+    });
+    expect(toggle).not.toBeChecked();
+  });
+
+  it("전화번호 인증 완료 처리도 스위치를 낙관적으로 켠다", async () => {
+    const user = userEvent.setup();
+    const deferred = createDeferred<void>();
+    profileState.phoneVerified = false;
+    saveNotificationConsentMock.mockResolvedValueOnce(undefined);
+    updateNotificationEnabledMock.mockReturnValueOnce(deferred.promise);
+    renderPage();
+
+    const toggle = screen.getByRole("switch", { name: "카카오톡/문자 알림" });
+    await user.click(toggle);
+
+    await waitFor(() => {
+      expect(screen.getByText("인증 완료")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText("인증 완료"));
+
+    expect(toggle).toBeChecked();
+
+    deferred.resolve(undefined);
+
+    await waitFor(() => {
+      expect(updateNotificationEnabledMock).toHaveBeenCalledWith(true);
+    });
+  });
+
+  it("전화번호 인증 완료 후 저장 실패 시 스위치 상태를 되돌린다", async () => {
+    const user = userEvent.setup();
+    profileState.phoneVerified = false;
+    saveNotificationConsentMock.mockResolvedValueOnce(undefined);
+    updateNotificationEnabledMock.mockRejectedValueOnce(
+      new Error("알림 활성화 실패"),
+    );
+    renderPage();
+
+    const toggle = screen.getByRole("switch", { name: "카카오톡/문자 알림" });
+    await user.click(toggle);
+
+    await waitFor(() => {
+      expect(screen.getByText("인증 완료")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText("인증 완료"));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith("알림 활성화 실패");
+    });
+    expect(toggle).not.toBeChecked();
   });
 
   it("phoneVerified=false이면 미인증 안내 문구를 표시한다", () => {

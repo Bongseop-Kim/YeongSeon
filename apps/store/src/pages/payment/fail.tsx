@@ -19,7 +19,6 @@ const PaymentFailPage = () => {
   const returnTo = searchParams.get("returnTo");
   const backRoute =
     returnTo && returnTo in BACK_LABELS ? returnTo : ROUTES.ORDER_FORM;
-  const backLabel = BACK_LABELS[backRoute] ?? "이전 페이지로 돌아가기";
 
   return (
     <MainLayout>
@@ -51,7 +50,9 @@ const PaymentFailPage = () => {
             <p className="mt-6 text-xs text-zinc-400">에러 코드: {code}</p>
           ) : null}
           <div className="mt-8 flex justify-center">
-            <Button onClick={() => navigate(backRoute)}>{backLabel}</Button>
+            <Button onClick={() => navigate(backRoute)}>
+              {BACK_LABELS[backRoute]}
+            </Button>
           </div>
         </div>
       </MainContent>
