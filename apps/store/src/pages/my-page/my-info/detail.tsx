@@ -128,10 +128,10 @@ export default function MyInfoDetailPage() {
                   <div className="flex items-center justify-between border-b border-stone-200 py-3">
                     <div>
                       <p className="text-sm font-medium text-zinc-950">
-                        푸시 알림
+                        카카오톡/문자 알림
                       </p>
                       <p className="mt-1 text-sm text-zinc-500">
-                        주문 상태와 주요 서비스 알림을 받습니다.
+                        주문·수선·제작 등 서비스 알림을 카카오톡으로 받습니다.
                       </p>
                     </div>
                     <Switch

@@ -132,6 +132,32 @@ REVOKE ALL ON FUNCTION public.set_notification_preferences(boolean, boolean) FRO
 GRANT EXECUTE ON FUNCTION public.set_notification_preferences(boolean, boolean) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.set_notification_preferences(boolean, boolean) TO service_role;
 
+-- ── set_marketing_consent ────────────────────────────────────
+-- SECURITY INVOKER: profiles RLS(id = auth.uid())가 소유권을 보장하며,
+-- audit log가 불필요하므로 INVOKER로 충분하다.
+CREATE OR REPLACE FUNCTION public.set_marketing_consent(
+  p_kakao_sms_consent boolean
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = 'public'
+AS $$
+BEGIN
+  UPDATE public.profiles
+  SET marketing_kakao_sms_consent = p_kakao_sms_consent
+  WHERE id = auth.uid();
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Profile not found';
+  END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.set_marketing_consent(boolean) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.set_marketing_consent(boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.set_marketing_consent(boolean) TO service_role;
+
 -- ── create_phone_verification ───────────────────────────────
 -- SECURITY DEFINER 사유: phone_verifications 직접 INSERT 권한을 열지 않고
 -- auth.uid() 소유권 검증, 재전송 제한, 일일 횟수 제한을 단일 RPC/트랜잭션으로 강제한다.

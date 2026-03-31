@@ -96,7 +96,7 @@ export default function MypagePage() {
     },
     {
       label: "마케팅 동의",
-      value: profile?.marketingConsent.all ? "동의" : "미동의",
+      value: profile?.marketingConsent.kakaoSms ? "동의" : "미동의",
     },
   ];
 

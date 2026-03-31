@@ -4,11 +4,6 @@ export {
   useUpdateMarketingConsent,
 } from "./api/profile-query";
 export {
-  DEFAULT_MARKETING_CONSENT,
-  normalizeMarketingConsent,
-  applyMarketingConsentToggle,
-} from "./api/profile-mapper";
-export {
   useRequestEmailChangeCode,
   useResendEmailChangeCode,
   useVerifyEmailChangeCode,
