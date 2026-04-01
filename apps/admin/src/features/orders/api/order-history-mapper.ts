@@ -5,7 +5,7 @@ import type {
   AdminOrderHistoryOrderEntry,
 } from "@/features/orders/types/admin-order";
 
-export function toAdminOrderHistoryOrderEntry(
+function toAdminOrderHistoryOrderEntry(
   dto: OrderStatusLogDTO,
 ): AdminOrderHistoryOrderEntry {
   return {
@@ -21,7 +21,7 @@ export function toAdminOrderHistoryOrderEntry(
   };
 }
 
-export function toAdminOrderHistoryClaimEntry(
+function toAdminOrderHistoryClaimEntry(
   dto: ClaimStatusLogDTO,
 ): AdminOrderHistoryClaimEntry {
   return {
