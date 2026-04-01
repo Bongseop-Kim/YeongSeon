@@ -1,4 +1,5 @@
 import type { OrderType } from "../../constants/order-status";
+import type { ClaimStatus, ClaimType } from "../view/claim-item";
 import type { AdminAction } from "../view/order-actions";
 
 /** admin_order_list_view row */
@@ -36,6 +37,14 @@ export interface AdminOrderListRowDTO {
 }
 
 /** admin_order_detail_view row (extends list + shipping address, minus list-only fields) */
+export interface AdminActiveClaimSummaryDTO {
+  id: string;
+  claimNumber: string;
+  type: ClaimType;
+  status: ClaimStatus;
+  quantity: number;
+}
+
 export interface AdminOrderDetailRowDTO extends Omit<
   AdminOrderListRowDTO,
   | "fabricType"
@@ -52,6 +61,11 @@ export interface AdminOrderDetailRowDTO extends Omit<
   shippingPostalCode: string | null;
   deliveryMemo: string | null;
   deliveryRequest: string | null;
+  activeClaimId: string | null;
+  activeClaimNumber: string | null;
+  activeClaimType: ClaimType | null;
+  activeClaimStatus: ClaimStatus | null;
+  activeClaimQuantity: number | null;
   adminActions: AdminAction[];
 }
 

@@ -5,7 +5,7 @@ import { useDefaultCourier } from "@/entities/settings";
 import {
   useAdminOrderDetail,
   useAdminOrderItems,
-  useAdminOrderStatusLogs,
+  useAdminOrderHistory,
   useOrderStatusUpdate,
   useTrackingSave,
   useTrackingState,
@@ -18,6 +18,7 @@ import { ShippingAddressSection } from "./shipping-address-section";
 import { TrackingSection } from "./tracking-section";
 import { OrderItemsTable } from "./order-items-table";
 import { StatusLogTable } from "./status-log-table";
+import { ActiveClaimSection } from "./active-claim-section";
 import { RelatedOrdersSection } from "@/features/orders/components/related-orders-section";
 import type {
   AdminCustomOrderItem,
@@ -33,7 +34,7 @@ export function OrderDetailSection() {
   const orderType = order?.orderType ?? "sale";
 
   const { items } = useAdminOrderItems(orderId, orderType);
-  const { logs } = useAdminOrderStatusLogs(orderId);
+  const { logs } = useAdminOrderHistory(orderId);
   const defaultCourier = useDefaultCourier();
 
   const { isUpdating, changeStatus, rollback } = useOrderStatusUpdate(
@@ -135,6 +136,7 @@ export function OrderDetailSection() {
   return (
     <>
       <Title level={5}>주문 정보</Title>
+      {order.activeClaim && <ActiveClaimSection claim={order.activeClaim} />}
       <OrderInfoSection order={order} />
 
       {orderType !== "token" && (

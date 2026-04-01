@@ -154,6 +154,7 @@ describe("toAdminOrderItem", () => {
     expect(toAdminOrderDetail(createAdminOrderDetailRowDTO())).toEqual(
       expect.objectContaining({
         createdAt: "2026-03-15T09:00:00Z",
+        activeClaim: null,
         shippingAddress: {
           recipientName: "홍길동",
           recipientPhone: "010-3333-4444",
@@ -172,6 +173,66 @@ describe("toAdminOrderItem", () => {
           companyTrackingNumber: null,
           companyShippedAt: null,
         },
+      }),
+    );
+  });
+
+  it("활성 클레임 요약 컬럼이 모두 있으면 activeClaim으로 매핑한다", () => {
+    expect(
+      toAdminOrderDetail(
+        createAdminOrderDetailRowDTO({
+          activeClaimId: "claim-1",
+          activeClaimNumber: "CLM-001",
+          activeClaimType: "exchange",
+          activeClaimStatus: "처리중",
+          activeClaimQuantity: 2,
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        activeClaim: {
+          id: "claim-1",
+          claimNumber: "CLM-001",
+          type: "exchange",
+          status: "처리중",
+          quantity: 2,
+        },
+      }),
+    );
+  });
+
+  it("활성 클레임 요약 컬럼이 undefined면 activeClaim은 null이다", () => {
+    expect(
+      toAdminOrderDetail(
+        createAdminOrderDetailRowDTO({
+          activeClaimId: "claim-1",
+          activeClaimNumber: "CLM-001",
+          activeClaimType: "exchange",
+          activeClaimStatus: undefined,
+          activeClaimQuantity: 2,
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        activeClaim: null,
+      }),
+    );
+  });
+
+  it("활성 클레임 요약 컬럼이 일부만 있으면 activeClaim은 null이다", () => {
+    expect(
+      toAdminOrderDetail(
+        createAdminOrderDetailRowDTO({
+          activeClaimId: "claim-1",
+          activeClaimNumber: "CLM-001",
+          activeClaimType: "exchange",
+          activeClaimStatus: null,
+          activeClaimQuantity: 2,
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        activeClaim: null,
       }),
     );
   });

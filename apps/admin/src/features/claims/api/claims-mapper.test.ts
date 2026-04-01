@@ -81,4 +81,14 @@ describe("toAdminClaimStatusLogEntry", () => {
       createdAt: "2026-03-15T11:30:00Z",
     });
   });
+
+  it("changedBy가 null이어도 그대로 매핑한다", () => {
+    expect(
+      toAdminClaimStatusLogEntry(createClaimStatusLogDTO({ changedBy: null })),
+    ).toEqual(
+      expect.objectContaining({
+        changedBy: null,
+      }),
+    );
+  });
 });

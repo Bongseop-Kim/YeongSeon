@@ -26,6 +26,7 @@ function createOrder(
     confirmedAt: null,
     paymentGroupId: null,
     shippingCost: 0,
+    activeClaim: null,
     adminActions: ["advance", "rollback", "cancel"],
     ...overrides,
   };
@@ -47,10 +48,6 @@ describe("OrderStatusActions", () => {
         />
       </App>,
     );
-
-    expect(
-      screen.queryByPlaceholderText("상태 변경 사유 (이력에 기록됨)"),
-    ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "대기중으로 롤백" }));
 
@@ -143,6 +140,93 @@ describe("OrderStatusActions", () => {
     await waitFor(() => {
       expect(onStatusChange).toHaveBeenCalledWith("취소", "");
       expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+  });
+
+  it("활성 클레임이 있으면 상태 액션 버튼이 모두 비활성화되고 안내 문구가 보인다", () => {
+    render(
+      <App>
+        <OrderStatusActions
+          order={createOrder({
+            activeClaim: {
+              id: "claim-1",
+              claimNumber: "CLM-001",
+              type: "exchange",
+              status: "수거요청",
+              quantity: 1,
+            },
+          })}
+          nextStatus="진행중"
+          rollbackStatus="대기중"
+          onStatusChange={vi.fn().mockResolvedValue(true)}
+          onRollback={vi.fn().mockResolvedValue(true)}
+          isUpdating={false}
+        />
+      </App>,
+    );
+
+    expect(
+      screen.getByText(
+        "활성 클레임이 있어 주문 상태는 클레임 상세에서 처리해야 합니다.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "진행중으로 변경" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "대기중으로 롤백" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "취소 처리" })).toBeDisabled();
+  });
+
+  it("모달이 열린 뒤 활성 클레임이 생기면 상태 변경을 막는다", async () => {
+    const onStatusChange = vi.fn().mockResolvedValue(true);
+
+    const { rerender } = render(
+      <App>
+        <OrderStatusActions
+          order={createOrder()}
+          nextStatus="진행중"
+          rollbackStatus="대기중"
+          onStatusChange={onStatusChange}
+          onRollback={vi.fn().mockResolvedValue(true)}
+          isUpdating={false}
+        />
+      </App>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "진행중으로 변경" }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    rerender(
+      <App>
+        <OrderStatusActions
+          order={createOrder({
+            activeClaim: {
+              id: "claim-1",
+              claimNumber: "CLM-001",
+              type: "exchange",
+              status: "수거요청",
+              quantity: 1,
+            },
+          })}
+          nextStatus="진행중"
+          rollbackStatus="대기중"
+          onStatusChange={onStatusChange}
+          onRollback={vi.fn().mockResolvedValue(true)}
+          isUpdating={false}
+        />
+      </App>,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "진행중으로 변경" }),
+    ).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "변경" }));
+
+    await waitFor(() => {
+      expect(onStatusChange).not.toHaveBeenCalled();
     });
   });
 });

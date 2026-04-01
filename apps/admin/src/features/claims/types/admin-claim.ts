@@ -71,7 +71,7 @@ export interface AdminClaimDetail {
 export interface AdminClaimStatusLogEntry {
   id: string;
   claimId: string;
-  changedBy: string;
+  changedBy: string | null;
   previousStatus: string;
   newStatus: string;
   memo: string | null;

@@ -1,7 +1,38 @@
--- ============================================================= 
--- 94_functions_claims.sql  – Claim RPC functions 
--- =============================================================
--- ── create_claim ─────────────────────────────────────────────
+-- fix: 주문당 활성 클레임 1건만 허용하는 DB 제약 추가
+--
+-- 목적: 같은 주문(order_id)에 대해 활성 상태 클레임이 2건 이상 동시에 존재하지 않도록 강제한다.
+-- 활성 상태 범위: '접수', '처리중', '수거요청', '수거완료', '재발송'
+-- 제외 상태: '완료', '거부'
+
+-- 1. 신규 partial unique index 생성 전 기존 중복 데이터 사전 검증
+--    중복이 존재하면 마이그레이션을 즉시 중단하고 진단 정보를 제공한다.
+do $$
+declare
+  v_dup_count int;
+begin
+  select count(*)
+  into v_dup_count
+  from (
+    select order_id
+    from public.claims
+    where status = any(array['접수','처리중','수거요청','수거완료','재발송'])
+    group by order_id
+    having count(*) > 1
+  ) dups;
+
+  if v_dup_count > 0 then
+    raise exception
+      'MIGRATION BLOCKED: idx_claims_single_active_per_order 생성 불가 — public.claims에 % 건의 중복 주문(order_id)이 존재합니다. 활성 클레임을 수동 정리한 뒤 재실행하세요.',
+      v_dup_count;
+  end if;
+end $$;
+
+-- 2. 주문당 활성 클레임 1건 제약 인덱스 생성
+CREATE UNIQUE INDEX idx_claims_single_active_per_order
+  ON public.claims USING btree (order_id)
+  WHERE status = ANY (ARRAY['접수','처리중','수거요청','수거완료','재발송']);
+
+-- 3. create_claim에 사용자 친화적인 주문 단위 활성 클레임 가드 추가
 CREATE OR REPLACE FUNCTION public.create_claim(
   p_type text,
   p_order_id uuid,
@@ -12,7 +43,6 @@ CREATE OR REPLACE FUNCTION public.create_claim(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
--- SECURITY DEFINER: claims 테이블의 RLS가 소유자 외 INSERT를 차단하여 우회 목적으로 사용
 SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
@@ -26,18 +56,15 @@ declare
   v_claim_id uuid;
   v_constraint_name text;
 begin
-  -- 1. Auth check
   v_user_id := auth.uid();
   if v_user_id is null then
     raise exception 'Unauthorized';
   end if;
 
-  -- 2. Type validation
   if p_type not in ('cancel', 'return', 'exchange') then
     raise exception 'Invalid claim type';
   end if;
 
-  -- 3. Reason validation
   if p_reason not in (
     'change_mind', 'defect', 'delay', 'wrong_item',
     'size_mismatch', 'color_mismatch', 'other'
@@ -45,7 +72,6 @@ begin
     raise exception 'Invalid claim reason';
   end if;
 
-  -- 4. Order ownership check (FOR UPDATE: 처리 중 동시 상태 변경 방지)
   select o.order_type, o.status
   into v_order_type, v_order_status
   from public.orders o
@@ -57,10 +83,9 @@ begin
     raise exception 'Order not found';
   end if;
 
-  -- 5. 상태 가드: cancel (BR-claim-002, BR-claim-003, BR-claim-004)
   if p_type = 'cancel' then
     if not (
-      (v_order_type = 'sale'   and v_order_status in ('대기중', '결제중', '진행중'))
+      (v_order_type = 'sale' and v_order_status in ('대기중', '결제중', '진행중'))
       or (v_order_type = 'custom' and v_order_status in ('대기중', '결제중', '접수'))
       or (v_order_type = 'repair' and v_order_status in ('대기중', '결제중'))
       or (v_order_type = 'sample' and v_order_status in ('대기중', '결제중', '접수'))
@@ -70,7 +95,6 @@ begin
     end if;
   end if;
 
-  -- 6. 상태 가드: return/exchange (BR-claim-007: 배송중/배송완료에서만 허용)
   if p_type in ('return', 'exchange') then
     if not (
       v_order_status in ('배송중', '배송완료')
@@ -80,7 +104,6 @@ begin
     end if;
   end if;
 
-  -- 7. Order item lookup (p_item_id is order_items.item_id text)
   begin
     select oi.id, oi.quantity
     into strict v_order_item
@@ -94,18 +117,13 @@ begin
       raise exception 'Multiple order items found for given order_id and item_id';
   end;
 
-  -- 8. Quantity validation
   v_claim_quantity := coalesce(p_quantity, v_order_item.quantity);
   if v_claim_quantity <= 0 or v_claim_quantity > v_order_item.quantity then
     raise exception 'Invalid claim quantity';
   end if;
 
-  -- 9. Generate claim number
   v_claim_number := public.generate_claim_number();
 
-  -- 10. 주문 단위 활성 클레임 가드
-  --     최종 진실 소스는 partial unique index(idx_claims_single_active_per_order)이며,
-  --     이 가드는 사용자 친화적인 오류 메시지를 위한 보조 장치다.
   if exists (
     select 1
     from public.claims c
@@ -115,9 +133,6 @@ begin
     raise exception 'Active claim already exists for this order';
   end if;
 
-  -- 11. Insert claim
-  --     중복 감지는 partial unique index(idx_claims_active_per_item)와
-  --     ON CONFLICT ... DO NOTHING + v_claim_id IS NULL 체크로 원자적으로 처리한다.
   begin
     insert into public.claims (
       user_id,
@@ -164,7 +179,7 @@ begin
 end;
 $$;
 
--- ── admin_update_claim_status ─────────────────────────────────
+-- 5. admin_update_claim_status에 비활성→활성 전이 시 주문 단위 락 추가
 CREATE OR REPLACE FUNCTION public.admin_update_claim_status(
   p_claim_id uuid,
   p_new_status text,
@@ -219,15 +234,11 @@ begin
   end if;
 
   if p_is_rollback then
-    -- Rollback requires memo
     if p_memo is null or trim(p_memo) = '' then
       raise exception '롤백 시 사유 입력 필수';
     end if;
 
-    -- Validate rollback transition by claim type
-    -- Special: 거부 → 접수 allowed for all types (오거부 복원)
     if v_current_status = '거부' and p_new_status = '접수' then
-      -- allowed for all claim types
       null;
     elsif v_claim_type = 'cancel' then
       if not (v_current_status = '처리중' and p_new_status = '접수') then
@@ -242,13 +253,11 @@ begin
         raise exception 'Invalid rollback from "%" to "%" for exchange claim', v_current_status, p_new_status;
       end if;
     elsif v_claim_type = 'token_refund' then
-      -- token_refund 롤백: 거부→접수는 공통 로직(위)에서 허용, 나머지 롤백 불가
       raise exception 'Invalid rollback from "%" to "%" for token_refund claim', v_current_status, p_new_status;
     else
       raise exception 'Unknown claim type: %', v_claim_type;
     end if;
   else
-    -- Validate forward state transition by claim type
     if v_claim_type = 'cancel' then
       if not (
         (v_current_status = '접수' and p_new_status = '처리중')
@@ -277,8 +286,6 @@ begin
         raise exception 'Invalid transition from "%" to "%" for exchange claim', v_current_status, p_new_status;
       end if;
     elsif v_claim_type = 'token_refund' then
-      -- token_refund 완료 처리는 approve_token_refund() 전용 (Edge Function 경유 필수)
-      -- 이 RPC에서 완료를 허용하면 design_tokens/orders 부수효과가 누락된다.
       if not (
         (v_current_status = '접수' and p_new_status = '거부')
       ) then
@@ -289,12 +296,10 @@ begin
     end if;
   end if;
 
-  -- Update claim status
   update public.claims
   set status = p_new_status
   where id = p_claim_id;
 
-  -- Insert status log
   insert into public.claim_status_logs (
     claim_id,
     changed_by,
@@ -320,47 +325,173 @@ begin
 end;
 $$;
 
--- cancel_claim: 접수 상태의 클레임을 유저가 직접 취소(삭제)한다.
-CREATE OR REPLACE FUNCTION public.cancel_claim(p_claim_id uuid)
-RETURNS void
+-- 4. admin_update_order_status에 활성 클레임 주문 상태 변경 차단 가드 추가
+CREATE OR REPLACE FUNCTION public.admin_update_order_status(
+  p_order_id uuid,
+  p_new_status text,
+  p_memo text DEFAULT NULL::text,
+  p_payment_key text DEFAULT NULL::text,
+  p_is_rollback boolean DEFAULT false
+)
+RETURNS jsonb
 LANGUAGE plpgsql
--- SECURITY DEFINER: claims 테이블에 authenticated 역할의 DELETE RLS 정책이
--- 의도적으로 존재하지 않는다. 직접 DELETE를 허용하면 상태 검증 없이
--- 레코드가 삭제될 수 있으므로, 이 함수를 통해서만 소유권·상태 검증 후
--- 삭제를 허용한다. DELETE RLS 정책을 추가하더라도 이 함수를 유지한다.
 SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 declare
-  v_user_id uuid;
-  v_status  text;
-  v_type    text;
+  v_admin_id uuid := auth.uid();
+  v_current_status text;
+  v_order_type text;
+  v_payment_key text;
 begin
-  v_user_id := auth.uid();
-  if v_user_id is null then
-    raise exception 'Unauthorized';
+  if v_admin_id is null or not public.is_admin() then
+    raise exception 'Admin only';
   end if;
 
-  select status, type into v_status, v_type
-  from public.claims
-  where id = p_claim_id
-    and user_id = v_user_id
+  select status, order_type, payment_key
+  into v_current_status, v_order_type, v_payment_key
+  from public.orders
+  where id = p_order_id
   for update;
 
   if not found then
-    raise exception 'Claim not found';
+    raise exception 'Order not found: %', p_order_id;
   end if;
 
-  -- token_refund는 create_claim으로 생성되지 않으며 별도 환불 흐름으로 관리된다.
-  if v_type = 'token_refund' then
-    raise exception 'token_refund 클레임은 직접 취소할 수 없습니다';
+  if exists (
+    select 1
+    from public.claims c
+    where c.order_id = p_order_id
+      and c.status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
+  ) then
+    raise exception '활성 클레임이 있는 주문은 주문 상태를 직접 변경할 수 없습니다';
   end if;
 
-  if v_status <> '접수' then
-    raise exception '접수 상태에서만 클레임을 취소할 수 있습니다';
+  if p_new_status is null or btrim(p_new_status) = '' then
+    raise exception 'p_new_status is required';
   end if;
 
-  delete from public.claims where id = p_claim_id;
-  -- claim_status_logs는 ON DELETE CASCADE로 자동 삭제
+  if p_is_rollback and (p_memo is null or btrim(p_memo) = '') then
+    raise exception '롤백 시 사유 입력 필수';
+  end if;
+
+  if p_is_rollback then
+    if v_current_status in ('배송중', '배송완료', '완료', '취소', '수거완료', '재발송') then
+      raise exception 'Rollback not allowed from status: %', v_current_status;
+    end if;
+
+    if v_order_type = 'sale' then
+      if not (
+        (v_current_status = '결제중' and p_new_status = '대기중')
+        or (v_current_status = '진행중' and p_new_status = '대기중')
+      ) then
+        raise exception 'Invalid rollback from "%" to "%" for sale order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'custom' then
+      if not (
+        (v_current_status = '결제중'   and p_new_status = '대기중')
+        or (v_current_status = '접수'   and p_new_status = '대기중')
+        or (v_current_status = '제작중' and p_new_status = '접수')
+        or (v_current_status = '제작완료' and p_new_status = '제작중')
+      ) then
+        raise exception 'Invalid rollback from "%" to "%" for custom order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'sample' then
+      if not (
+        (v_current_status = '결제중' and p_new_status = '대기중')
+        or (v_current_status = '접수' and p_new_status = '대기중')
+        or (v_current_status = '제작중' and p_new_status = '접수')
+      ) then
+        raise exception 'Invalid rollback from "%" to "%" for sample order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'repair' then
+      if not (
+        (v_current_status = '접수' and p_new_status = '발송중')
+        or (v_current_status = '수선중' and p_new_status = '접수')
+        or (v_current_status = '수선완료' and p_new_status = '수선중')
+      ) then
+        raise exception 'Invalid rollback from "%" to "%" for repair order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'token' then
+      if not (
+        (v_current_status = '결제중' and p_new_status = '대기중')
+      ) then
+        raise exception 'Invalid rollback from "%" to "%" for token order', v_current_status, p_new_status;
+      end if;
+    else
+      raise exception 'Unknown order type: %', v_order_type;
+    end if;
+  else
+    if v_order_type = 'sale' then
+      if not (
+        (v_current_status = '대기중'   and p_new_status = '진행중')
+        or (v_current_status = '진행중'   and p_new_status = '배송중')
+        or (v_current_status = '배송중'   and p_new_status = '배송완료')
+        or (v_current_status = '배송완료' and p_new_status = '완료')
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '진행중'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for sale order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'custom' then
+      if not (
+        (v_current_status = '대기중'   and p_new_status = '접수')
+        or (v_current_status = '접수'   and p_new_status = '제작중')
+        or (v_current_status = '제작중'   and p_new_status = '제작완료')
+        or (v_current_status = '제작완료' and p_new_status = '배송중')
+        or (v_current_status = '배송중'   and p_new_status = '배송완료')
+        or (v_current_status = '배송완료' and p_new_status = '완료')
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for custom order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'sample' then
+      if not (
+        (v_current_status = '접수' and p_new_status = '제작중')
+        or (v_current_status = '제작중' and p_new_status = '배송중')
+        or (v_current_status = '배송중' and p_new_status = '배송완료')
+        or (v_current_status = '배송완료' and p_new_status = '완료')
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '접수'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for sample order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'repair' then
+      if not (
+        (v_current_status = '발송중' and p_new_status = '접수')
+        or (v_current_status = '접수' and p_new_status = '수선중')
+        or (v_current_status = '수선중'   and p_new_status = '수선완료')
+        or (v_current_status = '수선완료' and p_new_status = '배송중')
+        or (v_current_status = '배송중'   and p_new_status = '배송완료')
+        or (v_current_status = '배송완료' and p_new_status = '완료')
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '발송대기', '발송중'))
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
+      end if;
+    elsif v_order_type = 'token' then
+      if not (
+        p_new_status = '취소' and v_current_status in ('대기중', '결제중')
+      ) then
+        raise exception 'Invalid transition from "%" to "%" for token order', v_current_status, p_new_status;
+      end if;
+    else
+      raise exception 'Unknown order type: %', v_order_type;
+    end if;
+  end if;
+
+  update public.orders
+  set status = p_new_status,
+      updated_at = now()
+  where id = p_order_id;
+
+  insert into public.order_status_logs (
+    order_id, changed_by, previous_status, new_status, memo
+  ) values (
+    p_order_id, v_admin_id, v_current_status, p_new_status, p_memo
+  );
+
+  return jsonb_build_object(
+    'success', true,
+    'previous_status', v_current_status,
+    'new_status', p_new_status
+  );
 end;
 $$;

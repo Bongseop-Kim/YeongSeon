@@ -181,6 +181,11 @@ export const createAdminOrderDetailRowDTO = (
     shippingPostalCode: "06236",
     deliveryMemo: "문 앞에 놓아주세요",
     deliveryRequest: "부재 시 연락 바랍니다",
+    activeClaimId: null,
+    activeClaimNumber: null,
+    activeClaimType: null,
+    activeClaimStatus: null,
+    activeClaimQuantity: null,
     adminActions: [],
     ...overrides,
   };
@@ -241,6 +246,9 @@ export const createClaimStatusLogDTO = (
 ): ClaimStatusLogDTO => ({
   id: "claim-status-log-1",
   claimId: "claim-1",
+  orderId: "order-1",
+  claimNumber: "CLM-001",
+  claimType: "return",
   changedBy: "admin-1",
   previousStatus: "접수",
   newStatus: "처리중",
