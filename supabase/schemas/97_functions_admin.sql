@@ -34,6 +34,15 @@ begin
     raise exception 'Order not found: %', p_order_id;
   end if;
 
+  if exists (
+    select 1
+    from public.claims c
+    where c.order_id = p_order_id
+      and c.status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
+  ) then
+    raise exception '활성 클레임이 있는 주문은 주문 상태를 직접 변경할 수 없습니다';
+  end if;
+
   if p_new_status is null or btrim(p_new_status) = '' then
     raise exception 'p_new_status is required';
   end if;

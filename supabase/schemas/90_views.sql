@@ -385,8 +385,8 @@ SELECT
   o.company_courier_company AS "companyCourierCompany",
   o.company_tracking_number AS "companyTrackingNumber",
   o.company_shipped_at      AS "companyShippedAt",
-  o.created_at,
-  o.updated_at,
+  o.created_at       AS "createdAt",
+  o.updated_at       AS "updatedAt",
   p.name           AS "customerName",
   p.phone          AS "customerPhone",
   public.admin_get_email(o.user_id) AS "customerEmail",
@@ -441,8 +441,8 @@ SELECT
   o.company_courier_company AS "companyCourierCompany",
   o.company_tracking_number AS "companyTrackingNumber",
   o.company_shipped_at      AS "companyShippedAt",
-  o.created_at,
-  o.updated_at,
+  o.created_at       AS "createdAt",
+  o.updated_at       AS "updatedAt",
   p.name           AS "customerName",
   p.phone          AS "customerPhone",
   public.admin_get_email(o.user_id) AS "customerEmail",
@@ -453,12 +453,30 @@ SELECT
   sa.postal_code      AS "shippingPostalCode",
   sa.delivery_memo    AS "deliveryMemo",
   sa.delivery_request AS "deliveryRequest",
+  ac.id               AS "activeClaimId",
+  ac.claim_number     AS "activeClaimNumber",
+  ac.type             AS "activeClaimType",
+  ac.status           AS "activeClaimStatus",
+  ac.quantity         AS "activeClaimQuantity",
   o.payment_group_id  AS "paymentGroupId",
   o.shipping_cost     AS "shippingCost",
   public.get_order_admin_actions(o.order_type, o.status) AS "adminActions"
 FROM public.orders o
 LEFT JOIN public.profiles p ON p.id = o.user_id
-LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id;
+LEFT JOIN public.shipping_addresses sa ON sa.id = o.shipping_address_id
+LEFT JOIN LATERAL (
+  SELECT
+    cl.id,
+    cl.claim_number,
+    cl.type,
+    cl.status,
+    cl.quantity
+  FROM public.claims cl
+  WHERE cl.order_id = o.id
+    AND cl.status IN ('접수', '처리중', '수거요청', '수거완료', '재발송')
+  ORDER BY cl.created_at DESC, cl.id DESC
+  LIMIT 1
+) ac ON true;
 
 -- ── admin_order_item_view ──────────────────────────────────
 CREATE OR REPLACE VIEW public.admin_order_item_view
@@ -618,10 +636,15 @@ AS
 SELECT
   l.id,
   l.claim_id         AS "claimId",
+  c.order_id         AS "orderId",
+  c.claim_number     AS "claimNumber",
+  c.type             AS "claimType",
   l.changed_by       AS "changedBy",
   l.previous_status  AS "previousStatus",
   l.new_status       AS "newStatus",
   l.memo,
   l.is_rollback      AS "isRollback",
   l.created_at       AS "createdAt"
-FROM public.claim_status_logs l;
+FROM public.claim_status_logs l
+JOIN public.claims c
+  ON c.id = l.claim_id;

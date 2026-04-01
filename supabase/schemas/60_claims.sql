@@ -49,6 +49,9 @@ CREATE INDEX idx_claims_status        ON public.claims USING btree (status);
 CREATE UNIQUE INDEX idx_claims_active_per_item
   ON public.claims USING btree (order_item_id, type)
   WHERE status = ANY (ARRAY['접수','처리중','수거요청','수거완료','재발송','완료']);
+CREATE UNIQUE INDEX idx_claims_single_active_per_order
+  ON public.claims USING btree (order_id)
+  WHERE status = ANY (ARRAY['접수','처리중','수거요청','수거완료','재발송']);
 
 -- Trigger
 CREATE OR REPLACE TRIGGER update_claims_updated_at

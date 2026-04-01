@@ -140,7 +140,11 @@ vi.mock("@/shared/ui-extended/button", () => ({
 }));
 
 vi.mock("@/features/order", () => ({
-  RepairShippingAddressBanner: () => <div>repair-shipping-banner</div>,
+  RepairShippingAddressBanner: ({ embedded }: { embedded?: boolean }) => (
+    <div data-testid="repair-shipping-banner">
+      {embedded ? "repair-shipping-banner-embedded" : "repair-shipping-banner"}
+    </div>
+  ),
 }));
 
 vi.mock("@/entities/order", () => ({
@@ -276,7 +280,9 @@ describe("OrderDetailPage", () => {
     expect(
       screen.getByRole("heading", { name: "현재 할 일" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("repair-shipping-banner")).toBeInTheDocument();
+    expect(
+      screen.getByText("repair-shipping-banner-embedded"),
+    ).toBeInTheDocument();
   });
 
   it("수선 주문의 배송 추적 섹션이 보이면 현재 할 일 카드에 같은 추적 정보를 중복 표시하지 않는다", () => {

@@ -7,6 +7,7 @@ import {
 } from "@yeongseon/shared";
 import { useAdminClaimTable } from "@/features/claims/api/claims-query";
 import type { AdminClaimListItem } from "@/features/claims/types/admin-claim";
+import { formatDateTime } from "@/utils/format-date-time";
 
 export function ClaimListTable() {
   const { show } = useNavigation();
@@ -66,7 +67,11 @@ export function ClaimListTable() {
         <Table.Column dataIndex="orderNumber" title="주문번호" />
         <Table.Column dataIndex="customerName" title="고객명" />
         <Table.Column dataIndex="productName" title="상품명" />
-        <Table.Column dataIndex="date" title="접수일" />
+        <Table.Column
+          dataIndex="createdAt"
+          title="접수일"
+          render={formatDateTime}
+        />
       </Table>
     </>
   );

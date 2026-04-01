@@ -36,7 +36,7 @@ export interface AdminTokenRefundInfo {
 export interface AdminClaimListItem {
   id: string;
   claimNumber: string;
-  date: string;
+  createdAt: string;
   claimType: ClaimType;
   status: string;
   reason: string;
@@ -50,7 +50,7 @@ export interface AdminClaimListItem {
 export interface AdminClaimDetail {
   id: string;
   claimNumber: string;
-  date: string;
+  createdAt: string;
   claimType: ClaimType;
   status: string;
   reason: string;
@@ -71,7 +71,7 @@ export interface AdminClaimDetail {
 export interface AdminClaimStatusLogEntry {
   id: string;
   claimId: string;
-  changedBy: string;
+  changedBy: string | null;
   previousStatus: string;
   newStatus: string;
   memo: string | null;

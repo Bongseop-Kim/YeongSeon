@@ -2,6 +2,7 @@ import { Descriptions, Tag } from "antd";
 import { useNavigation } from "@refinedev/core";
 import { ORDER_TYPE_LABELS, ORDER_STATUS_COLORS } from "@yeongseon/shared";
 import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
+import { formatDateTime } from "@/utils/format-date-time";
 
 interface OrderInfoSectionProps {
   order: AdminOrderDetail;
@@ -20,7 +21,7 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
         {order.orderNumber}
       </Descriptions.Item>
       <Descriptions.Item label="주문일">
-        {new Date(order.date).toLocaleString("ko-KR")}
+        {formatDateTime(order.createdAt)}
       </Descriptions.Item>
       <Descriptions.Item label="주문유형">
         <Tag>{ORDER_TYPE_LABELS[order.orderType]}</Tag>
@@ -66,12 +67,12 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
       </Descriptions.Item>
       {order.deliveredAt && (
         <Descriptions.Item label="배송완료일시">
-          {new Date(order.deliveredAt).toLocaleString("ko-KR")}
+          {formatDateTime(order.deliveredAt)}
         </Descriptions.Item>
       )}
       {order.confirmedAt && (
         <Descriptions.Item label="구매확정일시">
-          {new Date(order.confirmedAt).toLocaleString("ko-KR")}
+          {formatDateTime(order.confirmedAt)}
         </Descriptions.Item>
       )}
     </Descriptions>

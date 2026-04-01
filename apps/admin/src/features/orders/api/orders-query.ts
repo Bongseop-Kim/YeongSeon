@@ -9,6 +9,7 @@ import type {
   AdminOrderListRowDTO,
   AdminOrderDetailRowDTO,
   AdminOrderItemRowDTO,
+  ClaimStatusLogDTO,
   OrderStatusLogDTO,
   OrderType,
 } from "@yeongseon/shared";
@@ -16,14 +17,14 @@ import {
   toAdminOrderListItem,
   toAdminOrderDetail,
   toAdminOrderItem,
-  toAdminStatusLogEntry,
 } from "./orders-mapper";
+import { toAdminOrderHistoryEntries } from "./order-history-mapper";
 import { updateOrderStatus, updateOrderTracking } from "./orders-api";
 import type {
   AdminOrderListItem,
   AdminOrderDetail,
   AdminOrderItem,
-  AdminStatusLogEntry,
+  AdminOrderHistoryEntry,
 } from "@/features/orders/types/admin-order";
 
 // ── List ───────────────────────────────────────────────────────
@@ -137,15 +138,25 @@ export function useRelatedOrders(
 
 // ── Status logs ───────────────────────────────────────────────
 
-export function useAdminOrderStatusLogs(orderId: string | undefined) {
-  const { result } = useList<OrderStatusLogDTO>({
+export function useAdminOrderHistory(orderId: string | undefined) {
+  const { result: orderResult } = useList<OrderStatusLogDTO>({
     resource: "admin_order_status_log_view",
     filters: [{ field: "orderId", operator: "eq", value: orderId }],
     sorters: [{ field: "createdAt", order: "desc" }],
     queryOptions: { enabled: !!orderId },
   });
 
-  const logs: AdminStatusLogEntry[] = result.data.map(toAdminStatusLogEntry);
+  const { result: claimResult } = useList<ClaimStatusLogDTO>({
+    resource: "admin_claim_status_log_view",
+    filters: [{ field: "orderId", operator: "eq", value: orderId }],
+    sorters: [{ field: "createdAt", order: "desc" }],
+    queryOptions: { enabled: !!orderId },
+  });
+
+  const logs: AdminOrderHistoryEntry[] = toAdminOrderHistoryEntries({
+    orderLogs: orderResult.data,
+    claimLogs: claimResult.data,
+  });
 
   return { logs };
 }

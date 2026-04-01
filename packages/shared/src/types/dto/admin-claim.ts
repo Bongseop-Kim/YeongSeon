@@ -4,7 +4,10 @@ import type { TokenRefundDataDTO } from "./claim-view";
 export interface ClaimStatusLogDTO {
   id: string;
   claimId: string;
-  changedBy: string;
+  orderId: string;
+  claimNumber: string;
+  claimType: "cancel" | "return" | "exchange" | "token_refund";
+  changedBy: string | null;
   previousStatus: string;
   newStatus: string;
   memo: string | null;

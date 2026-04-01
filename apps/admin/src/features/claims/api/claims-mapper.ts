@@ -67,7 +67,7 @@ export function toAdminClaimListItem(
   return {
     id: dto.id,
     claimNumber: dto.claimNumber,
-    date: dto.date,
+    createdAt: dto.created_at,
     claimType: dto.type,
     status: dto.status,
     reason: dto.reason,
@@ -85,7 +85,7 @@ export function toAdminClaimDetail(
   return {
     id: dto.id,
     claimNumber: dto.claimNumber,
-    date: dto.date,
+    createdAt: dto.created_at,
     claimType: dto.type,
     status: dto.status,
     reason: dto.reason,

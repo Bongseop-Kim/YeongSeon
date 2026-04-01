@@ -7,6 +7,7 @@ import type {
 } from "@yeongseon/shared";
 import type {
   AdminOrderListItem,
+  AdminActiveClaimSummary,
   AdminOrderDetail,
   AdminOrderItem,
   AdminProductOrderItem,
@@ -53,7 +54,7 @@ export function toAdminOrderListItem(
   return {
     id: dto.id,
     orderNumber: dto.orderNumber,
-    date: dto.date,
+    createdAt: dto.createdAt,
     orderType: dto.orderType,
     status: dto.status,
     totalPrice: dto.totalPrice,
@@ -103,13 +104,35 @@ function toTrackingInfo(dto: AdminOrderDetailRowDTO): AdminTrackingInfo | null {
   };
 }
 
+function toActiveClaim(
+  dto: AdminOrderDetailRowDTO,
+): AdminActiveClaimSummary | null {
+  if (
+    dto.activeClaimId == null ||
+    dto.activeClaimNumber == null ||
+    dto.activeClaimType == null ||
+    dto.activeClaimStatus == null ||
+    dto.activeClaimQuantity == null
+  ) {
+    return null;
+  }
+
+  return {
+    id: dto.activeClaimId,
+    claimNumber: dto.activeClaimNumber,
+    type: dto.activeClaimType,
+    status: dto.activeClaimStatus,
+    quantity: dto.activeClaimQuantity,
+  };
+}
+
 export function toAdminOrderDetail(
   dto: AdminOrderDetailRowDTO,
 ): AdminOrderDetail {
   return {
     id: dto.id,
     orderNumber: dto.orderNumber,
-    date: dto.date,
+    createdAt: dto.createdAt,
     orderType: dto.orderType,
     status: dto.status,
     totalPrice: dto.totalPrice,
@@ -125,6 +148,7 @@ export function toAdminOrderDetail(
     confirmedAt: dto.confirmedAt,
     paymentGroupId: dto.paymentGroupId,
     shippingCost: dto.shippingCost,
+    activeClaim: toActiveClaim(dto),
     adminActions: Array.isArray(dto.adminActions) ? dto.adminActions : [],
   };
 }

@@ -2,6 +2,8 @@ import type {
   OrderType,
   AdminAction,
   SampleOrderData,
+  ClaimStatus,
+  ClaimType,
 } from "@yeongseon/shared";
 
 // ── Nested UI types ────────────────────────────────────────────
@@ -26,12 +28,20 @@ export interface AdminTrackingInfo {
   companyShippedAt: string | null;
 }
 
+export interface AdminActiveClaimSummary {
+  id: string;
+  claimNumber: string;
+  type: ClaimType;
+  status: ClaimStatus;
+  quantity: number;
+}
+
 // ── List UI model ──────────────────────────────────────────────
 
 export interface AdminOrderListItem {
   id: string;
   orderNumber: string;
-  date: string;
+  createdAt: string;
   orderType: OrderType;
   status: string;
   totalPrice: number;
@@ -52,7 +62,7 @@ export interface AdminOrderListItem {
 export interface AdminOrderDetail {
   id: string;
   orderNumber: string;
-  date: string;
+  createdAt: string;
   orderType: OrderType;
   status: string;
   totalPrice: number;
@@ -68,6 +78,7 @@ export interface AdminOrderDetail {
   confirmedAt: string | null;
   paymentGroupId: string | null;
   shippingCost: number;
+  activeClaim: AdminActiveClaimSummary | null;
   adminActions: AdminAction[];
 }
 
@@ -198,3 +209,30 @@ export interface AdminStatusLogEntry {
   isRollback: boolean;
   createdAt: string;
 }
+
+export interface AdminOrderHistoryBaseEntry {
+  id: string;
+  kind: "order" | "claim";
+  orderId: string;
+  changedBy: string | null;
+  previousStatus: string;
+  newStatus: string;
+  memo: string | null;
+  isRollback: boolean;
+  createdAt: string;
+}
+
+export interface AdminOrderHistoryOrderEntry extends AdminOrderHistoryBaseEntry {
+  kind: "order";
+}
+
+export interface AdminOrderHistoryClaimEntry extends AdminOrderHistoryBaseEntry {
+  kind: "claim";
+  claimId: string;
+  claimNumber: string;
+  claimType: ClaimType;
+}
+
+export type AdminOrderHistoryEntry =
+  | AdminOrderHistoryOrderEntry
+  | AdminOrderHistoryClaimEntry;

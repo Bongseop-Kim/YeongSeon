@@ -143,8 +143,8 @@ export const createAdminOrderListRowDTO = (
   companyCourierCompany: null,
   companyTrackingNumber: null,
   companyShippedAt: null,
-  created_at: "2026-03-15T09:00:00Z",
-  updated_at: "2026-03-15T09:30:00Z",
+  createdAt: "2026-03-15T09:00:00Z",
+  updatedAt: "2026-03-15T09:30:00Z",
   customerName: "홍길동",
   customerPhone: "010-1111-2222",
   customerEmail: "hong@example.com",
@@ -181,6 +181,11 @@ export const createAdminOrderDetailRowDTO = (
     shippingPostalCode: "06236",
     deliveryMemo: "문 앞에 놓아주세요",
     deliveryRequest: "부재 시 연락 바랍니다",
+    activeClaimId: null,
+    activeClaimNumber: null,
+    activeClaimType: null,
+    activeClaimStatus: null,
+    activeClaimQuantity: null,
     adminActions: [],
     ...overrides,
   };
@@ -241,6 +246,9 @@ export const createClaimStatusLogDTO = (
 ): ClaimStatusLogDTO => ({
   id: "claim-status-log-1",
   claimId: "claim-1",
+  orderId: "order-1",
+  claimNumber: "CLM-001",
+  claimType: "return",
   changedBy: "admin-1",
   previousStatus: "접수",
   newStatus: "처리중",
@@ -330,7 +338,7 @@ interface ProductOptionRowFixture {
   additional_price: number | null;
   stock: number | null;
   product_id: number;
-  created_at?: string;
+  createdAt?: string;
 }
 
 export const createProductOptionRow = (
