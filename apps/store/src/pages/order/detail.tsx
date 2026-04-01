@@ -170,6 +170,7 @@ const RepairShippingPendingSection = ({ orderId }: { orderId: string }) => {
 
   return (
     <RepairShippingAddressBanner
+      embedded
       onRegisterTracking={() =>
         navigate(`${ROUTES.REPAIR_SHIPPING}/${orderId}`)
       }

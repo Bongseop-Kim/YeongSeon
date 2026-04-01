@@ -7,10 +7,13 @@ import { toast } from "@/shared/lib/toast";
 interface RepairShippingAddressBannerProps {
   /** 제공 시 "송장번호 등록" 버튼 노출 */
   onRegisterTracking?: () => void;
+  /** 상위 카드 내부에 포함될 때 외곽 카드 스타일 제거 */
+  embedded?: boolean;
 }
 
 export function RepairShippingAddressBanner({
   onRegisterTracking,
+  embedded = false,
 }: RepairShippingAddressBannerProps) {
   const handleCopyAddress = async () => {
     try {
@@ -23,7 +26,13 @@ export function RepairShippingAddressBanner({
   };
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-stone-50/70 p-5">
+    <div
+      className={
+        embedded
+          ? "p-0"
+          : "rounded-2xl border border-stone-200 bg-stone-50/70 p-5"
+      }
+    >
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
           <div className="rounded-full bg-white p-2">
