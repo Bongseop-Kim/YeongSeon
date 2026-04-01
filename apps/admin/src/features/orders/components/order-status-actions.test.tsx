@@ -10,7 +10,7 @@ function createOrder(
   return {
     id: "order-1",
     orderNumber: "ORD-1",
-    date: "2026-03-31",
+    createdAt: "2026-03-31T09:00:00Z",
     orderType: "sale",
     status: "결제중",
     totalPrice: 10000,

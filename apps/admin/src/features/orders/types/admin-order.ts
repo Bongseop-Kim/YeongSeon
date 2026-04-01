@@ -31,7 +31,7 @@ export interface AdminTrackingInfo {
 export interface AdminOrderListItem {
   id: string;
   orderNumber: string;
-  date: string;
+  createdAt: string;
   orderType: OrderType;
   status: string;
   totalPrice: number;
@@ -52,7 +52,7 @@ export interface AdminOrderListItem {
 export interface AdminOrderDetail {
   id: string;
   orderNumber: string;
-  date: string;
+  createdAt: string;
   orderType: OrderType;
   status: string;
   totalPrice: number;

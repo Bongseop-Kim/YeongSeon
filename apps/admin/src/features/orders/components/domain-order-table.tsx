@@ -9,6 +9,7 @@ import type { OrderType } from "@yeongseon/shared";
 import { useAdminOrderTable } from "@/features/orders/api/orders-query";
 import type { AdminOrderListItem } from "@/features/orders/types/admin-order";
 import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
+import { formatDateTime } from "@/utils/format-date-time";
 
 interface DomainOrderTableProps {
   orderType: OrderType;
@@ -119,7 +120,12 @@ function getColumnsForType(orderType: OrderType) {
 
   const common = [
     <Table.Column key="orderNumber" dataIndex="orderNumber" title="주문번호" />,
-    <Table.Column key="date" dataIndex="date" title="주문일" />,
+    <Table.Column
+      key="createdAt"
+      dataIndex="createdAt"
+      title="주문일"
+      render={formatDateTime}
+    />,
     <Table.Column key="customerName" dataIndex="customerName" title="고객명" />,
   ];
 

@@ -53,7 +53,7 @@ export function toAdminOrderListItem(
   return {
     id: dto.id,
     orderNumber: dto.orderNumber,
-    date: dto.date,
+    createdAt: dto.created_at,
     orderType: dto.orderType,
     status: dto.status,
     totalPrice: dto.totalPrice,
@@ -109,7 +109,7 @@ export function toAdminOrderDetail(
   return {
     id: dto.id,
     orderNumber: dto.orderNumber,
-    date: dto.date,
+    createdAt: dto.created_at,
     orderType: dto.orderType,
     status: dto.status,
     totalPrice: dto.totalPrice,

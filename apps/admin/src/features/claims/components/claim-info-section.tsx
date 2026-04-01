@@ -6,6 +6,7 @@ import {
   CLAIM_REASON_LABELS,
 } from "@yeongseon/shared";
 import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
+import { formatDateTime } from "@/utils/format-date-time";
 
 interface ClaimInfoSectionProps {
   claim: AdminClaimDetail;
@@ -23,7 +24,9 @@ export function ClaimInfoSection({ claim }: ClaimInfoSectionProps) {
       <Descriptions.Item label="클레임번호">
         {claim.claimNumber}
       </Descriptions.Item>
-      <Descriptions.Item label="접수일">{claim.date}</Descriptions.Item>
+      <Descriptions.Item label="접수일">
+        {formatDateTime(claim.createdAt)}
+      </Descriptions.Item>
       <Descriptions.Item label="유형">
         {CLAIM_TYPE_LABELS[claim.claimType]}
       </Descriptions.Item>

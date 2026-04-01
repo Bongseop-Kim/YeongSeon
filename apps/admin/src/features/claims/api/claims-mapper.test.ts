@@ -14,7 +14,7 @@ describe("toAdminClaimListItem", () => {
     expect(toAdminClaimListItem(createAdminClaimListRowDTO())).toEqual({
       id: "claim-1",
       claimNumber: "CLM-001",
-      date: "2026-03-15",
+      createdAt: "2026-03-15T09:00:00Z",
       claimType: "return",
       status: "접수",
       reason: "불량",
@@ -29,6 +29,7 @@ describe("toAdminClaimDetail", () => {
   it("tracking 정보와 refundData를 매핑한다", () => {
     expect(toAdminClaimDetail(createAdminClaimListRowDTO())).toEqual(
       expect.objectContaining({
+        createdAt: "2026-03-15T09:00:00Z",
         returnTracking: {
           courierCompany: "CJ대한통운",
           trackingNumber: "RT-123",

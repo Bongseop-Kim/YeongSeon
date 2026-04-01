@@ -135,7 +135,7 @@ describe("toAdminOrderItem", () => {
     expect(toAdminOrderListItem(createAdminOrderListRowDTO())).toEqual({
       id: "order-1",
       orderNumber: "ORD-001",
-      date: "2026-03-15",
+      createdAt: "2026-03-15T09:00:00Z",
       orderType: "custom",
       status: "진행중",
       totalPrice: 23000,
@@ -153,6 +153,7 @@ describe("toAdminOrderItem", () => {
   it("주문 상세에서 배송지와 운송장 정보를 매핑한다", () => {
     expect(toAdminOrderDetail(createAdminOrderDetailRowDTO())).toEqual(
       expect.objectContaining({
+        createdAt: "2026-03-15T09:00:00Z",
         shippingAddress: {
           recipientName: "홍길동",
           recipientPhone: "010-3333-4444",

@@ -10,7 +10,7 @@ function createClaim(
   return {
     id: "claim-1",
     claimNumber: "CLM-1",
-    date: "2026-03-31",
+    createdAt: "2026-03-31T09:00:00Z",
     claimType: "cancel",
     status: "접수",
     reason: "단순 변심",
