@@ -143,8 +143,8 @@ export const createAdminOrderListRowDTO = (
   companyCourierCompany: null,
   companyTrackingNumber: null,
   companyShippedAt: null,
-  created_at: "2026-03-15T09:00:00Z",
-  updated_at: "2026-03-15T09:30:00Z",
+  createdAt: "2026-03-15T09:00:00Z",
+  updatedAt: "2026-03-15T09:30:00Z",
   customerName: "홍길동",
   customerPhone: "010-1111-2222",
   customerEmail: "hong@example.com",
@@ -338,7 +338,7 @@ interface ProductOptionRowFixture {
   additional_price: number | null;
   stock: number | null;
   product_id: number;
-  created_at?: string;
+  createdAt?: string;
 }
 
 export const createProductOptionRow = (

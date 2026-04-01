@@ -131,6 +131,20 @@ describe("parseCustomReformData", () => {
 });
 
 describe("toAdminOrderItem", () => {
+  it("주문 목록 DTO의 camelCase createdAt 계약을 사용한다", () => {
+    expect(
+      toAdminOrderListItem({
+        ...createAdminOrderListRowDTO(),
+        created_at: undefined,
+        createdAt: "2026-03-15T09:00:00Z",
+      } as unknown as Parameters<typeof toAdminOrderListItem>[0]),
+    ).toEqual(
+      expect.objectContaining({
+        createdAt: "2026-03-15T09:00:00Z",
+      }),
+    );
+  });
+
   it("주문 목록 아이템을 그대로 매핑한다", () => {
     expect(toAdminOrderListItem(createAdminOrderListRowDTO())).toEqual({
       id: "order-1",
@@ -148,6 +162,20 @@ describe("toAdminOrderItem", () => {
       sampleType: null,
       reformSummary: null,
     });
+  });
+
+  it("주문 상세 DTO의 camelCase createdAt 계약을 사용한다", () => {
+    expect(
+      toAdminOrderDetail({
+        ...createAdminOrderDetailRowDTO(),
+        created_at: undefined,
+        createdAt: "2026-03-15T09:00:00Z",
+      } as unknown as Parameters<typeof toAdminOrderDetail>[0]),
+    ).toEqual(
+      expect.objectContaining({
+        createdAt: "2026-03-15T09:00:00Z",
+      }),
+    );
   });
 
   it("주문 상세에서 배송지와 운송장 정보를 매핑한다", () => {

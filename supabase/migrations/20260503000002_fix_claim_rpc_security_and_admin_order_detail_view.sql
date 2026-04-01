@@ -146,6 +146,14 @@ begin
 end;
 $$;
 
+-- SECURITY DEFINER 사용 근거:
+-- - admin_update_claim_status는 관리자 전용 RPC이며, claims/orders 행을 FOR UPDATE로 잠그고
+--   claims UPDATE 및 claim_status_logs INSERT를 수행한다.
+-- - 이 쓰기 경로는 authenticated 역할에 직접 열려 있지 않은 RLS 보호 자원에 대한
+--   admin-only 변경과 감사 로그 작성을 포함하므로 SECURITY INVOKER 기본값으로는 처리할 수 없다.
+-- - 따라서 저장소 기본 규칙인 "SECURITY INVOKER를 기본으로, audit log 또는 admin-only update처럼
+--   RLS 우회가 필요한 특수 목적에만 SECURITY DEFINER 사용"에 따라 admin_update_claim_status에
+--   SECURITY DEFINER를 의도적으로 유지한다.
 CREATE OR REPLACE FUNCTION public.admin_update_claim_status(
   p_claim_id uuid,
   p_new_status text,

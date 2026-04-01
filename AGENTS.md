@@ -80,6 +80,7 @@ supabase functions deploy --use-api   # 전체 배포
 - Supabase CLI 실패 후 자동 재시도하지 않는다.
 - `migration repair`, `db reset --linked` 등 상태 변경 복구 명령은 영향 범위를 설명한 뒤 사용자 승인 후 실행한다.
 - 마이그레이션 내 `DROP CONSTRAINT`, `DROP INDEX` 등은 이전 마이그레이션에서 해당 객체 생성이 보장되므로 `IF EXISTS`를 붙이지 않는다. 존재하지 않으면 에러로 감지되는 것이 올바르다.
+- 마이그레이션 파일(`supabase/migrations/*.sql`)에 주석을 추가하지 않는다. squash 시 사라지므로 의미가 없다. 설명이 필요하면 `supabase/schemas/*.sql`에 작성한다.
 
 ## 테스트 규칙
 
