@@ -10,6 +10,8 @@ import {
   useTrackingSave,
   useTrackingState,
 } from "@/features/orders/api/orders-query";
+import { ActiveClaimSection } from "@/features/orders/components/active-claim-section";
+import { RelatedOrdersSection } from "@/features/orders/components/related-orders-section";
 import { OrderInfoSection } from "./order-info-section";
 import { OrderStatusActions } from "./order-status-actions";
 import { CustomOrderDetail } from "./custom-order-detail";
@@ -18,8 +20,6 @@ import { ShippingAddressSection } from "./shipping-address-section";
 import { TrackingSection } from "./tracking-section";
 import { OrderItemsTable } from "./order-items-table";
 import { StatusLogTable } from "./status-log-table";
-import { ActiveClaimSection } from "./active-claim-section";
-import { RelatedOrdersSection } from "@/features/orders/components/related-orders-section";
 import type {
   AdminCustomOrderItem,
   AdminReformOrderItem,

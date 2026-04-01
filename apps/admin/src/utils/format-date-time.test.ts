@@ -1,3 +1,5 @@
+process.env.TZ = "Asia/Seoul";
+
 import { describe, expect, it } from "vitest";
 import { formatDateTime } from "@/utils/format-date-time";
 

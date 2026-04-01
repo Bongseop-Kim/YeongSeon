@@ -67,12 +67,12 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
       </Descriptions.Item>
       {order.deliveredAt && (
         <Descriptions.Item label="배송완료일시">
-          {new Date(order.deliveredAt).toLocaleString("ko-KR")}
+          {formatDateTime(order.deliveredAt)}
         </Descriptions.Item>
       )}
       {order.confirmedAt && (
         <Descriptions.Item label="구매확정일시">
-          {new Date(order.confirmedAt).toLocaleString("ko-KR")}
+          {formatDateTime(order.confirmedAt)}
         </Descriptions.Item>
       )}
     </Descriptions>
