@@ -10,6 +10,7 @@ import { OrderItemCard } from "@/shared/composite/order-item-card";
 import { ClaimStatusBadge } from "@/shared/composite/status-badge";
 import { Empty } from "@/shared/composite/empty";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
+import { CLAIM_REASON_LABELS } from "@yeongseon/shared/constants/claim-status";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { toast } from "@/shared/lib/toast";
@@ -154,7 +155,7 @@ export default function ClaimDetailPage() {
             <CardContent className="py-4 space-y-2">
               <div className="p-3 bg-zinc-50 rounded-md">
                 <Label className="text-sm text-zinc-600">
-                  사유: {claim.reason}
+                  사유: {CLAIM_REASON_LABELS[claim.reason] ?? claim.reason}
                 </Label>
               </div>
               {claim.description && (

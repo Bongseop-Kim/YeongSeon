@@ -9,6 +9,7 @@ import {
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
+import { CLAIM_REASON_LABELS } from "@yeongseon/shared/constants/claim-status";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/shared/composite/order-item-card";
 import { useNavigate } from "react-router-dom";
@@ -175,7 +176,8 @@ export default function ClaimListPage() {
                               <div className="mt-4 border-l-2 border-stone-300 bg-stone-50/70 px-4 py-3">
                                 <p className="text-xs text-zinc-500">사유</p>
                                 <p className="mt-1 text-sm text-zinc-700">
-                                  {claim.reason}
+                                  {CLAIM_REASON_LABELS[claim.reason] ??
+                                    claim.reason}
                                 </p>
                               </div>
                             </div>
