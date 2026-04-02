@@ -8,6 +8,7 @@ interface OrderItemCardProps {
   onClick?: () => void;
   showQuantity?: boolean;
   showPrice?: boolean;
+  price?: string;
   actions?: React.ReactNode;
   className?: string;
 }
@@ -17,13 +18,14 @@ export function OrderItemCard({
   onClick,
   showQuantity = true,
   showPrice = true,
+  price,
   actions,
   className = "",
 }: OrderItemCardProps) {
   const isDeletedProduct =
     item.type === "product" && item.product.deleted === true;
   const itemLabel = getItemLabel(item);
-  const itemPrice = getItemPrice(item, isDeletedProduct);
+  const itemPrice = price ?? getItemPrice(item, isDeletedProduct);
 
   const content = (
     <div className={`flex gap-3 ${className}`}>

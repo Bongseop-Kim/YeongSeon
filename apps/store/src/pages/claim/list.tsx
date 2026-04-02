@@ -74,6 +74,17 @@ export default function ClaimListPage() {
     return claims.filter((claim) => claim.type === claimType);
   }, [claims, activeTab]);
 
+  const claimsByDate = useMemo(() => {
+    const grouped = new Map<string, typeof filteredClaims>();
+    for (const claim of filteredClaims) {
+      const dateKey = formatDate(claim.date);
+      if (!grouped.has(dateKey)) grouped.set(dateKey, []);
+      const group = grouped.get(dateKey);
+      if (group) group.push(claim);
+    }
+    return Array.from(grouped.entries());
+  }, [filteredClaims]);
+
   return (
     <UtilityListPageShell
       isLoading={isLoading}
@@ -96,7 +107,7 @@ export default function ClaimListPage() {
                 title="클레임 목록"
                 description="검색과 기간 필터, 클레임 유형 탭은 상단 공용 도구를 사용합니다."
               >
-                {filteredClaims.length === 0 ? (
+                {claimsByDate.length === 0 ? (
                   <div>
                     <Empty
                       title="취소/반품/교환/토큰환불 내역이 없습니다."
@@ -104,72 +115,74 @@ export default function ClaimListPage() {
                     />
                   </div>
                 ) : (
-                  filteredClaims.map((claim) => (
-                    <article
-                      key={claim.id}
-                      data-testid={`claim-card-${claim.orderId}-${claim.type}-${claim.id}`}
-                      className="border-b border-stone-200 py-5"
-                    >
-                      <div className="flex flex-col gap-5">
-                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-base font-semibold text-zinc-950">
-                                {formatDate(claim.date)}
-                              </p>
-                              <Badge variant="outline">
-                                {getClaimTypeLabel(claim.type)}
-                              </Badge>
-                              <ClaimStatusBadge status={claim.status} />
-                            </div>
-                            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-                              <span>클레임번호: {claim.claimNumber}</span>
-                              <span className="text-stone-300">/</span>
-                              <span>주문번호: {claim.orderNumber}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="border-t border-stone-200 pt-4">
-                          <OrderItemCard
-                            item={claim.item}
-                            onClick={() =>
-                              navigate(buildClaimDetailRoute(claim.id))
-                            }
-                          />
-
-                          {claim.type === "token_refund" &&
-                            claim.refundData && (
-                              <div className="mt-4 border-l-2 border-blue-200 bg-blue-50 px-4 py-3 text-sm">
-                                <div className="flex justify-between">
-                                  <span className="text-zinc-600">
-                                    환불 토큰
-                                  </span>
-                                  <span>
-                                    {claim.refundData.paidTokenAmount}T
-                                  </span>
+                  claimsByDate.map(([dateLabel, dateClaims]) => (
+                    <section key={dateLabel} className="space-y-0">
+                      <h2 className="sticky top-0 z-10 bg-white py-3 text-lg font-semibold tracking-tight text-zinc-950">
+                        {dateLabel}
+                      </h2>
+                      {dateClaims.map((claim) => (
+                        <article
+                          key={claim.id}
+                          data-testid={`claim-card-${claim.orderId}-${claim.type}-${claim.id}`}
+                          className="cursor-pointer border-b border-stone-200 py-5"
+                          onClick={() =>
+                            navigate(buildClaimDetailRoute(claim.id))
+                          }
+                        >
+                          <div className="flex flex-col gap-5">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Badge variant="outline">
+                                    {getClaimTypeLabel(claim.type)}
+                                  </Badge>
+                                  <ClaimStatusBadge status={claim.status} />
                                 </div>
-                                <div className="mt-2 flex justify-between font-semibold">
-                                  <span className="text-zinc-700">
-                                    환불 금액
-                                  </span>
-                                  <span>
-                                    {claim.refundData.refundAmount.toLocaleString()}
-                                    원
-                                  </span>
+                                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+                                  <span>클레임번호: {claim.claimNumber}</span>
+                                  <span className="text-stone-300">/</span>
+                                  <span>주문번호: {claim.orderNumber}</span>
                                 </div>
                               </div>
-                            )}
+                            </div>
 
-                          <div className="mt-4 border-l-2 border-stone-300 bg-stone-50/70 px-4 py-3">
-                            <p className="text-xs text-zinc-500">사유</p>
-                            <p className="mt-1 text-sm text-zinc-700">
-                              {claim.reason}
-                            </p>
+                            <div className="border-t border-stone-200 pt-4">
+                              <OrderItemCard item={claim.item} />
+
+                              {claim.type === "token_refund" &&
+                                claim.refundData && (
+                                  <div className="mt-4 border-l-2 border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+                                    <div className="flex justify-between">
+                                      <span className="text-zinc-600">
+                                        환불 토큰
+                                      </span>
+                                      <span>
+                                        {claim.refundData.paidTokenAmount}T
+                                      </span>
+                                    </div>
+                                    <div className="mt-2 flex justify-between font-semibold">
+                                      <span className="text-zinc-700">
+                                        환불 금액
+                                      </span>
+                                      <span>
+                                        {claim.refundData.refundAmount.toLocaleString()}
+                                        원
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+
+                              <div className="mt-4 border-l-2 border-stone-300 bg-stone-50/70 px-4 py-3">
+                                <p className="text-xs text-zinc-500">사유</p>
+                                <p className="mt-1 text-sm text-zinc-700">
+                                  {claim.reason}
+                                </p>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </article>
+                        </article>
+                      ))}
+                    </section>
                   ))
                 )}
               </UtilityPageSection>

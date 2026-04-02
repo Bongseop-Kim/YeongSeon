@@ -148,14 +148,17 @@ export default function OrderListPage() {
                 ) : (
                   ordersByDate.map(([dateLabel, dateOrders]) => (
                     <section key={dateLabel} className="space-y-0">
-                      <h3 className="sticky top-0 z-10 bg-white py-3 text-sm font-semibold text-zinc-500">
+                      <h2 className="sticky top-0 z-10 bg-white py-3 text-lg font-semibold tracking-tight text-zinc-950">
                         {dateLabel}
-                      </h3>
+                      </h2>
                       {dateOrders.map((order) => (
                         <article
                           key={order.id}
                           data-testid={`order-card-${order.id}`}
-                          className="border-b border-stone-200 py-5"
+                          className="cursor-pointer border-b border-stone-200 py-5"
+                          onClick={() =>
+                            navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
+                          }
                         >
                           <div className="flex flex-col gap-5">
                             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -169,19 +172,12 @@ export default function OrderListPage() {
                                   <span>상품 {order.items.length}개</span>
                                 </div>
                               </div>
-
-                              <div className="text-left lg:text-right">
-                                <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">
-                                  Total
-                                </p>
-                                <p className="mt-1 text-lg font-semibold text-zinc-950">
-                                  {order.totalPrice.toLocaleString()}원
-                                </p>
-                              </div>
                             </div>
 
                             <div className="divide-y divide-stone-200">
-                              {order.items.map((item) => {
+                              {order.items.map((item, index) => {
+                                const isLastItem =
+                                  index === order.items.length - 1;
                                 const claimActions =
                                   item.type === "token"
                                     ? ([] as ClaimActionType[])
@@ -197,14 +193,18 @@ export default function OrderListPage() {
                                   >
                                     <OrderItemCard
                                       item={item}
-                                      onClick={() =>
-                                        navigate(
-                                          `${ROUTES.ORDER_DETAIL}/${order.id}`,
-                                        )
+                                      showPrice={isLastItem}
+                                      price={
+                                        isLastItem
+                                          ? `${order.totalPrice.toLocaleString()}원`
+                                          : undefined
                                       }
                                       actions={
                                         item.type === "token" ? (
-                                          <div className="flex gap-2">
+                                          <div
+                                            className="flex gap-2"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
                                             <TokenRefundAction
                                               refundOrder={
                                                 refundOrderMap.get(order.id) ??
@@ -213,21 +213,23 @@ export default function OrderListPage() {
                                             />
                                           </div>
                                         ) : claimActions.length > 0 ? (
-                                          <div className="flex gap-2">
+                                          <div
+                                            className="flex gap-2"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
                                             {claimActions.map((actionType) => (
                                               <Button
                                                 key={actionType}
                                                 variant="outline"
                                                 size="sm"
                                                 className="flex-1"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
+                                                onClick={() =>
                                                   handleClaimRequest(
                                                     actionType,
                                                     order.id,
                                                     item.id,
-                                                  );
-                                                }}
+                                                  )
+                                                }
                                               >
                                                 {CLAIM_ACTION_LABEL[actionType]}
                                               </Button>
