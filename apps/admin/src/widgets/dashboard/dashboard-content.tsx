@@ -16,7 +16,10 @@ const { Title } = Typography;
 export function DashboardContent() {
   const [activeTab, setActiveTab] = useState<string>("orders");
   const [segment, setSegment] = useState<SegmentValue>("all");
-  const [dateRange, setDateRange] = useState<DateRange>([dayjs(), dayjs()]);
+  const [dateRange, setDateRange] = useState<DateRange>([
+    dayjs().subtract(6, "day"),
+    dayjs(),
+  ]);
 
   const stats = useDashboardStats(segment, dateRange);
   const recentOrders = useDashboardRecentOrders(segment, dateRange);

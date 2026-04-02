@@ -8,19 +8,19 @@ interface DateRangeFilterProps {
   onChange: (range: DateRange) => void;
 }
 
-type PresetKey = "today" | "this_week" | "this_month";
+type PresetKey = "today" | "last_week" | "last_month";
 
 const PRESETS: { key: PresetKey; label: string; range: () => DateRange }[] = [
   { key: "today", label: "오늘", range: () => [dayjs(), dayjs()] },
   {
-    key: "this_week",
-    label: "이번 주",
-    range: () => [dayjs().startOf("week"), dayjs().endOf("week")],
+    key: "last_week",
+    label: "최근 1주",
+    range: () => [dayjs().subtract(6, "day"), dayjs()],
   },
   {
-    key: "this_month",
-    label: "이번 달",
-    range: () => [dayjs().startOf("month"), dayjs().endOf("month")],
+    key: "last_month",
+    label: "최근 1달",
+    range: () => [dayjs().subtract(29, "day"), dayjs()],
   },
 ];
 
@@ -44,7 +44,7 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
         <Button
           key={preset.key}
           type={activePreset === preset.key ? "primary" : "default"}
-          size="small"
+          size="middle"
           onClick={() => onChange(preset.range())}
         >
           {preset.label}

@@ -17,10 +17,7 @@ interface DomainOrderTableProps {
 
 export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
   const { show } = useNavigation();
-  const defaultRange: DateRange = [
-    dayjs().startOf("month"),
-    dayjs().endOf("month"),
-  ];
+  const defaultRange: DateRange = [dayjs().subtract(6, "day"), dayjs()];
   const [dateRange, setDateRange] = useState<DateRange>(defaultRange);
 
   const { tableProps, setFilters } = useAdminOrderTable(orderType, [
