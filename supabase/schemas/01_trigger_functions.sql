@@ -25,6 +25,8 @@ END;
 $$;
 
 -- Auto-generate product code: {PREFIX}-{YYYYMMDD}-{NNN}
+-- SECURITY DEFINER 사유: 트리거 함수로 시스템 컨텍스트에서 실행됨. auth.uid() 없는 환경에서
+-- products 테이블을 조회해 순번을 계산해야 하므로 RLS 우회가 필요하다.
 CREATE OR REPLACE FUNCTION public.auto_generate_product_code()
 RETURNS trigger
 LANGUAGE plpgsql

@@ -40,7 +40,7 @@ export const useCreateInquiry = () => {
       content: string;
     }) => {
       if (!user?.id) throw new Error("로그인이 필요합니다.");
-      return createInquiry({ userId: user.id, ...params });
+      return createInquiry(params);
     },
     onSuccess: () => {
       if (user?.id) {
