@@ -238,6 +238,8 @@ GRANT EXECUTE ON FUNCTION public.create_phone_verification(text, timestamptz, te
 GRANT EXECUTE ON FUNCTION public.create_phone_verification(text, timestamptz, text) TO service_role;
 
 -- ── generate_quote_number ───────────────────────────────────
+-- SECURITY DEFINER 사유: 상위 RPC(create_quote_request 등) SECURITY DEFINER 내부에서
+-- quote_requests 테이블을 조회해 번호 시퀀스를 계산하므로 호출자 RLS에 영향받지 않아야 한다.
 CREATE OR REPLACE FUNCTION public.generate_quote_number()
 RETURNS text
 LANGUAGE plpgsql
@@ -266,6 +268,8 @@ end;
 $$;
 
 -- ── generate_claim_number ────────────────────────────────────
+-- SECURITY DEFINER 사유: 상위 RPC(create_claim 등) SECURITY DEFINER 내부에서
+-- claims 테이블을 조회해 번호 시퀀스를 계산하므로 호출자 RLS에 영향받지 않아야 한다.
 CREATE OR REPLACE FUNCTION public.generate_claim_number()
 RETURNS text
 LANGUAGE plpgsql

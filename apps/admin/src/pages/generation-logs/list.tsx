@@ -19,7 +19,7 @@ const EMPTY_SUMMARY = {
 
 export default function GenerationLogList() {
   const [dateRange, setDateRange] = useState<DateRange>([
-    dayjs().startOf("month"),
+    dayjs().subtract(6, "day"),
     dayjs(),
   ]);
   const [aiModel, setAiModel] = useState<string | null>(null);
