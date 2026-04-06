@@ -25,8 +25,7 @@ import { useOrderStore } from "@/shared/store/order";
 import { useCouponSelect } from "@/features/coupon";
 import { toast } from "@/shared/lib/toast";
 import { hasStringCode } from "@/shared/lib/type-guard";
-import { formatPhoneNumber } from "@/shared/lib/phone-format";
-import { getDeliveryRequestLabel } from "@/shared/constants/DELIVERY_REQUEST_OPTIONS";
+import { ShippingAddressCard } from "@/widgets/shipping-address-card";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useAuthStore } from "@/shared/store/auth";
 import { createOrder } from "@/entities/order";
@@ -282,58 +281,11 @@ const OrderFormPage = () => {
                 }
               />
 
-              <UtilityPageSection
-                title="배송지"
-                description="결제 전에 배송지와 요청 사항을 마지막으로 확인합니다."
-              >
-                <div
-                  className="border-t border-stone-200"
-                  data-testid="order-shipping-card"
-                >
-                  <div className="flex items-center justify-between gap-4 py-4">
-                    <div>
-                      <p className="text-lg font-semibold tracking-tight text-zinc-950">
-                        {selectedAddress?.recipientName || "배송지 정보"}
-                      </p>
-                      <p className="mt-1 text-sm text-zinc-500">
-                        기본 배송지와 수령 요청 사항을 확인합니다.
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={openShippingPopup}
-                      data-testid="order-shipping-manage"
-                    >
-                      배송지 관리
-                    </Button>
-                  </div>
-
-                  <Separator />
-
-                  {selectedAddress ? (
-                    <div className="space-y-2 py-5 text-sm">
-                      <p>
-                        ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
-                        {selectedAddress.detailAddress}
-                      </p>
-                      <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
-                      {selectedAddress.deliveryRequest ? (
-                        <p className="text-zinc-600">
-                          {getDeliveryRequestLabel(
-                            selectedAddress.deliveryRequest,
-                            selectedAddress.deliveryMemo,
-                          )}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-zinc-500">
-                      배송지를 추가해주세요.
-                    </div>
-                  )}
-                </div>
-              </UtilityPageSection>
+              <ShippingAddressCard
+                address={selectedAddress ?? null}
+                editable
+                onChangeClick={openShippingPopup}
+              />
 
               <UtilityPageSection
                 title={`주문 상품 ${orderItems.length}개`}

@@ -68,6 +68,7 @@ interface UtilityPageSectionProps {
   icon?: LucideIcon;
   title: string;
   description?: string;
+  action?: ReactNode;
   children: ReactNode;
   className?: string;
 }
@@ -84,16 +85,20 @@ export function UtilityPageSection({
   icon: Icon,
   title,
   description,
+  action,
   children,
   className,
 }: UtilityPageSectionProps) {
   return (
     <section className={className}>
-      <div className="flex items-center gap-2">
-        {Icon ? <Icon className="size-4 text-zinc-500" /> : null}
-        <h2 className="text-lg font-semibold tracking-tight text-zinc-950">
-          {title}
-        </h2>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          {Icon ? <Icon className="size-4 text-zinc-500" /> : null}
+          <h2 className="text-lg font-semibold tracking-tight text-zinc-950">
+            {title}
+          </h2>
+        </div>
+        {action ? <div className="shrink-0">{action}</div> : null}
       </div>
       {description ? (
         <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">

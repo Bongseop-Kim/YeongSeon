@@ -38,7 +38,7 @@ export const StepLayout = ({
           </ul>
         </UtilityPageAside>
       </div>
-      <div className="space-y-10">{children}</div>
+      <div className="space-y-8">{children}</div>
     </div>
   </div>
 );

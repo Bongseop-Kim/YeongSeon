@@ -38,7 +38,7 @@ describe("CheckoutBodySections", () => {
     expect(screen.getByText("010-1234-5678")).toBeInTheDocument();
     expect(screen.getByText("배송 전에 연락 주세요.")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "배송지 관리" }));
+    fireEvent.click(screen.getByRole("button", { name: "배송지 변경" }));
     expect(onOpenShippingPopup).toHaveBeenCalledTimes(1);
   });
 

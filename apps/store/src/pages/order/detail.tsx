@@ -11,10 +11,7 @@ import {
   type ClaimActionType,
   CLAIM_ACTION_LABEL,
 } from "@yeongseon/shared/constants/claim-actions";
-import type {
-  OrderItem,
-  ShippingInfo,
-} from "@yeongseon/shared/types/view/order";
+import type { OrderItem } from "@yeongseon/shared/types/view/order";
 
 import { CustomOrderOptionsSection } from "@/shared/composite/custom-order-options-section";
 import { Empty } from "@/shared/composite/empty";
@@ -33,7 +30,7 @@ import { Button } from "@/shared/ui-extended/button";
 import { RepairShippingAddressBanner } from "@/features/order";
 import { useConfirmPurchase, useOrderDetail } from "@/entities/order";
 import { buildClaimFormRoute, ROUTES } from "@/shared/constants/ROUTES";
-import { getDeliveryRequestLabel } from "@/shared/constants/DELIVERY_REQUEST_OPTIONS";
+import { ShippingAddressCard } from "@/widgets/shipping-address-card";
 
 const detailRowLabelClass =
   "shrink-0 text-sm font-medium text-muted-foreground";
@@ -201,31 +198,6 @@ const OrderDetailSkeleton = () => (
       </PageLayout>
     </MainContent>
   </MainLayout>
-);
-
-const ShippingInfoSection = ({ info }: { info: ShippingInfo }) => (
-  <div className="space-y-2">
-    <DetailRow label="수령인:" value={info.recipientName} />
-    <DetailRow label="연락처:" value={info.recipientPhone} />
-    <DetailRow
-      label="주소:"
-      value={
-        <>
-          ({info.postalCode}) {info.address}
-          {info.addressDetail && ` ${info.addressDetail}`}
-        </>
-      }
-    />
-    {info.deliveryMemo && (
-      <DetailRow label="배송메모:" value={info.deliveryMemo} />
-    )}
-    {info.deliveryRequest && (
-      <DetailRow
-        label="배송요청:"
-        value={getDeliveryRequestLabel(info.deliveryRequest, info.deliveryMemo)}
-      />
-    )}
-  </div>
 );
 
 const TrackingInfoSection = ({
@@ -408,36 +380,21 @@ const OrderDetailPage = () => {
               }
             />
 
-            {showTaskSection && (
-              <UtilityPageAside
-                title="현재 할 일"
-                description="주문 상태에 따라 지금 처리할 수 있는 작업입니다."
-                tone="muted"
-                className="rounded-2xl"
-              >
-                <div className="space-y-3">
-                  {isRepairShippingPending && (
-                    <RepairShippingPendingSection orderId={order.id} />
-                  )}
-                </div>
-              </UtilityPageAside>
+            {showTaskSection && isRepairShippingPending && (
+              <RepairShippingPendingSection orderId={order.id} />
             )}
 
             {order.orderType !== "token" ? (
-              <UtilityPageSection
-                title="배송지 정보"
-                description="수령인과 배송 요청 사항을 확인합니다."
-              >
-                <div className="border-t border-stone-200 py-5">
-                  {order.shippingInfo ? (
-                    <ShippingInfoSection info={order.shippingInfo} />
-                  ) : (
-                    <p className="text-sm text-zinc-500">
-                      배송지 정보가 없습니다.
-                    </p>
-                  )}
-                </div>
-              </UtilityPageSection>
+              <ShippingAddressCard
+                address={
+                  order.shippingInfo
+                    ? {
+                        ...order.shippingInfo,
+                        detailAddress: order.shippingInfo.addressDetail,
+                      }
+                    : null
+                }
+              />
             ) : null}
 
             {showTrackingSection && trackingInfo ? (
