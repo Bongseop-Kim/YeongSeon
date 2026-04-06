@@ -25,7 +25,7 @@ import { useOrderStore } from "@/shared/store/order";
 import { useCouponSelect } from "@/features/coupon";
 import { toast } from "@/shared/lib/toast";
 import { hasStringCode } from "@/shared/lib/type-guard";
-import { ShippingAddressCard } from "@/widgets/shipping-address-card";
+import { ShippingAddressCard } from "@/shared/composite/shipping-address-card";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useAuthStore } from "@/shared/store/auth";
 import { createOrder } from "@/entities/order";
@@ -40,6 +40,7 @@ import {
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
+import { Field, FieldTitle, FieldContent } from "@/shared/ui/field";
 import { OrderPriceSummaryAside } from "@/shared/composite/order-price-summary-aside";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 const OrderFormPage = () => {
@@ -299,39 +300,39 @@ const OrderFormPage = () => {
                   {hasReformItems && (
                     <div className="py-5">
                       <RepairShippingAddressBanner />
-                      <div className="space-y-2 mt-4">
-                        <p className="text-sm font-semibold text-zinc-700">
-                          이미 발송하셨나요?
-                        </p>
-                        <div className="flex gap-2">
-                          <div className="flex-1">
-                            <Select
-                              value={repairCourierCompany}
-                              onValueChange={setRepairCourierCompany}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="택배사 선택" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {COURIER_COMPANIES.map((c) => (
-                                  <SelectItem key={c.code} value={c.code}>
-                                    {c.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                      <Field className="mt-4">
+                        <FieldTitle>이미 발송하셨나요?</FieldTitle>
+                        <FieldContent>
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <Select
+                                value={repairCourierCompany}
+                                onValueChange={setRepairCourierCompany}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="택배사 선택" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {COURIER_COMPANIES.map((c) => (
+                                    <SelectItem key={c.code} value={c.code}>
+                                      {c.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Input
+                              type="text"
+                              placeholder="송장번호"
+                              value={repairTrackingNumber}
+                              className="flex-[2]"
+                              onChange={(e) =>
+                                setRepairTrackingNumber(e.target.value)
+                              }
+                            />
                           </div>
-                          <Input
-                            type="text"
-                            placeholder="송장번호"
-                            value={repairTrackingNumber}
-                            className="flex-[2]"
-                            onChange={(e) =>
-                              setRepairTrackingNumber(e.target.value)
-                            }
-                          />
-                        </div>
-                      </div>
+                        </FieldContent>
+                      </Field>
                       <Separator className="mt-5" />
                     </div>
                   )}

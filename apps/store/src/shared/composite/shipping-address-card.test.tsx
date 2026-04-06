@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { ShippingAddressCard } from "./ShippingAddressCard";
+import { ShippingAddressCard } from "@/shared/composite/shipping-address-card";
 
 const address = {
   recipientName: "김봉섭",

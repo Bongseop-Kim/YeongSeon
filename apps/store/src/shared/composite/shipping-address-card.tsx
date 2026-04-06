@@ -12,11 +12,17 @@ export interface ShippingCardAddress {
   deliveryMemo?: string | null;
 }
 
-interface ShippingAddressCardProps {
-  address: ShippingCardAddress | null;
-  editable?: boolean;
-  onChangeClick?: () => void;
-}
+type ShippingAddressCardProps =
+  | {
+      address: ShippingCardAddress | null;
+      editable: true;
+      onChangeClick: () => void;
+    }
+  | {
+      address: ShippingCardAddress | null;
+      editable?: false;
+      onChangeClick?: never;
+    };
 
 export function ShippingAddressCard({
   address,
@@ -36,7 +42,7 @@ export function ShippingAddressCard({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <p className="text-lg font-semibold text-zinc-950">
+        <p className="text-lg font-semibold text-foreground">
           {address?.recipientName ?? "배송지 정보 없음"}
         </p>
         {editable && (
@@ -46,13 +52,17 @@ export function ShippingAddressCard({
         )}
       </div>
       {address ? (
-        <div className="space-y-1 text-sm text-zinc-700">
+        <div className="space-y-1 text-sm text-foreground-subtle">
           <p>{addressLine}</p>
           <p>{formatPhoneNumber(address.recipientPhone)}</p>
-          {deliveryLabel && <p className="text-zinc-500">{deliveryLabel}</p>}
+          {deliveryLabel && (
+            <p className="text-foreground-muted">{deliveryLabel}</p>
+          )}
         </div>
       ) : (
-        <p className="pb-4 text-sm text-zinc-500">배송지를 추가해주세요.</p>
+        <p className="pb-4 text-sm text-foreground-muted">
+          배송지를 추가해주세요.
+        </p>
       )}
     </div>
   );

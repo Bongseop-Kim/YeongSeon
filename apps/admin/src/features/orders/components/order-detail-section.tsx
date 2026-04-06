@@ -87,27 +87,37 @@ export function OrderDetailSection() {
       />
     );
 
-  const validateBeforeAdvance = () => {
-    if (nextStatus !== "배송완료") return true;
-
-    const isRepairOrder = orderType === "repair";
-    const persistedCourierCompany = isRepairOrder
+  const getShippingFields = (isRepairOrder: boolean) => ({
+    persistedCourierCompany: isRepairOrder
       ? (order.trackingInfo?.companyCourierCompany?.trim() ?? "")
-      : (order.trackingInfo?.courierCompany?.trim() ?? "");
-    const persistedTrackingNumber = isRepairOrder
+      : (order.trackingInfo?.courierCompany?.trim() ?? ""),
+    persistedTrackingNumber: isRepairOrder
       ? (order.trackingInfo?.companyTrackingNumber?.trim() ?? "")
-      : (order.trackingInfo?.trackingNumber?.trim() ?? "");
-    const draftCourierCompany = isRepairOrder
+      : (order.trackingInfo?.trackingNumber?.trim() ?? ""),
+    draftCourierCompany: isRepairOrder
       ? companyCourierCompany.trim()
-      : courierCompany.trim();
-    const draftTrackingNumber = isRepairOrder
+      : courierCompany.trim(),
+    draftTrackingNumber: isRepairOrder
       ? companyTrackingNumber.trim()
-      : trackingNumber.trim();
+      : trackingNumber.trim(),
+  });
 
-    if (
+  const isShippingInfoMissing = (isRepairOrder: boolean) => {
+    const {
+      persistedCourierCompany,
+      persistedTrackingNumber,
+      draftCourierCompany,
+      draftTrackingNumber,
+    } = getShippingFields(isRepairOrder);
+    return (
       (!persistedCourierCompany || !persistedTrackingNumber) &&
       (!draftCourierCompany || !draftTrackingNumber)
-    ) {
+    );
+  };
+
+  const validateBeforeAdvance = () => {
+    if (nextStatus !== "배송완료") return true;
+    if (isShippingInfoMissing(orderType === "repair")) {
       message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
       return false;
     }
@@ -120,25 +130,19 @@ export function OrderDetailSection() {
     }
 
     const isRepairOrder = orderType === "repair";
-    const persistedCourierCompany = isRepairOrder
-      ? (order.trackingInfo?.companyCourierCompany?.trim() ?? "")
-      : (order.trackingInfo?.courierCompany?.trim() ?? "");
-    const persistedTrackingNumber = isRepairOrder
-      ? (order.trackingInfo?.companyTrackingNumber?.trim() ?? "")
-      : (order.trackingInfo?.trackingNumber?.trim() ?? "");
-    const draftCourierCompany = isRepairOrder
-      ? companyCourierCompany.trim()
-      : courierCompany.trim();
-    const draftTrackingNumber = isRepairOrder
-      ? companyTrackingNumber.trim()
-      : trackingNumber.trim();
+    if (isShippingInfoMissing(isRepairOrder)) {
+      message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
+      return false;
+    }
+
+    const {
+      persistedCourierCompany,
+      persistedTrackingNumber,
+      draftCourierCompany,
+      draftTrackingNumber,
+    } = getShippingFields(isRepairOrder);
 
     if (!persistedCourierCompany || !persistedTrackingNumber) {
-      if (!draftCourierCompany || !draftTrackingNumber) {
-        message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
-        return false;
-      }
-
       const saved = isRepairOrder
         ? await saveTracking(
             order.id,

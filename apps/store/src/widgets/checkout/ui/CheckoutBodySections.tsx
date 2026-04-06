@@ -1,7 +1,7 @@
 import type { ShippingAddress } from "@/entities/shipping";
 import { CouponSection } from "@/shared/composite/coupon-section";
 import { Separator } from "@/shared/ui/separator";
-import { ShippingAddressCard } from "@/widgets/shipping-address-card";
+import { ShippingAddressCard } from "@/shared/composite/shipping-address-card";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 
 interface CheckoutBodySectionsProps {
@@ -30,7 +30,7 @@ export function CheckoutBodySections({
       <Separator />
 
       <ShippingAddressCard
-        address={selectedAddress ?? null}
+        address={selectedAddress}
         editable
         onChangeClick={onOpenShippingPopup}
       />

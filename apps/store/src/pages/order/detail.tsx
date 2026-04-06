@@ -30,7 +30,7 @@ import { Button } from "@/shared/ui-extended/button";
 import { RepairShippingAddressBanner } from "@/features/order";
 import { useConfirmPurchase, useOrderDetail } from "@/entities/order";
 import { buildClaimFormRoute, ROUTES } from "@/shared/constants/ROUTES";
-import { ShippingAddressCard } from "@/widgets/shipping-address-card";
+import { ShippingAddressCard } from "@/shared/composite/shipping-address-card";
 
 const detailRowLabelClass =
   "shrink-0 text-sm font-medium text-muted-foreground";
@@ -380,7 +380,7 @@ const OrderDetailPage = () => {
               }
             />
 
-            {showTaskSection && isRepairShippingPending && (
+            {showTaskSection && (
               <RepairShippingPendingSection orderId={order.id} />
             )}
 
