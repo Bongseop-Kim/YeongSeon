@@ -11,7 +11,7 @@ import {
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/shared/composite/order-item-card";
 import { TokenRefundAction } from "@/features/order";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useOrders } from "@/entities/order";
@@ -96,9 +96,9 @@ export default function OrderListPage() {
     const grouped = new Map<string, typeof filteredOrders>();
     for (const order of filteredOrders) {
       const dateKey = formatDate(order.date);
-      if (!grouped.has(dateKey)) grouped.set(dateKey, []);
-      const group = grouped.get(dateKey);
-      if (group) group.push(order);
+      const group = grouped.get(dateKey) ?? [];
+      if (!grouped.has(dateKey)) grouped.set(dateKey, group);
+      group.push(order);
     }
     return Array.from(grouped.entries());
   }, [filteredOrders]);
@@ -152,21 +152,11 @@ export default function OrderListPage() {
                         {dateLabel}
                       </h2>
                       {dateOrders.map((order) => (
-                        <article
+                        <Link
                           key={order.id}
                           data-testid={`order-card-${order.id}`}
-                          className="cursor-pointer border-b border-stone-200 py-5"
-                          role="button"
-                          tabIndex={0}
-                          onClick={() =>
-                            navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
-                          }
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`);
-                            }
-                          }}
+                          className="block border-b border-stone-200 py-5"
+                          to={`${ROUTES.ORDER_DETAIL}/${order.id}`}
                         >
                           <div className="flex flex-col gap-5">
                             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -251,7 +241,7 @@ export default function OrderListPage() {
                               })}
                             </div>
                           </div>
-                        </article>
+                        </Link>
                       ))}
                     </section>
                   ))
