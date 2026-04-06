@@ -325,7 +325,9 @@ export default function AppLayout() {
             <FooterContent className="mt-8 border-t border-border/40 pt-8">
               <div className="space-y-1 text-xs text-foreground-muted">
                 <p>영선산업 | 대표: 김영선</p>
-                <p>주소: 대전 동구 가양2동 408-7</p>
+                <p>
+                  주소: 대전광역시 동구 우암로246번길 9-16 (가양동) 영선산업
+                </p>
                 <p>
                   통신판매업 번호: 2017-대전동구-0353 | 전화번호: 042-626-9055
                 </p>
