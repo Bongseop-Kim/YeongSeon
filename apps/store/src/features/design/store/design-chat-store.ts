@@ -13,7 +13,6 @@ interface DesignChatState {
   designContext: DesignContext;
   generationStatus: GenerationStatus;
   generatedImageUrl: string | null;
-  isImageDownloaded: boolean;
   resultTags: string[];
   pendingAttachments: Attachment[];
   aiModel: AiModel;
@@ -25,7 +24,6 @@ interface DesignChatState {
   clearAttachments: () => void;
   setGenerationStatus: (status: GenerationStatus) => void;
   setGeneratedImage: (imageUrl: string | null, tags: string[]) => void;
-  markImageDownloaded: () => void;
   restoreMessages: (messages: Message[]) => void;
   restoreSessionState: (
     sessionId: string,
@@ -50,7 +48,6 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
   designContext: createInitialDesignContext(),
   generationStatus: "idle",
   generatedImageUrl: null,
-  isImageDownloaded: false,
   resultTags: [],
   pendingAttachments: [],
   aiModel: "openai",
@@ -89,22 +86,16 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       imageUrl !== null
         ? {
             generatedImageUrl: imageUrl,
-            isImageDownloaded: false,
             resultTags: tags,
           }
         : { generatedImageUrl: null, resultTags: [] },
     ),
-  markImageDownloaded: () =>
-    set({
-      isImageDownloaded: true,
-    }),
   resetConversation: () =>
     set({
       messages: [],
       designContext: createInitialDesignContext(),
       generationStatus: "idle",
       generatedImageUrl: null,
-      isImageDownloaded: false,
       resultTags: [],
       pendingAttachments: [],
       currentSessionId: null,
@@ -114,7 +105,6 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
     set({
       ...sessionState,
       currentSessionId: sessionId,
-      isImageDownloaded: false,
       pendingAttachments: [],
     }),
   setCurrentSessionId: (id) => set({ currentSessionId: id }),

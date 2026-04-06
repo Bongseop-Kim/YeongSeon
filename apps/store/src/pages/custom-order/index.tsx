@@ -102,7 +102,7 @@ export default function OrderPage() {
         toast.error(error);
         return;
       }
-      wizard.skipToStep(WIZARD_STEPS.length - 1);
+      wizard.skipToStep(WIZARD_STEPS.length - 2);
       return;
     }
     const error = wizard.goNext();

@@ -32,9 +32,6 @@ export function ResultTagBar({
   const generatedImageUrl = useDesignChatStore(
     (state) => state.generatedImageUrl,
   );
-  const markImageDownloaded = useDesignChatStore(
-    (state) => state.markImageDownloaded,
-  );
   const { regenerate, isLoading } = useDesignChat();
 
   const hidden =
@@ -60,7 +57,6 @@ export function ResultTagBar({
         a.download = "design.png";
         a.click();
         setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-        markImageDownloaded();
       } catch {
         window.open(url, "_blank");
       }
@@ -160,7 +156,6 @@ export function ResultTagBar({
     a.click();
     setTimeout(() => {
       URL.revokeObjectURL(objectUrl);
-      markImageDownloaded();
     }, 100);
   };
 
