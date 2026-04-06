@@ -148,7 +148,7 @@ export default function OrderListPage() {
                 ) : (
                   ordersByDate.map(([dateLabel, dateOrders]) => (
                     <section key={dateLabel} className="space-y-0">
-                      <h2 className="sticky top-0 z-10 bg-white py-3 text-lg font-semibold tracking-tight text-zinc-950">
+                      <h2 className="sticky top-0 z-10 bg-background py-3 text-lg font-semibold tracking-tight text-zinc-950">
                         {dateLabel}
                       </h2>
                       {dateOrders.map((order) => (
@@ -187,7 +187,7 @@ export default function OrderListPage() {
                                   <div
                                     key={item.id}
                                     className="py-4 first:pt-0 last:pb-0"
-                                    data-testid={`order-item-link-${order.id}-${item.id}`}
+                                    data-testid={`order-item-wrapper-${order.id}-${item.id}`}
                                   >
                                     <OrderItemCard
                                       item={item}
