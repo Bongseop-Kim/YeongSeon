@@ -42,8 +42,14 @@ function stripSqlNonCode(sql) {
     if (sql[i] === "'") {
       i++;
       while (i < sql.length) {
-        if (sql[i] === "'" && sql[i + 1] === "'") { i += 2; continue; }
-        if (sql[i] === "'") { i++; break; }
+        if (sql[i] === "'" && sql[i + 1] === "'") {
+          i += 2;
+          continue;
+        }
+        if (sql[i] === "'") {
+          i++;
+          break;
+        }
         i++;
       }
       continue;
@@ -138,7 +144,8 @@ for (const file of sqlFiles) {
     if (/\bis_admin\(\)/i.test(execCode)) continue;
 
     // 면제 3: JWT role 기반 스케줄러 함수 (pg_cron 등 서버 내부 호출)
-    if (/current_setting\s*\(\s*['"]request\.jwt\.claim/i.test(execCode)) continue;
+    if (/current_setting\s*\(\s*['"]request\.jwt\.claim/i.test(execCode))
+      continue;
 
     // 면제 4: CREATE FUNCTION 앞뒤 600자 이내에 SECURITY DEFINER 주석이 있음
     // 패턴 예: "-- SECURITY DEFINER 사유:", "-- SECURITY DEFINER 유지 사유:",
@@ -146,7 +153,8 @@ for (const file of sqlFiles) {
     // 함수 본문 전체가 아닌 CREATE FUNCTION 선언부 근처만 검사한다.
     const prevTail = i > 0 ? parts[i - 1].slice(-600) : "";
     const cfIdx = part.search(/\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b/i);
-    const windowAfter = cfIdx >= 0 ? part.slice(0, cfIdx + 600) : part.slice(0, 600);
+    const windowAfter =
+      cfIdx >= 0 ? part.slice(0, cfIdx + 600) : part.slice(0, 600);
     const context = prevTail + windowAfter;
     if (/--[^\n]*\bSECURITY\s+DEFINER\b/i.test(context)) continue;
 
