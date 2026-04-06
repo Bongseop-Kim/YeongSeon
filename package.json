@@ -20,6 +20,7 @@
     "db:push": "supabase db push",
     "db:migrations": "supabase migration list",
     "db:lint": "supabase db lint --level warning",
+    "sql:security-check": "node scripts/check-sql-security.mjs",
     "db:test": "supabase test db",
     "preinstall": "npx only-allow pnpm",
     "format": "prettier --write .",
@@ -36,6 +37,9 @@
     ],
     "*.{json,md,yml,yaml,css}": [
       "prettier --write"
+    ],
+    "supabase/**/*.sql": [
+      "node scripts/check-sql-security.mjs"
     ]
   },
   "devDependencies": {
@@ -60,6 +64,10 @@
     "onlyBuiltDependencies": [
       "@swc/core",
       "esbuild"
-    ]
+    ],
+    "overrides": {
+      "lodash": "^4.18.1",
+      "lodash-es": "^4.18.1"
+    }
   }
 }

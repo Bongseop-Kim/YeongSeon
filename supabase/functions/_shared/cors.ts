@@ -1,4 +1,3 @@
-// 미설정(빈 문자열)이면 모든 Origin 허용 모드로 동작
 const ALLOWED_ORIGINS: readonly string[] = (() => {
   const raw = Deno.env.get("ALLOWED_ORIGINS") ?? "";
   if (!raw) return [];
@@ -24,7 +23,8 @@ export const getCorsHeaders = (
   };
 
   if (ALLOWED_ORIGINS.length === 0) {
-    return { ...base, "Access-Control-Allow-Origin": "*" };
+    // ALLOWED_ORIGINS 미설정 시 모든 Origin 차단 (fail-closed)
+    return base;
   }
 
   if (isOriginAllowed(requestOrigin)) {
