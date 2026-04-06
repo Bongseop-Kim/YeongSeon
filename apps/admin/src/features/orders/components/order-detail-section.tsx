@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Typography, Spin, Result, message } from "antd";
+import { Typography, Spin, Result, App } from "antd";
 import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW } from "@yeongseon/shared";
 import { useDefaultCourier } from "@/entities/settings";
 import {
@@ -29,6 +29,7 @@ import type {
 const { Title } = Typography;
 
 export function OrderDetailSection() {
+  const { message } = App.useApp();
   const { id: orderId } = useParams<{ id: string }>();
   const { order, refetch, isLoading, isError } = useAdminOrderDetail(orderId);
   const orderType = order?.orderType ?? "sale";
@@ -85,6 +86,33 @@ export function OrderDetailSection() {
         subTitle="주문 정보를 찾을 수 없습니다."
       />
     );
+
+  const validateBeforeAdvance = () => {
+    if (nextStatus !== "배송완료") return true;
+
+    const isRepairOrder = orderType === "repair";
+    const persistedCourierCompany = isRepairOrder
+      ? (order.trackingInfo?.companyCourierCompany?.trim() ?? "")
+      : (order.trackingInfo?.courierCompany?.trim() ?? "");
+    const persistedTrackingNumber = isRepairOrder
+      ? (order.trackingInfo?.companyTrackingNumber?.trim() ?? "")
+      : (order.trackingInfo?.trackingNumber?.trim() ?? "");
+    const draftCourierCompany = isRepairOrder
+      ? companyCourierCompany.trim()
+      : courierCompany.trim();
+    const draftTrackingNumber = isRepairOrder
+      ? companyTrackingNumber.trim()
+      : trackingNumber.trim();
+
+    if (
+      (!persistedCourierCompany || !persistedTrackingNumber) &&
+      (!draftCourierCompany || !draftTrackingNumber)
+    ) {
+      message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
+      return false;
+    }
+    return true;
+  };
 
   const handleChangeStatus = async (newStatus: string, memoText: string) => {
     if (newStatus !== "배송완료") {
@@ -152,6 +180,7 @@ export function OrderDetailSection() {
         rollbackStatus={rollbackStatus}
         onStatusChange={handleChangeStatus}
         onRollback={rollback}
+        onBeforeAdvance={validateBeforeAdvance}
         isUpdating={isUpdating}
       />
 

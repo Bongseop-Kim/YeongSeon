@@ -14,6 +14,7 @@ interface OrderStatusActionsProps {
   rollbackStatus: string | undefined;
   onStatusChange: (newStatus: string, memo: string) => Promise<boolean>;
   onRollback: (targetStatus: string, memo: string) => Promise<boolean>;
+  onBeforeAdvance?: () => boolean;
   isUpdating: boolean;
 }
 
@@ -23,6 +24,7 @@ export function OrderStatusActions({
   rollbackStatus,
   onStatusChange,
   onRollback,
+  onBeforeAdvance,
   isUpdating,
 }: OrderStatusActionsProps) {
   const { message } = App.useApp();
@@ -85,7 +87,10 @@ export function OrderStatusActions({
               type="primary"
               loading={isUpdating}
               disabled={isClaimLocked}
-              onClick={() => setActiveModal("advance")}
+              onClick={() => {
+                if (onBeforeAdvance && !onBeforeAdvance()) return;
+                setActiveModal("advance");
+              }}
             >
               {nextStatus}
               {eulo(nextStatus)} 변경
