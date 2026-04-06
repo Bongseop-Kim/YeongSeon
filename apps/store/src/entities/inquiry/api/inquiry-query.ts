@@ -30,7 +30,6 @@ export const useInquiries = () => {
 
 export const useCreateInquiry = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
 
   return useMutation({
     mutationFn: (params: {
@@ -38,14 +37,9 @@ export const useCreateInquiry = () => {
       productId?: number;
       title: string;
       content: string;
-    }) => {
-      if (!user?.id) throw new Error("로그인이 필요합니다.");
-      return createInquiry(params);
-    },
+    }) => createInquiry(params),
     onSuccess: () => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: inquiryKeys.list(user.id) });
-      }
+      queryClient.invalidateQueries({ queryKey: inquiryKeys.all });
     },
   });
 };

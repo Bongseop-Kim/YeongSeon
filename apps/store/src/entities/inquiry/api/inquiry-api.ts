@@ -32,13 +32,12 @@ export const createInquiry = async (params: {
   title: string;
   content: string;
 }): Promise<void> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("로그인이 필요합니다.");
+  const { data, error: authError } = await supabase.auth.getUser();
+  if (authError) throw new Error(`인증 오류: ${authError.message}`);
+  if (!data.user) throw new Error("로그인이 필요합니다.");
 
   const { error } = await supabase.from("inquiries").insert({
-    user_id: user.id,
+    user_id: data.user.id,
     category: params.category,
     product_id: params.productId ?? null,
     title: params.title,

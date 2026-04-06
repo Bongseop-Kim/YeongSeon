@@ -126,9 +126,17 @@ export default function ClaimListPage() {
                           key={claim.id}
                           data-testid={`claim-card-${claim.orderId}-${claim.type}-${claim.id}`}
                           className="cursor-pointer border-b border-stone-200 py-5"
+                          role="button"
+                          tabIndex={0}
                           onClick={() =>
                             navigate(buildClaimDetailRoute(claim.id))
                           }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              navigate(buildClaimDetailRoute(claim.id));
+                            }
+                          }}
                         >
                           <div className="flex flex-col gap-5">
                             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">

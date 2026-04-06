@@ -132,7 +132,7 @@ export default function OrderListPage() {
                 title="주문 목록"
                 description="검색과 기간 필터, 주문 유형 탭은 상단 공용 도구를 사용합니다."
               >
-                {filteredOrders.length === 0 ? (
+                {ordersByDate.length === 0 ? (
                   <Empty
                     title={
                       activeTab === "전체"
@@ -156,9 +156,17 @@ export default function OrderListPage() {
                           key={order.id}
                           data-testid={`order-card-${order.id}`}
                           className="cursor-pointer border-b border-stone-200 py-5"
+                          role="button"
+                          tabIndex={0}
                           onClick={() =>
                             navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`)
                           }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              navigate(`${ROUTES.ORDER_DETAIL}/${order.id}`);
+                            }
+                          }}
                         >
                           <div className="flex flex-col gap-5">
                             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -196,7 +204,7 @@ export default function OrderListPage() {
                                       showPrice={isLastItem}
                                       price={
                                         isLastItem
-                                          ? `${order.totalPrice.toLocaleString()}원`
+                                          ? `합계: ${order.totalPrice.toLocaleString()}원`
                                           : undefined
                                       }
                                       actions={

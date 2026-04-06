@@ -2,10 +2,11 @@
 /**
  * SECURITY DEFINER 함수에 auth.uid() 소유권 검증이 있는지 확인한다.
  *
- * 면제 조건 (셋 중 하나면 통과):
+ * 면제 조건 (넷 중 하나면 통과):
  *   1. 함수 본문에 auth.uid() 호출이 있음
  *   2. 함수 본문에 is_admin() 호출이 있음 (관리자 전용 함수)
- *   3. CREATE FUNCTION 앞뒤 600자 이내에 "-- ... SECURITY DEFINER ..." 주석이 있음
+ *   3. 함수 본문에 current_setting('request.jwt.claim...) 호출이 있음 (스케줄러/pg_cron 전용)
+ *   4. CREATE FUNCTION 앞뒤 600자 이내에 "-- ... SECURITY DEFINER ..." 주석이 있음
  *      (사유:, 유지 사유:, 사용 근거:, bypasses RLS 등 다양한 형식 허용)
  *
  * 전체 검사:  node scripts/check-sql-security.mjs              (schemas/ 대상)
@@ -32,7 +33,8 @@ function walkSql(dir) {
       if (statSync(full).isDirectory()) results.push(...walkSql(full))
       else if (entry.endsWith('.sql')) results.push(full)
     }
-  } catch {
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err
     // 디렉토리 없으면 skip
   }
   return results
@@ -58,7 +60,8 @@ for (const file of sqlFiles) {
   let content
   try {
     content = readFileSync(file, 'utf-8')
-  } catch {
+  } catch (err) {
+    process.stderr.write(`⚠️  파일 읽기 실패 (건너뜀): ${file}: ${err.message}\n`)
     continue
   }
 
@@ -81,7 +84,10 @@ for (const file of sqlFiles) {
     // 면제 2: is_admin() 호출 있음 (관리자 전용)
     if (/\bis_admin\(\)/i.test(part)) continue
 
-    // 면제 3: CREATE FUNCTION 바로 앞(이전 청크 tail 600자)에 SECURITY DEFINER 주석이 있음
+    // 면제 3: JWT role 기반 스케줄러 함수 (pg_cron 등 서버 내부 호출)
+    if (/current_setting\s*\(\s*['"]request\.jwt\.claim/i.test(part)) continue
+
+    // 면제 4: CREATE FUNCTION 바로 앞(이전 청크 tail 600자)에 SECURITY DEFINER 주석이 있음
     // 패턴 예: "-- SECURITY DEFINER 사유:", "-- SECURITY DEFINER 유지 사유:",
     //          "-- SECURITY DEFINER 사용 근거:", "-- ... SECURITY DEFINER bypasses RLS"
     const prevTail = i > 0 ? parts[i - 1].slice(-600) : ''

@@ -45,11 +45,12 @@ BEGIN
     );
   END IF;
 
-  INSERT INTO public.design_tokens (user_id, amount, type, ai_model, request_type, description)
+  INSERT INTO public.design_tokens (user_id, amount, type, token_class, ai_model, request_type, description)
   VALUES (
     p_user_id,
     -v_cost,
     'use',
+    'paid',
     p_ai_model,
     p_request_type,
     'AI 디자인 생성 (' || p_ai_model || ', ' || p_request_type || ')'
