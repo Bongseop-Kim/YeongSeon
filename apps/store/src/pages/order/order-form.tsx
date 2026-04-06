@@ -3,6 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { Button } from "@/shared/ui-extended/button";
 import { Separator } from "@/shared/ui/separator";
+import { Input } from "@/shared/ui-extended/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
@@ -12,6 +20,7 @@ import {
   RepairShippingAddressBanner,
 } from "@/features/order";
 import React from "react";
+import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
 import { useOrderStore } from "@/shared/store/order";
 import { useCouponSelect } from "@/features/coupon";
 import { toast } from "@/shared/lib/toast";
@@ -40,11 +49,26 @@ const OrderFormPage = () => {
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const isPaymentProcessingRef = useRef(false);
   const navigate = useNavigate();
+  const [repairCourierCompany, setRepairCourierCompany] = useState("");
+  const [repairTrackingNumber, setRepairTrackingNumber] = useState("");
+
   const {
     items: orderItems,
     hasOrderItems,
     updateOrderItemCoupon,
+    setRepairTracking,
   } = useOrderStore();
+
+  useEffect(() => {
+    setRepairTracking(
+      repairCourierCompany || repairTrackingNumber
+        ? {
+            courierCompany: repairCourierCompany,
+            trackingNumber: repairTrackingNumber,
+          }
+        : undefined,
+    );
+  }, [repairCourierCompany, repairTrackingNumber, setRepairTracking]);
   const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
   const { user } = useAuthStore();
 
@@ -323,6 +347,39 @@ const OrderFormPage = () => {
                   {hasReformItems && (
                     <div className="py-5">
                       <RepairShippingAddressBanner />
+                      <div className="space-y-2 mt-4">
+                        <p className="text-sm font-semibold text-zinc-700">
+                          이미 발송하셨나요?
+                        </p>
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <Select
+                              value={repairCourierCompany}
+                              onValueChange={setRepairCourierCompany}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="택배사 선택" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {COURIER_COMPANIES.map((c) => (
+                                  <SelectItem key={c.code} value={c.code}>
+                                    {c.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Input
+                            type="text"
+                            placeholder="송장번호"
+                            value={repairTrackingNumber}
+                            className="flex-[2]"
+                            onChange={(e) =>
+                              setRepairTrackingNumber(e.target.value)
+                            }
+                          />
+                        </div>
+                      </div>
                       <Separator className="mt-5" />
                     </div>
                   )}
