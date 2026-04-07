@@ -51,15 +51,19 @@ const PaymentSuccessPage = () => {
           amount: parsedAmount,
         });
 
-        analytics.track("purchase", {
-          transaction_id: orderId,
-          value: parsedAmount,
-          currency: "KRW",
-        });
-        ph.capture("order_completed", {
-          order_id: orderId,
-          amount: parsedAmount,
-        });
+        try {
+          analytics.track("purchase", {
+            transaction_id: orderId,
+            value: parsedAmount,
+            currency: "KRW",
+          });
+          ph.capture("order_completed", {
+            order_id: orderId,
+            amount: parsedAmount,
+          });
+        } catch (analyticsErr) {
+          console.warn("analytics error:", analyticsErr);
+        }
 
         // 2. 장바구니에서 주문한 아이템 제거 (sample order 등 cart 미사용 주문은 skip)
         if (orderItems.length > 0) {

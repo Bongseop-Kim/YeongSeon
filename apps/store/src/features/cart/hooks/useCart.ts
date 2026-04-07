@@ -106,10 +106,16 @@ export function useCart() {
       await syncItems(result.nextItems, items);
 
       analytics.track("add_to_cart", {
-        item_id: String(product.id),
-        item_name: product.name,
-        quantity,
-        price: product.price ?? undefined,
+        currency: "KRW",
+        value: (product.price ?? 0) * quantity,
+        items: [
+          {
+            item_id: String(product.id),
+            item_name: product.name,
+            quantity,
+            price: product.price ?? undefined,
+          },
+        ],
       });
 
       if (showModal) {
@@ -178,9 +184,16 @@ export function useCart() {
 
       if (removedItem?.type === "product") {
         analytics.track("remove_from_cart", {
-          item_id: String(removedItem.product.id),
-          item_name: removedItem.product.name,
-          quantity: removedItem.quantity,
+          currency: "KRW",
+          value: (removedItem.product.price ?? 0) * removedItem.quantity,
+          items: [
+            {
+              item_id: String(removedItem.product.id),
+              item_name: removedItem.product.name,
+              quantity: removedItem.quantity,
+              price: removedItem.product.price ?? undefined,
+            },
+          ],
         });
       }
     },

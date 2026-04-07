@@ -33,6 +33,11 @@ export default function PrivacyPolicyPage() {
               재화 또는 서비스 제공: 물품배송, 서비스 제공, 계약서·청구서 발송,
               콘텐츠 제공, 맞춤서비스 제공, 본인인증, 요금결제·정산
             </li>
+            <li>
+              서비스 이용 분석 및 개선: 페이지뷰, 상품 조회, 장바구니 담기, 구매
+              등 행동 이벤트를 수집하여 서비스 이용 현황을 분석하고 기능을
+              개선하는 목적 (Google Analytics, PostHog 등 분석 서비스 활용)
+            </li>
           </PolicyList>
         </PolicySection>
 
@@ -64,6 +69,12 @@ export default function PrivacyPolicyPage() {
               필수항목: 이름, 이메일, 전화번호, 배송지 주소, 소셜 계정 식별자
               (Google, Kakao 등 소셜 로그인을 통해 수집)
             </li>
+            <li>
+              자동 수집 항목(분석 목적): 쿠키, 기기 식별자(브라우저 fingerprint
+              포함), IP 주소, 서비스 이용 행동 이벤트(페이지뷰, 상품 조회,
+              장바구니 담기, 구매, 로그인 등). 보유기간: 서비스 탈퇴 후 최대
+              26개월(Google Analytics 기본 보유기간 기준) 또는 쿠키 만료 시까지.
+            </li>
           </PolicyList>
         </PolicySection>
 
@@ -93,6 +104,18 @@ export default function PrivacyPolicyPage() {
             <li>
               소셜 로그인 서비스: Google, Kakao 등 소셜 플랫폼에 인증에 필요한
               정보 제공
+            </li>
+            <li>
+              웹 분석 서비스(Google Analytics): 구글 엘엘씨(Google LLC), 미국.
+              서비스 이용 행동 이벤트(페이지뷰, 상품 조회, 장바구니 담기, 구매),
+              쿠키, 기기 식별자 전송. 보유기간: 최대 26개월. Google 개인정보
+              처리방침: https://policies.google.com/privacy
+            </li>
+            <li>
+              제품 분석 서비스(PostHog): PostHog Inc., 미국. 서비스 이용 행동
+              이벤트(디자인 생성, 주문 완료, 쿠폰 적용 등), 기기 식별자 전송.
+              보유기간: PostHog 정책에 따름. PostHog 개인정보 처리방침:
+              https://posthog.com/privacy
             </li>
           </PolicyList>
         </PolicySection>

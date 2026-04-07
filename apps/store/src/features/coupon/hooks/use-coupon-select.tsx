@@ -46,13 +46,18 @@ export const useCouponSelect = () => {
 
   const handleConfirm = () => {
     const selectedCoupon = couponRef.current?.getSelectedCoupon();
-    if (selectedCoupon !== undefined) {
-      analytics.track("apply_coupon", {
-        coupon_code: selectedCoupon?.couponId,
-      });
+    try {
+      if (selectedCoupon !== undefined) {
+        analytics.track("apply_coupon", {
+          coupon_code: selectedCoupon?.couponId,
+        });
+      }
+    } catch (e) {
+      console.warn("analytics error:", e);
+    } finally {
+      state?.resolve(selectedCoupon);
+      setState(null);
     }
-    state?.resolve(selectedCoupon);
-    setState(null);
   };
 
   const handleCancel = () => {

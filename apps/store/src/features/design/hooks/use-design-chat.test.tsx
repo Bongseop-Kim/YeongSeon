@@ -237,15 +237,23 @@ describe("useDesignChat", () => {
       });
     });
 
-    it("currentSessionId가 이미 있으면 design_session_started를 캡처하지 않는다", () => {
-      Object.assign(storeState, { currentSessionId: "existing-session" });
-      const { result } = renderHook(() => useDesignChat());
-      result.current.sendMessage("추가 요청", []);
-      expect(phCapture).not.toHaveBeenCalledWith(
-        "design_session_started",
-        expect.anything(),
-      );
-      Object.assign(storeState, { currentSessionId: null });
+    describe("currentSessionId가 이미 있는 경우", () => {
+      beforeEach(() => {
+        Object.assign(storeState, { currentSessionId: "existing-session" });
+      });
+
+      afterEach(() => {
+        Object.assign(storeState, { currentSessionId: null });
+      });
+
+      it("design_session_started를 캡처하지 않는다", () => {
+        const { result } = renderHook(() => useDesignChat());
+        result.current.sendMessage("추가 요청", []);
+        expect(phCapture).not.toHaveBeenCalledWith(
+          "design_session_started",
+          expect.anything(),
+        );
+      });
     });
   });
 });

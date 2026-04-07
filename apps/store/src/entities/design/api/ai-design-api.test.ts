@@ -109,8 +109,11 @@ describe("aiDesignApi", () => {
           has_image: true,
         }),
       );
+      const designGeneratedCall = phCapture.mock.calls.find(
+        (call) => call[0] === "design_generated",
+      );
       expect(
-        (phCapture.mock.calls[0][1] as { latency_ms: number }).latency_ms,
+        (designGeneratedCall?.[1] as { latency_ms: number }).latency_ms,
       ).toBeGreaterThanOrEqual(0);
     });
 

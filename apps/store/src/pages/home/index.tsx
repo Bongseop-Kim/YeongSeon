@@ -13,6 +13,31 @@ import { useProducts } from "@/entities/shop";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { Helmet } from "react-helmet-async";
 
+const HOME_JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://essesion.shop/#organization",
+      name: "ESSE SION",
+      url: "https://essesion.shop",
+      logo: "https://essesion.shop/logo/logo.png",
+      telephone: "042-626-9055",
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: "KR",
+      },
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://essesion.shop/#website",
+      url: "https://essesion.shop",
+      name: "ESSE SION",
+      publisher: { "@id": "https://essesion.shop/#organization" },
+    },
+  ],
+};
+
 export default function HomePage() {
   const { data: products = [], isLoading } = useProducts({
     sortOption: "popular",
@@ -29,30 +54,7 @@ export default function HomePage() {
       />
       <Helmet>
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@graph": [
-              {
-                "@type": "Organization",
-                "@id": "https://essesion.shop/#organization",
-                name: "ESSE SION",
-                url: "https://essesion.shop",
-                logo: "https://essesion.shop/logo/logo.png",
-                telephone: "042-626-9055",
-                address: {
-                  "@type": "PostalAddress",
-                  addressCountry: "KR",
-                },
-              },
-              {
-                "@type": "WebSite",
-                "@id": "https://essesion.shop/#website",
-                url: "https://essesion.shop",
-                name: "ESSE SION",
-                publisher: { "@id": "https://essesion.shop/#organization" },
-              },
-            ],
-          })}
+          {JSON.stringify(HOME_JSON_LD)}
         </script>
       </Helmet>
       <MainLayout>

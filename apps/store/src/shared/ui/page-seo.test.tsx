@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { HelmetProvider } from "react-helmet-async";
-import { PageSeo } from "./page-seo";
+import { PageSeo } from "@/shared/ui/page-seo";
 
 function renderWithHelmet(ui: React.ReactElement) {
   return render(<HelmetProvider>{ui}</HelmetProvider>);

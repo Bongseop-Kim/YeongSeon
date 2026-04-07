@@ -2,14 +2,14 @@ import GlobalModal from "@/shared/ui-extended/modal";
 import { Toaster } from "@/shared/ui/sonner";
 import { BreakpointProvider } from "@/shared/lib/breakpoint-provider";
 import { ScrollToTop } from "./scroll-to-top";
-import { RouteAnalytics } from "./route-analytics";
+import { RouteAnalytics } from "@/app/providers/route-analytics";
 import { QueryProvider } from "./query-provider";
 import { AuthSyncProvider } from "./auth-sync-provider";
 import { CartSyncProvider } from "./cart-sync-provider";
 import { ImageKitProvider } from "@imagekit/react";
 import { IMAGEKIT_URL_ENDPOINT } from "@/shared/lib/imagekit";
 import { HelmetProvider } from "react-helmet-async";
-import { PostHogProvider } from "./posthog-provider";
+import { PostHogProvider } from "@/app/providers/posthog-provider";
 // import { ThemeProvider } from "./theme-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {

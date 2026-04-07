@@ -158,13 +158,12 @@ export function useDesignChat(): UseDesignChatResult {
       return;
     }
 
-    const sessionId = currentSessionId ?? crypto.randomUUID();
-    const isFirstMessage = !currentSessionId;
-    if (!currentSessionId) {
-      setCurrentSessionId(sessionId);
-    }
+    // getState()로 호출 시점의 최신 값을 읽어 stale closure로 인한 중복 이벤트 방지
+    const prevSessionId = useDesignChatStore.getState().currentSessionId;
+    const sessionId = prevSessionId ?? crypto.randomUUID();
 
-    if (isFirstMessage) {
+    if (!prevSessionId) {
+      setCurrentSessionId(sessionId);
       ph.capture("design_session_started", { ai_model: aiModel });
     }
 

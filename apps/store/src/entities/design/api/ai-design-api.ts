@@ -129,34 +129,50 @@ export async function aiDesignApi(
         cost?: number;
       };
       if (body.error === "insufficient_tokens") {
-        ph.capture("design_generation_failed", {
-          ai_model: request.aiModel,
-          error_type: "insufficient_tokens",
-        });
+        try {
+          ph.capture("design_generation_failed", {
+            ai_model: request.aiModel,
+            error_type: "insufficient_tokens",
+          });
+        } catch (e) {
+          console.warn("analytics error:", e);
+        }
         throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
       }
     }
 
-    ph.capture("design_generation_failed", {
-      ai_model: request.aiModel,
-      error_type: "api_error",
-    });
+    try {
+      ph.capture("design_generation_failed", {
+        ai_model: request.aiModel,
+        error_type: "api_error",
+      });
+    } catch (e) {
+      console.warn("analytics error:", e);
+    }
     throw new Error(`디자인 생성 실패: ${error.message}`);
   }
 
   if (!data) {
-    ph.capture("design_generation_failed", {
-      ai_model: request.aiModel,
-      error_type: "api_error",
-    });
+    try {
+      ph.capture("design_generation_failed", {
+        ai_model: request.aiModel,
+        error_type: "api_error",
+      });
+    } catch (e) {
+      console.warn("analytics error:", e);
+    }
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }
 
   const result = normalizeInvokeResponse(data, request);
-  ph.capture("design_generated", {
-    ai_model: request.aiModel,
-    latency_ms: Date.now() - startTime,
-    has_image: result.imageUrl !== null,
-  });
+  try {
+    ph.capture("design_generated", {
+      ai_model: request.aiModel,
+      latency_ms: Date.now() - startTime,
+      has_image: result.imageUrl !== null,
+    });
+  } catch (e) {
+    console.warn("analytics error:", e);
+  }
   return result;
 }

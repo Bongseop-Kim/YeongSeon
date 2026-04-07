@@ -9,7 +9,10 @@ type PhEventParamsMap = {
     latency_ms: number;
     has_image: boolean;
   };
-  design_generation_failed: { ai_model: AiModel; error_type: string };
+  design_generation_failed: {
+    ai_model: AiModel;
+    error_type: "insufficient_tokens" | "api_error";
+  };
   order_completed: { order_id: string; amount: number };
   token_purchased: {
     order_id: string;
@@ -46,6 +49,6 @@ export const ph = {
   },
 
   captureException(message: string, extra?: Record<string, unknown>): void {
-    posthog.capture("$exception", { message, ...extra });
+    posthog.capture("$exception", { ...extra, message });
   },
 };
