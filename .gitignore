@@ -29,6 +29,9 @@ dist-ssr
 
 # Environment variables
 .env
+# .env.development* 계열은 .env.local보다 높은 우선순위이므로 실수 방지를 위해 차단
+.env.development
+.env.development.local
 
 # Local AI agent settings
 .claude/
