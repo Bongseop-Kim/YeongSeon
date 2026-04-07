@@ -2,6 +2,7 @@ import GlobalModal from "@/shared/ui-extended/modal";
 import { Toaster } from "@/shared/ui/sonner";
 import { BreakpointProvider } from "@/shared/lib/breakpoint-provider";
 import { ScrollToTop } from "./scroll-to-top";
+import { RouteAnalytics } from "./route-analytics";
 import { QueryProvider } from "./query-provider";
 import { AuthSyncProvider } from "./auth-sync-provider";
 import { CartSyncProvider } from "./cart-sync-provider";
@@ -26,6 +27,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 {/* <ThemeProvider> */}
 
                 <ScrollToTop />
+                <RouteAnalytics />
                 {children}
 
                 {/* 전역 컴포넌트들 */}
