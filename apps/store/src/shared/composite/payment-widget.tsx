@@ -99,7 +99,7 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
           if (!cancelled) {
             setReady(true);
             analytics.track("begin_checkout", {
-              value: amount,
+              value: amountRef.current,
               currency: "KRW",
             });
           }
