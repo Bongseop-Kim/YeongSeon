@@ -5,7 +5,7 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { Button } from "@/shared/ui-extended/button";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { Image } from "@imagekit/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { IMAGEKIT_URL_ENDPOINT } from "@/shared/lib/imagekit";
 import {
@@ -66,15 +66,18 @@ export default function ShopDetailPage() {
   const productId = Number(id);
   const { data: product, isLoading: isProductLoading } = useProduct(productId);
 
+  const firedIdRef = useRef<number | null>(null);
+
   useEffect(() => {
-    if (product) {
+    if (product && firedIdRef.current !== product.id) {
+      firedIdRef.current = product.id;
       analytics.track("view_item", {
         item_id: String(product.id),
         item_name: product.name,
         price: product.price ?? undefined,
       });
     }
-  }, [product?.id]);
+  }, [product]);
 
   // 좋아요 상태 및 수는 상품 상세 응답에서 사용
   const isLiked = product?.isLiked ?? false;

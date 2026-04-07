@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { FilterSheet } from "./components/filter-sheet";
 import { FilterButtons } from "./components/filter-buttons";
@@ -168,15 +168,17 @@ export default function ShopPage() {
     sortOption,
   });
 
+  const firedRef = useRef(false);
+
   useEffect(() => {
-    if (!isLoading && products.length > 0) {
+    if (!isLoading && products.length > 0 && !firedRef.current) {
+      firedRef.current = true;
       analytics.track("view_item_list", {
         item_list_id: "shop",
         item_list_name: "상품 목록",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading]);
+  }, [isLoading, products.length]);
 
   const selectedFilterCount = selectedFilterLabels.length;
 
