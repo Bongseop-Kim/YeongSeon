@@ -37,6 +37,7 @@ import {
   clearCartItemsWithRollback,
   syncCartItemsWithRollback,
 } from "@/features/cart/hooks/cart-sync";
+import { analytics } from "@/shared/lib/analytics";
 
 type AddToCartOptions = {
   option?: ProductOption;
@@ -104,6 +105,13 @@ export function useCart() {
       );
       await syncItems(result.nextItems, items);
 
+      analytics.track("add_to_cart", {
+        item_id: String(product.id),
+        item_name: product.name,
+        quantity,
+        price: product.price ?? undefined,
+      });
+
       if (showModal) {
         openModal({
           title: "장바구니",
@@ -164,8 +172,17 @@ export function useCart() {
 
   const removeFromCart = useCallback(
     async (itemId: string) => {
+      const removedItem = items.find((item) => item.id === itemId);
       const nextItems = removeCartItem(items, itemId);
       await syncItems(nextItems, items);
+
+      if (removedItem?.type === "product") {
+        analytics.track("remove_from_cart", {
+          item_id: String(removedItem.product.id),
+          item_name: removedItem.product.name,
+          quantity: removedItem.quantity,
+        });
+      }
     },
     [items, syncItems],
   );
