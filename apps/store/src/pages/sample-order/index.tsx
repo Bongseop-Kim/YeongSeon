@@ -20,6 +20,7 @@ import { Field, FieldTitle, FieldDescription } from "@/shared/ui/field";
 import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import type { SampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
+import { PageSeo } from "@/shared/ui/page-seo";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
@@ -180,6 +181,11 @@ export default function SampleOrderPage() {
 
   return (
     <>
+      <PageSeo
+        title="샘플 넥타이 주문"
+        description="대량 주문 전 샘플로 먼저 확인하세요. ESSE SION 샘플 서비스로 소재와 품질을 직접 체험할 수 있습니다."
+        ogUrl="https://essesion.shop/sample-order"
+      />
       <MainLayout>
         <MainContent className="overflow-visible">
           <Form {...form}>

@@ -29,6 +29,7 @@ import { toast } from "@/shared/lib/toast";
 import { useShippingAddressPopup } from "@/features/shipping";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { usePricingConfig } from "@/entities/custom-order";
+import { PageSeo } from "@/shared/ui/page-seo";
 
 export default function OrderPage() {
   const { user } = useAuthStore();
@@ -137,6 +138,11 @@ export default function OrderPage() {
 
   return (
     <>
+      <PageSeo
+        title="맞춤 넥타이 제작 주문"
+        description="기업 단체 넥타이부터 개인 맞춤 타이까지. 원하는 디자인·소재·색상으로 나만의 넥타이를 제작해 드립니다."
+        ogUrl="https://essesion.shop/custom-order"
+      />
       <MainLayout>
         <MainContent className="overflow-visible">
           <Form {...form}>
