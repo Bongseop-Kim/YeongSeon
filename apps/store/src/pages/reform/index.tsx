@@ -301,12 +301,17 @@ const ReformPage = () => {
                       value: formatCost(totalCost),
                       className: "pt-4",
                     },
+                    {
+                      id: "estimated-days",
+                      label: "예상 수선 기간",
+                      value: "7~14일",
+                    },
                   ]}
                   footer={
                     <TieLengthGuideAccordion
                       notices={[
                         "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
-                        "예상 수선 기간은 넥타이 확인 후 영업일 기준 10일입니다.",
+                        "예상 수선 기간은 영업일 기준 7~14일입니다.",
                         "접수 이후에는 취소 및 환불이 불가능합니다.",
                         "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
                       ]}

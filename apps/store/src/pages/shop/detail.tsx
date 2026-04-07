@@ -471,10 +471,14 @@ export default function ShopDetailPage() {
               </div>
 
               <div className="border-t border-stone-200 pt-2">
+                <div className="flex items-center justify-between py-3 text-sm">
+                  <span className="text-zinc-500">예상 배송 기간</span>
+                  <span className="font-medium text-zinc-900">3~4일</span>
+                </div>
                 <TieLengthGuideAccordion
                   notices={[
                     "• 제주/도서산간 지역 배송 시 추가 배송비 3,000원이 부과됩니다.",
-                    "• 예상 수선 기간은 넥타이 확인 후 영업일 기준 10일입니다.",
+                    "• 예상 배송 기간은 영업일 기준 3~4일입니다.",
                     "• 넥타이 확인 후 수선 진행 상태에서는 취소 및 환불이 불가능합니다.",
                     "• 수선 진행 전 취소 시, 택배비 3,000원을 제외한 금액을 환불해드립니다.",
                   ]}

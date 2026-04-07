@@ -210,6 +210,11 @@ export default function SampleOrderPage() {
                       value: selectedFabricLabel,
                     },
                     {
+                      id: "estimated-days",
+                      label: "예상 제작 기간",
+                      value: "28~42일",
+                    },
+                    {
                       id: "sample-total",
                       label: "총 결제 금액",
                       value:

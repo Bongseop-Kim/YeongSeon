@@ -17,8 +17,7 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true,
-      "dependsOn": ["//#dev:functions"]
+      "persistent": true
     },
     "lint": {},
     "test": {},
