@@ -11,6 +11,7 @@ import {
 } from "@/features/home";
 import { useProducts } from "@/entities/shop";
 import { PageSeo } from "@/shared/ui/page-seo";
+import { Helmet } from "react-helmet-async";
 
 export default function HomePage() {
   const { data: products = [], isLoading } = useProducts({
@@ -26,6 +27,34 @@ export default function HomePage() {
         ogUrl="https://essesion.shop/"
         fullTitle
       />
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": "https://essesion.shop/#organization",
+                name: "ESSE SION",
+                url: "https://essesion.shop",
+                logo: "https://essesion.shop/logo/logo.png",
+                telephone: "042-626-9055",
+                address: {
+                  "@type": "PostalAddress",
+                  addressCountry: "KR",
+                },
+              },
+              {
+                "@type": "WebSite",
+                "@id": "https://essesion.shop/#website",
+                url: "https://essesion.shop",
+                name: "ESSE SION",
+                publisher: { "@id": "https://essesion.shop/#organization" },
+              },
+            ],
+          })}
+        </script>
+      </Helmet>
       <MainLayout>
         <MainContent>
           <EsHero />
