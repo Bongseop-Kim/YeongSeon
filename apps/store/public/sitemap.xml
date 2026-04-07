@@ -6,6 +6,7 @@
   <url><loc>https://essesion.shop/sample-order</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://essesion.shop/reform</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://essesion.shop/faq</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://essesion.shop/notice</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
   <url><loc>https://essesion.shop/privacy-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://essesion.shop/terms-of-service</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://essesion.shop/refund-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
