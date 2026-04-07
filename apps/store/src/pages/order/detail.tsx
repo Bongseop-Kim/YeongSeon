@@ -30,7 +30,7 @@ import { Button } from "@/shared/ui-extended/button";
 import { RepairShippingAddressBanner } from "@/features/order";
 import { useConfirmPurchase, useOrderDetail } from "@/entities/order";
 import { buildClaimFormRoute, ROUTES } from "@/shared/constants/ROUTES";
-import { ShippingAddressCard } from "@/shared/composite/shipping-address-card";
+import { ShippingAddressCard } from "@/shared/composite";
 
 const detailRowLabelClass =
   "shrink-0 text-sm font-medium text-muted-foreground";
@@ -381,7 +381,9 @@ const OrderDetailPage = () => {
             />
 
             {showTaskSection && (
-              <RepairShippingPendingSection orderId={order.id} />
+              <UtilityPageSection title="현재 할 일">
+                <RepairShippingPendingSection orderId={order.id} />
+              </UtilityPageSection>
             )}
 
             {order.orderType !== "token" ? (

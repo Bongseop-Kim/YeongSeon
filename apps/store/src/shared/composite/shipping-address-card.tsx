@@ -2,7 +2,7 @@ import { Button } from "@/shared/ui/button";
 import { formatPhoneNumber } from "@/shared/lib/phone-format";
 import { getDeliveryRequestLabel } from "@/shared/constants/DELIVERY_REQUEST_OPTIONS";
 
-export interface ShippingCardAddress {
+interface ShippingCardAddress {
   recipientName: string;
   recipientPhone: string;
   address: string;

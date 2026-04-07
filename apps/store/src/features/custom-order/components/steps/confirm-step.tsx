@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
 import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { ContactInfoSection } from "@/features/custom-order/components/contact-info-section";
-import { ShippingAddressCard } from "@/shared/composite/shipping-address-card";
+import { ShippingAddressCard } from "@/shared/composite";
 import { SummaryRow } from "@/features/custom-order/components/summary-row";
 import {
   getFabricLabel,
