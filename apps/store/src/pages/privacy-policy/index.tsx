@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
     <>
       <PageSeo
         title="개인정보처리방침"
-        description="ESSE SION 개인정보처리방침"
+        description="ESSE SION이 수집하는 개인정보 항목, 보유 기간, 제3자 제공 기준과 정보주체 권리 행사 방법을 안내합니다."
         ogUrl="https://essesion.shop/privacy-policy"
       />
       <PolicyPageLayout title="개인정보처리방침">

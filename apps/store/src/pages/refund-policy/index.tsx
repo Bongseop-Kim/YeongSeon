@@ -10,7 +10,7 @@ export default function RefundPolicyPage() {
     <>
       <PageSeo
         title="환불·반품 정책"
-        description="ESSE SION 환불 및 반품 정책"
+        description="ESSE SION의 상품·맞춤 제작·수선·AI 토큰 환불 기준, 반품 배송비 부담 원칙, 환불 처리 기간을 안내합니다."
         ogUrl="https://essesion.shop/refund-policy"
       />
       <PolicyPageLayout title="환불정책">

@@ -11,7 +11,7 @@ interface PageSeoProps {
 export function PageSeo({
   title,
   description,
-  ogImage = "/logo/logo.png",
+  ogImage = "https://essesion.shop/logo/logo.png",
   ogUrl,
   fullTitle,
 }: PageSeoProps) {

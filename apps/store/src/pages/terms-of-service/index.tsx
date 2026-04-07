@@ -10,7 +10,7 @@ export default function TermsOfServicePage() {
     <>
       <PageSeo
         title="이용약관"
-        description="ESSE SION 이용약관"
+        description="ESSE SION 서비스 이용 조건, 회원 의무, 맞춤 제작·수선·AI 디자인 서비스의 운영 정책을 규정한 이용약관입니다."
         ogUrl="https://essesion.shop/terms-of-service"
       />
       <PolicyPageLayout title="이용약관">
