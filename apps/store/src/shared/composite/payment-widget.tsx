@@ -9,6 +9,7 @@ import {
   loadTossPayments,
   type TossPaymentsWidgets,
 } from "@tosspayments/tosspayments-sdk";
+import { analytics } from "@/shared/lib/analytics";
 
 const CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY;
 
@@ -97,6 +98,10 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
 
           if (!cancelled) {
             setReady(true);
+            analytics.track("begin_checkout", {
+              value: amountRef.current,
+              currency: "KRW",
+            });
           }
         } catch (error) {
           const message = "결제위젯 초기화에 실패했습니다.";

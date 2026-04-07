@@ -1,5 +1,11 @@
 import { App } from "antd";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OrderStatusActions } from "@/features/orders/components/order-status-actions";
 import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
@@ -53,14 +59,18 @@ describe("OrderStatusActions", () => {
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "롤백" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "롤백" }));
+    });
 
     expect(onRollback).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByPlaceholderText("롤백 사유 (필수)"), {
       target: { value: "관리자 확인 후 롤백" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "롤백" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "롤백" }));
+    });
 
     expect(onRollback).toHaveBeenCalledWith("대기중", "관리자 확인 후 롤백");
   });

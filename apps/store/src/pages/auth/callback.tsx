@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@/entities/auth";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { consumeAuthRedirect } from "@/shared/lib/auth-redirect";
+import { analytics } from "@/shared/lib/analytics";
 
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
   const { data: session, isLoading, isError } = useSession();
   const [waitingForSession, setWaitingForSession] = useState(true);
+  const hasTrackedLogin = useRef(false);
 
   useEffect(() => {
     // OAuth 콜백 후 세션이 로드될 때까지 최대 3초 대기
@@ -31,6 +33,10 @@ const AuthCallbackPage = () => {
 
     // 세션이 있으면 원래 가려던 페이지 또는 홈으로 리다이렉트
     if (session) {
+      if (!hasTrackedLogin.current) {
+        hasTrackedLogin.current = true;
+        analytics.track("login", {});
+      }
       const redirect = consumeAuthRedirect();
       if (redirect) {
         navigate(redirect.redirectPath, {

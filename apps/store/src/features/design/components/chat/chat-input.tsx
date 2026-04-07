@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Send, X } from "lucide-react";
 
+import { analytics } from "@/shared/lib/analytics";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui-extended/button";
 import { AttachmentPopup } from "@/features/design/components/chat/attachment-popup";
@@ -28,6 +29,7 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const [inputText, setInputText] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const popupWrapperRef = useRef<HTMLDivElement>(null);
+  const hasTrackedStartRef = useRef(false);
 
   useEffect(() => {
     if (!showPopup) return;
@@ -48,6 +50,11 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const handleSend = () => {
     if (!trimmedText || isLoading) {
       return;
+    }
+
+    if (!hasTrackedStartRef.current) {
+      analytics.track("design_chat_start", {});
+      hasTrackedStartRef.current = true;
     }
 
     onSend(trimmedText, pendingAttachments);

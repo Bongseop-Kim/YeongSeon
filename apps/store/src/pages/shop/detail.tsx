@@ -1,10 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { Button } from "@/shared/ui-extended/button";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { Image } from "@imagekit/react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { PageSeo } from "@/shared/ui/page-seo";
+import { IMAGEKIT_URL_ENDPOINT } from "@/shared/lib/imagekit";
 import {
   useSelectedOptions,
   MobilePurchaseSheet,
@@ -36,6 +39,8 @@ import { useOrderStore } from "@/shared/store/order";
 import { useModalStore } from "@/shared/store/modal";
 import { toast } from "@/shared/lib/toast";
 import { useProduct, useProducts, useToggleLike } from "@/entities/shop";
+import { analytics } from "@/shared/lib/analytics";
+import { ph } from "@/shared/lib/posthog";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { ChevronRightIcon } from "lucide-react";
 import { UtilityPageSection } from "@/shared/composite/utility-page";
@@ -61,6 +66,23 @@ export default function ShopDetailPage() {
 
   const productId = Number(id);
   const { data: product, isLoading: isProductLoading } = useProduct(productId);
+
+  const firedIdRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (product && firedIdRef.current !== product.id) {
+      firedIdRef.current = product.id;
+      analytics.track("view_item", {
+        item_id: String(product.id),
+        item_name: product.name,
+        price: product.price ?? undefined,
+      });
+      ph.capture("product_viewed", {
+        product_id: String(product.id),
+        product_name: product.name,
+      });
+    }
+  }, [product]);
 
   // 좋아요 상태 및 수는 상품 상세 응답에서 사용
   const isLiked = product?.isLiked ?? false;
@@ -210,8 +232,47 @@ export default function ShopDetailPage() {
     navigate(`${ROUTES.MY_PAGE_INQUIRY}?${params.toString()}`);
   };
 
+  const productImageUrl = `${IMAGEKIT_URL_ENDPOINT}${product.image}`;
+  const productUrl = `https://essesion.shop/shop/${product.id}`;
+
   return (
     <MainLayout>
+      <PageSeo
+        title={product.name}
+        description={product.info}
+        ogImage={productImageUrl}
+        ogUrl={productUrl}
+      />
+      <Helmet>
+        <meta property="og:type" content="product" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            name: product.name,
+            image: productImageUrl,
+            description: product.info,
+            sku: product.code,
+            brand: {
+              "@type": "Brand",
+              name: "ESSE SION",
+            },
+            offers: {
+              "@type": "Offer",
+              url: productUrl,
+              priceCurrency: "KRW",
+              price: product.price,
+              availability: isProductSoldOut
+                ? "https://schema.org/OutOfStock"
+                : "https://schema.org/InStock",
+              seller: {
+                "@type": "Organization",
+                name: "ESSE SION",
+              },
+            },
+          })}
+        </script>
+      </Helmet>
       <MainContent className="overflow-visible">
         <PageLayout
           detail={

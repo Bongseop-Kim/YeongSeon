@@ -5,6 +5,7 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { useConfirmTokenPurchase } from "@/entities/token-purchase";
 import { toast } from "@/shared/lib/toast";
 import { Loader2 } from "lucide-react";
+import { ph } from "@/shared/lib/posthog";
 
 const TokenPurchaseSuccessPage = () => {
   const [searchParams] = useSearchParams();
@@ -46,6 +47,11 @@ const TokenPurchaseSuccessPage = () => {
           return;
         }
 
+        ph.capture("token_purchased", {
+          order_id: orderId,
+          token_amount: result.tokenAmount,
+          amount: parsedAmount,
+        });
         toast.success(
           `토큰 ${result.tokenAmount.toLocaleString()}개가 충전되었습니다!`,
         );

@@ -38,6 +38,8 @@ import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
 import { ShopActionBar } from "@/shared/composite/shop-action-bar";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
+import { PageSeo } from "@/shared/ui/page-seo";
+import { analytics } from "@/shared/lib/analytics";
 
 const DEFAULT_TIE_ITEM = {
   id: "tie-1",
@@ -194,6 +196,7 @@ const ReformPage = () => {
       const uploadedTies = await uploadTiesIfNeeded(selectedTies);
       const orderItems = toReformCartItems(uploadedTies, baseCost);
       setOrderItems(orderItems);
+      analytics.track("form_submit", { form_type: "reform" });
       navigate(ROUTES.ORDER_FORM);
     });
 
@@ -202,6 +205,7 @@ const ReformPage = () => {
       const uploadedTies = await uploadTiesIfNeeded(selectedTies);
       const orderItems = toReformCartItems(uploadedTies, baseCost);
       setOrderItems(orderItems);
+      analytics.track("form_submit", { form_type: "reform" });
       navigate(ROUTES.ORDER_FORM);
     });
 
@@ -260,6 +264,11 @@ const ReformPage = () => {
 
   return (
     <>
+      <PageSeo
+        title="넥타이 수선·리폼"
+        description="낡거나 손상된 넥타이를 새것처럼. ESSE SION 수선·리폼 서비스로 길이 조절부터 전면 리폼까지 가능합니다."
+        ogUrl="https://essesion.shop/reform"
+      />
       <MainLayout>
         <MainContent className="overflow-visible">
           <Form {...form}>

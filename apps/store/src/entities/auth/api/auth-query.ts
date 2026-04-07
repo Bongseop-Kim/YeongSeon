@@ -7,6 +7,7 @@ import {
   deleteAccount,
 } from "./auth-api";
 import { toast } from "@/shared/lib/toast";
+import { analytics } from "@/shared/lib/analytics";
 import { DESIGN_TOKEN_BALANCE_QUERY_KEY } from "@/entities/design/api/ai-design-query";
 
 /**
@@ -65,6 +66,7 @@ export const useEmailSignIn = () => {
     mutationFn: signInWithEmail,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: authKeys.session() });
+      analytics.track("login", {});
     },
     onError: (error) => {
       console.error("Email sign in error:", error);

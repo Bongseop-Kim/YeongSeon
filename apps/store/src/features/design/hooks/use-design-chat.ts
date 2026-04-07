@@ -13,6 +13,7 @@ import type { Attachment, Message } from "@/features/design/types/chat";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { uploadGeneratedImage } from "@/features/design/utils/imagekit-upload";
 import { useSaveDesignSessionMutation } from "@/features/design/hooks/design-session-query";
+import { ph } from "@/shared/lib/posthog";
 
 interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
@@ -157,9 +158,13 @@ export function useDesignChat(): UseDesignChatResult {
       return;
     }
 
-    const sessionId = currentSessionId ?? crypto.randomUUID();
-    if (!currentSessionId) {
+    // getState()로 호출 시점의 최신 값을 읽어 stale closure로 인한 중복 이벤트 방지
+    const prevSessionId = useDesignChatStore.getState().currentSessionId;
+    const sessionId = prevSessionId ?? crypto.randomUUID();
+
+    if (!prevSessionId) {
       setCurrentSessionId(sessionId);
+      ph.capture("design_session_started", { ai_model: aiModel });
     }
 
     const userMessage: Message = {

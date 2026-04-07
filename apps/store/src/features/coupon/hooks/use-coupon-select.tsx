@@ -12,6 +12,7 @@ import {
   type CouponSelectModalRef,
 } from "@/features/coupon/components/coupon-select-modal";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
+import { analytics } from "@/shared/lib/analytics";
 
 /**
  * 쿠폰 선택 다이얼로그를 열고 선택된 쿠폰을 반환하는 범용 hook
@@ -45,8 +46,18 @@ export const useCouponSelect = () => {
 
   const handleConfirm = () => {
     const selectedCoupon = couponRef.current?.getSelectedCoupon();
-    state?.resolve(selectedCoupon);
-    setState(null);
+    try {
+      if (selectedCoupon !== undefined) {
+        analytics.track("apply_coupon", {
+          coupon_code: selectedCoupon?.couponId,
+        });
+      }
+    } catch (e) {
+      console.warn("analytics error:", e);
+    } finally {
+      state?.resolve(selectedCoupon);
+      setState(null);
+    }
   };
 
   const handleCancel = () => {

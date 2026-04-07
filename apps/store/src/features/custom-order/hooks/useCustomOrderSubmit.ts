@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/shared/store/auth";
 import { toast } from "@/shared/lib/toast";
+import { analytics } from "@/shared/lib/analytics";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import {
   toCreateQuoteRequestInput,
@@ -97,6 +98,7 @@ export function useCustomOrderSubmit({
           }),
         });
         toast.success("견적요청이 완료되었습니다!");
+        analytics.track("form_submit", { form_type: "custom_order" });
         formReset();
         navigate(ROUTES.MY_PAGE_QUOTE_REQUEST);
       } catch (error) {
@@ -118,6 +120,7 @@ export function useCustomOrderSubmit({
       totalCost,
       ...(selectedAddressId ? { shippingAddressId: selectedAddressId } : {}),
     };
+    analytics.track("form_submit", { form_type: "custom_order" });
     navigate(ROUTES.CUSTOM_PAYMENT, { state });
   };
 

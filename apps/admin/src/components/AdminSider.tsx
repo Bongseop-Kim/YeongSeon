@@ -7,6 +7,7 @@ import {
   theme,
   ConfigProvider,
   Tooltip,
+  type MenuProps,
 } from "antd";
 import {
   LogoutOutlined,
@@ -55,7 +56,9 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
 
   const RenderToTitle = TitleFromProps ?? ThemedTitle;
 
-  const renderTreeView = (tree: TreeMenuItem[], selectedKey?: string) => {
+  const buildMenuItems = (
+    tree: TreeMenuItem[],
+  ): Required<MenuProps>["items"] => {
     return tree.map((item: TreeMenuItem) => {
       const { key, name, children, meta, list } = item;
       const parentName = meta?.parent;
@@ -64,53 +67,37 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
       const route = list;
 
       if (children.length > 0) {
-        return (
-          <CanAccess
-            key={item.key}
-            resource={name}
-            action="list"
-            params={{ resource: item }}
-          >
-            <Menu.SubMenu
-              key={item.key}
-              icon={icon ?? <UnorderedListOutlined />}
-              title={label}
+        return {
+          key: item.key,
+          icon: icon ?? <UnorderedListOutlined />,
+          label: (
+            <CanAccess
+              resource={name}
+              action="list"
+              params={{ resource: item }}
             >
-              {renderTreeView(children, selectedKey)}
-            </Menu.SubMenu>
-          </CanAccess>
-        );
+              {label}
+            </CanAccess>
+          ),
+          children: buildMenuItems(children),
+        };
       }
 
       const isSelected = key === selectedKey;
       const isRoute = !(parentName !== undefined && children.length === 0);
-      const linkStyle: CSSProperties = {};
 
-      return (
-        <CanAccess
-          key={item.key}
-          resource={name}
-          action="list"
-          params={{ resource: item }}
-        >
-          <Menu.Item
-            key={item.key}
-            icon={icon ?? (isRoute && <UnorderedListOutlined />)}
-            style={linkStyle}
-          >
-            {route ? (
-              <Link to={route} style={linkStyle}>
-                {label}
-              </Link>
-            ) : (
-              <span style={linkStyle}>{label}</span>
-            )}
+      return {
+        key: item.key,
+        icon: icon ?? (isRoute ? <UnorderedListOutlined /> : undefined),
+        label: (
+          <CanAccess resource={name} action="list" params={{ resource: item }}>
+            {route ? <Link to={route}>{label}</Link> : <span>{label}</span>}
             {!siderCollapsed && isSelected && (
               <div className="ant-menu-tree-arrow" />
             )}
-          </Menu.Item>
-        </CanAccess>
-      );
+          </CanAccess>
+        ),
+      };
     });
   };
 
@@ -130,8 +117,6 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
       mutateLogout();
     }
   };
-
-  const items = renderTreeView(menuItems, selectedKey);
 
   const renderLogoutButton = (collapsed: boolean) => {
     if (!isExistAuthentication) return null;
@@ -204,9 +189,8 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
         onClick={() => {
           if (isMobile) setMobileSiderOpen(false);
         }}
-      >
-        {items}
-      </Menu>
+        items={buildMenuItems(menuItems)}
+      />
 
       {/* Logout area */}
       <div
