@@ -21,6 +21,7 @@ export default defineConfig({
         "/sample-order",
         "/reform",
         "/faq",
+        "/notice",
         "/privacy-policy",
         "/terms-of-service",
         "/refund-policy",
