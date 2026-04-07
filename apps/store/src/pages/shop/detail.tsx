@@ -5,7 +5,7 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { Button } from "@/shared/ui-extended/button";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { Image } from "@imagekit/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { IMAGEKIT_URL_ENDPOINT } from "@/shared/lib/imagekit";
 import {
@@ -39,6 +39,7 @@ import { useOrderStore } from "@/shared/store/order";
 import { useModalStore } from "@/shared/store/modal";
 import { toast } from "@/shared/lib/toast";
 import { useProduct, useProducts, useToggleLike } from "@/entities/shop";
+import { analytics } from "@/shared/lib/analytics";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { ChevronRightIcon } from "lucide-react";
 import { UtilityPageSection } from "@/shared/composite/utility-page";
@@ -64,6 +65,16 @@ export default function ShopDetailPage() {
 
   const productId = Number(id);
   const { data: product, isLoading: isProductLoading } = useProduct(productId);
+
+  useEffect(() => {
+    if (product) {
+      analytics.track("view_item", {
+        item_id: String(product.id),
+        item_name: product.name,
+        price: product.price ?? undefined,
+      });
+    }
+  }, [product?.id]);
 
   // 좋아요 상태 및 수는 상품 상세 응답에서 사용
   const isLiked = product?.isLiked ?? false;

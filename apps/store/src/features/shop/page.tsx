@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { FilterSheet } from "./components/filter-sheet";
 import { FilterButtons } from "./components/filter-buttons";
@@ -14,6 +14,7 @@ import {
   SORT_OPTIONS,
 } from "./constants/FILTER_OPTIONS";
 import { useProducts } from "@/entities/shop";
+import { analytics } from "@/shared/lib/analytics";
 import type {
   ProductCategory,
   ProductColor,
@@ -166,6 +167,16 @@ export default function ShopPage() {
     priceMax,
     sortOption,
   });
+
+  useEffect(() => {
+    if (!isLoading && products.length > 0) {
+      analytics.track("view_item_list", {
+        item_list_id: "shop",
+        item_list_name: "상품 목록",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
 
   const selectedFilterCount = selectedFilterLabels.length;
 
