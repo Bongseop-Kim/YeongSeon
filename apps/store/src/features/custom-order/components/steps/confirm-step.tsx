@@ -1,8 +1,7 @@
 import { useFormContext } from "react-hook-form";
 import type { QuoteOrderOptions } from "@/entities/custom-order";
-import { Button } from "@/shared/ui-extended/button";
 import { ContactInfoSection } from "@/features/custom-order/components/contact-info-section";
-import { formatPhoneNumber } from "@/shared/lib/phone-format";
+import { ShippingAddressCard } from "@/shared/composite";
 import { SummaryRow } from "@/features/custom-order/components/summary-row";
 import {
   getFabricLabel,
@@ -105,51 +104,12 @@ export const ConfirmStep = ({
       </section>
 
       {isQuoteMode && (
-        <section className="border-t border-stone-200 pt-8">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
-                배송지 정보
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
-                수령인과 연락처를 확인한 뒤 최종 제출합니다.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onOpenShippingPopup}
-            >
-              배송지 관리
-            </Button>
-          </div>
-          <div className="mt-5 border-y border-stone-200 py-4">
-            {selectedAddress ? (
-              <div className="space-y-1 text-sm text-zinc-700">
-                <p className="font-medium text-zinc-950">
-                  {selectedAddress.recipientName}
-                </p>
-                <p>
-                  ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
-                  {selectedAddress.detailAddress}
-                </p>
-                <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
-              </div>
-            ) : (
-              <div className="space-y-3 rounded-lg border-2 border-dashed border-zinc-200 py-4 text-center text-sm text-zinc-500">
-                <p>배송지를 추가해주세요.</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onOpenShippingPopup}
-                >
-                  배송지 추가
-                </Button>
-              </div>
-            )}
-          </div>
+        <section>
+          <ShippingAddressCard
+            address={selectedAddress ?? null}
+            editable
+            onChangeClick={onOpenShippingPopup}
+          />
         </section>
       )}
 

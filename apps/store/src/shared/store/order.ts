@@ -10,17 +10,13 @@ interface TrackingInfo {
 
 interface OrderState {
   items: CartItem[];
-  trackingInfoMap: Record<string, TrackingInfo>;
+  repairTracking: TrackingInfo | undefined;
   setOrderItems: (items: CartItem[]) => void;
   updateOrderItemCoupon: (
     itemId: string,
     coupon: AppliedCoupon | undefined,
   ) => void;
-  updateOrderItemTracking: (
-    itemId: string,
-    trackingInfo: TrackingInfo | undefined,
-  ) => void;
-  getTrackingInfo: (itemId: string) => TrackingInfo | undefined;
+  setRepairTracking: (trackingInfo: TrackingInfo | undefined) => void;
   clearOrderItems: () => void;
   hasOrderItems: () => boolean;
 }
@@ -29,7 +25,7 @@ export const useOrderStore = create<OrderState>()(
   persist(
     (set, get) => ({
       items: [],
-      trackingInfoMap: {},
+      repairTracking: undefined,
 
       setOrderItems: (items) => {
         set({ items });
@@ -43,24 +39,12 @@ export const useOrderStore = create<OrderState>()(
         });
       },
 
-      updateOrderItemTracking: (itemId, trackingInfo) => {
-        set((state) => {
-          const next = { ...state.trackingInfoMap };
-          if (trackingInfo) {
-            next[itemId] = trackingInfo;
-          } else {
-            delete next[itemId];
-          }
-          return { trackingInfoMap: next };
-        });
-      },
-
-      getTrackingInfo: (itemId) => {
-        return get().trackingInfoMap[itemId];
+      setRepairTracking: (trackingInfo) => {
+        set({ repairTracking: trackingInfo });
       },
 
       clearOrderItems: () => {
-        set({ items: [], trackingInfoMap: {} });
+        set({ items: [], repairTracking: undefined });
       },
 
       hasOrderItems: () => {

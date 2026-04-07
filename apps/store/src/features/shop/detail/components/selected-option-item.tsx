@@ -34,7 +34,11 @@ export function SelectedOptionItem({
 
       <div className="flex flex-col items-end justify-end flex-shrink-0 self-stretch">
         <p className="text-sm font-semibold">
-          {(product.price + item.option.additionalPrice).toLocaleString()}원
+          {(
+            (product.price + item.option.additionalPrice) *
+            item.quantity
+          ).toLocaleString()}
+          원
         </p>
       </div>
 

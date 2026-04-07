@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import {
   ChatPanel,
@@ -11,7 +9,6 @@ import {
   useDesignChat,
   useOnboarding,
   useSessionRestore,
-  useDesignChatStore,
 } from "@/features/design";
 import { cn } from "@/shared/lib/utils";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
@@ -20,25 +17,8 @@ function DesignPage() {
   const { isDesktop } = useBreakpoint();
   const { showOnboarding, completeOnboarding } = useOnboarding();
   const { sendMessage } = useDesignChat();
-  const generatedImageUrl = useDesignChatStore(
-    (state) => state.generatedImageUrl,
-  );
-  const isImageDownloaded = useDesignChatStore(
-    (state) => state.isImageDownloaded,
-  );
   const { isHistoryOpen, openHistory, closeHistory, restoreSession } =
     useSessionRestore();
-
-  const shouldBlock = generatedImageUrl !== null && !isImageDownloaded;
-
-  useEffect(() => {
-    if (!shouldBlock) return;
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [shouldBlock]);
 
   return (
     <MainLayout className="h-full">

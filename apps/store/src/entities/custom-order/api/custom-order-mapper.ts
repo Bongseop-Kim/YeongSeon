@@ -131,9 +131,12 @@ export const parseCreateCustomOrderResponse = (
     throw new Error("주문제작 생성 응답이 올바르지 않습니다: 객체가 아닙니다.");
   }
 
-  if (typeof data.order_id !== "string" || data.order_id.length === 0) {
+  if (
+    typeof data.payment_group_id !== "string" ||
+    data.payment_group_id.length === 0
+  ) {
     throw new Error(
-      "주문제작 생성 응답이 올바르지 않습니다: order_id가 누락되었거나 형식이 잘못되었습니다.",
+      "주문제작 생성 응답이 올바르지 않습니다: payment_group_id가 누락되었거나 형식이 잘못되었습니다.",
     );
   }
 
@@ -153,7 +156,7 @@ export const parseCreateCustomOrderResponse = (
   }
 
   return {
-    orderId: data.order_id,
+    orderId: data.payment_group_id,
     orderNumber: data.order_number,
     totalAmount: data.total_amount,
   };

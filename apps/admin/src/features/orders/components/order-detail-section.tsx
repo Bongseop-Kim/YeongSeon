@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Typography, Spin, Result, message } from "antd";
+import { Typography, Spin, Result, App } from "antd";
 import { ORDER_STATUS_FLOW, ORDER_ROLLBACK_FLOW } from "@yeongseon/shared";
 import { useDefaultCourier } from "@/entities/settings";
 import {
@@ -29,6 +29,7 @@ import type {
 const { Title } = Typography;
 
 export function OrderDetailSection() {
+  const { message } = App.useApp();
   const { id: orderId } = useParams<{ id: string }>();
   const { order, refetch, isLoading, isError } = useAdminOrderDetail(orderId);
   const orderType = order?.orderType ?? "sale";
@@ -86,31 +87,62 @@ export function OrderDetailSection() {
       />
     );
 
+  const getShippingFields = (isRepairOrder: boolean) => ({
+    persistedCourierCompany: isRepairOrder
+      ? (order.trackingInfo?.companyCourierCompany?.trim() ?? "")
+      : (order.trackingInfo?.courierCompany?.trim() ?? ""),
+    persistedTrackingNumber: isRepairOrder
+      ? (order.trackingInfo?.companyTrackingNumber?.trim() ?? "")
+      : (order.trackingInfo?.trackingNumber?.trim() ?? ""),
+    draftCourierCompany: isRepairOrder
+      ? companyCourierCompany.trim()
+      : courierCompany.trim(),
+    draftTrackingNumber: isRepairOrder
+      ? companyTrackingNumber.trim()
+      : trackingNumber.trim(),
+  });
+
+  const isShippingInfoMissing = (isRepairOrder: boolean) => {
+    const {
+      persistedCourierCompany,
+      persistedTrackingNumber,
+      draftCourierCompany,
+      draftTrackingNumber,
+    } = getShippingFields(isRepairOrder);
+    return (
+      (!persistedCourierCompany || !persistedTrackingNumber) &&
+      (!draftCourierCompany || !draftTrackingNumber)
+    );
+  };
+
+  const validateBeforeAdvance = () => {
+    if (nextStatus !== "배송완료") return true;
+    if (isShippingInfoMissing(orderType === "repair")) {
+      message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
+      return false;
+    }
+    return true;
+  };
+
   const handleChangeStatus = async (newStatus: string, memoText: string) => {
     if (newStatus !== "배송완료") {
       return changeStatus(newStatus, memoText);
     }
 
     const isRepairOrder = orderType === "repair";
-    const persistedCourierCompany = isRepairOrder
-      ? (order.trackingInfo?.companyCourierCompany?.trim() ?? "")
-      : (order.trackingInfo?.courierCompany?.trim() ?? "");
-    const persistedTrackingNumber = isRepairOrder
-      ? (order.trackingInfo?.companyTrackingNumber?.trim() ?? "")
-      : (order.trackingInfo?.trackingNumber?.trim() ?? "");
-    const draftCourierCompany = isRepairOrder
-      ? companyCourierCompany.trim()
-      : courierCompany.trim();
-    const draftTrackingNumber = isRepairOrder
-      ? companyTrackingNumber.trim()
-      : trackingNumber.trim();
+    if (isShippingInfoMissing(isRepairOrder)) {
+      message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
+      return false;
+    }
+
+    const {
+      persistedCourierCompany,
+      persistedTrackingNumber,
+      draftCourierCompany,
+      draftTrackingNumber,
+    } = getShippingFields(isRepairOrder);
 
     if (!persistedCourierCompany || !persistedTrackingNumber) {
-      if (!draftCourierCompany || !draftTrackingNumber) {
-        message.error("배송 정보(택배사·송장번호)를 먼저 입력해주세요.");
-        return false;
-      }
-
       const saved = isRepairOrder
         ? await saveTracking(
             order.id,
@@ -152,6 +184,7 @@ export function OrderDetailSection() {
         rollbackStatus={rollbackStatus}
         onStatusChange={handleChangeStatus}
         onRollback={rollback}
+        onBeforeAdvance={validateBeforeAdvance}
         isUpdating={isUpdating}
       />
 

@@ -3,6 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { Button } from "@/shared/ui-extended/button";
 import { Separator } from "@/shared/ui/separator";
+import { Input } from "@/shared/ui-extended/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
@@ -12,12 +20,12 @@ import {
   RepairShippingAddressBanner,
 } from "@/features/order";
 import React from "react";
+import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
 import { useOrderStore } from "@/shared/store/order";
 import { useCouponSelect } from "@/features/coupon";
 import { toast } from "@/shared/lib/toast";
 import { hasStringCode } from "@/shared/lib/type-guard";
-import { formatPhoneNumber } from "@/shared/lib/phone-format";
-import { getDeliveryRequestLabel } from "@/shared/constants/DELIVERY_REQUEST_OPTIONS";
+import { ShippingAddressCard } from "@/shared/composite/shipping-address-card";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
 import { useAuthStore } from "@/shared/store/auth";
 import { createOrder } from "@/entities/order";
@@ -32,6 +40,7 @@ import {
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
+import { Field, FieldTitle, FieldContent } from "@/shared/ui/field";
 import { OrderPriceSummaryAside } from "@/shared/composite/order-price-summary-aside";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 const OrderFormPage = () => {
@@ -40,11 +49,26 @@ const OrderFormPage = () => {
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const isPaymentProcessingRef = useRef(false);
   const navigate = useNavigate();
+  const [repairCourierCompany, setRepairCourierCompany] = useState("");
+  const [repairTrackingNumber, setRepairTrackingNumber] = useState("");
+
   const {
     items: orderItems,
     hasOrderItems,
     updateOrderItemCoupon,
+    setRepairTracking,
   } = useOrderStore();
+
+  useEffect(() => {
+    setRepairTracking(
+      repairCourierCompany || repairTrackingNumber
+        ? {
+            courierCompany: repairCourierCompany,
+            trackingNumber: repairTrackingNumber,
+          }
+        : undefined,
+    );
+  }, [repairCourierCompany, repairTrackingNumber, setRepairTracking]);
   const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
   const { user } = useAuthStore();
 
@@ -258,58 +282,11 @@ const OrderFormPage = () => {
                 }
               />
 
-              <UtilityPageSection
-                title="배송지"
-                description="결제 전에 배송지와 요청 사항을 마지막으로 확인합니다."
-              >
-                <div
-                  className="border-t border-stone-200"
-                  data-testid="order-shipping-card"
-                >
-                  <div className="flex items-center justify-between gap-4 py-4">
-                    <div>
-                      <p className="text-lg font-semibold tracking-tight text-zinc-950">
-                        {selectedAddress?.recipientName || "배송지 정보"}
-                      </p>
-                      <p className="mt-1 text-sm text-zinc-500">
-                        기본 배송지와 수령 요청 사항을 확인합니다.
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={openShippingPopup}
-                      data-testid="order-shipping-manage"
-                    >
-                      배송지 관리
-                    </Button>
-                  </div>
-
-                  <Separator />
-
-                  {selectedAddress ? (
-                    <div className="space-y-2 py-5 text-sm">
-                      <p>
-                        ({selectedAddress.postalCode}) {selectedAddress.address}{" "}
-                        {selectedAddress.detailAddress}
-                      </p>
-                      <p>{formatPhoneNumber(selectedAddress.recipientPhone)}</p>
-                      {selectedAddress.deliveryRequest ? (
-                        <p className="text-zinc-600">
-                          {getDeliveryRequestLabel(
-                            selectedAddress.deliveryRequest,
-                            selectedAddress.deliveryMemo,
-                          )}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-zinc-500">
-                      배송지를 추가해주세요.
-                    </div>
-                  )}
-                </div>
-              </UtilityPageSection>
+              <ShippingAddressCard
+                address={selectedAddress ?? null}
+                editable
+                onChangeClick={openShippingPopup}
+              />
 
               <UtilityPageSection
                 title={`주문 상품 ${orderItems.length}개`}
@@ -323,6 +300,39 @@ const OrderFormPage = () => {
                   {hasReformItems && (
                     <div className="py-5">
                       <RepairShippingAddressBanner />
+                      <Field className="mt-4">
+                        <FieldTitle>이미 발송하셨나요?</FieldTitle>
+                        <FieldContent>
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <Select
+                                value={repairCourierCompany}
+                                onValueChange={setRepairCourierCompany}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="택배사 선택" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {COURIER_COMPANIES.map((c) => (
+                                    <SelectItem key={c.code} value={c.code}>
+                                      {c.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Input
+                              type="text"
+                              placeholder="송장번호"
+                              value={repairTrackingNumber}
+                              className="flex-[2]"
+                              onChange={(e) =>
+                                setRepairTrackingNumber(e.target.value)
+                              }
+                            />
+                          </div>
+                        </FieldContent>
+                      </Field>
                       <Separator className="mt-5" />
                     </div>
                   )}

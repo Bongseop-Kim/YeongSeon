@@ -102,7 +102,10 @@ export default function OrderPage() {
         toast.error(error);
         return;
       }
-      wizard.skipToStep(WIZARD_STEPS.length - 1);
+      const attachmentIdx = WIZARD_STEPS.findIndex(
+        (s) => s.id === "attachment",
+      );
+      if (attachmentIdx !== -1) wizard.skipToStep(attachmentIdx);
       return;
     }
     const error = wizard.goNext();
