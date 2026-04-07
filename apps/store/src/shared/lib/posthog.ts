@@ -1,6 +1,6 @@
 import posthog from "posthog-js";
 
-export type AiModel = "openai" | "gemini";
+type AiModel = "openai" | "gemini";
 
 type PhEventParamsMap = {
   design_session_started: { ai_model: AiModel };
@@ -22,7 +22,7 @@ type PhEventParamsMap = {
   product_viewed: { product_id: string; product_name: string };
 };
 
-export type PhEventName = keyof PhEventParamsMap;
+type PhEventName = keyof PhEventParamsMap;
 
 export const ph = {
   init(key: string, host: string): void {

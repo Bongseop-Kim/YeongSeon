@@ -1,5 +1,5 @@
 import { App } from "antd";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ClaimStatusActions } from "@/features/claims/components/claim-status-actions";
 import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
@@ -62,14 +62,18 @@ describe("ClaimStatusActions", () => {
     ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "대기로 롤백" }));
-    fireEvent.click(screen.getByRole("button", { name: "롤백" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "롤백" }));
+    });
 
     expect(onRollback).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByPlaceholderText("롤백 사유 (필수)"), {
       target: { value: "오처리 복구" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "롤백" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "롤백" }));
+    });
 
     expect(onRollback).toHaveBeenCalledWith("대기", "오처리 복구");
   });
