@@ -21,6 +21,7 @@ import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import type { SampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
 import { PageSeo } from "@/shared/ui/page-seo";
+import { analytics } from "@/shared/lib/analytics";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
@@ -176,6 +177,7 @@ export default function SampleOrderPage() {
       sampleLabel: selectedSampleLabel,
       fabricLabel: selectedFabricLabel,
     };
+    analytics.track("form_submit", { form_type: "sample_order" });
     navigate(ROUTES.SAMPLE_PAYMENT, { state });
   };
 

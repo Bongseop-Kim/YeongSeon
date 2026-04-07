@@ -39,6 +39,7 @@ import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
 import { ShopActionBar } from "@/shared/composite/shop-action-bar";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { PageSeo } from "@/shared/ui/page-seo";
+import { analytics } from "@/shared/lib/analytics";
 
 const DEFAULT_TIE_ITEM = {
   id: "tie-1",
@@ -195,6 +196,7 @@ const ReformPage = () => {
       const uploadedTies = await uploadTiesIfNeeded(selectedTies);
       const orderItems = toReformCartItems(uploadedTies, baseCost);
       setOrderItems(orderItems);
+      analytics.track("form_submit", { form_type: "reform" });
       navigate(ROUTES.ORDER_FORM);
     });
 
@@ -203,6 +205,7 @@ const ReformPage = () => {
       const uploadedTies = await uploadTiesIfNeeded(selectedTies);
       const orderItems = toReformCartItems(uploadedTies, baseCost);
       setOrderItems(orderItems);
+      analytics.track("form_submit", { form_type: "reform" });
       navigate(ROUTES.ORDER_FORM);
     });
 
