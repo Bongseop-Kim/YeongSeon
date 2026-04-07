@@ -13,6 +13,7 @@ import type { Attachment, Message } from "@/features/design/types/chat";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { uploadGeneratedImage } from "@/features/design/utils/imagekit-upload";
 import { useSaveDesignSessionMutation } from "@/features/design/hooks/design-session-query";
+import { ph } from "@/shared/lib/posthog";
 
 interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
@@ -158,8 +159,13 @@ export function useDesignChat(): UseDesignChatResult {
     }
 
     const sessionId = currentSessionId ?? crypto.randomUUID();
+    const isFirstMessage = !currentSessionId;
     if (!currentSessionId) {
       setCurrentSessionId(sessionId);
+    }
+
+    if (isFirstMessage) {
+      ph.capture("design_session_started", { ai_model: aiModel });
     }
 
     const userMessage: Message = {

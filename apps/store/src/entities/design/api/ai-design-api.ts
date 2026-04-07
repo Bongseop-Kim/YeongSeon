@@ -8,6 +8,7 @@ import {
   toDesignTokenHistoryItem,
   type DesignTokenRow,
 } from "@/entities/design/api/ai-design-mapper";
+import { ph } from "@/shared/lib/posthog";
 
 interface DesignTokenBalance {
   total: number;
@@ -110,6 +111,8 @@ export async function aiDesignApi(
   const functionName =
     request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
 
+  const startTime = Date.now();
+
   const { data, error } = await supabase.functions.invoke(functionName, {
     body: buildInvokePayload(request, {
       ciImageBase64,
@@ -126,16 +129,34 @@ export async function aiDesignApi(
         cost?: number;
       };
       if (body.error === "insufficient_tokens") {
+        ph.capture("design_generation_failed", {
+          ai_model: request.aiModel,
+          error_type: "insufficient_tokens",
+        });
         throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
       }
     }
 
+    ph.capture("design_generation_failed", {
+      ai_model: request.aiModel,
+      error_type: "api_error",
+    });
     throw new Error(`디자인 생성 실패: ${error.message}`);
   }
 
   if (!data) {
+    ph.capture("design_generation_failed", {
+      ai_model: request.aiModel,
+      error_type: "api_error",
+    });
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }
 
-  return normalizeInvokeResponse(data, request);
+  const result = normalizeInvokeResponse(data, request);
+  ph.capture("design_generated", {
+    ai_model: request.aiModel,
+    latency_ms: Date.now() - startTime,
+    has_image: result.imageUrl !== null,
+  });
+  return result;
 }

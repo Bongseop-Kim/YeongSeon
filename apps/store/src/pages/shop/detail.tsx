@@ -40,6 +40,7 @@ import { useModalStore } from "@/shared/store/modal";
 import { toast } from "@/shared/lib/toast";
 import { useProduct, useProducts, useToggleLike } from "@/entities/shop";
 import { analytics } from "@/shared/lib/analytics";
+import { ph } from "@/shared/lib/posthog";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { ChevronRightIcon } from "lucide-react";
 import { UtilityPageSection } from "@/shared/composite/utility-page";
@@ -75,6 +76,10 @@ export default function ShopDetailPage() {
         item_id: String(product.id),
         item_name: product.name,
         price: product.price ?? undefined,
+      });
+      ph.capture("product_viewed", {
+        product_id: String(product.id),
+        product_name: product.name,
       });
     }
   }, [product]);

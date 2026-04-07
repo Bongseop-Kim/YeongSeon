@@ -11,6 +11,7 @@ import { useRequiredUser } from "@/shared/hooks/use-required-user";
 import { Button } from "@/shared/ui-extended/button";
 import { useModalStore } from "@/shared/store/modal";
 import { analytics } from "@/shared/lib/analytics";
+import { ph } from "@/shared/lib/posthog";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
@@ -54,6 +55,10 @@ const PaymentSuccessPage = () => {
           transaction_id: orderId,
           value: parsedAmount,
           currency: "KRW",
+        });
+        ph.capture("order_completed", {
+          order_id: orderId,
+          amount: parsedAmount,
         });
 
         // 2. 장바구니에서 주문한 아이템 제거 (sample order 등 cart 미사용 주문은 skip)

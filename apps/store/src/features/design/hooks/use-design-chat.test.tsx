@@ -11,6 +11,7 @@ const {
   setGeneratedImage,
   clearAttachments,
   setCurrentSessionId,
+  phCapture,
   MockInsufficientTokensError,
 } = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
@@ -21,6 +22,7 @@ const {
   setGeneratedImage: vi.fn(),
   clearAttachments: vi.fn(),
   setCurrentSessionId: vi.fn(),
+  phCapture: vi.fn(),
   MockInsufficientTokensError: class MockInsufficientTokensError extends Error {
     constructor(
       public readonly balance: number,
@@ -108,6 +110,12 @@ vi.mock("@/features/design/utils/imagekit-upload", () => ({
   uploadGeneratedImage: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock("@/shared/lib/posthog", () => ({
+  ph: {
+    capture: phCapture,
+  },
+}));
+
 vi.mock("@/features/design/store/design-chat-store", () => ({
   useDesignChatStore: Object.assign(
     (selector: (state: typeof storeState) => unknown) => selector(storeState),
@@ -131,6 +139,7 @@ describe("useDesignChat", () => {
     setGeneratedImage.mockReset();
     clearAttachments.mockReset();
     setCurrentSessionId.mockReset();
+    phCapture.mockReset();
   });
 
   it("빈 메시지는 무시하고 일반 메시지는 mutation을 호출한다", () => {
@@ -217,5 +226,26 @@ describe("useDesignChat", () => {
     const callbacks = mutate.mock.calls[0][1];
     callbacks.onError(new Error("boom"));
     expect(setGenerationStatus).toHaveBeenCalledWith("completed");
+  });
+
+  describe("design_session_started 이벤트", () => {
+    it("첫 번째 sendMessage 호출 시 design_session_started를 캡처한다", () => {
+      const { result } = renderHook(() => useDesignChat());
+      result.current.sendMessage("네이비 타이 만들어줘", []);
+      expect(phCapture).toHaveBeenCalledWith("design_session_started", {
+        ai_model: "openai",
+      });
+    });
+
+    it("currentSessionId가 이미 있으면 design_session_started를 캡처하지 않는다", () => {
+      Object.assign(storeState, { currentSessionId: "existing-session" });
+      const { result } = renderHook(() => useDesignChat());
+      result.current.sendMessage("추가 요청", []);
+      expect(phCapture).not.toHaveBeenCalledWith(
+        "design_session_started",
+        expect.anything(),
+      );
+      Object.assign(storeState, { currentSessionId: null });
+    });
   });
 });

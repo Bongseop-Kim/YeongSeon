@@ -9,6 +9,7 @@ import { CartSyncProvider } from "./cart-sync-provider";
 import { ImageKitProvider } from "@imagekit/react";
 import { IMAGEKIT_URL_ENDPOINT } from "@/shared/lib/imagekit";
 import { HelmetProvider } from "react-helmet-async";
+import { PostHogProvider } from "./posthog-provider";
 // import { ThemeProvider } from "./theme-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -19,28 +20,30 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <HelmetProvider>
-      <QueryProvider>
-        <AuthSyncProvider>
-          <CartSyncProvider>
-            <BreakpointProvider>
-              <ImageKitProvider urlEndpoint={IMAGEKIT_URL_ENDPOINT}>
-                {/* <ThemeProvider> */}
+      <PostHogProvider>
+        <QueryProvider>
+          <AuthSyncProvider>
+            <CartSyncProvider>
+              <BreakpointProvider>
+                <ImageKitProvider urlEndpoint={IMAGEKIT_URL_ENDPOINT}>
+                  {/* <ThemeProvider> */}
 
-                <ScrollToTop />
-                <RouteAnalytics />
-                {children}
+                  <ScrollToTop />
+                  <RouteAnalytics />
+                  {children}
 
-                {/* 전역 컴포넌트들 */}
-                <GlobalModal />
-                <Toaster />
-                {/* <GlobalLoadingSpinner /> */}
+                  {/* 전역 컴포넌트들 */}
+                  <GlobalModal />
+                  <Toaster />
+                  {/* <GlobalLoadingSpinner /> */}
 
-                {/* </ThemeProvider> */}
-              </ImageKitProvider>
-            </BreakpointProvider>
-          </CartSyncProvider>
-        </AuthSyncProvider>
-      </QueryProvider>
+                  {/* </ThemeProvider> */}
+                </ImageKitProvider>
+              </BreakpointProvider>
+            </CartSyncProvider>
+          </AuthSyncProvider>
+        </QueryProvider>
+      </PostHogProvider>
     </HelmetProvider>
   );
 }
