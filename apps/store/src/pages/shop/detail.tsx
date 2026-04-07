@@ -1,10 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { Button } from "@/shared/ui-extended/button";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { Image } from "@imagekit/react";
 import { useState } from "react";
+import { PageSeo } from "@/shared/ui/page-seo";
+import { IMAGEKIT_URL_ENDPOINT } from "@/shared/lib/imagekit";
 import {
   useSelectedOptions,
   MobilePurchaseSheet,
@@ -210,8 +213,47 @@ export default function ShopDetailPage() {
     navigate(`${ROUTES.MY_PAGE_INQUIRY}?${params.toString()}`);
   };
 
+  const productImageUrl = `${IMAGEKIT_URL_ENDPOINT}${product.image}`;
+  const productUrl = `https://essesion.shop/shop/${product.id}`;
+
   return (
     <MainLayout>
+      <PageSeo
+        title={product.name}
+        description={product.info}
+        ogImage={productImageUrl}
+        ogUrl={productUrl}
+      />
+      <Helmet>
+        <meta property="og:type" content="product" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            name: product.name,
+            image: productImageUrl,
+            description: product.info,
+            sku: product.code,
+            brand: {
+              "@type": "Brand",
+              name: "ESSE SION",
+            },
+            offers: {
+              "@type": "Offer",
+              url: productUrl,
+              priceCurrency: "KRW",
+              price: product.price,
+              availability: isProductSoldOut
+                ? "https://schema.org/OutOfStock"
+                : "https://schema.org/InStock",
+              seller: {
+                "@type": "Organization",
+                name: "ESSE SION",
+              },
+            },
+          })}
+        </script>
+      </Helmet>
       <MainContent className="overflow-visible">
         <PageLayout
           detail={

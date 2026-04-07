@@ -1,6 +1,7 @@
 "use client";
 
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
+import { PageSeo } from "@/shared/ui/page-seo";
 import {
   ChatPanel,
   MobileHistorySheet,
@@ -22,6 +23,11 @@ function DesignPage() {
 
   return (
     <MainLayout className="h-full">
+      <PageSeo
+        title="AI 넥타이 디자인"
+        description="AI와 대화하며 나만의 넥타이를 디자인해보세요. 원하는 색상, 패턴, 소재를 자유롭게 요청하면 ESSE SION이 맞춤 제작합니다."
+        ogUrl="https://essesion.shop/design"
+      />
       <MainContent className="min-h-0 overflow-hidden">
         <div
           className={cn(
