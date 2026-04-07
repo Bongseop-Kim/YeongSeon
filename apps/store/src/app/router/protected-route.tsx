@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useSession } from "@/entities/auth";
 import { useAuthStore } from "@/shared/store/auth";
 import { ROUTES } from "@/shared/constants/ROUTES";
@@ -46,5 +47,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      {children}
+    </>
+  );
 }
