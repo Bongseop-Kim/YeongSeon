@@ -10,6 +10,7 @@ import { Clock3, Loader2, ReceiptText, Truck } from "lucide-react";
 import { useRequiredUser } from "@/shared/hooks/use-required-user";
 import { Button } from "@/shared/ui-extended/button";
 import { useModalStore } from "@/shared/store/modal";
+import { analytics } from "@/shared/lib/analytics";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
@@ -47,6 +48,12 @@ const PaymentSuccessPage = () => {
           paymentKey,
           orderId,
           amount: parsedAmount,
+        });
+
+        analytics.track("purchase", {
+          transaction_id: orderId,
+          value: parsedAmount,
+          currency: "KRW",
         });
 
         // 2. 장바구니에서 주문한 아이템 제거 (sample order 등 cart 미사용 주문은 skip)
