@@ -44,7 +44,6 @@ export const useSignIn = () => {
     onSuccess: () => {
       // 로그인 성공 후 세션 쿼리 무효화하여 최신 세션 가져오기
       queryClient.invalidateQueries({ queryKey: authKeys.session() });
-      analytics.track("login", {});
     },
     onError: (error) => {
       console.error("Sign in error:", error);

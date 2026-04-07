@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSession } from "@/entities/auth";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { consumeAuthRedirect } from "@/shared/lib/auth-redirect";
+import { analytics } from "@/shared/lib/analytics";
 
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const AuthCallbackPage = () => {
 
     // 세션이 있으면 원래 가려던 페이지 또는 홈으로 리다이렉트
     if (session) {
+      analytics.track("login", {});
       const redirect = consumeAuthRedirect();
       if (redirect) {
         navigate(redirect.redirectPath, {
