@@ -96,6 +96,17 @@ export async function setGenerationLogImageUrl(
   }
 }
 
+function safeCapture(
+  eventName: Parameters<typeof ph.capture>[0],
+  payload: Parameters<typeof ph.capture>[1],
+) {
+  try {
+    ph.capture(eventName, payload as never);
+  } catch (e) {
+    console.warn("analytics error:", e);
+  }
+}
+
 export async function aiDesignApi(
   request: AiDesignRequest,
 ): Promise<AiDesignResponse> {
@@ -129,50 +140,34 @@ export async function aiDesignApi(
         cost?: number;
       };
       if (body.error === "insufficient_tokens") {
-        try {
-          ph.capture("design_generation_failed", {
-            ai_model: request.aiModel,
-            error_type: "insufficient_tokens",
-          });
-        } catch (e) {
-          console.warn("analytics error:", e);
-        }
+        safeCapture("design_generation_failed", {
+          ai_model: request.aiModel,
+          error_type: "insufficient_tokens",
+        });
         throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
       }
     }
 
-    try {
-      ph.capture("design_generation_failed", {
-        ai_model: request.aiModel,
-        error_type: "api_error",
-      });
-    } catch (e) {
-      console.warn("analytics error:", e);
-    }
+    safeCapture("design_generation_failed", {
+      ai_model: request.aiModel,
+      error_type: "api_error",
+    });
     throw new Error(`디자인 생성 실패: ${error.message}`);
   }
 
   if (!data) {
-    try {
-      ph.capture("design_generation_failed", {
-        ai_model: request.aiModel,
-        error_type: "api_error",
-      });
-    } catch (e) {
-      console.warn("analytics error:", e);
-    }
+    safeCapture("design_generation_failed", {
+      ai_model: request.aiModel,
+      error_type: "api_error",
+    });
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }
 
   const result = normalizeInvokeResponse(data, request);
-  try {
-    ph.capture("design_generated", {
-      ai_model: request.aiModel,
-      latency_ms: Date.now() - startTime,
-      has_image: result.imageUrl !== null,
-    });
-  } catch (e) {
-    console.warn("analytics error:", e);
-  }
+  safeCapture("design_generated", {
+    ai_model: request.aiModel,
+    latency_ms: Date.now() - startTime,
+    has_image: result.imageUrl !== null,
+  });
   return result;
 }

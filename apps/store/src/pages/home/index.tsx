@@ -49,7 +49,7 @@ export default function HomePage() {
       <PageSeo
         title="ESSE SION | 맞춤 넥타이 전문 브랜드"
         description="B2B 단체 제작부터 개인 맞춤 넥타이까지. 고품질 소재와 정교한 제작으로 당신만의 타이를 만들어 드립니다."
-        ogUrl="https://essesion.shop/"
+        ogUrl="https://essesion.shop"
         fullTitle
       />
       <Helmet>
