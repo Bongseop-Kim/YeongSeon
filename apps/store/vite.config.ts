@@ -2,31 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
-import Prerender from "vite-plugin-prerender";
 
 export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
   },
-  plugins: [
-    react(),
-    tailwindcss(),
-    Prerender({
-      staticDir: path.resolve(__dirname, "dist"),
-      routes: [
-        "/",
-        "/shop",
-        "/custom-order",
-        "/sample-order",
-        "/reform",
-        "/faq",
-        "/privacy-policy",
-        "/terms-of-service",
-        "/refund-policy",
-      ],
-    }),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

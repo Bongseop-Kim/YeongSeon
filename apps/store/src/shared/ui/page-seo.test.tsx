@@ -22,4 +22,46 @@ describe("PageSeo", () => {
     );
     expect(document.title).toBe("ESSE SION | 맞춤 넥타이 전문 브랜드");
   });
+
+  it("ogUrl이 있으면 canonical link를 렌더링한다", () => {
+    renderWithHelmet(
+      <PageSeo
+        title="쇼핑"
+        description="테스트"
+        ogUrl="https://essesion.shop/shop"
+      />,
+    );
+    const canonical = document.querySelector('link[rel="canonical"]');
+    expect(canonical).not.toBeNull();
+    expect(canonical?.getAttribute("href")).toBe("https://essesion.shop/shop");
+  });
+
+  it("ogUrl이 없으면 canonical link를 렌더링하지 않는다", () => {
+    renderWithHelmet(<PageSeo title="쇼핑" description="테스트" />);
+    const canonical = document.querySelector('link[rel="canonical"]');
+    expect(canonical).toBeNull();
+  });
+
+  it("twitter:card 메타 태그를 렌더링한다", () => {
+    renderWithHelmet(<PageSeo title="쇼핑" description="테스트" />);
+    const twitterCard = document.querySelector('meta[name="twitter:card"]');
+    expect(twitterCard).not.toBeNull();
+    expect(twitterCard?.getAttribute("content")).toBe("summary_large_image");
+  });
+
+  it("twitter:title이 og:title과 동일한 값을 사용한다", () => {
+    renderWithHelmet(<PageSeo title="넥타이 쇼핑" description="테스트" />);
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+    expect(twitterTitle?.getAttribute("content")).toBe(
+      "넥타이 쇼핑 | ESSE SION",
+    );
+  });
+
+  it("twitter:description이 description과 동일한 값을 사용한다", () => {
+    renderWithHelmet(<PageSeo title="쇼핑" description="ESSE SION 쇼핑" />);
+    const twitterDesc = document.querySelector(
+      'meta[name="twitter:description"]',
+    );
+    expect(twitterDesc?.getAttribute("content")).toBe("ESSE SION 쇼핑");
+  });
 });
