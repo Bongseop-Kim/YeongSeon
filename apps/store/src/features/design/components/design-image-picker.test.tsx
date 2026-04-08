@@ -129,4 +129,44 @@ describe("DesignImagePicker", () => {
     ).not.toBeInTheDocument();
     expect(onAdd).not.toHaveBeenCalled();
   });
+
+  it("썸네일 이미지는 lazy loading과 async decoding을 사용한다", async () => {
+    useDesignImagesQuery.mockReturnValue({
+      data: { images: mockImages, total: 2 },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    render(<DesignImagePicker onAdd={vi.fn()} />);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /내 AI 디자인에서 선택/ }),
+    );
+
+    const image = screen.getByAltText("파란 넥타이");
+    expect(image).toHaveAttribute("loading", "lazy");
+    expect(image).toHaveAttribute("decoding", "async");
+  });
+
+  it("페이지 버튼은 현재 페이지 주변 범위만 렌더링한다", async () => {
+    useDesignImagesQuery.mockReturnValue({
+      data: { images: mockImages, total: 120 },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    render(<DesignImagePicker onAdd={vi.fn()} />);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /내 AI 디자인에서 선택/ }),
+    );
+
+    expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "3" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "6" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "10" })).toBeInTheDocument();
+  });
 });

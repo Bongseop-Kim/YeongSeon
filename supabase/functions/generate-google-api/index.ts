@@ -548,8 +548,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    let imagekitUrl: string | null = null;
-    let imagekitFileId: string | null = null;
+    let uploadedImageUrl: string | null = null;
+    let uploadedFileId: string | null = null;
+    let responseImageUrl: string | null = imageUrl;
     if (imageUrl !== null) {
       const uploaded = await uploadImageToImageKit(
         imageUrl,
@@ -562,11 +563,10 @@ Deno.serve(async (req) => {
           uploadResult: uploaded,
           imageUrlPreview: imageUrl.slice(0, 64),
         });
-        imagekitUrl = imageUrl;
-        imagekitFileId = null;
       } else {
-        imagekitUrl = uploaded.url;
-        imagekitFileId = uploaded.fileId;
+        uploadedImageUrl = uploaded.url;
+        uploadedFileId = uploaded.fileId;
+        responseImageUrl = uploaded.url;
       }
     }
 
@@ -576,14 +576,14 @@ Deno.serve(async (req) => {
             sessionId: payload.sessionId,
             aiModel: "gemini",
             firstMessage: payload.firstMessage ?? "",
-            lastImageUrl: imagekitUrl,
-            lastImageFileId: imagekitFileId,
+            lastImageUrl: uploadedImageUrl,
+            lastImageFileId: uploadedFileId,
             messages: buildSessionMessages(payload.allMessages, {
               id: crypto.randomUUID(),
               role: "ai",
               content: textResult.aiMessage,
-              image_url: imagekitUrl,
-              image_file_id: imagekitFileId,
+              image_url: uploadedImageUrl,
+              image_file_id: uploadedFileId,
               sequence_number: payload.allMessages.length,
             } satisfies SessionMessage),
           })
@@ -592,7 +592,7 @@ Deno.serve(async (req) => {
     const settledResults = await Promise.allSettled([
       emitGenerationLog({
         image_generated: imageUrl !== null,
-        generated_image_url: imagekitUrl,
+        generated_image_url: uploadedImageUrl,
       }),
       sessionSavePromise,
     ]);
@@ -616,7 +616,7 @@ Deno.serve(async (req) => {
     return jsonResponse(200, {
       aiMessage: textResult.aiMessage,
       contextChips: textResult.contextChips,
-      imageUrl: imagekitUrl,
+      imageUrl: responseImageUrl,
       workId,
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });

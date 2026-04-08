@@ -27,6 +27,12 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
   const images = data?.images ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / pageSize);
+  const pageWindowStart = Math.max(1, page - 2);
+  const pageWindowEnd = Math.min(totalPages, page + 2);
+  const visiblePages = Array.from(
+    { length: pageWindowEnd - pageWindowStart + 1 },
+    (_, index) => pageWindowStart + index,
+  );
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -145,6 +151,8 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
                     <img
                       src={img.imageUrl}
                       alt={img.sessionFirstMessage}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover"
                     />
                     {isSelected && (
@@ -171,7 +179,28 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
               >
                 이전
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              {pageWindowStart > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(1)}
+                    className={cn(
+                      "rounded px-2 py-1 text-xs",
+                      page === 1
+                        ? "bg-foreground text-background"
+                        : "text-foreground-muted hover:bg-muted",
+                    )}
+                  >
+                    1
+                  </button>
+                  {pageWindowStart > 2 ? (
+                    <span className="px-1 text-xs text-foreground-muted">
+                      ...
+                    </span>
+                  ) : null}
+                </>
+              ) : null}
+              {visiblePages.map((p) => (
                 <button
                   key={p}
                   type="button"
@@ -186,6 +215,27 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
                   {p}
                 </button>
               ))}
+              {pageWindowEnd < totalPages ? (
+                <>
+                  {pageWindowEnd < totalPages - 1 ? (
+                    <span className="px-1 text-xs text-foreground-muted">
+                      ...
+                    </span>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(totalPages)}
+                    className={cn(
+                      "rounded px-2 py-1 text-xs",
+                      page === totalPages
+                        ? "bg-foreground text-background"
+                        : "text-foreground-muted hover:bg-muted",
+                    )}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              ) : null}
               <button
                 type="button"
                 onClick={() => handlePageChange(Math.min(totalPages, page + 1))}

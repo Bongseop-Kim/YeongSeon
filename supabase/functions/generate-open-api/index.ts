@@ -692,6 +692,7 @@ Deno.serve(async (req) => {
 
     let imagekitUrl: string | null = null;
     let imagekitFileId: string | null = null;
+    let responseImageUrl: string | null = imageUrl;
     if (imageUrl !== null) {
       const uploaded = await uploadImageToImageKit(
         imageUrl,
@@ -704,11 +705,10 @@ Deno.serve(async (req) => {
           uploadResult: uploaded,
           imageUrlPreview: imageUrl.slice(0, 64),
         });
-        imagekitUrl = imageUrl;
-        imagekitFileId = null;
       } else {
         imagekitUrl = uploaded.url;
         imagekitFileId = uploaded.fileId;
+        responseImageUrl = uploaded.url;
       }
     }
 
@@ -762,7 +762,7 @@ Deno.serve(async (req) => {
     return jsonResponse(200, {
       aiMessage: textResult.aiMessage,
       contextChips: textResult.contextChips,
-      imageUrl: imagekitUrl,
+      imageUrl: responseImageUrl,
       workId,
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });

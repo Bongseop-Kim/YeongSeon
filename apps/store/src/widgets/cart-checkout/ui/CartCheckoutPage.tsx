@@ -223,6 +223,7 @@ export function CartCheckoutPage() {
 
     try {
       if (!reformPricing) {
+        setReformDialogItemId(null);
         toast.error("수선 비용 정보를 불러오지 못했습니다.");
         return;
       }

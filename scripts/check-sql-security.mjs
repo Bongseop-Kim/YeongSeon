@@ -155,7 +155,7 @@ for (const file of sqlFiles) {
     //          "-- SECURITY DEFINER 사용 근거:", "-- ... SECURITY DEFINER bypasses RLS"
     // 함수 본문 전체가 아닌 CREATE FUNCTION 선언부 근처만 검사한다.
     const prevTail = content.slice(Math.max(0, index - 600), index);
-    const windowAfter = part.slice(0, 600);
+    const windowAfter = content.slice(index, index + 600);
     const context = prevTail + windowAfter;
     if (/--[^\n]*\bSECURITY\s+DEFINER\b/i.test(context)) continue;
 
