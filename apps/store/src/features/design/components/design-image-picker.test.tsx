@@ -76,11 +76,7 @@ describe("DesignImagePicker", () => {
       screen.getByRole("button", { name: /내 AI 디자인에서 선택/ }),
     );
 
-    // 첫 번째 이미지 버튼 클릭 (aria-label 없어서 index로)
-    const imageButtons = screen
-      .getAllByRole("button")
-      .filter((btn) => btn.querySelector("img"));
-    await userEvent.click(imageButtons[0]);
+    await userEvent.click(screen.getByRole("button", { name: "파란 넥타이" }));
 
     await userEvent.click(screen.getByRole("button", { name: /1장 추가/ }));
 
@@ -124,10 +120,7 @@ describe("DesignImagePicker", () => {
       screen.getByRole("button", { name: /내 AI 디자인에서 선택/ }),
     );
 
-    const imageButtons = screen
-      .getAllByRole("button")
-      .filter((btn) => btn.querySelector("img"));
-    await userEvent.click(imageButtons[0]);
+    await userEvent.click(screen.getByRole("button", { name: "파란 넥타이" }));
 
     await userEvent.click(screen.getByRole("button", { name: /취소/ }));
 

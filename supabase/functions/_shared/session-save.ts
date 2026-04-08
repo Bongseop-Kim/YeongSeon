@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RequestSessionMessage } from "./design-request.ts";
+import type { RequestSessionMessage } from "@/functions/_shared/design-request.ts";
 
 export interface SessionMessage {
   id: string;

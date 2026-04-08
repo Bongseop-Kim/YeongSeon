@@ -698,8 +698,18 @@ Deno.serve(async (req) => {
         `design-${workId}.png`,
         "/design-sessions",
       );
-      imagekitUrl = uploaded?.url ?? null;
-      imagekitFileId = uploaded?.fileId ?? null;
+      if (!uploaded?.url || !uploaded.fileId) {
+        console.error("ImageKit upload failed for generated image", {
+          workId,
+          uploadResult: uploaded,
+          imageUrlPreview: imageUrl.slice(0, 64),
+        });
+        imagekitUrl = imageUrl;
+        imagekitFileId = null;
+      } else {
+        imagekitUrl = uploaded.url;
+        imagekitFileId = uploaded.fileId;
+      }
     }
 
     const sessionSavePromise =
@@ -721,7 +731,7 @@ Deno.serve(async (req) => {
           })
         : Promise.resolve();
 
-    await Promise.allSettled([
+    const settledResults = await Promise.allSettled([
       emitGenerationLog({
         ai_message: textResult.aiMessage,
         generate_image: textResult.generateImage,
@@ -732,6 +742,22 @@ Deno.serve(async (req) => {
       }),
       sessionSavePromise,
     ]);
+
+    const [logResult, sessionResult] = settledResults;
+    if (logResult.status === "rejected") {
+      console.error("Post-generation task failed", {
+        workId,
+        task: "emitGenerationLog",
+        reason: logResult.reason,
+      });
+    }
+    if (sessionResult.status === "rejected") {
+      console.error("Post-generation task failed", {
+        workId,
+        task: "sessionSavePromise",
+        reason: sessionResult.reason,
+      });
+    }
 
     return jsonResponse(200, {
       aiMessage: textResult.aiMessage,

@@ -4,6 +4,7 @@ import {
   isMeasurementType,
   type TieItem,
 } from "@yeongseon/shared/types/view/reform";
+import { calcTieCost, useReformPricing } from "@/entities/reform";
 import {
   Select,
   SelectContent,
@@ -11,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Field, FieldContent, FieldLabel, FieldTitle } from "@/shared/ui/field";
 import { Input } from "@/shared/ui-extended/input";
 import { Label } from "@/shared/ui/label";
 
@@ -44,34 +47,51 @@ export const ReformOptionChangeModal = forwardRef<
   const [targetWidth, setTargetWidth] = useState<number | undefined>(
     item.reformData.tie.targetWidth,
   );
+  const { data: reformPricing } = useReformPricing();
+
+  const currentTie: TieItem = {
+    ...item.reformData.tie,
+    hasLengthReform,
+    hasWidthReform,
+    measurementType,
+    tieLength:
+      hasLengthReform && measurementType === "length" ? tieLength : undefined,
+    wearerHeight:
+      hasLengthReform && measurementType === "height"
+        ? wearerHeight
+        : undefined,
+    targetWidth: hasWidthReform ? targetWidth : undefined,
+  };
+
+  const dynamicCost =
+    reformPricing &&
+    Number.isFinite(reformPricing.baseCost) &&
+    Number.isFinite(reformPricing.widthReformCost)
+      ? calcTieCost(currentTie, {
+          baseCost: reformPricing.baseCost,
+          widthReformCost: reformPricing.widthReformCost,
+        })
+      : null;
 
   useImperativeHandle(ref, () => ({
-    getValues: () => ({
-      ...item.reformData.tie,
-      hasLengthReform,
-      hasWidthReform,
-      measurementType,
-      tieLength:
-        hasLengthReform && measurementType === "length" ? tieLength : undefined,
-      wearerHeight:
-        hasLengthReform && measurementType === "height"
-          ? wearerHeight
-          : undefined,
-      targetWidth: hasWidthReform ? targetWidth : undefined,
-    }),
+    getValues: () => currentTie,
   }));
 
   return (
     <div className="space-y-4">
       <div className="space-y-3">
-        <Label className="flex items-center gap-2">
-          <input
-            type="checkbox"
+        <Field orientation="horizontal">
+          <Checkbox
+            id="has-length-reform"
             checked={hasLengthReform}
-            onChange={(e) => setHasLengthReform(e.target.checked)}
+            onCheckedChange={(checked) => setHasLengthReform(checked === true)}
           />
-          자동수선
-        </Label>
+          <FieldContent>
+            <FieldLabel htmlFor="has-length-reform">
+              <FieldTitle>자동수선</FieldTitle>
+            </FieldLabel>
+          </FieldContent>
+        </Field>
 
         {hasLengthReform && (
           <>
@@ -135,14 +155,18 @@ export const ReformOptionChangeModal = forwardRef<
       </div>
 
       <div className="space-y-3">
-        <Label className="flex items-center gap-2">
-          <input
-            type="checkbox"
+        <Field orientation="horizontal">
+          <Checkbox
+            id="has-width-reform"
             checked={hasWidthReform}
-            onChange={(e) => setHasWidthReform(e.target.checked)}
+            onCheckedChange={(checked) => setHasWidthReform(checked === true)}
           />
-          폭수선
-        </Label>
+          <FieldContent>
+            <FieldLabel htmlFor="has-width-reform">
+              <FieldTitle>폭수선</FieldTitle>
+            </FieldLabel>
+          </FieldContent>
+        </Field>
 
         {hasWidthReform && (
           <div className="space-y-2">
@@ -174,7 +198,9 @@ export const ReformOptionChangeModal = forwardRef<
         <div className="flex justify-between items-center">
           <span className="text-sm text-zinc-600">수선 비용</span>
           <span className="font-medium">
-            {item.reformData.cost.toLocaleString()}원
+            {dynamicCost !== null
+              ? `${dynamicCost.toLocaleString()}원`
+              : "변동될 수 있음"}
           </span>
         </div>
       </div>

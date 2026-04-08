@@ -222,11 +222,11 @@ export function CartCheckoutPage() {
     }
 
     try {
-      setIsReformSubmitting(true);
       if (!reformPricing) {
         toast.error("수선 비용 정보를 불러오지 못했습니다.");
         return;
       }
+      setIsReformSubmitting(true);
       await updateReformOption(item.id, updatedTie);
       toast.success("수선 옵션이 변경되었습니다.");
       setReformDialogItemId(null);

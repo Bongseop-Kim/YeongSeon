@@ -33,15 +33,40 @@ const toConversationHistory = (
       content: message.content,
     }));
 
+const toSerializedAttachments = (attachments: Attachment[] | undefined) =>
+  attachments?.map(({ type, label, value }) => ({
+    type,
+    label,
+    value,
+  }));
+
+const getSerializedImageFields = (message: Message) => {
+  if (message.imageUrl || message.imageFileId) {
+    return {
+      imageUrl: message.imageUrl ?? null,
+      imageFileId: message.imageFileId ?? null,
+    };
+  }
+
+  const imageAttachment = message.attachments?.find(
+    (attachment) => attachment.type === "image",
+  );
+
+  return {
+    imageUrl: imageAttachment?.value ?? null,
+    imageFileId: null,
+  };
+};
+
 const toSessionPayload = (messages: Message[]) => {
   const visible = messages.filter((m) => !m.uiOnly);
   const firstUserMsg = visible.find((m) => m.role === "user");
   const allMessages = visible.map((m, idx) => ({
+    ...getSerializedImageFields(m),
     id: m.id,
     role: m.role,
     content: m.content,
-    imageUrl: m.imageUrl ?? null,
-    imageFileId: null,
+    attachments: toSerializedAttachments(m.attachments),
     sequenceNumber: idx,
   }));
   return { firstUserMsg, allMessages };

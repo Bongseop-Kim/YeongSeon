@@ -1,4 +1,5 @@
 const IMAGEKIT_UPLOAD_URL = "https://upload.imagekit.io/api/v1/files/upload";
+const IMAGEKIT_UPLOAD_TIMEOUT_MS = 5000;
 
 interface ImageKitUploadResult {
   url: string;
@@ -23,11 +24,22 @@ async function attemptUpload(
     formData.append("folder", folder);
 
     const credentials = btoa(`${privateKey}:`);
-    const response = await fetch(IMAGEKIT_UPLOAD_URL, {
-      method: "POST",
-      headers: { Authorization: `Basic ${credentials}` },
-      body: formData,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      IMAGEKIT_UPLOAD_TIMEOUT_MS,
+    );
+    let response: Response;
+    try {
+      response = await fetch(IMAGEKIT_UPLOAD_URL, {
+        method: "POST",
+        headers: { Authorization: `Basic ${credentials}` },
+        body: formData,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const errText = await response.text();
@@ -43,6 +55,12 @@ async function attemptUpload(
 
     return { url: result.url, fileId: result.fileId };
   } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      console.error(
+        `ImageKit upload timed out after ${IMAGEKIT_UPLOAD_TIMEOUT_MS}ms: ${IMAGEKIT_UPLOAD_URL}`,
+      );
+      return null;
+    }
     console.error("ImageKit upload error:", err);
     return null;
   }
@@ -50,7 +68,7 @@ async function attemptUpload(
 
 /**
  * base64 DataURI 이미지를 ImageKit에 업로드한다.
- * 실패 시 1회 재시도 후 null 반환 (예외를 던지지 않음).
+ * 실패 시 null 반환 (예외를 던지지 않음).
  *
  * @param base64DataUri - "data:image/png;base64,..." 형식 또는 순수 base64
  * @param fileName - 업로드할 파일명 (예: "design-abc.png")
@@ -73,9 +91,5 @@ export async function uploadImageToImageKit(
     folder,
     privateKey,
   );
-  if (result !== null) return result;
-
-  // 1회 재시도
-  console.warn("ImageKit 업로드 재시도 중...");
-  return attemptUpload(base64DataUri, fileName, folder, privateKey);
+  return result;
 }

@@ -1,11 +1,18 @@
 import type { ConversationTurn } from "./conversation.ts";
 
+interface RequestSessionAttachment {
+  type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+  label: string;
+  value: string;
+}
+
 export interface RequestSessionMessage {
   id: string;
   role: "user" | "ai";
   content: string;
   imageUrl: string | null;
   imageFileId: string | null;
+  attachments?: RequestSessionAttachment[];
   sequenceNumber: number;
 }
 

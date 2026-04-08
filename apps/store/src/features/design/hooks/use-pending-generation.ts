@@ -27,6 +27,7 @@ export function usePendingGeneration() {
     } catch {
       // localStorage 접근 불가 환경 무시
     }
+    setHasPendingResult(true);
   };
 
   const clearPending = (): void => {

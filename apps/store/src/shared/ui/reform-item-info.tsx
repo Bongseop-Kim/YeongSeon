@@ -24,9 +24,10 @@ export function ReformItemInfo({ item, image }: ReformItemInfoProps) {
       ? `길이: ${item.reformData.tie.tieLength}cm`
       : `키: ${item.reformData.tie.wearerHeight}cm`
     : null;
-  const widthText = hasWidthReform
-    ? `폭: ${item.reformData.tie.targetWidth}cm`
-    : null;
+  const widthText =
+    hasWidthReform && item.reformData.tie.targetWidth != null
+      ? `폭: ${item.reformData.tie.targetWidth}cm`
+      : null;
 
   return (
     <div className="flex gap-4">

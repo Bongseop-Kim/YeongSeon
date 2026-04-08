@@ -32,37 +32,47 @@ const {
   },
 }));
 
-const storeState = {
-  messages: [
-    {
-      id: "ai-1",
-      role: "ai",
-      content: "이전 답변",
-      timestamp: 1,
-    },
-    {
-      id: "user-1",
-      role: "user",
-      content: "이전 요청",
-      attachments: [],
-      timestamp: 2,
-      designContext: {
-        colors: ["navy"],
-        pattern: "stripe",
-        fabricMethod: "print",
-        ciPlacement: null,
-        ciImage: null,
-        referenceImage: null,
+const initialMessages = [
+  {
+    id: "ai-1",
+    role: "ai",
+    content: "이전 답변",
+    timestamp: 1,
+  },
+  {
+    id: "user-1",
+    role: "user",
+    content: "이전 요청",
+    attachments: [
+      {
+        type: "image",
+        label: "참고 이미지",
+        value: "reference",
       },
+    ],
+    imageUrl: "https://example.com/reference.png",
+    imageFileId: "file-existing-reference",
+    timestamp: 2,
+    designContext: {
+      colors: ["navy"],
+      pattern: "stripe",
+      fabricMethod: "print",
+      ciPlacement: null,
+      ciImage: null,
+      referenceImage: null,
     },
-    {
-      id: "ui-1",
-      role: "ai",
-      content: "  ",
-      timestamp: 3,
-      uiOnly: true,
-    },
-  ],
+  },
+  {
+    id: "ui-1",
+    role: "ai",
+    content: "  ",
+    timestamp: 3,
+    uiOnly: true,
+  },
+] as const;
+
+const storeState = {
+  messages: [...initialMessages],
   designContext: {
     colors: ["navy"],
     pattern: "stripe",
@@ -127,6 +137,10 @@ describe("useDesignChat", () => {
     clearAttachments.mockReset();
     setCurrentSessionId.mockReset();
     phCapture.mockReset();
+    storeState.messages = [...initialMessages];
+    addMessage.mockImplementation((message) => {
+      storeState.messages = [...storeState.messages, message];
+    });
   });
 
   it("빈 메시지는 무시하고 일반 메시지는 mutation을 호출한다", () => {
@@ -157,7 +171,28 @@ describe("useDesignChat", () => {
         ],
         sessionId: expect.any(String),
         firstMessage: expect.any(String),
-        allMessages: expect.any(Array),
+        allMessages: expect.arrayContaining([
+          expect.objectContaining({
+            id: "user-1",
+            imageUrl: "https://example.com/reference.png",
+            imageFileId: "file-existing-reference",
+            attachments: [
+              expect.objectContaining({
+                type: "image",
+                value: "reference",
+              }),
+            ],
+          }),
+          expect.objectContaining({
+            content: "새 디자인",
+            attachments: [
+              expect.objectContaining({
+                type: "color",
+                value: "navy",
+              }),
+            ],
+          }),
+        ]),
       }),
       expect.any(Object),
     );

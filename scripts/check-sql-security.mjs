@@ -18,7 +18,7 @@ import { join, resolve, relative, basename } from "path";
 import { fileURLToPath } from "url";
 
 /**
- * SQL 텍스트에서 라인 주석(-- ...), 블록 주석(/* ... *\/), 문자열 리터럴('...', $$...$$)을
+ * SQL 텍스트에서 라인 주석(-- ...), 블록 주석(/* ... *\/), 문자열 리터럴('...')을
  * 제거하여 실행 코드 영역만 반환한다.
  * 면제 조건 regex가 주석/문자열 내 패턴에 잘못 매칭되는 것을 방지한다.
  */
@@ -54,18 +54,24 @@ function stripSqlNonCode(sql) {
       }
       continue;
     }
-    // 달러 인용 문자열: $$...$$ 또는 $tag$...$tag$
-    const dollarMatch = sql.slice(i).match(/^\$([^$]*)\$/);
-    if (dollarMatch) {
-      const tag = dollarMatch[0];
-      i += tag.length;
-      const endIdx = sql.indexOf(tag, i);
-      i = endIdx !== -1 ? endIdx + tag.length : sql.length;
-      continue;
-    }
     result += sql[i++];
   }
   return result;
+}
+
+function extractFunctionChunks(sql) {
+  const functionChunks = [];
+  const functionPattern =
+    /\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b[\s\S]*?\bAS\s+(\$[^$]*\$)[\s\S]*?\1\s*;/gi;
+
+  for (const match of sql.matchAll(functionPattern)) {
+    functionChunks.push({
+      text: match[0],
+      index: match.index ?? 0,
+    });
+  }
+
+  return functionChunks;
 }
 
 const ROOT = resolve(fileURLToPath(import.meta.url), "../..");
@@ -119,11 +125,9 @@ for (const file of sqlFiles) {
     continue;
   }
 
-  // CREATE [OR REPLACE] FUNCTION 경계로 분리 → 함수 단위로 검사
-  const parts = content.split(/(?=\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b)/i);
+  const functions = extractFunctionChunks(content);
 
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
+  for (const { text: part, index } of functions) {
 
     // SECURITY DEFINER 없거나 CREATE FUNCTION 없는 청크(주석 등)는 skip
     if (!/\bSECURITY\s+DEFINER\b/i.test(part)) continue;
@@ -151,10 +155,8 @@ for (const file of sqlFiles) {
     // 패턴 예: "-- SECURITY DEFINER 사유:", "-- SECURITY DEFINER 유지 사유:",
     //          "-- SECURITY DEFINER 사용 근거:", "-- ... SECURITY DEFINER bypasses RLS"
     // 함수 본문 전체가 아닌 CREATE FUNCTION 선언부 근처만 검사한다.
-    const prevTail = i > 0 ? parts[i - 1].slice(-600) : "";
-    const cfIdx = part.search(/\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b/i);
-    const windowAfter =
-      cfIdx >= 0 ? part.slice(0, cfIdx + 600) : part.slice(0, 600);
+    const prevTail = content.slice(Math.max(0, index - 600), index);
+    const windowAfter = part.slice(0, 600);
     const context = prevTail + windowAfter;
     if (/--[^\n]*\bSECURITY\s+DEFINER\b/i.test(context)) continue;
 

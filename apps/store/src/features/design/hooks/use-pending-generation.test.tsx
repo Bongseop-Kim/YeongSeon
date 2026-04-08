@@ -15,9 +15,22 @@ vi.mock("@/features/design/store/design-chat-store", () => ({
 }));
 
 const STORAGE_KEY = "pending_design_generation";
+const storage = new Map<string, string>();
 
 beforeEach(() => {
-  localStorage.clear();
+  storage.clear();
+  vi.stubGlobal("localStorage", {
+    getItem: vi.fn((key: string) => storage.get(key) ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      storage.set(key, value);
+    }),
+    removeItem: vi.fn((key: string) => {
+      storage.delete(key);
+    }),
+    clear: vi.fn(() => {
+      storage.clear();
+    }),
+  });
 });
 
 describe("usePendingGeneration", () => {
@@ -40,6 +53,23 @@ describe("usePendingGeneration", () => {
     act(() => result.current.markPending("session-xyz"));
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
     expect(stored.sessionId).toBe("session-xyz");
+    expect(result.current.hasPendingResult).toBe(true);
+  });
+
+  it("localStorage 저장이 실패해도 pending 상태는 true로 유지한다", () => {
+    const setItemSpy = vi
+      .spyOn(localStorage, "setItem")
+      .mockImplementation(() => {
+        throw new Error("storage unavailable");
+      });
+
+    const { result } = renderHook(() => usePendingGeneration());
+
+    act(() => result.current.markPending("session-xyz"));
+
+    expect(result.current.hasPendingResult).toBe(true);
+
+    setItemSpy.mockRestore();
   });
 
   it("clearPending은 localStorage를 제거하고 hasPendingResult를 false로 만든다", () => {

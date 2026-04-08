@@ -11,6 +11,7 @@ export interface SessionMessagePayload {
   content: string;
   imageUrl: string | null;
   imageFileId: string | null;
+  attachments?: Attachment[];
   sequenceNumber: number;
 }
 
