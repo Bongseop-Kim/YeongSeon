@@ -129,6 +129,9 @@ export function buildInvokePayload(
     referenceImageBase64: input.referenceImageBase64,
     referenceImageMimeType:
       request.designContext.referenceImage?.type || undefined,
+    sessionId: request.sessionId,
+    firstMessage: request.firstMessage,
+    allMessages: request.allMessages,
   };
 }
 

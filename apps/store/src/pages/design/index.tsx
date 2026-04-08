@@ -6,9 +6,11 @@ import {
   ChatPanel,
   MobileHistorySheet,
   OnboardingDialog,
+  PendingResultBanner,
   PreviewPanel,
   useDesignChat,
   useOnboarding,
+  usePendingGeneration,
   useSessionRestore,
 } from "@/features/design";
 import { cn } from "@/shared/lib/utils";
@@ -17,9 +19,14 @@ import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 function DesignPage() {
   const { isDesktop } = useBreakpoint();
   const { showOnboarding, completeOnboarding } = useOnboarding();
-  const { sendMessage } = useDesignChat();
   const { isHistoryOpen, openHistory, closeHistory, restoreSession } =
     useSessionRestore();
+  const { hasPendingResult, markPending, clearPending } =
+    usePendingGeneration();
+  const { sendMessage } = useDesignChat({
+    onGenerationStart: markPending,
+    onGenerationEnd: clearPending,
+  });
 
   return (
     <MainLayout className="h-full">
@@ -29,6 +36,15 @@ function DesignPage() {
         ogUrl="https://essesion.shop/design"
       />
       <MainContent className="min-h-0 overflow-hidden">
+        {hasPendingResult && (
+          <PendingResultBanner
+            onConfirm={() => {
+              openHistory();
+              clearPending();
+            }}
+            onDismiss={clearPending}
+          />
+        )}
         <div
           className={cn(
             "mx-auto flex h-full w-full max-w-7xl min-h-0",

@@ -34,6 +34,9 @@ const baseRequest = {
   },
   aiModel: "openai" as const,
   conversationHistory: [],
+  sessionId: "test-session-id",
+  firstMessage: "네이비 스트라이프 넥타이 만들어줘",
+  allMessages: [],
 };
 
 const successResponse = {

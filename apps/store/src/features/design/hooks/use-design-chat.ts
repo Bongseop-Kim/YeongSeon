@@ -6,14 +6,16 @@ import {
 import {
   type AiDesignResponse,
   InsufficientTokensError,
-  setGenerationLogImageUrl,
 } from "@/entities/design";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment, Message } from "@/features/design/types/chat";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
-import { uploadGeneratedImage } from "@/features/design/utils/imagekit-upload";
-import { useSaveDesignSessionMutation } from "@/features/design/hooks/design-session-query";
 import { ph } from "@/shared/lib/posthog";
+
+interface UseDesignChatOptions {
+  onGenerationStart?: (sessionId: string) => void;
+  onGenerationEnd?: () => void;
+}
 
 interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
@@ -31,7 +33,24 @@ const toConversationHistory = (
       content: message.content,
     }));
 
-export function useDesignChat(): UseDesignChatResult {
+const toSessionPayload = (messages: Message[]) => {
+  const visible = messages.filter((m) => !m.uiOnly);
+  const firstUserMsg = visible.find((m) => m.role === "user");
+  const allMessages = visible.map((m, idx) => ({
+    id: m.id,
+    role: m.role,
+    content: m.content,
+    imageUrl: m.imageUrl ?? null,
+    imageFileId: null,
+    sequenceNumber: idx,
+  }));
+  return { firstUserMsg, allMessages };
+};
+
+export function useDesignChat(
+  options: UseDesignChatOptions = {},
+): UseDesignChatResult {
+  const { onGenerationStart, onGenerationEnd } = options;
   const queryClient = useQueryClient();
   const messages = useDesignChatStore((state) => state.messages);
   const designContext = useDesignChatStore((state) => state.designContext);
@@ -56,21 +75,18 @@ export function useDesignChat(): UseDesignChatResult {
     (state) => state.setCurrentSessionId,
   );
   const mutation = useAiDesignMutation();
-  const saveSessionMutation = useSaveDesignSessionMutation();
 
   const createMutationCallbacks = (
     errorContent: string,
     errorStatus: "idle" | "completed",
-    sessionId: string,
   ) => ({
     onSuccess: (data: AiDesignResponse) => {
       const previewBackground = data.imageUrl
         ? toPreviewBackground(data.imageUrl)
         : undefined;
 
-      const aiMessageId = crypto.randomUUID();
       const aiMessage: Message = {
-        id: aiMessageId,
+        id: crypto.randomUUID(),
         role: "ai",
         content: data.aiMessage,
         imageUrl: data.imageUrl ?? undefined,
@@ -83,53 +99,13 @@ export function useDesignChat(): UseDesignChatResult {
         setGeneratedImage(previewBackground, data.tags);
       }
       setGenerationStatus("completed");
+
+      // pending flag 해제 — 서버에서 저장 완료됐으므로 알림 불필요
+      onGenerationEnd?.();
+
       void queryClient.invalidateQueries({
         queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,
       });
-
-      // ImageKit 업로드 + 세션 저장 (백그라운드, 실패해도 채팅에 영향 없음)
-      const doSave = async () => {
-        let rawImageUrl: string | null = null;
-        let rawImageFileId: string | null = null;
-
-        if (data.imageUrl) {
-          const uploaded = await uploadGeneratedImage(data.imageUrl);
-          rawImageUrl = uploaded?.url ?? null;
-          rawImageFileId = uploaded?.fileId ?? null;
-
-          if (data.workId && rawImageUrl) {
-            void setGenerationLogImageUrl(data.workId, rawImageUrl);
-          }
-        }
-
-        const { messages: allMessages, aiModel: currentAiModel } =
-          useDesignChatStore.getState();
-        const firstUserMsg = allMessages.find(
-          (m) => m.role === "user" && !m.uiOnly,
-        );
-
-        const savableMessages = allMessages
-          .filter((m) => !m.uiOnly)
-          .map((m, idx) => ({
-            id: m.id,
-            role: m.role,
-            content: m.content,
-            imageUrl: m.id === aiMessageId ? rawImageUrl : (m.imageUrl ?? null),
-            imageFileId: m.id === aiMessageId ? rawImageFileId : null,
-            sequenceNumber: idx,
-          }));
-
-        saveSessionMutation.mutate({
-          sessionId,
-          aiModel: currentAiModel,
-          firstMessage: firstUserMsg?.content ?? "",
-          lastImageUrl: rawImageUrl,
-          lastImageFileId: rawImageFileId,
-          messages: savableMessages,
-        });
-      };
-
-      void doSave();
     },
     onError: (error: Error) => {
       let content = errorContent;
@@ -150,6 +126,9 @@ export function useDesignChat(): UseDesignChatResult {
       setGenerationStatus(
         error instanceof InsufficientTokensError ? "idle" : errorStatus,
       );
+
+      // 에러 시에도 pending flag 해제 (생성 실패 = 확인할 결과 없음)
+      onGenerationEnd?.();
     },
   });
 
@@ -158,7 +137,6 @@ export function useDesignChat(): UseDesignChatResult {
       return;
     }
 
-    // getState()로 호출 시점의 최신 값을 읽어 stale closure로 인한 중복 이벤트 방지
     const prevSessionId = useDesignChatStore.getState().currentSessionId;
     const sessionId = prevSessionId ?? crypto.randomUUID();
 
@@ -180,6 +158,14 @@ export function useDesignChat(): UseDesignChatResult {
     clearAttachments();
     setGenerationStatus("generating");
 
+    // pending flag 설정 — 이탈 후 재방문 시 알림 표시용
+    onGenerationStart?.(sessionId);
+
+    // addMessage 후 store 상태 기준 (userMessage 포함)
+    const { firstUserMsg, allMessages } = toSessionPayload(
+      useDesignChatStore.getState().messages,
+    );
+
     mutation.mutate(
       {
         userMessage: userText,
@@ -187,11 +173,13 @@ export function useDesignChat(): UseDesignChatResult {
         designContext,
         aiModel,
         conversationHistory: toConversationHistory([...messages, userMessage]),
+        sessionId,
+        firstMessage: firstUserMsg?.content ?? userText,
+        allMessages,
       },
       createMutationCallbacks(
         "죄송합니다. 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
         "idle",
-        sessionId,
       ),
     );
   };
@@ -211,6 +199,11 @@ export function useDesignChat(): UseDesignChatResult {
     }
 
     setGenerationStatus("regenerating");
+    onGenerationStart?.(sessionId);
+
+    const { firstUserMsg, allMessages } = toSessionPayload(
+      useDesignChatStore.getState().messages,
+    );
 
     mutation.mutate(
       {
@@ -219,11 +212,13 @@ export function useDesignChat(): UseDesignChatResult {
         designContext: lastUserMessage.designContext ?? designContext,
         aiModel,
         conversationHistory: toConversationHistory(messages),
+        sessionId,
+        firstMessage: firstUserMsg?.content ?? lastUserMessage.content,
+        allMessages,
       },
       createMutationCallbacks(
         "죄송합니다. 디자인 재생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
         "completed",
-        sessionId,
       ),
     );
   };

@@ -20,6 +20,12 @@ import {
   parseJsonBlock,
   SYSTEM_PROMPT,
 } from "@/functions/_shared/prompt-builders.ts";
+import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
+import {
+  buildSessionMessages,
+  saveDesignSession,
+  type SessionMessage,
+} from "@/functions/_shared/session-save.ts";
 
 export type { GenerateDesignRequest };
 
@@ -542,14 +548,49 @@ Deno.serve(async (req) => {
       }
     }
 
-    await emitGenerationLog({
-      image_generated: imageUrl !== null,
-    });
+    let imagekitUrl: string | null = null;
+    let imagekitFileId: string | null = null;
+    if (imageUrl !== null) {
+      const uploaded = await uploadImageToImageKit(
+        imageUrl,
+        `design-${workId}.png`,
+        "/design-sessions",
+      );
+      imagekitUrl = uploaded?.url ?? null;
+      imagekitFileId = uploaded?.fileId ?? null;
+    }
+
+    const sessionSavePromise =
+      payload.sessionId && Array.isArray(payload.allMessages)
+        ? saveDesignSession(supabase, {
+            sessionId: payload.sessionId,
+            aiModel: "gemini",
+            firstMessage: payload.firstMessage ?? "",
+            lastImageUrl: imagekitUrl,
+            lastImageFileId: imagekitFileId,
+            messages: buildSessionMessages(payload.allMessages, {
+              id: crypto.randomUUID(),
+              role: "ai",
+              content: textResult.aiMessage,
+              image_url: imagekitUrl,
+              image_file_id: imagekitFileId,
+              sequence_number: payload.allMessages.length,
+            } satisfies SessionMessage),
+          })
+        : Promise.resolve();
+
+    await Promise.allSettled([
+      emitGenerationLog({
+        image_generated: imageUrl !== null,
+        generated_image_url: imagekitUrl,
+      }),
+      sessionSavePromise,
+    ]);
 
     return jsonResponse(200, {
       aiMessage: textResult.aiMessage,
       contextChips: textResult.contextChips,
-      imageUrl,
+      imageUrl: imagekitUrl,
       workId,
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });
