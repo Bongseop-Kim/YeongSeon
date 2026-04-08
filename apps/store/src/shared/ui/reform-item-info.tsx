@@ -13,6 +13,20 @@ export function ReformItemInfo({ item, image }: ReformItemInfoProps) {
   const discount = calculateDiscount(itemPrice, item.appliedCoupon);
   const discountedPrice = itemPrice - discount;
   const imageUrl = typeof image === "string" ? image : null;
+  const hasLengthReform = item.reformData.tie.hasLengthReform !== false;
+  const hasWidthReform = item.reformData.tie.hasWidthReform === true;
+  const serviceLabels = [
+    hasLengthReform ? "자동수선" : null,
+    hasWidthReform ? "폭수선" : null,
+  ].filter((label): label is string => label !== null);
+  const measurementText = hasLengthReform
+    ? item.reformData.tie.measurementType === "length"
+      ? `길이: ${item.reformData.tie.tieLength}cm`
+      : `키: ${item.reformData.tie.wearerHeight}cm`
+    : null;
+  const widthText = hasWidthReform
+    ? `폭: ${item.reformData.tie.targetWidth}cm`
+    : null;
 
   return (
     <div className="flex gap-4">
@@ -30,11 +44,17 @@ export function ReformItemInfo({ item, image }: ReformItemInfoProps) {
 
       <div className="min-w-0 flex-1">
         <h3 className="text-base font-medium">넥타이 수선</h3>
-        <p className="text-sm text-zinc-500">
-          {item.reformData.tie.measurementType === "length"
-            ? `길이: ${item.reformData.tie.tieLength}cm`
-            : `키: ${item.reformData.tie.wearerHeight}cm`}
-        </p>
+        {serviceLabels.length > 0 ? (
+          <p className="text-sm text-zinc-500">
+            서비스: {serviceLabels.join(" · ")}
+          </p>
+        ) : null}
+        {measurementText ? (
+          <p className="text-sm text-zinc-500">{measurementText}</p>
+        ) : null}
+        {widthText ? (
+          <p className="text-sm text-zinc-500">{widthText}</p>
+        ) : null}
         <ItemPriceDisplay
           basePrice={itemPrice}
           discountedPrice={discountedPrice}

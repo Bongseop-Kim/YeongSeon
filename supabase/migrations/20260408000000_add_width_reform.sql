@@ -1,16 +1,8 @@
--- ============================================================= 
--- 93_functions_orders.sql  – Order lifecycle RPC functions 
--- =============================================================
--- ── create_order_txn ─────────────────────────────────────────
--- SECURITY DEFINER: 일반 유저는 orders, order_items, user_coupons 테이블에
---   직접 INSERT/UPDATE RLS 정책이 없다. 이 함수가 해당 테이블에 원자적으로
---   쓰기 위해 SECURITY DEFINER가 필요하다.
---   소유권 보호:
---     - auth.uid() null 체크로 미인증 호출 차단
---     - shipping_addresses는 user_id = auth.uid() 소유권 검증
---     - user_coupons 업데이트 시 WHERE user_id = v_user_id 조건 적용
---   완화 조치: SET search_path TO 'public'으로 검색 경로 고정,
---     입력값 유효성 검사(수량, 아이템 타입 등) 포함.
+INSERT INTO public.pricing_constants (key, amount, category)
+VALUES ('REFORM_WIDTH_COST', 0, 'reform')
+ON CONFLICT (key) DO NOTHING;
+
+-- SECURITY DEFINER 사유: auth.uid() 소유권 검증이 begin 블록 최상단에 있음
 CREATE OR REPLACE FUNCTION public.create_order_txn(p_shipping_address_id uuid, p_items jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -23,7 +15,6 @@ declare
   v_order_number text;
   v_item jsonb;
   v_normalized_items jsonb := '[]'::jsonb;
-
   v_item_id text;
   v_item_type text;
   v_product_id integer;
@@ -39,7 +30,6 @@ declare
   v_line_discount_total integer;
   v_product_stock integer;
   v_option_stock integer;
-
   v_original_price integer := 0;
   v_total_discount integer := 0;
   v_total_price integer := 0;
@@ -48,7 +38,6 @@ declare
   v_reform_width_cost integer;
   v_used_coupon_ids uuid[] := '{}'::uuid[];
   v_coupon record;
-
   v_payment_group_id uuid;
   v_group_total_amount integer := 0;
   v_orders_result jsonb := '[]'::jsonb;
@@ -137,7 +126,6 @@ begin
           raise exception 'Selected option not found';
         end if;
 
-        -- Check option stock
         if v_option_stock is not null then
           if v_option_stock < v_quantity then
             raise exception 'Insufficient stock for option';
@@ -148,7 +136,6 @@ begin
             and id::text = v_selected_option_id;
         end if;
       else
-        -- No option selected: check product-level stock
         if v_product_stock is not null then
           if v_product_stock < v_quantity then
             raise exception 'Insufficient stock';
@@ -265,7 +252,6 @@ begin
 
       v_discount_amount := floor(v_capped_line_discount::numeric / v_quantity)::integer;
       v_discount_remainder := v_capped_line_discount % v_quantity;
-      -- Distribute +1 to the first v_discount_remainder units.
       v_line_discount_total := (v_discount_amount * v_quantity) + v_discount_remainder;
       v_used_coupon_ids := array_append(v_used_coupon_ids, v_applied_coupon_id);
     end if;
@@ -291,7 +277,6 @@ begin
     );
   end loop;
 
-  -- 아이템 타입별 분류 및 소계 계산
   v_payment_group_id := gen_random_uuid();
 
   for v_item in select * from jsonb_array_elements(v_normalized_items)
@@ -311,7 +296,6 @@ begin
     end if;
   end loop;
 
-  -- product 주문 생성 (shipping_cost=0)
   if jsonb_array_length(v_product_items) > 0 then
     v_order_number := generate_order_number();
     v_total_price := v_product_original - v_product_discount;
@@ -365,7 +349,6 @@ begin
     );
   end if;
 
-  -- repair 주문 생성 (shipping_cost=v_reform_shipping_cost)
   if jsonb_array_length(v_reform_items) > 0 then
     v_order_number := generate_order_number();
     v_shipping_cost := v_reform_shipping_cost;
@@ -409,7 +392,6 @@ begin
         nullif(v_item->>'applied_user_coupon_id', '')::uuid
       );
 
-      -- reform 이미지 라이프사이클 추적: tie 이미지를 images 테이블에 등록
       v_tie_image := nullif(trim(v_item->'reform_data'->'tie'->>'image'), '');
       v_tie_file_id := nullif(trim(v_item->'reform_data'->'tie'->>'fileId'), '');
       IF v_tie_image IS NOT NULL THEN
@@ -428,9 +410,6 @@ begin
     );
   end if;
 
-  -- 쿠폰을 즉시 'used'로 마킹하지 않고 'reserved'로 예약.
-  -- 결제 확정(confirm_payment_orders) 시 'used'로 전환,
-  -- 결제 실패(unlock_payment_orders) 시 'active'로 복원.
   if array_length(v_used_coupon_ids, 1) is not null then
     update user_coupons
     set status = 'reserved',
@@ -444,173 +423,6 @@ begin
     'payment_group_id', v_payment_group_id,
     'total_amount', v_group_total_amount,
     'orders', v_orders_result
-  );
-end;
-$$;
-
--- ── customer_confirm_purchase ─────────────────────────────────
--- Allows a customer to manually confirm purchase after delivery.
--- Callable when status = '배송완료' or '배송중'.
--- SECURITY DEFINER 사용 근거:
---   이 함수는 authenticated 사용자(고객)가 호출하지만, 두 테이블에 직접 쓰기가 필요하다:
---     - public.orders        : UPDATE (RLS에 INSERT/UPDATE 정책 없음)
---     - public.order_status_logs : INSERT (RLS에 INSERT 정책 없음)
---   SECURITY INVOKER + RLS 조합으로는 위 테이블에 쓸 수 없어 SECURITY DEFINER가 필요하다.
---   SET ROLE 방식은 Supabase 환경에서 사용할 수 없다.
---   권한 상승 방지를 위한 안전 장치:
---     1) auth.uid() 검증으로 미인증 호출 즉시 차단
---     2) FOR UPDATE로 주문 소유권(user_id = auth.uid()) 검증
---     3) 상태 체크로 허용된 전이만 수행
---     4) 입력값은 p_order_id(uuid) 하나뿐이며 SQL 인젝션 표면이 없음
-CREATE OR REPLACE FUNCTION public.customer_confirm_purchase(p_order_id uuid)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-declare
-  v_user_id        uuid;
-  v_current_status text;
-begin
-  v_user_id := auth.uid();
-  if v_user_id is null then
-    raise exception 'Unauthorized';
-  end if;
-
-  -- Lock the row and verify ownership + status
-  select o.status
-  into v_current_status
-  from public.orders o
-  where o.id = p_order_id
-    and o.user_id = v_user_id
-  for update;
-
-  if not found then
-    raise exception 'Order not found or access denied';
-  end if;
-
-  if v_current_status not in ('배송완료', '배송중') then
-    raise exception '구매확정은 배송중 또는 배송완료 상태에서만 가능합니다 (현재: %)', v_current_status;
-  end if;
-
-  if exists (
-    select 1
-    from public.claims c
-    join public.order_items oi on oi.id = c.order_item_id
-    where oi.order_id = p_order_id
-      and c.status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
-  ) then
-    raise exception '진행 중인 클레임이 있는 주문은 구매확정할 수 없습니다';
-  end if;
-
-  update public.orders
-  set status       = '완료',
-      confirmed_at = now()
-  where id = p_order_id;
-
-  -- Audit log (changed_by = customer uid)
-  insert into public.order_status_logs (
-    order_id,
-    changed_by,
-    previous_status,
-    new_status,
-    memo
-  )
-  values (
-    p_order_id,
-    v_user_id,
-    v_current_status,
-    '완료',
-    '고객 직접 구매확정'
-  );
-
-  return jsonb_build_object('success', true);
-end;
-$$;
-
-
--- ── auto_confirm_delivered_orders ────────────────────────────
--- Called by pg_cron daily at 03:00 KST.
--- Confirms orders in '배송완료' (7+ days since delivered_at) and
--- '배송중' (7+ days since shipped_at, or repair orders use company_shipped_at).
--- SECURITY DEFINER 사용 근거:
---   pg_cron 또는 service_role에 의해서만 호출되는 스케줄러 함수로, 두 테이블에 직접 쓰기가 필요하다:
---     - public.orders        : UPDATE (status → '완료', confirmed_at 갱신)
---     - public.order_status_logs : INSERT (감사 로그)
---   SECURITY INVOKER로는 스케줄러 실행 컨텍스트에서 위 테이블에 쓸 수 없어 SECURITY DEFINER가 필요하다.
---   권한 남용 방지를 위한 안전 장치:
---     - current_setting('request.jwt.claim.role') 검사로 service_role 또는 pg_cron(JWT 없음 → '')만 허용
---     - '': pg_cron은 JWT 없이 DB 레벨에서 직접 호출하므로 coalesce(NULL, '') = ''이 됨 (의도된 허용)
---           이 경우 보안은 DB 접근 제어(네트워크/역할 권한)에 의존하며, 외부 HTTP 경유 호출 불가
---     - FOR UPDATE SKIP LOCKED로 동시 중복 처리 방지
-CREATE OR REPLACE FUNCTION public.auto_confirm_delivered_orders()
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-declare
-  v_order  record;
-  v_count  integer := 0;
-begin
-  -- pg_cron 또는 service_role 호출만 허용
-  -- ''는 pg_cron 전용: pg_cron은 JWT 없이 DB 레벨에서 실행되므로 role claim이 NULL → ''로 평가됨
-  -- HTTP를 통한 외부 호출은 반드시 JWT를 포함하므로 ''로 도달할 수 없음
-  if coalesce(current_setting('request.jwt.claim.role', true), '') not in ('', 'service_role') then
-    raise exception 'unauthorized: scheduler-only function';
-  end if;
-
-  for v_order in
-    select id, user_id, total_price, status
-    from public.orders
-    where (
-      (status = '배송완료' and delivered_at <= now() - interval '7 days')
-      or
-      (
-        status = '배송중'
-        and (
-          (order_type = 'repair' and company_shipped_at <= now() - interval '7 days')
-          or
-          (order_type <> 'repair' and shipped_at <= now() - interval '7 days')
-        )
-      )
-    )
-    and not exists (
-      select 1
-      from public.claims c
-      join public.order_items oi on oi.id = c.order_item_id
-      where oi.order_id = orders.id
-        and c.status in ('접수', '처리중', '수거요청', '수거완료', '재발송')
-    )
-    for update skip locked
-  loop
-    update public.orders
-    set status       = '완료',
-        confirmed_at = now()
-    where id = v_order.id;
-
-    -- Audit log (changed_by = NULL indicates automated system action)
-    insert into public.order_status_logs (
-      order_id,
-      changed_by,
-      previous_status,
-      new_status,
-      memo
-    )
-    values (
-      v_order.id,
-      NULL,
-      v_order.status,
-      '완료',
-      format('자동 구매확정 (%s 후 7일 경과)', v_order.status)
-    );
-
-    v_count := v_count + 1;
-  end loop;
-
-  return jsonb_build_object(
-    'success', true,
-    'confirmed_count', v_count
   );
 end;
 $$;

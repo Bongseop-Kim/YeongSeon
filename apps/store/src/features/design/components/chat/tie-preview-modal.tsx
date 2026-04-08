@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Crop, Square, X } from "lucide-react";
 
 import { TieMask } from "@/features/design/components/preview/tie-mask";
+import { Button } from "@/shared/ui-extended/button";
 
 interface TiePreviewModalProps {
   imageUrl: string;
@@ -12,6 +13,7 @@ export function TiePreviewModal({ imageUrl, onClose }: TiePreviewModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
+  const [unmasked, setUnmasked] = useState(false);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -80,6 +82,20 @@ export function TiePreviewModal({ imageUrl, onClose }: TiePreviewModalProps) {
       aria-label="넥타이 미리보기"
       onClick={onClose}
     >
+      <Button
+        type="button"
+        variant={unmasked ? "default" : "outline"}
+        size="icon"
+        className="absolute top-4 left-4 z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          setUnmasked((v) => !v);
+        }}
+        title={unmasked ? "넥타이 형태로 보기" : "패턴 전체 보기"}
+        aria-label={unmasked ? "넥타이 형태로 보기" : "패턴 전체 보기"}
+      >
+        {unmasked ? <Crop className="size-4" /> : <Square className="size-4" />}
+      </Button>
       <button
         ref={closeButtonRef}
         type="button"
@@ -94,12 +110,19 @@ export function TiePreviewModal({ imageUrl, onClose }: TiePreviewModalProps) {
         className="relative"
         onClick={(event) => event.stopPropagation()}
       >
-        <TieMask
-          imageUrl={imageUrl}
-          width={256}
-          height={488}
-          shadowClassName="top-[-46px]"
-        />
+        {unmasked ? (
+          <div
+            className="h-[488px] w-[256px]"
+            style={{ background: imageUrl }}
+          />
+        ) : (
+          <TieMask
+            imageUrl={imageUrl}
+            width={256}
+            height={488}
+            shadowClassName="top-[-46px]"
+          />
+        )}
       </div>
     </div>
   );

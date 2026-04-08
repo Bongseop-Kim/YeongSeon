@@ -8,7 +8,11 @@ export function useReformPricing() {
       const { data, error } = await supabase
         .from("pricing_constants")
         .select("key, amount")
-        .in("key", ["REFORM_BASE_COST", "REFORM_SHIPPING_COST"]);
+        .in("key", [
+          "REFORM_BASE_COST",
+          "REFORM_SHIPPING_COST",
+          "REFORM_WIDTH_COST",
+        ]);
 
       if (error) throw error;
 
@@ -16,6 +20,7 @@ export function useReformPricing() {
 
       const baseCostRaw = map["REFORM_BASE_COST"];
       const shippingCostRaw = map["REFORM_SHIPPING_COST"];
+      const widthCostRaw = map["REFORM_WIDTH_COST"];
 
       if (!Number.isFinite(baseCostRaw)) {
         throw new Error(
@@ -27,10 +32,16 @@ export function useReformPricing() {
           "pricing_constants에서 REFORM_SHIPPING_COST를 찾을 수 없습니다.",
         );
       }
+      if (!Number.isFinite(widthCostRaw)) {
+        throw new Error(
+          "pricing_constants에서 REFORM_WIDTH_COST를 찾을 수 없습니다.",
+        );
+      }
 
       return {
         baseCost: baseCostRaw as number,
         shippingCost: shippingCostRaw as number,
+        widthReformCost: widthCostRaw as number,
       };
     },
   });

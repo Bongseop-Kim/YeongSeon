@@ -12,6 +12,9 @@ export interface TieItem {
   wearerHeight?: number;
   notes?: string;
   checked?: boolean;
+  hasLengthReform?: boolean;
+  hasWidthReform?: boolean;
+  targetWidth?: number;
 }
 
 export interface ReformOptions {
@@ -20,5 +23,6 @@ export interface ReformOptions {
     tieLength?: number;
     wearerHeight?: number;
     measurementType?: MeasurementType;
+    targetWidth?: number;
   };
 }

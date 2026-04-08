@@ -12,6 +12,7 @@ import {
   removeCartItem,
   updateCartItemQuantity,
   updateProductCartItemOption,
+  updateReformCartItemOption,
 } from "@/features/cart/hooks/cart-item-operations";
 
 const product = createProduct();
@@ -79,6 +80,44 @@ describe("cart-item-operations", () => {
     const coupon = createAppliedCoupon();
     const nextItems = applyCartItemCoupon([baseItem], "item-1", coupon);
     expect(nextItems[0].appliedCoupon?.id).toBe("uc-1");
+  });
+
+  it("updateReformOption: 수선 옵션과 비용을 함께 갱신한다", () => {
+    const reformItem = addReformToCart(
+      [],
+      {
+        tie: {
+          id: "tie-1",
+          measurementType: "length",
+          tieLength: 145,
+          hasLengthReform: true,
+          hasWidthReform: false,
+        },
+        cost: 15000,
+      },
+      generateItemId,
+    )[0];
+
+    const nextItems = updateReformCartItemOption([reformItem], reformItem.id, {
+      tie: {
+        id: "tie-1",
+        targetWidth: 9,
+        hasLengthReform: false,
+        hasWidthReform: true,
+      },
+      cost: 10000,
+    });
+
+    expect(nextItems[0]).toMatchObject({
+      reformData: {
+        tie: {
+          targetWidth: 9,
+          hasLengthReform: false,
+          hasWidthReform: true,
+        },
+        cost: 10000,
+      },
+    });
   });
 
   it("updateOption: 옵션 변경 시 같은 옵션 아이템이 있으면 수량을 합친다", () => {

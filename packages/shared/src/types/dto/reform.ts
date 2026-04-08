@@ -6,6 +6,9 @@ export interface TieItemDTO {
   tieLength?: number;
   wearerHeight?: number;
   notes?: string;
+  hasLengthReform?: boolean;
+  hasWidthReform?: boolean;
+  targetWidth?: number;
 }
 
 export interface TieItemCreateDTO {
@@ -16,4 +19,7 @@ export interface TieItemCreateDTO {
   tieLength?: number;
   wearerHeight?: number;
   notes?: string;
+  hasLengthReform?: boolean;
+  hasWidthReform?: boolean;
+  targetWidth?: number;
 }

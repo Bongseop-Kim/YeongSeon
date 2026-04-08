@@ -195,6 +195,30 @@ const parseClaimItemField = (
         );
       }
       if (
+        v.reformData.tie.hasLengthReform != null &&
+        typeof v.reformData.tie.hasLengthReform !== "boolean"
+      ) {
+        throw new Error(
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: hasLengthReform 필드 타입 오류.`,
+        );
+      }
+      if (
+        v.reformData.tie.hasWidthReform != null &&
+        typeof v.reformData.tie.hasWidthReform !== "boolean"
+      ) {
+        throw new Error(
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: hasWidthReform 필드 타입 오류.`,
+        );
+      }
+      if (
+        v.reformData.tie.targetWidth != null &&
+        typeof v.reformData.tie.targetWidth !== "number"
+      ) {
+        throw new Error(
+          `클레임 목록 행(${i})의 item.reformData.tie가 올바르지 않습니다: targetWidth 필드 타입 오류.`,
+        );
+      }
+      if (
         v.reformData.tie.checked != null &&
         typeof v.reformData.tie.checked !== "boolean"
       ) {
@@ -225,6 +249,18 @@ const parseClaimItemField = (
           notes:
             typeof v.reformData.tie.notes === "string"
               ? v.reformData.tie.notes
+              : undefined,
+          hasLengthReform:
+            typeof v.reformData.tie.hasLengthReform === "boolean"
+              ? v.reformData.tie.hasLengthReform
+              : undefined,
+          hasWidthReform:
+            typeof v.reformData.tie.hasWidthReform === "boolean"
+              ? v.reformData.tie.hasWidthReform
+              : undefined,
+          targetWidth:
+            typeof v.reformData.tie.targetWidth === "number"
+              ? v.reformData.tie.targetWidth
               : undefined,
         },
       };
