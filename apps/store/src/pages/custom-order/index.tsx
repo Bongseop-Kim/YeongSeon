@@ -24,6 +24,7 @@ import {
   AttachmentStep,
   ConfirmStep,
 } from "@/features/custom-order";
+import { DesignImagePicker } from "@/features/design";
 import { useAuthStore } from "@/shared/store/auth";
 import { toast } from "@/shared/lib/toast";
 import { useShippingAddressPopup } from "@/features/shipping";
@@ -200,7 +201,16 @@ export default function OrderPage() {
               {wizard.currentStep.id === "spec" && <SpecStep />}
               {wizard.currentStep.id === "finishing" && <FinishingStep />}
               {wizard.currentStep.id === "attachment" && (
-                <AttachmentStep imageUpload={imageUpload} />
+                <AttachmentStep
+                  imageUpload={imageUpload}
+                  pickerSlot={
+                    isLoggedIn ? (
+                      <DesignImagePicker
+                        onAdd={imageUpload.addExistingImages}
+                      />
+                    ) : undefined
+                  }
+                />
               )}
               {wizard.currentStep.id === "confirm" && (
                 <ConfirmStep
