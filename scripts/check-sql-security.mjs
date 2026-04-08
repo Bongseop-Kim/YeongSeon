@@ -128,7 +128,6 @@ for (const file of sqlFiles) {
   const functions = extractFunctionChunks(content);
 
   for (const { text: part, index } of functions) {
-
     // SECURITY DEFINER 없거나 CREATE FUNCTION 없는 청크(주석 등)는 skip
     if (!/\bSECURITY\s+DEFINER\b/i.test(part)) continue;
     if (!/\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b/i.test(part)) continue;
