@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { X } from "lucide-react";
 
 import { TieMask } from "@/features/design/components/preview/tie-mask";
 
@@ -79,20 +80,20 @@ export function TiePreviewModal({ imageUrl, onClose }: TiePreviewModalProps) {
       aria-label="넥타이 미리보기"
       onClick={onClose}
     >
+      <button
+        ref={closeButtonRef}
+        type="button"
+        aria-label="닫기"
+        className="absolute top-4 right-4 z-10 rounded-full bg-white/90 p-1 text-gray-900 shadow transition-opacity hover:bg-white"
+        onClick={onClose}
+      >
+        <X className="size-4" aria-hidden="true" />
+      </button>
       <div
         data-testid="tie-preview-container"
         className="relative"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          ref={closeButtonRef}
-          type="button"
-          aria-label="Close"
-          className="absolute top-2 right-2 z-10 rounded-full bg-white/90 px-2 py-1 text-sm text-gray-900 shadow"
-          onClick={onClose}
-        >
-          닫기
-        </button>
         <TieMask
           imageUrl={imageUrl}
           width={256}
