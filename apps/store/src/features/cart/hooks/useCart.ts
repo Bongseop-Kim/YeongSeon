@@ -38,6 +38,7 @@ import {
   syncCartItemsWithRollback,
 } from "@/features/cart/hooks/cart-sync";
 import { analytics } from "@/shared/lib/analytics";
+import { useReformPricing, toReformData } from "@/entities/reform";
 
 type AddToCartOptions = {
   option?: ProductOption;
@@ -57,6 +58,7 @@ export function useCart() {
   const queryClient = useQueryClient();
 
   const { openModal } = useModalStore();
+  const { data: reformPricing } = useReformPricing();
 
   const guestCartQuery = useQuery({
     queryKey: cartKeys.guest(),
@@ -211,10 +213,18 @@ export function useCart() {
 
   const updateReformOption = useCallback(
     async (itemId: string, tie: TieItem) => {
-      const nextItems = updateReformCartItemOption(items, itemId, tie);
+      if (!reformPricing) {
+        throw new Error("수선 비용 정보를 불러오지 못했습니다.");
+      }
+
+      const nextItems = updateReformCartItemOption(
+        items,
+        itemId,
+        toReformData(tie, reformPricing),
+      );
       await syncItems(nextItems, items);
     },
-    [items, syncItems],
+    [items, reformPricing, syncItems],
   );
 
   const applyCoupon = useCallback(

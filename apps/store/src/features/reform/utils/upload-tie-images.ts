@@ -1,5 +1,6 @@
 import { upload } from "@imagekit/react";
 import { getImageKitAuth, IMAGEKIT_PUBLIC_KEY } from "@/shared/lib/imagekit";
+import { supabase } from "@/shared/lib/supabase";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
 
@@ -34,6 +35,14 @@ export async function uploadTieImages(ties: TieItem[]): Promise<TieItem[]> {
       }
       if (!response.fileId) {
         throw new Error("파일 ID를 받지 못했습니다.");
+      }
+
+      const { error } = await supabase.rpc("register_reform_upload", {
+        p_url: response.url,
+        p_file_id: response.fileId,
+      });
+      if (error) {
+        throw new Error(`수선 이미지 등록에 실패했습니다: ${error.message}`);
       }
 
       return { ...tie, image: response.url, fileId: response.fileId };

@@ -19,7 +19,11 @@ import {
   toReformData,
   useUploadTieImages,
 } from "@/features/reform";
-import { useReformPricing } from "@/entities/reform";
+import {
+  useReformPricing,
+  calcTieCost,
+  type ReformPricing,
+} from "@/entities/reform";
 import BulkApplySection, {
   type BulkApplySectionRef,
 } from "@/shared/composite/bulk-apply-section";
@@ -48,6 +52,9 @@ const DEFAULT_TIE_ITEM = {
   tieLength: undefined,
   wearerHeight: undefined,
   checked: true,
+  hasLengthReform: true,
+  hasWidthReform: false,
+  targetWidth: undefined,
 };
 
 const DEFAULT_REFORM_OPTIONS: ReformOptions = {
@@ -56,6 +63,7 @@ const DEFAULT_REFORM_OPTIONS: ReformOptions = {
     measurementType: "length",
     tieLength: undefined,
     wearerHeight: undefined,
+    targetWidth: undefined,
   },
 };
 
@@ -95,6 +103,9 @@ const ReformPage = () => {
       tieLength: undefined,
       wearerHeight: undefined,
       checked: true,
+      hasLengthReform: true,
+      hasWidthReform: false,
+      targetWidth: undefined,
     });
   };
 
@@ -134,12 +145,13 @@ const ReformPage = () => {
 
   const hasValidPricing =
     Number.isFinite(pricing?.baseCost) &&
-    Number.isFinite(pricing?.shippingCost);
+    Number.isFinite(pricing?.shippingCost) &&
+    Number.isFinite(pricing?.widthReformCost);
 
   const withSubmitGuard = useCallback(
     async (
       action: (
-        baseCost: number,
+        pricing: ReformPricing,
         selectedTies: ReformOptions["ties"],
       ) => Promise<void>,
     ) => {
@@ -170,7 +182,13 @@ const ReformPage = () => {
           );
           return;
         }
-        await action(pricing.baseCost, selectedTies);
+        await action(
+          {
+            baseCost: pricing.baseCost,
+            widthReformCost: pricing.widthReformCost,
+          },
+          selectedTies,
+        );
       } finally {
         isSubmittingRef.current = false;
       }
@@ -187,34 +205,34 @@ const ReformPage = () => {
   );
 
   const handleDirectOrder = () =>
-    withSubmitGuard(async (baseCost, selectedTies) => {
+    withSubmitGuard(async (pricing, selectedTies) => {
       if (isMobile) {
         setIsPurchaseSheetOpen(true);
         return;
       }
 
       const uploadedTies = await uploadTiesIfNeeded(selectedTies);
-      const orderItems = toReformCartItems(uploadedTies, baseCost);
+      const orderItems = toReformCartItems(uploadedTies, pricing);
       setOrderItems(orderItems);
       analytics.track("form_submit", { form_type: "reform" });
       navigate(ROUTES.ORDER_FORM);
     });
 
   const handleMobileOrder = () =>
-    withSubmitGuard(async (baseCost, selectedTies) => {
+    withSubmitGuard(async (pricing, selectedTies) => {
       const uploadedTies = await uploadTiesIfNeeded(selectedTies);
-      const orderItems = toReformCartItems(uploadedTies, baseCost);
+      const orderItems = toReformCartItems(uploadedTies, pricing);
       setOrderItems(orderItems);
       analytics.track("form_submit", { form_type: "reform" });
       navigate(ROUTES.ORDER_FORM);
     });
 
   const handleAddToCart = () =>
-    withSubmitGuard(async (baseCost, selectedTies) => {
+    withSubmitGuard(async (pricing, selectedTies) => {
       const uploadedTies = await uploadTiesIfNeeded(selectedTies);
 
       await addMultipleReformToCart(
-        uploadedTies.map((tie) => toReformData(tie, baseCost)),
+        uploadedTies.map((tie) => toReformData(tie, pricing)),
       );
 
       form.reset(DEFAULT_REFORM_OPTIONS);
@@ -225,14 +243,24 @@ const ReformPage = () => {
     cost !== undefined ? `${cost.toLocaleString()}${suffix}` : "-";
 
   const selectedCount = selectedTieIndices.length;
-  const baseCost = hasValidPricing && pricing ? pricing.baseCost : undefined;
+  const totalServiceCost = useMemo(() => {
+    if (!hasValidPricing || !pricing) return undefined;
+
+    const selectedTies = watchedTies.filter((tie) => tie.checked);
+    if (selectedTies.length === 0) return undefined;
+
+    return selectedTies.reduce(
+      (sum, tie) => sum + calcTieCost(tie, pricing),
+      0,
+    );
+  }, [hasValidPricing, pricing, watchedTies]);
   const estimatedShipping =
     hasValidPricing && selectedCount > 0 && pricing
       ? pricing.shippingCost
       : undefined;
   const totalCost =
-    hasValidPricing && selectedCount > 0 && pricing
-      ? pricing.baseCost * selectedCount + pricing.shippingCost
+    totalServiceCost !== undefined && estimatedShipping !== undefined
+      ? totalServiceCost + estimatedShipping
       : undefined;
 
   const handleDelete = () => {
@@ -284,11 +312,6 @@ const ReformPage = () => {
                       id: "selected-count",
                       label: "수선 수량",
                       value: `총 ${selectedCount}개`,
-                    },
-                    {
-                      id: "base-cost",
-                      label: "기본 수선비",
-                      value: formatCost(baseCost, "원 / 개"),
                     },
                     {
                       id: "shipping-cost",

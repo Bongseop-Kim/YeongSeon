@@ -297,6 +297,9 @@ describe("단순 변환 함수", () => {
       wearerHeight: undefined,
       notes: "메모",
       checked: true,
+      hasLengthReform: true,
+      hasWidthReform: true,
+      targetWidth: 9,
     };
 
     expect(toTieItemView(tie)).toEqual(tie);
@@ -308,6 +311,9 @@ describe("단순 변환 함수", () => {
       tieLength: 145,
       wearerHeight: undefined,
       notes: "메모",
+      hasLengthReform: true,
+      hasWidthReform: true,
+      targetWidth: 9,
     });
   });
 });

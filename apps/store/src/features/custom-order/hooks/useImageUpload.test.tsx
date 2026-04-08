@@ -99,4 +99,30 @@ describe("useImageUpload", () => {
     expect(error).toHaveBeenCalledWith("이미지 URL을 받지 못했습니다.");
     expect(result.current.isUploading).toBe(false);
   });
+
+  it("addExistingImage로 이미 업로드된 이미지를 배열에 추가한다", () => {
+    const { result } = renderHook(() => useImageUpload());
+
+    act(() => {
+      result.current.addExistingImage(
+        "https://cdn.example.com/design.png",
+        "design-file-1",
+        "AI 디자인 04/01",
+      );
+    });
+
+    expect(result.current.uploadedImages).toEqual([
+      {
+        name: "AI 디자인 04/01",
+        url: "https://cdn.example.com/design.png",
+        fileId: "design-file-1",
+      },
+    ]);
+    expect(result.current.getImageRefs()).toEqual([
+      {
+        url: "https://cdn.example.com/design.png",
+        fileId: "design-file-1",
+      },
+    ]);
+  });
 });

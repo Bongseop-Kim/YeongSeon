@@ -8,15 +8,28 @@ import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 interface MessageBubbleProps {
   message: Message;
   onChipClick?: (text: string) => void;
-  onImageIndicatorClick?: (imageUrl: string) => void;
   onTiePreviewClick?: (imageUrl: string) => void;
+  selectedPreviewImageUrl?: string | null;
+  onSelectPreview?: (imageUrl: string) => void;
+}
+
+function ChatTieMask({ imageUrl }: { imageUrl: string }) {
+  return (
+    <TieMask
+      imageUrl={imageUrl}
+      width={128}
+      height={244}
+      shadowClassName="top-[-22px]"
+    />
+  );
 }
 
 export function MessageBubble({
   message,
   onChipClick,
-  onImageIndicatorClick,
   onTiePreviewClick,
+  selectedPreviewImageUrl,
+  onSelectPreview,
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const { isMobile } = useBreakpoint();
@@ -59,42 +72,46 @@ export function MessageBubble({
       >
         {message.content}
       </div>
-      {!isUser &&
-        previewBackground &&
-        isMobile &&
-        (onTiePreviewClick ? (
-          <button
-            type="button"
-            aria-label="넥타이 프리뷰 확대"
-            className="cursor-pointer"
-            onClick={() => {
-              onTiePreviewClick(previewBackground);
-            }}
-          >
-            <TieMask
-              imageUrl={previewBackground}
-              width={128}
-              height={244}
-              shadowClassName="top-[-22px]"
-            />
-          </button>
+      {!isUser && previewBackground ? (
+        isMobile ? (
+          onTiePreviewClick ? (
+            <button
+              type="button"
+              aria-label="넥타이 프리뷰 확대"
+              className="cursor-pointer"
+              onClick={() => onTiePreviewClick(previewBackground)}
+            >
+              <ChatTieMask imageUrl={previewBackground} />
+            </button>
+          ) : (
+            <ChatTieMask imageUrl={previewBackground} />
+          )
         ) : (
-          <TieMask
-            imageUrl={previewBackground}
-            width={128}
-            height={244}
-            shadowClassName="top-[-22px]"
-          />
-        ))}
-      {!isUser && previewBackground && !isMobile && onImageIndicatorClick ? (
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 rounded border border-green-200 bg-green-50 px-2 py-1 text-xs text-green-700 transition-colors hover:bg-green-100"
-          onClick={() => onImageIndicatorClick(previewBackground)}
-        >
-          <span>🖼</span>
-          <span>이미지 생성됨 · 우측 프리뷰 확인</span>
-        </button>
+          <div className="relative">
+            <button
+              type="button"
+              aria-label="넥타이 프리뷰 선택"
+              aria-pressed={selectedPreviewImageUrl === previewBackground}
+              className={cn(
+                "cursor-pointer transition-all",
+                selectedPreviewImageUrl === previewBackground
+                  ? "opacity-100"
+                  : "opacity-40 grayscale hover:opacity-70",
+              )}
+              onClick={() => onSelectPreview?.(previewBackground)}
+            >
+              <ChatTieMask imageUrl={previewBackground} />
+            </button>
+            {selectedPreviewImageUrl === previewBackground && (
+              <div
+                aria-label="선택됨"
+                className="pointer-events-none absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-indigo-600"
+              >
+                <span className="text-[10px] leading-none text-white">✓</span>
+              </div>
+            )}
+          </div>
+        )
       ) : null}
       {!isUser && message.contextChips && message.contextChips.length > 0 ? (
         <div className="flex flex-wrap gap-1.5 pt-1">

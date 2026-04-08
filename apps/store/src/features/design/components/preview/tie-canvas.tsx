@@ -35,15 +35,15 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
   );
-  const generatedImageUrl = useDesignChatStore(
-    (state) => state.generatedImageUrl,
+  const selectedPreviewImageUrl = useDesignChatStore(
+    (state) => state.selectedPreviewImageUrl,
   );
   const designContext = useDesignChatStore((state) => state.designContext);
 
   const isLoading =
     generationStatus === "generating" || generationStatus === "regenerating";
   const previewBackground =
-    generatedImageUrl ?? designContext.colors[0] ?? "#e5e7eb";
+    selectedPreviewImageUrl ?? designContext.colors[0] ?? "#e5e7eb";
 
   if (unmasked) {
     return (

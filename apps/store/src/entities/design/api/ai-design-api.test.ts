@@ -21,8 +21,10 @@ vi.mock("@/shared/lib/supabase", () => ({
   },
 }));
 
+const userMessage = "네이비 스트라이프 넥타이 만들어줘";
+
 const baseRequest = {
-  userMessage: "네이비 스트라이프 넥타이 만들어줘",
+  userMessage,
   attachments: [],
   designContext: {
     colors: [],
@@ -34,6 +36,9 @@ const baseRequest = {
   },
   aiModel: "openai" as const,
   conversationHistory: [],
+  sessionId: "test-session-id",
+  firstMessage: userMessage,
+  allMessages: [],
 };
 
 const successResponse = {

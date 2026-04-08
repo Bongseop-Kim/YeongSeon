@@ -14,7 +14,10 @@ function sessionMessageToMessage(message: DesignSessionMessage): Message {
     id: message.id,
     role: message.role,
     content: message.content,
-    imageUrl: message.imageUrl ?? undefined,
+    ...(message.imageUrl != null ? { imageUrl: message.imageUrl } : {}),
+    ...(message.imageFileId != null
+      ? { imageFileId: message.imageFileId }
+      : {}),
     timestamp: new Date(message.createdAt).getTime(),
   };
 }

@@ -10,6 +10,7 @@ import { ROUTES } from "@/shared/constants/ROUTES";
 import { useAuthStore } from "@/shared/store/auth";
 import { toast } from "@/shared/lib/toast";
 import { useImageUpload, ImageUpload } from "@/features/custom-order";
+import { DesignImagePicker } from "@/features/design";
 import { usePricingConfig } from "@/entities/custom-order";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 import {
@@ -454,6 +455,9 @@ export default function SampleOrderPage() {
                     onFileSelect={imageUpload.uploadFile}
                     onRemoveImage={imageUpload.removeImage}
                   />
+                  {user && (
+                    <DesignImagePicker onAdd={imageUpload.addExistingImages} />
+                  )}
 
                   <Field className="py-6">
                     <FieldTitle>요청사항</FieldTitle>

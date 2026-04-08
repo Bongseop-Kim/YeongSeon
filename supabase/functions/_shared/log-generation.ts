@@ -16,6 +16,7 @@ export type AiGenerationLogInsert = {
   ai_message?: string | null;
   generate_image?: boolean | null;
   image_generated: boolean;
+  generated_image_url?: string | null;
   detected_design?: Record<string, unknown> | null;
   tokens_charged: number;
   tokens_refunded: number;

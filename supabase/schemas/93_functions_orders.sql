@@ -45,6 +45,7 @@ declare
   v_total_price integer := 0;
   v_reform_base_cost integer;
   v_reform_shipping_cost integer;
+  v_reform_width_cost integer;
   v_used_coupon_ids uuid[] := '{}'::uuid[];
   v_coupon record;
 
@@ -60,6 +61,9 @@ declare
   v_shipping_cost integer;
   v_tie_image text;
   v_tie_file_id text;
+  v_has_length_reform boolean;
+  v_has_width_reform boolean;
+  v_reform_image_row_count integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -162,14 +166,12 @@ begin
       v_selected_option_id := null;
       v_reform_data := v_item->'reform_data';
 
-      -- reform 아이템이 실제로 있을 때만 pricing constants 조회 (최초 1회)
       if v_reform_base_cost is null then
         SELECT amount INTO v_reform_base_cost
         FROM pricing_constants WHERE key = 'REFORM_BASE_COST';
         IF v_reform_base_cost IS NULL THEN
           RAISE EXCEPTION 'Missing pricing constant: REFORM_BASE_COST';
         END IF;
-
         SELECT amount INTO v_reform_shipping_cost
         FROM pricing_constants WHERE key = 'REFORM_SHIPPING_COST';
         IF v_reform_shipping_cost IS NULL THEN
@@ -181,13 +183,26 @@ begin
         raise exception 'Reform data is required';
       end if;
 
-      v_unit_price := v_reform_base_cost;
-      v_reform_data := jsonb_set(
-        v_reform_data,
-        '{cost}',
-        to_jsonb(v_reform_base_cost),
-        true
-      );
+      v_has_length_reform := coalesce((v_reform_data->'tie'->>'hasLengthReform')::boolean, true);
+      v_has_width_reform := coalesce((v_reform_data->'tie'->>'hasWidthReform')::boolean, false);
+
+      if not v_has_length_reform and not v_has_width_reform then
+        raise exception 'At least one reform service must be selected';
+      end if;
+
+      if v_has_width_reform and v_reform_width_cost is null then
+        SELECT amount INTO v_reform_width_cost
+        FROM pricing_constants WHERE key = 'REFORM_WIDTH_COST';
+        IF v_reform_width_cost IS NULL THEN
+          RAISE EXCEPTION 'Missing pricing constant: REFORM_WIDTH_COST';
+        END IF;
+      end if;
+
+      v_unit_price :=
+        (case when v_has_length_reform then v_reform_base_cost else 0 end) +
+        (case when v_has_width_reform then coalesce(v_reform_width_cost, 0) else 0 end);
+
+      v_reform_data := jsonb_set(v_reform_data, '{cost}', to_jsonb(v_unit_price), true);
     else
       raise exception 'Invalid item type';
     end if;
@@ -399,8 +414,24 @@ begin
       v_tie_image := nullif(trim(v_item->'reform_data'->'tie'->>'image'), '');
       v_tie_file_id := nullif(trim(v_item->'reform_data'->'tie'->>'fileId'), '');
       IF v_tie_image IS NOT NULL THEN
-        INSERT INTO public.images (url, file_id, folder, entity_type, entity_id, uploaded_by)
-        VALUES (v_tie_image, v_tie_file_id, '/reform', 'reform', v_order_id::text, v_user_id);
+        IF v_tie_file_id IS NULL THEN
+          RAISE EXCEPTION 'Reform image file id is required';
+        END IF;
+
+        UPDATE public.images
+        SET folder = '/reform',
+            entity_type = 'reform',
+            entity_id = v_order_id::text
+        WHERE entity_type = 'reform_upload'
+          AND entity_id = v_tie_file_id
+          AND file_id = v_tie_file_id
+          AND url = v_tie_image
+          AND uploaded_by = v_user_id;
+
+        GET DIAGNOSTICS v_reform_image_row_count = ROW_COUNT;
+        IF v_reform_image_row_count = 0 THEN
+          RAISE EXCEPTION 'Reform image not found or not owned';
+        END IF;
       END IF;
     end loop;
 

@@ -17,6 +17,7 @@ export interface Message {
   role: "user" | "ai";
   content: string;
   imageUrl?: string;
+  imageFileId?: string;
   attachments?: Attachment[];
   contextChips?: ContextChip[];
   timestamp: number;

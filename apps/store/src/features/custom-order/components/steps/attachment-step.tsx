@@ -9,9 +9,13 @@ import { StepLayout } from "./step-layout";
 
 interface AttachmentStepProps {
   imageUpload: ImageUploadHook;
+  pickerSlot?: React.ReactNode;
 }
 
-export const AttachmentStep = ({ imageUpload }: AttachmentStepProps) => {
+export const AttachmentStep = ({
+  imageUpload,
+  pickerSlot,
+}: AttachmentStepProps) => {
   const { control } = useFormContext<QuoteOrderOptions>();
 
   return (
@@ -33,6 +37,7 @@ export const AttachmentStep = ({ imageUpload }: AttachmentStepProps) => {
           onFileSelect={imageUpload.uploadFile}
           onRemoveImage={imageUpload.removeImage}
         />
+        {pickerSlot}
       </UtilityPagePanel>
 
       <UtilityPagePanel

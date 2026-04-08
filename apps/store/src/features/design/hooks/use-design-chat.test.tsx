@@ -5,7 +5,6 @@ import { useDesignChat } from "@/features/design/hooks/use-design-chat";
 const {
   invalidateQueries,
   mutate,
-  saveSessionMutate,
   addMessage,
   setGenerationStatus,
   setGeneratedImage,
@@ -16,7 +15,6 @@ const {
 } = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
   mutate: vi.fn(),
-  saveSessionMutate: vi.fn(),
   addMessage: vi.fn(),
   setGenerationStatus: vi.fn(),
   setGeneratedImage: vi.fn(),
@@ -34,37 +32,47 @@ const {
   },
 }));
 
-const storeState = {
-  messages: [
-    {
-      id: "ai-1",
-      role: "ai",
-      content: "이전 답변",
-      timestamp: 1,
-    },
-    {
-      id: "user-1",
-      role: "user",
-      content: "이전 요청",
-      attachments: [],
-      timestamp: 2,
-      designContext: {
-        colors: ["navy"],
-        pattern: "stripe",
-        fabricMethod: "print",
-        ciPlacement: null,
-        ciImage: null,
-        referenceImage: null,
+const initialMessages = [
+  {
+    id: "ai-1",
+    role: "ai",
+    content: "이전 답변",
+    timestamp: 1,
+  },
+  {
+    id: "user-1",
+    role: "user",
+    content: "이전 요청",
+    attachments: [
+      {
+        type: "image",
+        label: "참고 이미지",
+        value: "reference",
       },
+    ],
+    imageUrl: "https://example.com/reference.png",
+    imageFileId: "file-existing-reference",
+    timestamp: 2,
+    designContext: {
+      colors: ["navy"],
+      pattern: "stripe",
+      fabricMethod: "print",
+      ciPlacement: null,
+      ciImage: null,
+      referenceImage: null,
     },
-    {
-      id: "ui-1",
-      role: "ai",
-      content: "  ",
-      timestamp: 3,
-      uiOnly: true,
-    },
-  ],
+  },
+  {
+    id: "ui-1",
+    role: "ai",
+    content: "  ",
+    timestamp: 3,
+    uiOnly: true,
+  },
+] as const;
+
+const storeState = {
+  messages: [...initialMessages],
   designContext: {
     colors: ["navy"],
     pattern: "stripe",
@@ -100,16 +108,6 @@ vi.mock("@/features/design/hooks/ai-design-query", () => ({
   }),
 }));
 
-vi.mock("@/features/design/hooks/design-session-query", () => ({
-  useSaveDesignSessionMutation: () => ({
-    mutate: saveSessionMutate,
-  }),
-}));
-
-vi.mock("@/features/design/utils/imagekit-upload", () => ({
-  uploadGeneratedImage: vi.fn().mockResolvedValue(null),
-}));
-
 vi.mock("@/shared/lib/posthog", () => ({
   ph: {
     capture: phCapture,
@@ -133,13 +131,16 @@ describe("useDesignChat", () => {
     });
     invalidateQueries.mockReset();
     mutate.mockReset();
-    saveSessionMutate.mockReset();
     addMessage.mockReset();
     setGenerationStatus.mockReset();
     setGeneratedImage.mockReset();
     clearAttachments.mockReset();
     setCurrentSessionId.mockReset();
     phCapture.mockReset();
+    storeState.messages = [...initialMessages];
+    addMessage.mockImplementation((message) => {
+      storeState.messages = [...storeState.messages, message];
+    });
   });
 
   it("빈 메시지는 무시하고 일반 메시지는 mutation을 호출한다", () => {
@@ -168,6 +169,30 @@ describe("useDesignChat", () => {
           { role: "user", content: "이전 요청" },
           { role: "user", content: "새 디자인" },
         ],
+        sessionId: expect.any(String),
+        firstMessage: expect.any(String),
+        allMessages: expect.arrayContaining([
+          expect.objectContaining({
+            id: "user-1",
+            imageUrl: "https://example.com/reference.png",
+            imageFileId: "file-existing-reference",
+            attachments: [
+              expect.objectContaining({
+                type: "image",
+                value: "reference",
+              }),
+            ],
+          }),
+          expect.objectContaining({
+            content: "새 디자인",
+            attachments: [
+              expect.objectContaining({
+                type: "color",
+                value: "navy",
+              }),
+            ],
+          }),
+        ]),
       }),
       expect.any(Object),
     );
@@ -226,6 +251,38 @@ describe("useDesignChat", () => {
     const callbacks = mutate.mock.calls[0][1];
     callbacks.onError(new Error("boom"));
     expect(setGenerationStatus).toHaveBeenCalledWith("completed");
+  });
+
+  it("onGenerationStart는 sendMessage 시 sessionId와 함께 호출된다", () => {
+    const onGenerationStart = vi.fn();
+    const { result } = renderHook(() => useDesignChat({ onGenerationStart }));
+    result.current.sendMessage("새 디자인", []);
+    expect(onGenerationStart).toHaveBeenCalledWith(expect.any(String));
+  });
+
+  it("onGenerationEnd는 성공 시 호출된다", () => {
+    const onGenerationEnd = vi.fn();
+    const { result } = renderHook(() => useDesignChat({ onGenerationEnd }));
+    result.current.sendMessage("새 디자인", []);
+
+    const callbacks = mutate.mock.calls[0][1];
+    callbacks.onSuccess({
+      aiMessage: "시안을 만들었습니다.",
+      imageUrl: null,
+      tags: [],
+      contextChips: [],
+    });
+    expect(onGenerationEnd).toHaveBeenCalledOnce();
+  });
+
+  it("onGenerationEnd는 에러 시에도 호출된다", () => {
+    const onGenerationEnd = vi.fn();
+    const { result } = renderHook(() => useDesignChat({ onGenerationEnd }));
+    result.current.sendMessage("새 디자인", []);
+
+    const callbacks = mutate.mock.calls[0][1];
+    callbacks.onError(new Error("boom"));
+    expect(onGenerationEnd).toHaveBeenCalledOnce();
   });
 
   describe("design_session_started 이벤트", () => {

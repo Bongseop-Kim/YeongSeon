@@ -87,6 +87,20 @@ export const useImageUpload = (
       .filter((img) => img.url && img.fileId);
   }, [uploadedImages]);
 
+  const addExistingImage = useCallback(
+    (url: string, fileId: string, name: string) => {
+      setUploadedImages((prev) => [...prev, { name, url, fileId }]);
+    },
+    [],
+  );
+
+  const addExistingImages = useCallback(
+    (images: { name: string; url: string; fileId: string }[]) => {
+      setUploadedImages((prev) => [...prev, ...images]);
+    },
+    [],
+  );
+
   const isUploading = activeUploads > 0;
 
   return {
@@ -95,5 +109,7 @@ export const useImageUpload = (
     uploadFile,
     removeImage,
     getImageRefs,
+    addExistingImage,
+    addExistingImages,
   };
 };

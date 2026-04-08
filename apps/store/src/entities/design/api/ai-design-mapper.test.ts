@@ -35,6 +35,9 @@ const createAiDesignRequest = (
   aiModel: "openai",
   attachments: [],
   designContext: createDesignContext(),
+  sessionId: "test-session-id",
+  firstMessage: "테스트 요청",
+  allMessages: [],
   ...overrides,
 });
 
@@ -150,7 +153,37 @@ describe("buildInvokePayload", () => {
       ciImageMimeType: "image/png",
       referenceImageBase64: "ref-base64",
       referenceImageMimeType: "image/jpeg",
+      sessionId: "test-session-id",
+      firstMessage: "테스트 요청",
+      allMessages: [],
     });
+  });
+});
+
+describe("buildInvokePayload — 세션 필드", () => {
+  const baseRequest = createAiDesignRequest({
+    userMessage: "네이비 스트라이프",
+    sessionId: "session-abc",
+    firstMessage: "첫 메시지",
+    allMessages: [
+      {
+        id: "msg-1",
+        role: "user" as const,
+        content: "네이비 스트라이프",
+        imageUrl: null,
+        imageFileId: null,
+        sequenceNumber: 0,
+      },
+    ],
+  });
+
+  it("sessionId, firstMessage, allMessages가 payload에 포함된다", () => {
+    const payload = buildInvokePayload(baseRequest, {});
+
+    expect(payload.sessionId).toBe("session-abc");
+    expect(payload.firstMessage).toBe("첫 메시지");
+    expect(payload.allMessages).toHaveLength(1);
+    expect(payload.allMessages[0].id).toBe("msg-1");
   });
 });
 

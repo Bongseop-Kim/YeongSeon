@@ -9,6 +9,8 @@ interface MessageListProps {
   isTyping: boolean;
   onChipClick?: (text: string) => void;
   onTiePreviewClick?: (imageUrl: string) => void;
+  selectedPreviewImageUrl?: string | null;
+  onSelectPreview?: (imageUrl: string) => void;
 }
 
 export function MessageList({
@@ -16,6 +18,8 @@ export function MessageList({
   isTyping,
   onChipClick,
   onTiePreviewClick,
+  selectedPreviewImageUrl,
+  onSelectPreview,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -35,6 +39,8 @@ export function MessageList({
           message={message}
           onChipClick={onChipClick}
           onTiePreviewClick={onTiePreviewClick}
+          selectedPreviewImageUrl={selectedPreviewImageUrl}
+          onSelectPreview={onSelectPreview}
         />
       ))}
       {isTyping ? <TypingIndicator /> : null}

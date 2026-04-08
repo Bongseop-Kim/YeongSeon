@@ -38,6 +38,12 @@ export function ChatPanel({
   );
   const aiModel = useDesignChatStore((state) => state.aiModel);
   const setAiModel = useDesignChatStore((state) => state.setAiModel);
+  const selectedPreviewImageUrl = useDesignChatStore(
+    (state) => state.selectedPreviewImageUrl,
+  );
+  const setSelectedPreviewImage = useDesignChatStore(
+    (state) => state.setSelectedPreviewImage,
+  );
 
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
@@ -98,6 +104,8 @@ export function ChatPanel({
             }
             onChipClick={handleChipClick}
             onTiePreviewClick={(url) => setSelectedImageUrl(url)}
+            selectedPreviewImageUrl={selectedPreviewImageUrl}
+            onSelectPreview={setSelectedPreviewImage}
           />
         )}
       </div>

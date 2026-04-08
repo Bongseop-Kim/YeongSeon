@@ -20,6 +20,12 @@ import {
   parseJsonBlock,
   SYSTEM_PROMPT,
 } from "@/functions/_shared/prompt-builders.ts";
+import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
+import {
+  buildSessionMessages,
+  saveDesignSession,
+  type SessionMessage,
+} from "@/functions/_shared/session-save.ts";
 
 export type { GenerateDesignRequest };
 
@@ -542,14 +548,75 @@ Deno.serve(async (req) => {
       }
     }
 
-    await emitGenerationLog({
-      image_generated: imageUrl !== null,
-    });
+    let uploadedImageUrl: string | null = null;
+    let uploadedFileId: string | null = null;
+    let responseImageUrl: string | null = imageUrl;
+    if (imageUrl !== null) {
+      const uploaded = await uploadImageToImageKit(
+        imageUrl,
+        `design-${workId}.png`,
+        "/design-sessions",
+      );
+      if (!uploaded?.url || !uploaded.fileId) {
+        console.error("ImageKit upload failed for generated image", {
+          workId,
+          uploadResult: uploaded,
+          imageUrlPreview: imageUrl.slice(0, 64),
+        });
+      } else {
+        uploadedImageUrl = uploaded.url;
+        uploadedFileId = uploaded.fileId;
+        responseImageUrl = uploaded.url;
+      }
+    }
+
+    const sessionSavePromise =
+      payload.sessionId && Array.isArray(payload.allMessages)
+        ? saveDesignSession(supabase, {
+            sessionId: payload.sessionId,
+            aiModel: "gemini",
+            firstMessage: payload.firstMessage ?? "",
+            lastImageUrl: uploadedImageUrl,
+            lastImageFileId: uploadedFileId,
+            messages: buildSessionMessages(payload.allMessages, {
+              id: crypto.randomUUID(),
+              role: "ai",
+              content: textResult.aiMessage,
+              image_url: uploadedImageUrl,
+              image_file_id: uploadedFileId,
+              sequence_number: payload.allMessages.length,
+            } satisfies SessionMessage),
+          })
+        : Promise.resolve();
+
+    const settledResults = await Promise.allSettled([
+      emitGenerationLog({
+        image_generated: imageUrl !== null,
+        generated_image_url: uploadedImageUrl,
+      }),
+      sessionSavePromise,
+    ]);
+
+    const [logResult, sessionResult] = settledResults;
+    if (logResult.status === "rejected") {
+      console.error("Post-generation task failed", {
+        workId,
+        task: "emitGenerationLog",
+        reason: logResult.reason,
+      });
+    }
+    if (sessionResult.status === "rejected") {
+      console.error("Post-generation task failed", {
+        workId,
+        task: "sessionSavePromise",
+        reason: sessionResult.reason,
+      });
+    }
 
     return jsonResponse(200, {
       aiMessage: textResult.aiMessage,
       contextChips: textResult.contextChips,
-      imageUrl,
+      imageUrl: responseImageUrl,
       workId,
       remainingTokens,
     } satisfies GenerateDesignResult & { remainingTokens: number });

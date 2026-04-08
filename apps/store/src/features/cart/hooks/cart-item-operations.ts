@@ -91,11 +91,11 @@ export const updateCartItemQuantity = (
 export const updateReformCartItemOption = (
   currentItems: CartItem[],
   itemId: string,
-  tie: TieItem,
+  reformData: { tie: TieItem; cost: number },
 ) =>
   currentItems.map((item) =>
     item.id === itemId && item.type === "reform"
-      ? { ...item, reformData: { ...item.reformData, tie } }
+      ? { ...item, reformData }
       : item,
   );
 

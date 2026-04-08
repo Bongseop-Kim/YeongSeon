@@ -208,9 +208,12 @@ export function CartCheckoutPage() {
 
     const updatedTie = reformOptionChangeRef.current.getValues();
     const hasChanges =
+      updatedTie.hasLengthReform !== item.reformData.tie.hasLengthReform ||
+      updatedTie.hasWidthReform !== item.reformData.tie.hasWidthReform ||
       updatedTie.measurementType !== item.reformData.tie.measurementType ||
       updatedTie.tieLength !== item.reformData.tie.tieLength ||
-      updatedTie.wearerHeight !== item.reformData.tie.wearerHeight;
+      updatedTie.wearerHeight !== item.reformData.tie.wearerHeight ||
+      updatedTie.targetWidth !== item.reformData.tie.targetWidth;
 
     if (!hasChanges) {
       toast.warning("변경 사항이 없습니다.");
@@ -219,6 +222,11 @@ export function CartCheckoutPage() {
     }
 
     try {
+      if (!reformPricing) {
+        setReformDialogItemId(null);
+        toast.error("수선 비용 정보를 불러오지 못했습니다.");
+        return;
+      }
       setIsReformSubmitting(true);
       await updateReformOption(item.id, updatedTie);
       toast.success("수선 옵션이 변경되었습니다.");
