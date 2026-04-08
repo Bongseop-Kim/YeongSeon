@@ -2,7 +2,6 @@ export {
   aiDesignApi,
   getDesignTokenBalance,
   InsufficientTokensError,
-  setGenerationLogImageUrl,
 } from "./api/ai-design-api";
 export type { AiDesignResponse } from "./model/ai-design-response";
 export {
@@ -12,9 +11,7 @@ export {
 export {
   getDesignSessionMessages,
   getDesignSessions,
-  saveDesignSession,
 } from "./api/design-session-api";
-export type { SaveDesignSessionParams } from "./api/design-session-api";
 export {
   toRestoredDesignSessionState,
   type RestoredDesignSessionState,
@@ -30,5 +27,3 @@ export type {
 } from "./model/design-context";
 export type { DesignSession } from "./model/design-session";
 export { getDesignImages } from "./api/design-image-api";
-export type { GetDesignImagesResult } from "./api/design-image-api";
-export type { DesignImage } from "./model/design-image";

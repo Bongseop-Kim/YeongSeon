@@ -1,9 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   getDesignSessionMessages,
   getDesignSessions,
-  saveDesignSession,
-  type SaveDesignSessionParams,
   toRestoredDesignSessionState,
   type RestoredDesignSessionState,
 } from "@/entities/design";
@@ -27,17 +25,5 @@ export function useDesignSessionMessagesQuery(sessionId: string) {
     queryFn: async (): Promise<RestoredDesignSessionState> =>
       toRestoredDesignSessionState(await getDesignSessionMessages(sessionId)),
     enabled: sessionId.length > 0,
-  });
-}
-
-export function useSaveDesignSessionMutation() {
-  const queryClient = useQueryClient();
-  return useMutation<void, Error, SaveDesignSessionParams>({
-    mutationFn: saveDesignSession,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: DESIGN_SESSIONS_QUERY_KEY,
-      });
-    },
   });
 }

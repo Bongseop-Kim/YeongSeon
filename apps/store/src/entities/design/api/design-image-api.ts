@@ -5,7 +5,7 @@ import {
   type DesignImageRow,
 } from "@/entities/design/api/design-image-mapper";
 
-export interface GetDesignImagesResult {
+interface GetDesignImagesResult {
   images: DesignImage[];
   total: number;
 }
