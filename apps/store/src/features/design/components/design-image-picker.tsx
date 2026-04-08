@@ -9,6 +9,18 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
   month: "2-digit",
   day: "2-digit",
 });
+const UNKNOWN_DATE_LABEL = "unknown date";
+
+function formatCreatedAt(createdAt?: string) {
+  if (!createdAt) return null;
+
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return DATE_FORMATTER.format(date);
+}
 
 interface DesignImagePickerProps {
   onAdd: (images: UploadedImage[]) => void;
@@ -23,6 +35,7 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
   const { data, isLoading, isError, refetch } = useDesignImagesQuery(
     page,
     pageSize,
+    { enabled: isOpen },
   );
   const images = data?.images ?? [];
   const total = data?.total ?? 0;
@@ -54,11 +67,17 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
   const handleAdd = () => {
     const selected = images.filter((img) => selectedIds.has(img.imageFileId));
     onAdd(
-      selected.map((img) => ({
-        url: img.imageUrl,
-        fileId: img.imageFileId,
-        name: `AI 디자인 ${DATE_FORMATTER.format(new Date(img.createdAt))}`,
-      })),
+      selected.map((img) => {
+        const formattedCreatedAt = formatCreatedAt(img.createdAt);
+
+        return {
+          url: img.imageUrl,
+          fileId: img.imageFileId,
+          name: formattedCreatedAt
+            ? `AI 디자인 ${formattedCreatedAt}`
+            : "AI 디자인",
+        };
+      }),
     );
     setSelectedIds(new Set());
     setIsOpen(false);
@@ -134,6 +153,7 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
             <div className="grid grid-cols-4 gap-2">
               {images.map((img) => {
                 const isSelected = selectedIds.has(img.imageFileId);
+                const formattedCreatedAt = formatCreatedAt(img.createdAt);
                 return (
                   <button
                     key={img.imageFileId}
@@ -161,7 +181,7 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
                       </span>
                     )}
                     <span className="absolute bottom-0 left-0 right-0 bg-foreground/70 px-1 py-0.5 text-[10px] text-background">
-                      {DATE_FORMATTER.format(new Date(img.createdAt))}
+                      {formattedCreatedAt ?? UNKNOWN_DATE_LABEL}
                     </span>
                   </button>
                 );

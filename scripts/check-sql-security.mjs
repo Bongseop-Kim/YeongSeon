@@ -74,6 +74,12 @@ function extractFunctionChunks(sql) {
   return functionChunks;
 }
 
+const RAW_EXEMPTION_PATTERNS = [
+  /\bauth\.uid\(\)/i,
+  /\bis_admin\(\)/i,
+  /current_setting\s*\(\s*['"]request\.jwt\.claim/i,
+];
+
 const ROOT = resolve(fileURLToPath(import.meta.url), "../..");
 
 // 전체 검사 시 schemas만 검사 (마이그레이션은 squash 후 schemas가 기준)
@@ -137,7 +143,11 @@ for (const file of sqlFiles) {
     );
     const funcName = nameMatch ? nameMatch[1] : "(unknown)";
 
-    // 면제 1-3: 주석·문자열 제거 후 실행 코드 영역에서만 검사
+    // 면제 1-3: current_setting('request.jwt.claim...')는 문자열 리터럴을 포함하므로
+    // 비코드 제거 전에 원문 기준으로 먼저 확인한다.
+    if (RAW_EXEMPTION_PATTERNS.some((pattern) => pattern.test(part))) continue;
+
+    // 원문에서 면제되지 않은 경우에만 비실행 영역을 제거하고 일반 검사를 이어간다.
     const execCode = stripSqlNonCode(part);
 
     // 면제 1: auth.uid() 호출 있음

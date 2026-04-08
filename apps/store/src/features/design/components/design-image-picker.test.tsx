@@ -37,6 +37,10 @@ describe("DesignImagePicker", () => {
 
     render(<DesignImagePicker onAdd={vi.fn()} />);
 
+    expect(useDesignImagesQuery).toHaveBeenCalledWith(1, 12, {
+      enabled: false,
+    });
+
     expect(
       screen.getByRole("button", { name: /내 AI 디자인에서 선택/ }),
     ).toBeInTheDocument();
@@ -57,6 +61,10 @@ describe("DesignImagePicker", () => {
     await userEvent.click(
       screen.getByRole("button", { name: /내 AI 디자인에서 선택/ }),
     );
+
+    expect(useDesignImagesQuery).toHaveBeenLastCalledWith(1, 12, {
+      enabled: true,
+    });
 
     expect(screen.getByRole("button", { name: /추가/ })).toBeInTheDocument();
   });
@@ -168,5 +176,44 @@ describe("DesignImagePicker", () => {
     expect(screen.getByRole("button", { name: "3" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "6" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "10" })).toBeInTheDocument();
+  });
+
+  it("createdAt이 비정상이면 안전한 대체 문구를 사용한다", async () => {
+    useDesignImagesQuery.mockReturnValue({
+      data: {
+        images: [
+          {
+            imageUrl: "https://cdn.example.com/img3.png",
+            imageFileId: "file-3",
+            createdAt: "not-a-date",
+            sessionFirstMessage: "검은 넥타이",
+          },
+        ],
+        total: 1,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    const onAdd = vi.fn();
+    render(<DesignImagePicker onAdd={onAdd} />);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /내 AI 디자인에서 선택/ }),
+    );
+
+    expect(screen.getByText("unknown date")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "검은 넥타이" }));
+    await userEvent.click(screen.getByRole("button", { name: /1장 추가/ }));
+
+    expect(onAdd).toHaveBeenCalledWith([
+      {
+        url: "https://cdn.example.com/img3.png",
+        fileId: "file-3",
+        name: "AI 디자인",
+      },
+    ]);
   });
 });
