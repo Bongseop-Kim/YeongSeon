@@ -3,17 +3,14 @@ import { type UseFormSetValue } from "react-hook-form";
 import { Input } from "@/shared/ui-extended/input";
 import {
   Field,
-  FieldContent,
   FieldDescription,
   FieldLabel,
   FieldTitle,
 } from "@/shared/ui/field";
-import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import { toast } from "sonner";
-import {
-  isMeasurementType,
-  type ReformOptions,
-} from "@yeongseon/shared/types/view/reform";
+import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
+import { cn } from "@/shared/lib/utils";
+import { CheckIcon } from "lucide-react";
 
 interface BulkApplySectionProps {
   setValue: UseFormSetValue<ReformOptions>;
@@ -27,11 +24,13 @@ export interface BulkApplySectionRef {
 
 const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
   ({ setValue, checkedIndices, onApply }, ref) => {
+    const [hasLengthReform, setHasLengthReform] = useState(false);
+    const [hasWidthReform, setHasWidthReform] = useState(false);
     const [measurementType, setMeasurementType] = useState<"length" | "height">(
       "length",
     );
-    const [lengthValue, setLengthValue] = useState<string>("");
-    const [widthValue, setWidthValue] = useState<string>("");
+    const [lengthValue, setLengthValue] = useState("");
+    const [widthValue, setWidthValue] = useState("");
 
     const handleBulkApply = () => {
       if (checkedIndices.length === 0) {
@@ -39,20 +38,36 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
         return false;
       }
 
-      const lengthNum = Number(lengthValue);
-      const widthNum = Number(widthValue);
-      const hasValidLength =
-        lengthValue.trim() !== "" && !Number.isNaN(lengthNum) && lengthNum > 0;
-      const hasValidWidth =
-        widthValue.trim() !== "" && !Number.isNaN(widthNum) && widthNum > 0;
-
-      if (!hasValidLength && !hasValidWidth) {
-        toast.error("자동수선 또는 폭수선 값을 하나 이상 입력해주세요.");
+      if (!hasLengthReform && !hasWidthReform) {
+        toast.error("수선 서비스를 하나 이상 선택해주세요.");
         return false;
       }
 
+      if (hasLengthReform) {
+        const lengthNum = Number(lengthValue);
+        const valid =
+          lengthValue.trim() !== "" &&
+          !Number.isNaN(lengthNum) &&
+          lengthNum > 0;
+        if (!valid) {
+          toast.error("측정 값을 입력해주세요.");
+          return false;
+        }
+      }
+
+      if (hasWidthReform) {
+        const widthNum = Number(widthValue);
+        const valid =
+          widthValue.trim() !== "" && !Number.isNaN(widthNum) && widthNum > 0;
+        if (!valid) {
+          toast.error("원하는 폭을 입력해주세요.");
+          return false;
+        }
+      }
+
       checkedIndices.forEach((i) => {
-        if (hasValidLength) {
+        if (hasLengthReform) {
+          const lengthNum = Number(lengthValue);
           setValue(`ties.${i}.hasLengthReform`, true);
           if (measurementType === "length") {
             setValue(`ties.${i}.measurementType`, "length");
@@ -65,7 +80,8 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
           }
         }
 
-        if (hasValidWidth) {
+        if (hasWidthReform) {
+          const widthNum = Number(widthValue);
           setValue(`ties.${i}.hasWidthReform`, true);
           setValue(`ties.${i}.targetWidth`, widthNum);
         }
@@ -75,95 +91,142 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
       return true;
     };
 
-    useImperativeHandle(ref, () => ({
-      handleBulkApply,
-    }));
+    useImperativeHandle(ref, () => ({ handleBulkApply }));
 
     return (
-      <div className="space-y-6">
-        <div className="space-y-4">
-          <FieldTitle>자동수선</FieldTitle>
-
-          <Field orientation="vertical" className="gap-3">
-            <FieldContent className="gap-2">
-              <FieldLabel>
-                <FieldTitle>측정 방식</FieldTitle>
-              </FieldLabel>
-            </FieldContent>
-            <RadioGroup
-              value={measurementType}
-              onValueChange={(value) =>
-                setMeasurementType(isMeasurementType(value) ? value : "length")
-              }
-              className="gap-2"
+      <div className="space-y-2">
+        {/* 자동수선 카드 */}
+        <div
+          className={cn(
+            "overflow-hidden rounded-md border transition-colors",
+            hasLengthReform ? "border-brand-ink" : "border-border",
+          )}
+        >
+          <button
+            type="button"
+            className={cn(
+              "flex w-full items-center gap-2 px-3 py-[10px] text-left transition-colors",
+              hasLengthReform
+                ? "bg-brand-ink"
+                : "bg-muted hover:bg-brand-paper-muted",
+            )}
+            onClick={() => setHasLengthReform((v) => !v)}
+          >
+            <span
+              className={cn(
+                "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                hasLengthReform
+                  ? "border-white bg-white/0"
+                  : "border-input bg-white",
+              )}
             >
-              <FieldLabel htmlFor="bulk-measurement-length">
-                <Field orientation="horizontal" className="items-center gap-3">
-                  <FieldContent className="gap-0">
-                    <FieldTitle>넥타이 길이</FieldTitle>
-                  </FieldContent>
-                  <RadioGroupItem value="length" id="bulk-measurement-length" />
-                </Field>
-              </FieldLabel>
-              <FieldLabel htmlFor="bulk-measurement-height">
-                <Field orientation="horizontal" className="items-center gap-3">
-                  <FieldContent className="gap-0">
-                    <FieldTitle>착용자 키</FieldTitle>
-                  </FieldContent>
-                  <RadioGroupItem value="height" id="bulk-measurement-height" />
-                </Field>
-              </FieldLabel>
-            </RadioGroup>
-          </Field>
+              {hasLengthReform && <CheckIcon className="size-3 text-white" />}
+            </span>
+            <span
+              className={cn(
+                "text-sm font-semibold",
+                hasLengthReform ? "text-white" : "text-foreground",
+              )}
+            >
+              자동수선
+            </span>
+          </button>
 
-          <Field orientation="vertical" className="gap-2">
-            <FieldContent className="gap-1">
-              <FieldLabel htmlFor="bulk-measurement-value">
-                <FieldTitle>
-                  {measurementType === "length" ? "넥타이 길이" : "착용자 키"}
-                </FieldTitle>
-              </FieldLabel>
-              {measurementType === "length" ? (
+          <div className="border-t border-border p-3">
+            <div className="mb-3 flex overflow-hidden rounded-md border border-border bg-muted/40">
+              {(["length", "height"] as const).map((type, i) => (
+                <button
+                  key={type}
+                  type="button"
+                  className={cn(
+                    "flex-1 px-3 py-2 text-xs font-medium transition-colors",
+                    i > 0 && "border-l border-border",
+                    measurementType === type
+                      ? "bg-brand-ink text-white"
+                      : "text-muted-foreground hover:bg-background",
+                  )}
+                  onClick={() => setMeasurementType(type)}
+                >
+                  {type === "length" ? "넥타이 길이" : "착용자 키"}
+                </button>
+              ))}
+            </div>
+            <Field orientation="vertical" className="gap-1">
+              {measurementType === "length" && (
                 <FieldDescription className="mt-0 text-xs">
                   (매듭 포함)
                 </FieldDescription>
-              ) : null}
-            </FieldContent>
-            <Input
-              id="bulk-measurement-value"
-              type="number"
-              placeholder={measurementType === "length" ? "예: 51" : "예: 175"}
-              className="pr-8"
-              value={lengthValue}
-              onChange={(e) => setLengthValue(e.target.value)}
-              unit="cm"
-            />
-          </Field>
+              )}
+              <Input
+                type="number"
+                placeholder={
+                  measurementType === "length" ? "예: 51" : "예: 175"
+                }
+                value={lengthValue}
+                onChange={(e) => setLengthValue(e.target.value)}
+                unit="cm"
+              />
+            </Field>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <FieldTitle>폭수선</FieldTitle>
+        {/* 폭수선 카드 */}
+        <div
+          className={cn(
+            "overflow-hidden rounded-md border transition-colors",
+            hasWidthReform ? "border-brand-ink" : "border-border",
+          )}
+        >
+          <button
+            type="button"
+            className={cn(
+              "flex w-full items-center gap-2 px-3 py-[10px] text-left transition-colors",
+              hasWidthReform
+                ? "bg-brand-ink"
+                : "bg-muted hover:bg-brand-paper-muted",
+            )}
+            onClick={() => setHasWidthReform((v) => !v)}
+          >
+            <span
+              className={cn(
+                "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                hasWidthReform
+                  ? "border-white bg-white/0"
+                  : "border-input bg-white",
+              )}
+            >
+              {hasWidthReform && <CheckIcon className="size-3 text-white" />}
+            </span>
+            <span
+              className={cn(
+                "text-sm font-semibold",
+                hasWidthReform ? "text-white" : "text-foreground",
+              )}
+            >
+              폭수선
+            </span>
+          </button>
 
-          <Field orientation="vertical" className="gap-2">
-            <FieldContent className="gap-1">
-              <FieldLabel htmlFor="bulk-width-value">
+          <div className="border-t border-border p-3">
+            <Field orientation="vertical" className="gap-1">
+              <FieldLabel>
                 <FieldTitle>원하는 폭</FieldTitle>
               </FieldLabel>
-            </FieldContent>
-            <Input
-              id="bulk-width-value"
-              type="number"
-              placeholder="예: 9"
-              className="pr-8"
-              value={widthValue}
-              onChange={(e) => setWidthValue(e.target.value)}
-              unit="cm"
-            />
-          </Field>
+              <Input
+                type="number"
+                placeholder="예: 9"
+                value={widthValue}
+                onChange={(e) => setWidthValue(e.target.value)}
+                unit="cm"
+              />
+            </Field>
+          </div>
         </div>
       </div>
     );
   },
 );
+
+BulkApplySection.displayName = "BulkApplySection";
 
 export default BulkApplySection;
