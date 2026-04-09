@@ -6,8 +6,8 @@ Always respond in Korean.
 
 - 워크트리 사용하지 않음
 - git checkout -b <branch> 로 브랜치 생성
-- 커밋 금지
-- MR 생성 금지
+- AI 임의 커밋 금지 (사용자 명시적 요청 시에만 허용)
+- AI 임의 MR 생성 금지 (사용자 명시적 요청 시에만 허용)
 
 ## Codex 위임 정책
 

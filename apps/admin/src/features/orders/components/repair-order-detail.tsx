@@ -43,7 +43,7 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
                     {tie.hasLengthReform ? "O" : "X"}
                   </Descriptions.Item>
                   <Descriptions.Item label="길이 값">
-                    {tie.measurementValue
+                    {tie.hasLengthReform && tie.measurementValue
                       ? `${tie.measurementValue}cm (${tie.measurementType === "length" ? "직접 입력" : "키 입력"})`
                       : "-"}
                   </Descriptions.Item>
@@ -56,7 +56,7 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
                       : "-"}
                   </Descriptions.Item>
                   <Descriptions.Item label="딤플" span={2}>
-                    {tie.dimple ? "O" : "X"}
+                    {tie.hasLengthReform ? (tie.dimple ? "O" : "X") : "-"}
                   </Descriptions.Item>
                   {tie.memo && (
                     <Descriptions.Item label="메모" span={2}>

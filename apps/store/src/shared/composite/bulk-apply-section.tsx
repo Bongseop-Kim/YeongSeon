@@ -67,12 +67,21 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
           setValue(`ties.${i}.wearerHeight`, lengthNum);
           setValue(`ties.${i}.tieLength`, undefined);
           setValue(`ties.${i}.dimple`, dimple);
+        } else {
+          setValue(`ties.${i}.hasLengthReform`, false);
+          setValue(`ties.${i}.measurementType`, undefined);
+          setValue(`ties.${i}.wearerHeight`, undefined);
+          setValue(`ties.${i}.tieLength`, undefined);
+          setValue(`ties.${i}.dimple`, undefined);
         }
 
         if (hasWidthReform) {
           const widthNum = Number(widthValue);
           setValue(`ties.${i}.hasWidthReform`, true);
           setValue(`ties.${i}.targetWidth`, widthNum);
+        } else {
+          setValue(`ties.${i}.hasWidthReform`, false);
+          setValue(`ties.${i}.targetWidth`, undefined);
         }
       });
 

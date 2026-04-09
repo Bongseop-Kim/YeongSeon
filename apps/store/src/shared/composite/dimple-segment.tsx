@@ -17,6 +17,9 @@ export function DimpleSegment({
         <button
           key={type}
           type="button"
+          aria-pressed={
+            (type === "basic" && !value) || (type === "dimple" && value)
+          }
           className={cn(
             "px-2.5 py-1 text-xs font-medium transition-colors",
             i > 0 && "border-l border-white/30",
