@@ -9,6 +9,7 @@ export interface TieItemDTO {
   hasLengthReform?: boolean;
   hasWidthReform?: boolean;
   targetWidth?: number;
+  dimple?: boolean;
 }
 
 export interface TieItemCreateDTO {
@@ -22,4 +23,5 @@ export interface TieItemCreateDTO {
   hasLengthReform?: boolean;
   hasWidthReform?: boolean;
   targetWidth?: number;
+  dimple?: boolean;
 }

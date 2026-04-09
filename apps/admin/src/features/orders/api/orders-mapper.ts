@@ -333,6 +333,12 @@ function parseRepairTie(raw: unknown): RepairTie {
     measurementType,
     measurementValue,
     memo: typeof r.notes === "string" ? r.notes : null,
+    dimple: typeof r.dimple === "boolean" ? r.dimple : false,
+    hasLengthReform:
+      typeof r.hasLengthReform === "boolean" ? r.hasLengthReform : true,
+    hasWidthReform:
+      typeof r.hasWidthReform === "boolean" ? r.hasWidthReform : false,
+    targetWidth: typeof r.targetWidth === "number" ? r.targetWidth : null,
   };
 }
 

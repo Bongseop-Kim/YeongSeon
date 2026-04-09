@@ -1,15 +1,11 @@
 import { useState, useImperativeHandle, forwardRef } from "react";
 import { type UseFormSetValue } from "react-hook-form";
 import { Input } from "@/shared/ui-extended/input";
-import {
-  Field,
-  FieldDescription,
-  FieldLabel,
-  FieldTitle,
-} from "@/shared/ui/field";
+import { Field, FieldLabel, FieldTitle } from "@/shared/ui/field";
 import { toast } from "sonner";
 import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
 import { cn } from "@/shared/lib/utils";
+import { DimpleSegment } from "@/shared/composite/dimple-segment";
 import { CheckIcon } from "lucide-react";
 
 interface BulkApplySectionProps {
@@ -26,9 +22,7 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
   ({ setValue, checkedIndices, onApply }, ref) => {
     const [hasLengthReform, setHasLengthReform] = useState(false);
     const [hasWidthReform, setHasWidthReform] = useState(false);
-    const [measurementType, setMeasurementType] = useState<"length" | "height">(
-      "length",
-    );
+    const [dimple, setDimple] = useState(false);
     const [lengthValue, setLengthValue] = useState("");
     const [widthValue, setWidthValue] = useState("");
 
@@ -69,15 +63,10 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
         if (hasLengthReform) {
           const lengthNum = Number(lengthValue);
           setValue(`ties.${i}.hasLengthReform`, true);
-          if (measurementType === "length") {
-            setValue(`ties.${i}.measurementType`, "length");
-            setValue(`ties.${i}.tieLength`, lengthNum);
-            setValue(`ties.${i}.wearerHeight`, undefined);
-          } else {
-            setValue(`ties.${i}.measurementType`, "height");
-            setValue(`ties.${i}.wearerHeight`, lengthNum);
-            setValue(`ties.${i}.tieLength`, undefined);
-          }
+          setValue(`ties.${i}.measurementType`, "height");
+          setValue(`ties.${i}.wearerHeight`, lengthNum);
+          setValue(`ties.${i}.tieLength`, undefined);
+          setValue(`ties.${i}.dimple`, dimple);
         }
 
         if (hasWidthReform) {
@@ -130,44 +119,35 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
             >
               자동수선
             </span>
+
+            <span
+              className="ml-auto flex overflow-hidden rounded-md border border-white/30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DimpleSegment
+                value={dimple}
+                onChange={setDimple}
+                isActive={hasLengthReform}
+              />
+            </span>
           </button>
 
-          <div className="border-t border-border p-3">
-            <div className="mb-3 flex overflow-hidden rounded-md border border-border bg-muted/40">
-              {(["length", "height"] as const).map((type, i) => (
-                <button
-                  key={type}
-                  type="button"
-                  className={cn(
-                    "flex-1 px-3 py-2 text-xs font-medium transition-colors",
-                    i > 0 && "border-l border-border",
-                    measurementType === type
-                      ? "bg-brand-ink text-white"
-                      : "text-muted-foreground hover:bg-background",
-                  )}
-                  onClick={() => setMeasurementType(type)}
-                >
-                  {type === "length" ? "넥타이 길이" : "착용자 키"}
-                </button>
-              ))}
+          {hasLengthReform && (
+            <div className="border-t border-border p-3">
+              <Field orientation="vertical" className="gap-1">
+                <FieldLabel>
+                  <FieldTitle>착용자 키</FieldTitle>
+                </FieldLabel>
+                <Input
+                  type="number"
+                  placeholder="예: 175"
+                  value={lengthValue}
+                  onChange={(e) => setLengthValue(e.target.value)}
+                  unit="cm"
+                />
+              </Field>
             </div>
-            <Field orientation="vertical" className="gap-1">
-              {measurementType === "length" && (
-                <FieldDescription className="mt-0 text-xs">
-                  (매듭 포함)
-                </FieldDescription>
-              )}
-              <Input
-                type="number"
-                placeholder={
-                  measurementType === "length" ? "예: 51" : "예: 175"
-                }
-                value={lengthValue}
-                onChange={(e) => setLengthValue(e.target.value)}
-                unit="cm"
-              />
-            </Field>
-          </div>
+          )}
         </div>
 
         {/* 폭수선 카드 */}
@@ -207,20 +187,22 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
             </span>
           </button>
 
-          <div className="border-t border-border p-3">
-            <Field orientation="vertical" className="gap-1">
-              <FieldLabel>
-                <FieldTitle>원하는 폭</FieldTitle>
-              </FieldLabel>
-              <Input
-                type="number"
-                placeholder="예: 9"
-                value={widthValue}
-                onChange={(e) => setWidthValue(e.target.value)}
-                unit="cm"
-              />
-            </Field>
-          </div>
+          {hasWidthReform && (
+            <div className="border-t border-border p-3">
+              <Field orientation="vertical" className="gap-1">
+                <FieldLabel>
+                  <FieldTitle>원하는 폭</FieldTitle>
+                </FieldLabel>
+                <Input
+                  type="number"
+                  placeholder="예: 9"
+                  value={widthValue}
+                  onChange={(e) => setWidthValue(e.target.value)}
+                  unit="cm"
+                />
+              </Field>
+            </div>
+          )}
         </div>
       </div>
     );

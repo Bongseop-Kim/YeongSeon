@@ -30,7 +30,7 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
                 <Descriptions
                   key={tieIdx}
                   bordered
-                  column={{ xs: 1, sm: 1, md: 2 }}
+                  column={2}
                   size="small"
                   style={{ marginBottom: 8 }}
                 >
@@ -39,13 +39,24 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
                       <Image width={100} src={tie.imageUrl} />
                     </Descriptions.Item>
                   )}
-                  <Descriptions.Item label="측정방식">
-                    {tie.measurementType === "length"
-                      ? "길이 직접 입력"
-                      : "키 입력"}
+                  <Descriptions.Item label="길이수선">
+                    {tie.hasLengthReform ? "O" : "X"}
                   </Descriptions.Item>
-                  <Descriptions.Item label="측정값">
-                    {tie.measurementValue || "-"}
+                  <Descriptions.Item label="길이 값">
+                    {tie.measurementValue
+                      ? `${tie.measurementValue}cm (${tie.measurementType === "length" ? "직접 입력" : "키 입력"})`
+                      : "-"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="폭수선">
+                    {tie.hasWidthReform ? "O" : "X"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="폭 값">
+                    {tie.hasWidthReform && tie.targetWidth != null
+                      ? `${tie.targetWidth}cm`
+                      : "-"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="딤플" span={2}>
+                    {tie.dimple ? "O" : "X"}
                   </Descriptions.Item>
                   {tie.memo && (
                     <Descriptions.Item label="메모" span={2}>
@@ -55,11 +66,7 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
                 </Descriptions>
               ))}
               {ties.length === 0 && (
-                <Descriptions
-                  bordered
-                  column={{ xs: 1, sm: 1, md: 2 }}
-                  size="small"
-                >
+                <Descriptions bordered column={2} size="small">
                   <Descriptions.Item label="수량">
                     {item.quantity}
                   </Descriptions.Item>

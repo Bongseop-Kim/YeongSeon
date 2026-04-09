@@ -1,5 +1,8 @@
 import { Badge } from "@/shared/ui/badge";
-import { ORDER_STATUS_COLORS } from "@yeongseon/shared/constants/order-status";
+import {
+  ORDER_STATUS_COLORS,
+  ORDER_STATUS_LABELS,
+} from "@yeongseon/shared/constants/order-status";
 import { CLAIM_STATUS_COLORS } from "@yeongseon/shared/constants/claim-status";
 import type { OrderStatus } from "@yeongseon/shared/types/view/order";
 import type { ClaimStatus } from "@yeongseon/shared/types/view/claim-item";
@@ -22,9 +25,11 @@ const BASE_BADGE_CLASS =
 
 function StatusBadge({
   status,
+  label,
   colorMap,
 }: {
   status: string;
+  label?: string;
   colorMap: Record<string, string>;
 }) {
   const dotClass =
@@ -32,13 +37,19 @@ function StatusBadge({
   return (
     <Badge className={BASE_BADGE_CLASS}>
       <span className={`inline-block w-2 h-2 rounded-full ${dotClass}`} />
-      {status}
+      {label ?? status}
     </Badge>
   );
 }
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  return <StatusBadge status={status} colorMap={ORDER_STATUS_COLORS} />;
+  return (
+    <StatusBadge
+      status={status}
+      label={ORDER_STATUS_LABELS[status] ?? status}
+      colorMap={ORDER_STATUS_COLORS}
+    />
+  );
 }
 
 export function ClaimStatusBadge({ status }: { status: ClaimStatus }) {

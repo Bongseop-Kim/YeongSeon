@@ -5,6 +5,7 @@ import { ImagePicker } from "@/shared/composite/image-picker";
 import CloseButton from "@/shared/ui-extended/close";
 import { MeasurementField } from "@/shared/composite/measurement-field";
 import { cn } from "@/shared/lib/utils";
+import { DimpleSegment } from "@/shared/composite/dimple-segment";
 import { CheckIcon } from "lucide-react";
 
 interface TieItemCardProps {
@@ -14,13 +15,9 @@ interface TieItemCardProps {
 }
 
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
-  const [currentMeasurementType, hasLengthReform, hasWidthReform] = useWatch({
+  const [hasLengthReform, hasWidthReform] = useWatch({
     control,
-    name: [
-      `ties.${index}.measurementType`,
-      `ties.${index}.hasLengthReform`,
-      `ties.${index}.hasWidthReform`,
-    ],
+    name: [`ties.${index}.hasLengthReform`, `ties.${index}.hasWidthReform`],
   });
 
   const isLengthActive = hasLengthReform !== false;
@@ -146,54 +143,38 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                       >
                         자동수선
                       </span>
-                    </label>
 
-                    {/* 패널: 측정값 입력 */}
-                    <div className="border-t border-border p-3">
                       <Controller
                         control={control}
-                        name={`ties.${index}.measurementType`}
-                        render={({ field: segField }) => (
-                          <div className="mb-3 flex overflow-hidden rounded-md border border-border bg-muted/40">
-                            {(["length", "height"] as const).map((type, i) => (
-                              <button
-                                key={type}
-                                type="button"
-                                className={cn(
-                                  "flex-1 px-3 py-2 text-xs font-medium transition-colors",
-                                  i > 0 && "border-l border-border",
-                                  (segField.value ?? "length") === type
-                                    ? "bg-brand-ink text-white"
-                                    : "text-muted-foreground hover:bg-background",
-                                )}
-                                onClick={() => segField.onChange(type)}
-                              >
-                                {type === "length"
-                                  ? "넥타이 길이"
-                                  : "착용자 키"}
-                              </button>
-                            ))}
-                          </div>
+                        name={`ties.${index}.dimple`}
+                        render={({ field: dimpleField }) => (
+                          <span
+                            className="ml-auto flex overflow-hidden rounded-md border border-white/30"
+                            onClick={(e) => e.preventDefault()}
+                          >
+                            <DimpleSegment
+                              value={dimpleField.value ?? false}
+                              onChange={dimpleField.onChange}
+                              isActive={isLengthActive}
+                            />
+                          </span>
                         )}
                       />
-                      {(currentMeasurementType ?? "length") === "length" ? (
-                        <MeasurementField
-                          control={control}
-                          name={`ties.${index}.tieLength`}
-                          label="넥타이 길이"
-                          description="(매듭 포함)"
-                          placeholder="예: 51"
-                          requiredMessage="넥타이 길이를 입력해주세요"
-                        />
-                      ) : (
-                        <MeasurementField
-                          control={control}
-                          name={`ties.${index}.wearerHeight`}
-                          label="착용자 키"
-                          placeholder="예: 175"
-                          requiredMessage="착용자 키를 입력해주세요"
-                        />
-                      )}
+                    </label>
+
+                    {/* 패널: 착용자 키 입력 */}
+                    <div className="border-t border-border p-3">
+                      <MeasurementField
+                        control={control}
+                        name={`ties.${index}.wearerHeight`}
+                        label="착용자 키"
+                        placeholder="예: 175"
+                        requiredMessage={
+                          isLengthActive
+                            ? "착용자 키를 입력해주세요"
+                            : undefined
+                        }
+                      />
                     </div>
                   </div>
                   <FieldError errors={[fieldState.error]} />
@@ -256,7 +237,9 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                       name={`ties.${index}.targetWidth`}
                       label="원하는 폭"
                       placeholder="예: 9"
-                      requiredMessage="원하는 폭을 입력해주세요"
+                      requiredMessage={
+                        isWidthActive ? "원하는 폭을 입력해주세요" : undefined
+                      }
                     />
                   </div>
                 </div>

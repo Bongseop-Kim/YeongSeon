@@ -15,6 +15,7 @@ export interface TieItem {
   hasLengthReform?: boolean;
   hasWidthReform?: boolean;
   targetWidth?: number;
+  dimple?: boolean;
 }
 
 export interface ReformOptions {
@@ -24,5 +25,6 @@ export interface ReformOptions {
     wearerHeight?: number;
     measurementType?: MeasurementType;
     targetWidth?: number;
+    dimple?: boolean;
   };
 }

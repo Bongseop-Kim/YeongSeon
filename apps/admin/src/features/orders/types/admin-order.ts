@@ -190,6 +190,10 @@ export interface RepairTie {
   measurementType: "length" | "height";
   measurementValue: string;
   memo: string | null;
+  dimple: boolean;
+  hasLengthReform: boolean;
+  hasWidthReform: boolean;
+  targetWidth: number | null;
 }
 
 export interface RepairOrderReformData {

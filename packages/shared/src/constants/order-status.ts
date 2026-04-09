@@ -1,3 +1,5 @@
+import type { OrderStatus } from "../types/view/order";
+
 export type OrderType = "sale" | "custom" | "repair" | "token" | "sample";
 
 export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
@@ -56,6 +58,10 @@ export const ORDER_ROLLBACK_FLOW: Record<OrderType, Record<string, string>> = {
   },
   token: { 결제중: "대기중" },
   sample: { 결제중: "대기중", 접수: "대기중", 제작중: "접수" },
+};
+
+export const ORDER_STATUS_LABELS: Partial<Record<OrderStatus, string>> = {
+  발송대기: "발송 대기중",
 };
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {

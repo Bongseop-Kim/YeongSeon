@@ -15,9 +15,11 @@ export function ReformItemInfo({ item, image }: ReformItemInfoProps) {
   const imageUrl = typeof image === "string" ? image : null;
   const hasLengthReform = item.reformData.tie.hasLengthReform !== false;
   const hasWidthReform = item.reformData.tie.hasWidthReform === true;
+  const hasDimple = hasLengthReform && item.reformData.tie.dimple === true;
   const serviceLabels = [
     hasLengthReform ? "자동수선" : null,
     hasWidthReform ? "폭수선" : null,
+    hasDimple ? "딤플" : null,
   ].filter((label): label is string => label !== null);
   const measurementText = (() => {
     if (!hasLengthReform) {

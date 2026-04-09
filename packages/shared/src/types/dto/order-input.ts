@@ -13,6 +13,10 @@ export interface CreateOrderItemInputDTO {
       wearerHeight?: number;
       notes?: string;
       checked?: boolean;
+      dimple?: boolean;
+      hasLengthReform?: boolean;
+      hasWidthReform?: boolean;
+      targetWidth?: number;
     };
     cost: number;
   } | null;

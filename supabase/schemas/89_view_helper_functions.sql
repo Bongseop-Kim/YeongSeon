@@ -137,7 +137,7 @@ begin
   IF (p_order_type = 'sale'   AND p_status IN ('대기중', '진행중'))
   OR (p_order_type = 'custom' AND p_status IN ('대기중', '접수'))
   OR (p_order_type = 'sample' AND p_status IN ('대기중', '접수'))
-  OR (p_order_type = 'repair' AND p_status = '대기중')
+  OR (p_order_type = 'repair' AND p_status IN ('대기중', '발송대기', '발송중'))
   OR (p_order_type = 'token'  AND p_status = '대기중')
   THEN
     v_actions := v_actions || ARRAY['claim_cancel'];

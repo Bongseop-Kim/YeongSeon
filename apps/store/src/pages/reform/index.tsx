@@ -48,22 +48,24 @@ import { analytics } from "@/shared/lib/analytics";
 const DEFAULT_TIE_ITEM = {
   id: "tie-1",
   image: undefined,
-  measurementType: "length" as const,
+  measurementType: "height" as const,
   tieLength: undefined,
   wearerHeight: undefined,
   checked: true,
   hasLengthReform: true,
   hasWidthReform: false,
   targetWidth: undefined,
+  dimple: false,
 };
 
 const DEFAULT_REFORM_OPTIONS: ReformOptions = {
   ties: [DEFAULT_TIE_ITEM],
   bulkApply: {
-    measurementType: "length",
+    measurementType: "height",
     tieLength: undefined,
     wearerHeight: undefined,
     targetWidth: undefined,
+    dimple: false,
   },
 };
 
@@ -99,13 +101,14 @@ const ReformPage = () => {
     append({
       id: `tie-${Date.now()}`,
       image: undefined,
-      measurementType: "length",
+      measurementType: "height",
       tieLength: undefined,
       wearerHeight: undefined,
       checked: true,
       hasLengthReform: true,
       hasWidthReform: false,
       targetWidth: undefined,
+      dimple: false,
     });
   };
 

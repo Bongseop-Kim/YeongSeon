@@ -22,15 +22,9 @@ function setup() {
 
 describe("BulkApplySection", () => {
   describe("초기 렌더링", () => {
-    it("초기에 측정 방식 탭이 보이지 않는다", () => {
+    it("초기에 착용자 키 입력 필드가 보이지 않는다", () => {
       setup();
-      expect(screen.queryByText("넥타이 길이")).not.toBeInTheDocument();
-      expect(screen.queryByText("착용자 키")).not.toBeInTheDocument();
-    });
-
-    it("초기에 넥타이 길이 입력 필드가 보이지 않는다", () => {
-      setup();
-      expect(screen.queryByPlaceholderText("예: 51")).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText("예: 175")).not.toBeInTheDocument();
     });
 
     it("초기에 원하는 폭 입력 필드가 보이지 않는다", () => {
@@ -40,37 +34,24 @@ describe("BulkApplySection", () => {
   });
 
   describe("자동수선 선택", () => {
-    it("자동수선 카드 클릭 시 측정 방식 탭이 나타난다", async () => {
+    it("자동수선 카드 클릭 시 착용자 키 입력 필드가 나타난다", async () => {
       const user = userEvent.setup();
       setup();
 
       await user.click(screen.getByRole("button", { name: /자동수선/ }));
 
-      expect(screen.getByText("넥타이 길이")).toBeInTheDocument();
-      expect(screen.getByText("착용자 키")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("예: 175")).toBeInTheDocument();
     });
 
-    it("자동수선 카드 클릭 시 넥타이 길이 입력 필드가 나타난다", async () => {
-      const user = userEvent.setup();
+    it("자동수선 헤더에 기본/딤플 세그먼트가 있다", async () => {
       setup();
 
-      await user.click(screen.getByRole("button", { name: /자동수선/ }));
-
-      expect(screen.getByPlaceholderText("예: 51")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "기본" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "딤플" })).toBeInTheDocument();
     });
   });
 
   describe("폭수선만 선택", () => {
-    it("폭수선 카드 클릭 시 측정 방식 탭이 나타나지 않는다", async () => {
-      const user = userEvent.setup();
-      setup();
-
-      await user.click(screen.getByRole("button", { name: /폭수선/ }));
-
-      expect(screen.queryByText("넥타이 길이")).not.toBeInTheDocument();
-      expect(screen.queryByText("착용자 키")).not.toBeInTheDocument();
-    });
-
     it("폭수선 카드 클릭 시 원하는 폭 입력 필드가 나타난다", async () => {
       const user = userEvent.setup();
       setup();
@@ -136,6 +117,28 @@ describe("BulkApplySection", () => {
       expect(calledKeys).not.toContain("ties.0.measurementType");
       expect(calledKeys).toContain("ties.0.hasWidthReform");
       expect(calledKeys).toContain("ties.0.targetWidth");
+    });
+
+    it("자동수선 + 딤플 선택 후 적용 시 dimple이 true로 설정된다", async () => {
+      const user = userEvent.setup();
+      const setValue = vi.fn();
+      const ref = createRef<BulkApplySectionRef>();
+      render(
+        <BulkApplySection ref={ref} setValue={setValue} checkedIndices={[0]} />,
+      );
+
+      await user.click(screen.getByRole("button", { name: /자동수선/ }));
+      await user.click(screen.getByRole("button", { name: "딤플" }));
+      await user.type(screen.getByPlaceholderText("예: 175"), "175");
+      if (!ref.current) throw new Error("ref should be mounted");
+      await ref.current.handleBulkApply();
+
+      const calledKeys = setValue.mock.calls.map(([key]) => key);
+      expect(calledKeys).toContain("ties.0.dimple");
+      const dimpleCall = setValue.mock.calls.find(
+        ([key]) => key === "ties.0.dimple",
+      );
+      expect(dimpleCall?.[1]).toBe(true);
     });
   });
 });
