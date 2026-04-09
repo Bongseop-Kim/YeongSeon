@@ -1,11 +1,5 @@
 import { type Control, Controller, useWatch } from "react-hook-form";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/shared/ui/field";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@/shared/ui/field";
 import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
 import { ImagePicker } from "@/shared/composite/image-picker";
 import CloseButton from "@/shared/ui-extended/close";
@@ -76,9 +70,6 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
               <FieldLabel>
                 <FieldTitle>넥타이 사진</FieldTitle>
               </FieldLabel>
-              <FieldDescription className="-mt-1 text-xs">
-                (선택사항)
-              </FieldDescription>
               <ImagePicker
                 id={`tie-image-${index}`}
                 selectedFile={
@@ -96,15 +87,6 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
 
         {/* 수선 서비스 영역 */}
         <div className="space-y-2">
-          {/* 수선 서비스 라벨: 데스크톱만 표시 */}
-          <FieldTitle className="hidden text-xs sm:block">
-            수선 서비스
-          </FieldTitle>
-
-          {/*
-            데스크톱: grid-cols-2 (자동수선 | 폭수선 나란히)
-            모바일:   grid-cols-1 (자동수선 위, 폭수선 아래)
-          */}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {/* ── 자동수선 카드 ── */}
             <Controller
