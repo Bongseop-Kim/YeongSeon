@@ -44,6 +44,7 @@ const CONSTANT_LABELS: Record<string, string> = {
   YARN_DYED_DESIGN_COST: "선염 디자인 비용",
   REFORM_BASE_COST: "수선 비용",
   REFORM_SHIPPING_COST: "수선 택배비",
+  REFORM_WIDTH_COST: "폭수선 비용",
   SAMPLE_SEWING_COST: "봉제 샘플",
   SAMPLE_FABRIC_PRINTING_COST: "원단 샘플 (날염)",
   SAMPLE_FABRIC_YARN_DYED_COST: "원단 샘플 (선염)",
@@ -78,7 +79,11 @@ const SEWING_GROUPS: { title: string; keys: string[] }[] = [
   },
 ];
 
-const REFORM_KEYS = ["REFORM_BASE_COST", "REFORM_SHIPPING_COST"];
+const REFORM_KEYS = [
+  "REFORM_BASE_COST",
+  "REFORM_SHIPPING_COST",
+  "REFORM_WIDTH_COST",
+];
 
 const SAMPLE_KEYS = [
   "SAMPLE_SEWING_COST",

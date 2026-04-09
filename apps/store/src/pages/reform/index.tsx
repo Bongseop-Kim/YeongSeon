@@ -122,12 +122,17 @@ const ReformPage = () => {
     [uploadTieImagesMutation],
   );
 
-  const selectedTieIndices = useMemo(
+  const selectedTies = useMemo(
     () =>
       watchedTies
-        .map((tie, index) => (tie.checked ? index : -1))
-        .filter((index) => index !== -1),
+        .map((tie, index) => ({ tie, index }))
+        .filter(({ tie }) => !!tie.checked),
     [watchedTies],
+  );
+
+  const selectedTieIndices = useMemo(
+    () => selectedTies.map(({ index }) => index),
+    [selectedTies],
   );
 
   const getSelectedTiesSnapshot = useCallback(() => {
@@ -242,18 +247,30 @@ const ReformPage = () => {
   const formatCost = (cost: number | undefined, suffix = "원") =>
     cost !== undefined ? `${cost.toLocaleString()}${suffix}` : "-";
 
-  const selectedCount = selectedTieIndices.length;
+  const selectedCount = selectedTies.length;
   const totalServiceCost = useMemo(() => {
-    if (!hasValidPricing || !pricing) return undefined;
-
-    const selectedTies = watchedTies.filter((tie) => tie.checked);
-    if (selectedTies.length === 0) return undefined;
-
+    if (!hasValidPricing || !pricing || selectedTies.length === 0)
+      return undefined;
     return selectedTies.reduce(
-      (sum, tie) => sum + calcTieCost(tie, pricing),
+      (sum, { tie }) => sum + calcTieCost(tie, pricing),
       0,
     );
-  }, [hasValidPricing, pricing, watchedTies]);
+  }, [hasValidPricing, pricing, selectedTies]);
+  const tieRows = selectedTies.map(({ tie, index }) => {
+    const services = [
+      tie.hasLengthReform !== false ? "자동수선" : null,
+      tie.hasWidthReform === true ? "폭수선" : null,
+    ]
+      .filter((s): s is string => s !== null)
+      .join(" · ");
+    const tieCost =
+      hasValidPricing && pricing ? calcTieCost(tie, pricing) : undefined;
+    return {
+      id: `tie-${index}`,
+      label: `항목 ${index + 1}`,
+      value: tieCost !== undefined ? formatCost(tieCost) : services || "-",
+    };
+  });
   const estimatedShipping =
     hasValidPricing && selectedCount > 0 && pricing
       ? pricing.shippingCost
@@ -287,8 +304,7 @@ const ReformPage = () => {
   const isActionDisabled =
     fields.length === 0 ||
     selectedCount === 0 ||
-    uploadTieImagesMutation.isPending ||
-    !hasValidPricing;
+    uploadTieImagesMutation.isPending;
 
   return (
     <>
@@ -308,6 +324,7 @@ const ReformPage = () => {
                   title="접수 요약"
                   description="현재 접수 수량과 예상 결제를 확인합니다."
                   rows={[
+                    ...tieRows,
                     {
                       id: "selected-count",
                       label: "수선 수량",
