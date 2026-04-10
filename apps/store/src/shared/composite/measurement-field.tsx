@@ -20,7 +20,7 @@ interface MeasurementFieldProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
   label: string;
-  requiredMessage: string;
+  requiredMessage?: string;
   description?: string;
   placeholder?: string;
 }
@@ -41,19 +41,19 @@ export function MeasurementField<T extends FieldValues>({
       control={control}
       name={name}
       rules={{
-        required: requiredMessage,
-        validate: (value: unknown) =>
-          value != null &&
-          Number.isFinite(value as number) &&
-          (value as number) > 0
+        required: requiredMessage || false,
+        validate: (value: unknown) => {
+          if (value == null || value === "") return !requiredMessage || true;
+          return Number.isFinite(value as number) && (value as number) > 0
             ? true
-            : "0보다 큰 숫자를 입력해주세요.",
+            : "0보다 큰 숫자를 입력해주세요.";
+        },
       }}
       render={({ field, fieldState }) => (
         <Field orientation="vertical">
           <FieldLabel htmlFor={id}>
             <FieldTitle>
-              <Required />
+              {requiredMessage && <Required />}
               {label}
             </FieldTitle>
           </FieldLabel>

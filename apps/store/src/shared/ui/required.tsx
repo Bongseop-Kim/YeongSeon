@@ -6,10 +6,7 @@ export const Required = ({
 }: React.HTMLAttributes<HTMLParagraphElement>) => {
   return (
     <p
-      className={cn(
-        "text-red-500 font-bold top-[-2px] relative mr-1",
-        className,
-      )}
+      className={cn("text-red-500 font-bold top-[-2px] relative", className)}
       {...props}
     >
       *

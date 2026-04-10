@@ -1,19 +1,12 @@
 import { type Control, Controller, useWatch } from "react-hook-form";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/shared/ui/field";
-import { RadioGroupItem } from "@/shared/ui/radio-group";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@/shared/ui/field";
 import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
 import { ImagePicker } from "@/shared/composite/image-picker";
-import { Checkbox } from "@/shared/ui/checkbox";
 import CloseButton from "@/shared/ui-extended/close";
-import { RadioGroupField } from "@/shared/composite/radio-group-field";
 import { MeasurementField } from "@/shared/composite/measurement-field";
+import { cn } from "@/shared/lib/utils";
+import { DimpleSegment } from "@/shared/composite/dimple-segment";
+import { CheckIcon } from "lucide-react";
 
 interface TieItemCardProps {
   index: number;
@@ -22,13 +15,9 @@ interface TieItemCardProps {
 }
 
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
-  const [currentMeasurementType, hasLengthReform, hasWidthReform] = useWatch({
+  const [hasLengthReform, hasWidthReform] = useWatch({
     control,
-    name: [
-      `ties.${index}.measurementType`,
-      `ties.${index}.hasLengthReform`,
-      `ties.${index}.hasWidthReform`,
-    ],
+    name: [`ties.${index}.hasLengthReform`, `ties.${index}.hasWidthReform`],
   });
 
   const isLengthActive = hasLengthReform !== false;
@@ -36,16 +25,19 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
 
   return (
     <div className="py-4">
+      {/* 헤더: 항목 선택 체크박스 + 닫기 버튼 */}
       <div className="flex items-start justify-between gap-3">
         <Controller
           control={control}
           name={`ties.${index}.checked`}
           render={({ field }) => (
-            <Field orientation="horizontal" className="gap-3 items-center">
-              <Checkbox
+            <Field orientation="horizontal" className="items-center gap-3">
+              <input
+                type="checkbox"
                 id={`tie-checked-${index}`}
                 checked={field.value || false}
-                onCheckedChange={field.onChange}
+                onChange={field.onChange}
+                className="size-4 rounded-[4px] border-input accent-brand-ink"
               />
               <FieldLabel htmlFor={`tie-checked-${index}`}>
                 <FieldTitle>항목 {index + 1}</FieldTitle>
@@ -53,7 +45,6 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
             </Field>
           )}
         />
-
         <CloseButton
           onRemove={onRemove}
           className="-mr-2 -mt-1"
@@ -61,7 +52,13 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         />
       </div>
 
-      <div className="mt-3 grid grid-cols-[107px_minmax(0,1fr)] items-start gap-4">
+      {/* 바디: 이미지 + 서비스 영역 */}
+      {/*
+        데스크톱: grid-cols-[104px_1fr] — 이미지(104px) | 서비스 2열
+        모바일:   grid-cols-[88px_1fr]  — 이미지(88px) | 서비스 1열
+      */}
+      <div className="mt-3 grid grid-cols-[88px_minmax(0,1fr)] items-start gap-3 sm:grid-cols-[104px_minmax(0,1fr)] sm:gap-4">
+        {/* 이미지 피커 */}
         <Controller
           control={control}
           name={`ties.${index}.image`}
@@ -70,162 +67,185 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
               <FieldLabel>
                 <FieldTitle>넥타이 사진</FieldTitle>
               </FieldLabel>
-              <FieldDescription className="-mt-1 text-xs">
-                (선택사항)
-              </FieldDescription>
-              <FieldContent>
-                <ImagePicker
-                  id={`tie-image-${index}`}
-                  selectedFile={
-                    field.value instanceof File ? field.value : undefined
-                  }
-                  previewUrl={
-                    typeof field.value === "string" ? field.value : undefined
-                  }
-                  onFileChange={(file) => {
-                    field.onChange(file);
-                  }}
-                  onPreviewUrlChange={(url) => {
-                    field.onChange(url ?? undefined);
-                  }}
-                />
-              </FieldContent>
+              <ImagePicker
+                id={`tie-image-${index}`}
+                selectedFile={
+                  field.value instanceof File ? field.value : undefined
+                }
+                previewUrl={
+                  typeof field.value === "string" ? field.value : undefined
+                }
+                onFileChange={(file) => field.onChange(file)}
+                onPreviewUrlChange={(url) => field.onChange(url ?? undefined)}
+              />
             </Field>
           )}
         />
 
-        <div className="space-y-4">
-          <Field orientation="vertical">
-            <FieldLabel>
-              <FieldTitle>수선 서비스</FieldTitle>
-            </FieldLabel>
-            <FieldDescription className="-mt-1 text-xs">
-              하나 이상 선택해주세요.
-            </FieldDescription>
-
-            <FieldContent className="space-y-4">
-              <Controller
-                control={control}
-                name={`ties.${index}.hasLengthReform`}
-                rules={{
-                  validate: (_, formValues) => {
-                    const tie = formValues.ties[index];
-                    const hasLength = tie.hasLengthReform !== false;
-                    const hasWidth = tie.hasWidthReform === true;
-
-                    return (
-                      hasLength ||
-                      hasWidth ||
-                      "수선 서비스를 하나 이상 선택해주세요."
-                    );
-                  },
-                }}
-                render={({ field, fieldState }) => (
-                  <div className="space-y-3">
-                    <Field
-                      orientation="horizontal"
-                      className="gap-3 items-center"
+        {/* 수선 서비스 영역 */}
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {/* ── 자동수선 카드 ── */}
+            <Controller
+              control={control}
+              name={`ties.${index}.hasLengthReform`}
+              rules={{
+                validate: (_, formValues) => {
+                  const tie = formValues.ties[index];
+                  return (
+                    tie.hasLengthReform !== false ||
+                    tie.hasWidthReform === true ||
+                    "수선 서비스를 하나 이상 선택해주세요."
+                  );
+                },
+              }}
+              render={({ field, fieldState }) => (
+                <div>
+                  <div
+                    className={cn(
+                      "overflow-hidden rounded-md border transition-colors",
+                      isLengthActive ? "border-brand-ink" : "border-border",
+                    )}
+                  >
+                    {/* 트리거 행 */}
+                    <label
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 px-3 py-[10px] transition-colors",
+                        isLengthActive
+                          ? "bg-brand-ink"
+                          : "bg-muted hover:bg-brand-paper-muted",
+                      )}
                     >
-                      <Checkbox
-                        id={`length-reform-${index}`}
-                        checked={field.value !== false}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true)
+                      {/* 비주얼 체크박스 */}
+                      <span
+                        className={cn(
+                          "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                          isLengthActive
+                            ? "border-white"
+                            : "border-input bg-white",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={isLengthActive}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                        />
+                        {isLengthActive && (
+                          <CheckIcon className="size-3 text-white" />
+                        )}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-sm font-semibold",
+                          isLengthActive ? "text-white" : "text-foreground",
+                        )}
+                      >
+                        자동수선
+                      </span>
+
+                      <Controller
+                        control={control}
+                        name={`ties.${index}.dimple`}
+                        render={({ field: dimpleField }) => (
+                          <span
+                            className="ml-auto flex overflow-hidden rounded-md border border-white/30"
+                            onClick={(e) => e.preventDefault()}
+                          >
+                            <DimpleSegment
+                              value={dimpleField.value ?? false}
+                              onChange={dimpleField.onChange}
+                              isActive={isLengthActive}
+                            />
+                          </span>
+                        )}
+                      />
+                    </label>
+
+                    {/* 패널: 착용자 키 입력 */}
+                    <div className="border-t border-border p-3">
+                      <MeasurementField
+                        control={control}
+                        name={`ties.${index}.wearerHeight`}
+                        label="착용자 키"
+                        placeholder="예: 175"
+                        requiredMessage={
+                          isLengthActive
+                            ? "착용자 키를 입력해주세요"
+                            : undefined
                         }
                       />
-                      <FieldLabel htmlFor={`length-reform-${index}`}>
-                        <FieldTitle>자동수선</FieldTitle>
-                      </FieldLabel>
-                    </Field>
-                    <FieldError errors={[fieldState.error]} />
+                    </div>
                   </div>
-                )}
-              />
-
-              {isLengthActive && (
-                <div className="ml-7 space-y-4">
-                  <RadioGroupField
-                    control={control}
-                    name={`ties.${index}.measurementType`}
-                    label="측정 방식"
-                    radioGroupClassName="gap-2"
-                  >
-                    <Field orientation="horizontal">
-                      <RadioGroupItem
-                        value="length"
-                        id={`measurement-${index}-length`}
-                      />
-                      <FieldLabel htmlFor={`measurement-${index}-length`}>
-                        <FieldTitle>넥타이 길이</FieldTitle>
-                      </FieldLabel>
-                    </Field>
-                    <Field orientation="horizontal">
-                      <RadioGroupItem
-                        value="height"
-                        id={`measurement-${index}-height`}
-                      />
-                      <FieldLabel htmlFor={`measurement-${index}-height`}>
-                        <FieldTitle>착용자 키</FieldTitle>
-                      </FieldLabel>
-                    </Field>
-                  </RadioGroupField>
-
-                  {(currentMeasurementType ?? "length") === "length" ? (
-                    <MeasurementField
-                      control={control}
-                      name={`ties.${index}.tieLength`}
-                      label="넥타이 길이"
-                      description="(매듭 포함)"
-                      placeholder="예: 51"
-                      requiredMessage="넥타이 길이를 입력해주세요"
-                    />
-                  ) : (
-                    <MeasurementField
-                      control={control}
-                      name={`ties.${index}.wearerHeight`}
-                      label="착용자 키"
-                      placeholder="예: 175"
-                      requiredMessage="착용자 키를 입력해주세요"
-                    />
-                  )}
+                  <FieldError errors={[fieldState.error]} />
                 </div>
               )}
+            />
 
-              <Controller
-                control={control}
-                name={`ties.${index}.hasWidthReform`}
-                render={({ field }) => (
-                  <Field
-                    orientation="horizontal"
-                    className="gap-3 items-center"
+            {/* ── 폭수선 카드 ── */}
+            <Controller
+              control={control}
+              name={`ties.${index}.hasWidthReform`}
+              render={({ field }) => (
+                <div
+                  className={cn(
+                    "overflow-hidden rounded-md border transition-colors",
+                    isWidthActive ? "border-brand-ink" : "border-border",
+                  )}
+                >
+                  {/* 트리거 행 */}
+                  <label
+                    className={cn(
+                      "flex cursor-pointer items-center gap-2 px-3 py-[10px] transition-colors",
+                      isWidthActive
+                        ? "bg-brand-ink"
+                        : "bg-muted hover:bg-brand-paper-muted",
+                    )}
                   >
-                    <Checkbox
-                      id={`width-reform-${index}`}
-                      checked={field.value === true}
-                      onCheckedChange={(checked) =>
-                        field.onChange(checked === true)
+                    <span
+                      className={cn(
+                        "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                        isWidthActive
+                          ? "border-white"
+                          : "border-input bg-white",
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={isWidthActive}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                      />
+                      {isWidthActive && (
+                        <CheckIcon className="size-3 text-white" />
+                      )}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-sm font-semibold",
+                        isWidthActive ? "text-white" : "text-foreground",
+                      )}
+                    >
+                      폭수선
+                    </span>
+                  </label>
+
+                  {/* 패널: 폭 입력 */}
+                  <div className="border-t border-border p-3">
+                    <MeasurementField
+                      control={control}
+                      name={`ties.${index}.targetWidth`}
+                      label="원하는 폭"
+                      placeholder="예: 9"
+                      requiredMessage={
+                        isWidthActive ? "원하는 폭을 입력해주세요" : undefined
                       }
                     />
-                    <FieldLabel htmlFor={`width-reform-${index}`}>
-                      <FieldTitle>폭수선</FieldTitle>
-                    </FieldLabel>
-                  </Field>
-                )}
-              />
-
-              {isWidthActive && (
-                <div className="ml-7">
-                  <MeasurementField
-                    control={control}
-                    name={`ties.${index}.targetWidth`}
-                    label="원하는 폭"
-                    placeholder="예: 9"
-                    requiredMessage="원하는 폭을 입력해주세요"
-                  />
+                  </div>
                 </div>
               )}
-            </FieldContent>
-          </Field>
+            />
+          </div>
         </div>
       </div>
     </div>

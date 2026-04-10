@@ -42,5 +42,11 @@ export const getOrderItemDetails = (item: OrderItem): string => {
   } else if (tie.measurementType === "height" && tie.wearerHeight) {
     details.push(`신장 ${tie.wearerHeight}cm 기준`);
   }
+  if (tie.hasWidthReform === true && tie.targetWidth != null) {
+    details.push(`폭 ${tie.targetWidth}cm`);
+  }
+  if (tie.hasLengthReform !== false && tie.dimple === true) {
+    details.push("딤플");
+  }
   return details.join(" · ") || "수선";
 };

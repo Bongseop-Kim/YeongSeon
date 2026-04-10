@@ -70,6 +70,10 @@ export const toOrderItemInputDTO = (
           wearerHeight: tie.wearerHeight,
           notes: tie.notes,
           checked: tie.checked,
+          dimple: tie.dimple,
+          hasLengthReform: tie.hasLengthReform,
+          hasWidthReform: tie.hasWidthReform,
+          targetWidth: tie.targetWidth,
         },
         cost: item.reformData.cost,
       };
@@ -269,6 +273,17 @@ const parseReformDataField = (
           ? tieRaw.wearerHeight
           : undefined,
       notes: typeof tieRaw.notes === "string" ? tieRaw.notes : undefined,
+      dimple: typeof tieRaw.dimple === "boolean" ? tieRaw.dimple : undefined,
+      hasLengthReform:
+        typeof tieRaw.hasLengthReform === "boolean"
+          ? tieRaw.hasLengthReform
+          : undefined,
+      hasWidthReform:
+        typeof tieRaw.hasWidthReform === "boolean"
+          ? tieRaw.hasWidthReform
+          : undefined,
+      targetWidth:
+        typeof tieRaw.targetWidth === "number" ? tieRaw.targetWidth : undefined,
     },
   };
 };
