@@ -88,8 +88,18 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
     </label>
   );
 
-  const dimpleSegmentEl = (
+  const desktopDimpleSegmentEl = (
     <span className="ml-auto flex overflow-hidden rounded-md border border-border">
+      <DimpleSegment
+        value={dimpleField.value ?? false}
+        onChange={dimpleField.onChange}
+        isActive={false}
+      />
+    </span>
+  );
+
+  const mobileDimpleSegmentEl = (
+    <span className="flex overflow-hidden rounded-md border border-border">
       <DimpleSegment
         value={dimpleField.value ?? false}
         onChange={dimpleField.onChange}
@@ -144,7 +154,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       </div>
 
       {/* ── 모바일 레이아웃 (< sm): 자동수선 → 폭수선 세로 배치 ── */}
-      <div className="mt-3 grid grid-cols-[88px_minmax(0,1fr)] items-start gap-x-3 sm:hidden">
+      <div className="mt-3 grid grid-cols-[107px_minmax(0,1fr)] items-start gap-x-3 sm:hidden">
         {/* 이미지 (레이블 + 피커 함께) */}
         <Field orientation="vertical">
           <FieldLabel htmlFor={`tie-image-${index}`}>
@@ -154,12 +164,12 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         </Field>
 
         {/* 서비스 영역 — 세로 배치 */}
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           {/* 자동수선 블록 */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-start gap-2">
               {lengthCheckboxEl}
-              {dimpleSegmentEl}
+              {mobileDimpleSegmentEl}
             </div>
             <MeasurementField
               control={control}
@@ -200,7 +210,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         <div className="grid grid-cols-2 items-center">
           <div className="flex items-center gap-2 border-r border-border pr-3">
             {lengthCheckboxEl}
-            {dimpleSegmentEl}
+            {desktopDimpleSegmentEl}
           </div>
           <div className="pl-3">{widthCheckboxEl}</div>
         </div>
