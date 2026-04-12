@@ -13,4 +13,3 @@ export {
 export { CartSelectionToolbar } from "./components/cart-selection-toolbar";
 export { CartItemsPanel } from "./components/cart-items-panel";
 export { CartRecommendationsCard } from "./components/cart-recommendations-card";
-export { CartOrderSummaryCard } from "./components/cart-order-summary-card";

@@ -1,5 +1,5 @@
 import type { RefObject, ReactNode } from "react";
-import { UtilityPageAside } from "@/shared/composite/utility-page";
+import { cn } from "@/shared/lib/utils";
 import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/shared/composite/payment-widget";
@@ -35,23 +35,22 @@ export function PaymentWidgetAside({
   className,
 }: PaymentWidgetAsideProps) {
   return (
-    <UtilityPageAside
-      title={title}
-      description={description}
-      tone="muted"
-      className={className}
-    >
-      {amount !== null ? (
-        <div className="-mx-4 lg:-mx-5">
+    <section className={cn(className)}>
+      <h3 className="text-sm font-semibold text-zinc-950">{title}</h3>
+      {description && (
+        <p className="mt-1 text-sm leading-6 text-zinc-500">{description}</p>
+      )}
+      <div className="mt-3">
+        {amount !== null ? (
           <PaymentWidget
             ref={paymentWidgetRef}
             amount={amount}
             customerKey={customerKey}
           />
-        </div>
-      ) : (
-        (priceFallback ?? null)
-      )}
+        ) : (
+          (priceFallback ?? null)
+        )}
+      </div>
       {consent ? (
         <CheckboxInput
           id={consent.id}
@@ -63,6 +62,6 @@ export function PaymentWidgetAside({
           className="pt-4"
         />
       ) : null}
-    </UtilityPageAside>
+    </section>
   );
 }
