@@ -1,4 +1,4 @@
-import { type Control, Controller, useWatch } from "react-hook-form";
+import { type Control, useController } from "react-hook-form";
 import { Field, FieldError, FieldLabel, FieldTitle } from "@/shared/ui/field";
 import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
 import { ImagePicker } from "@/shared/composite/image-picker";
@@ -15,36 +15,127 @@ interface TieItemCardProps {
 }
 
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
-  const [hasLengthReform, hasWidthReform] = useWatch({
+  // 필드를 한 번만 등록 — 모바일/데스크톱 두 레이아웃이 동일한 필드 인스턴스를 공유
+  const { field: checkedField } = useController({
     control,
-    name: [`ties.${index}.hasLengthReform`, `ties.${index}.hasWidthReform`],
+    name: `ties.${index}.checked`,
+  });
+  const { field: imageField } = useController({
+    control,
+    name: `ties.${index}.image`,
+  });
+  const { field: lengthField, fieldState: lengthFieldState } = useController({
+    control,
+    name: `ties.${index}.hasLengthReform`,
+    rules: {
+      validate: (_, formValues) => {
+        const tie = formValues.ties[index];
+        return (
+          tie.hasLengthReform !== false ||
+          tie.hasWidthReform === true ||
+          "수선 서비스를 하나 이상 선택해주세요."
+        );
+      },
+    },
+  });
+  const { field: widthField } = useController({
+    control,
+    name: `ties.${index}.hasWidthReform`,
+  });
+  const { field: dimpleField } = useController({
+    control,
+    name: `ties.${index}.dimple`,
   });
 
-  const isLengthActive = hasLengthReform !== false;
-  const isWidthActive = hasWidthReform === true;
+  const isLengthActive = lengthField.value !== false;
+  const isWidthActive = widthField.value === true;
+
+  // ── 재사용 UI 조각 ─────────────────────────────────────────────────
+
+  const imagePickerEl = (
+    <ImagePicker
+      id={`tie-image-${index}`}
+      selectedFile={
+        imageField.value instanceof File ? imageField.value : undefined
+      }
+      previewUrl={
+        typeof imageField.value === "string" ? imageField.value : undefined
+      }
+      onFileChange={(file) => imageField.onChange(file)}
+      onPreviewUrlChange={(url) => imageField.onChange(url ?? undefined)}
+    />
+  );
+
+  const lengthCheckboxEl = (
+    <label className="flex cursor-pointer items-center gap-2">
+      <span
+        className={cn(
+          "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+          isLengthActive
+            ? "border-brand-ink bg-brand-ink"
+            : "border-input bg-white",
+        )}
+      >
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={isLengthActive}
+          onChange={(e) => lengthField.onChange(e.target.checked)}
+        />
+        {isLengthActive && <CheckIcon className="size-3 text-white" />}
+      </span>
+      <span className="text-sm font-semibold">자동수선</span>
+    </label>
+  );
+
+  const dimpleSegmentEl = (
+    <span className="ml-auto flex overflow-hidden rounded-md border border-border">
+      <DimpleSegment
+        value={dimpleField.value ?? false}
+        onChange={dimpleField.onChange}
+        isActive={false}
+      />
+    </span>
+  );
+
+  const widthCheckboxEl = (
+    <label className="flex cursor-pointer items-center gap-2">
+      <span
+        className={cn(
+          "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+          isWidthActive
+            ? "border-brand-ink bg-brand-ink"
+            : "border-input bg-white",
+        )}
+      >
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={isWidthActive}
+          onChange={(e) => widthField.onChange(e.target.checked)}
+        />
+        {isWidthActive && <CheckIcon className="size-3 text-white" />}
+      </span>
+      <span className="text-sm font-semibold">폭수선</span>
+    </label>
+  );
 
   return (
     <div className="py-4">
-      {/* 헤더: 항목 선택 체크박스 + 닫기 버튼 */}
+      {/* 항목 선택 체크박스 + 닫기 버튼 */}
       <div className="flex items-start justify-between gap-3">
-        <Controller
-          control={control}
-          name={`ties.${index}.checked`}
-          render={({ field }) => (
-            <Field orientation="horizontal" className="items-center gap-3">
-              <input
-                type="checkbox"
-                id={`tie-checked-${index}`}
-                checked={field.value || false}
-                onChange={field.onChange}
-                className="size-4 rounded-[4px] border-input accent-brand-ink"
-              />
-              <FieldLabel htmlFor={`tie-checked-${index}`}>
-                <FieldTitle>항목 {index + 1}</FieldTitle>
-              </FieldLabel>
-            </Field>
-          )}
-        />
+        <Field orientation="horizontal" className="items-center gap-3">
+          <input
+            type="checkbox"
+            id={`tie-checked-${index}`}
+            checked={checkedField.value || false}
+            onChange={checkedField.onChange}
+            className="size-4 rounded-[4px] border-input accent-brand-ink"
+          />
+          <FieldLabel htmlFor={`tie-checked-${index}`}>
+            <FieldTitle>항목 {index + 1}</FieldTitle>
+          </FieldLabel>
+        </Field>
         <CloseButton
           onRemove={onRemove}
           className="-mr-2 -mt-1"
@@ -52,198 +143,92 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         />
       </div>
 
-      {/* 바디: 이미지 + 서비스 영역 */}
-      {/*
-        데스크톱: grid-cols-[104px_1fr] — 이미지(104px) | 서비스 2열
-        모바일:   grid-cols-[88px_1fr]  — 이미지(88px) | 서비스 1열
-      */}
-      <div className="mt-3 grid grid-cols-[88px_minmax(0,1fr)] items-start gap-3 sm:grid-cols-[104px_minmax(0,1fr)] sm:gap-4">
-        {/* 이미지 피커 */}
-        <Controller
-          control={control}
-          name={`ties.${index}.image`}
-          render={({ field }) => (
-            <Field orientation="vertical">
-              <FieldLabel>
-                <FieldTitle>넥타이 사진</FieldTitle>
-              </FieldLabel>
-              <ImagePicker
-                id={`tie-image-${index}`}
-                selectedFile={
-                  field.value instanceof File ? field.value : undefined
-                }
-                previewUrl={
-                  typeof field.value === "string" ? field.value : undefined
-                }
-                onFileChange={(file) => field.onChange(file)}
-                onPreviewUrlChange={(url) => field.onChange(url ?? undefined)}
-              />
-            </Field>
-          )}
-        />
+      {/* ── 모바일 레이아웃 (< sm): 자동수선 → 폭수선 세로 배치 ── */}
+      <div className="mt-3 grid grid-cols-[88px_minmax(0,1fr)] items-start gap-x-3 sm:hidden">
+        {/* 이미지 (레이블 + 피커 함께) */}
+        <Field orientation="vertical">
+          <FieldLabel htmlFor={`tie-image-${index}`}>
+            <FieldTitle>넥타이 사진</FieldTitle>
+          </FieldLabel>
+          {imagePickerEl}
+        </Field>
 
-        {/* 수선 서비스 영역 */}
-        <div className="space-y-2">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {/* ── 자동수선 카드 ── */}
-            <Controller
+        {/* 서비스 영역 — 세로 배치 */}
+        <div className="space-y-3">
+          {/* 자동수선 블록 */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              {lengthCheckboxEl}
+              {dimpleSegmentEl}
+            </div>
+            <MeasurementField
               control={control}
-              name={`ties.${index}.hasLengthReform`}
-              rules={{
-                validate: (_, formValues) => {
-                  const tie = formValues.ties[index];
-                  return (
-                    tie.hasLengthReform !== false ||
-                    tie.hasWidthReform === true ||
-                    "수선 서비스를 하나 이상 선택해주세요."
-                  );
-                },
-              }}
-              render={({ field, fieldState }) => (
-                <div>
-                  <div
-                    className={cn(
-                      "overflow-hidden rounded-md border transition-colors",
-                      isLengthActive ? "border-brand-ink" : "border-border",
-                    )}
-                  >
-                    {/* 트리거 행 */}
-                    <label
-                      className={cn(
-                        "flex cursor-pointer items-center gap-2 px-3 py-[10px] transition-colors",
-                        isLengthActive
-                          ? "bg-brand-ink"
-                          : "bg-muted hover:bg-brand-paper-muted",
-                      )}
-                    >
-                      {/* 비주얼 체크박스 */}
-                      <span
-                        className={cn(
-                          "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
-                          isLengthActive
-                            ? "border-white"
-                            : "border-input bg-white",
-                        )}
-                      >
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          checked={isLengthActive}
-                          onChange={(e) => field.onChange(e.target.checked)}
-                        />
-                        {isLengthActive && (
-                          <CheckIcon className="size-3 text-white" />
-                        )}
-                      </span>
-                      <span
-                        className={cn(
-                          "text-sm font-semibold",
-                          isLengthActive ? "text-white" : "text-foreground",
-                        )}
-                      >
-                        자동수선
-                      </span>
-
-                      <Controller
-                        control={control}
-                        name={`ties.${index}.dimple`}
-                        render={({ field: dimpleField }) => (
-                          <span
-                            className="ml-auto flex overflow-hidden rounded-md border border-white/30"
-                            onClick={(e) => e.preventDefault()}
-                          >
-                            <DimpleSegment
-                              value={dimpleField.value ?? false}
-                              onChange={dimpleField.onChange}
-                              isActive={isLengthActive}
-                            />
-                          </span>
-                        )}
-                      />
-                    </label>
-
-                    {/* 패널: 착용자 키 입력 */}
-                    <div className="border-t border-border p-3">
-                      <MeasurementField
-                        control={control}
-                        name={`ties.${index}.wearerHeight`}
-                        label="착용자 키"
-                        placeholder="예: 175"
-                        requiredMessage={
-                          isLengthActive
-                            ? "착용자 키를 입력해주세요"
-                            : undefined
-                        }
-                      />
-                    </div>
-                  </div>
-                  <FieldError errors={[fieldState.error]} />
-                </div>
-              )}
+              name={`ties.${index}.wearerHeight`}
+              label="착용자 키"
+              placeholder="예: 175"
+              requiredMessage={
+                isLengthActive ? "착용자 키를 입력해주세요" : undefined
+              }
             />
+            <FieldError errors={[lengthFieldState.error]} />
+          </div>
 
-            {/* ── 폭수선 카드 ── */}
-            <Controller
+          <hr className="border-border" />
+
+          {/* 폭수선 블록 */}
+          <div className="space-y-2">
+            {widthCheckboxEl}
+            <MeasurementField
               control={control}
-              name={`ties.${index}.hasWidthReform`}
-              render={({ field }) => (
-                <div
-                  className={cn(
-                    "overflow-hidden rounded-md border transition-colors",
-                    isWidthActive ? "border-brand-ink" : "border-border",
-                  )}
-                >
-                  {/* 트리거 행 */}
-                  <label
-                    className={cn(
-                      "flex cursor-pointer items-center gap-2 px-3 py-[10px] transition-colors",
-                      isWidthActive
-                        ? "bg-brand-ink"
-                        : "bg-muted hover:bg-brand-paper-muted",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
-                        isWidthActive
-                          ? "border-white"
-                          : "border-input bg-white",
-                      )}
-                    >
-                      <input
-                        type="checkbox"
-                        className="sr-only"
-                        checked={isWidthActive}
-                        onChange={(e) => field.onChange(e.target.checked)}
-                      />
-                      {isWidthActive && (
-                        <CheckIcon className="size-3 text-white" />
-                      )}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-sm font-semibold",
-                        isWidthActive ? "text-white" : "text-foreground",
-                      )}
-                    >
-                      폭수선
-                    </span>
-                  </label>
+              name={`ties.${index}.targetWidth`}
+              label="원하는 폭"
+              placeholder="예: 9"
+              requiredMessage={
+                isWidthActive ? "원하는 폭을 입력해주세요" : undefined
+              }
+            />
+          </div>
+        </div>
+      </div>
 
-                  {/* 패널: 폭 입력 */}
-                  <div className="border-t border-border p-3">
-                    <MeasurementField
-                      control={control}
-                      name={`ties.${index}.targetWidth`}
-                      label="원하는 폭"
-                      placeholder="예: 9"
-                      requiredMessage={
-                        isWidthActive ? "원하는 폭을 입력해주세요" : undefined
-                      }
-                    />
-                  </div>
-                </div>
-              )}
+      {/* ── 데스크톱 레이아웃 (≥ sm): 헤더행 + 입력행 정렬 ── */}
+      <div className="mt-3 hidden sm:grid sm:grid-cols-[104px_minmax(0,1fr)] sm:gap-x-4 sm:gap-y-2">
+        {/* 행 1: 넥타이 사진 레이블 | 서비스 헤더들 */}
+        <FieldLabel htmlFor={`tie-image-${index}`}>
+          <FieldTitle>넥타이 사진</FieldTitle>
+        </FieldLabel>
+        <div className="grid grid-cols-2 items-center">
+          <div className="flex items-center gap-2 border-r border-border pr-3">
+            {lengthCheckboxEl}
+            {dimpleSegmentEl}
+          </div>
+          <div className="pl-3">{widthCheckboxEl}</div>
+        </div>
+
+        {/* 행 2: 이미지 피커 | 서비스 입력들 */}
+        {imagePickerEl}
+        <div className="grid grid-cols-2 items-start">
+          <div className="border-r border-border pr-3">
+            <MeasurementField
+              control={control}
+              name={`ties.${index}.wearerHeight`}
+              label="착용자 키"
+              placeholder="예: 175"
+              requiredMessage={
+                isLengthActive ? "착용자 키를 입력해주세요" : undefined
+              }
+            />
+            <FieldError errors={[lengthFieldState.error]} />
+          </div>
+          <div className="pl-3">
+            <MeasurementField
+              control={control}
+              name={`ties.${index}.targetWidth`}
+              label="원하는 폭"
+              placeholder="예: 9"
+              requiredMessage={
+                isWidthActive ? "원하는 폭을 입력해주세요" : undefined
+              }
             />
           </div>
         </div>
