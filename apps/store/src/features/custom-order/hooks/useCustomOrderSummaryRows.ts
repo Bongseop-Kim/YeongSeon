@@ -1,5 +1,5 @@
 import type { OrderOptions } from "@/entities/custom-order";
-import type { SummaryRow } from "@/shared/composite/order-summary-aside";
+import type { SummaryRow } from "@/shared/composite/order-summary-utils";
 import {
   getFabricLabel,
   getSewingStyleLabel,
@@ -8,7 +8,9 @@ import {
 
 export function useCustomOrderSummaryRows(options: OrderOptions): SummaryRow[] {
   const fabricLabel = getFabricLabel(options);
-  const sewingLabel = `${getTieTypeLabel(options.tieType, true)} · ${getSewingStyleLabel(options)}`;
+  const tieTypeLabel =
+    options.tieType == null ? "미선택" : getTieTypeLabel(options.tieType, true);
+  const sewingLabel = `${tieTypeLabel} · ${getSewingStyleLabel(options)}`;
 
   return [
     { id: "fabric", label: "원단", value: fabricLabel },

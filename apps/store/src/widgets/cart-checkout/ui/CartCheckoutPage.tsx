@@ -11,10 +11,8 @@ import {
   CartItemsPanel,
   CartRecommendationsCard,
 } from "@/features/cart";
-import {
-  OrderSummaryAside,
-  buildPriceRows,
-} from "@/shared/composite/order-summary-aside";
+import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { buildPriceRows } from "@/shared/composite/order-summary-utils";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { useModalStore } from "@/shared/store/modal";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";

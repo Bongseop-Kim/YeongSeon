@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
 import { NotificationConsentFlowModals } from "@/features/notification";
-import {
-  OrderSummaryAside,
-  buildPriceRows,
-} from "@/shared/composite/order-summary-aside";
+import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { buildPriceRows } from "@/shared/composite/order-summary-utils";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 import {

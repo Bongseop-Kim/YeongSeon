@@ -456,19 +456,10 @@ const ReformPage = () => {
               detail={
                 <div className="space-y-5 py-8 lg:py-10">
                   <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-stone-100">
-                    <div className="flex min-h-[420px] items-center justify-center px-6 py-12 lg:min-h-[620px]">
-                      <div className="text-center">
-                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
-                          Hero Image
-                        </p>
-                        <p className="mt-3 text-sm text-zinc-500">
-                          메인 비주얼 플레이스홀더
-                        </p>
-                      </div>
-                    </div>
+                    <div className="min-h-[420px] animate-pulse bg-stone-200/80 py-12 lg:min-h-[620px]" />
                   </section>
 
-                  <section className="px-2 py-4 text-center lg:px-10 lg:py-6">
+                  <section className="py-4 text-center lg:py-6">
                     <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
                       Reform Service
                     </p>
@@ -514,19 +505,10 @@ const ReformPage = () => {
                   {IMAGE_SECTIONS.map((section) => (
                     <React.Fragment key={section.title}>
                       <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-stone-100">
-                        <div className="flex min-h-[360px] items-center justify-center px-6 py-12 lg:min-h-[560px]">
-                          <div className="text-center">
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">
-                              Image
-                            </p>
-                            <p className="mt-3 text-sm text-zinc-500">
-                              {section.imageLabel} 플레이스홀더
-                            </p>
-                          </div>
-                        </div>
+                        <div className="min-h-[360px] animate-pulse bg-stone-200/80 py-12 lg:min-h-[560px]" />
                       </section>
 
-                      <section className="px-2 py-4 text-center lg:px-10 lg:py-6">
+                      <section className="py-4 text-center lg:py-6">
                         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
                           {section.eyebrow}
                         </p>
@@ -540,7 +522,7 @@ const ReformPage = () => {
                     </React.Fragment>
                   ))}
 
-                  <section className="px-2 pt-2 text-center lg:px-10 lg:pt-4">
+                  <section className="pt-2 text-center lg:pt-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
                       Basic / Dimple
                     </p>
@@ -557,19 +539,10 @@ const ReformPage = () => {
                     {DIMPLE_CONTENT.map((item) => (
                       <section key={item.label} className="space-y-3">
                         <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-stone-100">
-                          <div className="flex min-h-[320px] items-center justify-center px-6 py-12 lg:min-h-[480px]">
-                            <div className="text-center">
-                              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">
-                                {item.label}
-                              </p>
-                              <p className="mt-3 text-sm text-zinc-500">
-                                {item.imageLabel} 플레이스홀더
-                              </p>
-                            </div>
-                          </div>
+                          <div className="min-h-[320px] animate-pulse bg-stone-200/80 py-12 lg:min-h-[480px]" />
                         </section>
 
-                        <section className="px-2 py-2 text-center lg:px-6 lg:py-3">
+                        <section className="py-2 text-center lg:py-3">
                           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
                             {item.label}
                           </p>
@@ -584,7 +557,7 @@ const ReformPage = () => {
                     ))}
                   </section>
 
-                  <section className="px-2 pt-2 text-center lg:px-10 lg:pt-4">
+                  <section className="pt-2 text-center lg:pt-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
                       Before / After
                     </p>
@@ -597,19 +570,10 @@ const ReformPage = () => {
                     {BEFORE_AFTER_CONTENT.map((item) => (
                       <section key={item.label} className="space-y-3">
                         <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-stone-100">
-                          <div className="flex min-h-[320px] items-center justify-center px-6 py-12 lg:min-h-[480px]">
-                            <div className="text-center">
-                              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">
-                                {item.label}
-                              </p>
-                              <p className="mt-3 text-sm text-zinc-500">
-                                비교 이미지 플레이스홀더
-                              </p>
-                            </div>
-                          </div>
+                          <div className="min-h-[320px] animate-pulse bg-stone-200/80 py-12 lg:min-h-[480px]" />
                         </section>
 
-                        <section className="px-2 py-2 text-center lg:px-6 lg:py-3">
+                        <section className="py-2 text-center lg:py-3">
                           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
                             {item.label}
                           </p>

@@ -29,7 +29,16 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
     name: `ties.${index}.hasLengthReform`,
     rules: {
       validate: (_, formValues) => {
+        if (!formValues || !Array.isArray(formValues.ties)) {
+          return "수선 서비스를 하나 이상 선택해주세요.";
+        }
+
         const tie = formValues.ties[index];
+
+        if (!tie) {
+          return "수선 서비스를 하나 이상 선택해주세요.";
+        }
+
         return (
           tie.hasLengthReform !== false ||
           tie.hasWidthReform === true ||

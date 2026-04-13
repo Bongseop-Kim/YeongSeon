@@ -41,10 +41,8 @@ import {
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
 import { Field, FieldTitle, FieldContent } from "@/shared/ui/field";
-import {
-  OrderSummaryAside,
-  buildPriceRows,
-} from "@/shared/composite/order-summary-aside";
+import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { buildPriceRows } from "@/shared/composite/order-summary-utils";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);

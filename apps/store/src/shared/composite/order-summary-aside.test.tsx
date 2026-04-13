@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { OrderSummaryAside, buildPriceRows } from "./order-summary-aside";
+import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { buildPriceRows } from "@/shared/composite/order-summary-utils";
 
 describe("buildPriceRows", () => {
   it("할인이 있으면 할인 행을 포함한다", () => {

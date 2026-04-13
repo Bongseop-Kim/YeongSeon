@@ -1,5 +1,5 @@
 import type { OrderOptions } from "@/entities/custom-order";
-import { useCustomOrderSummaryRows } from "./useCustomOrderSummaryRows";
+import { useCustomOrderSummaryRows } from "@/features/custom-order/hooks/useCustomOrderSummaryRows";
 
 const makeOptions = (overrides?: Partial<OrderOptions>): OrderOptions =>
   ({

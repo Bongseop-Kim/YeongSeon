@@ -6,21 +6,6 @@ export {
   createCartItem,
   createReformCartItem,
 } from "@yeongseon/shared/test/fixtures";
-import type { OrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
-
-// ── OrderSummary ──
-
-export const createOrderSummary = (
-  overrides?: Partial<OrderSummary>,
-): OrderSummary => ({
-  originalPrice: 12000,
-  totalDiscount: 2000,
-  shippingCost: 3000,
-  totalPrice: 13000,
-  totalQuantity: 2,
-  ...overrides,
-});
-
 export const createOrderItemRowRaw = (
   overrides?: Partial<Record<string, unknown>>,
 ): Record<string, unknown> => ({
