@@ -401,7 +401,6 @@ const ReformPage = () => {
               contentClassName="pt-0"
               sidebar={
                 <OrderSummaryAside
-                  icon={ReceiptTextIcon}
                   title="접수 요약"
                   description="현재 접수 수량과 예상 결제를 확인합니다."
                   rows={[

@@ -58,6 +58,38 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
     control,
     name: `ties.${index}.hasWidthReform`,
   });
+  const { field: wearerHeightField, fieldState: wearerHeightFieldState } =
+    useController({
+      control,
+      name: `ties.${index}.wearerHeight`,
+      rules: {
+        validate: (value) => {
+          if (!isLengthActive && value == null) return true;
+          if (value == null) {
+            return "착용자 키를 입력해주세요";
+          }
+          return Number.isFinite(value as number) && (value as number) > 0
+            ? true
+            : "0보다 큰 숫자를 입력해주세요.";
+        },
+      },
+    });
+  const { field: targetWidthField, fieldState: targetWidthFieldState } =
+    useController({
+      control,
+      name: `ties.${index}.targetWidth`,
+      rules: {
+        validate: (value) => {
+          if (!isWidthActive && value == null) return true;
+          if (value == null) {
+            return "원하는 폭을 입력해주세요";
+          }
+          return Number.isFinite(value as number) && (value as number) > 0
+            ? true
+            : "0보다 큰 숫자를 입력해주세요.";
+        },
+      },
+    });
   const { field: dimpleField } = useController({
     control,
     name: `ties.${index}.dimple`,
@@ -174,13 +206,23 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       {/* 항목 선택 체크박스 + 닫기 버튼 */}
       <div className="flex items-start justify-between gap-3">
         <Field orientation="horizontal" className="items-center gap-3">
-          <input
-            type="checkbox"
-            id={`tie-checked-${index}`}
-            checked={checkedField.value || false}
-            onChange={checkedField.onChange}
-            className="size-4 rounded-[4px] border-input accent-brand-ink"
-          />
+          <FieldContent
+            className={cn(
+              "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+              checkedField.value
+                ? "border-brand-ink bg-brand-ink"
+                : "border-input bg-white",
+            )}
+          >
+            <input
+              type="checkbox"
+              id={`tie-checked-${index}`}
+              className="sr-only"
+              checked={checkedField.value || false}
+              onChange={checkedField.onChange}
+            />
+            {checkedField.value && <CheckIcon className="size-3 text-white" />}
+          </FieldContent>
           <FieldLabel htmlFor={`tie-checked-${index}`}>
             <FieldTitle>항목 {index + 1}</FieldTitle>
           </FieldLabel>
@@ -211,8 +253,8 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
               {mobileDimpleSegmentEl}
             </div>
             <MeasurementField
-              control={control}
-              name={`ties.${index}.wearerHeight`}
+              field={wearerHeightField}
+              fieldState={wearerHeightFieldState}
               label="착용자 키"
               placeholder="예: 175"
               requiredMessage={
@@ -228,8 +270,8 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
           <div className="space-y-2">
             {widthCheckboxEl}
             <MeasurementField
-              control={control}
-              name={`ties.${index}.targetWidth`}
+              field={targetWidthField}
+              fieldState={targetWidthFieldState}
               label="원하는 폭"
               placeholder="예: 9"
               requiredMessage={
@@ -259,8 +301,8 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         <div className="grid grid-cols-2 items-start">
           <div className="border-r border-border pr-3">
             <MeasurementField
-              control={control}
-              name={`ties.${index}.wearerHeight`}
+              field={wearerHeightField}
+              fieldState={wearerHeightFieldState}
               label="착용자 키"
               placeholder="예: 175"
               requiredMessage={
@@ -271,8 +313,8 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
           </div>
           <div className="pl-3">
             <MeasurementField
-              control={control}
-              name={`ties.${index}.targetWidth`}
+              field={targetWidthField}
+              fieldState={targetWidthFieldState}
               label="원하는 폭"
               placeholder="예: 9"
               requiredMessage={

@@ -1,4 +1,3 @@
-import { type LucideIcon } from "lucide-react";
 import { type ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
 import { UtilityKeyValueRow } from "@/shared/composite/utility-page";
@@ -7,7 +6,6 @@ import type { SummaryRow } from "@/shared/composite/order-summary-utils";
 interface OrderSummaryAsideProps {
   title?: string;
   description?: string;
-  icon?: LucideIcon; // flat 레이아웃에서 미사용 — 하위 호환성을 위해 유지
   rows: SummaryRow[];
   totalAmount?: number;
   totalLabel?: string;
@@ -28,9 +26,11 @@ export function OrderSummaryAside({
 }: OrderSummaryAsideProps) {
   return (
     <section className={className}>
-      <h3 className="text-sm font-semibold text-zinc-950">{title}</h3>
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       {description && (
-        <p className="mt-1 text-sm leading-6 text-zinc-500">{description}</p>
+        <p className="mt-1 text-sm leading-6 text-foreground-muted">
+          {description}
+        </p>
       )}
       <dl className="mt-3">
         {rows.map((row) => (
@@ -42,8 +42,10 @@ export function OrderSummaryAside({
           />
         ))}
         {totalAmount !== undefined && (
-          <div className="flex items-center justify-between border-t border-stone-950 pt-3">
-            <dt className="text-sm font-medium text-zinc-950">{totalLabel}</dt>
+          <div className="flex items-center justify-between border-t border-border pt-3">
+            <dt className="text-sm font-medium text-foreground">
+              {totalLabel}
+            </dt>
             <dd className="min-w-0 text-right">
               <span
                 className={cn(
