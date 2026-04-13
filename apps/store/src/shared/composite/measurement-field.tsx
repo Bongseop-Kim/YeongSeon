@@ -46,7 +46,7 @@ type MeasurementFieldProps<T extends FieldValues> =
   | MeasurementFieldControlledProps<T>;
 
 const validateMeasurementValue = (value: unknown, requiredMessage?: string) => {
-  if (value == null) return !requiredMessage || true;
+  if (value == null) return requiredMessage || true;
   return Number.isFinite(value as number) && (value as number) > 0
     ? true
     : "0보다 큰 숫자를 입력해주세요.";

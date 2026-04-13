@@ -12,6 +12,7 @@ import CloseButton from "@/shared/ui-extended/close";
 import { MeasurementField } from "@/shared/composite/measurement-field";
 import { cn } from "@/shared/lib/utils";
 import { DimpleSegment } from "@/shared/composite/dimple-segment";
+import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { CheckIcon } from "lucide-react";
 
 interface TieItemCardProps {
@@ -22,6 +23,7 @@ interface TieItemCardProps {
 
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   // 필드를 한 번만 등록 — 모바일/데스크톱 두 레이아웃이 동일한 필드 인스턴스를 공유
+  const { isMobile } = useBreakpoint();
   const { trigger } = useFormContext<ReformOptions>();
   const { field: checkedField } = useController({
     control,
@@ -64,7 +66,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       name: `ties.${index}.wearerHeight`,
       rules: {
         validate: (value) => {
-          if (!isLengthActive && value == null) return true;
+          if (!isLengthActive) return true;
           if (value == null) {
             return "착용자 키를 입력해주세요";
           }
@@ -80,7 +82,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       name: `ties.${index}.targetWidth`,
       rules: {
         validate: (value) => {
-          if (!isWidthActive && value == null) return true;
+          if (!isWidthActive) return true;
           if (value == null) {
             return "원하는 폭을 입력해주세요";
           }
@@ -97,109 +99,6 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
 
   const isLengthActive = lengthField.value !== false;
   const isWidthActive = widthField.value === true;
-
-  // ── 재사용 UI 조각 ─────────────────────────────────────────────────
-
-  const mobileImagePickerEl = (
-    <ImagePicker
-      id={`tie-image-${index}-mobile`}
-      selectedFile={
-        imageField.value instanceof File ? imageField.value : undefined
-      }
-      previewUrl={
-        typeof imageField.value === "string" ? imageField.value : undefined
-      }
-      onFileChange={(file) => imageField.onChange(file)}
-      onPreviewUrlChange={(url) => imageField.onChange(url ?? undefined)}
-    />
-  );
-
-  const desktopImagePickerEl = (
-    <ImagePicker
-      id={`tie-image-${index}-desktop`}
-      selectedFile={
-        imageField.value instanceof File ? imageField.value : undefined
-      }
-      previewUrl={
-        typeof imageField.value === "string" ? imageField.value : undefined
-      }
-      onFileChange={(file) => imageField.onChange(file)}
-      onPreviewUrlChange={(url) => imageField.onChange(url ?? undefined)}
-    />
-  );
-
-  const lengthCheckboxEl = (
-    <Field orientation="horizontal" className="w-fit cursor-pointer gap-2">
-      <FieldContent
-        className={cn(
-          "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
-          isLengthActive
-            ? "border-brand-ink bg-brand-ink"
-            : "border-input bg-white",
-        )}
-      >
-        <input
-          type="checkbox"
-          id={`tie-length-reform-${index}`}
-          className="sr-only"
-          checked={isLengthActive}
-          onChange={(e) => lengthField.onChange(e.target.checked)}
-        />
-        {isLengthActive && <CheckIcon className="size-3 text-white" />}
-      </FieldContent>
-      <FieldLabel htmlFor={`tie-length-reform-${index}`}>
-        <FieldTitle>자동수선</FieldTitle>
-      </FieldLabel>
-    </Field>
-  );
-
-  const desktopDimpleSegmentEl = (
-    <span className="ml-auto flex overflow-hidden rounded-md border border-border">
-      <DimpleSegment
-        value={dimpleField.value ?? false}
-        onChange={dimpleField.onChange}
-        isActive={false}
-      />
-    </span>
-  );
-
-  const mobileDimpleSegmentEl = (
-    <span className="flex overflow-hidden rounded-md border border-border">
-      <DimpleSegment
-        value={dimpleField.value ?? false}
-        onChange={dimpleField.onChange}
-        isActive={false}
-      />
-    </span>
-  );
-
-  const widthCheckboxEl = (
-    <Field orientation="horizontal" className="w-fit cursor-pointer gap-2">
-      <FieldContent
-        className={cn(
-          "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
-          isWidthActive
-            ? "border-brand-ink bg-brand-ink"
-            : "border-input bg-white",
-        )}
-      >
-        <input
-          type="checkbox"
-          id={`tie-width-reform-${index}`}
-          className="sr-only"
-          checked={isWidthActive}
-          onChange={(e) => {
-            widthField.onChange(e.target.checked);
-            void trigger(`ties.${index}.hasLengthReform`);
-          }}
-        />
-        {isWidthActive && <CheckIcon className="size-3 text-white" />}
-      </FieldContent>
-      <FieldLabel htmlFor={`tie-width-reform-${index}`}>
-        <FieldTitle>폭수선</FieldTitle>
-      </FieldLabel>
-    </Field>
-  );
 
   return (
     <div className="py-4">
@@ -234,96 +133,244 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         />
       </div>
 
-      {/* ── 모바일 레이아웃 (< sm): 자동수선 → 폭수선 세로 배치 ── */}
-      <div className="mt-3 grid grid-cols-[107px_minmax(0,1fr)] items-start gap-x-3 sm:hidden">
-        {/* 이미지 (레이블 + 피커 함께) */}
-        <Field orientation="vertical">
-          <FieldLabel htmlFor={`tie-image-${index}-mobile`}>
+      {isMobile ? (
+        <div className="mt-3 grid grid-cols-[107px_minmax(0,1fr)] items-start gap-x-3">
+          <Field orientation="vertical">
+            <FieldLabel htmlFor={`tie-image-${index}-mobile`}>
+              <FieldTitle>넥타이 사진</FieldTitle>
+            </FieldLabel>
+            <ImagePicker
+              id={`tie-image-${index}-mobile`}
+              selectedFile={
+                imageField.value instanceof File ? imageField.value : undefined
+              }
+              previewUrl={
+                typeof imageField.value === "string"
+                  ? imageField.value
+                  : undefined
+              }
+              onFileChange={(file) => imageField.onChange(file)}
+              onPreviewUrlChange={(url) =>
+                imageField.onChange(url ?? undefined)
+              }
+            />
+          </Field>
+
+          <div className="min-w-0 space-y-3">
+            <div className="min-w-0 space-y-2">
+              <div className="flex flex-wrap items-start gap-2">
+                <Field
+                  orientation="horizontal"
+                  className="w-fit cursor-pointer gap-2"
+                >
+                  <FieldContent
+                    className={cn(
+                      "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                      isLengthActive
+                        ? "border-brand-ink bg-brand-ink"
+                        : "border-input bg-white",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      id={`tie-length-reform-${index}`}
+                      className="sr-only"
+                      checked={isLengthActive}
+                      onChange={(e) => {
+                        lengthField.onChange(e.target.checked);
+                        void trigger(`ties.${index}.wearerHeight`);
+                      }}
+                    />
+                    {isLengthActive && (
+                      <CheckIcon className="size-3 text-white" />
+                    )}
+                  </FieldContent>
+                  <FieldLabel htmlFor={`tie-length-reform-${index}`}>
+                    <FieldTitle>자동수선</FieldTitle>
+                  </FieldLabel>
+                </Field>
+                <span className="flex overflow-hidden rounded-md border border-border">
+                  <DimpleSegment
+                    value={dimpleField.value ?? false}
+                    onChange={dimpleField.onChange}
+                    isActive={false}
+                  />
+                </span>
+              </div>
+              <MeasurementField
+                field={wearerHeightField}
+                fieldState={wearerHeightFieldState}
+                label="착용자 키"
+                placeholder="예: 175"
+                requiredMessage={
+                  isLengthActive ? "착용자 키를 입력해주세요" : undefined
+                }
+              />
+              <FieldError errors={[lengthFieldState.error]} />
+            </div>
+
+            <hr className="border-border" />
+
+            <div className="space-y-2">
+              <Field
+                orientation="horizontal"
+                className="w-fit cursor-pointer gap-2"
+              >
+                <FieldContent
+                  className={cn(
+                    "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                    isWidthActive
+                      ? "border-brand-ink bg-brand-ink"
+                      : "border-input bg-white",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    id={`tie-width-reform-${index}`}
+                    className="sr-only"
+                    checked={isWidthActive}
+                    onChange={(e) => {
+                      widthField.onChange(e.target.checked);
+                      void trigger(`ties.${index}.hasLengthReform`);
+                      void trigger(`ties.${index}.targetWidth`);
+                    }}
+                  />
+                  {isWidthActive && <CheckIcon className="size-3 text-white" />}
+                </FieldContent>
+                <FieldLabel htmlFor={`tie-width-reform-${index}`}>
+                  <FieldTitle>폭수선</FieldTitle>
+                </FieldLabel>
+              </Field>
+              <MeasurementField
+                field={targetWidthField}
+                fieldState={targetWidthFieldState}
+                label="원하는 폭"
+                placeholder="예: 9"
+                requiredMessage={
+                  isWidthActive ? "원하는 폭을 입력해주세요" : undefined
+                }
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 grid grid-cols-[104px_minmax(0,1fr)] gap-x-4 gap-y-2">
+          <FieldLabel htmlFor={`tie-image-${index}-desktop`}>
             <FieldTitle>넥타이 사진</FieldTitle>
           </FieldLabel>
-          {mobileImagePickerEl}
-        </Field>
-
-        {/* 서비스 영역 — 세로 배치 */}
-        <div className="min-w-0 space-y-3">
-          {/* 자동수선 블록 */}
-          <div className="min-w-0 space-y-2">
-            <div className="flex flex-wrap items-start gap-2">
-              {lengthCheckboxEl}
-              {mobileDimpleSegmentEl}
+          <div className="grid grid-cols-2 items-center">
+            <div className="flex items-center gap-2 border-r border-border pr-3">
+              <Field
+                orientation="horizontal"
+                className="w-fit cursor-pointer gap-2"
+              >
+                <FieldContent
+                  className={cn(
+                    "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                    isLengthActive
+                      ? "border-brand-ink bg-brand-ink"
+                      : "border-input bg-white",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    id={`tie-length-reform-${index}`}
+                    className="sr-only"
+                    checked={isLengthActive}
+                    onChange={(e) => {
+                      lengthField.onChange(e.target.checked);
+                      void trigger(`ties.${index}.wearerHeight`);
+                    }}
+                  />
+                  {isLengthActive && (
+                    <CheckIcon className="size-3 text-white" />
+                  )}
+                </FieldContent>
+                <FieldLabel htmlFor={`tie-length-reform-${index}`}>
+                  <FieldTitle>자동수선</FieldTitle>
+                </FieldLabel>
+              </Field>
+              <span className="ml-auto flex overflow-hidden rounded-md border border-border">
+                <DimpleSegment
+                  value={dimpleField.value ?? false}
+                  onChange={dimpleField.onChange}
+                  isActive={false}
+                />
+              </span>
             </div>
-            <MeasurementField
-              field={wearerHeightField}
-              fieldState={wearerHeightFieldState}
-              label="착용자 키"
-              placeholder="예: 175"
-              requiredMessage={
-                isLengthActive ? "착용자 키를 입력해주세요" : undefined
-              }
-            />
-            <FieldError errors={[lengthFieldState.error]} />
+            <div className="pl-3">
+              <Field
+                orientation="horizontal"
+                className="w-fit cursor-pointer gap-2"
+              >
+                <FieldContent
+                  className={cn(
+                    "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                    isWidthActive
+                      ? "border-brand-ink bg-brand-ink"
+                      : "border-input bg-white",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    id={`tie-width-reform-${index}`}
+                    className="sr-only"
+                    checked={isWidthActive}
+                    onChange={(e) => {
+                      widthField.onChange(e.target.checked);
+                      void trigger(`ties.${index}.hasLengthReform`);
+                      void trigger(`ties.${index}.targetWidth`);
+                    }}
+                  />
+                  {isWidthActive && <CheckIcon className="size-3 text-white" />}
+                </FieldContent>
+                <FieldLabel htmlFor={`tie-width-reform-${index}`}>
+                  <FieldTitle>폭수선</FieldTitle>
+                </FieldLabel>
+              </Field>
+            </div>
           </div>
 
-          <hr className="border-border" />
-
-          {/* 폭수선 블록 */}
-          <div className="space-y-2">
-            {widthCheckboxEl}
-            <MeasurementField
-              field={targetWidthField}
-              fieldState={targetWidthFieldState}
-              label="원하는 폭"
-              placeholder="예: 9"
-              requiredMessage={
-                isWidthActive ? "원하는 폭을 입력해주세요" : undefined
-              }
-            />
+          <ImagePicker
+            id={`tie-image-${index}-desktop`}
+            selectedFile={
+              imageField.value instanceof File ? imageField.value : undefined
+            }
+            previewUrl={
+              typeof imageField.value === "string"
+                ? imageField.value
+                : undefined
+            }
+            onFileChange={(file) => imageField.onChange(file)}
+            onPreviewUrlChange={(url) => imageField.onChange(url ?? undefined)}
+          />
+          <div className="grid grid-cols-2 items-start">
+            <div className="border-r border-border pr-3">
+              <MeasurementField
+                field={wearerHeightField}
+                fieldState={wearerHeightFieldState}
+                label="착용자 키"
+                placeholder="예: 175"
+                requiredMessage={
+                  isLengthActive ? "착용자 키를 입력해주세요" : undefined
+                }
+              />
+              <FieldError errors={[lengthFieldState.error]} />
+            </div>
+            <div className="pl-3">
+              <MeasurementField
+                field={targetWidthField}
+                fieldState={targetWidthFieldState}
+                label="원하는 폭"
+                placeholder="예: 9"
+                requiredMessage={
+                  isWidthActive ? "원하는 폭을 입력해주세요" : undefined
+                }
+              />
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* ── 데스크톱 레이아웃 (≥ sm): 헤더행 + 입력행 정렬 ── */}
-      <div className="mt-3 hidden sm:grid sm:grid-cols-[104px_minmax(0,1fr)] sm:gap-x-4 sm:gap-y-2">
-        {/* 행 1: 넥타이 사진 레이블 | 서비스 헤더들 */}
-        <FieldLabel htmlFor={`tie-image-${index}-desktop`}>
-          <FieldTitle>넥타이 사진</FieldTitle>
-        </FieldLabel>
-        <div className="grid grid-cols-2 items-center">
-          <div className="flex items-center gap-2 border-r border-border pr-3">
-            {lengthCheckboxEl}
-            {desktopDimpleSegmentEl}
-          </div>
-          <div className="pl-3">{widthCheckboxEl}</div>
-        </div>
-
-        {/* 행 2: 이미지 피커 | 서비스 입력들 */}
-        {desktopImagePickerEl}
-        <div className="grid grid-cols-2 items-start">
-          <div className="border-r border-border pr-3">
-            <MeasurementField
-              field={wearerHeightField}
-              fieldState={wearerHeightFieldState}
-              label="착용자 키"
-              placeholder="예: 175"
-              requiredMessage={
-                isLengthActive ? "착용자 키를 입력해주세요" : undefined
-              }
-            />
-            <FieldError errors={[lengthFieldState.error]} />
-          </div>
-          <div className="pl-3">
-            <MeasurementField
-              field={targetWidthField}
-              fieldState={targetWidthFieldState}
-              label="원하는 폭"
-              placeholder="예: 9"
-              requiredMessage={
-                isWidthActive ? "원하는 폭을 입력해주세요" : undefined
-              }
-            />
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -103,19 +103,16 @@ const IMAGE_SECTIONS = [
     eyebrow: "Automatic Reform",
     title: "수동 넥타이, 자동 넥타이로 바꿔보세요",
     description: "지퍼 구조로 더 빠르고 간편하게 착용",
-    imageLabel: "자동 전환 이미지",
   },
   {
     eyebrow: "Width Reform",
     title: "넥타이 폭, 지금 취향에 맞게",
     description: "넓은 폭도 더 슬림하고 깔끔하게",
-    imageLabel: "폭 수선 이미지",
   },
   {
     eyebrow: "Bulk Apply",
     title: "여러 개 맡겨도 어렵지 않아요",
     description: "일괄 적용으로 한 번에 같은 요청 전달",
-    imageLabel: "일괄 적용 이미지",
   },
 ] as const;
 
@@ -124,13 +121,11 @@ const DIMPLE_CONTENT = [
     label: "Basic",
     title: "기본",
     description: "매끈하고 단정한 매듭 느낌",
-    imageLabel: "기본 자동 넥타이 이미지",
   },
   {
     label: "Dimple",
     title: "딤플",
     description: "중앙 홈이 살아 있는 입체감",
-    imageLabel: "딤플 자동 넥타이 이미지",
   },
 ] as const;
 
