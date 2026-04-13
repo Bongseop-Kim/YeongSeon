@@ -2,7 +2,7 @@ import { type LucideIcon } from "lucide-react";
 import { type ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
 import { UtilityKeyValueRow } from "@/shared/composite/utility-page";
-import type { SummaryRow } from "./order-summary-utils";
+import type { SummaryRow } from "@/shared/composite/order-summary-utils";
 
 interface OrderSummaryAsideProps {
   title?: string;

@@ -1,5 +1,11 @@
-import { type Control, useController } from "react-hook-form";
-import { Field, FieldError, FieldLabel, FieldTitle } from "@/shared/ui/field";
+import { type Control, useController, useFormContext } from "react-hook-form";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/shared/ui/field";
 import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
 import { ImagePicker } from "@/shared/composite/image-picker";
 import CloseButton from "@/shared/ui-extended/close";
@@ -16,6 +22,7 @@ interface TieItemCardProps {
 
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   // 필드를 한 번만 등록 — 모바일/데스크톱 두 레이아웃이 동일한 필드 인스턴스를 공유
+  const { trigger } = useFormContext<ReformOptions>();
   const { field: checkedField } = useController({
     control,
     name: `ties.${index}.checked`,
@@ -61,9 +68,23 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
 
   // ── 재사용 UI 조각 ─────────────────────────────────────────────────
 
-  const imagePickerEl = (
+  const mobileImagePickerEl = (
     <ImagePicker
-      id={`tie-image-${index}`}
+      id={`tie-image-${index}-mobile`}
+      selectedFile={
+        imageField.value instanceof File ? imageField.value : undefined
+      }
+      previewUrl={
+        typeof imageField.value === "string" ? imageField.value : undefined
+      }
+      onFileChange={(file) => imageField.onChange(file)}
+      onPreviewUrlChange={(url) => imageField.onChange(url ?? undefined)}
+    />
+  );
+
+  const desktopImagePickerEl = (
+    <ImagePicker
+      id={`tie-image-${index}-desktop`}
       selectedFile={
         imageField.value instanceof File ? imageField.value : undefined
       }
@@ -76,10 +97,10 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   );
 
   const lengthCheckboxEl = (
-    <label className="flex cursor-pointer items-center gap-2">
-      <span
+    <Field orientation="horizontal" className="w-fit cursor-pointer gap-2">
+      <FieldContent
         className={cn(
-          "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+          "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
           isLengthActive
             ? "border-brand-ink bg-brand-ink"
             : "border-input bg-white",
@@ -87,14 +108,17 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       >
         <input
           type="checkbox"
+          id={`tie-length-reform-${index}`}
           className="sr-only"
           checked={isLengthActive}
           onChange={(e) => lengthField.onChange(e.target.checked)}
         />
         {isLengthActive && <CheckIcon className="size-3 text-white" />}
-      </span>
-      <span className="text-sm font-semibold">자동수선</span>
-    </label>
+      </FieldContent>
+      <FieldLabel htmlFor={`tie-length-reform-${index}`}>
+        <FieldTitle>자동수선</FieldTitle>
+      </FieldLabel>
+    </Field>
   );
 
   const desktopDimpleSegmentEl = (
@@ -118,10 +142,10 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   );
 
   const widthCheckboxEl = (
-    <label className="flex cursor-pointer items-center gap-2">
-      <span
+    <Field orientation="horizontal" className="w-fit cursor-pointer gap-2">
+      <FieldContent
         className={cn(
-          "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+          "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
           isWidthActive
             ? "border-brand-ink bg-brand-ink"
             : "border-input bg-white",
@@ -129,14 +153,20 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       >
         <input
           type="checkbox"
+          id={`tie-width-reform-${index}`}
           className="sr-only"
           checked={isWidthActive}
-          onChange={(e) => widthField.onChange(e.target.checked)}
+          onChange={(e) => {
+            widthField.onChange(e.target.checked);
+            void trigger(`ties.${index}.hasLengthReform`);
+          }}
         />
         {isWidthActive && <CheckIcon className="size-3 text-white" />}
-      </span>
-      <span className="text-sm font-semibold">폭수선</span>
-    </label>
+      </FieldContent>
+      <FieldLabel htmlFor={`tie-width-reform-${index}`}>
+        <FieldTitle>폭수선</FieldTitle>
+      </FieldLabel>
+    </Field>
   );
 
   return (
@@ -166,10 +196,10 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       <div className="mt-3 grid grid-cols-[107px_minmax(0,1fr)] items-start gap-x-3 sm:hidden">
         {/* 이미지 (레이블 + 피커 함께) */}
         <Field orientation="vertical">
-          <FieldLabel htmlFor={`tie-image-${index}`}>
+          <FieldLabel htmlFor={`tie-image-${index}-mobile`}>
             <FieldTitle>넥타이 사진</FieldTitle>
           </FieldLabel>
-          {imagePickerEl}
+          {mobileImagePickerEl}
         </Field>
 
         {/* 서비스 영역 — 세로 배치 */}
@@ -213,7 +243,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       {/* ── 데스크톱 레이아웃 (≥ sm): 헤더행 + 입력행 정렬 ── */}
       <div className="mt-3 hidden sm:grid sm:grid-cols-[104px_minmax(0,1fr)] sm:gap-x-4 sm:gap-y-2">
         {/* 행 1: 넥타이 사진 레이블 | 서비스 헤더들 */}
-        <FieldLabel htmlFor={`tie-image-${index}`}>
+        <FieldLabel htmlFor={`tie-image-${index}-desktop`}>
           <FieldTitle>넥타이 사진</FieldTitle>
         </FieldLabel>
         <div className="grid grid-cols-2 items-center">
@@ -225,7 +255,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
         </div>
 
         {/* 행 2: 이미지 피커 | 서비스 입력들 */}
-        {imagePickerEl}
+        {desktopImagePickerEl}
         <div className="grid grid-cols-2 items-start">
           <div className="border-r border-border pr-3">
             <MeasurementField
