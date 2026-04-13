@@ -63,7 +63,7 @@ const mergeMeasurementRules = <T extends FieldValues>(
   if (!validateRule) {
     return {
       ...rules,
-      required: requiredMessage || false,
+      required: rules?.required || requiredMessage || false,
       validate: baseValidate,
     };
   }
