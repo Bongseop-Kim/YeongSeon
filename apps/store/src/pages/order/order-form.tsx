@@ -41,7 +41,8 @@ import {
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
 import { Field, FieldTitle, FieldContent } from "@/shared/ui/field";
-import { OrderPriceSummaryAside } from "@/shared/composite/order-price-summary-aside";
+import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { buildPriceRows } from "@/shared/composite/order-summary-utils";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
@@ -203,13 +204,11 @@ const OrderFormPage = () => {
             contentClassName="py-4 lg:py-8"
             sidebar={
               <div className="space-y-4">
-                <OrderPriceSummaryAside
+                <OrderSummaryAside
                   title="결제 금액"
                   description="주문서에 반영된 할인과 배송비를 포함한 예상 결제 금액입니다."
-                  originalPrice={totals.originalPrice}
-                  totalDiscount={totals.totalDiscount}
-                  shippingCost={totals.shippingCost}
-                  totalPrice={totals.totalPrice}
+                  rows={buildPriceRows(totals)}
+                  totalAmount={totals.totalPrice}
                   totalClassName="text-blue-600"
                 />
                 {user && isPricingReady && (
@@ -219,7 +218,6 @@ const OrderFormPage = () => {
                     paymentWidgetRef={paymentWidgetRef}
                     amount={totals.totalPrice}
                     customerKey={user.id}
-                    className="rounded-2xl"
                     consent={
                       hasReformItems
                         ? {

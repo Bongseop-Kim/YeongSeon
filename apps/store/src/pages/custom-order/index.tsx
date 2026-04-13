@@ -13,8 +13,9 @@ import {
   PACKAGE_PRESETS,
   useWizardStep,
   useCustomOrderSubmit,
+  useCustomOrderSummaryRows,
   ProgressBar,
-  StickySummary,
+  CustomOrderCostFooter,
   WizardActionButtons,
   QuantityStep,
   FabricStep,
@@ -25,6 +26,7 @@ import {
   ConfirmStep,
 } from "@/features/custom-order";
 import { DesignImagePicker } from "@/features/design";
+import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
 import { useAuthStore } from "@/shared/store/auth";
 import { toast } from "@/shared/lib/toast";
 import { useShippingAddressPopup } from "@/features/shipping";
@@ -95,6 +97,7 @@ export default function OrderPage() {
     steps: WIZARD_STEPS,
     getValues: form.getValues,
   });
+  const summaryRows = useCustomOrderSummaryRows(watchedValues);
 
   const handleNext = () => {
     if (wizard.currentStep.id === "quantity" && selectedPackage !== null) {
@@ -151,13 +154,20 @@ export default function OrderPage() {
               contentClassName="space-y-8"
               sidebarClassName="space-y-4"
               sidebar={
-                <StickySummary
-                  options={watchedValues}
-                  totalCost={totalCost}
-                  sewingCost={sewingCost}
-                  fabricCost={fabricCost}
-                  pricingConfig={pricingConfig}
-                  isLoggedIn={isLoggedIn}
+                <OrderSummaryAside
+                  title="주문 요약"
+                  description="현재 선택한 사양을 기준으로 제작 방식과 예상 비용을 확인합니다."
+                  rows={summaryRows}
+                  footer={
+                    <CustomOrderCostFooter
+                      options={watchedValues}
+                      totalCost={totalCost}
+                      sewingCost={sewingCost}
+                      fabricCost={fabricCost}
+                      pricingConfig={pricingConfig}
+                      isLoggedIn={isLoggedIn}
+                    />
+                  }
                 />
               }
               actionBar={

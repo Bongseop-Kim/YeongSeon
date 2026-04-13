@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { NotificationConsentFlowModals } from "@/features/notification";
-import { OrderPriceSummaryAside } from "@/shared/composite/order-price-summary-aside";
 import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { buildPriceRows } from "@/shared/composite/order-summary-utils";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 import {
@@ -70,12 +70,14 @@ export function BaseCheckoutPage({
             sidebar={
               <div className="space-y-4">
                 {appliedCoupon ? (
-                  <OrderPriceSummaryAside
+                  <OrderSummaryAside
                     title="결제 금액"
-                    originalPrice={totalOriginalPrice}
-                    totalDiscount={discountAmount}
-                    shippingCost={0}
-                    totalPrice={amount}
+                    rows={buildPriceRows({
+                      originalPrice: totalOriginalPrice,
+                      totalDiscount: discountAmount,
+                      shippingCost: 0,
+                    })}
+                    totalAmount={amount}
                     totalClassName="text-blue-600"
                   />
                 ) : (
@@ -99,7 +101,6 @@ export function BaseCheckoutPage({
                       label: "취소/환불 불가 동의",
                       description: consentDescription,
                     }}
-                    className="rounded-2xl"
                   />
                 ) : null}
               </div>

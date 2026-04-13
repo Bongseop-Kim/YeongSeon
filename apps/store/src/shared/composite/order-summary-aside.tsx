@@ -1,25 +1,15 @@
-import { type LucideIcon } from "lucide-react";
 import { type ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
-import {
-  UtilityKeyValueRow,
-  UtilityPageAside,
-} from "@/shared/composite/utility-page";
-
-interface SummaryRow {
-  id: string | number;
-  label: string;
-  value: ReactNode;
-  className?: string;
-}
+import { UtilityKeyValueRow } from "@/shared/composite/utility-page";
+import type { SummaryRow } from "@/shared/composite/order-summary-utils";
 
 interface OrderSummaryAsideProps {
   title?: string;
   description?: string;
-  icon?: LucideIcon;
   rows: SummaryRow[];
   totalAmount?: number;
   totalLabel?: string;
+  totalClassName?: string;
   footer?: ReactNode;
   className?: string;
 }
@@ -27,22 +17,22 @@ interface OrderSummaryAsideProps {
 export function OrderSummaryAside({
   title = "주문 요약",
   description,
-  icon,
   rows,
   totalAmount,
   totalLabel = "총 결제 금액",
+  totalClassName,
   footer,
   className,
 }: OrderSummaryAsideProps) {
   return (
-    <UtilityPageAside
-      title={title}
-      description={description}
-      icon={icon}
-      tone="muted"
-      className={cn("lg:rounded-2xl", className)}
-    >
-      <dl>
+    <section className={className}>
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      {description && (
+        <p className="mt-1 text-sm leading-6 text-foreground-muted">
+          {description}
+        </p>
+      )}
+      <dl className="mt-3">
         {rows.map((row) => (
           <UtilityKeyValueRow
             key={row.id}
@@ -52,18 +42,24 @@ export function OrderSummaryAside({
           />
         ))}
         {totalAmount !== undefined && (
-          <UtilityKeyValueRow
-            className="pt-5"
-            label={totalLabel}
-            value={
-              <span className="text-base font-semibold tracking-tight text-foreground">
+          <div className="flex items-center justify-between border-t border-border pt-3">
+            <dt className="text-sm font-medium text-foreground">
+              {totalLabel}
+            </dt>
+            <dd className="min-w-0 text-right">
+              <span
+                className={cn(
+                  "text-base font-semibold tracking-tight text-foreground",
+                  totalClassName,
+                )}
+              >
                 {totalAmount.toLocaleString()}원
               </span>
-            }
-          />
+            </dd>
+          </div>
         )}
       </dl>
       {footer}
-    </UtilityPageAside>
+    </section>
   );
 }

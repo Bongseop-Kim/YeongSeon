@@ -10,8 +10,9 @@ import {
   CartSelectionToolbar,
   CartItemsPanel,
   CartRecommendationsCard,
-  CartOrderSummaryCard,
 } from "@/features/cart";
+import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { buildPriceRows } from "@/shared/composite/order-summary-utils";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { useModalStore } from "@/shared/store/modal";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
@@ -317,7 +318,15 @@ export function CartCheckoutPage() {
                 onRetry={refetchSimilar}
               />
             }
-            sidebar={<CartOrderSummaryCard summary={selectedTotals} />}
+            sidebar={
+              <OrderSummaryAside
+                title="주문 금액"
+                description="선택한 상품 기준 예상 결제 금액입니다."
+                rows={buildPriceRows(selectedTotals)}
+                totalAmount={selectedTotals.totalPrice}
+                totalLabel={`총 ${selectedTotals.totalQuantity}개`}
+              />
+            }
             actionBar={
               <Button
                 type="button"
