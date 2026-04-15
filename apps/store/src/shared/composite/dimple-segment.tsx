@@ -22,13 +22,16 @@ export function DimpleSegment({
           }
           className={cn(
             "px-2.5 py-1 text-xs font-medium transition-colors",
-            i > 0 && "border-l border-white/30",
+            i > 0 &&
+              (isActive
+                ? "border-l border-border"
+                : "border-l border-white/30"),
             (type === "basic" && !value) || (type === "dimple" && value)
               ? isActive
                 ? "bg-white text-brand-ink"
                 : "bg-brand-ink text-white"
               : isActive
-                ? "text-white/50"
+                ? "bg-white text-muted-foreground"
                 : "text-muted-foreground",
           )}
           onClick={() => onChange(type === "dimple")}

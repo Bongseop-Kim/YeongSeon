@@ -1,12 +1,19 @@
-import { useState, useImperativeHandle, forwardRef } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { type UseFormSetValue } from "react-hook-form";
-import { Input } from "@/shared/ui-extended/input";
-import { Field, FieldLabel, FieldTitle } from "@/shared/ui/field";
-import { toast } from "sonner";
-import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
-import { cn } from "@/shared/lib/utils";
-import { DimpleSegment } from "@/shared/composite/dimple-segment";
 import { CheckIcon } from "lucide-react";
+
+import { type ReformOptions } from "@yeongseon/shared/types/view/reform";
+import { DimpleSegment } from "@/shared/composite/dimple-segment";
+import { cn } from "@/shared/lib/utils";
+import { Input } from "@/shared/ui-extended/input";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/shared/ui/field";
+import { Required } from "@/shared/ui/required";
 
 interface BulkApplySectionProps {
   setValue: UseFormSetValue<ReformOptions>;
@@ -25,17 +32,21 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
     const [dimple, setDimple] = useState(false);
     const [lengthValue, setLengthValue] = useState("");
     const [widthValue, setWidthValue] = useState("");
+    const [lengthError, setLengthError] = useState<string | null>(null);
+    const [widthError, setWidthError] = useState<string | null>(null);
+    const [serviceError, setServiceError] = useState<string | null>(null);
 
     const handleBulkApply = () => {
-      if (checkedIndices.length === 0) {
-        toast.error("적용할 항목을 선택해주세요.");
+      setLengthError(null);
+      setWidthError(null);
+      setServiceError(null);
+
+      if (!hasLengthReform && !hasWidthReform) {
+        setServiceError("수선 서비스를 하나 이상 선택해주세요.");
         return false;
       }
 
-      if (!hasLengthReform && !hasWidthReform) {
-        toast.error("수선 서비스를 하나 이상 선택해주세요.");
-        return false;
-      }
+      let hasError = false;
 
       if (hasLengthReform) {
         const lengthNum = Number(lengthValue);
@@ -44,8 +55,8 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
           !Number.isNaN(lengthNum) &&
           lengthNum > 0;
         if (!valid) {
-          toast.error("측정 값을 입력해주세요.");
-          return false;
+          setLengthError("착용자 키를 입력해주세요");
+          hasError = true;
         }
       }
 
@@ -54,10 +65,12 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
         const valid =
           widthValue.trim() !== "" && !Number.isNaN(widthNum) && widthNum > 0;
         if (!valid) {
-          toast.error("원하는 폭을 입력해주세요.");
-          return false;
+          setWidthError("원하는 폭을 입력해주세요");
+          hasError = true;
         }
       }
+
+      if (hasError) return false;
 
       checkedIndices.forEach((i) => {
         if (hasLengthReform) {
@@ -84,126 +97,122 @@ const BulkApplySection = forwardRef<BulkApplySectionRef, BulkApplySectionProps>(
 
     return (
       <div className="space-y-2">
-        {/* 자동수선 카드 */}
-        <div
-          className={cn(
-            "overflow-hidden rounded-md border transition-colors",
-            hasLengthReform ? "border-brand-ink" : "border-border",
-          )}
-        >
-          <button
-            type="button"
-            className={cn(
-              "flex w-full items-center gap-2 px-3 py-[10px] text-left transition-colors",
-              hasLengthReform
-                ? "bg-brand-ink"
-                : "bg-muted hover:bg-brand-paper-muted",
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Field
+              orientation="horizontal"
+              className="w-fit cursor-pointer gap-2"
+            >
+              <FieldContent
+                className={cn(
+                  "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                  hasLengthReform
+                    ? "border-brand-ink bg-brand-ink"
+                    : "border-input bg-white",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  id="bulk-length-reform"
+                  className="sr-only"
+                  checked={hasLengthReform}
+                  onChange={(e) => {
+                    setHasLengthReform(e.target.checked);
+                    setLengthError(null);
+                    setServiceError(null);
+                  }}
+                />
+                {hasLengthReform && <CheckIcon className="size-3 text-white" />}
+              </FieldContent>
+              <FieldLabel htmlFor="bulk-length-reform">
+                <FieldTitle>자동수선</FieldTitle>
+              </FieldLabel>
+            </Field>
+            {hasLengthReform && (
+              <span className="flex overflow-hidden rounded-md border border-border">
+                <DimpleSegment
+                  value={dimple}
+                  onChange={setDimple}
+                  isActive={true}
+                />
+              </span>
             )}
-            onClick={() => setHasLengthReform((v) => !v)}
-          >
-            <span
-              className={cn(
-                "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
-                hasLengthReform
-                  ? "border-white bg-white/0"
-                  : "border-input bg-white",
-              )}
-            >
-              {hasLengthReform && <CheckIcon className="size-3 text-white" />}
-            </span>
-            <span
-              className={cn(
-                "text-sm font-semibold",
-                hasLengthReform ? "text-white" : "text-foreground",
-              )}
-            >
-              자동수선
-            </span>
+          </div>
 
-            <span
-              className="ml-auto flex overflow-hidden rounded-md border border-white/30"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DimpleSegment
-                value={dimple}
-                onChange={setDimple}
-                isActive={hasLengthReform}
+          <Field orientation="vertical" className="gap-1">
+            <FieldLabel>
+              <FieldTitle>
+                {hasLengthReform && <Required />}
+                착용자 키
+              </FieldTitle>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                type="number"
+                placeholder="예: 175"
+                value={lengthValue}
+                onChange={(e) => setLengthValue(e.target.value)}
+                unit="cm"
               />
-            </span>
-          </button>
-
-          {hasLengthReform && (
-            <div className="border-t border-border p-3">
-              <Field orientation="vertical" className="gap-1">
-                <FieldLabel>
-                  <FieldTitle>착용자 키</FieldTitle>
-                </FieldLabel>
-                <Input
-                  type="number"
-                  placeholder="예: 175"
-                  value={lengthValue}
-                  onChange={(e) => setLengthValue(e.target.value)}
-                  unit="cm"
-                />
-              </Field>
-            </div>
-          )}
+            </FieldContent>
+          </Field>
+          {lengthError && <FieldError errors={[{ message: lengthError }]} />}
         </div>
 
-        {/* 폭수선 카드 */}
-        <div
-          className={cn(
-            "overflow-hidden rounded-md border transition-colors",
-            hasWidthReform ? "border-brand-ink" : "border-border",
-          )}
-        >
-          <button
-            type="button"
-            className={cn(
-              "flex w-full items-center gap-2 px-3 py-[10px] text-left transition-colors",
-              hasWidthReform
-                ? "bg-brand-ink"
-                : "bg-muted hover:bg-brand-paper-muted",
-            )}
-            onClick={() => setHasWidthReform((v) => !v)}
+        <hr className="border-border" />
+
+        <div className="space-y-2">
+          <Field
+            orientation="horizontal"
+            className="w-fit cursor-pointer gap-2"
           >
-            <span
+            <FieldContent
               className={cn(
-                "flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
                 hasWidthReform
-                  ? "border-white bg-white/0"
+                  ? "border-brand-ink bg-brand-ink"
                   : "border-input bg-white",
               )}
             >
+              <input
+                type="checkbox"
+                id="bulk-width-reform"
+                className="sr-only"
+                checked={hasWidthReform}
+                onChange={(e) => {
+                  setHasWidthReform(e.target.checked);
+                  setWidthError(null);
+                  setServiceError(null);
+                }}
+              />
               {hasWidthReform && <CheckIcon className="size-3 text-white" />}
-            </span>
-            <span
-              className={cn(
-                "text-sm font-semibold",
-                hasWidthReform ? "text-white" : "text-foreground",
-              )}
-            >
-              폭수선
-            </span>
-          </button>
+            </FieldContent>
+            <FieldLabel htmlFor="bulk-width-reform">
+              <FieldTitle>폭수선</FieldTitle>
+            </FieldLabel>
+          </Field>
 
-          {hasWidthReform && (
-            <div className="border-t border-border p-3">
-              <Field orientation="vertical" className="gap-1">
-                <FieldLabel>
-                  <FieldTitle>원하는 폭</FieldTitle>
-                </FieldLabel>
-                <Input
-                  type="number"
-                  placeholder="예: 9"
-                  value={widthValue}
-                  onChange={(e) => setWidthValue(e.target.value)}
-                  unit="cm"
-                />
-              </Field>
-            </div>
-          )}
+          <Field orientation="vertical" className="gap-1">
+            <FieldLabel>
+              <FieldTitle>
+                {hasWidthReform && <Required />}
+                원하는 폭
+              </FieldTitle>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                type="number"
+                placeholder="예: 9"
+                value={widthValue}
+                onChange={(e) => setWidthValue(e.target.value)}
+                unit="cm"
+              />
+            </FieldContent>
+          </Field>
+          {widthError && <FieldError errors={[{ message: widthError }]} />}
         </div>
+
+        {serviceError && <FieldError errors={[{ message: serviceError }]} />}
       </div>
     );
   },

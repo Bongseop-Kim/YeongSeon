@@ -189,13 +189,15 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                     <FieldTitle>자동수선</FieldTitle>
                   </FieldLabel>
                 </Field>
-                <span className="flex overflow-hidden rounded-md border border-border">
-                  <DimpleSegment
-                    value={dimpleField.value ?? false}
-                    onChange={dimpleField.onChange}
-                    isActive={false}
-                  />
-                </span>
+                {isLengthActive && (
+                  <span className="flex overflow-hidden rounded-md border border-border">
+                    <DimpleSegment
+                      value={dimpleField.value ?? false}
+                      onChange={dimpleField.onChange}
+                      isActive={true}
+                    />
+                  </span>
+                )}
               </div>
               <MeasurementField
                 field={wearerHeightField}
@@ -290,13 +292,15 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                   <FieldTitle>자동수선</FieldTitle>
                 </FieldLabel>
               </Field>
-              <span className="ml-auto flex overflow-hidden rounded-md border border-border">
-                <DimpleSegment
-                  value={dimpleField.value ?? false}
-                  onChange={dimpleField.onChange}
-                  isActive={false}
-                />
-              </span>
+              {isLengthActive && (
+                <span className="ml-auto flex overflow-hidden rounded-md border border-border">
+                  <DimpleSegment
+                    value={dimpleField.value ?? false}
+                    onChange={dimpleField.onChange}
+                    isActive={true}
+                  />
+                </span>
+              )}
             </div>
             <div className="pl-3">
               <Field
