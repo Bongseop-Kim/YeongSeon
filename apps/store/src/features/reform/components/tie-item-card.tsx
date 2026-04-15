@@ -24,7 +24,7 @@ interface TieItemCardProps {
 const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   // 필드를 한 번만 등록 — 모바일/데스크톱 두 레이아웃이 동일한 필드 인스턴스를 공유
   const { isMobile } = useBreakpoint();
-  const { trigger } = useFormContext<ReformOptions>();
+  const { clearErrors } = useFormContext<ReformOptions>();
   const { field: checkedField } = useController({
     control,
     name: `ties.${index}.checked`,
@@ -65,8 +65,10 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       control,
       name: `ties.${index}.wearerHeight`,
       rules: {
-        validate: (value) => {
-          if (!isLengthActive) return true;
+        validate: (value, formValues) => {
+          const tie = formValues?.ties?.[index];
+          const isActive = tie ? tie.hasLengthReform !== false : false;
+          if (!isActive) return true;
           if (value == null) {
             return "착용자 키를 입력해주세요";
           }
@@ -81,8 +83,10 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
       control,
       name: `ties.${index}.targetWidth`,
       rules: {
-        validate: (value) => {
-          if (!isWidthActive) return true;
+        validate: (value, formValues) => {
+          const tie = formValues?.ties?.[index];
+          const isActive = tie ? tie.hasWidthReform === true : false;
+          if (!isActive) return true;
           if (value == null) {
             return "원하는 폭을 입력해주세요";
           }
@@ -178,7 +182,10 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                       checked={isLengthActive}
                       onChange={(e) => {
                         lengthField.onChange(e.target.checked);
-                        void trigger(`ties.${index}.wearerHeight`);
+                        clearErrors(`ties.${index}.hasLengthReform`);
+                        if (!e.target.checked) {
+                          clearErrors(`ties.${index}.wearerHeight`);
+                        }
                       }}
                     />
                     {isLengthActive && (
@@ -229,8 +236,10 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                     checked={isWidthActive}
                     onChange={(e) => {
                       widthField.onChange(e.target.checked);
-                      void trigger(`ties.${index}.hasLengthReform`);
-                      void trigger(`ties.${index}.targetWidth`);
+                      clearErrors(`ties.${index}.hasLengthReform`);
+                      if (!e.target.checked) {
+                        clearErrors(`ties.${index}.targetWidth`);
+                      }
                     }}
                   />
                   {isWidthActive && <CheckIcon className="size-3 text-white" />}
@@ -277,7 +286,10 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                     checked={isLengthActive}
                     onChange={(e) => {
                       lengthField.onChange(e.target.checked);
-                      void trigger(`ties.${index}.wearerHeight`);
+                      clearErrors(`ties.${index}.hasLengthReform`);
+                      if (!e.target.checked) {
+                        clearErrors(`ties.${index}.wearerHeight`);
+                      }
                     }}
                   />
                   {isLengthActive && (
@@ -314,8 +326,10 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                     checked={isWidthActive}
                     onChange={(e) => {
                       widthField.onChange(e.target.checked);
-                      void trigger(`ties.${index}.hasLengthReform`);
-                      void trigger(`ties.${index}.targetWidth`);
+                      clearErrors(`ties.${index}.hasLengthReform`);
+                      if (!e.target.checked) {
+                        clearErrors(`ties.${index}.targetWidth`);
+                      }
                     }}
                   />
                   {isWidthActive && <CheckIcon className="size-3 text-white" />}
