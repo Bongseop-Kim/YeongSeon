@@ -158,7 +158,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
 
           <div className="min-w-0 space-y-3">
             <div className="min-w-0 space-y-2">
-              <div className="flex flex-wrap items-start gap-2">
+              <div className="flex items-center justify-between">
                 <Field
                   orientation="horizontal"
                   className="w-fit cursor-pointer gap-2"
@@ -189,15 +189,11 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                     <FieldTitle>자동수선</FieldTitle>
                   </FieldLabel>
                 </Field>
-                {isLengthActive && (
-                  <span className="flex overflow-hidden rounded-md border border-border">
-                    <DimpleSegment
-                      value={dimpleField.value ?? false}
-                      onChange={dimpleField.onChange}
-                      isActive={true}
-                    />
-                  </span>
-                )}
+                <DimpleSegment
+                  value={dimpleField.value ?? false}
+                  onChange={dimpleField.onChange}
+                  disabled={!isLengthActive}
+                />
               </div>
               <MeasurementField
                 field={wearerHeightField}
@@ -261,7 +257,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
             <FieldTitle>넥타이 사진</FieldTitle>
           </FieldLabel>
           <div className="grid grid-cols-2 items-center">
-            <div className="flex items-center gap-2 border-r border-border pr-3">
+            <div className="flex items-center justify-between border-r border-border pr-3">
               <Field
                 orientation="horizontal"
                 className="w-fit cursor-pointer gap-2"
@@ -292,15 +288,11 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                   <FieldTitle>자동수선</FieldTitle>
                 </FieldLabel>
               </Field>
-              {isLengthActive && (
-                <span className="ml-auto flex overflow-hidden rounded-md border border-border">
-                  <DimpleSegment
-                    value={dimpleField.value ?? false}
-                    onChange={dimpleField.onChange}
-                    isActive={true}
-                  />
-                </span>
-              )}
+              <DimpleSegment
+                value={dimpleField.value ?? false}
+                onChange={dimpleField.onChange}
+                disabled={!isLengthActive}
+              />
             </div>
             <div className="pl-3">
               <Field

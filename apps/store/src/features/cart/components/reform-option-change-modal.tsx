@@ -71,7 +71,7 @@ export const ReformOptionChangeModal = forwardRef<
   return (
     <div className="space-y-4">
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center justify-between">
           <Field
             orientation="horizontal"
             className="w-fit cursor-pointer gap-2"
@@ -97,15 +97,11 @@ export const ReformOptionChangeModal = forwardRef<
               <FieldTitle>자동수선</FieldTitle>
             </FieldLabel>
           </Field>
-          {hasLengthReform && (
-            <span className="flex overflow-hidden rounded-md border border-border">
-              <DimpleSegment
-                value={dimple}
-                onChange={setDimple}
-                isActive={true}
-              />
-            </span>
-          )}
+          <DimpleSegment
+            value={dimple}
+            onChange={setDimple}
+            disabled={!hasLengthReform}
+          />
         </div>
 
         <Field orientation="vertical" className="gap-1">

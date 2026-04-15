@@ -29,14 +29,10 @@ describe("BulkApplySection", () => {
       expect(screen.getByPlaceholderText("예: 9")).toBeInTheDocument();
     });
 
-    it("초기에 기본/딤플 세그먼트가 보이지 않는다", () => {
+    it("초기에 기본/딤플 세그먼트가 비활성화 상태로 보인다", () => {
       setup();
-      expect(
-        screen.queryByRole("button", { name: "기본" }),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole("button", { name: "딤플" }),
-      ).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "기본" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "딤플" })).toBeDisabled();
     });
 
     it("초기에 required 표시(*)가 없다", () => {
@@ -65,16 +61,15 @@ describe("BulkApplySection", () => {
       expect(screen.getByText("*")).toBeInTheDocument();
     });
 
-    it("자동수선 해제 시 기본/딤플 세그먼트가 사라진다", async () => {
+    it("자동수선 해제 시 기본/딤플 세그먼트가 다시 비활성화된다", async () => {
       const user = userEvent.setup();
       setup();
 
       await user.click(screen.getByRole("checkbox", { name: /자동수선/ }));
       await user.click(screen.getByRole("checkbox", { name: /자동수선/ }));
 
-      expect(
-        screen.queryByRole("button", { name: "기본" }),
-      ).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "기본" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "딤플" })).toBeDisabled();
     });
   });
 

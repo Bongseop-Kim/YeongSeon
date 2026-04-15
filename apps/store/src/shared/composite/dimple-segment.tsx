@@ -1,44 +1,49 @@
 import { cn } from "@/shared/lib/utils";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
 
 interface DimpleSegmentProps {
   value: boolean;
   onChange: (value: boolean) => void;
-  isActive: boolean;
+  disabled?: boolean;
 }
 
 export function DimpleSegment({
   value,
   onChange,
-  isActive,
+  disabled,
 }: DimpleSegmentProps) {
+  const selectedValue = value ? "dimple" : "basic";
+
   return (
-    <>
-      {(["basic", "dimple"] as const).map((type, i) => (
-        <button
-          key={type}
-          type="button"
-          aria-pressed={
-            (type === "basic" && !value) || (type === "dimple" && value)
-          }
-          className={cn(
-            "px-2.5 py-1 text-xs font-medium transition-colors",
-            i > 0 &&
-              (isActive
-                ? "border-l border-border"
-                : "border-l border-white/30"),
-            (type === "basic" && !value) || (type === "dimple" && value)
-              ? isActive
-                ? "bg-white text-brand-ink"
-                : "bg-brand-ink text-white"
-              : isActive
-                ? "bg-white text-muted-foreground"
-                : "text-muted-foreground",
-          )}
-          onClick={() => onChange(type === "dimple")}
+    <span className={cn(disabled && "pointer-events-none opacity-40")}>
+      <ToggleGroup
+        type="multiple"
+        value={[selectedValue]}
+        variant="outline"
+        spacing={0}
+        className="h-auto"
+      >
+        <ToggleGroupItem
+          value="basic"
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled && value) onChange(false);
+          }}
+          className="h-auto px-2.5 py-1 text-xs font-medium data-[state=on]:bg-brand-ink data-[state=on]:text-white"
         >
-          {type === "basic" ? "기본" : "딤플"}
-        </button>
-      ))}
-    </>
+          기본
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="dimple"
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled && !value) onChange(true);
+          }}
+          className="h-auto px-2.5 py-1 text-xs font-medium data-[state=on]:bg-brand-ink data-[state=on]:text-white"
+        >
+          딤플
+        </ToggleGroupItem>
+      </ToggleGroup>
+    </span>
   );
 }
