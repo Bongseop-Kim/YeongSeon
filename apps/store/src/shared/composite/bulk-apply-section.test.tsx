@@ -31,8 +31,8 @@ describe("BulkApplySection", () => {
 
     it("초기에 기본/딤플 세그먼트가 비활성화 상태로 보인다", () => {
       setup();
-      expect(screen.getByRole("button", { name: "기본" })).toBeDisabled();
-      expect(screen.getByRole("button", { name: "딤플" })).toBeDisabled();
+      expect(screen.getByRole("radio", { name: "기본" })).toBeDisabled();
+      expect(screen.getByRole("radio", { name: "딤플" })).toBeDisabled();
     });
 
     it("초기에 required 표시(*)가 없다", () => {
@@ -48,8 +48,8 @@ describe("BulkApplySection", () => {
 
       await user.click(screen.getByRole("checkbox", { name: /자동수선/ }));
 
-      expect(screen.getByRole("button", { name: "기본" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "딤플" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "기본" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "딤플" })).toBeInTheDocument();
     });
 
     it("자동수선 체크 시 착용자 키 required 표시(*)가 나타난다", async () => {
@@ -68,8 +68,8 @@ describe("BulkApplySection", () => {
       await user.click(screen.getByRole("checkbox", { name: /자동수선/ }));
       await user.click(screen.getByRole("checkbox", { name: /자동수선/ }));
 
-      expect(screen.getByRole("button", { name: "기본" })).toBeDisabled();
-      expect(screen.getByRole("button", { name: "딤플" })).toBeDisabled();
+      expect(screen.getByRole("radio", { name: "기본" })).toBeDisabled();
+      expect(screen.getByRole("radio", { name: "딤플" })).toBeDisabled();
     });
   });
 
@@ -154,7 +154,7 @@ describe("BulkApplySection", () => {
       );
 
       await user.click(screen.getByRole("checkbox", { name: /자동수선/ }));
-      await user.click(screen.getByRole("button", { name: "딤플" }));
+      await user.click(screen.getByRole("radio", { name: "딤플" }));
       await user.type(screen.getByPlaceholderText("예: 175"), "175");
       if (!ref.current) throw new Error("ref should be mounted");
       const current = ref.current;
