@@ -17,8 +17,9 @@ export function DimpleSegment({
   return (
     <span className={cn(disabled && "pointer-events-none opacity-40")}>
       <ToggleGroup
-        type="multiple"
-        value={[selectedValue]}
+        type="single"
+        value={selectedValue}
+        onValueChange={(v) => onChange(v === "dimple")}
         variant="outline"
         spacing={0}
         className="h-auto"
@@ -26,9 +27,6 @@ export function DimpleSegment({
         <ToggleGroupItem
           value="basic"
           disabled={disabled}
-          onClick={() => {
-            if (!disabled && value) onChange(false);
-          }}
           className="h-auto px-2.5 py-1 text-xs font-medium data-[state=on]:bg-brand-ink data-[state=on]:text-white"
         >
           기본
@@ -36,9 +34,6 @@ export function DimpleSegment({
         <ToggleGroupItem
           value="dimple"
           disabled={disabled}
-          onClick={() => {
-            if (!disabled && !value) onChange(true);
-          }}
           className="h-auto px-2.5 py-1 text-xs font-medium data-[state=on]:bg-brand-ink data-[state=on]:text-white"
         >
           딤플

@@ -47,11 +47,15 @@ export const ReformOptionChangeModal = forwardRef<
     ...item.reformData.tie,
     hasLengthReform,
     hasWidthReform,
-    measurementType: "height",
-    tieLength: undefined,
-    wearerHeight: hasLengthReform ? wearerHeight : undefined,
+    ...(hasLengthReform
+      ? {
+          measurementType: "height" as const,
+          tieLength: undefined,
+          wearerHeight,
+          dimple,
+        }
+      : {}),
     targetWidth: hasWidthReform ? targetWidth : undefined,
-    dimple,
   };
 
   const dynamicCost =

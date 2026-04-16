@@ -236,7 +236,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                     checked={isWidthActive}
                     onChange={(e) => {
                       widthField.onChange(e.target.checked);
-                      clearErrors(`ties.${index}.hasLengthReform`);
+                      clearErrors(`ties.${index}.hasWidthReform`);
                       if (!e.target.checked) {
                         clearErrors(`ties.${index}.targetWidth`);
                       }
@@ -326,7 +326,7 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                     checked={isWidthActive}
                     onChange={(e) => {
                       widthField.onChange(e.target.checked);
-                      clearErrors(`ties.${index}.hasLengthReform`);
+                      clearErrors(`ties.${index}.hasWidthReform`);
                       if (!e.target.checked) {
                         clearErrors(`ties.${index}.targetWidth`);
                       }
