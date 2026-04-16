@@ -49,8 +49,6 @@ export const ReformOptionChangeModal = forwardRef<
     hasWidthReform,
     ...(hasLengthReform
       ? {
-          measurementType: "height" as const,
-          tieLength: undefined,
           wearerHeight,
           dimple,
         }
@@ -81,6 +79,7 @@ export const ReformOptionChangeModal = forwardRef<
             className="w-fit cursor-pointer gap-2"
           >
             <FieldContent
+              onClick={() => setHasLengthReform(!hasLengthReform)}
               className={cn(
                 "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
                 hasLengthReform
@@ -139,6 +138,7 @@ export const ReformOptionChangeModal = forwardRef<
       <div className="space-y-3">
         <Field orientation="horizontal" className="w-fit cursor-pointer gap-2">
           <FieldContent
+            onClick={() => setHasWidthReform(!hasWidthReform)}
             className={cn(
               "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
               hasWidthReform

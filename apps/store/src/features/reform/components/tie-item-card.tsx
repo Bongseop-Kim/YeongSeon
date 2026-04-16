@@ -168,6 +168,14 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                   className="w-fit cursor-pointer gap-2"
                 >
                   <FieldContent
+                    onClick={() => {
+                      const next = !isLengthActive;
+                      lengthField.onChange(next);
+                      clearErrors(`ties.${index}.hasLengthReform`);
+                      if (!next) {
+                        clearErrors(`ties.${index}.wearerHeight`);
+                      }
+                    }}
                     className={cn(
                       "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
                       isLengthActive
@@ -272,6 +280,14 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
                 className="w-fit cursor-pointer gap-2"
               >
                 <FieldContent
+                  onClick={() => {
+                    const next = !isLengthActive;
+                    lengthField.onChange(next);
+                    clearErrors(`ties.${index}.hasLengthReform`);
+                    if (!next) {
+                      clearErrors(`ties.${index}.wearerHeight`);
+                    }
+                  }}
                   className={cn(
                     "flex-none size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
                     isLengthActive
