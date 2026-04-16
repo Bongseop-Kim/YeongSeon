@@ -101,8 +101,10 @@ const REFORM_STEPS = [
 const IMAGE_SECTIONS = [
   {
     eyebrow: "Automatic Reform",
-    title: "수동 넥타이, 자동 넥타이로 바꿔보세요",
+    title: "자동 넥타이로 바꿔보세요",
     description: "지퍼 구조로 더 빠르고 간편하게 착용",
+    video: "/images/reform/reform-ver.mov",
+    aspect: "aspect-[3/4]",
   },
   {
     eyebrow: "Width Reform",
@@ -121,24 +123,28 @@ const DIMPLE_CONTENT = [
     label: "Basic",
     title: "기본",
     description: "매끈하고 단정한 매듭 느낌",
+    image: "/images/reform/normal.jpeg",
   },
   {
     label: "Dimple",
     title: "딤플",
     description: "중앙 홈이 살아 있는 입체감",
+    image: "/images/reform/dimple.jpeg",
   },
 ] as const;
 
 const BEFORE_AFTER_CONTENT = [
   {
     label: "Before",
-    title: "수동 넥타이",
-    description: "손으로 직접 매듭을 묶어 착용",
+    title: "수선 전",
+    description: "익숙하지만 어딘가 무거워 보이는 폭",
+    image: "/images/reform/wide_cropped.png",
   },
   {
     label: "After",
-    title: "자동 넥타이 또는 폭수선 후",
-    description: "더 편하게, 더 지금 같은 인상으로",
+    title: "폭수선 후",
+    description: "같은 넥타이, 딱 맞는 폭으로 다듬어진 인상",
+    image: "/images/reform/slim_cropped.png",
   },
 ] as const;
 
@@ -449,8 +455,15 @@ const ReformPage = () => {
               }
               detail={
                 <div className="space-y-5 py-8 lg:py-10">
-                  <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-stone-100">
-                    <div className="min-h-[420px] animate-pulse bg-stone-200/80 py-12 lg:min-h-[620px]" />
+                  <section className="overflow-hidden -mx-4 sm:-mx-6 lg:mx-0 lg:border lg:border-stone-200 bg-stone-100 aspect-[4/3]">
+                    <video
+                      src="/images/reform/reform.mov"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
                   </section>
 
                   <section className="py-4 text-center lg:py-6">
@@ -498,8 +511,21 @@ const ReformPage = () => {
 
                   {IMAGE_SECTIONS.map((section) => (
                     <React.Fragment key={section.title}>
-                      <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-stone-100">
-                        <div className="min-h-[360px] animate-pulse bg-stone-200/80 py-12 lg:min-h-[560px]" />
+                      <section
+                        className={`overflow-hidden -mx-4 sm:-mx-6 lg:mx-0 lg:border lg:border-stone-200 bg-stone-100 ${"aspect" in section ? section.aspect : ""}`}
+                      >
+                        {"video" in section ? (
+                          <video
+                            src={section.video}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="min-h-[360px] animate-pulse bg-stone-200/80 py-12 lg:min-h-[560px]" />
+                        )}
                       </section>
 
                       <section className="py-4 text-center lg:py-6">
@@ -532,8 +558,12 @@ const ReformPage = () => {
                   <section className="grid gap-4 lg:grid-cols-2">
                     {DIMPLE_CONTENT.map((item) => (
                       <section key={item.label} className="space-y-3">
-                        <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-stone-100">
-                          <div className="min-h-[320px] animate-pulse bg-stone-200/80 py-12 lg:min-h-[480px]" />
+                        <section className="overflow-hidden -mx-4 sm:-mx-6 lg:mx-0 lg:border lg:border-stone-200 bg-stone-100">
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="h-full w-full object-cover"
+                          />
                         </section>
 
                         <section className="py-2 text-center lg:py-3">
@@ -553,18 +583,26 @@ const ReformPage = () => {
 
                   <section className="pt-2 text-center lg:pt-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
-                      Before / After
+                      Width Reform
                     </p>
                     <h3 className="mt-3 text-2xl font-semibold tracking-tight text-zinc-950 lg:text-4xl">
-                      같은 넥타이도 이렇게 달라질 수 있어요
+                      몇 밀리미터 차이가 인상을 바꿉니다
                     </h3>
+                    <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-600 lg:text-base">
+                      폭 하나만 줄여도 실루엣이 달라지고, 전체 인상이 다르게
+                      읽힙니다.
+                    </p>
                   </section>
 
                   <section className="grid gap-4 lg:grid-cols-2">
                     {BEFORE_AFTER_CONTENT.map((item) => (
                       <section key={item.label} className="space-y-3">
-                        <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-stone-100">
-                          <div className="min-h-[320px] animate-pulse bg-stone-200/80 py-12 lg:min-h-[480px]" />
+                        <section className="overflow-hidden -mx-4 sm:-mx-6 lg:mx-0 lg:border lg:border-stone-200 bg-stone-100">
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="h-full w-full object-cover"
+                          />
                         </section>
 
                         <section className="py-2 text-center lg:py-3">
