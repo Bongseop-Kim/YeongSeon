@@ -35,6 +35,8 @@ export type GenerateDesignRequest = {
   ciImageMimeType?: string;
   referenceImageBase64?: string;
   referenceImageMimeType?: string;
+  tiledBase64?: string;
+  tiledMimeType?: string;
   // 세션 저장용 필드 (클라이언트에서 선택적으로 전송)
   sessionId?: string;
   firstMessage?: string;

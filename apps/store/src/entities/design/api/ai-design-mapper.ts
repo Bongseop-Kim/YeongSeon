@@ -126,6 +126,8 @@ export const getTags = (request: AiDesignRequest): string[] => {
 interface InvokePayloadInput {
   ciImageBase64?: string;
   referenceImageBase64?: string;
+  tiledBase64?: string;
+  tiledMimeType?: string;
 }
 
 interface InvokeResponseBody {
@@ -193,6 +195,8 @@ export function buildInvokePayload(
     referenceImageBase64: input.referenceImageBase64,
     referenceImageMimeType:
       request.designContext.referenceImage?.type || undefined,
+    tiledBase64: input.tiledBase64,
+    tiledMimeType: input.tiledMimeType,
     sessionId: request.sessionId,
     firstMessage: request.firstMessage,
     allMessages: request.allMessages,

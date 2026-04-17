@@ -17,6 +17,7 @@
     "./create-quote-request",
     "./create-sample-order",
     "./delete-account",
+    "./generate-fal-api",
     "./generate-google-api",
     "./generate-open-api",
     "./imagekit-auth",

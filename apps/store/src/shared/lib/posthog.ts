@@ -8,6 +8,7 @@ type PhEventParamsMap = {
     ai_model: AiModel;
     latency_ms: number;
     has_image: boolean;
+    pipeline?: "fal-ai";
   };
   design_generation_failed: {
     ai_model: AiModel;

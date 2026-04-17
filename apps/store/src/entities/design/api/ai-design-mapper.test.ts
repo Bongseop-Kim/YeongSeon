@@ -163,6 +163,8 @@ describe("buildInvokePayload", () => {
       buildInvokePayload(request, {
         ciImageBase64: "ci-base64",
         referenceImageBase64: "ref-base64",
+        tiledBase64: "tiled-base64",
+        tiledMimeType: "image/png",
       }),
     ).toEqual({
       userMessage: "테스트 요청",
@@ -178,6 +180,8 @@ describe("buildInvokePayload", () => {
       ciImageMimeType: "image/png",
       referenceImageBase64: "ref-base64",
       referenceImageMimeType: "image/jpeg",
+      tiledBase64: "tiled-base64",
+      tiledMimeType: "image/png",
       sessionId: "test-session-id",
       firstMessage: "테스트 요청",
       allMessages: [],

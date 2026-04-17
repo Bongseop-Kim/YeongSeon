@@ -2,13 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { InsufficientTokensError } from "@/entities/design/api/ai-design-api";
 import { aiDesignApi } from "@/entities/design/api/ai-design-api";
 
-const { invoke, phCapture } = vi.hoisted(() => ({
+const { invoke, phCapture, tileLogoOnCanvas } = vi.hoisted(() => ({
   invoke: vi.fn(),
   phCapture: vi.fn(),
+  tileLogoOnCanvas: vi.fn(),
 }));
 
 vi.mock("@/shared/lib/posthog", () => ({
   ph: { capture: phCapture },
+}));
+
+vi.mock("@/shared/lib/tile-logo-on-canvas", () => ({
+  tileLogoOnCanvas,
 }));
 
 vi.mock("@/shared/lib/supabase", () => ({
@@ -59,6 +64,9 @@ describe("aiDesignApi", () => {
   beforeEach(() => {
     invoke.mockReset();
     phCapture.mockReset();
+    tileLogoOnCanvas.mockReset();
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
   it("토큰 부족 응답은 InsufficientTokensError로 변환한다", async () => {
@@ -199,6 +207,52 @@ describe("aiDesignApi", () => {
         ai_model: "openai",
         error_type: "api_error",
       });
+    });
+  });
+
+  it("Fal 플래그와 올패턴 CI 조건이 맞으면 generate-fal-api를 호출한다", async () => {
+    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
+    tileLogoOnCanvas.mockResolvedValue({
+      base64: "tiled-base64",
+      mimeType: "image/png",
+    });
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+
+    class MockFileReader {
+      result: string | null = null;
+      onload: null | (() => void) = null;
+      onerror: null | (() => void) = null;
+
+      readAsDataURL() {
+        this.result = "data:image/png;base64,ci-base64";
+        this.onload?.();
+      }
+    }
+
+    vi.stubGlobal("FileReader", MockFileReader);
+
+    await aiDesignApi({
+      ...baseRequest,
+      designContext: {
+        ...baseRequest.designContext,
+        ciImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+        scale: "medium",
+      },
+    });
+
+    expect(tileLogoOnCanvas).toHaveBeenCalledWith({
+      logoBase64: "ci-base64",
+      logoMimeType: "image/png",
+      fabricMethod: "yarn-dyed",
+      scale: "medium",
+      backgroundColor: undefined,
+    });
+    expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
+      body: expect.objectContaining({
+        tiledBase64: "tiled-base64",
+        tiledMimeType: "image/png",
+      }),
     });
   });
 });

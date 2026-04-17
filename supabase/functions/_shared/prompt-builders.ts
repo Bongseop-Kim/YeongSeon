@@ -1,4 +1,5 @@
 import type { GenerateDesignRequest } from "./design-request.ts";
+import type { NormalizedDesignContext } from "./design-generation.ts";
 import { SCALE_META } from "./scale-meta.ts";
 
 export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
@@ -67,6 +68,34 @@ export const buildTextPrompt = (payload: GenerateDesignRequest) => {
     "generateImage는 이번 응답이 실제 디자인 이미지를 새로 생성해야 하는지 여부를 의미합니다.",
     "contextChips는 후속 대화에 바로 사용할 수 있는 짧은 디자인 변경 액션 2~3개로 구성하세요.",
   ].join("\n");
+};
+
+export const buildFalPatternPrompt = (
+  design: NormalizedDesignContext,
+): string => {
+  const fabricLine =
+    design.fabricMethod === "yarn-dyed"
+      ? "Render the surface as woven silk with visible thread interlacing, a soft natural sheen, and subtle fabric weave."
+      : design.fabricMethod === "print"
+        ? "Render the surface as printed silk with crisp printed color on a smooth lustrous fabric and no thread texture."
+        : "Render the surface as a high-quality silk fabric.";
+
+  const colorLine =
+    design.colors.length > 0
+      ? `Dominant color palette: ${design.colors.join(", ")}.`
+      : "";
+
+  return [
+    "This is a fabric texture transfer task, not a creative generation.",
+    "The input image already contains the exact logo shapes, positions, and repetition spacing that must be preserved at pixel level.",
+    "Apply only fabric texture and lighting on top of the existing logos and background.",
+    "Do not invent new motifs. Do not change logo shapes. Do not change logo positions. Do not change the repetition pattern.",
+    fabricLine,
+    colorLine,
+    "Soft uniform front lighting. No folds, creases, drape, or shadows. The fabric lies perfectly flat. Edge-to-edge fabric swatch.",
+  ]
+    .filter(Boolean)
+    .join(" ");
 };
 
 export const buildBasePrompt = () =>

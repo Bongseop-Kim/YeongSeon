@@ -349,6 +349,12 @@
           "jsr:@supabase/supabase-js@2.99.3"
         ]
       },
+      "generate-fal-api": {
+        "dependencies": [
+          "jsr:@supabase/functions-js@*",
+          "jsr:@supabase/supabase-js@2.99.3"
+        ]
+      },
       "generate-google-api": {
         "dependencies": [
           "jsr:@supabase/functions-js@*",

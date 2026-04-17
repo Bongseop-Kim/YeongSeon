@@ -8,6 +8,8 @@ import {
   toDesignTokenHistoryItem,
   type DesignTokenRow,
 } from "@/entities/design/api/ai-design-mapper";
+import { shouldUseFalPipeline } from "@/entities/design/api/should-use-fal-pipeline";
+import { tileLogoOnCanvas } from "@/shared/lib/tile-logo-on-canvas";
 import { ph } from "@/shared/lib/posthog";
 
 interface DesignTokenBalance {
@@ -93,6 +95,9 @@ function safeCapture(
   }
 }
 
+const isFalPipelineEnabled = () =>
+  import.meta.env.VITE_FALAI_CI_PATTERN_ENABLED === "true";
+
 export async function aiDesignApi(
   request: AiDesignRequest,
 ): Promise<AiDesignResponse> {
@@ -105,8 +110,39 @@ export async function aiDesignApi(
       : Promise.resolve(undefined),
   ]);
 
-  const functionName =
-    request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
+  const useFalPipeline = shouldUseFalPipeline({
+    ciImageBase64,
+    ciPlacement: request.designContext.ciPlacement,
+    fabricMethod: request.designContext.fabricMethod,
+    autoGenerate: (request.executionMode ?? "auto") === "auto",
+    featureFlag: isFalPipelineEnabled(),
+  });
+
+  let tiledBase64: string | undefined;
+  let tiledMimeType: string | undefined;
+
+  if (
+    useFalPipeline &&
+    ciImageBase64 &&
+    request.designContext.ciImage &&
+    request.designContext.fabricMethod
+  ) {
+    const tileResult = await tileLogoOnCanvas({
+      logoBase64: ciImageBase64,
+      logoMimeType: request.designContext.ciImage.type || "image/png",
+      fabricMethod: request.designContext.fabricMethod,
+      scale: request.designContext.scale ?? "medium",
+      backgroundColor: request.designContext.colors[0],
+    });
+    tiledBase64 = tileResult.base64;
+    tiledMimeType = tileResult.mimeType;
+  }
+
+  const functionName = useFalPipeline
+    ? "generate-fal-api"
+    : request.aiModel === "openai"
+      ? "generate-open-api"
+      : "generate-google-api";
 
   const startTime = Date.now();
 
@@ -114,6 +150,8 @@ export async function aiDesignApi(
     body: buildInvokePayload(request, {
       ciImageBase64,
       referenceImageBase64,
+      tiledBase64,
+      tiledMimeType,
     }),
   });
 
@@ -154,6 +192,7 @@ export async function aiDesignApi(
     ai_model: request.aiModel,
     latency_ms: Date.now() - startTime,
     has_image: result.imageUrl !== null,
+    pipeline: useFalPipeline ? "fal-ai" : undefined,
   });
   return result;
 }
