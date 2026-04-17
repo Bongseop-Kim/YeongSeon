@@ -25,6 +25,9 @@ export type GenerateDesignRequest = {
     ciPlacement?: string | null;
     scale?: "large" | "medium" | "small" | null;
   };
+  autoGenerate?: boolean;
+  analysisWorkId?: string | null;
+  executionMode?: "auto" | "analysis_only" | "render_from_analysis";
   conversationHistory?: ConversationTurn[];
   previousImageBase64?: string;
   previousImageMimeType?: string;

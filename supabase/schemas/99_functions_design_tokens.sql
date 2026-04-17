@@ -45,7 +45,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
   p_ai_model     text,             -- 'openai' | 'gemini'
-  p_request_type text,            -- 'text_only' | 'text_and_image'
+  p_request_type text,             -- 'analysis' | 'render_standard' | 'render_high'
   p_quality      text DEFAULT 'standard',  -- 'high' | 'standard'
   p_work_id      text DEFAULT NULL
 )
@@ -78,7 +78,7 @@ BEGIN
   IF p_ai_model NOT IN ('openai', 'gemini') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
-  IF p_request_type NOT IN ('text_only', 'text_and_image') THEN
+  IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
   IF p_quality NOT IN ('standard', 'high') THEN
@@ -90,11 +90,12 @@ BEGIN
 
   -- 비용 조회
   v_cost_key := CASE
-    WHEN p_request_type = 'text_and_image' AND p_quality = 'high'
-      THEN 'design_token_cost_' || p_ai_model || '_image_high'
-    ELSE
-      'design_token_cost_' || p_ai_model || '_' ||
-      CASE p_request_type WHEN 'text_and_image' THEN 'image' ELSE 'text' END
+    WHEN p_request_type = 'analysis' THEN
+      'design_token_cost_' || p_ai_model || '_analysis'
+    WHEN p_request_type = 'render_standard' THEN
+      'design_token_cost_' || p_ai_model || '_render_standard'
+    WHEN p_request_type = 'render_high' THEN
+      'design_token_cost_' || p_ai_model || '_render_high'
   END;
 
   SELECT value::integer INTO v_cost FROM public.admin_settings WHERE key = v_cost_key;
@@ -247,6 +248,14 @@ BEGIN
   v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
   IF v_caller_role IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'unauthorized: refund requires service_role';
+  END IF;
+
+  IF p_ai_model NOT IN ('openai', 'gemini') THEN
+    RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
+  END IF;
+
+  IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
+    RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
 
   IF p_amount <= 0 THEN

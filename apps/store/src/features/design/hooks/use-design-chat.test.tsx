@@ -8,6 +8,7 @@ const {
   addMessage,
   setGenerationStatus,
   setGeneratedImage,
+  setLastAnalysisResult,
   clearAttachments,
   setCurrentSessionId,
   phCapture,
@@ -18,6 +19,7 @@ const {
   addMessage: vi.fn(),
   setGenerationStatus: vi.fn(),
   setGeneratedImage: vi.fn(),
+  setLastAnalysisResult: vi.fn(),
   clearAttachments: vi.fn(),
   setCurrentSessionId: vi.fn(),
   phCapture: vi.fn(),
@@ -84,9 +86,12 @@ const storeState = {
   aiModel: "openai",
   generationStatus: "idle",
   currentSessionId: null,
+  autoGenerateImage: true,
+  lastAnalysisWorkId: "analysis-work-1",
   addMessage,
   setGenerationStatus,
   setGeneratedImage,
+  setLastAnalysisResult,
   clearAttachments,
   setCurrentSessionId,
 };
@@ -134,10 +139,14 @@ describe("useDesignChat", () => {
     addMessage.mockReset();
     setGenerationStatus.mockReset();
     setGeneratedImage.mockReset();
+    setLastAnalysisResult.mockReset();
     clearAttachments.mockReset();
     setCurrentSessionId.mockReset();
     phCapture.mockReset();
     storeState.messages = [...initialMessages];
+    storeState.autoGenerateImage = true;
+    storeState.lastAnalysisWorkId = "analysis-work-1";
+    storeState.currentSessionId = null;
     addMessage.mockImplementation((message) => {
       storeState.messages = [...storeState.messages, message];
     });
@@ -161,9 +170,15 @@ describe("useDesignChat", () => {
     );
     expect(clearAttachments).toHaveBeenCalled();
     expect(setGenerationStatus).toHaveBeenCalledWith("generating");
+    expect(setLastAnalysisResult).toHaveBeenCalledWith({
+      analysisWorkId: null,
+      eligibleForRender: false,
+      missingRequirements: [],
+    });
     expect(mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         userMessage: "새 디자인",
+        executionMode: "auto",
         conversationHistory: [
           { role: "ai", content: "이전 답변" },
           { role: "user", content: "이전 요청" },
@@ -198,6 +213,65 @@ describe("useDesignChat", () => {
     );
   });
 
+  it("autoGenerateImage가 false면 analysis_only로 전송한다", () => {
+    Object.assign(storeState, { autoGenerateImage: false });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.sendMessage("새 디자인", []);
+
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        executionMode: "analysis_only",
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it("requestRender는 analysis snapshot이 없으면 mutate를 호출하지 않는다", () => {
+    Object.assign(storeState, {
+      lastAnalysisWorkId: null,
+      lastGenerateImage: false,
+      lastEligibleForRender: false,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.requestRender();
+
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it("requestRender는 render 불가 snapshot이면 mutate를 호출하지 않는다", () => {
+    Object.assign(storeState, {
+      lastAnalysisWorkId: "analysis-work-100",
+      lastEligibleForRender: false,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.requestRender();
+
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it("requestRender는 generateImage가 false여도 eligible snapshot이면 mutate를 호출한다", () => {
+    Object.assign(storeState, {
+      autoGenerateImage: false,
+      lastAnalysisWorkId: "analysis-work-101",
+      lastGenerateImage: false,
+      lastEligibleForRender: true,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.requestRender();
+
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        analysisWorkId: "analysis-work-101",
+        executionMode: "render_from_analysis",
+      }),
+      expect.any(Object),
+    );
+  });
+
   it("성공 시 AI 메시지와 생성 이미지를 반영한다", () => {
     const { result } = renderHook(() => useDesignChat());
     result.current.sendMessage("새 디자인", []);
@@ -206,6 +280,10 @@ describe("useDesignChat", () => {
     callbacks.onSuccess({
       aiMessage: "시안을 만들었습니다.",
       imageUrl: "https://example.com/design.jpg",
+      analysisWorkId: "analysis-work-2",
+      generateImage: true,
+      eligibleForRender: true,
+      missingRequirements: ["referenceImage"],
       tags: ["네이비"],
       contextChips: [],
     });
@@ -221,10 +299,37 @@ describe("useDesignChat", () => {
       'url("https://example.com/design.jpg") center/cover no-repeat',
       ["네이비"],
     );
+    expect(setLastAnalysisResult).toHaveBeenCalledWith({
+      analysisWorkId: "analysis-work-2",
+      eligibleForRender: true,
+      missingRequirements: ["referenceImage"],
+    });
     expect(setGenerationStatus).toHaveBeenCalledWith("completed");
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["design-token-balance"],
     });
+  });
+
+  it("requestRender는 마지막 analysisWorkId로 render_from_analysis 요청을 보낸다", () => {
+    Object.assign(storeState, {
+      autoGenerateImage: false,
+      lastAnalysisWorkId: "analysis-work-99",
+      lastGenerateImage: false,
+      lastEligibleForRender: true,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    expect(result.current.requestRender).toBeTypeOf("function");
+
+    result.current.requestRender();
+
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        analysisWorkId: "analysis-work-99",
+        executionMode: "render_from_analysis",
+      }),
+      expect.any(Object),
+    );
   });
 
   it("재생성 중 토큰 부족 에러를 처리한다", () => {
@@ -232,6 +337,11 @@ describe("useDesignChat", () => {
     result.current.regenerate();
 
     expect(setGenerationStatus).toHaveBeenCalledWith("regenerating");
+    expect(setLastAnalysisResult).toHaveBeenCalledWith({
+      analysisWorkId: null,
+      eligibleForRender: false,
+      missingRequirements: [],
+    });
     const callbacks = mutate.mock.calls[0][1];
 
     callbacks.onError(new MockInsufficientTokensError(3, 5));

@@ -12,18 +12,21 @@ import {
 import { useDesignTokenBalanceQuery } from "@/features/design/hooks/ai-design-query";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
+import { Button } from "@/shared/ui-extended/button";
 import { cn } from "@/shared/lib/utils";
 
 interface ChatPanelProps {
   className?: string;
   sendMessage: (text: string, attachments: Attachment[]) => void;
   onOpenHistory: () => void;
+  onRequestRender?: () => void;
 }
 
 export function ChatPanel({
   className,
   sendMessage,
   onOpenHistory,
+  onRequestRender,
 }: ChatPanelProps) {
   const messages = useDesignChatStore((state) => state.messages);
   const { data: tokenBalance } = useDesignTokenBalanceQuery();
@@ -41,9 +44,18 @@ export function ChatPanel({
   const selectedPreviewImageUrl = useDesignChatStore(
     (state) => state.selectedPreviewImageUrl,
   );
+  const autoGenerateImage = useDesignChatStore(
+    (state) => state.autoGenerateImage,
+  );
+  const lastEligibleForRender = useDesignChatStore(
+    (state) => state.lastEligibleForRender,
+  );
   const setSelectedPreviewImage = useDesignChatStore(
     (state) => state.setSelectedPreviewImage,
   );
+
+  const isGenerating =
+    generationStatus === "generating" || generationStatus === "regenerating";
 
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
@@ -98,10 +110,7 @@ export function ChatPanel({
         ) : (
           <MessageList
             messages={messages}
-            isTyping={
-              generationStatus === "generating" ||
-              generationStatus === "regenerating"
-            }
+            isTyping={isGenerating}
             onChipClick={handleChipClick}
             onTiePreviewClick={(url) => setSelectedImageUrl(url)}
             selectedPreviewImageUrl={selectedPreviewImageUrl}
@@ -116,13 +125,14 @@ export function ChatPanel({
         />
       )}
       <div className="shrink-0 border-t p-2">
-        <ChatInput
-          onSend={sendMessage}
-          isLoading={
-            generationStatus === "generating" ||
-            generationStatus === "regenerating"
-          }
-        />
+        {onRequestRender && !autoGenerateImage && lastEligibleForRender ? (
+          <div className="mb-2 flex justify-end">
+            <Button type="button" variant="secondary" onClick={onRequestRender}>
+              이미지를 요청하시겠습니까?
+            </Button>
+          </div>
+        ) : null}
+        <ChatInput onSend={sendMessage} isLoading={isGenerating} />
       </div>
     </div>
   );

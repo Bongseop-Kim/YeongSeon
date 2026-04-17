@@ -9,7 +9,7 @@ CREATE TABLE public.design_tokens (
   type            text        NOT NULL CHECK (type = ANY(ARRAY['grant','use','refund','admin','purchase'])),
   token_class     text        NOT NULL CHECK (token_class IN ('paid', 'bonus', 'free')),
   ai_model        text,       -- 'openai' | 'gemini' | NULL
-  request_type    text,       -- 'text_only' | 'text_and_image' | NULL
+  request_type    text,       -- 'analysis' | 'render_standard' | 'render_high' | NULL
   description     text,
   created_at      timestamptz NOT NULL DEFAULT now(),
   work_id         text,

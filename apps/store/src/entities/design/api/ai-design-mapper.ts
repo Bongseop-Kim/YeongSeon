@@ -55,6 +55,17 @@ const CI_PLACEMENT_LABELS: Record<CiPlacement, string> = {
   "one-point": "원포인트",
 };
 
+const isKnownKey = <T extends string>(
+  map: Record<T, string>,
+  value: unknown,
+): value is T =>
+  typeof value === "string" && Object.prototype.hasOwnProperty.call(map, value);
+
+const getLookupLabel = <T extends string>(
+  map: Record<T, string>,
+  value: unknown,
+): string | undefined => (isKnownKey(map, value) ? map[value] : undefined);
+
 const getAttachmentLabels = (
   attachments: Attachment[],
   type: Attachment["type"],
@@ -71,19 +82,33 @@ export const getTags = (request: AiDesignRequest): string[] => {
   const patternLabels = getAttachmentLabels(request.attachments, "pattern");
   const fabricLabels = getAttachmentLabels(request.attachments, "fabric");
 
-  if (patternLabels.length === 0 && request.designContext.pattern) {
-    patternLabels.push(PATTERN_LABELS[request.designContext.pattern]);
+  if (patternLabels.length === 0) {
+    const patternLabel = getLookupLabel(
+      PATTERN_LABELS,
+      request.designContext.pattern,
+    );
+    if (patternLabel) {
+      patternLabels.push(patternLabel);
+    }
   }
 
-  if (fabricLabels.length === 0 && request.designContext.fabricMethod) {
-    fabricLabels.push(FABRIC_LABELS[request.designContext.fabricMethod]);
+  if (fabricLabels.length === 0) {
+    const fabricLabel = getLookupLabel(
+      FABRIC_LABELS,
+      request.designContext.fabricMethod,
+    );
+    if (fabricLabel) {
+      fabricLabels.push(fabricLabel);
+    }
   }
 
   const ciPlacementLabels: string[] = [];
-  if (request.designContext.ciPlacement) {
-    ciPlacementLabels.push(
-      CI_PLACEMENT_LABELS[request.designContext.ciPlacement],
-    );
+  const ciPlacementLabel = getLookupLabel(
+    CI_PLACEMENT_LABELS,
+    request.designContext.ciPlacement,
+  );
+  if (ciPlacementLabel) {
+    ciPlacementLabels.push(ciPlacementLabel);
   }
 
   const tags = [
@@ -106,10 +131,48 @@ interface InvokePayloadInput {
 interface InvokeResponseBody {
   aiMessage: string;
   imageUrl?: string | null;
-  workId?: string;
+  workId?: string | null;
+  workflowId?: string | null;
+  analysisWorkId?: string | null;
+  generateImage?: boolean | null;
+  eligibleForRender?: boolean | null;
+  missingRequirements?: unknown;
   contextChips?: unknown;
   remainingTokens?: unknown;
 }
+
+const normalizeString = (value: unknown): string | undefined =>
+  typeof value === "string" && value.length > 0 ? value : undefined;
+
+const normalizeBoolean = (value: unknown): boolean | undefined =>
+  typeof value === "boolean" ? value : undefined;
+
+const normalizeMissingRequirements = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === "string");
+};
+
+const isContextChip = (
+  value: unknown,
+): value is { label: string; action: string } => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.label === "string" &&
+    record.label.length > 0 &&
+    typeof record.action === "string" &&
+    record.action.length > 0
+  );
+};
+
+const normalizeContextChips = (value: unknown) =>
+  Array.isArray(value) ? value.filter(isContextChip) : [];
 
 export function buildInvokePayload(
   request: AiDesignRequest,
@@ -122,6 +185,7 @@ export function buildInvokePayload(
       pattern: request.designContext.pattern,
       fabricMethod: request.designContext.fabricMethod,
       ciPlacement: request.designContext.ciPlacement,
+      scale: request.designContext.scale,
     },
     conversationHistory: request.conversationHistory ?? [],
     ciImageBase64: input.ciImageBase64,
@@ -132,6 +196,8 @@ export function buildInvokePayload(
     sessionId: request.sessionId,
     firstMessage: request.firstMessage,
     allMessages: request.allMessages,
+    executionMode: request.executionMode ?? "auto",
+    analysisWorkId: request.analysisWorkId ?? null,
   };
 }
 
@@ -142,11 +208,16 @@ export function normalizeInvokeResponse(
   return {
     aiMessage: response.aiMessage,
     imageUrl: response.imageUrl ?? null,
-    workId: response.workId,
+    workId: normalizeString(response.workId),
+    workflowId: normalizeString(response.workflowId),
+    analysisWorkId: normalizeString(response.analysisWorkId),
+    generateImage: normalizeBoolean(response.generateImage),
+    eligibleForRender: normalizeBoolean(response.eligibleForRender),
+    missingRequirements: normalizeMissingRequirements(
+      response.missingRequirements,
+    ),
     tags: getTags(request),
-    contextChips: Array.isArray(response.contextChips)
-      ? response.contextChips
-      : [],
+    contextChips: normalizeContextChips(response.contextChips),
     remainingTokens:
       typeof response.remainingTokens === "number"
         ? response.remainingTokens

@@ -366,6 +366,24 @@
           "jsr:@supabase/functions-js@*",
           "jsr:@supabase/supabase-js@2.99.3"
         ]
+      },
+      "notify-claim": {
+        "dependencies": [
+          "jsr:@supabase/functions-js@*",
+          "jsr:@supabase/supabase-js@2.99.3"
+        ]
+      },
+      "send-phone-verification": {
+        "dependencies": [
+          "jsr:@supabase/functions-js@*",
+          "jsr:@supabase/supabase-js@2.99.3"
+        ]
+      },
+      "verify-phone": {
+        "dependencies": [
+          "jsr:@supabase/functions-js@*",
+          "jsr:@supabase/supabase-js@2.99.3"
+        ]
       }
     }
   }

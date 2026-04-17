@@ -7,6 +7,10 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
       selectedPreviewImageUrl: null,
       generatedImageUrl: null,
       resultTags: [],
+      autoGenerateImage: true,
+      lastAnalysisWorkId: null,
+      lastEligibleForRender: false,
+      lastMissingRequirements: [],
     });
   });
 
@@ -64,5 +68,62 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
       generationStatus: "idle",
     });
     expect(useDesignChatStore.getState().selectedPreviewImageUrl).toBeNull();
+  });
+});
+
+describe("design-chat-store — autoGenerateImage", () => {
+  beforeEach(() => {
+    useDesignChatStore.setState({
+      autoGenerateImage: true,
+      currentSessionId: null,
+      lastAnalysisWorkId: null,
+      lastEligibleForRender: false,
+      lastMissingRequirements: [],
+    });
+  });
+
+  it("defaults autoGenerateImage to true", () => {
+    expect(useDesignChatStore.getState().autoGenerateImage).toBe(true);
+  });
+
+  it("setAutoGenerateImage는 autoGenerateImage를 업데이트한다", () => {
+    useDesignChatStore.getState().setAutoGenerateImage(false);
+    expect(useDesignChatStore.getState().autoGenerateImage).toBe(false);
+  });
+
+  it("stores last analysis status for manual render", () => {
+    useDesignChatStore.getState().setLastAnalysisResult({
+      analysisWorkId: "analysis-1",
+      eligibleForRender: true,
+      missingRequirements: ["referenceImage"],
+    });
+
+    expect(useDesignChatStore.getState().lastAnalysisWorkId).toBe("analysis-1");
+    expect(useDesignChatStore.getState().lastEligibleForRender).toBe(true);
+    expect(useDesignChatStore.getState().lastMissingRequirements).toEqual([
+      "referenceImage",
+    ]);
+  });
+
+  it("stores analysis-only snapshots with eligibleForRender=false", () => {
+    useDesignChatStore.getState().setLastAnalysisResult({
+      analysisWorkId: "analysis-2",
+      eligibleForRender: false,
+      missingRequirements: [],
+    });
+
+    expect(useDesignChatStore.getState().lastEligibleForRender).toBe(false);
+  });
+
+  it("setAiModel는 currentSessionId를 초기화한다", () => {
+    useDesignChatStore.setState({
+      aiModel: "openai",
+      currentSessionId: "session-123",
+    });
+
+    useDesignChatStore.getState().setAiModel("gemini");
+
+    expect(useDesignChatStore.getState().aiModel).toBe("gemini");
+    expect(useDesignChatStore.getState().currentSessionId).toBeNull();
   });
 });

@@ -9,15 +9,20 @@ import type { AiDesignRequest } from "@/entities/design/model/ai-design-request"
 import type { Attachment } from "@/entities/design/model/ai-design-types";
 import type { DesignContext } from "@/entities/design/model/design-context";
 
+type TestDesignContext = DesignContext & {
+  scale?: "large" | "medium" | "small" | null;
+};
+
 const createDesignContext = (
-  overrides: Partial<DesignContext> = {},
-): DesignContext => ({
+  overrides: Partial<TestDesignContext> = {},
+): TestDesignContext => ({
   colors: [],
   pattern: null,
   fabricMethod: null,
   ciImage: null,
   ciPlacement: null,
   referenceImage: null,
+  scale: null,
   ...overrides,
 });
 
@@ -85,6 +90,24 @@ describe("getTags", () => {
     ).toEqual(["페이즐리", "날염", "원포인트"]);
   });
 
+  it("예상 밖의 designContext 값은 태그에 undefined를 넣지 않는다", () => {
+    expect(
+      getTags(
+        createAiDesignRequest({
+          designContext: {
+            colors: [],
+            pattern: "unknown-pattern" as never,
+            fabricMethod: "unknown-fabric" as never,
+            ciImage: null,
+            ciPlacement: "unknown-placement" as never,
+            referenceImage: null,
+            scale: null,
+          },
+        }),
+      ),
+    ).toEqual(["클래식", "프리미엄", "넥타이"]);
+  });
+
   it("태그가 없으면 기본 태그를 반환한다", () => {
     expect(getTags(createAiDesignRequest())).toEqual([
       "클래식",
@@ -132,6 +155,7 @@ describe("buildInvokePayload", () => {
         ciPlacement: "one-point",
         ciImage: { type: "image/png" } as File,
         referenceImage: { type: "image/jpeg" } as File,
+        scale: "medium",
       }),
     });
 
@@ -147,6 +171,7 @@ describe("buildInvokePayload", () => {
         pattern: "stripe",
         fabricMethod: "print",
         ciPlacement: "one-point",
+        scale: "medium",
       },
       conversationHistory: [{ role: "user", content: "이전 요청" }],
       ciImageBase64: "ci-base64",
@@ -156,7 +181,32 @@ describe("buildInvokePayload", () => {
       sessionId: "test-session-id",
       firstMessage: "테스트 요청",
       allMessages: [],
+      executionMode: "auto",
+      analysisWorkId: null,
     });
+  });
+
+  it("scale, executionMode, analysisWorkId를 payload에 포함한다", () => {
+    const payload = buildInvokePayload(
+      createAiDesignRequest({
+        designContext: createDesignContext({
+          colors: ["navy"],
+          pattern: "stripe",
+          fabricMethod: "yarn-dyed",
+          ciPlacement: null,
+          ciImage: null,
+          referenceImage: null,
+          scale: "large",
+        }),
+        executionMode: "analysis_only",
+        analysisWorkId: "analysis-1",
+      }),
+      {},
+    );
+
+    expect(payload.designContext?.scale).toBe("large");
+    expect(payload.executionMode).toBe("analysis_only");
+    expect(payload.analysisWorkId).toBe("analysis-1");
   });
 });
 
@@ -198,7 +248,12 @@ describe("normalizeInvokeResponse", () => {
         {
           aiMessage: "시안을 만들었습니다.",
           imageUrl: "https://example.com/design.png",
-          contextChips: [{ type: "color", label: "네이비", value: "navy" }],
+          workflowId: "workflow-1",
+          analysisWorkId: "analysis-1",
+          generateImage: true,
+          eligibleForRender: true,
+          missingRequirements: ["pattern"],
+          contextChips: [{ label: "네이비", action: "color" }],
           remainingTokens: 4,
         },
         request,
@@ -206,10 +261,70 @@ describe("normalizeInvokeResponse", () => {
     ).toEqual({
       aiMessage: "시안을 만들었습니다.",
       imageUrl: "https://example.com/design.png",
+      workflowId: "workflow-1",
+      analysisWorkId: "analysis-1",
+      generateImage: true,
+      eligibleForRender: true,
+      missingRequirements: ["pattern"],
       tags: ["네이비"],
-      contextChips: [{ type: "color", label: "네이비", value: "navy" }],
+      contextChips: [{ label: "네이비", action: "color" }],
       remainingTokens: 4,
     });
+  });
+
+  it("null scalar wire values는 undefined로 정규화한다", () => {
+    const result = normalizeInvokeResponse(
+      {
+        aiMessage: "응답",
+        imageUrl: null,
+        workId: null,
+        workflowId: null,
+        analysisWorkId: null,
+        generateImage: null,
+        eligibleForRender: null,
+        missingRequirements: [],
+        contextChips: [],
+      },
+      createAiDesignRequest(),
+    );
+
+    expect(result.workId).toBeUndefined();
+    expect(result.workflowId).toBeUndefined();
+    expect(result.analysisWorkId).toBeUndefined();
+    expect(result.generateImage).toBeUndefined();
+    expect(result.eligibleForRender).toBeUndefined();
+  });
+
+  it("malformed missingRequirements는 문자열만 남긴다", () => {
+    const result = normalizeInvokeResponse(
+      {
+        aiMessage: "응답",
+        missingRequirements: ["fabric", null, 1, "pattern", undefined],
+        contextChips: [],
+      },
+      createAiDesignRequest(),
+    );
+
+    expect(result.missingRequirements).toEqual(["fabric", "pattern"]);
+  });
+
+  it("malformed contextChips는 유효한 chip 객체만 남긴다", () => {
+    const result = normalizeInvokeResponse(
+      {
+        aiMessage: "응답",
+        missingRequirements: [],
+        contextChips: [
+          { label: "유효", action: "color" },
+          { label: "", action: "color" },
+          { label: "유효2", action: "" },
+          { type: "color", label: "무효" },
+          null,
+        ],
+      },
+      createAiDesignRequest(),
+    );
+
+    expect(result.contextChips).toEqual([{ label: "유효", action: "color" }]);
   });
 
   it("비정상 응답 필드는 안전한 기본값으로 정규화한다", () => {
@@ -225,6 +340,11 @@ describe("normalizeInvokeResponse", () => {
     ).toEqual({
       aiMessage: "응답",
       imageUrl: null,
+      workflowId: undefined,
+      analysisWorkId: undefined,
+      generateImage: undefined,
+      eligibleForRender: undefined,
+      missingRequirements: [],
       tags: ["클래식", "프리미엄", "넥타이"],
       contextChips: [],
       remainingTokens: undefined,

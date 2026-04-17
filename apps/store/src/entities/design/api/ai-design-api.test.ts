@@ -45,6 +45,11 @@ const successResponse = {
   aiMessage: "네이비 스트라이프 넥타이 디자인을 만들었습니다.",
   imageUrl: "https://example.com/image.png",
   workId: "work-123",
+  workflowId: "workflow-123",
+  analysisWorkId: "analysis-123",
+  generateImage: true,
+  eligibleForRender: true,
+  missingRequirements: [],
   tags: ["navy", "stripe"],
   contextChips: [],
   remainingTokens: 95,
@@ -133,6 +138,30 @@ describe("aiDesignApi", () => {
       expect(phCapture).toHaveBeenCalledWith(
         "design_generated",
         expect.objectContaining({ has_image: false }),
+      );
+    });
+
+    it("새로운 분석/렌더 응답 필드를 그대로 반환한다", async () => {
+      invoke.mockResolvedValue({
+        data: {
+          ...successResponse,
+          workflowId: "workflow-999",
+          analysisWorkId: "analysis-999",
+          generateImage: false,
+          eligibleForRender: false,
+          missingRequirements: ["fabricMethod"],
+        },
+        error: null,
+      });
+
+      await expect(aiDesignApi(baseRequest)).resolves.toEqual(
+        expect.objectContaining({
+          workflowId: "workflow-999",
+          analysisWorkId: "analysis-999",
+          generateImage: false,
+          eligibleForRender: false,
+          missingRequirements: ["fabricMethod"],
+        }),
       );
     });
 

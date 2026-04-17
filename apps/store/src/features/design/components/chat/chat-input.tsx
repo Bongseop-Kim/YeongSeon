@@ -26,6 +26,12 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const setDesignContext = useDesignChatStore(
     (state) => state.setDesignContext,
   );
+  const autoGenerateImage = useDesignChatStore(
+    (state) => state.autoGenerateImage,
+  );
+  const setAutoGenerateImage = useDesignChatStore(
+    (state) => state.setAutoGenerateImage,
+  );
   const [inputText, setInputText] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const popupWrapperRef = useRef<HTMLDivElement>(null);
@@ -90,6 +96,25 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                     });
                   } else if (removed.type === "pattern") {
                     setDesignContext({ pattern: null });
+                  } else if (
+                    removed.type === "ci-placement" ||
+                    (removed.type === "image" && removed.value === "ci")
+                  ) {
+                    setDesignContext({
+                      ciPlacement:
+                        removed.type === "ci-placement"
+                          ? null
+                          : designContext.ciPlacement,
+                      ciImage:
+                        removed.type === "image" && removed.value === "ci"
+                          ? null
+                          : designContext.ciImage,
+                    });
+                  } else if (
+                    removed.type === "image" &&
+                    removed.value === "reference"
+                  ) {
+                    setDesignContext({ referenceImage: null });
                   }
                 }}
               >
@@ -125,60 +150,68 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           }}
           className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 text-sm outline-none"
         />
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="mt-2 flex flex-col gap-2">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={autoGenerateImage}
+              onChange={(event) => setAutoGenerateImage(event.target.checked)}
+              className="size-4 rounded border-gray-300 accent-gray-900"
+            />
+            자동 이미지 생성
+          </label>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="옵션 추가"
+                aria-expanded={showPopup}
+                aria-controls="attachment-popup"
+                onClick={() => setShowPopup((prev) => !prev)}
+              >
+                <Plus
+                  className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
+                />
+              </Button>
+              <div className="inline-flex rounded-md border bg-muted p-0.5 gap-0.5">
+                {FABRIC_OPTIONS.map((option) => {
+                  const isSelected =
+                    designContext.fabricMethod === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={isSelected}
+                      className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
+                        isSelected
+                          ? "bg-background text-foreground shadow-sm"
+                          : "bg-transparent text-muted-foreground hover:text-foreground"
+                      }`}
+                      onClick={() =>
+                        setDesignContext({
+                          fabricMethod: option.value as FabricMethod,
+                        })
+                      }
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <Button
               type="button"
-              variant="ghost"
               size="icon"
-              aria-label="옵션 추가"
-              aria-expanded={showPopup}
-              aria-controls="attachment-popup"
-              onClick={() => setShowPopup((prev) => !prev)}
+              aria-label="메시지 전송"
+              onClick={handleSend}
+              disabled={!trimmedText || isLoading}
             >
-              <Plus
-                className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
-              />
+              <Send className="size-4" />
             </Button>
-            <div
-              role="radiogroup"
-              className="inline-flex rounded-md border bg-muted p-0.5 gap-0.5"
-            >
-              {FABRIC_OPTIONS.map((option) => {
-                const isSelected = designContext.fabricMethod === option.value;
-
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={isSelected}
-                    className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
-                      isSelected
-                        ? "bg-background text-foreground shadow-sm"
-                        : "bg-transparent text-muted-foreground hover:text-foreground"
-                    }`}
-                    onClick={() =>
-                      setDesignContext({
-                        fabricMethod: option.value as FabricMethod,
-                      })
-                    }
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
           </div>
-          <Button
-            type="button"
-            size="icon"
-            aria-label="메시지 전송"
-            onClick={handleSend}
-            disabled={!trimmedText || isLoading}
-          >
-            <Send className="size-4" />
-          </Button>
         </div>
       </div>
     </div>

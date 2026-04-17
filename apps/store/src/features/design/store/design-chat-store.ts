@@ -18,6 +18,10 @@ interface DesignChatState {
   pendingAttachments: Attachment[];
   aiModel: AiModel;
   currentSessionId: string | null;
+  autoGenerateImage: boolean;
+  lastAnalysisWorkId: string | null;
+  lastEligibleForRender: boolean;
+  lastMissingRequirements: string[];
   addMessage: (message: Message) => void;
   setDesignContext: (patch: Partial<DesignContext>) => void;
   addAttachment: (attachment: Attachment) => void;
@@ -26,6 +30,12 @@ interface DesignChatState {
   setGenerationStatus: (status: GenerationStatus) => void;
   setGeneratedImage: (imageUrl: string | null, tags: string[]) => void;
   setSelectedPreviewImage: (url: string) => void;
+  setAutoGenerateImage: (value: boolean) => void;
+  setLastAnalysisResult: (input: {
+    analysisWorkId: string | null;
+    eligibleForRender: boolean;
+    missingRequirements: string[];
+  }) => void;
   restoreMessages: (messages: Message[]) => void;
   restoreSessionState: (
     sessionId: string,
@@ -45,6 +55,12 @@ const createInitialDesignContext = (): DesignContext => ({
   referenceImage: null,
 });
 
+const LAST_ANALYSIS_RESET = {
+  lastAnalysisWorkId: null as string | null,
+  lastEligibleForRender: false,
+  lastMissingRequirements: [] as string[],
+};
+
 export const useDesignChatStore = create<DesignChatState>((set) => ({
   messages: [],
   designContext: createInitialDesignContext(),
@@ -55,6 +71,8 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
   pendingAttachments: [],
   aiModel: "openai",
   currentSessionId: null,
+  autoGenerateImage: true,
+  ...LAST_ANALYSIS_RESET,
   addMessage: (message) =>
     set((state) => ({
       messages: [...state.messages, message],
@@ -99,6 +117,13 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
           },
     ),
   setSelectedPreviewImage: (url) => set({ selectedPreviewImageUrl: url }),
+  setAutoGenerateImage: (value) => set({ autoGenerateImage: value }),
+  setLastAnalysisResult: (input) =>
+    set({
+      lastAnalysisWorkId: input.analysisWorkId,
+      lastEligibleForRender: input.eligibleForRender,
+      lastMissingRequirements: input.missingRequirements,
+    }),
   resetConversation: () =>
     set({
       messages: [],
@@ -109,6 +134,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       resultTags: [],
       pendingAttachments: [],
       currentSessionId: null,
+      ...LAST_ANALYSIS_RESET,
     }),
   restoreMessages: (messages) => set({ messages }),
   restoreSessionState: (sessionId, sessionState) =>
@@ -117,6 +143,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       selectedPreviewImageUrl: sessionState.generatedImageUrl,
       currentSessionId: sessionId,
       pendingAttachments: [],
+      ...LAST_ANALYSIS_RESET,
     }),
   setCurrentSessionId: (id) => set({ currentSessionId: id }),
   setAiModel: (model) =>
@@ -131,6 +158,8 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
         selectedPreviewImageUrl: null,
         resultTags: [],
         pendingAttachments: [],
+        currentSessionId: null,
+        ...LAST_ANALYSIS_RESET,
       };
     }),
 }));

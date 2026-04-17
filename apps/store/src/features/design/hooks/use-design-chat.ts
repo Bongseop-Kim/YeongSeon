@@ -20,6 +20,7 @@ interface UseDesignChatOptions {
 interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
   regenerate: () => void;
+  requestRender: () => void;
   isLoading: boolean;
 }
 
@@ -80,6 +81,9 @@ export function useDesignChat(
   const messages = useDesignChatStore((state) => state.messages);
   const designContext = useDesignChatStore((state) => state.designContext);
   const aiModel = useDesignChatStore((state) => state.aiModel);
+  const autoGenerateImage = useDesignChatStore(
+    (state) => state.autoGenerateImage,
+  );
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
   );
@@ -89,6 +93,9 @@ export function useDesignChat(
   );
   const setGeneratedImage = useDesignChatStore(
     (state) => state.setGeneratedImage,
+  );
+  const setLastAnalysisResult = useDesignChatStore(
+    (state) => state.setLastAnalysisResult,
   );
   const clearAttachments = useDesignChatStore(
     (state) => state.clearAttachments,
@@ -106,6 +113,12 @@ export function useDesignChat(
     errorStatus: "idle" | "completed",
   ) => ({
     onSuccess: (data: AiDesignResponse) => {
+      setLastAnalysisResult({
+        analysisWorkId: data.analysisWorkId ?? null,
+        eligibleForRender: data.eligibleForRender ?? false,
+        missingRequirements: data.missingRequirements ?? [],
+      });
+
       const previewBackground = data.imageUrl
         ? toPreviewBackground(data.imageUrl)
         : undefined;
@@ -157,6 +170,17 @@ export function useDesignChat(
     },
   });
 
+  const submitDesignRequest = (
+    request: Parameters<typeof mutation.mutate>[0],
+    errorContent: string,
+    errorStatus: "idle" | "completed",
+  ): void => {
+    mutation.mutate(
+      request,
+      createMutationCallbacks(errorContent, errorStatus),
+    );
+  };
+
   const sendMessage = (userText: string, attachments: Attachment[]): void => {
     if (userText.trim().length === 0) {
       return;
@@ -183,15 +207,18 @@ export function useDesignChat(
     clearAttachments();
     setGenerationStatus("generating");
 
-    // pending flag 설정 — 이탈 후 재방문 시 알림 표시용
     onGenerationStart?.(sessionId);
+    setLastAnalysisResult({
+      analysisWorkId: null,
+      eligibleForRender: false,
+      missingRequirements: [],
+    });
 
-    // addMessage 후 store 상태 기준 (userMessage 포함)
     const { firstUserMsg, allMessages } = toSessionPayload(
       useDesignChatStore.getState().messages,
     );
 
-    mutation.mutate(
+    submitDesignRequest(
       {
         userMessage: userText,
         attachments,
@@ -201,20 +228,62 @@ export function useDesignChat(
         sessionId,
         firstMessage: firstUserMsg?.content ?? userText,
         allMessages,
+        executionMode: autoGenerateImage ? "auto" : "analysis_only",
+        analysisWorkId: null,
       },
-      createMutationCallbacks(
-        "죄송합니다. 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
-        "idle",
-      ),
+      "죄송합니다. 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      "idle",
     );
   };
 
   const regenerate = (): void => {
-    const lastUserMessage = [...messages]
-      .reverse()
-      .find((m) => m.role === "user");
+    const lastUserMessage = messages.findLast((m) => m.role === "user");
 
     if (!lastUserMessage) {
+      return;
+    }
+
+    const sessionId = currentSessionId ?? crypto.randomUUID();
+    if (!currentSessionId) {
+      setCurrentSessionId(sessionId);
+    }
+
+    setGenerationStatus("regenerating");
+    onGenerationStart?.(sessionId);
+    setLastAnalysisResult({
+      analysisWorkId: null,
+      eligibleForRender: false,
+      missingRequirements: [],
+    });
+
+    const { firstUserMsg, allMessages } = toSessionPayload(
+      useDesignChatStore.getState().messages,
+    );
+
+    submitDesignRequest(
+      {
+        userMessage: lastUserMessage.content,
+        attachments: lastUserMessage.attachments ?? [],
+        designContext: lastUserMessage.designContext ?? designContext,
+        aiModel,
+        conversationHistory: toConversationHistory(messages),
+        sessionId,
+        firstMessage: firstUserMsg?.content ?? lastUserMessage.content,
+        allMessages,
+        executionMode: autoGenerateImage ? "auto" : "analysis_only",
+      },
+      "죄송합니다. 디자인 재생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      "completed",
+    );
+  };
+
+  const requestRender = (): void => {
+    const {
+      lastAnalysisWorkId: currentLastAnalysisWorkId,
+      lastEligibleForRender: currentLastEligibleForRender,
+    } = useDesignChatStore.getState();
+
+    if (!currentLastAnalysisWorkId || !currentLastEligibleForRender) {
       return;
     }
 
@@ -230,27 +299,28 @@ export function useDesignChat(
       useDesignChatStore.getState().messages,
     );
 
-    mutation.mutate(
+    submitDesignRequest(
       {
-        userMessage: lastUserMessage.content,
-        attachments: lastUserMessage.attachments ?? [],
-        designContext: lastUserMessage.designContext ?? designContext,
+        userMessage: firstUserMsg?.content ?? "",
+        attachments: firstUserMsg?.attachments ?? [],
+        designContext: firstUserMsg?.designContext ?? designContext,
         aiModel,
         conversationHistory: toConversationHistory(messages),
         sessionId,
-        firstMessage: firstUserMsg?.content ?? lastUserMessage.content,
+        firstMessage: firstUserMsg?.content ?? "",
         allMessages,
+        executionMode: "render_from_analysis",
+        analysisWorkId: currentLastAnalysisWorkId,
       },
-      createMutationCallbacks(
-        "죄송합니다. 디자인 재생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
-        "completed",
-      ),
+      "죄송합니다. 이미지 렌더링 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      "completed",
     );
   };
 
   return {
     sendMessage,
     regenerate,
+    requestRender,
     isLoading:
       generationStatus === "generating" || generationStatus === "regenerating",
   };

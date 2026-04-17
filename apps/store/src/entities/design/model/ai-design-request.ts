@@ -5,6 +5,10 @@ import type {
 import type { DesignContext } from "@/entities/design/model/design-context";
 import type { Message } from "@/entities/design/model/chat";
 
+export type DesignContextPayload = DesignContext & {
+  scale?: "large" | "medium" | "small" | null;
+};
+
 export interface SessionMessagePayload {
   id: string;
   role: "user" | "ai";
@@ -18,10 +22,12 @@ export interface SessionMessagePayload {
 export interface AiDesignRequest {
   userMessage: string;
   attachments: Attachment[];
-  designContext: DesignContext;
+  designContext: DesignContextPayload;
   aiModel: AiModel;
   conversationHistory?: Pick<Message, "role" | "content">[];
   sessionId: string;
   firstMessage: string;
   allMessages: SessionMessagePayload[];
+  analysisWorkId?: string | null;
+  executionMode?: "auto" | "analysis_only" | "render_from_analysis";
 }
