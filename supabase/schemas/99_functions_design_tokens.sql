@@ -46,6 +46,7 @@ CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
   p_ai_model     text,             -- 'openai' | 'gemini' | 'fal'
   p_request_type text,             -- 'analysis' | 'render_standard' | 'render_high'
+  p_quality      text DEFAULT 'standard', -- 'standard' | 'high'
   p_work_id      text DEFAULT NULL
 )
 RETURNS jsonb
@@ -79,6 +80,9 @@ BEGIN
   END IF;
   IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
+  END IF;
+  IF p_quality NOT IN ('standard', 'high') THEN
+    RAISE EXCEPTION 'invalid quality: %', p_quality;
   END IF;
 
   -- 동시 요청 advisory lock (사용자별)

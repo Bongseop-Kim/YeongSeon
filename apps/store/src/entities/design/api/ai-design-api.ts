@@ -9,7 +9,7 @@ import {
   type DesignTokenRow,
 } from "@/entities/design/api/ai-design-mapper";
 import { shouldUseFalPipeline } from "@/entities/design/api/should-use-fal-pipeline";
-import { tileLogoOnCanvas } from "./tile-logo-on-canvas";
+import { tileLogoOnCanvas } from "@/entities/design/api/tile-logo-on-canvas";
 import { ph } from "@/shared/lib/posthog";
 
 interface DesignTokenBalance {
@@ -167,6 +167,7 @@ export async function aiDesignApi(
       tiledMimeType,
     }),
   });
+  let usedFallback = false;
 
   if (error) {
     const context = (error as { context?: unknown }).context;
@@ -185,6 +186,7 @@ export async function aiDesignApi(
       }
 
       if (body.error === "fal_pipeline_disabled" && useFalPipeline) {
+        usedFallback = true;
         ({ data, error } = await supabase.functions.invoke(
           getFallbackFunctionName(request),
           {
@@ -202,6 +204,7 @@ export async function aiDesignApi(
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
+      pipeline: usedFallback ? "fal-ai-fallback-failed" : undefined,
     });
     throw new Error(`디자인 생성 실패: ${error.message}`);
   }
@@ -210,6 +213,7 @@ export async function aiDesignApi(
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
+      pipeline: usedFallback ? "fal-ai-fallback-failed" : undefined,
     });
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }

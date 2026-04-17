@@ -16,7 +16,7 @@ type PhEventParamsMap = {
       | "insufficient_tokens"
       | "api_error"
       | "tile_logo_on_canvas_failed";
-    pipeline?: "fal-ai";
+    pipeline?: "fal-ai" | "fal-ai-fallback-failed";
     scale?: "large" | "medium" | "small";
     colors?: string[];
     fabric_method?: "yarn-dyed" | "print" | null;

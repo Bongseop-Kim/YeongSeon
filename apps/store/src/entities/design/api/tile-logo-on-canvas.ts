@@ -77,28 +77,6 @@ const drawTiledPattern = (
   }
 };
 
-const applyPrintTiling = (
-  ctx: OffscreenCanvasRenderingContext2D,
-  logoBitmap: ImageBitmapLike,
-  canvasSize: number,
-  stride: number,
-  drawWidth: number,
-  drawHeight: number,
-) => {
-  drawTiledPattern(ctx, logoBitmap, canvasSize, stride, drawWidth, drawHeight);
-};
-
-const applyYarnDyedTiling = (
-  ctx: OffscreenCanvasRenderingContext2D,
-  logoBitmap: ImageBitmapLike,
-  canvasSize: number,
-  stride: number,
-  drawWidth: number,
-  drawHeight: number,
-) => {
-  drawTiledPattern(ctx, logoBitmap, canvasSize, stride, drawWidth, drawHeight);
-};
-
 export async function tileLogoOnCanvas(
   input: TileLogoOnCanvasInput,
 ): Promise<TileLogoOnCanvasResult> {
@@ -125,7 +103,7 @@ export async function tileLogoOnCanvas(
 
     switch (input.fabricMethod) {
       case "yarn-dyed":
-        applyYarnDyedTiling(
+        drawTiledPattern(
           ctx,
           logoBitmap,
           canvasSize,
@@ -136,7 +114,7 @@ export async function tileLogoOnCanvas(
         break;
       case "print":
       case undefined:
-        applyPrintTiling(
+        drawTiledPattern(
           ctx,
           logoBitmap,
           canvasSize,
@@ -145,8 +123,9 @@ export async function tileLogoOnCanvas(
           drawHeight,
         );
         break;
-      default:
-        throw new Error(`Unsupported fabric method: ${input.fabricMethod}`);
+      default: {
+        throw new Error(input.fabricMethod satisfies never);
+      }
     }
 
     const outputBlob = await canvas.convertToBlob({ type: "image/png" });

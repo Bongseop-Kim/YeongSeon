@@ -43,8 +43,7 @@ const ANALYSIS_AI_MODEL = "openai" as const;
 const RENDER_AI_MODEL = "fal" as const;
 
 const SERVER_VAR = "FALAI_CI_PATTERN_ENABLED";
-const CLIENT_VAR =
-  Deno.env.get("BUILD_CLIENT_FLAG") ?? "VITE_FALAI_CI_PATTERN_ENABLED";
+const CLIENT_VAR = "VITE_FALAI_CI_PATTERN_ENABLED";
 const IS_FAL_PIPELINE_ENABLED = Deno.env.get(SERVER_VAR) === "true";
 
 async function tryRefund(
@@ -362,6 +361,7 @@ Deno.serve(async (req) => {
       aiMessage,
       imageUrl: null,
       workId,
+      analysisWorkId,
       generateImage: false,
       eligibleForRender: eligibility.eligibleForRender,
       missingRequirements: eligibility.missingRequirements,
