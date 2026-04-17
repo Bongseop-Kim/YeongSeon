@@ -98,6 +98,9 @@ function safeCapture(
 const isFalPipelineEnabled = () =>
   import.meta.env.VITE_FALAI_CI_PATTERN_ENABLED === "true";
 
+const getFallbackFunctionName = (request: AiDesignRequest) =>
+  request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
+
 export async function aiDesignApi(
   request: AiDesignRequest,
 ): Promise<AiDesignResponse> {
@@ -152,13 +155,11 @@ export async function aiDesignApi(
 
   const functionName = useFalPipeline
     ? "generate-fal-api"
-    : request.aiModel === "openai"
-      ? "generate-open-api"
-      : "generate-google-api";
+    : getFallbackFunctionName(request);
 
   const startTime = Date.now();
 
-  const { data, error } = await supabase.functions.invoke(functionName, {
+  let { data, error } = await supabase.functions.invoke(functionName, {
     body: buildInvokePayload(request, {
       ciImageBase64,
       referenceImageBase64,
@@ -182,8 +183,22 @@ export async function aiDesignApi(
         });
         throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
       }
-    }
 
+      if (body.error === "fal_pipeline_disabled" && useFalPipeline) {
+        ({ data, error } = await supabase.functions.invoke(
+          getFallbackFunctionName(request),
+          {
+            body: buildInvokePayload(request, {
+              ciImageBase64,
+              referenceImageBase64,
+            }),
+          },
+        ));
+      }
+    }
+  }
+
+  if (error) {
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",

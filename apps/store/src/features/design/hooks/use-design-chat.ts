@@ -24,6 +24,10 @@ interface UseDesignChatResult {
   isLoading: boolean;
 }
 
+interface MutationCallbackOptions {
+  skipAiMessageAppend?: boolean;
+}
+
 const toConversationHistory = (
   items: Message[],
 ): { role: "user" | "ai"; content: string }[] =>
@@ -100,6 +104,7 @@ export function useDesignChat(
   const clearAttachments = useDesignChatStore(
     (state) => state.clearAttachments,
   );
+  const restoreMessages = useDesignChatStore((state) => state.restoreMessages);
   const currentSessionId = useDesignChatStore(
     (state) => state.currentSessionId,
   );
@@ -111,6 +116,7 @@ export function useDesignChat(
   const createMutationCallbacks = (
     errorContent: string,
     errorStatus: "idle" | "completed",
+    callbackOptions: MutationCallbackOptions = {},
   ) => ({
     onSuccess: (data: AiDesignResponse) => {
       setLastAnalysisResult({
@@ -132,7 +138,31 @@ export function useDesignChat(
         timestamp: Date.now(),
       };
 
-      addMessage(aiMessage);
+      if (callbackOptions.skipAiMessageAppend) {
+        const nextMessages = [...useDesignChatStore.getState().messages];
+
+        for (let index = nextMessages.length - 1; index >= 0; index -= 1) {
+          const message = nextMessages[index];
+          if (message.role !== "ai" || message.uiOnly) {
+            continue;
+          }
+
+          nextMessages[index] = {
+            ...message,
+            imageUrl: data.imageUrl ?? message.imageUrl,
+            contextChips:
+              data.contextChips.length > 0
+                ? data.contextChips
+                : message.contextChips,
+          };
+          break;
+        }
+
+        restoreMessages(nextMessages);
+      } else {
+        addMessage(aiMessage);
+      }
+
       if (previewBackground) {
         setGeneratedImage(previewBackground, data.tags);
       }
@@ -174,10 +204,11 @@ export function useDesignChat(
     request: Parameters<typeof mutation.mutate>[0],
     errorContent: string,
     errorStatus: "idle" | "completed",
+    callbackOptions: MutationCallbackOptions = {},
   ): void => {
     mutation.mutate(
       request,
-      createMutationCallbacks(errorContent, errorStatus),
+      createMutationCallbacks(errorContent, errorStatus, callbackOptions),
     );
   };
 
@@ -321,6 +352,9 @@ export function useDesignChat(
       },
       "죄송합니다. 이미지 렌더링 중 오류가 발생했습니다. 다시 시도해 주세요.",
       "completed",
+      {
+        skipAiMessageAppend: true,
+      },
     );
   };
 

@@ -276,4 +276,65 @@ describe("aiDesignApi", () => {
     );
     expect(invoke).not.toHaveBeenCalled();
   });
+
+  it("Fal API가 비활성화되어 있으면 기존 모델 함수로 한 번 폴백한다", async () => {
+    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
+    tileLogoOnCanvas.mockResolvedValue({
+      base64: "tiled-base64",
+      mimeType: "image/png",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke
+      .mockResolvedValueOnce({
+        data: null,
+        error: {
+          message: "Edge Function returned a non-2xx status code",
+          context: new Response(
+            JSON.stringify({
+              error: "fal_pipeline_disabled",
+            }),
+            {
+              status: 503,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          ),
+        },
+      })
+      .mockResolvedValueOnce({ data: successResponse, error: null });
+
+    await expect(
+      aiDesignApi({
+        ...baseRequest,
+        designContext: {
+          ...baseRequest.designContext,
+          ciImage: { type: "image/png" } as File,
+          ciPlacement: "all-over",
+          scale: "medium",
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        aiMessage: successResponse.aiMessage,
+        imageUrl: successResponse.imageUrl,
+        workId: successResponse.workId,
+        workflowId: successResponse.workflowId,
+        analysisWorkId: successResponse.analysisWorkId,
+      }),
+    );
+
+    expect(invoke).toHaveBeenNthCalledWith(1, "generate-fal-api", {
+      body: expect.objectContaining({
+        tiledBase64: "tiled-base64",
+        tiledMimeType: "image/png",
+      }),
+    });
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-open-api", {
+      body: expect.not.objectContaining({
+        tiledBase64: "tiled-base64",
+        tiledMimeType: "image/png",
+      }),
+    });
+  });
 });

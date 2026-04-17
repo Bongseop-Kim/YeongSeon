@@ -15,6 +15,11 @@ import {
 } from "@/functions/_shared/prompt-builders.ts";
 import { createJsonResponse } from "@/functions/_shared/response.ts";
 import {
+  buildSessionMessages,
+  saveDesignSession,
+  type SessionMessage,
+} from "@/functions/_shared/session-save.ts";
+import {
   createAdminSupabaseClient,
   createAuthenticatedSupabaseClient,
 } from "@/functions/_shared/supabase-clients.ts";
@@ -62,6 +67,34 @@ async function tryRefund(
   });
   return error ? 0 : params.amount;
 }
+
+const saveSessionIfNeeded = async (
+  supabase: ReturnType<typeof createAuthenticatedSupabaseClient>,
+  payload: GenerateDesignRequest,
+  aiMessage: string,
+  imageUrl: string | null,
+  imageFileId: string | null,
+) => {
+  if (!payload.sessionId || !Array.isArray(payload.allMessages)) {
+    return;
+  }
+
+  await saveDesignSession(supabase, {
+    sessionId: payload.sessionId,
+    aiModel: "openai",
+    firstMessage: payload.firstMessage ?? "",
+    lastImageUrl: imageUrl,
+    lastImageFileId: imageFileId,
+    messages: buildSessionMessages(payload.allMessages, {
+      id: crypto.randomUUID(),
+      role: "ai",
+      content: aiMessage,
+      image_url: imageUrl,
+      image_file_id: imageFileId,
+      sequence_number: payload.allMessages.length,
+    } satisfies SessionMessage),
+  });
+};
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
@@ -315,6 +348,16 @@ Deno.serve(async (req) => {
   });
 
   if (!generateImage) {
+    try {
+      await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
+    } catch (reason) {
+      console.error("Post-generation task failed", {
+        workId: analysisWorkId,
+        task: "saveSessionIfNeeded",
+        reason,
+      });
+    }
+
     return jsonResponse(200, {
       aiMessage,
       imageUrl: null,
@@ -451,6 +494,7 @@ Deno.serve(async (req) => {
 
   const imageLatencyMs = Date.now() - imageStart;
   let finalImageUrl = falImageUrl;
+  let finalImageFileId: string | null = null;
   let errorCode: "fal_image_fetch_failed" | "image_upload_failed" | null = null;
 
   try {
@@ -486,6 +530,7 @@ Deno.serve(async (req) => {
     }
 
     finalImageUrl = uploaded?.url ?? falImageUrl;
+    finalImageFileId = uploaded?.fileId ?? null;
   } catch (error) {
     renderTokensRefunded = await tryRefund(adminClient, {
       userId: user.id,
@@ -551,6 +596,22 @@ Deno.serve(async (req) => {
     tokens_charged: renderTokensCharged,
     tokens_refunded: renderTokensRefunded,
   });
+
+  try {
+    await saveSessionIfNeeded(
+      supabase,
+      payload,
+      aiMessage,
+      finalImageUrl,
+      finalImageFileId,
+    );
+  } catch (reason) {
+    console.error("Post-generation task failed", {
+      workId: renderWorkId,
+      task: "saveSessionIfNeeded",
+      reason,
+    });
+  }
 
   return jsonResponse(200, {
     aiMessage,

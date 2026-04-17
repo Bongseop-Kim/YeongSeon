@@ -10,6 +10,7 @@ const {
   setGeneratedImage,
   setLastAnalysisResult,
   clearAttachments,
+  restoreMessages,
   setCurrentSessionId,
   phCapture,
   MockInsufficientTokensError,
@@ -21,6 +22,7 @@ const {
   setGeneratedImage: vi.fn(),
   setLastAnalysisResult: vi.fn(),
   clearAttachments: vi.fn(),
+  restoreMessages: vi.fn(),
   setCurrentSessionId: vi.fn(),
   phCapture: vi.fn(),
   MockInsufficientTokensError: class MockInsufficientTokensError extends Error {
@@ -95,6 +97,7 @@ const storeState = {
   setGeneratedImage,
   setLastAnalysisResult,
   clearAttachments,
+  restoreMessages,
   setCurrentSessionId,
 };
 
@@ -143,6 +146,7 @@ describe("useDesignChat", () => {
     setGeneratedImage.mockReset();
     setLastAnalysisResult.mockReset();
     clearAttachments.mockReset();
+    restoreMessages.mockReset();
     setCurrentSessionId.mockReset();
     phCapture.mockReset();
     storeState.messages = [...initialMessages];
@@ -153,6 +157,9 @@ describe("useDesignChat", () => {
     storeState.currentSessionId = null;
     addMessage.mockImplementation((message) => {
       storeState.messages = [...storeState.messages, message];
+    });
+    restoreMessages.mockImplementation((messages) => {
+      storeState.messages = messages;
     });
   });
 
@@ -313,6 +320,49 @@ describe("useDesignChat", () => {
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["design-token-balance"],
     });
+  });
+
+  it("수동 렌더 성공 시에는 AI 메시지를 중복 추가하지 않고 이미지만 반영한다", () => {
+    Object.assign(storeState, {
+      autoGenerateImage: false,
+      currentSessionId: "session-1",
+      lastAnalysisWorkId: "analysis-work-5",
+      lastEligibleForRender: true,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.requestRender();
+
+    const callbacks = mutate.mock.calls[0][1];
+    callbacks.onSuccess({
+      aiMessage: "분석 결과 문구",
+      imageUrl: "https://example.com/rendered.jpg",
+      analysisWorkId: "analysis-work-5",
+      generateImage: true,
+      eligibleForRender: true,
+      missingRequirements: [],
+      tags: ["렌더"],
+      contextChips: [],
+    });
+
+    expect(addMessage).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: "ai",
+        content: "분석 결과 문구",
+      }),
+    );
+    expect(setGeneratedImage).toHaveBeenCalledWith(
+      'url("https://example.com/rendered.jpg") center/cover no-repeat',
+      ["렌더"],
+    );
+    expect(restoreMessages).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "ai-1",
+          imageUrl: "https://example.com/rendered.jpg",
+        }),
+      ]),
+    );
   });
 
   it("requestRender는 마지막 analysisWorkId로 render_from_analysis 요청을 보낸다", () => {

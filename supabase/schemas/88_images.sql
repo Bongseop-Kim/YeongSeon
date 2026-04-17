@@ -22,6 +22,12 @@ CREATE INDEX idx_images_file_id ON public.images (file_id) WHERE file_id IS NOT 
 CREATE UNIQUE INDEX idx_images_reform_upload_unique
   ON public.images (entity_type, entity_id)
   WHERE entity_type = 'reform_upload';
+CREATE INDEX idx_images_deletion_claimed
+  ON public.images (deletion_claimed_at)
+  WHERE deletion_claimed_at IS NOT NULL AND deleted_at IS NULL;
+CREATE UNIQUE INDEX idx_images_design_message_unique
+  ON public.images (entity_type, entity_id)
+  WHERE entity_type = 'design_message';
 
 -- RLS
 ALTER TABLE public.images ENABLE ROW LEVEL SECURITY;
