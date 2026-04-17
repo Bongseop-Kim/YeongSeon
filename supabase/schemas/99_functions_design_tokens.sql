@@ -44,7 +44,7 @@ $$;
 -- Returns: { success, cost, balance } or { success: false, error: '...', balance, cost }
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
-  p_ai_model     text,             -- 'openai' | 'gemini'
+  p_ai_model     text,             -- 'openai' | 'gemini' | 'fal'
   p_request_type text,             -- 'analysis' | 'render_standard' | 'render_high'
   p_work_id      text DEFAULT NULL
 )
@@ -74,7 +74,7 @@ BEGIN
   END IF;
 
   -- 파라미터 화이트리스트 검증
-  IF p_ai_model NOT IN ('openai', 'gemini') THEN
+  IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
   IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
@@ -239,7 +239,7 @@ BEGIN
     RAISE EXCEPTION 'unauthorized: refund requires service_role';
   END IF;
 
-  IF p_ai_model NOT IN ('openai', 'gemini') THEN
+  IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
 
@@ -249,6 +249,10 @@ BEGIN
 
   IF p_amount <= 0 THEN
     RETURN;
+  END IF;
+
+  IF p_work_id IS NULL THEN
+    RAISE EXCEPTION 'refund_design_tokens requires non-null p_work_id for idempotency';
   END IF;
 
   -- work_id 기반 멱등성: 동일 work_id로 이미 환불된 경우 무시

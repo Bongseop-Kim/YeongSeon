@@ -967,11 +967,6 @@ Deno.serve(async (req) => {
 
   try {
     if (executionMode === "render_from_analysis") {
-      if (!payload.analysisWorkId) {
-        return jsonResponse(400, {
-          error: "analysisWorkId is required for render_from_analysis",
-        });
-      }
       const analysis = await loadAnalysisSnapshot(
         adminClient,
         user.id,

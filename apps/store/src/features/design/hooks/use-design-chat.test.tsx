@@ -337,6 +337,27 @@ describe("useDesignChat", () => {
     );
   });
 
+  it("requestRender는 최신 store sessionId를 사용한다", () => {
+    Object.assign(storeState, {
+      currentSessionId: "store-session-42",
+      lastAnalysisWorkId: "analysis-work-103",
+      lastEligibleForRender: true,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.requestRender();
+
+    expect(setCurrentSessionId).not.toHaveBeenCalled();
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: "store-session-42",
+        analysisWorkId: "analysis-work-103",
+        executionMode: "render_from_analysis",
+      }),
+      expect.any(Object),
+    );
+  });
+
   it("requestRender는 첫 사용자 메시지가 없으면 mutate를 호출하지 않는다", () => {
     Object.assign(storeState, {
       messages: [

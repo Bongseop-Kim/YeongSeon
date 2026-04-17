@@ -68,7 +68,7 @@ describe("aiDesignApi", () => {
     tileLogoOnCanvas.mockReset();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
-    MockFileReader.configure({});
+    MockFileReader.reset();
   });
 
   it("토큰 부족 응답은 InsufficientTokensError로 변환한다", async () => {

@@ -281,6 +281,7 @@ export function useDesignChat(
 
   const requestRender = (): void => {
     const {
+      currentSessionId: storeSessionId,
       lastAnalysisWorkId: currentLastAnalysisWorkId,
       lastEligibleForRender: currentLastEligibleForRender,
     } = useDesignChatStore.getState();
@@ -297,8 +298,8 @@ export function useDesignChat(
       return;
     }
 
-    const sessionId = currentSessionId ?? crypto.randomUUID();
-    if (!currentSessionId) {
+    const sessionId = storeSessionId ?? crypto.randomUUID();
+    if (!storeSessionId) {
       setCurrentSessionId(sessionId);
     }
 

@@ -6,7 +6,6 @@ type TileScale = NonNullable<Scale>;
 interface TileLogoOnCanvasInput {
   logoBase64: string;
   logoMimeType: string;
-  // TODO: Use fabricMethod to branch yarn-dyed vs print tiling when needed.
   fabricMethod?: FabricMethod;
   scale: TileScale;
   backgroundColor?: string;
@@ -17,6 +16,8 @@ interface TileLogoOnCanvasResult {
   base64: string;
   mimeType: "image/png";
 }
+
+type ImageBitmapLike = Awaited<ReturnType<typeof createImageBitmap>>;
 
 const SCALE_TO_LOGO_RATIO: Record<TileScale, number> = {
   large: 0.2,
@@ -46,7 +47,56 @@ const decodeBase64ToBlob = (base64: string, mimeType: string): Blob => {
 
 const blobToBase64 = async (blob: Blob): Promise<string> => {
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  return btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(""));
+  const chunkSize = 32 * 1024;
+  let binary = "";
+
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    const chunk = bytes.slice(offset, offset + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
+};
+
+const drawTiledPattern = (
+  ctx: OffscreenCanvasRenderingContext2D,
+  logoBitmap: ImageBitmapLike,
+  canvasSize: number,
+  stride: number,
+  drawWidth: number,
+  drawHeight: number,
+) => {
+  const tileCount = Math.ceil(canvasSize / stride);
+
+  for (let yIndex = 0; yIndex < tileCount; yIndex += 1) {
+    const yPos = Math.round(yIndex * stride);
+    for (let xIndex = 0; xIndex < tileCount; xIndex += 1) {
+      const xPos = Math.round(xIndex * stride);
+      ctx.drawImage(logoBitmap, xPos, yPos, drawWidth, drawHeight);
+    }
+  }
+};
+
+const applyPrintTiling = (
+  ctx: OffscreenCanvasRenderingContext2D,
+  logoBitmap: ImageBitmapLike,
+  canvasSize: number,
+  stride: number,
+  drawWidth: number,
+  drawHeight: number,
+) => {
+  drawTiledPattern(ctx, logoBitmap, canvasSize, stride, drawWidth, drawHeight);
+};
+
+const applyYarnDyedTiling = (
+  ctx: OffscreenCanvasRenderingContext2D,
+  logoBitmap: ImageBitmapLike,
+  canvasSize: number,
+  stride: number,
+  drawWidth: number,
+  drawHeight: number,
+) => {
+  drawTiledPattern(ctx, logoBitmap, canvasSize, stride, drawWidth, drawHeight);
 };
 
 export async function tileLogoOnCanvas(
@@ -56,36 +106,54 @@ export async function tileLogoOnCanvas(
   const backgroundColor = input.backgroundColor ?? DEFAULT_BACKGROUND;
   const logoBlob = decodeBase64ToBlob(input.logoBase64, input.logoMimeType);
   const logoBitmap = await createImageBitmap(logoBlob);
-  const logoLongEdge = Math.max(logoBitmap.width, logoBitmap.height);
-  const targetLongEdge = canvasSize * SCALE_TO_LOGO_RATIO[input.scale];
-  const stride = canvasSize * SCALE_TO_STRIDE_RATIO[input.scale];
-  const logoScaleFactor = targetLongEdge / logoLongEdge;
-  const drawWidth = logoBitmap.width * logoScaleFactor;
-  const drawHeight = logoBitmap.height * logoScaleFactor;
-  const canvas = new OffscreenCanvas(canvasSize, canvasSize);
-  const ctx = canvas.getContext("2d");
+  try {
+    const logoLongEdge = Math.max(logoBitmap.width, logoBitmap.height);
+    const targetLongEdge = canvasSize * SCALE_TO_LOGO_RATIO[input.scale];
+    const stride = canvasSize * SCALE_TO_STRIDE_RATIO[input.scale];
+    const logoScaleFactor = targetLongEdge / logoLongEdge;
+    const drawWidth = logoBitmap.width * logoScaleFactor;
+    const drawHeight = logoBitmap.height * logoScaleFactor;
+    const canvas = new OffscreenCanvas(canvasSize, canvasSize);
+    const ctx = canvas.getContext("2d");
 
-  if (!ctx) {
-    throw new Error("Failed to acquire 2D context on OffscreenCanvas");
-  }
-
-  ctx.fillStyle = backgroundColor;
-  ctx.fillRect(0, 0, canvasSize, canvasSize);
-
-  const tileCount = Math.ceil(canvasSize / stride);
-
-  for (let yIndex = 0; yIndex <= tileCount; yIndex += 1) {
-    const yPos = Math.round(yIndex * stride);
-    for (let xIndex = 0; xIndex <= tileCount; xIndex += 1) {
-      const xPos = Math.round(xIndex * stride);
-      ctx.drawImage(logoBitmap, xPos, yPos, drawWidth, drawHeight);
+    if (!ctx) {
+      throw new Error("Failed to acquire 2D context on OffscreenCanvas");
     }
+
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+    switch (input.fabricMethod) {
+      case "yarn-dyed":
+        applyYarnDyedTiling(
+          ctx,
+          logoBitmap,
+          canvasSize,
+          stride,
+          drawWidth,
+          drawHeight,
+        );
+        break;
+      case "print":
+      case undefined:
+        applyPrintTiling(
+          ctx,
+          logoBitmap,
+          canvasSize,
+          stride,
+          drawWidth,
+          drawHeight,
+        );
+        break;
+      default:
+        throw new Error(`Unsupported fabric method: ${input.fabricMethod}`);
+    }
+
+    const outputBlob = await canvas.convertToBlob({ type: "image/png" });
+    const base64 = await blobToBase64(outputBlob);
+
+    return { base64, mimeType: "image/png" };
+  } finally {
+    logoBitmap.close();
   }
-
-  logoBitmap.close();
-
-  const outputBlob = await canvas.convertToBlob({ type: "image/png" });
-  const base64 = await blobToBase64(outputBlob);
-
-  return { base64, mimeType: "image/png" };
 }

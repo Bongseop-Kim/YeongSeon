@@ -7,9 +7,9 @@ CREATE TABLE public.ai_generation_logs (
   workflow_id          text        NOT NULL,
   phase                text        NOT NULL CHECK (phase IN ('analysis', 'render')),
   work_id              text        NOT NULL UNIQUE,
-  parent_work_id       text,
+  parent_work_id       text        REFERENCES public.ai_generation_logs(work_id),
   user_id              uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  ai_model             text        NOT NULL CHECK (ai_model IN ('openai', 'gemini')),
+  ai_model             text        NOT NULL CHECK (ai_model IN ('openai', 'gemini', 'fal')),
   request_type         text        NOT NULL CHECK (request_type IN ('analysis', 'render_standard', 'render_high')),
   quality              text        CHECK (quality IN ('standard', 'high')),
   user_message         text        NOT NULL,
@@ -38,7 +38,11 @@ CREATE TABLE public.ai_generation_logs (
   total_latency_ms     integer,
   error_type           text,
   error_message        text,
-  created_at           timestamptz NOT NULL DEFAULT now()
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT chk_ai_generation_phase_request_type CHECK (
+    (phase = 'analysis' AND request_type = 'analysis') OR
+    (phase = 'render' AND request_type IN ('render_standard', 'render_high'))
+  )
 );
 
 CREATE INDEX idx_ai_gen_logs_workflow       ON public.ai_generation_logs (workflow_id, created_at DESC);

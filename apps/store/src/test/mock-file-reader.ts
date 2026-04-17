@@ -14,12 +14,16 @@ export class MockFileReader {
     MockFileReader.nextOptions = options;
   }
 
+  static reset() {
+    MockFileReader.nextOptions = {};
+  }
+
   readAsDataURL() {
     const { result = "data:image/png;base64,ci-base64", error } =
       MockFileReader.nextOptions;
-    MockFileReader.nextOptions = {};
+    MockFileReader.reset();
 
-    if (error) {
+    if (error !== undefined) {
       this.onerror?.();
       return;
     }

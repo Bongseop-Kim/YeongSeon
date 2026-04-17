@@ -38,5 +38,11 @@ CREATE POLICY "Admins can update settings"
   WITH CHECK (public.is_admin());
 
 INSERT INTO public.admin_settings (key, value)
-VALUES ('default_courier_company', '')
+VALUES
+  ('default_courier_company', ''),
+  ('design_token_cost_fal_render_standard', '5'),
+  ('design_token_cost_fal_render_high', '5'),
+  ('design_token_cost_gemini_analysis', '5'),
+  ('design_token_cost_gemini_render_standard', '5'),
+  ('design_token_cost_gemini_render_high', '5')
 ON CONFLICT (key) DO NOTHING;

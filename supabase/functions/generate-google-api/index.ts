@@ -924,11 +924,6 @@ Deno.serve(async (req) => {
   }
 
   const conversationTurn = conversationTurns.length;
-  if (executionMode === "render_from_analysis" && !payload.analysisWorkId) {
-    return jsonResponse(400, {
-      error: "analysisWorkId is required for render_from_analysis",
-    });
-  }
 
   const analysisWorkId =
     executionMode === "render_from_analysis" && payload.analysisWorkId
@@ -937,6 +932,12 @@ Deno.serve(async (req) => {
 
   try {
     if (executionMode === "render_from_analysis") {
+      if (!analysisWorkId) {
+        throw new HttpError(400, {
+          error: "analysisWorkId is required for render_from_analysis",
+        });
+      }
+
       const analysis = await loadAnalysisSnapshot(
         adminClient,
         user.id,

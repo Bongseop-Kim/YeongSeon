@@ -29,7 +29,26 @@ const FAL_ENDPOINT = "https://queue.fal.run/fal-ai/flux/dev/image-to-image";
 const POLL_INTERVAL_MS = 2000;
 const DEFAULT_TIMEOUT_MS = 60000;
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+
+    const onAbort = () => {
+      clearTimeout(timeoutId);
+      signal?.removeEventListener("abort", onAbort);
+      reject(signal.reason);
+    };
+
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
 
 export async function callFalFluxImg2Img(
   input: CallFalFluxImg2ImgInput,
@@ -37,9 +56,7 @@ export async function callFalFluxImg2Img(
   const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const strength = input.strength ?? 0.3;
   const dataUri = `data:${input.imageMimeType};base64,${input.imageBase64}`;
-  const deadline = Date.now() + timeoutMs;
-  const getTimeoutSignal = () =>
-    AbortSignal.timeout(Math.max(0, deadline - Date.now()));
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
 
   const submitResponse = await fetch(FAL_ENDPOINT, {
     method: "POST",
@@ -56,7 +73,7 @@ export async function callFalFluxImg2Img(
       num_images: 1,
       image_size: { width: 1024, height: 1024 },
     }),
-    signal: getTimeoutSignal(),
+    signal: timeoutSignal,
   });
 
   if (!submitResponse.ok) {
@@ -73,17 +90,13 @@ export async function callFalFluxImg2Img(
     throw new Error("Fal.ai submit did not return request_id");
   }
 
-  const statusUrl = `https://queue.fal.run/fal-ai/flux/requests/${requestId}/status`;
-  const resultUrl = `https://queue.fal.run/fal-ai/flux/requests/${requestId}`;
+  const statusUrl = `${FAL_ENDPOINT}/requests/${requestId}/status`;
+  const resultUrl = `${FAL_ENDPOINT}/requests/${requestId}`;
 
   while (true) {
-    if (Date.now() >= deadline) {
-      throw new Error(`Fal.ai generation timed out after ${timeoutMs}ms`);
-    }
-
     const statusResponse = await fetch(statusUrl, {
       headers: { Authorization: `Key ${input.apiKey}` },
-      signal: getTimeoutSignal(),
+      signal: timeoutSignal,
     });
 
     if (!statusResponse.ok) {
@@ -95,7 +108,7 @@ export async function callFalFluxImg2Img(
     if (status.status === "COMPLETED") {
       const resultResponse = await fetch(resultUrl, {
         headers: { Authorization: `Key ${input.apiKey}` },
-        signal: getTimeoutSignal(),
+        signal: timeoutSignal,
       });
 
       if (!resultResponse.ok) {
@@ -118,6 +131,6 @@ export async function callFalFluxImg2Img(
       throw new Error(`Fal.ai generation failed: ${failureDetails}`);
     }
 
-    await sleep(POLL_INTERVAL_MS);
+    await sleep(POLL_INTERVAL_MS, timeoutSignal);
   }
 }
