@@ -82,7 +82,9 @@ export const buildFalPatternPrompt = (
 
   const colorLine =
     design.colors.length > 0
-      ? `Dominant color palette: ${design.colors.join(", ")}.`
+      ? `Dominant color palette: ${design.colors
+          .map((color) => HEX_TO_COLOR_NAME[color.toLowerCase()] || color)
+          .join(", ")}.`
       : "";
 
   return [

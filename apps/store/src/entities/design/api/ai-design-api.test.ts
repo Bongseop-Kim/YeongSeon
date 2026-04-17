@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { InsufficientTokensError } from "@/entities/design/api/ai-design-api";
 import { aiDesignApi } from "@/entities/design/api/ai-design-api";
+import { MockFileReader } from "@/test/mock-file-reader";
 
 const { invoke, phCapture, tileLogoOnCanvas } = vi.hoisted(() => ({
   invoke: vi.fn(),
@@ -12,7 +13,7 @@ vi.mock("@/shared/lib/posthog", () => ({
   ph: { capture: phCapture },
 }));
 
-vi.mock("@/shared/lib/tile-logo-on-canvas", () => ({
+vi.mock("@/entities/design/api/tile-logo-on-canvas", () => ({
   tileLogoOnCanvas,
 }));
 
@@ -67,6 +68,7 @@ describe("aiDesignApi", () => {
     tileLogoOnCanvas.mockReset();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+    MockFileReader.configure({});
   });
 
   it("토큰 부족 응답은 InsufficientTokensError로 변환한다", async () => {
@@ -218,17 +220,6 @@ describe("aiDesignApi", () => {
     });
     invoke.mockResolvedValue({ data: successResponse, error: null });
 
-    class MockFileReader {
-      result: string | null = null;
-      onload: null | (() => void) = null;
-      onerror: null | (() => void) = null;
-
-      readAsDataURL() {
-        this.result = "data:image/png;base64,ci-base64";
-        this.onload?.();
-      }
-    }
-
     vi.stubGlobal("FileReader", MockFileReader);
 
     await aiDesignApi({
@@ -244,7 +235,6 @@ describe("aiDesignApi", () => {
     expect(tileLogoOnCanvas).toHaveBeenCalledWith({
       logoBase64: "ci-base64",
       logoMimeType: "image/png",
-      fabricMethod: "yarn-dyed",
       scale: "medium",
       backgroundColor: undefined,
     });
@@ -254,5 +244,36 @@ describe("aiDesignApi", () => {
         tiledMimeType: "image/png",
       }),
     });
+  });
+
+  it("tileLogoOnCanvas 실패는 observability 이벤트를 남기고 정리된 에러를 던진다", async () => {
+    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
+    MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
+    tileLogoOnCanvas.mockRejectedValue(new Error("canvas exploded"));
+    vi.stubGlobal("FileReader", MockFileReader);
+
+    await expect(
+      aiDesignApi({
+        ...baseRequest,
+        designContext: {
+          ...baseRequest.designContext,
+          ciImage: { type: "image/png" } as File,
+          ciPlacement: "all-over",
+          scale: "medium",
+        },
+      }),
+    ).rejects.toThrow("CI 패턴 이미지를 준비하지 못했습니다.");
+
+    expect(phCapture).toHaveBeenCalledWith(
+      "design_generation_failed",
+      expect.objectContaining({
+        ai_model: "openai",
+        error_type: "tile_logo_on_canvas_failed",
+        pipeline: "fal-ai",
+        fabric_method: "yarn-dyed",
+        scale: "medium",
+      }),
+    );
+    expect(invoke).not.toHaveBeenCalled();
   });
 });

@@ -41,7 +41,9 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
   const designContext = useDesignChatStore((state) => state.designContext);
 
   const isLoading =
-    generationStatus === "generating" || generationStatus === "regenerating";
+    generationStatus === "generating" ||
+    generationStatus === "regenerating" ||
+    generationStatus === "rendering";
   const previewBackground =
     selectedPreviewImageUrl ?? designContext.colors[0] ?? "#e5e7eb";
 

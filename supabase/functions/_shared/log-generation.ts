@@ -9,15 +9,15 @@ export type AiGenerationLogQuality = "standard" | "high";
 
 export type AiGenerationLogInsert = {
   work_id: string;
-  workflow_id?: string | null;
-  phase?: AiGenerationLogPhase | null;
+  workflow_id: string;
+  phase: AiGenerationLogPhase;
   parent_work_id?: string | null;
   user_id: string;
   ai_model: "openai" | "gemini";
   request_type: AiGenerationLogRequestType;
   quality?: AiGenerationLogQuality | null;
   user_message: string;
-  prompt_length?: number;
+  prompt_length: number;
   design_context?: Record<string, unknown> | null;
   normalized_design?: Record<string, unknown> | null;
   conversation_turn?: number;

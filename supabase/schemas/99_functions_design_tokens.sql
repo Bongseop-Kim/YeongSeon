@@ -46,7 +46,6 @@ CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
   p_ai_model     text,             -- 'openai' | 'gemini'
   p_request_type text,             -- 'analysis' | 'render_standard' | 'render_high'
-  p_quality      text DEFAULT 'standard',  -- 'high' | 'standard'
   p_work_id      text DEFAULT NULL
 )
 RETURNS jsonb
@@ -81,22 +80,12 @@ BEGIN
   IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
-  IF p_quality NOT IN ('standard', 'high') THEN
-    RAISE EXCEPTION 'invalid quality: %', p_quality;
-  END IF;
 
   -- 동시 요청 advisory lock (사용자별)
   PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
 
   -- 비용 조회
-  v_cost_key := CASE
-    WHEN p_request_type = 'analysis' THEN
-      'design_token_cost_' || p_ai_model || '_analysis'
-    WHEN p_request_type = 'render_standard' THEN
-      'design_token_cost_' || p_ai_model || '_render_standard'
-    WHEN p_request_type = 'render_high' THEN
-      'design_token_cost_' || p_ai_model || '_render_high'
-  END;
+  v_cost_key := 'design_token_cost_' || p_ai_model || '_' || p_request_type;
 
   SELECT value::integer INTO v_cost FROM public.admin_settings WHERE key = v_cost_key;
   IF v_cost IS NULL OR v_cost <= 0 THEN

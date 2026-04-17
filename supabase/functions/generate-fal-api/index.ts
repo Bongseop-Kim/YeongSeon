@@ -5,6 +5,7 @@ import type { GenerateDesignRequest } from "@/functions/_shared/design-request.t
 import { callFalFluxImg2Img } from "@/functions/_shared/fal-client.ts";
 import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
 import { logGeneration } from "@/functions/_shared/log-generation.ts";
+import { createLogger } from "@/functions/_shared/logger.ts";
 import {
   buildFalPatternPrompt,
   buildTextPrompt,
@@ -28,19 +29,61 @@ const MAX_IMAGE_BASE64_LENGTH = 20 * 1024 * 1024;
 const bytesToBase64 = (bytes: Uint8Array): string =>
   btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(""));
 
+const { processLogger, errorLogger } = createLogger("generate-fal-api");
+
+const ANALYSIS_REQUEST_TYPE = "analysis" as const;
+const RENDER_REQUEST_TYPE = "render_standard" as const;
+
+const SERVER_VAR = "FALAI_CI_PATTERN_ENABLED";
+const CLIENT_VAR =
+  Deno.env.get("BUILD_CLIENT_FLAG") ?? "VITE_FALAI_CI_PATTERN_ENABLED";
+const IS_FAL_PIPELINE_ENABLED = Deno.env.get(SERVER_VAR) === "true";
+
+async function tryRefund(
+  client: ReturnType<typeof createAdminSupabaseClient>,
+  params: {
+    userId: string;
+    amount: number;
+    requestType: string;
+    workId: string;
+  },
+): Promise<number> {
+  if (params.amount <= 0) return 0;
+  const { error } = await client.rpc("refund_design_tokens", {
+    p_user_id: params.userId,
+    p_amount: params.amount,
+    p_ai_model: "openai",
+    p_request_type: params.requestType,
+    p_work_id: params.workId,
+  });
+  return error ? 0 : params.amount;
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
   const jsonResponse = createJsonResponse(corsHeaders);
+  const url = new URL(req.url);
 
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (
+    req.method === "GET" &&
+    url.pathname.endsWith("/should-use-fal-pipeline")
+  ) {
+    return jsonResponse(200, {
+      enabled: IS_FAL_PIPELINE_ENABLED,
+      serverVar: SERVER_VAR,
+      clientVar: CLIENT_VAR,
+    });
   }
 
   if (req.method !== "POST") {
     return jsonResponse(405, { error: "Method not allowed" });
   }
 
-  if (Deno.env.get("FALAI_CI_PATTERN_ENABLED") !== "true") {
+  if (!IS_FAL_PIPELINE_ENABLED) {
     return jsonResponse(503, { error: "fal_pipeline_disabled" });
   }
 
@@ -111,9 +154,64 @@ Deno.serve(async (req) => {
   }
 
   const workId = crypto.randomUUID();
+  const analysisWorkId = `${workId}_analysis`;
+  const renderWorkId = `${workId}_render`;
   const textPrompt = buildTextPrompt(payload);
   const history = filterValidConversationTurns(payload.conversationHistory);
   const textStart = Date.now();
+  let analysisTokensCharged = 0;
+  let analysisTokensRefunded = 0;
+
+  const { data: analysisTokenResult, error: analysisTokenError } =
+    await adminClient.rpc("use_design_tokens", {
+      p_user_id: user.id,
+      p_ai_model: "openai",
+      p_request_type: ANALYSIS_REQUEST_TYPE,
+      p_work_id: analysisWorkId,
+    });
+
+  if (analysisTokenError) {
+    await logGeneration(adminClient, {
+      work_id: analysisWorkId,
+      workflow_id: workId,
+      phase: "analysis",
+      user_id: user.id,
+      ai_model: "openai",
+      request_type: ANALYSIS_REQUEST_TYPE,
+      user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
+      text_prompt: textPrompt,
+      image_generated: false,
+      error_type: "token_processing_failed",
+      error_message: analysisTokenError.message,
+    });
+    return jsonResponse(500, { error: "token_processing_failed" });
+  }
+
+  if (!analysisTokenResult?.success) {
+    await logGeneration(adminClient, {
+      work_id: analysisWorkId,
+      workflow_id: workId,
+      phase: "analysis",
+      user_id: user.id,
+      ai_model: "openai",
+      request_type: ANALYSIS_REQUEST_TYPE,
+      user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
+      text_prompt: textPrompt,
+      image_generated: false,
+      error_type: analysisTokenResult?.error ?? "insufficient_tokens",
+      error_message:
+        analysisTokenResult?.error ?? "Token deduction was rejected",
+    });
+    return jsonResponse(403, {
+      error: "insufficient_tokens",
+      balance: analysisTokenResult?.balance ?? 0,
+      cost: analysisTokenResult?.cost ?? 0,
+    });
+  }
+
+  analysisTokensCharged = analysisTokenResult.cost ?? 0;
 
   let analysisJson: ReturnType<typeof parseJsonBlock>;
   try {
@@ -146,14 +244,26 @@ Deno.serve(async (req) => {
     const content = textData.choices?.[0]?.message?.content ?? "";
     analysisJson = parseJsonBlock(content);
   } catch (error) {
+    analysisTokensRefunded = await tryRefund(adminClient, {
+      userId: user.id,
+      amount: analysisTokensCharged,
+      requestType: ANALYSIS_REQUEST_TYPE,
+      workId: `${analysisWorkId}_analysis_failed_refund`,
+    });
+
     await logGeneration(adminClient, {
-      work_id: workId,
+      work_id: analysisWorkId,
+      workflow_id: workId,
       phase: "analysis",
       user_id: user.id,
       ai_model: "openai",
-      request_type: "analysis",
+      request_type: ANALYSIS_REQUEST_TYPE,
       user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
+      text_prompt: textPrompt,
       image_generated: false,
+      tokens_charged: analysisTokensCharged,
+      tokens_refunded: analysisTokensRefunded,
       error_type: "text_analysis_failed",
       error_message: error instanceof Error ? error.message : String(error),
     });
@@ -169,22 +279,26 @@ Deno.serve(async (req) => {
     ? analysisJson.contextChips
     : [];
 
-  if (!generateImage) {
-    await logGeneration(adminClient, {
-      work_id: workId,
-      phase: "analysis",
-      user_id: user.id,
-      ai_model: "openai",
-      request_type: "analysis",
-      user_message: payload.userMessage,
-      text_prompt: textPrompt,
-      ai_message: aiMessage,
-      generate_image: false,
-      eligible_for_render: false,
-      image_generated: false,
-      text_latency_ms: textLatencyMs,
-    });
+  await logGeneration(adminClient, {
+    work_id: analysisWorkId,
+    workflow_id: workId,
+    phase: "analysis",
+    user_id: user.id,
+    ai_model: "openai",
+    request_type: ANALYSIS_REQUEST_TYPE,
+    user_message: payload.userMessage,
+    prompt_length: payload.userMessage.length,
+    text_prompt: textPrompt,
+    ai_message: aiMessage,
+    generate_image: generateImage,
+    eligible_for_render: generateImage,
+    image_generated: false,
+    text_latency_ms: Date.now() - textStart,
+    tokens_charged: analysisTokensCharged,
+    tokens_refunded: analysisTokensRefunded,
+  });
 
+  if (!generateImage) {
     return jsonResponse(200, {
       aiMessage,
       imageUrl: null,
@@ -206,6 +320,70 @@ Deno.serve(async (req) => {
 
   const imageStart = Date.now();
   let falImageUrl: string;
+  let renderTokensCharged = 0;
+  let renderTokensRefunded = 0;
+
+  const { data: renderTokenResult, error: renderTokenError } =
+    await adminClient.rpc("use_design_tokens", {
+      p_user_id: user.id,
+      p_ai_model: "openai",
+      p_request_type: RENDER_REQUEST_TYPE,
+      p_work_id: renderWorkId,
+    });
+
+  if (renderTokenError) {
+    await logGeneration(adminClient, {
+      work_id: renderWorkId,
+      workflow_id: workId,
+      phase: "render",
+      parent_work_id: analysisWorkId,
+      user_id: user.id,
+      ai_model: "openai",
+      request_type: RENDER_REQUEST_TYPE,
+      user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
+      text_prompt: textPrompt,
+      image_prompt: imagePrompt,
+      ai_message: aiMessage,
+      generate_image: true,
+      eligible_for_render: true,
+      image_generated: false,
+      text_latency_ms: textLatencyMs,
+      error_type: "token_processing_failed",
+      error_message: renderTokenError.message,
+    });
+    return jsonResponse(500, { error: "token_processing_failed" });
+  }
+
+  if (!renderTokenResult?.success) {
+    await logGeneration(adminClient, {
+      work_id: renderWorkId,
+      workflow_id: workId,
+      phase: "render",
+      parent_work_id: analysisWorkId,
+      user_id: user.id,
+      ai_model: "openai",
+      request_type: RENDER_REQUEST_TYPE,
+      user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
+      text_prompt: textPrompt,
+      image_prompt: imagePrompt,
+      ai_message: aiMessage,
+      generate_image: true,
+      eligible_for_render: true,
+      image_generated: false,
+      text_latency_ms: textLatencyMs,
+      error_type: renderTokenResult?.error ?? "insufficient_tokens",
+      error_message: renderTokenResult?.error ?? "Token deduction was rejected",
+    });
+    return jsonResponse(403, {
+      error: "insufficient_tokens",
+      balance: renderTokenResult?.balance ?? 0,
+      cost: renderTokenResult?.cost ?? 0,
+    });
+  }
+
+  renderTokensCharged = renderTokenResult.cost ?? 0;
 
   try {
     const falResult = await callFalFluxImg2Img({
@@ -217,13 +395,27 @@ Deno.serve(async (req) => {
     });
     falImageUrl = falResult.imageUrl;
   } catch (error) {
+    renderTokensRefunded = await tryRefund(adminClient, {
+      userId: user.id,
+      amount: renderTokensCharged,
+      requestType: RENDER_REQUEST_TYPE,
+      workId: `${renderWorkId}_render_failed_refund`,
+    });
+
+    errorLogger("fal_render_failed", error, {
+      workId,
+      renderWorkId,
+    });
     await logGeneration(adminClient, {
-      work_id: workId,
+      work_id: renderWorkId,
+      workflow_id: workId,
       phase: "render",
+      parent_work_id: analysisWorkId,
       user_id: user.id,
       ai_model: "openai",
-      request_type: "render_standard",
+      request_type: RENDER_REQUEST_TYPE,
       user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
       ai_message: aiMessage,
@@ -231,6 +423,8 @@ Deno.serve(async (req) => {
       eligible_for_render: true,
       image_generated: false,
       text_latency_ms: textLatencyMs,
+      tokens_charged: renderTokensCharged,
+      tokens_refunded: renderTokensRefunded,
       error_type: "fal_render_failed",
       error_message: error instanceof Error ? error.message : String(error),
     });
@@ -239,30 +433,78 @@ Deno.serve(async (req) => {
   }
 
   const imageLatencyMs = Date.now() - imageStart;
-  const falImageResp = await fetch(falImageUrl);
+  let finalImageUrl = falImageUrl;
 
-  if (!falImageResp.ok) {
-    return jsonResponse(500, { error: "fal_image_fetch_failed" });
+  try {
+    processLogger("fal_image_fetch_start", { workId, renderWorkId });
+    const falImageResp = await fetch(falImageUrl);
+    if (!falImageResp.ok) {
+      throw new Error(`Fal image fetch failed: ${falImageResp.status}`);
+    }
+
+    const imageBytes = new Uint8Array(await falImageResp.arrayBuffer());
+    const imageMimeType =
+      falImageResp.headers.get("content-type") ?? payload.tiledMimeType;
+
+    processLogger("image_upload_start", { workId, renderWorkId });
+    const uploaded = await uploadImageToImageKit(
+      `data:${imageMimeType};base64,${bytesToBase64(imageBytes)}`,
+      `design-${workId}.png`,
+      "/design-sessions",
+    );
+
+    finalImageUrl = uploaded?.url ?? falImageUrl;
+  } catch (error) {
+    const errorCode =
+      error instanceof Error && error.message.toLowerCase().includes("upload")
+        ? "image_upload_failed"
+        : "fal_image_fetch_failed";
+
+    renderTokensRefunded = await tryRefund(adminClient, {
+      userId: user.id,
+      amount: renderTokensCharged,
+      requestType: RENDER_REQUEST_TYPE,
+      workId: `${renderWorkId}_render_failed_refund`,
+    });
+
+    errorLogger(errorCode, error, { workId, renderWorkId, falImageUrl });
+    await logGeneration(adminClient, {
+      work_id: renderWorkId,
+      workflow_id: workId,
+      phase: "render",
+      parent_work_id: analysisWorkId,
+      user_id: user.id,
+      ai_model: "openai",
+      request_type: RENDER_REQUEST_TYPE,
+      user_message: payload.userMessage,
+      prompt_length: payload.userMessage.length,
+      text_prompt: textPrompt,
+      image_prompt: imagePrompt,
+      ai_message: aiMessage,
+      generate_image: true,
+      eligible_for_render: true,
+      image_generated: false,
+      text_latency_ms: textLatencyMs,
+      image_latency_ms: imageLatencyMs,
+      total_latency_ms: textLatencyMs + imageLatencyMs,
+      tokens_charged: renderTokensCharged,
+      tokens_refunded: renderTokensRefunded,
+      error_type: errorCode,
+      error_message: error instanceof Error ? error.message : String(error),
+    });
+    return jsonResponse(500, { error: errorCode });
   }
 
-  const imageBytes = new Uint8Array(await falImageResp.arrayBuffer());
-  const imageMimeType =
-    falImageResp.headers.get("content-type") ?? payload.tiledMimeType;
-  const uploaded = await uploadImageToImageKit(
-    `data:${imageMimeType};base64,${bytesToBase64(imageBytes)}`,
-    `design-${workId}.png`,
-    "/design-sessions",
-  );
-
-  const finalImageUrl = uploaded?.url ?? falImageUrl;
-
   await logGeneration(adminClient, {
-    work_id: workId,
+    work_id: renderWorkId,
+    workflow_id: workId,
     phase: "render",
+    parent_work_id: analysisWorkId,
     user_id: user.id,
     ai_model: "openai",
-    request_type: "render_standard",
+    request_type: RENDER_REQUEST_TYPE,
     user_message: payload.userMessage,
+    prompt_length: payload.userMessage.length,
     text_prompt: textPrompt,
     image_prompt: imagePrompt,
     ai_message: aiMessage,
@@ -273,12 +515,15 @@ Deno.serve(async (req) => {
     text_latency_ms: textLatencyMs,
     image_latency_ms: imageLatencyMs,
     total_latency_ms: textLatencyMs + imageLatencyMs,
+    tokens_charged: renderTokensCharged,
+    tokens_refunded: renderTokensRefunded,
   });
 
   return jsonResponse(200, {
     aiMessage,
     imageUrl: finalImageUrl,
     workId,
+    workflowId: workId,
     generateImage: true,
     eligibleForRender: true,
     missingRequirements: [],

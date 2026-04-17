@@ -91,7 +91,6 @@ const chargeTokens = async (
     p_user_id: params.userId,
     p_ai_model: "openai",
     p_request_type: params.requestType,
-    p_quality: params.quality,
     p_work_id: params.workId,
   });
 

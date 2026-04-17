@@ -9,7 +9,7 @@ import {
   type DesignTokenRow,
 } from "@/entities/design/api/ai-design-mapper";
 import { shouldUseFalPipeline } from "@/entities/design/api/should-use-fal-pipeline";
-import { tileLogoOnCanvas } from "@/shared/lib/tile-logo-on-canvas";
+import { tileLogoOnCanvas } from "./tile-logo-on-canvas";
 import { ph } from "@/shared/lib/posthog";
 
 interface DesignTokenBalance {
@@ -127,15 +127,27 @@ export async function aiDesignApi(
     request.designContext.ciImage &&
     request.designContext.fabricMethod
   ) {
-    const tileResult = await tileLogoOnCanvas({
-      logoBase64: ciImageBase64,
-      logoMimeType: request.designContext.ciImage.type || "image/png",
-      fabricMethod: request.designContext.fabricMethod,
-      scale: request.designContext.scale ?? "medium",
-      backgroundColor: request.designContext.colors[0],
-    });
-    tiledBase64 = tileResult.base64;
-    tiledMimeType = tileResult.mimeType;
+    try {
+      const tileResult = await tileLogoOnCanvas({
+        logoBase64: ciImageBase64,
+        logoMimeType: request.designContext.ciImage.type || "image/png",
+        scale: request.designContext.scale ?? "medium",
+        backgroundColor: request.designContext.colors[0],
+      });
+      tiledBase64 = tileResult.base64;
+      tiledMimeType = tileResult.mimeType;
+    } catch (error) {
+      safeCapture("design_generation_failed", {
+        ai_model: request.aiModel,
+        error_type: "tile_logo_on_canvas_failed",
+        pipeline: "fal-ai",
+        scale: request.designContext.scale ?? "medium",
+        colors: request.designContext.colors,
+        fabric_method: request.designContext.fabricMethod,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new Error("CI 패턴 이미지를 준비하지 못했습니다.");
+    }
   }
 
   const functionName = useFalPipeline

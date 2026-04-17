@@ -74,7 +74,6 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
 describe("design-chat-store — autoGenerateImage", () => {
   beforeEach(() => {
     useDesignChatStore.setState({
-      autoGenerateImage: true,
       currentSessionId: null,
       lastAnalysisWorkId: null,
       lastEligibleForRender: false,
@@ -84,6 +83,22 @@ describe("design-chat-store — autoGenerateImage", () => {
 
   it("defaults autoGenerateImage to true", () => {
     expect(useDesignChatStore.getState().autoGenerateImage).toBe(true);
+  });
+
+  it("resetConversation은 lastMissingRequirements를 새 배열로 재생성한다", () => {
+    useDesignChatStore.getState().setLastAnalysisResult({
+      analysisWorkId: "analysis-3",
+      eligibleForRender: true,
+      missingRequirements: ["ciImage"],
+    });
+
+    const previous = useDesignChatStore.getState().lastMissingRequirements;
+    useDesignChatStore.getState().resetConversation();
+
+    expect(useDesignChatStore.getState().lastMissingRequirements).toEqual([]);
+    expect(useDesignChatStore.getState().lastMissingRequirements).not.toBe(
+      previous,
+    );
   });
 
   it("setAutoGenerateImage는 autoGenerateImage를 업데이트한다", () => {

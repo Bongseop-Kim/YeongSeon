@@ -23,7 +23,7 @@ function DesignPage() {
     useSessionRestore();
   const { hasPendingResult, markPending, clearPending } =
     usePendingGeneration();
-  const { sendMessage } = useDesignChat({
+  const { sendMessage, requestRender } = useDesignChat({
     onGenerationStart: markPending,
     onGenerationEnd: clearPending,
   });
@@ -65,6 +65,7 @@ function DesignPage() {
               className="h-full"
               sendMessage={sendMessage}
               onOpenHistory={openHistory}
+              onRequestRender={requestRender}
             />
           </div>
         </div>

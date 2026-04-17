@@ -17,6 +17,8 @@ interface FalQueueSubmitResponse {
 
 interface FalQueueStatusResponse {
   status?: "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+  error?: string;
+  message?: string;
 }
 
 interface FalResultResponse {
@@ -35,6 +37,9 @@ export async function callFalFluxImg2Img(
   const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const strength = input.strength ?? 0.3;
   const dataUri = `data:${input.imageMimeType};base64,${input.imageBase64}`;
+  const deadline = Date.now() + timeoutMs;
+  const getTimeoutSignal = () =>
+    AbortSignal.timeout(Math.max(0, deadline - Date.now()));
 
   const submitResponse = await fetch(FAL_ENDPOINT, {
     method: "POST",
@@ -51,6 +56,7 @@ export async function callFalFluxImg2Img(
       num_images: 1,
       image_size: { width: 1024, height: 1024 },
     }),
+    signal: getTimeoutSignal(),
   });
 
   if (!submitResponse.ok) {
@@ -69,11 +75,15 @@ export async function callFalFluxImg2Img(
 
   const statusUrl = `https://queue.fal.run/fal-ai/flux/requests/${requestId}/status`;
   const resultUrl = `https://queue.fal.run/fal-ai/flux/requests/${requestId}`;
-  const deadline = Date.now() + timeoutMs;
 
   while (true) {
+    if (Date.now() >= deadline) {
+      throw new Error(`Fal.ai generation timed out after ${timeoutMs}ms`);
+    }
+
     const statusResponse = await fetch(statusUrl, {
       headers: { Authorization: `Key ${input.apiKey}` },
+      signal: getTimeoutSignal(),
     });
 
     if (!statusResponse.ok) {
@@ -85,6 +95,7 @@ export async function callFalFluxImg2Img(
     if (status.status === "COMPLETED") {
       const resultResponse = await fetch(resultUrl, {
         headers: { Authorization: `Key ${input.apiKey}` },
+        signal: getTimeoutSignal(),
       });
 
       if (!resultResponse.ok) {
@@ -102,12 +113,11 @@ export async function callFalFluxImg2Img(
     }
 
     if (status.status === "FAILED") {
-      throw new Error("Fal.ai generation failed");
+      const failureDetails =
+        status.error ?? status.message ?? JSON.stringify(status);
+      throw new Error(`Fal.ai generation failed: ${failureDetails}`);
     }
 
-    if (Date.now() >= deadline) break;
     await sleep(POLL_INTERVAL_MS);
   }
-
-  throw new Error(`Fal.ai generation timed out after ${timeoutMs}ms`);
 }

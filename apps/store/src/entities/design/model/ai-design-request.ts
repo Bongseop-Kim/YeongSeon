@@ -3,10 +3,11 @@ import type {
   Attachment,
 } from "@/entities/design/model/ai-design-types";
 import type { DesignContext } from "@/entities/design/model/design-context";
+import type { Scale } from "@/entities/design/model/design-scale";
 import type { Message } from "@/entities/design/model/chat";
 
 export type DesignContextPayload = DesignContext & {
-  scale?: "large" | "medium" | "small" | null;
+  scale?: Scale;
 };
 
 export interface SessionMessagePayload {

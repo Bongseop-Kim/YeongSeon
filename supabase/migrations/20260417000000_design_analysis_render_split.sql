@@ -1,8 +1,3 @@
--- =============================================================
--- 20260417000000_design_analysis_render_split.sql
--- Design analysis/render split + admin-only generation logs
--- =============================================================
-
 DO $$
 DECLARE
   v_has_new_schema boolean;
@@ -77,22 +72,11 @@ REVOKE ALL ON TABLE public.ai_generation_logs FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON TABLE public.ai_generation_logs TO authenticated;
 GRANT INSERT, UPDATE ON TABLE public.ai_generation_logs TO service_role;
 
-DROP POLICY IF EXISTS "Admins can view all generation logs" ON public.ai_generation_logs;
-
 CREATE POLICY "Admins can view all generation logs"
   ON public.ai_generation_logs FOR SELECT
   TO authenticated
   USING (public.is_admin());
 
--- SECURITY DEFINER rationale for use_design_tokens:
--- 1. design_tokens INSERT remains RPC-only and is not granted directly through RLS policies,
---    so the function must execute with the function owner's rights to write the ledger rows.
--- 2. Ownership is still enforced inside the function via auth.uid() = p_user_id unless the
---    caller is service_role, which is the intended Edge Function path.
--- 3. The effective privilege surface is limited to the function owner and every deduction /
---    refund stays audit-able in the design_tokens ledger.
--- 4. SET search_path TO 'public' is required in SECURITY DEFINER context to avoid search_path
---    spoofing and ensure object resolution stays pinned to trusted schemas.
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
   p_ai_model     text,
@@ -267,10 +251,6 @@ BEGIN
 END;
 $$;
 
--- ── refund_design_tokens ──────────────────────────────────────
--- Refunds tokens when image generation fails after text succeeds.
--- SECURITY DEFINER 유지 사유: design_tokens INSERT는 RLS로 허용되지 않음
--- service_role 전용이며 work_id 기반 멱등성으로 중복 환불을 방지함
 CREATE OR REPLACE FUNCTION public.refund_design_tokens(
   p_user_id      uuid,
   p_amount       integer,
@@ -286,7 +266,6 @@ AS $$
 DECLARE
   v_caller_role text;
 BEGIN
-  -- service_role 전용: 클라이언트 직접 호출 차단
   v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
   IF v_caller_role IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'unauthorized: refund requires service_role';

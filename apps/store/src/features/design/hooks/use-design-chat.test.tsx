@@ -88,6 +88,8 @@ const storeState = {
   currentSessionId: null,
   autoGenerateImage: true,
   lastAnalysisWorkId: "analysis-work-1",
+  lastEligibleForRender: false,
+  lastGenerateImage: null as boolean | null,
   addMessage,
   setGenerationStatus,
   setGeneratedImage,
@@ -146,6 +148,8 @@ describe("useDesignChat", () => {
     storeState.messages = [...initialMessages];
     storeState.autoGenerateImage = true;
     storeState.lastAnalysisWorkId = "analysis-work-1";
+    storeState.lastEligibleForRender = false;
+    storeState.lastGenerateImage = null;
     storeState.currentSessionId = null;
     addMessage.mockImplementation((message) => {
       storeState.messages = [...storeState.messages, message];
@@ -263,6 +267,7 @@ describe("useDesignChat", () => {
     const { result } = renderHook(() => useDesignChat());
     result.current.requestRender();
 
+    expect(setGenerationStatus).toHaveBeenCalledWith("rendering");
     expect(mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         analysisWorkId: "analysis-work-101",
@@ -330,6 +335,27 @@ describe("useDesignChat", () => {
       }),
       expect.any(Object),
     );
+  });
+
+  it("requestRender는 첫 사용자 메시지가 없으면 mutate를 호출하지 않는다", () => {
+    Object.assign(storeState, {
+      messages: [
+        {
+          id: "ai-only",
+          role: "ai",
+          content: "분석 결과",
+          timestamp: 10,
+        },
+      ],
+      lastAnalysisWorkId: "analysis-work-102",
+      lastEligibleForRender: true,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.requestRender();
+
+    expect(setGenerationStatus).not.toHaveBeenCalledWith("rendering");
+    expect(mutate).not.toHaveBeenCalled();
   });
 
   it("재생성 중 토큰 부족 에러를 처리한다", () => {

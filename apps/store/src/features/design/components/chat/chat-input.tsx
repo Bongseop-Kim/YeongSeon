@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Plus, Send, X } from "lucide-react";
 
 import { analytics } from "@/shared/lib/analytics";
 import { Badge } from "@/shared/ui/badge";
+import { Field, FieldContent, FieldLabel } from "@/shared/ui/field";
 import { Button } from "@/shared/ui-extended/button";
 import { AttachmentPopup } from "@/features/design/components/chat/attachment-popup";
 import { FABRIC_OPTIONS } from "@/features/design/constants/design-options";
@@ -36,6 +37,7 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const [showPopup, setShowPopup] = useState(false);
   const popupWrapperRef = useRef<HTMLDivElement>(null);
   const hasTrackedStartRef = useRef(false);
+  const autoGenerateImageId = useId();
 
   useEffect(() => {
     if (!showPopup) return;
@@ -96,20 +98,13 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                     });
                   } else if (removed.type === "pattern") {
                     setDesignContext({ pattern: null });
+                  } else if (removed.type === "ci-placement") {
+                    setDesignContext({ ciPlacement: null });
                   } else if (
-                    removed.type === "ci-placement" ||
-                    (removed.type === "image" && removed.value === "ci")
+                    removed.type === "image" &&
+                    removed.value === "ci"
                   ) {
-                    setDesignContext({
-                      ciPlacement:
-                        removed.type === "ci-placement"
-                          ? null
-                          : designContext.ciPlacement,
-                      ciImage:
-                        removed.type === "image" && removed.value === "ci"
-                          ? null
-                          : designContext.ciImage,
-                    });
+                    setDesignContext({ ciImage: null });
                   } else if (
                     removed.type === "image" &&
                     removed.value === "reference"
@@ -151,15 +146,23 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 text-sm outline-none"
         />
         <div className="mt-2 flex flex-col gap-2">
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={autoGenerateImage}
-              onChange={(event) => setAutoGenerateImage(event.target.checked)}
-              className="size-4 rounded border-gray-300 accent-gray-900"
-            />
-            자동 이미지 생성
-          </label>
+          <Field orientation="horizontal" className="items-center gap-2">
+            <FieldContent className="flex-none">
+              <input
+                id={autoGenerateImageId}
+                type="checkbox"
+                checked={autoGenerateImage}
+                onChange={(event) => setAutoGenerateImage(event.target.checked)}
+                className="size-4 rounded border-gray-300 accent-gray-900"
+              />
+            </FieldContent>
+            <FieldLabel
+              htmlFor={autoGenerateImageId}
+              className="text-xs font-normal text-muted-foreground"
+            >
+              자동 이미지 생성
+            </FieldLabel>
+          </Field>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Button
@@ -175,7 +178,11 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                   className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
                 />
               </Button>
-              <div className="inline-flex rounded-md border bg-muted p-0.5 gap-0.5">
+              <div
+                role="radiogroup"
+                aria-label="원단 방식"
+                className="inline-flex gap-0.5 rounded-md border bg-muted p-0.5"
+              >
                 {FABRIC_OPTIONS.map((option) => {
                   const isSelected =
                     designContext.fabricMethod === option.value;
@@ -184,7 +191,8 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                     <button
                       key={option.value}
                       type="button"
-                      aria-pressed={isSelected}
+                      role="radio"
+                      aria-checked={isSelected}
                       className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
                         isSelected
                           ? "bg-background text-foreground shadow-sm"

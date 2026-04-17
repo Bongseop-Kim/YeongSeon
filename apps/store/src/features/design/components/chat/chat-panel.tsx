@@ -55,7 +55,9 @@ export function ChatPanel({
   );
 
   const isGenerating =
-    generationStatus === "generating" || generationStatus === "regenerating";
+    generationStatus === "generating" ||
+    generationStatus === "regenerating" ||
+    generationStatus === "rendering";
 
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 

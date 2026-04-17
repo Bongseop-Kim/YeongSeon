@@ -249,7 +249,7 @@ BEGIN
   );
 END $expiry_setup$;
 
--- ── 테스트 10: 만료된 배치는 잔액에 포함되지 않음 ────────────────────────
+-- ── 테스트 12: 만료된 배치는 잔액에 포함되지 않음 ────────────────────────
 SELECT is(
   (SELECT COALESCE(SUM(amount) FILTER (
     WHERE token_class = 'paid' AND (expires_at IS NULL OR expires_at > now())
@@ -260,7 +260,7 @@ SELECT is(
   '만료된 배치(50)는 잔액 계산에서 제외되고 유효 배치(30)만 집계됨'
 );
 
--- ── 테스트 11: 만료 토큰만 있을 때 use_design_tokens insufficient_tokens ──
+-- ── 테스트 13: 만료 토큰만 있을 때 use_design_tokens insufficient_tokens ──
 DO $expired_only_setup$
 DECLARE
   v_user_d  uuid := 'dd000001-0000-0000-0000-000000000004';

@@ -1,17 +1,19 @@
-import type { FabricMethod } from "@/entities/design/model/design-context";
+import type { FabricMethod } from "../model/design-context";
+import type { Scale } from "../model/design-scale";
 
-type TileScale = "large" | "medium" | "small";
+type TileScale = NonNullable<Scale>;
 
-export interface TileLogoOnCanvasInput {
+interface TileLogoOnCanvasInput {
   logoBase64: string;
   logoMimeType: string;
-  fabricMethod: FabricMethod;
+  // TODO: Use fabricMethod to branch yarn-dyed vs print tiling when needed.
+  fabricMethod?: FabricMethod;
   scale: TileScale;
   backgroundColor?: string;
   canvasSize?: number;
 }
 
-export interface TileLogoOnCanvasResult {
+interface TileLogoOnCanvasResult {
   base64: string;
   mimeType: "image/png";
 }
@@ -70,9 +72,13 @@ export async function tileLogoOnCanvas(
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-  for (let y = 0; y < canvasSize; y += stride) {
-    for (let x = 0; x < canvasSize; x += stride) {
-      ctx.drawImage(logoBitmap, x, y, drawWidth, drawHeight);
+  const tileCount = Math.ceil(canvasSize / stride);
+
+  for (let yIndex = 0; yIndex <= tileCount; yIndex += 1) {
+    const yPos = Math.round(yIndex * stride);
+    for (let xIndex = 0; xIndex <= tileCount; xIndex += 1) {
+      const xPos = Math.round(xIndex * stride);
+      ctx.drawImage(logoBitmap, xPos, yPos, drawWidth, drawHeight);
     }
   }
 

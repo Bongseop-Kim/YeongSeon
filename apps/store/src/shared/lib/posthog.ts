@@ -12,7 +12,15 @@ type PhEventParamsMap = {
   };
   design_generation_failed: {
     ai_model: AiModel;
-    error_type: "insufficient_tokens" | "api_error";
+    error_type:
+      | "insufficient_tokens"
+      | "api_error"
+      | "tile_logo_on_canvas_failed";
+    pipeline?: "fal-ai";
+    scale?: "large" | "medium" | "small";
+    colors?: string[];
+    fabric_method?: "yarn-dyed" | "print" | null;
+    error?: string;
   };
   order_completed: { order_id: string; amount: number };
   token_purchased: {

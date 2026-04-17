@@ -16,7 +16,6 @@ describe("tileLogoOnCanvas", () => {
     const result = await tileLogoOnCanvas({
       logoBase64,
       logoMimeType: "image/png",
-      fabricMethod: "yarn-dyed",
       scale: "medium",
     });
 
@@ -30,7 +29,6 @@ describe("tileLogoOnCanvas", () => {
     const result = await tileLogoOnCanvas({
       logoBase64,
       logoMimeType: "image/png",
-      fabricMethod: "print",
       scale: "small",
       backgroundColor: "#ff0000",
     });
@@ -38,12 +36,11 @@ describe("tileLogoOnCanvas", () => {
     expect(result.base64.length).toBeGreaterThan(0);
   });
 
-  it("resizes logo to long-edge fraction for wide logos", async () => {
+  it("returns non-empty output for wide logos", async () => {
     const wideLogoBase64 = generateLogoBase64(400, 100);
     const result = await tileLogoOnCanvas({
       logoBase64: wideLogoBase64,
       logoMimeType: "image/png",
-      fabricMethod: "yarn-dyed",
       scale: "large",
     });
 
@@ -55,7 +52,6 @@ describe("tileLogoOnCanvas", () => {
     const result = await tileLogoOnCanvas({
       logoBase64,
       logoMimeType: "image/png",
-      fabricMethod: "yarn-dyed",
       scale: "medium",
     });
 

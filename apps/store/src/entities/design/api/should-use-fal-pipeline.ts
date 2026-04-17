@@ -3,7 +3,7 @@ import type {
   FabricMethod,
 } from "@/entities/design/model/design-context";
 
-export interface ShouldUseFalPipelineInput {
+interface ShouldUseFalPipelineInput {
   ciImageBase64: string | undefined;
   ciPlacement: CiPlacement | null | undefined;
   fabricMethod: FabricMethod | null | undefined;

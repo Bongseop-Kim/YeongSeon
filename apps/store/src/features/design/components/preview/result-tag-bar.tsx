@@ -35,7 +35,9 @@ export function ResultTagBar({
   const { regenerate, isLoading } = useDesignChat();
 
   const hidden =
-    generationStatus === "idle" || generationStatus === "generating";
+    generationStatus === "idle" ||
+    generationStatus === "generating" ||
+    generationStatus === "rendering";
 
   const handleDownload = async () => {
     const url = extractImageUrl(generatedImageUrl ?? "");

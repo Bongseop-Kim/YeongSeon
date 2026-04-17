@@ -237,7 +237,9 @@ export function useDesignChat(
   };
 
   const regenerate = (): void => {
-    const lastUserMessage = messages.findLast((m) => m.role === "user");
+    const lastUserMessage = [...messages]
+      .reverse()
+      .find((m) => m.role === "user");
 
     if (!lastUserMessage) {
       return;
@@ -287,27 +289,31 @@ export function useDesignChat(
       return;
     }
 
+    const { firstUserMsg, allMessages } = toSessionPayload(
+      useDesignChatStore.getState().messages,
+    );
+
+    if (!firstUserMsg) {
+      return;
+    }
+
     const sessionId = currentSessionId ?? crypto.randomUUID();
     if (!currentSessionId) {
       setCurrentSessionId(sessionId);
     }
 
-    setGenerationStatus("regenerating");
+    setGenerationStatus("rendering");
     onGenerationStart?.(sessionId);
-
-    const { firstUserMsg, allMessages } = toSessionPayload(
-      useDesignChatStore.getState().messages,
-    );
 
     submitDesignRequest(
       {
-        userMessage: firstUserMsg?.content ?? "",
-        attachments: firstUserMsg?.attachments ?? [],
-        designContext: firstUserMsg?.designContext ?? designContext,
+        userMessage: firstUserMsg.content,
+        attachments: firstUserMsg.attachments ?? [],
+        designContext: firstUserMsg.designContext ?? designContext,
         aiModel,
         conversationHistory: toConversationHistory(messages),
         sessionId,
-        firstMessage: firstUserMsg?.content ?? "",
+        firstMessage: firstUserMsg.content,
         allMessages,
         executionMode: "render_from_analysis",
         analysisWorkId: currentLastAnalysisWorkId,
@@ -322,6 +328,8 @@ export function useDesignChat(
     regenerate,
     requestRender,
     isLoading:
-      generationStatus === "generating" || generationStatus === "regenerating",
+      generationStatus === "generating" ||
+      generationStatus === "regenerating" ||
+      generationStatus === "rendering",
   };
 }

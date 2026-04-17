@@ -10,7 +10,8 @@ export type GenerationStatus =
   | "idle"
   | "generating"
   | "completed"
-  | "regenerating";
+  | "regenerating"
+  | "rendering";
 
 export interface Message {
   id: string;
