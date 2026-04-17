@@ -16,6 +16,12 @@ BEGIN
   END IF;
 
   IF to_regclass('public.ai_generation_logs') IS NOT NULL
+     AND to_regclass('public.ai_generation_logs_legacy') IS NOT NULL THEN
+    RAISE EXCEPTION
+      'Both public.ai_generation_logs and public.ai_generation_logs_legacy already exist. Resolve the collision manually before rerunning 20260417000001_design_analysis_render_split.sql.';
+  END IF;
+
+  IF to_regclass('public.ai_generation_logs') IS NOT NULL
      AND to_regclass('public.ai_generation_logs_legacy') IS NULL THEN
     EXECUTE 'ALTER TABLE public.ai_generation_logs RENAME TO ai_generation_logs_legacy';
   END IF;
@@ -26,9 +32,9 @@ CREATE TABLE IF NOT EXISTS public.ai_generation_logs (
   workflow_id          text        NOT NULL,
   phase                text        NOT NULL CHECK (phase IN ('analysis', 'render')),
   work_id              text        NOT NULL UNIQUE,
-  parent_work_id       text,
+  parent_work_id       text        REFERENCES public.ai_generation_logs(work_id),
   user_id              uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  ai_model             text        NOT NULL CHECK (ai_model IN ('openai', 'gemini')),
+  ai_model             text        NOT NULL CHECK (ai_model IN ('openai', 'gemini', 'fal')),
   request_type         text        NOT NULL CHECK (request_type IN ('analysis', 'render_standard', 'render_high')),
   quality              text        CHECK (quality IN ('standard', 'high')),
   user_message         text        NOT NULL,
@@ -49,7 +55,6 @@ CREATE TABLE IF NOT EXISTS public.ai_generation_logs (
   image_edit_prompt    text,
   ai_message           text,
   image_generated      boolean     NOT NULL DEFAULT false,
-  generated_image_url  text,
   tokens_charged       integer     NOT NULL DEFAULT 0,
   tokens_refunded      integer     NOT NULL DEFAULT 0,
   text_latency_ms      integer,
@@ -57,7 +62,11 @@ CREATE TABLE IF NOT EXISTS public.ai_generation_logs (
   total_latency_ms     integer,
   error_type           text,
   error_message        text,
-  created_at           timestamptz NOT NULL DEFAULT now()
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT chk_ai_generation_phase_request_type CHECK (
+    (phase = 'analysis' AND request_type = 'analysis') OR
+    (phase = 'render' AND request_type IN ('render_standard', 'render_high'))
+  )
 );
 
 CREATE INDEX IF NOT EXISTS idx_ai_gen_logs_workflow       ON public.ai_generation_logs (workflow_id, created_at DESC);
@@ -108,7 +117,7 @@ BEGIN
     RAISE EXCEPTION 'unauthorized: caller does not own this resource';
   END IF;
 
-  IF p_ai_model NOT IN ('openai', 'gemini') THEN
+  IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
   IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
@@ -271,7 +280,7 @@ BEGIN
     RAISE EXCEPTION 'unauthorized: refund requires service_role';
   END IF;
 
-  IF p_ai_model NOT IN ('openai', 'gemini') THEN
+  IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
 
@@ -281,6 +290,10 @@ BEGIN
 
   IF p_amount <= 0 THEN
     RETURN;
+  END IF;
+
+  IF p_work_id IS NULL THEN
+    RAISE EXCEPTION 'refund_design_tokens requires non-null p_work_id for idempotency';
   END IF;
 
   INSERT INTO public.design_tokens (user_id, amount, type, token_class, ai_model, request_type, description, work_id)
@@ -297,3 +310,12 @@ BEGIN
   ON CONFLICT (work_id) WHERE work_id IS NOT NULL DO NOTHING;
 END;
 $$;
+
+INSERT INTO public.admin_settings (key, value)
+VALUES
+  ('design_token_cost_fal_render_standard', '5'),
+  ('design_token_cost_fal_render_high', '5'),
+  ('design_token_cost_gemini_analysis', '5'),
+  ('design_token_cost_gemini_render_standard', '5'),
+  ('design_token_cost_gemini_render_high', '5')
+ON CONFLICT (key) DO NOTHING;
