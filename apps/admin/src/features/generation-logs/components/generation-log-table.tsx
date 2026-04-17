@@ -99,11 +99,7 @@ export function GenerationLogTable({
       align: "center",
       render: (v: boolean, record) => {
         if (!record.generateImage) return <Tag>미요청</Tag>;
-        return v ? (
-          <Tag color="success">성공</Tag>
-        ) : (
-          <Tag color="error">실패</Tag>
-        );
+        return v ? <Tag color="success">true</Tag> : <Tag>false</Tag>;
       },
     },
     {
@@ -236,7 +232,7 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
       )}
       <Descriptions.Item label="품질">{log.quality ?? "-"}</Descriptions.Item>
       <Descriptions.Item label="이미지 생성">
-        {log.generateImage ? (log.imageGenerated ? "성공" : "실패") : "미요청"}
+        {log.generateImage ? (log.imageGenerated ? "true" : "false") : "미요청"}
       </Descriptions.Item>
       {typeof log.eligibleForRender === "boolean" && (
         <Descriptions.Item label="렌더 가능">

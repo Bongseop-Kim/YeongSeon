@@ -13,6 +13,10 @@ export interface CallFalFluxImg2ImgResult {
 
 interface FalQueueSubmitResponse {
   request_id?: string;
+  status_url?: string;
+  response_url?: string;
+  cancel_url?: string;
+  queue_position?: number;
 }
 
 interface FalQueueStatusResponse {
@@ -90,8 +94,16 @@ export async function callFalFluxImg2Img(
     throw new Error("Fal.ai submit did not return request_id");
   }
 
-  const statusUrl = `${FAL_ENDPOINT}/requests/${requestId}/status`;
-  const resultUrl = `${FAL_ENDPOINT}/requests/${requestId}`;
+  const statusUrl = submitData.status_url;
+  const resultUrl = submitData.response_url;
+
+  if (!statusUrl) {
+    throw new Error("Fal.ai submit did not return status_url");
+  }
+
+  if (!resultUrl) {
+    throw new Error("Fal.ai submit did not return response_url");
+  }
 
   while (true) {
     const statusResponse = await fetch(statusUrl, {
