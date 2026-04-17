@@ -648,3 +648,22 @@ SELECT
 FROM public.claim_status_logs l
 JOIN public.claims c
   ON c.id = l.claim_id;
+
+-- =============================================================
+-- Grants
+-- =============================================================
+GRANT SELECT ON public.product_list_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.claim_list_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.order_list_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.order_detail_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.order_item_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.quote_request_list_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.quote_request_detail_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.admin_claim_list_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.admin_claim_status_log_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.admin_order_detail_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.admin_order_list_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.admin_order_status_log_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.admin_product_list_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.admin_quote_request_detail_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.admin_quote_request_list_view TO anon, authenticated, service_role;

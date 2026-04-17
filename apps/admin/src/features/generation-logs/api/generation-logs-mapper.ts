@@ -34,7 +34,10 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 
 type GenerationLogRow = {
   id: unknown;
+  workflow_id?: unknown;
+  phase?: unknown;
   work_id: unknown;
+  parent_work_id?: unknown;
   user_id: unknown;
   ai_model: unknown;
   request_type: unknown;
@@ -42,12 +45,19 @@ type GenerationLogRow = {
   user_message: unknown;
   prompt_length: unknown;
   design_context: unknown;
+  normalized_design?: unknown;
   conversation_turn: unknown;
   has_ci_image: unknown;
   has_reference_image: unknown;
   has_previous_image: unknown;
   ai_message: unknown;
   generate_image: unknown;
+  eligible_for_render?: unknown;
+  missing_requirements?: unknown;
+  eligibility_reason?: unknown;
+  text_prompt?: unknown;
+  image_prompt?: unknown;
+  image_edit_prompt?: unknown;
   image_generated: unknown;
   generated_image_url: unknown;
   detected_design: unknown;
@@ -57,12 +67,22 @@ type GenerationLogRow = {
   image_latency_ms: unknown;
   total_latency_ms: unknown;
   error_type: unknown;
+  error_message?: unknown;
   created_at: unknown;
 };
 
-function toRequestType(v: unknown): "text_only" | "text_and_image" | null {
-  if (v === "text_only" || v === "text_and_image") return v;
+function toRequestType(
+  v: unknown,
+): "analysis" | "render_standard" | "render_high" | null {
+  if (v === "analysis" || v === "render_standard" || v === "render_high") {
+    return v;
+  }
   return null;
+}
+
+function toPhase(v: unknown): "analysis" | "render" | undefined {
+  if (v === "analysis" || v === "render") return v;
+  return undefined;
 }
 
 function toQuality(v: unknown): "standard" | "high" | null {
@@ -70,8 +90,8 @@ function toQuality(v: unknown): "standard" | "high" | null {
   return null;
 }
 
-function toAiModel(v: unknown): "openai" | "gemini" {
-  if (v === "openai" || v === "gemini") return v;
+function toAiModel(v: unknown): "openai" | "gemini" | "fal" {
+  if (v === "openai" || v === "gemini" || v === "fal") return v;
   console.warn(`[toAiModel] Invalid ai_model value: ${String(v)}`);
   return "openai";
 }
@@ -79,6 +99,25 @@ function toAiModel(v: unknown): "openai" | "gemini" {
 export function toAdminGenerationLogItem(
   row: GenerationLogRow,
 ): AdminGenerationLogItem {
+  const workflowId = toString(row.workflow_id);
+  const phase = toPhase(row.phase);
+  const parentWorkId = toString(row.parent_work_id);
+  const normalizedDesign = isRecord(row.normalized_design)
+    ? row.normalized_design
+    : null;
+  const eligibleForRender =
+    typeof row.eligible_for_render === "boolean"
+      ? row.eligible_for_render
+      : null;
+  const missingRequirements = Array.isArray(row.missing_requirements)
+    ? row.missing_requirements
+    : null;
+  const eligibilityReason = toString(row.eligibility_reason);
+  const textPrompt = toString(row.text_prompt);
+  const imagePrompt = toString(row.image_prompt);
+  const imageEditPrompt = toString(row.image_edit_prompt);
+  const errorMessage = toString(row.error_message);
+
   return {
     id: toString(row.id) ?? "",
     workId: toString(row.work_id) ?? "",
@@ -113,6 +152,17 @@ export function toAdminGenerationLogItem(
       typeof row.total_latency_ms === "number" ? row.total_latency_ms : null,
     errorType: toString(row.error_type),
     createdAt: toString(row.created_at) ?? "",
+    ...(workflowId ? { workflowId } : {}),
+    ...(phase ? { phase } : {}),
+    ...(parentWorkId !== null ? { parentWorkId } : {}),
+    ...(normalizedDesign ? { normalizedDesign } : {}),
+    ...(eligibleForRender !== null ? { eligibleForRender } : {}),
+    ...(missingRequirements ? { missingRequirements } : {}),
+    ...(eligibilityReason ? { eligibilityReason } : {}),
+    ...(textPrompt ? { textPrompt } : {}),
+    ...(imagePrompt ? { imagePrompt } : {}),
+    ...(imageEditPrompt ? { imageEditPrompt } : {}),
+    ...(errorMessage ? { errorMessage } : {}),
   };
 }
 

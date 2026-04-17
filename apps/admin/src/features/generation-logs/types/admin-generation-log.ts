@@ -1,9 +1,12 @@
 export interface AdminGenerationLogItem {
   id: string;
+  workflowId?: string;
+  phase?: "analysis" | "render";
   workId: string;
+  parentWorkId?: string | null;
   userId: string;
-  aiModel: "openai" | "gemini";
-  requestType: "text_only" | "text_and_image" | null;
+  aiModel: "openai" | "gemini" | "fal";
+  requestType: "analysis" | "render_standard" | "render_high" | null;
   quality: "standard" | "high" | null;
   userMessage: string;
   promptLength: number;
@@ -14,12 +17,19 @@ export interface AdminGenerationLogItem {
     ciPlacement?: string | null;
     scale?: "large" | "medium" | "small" | null;
   } | null;
+  normalizedDesign?: Record<string, unknown> | null;
   conversationTurn: number;
   hasCiImage: boolean;
   hasReferenceImage: boolean;
   hasPreviousImage: boolean;
   aiMessage: string | null;
   generateImage: boolean | null;
+  eligibleForRender?: boolean | null;
+  missingRequirements?: unknown[] | null;
+  eligibilityReason?: string | null;
+  textPrompt?: string | null;
+  imagePrompt?: string | null;
+  imageEditPrompt?: string | null;
   imageGenerated: boolean;
   generatedImageUrl: string | null;
   detectedDesign: Record<string, unknown> | null;
@@ -29,6 +39,7 @@ export interface AdminGenerationLogItem {
   imageLatencyMs: number | null;
   totalLatencyMs: number | null;
   errorType: string | null;
+  errorMessage?: string | null;
   createdAt: string;
 }
 

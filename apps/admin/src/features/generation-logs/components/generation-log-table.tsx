@@ -52,9 +52,12 @@ export function GenerationLogTable({
       dataIndex: "aiModel",
       key: "aiModel",
       width: 80,
-      render: (v: string) => (
-        <Tag color={v === "openai" ? "blue" : "green"}>{v}</Tag>
-      ),
+      render: (v: string) => {
+        const color =
+          v === "openai" ? "blue" : v === "gemini" ? "green" : "purple";
+
+        return <Tag color={color}>{v}</Tag>;
+      },
     },
     {
       title: "요청 유형",
@@ -62,11 +65,13 @@ export function GenerationLogTable({
       key: "requestType",
       width: 120,
       render: (v: string | null) =>
-        v === "text_and_image"
-          ? "텍스트+이미지"
-          : v === "text_only"
-            ? "텍스트만"
-            : "-",
+        v === "analysis"
+          ? "분석"
+          : v === "render_standard"
+            ? "렌더(표준)"
+            : v === "render_high"
+              ? "렌더(고품질)"
+              : "-",
     },
     {
       title: "프롬프트",
@@ -151,6 +156,7 @@ export function GenerationLogTable({
           options={[
             { value: "openai", label: "OpenAI" },
             { value: "gemini", label: "Gemini" },
+            { value: "fal", label: "Fal.ai" },
           ]}
         />
       </Space>
@@ -201,12 +207,49 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
       </Descriptions.Item>
       <Descriptions.Item label="AI 모델">{log.aiModel}</Descriptions.Item>
       <Descriptions.Item label="요청 유형">
-        {log.requestType ?? "-"}
+        {log.requestType === "analysis"
+          ? "분석"
+          : log.requestType === "render_standard"
+            ? "렌더(표준)"
+            : log.requestType === "render_high"
+              ? "렌더(고품질)"
+              : "-"}
       </Descriptions.Item>
+      {log.phase && (
+        <Descriptions.Item label="phase">
+          {log.phase === "analysis" ? "분석" : "렌더"}
+        </Descriptions.Item>
+      )}
+      {log.workflowId && (
+        <Descriptions.Item label="workflow_id">
+          <Text code style={{ fontSize: 11 }}>
+            {log.workflowId}
+          </Text>
+        </Descriptions.Item>
+      )}
+      {log.parentWorkId && (
+        <Descriptions.Item label="parent_work_id" span={2}>
+          <Text code style={{ fontSize: 11 }}>
+            {log.parentWorkId}
+          </Text>
+        </Descriptions.Item>
+      )}
       <Descriptions.Item label="품질">{log.quality ?? "-"}</Descriptions.Item>
       <Descriptions.Item label="이미지 생성">
         {log.generateImage ? (log.imageGenerated ? "성공" : "실패") : "미요청"}
       </Descriptions.Item>
+      {typeof log.eligibleForRender === "boolean" && (
+        <Descriptions.Item label="렌더 가능">
+          {log.eligibleForRender ? "가능" : "불가"}
+        </Descriptions.Item>
+      )}
+      {log.eligibilityReason && (
+        <Descriptions.Item label="렌더 판정 사유" span={2}>
+          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
+            {log.eligibilityReason}
+          </Text>
+        </Descriptions.Item>
+      )}
       <Descriptions.Item label="프롬프트 길이">
         {log.promptLength}자
       </Descriptions.Item>
@@ -240,11 +283,39 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
       <Descriptions.Item label="에러 유형">
         {log.errorType ?? "없음"}
       </Descriptions.Item>
+      {log.errorMessage && (
+        <Descriptions.Item label="에러 메시지" span={2}>
+          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
+            {log.errorMessage}
+          </Text>
+        </Descriptions.Item>
+      )}
       <Descriptions.Item label="프롬프트" span={2}>
         <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
           {log.userMessage}
         </Text>
       </Descriptions.Item>
+      {log.textPrompt && (
+        <Descriptions.Item label="text_prompt" span={2}>
+          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
+            {log.textPrompt}
+          </Text>
+        </Descriptions.Item>
+      )}
+      {log.imagePrompt && (
+        <Descriptions.Item label="image_prompt" span={2}>
+          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
+            {log.imagePrompt}
+          </Text>
+        </Descriptions.Item>
+      )}
+      {log.imageEditPrompt && (
+        <Descriptions.Item label="image_edit_prompt" span={2}>
+          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
+            {log.imageEditPrompt}
+          </Text>
+        </Descriptions.Item>
+      )}
       {log.aiMessage && (
         <Descriptions.Item label="AI 응답" span={2}>
           <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
@@ -272,6 +343,20 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
         <Descriptions.Item label="감지된 디자인" span={2}>
           <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
             {JSON.stringify(log.detectedDesign, null, 2)}
+          </Text>
+        </Descriptions.Item>
+      )}
+      {log.normalizedDesign && (
+        <Descriptions.Item label="정규화된 디자인" span={2}>
+          <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
+            {JSON.stringify(log.normalizedDesign, null, 2)}
+          </Text>
+        </Descriptions.Item>
+      )}
+      {log.missingRequirements && (
+        <Descriptions.Item label="누락 요구사항" span={2}>
+          <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
+            {JSON.stringify(log.missingRequirements, null, 2)}
           </Text>
         </Descriptions.Item>
       )}
