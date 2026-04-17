@@ -2707,7 +2707,6 @@ END;
 $function$
 ;
 
--- SECURITY DEFINER 사유: orders 테이블에서 최대 순번을 조회하기 위해 RLS를 우회해야 하는 주문 번호 생성 유틸리티
 CREATE OR REPLACE FUNCTION public.generate_token_order_number()
  RETURNS text
  LANGUAGE plpgsql
