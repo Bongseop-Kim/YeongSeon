@@ -1,6 +1,9 @@
 import type { ConversationTurn } from "./conversation.ts";
 import { filterValidConversationTurns } from "./conversation.ts";
-import type { GenerateDesignRequest } from "./design-request.ts";
+import type {
+  FalGenerationRoute,
+  GenerateDesignRequest,
+} from "./design-request.ts";
 
 const ALLOWED_FABRIC_METHODS = new Set(["yarn-dyed", "print"]);
 const ALLOWED_CI_PLACEMENTS = new Set(["all-over", "one-point"]);
@@ -24,6 +27,11 @@ export const ALLOWED_TILED_MIME_TYPES = new Set([
   "image/webp",
 ]);
 
+const ALLOWED_FAL_ROUTES = new Set<FalGenerationRoute>([
+  "fal_tiling",
+  "fal_edit",
+]);
+
 type ValidationFailure = {
   ok: false;
   status: number;
@@ -37,12 +45,32 @@ type ValidationSuccess = {
 
 export type FalPayloadValidationResult = ValidationFailure | ValidationSuccess;
 
+const getFalRoute = (
+  payload: GenerateDesignRequest,
+): FalGenerationRoute | null => {
+  if (payload.route === undefined) {
+    return "fal_tiling";
+  }
+
+  return ALLOWED_FAL_ROUTES.has(payload.route) ? payload.route : null;
+};
+
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 export const validateFalGeneratePayload = (
   payload: GenerateDesignRequest,
 ): FalPayloadValidationResult => {
+  const route = getFalRoute(payload);
+
+  if (!route) {
+    return {
+      ok: false,
+      status: 400,
+      body: { error: "invalid_fal_route" },
+    };
+  }
+
   if (
     typeof payload.userMessage !== "string" ||
     !payload.userMessage.trim() ||
@@ -120,14 +148,6 @@ export const validateFalGeneratePayload = (
     };
   }
 
-  if (payload.designContext.ciPlacement !== "all-over") {
-    return {
-      ok: false,
-      status: 400,
-      body: { error: "ci_placement_must_be_all_over" },
-    };
-  }
-
   if (
     payload.designContext.scale !== undefined &&
     payload.designContext.scale !== null &&
@@ -140,33 +160,57 @@ export const validateFalGeneratePayload = (
     };
   }
 
-  if (typeof payload.tiledBase64 !== "string" || !payload.tiledBase64.trim()) {
-    return {
-      ok: false,
-      status: 400,
-      body: { error: "tiledBase64 must be a non-empty string" },
-    };
-  }
+  if (route === "fal_tiling") {
+    if (payload.designContext.ciPlacement !== "all-over") {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "ci_placement_must_be_all_over" },
+      };
+    }
 
-  if (payload.tiledBase64.length > MAX_IMAGE_BASE64_LENGTH) {
-    return {
-      ok: false,
-      status: 413,
-      body: { error: "tiled_image_too_large" },
-    };
+    if (
+      typeof payload.tiledBase64 !== "string" ||
+      !payload.tiledBase64.trim()
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "tiledBase64 must be a non-empty string" },
+      };
+    }
+
+    if (payload.tiledBase64.length > MAX_IMAGE_BASE64_LENGTH) {
+      return {
+        ok: false,
+        status: 413,
+        body: { error: "tiled_image_too_large" },
+      };
+    }
+
+    if (
+      typeof payload.tiledMimeType !== "string" ||
+      !payload.tiledMimeType.trim() ||
+      !ALLOWED_TILED_MIME_TYPES.has(payload.tiledMimeType)
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        body: {
+          error: `tiledMimeType must be one of: ${Array.from(ALLOWED_TILED_MIME_TYPES).join(", ")}`,
+        },
+      };
+    }
   }
 
   if (
-    typeof payload.tiledMimeType !== "string" ||
-    !payload.tiledMimeType.trim() ||
-    !ALLOWED_TILED_MIME_TYPES.has(payload.tiledMimeType)
+    route === "fal_edit" &&
+    (typeof payload.baseImageUrl !== "string" || !payload.baseImageUrl.trim())
   ) {
     return {
       ok: false,
       status: 400,
-      body: {
-        error: `tiledMimeType must be one of: ${Array.from(ALLOWED_TILED_MIME_TYPES).join(", ")}`,
-      },
+      body: { error: "base_image_url_required" },
     };
   }
 

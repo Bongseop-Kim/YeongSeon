@@ -2,7 +2,10 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 
 import { determineEligibility } from "@/functions/_shared/design-generation.ts";
 import type { GenerateDesignRequest } from "@/functions/_shared/design-request.ts";
-import { callFalFluxImg2Img } from "@/functions/_shared/fal-client.ts";
+import {
+  callFalFluxImg2Img,
+  callFalNanoBananaEdit,
+} from "@/functions/_shared/fal-client.ts";
 import {
   shouldProceedToFalRender,
   validateFalGeneratePayload,
@@ -12,6 +15,7 @@ import { logGeneration } from "@/functions/_shared/log-generation.ts";
 import { createLogger } from "@/functions/_shared/logger.ts";
 import {
   buildFalPatternPrompt,
+  buildImageEditPrompt,
   buildTextPrompt,
   parseJsonBlock,
   SYSTEM_PROMPT,
@@ -42,6 +46,7 @@ const RENDER_REQUEST_TYPE = "render_standard" as const;
 const ANALYSIS_AI_MODEL = "openai" as const;
 const RENDER_AI_MODEL = "fal" as const;
 const OPENAI_TIMEOUT_MS = 60_000;
+const DEFAULT_FAL_ROUTE = "fal_tiling" as const;
 
 const SERVER_VAR = "FALAI_CI_PATTERN_ENABLED";
 const IS_FAL_PIPELINE_ENABLED = Deno.env.get(SERVER_VAR) === "true";
@@ -73,6 +78,7 @@ const saveSessionIfNeeded = async (
   aiMessage: string,
   imageUrl: string | null,
   imageFileId: string | null,
+  imageWorkId: string | null,
 ) => {
   if (!payload.sessionId || !Array.isArray(payload.allMessages)) {
     return;
@@ -84,6 +90,7 @@ const saveSessionIfNeeded = async (
     firstMessage: payload.firstMessage ?? "",
     lastImageUrl: imageUrl,
     lastImageFileId: imageFileId,
+    lastImageWorkId: imageWorkId,
     messages: buildSessionMessages(payload.allMessages, {
       id: crypto.randomUUID(),
       role: "ai",
@@ -93,6 +100,19 @@ const saveSessionIfNeeded = async (
       sequence_number: payload.allMessages.length,
     } satisfies SessionMessage),
   });
+};
+
+const toDataUri = (base64: string, mimeType: string): string =>
+  `data:${mimeType};base64,${base64}`;
+
+const toDeterministicSeed = (value: string): number => {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) | 0;
+  }
+
+  return Math.abs(hash) || 1;
 };
 
 Deno.serve(async (req) => {
@@ -166,9 +186,24 @@ Deno.serve(async (req) => {
     return jsonResponse(validation.status, validation.body);
   }
 
+  const route = payload.route ?? DEFAULT_FAL_ROUTE;
+  const routeLogFields = {
+    route,
+    route_reason: payload.routeReason ?? null,
+    route_signals: payload.routeSignals ?? [],
+    base_image_work_id: payload.baseImageWorkId ?? null,
+  } as const;
+
   const workId = crypto.randomUUID();
   const analysisWorkId = `${workId}_analysis`;
   const renderWorkId = `${workId}_render`;
+  const renderSeed =
+    route === "fal_edit"
+      ? (payload.seed ??
+        toDeterministicSeed(
+          payload.baseImageWorkId ?? payload.baseImageUrl ?? workId,
+        ))
+      : null;
   const textPrompt = buildTextPrompt(payload);
   const history = validation.conversationHistory;
   const textStart = Date.now();
@@ -191,6 +226,7 @@ Deno.serve(async (req) => {
       user_id: user.id,
       ai_model: ANALYSIS_AI_MODEL,
       request_type: ANALYSIS_REQUEST_TYPE,
+      ...routeLogFields,
       user_message: payload.userMessage,
       prompt_length: payload.userMessage.length,
       text_prompt: textPrompt,
@@ -209,6 +245,7 @@ Deno.serve(async (req) => {
       user_id: user.id,
       ai_model: ANALYSIS_AI_MODEL,
       request_type: ANALYSIS_REQUEST_TYPE,
+      ...routeLogFields,
       user_message: payload.userMessage,
       prompt_length: payload.userMessage.length,
       text_prompt: textPrompt,
@@ -273,6 +310,7 @@ Deno.serve(async (req) => {
       user_id: user.id,
       ai_model: ANALYSIS_AI_MODEL,
       request_type: ANALYSIS_REQUEST_TYPE,
+      ...routeLogFields,
       user_message: payload.userMessage,
       prompt_length: payload.userMessage.length,
       text_prompt: textPrompt,
@@ -307,9 +345,14 @@ Deno.serve(async (req) => {
   const analysisResponseBody = {
     aiMessage,
     imageUrl: null,
-    workId,
+    workId: analysisWorkId,
     workflowId: workId,
     analysisWorkId,
+    route,
+    routeSignals: payload.routeSignals ?? [],
+    routeReason: payload.routeReason ?? null,
+    falRequestId: null,
+    seed: renderSeed,
     generateImage: false,
     eligibleForRender: eligibility.eligibleForRender,
     eligibilityReason: eligibility.eligibilityReason,
@@ -324,6 +367,7 @@ Deno.serve(async (req) => {
     user_id: user.id,
     ai_model: ANALYSIS_AI_MODEL,
     request_type: ANALYSIS_REQUEST_TYPE,
+    ...routeLogFields,
     user_message: payload.userMessage,
     prompt_length: payload.userMessage.length,
     text_prompt: textPrompt,
@@ -339,20 +383,26 @@ Deno.serve(async (req) => {
   });
 
   if (!shouldProceedToFalRender(generateImage, eligibility)) {
-    await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
+    await saveSessionIfNeeded(supabase, payload, aiMessage, null, null, null);
     return jsonResponse(200, analysisResponseBody);
   }
 
-  const imagePrompt = buildFalPatternPrompt({
-    colors: payload.designContext?.colors ?? [],
-    pattern: payload.designContext?.pattern ?? null,
-    fabricMethod: payload.designContext?.fabricMethod ?? null,
-    ciPlacement: payload.designContext?.ciPlacement ?? null,
-    scale: payload.designContext?.scale ?? null,
-  });
+  const imagePrompt =
+    route === "fal_tiling"
+      ? buildFalPatternPrompt({
+          colors: payload.designContext?.colors ?? [],
+          pattern: payload.designContext?.pattern ?? null,
+          fabricMethod: payload.designContext?.fabricMethod ?? null,
+          ciPlacement: payload.designContext?.ciPlacement ?? null,
+          scale: payload.designContext?.scale ?? null,
+        })
+      : null;
+  const imageEditPrompt =
+    route === "fal_edit" ? buildImageEditPrompt(payload) : null;
 
   const imageStart = Date.now();
   let falImageUrl: string;
+  let falRequestId: string | null = null;
   let renderTokensCharged = 0;
   let renderTokensRefunded = 0;
 
@@ -365,7 +415,7 @@ Deno.serve(async (req) => {
     });
 
   if (renderTokenError) {
-    await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
+    await saveSessionIfNeeded(supabase, payload, aiMessage, null, null, null);
 
     await logGeneration(adminClient, {
       work_id: renderWorkId,
@@ -375,10 +425,12 @@ Deno.serve(async (req) => {
       user_id: user.id,
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
+      ...routeLogFields,
       user_message: payload.userMessage,
       prompt_length: payload.userMessage.length,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
+      image_edit_prompt: imageEditPrompt,
       ai_message: aiMessage,
       generate_image: true,
       eligible_for_render: eligibility.eligibleForRender,
@@ -396,7 +448,7 @@ Deno.serve(async (req) => {
   }
 
   if (!renderTokenResult?.success) {
-    await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
+    await saveSessionIfNeeded(supabase, payload, aiMessage, null, null, null);
 
     await logGeneration(adminClient, {
       work_id: renderWorkId,
@@ -406,10 +458,12 @@ Deno.serve(async (req) => {
       user_id: user.id,
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
+      ...routeLogFields,
       user_message: payload.userMessage,
       prompt_length: payload.userMessage.length,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
+      image_edit_prompt: imageEditPrompt,
       ai_message: aiMessage,
       generate_image: true,
       eligible_for_render: eligibility.eligibleForRender,
@@ -431,14 +485,50 @@ Deno.serve(async (req) => {
   renderTokensCharged = renderTokenResult.cost ?? 0;
 
   try {
-    const falResult = await callFalFluxImg2Img({
-      imageBase64: payload.tiledBase64,
-      imageMimeType: payload.tiledMimeType,
-      prompt: imagePrompt,
-      strength: 0.3,
-      apiKey: falApiKey,
-    });
-    falImageUrl = falResult.imageUrl;
+    if (route === "fal_edit") {
+      if (!payload.baseImageUrl || !imageEditPrompt) {
+        throw new Error(
+          "fal_edit route requires baseImageUrl and imageEditPrompt",
+        );
+      }
+
+      const editImageUrls = [
+        payload.baseImageUrl,
+        ...(payload.ciImageBase64
+          ? [
+              toDataUri(
+                payload.ciImageBase64,
+                payload.ciImageMimeType ?? "image/png",
+              ),
+            ]
+          : []),
+      ];
+
+      const falResult = await callFalNanoBananaEdit({
+        imageUrls: editImageUrls,
+        prompt: imageEditPrompt,
+        seed: renderSeed ?? undefined,
+        apiKey: falApiKey,
+      });
+      falImageUrl = falResult.imageUrl;
+      falRequestId = falResult.requestId;
+    } else {
+      if (!payload.tiledBase64 || !payload.tiledMimeType || !imagePrompt) {
+        throw new Error(
+          "fal_tiling route requires tiled image input and imagePrompt",
+        );
+      }
+
+      const falResult = await callFalFluxImg2Img({
+        imageBase64: payload.tiledBase64,
+        imageMimeType: payload.tiledMimeType,
+        prompt: imagePrompt,
+        strength: 0.3,
+        apiKey: falApiKey,
+      });
+      falImageUrl = falResult.imageUrl;
+      falRequestId = falResult.requestId;
+    }
   } catch (error) {
     renderTokensRefunded = await tryRefund(adminClient, {
       userId: user.id,
@@ -460,15 +550,19 @@ Deno.serve(async (req) => {
       user_id: user.id,
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
+      ...routeLogFields,
       user_message: payload.userMessage,
       prompt_length: payload.userMessage.length,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
+      image_edit_prompt: imageEditPrompt,
       ai_message: aiMessage,
       generate_image: true,
       eligible_for_render: eligibility.eligibleForRender,
       missing_requirements: eligibility.missingRequirements,
       eligibility_reason: eligibility.eligibilityReason,
+      fal_request_id: falRequestId,
+      seed: renderSeed,
       image_generated: false,
       text_latency_ms: textLatencyMs,
       tokens_charged: renderTokensCharged,
@@ -542,15 +636,19 @@ Deno.serve(async (req) => {
       user_id: user.id,
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
+      ...routeLogFields,
       user_message: payload.userMessage,
       prompt_length: payload.userMessage.length,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
+      image_edit_prompt: imageEditPrompt,
       ai_message: aiMessage,
       generate_image: true,
       eligible_for_render: eligibility.eligibleForRender,
       missing_requirements: eligibility.missingRequirements,
       eligibility_reason: eligibility.eligibilityReason,
+      fal_request_id: falRequestId,
+      seed: renderSeed,
       image_generated: false,
       text_latency_ms: textLatencyMs,
       image_latency_ms: imageLatencyMs,
@@ -571,15 +669,19 @@ Deno.serve(async (req) => {
     user_id: user.id,
     ai_model: RENDER_AI_MODEL,
     request_type: RENDER_REQUEST_TYPE,
+    ...routeLogFields,
     user_message: payload.userMessage,
     prompt_length: payload.userMessage.length,
     text_prompt: textPrompt,
     image_prompt: imagePrompt,
+    image_edit_prompt: imageEditPrompt,
     ai_message: aiMessage,
     generate_image: true,
     eligible_for_render: eligibility.eligibleForRender,
     missing_requirements: eligibility.missingRequirements,
     eligibility_reason: eligibility.eligibilityReason,
+    fal_request_id: falRequestId,
+    seed: renderSeed,
     image_generated: true,
     generated_image_url: finalImageUrl,
     text_latency_ms: textLatencyMs,
@@ -595,14 +697,20 @@ Deno.serve(async (req) => {
     aiMessage,
     finalImageUrl,
     finalImageFileId,
+    renderWorkId,
   );
 
   return jsonResponse(200, {
     aiMessage,
     imageUrl: finalImageUrl,
-    workId,
+    workId: renderWorkId,
     workflowId: workId,
     analysisWorkId,
+    route,
+    routeSignals: payload.routeSignals ?? [],
+    routeReason: payload.routeReason ?? null,
+    falRequestId,
+    seed: renderSeed,
     generateImage: true,
     eligibleForRender: eligibility.eligibleForRender,
     eligibilityReason: eligibility.eligibilityReason,

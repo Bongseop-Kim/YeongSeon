@@ -15,6 +15,7 @@ describe("toDesignSession", () => {
         last_image_url:
           "https://ik.imagekit.io/essesion/design-sessions/img.png",
         last_image_file_id: "file-1",
+        last_image_work_id: "work-1",
         image_count: 2,
         created_at: "2026-03-19T10:00:00Z",
         updated_at: "2026-03-19T10:05:00Z",
@@ -25,6 +26,7 @@ describe("toDesignSession", () => {
       firstMessage: "넥타이 디자인",
       lastImageUrl: "https://ik.imagekit.io/essesion/design-sessions/img.png",
       lastImageFileId: "file-1",
+      lastImageWorkId: "work-1",
       imageCount: 2,
       createdAt: "2026-03-19T10:00:00Z",
       updatedAt: "2026-03-19T10:05:00Z",
@@ -40,11 +42,16 @@ describe("toDesignSession", () => {
         first_message: "첫 메시지",
         last_image_url: null,
         last_image_file_id: null,
+        last_image_work_id: null,
         image_count: 0,
         created_at: "2026-03-19T10:00:00Z",
         updated_at: "2026-03-19T10:00:00Z",
       }),
-    ).toMatchObject({ lastImageUrl: null, lastImageFileId: null });
+    ).toMatchObject({
+      lastImageUrl: null,
+      lastImageFileId: null,
+      lastImageWorkId: null,
+    });
   });
 });
 

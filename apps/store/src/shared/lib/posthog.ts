@@ -1,6 +1,7 @@
 import posthog from "posthog-js";
 
 type AiModel = "openai" | "gemini";
+type GenerationRoute = "openai" | "fal_tiling" | "fal_edit";
 
 type PhEventParamsMap = {
   design_session_started: { ai_model: AiModel };
@@ -9,6 +10,9 @@ type PhEventParamsMap = {
     latency_ms: number;
     has_image: boolean;
     pipeline?: "fal-ai";
+    route?: GenerationRoute;
+    route_reason?: string;
+    route_signals?: string[];
   };
   design_generation_failed: {
     ai_model: AiModel;

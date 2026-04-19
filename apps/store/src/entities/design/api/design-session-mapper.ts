@@ -10,6 +10,7 @@ export interface DesignSessionRow {
   first_message: string;
   last_image_url: string | null;
   last_image_file_id: string | null;
+  last_image_work_id: string | null;
   image_count: number;
   created_at: string;
   updated_at: string;
@@ -50,6 +51,7 @@ export function toDesignSession(row: DesignSessionRow): DesignSession {
     firstMessage: row.first_message,
     lastImageUrl: row.last_image_url,
     lastImageFileId: row.last_image_file_id,
+    lastImageWorkId: row.last_image_work_id,
     imageCount: row.image_count,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

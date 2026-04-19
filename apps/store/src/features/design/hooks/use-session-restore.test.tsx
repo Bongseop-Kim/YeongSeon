@@ -16,6 +16,7 @@ const { restoreSessionState, mockQueryData } = vi.hoisted(() => ({
             timestamp: number;
           }[];
           generatedImageUrl: string | null;
+          baseImageWorkId?: string | null;
           resultTags: string[];
           generationStatus:
             | "idle"
@@ -61,6 +62,7 @@ describe("useSessionRestore", () => {
       ],
       generatedImageUrl:
         'url("https://example.com/tie.png") center/cover no-repeat',
+      baseImageWorkId: "work-restore-1",
       resultTags: [],
       generationStatus: "completed",
     };
@@ -75,6 +77,7 @@ describe("useSessionRestore", () => {
         firstMessage: "생성",
         lastImageUrl: "https://example.com/tie.png",
         lastImageFileId: "file-1",
+        lastImageWorkId: "work-restore-1",
         imageCount: 1,
         createdAt: "2026-03-19T10:00:00Z",
         updatedAt: "2026-03-19T10:00:00Z",
@@ -91,6 +94,7 @@ describe("useSessionRestore", () => {
         ],
         generatedImageUrl:
           'url("https://example.com/tie.png") center/cover no-repeat',
+        baseImageWorkId: "work-restore-1",
         resultTags: [],
         generationStatus: "completed",
       });
@@ -122,6 +126,7 @@ describe("useSessionRestore", () => {
         firstMessage: "텍스트만",
         lastImageUrl: null,
         lastImageFileId: null,
+        lastImageWorkId: null,
         imageCount: 0,
         createdAt: "2026-03-19T10:00:00Z",
         updatedAt: "2026-03-19T10:00:00Z",

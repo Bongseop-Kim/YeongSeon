@@ -20,6 +20,11 @@ export type GenerateDesignResult = {
   workId: string;
   workflowId: string;
   analysisWorkId: string;
+  route?: "openai" | "fal_tiling" | "fal_edit";
+  routeSignals?: string[];
+  routeReason?: string | null;
+  falRequestId?: string | null;
+  seed?: number | null;
   generateImage: boolean;
   eligibleForRender: boolean;
   missingRequirements: string[];
@@ -152,6 +157,12 @@ export type LogContext = {
   textPrompt?: string | null;
   imagePrompt?: string | null;
   imageEditPrompt?: string | null;
+  route?: "openai" | "fal_tiling" | "fal_edit" | null;
+  routeReason?: string | null;
+  routeSignals?: string[] | null;
+  baseImageWorkId?: string | null;
+  falRequestId?: string | null;
+  seed?: number | null;
   imageGenerated?: boolean;
   generatedImageUrl?: string | null;
   tokensCharged?: number;

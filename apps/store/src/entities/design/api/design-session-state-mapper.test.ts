@@ -22,4 +22,21 @@ describe("toRestoredDesignSessionState", () => {
       imageFileId: "",
     });
   });
+
+  it("세션 복원 상태는 baseImageWorkId를 null로 초기화한다", () => {
+    expect(
+      toRestoredDesignSessionState([
+        {
+          id: "msg-1",
+          sessionId: "session-1",
+          role: "ai",
+          content: "첫 이미지",
+          imageUrl: "https://example.com/first.png",
+          imageFileId: "file-1",
+          sequenceNumber: 0,
+          createdAt: "2026-03-19T10:00:00Z",
+        },
+      ]).baseImageWorkId,
+    ).toBeNull();
+  });
 });

@@ -32,6 +32,12 @@ export type AiGenerationLogInsert = {
   text_prompt?: string | null;
   image_prompt?: string | null;
   image_edit_prompt?: string | null;
+  route?: "openai" | "fal_tiling" | "fal_edit" | null;
+  route_reason?: string | null;
+  route_signals?: unknown[] | null;
+  base_image_work_id?: string | null;
+  fal_request_id?: string | null;
+  seed?: number | null;
   image_generated: boolean;
   generated_image_url?: string | null;
   detected_design?: Record<string, unknown> | null;

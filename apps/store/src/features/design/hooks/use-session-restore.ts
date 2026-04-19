@@ -25,6 +25,9 @@ export function useSessionRestore(
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+  const [pendingSession, setPendingSession] = useState<DesignSession | null>(
+    null,
+  );
   const onRestoredRef = useRef(onRestored);
 
   const { data: sessionMessages } = useDesignSessionMessagesQuery(
@@ -36,15 +39,19 @@ export function useSessionRestore(
   }, [onRestored]);
 
   useEffect(() => {
-    if (!pendingSessionId || !sessionMessages) {
+    if (!pendingSessionId || !pendingSession || !sessionMessages) {
       return;
     }
 
-    restoreSessionState(pendingSessionId, sessionMessages);
+    restoreSessionState(pendingSessionId, {
+      ...sessionMessages,
+      baseImageWorkId: pendingSession.lastImageWorkId,
+    });
 
     setPendingSessionId(null);
+    setPendingSession(null);
     onRestoredRef.current?.();
-  }, [pendingSessionId, restoreSessionState, sessionMessages]);
+  }, [pendingSession, pendingSessionId, restoreSessionState, sessionMessages]);
 
   const openHistory = () => {
     setIsHistoryOpen(true);
@@ -56,6 +63,7 @@ export function useSessionRestore(
 
   const restoreSession = (session: DesignSession) => {
     setIsHistoryOpen(false);
+    setPendingSession(session);
     setPendingSessionId(session.id);
   };
 

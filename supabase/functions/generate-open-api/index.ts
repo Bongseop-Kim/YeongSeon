@@ -422,6 +422,7 @@ const saveSessionIfNeeded = async (
   aiMessage: string,
   imagekitUrl: string | null,
   imagekitFileId: string | null,
+  imageWorkId: string | null,
 ) => {
   if (!payload.sessionId || !Array.isArray(payload.allMessages)) {
     return;
@@ -433,6 +434,7 @@ const saveSessionIfNeeded = async (
     firstMessage: payload.firstMessage ?? "",
     lastImageUrl: imagekitUrl,
     lastImageFileId: imagekitFileId,
+    lastImageWorkId: imageWorkId,
     messages: buildSessionMessages(payload.allMessages, {
       id: crypto.randomUUID(),
       role: "ai",
@@ -997,6 +999,7 @@ Deno.serve(async (req) => {
           analysis.aiMessage,
           render.imagekitUrl,
           render.imagekitFileId,
+          render.renderWorkId,
         );
       } catch (reason) {
         console.error("Post-generation task failed", {
@@ -1043,6 +1046,7 @@ Deno.serve(async (req) => {
           analysis.aiMessage,
           null,
           null,
+          null,
         );
       } catch (reason) {
         console.error("Post-generation task failed", {
@@ -1081,6 +1085,7 @@ Deno.serve(async (req) => {
         analysis.aiMessage,
         render.imagekitUrl,
         render.imagekitFileId,
+        render.renderWorkId,
       );
     } catch (reason) {
       console.error("Post-generation task failed", {

@@ -9,6 +9,7 @@ CREATE TABLE public.design_chat_sessions (
   first_message       text        NOT NULL DEFAULT '',
   last_image_url      text,
   last_image_file_id  text,
+  last_image_work_id  text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   image_count         int         NOT NULL DEFAULT 0,
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now()
@@ -58,6 +59,7 @@ CREATE OR REPLACE FUNCTION public.save_design_session(
   p_first_message       text,
   p_last_image_url      text,
   p_last_image_file_id  text,
+  p_last_image_work_id  text,
   p_messages            jsonb
 )
 RETURNS uuid
@@ -86,11 +88,11 @@ BEGIN
 
   INSERT INTO public.design_chat_sessions (
     id, user_id, ai_model, first_message,
-    last_image_url, last_image_file_id, image_count, updated_at
+    last_image_url, last_image_file_id, last_image_work_id, image_count, updated_at
   )
   VALUES (
     v_session_id, v_user_id, p_ai_model, p_first_message,
-    p_last_image_url, p_last_image_file_id,
+    p_last_image_url, p_last_image_file_id, p_last_image_work_id,
     (
       SELECT COUNT(*)
       FROM jsonb_array_elements(COALESCE(p_messages, '[]'::jsonb)) m
@@ -103,6 +105,7 @@ BEGIN
       first_message = EXCLUDED.first_message,
       last_image_url = EXCLUDED.last_image_url,
       last_image_file_id = EXCLUDED.last_image_file_id,
+      last_image_work_id = EXCLUDED.last_image_work_id,
       image_count = EXCLUDED.image_count,
       updated_at = now()
   WHERE public.design_chat_sessions.user_id = v_user_id;
@@ -143,5 +146,5 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.save_design_session(uuid, text, text, text, text, jsonb)
+GRANT EXECUTE ON FUNCTION public.save_design_session(uuid, text, text, text, text, text, jsonb)
   TO authenticated;

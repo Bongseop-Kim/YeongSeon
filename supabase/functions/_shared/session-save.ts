@@ -16,6 +16,7 @@ export interface SessionSaveParams {
   firstMessage: string;
   lastImageUrl: string | null;
   lastImageFileId: string | null;
+  lastImageWorkId: string | null;
   messages: SessionMessage[];
 }
 
@@ -56,6 +57,7 @@ export async function saveDesignSession(
       p_first_message: params.firstMessage,
       p_last_image_url: params.lastImageUrl,
       p_last_image_file_id: params.lastImageFileId,
+      p_last_image_work_id: params.lastImageWorkId,
       p_messages: params.messages,
     });
 

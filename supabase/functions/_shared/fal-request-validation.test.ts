@@ -120,6 +120,25 @@ Deno.test(
   },
 );
 
+Deno.test("validateFalGeneratePayload rejects invalid fal route", () => {
+  const result = validateFalGeneratePayload({
+    userMessage: "포인트를 아래로 내려줘",
+    route: "unknown",
+    designContext: {
+      colors: ["navy"],
+      fabricMethod: "print",
+      ciPlacement: "one-point",
+    },
+    baseImageUrl: "https://example.com/base.png",
+  } as unknown as Parameters<typeof validateFalGeneratePayload>[0]);
+
+  assertObjectMatch(result, {
+    ok: false,
+    status: 400,
+    body: { error: "invalid_fal_route" },
+  });
+});
+
 Deno.test("validateFalGeneratePayload rejects oversized tiled images", () => {
   const result = validateFalGeneratePayload({
     userMessage: "스트라이프로 바꿔줘",
@@ -265,6 +284,50 @@ Deno.test(
       ok: false,
       status: 400,
       body: { error: "ci_placement_must_be_all_over" },
+    });
+  },
+);
+
+Deno.test(
+  "validateFalGeneratePayload accepts fal_edit with base image url",
+  () => {
+    const result = validateFalGeneratePayload({
+      userMessage: "포인트 위치를 아래로 내려줘",
+      route: "fal_edit",
+      designContext: {
+        colors: ["navy"],
+        pattern: "stripe",
+        fabricMethod: "print",
+        ciPlacement: "one-point",
+        scale: "medium",
+      },
+      baseImageUrl: "https://example.com/base.png",
+      baseImageWorkId: "work-base-1",
+      ciImageBase64: "abc",
+      ciImageMimeType: "image/png",
+    });
+
+    assertEquals(result.ok, true);
+  },
+);
+
+Deno.test(
+  "validateFalGeneratePayload rejects fal_edit without base image url",
+  () => {
+    const result = validateFalGeneratePayload({
+      userMessage: "포인트 위치를 아래로 내려줘",
+      route: "fal_edit",
+      designContext: {
+        colors: ["navy"],
+        fabricMethod: "print",
+        ciPlacement: "one-point",
+      },
+    });
+
+    assertObjectMatch(result, {
+      ok: false,
+      status: 400,
+      body: { error: "base_image_url_required" },
     });
   },
 );

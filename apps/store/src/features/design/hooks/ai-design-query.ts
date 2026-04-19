@@ -4,11 +4,9 @@ import {
   aiDesignApi,
   type AiDesignRequest,
   type AiDesignResponse,
-} from "@/entities/design";
-import {
   DESIGN_TOKEN_BALANCE_QUERY_KEY,
   useDesignTokenBalanceQuery,
-} from "@/entities/design/api/ai-design-query";
+} from "@/entities/design";
 
 export { DESIGN_TOKEN_BALANCE_QUERY_KEY, useDesignTokenBalanceQuery };
 

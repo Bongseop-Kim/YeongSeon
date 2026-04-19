@@ -9,6 +9,20 @@ export interface CallFalFluxImg2ImgInput {
 
 export interface CallFalFluxImg2ImgResult {
   imageUrl: string;
+  requestId: string;
+}
+
+export interface CallFalNanoBananaEditInput {
+  imageUrls: string[];
+  prompt: string;
+  seed?: number;
+  apiKey: string;
+  timeoutMs?: number;
+}
+
+export interface CallFalNanoBananaEditResult {
+  imageUrl: string;
+  requestId: string;
 }
 
 interface FalQueueSubmitResponse {
@@ -29,7 +43,10 @@ interface FalResultResponse {
   images?: Array<{ url?: string }>;
 }
 
-const FAL_ENDPOINT = "https://queue.fal.run/fal-ai/flux/dev/image-to-image";
+const FAL_FLUX_ENDPOINT =
+  "https://queue.fal.run/fal-ai/flux/dev/image-to-image";
+const FAL_NANO_BANANA_EDIT_ENDPOINT =
+  "https://queue.fal.run/fal-ai/nano-banana-2/edit";
 const POLL_INTERVAL_MS = 2000;
 const DEFAULT_TIMEOUT_MS = 60000;
 
@@ -54,29 +71,22 @@ const sleep = (ms: number, signal?: AbortSignal) =>
     signal?.addEventListener("abort", onAbort, { once: true });
   });
 
-export async function callFalFluxImg2Img(
-  input: CallFalFluxImg2ImgInput,
-): Promise<CallFalFluxImg2ImgResult> {
+async function callFalImageEndpoint(input: {
+  endpoint: string;
+  apiKey: string;
+  body: Record<string, unknown>;
+  timeoutMs?: number;
+}): Promise<{ imageUrl: string; requestId: string }> {
   const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const strength = input.strength ?? 0.3;
-  const dataUri = `data:${input.imageMimeType};base64,${input.imageBase64}`;
   const timeoutSignal = AbortSignal.timeout(timeoutMs);
 
-  const submitResponse = await fetch(FAL_ENDPOINT, {
+  const submitResponse = await fetch(input.endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Key ${input.apiKey}`,
     },
-    body: JSON.stringify({
-      image_url: dataUri,
-      prompt: input.prompt,
-      strength,
-      num_inference_steps: 28,
-      guidance_scale: 3.5,
-      num_images: 1,
-      image_size: { width: 1024, height: 1024 },
-    }),
+    body: JSON.stringify(input.body),
     signal: timeoutSignal,
   });
 
@@ -134,7 +144,7 @@ export async function callFalFluxImg2Img(
         throw new Error("Fal.ai result did not include image URL");
       }
 
-      return { imageUrl };
+      return { imageUrl, requestId };
     }
 
     if (status.status === "FAILED") {
@@ -145,4 +155,46 @@ export async function callFalFluxImg2Img(
 
     await sleep(POLL_INTERVAL_MS, timeoutSignal);
   }
+}
+
+export async function callFalFluxImg2Img(
+  input: CallFalFluxImg2ImgInput,
+): Promise<CallFalFluxImg2ImgResult> {
+  const strength = input.strength ?? 0.3;
+  const dataUri = `data:${input.imageMimeType};base64,${input.imageBase64}`;
+
+  return callFalImageEndpoint({
+    endpoint: FAL_FLUX_ENDPOINT,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: {
+      image_url: dataUri,
+      prompt: input.prompt,
+      strength,
+      num_inference_steps: 28,
+      guidance_scale: 3.5,
+      num_images: 1,
+      image_size: { width: 1024, height: 1024 },
+    },
+  });
+}
+
+export async function callFalNanoBananaEdit(
+  input: CallFalNanoBananaEditInput,
+): Promise<CallFalNanoBananaEditResult> {
+  return callFalImageEndpoint({
+    endpoint: FAL_NANO_BANANA_EDIT_ENDPOINT,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: {
+      prompt: input.prompt,
+      image_urls: input.imageUrls,
+      seed: input.seed,
+      output_format: "png",
+      resolution: "1K",
+      aspect_ratio: "auto",
+      limit_generations: true,
+      num_images: 1,
+    },
+  });
 }

@@ -1,6 +1,19 @@
 import type { ContextChip } from "@/entities/design/model/ai-design-types";
+import type {
+  GenerationRoute,
+  GenerationRouteReason,
+  GenerationRouteSignal,
+} from "@/entities/design/model/ai-design-request";
 
-export interface AiDesignResponse {
+export interface AiDesignRouteMetadata {
+  route?: GenerationRoute;
+  routeSignals?: GenerationRouteSignal[];
+  routeReason?: GenerationRouteReason;
+  falRequestId?: string | null;
+  seed?: number | null;
+}
+
+export interface AiDesignResponse extends AiDesignRouteMetadata {
   aiMessage: string;
   imageUrl: string | null;
   workId?: string;

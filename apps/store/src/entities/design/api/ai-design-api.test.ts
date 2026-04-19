@@ -53,6 +53,11 @@ const successResponse = {
   workId: "work-123",
   workflowId: "workflow-123",
   analysisWorkId: "analysis-123",
+  route: "openai" as const,
+  routeSignals: ["new_generation"],
+  routeReason: "default_openai_generation" as const,
+  falRequestId: "fal-request-123",
+  seed: 1234,
   generateImage: true,
   eligibleForRender: true,
   missingRequirements: [],
@@ -127,6 +132,9 @@ describe("aiDesignApi", () => {
         expect.objectContaining({
           ai_model: "openai",
           has_image: true,
+          route: "openai",
+          route_reason: "default_openai_generation",
+          route_signals: ["new_generation"],
         }),
       );
       const designGeneratedCall = phCapture.mock.calls.find(
@@ -147,7 +155,12 @@ describe("aiDesignApi", () => {
 
       expect(phCapture).toHaveBeenCalledWith(
         "design_generated",
-        expect.objectContaining({ has_image: false }),
+        expect.objectContaining({
+          has_image: false,
+          route: "openai",
+          route_reason: "default_openai_generation",
+          route_signals: ["new_generation"],
+        }),
       );
     });
 
@@ -157,6 +170,11 @@ describe("aiDesignApi", () => {
           ...successResponse,
           workflowId: "workflow-999",
           analysisWorkId: "analysis-999",
+          route: "fal_edit",
+          routeSignals: ["exact_placement", "edit_only"],
+          routeReason: "existing_result_edit_request",
+          falRequestId: "fal-request-999",
+          seed: 4321,
           generateImage: false,
           eligibleForRender: false,
           missingRequirements: ["fabricMethod"],
@@ -168,6 +186,11 @@ describe("aiDesignApi", () => {
         expect.objectContaining({
           workflowId: "workflow-999",
           analysisWorkId: "analysis-999",
+          route: "fal_edit",
+          routeSignals: ["exact_placement", "edit_only"],
+          routeReason: "existing_result_edit_request",
+          falRequestId: "fal-request-999",
+          seed: 4321,
           generateImage: false,
           eligibleForRender: false,
           missingRequirements: ["fabricMethod"],
@@ -224,6 +247,7 @@ describe("aiDesignApi", () => {
 
     await aiDesignApi({
       ...baseRequest,
+      userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
       designContext: {
         ...baseRequest.designContext,
         ciImage: { type: "image/png" } as File,
@@ -240,8 +264,100 @@ describe("aiDesignApi", () => {
     });
     expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
       body: expect.objectContaining({
+        route: "fal_tiling",
+        routeSignals: expect.arrayContaining([
+          "ci_image_present",
+          "pattern_repeat",
+        ]),
+        routeReason: "ci_image_with_pattern_repeat",
         tiledBase64: "tiled-base64",
         tiledMimeType: "image/png",
+      }),
+    });
+  });
+
+  it.each([
+    {
+      title:
+        "featureFlag가 꺼져 있으면 fal_tiling 요청도 로컬에서 openai로 처리한다",
+      stubEnv: false,
+      executionMode: undefined,
+      fabricMethod: "yarn-dyed" as const,
+    },
+    {
+      title: "auto가 아니면 fal_tiling 요청도 로컬에서 openai로 처리한다",
+      stubEnv: true,
+      executionMode: "analysis_only" as const,
+      fabricMethod: "yarn-dyed" as const,
+    },
+    {
+      title:
+        "fabricMethod가 없으면 fal_tiling 요청도 로컬에서 openai로 처리한다",
+      stubEnv: true,
+      executionMode: undefined,
+      fabricMethod: null,
+    },
+  ])("$title", async ({ stubEnv, executionMode, fabricMethod }) => {
+    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", stubEnv ? "true" : "false");
+    MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      executionMode,
+      userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
+      designContext: {
+        ...baseRequest.designContext,
+        ciImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+        fabricMethod,
+        scale: "medium",
+      },
+    });
+
+    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke).toHaveBeenCalledWith("generate-open-api", {
+      body: expect.objectContaining({
+        userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
+        ciImageBase64: "ci-base64",
+      }),
+    });
+    expect(invoke.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        body: expect.not.objectContaining({
+          route: expect.anything(),
+          routeSignals: expect.anything(),
+          routeReason: expect.anything(),
+          tiledBase64: expect.anything(),
+          tiledMimeType: expect.anything(),
+        }),
+      }),
+    );
+  });
+
+  it("편집 라우트는 baseImageUrl과 baseImageWorkId를 payload에 담아 generate-fal-api를 호출한다", async () => {
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "포인트 위치가 너무 높아 아래로 내려줘",
+      baseImageUrl: "https://example.com/base.png",
+      baseImageWorkId: "work-base-1",
+    });
+
+    expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
+      body: expect.objectContaining({
+        route: "fal_edit",
+        routeSignals: expect.arrayContaining([
+          "selected_preview_image_present",
+          "exact_placement",
+          "edit_only",
+        ]),
+        routeReason: "existing_result_edit_request",
+        baseImageUrl: "https://example.com/base.png",
+        baseImageWorkId: "work-base-1",
       }),
     });
   });
@@ -255,6 +371,7 @@ describe("aiDesignApi", () => {
     await expect(
       aiDesignApi({
         ...baseRequest,
+        userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
         designContext: {
           ...baseRequest.designContext,
           ciImage: { type: "image/png" } as File,
@@ -307,6 +424,7 @@ describe("aiDesignApi", () => {
     await expect(
       aiDesignApi({
         ...baseRequest,
+        userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
         designContext: {
           ...baseRequest.designContext,
           ciImage: { type: "image/png" } as File,
@@ -321,6 +439,11 @@ describe("aiDesignApi", () => {
         workId: successResponse.workId,
         workflowId: successResponse.workflowId,
         analysisWorkId: successResponse.analysisWorkId,
+        route: "openai",
+        routeSignals: ["new_generation"],
+        routeReason: "default_openai_generation",
+        falRequestId: "fal-request-123",
+        seed: 1234,
       }),
     );
 
@@ -334,6 +457,60 @@ describe("aiDesignApi", () => {
       body: expect.not.objectContaining({
         tiledBase64: "tiled-base64",
         tiledMimeType: "image/png",
+        route: "fal_tiling",
+        routeSignals: expect.anything(),
+        routeReason: "ci_image_with_pattern_repeat",
+      }),
+    });
+  });
+
+  it("fal_edit가 fal_pipeline_disabled로 폴백되면 두 번째 invoke가 edit context를 유지한다", async () => {
+    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke
+      .mockResolvedValueOnce({
+        data: null,
+        error: {
+          message: "Edge Function returned a non-2xx status code",
+          context: new Response(
+            JSON.stringify({
+              error: "fal_pipeline_disabled",
+            }),
+            {
+              status: 503,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          ),
+        },
+      })
+      .mockResolvedValueOnce({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "포인트 위치가 너무 높아 아래로 내려줘",
+      routeHint: "fal_edit",
+      baseImageUrl: "https://example.com/base.png",
+      baseImageWorkId: "work-base-1",
+    });
+
+    expect(invoke).toHaveBeenNthCalledWith(1, "generate-fal-api", {
+      body: expect.objectContaining({
+        route: "fal_edit",
+        routeSignals: expect.arrayContaining([
+          "selected_preview_image_present",
+          "exact_placement",
+          "edit_only",
+        ]),
+        routeReason: "existing_result_edit_request",
+      }),
+    });
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-open-api", {
+      body: expect.objectContaining({
+        baseImageUrl: "https://example.com/base.png",
+        baseImageWorkId: "work-base-1",
+        routeHint: "fal_edit",
       }),
     });
   });
