@@ -26,6 +26,17 @@ interface GenerationLogTableProps {
   onAiModelChange: (model: string | null) => void;
 }
 
+const renderGenerateImageStatus = (
+  generateImage: boolean | null | undefined,
+  imageGenerated: boolean,
+) => {
+  if (!generateImage) {
+    return <Tag>미요청</Tag>;
+  }
+
+  return imageGenerated ? <Tag color="success">성공</Tag> : <Tag>실패</Tag>;
+};
+
 export function GenerationLogTable({
   data,
   loading,
@@ -97,10 +108,8 @@ export function GenerationLogTable({
       key: "imageGenerated",
       width: 70,
       align: "center",
-      render: (v: boolean, record) => {
-        if (!record.generateImage) return <Tag>미요청</Tag>;
-        return v ? <Tag color="success">true</Tag> : <Tag>false</Tag>;
-      },
+      render: (v: boolean, record) =>
+        renderGenerateImageStatus(record.generateImage, v),
     },
     {
       title: "토큰",
@@ -232,7 +241,7 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
       )}
       <Descriptions.Item label="품질">{log.quality ?? "-"}</Descriptions.Item>
       <Descriptions.Item label="이미지 생성">
-        {log.generateImage ? (log.imageGenerated ? "true" : "false") : "미요청"}
+        {renderGenerateImageStatus(log.generateImage, log.imageGenerated)}
       </Descriptions.Item>
       {typeof log.eligibleForRender === "boolean" && (
         <Descriptions.Item label="렌더 가능">
@@ -349,13 +358,14 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
           </Text>
         </Descriptions.Item>
       )}
-      {log.missingRequirements && (
-        <Descriptions.Item label="누락 요구사항" span={2}>
-          <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
-            {JSON.stringify(log.missingRequirements, null, 2)}
-          </Text>
-        </Descriptions.Item>
-      )}
+      {Array.isArray(log.missingRequirements) &&
+        log.missingRequirements.length > 0 && (
+          <Descriptions.Item label="누락 요구사항" span={2}>
+            <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
+              {JSON.stringify(log.missingRequirements, null, 2)}
+            </Text>
+          </Descriptions.Item>
+        )}
       <Descriptions.Item label="생성 시각" span={2}>
         {dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss")}
       </Descriptions.Item>

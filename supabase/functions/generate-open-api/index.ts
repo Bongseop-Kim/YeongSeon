@@ -964,13 +964,23 @@ Deno.serve(async (req) => {
   }
 
   const conversationTurn = conversationTurns.length;
+  const trimmedAnalysisWorkId =
+    executionMode === "render_from_analysis" && payload.analysisWorkId
+      ? payload.analysisWorkId.trim()
+      : null;
 
   try {
     if (executionMode === "render_from_analysis") {
+      if (!trimmedAnalysisWorkId) {
+        throw new HttpError(400, {
+          error: "analysisWorkId is required for render_from_analysis",
+        });
+      }
+
       const analysis = await loadAnalysisSnapshot(
         adminClient,
         user.id,
-        payload.analysisWorkId,
+        trimmedAnalysisWorkId,
       );
       const render = await runOpenAiRenderFromAnalysis({
         adminClient,

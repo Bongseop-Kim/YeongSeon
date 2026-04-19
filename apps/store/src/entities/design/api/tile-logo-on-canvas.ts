@@ -101,32 +101,14 @@ export async function tileLogoOnCanvas(
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    switch (input.fabricMethod) {
-      case "yarn-dyed":
-        drawTiledPattern(
-          ctx,
-          logoBitmap,
-          canvasSize,
-          stride,
-          drawWidth,
-          drawHeight,
-        );
-        break;
-      case "print":
-      case undefined:
-        drawTiledPattern(
-          ctx,
-          logoBitmap,
-          canvasSize,
-          stride,
-          drawWidth,
-          drawHeight,
-        );
-        break;
-      default: {
-        throw new Error(input.fabricMethod satisfies never);
-      }
-    }
+    drawTiledPattern(
+      ctx,
+      logoBitmap,
+      canvasSize,
+      stride,
+      drawWidth,
+      drawHeight,
+    );
 
     const outputBlob = await canvas.convertToBlob({ type: "image/png" });
     const base64 = await blobToBase64(outputBlob);

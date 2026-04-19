@@ -89,7 +89,10 @@ const FULL_SCAN_DIRS = ["supabase/schemas"];
 const isSquashFile = (f) => basename(f).includes("_squash.");
 
 // 마이그레이션 파일은 squash 시 주석이 사라지므로 검사 제외 (schemas/가 영구 기준)
-const isMigrationFile = (f) => f.replace(/\\/g, "/").includes("supabase/migrations/");
+const toRepoRelativePath = (f) => relative(ROOT, resolve(f)).replace(/\\/g, "/");
+
+const isMigrationFile = (f) =>
+  toRepoRelativePath(f).startsWith("supabase/migrations/");
 
 function walkSql(dir) {
   const results = [];
@@ -112,9 +115,9 @@ const targetFiles =
     : FULL_SCAN_DIRS.flatMap((d) => walkSql(join(ROOT, d)));
 
 const sqlFiles = targetFiles.filter((f) => {
-  const normalized = f.replace(/\\/g, "/");
+  const normalized = toRepoRelativePath(f);
   return (
-    !normalized.includes("supabase/tests") &&
+    !normalized.startsWith("supabase/tests/") &&
     !isSquashFile(f) &&
     !isMigrationFile(f)
   );

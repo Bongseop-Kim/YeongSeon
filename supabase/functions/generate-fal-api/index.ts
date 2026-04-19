@@ -41,6 +41,7 @@ const ANALYSIS_REQUEST_TYPE = "analysis" as const;
 const RENDER_REQUEST_TYPE = "render_standard" as const;
 const ANALYSIS_AI_MODEL = "openai" as const;
 const RENDER_AI_MODEL = "fal" as const;
+const OPENAI_TIMEOUT_MS = 60_000;
 
 const SERVER_VAR = "FALAI_CI_PATTERN_ENABLED";
 const CLIENT_VAR = "VITE_FALAI_CI_PATTERN_ENABLED";
@@ -269,6 +270,7 @@ Deno.serve(async (req) => {
         ],
         response_format: { type: "json_object" },
       }),
+      signal: AbortSignal.timeout(OPENAI_TIMEOUT_MS),
     });
 
     if (!textResp.ok) {
@@ -347,20 +349,13 @@ Deno.serve(async (req) => {
   });
 
   if (!generateImage) {
-    try {
-      await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
-    } catch (reason) {
-      console.error("Post-generation task failed", {
-        workId: analysisWorkId,
-        task: "saveSessionIfNeeded",
-        reason,
-      });
-    }
+    await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
 
     return jsonResponse(200, {
       aiMessage,
       imageUrl: null,
       workId,
+      workflowId: workId,
       analysisWorkId,
       generateImage: false,
       eligibleForRender: eligibility.eligibleForRender,
@@ -597,27 +592,20 @@ Deno.serve(async (req) => {
     tokens_refunded: renderTokensRefunded,
   });
 
-  try {
-    await saveSessionIfNeeded(
-      supabase,
-      payload,
-      aiMessage,
-      finalImageUrl,
-      finalImageFileId,
-    );
-  } catch (reason) {
-    console.error("Post-generation task failed", {
-      workId: renderWorkId,
-      task: "saveSessionIfNeeded",
-      reason,
-    });
-  }
+  await saveSessionIfNeeded(
+    supabase,
+    payload,
+    aiMessage,
+    finalImageUrl,
+    finalImageFileId,
+  );
 
   return jsonResponse(200, {
     aiMessage,
     imageUrl: finalImageUrl,
     workId,
     workflowId: workId,
+    analysisWorkId,
     generateImage: true,
     eligibleForRender: eligibility.eligibleForRender,
     missingRequirements: eligibility.missingRequirements,
