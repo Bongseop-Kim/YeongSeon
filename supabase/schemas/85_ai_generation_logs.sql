@@ -55,7 +55,7 @@ ALTER TABLE public.ai_generation_logs ENABLE ROW LEVEL SECURITY;
 
 REVOKE ALL ON TABLE public.ai_generation_logs FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON TABLE public.ai_generation_logs TO authenticated;
-GRANT INSERT, UPDATE ON TABLE public.ai_generation_logs TO service_role;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.ai_generation_logs TO service_role;
 
 -- 운영 로그는 민감한 프롬프트/에러 정보를 포함하므로 관리자에게만 전체 조회를 허용한다.
 CREATE POLICY "Admins can view all generation logs"

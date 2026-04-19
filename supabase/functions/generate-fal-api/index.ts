@@ -1,9 +1,12 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 
-import { filterValidConversationTurns } from "@/functions/_shared/conversation.ts";
 import { determineEligibility } from "@/functions/_shared/design-generation.ts";
 import type { GenerateDesignRequest } from "@/functions/_shared/design-request.ts";
 import { callFalFluxImg2Img } from "@/functions/_shared/fal-client.ts";
+import {
+  shouldProceedToFalRender,
+  validateFalGeneratePayload,
+} from "@/functions/_shared/fal-request-validation.ts";
 import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
 import { logGeneration } from "@/functions/_shared/log-generation.ts";
 import { createLogger } from "@/functions/_shared/logger.ts";
@@ -28,9 +31,6 @@ import { getCorsHeaders } from "@/functions/_shared/cors.ts";
 type OpenAITextResponse = {
   choices?: Array<{ message?: { content?: string } }>;
 };
-
-const MAX_MESSAGE_LENGTH = 4000;
-const MAX_IMAGE_BASE64_LENGTH = 20 * 1024 * 1024;
 
 const bytesToBase64 = (bytes: Uint8Array): string =>
   btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(""));
@@ -164,37 +164,16 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "invalid_json" });
   }
 
-  if (
-    typeof payload.userMessage !== "string" ||
-    !payload.userMessage.trim() ||
-    payload.userMessage.length > MAX_MESSAGE_LENGTH
-  ) {
-    return jsonResponse(400, { error: "invalid_user_message" });
-  }
-
-  if (payload.designContext?.ciPlacement !== "all-over") {
-    return jsonResponse(400, {
-      error: "ci_placement_must_be_all_over",
-    });
-  }
-
-  if (!payload.designContext?.fabricMethod) {
-    return jsonResponse(400, { error: "fabric_method_required" });
-  }
-
-  if (!payload.tiledBase64 || !payload.tiledMimeType) {
-    return jsonResponse(400, { error: "tiled_image_required" });
-  }
-
-  if (payload.tiledBase64.length > MAX_IMAGE_BASE64_LENGTH) {
-    return jsonResponse(400, { error: "tiled_image_too_large" });
+  const validation = validateFalGeneratePayload(payload);
+  if (!validation.ok) {
+    return jsonResponse(validation.status, validation.body);
   }
 
   const workId = crypto.randomUUID();
   const analysisWorkId = `${workId}_analysis`;
   const renderWorkId = `${workId}_render`;
   const textPrompt = buildTextPrompt(payload);
-  const history = filterValidConversationTurns(payload.conversationHistory);
+  const history = validation.conversationHistory;
   const textStart = Date.now();
   let analysisTokensCharged = 0;
   let analysisTokensRefunded = 0;
@@ -348,7 +327,7 @@ Deno.serve(async (req) => {
     tokens_refunded: analysisTokensRefunded,
   });
 
-  if (!generateImage) {
+  if (!shouldProceedToFalRender(generateImage, eligibility)) {
     await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
 
     return jsonResponse(200, {

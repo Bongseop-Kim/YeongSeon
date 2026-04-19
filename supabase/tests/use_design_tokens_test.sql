@@ -8,7 +8,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(20);
+SELECT plan(21);
 
 -- ── 픽스처 설정 ─────────────────────────────────────────────
 
@@ -42,6 +42,11 @@ SELECT ok(
 SELECT ok(
   has_table_privilege('service_role', 'public.ai_generation_logs', 'INSERT'),
   'service_role는 ai_generation_logs INSERT 권한을 가진다'
+);
+
+SELECT ok(
+  has_table_privilege('service_role', 'public.ai_generation_logs', 'SELECT'),
+  'service_role는 ai_generation_logs SELECT 권한을 가진다'
 );
 
 -- ── 테스트 1: 정상 차감 - 예외 없이 실행 ───────────────────

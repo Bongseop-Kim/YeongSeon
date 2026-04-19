@@ -19,6 +19,8 @@ CREATE INDEX idx_design_chat_sessions_user_updated_at
 
 ALTER TABLE public.design_chat_sessions ENABLE ROW LEVEL SECURITY;
 
+GRANT SELECT ON TABLE public.design_chat_sessions TO authenticated;
+
 CREATE POLICY "본인 세션만 조회" ON public.design_chat_sessions
   FOR SELECT USING (user_id = auth.uid());
 
@@ -39,6 +41,8 @@ CREATE UNIQUE INDEX idx_design_chat_messages_session_id
   ON public.design_chat_messages (session_id, sequence_number);
 
 ALTER TABLE public.design_chat_messages ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT ON TABLE public.design_chat_messages TO authenticated;
 
 CREATE POLICY "본인 세션 메시지만 조회" ON public.design_chat_messages
   FOR SELECT USING (
