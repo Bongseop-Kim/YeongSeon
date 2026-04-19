@@ -214,6 +214,39 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.use_design_tokens(
+  p_user_id      uuid,
+  p_ai_model     text,
+  p_request_type text,
+  p_quality      text,
+  p_work_id      text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_caller_role text;
+BEGIN
+  v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
+  IF v_caller_role IS DISTINCT FROM 'service_role' AND auth.uid() IS DISTINCT FROM p_user_id THEN
+    RAISE EXCEPTION 'unauthorized: caller does not own this resource';
+  END IF;
+
+  IF p_quality NOT IN ('standard', 'high') THEN
+    RAISE EXCEPTION 'invalid quality: %', p_quality;
+  END IF;
+
+  RETURN public.use_design_tokens(
+    p_user_id,
+    p_ai_model,
+    p_request_type,
+    p_work_id
+  );
+END;
+$$;
+
 -- ── refund_design_tokens ──────────────────────────────────────
 -- Refunds tokens when image generation fails after text succeeds.
 -- SECURITY DEFINER 유지 사유: design_tokens INSERT는 RLS로 허용되지 않음

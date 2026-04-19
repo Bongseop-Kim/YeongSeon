@@ -224,7 +224,7 @@ describe("useDesignChat", () => {
     );
   });
 
-  it("autoGenerateImage가 false면 analysis_only로 전송한다", () => {
+  it("autoGenerateImage가 false여도 auto로 전송한다", () => {
     Object.assign(storeState, { autoGenerateImage: false });
 
     const { result } = renderHook(() => useDesignChat());
@@ -232,7 +232,7 @@ describe("useDesignChat", () => {
 
     expect(mutate).toHaveBeenCalledWith(
       expect.objectContaining({
-        executionMode: "analysis_only",
+        executionMode: "auto",
       }),
       expect.any(Object),
     );

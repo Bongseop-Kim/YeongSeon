@@ -1,6 +1,8 @@
 BEGIN;
 SELECT plan(4);
 
+DROP INDEX public.idx_design_chat_messages_session_id;
+
 DO $setup$
 DECLARE
   v_user_id uuid := 'dd000001-0000-0000-0000-000000000011';
@@ -81,6 +83,9 @@ DELETE FROM public.images image
 USING deleted_design_chat_messages deleted
 WHERE image.entity_type = 'design_message'
   AND image.entity_id = deleted.id;
+
+CREATE UNIQUE INDEX idx_design_chat_messages_session_id
+  ON public.design_chat_messages (session_id, sequence_number);
 
 SELECT is(
   (

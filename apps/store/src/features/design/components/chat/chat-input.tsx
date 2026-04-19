@@ -1,9 +1,8 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Send, X } from "lucide-react";
 
 import { analytics } from "@/shared/lib/analytics";
 import { Badge } from "@/shared/ui/badge";
-import { Field, FieldContent, FieldLabel } from "@/shared/ui/field";
 import { Button } from "@/shared/ui-extended/button";
 import { AttachmentPopup } from "@/features/design/components/chat/attachment-popup";
 import { FABRIC_OPTIONS } from "@/features/design/constants/design-options";
@@ -16,6 +15,14 @@ interface ChatInputProps {
   isLoading?: boolean;
 }
 
+const getNextColorValues = (attachments: Attachment[], removedIndex: number) =>
+  attachments
+    .filter(
+      (attachment, index) =>
+        index !== removedIndex && attachment.type === "color",
+    )
+    .map((attachment) => attachment.value);
+
 export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const designContext = useDesignChatStore((state) => state.designContext);
   const pendingAttachments = useDesignChatStore(
@@ -27,17 +34,10 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const setDesignContext = useDesignChatStore(
     (state) => state.setDesignContext,
   );
-  const autoGenerateImage = useDesignChatStore(
-    (state) => state.autoGenerateImage,
-  );
-  const setAutoGenerateImage = useDesignChatStore(
-    (state) => state.setAutoGenerateImage,
-  );
   const [inputText, setInputText] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const popupWrapperRef = useRef<HTMLDivElement>(null);
   const hasTrackedStartRef = useRef(false);
-  const autoGenerateImageId = useId();
 
   useEffect(() => {
     if (!showPopup) return;
@@ -87,14 +87,9 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                 onClick={() => {
                   const removed = pendingAttachments[index];
                   removeAttachment(index);
-                  const remaining = pendingAttachments.filter(
-                    (_, i) => i !== index,
-                  );
                   if (removed.type === "color") {
                     setDesignContext({
-                      colors: remaining
-                        .filter((a) => a.type === "color")
-                        .map((a) => a.value),
+                      colors: getNextColorValues(pendingAttachments, index),
                     });
                   } else if (removed.type === "pattern") {
                     setDesignContext({ pattern: null });
@@ -102,14 +97,9 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                     setDesignContext({ ciPlacement: null });
                   } else if (
                     removed.type === "image" &&
-                    removed.value === "ci"
-                  ) {
-                    setDesignContext({ ciImage: null });
-                  } else if (
-                    removed.type === "image" &&
                     removed.value === "reference"
                   ) {
-                    setDesignContext({ referenceImage: null });
+                    setDesignContext({ ciImage: null, referenceImage: null });
                   }
                 }}
               >
@@ -146,23 +136,6 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 text-sm outline-none"
         />
         <div className="mt-2 flex flex-col gap-2">
-          <Field orientation="horizontal" className="items-center gap-2">
-            <FieldContent className="flex-none">
-              <input
-                id={autoGenerateImageId}
-                type="checkbox"
-                checked={autoGenerateImage}
-                onChange={(event) => setAutoGenerateImage(event.target.checked)}
-                className="size-4 rounded border-gray-300 accent-gray-900"
-              />
-            </FieldContent>
-            <FieldLabel
-              htmlFor={autoGenerateImageId}
-              className="text-xs font-normal text-muted-foreground"
-            >
-              자동 이미지 생성
-            </FieldLabel>
-          </Field>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Button

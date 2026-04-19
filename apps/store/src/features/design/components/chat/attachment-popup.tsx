@@ -34,6 +34,20 @@ function removeAttachmentsByFilter(
   }
 }
 
+function replaceSingleAttachment(
+  attachments: Attachment[],
+  removeAttachment: (index: number) => void,
+  nextAttachment: Attachment,
+  addAttachment: (attachment: Attachment) => void,
+) {
+  removeAttachmentsByFilter(
+    attachments,
+    removeAttachment,
+    (attachment) => attachment.type === nextAttachment.type,
+  );
+  addAttachment(nextAttachment);
+}
+
 export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   const designContext = useDesignChatStore((state) => state.designContext);
   const pendingAttachments = useDesignChatStore(
@@ -46,8 +60,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   const setDesignContext = useDesignChatStore(
     (state) => state.setDesignContext,
   );
-  const ciInputRef = useRef<HTMLInputElement | null>(null);
-  const referenceInputRef = useRef<HTMLInputElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   const selectedColors = pendingAttachments.filter(
     (attachment) => attachment.type === "color",
@@ -92,29 +105,28 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   };
 
   const handlePatternSelect = (label: string, value: PatternOption) => {
-    removeAttachmentsByFilter(
+    replaceSingleAttachment(
       pendingAttachments,
       removeAttachment,
-      (attachment) => attachment.type === "pattern",
+      { type: "pattern", label, value },
+      addAttachment,
     );
-    addAttachment({ type: "pattern", label, value });
     setDesignContext({ pattern: value });
   };
 
   const handleCiPlacementSelect = (label: string, value: CiPlacement) => {
-    removeAttachmentsByFilter(
+    replaceSingleAttachment(
       pendingAttachments,
       removeAttachment,
-      (attachment) => attachment.type === "ci-placement",
+      { type: "ci-placement", label, value },
+      addAttachment,
     );
-    addAttachment({ type: "ci-placement", label, value });
     setDesignContext({ ciPlacement: value });
   };
 
   const handleImageSelection = (
     event: ChangeEvent<HTMLInputElement>,
     label: string,
-    value: "ci" | "reference",
   ) => {
     const file = event.target.files?.[0];
 
@@ -122,17 +134,13 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       return;
     }
 
-    removeAttachmentsByFilter(
+    replaceSingleAttachment(
       pendingAttachments,
       removeAttachment,
-      (attachment) => attachment.type === "image" && attachment.value === value,
+      { type: "image", label, value: "reference", file },
+      addAttachment,
     );
-    addAttachment({ type: "image", label, value, file });
-    if (value === "ci") {
-      setDesignContext({ ciImage: file });
-    } else {
-      setDesignContext({ referenceImage: file });
-    }
+    setDesignContext({ ciImage: null, referenceImage: file });
     event.target.value = "";
     onClose();
   };
@@ -231,34 +239,18 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
           <FieldTitle>이미지 업로드</FieldTitle>
           <div className="flex flex-col gap-2">
             <input
-              ref={ciInputRef}
+              ref={imageInputRef}
               type="file"
               className="hidden"
               accept="image/*"
-              onChange={(event) => handleImageSelection(event, "CI 로고", "ci")}
-            />
-            <input
-              ref={referenceInputRef}
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={(event) =>
-                handleImageSelection(event, "참고 이미지", "reference")
-              }
+              onChange={(event) => handleImageSelection(event, "첨부 이미지")}
             />
             <Button
               type="button"
               variant="outline"
-              onClick={() => ciInputRef.current?.click()}
+              onClick={() => imageInputRef.current?.click()}
             >
-              CI 로고 업로드
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => referenceInputRef.current?.click()}
-            >
-              참고 이미지 업로드
+              이미지 첨부
             </Button>
           </div>
         </section>

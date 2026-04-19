@@ -12,21 +12,18 @@ import {
 import { useDesignTokenBalanceQuery } from "@/features/design/hooks/ai-design-query";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
-import { Button } from "@/shared/ui-extended/button";
 import { cn } from "@/shared/lib/utils";
 
 interface ChatPanelProps {
   className?: string;
   sendMessage: (text: string, attachments: Attachment[]) => void;
   onOpenHistory: () => void;
-  onRequestRender?: () => void;
 }
 
 export function ChatPanel({
   className,
   sendMessage,
   onOpenHistory,
-  onRequestRender,
 }: ChatPanelProps) {
   const messages = useDesignChatStore((state) => state.messages);
   const { data: tokenBalance } = useDesignTokenBalanceQuery();
@@ -39,16 +36,8 @@ export function ChatPanel({
   const pendingAttachments = useDesignChatStore(
     (state) => state.pendingAttachments,
   );
-  const aiModel = useDesignChatStore((state) => state.aiModel);
-  const setAiModel = useDesignChatStore((state) => state.setAiModel);
   const selectedPreviewImageUrl = useDesignChatStore(
     (state) => state.selectedPreviewImageUrl,
-  );
-  const autoGenerateImage = useDesignChatStore(
-    (state) => state.autoGenerateImage,
-  );
-  const lastEligibleForRender = useDesignChatStore(
-    (state) => state.lastEligibleForRender,
   );
   const setSelectedPreviewImage = useDesignChatStore(
     (state) => state.setSelectedPreviewImage,
@@ -80,8 +69,6 @@ export function ChatPanel({
         onNewChat={resetConversation}
         onOpenHistory={onOpenHistory}
         tokenBalance={tokenBalance?.total}
-        aiModel={aiModel}
-        onModelChange={setAiModel}
       />
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {messages.length === 0 ? (
@@ -127,13 +114,6 @@ export function ChatPanel({
         />
       )}
       <div className="shrink-0 border-t p-2">
-        {onRequestRender && !autoGenerateImage && lastEligibleForRender ? (
-          <div className="mb-2 flex justify-end">
-            <Button type="button" variant="secondary" onClick={onRequestRender}>
-              이미지를 요청하시겠습니까?
-            </Button>
-          </div>
-        ) : null}
         <ChatInput onSend={sendMessage} isLoading={isGenerating} />
       </div>
     </div>

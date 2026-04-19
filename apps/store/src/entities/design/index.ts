@@ -1,8 +1,4 @@
-export {
-  aiDesignApi,
-  getDesignTokenBalance,
-  InsufficientTokensError,
-} from "./api/ai-design-api";
+export { aiDesignApi, InsufficientTokensError } from "./api/ai-design-api";
 export type { AiDesignResponse } from "./model/ai-design-response";
 export {
   useDesignTokenBalanceQuery,

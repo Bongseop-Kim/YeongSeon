@@ -28,6 +28,8 @@ interface MutationCallbackOptions {
   skipAiMessageAppend?: boolean;
 }
 
+const DEFAULT_AI_MODEL = "openai" as const;
+
 const toConversationHistory = (
   items: Message[],
 ): { role: "user" | "ai"; content: string }[] =>
@@ -77,6 +79,12 @@ const toSessionPayload = (messages: Message[]) => {
   return { firstUserMsg, allMessages };
 };
 
+const createAnalysisReset = () => ({
+  analysisWorkId: null,
+  eligibleForRender: false,
+  missingRequirements: [],
+});
+
 export function useDesignChat(
   options: UseDesignChatOptions = {},
 ): UseDesignChatResult {
@@ -84,10 +92,6 @@ export function useDesignChat(
   const queryClient = useQueryClient();
   const messages = useDesignChatStore((state) => state.messages);
   const designContext = useDesignChatStore((state) => state.designContext);
-  const aiModel = useDesignChatStore((state) => state.aiModel);
-  const autoGenerateImage = useDesignChatStore(
-    (state) => state.autoGenerateImage,
-  );
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
   );
@@ -222,7 +226,7 @@ export function useDesignChat(
 
     if (!prevSessionId) {
       setCurrentSessionId(sessionId);
-      ph.capture("design_session_started", { ai_model: aiModel });
+      ph.capture("design_session_started", { ai_model: DEFAULT_AI_MODEL });
     }
 
     const userMessage: Message = {
@@ -239,11 +243,7 @@ export function useDesignChat(
     setGenerationStatus("generating");
 
     onGenerationStart?.(sessionId);
-    setLastAnalysisResult({
-      analysisWorkId: null,
-      eligibleForRender: false,
-      missingRequirements: [],
-    });
+    setLastAnalysisResult(createAnalysisReset());
 
     const { firstUserMsg, allMessages } = toSessionPayload(
       useDesignChatStore.getState().messages,
@@ -254,12 +254,12 @@ export function useDesignChat(
         userMessage: userText,
         attachments,
         designContext,
-        aiModel,
+        aiModel: DEFAULT_AI_MODEL,
         conversationHistory: toConversationHistory([...messages, userMessage]),
         sessionId,
         firstMessage: firstUserMsg?.content ?? userText,
         allMessages,
-        executionMode: autoGenerateImage ? "auto" : "analysis_only",
+        executionMode: "auto",
         analysisWorkId: null,
       },
       "죄송합니다. 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
@@ -283,11 +283,7 @@ export function useDesignChat(
 
     setGenerationStatus("regenerating");
     onGenerationStart?.(sessionId);
-    setLastAnalysisResult({
-      analysisWorkId: null,
-      eligibleForRender: false,
-      missingRequirements: [],
-    });
+    setLastAnalysisResult(createAnalysisReset());
 
     const { firstUserMsg, allMessages } = toSessionPayload(
       useDesignChatStore.getState().messages,
@@ -298,12 +294,12 @@ export function useDesignChat(
         userMessage: lastUserMessage.content,
         attachments: lastUserMessage.attachments ?? [],
         designContext: lastUserMessage.designContext ?? designContext,
-        aiModel,
+        aiModel: DEFAULT_AI_MODEL,
         conversationHistory: toConversationHistory(messages),
         sessionId,
         firstMessage: firstUserMsg?.content ?? lastUserMessage.content,
         allMessages,
-        executionMode: autoGenerateImage ? "auto" : "analysis_only",
+        executionMode: "auto",
       },
       "죄송합니다. 디자인 재생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
       "completed",
@@ -342,7 +338,7 @@ export function useDesignChat(
         userMessage: firstUserMsg.content,
         attachments: firstUserMsg.attachments ?? [],
         designContext: firstUserMsg.designContext ?? designContext,
-        aiModel,
+        aiModel: DEFAULT_AI_MODEL,
         conversationHistory: toConversationHistory(messages),
         sessionId,
         firstMessage: firstUserMsg.content,
