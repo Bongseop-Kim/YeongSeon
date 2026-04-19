@@ -1,7 +1,7 @@
 BEGIN;
 SELECT plan(4);
 
-DROP INDEX public.idx_design_chat_messages_session_id;
+DROP INDEX IF EXISTS public.idx_design_chat_messages_session_id;
 
 DO $setup$
 DECLARE

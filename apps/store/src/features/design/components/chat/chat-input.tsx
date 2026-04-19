@@ -95,11 +95,12 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                     setDesignContext({ pattern: null });
                   } else if (removed.type === "ci-placement") {
                     setDesignContext({ ciPlacement: null });
-                  } else if (
-                    removed.type === "image" &&
-                    removed.value === "reference"
-                  ) {
-                    setDesignContext({ ciImage: null, referenceImage: null });
+                  } else if (removed.type === "image") {
+                    setDesignContext(
+                      removed.value === "ci"
+                        ? { ciImage: null }
+                        : { referenceImage: null },
+                    );
                   }
                 }}
               >

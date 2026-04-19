@@ -1,6 +1,7 @@
 export { aiDesignApi, InsufficientTokensError } from "./api/ai-design-api";
 export { resolveGenerationRoute } from "./api/resolve-generation-route";
 export type {
+  AiDesignRequest,
   GenerationRoute,
   GenerationRouteReason,
   GenerationRouteSignal,
@@ -19,7 +20,6 @@ export {
   toRestoredDesignSessionState,
   type RestoredDesignSessionState,
 } from "./api/design-session-state-mapper";
-export type { AiDesignRequest } from "./model/ai-design-request";
 export type { AiModel, Attachment, ContextChip } from "./model/ai-design-types";
 export type { GenerationStatus, Message } from "./model/chat";
 export type {

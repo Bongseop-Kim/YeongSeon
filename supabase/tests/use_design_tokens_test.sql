@@ -8,7 +8,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(21);
+SELECT plan(23);
 
 -- ── 픽스처 설정 ─────────────────────────────────────────────
 
@@ -171,6 +171,21 @@ SELECT throws_ok(
   '유효하지 않은 request_type 파라미터로 호출 시 예외 발생'
 );
 
+-- ── 테스트 10b: 유효하지 않은 quality → 예외 ──────────────────
+SELECT throws_ok(
+  $$
+    SELECT public.use_design_tokens(
+      'dd000001-0000-0000-0000-000000000001'::uuid,
+      'openai',
+      'analysis',
+      'invalid',
+      'work-invalid-quality-0001'
+    )
+  $$,
+  'P0001', NULL,
+  '유효하지 않은 quality 파라미터로 호출 시 예외 발생'
+);
+
 -- ── 테스트 11: non-service_role refund_design_tokens 거부 ──────
 SELECT test_helpers.set_auth('dd000001-0000-0000-0000-000000000001'::uuid);
 
@@ -186,6 +201,23 @@ SELECT throws_ok(
   $$,
   'P0001', NULL,
   'service_role이 아니면 refund_design_tokens가 거부된다'
+);
+
+SELECT test_helpers.set_service_role();
+
+-- ── 테스트 11b: refund_design_tokens는 공백 work_id를 거부한다 ──
+SELECT throws_ok(
+  $$
+    SELECT public.refund_design_tokens(
+      'dd000001-0000-0000-0000-000000000001'::uuid,
+      5,
+      'openai',
+      'analysis',
+      '   '
+    )
+  $$,
+  'P0001', NULL,
+  'refund_design_tokens는 공백만 있는 work_id를 거부한다'
 );
 
 SELECT test_helpers.set_service_role();

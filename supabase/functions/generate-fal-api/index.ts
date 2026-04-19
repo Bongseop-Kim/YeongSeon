@@ -592,7 +592,9 @@ Deno.serve(async (req) => {
 
       imageBytes = new Uint8Array(await falImageResp.arrayBuffer());
       imageMimeType =
-        falImageResp.headers.get("content-type") ?? payload.tiledMimeType;
+        falImageResp.headers.get("content-type") ??
+        payload.tiledMimeType ??
+        "image/png";
     } catch (error) {
       errorCode = "fal_image_fetch_failed";
       throw error;

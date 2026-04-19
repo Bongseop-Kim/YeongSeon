@@ -46,6 +46,7 @@ CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
   p_ai_model     text,             -- 'openai' | 'gemini' | 'fal'
   p_request_type text,             -- 'analysis' | 'render_standard' | 'render_high'
+  p_quality      text DEFAULT 'standard',
   p_work_id      text DEFAULT NULL
 )
 RETURNS jsonb
@@ -79,6 +80,9 @@ BEGIN
   END IF;
   IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
+  END IF;
+  IF p_quality NOT IN ('standard', 'high') THEN
+    RAISE EXCEPTION 'invalid quality: %', p_quality;
   END IF;
 
   -- 동시 요청 advisory lock (사용자별)
@@ -214,38 +218,10 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.use_design_tokens(
-  p_user_id      uuid,
-  p_ai_model     text,
-  p_request_type text,
-  p_quality      text,
-  p_work_id      text
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-DECLARE
-  v_caller_role text;
-BEGIN
-  v_caller_role := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
-  IF v_caller_role IS DISTINCT FROM 'service_role' AND auth.uid() IS DISTINCT FROM p_user_id THEN
-    RAISE EXCEPTION 'unauthorized: caller does not own this resource';
-  END IF;
-
-  IF p_quality NOT IN ('standard', 'high') THEN
-    RAISE EXCEPTION 'invalid quality: %', p_quality;
-  END IF;
-
-  RETURN public.use_design_tokens(
-    p_user_id,
-    p_ai_model,
-    p_request_type,
-    p_work_id
-  );
-END;
-$$;
+GRANT EXECUTE ON FUNCTION public.use_design_tokens(uuid, text, text, text, text)
+  TO authenticated;
+GRANT EXECUTE ON FUNCTION public.use_design_tokens(uuid, text, text, text, text)
+  TO service_role;
 
 -- ── refund_design_tokens ──────────────────────────────────────
 -- Refunds tokens when image generation fails after text succeeds.
@@ -284,7 +260,7 @@ BEGIN
     RETURN;
   END IF;
 
-  IF p_work_id IS NULL THEN
+  IF p_work_id IS NULL OR trim(p_work_id) = '' THEN
     RAISE EXCEPTION 'refund_design_tokens requires non-null p_work_id for idempotency';
   END IF;
 

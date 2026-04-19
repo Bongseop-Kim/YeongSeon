@@ -1,30 +1,13 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { RestoredDesignSessionState } from "@/entities/design";
 import { useSessionRestore } from "@/features/design/hooks/use-session-restore";
 
 const { restoreSessionState, mockQueryData } = vi.hoisted(() => ({
   restoreSessionState: vi.fn(),
   mockQueryData: {
-    data: undefined as
-      | {
-          messages: {
-            id: string;
-            role: "user" | "ai";
-            content: string;
-            imageUrl?: string;
-            timestamp: number;
-          }[];
-          generatedImageUrl: string | null;
-          baseImageWorkId?: string | null;
-          resultTags: string[];
-          generationStatus:
-            | "idle"
-            | "completed"
-            | "generating"
-            | "regenerating";
-        }
-      | undefined,
+    data: undefined as RestoredDesignSessionState | undefined,
   },
 }));
 
@@ -113,6 +96,7 @@ describe("useSessionRestore", () => {
         },
       ],
       generatedImageUrl: null,
+      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
     };

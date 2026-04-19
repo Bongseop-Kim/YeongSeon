@@ -49,27 +49,49 @@ const FAL_NANO_BANANA_EDIT_ENDPOINT =
   "https://queue.fal.run/fal-ai/nano-banana-2/edit";
 const POLL_INTERVAL_MS = 2000;
 const DEFAULT_TIMEOUT_MS = 60000;
+const TRUSTED_FAL_QUEUE_HOST = "queue.fal.run";
 
 const sleep = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(signal.reason);
+    const abortSignal = signal;
+
+    if (abortSignal?.aborted) {
+      reject(abortSignal.reason);
       return;
     }
 
     const timeoutId = setTimeout(() => {
-      signal?.removeEventListener("abort", onAbort);
+      abortSignal?.removeEventListener("abort", onAbort);
       resolve();
     }, ms);
 
     const onAbort = () => {
       clearTimeout(timeoutId);
-      signal?.removeEventListener("abort", onAbort);
-      reject(signal.reason);
+      abortSignal?.removeEventListener("abort", onAbort);
+      reject(abortSignal?.reason);
     };
 
-    signal?.addEventListener("abort", onAbort, { once: true });
+    abortSignal?.addEventListener("abort", onAbort, { once: true });
   });
+
+const assertTrustedFalQueueUrl = (value: string, fieldName: string): string => {
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(value);
+  } catch {
+    throw new Error(`Unexpected Fal queue URL for ${fieldName}`);
+  }
+
+  if (
+    parsedUrl.protocol !== "https:" ||
+    parsedUrl.hostname !== TRUSTED_FAL_QUEUE_HOST
+  ) {
+    throw new Error(`Unexpected Fal queue URL for ${fieldName}`);
+  }
+
+  return parsedUrl.toString();
+};
 
 async function callFalImageEndpoint(input: {
   endpoint: string;
@@ -115,8 +137,11 @@ async function callFalImageEndpoint(input: {
     throw new Error("Fal.ai submit did not return response_url");
   }
 
+  const trustedStatusUrl = assertTrustedFalQueueUrl(statusUrl, "status_url");
+  const trustedResultUrl = assertTrustedFalQueueUrl(resultUrl, "response_url");
+
   while (true) {
-    const statusResponse = await fetch(statusUrl, {
+    const statusResponse = await fetch(trustedStatusUrl, {
       headers: { Authorization: `Key ${input.apiKey}` },
       signal: timeoutSignal,
     });
@@ -128,7 +153,7 @@ async function callFalImageEndpoint(input: {
     const status = (await statusResponse.json()) as FalQueueStatusResponse;
 
     if (status.status === "COMPLETED") {
-      const resultResponse = await fetch(resultUrl, {
+      const resultResponse = await fetch(trustedResultUrl, {
         headers: { Authorization: `Key ${input.apiKey}` },
         signal: timeoutSignal,
       });

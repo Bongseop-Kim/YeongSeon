@@ -94,7 +94,12 @@ export type AnalysisSnapshot = Omit<
   | "tokensRefunded"
   | "textLatencyMs"
   | "remainingTokens"
->;
+  | "imagePrompt"
+  | "imageEditPrompt"
+> & {
+  imagePrompt: string | null;
+  imageEditPrompt: string | null;
+};
 
 export type AnalysisSnapshotRow = {
   workflow_id: string | null;
@@ -350,13 +355,7 @@ export const loadAnalysisSnapshot = async (
   const imageEditPrompt =
     typeof row.image_edit_prompt === "string" ? row.image_edit_prompt : null;
 
-  if (
-    !workflowId ||
-    !workId ||
-    !textPrompt ||
-    !imagePrompt ||
-    !imageEditPrompt
-  ) {
+  if (!workflowId || !workId || !textPrompt) {
     throw new HttpError(409, { error: "analysis_snapshot_incomplete" });
   }
 

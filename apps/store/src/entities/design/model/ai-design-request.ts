@@ -6,7 +6,13 @@ import type { DesignContext } from "@/entities/design/model/design-context";
 import type { Scale } from "@/entities/design/model/design-scale";
 import type { Message } from "@/entities/design/model/chat";
 
-export type GenerationRoute = "openai" | "fal_tiling" | "fal_edit";
+export const GENERATION_ROUTE_VALUES = [
+  "openai",
+  "fal_tiling",
+  "fal_edit",
+] as const;
+
+export type GenerationRoute = (typeof GENERATION_ROUTE_VALUES)[number];
 
 export const GENERATION_ROUTE_SIGNAL_VALUES = [
   "ci_image_present",

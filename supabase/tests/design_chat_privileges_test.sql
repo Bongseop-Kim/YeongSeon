@@ -113,6 +113,7 @@ SELECT lives_ok(
       '첫 요청',
       NULL,
       NULL,
+      NULL,
       '[
         {
           "id": "dc200001-0000-0000-0000-000000000011",
@@ -183,6 +184,7 @@ SELECT throws_ok(
       'dc100001-0000-0000-0000-000000000001'::uuid,
       'openai',
       '침범 시도',
+      NULL,
       NULL,
       NULL,
       '[]'::jsonb

@@ -319,8 +319,11 @@ describe("normalizeInvokeResponse", () => {
         missingRequirements: [],
         contextChips: [
           { label: "유효", action: "color" },
+          { label: "  네이비  ", action: "  color  " },
           { label: "", action: "color" },
+          { label: "   ", action: "color" },
           { label: "유효2", action: "" },
+          { label: "유효3", action: "   " },
           { type: "color", label: "무효" },
           null,
         ],
@@ -328,7 +331,10 @@ describe("normalizeInvokeResponse", () => {
       createAiDesignRequest(),
     );
 
-    expect(result.contextChips).toEqual([{ label: "유효", action: "color" }]);
+    expect(result.contextChips).toEqual([
+      { label: "유효", action: "color" },
+      { label: "네이비", action: "color" },
+    ]);
   });
 
   it("비정상 응답 필드는 안전한 기본값으로 정규화한다", () => {

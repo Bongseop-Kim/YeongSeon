@@ -99,4 +99,18 @@ describe("useSearchTabs", () => {
 
     expect(result.current).toBe("완료");
   });
+
+  it("store config의 activeTab이 허용된 탭이 아니면 defaultTab을 반환한다", () => {
+    mockConfig.tabs = { activeTab: "잘못된 탭" };
+    const { result } = renderHook(() =>
+      useSearchTabs<Tab>({
+        tabs: TABS,
+        defaultTab: "전체",
+        placeholder: "검색",
+        onSearch: vi.fn(),
+      }),
+    );
+
+    expect(result.current).toBe("전체");
+  });
 });

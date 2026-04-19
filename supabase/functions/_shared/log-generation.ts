@@ -27,14 +27,14 @@ export type AiGenerationLogInsert = {
   ai_message?: string | null;
   generate_image?: boolean | null;
   eligible_for_render?: boolean | null;
-  missing_requirements?: unknown[] | null;
+  missing_requirements?: string[] | null;
   eligibility_reason?: string | null;
   text_prompt?: string | null;
   image_prompt?: string | null;
   image_edit_prompt?: string | null;
   route?: "openai" | "fal_tiling" | "fal_edit" | null;
   route_reason?: string | null;
-  route_signals?: unknown[] | null;
+  route_signals?: string[] | null;
   base_image_work_id?: string | null;
   fal_request_id?: string | null;
   seed?: number | null;

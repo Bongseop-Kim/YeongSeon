@@ -606,6 +606,9 @@ const runGeminiRenderFromAnalysis = async (params: {
     userMessage: analysis.userMessage,
     designContext: analysis.normalizedDesign,
   };
+  const imagePrompt = analysis.imagePrompt ?? buildImagePrompt(renderPayload);
+  const imageEditPrompt =
+    analysis.imageEditPrompt ?? buildImageEditPrompt(renderPayload);
   const missingRenderAssets: string[] = [];
 
   if (analysis.hasPreviousImage && !payload.previousImageBase64) {
@@ -653,8 +656,8 @@ const runGeminiRenderFromAnalysis = async (params: {
       missingRequirements: analysis.missingRequirements,
       eligibilityReason: analysis.eligibilityReason,
       textPrompt: analysis.textPrompt,
-      imagePrompt: analysis.imagePrompt,
-      imageEditPrompt: analysis.imageEditPrompt,
+      imagePrompt,
+      imageEditPrompt,
       imageGenerated: false,
       tokensCharged,
       tokensRefunded,
@@ -724,8 +727,8 @@ const runGeminiRenderFromAnalysis = async (params: {
 
   const imageStartTime = Date.now();
   const rawImageUrl = await requestGeminiImage(renderPayload, geminiApiKey, {
-    imagePrompt: analysis.imagePrompt,
-    imageEditPrompt: analysis.imageEditPrompt,
+    imagePrompt,
+    imageEditPrompt,
   });
   imageLatencyMs = Date.now() - imageStartTime;
 

@@ -1,4 +1,4 @@
-import { assertEquals, assertObjectMatch } from "jsr:@std/assert";
+import { assertEquals, assertObjectMatch } from "jsr:@std/assert@1.0.19";
 import {
   ALLOWED_TILED_MIME_TYPES,
   MAX_IMAGE_BASE64_LENGTH,

@@ -1,6 +1,7 @@
 import type { DesignTokenHistoryItem } from "@/entities/design/model/token-history";
 import type { AiDesignRequest } from "@/entities/design/model/ai-design-request";
 import {
+  GENERATION_ROUTE_VALUES,
   GENERATION_ROUTE_REASON_VALUES,
   GENERATION_ROUTE_SIGNAL_VALUES,
 } from "@/entities/design/model/ai-design-request";
@@ -58,8 +59,6 @@ const CI_PLACEMENT_LABELS: Record<CiPlacement, string> = {
   "all-over": "올패턴",
   "one-point": "원포인트",
 };
-
-const GENERATION_ROUTE_VALUES = ["openai", "fal_tiling", "fal_edit"] as const;
 
 const isKnownKey = <T extends string>(
   map: Record<T, string>,
@@ -211,16 +210,23 @@ const isContextChip = (
   }
 
   const record = value as Record<string, unknown>;
-  return (
-    typeof record.label === "string" &&
-    record.label.length > 0 &&
-    typeof record.action === "string" &&
-    record.action.length > 0
-  );
+  if (typeof record.label !== "string" || typeof record.action !== "string") {
+    return false;
+  }
+
+  const label = record.label.trim();
+  const action = record.action.trim();
+
+  return label.length > 0 && action.length > 0;
 };
 
 const normalizeContextChips = (value: unknown) =>
-  Array.isArray(value) ? value.filter(isContextChip) : [];
+  Array.isArray(value)
+    ? value.filter(isContextChip).map((chip) => ({
+        label: chip.label.trim(),
+        action: chip.action.trim(),
+      }))
+    : [];
 
 const normalizeGenerationRoute = (
   value: unknown,

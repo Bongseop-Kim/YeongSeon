@@ -1,4 +1,4 @@
-import { useRef, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { X } from "lucide-react";
 
 import { Badge } from "@/shared/ui/badge";
@@ -43,7 +43,10 @@ function replaceSingleAttachment(
   removeAttachmentsByFilter(
     attachments,
     removeAttachment,
-    (attachment) => attachment.type === nextAttachment.type,
+    (attachment) =>
+      attachment.type === nextAttachment.type &&
+      (attachment.type !== "image" ||
+        attachment.value === nextAttachment.value),
   );
   addAttachment(nextAttachment);
 }
@@ -61,6 +64,9 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
     (state) => state.setDesignContext,
   );
   const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedImageKind, setSelectedImageKind] = useState<
+    "ci" | "reference"
+  >("reference");
 
   const selectedColors = pendingAttachments.filter(
     (attachment) => attachment.type === "color",
@@ -124,25 +130,41 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
     setDesignContext({ ciPlacement: value });
   };
 
-  const handleImageSelection = (
-    event: ChangeEvent<HTMLInputElement>,
-    label: string,
-  ) => {
+  const handleImageSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) {
       return;
     }
 
+    const nextAttachment =
+      selectedImageKind === "ci"
+        ? { type: "image" as const, label: "CI 이미지", value: "ci", file }
+        : {
+            type: "image" as const,
+            label: "참고 이미지",
+            value: "reference",
+            file,
+          };
+
     replaceSingleAttachment(
       pendingAttachments,
       removeAttachment,
-      { type: "image", label, value: "reference", file },
+      nextAttachment,
       addAttachment,
     );
-    setDesignContext({ ciImage: null, referenceImage: file });
+    setDesignContext(
+      selectedImageKind === "ci"
+        ? { ciImage: file, referenceImage: designContext.referenceImage }
+        : { ciImage: designContext.ciImage, referenceImage: file },
+    );
     event.target.value = "";
     onClose();
+  };
+
+  const openImagePicker = (kind: "ci" | "reference") => {
+    setSelectedImageKind(kind);
+    imageInputRef.current?.click();
   };
 
   return (
@@ -243,14 +265,21 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
               type="file"
               className="hidden"
               accept="image/*"
-              onChange={(event) => handleImageSelection(event, "첨부 이미지")}
+              onChange={handleImageSelection}
             />
             <Button
               type="button"
               variant="outline"
-              onClick={() => imageInputRef.current?.click()}
+              onClick={() => openImagePicker("ci")}
             >
-              이미지 첨부
+              CI 이미지 첨부
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => openImagePicker("reference")}
+            >
+              참고 이미지 첨부
             </Button>
           </div>
         </section>
