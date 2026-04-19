@@ -7,6 +7,27 @@ alter table public.design_chat_sessions
 
 drop index public.idx_design_chat_messages_session_id;
 
+with duplicate_design_chat_messages as (
+  select
+    id,
+    row_number() over (
+      partition by session_id, sequence_number
+      order by created_at desc, id desc
+    ) as duplicate_rank
+  from public.design_chat_messages
+),
+deleted_design_chat_messages as (
+  delete from public.design_chat_messages target
+  using duplicate_design_chat_messages duplicate
+  where target.id = duplicate.id
+    and duplicate.duplicate_rank > 1
+  returning target.id::text as id
+)
+delete from public.images image
+using deleted_design_chat_messages deleted
+where image.entity_type = 'design_message'
+  and image.entity_id = deleted.id;
+
 create unique index idx_design_chat_messages_session_id
   on public.design_chat_messages (session_id, sequence_number);
 
