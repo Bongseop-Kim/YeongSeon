@@ -89,7 +89,8 @@ const FULL_SCAN_DIRS = ["supabase/schemas"];
 const isSquashFile = (f) => basename(f).includes("_squash.");
 
 // 마이그레이션 파일은 squash 시 주석이 사라지므로 검사 제외 (schemas/가 영구 기준)
-const toRepoRelativePath = (f) => relative(ROOT, resolve(f)).replace(/\\/g, "/");
+const toRepoRelativePath = (f) =>
+  relative(ROOT, resolve(f)).replace(/\\/g, "/");
 
 const isMigrationFile = (f) =>
   toRepoRelativePath(f).startsWith("supabase/migrations/");

@@ -41,11 +41,5 @@ export function useSearch({
     });
 
     return () => setSearchEnabled(false);
-  }, [
-    placeholder,
-    setSearchEnabled,
-    tabs?.defaultTab,
-    tabs?.items,
-    tabs?.onTabChange,
-  ]);
+  }, [placeholder, setSearchEnabled, tabs]);
 }
