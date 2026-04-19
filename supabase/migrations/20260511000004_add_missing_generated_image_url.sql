@@ -1,1 +1,1 @@
-ALTER TABLE public.ai_generation_logs ADD COLUMN generated_image_url text;
+ALTER TABLE public.ai_generation_logs ADD COLUMN IF NOT EXISTS generated_image_url text;
