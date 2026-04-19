@@ -107,6 +107,9 @@ BEGIN
       updated_at = now()
   WHERE public.design_chat_sessions.user_id = v_user_id;
 
+  DELETE FROM public.design_chat_messages
+  WHERE session_id = v_session_id;
+
   FOR v_msg IN
     SELECT *
     FROM jsonb_array_elements(COALESCE(p_messages, '[]'::jsonb))
@@ -123,13 +126,18 @@ BEGIN
       v_msg->>'image_url',
       v_msg->>'image_file_id',
       (v_msg->>'sequence_number')::int
-    )
-    ON CONFLICT (session_id, sequence_number) DO UPDATE
-    SET role = EXCLUDED.role,
-        content = EXCLUDED.content,
-        image_url = EXCLUDED.image_url,
-        image_file_id = EXCLUDED.image_file_id;
+    );
   END LOOP;
+
+  UPDATE public.design_chat_sessions
+  SET image_count = (
+        SELECT COUNT(*)
+        FROM public.design_chat_messages
+        WHERE session_id = v_session_id
+          AND image_url IS NOT NULL
+      ),
+      updated_at = now()
+  WHERE id = v_session_id;
 
   RETURN v_session_id;
 END;

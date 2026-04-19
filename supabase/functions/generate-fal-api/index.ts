@@ -44,7 +44,6 @@ const RENDER_AI_MODEL = "fal" as const;
 const OPENAI_TIMEOUT_MS = 60_000;
 
 const SERVER_VAR = "FALAI_CI_PATTERN_ENABLED";
-const CLIENT_VAR = "VITE_FALAI_CI_PATTERN_ENABLED";
 const IS_FAL_PIPELINE_ENABLED = Deno.env.get(SERVER_VAR) === "true";
 
 async function tryRefund(
@@ -81,7 +80,7 @@ const saveSessionIfNeeded = async (
 
   await saveDesignSession(supabase, {
     sessionId: payload.sessionId,
-    aiModel: "openai",
+    aiModel: "fal",
     firstMessage: payload.firstMessage ?? "",
     lastImageUrl: imageUrl,
     lastImageFileId: imageFileId,
@@ -111,8 +110,6 @@ Deno.serve(async (req) => {
   ) {
     return jsonResponse(200, {
       enabled: IS_FAL_PIPELINE_ENABLED,
-      serverVar: SERVER_VAR,
-      clientVar: CLIENT_VAR,
     });
   }
 
@@ -266,7 +263,7 @@ Deno.serve(async (req) => {
       amount: analysisTokensCharged,
       aiModel: ANALYSIS_AI_MODEL,
       requestType: ANALYSIS_REQUEST_TYPE,
-      workId: `${analysisWorkId}_analysis_failed_refund`,
+      workId: `${analysisWorkId}_failed_refund`,
     });
 
     await logGeneration(adminClient, {
@@ -307,6 +304,18 @@ Deno.serve(async (req) => {
     },
     generateImage,
   );
+  const analysisResponseBody = {
+    aiMessage,
+    imageUrl: null,
+    workId,
+    workflowId: workId,
+    analysisWorkId,
+    generateImage: false,
+    eligibleForRender: eligibility.eligibleForRender,
+    eligibilityReason: eligibility.eligibilityReason,
+    missingRequirements: eligibility.missingRequirements,
+    contextChips,
+  };
 
   await logGeneration(adminClient, {
     work_id: analysisWorkId,
@@ -321,6 +330,8 @@ Deno.serve(async (req) => {
     ai_message: aiMessage,
     generate_image: generateImage,
     eligible_for_render: eligibility.eligibleForRender,
+    missing_requirements: eligibility.missingRequirements,
+    eligibility_reason: eligibility.eligibilityReason,
     image_generated: false,
     text_latency_ms: textLatencyMs,
     tokens_charged: analysisTokensCharged,
@@ -329,18 +340,7 @@ Deno.serve(async (req) => {
 
   if (!shouldProceedToFalRender(generateImage, eligibility)) {
     await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
-
-    return jsonResponse(200, {
-      aiMessage,
-      imageUrl: null,
-      workId,
-      workflowId: workId,
-      analysisWorkId,
-      generateImage: false,
-      eligibleForRender: eligibility.eligibleForRender,
-      missingRequirements: eligibility.missingRequirements,
-      contextChips,
-    });
+    return jsonResponse(200, analysisResponseBody);
   }
 
   const imagePrompt = buildFalPatternPrompt({
@@ -365,6 +365,8 @@ Deno.serve(async (req) => {
     });
 
   if (renderTokenError) {
+    await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
+
     await logGeneration(adminClient, {
       work_id: renderWorkId,
       workflow_id: workId,
@@ -380,15 +382,22 @@ Deno.serve(async (req) => {
       ai_message: aiMessage,
       generate_image: true,
       eligible_for_render: eligibility.eligibleForRender,
+      missing_requirements: eligibility.missingRequirements,
+      eligibility_reason: eligibility.eligibilityReason,
       image_generated: false,
       text_latency_ms: textLatencyMs,
       error_type: "token_processing_failed",
       error_message: renderTokenError.message,
     });
-    return jsonResponse(500, { error: "token_processing_failed" });
+    return jsonResponse(500, {
+      error: "token_processing_failed",
+      ...analysisResponseBody,
+    });
   }
 
   if (!renderTokenResult?.success) {
+    await saveSessionIfNeeded(supabase, payload, aiMessage, null, null);
+
     await logGeneration(adminClient, {
       work_id: renderWorkId,
       workflow_id: workId,
@@ -404,6 +413,8 @@ Deno.serve(async (req) => {
       ai_message: aiMessage,
       generate_image: true,
       eligible_for_render: eligibility.eligibleForRender,
+      missing_requirements: eligibility.missingRequirements,
+      eligibility_reason: eligibility.eligibilityReason,
       image_generated: false,
       text_latency_ms: textLatencyMs,
       error_type: renderTokenResult?.error ?? "insufficient_tokens",
@@ -413,6 +424,7 @@ Deno.serve(async (req) => {
       error: "insufficient_tokens",
       balance: renderTokenResult?.balance ?? 0,
       cost: renderTokenResult?.cost ?? 0,
+      ...analysisResponseBody,
     });
   }
 
@@ -433,7 +445,7 @@ Deno.serve(async (req) => {
       amount: renderTokensCharged,
       aiModel: RENDER_AI_MODEL,
       requestType: RENDER_REQUEST_TYPE,
-      workId: `${renderWorkId}_render_failed_refund`,
+      workId: `${renderWorkId}_failed_refund`,
     });
 
     errorLogger("fal_render_failed", error, {
@@ -455,6 +467,8 @@ Deno.serve(async (req) => {
       ai_message: aiMessage,
       generate_image: true,
       eligible_for_render: eligibility.eligibleForRender,
+      missing_requirements: eligibility.missingRequirements,
+      eligibility_reason: eligibility.eligibilityReason,
       image_generated: false,
       text_latency_ms: textLatencyMs,
       tokens_charged: renderTokensCharged,
@@ -511,7 +525,7 @@ Deno.serve(async (req) => {
       amount: renderTokensCharged,
       aiModel: RENDER_AI_MODEL,
       requestType: RENDER_REQUEST_TYPE,
-      workId: `${renderWorkId}_render_failed_refund`,
+      workId: `${renderWorkId}_failed_refund`,
     });
 
     const resolvedErrorCode = errorCode ?? "fal_image_fetch_failed";
@@ -535,6 +549,8 @@ Deno.serve(async (req) => {
       ai_message: aiMessage,
       generate_image: true,
       eligible_for_render: eligibility.eligibleForRender,
+      missing_requirements: eligibility.missingRequirements,
+      eligibility_reason: eligibility.eligibilityReason,
       image_generated: false,
       text_latency_ms: textLatencyMs,
       image_latency_ms: imageLatencyMs,
@@ -562,6 +578,8 @@ Deno.serve(async (req) => {
     ai_message: aiMessage,
     generate_image: true,
     eligible_for_render: eligibility.eligibleForRender,
+    missing_requirements: eligibility.missingRequirements,
+    eligibility_reason: eligibility.eligibilityReason,
     image_generated: true,
     generated_image_url: finalImageUrl,
     text_latency_ms: textLatencyMs,
@@ -587,6 +605,7 @@ Deno.serve(async (req) => {
     analysisWorkId,
     generateImage: true,
     eligibleForRender: eligibility.eligibleForRender,
+    eligibilityReason: eligibility.eligibilityReason,
     missingRequirements: eligibility.missingRequirements,
     contextChips,
   });

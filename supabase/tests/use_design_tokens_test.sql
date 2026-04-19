@@ -24,7 +24,8 @@ BEGIN
   INSERT INTO public.design_tokens (user_id, amount, type, token_class, description)
   VALUES (v_user_a, 100, 'grant', 'paid', '테스트용 유료 토큰');
 
-  -- admin_settings: openai 분석/렌더 비용 = 5
+  -- 이 테스트는 계산 단순화를 위해 admin_settings 비용을 5로 덮어쓴다.
+  -- 20260511000003_add_design_token_cost_keys.sql 기본값(1/5/12)과는 다르다.
   PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_analysis', '5');
   PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_render_standard', '5');
   PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_render_high', '5');
@@ -298,7 +299,7 @@ SELECT is(
   '만료 토큰만 있는 사용자: use_design_tokens → insufficient_tokens'
 );
 
--- ── 테스트 12: 유효 배치에서 FIFO 소비 → source_order_id 기록 확인 ─────────
+-- ── 테스트 14: 유효 배치에서 FIFO 소비 → source_order_id 기록 확인 ─────────
 SELECT lives_ok(
   $$
     SELECT public.use_design_tokens(
@@ -309,7 +310,7 @@ SELECT lives_ok(
   '유효 배치에서 paid 토큰 차감 예외 없이 실행'
 );
 
--- ── 테스트 13: use 항목의 source_order_id가 배치 주문 ID와 일치 ─────────────
+-- ── 테스트 15: use 항목의 source_order_id가 배치 주문 ID와 일치 ─────────────
 SELECT is(
   (SELECT source_order_id::text
    FROM public.design_tokens
@@ -320,7 +321,7 @@ SELECT is(
   'use 항목의 source_order_id가 유효 배치(order_2) ID와 일치'
 );
 
--- ── 테스트 14: use 항목의 expires_at이 배치 expires_at과 일치 ───────────────
+-- ── 테스트 16: use 항목의 expires_at이 배치 expires_at과 일치 ───────────────
 SELECT ok(
   (SELECT (expires_at - now()) > interval '364 days'
    FROM public.design_tokens
@@ -330,7 +331,7 @@ SELECT ok(
   'use 항목의 expires_at이 배치의 expires_at(1년 후)과 일치'
 );
 
--- ── 테스트 15: source_order_id가 있는 expires_at NULL paid 토큰도 차감 가능 ──
+-- ── 테스트 17: source_order_id가 있는 expires_at NULL paid 토큰도 차감 가능 ──
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000005'::uuid,
@@ -340,7 +341,7 @@ SELECT is(
   'source_order_id가 있고 expires_at이 NULL인 paid 토큰도 use_design_tokens가 사용한다'
 );
 
--- ── 테스트 16: 위 차감 후 잔액이 감소함 ─────────────────────────────────
+-- ── 테스트 18: 위 차감 후 잔액이 감소함 ─────────────────────────────────
 SELECT is(
   (SELECT COALESCE(SUM(amount), 0)::int
    FROM public.design_tokens

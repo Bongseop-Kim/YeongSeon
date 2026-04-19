@@ -1,46 +1,10 @@
+import { assertEquals, assertObjectMatch } from "jsr:@std/assert";
 import {
   ALLOWED_TILED_MIME_TYPES,
+  MAX_IMAGE_BASE64_LENGTH,
   shouldProceedToFalRender,
   validateFalGeneratePayload,
 } from "./fal-request-validation.ts";
-
-const assertEquals = <T>(actual: T, expected: T) => {
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-    throw new Error(
-      `Expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}`,
-    );
-  }
-};
-
-const assertObjectMatch = (
-  actual: Record<string, unknown>,
-  expected: Record<string, unknown>,
-) => {
-  const entries = Object.entries(expected);
-  for (const [key, value] of entries) {
-    const actualValue = actual[key];
-    if (
-      value &&
-      typeof value === "object" &&
-      !Array.isArray(value) &&
-      actualValue &&
-      typeof actualValue === "object" &&
-      !Array.isArray(actualValue)
-    ) {
-      assertObjectMatch(
-        actualValue as Record<string, unknown>,
-        value as Record<string, unknown>,
-      );
-      continue;
-    }
-
-    if (JSON.stringify(actualValue) !== JSON.stringify(value)) {
-      throw new Error(
-        `Expected ${key} to match ${JSON.stringify(value)}, received ${JSON.stringify(actualValue)}`,
-      );
-    }
-  }
-};
 
 Deno.test(
   "validateFalGeneratePayload rejects non-array conversationHistory",
@@ -156,6 +120,25 @@ Deno.test(
   },
 );
 
+Deno.test("validateFalGeneratePayload rejects oversized tiled images", () => {
+  const result = validateFalGeneratePayload({
+    userMessage: "스트라이프로 바꿔줘",
+    designContext: {
+      colors: ["navy"],
+      fabricMethod: "yarn-dyed",
+      ciPlacement: "all-over",
+    },
+    tiledBase64: "a".repeat(MAX_IMAGE_BASE64_LENGTH + 1),
+    tiledMimeType: "image/png",
+  });
+
+  assertObjectMatch(result, {
+    ok: false,
+    status: 413,
+    body: { error: "tiled_image_too_large" },
+  });
+});
+
 Deno.test(
   "validateFalGeneratePayload rejects invalid designContext types",
   () => {
@@ -174,6 +157,114 @@ Deno.test(
       ok: false,
       status: 400,
       body: { error: "designContext.colors must be an array of strings" },
+    });
+  },
+);
+
+Deno.test(
+  "validateFalGeneratePayload rejects non-allowed design patterns",
+  () => {
+    const result = validateFalGeneratePayload({
+      userMessage: "스트라이프로 바꿔줘",
+      designContext: {
+        colors: ["navy"],
+        pattern: "zigzag",
+        fabricMethod: "yarn-dyed",
+        ciPlacement: "all-over",
+      },
+      tiledBase64: "abc",
+      tiledMimeType: "image/png",
+    } as unknown as Parameters<typeof validateFalGeneratePayload>[0]);
+
+    assertObjectMatch(result, {
+      ok: false,
+      status: 400,
+      body: { error: "invalid_design_pattern" },
+    });
+  },
+);
+
+Deno.test(
+  "validateFalGeneratePayload rejects non-string design patterns",
+  () => {
+    const result = validateFalGeneratePayload({
+      userMessage: "스트라이프로 바꿔줘",
+      designContext: {
+        colors: ["navy"],
+        pattern: 123,
+        fabricMethod: "yarn-dyed",
+        ciPlacement: "all-over",
+      },
+      tiledBase64: "abc",
+      tiledMimeType: "image/png",
+    } as unknown as Parameters<typeof validateFalGeneratePayload>[0]);
+
+    assertObjectMatch(result, {
+      ok: false,
+      status: 400,
+      body: { error: "invalid_design_pattern" },
+    });
+  },
+);
+
+Deno.test("validateFalGeneratePayload rejects missing user messages", () => {
+  const result = validateFalGeneratePayload({
+    designContext: {
+      colors: ["navy"],
+      fabricMethod: "yarn-dyed",
+      ciPlacement: "all-over",
+    },
+    tiledBase64: "abc",
+    tiledMimeType: "image/png",
+  } as unknown as Parameters<typeof validateFalGeneratePayload>[0]);
+
+  assertObjectMatch(result, {
+    ok: false,
+    status: 400,
+    body: { error: "invalid_user_message" },
+  });
+});
+
+Deno.test(
+  "validateFalGeneratePayload rejects overly long user messages",
+  () => {
+    const result = validateFalGeneratePayload({
+      userMessage: "a".repeat(4001),
+      designContext: {
+        colors: ["navy"],
+        fabricMethod: "yarn-dyed",
+        ciPlacement: "all-over",
+      },
+      tiledBase64: "abc",
+      tiledMimeType: "image/png",
+    });
+
+    assertObjectMatch(result, {
+      ok: false,
+      status: 400,
+      body: { error: "invalid_user_message" },
+    });
+  },
+);
+
+Deno.test(
+  "validateFalGeneratePayload rejects unsupported ci placement for fal render",
+  () => {
+    const result = validateFalGeneratePayload({
+      userMessage: "스트라이프로 바꿔줘",
+      designContext: {
+        colors: ["navy"],
+        fabricMethod: "yarn-dyed",
+        ciPlacement: "one-point",
+      },
+      tiledBase64: "abc",
+      tiledMimeType: "image/png",
+    });
+
+    assertObjectMatch(result, {
+      ok: false,
+      status: 400,
+      body: { error: "ci_placement_must_be_all_over" },
     });
   },
 );

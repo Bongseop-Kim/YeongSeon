@@ -16,7 +16,7 @@ const ALLOWED_PATTERNS = new Set([
 ]);
 
 const MAX_HISTORY_TURNS = 20;
-const MAX_IMAGE_BASE64_LENGTH = 5_000_000;
+export const MAX_IMAGE_BASE64_LENGTH = 5_000_000;
 
 export const ALLOWED_TILED_MIME_TYPES = new Set([
   "image/png",
@@ -83,7 +83,8 @@ export const validateFalGeneratePayload = (
   if (
     payload.designContext?.pattern !== undefined &&
     payload.designContext.pattern !== null &&
-    (!payload.designContext.pattern.trim() ||
+    (typeof payload.designContext.pattern !== "string" ||
+      !payload.designContext.pattern.trim() ||
       !ALLOWED_PATTERNS.has(payload.designContext.pattern))
   ) {
     return {
