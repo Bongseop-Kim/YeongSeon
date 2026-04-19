@@ -7,7 +7,9 @@ const { setSearchEnabled } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/shared/store/search", () => ({
-  useSearchStore: () => ({ setSearchEnabled }),
+  useSearchStore: <T,>(
+    selector: (state: { setSearchEnabled: typeof setSearchEnabled }) => T,
+  ) => selector({ setSearchEnabled }),
 }));
 
 describe("useSearch", () => {

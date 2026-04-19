@@ -10,11 +10,18 @@ const { setSearchEnabled, setTabsActiveTab } = vi.hoisted(() => ({
 const mockConfig: { tabs?: { activeTab: string } } = { tabs: undefined };
 
 vi.mock("@/shared/store/search", () => ({
-  useSearchStore: () => ({
-    setSearchEnabled,
-    setTabsActiveTab,
-    config: mockConfig,
-  }),
+  useSearchStore: <T,>(
+    selector: (state: {
+      setSearchEnabled: typeof setSearchEnabled;
+      setTabsActiveTab: typeof setTabsActiveTab;
+      config: typeof mockConfig;
+    }) => T,
+  ) =>
+    selector({
+      setSearchEnabled,
+      setTabsActiveTab,
+      config: mockConfig,
+    }),
 }));
 
 const TABS = ["전체", "진행중", "완료"] as const;

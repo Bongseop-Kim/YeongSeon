@@ -14,8 +14,10 @@ export function useSearchTabs<T extends string>({
   placeholder,
   onSearch,
 }: UseSearchTabsOptions<T>): T {
-  const { setTabsActiveTab, config } = useSearchStore();
-  const activeTab = (config.tabs?.activeTab as T | undefined) ?? defaultTab;
+  const setTabsActiveTab = useSearchStore((state) => state.setTabsActiveTab);
+  const activeTab = useSearchStore(
+    (state) => (state.config.tabs?.activeTab as T | undefined) ?? defaultTab,
+  );
 
   useSearch({
     placeholder,

@@ -4,6 +4,8 @@ import {
   toDefaultCourierSetting,
   toDesignTokenInitialGrantSetting,
   DEFAULT_DESIGN_TOKEN_INITIAL_GRANT,
+  sanitizeDesignTokenInitialGrantAmount,
+  toDesignTokenInitialGrantDTOValue,
 } from "@/features/settings/api/settings-mapper";
 
 describe("toDefaultCourierSetting", () => {
@@ -99,5 +101,29 @@ describe("toDesignTokenInitialGrantSetting", () => {
         updated_by: null,
       }),
     ).toEqual({ amount: DEFAULT_DESIGN_TOKEN_INITIAL_GRANT });
+  });
+});
+
+describe("sanitizeDesignTokenInitialGrantAmount", () => {
+  it("Infinity면 기본값을 반환한다", () => {
+    expect(
+      sanitizeDesignTokenInitialGrantAmount(Number.POSITIVE_INFINITY),
+    ).toBe(DEFAULT_DESIGN_TOKEN_INITIAL_GRANT);
+  });
+
+  it("양의 정수면 그대로 반환한다", () => {
+    expect(sanitizeDesignTokenInitialGrantAmount(75)).toBe(75);
+  });
+});
+
+describe("toDesignTokenInitialGrantDTOValue", () => {
+  it("유효한 값을 문자열로 변환한다", () => {
+    expect(toDesignTokenInitialGrantDTOValue(45)).toBe("45");
+  });
+
+  it("유효하지 않은 값은 기본값 문자열로 변환한다", () => {
+    expect(toDesignTokenInitialGrantDTOValue(-1)).toBe(
+      String(DEFAULT_DESIGN_TOKEN_INITIAL_GRANT),
+    );
   });
 });
