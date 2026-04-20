@@ -244,7 +244,7 @@ export async function aiDesignApi(
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
-      pipeline: usedFallback ? "fal-ai-fallback-failed" : undefined,
+      pipeline: usedFallback ? "fal-ai" : undefined,
     });
     throw new Error(`디자인 생성 실패: ${error.message}`);
   }
@@ -253,7 +253,7 @@ export async function aiDesignApi(
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
-      pipeline: usedFallback ? "fal-ai-fallback-failed" : undefined,
+      pipeline: usedFallback ? "fal-ai" : undefined,
     });
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }
