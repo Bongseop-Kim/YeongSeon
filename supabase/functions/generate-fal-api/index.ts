@@ -47,6 +47,7 @@ const ANALYSIS_AI_MODEL = "openai" as const;
 const RENDER_AI_MODEL = "fal" as const;
 const OPENAI_TIMEOUT_MS = 60_000;
 const DEFAULT_FAL_ROUTE = "fal_tiling" as const;
+const TRUSTED_FAL_IMAGE_HOSTS = new Set(["fal.media"]);
 
 const SERVER_VAR = "FALAI_CI_PATTERN_ENABLED";
 const IS_FAL_PIPELINE_ENABLED = Deno.env.get(SERVER_VAR) === "true";
@@ -113,6 +114,22 @@ const toDeterministicSeed = (value: string): number => {
   }
 
   return Math.abs(hash) || 1;
+};
+
+const getTrustedFalImageUrl = (value: string): string | null => {
+  try {
+    const parsedUrl = new URL(value);
+    if (
+      parsedUrl.protocol !== "https:" ||
+      !TRUSTED_FAL_IMAGE_HOSTS.has(parsedUrl.hostname)
+    ) {
+      return null;
+    }
+
+    return parsedUrl.toString();
+  } catch {
+    return null;
+  }
 };
 
 Deno.serve(async (req) => {
@@ -584,8 +601,20 @@ Deno.serve(async (req) => {
     let imageMimeType: string;
 
     try {
+      const trustedFalImageUrl = getTrustedFalImageUrl(falImageUrl);
+      if (!trustedFalImageUrl) {
+        processLogger("fal_image_fetch_invalid_url", {
+          workId,
+          renderWorkId,
+          falImageUrl,
+        });
+        throw new Error("Invalid Fal image URL");
+      }
+
       processLogger("fal_image_fetch_start", { workId, renderWorkId });
-      const falImageResp = await fetch(falImageUrl);
+      const falImageResp = await fetch(trustedFalImageUrl, {
+        signal: AbortSignal.timeout(OPENAI_TIMEOUT_MS),
+      });
       if (!falImageResp.ok) {
         throw new Error(`Fal image fetch failed: ${falImageResp.status}`);
       }
@@ -597,7 +626,28 @@ Deno.serve(async (req) => {
         "image/png";
     } catch (error) {
       errorCode = "fal_image_fetch_failed";
-      throw error;
+      if (
+        !(error instanceof Error && error.message === "Invalid Fal image URL")
+      ) {
+        processLogger("fal_image_fetch_error", {
+          workId,
+          renderWorkId,
+          falImageUrl,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      if (error instanceof DOMException && error.name === "TimeoutError") {
+        throw new Error("Fal image fetch timed out");
+      }
+
+      if (error instanceof Error) {
+        throw error.message.startsWith("Fal image fetch")
+          ? error
+          : new Error(`Fal image fetch failed: ${error.message}`);
+      }
+
+      throw new Error(`Fal image fetch failed: ${String(error)}`);
     }
 
     let uploaded;

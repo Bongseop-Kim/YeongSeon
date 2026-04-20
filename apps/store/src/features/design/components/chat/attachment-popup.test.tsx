@@ -76,7 +76,6 @@ describe("AttachmentPopup", () => {
     });
     expect(setDesignContext).toHaveBeenCalledWith({
       ciImage: file,
-      referenceImage: null,
     });
     expect(onClose).toHaveBeenCalledOnce();
   });
@@ -112,7 +111,6 @@ describe("AttachmentPopup", () => {
       file,
     });
     expect(setDesignContext).toHaveBeenCalledWith({
-      ciImage: null,
       referenceImage: file,
     });
   });

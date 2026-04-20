@@ -45,7 +45,7 @@ describe("useSessionRestore", () => {
       ],
       generatedImageUrl:
         'url("https://example.com/tie.png") center/cover no-repeat',
-      baseImageWorkId: "work-restore-1",
+      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "completed",
     };
@@ -122,6 +122,7 @@ describe("useSessionRestore", () => {
         "session-2",
         expect.objectContaining({
           generatedImageUrl: null,
+          baseImageWorkId: null,
           generationStatus: "idle",
         }),
       );

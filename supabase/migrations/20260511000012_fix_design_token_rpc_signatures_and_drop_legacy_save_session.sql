@@ -1,6 +1,7 @@
 drop function if exists public.save_design_session(uuid, text, text, text, text, jsonb);
 
 drop function if exists public.use_design_tokens(uuid, text, text, text);
+drop function if exists public.use_design_tokens(uuid, text, text, text, text);
 
 create or replace function public.use_design_tokens(
   p_user_id uuid,

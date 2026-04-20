@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert@1.0.19";
-import { callFalFluxImg2Img } from "./fal-client.ts";
+import { callFalFluxImg2Img } from "@/functions/_shared/fal-client.ts";
 
 Deno.test(
   "callFalFluxImg2Img rejects an untrusted fal status url",

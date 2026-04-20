@@ -154,9 +154,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       addAttachment,
     );
     setDesignContext(
-      selectedImageKind === "ci"
-        ? { ciImage: file, referenceImage: designContext.referenceImage }
-        : { ciImage: designContext.ciImage, referenceImage: file },
+      selectedImageKind === "ci" ? { ciImage: file } : { referenceImage: file },
     );
     event.target.value = "";
     onClose();

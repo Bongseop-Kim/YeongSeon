@@ -156,10 +156,10 @@ BEGIN
       WHERE user_id = p_user_id
         AND token_class = 'paid'
         AND source_order_id IS NOT NULL
-        AND expires_at > now()
+        AND (expires_at IS NULL OR expires_at > now())
       GROUP BY source_order_id, expires_at
       HAVING SUM(amount) > 0
-      ORDER BY expires_at ASC
+      ORDER BY expires_at ASC NULLS LAST
     LOOP
       EXIT WHEN v_remaining_paid <= 0;
 

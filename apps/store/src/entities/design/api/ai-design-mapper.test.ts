@@ -5,17 +5,15 @@ import {
   normalizeInvokeResponse,
   toDesignTokenHistoryItem,
 } from "@/entities/design/api/ai-design-mapper";
-import type { AiDesignRequest } from "@/entities/design/model/ai-design-request";
+import type {
+  AiDesignRequest,
+  DesignContextPayload,
+} from "@/entities/design/model/ai-design-request";
 import type { Attachment } from "@/entities/design/model/ai-design-types";
-import type { DesignContext } from "@/entities/design/model/design-context";
-
-type TestDesignContext = DesignContext & {
-  scale?: "large" | "medium" | "small" | null;
-};
 
 const createDesignContext = (
-  overrides: Partial<TestDesignContext> = {},
-): TestDesignContext => ({
+  overrides: Partial<DesignContextPayload> = {},
+): DesignContextPayload => ({
   colors: [],
   pattern: null,
   fabricMethod: null,
@@ -284,6 +282,11 @@ describe("normalizeInvokeResponse", () => {
         workId: null,
         workflowId: null,
         analysisWorkId: null,
+        route: null,
+        routeSignals: null,
+        routeReason: null,
+        falRequestId: null,
+        seed: "123" as never,
         generateImage: null,
         eligibleForRender: null,
         missingRequirements: [],
@@ -295,6 +298,11 @@ describe("normalizeInvokeResponse", () => {
     expect(result.workId).toBeUndefined();
     expect(result.workflowId).toBeUndefined();
     expect(result.analysisWorkId).toBeUndefined();
+    expect(result.route).toBeUndefined();
+    expect(result.routeSignals).toBeUndefined();
+    expect(result.routeReason).toBeUndefined();
+    expect(result.falRequestId).toBeUndefined();
+    expect(result.seed).toBeUndefined();
     expect(result.generateImage).toBeUndefined();
     expect(result.eligibleForRender).toBeUndefined();
   });

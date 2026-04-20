@@ -2,7 +2,7 @@ import { assertEquals } from "jsr:@std/assert@1.0.19";
 import {
   loadAnalysisSnapshot,
   type AnalysisSnapshotRow,
-} from "./design-generation.ts";
+} from "@/functions/_shared/design-generation.ts";
 
 Deno.test(
   "loadAnalysisSnapshot allows missing image prompts when textPrompt exists",
