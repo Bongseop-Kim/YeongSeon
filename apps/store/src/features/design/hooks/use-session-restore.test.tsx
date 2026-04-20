@@ -1,29 +1,13 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { RestoredDesignSessionState } from "@/entities/design";
 import { useSessionRestore } from "@/features/design/hooks/use-session-restore";
 
 const { restoreSessionState, mockQueryData } = vi.hoisted(() => ({
   restoreSessionState: vi.fn(),
   mockQueryData: {
-    data: undefined as
-      | {
-          messages: {
-            id: string;
-            role: "user" | "ai";
-            content: string;
-            imageUrl?: string;
-            timestamp: number;
-          }[];
-          generatedImageUrl: string | null;
-          resultTags: string[];
-          generationStatus:
-            | "idle"
-            | "completed"
-            | "generating"
-            | "regenerating";
-        }
-      | undefined,
+    data: undefined as RestoredDesignSessionState | undefined,
   },
 }));
 
@@ -61,6 +45,7 @@ describe("useSessionRestore", () => {
       ],
       generatedImageUrl:
         'url("https://example.com/tie.png") center/cover no-repeat',
+      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "completed",
     };
@@ -75,6 +60,7 @@ describe("useSessionRestore", () => {
         firstMessage: "생성",
         lastImageUrl: "https://example.com/tie.png",
         lastImageFileId: "file-1",
+        lastImageWorkId: "work-restore-1",
         imageCount: 1,
         createdAt: "2026-03-19T10:00:00Z",
         updatedAt: "2026-03-19T10:00:00Z",
@@ -91,6 +77,7 @@ describe("useSessionRestore", () => {
         ],
         generatedImageUrl:
           'url("https://example.com/tie.png") center/cover no-repeat',
+        baseImageWorkId: "work-restore-1",
         resultTags: [],
         generationStatus: "completed",
       });
@@ -109,6 +96,7 @@ describe("useSessionRestore", () => {
         },
       ],
       generatedImageUrl: null,
+      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
     };
@@ -122,6 +110,7 @@ describe("useSessionRestore", () => {
         firstMessage: "텍스트만",
         lastImageUrl: null,
         lastImageFileId: null,
+        lastImageWorkId: null,
         imageCount: 0,
         createdAt: "2026-03-19T10:00:00Z",
         updatedAt: "2026-03-19T10:00:00Z",
@@ -133,6 +122,7 @@ describe("useSessionRestore", () => {
         "session-2",
         expect.objectContaining({
           generatedImageUrl: null,
+          baseImageWorkId: null,
           generationStatus: "idle",
         }),
       );

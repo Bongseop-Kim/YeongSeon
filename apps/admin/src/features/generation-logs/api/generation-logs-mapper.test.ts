@@ -9,7 +9,7 @@ const baseRow = {
   work_id: "work-1",
   user_id: "user-1",
   ai_model: "openai",
-  request_type: "text_only",
+  request_type: "analysis",
   quality: "standard",
   user_message: "디자인 생성해줘",
   prompt_length: 100,
@@ -39,7 +39,7 @@ describe("toAdminGenerationLogItem", () => {
       workId: "work-1",
       userId: "user-1",
       aiModel: "openai",
-      requestType: "text_only",
+      requestType: "analysis",
       quality: "standard",
       userMessage: "디자인 생성해줘",
       promptLength: 100,
@@ -79,12 +79,20 @@ describe("toAdminGenerationLogItem", () => {
     warnSpy.mockRestore();
   });
 
-  it("request_type이 text_and_image이면 그대로 매핑한다", () => {
+  it("request_type이 render_standard이면 그대로 매핑한다", () => {
     const result = toAdminGenerationLogItem({
       ...baseRow,
-      request_type: "text_and_image",
+      request_type: "render_standard",
     });
-    expect(result.requestType).toBe("text_and_image");
+    expect(result.requestType).toBe("render_standard");
+  });
+
+  it("request_type이 render_high이면 그대로 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      request_type: "render_high",
+    });
+    expect(result.requestType).toBe("render_high");
   });
 
   it("request_type이 알 수 없는 값이면 null을 반환한다", () => {

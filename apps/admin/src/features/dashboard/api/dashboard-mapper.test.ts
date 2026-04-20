@@ -13,11 +13,34 @@ describe("fromPeriodStatsRpcRow", () => {
     });
   });
 
+  it("유효한 문자열과 숫자 값을 숫자 필드로 변환한다", () => {
+    expect(
+      fromPeriodStatsRpcRow({
+        period_order_count: "12",
+        period_revenue: 345000,
+      }),
+    ).toEqual({
+      orderCount: 12,
+      revenue: 345000,
+    });
+  });
+
   it("유효하지 않은 숫자는 0으로 fallback한다", () => {
     expect(
       fromPeriodStatsRpcRow({
         period_order_count: "NaN",
         period_revenue: Number.POSITIVE_INFINITY,
+      }),
+    ).toEqual({
+      orderCount: 0,
+      revenue: 0,
+    });
+  });
+
+  it("필수 필드가 누락되면 기본값을 반환한다", () => {
+    expect(
+      fromPeriodStatsRpcRow({
+        period_order_count: 3,
       }),
     ).toEqual({
       orderCount: 0,

@@ -4559,6 +4559,9 @@ CREATE TABLE IF NOT EXISTS "public"."orders" (
     "order_type" "text" DEFAULT 'sale'::"text" NOT NULL,
     "delivered_at" timestamp with time zone,
     "confirmed_at" timestamp with time zone,
+    "company_courier_company" "text",
+    "company_tracking_number" "text",
+    "company_shipped_at" timestamp with time zone,
     "payment_group_id" "uuid",
     "shipping_cost" integer DEFAULT 0 NOT NULL,
     "payment_key" "text",
@@ -7260,4 +7263,3 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 --
 -- Dumped schema changes for auth and storage
 --
-

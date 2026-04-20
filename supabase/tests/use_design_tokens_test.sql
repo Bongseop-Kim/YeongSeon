@@ -8,7 +8,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(16);
+SELECT plan(23);
 
 -- ── 픽스처 설정 ─────────────────────────────────────────────
 
@@ -24,12 +24,31 @@ BEGIN
   INSERT INTO public.design_tokens (user_id, amount, type, token_class, description)
   VALUES (v_user_a, 100, 'grant', 'paid', '테스트용 유료 토큰');
 
-  -- admin_settings: openai/text_only 비용 = 5
-  PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_text', '5');
+  -- 이 테스트는 계산 단순화를 위해 admin_settings 비용을 5로 덮어쓴다.
+  -- 20260511000003_add_design_token_cost_keys.sql 기본값(1/5/12)과는 다르다.
+  PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_analysis', '5');
+  PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_render_standard', '5');
+  PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_render_high', '5');
 END $setup$;
 
 -- service_role 컨텍스트 설정 (트랜잭션 내내 유지, 소유권 검증 우회)
 SELECT test_helpers.set_service_role();
+
+-- ── 테스트 1a: ai_generation_logs 접근 권한 확인 ─────────────
+SELECT ok(
+  has_table_privilege('authenticated', 'public.ai_generation_logs', 'SELECT'),
+  'authenticated는 ai_generation_logs SELECT 권한을 가진다'
+);
+
+SELECT ok(
+  has_table_privilege('service_role', 'public.ai_generation_logs', 'INSERT'),
+  'service_role는 ai_generation_logs INSERT 권한을 가진다'
+);
+
+SELECT ok(
+  has_table_privilege('service_role', 'public.ai_generation_logs', 'SELECT'),
+  'service_role는 ai_generation_logs SELECT 권한을 가진다'
+);
 
 -- ── 테스트 1: 정상 차감 - 예외 없이 실행 ───────────────────
 SELECT lives_ok(
@@ -37,7 +56,7 @@ SELECT lives_ok(
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000001'::uuid,
       'openai',
-      'text_only',
+      'analysis',
       'standard',
       'work-test-0001'
     )
@@ -49,7 +68,7 @@ SELECT lives_ok(
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000001'::uuid,
-    'openai', 'text_only', 'standard', 'work-test-0002'
+    'openai', 'render_standard', 'standard', 'work-test-0002'
   ))->>'success'),
   'true',
   '정상 차감 시 success=true 반환'
@@ -70,7 +89,7 @@ SELECT is(
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000001'::uuid,
-    'openai', 'text_only', 'standard', 'work-test-0001'
+    'openai', 'analysis', 'standard', 'work-test-0001'
   ))->>'cost'),
   '5',
   '이미 처리된 work_id 재호출 시 원래 cost를 반환한다 (멱등성)'
@@ -86,52 +105,122 @@ SELECT is(
   '멱등 호출 후 잔액 변경 없음'
 );
 
--- ── 테스트 6: 잔액 부족 - error=insufficient_tokens ─────────
+-- ── 테스트 6: unauthorized caller → ownership failure ────────
+SELECT test_helpers.set_auth('dd000001-0000-0000-0000-000000000002'::uuid);
+
+SELECT throws_ok(
+  $$
+    SELECT public.use_design_tokens(
+      'dd000001-0000-0000-0000-000000000001'::uuid,
+      'openai',
+      'analysis',
+      'standard',
+      'work-unauthorized-0001'
+    )
+  $$,
+  'P0001', NULL,
+  '비 service_role 호출자가 다른 사용자 토큰을 사용하려 하면 예외 발생'
+);
+
+SELECT test_helpers.set_service_role();
+
+-- ── 테스트 7: 잔액 부족 - error=insufficient_tokens ─────────
 -- user_b는 토큰 없음
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000002'::uuid,
-    'openai', 'text_only'
+    'openai', 'analysis'
   ))->>'error'),
   'insufficient_tokens',
   '잔액 부족 시 error=insufficient_tokens 반환'
 );
 
--- ── 테스트 7: 잔액 부족 - success=false ─────────────────────
+-- ── 테스트 8: 잔액 부족 - success=false ─────────────────────
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000002'::uuid,
-    'openai', 'text_only'
+    'openai', 'render_high', 'high'
   ))->>'success'),
   'false',
   '잔액 부족 시 success=false 반환'
 );
 
--- ── 테스트 8: 유효하지 않은 ai_model → 예외 ─────────────────
+-- ── 테스트 9: 유효하지 않은 ai_model → 예외 ─────────────────
 SELECT throws_ok(
   $$
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000001'::uuid,
       'invalid_model',
-      'text_only'
+      'analysis'
     )
   $$,
   'P0001', NULL,
   '유효하지 않은 ai_model 파라미터로 호출 시 예외 발생'
 );
 
--- ── 테스트 9: 유효하지 않은 request_type → 예외 ─────────────
+-- ── 테스트 10: 유효하지 않은 request_type → 예외 ─────────────
 SELECT throws_ok(
   $$
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000001'::uuid,
       'openai',
-      'invalid_type'
+      'text_only'
     )
   $$,
   'P0001', NULL,
   '유효하지 않은 request_type 파라미터로 호출 시 예외 발생'
 );
+
+-- ── 테스트 10b: 유효하지 않은 quality → 예외 ──────────────────
+SELECT throws_ok(
+  $$
+    SELECT public.use_design_tokens(
+      'dd000001-0000-0000-0000-000000000001'::uuid,
+      'openai',
+      'analysis',
+      'invalid',
+      'work-invalid-quality-0001'
+    )
+  $$,
+  'P0001', NULL,
+  '유효하지 않은 quality 파라미터로 호출 시 예외 발생'
+);
+
+-- ── 테스트 11: non-service_role refund_design_tokens 거부 ──────
+SELECT test_helpers.set_auth('dd000001-0000-0000-0000-000000000001'::uuid);
+
+SELECT throws_ok(
+  $$
+    SELECT public.refund_design_tokens(
+      'dd000001-0000-0000-0000-000000000001'::uuid,
+      5,
+      'openai',
+      'analysis',
+      'refund-unauthorized-0001'
+    )
+  $$,
+  'P0001', NULL,
+  'service_role이 아니면 refund_design_tokens가 거부된다'
+);
+
+SELECT test_helpers.set_service_role();
+
+-- ── 테스트 11b: refund_design_tokens는 공백 work_id를 거부한다 ──
+SELECT throws_ok(
+  $$
+    SELECT public.refund_design_tokens(
+      'dd000001-0000-0000-0000-000000000001'::uuid,
+      5,
+      'openai',
+      'analysis',
+      '   '
+    )
+  $$,
+  'P0001', NULL,
+  'refund_design_tokens는 공백만 있는 work_id를 거부한다'
+);
+
+SELECT test_helpers.set_service_role();
 
 -- ── 테스트 픽스처: 만료 테스트용 사용자 + 주문 + 토큰 설정 ──────────────
 DO $expiry_setup$
@@ -198,7 +287,7 @@ BEGIN
   );
 END $expiry_setup$;
 
--- ── 테스트 10: 만료된 배치는 잔액에 포함되지 않음 ────────────────────────
+-- ── 테스트 12: 만료된 배치는 잔액에 포함되지 않음 ────────────────────────
 SELECT is(
   (SELECT COALESCE(SUM(amount) FILTER (
     WHERE token_class = 'paid' AND (expires_at IS NULL OR expires_at > now())
@@ -209,7 +298,7 @@ SELECT is(
   '만료된 배치(50)는 잔액 계산에서 제외되고 유효 배치(30)만 집계됨'
 );
 
--- ── 테스트 11: 만료 토큰만 있을 때 use_design_tokens insufficient_tokens ──
+-- ── 테스트 13: 만료 토큰만 있을 때 use_design_tokens insufficient_tokens ──
 DO $expired_only_setup$
 DECLARE
   v_user_d  uuid := 'dd000001-0000-0000-0000-000000000004';
@@ -236,24 +325,24 @@ END $expired_only_setup$;
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000004'::uuid,
-    'openai', 'text_only'
+    'openai', 'analysis'
   ))->>'error'),
   'insufficient_tokens',
   '만료 토큰만 있는 사용자: use_design_tokens → insufficient_tokens'
 );
 
--- ── 테스트 12: 유효 배치에서 FIFO 소비 → source_order_id 기록 확인 ─────────
+-- ── 테스트 14: 유효 배치에서 FIFO 소비 → source_order_id 기록 확인 ─────────
 SELECT lives_ok(
   $$
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000003'::uuid,
-      'openai', 'text_only', 'standard', 'work-expiry-test-001'
+      'openai', 'render_standard', 'standard', 'work-expiry-test-001'
     )
   $$,
   '유효 배치에서 paid 토큰 차감 예외 없이 실행'
 );
 
--- ── 테스트 13: use 항목의 source_order_id가 배치 주문 ID와 일치 ─────────────
+-- ── 테스트 15: use 항목의 source_order_id가 배치 주문 ID와 일치 ─────────────
 SELECT is(
   (SELECT source_order_id::text
    FROM public.design_tokens
@@ -264,7 +353,7 @@ SELECT is(
   'use 항목의 source_order_id가 유효 배치(order_2) ID와 일치'
 );
 
--- ── 테스트 14: use 항목의 expires_at이 배치 expires_at과 일치 ───────────────
+-- ── 테스트 16: use 항목의 expires_at이 배치 expires_at과 일치 ───────────────
 SELECT ok(
   (SELECT (expires_at - now()) > interval '364 days'
    FROM public.design_tokens
@@ -274,17 +363,17 @@ SELECT ok(
   'use 항목의 expires_at이 배치의 expires_at(1년 후)과 일치'
 );
 
--- ── 테스트 15: source_order_id가 있는 expires_at NULL paid 토큰도 차감 가능 ──
+-- ── 테스트 17: source_order_id가 있는 expires_at NULL paid 토큰도 차감 가능 ──
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000005'::uuid,
-    'openai', 'text_only', 'standard', 'work-legacy-null-expiry-001'
+    'openai', 'render_high', 'high', 'work-legacy-null-expiry-001'
   ))->>'success'),
   'true',
   'source_order_id가 있고 expires_at이 NULL인 paid 토큰도 use_design_tokens가 사용한다'
 );
 
--- ── 테스트 16: 위 차감 후 잔액이 감소함 ─────────────────────────────────
+-- ── 테스트 18: 위 차감 후 잔액이 감소함 ─────────────────────────────────
 SELECT is(
   (SELECT COALESCE(SUM(amount), 0)::int
    FROM public.design_tokens

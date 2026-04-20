@@ -1,0 +1,150 @@
+-- =============================================================
+-- 84_design_chat.sql  –  Design chat sessions & messages
+-- =============================================================
+
+CREATE TABLE public.design_chat_sessions (
+  id                  uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id             uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  ai_model            text        NOT NULL CHECK (ai_model IN ('openai', 'gemini', 'fal')),
+  first_message       text        NOT NULL DEFAULT '',
+  last_image_url      text,
+  last_image_file_id  text,
+  last_image_work_id  text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
+  image_count         int         NOT NULL DEFAULT 0,
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  updated_at          timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_design_chat_sessions_user_updated_at
+  ON public.design_chat_sessions (user_id, updated_at DESC);
+
+ALTER TABLE public.design_chat_sessions ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT ON TABLE public.design_chat_sessions TO authenticated;
+
+CREATE POLICY "본인 세션만 조회" ON public.design_chat_sessions
+  FOR SELECT USING (user_id = auth.uid());
+
+-- ──────────────────────────────────────────────────────────────
+
+CREATE TABLE public.design_chat_messages (
+  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id      uuid        NOT NULL REFERENCES public.design_chat_sessions(id) ON DELETE CASCADE,
+  role            text        NOT NULL CHECK (role IN ('user', 'ai')),
+  content         text        NOT NULL DEFAULT '',
+  image_url       text,
+  image_file_id   text,
+  sequence_number int         NOT NULL,
+  created_at      timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX idx_design_chat_messages_session_id
+  ON public.design_chat_messages (session_id, sequence_number);
+
+ALTER TABLE public.design_chat_messages ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT ON TABLE public.design_chat_messages TO authenticated;
+
+CREATE POLICY "본인 세션 메시지만 조회" ON public.design_chat_messages
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.design_chat_sessions s
+      WHERE s.id = session_id AND s.user_id = auth.uid()
+    )
+  );
+
+CREATE OR REPLACE FUNCTION public.save_design_session(
+  p_session_id          uuid,
+  p_ai_model            text,
+  p_first_message       text,
+  p_last_image_url      text,
+  p_last_image_file_id  text,
+  p_last_image_work_id  text,
+  p_messages            jsonb
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_owner_id uuid;
+  v_session_id uuid := COALESCE(p_session_id, gen_random_uuid());
+  v_msg jsonb;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'unauthorized: must be logged in';
+  END IF;
+
+  SELECT user_id
+  INTO v_owner_id
+  FROM public.design_chat_sessions
+  WHERE id = v_session_id;
+
+  IF v_owner_id IS NOT NULL AND v_owner_id IS DISTINCT FROM v_user_id THEN
+    RAISE EXCEPTION 'forbidden: session % is not owned by user', v_session_id;
+  END IF;
+
+  INSERT INTO public.design_chat_sessions (
+    id, user_id, ai_model, first_message,
+    last_image_url, last_image_file_id, last_image_work_id, image_count, updated_at
+  )
+  VALUES (
+    v_session_id, v_user_id, p_ai_model, p_first_message,
+    p_last_image_url, p_last_image_file_id, p_last_image_work_id,
+    (
+      SELECT COUNT(*)
+      FROM jsonb_array_elements(COALESCE(p_messages, '[]'::jsonb)) m
+      WHERE (m->>'image_url') IS NOT NULL
+    ),
+    now()
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET ai_model = EXCLUDED.ai_model,
+      first_message = EXCLUDED.first_message,
+      last_image_url = EXCLUDED.last_image_url,
+      last_image_file_id = EXCLUDED.last_image_file_id,
+      last_image_work_id = EXCLUDED.last_image_work_id,
+      image_count = EXCLUDED.image_count,
+      updated_at = now()
+  WHERE public.design_chat_sessions.user_id = v_user_id;
+
+  DELETE FROM public.design_chat_messages
+  WHERE session_id = v_session_id;
+
+  FOR v_msg IN
+    SELECT *
+    FROM jsonb_array_elements(COALESCE(p_messages, '[]'::jsonb))
+  LOOP
+    INSERT INTO public.design_chat_messages (
+      id, session_id, role, content,
+      image_url, image_file_id, sequence_number
+    )
+    VALUES (
+      (v_msg->>'id')::uuid,
+      v_session_id,
+      v_msg->>'role',
+      COALESCE(v_msg->>'content', ''),
+      v_msg->>'image_url',
+      v_msg->>'image_file_id',
+      (v_msg->>'sequence_number')::int
+    );
+  END LOOP;
+
+  UPDATE public.design_chat_sessions
+  SET image_count = (
+        SELECT COUNT(*)
+        FROM public.design_chat_messages
+        WHERE session_id = v_session_id
+          AND image_url IS NOT NULL
+      ),
+      updated_at = now()
+  WHERE id = v_session_id;
+
+  RETURN v_session_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.save_design_session(uuid, text, text, text, text, text, jsonb)
+  TO authenticated;

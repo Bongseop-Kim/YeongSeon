@@ -8,14 +8,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
-import type { AiModel } from "@/features/design/types/chat";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 
@@ -23,16 +15,12 @@ interface ChatHeaderProps {
   onNewChat: () => void;
   onOpenHistory: () => void;
   tokenBalance: number | undefined;
-  aiModel: AiModel;
-  onModelChange: (model: AiModel) => void;
 }
 
 export function ChatHeader({
   onNewChat,
   onOpenHistory,
   tokenBalance,
-  aiModel,
-  onModelChange,
 }: ChatHeaderProps) {
   const navigate = useNavigate();
   const { isDesktop } = useBreakpoint();
@@ -65,18 +53,6 @@ export function ChatHeader({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Select
-          value={aiModel}
-          onValueChange={(value) => onModelChange(value as AiModel)}
-        >
-          <SelectTrigger size="sm" className="w-28">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="openai">OpenAI</SelectItem>
-            <SelectItem value="gemini">Gemini</SelectItem>
-          </SelectContent>
-        </Select>
         {isDesktop ? (
           <Button variant="outline" size="sm" type="button" onClick={onNewChat}>
             신규 대화

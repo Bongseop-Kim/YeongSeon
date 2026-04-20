@@ -13,7 +13,8 @@ export function OrderCta() {
   const hidden =
     generationStatus === "idle" ||
     generationStatus === "generating" ||
-    generationStatus === "regenerating";
+    generationStatus === "regenerating" ||
+    generationStatus === "rendering";
 
   const handleClick = () => {
     navigate(ROUTES.CUSTOM_ORDER);

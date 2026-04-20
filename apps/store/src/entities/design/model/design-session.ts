@@ -4,6 +4,7 @@ export interface DesignSession {
   firstMessage: string;
   lastImageUrl: string | null;
   lastImageFileId: string | null;
+  lastImageWorkId: string | null;
   imageCount: number;
   createdAt: string;
   updatedAt: string;

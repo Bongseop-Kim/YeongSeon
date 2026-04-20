@@ -16,7 +16,7 @@ export function useSearch({
   onSearch,
   tabs,
 }: UseSearchOptions): void {
-  const { setSearchEnabled } = useSearchStore();
+  const setSearchEnabled = useSearchStore((state) => state.setSearchEnabled);
   const onSearchRef = useRef(onSearch);
 
   useEffect(() => {

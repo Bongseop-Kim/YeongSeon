@@ -5,6 +5,7 @@ import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 export interface RestoredDesignSessionState {
   messages: Message[];
   generatedImageUrl: string | null;
+  baseImageWorkId: string | null;
   resultTags: string[];
   generationStatus: GenerationStatus;
 }
@@ -43,6 +44,7 @@ export function toRestoredDesignSessionState(
   return {
     messages: restoredMessages,
     generatedImageUrl,
+    baseImageWorkId: null,
     resultTags: [],
     generationStatus: generatedImageUrl ? "completed" : "idle",
   };

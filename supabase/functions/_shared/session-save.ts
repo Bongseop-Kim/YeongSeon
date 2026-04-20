@@ -12,10 +12,11 @@ export interface SessionMessage {
 
 export interface SessionSaveParams {
   sessionId: string;
-  aiModel: "openai" | "gemini";
+  aiModel: "openai" | "gemini" | "fal";
   firstMessage: string;
   lastImageUrl: string | null;
   lastImageFileId: string | null;
+  lastImageWorkId: string | null;
   messages: SessionMessage[];
 }
 
@@ -40,8 +41,8 @@ export function buildSessionMessages(
  * save_design_session RPC를 호출해 디자인 채팅 세션을 저장한다.
  *
  * ⚠️  반드시 authenticated client(user JWT 보유)로 호출해야 한다.
- *    save_design_session은 SECURITY INVOKER + auth.uid() 기반이므로
- *    admin client(service role)로 호출하면 auth.uid() = null → 예외 발생.
+ *    save_design_session은 auth.uid()로 호출자 소유권을 검증하므로
+ *    user JWT가 없는 admin client(service role)로 호출하면 예외가 발생한다.
  *
  * 실패해도 예외를 던지지 않는다 (non-blocking).
  */
@@ -56,6 +57,7 @@ export async function saveDesignSession(
       p_first_message: params.firstMessage,
       p_last_image_url: params.lastImageUrl,
       p_last_image_file_id: params.lastImageFileId,
+      p_last_image_work_id: params.lastImageWorkId,
       p_messages: params.messages,
     });
 

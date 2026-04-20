@@ -20,7 +20,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.product_is_liked_rpc(p_id integer)
 RETURNS boolean
 LANGUAGE sql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
   select exists (

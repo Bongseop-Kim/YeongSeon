@@ -4,10 +4,15 @@ import {
   DESIGN_TOKEN_BALANCE_QUERY_KEY,
 } from "@/features/design/hooks/ai-design-query";
 import {
+  resolveGenerationRoute,
   type AiDesignResponse,
   InsufficientTokensError,
+  type GenerationRouteSignal,
 } from "@/entities/design";
-import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import {
+  getRawImageUrlFromPreviewBackground,
+  useDesignChatStore,
+} from "@/features/design/store/design-chat-store";
 import type { Attachment, Message } from "@/features/design/types/chat";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { ph } from "@/shared/lib/posthog";
@@ -20,8 +25,22 @@ interface UseDesignChatOptions {
 interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
   regenerate: () => void;
+  requestRender: () => void;
   isLoading: boolean;
 }
+
+interface MutationCallbackOptions {
+  skipAiMessageAppend?: boolean;
+}
+
+const EDIT_INTENT_SIGNALS = new Set<GenerationRouteSignal>([
+  "edit_only",
+  "exact_placement",
+  "modification_intent",
+  "preserve_identity",
+]);
+const EDIT_BASE_IMAGE_REQUIRED_MESSAGE =
+  "현재 결과를 기준으로 수정할 이미지가 없어 먼저 디자인을 생성해 주세요.";
 
 const toConversationHistory = (
   items: Message[],
@@ -58,6 +77,9 @@ const getSerializedImageFields = (message: Message) => {
   };
 };
 
+const isEditIntent = (signals: GenerationRouteSignal[]) =>
+  signals.some((signal) => EDIT_INTENT_SIGNALS.has(signal));
+
 const toSessionPayload = (messages: Message[]) => {
   const visible = messages.filter((m) => !m.uiOnly);
   const firstUserMsg = visible.find((m) => m.role === "user");
@@ -72,14 +94,23 @@ const toSessionPayload = (messages: Message[]) => {
   return { firstUserMsg, allMessages };
 };
 
+const createAnalysisReset = () => ({
+  analysisWorkId: null,
+  eligibleForRender: false,
+  missingRequirements: [],
+});
+
+const createEditRequestBase = (
+  editIntent: boolean,
+  baseImageUrl: string | null,
+  baseImageWorkId: string | null,
+) => (editIntent ? { baseImageUrl, baseImageWorkId } : {});
+
 export function useDesignChat(
   options: UseDesignChatOptions = {},
 ): UseDesignChatResult {
   const { onGenerationStart, onGenerationEnd } = options;
   const queryClient = useQueryClient();
-  const messages = useDesignChatStore((state) => state.messages);
-  const designContext = useDesignChatStore((state) => state.designContext);
-  const aiModel = useDesignChatStore((state) => state.aiModel);
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
   );
@@ -90,12 +121,16 @@ export function useDesignChat(
   const setGeneratedImage = useDesignChatStore(
     (state) => state.setGeneratedImage,
   );
+  const setGenerationMetadata = useDesignChatStore(
+    (state) => state.setGenerationMetadata,
+  );
+  const setLastAnalysisResult = useDesignChatStore(
+    (state) => state.setLastAnalysisResult,
+  );
   const clearAttachments = useDesignChatStore(
     (state) => state.clearAttachments,
   );
-  const currentSessionId = useDesignChatStore(
-    (state) => state.currentSessionId,
-  );
+  const restoreMessages = useDesignChatStore((state) => state.restoreMessages);
   const setCurrentSessionId = useDesignChatStore(
     (state) => state.setCurrentSessionId,
   );
@@ -104,8 +139,32 @@ export function useDesignChat(
   const createMutationCallbacks = (
     errorContent: string,
     errorStatus: "idle" | "completed",
+    callbackOptions: MutationCallbackOptions = {},
   ) => ({
     onSuccess: (data: AiDesignResponse) => {
+      const currentState = useDesignChatStore.getState();
+      const nextBaseImageUrl = data.imageUrl ?? currentState.baseImageUrl;
+      const nextBaseImageWorkId =
+        data.imageUrl != null
+          ? (data.workId ?? null)
+          : currentState.baseImageWorkId;
+
+      setLastAnalysisResult({
+        analysisWorkId: data.analysisWorkId ?? null,
+        eligibleForRender: data.eligibleForRender ?? false,
+        missingRequirements: data.missingRequirements ?? [],
+      });
+
+      setGenerationMetadata({
+        baseImageUrl: nextBaseImageUrl,
+        baseImageWorkId: nextBaseImageWorkId,
+        lastRoute: data.route ?? null,
+        lastRouteSignals: data.routeSignals ?? [],
+        lastRouteReason: data.routeReason ?? null,
+        lastFalRequestId: data.falRequestId ?? null,
+        lastSeed: data.seed ?? null,
+      });
+
       const previewBackground = data.imageUrl
         ? toPreviewBackground(data.imageUrl)
         : undefined;
@@ -119,7 +178,31 @@ export function useDesignChat(
         timestamp: Date.now(),
       };
 
-      addMessage(aiMessage);
+      if (callbackOptions.skipAiMessageAppend) {
+        const nextMessages = [...useDesignChatStore.getState().messages];
+
+        for (let index = nextMessages.length - 1; index >= 0; index -= 1) {
+          const message = nextMessages[index];
+          if (message.role !== "ai" || message.uiOnly) {
+            continue;
+          }
+
+          nextMessages[index] = {
+            ...message,
+            imageUrl: data.imageUrl ?? message.imageUrl,
+            contextChips:
+              data.contextChips.length > 0
+                ? data.contextChips
+                : message.contextChips,
+          };
+          break;
+        }
+
+        restoreMessages(nextMessages);
+      } else {
+        addMessage(aiMessage);
+      }
+
       if (previewBackground) {
         setGeneratedImage(previewBackground, data.tags);
       }
@@ -157,17 +240,49 @@ export function useDesignChat(
     },
   });
 
+  const submitDesignRequest = (
+    request: Parameters<typeof mutation.mutate>[0],
+    errorContent: string,
+    errorStatus: "idle" | "completed",
+    callbackOptions: MutationCallbackOptions = {},
+  ): void => {
+    mutation.mutate(
+      request,
+      createMutationCallbacks(errorContent, errorStatus, callbackOptions),
+    );
+  };
+
   const sendMessage = (userText: string, attachments: Attachment[]): void => {
     if (userText.trim().length === 0) {
       return;
     }
 
-    const prevSessionId = useDesignChatStore.getState().currentSessionId;
-    const sessionId = prevSessionId ?? crypto.randomUUID();
+    const storeState = useDesignChatStore.getState();
+    const aiModel = storeState.aiModel;
+    const designContext = storeState.designContext;
+    const selectedPreviewImageUrl = storeState.selectedPreviewImageUrl;
+    const baseImageUrl = getRawImageUrlFromPreviewBackground(
+      storeState.baseImageUrl ?? selectedPreviewImageUrl,
+    );
+    const baseImageWorkId = storeState.baseImageWorkId;
+    const routeResolution = resolveGenerationRoute({
+      userMessage: userText,
+      hasCiImage: !!designContext.ciImage,
+      hasReferenceImage: !!designContext.referenceImage,
+      hasPreviousGeneratedImage: !!baseImageUrl,
+      selectedPreviewImageUrl,
+    });
+    const editIntent = isEditIntent(routeResolution.signals);
 
-    if (!prevSessionId) {
-      setCurrentSessionId(sessionId);
-      ph.capture("design_session_started", { ai_model: aiModel });
+    if (editIntent && !baseImageUrl) {
+      addMessage({
+        id: crypto.randomUUID(),
+        role: "ai",
+        content: EDIT_BASE_IMAGE_REQUIRED_MESSAGE,
+        timestamp: Date.now(),
+        uiOnly: true,
+      });
+      return;
     }
 
     const userMessage: Message = {
@@ -178,39 +293,55 @@ export function useDesignChat(
       timestamp: Date.now(),
       designContext,
     };
+    const nextMessages = [...storeState.messages, userMessage];
+
+    const prevSessionId = storeState.currentSessionId;
+    const sessionId = prevSessionId ?? crypto.randomUUID();
+
+    if (!prevSessionId) {
+      setCurrentSessionId(sessionId);
+      ph.capture("design_session_started", { ai_model: aiModel });
+    }
 
     addMessage(userMessage);
     clearAttachments();
+
     setGenerationStatus("generating");
 
-    // pending flag 설정 — 이탈 후 재방문 시 알림 표시용
     onGenerationStart?.(sessionId);
+    setLastAnalysisResult(createAnalysisReset());
 
-    // addMessage 후 store 상태 기준 (userMessage 포함)
-    const { firstUserMsg, allMessages } = toSessionPayload(
-      useDesignChatStore.getState().messages,
-    );
+    const { firstUserMsg, allMessages } = toSessionPayload(nextMessages);
 
-    mutation.mutate(
+    submitDesignRequest(
       {
         userMessage: userText,
         attachments,
         designContext,
         aiModel,
-        conversationHistory: toConversationHistory([...messages, userMessage]),
+        conversationHistory: toConversationHistory(nextMessages),
         sessionId,
         firstMessage: firstUserMsg?.content ?? userText,
         allMessages,
+        executionMode: "auto",
+        analysisWorkId: null,
+        ...createEditRequestBase(editIntent, baseImageUrl, baseImageWorkId),
       },
-      createMutationCallbacks(
-        "죄송합니다. 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
-        "idle",
-      ),
+      "죄송합니다. 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      "idle",
     );
   };
 
   const regenerate = (): void => {
-    const lastUserMessage = [...messages]
+    const storeState = useDesignChatStore.getState();
+    const aiModel = storeState.aiModel;
+    const designContext = storeState.designContext;
+    const selectedPreviewImageUrl = storeState.selectedPreviewImageUrl;
+    const baseImageUrl = getRawImageUrlFromPreviewBackground(
+      storeState.baseImageUrl ?? selectedPreviewImageUrl,
+    );
+    const baseImageWorkId = storeState.baseImageWorkId;
+    const lastUserMessage = [...storeState.messages]
       .reverse()
       .find((m) => m.role === "user");
 
@@ -218,40 +349,111 @@ export function useDesignChat(
       return;
     }
 
-    const sessionId = currentSessionId ?? crypto.randomUUID();
-    if (!currentSessionId) {
+    const routeResolution = resolveGenerationRoute({
+      userMessage: lastUserMessage.content,
+      hasCiImage: !!(lastUserMessage.designContext ?? designContext).ciImage,
+      hasReferenceImage: !!(lastUserMessage.designContext ?? designContext)
+        .referenceImage,
+      hasPreviousGeneratedImage: !!baseImageUrl,
+      selectedPreviewImageUrl,
+    });
+    const editIntent = isEditIntent(routeResolution.signals);
+
+    if (editIntent && !baseImageUrl) {
+      addMessage({
+        id: crypto.randomUUID(),
+        role: "ai",
+        content: EDIT_BASE_IMAGE_REQUIRED_MESSAGE,
+        timestamp: Date.now(),
+        uiOnly: true,
+      });
+      return;
+    }
+
+    const sessionId = storeState.currentSessionId ?? crypto.randomUUID();
+    if (!storeState.currentSessionId) {
       setCurrentSessionId(sessionId);
     }
 
     setGenerationStatus("regenerating");
     onGenerationStart?.(sessionId);
+    setLastAnalysisResult(createAnalysisReset());
 
-    const { firstUserMsg, allMessages } = toSessionPayload(
-      useDesignChatStore.getState().messages,
-    );
+    const { firstUserMsg, allMessages } = toSessionPayload(storeState.messages);
 
-    mutation.mutate(
+    submitDesignRequest(
       {
         userMessage: lastUserMessage.content,
         attachments: lastUserMessage.attachments ?? [],
         designContext: lastUserMessage.designContext ?? designContext,
         aiModel,
-        conversationHistory: toConversationHistory(messages),
+        conversationHistory: toConversationHistory(storeState.messages),
         sessionId,
         firstMessage: firstUserMsg?.content ?? lastUserMessage.content,
         allMessages,
+        executionMode: "auto",
+        ...createEditRequestBase(editIntent, baseImageUrl, baseImageWorkId),
       },
-      createMutationCallbacks(
-        "죄송합니다. 디자인 재생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
-        "completed",
-      ),
+      "죄송합니다. 디자인 재생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      "completed",
+    );
+  };
+
+  const requestRender = (): void => {
+    const storeState = useDesignChatStore.getState();
+    const aiModel = storeState.aiModel;
+    const {
+      currentSessionId: storeSessionId,
+      lastAnalysisWorkId: currentLastAnalysisWorkId,
+      lastEligibleForRender: currentLastEligibleForRender,
+    } = storeState;
+
+    if (!currentLastAnalysisWorkId || !currentLastEligibleForRender) {
+      return;
+    }
+
+    const { firstUserMsg, allMessages } = toSessionPayload(storeState.messages);
+
+    if (!firstUserMsg) {
+      return;
+    }
+
+    const sessionId = storeSessionId ?? crypto.randomUUID();
+    if (!storeSessionId) {
+      setCurrentSessionId(sessionId);
+    }
+
+    setGenerationStatus("rendering");
+    onGenerationStart?.(sessionId);
+
+    submitDesignRequest(
+      {
+        userMessage: firstUserMsg.content,
+        attachments: firstUserMsg.attachments ?? [],
+        designContext: firstUserMsg.designContext ?? storeState.designContext,
+        aiModel,
+        conversationHistory: toConversationHistory(storeState.messages),
+        sessionId,
+        firstMessage: firstUserMsg.content,
+        allMessages,
+        executionMode: "render_from_analysis",
+        analysisWorkId: currentLastAnalysisWorkId,
+      },
+      "죄송합니다. 이미지 렌더링 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      "completed",
+      {
+        skipAiMessageAppend: true,
+      },
     );
   };
 
   return {
     sendMessage,
     regenerate,
+    requestRender,
     isLoading:
-      generationStatus === "generating" || generationStatus === "regenerating",
+      generationStatus === "generating" ||
+      generationStatus === "regenerating" ||
+      generationStatus === "rendering",
   };
 }

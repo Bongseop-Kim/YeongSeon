@@ -29,6 +29,7 @@ export default defineConfig({
         test: {
           name: "store-node",
           environment: "node",
+          setupFiles: ["./src/test/canvas-polyfill.ts"],
           include: ["src/**/*.test.ts"],
         },
       },

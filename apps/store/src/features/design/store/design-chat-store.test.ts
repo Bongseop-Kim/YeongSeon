@@ -7,6 +7,17 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
       selectedPreviewImageUrl: null,
       generatedImageUrl: null,
       resultTags: [],
+      autoGenerateImage: true,
+      baseImageUrl: null,
+      baseImageWorkId: null,
+      lastRoute: null,
+      lastRouteSignals: [],
+      lastRouteReason: null,
+      lastFalRequestId: null,
+      lastSeed: null,
+      lastAnalysisWorkId: null,
+      lastEligibleForRender: false,
+      lastMissingRequirements: [],
     });
   });
 
@@ -40,16 +51,52 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
     expect(useDesignChatStore.getState().selectedPreviewImageUrl).toBeNull();
   });
 
+  it("setGenerationMetadata는 base image와 route metadata를 저장한다", () => {
+    useDesignChatStore.getState().setGenerationMetadata({
+      baseImageUrl: "https://example.com/base.png",
+      baseImageWorkId: "work-base-1",
+      lastRoute: "fal_edit",
+      lastRouteSignals: ["exact_placement", "edit_only"],
+      lastRouteReason: "existing_result_edit_request",
+      lastFalRequestId: "fal-request-1",
+      lastSeed: 1234,
+    });
+
+    expect(useDesignChatStore.getState().baseImageUrl).toBe(
+      "https://example.com/base.png",
+    );
+    expect(useDesignChatStore.getState().baseImageWorkId).toBe("work-base-1");
+    expect(useDesignChatStore.getState().lastRoute).toBe("fal_edit");
+    expect(useDesignChatStore.getState().lastRouteSignals).toEqual([
+      "exact_placement",
+      "edit_only",
+    ]);
+    expect(useDesignChatStore.getState().lastRouteReason).toBe(
+      "existing_result_edit_request",
+    );
+    expect(useDesignChatStore.getState().lastFalRequestId).toBe(
+      "fal-request-1",
+    );
+    expect(useDesignChatStore.getState().lastSeed).toBe(1234);
+  });
+
   it("restoreSessionState는 generatedImageUrl을 selectedPreviewImageUrl로 복원한다", () => {
     const url =
       'url("https://example.com/restored.png") center/cover no-repeat';
     useDesignChatStore.getState().restoreSessionState("session-1", {
       messages: [],
       generatedImageUrl: url,
+      baseImageWorkId: "work-restored-1",
       resultTags: [],
       generationStatus: "completed",
     });
     expect(useDesignChatStore.getState().selectedPreviewImageUrl).toBe(url);
+    expect(useDesignChatStore.getState().baseImageUrl).toBe(
+      "https://example.com/restored.png",
+    );
+    expect(useDesignChatStore.getState().baseImageWorkId).toBe(
+      "work-restored-1",
+    );
   });
 
   it("restoreSessionState에서 generatedImageUrl이 null이면 selectedPreviewImageUrl도 null이다", () => {
@@ -60,9 +107,104 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
     useDesignChatStore.getState().restoreSessionState("session-1", {
       messages: [],
       generatedImageUrl: null,
+      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
     });
     expect(useDesignChatStore.getState().selectedPreviewImageUrl).toBeNull();
+  });
+});
+
+describe("design-chat-store — autoGenerateImage", () => {
+  beforeEach(() => {
+    useDesignChatStore.setState({
+      currentSessionId: null,
+      lastAnalysisWorkId: null,
+      lastEligibleForRender: false,
+      lastMissingRequirements: [],
+    });
+  });
+
+  it("defaults autoGenerateImage to true", () => {
+    expect(useDesignChatStore.getState().autoGenerateImage).toBe(true);
+  });
+
+  it("resetConversation은 lastMissingRequirements를 새 배열로 재생성한다", () => {
+    useDesignChatStore.getState().setLastAnalysisResult({
+      analysisWorkId: "analysis-3",
+      eligibleForRender: true,
+      missingRequirements: ["ciImage"],
+    });
+
+    const previous = useDesignChatStore.getState().lastMissingRequirements;
+    useDesignChatStore.getState().resetConversation();
+
+    expect(useDesignChatStore.getState().lastMissingRequirements).toEqual([]);
+    expect(useDesignChatStore.getState().lastMissingRequirements).not.toBe(
+      previous,
+    );
+  });
+
+  it("resetConversation은 base image와 route metadata도 초기화한다", () => {
+    useDesignChatStore.getState().setGenerationMetadata({
+      baseImageUrl: "https://example.com/base.png",
+      baseImageWorkId: "work-base-2",
+      lastRoute: "fal_tiling",
+      lastRouteSignals: ["pattern_repeat"],
+      lastRouteReason: "ci_image_with_pattern_repeat",
+      lastFalRequestId: "fal-request-2",
+      lastSeed: 4321,
+    });
+
+    useDesignChatStore.getState().resetConversation();
+
+    expect(useDesignChatStore.getState().baseImageUrl).toBeNull();
+    expect(useDesignChatStore.getState().baseImageWorkId).toBeNull();
+    expect(useDesignChatStore.getState().lastRoute).toBeNull();
+    expect(useDesignChatStore.getState().lastRouteSignals).toEqual([]);
+    expect(useDesignChatStore.getState().lastRouteReason).toBeNull();
+    expect(useDesignChatStore.getState().lastFalRequestId).toBeNull();
+    expect(useDesignChatStore.getState().lastSeed).toBeNull();
+  });
+
+  it("setAutoGenerateImage는 autoGenerateImage를 업데이트한다", () => {
+    useDesignChatStore.getState().setAutoGenerateImage(false);
+    expect(useDesignChatStore.getState().autoGenerateImage).toBe(false);
+  });
+
+  it("stores last analysis status for manual render", () => {
+    useDesignChatStore.getState().setLastAnalysisResult({
+      analysisWorkId: "analysis-1",
+      eligibleForRender: true,
+      missingRequirements: ["referenceImage"],
+    });
+
+    expect(useDesignChatStore.getState().lastAnalysisWorkId).toBe("analysis-1");
+    expect(useDesignChatStore.getState().lastEligibleForRender).toBe(true);
+    expect(useDesignChatStore.getState().lastMissingRequirements).toEqual([
+      "referenceImage",
+    ]);
+  });
+
+  it("stores analysis-only snapshots with eligibleForRender=false", () => {
+    useDesignChatStore.getState().setLastAnalysisResult({
+      analysisWorkId: "analysis-2",
+      eligibleForRender: false,
+      missingRequirements: [],
+    });
+
+    expect(useDesignChatStore.getState().lastEligibleForRender).toBe(false);
+  });
+
+  it("setAiModel는 currentSessionId를 초기화한다", () => {
+    useDesignChatStore.setState({
+      aiModel: "openai",
+      currentSessionId: "session-123",
+    });
+
+    useDesignChatStore.getState().setAiModel("gemini");
+
+    expect(useDesignChatStore.getState().aiModel).toBe("gemini");
+    expect(useDesignChatStore.getState().currentSessionId).toBeNull();
   });
 });

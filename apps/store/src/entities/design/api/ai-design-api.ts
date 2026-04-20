@@ -8,6 +8,9 @@ import {
   toDesignTokenHistoryItem,
   type DesignTokenRow,
 } from "@/entities/design/api/ai-design-mapper";
+import { resolveGenerationRoute } from "@/entities/design/api/resolve-generation-route";
+import { shouldUseFalPipeline } from "@/entities/design/api/should-use-fal-pipeline";
+import { tileLogoOnCanvas } from "@/entities/design/api/tile-logo-on-canvas";
 import { ph } from "@/shared/lib/posthog";
 
 interface DesignTokenBalance {
@@ -93,9 +96,23 @@ function safeCapture(
   }
 }
 
+const isFalPipelineEnabled = () =>
+  import.meta.env.VITE_FALAI_CI_PATTERN_ENABLED === "true";
+
+const getFallbackFunctionName = (request: AiDesignRequest) =>
+  request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
+
 export async function aiDesignApi(
   request: AiDesignRequest,
 ): Promise<AiDesignResponse> {
+  const routeResolution = resolveGenerationRoute({
+    userMessage: request.userMessage,
+    hasCiImage: !!request.designContext.ciImage,
+    hasReferenceImage: !!request.designContext.referenceImage,
+    hasPreviousGeneratedImage: !!request.baseImageUrl,
+    selectedPreviewImageUrl: request.baseImageUrl ?? null,
+  });
+
   const [ciImageBase64, referenceImageBase64] = await Promise.all([
     request.designContext.ciImage
       ? fileToBase64(request.designContext.ciImage)
@@ -105,17 +122,80 @@ export async function aiDesignApi(
       : Promise.resolve(undefined),
   ]);
 
-  const functionName =
-    request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
+  const useFalTiling = shouldUseFalPipeline({
+    ciImageBase64,
+    ciPlacement: request.designContext.ciPlacement,
+    fabricMethod: request.designContext.fabricMethod,
+    autoGenerate: (request.executionMode ?? "auto") === "auto",
+    featureFlag: isFalPipelineEnabled(),
+  });
+
+  let tiledBase64: string | undefined;
+  let tiledMimeType: string | undefined;
+  const canUseFalApi =
+    routeResolution.route === "fal_edit" ||
+    (routeResolution.route === "fal_tiling" && useFalTiling);
+
+  if (
+    routeResolution.route === "fal_tiling" &&
+    useFalTiling &&
+    ciImageBase64 &&
+    request.designContext.ciImage &&
+    request.designContext.fabricMethod
+  ) {
+    try {
+      const tileResult = await tileLogoOnCanvas({
+        logoBase64: ciImageBase64,
+        logoMimeType: request.designContext.ciImage.type || "image/png",
+        scale: request.designContext.scale ?? "medium",
+        backgroundColor: request.designContext.colors[0],
+      });
+      tiledBase64 = tileResult.base64;
+      tiledMimeType = tileResult.mimeType;
+    } catch (error) {
+      safeCapture("design_generation_failed", {
+        ai_model: request.aiModel,
+        error_type: "tile_logo_on_canvas_failed",
+        pipeline: "fal-ai",
+        scale: request.designContext.scale ?? "medium",
+        colors: request.designContext.colors,
+        fabric_method: request.designContext.fabricMethod,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new Error("CI 패턴 이미지를 준비하지 못했습니다.");
+    }
+  }
+
+  const functionName = canUseFalApi
+    ? "generate-fal-api"
+    : getFallbackFunctionName(request);
+
+  const invokePayload = canUseFalApi
+    ? buildInvokePayload(request, {
+        ciImageBase64,
+        referenceImageBase64,
+        tiledBase64:
+          routeResolution.route === "fal_tiling" ? tiledBase64 : undefined,
+        tiledMimeType:
+          routeResolution.route === "fal_tiling" ? tiledMimeType : undefined,
+        route: routeResolution.route,
+        routeSignals: routeResolution.signals,
+        routeReason: routeResolution.reason,
+        routeHint: request.routeHint,
+        baseImageUrl: request.baseImageUrl,
+        baseImageWorkId: request.baseImageWorkId,
+      })
+    : buildInvokePayload(request, {
+        ciImageBase64,
+        referenceImageBase64,
+      });
 
   const startTime = Date.now();
 
-  const { data, error } = await supabase.functions.invoke(functionName, {
-    body: buildInvokePayload(request, {
-      ciImageBase64,
-      referenceImageBase64,
-    }),
+  let { data, error } = await supabase.functions.invoke(functionName, {
+    body: invokePayload,
   });
+  let usedFallback = false;
 
   if (error) {
     const context = (error as { context?: unknown }).context;
@@ -132,11 +212,33 @@ export async function aiDesignApi(
         });
         throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
       }
-    }
 
+      if (
+        body.error === "fal_pipeline_disabled" &&
+        routeResolution.route !== "openai"
+      ) {
+        usedFallback = true;
+        ({ data, error } = await supabase.functions.invoke(
+          getFallbackFunctionName(request),
+          {
+            body: buildInvokePayload(request, {
+              ciImageBase64,
+              referenceImageBase64,
+              routeHint: request.routeHint,
+              baseImageUrl: request.baseImageUrl,
+              baseImageWorkId: request.baseImageWorkId,
+            }),
+          },
+        ));
+      }
+    }
+  }
+
+  if (error) {
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
+      pipeline: usedFallback ? "fal-ai-fallback-failed" : undefined,
     });
     throw new Error(`디자인 생성 실패: ${error.message}`);
   }
@@ -145,15 +247,21 @@ export async function aiDesignApi(
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
+      pipeline: usedFallback ? "fal-ai-fallback-failed" : undefined,
     });
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }
 
   const result = normalizeInvokeResponse(data, request);
+  const usedFalApi = canUseFalApi && !usedFallback;
   safeCapture("design_generated", {
     ai_model: request.aiModel,
     latency_ms: Date.now() - startTime,
     has_image: result.imageUrl !== null,
+    pipeline: usedFalApi ? "fal-ai" : undefined,
+    route: result.route ?? routeResolution.route,
+    route_reason: result.routeReason ?? routeResolution.reason,
+    route_signals: result.routeSignals ?? routeResolution.signals,
   });
   return result;
 }

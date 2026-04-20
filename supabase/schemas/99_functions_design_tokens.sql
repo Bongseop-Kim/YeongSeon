@@ -44,9 +44,9 @@ $$;
 -- Returns: { success, cost, balance } or { success: false, error: '...', balance, cost }
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
-  p_ai_model     text,             -- 'openai' | 'gemini'
-  p_request_type text,            -- 'text_only' | 'text_and_image'
-  p_quality      text DEFAULT 'standard',  -- 'high' | 'standard'
+  p_ai_model     text,             -- 'openai' | 'gemini' | 'fal'
+  p_request_type text,             -- 'analysis' | 'render_standard' | 'render_high'
+  p_quality      text DEFAULT 'standard',
   p_work_id      text DEFAULT NULL
 )
 RETURNS jsonb
@@ -75,10 +75,10 @@ BEGIN
   END IF;
 
   -- 파라미터 화이트리스트 검증
-  IF p_ai_model NOT IN ('openai', 'gemini') THEN
+  IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
-  IF p_request_type NOT IN ('text_only', 'text_and_image') THEN
+  IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
   IF p_quality NOT IN ('standard', 'high') THEN
@@ -89,13 +89,7 @@ BEGIN
   PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
 
   -- 비용 조회
-  v_cost_key := CASE
-    WHEN p_request_type = 'text_and_image' AND p_quality = 'high'
-      THEN 'design_token_cost_' || p_ai_model || '_image_high'
-    ELSE
-      'design_token_cost_' || p_ai_model || '_' ||
-      CASE p_request_type WHEN 'text_and_image' THEN 'image' ELSE 'text' END
-  END;
+  v_cost_key := 'design_token_cost_' || p_ai_model || '_' || p_request_type;
 
   SELECT value::integer INTO v_cost FROM public.admin_settings WHERE key = v_cost_key;
   IF v_cost IS NULL OR v_cost <= 0 THEN
@@ -162,10 +156,10 @@ BEGIN
       WHERE user_id = p_user_id
         AND token_class = 'paid'
         AND source_order_id IS NOT NULL
-        AND expires_at > now()
+        AND (expires_at IS NULL OR expires_at > now())
       GROUP BY source_order_id, expires_at
       HAVING SUM(amount) > 0
-      ORDER BY expires_at ASC
+      ORDER BY expires_at ASC NULLS LAST
     LOOP
       EXIT WHEN v_remaining_paid <= 0;
 
@@ -224,6 +218,11 @@ BEGIN
 END;
 $$;
 
+GRANT EXECUTE ON FUNCTION public.use_design_tokens(uuid, text, text, text, text)
+  TO authenticated;
+GRANT EXECUTE ON FUNCTION public.use_design_tokens(uuid, text, text, text, text)
+  TO service_role;
+
 -- ── refund_design_tokens ──────────────────────────────────────
 -- Refunds tokens when image generation fails after text succeeds.
 -- SECURITY DEFINER 유지 사유: design_tokens INSERT는 RLS로 허용되지 않음
@@ -249,8 +248,20 @@ BEGIN
     RAISE EXCEPTION 'unauthorized: refund requires service_role';
   END IF;
 
+  IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
+    RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
+  END IF;
+
+  IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
+    RAISE EXCEPTION 'invalid request_type: %', p_request_type;
+  END IF;
+
   IF p_amount <= 0 THEN
     RETURN;
+  END IF;
+
+  IF p_work_id IS NULL OR trim(p_work_id) = '' THEN
+    RAISE EXCEPTION 'refund_design_tokens requires non-null p_work_id for idempotency';
   END IF;
 
   -- work_id 기반 멱등성: 동일 work_id로 이미 환불된 경우 무시

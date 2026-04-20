@@ -15,6 +15,14 @@ interface ChatInputProps {
   isLoading?: boolean;
 }
 
+const getNextColorValues = (attachments: Attachment[], removedIndex: number) =>
+  attachments
+    .filter(
+      (attachment, index) =>
+        index !== removedIndex && attachment.type === "color",
+    )
+    .map((attachment) => attachment.value);
+
 export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const designContext = useDesignChatStore((state) => state.designContext);
   const pendingAttachments = useDesignChatStore(
@@ -79,17 +87,20 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
                 onClick={() => {
                   const removed = pendingAttachments[index];
                   removeAttachment(index);
-                  const remaining = pendingAttachments.filter(
-                    (_, i) => i !== index,
-                  );
                   if (removed.type === "color") {
                     setDesignContext({
-                      colors: remaining
-                        .filter((a) => a.type === "color")
-                        .map((a) => a.value),
+                      colors: getNextColorValues(pendingAttachments, index),
                     });
                   } else if (removed.type === "pattern") {
                     setDesignContext({ pattern: null });
+                  } else if (removed.type === "ci-placement") {
+                    setDesignContext({ ciPlacement: null });
+                  } else if (removed.type === "image") {
+                    setDesignContext(
+                      removed.value === "ci"
+                        ? { ciImage: null }
+                        : { referenceImage: null },
+                    );
                   }
                 }}
               >
@@ -125,60 +136,64 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           }}
           className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 text-sm outline-none"
         />
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="mt-2 flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="옵션 추가"
+                aria-expanded={showPopup}
+                aria-controls="attachment-popup"
+                onClick={() => setShowPopup((prev) => !prev)}
+              >
+                <Plus
+                  className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
+                />
+              </Button>
+              <div
+                role="radiogroup"
+                aria-label="원단 방식"
+                className="inline-flex gap-0.5 rounded-md border bg-muted p-0.5"
+              >
+                {FABRIC_OPTIONS.map((option) => {
+                  const isSelected =
+                    designContext.fabricMethod === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
+                        isSelected
+                          ? "bg-background text-foreground shadow-sm"
+                          : "bg-transparent text-muted-foreground hover:text-foreground"
+                      }`}
+                      onClick={() =>
+                        setDesignContext({
+                          fabricMethod: option.value as FabricMethod,
+                        })
+                      }
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <Button
               type="button"
-              variant="ghost"
               size="icon"
-              aria-label="옵션 추가"
-              aria-expanded={showPopup}
-              aria-controls="attachment-popup"
-              onClick={() => setShowPopup((prev) => !prev)}
+              aria-label="메시지 전송"
+              onClick={handleSend}
+              disabled={!trimmedText || isLoading}
             >
-              <Plus
-                className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
-              />
+              <Send className="size-4" />
             </Button>
-            <div
-              role="radiogroup"
-              className="inline-flex rounded-md border bg-muted p-0.5 gap-0.5"
-            >
-              {FABRIC_OPTIONS.map((option) => {
-                const isSelected = designContext.fabricMethod === option.value;
-
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={isSelected}
-                    className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
-                      isSelected
-                        ? "bg-background text-foreground shadow-sm"
-                        : "bg-transparent text-muted-foreground hover:text-foreground"
-                    }`}
-                    onClick={() =>
-                      setDesignContext({
-                        fabricMethod: option.value as FabricMethod,
-                      })
-                    }
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
           </div>
-          <Button
-            type="button"
-            size="icon"
-            aria-label="메시지 전송"
-            onClick={handleSend}
-            disabled={!trimmedText || isLoading}
-          >
-            <Send className="size-4" />
-          </Button>
         </div>
       </div>
     </div>

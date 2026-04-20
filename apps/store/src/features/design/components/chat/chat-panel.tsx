@@ -36,14 +36,17 @@ export function ChatPanel({
   const pendingAttachments = useDesignChatStore(
     (state) => state.pendingAttachments,
   );
-  const aiModel = useDesignChatStore((state) => state.aiModel);
-  const setAiModel = useDesignChatStore((state) => state.setAiModel);
   const selectedPreviewImageUrl = useDesignChatStore(
     (state) => state.selectedPreviewImageUrl,
   );
   const setSelectedPreviewImage = useDesignChatStore(
     (state) => state.setSelectedPreviewImage,
   );
+
+  const isGenerating =
+    generationStatus === "generating" ||
+    generationStatus === "regenerating" ||
+    generationStatus === "rendering";
 
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
@@ -66,8 +69,6 @@ export function ChatPanel({
         onNewChat={resetConversation}
         onOpenHistory={onOpenHistory}
         tokenBalance={tokenBalance?.total}
-        aiModel={aiModel}
-        onModelChange={setAiModel}
       />
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {messages.length === 0 ? (
@@ -98,10 +99,7 @@ export function ChatPanel({
         ) : (
           <MessageList
             messages={messages}
-            isTyping={
-              generationStatus === "generating" ||
-              generationStatus === "regenerating"
-            }
+            isTyping={isGenerating}
             onChipClick={handleChipClick}
             onTiePreviewClick={(url) => setSelectedImageUrl(url)}
             selectedPreviewImageUrl={selectedPreviewImageUrl}
@@ -116,13 +114,7 @@ export function ChatPanel({
         />
       )}
       <div className="shrink-0 border-t p-2">
-        <ChatInput
-          onSend={sendMessage}
-          isLoading={
-            generationStatus === "generating" ||
-            generationStatus === "regenerating"
-          }
-        />
+        <ChatInput onSend={sendMessage} isLoading={isGenerating} />
       </div>
     </div>
   );
