@@ -1,11 +1,14 @@
-import type { GenerateDesignRequest } from "./design-request.ts";
+import type {
+  BackgroundPattern,
+  GenerateDesignRequest,
+} from "./design-request.ts";
 import type { NormalizedDesignContext } from "./design-generation.ts";
 import { SCALE_META } from "./scale-meta.ts";
 
 export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
 항상 한국어로만 응답하세요.
 응답은 반드시 다음 JSON 형식만 반환하세요:
-{"aiMessage": "...", "generateImage": true, "contextChips": [{"label": "...", "action": "..."}], "detectedDesign": {"pattern": null, "colors": [], "ciPlacement": null, "scale": null}}
+{"aiMessage": "...", "generateImage": true, "contextChips": [{"label": "...", "action": "..."}], "detectedDesign": {"pattern": null, "colors": [], "ciPlacement": null, "scale": null, "positionIntent": null}}
 
 generateImage 판단 기준:
 - true: 사용자가 특정 패턴·모티프·색상·스타일을 언급하거나 디자인 변경을 요청한 경우. "상어 패턴", "스트라이프로", "파란색으로 바꿔줘" 등 시각적 결과물이 달라지는 모든 요청은 true.
@@ -22,6 +25,7 @@ detectedDesign은 사용자 메시지와 대화 전체에서 감지한 디자인
 - colors: 감지된 색상 목록. 영어 색상명 배열 (예: ["navy", "burgundy"]). 언급 없으면 [].
 - ciPlacement: 감지된 CI 배치. "all-over" 또는 "one-point". 언급 없으면 null.
 - scale: "large" | "medium" | "small" | null. 패턴 크기 변경 요청이면 감지. 언급 없으면 null.
+- positionIntent: "move-left" | "move-right" | "move-up" | "move-down" | null. 모티프 위치 이동 요청이면 해당 값을 설정.
 이미 designContext에 설정된 값이 있으면 그 값을 우선하고, 사용자 메시지에서 새로 언급된 것만 반영하세요.
 
 contextChips는 사용자가 클릭하는 즉시 디자인이 직접 변경되는 후속 액션만 허용됩니다.
@@ -253,6 +257,7 @@ export const buildReferencePrompt = (
 export const buildCiPlacementPrompt = (
   ciPlacement: string | null | undefined,
   hasCiImage: boolean,
+  backgroundPattern?: BackgroundPattern | null,
 ): string => {
   if (!ciPlacement) return "";
   if (ciPlacement === "all-over") {
@@ -265,9 +270,35 @@ export const buildCiPlacementPrompt = (
     const source = hasCiImage
       ? "from the uploaded CI image"
       : "described in the conversation";
-    return `Place the motif ${source} as a single small accent — treating it as a purely visual graphic shape, not as text; do not read or reproduce any letterforms in the image, use only the silhouette and outline form — slightly right of the vertical centerline, in the lower portion of the fabric — about one-third from the bottom edge, not at the very bottom. The motif must be tiny — occupying only about 2-3% of the fabric width, similar in size to a small pin badge or a watermark-level detail. It should feel like a subtle, refined detail rather than a focal statement. The rest of the fabric surface remains as the base pattern.`;
+    const describedBackground = describeBackgroundPattern(backgroundPattern);
+    return [
+      `Place the motif ${source} as a single small accent — treating it as a purely visual graphic shape, not as text; do not read or reproduce any letterforms in the image, use only the silhouette and outline form — slightly right of the vertical centerline, in the lower portion of the fabric — about one-third from the bottom edge, not at the very bottom.`,
+      "The motif must be tiny — occupying only about 2-3% of the fabric width, similar in size to a small pin badge or a watermark-level detail.",
+      "It should feel like a subtle, refined detail rather than a focal statement.",
+      `The background pattern must be exactly: ${describedBackground}.`,
+      "Do not invent any other background texture or motif beyond what is specified.",
+    ].join(" ");
   }
   return "";
+};
+
+const describeBackgroundPattern = (
+  backgroundPattern?: BackgroundPattern | null,
+): string => {
+  if (!backgroundPattern) {
+    return "a solid uniform color field in the primary color described above";
+  }
+
+  switch (backgroundPattern.type) {
+    case "solid":
+      return `a solid uniform field in color ${backgroundPattern.color}`;
+    case "stripe":
+      return `parallel stripes of ${backgroundPattern.width}px width alternating between colors ${backgroundPattern.colors[0]} and ${backgroundPattern.colors[1]}`;
+    case "check":
+      return `a regular check grid with ${backgroundPattern.cellSize}px cells in colors ${backgroundPattern.colors[0]} and ${backgroundPattern.colors[1]}`;
+    case "dot":
+      return `a regular dot grid: ${backgroundPattern.dotSize}px dots in ${backgroundPattern.color} on ${backgroundPattern.background} background, spaced every ${backgroundPattern.spacing}px`;
+  }
 };
 
 export const buildClosurePrompt = () =>
@@ -298,6 +329,7 @@ export const buildImagePrompt = (payload: GenerateDesignRequest): string => {
     buildCiPlacementPrompt(
       payload.designContext?.ciPlacement,
       !!payload.ciImageBase64,
+      payload.designContext?.backgroundPattern ?? null,
     ),
     buildUserInstructionPrompt(payload.userMessage),
     buildClosurePrompt(),
@@ -324,6 +356,7 @@ export const buildImageEditPrompt = (
     buildCiPlacementPrompt(
       payload.designContext?.ciPlacement,
       !!payload.ciImageBase64,
+      payload.designContext?.backgroundPattern ?? null,
     ),
     buildUserInstructionPrompt(payload.userMessage),
     "Preserve the layout, motif shapes, scale, and overall composition unless explicitly changed.",

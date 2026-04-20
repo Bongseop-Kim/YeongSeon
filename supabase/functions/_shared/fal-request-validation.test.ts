@@ -1,6 +1,5 @@
 import { assertEquals, assertObjectMatch } from "jsr:@std/assert@1.0.19";
 import {
-  ALLOWED_TILED_MIME_TYPES,
   MAX_IMAGE_BASE64_LENGTH,
   shouldProceedToFalRender,
   validateFalGeneratePayload,
@@ -99,7 +98,7 @@ Deno.test(
       {
         ok: false,
         status: 400,
-        body: { error: "tiledBase64 must be a non-empty string" },
+        body: { error: "fal_tiling_requires_tiled_or_reference_image" },
       },
     );
 
@@ -113,7 +112,7 @@ Deno.test(
         ok: false,
         status: 400,
         body: {
-          error: `tiledMimeType must be one of: ${Array.from(ALLOWED_TILED_MIME_TYPES).join(", ")}`,
+          error: "invalid_tiled_mime_type",
         },
       },
     );

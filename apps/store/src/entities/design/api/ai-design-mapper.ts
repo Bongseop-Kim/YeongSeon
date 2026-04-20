@@ -128,9 +128,22 @@ export const getTags = (request: AiDesignRequest): string[] => {
   return tags.length > 0 ? tags : DEFAULT_TAGS;
 };
 
+type BackgroundPattern =
+  | { type: "solid"; color: string }
+  | { type: "stripe"; width: number; colors: [string, string] }
+  | { type: "check"; cellSize: number; colors: [string, string] }
+  | {
+      type: "dot";
+      dotSize: number;
+      spacing: number;
+      color: string;
+      background: string;
+    };
+
 interface InvokePayloadInput {
   ciImageBase64?: string;
   referenceImageBase64?: string;
+  backgroundPattern?: BackgroundPattern | null;
   tiledBase64?: string;
   tiledMimeType?: string;
   route?: AiDesignResponse["route"];
@@ -149,6 +162,7 @@ type InvokePayload = {
     fabricMethod: AiDesignRequest["designContext"]["fabricMethod"];
     ciPlacement: AiDesignRequest["designContext"]["ciPlacement"];
     scale: AiDesignRequest["designContext"]["scale"];
+    backgroundPattern?: BackgroundPattern | null;
   };
   conversationHistory: NonNullable<AiDesignRequest["conversationHistory"]>;
   ciImageBase64: string | undefined;
@@ -280,6 +294,9 @@ export function buildInvokePayload(
       fabricMethod: request.designContext.fabricMethod,
       ciPlacement: request.designContext.ciPlacement,
       scale: request.designContext.scale,
+      ...(input.backgroundPattern != null
+        ? { backgroundPattern: input.backgroundPattern }
+        : {}),
     },
     conversationHistory: request.conversationHistory ?? [],
     ciImageBase64: input.ciImageBase64,

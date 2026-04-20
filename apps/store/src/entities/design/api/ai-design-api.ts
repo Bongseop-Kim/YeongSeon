@@ -96,9 +96,6 @@ function safeCapture(
   }
 }
 
-const isFalPipelineEnabled = () =>
-  import.meta.env.VITE_FALAI_CI_PATTERN_ENABLED === "true";
-
 const getFallbackFunctionName = (request: AiDesignRequest) =>
   request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
 
@@ -127,8 +124,15 @@ export async function aiDesignApi(
     ciPlacement: request.designContext.ciPlacement,
     fabricMethod: request.designContext.fabricMethod,
     autoGenerate: (request.executionMode ?? "auto") === "auto",
-    featureFlag: isFalPipelineEnabled(),
   });
+  const backgroundPattern =
+    request.designContext.ciPlacement === "one-point" &&
+    request.designContext.colors[0]
+      ? {
+          type: "solid" as const,
+          color: request.designContext.colors[0],
+        }
+      : null;
 
   let tiledBase64: string | undefined;
   let tiledMimeType: string | undefined;
@@ -174,6 +178,7 @@ export async function aiDesignApi(
     ? buildInvokePayload(request, {
         ciImageBase64,
         referenceImageBase64,
+        backgroundPattern,
         tiledBase64:
           routeResolution.route === "fal_tiling" ? tiledBase64 : undefined,
         tiledMimeType:
@@ -188,6 +193,7 @@ export async function aiDesignApi(
     : buildInvokePayload(request, {
         ciImageBase64,
         referenceImageBase64,
+        backgroundPattern,
       });
 
   const startTime = Date.now();

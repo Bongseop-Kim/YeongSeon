@@ -2,6 +2,18 @@ import type { ConversationTurn } from "./conversation.ts";
 
 export type FalGenerationRoute = "fal_tiling" | "fal_edit";
 
+export type BackgroundPattern =
+  | { type: "solid"; color: string }
+  | { type: "stripe"; width: number; colors: [string, string] }
+  | { type: "check"; cellSize: number; colors: [string, string] }
+  | {
+      type: "dot";
+      dotSize: number;
+      spacing: number;
+      color: string;
+      background: string;
+    };
+
 interface RequestSessionAttachment {
   type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
   label: string;
@@ -26,6 +38,7 @@ export type GenerateDesignRequest = {
     fabricMethod?: string | null;
     ciPlacement?: string | null;
     scale?: "large" | "medium" | "small" | null;
+    backgroundPattern?: BackgroundPattern | null;
   };
   autoGenerate?: boolean;
   analysisWorkId?: string | null;
@@ -46,7 +59,6 @@ export type GenerateDesignRequest = {
   baseImageUrl?: string | null;
   baseImageWorkId?: string | null;
   seed?: number | null;
-  // 세션 저장용 필드 (클라이언트에서 선택적으로 전송)
   sessionId?: string;
   firstMessage?: string;
   allMessages?: RequestSessionMessage[];

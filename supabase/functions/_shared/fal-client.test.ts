@@ -1,5 +1,10 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert@1.0.19";
-import { callFalFluxImg2Img } from "@/functions/_shared/fal-client.ts";
+import {
+  callFalClarityUpscaler,
+  callFalFluxFill,
+  callFalFluxImg2Img,
+  callFalFluxIpAdapter,
+} from "@/functions/_shared/fal-client.ts";
 
 Deno.test(
   "callFalFluxImg2Img rejects an untrusted fal status url",
@@ -123,3 +128,178 @@ Deno.test(
     }
   },
 );
+
+Deno.test("callFalClarityUpscaler returns upscaled image url", async () => {
+  const originalFetch = globalThis.fetch;
+  let submitBody: Record<string, unknown> | null = null;
+
+  globalThis.fetch = (async (
+    input: string | URL | Request,
+    init?: RequestInit,
+  ) => {
+    const url = String(input);
+
+    if (url === "https://queue.fal.run/fal-ai/clarity-upscaler") {
+      submitBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return new Response(
+        JSON.stringify({
+          request_id: "req-upscale",
+          status_url: "https://queue.fal.run/requests/req-upscale/status",
+          response_url: "https://queue.fal.run/requests/req-upscale",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    if (url === "https://queue.fal.run/requests/req-upscale/status") {
+      return new Response(JSON.stringify({ status: "COMPLETED" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (url === "https://queue.fal.run/requests/req-upscale") {
+      return new Response(
+        JSON.stringify({ images: [{ url: "https://fal.media/upscaled.png" }] }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    throw new Error(`unexpected fetch: ${url}`);
+  }) as typeof fetch;
+
+  try {
+    const result = await callFalClarityUpscaler({
+      imageBase64: "abc",
+      imageMimeType: "image/png",
+      apiKey: "secret",
+    });
+
+    assertEquals(result.imageUrl, "https://fal.media/upscaled.png");
+    if (submitBody === null) {
+      throw new Error("submitBody was not captured");
+    }
+    const capturedBody = submitBody as Record<string, unknown>;
+    assertEquals(capturedBody["scale"], 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("callFalFluxIpAdapter passes style image and weight", async () => {
+  const originalFetch = globalThis.fetch;
+  let submitBody: Record<string, unknown> | null = null;
+
+  globalThis.fetch = (async (
+    input: string | URL | Request,
+    init?: RequestInit,
+  ) => {
+    const url = String(input);
+
+    if (url === "https://queue.fal.run/fal-ai/flux/dev/image-to-image") {
+      submitBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return new Response(
+        JSON.stringify({
+          request_id: "req-ip",
+          status_url: "https://queue.fal.run/requests/req-ip/status",
+          response_url: "https://queue.fal.run/requests/req-ip",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    if (url === "https://queue.fal.run/requests/req-ip/status") {
+      return new Response(JSON.stringify({ status: "COMPLETED" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (url === "https://queue.fal.run/requests/req-ip") {
+      return new Response(
+        JSON.stringify({ images: [{ url: "https://fal.media/ip.png" }] }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    throw new Error(`unexpected fetch: ${url}`);
+  }) as typeof fetch;
+
+  try {
+    await callFalFluxIpAdapter({
+      referenceBase64: "ref",
+      referenceMimeType: "image/png",
+      prompt: "prompt",
+      apiKey: "secret",
+    });
+
+    if (submitBody === null) {
+      throw new Error("submitBody was not captured");
+    }
+    const capturedBody = submitBody as Record<string, unknown>;
+    assertEquals(capturedBody["image_url"], "data:image/png;base64,ref");
+    assertEquals(capturedBody["ip_adapter_scale"], 0.55);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("callFalFluxFill passes mask payload", async () => {
+  const originalFetch = globalThis.fetch;
+  let submitBody: Record<string, unknown> | null = null;
+
+  globalThis.fetch = (async (
+    input: string | URL | Request,
+    init?: RequestInit,
+  ) => {
+    const url = String(input);
+
+    if (url === "https://queue.fal.run/fal-ai/flux-pro/v1/fill") {
+      submitBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return new Response(
+        JSON.stringify({
+          request_id: "req-fill",
+          status_url: "https://queue.fal.run/requests/req-fill/status",
+          response_url: "https://queue.fal.run/requests/req-fill",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    if (url === "https://queue.fal.run/requests/req-fill/status") {
+      return new Response(JSON.stringify({ status: "COMPLETED" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (url === "https://queue.fal.run/requests/req-fill") {
+      return new Response(
+        JSON.stringify({ images: [{ url: "https://fal.media/fill.png" }] }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    throw new Error(`unexpected fetch: ${url}`);
+  }) as typeof fetch;
+
+  try {
+    await callFalFluxFill({
+      imageBase64: "image",
+      imageMimeType: "image/png",
+      maskBase64: "mask",
+      maskMimeType: "image/png",
+      prompt: "prompt",
+      apiKey: "secret",
+    });
+
+    if (submitBody === null) {
+      throw new Error("submitBody was not captured");
+    }
+    const capturedBody = submitBody as Record<string, unknown>;
+    assertEquals(capturedBody["image_url"], "data:image/png;base64,image");
+    assertEquals(capturedBody["mask_url"], "data:image/png;base64,mask");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

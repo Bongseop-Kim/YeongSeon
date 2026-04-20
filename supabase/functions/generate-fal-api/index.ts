@@ -4,6 +4,7 @@ import { determineEligibility } from "@/functions/_shared/design-generation.ts";
 import type { GenerateDesignRequest } from "@/functions/_shared/design-request.ts";
 import {
   callFalFluxImg2Img,
+  callFalFluxIpAdapter,
   callFalNanoBananaEdit,
 } from "@/functions/_shared/fal-client.ts";
 import {
@@ -35,6 +36,7 @@ import {
   createAuthenticatedSupabaseClient,
 } from "@/functions/_shared/supabase-clients.ts";
 import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { maybeUpscaleReference } from "@/functions/_shared/preprocessing/upscale.ts";
 
 type OpenAITextResponse = {
   choices?: Array<{ message?: { content?: string } }>;
@@ -51,9 +53,6 @@ const ANALYSIS_AI_MODEL = "openai" as const;
 const RENDER_AI_MODEL = "fal" as const;
 const OPENAI_TIMEOUT_MS = 60_000;
 const DEFAULT_FAL_ROUTE = "fal_tiling" as const;
-
-const SERVER_VAR = "FALAI_CI_PATTERN_ENABLED";
-const IS_FAL_PIPELINE_ENABLED = Deno.env.get(SERVER_VAR) === "true";
 
 async function tryRefund(
   client: ReturnType<typeof createAdminSupabaseClient>,
@@ -133,16 +132,12 @@ Deno.serve(async (req) => {
     url.pathname.endsWith("/should-use-fal-pipeline")
   ) {
     return jsonResponse(200, {
-      enabled: IS_FAL_PIPELINE_ENABLED,
+      enabled: true,
     });
   }
 
   if (req.method !== "POST") {
     return jsonResponse(405, { error: "Method not allowed" });
-  }
-
-  if (!IS_FAL_PIPELINE_ENABLED) {
-    return jsonResponse(503, { error: "fal_pipeline_disabled" });
   }
 
   const authHeader = req.headers.get("Authorization");
@@ -517,21 +512,45 @@ Deno.serve(async (req) => {
       falImageUrl = falResult.imageUrl;
       falRequestId = falResult.requestId;
     } else {
-      if (!payload.tiledBase64 || !payload.tiledMimeType || !imagePrompt) {
+      const processedReference = payload.referenceImageBase64
+        ? await maybeUpscaleReference({
+            base64: payload.referenceImageBase64,
+            mimeType: payload.referenceImageMimeType ?? "image/png",
+            apiKey: falApiKey,
+          })
+        : null;
+
+      const isA2Scenario =
+        processedReference !== null && !payload.ciImageBase64;
+
+      if (isA2Scenario) {
+        const falResult = await callFalFluxIpAdapter({
+          referenceBase64: processedReference.base64,
+          referenceMimeType: processedReference.mimeType,
+          prompt: imagePrompt ?? textPrompt,
+          apiKey: falApiKey,
+        });
+        falImageUrl = falResult.imageUrl;
+        falRequestId = falResult.requestId;
+      } else if (
+        !payload.tiledBase64 ||
+        !payload.tiledMimeType ||
+        !imagePrompt
+      ) {
         throw new Error(
           "fal_tiling route requires tiled image input and imagePrompt",
         );
+      } else {
+        const falResult = await callFalFluxImg2Img({
+          imageBase64: payload.tiledBase64,
+          imageMimeType: payload.tiledMimeType,
+          prompt: imagePrompt,
+          strength: 0.3,
+          apiKey: falApiKey,
+        });
+        falImageUrl = falResult.imageUrl;
+        falRequestId = falResult.requestId;
       }
-
-      const falResult = await callFalFluxImg2Img({
-        imageBase64: payload.tiledBase64,
-        imageMimeType: payload.tiledMimeType,
-        prompt: imagePrompt,
-        strength: 0.3,
-        apiKey: falApiKey,
-      });
-      falImageUrl = falResult.imageUrl;
-      falRequestId = falResult.requestId;
     }
   } catch (error) {
     renderTokensRefunded = await tryRefund(adminClient, {

@@ -6,16 +6,11 @@ const base = {
   ciPlacement: "all-over" as const,
   fabricMethod: "yarn-dyed" as const,
   autoGenerate: true,
-  featureFlag: true,
 };
 
 describe("shouldUseFalPipeline", () => {
   it("returns true when all conditions are met", () => {
     expect(shouldUseFalPipeline(base)).toBe(true);
-  });
-
-  it("returns false when featureFlag is false", () => {
-    expect(shouldUseFalPipeline({ ...base, featureFlag: false })).toBe(false);
   });
 
   it("returns false when autoGenerate is false", () => {

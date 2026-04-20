@@ -25,6 +25,33 @@ export interface CallFalNanoBananaEditResult {
   requestId: string;
 }
 
+export interface CallFalClarityUpscalerInput {
+  imageBase64: string;
+  imageMimeType: string;
+  apiKey: string;
+  scale?: 2 | 4;
+  timeoutMs?: number;
+}
+
+export interface CallFalFluxIpAdapterInput {
+  referenceBase64: string;
+  referenceMimeType: string;
+  prompt: string;
+  weight?: number;
+  apiKey: string;
+  timeoutMs?: number;
+}
+
+export interface CallFalFluxFillInput {
+  imageBase64: string;
+  imageMimeType: string;
+  maskBase64: string;
+  maskMimeType: string;
+  prompt: string;
+  apiKey: string;
+  timeoutMs?: number;
+}
+
 interface FalQueueSubmitResponse {
   request_id?: string;
   status_url?: string;
@@ -47,6 +74,17 @@ const FAL_FLUX_ENDPOINT =
   "https://queue.fal.run/fal-ai/flux/dev/image-to-image";
 const FAL_NANO_BANANA_EDIT_ENDPOINT =
   "https://queue.fal.run/fal-ai/nano-banana-2/edit";
+const FAL_CLARITY_UPSCALER_ENDPOINT =
+  "https://queue.fal.run/fal-ai/clarity-upscaler";
+const FAL_FLUX_FILL_ENDPOINT = "https://queue.fal.run/fal-ai/flux-pro/v1/fill";
+const FAL_FLUX_DEFAULT_PARAMS = {
+  num_inference_steps: 28,
+  guidance_scale: 3.5,
+  num_images: 1,
+} as const;
+const buildDataUri = (mimeType: string, base64: string) =>
+  `data:${mimeType};base64,${base64}`;
+
 const POLL_INTERVAL_MS = 2000;
 const DEFAULT_TIMEOUT_MS = 60000;
 const TRUSTED_FAL_QUEUE_HOST = "queue.fal.run";
@@ -186,7 +224,7 @@ export async function callFalFluxImg2Img(
   input: CallFalFluxImg2ImgInput,
 ): Promise<CallFalFluxImg2ImgResult> {
   const strength = input.strength ?? 0.3;
-  const dataUri = `data:${input.imageMimeType};base64,${input.imageBase64}`;
+  const dataUri = buildDataUri(input.imageMimeType, input.imageBase64);
 
   return callFalImageEndpoint({
     endpoint: FAL_FLUX_ENDPOINT,
@@ -196,9 +234,7 @@ export async function callFalFluxImg2Img(
       image_url: dataUri,
       prompt: input.prompt,
       strength,
-      num_inference_steps: 28,
-      guidance_scale: 3.5,
-      num_images: 1,
+      ...FAL_FLUX_DEFAULT_PARAMS,
       image_size: { width: 1024, height: 1024 },
     },
   });
@@ -220,6 +256,60 @@ export async function callFalNanoBananaEdit(
       aspect_ratio: "auto",
       limit_generations: true,
       num_images: 1,
+    },
+  });
+}
+
+export async function callFalClarityUpscaler(
+  input: CallFalClarityUpscalerInput,
+): Promise<CallFalFluxImg2ImgResult> {
+  const dataUri = buildDataUri(input.imageMimeType, input.imageBase64);
+
+  return callFalImageEndpoint({
+    endpoint: FAL_CLARITY_UPSCALER_ENDPOINT,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: {
+      image_url: dataUri,
+      scale: input.scale ?? 2,
+    },
+  });
+}
+
+export async function callFalFluxIpAdapter(
+  input: CallFalFluxIpAdapterInput,
+): Promise<CallFalFluxImg2ImgResult> {
+  const dataUri = buildDataUri(input.referenceMimeType, input.referenceBase64);
+
+  return callFalImageEndpoint({
+    endpoint: FAL_FLUX_ENDPOINT,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: {
+      image_url: dataUri,
+      prompt: input.prompt,
+      ip_adapter_scale: input.weight ?? 0.55,
+      ...FAL_FLUX_DEFAULT_PARAMS,
+      image_size: { width: 1024, height: 1024 },
+    },
+  });
+}
+
+export async function callFalFluxFill(
+  input: CallFalFluxFillInput,
+): Promise<CallFalFluxImg2ImgResult> {
+  const imageUri = buildDataUri(input.imageMimeType, input.imageBase64);
+  const maskUri = buildDataUri(input.maskMimeType, input.maskBase64);
+
+  return callFalImageEndpoint({
+    endpoint: FAL_FLUX_FILL_ENDPOINT,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: {
+      image_url: imageUri,
+      mask_url: maskUri,
+      prompt: input.prompt,
+      ...FAL_FLUX_DEFAULT_PARAMS,
     },
   });
 }

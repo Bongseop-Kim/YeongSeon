@@ -8,14 +8,12 @@ interface ShouldUseFalPipelineInput {
   ciPlacement: CiPlacement | null | undefined;
   fabricMethod: FabricMethod | null | undefined;
   autoGenerate: boolean;
-  featureFlag: boolean;
 }
 
 export function shouldUseFalPipeline(
   input: ShouldUseFalPipelineInput,
 ): boolean {
   return (
-    input.featureFlag &&
     input.autoGenerate &&
     input.ciPlacement === "all-over" &&
     !!input.ciImageBase64 &&

@@ -236,7 +236,6 @@ describe("aiDesignApi", () => {
   });
 
   it("Fal 플래그와 올패턴 CI 조건이 맞으면 generate-fal-api를 호출한다", async () => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
     tileLogoOnCanvas.mockResolvedValue({
       base64: "tiled-base64",
       mimeType: "image/png",
@@ -278,27 +277,17 @@ describe("aiDesignApi", () => {
 
   it.each([
     {
-      title:
-        "featureFlag가 꺼져 있으면 fal_tiling 요청도 로컬에서 openai로 처리한다",
-      stubEnv: false,
-      executionMode: undefined,
-      fabricMethod: "yarn-dyed" as const,
-    },
-    {
       title: "auto가 아니면 fal_tiling 요청도 로컬에서 openai로 처리한다",
-      stubEnv: true,
       executionMode: "analysis_only" as const,
       fabricMethod: "yarn-dyed" as const,
     },
     {
       title:
         "fabricMethod가 없으면 fal_tiling 요청도 로컬에서 openai로 처리한다",
-      stubEnv: true,
       executionMode: undefined,
       fabricMethod: null,
     },
-  ])("$title", async ({ stubEnv, executionMode, fabricMethod }) => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", stubEnv ? "true" : "false");
+  ])("$title", async ({ executionMode, fabricMethod }) => {
     MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
     vi.stubGlobal("FileReader", MockFileReader);
     invoke.mockResolvedValue({ data: successResponse, error: null });
@@ -362,8 +351,32 @@ describe("aiDesignApi", () => {
     });
   });
 
+  it("one-point CI 배치에서는 solid backgroundPattern을 payload에 주입한다", async () => {
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "원포인트 로고 넥타이로 만들어줘",
+      designContext: {
+        ...baseRequest.designContext,
+        colors: ["#123456"],
+        ciPlacement: "one-point",
+      },
+    });
+
+    expect(invoke).toHaveBeenCalledWith("generate-open-api", {
+      body: expect.objectContaining({
+        designContext: expect.objectContaining({
+          backgroundPattern: {
+            type: "solid",
+            color: "#123456",
+          },
+        }),
+      }),
+    });
+  });
+
   it("tileLogoOnCanvas 실패는 observability 이벤트를 남기고 정리된 에러를 던진다", async () => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
     MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
     tileLogoOnCanvas.mockRejectedValue(new Error("canvas exploded"));
     vi.stubGlobal("FileReader", MockFileReader);
@@ -395,7 +408,6 @@ describe("aiDesignApi", () => {
   });
 
   it("Fal API가 비활성화되어 있으면 기존 모델 함수로 한 번 폴백한다", async () => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
     tileLogoOnCanvas.mockResolvedValue({
       base64: "tiled-base64",
       mimeType: "image/png",
@@ -465,7 +477,6 @@ describe("aiDesignApi", () => {
   });
 
   it("fal_edit가 fal_pipeline_disabled로 폴백되면 두 번째 invoke가 edit context를 유지한다", async () => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
     vi.stubGlobal("FileReader", MockFileReader);
     invoke
       .mockResolvedValueOnce({

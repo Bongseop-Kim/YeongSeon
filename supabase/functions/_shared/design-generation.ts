@@ -211,6 +211,16 @@ export const normalizeScale = (
 ): NormalizedDesignContext["scale"] =>
   value === "large" || value === "medium" || value === "small" ? value : null;
 
+export const normalizePositionIntent = (
+  value: unknown,
+): DetectedDesign["positionIntent"] =>
+  value === "move-left" ||
+  value === "move-right" ||
+  value === "move-up" ||
+  value === "move-down"
+    ? value
+    : null;
+
 export const normalizeDetectedDesign = (
   value: unknown,
 ): DetectedDesign | null => {
@@ -225,6 +235,7 @@ export const normalizeDetectedDesign = (
     ciPlacement:
       typeof record.ciPlacement === "string" ? record.ciPlacement : null,
     scale: normalizeScale(record.scale),
+    positionIntent: normalizePositionIntent(record.positionIntent),
   };
 };
 

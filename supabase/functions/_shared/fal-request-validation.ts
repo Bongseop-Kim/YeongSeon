@@ -169,18 +169,25 @@ export const validateFalGeneratePayload = (
       };
     }
 
-    if (
-      typeof payload.tiledBase64 !== "string" ||
-      !payload.tiledBase64.trim()
-    ) {
+    const hasTiledInput =
+      typeof payload.tiledBase64 === "string" &&
+      payload.tiledBase64.trim().length > 0;
+    const hasReferenceInput =
+      typeof payload.referenceImageBase64 === "string" &&
+      payload.referenceImageBase64.trim().length > 0;
+
+    if (!hasTiledInput && !hasReferenceInput) {
       return {
         ok: false,
         status: 400,
-        body: { error: "tiledBase64 must be a non-empty string" },
+        body: { error: "fal_tiling_requires_tiled_or_reference_image" },
       };
     }
 
-    if (payload.tiledBase64.length > MAX_IMAGE_BASE64_LENGTH) {
+    if (
+      typeof payload.tiledBase64 === "string" &&
+      payload.tiledBase64.length > MAX_IMAGE_BASE64_LENGTH
+    ) {
       return {
         ok: false,
         status: 413,
@@ -189,16 +196,15 @@ export const validateFalGeneratePayload = (
     }
 
     if (
-      typeof payload.tiledMimeType !== "string" ||
-      !payload.tiledMimeType.trim() ||
-      !ALLOWED_TILED_MIME_TYPES.has(payload.tiledMimeType)
+      hasTiledInput &&
+      (typeof payload.tiledMimeType !== "string" ||
+        !payload.tiledMimeType.trim() ||
+        !ALLOWED_TILED_MIME_TYPES.has(payload.tiledMimeType))
     ) {
       return {
         ok: false,
         status: 400,
-        body: {
-          error: `tiledMimeType must be one of: ${Array.from(ALLOWED_TILED_MIME_TYPES).join(", ")}`,
-        },
+        body: { error: "invalid_tiled_mime_type" },
       };
     }
   }
