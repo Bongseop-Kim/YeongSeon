@@ -80,6 +80,34 @@ describe("AttachmentPopup", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it("파일 선택 change가 리렌더 전 동기로 발생해도 최신 이미지 종류를 사용한다", () => {
+    const { container } = render(<AttachmentPopup onClose={onClose} />);
+    const file = new File(["ci"], "ci-sync.png", { type: "image/png" });
+    const imageInput = container.querySelector('input[type="file"]');
+
+    if (!(imageInput instanceof HTMLInputElement)) {
+      throw new Error("image input not found");
+    }
+
+    imageInput.click = () => {
+      fireEvent.change(imageInput, {
+        target: { files: [file] },
+      });
+    };
+
+    fireEvent.click(screen.getByRole("button", { name: "CI 이미지 첨부" }));
+
+    expect(addAttachment).toHaveBeenCalledWith({
+      type: "image",
+      label: "CI 이미지",
+      value: "ci",
+      file,
+    });
+    expect(setDesignContext).toHaveBeenCalledWith({
+      ciImage: file,
+    });
+  });
+
   it("참고 이미지 업로드는 기존 CI attachment를 제거하지 않는다", () => {
     state.pendingAttachments = [
       {

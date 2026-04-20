@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useRef, type ChangeEvent } from "react";
 import { X } from "lucide-react";
 
 import { Badge } from "@/shared/ui/badge";
@@ -64,9 +64,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
     (state) => state.setDesignContext,
   );
   const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const [selectedImageKind, setSelectedImageKind] = useState<
-    "ci" | "reference"
-  >("reference");
+  const selectedImageKindRef = useRef<"ci" | "reference">("reference");
 
   const selectedColors = pendingAttachments.filter(
     (attachment) => attachment.type === "color",
@@ -137,6 +135,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       return;
     }
 
+    const selectedImageKind = selectedImageKindRef.current;
     const nextAttachment =
       selectedImageKind === "ci"
         ? { type: "image" as const, label: "CI 이미지", value: "ci", file }
@@ -161,7 +160,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   };
 
   const openImagePicker = (kind: "ci" | "reference") => {
-    setSelectedImageKind(kind);
+    selectedImageKindRef.current = kind;
     imageInputRef.current?.click();
   };
 

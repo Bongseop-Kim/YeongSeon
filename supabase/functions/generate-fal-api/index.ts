@@ -10,6 +10,10 @@ import {
   shouldProceedToFalRender,
   validateFalGeneratePayload,
 } from "@/functions/_shared/fal-request-validation.ts";
+import {
+  buildFalErrorResponseBody,
+  getTrustedFalImageUrl,
+} from "@/functions/_shared/generate-fal-api-utils.ts";
 import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
 import { logGeneration } from "@/functions/_shared/log-generation.ts";
 import { createLogger } from "@/functions/_shared/logger.ts";
@@ -47,7 +51,6 @@ const ANALYSIS_AI_MODEL = "openai" as const;
 const RENDER_AI_MODEL = "fal" as const;
 const OPENAI_TIMEOUT_MS = 60_000;
 const DEFAULT_FAL_ROUTE = "fal_tiling" as const;
-const TRUSTED_FAL_IMAGE_HOSTS = new Set(["fal.media"]);
 
 const SERVER_VAR = "FALAI_CI_PATTERN_ENABLED";
 const IS_FAL_PIPELINE_ENABLED = Deno.env.get(SERVER_VAR) === "true";
@@ -114,22 +117,6 @@ const toDeterministicSeed = (value: string): number => {
   }
 
   return Math.abs(hash) || 1;
-};
-
-const getTrustedFalImageUrl = (value: string): string | null => {
-  try {
-    const parsedUrl = new URL(value);
-    if (
-      parsedUrl.protocol !== "https:" ||
-      !TRUSTED_FAL_IMAGE_HOSTS.has(parsedUrl.hostname)
-    ) {
-      return null;
-    }
-
-    return parsedUrl.toString();
-  } catch {
-    return null;
-  }
 };
 
 Deno.serve(async (req) => {
@@ -588,7 +575,10 @@ Deno.serve(async (req) => {
       error_message: error instanceof Error ? error.message : String(error),
     });
 
-    return jsonResponse(500, { error: "fal_render_failed" });
+    return jsonResponse(
+      500,
+      buildFalErrorResponseBody("fal_render_failed", analysisResponseBody),
+    );
   }
 
   const imageLatencyMs = Date.now() - imageStart;
@@ -710,7 +700,10 @@ Deno.serve(async (req) => {
       error_type: resolvedErrorCode,
       error_message: error instanceof Error ? error.message : String(error),
     });
-    return jsonResponse(500, { error: resolvedErrorCode });
+    return jsonResponse(
+      500,
+      buildFalErrorResponseBody(resolvedErrorCode, analysisResponseBody),
+    );
   }
 
   await logGeneration(adminClient, {

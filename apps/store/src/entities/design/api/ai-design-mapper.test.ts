@@ -286,7 +286,7 @@ describe("normalizeInvokeResponse", () => {
         routeSignals: null,
         routeReason: null,
         falRequestId: null,
-        seed: "123" as never,
+        seed: null,
         generateImage: null,
         eligibleForRender: null,
         missingRequirements: [],
