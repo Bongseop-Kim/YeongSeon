@@ -3,21 +3,23 @@ import type {
   GenerationRouteReason,
   GenerationRouteSignal,
 } from "@/entities/design/model/ai-design-request";
+import {
+  classifyRouteWithLlm,
+  type ClassifierInput,
+  type ClassifierResult,
+} from "@/entities/design/api/route-classifier";
 
-interface RouteResolverInput {
-  userMessage: string;
-  hasCiImage: boolean;
-  hasReferenceImage: boolean;
-  hasPreviousGeneratedImage: boolean;
-  selectedPreviewImageUrl: string | null;
-  detectedPattern?: string | null;
-}
+export type RouteResolverInput = ClassifierInput;
 
-interface RouteResolution {
+export interface RouteResolution {
   route: GenerationRoute;
   signals: GenerationRouteSignal[];
   reason: GenerationRouteReason;
   usedIntentRouter: boolean;
+}
+
+export interface AsyncRouteResolution extends RouteResolution {
+  source: "llm" | "heuristic";
 }
 
 const PATTERN_REPEAT_KEYWORDS = [
@@ -375,5 +377,26 @@ export function resolveGenerationRoute(
     signals,
     reason: "default_openai_generation",
     usedIntentRouter: false,
+  };
+}
+
+export async function resolveGenerationRouteAsync(
+  input: RouteResolverInput,
+): Promise<AsyncRouteResolution> {
+  const llm: ClassifierResult | null = await classifyRouteWithLlm(input);
+
+  if (llm && llm.route !== "none") {
+    return {
+      route: llm.route,
+      signals: llm.signals,
+      reason: "llm_classifier",
+      usedIntentRouter: false,
+      source: "llm",
+    };
+  }
+
+  return {
+    ...resolveGenerationRoute(input),
+    source: "heuristic",
   };
 }

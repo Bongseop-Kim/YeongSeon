@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,11 @@ import {
 } from "@/shared/ui/field";
 import { Textarea } from "@/shared/ui/textarea";
 import { MaskCanvas } from "@/features/design/components/inpaint/mask-canvas";
+import {
+  canvasToPngBase64,
+  MAX_MASK_BASE64_LENGTH,
+  rescaleMaskToTarget,
+} from "@/features/design/lib/rescale-mask";
 
 interface InpaintDialogProps {
   open: boolean;
@@ -36,6 +41,7 @@ export function InpaintDialog({
   const [maskBase64, setMaskBase64] = useState("");
   const [editPrompt, setEditPrompt] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const maskCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -45,7 +51,20 @@ export function InpaintDialog({
     }
   }, [open]);
 
-  const handleSubmit = () => {
+  const loadImageNaturalSize = async () =>
+    await new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => {
+        resolve({
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        });
+      };
+      image.onerror = () => reject(new Error("image_load_failed"));
+      image.src = imageUrl;
+    });
+
+  const handleSubmit = async () => {
     if (maskBase64.length === 0) {
       setErrorMessage("수정할 영역을 먼저 칠해 주세요.");
       return;
@@ -57,7 +76,25 @@ export function InpaintDialog({
     }
 
     setErrorMessage(null);
-    onSubmit(maskBase64, editPrompt.trim());
+
+    const sourceCanvas = maskCanvasRef.current;
+    if (!sourceCanvas) {
+      onSubmit(maskBase64, editPrompt.trim());
+      return;
+    }
+
+    try {
+      const naturalSize = await loadImageNaturalSize();
+      const rescaledMask = await rescaleMaskToTarget(sourceCanvas, naturalSize);
+      const rescaledBase64 = await canvasToPngBase64(rescaledMask);
+      if (rescaledBase64.length > MAX_MASK_BASE64_LENGTH) {
+        onSubmit(maskBase64, editPrompt.trim());
+        return;
+      }
+      onSubmit(rescaledBase64, editPrompt.trim());
+    } catch {
+      onSubmit(maskBase64, editPrompt.trim());
+    }
   };
 
   return (
@@ -72,6 +109,7 @@ export function InpaintDialog({
 
         <div className="space-y-4">
           <MaskCanvas
+            ref={maskCanvasRef}
             baseImageUrl={imageUrl}
             width={320}
             height={320}

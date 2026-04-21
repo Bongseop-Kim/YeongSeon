@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { resolveGenerationRoute } from "@/entities/design/api/resolve-generation-route";
+import { describe, expect, it, vi } from "vitest";
+import {
+  resolveGenerationRoute,
+  resolveGenerationRouteAsync,
+} from "@/entities/design/api/resolve-generation-route";
+import * as classifier from "@/entities/design/api/route-classifier";
 
 const createInput = (
   overrides: Partial<Parameters<typeof resolveGenerationRoute>[0]> = {},
@@ -417,5 +421,49 @@ describe("resolveGenerationRoute", () => {
       usedIntentRouter: false,
       signals: ["previous_generated_image_present", "new_generation"],
     });
+  });
+});
+
+describe("resolveGenerationRouteAsync", () => {
+  it("LLM 결과가 유효하면 해당 route를 사용한다", async () => {
+    vi.spyOn(classifier, "classifyRouteWithLlm").mockResolvedValueOnce({
+      route: "fal_inpaint",
+      signals: ["edit_only"],
+      confidence: 0.9,
+      source: "llm",
+    });
+
+    const result = await resolveGenerationRouteAsync({
+      userMessage: "이 부분만 수정",
+      hasCiImage: false,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: true,
+      selectedPreviewImageUrl: null,
+      detectedPattern: null,
+    });
+
+    expect(result).toEqual({
+      route: "fal_inpaint",
+      reason: "llm_classifier",
+      signals: ["edit_only"],
+      usedIntentRouter: false,
+      source: "llm",
+    });
+  });
+
+  it("LLM이 null이면 heuristic 폴백을 사용한다", async () => {
+    vi.spyOn(classifier, "classifyRouteWithLlm").mockResolvedValueOnce(null);
+
+    const result = await resolveGenerationRouteAsync({
+      userMessage: "새 디자인",
+      hasCiImage: false,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: false,
+      selectedPreviewImageUrl: null,
+      detectedPattern: null,
+    });
+
+    expect(result.source).toBe("heuristic");
+    expect(result.route).toBe("openai");
   });
 });

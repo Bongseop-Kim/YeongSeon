@@ -1,5 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { buildAnalysisReuseKey } from "@/entities/design/api/analysis-reuse-key";
 import { useDesignChat } from "@/features/design/hooks/use-design-chat";
 
 const {
@@ -114,6 +115,25 @@ const initialMessages = [
     uiOnly: true,
   },
 ] as const;
+
+const createReuseKey = (overrides?: {
+  colors?: string[];
+  pattern?: string | null;
+  fabricMethod?: string | null;
+  ciPlacement?: string | null;
+  baseImageWorkId?: string | null;
+  baseImageUrl?: string | null;
+}) =>
+  buildAnalysisReuseKey({
+    colors: overrides?.colors ?? ["navy"],
+    pattern: overrides?.pattern ?? "stripe",
+    fabricMethod: overrides?.fabricMethod ?? "print",
+    ciPlacement: overrides?.ciPlacement ?? null,
+    baseImageWorkId: overrides?.baseImageWorkId ?? null,
+    ciImageHash: null,
+    referenceImageHash: null,
+    baseImageUrl: overrides?.baseImageUrl ?? null,
+  });
 
 const storeState = {
   messages: [...initialMessages],
@@ -472,8 +492,7 @@ describe("useDesignChat", () => {
       lastAnalysisWorkId: "analysis-work-101",
       lastGenerateImage: false,
       lastEligibleForRender: true,
-      lastAnalysisReuseKey:
-        '{"colors":["navy"],"pattern":"stripe","fabricMethod":"print","ciPlacement":null,"ciImage":null,"referenceImage":null,"baseImageUrl":null,"baseImageWorkId":null}',
+      lastAnalysisReuseKey: createReuseKey(),
     });
 
     const { result } = renderHook(() => useDesignChat());
@@ -498,8 +517,7 @@ describe("useDesignChat", () => {
       },
       lastAnalysisWorkId: "analysis-work-101",
       lastEligibleForRender: true,
-      lastAnalysisReuseKey:
-        '{"colors":["navy"],"pattern":"stripe","fabricMethod":"print","ciPlacement":null,"ciImage":null,"referenceImage":null,"baseImageUrl":null,"baseImageWorkId":null}',
+      lastAnalysisReuseKey: createReuseKey(),
     });
 
     const { result } = renderHook(() => useDesignChat());
@@ -629,8 +647,7 @@ describe("useDesignChat", () => {
       lastAnalysisWorkId: "analysis-work-99",
       lastGenerateImage: false,
       lastEligibleForRender: true,
-      lastAnalysisReuseKey:
-        '{"colors":["navy"],"pattern":"stripe","fabricMethod":"print","ciPlacement":null,"ciImage":null,"referenceImage":null,"baseImageUrl":null,"baseImageWorkId":null}',
+      lastAnalysisReuseKey: createReuseKey(),
     });
 
     const { result } = renderHook(() => useDesignChat());
@@ -652,8 +669,7 @@ describe("useDesignChat", () => {
       currentSessionId: "store-session-42",
       lastAnalysisWorkId: "analysis-work-103",
       lastEligibleForRender: true,
-      lastAnalysisReuseKey:
-        '{"colors":["navy"],"pattern":"stripe","fabricMethod":"print","ciPlacement":null,"ciImage":null,"referenceImage":null,"baseImageUrl":null,"baseImageWorkId":null}',
+      lastAnalysisReuseKey: createReuseKey(),
     });
 
     const { result } = renderHook(() => useDesignChat());

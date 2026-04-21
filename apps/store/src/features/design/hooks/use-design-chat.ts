@@ -10,6 +10,10 @@ import {
   type GenerationRouteSignal,
 } from "@/entities/design";
 import {
+  buildAnalysisReuseKey,
+  fnv1a32,
+} from "@/entities/design/api/analysis-reuse-key";
+import {
   getRawImageUrlFromPreviewBackground,
   useDesignChatStore,
 } from "@/features/design/store/design-chat-store";
@@ -44,18 +48,21 @@ const toSerializableFile = (file: File | null) =>
       }
     : null;
 
+const hashFileMeta = (file: File | null): string | null =>
+  file ? fnv1a32(JSON.stringify(toSerializableFile(file))) : null;
+
 const createAnalysisReuseKey = (
   designContext: Message["designContext"],
   baseImageUrl: string | null,
   baseImageWorkId: string | null,
 ): string =>
-  JSON.stringify({
+  buildAnalysisReuseKey({
     colors: designContext?.colors ?? [],
     pattern: designContext?.pattern ?? null,
     fabricMethod: designContext?.fabricMethod ?? null,
     ciPlacement: designContext?.ciPlacement ?? null,
-    ciImage: toSerializableFile(designContext?.ciImage ?? null),
-    referenceImage: toSerializableFile(designContext?.referenceImage ?? null),
+    ciImageHash: hashFileMeta(designContext?.ciImage ?? null),
+    referenceImageHash: hashFileMeta(designContext?.referenceImage ?? null),
     baseImageUrl,
     baseImageWorkId,
   });

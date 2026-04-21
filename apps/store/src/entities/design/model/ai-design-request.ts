@@ -39,6 +39,7 @@ export const GENERATION_ROUTE_REASON_VALUES = [
   "existing_result_edit_request",
   "similar_mood_or_new_generation",
   "default_openai_generation",
+  "llm_classifier",
 ] as const;
 
 export type GenerationRouteReason =

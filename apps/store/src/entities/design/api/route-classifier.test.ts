@@ -1,0 +1,119 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { classifyRouteWithLlm } from "@/entities/design/api/route-classifier";
+
+const mockInvoke = vi.fn();
+
+vi.mock("@/shared/lib/supabase", () => ({
+  supabase: {
+    functions: {
+      invoke: (...args: unknown[]) => mockInvoke(...args),
+    },
+  },
+}));
+
+describe("classifyRouteWithLlm", () => {
+  beforeEach(() => {
+    mockInvoke.mockReset();
+  });
+
+  it("신뢰도가 임계값 이상이면 분류 결과를 반환한다", async () => {
+    mockInvoke.mockResolvedValueOnce({
+      data: {
+        route: "fal_controlnet",
+        signals: ["pattern_repeat"],
+        confidence: 0.82,
+      },
+      error: null,
+    });
+
+    const result = await classifyRouteWithLlm({
+      userMessage: "체크 패턴 반복해서 넣어줘",
+      hasCiImage: true,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: false,
+      selectedPreviewImageUrl: null,
+      detectedPattern: "check",
+    });
+
+    expect(result).toEqual({
+      route: "fal_controlnet",
+      signals: ["pattern_repeat"],
+      confidence: 0.82,
+      source: "llm",
+    });
+  });
+
+  it("타임아웃 초과 시 null을 반환한다", async () => {
+    mockInvoke.mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ data: {}, error: null }), 2000),
+        ),
+    );
+
+    const result = await classifyRouteWithLlm(
+      {
+        userMessage: "x",
+        hasCiImage: false,
+        hasReferenceImage: false,
+        hasPreviousGeneratedImage: false,
+        selectedPreviewImageUrl: null,
+        detectedPattern: null,
+      },
+      { timeoutMs: 50 },
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it("confidence가 임계값 미만이면 null을 반환한다", async () => {
+    mockInvoke.mockResolvedValueOnce({
+      data: { route: "openai", signals: [], confidence: 0.4 },
+      error: null,
+    });
+
+    const result = await classifyRouteWithLlm({
+      userMessage: "그거 해줘",
+      hasCiImage: false,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: false,
+      selectedPreviewImageUrl: null,
+      detectedPattern: null,
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it("Edge Function 오류 시 null을 반환한다", async () => {
+    mockInvoke.mockResolvedValueOnce({
+      data: null,
+      error: new Error("boom"),
+    });
+
+    const result = await classifyRouteWithLlm({
+      userMessage: "테스트",
+      hasCiImage: false,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: false,
+      selectedPreviewImageUrl: null,
+      detectedPattern: null,
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it("invoke reject 시에도 null을 반환한다", async () => {
+    mockInvoke.mockRejectedValueOnce(new Error("network"));
+
+    const result = await classifyRouteWithLlm({
+      userMessage: "테스트",
+      hasCiImage: false,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: false,
+      selectedPreviewImageUrl: null,
+      detectedPattern: null,
+    });
+
+    expect(result).toBeNull();
+  });
+});

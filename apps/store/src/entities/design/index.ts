@@ -1,11 +1,16 @@
 export { aiDesignApi, InsufficientTokensError } from "./api/ai-design-api";
-export { resolveGenerationRoute } from "./api/resolve-generation-route";
+export {
+  resolveGenerationRoute,
+  resolveGenerationRouteAsync,
+} from "./api/resolve-generation-route";
+export { classifyRouteWithLlm } from "./api/route-classifier";
 export type {
   AiDesignRequest,
   GenerationRoute,
   GenerationRouteReason,
   GenerationRouteSignal,
 } from "./model/ai-design-request";
+export type { ClassifierInput, ClassifierResult } from "./api/route-classifier";
 export type { AiDesignResponse } from "./model/ai-design-response";
 export {
   DESIGN_TOKEN_BALANCE_QUERY_KEY,

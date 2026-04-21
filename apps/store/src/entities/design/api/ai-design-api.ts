@@ -8,6 +8,10 @@ import {
   toDesignTokenHistoryItem,
   type DesignTokenRow,
 } from "@/entities/design/api/ai-design-mapper";
+import { falProvider } from "@/entities/design/api/providers/fal-provider";
+import { geminiProvider } from "@/entities/design/api/providers/gemini-provider";
+import { openaiProvider } from "@/entities/design/api/providers/openai-provider";
+import { runProviderChain } from "@/entities/design/api/providers/provider-chain";
 import { resolveGenerationRoute } from "@/entities/design/api/resolve-generation-route";
 import { shouldUseFalPipeline } from "@/entities/design/api/should-use-fal-pipeline";
 import { tileLogoOnCanvas } from "@/entities/design/api/tile-logo-on-canvas";
@@ -96,8 +100,20 @@ function safeCapture(
   }
 }
 
-const getFallbackFunctionName = (request: AiDesignRequest) =>
-  request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
+const getErrorResponseBody = async (
+  error: unknown,
+): Promise<{ error?: string; balance?: number; cost?: number } | null> => {
+  const context = (error as { context?: unknown } | null)?.context;
+  if (!(context instanceof Response)) {
+    return null;
+  }
+
+  return (await context.json()) as {
+    error?: string;
+    balance?: number;
+    cost?: number;
+  };
+};
 
 export async function aiDesignApi(
   request: AiDesignRequest,
@@ -177,93 +193,77 @@ export async function aiDesignApi(
     }
   }
 
-  const functionName = canUseFalApi
-    ? "generate-fal-api"
-    : getFallbackFunctionName(request);
+  const falPayload = buildInvokePayload(request, {
+    ciImageBase64,
+    referenceImageBase64,
+    backgroundPattern,
+    tiledBase64: isPatternRoute ? tiledBase64 : undefined,
+    tiledMimeType: isPatternRoute ? tiledMimeType : undefined,
+    route: resolvedRoute,
+    routeSignals: routeResolution.signals,
+    routeReason: routeResolution.reason,
+    routeHint: request.routeHint,
+    baseImageUrl: request.baseImageUrl,
+    baseImageWorkId: request.baseImageWorkId,
+    controlType: request.controlType,
+    structureImageBase64: request.structureImageBase64,
+    structureImageMimeType: request.structureImageMimeType,
+    baseImageBase64: request.baseImageBase64,
+    baseImageMimeType: request.baseImageMimeType,
+    maskBase64: request.maskBase64,
+    maskMimeType: request.maskMimeType,
+    editPrompt: request.editPrompt,
+  }) as Record<string, unknown>;
 
-  const invokePayload = canUseFalApi
-    ? buildInvokePayload(request, {
-        ciImageBase64,
-        referenceImageBase64,
-        backgroundPattern,
-        tiledBase64: isPatternRoute ? tiledBase64 : undefined,
-        tiledMimeType: isPatternRoute ? tiledMimeType : undefined,
-        route: resolvedRoute,
-        routeSignals: routeResolution.signals,
-        routeReason: routeResolution.reason,
-        routeHint: request.routeHint,
-        baseImageUrl: request.baseImageUrl,
-        baseImageWorkId: request.baseImageWorkId,
-        controlType: request.controlType,
-        structureImageBase64: request.structureImageBase64,
-        structureImageMimeType: request.structureImageMimeType,
-        baseImageBase64: request.baseImageBase64,
-        baseImageMimeType: request.baseImageMimeType,
-        maskBase64: request.maskBase64,
-        maskMimeType: request.maskMimeType,
-        editPrompt: request.editPrompt,
-      })
-    : buildInvokePayload(request, {
-        ciImageBase64,
-        referenceImageBase64,
-        backgroundPattern,
-      });
+  const defaultPayload = buildInvokePayload(request, {
+    ciImageBase64,
+    referenceImageBase64,
+    backgroundPattern,
+    routeHint: request.routeHint,
+    baseImageUrl: request.baseImageUrl,
+    baseImageWorkId: request.baseImageWorkId,
+  }) as Record<string, unknown>;
 
   const startTime = Date.now();
+  let data: unknown;
+  let providerUsed: "fal" | "openai" | "gemini";
 
-  let { data, error } = await supabase.functions.invoke(functionName, {
-    body: invokePayload,
-  });
-  let usedFallback = false;
+  try {
+    const chainResult = await runProviderChain(
+      {
+        request,
+        defaultPayload,
+        falPayload,
+        resolvedRoute,
+        canUseFalApi,
+      },
+      [falProvider, openaiProvider, geminiProvider],
+    );
 
-  if (error) {
-    const context = (error as { context?: unknown }).context;
-    if (context instanceof Response) {
-      const body = (await context.json()) as {
-        error?: string;
-        balance?: number;
-        cost?: number;
-      };
-      if (body.error === "insufficient_tokens") {
-        safeCapture("design_generation_failed", {
-          ai_model: request.aiModel,
-          error_type: "insufficient_tokens",
-        });
-        throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
-      }
+    data = chainResult.result;
+    providerUsed = chainResult.providerUsed;
+  } catch (error) {
+    const body = await getErrorResponseBody(error);
 
-      if (
-        body.error === "fal_pipeline_disabled" &&
-        routeResolution.route !== "openai"
-      ) {
-        usedFallback = true;
-        ({ data, error } = await supabase.functions.invoke(
-          getFallbackFunctionName(request),
-          {
-            body: buildInvokePayload(request, {
-              ciImageBase64,
-              referenceImageBase64,
-              backgroundPattern,
-              routeHint: request.routeHint,
-              baseImageUrl: request.baseImageUrl,
-              baseImageWorkId: request.baseImageWorkId,
-            }),
-          },
-        ));
-      }
+    if (body?.error === "insufficient_tokens") {
+      safeCapture("design_generation_failed", {
+        ai_model: request.aiModel,
+        error_type: "insufficient_tokens",
+      });
+      throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
     }
-  }
 
-  const usedFalApi = canUseFalApi && !usedFallback;
-
-  if (error) {
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
-      pipeline: usedFalApi ? "fal-ai" : undefined,
+      pipeline: canUseFalApi ? "fal-ai" : undefined,
     });
-    throw new Error(`디자인 생성 실패: ${error.message}`);
+    throw new Error(
+      `디자인 생성 실패: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
+
+  const usedFalApi = providerUsed === "fal";
 
   if (!data) {
     safeCapture("design_generation_failed", {
@@ -274,7 +274,10 @@ export async function aiDesignApi(
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }
 
-  const result = normalizeInvokeResponse(data, request);
+  const result = normalizeInvokeResponse(
+    data as Parameters<typeof normalizeInvokeResponse>[0],
+    request,
+  );
   safeCapture("design_generated", {
     ai_model: request.aiModel,
     latency_ms: Date.now() - startTime,
