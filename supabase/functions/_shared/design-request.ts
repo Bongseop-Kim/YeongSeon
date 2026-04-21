@@ -1,18 +1,8 @@
 import type { ConversationTurn } from "./conversation.ts";
+export type { BackgroundPattern } from "../../../packages/shared/src/types/design/background-pattern.ts";
+import type { BackgroundPattern } from "../../../packages/shared/src/types/design/background-pattern.ts";
 
 export type FalGenerationRoute = "fal_tiling" | "fal_edit";
-
-export type BackgroundPattern =
-  | { type: "solid"; color: string }
-  | { type: "stripe"; width: number; colors: [string, string] }
-  | { type: "check"; cellSize: number; colors: [string, string] }
-  | {
-      type: "dot";
-      dotSize: number;
-      spacing: number;
-      color: string;
-      background: string;
-    };
 
 interface RequestSessionAttachment {
   type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
@@ -38,7 +28,7 @@ export type GenerateDesignRequest = {
     fabricMethod?: string | null;
     ciPlacement?: string | null;
     scale?: "large" | "medium" | "small" | null;
-    backgroundPattern?: BackgroundPattern | null;
+    backgroundPattern?: BackgroundPattern;
   };
   autoGenerate?: boolean;
   analysisWorkId?: string | null;

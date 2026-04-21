@@ -1,4 +1,8 @@
-import { assertAlmostEquals, assertEquals } from "jsr:@std/assert@1.0.19";
+import {
+  assertAlmostEquals,
+  assertEquals,
+  assertThrows,
+} from "jsr:@std/assert@1.0.19";
 import {
   applyEdgeFeather,
   measureSeamlessDelta,
@@ -158,3 +162,46 @@ Deno.test("verifySeamlessTile rejects strongly mismatched edges", () => {
   const result = verifySeamlessTile({ pixels, width, height, stripWidth: 4 });
   assertEquals(result.status, "reject");
 });
+
+Deno.test(
+  "verifySeamlessTile clamps default strip width for small images",
+  () => {
+    const width = 4;
+    const height = 4;
+    const pixels = new Uint8ClampedArray(width * height * 4);
+
+    for (let index = 0; index < pixels.length; index += 4) {
+      pixels[index] = 128;
+      pixels[index + 1] = 128;
+      pixels[index + 2] = 128;
+      pixels[index + 3] = 255;
+    }
+
+    const result = verifySeamlessTile({ pixels, width, height });
+
+    assertEquals(result.status, "pass");
+  },
+);
+
+Deno.test(
+  "measureSeamlessDelta rejects strip widths above half the image size",
+  () => {
+    const pixels = new Uint8ClampedArray(4 * 4 * 4);
+
+    const error = assertThrows(
+      () =>
+        measureSeamlessDelta({
+          pixels,
+          width: 4,
+          height: 4,
+          stripWidth: 3,
+        }),
+      Error,
+    );
+
+    assertEquals(
+      error.message,
+      "stripWidth must not exceed half the image dimension (2)",
+    );
+  },
+);

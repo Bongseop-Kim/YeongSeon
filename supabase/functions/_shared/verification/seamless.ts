@@ -29,6 +29,10 @@ export interface VerifySeamlessResult extends MeasureSeamlessResult {
   correctedPixels?: Uint8ClampedArray;
 }
 
+const SEAMLESS_PASS_THRESHOLD = 5;
+const SEAMLESS_UNRECOVERABLE_THRESHOLD = 10;
+const DEFAULT_STRIP_WIDTH = 24;
+
 export function measureSeamlessDelta(
   input: MeasureSeamlessInput,
 ): MeasureSeamlessResult {
@@ -102,7 +106,14 @@ export function applyEdgeFeather(input: FeatherInput): Uint8ClampedArray {
 export function verifySeamlessTile(
   input: VerifySeamlessInput,
 ): VerifySeamlessResult {
-  const stripWidth = input.stripWidth ?? 24;
+  const dimensionLimit = Math.min(input.width, input.height);
+  const stripWidth = Math.max(
+    1,
+    Math.min(
+      input.stripWidth ?? DEFAULT_STRIP_WIDTH,
+      Math.floor(dimensionLimit / 2),
+    ),
+  );
   const first = measureSeamlessDelta({
     pixels: input.pixels,
     width: input.width,
@@ -111,11 +122,12 @@ export function verifySeamlessTile(
   });
   const maxFirst = Math.max(first.horizontalDeltaE, first.verticalDeltaE);
 
-  if (maxFirst < 5) {
+  if (maxFirst < SEAMLESS_PASS_THRESHOLD) {
     return { status: "pass", ...first };
   }
 
-  if (maxFirst >= 10) {
+  // Large edge deltas are rejected immediately instead of attempting recovery.
+  if (maxFirst >= SEAMLESS_UNRECOVERABLE_THRESHOLD) {
     return { status: "reject", ...first };
   }
 
@@ -132,7 +144,10 @@ export function verifySeamlessTile(
     stripWidth,
   });
 
-  if (Math.max(second.horizontalDeltaE, second.verticalDeltaE) < 5) {
+  if (
+    Math.max(second.horizontalDeltaE, second.verticalDeltaE) <
+    SEAMLESS_PASS_THRESHOLD
+  ) {
     return { status: "corrected", correctedPixels, ...second };
   }
 
@@ -155,7 +170,7 @@ type ReverseStripOptions = {
 };
 
 function validatePixelsInput(
-  pixels: Uint8ClampedArray | unknown[],
+  pixels: Uint8ClampedArray,
   width: number,
   height: number,
 ): void {
@@ -166,10 +181,6 @@ function validatePixelsInput(
     height <= 0
   ) {
     throw new Error("width and height must be positive integers");
-  }
-
-  if (!(pixels instanceof Uint8ClampedArray) && !Array.isArray(pixels)) {
-    throw new Error("pixels must be an array or Uint8ClampedArray");
   }
 
   if (pixels.length !== width * height * 4) {
@@ -186,8 +197,11 @@ function validateWindowSize(
     throw new Error(`${fieldName} must be a positive integer`);
   }
 
-  if (value > dimensionLimit) {
-    throw new Error(`${fieldName} must not exceed the image dimensions`);
+  const maxAllowed = Math.floor(dimensionLimit / 2);
+  if (value > maxAllowed) {
+    throw new Error(
+      `${fieldName} must not exceed half the image dimension (${maxAllowed})`,
+    );
   }
 }
 

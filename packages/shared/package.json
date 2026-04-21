@@ -29,6 +29,7 @@
     "./types/dto/claim-output": "./src/types/dto/claim-output.ts",
     "./types/dto/cart-view": "./src/types/dto/cart-view.ts",
     "./types/dto/cart-input": "./src/types/dto/cart-input.ts",
+    "./types/design/background-pattern": "./src/types/design/background-pattern.ts",
     "./types/view/product": "./src/types/view/product.ts",
     "./types/view/coupon": "./src/types/view/coupon.ts",
     "./types/view/reform": "./src/types/view/reform.ts",

@@ -15,6 +15,7 @@ import {
   buildFalErrorResponseBody,
   getTrustedFalImageUrl,
 } from "@/functions/_shared/generate-fal-api-utils.ts";
+import { planFalRender } from "@/functions/_shared/generate-fal-render-plan.ts";
 import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
 import { logGeneration } from "@/functions/_shared/log-generation.ts";
 import { createLogger } from "@/functions/_shared/logger.ts";
@@ -512,22 +513,35 @@ Deno.serve(async (req) => {
       falImageUrl = falResult.imageUrl;
       falRequestId = falResult.requestId;
     } else {
-      const processedReference = payload.referenceImageBase64
-        ? await maybeUpscaleReference({
-            base64: payload.referenceImageBase64,
-            mimeType: payload.referenceImageMimeType ?? "image/png",
-            apiKey: falApiKey,
-          })
-        : null;
+      const initialRenderPlan = planFalRender(payload, null);
+      const referenceImageBase64 = payload.referenceImageBase64;
+      if (initialRenderPlan.shouldUpscaleReference && !referenceImageBase64) {
+        throw new Error("reference upscaling requires referenceImageBase64");
+      }
+      let processedReference = null;
+      if (initialRenderPlan.shouldUpscaleReference) {
+        const upscaleReferenceBase64 = referenceImageBase64;
+        if (!upscaleReferenceBase64) {
+          throw new Error("reference upscaling requires referenceImageBase64");
+        }
+        processedReference = await maybeUpscaleReference({
+          base64: upscaleReferenceBase64,
+          mimeType: payload.referenceImageMimeType ?? "image/png",
+          apiKey: falApiKey,
+        });
+      }
 
-      const isA2Scenario =
-        processedReference !== null && !payload.ciImageBase64;
+      const renderPlan = planFalRender(payload, processedReference);
 
-      if (isA2Scenario) {
+      if (renderPlan.isA2Scenario) {
         if (!imagePrompt) {
           throw new Error("ip_adapter render requires imagePrompt");
         }
+        if (processedReference === null) {
+          throw new Error("ip_adapter render requires processed reference");
+        }
 
+        renderBackend = renderPlan.renderBackend;
         const falResult = await callFalFluxIpAdapter({
           referenceBase64: processedReference.base64,
           referenceMimeType: processedReference.mimeType,
@@ -536,7 +550,6 @@ Deno.serve(async (req) => {
         });
         falImageUrl = falResult.imageUrl;
         falRequestId = falResult.requestId;
-        renderBackend = "ip_adapter";
       } else if (
         !payload.tiledBase64 ||
         !payload.tiledMimeType ||
@@ -546,6 +559,7 @@ Deno.serve(async (req) => {
           "fal_tiling route requires tiled image input and imagePrompt",
         );
       } else {
+        renderBackend = renderPlan.renderBackend;
         const falResult = await callFalFluxImg2Img({
           imageBase64: payload.tiledBase64,
           imageMimeType: payload.tiledMimeType,
@@ -555,7 +569,6 @@ Deno.serve(async (req) => {
         });
         falImageUrl = falResult.imageUrl;
         falRequestId = falResult.requestId;
-        renderBackend = "img2img";
       }
     }
   } catch (error) {

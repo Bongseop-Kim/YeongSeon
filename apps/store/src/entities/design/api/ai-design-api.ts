@@ -132,7 +132,7 @@ export async function aiDesignApi(
           type: "solid" as const,
           color: request.designContext.colors[0],
         }
-      : null;
+      : undefined;
 
   let tiledBase64: string | undefined;
   let tiledMimeType: string | undefined;

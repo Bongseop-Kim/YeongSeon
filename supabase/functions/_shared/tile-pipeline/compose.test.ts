@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert@1.0.19";
+import { assertEquals, assertThrows } from "jsr:@std/assert@1.0.19";
 import { renderSolidTile } from "@/functions/_shared/tile-pipeline/canvas-renderer.ts";
 import { composeTiled } from "@/functions/_shared/tile-pipeline/compose.ts";
 
@@ -33,28 +33,34 @@ Deno.test("composeTiled leaves gap pixels as gapColor", () => {
     gapColor: "#00ff00",
   });
 
-  assertEquals(output.pixels[0], 255);
-  assertEquals(output.pixels[4 * 4 + 1], 255);
-  assertEquals(output.pixels[6 * 4], 255);
+  const row = 0;
+  const width = output.width;
+
+  for (const gapX of [4, 5]) {
+    const pixelIndex = (row * width + gapX) * 4;
+    assertEquals(output.pixels[pixelIndex], 0);
+    assertEquals(output.pixels[pixelIndex + 1], 255);
+    assertEquals(output.pixels[pixelIndex + 2], 0);
+  }
 });
 
 Deno.test("composeTiled rejects non-positive step sizes", () => {
   const tile = renderSolidTile({ size: 4, color: "#aabbcc" });
 
-  try {
-    composeTiled({
-      tile,
-      canvasWidth: 8,
-      canvasHeight: 8,
-      tileSize: 0,
-      gap: 0,
-    });
-    throw new Error("expected composeTiled to throw");
-  } catch (error) {
-    assertEquals(
-      error instanceof Error &&
-        error.message.includes("tileSize + gap must be greater than 0"),
-      true,
-    );
-  }
+  const error = assertThrows(
+    () =>
+      composeTiled({
+        tile,
+        canvasWidth: 8,
+        canvasHeight: 8,
+        tileSize: 0,
+        gap: 0,
+      }),
+    Error,
+  );
+
+  assertEquals(
+    error.message.includes("tileSize + gap must be greater than 0"),
+    true,
+  );
 });

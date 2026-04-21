@@ -12,6 +12,7 @@ import type {
   FabricMethod,
   PatternOption,
 } from "@/entities/design/model/design-context";
+import type { BackgroundPattern } from "@yeongseon/shared/types/design/background-pattern";
 
 export interface DesignTokenRow {
   id: string;
@@ -128,22 +129,10 @@ export const getTags = (request: AiDesignRequest): string[] => {
   return tags.length > 0 ? tags : DEFAULT_TAGS;
 };
 
-type BackgroundPattern =
-  | { type: "solid"; color: string }
-  | { type: "stripe"; width: number; colors: [string, string] }
-  | { type: "check"; cellSize: number; colors: [string, string] }
-  | {
-      type: "dot";
-      dotSize: number;
-      spacing: number;
-      color: string;
-      background: string;
-    };
-
 interface InvokePayloadInput {
   ciImageBase64?: string;
   referenceImageBase64?: string;
-  backgroundPattern?: BackgroundPattern | null;
+  backgroundPattern?: BackgroundPattern;
   tiledBase64?: string;
   tiledMimeType?: string;
   route?: AiDesignResponse["route"];
@@ -162,7 +151,7 @@ type InvokePayload = {
     fabricMethod: AiDesignRequest["designContext"]["fabricMethod"];
     ciPlacement: AiDesignRequest["designContext"]["ciPlacement"];
     scale: AiDesignRequest["designContext"]["scale"];
-    backgroundPattern?: BackgroundPattern | null;
+    backgroundPattern?: BackgroundPattern;
   };
   conversationHistory: NonNullable<AiDesignRequest["conversationHistory"]>;
   ciImageBase64: string | undefined;
