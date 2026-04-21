@@ -74,16 +74,6 @@ describe("useCartAuthSync", () => {
     vi.resetAllMocks();
     authState.user = null;
     authState.initialized = true;
-    ensureQueryData.mockReset();
-    setQueryData.mockReset();
-    invalidateQueries.mockReset();
-    mutateAsync.mockReset();
-    getCartItems.mockReset();
-    clearGuest.mockReset();
-    clearMergeLock.mockReset();
-    clearUserCache.mockReset();
-    getGuestItems.mockReset();
-    error.mockReset();
   });
 
   afterEach(() => {
@@ -159,7 +149,7 @@ describe("useCartAuthSync", () => {
     authState.user = { id: "user-3" };
     ensureQueryData.mockRejectedValueOnce(new Error("server failed"));
 
-    renderHook(() => useCartAuthSync());
+    const { rerender } = renderHook(() => useCartAuthSync());
 
     await waitFor(() => {
       expect(error).toHaveBeenCalledWith("장바구니를 불러오지 못했어요.");
@@ -174,7 +164,6 @@ describe("useCartAuthSync", () => {
     getGuestItems.mockResolvedValueOnce([createCartItem()]);
     mutateAsync.mockRejectedValueOnce(new Error("upload failed"));
 
-    const { rerender } = renderHook(() => useCartAuthSync());
     rerender();
 
     await waitFor(() => {
@@ -182,6 +171,11 @@ describe("useCartAuthSync", () => {
         ["cart", "items", "user-4"],
         [{ id: "server-item" }],
       );
+    });
+    expect(clearUserCache).toHaveBeenCalledWith("user-3");
+    expect(clearMergeLock).toHaveBeenCalledWith("user-3");
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["cart", "items", "user-3"],
     });
     expect(error).toHaveBeenCalledWith(
       "로컬 장바구니를 서버로 업로드하지 못했습니다. 서버 장바구니를 사용합니다.",
