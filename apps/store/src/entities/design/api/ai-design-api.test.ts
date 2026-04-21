@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { InsufficientTokensError } from "@/entities/design/api/ai-design-api";
 import { aiDesignApi } from "@/entities/design/api/ai-design-api";
+import { __resetProbeCacheForTesting } from "@/entities/design/api/should-use-fal-pipeline";
 import { MockFileReader } from "@/test/mock-file-reader";
 
 const { invoke, phCapture, tileLogoOnCanvas } = vi.hoisted(() => ({
@@ -71,6 +72,7 @@ describe("aiDesignApi", () => {
     invoke.mockReset();
     phCapture.mockReset();
     tileLogoOnCanvas.mockReset();
+    __resetProbeCacheForTesting();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     vi.stubGlobal(
