@@ -84,6 +84,7 @@ flowchart TD
   └─ one-point CI 배치 시 solid backgroundPattern 자동 생성
   └─ Edge Function 선택
        ├─ fal 조건 충족 → generate-fal-api  (타일링/업스케일/IP-어댑터)
+          referenceImageBase64만 있고 ciImageBase64는 없으면 A2(IP-Adapter) 분기로, 그 외 all-over CI 반복 렌더는 타일링 img2img 분기로 처리
        ├─ openai → generate-open-api
        └─ gemini → generate-google-api
   └─ Edge Function 호출 (메시지 / 디자인 컨텍스트 / 대화 히스토리 / 첨부 파일 / backgroundPattern)

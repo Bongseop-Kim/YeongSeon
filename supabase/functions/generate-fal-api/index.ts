@@ -36,14 +36,12 @@ import {
   createAuthenticatedSupabaseClient,
 } from "@/functions/_shared/supabase-clients.ts";
 import { getCorsHeaders } from "@/functions/_shared/cors.ts";
+import { bytesToBase64 } from "@/functions/_shared/color.ts";
 import { maybeUpscaleReference } from "@/functions/_shared/preprocessing/upscale.ts";
 
 type OpenAITextResponse = {
   choices?: Array<{ message?: { content?: string } }>;
 };
-
-const bytesToBase64 = (bytes: Uint8Array): string =>
-  btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(""));
 
 const { processLogger, errorLogger } = createLogger("generate-fal-api");
 
@@ -402,6 +400,8 @@ Deno.serve(async (req) => {
   const imageStart = Date.now();
   let falImageUrl: string;
   let falRequestId: string | null = null;
+  let renderBackend: "ip_adapter" | "img2img" | "nano_banana_edit" | null =
+    route === "fal_edit" ? "nano_banana_edit" : null;
   let renderTokensCharged = 0;
   let renderTokensRefunded = 0;
 
@@ -524,14 +524,19 @@ Deno.serve(async (req) => {
         processedReference !== null && !payload.ciImageBase64;
 
       if (isA2Scenario) {
+        if (!imagePrompt) {
+          throw new Error("ip_adapter render requires imagePrompt");
+        }
+
         const falResult = await callFalFluxIpAdapter({
           referenceBase64: processedReference.base64,
           referenceMimeType: processedReference.mimeType,
-          prompt: imagePrompt ?? textPrompt,
+          prompt: imagePrompt,
           apiKey: falApiKey,
         });
         falImageUrl = falResult.imageUrl;
         falRequestId = falResult.requestId;
+        renderBackend = "ip_adapter";
       } else if (
         !payload.tiledBase64 ||
         !payload.tiledMimeType ||
@@ -550,6 +555,7 @@ Deno.serve(async (req) => {
         });
         falImageUrl = falResult.imageUrl;
         falRequestId = falResult.requestId;
+        renderBackend = "img2img";
       }
     }
   } catch (error) {
@@ -585,6 +591,7 @@ Deno.serve(async (req) => {
       missing_requirements: eligibility.missingRequirements,
       eligibility_reason: eligibility.eligibilityReason,
       fal_request_id: falRequestId,
+      render_backend: renderBackend,
       seed: renderSeed,
       image_generated: false,
       text_latency_ms: textLatencyMs,
@@ -709,6 +716,7 @@ Deno.serve(async (req) => {
       missing_requirements: eligibility.missingRequirements,
       eligibility_reason: eligibility.eligibilityReason,
       fal_request_id: falRequestId,
+      render_backend: renderBackend,
       seed: renderSeed,
       image_generated: false,
       text_latency_ms: textLatencyMs,
@@ -745,6 +753,7 @@ Deno.serve(async (req) => {
     missing_requirements: eligibility.missingRequirements,
     eligibility_reason: eligibility.eligibilityReason,
     fal_request_id: falRequestId,
+    render_backend: renderBackend,
     seed: renderSeed,
     image_generated: true,
     generated_image_url: finalImageUrl,

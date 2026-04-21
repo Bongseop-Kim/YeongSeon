@@ -1,4 +1,5 @@
 import type { TileOutput } from "@/functions/_shared/tile-pipeline/canvas-renderer.ts";
+import { hexToRgb } from "@/functions/_shared/color.ts";
 
 export interface ComposeTiledInput {
   tile: TileOutput;
@@ -23,6 +24,9 @@ export function composeTiled(input: ComposeTiledInput): TileOutput {
   }
 
   const step = input.tileSize + input.gap;
+  if (step <= 0) {
+    throw new Error("tileSize + gap must be greater than 0");
+  }
   const columns = Math.floor((input.canvasWidth + input.gap) / step);
   const rows = Math.floor((input.canvasHeight + input.gap) / step);
 
@@ -80,13 +84,4 @@ function blitScaled(
       destination[destinationIndex + 3] = tile.pixels[sourceIndex + 3];
     }
   }
-}
-
-function hexToRgb(hex: string): [number, number, number] {
-  const normalized = hex.replace("#", "");
-  return [
-    Number.parseInt(normalized.slice(0, 2), 16),
-    Number.parseInt(normalized.slice(2, 4), 16),
-    Number.parseInt(normalized.slice(4, 6), 16),
-  ];
 }

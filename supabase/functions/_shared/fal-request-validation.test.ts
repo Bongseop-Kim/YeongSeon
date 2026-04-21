@@ -105,6 +105,18 @@ Deno.test(
     assertObjectMatch(
       validateFalGeneratePayload({
         ...basePayload,
+        tiledBase64: "",
+        tiledMimeType: "image/png",
+        referenceImageBase64: "valid-reference-base64",
+      }),
+      {
+        ok: true,
+      },
+    );
+
+    assertObjectMatch(
+      validateFalGeneratePayload({
+        ...basePayload,
         tiledBase64: "abc",
         tiledMimeType: "text/plain",
       }),

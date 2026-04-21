@@ -1,9 +1,9 @@
 import type {
   BackgroundPattern,
   GenerateDesignRequest,
-} from "./design-request.ts";
-import type { NormalizedDesignContext } from "./design-generation.ts";
-import { SCALE_META } from "./scale-meta.ts";
+} from "@/functions/_shared/design-request.ts";
+import type { NormalizedDesignContext } from "@/functions/_shared/design-generation.ts";
+import { SCALE_META } from "@/functions/_shared/scale-meta.ts";
 
 export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
 항상 한국어로만 응답하세요.
@@ -286,7 +286,7 @@ const describeBackgroundPattern = (
   backgroundPattern?: BackgroundPattern | null,
 ): string => {
   if (!backgroundPattern) {
-    return "a solid uniform color field in the primary color described above";
+    return "a solid, uniform background with no specific color";
   }
 
   switch (backgroundPattern.type) {

@@ -37,3 +37,24 @@ Deno.test("composeTiled leaves gap pixels as gapColor", () => {
   assertEquals(output.pixels[4 * 4 + 1], 255);
   assertEquals(output.pixels[6 * 4], 255);
 });
+
+Deno.test("composeTiled rejects non-positive step sizes", () => {
+  const tile = renderSolidTile({ size: 4, color: "#aabbcc" });
+
+  try {
+    composeTiled({
+      tile,
+      canvasWidth: 8,
+      canvasHeight: 8,
+      tileSize: 0,
+      gap: 0,
+    });
+    throw new Error("expected composeTiled to throw");
+  } catch (error) {
+    assertEquals(
+      error instanceof Error &&
+        error.message.includes("tileSize + gap must be greater than 0"),
+      true,
+    );
+  }
+});

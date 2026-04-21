@@ -37,6 +37,7 @@ export type AiGenerationLogInsert = {
   route_signals?: string[] | null;
   base_image_work_id?: string | null;
   fal_request_id?: string | null;
+  render_backend?: "ip_adapter" | "img2img" | "nano_banana_edit" | null;
   seed?: number | null;
   image_generated: boolean;
   generated_image_url?: string | null;

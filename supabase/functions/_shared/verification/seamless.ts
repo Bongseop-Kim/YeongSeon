@@ -33,26 +33,34 @@ export function measureSeamlessDelta(
   input: MeasureSeamlessInput,
 ): MeasureSeamlessResult {
   const { pixels, width, height, stripWidth } = input;
+  validatePixelsInput(pixels, width, height);
+  validateWindowSize("stripWidth", stripWidth, Math.min(width, height));
   const leftStrip = extractStrip(pixels, width, height, {
     x: 0,
     width: stripWidth,
     fullHeight: true,
   });
-  const rightStrip = extractStrip(pixels, width, height, {
-    x: width - stripWidth,
-    width: stripWidth,
-    fullHeight: true,
-  });
+  const rightStrip = reverseStrip(
+    extractStrip(pixels, width, height, {
+      x: width - stripWidth,
+      width: stripWidth,
+      fullHeight: true,
+    }),
+    { rowLength: stripWidth, reverseRows: true },
+  );
   const topStrip = extractStrip(pixels, width, height, {
     y: 0,
     height: stripWidth,
     fullWidth: true,
   });
-  const bottomStrip = extractStrip(pixels, width, height, {
-    y: height - stripWidth,
-    height: stripWidth,
-    fullWidth: true,
-  });
+  const bottomStrip = reverseStrip(
+    extractStrip(pixels, width, height, {
+      y: height - stripWidth,
+      height: stripWidth,
+      fullWidth: true,
+    }),
+    { rowLength: width, reverseRowOrder: true },
+  );
 
   return {
     horizontalDeltaE: averageDeltaE(leftStrip, rightStrip),
@@ -61,6 +69,12 @@ export function measureSeamlessDelta(
 }
 
 export function applyEdgeFeather(input: FeatherInput): Uint8ClampedArray {
+  validatePixelsInput(input.pixels, input.width, input.height);
+  validateWindowSize(
+    "featherWidth",
+    input.featherWidth,
+    Math.min(input.width, input.height),
+  );
   const output = new Uint8ClampedArray(input.pixels);
   const { width, height, featherWidth } = input;
 
@@ -68,7 +82,8 @@ export function applyEdgeFeather(input: FeatherInput): Uint8ClampedArray {
     for (let offset = 0; offset < featherWidth; offset += 1) {
       const leftIndex = (y * width + offset) * 4;
       const rightIndex = (y * width + (width - 1 - offset)) * 4;
-      blendPixels(output, leftIndex, rightIndex, offset / featherWidth);
+      const blendRatio = (featherWidth - offset) / (2 * featherWidth);
+      blendPixels(output, leftIndex, rightIndex, blendRatio);
     }
   }
 
@@ -76,7 +91,8 @@ export function applyEdgeFeather(input: FeatherInput): Uint8ClampedArray {
     for (let offset = 0; offset < featherWidth; offset += 1) {
       const topIndex = (offset * width + x) * 4;
       const bottomIndex = ((height - 1 - offset) * width + x) * 4;
-      blendPixels(output, topIndex, bottomIndex, offset / featherWidth);
+      const blendRatio = (featherWidth - offset) / (2 * featherWidth);
+      blendPixels(output, topIndex, bottomIndex, blendRatio);
     }
   }
 
@@ -132,6 +148,49 @@ type ExtractStripOptions = {
   fullHeight?: boolean;
 };
 
+type ReverseStripOptions = {
+  rowLength: number;
+  reverseRows?: boolean;
+  reverseRowOrder?: boolean;
+};
+
+function validatePixelsInput(
+  pixels: Uint8ClampedArray | unknown[],
+  width: number,
+  height: number,
+): void {
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    throw new Error("width and height must be positive integers");
+  }
+
+  if (!(pixels instanceof Uint8ClampedArray) && !Array.isArray(pixels)) {
+    throw new Error("pixels must be an array or Uint8ClampedArray");
+  }
+
+  if (pixels.length !== width * height * 4) {
+    throw new Error("pixels length must equal width * height * 4");
+  }
+}
+
+function validateWindowSize(
+  fieldName: "stripWidth" | "featherWidth",
+  value: number,
+  dimensionLimit: number,
+): void {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`${fieldName} must be a positive integer`);
+  }
+
+  if (value > dimensionLimit) {
+    throw new Error(`${fieldName} must not exceed the image dimensions`);
+  }
+}
+
 function extractStrip(
   pixels: Uint8ClampedArray,
   width: number,
@@ -154,6 +213,26 @@ function extractStrip(
   return strip;
 }
 
+function reverseStrip(
+  strip: number[][],
+  options: ReverseStripOptions,
+): number[][] {
+  const { rowLength } = options;
+  const numRows = strip.length / rowLength;
+  const result: number[][] = new Array(strip.length);
+
+  for (let r = 0; r < numRows; r += 1) {
+    const srcRow = options.reverseRowOrder ? numRows - 1 - r : r;
+
+    for (let c = 0; c < rowLength; c += 1) {
+      const srcCol = options.reverseRows ? rowLength - 1 - c : c;
+      result[r * rowLength + c] = strip[srcRow * rowLength + srcCol];
+    }
+  }
+
+  return result;
+}
+
 function averageDeltaE(left: number[][], right: number[][]): number {
   const count = Math.min(left.length, right.length);
   let total = 0;
@@ -174,15 +253,11 @@ function blendPixels(
   for (let channel = 0; channel < 3; channel += 1) {
     const first = pixels[firstIndex + channel];
     const second = pixels[secondIndex + channel];
-    const blended =
-      (first * (1 - blendRatio) +
-        second * blendRatio +
-        second * (1 - blendRatio) +
-        first * blendRatio) /
-      2;
+    const leftBlend = first * (1 - blendRatio) + second * blendRatio;
+    const rightBlend = second * (1 - blendRatio) + first * blendRatio;
 
-    pixels[firstIndex + channel] = blended;
-    pixels[secondIndex + channel] = blended;
+    pixels[firstIndex + channel] = leftBlend;
+    pixels[secondIndex + channel] = rightBlend;
   }
 }
 

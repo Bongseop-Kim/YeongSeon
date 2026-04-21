@@ -40,3 +40,13 @@ Deno.test(
     assertEquals(prompt.includes("#1a2c55"), false);
   },
 );
+
+Deno.test(
+  "buildCiPlacementPrompt uses a self-contained fallback for one-point backgroundPattern",
+  () => {
+    const prompt = buildCiPlacementPrompt("one-point", true, null);
+
+    assertEquals(prompt.includes("primary color described above"), false);
+    assertEquals(prompt.includes("solid"), true);
+  },
+);

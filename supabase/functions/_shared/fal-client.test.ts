@@ -176,6 +176,7 @@ Deno.test("callFalClarityUpscaler returns upscaled image url", async () => {
     });
 
     assertEquals(result.imageUrl, "https://fal.media/upscaled.png");
+    assertEquals(result.requestId, "req-upscale");
     if (submitBody === null) {
       throw new Error("submitBody was not captured");
     }
@@ -196,7 +197,7 @@ Deno.test("callFalFluxIpAdapter passes style image and weight", async () => {
   ) => {
     const url = String(input);
 
-    if (url === "https://queue.fal.run/fal-ai/flux/dev/image-to-image") {
+    if (url === "https://queue.fal.run/fal-ai/flux-general/image-to-image") {
       submitBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
       return new Response(
         JSON.stringify({
@@ -226,19 +227,29 @@ Deno.test("callFalFluxIpAdapter passes style image and weight", async () => {
   }) as typeof fetch;
 
   try {
-    await callFalFluxIpAdapter({
-      referenceBase64: "ref",
+    const result = await callFalFluxIpAdapter({
+      referenceBase64: "abc",
       referenceMimeType: "image/png",
-      prompt: "prompt",
+      prompt: "ip-adapter prompt",
+      weight: 0.7,
       apiKey: "secret",
     });
 
+    assertEquals(result.imageUrl, "https://fal.media/ip.png");
+    assertEquals(result.requestId, "req-ip");
     if (submitBody === null) {
       throw new Error("submitBody was not captured");
     }
     const capturedBody = submitBody as Record<string, unknown>;
-    assertEquals(capturedBody["image_url"], "data:image/png;base64,ref");
-    assertEquals(capturedBody["ip_adapter_scale"], 0.55);
+    assertEquals(capturedBody["image_url"], "data:image/png;base64,abc");
+    assertEquals(capturedBody["ip_adapters"], [
+      {
+        path: "h94/IP-Adapter",
+        image_encoder_path: "openai/clip-vit-large-patch14",
+        image_url: "data:image/png;base64,abc",
+        scale: 0.7,
+      },
+    ]);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -284,7 +295,7 @@ Deno.test("callFalFluxFill passes mask payload", async () => {
   }) as typeof fetch;
 
   try {
-    await callFalFluxFill({
+    const result = await callFalFluxFill({
       imageBase64: "image",
       imageMimeType: "image/png",
       maskBase64: "mask",
@@ -293,6 +304,8 @@ Deno.test("callFalFluxFill passes mask payload", async () => {
       apiKey: "secret",
     });
 
+    assertEquals(result.imageUrl, "https://fal.media/fill.png");
+    assertEquals(result.requestId, "req-fill");
     if (submitBody === null) {
       throw new Error("submitBody was not captured");
     }

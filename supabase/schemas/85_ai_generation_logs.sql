@@ -33,6 +33,7 @@ CREATE TABLE public.ai_generation_logs (
   route_signals        jsonb,
   base_image_work_id   text        REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   fal_request_id       text,
+  render_backend       text        CHECK (render_backend IN ('ip_adapter', 'img2img', 'nano_banana_edit')),
   seed                 bigint,
   ai_message           text,
   image_generated      boolean     NOT NULL DEFAULT false,

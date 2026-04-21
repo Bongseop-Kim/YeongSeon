@@ -68,7 +68,10 @@ Deno.test(
     for (let y = 0; y < height; y += 1) {
       for (let x = 0; x < width; x += 1) {
         const index = (y * width + x) * 4;
-        const value = x < width / 2 ? 120 : 135;
+        const mirroredOffset = Math.min(x, width - 1 - x);
+        const base = 96 + mirroredOffset * 8 + y;
+        const edgeAdjustment = x < width / 2 ? -6 : 6;
+        const value = Math.max(0, Math.min(255, base + edgeAdjustment));
         pixels[index] = value;
         pixels[index + 1] = value;
         pixels[index + 2] = value;
@@ -96,8 +99,42 @@ Deno.test(
     });
 
     assertEquals(after.horizontalDeltaE < before.horizontalDeltaE, true);
+
+    for (let offset = 0; offset < 4; offset += 1) {
+      for (let y = 0; y < height; y += 1) {
+        const leftIndex = (y * width + offset) * 4;
+        const rightIndex = (y * width + (width - 1 - offset)) * 4;
+        const beforeGap = Math.abs(pixels[leftIndex] - pixels[rightIndex]);
+        const afterGap = Math.abs(feathered[leftIndex] - feathered[rightIndex]);
+
+        assertEquals(afterGap < beforeGap, true);
+      }
+    }
+
+    const unchangedIndex = (8 * width + 8) * 4;
+    assertEquals(feathered[unchangedIndex], pixels[unchangedIndex]);
   },
 );
+
+Deno.test("measureSeamlessDelta rejects invalid input dimensions", () => {
+  const pixels = new Uint8ClampedArray(4 * 4 * 4);
+
+  try {
+    measureSeamlessDelta({
+      pixels,
+      width: 0,
+      height: 4,
+      stripWidth: 1,
+    });
+    throw new Error("expected measureSeamlessDelta to throw");
+  } catch (error) {
+    assertEquals(
+      error instanceof Error &&
+        error.message.includes("width and height must be positive integers"),
+      true,
+    );
+  }
+});
 
 Deno.test("verifySeamlessTile rejects strongly mismatched edges", () => {
   const width = 32;

@@ -1,4 +1,5 @@
 import { encodePNG } from "jsr:@img/png@0.1.1";
+import { hexToRgb } from "@/functions/_shared/color.ts";
 
 export interface TileOutput {
   pixels: Uint8ClampedArray;
@@ -87,15 +88,6 @@ export async function encodeTileToPng(tile: TileOutput): Promise<Uint8Array> {
     filter: 0,
     interlace: 0,
   });
-}
-
-function hexToRgb(hex: string): [number, number, number] {
-  const normalized = hex.replace("#", "");
-  return [
-    Number.parseInt(normalized.slice(0, 2), 16),
-    Number.parseInt(normalized.slice(2, 4), 16),
-    Number.parseInt(normalized.slice(4, 6), 16),
-  ];
 }
 
 function resolveStripeIndex(

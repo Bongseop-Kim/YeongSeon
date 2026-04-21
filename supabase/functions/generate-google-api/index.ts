@@ -537,6 +537,7 @@ const runGeminiAnalysis = async (params: {
             colors: textResult.detectedDesign.colors,
             ciPlacement: textResult.detectedDesign.ciPlacement,
             scale: textResult.detectedDesign.scale,
+            positionIntent: textResult.detectedDesign.positionIntent,
           }
         : null,
       textPrompt,

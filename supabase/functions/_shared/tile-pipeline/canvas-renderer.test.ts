@@ -64,4 +64,5 @@ Deno.test("renderCheckTile alternates cells by (cellX + cellY) parity", () => {
 
   assertEquals(tile.pixels[0], 0);
   assertEquals(tile.pixels[4 * 4], 255);
+  assertEquals(tile.pixels[4 * (4 * 8)], 255);
 });

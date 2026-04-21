@@ -1,4 +1,5 @@
 import { callFalClarityUpscaler } from "@/functions/_shared/fal-client.ts";
+import { bytesToBase64 } from "@/functions/_shared/color.ts";
 
 const MIN_ACCEPTABLE_DIMENSION = 512;
 
@@ -18,9 +19,6 @@ export interface MaybeUpscaleReferenceResult {
   mimeType: string;
   upscaled: boolean;
 }
-
-const bytesToBase64 = (bytes: Uint8Array): string =>
-  btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""));
 
 export function needsUpscale(dimensions: ImageDimensions): boolean {
   return (
@@ -46,10 +44,14 @@ export function readImageDimensions(
     };
   }
 
-  if (mimeType === "image/jpeg" || mimeType === "image/jpg") {
+  if (mimeType === "image/jpeg") {
     let offset = 2;
 
     while (offset < binary.length) {
+      if (offset + 1 >= binary.length) {
+        break;
+      }
+
       if (binary[offset] !== 0xff) {
         break;
       }
@@ -59,15 +61,28 @@ export function readImageDimensions(
         marker >= 0xc0 &&
         marker <= 0xcf &&
         marker !== 0xc4 &&
-        marker !== 0xc8
+        marker !== 0xc8 &&
+        marker !== 0xcc
       ) {
+        if (offset + 8 >= binary.length) {
+          break;
+        }
+
         return {
           height: (binary[offset + 5] << 8) | binary[offset + 6],
           width: (binary[offset + 7] << 8) | binary[offset + 8],
         };
       }
 
+      if (offset + 3 >= binary.length) {
+        break;
+      }
+
       const segmentLength = (binary[offset + 2] << 8) | binary[offset + 3];
+      if (segmentLength <= 0 || offset + 2 + segmentLength > binary.length) {
+        break;
+      }
+
       offset += 2 + segmentLength;
     }
 
@@ -94,12 +109,29 @@ export async function maybeUpscaleReference(
     imageMimeType: input.mimeType,
     apiKey: input.apiKey,
   });
-  const response = await fetch(result.imageUrl);
+  const response = await fetch(result.imageUrl, {
+    signal: AbortSignal.timeout(30_000),
+  });
+
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (!response.ok) {
+    throw new Error(
+      `Upscaled image download failed: ${response.status} ${contentType} ${result.imageUrl}`,
+    );
+  }
+
+  if (!contentType.startsWith("image/")) {
+    throw new Error(
+      `Upscaled image download returned non-image content: ${response.status} ${contentType} ${result.imageUrl}`,
+    );
+  }
+
   const buffer = await response.arrayBuffer();
 
   return {
     base64: bytesToBase64(new Uint8Array(buffer)),
-    mimeType: response.headers.get("content-type") ?? "image/png",
+    mimeType: contentType,
     upscaled: true,
   };
 }

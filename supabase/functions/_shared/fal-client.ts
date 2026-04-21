@@ -7,7 +7,7 @@ export interface CallFalFluxImg2ImgInput {
   timeoutMs?: number;
 }
 
-export interface CallFalFluxImg2ImgResult {
+export interface FalImageJobResult {
   imageUrl: string;
   requestId: string;
 }
@@ -18,11 +18,6 @@ export interface CallFalNanoBananaEditInput {
   seed?: number;
   apiKey: string;
   timeoutMs?: number;
-}
-
-export interface CallFalNanoBananaEditResult {
-  imageUrl: string;
-  requestId: string;
 }
 
 export interface CallFalClarityUpscalerInput {
@@ -72,6 +67,8 @@ interface FalResultResponse {
 
 const FAL_FLUX_ENDPOINT =
   "https://queue.fal.run/fal-ai/flux/dev/image-to-image";
+const FAL_FLUX_GENERAL_IMAGE_TO_IMAGE_ENDPOINT =
+  "https://queue.fal.run/fal-ai/flux-general/image-to-image";
 const FAL_NANO_BANANA_EDIT_ENDPOINT =
   "https://queue.fal.run/fal-ai/nano-banana-2/edit";
 const FAL_CLARITY_UPSCALER_ENDPOINT =
@@ -82,6 +79,8 @@ const FAL_FLUX_DEFAULT_PARAMS = {
   guidance_scale: 3.5,
   num_images: 1,
 } as const;
+const FAL_IP_ADAPTER_PATH = "h94/IP-Adapter";
+const FAL_IP_ADAPTER_IMAGE_ENCODER_PATH = "openai/clip-vit-large-patch14";
 const buildDataUri = (mimeType: string, base64: string) =>
   `data:${mimeType};base64,${base64}`;
 
@@ -222,7 +221,7 @@ async function callFalImageEndpoint(input: {
 
 export async function callFalFluxImg2Img(
   input: CallFalFluxImg2ImgInput,
-): Promise<CallFalFluxImg2ImgResult> {
+): Promise<FalImageJobResult> {
   const strength = input.strength ?? 0.3;
   const dataUri = buildDataUri(input.imageMimeType, input.imageBase64);
 
@@ -242,7 +241,7 @@ export async function callFalFluxImg2Img(
 
 export async function callFalNanoBananaEdit(
   input: CallFalNanoBananaEditInput,
-): Promise<CallFalNanoBananaEditResult> {
+): Promise<FalImageJobResult> {
   return callFalImageEndpoint({
     endpoint: FAL_NANO_BANANA_EDIT_ENDPOINT,
     apiKey: input.apiKey,
@@ -262,7 +261,7 @@ export async function callFalNanoBananaEdit(
 
 export async function callFalClarityUpscaler(
   input: CallFalClarityUpscalerInput,
-): Promise<CallFalFluxImg2ImgResult> {
+): Promise<FalImageJobResult> {
   const dataUri = buildDataUri(input.imageMimeType, input.imageBase64);
 
   return callFalImageEndpoint({
@@ -278,17 +277,24 @@ export async function callFalClarityUpscaler(
 
 export async function callFalFluxIpAdapter(
   input: CallFalFluxIpAdapterInput,
-): Promise<CallFalFluxImg2ImgResult> {
+): Promise<FalImageJobResult> {
   const dataUri = buildDataUri(input.referenceMimeType, input.referenceBase64);
 
   return callFalImageEndpoint({
-    endpoint: FAL_FLUX_ENDPOINT,
+    endpoint: FAL_FLUX_GENERAL_IMAGE_TO_IMAGE_ENDPOINT,
     apiKey: input.apiKey,
     timeoutMs: input.timeoutMs,
     body: {
       image_url: dataUri,
       prompt: input.prompt,
-      ip_adapter_scale: input.weight ?? 0.55,
+      ip_adapters: [
+        {
+          path: FAL_IP_ADAPTER_PATH,
+          image_encoder_path: FAL_IP_ADAPTER_IMAGE_ENCODER_PATH,
+          image_url: dataUri,
+          scale: input.weight ?? 0.55,
+        },
+      ],
       ...FAL_FLUX_DEFAULT_PARAMS,
       image_size: { width: 1024, height: 1024 },
     },
@@ -297,7 +303,7 @@ export async function callFalFluxIpAdapter(
 
 export async function callFalFluxFill(
   input: CallFalFluxFillInput,
-): Promise<CallFalFluxImg2ImgResult> {
+): Promise<FalImageJobResult> {
   const imageUri = buildDataUri(input.imageMimeType, input.imageBase64);
   const maskUri = buildDataUri(input.maskMimeType, input.maskBase64);
 

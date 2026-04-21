@@ -285,7 +285,7 @@ const normalizeGenerationRouteReason = (
 export function buildInvokePayload(
   request: AiDesignRequest,
   input: InvokePayloadInput = {},
-) {
+): InvokePayload {
   const payload: InvokePayload = {
     userMessage: request.userMessage,
     designContext: {

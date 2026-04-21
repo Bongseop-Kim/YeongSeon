@@ -169,9 +169,9 @@ export const validateFalGeneratePayload = (
       };
     }
 
-    const hasTiledInput =
-      typeof payload.tiledBase64 === "string" &&
-      payload.tiledBase64.trim().length > 0;
+    const tiledBase64Trimmed =
+      typeof payload.tiledBase64 === "string" ? payload.tiledBase64.trim() : "";
+    const hasTiledInput = tiledBase64Trimmed.length > 0;
     const hasReferenceInput =
       typeof payload.referenceImageBase64 === "string" &&
       payload.referenceImageBase64.trim().length > 0;
@@ -184,10 +184,7 @@ export const validateFalGeneratePayload = (
       };
     }
 
-    if (
-      typeof payload.tiledBase64 === "string" &&
-      payload.tiledBase64.length > MAX_IMAGE_BASE64_LENGTH
-    ) {
+    if (hasTiledInput && tiledBase64Trimmed.length > MAX_IMAGE_BASE64_LENGTH) {
       return {
         ok: false,
         status: 413,
