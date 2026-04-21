@@ -1,8 +1,16 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 
-import { determineEligibility } from "@/functions/_shared/design-generation.ts";
+import {
+  determineEligibility,
+  getExecutionMode,
+  HttpError,
+  loadAnalysisSnapshot,
+} from "@/functions/_shared/design-generation.ts";
 import type { GenerateDesignRequest } from "@/functions/_shared/design-request.ts";
 import {
+  callFalReferenceToIpAdapterWorkflow,
+  callFalFluxControlNet,
+  callFalFluxFill,
   callFalFluxImg2Img,
   callFalFluxIpAdapter,
   callFalNanoBananaEdit,
@@ -20,12 +28,14 @@ import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
 import { logGeneration } from "@/functions/_shared/log-generation.ts";
 import { createLogger } from "@/functions/_shared/logger.ts";
 import {
+  buildFabricPrompt,
   buildFalPatternPrompt,
   buildImageEditPrompt,
   buildTextPrompt,
   parseJsonBlock,
   SYSTEM_PROMPT,
 } from "@/functions/_shared/prompt-builders.ts";
+import { resolveRenderCapability } from "@/functions/_shared/render-capability.ts";
 import { createJsonResponse } from "@/functions/_shared/response.ts";
 import {
   buildSessionMessages,
@@ -38,7 +48,9 @@ import {
 } from "@/functions/_shared/supabase-clients.ts";
 import { getCorsHeaders } from "@/functions/_shared/cors.ts";
 import { bytesToBase64 } from "@/functions/_shared/color.ts";
+import { prepareControlImage } from "@/functions/_shared/preprocessing/control-image.ts";
 import { maybeUpscaleReference } from "@/functions/_shared/preprocessing/upscale.ts";
+import { uploadGeneratedImageToSupabaseStorage } from "@/functions/_shared/supabase-storage-fallback.ts";
 
 type OpenAITextResponse = {
   choices?: Array<{ message?: { content?: string } }>;
@@ -107,6 +119,48 @@ const saveSessionIfNeeded = async (
 const toDataUri = (base64: string, mimeType: string): string =>
   `data:${mimeType};base64,${base64}`;
 
+const parseDataUri = (
+  value: string,
+): { mimeType: string; base64: string } | null => {
+  const match = value.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    mimeType: match[1],
+    base64: match[2],
+  };
+};
+
+const readImageAsBase64 = async (
+  imageUrl: string,
+): Promise<{
+  base64: string;
+  mimeType: string;
+}> => {
+  const dataUri = parseDataUri(imageUrl);
+  if (dataUri) {
+    return dataUri;
+  }
+
+  const response = await fetch(imageUrl, {
+    signal: AbortSignal.timeout(OPENAI_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Base image fetch failed: ${response.status}`);
+  }
+
+  const mimeType = response.headers.get("content-type") ?? "image/png";
+  const bytes = new Uint8Array(await response.arrayBuffer());
+
+  return {
+    base64: bytesToBase64(bytes),
+    mimeType,
+  };
+};
+
 const toDeterministicSeed = (value: string): number => {
   let hash = 0;
 
@@ -121,6 +175,8 @@ Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
   const jsonResponse = createJsonResponse(corsHeaders);
   const url = new URL(req.url);
+  const isFalPipelineDisabled =
+    Deno.env.get("FAL_PIPELINE_DISABLED") === "true";
 
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -131,12 +187,16 @@ Deno.serve(async (req) => {
     url.pathname.endsWith("/should-use-fal-pipeline")
   ) {
     return jsonResponse(200, {
-      enabled: true,
+      enabled: !isFalPipelineDisabled,
     });
   }
 
   if (req.method !== "POST") {
     return jsonResponse(405, { error: "Method not allowed" });
+  }
+
+  if (isFalPipelineDisabled) {
+    return jsonResponse(503, { error: "fal_pipeline_disabled" });
   }
 
   const authHeader = req.headers.get("Authorization");
@@ -179,9 +239,27 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "invalid_json" });
   }
 
-  const validation = validateFalGeneratePayload(payload);
+  const executionMode = getExecutionMode(payload);
+  const validation = validateFalGeneratePayload(payload, executionMode);
   if (!validation.ok) {
     return jsonResponse(validation.status, validation.body);
+  }
+
+  let analysisSnapshot = null;
+  if (executionMode === "render_from_analysis") {
+    try {
+      analysisSnapshot = await loadAnalysisSnapshot(
+        adminClient,
+        user.id,
+        (payload.analysisWorkId ?? "").trim(),
+      );
+    } catch (error) {
+      if (error instanceof HttpError) {
+        return jsonResponse(error.status, error.body);
+      }
+
+      throw error;
+    }
   }
 
   const route = payload.route ?? DEFAULT_FAL_ROUTE;
@@ -192,8 +270,9 @@ Deno.serve(async (req) => {
     base_image_work_id: payload.baseImageWorkId ?? null,
   } as const;
 
-  const workId = crypto.randomUUID();
-  const analysisWorkId = `${workId}_analysis`;
+  const workId = analysisSnapshot?.workflowId ?? crypto.randomUUID();
+  const analysisWorkId =
+    analysisSnapshot?.analysisWorkId ?? `${workId}_analysis`;
   const renderWorkId = `${workId}_render`;
   const renderSeed =
     route === "fal_edit"
@@ -202,104 +281,162 @@ Deno.serve(async (req) => {
           payload.baseImageWorkId ?? payload.baseImageUrl ?? workId,
         ))
       : null;
-  const textPrompt = buildTextPrompt(payload);
+  const textPrompt = analysisSnapshot?.textPrompt ?? buildTextPrompt(payload);
   const history = validation.conversationHistory;
-  const textStart = Date.now();
+  const textStart =
+    executionMode === "render_from_analysis" ? null : Date.now();
   let analysisTokensCharged = 0;
   let analysisTokensRefunded = 0;
+  let textLatencyMs: number | null = null;
+  let aiMessage = "";
+  let generateImage = false;
+  let contextChips: unknown[] = [];
+  let eligibility: ReturnType<typeof determineEligibility>;
 
-  const { data: analysisTokenResult, error: analysisTokenError } =
-    await adminClient.rpc("use_design_tokens", {
-      p_user_id: user.id,
-      p_ai_model: ANALYSIS_AI_MODEL,
-      p_request_type: ANALYSIS_REQUEST_TYPE,
-      p_work_id: analysisWorkId,
-    });
+  if (analysisSnapshot) {
+    aiMessage = analysisSnapshot.aiMessage;
+    generateImage = analysisSnapshot.generateImage;
+    eligibility = {
+      eligibleForRender: analysisSnapshot.eligibleForRender,
+      missingRequirements: analysisSnapshot.missingRequirements,
+      eligibilityReason: analysisSnapshot.eligibilityReason,
+    };
+  } else {
+    const { data: analysisTokenResult, error: analysisTokenError } =
+      await adminClient.rpc("use_design_tokens", {
+        p_user_id: user.id,
+        p_ai_model: ANALYSIS_AI_MODEL,
+        p_request_type: ANALYSIS_REQUEST_TYPE,
+        p_work_id: analysisWorkId,
+      });
 
-  if (analysisTokenError) {
-    await logGeneration(adminClient, {
-      work_id: analysisWorkId,
-      workflow_id: workId,
-      phase: "analysis",
-      user_id: user.id,
-      ai_model: ANALYSIS_AI_MODEL,
-      request_type: ANALYSIS_REQUEST_TYPE,
-      ...routeLogFields,
-      user_message: payload.userMessage,
-      prompt_length: payload.userMessage.length,
-      text_prompt: textPrompt,
-      image_generated: false,
-      error_type: "token_processing_failed",
-      error_message: analysisTokenError.message,
-    });
-    return jsonResponse(500, { error: "token_processing_failed" });
-  }
-
-  if (!analysisTokenResult?.success) {
-    await logGeneration(adminClient, {
-      work_id: analysisWorkId,
-      workflow_id: workId,
-      phase: "analysis",
-      user_id: user.id,
-      ai_model: ANALYSIS_AI_MODEL,
-      request_type: ANALYSIS_REQUEST_TYPE,
-      ...routeLogFields,
-      user_message: payload.userMessage,
-      prompt_length: payload.userMessage.length,
-      text_prompt: textPrompt,
-      image_generated: false,
-      error_type: analysisTokenResult?.error ?? "insufficient_tokens",
-      error_message:
-        analysisTokenResult?.error ?? "Token deduction was rejected",
-    });
-    return jsonResponse(403, {
-      error: "insufficient_tokens",
-      balance: analysisTokenResult?.balance ?? 0,
-      cost: analysisTokenResult?.cost ?? 0,
-    });
-  }
-
-  analysisTokensCharged = analysisTokenResult.cost ?? 0;
-
-  let analysisJson: ReturnType<typeof parseJsonBlock>;
-  try {
-    const textResp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${openaiApiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...history.map((turn) => ({
-            role: turn.role === "user" ? "user" : "assistant",
-            content: turn.content,
-          })),
-          { role: "user", content: textPrompt },
-        ],
-        response_format: { type: "json_object" },
-      }),
-      signal: AbortSignal.timeout(OPENAI_TIMEOUT_MS),
-    });
-
-    if (!textResp.ok) {
-      const errorText = await textResp.text();
-      throw new Error(`OpenAI text failed: ${textResp.status} ${errorText}`);
+    if (analysisTokenError) {
+      await logGeneration(adminClient, {
+        work_id: analysisWorkId,
+        workflow_id: workId,
+        phase: "analysis",
+        user_id: user.id,
+        ai_model: ANALYSIS_AI_MODEL,
+        request_type: ANALYSIS_REQUEST_TYPE,
+        ...routeLogFields,
+        user_message: payload.userMessage,
+        prompt_length: payload.userMessage.length,
+        text_prompt: textPrompt,
+        image_generated: false,
+        error_type: "token_processing_failed",
+        error_message: analysisTokenError.message,
+      });
+      return jsonResponse(500, { error: "token_processing_failed" });
     }
 
-    const textData = (await textResp.json()) as OpenAITextResponse;
-    const content = textData.choices?.[0]?.message?.content ?? "";
-    analysisJson = parseJsonBlock(content);
-  } catch (error) {
-    analysisTokensRefunded = await tryRefund(adminClient, {
-      userId: user.id,
-      amount: analysisTokensCharged,
-      aiModel: ANALYSIS_AI_MODEL,
-      requestType: ANALYSIS_REQUEST_TYPE,
-      workId: `${analysisWorkId}_failed_refund`,
-    });
+    if (!analysisTokenResult?.success) {
+      await logGeneration(adminClient, {
+        work_id: analysisWorkId,
+        workflow_id: workId,
+        phase: "analysis",
+        user_id: user.id,
+        ai_model: ANALYSIS_AI_MODEL,
+        request_type: ANALYSIS_REQUEST_TYPE,
+        ...routeLogFields,
+        user_message: payload.userMessage,
+        prompt_length: payload.userMessage.length,
+        text_prompt: textPrompt,
+        image_generated: false,
+        error_type: analysisTokenResult?.error ?? "insufficient_tokens",
+        error_message:
+          analysisTokenResult?.error ?? "Token deduction was rejected",
+      });
+      return jsonResponse(403, {
+        error: "insufficient_tokens",
+        balance: analysisTokenResult?.balance ?? 0,
+        cost: analysisTokenResult?.cost ?? 0,
+      });
+    }
+
+    analysisTokensCharged = analysisTokenResult.cost ?? 0;
+
+    let analysisJson: ReturnType<typeof parseJsonBlock>;
+    try {
+      const textResp = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${openaiApiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [
+              { role: "system", content: SYSTEM_PROMPT },
+              ...history.map((turn) => ({
+                role: turn.role === "user" ? "user" : "assistant",
+                content: turn.content,
+              })),
+              { role: "user", content: textPrompt },
+            ],
+            response_format: { type: "json_object" },
+          }),
+          signal: AbortSignal.timeout(OPENAI_TIMEOUT_MS),
+        },
+      );
+
+      if (!textResp.ok) {
+        const errorText = await textResp.text();
+        throw new Error(`OpenAI text failed: ${textResp.status} ${errorText}`);
+      }
+
+      const textData = (await textResp.json()) as OpenAITextResponse;
+      const content = textData.choices?.[0]?.message?.content ?? "";
+      analysisJson = parseJsonBlock(content);
+    } catch (error) {
+      analysisTokensRefunded = await tryRefund(adminClient, {
+        userId: user.id,
+        amount: analysisTokensCharged,
+        aiModel: ANALYSIS_AI_MODEL,
+        requestType: ANALYSIS_REQUEST_TYPE,
+        workId: `${analysisWorkId}_failed_refund`,
+      });
+
+      await logGeneration(adminClient, {
+        work_id: analysisWorkId,
+        workflow_id: workId,
+        phase: "analysis",
+        user_id: user.id,
+        ai_model: ANALYSIS_AI_MODEL,
+        request_type: ANALYSIS_REQUEST_TYPE,
+        ...routeLogFields,
+        user_message: payload.userMessage,
+        prompt_length: payload.userMessage.length,
+        text_prompt: textPrompt,
+        image_generated: false,
+        tokens_charged: analysisTokensCharged,
+        tokens_refunded: analysisTokensRefunded,
+        error_type: "text_analysis_failed",
+        error_message: error instanceof Error ? error.message : String(error),
+      });
+
+      return jsonResponse(500, { error: "text_analysis_failed" });
+    }
+
+    textLatencyMs = textStart === null ? null : Date.now() - textStart;
+    aiMessage =
+      typeof analysisJson.aiMessage === "string" ? analysisJson.aiMessage : "";
+    generateImage = analysisJson.generateImage === true;
+    contextChips = Array.isArray(analysisJson.contextChips)
+      ? analysisJson.contextChips
+      : [];
+    eligibility = determineEligibility(
+      payload,
+      {
+        colors: payload.designContext?.colors ?? [],
+        pattern: payload.designContext?.pattern ?? null,
+        fabricMethod: payload.designContext?.fabricMethod ?? null,
+        ciPlacement: payload.designContext?.ciPlacement ?? null,
+        scale: payload.designContext?.scale ?? null,
+      },
+      generateImage,
+    );
 
     await logGeneration(adminClient, {
       work_id: analysisWorkId,
@@ -312,34 +449,18 @@ Deno.serve(async (req) => {
       user_message: payload.userMessage,
       prompt_length: payload.userMessage.length,
       text_prompt: textPrompt,
+      ai_message: aiMessage,
+      generate_image: generateImage,
+      eligible_for_render: eligibility.eligibleForRender,
+      missing_requirements: eligibility.missingRequirements,
+      eligibility_reason: eligibility.eligibilityReason,
       image_generated: false,
+      text_latency_ms: textLatencyMs,
       tokens_charged: analysisTokensCharged,
       tokens_refunded: analysisTokensRefunded,
-      error_type: "text_analysis_failed",
-      error_message: error instanceof Error ? error.message : String(error),
     });
-
-    return jsonResponse(500, { error: "text_analysis_failed" });
   }
 
-  const textLatencyMs = Date.now() - textStart;
-  const aiMessage =
-    typeof analysisJson.aiMessage === "string" ? analysisJson.aiMessage : "";
-  const generateImage = analysisJson.generateImage === true;
-  const contextChips = Array.isArray(analysisJson.contextChips)
-    ? analysisJson.contextChips
-    : [];
-  const eligibility = determineEligibility(
-    payload,
-    {
-      colors: payload.designContext?.colors ?? [],
-      pattern: payload.designContext?.pattern ?? null,
-      fabricMethod: payload.designContext?.fabricMethod ?? null,
-      ciPlacement: payload.designContext?.ciPlacement ?? null,
-      scale: payload.designContext?.scale ?? null,
-    },
-    generateImage,
-  );
   const analysisResponseBody = {
     aiMessage,
     imageUrl: null,
@@ -358,51 +479,48 @@ Deno.serve(async (req) => {
     contextChips,
   };
 
-  await logGeneration(adminClient, {
-    work_id: analysisWorkId,
-    workflow_id: workId,
-    phase: "analysis",
-    user_id: user.id,
-    ai_model: ANALYSIS_AI_MODEL,
-    request_type: ANALYSIS_REQUEST_TYPE,
-    ...routeLogFields,
-    user_message: payload.userMessage,
-    prompt_length: payload.userMessage.length,
-    text_prompt: textPrompt,
-    ai_message: aiMessage,
-    generate_image: generateImage,
-    eligible_for_render: eligibility.eligibleForRender,
-    missing_requirements: eligibility.missingRequirements,
-    eligibility_reason: eligibility.eligibilityReason,
-    image_generated: false,
-    text_latency_ms: textLatencyMs,
-    tokens_charged: analysisTokensCharged,
-    tokens_refunded: analysisTokensRefunded,
-  });
-
   if (!shouldProceedToFalRender(generateImage, eligibility)) {
+    if (analysisSnapshot) {
+      return jsonResponse(409, {
+        error: "analysis_not_renderable",
+        ...analysisResponseBody,
+      });
+    }
+
     await saveSessionIfNeeded(supabase, payload, aiMessage, null, null, null);
     return jsonResponse(200, analysisResponseBody);
   }
 
   const imagePrompt =
-    route === "fal_tiling"
-      ? buildFalPatternPrompt({
+    route === "fal_tiling" || route === "fal_controlnet"
+      ? (analysisSnapshot?.imagePrompt ??
+        buildFalPatternPrompt({
           colors: payload.designContext?.colors ?? [],
           pattern: payload.designContext?.pattern ?? null,
           fabricMethod: payload.designContext?.fabricMethod ?? null,
           ciPlacement: payload.designContext?.ciPlacement ?? null,
           scale: payload.designContext?.scale ?? null,
-        })
+        }))
       : null;
   const imageEditPrompt =
-    route === "fal_edit" ? buildImageEditPrompt(payload) : null;
+    route === "fal_edit"
+      ? (analysisSnapshot?.imageEditPrompt ?? buildImageEditPrompt(payload))
+      : null;
+  const imageInpaintPrompt =
+    route === "fal_inpaint"
+      ? `${buildFabricPrompt(payload.designContext?.fabricMethod)} ${payload.editPrompt ?? ""}`.trim()
+      : null;
 
   const imageStart = Date.now();
   let falImageUrl: string;
   let falRequestId: string | null = null;
-  let renderBackend: "ip_adapter" | "img2img" | "nano_banana_edit" | null =
-    route === "fal_edit" ? "nano_banana_edit" : null;
+  let renderBackend:
+    | "ip_adapter"
+    | "img2img"
+    | "nano_banana_edit"
+    | "controlnet"
+    | "flux_fill"
+    | null = route === "fal_edit" ? "nano_banana_edit" : null;
   let renderTokensCharged = 0;
   let renderTokensRefunded = 0;
 
@@ -512,14 +630,89 @@ Deno.serve(async (req) => {
       });
       falImageUrl = falResult.imageUrl;
       falRequestId = falResult.requestId;
+    } else if (route === "fal_controlnet") {
+      if (!imagePrompt) {
+        throw new Error("fal_controlnet route requires imagePrompt");
+      }
+
+      const sourceBase64 = payload.structureImageBase64 ?? payload.tiledBase64;
+      const sourceMimeType =
+        payload.structureImageMimeType ?? payload.tiledMimeType;
+
+      if (!sourceBase64 || !sourceMimeType) {
+        throw new Error(
+          "fal_controlnet requires structureImageBase64 or tiledBase64",
+        );
+      }
+
+      const controlImage = await prepareControlImage({
+        base64: sourceBase64,
+        mimeType: sourceMimeType,
+        controlType: payload.controlType ?? "lineart",
+        apiKey: falApiKey,
+      });
+      const preset = resolveRenderCapability(
+        payload.designContext?.fabricMethod ?? null,
+      );
+
+      renderBackend = "controlnet";
+      const falResult = await callFalFluxControlNet({
+        controlImageBase64: controlImage.base64,
+        controlImageMimeType: controlImage.mimeType,
+        prompt: imagePrompt,
+        controlType: payload.controlType ?? "lineart",
+        conditioningScale: preset?.controlNetConditioningScale,
+        apiKey: falApiKey,
+      });
+      falImageUrl = falResult.imageUrl;
+      falRequestId = falResult.requestId;
+    } else if (route === "fal_inpaint") {
+      if (!imageInpaintPrompt) {
+        throw new Error("fal_inpaint route requires imageInpaintPrompt");
+      }
+
+      const baseImage =
+        payload.baseImageBase64 && payload.baseImageMimeType
+          ? {
+              base64: payload.baseImageBase64,
+              mimeType: payload.baseImageMimeType,
+            }
+          : payload.baseImageUrl
+            ? await readImageAsBase64(payload.baseImageUrl)
+            : null;
+
+      if (!baseImage || !payload.maskBase64 || !payload.maskMimeType) {
+        throw new Error(
+          "fal_inpaint route requires base image and mask payload",
+        );
+      }
+
+      renderBackend = "flux_fill";
+      const falResult = await callFalFluxFill({
+        imageBase64: baseImage.base64,
+        imageMimeType: baseImage.mimeType,
+        imageUrl: payload.baseImageUrl ?? undefined,
+        maskBase64: payload.maskBase64,
+        maskMimeType: payload.maskMimeType,
+        prompt: imageInpaintPrompt,
+        apiKey: falApiKey,
+      });
+      falImageUrl = falResult.imageUrl;
+      falRequestId = falResult.requestId;
     } else {
       const initialRenderPlan = planFalRender(payload, null);
+      const workflowEnabled =
+        Deno.env.get("FAL_REFERENCE_WORKFLOW_ENABLED") === "true";
       const referenceImageBase64 = payload.referenceImageBase64;
-      if (initialRenderPlan.shouldUpscaleReference && !referenceImageBase64) {
+      if (
+        !workflowEnabled &&
+        initialRenderPlan.shouldUpscaleReference &&
+        !referenceImageBase64
+      ) {
         throw new Error("reference upscaling requires referenceImageBase64");
       }
       let processedReference = null;
-      if (initialRenderPlan.shouldUpscaleReference) {
+      if (!workflowEnabled && initialRenderPlan.shouldUpscaleReference) {
         const upscaleReferenceBase64 = referenceImageBase64;
         if (!upscaleReferenceBase64) {
           throw new Error("reference upscaling requires referenceImageBase64");
@@ -537,19 +730,34 @@ Deno.serve(async (req) => {
         if (!imagePrompt) {
           throw new Error("ip_adapter render requires imagePrompt");
         }
-        if (processedReference === null) {
-          throw new Error("ip_adapter render requires processed reference");
-        }
 
         renderBackend = renderPlan.renderBackend;
-        const falResult = await callFalFluxIpAdapter({
-          referenceBase64: processedReference.base64,
-          referenceMimeType: processedReference.mimeType,
-          prompt: imagePrompt,
-          apiKey: falApiKey,
-        });
-        falImageUrl = falResult.imageUrl;
-        falRequestId = falResult.requestId;
+
+        if (workflowEnabled) {
+          if (!referenceImageBase64) {
+            throw new Error("workflow render requires referenceImageBase64");
+          }
+
+          const falResult = await callFalReferenceToIpAdapterWorkflow({
+            referenceBase64: referenceImageBase64,
+            referenceMimeType: payload.referenceImageMimeType ?? "image/png",
+            prompt: imagePrompt,
+            apiKey: falApiKey,
+          });
+          falImageUrl = falResult.imageUrl;
+          falRequestId = falResult.requestId;
+        } else if (processedReference === null) {
+          throw new Error("ip_adapter render requires processed reference");
+        } else {
+          const falResult = await callFalFluxIpAdapter({
+            referenceBase64: processedReference.base64,
+            referenceMimeType: processedReference.mimeType,
+            prompt: imagePrompt,
+            apiKey: falApiKey,
+          });
+          falImageUrl = falResult.imageUrl;
+          falRequestId = falResult.requestId;
+        }
       } else if (
         !payload.tiledBase64 ||
         !payload.tiledMimeType ||
@@ -560,11 +768,14 @@ Deno.serve(async (req) => {
         );
       } else {
         renderBackend = renderPlan.renderBackend;
+        const preset = resolveRenderCapability(
+          payload.designContext?.fabricMethod ?? null,
+        );
         const falResult = await callFalFluxImg2Img({
           imageBase64: payload.tiledBase64,
           imageMimeType: payload.tiledMimeType,
           prompt: imagePrompt,
-          strength: 0.3,
+          strength: preset?.img2imgStrength,
           apiKey: falApiKey,
         });
         falImageUrl = falResult.imageUrl;
@@ -692,8 +903,27 @@ Deno.serve(async (req) => {
       throw error;
     }
 
-    finalImageUrl = uploaded?.url ?? falImageUrl;
-    finalImageFileId = uploaded?.fileId ?? null;
+    if (uploaded?.url) {
+      finalImageUrl = uploaded.url;
+      finalImageFileId = uploaded.fileId;
+    } else if (
+      Deno.env.get("PERSIST_FAL_URL_FALLBACK_TO_SUPABASE_STORAGE") === "true"
+    ) {
+      const fallbackUpload = await uploadGeneratedImageToSupabaseStorage(
+        adminClient,
+        {
+          bytes: imageBytes,
+          mimeType: imageMimeType,
+          workId,
+        },
+      );
+
+      finalImageUrl = fallbackUpload?.url ?? falImageUrl;
+      finalImageFileId = null;
+    } else {
+      finalImageUrl = falImageUrl;
+      finalImageFileId = null;
+    }
   } catch (error) {
     renderTokensRefunded = await tryRefund(adminClient, {
       userId: user.id,
@@ -734,7 +964,8 @@ Deno.serve(async (req) => {
       image_generated: false,
       text_latency_ms: textLatencyMs,
       image_latency_ms: imageLatencyMs,
-      total_latency_ms: textLatencyMs + imageLatencyMs,
+      total_latency_ms:
+        textLatencyMs !== null ? textLatencyMs + imageLatencyMs : null,
       tokens_charged: renderTokensCharged,
       tokens_refunded: renderTokensRefunded,
       error_type: resolvedErrorCode,
@@ -772,7 +1003,8 @@ Deno.serve(async (req) => {
     generated_image_url: finalImageUrl,
     text_latency_ms: textLatencyMs,
     image_latency_ms: imageLatencyMs,
-    total_latency_ms: textLatencyMs + imageLatencyMs,
+    total_latency_ms:
+      textLatencyMs !== null ? textLatencyMs + imageLatencyMs : null,
     tokens_charged: renderTokensCharged,
     tokens_refunded: renderTokensRefunded,
   });

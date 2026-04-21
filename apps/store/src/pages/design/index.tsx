@@ -23,7 +23,7 @@ function DesignPage() {
     useSessionRestore();
   const { hasPendingResult, markPending, clearPending } =
     usePendingGeneration();
-  const { sendMessage } = useDesignChat({
+  const { sendMessage, requestInpaint } = useDesignChat({
     onGenerationStart: markPending,
     onGenerationEnd: clearPending,
   });
@@ -64,6 +64,7 @@ function DesignPage() {
             <ChatPanel
               className="h-full"
               sendMessage={sendMessage}
+              requestInpaint={requestInpaint}
               onOpenHistory={openHistory}
             />
           </div>

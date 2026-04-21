@@ -2,7 +2,11 @@ import type { ConversationTurn } from "./conversation.ts";
 export type { BackgroundPattern } from "../../../packages/shared/src/types/design/background-pattern.ts";
 import type { BackgroundPattern } from "../../../packages/shared/src/types/design/background-pattern.ts";
 
-export type FalGenerationRoute = "fal_tiling" | "fal_edit";
+export type FalGenerationRoute =
+  | "fal_tiling"
+  | "fal_edit"
+  | "fal_controlnet"
+  | "fal_inpaint";
 
 interface RequestSessionAttachment {
   type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
@@ -43,6 +47,14 @@ export type GenerateDesignRequest = {
   tiledBase64?: string;
   tiledMimeType?: string;
   route?: FalGenerationRoute;
+  controlType?: "lineart" | "edge" | "depth";
+  structureImageBase64?: string;
+  structureImageMimeType?: string;
+  baseImageBase64?: string;
+  baseImageMimeType?: string;
+  maskBase64?: string;
+  maskMimeType?: string;
+  editPrompt?: string;
   routeSignals?: string[];
   routeReason?: string | null;
   routeHint?: "openai" | "fal_tiling" | "fal_edit";

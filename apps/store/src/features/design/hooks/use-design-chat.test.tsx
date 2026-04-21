@@ -15,6 +15,7 @@ const {
   clearAttachments,
   restoreMessages,
   setCurrentSessionId,
+  setLastAnalysisReuseKey,
   phCapture,
   MockInsufficientTokensError,
 } = vi.hoisted(() => ({
@@ -62,6 +63,7 @@ const {
   clearAttachments: vi.fn(),
   restoreMessages: vi.fn(),
   setCurrentSessionId: vi.fn(),
+  setLastAnalysisReuseKey: vi.fn(),
   phCapture: vi.fn(),
   MockInsufficientTokensError: class MockInsufficientTokensError extends Error {
     constructor(
@@ -138,11 +140,17 @@ const storeState = {
   lastAnalysisWorkId: "analysis-work-1",
   lastEligibleForRender: false,
   lastGenerateImage: null as boolean | null,
+  lastAnalysisReuseKey: null as string | null,
+  inpaintTarget: null as {
+    imageUrl: string;
+    imageWorkId: string | null;
+  } | null,
   addMessage,
   setGenerationStatus,
   setGeneratedImage,
   setGenerationMetadata,
   setLastAnalysisResult,
+  setLastAnalysisReuseKey,
   clearAttachments,
   restoreMessages,
   setCurrentSessionId,
@@ -199,14 +207,25 @@ describe("useDesignChat", () => {
     clearAttachments.mockReset();
     restoreMessages.mockReset();
     setCurrentSessionId.mockReset();
+    setLastAnalysisReuseKey.mockReset();
     phCapture.mockReset();
     storeState.messages = [...initialMessages];
+    storeState.designContext = {
+      colors: ["navy"],
+      pattern: "stripe",
+      fabricMethod: "print",
+      ciPlacement: null,
+      ciImage: null,
+      referenceImage: null,
+    };
     storeState.aiModel = "openai";
     storeState.autoGenerateImage = true;
     storeState.selectedPreviewImageUrl = null;
     storeState.lastAnalysisWorkId = "analysis-work-1";
     storeState.lastEligibleForRender = false;
     storeState.lastGenerateImage = null;
+    storeState.lastAnalysisReuseKey = null;
+    storeState.inpaintTarget = null;
     storeState.currentSessionId = null;
     storeState.baseImageUrl = null;
     storeState.baseImageWorkId = null;
@@ -453,6 +472,8 @@ describe("useDesignChat", () => {
       lastAnalysisWorkId: "analysis-work-101",
       lastGenerateImage: false,
       lastEligibleForRender: true,
+      lastAnalysisReuseKey:
+        '{"colors":["navy"],"pattern":"stripe","fabricMethod":"print","ciPlacement":null,"ciImage":null,"referenceImage":null,"baseImageUrl":null,"baseImageWorkId":null}',
     });
 
     const { result } = renderHook(() => useDesignChat());
@@ -464,6 +485,33 @@ describe("useDesignChat", () => {
         analysisWorkId: "analysis-work-101",
         executionMode: "render_from_analysis",
         aiModel: "gemini",
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it("requestRender는 현재 컨텍스트가 마지막 분석과 다르면 render_from_analysis를 재사용하지 않는다", () => {
+    Object.assign(storeState, {
+      designContext: {
+        ...storeState.designContext,
+        colors: ["burgundy"],
+      },
+      lastAnalysisWorkId: "analysis-work-101",
+      lastEligibleForRender: true,
+      lastAnalysisReuseKey:
+        '{"colors":["navy"],"pattern":"stripe","fabricMethod":"print","ciPlacement":null,"ciImage":null,"referenceImage":null,"baseImageUrl":null,"baseImageWorkId":null}',
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.requestRender();
+
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        analysisWorkId: null,
+        executionMode: "auto",
+        designContext: expect.objectContaining({
+          colors: ["burgundy"],
+        }),
       }),
       expect.any(Object),
     );
@@ -581,6 +629,8 @@ describe("useDesignChat", () => {
       lastAnalysisWorkId: "analysis-work-99",
       lastGenerateImage: false,
       lastEligibleForRender: true,
+      lastAnalysisReuseKey:
+        '{"colors":["navy"],"pattern":"stripe","fabricMethod":"print","ciPlacement":null,"ciImage":null,"referenceImage":null,"baseImageUrl":null,"baseImageWorkId":null}',
     });
 
     const { result } = renderHook(() => useDesignChat());
@@ -602,6 +652,8 @@ describe("useDesignChat", () => {
       currentSessionId: "store-session-42",
       lastAnalysisWorkId: "analysis-work-103",
       lastEligibleForRender: true,
+      lastAnalysisReuseKey:
+        '{"colors":["navy"],"pattern":"stripe","fabricMethod":"print","ciPlacement":null,"ciImage":null,"referenceImage":null,"baseImageUrl":null,"baseImageWorkId":null}',
     });
 
     const { result } = renderHook(() => useDesignChat());
@@ -676,6 +728,30 @@ describe("useDesignChat", () => {
     const callbacks = mutate.mock.calls[0][1];
     callbacks.onError(new Error("boom"));
     expect(setGenerationStatus).toHaveBeenCalledWith("completed");
+  });
+
+  it("requestInpaint는 fal_inpaint payload로 mutation을 호출한다", () => {
+    storeState.inpaintTarget = {
+      imageUrl: "https://example.com/base.png",
+      imageWorkId: "work-1",
+    };
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.requestInpaint("mask-base64", "이 부분만 자수 느낌으로");
+
+    expect(setGenerationStatus).toHaveBeenCalledWith("rendering");
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userMessage: "이 부분만 자수 느낌으로",
+        route: "fal_inpaint",
+        baseImageUrl: "https://example.com/base.png",
+        baseImageWorkId: "work-1",
+        maskBase64: "mask-base64",
+        maskMimeType: "image/png",
+        editPrompt: "이 부분만 자수 느낌으로",
+      }),
+      expect.any(Object),
+    );
   });
 
   it("onGenerationStart는 sendMessage 시 sessionId와 함께 호출된다", () => {

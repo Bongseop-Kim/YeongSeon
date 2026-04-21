@@ -1,0 +1,18 @@
+{
+  "slug": "duegosystem/reference-to-ipadapter-v1",
+  "input_schema": {
+    "prompt": "string",
+    "reference_image_url": "string"
+  },
+  "steps": [
+    {
+      "id": "clarity_upscaler",
+      "app_id": "fal-ai/clarity-upscaler",
+      "condition": "min_dim < 512"
+    },
+    {
+      "id": "flux_general_ip_adapter",
+      "app_id": "fal-ai/flux-general/image-to-image"
+    }
+  ]
+}

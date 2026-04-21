@@ -32,12 +32,24 @@ export type AiGenerationLogInsert = {
   text_prompt?: string | null;
   image_prompt?: string | null;
   image_edit_prompt?: string | null;
-  route?: "openai" | "fal_tiling" | "fal_edit" | null;
+  route?:
+    | "openai"
+    | "fal_tiling"
+    | "fal_edit"
+    | "fal_controlnet"
+    | "fal_inpaint"
+    | null;
   route_reason?: string | null;
   route_signals?: string[] | null;
   base_image_work_id?: string | null;
   fal_request_id?: string | null;
-  render_backend?: "ip_adapter" | "img2img" | "nano_banana_edit" | null;
+  render_backend?:
+    | "ip_adapter"
+    | "img2img"
+    | "nano_banana_edit"
+    | "controlnet"
+    | "flux_fill"
+    | null;
   seed?: number | null;
   image_generated: boolean;
   generated_image_url?: string | null;

@@ -5,6 +5,7 @@ import { ChatHeader } from "@/features/design/components/chat/chat-header";
 import { TiePreviewModal } from "@/features/design/components/chat/tie-preview-modal";
 import { ChatInput } from "@/features/design/components/chat/chat-input";
 import { MessageList } from "@/features/design/components/chat/message-list";
+import { InpaintDialog } from "@/features/design/components/inpaint/inpaint-dialog";
 import {
   QUICK_CHIPS,
   WELCOME_MESSAGE,
@@ -17,12 +18,14 @@ import { cn } from "@/shared/lib/utils";
 interface ChatPanelProps {
   className?: string;
   sendMessage: (text: string, attachments: Attachment[]) => void;
+  requestInpaint: (maskBase64: string, editPrompt: string) => void;
   onOpenHistory: () => void;
 }
 
 export function ChatPanel({
   className,
   sendMessage,
+  requestInpaint,
   onOpenHistory,
 }: ChatPanelProps) {
   const messages = useDesignChatStore((state) => state.messages);
@@ -42,6 +45,14 @@ export function ChatPanel({
   const setSelectedPreviewImage = useDesignChatStore(
     (state) => state.setSelectedPreviewImage,
   );
+  const inpaintTarget = useDesignChatStore((state) => state.inpaintTarget);
+  const openInpaintDialog = useDesignChatStore(
+    (state) => state.openInpaintDialog,
+  );
+  const closeInpaintDialog = useDesignChatStore(
+    (state) => state.closeInpaintDialog,
+  );
+  const baseImageWorkId = useDesignChatStore((state) => state.baseImageWorkId);
 
   const isGenerating =
     generationStatus === "generating" ||
@@ -104,6 +115,7 @@ export function ChatPanel({
             onTiePreviewClick={(url) => setSelectedImageUrl(url)}
             selectedPreviewImageUrl={selectedPreviewImageUrl}
             onSelectPreview={setSelectedPreviewImage}
+            onRequestInpaint={(url) => openInpaintDialog(url, baseImageWorkId)}
           />
         )}
       </div>
@@ -113,6 +125,22 @@ export function ChatPanel({
           onClose={() => setSelectedImageUrl(null)}
         />
       )}
+      {inpaintTarget ? (
+        <InpaintDialog
+          open
+          imageUrl={inpaintTarget.imageUrl}
+          isSubmitting={isGenerating}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              closeInpaintDialog();
+            }
+          }}
+          onSubmit={(maskBase64, editPrompt) => {
+            requestInpaint(maskBase64, editPrompt);
+            closeInpaintDialog();
+          }}
+        />
+      ) : null}
       <div className="shrink-0 border-t p-2">
         <ChatInput onSend={sendMessage} isLoading={isGenerating} />
       </div>

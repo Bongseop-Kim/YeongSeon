@@ -9,11 +9,30 @@ const createInput = (
   hasReferenceImage: false,
   hasPreviousGeneratedImage: false,
   selectedPreviewImageUrl: null,
+  detectedPattern: null,
   ...overrides,
 });
 
 describe("resolveGenerationRoute", () => {
   it.each([
+    {
+      title: "sharp edge 체크 반복 요청은 fal_controlnet으로 보낸다",
+      input: createInput({
+        userMessage: "첨부한 이미지를 체크 반복 패턴으로 만들어줘",
+        hasCiImage: true,
+        detectedPattern: "check",
+      }),
+      expected: {
+        route: "fal_controlnet" as const,
+        reason: "sharp_edge_pattern_repeat" as const,
+        signals: [
+          "ci_image_present",
+          "pattern_repeat",
+          "new_generation",
+          "preserve_identity",
+        ] as const,
+      },
+    },
     {
       title: "CI 첨부 + 올 패턴은 fal_tiling으로 보낸다",
       input: createInput({

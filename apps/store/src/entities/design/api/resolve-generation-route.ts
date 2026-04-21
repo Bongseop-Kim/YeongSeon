@@ -10,6 +10,7 @@ interface RouteResolverInput {
   hasReferenceImage: boolean;
   hasPreviousGeneratedImage: boolean;
   selectedPreviewImageUrl: string | null;
+  detectedPattern?: string | null;
 }
 
 interface RouteResolution {
@@ -150,6 +151,8 @@ const EDIT_INTENT_SIGNALS = new Set<GenerationRouteSignal>([
   "exact_placement",
   "modification_intent",
 ]);
+
+const SHARP_EDGE_PATTERNS = new Set(["check", "stripe", "houndstooth"]);
 
 const isAsciiWordChar = (char: string): boolean => {
   const code = char.charCodeAt(0);
@@ -331,6 +334,20 @@ export function resolveGenerationRoute(
       route: "fal_edit",
       signals,
       reason: "existing_result_edit_request",
+      usedIntentRouter: false,
+    };
+  }
+
+  if (
+    input.hasCiImage &&
+    signals.includes("pattern_repeat") &&
+    input.detectedPattern &&
+    SHARP_EDGE_PATTERNS.has(input.detectedPattern)
+  ) {
+    return {
+      route: "fal_controlnet",
+      signals,
+      reason: "sharp_edge_pattern_repeat",
       usedIntentRouter: false,
     };
   }

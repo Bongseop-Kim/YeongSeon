@@ -11,6 +11,7 @@ interface MessageBubbleProps {
   onTiePreviewClick?: (imageUrl: string) => void;
   selectedPreviewImageUrl?: string | null;
   onSelectPreview?: (imageUrl: string) => void;
+  onRequestInpaint?: (imageUrl: string) => void;
 }
 
 function ChatTieMask({ imageUrl }: { imageUrl: string }) {
@@ -30,6 +31,7 @@ export function MessageBubble({
   onTiePreviewClick,
   selectedPreviewImageUrl,
   onSelectPreview,
+  onRequestInpaint,
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const { isMobile } = useBreakpoint();
@@ -73,45 +75,58 @@ export function MessageBubble({
         {message.content}
       </div>
       {!isUser && previewBackground ? (
-        isMobile ? (
-          onTiePreviewClick ? (
-            <button
-              type="button"
-              aria-label="넥타이 프리뷰 확대"
-              className="cursor-pointer"
-              onClick={() => onTiePreviewClick(previewBackground)}
-            >
-              <ChatTieMask imageUrl={previewBackground} />
-            </button>
-          ) : (
-            <ChatTieMask imageUrl={previewBackground} />
-          )
-        ) : (
-          <div className="relative">
-            <button
-              type="button"
-              aria-label="넥타이 프리뷰 선택"
-              aria-pressed={selectedPreviewImageUrl === previewBackground}
-              className={cn(
-                "cursor-pointer transition-all",
-                selectedPreviewImageUrl === previewBackground
-                  ? "opacity-100"
-                  : "opacity-40 grayscale hover:opacity-70",
-              )}
-              onClick={() => onSelectPreview?.(previewBackground)}
-            >
-              <ChatTieMask imageUrl={previewBackground} />
-            </button>
-            {selectedPreviewImageUrl === previewBackground && (
-              <div
-                aria-label="선택됨"
-                className="pointer-events-none absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-indigo-600"
+        <div className="space-y-2">
+          {isMobile ? (
+            onTiePreviewClick ? (
+              <button
+                type="button"
+                aria-label="넥타이 프리뷰 확대"
+                className="cursor-pointer"
+                onClick={() => onTiePreviewClick(previewBackground)}
               >
-                <span className="text-[10px] leading-none text-white">✓</span>
-              </div>
-            )}
-          </div>
-        )
+                <ChatTieMask imageUrl={previewBackground} />
+              </button>
+            ) : (
+              <ChatTieMask imageUrl={previewBackground} />
+            )
+          ) : (
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="넥타이 프리뷰 선택"
+                aria-pressed={selectedPreviewImageUrl === previewBackground}
+                className={cn(
+                  "cursor-pointer transition-all",
+                  selectedPreviewImageUrl === previewBackground
+                    ? "opacity-100"
+                    : "opacity-40 grayscale hover:opacity-70",
+                )}
+                onClick={() => onSelectPreview?.(previewBackground)}
+              >
+                <ChatTieMask imageUrl={previewBackground} />
+              </button>
+              {selectedPreviewImageUrl === previewBackground && (
+                <div
+                  aria-label="선택됨"
+                  className="pointer-events-none absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-indigo-600"
+                >
+                  <span className="text-[10px] leading-none text-white">✓</span>
+                </div>
+              )}
+            </div>
+          )}
+          {onRequestInpaint ? (
+            <button
+              type="button"
+              onClick={() =>
+                message.imageUrl && onRequestInpaint(message.imageUrl)
+              }
+              className="rounded-full border border-gray-300 px-3 py-1 text-xs text-gray-600 transition-colors hover:border-gray-500 hover:text-gray-900"
+            >
+              부분 수정
+            </button>
+          ) : null}
+        </div>
       ) : null}
       {!isUser && message.contextChips && message.contextChips.length > 0 ? (
         <div className="flex flex-wrap gap-1.5 pt-1">

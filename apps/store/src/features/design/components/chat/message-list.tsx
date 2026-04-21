@@ -11,6 +11,7 @@ interface MessageListProps {
   onTiePreviewClick?: (imageUrl: string) => void;
   selectedPreviewImageUrl?: string | null;
   onSelectPreview?: (imageUrl: string) => void;
+  onRequestInpaint?: (imageUrl: string) => void;
 }
 
 export function MessageList({
@@ -20,6 +21,7 @@ export function MessageList({
   onTiePreviewClick,
   selectedPreviewImageUrl,
   onSelectPreview,
+  onRequestInpaint,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -41,6 +43,7 @@ export function MessageList({
           onTiePreviewClick={onTiePreviewClick}
           selectedPreviewImageUrl={selectedPreviewImageUrl}
           onSelectPreview={onSelectPreview}
+          onRequestInpaint={onRequestInpaint}
         />
       ))}
       {isTyping ? <TypingIndicator /> : null}

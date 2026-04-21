@@ -73,6 +73,13 @@ describe("aiDesignApi", () => {
     tileLogoOnCanvas.mockReset();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ enabled: true }),
+      }),
+    );
     MockFileReader.reset();
   });
 
@@ -472,6 +479,41 @@ describe("aiDesignApi", () => {
         route: "fal_tiling",
         routeSignals: expect.anything(),
         routeReason: "ci_image_with_pattern_repeat",
+      }),
+    });
+  });
+
+  it("Fal probe가 비활성화 상태를 반환하면 Edge 호출 없이 즉시 폴백한다", async () => {
+    tileLogoOnCanvas.mockResolvedValue({
+      base64: "tiled-base64",
+      mimeType: "image/png",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ enabled: false }),
+      }),
+    );
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
+      designContext: {
+        ...baseRequest.designContext,
+        ciImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+        scale: "medium",
+      },
+    });
+
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke).toHaveBeenCalledWith("generate-open-api", {
+      body: expect.not.objectContaining({
+        route: "fal_tiling",
+        tiledBase64: "tiled-base64",
       }),
     });
   });

@@ -108,6 +108,7 @@ export async function aiDesignApi(
     hasReferenceImage: !!request.designContext.referenceImage,
     hasPreviousGeneratedImage: !!request.baseImageUrl,
     selectedPreviewImageUrl: request.baseImageUrl ?? null,
+    detectedPattern: request.designContext.pattern,
   });
 
   const [ciImageBase64, referenceImageBase64] = await Promise.all([
@@ -119,11 +120,11 @@ export async function aiDesignApi(
       : Promise.resolve(undefined),
   ]);
 
-  const useFalTiling = shouldUseFalPipeline({
+  const useFalTiling = await shouldUseFalPipeline({
     ciImageBase64,
     ciPlacement: request.designContext.ciPlacement,
     fabricMethod: request.designContext.fabricMethod,
-    autoGenerate: (request.executionMode ?? "auto") === "auto",
+    allowFalRender: (request.executionMode ?? "auto") !== "analysis_only",
   });
   const backgroundPattern =
     request.designContext.ciPlacement === "one-point" &&
@@ -136,12 +137,17 @@ export async function aiDesignApi(
 
   let tiledBase64: string | undefined;
   let tiledMimeType: string | undefined;
+  const resolvedRoute = request.route ?? routeResolution.route;
+  const isPatternRoute =
+    resolvedRoute === "fal_tiling" || resolvedRoute === "fal_controlnet";
   const canUseFalApi =
-    routeResolution.route === "fal_edit" ||
-    (routeResolution.route === "fal_tiling" && useFalTiling);
+    resolvedRoute === "fal_edit" ||
+    resolvedRoute === "fal_inpaint" ||
+    resolvedRoute === "fal_controlnet" ||
+    (resolvedRoute === "fal_tiling" && useFalTiling);
 
   if (
-    routeResolution.route === "fal_tiling" &&
+    isPatternRoute &&
     useFalTiling &&
     ciImageBase64 &&
     request.designContext.ciImage &&
@@ -179,16 +185,22 @@ export async function aiDesignApi(
         ciImageBase64,
         referenceImageBase64,
         backgroundPattern,
-        tiledBase64:
-          routeResolution.route === "fal_tiling" ? tiledBase64 : undefined,
-        tiledMimeType:
-          routeResolution.route === "fal_tiling" ? tiledMimeType : undefined,
-        route: routeResolution.route,
+        tiledBase64: isPatternRoute ? tiledBase64 : undefined,
+        tiledMimeType: isPatternRoute ? tiledMimeType : undefined,
+        route: resolvedRoute,
         routeSignals: routeResolution.signals,
         routeReason: routeResolution.reason,
         routeHint: request.routeHint,
         baseImageUrl: request.baseImageUrl,
         baseImageWorkId: request.baseImageWorkId,
+        controlType: request.controlType,
+        structureImageBase64: request.structureImageBase64,
+        structureImageMimeType: request.structureImageMimeType,
+        baseImageBase64: request.baseImageBase64,
+        baseImageMimeType: request.baseImageMimeType,
+        maskBase64: request.maskBase64,
+        maskMimeType: request.maskMimeType,
+        editPrompt: request.editPrompt,
       })
     : buildInvokePayload(request, {
         ciImageBase64,

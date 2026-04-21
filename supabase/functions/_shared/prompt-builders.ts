@@ -3,6 +3,7 @@ import type {
   GenerateDesignRequest,
 } from "@/functions/_shared/design-request.ts";
 import type { NormalizedDesignContext } from "@/functions/_shared/design-generation.ts";
+import { resolveRenderCapability } from "@/functions/_shared/render-capability.ts";
 import { SCALE_META } from "@/functions/_shared/scale-meta.ts";
 
 export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
@@ -78,11 +79,8 @@ export const buildFalPatternPrompt = (
   design: NormalizedDesignContext,
 ): string => {
   const fabricLine =
-    design.fabricMethod === "yarn-dyed"
-      ? "Render the surface as woven silk with visible thread interlacing, a soft natural sheen, and subtle fabric weave."
-      : design.fabricMethod === "print"
-        ? "Render the surface as printed silk with crisp printed color on a smooth lustrous fabric and no thread texture."
-        : "Render the surface as a high-quality silk fabric.";
+    resolveRenderCapability(design.fabricMethod)?.fabricLineShort ??
+    "Render the surface as a high-quality silk fabric.";
 
   const colorLine =
     design.colors.length > 0
@@ -110,24 +108,11 @@ export const buildBasePrompt = () =>
 export const buildFabricPrompt = (
   fabricMethod: string | null | undefined,
 ): string => {
-  if (fabricMethod === "yarn-dyed") {
-    return [
-      "Fabric construction: yarn-dyed woven silk.",
-      "The pattern is formed entirely by interwoven threads — visible weave structure, subtle textile depth, and a genuine woven repeat.",
-      "Each motif appears as a single solid thread color against the background, rendered as a clean silhouette.",
-      "The pattern emerges from the thread interlacing itself, not from printing.",
-      "The surface has the tactile, slightly textured quality of woven jacquard silk.",
-    ].join(" ");
+  const preset = resolveRenderCapability(fabricMethod);
+  if (preset) {
+    return preset.fabricConstruction.join(" ");
   }
-  if (fabricMethod === "print") {
-    return [
-      "Fabric construction: printed silk.",
-      "The pattern is screen-printed or digitally printed directly onto the fabric surface — crisp edges, vibrant colors, and surface-applied graphics.",
-      "Multi-color details within each motif are fully supported: crisp outlines, gradients, fine inner details, and multiple colors per motif.",
-      "The surface is smooth and lustrous, with the clean flat quality of printed silk.",
-      "No thread texture, no weave structure, no fiber depth — the surface is as flat and smooth as coated paper.",
-    ].join(" ");
-  }
+
   return "This must be a high-quality silk fabric surface with refined textile character.";
 };
 
@@ -177,8 +162,9 @@ export const buildPatternPrompt = (
 ): string => {
   if (pattern && PATTERN_MAP[pattern]) {
     const basePrompt = `Pattern: ${PATTERN_MAP[pattern]}.`;
-    if (fabricMethod === "yarn-dyed") {
-      return `${basePrompt} Render each motif as a single-color silhouette only — no inner color variation or detail.`;
+    const extraHint = resolveRenderCapability(fabricMethod)?.patternExtraHint;
+    if (extraHint) {
+      return `${basePrompt} ${extraHint}`;
     }
     return basePrompt;
   }
@@ -218,11 +204,7 @@ export const buildReferencePrompt = (
 ): string => {
   if (!hasCiImage && !hasReferenceImage) return "";
   const fabricLabel =
-    fabricMethod === "yarn-dyed"
-      ? "yarn-dyed woven"
-      : fabricMethod === "print"
-        ? "printed"
-        : "fabric";
+    resolveRenderCapability(fabricMethod)?.referenceLabel ?? "fabric";
   if (hasCiImage && hasReferenceImage) {
     return [
       "Image 1: base fabric reference (referenceImage). Image 2: CI logo reference (ciImage).",

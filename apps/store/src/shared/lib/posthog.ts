@@ -1,7 +1,12 @@
 import posthog from "posthog-js";
 
 type AiModel = "openai" | "gemini";
-type GenerationRoute = "openai" | "fal_tiling" | "fal_edit";
+type GenerationRoute =
+  | "openai"
+  | "fal_tiling"
+  | "fal_edit"
+  | "fal_controlnet"
+  | "fal_inpaint";
 
 type PhEventParamsMap = {
   design_session_started: { ai_model: AiModel };

@@ -132,4 +132,23 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
       screen.queryByRole("button", { name: "넥타이 프리뷰 선택" }),
     ).toBeNull();
   });
+
+  it("AI 이미지가 있으면 부분 수정 버튼을 렌더링하고 콜백을 호출한다", async () => {
+    const onRequestInpaint = vi.fn();
+
+    render(
+      <MessageBubble
+        message={{ ...baseMessage, imageUrl: "https://example.com/tie.png" }}
+        selectedPreviewImageUrl={null}
+        onSelectPreview={vi.fn()}
+        onRequestInpaint={onRequestInpaint}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "부분 수정" }));
+
+    expect(onRequestInpaint).toHaveBeenCalledWith(
+      "https://example.com/tie.png",
+    );
+  });
 });

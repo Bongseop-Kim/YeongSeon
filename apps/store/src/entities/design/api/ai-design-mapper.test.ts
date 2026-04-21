@@ -210,6 +210,26 @@ describe("buildInvokePayload", () => {
     expect(payload.executionMode).toBe("analysis_only");
     expect(payload.analysisWorkId).toBe("analysis-1");
   });
+
+  it("controlnet/inpaint 필드를 invoke payload에 포함한다", () => {
+    const payload = buildInvokePayload(createAiDesignRequest(), {
+      route: "fal_controlnet",
+      controlType: "lineart",
+      structureImageBase64: "structure-base64",
+      structureImageMimeType: "image/png",
+      maskBase64: "mask-base64",
+      maskMimeType: "image/png",
+      editPrompt: "이 부분만 수정",
+    });
+
+    expect(payload.route).toBe("fal_controlnet");
+    expect(payload.controlType).toBe("lineart");
+    expect(payload.structureImageBase64).toBe("structure-base64");
+    expect(payload.structureImageMimeType).toBe("image/png");
+    expect(payload.maskBase64).toBe("mask-base64");
+    expect(payload.maskMimeType).toBe("image/png");
+    expect(payload.editPrompt).toBe("이 부분만 수정");
+  });
 });
 
 describe("buildInvokePayload — 세션 필드", () => {

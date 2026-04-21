@@ -150,6 +150,136 @@ Deno.test("validateFalGeneratePayload rejects invalid fal route", () => {
   });
 });
 
+Deno.test(
+  "validateFalGeneratePayload allows render_from_analysis requests with analysisWorkId only",
+  () => {
+    const result = validateFalGeneratePayload(
+      {
+        userMessage: "이대로 다시 렌더해줘",
+        analysisWorkId: "analysis-1",
+        executionMode: "render_from_analysis",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0],
+      "render_from_analysis",
+    );
+
+    assertObjectMatch(result, {
+      ok: true,
+    });
+  },
+);
+
+Deno.test("validateFalGeneratePayload accepts fal_controlnet payload", () => {
+  const result = validateFalGeneratePayload({
+    userMessage: "체크 패턴으로 반복해줘",
+    route: "fal_controlnet",
+    designContext: {
+      colors: ["navy"],
+      pattern: "check",
+      fabricMethod: "yarn-dyed",
+      ciPlacement: "all-over",
+    },
+    structureImageBase64: "abc",
+    structureImageMimeType: "image/png",
+    controlType: "lineart",
+  } as unknown as Parameters<typeof validateFalGeneratePayload>[0]);
+
+  assertObjectMatch(result, {
+    ok: true,
+  });
+});
+
+Deno.test(
+  "validateFalGeneratePayload rejects invalid fal_controlnet payloads",
+  () => {
+    assertObjectMatch(
+      validateFalGeneratePayload({
+        userMessage: "체크 패턴으로 반복해줘",
+        route: "fal_controlnet",
+        designContext: {
+          colors: ["navy"],
+          pattern: "check",
+          fabricMethod: "yarn-dyed",
+          ciPlacement: "one-point",
+        },
+        structureImageBase64: "abc",
+        structureImageMimeType: "image/png",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0]),
+      {
+        ok: false,
+        status: 400,
+        body: { error: "ci_placement_must_be_all_over" },
+      },
+    );
+
+    assertObjectMatch(
+      validateFalGeneratePayload({
+        userMessage: "체크 패턴으로 반복해줘",
+        route: "fal_controlnet",
+        designContext: {
+          colors: ["navy"],
+          pattern: "check",
+          fabricMethod: "yarn-dyed",
+          ciPlacement: "all-over",
+        },
+        controlType: "unknown",
+        structureImageBase64: "abc",
+        structureImageMimeType: "image/png",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0]),
+      {
+        ok: false,
+        status: 400,
+        body: { error: "invalid_control_type" },
+      },
+    );
+  },
+);
+
+Deno.test(
+  "validateFalGeneratePayload validates fal_inpaint requirements",
+  () => {
+    assertObjectMatch(
+      validateFalGeneratePayload({
+        userMessage: "이 부분만 수정해줘",
+        route: "fal_inpaint",
+        designContext: {
+          colors: ["navy"],
+          pattern: "check",
+          fabricMethod: "print",
+          ciPlacement: "one-point",
+        },
+        baseImageUrl: "https://example.com/base.png",
+        maskBase64: "mask",
+        maskMimeType: "image/png",
+        editPrompt: "이 부분만 자수 느낌으로 바꿔줘",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0]),
+      {
+        ok: true,
+      },
+    );
+
+    assertObjectMatch(
+      validateFalGeneratePayload({
+        userMessage: "이 부분만 수정해줘",
+        route: "fal_inpaint",
+        designContext: {
+          colors: ["navy"],
+          pattern: "check",
+          fabricMethod: "print",
+          ciPlacement: "one-point",
+        },
+        baseImageUrl: "https://example.com/base.png",
+        maskMimeType: "image/png",
+        editPrompt: "이 부분만 자수 느낌으로 바꿔줘",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0]),
+      {
+        ok: false,
+        status: 400,
+        body: { error: "mask_base64_required" },
+      },
+    );
+  },
+);
+
 Deno.test("validateFalGeneratePayload rejects oversized tiled images", () => {
   const result = validateFalGeneratePayload({
     userMessage: "스트라이프로 바꿔줘",
