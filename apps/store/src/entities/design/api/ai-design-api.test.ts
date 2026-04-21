@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { InsufficientTokensError } from "@/entities/design/api/ai-design-api";
 import { aiDesignApi } from "@/entities/design/api/ai-design-api";
+import { __resetProbeCacheForTesting } from "@/entities/design/api/should-use-fal-pipeline";
 import { MockFileReader } from "@/test/mock-file-reader";
 
 const { invoke, phCapture, tileLogoOnCanvas } = vi.hoisted(() => ({
@@ -71,8 +72,16 @@ describe("aiDesignApi", () => {
     invoke.mockReset();
     phCapture.mockReset();
     tileLogoOnCanvas.mockReset();
+    __resetProbeCacheForTesting();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ enabled: true }),
+      }),
+    );
     MockFileReader.reset();
   });
 
@@ -236,7 +245,6 @@ describe("aiDesignApi", () => {
   });
 
   it("Fal 플래그와 올패턴 CI 조건이 맞으면 generate-fal-api를 호출한다", async () => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
     tileLogoOnCanvas.mockResolvedValue({
       base64: "tiled-base64",
       mimeType: "image/png",
@@ -278,27 +286,17 @@ describe("aiDesignApi", () => {
 
   it.each([
     {
-      title:
-        "featureFlag가 꺼져 있으면 fal_tiling 요청도 로컬에서 openai로 처리한다",
-      stubEnv: false,
-      executionMode: undefined,
-      fabricMethod: "yarn-dyed" as const,
-    },
-    {
       title: "auto가 아니면 fal_tiling 요청도 로컬에서 openai로 처리한다",
-      stubEnv: true,
       executionMode: "analysis_only" as const,
       fabricMethod: "yarn-dyed" as const,
     },
     {
       title:
         "fabricMethod가 없으면 fal_tiling 요청도 로컬에서 openai로 처리한다",
-      stubEnv: true,
       executionMode: undefined,
       fabricMethod: null,
     },
-  ])("$title", async ({ stubEnv, executionMode, fabricMethod }) => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", stubEnv ? "true" : "false");
+  ])("$title", async ({ executionMode, fabricMethod }) => {
     MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
     vi.stubGlobal("FileReader", MockFileReader);
     invoke.mockResolvedValue({ data: successResponse, error: null });
@@ -362,8 +360,91 @@ describe("aiDesignApi", () => {
     });
   });
 
+  it("reference-only all-over 요청도 fal_tiling 경로로 전달한다", async () => {
+    MockFileReader.configure({
+      result: "data:image/png;base64,reference-base64",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      route: "fal_tiling",
+      userMessage: "이 레퍼런스 이미지처럼 올 패턴으로 만들어줘",
+      designContext: {
+        ...baseRequest.designContext,
+        ciPlacement: "all-over",
+        referenceImage: { type: "image/png" } as File,
+      },
+    });
+
+    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
+      body: expect.objectContaining({
+        route: "fal_tiling",
+        referenceImageBase64: "reference-base64",
+      }),
+    });
+  });
+
+  it("sharp-edge controlnet 경로에서는 CI 원본을 control image로 전달한다", async () => {
+    MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke.mockResolvedValue({
+      data: { ...successResponse, route: "fal_controlnet" },
+      error: null,
+    });
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "첨부한 이미지를 반복 패턴으로 만들어줘",
+      designContext: {
+        ...baseRequest.designContext,
+        pattern: "check",
+        ciImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+        scale: "medium",
+      },
+    });
+
+    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
+      body: expect.objectContaining({
+        route: "fal_controlnet",
+        structureImageBase64: "ci-base64",
+        structureImageMimeType: "image/png",
+        tiledBase64: undefined,
+        tiledMimeType: undefined,
+      }),
+    });
+  });
+
+  it("one-point CI 배치에서는 solid backgroundPattern을 payload에 주입한다", async () => {
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "원포인트 로고 넥타이로 만들어줘",
+      designContext: {
+        ...baseRequest.designContext,
+        colors: ["#123456"],
+        ciPlacement: "one-point",
+      },
+    });
+
+    expect(invoke).toHaveBeenCalledWith("generate-open-api", {
+      body: expect.objectContaining({
+        designContext: expect.objectContaining({
+          backgroundPattern: {
+            type: "solid",
+            color: "#123456",
+          },
+        }),
+      }),
+    });
+  });
+
   it("tileLogoOnCanvas 실패는 observability 이벤트를 남기고 정리된 에러를 던진다", async () => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
     MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
     tileLogoOnCanvas.mockRejectedValue(new Error("canvas exploded"));
     vi.stubGlobal("FileReader", MockFileReader);
@@ -394,8 +475,24 @@ describe("aiDesignApi", () => {
     expect(invoke).not.toHaveBeenCalled();
   });
 
+  it("일반 API 에러를 감쌀 때 원래 에러를 cause로 보존한다", async () => {
+    const originalError = Object.assign(new Error("Internal Server Error"), {
+      name: "FunctionsHttpError",
+    });
+    invoke.mockResolvedValue({
+      data: null,
+      error: originalError,
+    });
+
+    const rejection = aiDesignApi(baseRequest).catch((error) => error);
+
+    await expect(rejection).resolves.toMatchObject({
+      message: "디자인 생성 실패: Internal Server Error",
+      cause: originalError,
+    });
+  });
+
   it("Fal API가 비활성화되어 있으면 기존 모델 함수로 한 번 폴백한다", async () => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
     tileLogoOnCanvas.mockResolvedValue({
       base64: "tiled-base64",
       mimeType: "image/png",
@@ -464,8 +561,43 @@ describe("aiDesignApi", () => {
     });
   });
 
+  it("Fal probe가 비활성화 상태를 반환하면 Edge 호출 없이 즉시 폴백한다", async () => {
+    tileLogoOnCanvas.mockResolvedValue({
+      base64: "tiled-base64",
+      mimeType: "image/png",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ enabled: false }),
+      }),
+    );
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
+      designContext: {
+        ...baseRequest.designContext,
+        ciImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+        scale: "medium",
+      },
+    });
+
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledWith("generate-open-api", {
+      body: expect.not.objectContaining({
+        route: "fal_tiling",
+        tiledBase64: "tiled-base64",
+      }),
+    });
+  });
+
   it("fal_edit가 fal_pipeline_disabled로 폴백되면 두 번째 invoke가 edit context를 유지한다", async () => {
-    vi.stubEnv("VITE_FALAI_CI_PATTERN_ENABLED", "true");
     vi.stubGlobal("FileReader", MockFileReader);
     invoke
       .mockResolvedValueOnce({
@@ -493,6 +625,11 @@ describe("aiDesignApi", () => {
       routeHint: "fal_edit",
       baseImageUrl: "https://example.com/base.png",
       baseImageWorkId: "work-base-1",
+      designContext: {
+        ...baseRequest.designContext,
+        colors: ["#123456"],
+        ciPlacement: "one-point",
+      },
     });
 
     expect(invoke).toHaveBeenNthCalledWith(1, "generate-fal-api", {
@@ -511,6 +648,12 @@ describe("aiDesignApi", () => {
         baseImageUrl: "https://example.com/base.png",
         baseImageWorkId: "work-base-1",
         routeHint: "fal_edit",
+        designContext: expect.objectContaining({
+          backgroundPattern: {
+            type: "solid",
+            color: "#123456",
+          },
+        }),
       }),
     });
   });

@@ -1,13 +1,16 @@
+import { uploadBase64ToFalStorage } from "@/functions/_shared/fal-storage.ts";
+
 export interface CallFalFluxImg2ImgInput {
   imageBase64: string;
   imageMimeType: string;
+  imageUrl?: string;
   prompt: string;
   strength?: number;
   apiKey: string;
   timeoutMs?: number;
 }
 
-export interface CallFalFluxImg2ImgResult {
+export interface FalImageJobResult {
   imageUrl: string;
   requestId: string;
 }
@@ -20,9 +23,62 @@ export interface CallFalNanoBananaEditInput {
   timeoutMs?: number;
 }
 
-export interface CallFalNanoBananaEditResult {
-  imageUrl: string;
-  requestId: string;
+export interface CallFalClarityUpscalerInput {
+  imageBase64: string;
+  imageMimeType: string;
+  imageUrl?: string;
+  apiKey: string;
+  scale?: 2 | 4;
+  timeoutMs?: number;
+}
+
+export interface CallFalFluxIpAdapterInput {
+  referenceBase64: string;
+  referenceMimeType: string;
+  imageUrl?: string;
+  prompt: string;
+  weight?: number;
+  apiKey: string;
+  timeoutMs?: number;
+}
+
+export interface CallFalFluxControlNetInput {
+  controlImageBase64: string;
+  controlImageMimeType: string;
+  imageUrl?: string;
+  prompt: string;
+  controlType: "lineart" | "edge" | "depth";
+  conditioningScale?: number;
+  apiKey: string;
+  timeoutMs?: number;
+}
+
+export interface CallFalFluxFillInput {
+  imageBase64: string;
+  imageMimeType: string;
+  imageUrl?: string;
+  maskBase64: string;
+  maskMimeType: string;
+  maskUrl?: string;
+  prompt: string;
+  apiKey: string;
+  timeoutMs?: number;
+}
+
+export interface CallFalWorkflowInput {
+  slug: string;
+  input: Record<string, unknown>;
+  apiKey: string;
+  timeoutMs?: number;
+}
+
+export interface CallFalReferenceToIpAdapterWorkflowInput {
+  referenceBase64: string;
+  referenceMimeType: string;
+  imageUrl?: string;
+  prompt: string;
+  apiKey: string;
+  timeoutMs?: number;
 }
 
 interface FalQueueSubmitResponse {
@@ -45,11 +101,35 @@ interface FalResultResponse {
 
 const FAL_FLUX_ENDPOINT =
   "https://queue.fal.run/fal-ai/flux/dev/image-to-image";
+const FAL_FLUX_GENERAL_IMAGE_TO_IMAGE_ENDPOINT =
+  "https://queue.fal.run/fal-ai/flux-general/image-to-image";
 const FAL_NANO_BANANA_EDIT_ENDPOINT =
   "https://queue.fal.run/fal-ai/nano-banana-2/edit";
+const FAL_CLARITY_UPSCALER_ENDPOINT =
+  "https://queue.fal.run/fal-ai/clarity-upscaler";
+const FAL_FLUX_FILL_ENDPOINT = "https://queue.fal.run/fal-ai/flux-pro/v1/fill";
+const FAL_CONTROLNET_LINEART_PATH = "XLabs-AI/flux-controlnet-lineart";
+const FAL_CONTROLNET_CANNY_PATH = "XLabs-AI/flux-controlnet-canny";
+const FAL_CONTROLNET_DEPTH_PATH = "jasperai/Flux.1-dev-Controlnet-Depth";
+const FAL_FLUX_DEFAULT_PARAMS = {
+  num_inference_steps: 28,
+  guidance_scale: 3.5,
+  num_images: 1,
+} as const;
+const FAL_IP_ADAPTER_PATH = "h94/IP-Adapter";
+const FAL_IP_ADAPTER_IMAGE_ENCODER_PATH = "openai/clip-vit-large-patch14";
+const DATA_URI_MAX_BYTES = 500 * 1024;
+const buildDataUri = (mimeType: string, base64: string) =>
+  `data:${mimeType};base64,${base64}`;
+
 const POLL_INTERVAL_MS = 2000;
 const DEFAULT_TIMEOUT_MS = 60000;
-const TRUSTED_FAL_QUEUE_HOST = "queue.fal.run";
+const TRUSTED_FAL_HOSTS = new Set([
+  "queue.fal.run",
+  "fal.media",
+  "v3.fal.media",
+  "storage.fal.run",
+]);
 
 const sleep = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
@@ -85,12 +165,64 @@ const assertTrustedFalQueueUrl = (value: string, fieldName: string): string => {
 
   if (
     parsedUrl.protocol !== "https:" ||
-    parsedUrl.hostname !== TRUSTED_FAL_QUEUE_HOST
+    !TRUSTED_FAL_HOSTS.has(parsedUrl.hostname)
   ) {
     throw new Error(`Unexpected Fal queue URL for ${fieldName}`);
   }
 
   return parsedUrl.toString();
+};
+
+const estimateBase64Bytes = (base64: string): number => {
+  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
+  return Math.floor((base64.length * 3) / 4) - padding;
+};
+
+const isReusableImageUrl = (value: string | undefined): value is string => {
+  if (!value) {
+    return false;
+  }
+
+  return value.startsWith("https://") || value.startsWith("data:");
+};
+
+const resolveFalInputUrl = async (input: {
+  base64: string;
+  mimeType: string;
+  apiKey: string;
+  fileName: string;
+  imageUrl?: string;
+}): Promise<string> => {
+  if (isReusableImageUrl(input.imageUrl)) {
+    return input.imageUrl;
+  }
+
+  if (estimateBase64Bytes(input.base64) < DATA_URI_MAX_BYTES) {
+    return buildDataUri(input.mimeType, input.base64);
+  }
+
+  const uploaded = await uploadBase64ToFalStorage(
+    input.base64,
+    input.mimeType,
+    input.apiKey,
+    input.fileName,
+  );
+
+  return assertTrustedFalQueueUrl(uploaded.url, input.fileName);
+};
+
+const getControlnetPath = (
+  controlType: CallFalFluxControlNetInput["controlType"],
+) => {
+  if (controlType === "edge") {
+    return FAL_CONTROLNET_CANNY_PATH;
+  }
+
+  if (controlType === "depth") {
+    return FAL_CONTROLNET_DEPTH_PATH;
+  }
+
+  return FAL_CONTROLNET_LINEART_PATH;
 };
 
 async function callFalImageEndpoint(input: {
@@ -184,21 +316,25 @@ async function callFalImageEndpoint(input: {
 
 export async function callFalFluxImg2Img(
   input: CallFalFluxImg2ImgInput,
-): Promise<CallFalFluxImg2ImgResult> {
+): Promise<FalImageJobResult> {
   const strength = input.strength ?? 0.3;
-  const dataUri = `data:${input.imageMimeType};base64,${input.imageBase64}`;
+  const imageUrl = await resolveFalInputUrl({
+    base64: input.imageBase64,
+    mimeType: input.imageMimeType,
+    apiKey: input.apiKey,
+    fileName: "flux-img2img-input",
+    imageUrl: input.imageUrl,
+  });
 
   return callFalImageEndpoint({
     endpoint: FAL_FLUX_ENDPOINT,
     apiKey: input.apiKey,
     timeoutMs: input.timeoutMs,
     body: {
-      image_url: dataUri,
+      image_url: imageUrl,
       prompt: input.prompt,
       strength,
-      num_inference_steps: 28,
-      guidance_scale: 3.5,
-      num_images: 1,
+      ...FAL_FLUX_DEFAULT_PARAMS,
       image_size: { width: 1024, height: 1024 },
     },
   });
@@ -206,7 +342,7 @@ export async function callFalFluxImg2Img(
 
 export async function callFalNanoBananaEdit(
   input: CallFalNanoBananaEditInput,
-): Promise<CallFalNanoBananaEditResult> {
+): Promise<FalImageJobResult> {
   return callFalImageEndpoint({
     endpoint: FAL_NANO_BANANA_EDIT_ENDPOINT,
     apiKey: input.apiKey,
@@ -220,6 +356,157 @@ export async function callFalNanoBananaEdit(
       aspect_ratio: "auto",
       limit_generations: true,
       num_images: 1,
+    },
+  });
+}
+
+export async function callFalClarityUpscaler(
+  input: CallFalClarityUpscalerInput,
+): Promise<FalImageJobResult> {
+  const imageUrl = await resolveFalInputUrl({
+    base64: input.imageBase64,
+    mimeType: input.imageMimeType,
+    apiKey: input.apiKey,
+    fileName: "clarity-upscaler-input",
+    imageUrl: input.imageUrl,
+  });
+
+  return callFalImageEndpoint({
+    endpoint: FAL_CLARITY_UPSCALER_ENDPOINT,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: {
+      image_url: imageUrl,
+      scale: input.scale ?? 2,
+    },
+  });
+}
+
+export async function callFalFluxIpAdapter(
+  input: CallFalFluxIpAdapterInput,
+): Promise<FalImageJobResult> {
+  const imageUrl = await resolveFalInputUrl({
+    base64: input.referenceBase64,
+    mimeType: input.referenceMimeType,
+    apiKey: input.apiKey,
+    fileName: "flux-ip-adapter-reference",
+    imageUrl: input.imageUrl,
+  });
+
+  return callFalImageEndpoint({
+    endpoint: FAL_FLUX_GENERAL_IMAGE_TO_IMAGE_ENDPOINT,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: {
+      image_url: imageUrl,
+      prompt: input.prompt,
+      ip_adapters: [
+        {
+          path: FAL_IP_ADAPTER_PATH,
+          image_encoder_path: FAL_IP_ADAPTER_IMAGE_ENCODER_PATH,
+          image_url: imageUrl,
+          scale: input.weight ?? 0.55,
+        },
+      ],
+      ...FAL_FLUX_DEFAULT_PARAMS,
+      image_size: { width: 1024, height: 1024 },
+    },
+  });
+}
+
+export async function callFalFluxControlNet(
+  input: CallFalFluxControlNetInput,
+): Promise<FalImageJobResult> {
+  const imageUrl = await resolveFalInputUrl({
+    base64: input.controlImageBase64,
+    mimeType: input.controlImageMimeType,
+    apiKey: input.apiKey,
+    fileName: "flux-controlnet-image",
+    imageUrl: input.imageUrl,
+  });
+
+  return callFalImageEndpoint({
+    endpoint: FAL_FLUX_GENERAL_IMAGE_TO_IMAGE_ENDPOINT,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: {
+      image_url: imageUrl,
+      prompt: input.prompt,
+      controlnets: [
+        {
+          path: getControlnetPath(input.controlType),
+          control_image_url: imageUrl,
+          conditioning_scale: input.conditioningScale ?? 0.65,
+        },
+      ],
+      ...FAL_FLUX_DEFAULT_PARAMS,
+      image_size: { width: 1024, height: 1024 },
+    },
+  });
+}
+
+export async function callFalFluxFill(
+  input: CallFalFluxFillInput,
+): Promise<FalImageJobResult> {
+  const [imageUrl, maskUrl] = await Promise.all([
+    resolveFalInputUrl({
+      base64: input.imageBase64,
+      mimeType: input.imageMimeType,
+      apiKey: input.apiKey,
+      fileName: "flux-fill-image",
+      imageUrl: input.imageUrl,
+    }),
+    resolveFalInputUrl({
+      base64: input.maskBase64,
+      mimeType: input.maskMimeType,
+      apiKey: input.apiKey,
+      fileName: "flux-fill-mask",
+      imageUrl: input.maskUrl,
+    }),
+  ]);
+
+  return callFalImageEndpoint({
+    endpoint: FAL_FLUX_FILL_ENDPOINT,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: {
+      image_url: imageUrl,
+      mask_url: maskUrl,
+      prompt: input.prompt,
+      ...FAL_FLUX_DEFAULT_PARAMS,
+    },
+  });
+}
+
+export async function callFalWorkflow(
+  input: CallFalWorkflowInput,
+): Promise<FalImageJobResult> {
+  return callFalImageEndpoint({
+    endpoint: `https://queue.fal.run/workflows/${input.slug}`,
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    body: input.input,
+  });
+}
+
+export async function callFalReferenceToIpAdapterWorkflow(
+  input: CallFalReferenceToIpAdapterWorkflowInput,
+): Promise<FalImageJobResult> {
+  const referenceImageUrl = await resolveFalInputUrl({
+    base64: input.referenceBase64,
+    mimeType: input.referenceMimeType,
+    apiKey: input.apiKey,
+    fileName: "reference-to-ipadapter-workflow-reference",
+    imageUrl: input.imageUrl,
+  });
+
+  return callFalWorkflow({
+    slug: "duegosystem/reference-to-ipadapter-v1",
+    apiKey: input.apiKey,
+    timeoutMs: input.timeoutMs,
+    input: {
+      prompt: input.prompt,
+      reference_image_url: referenceImageUrl,
     },
   });
 }

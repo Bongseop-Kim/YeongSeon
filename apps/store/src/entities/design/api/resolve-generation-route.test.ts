@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { resolveGenerationRoute } from "@/entities/design/api/resolve-generation-route";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  resolveGenerationRoute,
+  resolveGenerationRouteAsync,
+} from "@/entities/design/api/resolve-generation-route";
+import * as classifier from "@/entities/design/api/route-classifier";
 
 const createInput = (
   overrides: Partial<Parameters<typeof resolveGenerationRoute>[0]> = {},
@@ -9,11 +13,34 @@ const createInput = (
   hasReferenceImage: false,
   hasPreviousGeneratedImage: false,
   selectedPreviewImageUrl: null,
+  detectedPattern: null,
   ...overrides,
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("resolveGenerationRoute", () => {
   it.each([
+    {
+      title: "sharp edge 체크 반복 요청은 fal_controlnet으로 보낸다",
+      input: createInput({
+        userMessage: "첨부한 이미지를 반복 패턴으로 만들어줘",
+        hasCiImage: true,
+        detectedPattern: " Check ",
+      }),
+      expected: {
+        route: "fal_controlnet" as const,
+        reason: "sharp_edge_pattern_repeat" as const,
+        signals: [
+          "ci_image_present",
+          "pattern_repeat",
+          "new_generation",
+          "preserve_identity",
+        ] as const,
+      },
+    },
     {
       title: "CI 첨부 + 올 패턴은 fal_tiling으로 보낸다",
       input: createInput({
@@ -397,6 +424,84 @@ describe("resolveGenerationRoute", () => {
       reason: "similar_mood_or_new_generation",
       usedIntentRouter: false,
       signals: ["previous_generated_image_present", "new_generation"],
+    });
+  });
+});
+
+describe("resolveGenerationRouteAsync", () => {
+  it("LLM 결과가 유효하면 해당 route를 사용한다", async () => {
+    vi.spyOn(classifier, "classifyRouteWithLlm").mockResolvedValueOnce({
+      route: "fal_inpaint",
+      signals: ["edit_only"],
+      confidence: 0.9,
+      source: "llm",
+    });
+
+    const result = await resolveGenerationRouteAsync({
+      userMessage: "이 부분만 수정",
+      hasCiImage: false,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: true,
+      selectedPreviewImageUrl: null,
+      detectedPattern: null,
+    });
+
+    expect(result).toEqual({
+      route: "fal_inpaint",
+      reason: "llm_classifier",
+      signals: ["edit_only"],
+      usedIntentRouter: false,
+      source: "llm",
+    });
+  });
+
+  it("LLM이 null이면 heuristic 폴백을 사용한다", async () => {
+    vi.spyOn(classifier, "classifyRouteWithLlm").mockResolvedValueOnce(null);
+
+    const result = await resolveGenerationRouteAsync({
+      userMessage: "새 디자인",
+      hasCiImage: false,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: false,
+      selectedPreviewImageUrl: null,
+      detectedPattern: null,
+    });
+
+    expect(result.source).toBe("heuristic");
+    expect(result.route).toBe("openai");
+  });
+
+  it("sharp-edge 반복 패턴은 LLM이 fal_tiling을 반환해도 fal_controlnet을 유지한다", async () => {
+    const classifyRouteWithLlmSpy = vi
+      .spyOn(classifier, "classifyRouteWithLlm")
+      .mockResolvedValueOnce({
+        route: "fal_tiling",
+        signals: ["pattern_repeat"],
+        confidence: 0.95,
+        source: "llm",
+      });
+
+    const result = await resolveGenerationRouteAsync({
+      userMessage: "첨부한 이미지를 반복 패턴으로 만들어줘",
+      hasCiImage: true,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: false,
+      selectedPreviewImageUrl: null,
+      detectedPattern: " Stripe ",
+    });
+
+    expect(classifyRouteWithLlmSpy).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      route: "fal_controlnet",
+      reason: "sharp_edge_pattern_repeat",
+      signals: [
+        "ci_image_present",
+        "pattern_repeat",
+        "new_generation",
+        "preserve_identity",
+      ],
+      usedIntentRouter: false,
+      source: "heuristic",
     });
   });
 });

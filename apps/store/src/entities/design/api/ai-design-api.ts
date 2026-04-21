@@ -8,6 +8,11 @@ import {
   toDesignTokenHistoryItem,
   type DesignTokenRow,
 } from "@/entities/design/api/ai-design-mapper";
+import { falProvider } from "@/entities/design/api/providers/fal-provider";
+import { geminiProvider } from "@/entities/design/api/providers/gemini-provider";
+import { openaiProvider } from "@/entities/design/api/providers/openai-provider";
+import { parseEdgeErrorResponse } from "@/entities/design/api/providers/parse-edge-error";
+import { runProviderChain } from "@/entities/design/api/providers/provider-chain";
 import { resolveGenerationRoute } from "@/entities/design/api/resolve-generation-route";
 import { shouldUseFalPipeline } from "@/entities/design/api/should-use-fal-pipeline";
 import { tileLogoOnCanvas } from "@/entities/design/api/tile-logo-on-canvas";
@@ -96,11 +101,15 @@ function safeCapture(
   }
 }
 
-const isFalPipelineEnabled = () =>
-  import.meta.env.VITE_FALAI_CI_PATTERN_ENABLED === "true";
-
-const getFallbackFunctionName = (request: AiDesignRequest) =>
-  request.aiModel === "openai" ? "generate-open-api" : "generate-google-api";
+const getErrorResponseBody = async (
+  error: unknown,
+): Promise<{ error?: string; balance?: number; cost?: number } | null> => {
+  return (await parseEdgeErrorResponse(error)) as {
+    error?: string;
+    balance?: number;
+    cost?: number;
+  };
+};
 
 export async function aiDesignApi(
   request: AiDesignRequest,
@@ -111,6 +120,7 @@ export async function aiDesignApi(
     hasReferenceImage: !!request.designContext.referenceImage,
     hasPreviousGeneratedImage: !!request.baseImageUrl,
     selectedPreviewImageUrl: request.baseImageUrl ?? null,
+    detectedPattern: request.designContext.pattern,
   });
 
   const [ciImageBase64, referenceImageBase64] = await Promise.all([
@@ -122,22 +132,44 @@ export async function aiDesignApi(
       : Promise.resolve(undefined),
   ]);
 
-  const useFalTiling = shouldUseFalPipeline({
+  const useFalTiling = await shouldUseFalPipeline({
     ciImageBase64,
+    referenceImageBase64,
     ciPlacement: request.designContext.ciPlacement,
     fabricMethod: request.designContext.fabricMethod,
-    autoGenerate: (request.executionMode ?? "auto") === "auto",
-    featureFlag: isFalPipelineEnabled(),
+    allowFalRender: (request.executionMode ?? "auto") !== "analysis_only",
   });
+  const backgroundPattern =
+    request.designContext.ciPlacement === "one-point" &&
+    request.designContext.colors[0]
+      ? {
+          type: "solid" as const,
+          color: request.designContext.colors[0],
+        }
+      : undefined;
 
   let tiledBase64: string | undefined;
   let tiledMimeType: string | undefined;
+  const resolvedRoute = request.route ?? routeResolution.route;
+  const shouldPrepareTiledPattern = resolvedRoute === "fal_tiling";
+  const controlStructureBase64 =
+    resolvedRoute === "fal_controlnet"
+      ? (request.structureImageBase64 ?? ciImageBase64)
+      : request.structureImageBase64;
+  const controlStructureMimeType =
+    resolvedRoute === "fal_controlnet"
+      ? (request.structureImageMimeType ??
+        request.designContext.ciImage?.type ??
+        undefined)
+      : request.structureImageMimeType;
   const canUseFalApi =
-    routeResolution.route === "fal_edit" ||
-    (routeResolution.route === "fal_tiling" && useFalTiling);
+    resolvedRoute === "fal_edit" ||
+    resolvedRoute === "fal_inpaint" ||
+    resolvedRoute === "fal_controlnet" ||
+    (resolvedRoute === "fal_tiling" && useFalTiling);
 
   if (
-    routeResolution.route === "fal_tiling" &&
+    shouldPrepareTiledPattern &&
     useFalTiling &&
     ciImageBase64 &&
     request.designContext.ciImage &&
@@ -166,94 +198,94 @@ export async function aiDesignApi(
     }
   }
 
-  const functionName = canUseFalApi
-    ? "generate-fal-api"
-    : getFallbackFunctionName(request);
+  const falPayload = buildInvokePayload(request, {
+    ciImageBase64,
+    referenceImageBase64,
+    backgroundPattern,
+    tiledBase64: shouldPrepareTiledPattern ? tiledBase64 : undefined,
+    tiledMimeType: shouldPrepareTiledPattern ? tiledMimeType : undefined,
+    route: resolvedRoute,
+    routeSignals: routeResolution.signals,
+    routeReason: routeResolution.reason,
+    routeHint: request.routeHint,
+    baseImageUrl: request.baseImageUrl,
+    baseImageWorkId: request.baseImageWorkId,
+    controlType: request.controlType,
+    structureImageBase64: controlStructureBase64,
+    structureImageMimeType: controlStructureMimeType,
+    baseImageBase64: request.baseImageBase64,
+    baseImageMimeType: request.baseImageMimeType,
+    maskBase64: request.maskBase64,
+    maskMimeType: request.maskMimeType,
+    editPrompt: request.editPrompt,
+  }) as Record<string, unknown>;
 
-  const invokePayload = canUseFalApi
-    ? buildInvokePayload(request, {
-        ciImageBase64,
-        referenceImageBase64,
-        tiledBase64:
-          routeResolution.route === "fal_tiling" ? tiledBase64 : undefined,
-        tiledMimeType:
-          routeResolution.route === "fal_tiling" ? tiledMimeType : undefined,
-        route: routeResolution.route,
-        routeSignals: routeResolution.signals,
-        routeReason: routeResolution.reason,
-        routeHint: request.routeHint,
-        baseImageUrl: request.baseImageUrl,
-        baseImageWorkId: request.baseImageWorkId,
-      })
-    : buildInvokePayload(request, {
-        ciImageBase64,
-        referenceImageBase64,
-      });
+  const defaultPayload = buildInvokePayload(request, {
+    ciImageBase64,
+    referenceImageBase64,
+    backgroundPattern,
+    routeHint: request.routeHint,
+    baseImageUrl: request.baseImageUrl,
+    baseImageWorkId: request.baseImageWorkId,
+  }) as Record<string, unknown>;
 
   const startTime = Date.now();
+  let data: unknown;
+  let providerUsed: "fal" | "openai" | "gemini";
 
-  let { data, error } = await supabase.functions.invoke(functionName, {
-    body: invokePayload,
-  });
-  let usedFallback = false;
+  try {
+    const chainResult = await runProviderChain(
+      {
+        request,
+        defaultPayload,
+        falPayload,
+        resolvedRoute,
+        canUseFalApi,
+      },
+      [falProvider, openaiProvider, geminiProvider],
+    );
 
-  if (error) {
-    const context = (error as { context?: unknown }).context;
-    if (context instanceof Response) {
-      const body = (await context.json()) as {
-        error?: string;
-        balance?: number;
-        cost?: number;
-      };
-      if (body.error === "insufficient_tokens") {
-        safeCapture("design_generation_failed", {
-          ai_model: request.aiModel,
-          error_type: "insufficient_tokens",
-        });
-        throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
-      }
+    data = chainResult.result;
+    providerUsed = chainResult.providerUsed;
+  } catch (error) {
+    const body = await getErrorResponseBody(error);
 
-      if (
-        body.error === "fal_pipeline_disabled" &&
-        routeResolution.route !== "openai"
-      ) {
-        usedFallback = true;
-        ({ data, error } = await supabase.functions.invoke(
-          getFallbackFunctionName(request),
-          {
-            body: buildInvokePayload(request, {
-              ciImageBase64,
-              referenceImageBase64,
-              routeHint: request.routeHint,
-              baseImageUrl: request.baseImageUrl,
-              baseImageWorkId: request.baseImageWorkId,
-            }),
-          },
-        ));
-      }
+    if (body?.error === "insufficient_tokens") {
+      safeCapture("design_generation_failed", {
+        ai_model: request.aiModel,
+        error_type: "insufficient_tokens",
+      });
+      throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
     }
-  }
 
-  if (error) {
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
-      pipeline: usedFallback ? "fal-ai-fallback-failed" : undefined,
+      pipeline: canUseFalApi ? "fal-ai" : undefined,
     });
-    throw new Error(`디자인 생성 실패: ${error.message}`);
+    throw new Error(
+      `디자인 생성 실패: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        cause: error,
+      },
+    );
   }
+
+  const usedFalApi = providerUsed === "fal";
 
   if (!data) {
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
-      pipeline: usedFallback ? "fal-ai-fallback-failed" : undefined,
+      pipeline: usedFalApi ? "fal-ai" : undefined,
     });
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }
 
-  const result = normalizeInvokeResponse(data, request);
-  const usedFalApi = canUseFalApi && !usedFallback;
+  const result = normalizeInvokeResponse(
+    data as Parameters<typeof normalizeInvokeResponse>[0],
+    request,
+  );
   safeCapture("design_generated", {
     ai_model: request.aiModel,
     latency_ms: Date.now() - startTime,

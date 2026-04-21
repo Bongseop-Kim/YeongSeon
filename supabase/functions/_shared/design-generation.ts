@@ -20,7 +20,12 @@ export type GenerateDesignResult = {
   workId: string;
   workflowId: string;
   analysisWorkId: string;
-  route?: "openai" | "fal_tiling" | "fal_edit";
+  route?:
+    | "openai"
+    | "fal_tiling"
+    | "fal_edit"
+    | "fal_controlnet"
+    | "fal_inpaint";
   routeSignals?: string[];
   routeReason?: string | null;
   falRequestId?: string | null;
@@ -162,7 +167,13 @@ export type LogContext = {
   textPrompt?: string | null;
   imagePrompt?: string | null;
   imageEditPrompt?: string | null;
-  route?: "openai" | "fal_tiling" | "fal_edit" | null;
+  route?:
+    | "openai"
+    | "fal_tiling"
+    | "fal_edit"
+    | "fal_controlnet"
+    | "fal_inpaint"
+    | null;
   routeReason?: string | null;
   routeSignals?: string[] | null;
   baseImageWorkId?: string | null;
@@ -211,6 +222,16 @@ export const normalizeScale = (
 ): NormalizedDesignContext["scale"] =>
   value === "large" || value === "medium" || value === "small" ? value : null;
 
+export const normalizePositionIntent = (
+  value: unknown,
+): DetectedDesign["positionIntent"] =>
+  value === "move-left" ||
+  value === "move-right" ||
+  value === "move-up" ||
+  value === "move-down"
+    ? value
+    : null;
+
 export const normalizeDetectedDesign = (
   value: unknown,
 ): DetectedDesign | null => {
@@ -225,6 +246,7 @@ export const normalizeDetectedDesign = (
     ciPlacement:
       typeof record.ciPlacement === "string" ? record.ciPlacement : null,
     scale: normalizeScale(record.scale),
+    positionIntent: normalizePositionIntent(record.positionIntent),
   };
 };
 

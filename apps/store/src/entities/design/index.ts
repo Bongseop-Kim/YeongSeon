@@ -1,5 +1,9 @@
 export { aiDesignApi, InsufficientTokensError } from "./api/ai-design-api";
 export { resolveGenerationRoute } from "./api/resolve-generation-route";
+export {
+  buildAnalysisReuseKey,
+  createAnalysisReuseKeyForContext,
+} from "./api/analysis-reuse-key";
 export type {
   AiDesignRequest,
   GenerationRoute,

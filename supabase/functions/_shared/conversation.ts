@@ -8,6 +8,7 @@ export type DetectedDesign = {
   colors: string[];
   ciPlacement: string | null;
   scale: "large" | "medium" | "small" | null;
+  positionIntent: "move-left" | "move-right" | "move-up" | "move-down" | null;
 };
 
 export const MAX_TURN_CONTENT_LENGTH = 10_000;

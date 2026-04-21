@@ -4,6 +4,7 @@ import type {
   FalGenerationRoute,
   GenerateDesignRequest,
 } from "./design-request.ts";
+import type { ExecutionMode } from "@/functions/_shared/design-generation.ts";
 
 const ALLOWED_FABRIC_METHODS = new Set(["yarn-dyed", "print"]);
 const ALLOWED_CI_PLACEMENTS = new Set(["all-over", "one-point"]);
@@ -30,7 +31,10 @@ export const ALLOWED_TILED_MIME_TYPES = new Set([
 const ALLOWED_FAL_ROUTES = new Set<FalGenerationRoute>([
   "fal_tiling",
   "fal_edit",
+  "fal_controlnet",
+  "fal_inpaint",
 ]);
+const ALLOWED_CONTROL_TYPES = new Set(["lineart", "edge", "depth"]);
 
 type ValidationFailure = {
   ok: false;
@@ -58,19 +62,27 @@ const getFalRoute = (
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-export const validateFalGeneratePayload = (
-  payload: GenerateDesignRequest,
-): FalPayloadValidationResult => {
-  const route = getFalRoute(payload);
+const getTrimmedBase64 = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
 
-  if (!route) {
-    return {
-      ok: false,
-      status: 400,
-      body: { error: "invalid_fal_route" },
-    };
+const validateImageBase64Length = (
+  value: string,
+  error: string,
+): ValidationFailure | null => {
+  if (value.length <= MAX_IMAGE_BASE64_LENGTH) {
+    return null;
   }
 
+  return {
+    ok: false,
+    status: 413,
+    body: { error },
+  };
+};
+
+const getInvalidUserMessageFailure = (
+  payload: GenerateDesignRequest,
+): ValidationFailure | null => {
   if (
     typeof payload.userMessage !== "string" ||
     !payload.userMessage.trim() ||
@@ -81,6 +93,59 @@ export const validateFalGeneratePayload = (
       status: 400,
       body: { error: "invalid_user_message" },
     };
+  }
+
+  return null;
+};
+
+export const validateFalGeneratePayload = (
+  payload: GenerateDesignRequest,
+  executionMode: ExecutionMode = "auto",
+): FalPayloadValidationResult => {
+  const route = getFalRoute(payload);
+
+  if (executionMode === "render_from_analysis") {
+    if (
+      typeof payload.analysisWorkId !== "string" ||
+      payload.analysisWorkId.trim().length === 0
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "analysisWorkId is required for render_from_analysis" },
+      };
+    }
+
+    if (!route) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "invalid_fal_route" },
+      };
+    }
+
+    const userMessageFailure = getInvalidUserMessageFailure(payload);
+    if (userMessageFailure) {
+      return userMessageFailure;
+    }
+
+    return {
+      ok: true,
+      conversationHistory: [],
+    };
+  }
+
+  if (!route) {
+    return {
+      ok: false,
+      status: 400,
+      body: { error: "invalid_fal_route" },
+    };
+  }
+
+  const userMessageFailure = getInvalidUserMessageFailure(payload);
+  if (userMessageFailure) {
+    return userMessageFailure;
   }
 
   if (
@@ -160,7 +225,10 @@ export const validateFalGeneratePayload = (
     };
   }
 
-  if (route === "fal_tiling") {
+  let tiledBase64Trimmed = "";
+  let hasTiledInput = false;
+
+  if (route === "fal_tiling" || route === "fal_controlnet") {
     if (payload.designContext.ciPlacement !== "all-over") {
       return {
         ok: false,
@@ -169,36 +237,100 @@ export const validateFalGeneratePayload = (
       };
     }
 
+    tiledBase64Trimmed = getTrimmedBase64(payload.tiledBase64);
+    const referenceImageBase64Trimmed = getTrimmedBase64(
+      payload.referenceImageBase64,
+    );
+    hasTiledInput = tiledBase64Trimmed.length > 0;
+    const hasReferenceInput = referenceImageBase64Trimmed.length > 0;
+
+    if (route === "fal_tiling" && !hasTiledInput && !hasReferenceInput) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "fal_tiling_requires_tiled_or_reference_image" },
+      };
+    }
+
+    if (hasTiledInput) {
+      const tiledImageLengthValidation = validateImageBase64Length(
+        tiledBase64Trimmed,
+        "tiled_image_too_large",
+      );
+      if (tiledImageLengthValidation) {
+        return tiledImageLengthValidation;
+      }
+    }
+
+    if (hasReferenceInput) {
+      const referenceImageLengthValidation = validateImageBase64Length(
+        referenceImageBase64Trimmed,
+        "reference_image_too_large",
+      );
+      if (referenceImageLengthValidation) {
+        return referenceImageLengthValidation;
+      }
+    }
+
     if (
-      typeof payload.tiledBase64 !== "string" ||
-      !payload.tiledBase64.trim()
+      hasTiledInput &&
+      (typeof payload.tiledMimeType !== "string" ||
+        !payload.tiledMimeType.trim() ||
+        !ALLOWED_TILED_MIME_TYPES.has(payload.tiledMimeType))
     ) {
       return {
         ok: false,
         status: 400,
-        body: { error: "tiledBase64 must be a non-empty string" },
+        body: { error: "invalid_tiled_mime_type" },
       };
     }
+  }
 
-    if (payload.tiledBase64.length > MAX_IMAGE_BASE64_LENGTH) {
+  if (route === "fal_controlnet") {
+    const structureImageBase64Trimmed = getTrimmedBase64(
+      payload.structureImageBase64,
+    );
+    const hasStructureInput = structureImageBase64Trimmed.length > 0;
+    const controlType = payload.controlType ?? "lineart";
+
+    if (tiledBase64Trimmed.length === 0 && !hasStructureInput) {
       return {
         ok: false,
-        status: 413,
-        body: { error: "tiled_image_too_large" },
+        status: 400,
+        body: { error: "fal_controlnet_requires_structure_or_tiled_image" },
       };
     }
 
     if (
-      typeof payload.tiledMimeType !== "string" ||
-      !payload.tiledMimeType.trim() ||
-      !ALLOWED_TILED_MIME_TYPES.has(payload.tiledMimeType)
+      typeof controlType !== "string" ||
+      !ALLOWED_CONTROL_TYPES.has(controlType)
     ) {
       return {
         ok: false,
         status: 400,
-        body: {
-          error: `tiledMimeType must be one of: ${Array.from(ALLOWED_TILED_MIME_TYPES).join(", ")}`,
-        },
+        body: { error: "invalid_control_type" },
+      };
+    }
+
+    if (hasStructureInput) {
+      const structureImageLengthValidation = validateImageBase64Length(
+        structureImageBase64Trimmed,
+        "structure_image_too_large",
+      );
+      if (structureImageLengthValidation) {
+        return structureImageLengthValidation;
+      }
+    }
+
+    if (
+      hasStructureInput &&
+      (typeof payload.structureImageMimeType !== "string" ||
+        !ALLOWED_TILED_MIME_TYPES.has(payload.structureImageMimeType))
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "invalid_structure_image_mime_type" },
       };
     }
   }
@@ -212,6 +344,76 @@ export const validateFalGeneratePayload = (
       status: 400,
       body: { error: "base_image_url_required" },
     };
+  }
+
+  if (route === "fal_inpaint") {
+    const baseImageBase64Trimmed = getTrimmedBase64(payload.baseImageBase64);
+    const maskBase64Trimmed = getTrimmedBase64(payload.maskBase64);
+    const hasBaseImageUrl =
+      typeof payload.baseImageUrl === "string" &&
+      payload.baseImageUrl.trim().length > 0;
+    const hasBaseImageBase64 = baseImageBase64Trimmed.length > 0;
+    const hasMaskBase64 = maskBase64Trimmed.length > 0;
+
+    if (!hasBaseImageUrl && !hasBaseImageBase64) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "base_image_url_required" },
+      };
+    }
+
+    if (!hasMaskBase64) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "mask_base64_required" },
+      };
+    }
+
+    if (hasBaseImageBase64) {
+      const baseImageLengthValidation = validateImageBase64Length(
+        baseImageBase64Trimmed,
+        "base_image_too_large",
+      );
+      if (baseImageLengthValidation) {
+        return baseImageLengthValidation;
+      }
+    }
+
+    if (hasMaskBase64) {
+      const maskImageLengthValidation = validateImageBase64Length(
+        maskBase64Trimmed,
+        "mask_image_too_large",
+      );
+      if (maskImageLengthValidation) {
+        return maskImageLengthValidation;
+      }
+    }
+
+    if (
+      typeof payload.maskMimeType !== "string" ||
+      payload.maskMimeType.trim().length === 0 ||
+      !ALLOWED_TILED_MIME_TYPES.has(payload.maskMimeType.trim())
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "invalid_mask_mime_type" },
+      };
+    }
+
+    if (
+      typeof payload.editPrompt !== "string" ||
+      payload.editPrompt.trim().length === 0 ||
+      payload.editPrompt.length > 2000
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "edit_prompt_required" },
+      };
+    }
   }
 
   const rawConversationHistory = payload.conversationHistory;

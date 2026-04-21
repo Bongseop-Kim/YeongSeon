@@ -5,6 +5,7 @@ import {
 } from "@/features/design/hooks/ai-design-query";
 import {
   resolveGenerationRoute,
+  createAnalysisReuseKeyForContext,
   type AiDesignResponse,
   InsufficientTokensError,
   type GenerationRouteSignal,
@@ -26,6 +27,7 @@ interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
   regenerate: () => void;
   requestRender: () => void;
+  requestInpaint: (maskBase64: string, editPrompt: string) => boolean;
   isLoading: boolean;
 }
 
@@ -127,6 +129,9 @@ export function useDesignChat(
   const setLastAnalysisResult = useDesignChatStore(
     (state) => state.setLastAnalysisResult,
   );
+  const setLastAnalysisReuseKey = useDesignChatStore(
+    (state) => state.setLastAnalysisReuseKey,
+  );
   const clearAttachments = useDesignChatStore(
     (state) => state.clearAttachments,
   );
@@ -137,6 +142,7 @@ export function useDesignChat(
   const mutation = useAiDesignMutation();
 
   const createMutationCallbacks = (
+    request: Parameters<typeof mutation.mutate>[0],
     errorContent: string,
     errorStatus: "idle" | "completed",
     callbackOptions: MutationCallbackOptions = {},
@@ -154,6 +160,15 @@ export function useDesignChat(
         eligibleForRender: data.eligibleForRender ?? false,
         missingRequirements: data.missingRequirements ?? [],
       });
+      setLastAnalysisReuseKey(
+        data.analysisWorkId
+          ? createAnalysisReuseKeyForContext(
+              request.designContext,
+              request.baseImageUrl ?? null,
+              request.baseImageWorkId ?? null,
+            )
+          : null,
+      );
 
       setGenerationMetadata({
         baseImageUrl: nextBaseImageUrl,
@@ -174,6 +189,7 @@ export function useDesignChat(
         role: "ai",
         content: data.aiMessage,
         imageUrl: data.imageUrl ?? undefined,
+        workId: data.workId ?? null,
         contextChips: data.contextChips,
         timestamp: Date.now(),
       };
@@ -190,6 +206,7 @@ export function useDesignChat(
           nextMessages[index] = {
             ...message,
             imageUrl: data.imageUrl ?? message.imageUrl,
+            workId: data.workId ?? message.workId ?? null,
             contextChips:
               data.contextChips.length > 0
                 ? data.contextChips
@@ -208,7 +225,6 @@ export function useDesignChat(
       }
       setGenerationStatus("completed");
 
-      // pending flag 해제 — 서버에서 저장 완료됐으므로 알림 불필요
       onGenerationEnd?.();
 
       void queryClient.invalidateQueries({
@@ -234,8 +250,8 @@ export function useDesignChat(
       setGenerationStatus(
         error instanceof InsufficientTokensError ? "idle" : errorStatus,
       );
+      setLastAnalysisReuseKey(null);
 
-      // 에러 시에도 pending flag 해제 (생성 실패 = 확인할 결과 없음)
       onGenerationEnd?.();
     },
   });
@@ -248,7 +264,12 @@ export function useDesignChat(
   ): void => {
     mutation.mutate(
       request,
-      createMutationCallbacks(errorContent, errorStatus, callbackOptions),
+      createMutationCallbacks(
+        request,
+        errorContent,
+        errorStatus,
+        callbackOptions,
+      ),
     );
   };
 
@@ -271,6 +292,7 @@ export function useDesignChat(
       hasReferenceImage: !!designContext.referenceImage,
       hasPreviousGeneratedImage: !!baseImageUrl,
       selectedPreviewImageUrl,
+      detectedPattern: designContext.pattern,
     });
     const editIntent = isEditIntent(routeResolution.signals);
 
@@ -310,6 +332,7 @@ export function useDesignChat(
 
     onGenerationStart?.(sessionId);
     setLastAnalysisResult(createAnalysisReset());
+    setLastAnalysisReuseKey(null);
 
     const { firstUserMsg, allMessages } = toSessionPayload(nextMessages);
 
@@ -356,6 +379,7 @@ export function useDesignChat(
         .referenceImage,
       hasPreviousGeneratedImage: !!baseImageUrl,
       selectedPreviewImageUrl,
+      detectedPattern: (lastUserMessage.designContext ?? designContext).pattern,
     });
     const editIntent = isEditIntent(routeResolution.signals);
 
@@ -378,6 +402,7 @@ export function useDesignChat(
     setGenerationStatus("regenerating");
     onGenerationStart?.(sessionId);
     setLastAnalysisResult(createAnalysisReset());
+    setLastAnalysisReuseKey(null);
 
     const { firstUserMsg, allMessages } = toSessionPayload(storeState.messages);
 
@@ -406,6 +431,7 @@ export function useDesignChat(
       currentSessionId: storeSessionId,
       lastAnalysisWorkId: currentLastAnalysisWorkId,
       lastEligibleForRender: currentLastEligibleForRender,
+      lastAnalysisReuseKey: currentLastAnalysisReuseKey,
     } = storeState;
 
     if (!currentLastAnalysisWorkId || !currentLastEligibleForRender) {
@@ -423,21 +449,43 @@ export function useDesignChat(
       setCurrentSessionId(sessionId);
     }
 
+    const currentBaseImageUrl = getRawImageUrlFromPreviewBackground(
+      storeState.baseImageUrl ?? storeState.selectedPreviewImageUrl,
+    );
+    const currentBaseImageWorkId = storeState.baseImageWorkId;
+    const currentReuseKey = createAnalysisReuseKeyForContext(
+      storeState.designContext,
+      currentBaseImageUrl,
+      currentBaseImageWorkId,
+    );
+    const canReuseAnalysis = currentLastAnalysisReuseKey === currentReuseKey;
+    const executionMode = canReuseAnalysis ? "render_from_analysis" : "auto";
+
     setGenerationStatus("rendering");
     onGenerationStart?.(sessionId);
+    if (!canReuseAnalysis) {
+      setLastAnalysisResult(createAnalysisReset());
+      setLastAnalysisReuseKey(null);
+    }
 
     submitDesignRequest(
       {
         userMessage: firstUserMsg.content,
         attachments: firstUserMsg.attachments ?? [],
-        designContext: firstUserMsg.designContext ?? storeState.designContext,
+        designContext: storeState.designContext,
         aiModel,
         conversationHistory: toConversationHistory(storeState.messages),
         sessionId,
         firstMessage: firstUserMsg.content,
         allMessages,
-        executionMode: "render_from_analysis",
-        analysisWorkId: currentLastAnalysisWorkId,
+        executionMode,
+        analysisWorkId: canReuseAnalysis ? currentLastAnalysisWorkId : null,
+        ...(currentBaseImageUrl
+          ? {
+              baseImageUrl: currentBaseImageUrl,
+              baseImageWorkId: currentBaseImageWorkId,
+            }
+          : {}),
       },
       "죄송합니다. 이미지 렌더링 중 오류가 발생했습니다. 다시 시도해 주세요.",
       "completed",
@@ -447,10 +495,88 @@ export function useDesignChat(
     );
   };
 
+  const requestInpaint = (maskBase64: string, editPrompt: string): boolean => {
+    const trimmedPrompt = editPrompt.trim();
+    if (maskBase64.trim().length === 0 || trimmedPrompt.length === 0) {
+      return false;
+    }
+
+    const storeState = useDesignChatStore.getState();
+    const aiModel = storeState.aiModel;
+    const isInpaintTarget = Boolean(storeState.inpaintTarget);
+    const targetImageUrl = isInpaintTarget
+      ? (storeState.inpaintTarget?.imageUrl ?? null)
+      : getRawImageUrlFromPreviewBackground(
+          storeState.baseImageUrl ?? storeState.selectedPreviewImageUrl,
+        );
+    const targetImageWorkId = isInpaintTarget
+      ? (storeState.inpaintTarget?.imageWorkId ?? null)
+      : storeState.baseImageWorkId;
+
+    if (!targetImageUrl) {
+      addMessage({
+        id: crypto.randomUUID(),
+        role: "ai",
+        content: EDIT_BASE_IMAGE_REQUIRED_MESSAGE,
+        timestamp: Date.now(),
+        uiOnly: true,
+      });
+      return false;
+    }
+
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: trimmedPrompt,
+      timestamp: Date.now(),
+      designContext: storeState.designContext,
+    };
+    const nextMessages = [...storeState.messages, userMessage];
+    const sessionId = storeState.currentSessionId ?? crypto.randomUUID();
+
+    if (!storeState.currentSessionId) {
+      setCurrentSessionId(sessionId);
+    }
+
+    addMessage(userMessage);
+    setGenerationStatus("rendering");
+    onGenerationStart?.(sessionId);
+    setLastAnalysisResult(createAnalysisReset());
+    setLastAnalysisReuseKey(null);
+
+    const { firstUserMsg, allMessages } = toSessionPayload(nextMessages);
+
+    submitDesignRequest(
+      {
+        userMessage: trimmedPrompt,
+        attachments: [],
+        designContext: storeState.designContext,
+        aiModel,
+        conversationHistory: toConversationHistory(nextMessages),
+        sessionId,
+        firstMessage: firstUserMsg?.content ?? trimmedPrompt,
+        allMessages,
+        executionMode: "auto",
+        analysisWorkId: null,
+        route: "fal_inpaint",
+        baseImageUrl: targetImageUrl,
+        baseImageWorkId: targetImageWorkId,
+        maskBase64,
+        maskMimeType: "image/png",
+        editPrompt: trimmedPrompt,
+      },
+      "죄송합니다. 부분 수정 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      "completed",
+    );
+
+    return true;
+  };
+
   return {
     sendMessage,
     regenerate,
     requestRender,
+    requestInpaint,
     isLoading:
       generationStatus === "generating" ||
       generationStatus === "regenerating" ||

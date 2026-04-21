@@ -54,6 +54,8 @@ interface DesignChatState {
   lastAnalysisWorkId: string | null;
   lastEligibleForRender: boolean;
   lastMissingRequirements: string[];
+  lastAnalysisReuseKey: string | null;
+  inpaintTarget: { imageUrl: string; imageWorkId: string | null } | null;
   addMessage: (message: Message) => void;
   setDesignContext: (patch: Partial<DesignContext>) => void;
   addAttachment: (attachment: Attachment) => void;
@@ -77,6 +79,9 @@ interface DesignChatState {
     eligibleForRender: boolean;
     missingRequirements: string[];
   }) => void;
+  setLastAnalysisReuseKey: (value: string | null) => void;
+  openInpaintDialog: (imageUrl: string, imageWorkId?: string | null) => void;
+  closeInpaintDialog: () => void;
   restoreMessages: (messages: Message[]) => void;
   restoreSessionState: (
     sessionId: string,
@@ -100,6 +105,7 @@ const createLastAnalysisReset = () => ({
   lastAnalysisWorkId: null as string | null,
   lastEligibleForRender: false,
   lastMissingRequirements: [] as string[],
+  lastAnalysisReuseKey: null as string | null,
 });
 
 const createRouteMetadataReset = () => ({
@@ -121,6 +127,10 @@ const createConversationResetState = () => ({
   currentSessionId: null as string | null,
   baseImageUrl: null as string | null,
   baseImageWorkId: null as string | null,
+  inpaintTarget: null as {
+    imageUrl: string;
+    imageWorkId: string | null;
+  } | null,
   ...createRouteMetadataReset(),
   ...createLastAnalysisReset(),
 });
@@ -190,6 +200,21 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       lastEligibleForRender: input.eligibleForRender,
       lastMissingRequirements: input.missingRequirements,
     }),
+  setLastAnalysisReuseKey: (value) =>
+    set({
+      lastAnalysisReuseKey: value,
+    }),
+  openInpaintDialog: (imageUrl, imageWorkId = null) =>
+    set({
+      inpaintTarget: {
+        imageUrl,
+        imageWorkId,
+      },
+    }),
+  closeInpaintDialog: () =>
+    set({
+      inpaintTarget: null,
+    }),
   resetConversation: () => set(createConversationResetState()),
   restoreMessages: (messages) => set({ messages }),
   restoreSessionState: (sessionId, sessionState) =>
@@ -200,6 +225,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
         sessionState.generatedImageUrl,
       ),
       baseImageWorkId: sessionState.baseImageWorkId,
+      inpaintTarget: null,
       currentSessionId: sessionId,
       pendingAttachments: [],
       ...createRouteMetadataReset(),

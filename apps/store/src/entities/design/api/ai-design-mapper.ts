@@ -12,6 +12,7 @@ import type {
   FabricMethod,
   PatternOption,
 } from "@/entities/design/model/design-context";
+import type { BackgroundPattern } from "@yeongseon/shared/types/design/background-pattern";
 
 export interface DesignTokenRow {
   id: string;
@@ -131,6 +132,7 @@ export const getTags = (request: AiDesignRequest): string[] => {
 interface InvokePayloadInput {
   ciImageBase64?: string;
   referenceImageBase64?: string;
+  backgroundPattern?: BackgroundPattern;
   tiledBase64?: string;
   tiledMimeType?: string;
   route?: AiDesignResponse["route"];
@@ -139,6 +141,14 @@ interface InvokePayloadInput {
   routeHint?: AiDesignRequest["routeHint"];
   baseImageUrl?: AiDesignRequest["baseImageUrl"];
   baseImageWorkId?: AiDesignRequest["baseImageWorkId"];
+  controlType?: AiDesignRequest["controlType"];
+  structureImageBase64?: AiDesignRequest["structureImageBase64"];
+  structureImageMimeType?: AiDesignRequest["structureImageMimeType"];
+  baseImageBase64?: AiDesignRequest["baseImageBase64"];
+  baseImageMimeType?: AiDesignRequest["baseImageMimeType"];
+  maskBase64?: AiDesignRequest["maskBase64"];
+  maskMimeType?: AiDesignRequest["maskMimeType"];
+  editPrompt?: AiDesignRequest["editPrompt"];
 }
 
 type InvokePayload = {
@@ -149,6 +159,7 @@ type InvokePayload = {
     fabricMethod: AiDesignRequest["designContext"]["fabricMethod"];
     ciPlacement: AiDesignRequest["designContext"]["ciPlacement"];
     scale: AiDesignRequest["designContext"]["scale"];
+    backgroundPattern?: BackgroundPattern;
   };
   conversationHistory: NonNullable<AiDesignRequest["conversationHistory"]>;
   ciImageBase64: string | undefined;
@@ -168,6 +179,14 @@ type InvokePayload = {
   routeHint?: AiDesignRequest["routeHint"];
   baseImageUrl?: AiDesignRequest["baseImageUrl"];
   baseImageWorkId?: AiDesignRequest["baseImageWorkId"];
+  controlType?: AiDesignRequest["controlType"];
+  structureImageBase64?: AiDesignRequest["structureImageBase64"];
+  structureImageMimeType?: AiDesignRequest["structureImageMimeType"];
+  baseImageBase64?: AiDesignRequest["baseImageBase64"];
+  baseImageMimeType?: AiDesignRequest["baseImageMimeType"];
+  maskBase64?: AiDesignRequest["maskBase64"];
+  maskMimeType?: AiDesignRequest["maskMimeType"];
+  editPrompt?: AiDesignRequest["editPrompt"];
 };
 
 interface InvokeResponseBody {
@@ -271,7 +290,7 @@ const normalizeGenerationRouteReason = (
 export function buildInvokePayload(
   request: AiDesignRequest,
   input: InvokePayloadInput = {},
-) {
+): InvokePayload {
   const payload: InvokePayload = {
     userMessage: request.userMessage,
     designContext: {
@@ -280,6 +299,9 @@ export function buildInvokePayload(
       fabricMethod: request.designContext.fabricMethod,
       ciPlacement: request.designContext.ciPlacement,
       scale: request.designContext.scale,
+      ...(input.backgroundPattern != null
+        ? { backgroundPattern: input.backgroundPattern }
+        : {}),
     },
     conversationHistory: request.conversationHistory ?? [],
     ciImageBase64: input.ciImageBase64,
@@ -318,6 +340,38 @@ export function buildInvokePayload(
 
   if (input.baseImageWorkId !== undefined) {
     payload.baseImageWorkId = input.baseImageWorkId;
+  }
+
+  if (input.controlType !== undefined) {
+    payload.controlType = input.controlType;
+  }
+
+  if (input.structureImageBase64 !== undefined) {
+    payload.structureImageBase64 = input.structureImageBase64;
+  }
+
+  if (input.structureImageMimeType !== undefined) {
+    payload.structureImageMimeType = input.structureImageMimeType;
+  }
+
+  if (input.baseImageBase64 !== undefined) {
+    payload.baseImageBase64 = input.baseImageBase64;
+  }
+
+  if (input.baseImageMimeType !== undefined) {
+    payload.baseImageMimeType = input.baseImageMimeType;
+  }
+
+  if (input.maskBase64 !== undefined) {
+    payload.maskBase64 = input.maskBase64;
+  }
+
+  if (input.maskMimeType !== undefined) {
+    payload.maskMimeType = input.maskMimeType;
+  }
+
+  if (input.editPrompt !== undefined) {
+    payload.editPrompt = input.editPrompt;
   }
 
   return payload;

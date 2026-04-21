@@ -10,6 +10,8 @@ export const GENERATION_ROUTE_VALUES = [
   "openai",
   "fal_tiling",
   "fal_edit",
+  "fal_controlnet",
+  "fal_inpaint",
 ] as const;
 
 export type GenerationRoute = (typeof GENERATION_ROUTE_VALUES)[number];
@@ -33,9 +35,11 @@ export type GenerationRouteSignal =
 
 export const GENERATION_ROUTE_REASON_VALUES = [
   "ci_image_with_pattern_repeat",
+  "sharp_edge_pattern_repeat",
   "existing_result_edit_request",
   "similar_mood_or_new_generation",
   "default_openai_generation",
+  "llm_classifier",
 ] as const;
 
 export type GenerationRouteReason =
@@ -72,4 +76,13 @@ export interface AiDesignRequest extends AiDesignRouteHint {
   allMessages: SessionMessagePayload[];
   analysisWorkId?: string | null;
   executionMode?: "auto" | "analysis_only" | "render_from_analysis";
+  route?: Exclude<GenerationRoute, "openai">;
+  controlType?: "lineart" | "edge" | "depth";
+  structureImageBase64?: string;
+  structureImageMimeType?: string;
+  baseImageBase64?: string;
+  baseImageMimeType?: string;
+  maskBase64?: string;
+  maskMimeType?: string;
+  editPrompt?: string;
 }

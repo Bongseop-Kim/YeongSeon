@@ -1,15 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 
+import { createAnalysisReuseKeyForContext } from "@/entities/design";
 import { ChatHeader } from "@/features/design/components/chat/chat-header";
 import { TiePreviewModal } from "@/features/design/components/chat/tie-preview-modal";
-import { ChatInput } from "@/features/design/components/chat/chat-input";
+import {
+  ChatInput,
+  type ChatInputHandle,
+} from "@/features/design/components/chat/chat-input";
 import { MessageList } from "@/features/design/components/chat/message-list";
+import { InpaintDialog } from "@/features/design/components/inpaint/inpaint-dialog";
 import {
   QUICK_CHIPS,
   WELCOME_MESSAGE,
 } from "@/features/design/constants/welcome";
 import { useDesignTokenBalanceQuery } from "@/features/design/hooks/ai-design-query";
+import {
+  toAnalysisMissingRequirementLabels,
+  toAnalysisSummaryChips,
+} from "@/features/design/lib/analysis-status";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
 import { cn } from "@/shared/lib/utils";
@@ -17,12 +26,16 @@ import { cn } from "@/shared/lib/utils";
 interface ChatPanelProps {
   className?: string;
   sendMessage: (text: string, attachments: Attachment[]) => void;
+  requestRender?: () => void;
+  requestInpaint: (maskBase64: string, editPrompt: string) => boolean;
   onOpenHistory: () => void;
 }
 
 export function ChatPanel({
   className,
   sendMessage,
+  requestRender,
+  requestInpaint,
   onOpenHistory,
 }: ChatPanelProps) {
   const messages = useDesignChatStore((state) => state.messages);
@@ -42,6 +55,28 @@ export function ChatPanel({
   const setSelectedPreviewImage = useDesignChatStore(
     (state) => state.setSelectedPreviewImage,
   );
+  const inpaintTarget = useDesignChatStore((state) => state.inpaintTarget);
+  const openInpaintDialog = useDesignChatStore(
+    (state) => state.openInpaintDialog,
+  );
+  const closeInpaintDialog = useDesignChatStore(
+    (state) => state.closeInpaintDialog,
+  );
+  const lastAnalysisWorkId = useDesignChatStore(
+    (state) => state.lastAnalysisWorkId,
+  );
+  const lastEligibleForRender = useDesignChatStore(
+    (state) => state.lastEligibleForRender,
+  );
+  const lastMissingRequirements = useDesignChatStore(
+    (state) => state.lastMissingRequirements,
+  );
+  const lastAnalysisReuseKey = useDesignChatStore(
+    (state) => state.lastAnalysisReuseKey,
+  );
+  const designContext = useDesignChatStore((state) => state.designContext);
+  const baseImageUrl = useDesignChatStore((state) => state.baseImageUrl);
+  const baseImageWorkId = useDesignChatStore((state) => state.baseImageWorkId);
 
   const isGenerating =
     generationStatus === "generating" ||
@@ -49,6 +84,14 @@ export function ChatPanel({
     generationStatus === "rendering";
 
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [pendingInpaintClose, setPendingInpaintClose] = useState(false);
+  const [hasObservedInpaintGeneration, setHasObservedInpaintGeneration] =
+    useState(false);
+  const inputRef = useRef<ChatInputHandle>(null);
+  const inpaintTargetKey = inpaintTarget
+    ? `${inpaintTarget.imageUrl}::${inpaintTarget.imageWorkId ?? ""}`
+    : null;
+  const previousInpaintTargetKeyRef = useRef<string | null>(inpaintTargetKey);
 
   useEffect(() => {
     if (!selectedImageUrl) return;
@@ -59,9 +102,80 @@ export function ChatPanel({
     };
   }, [selectedImageUrl]);
 
+  useEffect(() => {
+    if (previousInpaintTargetKeyRef.current !== inpaintTargetKey) {
+      setPendingInpaintClose(false);
+      setHasObservedInpaintGeneration(false);
+      previousInpaintTargetKeyRef.current = inpaintTargetKey;
+    }
+  }, [inpaintTargetKey]);
+
+  useEffect(() => {
+    if (!pendingInpaintClose) {
+      return;
+    }
+
+    if (isGenerating) {
+      setHasObservedInpaintGeneration(true);
+      return;
+    }
+
+    if (!hasObservedInpaintGeneration) {
+      return;
+    }
+
+    closeInpaintDialog();
+    setPendingInpaintClose(false);
+    setHasObservedInpaintGeneration(false);
+  }, [
+    closeInpaintDialog,
+    hasObservedInpaintGeneration,
+    isGenerating,
+    pendingInpaintClose,
+  ]);
+
   const handleChipClick = (text: string) => {
     sendMessage(text, pendingAttachments);
   };
+
+  const handleCloseInpaintDialog = () => {
+    setPendingInpaintClose(false);
+    setHasObservedInpaintGeneration(false);
+    closeInpaintDialog();
+  };
+  const handleInpaintSubmit = (maskBase64: string, editPrompt: string) => {
+    const requestStarted = requestInpaint(maskBase64, editPrompt);
+
+    if (!requestStarted) {
+      handleCloseInpaintDialog();
+      return;
+    }
+
+    setPendingInpaintClose(true);
+    setHasObservedInpaintGeneration(false);
+  };
+  const latestAiMessage = [...messages]
+    .reverse()
+    .find((message) => message.role === "ai" && !message.uiOnly);
+  const currentAnalysisReuseKey = createAnalysisReuseKeyForContext(
+    designContext,
+    baseImageUrl,
+    baseImageWorkId,
+  );
+  const analysisState =
+    generationStatus === "completed" &&
+    lastAnalysisWorkId &&
+    latestAiMessage &&
+    lastAnalysisReuseKey === currentAnalysisReuseKey
+      ? {
+          visibleMessageId: latestAiMessage.id,
+          eligibleForRender: lastEligibleForRender,
+          missingRequirements: toAnalysisMissingRequirementLabels(
+            lastMissingRequirements,
+          ),
+          summaryChips: toAnalysisSummaryChips(designContext),
+        }
+      : null;
 
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
@@ -100,10 +214,17 @@ export function ChatPanel({
           <MessageList
             messages={messages}
             isTyping={isGenerating}
+            analysisState={analysisState}
             onChipClick={handleChipClick}
             onTiePreviewClick={(url) => setSelectedImageUrl(url)}
             selectedPreviewImageUrl={selectedPreviewImageUrl}
             onSelectPreview={setSelectedPreviewImage}
+            onRequestInpaint={(url, imageWorkId) =>
+              openInpaintDialog(url, imageWorkId)
+            }
+            onRequestRender={requestRender}
+            onOpenOptions={() => inputRef.current?.openOptions()}
+            onFocusInput={() => inputRef.current?.focus()}
           />
         )}
       </div>
@@ -113,8 +234,25 @@ export function ChatPanel({
           onClose={() => setSelectedImageUrl(null)}
         />
       )}
+      {inpaintTarget ? (
+        <InpaintDialog
+          open
+          imageUrl={inpaintTarget.imageUrl}
+          isSubmitting={isGenerating}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              handleCloseInpaintDialog();
+            }
+          }}
+          onSubmit={handleInpaintSubmit}
+        />
+      ) : null}
       <div className="shrink-0 border-t p-2">
-        <ChatInput onSend={sendMessage} isLoading={isGenerating} />
+        <ChatInput
+          ref={inputRef}
+          onSend={sendMessage}
+          isLoading={isGenerating}
+        />
       </div>
     </div>
   );

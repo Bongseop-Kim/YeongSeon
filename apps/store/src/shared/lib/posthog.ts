@@ -1,7 +1,12 @@
 import posthog from "posthog-js";
 
 type AiModel = "openai" | "gemini";
-type GenerationRoute = "openai" | "fal_tiling" | "fal_edit";
+type GenerationRoute =
+  | "openai"
+  | "fal_tiling"
+  | "fal_edit"
+  | "fal_controlnet"
+  | "fal_inpaint";
 
 type PhEventParamsMap = {
   design_session_started: { ai_model: AiModel };
@@ -20,7 +25,7 @@ type PhEventParamsMap = {
       | "insufficient_tokens"
       | "api_error"
       | "tile_logo_on_canvas_failed";
-    pipeline?: "fal-ai" | "fal-ai-fallback-failed";
+    pipeline?: "fal-ai";
     scale?: "large" | "medium" | "small";
     colors?: string[];
     fabric_method?: "yarn-dyed" | "print" | null;

@@ -46,6 +46,26 @@ describe("MessageBubble — 모바일 넥타이 프리뷰", () => {
 
     expect(screen.queryByRole("button", { name: /넥타이 프리뷰/i })).toBeNull();
   });
+
+  it("analysisState가 현재 메시지에 연결되면 분석 카드를 렌더링한다", () => {
+    render(
+      <MessageBubble
+        message={{ ...baseMessage }}
+        analysisState={{
+          visibleMessageId: "msg-1",
+          eligibleForRender: true,
+          missingRequirements: [],
+          summaryChips: ["네이비"],
+        }}
+        onRequestRender={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("분석 완료")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "이대로 렌더링" }),
+    ).toBeInTheDocument();
+  });
 });
 
 describe("MessageBubble — PC 넥타이 썸네일", () => {
@@ -131,5 +151,29 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
     expect(
       screen.queryByRole("button", { name: "넥타이 프리뷰 선택" }),
     ).toBeNull();
+  });
+
+  it("AI 이미지가 있으면 부분 수정 버튼을 렌더링하고 콜백을 호출한다", async () => {
+    const onRequestInpaint = vi.fn();
+
+    render(
+      <MessageBubble
+        message={{
+          ...baseMessage,
+          imageUrl: "https://example.com/tie.png",
+          workId: "work-image-1",
+        }}
+        selectedPreviewImageUrl={null}
+        onSelectPreview={vi.fn()}
+        onRequestInpaint={onRequestInpaint}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "부분 수정" }));
+
+    expect(onRequestInpaint).toHaveBeenCalledWith(
+      "https://example.com/tie.png",
+      "work-image-1",
+    );
   });
 });

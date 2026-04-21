@@ -1,11 +1,15 @@
-import type { GenerateDesignRequest } from "./design-request.ts";
-import type { NormalizedDesignContext } from "./design-generation.ts";
-import { SCALE_META } from "./scale-meta.ts";
+import type {
+  BackgroundPattern,
+  GenerateDesignRequest,
+} from "@/functions/_shared/design-request.ts";
+import type { NormalizedDesignContext } from "@/functions/_shared/design-generation.ts";
+import { resolveRenderCapability } from "@/functions/_shared/render-capability.ts";
+import { SCALE_META } from "@/functions/_shared/scale-meta.ts";
 
 export const SYSTEM_PROMPT = `당신은 넥타이 디자인을 제안하는 AI 어시스턴트입니다.
 항상 한국어로만 응답하세요.
 응답은 반드시 다음 JSON 형식만 반환하세요:
-{"aiMessage": "...", "generateImage": true, "contextChips": [{"label": "...", "action": "..."}], "detectedDesign": {"pattern": null, "colors": [], "ciPlacement": null, "scale": null}}
+{"aiMessage": "...", "generateImage": true, "contextChips": [{"label": "...", "action": "..."}], "detectedDesign": {"pattern": null, "colors": [], "ciPlacement": null, "scale": null, "positionIntent": null}}
 
 generateImage 판단 기준:
 - true: 사용자가 특정 패턴·모티프·색상·스타일을 언급하거나 디자인 변경을 요청한 경우. "상어 패턴", "스트라이프로", "파란색으로 바꿔줘" 등 시각적 결과물이 달라지는 모든 요청은 true.
@@ -22,6 +26,7 @@ detectedDesign은 사용자 메시지와 대화 전체에서 감지한 디자인
 - colors: 감지된 색상 목록. 영어 색상명 배열 (예: ["navy", "burgundy"]). 언급 없으면 [].
 - ciPlacement: 감지된 CI 배치. "all-over" 또는 "one-point". 언급 없으면 null.
 - scale: "large" | "medium" | "small" | null. 패턴 크기 변경 요청이면 감지. 언급 없으면 null.
+- positionIntent: "move-left" | "move-right" | "move-up" | "move-down" | null. 모티프 위치 이동 요청이면 해당 값을 설정.
 이미 designContext에 설정된 값이 있으면 그 값을 우선하고, 사용자 메시지에서 새로 언급된 것만 반영하세요.
 
 contextChips는 사용자가 클릭하는 즉시 디자인이 직접 변경되는 후속 액션만 허용됩니다.
@@ -74,11 +79,8 @@ export const buildFalPatternPrompt = (
   design: NormalizedDesignContext,
 ): string => {
   const fabricLine =
-    design.fabricMethod === "yarn-dyed"
-      ? "Render the surface as woven silk with visible thread interlacing, a soft natural sheen, and subtle fabric weave."
-      : design.fabricMethod === "print"
-        ? "Render the surface as printed silk with crisp printed color on a smooth lustrous fabric and no thread texture."
-        : "Render the surface as a high-quality silk fabric.";
+    resolveRenderCapability(design.fabricMethod)?.fabricLineShort ??
+    "Render the surface as a high-quality silk fabric.";
 
   const colorLine =
     design.colors.length > 0
@@ -106,24 +108,11 @@ export const buildBasePrompt = () =>
 export const buildFabricPrompt = (
   fabricMethod: string | null | undefined,
 ): string => {
-  if (fabricMethod === "yarn-dyed") {
-    return [
-      "Fabric construction: yarn-dyed woven silk.",
-      "The pattern is formed entirely by interwoven threads — visible weave structure, subtle textile depth, and a genuine woven repeat.",
-      "Each motif appears as a single solid thread color against the background, rendered as a clean silhouette.",
-      "The pattern emerges from the thread interlacing itself, not from printing.",
-      "The surface has the tactile, slightly textured quality of woven jacquard silk.",
-    ].join(" ");
+  const preset = resolveRenderCapability(fabricMethod);
+  if (preset) {
+    return preset.fabricConstruction.join(" ");
   }
-  if (fabricMethod === "print") {
-    return [
-      "Fabric construction: printed silk.",
-      "The pattern is screen-printed or digitally printed directly onto the fabric surface — crisp edges, vibrant colors, and surface-applied graphics.",
-      "Multi-color details within each motif are fully supported: crisp outlines, gradients, fine inner details, and multiple colors per motif.",
-      "The surface is smooth and lustrous, with the clean flat quality of printed silk.",
-      "No thread texture, no weave structure, no fiber depth — the surface is as flat and smooth as coated paper.",
-    ].join(" ");
-  }
+
   return "This must be a high-quality silk fabric surface with refined textile character.";
 };
 
@@ -173,8 +162,9 @@ export const buildPatternPrompt = (
 ): string => {
   if (pattern && PATTERN_MAP[pattern]) {
     const basePrompt = `Pattern: ${PATTERN_MAP[pattern]}.`;
-    if (fabricMethod === "yarn-dyed") {
-      return `${basePrompt} Render each motif as a single-color silhouette only — no inner color variation or detail.`;
+    const extraHint = resolveRenderCapability(fabricMethod)?.patternExtraHint;
+    if (extraHint) {
+      return `${basePrompt} ${extraHint}`;
     }
     return basePrompt;
   }
@@ -214,11 +204,7 @@ export const buildReferencePrompt = (
 ): string => {
   if (!hasCiImage && !hasReferenceImage) return "";
   const fabricLabel =
-    fabricMethod === "yarn-dyed"
-      ? "yarn-dyed woven"
-      : fabricMethod === "print"
-        ? "printed"
-        : "fabric";
+    resolveRenderCapability(fabricMethod)?.referenceLabel ?? "fabric";
   if (hasCiImage && hasReferenceImage) {
     return [
       "Image 1: base fabric reference (referenceImage). Image 2: CI logo reference (ciImage).",
@@ -253,6 +239,7 @@ export const buildReferencePrompt = (
 export const buildCiPlacementPrompt = (
   ciPlacement: string | null | undefined,
   hasCiImage: boolean,
+  backgroundPattern?: BackgroundPattern | null,
 ): string => {
   if (!ciPlacement) return "";
   if (ciPlacement === "all-over") {
@@ -265,9 +252,64 @@ export const buildCiPlacementPrompt = (
     const source = hasCiImage
       ? "from the uploaded CI image"
       : "described in the conversation";
-    return `Place the motif ${source} as a single small accent — treating it as a purely visual graphic shape, not as text; do not read or reproduce any letterforms in the image, use only the silhouette and outline form — slightly right of the vertical centerline, in the lower portion of the fabric — about one-third from the bottom edge, not at the very bottom. The motif must be tiny — occupying only about 2-3% of the fabric width, similar in size to a small pin badge or a watermark-level detail. It should feel like a subtle, refined detail rather than a focal statement. The rest of the fabric surface remains as the base pattern.`;
+    const describedBackground = describeBackgroundPattern(backgroundPattern);
+    return [
+      `Place the motif ${source} as a single small accent — treating it as a purely visual graphic shape, not as text; do not read or reproduce any letterforms in the image, use only the silhouette and outline form — slightly right of the vertical centerline, in the lower portion of the fabric — about one-third from the bottom edge, not at the very bottom.`,
+      "The motif must be tiny — occupying only about 2-3% of the fabric width, similar in size to a small pin badge or a watermark-level detail.",
+      "It should feel like a subtle, refined detail rather than a focal statement.",
+      `The background pattern must be exactly: ${describedBackground}.`,
+      "Do not invent any other background texture or motif beyond what is specified.",
+    ].join(" ");
   }
   return "";
+};
+
+const describeBackgroundPattern = (
+  backgroundPattern?: BackgroundPattern | null,
+): string => {
+  if (!backgroundPattern) {
+    return "a solid, uniform background with no specific color";
+  }
+
+  const fallbackDescription =
+    "a solid, uniform background with no specific color";
+  const isColor = (value: unknown): value is string =>
+    typeof value === "string" && value.length > 0;
+  const isPositiveNumber = (value: unknown): value is number =>
+    typeof value === "number" && Number.isFinite(value) && value > 0;
+  const hasTwoColors = (
+    value: unknown,
+  ): value is [string, string, ...string[]] =>
+    Array.isArray(value) &&
+    value.length >= 2 &&
+    isColor(value[0]) &&
+    isColor(value[1]);
+
+  switch (backgroundPattern.type) {
+    case "solid":
+      return isColor(backgroundPattern.color)
+        ? `a solid uniform field in color ${backgroundPattern.color}`
+        : fallbackDescription;
+    case "stripe":
+      return hasTwoColors(backgroundPattern.colors) &&
+        isPositiveNumber(backgroundPattern.width)
+        ? `parallel stripes of ${backgroundPattern.width}px width alternating between colors ${backgroundPattern.colors[0]} and ${backgroundPattern.colors[1]}`
+        : fallbackDescription;
+    case "check":
+      return hasTwoColors(backgroundPattern.colors) &&
+        isPositiveNumber(backgroundPattern.cellSize)
+        ? `a regular check grid with ${backgroundPattern.cellSize}px cells in colors ${backgroundPattern.colors[0]} and ${backgroundPattern.colors[1]}`
+        : fallbackDescription;
+    case "dot":
+      return isPositiveNumber(backgroundPattern.dotSize) &&
+        isPositiveNumber(backgroundPattern.spacing) &&
+        isColor(backgroundPattern.color) &&
+        isColor(backgroundPattern.background)
+        ? `a regular dot grid: ${backgroundPattern.dotSize}px dots in ${backgroundPattern.color} on ${backgroundPattern.background} background, spaced every ${backgroundPattern.spacing}px`
+        : fallbackDescription;
+    default:
+      return fallbackDescription;
+  }
 };
 
 export const buildClosurePrompt = () =>
@@ -298,6 +340,7 @@ export const buildImagePrompt = (payload: GenerateDesignRequest): string => {
     buildCiPlacementPrompt(
       payload.designContext?.ciPlacement,
       !!payload.ciImageBase64,
+      payload.designContext?.backgroundPattern ?? null,
     ),
     buildUserInstructionPrompt(payload.userMessage),
     buildClosurePrompt(),
@@ -324,6 +367,7 @@ export const buildImageEditPrompt = (
     buildCiPlacementPrompt(
       payload.designContext?.ciPlacement,
       !!payload.ciImageBase64,
+      payload.designContext?.backgroundPattern ?? null,
     ),
     buildUserInstructionPrompt(payload.userMessage),
     "Preserve the layout, motif shapes, scale, and overall composition unless explicitly changed.",

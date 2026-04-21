@@ -20,6 +20,9 @@ export type * from "./types/dto/token-purchase";
 export type * from "./types/image-ref";
 export type * from "./types/type-utils";
 
+// Types - Design
+export type * from "./types/design/background-pattern";
+
 // Types - View
 export type * from "./types/view/product";
 export type * from "./types/view/coupon";
