@@ -53,6 +53,27 @@ describe("toDesignSession", () => {
       lastImageWorkId: null,
     });
   });
+
+  it("fal 세션도 DesignSession UI 타입으로 변환한다", () => {
+    expect(
+      toDesignSession({
+        id: "session-3",
+        user_id: "user-1",
+        ai_model: "fal",
+        first_message: "CI 패턴으로 올오버 생성",
+        last_image_url: "https://example.com/fal.png",
+        last_image_file_id: "file-3",
+        last_image_work_id: "work-3",
+        image_count: 1,
+        created_at: "2026-03-19T10:10:00Z",
+        updated_at: "2026-03-19T10:15:00Z",
+      }),
+    ).toMatchObject({
+      id: "session-3",
+      aiModel: "fal",
+      firstMessage: "CI 패턴으로 올오버 생성",
+    });
+  });
 });
 
 describe("toDesignSessionMessage", () => {

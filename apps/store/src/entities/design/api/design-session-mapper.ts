@@ -27,7 +27,7 @@ export interface DesignSessionMessageRow {
   created_at: string;
 }
 
-const AI_MODELS = ["openai", "gemini"] as const;
+const AI_MODELS = ["openai", "gemini", "fal"] as const;
 const MESSAGE_ROLES = ["user", "ai"] as const;
 const AI_MODEL_SET: ReadonlySet<string> = new Set(AI_MODELS);
 const MESSAGE_ROLE_SET: ReadonlySet<string> = new Set(MESSAGE_ROLES);

@@ -1,6 +1,6 @@
 export interface DesignSession {
   id: string;
-  aiModel: "openai" | "gemini";
+  aiModel: "openai" | "gemini" | "fal";
   firstMessage: string;
   lastImageUrl: string | null;
   lastImageFileId: string | null;
