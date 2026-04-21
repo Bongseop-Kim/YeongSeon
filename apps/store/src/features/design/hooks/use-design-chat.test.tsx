@@ -448,22 +448,99 @@ describe("useDesignChat", () => {
     }
   });
 
-  it("base image가 없으면 edit intent는 mutate를 호출하지 않고 UI-only 메시지를 추가한다", () => {
+  it("base image가 없어도 edit intent는 서버로 요청을 전달한다", () => {
     const { result } = renderHook(() => useDesignChat());
     result.current.sendMessage("포인트 위치가 너무 높아 아래로 내려줘", []);
 
-    expect(mutate).not.toHaveBeenCalled();
-    expect(setCurrentSessionId).not.toHaveBeenCalled();
-    expect(phCapture).not.toHaveBeenCalled();
-    expect(clearAttachments).not.toHaveBeenCalled();
-    expect(addMessage).toHaveBeenCalledTimes(1);
+    expect(setCurrentSessionId).toHaveBeenCalled();
+    expect(phCapture).toHaveBeenCalledWith("design_session_started", {
+      ai_model: "openai",
+    });
+    expect(clearAttachments).toHaveBeenCalled();
     expect(addMessage).toHaveBeenCalledWith(
       expect.objectContaining({
-        role: "ai",
-        uiOnly: true,
-        content:
-          "현재 결과를 기준으로 수정할 이미지가 없어 먼저 디자인을 생성해 주세요.",
+        role: "user",
+        content: "포인트 위치가 너무 높아 아래로 내려줘",
       }),
+    );
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userMessage: "포인트 위치가 너무 높아 아래로 내려줘",
+        executionMode: "auto",
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it("preserve_identity만 있는 새 생성 요청은 base image가 없어도 차단하지 않는다", () => {
+    const previousImplementation =
+      resolveGenerationRoute.getMockImplementation();
+    resolveGenerationRoute.mockImplementation(() => ({
+      route: "fal_tiling",
+      signals: ["ci_image_present", "pattern_repeat", "preserve_identity"],
+      reason: "ci_image_with_pattern_repeat",
+      usedIntentRouter: false,
+    }));
+
+    try {
+      Object.assign(storeState, {
+        designContext: {
+          ...defaultDesignContext,
+          ciImage: "https://example.com/ci.png",
+        },
+      });
+
+      const { result } = renderHook(() => useDesignChat());
+      result.current.sendMessage("CI로고 참고해서 올패턴으로 뿌려주세요", []);
+
+      expect(mutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userMessage: "CI로고 참고해서 올패턴으로 뿌려주세요",
+          executionMode: "auto",
+        }),
+        expect.any(Object),
+      );
+      expect(addMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: "user",
+          content: "CI로고 참고해서 올패턴으로 뿌려주세요",
+        }),
+      );
+    } finally {
+      if (previousImplementation) {
+        resolveGenerationRoute.mockImplementation(previousImplementation);
+      }
+    }
+  });
+
+  it("base image가 없어도 edit intent regenerate는 서버로 요청을 전달한다", () => {
+    Object.assign(storeState, {
+      currentSessionId: "session-existing",
+      messages: [
+        ...initialMessages,
+        {
+          id: "user-edit-1",
+          role: "user",
+          content: "포인트 위치가 너무 높아 아래로 내려줘",
+          attachments: [],
+          timestamp: 4,
+          designContext: {
+            ...defaultDesignContext,
+          },
+        },
+      ],
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.regenerate();
+
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userMessage: "포인트 위치가 너무 높아 아래로 내려줘",
+        sessionId: "session-existing",
+        executionMode: "auto",
+      }),
+      expect.any(Object),
     );
   });
 
@@ -799,6 +876,35 @@ describe("useDesignChat", () => {
         baseImageWorkId: null,
       }),
       expect.any(Object),
+    );
+  });
+
+  it("requestInpaint는 대상 이미지가 없으면 원인 코드를 반환한다", () => {
+    Object.assign(storeState, {
+      inpaintTarget: null,
+      baseImageUrl: null,
+      baseImageWorkId: null,
+      selectedPreviewImageUrl: null,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    const requestResult = result.current.requestInpaint(
+      "mask-base64",
+      "이 부분만 자수 느낌으로",
+    );
+
+    expect(requestResult).toEqual({
+      started: false,
+      errorCode: "NO_EDIT_TARGET",
+      errorMessage:
+        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+    });
+    expect(mutate).not.toHaveBeenCalled();
+    expect(addMessage).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        content:
+          "현재 결과를 기준으로 수정할 이미지가 없어 먼저 디자인을 생성해 주세요.",
+      }),
     );
   });
 

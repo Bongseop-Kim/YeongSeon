@@ -148,6 +148,7 @@ describe("InpaintDialog", () => {
         isSubmitting={false}
         onOpenChange={vi.fn()}
         onSubmit={onSubmit}
+        externalError={null}
       />,
     );
 
@@ -180,6 +181,7 @@ describe("InpaintDialog", () => {
         isSubmitting={false}
         onOpenChange={vi.fn()}
         onSubmit={onSubmit}
+        externalError={null}
       />,
     );
 
@@ -208,6 +210,7 @@ describe("InpaintDialog", () => {
         isSubmitting={false}
         onOpenChange={vi.fn()}
         onSubmit={onSubmit}
+        externalError={null}
       />,
     );
 
@@ -235,5 +238,65 @@ describe("InpaintDialog", () => {
         "Failed to generate full-resolution mask, using preview mask instead",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("외부 에러 메시지를 표시하고 입력 변경 시 초기화한다", async () => {
+    const onSubmit = vi.fn();
+    const { rerender } = render(
+      <InpaintDialog
+        open
+        imageUrl="https://example.com/base.png"
+        isSubmitting={false}
+        onOpenChange={vi.fn()}
+        onSubmit={onSubmit}
+        externalError={{
+          message:
+            "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+          nonce: 1,
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.change(
+      screen.getByPlaceholderText("예: 이 부분만 자수 느낌으로 바꿔줘"),
+      {
+        target: { value: "다시 시도" },
+      },
+    );
+
+    expect(
+      screen.queryByText(
+        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+      ),
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <InpaintDialog
+        open
+        imageUrl="https://example.com/base.png"
+        isSubmitting={false}
+        onOpenChange={vi.fn()}
+        onSubmit={onSubmit}
+        externalError={{
+          message:
+            "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+          nonce: 2,
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "commit-mask" }));
+
+    expect(
+      screen.queryByText(
+        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+      ),
+    ).not.toBeInTheDocument();
   });
 });

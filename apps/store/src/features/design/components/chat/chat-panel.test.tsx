@@ -68,6 +68,7 @@ vi.mock("@/features/design/components/inpaint/inpaint-dialog", () => ({
   InpaintDialog: (props: {
     open: boolean;
     isSubmitting: boolean;
+    externalError?: { message: string; nonce: number } | null;
     onSubmit: (maskBase64: string, editPrompt: string) => void;
     onOpenChange: (open: boolean) => void;
   }) => {
@@ -78,11 +79,20 @@ vi.mock("@/features/design/components/inpaint/inpaint-dialog", () => ({
         data-open={String(props.open)}
         data-submitting={String(props.isSubmitting)}
       >
+        <div data-testid="inpaint-error">
+          {props.externalError?.message ?? ""}
+        </div>
         <button
           type="button"
           onClick={() => props.onSubmit("mask-base64", "이 부분만 수정")}
         >
           submit
+        </button>
+        <button
+          type="button"
+          onClick={() => props.onSubmit("mask-base64", "다시 시도")}
+        >
+          retry-submit
         </button>
         <button type="button" onClick={() => props.onOpenChange(false)}>
           close
@@ -260,7 +270,7 @@ describe("ChatPanel", () => {
 
   it("keeps the inpaint dialog open until rendering finishes", async () => {
     const user = userEvent.setup();
-    const requestInpaint = vi.fn(() => true);
+    const requestInpaint = vi.fn(() => ({ started: true as const }));
     const queryClient = new QueryClient();
 
     render(
@@ -311,7 +321,7 @@ describe("ChatPanel", () => {
 
   it("does not close a newly opened dialog when the previous inpaint completes", async () => {
     const user = userEvent.setup();
-    const requestInpaint = vi.fn(() => true);
+    const requestInpaint = vi.fn(() => ({ started: true as const }));
     const queryClient = new QueryClient();
 
     render(
@@ -362,7 +372,12 @@ describe("ChatPanel", () => {
       <QueryClientProvider client={queryClient}>
         <ChatPanel
           sendMessage={vi.fn()}
-          requestInpaint={vi.fn(() => false)}
+          requestInpaint={vi.fn(() => ({
+            started: false as const,
+            errorCode: "NO_EDIT_TARGET" as const,
+            errorMessage:
+              "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+          }))}
           onOpenHistory={vi.fn()}
         />
       </QueryClientProvider>,
@@ -371,8 +386,60 @@ describe("ChatPanel", () => {
     await user.click(screen.getByRole("button", { name: "submit" }));
 
     await waitFor(() => {
-      expect(useDesignChatStore.getState().inpaintTarget).toBeNull();
-      expect(screen.queryByTestId("inpaint-dialog")).not.toBeInTheDocument();
+      expect(useDesignChatStore.getState().inpaintTarget).toEqual({
+        imageUrl: "https://example.com/base.png",
+        imageWorkId: "work-1",
+      });
+      expect(screen.getByTestId("inpaint-dialog")).toBeInTheDocument();
+    });
+
+    expect(inpaintDialogSpy.mock.calls.at(-1)?.[0]).toMatchObject({
+      externalError: {
+        message:
+          "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+      },
+    });
+  });
+
+  it("같은 인페인트 에러가 반복되면 다시 표시한다", async () => {
+    const user = userEvent.setup();
+    const queryClient = new QueryClient();
+    const requestInpaint = vi.fn().mockReturnValue({
+      started: false as const,
+      errorCode: "NO_EDIT_TARGET" as const,
+      errorMessage:
+        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ChatPanel
+          sendMessage={vi.fn()}
+          requestInpaint={requestInpaint}
+          onOpenHistory={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "submit" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("inpaint-error")).toHaveTextContent(
+        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+      );
+    });
+
+    act(() => {
+      inpaintDialogSpy.mock.calls
+        .at(-1)?.[0]
+        .onSubmit("mask-base64", "다시 시도");
+    });
+
+    await waitFor(() => {
+      expect(requestInpaint).toHaveBeenCalledTimes(2);
+      expect(screen.getByTestId("inpaint-error")).toHaveTextContent(
+        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+      );
     });
   });
 });

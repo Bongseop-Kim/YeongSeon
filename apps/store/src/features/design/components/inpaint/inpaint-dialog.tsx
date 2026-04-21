@@ -23,10 +23,16 @@ import {
   rescaleMaskToTarget,
 } from "@/features/design/lib/rescale-mask";
 
+export interface InpaintDialogExternalError {
+  message: string;
+  nonce: number;
+}
+
 interface InpaintDialogProps {
   open: boolean;
   imageUrl: string;
   isSubmitting: boolean;
+  externalError?: InpaintDialogExternalError | null;
   onOpenChange: (open: boolean) => void;
   onSubmit: (maskBase64: string, editPrompt: string) => void;
 }
@@ -35,6 +41,7 @@ export function InpaintDialog({
   open,
   imageUrl,
   isSubmitting,
+  externalError = null,
   onOpenChange,
   onSubmit,
 }: InpaintDialogProps) {
@@ -50,6 +57,12 @@ export function InpaintDialog({
       setErrorMessage(null);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (externalError) {
+      setErrorMessage(externalError.message);
+    }
+  }, [externalError]);
 
   const loadImageNaturalSize = async () =>
     await new Promise<{ width: number; height: number }>((resolve, reject) => {
@@ -160,7 +173,10 @@ export function InpaintDialog({
                 id="inpaint-edit-prompt"
                 maxLength={500}
                 value={editPrompt}
-                onChange={(event) => setEditPrompt(event.target.value)}
+                onChange={(event) => {
+                  setEditPrompt(event.target.value);
+                  setErrorMessage(null);
+                }}
                 placeholder="예: 이 부분만 자수 느낌으로 바꿔줘"
               />
               <FieldDescription>
