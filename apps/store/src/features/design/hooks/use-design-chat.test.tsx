@@ -117,6 +117,20 @@ const initialMessages = [
   },
 ] as const;
 
+const defaultDesignContext = {
+  colors: ["navy"],
+  pattern: "stripe",
+  fabricMethod: "print",
+  ciPlacement: null,
+  ciImage: null,
+  referenceImage: null,
+} as const;
+
+const defaultBaseImageState = {
+  baseImageUrl: null,
+  baseImageWorkId: null,
+} as const;
+
 const createReuseKey = (overrides?: {
   colors?: string[];
   pattern?: string | null;
@@ -126,33 +140,27 @@ const createReuseKey = (overrides?: {
   baseImageUrl?: string | null;
 }) =>
   buildAnalysisReuseKey({
-    colors: overrides?.colors ?? ["navy"],
-    pattern: overrides?.pattern ?? "stripe",
-    fabricMethod: overrides?.fabricMethod ?? "print",
-    ciPlacement: overrides?.ciPlacement ?? null,
-    baseImageWorkId: overrides?.baseImageWorkId ?? null,
+    colors: overrides?.colors ?? [...defaultDesignContext.colors],
+    pattern: overrides?.pattern ?? defaultDesignContext.pattern,
+    fabricMethod: overrides?.fabricMethod ?? defaultDesignContext.fabricMethod,
+    ciPlacement: overrides?.ciPlacement ?? defaultDesignContext.ciPlacement,
+    baseImageWorkId:
+      overrides?.baseImageWorkId ?? defaultBaseImageState.baseImageWorkId,
     ciImageHash: null,
     referenceImageHash: null,
-    baseImageUrl: overrides?.baseImageUrl ?? null,
+    baseImageUrl: overrides?.baseImageUrl ?? defaultBaseImageState.baseImageUrl,
   });
 
 const storeState = {
   messages: [...initialMessages],
-  designContext: {
-    colors: ["navy"],
-    pattern: "stripe",
-    fabricMethod: "print",
-    ciPlacement: null,
-    ciImage: null,
-    referenceImage: null,
-  },
+  designContext: { ...defaultDesignContext },
   aiModel: "openai",
   generationStatus: "idle",
   currentSessionId: null,
   autoGenerateImage: true,
   selectedPreviewImageUrl: null as string | null,
-  baseImageUrl: null,
-  baseImageWorkId: null,
+  baseImageUrl: defaultBaseImageState.baseImageUrl,
+  baseImageWorkId: defaultBaseImageState.baseImageWorkId,
   lastRoute: null,
   lastRouteSignals: [],
   lastRouteReason: null,
@@ -236,14 +244,7 @@ describe("useDesignChat", () => {
     setLastAnalysisReuseKey.mockReset();
     phCapture.mockReset();
     storeState.messages = [...initialMessages];
-    storeState.designContext = {
-      colors: ["navy"],
-      pattern: "stripe",
-      fabricMethod: "print",
-      ciPlacement: null,
-      ciImage: null,
-      referenceImage: null,
-    };
+    storeState.designContext = { ...defaultDesignContext };
     storeState.aiModel = "openai";
     storeState.autoGenerateImage = true;
     storeState.selectedPreviewImageUrl = null;
@@ -253,8 +254,8 @@ describe("useDesignChat", () => {
     storeState.lastAnalysisReuseKey = null;
     storeState.inpaintTarget = null;
     storeState.currentSessionId = null;
-    storeState.baseImageUrl = null;
-    storeState.baseImageWorkId = null;
+    storeState.baseImageUrl = defaultBaseImageState.baseImageUrl;
+    storeState.baseImageWorkId = defaultBaseImageState.baseImageWorkId;
     storeState.lastRoute = null;
     storeState.lastRouteSignals = [];
     storeState.lastRouteReason = null;
@@ -529,6 +530,9 @@ describe("useDesignChat", () => {
     const { result } = renderHook(() => useDesignChat());
     result.current.requestRender();
 
+    expect(setLastAnalysisReuseKey).toHaveBeenCalledWith(null);
+    expect(setGenerationStatus).toHaveBeenCalledWith("rendering");
+    expect(setGenerationStatus).not.toHaveBeenCalledWith("generating");
     expect(mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         analysisWorkId: null,

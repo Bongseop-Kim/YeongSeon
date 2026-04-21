@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useCartAuthSync } from "@/features/cart/hooks/useCartAuthSync";
 import { createCartItem } from "@/test/fixtures";
 
@@ -14,7 +14,6 @@ const {
   clearUserCache,
   getGuestItems,
   error,
-  consoleError,
 } = vi.hoisted(() => ({
   ensureQueryData: vi.fn(),
   setQueryData: vi.fn(),
@@ -26,7 +25,6 @@ const {
   clearUserCache: vi.fn(),
   getGuestItems: vi.fn(),
   error: vi.fn(),
-  consoleError: vi.fn(),
 }));
 
 const authState = {
@@ -72,9 +70,8 @@ vi.mock("@/shared/lib/toast", () => ({
 }));
 
 describe("useCartAuthSync", () => {
-  let consoleErrorSpy: { mockRestore: () => void } | null = null;
-
   beforeEach(() => {
+    vi.resetAllMocks();
     authState.user = null;
     authState.initialized = true;
     ensureQueryData.mockReset();
@@ -87,15 +84,10 @@ describe("useCartAuthSync", () => {
     clearUserCache.mockReset();
     getGuestItems.mockReset();
     error.mockReset();
-    consoleError.mockReset();
-    consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(consoleError);
   });
 
   afterEach(() => {
-    consoleErrorSpy?.mockRestore();
-    consoleErrorSpy = null;
+    vi.restoreAllMocks();
   });
 
   it("로그아웃 상태에서는 guest 장바구니를 로드한다", async () => {
@@ -160,6 +152,10 @@ describe("useCartAuthSync", () => {
   });
 
   it("서버 조회 실패와 업로드 실패 시 에러를 표시하고 서버 장바구니로 폴백한다", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
     authState.user = { id: "user-3" };
     ensureQueryData.mockRejectedValueOnce(new Error("server failed"));
 
@@ -168,7 +164,7 @@ describe("useCartAuthSync", () => {
     await waitFor(() => {
       expect(error).toHaveBeenCalledWith("장바구니를 불러오지 못했어요.");
     });
-    expect(consoleError).toHaveBeenCalledWith(
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
       "서버 장바구니 조회 실패:",
       expect.any(Error),
     );
@@ -190,7 +186,7 @@ describe("useCartAuthSync", () => {
     expect(error).toHaveBeenCalledWith(
       "로컬 장바구니를 서버로 업로드하지 못했습니다. 서버 장바구니를 사용합니다.",
     );
-    expect(consoleError).toHaveBeenCalledWith(
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
       "로컬 장바구니 업로드 실패:",
       expect.any(Error),
     );
