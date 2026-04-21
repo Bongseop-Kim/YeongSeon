@@ -4,6 +4,7 @@ import {
   type GenerationRoute,
   type GenerationRouteSignal,
 } from "@/entities/design/model/ai-design-request";
+import { normalizeDetectedPattern } from "@/entities/design/api/normalize-detected-pattern";
 import { supabase } from "@/shared/lib/supabase";
 
 export interface ClassifierInput {
@@ -52,26 +53,53 @@ const isClassifierRoute = (value: unknown): value is ClassifierRoute =>
   ((GENERATION_ROUTE_VALUES as readonly string[]).includes(value) ||
     value === "none");
 
+const isAbortLikeError = (error: unknown): boolean => {
+  if (error instanceof DOMException) {
+    return error.name === "AbortError";
+  }
+
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as { name?: unknown }).name === "AbortError"
+  );
+};
+
 export async function classifyRouteWithLlm(
   input: ClassifierInput,
   options: ClassifyOptions = {},
 ): Promise<ClassifierResult | null> {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const minConfidence = options.minConfidence ?? DEFAULT_MIN_CONFIDENCE;
+  const controller = new AbortController();
+  const normalizedInput = {
+    ...input,
+    detectedPattern: normalizeDetectedPattern(input.detectedPattern),
+  };
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<null>((resolve) => {
-    timer = setTimeout(() => resolve(null), timeoutMs);
+    timer = setTimeout(() => {
+      controller.abort();
+      resolve(null);
+    }, timeoutMs);
   });
 
   const invokePromise = (async (): Promise<ClassifierResult | null> => {
     try {
       const { data, error } = await supabase.functions.invoke(
         "classify-generation-route",
-        { body: input },
+        {
+          body: normalizedInput,
+          signal: controller.signal,
+        },
       );
 
       if (error || !data) {
+        if (error && !controller.signal.aborted && !isAbortLikeError(error)) {
+          console.warn("classifyRouteWithLlm error:", error);
+        }
         return null;
       }
 
@@ -91,7 +119,10 @@ export async function classifyRouteWithLlm(
         confidence: response.confidence,
         source: "llm",
       };
-    } catch {
+    } catch (error) {
+      if (!controller.signal.aborted && !isAbortLikeError(error)) {
+        console.warn("classifyRouteWithLlm error:", error);
+      }
       return null;
     }
   })();

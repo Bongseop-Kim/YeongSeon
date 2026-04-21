@@ -11,6 +11,7 @@ import {
 import { falProvider } from "@/entities/design/api/providers/fal-provider";
 import { geminiProvider } from "@/entities/design/api/providers/gemini-provider";
 import { openaiProvider } from "@/entities/design/api/providers/openai-provider";
+import { parseEdgeErrorResponse } from "@/entities/design/api/providers/parse-edge-error";
 import { runProviderChain } from "@/entities/design/api/providers/provider-chain";
 import { resolveGenerationRoute } from "@/entities/design/api/resolve-generation-route";
 import { shouldUseFalPipeline } from "@/entities/design/api/should-use-fal-pipeline";
@@ -103,12 +104,7 @@ function safeCapture(
 const getErrorResponseBody = async (
   error: unknown,
 ): Promise<{ error?: string; balance?: number; cost?: number } | null> => {
-  const context = (error as { context?: unknown } | null)?.context;
-  if (!(context instanceof Response)) {
-    return null;
-  }
-
-  return (await context.json()) as {
+  return (await parseEdgeErrorResponse(error)) as {
     error?: string;
     balance?: number;
     cost?: number;
@@ -155,8 +151,17 @@ export async function aiDesignApi(
   let tiledBase64: string | undefined;
   let tiledMimeType: string | undefined;
   const resolvedRoute = request.route ?? routeResolution.route;
-  const isPatternRoute =
-    resolvedRoute === "fal_tiling" || resolvedRoute === "fal_controlnet";
+  const shouldPrepareTiledPattern = resolvedRoute === "fal_tiling";
+  const controlStructureBase64 =
+    resolvedRoute === "fal_controlnet"
+      ? (request.structureImageBase64 ?? ciImageBase64)
+      : request.structureImageBase64;
+  const controlStructureMimeType =
+    resolvedRoute === "fal_controlnet"
+      ? (request.structureImageMimeType ??
+        request.designContext.ciImage?.type ??
+        undefined)
+      : request.structureImageMimeType;
   const canUseFalApi =
     resolvedRoute === "fal_edit" ||
     resolvedRoute === "fal_inpaint" ||
@@ -164,7 +169,7 @@ export async function aiDesignApi(
     (resolvedRoute === "fal_tiling" && useFalTiling);
 
   if (
-    isPatternRoute &&
+    shouldPrepareTiledPattern &&
     useFalTiling &&
     ciImageBase64 &&
     request.designContext.ciImage &&
@@ -197,8 +202,8 @@ export async function aiDesignApi(
     ciImageBase64,
     referenceImageBase64,
     backgroundPattern,
-    tiledBase64: isPatternRoute ? tiledBase64 : undefined,
-    tiledMimeType: isPatternRoute ? tiledMimeType : undefined,
+    tiledBase64: shouldPrepareTiledPattern ? tiledBase64 : undefined,
+    tiledMimeType: shouldPrepareTiledPattern ? tiledMimeType : undefined,
     route: resolvedRoute,
     routeSignals: routeResolution.signals,
     routeReason: routeResolution.reason,
@@ -206,8 +211,8 @@ export async function aiDesignApi(
     baseImageUrl: request.baseImageUrl,
     baseImageWorkId: request.baseImageWorkId,
     controlType: request.controlType,
-    structureImageBase64: request.structureImageBase64,
-    structureImageMimeType: request.structureImageMimeType,
+    structureImageBase64: controlStructureBase64,
+    structureImageMimeType: controlStructureMimeType,
     baseImageBase64: request.baseImageBase64,
     baseImageMimeType: request.baseImageMimeType,
     maskBase64: request.maskBase64,
@@ -260,6 +265,9 @@ export async function aiDesignApi(
     });
     throw new Error(
       `디자인 생성 실패: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        cause: error,
+      },
     );
   }
 

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   resolveGenerationRoute,
   resolveGenerationRouteAsync,
@@ -17,6 +17,10 @@ const createInput = (
   ...overrides,
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("resolveGenerationRoute", () => {
   it.each([
     {
@@ -24,7 +28,7 @@ describe("resolveGenerationRoute", () => {
       input: createInput({
         userMessage: "첨부한 이미지를 반복 패턴으로 만들어줘",
         hasCiImage: true,
-        detectedPattern: "check",
+        detectedPattern: " Check ",
       }),
       expected: {
         route: "fal_controlnet" as const,
@@ -465,5 +469,36 @@ describe("resolveGenerationRouteAsync", () => {
 
     expect(result.source).toBe("heuristic");
     expect(result.route).toBe("openai");
+  });
+
+  it("sharp-edge 반복 패턴은 LLM이 fal_tiling을 반환해도 fal_controlnet을 유지한다", async () => {
+    vi.spyOn(classifier, "classifyRouteWithLlm").mockResolvedValueOnce({
+      route: "fal_tiling",
+      signals: ["pattern_repeat"],
+      confidence: 0.95,
+      source: "llm",
+    });
+
+    const result = await resolveGenerationRouteAsync({
+      userMessage: "첨부한 이미지를 반복 패턴으로 만들어줘",
+      hasCiImage: true,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: false,
+      selectedPreviewImageUrl: null,
+      detectedPattern: " Stripe ",
+    });
+
+    expect(result).toEqual({
+      route: "fal_controlnet",
+      reason: "sharp_edge_pattern_repeat",
+      signals: [
+        "ci_image_present",
+        "pattern_repeat",
+        "new_generation",
+        "preserve_identity",
+      ],
+      usedIntentRouter: false,
+      source: "heuristic",
+    });
   });
 });

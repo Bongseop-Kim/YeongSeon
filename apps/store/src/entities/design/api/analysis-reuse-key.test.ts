@@ -38,6 +38,17 @@ describe("buildAnalysisReuseKey", () => {
     ).not.toBe(buildAnalysisReuseKey(baseInput));
   });
 
+  it.each([
+    ["fabricMethod", { fabricMethod: "print" }],
+    ["ciPlacement", { ciPlacement: "one-point" }],
+    ["baseImageWorkId", { baseImageWorkId: "work-2" }],
+    ["referenceImageHash", { referenceImageHash: "ref-1" }],
+  ])("%s가 달라지면 키가 달라진다", (_label, overrides) => {
+    expect(buildAnalysisReuseKey({ ...baseInput, ...overrides })).not.toBe(
+      buildAnalysisReuseKey(baseInput),
+    );
+  });
+
   it("null/undefined 필드는 동일하게 취급한다", () => {
     const a = { ...baseInput, referenceImageHash: null };
     const b = { ...baseInput, referenceImageHash: undefined };
@@ -45,7 +56,23 @@ describe("buildAnalysisReuseKey", () => {
     expect(buildAnalysisReuseKey(a)).toBe(buildAnalysisReuseKey(b));
   });
 
-  it("16진수 문자열을 반환한다", () => {
-    expect(buildAnalysisReuseKey(baseInput)).toMatch(/^[0-9a-f]+$/);
+  it("ciImageHash의 null/undefined도 동일하게 취급한다", () => {
+    const a = { ...baseInput, ciImageHash: null };
+    const b = { ...baseInput, ciImageHash: undefined };
+
+    expect(buildAnalysisReuseKey(a)).toBe(buildAnalysisReuseKey(b));
+  });
+
+  it("동등한 baseImageUrl은 동일 키로 정규화한다", () => {
+    expect(
+      buildAnalysisReuseKey({
+        ...baseInput,
+        baseImageUrl: " HTTPS://EXAMPLE.COM:443/x.png ",
+      }),
+    ).toBe(buildAnalysisReuseKey(baseInput));
+  });
+
+  it("8자리 소문자 16진수 문자열을 반환한다", () => {
+    expect(buildAnalysisReuseKey(baseInput)).toMatch(/^[0-9a-f]{8}$/);
   });
 });

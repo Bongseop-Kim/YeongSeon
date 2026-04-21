@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { classifyRouteWithLlm } from "@/entities/design/api/route-classifier";
 
-const mockInvoke = vi.fn();
+const mockInvoke = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/lib/supabase", () => ({
   supabase: {
@@ -44,12 +44,7 @@ describe("classifyRouteWithLlm", () => {
   });
 
   it("타임아웃 초과 시 null을 반환한다", async () => {
-    mockInvoke.mockImplementationOnce(
-      () =>
-        new Promise((resolve) =>
-          setTimeout(() => resolve({ data: {}, error: null }), 2000),
-        ),
-    );
+    mockInvoke.mockImplementationOnce(() => new Promise(() => {}));
 
     const result = await classifyRouteWithLlm(
       {
@@ -64,6 +59,48 @@ describe("classifyRouteWithLlm", () => {
     );
 
     expect(result).toBeNull();
+    expect(mockInvoke).toHaveBeenCalledWith(
+      "classify-generation-route",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }),
+    );
+    expect(
+      (mockInvoke.mock.calls[0]?.[1] as { signal?: AbortSignal } | undefined)
+        ?.signal?.aborted,
+    ).toBe(true);
+  });
+
+  it("타임아웃으로 중단된 경우 warning을 남기지 않는다", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    mockInvoke.mockImplementationOnce(
+      (_name: string, options?: { signal?: AbortSignal }) =>
+        new Promise((_, reject) => {
+          options?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("aborted", "AbortError"));
+          });
+        }),
+    );
+
+    const result = await classifyRouteWithLlm(
+      {
+        userMessage: "x",
+        hasCiImage: false,
+        hasReferenceImage: false,
+        hasPreviousGeneratedImage: false,
+        selectedPreviewImageUrl: null,
+        detectedPattern: null,
+      },
+      { timeoutMs: 50 },
+    );
+
+    await Promise.resolve();
+
+    expect(result).toBeNull();
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
   });
 
   it("confidence가 임계값 미만이면 null을 반환한다", async () => {

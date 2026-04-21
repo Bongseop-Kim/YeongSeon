@@ -89,15 +89,15 @@ const isAllowedHostname = (
 };
 
 const parseContentLength = (headers: Headers): number | null => {
-  const contentLengthHeader = headers.get("content-length");
-  if (contentLengthHeader && /^\d+$/.test(contentLengthHeader)) {
-    return Number(contentLengthHeader);
-  }
-
   const contentRange = headers.get("content-range");
   const totalLengthMatch = contentRange?.match(/\/(\d+)$/);
   if (totalLengthMatch?.[1]) {
     return Number(totalLengthMatch[1]);
+  }
+
+  const contentLengthHeader = headers.get("content-length");
+  if (contentLengthHeader && /^\d+$/.test(contentLengthHeader)) {
+    return Number(contentLengthHeader);
   }
 
   return null;
@@ -112,6 +112,9 @@ const shouldRetryWithRangeGet = (response: Response): boolean =>
 const cancelResponseBody = (response: Response) => {
   void response.body?.cancel();
 };
+
+const isRedirectResponse = (response: Response): boolean =>
+  response.status >= 300 && response.status < 400;
 
 export const buildAllowedInpaintBaseImageHosts = (
   input: {
@@ -275,8 +278,14 @@ export const inspectRemoteInpaintImage = async (
 
   let response = await fetchImpl(validatedUrl, {
     method: "HEAD",
+    redirect: "manual",
     signal: AbortSignal.timeout(timeoutMs),
   });
+
+  if (isRedirectResponse(response)) {
+    cancelResponseBody(response);
+    throw new Error("base_image_url_redirect_not_allowed");
+  }
 
   if (shouldRetryWithRangeGet(response)) {
     cancelResponseBody(response);
@@ -285,8 +294,14 @@ export const inspectRemoteInpaintImage = async (
       headers: {
         Range: "bytes=0-0",
       },
+      redirect: "manual",
       signal: AbortSignal.timeout(timeoutMs),
     });
+
+    if (isRedirectResponse(response)) {
+      cancelResponseBody(response);
+      throw new Error("base_image_url_redirect_not_allowed");
+    }
   }
 
   if (!response.ok) {

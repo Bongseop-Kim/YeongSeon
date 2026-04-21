@@ -83,17 +83,49 @@ export function InpaintDialog({
       return;
     }
 
+    const submitPreviewMaskWithError = (context: string, error: unknown) => {
+      console.error(
+        `Failed to generate full-resolution mask at ${context}, using preview mask instead`,
+        error,
+      );
+      setErrorMessage(
+        "Failed to generate full-resolution mask, using preview mask instead",
+      );
+      onSubmit(maskBase64, editPrompt.trim());
+    };
+
+    let naturalSize: { width: number; height: number };
     try {
-      const naturalSize = await loadImageNaturalSize();
-      const rescaledMask = await rescaleMaskToTarget(sourceCanvas, naturalSize);
-      const rescaledBase64 = await canvasToPngBase64(rescaledMask);
+      naturalSize = await loadImageNaturalSize();
+    } catch (error) {
+      submitPreviewMaskWithError("loadImageNaturalSize", error);
+      return;
+    }
+
+    let rescaledMask: HTMLCanvasElement;
+    try {
+      rescaledMask = await rescaleMaskToTarget(sourceCanvas, naturalSize);
+    } catch (error) {
+      submitPreviewMaskWithError("rescaleMaskToTarget", error);
+      return;
+    }
+
+    let rescaledBase64: string;
+    try {
+      rescaledBase64 = await canvasToPngBase64(rescaledMask);
+    } catch (error) {
+      submitPreviewMaskWithError("canvasToPngBase64", error);
+      return;
+    }
+
+    try {
       if (rescaledBase64.length > MAX_MASK_BASE64_LENGTH) {
         onSubmit(maskBase64, editPrompt.trim());
         return;
       }
       onSubmit(rescaledBase64, editPrompt.trim());
-    } catch {
-      onSubmit(maskBase64, editPrompt.trim());
+    } catch (error) {
+      submitPreviewMaskWithError("canvasToPngBase64", error);
     }
   };
 

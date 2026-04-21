@@ -1,17 +1,29 @@
 import { Badge } from "@/shared/ui/badge";
+import { AnalysisStatusCard } from "@/features/design/components/chat/analysis-status-card";
 import { TieMask } from "@/features/design/components/preview/tie-mask";
 import type { Message } from "@/features/design/types/chat";
 import { cn } from "@/shared/lib/utils";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 
+export interface AnalysisState {
+  visibleMessageId: string;
+  eligibleForRender: boolean;
+  missingRequirements: string[];
+  summaryChips: string[];
+}
+
 interface MessageBubbleProps {
   message: Message;
+  analysisState?: AnalysisState | null;
   onChipClick?: (text: string) => void;
   onTiePreviewClick?: (imageUrl: string) => void;
   selectedPreviewImageUrl?: string | null;
   onSelectPreview?: (imageUrl: string) => void;
   onRequestInpaint?: (imageUrl: string, imageWorkId: string | null) => void;
+  onRequestRender?: () => void;
+  onOpenOptions?: () => void;
+  onFocusInput?: () => void;
 }
 
 function ChatTieMask({ imageUrl }: { imageUrl: string }) {
@@ -27,11 +39,15 @@ function ChatTieMask({ imageUrl }: { imageUrl: string }) {
 
 export function MessageBubble({
   message,
+  analysisState,
   onChipClick,
   onTiePreviewClick,
   selectedPreviewImageUrl,
   onSelectPreview,
   onRequestInpaint,
+  onRequestRender,
+  onOpenOptions,
+  onFocusInput,
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const { isMobile } = useBreakpoint();
@@ -142,6 +158,16 @@ export function MessageBubble({
             </button>
           ))}
         </div>
+      ) : null}
+      {!isUser && analysisState?.visibleMessageId === message.id ? (
+        <AnalysisStatusCard
+          eligibleForRender={analysisState.eligibleForRender}
+          missingRequirements={analysisState.missingRequirements}
+          summaryChips={analysisState.summaryChips}
+          onRender={onRequestRender}
+          onOpenOptions={onOpenOptions}
+          onFocusInput={onFocusInput}
+        />
       ) : null}
       <span className="px-1 text-xs text-gray-400">{timestamp}</span>
     </div>

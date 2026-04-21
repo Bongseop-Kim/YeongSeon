@@ -8,6 +8,7 @@ import {
   type ClassifierInput,
   type ClassifierResult,
 } from "@/entities/design/api/route-classifier";
+import { normalizeDetectedPattern } from "@/entities/design/api/normalize-detected-pattern";
 
 export type RouteResolverInput = ClassifierInput;
 
@@ -327,6 +328,9 @@ export function resolveGenerationRoute(
   input: RouteResolverInput,
 ): RouteResolution {
   const signals = collectSignals(input);
+  const normalizedDetectedPattern = normalizeDetectedPattern(
+    input.detectedPattern,
+  );
   const hasEditTarget =
     input.hasPreviousGeneratedImage ||
     Boolean(input.selectedPreviewImageUrl?.trim());
@@ -343,8 +347,8 @@ export function resolveGenerationRoute(
   if (
     input.hasCiImage &&
     signals.includes("pattern_repeat") &&
-    input.detectedPattern &&
-    SHARP_EDGE_PATTERNS.has(input.detectedPattern)
+    normalizedDetectedPattern &&
+    SHARP_EDGE_PATTERNS.has(normalizedDetectedPattern)
   ) {
     return {
       route: "fal_controlnet",
@@ -383,6 +387,14 @@ export function resolveGenerationRoute(
 export async function resolveGenerationRouteAsync(
   input: RouteResolverInput,
 ): Promise<AsyncRouteResolution> {
+  const heuristic = resolveGenerationRoute(input);
+  if (heuristic.reason === "sharp_edge_pattern_repeat") {
+    return {
+      ...heuristic,
+      source: "heuristic",
+    };
+  }
+
   const llm: ClassifierResult | null = await classifyRouteWithLlm(input);
 
   if (llm && llm.route !== "none") {
@@ -396,7 +408,7 @@ export async function resolveGenerationRouteAsync(
   }
 
   return {
-    ...resolveGenerationRoute(input),
+    ...heuristic,
     source: "heuristic",
   };
 }

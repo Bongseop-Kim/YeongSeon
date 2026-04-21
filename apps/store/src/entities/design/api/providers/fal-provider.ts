@@ -4,15 +4,15 @@ import {
   type GenerationProvider,
   type ProviderInvokeContext,
 } from "@/entities/design/api/providers/provider";
+import { parseEdgeErrorResponse } from "@/entities/design/api/providers/parse-edge-error";
 
 const getErrorCode = async (error: unknown): Promise<string | null> => {
-  const response = (error as { context?: unknown } | null)?.context;
-  if (!(response instanceof Response)) {
-    return null;
-  }
-
   try {
-    const body = (await response.clone().json()) as { error?: unknown };
+    const body = await parseEdgeErrorResponse(error);
+    if (!body) {
+      return null;
+    }
+
     return typeof body.error === "string" ? body.error : null;
   } catch {
     return null;

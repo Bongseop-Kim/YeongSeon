@@ -15,6 +15,7 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/shared/ui/field";
+import { canvasToPngBase64 } from "@/features/design/lib/rescale-mask";
 
 interface MaskCanvasProps {
   baseImageUrl: string;
@@ -26,29 +27,6 @@ interface MaskCanvasProps {
 type Point = { x: number; y: number };
 
 const MAX_UNDO_STEPS = 5;
-
-const readCanvasBase64 = (canvas: HTMLCanvasElement): Promise<string> =>
-  new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("mask_blob_creation_failed"));
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        if (typeof result !== "string") {
-          reject(new Error("mask_blob_read_failed"));
-          return;
-        }
-
-        resolve(result.split(",")[1] ?? "");
-      };
-      reader.onerror = () => reject(new Error("mask_blob_read_failed"));
-      reader.readAsDataURL(blob);
-    }, "image/png");
-  });
 
 const hasVisibleMaskPixels = (
   context: CanvasRenderingContext2D,
@@ -249,7 +227,7 @@ export const MaskCanvas = forwardRef<HTMLCanvasElement, MaskCanvasProps>(
         return;
       }
 
-      const base64 = await readCanvasBase64(maskCanvas);
+      const base64 = await canvasToPngBase64(maskCanvas);
       if (base64.length === 0) {
         setHasMask(false);
         return;

@@ -1,3 +1,5 @@
+import type { DesignContext } from "@/entities/design";
+
 export interface AnalysisReuseKeyInput {
   colors: readonly string[] | null;
   pattern: string | null;
@@ -9,7 +11,24 @@ export interface AnalysisReuseKeyInput {
   baseImageUrl: string | null;
 }
 
-function normalize(input: AnalysisReuseKeyInput): string {
+const normalizeBaseImageUrl = (baseImageUrl: string | null): string => {
+  if (typeof baseImageUrl !== "string") {
+    return "";
+  }
+
+  const trimmedValue = baseImageUrl.trim();
+  if (trimmedValue.length === 0) {
+    return "";
+  }
+
+  try {
+    return new URL(trimmedValue).toString();
+  } catch {
+    return trimmedValue;
+  }
+};
+
+function serializeAnalysisReuseKeyInput(input: AnalysisReuseKeyInput): string {
   const parts = [
     (input.colors ?? []).join(","),
     input.pattern ?? "",
@@ -18,7 +37,7 @@ function normalize(input: AnalysisReuseKeyInput): string {
     input.baseImageWorkId ?? "",
     input.ciImageHash ?? "",
     input.referenceImageHash ?? "",
-    input.baseImageUrl ?? "",
+    normalizeBaseImageUrl(input.baseImageUrl),
   ];
 
   return parts.join("|");
@@ -36,5 +55,35 @@ export function fnv1a32(value: string): string {
 }
 
 export function buildAnalysisReuseKey(input: AnalysisReuseKeyInput): string {
-  return fnv1a32(normalize(input));
+  return fnv1a32(serializeAnalysisReuseKeyInput(input));
+}
+
+const toSerializableFileMetadata = (file: File | null) =>
+  file
+    ? {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+      }
+    : null;
+
+const hashFileMetadata = (file: File | null): string | null =>
+  file ? fnv1a32(JSON.stringify(toSerializableFileMetadata(file))) : null;
+
+export function createAnalysisReuseKeyForContext(
+  designContext: DesignContext,
+  baseImageUrl: string | null,
+  baseImageWorkId: string | null,
+): string {
+  return buildAnalysisReuseKey({
+    colors: designContext.colors,
+    pattern: designContext.pattern,
+    fabricMethod: designContext.fabricMethod,
+    ciPlacement: designContext.ciPlacement,
+    ciImageHash: hashFileMetadata(designContext.ciImage),
+    referenceImageHash: hashFileMetadata(designContext.referenceImage),
+    baseImageUrl,
+    baseImageWorkId,
+  });
 }

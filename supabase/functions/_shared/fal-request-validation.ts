@@ -80,10 +80,30 @@ const validateImageBase64Length = (
   };
 };
 
+const getInvalidUserMessageFailure = (
+  payload: GenerateDesignRequest,
+): ValidationFailure | null => {
+  if (
+    typeof payload.userMessage !== "string" ||
+    !payload.userMessage.trim() ||
+    payload.userMessage.length > 4000
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      body: { error: "invalid_user_message" },
+    };
+  }
+
+  return null;
+};
+
 export const validateFalGeneratePayload = (
   payload: GenerateDesignRequest,
   executionMode: ExecutionMode = "auto",
 ): FalPayloadValidationResult => {
+  const route = getFalRoute(payload);
+
   if (executionMode === "render_from_analysis") {
     if (
       typeof payload.analysisWorkId !== "string" ||
@@ -96,13 +116,24 @@ export const validateFalGeneratePayload = (
       };
     }
 
+    if (!route) {
+      return {
+        ok: false,
+        status: 400,
+        body: { error: "invalid_fal_route" },
+      };
+    }
+
+    const userMessageFailure = getInvalidUserMessageFailure(payload);
+    if (userMessageFailure) {
+      return userMessageFailure;
+    }
+
     return {
       ok: true,
       conversationHistory: [],
     };
   }
-
-  const route = getFalRoute(payload);
 
   if (!route) {
     return {
@@ -112,16 +143,9 @@ export const validateFalGeneratePayload = (
     };
   }
 
-  if (
-    typeof payload.userMessage !== "string" ||
-    !payload.userMessage.trim() ||
-    payload.userMessage.length > 4000
-  ) {
-    return {
-      ok: false,
-      status: 400,
-      body: { error: "invalid_user_message" },
-    };
+  const userMessageFailure = getInvalidUserMessageFailure(payload);
+  if (userMessageFailure) {
+    return userMessageFailure;
   }
 
   if (
@@ -201,6 +225,9 @@ export const validateFalGeneratePayload = (
     };
   }
 
+  let tiledBase64Trimmed = "";
+  let hasTiledInput = false;
+
   if (route === "fal_tiling" || route === "fal_controlnet") {
     if (payload.designContext.ciPlacement !== "all-over") {
       return {
@@ -210,11 +237,11 @@ export const validateFalGeneratePayload = (
       };
     }
 
-    const tiledBase64Trimmed = getTrimmedBase64(payload.tiledBase64);
+    tiledBase64Trimmed = getTrimmedBase64(payload.tiledBase64);
     const referenceImageBase64Trimmed = getTrimmedBase64(
       payload.referenceImageBase64,
     );
-    const hasTiledInput = tiledBase64Trimmed.length > 0;
+    hasTiledInput = tiledBase64Trimmed.length > 0;
     const hasReferenceInput = referenceImageBase64Trimmed.length > 0;
 
     if (route === "fal_tiling" && !hasTiledInput && !hasReferenceInput) {
@@ -260,7 +287,6 @@ export const validateFalGeneratePayload = (
   }
 
   if (route === "fal_controlnet") {
-    const tiledBase64Trimmed = getTrimmedBase64(payload.tiledBase64);
     const structureImageBase64Trimmed = getTrimmedBase64(
       payload.structureImageBase64,
     );
@@ -275,7 +301,10 @@ export const validateFalGeneratePayload = (
       };
     }
 
-    if (!ALLOWED_CONTROL_TYPES.has(controlType)) {
+    if (
+      typeof controlType !== "string" ||
+      !ALLOWED_CONTROL_TYPES.has(controlType)
+    ) {
       return {
         ok: false,
         status: 400,
@@ -364,7 +393,8 @@ export const validateFalGeneratePayload = (
 
     if (
       typeof payload.maskMimeType !== "string" ||
-      !ALLOWED_TILED_MIME_TYPES.has(payload.maskMimeType)
+      payload.maskMimeType.trim().length === 0 ||
+      !ALLOWED_TILED_MIME_TYPES.has(payload.maskMimeType.trim())
     ) {
       return {
         ok: false,

@@ -9,10 +9,7 @@ import {
   InsufficientTokensError,
   type GenerationRouteSignal,
 } from "@/entities/design";
-import {
-  buildAnalysisReuseKey,
-  fnv1a32,
-} from "@/entities/design/api/analysis-reuse-key";
+import { createAnalysisReuseKeyForContext } from "@/entities/design/api/analysis-reuse-key";
 import {
   getRawImageUrlFromPreviewBackground,
   useDesignChatStore,
@@ -37,35 +34,6 @@ interface UseDesignChatResult {
 interface MutationCallbackOptions {
   skipAiMessageAppend?: boolean;
 }
-
-const toSerializableFile = (file: File | null) =>
-  file
-    ? {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified,
-      }
-    : null;
-
-const hashFileMeta = (file: File | null): string | null =>
-  file ? fnv1a32(JSON.stringify(toSerializableFile(file))) : null;
-
-const createAnalysisReuseKey = (
-  designContext: Message["designContext"],
-  baseImageUrl: string | null,
-  baseImageWorkId: string | null,
-): string =>
-  buildAnalysisReuseKey({
-    colors: designContext?.colors ?? [],
-    pattern: designContext?.pattern ?? null,
-    fabricMethod: designContext?.fabricMethod ?? null,
-    ciPlacement: designContext?.ciPlacement ?? null,
-    ciImageHash: hashFileMeta(designContext?.ciImage ?? null),
-    referenceImageHash: hashFileMeta(designContext?.referenceImage ?? null),
-    baseImageUrl,
-    baseImageWorkId,
-  });
 
 const EDIT_INTENT_SIGNALS = new Set<GenerationRouteSignal>([
   "edit_only",
@@ -194,7 +162,7 @@ export function useDesignChat(
       });
       setLastAnalysisReuseKey(
         data.analysisWorkId
-          ? createAnalysisReuseKey(
+          ? createAnalysisReuseKeyForContext(
               request.designContext,
               request.baseImageUrl ?? null,
               request.baseImageWorkId ?? null,
@@ -485,7 +453,7 @@ export function useDesignChat(
       storeState.baseImageUrl ?? storeState.selectedPreviewImageUrl,
     );
     const currentBaseImageWorkId = storeState.baseImageWorkId;
-    const currentReuseKey = createAnalysisReuseKey(
+    const currentReuseKey = createAnalysisReuseKeyForContext(
       storeState.designContext,
       currentBaseImageUrl,
       currentBaseImageWorkId,

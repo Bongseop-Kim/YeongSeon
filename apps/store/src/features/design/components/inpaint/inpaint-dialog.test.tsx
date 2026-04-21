@@ -5,6 +5,7 @@ import { InpaintDialog } from "@/features/design/components/inpaint/inpaint-dial
 const maskCanvasElement = document.createElement("canvas");
 const rescaleMaskToTarget = vi.fn();
 const canvasToPngBase64 = vi.fn();
+const consoleError = vi.fn();
 
 vi.mock("@/shared/ui-extended/dialog", () => ({
   Dialog: ({ children }: { children: React.ReactNode }) => (
@@ -109,6 +110,7 @@ vi.mock("@/features/design/components/inpaint/mask-canvas", () => ({
 }));
 
 vi.mock("@/features/design/lib/rescale-mask", () => ({
+  MAX_MASK_BASE64_LENGTH: 5_000_000,
   rescaleMaskToTarget: (...args: unknown[]) => rescaleMaskToTarget(...args),
   canvasToPngBase64: (...args: unknown[]) => canvasToPngBase64(...args),
 }));
@@ -117,6 +119,8 @@ describe("InpaintDialog", () => {
   beforeEach(() => {
     rescaleMaskToTarget.mockReset();
     canvasToPngBase64.mockReset();
+    consoleError.mockReset();
+    vi.spyOn(console, "error").mockImplementation(consoleError);
     vi.stubGlobal(
       "Image",
       class {
@@ -191,5 +195,45 @@ describe("InpaintDialog", () => {
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith("rescaled-mask", "이 부분만 수정");
     });
+  });
+
+  it("전체 해상도 마스크 생성 실패 시 에러를 남기고 preview mask로 폴백한다", async () => {
+    rescaleMaskToTarget.mockRejectedValue(new Error("rescale_failed"));
+    const onSubmit = vi.fn();
+
+    render(
+      <InpaintDialog
+        open
+        imageUrl="https://example.com/base.png"
+        isSubmitting={false}
+        onOpenChange={vi.fn()}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "commit-mask" }));
+    fireEvent.change(
+      screen.getByPlaceholderText("예: 이 부분만 자수 느낌으로 바꿔줘"),
+      {
+        target: { value: "이 부분만 수정" },
+      },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "수정하기" }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        "preview-mask-base64",
+        "이 부분만 수정",
+      );
+    });
+    expect(consoleError).toHaveBeenCalledWith(
+      expect.stringContaining("rescaleMaskToTarget"),
+      expect.any(Error),
+    );
+    expect(
+      screen.getByText(
+        "Failed to generate full-resolution mask, using preview mask instead",
+      ),
+    ).toBeInTheDocument();
   });
 });

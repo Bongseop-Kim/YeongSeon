@@ -151,12 +151,13 @@ Deno.test("validateFalGeneratePayload rejects invalid fal route", () => {
 });
 
 Deno.test(
-  "validateFalGeneratePayload allows render_from_analysis requests with analysisWorkId only",
+  "validateFalGeneratePayload allows render_from_analysis requests with valid analysisWorkId, route, and userMessage",
   () => {
     const result = validateFalGeneratePayload(
       {
         userMessage: "이대로 다시 렌더해줘",
         analysisWorkId: "analysis-1",
+        route: "fal_tiling",
         executionMode: "render_from_analysis",
       } as unknown as Parameters<typeof validateFalGeneratePayload>[0],
       "render_from_analysis",
@@ -164,6 +165,48 @@ Deno.test(
 
     assertObjectMatch(result, {
       ok: true,
+    });
+  },
+);
+
+Deno.test(
+  "validateFalGeneratePayload rejects invalid route for render_from_analysis",
+  () => {
+    const result = validateFalGeneratePayload(
+      {
+        userMessage: "이대로 다시 렌더해줘",
+        analysisWorkId: "analysis-1",
+        route: "unknown",
+        executionMode: "render_from_analysis",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0],
+      "render_from_analysis",
+    );
+
+    assertObjectMatch(result, {
+      ok: false,
+      status: 400,
+      body: { error: "invalid_fal_route" },
+    });
+  },
+);
+
+Deno.test(
+  "validateFalGeneratePayload rejects invalid userMessage for render_from_analysis",
+  () => {
+    const result = validateFalGeneratePayload(
+      {
+        userMessage: "   ",
+        analysisWorkId: "analysis-1",
+        route: "fal_tiling",
+        executionMode: "render_from_analysis",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0],
+      "render_from_analysis",
+    );
+
+    assertObjectMatch(result, {
+      ok: false,
+      status: 400,
+      body: { error: "invalid_user_message" },
     });
   },
 );
@@ -231,6 +274,27 @@ Deno.test(
         body: { error: "invalid_control_type" },
       },
     );
+
+    assertObjectMatch(
+      validateFalGeneratePayload({
+        userMessage: "체크 패턴으로 반복해줘",
+        route: "fal_controlnet",
+        designContext: {
+          colors: ["navy"],
+          pattern: "check",
+          fabricMethod: "yarn-dyed",
+          ciPlacement: "all-over",
+        },
+        controlType: 123,
+        structureImageBase64: "abc",
+        structureImageMimeType: "image/png",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0]),
+      {
+        ok: false,
+        status: 400,
+        body: { error: "invalid_control_type" },
+      },
+    );
   },
 );
 
@@ -249,7 +313,7 @@ Deno.test(
         },
         baseImageUrl: "https://example.com/base.png",
         maskBase64: "mask",
-        maskMimeType: "image/png",
+        maskMimeType: " image/png ",
         editPrompt: "이 부분만 자수 느낌으로 바꿔줘",
       } as unknown as Parameters<typeof validateFalGeneratePayload>[0]),
       {

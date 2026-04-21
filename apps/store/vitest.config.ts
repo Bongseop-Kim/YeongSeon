@@ -38,7 +38,7 @@ export default defineConfig({
         test: {
           name: "store-jsdom",
           environment: "jsdom",
-          setupFiles: ["./src/test/setup.ts"],
+          setupFiles: ["./src/test/canvas-polyfill.ts", "./src/test/setup.ts"],
           include: ["src/**/*.test.tsx"],
         },
       },

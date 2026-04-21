@@ -137,8 +137,10 @@ Deno.test("parseValidatedInpaintDataUri rejects disallowed mime types", () => {
 Deno.test(
   "inspectRemoteInpaintImage validates remote image metadata",
   async () => {
-    const originalFetch = globalThis.fetch;
-    globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
+    const mockFetch: typeof fetch = (
+      input: string | URL | Request,
+      init?: RequestInit,
+    ) => {
       if (
         String(input) === "https://assets.example.com/base.png" &&
         init?.method === "HEAD"
@@ -155,22 +157,19 @@ Deno.test(
       }
 
       throw new Error(`unexpected fetch: ${String(input)}`);
-    }) as typeof fetch;
+    };
 
-    try {
-      assertEquals(
-        await inspectRemoteInpaintImage("https://assets.example.com/base.png", {
-          allowedHosts: ["example.com"],
-        }),
-        {
-          url: "https://assets.example.com/base.png",
-          mimeType: "image/png",
-          contentLength: 1024,
-        },
-      );
-    } finally {
-      globalThis.fetch = originalFetch;
-    }
+    assertEquals(
+      await inspectRemoteInpaintImage("https://assets.example.com/base.png", {
+        allowedHosts: ["example.com"],
+        fetchImpl: mockFetch,
+      }),
+      {
+        url: "https://assets.example.com/base.png",
+        mimeType: "image/png",
+        contentLength: 1024,
+      },
+    );
   },
 );
 
@@ -182,18 +181,38 @@ Deno.test(
         inspectRemoteInpaintImage("https://assets.example.com/base.png", {
           allowedHosts: ["example.com"],
           fetchImpl: async () =>
-            ({
-              ok: true,
-              status: 200,
-              url: "https://169.254.169.254/latest/meta-data",
-              headers: new Headers({
-                "content-type": "image/png",
-                "content-length": "1024",
-              }),
-              body: null,
-            }) as Response,
+            new Response(null, {
+              status: 302,
+              headers: {
+                location: "https://169.254.169.254/latest/meta-data",
+              },
+            }),
         }),
       Error,
+      "base_image_url_redirect_not_allowed",
     );
+  },
+);
+
+Deno.test(
+  "inspectRemoteInpaintImage prefers content-range total length over content-length",
+  async () => {
+    const response = await inspectRemoteInpaintImage(
+      "https://assets.example.com/base.png",
+      {
+        allowedHosts: ["example.com"],
+        fetchImpl: async () =>
+          new Response(null, {
+            status: 206,
+            headers: {
+              "content-type": "image/png",
+              "content-length": "1",
+              "content-range": "bytes 0-0/1024",
+            },
+          }),
+      },
+    );
+
+    assertEquals(response.contentLength, 1024);
   },
 );

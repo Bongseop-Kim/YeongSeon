@@ -1,27 +1,38 @@
 import { useEffect, useRef } from "react";
 
-import { MessageBubble } from "@/features/design/components/chat/message-bubble";
+import {
+  MessageBubble,
+  type AnalysisState,
+} from "@/features/design/components/chat/message-bubble";
 import { TypingIndicator } from "@/features/design/components/chat/typing-indicator";
 import type { Message } from "@/features/design/types/chat";
 
 interface MessageListProps {
   messages: Message[];
   isTyping: boolean;
+  analysisState?: AnalysisState | null;
   onChipClick?: (text: string) => void;
   onTiePreviewClick?: (imageUrl: string) => void;
   selectedPreviewImageUrl?: string | null;
   onSelectPreview?: (imageUrl: string) => void;
   onRequestInpaint?: (imageUrl: string, imageWorkId: string | null) => void;
+  onRequestRender?: () => void;
+  onOpenOptions?: () => void;
+  onFocusInput?: () => void;
 }
 
 export function MessageList({
   messages,
   isTyping,
+  analysisState,
   onChipClick,
   onTiePreviewClick,
   selectedPreviewImageUrl,
   onSelectPreview,
   onRequestInpaint,
+  onRequestRender,
+  onOpenOptions,
+  onFocusInput,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -39,11 +50,15 @@ export function MessageList({
         <MessageBubble
           key={message.id}
           message={message}
+          analysisState={analysisState}
           onChipClick={onChipClick}
           onTiePreviewClick={onTiePreviewClick}
           selectedPreviewImageUrl={selectedPreviewImageUrl}
           onSelectPreview={onSelectPreview}
           onRequestInpaint={onRequestInpaint}
+          onRequestRender={onRequestRender}
+          onOpenOptions={onOpenOptions}
+          onFocusInput={onFocusInput}
         />
       ))}
       {isTyping ? <TypingIndicator /> : null}

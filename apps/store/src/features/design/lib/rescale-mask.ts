@@ -48,7 +48,7 @@ export async function canvasToPngBlob(
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (!blob) {
-        reject(new Error("toBlob-null"));
+        reject(new Error("mask_blob_creation_failed"));
         return;
       }
 

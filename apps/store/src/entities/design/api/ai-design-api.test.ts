@@ -387,6 +387,38 @@ describe("aiDesignApi", () => {
     });
   });
 
+  it("sharp-edge controlnet 경로에서는 CI 원본을 control image로 전달한다", async () => {
+    MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke.mockResolvedValue({
+      data: { ...successResponse, route: "fal_controlnet" },
+      error: null,
+    });
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "첨부한 이미지를 반복 패턴으로 만들어줘",
+      designContext: {
+        ...baseRequest.designContext,
+        pattern: "check",
+        ciImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+        scale: "medium",
+      },
+    });
+
+    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
+      body: expect.objectContaining({
+        route: "fal_controlnet",
+        structureImageBase64: "ci-base64",
+        structureImageMimeType: "image/png",
+        tiledBase64: undefined,
+        tiledMimeType: undefined,
+      }),
+    });
+  });
+
   it("one-point CI 배치에서는 solid backgroundPattern을 payload에 주입한다", async () => {
     invoke.mockResolvedValue({ data: successResponse, error: null });
 
@@ -441,6 +473,23 @@ describe("aiDesignApi", () => {
       }),
     );
     expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it("일반 API 에러를 감쌀 때 원래 에러를 cause로 보존한다", async () => {
+    const originalError = Object.assign(new Error("Internal Server Error"), {
+      name: "FunctionsHttpError",
+    });
+    invoke.mockResolvedValue({
+      data: null,
+      error: originalError,
+    });
+
+    const rejection = aiDesignApi(baseRequest).catch((error) => error);
+
+    await expect(rejection).resolves.toMatchObject({
+      message: "디자인 생성 실패: Internal Server Error",
+      cause: originalError,
+    });
   });
 
   it("Fal API가 비활성화되어 있으면 기존 모델 함수로 한 번 폴백한다", async () => {
