@@ -5,15 +5,20 @@ import type {
 
 interface ShouldUseFalPipelineInput {
   ciImageBase64: string | undefined;
+  referenceImageBase64?: string | undefined;
   ciPlacement: CiPlacement | null | undefined;
   fabricMethod: FabricMethod | null | undefined;
   allowFalRender: boolean;
 }
 
+const hasImageInput = (value: string | undefined): boolean =>
+  typeof value === "string" && value.trim().length > 0;
+
 const isFalPipelineCandidate = (input: ShouldUseFalPipelineInput): boolean =>
   input.allowFalRender &&
   input.ciPlacement === "all-over" &&
-  !!input.ciImageBase64 &&
+  (hasImageInput(input.ciImageBase64) ||
+    hasImageInput(input.referenceImageBase64)) &&
   !!input.fabricMethod;
 
 const SHOULD_USE_FAL_PIPELINE_URL = `${

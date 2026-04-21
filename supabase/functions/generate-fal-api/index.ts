@@ -8,21 +8,23 @@ import {
 } from "@/functions/_shared/design-generation.ts";
 import type { GenerateDesignRequest } from "@/functions/_shared/design-request.ts";
 import {
-  callFalReferenceToIpAdapterWorkflow,
   callFalFluxControlNet,
   callFalFluxFill,
   callFalFluxImg2Img,
   callFalFluxIpAdapter,
   callFalNanoBananaEdit,
+  callFalReferenceToIpAdapterWorkflow,
 } from "@/functions/_shared/fal-client.ts";
+import { validateFalGeneratePayload } from "@/functions/_shared/fal-request-validation.ts";
 import {
-  shouldProceedToFalRender,
-  validateFalGeneratePayload,
-} from "@/functions/_shared/fal-request-validation.ts";
-import {
+  buildAllowedInpaintBaseImageHosts,
   buildFalErrorResponseBody,
+  getGenerationLogUserMessage,
   getTrustedFalImageUrl,
-  resolveInpaintBaseImageUrl,
+  inspectRemoteInpaintImage,
+  parseValidatedInpaintDataUri,
+  shouldExecuteFalRender,
+  validateRemoteInpaintBaseImageUrl,
 } from "@/functions/_shared/generate-fal-api-utils.ts";
 import { planFalRender } from "@/functions/_shared/generate-fal-render-plan.ts";
 import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
@@ -120,40 +122,43 @@ const saveSessionIfNeeded = async (
 const toDataUri = (base64: string, mimeType: string): string =>
   `data:${mimeType};base64,${base64}`;
 
-const parseDataUri = (
-  value: string,
-): { mimeType: string; base64: string } | null => {
-  const match = value.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) {
-    return null;
-  }
-
-  return {
-    mimeType: match[1],
-    base64: match[2],
-  };
-};
-
 const readImageAsBase64 = async (
   imageUrl: string,
+  allowedHosts: readonly string[],
 ): Promise<{
   base64: string;
   mimeType: string;
 }> => {
-  const dataUri = parseDataUri(imageUrl);
+  const dataUri = parseValidatedInpaintDataUri(imageUrl);
   if (dataUri) {
     return dataUri;
   }
 
-  const response = await fetch(imageUrl, {
+  const inspectedImage = await inspectRemoteInpaintImage(imageUrl, {
+    allowedHosts,
+    timeoutMs: OPENAI_TIMEOUT_MS,
+  });
+
+  const response = await fetch(inspectedImage.url, {
     signal: AbortSignal.timeout(OPENAI_TIMEOUT_MS),
+    redirect: "error",
   });
 
   if (!response.ok) {
     throw new Error(`Base image fetch failed: ${response.status}`);
   }
 
-  const mimeType = response.headers.get("content-type") ?? "image/png";
+  const finalImageUrl = validateRemoteInpaintBaseImageUrl(
+    response.url || inspectedImage.url,
+    allowedHosts,
+  );
+  if (!finalImageUrl) {
+    throw new Error("Base image fetch failed: redirected_to_untrusted_host");
+  }
+
+  const mimeType =
+    response.headers.get("content-type")?.split(";")[0]?.trim() ||
+    inspectedImage.mimeType;
   const bytes = new Uint8Array(await response.arrayBuffer());
 
   return {
@@ -241,6 +246,8 @@ Deno.serve(async (req) => {
   }
 
   const executionMode = getExecutionMode(payload);
+  const payloadUserMessage =
+    typeof payload.userMessage === "string" ? payload.userMessage : "";
   const validation = validateFalGeneratePayload(payload, executionMode);
   if (!validation.ok) {
     return jsonResponse(validation.status, validation.body);
@@ -276,8 +283,8 @@ Deno.serve(async (req) => {
         route_reason: payload.routeReason ?? null,
         route_signals: payload.routeSignals ?? [],
         base_image_work_id: payload.baseImageWorkId ?? null,
-        user_message: payload.userMessage,
-        prompt_length: payload.userMessage.length,
+        user_message: payloadUserMessage,
+        prompt_length: payloadUserMessage.length,
         image_generated: false,
         error_type: "analysis_snapshot_load_failed",
         error_message: error instanceof Error ? error.message : String(error),
@@ -306,6 +313,17 @@ Deno.serve(async (req) => {
         ))
       : null;
   const textPrompt = analysisSnapshot?.textPrompt ?? buildTextPrompt(payload);
+  const {
+    userMessage: userMessageForLog,
+    promptLength: userMessagePromptLength,
+  } = getGenerationLogUserMessage({
+    payloadUserMessage,
+    analysisUserMessage: analysisSnapshot?.userMessage,
+  });
+  const userMessageLogFields = {
+    user_message: userMessageForLog,
+    prompt_length: userMessagePromptLength,
+  } as const;
   const history = validation.conversationHistory;
   const textStart =
     executionMode === "render_from_analysis" ? null : Date.now();
@@ -343,8 +361,7 @@ Deno.serve(async (req) => {
         ai_model: ANALYSIS_AI_MODEL,
         request_type: ANALYSIS_REQUEST_TYPE,
         ...routeLogFields,
-        user_message: payload.userMessage,
-        prompt_length: payload.userMessage.length,
+        ...userMessageLogFields,
         text_prompt: textPrompt,
         image_generated: false,
         error_type: "token_processing_failed",
@@ -362,8 +379,7 @@ Deno.serve(async (req) => {
         ai_model: ANALYSIS_AI_MODEL,
         request_type: ANALYSIS_REQUEST_TYPE,
         ...routeLogFields,
-        user_message: payload.userMessage,
-        prompt_length: payload.userMessage.length,
+        ...userMessageLogFields,
         text_prompt: textPrompt,
         image_generated: false,
         error_type: analysisTokenResult?.error ?? "insufficient_tokens",
@@ -430,8 +446,7 @@ Deno.serve(async (req) => {
         ai_model: ANALYSIS_AI_MODEL,
         request_type: ANALYSIS_REQUEST_TYPE,
         ...routeLogFields,
-        user_message: payload.userMessage,
-        prompt_length: payload.userMessage.length,
+        ...userMessageLogFields,
         text_prompt: textPrompt,
         image_generated: false,
         tokens_charged: analysisTokensCharged,
@@ -470,8 +485,7 @@ Deno.serve(async (req) => {
       ai_model: ANALYSIS_AI_MODEL,
       request_type: ANALYSIS_REQUEST_TYPE,
       ...routeLogFields,
-      user_message: payload.userMessage,
-      prompt_length: payload.userMessage.length,
+      ...userMessageLogFields,
       text_prompt: textPrompt,
       ai_message: aiMessage,
       generate_image: generateImage,
@@ -503,7 +517,7 @@ Deno.serve(async (req) => {
     contextChips,
   };
 
-  if (!shouldProceedToFalRender(generateImage, eligibility)) {
+  if (!shouldExecuteFalRender(executionMode, generateImage, eligibility)) {
     if (analysisSnapshot) {
       return jsonResponse(409, {
         error: "analysis_not_renderable",
@@ -532,7 +546,9 @@ Deno.serve(async (req) => {
       : null;
   const imageInpaintPrompt =
     route === "fal_inpaint"
-      ? `${buildFabricPrompt(payload.designContext?.fabricMethod)} ${payload.editPrompt ?? ""}`.trim()
+      ? `${buildFabricPrompt(payload.designContext?.fabricMethod)} ${
+          payload.editPrompt ?? ""
+        }`.trim()
       : null;
 
   const imageStart = Date.now();
@@ -547,6 +563,12 @@ Deno.serve(async (req) => {
     | null = route === "fal_edit" ? "nano_banana_edit" : null;
   let renderTokensCharged = 0;
   let renderTokensRefunded = 0;
+  const allowedInpaintBaseImageHosts = buildAllowedInpaintBaseImageHosts({
+    supabaseUrl: Deno.env.get("SUPABASE_URL"),
+    imagekitUrlEndpoint:
+      Deno.env.get("IMAGEKIT_URL_ENDPOINT") ??
+      Deno.env.get("VITE_IMAGEKIT_URL_ENDPOINT"),
+  });
 
   const { data: renderTokenResult, error: renderTokenError } =
     await adminClient.rpc("use_design_tokens", {
@@ -568,8 +590,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
-      user_message: payload.userMessage,
-      prompt_length: payload.userMessage.length,
+      ...userMessageLogFields,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
       image_edit_prompt: imageEditPrompt,
@@ -601,8 +622,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
-      user_message: payload.userMessage,
-      prompt_length: payload.userMessage.length,
+      ...userMessageLogFields,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
       image_edit_prompt: imageEditPrompt,
@@ -695,14 +715,19 @@ Deno.serve(async (req) => {
         throw new Error("fal_inpaint route requires imageInpaintPrompt");
       }
 
+      const baseImageBase64 = payload.baseImageBase64?.trim();
+      const baseImageMimeType = payload.baseImageMimeType?.trim();
       const baseImage =
-        payload.baseImageBase64 && payload.baseImageMimeType
+        baseImageBase64 && baseImageMimeType
           ? {
-              base64: payload.baseImageBase64,
-              mimeType: payload.baseImageMimeType,
+              base64: baseImageBase64,
+              mimeType: baseImageMimeType,
             }
           : payload.baseImageUrl
-            ? await readImageAsBase64(payload.baseImageUrl)
+            ? await readImageAsBase64(
+                payload.baseImageUrl,
+                allowedInpaintBaseImageHosts,
+              )
             : null;
 
       if (!baseImage || !payload.maskBase64 || !payload.maskMimeType) {
@@ -715,7 +740,6 @@ Deno.serve(async (req) => {
       const falResult = await callFalFluxFill({
         imageBase64: baseImage.base64,
         imageMimeType: baseImage.mimeType,
-        imageUrl: resolveInpaintBaseImageUrl(payload),
         maskBase64: payload.maskBase64,
         maskMimeType: payload.maskMimeType,
         prompt: imageInpaintPrompt,
@@ -828,8 +852,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
-      user_message: payload.userMessage,
-      prompt_length: payload.userMessage.length,
+      ...userMessageLogFields,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
       image_edit_prompt: imageEditPrompt,
@@ -972,8 +995,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
-      user_message: payload.userMessage,
-      prompt_length: payload.userMessage.length,
+      ...userMessageLogFields,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
       image_edit_prompt: imageEditPrompt,
@@ -1010,8 +1032,7 @@ Deno.serve(async (req) => {
     ai_model: RENDER_AI_MODEL,
     request_type: RENDER_REQUEST_TYPE,
     ...routeLogFields,
-    user_message: payload.userMessage,
-    prompt_length: payload.userMessage.length,
+    ...userMessageLogFields,
     text_prompt: textPrompt,
     image_prompt: imagePrompt,
     image_edit_prompt: imageEditPrompt,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 
 import { ChatHeader } from "@/features/design/components/chat/chat-header";
@@ -59,6 +59,13 @@ export function ChatPanel({
     generationStatus === "rendering";
 
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [pendingInpaintClose, setPendingInpaintClose] = useState(false);
+  const [hasObservedInpaintGeneration, setHasObservedInpaintGeneration] =
+    useState(false);
+  const inpaintTargetKey = inpaintTarget
+    ? `${inpaintTarget.imageUrl}::${inpaintTarget.imageWorkId ?? ""}`
+    : null;
+  const previousInpaintTargetKeyRef = useRef<string | null>(inpaintTargetKey);
 
   useEffect(() => {
     if (!selectedImageUrl) return;
@@ -69,8 +76,46 @@ export function ChatPanel({
     };
   }, [selectedImageUrl]);
 
+  useEffect(() => {
+    if (previousInpaintTargetKeyRef.current !== inpaintTargetKey) {
+      setPendingInpaintClose(false);
+      setHasObservedInpaintGeneration(false);
+      previousInpaintTargetKeyRef.current = inpaintTargetKey;
+    }
+  }, [inpaintTargetKey]);
+
+  useEffect(() => {
+    if (!pendingInpaintClose) {
+      return;
+    }
+
+    if (isGenerating) {
+      setHasObservedInpaintGeneration(true);
+      return;
+    }
+
+    if (!hasObservedInpaintGeneration) {
+      return;
+    }
+
+    closeInpaintDialog();
+    setPendingInpaintClose(false);
+    setHasObservedInpaintGeneration(false);
+  }, [
+    closeInpaintDialog,
+    hasObservedInpaintGeneration,
+    isGenerating,
+    pendingInpaintClose,
+  ]);
+
   const handleChipClick = (text: string) => {
     sendMessage(text, pendingAttachments);
+  };
+
+  const handleCloseInpaintDialog = () => {
+    setPendingInpaintClose(false);
+    setHasObservedInpaintGeneration(false);
+    closeInpaintDialog();
   };
 
   return (
@@ -133,12 +178,13 @@ export function ChatPanel({
           isSubmitting={isGenerating}
           onOpenChange={(nextOpen) => {
             if (!nextOpen) {
-              closeInpaintDialog();
+              handleCloseInpaintDialog();
             }
           }}
           onSubmit={(maskBase64, editPrompt) => {
             requestInpaint(maskBase64, editPrompt);
-            closeInpaintDialog();
+            setPendingInpaintClose(true);
+            setHasObservedInpaintGeneration(false);
           }}
         />
       ) : null}

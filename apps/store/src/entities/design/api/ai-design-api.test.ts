@@ -360,6 +360,33 @@ describe("aiDesignApi", () => {
     });
   });
 
+  it("reference-only all-over 요청도 fal_tiling 경로로 전달한다", async () => {
+    MockFileReader.configure({
+      result: "data:image/png;base64,reference-base64",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      route: "fal_tiling",
+      userMessage: "이 레퍼런스 이미지처럼 올 패턴으로 만들어줘",
+      designContext: {
+        ...baseRequest.designContext,
+        ciPlacement: "all-over",
+        referenceImage: { type: "image/png" } as File,
+      },
+    });
+
+    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
+      body: expect.objectContaining({
+        route: "fal_tiling",
+        referenceImageBase64: "reference-base64",
+      }),
+    });
+  });
+
   it("one-point CI 배치에서는 solid backgroundPattern을 payload에 주입한다", async () => {
     invoke.mockResolvedValue({ data: successResponse, error: null });
 

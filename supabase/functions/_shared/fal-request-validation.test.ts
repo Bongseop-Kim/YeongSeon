@@ -344,6 +344,29 @@ Deno.test(
   },
 );
 
+Deno.test(
+  "validateFalGeneratePayload safely rejects non-string tiledBase64 for fal_controlnet",
+  () => {
+    const result = validateFalGeneratePayload({
+      userMessage: "체크 패턴으로 반복해줘",
+      route: "fal_controlnet",
+      designContext: {
+        colors: ["navy"],
+        pattern: "check",
+        fabricMethod: "yarn-dyed",
+        ciPlacement: "all-over",
+      },
+      tiledBase64: 123 as unknown as string,
+    } as unknown as Parameters<typeof validateFalGeneratePayload>[0]);
+
+    assertObjectMatch(result, {
+      ok: false,
+      status: 400,
+      body: { error: "fal_controlnet_requires_structure_or_tiled_image" },
+    });
+  },
+);
+
 Deno.test("validateFalGeneratePayload rejects oversized base images", () => {
   const result = validateFalGeneratePayload({
     userMessage: "이 부분만 수정해줘",

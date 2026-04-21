@@ -122,6 +122,7 @@ export async function aiDesignApi(
 
   const useFalTiling = await shouldUseFalPipeline({
     ciImageBase64,
+    referenceImageBase64,
     ciPlacement: request.designContext.ciPlacement,
     fabricMethod: request.designContext.fabricMethod,
     allowFalRender: (request.executionMode ?? "auto") !== "analysis_only",

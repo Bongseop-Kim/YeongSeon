@@ -260,13 +260,14 @@ export const validateFalGeneratePayload = (
   }
 
   if (route === "fal_controlnet") {
+    const tiledBase64Trimmed = getTrimmedBase64(payload.tiledBase64);
     const structureImageBase64Trimmed = getTrimmedBase64(
       payload.structureImageBase64,
     );
     const hasStructureInput = structureImageBase64Trimmed.length > 0;
     const controlType = payload.controlType ?? "lineart";
 
-    if (!payload.tiledBase64?.trim() && !hasStructureInput) {
+    if (tiledBase64Trimmed.length === 0 && !hasStructureInput) {
       return {
         ok: false,
         status: 400,

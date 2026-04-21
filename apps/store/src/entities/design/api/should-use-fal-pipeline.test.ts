@@ -6,6 +6,7 @@ import {
 
 const base = {
   ciImageBase64: "abc",
+  referenceImageBase64: undefined,
   ciPlacement: "all-over" as const,
   fabricMethod: "yarn-dyed" as const,
   allowFalRender: true,
@@ -56,6 +57,16 @@ describe("shouldUseFalPipeline", () => {
     await expect(
       shouldUseFalPipeline({ ...base, ciImageBase64: "" }),
     ).resolves.toBe(false);
+  });
+
+  it("returns true for reference-only all-over requests", async () => {
+    await expect(
+      shouldUseFalPipeline({
+        ...base,
+        ciImageBase64: undefined,
+        referenceImageBase64: "ref-base64",
+      }),
+    ).resolves.toBe(true);
   });
 
   it("returns false when fabricMethod is null", async () => {
