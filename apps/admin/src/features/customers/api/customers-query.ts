@@ -76,7 +76,7 @@ export function useAdminCustomerOrders(customerId: string | undefined) {
   const { result } = useList<AdminOrderListRowDTO>({
     resource: "admin_order_list_view",
     filters: [{ field: "userId", operator: "eq", value: customerId }],
-    sorters: [{ field: "created_at", order: "desc" }],
+    sorters: [{ field: "createdAt", order: "desc" }],
     pagination: { mode: "off" },
     queryOptions: { enabled: !!customerId },
   });

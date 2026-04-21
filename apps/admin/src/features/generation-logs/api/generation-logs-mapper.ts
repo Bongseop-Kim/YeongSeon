@@ -44,6 +44,7 @@ type GenerationLogRow = {
   quality: unknown;
   user_message: unknown;
   prompt_length: unknown;
+  request_attachments?: unknown;
   design_context: unknown;
   normalized_design?: unknown;
   conversation_turn: unknown;
@@ -96,6 +97,46 @@ function toAiModel(v: unknown): "openai" | "gemini" | "fal" {
   return "openai";
 }
 
+function toRequestAttachments(
+  value: unknown,
+): AdminGenerationLogItem["requestAttachments"] {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const attachments = value
+    .filter(isRecord)
+    .map((attachment) => {
+      const type = toString(attachment.type);
+      const label = toString(attachment.label);
+      const attachmentValue = toString(attachment.value);
+      const fileName =
+        toString(attachment.fileName) ?? toString(attachment.file_name);
+
+      if (!type || !label || !attachmentValue) {
+        return null;
+      }
+
+      return {
+        type: type as NonNullable<
+          AdminGenerationLogItem["requestAttachments"]
+        >[number]["type"],
+        label,
+        value: attachmentValue,
+        ...(fileName ? { fileName } : {}),
+      };
+    })
+    .filter(
+      (
+        attachment,
+      ): attachment is NonNullable<
+        AdminGenerationLogItem["requestAttachments"]
+      >[number] => attachment !== null,
+    );
+
+  return attachments.length > 0 ? attachments : null;
+}
+
 export function toAdminGenerationLogItem(
   row: GenerationLogRow,
 ): AdminGenerationLogItem {
@@ -127,6 +168,7 @@ export function toAdminGenerationLogItem(
     quality: toQuality(row.quality),
     userMessage: toString(row.user_message) ?? "",
     promptLength: toNumber(row.prompt_length),
+    requestAttachments: toRequestAttachments(row.request_attachments),
     designContext: isRecord(row.design_context)
       ? (row.design_context as AdminGenerationLogItem["designContext"])
       : null,
