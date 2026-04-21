@@ -10,6 +10,11 @@ import {
 } from "@/features/cart/utils/cart-local-storage";
 import { createCartItem, createReformCartItem } from "@/test/fixtures";
 
+const { warnSpy, errorSpy } = vi.hoisted(() => ({
+  warnSpy: vi.fn(),
+  errorSpy: vi.fn(),
+}));
+
 const createStorage = () => {
   let store = new Map<string, string>();
   return {
@@ -34,6 +39,10 @@ describe("cart-local-storage", () => {
     });
     window.localStorage.clear();
     vi.restoreAllMocks();
+    warnSpy.mockReset();
+    errorSpy.mockReset();
+    vi.spyOn(console, "warn").mockImplementation(warnSpy);
+    vi.spyOn(console, "error").mockImplementation(errorSpy);
   });
 
   it("guest 아이템을 저장/조회/삭제한다", async () => {
@@ -83,9 +92,13 @@ describe("cart-local-storage", () => {
       JSON.stringify({ items: [{ bad: true }] }),
     );
     await expect(getGuestItems()).resolves.toEqual([]);
+    expect(warnSpy).toHaveBeenCalledWith("Invalid cart data format");
 
     window.localStorage.setItem("cart_guest", "{");
     await expect(getGuestItems()).resolves.toEqual([]);
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Failed to parse cart data from localStorage",
+    );
   });
 
   it("storage 접근 실패와 quota exceeded를 처리한다", async () => {
@@ -93,15 +106,25 @@ describe("cart-local-storage", () => {
       throw new Error("denied");
     });
     await expect(getGuestItems()).resolves.toEqual([]);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to get cart_guest from localStorage:",
+      expect.any(Error),
+    );
 
     vi.spyOn(window.localStorage, "setItem").mockImplementationOnce(() => {
       throw new DOMException("quota", "QuotaExceededError");
     });
     await expect(setGuestItems([])).rejects.toThrow("저장 공간이 부족합니다.");
+    expect(errorSpy).toHaveBeenCalledTimes(1);
 
     vi.spyOn(window.localStorage, "removeItem").mockImplementationOnce(() => {
       throw new Error("remove failed");
     });
     await expect(clearGuest()).rejects.toThrow("remove failed");
+    expect(errorSpy).toHaveBeenNthCalledWith(
+      2,
+      "Failed to remove cart_guest from localStorage:",
+      expect.any(Error),
+    );
   });
 });

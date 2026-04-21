@@ -22,8 +22,12 @@ vi.mock("@/entities/notification", () => ({
 
 describe("useNotificationConsentFlow", () => {
   const onProceed = vi.fn();
+  const logSpy = vi.fn();
 
   beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.spyOn(console, "log").mockImplementation(logSpy);
+    logSpy.mockReset();
     onProceed.mockReset().mockResolvedValue(undefined);
     saveNotificationConsent.mockReset().mockResolvedValue(undefined);
     refetchStatus.mockReset().mockResolvedValue(undefined);
@@ -40,6 +44,7 @@ describe("useNotificationConsentFlow", () => {
 
     expect(result.current.consentFlow.showConsentModal).toBe(true);
     expect(onProceed).not.toHaveBeenCalled();
+    expect(logSpy).not.toHaveBeenCalled();
   });
 
   it("동의가 있을 때 initiateWithConsentCheck은 onProceed를 바로 호출한다", async () => {
@@ -52,6 +57,7 @@ describe("useNotificationConsentFlow", () => {
 
     expect(result.current.consentFlow.showConsentModal).toBe(false);
     expect(onProceed).toHaveBeenCalled();
+    expect(logSpy).not.toHaveBeenCalled();
   });
 
   it("agreed=false이면 모달을 닫고 onProceed를 호출한다", async () => {

@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { classifyRouteWithLlm } from "@/entities/design/api/route-classifier";
 
-const mockInvoke = vi.hoisted(() => vi.fn());
+const { mockInvoke, warnSpy } = vi.hoisted(() => ({
+  mockInvoke: vi.fn(),
+  warnSpy: vi.fn(),
+}));
 
 vi.mock("@/shared/lib/supabase", () => ({
   supabase: {
@@ -14,6 +17,8 @@ vi.mock("@/shared/lib/supabase", () => ({
 describe("classifyRouteWithLlm", () => {
   beforeEach(() => {
     mockInvoke.mockReset();
+    warnSpy.mockReset();
+    vi.spyOn(console, "warn").mockImplementation(warnSpy);
   });
 
   it("신뢰도가 임계값 이상이면 분류 결과를 반환한다", async () => {
@@ -72,8 +77,6 @@ describe("classifyRouteWithLlm", () => {
   });
 
   it("타임아웃으로 중단된 경우 warning을 남기지 않는다", async () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
     mockInvoke.mockImplementationOnce(
       (_name: string, options?: { signal?: AbortSignal }) =>
         new Promise((_, reject) => {
@@ -99,8 +102,6 @@ describe("classifyRouteWithLlm", () => {
 
     expect(result).toBeNull();
     expect(warnSpy).not.toHaveBeenCalled();
-
-    warnSpy.mockRestore();
   });
 
   it("confidence가 임계값 미만이면 null을 반환한다", async () => {
@@ -137,6 +138,10 @@ describe("classifyRouteWithLlm", () => {
     });
 
     expect(result).toBeNull();
+    expect(warnSpy).toHaveBeenCalledWith(
+      "classifyRouteWithLlm error:",
+      expect.any(Error),
+    );
   });
 
   it("invoke reject 시에도 null을 반환한다", async () => {
@@ -152,5 +157,9 @@ describe("classifyRouteWithLlm", () => {
     });
 
     expect(result).toBeNull();
+    expect(warnSpy).toHaveBeenCalledWith(
+      "classifyRouteWithLlm error:",
+      expect.any(Error),
+    );
   });
 });

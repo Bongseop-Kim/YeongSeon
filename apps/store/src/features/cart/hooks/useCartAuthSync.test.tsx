@@ -14,6 +14,7 @@ const {
   clearUserCache,
   getGuestItems,
   error,
+  consoleError,
 } = vi.hoisted(() => ({
   ensureQueryData: vi.fn(),
   setQueryData: vi.fn(),
@@ -25,6 +26,7 @@ const {
   clearUserCache: vi.fn(),
   getGuestItems: vi.fn(),
   error: vi.fn(),
+  consoleError: vi.fn(),
 }));
 
 const authState = {
@@ -83,6 +85,8 @@ describe("useCartAuthSync", () => {
     clearUserCache.mockReset();
     getGuestItems.mockReset();
     error.mockReset();
+    consoleError.mockReset();
+    vi.spyOn(console, "error").mockImplementation(consoleError);
   });
 
   it("로그아웃 상태에서는 guest 장바구니를 로드한다", async () => {
@@ -155,6 +159,10 @@ describe("useCartAuthSync", () => {
     await waitFor(() => {
       expect(error).toHaveBeenCalledWith("장바구니를 불러오지 못했어요.");
     });
+    expect(consoleError).toHaveBeenCalledWith(
+      "서버 장바구니 조회 실패:",
+      expect.any(Error),
+    );
 
     authState.user = { id: "user-4" };
     ensureQueryData.mockResolvedValueOnce([{ id: "server-item" }]);
@@ -172,6 +180,10 @@ describe("useCartAuthSync", () => {
     });
     expect(error).toHaveBeenCalledWith(
       "로컬 장바구니를 서버로 업로드하지 못했습니다. 서버 장바구니를 사용합니다.",
+    );
+    expect(consoleError).toHaveBeenCalledWith(
+      "로컬 장바구니 업로드 실패:",
+      expect.any(Error),
     );
   });
 });

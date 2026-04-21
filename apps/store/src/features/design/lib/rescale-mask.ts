@@ -1,6 +1,6 @@
 export const MAX_MASK_BASE64_LENGTH = 5_000_000;
 
-export interface RescaleTarget {
+interface RescaleTarget {
   width: number;
   height: number;
 }
@@ -42,9 +42,7 @@ export async function rescaleMaskToTarget(
   return output;
 }
 
-export async function canvasToPngBlob(
-  canvas: HTMLCanvasElement,
-): Promise<Blob> {
+async function canvasToPngBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (!blob) {

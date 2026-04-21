@@ -5,11 +5,11 @@ import {
 } from "@/features/design/hooks/ai-design-query";
 import {
   resolveGenerationRoute,
+  createAnalysisReuseKeyForContext,
   type AiDesignResponse,
   InsufficientTokensError,
   type GenerationRouteSignal,
 } from "@/entities/design";
-import { createAnalysisReuseKeyForContext } from "@/entities/design/api/analysis-reuse-key";
 import {
   getRawImageUrlFromPreviewBackground,
   useDesignChatStore,

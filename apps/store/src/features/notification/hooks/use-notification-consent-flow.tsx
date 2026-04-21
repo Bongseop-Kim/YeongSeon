@@ -20,16 +20,10 @@ export function useNotificationConsentFlow(onProceed: () => Promise<void>) {
     useNotificationStatus();
 
   const initiateWithConsentCheck = async () => {
-    console.log(
-      "[initiateWithConsentCheck] called, notificationConsent:",
-      notificationStatus?.notificationConsent,
-    );
     if (!notificationStatus?.notificationConsent) {
-      console.log("[initiateWithConsentCheck] showing consent modal");
       setShowConsentModal(true);
       return;
     }
-    console.log("[initiateWithConsentCheck] calling onProceed directly");
     await onProceed();
   };
 

@@ -1,6 +1,6 @@
-import type { DesignContext } from "@/entities/design";
+import type { DesignContext } from "@/entities/design/model/design-context";
 
-export interface AnalysisReuseKeyInput {
+interface AnalysisReuseKeyInput {
   colors: readonly string[] | null;
   pattern: string | null;
   fabricMethod: string | null;
@@ -43,7 +43,7 @@ function serializeAnalysisReuseKeyInput(input: AnalysisReuseKeyInput): string {
   return parts.join("|");
 }
 
-export function fnv1a32(value: string): string {
+function fnv1a32(value: string): string {
   let hash = 0x811c9dc5;
 
   for (let index = 0; index < value.length; index += 1) {

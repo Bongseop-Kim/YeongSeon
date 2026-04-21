@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 
-import { createAnalysisReuseKeyForContext } from "@/entities/design/api/analysis-reuse-key";
+import { createAnalysisReuseKeyForContext } from "@/entities/design";
 import { ChatHeader } from "@/features/design/components/chat/chat-header";
 import { TiePreviewModal } from "@/features/design/components/chat/tie-preview-modal";
 import {

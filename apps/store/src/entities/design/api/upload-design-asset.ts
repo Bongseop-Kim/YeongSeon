@@ -1,8 +1,8 @@
 import { supabase } from "@/shared/lib/supabase";
 
-export type AssetKind = "ci" | "reference" | "mask" | "base";
+type AssetKind = "ci" | "reference" | "mask" | "base";
 
-export interface UploadResult {
+interface UploadResult {
   signedUrl: string;
   storagePath: string;
   hash: string;

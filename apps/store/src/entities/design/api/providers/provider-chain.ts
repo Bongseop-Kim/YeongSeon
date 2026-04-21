@@ -13,7 +13,7 @@ export class NoProviderAvailableError extends Error {
   }
 }
 
-export interface ChainResult<TResult> {
+interface ChainResult<TResult> {
   result: TResult;
   providerUsed: ProviderName;
   usedFallback: boolean;

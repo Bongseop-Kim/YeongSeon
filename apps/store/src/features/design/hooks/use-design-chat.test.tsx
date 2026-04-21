@@ -1,6 +1,7 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildAnalysisReuseKey } from "@/entities/design/api/analysis-reuse-key";
+import type * as DesignEntities from "@/entities/design";
+import { buildAnalysisReuseKey } from "@/entities/design";
 import { useDesignChat } from "@/features/design/hooks/use-design-chat";
 
 const {
@@ -182,10 +183,15 @@ vi.mock("@tanstack/react-query", () => ({
   }),
 }));
 
-vi.mock("@/entities/design", () => ({
-  InsufficientTokensError: MockInsufficientTokensError,
-  resolveGenerationRoute,
-}));
+vi.mock("@/entities/design", async (importOriginal) => {
+  const actual = await importOriginal<typeof DesignEntities>();
+
+  return {
+    ...actual,
+    InsufficientTokensError: MockInsufficientTokensError,
+    resolveGenerationRoute,
+  };
+});
 
 vi.mock("@/features/design/hooks/ai-design-query", () => ({
   DESIGN_TOKEN_BALANCE_QUERY_KEY: ["design-token-balance"],
