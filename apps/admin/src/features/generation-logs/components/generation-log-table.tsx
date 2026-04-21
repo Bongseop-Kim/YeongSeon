@@ -7,6 +7,7 @@ import {
   Typography,
   Modal,
   Descriptions,
+  List,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -257,6 +258,24 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
       )}
       <Descriptions.Item label="프롬프트 길이">
         {log.promptLength}자
+      </Descriptions.Item>
+      <Descriptions.Item label="첨부 파일" span={2}>
+        {log.requestAttachments && log.requestAttachments.length > 0 ? (
+          <List
+            size="small"
+            dataSource={log.requestAttachments}
+            renderItem={(attachment) => (
+              <List.Item>
+                <Space size={8} wrap>
+                  <Tag>{attachment.label}</Tag>
+                  <Text>{attachment.fileName ?? "(파일명 없음)"}</Text>
+                </Space>
+              </List.Item>
+            )}
+          />
+        ) : (
+          "-"
+        )}
       </Descriptions.Item>
       <Descriptions.Item label="대화 턴">
         {log.conversationTurn}

@@ -152,6 +152,12 @@ export type LogContext = {
   userId: string;
   userMessage: string;
   promptLength: number;
+  requestAttachments?: Array<{
+    type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+    label: string;
+    value: string;
+    fileName?: string;
+  }> | null;
   conversationTurn: number;
   designContext: Record<string, unknown> | null;
   normalizedDesign?: Record<string, unknown> | null;

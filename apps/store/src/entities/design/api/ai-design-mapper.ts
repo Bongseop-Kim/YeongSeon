@@ -153,6 +153,12 @@ interface InvokePayloadInput {
 
 type InvokePayload = {
   userMessage: string;
+  attachments: Array<{
+    type: Attachment["type"];
+    label: string;
+    value: string;
+    fileName?: string;
+  }>;
   designContext: {
     colors: string[];
     pattern: AiDesignRequest["designContext"]["pattern"];
@@ -293,6 +299,16 @@ export function buildInvokePayload(
 ): InvokePayload {
   const payload: InvokePayload = {
     userMessage: request.userMessage,
+    attachments: request.attachments.map(
+      ({ type, label, value, file, fileName }) => ({
+        type,
+        label,
+        value,
+        ...((fileName ?? file?.name)
+          ? { fileName: fileName ?? file?.name }
+          : {}),
+      }),
+    ),
     designContext: {
       colors: request.designContext.colors,
       pattern: request.designContext.pattern,

@@ -166,6 +166,7 @@ describe("buildInvokePayload", () => {
       }),
     ).toEqual({
       userMessage: "테스트 요청",
+      attachments: [],
       designContext: {
         colors: ["navy"],
         pattern: "stripe",
@@ -256,6 +257,57 @@ describe("buildInvokePayload — 세션 필드", () => {
     expect(payload.firstMessage).toBe("첫 메시지");
     expect(payload.allMessages).toHaveLength(1);
     expect(payload.allMessages[0].id).toBe("msg-1");
+  });
+
+  it("첨부 이미지의 fileName을 payload에 포함한다", () => {
+    const payload = buildInvokePayload(
+      createAiDesignRequest({
+        attachments: [
+          createAttachment({
+            type: "image",
+            label: "참고 이미지",
+            value: "reference",
+            file: new File(["ref"], "mood-board.png", { type: "image/png" }),
+          }),
+        ],
+        allMessages: [
+          {
+            id: "msg-1",
+            role: "user",
+            content: "이런 무드로 만들어줘",
+            imageUrl: null,
+            imageFileId: null,
+            attachments: [
+              {
+                type: "image",
+                label: "참고 이미지",
+                value: "reference",
+                fileName: "mood-board.png",
+              },
+            ],
+            sequenceNumber: 0,
+          },
+        ],
+      }),
+      {},
+    );
+
+    expect(payload.attachments).toEqual([
+      {
+        type: "image",
+        label: "참고 이미지",
+        value: "reference",
+        fileName: "mood-board.png",
+      },
+    ]);
+    expect(payload.allMessages[0].attachments).toEqual([
+      {
+        type: "image",
+        label: "참고 이미지",
+        value: "reference",
+        fileName: "mood-board.png",
+      },
+    ]);
   });
 });
 

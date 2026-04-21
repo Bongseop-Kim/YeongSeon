@@ -18,6 +18,12 @@ export type AiGenerationLogInsert = {
   quality?: AiGenerationLogQuality | null;
   user_message: string;
   prompt_length: number;
+  request_attachments?: Array<{
+    type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+    label: string;
+    value: string;
+    fileName?: string;
+  }> | null;
   design_context?: Record<string, unknown> | null;
   normalized_design?: Record<string, unknown> | null;
   conversation_turn?: number;

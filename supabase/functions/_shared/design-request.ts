@@ -12,6 +12,7 @@ interface RequestSessionAttachment {
   type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
   label: string;
   value: string;
+  fileName?: string;
 }
 
 export interface RequestSessionMessage {
@@ -26,6 +27,7 @@ export interface RequestSessionMessage {
 
 export type GenerateDesignRequest = {
   userMessage: string;
+  attachments?: RequestSessionAttachment[];
   designContext?: {
     colors?: string[];
     pattern?: string | null;

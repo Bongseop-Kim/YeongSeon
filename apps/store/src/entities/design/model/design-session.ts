@@ -17,6 +17,12 @@ export interface DesignSessionMessage {
   content: string;
   imageUrl: string | null;
   imageFileId: string | null;
+  attachments: Array<{
+    type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+    label: string;
+    value: string;
+    fileName?: string;
+  }> | null;
   sequenceNumber: number;
   createdAt: string;
 }

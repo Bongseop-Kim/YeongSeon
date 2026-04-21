@@ -15,6 +15,7 @@ CREATE TABLE public.ai_generation_logs (
   user_message         text        NOT NULL,
   conversation_turn    integer     NOT NULL DEFAULT 0,
   prompt_length        integer,
+  request_attachments  jsonb,
   design_context       jsonb,
   normalized_design    jsonb,
   has_ci_image         boolean,

@@ -34,6 +34,7 @@ CREATE TABLE public.design_chat_messages (
   content         text        NOT NULL DEFAULT '',
   image_url       text,
   image_file_id   text,
+  attachments     jsonb,
   sequence_number int         NOT NULL,
   created_at      timestamptz NOT NULL DEFAULT now()
 );
@@ -119,7 +120,7 @@ BEGIN
   LOOP
     INSERT INTO public.design_chat_messages (
       id, session_id, role, content,
-      image_url, image_file_id, sequence_number
+      image_url, image_file_id, attachments, sequence_number
     )
     VALUES (
       (v_msg->>'id')::uuid,
@@ -128,6 +129,7 @@ BEGIN
       COALESCE(v_msg->>'content', ''),
       v_msg->>'image_url',
       v_msg->>'image_file_id',
+      v_msg->'attachments',
       (v_msg->>'sequence_number')::int
     );
   END LOOP;

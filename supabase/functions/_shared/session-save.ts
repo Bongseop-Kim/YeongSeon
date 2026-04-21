@@ -7,6 +7,7 @@ export interface SessionMessage {
   content: string;
   image_url: string | null;
   image_file_id: string | null;
+  attachments: RequestSessionMessage["attachments"];
   sequence_number: number;
 }
 
@@ -31,6 +32,7 @@ export function buildSessionMessages(
       content: m.content,
       image_url: m.imageUrl ?? null,
       image_file_id: m.imageFileId ?? null,
+      attachments: m.attachments ?? null,
       sequence_number: idx,
     })),
     newAiMessage,

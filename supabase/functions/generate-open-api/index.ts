@@ -144,6 +144,7 @@ const emitGenerationLog = async (
     quality: context.quality,
     user_message: context.userMessage,
     prompt_length: context.promptLength,
+    request_attachments: context.requestAttachments ?? null,
     design_context: context.designContext,
     normalized_design: context.normalizedDesign ?? null,
     conversation_turn: context.conversationTurn,
@@ -441,6 +442,7 @@ const saveSessionIfNeeded = async (
       content: aiMessage,
       image_url: imagekitUrl,
       image_file_id: imagekitFileId,
+      attachments: null,
       sequence_number: payload.allMessages.length,
     } satisfies SessionMessage),
   });
@@ -483,6 +485,7 @@ const runOpenAiAnalysis = async (params: {
       userId,
       userMessage: payload.userMessage,
       promptLength: payload.userMessage.length,
+      requestAttachments: payload.attachments ?? null,
       conversationTurn,
       designContext: toRecord(payload.designContext) ?? null,
       hasCiImage: Boolean(payload.ciImageBase64),
@@ -681,6 +684,7 @@ const runOpenAiRenderFromAnalysis = async (params: {
       userId,
       userMessage: analysis.userMessage,
       promptLength: analysis.userMessage.length,
+      requestAttachments: renderPayload.attachments ?? null,
       conversationTurn: analysis.conversationTurn,
       designContext: analysis.designContext,
       normalizedDesign: analysis.normalizedDesign as unknown as Record<

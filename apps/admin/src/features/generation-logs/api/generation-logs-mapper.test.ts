@@ -22,6 +22,7 @@ const baseRow = {
   generate_image: true,
   image_generated: true,
   generated_image_url: null,
+  request_attachments: null,
   detected_design: { pattern: "solid" },
   tokens_charged: 10,
   tokens_refunded: 0,
@@ -52,6 +53,7 @@ describe("toAdminGenerationLogItem", () => {
       generateImage: true,
       imageGenerated: true,
       generatedImageUrl: null,
+      requestAttachments: null,
       detectedDesign: { pattern: "solid" },
       tokensCharged: 10,
       tokensRefunded: 0,
@@ -191,6 +193,41 @@ describe("toAdminGenerationLogItem", () => {
       image_generated: false,
     });
     expect(result.imageGenerated).toBe(false);
+  });
+
+  it("request_attachments를 Admin 뷰 모델로 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      request_attachments: [
+        {
+          type: "image",
+          label: "CI 이미지",
+          value: "ci",
+          fileName: "brand-mark.png",
+        },
+        {
+          type: "image",
+          label: "참고 이미지",
+          value: "reference",
+          fileName: "stripe-reference.jpg",
+        },
+      ],
+    });
+
+    expect(result.requestAttachments).toEqual([
+      {
+        type: "image",
+        label: "CI 이미지",
+        value: "ci",
+        fileName: "brand-mark.png",
+      },
+      {
+        type: "image",
+        label: "참고 이미지",
+        value: "reference",
+        fileName: "stripe-reference.jpg",
+      },
+    ]);
   });
 });
 

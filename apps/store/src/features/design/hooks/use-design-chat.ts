@@ -55,10 +55,11 @@ const toConversationHistory = (
     }));
 
 const toSerializedAttachments = (attachments: Attachment[] | undefined) =>
-  attachments?.map(({ type, label, value }) => ({
+  attachments?.map(({ type, label, value, file, fileName }) => ({
     type,
     label,
     value,
+    fileName: fileName ?? file?.name,
   }));
 
 const getSerializedImageFields = (message: Message) => {

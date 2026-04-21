@@ -19,6 +19,9 @@ function sessionMessageToMessage(message: DesignSessionMessage): Message {
     ...(message.imageFileId != null
       ? { imageFileId: message.imageFileId }
       : {}),
+    ...(message.attachments != null
+      ? { attachments: message.attachments }
+      : {}),
     timestamp: new Date(message.createdAt).getTime(),
   };
 }

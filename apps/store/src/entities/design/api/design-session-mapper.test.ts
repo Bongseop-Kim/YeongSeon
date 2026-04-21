@@ -86,6 +86,14 @@ describe("toDesignSessionMessage", () => {
         content: "생성했습니다",
         image_url: "https://ik.imagekit.io/essesion/design-sessions/img.png",
         image_file_id: "file-1",
+        attachments: [
+          {
+            type: "image",
+            label: "참고 이미지",
+            value: "reference",
+            fileName: "mood-board.png",
+          },
+        ],
         sequence_number: 2,
         created_at: "2026-03-19T10:05:00Z",
       }),
@@ -96,6 +104,14 @@ describe("toDesignSessionMessage", () => {
       content: "생성했습니다",
       imageUrl: "https://ik.imagekit.io/essesion/design-sessions/img.png",
       imageFileId: "file-1",
+      attachments: [
+        {
+          type: "image",
+          label: "참고 이미지",
+          value: "reference",
+          fileName: "mood-board.png",
+        },
+      ],
       sequenceNumber: 2,
       createdAt: "2026-03-19T10:05:00Z",
     });

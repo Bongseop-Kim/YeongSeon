@@ -5,6 +5,7 @@ export interface Attachment {
   label: string;
   value: string;
   file?: File;
+  fileName?: string;
 }
 
 export interface ContextChip {
