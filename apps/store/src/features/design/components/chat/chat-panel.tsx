@@ -27,7 +27,7 @@ interface ChatPanelProps {
   className?: string;
   sendMessage: (text: string, attachments: Attachment[]) => void;
   requestRender?: () => void;
-  requestInpaint: (maskBase64: string, editPrompt: string) => void;
+  requestInpaint: (maskBase64: string, editPrompt: string) => boolean;
   onOpenHistory: () => void;
 }
 
@@ -143,6 +143,17 @@ export function ChatPanel({
     setHasObservedInpaintGeneration(false);
     closeInpaintDialog();
   };
+  const handleInpaintSubmit = (maskBase64: string, editPrompt: string) => {
+    const requestStarted = requestInpaint(maskBase64, editPrompt);
+
+    if (!requestStarted) {
+      handleCloseInpaintDialog();
+      return;
+    }
+
+    setPendingInpaintClose(true);
+    setHasObservedInpaintGeneration(false);
+  };
   const latestAiMessage = [...messages]
     .reverse()
     .find((message) => message.role === "ai" && !message.uiOnly);
@@ -233,11 +244,7 @@ export function ChatPanel({
               handleCloseInpaintDialog();
             }
           }}
-          onSubmit={(maskBase64, editPrompt) => {
-            requestInpaint(maskBase64, editPrompt);
-            setPendingInpaintClose(true);
-            setHasObservedInpaintGeneration(false);
-          }}
+          onSubmit={handleInpaintSubmit}
         />
       ) : null}
       <div className="shrink-0 border-t p-2">

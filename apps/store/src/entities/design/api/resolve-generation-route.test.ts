@@ -472,12 +472,14 @@ describe("resolveGenerationRouteAsync", () => {
   });
 
   it("sharp-edge 반복 패턴은 LLM이 fal_tiling을 반환해도 fal_controlnet을 유지한다", async () => {
-    vi.spyOn(classifier, "classifyRouteWithLlm").mockResolvedValueOnce({
-      route: "fal_tiling",
-      signals: ["pattern_repeat"],
-      confidence: 0.95,
-      source: "llm",
-    });
+    const classifyRouteWithLlmSpy = vi
+      .spyOn(classifier, "classifyRouteWithLlm")
+      .mockResolvedValueOnce({
+        route: "fal_tiling",
+        signals: ["pattern_repeat"],
+        confidence: 0.95,
+        source: "llm",
+      });
 
     const result = await resolveGenerationRouteAsync({
       userMessage: "첨부한 이미지를 반복 패턴으로 만들어줘",
@@ -488,6 +490,7 @@ describe("resolveGenerationRouteAsync", () => {
       detectedPattern: " Stripe ",
     });
 
+    expect(classifyRouteWithLlmSpy).not.toHaveBeenCalled();
     expect(result).toEqual({
       route: "fal_controlnet",
       reason: "sharp_edge_pattern_repeat",

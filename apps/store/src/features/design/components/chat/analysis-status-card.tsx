@@ -15,6 +15,39 @@ export function AnalysisStatusCard({
   onOpenOptions,
   onFocusInput,
 }: AnalysisStatusCardProps) {
+  const actionButtons = [
+    eligibleForRender && onRender ? (
+      <button
+        key="render"
+        type="button"
+        onClick={onRender}
+        className="rounded-xl bg-gray-900 px-3 py-2 text-xs font-semibold text-white"
+      >
+        이대로 렌더링
+      </button>
+    ) : null,
+    !eligibleForRender && onOpenOptions ? (
+      <button
+        key="options"
+        type="button"
+        onClick={onOpenOptions}
+        className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700"
+      >
+        옵션 열기
+      </button>
+    ) : null,
+    onFocusInput ? (
+      <button
+        key="focus-input"
+        type="button"
+        onClick={onFocusInput}
+        className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700"
+      >
+        요청 더 수정
+      </button>
+    ) : null,
+  ].filter(Boolean);
+
   return (
     <div className="mt-2 rounded-2xl border border-blue-100 bg-gradient-to-b from-blue-50 to-white p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -55,32 +88,9 @@ export function AnalysisStatusCard({
             ))
           : null}
       </div>
-      <div className="flex flex-wrap gap-2">
-        {eligibleForRender ? (
-          <button
-            type="button"
-            onClick={onRender}
-            className="rounded-xl bg-gray-900 px-3 py-2 text-xs font-semibold text-white"
-          >
-            이대로 렌더링
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onOpenOptions}
-            className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700"
-          >
-            옵션 열기
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={onFocusInput}
-          className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700"
-        >
-          요청 더 수정
-        </button>
-      </div>
+      {actionButtons.length > 0 ? (
+        <div className="flex flex-wrap gap-2">{actionButtons}</div>
+      ) : null}
     </div>
   );
 }

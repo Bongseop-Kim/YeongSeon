@@ -776,6 +776,28 @@ describe("useDesignChat", () => {
     );
   });
 
+  it("requestInpaint는 inpaint target URL을 사용할 때 해당 target의 workId를 그대로 사용한다", () => {
+    Object.assign(storeState, {
+      inpaintTarget: {
+        imageUrl: "https://example.com/inpaint-target.png",
+        imageWorkId: null,
+      },
+      baseImageUrl: "https://example.com/base.png",
+      baseImageWorkId: "base-work-1",
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.requestInpaint("mask-base64", "이 부분만 자수 느낌으로");
+
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseImageUrl: "https://example.com/inpaint-target.png",
+        baseImageWorkId: null,
+      }),
+      expect.any(Object),
+    );
+  });
+
   it("onGenerationStart는 sendMessage 시 sessionId와 함께 호출된다", () => {
     const onGenerationStart = vi.fn();
     const { result } = renderHook(() => useDesignChat({ onGenerationStart }));

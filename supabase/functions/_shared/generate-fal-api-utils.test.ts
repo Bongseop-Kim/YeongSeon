@@ -216,3 +216,22 @@ Deno.test(
     assertEquals(response.contentLength, 1024);
   },
 );
+
+Deno.test("inspectRemoteInpaintImage rejects zero-byte images", async () => {
+  await assertRejects(
+    () =>
+      inspectRemoteInpaintImage("https://assets.example.com/base.png", {
+        allowedHosts: ["example.com"],
+        fetchImpl: async () =>
+          new Response(null, {
+            status: 200,
+            headers: {
+              "content-type": "image/png",
+              "content-length": "0",
+            },
+          }),
+      }),
+    Error,
+    "base_image_url_empty",
+  );
+});

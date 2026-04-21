@@ -57,6 +57,18 @@ describe("uploadDesignAsset", () => {
     expect(result.hash).toMatch(/^[0-9a-f]{64}$/);
   });
 
+  it("해시 계산이 실패하면 업로드를 시작하지 않고 에러를 throw한다", async () => {
+    const blob = new Blob(["x"], { type: "image/png" });
+    vi.spyOn(blob, "arrayBuffer").mockRejectedValueOnce(new Error("hash-fail"));
+
+    await expect(uploadDesignAsset(blob, { kind: "ci" })).rejects.toThrow(
+      "hash-fail",
+    );
+
+    expect(uploadMock).not.toHaveBeenCalled();
+    expect(createSignedUrlMock).not.toHaveBeenCalled();
+  });
+
   it("지원하지 않는 MIME type은 415 에러로 거절한다", async () => {
     await expect(
       uploadDesignAsset(new Blob(["x"], { type: "application/pdf" }), {

@@ -67,6 +67,7 @@ export async function uploadDesignAsset(
     throw new Error("unauthenticated");
   }
 
+  const hash = await hashBlob(blob);
   const extension = extOf(blob.type);
   const path = `${user.id}/${ymd()}/${options.kind}-${crypto.randomUUID()}.${extension}`;
   const { data: uploaded, error: uploadError } = await supabase.storage
@@ -104,6 +105,6 @@ export async function uploadDesignAsset(
   return {
     signedUrl: signed.signedUrl,
     storagePath: uploaded.path,
-    hash: await hashBlob(blob),
+    hash,
   };
 }

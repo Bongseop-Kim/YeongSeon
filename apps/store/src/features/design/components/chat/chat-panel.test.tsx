@@ -260,7 +260,7 @@ describe("ChatPanel", () => {
 
   it("keeps the inpaint dialog open until rendering finishes", async () => {
     const user = userEvent.setup();
-    const requestInpaint = vi.fn();
+    const requestInpaint = vi.fn(() => true);
     const queryClient = new QueryClient();
 
     render(
@@ -311,7 +311,7 @@ describe("ChatPanel", () => {
 
   it("does not close a newly opened dialog when the previous inpaint completes", async () => {
     const user = userEvent.setup();
-    const requestInpaint = vi.fn();
+    const requestInpaint = vi.fn(() => true);
     const queryClient = new QueryClient();
 
     render(
@@ -351,6 +351,28 @@ describe("ChatPanel", () => {
     expect(useDesignChatStore.getState().inpaintTarget).toEqual({
       imageUrl: "https://example.com/next.png",
       imageWorkId: "work-2",
+    });
+  });
+
+  it("inpaint 요청이 시작되지 않으면 다이얼로그를 즉시 닫는다", async () => {
+    const user = userEvent.setup();
+    const queryClient = new QueryClient();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ChatPanel
+          sendMessage={vi.fn()}
+          requestInpaint={vi.fn(() => false)}
+          onOpenHistory={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "submit" }));
+
+    await waitFor(() => {
+      expect(useDesignChatStore.getState().inpaintTarget).toBeNull();
+      expect(screen.queryByTestId("inpaint-dialog")).not.toBeInTheDocument();
     });
   });
 });

@@ -27,7 +27,7 @@ interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
   regenerate: () => void;
   requestRender: () => void;
-  requestInpaint: (maskBase64: string, editPrompt: string) => void;
+  requestInpaint: (maskBase64: string, editPrompt: string) => boolean;
   isLoading: boolean;
 }
 
@@ -495,21 +495,23 @@ export function useDesignChat(
     );
   };
 
-  const requestInpaint = (maskBase64: string, editPrompt: string): void => {
+  const requestInpaint = (maskBase64: string, editPrompt: string): boolean => {
     const trimmedPrompt = editPrompt.trim();
     if (maskBase64.trim().length === 0 || trimmedPrompt.length === 0) {
-      return;
+      return false;
     }
 
     const storeState = useDesignChatStore.getState();
     const aiModel = storeState.aiModel;
-    const targetImageUrl =
-      storeState.inpaintTarget?.imageUrl ??
-      getRawImageUrlFromPreviewBackground(
-        storeState.baseImageUrl ?? storeState.selectedPreviewImageUrl,
-      );
-    const targetImageWorkId =
-      storeState.inpaintTarget?.imageWorkId ?? storeState.baseImageWorkId;
+    const isInpaintTarget = Boolean(storeState.inpaintTarget);
+    const targetImageUrl = isInpaintTarget
+      ? (storeState.inpaintTarget?.imageUrl ?? null)
+      : getRawImageUrlFromPreviewBackground(
+          storeState.baseImageUrl ?? storeState.selectedPreviewImageUrl,
+        );
+    const targetImageWorkId = isInpaintTarget
+      ? (storeState.inpaintTarget?.imageWorkId ?? null)
+      : storeState.baseImageWorkId;
 
     if (!targetImageUrl) {
       addMessage({
@@ -519,7 +521,7 @@ export function useDesignChat(
         timestamp: Date.now(),
         uiOnly: true,
       });
-      return;
+      return false;
     }
 
     const userMessage: Message = {
@@ -566,6 +568,8 @@ export function useDesignChat(
       "죄송합니다. 부분 수정 중 오류가 발생했습니다. 다시 시도해 주세요.",
       "completed",
     );
+
+    return true;
   };
 
   return {

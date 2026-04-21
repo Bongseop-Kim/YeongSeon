@@ -330,6 +330,11 @@ export const inspectRemoteInpaintImage = async (
     throw new Error("base_image_url_content_length_missing");
   }
 
+  if (contentLength <= 0) {
+    cancelResponseBody(response);
+    throw new Error("base_image_url_empty");
+  }
+
   if (contentLength > MAX_REMOTE_INPAINT_IMAGE_BYTES) {
     cancelResponseBody(response);
     throw new Error("base_image_url_too_large");

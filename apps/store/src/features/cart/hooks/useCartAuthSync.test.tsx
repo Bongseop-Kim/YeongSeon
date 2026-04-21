@@ -72,6 +72,8 @@ vi.mock("@/shared/lib/toast", () => ({
 }));
 
 describe("useCartAuthSync", () => {
+  let consoleErrorSpy: { mockRestore: () => void } | null = null;
+
   beforeEach(() => {
     authState.user = null;
     authState.initialized = true;
@@ -86,7 +88,14 @@ describe("useCartAuthSync", () => {
     getGuestItems.mockReset();
     error.mockReset();
     consoleError.mockReset();
-    vi.spyOn(console, "error").mockImplementation(consoleError);
+    consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(consoleError);
+  });
+
+  afterEach(() => {
+    consoleErrorSpy?.mockRestore();
+    consoleErrorSpy = null;
   });
 
   it("로그아웃 상태에서는 guest 장바구니를 로드한다", async () => {
