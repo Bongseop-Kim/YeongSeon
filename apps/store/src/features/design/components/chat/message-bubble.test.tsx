@@ -138,7 +138,11 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
 
     render(
       <MessageBubble
-        message={{ ...baseMessage, imageUrl: "https://example.com/tie.png" }}
+        message={{
+          ...baseMessage,
+          imageUrl: "https://example.com/tie.png",
+          workId: "work-image-1",
+        }}
         selectedPreviewImageUrl={null}
         onSelectPreview={vi.fn()}
         onRequestInpaint={onRequestInpaint}
@@ -149,6 +153,7 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
 
     expect(onRequestInpaint).toHaveBeenCalledWith(
       "https://example.com/tie.png",
+      "work-image-1",
     );
   });
 });

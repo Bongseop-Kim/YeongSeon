@@ -42,6 +42,21 @@ const readCanvasBase64 = (canvas: HTMLCanvasElement): Promise<string> =>
     }, "image/png");
   });
 
+const hasVisibleMaskPixels = (
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+): boolean => {
+  const { data } = context.getImageData(0, 0, width, height);
+  for (let index = 3; index < data.length; index += 4) {
+    if (data[index] !== 0) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export function MaskCanvas({
   baseImageUrl,
   width,
@@ -161,6 +176,11 @@ export function MaskCanvas({
       maskContext.clearRect(0, 0, width, height);
       previewContext.clearRect(0, 0, width, height);
       maskContext.drawImage(image, 0, 0, width, height);
+      if (!hasVisibleMaskPixels(maskContext, width, height)) {
+        setHasMask(false);
+        return;
+      }
+
       previewContext.drawImage(image, 0, 0, width, height);
       previewContext.globalCompositeOperation = "source-in";
       previewContext.fillStyle = "rgba(255, 255, 255, 0.45)";
@@ -201,6 +221,9 @@ export function MaskCanvas({
       return;
     }
 
+    if (undoStackRef.current.length === 0) {
+      setHasMask(false);
+    }
     restoreMaskFromDataUrl(previous);
   };
 
@@ -210,8 +233,15 @@ export function MaskCanvas({
       return;
     }
 
+    const maskContext = maskCanvas.getContext("2d");
+    if (!maskContext || !hasVisibleMaskPixels(maskContext, width, height)) {
+      setHasMask(false);
+      return;
+    }
+
     const base64 = await readCanvasBase64(maskCanvas);
     if (base64.length === 0) {
+      setHasMask(false);
       return;
     }
 

@@ -14,6 +14,7 @@ const base = {
 describe("shouldUseFalPipeline", () => {
   beforeEach(() => {
     __resetProbeCacheForTesting();
+    vi.useRealTimers();
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -79,5 +80,26 @@ describe("shouldUseFalPipeline", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
 
     await expect(shouldUseFalPipeline(base)).resolves.toBe(true);
+  });
+
+  it("aborts a slow probe request and caches the fail-open result", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise((_, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("aborted", "AbortError"));
+          });
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const firstCall = shouldUseFalPipeline(base);
+    await vi.advanceTimersByTimeAsync(3_100);
+
+    await expect(firstCall).resolves.toBe(true);
+    await expect(shouldUseFalPipeline(base)).resolves.toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
   });
 });

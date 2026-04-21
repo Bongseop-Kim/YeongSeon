@@ -22,6 +22,7 @@ import {
 import {
   buildFalErrorResponseBody,
   getTrustedFalImageUrl,
+  resolveInpaintBaseImageUrl,
 } from "@/functions/_shared/generate-fal-api-utils.ts";
 import { planFalRender } from "@/functions/_shared/generate-fal-render-plan.ts";
 import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
@@ -247,18 +248,41 @@ Deno.serve(async (req) => {
 
   let analysisSnapshot = null;
   if (executionMode === "render_from_analysis") {
+    const requestedAnalysisWorkId = (payload.analysisWorkId ?? "").trim();
     try {
       analysisSnapshot = await loadAnalysisSnapshot(
         adminClient,
         user.id,
-        (payload.analysisWorkId ?? "").trim(),
+        requestedAnalysisWorkId,
       );
     } catch (error) {
       if (error instanceof HttpError) {
         return jsonResponse(error.status, error.body);
       }
 
-      throw error;
+      errorLogger("analysis_snapshot_load_failed", error, {
+        analysisWorkId: requestedAnalysisWorkId,
+        userId: user.id,
+        route: payload.route ?? DEFAULT_FAL_ROUTE,
+      });
+      await logGeneration(adminClient, {
+        work_id: requestedAnalysisWorkId,
+        workflow_id: requestedAnalysisWorkId,
+        phase: "render",
+        user_id: user.id,
+        ai_model: RENDER_AI_MODEL,
+        request_type: RENDER_REQUEST_TYPE,
+        route: payload.route ?? DEFAULT_FAL_ROUTE,
+        route_reason: payload.routeReason ?? null,
+        route_signals: payload.routeSignals ?? [],
+        base_image_work_id: payload.baseImageWorkId ?? null,
+        user_message: payload.userMessage,
+        prompt_length: payload.userMessage.length,
+        image_generated: false,
+        error_type: "analysis_snapshot_load_failed",
+        error_message: error instanceof Error ? error.message : String(error),
+      });
+      return jsonResponse(500, { error: "analysis_snapshot_load_failed" });
     }
   }
 
@@ -691,7 +715,7 @@ Deno.serve(async (req) => {
       const falResult = await callFalFluxFill({
         imageBase64: baseImage.base64,
         imageMimeType: baseImage.mimeType,
-        imageUrl: payload.baseImageUrl ?? undefined,
+        imageUrl: resolveInpaintBaseImageUrl(payload),
         maskBase64: payload.maskBase64,
         maskMimeType: payload.maskMimeType,
         prompt: imageInpaintPrompt,

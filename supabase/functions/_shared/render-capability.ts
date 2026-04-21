@@ -68,7 +68,12 @@ export function resolveRenderCapability(
     return null;
   }
 
-  if (!(fabricMethod in FABRIC_METHOD_TO_CAPABILITY)) {
+  if (
+    !Object.prototype.hasOwnProperty.call(
+      FABRIC_METHOD_TO_CAPABILITY,
+      fabricMethod,
+    )
+  ) {
     return null;
   }
 

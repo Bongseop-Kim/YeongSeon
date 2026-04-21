@@ -512,6 +512,7 @@ describe("aiDesignApi", () => {
     });
 
     expect(invoke).toHaveBeenCalledTimes(1);
+    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
     expect(invoke).toHaveBeenCalledWith("generate-open-api", {
       body: expect.not.objectContaining({
         route: "fal_tiling",
@@ -548,6 +549,11 @@ describe("aiDesignApi", () => {
       routeHint: "fal_edit",
       baseImageUrl: "https://example.com/base.png",
       baseImageWorkId: "work-base-1",
+      designContext: {
+        ...baseRequest.designContext,
+        colors: ["#123456"],
+        ciPlacement: "one-point",
+      },
     });
 
     expect(invoke).toHaveBeenNthCalledWith(1, "generate-fal-api", {
@@ -566,6 +572,12 @@ describe("aiDesignApi", () => {
         baseImageUrl: "https://example.com/base.png",
         baseImageWorkId: "work-base-1",
         routeHint: "fal_edit",
+        designContext: expect.objectContaining({
+          backgroundPattern: {
+            type: "solid",
+            color: "#123456",
+          },
+        }),
       }),
     });
   });

@@ -242,6 +242,7 @@ export async function aiDesignApi(
             body: buildInvokePayload(request, {
               ciImageBase64,
               referenceImageBase64,
+              backgroundPattern,
               routeHint: request.routeHint,
               baseImageUrl: request.baseImageUrl,
               baseImageWorkId: request.baseImageWorkId,
@@ -252,11 +253,13 @@ export async function aiDesignApi(
     }
   }
 
+  const usedFalApi = canUseFalApi && !usedFallback;
+
   if (error) {
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
-      pipeline: usedFallback ? "fal-ai" : undefined,
+      pipeline: usedFalApi ? "fal-ai" : undefined,
     });
     throw new Error(`디자인 생성 실패: ${error.message}`);
   }
@@ -265,13 +268,12 @@ export async function aiDesignApi(
     safeCapture("design_generation_failed", {
       ai_model: request.aiModel,
       error_type: "api_error",
-      pipeline: usedFallback ? "fal-ai" : undefined,
+      pipeline: usedFalApi ? "fal-ai" : undefined,
     });
     throw new Error("디자인 생성 결과를 받을 수 없습니다.");
   }
 
   const result = normalizeInvokeResponse(data, request);
-  const usedFalApi = canUseFalApi && !usedFallback;
   safeCapture("design_generated", {
     ai_model: request.aiModel,
     latency_ms: Date.now() - startTime,

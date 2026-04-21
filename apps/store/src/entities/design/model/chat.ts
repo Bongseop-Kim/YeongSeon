@@ -19,6 +19,7 @@ export interface Message {
   content: string;
   imageUrl?: string;
   imageFileId?: string;
+  workId?: string | null;
   attachments?: Attachment[];
   contextChips?: ContextChip[];
   timestamp: number;

@@ -46,7 +46,7 @@ export function InpaintDialog({
   }, [open]);
 
   const handleSubmit = () => {
-    if (maskBase64.trim().length === 0) {
+    if (maskBase64.length === 0) {
       setErrorMessage("수정할 영역을 먼저 칠해 주세요.");
       return;
     }

@@ -11,7 +11,7 @@ interface MessageBubbleProps {
   onTiePreviewClick?: (imageUrl: string) => void;
   selectedPreviewImageUrl?: string | null;
   onSelectPreview?: (imageUrl: string) => void;
-  onRequestInpaint?: (imageUrl: string) => void;
+  onRequestInpaint?: (imageUrl: string, imageWorkId: string | null) => void;
 }
 
 function ChatTieMask({ imageUrl }: { imageUrl: string }) {
@@ -119,7 +119,8 @@ export function MessageBubble({
             <button
               type="button"
               onClick={() =>
-                message.imageUrl && onRequestInpaint(message.imageUrl)
+                message.imageUrl &&
+                onRequestInpaint(message.imageUrl, message.workId ?? null)
               }
               className="rounded-full border border-gray-300 px-3 py-1 text-xs text-gray-600 transition-colors hover:border-gray-500 hover:text-gray-900"
             >

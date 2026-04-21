@@ -271,15 +271,44 @@ const describeBackgroundPattern = (
     return "a solid, uniform background with no specific color";
   }
 
+  const fallbackDescription =
+    "a solid, uniform background with no specific color";
+  const isColor = (value: unknown): value is string =>
+    typeof value === "string" && value.length > 0;
+  const isPositiveNumber = (value: unknown): value is number =>
+    typeof value === "number" && Number.isFinite(value) && value > 0;
+  const hasTwoColors = (
+    value: unknown,
+  ): value is [string, string, ...string[]] =>
+    Array.isArray(value) &&
+    value.length >= 2 &&
+    isColor(value[0]) &&
+    isColor(value[1]);
+
   switch (backgroundPattern.type) {
     case "solid":
-      return `a solid uniform field in color ${backgroundPattern.color}`;
+      return isColor(backgroundPattern.color)
+        ? `a solid uniform field in color ${backgroundPattern.color}`
+        : fallbackDescription;
     case "stripe":
-      return `parallel stripes of ${backgroundPattern.width}px width alternating between colors ${backgroundPattern.colors[0]} and ${backgroundPattern.colors[1]}`;
+      return hasTwoColors(backgroundPattern.colors) &&
+        isPositiveNumber(backgroundPattern.width)
+        ? `parallel stripes of ${backgroundPattern.width}px width alternating between colors ${backgroundPattern.colors[0]} and ${backgroundPattern.colors[1]}`
+        : fallbackDescription;
     case "check":
-      return `a regular check grid with ${backgroundPattern.cellSize}px cells in colors ${backgroundPattern.colors[0]} and ${backgroundPattern.colors[1]}`;
+      return hasTwoColors(backgroundPattern.colors) &&
+        isPositiveNumber(backgroundPattern.cellSize)
+        ? `a regular check grid with ${backgroundPattern.cellSize}px cells in colors ${backgroundPattern.colors[0]} and ${backgroundPattern.colors[1]}`
+        : fallbackDescription;
     case "dot":
-      return `a regular dot grid: ${backgroundPattern.dotSize}px dots in ${backgroundPattern.color} on ${backgroundPattern.background} background, spaced every ${backgroundPattern.spacing}px`;
+      return isPositiveNumber(backgroundPattern.dotSize) &&
+        isPositiveNumber(backgroundPattern.spacing) &&
+        isColor(backgroundPattern.color) &&
+        isColor(backgroundPattern.background)
+        ? `a regular dot grid: ${backgroundPattern.dotSize}px dots in ${backgroundPattern.color} on ${backgroundPattern.background} background, spaced every ${backgroundPattern.spacing}px`
+        : fallbackDescription;
+    default:
+      return fallbackDescription;
   }
 };
 

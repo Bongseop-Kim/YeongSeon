@@ -52,7 +52,6 @@ export function ChatPanel({
   const closeInpaintDialog = useDesignChatStore(
     (state) => state.closeInpaintDialog,
   );
-  const baseImageWorkId = useDesignChatStore((state) => state.baseImageWorkId);
 
   const isGenerating =
     generationStatus === "generating" ||
@@ -115,7 +114,9 @@ export function ChatPanel({
             onTiePreviewClick={(url) => setSelectedImageUrl(url)}
             selectedPreviewImageUrl={selectedPreviewImageUrl}
             onSelectPreview={setSelectedPreviewImage}
-            onRequestInpaint={(url) => openInpaintDialog(url, baseImageWorkId)}
+            onRequestInpaint={(url, imageWorkId) =>
+              openInpaintDialog(url, imageWorkId)
+            }
           />
         )}
       </div>

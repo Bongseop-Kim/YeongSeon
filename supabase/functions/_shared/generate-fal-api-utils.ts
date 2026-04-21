@@ -25,3 +25,16 @@ export const buildFalErrorResponseBody = <T extends Record<string, unknown>>(
   error,
   ...analysisResponseBody,
 });
+
+export const resolveInpaintBaseImageUrl = (input: {
+  baseImageUrl?: string | null;
+  baseImageBase64?: string;
+  baseImageMimeType?: string;
+}): string | undefined => {
+  if (input.baseImageBase64 && input.baseImageMimeType) {
+    return undefined;
+  }
+
+  const baseImageUrl = input.baseImageUrl?.trim();
+  return baseImageUrl ? baseImageUrl : undefined;
+};

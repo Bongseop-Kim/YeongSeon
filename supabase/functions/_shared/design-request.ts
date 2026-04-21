@@ -1,6 +1,6 @@
 import type { ConversationTurn } from "./conversation.ts";
-export type { BackgroundPattern } from "../../../packages/shared/src/types/design/background-pattern.ts";
-import type { BackgroundPattern } from "../../../packages/shared/src/types/design/background-pattern.ts";
+export type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
+import type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
 
 export type FalGenerationRoute =
   | "fal_tiling"

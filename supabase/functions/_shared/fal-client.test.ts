@@ -195,12 +195,16 @@ Deno.test(
     const originalFetch = globalThis.fetch;
     const uploadedBodies: Array<{ url: string; contentType: string | null }> =
       [];
+    const signals: AbortSignal[] = [];
 
     globalThis.fetch = (async (
       input: string | URL | Request,
       init?: RequestInit,
     ) => {
       const url = String(input);
+      if (init?.signal) {
+        signals.push(init.signal);
+      }
 
       if (url === "https://rest.alpha.fal.ai/storage/upload/initiate") {
         return new Response(
@@ -243,6 +247,7 @@ Deno.test(
           contentType: "image/png",
         },
       ]);
+      assertEquals(signals.length, 0);
     } finally {
       globalThis.fetch = originalFetch;
     }

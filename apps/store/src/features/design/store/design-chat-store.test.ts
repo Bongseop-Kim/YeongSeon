@@ -113,6 +113,25 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
     });
     expect(useDesignChatStore.getState().selectedPreviewImageUrl).toBeNull();
   });
+
+  it("restoreSessionState는 기존 inpaintTarget을 초기화한다", () => {
+    useDesignChatStore.setState({
+      inpaintTarget: {
+        imageUrl: "https://example.com/stale.png",
+        imageWorkId: "work-stale-1",
+      },
+    });
+
+    useDesignChatStore.getState().restoreSessionState("session-1", {
+      messages: [],
+      generatedImageUrl: null,
+      baseImageWorkId: null,
+      resultTags: [],
+      generationStatus: "idle",
+    });
+
+    expect(useDesignChatStore.getState().inpaintTarget).toBeNull();
+  });
 });
 
 describe("design-chat-store — autoGenerateImage", () => {

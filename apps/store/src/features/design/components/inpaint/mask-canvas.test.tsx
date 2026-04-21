@@ -1,8 +1,13 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MaskCanvas } from "@/features/design/components/inpaint/mask-canvas";
 
 describe("MaskCanvas", () => {
+  const originalSetPointerCaptureDescriptor = Object.getOwnPropertyDescriptor(
+    HTMLCanvasElement.prototype,
+    "setPointerCapture",
+  );
+
   beforeEach(() => {
     const context = {
       save: vi.fn(),
@@ -21,6 +26,9 @@ describe("MaskCanvas", () => {
       strokeStyle: "#ffffff",
       globalAlpha: 1,
       fillStyle: "#ffffff",
+      getImageData: vi.fn(() => ({
+        data: new Uint8ClampedArray([255, 255, 255, 255]),
+      })),
     } as unknown as CanvasRenderingContext2D;
 
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
@@ -52,6 +60,21 @@ describe("MaskCanvas", () => {
       configurable: true,
       value: vi.fn(),
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    if (originalSetPointerCaptureDescriptor) {
+      Object.defineProperty(
+        HTMLCanvasElement.prototype,
+        "setPointerCapture",
+        originalSetPointerCaptureDescriptor,
+      );
+      return;
+    }
+
+    delete (HTMLCanvasElement.prototype as unknown as Record<string, unknown>)
+      .setPointerCapture;
   });
 
   it("pointer draw 후 마스크를 base64로 커밋한다", async () => {
@@ -93,5 +116,66 @@ describe("MaskCanvas", () => {
       expect(onCommit).toHaveBeenCalledWith(expect.any(String), "image/png");
     });
     expect((onCommit.mock.calls[0]?.[0] as string).length).toBeGreaterThan(0);
+  });
+
+  it("투명한 마스크는 커밋하지 않는다", async () => {
+    const transparentContext = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      clearRect: vi.fn(),
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      getImageData: vi.fn(() => ({
+        data: new Uint8ClampedArray([0, 0, 0, 0]),
+      })),
+      globalCompositeOperation: "source-over",
+      lineCap: "round",
+      lineJoin: "round",
+      lineWidth: 24,
+      strokeStyle: "#ffffff",
+      globalAlpha: 1,
+      fillStyle: "#ffffff",
+    } as unknown as CanvasRenderingContext2D;
+
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
+      transparentContext,
+    );
+
+    const onCommit = vi.fn();
+
+    render(
+      <MaskCanvas
+        baseImageUrl="https://example.com/base.png"
+        width={100}
+        height={100}
+        onCommit={onCommit}
+      />,
+    );
+
+    const targetCanvas = document.querySelector("canvas");
+    if (!(targetCanvas instanceof HTMLCanvasElement)) {
+      throw new Error("canvas not found");
+    }
+
+    fireEvent.pointerDown(targetCanvas, {
+      clientX: 10,
+      clientY: 10,
+      pointerId: 1,
+    });
+    fireEvent.pointerUp(targetCanvas, {
+      clientX: 10,
+      clientY: 10,
+      pointerId: 1,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "마스크 반영" }));
+
+    await waitFor(() => {
+      expect(onCommit).not.toHaveBeenCalled();
+    });
   });
 });

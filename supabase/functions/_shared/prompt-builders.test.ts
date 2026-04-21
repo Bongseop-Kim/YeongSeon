@@ -61,6 +61,23 @@ Deno.test(
   },
 );
 
+Deno.test(
+  "buildCiPlacementPrompt tolerates malformed or unknown backgroundPattern payloads",
+  () => {
+    const malformedPrompt = buildCiPlacementPrompt("one-point", true, {
+      type: "stripe",
+      width: "wide",
+      colors: ["#1a2c55"],
+    } as unknown as Parameters<typeof buildCiPlacementPrompt>[2]);
+    const unknownPrompt = buildCiPlacementPrompt("one-point", true, {
+      type: "unexpected",
+    } as unknown as Parameters<typeof buildCiPlacementPrompt>[2]);
+
+    assertStringIncludes(malformedPrompt, "solid, uniform background");
+    assertStringIncludes(unknownPrompt, "solid, uniform background");
+  },
+);
+
 const DEFAULT_FAL_PATTERN_LINE =
   "Render the surface as a high-quality silk fabric.";
 const DEFAULT_FABRIC_PROMPT =
@@ -81,6 +98,7 @@ Deno.test("resolveRenderCapability maps known fabric methods", () => {
     "woven_texture_render",
   );
   assertEquals(resolveRenderCapability("print")?.id, "printed_surface_render");
+  assertEquals(resolveRenderCapability("__proto__"), null);
   assertEquals(resolveRenderCapability(null), null);
   assertEquals(resolveRenderCapability(undefined), null);
 });

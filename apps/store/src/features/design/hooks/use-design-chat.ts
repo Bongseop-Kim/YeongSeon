@@ -214,6 +214,7 @@ export function useDesignChat(
         role: "ai",
         content: data.aiMessage,
         imageUrl: data.imageUrl ?? undefined,
+        workId: data.workId ?? null,
         contextChips: data.contextChips,
         timestamp: Date.now(),
       };
@@ -230,6 +231,7 @@ export function useDesignChat(
           nextMessages[index] = {
             ...message,
             imageUrl: data.imageUrl ?? message.imageUrl,
+            workId: data.workId ?? message.workId ?? null,
             contextChips:
               data.contextChips.length > 0
                 ? data.contextChips

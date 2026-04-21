@@ -4,7 +4,7 @@ import type {
   FalGenerationRoute,
   GenerateDesignRequest,
 } from "./design-request.ts";
-import type { ExecutionMode } from "./design-generation.ts";
+import type { ExecutionMode } from "@/functions/_shared/design-generation.ts";
 
 const ALLOWED_FABRIC_METHODS = new Set(["yarn-dyed", "print"]);
 const ALLOWED_CI_PLACEMENTS = new Set(["all-over", "one-point"]);
@@ -61,6 +61,24 @@ const getFalRoute = (
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const getTrimmedBase64 = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
+
+const validateImageBase64Length = (
+  value: string,
+  error: string,
+): ValidationFailure | null => {
+  if (value.length <= MAX_IMAGE_BASE64_LENGTH) {
+    return null;
+  }
+
+  return {
+    ok: false,
+    status: 413,
+    body: { error },
+  };
+};
 
 export const validateFalGeneratePayload = (
   payload: GenerateDesignRequest,
@@ -192,12 +210,12 @@ export const validateFalGeneratePayload = (
       };
     }
 
-    const tiledBase64Trimmed =
-      typeof payload.tiledBase64 === "string" ? payload.tiledBase64.trim() : "";
+    const tiledBase64Trimmed = getTrimmedBase64(payload.tiledBase64);
+    const referenceImageBase64Trimmed = getTrimmedBase64(
+      payload.referenceImageBase64,
+    );
     const hasTiledInput = tiledBase64Trimmed.length > 0;
-    const hasReferenceInput =
-      typeof payload.referenceImageBase64 === "string" &&
-      payload.referenceImageBase64.trim().length > 0;
+    const hasReferenceInput = referenceImageBase64Trimmed.length > 0;
 
     if (route === "fal_tiling" && !hasTiledInput && !hasReferenceInput) {
       return {
@@ -207,12 +225,24 @@ export const validateFalGeneratePayload = (
       };
     }
 
-    if (hasTiledInput && tiledBase64Trimmed.length > MAX_IMAGE_BASE64_LENGTH) {
-      return {
-        ok: false,
-        status: 413,
-        body: { error: "tiled_image_too_large" },
-      };
+    if (hasTiledInput) {
+      const tiledImageLengthValidation = validateImageBase64Length(
+        tiledBase64Trimmed,
+        "tiled_image_too_large",
+      );
+      if (tiledImageLengthValidation) {
+        return tiledImageLengthValidation;
+      }
+    }
+
+    if (hasReferenceInput) {
+      const referenceImageLengthValidation = validateImageBase64Length(
+        referenceImageBase64Trimmed,
+        "reference_image_too_large",
+      );
+      if (referenceImageLengthValidation) {
+        return referenceImageLengthValidation;
+      }
     }
 
     if (
@@ -230,9 +260,10 @@ export const validateFalGeneratePayload = (
   }
 
   if (route === "fal_controlnet") {
-    const hasStructureInput =
-      typeof payload.structureImageBase64 === "string" &&
-      payload.structureImageBase64.trim().length > 0;
+    const structureImageBase64Trimmed = getTrimmedBase64(
+      payload.structureImageBase64,
+    );
+    const hasStructureInput = structureImageBase64Trimmed.length > 0;
     const controlType = payload.controlType ?? "lineart";
 
     if (!payload.tiledBase64?.trim() && !hasStructureInput) {
@@ -249,6 +280,16 @@ export const validateFalGeneratePayload = (
         status: 400,
         body: { error: "invalid_control_type" },
       };
+    }
+
+    if (hasStructureInput) {
+      const structureImageLengthValidation = validateImageBase64Length(
+        structureImageBase64Trimmed,
+        "structure_image_too_large",
+      );
+      if (structureImageLengthValidation) {
+        return structureImageLengthValidation;
+      }
     }
 
     if (
@@ -276,15 +317,13 @@ export const validateFalGeneratePayload = (
   }
 
   if (route === "fal_inpaint") {
+    const baseImageBase64Trimmed = getTrimmedBase64(payload.baseImageBase64);
+    const maskBase64Trimmed = getTrimmedBase64(payload.maskBase64);
     const hasBaseImageUrl =
       typeof payload.baseImageUrl === "string" &&
       payload.baseImageUrl.trim().length > 0;
-    const hasBaseImageBase64 =
-      typeof payload.baseImageBase64 === "string" &&
-      payload.baseImageBase64.trim().length > 0;
-    const hasMaskBase64 =
-      typeof payload.maskBase64 === "string" &&
-      payload.maskBase64.trim().length > 0;
+    const hasBaseImageBase64 = baseImageBase64Trimmed.length > 0;
+    const hasMaskBase64 = maskBase64Trimmed.length > 0;
 
     if (!hasBaseImageUrl && !hasBaseImageBase64) {
       return {
@@ -302,12 +341,24 @@ export const validateFalGeneratePayload = (
       };
     }
 
-    if ((payload.maskBase64?.trim().length ?? 0) > MAX_IMAGE_BASE64_LENGTH) {
-      return {
-        ok: false,
-        status: 413,
-        body: { error: "mask_image_too_large" },
-      };
+    if (hasBaseImageBase64) {
+      const baseImageLengthValidation = validateImageBase64Length(
+        baseImageBase64Trimmed,
+        "base_image_too_large",
+      );
+      if (baseImageLengthValidation) {
+        return baseImageLengthValidation;
+      }
+    }
+
+    if (hasMaskBase64) {
+      const maskImageLengthValidation = validateImageBase64Length(
+        maskBase64Trimmed,
+        "mask_image_too_large",
+      );
+      if (maskImageLengthValidation) {
+        return maskImageLengthValidation;
+      }
     }
 
     if (

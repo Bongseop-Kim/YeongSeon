@@ -11,7 +11,7 @@ interface MessageListProps {
   onTiePreviewClick?: (imageUrl: string) => void;
   selectedPreviewImageUrl?: string | null;
   onSelectPreview?: (imageUrl: string) => void;
-  onRequestInpaint?: (imageUrl: string) => void;
+  onRequestInpaint?: (imageUrl: string, imageWorkId: string | null) => void;
 }
 
 export function MessageList({

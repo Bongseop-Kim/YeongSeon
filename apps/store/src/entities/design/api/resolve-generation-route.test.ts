@@ -18,7 +18,7 @@ describe("resolveGenerationRoute", () => {
     {
       title: "sharp edge 체크 반복 요청은 fal_controlnet으로 보낸다",
       input: createInput({
-        userMessage: "첨부한 이미지를 체크 반복 패턴으로 만들어줘",
+        userMessage: "첨부한 이미지를 반복 패턴으로 만들어줘",
         hasCiImage: true,
         detectedPattern: "check",
       }),

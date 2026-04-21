@@ -21,6 +21,7 @@ const SHOULD_USE_FAL_PIPELINE_URL = `${
 }/functions/v1/generate-fal-api/should-use-fal-pipeline`;
 
 const PROBE_CACHE_TTL_MS = 60_000;
+const PROBE_TIMEOUT_MS = 3_000;
 let probeCache: { value: boolean; expiresAt: number } | null = null;
 
 export const __resetProbeCacheForTesting = () => {
@@ -33,15 +34,25 @@ async function fetchFalPipelineEnabled(): Promise<boolean> {
     return probeCache.value;
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, PROBE_TIMEOUT_MS);
+
   try {
-    const response = await fetch(SHOULD_USE_FAL_PIPELINE_URL);
+    const response = await fetch(SHOULD_USE_FAL_PIPELINE_URL, {
+      signal: controller.signal,
+    });
     const value = response.ok
       ? ((await response.json()) as { enabled?: unknown }).enabled !== false
       : true;
     probeCache = { value, expiresAt: now + PROBE_CACHE_TTL_MS };
     return value;
   } catch {
+    probeCache = { value: true, expiresAt: now + PROBE_CACHE_TTL_MS };
     return true;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

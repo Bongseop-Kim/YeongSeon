@@ -300,6 +300,75 @@ Deno.test("validateFalGeneratePayload rejects oversized tiled images", () => {
 });
 
 Deno.test(
+  "validateFalGeneratePayload rejects oversized reference and structure images",
+  () => {
+    assertObjectMatch(
+      validateFalGeneratePayload({
+        userMessage: "체크 패턴으로 반복해줘",
+        route: "fal_tiling",
+        designContext: {
+          colors: ["navy"],
+          pattern: "check",
+          fabricMethod: "yarn-dyed",
+          ciPlacement: "all-over",
+        },
+        referenceImageBase64: "a".repeat(MAX_IMAGE_BASE64_LENGTH + 1),
+        referenceImageMimeType: "image/png",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0]),
+      {
+        ok: false,
+        status: 413,
+        body: { error: "reference_image_too_large" },
+      },
+    );
+
+    assertObjectMatch(
+      validateFalGeneratePayload({
+        userMessage: "체크 패턴으로 반복해줘",
+        route: "fal_controlnet",
+        designContext: {
+          colors: ["navy"],
+          pattern: "check",
+          fabricMethod: "yarn-dyed",
+          ciPlacement: "all-over",
+        },
+        structureImageBase64: "a".repeat(MAX_IMAGE_BASE64_LENGTH + 1),
+        structureImageMimeType: "image/png",
+      } as unknown as Parameters<typeof validateFalGeneratePayload>[0]),
+      {
+        ok: false,
+        status: 413,
+        body: { error: "structure_image_too_large" },
+      },
+    );
+  },
+);
+
+Deno.test("validateFalGeneratePayload rejects oversized base images", () => {
+  const result = validateFalGeneratePayload({
+    userMessage: "이 부분만 수정해줘",
+    route: "fal_inpaint",
+    designContext: {
+      colors: ["navy"],
+      pattern: "check",
+      fabricMethod: "print",
+      ciPlacement: "one-point",
+    },
+    baseImageBase64: "a".repeat(MAX_IMAGE_BASE64_LENGTH + 1),
+    baseImageMimeType: "image/png",
+    maskBase64: "mask",
+    maskMimeType: "image/png",
+    editPrompt: "이 부분만 자수 느낌으로 바꿔줘",
+  } as unknown as Parameters<typeof validateFalGeneratePayload>[0]);
+
+  assertObjectMatch(result, {
+    ok: false,
+    status: 413,
+    body: { error: "base_image_too_large" },
+  });
+});
+
+Deno.test(
   "validateFalGeneratePayload rejects invalid designContext types",
   () => {
     const result = validateFalGeneratePayload({

@@ -225,6 +225,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
         sessionState.generatedImageUrl,
       ),
       baseImageWorkId: sessionState.baseImageWorkId,
+      inpaintTarget: null,
       currentSessionId: sessionId,
       pendingAttachments: [],
       ...createRouteMetadataReset(),
