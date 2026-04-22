@@ -2,11 +2,13 @@
   "version": "5",
   "specifiers": {
     "jsr:@img/png@0.1.1": "0.1.1",
+    "jsr:@std/assert@*": "1.0.19",
     "jsr:@std/assert@1.0.19": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@supabase/functions-js@*": "2.98.0",
     "jsr:@supabase/functions-js@^0.0.0-automated": "0.0.0-jsr-test.1",
     "jsr:@supabase/supabase-js@2.99.3": "2.99.3",
+    "npm:@imagemagick/magick-wasm@0.0.30": "0.0.30",
     "npm:@supabase/auth-js@2.99.3": "2.99.3",
     "npm:@supabase/postgrest-js@2.99.3": "2.99.3",
     "npm:@supabase/realtime-js@2.99.3": "2.99.3",
@@ -47,6 +49,9 @@
     }
   },
   "npm": {
+    "@imagemagick/magick-wasm@0.0.30": {
+      "integrity": "sha512-l5pTepsyrM9O3zMdmDHGbncP2Uf4858nylU5tw6GE7QA/Qh99aEFr4eNkEan3q1PT6mV/1Ev0gOgthuK7/kNFQ=="
+    },
     "@supabase/auth-js@2.99.3": {
       "integrity": "sha512-vMEVLA1kGGYd/kdsJSwtjiFUZM1nGfrz2DWmgMBZtocV48qL+L2+4QpIkueXyBEumMQZFEyhz57i/5zGHjvdBw==",
       "dependencies": [
@@ -389,6 +394,12 @@
         ]
       },
       "notify-claim": {
+        "dependencies": [
+          "jsr:@supabase/functions-js@*",
+          "jsr:@supabase/supabase-js@2.99.3"
+        ]
+      },
+      "prepare-pattern-composite": {
         "dependencies": [
           "jsr:@supabase/functions-js@*",
           "jsr:@supabase/supabase-js@2.99.3"

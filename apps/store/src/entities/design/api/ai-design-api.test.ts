@@ -4,24 +4,13 @@ import { aiDesignApi } from "@/entities/design/api/ai-design-api";
 import { __resetProbeCacheForTesting } from "@/entities/design/api/should-use-fal-pipeline";
 import { MockFileReader } from "@/test/mock-file-reader";
 
-const { invoke, phCapture, tileLogoOnCanvas, preparePatternSource } =
-  vi.hoisted(() => ({
-    invoke: vi.fn(),
-    phCapture: vi.fn(),
-    tileLogoOnCanvas: vi.fn(),
-    preparePatternSource: vi.fn(),
-  }));
+const { invoke, phCapture } = vi.hoisted(() => ({
+  invoke: vi.fn(),
+  phCapture: vi.fn(),
+}));
 
 vi.mock("@/shared/lib/posthog", () => ({
   ph: { capture: phCapture },
-}));
-
-vi.mock("@/entities/design/api/tile-logo-on-canvas", () => ({
-  tileLogoOnCanvas,
-}));
-
-vi.mock("@/entities/design/api/prepare-pattern-source", () => ({
-  preparePatternSource,
 }));
 
 vi.mock("@/entities/design/api/route-classifier", () => ({
@@ -83,8 +72,6 @@ describe("aiDesignApi", () => {
   beforeEach(() => {
     invoke.mockReset();
     phCapture.mockReset();
-    tileLogoOnCanvas.mockReset();
-    preparePatternSource.mockReset();
     __resetProbeCacheForTesting();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
@@ -103,88 +90,29 @@ describe("aiDesignApi", () => {
       result: "data:image/png;base64,source-base64",
     });
     vi.stubGlobal("FileReader", MockFileReader);
-    preparePatternSource.mockResolvedValue({
-      placementMode: "all-over",
-      sourceStatus: "ready",
-      fabricStatus: "ready",
-      reasonCodes: [],
-      preparedSourceKind: "original",
-      preparationBackend: "local",
-      repairApplied: false,
-      repairPromptKind: null,
-      repairSummary: null,
-      userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
-      preparedSourceBase64: "prepared-source-base64",
-      preparedSourceMimeType: "image/png",
-      preparedPatternTileBase64: "prepared-tile-base64",
-      preparedPatternTileMimeType: "image/png",
-    });
-    invoke.mockResolvedValue({
-      data: {
-        ...successResponse,
-        route: "fal_tiling",
-      },
-      error: null,
-    });
-
-    const result = await aiDesignApi({
-      ...baseRequest,
-      userMessage: "첨부한 이미지를 올패턴으로 뿌려줘",
-      designContext: {
-        ...baseRequest.designContext,
-        sourceImage: { type: "image/png" } as File,
-        ciPlacement: "all-over",
-      },
-    });
-
-    expect(preparePatternSource).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sourceImageBase64: "source-base64",
-        placementMode: "all-over",
-      }),
-    );
-    expect(invoke).toHaveBeenCalledWith(
-      "generate-fal-api",
-      expect.objectContaining({
-        body: expect.objectContaining({
-          sourceImageBase64: "prepared-source-base64",
-          ciImageBase64: "prepared-source-base64",
-          tiledBase64: "prepared-tile-base64",
-        }),
-      }),
-    );
-    expect(result.patternPreparationMessage).toContain("패턴 소스");
-    expect(result.routeReason).toBe("pattern_source_ready");
-  });
-
-  it("부적합한 올패턴 이미지는 OpenAI prep을 먼저 호출한 뒤 보정 타일로 렌더한다", async () => {
-    MockFileReader.configure({
-      result: "data:image/png;base64,source-base64",
-    });
-    vi.stubGlobal("FileReader", MockFileReader);
-    preparePatternSource.mockResolvedValue({
-      placementMode: "all-over",
-      sourceStatus: "repair_required",
-      fabricStatus: "ready",
-      reasonCodes: ["uneven_outer_margin"],
-      preparedSourceKind: "repaired",
-      preparationBackend: "local",
-      repairApplied: false,
-      repairPromptKind: null,
-      repairSummary: null,
-      userMessage: "첨부 이미지를 반복 패턴에 맞게 다시 정리했어요.",
-      preparedSourceBase64: "source-base64",
-      preparedSourceMimeType: "image/png",
-    });
     invoke
       .mockResolvedValueOnce({
         data: {
-          preparedSourceBase64: "openai-prepared-source",
+          placementMode: "all-over",
+          sourceStatus: "ready",
+          fabricStatus: "ready",
+          reasonCodes: [],
+          preparedSourceKind: "original",
+          preparationBackend: "local",
+          repairApplied: false,
+          repairPromptKind: null,
+          repairSummary: null,
+          userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+          preparedSourceBase64: "prepared-source-base64",
           preparedSourceMimeType: "image/png",
-          preparedPatternTileBase64: "openai-prepared-tile",
+          preparedPatternTileBase64: "prepared-tile-base64",
           preparedPatternTileMimeType: "image/png",
-          repairSummary: "타일 반복 간격을 균일하게 보정했습니다.",
-          repairPromptKind: "all_over_tile",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
         },
         error: null,
       })
@@ -206,13 +134,87 @@ describe("aiDesignApi", () => {
       },
     });
 
-    expect(invoke).toHaveBeenNthCalledWith(1, "prepare-pattern-source-openai", {
+    expect(invoke).toHaveBeenNthCalledWith(1, "prepare-pattern-composite", {
       body: expect.objectContaining({
         sourceImageBase64: "source-base64",
         sourceImageMimeType: "image/png",
         placementMode: "all-over",
         fabricMethod: "yarn-dyed",
-        reasonCodes: ["uneven_outer_margin"],
+        scale: "medium",
+      }),
+    });
+    expect(invoke).toHaveBeenNthCalledWith(
+      2,
+      "generate-fal-api",
+      expect.objectContaining({
+        body: expect.objectContaining({
+          sourceImageBase64: "prepared-source-base64",
+          ciImageBase64: "prepared-source-base64",
+          tiledBase64: "prepared-tile-base64",
+        }),
+      }),
+    );
+    expect(result.patternPreparationMessage).toContain("패턴 소스");
+    expect(result.routeReason).toBe("pattern_source_ready");
+  });
+
+  it("부적합한 올패턴 이미지는 OpenAI prep을 먼저 호출한 뒤 보정 타일로 렌더한다", async () => {
+    MockFileReader.configure({
+      result: "data:image/png;base64,source-base64",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          placementMode: "all-over",
+          sourceStatus: "repair_required",
+          fabricStatus: "ready",
+          reasonCodes: ["uneven_outer_margin"],
+          preparedSourceKind: "repaired",
+          preparationBackend: "openai_repair",
+          repairApplied: true,
+          userMessage: "첨부 이미지를 반복 패턴에 맞게 다시 정리했어요.",
+          repairSummary: "타일 반복 간격을 균일하게 보정했습니다.",
+          repairPromptKind: "all_over_tile",
+          prepTokensCharged: 7,
+          preparedSourceBase64: "openai-prepared-source",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "openai-prepared-tile",
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: {
+          ...successResponse,
+          route: "fal_tiling",
+        },
+        error: null,
+      });
+
+    const result = await aiDesignApi({
+      ...baseRequest,
+      userMessage: "첨부한 이미지를 올패턴으로 뿌려줘",
+      designContext: {
+        ...baseRequest.designContext,
+        sourceImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+      },
+    });
+
+    expect(invoke).toHaveBeenNthCalledWith(1, "prepare-pattern-composite", {
+      body: expect.objectContaining({
+        sourceImageBase64: "source-base64",
+        sourceImageMimeType: "image/png",
+        placementMode: "all-over",
+        fabricMethod: "yarn-dyed",
+        scale: "medium",
       }),
     });
     expect(invoke).toHaveBeenNthCalledWith(2, "generate-fal-api", {
@@ -235,32 +237,32 @@ describe("aiDesignApi", () => {
       result: "data:image/png;base64,source-base64",
     });
     vi.stubGlobal("FileReader", MockFileReader);
-    preparePatternSource.mockResolvedValue({
-      placementMode: "one-point",
-      sourceStatus: "repair_required",
-      fabricStatus: "repair_required",
-      reasonCodes: [
-        "not_suitable_for_one_point",
-        "too_many_colors_for_yarn_dyed",
-      ],
-      preparedSourceKind: "repaired",
-      preparationBackend: "local",
-      repairApplied: false,
-      repairPromptKind: null,
-      repairSummary: null,
-      userMessage: "첨부 이미지를 원포인트용 모티프로 다시 정리했어요.",
-      preparedSourceBase64: "source-base64",
-      preparedSourceMimeType: "image/png",
-    });
     invoke
       .mockResolvedValueOnce({
         data: {
+          placementMode: "one-point",
+          sourceStatus: "repair_required",
+          fabricStatus: "repair_required",
+          reasonCodes: [
+            "not_suitable_for_one_point",
+            "too_many_colors_for_yarn_dyed",
+          ],
+          preparedSourceKind: "repaired",
+          preparationBackend: "openai_repair",
+          repairApplied: true,
           preparedSourceBase64: "prepared-point-source",
           preparedSourceMimeType: "image/png",
           preparedPointMotifTileBase64: "prepared-point-tile",
           preparedPointMotifTileMimeType: "image/png",
           repairSummary: "원포인트용 단일 모티프로 정리했습니다.",
           repairPromptKind: "one_point_motif",
+          prepTokensCharged: 7,
+          tileSizePx: 123,
+          gapPx: 0,
+          compositeCanvasWidth: 316,
+          compositeCanvasHeight: 600,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
         },
         error: null,
       })
@@ -276,22 +278,20 @@ describe("aiDesignApi", () => {
       },
     });
 
-    expect(invoke).toHaveBeenNthCalledWith(1, "prepare-pattern-source-openai", {
+    expect(invoke).toHaveBeenNthCalledWith(1, "prepare-pattern-composite", {
       body: expect.objectContaining({
         placementMode: "one-point",
-        reasonCodes: expect.arrayContaining([
-          "not_suitable_for_one_point",
-          "too_many_colors_for_yarn_dyed",
-        ]),
+        scale: "medium",
       }),
     });
     expect(invoke).toHaveBeenNthCalledWith(2, "generate-open-api", {
       body: expect.objectContaining({
-        sourceImageBase64: "prepared-point-source",
-        ciImageBase64: "prepared-point-source",
+        sourceImageBase64: "prepared-point-tile",
+        ciImageBase64: "prepared-point-tile",
         patternPreparation: expect.objectContaining({
           placementMode: "one-point",
           preparedSourceKind: "repaired",
+          prepTokensCharged: 7,
         }),
       }),
     });
@@ -302,20 +302,6 @@ describe("aiDesignApi", () => {
       result: "data:image/png;base64,source-base64",
     });
     vi.stubGlobal("FileReader", MockFileReader);
-    preparePatternSource.mockResolvedValue({
-      placementMode: "all-over",
-      sourceStatus: "repair_required",
-      fabricStatus: "ready",
-      reasonCodes: ["uneven_outer_margin"],
-      preparedSourceKind: "repaired",
-      preparationBackend: "local",
-      repairApplied: false,
-      repairPromptKind: null,
-      repairSummary: null,
-      userMessage: "첨부 이미지를 반복 패턴에 맞게 다시 정리했어요.",
-      preparedSourceBase64: "source-base64",
-      preparedSourceMimeType: "image/png",
-    });
     invoke.mockResolvedValueOnce({
       data: null,
       error: { message: "prep failed" },
@@ -504,12 +490,34 @@ describe("aiDesignApi", () => {
     });
   });
 
-  it("Fal 플래그와 올패턴 CI 조건이 맞으면 generate-fal-api를 호출한다", async () => {
-    tileLogoOnCanvas.mockResolvedValue({
-      base64: "tiled-base64",
-      mimeType: "image/png",
-    });
-    invoke.mockResolvedValue({ data: successResponse, error: null });
+  it("Fal 플래그와 올패턴 CI 조건이 맞으면 Edge prep 이후 generate-fal-api를 호출한다", async () => {
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          placementMode: "all-over",
+          sourceStatus: "ready",
+          fabricStatus: "ready",
+          reasonCodes: [],
+          preparedSourceKind: "original",
+          preparationBackend: "local",
+          repairApplied: false,
+          repairPromptKind: null,
+          repairSummary: null,
+          userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+          preparedSourceBase64: "ci-base64",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "tiled-base64",
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: successResponse, error: null });
 
     vi.stubGlobal("FileReader", MockFileReader);
 
@@ -524,13 +532,13 @@ describe("aiDesignApi", () => {
       },
     });
 
-    expect(tileLogoOnCanvas).toHaveBeenCalledWith({
-      logoBase64: "ci-base64",
-      logoMimeType: "image/png",
-      scale: "medium",
-      backgroundColor: undefined,
+    expect(invoke).toHaveBeenNthCalledWith(1, "prepare-pattern-composite", {
+      body: expect.objectContaining({
+        sourceImageBase64: "ci-base64",
+        placementMode: "all-over",
+      }),
     });
-    expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-fal-api", {
       body: expect.objectContaining({
         route: "fal_tiling",
         routeSignals: expect.arrayContaining([
@@ -544,10 +552,36 @@ describe("aiDesignApi", () => {
     });
   });
 
-  it("fabricMethod가 없으면 fal_tiling 요청도 로컬에서 openai로 처리한다", async () => {
+  it("fabricMethod가 없으면 fal_tiling 요청도 openai로 처리한다", async () => {
     MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
     vi.stubGlobal("FileReader", MockFileReader);
-    invoke.mockResolvedValue({ data: successResponse, error: null });
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          placementMode: "all-over",
+          sourceStatus: "ready",
+          fabricStatus: "ready",
+          reasonCodes: [],
+          preparedSourceKind: "original",
+          preparationBackend: "local",
+          repairApplied: false,
+          repairPromptKind: null,
+          repairSummary: null,
+          userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+          preparedSourceBase64: "ci-base64",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "tiled-base64",
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: successResponse, error: null });
 
     await aiDesignApi({
       ...baseRequest,
@@ -561,9 +595,8 @@ describe("aiDesignApi", () => {
       },
     });
 
-    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
-    expect(invoke).toHaveBeenCalledTimes(1);
-    expect(invoke).toHaveBeenCalledWith("generate-open-api", {
+    expect(invoke).toHaveBeenCalledTimes(2);
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-open-api", {
       body: expect.objectContaining({
         userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
         ciImageBase64: "ci-base64",
@@ -612,19 +645,29 @@ describe("aiDesignApi", () => {
       result: "data:image/png;base64,reference-base64",
     });
     vi.stubGlobal("FileReader", MockFileReader);
-    preparePatternSource.mockResolvedValue({
-      placementMode: "all-over",
-      sourceStatus: "ready",
-      fabricStatus: "ready",
-      reasonCodes: [],
-      preparedSourceKind: "original",
-      userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
-      preparedSourceBase64: "reference-base64",
-      preparedSourceMimeType: "image/png",
-      preparedPatternTileBase64: "prepared-reference-tile",
-      preparedPatternTileMimeType: "image/png",
-    });
-    invoke.mockResolvedValue({ data: successResponse, error: null });
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          placementMode: "all-over",
+          sourceStatus: "ready",
+          fabricStatus: "ready",
+          reasonCodes: [],
+          preparedSourceKind: "original",
+          userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+          preparedSourceBase64: "reference-base64",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "prepared-reference-tile",
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: successResponse, error: null });
 
     await aiDesignApi({
       ...baseRequest,
@@ -637,8 +680,7 @@ describe("aiDesignApi", () => {
       },
     });
 
-    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
-    expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-fal-api", {
       body: expect.objectContaining({
         route: "fal_tiling",
         sourceImageBase64: "reference-base64",
@@ -651,10 +693,36 @@ describe("aiDesignApi", () => {
   it("sharp-edge controlnet 경로에서는 CI 원본을 control image로 전달한다", async () => {
     MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
     vi.stubGlobal("FileReader", MockFileReader);
-    invoke.mockResolvedValue({
-      data: { ...successResponse, route: "fal_controlnet" },
-      error: null,
-    });
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          placementMode: "all-over",
+          sourceStatus: "ready",
+          fabricStatus: "ready",
+          reasonCodes: [],
+          preparedSourceKind: "original",
+          preparationBackend: "local",
+          repairApplied: false,
+          repairPromptKind: null,
+          repairSummary: null,
+          userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+          preparedSourceBase64: "ci-base64",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "prepared-controlnet-tile",
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: { ...successResponse, route: "fal_controlnet" },
+        error: null,
+      });
 
     await aiDesignApi({
       ...baseRequest,
@@ -668,11 +736,10 @@ describe("aiDesignApi", () => {
       },
     });
 
-    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
-    expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-fal-api", {
       body: expect.objectContaining({
         route: "fal_controlnet",
-        structureImageBase64: "ci-base64",
+        structureImageBase64: "prepared-controlnet-tile",
         structureImageMimeType: "image/png",
       }),
     });
@@ -703,37 +770,6 @@ describe("aiDesignApi", () => {
     });
   });
 
-  it("tileLogoOnCanvas 실패는 observability 이벤트를 남기고 정리된 에러를 던진다", async () => {
-    MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
-    tileLogoOnCanvas.mockRejectedValue(new Error("canvas exploded"));
-    vi.stubGlobal("FileReader", MockFileReader);
-
-    await expect(
-      aiDesignApi({
-        ...baseRequest,
-        userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
-        designContext: {
-          ...baseRequest.designContext,
-          ciImage: { type: "image/png" } as File,
-          ciPlacement: "all-over",
-          scale: "medium",
-        },
-      }),
-    ).rejects.toThrow("CI 패턴 이미지를 준비하지 못했습니다.");
-
-    expect(phCapture).toHaveBeenCalledWith(
-      "design_generation_failed",
-      expect.objectContaining({
-        ai_model: "openai",
-        error_type: "tile_logo_on_canvas_failed",
-        pipeline: "fal-ai",
-        fabric_method: "yarn-dyed",
-        scale: "medium",
-      }),
-    );
-    expect(invoke).not.toHaveBeenCalled();
-  });
-
   it("일반 API 에러를 감쌀 때 원래 에러를 cause로 보존한다", async () => {
     const originalError = Object.assign(new Error("Internal Server Error"), {
       name: "FunctionsHttpError",
@@ -752,12 +788,33 @@ describe("aiDesignApi", () => {
   });
 
   it("Fal API가 비활성화되어 있으면 기존 모델 함수로 한 번 폴백한다", async () => {
-    tileLogoOnCanvas.mockResolvedValue({
-      base64: "tiled-base64",
-      mimeType: "image/png",
-    });
     vi.stubGlobal("FileReader", MockFileReader);
     invoke
+      .mockResolvedValueOnce({
+        data: {
+          placementMode: "all-over",
+          sourceStatus: "ready",
+          fabricStatus: "ready",
+          reasonCodes: [],
+          preparedSourceKind: "original",
+          preparationBackend: "local",
+          repairApplied: false,
+          repairPromptKind: null,
+          repairSummary: null,
+          userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+          preparedSourceBase64: "ci-base64",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "tiled-base64",
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
+        },
+        error: null,
+      })
       .mockResolvedValueOnce({
         data: null,
         error: {
@@ -797,19 +854,19 @@ describe("aiDesignApi", () => {
         analysisWorkId: successResponse.analysisWorkId,
         route: "openai",
         routeSignals: ["new_generation"],
-        routeReason: "default_openai_generation",
+        routeReason: "pattern_source_ready",
         falRequestId: "fal-request-123",
         seed: 1234,
       }),
     );
 
-    expect(invoke).toHaveBeenNthCalledWith(1, "generate-fal-api", {
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-fal-api", {
       body: expect.objectContaining({
         tiledBase64: "tiled-base64",
         tiledMimeType: "image/png",
       }),
     });
-    expect(invoke).toHaveBeenNthCalledWith(2, "generate-open-api", {
+    expect(invoke).toHaveBeenNthCalledWith(3, "generate-open-api", {
       body: expect.not.objectContaining({
         tiledBase64: "tiled-base64",
         tiledMimeType: "image/png",
@@ -821,10 +878,6 @@ describe("aiDesignApi", () => {
   });
 
   it("Fal probe가 비활성화 상태를 반환하면 Edge 호출 없이 즉시 폴백한다", async () => {
-    tileLogoOnCanvas.mockResolvedValue({
-      base64: "tiled-base64",
-      mimeType: "image/png",
-    });
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -833,7 +886,33 @@ describe("aiDesignApi", () => {
       }),
     );
     vi.stubGlobal("FileReader", MockFileReader);
-    invoke.mockResolvedValue({ data: successResponse, error: null });
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          placementMode: "all-over",
+          sourceStatus: "ready",
+          fabricStatus: "ready",
+          reasonCodes: [],
+          preparedSourceKind: "original",
+          preparationBackend: "local",
+          repairApplied: false,
+          repairPromptKind: null,
+          repairSummary: null,
+          userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+          preparedSourceBase64: "ci-base64",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "tiled-base64",
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: successResponse, error: null });
 
     await aiDesignApi({
       ...baseRequest,
@@ -846,8 +925,7 @@ describe("aiDesignApi", () => {
       },
     });
 
-    expect(invoke).toHaveBeenCalledTimes(1);
-    expect(tileLogoOnCanvas).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledTimes(2);
     expect(invoke).toHaveBeenCalledWith("generate-open-api", {
       body: expect.not.objectContaining({
         route: "fal_tiling",

@@ -14,8 +14,6 @@ import { parseEdgeErrorResponse } from "@/entities/design/api/providers/parse-ed
 import { runProviderChain } from "@/entities/design/api/providers/provider-chain";
 import { resolveGenerationRouteAsync } from "@/entities/design/api/resolve-generation-route";
 import { shouldUseFalPipeline } from "@/entities/design/api/should-use-fal-pipeline";
-import { preparePatternSource } from "@/entities/design/api/prepare-pattern-source";
-import { tileLogoOnCanvas } from "@/entities/design/api/tile-logo-on-canvas";
 import { ph } from "@/shared/lib/posthog";
 
 interface DesignTokenBalance {
@@ -24,16 +22,30 @@ interface DesignTokenBalance {
   bonus: number;
 }
 
-interface PatternRepairResponse {
+interface PatternPreparationResponse {
+  placementMode: "all-over" | "one-point";
+  sourceStatus: "ready" | "repair_required";
+  fabricStatus: "ready" | "repair_required";
+  reasonCodes: string[];
+  preparedSourceKind: "original" | "repaired";
+  preparationBackend?: "local" | "openai_repair";
+  repairApplied?: boolean;
+  repairPromptKind?: "all_over_tile" | "one_point_motif" | null;
+  repairSummary?: string | null;
+  prepTokensCharged?: number | null;
+  userMessage: string;
   preparedSourceBase64?: string;
   preparedSourceMimeType?: string;
   preparedPatternTileBase64?: string;
   preparedPatternTileMimeType?: string;
   preparedPointMotifTileBase64?: string;
   preparedPointMotifTileMimeType?: string;
-  repairSummary?: string | null;
-  repairPromptKind?: "all_over_tile" | "one_point_motif" | null;
-  prepTokensCharged?: number | null;
+  tileSizePx?: number;
+  gapPx?: number;
+  compositeCanvasWidth?: number;
+  compositeCanvasHeight?: number;
+  harmonizationApplied?: boolean;
+  harmonizationBackend?: "fal" | "openai" | null;
 }
 
 export class InsufficientTokensError extends Error {
@@ -133,31 +145,24 @@ const captureGenerationFailed = (
   });
 };
 
-const requiresOpenAiPatternRepair = (
-  patternPreparation: Awaited<ReturnType<typeof preparePatternSource>> | null,
-): boolean =>
-  patternPreparation?.sourceStatus === "repair_required" ||
-  patternPreparation?.fabricStatus === "repair_required";
-
-const invokeOpenAiPatternRepair = async (params: {
+const invokePatternComposite = async (params: {
   sourceImageBase64: string;
   sourceImageMimeType: string;
-  patternPreparation: Awaited<ReturnType<typeof preparePatternSource>>;
+  placementMode: "all-over" | "one-point";
   fabricMethod: AiDesignRequest["designContext"]["fabricMethod"];
   scale: AiDesignRequest["designContext"]["scale"];
   backgroundColor?: string;
 }) => {
   const { data, error } = await supabase.functions.invoke(
-    "prepare-pattern-source-openai",
+    "prepare-pattern-composite",
     {
       body: {
         sourceImageBase64: params.sourceImageBase64,
         sourceImageMimeType: params.sourceImageMimeType,
-        placementMode: params.patternPreparation.placementMode,
+        placementMode: params.placementMode,
         fabricMethod: params.fabricMethod,
         scale: params.scale ?? "medium",
         backgroundColor: params.backgroundColor,
-        reasonCodes: params.patternPreparation.reasonCodes,
       },
     },
   );
@@ -166,7 +171,7 @@ const invokeOpenAiPatternRepair = async (params: {
     throw error;
   }
 
-  return data as PatternRepairResponse | null;
+  return data as PatternPreparationResponse | null;
 };
 
 export async function aiDesignApi(
@@ -190,71 +195,22 @@ export async function aiDesignApi(
     sourceImage ? fileToBase64(sourceImage) : Promise.resolve(undefined),
   ]);
   const placementMode = request.designContext.ciPlacement;
-  let patternPreparation =
-    sourceImageBase64 &&
-    sourceImage &&
-    (placementMode === "all-over" || placementMode === "one-point")
-      ? await preparePatternSource({
-          sourceImageBase64,
-          sourceImageMimeType: sourceImage.type || "image/png",
-          placementMode,
-          fabricMethod: request.designContext.fabricMethod,
-          scale: request.designContext.scale ?? "medium",
-          backgroundColor: request.designContext.colors[0],
-        })
-      : null;
+  let patternPreparation: PatternPreparationResponse | null = null;
 
   if (
     sourceImageBase64 &&
     sourceImage &&
-    patternPreparation &&
-    requiresOpenAiPatternRepair(patternPreparation)
+    (placementMode === "all-over" || placementMode === "one-point")
   ) {
     try {
-      const repairResult = await invokeOpenAiPatternRepair({
-        sourceImageBase64:
-          patternPreparation.preparedSourceBase64 ?? sourceImageBase64,
-        sourceImageMimeType:
-          patternPreparation.preparedSourceMimeType ??
-          sourceImage.type ??
-          "image/png",
-        patternPreparation,
+      patternPreparation = await invokePatternComposite({
+        sourceImageBase64,
+        sourceImageMimeType: sourceImage.type || "image/png",
+        placementMode,
         fabricMethod: request.designContext.fabricMethod,
-        scale: request.designContext.scale,
+        scale: request.designContext.scale ?? "medium",
         backgroundColor: request.designContext.colors[0],
       });
-
-      if (!repairResult?.preparedSourceBase64) {
-        throw new Error("prepared_source_missing");
-      }
-
-      patternPreparation = {
-        ...patternPreparation,
-        preparationBackend: "openai_repair",
-        repairApplied: true,
-        repairPromptKind: repairResult.repairPromptKind ?? null,
-        repairSummary: repairResult.repairSummary ?? null,
-        prepTokensCharged: repairResult.prepTokensCharged ?? null,
-        preparedSourceBase64: repairResult.preparedSourceBase64,
-        preparedSourceMimeType:
-          repairResult.preparedSourceMimeType === "image/png"
-            ? repairResult.preparedSourceMimeType
-            : "image/png",
-        preparedPatternTileBase64:
-          repairResult.preparedPatternTileBase64 ??
-          patternPreparation.preparedPatternTileBase64,
-        preparedPatternTileMimeType:
-          repairResult.preparedPatternTileMimeType === "image/png"
-            ? repairResult.preparedPatternTileMimeType
-            : patternPreparation.preparedPatternTileMimeType,
-        preparedPointMotifTileBase64:
-          repairResult.preparedPointMotifTileBase64 ??
-          patternPreparation.preparedPointMotifTileBase64,
-        preparedPointMotifTileMimeType:
-          repairResult.preparedPointMotifTileMimeType === "image/png"
-            ? repairResult.preparedPointMotifTileMimeType
-            : patternPreparation.preparedPointMotifTileMimeType,
-      };
     } catch (error) {
       const body = await getErrorResponseBody(error);
 
@@ -274,18 +230,40 @@ export async function aiDesignApi(
     }
   }
 
+  if (
+    sourceImageBase64 &&
+    sourceImage &&
+    (placementMode === "all-over" || placementMode === "one-point") &&
+    !patternPreparation?.preparedSourceBase64
+  ) {
+    captureGenerationFailed({
+      error_type: "pattern_preparation_failed",
+    });
+    throw new Error(
+      "첨부 이미지를 패턴용으로 정리하지 못했습니다. 더 단순한 이미지를 사용해 주세요.",
+    );
+  }
+
   const preparedSourceBase64 =
     patternPreparation?.preparedSourceBase64 ?? sourceImageBase64;
   const preparedSourceMimeType =
     patternPreparation?.preparedSourceMimeType ??
     sourceImage?.type ??
     undefined;
-  const preparedPatternTileBase64 =
+  const preparedCompositeBase64 =
     patternPreparation?.preparedPatternTileBase64 ??
     patternPreparation?.preparedPointMotifTileBase64;
-  const preparedPatternTileMimeType =
+  const preparedCompositeMimeType =
     patternPreparation?.preparedPatternTileMimeType ??
     patternPreparation?.preparedPointMotifTileMimeType;
+  const preparedRenderImageBase64 =
+    placementMode === "one-point"
+      ? (preparedCompositeBase64 ?? preparedSourceBase64)
+      : preparedSourceBase64;
+  const preparedRenderImageMimeType =
+    placementMode === "one-point"
+      ? (preparedCompositeMimeType ?? preparedSourceMimeType)
+      : preparedSourceMimeType;
 
   const useFalTiling = await shouldUseFalPipeline({
     ciImageBase64: preparedSourceBase64,
@@ -302,20 +280,19 @@ export async function aiDesignApi(
         }
       : undefined;
 
-  let tiledBase64: string | undefined;
-  let tiledMimeType: string | undefined;
   const resolvedRoute = request.route ?? routeResolution.route;
-  const shouldPrepareTiledPattern = resolvedRoute === "fal_tiling";
+  const shouldPrepareTiledPattern =
+    resolvedRoute === "fal_tiling" && placementMode === "all-over";
   const controlStructureBase64 =
     resolvedRoute === "fal_controlnet"
       ? (request.structureImageBase64 ??
-        preparedPatternTileBase64 ??
+        preparedCompositeBase64 ??
         preparedSourceBase64)
       : request.structureImageBase64;
   const controlStructureMimeType =
     resolvedRoute === "fal_controlnet"
       ? (request.structureImageMimeType ??
-        preparedPatternTileMimeType ??
+        preparedCompositeMimeType ??
         preparedSourceMimeType ??
         undefined)
       : request.structureImageMimeType;
@@ -325,47 +302,17 @@ export async function aiDesignApi(
     resolvedRoute === "fal_controlnet" ||
     (resolvedRoute === "fal_tiling" && useFalTiling);
 
-  if (
-    shouldPrepareTiledPattern &&
-    useFalTiling &&
-    preparedSourceBase64 &&
-    sourceImage &&
-    request.designContext.fabricMethod
-  ) {
-    try {
-      if (preparedPatternTileBase64 && preparedPatternTileMimeType) {
-        tiledBase64 = preparedPatternTileBase64;
-        tiledMimeType = preparedPatternTileMimeType;
-      } else {
-        const tileResult = await tileLogoOnCanvas({
-          logoBase64: preparedSourceBase64,
-          logoMimeType: preparedSourceMimeType || "image/png",
-          scale: request.designContext.scale ?? "medium",
-          backgroundColor: request.designContext.colors[0],
-        });
-        tiledBase64 = tileResult.base64;
-        tiledMimeType = tileResult.mimeType;
-      }
-    } catch (error) {
-      captureGenerationFailed({
-        error_type: "tile_logo_on_canvas_failed",
-        pipeline: "fal-ai",
-        scale: request.designContext.scale ?? "medium",
-        colors: request.designContext.colors,
-        fabric_method: request.designContext.fabricMethod,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new Error("CI 패턴 이미지를 준비하지 못했습니다.");
-    }
-  }
-
   const falPayload = buildInvokePayload(request, {
-    sourceImageBase64: preparedSourceBase64,
-    sourceImageMimeType: preparedSourceMimeType,
-    ciImageBase64: preparedSourceBase64,
+    sourceImageBase64: preparedRenderImageBase64,
+    sourceImageMimeType: preparedRenderImageMimeType,
+    ciImageBase64: preparedRenderImageBase64,
     backgroundPattern,
-    tiledBase64: shouldPrepareTiledPattern ? tiledBase64 : undefined,
-    tiledMimeType: shouldPrepareTiledPattern ? tiledMimeType : undefined,
+    tiledBase64: shouldPrepareTiledPattern
+      ? preparedCompositeBase64
+      : undefined,
+    tiledMimeType: shouldPrepareTiledPattern
+      ? preparedCompositeMimeType
+      : undefined,
     patternPreparation: patternPreparation
       ? {
           placementMode: patternPreparation.placementMode,
@@ -397,9 +344,9 @@ export async function aiDesignApi(
   }) as Record<string, unknown>;
 
   const defaultPayload = buildInvokePayload(request, {
-    sourceImageBase64: preparedSourceBase64,
-    sourceImageMimeType: preparedSourceMimeType,
-    ciImageBase64: preparedSourceBase64,
+    sourceImageBase64: preparedRenderImageBase64,
+    sourceImageMimeType: preparedRenderImageMimeType,
+    ciImageBase64: preparedRenderImageBase64,
     backgroundPattern,
     patternPreparation: patternPreparation
       ? {
