@@ -1,6 +1,11 @@
-import { assertEquals, assertObjectMatch } from "jsr:@std/assert";
+import {
+  assertEquals,
+  assertObjectMatch,
+  assertRejects,
+} from "jsr:@std/assert";
 import {
   assessPatternPreparation,
+  buildOpenAiEditCanvas,
   resolveOnePointCompositeMetrics,
   resolveTileCompositeMetrics,
 } from "@/functions/_shared/pattern-composite.ts";
@@ -71,3 +76,11 @@ Deno.test(
     );
   },
 );
+
+Deno.test("buildOpenAiEditCanvas rejects empty input", async () => {
+  await assertRejects(
+    () => buildOpenAiEditCanvas(new Uint8Array()),
+    Error,
+    "prepared_source_empty",
+  );
+});

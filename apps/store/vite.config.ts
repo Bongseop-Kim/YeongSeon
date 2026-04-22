@@ -6,9 +6,12 @@ import path from "path";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, "");
+  const sentryUploadEnabled = Boolean(
+    env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT,
+  );
   const plugins = [react(), tailwindcss()];
 
-  if (env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT) {
+  if (sentryUploadEnabled) {
     plugins.push(
       sentryVitePlugin({
         org: env.SENTRY_ORG,
@@ -37,9 +40,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
     },
     build: {
-      sourcemap: Boolean(
-        env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT,
-      ),
+      sourcemap: sentryUploadEnabled,
     },
     plugins,
     resolve: {

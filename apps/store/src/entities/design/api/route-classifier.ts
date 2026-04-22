@@ -38,6 +38,8 @@ export interface ClassifyOptions {
 
 const DEFAULT_TIMEOUT_MS = 500;
 const DEFAULT_MIN_CONFIDENCE = 0.6;
+const isRouteClassifierEnabled = (): boolean =>
+  import.meta.env.VITE_ENABLE_LLM_ROUTE_CLASSIFIER === "true";
 
 const isGenerationRouteSignal = (
   value: unknown,
@@ -70,6 +72,10 @@ export async function classifyRouteWithLlm(
   input: ClassifierInput,
   options: ClassifyOptions = {},
 ): Promise<ClassifierResult | null> {
+  if (!isRouteClassifierEnabled()) {
+    return null;
+  }
+
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const minConfidence = options.minConfidence ?? DEFAULT_MIN_CONFIDENCE;
   const controller = new AbortController();

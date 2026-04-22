@@ -491,12 +491,12 @@ const rgbaToPngBytes = async (
 export const renderPreparedSource = async (
   image: ImageRgbaData,
   silhouetteOnly: boolean,
-): Promise<Uint8Array> => {
+): Promise<{ bytes: Uint8Array; width: number; height: number } | null> => {
   const mask = getBinaryMask(image.pixels, image.width, image.height);
   const bounds = getMaskBounds(mask, image.width, image.height);
 
   if (!bounds) {
-    return new Uint8Array();
+    return null;
   }
 
   const output = new Uint8Array(bounds.width * bounds.height * 4);
@@ -527,7 +527,58 @@ export const renderPreparedSource = async (
     }
   }
 
-  return await rgbaToPngBytes(output, bounds.width, bounds.height);
+  const bytes = await rgbaToPngBytes(output, bounds.width, bounds.height);
+  return { bytes, width: bounds.width, height: bounds.height };
+};
+
+export const OPENAI_EDITS_CANVAS_SIZE = 1024;
+
+/**
+ * Prepares a cropped source image for the OpenAI `/v1/images/edits` endpoint.
+ * - Flattens transparent pixels onto a white background (removes RGBA-mode ambiguity)
+ * - Downscales if larger than the target canvas
+ * - Centers onto a 1024x1024 opaque white canvas (OpenAI expects a predictable size)
+ */
+export const buildOpenAiEditCanvas = async (
+  bytes: Uint8Array,
+): Promise<{
+  bytes: Uint8Array;
+  sourceWidth: number;
+  sourceHeight: number;
+}> => {
+  if (bytes.length === 0) {
+    throw new Error("prepared_source_empty");
+  }
+  await ensureImageMagick();
+  let sourceWidth = 0;
+  let sourceHeight = 0;
+  const outputBytes = await ImageMagick.read(bytes, async (image) => {
+    sourceWidth = image.width;
+    sourceHeight = image.height;
+
+    const longEdge = Math.max(image.width, image.height);
+    if (longEdge > OPENAI_EDITS_CANVAS_SIZE) {
+      const scale = OPENAI_EDITS_CANVAS_SIZE / longEdge;
+      image.resize(
+        Math.max(1, Math.round(image.width * scale)),
+        Math.max(1, Math.round(image.height * scale)),
+      );
+    }
+
+    image.backgroundColor = new MagickColor("#ffffff");
+    image.alpha(0);
+
+    const canvas = MagickImage.create(
+      new MagickColor("#ffffff"),
+      OPENAI_EDITS_CANVAS_SIZE,
+      OPENAI_EDITS_CANVAS_SIZE,
+    );
+    const offsetX = Math.round((OPENAI_EDITS_CANVAS_SIZE - image.width) / 2);
+    const offsetY = Math.round((OPENAI_EDITS_CANVAS_SIZE - image.height) / 2);
+    canvas.composite(image, new Point(offsetX, offsetY));
+    return await canvas.write(MagickFormat.Png, (data) => data);
+  });
+  return { bytes: outputBytes, sourceWidth, sourceHeight };
 };
 
 export const composeAllOverTile = async (input: {

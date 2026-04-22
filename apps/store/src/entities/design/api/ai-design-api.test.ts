@@ -4,9 +4,10 @@ import { aiDesignApi } from "@/entities/design/api/ai-design-api";
 import { __resetProbeCacheForTesting } from "@/entities/design/api/should-use-fal-pipeline";
 import { MockFileReader } from "@/test/mock-file-reader";
 
-const { invoke, phCapture } = vi.hoisted(() => ({
+const { invoke, phCapture, getSession } = vi.hoisted(() => ({
   invoke: vi.fn(),
   phCapture: vi.fn(),
+  getSession: vi.fn(),
 }));
 
 vi.mock("@/shared/lib/posthog", () => ({
@@ -21,6 +22,9 @@ vi.mock("@/shared/lib/supabase", () => ({
   supabase: {
     functions: {
       invoke,
+    },
+    auth: {
+      getSession,
     },
     rpc: vi.fn(),
     from: vi.fn(),
@@ -72,9 +76,15 @@ describe("aiDesignApi", () => {
   beforeEach(() => {
     invoke.mockReset();
     phCapture.mockReset();
+    getSession.mockReset();
+    getSession.mockResolvedValue({
+      data: { session: { access_token: "access-token" } },
+      error: null,
+    });
     __resetProbeCacheForTesting();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+    vi.stubEnv("VITE_SUPABASE_ANON_KEY", "anon-key");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -297,15 +307,20 @@ describe("aiDesignApi", () => {
     });
   });
 
-  it("OpenAI prep이 실패하면 최종 렌더를 호출하지 않고 정리된 에러를 던진다", async () => {
+  it("OpenAI prep이 실패하면 원본 이미지로 openai 생성에 폴백한다", async () => {
     MockFileReader.configure({
       result: "data:image/png;base64,source-base64",
     });
     vi.stubGlobal("FileReader", MockFileReader);
-    invoke.mockResolvedValueOnce({
-      data: null,
-      error: { message: "prep failed" },
-    });
+    invoke
+      .mockResolvedValueOnce({
+        data: null,
+        error: { message: "prep failed" },
+      })
+      .mockResolvedValueOnce({
+        data: successResponse,
+        error: null,
+      });
 
     await expect(
       aiDesignApi({
@@ -317,11 +332,20 @@ describe("aiDesignApi", () => {
           ciPlacement: "all-over",
         },
       }),
-    ).rejects.toThrow(
-      "첨부 이미지를 패턴용으로 정리하지 못했습니다. 더 단순한 이미지를 사용해 주세요.",
+    ).resolves.toEqual(
+      expect.objectContaining({
+        imageUrl: successResponse.imageUrl,
+        route: "openai",
+      }),
     );
 
-    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke).toHaveBeenCalledTimes(2);
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-open-api", {
+      body: expect.objectContaining({
+        sourceImageBase64: "source-base64",
+        ciImageBase64: "source-base64",
+      }),
+    });
     expect(phCapture).toHaveBeenCalledWith(
       "design_generation_failed",
       expect.objectContaining({

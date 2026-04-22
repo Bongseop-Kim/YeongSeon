@@ -19,9 +19,25 @@ describe("classifyRouteWithLlm", () => {
     mockInvoke.mockReset();
     warnSpy.mockReset();
     vi.spyOn(console, "warn").mockImplementation(warnSpy);
+    vi.unstubAllEnvs();
   });
 
-  it("신뢰도가 임계값 이상이면 분류 결과를 반환한다", async () => {
+  it("기본값으로는 LLM 라우트 분류를 호출하지 않는다", async () => {
+    const result = await classifyRouteWithLlm({
+      userMessage: "체크 패턴 반복해서 넣어줘",
+      hasCiImage: true,
+      hasReferenceImage: false,
+      hasPreviousGeneratedImage: false,
+      selectedPreviewImageUrl: null,
+      detectedPattern: "check",
+    });
+
+    expect(result).toBeNull();
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it("활성화되어 있고 신뢰도가 임계값 이상이면 분류 결과를 반환한다", async () => {
+    vi.stubEnv("VITE_ENABLE_LLM_ROUTE_CLASSIFIER", "true");
     mockInvoke.mockResolvedValueOnce({
       data: {
         route: "fal_controlnet",
@@ -49,6 +65,7 @@ describe("classifyRouteWithLlm", () => {
   });
 
   it("타임아웃 초과 시 null을 반환한다", async () => {
+    vi.stubEnv("VITE_ENABLE_LLM_ROUTE_CLASSIFIER", "true");
     mockInvoke.mockImplementationOnce(() => new Promise(() => {}));
 
     const result = await classifyRouteWithLlm(
@@ -77,6 +94,7 @@ describe("classifyRouteWithLlm", () => {
   });
 
   it("타임아웃으로 중단된 경우 warning을 남기지 않는다", async () => {
+    vi.stubEnv("VITE_ENABLE_LLM_ROUTE_CLASSIFIER", "true");
     mockInvoke.mockImplementationOnce(
       (_name: string, options?: { signal?: AbortSignal }) =>
         new Promise((_, reject) => {
@@ -105,6 +123,7 @@ describe("classifyRouteWithLlm", () => {
   });
 
   it("confidence가 임계값 미만이면 null을 반환한다", async () => {
+    vi.stubEnv("VITE_ENABLE_LLM_ROUTE_CLASSIFIER", "true");
     mockInvoke.mockResolvedValueOnce({
       data: { route: "openai", signals: [], confidence: 0.4 },
       error: null,
@@ -123,6 +142,7 @@ describe("classifyRouteWithLlm", () => {
   });
 
   it("Edge Function 오류 시 null을 반환한다", async () => {
+    vi.stubEnv("VITE_ENABLE_LLM_ROUTE_CLASSIFIER", "true");
     mockInvoke.mockResolvedValueOnce({
       data: null,
       error: new Error("boom"),
@@ -145,6 +165,7 @@ describe("classifyRouteWithLlm", () => {
   });
 
   it("invoke reject 시에도 null을 반환한다", async () => {
+    vi.stubEnv("VITE_ENABLE_LLM_ROUTE_CLASSIFIER", "true");
     mockInvoke.mockRejectedValueOnce(new Error("network"));
 
     const result = await classifyRouteWithLlm({

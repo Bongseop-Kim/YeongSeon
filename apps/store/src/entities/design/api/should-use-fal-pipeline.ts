@@ -2,6 +2,7 @@ import type {
   CiPlacement,
   FabricMethod,
 } from "@/entities/design/model/design-context";
+import { supabase } from "@/shared/lib/supabase";
 
 interface ShouldUseFalPipelineInput {
   ciImageBase64: string | undefined;
@@ -45,7 +46,21 @@ async function fetchFalPipelineEnabled(): Promise<boolean> {
   }, PROBE_TIMEOUT_MS);
 
   try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const headers: HeadersInit = {};
+
+    if (anonKey) {
+      headers.apikey = anonKey;
+    }
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`;
+    }
+
     const response = await fetch(SHOULD_USE_FAL_PIPELINE_URL, {
+      headers,
       signal: controller.signal,
     });
     const value = response.ok

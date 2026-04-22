@@ -27,7 +27,7 @@ export function buildTracePropagationTargets(
   try {
     targets.push(new URL(supabaseUrl).origin);
   } catch {
-    targets.push(supabaseUrl);
+    // Invalid URL — skip rather than emit a non-matching target string.
   }
 
   return targets;
@@ -54,11 +54,11 @@ export function buildSentryOptions(config: StoreSentryConfig) {
   };
 }
 
-export function initSentry(config: StoreSentryConfig) {
+export function initSentry(config: StoreSentryConfig): void {
   const options = buildSentryOptions(config);
 
   if (!options) {
-    return false;
+    return;
   }
 
   Sentry.init({
@@ -68,6 +68,4 @@ export function initSentry(config: StoreSentryConfig) {
       Sentry.replayIntegration(),
     ],
   });
-
-  return true;
 }

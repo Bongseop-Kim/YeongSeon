@@ -17,7 +17,9 @@ import {
   buildOnePointRepairPrompt,
 } from "@/functions/_shared/prompt-builders.ts";
 import {
+  OPENAI_EDITS_CANVAS_SIZE,
   assessPatternPreparation,
+  buildOpenAiEditCanvas,
   composeAllOverTile,
   composeOnePointMotif,
   computeMetrics,
@@ -45,6 +47,8 @@ type OpenAIImageResponse = {
 
 const OPENAI_TIMEOUT_MS = 120_000;
 const MAX_IMAGE_BASE64_LENGTH = 5_000_000;
+const MIN_REPAIR_EDGE_PX = 64;
+const OPENAI_IMAGE_EDIT_MODEL = "gpt-image-1.5";
 const PREP_REQUEST_TYPE = "prep" as const satisfies GenerationRequestType;
 const PREP_QUALITY = "high" as const satisfies ImageQuality;
 const PREP_AI_MODEL = "openai" as const;
@@ -96,22 +100,10 @@ const refundTokens = async (
   return !error;
 };
 
-const base64ToBlob = (base64: string, mimeType: string) => {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
-  return new Blob([bytes], { type: mimeType });
-};
-
 const requestOpenAiRepair = async (params: {
   apiKey: string;
   prompt: string;
-  sourceImageBase64: string;
-  sourceImageMimeType: string;
+  sourceImageBytes: Uint8Array;
 }) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
@@ -121,12 +113,17 @@ const requestOpenAiRepair = async (params: {
     const formData = new FormData();
     formData.append(
       "image",
-      base64ToBlob(params.sourceImageBase64, params.sourceImageMimeType),
+      new Blob([params.sourceImageBytes as Uint8Array<ArrayBuffer>], {
+        type: "image/png",
+      }),
       "pattern-source.png",
     );
     formData.append("prompt", params.prompt);
-    formData.append("model", "gpt-image-1");
-    formData.append("size", "1024x1024");
+    formData.append("model", OPENAI_IMAGE_EDIT_MODEL);
+    formData.append(
+      "size",
+      `${OPENAI_EDITS_CANVAS_SIZE}x${OPENAI_EDITS_CANVAS_SIZE}`,
+    );
     formData.append("quality", "high");
 
     response = await fetch("https://api.openai.com/v1/images/edits", {
@@ -304,10 +301,16 @@ Deno.serve(async (req) => {
       ),
     });
 
-    let preparedSourceBytes = await renderPreparedSource(
+    const prepared = await renderPreparedSource(
       sourceImage,
       payload.fabricMethod === "yarn-dyed",
     );
+    if (!prepared) {
+      throw new Error("prepared_source_missing");
+    }
+    let preparedSourceBytes = prepared.bytes;
+    const preparedWidth = prepared.width;
+    const preparedHeight = prepared.height;
 
     let result: PatternPreparationResult = {
       ...assessed,
@@ -321,9 +324,24 @@ Deno.serve(async (req) => {
       harmonizationBackend: null,
     };
 
+    const sourceTooSmallForRepair =
+      preparedWidth < MIN_REPAIR_EDGE_PX || preparedHeight < MIN_REPAIR_EDGE_PX;
     const repairNeeded =
-      assessed.sourceStatus === "repair_required" ||
-      assessed.fabricStatus === "repair_required";
+      (assessed.sourceStatus === "repair_required" ||
+        assessed.fabricStatus === "repair_required") &&
+      !sourceTooSmallForRepair;
+
+    if (sourceTooSmallForRepair) {
+      console.warn(
+        "prepare-pattern-composite: prepared source too small for OpenAI repair; using local preparation only",
+        {
+          width: preparedWidth,
+          height: preparedHeight,
+          placementMode: payload.placementMode,
+          fabricMethod: payload.fabricMethod ?? null,
+        },
+      );
+    }
 
     if (repairNeeded && openaiApiKey) {
       const { data: tokenResult, error: tokenError } = await chargeTokens(
@@ -358,10 +376,6 @@ Deno.serve(async (req) => {
 
       tokensCharged = tokenResult.cost;
       remainingTokens = tokenResult.balance;
-      const preparedSourceBase64 = result.preparedSourceBase64;
-      if (!preparedSourceBase64) {
-        throw new Error("prepared_source_missing");
-      }
       const prompt =
         payload.placementMode === "all-over"
           ? buildAllOverRepairPrompt({
@@ -374,12 +388,22 @@ Deno.serve(async (req) => {
             });
 
       try {
+        const editCanvas = await buildOpenAiEditCanvas(preparedSourceBytes);
+
+        console.info("prepare-pattern-composite: calling OpenAI edits", {
+          placementMode: payload.placementMode,
+          fabricMethod: payload.fabricMethod ?? null,
+          sourceWidth: editCanvas.sourceWidth,
+          sourceHeight: editCanvas.sourceHeight,
+          canvasBytes: editCanvas.bytes.length,
+          reasonCodes: assessed.reasonCodes,
+        });
+
         const imageStartTime = Date.now();
         const repairedBase64 = await requestOpenAiRepair({
           apiKey: openaiApiKey,
           prompt,
-          sourceImageBase64: preparedSourceBase64,
-          sourceImageMimeType: "image/png",
+          sourceImageBytes: editCanvas.bytes,
         });
         imageLatencyMs = Date.now() - imageStartTime;
         preparedSourceBytes = decodeBase64Image(repairedBase64);
@@ -399,6 +423,14 @@ Deno.serve(async (req) => {
           prepTokensCharged: tokensCharged,
         };
       } catch (error) {
+        console.error("prepare-pattern-composite: OpenAI repair failed", {
+          error: error instanceof Error ? error.message : String(error),
+          placementMode: payload.placementMode,
+          fabricMethod: payload.fabricMethod ?? null,
+          preparedWidth,
+          preparedHeight,
+          reasonCodes: assessed.reasonCodes,
+        });
         const refunded = await refundTokens(adminClient, {
           userId: user.id,
           amount: tokensCharged,

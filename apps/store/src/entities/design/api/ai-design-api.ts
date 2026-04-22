@@ -196,6 +196,7 @@ export async function aiDesignApi(
   ]);
   const placementMode = request.designContext.ciPlacement;
   let patternPreparation: PatternPreparationResponse | null = null;
+  let patternPreparationFailed = false;
 
   if (
     sourceImageBase64 &&
@@ -224,9 +225,7 @@ export async function aiDesignApi(
       captureGenerationFailed({
         error_type: "pattern_preparation_failed",
       });
-      throw new Error(
-        "첨부 이미지를 패턴용으로 정리하지 못했습니다. 더 단순한 이미지를 사용해 주세요.",
-      );
+      patternPreparationFailed = true;
     }
   }
 
@@ -234,14 +233,12 @@ export async function aiDesignApi(
     sourceImageBase64 &&
     sourceImage &&
     (placementMode === "all-over" || placementMode === "one-point") &&
-    !patternPreparation?.preparedSourceBase64
+    !patternPreparation?.preparedSourceBase64 &&
+    !patternPreparationFailed
   ) {
     captureGenerationFailed({
       error_type: "pattern_preparation_failed",
     });
-    throw new Error(
-      "첨부 이미지를 패턴용으로 정리하지 못했습니다. 더 단순한 이미지를 사용해 주세요.",
-    );
   }
 
   const preparedSourceBase64 =
@@ -280,7 +277,13 @@ export async function aiDesignApi(
         }
       : undefined;
 
-  const resolvedRoute = request.route ?? routeResolution.route;
+  const requestedRoute = request.route ?? routeResolution.route;
+  const resolvedRoute =
+    requestedRoute === "fal_tiling" &&
+    placementMode === "all-over" &&
+    !preparedCompositeBase64
+      ? "openai"
+      : requestedRoute;
   const shouldPrepareTiledPattern =
     resolvedRoute === "fal_tiling" && placementMode === "all-over";
   const controlStructureBase64 =
