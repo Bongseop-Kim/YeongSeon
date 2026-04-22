@@ -1,6 +1,6 @@
 export interface DesignSession {
   id: string;
-  aiModel: "openai" | "gemini";
+  aiModel: "openai" | "gemini" | "fal";
   firstMessage: string;
   lastImageUrl: string | null;
   lastImageFileId: string | null;
@@ -17,6 +17,12 @@ export interface DesignSessionMessage {
   content: string;
   imageUrl: string | null;
   imageFileId: string | null;
+  attachments: Array<{
+    type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+    label: string;
+    value: string;
+    fileName?: string;
+  }> | null;
   sequenceNumber: number;
   createdAt: string;
 }

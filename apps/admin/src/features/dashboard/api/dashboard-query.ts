@@ -72,7 +72,7 @@ export function useDashboardRecentOrders(
 
   const { result: recentOrdersResult } = useList<AdminOrderListRowDTO>({
     resource: "admin_order_list_view",
-    sorters: [{ field: "created_at", order: "desc" }],
+    sorters: [{ field: "createdAt", order: "desc" }],
     filters: [
       ...orderTypeFilter,
       { field: "date", operator: "gte", value: startDate },

@@ -29,6 +29,24 @@ function toBoolean(v: unknown): boolean {
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
+const REQUEST_ATTACHMENT_TYPES = [
+  "color",
+  "pattern",
+  "fabric",
+  "image",
+  "ci-placement",
+] as const;
+const REQUEST_ATTACHMENT_TYPE_SET: ReadonlySet<string> = new Set(
+  REQUEST_ATTACHMENT_TYPES,
+);
+
+function isAllowedAttachmentType(
+  value: unknown,
+): value is NonNullable<
+  AdminGenerationLogItem["requestAttachments"]
+>[number]["type"] {
+  return typeof value === "string" && REQUEST_ATTACHMENT_TYPE_SET.has(value);
+}
 
 // ── 로그 행 ──────────────────────────────────────────────────
 
@@ -44,6 +62,7 @@ type GenerationLogRow = {
   quality: unknown;
   user_message: unknown;
   prompt_length: unknown;
+  request_attachments?: unknown;
   design_context: unknown;
   normalized_design?: unknown;
   conversation_turn: unknown;
@@ -96,6 +115,46 @@ function toAiModel(v: unknown): "openai" | "gemini" | "fal" {
   return "openai";
 }
 
+function toRequestAttachments(
+  value: unknown,
+): AdminGenerationLogItem["requestAttachments"] {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const attachments = value
+    .filter(isRecord)
+    .map((attachment) => {
+      const type = isAllowedAttachmentType(attachment.type)
+        ? attachment.type
+        : null;
+      const label = toString(attachment.label);
+      const attachmentValue = toString(attachment.value);
+      const fileName =
+        toString(attachment.fileName) ?? toString(attachment.file_name);
+
+      if (!type || !label || !attachmentValue) {
+        return null;
+      }
+
+      return {
+        type,
+        label,
+        value: attachmentValue,
+        ...(fileName ? { fileName } : {}),
+      };
+    })
+    .filter(
+      (
+        attachment,
+      ): attachment is NonNullable<
+        AdminGenerationLogItem["requestAttachments"]
+      >[number] => attachment !== null,
+    );
+
+  return attachments.length > 0 ? attachments : null;
+}
+
 export function toAdminGenerationLogItem(
   row: GenerationLogRow,
 ): AdminGenerationLogItem {
@@ -127,6 +186,7 @@ export function toAdminGenerationLogItem(
     quality: toQuality(row.quality),
     userMessage: toString(row.user_message) ?? "",
     promptLength: toNumber(row.prompt_length),
+    requestAttachments: toRequestAttachments(row.request_attachments),
     designContext: isRecord(row.design_context)
       ? (row.design_context as AdminGenerationLogItem["designContext"])
       : null,

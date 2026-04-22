@@ -31,12 +31,12 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
     setFilters(
       [
         {
-          field: "created_at",
+          field: "createdAt",
           operator: "gte",
           value: range[0].startOf("day").toISOString(),
         },
         {
-          field: "created_at",
+          field: "createdAt",
           operator: "lte",
           value: range[1].endOf("day").toISOString(),
         },

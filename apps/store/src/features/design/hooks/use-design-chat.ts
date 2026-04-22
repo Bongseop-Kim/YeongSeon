@@ -27,9 +27,20 @@ interface UseDesignChatResult {
   sendMessage: (userText: string, attachments: Attachment[]) => void;
   regenerate: () => void;
   requestRender: () => void;
-  requestInpaint: (maskBase64: string, editPrompt: string) => boolean;
+  requestInpaint: (
+    maskBase64: string,
+    editPrompt: string,
+  ) => InpaintRequestResult;
   isLoading: boolean;
 }
+
+export type InpaintRequestResult =
+  | { started: true }
+  | {
+      started: false;
+      errorCode: "INVALID_INPUT" | "NO_EDIT_TARGET";
+      errorMessage: string;
+    };
 
 interface MutationCallbackOptions {
   skipAiMessageAppend?: boolean;
@@ -39,10 +50,9 @@ const EDIT_INTENT_SIGNALS = new Set<GenerationRouteSignal>([
   "edit_only",
   "exact_placement",
   "modification_intent",
-  "preserve_identity",
 ]);
-const EDIT_BASE_IMAGE_REQUIRED_MESSAGE =
-  "현재 결과를 기준으로 수정할 이미지가 없어 먼저 디자인을 생성해 주세요.";
+export const INPAINT_TARGET_REQUIRED_MESSAGE =
+  "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.";
 
 const toConversationHistory = (
   items: Message[],
@@ -55,10 +65,11 @@ const toConversationHistory = (
     }));
 
 const toSerializedAttachments = (attachments: Attachment[] | undefined) =>
-  attachments?.map(({ type, label, value }) => ({
+  attachments?.map(({ type, label, value, file, fileName }) => ({
     type,
     label,
     value,
+    fileName: fileName ?? file?.name,
   }));
 
 const getSerializedImageFields = (message: Message) => {
@@ -296,17 +307,6 @@ export function useDesignChat(
     });
     const editIntent = isEditIntent(routeResolution.signals);
 
-    if (editIntent && !baseImageUrl) {
-      addMessage({
-        id: crypto.randomUUID(),
-        role: "ai",
-        content: EDIT_BASE_IMAGE_REQUIRED_MESSAGE,
-        timestamp: Date.now(),
-        uiOnly: true,
-      });
-      return;
-    }
-
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
@@ -382,17 +382,6 @@ export function useDesignChat(
       detectedPattern: (lastUserMessage.designContext ?? designContext).pattern,
     });
     const editIntent = isEditIntent(routeResolution.signals);
-
-    if (editIntent && !baseImageUrl) {
-      addMessage({
-        id: crypto.randomUUID(),
-        role: "ai",
-        content: EDIT_BASE_IMAGE_REQUIRED_MESSAGE,
-        timestamp: Date.now(),
-        uiOnly: true,
-      });
-      return;
-    }
 
     const sessionId = storeState.currentSessionId ?? crypto.randomUUID();
     if (!storeState.currentSessionId) {
@@ -495,10 +484,21 @@ export function useDesignChat(
     );
   };
 
-  const requestInpaint = (maskBase64: string, editPrompt: string): boolean => {
+  const requestInpaint = (
+    maskBase64: string,
+    editPrompt: string,
+  ): InpaintRequestResult => {
+    const trimmedMaskBase64 = maskBase64.trim();
     const trimmedPrompt = editPrompt.trim();
-    if (maskBase64.trim().length === 0 || trimmedPrompt.length === 0) {
-      return false;
+    if (trimmedMaskBase64.length === 0 || trimmedPrompt.length === 0) {
+      return {
+        started: false,
+        errorCode: "INVALID_INPUT",
+        errorMessage:
+          trimmedMaskBase64.length === 0
+            ? "수정할 영역을 먼저 칠해 주세요."
+            : "수정 지시를 입력해 주세요.",
+      };
     }
 
     const storeState = useDesignChatStore.getState();
@@ -514,14 +514,11 @@ export function useDesignChat(
       : storeState.baseImageWorkId;
 
     if (!targetImageUrl) {
-      addMessage({
-        id: crypto.randomUUID(),
-        role: "ai",
-        content: EDIT_BASE_IMAGE_REQUIRED_MESSAGE,
-        timestamp: Date.now(),
-        uiOnly: true,
-      });
-      return false;
+      return {
+        started: false,
+        errorCode: "NO_EDIT_TARGET",
+        errorMessage: INPAINT_TARGET_REQUIRED_MESSAGE,
+      };
     }
 
     const userMessage: Message = {
@@ -569,7 +566,7 @@ export function useDesignChat(
       "completed",
     );
 
-    return true;
+    return { started: true };
   };
 
   return {

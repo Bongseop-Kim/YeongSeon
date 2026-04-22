@@ -45,6 +45,7 @@ import {
   saveDesignSession,
   type SessionMessage,
 } from "@/functions/_shared/session-save.ts";
+import { sanitizeLogRequestAttachments } from "@/functions/_shared/request-attachments.ts";
 import {
   createAdminSupabaseClient,
   createAuthenticatedSupabaseClient,
@@ -114,6 +115,7 @@ const saveSessionIfNeeded = async (
       content: aiMessage,
       image_url: imageUrl,
       image_file_id: imageFileId,
+      attachments: null,
       sequence_number: payload.allMessages.length,
     } satisfies SessionMessage),
   });
@@ -252,6 +254,9 @@ Deno.serve(async (req) => {
   if (!validation.ok) {
     return jsonResponse(validation.status, validation.body);
   }
+  const attachmentLogFields = {
+    request_attachments: sanitizeLogRequestAttachments(payload.attachments),
+  } as const;
 
   let analysisSnapshot = null;
   if (executionMode === "render_from_analysis") {
@@ -283,6 +288,7 @@ Deno.serve(async (req) => {
         route_reason: payload.routeReason ?? null,
         route_signals: payload.routeSignals ?? [],
         base_image_work_id: payload.baseImageWorkId ?? null,
+        ...attachmentLogFields,
         user_message: payloadUserMessage,
         prompt_length: payloadUserMessage.length,
         image_generated: false,
@@ -361,6 +367,7 @@ Deno.serve(async (req) => {
         ai_model: ANALYSIS_AI_MODEL,
         request_type: ANALYSIS_REQUEST_TYPE,
         ...routeLogFields,
+        ...attachmentLogFields,
         ...userMessageLogFields,
         text_prompt: textPrompt,
         image_generated: false,
@@ -379,6 +386,7 @@ Deno.serve(async (req) => {
         ai_model: ANALYSIS_AI_MODEL,
         request_type: ANALYSIS_REQUEST_TYPE,
         ...routeLogFields,
+        ...attachmentLogFields,
         ...userMessageLogFields,
         text_prompt: textPrompt,
         image_generated: false,
@@ -446,6 +454,7 @@ Deno.serve(async (req) => {
         ai_model: ANALYSIS_AI_MODEL,
         request_type: ANALYSIS_REQUEST_TYPE,
         ...routeLogFields,
+        ...attachmentLogFields,
         ...userMessageLogFields,
         text_prompt: textPrompt,
         image_generated: false,
@@ -485,6 +494,7 @@ Deno.serve(async (req) => {
       ai_model: ANALYSIS_AI_MODEL,
       request_type: ANALYSIS_REQUEST_TYPE,
       ...routeLogFields,
+      ...attachmentLogFields,
       ...userMessageLogFields,
       text_prompt: textPrompt,
       ai_message: aiMessage,
@@ -590,6 +600,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
+      ...attachmentLogFields,
       ...userMessageLogFields,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
@@ -622,6 +633,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
+      ...attachmentLogFields,
       ...userMessageLogFields,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
@@ -852,6 +864,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
+      ...attachmentLogFields,
       ...userMessageLogFields,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
@@ -995,6 +1008,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
+      ...attachmentLogFields,
       ...userMessageLogFields,
       text_prompt: textPrompt,
       image_prompt: imagePrompt,
@@ -1032,6 +1046,7 @@ Deno.serve(async (req) => {
     ai_model: RENDER_AI_MODEL,
     request_type: RENDER_REQUEST_TYPE,
     ...routeLogFields,
+    ...attachmentLogFields,
     ...userMessageLogFields,
     text_prompt: textPrompt,
     image_prompt: imagePrompt,

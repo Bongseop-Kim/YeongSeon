@@ -23,11 +23,12 @@ export interface DesignSessionMessageRow {
   content: string;
   image_url: string | null;
   image_file_id: string | null;
+  attachments: unknown;
   sequence_number: number;
   created_at: string;
 }
 
-const AI_MODELS = ["openai", "gemini"] as const;
+const AI_MODELS = ["openai", "gemini", "fal"] as const;
 const MESSAGE_ROLES = ["user", "ai"] as const;
 const AI_MODEL_SET: ReadonlySet<string> = new Set(AI_MODELS);
 const MESSAGE_ROLE_SET: ReadonlySet<string> = new Set(MESSAGE_ROLES);
@@ -38,6 +39,52 @@ function isAiModel(value: string): value is DesignSession["aiModel"] {
 
 function isMessageRole(value: string): value is DesignSessionMessage["role"] {
   return MESSAGE_ROLE_SET.has(value);
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+function toAttachments(value: unknown): DesignSessionMessage["attachments"] {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const attachments = value
+    .filter(isRecord)
+    .map((attachment) => {
+      const type = attachment.type;
+      const label = attachment.label;
+      const itemValue = attachment.value;
+      const fileName = attachment.fileName;
+
+      if (
+        (type !== "color" &&
+          type !== "pattern" &&
+          type !== "fabric" &&
+          type !== "image" &&
+          type !== "ci-placement") ||
+        typeof label !== "string" ||
+        typeof itemValue !== "string"
+      ) {
+        return null;
+      }
+
+      return {
+        type,
+        label,
+        value: itemValue,
+        ...(typeof fileName === "string" ? { fileName } : {}),
+      };
+    })
+    .filter(
+      (
+        attachment,
+      ): attachment is NonNullable<
+        DesignSessionMessage["attachments"]
+      >[number] => attachment !== null,
+    );
+
+  return attachments.length > 0 ? attachments : null;
 }
 
 export function toDesignSession(row: DesignSessionRow): DesignSession {
@@ -72,6 +119,7 @@ export function toDesignSessionMessage(
     content: row.content,
     imageUrl: row.image_url,
     imageFileId: row.image_file_id,
+    attachments: toAttachments(row.attachments),
     sequenceNumber: row.sequence_number,
     createdAt: row.created_at,
   };

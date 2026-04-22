@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RequestSessionMessage } from "@/functions/_shared/design-request.ts";
+import {
+  sanitizeSessionAttachments,
+  type SessionAttachment,
+} from "@/functions/_shared/request-attachments.ts";
 
 export interface SessionMessage {
   id: string;
@@ -7,6 +11,7 @@ export interface SessionMessage {
   content: string;
   image_url: string | null;
   image_file_id: string | null;
+  attachments: SessionAttachment[] | null;
   sequence_number: number;
 }
 
@@ -25,14 +30,19 @@ export function buildSessionMessages(
   newAiMessage: SessionMessage,
 ): SessionMessage[] {
   return [
-    ...requestMessages.map((m, idx) => ({
-      id: m.id,
-      role: m.role,
-      content: m.content,
-      image_url: m.imageUrl ?? null,
-      image_file_id: m.imageFileId ?? null,
-      sequence_number: idx,
-    })),
+    ...requestMessages.map((m, idx) => {
+      const sanitizedAttachments = sanitizeSessionAttachments(m.attachments);
+
+      return {
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        image_url: m.imageUrl ?? null,
+        image_file_id: m.imageFileId ?? null,
+        attachments: sanitizedAttachments,
+        sequence_number: idx,
+      };
+    }),
     newAiMessage,
   ];
 }

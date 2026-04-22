@@ -40,17 +40,17 @@ export function useAdminOrderTable(
   const { tableProps: rawTableProps, setFilters } =
     useTable<AdminOrderListRowDTO>({
       resource: "admin_order_list_view",
-      sorters: { initial: [{ field: "created_at", order: "desc" }] },
+      sorters: { initial: [{ field: "createdAt", order: "desc" }] },
       filters: {
         permanent: [{ field: "orderType", operator: "eq", value: orderType }],
         initial: [
           {
-            field: "created_at",
+            field: "createdAt",
             operator: "gte",
             value: dayjs(initialDateRange[0]).startOf("day").toISOString(),
           },
           {
-            field: "created_at",
+            field: "createdAt",
             operator: "lte",
             value: dayjs(initialDateRange[1]).endOf("day").toISOString(),
           },

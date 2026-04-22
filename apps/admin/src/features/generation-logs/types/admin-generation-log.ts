@@ -32,6 +32,12 @@ export interface AdminGenerationLogItem {
   imageEditPrompt?: string | null;
   imageGenerated: boolean;
   generatedImageUrl: string | null;
+  requestAttachments: Array<{
+    type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+    label: string;
+    value: string;
+    fileName?: string;
+  }> | null;
   detectedDesign: Record<string, unknown> | null;
   tokensCharged: number;
   tokensRefunded: number;

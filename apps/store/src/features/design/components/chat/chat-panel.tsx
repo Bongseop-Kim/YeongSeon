@@ -10,6 +10,7 @@ import {
 } from "@/features/design/components/chat/chat-input";
 import { MessageList } from "@/features/design/components/chat/message-list";
 import { InpaintDialog } from "@/features/design/components/inpaint/inpaint-dialog";
+import type { InpaintDialogExternalError } from "@/features/design/components/inpaint/inpaint-dialog";
 import {
   QUICK_CHIPS,
   WELCOME_MESSAGE,
@@ -21,13 +22,17 @@ import {
 } from "@/features/design/lib/analysis-status";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
+import type { InpaintRequestResult } from "@/features/design/hooks/use-design-chat";
 import { cn } from "@/shared/lib/utils";
 
 interface ChatPanelProps {
   className?: string;
   sendMessage: (text: string, attachments: Attachment[]) => void;
   requestRender?: () => void;
-  requestInpaint: (maskBase64: string, editPrompt: string) => boolean;
+  requestInpaint: (
+    maskBase64: string,
+    editPrompt: string,
+  ) => InpaintRequestResult;
   onOpenHistory: () => void;
 }
 
@@ -87,6 +92,8 @@ export function ChatPanel({
   const [pendingInpaintClose, setPendingInpaintClose] = useState(false);
   const [hasObservedInpaintGeneration, setHasObservedInpaintGeneration] =
     useState(false);
+  const [inpaintError, setInpaintError] =
+    useState<InpaintDialogExternalError | null>(null);
   const inputRef = useRef<ChatInputHandle>(null);
   const inpaintTargetKey = inpaintTarget
     ? `${inpaintTarget.imageUrl}::${inpaintTarget.imageWorkId ?? ""}`
@@ -106,6 +113,7 @@ export function ChatPanel({
     if (previousInpaintTargetKeyRef.current !== inpaintTargetKey) {
       setPendingInpaintClose(false);
       setHasObservedInpaintGeneration(false);
+      setInpaintError(null);
       previousInpaintTargetKeyRef.current = inpaintTargetKey;
     }
   }, [inpaintTargetKey]);
@@ -141,16 +149,21 @@ export function ChatPanel({
   const handleCloseInpaintDialog = () => {
     setPendingInpaintClose(false);
     setHasObservedInpaintGeneration(false);
+    setInpaintError(null);
     closeInpaintDialog();
   };
   const handleInpaintSubmit = (maskBase64: string, editPrompt: string) => {
-    const requestStarted = requestInpaint(maskBase64, editPrompt);
+    const requestResult = requestInpaint(maskBase64, editPrompt);
 
-    if (!requestStarted) {
-      handleCloseInpaintDialog();
+    if (!requestResult.started) {
+      setInpaintError({
+        message: requestResult.errorMessage,
+        nonce: Date.now(),
+      });
       return;
     }
 
+    setInpaintError(null);
     setPendingInpaintClose(true);
     setHasObservedInpaintGeneration(false);
   };
@@ -239,6 +252,7 @@ export function ChatPanel({
           open
           imageUrl={inpaintTarget.imageUrl}
           isSubmitting={isGenerating}
+          externalError={inpaintError}
           onOpenChange={(nextOpen) => {
             if (!nextOpen) {
               handleCloseInpaintDialog();

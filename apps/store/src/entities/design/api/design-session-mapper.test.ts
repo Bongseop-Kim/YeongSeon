@@ -53,6 +53,27 @@ describe("toDesignSession", () => {
       lastImageWorkId: null,
     });
   });
+
+  it("fal 세션도 DesignSession UI 타입으로 변환한다", () => {
+    expect(
+      toDesignSession({
+        id: "session-3",
+        user_id: "user-1",
+        ai_model: "fal",
+        first_message: "CI 패턴으로 올오버 생성",
+        last_image_url: "https://example.com/fal.png",
+        last_image_file_id: "file-3",
+        last_image_work_id: "work-3",
+        image_count: 1,
+        created_at: "2026-03-19T10:10:00Z",
+        updated_at: "2026-03-19T10:15:00Z",
+      }),
+    ).toMatchObject({
+      id: "session-3",
+      aiModel: "fal",
+      firstMessage: "CI 패턴으로 올오버 생성",
+    });
+  });
 });
 
 describe("toDesignSessionMessage", () => {
@@ -65,6 +86,14 @@ describe("toDesignSessionMessage", () => {
         content: "생성했습니다",
         image_url: "https://ik.imagekit.io/essesion/design-sessions/img.png",
         image_file_id: "file-1",
+        attachments: [
+          {
+            type: "image",
+            label: "참고 이미지",
+            value: "reference",
+            fileName: "mood-board.png",
+          },
+        ],
         sequence_number: 2,
         created_at: "2026-03-19T10:05:00Z",
       }),
@@ -75,6 +104,14 @@ describe("toDesignSessionMessage", () => {
       content: "생성했습니다",
       imageUrl: "https://ik.imagekit.io/essesion/design-sessions/img.png",
       imageFileId: "file-1",
+      attachments: [
+        {
+          type: "image",
+          label: "참고 이미지",
+          value: "reference",
+          fileName: "mood-board.png",
+        },
+      ],
       sequenceNumber: 2,
       createdAt: "2026-03-19T10:05:00Z",
     });
