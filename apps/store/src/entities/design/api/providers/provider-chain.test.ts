@@ -12,7 +12,7 @@ import {
 const ok = { aiMessage: "ok", imageUrl: "u", workId: "w" };
 
 function mkProvider(
-  name: "fal" | "openai" | "gemini",
+  name: "fal" | "openai",
   behavior: () => Promise<unknown>,
   canHandle = true,
 ): GenerationProvider<unknown, typeof ok> {

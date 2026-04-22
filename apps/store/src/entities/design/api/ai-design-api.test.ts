@@ -41,7 +41,6 @@ const baseRequest = {
     ciPlacement: null,
     referenceImage: null,
   },
-  aiModel: "openai" as const,
   conversationHistory: [],
   sessionId: "test-session-id",
   firstMessage: userMessage,
@@ -284,32 +283,19 @@ describe("aiDesignApi", () => {
     });
   });
 
-  it.each([
-    {
-      title: "auto가 아니면 fal_tiling 요청도 로컬에서 openai로 처리한다",
-      executionMode: "analysis_only" as const,
-      fabricMethod: "yarn-dyed" as const,
-    },
-    {
-      title:
-        "fabricMethod가 없으면 fal_tiling 요청도 로컬에서 openai로 처리한다",
-      executionMode: undefined,
-      fabricMethod: null,
-    },
-  ])("$title", async ({ executionMode, fabricMethod }) => {
+  it("fabricMethod가 없으면 fal_tiling 요청도 로컬에서 openai로 처리한다", async () => {
     MockFileReader.configure({ result: "data:image/png;base64,ci-base64" });
     vi.stubGlobal("FileReader", MockFileReader);
     invoke.mockResolvedValue({ data: successResponse, error: null });
 
     await aiDesignApi({
       ...baseRequest,
-      executionMode,
       userMessage: "첨부한 이미지를 올 패턴으로 넥타이 디자인해줘",
       designContext: {
         ...baseRequest.designContext,
         ciImage: { type: "image/png" } as File,
         ciPlacement: "all-over",
-        fabricMethod,
+        fabricMethod: null,
         scale: "medium",
       },
     });

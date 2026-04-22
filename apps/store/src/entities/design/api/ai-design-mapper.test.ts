@@ -35,7 +35,6 @@ const createAiDesignRequest = (
   overrides: Partial<AiDesignRequest> = {},
 ): AiDesignRequest => ({
   userMessage: "테스트 요청",
-  aiModel: "openai",
   attachments: [],
   designContext: createDesignContext(),
   sessionId: "test-session-id",
@@ -201,14 +200,14 @@ describe("buildInvokePayload", () => {
           referenceImage: null,
           scale: "large",
         }),
-        executionMode: "analysis_only",
+        executionMode: "render_from_analysis",
         analysisWorkId: "analysis-1",
       }),
       {},
     );
 
     expect(payload.designContext?.scale).toBe("large");
-    expect(payload.executionMode).toBe("analysis_only");
+    expect(payload.executionMode).toBe("render_from_analysis");
     expect(payload.analysisWorkId).toBe("analysis-1");
   });
 

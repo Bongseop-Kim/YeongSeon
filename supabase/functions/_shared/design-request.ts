@@ -36,9 +36,8 @@ export type GenerateDesignRequest = {
     scale?: "large" | "medium" | "small" | null;
     backgroundPattern?: BackgroundPattern;
   };
-  autoGenerate?: boolean;
   analysisWorkId?: string | null;
-  executionMode?: "auto" | "analysis_only" | "render_from_analysis";
+  executionMode?: "auto" | "render_from_analysis";
   conversationHistory?: ConversationTurn[];
   previousImageBase64?: string;
   previousImageMimeType?: string;

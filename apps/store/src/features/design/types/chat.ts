@@ -1,5 +1,4 @@
 export type {
-  AiModel,
   Attachment,
   ContextChip,
   GenerationStatus,

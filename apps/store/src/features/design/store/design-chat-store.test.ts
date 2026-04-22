@@ -7,7 +7,6 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
       selectedPreviewImageUrl: null,
       generatedImageUrl: null,
       resultTags: [],
-      autoGenerateImage: true,
       baseImageUrl: null,
       baseImageWorkId: null,
       lastRoute: null,
@@ -134,7 +133,7 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
   });
 });
 
-describe("design-chat-store — autoGenerateImage", () => {
+describe("design-chat-store", () => {
   beforeEach(() => {
     useDesignChatStore.setState({
       currentSessionId: null,
@@ -144,8 +143,24 @@ describe("design-chat-store — autoGenerateImage", () => {
     });
   });
 
-  it("defaults autoGenerateImage to true", () => {
-    expect(useDesignChatStore.getState().autoGenerateImage).toBe(true);
+  it("레거시 모델 선택 상태를 노출하지 않는다", () => {
+    const state = useDesignChatStore.getState() as unknown as Record<
+      string,
+      unknown
+    >;
+
+    expect(state).not.toHaveProperty("aiModel");
+    expect(state).not.toHaveProperty("setAiModel");
+  });
+
+  it("레거시 자동 렌더 토글 상태를 노출하지 않는다", () => {
+    const state = useDesignChatStore.getState() as unknown as Record<
+      string,
+      unknown
+    >;
+
+    expect(state).not.toHaveProperty("autoGenerateImage");
+    expect(state).not.toHaveProperty("setAutoGenerateImage");
   });
 
   it("resetConversation은 lastMissingRequirements를 새 배열로 재생성한다", () => {
@@ -186,11 +201,6 @@ describe("design-chat-store — autoGenerateImage", () => {
     expect(useDesignChatStore.getState().lastSeed).toBeNull();
   });
 
-  it("setAutoGenerateImage는 autoGenerateImage를 업데이트한다", () => {
-    useDesignChatStore.getState().setAutoGenerateImage(false);
-    expect(useDesignChatStore.getState().autoGenerateImage).toBe(false);
-  });
-
   it("stores last analysis status for manual render", () => {
     useDesignChatStore.getState().setLastAnalysisResult({
       analysisWorkId: "analysis-1",
@@ -213,17 +223,5 @@ describe("design-chat-store — autoGenerateImage", () => {
     });
 
     expect(useDesignChatStore.getState().lastEligibleForRender).toBe(false);
-  });
-
-  it("setAiModel는 currentSessionId를 초기화한다", () => {
-    useDesignChatStore.setState({
-      aiModel: "openai",
-      currentSessionId: "session-123",
-    });
-
-    useDesignChatStore.getState().setAiModel("gemini");
-
-    expect(useDesignChatStore.getState().aiModel).toBe("gemini");
-    expect(useDesignChatStore.getState().currentSessionId).toBeNull();
   });
 });

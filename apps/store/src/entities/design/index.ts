@@ -24,7 +24,7 @@ export {
   toRestoredDesignSessionState,
   type RestoredDesignSessionState,
 } from "./api/design-session-state-mapper";
-export type { AiModel, Attachment, ContextChip } from "./model/ai-design-types";
+export type { Attachment, ContextChip } from "./model/ai-design-types";
 export type { GenerationStatus, Message } from "./model/chat";
 export type {
   CiPlacement,

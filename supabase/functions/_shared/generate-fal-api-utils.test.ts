@@ -98,11 +98,11 @@ Deno.test(
   },
 );
 
-Deno.test("shouldExecuteFalRender blocks analysis_only requests", () => {
+Deno.test("shouldExecuteFalRender blocks non-renderable analyses", () => {
   assertEquals(
-    shouldExecuteFalRender("analysis_only", true, {
+    shouldExecuteFalRender(true, {
       eligibleForRender: true,
-      missingRequirements: [],
+      missingRequirements: ["pattern"],
     }),
     false,
   );

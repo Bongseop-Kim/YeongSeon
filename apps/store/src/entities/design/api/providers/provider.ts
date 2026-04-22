@@ -3,7 +3,7 @@ import type {
   GenerationRoute,
 } from "@/entities/design/model/ai-design-request";
 
-export type ProviderName = "fal" | "openai" | "gemini";
+export type ProviderName = "fal" | "openai";
 
 export class ProviderSkipError extends Error {
   constructor(

@@ -9,7 +9,6 @@ import {
   type DesignTokenRow,
 } from "@/entities/design/api/ai-design-mapper";
 import { falProvider } from "@/entities/design/api/providers/fal-provider";
-import { geminiProvider } from "@/entities/design/api/providers/gemini-provider";
 import { openaiProvider } from "@/entities/design/api/providers/openai-provider";
 import { parseEdgeErrorResponse } from "@/entities/design/api/providers/parse-edge-error";
 import { runProviderChain } from "@/entities/design/api/providers/provider-chain";
@@ -36,6 +35,7 @@ export class InsufficientTokensError extends Error {
 
 const DESIGN_TOKEN_SELECT_FIELDS =
   "id, user_id, amount, type, ai_model, request_type, description, created_at, work_id";
+const DEFAULT_AI_MODEL = "openai" as const;
 
 const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -111,6 +111,15 @@ const getErrorResponseBody = async (
   };
 };
 
+const captureGenerationFailed = (
+  payload: Omit<Parameters<typeof safeCapture>[1], "ai_model">,
+): void => {
+  safeCapture("design_generation_failed", {
+    ai_model: DEFAULT_AI_MODEL,
+    ...payload,
+  });
+};
+
 export async function aiDesignApi(
   request: AiDesignRequest,
 ): Promise<AiDesignResponse> {
@@ -137,7 +146,7 @@ export async function aiDesignApi(
     referenceImageBase64,
     ciPlacement: request.designContext.ciPlacement,
     fabricMethod: request.designContext.fabricMethod,
-    allowFalRender: (request.executionMode ?? "auto") !== "analysis_only",
+    allowFalRender: true,
   });
   const backgroundPattern =
     request.designContext.ciPlacement === "one-point" &&
@@ -185,8 +194,7 @@ export async function aiDesignApi(
       tiledBase64 = tileResult.base64;
       tiledMimeType = tileResult.mimeType;
     } catch (error) {
-      safeCapture("design_generation_failed", {
-        ai_model: request.aiModel,
+      captureGenerationFailed({
         error_type: "tile_logo_on_canvas_failed",
         pipeline: "fal-ai",
         scale: request.designContext.scale ?? "medium",
@@ -231,7 +239,7 @@ export async function aiDesignApi(
 
   const startTime = Date.now();
   let data: unknown;
-  let providerUsed: "fal" | "openai" | "gemini";
+  let providerUsed: "fal" | "openai";
 
   try {
     const chainResult = await runProviderChain(
@@ -242,7 +250,7 @@ export async function aiDesignApi(
         resolvedRoute,
         canUseFalApi,
       },
-      [falProvider, openaiProvider, geminiProvider],
+      [falProvider, openaiProvider],
     );
 
     data = chainResult.result;
@@ -251,15 +259,13 @@ export async function aiDesignApi(
     const body = await getErrorResponseBody(error);
 
     if (body?.error === "insufficient_tokens") {
-      safeCapture("design_generation_failed", {
-        ai_model: request.aiModel,
+      captureGenerationFailed({
         error_type: "insufficient_tokens",
       });
       throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
     }
 
-    safeCapture("design_generation_failed", {
-      ai_model: request.aiModel,
+    captureGenerationFailed({
       error_type: "api_error",
       pipeline: canUseFalApi ? "fal-ai" : undefined,
     });
@@ -274,8 +280,7 @@ export async function aiDesignApi(
   const usedFalApi = providerUsed === "fal";
 
   if (!data) {
-    safeCapture("design_generation_failed", {
-      ai_model: request.aiModel,
+    captureGenerationFailed({
       error_type: "api_error",
       pipeline: usedFalApi ? "fal-ai" : undefined,
     });
@@ -287,7 +292,7 @@ export async function aiDesignApi(
     request,
   );
   safeCapture("design_generated", {
-    ai_model: request.aiModel,
+    ai_model: DEFAULT_AI_MODEL,
     latency_ms: Date.now() - startTime,
     has_image: result.imageUrl !== null,
     pipeline: usedFalApi ? "fal-ai" : undefined,

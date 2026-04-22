@@ -1,7 +1,4 @@
-import type {
-  AiModel,
-  Attachment,
-} from "@/entities/design/model/ai-design-types";
+import type { Attachment } from "@/entities/design/model/ai-design-types";
 import type { DesignContext } from "@/entities/design/model/design-context";
 import type { Scale } from "@/entities/design/model/design-scale";
 import type { Message } from "@/entities/design/model/chat";
@@ -69,13 +66,12 @@ export interface AiDesignRequest extends AiDesignRouteHint {
   userMessage: string;
   attachments: Attachment[];
   designContext: DesignContextPayload;
-  aiModel: AiModel;
   conversationHistory?: Pick<Message, "role" | "content">[];
   sessionId: string;
   firstMessage: string;
   allMessages: SessionMessagePayload[];
   analysisWorkId?: string | null;
-  executionMode?: "auto" | "analysis_only" | "render_from_analysis";
+  executionMode?: "auto" | "render_from_analysis";
   route?: Exclude<GenerationRoute, "openai">;
   controlType?: "lineart" | "edge" | "depth";
   structureImageBase64?: string;

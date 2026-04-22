@@ -42,7 +42,7 @@ export type GenerationRequestType =
   | "render_standard"
   | "render_high";
 export type ImageQuality = "standard" | "high";
-export type ExecutionMode = "auto" | "analysis_only" | "render_from_analysis";
+export type ExecutionMode = "auto" | "render_from_analysis";
 export type UseDesignTokensResult = {
   success: boolean;
   error?: string;
@@ -287,9 +287,7 @@ export const mergeDetectedDesign = (
 
 export const getExecutionMode = (
   payload: GenerateDesignRequest,
-): ExecutionMode =>
-  payload.executionMode ??
-  (payload.autoGenerate === false ? "analysis_only" : "auto");
+): ExecutionMode => payload.executionMode ?? "auto";
 
 export const getImageQuality = (
   payload: GenerateDesignRequest,

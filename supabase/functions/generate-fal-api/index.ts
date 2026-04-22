@@ -527,7 +527,7 @@ Deno.serve(async (req) => {
     contextChips,
   };
 
-  if (!shouldExecuteFalRender(executionMode, generateImage, eligibility)) {
+  if (!shouldExecuteFalRender(generateImage, eligibility)) {
     if (analysisSnapshot) {
       return jsonResponse(409, {
         error: "analysis_not_renderable",

@@ -6,6 +6,7 @@ import {
 import {
   resolveGenerationRoute,
   createAnalysisReuseKeyForContext,
+  type AiDesignRequest,
   type AiDesignResponse,
   InsufficientTokensError,
   type GenerationRouteSignal,
@@ -46,11 +47,14 @@ interface MutationCallbackOptions {
   skipAiMessageAppend?: boolean;
 }
 
+type DesignChatStoreState = ReturnType<typeof useDesignChatStore.getState>;
+
 const EDIT_INTENT_SIGNALS = new Set<GenerationRouteSignal>([
   "edit_only",
   "exact_placement",
   "modification_intent",
 ]);
+const ANALYTICS_AI_MODEL = "openai" as const;
 export const INPAINT_TARGET_REQUIRED_MESSAGE =
   "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.";
 
@@ -119,6 +123,32 @@ const createEditRequestBase = (
   baseImageWorkId: string | null,
 ) => (editIntent ? { baseImageUrl, baseImageWorkId } : {});
 
+const getBaseImageContext = (
+  state: Pick<
+    DesignChatStoreState,
+    "baseImageUrl" | "selectedPreviewImageUrl" | "baseImageWorkId"
+  >,
+) => ({
+  baseImageUrl: getRawImageUrlFromPreviewBackground(
+    state.baseImageUrl ?? state.selectedPreviewImageUrl,
+  ),
+  baseImageWorkId: state.baseImageWorkId,
+});
+
+const getInpaintTarget = (
+  state: Pick<
+    DesignChatStoreState,
+    | "inpaintTarget"
+    | "baseImageUrl"
+    | "selectedPreviewImageUrl"
+    | "baseImageWorkId"
+  >,
+) =>
+  state.inpaintTarget ?? {
+    imageUrl: getBaseImageContext(state).baseImageUrl,
+    imageWorkId: state.baseImageWorkId,
+  };
+
 export function useDesignChat(
   options: UseDesignChatOptions = {},
 ): UseDesignChatResult {
@@ -151,6 +181,53 @@ export function useDesignChat(
     (state) => state.setCurrentSessionId,
   );
   const mutation = useAiDesignMutation();
+
+  const resetAnalysisState = (): void => {
+    setLastAnalysisResult(createAnalysisReset());
+    setLastAnalysisReuseKey(null);
+  };
+
+  const ensureSessionId = (currentSessionId: string | null): string => {
+    const sessionId = currentSessionId ?? crypto.randomUUID();
+
+    if (!currentSessionId) {
+      setCurrentSessionId(sessionId);
+    }
+
+    return sessionId;
+  };
+
+  const startGeneration = (
+    status: "generating" | "regenerating" | "rendering",
+    sessionId: string,
+    { resetAnalysis = true }: { resetAnalysis?: boolean } = {},
+  ): void => {
+    setGenerationStatus(status);
+    onGenerationStart?.(sessionId);
+
+    if (resetAnalysis) {
+      resetAnalysisState();
+    }
+  };
+
+  const createRequest = (
+    input: Omit<
+      AiDesignRequest,
+      "conversationHistory" | "firstMessage" | "allMessages"
+    > & {
+      messages: Message[];
+    },
+  ): AiDesignRequest => {
+    const { messages, ...request } = input;
+    const { firstUserMsg, allMessages } = toSessionPayload(messages);
+
+    return {
+      ...request,
+      conversationHistory: toConversationHistory(messages),
+      firstMessage: firstUserMsg?.content ?? request.userMessage,
+      allMessages,
+    };
+  };
 
   const createMutationCallbacks = (
     request: Parameters<typeof mutation.mutate>[0],
@@ -290,19 +367,14 @@ export function useDesignChat(
     }
 
     const storeState = useDesignChatStore.getState();
-    const aiModel = storeState.aiModel;
     const designContext = storeState.designContext;
-    const selectedPreviewImageUrl = storeState.selectedPreviewImageUrl;
-    const baseImageUrl = getRawImageUrlFromPreviewBackground(
-      storeState.baseImageUrl ?? selectedPreviewImageUrl,
-    );
-    const baseImageWorkId = storeState.baseImageWorkId;
+    const { baseImageUrl, baseImageWorkId } = getBaseImageContext(storeState);
     const routeResolution = resolveGenerationRoute({
       userMessage: userText,
       hasCiImage: !!designContext.ciImage,
       hasReferenceImage: !!designContext.referenceImage,
       hasPreviousGeneratedImage: !!baseImageUrl,
-      selectedPreviewImageUrl,
+      selectedPreviewImageUrl: storeState.selectedPreviewImageUrl,
       detectedPattern: designContext.pattern,
     });
     const editIntent = isEditIntent(routeResolution.signals);
@@ -317,39 +389,28 @@ export function useDesignChat(
     };
     const nextMessages = [...storeState.messages, userMessage];
 
-    const prevSessionId = storeState.currentSessionId;
-    const sessionId = prevSessionId ?? crypto.randomUUID();
+    const sessionId = ensureSessionId(storeState.currentSessionId);
 
-    if (!prevSessionId) {
-      setCurrentSessionId(sessionId);
-      ph.capture("design_session_started", { ai_model: aiModel });
+    if (!storeState.currentSessionId) {
+      ph.capture("design_session_started", { ai_model: ANALYTICS_AI_MODEL });
     }
 
     addMessage(userMessage);
     clearAttachments();
 
-    setGenerationStatus("generating");
-
-    onGenerationStart?.(sessionId);
-    setLastAnalysisResult(createAnalysisReset());
-    setLastAnalysisReuseKey(null);
-
-    const { firstUserMsg, allMessages } = toSessionPayload(nextMessages);
+    startGeneration("generating", sessionId);
 
     submitDesignRequest(
-      {
+      createRequest({
+        messages: nextMessages,
         userMessage: userText,
         attachments,
         designContext,
-        aiModel,
-        conversationHistory: toConversationHistory(nextMessages),
         sessionId,
-        firstMessage: firstUserMsg?.content ?? userText,
-        allMessages,
         executionMode: "auto",
         analysisWorkId: null,
         ...createEditRequestBase(editIntent, baseImageUrl, baseImageWorkId),
-      },
+      }),
       "죄송합니다. 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
       "idle",
     );
@@ -357,13 +418,8 @@ export function useDesignChat(
 
   const regenerate = (): void => {
     const storeState = useDesignChatStore.getState();
-    const aiModel = storeState.aiModel;
     const designContext = storeState.designContext;
-    const selectedPreviewImageUrl = storeState.selectedPreviewImageUrl;
-    const baseImageUrl = getRawImageUrlFromPreviewBackground(
-      storeState.baseImageUrl ?? selectedPreviewImageUrl,
-    );
-    const baseImageWorkId = storeState.baseImageWorkId;
+    const { baseImageUrl, baseImageWorkId } = getBaseImageContext(storeState);
     const lastUserMessage = [...storeState.messages]
       .reverse()
       .find((m) => m.role === "user");
@@ -378,36 +434,25 @@ export function useDesignChat(
       hasReferenceImage: !!(lastUserMessage.designContext ?? designContext)
         .referenceImage,
       hasPreviousGeneratedImage: !!baseImageUrl,
-      selectedPreviewImageUrl,
+      selectedPreviewImageUrl: storeState.selectedPreviewImageUrl,
       detectedPattern: (lastUserMessage.designContext ?? designContext).pattern,
     });
     const editIntent = isEditIntent(routeResolution.signals);
 
-    const sessionId = storeState.currentSessionId ?? crypto.randomUUID();
-    if (!storeState.currentSessionId) {
-      setCurrentSessionId(sessionId);
-    }
+    const sessionId = ensureSessionId(storeState.currentSessionId);
 
-    setGenerationStatus("regenerating");
-    onGenerationStart?.(sessionId);
-    setLastAnalysisResult(createAnalysisReset());
-    setLastAnalysisReuseKey(null);
-
-    const { firstUserMsg, allMessages } = toSessionPayload(storeState.messages);
+    startGeneration("regenerating", sessionId);
 
     submitDesignRequest(
-      {
+      createRequest({
+        messages: storeState.messages,
         userMessage: lastUserMessage.content,
         attachments: lastUserMessage.attachments ?? [],
         designContext: lastUserMessage.designContext ?? designContext,
-        aiModel,
-        conversationHistory: toConversationHistory(storeState.messages),
         sessionId,
-        firstMessage: firstUserMsg?.content ?? lastUserMessage.content,
-        allMessages,
         executionMode: "auto",
         ...createEditRequestBase(editIntent, baseImageUrl, baseImageWorkId),
-      },
+      }),
       "죄송합니다. 디자인 재생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
       "completed",
     );
@@ -415,7 +460,6 @@ export function useDesignChat(
 
   const requestRender = (): void => {
     const storeState = useDesignChatStore.getState();
-    const aiModel = storeState.aiModel;
     const {
       currentSessionId: storeSessionId,
       lastAnalysisWorkId: currentLastAnalysisWorkId,
@@ -427,21 +471,17 @@ export function useDesignChat(
       return;
     }
 
-    const { firstUserMsg, allMessages } = toSessionPayload(storeState.messages);
+    const { firstUserMsg } = toSessionPayload(storeState.messages);
 
     if (!firstUserMsg) {
       return;
     }
 
-    const sessionId = storeSessionId ?? crypto.randomUUID();
-    if (!storeSessionId) {
-      setCurrentSessionId(sessionId);
-    }
-
-    const currentBaseImageUrl = getRawImageUrlFromPreviewBackground(
-      storeState.baseImageUrl ?? storeState.selectedPreviewImageUrl,
-    );
-    const currentBaseImageWorkId = storeState.baseImageWorkId;
+    const sessionId = ensureSessionId(storeSessionId);
+    const {
+      baseImageUrl: currentBaseImageUrl,
+      baseImageWorkId: currentBaseImageWorkId,
+    } = getBaseImageContext(storeState);
     const currentReuseKey = createAnalysisReuseKeyForContext(
       storeState.designContext,
       currentBaseImageUrl,
@@ -450,23 +490,17 @@ export function useDesignChat(
     const canReuseAnalysis = currentLastAnalysisReuseKey === currentReuseKey;
     const executionMode = canReuseAnalysis ? "render_from_analysis" : "auto";
 
-    setGenerationStatus("rendering");
-    onGenerationStart?.(sessionId);
-    if (!canReuseAnalysis) {
-      setLastAnalysisResult(createAnalysisReset());
-      setLastAnalysisReuseKey(null);
-    }
+    startGeneration("rendering", sessionId, {
+      resetAnalysis: !canReuseAnalysis,
+    });
 
     submitDesignRequest(
-      {
+      createRequest({
+        messages: storeState.messages,
         userMessage: firstUserMsg.content,
         attachments: firstUserMsg.attachments ?? [],
         designContext: storeState.designContext,
-        aiModel,
-        conversationHistory: toConversationHistory(storeState.messages),
         sessionId,
-        firstMessage: firstUserMsg.content,
-        allMessages,
         executionMode,
         analysisWorkId: canReuseAnalysis ? currentLastAnalysisWorkId : null,
         ...(currentBaseImageUrl
@@ -475,7 +509,7 @@ export function useDesignChat(
               baseImageWorkId: currentBaseImageWorkId,
             }
           : {}),
-      },
+      }),
       "죄송합니다. 이미지 렌더링 중 오류가 발생했습니다. 다시 시도해 주세요.",
       "completed",
       {
@@ -502,16 +536,8 @@ export function useDesignChat(
     }
 
     const storeState = useDesignChatStore.getState();
-    const aiModel = storeState.aiModel;
-    const isInpaintTarget = Boolean(storeState.inpaintTarget);
-    const targetImageUrl = isInpaintTarget
-      ? (storeState.inpaintTarget?.imageUrl ?? null)
-      : getRawImageUrlFromPreviewBackground(
-          storeState.baseImageUrl ?? storeState.selectedPreviewImageUrl,
-        );
-    const targetImageWorkId = isInpaintTarget
-      ? (storeState.inpaintTarget?.imageWorkId ?? null)
-      : storeState.baseImageWorkId;
+    const { imageUrl: targetImageUrl, imageWorkId: targetImageWorkId } =
+      getInpaintTarget(storeState);
 
     if (!targetImageUrl) {
       return {
@@ -529,30 +555,18 @@ export function useDesignChat(
       designContext: storeState.designContext,
     };
     const nextMessages = [...storeState.messages, userMessage];
-    const sessionId = storeState.currentSessionId ?? crypto.randomUUID();
-
-    if (!storeState.currentSessionId) {
-      setCurrentSessionId(sessionId);
-    }
+    const sessionId = ensureSessionId(storeState.currentSessionId);
 
     addMessage(userMessage);
-    setGenerationStatus("rendering");
-    onGenerationStart?.(sessionId);
-    setLastAnalysisResult(createAnalysisReset());
-    setLastAnalysisReuseKey(null);
-
-    const { firstUserMsg, allMessages } = toSessionPayload(nextMessages);
+    startGeneration("rendering", sessionId);
 
     submitDesignRequest(
-      {
+      createRequest({
+        messages: nextMessages,
         userMessage: trimmedPrompt,
         attachments: [],
         designContext: storeState.designContext,
-        aiModel,
-        conversationHistory: toConversationHistory(nextMessages),
         sessionId,
-        firstMessage: firstUserMsg?.content ?? trimmedPrompt,
-        allMessages,
         executionMode: "auto",
         analysisWorkId: null,
         route: "fal_inpaint",
@@ -561,7 +575,7 @@ export function useDesignChat(
         maskBase64,
         maskMimeType: "image/png",
         editPrompt: trimmedPrompt,
-      },
+      }),
       "죄송합니다. 부분 수정 중 오류가 발생했습니다. 다시 시도해 주세요.",
       "completed",
     );
