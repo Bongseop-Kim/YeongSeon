@@ -29,6 +29,7 @@ import {
   saveDesignSession,
   type SessionMessage,
 } from "@/functions/_shared/session-save.ts";
+import { sanitizeLogRequestAttachments } from "@/functions/_shared/request-attachments.ts";
 import {
   isContextChip,
   type GenerateDesignResult,
@@ -143,7 +144,9 @@ const emitGenerationLog = async (
     quality: context.quality,
     user_message: context.userMessage,
     prompt_length: context.promptLength,
-    request_attachments: context.requestAttachments ?? null,
+    request_attachments: sanitizeLogRequestAttachments(
+      context.requestAttachments,
+    ),
     design_context: context.designContext,
     normalized_design: context.normalizedDesign ?? null,
     conversation_turn: context.conversationTurn,
@@ -445,7 +448,7 @@ const runGeminiAnalysis = async (params: {
       userId,
       userMessage: payload.userMessage,
       promptLength: payload.userMessage.length,
-      requestAttachments: payload.attachments ?? null,
+      requestAttachments: sanitizeLogRequestAttachments(payload.attachments),
       conversationTurn,
       designContext: toRecord(payload.designContext) ?? null,
       hasCiImage: Boolean(payload.ciImageBase64),
@@ -644,7 +647,9 @@ const runGeminiRenderFromAnalysis = async (params: {
       userId,
       userMessage: analysis.userMessage,
       promptLength: analysis.userMessage.length,
-      requestAttachments: renderPayload.attachments ?? null,
+      requestAttachments: sanitizeLogRequestAttachments(
+        renderPayload.attachments,
+      ),
       conversationTurn: analysis.conversationTurn,
       designContext: analysis.designContext,
       normalizedDesign: analysis.normalizedDesign as unknown as Record<
@@ -856,6 +861,9 @@ Deno.serve(async (req) => {
   }
 
   const executionMode = getExecutionMode(payload);
+  const sanitizedAttachments = sanitizeLogRequestAttachments(
+    payload.attachments,
+  );
 
   if (
     executionMode !== "render_from_analysis" &&
@@ -880,6 +888,13 @@ Deno.serve(async (req) => {
     !Array.isArray(rawConversationHistory)
   ) {
     return jsonResponse(400, { error: "conversationHistory must be an array" });
+  }
+
+  if (
+    payload.attachments !== undefined &&
+    !Array.isArray(payload.attachments)
+  ) {
+    return jsonResponse(400, { error: "attachments must be an array" });
   }
 
   for (const [field, value] of optionalStringFields) {
@@ -932,6 +947,8 @@ Deno.serve(async (req) => {
   if (!geminiApiKey) {
     return jsonResponse(500, { error: "Missing Gemini configuration" });
   }
+
+  payload.attachments = sanitizedAttachments ?? undefined;
 
   const conversationTurn = conversationTurns.length;
 

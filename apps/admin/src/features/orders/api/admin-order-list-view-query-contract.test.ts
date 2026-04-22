@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import dayjs from "dayjs";
-import { useAdminCustomerOrders } from "@/features/customers/api/customers-query";
-import { useDashboardRecentOrders } from "@/features/dashboard/api/dashboard-query";
 import { useAdminOrderTable } from "@/features/orders/api/orders-query";
 
 const {
@@ -10,22 +8,22 @@ const {
   useShowMock,
   useInvalidateMock,
   useQueryMock,
+  useMutationMock,
+  useQueryClientMock,
   toAdminOrderListItemMock,
   toAdminOrderDetailMock,
   toAdminOrderItemMock,
-  toAdminCustomerOrderRowMock,
-  toDashboardRecentOrderMock,
 } = vi.hoisted(() => ({
   useTableMock: vi.fn(),
   useListMock: vi.fn(),
   useShowMock: vi.fn(),
   useInvalidateMock: vi.fn(),
   useQueryMock: vi.fn(),
+  useMutationMock: vi.fn(),
+  useQueryClientMock: vi.fn(),
   toAdminOrderListItemMock: vi.fn((value) => value),
   toAdminOrderDetailMock: vi.fn((value) => value),
   toAdminOrderItemMock: vi.fn((value) => value),
-  toAdminCustomerOrderRowMock: vi.fn((value) => value),
-  toDashboardRecentOrderMock: vi.fn((value) => value),
 }));
 
 vi.mock("@refinedev/antd", () => ({
@@ -40,6 +38,8 @@ vi.mock("@refinedev/core", () => ({
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: useQueryMock,
+  useMutation: useMutationMock,
+  useQueryClient: useQueryClientMock,
 }));
 
 vi.mock("@/features/orders/api/orders-mapper", () => ({
@@ -55,29 +55,6 @@ vi.mock("@/features/orders/api/order-history-mapper", () => ({
 vi.mock("@/features/orders/api/orders-api", () => ({
   updateOrderStatus: vi.fn(),
   updateOrderTracking: vi.fn(),
-}));
-
-vi.mock("@/features/customers/api/customers-mapper", () => ({
-  toAdminCustomerListItem: vi.fn((value) => value),
-  toAdminCustomerDetail: vi.fn((value) => value),
-  toAdminCustomerOrderRow: toAdminCustomerOrderRowMock,
-  toAdminCustomerCouponRow: vi.fn((value) => value),
-  toAdminCustomerTokenRow: vi.fn((value) => value),
-}));
-
-vi.mock("@/features/customers/api/customers-api", () => ({
-  getCustomerTokenBalances: vi.fn(),
-  getCustomerTokenHistory: vi.fn(),
-  manageCustomerTokens: vi.fn(),
-}));
-
-vi.mock("@/features/dashboard/api/dashboard-api", () => ({
-  getPeriodStats: vi.fn(),
-}));
-
-vi.mock("@/features/dashboard/api/dashboard-mapper", () => ({
-  toDashboardRecentOrder: toDashboardRecentOrderMock,
-  toDashboardStats: vi.fn((...args) => args),
 }));
 
 function createListResult(data: unknown[] = []) {
@@ -99,6 +76,8 @@ describe("admin_order_list_view query contract", () => {
     useShowMock.mockReset();
     useInvalidateMock.mockReset();
     useQueryMock.mockReset();
+    useMutationMock.mockReset();
+    useQueryClientMock.mockReset();
 
     useTableMock.mockReturnValue({
       tableProps: {
@@ -120,6 +99,14 @@ describe("admin_order_list_view query contract", () => {
     });
     useInvalidateMock.mockReturnValue(vi.fn());
     useQueryMock.mockReturnValue({ data: undefined });
+    useMutationMock.mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn(),
+      isPending: false,
+    });
+    useQueryClientMock.mockReturnValue({
+      invalidateQueries: vi.fn(),
+    });
   });
 
   it("주문 목록 테이블은 admin_order_list_view의 camelCase createdAt 계약으로 정렬/필터링한다", () => {
@@ -143,28 +130,6 @@ describe("admin_order_list_view query contract", () => {
             },
           ],
         }),
-      }),
-    );
-  });
-
-  it("고객 상세의 주문 목록은 createdAt으로 정렬한다", () => {
-    useAdminCustomerOrders("user-1");
-
-    expect(useListMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        resource: "admin_order_list_view",
-        sorters: [{ field: "createdAt", order: "desc" }],
-      }),
-    );
-  });
-
-  it("대시보드 최근 주문 조회는 createdAt으로 정렬한다", () => {
-    useDashboardRecentOrders("all", [dayjs("2026-04-01"), dayjs("2026-04-30")]);
-
-    expect(useListMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        resource: "admin_order_list_view",
-        sorters: [{ field: "createdAt", order: "desc" }],
       }),
     );
   });

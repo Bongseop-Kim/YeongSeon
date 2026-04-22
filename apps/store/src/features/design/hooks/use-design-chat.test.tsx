@@ -117,6 +117,10 @@ const initialMessages = [
   },
 ] as const;
 
+const pendingAttachmentFile = new File(["binary"], "navy-chip.png", {
+  type: "image/png",
+});
+
 const defaultDesignContext = {
   colors: ["navy"],
   pattern: "stripe",
@@ -276,7 +280,12 @@ describe("useDesignChat", () => {
     expect(mutate).not.toHaveBeenCalled();
 
     result.current.sendMessage("새 디자인", [
-      { type: "color", label: "네이비", value: "navy" },
+      {
+        type: "color",
+        label: "네이비",
+        value: "navy",
+        file: pendingAttachmentFile,
+      },
     ]);
 
     expect(addMessage).toHaveBeenCalledWith(
@@ -321,6 +330,7 @@ describe("useDesignChat", () => {
               expect.objectContaining({
                 type: "color",
                 value: "navy",
+                fileName: "navy-chip.png",
               }),
             ],
           }),
@@ -328,13 +338,23 @@ describe("useDesignChat", () => {
       }),
       expect.any(Object),
     );
+
+    const newUserMessage = mutate.mock.calls[0]?.[0].allMessages.at(-1);
+    expect(newUserMessage?.attachments?.[0]).not.toHaveProperty("file");
   });
 
   it("autoGenerateImage가 false여도 auto로 전송한다", () => {
     Object.assign(storeState, { autoGenerateImage: false });
 
     const { result } = renderHook(() => useDesignChat());
-    result.current.sendMessage("새 디자인", []);
+    result.current.sendMessage("새 디자인", [
+      {
+        type: "color",
+        label: "네이비",
+        value: "navy",
+        file: pendingAttachmentFile,
+      },
+    ]);
 
     expect(mutate).toHaveBeenCalledWith(
       expect.objectContaining({

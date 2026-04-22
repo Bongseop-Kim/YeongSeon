@@ -229,6 +229,34 @@ describe("toAdminGenerationLogItem", () => {
       },
     ]);
   });
+
+  it("허용되지 않은 attachment type은 제외한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      request_attachments: [
+        {
+          type: "image",
+          label: "CI 이미지",
+          value: "ci",
+          fileName: "brand-mark.png",
+        },
+        {
+          type: "invalid",
+          label: "잘못된 타입",
+          value: "ignored",
+        },
+      ],
+    });
+
+    expect(result.requestAttachments).toEqual([
+      {
+        type: "image",
+        label: "CI 이미지",
+        value: "ci",
+        fileName: "brand-mark.png",
+      },
+    ]);
+  });
 });
 
 describe("toGenerationStatsData", () => {

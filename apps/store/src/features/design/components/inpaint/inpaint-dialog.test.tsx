@@ -6,6 +6,8 @@ const maskCanvasElement = document.createElement("canvas");
 const rescaleMaskToTarget = vi.fn();
 const canvasToPngBase64 = vi.fn();
 const consoleError = vi.fn();
+const INPAINT_ERROR_MESSAGE =
+  "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.";
 
 vi.mock("@/shared/ui-extended/dialog", () => ({
   Dialog: ({ children }: { children: React.ReactNode }) => (
@@ -250,18 +252,13 @@ describe("InpaintDialog", () => {
         onOpenChange={vi.fn()}
         onSubmit={onSubmit}
         externalError={{
-          message:
-            "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+          message: INPAINT_ERROR_MESSAGE,
           nonce: 1,
         }}
       />,
     );
 
-    expect(
-      screen.getByText(
-        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText(INPAINT_ERROR_MESSAGE)).toBeInTheDocument();
 
     fireEvent.change(
       screen.getByPlaceholderText("예: 이 부분만 자수 느낌으로 바꿔줘"),
@@ -270,11 +267,7 @@ describe("InpaintDialog", () => {
       },
     );
 
-    expect(
-      screen.queryByText(
-        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
-      ),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(INPAINT_ERROR_MESSAGE)).not.toBeInTheDocument();
 
     rerender(
       <InpaintDialog
@@ -284,8 +277,7 @@ describe("InpaintDialog", () => {
         onOpenChange={vi.fn()}
         onSubmit={onSubmit}
         externalError={{
-          message:
-            "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+          message: INPAINT_ERROR_MESSAGE,
           nonce: 2,
         }}
       />,
@@ -293,10 +285,37 @@ describe("InpaintDialog", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "commit-mask" }));
 
-    expect(
-      screen.queryByText(
-        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
-      ),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(INPAINT_ERROR_MESSAGE)).not.toBeInTheDocument();
+  });
+
+  it("externalError가 null로 바뀌면 표시 중인 에러를 지운다", () => {
+    const { rerender } = render(
+      <InpaintDialog
+        open
+        imageUrl="https://example.com/base.png"
+        isSubmitting={false}
+        onOpenChange={vi.fn()}
+        onSubmit={vi.fn()}
+        externalError={{
+          message: INPAINT_ERROR_MESSAGE,
+          nonce: 1,
+        }}
+      />,
+    );
+
+    expect(screen.getByText(INPAINT_ERROR_MESSAGE)).toBeInTheDocument();
+
+    rerender(
+      <InpaintDialog
+        open
+        imageUrl="https://example.com/base.png"
+        isSubmitting={false}
+        onOpenChange={vi.fn()}
+        onSubmit={vi.fn()}
+        externalError={null}
+      />,
+    );
+
+    expect(screen.queryByText(INPAINT_ERROR_MESSAGE)).not.toBeInTheDocument();
   });
 });

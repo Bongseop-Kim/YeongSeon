@@ -25,6 +25,8 @@ const { inputHandleSpy } = vi.hoisted(() => ({
     openOptions: vi.fn(),
   },
 }));
+const INPAINT_ERROR_MESSAGE =
+  "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.";
 
 vi.mock("@/features/design/components/chat/chat-header", () => ({
   ChatHeader: () => <div data-testid="chat-header" />,
@@ -364,7 +366,7 @@ describe("ChatPanel", () => {
     });
   });
 
-  it("inpaint 요청이 시작되지 않으면 다이얼로그를 즉시 닫는다", async () => {
+  it("inpaint 요청이 시작되지 않으면 다이얼로그를 닫지 않고 externalError를 전달한다", async () => {
     const user = userEvent.setup();
     const queryClient = new QueryClient();
 
@@ -375,8 +377,7 @@ describe("ChatPanel", () => {
           requestInpaint={vi.fn(() => ({
             started: false as const,
             errorCode: "NO_EDIT_TARGET" as const,
-            errorMessage:
-              "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+            errorMessage: INPAINT_ERROR_MESSAGE,
           }))}
           onOpenHistory={vi.fn()}
         />
@@ -395,8 +396,7 @@ describe("ChatPanel", () => {
 
     expect(inpaintDialogSpy.mock.calls.at(-1)?.[0]).toMatchObject({
       externalError: {
-        message:
-          "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+        message: INPAINT_ERROR_MESSAGE,
       },
     });
   });
@@ -407,8 +407,7 @@ describe("ChatPanel", () => {
     const requestInpaint = vi.fn().mockReturnValue({
       started: false as const,
       errorCode: "NO_EDIT_TARGET" as const,
-      errorMessage:
-        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+      errorMessage: INPAINT_ERROR_MESSAGE,
     });
 
     render(
@@ -425,9 +424,13 @@ describe("ChatPanel", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("inpaint-error")).toHaveTextContent(
-        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+        INPAINT_ERROR_MESSAGE,
       );
     });
+
+    const firstExternalError =
+      inpaintDialogSpy.mock.calls.at(-1)?.[0].externalError;
+    expect(firstExternalError?.nonce).toEqual(expect.any(Number));
 
     act(() => {
       inpaintDialogSpy.mock.calls
@@ -438,8 +441,13 @@ describe("ChatPanel", () => {
     await waitFor(() => {
       expect(requestInpaint).toHaveBeenCalledTimes(2);
       expect(screen.getByTestId("inpaint-error")).toHaveTextContent(
-        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+        INPAINT_ERROR_MESSAGE,
       );
     });
+
+    const secondExternalError =
+      inpaintDialogSpy.mock.calls.at(-1)?.[0].externalError;
+    expect(secondExternalError?.nonce).toEqual(expect.any(Number));
+    expect(secondExternalError?.nonce).not.toBe(firstExternalError?.nonce);
   });
 });

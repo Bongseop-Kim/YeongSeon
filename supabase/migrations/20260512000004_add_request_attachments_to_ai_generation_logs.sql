@@ -1,7 +1,7 @@
 alter table public.ai_generation_logs
   add column request_attachments jsonb;
 
-drop function if exists public.admin_get_generation_logs(date, date, text, integer, integer);
+drop function public.admin_get_generation_logs(date, date, text, integer, integer);
 
 create function public.admin_get_generation_logs(
   p_start_date date,

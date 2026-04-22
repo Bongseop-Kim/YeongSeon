@@ -1,6 +1,14 @@
 alter table public.design_chat_messages
   add column attachments jsonb;
 
+alter table public.design_chat_messages
+  add constraint design_chat_messages_attachments_is_array
+    check (attachments is null or jsonb_typeof(attachments) = 'array');
+
+alter table public.design_chat_messages
+  add constraint design_chat_messages_attachments_size
+    check (attachments is null or octet_length(attachments::text) < 10000);
+
 create or replace function public.save_design_session(
   p_session_id uuid,
   p_ai_model text,
@@ -48,6 +56,7 @@ begin
       last_image_url = excluded.last_image_url,
       last_image_file_id = excluded.last_image_file_id,
       last_image_work_id = excluded.last_image_work_id,
+      image_count = excluded.image_count,
       updated_at = now()
   where public.design_chat_sessions.user_id = v_user_id;
 

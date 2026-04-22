@@ -59,31 +59,52 @@ export function InpaintDialog({
   }, [open]);
 
   useEffect(() => {
-    if (externalError) {
-      setErrorMessage(externalError.message);
-    }
+    setErrorMessage(externalError ? externalError.message : null);
   }, [externalError]);
 
-  const loadImageNaturalSize = async () =>
-    await new Promise<{ width: number; height: number }>((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => {
-        resolve({
-          width: image.naturalWidth,
-          height: image.naturalHeight,
-        });
-      };
-      image.onerror = () => reject(new Error("image_load_failed"));
-      image.src = imageUrl;
-    });
+  async function loadImageNaturalSize(): Promise<{
+    width: number;
+    height: number;
+  }> {
+    return await new Promise<{ width: number; height: number }>(
+      (resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+          resolve({
+            width: image.naturalWidth,
+            height: image.naturalHeight,
+          });
+        };
+        image.onerror = () => reject(new Error("image_load_failed"));
+        image.src = imageUrl;
+      },
+    );
+  }
 
-  const handleSubmit = async () => {
+  async function handleSubmit(): Promise<void> {
+    const trimmedEditPrompt = editPrompt.trim();
+
+    function submitPreviewMaskWithError(context: string, error: unknown): void {
+      console.error(
+        `Failed to generate full-resolution mask at ${context}, using preview mask instead`,
+        error,
+      );
+      setErrorMessage(
+        "Failed to generate full-resolution mask, using preview mask instead",
+      );
+      onSubmit(maskBase64, trimmedEditPrompt);
+    }
+
+    function submitMask(mask: string): void {
+      onSubmit(mask, trimmedEditPrompt);
+    }
+
     if (maskBase64.length === 0) {
       setErrorMessage("수정할 영역을 먼저 칠해 주세요.");
       return;
     }
 
-    if (editPrompt.trim().length === 0) {
+    if (trimmedEditPrompt.length === 0) {
       setErrorMessage("수정 지시를 입력해 주세요.");
       return;
     }
@@ -92,20 +113,9 @@ export function InpaintDialog({
 
     const sourceCanvas = maskCanvasRef.current;
     if (!sourceCanvas) {
-      onSubmit(maskBase64, editPrompt.trim());
+      submitMask(maskBase64);
       return;
     }
-
-    const submitPreviewMaskWithError = (context: string, error: unknown) => {
-      console.error(
-        `Failed to generate full-resolution mask at ${context}, using preview mask instead`,
-        error,
-      );
-      setErrorMessage(
-        "Failed to generate full-resolution mask, using preview mask instead",
-      );
-      onSubmit(maskBase64, editPrompt.trim());
-    };
 
     let naturalSize: { width: number; height: number };
     try {
@@ -133,14 +143,15 @@ export function InpaintDialog({
 
     try {
       if (rescaledBase64.length > MAX_MASK_BASE64_LENGTH) {
-        onSubmit(maskBase64, editPrompt.trim());
+        submitMask(maskBase64);
         return;
       }
-      onSubmit(rescaledBase64, editPrompt.trim());
+
+      submitMask(rescaledBase64);
     } catch (error) {
       submitPreviewMaskWithError("canvasToPngBase64", error);
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -29,6 +29,24 @@ function toBoolean(v: unknown): boolean {
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
+const REQUEST_ATTACHMENT_TYPES = [
+  "color",
+  "pattern",
+  "fabric",
+  "image",
+  "ci-placement",
+] as const;
+const REQUEST_ATTACHMENT_TYPE_SET: ReadonlySet<string> = new Set(
+  REQUEST_ATTACHMENT_TYPES,
+);
+
+function isAllowedAttachmentType(
+  value: unknown,
+): value is NonNullable<
+  AdminGenerationLogItem["requestAttachments"]
+>[number]["type"] {
+  return typeof value === "string" && REQUEST_ATTACHMENT_TYPE_SET.has(value);
+}
 
 // ── 로그 행 ──────────────────────────────────────────────────
 
@@ -107,7 +125,9 @@ function toRequestAttachments(
   const attachments = value
     .filter(isRecord)
     .map((attachment) => {
-      const type = toString(attachment.type);
+      const type = isAllowedAttachmentType(attachment.type)
+        ? attachment.type
+        : null;
       const label = toString(attachment.label);
       const attachmentValue = toString(attachment.value);
       const fileName =
@@ -118,9 +138,7 @@ function toRequestAttachments(
       }
 
       return {
-        type: type as NonNullable<
-          AdminGenerationLogItem["requestAttachments"]
-        >[number]["type"],
+        type,
         label,
         value: attachmentValue,
         ...(fileName ? { fileName } : {}),

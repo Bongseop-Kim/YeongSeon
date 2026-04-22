@@ -1,6 +1,6 @@
 import posthog from "posthog-js";
+import type { AiModel } from "@/entities/design/model/ai-design-types";
 
-type AiModel = "openai" | "gemini";
 type GenerationRoute =
   | "openai"
   | "fal_tiling"

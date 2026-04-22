@@ -45,6 +45,7 @@ import {
   saveDesignSession,
   type SessionMessage,
 } from "@/functions/_shared/session-save.ts";
+import { sanitizeLogRequestAttachments } from "@/functions/_shared/request-attachments.ts";
 import {
   createAdminSupabaseClient,
   createAuthenticatedSupabaseClient,
@@ -253,6 +254,9 @@ Deno.serve(async (req) => {
   if (!validation.ok) {
     return jsonResponse(validation.status, validation.body);
   }
+  const attachmentLogFields = {
+    request_attachments: sanitizeLogRequestAttachments(payload.attachments),
+  } as const;
 
   let analysisSnapshot = null;
   if (executionMode === "render_from_analysis") {
@@ -284,7 +288,7 @@ Deno.serve(async (req) => {
         route_reason: payload.routeReason ?? null,
         route_signals: payload.routeSignals ?? [],
         base_image_work_id: payload.baseImageWorkId ?? null,
-        request_attachments: payload.attachments ?? null,
+        ...attachmentLogFields,
         user_message: payloadUserMessage,
         prompt_length: payloadUserMessage.length,
         image_generated: false,
@@ -325,9 +329,6 @@ Deno.serve(async (req) => {
   const userMessageLogFields = {
     user_message: userMessageForLog,
     prompt_length: userMessagePromptLength,
-  } as const;
-  const attachmentLogFields = {
-    request_attachments: payload.attachments ?? null,
   } as const;
   const history = validation.conversationHistory;
   const textStart =
