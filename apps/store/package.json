@@ -17,6 +17,7 @@
     "@google/model-viewer": "^4.2.0",
     "@hookform/resolvers": "^5.2.1",
     "@imagekit/react": "^5.0.1",
+    "@sentry/react": "^10.49.0",
     "@supabase/postgrest-js": "^2.97.0",
     "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query": "^5.83.0",
@@ -45,6 +46,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@sentry/vite-plugin": "^5.2.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
