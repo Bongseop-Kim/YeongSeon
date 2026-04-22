@@ -4,11 +4,13 @@ import { aiDesignApi } from "@/entities/design/api/ai-design-api";
 import { __resetProbeCacheForTesting } from "@/entities/design/api/should-use-fal-pipeline";
 import { MockFileReader } from "@/test/mock-file-reader";
 
-const { invoke, phCapture, tileLogoOnCanvas } = vi.hoisted(() => ({
-  invoke: vi.fn(),
-  phCapture: vi.fn(),
-  tileLogoOnCanvas: vi.fn(),
-}));
+const { invoke, phCapture, tileLogoOnCanvas, preparePatternSource } =
+  vi.hoisted(() => ({
+    invoke: vi.fn(),
+    phCapture: vi.fn(),
+    tileLogoOnCanvas: vi.fn(),
+    preparePatternSource: vi.fn(),
+  }));
 
 vi.mock("@/shared/lib/posthog", () => ({
   ph: { capture: phCapture },
@@ -16,6 +18,14 @@ vi.mock("@/shared/lib/posthog", () => ({
 
 vi.mock("@/entities/design/api/tile-logo-on-canvas", () => ({
   tileLogoOnCanvas,
+}));
+
+vi.mock("@/entities/design/api/prepare-pattern-source", () => ({
+  preparePatternSource,
+}));
+
+vi.mock("@/entities/design/api/route-classifier", () => ({
+  classifyRouteWithLlm: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/shared/lib/supabase", () => ({
@@ -37,9 +47,12 @@ const baseRequest = {
     colors: [],
     pattern: null,
     fabricMethod: "yarn-dyed" as const,
+    sourceImage: null,
     ciImage: null,
     ciPlacement: null,
     referenceImage: null,
+    onePointOffsetX: 0,
+    onePointOffsetY: 0,
   },
   conversationHistory: [],
   sessionId: "test-session-id",
@@ -71,6 +84,7 @@ describe("aiDesignApi", () => {
     invoke.mockReset();
     phCapture.mockReset();
     tileLogoOnCanvas.mockReset();
+    preparePatternSource.mockReset();
     __resetProbeCacheForTesting();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
@@ -82,6 +96,253 @@ describe("aiDesignApi", () => {
       }),
     );
     MockFileReader.reset();
+  });
+
+  it("올패턴 sourceImage는 준비 파이프라인을 먼저 거친다", async () => {
+    MockFileReader.configure({
+      result: "data:image/png;base64,source-base64",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    preparePatternSource.mockResolvedValue({
+      placementMode: "all-over",
+      sourceStatus: "ready",
+      fabricStatus: "ready",
+      reasonCodes: [],
+      preparedSourceKind: "original",
+      preparationBackend: "local",
+      repairApplied: false,
+      repairPromptKind: null,
+      repairSummary: null,
+      userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+      preparedSourceBase64: "prepared-source-base64",
+      preparedSourceMimeType: "image/png",
+      preparedPatternTileBase64: "prepared-tile-base64",
+      preparedPatternTileMimeType: "image/png",
+    });
+    invoke.mockResolvedValue({
+      data: {
+        ...successResponse,
+        route: "fal_tiling",
+      },
+      error: null,
+    });
+
+    const result = await aiDesignApi({
+      ...baseRequest,
+      userMessage: "첨부한 이미지를 올패턴으로 뿌려줘",
+      designContext: {
+        ...baseRequest.designContext,
+        sourceImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+      },
+    });
+
+    expect(preparePatternSource).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceImageBase64: "source-base64",
+        placementMode: "all-over",
+      }),
+    );
+    expect(invoke).toHaveBeenCalledWith(
+      "generate-fal-api",
+      expect.objectContaining({
+        body: expect.objectContaining({
+          sourceImageBase64: "prepared-source-base64",
+          ciImageBase64: "prepared-source-base64",
+          tiledBase64: "prepared-tile-base64",
+        }),
+      }),
+    );
+    expect(result.patternPreparationMessage).toContain("패턴 소스");
+    expect(result.routeReason).toBe("pattern_source_ready");
+  });
+
+  it("부적합한 올패턴 이미지는 OpenAI prep을 먼저 호출한 뒤 보정 타일로 렌더한다", async () => {
+    MockFileReader.configure({
+      result: "data:image/png;base64,source-base64",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    preparePatternSource.mockResolvedValue({
+      placementMode: "all-over",
+      sourceStatus: "repair_required",
+      fabricStatus: "ready",
+      reasonCodes: ["uneven_outer_margin"],
+      preparedSourceKind: "repaired",
+      preparationBackend: "local",
+      repairApplied: false,
+      repairPromptKind: null,
+      repairSummary: null,
+      userMessage: "첨부 이미지를 반복 패턴에 맞게 다시 정리했어요.",
+      preparedSourceBase64: "source-base64",
+      preparedSourceMimeType: "image/png",
+    });
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          preparedSourceBase64: "openai-prepared-source",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "openai-prepared-tile",
+          preparedPatternTileMimeType: "image/png",
+          repairSummary: "타일 반복 간격을 균일하게 보정했습니다.",
+          repairPromptKind: "all_over_tile",
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: {
+          ...successResponse,
+          route: "fal_tiling",
+        },
+        error: null,
+      });
+
+    const result = await aiDesignApi({
+      ...baseRequest,
+      userMessage: "첨부한 이미지를 올패턴으로 뿌려줘",
+      designContext: {
+        ...baseRequest.designContext,
+        sourceImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+      },
+    });
+
+    expect(invoke).toHaveBeenNthCalledWith(1, "prepare-pattern-source-openai", {
+      body: expect.objectContaining({
+        sourceImageBase64: "source-base64",
+        sourceImageMimeType: "image/png",
+        placementMode: "all-over",
+        fabricMethod: "yarn-dyed",
+        reasonCodes: ["uneven_outer_margin"],
+      }),
+    });
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-fal-api", {
+      body: expect.objectContaining({
+        sourceImageBase64: "openai-prepared-source",
+        ciImageBase64: "openai-prepared-source",
+        tiledBase64: "openai-prepared-tile",
+        tiledMimeType: "image/png",
+        patternPreparation: expect.objectContaining({
+          preparedSourceKind: "repaired",
+        }),
+      }),
+    });
+    expect(result.patternPreparationMessage).toContain("다시 정리");
+    expect(result.routeReason).toBe("pattern_source_repaired");
+  });
+
+  it("부적합한 원포인트 이미지는 OpenAI prep 모티프를 anchor 배치용 source로 사용한다", async () => {
+    MockFileReader.configure({
+      result: "data:image/png;base64,source-base64",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    preparePatternSource.mockResolvedValue({
+      placementMode: "one-point",
+      sourceStatus: "repair_required",
+      fabricStatus: "repair_required",
+      reasonCodes: [
+        "not_suitable_for_one_point",
+        "too_many_colors_for_yarn_dyed",
+      ],
+      preparedSourceKind: "repaired",
+      preparationBackend: "local",
+      repairApplied: false,
+      repairPromptKind: null,
+      repairSummary: null,
+      userMessage: "첨부 이미지를 원포인트용 모티프로 다시 정리했어요.",
+      preparedSourceBase64: "source-base64",
+      preparedSourceMimeType: "image/png",
+    });
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          preparedSourceBase64: "prepared-point-source",
+          preparedSourceMimeType: "image/png",
+          preparedPointMotifTileBase64: "prepared-point-tile",
+          preparedPointMotifTileMimeType: "image/png",
+          repairSummary: "원포인트용 단일 모티프로 정리했습니다.",
+          repairPromptKind: "one_point_motif",
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: successResponse, error: null });
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "첨부 이미지를 원포인트로 써줘",
+      designContext: {
+        ...baseRequest.designContext,
+        sourceImage: { type: "image/png" } as File,
+        ciPlacement: "one-point",
+      },
+    });
+
+    expect(invoke).toHaveBeenNthCalledWith(1, "prepare-pattern-source-openai", {
+      body: expect.objectContaining({
+        placementMode: "one-point",
+        reasonCodes: expect.arrayContaining([
+          "not_suitable_for_one_point",
+          "too_many_colors_for_yarn_dyed",
+        ]),
+      }),
+    });
+    expect(invoke).toHaveBeenNthCalledWith(2, "generate-open-api", {
+      body: expect.objectContaining({
+        sourceImageBase64: "prepared-point-source",
+        ciImageBase64: "prepared-point-source",
+        patternPreparation: expect.objectContaining({
+          placementMode: "one-point",
+          preparedSourceKind: "repaired",
+        }),
+      }),
+    });
+  });
+
+  it("OpenAI prep이 실패하면 최종 렌더를 호출하지 않고 정리된 에러를 던진다", async () => {
+    MockFileReader.configure({
+      result: "data:image/png;base64,source-base64",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    preparePatternSource.mockResolvedValue({
+      placementMode: "all-over",
+      sourceStatus: "repair_required",
+      fabricStatus: "ready",
+      reasonCodes: ["uneven_outer_margin"],
+      preparedSourceKind: "repaired",
+      preparationBackend: "local",
+      repairApplied: false,
+      repairPromptKind: null,
+      repairSummary: null,
+      userMessage: "첨부 이미지를 반복 패턴에 맞게 다시 정리했어요.",
+      preparedSourceBase64: "source-base64",
+      preparedSourceMimeType: "image/png",
+    });
+    invoke.mockResolvedValueOnce({
+      data: null,
+      error: { message: "prep failed" },
+    });
+
+    await expect(
+      aiDesignApi({
+        ...baseRequest,
+        userMessage: "첨부한 이미지를 올패턴으로 뿌려줘",
+        designContext: {
+          ...baseRequest.designContext,
+          sourceImage: { type: "image/png" } as File,
+          ciPlacement: "all-over",
+        },
+      }),
+    ).rejects.toThrow(
+      "첨부 이미지를 패턴용으로 정리하지 못했습니다. 더 단순한 이미지를 사용해 주세요.",
+    );
+
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(phCapture).toHaveBeenCalledWith(
+      "design_generation_failed",
+      expect.objectContaining({
+        ai_model: "openai",
+        error_type: "pattern_preparation_failed",
+      }),
+    );
   });
 
   it("토큰 부족 응답은 InsufficientTokensError로 변환한다", async () => {
@@ -351,6 +612,18 @@ describe("aiDesignApi", () => {
       result: "data:image/png;base64,reference-base64",
     });
     vi.stubGlobal("FileReader", MockFileReader);
+    preparePatternSource.mockResolvedValue({
+      placementMode: "all-over",
+      sourceStatus: "ready",
+      fabricStatus: "ready",
+      reasonCodes: [],
+      preparedSourceKind: "original",
+      userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+      preparedSourceBase64: "reference-base64",
+      preparedSourceMimeType: "image/png",
+      preparedPatternTileBase64: "prepared-reference-tile",
+      preparedPatternTileMimeType: "image/png",
+    });
     invoke.mockResolvedValue({ data: successResponse, error: null });
 
     await aiDesignApi({
@@ -360,7 +633,7 @@ describe("aiDesignApi", () => {
       designContext: {
         ...baseRequest.designContext,
         ciPlacement: "all-over",
-        referenceImage: { type: "image/png" } as File,
+        sourceImage: { type: "image/png" } as File,
       },
     });
 
@@ -368,7 +641,9 @@ describe("aiDesignApi", () => {
     expect(invoke).toHaveBeenCalledWith("generate-fal-api", {
       body: expect.objectContaining({
         route: "fal_tiling",
-        referenceImageBase64: "reference-base64",
+        sourceImageBase64: "reference-base64",
+        ciImageBase64: "reference-base64",
+        tiledBase64: "prepared-reference-tile",
       }),
     });
   });
@@ -399,8 +674,6 @@ describe("aiDesignApi", () => {
         route: "fal_controlnet",
         structureImageBase64: "ci-base64",
         structureImageMimeType: "image/png",
-        tiledBase64: undefined,
-        tiledMimeType: undefined,
       }),
     });
   });

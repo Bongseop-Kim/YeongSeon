@@ -131,11 +131,11 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       }
 
       if (attachment.type === "image") {
-        setDesignContext(
-          attachment.value === "ci"
-            ? { ciImage: null }
-            : { referenceImage: null },
-        );
+        setDesignContext({
+          sourceImage: null,
+          ciImage: null,
+          referenceImage: null,
+        });
       }
     };
 

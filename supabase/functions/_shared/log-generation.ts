@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type AiGenerationLogPhase = "analysis" | "render";
+export type AiGenerationLogPhase = "analysis" | "prep" | "render";
 export type AiGenerationLogRequestType =
   | "analysis"
+  | "prep"
   | "render_standard"
   | "render_high";
 export type AiGenerationLogQuality = "standard" | "high";
@@ -59,6 +60,11 @@ export type AiGenerationLogInsert = {
   seed?: number | null;
   image_generated: boolean;
   generated_image_url?: string | null;
+  pattern_preparation_backend?: "local" | "openai_repair" | null;
+  pattern_repair_prompt_kind?: "all_over_tile" | "one_point_motif" | null;
+  pattern_repair_applied?: boolean | null;
+  pattern_repair_reason_codes?: string[] | null;
+  prep_tokens_charged?: number | null;
   detected_design?: Record<string, unknown> | null;
   tokens_charged?: number;
   tokens_refunded?: number;

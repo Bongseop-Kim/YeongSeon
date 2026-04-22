@@ -257,6 +257,16 @@ Deno.serve(async (req) => {
   const attachmentLogFields = {
     request_attachments: sanitizeLogRequestAttachments(payload.attachments),
   } as const;
+  const patternPreparationLogFields = {
+    pattern_preparation_backend:
+      payload.patternPreparation?.preparationBackend ?? null,
+    pattern_repair_prompt_kind:
+      payload.patternPreparation?.repairPromptKind ?? null,
+    pattern_repair_applied: payload.patternPreparation?.repairApplied ?? null,
+    pattern_repair_reason_codes:
+      payload.patternPreparation?.reasonCodes ?? null,
+    prep_tokens_charged: payload.patternPreparation?.prepTokensCharged ?? null,
+  } as const;
 
   let analysisSnapshot = null;
   if (executionMode === "render_from_analysis") {
@@ -288,6 +298,7 @@ Deno.serve(async (req) => {
         route_reason: payload.routeReason ?? null,
         route_signals: payload.routeSignals ?? [],
         base_image_work_id: payload.baseImageWorkId ?? null,
+        ...patternPreparationLogFields,
         ...attachmentLogFields,
         user_message: payloadUserMessage,
         prompt_length: payloadUserMessage.length,
@@ -600,6 +611,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
+      ...patternPreparationLogFields,
       ...attachmentLogFields,
       ...userMessageLogFields,
       text_prompt: textPrompt,
@@ -633,6 +645,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
+      ...patternPreparationLogFields,
       ...attachmentLogFields,
       ...userMessageLogFields,
       text_prompt: textPrompt,
@@ -864,6 +877,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
+      ...patternPreparationLogFields,
       ...attachmentLogFields,
       ...userMessageLogFields,
       text_prompt: textPrompt,
@@ -1008,6 +1022,7 @@ Deno.serve(async (req) => {
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
       ...routeLogFields,
+      ...patternPreparationLogFields,
       ...attachmentLogFields,
       ...userMessageLogFields,
       text_prompt: textPrompt,
@@ -1046,6 +1061,7 @@ Deno.serve(async (req) => {
     ai_model: RENDER_AI_MODEL,
     request_type: RENDER_REQUEST_TYPE,
     ...routeLogFields,
+    ...patternPreparationLogFields,
     ...attachmentLogFields,
     ...userMessageLogFields,
     text_prompt: textPrompt,

@@ -16,6 +16,7 @@ export interface AiDesignRouteMetadata {
 export interface AiDesignResponse extends AiDesignRouteMetadata {
   aiMessage: string;
   imageUrl: string | null;
+  patternPreparationMessage?: string;
   workId?: string;
   workflowId?: string;
   analysisWorkId?: string;

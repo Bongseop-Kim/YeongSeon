@@ -275,7 +275,9 @@ export function useDesignChat(
       const aiMessage: Message = {
         id: crypto.randomUUID(),
         role: "ai",
-        content: data.aiMessage,
+        content: data.patternPreparationMessage
+          ? `${data.patternPreparationMessage}\n\n${data.aiMessage}`
+          : data.aiMessage,
         imageUrl: data.imageUrl ?? undefined,
         workId: data.workId ?? null,
         contextChips: data.contextChips,
@@ -371,8 +373,11 @@ export function useDesignChat(
     const { baseImageUrl, baseImageWorkId } = getBaseImageContext(storeState);
     const routeResolution = resolveGenerationRoute({
       userMessage: userText,
-      hasCiImage: !!designContext.ciImage,
-      hasReferenceImage: !!designContext.referenceImage,
+      hasCiImage:
+        !!designContext.sourceImage ||
+        !!designContext.ciImage ||
+        !!designContext.referenceImage,
+      hasReferenceImage: false,
       hasPreviousGeneratedImage: !!baseImageUrl,
       selectedPreviewImageUrl: storeState.selectedPreviewImageUrl,
       detectedPattern: designContext.pattern,
@@ -430,9 +435,11 @@ export function useDesignChat(
 
     const routeResolution = resolveGenerationRoute({
       userMessage: lastUserMessage.content,
-      hasCiImage: !!(lastUserMessage.designContext ?? designContext).ciImage,
-      hasReferenceImage: !!(lastUserMessage.designContext ?? designContext)
-        .referenceImage,
+      hasCiImage:
+        !!(lastUserMessage.designContext ?? designContext).sourceImage ||
+        !!(lastUserMessage.designContext ?? designContext).ciImage ||
+        !!(lastUserMessage.designContext ?? designContext).referenceImage,
+      hasReferenceImage: false,
       hasPreviousGeneratedImage: !!baseImageUrl,
       selectedPreviewImageUrl: storeState.selectedPreviewImageUrl,
       detectedPattern: (lastUserMessage.designContext ?? designContext).pattern,

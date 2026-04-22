@@ -12,8 +12,9 @@ import { falProvider } from "@/entities/design/api/providers/fal-provider";
 import { openaiProvider } from "@/entities/design/api/providers/openai-provider";
 import { parseEdgeErrorResponse } from "@/entities/design/api/providers/parse-edge-error";
 import { runProviderChain } from "@/entities/design/api/providers/provider-chain";
-import { resolveGenerationRoute } from "@/entities/design/api/resolve-generation-route";
+import { resolveGenerationRouteAsync } from "@/entities/design/api/resolve-generation-route";
 import { shouldUseFalPipeline } from "@/entities/design/api/should-use-fal-pipeline";
+import { preparePatternSource } from "@/entities/design/api/prepare-pattern-source";
 import { tileLogoOnCanvas } from "@/entities/design/api/tile-logo-on-canvas";
 import { ph } from "@/shared/lib/posthog";
 
@@ -21,6 +22,18 @@ interface DesignTokenBalance {
   total: number;
   paid: number;
   bonus: number;
+}
+
+interface PatternRepairResponse {
+  preparedSourceBase64?: string;
+  preparedSourceMimeType?: string;
+  preparedPatternTileBase64?: string;
+  preparedPatternTileMimeType?: string;
+  preparedPointMotifTileBase64?: string;
+  preparedPointMotifTileMimeType?: string;
+  repairSummary?: string | null;
+  repairPromptKind?: "all_over_tile" | "one_point_motif" | null;
+  prepTokensCharged?: number | null;
 }
 
 export class InsufficientTokensError extends Error {
@@ -120,30 +133,162 @@ const captureGenerationFailed = (
   });
 };
 
+const requiresOpenAiPatternRepair = (
+  patternPreparation: Awaited<ReturnType<typeof preparePatternSource>> | null,
+): boolean =>
+  patternPreparation?.sourceStatus === "repair_required" ||
+  patternPreparation?.fabricStatus === "repair_required";
+
+const invokeOpenAiPatternRepair = async (params: {
+  sourceImageBase64: string;
+  sourceImageMimeType: string;
+  patternPreparation: Awaited<ReturnType<typeof preparePatternSource>>;
+  fabricMethod: AiDesignRequest["designContext"]["fabricMethod"];
+  scale: AiDesignRequest["designContext"]["scale"];
+  backgroundColor?: string;
+}) => {
+  const { data, error } = await supabase.functions.invoke(
+    "prepare-pattern-source-openai",
+    {
+      body: {
+        sourceImageBase64: params.sourceImageBase64,
+        sourceImageMimeType: params.sourceImageMimeType,
+        placementMode: params.patternPreparation.placementMode,
+        fabricMethod: params.fabricMethod,
+        scale: params.scale ?? "medium",
+        backgroundColor: params.backgroundColor,
+        reasonCodes: params.patternPreparation.reasonCodes,
+      },
+    },
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return data as PatternRepairResponse | null;
+};
+
 export async function aiDesignApi(
   request: AiDesignRequest,
 ): Promise<AiDesignResponse> {
-  const routeResolution = resolveGenerationRoute({
+  const sourceImage =
+    request.designContext.sourceImage ??
+    request.designContext.ciImage ??
+    request.designContext.referenceImage ??
+    null;
+  const routeResolution = await resolveGenerationRouteAsync({
     userMessage: request.userMessage,
-    hasCiImage: !!request.designContext.ciImage,
-    hasReferenceImage: !!request.designContext.referenceImage,
+    hasCiImage: !!sourceImage,
+    hasReferenceImage: false,
     hasPreviousGeneratedImage: !!request.baseImageUrl,
     selectedPreviewImageUrl: request.baseImageUrl ?? null,
     detectedPattern: request.designContext.pattern,
   });
 
-  const [ciImageBase64, referenceImageBase64] = await Promise.all([
-    request.designContext.ciImage
-      ? fileToBase64(request.designContext.ciImage)
-      : Promise.resolve(undefined),
-    request.designContext.referenceImage
-      ? fileToBase64(request.designContext.referenceImage)
-      : Promise.resolve(undefined),
+  const [sourceImageBase64] = await Promise.all([
+    sourceImage ? fileToBase64(sourceImage) : Promise.resolve(undefined),
   ]);
+  const placementMode = request.designContext.ciPlacement;
+  let patternPreparation =
+    sourceImageBase64 &&
+    sourceImage &&
+    (placementMode === "all-over" || placementMode === "one-point")
+      ? await preparePatternSource({
+          sourceImageBase64,
+          sourceImageMimeType: sourceImage.type || "image/png",
+          placementMode,
+          fabricMethod: request.designContext.fabricMethod,
+          scale: request.designContext.scale ?? "medium",
+          backgroundColor: request.designContext.colors[0],
+        })
+      : null;
+
+  if (
+    sourceImageBase64 &&
+    sourceImage &&
+    patternPreparation &&
+    requiresOpenAiPatternRepair(patternPreparation)
+  ) {
+    try {
+      const repairResult = await invokeOpenAiPatternRepair({
+        sourceImageBase64:
+          patternPreparation.preparedSourceBase64 ?? sourceImageBase64,
+        sourceImageMimeType:
+          patternPreparation.preparedSourceMimeType ??
+          sourceImage.type ??
+          "image/png",
+        patternPreparation,
+        fabricMethod: request.designContext.fabricMethod,
+        scale: request.designContext.scale,
+        backgroundColor: request.designContext.colors[0],
+      });
+
+      if (!repairResult?.preparedSourceBase64) {
+        throw new Error("prepared_source_missing");
+      }
+
+      patternPreparation = {
+        ...patternPreparation,
+        preparationBackend: "openai_repair",
+        repairApplied: true,
+        repairPromptKind: repairResult.repairPromptKind ?? null,
+        repairSummary: repairResult.repairSummary ?? null,
+        prepTokensCharged: repairResult.prepTokensCharged ?? null,
+        preparedSourceBase64: repairResult.preparedSourceBase64,
+        preparedSourceMimeType:
+          repairResult.preparedSourceMimeType === "image/png"
+            ? repairResult.preparedSourceMimeType
+            : "image/png",
+        preparedPatternTileBase64:
+          repairResult.preparedPatternTileBase64 ??
+          patternPreparation.preparedPatternTileBase64,
+        preparedPatternTileMimeType:
+          repairResult.preparedPatternTileMimeType === "image/png"
+            ? repairResult.preparedPatternTileMimeType
+            : patternPreparation.preparedPatternTileMimeType,
+        preparedPointMotifTileBase64:
+          repairResult.preparedPointMotifTileBase64 ??
+          patternPreparation.preparedPointMotifTileBase64,
+        preparedPointMotifTileMimeType:
+          repairResult.preparedPointMotifTileMimeType === "image/png"
+            ? repairResult.preparedPointMotifTileMimeType
+            : patternPreparation.preparedPointMotifTileMimeType,
+      };
+    } catch (error) {
+      const body = await getErrorResponseBody(error);
+
+      if (body?.error === "insufficient_tokens") {
+        captureGenerationFailed({
+          error_type: "insufficient_tokens",
+        });
+        throw new InsufficientTokensError(body.balance ?? 0, body.cost ?? 0);
+      }
+
+      captureGenerationFailed({
+        error_type: "pattern_preparation_failed",
+      });
+      throw new Error(
+        "첨부 이미지를 패턴용으로 정리하지 못했습니다. 더 단순한 이미지를 사용해 주세요.",
+      );
+    }
+  }
+
+  const preparedSourceBase64 =
+    patternPreparation?.preparedSourceBase64 ?? sourceImageBase64;
+  const preparedSourceMimeType =
+    patternPreparation?.preparedSourceMimeType ??
+    sourceImage?.type ??
+    undefined;
+  const preparedPatternTileBase64 =
+    patternPreparation?.preparedPatternTileBase64 ??
+    patternPreparation?.preparedPointMotifTileBase64;
+  const preparedPatternTileMimeType =
+    patternPreparation?.preparedPatternTileMimeType ??
+    patternPreparation?.preparedPointMotifTileMimeType;
 
   const useFalTiling = await shouldUseFalPipeline({
-    ciImageBase64,
-    referenceImageBase64,
+    ciImageBase64: preparedSourceBase64,
     ciPlacement: request.designContext.ciPlacement,
     fabricMethod: request.designContext.fabricMethod,
     allowFalRender: true,
@@ -163,12 +308,15 @@ export async function aiDesignApi(
   const shouldPrepareTiledPattern = resolvedRoute === "fal_tiling";
   const controlStructureBase64 =
     resolvedRoute === "fal_controlnet"
-      ? (request.structureImageBase64 ?? ciImageBase64)
+      ? (request.structureImageBase64 ??
+        preparedPatternTileBase64 ??
+        preparedSourceBase64)
       : request.structureImageBase64;
   const controlStructureMimeType =
     resolvedRoute === "fal_controlnet"
       ? (request.structureImageMimeType ??
-        request.designContext.ciImage?.type ??
+        preparedPatternTileMimeType ??
+        preparedSourceMimeType ??
         undefined)
       : request.structureImageMimeType;
   const canUseFalApi =
@@ -180,19 +328,24 @@ export async function aiDesignApi(
   if (
     shouldPrepareTiledPattern &&
     useFalTiling &&
-    ciImageBase64 &&
-    request.designContext.ciImage &&
+    preparedSourceBase64 &&
+    sourceImage &&
     request.designContext.fabricMethod
   ) {
     try {
-      const tileResult = await tileLogoOnCanvas({
-        logoBase64: ciImageBase64,
-        logoMimeType: request.designContext.ciImage.type || "image/png",
-        scale: request.designContext.scale ?? "medium",
-        backgroundColor: request.designContext.colors[0],
-      });
-      tiledBase64 = tileResult.base64;
-      tiledMimeType = tileResult.mimeType;
+      if (preparedPatternTileBase64 && preparedPatternTileMimeType) {
+        tiledBase64 = preparedPatternTileBase64;
+        tiledMimeType = preparedPatternTileMimeType;
+      } else {
+        const tileResult = await tileLogoOnCanvas({
+          logoBase64: preparedSourceBase64,
+          logoMimeType: preparedSourceMimeType || "image/png",
+          scale: request.designContext.scale ?? "medium",
+          backgroundColor: request.designContext.colors[0],
+        });
+        tiledBase64 = tileResult.base64;
+        tiledMimeType = tileResult.mimeType;
+      }
     } catch (error) {
       captureGenerationFailed({
         error_type: "tile_logo_on_canvas_failed",
@@ -207,11 +360,26 @@ export async function aiDesignApi(
   }
 
   const falPayload = buildInvokePayload(request, {
-    ciImageBase64,
-    referenceImageBase64,
+    sourceImageBase64: preparedSourceBase64,
+    sourceImageMimeType: preparedSourceMimeType,
+    ciImageBase64: preparedSourceBase64,
     backgroundPattern,
     tiledBase64: shouldPrepareTiledPattern ? tiledBase64 : undefined,
     tiledMimeType: shouldPrepareTiledPattern ? tiledMimeType : undefined,
+    patternPreparation: patternPreparation
+      ? {
+          placementMode: patternPreparation.placementMode,
+          sourceStatus: patternPreparation.sourceStatus,
+          fabricStatus: patternPreparation.fabricStatus,
+          reasonCodes: patternPreparation.reasonCodes,
+          preparedSourceKind: patternPreparation.preparedSourceKind,
+          preparationBackend: patternPreparation.preparationBackend,
+          repairApplied: patternPreparation.repairApplied,
+          repairPromptKind: patternPreparation.repairPromptKind,
+          repairSummary: patternPreparation.repairSummary,
+          prepTokensCharged: patternPreparation.prepTokensCharged,
+        }
+      : undefined,
     route: resolvedRoute,
     routeSignals: routeResolution.signals,
     routeReason: routeResolution.reason,
@@ -229,9 +397,24 @@ export async function aiDesignApi(
   }) as Record<string, unknown>;
 
   const defaultPayload = buildInvokePayload(request, {
-    ciImageBase64,
-    referenceImageBase64,
+    sourceImageBase64: preparedSourceBase64,
+    sourceImageMimeType: preparedSourceMimeType,
+    ciImageBase64: preparedSourceBase64,
     backgroundPattern,
+    patternPreparation: patternPreparation
+      ? {
+          placementMode: patternPreparation.placementMode,
+          sourceStatus: patternPreparation.sourceStatus,
+          fabricStatus: patternPreparation.fabricStatus,
+          reasonCodes: patternPreparation.reasonCodes,
+          preparedSourceKind: patternPreparation.preparedSourceKind,
+          preparationBackend: patternPreparation.preparationBackend,
+          repairApplied: patternPreparation.repairApplied,
+          repairPromptKind: patternPreparation.repairPromptKind,
+          repairSummary: patternPreparation.repairSummary,
+          prepTokensCharged: patternPreparation.prepTokensCharged,
+        }
+      : undefined,
     routeHint: request.routeHint,
     baseImageUrl: request.baseImageUrl,
     baseImageWorkId: request.baseImageWorkId,
@@ -291,14 +474,30 @@ export async function aiDesignApi(
     data as Parameters<typeof normalizeInvokeResponse>[0],
     request,
   );
+  const patternPreparationMessage = patternPreparation?.userMessage;
+  const routeReason = patternPreparation
+    ? request.designContext.ciPlacement === "one-point"
+      ? patternPreparation.preparedSourceKind === "repaired"
+        ? "one_point_source_repaired"
+        : "one_point_source_ready"
+      : patternPreparation.fabricStatus === "repair_required"
+        ? "fabric_constraint_repaired"
+        : patternPreparation.preparedSourceKind === "repaired"
+          ? "pattern_source_repaired"
+          : "pattern_source_ready"
+    : (result.routeReason ?? routeResolution.reason);
   safeCapture("design_generated", {
     ai_model: DEFAULT_AI_MODEL,
     latency_ms: Date.now() - startTime,
     has_image: result.imageUrl !== null,
     pipeline: usedFalApi ? "fal-ai" : undefined,
     route: result.route ?? routeResolution.route,
-    route_reason: result.routeReason ?? routeResolution.reason,
+    route_reason: routeReason,
     route_signals: result.routeSignals ?? routeResolution.signals,
   });
-  return result;
+  return {
+    ...result,
+    routeReason,
+    patternPreparationMessage,
+  };
 }

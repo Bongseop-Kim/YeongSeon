@@ -39,6 +39,7 @@ export type GenerateDesignResult = {
 
 export type GenerationRequestType =
   | "analysis"
+  | "prep"
   | "render_standard"
   | "render_high";
 export type ImageQuality = "standard" | "high";
@@ -146,7 +147,7 @@ export type RenderResult = {
 export type LogContext = {
   workId: string;
   workflowId: string;
-  phase: "analysis" | "render";
+  phase: "analysis" | "prep" | "render";
   parentWorkId?: string | null;
   requestType: GenerationRequestType;
   quality: ImageQuality | null;
@@ -183,6 +184,11 @@ export type LogContext = {
   seed?: number | null;
   imageGenerated?: boolean;
   generatedImageUrl?: string | null;
+  patternPreparationBackend?: "local" | "openai_repair" | null;
+  patternRepairPromptKind?: "all_over_tile" | "one_point_motif" | null;
+  patternRepairApplied?: boolean | null;
+  patternRepairReasonCodes?: string[] | null;
+  prepTokensCharged?: number | null;
   tokensCharged?: number;
   tokensRefunded?: number;
   textLatencyMs?: number | null;

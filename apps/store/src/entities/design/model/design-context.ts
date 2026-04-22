@@ -13,6 +13,9 @@ export interface DesignContext {
   colors: string[];
   pattern: PatternOption | null;
   fabricMethod: FabricMethod | null;
+  sourceImage?: File | null;
+  onePointOffsetX?: number;
+  onePointOffsetY?: number;
   ciImage: File | null;
   ciPlacement: CiPlacement | null;
   referenceImage: File | null;

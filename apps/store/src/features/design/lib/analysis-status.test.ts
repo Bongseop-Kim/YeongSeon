@@ -8,7 +8,7 @@ describe("analysis-status", () => {
   it("maps known missing requirements to user-facing labels", () => {
     expect(
       toAnalysisMissingRequirementLabels(["ciImage", "referenceImage"]),
-    ).toEqual(["CI 이미지 필요", "참고 이미지 있으면 더 정확함"]);
+    ).toEqual(["이미지 첨부 필요"]);
   });
 
   it("falls back to a generic label for unknown requirements", () => {

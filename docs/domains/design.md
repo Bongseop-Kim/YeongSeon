@@ -63,7 +63,7 @@ flowchart TD
 - **BR-design-005**: paid 토큰 미사용분은 전자거래 규정에 따라 고객이 수동 환불 신청 가능. bonus 불가.
 - **BR-design-006**: 동일 주문에 `접수` 또는 `완료` 상태의 `token_refund`가 있으면 중복 신청 불가.
 - **BR-design-007**: 신규 가입 시 bonus 토큰 30개 자동 지급.
-- **BR-design-008**: 토큰 비용은 `admin_settings`에서 모델×요청 타입×품질 조합으로 관리 (`design_token_cost_openai_text` 등 6개 키).
+- **BR-design-008**: 토큰 비용은 `admin_settings`에서 모델×요청 타입 조합으로 관리한다. 기본 요청 타입은 `analysis`, `prep`, `render_standard`, `render_high`이며, `prep`은 부적합 이미지의 OpenAI 패턴 보정이 실제 실행된 경우에만 별도 차감된다.
 - **BR-design-009**: 멀티턴 대화 지원 — 프론트에서 `conversation_history` 유지해 이전 맥락 Edge Function에 전달.
 - **BR-design-010**: `ciPlacement === "one-point"` 요청 시 첫 번째 색상으로 `solid` backgroundPattern을 자동 생성해 payload에 주입한다. 프롬프트에 배경 패턴 명세로 반영되어 AI가 다른 배경을 임의로 생성하지 않도록 제한한다.
 - **BR-design-011**: AI 응답의 `detectedDesign`에 `positionIntent`("move-left" | "move-right" | "move-up" | "move-down") 필드 포함. 모티프 위치 이동 요청을 감지해 후속 생성에 반영한다.

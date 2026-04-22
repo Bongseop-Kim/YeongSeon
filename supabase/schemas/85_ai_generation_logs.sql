@@ -5,12 +5,12 @@
 CREATE TABLE public.ai_generation_logs (
   id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   workflow_id          text        NOT NULL,
-  phase                text        NOT NULL CHECK (phase IN ('analysis', 'render')),
+  phase                text        NOT NULL CHECK (phase IN ('analysis', 'prep', 'render')),
   work_id              text        NOT NULL UNIQUE,
   parent_work_id       text        REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   user_id              uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   ai_model             text        NOT NULL CHECK (ai_model IN ('openai', 'gemini', 'fal')),
-  request_type         text        NOT NULL CHECK (request_type IN ('analysis', 'render_standard', 'render_high')),
+  request_type         text        NOT NULL CHECK (request_type IN ('analysis', 'prep', 'render_standard', 'render_high')),
   quality              text        CHECK (quality IN ('standard', 'high')),
   user_message         text        NOT NULL,
   conversation_turn    integer     NOT NULL DEFAULT 0,
@@ -39,6 +39,11 @@ CREATE TABLE public.ai_generation_logs (
   ai_message           text,
   image_generated      boolean     NOT NULL DEFAULT false,
   generated_image_url  text,
+  pattern_preparation_backend text CHECK (pattern_preparation_backend IN ('local', 'openai_repair')),
+  pattern_repair_prompt_kind text CHECK (pattern_repair_prompt_kind IN ('all_over_tile', 'one_point_motif')),
+  pattern_repair_applied boolean,
+  pattern_repair_reason_codes jsonb,
+  prep_tokens_charged integer,
   tokens_charged       integer     NOT NULL DEFAULT 0,
   tokens_refunded      integer     NOT NULL DEFAULT 0,
   text_latency_ms      integer,
@@ -49,6 +54,7 @@ CREATE TABLE public.ai_generation_logs (
   created_at           timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT chk_ai_generation_phase_request_type CHECK (
     (phase = 'analysis' AND request_type = 'analysis') OR
+    (phase = 'prep' AND request_type = 'prep') OR
     (phase = 'render' AND request_type IN ('render_standard', 'render_high'))
   )
 );

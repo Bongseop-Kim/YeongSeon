@@ -165,6 +165,11 @@ const emitGenerationLog = async (
     ai_message: context.aiMessage ?? null,
     image_generated: context.imageGenerated ?? false,
     generated_image_url: context.generatedImageUrl ?? null,
+    pattern_preparation_backend: context.patternPreparationBackend ?? null,
+    pattern_repair_prompt_kind: context.patternRepairPromptKind ?? null,
+    pattern_repair_applied: context.patternRepairApplied ?? null,
+    pattern_repair_reason_codes: context.patternRepairReasonCodes ?? null,
+    prep_tokens_charged: context.prepTokensCharged ?? null,
     tokens_charged: context.tokensCharged ?? 0,
     tokens_refunded: context.tokensRefunded ?? 0,
     text_latency_ms: context.textLatencyMs ?? null,
@@ -709,6 +714,16 @@ const runOpenAiRenderFromAnalysis = async (params: {
       imagePrompt,
       imageEditPrompt,
       imageGenerated: false,
+      patternPreparationBackend:
+        renderPayload.patternPreparation?.preparationBackend ?? null,
+      patternRepairPromptKind:
+        renderPayload.patternPreparation?.repairPromptKind ?? null,
+      patternRepairApplied:
+        renderPayload.patternPreparation?.repairApplied ?? null,
+      patternRepairReasonCodes:
+        renderPayload.patternPreparation?.reasonCodes ?? null,
+      prepTokensCharged:
+        renderPayload.patternPreparation?.prepTokensCharged ?? null,
       tokensCharged,
       tokensRefunded,
       textLatencyMs: null,

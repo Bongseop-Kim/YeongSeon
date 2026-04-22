@@ -64,7 +64,6 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
     (state) => state.setDesignContext,
   );
   const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const selectedImageKindRef = useRef<"ci" | "reference">("reference");
 
   const selectedColors = pendingAttachments.filter(
     (attachment) => attachment.type === "color",
@@ -135,16 +134,12 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       return;
     }
 
-    const selectedImageKind = selectedImageKindRef.current;
-    const nextAttachment =
-      selectedImageKind === "ci"
-        ? { type: "image" as const, label: "CI 이미지", value: "ci", file }
-        : {
-            type: "image" as const,
-            label: "참고 이미지",
-            value: "reference",
-            file,
-          };
+    const nextAttachment = {
+      type: "image" as const,
+      label: "이미지 첨부",
+      value: "source",
+      file,
+    };
 
     replaceSingleAttachment(
       pendingAttachments,
@@ -152,15 +147,16 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       nextAttachment,
       addAttachment,
     );
-    setDesignContext(
-      selectedImageKind === "ci" ? { ciImage: file } : { referenceImage: file },
-    );
+    setDesignContext({
+      sourceImage: file,
+      ciImage: null,
+      referenceImage: null,
+    });
     event.target.value = "";
     onClose();
   };
 
-  const openImagePicker = (kind: "ci" | "reference") => {
-    selectedImageKindRef.current = kind;
+  const openImagePicker = () => {
     imageInputRef.current?.click();
   };
 
@@ -267,16 +263,9 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => openImagePicker("ci")}
+              onClick={() => openImagePicker()}
             >
-              CI 이미지 첨부
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => openImagePicker("reference")}
-            >
-              참고 이미지 첨부
+              이미지 첨부
             </Button>
           </div>
         </section>

@@ -45,7 +45,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
   p_ai_model     text,             -- 'openai' | 'gemini' | 'fal'
-  p_request_type text,             -- 'analysis' | 'render_standard' | 'render_high'
+  p_request_type text,             -- 'analysis' | 'prep' | 'render_standard' | 'render_high'
   p_quality      text DEFAULT 'standard',
   p_work_id      text DEFAULT NULL
 )
@@ -78,7 +78,7 @@ BEGIN
   IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
-  IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
+  IF p_request_type NOT IN ('analysis', 'prep', 'render_standard', 'render_high') THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
   IF p_quality NOT IN ('standard', 'high') THEN
@@ -252,7 +252,7 @@ BEGIN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
 
-  IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
+  IF p_request_type NOT IN ('analysis', 'prep', 'render_standard', 'render_high') THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
 

@@ -178,6 +178,7 @@ describe("buildInvokePayload", () => {
       ciImageMimeType: "image/png",
       referenceImageBase64: "ref-base64",
       referenceImageMimeType: "image/jpeg",
+      sourceImageMimeType: "image/png",
       tiledBase64: "tiled-base64",
       tiledMimeType: "image/png",
       sessionId: "test-session-id",

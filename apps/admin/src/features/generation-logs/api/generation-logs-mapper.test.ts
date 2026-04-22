@@ -97,6 +97,14 @@ describe("toAdminGenerationLogItem", () => {
     expect(result.requestType).toBe("render_high");
   });
 
+  it("request_type이 prep이면 그대로 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      request_type: "prep",
+    });
+    expect(result.requestType).toBe("prep");
+  });
+
   it("request_type이 알 수 없는 값이면 null을 반환한다", () => {
     const result = toAdminGenerationLogItem({
       ...baseRow,

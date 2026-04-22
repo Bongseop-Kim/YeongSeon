@@ -23,6 +23,7 @@
     "./generate-open-api",
     "./imagekit-auth",
     "./notify-claim",
+    "./prepare-pattern-source-openai",
     "./send-phone-verification",
     "./verify-phone"
   ]

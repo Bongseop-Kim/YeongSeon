@@ -67,8 +67,13 @@ export const buildTextPrompt = (payload: GenerateDesignRequest) => {
     `designContext.pattern: ${pattern}`,
     `designContext.fabricMethod: ${fabricMethod}`,
     `CI 배치: ${ciPlacement}`,
-    `CI 이미지: ${payload.ciImageBase64 ? "업로드됨" : "없음"}`,
-    `참고 이미지: ${payload.referenceImageBase64 ? "업로드됨" : "없음"}`,
+    `업로드 이미지: ${
+      payload.sourceImageBase64 ||
+      payload.ciImageBase64 ||
+      payload.referenceImageBase64
+        ? "업로드됨"
+        : "없음"
+    }`,
     `userMessage: ${payload.userMessage}`,
     "generateImage는 이번 응답이 실제 디자인 이미지를 새로 생성해야 하는지 여부를 의미합니다.",
     "contextChips는 후속 대화에 바로 사용할 수 있는 짧은 디자인 변경 액션 2~3개로 구성하세요.",
@@ -202,38 +207,17 @@ export const buildReferencePrompt = (
   hasReferenceImage: boolean,
   fabricMethod: string | null | undefined,
 ): string => {
-  if (!hasCiImage && !hasReferenceImage) return "";
+  const hasSourceImage = hasCiImage || hasReferenceImage;
+  if (!hasSourceImage) return "";
   const fabricLabel =
     resolveRenderCapability(fabricMethod)?.referenceLabel ?? "fabric";
-  if (hasCiImage && hasReferenceImage) {
-    return [
-      "Image 1: base fabric reference (referenceImage). Image 2: CI logo reference (ciImage).",
-      "Preserve fabric appearance from Image 1.",
-      "Use visual silhouette of Image 2 as accent.",
-      "Do not read, reproduce, or render any text or letterforms from Image 2.",
-      `The fabric construction method is strictly ${fabricLabel}, regardless of either image style.`,
-      "Keep the final result as a clean rectangular fabric swatch.",
-    ].join(" ");
-  }
-  if (hasCiImage) {
-    return [
-      "The uploaded image is a CI logo reference.",
-      "Use only its silhouette and outline — do not reproduce text or letterforms.",
-      `The fabric construction method is strictly ${fabricLabel}, regardless of the image style.`,
-      "Keep the final result as a clean rectangular fabric swatch.",
-    ].join(" ");
-  }
-  if (hasReferenceImage) {
-    return [
-      "The uploaded image is a base fabric reference.",
-      "Use it for color palette and motif shape reference only.",
-      `The fabric construction method is strictly ${fabricLabel}, regardless of the image style.`,
-      "Keep the final result as a clean rectangular fabric swatch.",
-    ].join(" ");
-  }
-  throw new Error(
-    "unreachable: all hasCiImage/hasReferenceImage combinations are handled above",
-  );
+  return [
+    "The uploaded image is the source motif reference.",
+    "Use its silhouette, shape language, and visual identity as the basis for the design.",
+    "Do not read or reproduce letterforms as text; treat the input as a graphic motif.",
+    `The fabric construction method is strictly ${fabricLabel}, regardless of the image style.`,
+    "Keep the final result as a clean rectangular fabric swatch.",
+  ].join(" ");
 };
 
 export const buildCiPlacementPrompt = (
@@ -244,13 +228,13 @@ export const buildCiPlacementPrompt = (
   if (!ciPlacement) return "";
   if (ciPlacement === "all-over") {
     const source = hasCiImage
-      ? "from the uploaded CI image"
+      ? "from the uploaded image"
       : "described in the conversation";
     return `Repeat the motif ${source} as an all-over pattern across the entire fabric surface. Treat the motif as a purely visual graphic shape — do not read or reproduce any text or letterforms in the image; use only its silhouette and outline form. Arrange them in a consistent, evenly-spaced grid with equal gaps between each motif. Every motif must be identical in size and orientation throughout the image. Follow the motif scale and density described above.`;
   }
   if (ciPlacement === "one-point") {
     const source = hasCiImage
-      ? "from the uploaded CI image"
+      ? "from the uploaded image"
       : "described in the conversation";
     const describedBackground = describeBackgroundPattern(backgroundPattern);
     return [
@@ -262,6 +246,64 @@ export const buildCiPlacementPrompt = (
     ].join(" ");
   }
   return "";
+};
+
+export const buildAllOverRepairPrompt = (input: {
+  fabricMethod: string | null | undefined;
+  reasonCodes: string[];
+}): string => {
+  const fabricCapability = resolveRenderCapability(input.fabricMethod);
+  const fabricLine =
+    input.fabricMethod === "yarn-dyed"
+      ? [
+          "Convert the motif into a single-color silhouette.",
+          "reduce the number of colors.",
+          "Remove fine inner details and gradients.",
+        ].join(" ")
+      : "Printed fabric may keep multiple colors and fine inner details when they support readability.";
+
+  return [
+    "Create a single repeatable tile from the uploaded image.",
+    "The output must be edge-to-edge and seamless on all four sides.",
+    "Keep the source identity, but regularize spacing, outer margins, and negative space so the tile can repeat cleanly.",
+    "Do not generate a tie mockup or a full fabric swatch. Return only the repaired tile image.",
+    fabricLine,
+    fabricCapability
+      ? `Target fabric construction: ${fabricCapability.referenceLabel}.`
+      : "",
+    input.reasonCodes.length > 0
+      ? `Fix these issues explicitly: ${input.reasonCodes.join(", ")}.`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+};
+
+export const buildOnePointRepairPrompt = (input: {
+  fabricMethod: string | null | undefined;
+  reasonCodes: string[];
+}): string => {
+  const fabricLine =
+    input.fabricMethod === "yarn-dyed"
+      ? [
+          "Convert the motif into a single-color silhouette.",
+          "Remove gradients and fine inner details.",
+          "Ensure the motif remains recognizable at very small scale.",
+        ].join(" ")
+      : "Printed fabric may preserve fine inner details and multiple colors if the motif stays readable at small scale.";
+
+  return [
+    "Create a single isolated motif from the uploaded image for one-point placement.",
+    "The output must have clear background separation and be ready to place on fabric without additional cleanup.",
+    "Optimize the motif for small scale placement, similar to a subtle pin-sized accent on a tie.",
+    "Do not generate a tie mockup or repeated pattern. Return only the repaired motif image.",
+    fabricLine,
+    input.reasonCodes.length > 0
+      ? `Fix these issues explicitly: ${input.reasonCodes.join(", ")}.`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 };
 
 const describeBackgroundPattern = (

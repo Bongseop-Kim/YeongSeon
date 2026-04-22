@@ -37,6 +37,11 @@ export const GENERATION_ROUTE_REASON_VALUES = [
   "similar_mood_or_new_generation",
   "default_openai_generation",
   "llm_classifier",
+  "pattern_source_ready",
+  "pattern_source_repaired",
+  "one_point_source_ready",
+  "one_point_source_repaired",
+  "fabric_constraint_repaired",
 ] as const;
 
 export type GenerationRouteReason =

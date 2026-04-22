@@ -41,12 +41,26 @@ export type GenerateDesignRequest = {
   conversationHistory?: ConversationTurn[];
   previousImageBase64?: string;
   previousImageMimeType?: string;
+  sourceImageBase64?: string;
+  sourceImageMimeType?: string;
   ciImageBase64?: string;
   ciImageMimeType?: string;
   referenceImageBase64?: string;
   referenceImageMimeType?: string;
   tiledBase64?: string;
   tiledMimeType?: string;
+  patternPreparation?: {
+    placementMode: "all-over" | "one-point";
+    sourceStatus: "ready" | "repair_required";
+    fabricStatus: "ready" | "repair_required";
+    reasonCodes: string[];
+    preparedSourceKind: "original" | "repaired";
+    preparationBackend?: "local" | "openai_repair";
+    repairApplied?: boolean;
+    repairPromptKind?: "all_over_tile" | "one_point_motif" | null;
+    repairSummary?: string | null;
+    prepTokensCharged?: number | null;
+  };
   route?: FalGenerationRoute;
   controlType?: "lineart" | "edge" | "depth";
   structureImageBase64?: string;
