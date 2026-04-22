@@ -2,7 +2,10 @@ import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as DesignEntities from "@/entities/design";
 import { buildAnalysisReuseKey } from "@/entities/design";
-import { useDesignChat } from "@/features/design/hooks/use-design-chat";
+import {
+  INPAINT_TARGET_REQUIRED_MESSAGE,
+  useDesignChat,
+} from "@/features/design/hooks/use-design-chat";
 
 const {
   invalidateQueries,
@@ -916,8 +919,7 @@ describe("useDesignChat", () => {
     expect(requestResult).toEqual({
       started: false,
       errorCode: "NO_EDIT_TARGET",
-      errorMessage:
-        "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.",
+      errorMessage: INPAINT_TARGET_REQUIRED_MESSAGE,
     });
     expect(mutate).not.toHaveBeenCalled();
     expect(addMessage).not.toHaveBeenCalledWith(

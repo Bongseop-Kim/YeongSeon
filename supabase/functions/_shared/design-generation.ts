@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { GenerateDesignRequest } from "@/functions/_shared/design-request.ts";
 import type { DetectedDesign } from "@/functions/_shared/conversation.ts";
+import type { LogRequestAttachment } from "@/functions/_shared/request-attachments.ts";
 
 export type ContextChip = {
   label: string;
@@ -152,12 +153,7 @@ export type LogContext = {
   userId: string;
   userMessage: string;
   promptLength: number;
-  requestAttachments?: Array<{
-    type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
-    label: string;
-    value: string;
-    fileName?: string;
-  }> | null;
+  requestAttachments?: LogRequestAttachment[] | null;
   conversationTurn: number;
   designContext: Record<string, unknown> | null;
   normalizedDesign?: Record<string, unknown> | null;

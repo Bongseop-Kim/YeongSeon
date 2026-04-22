@@ -66,19 +66,17 @@ export function InpaintDialog({
     width: number;
     height: number;
   }> {
-    return await new Promise<{ width: number; height: number }>(
-      (resolve, reject) => {
-        const image = new Image();
-        image.onload = () => {
-          resolve({
-            width: image.naturalWidth,
-            height: image.naturalHeight,
-          });
-        };
-        image.onerror = () => reject(new Error("image_load_failed"));
-        image.src = imageUrl;
-      },
-    );
+    return new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => {
+        resolve({
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        });
+      };
+      image.onerror = () => reject(new Error("image_load_failed"));
+      image.src = imageUrl;
+    });
   }
 
   async function handleSubmit(): Promise<void> {
@@ -141,16 +139,11 @@ export function InpaintDialog({
       return;
     }
 
-    try {
-      if (rescaledBase64.length > MAX_MASK_BASE64_LENGTH) {
-        submitMask(maskBase64);
-        return;
-      }
-
-      submitMask(rescaledBase64);
-    } catch (error) {
-      submitPreviewMaskWithError("canvasToPngBase64", error);
-    }
+    submitMask(
+      rescaledBase64.length > MAX_MASK_BASE64_LENGTH
+        ? maskBase64
+        : rescaledBase64,
+    );
   }
 
   return (

@@ -144,9 +144,7 @@ const emitGenerationLog = async (
     quality: context.quality,
     user_message: context.userMessage,
     prompt_length: context.promptLength,
-    request_attachments: sanitizeLogRequestAttachments(
-      context.requestAttachments,
-    ),
+    request_attachments: context.requestAttachments ?? null,
     design_context: context.designContext,
     normalized_design: context.normalizedDesign ?? null,
     conversation_turn: context.conversationTurn,

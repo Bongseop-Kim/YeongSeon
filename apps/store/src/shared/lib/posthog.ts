@@ -1,5 +1,4 @@
 import posthog from "posthog-js";
-import type { AiModel } from "@/entities/design/model/ai-design-types";
 
 type GenerationRoute =
   | "openai"
@@ -8,10 +7,12 @@ type GenerationRoute =
   | "fal_controlnet"
   | "fal_inpaint";
 
+type PosthogAiModel = "openai" | "gemini" | "fal";
+
 type PhEventParamsMap = {
-  design_session_started: { ai_model: AiModel };
+  design_session_started: { ai_model: PosthogAiModel };
   design_generated: {
-    ai_model: AiModel;
+    ai_model: PosthogAiModel;
     latency_ms: number;
     has_image: boolean;
     pipeline?: "fal-ai";
@@ -20,7 +21,7 @@ type PhEventParamsMap = {
     route_signals?: string[];
   };
   design_generation_failed: {
-    ai_model: AiModel;
+    ai_model: PosthogAiModel;
     error_type:
       | "insufficient_tokens"
       | "api_error"

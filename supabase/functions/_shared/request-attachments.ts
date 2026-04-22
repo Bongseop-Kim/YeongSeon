@@ -66,22 +66,26 @@ function toSanitizedFileName(value: unknown): string | undefined {
   return fileName;
 }
 
+function isAttachmentType(value: unknown): value is AttachmentType {
+  return (
+    typeof value === "string" &&
+    LOG_ATTACHMENT_TYPES.some((attachmentType) => attachmentType === value)
+  );
+}
+
 function toAttachmentType(
   value: unknown,
 ): LogRequestAttachment["type"] | undefined {
-  if (
-    typeof value === "string" &&
-    LOG_ATTACHMENT_TYPES.includes(value as AttachmentType)
-  ) {
-    return value as AttachmentType;
-  }
+  return isAttachmentType(value) ? value : undefined;
+}
 
-  return undefined;
+function isControlCharacterCode(code: number): boolean {
+  return code <= 0x1f || code === 0x7f || (code >= 0x80 && code <= 0x9f);
 }
 
 function hasControlCharacter(value: string): boolean {
   for (const character of value) {
-    if (character.charCodeAt(0) <= 0x1f) {
+    if (isControlCharacterCode(character.charCodeAt(0))) {
       return true;
     }
   }

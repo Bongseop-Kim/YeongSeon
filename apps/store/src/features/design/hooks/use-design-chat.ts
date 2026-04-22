@@ -51,7 +51,7 @@ const EDIT_INTENT_SIGNALS = new Set<GenerationRouteSignal>([
   "exact_placement",
   "modification_intent",
 ]);
-const INPAINT_TARGET_REQUIRED_MESSAGE =
+export const INPAINT_TARGET_REQUIRED_MESSAGE =
   "부분 수정할 이미지가 없습니다. 먼저 결과 이미지를 선택한 뒤 수정 영역을 지정해 주세요.";
 
 const toConversationHistory = (
@@ -488,13 +488,14 @@ export function useDesignChat(
     maskBase64: string,
     editPrompt: string,
   ): InpaintRequestResult => {
+    const trimmedMaskBase64 = maskBase64.trim();
     const trimmedPrompt = editPrompt.trim();
-    if (maskBase64.trim().length === 0 || trimmedPrompt.length === 0) {
+    if (trimmedMaskBase64.length === 0 || trimmedPrompt.length === 0) {
       return {
         started: false,
         errorCode: "INVALID_INPUT",
         errorMessage:
-          maskBase64.trim().length === 0
+          trimmedMaskBase64.length === 0
             ? "수정할 영역을 먼저 칠해 주세요."
             : "수정 지시를 입력해 주세요.",
       };
