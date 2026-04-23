@@ -77,6 +77,7 @@ export interface AiDesignRequest extends AiDesignRouteHint {
   allMessages: SessionMessagePayload[];
   analysisWorkId?: string | null;
   executionMode?: "auto" | "render_from_analysis";
+  autoGenerate?: boolean;
   route?: Exclude<GenerationRoute, "openai">;
   controlType?: "lineart" | "edge" | "depth";
   structureImageBase64?: string;

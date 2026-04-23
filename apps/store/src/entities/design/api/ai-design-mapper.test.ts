@@ -17,6 +17,9 @@ const createDesignContext = (
   colors: [],
   pattern: null,
   fabricMethod: null,
+  sourceImage: null,
+  onePointOffsetX: 0,
+  onePointOffsetY: 0,
   ciImage: null,
   ciPlacement: null,
   referenceImage: null,
@@ -95,6 +98,9 @@ describe("getTags", () => {
             colors: [],
             pattern: "unknown-pattern" as never,
             fabricMethod: "unknown-fabric" as never,
+            sourceImage: null,
+            onePointOffsetX: 0,
+            onePointOffsetY: 0,
             ciImage: null,
             ciPlacement: "unknown-placement" as never,
             referenceImage: null,
@@ -210,6 +216,17 @@ describe("buildInvokePayload", () => {
     expect(payload.designContext?.scale).toBe("large");
     expect(payload.executionMode).toBe("render_from_analysis");
     expect(payload.analysisWorkId).toBe("analysis-1");
+  });
+
+  it("autoGenerate가 주어지면 payload에 그대로 포함한다", () => {
+    const payload = buildInvokePayload(
+      createAiDesignRequest({
+        autoGenerate: false,
+      }),
+      {},
+    );
+
+    expect(payload.autoGenerate).toBe(false);
   });
 
   it("controlnet/inpaint 필드를 invoke payload에 포함한다", () => {

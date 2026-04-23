@@ -106,6 +106,9 @@ const initialMessages = [
       colors: ["navy"],
       pattern: "stripe",
       fabricMethod: "print",
+      sourceImage: null,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
       ciPlacement: null,
       ciImage: null,
       referenceImage: null,
@@ -128,6 +131,9 @@ const defaultDesignContext = {
   colors: ["navy"],
   pattern: "stripe",
   fabricMethod: "print",
+  sourceImage: null,
+  onePointOffsetX: 0,
+  onePointOffsetY: 0,
   ciPlacement: null,
   ciImage: null,
   referenceImage: null,
@@ -819,7 +825,10 @@ describe("useDesignChat", () => {
     };
 
     const { result } = renderHook(() => useDesignChat());
-    result.current.requestInpaint("mask-base64", "이 부분만 자수 느낌으로");
+    result.current.requestInpaint(
+      "  mask-base64  ",
+      "  이 부분만 자수 느낌으로  ",
+    );
 
     expect(setGenerationStatus).toHaveBeenCalledWith("rendering");
     expect(mutate).toHaveBeenCalledWith(

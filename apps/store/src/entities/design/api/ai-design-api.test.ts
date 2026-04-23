@@ -626,7 +626,7 @@ describe("aiDesignApi", () => {
         ciImageBase64: "ci-base64",
       }),
     });
-    expect(invoke.mock.calls[0]?.[1]).toEqual(
+    expect(invoke.mock.calls[1]?.[1]).toEqual(
       expect.objectContaining({
         body: expect.not.objectContaining({
           route: expect.anything(),
@@ -637,6 +637,58 @@ describe("aiDesignApi", () => {
         }),
       }),
     );
+  });
+
+  it("repair_required 상태는 preparedSourceKind가 original이어도 ready route로 내려가지 않는다", async () => {
+    MockFileReader.configure({
+      result: "data:image/png;base64,source-base64",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          placementMode: "all-over",
+          sourceStatus: "repair_required",
+          fabricStatus: "ready",
+          reasonCodes: ["uneven_outer_margin"],
+          preparedSourceKind: "original",
+          preparationBackend: "local",
+          repairApplied: false,
+          repairPromptKind: null,
+          repairSummary: null,
+          userMessage: "첨부 이미지를 패턴 소스로 정리했어요.",
+          preparedSourceBase64: "prepared-source-base64",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "prepared-tile-base64",
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: {
+          ...successResponse,
+          route: "fal_tiling",
+        },
+        error: null,
+      });
+
+    const result = await aiDesignApi({
+      ...baseRequest,
+      userMessage: "첨부한 이미지를 올패턴으로 뿌려줘",
+      designContext: {
+        ...baseRequest.designContext,
+        sourceImage: { type: "image/png" } as File,
+        ciPlacement: "all-over",
+      },
+    });
+
+    expect(result.routeReason).toBe("pattern_source_repaired");
   });
 
   it("편집 라우트는 baseImageUrl과 baseImageWorkId를 payload에 담아 generate-fal-api를 호출한다", async () => {

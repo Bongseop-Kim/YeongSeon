@@ -207,6 +207,7 @@ type InvokePayload = {
   allMessages: AiDesignRequest["allMessages"];
   executionMode: NonNullable<AiDesignRequest["executionMode"]> | "auto";
   analysisWorkId: string | null;
+  autoGenerate?: AiDesignRequest["autoGenerate"];
   route?: AiDesignResponse["route"];
   routeSignals?: AiDesignResponse["routeSignals"];
   routeReason?: AiDesignResponse["routeReason"];
@@ -353,6 +354,9 @@ export function buildInvokePayload(
     allMessages: request.allMessages,
     executionMode: request.executionMode ?? "auto",
     analysisWorkId: request.analysisWorkId ?? null,
+    ...(request.autoGenerate !== undefined
+      ? { autoGenerate: request.autoGenerate }
+      : {}),
   };
 
   if (input.sourceImageBase64 !== undefined) {

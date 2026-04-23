@@ -79,6 +79,8 @@ describe("AttachmentPopup", () => {
     });
     expect(setDesignContext).toHaveBeenCalledWith({
       sourceImage: file,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
       ciImage: null,
       referenceImage: null,
     });
@@ -110,6 +112,8 @@ describe("AttachmentPopup", () => {
     });
     expect(setDesignContext).toHaveBeenCalledWith({
       sourceImage: file,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
       ciImage: null,
       referenceImage: null,
     });
@@ -147,6 +151,8 @@ describe("AttachmentPopup", () => {
     });
     expect(setDesignContext).toHaveBeenCalledWith({
       sourceImage: file,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
       ciImage: null,
       referenceImage: null,
     });

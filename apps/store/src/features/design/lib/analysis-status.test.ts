@@ -9,6 +9,12 @@ describe("analysis-status", () => {
     expect(
       toAnalysisMissingRequirementLabels(["ciImage", "referenceImage"]),
     ).toEqual(["이미지 첨부 필요"]);
+    expect(toAnalysisMissingRequirementLabels(["sourceImage"])).toEqual([
+      "이미지 첨부 필요",
+    ]);
+    expect(
+      toAnalysisMissingRequirementLabels(["sourceImage", "ciImage"]),
+    ).toEqual(["이미지 첨부 필요"]);
   });
 
   it("falls back to a generic label for unknown requirements", () => {

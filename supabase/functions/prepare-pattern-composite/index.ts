@@ -45,6 +45,10 @@ type OpenAIImageResponse = {
   data?: Array<{ b64_json?: string }>;
 };
 
+type ErrorWithRemainingTokens = Error & {
+  remainingTokens?: number | null;
+};
+
 const OPENAI_TIMEOUT_MS = 120_000;
 const MAX_IMAGE_BASE64_LENGTH = 5_000_000;
 const MIN_REPAIR_EDGE_PX = 64;
@@ -52,6 +56,16 @@ const OPENAI_IMAGE_EDIT_MODEL = "gpt-image-1.5";
 const PREP_REQUEST_TYPE = "prep" as const satisfies GenerationRequestType;
 const PREP_QUALITY = "high" as const satisfies ImageQuality;
 const PREP_AI_MODEL = "openai" as const;
+
+const attachRemainingTokens = (
+  error: unknown,
+  nextRemainingTokens: number | null,
+): ErrorWithRemainingTokens => {
+  const normalizedError =
+    error instanceof Error ? error : new Error(String(error));
+  normalizedError.remainingTokens = nextRemainingTokens;
+  return normalizedError as ErrorWithRemainingTokens;
+};
 
 const chargeTokens = async (
   adminClient: SupabaseClient,
@@ -286,6 +300,24 @@ Deno.serve(async (req) => {
     });
   };
 
+  const refundPrepCharge = async () => {
+    const refunded = await refundTokens(adminClient, {
+      userId: user.id,
+      amount: tokensCharged,
+      requestType: PREP_REQUEST_TYPE,
+      workId: `${prepWorkId}_prep_failed_refund`,
+    });
+
+    if (refunded) {
+      tokensRefunded += tokensCharged;
+      if (remainingTokens !== null) {
+        remainingTokens += tokensCharged;
+      }
+    }
+
+    return refunded;
+  };
+
   try {
     const downscaledBytes = await maybeDownscaleImage(
       decodeBase64Image(payload.sourceImageBase64),
@@ -341,6 +373,17 @@ Deno.serve(async (req) => {
           fabricMethod: payload.fabricMethod ?? null,
         },
       );
+    }
+
+    if (repairNeeded && !openaiApiKey) {
+      await emitPrepLog(result, {
+        error_type: "openai_key_missing_for_repair",
+        error_message: "OpenAI API key required for repair",
+      });
+      return jsonResponse(502, {
+        error: "openai_key_missing_for_repair",
+        remainingTokens: 0,
+      });
     }
 
     if (repairNeeded && openaiApiKey) {
@@ -431,19 +474,7 @@ Deno.serve(async (req) => {
           preparedHeight,
           reasonCodes: assessed.reasonCodes,
         });
-        const refunded = await refundTokens(adminClient, {
-          userId: user.id,
-          amount: tokensCharged,
-          requestType: PREP_REQUEST_TYPE,
-          workId: `${prepWorkId}_prep_failed_refund`,
-        });
-
-        if (refunded) {
-          tokensRefunded += tokensCharged;
-          if (remainingTokens !== null) {
-            remainingTokens += tokensCharged;
-          }
-        }
+        await refundPrepCharge();
 
         await emitPrepLog(result, {
           error_type: "pattern_preparation_failed",
@@ -456,50 +487,66 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (payload.placementMode === "all-over") {
-      const composed = await composeAllOverTile({
-        spriteBytes: preparedSourceBytes,
-        backgroundColor,
-        scale,
-      });
+    try {
+      if (payload.placementMode === "all-over") {
+        const composed = await composeAllOverTile({
+          spriteBytes: preparedSourceBytes,
+          backgroundColor,
+          scale,
+        });
 
-      result = {
-        ...result,
-        preparedPatternTileBase64: toPngBase64(composed.tileBytes),
-        preparedPatternTileMimeType: "image/png",
-        tileSizePx: composed.tileSizePx,
-        gapPx: composed.gapPx,
-        compositeCanvasWidth: composed.compositeCanvasWidth,
-        compositeCanvasHeight: composed.compositeCanvasHeight,
-      };
-    } else {
-      const composed = await composeOnePointMotif({
-        spriteBytes: preparedSourceBytes,
-        backgroundColor,
-        scale,
-      });
+        result = {
+          ...result,
+          preparedPatternTileBase64: toPngBase64(composed.tileBytes),
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: composed.tileSizePx,
+          gapPx: composed.gapPx,
+          compositeCanvasWidth: composed.compositeCanvasWidth,
+          compositeCanvasHeight: composed.compositeCanvasHeight,
+        };
+      } else {
+        const composed = await composeOnePointMotif({
+          spriteBytes: preparedSourceBytes,
+          backgroundColor,
+          scale,
+        });
 
-      result = {
-        ...result,
-        preparedPointMotifTileBase64: toPngBase64(composed.motifBytes),
-        preparedPointMotifTileMimeType: "image/png",
-        tileSizePx: composed.tileSizePx,
-        gapPx: composed.gapPx,
-        compositeCanvasWidth: composed.compositeCanvasWidth,
-        compositeCanvasHeight: composed.compositeCanvasHeight,
-      };
+        result = {
+          ...result,
+          preparedPointMotifTileBase64: toPngBase64(composed.motifBytes),
+          preparedPointMotifTileMimeType: "image/png",
+          tileSizePx: composed.tileSizePx,
+          gapPx: composed.gapPx,
+          compositeCanvasWidth: composed.compositeCanvasWidth,
+          compositeCanvasHeight: composed.compositeCanvasHeight,
+        };
+      }
+
+      await emitPrepLog(result, {
+        image_generated: Boolean(result.repairApplied),
+      });
+    } catch (error) {
+      await refundPrepCharge();
+      await emitPrepLog(result, {
+        error_type: "pattern_preparation_failed",
+        error_message: error instanceof Error ? error.message : String(error),
+      });
+      throw attachRemainingTokens(error, remainingTokens);
     }
-
-    await emitPrepLog(result, {
-      image_generated: Boolean(result.repairApplied),
-    });
 
     return jsonResponse(200, result as unknown as Record<string, unknown>);
   } catch (error) {
     console.error("prepare-pattern-composite failed:", error);
+    const remainingTokensFromError =
+      error instanceof Error && "remainingTokens" in error
+        ? error.remainingTokens
+        : undefined;
     return jsonResponse(500, {
       error: "pattern_preparation_failed",
       message: error instanceof Error ? error.message : String(error),
+      ...(typeof remainingTokensFromError === "number"
+        ? { remainingTokens: remainingTokensFromError }
+        : {}),
     });
   }
 });

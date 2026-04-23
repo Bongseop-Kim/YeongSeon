@@ -215,6 +215,10 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
   restoreSessionState: (sessionId, sessionState) =>
     set({
       ...sessionState,
+      designContext: {
+        ...createInitialDesignContext(),
+        ...sessionState.designContext,
+      },
       selectedPreviewImageUrl: sessionState.generatedImageUrl,
       baseImageUrl: getRawImageUrlFromPreviewBackground(
         sessionState.generatedImageUrl,

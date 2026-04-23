@@ -149,6 +149,8 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
     );
     setDesignContext({
       sourceImage: file,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
       ciImage: null,
       referenceImage: null,
     });

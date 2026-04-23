@@ -62,14 +62,18 @@ last-verified: 2026-03-29
 
 ## 토큰 소비 단가
 
-| 설정 키                               | 모델   | 요청 타입      | 품질     |
-| ------------------------------------- | ------ | -------------- | -------- |
-| `design_token_cost_openai_text`       | OpenAI | text_only      | -        |
-| `design_token_cost_openai_image`      | OpenAI | text_and_image | standard |
-| `design_token_cost_openai_image_high` | OpenAI | text_and_image | high     |
-| `design_token_cost_gemini_text`       | Gemini | text_only      | -        |
-| `design_token_cost_gemini_image`      | Gemini | text_and_image | standard |
-| `design_token_cost_gemini_image_high` | Gemini | text_and_image | high     |
+| 설정 키                                    | 모델   | 요청 타입       | 품질     |
+| ------------------------------------------ | ------ | --------------- | -------- |
+| `design_token_cost_openai_analysis`        | OpenAI | analysis        | standard |
+| `design_token_cost_openai_prep`            | OpenAI | prep            | high     |
+| `design_token_cost_openai_render_standard` | OpenAI | render_standard | standard |
+| `design_token_cost_openai_render_high`     | OpenAI | render_high     | high     |
+| `design_token_cost_gemini_analysis`        | Gemini | analysis        | standard |
+| `design_token_cost_gemini_render_standard` | Gemini | render_standard | standard |
+| `design_token_cost_gemini_render_high`     | Gemini | render_high     | high     |
+| `design_token_cost_fal_analysis`           | FAL    | analysis        | standard |
+| `design_token_cost_fal_render_standard`    | FAL    | render_standard | standard |
+| `design_token_cost_fal_render_high`        | FAL    | render_high     | high     |
 
 ## 주요 RPC
 

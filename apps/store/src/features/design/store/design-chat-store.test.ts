@@ -131,6 +131,32 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
 
     expect(useDesignChatStore.getState().inpaintTarget).toBeNull();
   });
+
+  it("restoreSessionState는 누락된 designContext 필드를 기본값으로 보완한다", () => {
+    useDesignChatStore.getState().restoreSessionState("session-1", {
+      messages: [],
+      generatedImageUrl: null,
+      baseImageWorkId: null,
+      resultTags: [],
+      generationStatus: "idle",
+      designContext: {
+        colors: ["#112233"],
+        pattern: "stripe",
+      },
+    });
+
+    expect(useDesignChatStore.getState().designContext).toEqual({
+      colors: ["#112233"],
+      pattern: "stripe",
+      fabricMethod: "yarn-dyed",
+      sourceImage: null,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
+      ciImage: null,
+      ciPlacement: null,
+      referenceImage: null,
+    });
+  });
 });
 
 describe("design-chat-store", () => {

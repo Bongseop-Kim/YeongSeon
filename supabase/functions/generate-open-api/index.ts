@@ -1074,6 +1074,7 @@ Deno.serve(async (req) => {
 
     const shouldRenderNow =
       executionMode === "auto" &&
+      payload.autoGenerate !== false &&
       analysis.generateImage &&
       analysis.eligibleForRender;
 

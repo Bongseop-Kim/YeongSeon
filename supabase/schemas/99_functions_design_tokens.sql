@@ -18,13 +18,19 @@ AS $$
         WHERE token_class = 'paid'
           AND (expires_at IS NULL OR expires_at > now())
       ), 0) +
-      COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)
+      COALESCE(SUM(amount) FILTER (
+        WHERE token_class IN ('bonus', 'free')
+          AND (expires_at IS NULL OR expires_at > now())
+      ), 0)
     )::integer,
     'paid',  COALESCE(SUM(amount) FILTER (
                WHERE token_class = 'paid'
                  AND (expires_at IS NULL OR expires_at > now())
              ), 0)::integer,
-    'bonus', COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)::integer
+    'bonus', COALESCE(SUM(amount) FILTER (
+               WHERE token_class IN ('bonus', 'free')
+                 AND (expires_at IS NULL OR expires_at > now())
+             ), 0)::integer
   )
   FROM public.design_tokens
   WHERE user_id = auth.uid();
@@ -84,6 +90,9 @@ BEGIN
   IF p_quality NOT IN ('standard', 'high') THEN
     RAISE EXCEPTION 'invalid quality: %', p_quality;
   END IF;
+  IF p_request_type = 'prep' AND p_ai_model != 'openai' THEN
+    RAISE EXCEPTION 'prep request_type is only supported for openai: %', p_ai_model;
+  END IF;
 
   -- 동시 요청 advisory lock (사용자별)
   PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
@@ -118,7 +127,9 @@ BEGIN
 
   SELECT COALESCE(SUM(amount), 0)::integer INTO v_bonus_bal
   FROM public.design_tokens
-  WHERE user_id = p_user_id AND token_class IN ('bonus', 'free');
+  WHERE user_id = p_user_id
+    AND token_class IN ('bonus', 'free')
+    AND (expires_at IS NULL OR expires_at > now());
   v_total_bal := v_paid_bal + v_bonus_bal;
 
   -- 구 포맷(_use_paid) + 신 포맷(_use_paid_0, _use_paid_legacy) 모두 인식

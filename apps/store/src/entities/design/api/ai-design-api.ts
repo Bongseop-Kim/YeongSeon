@@ -425,14 +425,19 @@ export async function aiDesignApi(
     request,
   );
   const patternPreparationMessage = patternPreparation?.userMessage;
+  const sourceRepairing =
+    patternPreparation?.preparedSourceKind === "repaired" ||
+    patternPreparation?.sourceStatus === "repair_required";
+  const fabricRepairing =
+    patternPreparation?.fabricStatus === "repair_required";
   const routeReason = patternPreparation
     ? request.designContext.ciPlacement === "one-point"
-      ? patternPreparation.preparedSourceKind === "repaired"
+      ? sourceRepairing || fabricRepairing
         ? "one_point_source_repaired"
         : "one_point_source_ready"
-      : patternPreparation.fabricStatus === "repair_required"
+      : fabricRepairing
         ? "fabric_constraint_repaired"
-        : patternPreparation.preparedSourceKind === "repaired"
+        : sourceRepairing
           ? "pattern_source_repaired"
           : "pattern_source_ready"
     : (result.routeReason ?? routeResolution.reason);

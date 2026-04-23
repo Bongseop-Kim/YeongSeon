@@ -133,6 +133,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       if (attachment.type === "image") {
         setDesignContext({
           sourceImage: null,
+          onePointOffsetX: 0,
+          onePointOffsetY: 0,
           ciImage: null,
           referenceImage: null,
         });

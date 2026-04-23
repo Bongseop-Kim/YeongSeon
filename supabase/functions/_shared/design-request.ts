@@ -38,6 +38,7 @@ export type GenerateDesignRequest = {
   };
   analysisWorkId?: string | null;
   executionMode?: "auto" | "render_from_analysis";
+  autoGenerate?: boolean;
   conversationHistory?: ConversationTurn[];
   previousImageBase64?: string;
   previousImageMimeType?: string;

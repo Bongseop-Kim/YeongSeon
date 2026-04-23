@@ -1,4 +1,5 @@
 import {
+  AlphaOption,
   ImageMagick,
   initializeImageMagick,
   MagickColor,
@@ -98,13 +99,18 @@ export const bytesToPngBase64 = (bytes: Uint8Array): string =>
 export const ensureImageMagick = async (): Promise<void> => {
   if (!magickInitialized) {
     magickInitialized = (async () => {
-      const wasmBytes = await Deno.readFile(
-        new URL(
-          "magick.wasm",
-          import.meta.resolve("npm:@imagemagick/magick-wasm@0.0.30"),
-        ),
-      );
-      await initializeImageMagick(wasmBytes);
+      try {
+        const wasmBytes = await Deno.readFile(
+          new URL(
+            "magick.wasm",
+            import.meta.resolve("npm:@imagemagick/magick-wasm@0.0.30"),
+          ),
+        );
+        await initializeImageMagick(wasmBytes);
+      } catch (error) {
+        magickInitialized = null;
+        throw error;
+      }
     })();
   }
 
@@ -344,8 +350,6 @@ export function assessPatternPreparation(input: {
         "uneven_outer_margin",
         "uneven_object_spacing",
         "occupied_too_dense",
-        "background_not_tile_friendly",
-        "low_confidence",
         "not_suitable_for_one_point",
       ].includes(code),
     )
@@ -566,7 +570,7 @@ export const buildOpenAiEditCanvas = async (
     }
 
     image.backgroundColor = new MagickColor("#ffffff");
-    image.alpha(0);
+    image.alpha(AlphaOption.Remove);
 
     const canvas = MagickImage.create(
       new MagickColor("#ffffff"),

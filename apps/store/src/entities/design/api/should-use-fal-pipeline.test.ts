@@ -155,4 +155,22 @@ describe("shouldUseFalPipeline", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
   });
+
+  it("getSession이 지연되면 probe timeout 안에 fail-open 한다", async () => {
+    vi.useFakeTimers();
+    getSessionMock.mockImplementation(
+      () =>
+        new Promise(() => {
+          // never resolves
+        }),
+    );
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const call = shouldUseFalPipeline(base);
+    await vi.advanceTimersByTimeAsync(3_100);
+
+    await expect(call).resolves.toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

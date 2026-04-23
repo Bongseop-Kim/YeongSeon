@@ -579,7 +579,7 @@ export function useDesignChat(
         route: "fal_inpaint",
         baseImageUrl: targetImageUrl,
         baseImageWorkId: targetImageWorkId,
-        maskBase64,
+        maskBase64: trimmedMaskBase64,
         maskMimeType: "image/png",
         editPrompt: trimmedPrompt,
       }),

@@ -105,6 +105,14 @@ describe("toAdminGenerationLogItem", () => {
     expect(result.requestType).toBe("prep");
   });
 
+  it("잘못된 문자열 prep_tokens_charged는 0이 아니라 undefined로 버린다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      prep_tokens_charged: "not-a-number",
+    });
+    expect(result.prepTokensCharged).toBeUndefined();
+  });
+
   it("request_type이 알 수 없는 값이면 null을 반환한다", () => {
     const result = toAdminGenerationLogItem({
       ...baseRow,

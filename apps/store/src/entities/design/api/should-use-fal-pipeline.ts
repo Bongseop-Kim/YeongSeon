@@ -35,20 +35,36 @@ export const __resetProbeCacheForTesting = () => {
 };
 
 async function fetchFalPipelineEnabled(): Promise<boolean> {
-  const now = Date.now();
-  if (probeCache && now < probeCache.expiresAt) {
+  if (probeCache && Date.now() < probeCache.expiresAt) {
     return probeCache.value;
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, PROBE_TIMEOUT_MS);
+  const fallbackToEnabled = () => {
+    probeCache = { value: true, expiresAt: Date.now() + PROBE_CACHE_TTL_MS };
+    return true;
+  };
+
+  const sessionTimeout = Symbol("session-timeout");
+  let sessionTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  let fetchTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   try {
+    const sessionResult = await Promise.race([
+      supabase.auth.getSession(),
+      new Promise<typeof sessionTimeout>((resolve) => {
+        sessionTimeoutId = setTimeout(
+          () => resolve(sessionTimeout),
+          PROBE_TIMEOUT_MS,
+        );
+      }),
+    ]);
+    if (sessionResult === sessionTimeout) {
+      return fallbackToEnabled();
+    }
+
     const {
       data: { session },
-    } = await supabase.auth.getSession();
+    } = sessionResult;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const headers: HeadersInit = {};
 
@@ -59,6 +75,11 @@ async function fetchFalPipelineEnabled(): Promise<boolean> {
       headers.Authorization = `Bearer ${session.access_token}`;
     }
 
+    const controller = new AbortController();
+    fetchTimeoutId = setTimeout(() => {
+      controller.abort();
+    }, PROBE_TIMEOUT_MS);
+
     const response = await fetch(SHOULD_USE_FAL_PIPELINE_URL, {
       headers,
       signal: controller.signal,
@@ -66,13 +87,17 @@ async function fetchFalPipelineEnabled(): Promise<boolean> {
     const value = response.ok
       ? ((await response.json()) as { enabled?: unknown }).enabled !== false
       : true;
-    probeCache = { value, expiresAt: now + PROBE_CACHE_TTL_MS };
+    probeCache = { value, expiresAt: Date.now() + PROBE_CACHE_TTL_MS };
     return value;
   } catch {
-    probeCache = { value: true, expiresAt: now + PROBE_CACHE_TTL_MS };
-    return true;
+    return fallbackToEnabled();
   } finally {
-    clearTimeout(timeoutId);
+    if (sessionTimeoutId) {
+      clearTimeout(sessionTimeoutId);
+    }
+    if (fetchTimeoutId) {
+      clearTimeout(fetchTimeoutId);
+    }
   }
 }
 

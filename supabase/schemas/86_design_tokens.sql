@@ -9,7 +9,10 @@ CREATE TABLE public.design_tokens (
   type            text        NOT NULL CHECK (type = ANY(ARRAY['grant','use','refund','admin','purchase'])),
   token_class     text        NOT NULL CHECK (token_class IN ('paid', 'bonus', 'free')),
   ai_model        text,       -- 'openai' | 'gemini' | NULL
-  request_type    text,       -- 'analysis' | 'prep' | 'render_standard' | 'render_high' | NULL
+  request_type    text        CHECK (
+    request_type IS NULL OR
+    request_type = ANY(ARRAY['analysis', 'prep', 'render_standard', 'render_high'])
+  ),
   description     text,
   created_at      timestamptz NOT NULL DEFAULT now(),
   work_id         text,

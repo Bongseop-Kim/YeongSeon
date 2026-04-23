@@ -236,23 +236,20 @@ const computeMetrics = (
       ? Math.max(...margins.map((value) => Math.abs(value - averageMargin))) /
         averageMargin
       : 0;
+  const componentCount = getConnectedComponents(mask, width, height);
 
   return {
     opaqueCoverageRatio: opaqueCount / Math.max(1, width * height),
     dominantColorCount: quantizedColors.size,
     internalDetailRatio: detailTransitions / Math.max(1, opaqueCount),
-    componentCount: getConnectedComponents(mask, width, height),
+    componentCount,
     edgeTouchRatio: edgeTouches / Math.max(1, opaqueCount),
     outerMarginVariance,
-    spacingVariance: Math.min(
-      1,
-      Math.max(0, (getConnectedComponents(mask, width, height) - 1) / 6),
-    ),
+    spacingVariance: Math.min(1, Math.max(0, (componentCount - 1) / 6)),
     singleMotifConfidence:
       bboxWidth === 0 || bboxHeight === 0
         ? 0
-        : 1 -
-          Math.min(1, (getConnectedComponents(mask, width, height) - 1) / 3),
+        : 1 - Math.min(1, (componentCount - 1) / 3),
   };
 };
 
@@ -305,8 +302,6 @@ export function assessPatternPreparation(
         "uneven_outer_margin",
         "uneven_object_spacing",
         "occupied_too_dense",
-        "background_not_tile_friendly",
-        "low_confidence",
         "not_suitable_for_one_point",
       ].includes(code),
     )

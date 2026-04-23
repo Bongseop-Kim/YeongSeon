@@ -19,6 +19,15 @@ function toNumber(v: unknown, fallback = 0): number {
   return fallback;
 }
 
+function toNumberOrNull(v: unknown): number | null {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "string") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
 function toString(v: unknown): string | null {
   return typeof v === "string" ? v : null;
 }
@@ -207,12 +216,7 @@ export function toAdminGenerationLogItem(
         (value): value is string => typeof value === "string",
       )
     : null;
-  const prepTokensCharged =
-    typeof row.prep_tokens_charged === "number"
-      ? row.prep_tokens_charged
-      : typeof row.prep_tokens_charged === "string"
-        ? toNumber(row.prep_tokens_charged)
-        : null;
+  const prepTokensCharged = toNumberOrNull(row.prep_tokens_charged);
 
   return {
     id: toString(row.id) ?? "",
