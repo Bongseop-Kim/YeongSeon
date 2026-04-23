@@ -1,5 +1,6 @@
 import {
   assertEquals,
+  assertExists,
   assertLess,
   assertObjectMatch,
   assertRejects,
@@ -8,6 +9,8 @@ import {
   assessPatternPreparation,
   buildOpenAiEditCanvas,
   computeMetrics,
+  readImageRgba,
+  renderPreparedSource,
   resolveOnePointCompositeMetrics,
   resolveTileCompositeMetrics,
 } from "@/functions/_shared/pattern-composite.ts";
@@ -122,3 +125,45 @@ Deno.test("buildOpenAiEditCanvas rejects empty input", async () => {
     "prepared_source_empty",
   );
 });
+
+Deno.test(
+  "buildOpenAiEditCanvas accepts bytes emitted by renderPreparedSource",
+  async () => {
+    const width = 12;
+    const height = 12;
+    const pixels = new Uint8ClampedArray(width * height * 4);
+
+    for (let index = 0; index < width * height; index += 1) {
+      const pixelIndex = index * 4;
+      pixels[pixelIndex] = 255;
+      pixels[pixelIndex + 1] = 255;
+      pixels[pixelIndex + 2] = 255;
+      pixels[pixelIndex + 3] = 255;
+    }
+
+    for (let y = 3; y < 9; y += 1) {
+      for (let x = 2; x < 10; x += 1) {
+        const pixelIndex = (y * width + x) * 4;
+        pixels[pixelIndex] = 0;
+        pixels[pixelIndex + 1] = x % 2 === 0 ? 0 : 120;
+        pixels[pixelIndex + 2] = y % 2 === 0 ? 0 : 120;
+      }
+    }
+
+    const prepared = await renderPreparedSource(
+      { pixels, width, height },
+      true,
+    );
+    assertExists(prepared);
+
+    for (let iteration = 0; iteration < 5; iteration += 1) {
+      await renderPreparedSource({ pixels, width, height }, false);
+    }
+
+    const canvas = await buildOpenAiEditCanvas(prepared.bytes);
+    const decoded = await readImageRgba(canvas.bytes);
+
+    assertEquals(decoded.width, 1024);
+    assertEquals(decoded.height, 1024);
+  },
+);
