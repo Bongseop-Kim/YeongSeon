@@ -130,11 +130,25 @@ export const getTags = (request: AiDesignRequest): string[] => {
 };
 
 interface InvokePayloadInput {
+  sourceImageBase64?: string;
+  sourceImageMimeType?: string;
   ciImageBase64?: string;
   referenceImageBase64?: string;
   backgroundPattern?: BackgroundPattern;
   tiledBase64?: string;
   tiledMimeType?: string;
+  patternPreparation?: {
+    placementMode: "all-over" | "one-point";
+    sourceStatus: "ready" | "repair_required";
+    fabricStatus: "ready" | "repair_required";
+    reasonCodes: string[];
+    preparedSourceKind: "original" | "repaired";
+    preparationBackend?: "local" | "openai_repair";
+    repairApplied?: boolean;
+    repairPromptKind?: "all_over_tile" | "one_point_motif" | null;
+    repairSummary?: string | null;
+    prepTokensCharged?: number | null;
+  };
   route?: AiDesignResponse["route"];
   routeSignals?: AiDesignResponse["routeSignals"];
   routeReason?: AiDesignResponse["routeReason"];
@@ -168,17 +182,32 @@ type InvokePayload = {
     backgroundPattern?: BackgroundPattern;
   };
   conversationHistory: NonNullable<AiDesignRequest["conversationHistory"]>;
-  ciImageBase64: string | undefined;
-  ciImageMimeType: string | undefined;
-  referenceImageBase64: string | undefined;
-  referenceImageMimeType: string | undefined;
-  tiledBase64: string | undefined;
-  tiledMimeType: string | undefined;
+  sourceImageBase64?: string;
+  sourceImageMimeType?: string;
+  ciImageBase64?: string;
+  ciImageMimeType?: string;
+  referenceImageBase64?: string;
+  referenceImageMimeType?: string;
+  tiledBase64?: string;
+  tiledMimeType?: string;
+  patternPreparation?: {
+    placementMode: "all-over" | "one-point";
+    sourceStatus: "ready" | "repair_required";
+    fabricStatus: "ready" | "repair_required";
+    reasonCodes: string[];
+    preparedSourceKind: "original" | "repaired";
+    preparationBackend?: "local" | "openai_repair";
+    repairApplied?: boolean;
+    repairPromptKind?: "all_over_tile" | "one_point_motif" | null;
+    repairSummary?: string | null;
+    prepTokensCharged?: number | null;
+  };
   sessionId: string;
   firstMessage: string;
   allMessages: AiDesignRequest["allMessages"];
   executionMode: NonNullable<AiDesignRequest["executionMode"]> | "auto";
   analysisWorkId: string | null;
+  autoGenerate?: AiDesignRequest["autoGenerate"];
   route?: AiDesignResponse["route"];
   routeSignals?: AiDesignResponse["routeSignals"];
   routeReason?: AiDesignResponse["routeReason"];
@@ -320,19 +349,57 @@ export function buildInvokePayload(
         : {}),
     },
     conversationHistory: request.conversationHistory ?? [],
-    ciImageBase64: input.ciImageBase64,
-    ciImageMimeType: request.designContext.ciImage?.type || undefined,
-    referenceImageBase64: input.referenceImageBase64,
-    referenceImageMimeType:
-      request.designContext.referenceImage?.type || undefined,
-    tiledBase64: input.tiledBase64,
-    tiledMimeType: input.tiledMimeType,
     sessionId: request.sessionId,
     firstMessage: request.firstMessage,
     allMessages: request.allMessages,
     executionMode: request.executionMode ?? "auto",
     analysisWorkId: request.analysisWorkId ?? null,
+    ...(request.autoGenerate !== undefined
+      ? { autoGenerate: request.autoGenerate }
+      : {}),
   };
+
+  if (input.sourceImageBase64 !== undefined) {
+    payload.sourceImageBase64 = input.sourceImageBase64;
+  }
+
+  const sourceImageMimeType =
+    input.sourceImageMimeType ??
+    request.designContext.sourceImage?.type ??
+    request.designContext.ciImage?.type ??
+    request.designContext.referenceImage?.type ??
+    undefined;
+
+  if (sourceImageMimeType !== undefined) {
+    payload.sourceImageMimeType = sourceImageMimeType;
+  }
+
+  if (input.ciImageBase64 !== undefined) {
+    payload.ciImageBase64 = input.ciImageBase64;
+    payload.ciImageMimeType =
+      input.sourceImageMimeType ??
+      request.designContext.sourceImage?.type ??
+      request.designContext.ciImage?.type ??
+      undefined;
+  }
+
+  if (input.referenceImageBase64 !== undefined) {
+    payload.referenceImageBase64 = input.referenceImageBase64;
+    payload.referenceImageMimeType =
+      request.designContext.referenceImage?.type || undefined;
+  }
+
+  if (input.tiledBase64 !== undefined) {
+    payload.tiledBase64 = input.tiledBase64;
+  }
+
+  if (input.tiledMimeType !== undefined) {
+    payload.tiledMimeType = input.tiledMimeType;
+  }
+
+  if (input.patternPreparation !== undefined) {
+    payload.patternPreparation = input.patternPreparation;
+  }
 
   if (input.route !== undefined) {
     payload.route = input.route;

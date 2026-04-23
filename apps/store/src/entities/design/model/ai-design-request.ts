@@ -1,7 +1,4 @@
-import type {
-  AiModel,
-  Attachment,
-} from "@/entities/design/model/ai-design-types";
+import type { Attachment } from "@/entities/design/model/ai-design-types";
 import type { DesignContext } from "@/entities/design/model/design-context";
 import type { Scale } from "@/entities/design/model/design-scale";
 import type { Message } from "@/entities/design/model/chat";
@@ -40,6 +37,11 @@ export const GENERATION_ROUTE_REASON_VALUES = [
   "similar_mood_or_new_generation",
   "default_openai_generation",
   "llm_classifier",
+  "pattern_source_ready",
+  "pattern_source_repaired",
+  "one_point_source_ready",
+  "one_point_source_repaired",
+  "fabric_constraint_repaired",
 ] as const;
 
 export type GenerationRouteReason =
@@ -69,13 +71,13 @@ export interface AiDesignRequest extends AiDesignRouteHint {
   userMessage: string;
   attachments: Attachment[];
   designContext: DesignContextPayload;
-  aiModel: AiModel;
   conversationHistory?: Pick<Message, "role" | "content">[];
   sessionId: string;
   firstMessage: string;
   allMessages: SessionMessagePayload[];
   analysisWorkId?: string | null;
-  executionMode?: "auto" | "analysis_only" | "render_from_analysis";
+  executionMode?: "auto" | "render_from_analysis";
+  autoGenerate?: boolean;
   route?: Exclude<GenerationRoute, "openai">;
   controlType?: "lineart" | "edge" | "depth";
   structureImageBase64?: string;

@@ -6,6 +6,7 @@ interface AnalysisReuseKeyInput {
   fabricMethod: string | null;
   ciPlacement: string | null;
   baseImageWorkId: string | null;
+  sourceImageHash?: string | null | undefined;
   ciImageHash: string | null | undefined;
   referenceImageHash: string | null | undefined;
   baseImageUrl: string | null;
@@ -35,6 +36,7 @@ function serializeAnalysisReuseKeyInput(input: AnalysisReuseKeyInput): string {
     input.fabricMethod ?? "",
     input.ciPlacement ?? "",
     input.baseImageWorkId ?? "",
+    input.sourceImageHash ?? "",
     input.ciImageHash ?? "",
     input.referenceImageHash ?? "",
     normalizeBaseImageUrl(input.baseImageUrl),
@@ -81,6 +83,7 @@ export function createAnalysisReuseKeyForContext(
     pattern: designContext.pattern,
     fabricMethod: designContext.fabricMethod,
     ciPlacement: designContext.ciPlacement,
+    sourceImageHash: hashFileMetadata(designContext.sourceImage ?? null),
     ciImageHash: hashFileMetadata(designContext.ciImage),
     referenceImageHash: hashFileMetadata(designContext.referenceImage),
     baseImageUrl,

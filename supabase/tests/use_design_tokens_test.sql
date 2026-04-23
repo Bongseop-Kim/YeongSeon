@@ -8,7 +8,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(23);
+SELECT plan(25);
 
 -- ── 픽스처 설정 ─────────────────────────────────────────────
 
@@ -171,6 +171,18 @@ SELECT throws_ok(
   '유효하지 않은 request_type 파라미터로 호출 시 예외 발생'
 );
 
+SELECT throws_ok(
+  $$
+    SELECT public.use_design_tokens(
+      'dd000001-0000-0000-0000-000000000001'::uuid,
+      'gemini',
+      'prep'
+    )
+  $$,
+  'P0001', NULL,
+  'prep request_type은 openai 이외 모델에서 예외 발생'
+);
+
 -- ── 테스트 10b: 유효하지 않은 quality → 예외 ──────────────────
 SELECT throws_ok(
   $$
@@ -303,6 +315,7 @@ DO $expired_only_setup$
 DECLARE
   v_user_d  uuid := 'dd000001-0000-0000-0000-000000000004';
   v_order_d uuid := 'eeeeeeee-0000-0000-0000-000000000004';
+  v_user_f  uuid := 'dd000001-0000-0000-0000-000000000006';
 BEGIN
   PERFORM test_helpers.create_test_user(v_user_d);
   INSERT INTO public.orders (
@@ -320,6 +333,15 @@ BEGIN
     v_order_d, now() - interval '1 day',
     '만료 전용 테스트', 'order_' || v_order_d::text
   );
+
+  PERFORM test_helpers.create_test_user(v_user_f);
+  INSERT INTO public.design_tokens (
+    user_id, amount, type, token_class, expires_at, description, work_id
+  ) VALUES (
+    v_user_f, 100, 'grant', 'bonus',
+    now() - interval '1 day',
+    '만료된 보너스 토큰', 'expired-bonus-only-token'
+  );
 END $expired_only_setup$;
 
 SELECT is(
@@ -329,6 +351,15 @@ SELECT is(
   ))->>'error'),
   'insufficient_tokens',
   '만료 토큰만 있는 사용자: use_design_tokens → insufficient_tokens'
+);
+
+SELECT is(
+  (SELECT (public.use_design_tokens(
+    'dd000001-0000-0000-0000-000000000006'::uuid,
+    'openai', 'analysis'
+  ))->>'error'),
+  'insufficient_tokens',
+  '만료된 bonus 토큰만 있는 사용자도 use_design_tokens에서 제외된다'
 );
 
 -- ── 테스트 14: 유효 배치에서 FIFO 소비 → source_order_id 기록 확인 ─────────

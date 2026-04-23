@@ -1,5 +1,5 @@
 import type { AdminSampleOrderItemRowDTO } from "@yeongseon/shared";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   parseCustomReformData,
   parseRepairReformData,
@@ -38,6 +38,10 @@ function createSampleRowDTO(): AdminSampleOrderItemRowDTO {
     productImage: null,
   };
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("parseCustomReformData", () => {
   it("유효한 custom reformData를 파싱한다", () => {
@@ -346,6 +350,8 @@ describe("toAdminOrderItem", () => {
   });
 
   it("reform 아이템을 repair order에서만 reformData와 함께 매핑한다", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
     expect(
       toAdminOrderItem(createAdminReformOrderItemRowDTO(), "repair"),
     ).toEqual(
@@ -357,6 +363,7 @@ describe("toAdminOrderItem", () => {
         }),
       }),
     );
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 
   it("token 아이템을 매핑한다", () => {

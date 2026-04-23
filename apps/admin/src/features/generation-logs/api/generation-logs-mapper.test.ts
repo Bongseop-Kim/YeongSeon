@@ -97,6 +97,22 @@ describe("toAdminGenerationLogItem", () => {
     expect(result.requestType).toBe("render_high");
   });
 
+  it("request_type이 prep이면 그대로 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      request_type: "prep",
+    });
+    expect(result.requestType).toBe("prep");
+  });
+
+  it("잘못된 문자열 prep_tokens_charged는 0이 아니라 undefined로 버린다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      prep_tokens_charged: "not-a-number",
+    });
+    expect(result.prepTokensCharged).toBeUndefined();
+  });
+
   it("request_type이 알 수 없는 값이면 null을 반환한다", () => {
     const result = toAdminGenerationLogItem({
       ...baseRow,
@@ -256,6 +272,72 @@ describe("toAdminGenerationLogItem", () => {
         fileName: "brand-mark.png",
       },
     ]);
+  });
+
+  it("유효한 워크플로우/패턴 준비 메타데이터를 함께 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      workflow_id: "workflow-1",
+      phase: "prep",
+      parent_work_id: "parent-1",
+      normalized_design: { motif: "stripe" },
+      eligible_for_render: false,
+      missing_requirements: ["fabric", 3],
+      eligibility_reason: "fabric_required",
+      text_prompt: "텍스트 프롬프트",
+      image_prompt: "이미지 프롬프트",
+      image_edit_prompt: "이미지 편집 프롬프트",
+      generated_image_url: "https://example.com/generated.png",
+      pattern_preparation_backend: "openai_repair",
+      pattern_repair_prompt_kind: "one_point_motif",
+      pattern_repair_applied: false,
+      pattern_repair_reason_codes: ["non_seamless_edges", 1, null],
+      prep_tokens_charged: "42",
+      error_message: "retry exhausted",
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        workflowId: "workflow-1",
+        phase: "prep",
+        parentWorkId: "parent-1",
+        normalizedDesign: { motif: "stripe" },
+        eligibleForRender: false,
+        missingRequirements: ["fabric", 3],
+        eligibilityReason: "fabric_required",
+        textPrompt: "텍스트 프롬프트",
+        imagePrompt: "이미지 프롬프트",
+        imageEditPrompt: "이미지 편집 프롬프트",
+        generatedImageUrl: "https://example.com/generated.png",
+        patternPreparationBackend: "openai_repair",
+        patternRepairPromptKind: "one_point_motif",
+        patternRepairApplied: false,
+        patternRepairReasonCodes: ["non_seamless_edges"],
+        prepTokensCharged: 42,
+        errorMessage: "retry exhausted",
+      }),
+    );
+  });
+
+  it("문자열이 아닌 기본 식별자는 빈 문자열로 폴백한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      id: 123,
+      work_id: false,
+      user_id: {},
+      user_message: ["invalid"],
+      created_at: null,
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: "",
+        workId: "",
+        userId: "",
+        userMessage: "",
+        createdAt: "",
+      }),
+    );
   });
 });
 

@@ -1,9 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { StatusLogTable } from "@/components/StatusLogTable";
 
 describe("StatusLogTable", () => {
   it("롤백이 아닌 이력에도 정상 태그를 표시한다", () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     render(
       <StatusLogTable
         logs={[
@@ -21,5 +23,10 @@ describe("StatusLogTable", () => {
     );
 
     expect(screen.getByText("정상")).toBeInTheDocument();
+    expect(errorSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining(
+        "Not implemented: Window's getComputedStyle() method: with pseudo-elements",
+      ),
+    );
   });
 });

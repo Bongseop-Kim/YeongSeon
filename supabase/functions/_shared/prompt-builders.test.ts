@@ -4,9 +4,11 @@ import {
   type FabricMethod,
 } from "@/functions/_shared/render-capability.ts";
 import {
+  buildAllOverRepairPrompt,
   buildCiPlacementPrompt,
   buildFabricPrompt,
   buildFalPatternPrompt,
+  buildOnePointRepairPrompt,
   buildPatternPrompt,
   buildReferencePrompt,
 } from "@/functions/_shared/prompt-builders.ts";
@@ -196,3 +198,33 @@ Deno.test("buildReferencePrompt preserves fabric labels", () => {
     "strictly fabric",
   );
 });
+
+Deno.test(
+  "buildAllOverRepairPrompt adds repeat-tile and yarn-dyed constraints",
+  () => {
+    const prompt = buildAllOverRepairPrompt({
+      fabricMethod: "yarn-dyed",
+      reasonCodes: ["uneven_outer_margin", "too_many_colors_for_yarn_dyed"],
+    });
+
+    assertStringIncludes(prompt, "single repeatable tile");
+    assertStringIncludes(prompt, "edge-to-edge");
+    assertStringIncludes(prompt, "single-color silhouette");
+    assertStringIncludes(prompt, "reduce the number of colors");
+  },
+);
+
+Deno.test(
+  "buildOnePointRepairPrompt adds small-motif and print constraints",
+  () => {
+    const prompt = buildOnePointRepairPrompt({
+      fabricMethod: "print",
+      reasonCodes: ["not_suitable_for_one_point"],
+    });
+
+    assertStringIncludes(prompt, "single isolated motif");
+    assertStringIncludes(prompt, "small scale");
+    assertStringIncludes(prompt, "background separation");
+    assertStringIncludes(prompt, "fine inner details");
+  },
+);

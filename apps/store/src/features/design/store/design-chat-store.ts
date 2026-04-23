@@ -5,7 +5,6 @@ import type {
   GenerationRouteSignal,
 } from "@/entities/design";
 import type {
-  AiModel,
   Attachment,
   GenerationStatus,
   Message,
@@ -41,9 +40,7 @@ interface DesignChatState {
   selectedPreviewImageUrl: string | null;
   resultTags: string[];
   pendingAttachments: Attachment[];
-  aiModel: AiModel;
   currentSessionId: string | null;
-  autoGenerateImage: boolean;
   baseImageUrl: string | null;
   baseImageWorkId: string | null;
   lastRoute: GenerationRoute | null;
@@ -64,7 +61,6 @@ interface DesignChatState {
   setGenerationStatus: (status: GenerationStatus) => void;
   setGeneratedImage: (imageUrl: string | null, tags: string[]) => void;
   setSelectedPreviewImage: (url: string) => void;
-  setAutoGenerateImage: (value: boolean) => void;
   setGenerationMetadata: (input: {
     baseImageUrl: string | null;
     baseImageWorkId: string | null;
@@ -88,7 +84,6 @@ interface DesignChatState {
     sessionState: RestoredDesignSessionState,
   ) => void;
   resetConversation: () => void;
-  setAiModel: (model: AiModel) => void;
   setCurrentSessionId: (id: string) => void;
 }
 
@@ -96,6 +91,9 @@ const createInitialDesignContext = (): DesignContext => ({
   colors: [],
   pattern: null,
   fabricMethod: "yarn-dyed",
+  sourceImage: null,
+  onePointOffsetX: 0,
+  onePointOffsetY: 0,
   ciImage: null,
   ciPlacement: null,
   referenceImage: null,
@@ -137,8 +135,6 @@ const createConversationResetState = () => ({
 
 export const useDesignChatStore = create<DesignChatState>((set) => ({
   ...createConversationResetState(),
-  aiModel: "openai",
-  autoGenerateImage: true,
   addMessage: (message) =>
     set((state) => ({
       messages: [...state.messages, message],
@@ -183,7 +179,6 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
           },
     ),
   setSelectedPreviewImage: (url) => set({ selectedPreviewImageUrl: url }),
-  setAutoGenerateImage: (value) => set({ autoGenerateImage: value }),
   setGenerationMetadata: (input) =>
     set({
       baseImageUrl: input.baseImageUrl,
@@ -220,6 +215,10 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
   restoreSessionState: (sessionId, sessionState) =>
     set({
       ...sessionState,
+      designContext: {
+        ...createInitialDesignContext(),
+        ...sessionState.designContext,
+      },
       selectedPreviewImageUrl: sessionState.generatedImageUrl,
       baseImageUrl: getRawImageUrlFromPreviewBackground(
         sessionState.generatedImageUrl,
@@ -232,13 +231,4 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       ...createLastAnalysisReset(),
     }),
   setCurrentSessionId: (id) => set({ currentSessionId: id }),
-  setAiModel: (model) =>
-    set((state) => {
-      if (state.aiModel === model) return {};
-      if (state.generationStatus !== "idle") return {};
-      return {
-        aiModel: model,
-        ...createConversationResetState(),
-      };
-    }),
 }));

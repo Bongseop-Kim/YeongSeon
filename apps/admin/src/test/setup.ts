@@ -14,3 +14,16 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => false,
   }),
 });
+
+const originalGetComputedStyle = window.getComputedStyle.bind(window);
+const normalizePseudoElement = (pseudoElt?: string | null) =>
+  pseudoElt && pseudoElt !== "" ? undefined : pseudoElt;
+
+// Ant Design internals may probe pseudo-element styles, which jsdom logs as a
+// not-implemented warning even though the rendered behavior under test does not
+// depend on pseudo-element output.
+window.getComputedStyle = ((element: Element, pseudoElt?: string | null) =>
+  originalGetComputedStyle(
+    element,
+    normalizePseudoElement(pseudoElt),
+  )) as typeof window.getComputedStyle;

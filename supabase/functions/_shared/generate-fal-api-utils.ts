@@ -1,4 +1,3 @@
-import type { ExecutionMode } from "@/functions/_shared/design-generation.ts";
 import {
   ALLOWED_TILED_MIME_TYPES,
   MAX_IMAGE_BASE64_LENGTH,
@@ -196,14 +195,12 @@ export const getGenerationLogUserMessage = (input: {
 };
 
 export const shouldExecuteFalRender = (
-  executionMode: ExecutionMode,
   generateImage: boolean,
   eligibility: {
     eligibleForRender: boolean;
     missingRequirements: string[];
   },
 ): boolean =>
-  executionMode !== "analysis_only" &&
   generateImage &&
   eligibility.eligibleForRender &&
   eligibility.missingRequirements.length === 0;

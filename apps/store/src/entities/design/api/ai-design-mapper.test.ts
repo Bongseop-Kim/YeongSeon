@@ -17,6 +17,9 @@ const createDesignContext = (
   colors: [],
   pattern: null,
   fabricMethod: null,
+  sourceImage: null,
+  onePointOffsetX: 0,
+  onePointOffsetY: 0,
   ciImage: null,
   ciPlacement: null,
   referenceImage: null,
@@ -35,7 +38,6 @@ const createAiDesignRequest = (
   overrides: Partial<AiDesignRequest> = {},
 ): AiDesignRequest => ({
   userMessage: "테스트 요청",
-  aiModel: "openai",
   attachments: [],
   designContext: createDesignContext(),
   sessionId: "test-session-id",
@@ -96,6 +98,9 @@ describe("getTags", () => {
             colors: [],
             pattern: "unknown-pattern" as never,
             fabricMethod: "unknown-fabric" as never,
+            sourceImage: null,
+            onePointOffsetX: 0,
+            onePointOffsetY: 0,
             ciImage: null,
             ciPlacement: "unknown-placement" as never,
             referenceImage: null,
@@ -179,6 +184,7 @@ describe("buildInvokePayload", () => {
       ciImageMimeType: "image/png",
       referenceImageBase64: "ref-base64",
       referenceImageMimeType: "image/jpeg",
+      sourceImageMimeType: "image/png",
       tiledBase64: "tiled-base64",
       tiledMimeType: "image/png",
       sessionId: "test-session-id",
@@ -201,15 +207,26 @@ describe("buildInvokePayload", () => {
           referenceImage: null,
           scale: "large",
         }),
-        executionMode: "analysis_only",
+        executionMode: "render_from_analysis",
         analysisWorkId: "analysis-1",
       }),
       {},
     );
 
     expect(payload.designContext?.scale).toBe("large");
-    expect(payload.executionMode).toBe("analysis_only");
+    expect(payload.executionMode).toBe("render_from_analysis");
     expect(payload.analysisWorkId).toBe("analysis-1");
+  });
+
+  it("autoGenerate가 주어지면 payload에 그대로 포함한다", () => {
+    const payload = buildInvokePayload(
+      createAiDesignRequest({
+        autoGenerate: false,
+      }),
+      {},
+    );
+
+    expect(payload.autoGenerate).toBe(false);
   });
 
   it("controlnet/inpaint 필드를 invoke payload에 포함한다", () => {

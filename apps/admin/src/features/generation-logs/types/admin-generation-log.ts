@@ -1,12 +1,12 @@
 export interface AdminGenerationLogItem {
   id: string;
   workflowId?: string;
-  phase?: "analysis" | "render";
+  phase?: "analysis" | "prep" | "render";
   workId: string;
   parentWorkId?: string | null;
   userId: string;
   aiModel: "openai" | "gemini" | "fal";
-  requestType: "analysis" | "render_standard" | "render_high" | null;
+  requestType: "analysis" | "prep" | "render_standard" | "render_high" | null;
   quality: "standard" | "high" | null;
   userMessage: string;
   promptLength: number;
@@ -32,6 +32,11 @@ export interface AdminGenerationLogItem {
   imageEditPrompt?: string | null;
   imageGenerated: boolean;
   generatedImageUrl: string | null;
+  patternPreparationBackend?: "local" | "openai_repair" | null;
+  patternRepairPromptKind?: "all_over_tile" | "one_point_motif" | null;
+  patternRepairApplied?: boolean | null;
+  patternRepairReasonCodes?: string[] | null;
+  prepTokensCharged?: number | null;
   requestAttachments: Array<{
     type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
     label: string;

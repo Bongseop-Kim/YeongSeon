@@ -16,8 +16,9 @@ const placementLabelMap = new Map(
 );
 
 const requirementLabelMap: Record<string, string> = {
-  ciImage: "CI 이미지 필요",
-  referenceImage: "참고 이미지 있으면 더 정확함",
+  ciImage: "이미지 첨부 필요",
+  referenceImage: "이미지 첨부 필요",
+  sourceImage: "이미지 첨부 필요",
   baseImage: "수정할 기존 디자인 필요",
 };
 

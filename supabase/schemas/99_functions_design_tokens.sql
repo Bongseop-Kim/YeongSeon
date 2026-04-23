@@ -18,13 +18,19 @@ AS $$
         WHERE token_class = 'paid'
           AND (expires_at IS NULL OR expires_at > now())
       ), 0) +
-      COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)
+      COALESCE(SUM(amount) FILTER (
+        WHERE token_class IN ('bonus', 'free')
+          AND (expires_at IS NULL OR expires_at > now())
+      ), 0)
     )::integer,
     'paid',  COALESCE(SUM(amount) FILTER (
                WHERE token_class = 'paid'
                  AND (expires_at IS NULL OR expires_at > now())
              ), 0)::integer,
-    'bonus', COALESCE(SUM(amount) FILTER (WHERE token_class IN ('bonus', 'free')), 0)::integer
+    'bonus', COALESCE(SUM(amount) FILTER (
+               WHERE token_class IN ('bonus', 'free')
+                 AND (expires_at IS NULL OR expires_at > now())
+             ), 0)::integer
   )
   FROM public.design_tokens
   WHERE user_id = auth.uid();
@@ -45,7 +51,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
   p_ai_model     text,             -- 'openai' | 'gemini' | 'fal'
-  p_request_type text,             -- 'analysis' | 'render_standard' | 'render_high'
+  p_request_type text,             -- 'analysis' | 'prep' | 'render_standard' | 'render_high'
   p_quality      text DEFAULT 'standard',
   p_work_id      text DEFAULT NULL
 )
@@ -78,11 +84,14 @@ BEGIN
   IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
-  IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
+  IF p_request_type NOT IN ('analysis', 'prep', 'render_standard', 'render_high') THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
   IF p_quality NOT IN ('standard', 'high') THEN
     RAISE EXCEPTION 'invalid quality: %', p_quality;
+  END IF;
+  IF p_request_type = 'prep' AND p_ai_model != 'openai' THEN
+    RAISE EXCEPTION 'prep request_type is only supported for openai: %', p_ai_model;
   END IF;
 
   -- 동시 요청 advisory lock (사용자별)
@@ -118,7 +127,9 @@ BEGIN
 
   SELECT COALESCE(SUM(amount), 0)::integer INTO v_bonus_bal
   FROM public.design_tokens
-  WHERE user_id = p_user_id AND token_class IN ('bonus', 'free');
+  WHERE user_id = p_user_id
+    AND token_class IN ('bonus', 'free')
+    AND (expires_at IS NULL OR expires_at > now());
   v_total_bal := v_paid_bal + v_bonus_bal;
 
   -- 구 포맷(_use_paid) + 신 포맷(_use_paid_0, _use_paid_legacy) 모두 인식
@@ -252,7 +263,7 @@ BEGIN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
 
-  IF p_request_type NOT IN ('analysis', 'render_standard', 'render_high') THEN
+  IF p_request_type NOT IN ('analysis', 'prep', 'render_standard', 'render_high') THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
 

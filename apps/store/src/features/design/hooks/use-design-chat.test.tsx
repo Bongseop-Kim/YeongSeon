@@ -106,6 +106,9 @@ const initialMessages = [
       colors: ["navy"],
       pattern: "stripe",
       fabricMethod: "print",
+      sourceImage: null,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
       ciPlacement: null,
       ciImage: null,
       referenceImage: null,
@@ -128,6 +131,9 @@ const defaultDesignContext = {
   colors: ["navy"],
   pattern: "stripe",
   fabricMethod: "print",
+  sourceImage: null,
+  onePointOffsetX: 0,
+  onePointOffsetY: 0,
   ciPlacement: null,
   ciImage: null,
   referenceImage: null,
@@ -161,10 +167,8 @@ const createReuseKey = (overrides?: {
 const storeState = {
   messages: [...initialMessages],
   designContext: { ...defaultDesignContext },
-  aiModel: "openai",
   generationStatus: "idle",
   currentSessionId: null,
-  autoGenerateImage: true,
   selectedPreviewImageUrl: null as string | null,
   baseImageUrl: defaultBaseImageState.baseImageUrl,
   baseImageWorkId: defaultBaseImageState.baseImageWorkId,
@@ -252,8 +256,6 @@ describe("useDesignChat", () => {
     phCapture.mockReset();
     storeState.messages = [...initialMessages];
     storeState.designContext = { ...defaultDesignContext };
-    storeState.aiModel = "openai";
-    storeState.autoGenerateImage = true;
     storeState.selectedPreviewImageUrl = null;
     storeState.lastAnalysisWorkId = "analysis-work-1";
     storeState.lastEligibleForRender = false;
@@ -346,42 +348,14 @@ describe("useDesignChat", () => {
     expect(newUserMessage?.attachments?.[0]).not.toHaveProperty("file");
   });
 
-  it("autoGenerateImage가 false여도 auto로 전송한다", () => {
-    Object.assign(storeState, { autoGenerateImage: false });
-
-    const { result } = renderHook(() => useDesignChat());
-    result.current.sendMessage("새 디자인", [
-      {
-        type: "color",
-        label: "네이비",
-        value: "navy",
-        file: pendingAttachmentFile,
-      },
-    ]);
-
-    expect(mutate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        executionMode: "auto",
-      }),
-      expect.any(Object),
-    );
-  });
-
-  it("store aiModel을 요청 payload와 세션 이벤트에 반영한다", () => {
-    Object.assign(storeState, { aiModel: "gemini" });
-
+  it("새 메시지 요청은 openai 세션 이벤트를 기록하고 aiModel을 payload에 담지 않는다", () => {
     const { result } = renderHook(() => useDesignChat());
     result.current.sendMessage("새 디자인", []);
 
     expect(phCapture).toHaveBeenCalledWith("design_session_started", {
-      ai_model: "gemini",
+      ai_model: "openai",
     });
-    expect(mutate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        aiModel: "gemini",
-      }),
-      expect.any(Object),
-    );
+    expect(mutate.mock.calls[0]?.[0]).not.toHaveProperty("aiModel");
   });
 
   it("편집 요청은 base image 정보를 함께 전송한다", () => {
@@ -594,8 +568,6 @@ describe("useDesignChat", () => {
 
   it("requestRender는 generateImage가 false여도 eligible snapshot이면 mutate를 호출한다", () => {
     Object.assign(storeState, {
-      autoGenerateImage: false,
-      aiModel: "gemini",
       lastAnalysisWorkId: "analysis-work-101",
       lastGenerateImage: false,
       lastEligibleForRender: true,
@@ -610,7 +582,6 @@ describe("useDesignChat", () => {
       expect.objectContaining({
         analysisWorkId: "analysis-work-101",
         executionMode: "render_from_analysis",
-        aiModel: "gemini",
       }),
       expect.any(Object),
     );
@@ -700,7 +671,6 @@ describe("useDesignChat", () => {
 
   it("수동 렌더 성공 시에는 AI 메시지를 중복 추가하지 않고 이미지만 반영한다", () => {
     Object.assign(storeState, {
-      autoGenerateImage: false,
       currentSessionId: "session-1",
       lastAnalysisWorkId: "analysis-work-5",
       lastEligibleForRender: true,
@@ -753,7 +723,6 @@ describe("useDesignChat", () => {
 
   it("requestRender는 마지막 analysisWorkId로 render_from_analysis 요청을 보낸다", () => {
     Object.assign(storeState, {
-      autoGenerateImage: false,
       lastAnalysisWorkId: "analysis-work-99",
       lastGenerateImage: false,
       lastEligibleForRender: true,
@@ -818,8 +787,6 @@ describe("useDesignChat", () => {
   });
 
   it("재생성 중 토큰 부족 에러를 처리한다", () => {
-    Object.assign(storeState, { aiModel: "gemini" });
-
     const { result } = renderHook(() => useDesignChat());
     result.current.regenerate();
 
@@ -830,12 +797,7 @@ describe("useDesignChat", () => {
       missingRequirements: [],
     });
     const callbacks = mutate.mock.calls[0][1];
-    expect(mutate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        aiModel: "gemini",
-      }),
-      expect.any(Object),
-    );
+    expect(mutate.mock.calls[0]?.[0]).not.toHaveProperty("aiModel");
 
     callbacks.onError(new MockInsufficientTokensError(3, 5));
     expect(addMessage).toHaveBeenCalledWith(
@@ -863,7 +825,10 @@ describe("useDesignChat", () => {
     };
 
     const { result } = renderHook(() => useDesignChat());
-    result.current.requestInpaint("mask-base64", "이 부분만 자수 느낌으로");
+    result.current.requestInpaint(
+      "  mask-base64  ",
+      "  이 부분만 자수 느낌으로  ",
+    );
 
     expect(setGenerationStatus).toHaveBeenCalledWith("rendering");
     expect(mutate).toHaveBeenCalledWith(

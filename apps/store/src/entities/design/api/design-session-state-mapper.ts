@@ -1,9 +1,37 @@
 import type { DesignSessionMessage } from "@/entities/design/model/design-session";
+import type { DesignContext } from "@/entities/design/model/design-context";
 import type { GenerationStatus, Message } from "@/entities/design/model/chat";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 
+const PATTERN_OPTIONS = [
+  "stripe",
+  "dot",
+  "check",
+  "paisley",
+  "plain",
+  "houndstooth",
+  "floral",
+] as const satisfies ReadonlyArray<NonNullable<DesignContext["pattern"]>>;
+const FABRIC_METHODS = ["yarn-dyed", "print"] as const satisfies ReadonlyArray<
+  NonNullable<DesignContext["fabricMethod"]>
+>;
+const CI_PLACEMENTS = [
+  "all-over",
+  "one-point",
+] as const satisfies ReadonlyArray<NonNullable<DesignContext["ciPlacement"]>>;
+
+const isOptionOf =
+  <T extends string>(options: readonly T[]) =>
+  (value: string): value is T =>
+    options.some((option) => option === value);
+
+const isPatternOption = isOptionOf(PATTERN_OPTIONS);
+const isFabricMethod = isOptionOf(FABRIC_METHODS);
+const isCiPlacement = isOptionOf(CI_PLACEMENTS);
+
 export interface RestoredDesignSessionState {
   messages: Message[];
+  designContext?: Partial<DesignContext>;
   generatedImageUrl: string | null;
   baseImageWorkId: string | null;
   resultTags: string[];
@@ -26,10 +54,51 @@ function sessionMessageToMessage(message: DesignSessionMessage): Message {
   };
 }
 
+function restoreDesignContextFromMessages(
+  messages: DesignSessionMessage[],
+): Partial<DesignContext> | undefined {
+  const restored: Partial<DesignContext> = {};
+
+  for (const message of messages) {
+    if (message.role !== "user" || message.attachments == null) {
+      continue;
+    }
+
+    for (const attachment of message.attachments) {
+      if (attachment.type === "color") {
+        restored.colors = [
+          ...new Set([...(restored.colors ?? []), attachment.value]),
+        ];
+        continue;
+      }
+
+      if (attachment.type === "pattern" && isPatternOption(attachment.value)) {
+        restored.pattern = attachment.value;
+        continue;
+      }
+
+      if (attachment.type === "fabric" && isFabricMethod(attachment.value)) {
+        restored.fabricMethod = attachment.value;
+        continue;
+      }
+
+      if (
+        attachment.type === "ci-placement" &&
+        isCiPlacement(attachment.value)
+      ) {
+        restored.ciPlacement = attachment.value;
+      }
+    }
+  }
+
+  return Object.keys(restored).length > 0 ? restored : undefined;
+}
+
 export function toRestoredDesignSessionState(
   messages: DesignSessionMessage[],
 ): RestoredDesignSessionState {
   const restoredMessages = messages.map(sessionMessageToMessage);
+  const designContext = restoreDesignContextFromMessages(messages);
 
   let lastImageMessage: DesignSessionMessage | undefined;
   for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -46,6 +115,7 @@ export function toRestoredDesignSessionState(
 
   return {
     messages: restoredMessages,
+    ...(designContext ? { designContext } : {}),
     generatedImageUrl,
     baseImageWorkId: null,
     resultTags: [],

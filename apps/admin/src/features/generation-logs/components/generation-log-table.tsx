@@ -79,11 +79,13 @@ export function GenerationLogTable({
       render: (v: string | null) =>
         v === "analysis"
           ? "분석"
-          : v === "render_standard"
-            ? "렌더(표준)"
-            : v === "render_high"
-              ? "렌더(고품질)"
-              : "-",
+          : v === "prep"
+            ? "보정"
+            : v === "render_standard"
+              ? "렌더(표준)"
+              : v === "render_high"
+                ? "렌더(고품질)"
+                : "-",
     },
     {
       title: "프롬프트",
@@ -215,15 +217,21 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
       <Descriptions.Item label="요청 유형">
         {log.requestType === "analysis"
           ? "분석"
-          : log.requestType === "render_standard"
-            ? "렌더(표준)"
-            : log.requestType === "render_high"
-              ? "렌더(고품질)"
-              : "-"}
+          : log.requestType === "prep"
+            ? "보정"
+            : log.requestType === "render_standard"
+              ? "렌더(표준)"
+              : log.requestType === "render_high"
+                ? "렌더(고품질)"
+                : "-"}
       </Descriptions.Item>
       {log.phase && (
         <Descriptions.Item label="phase">
-          {log.phase === "analysis" ? "분석" : "렌더"}
+          {log.phase === "analysis"
+            ? "분석"
+            : log.phase === "prep"
+              ? "보정"
+              : "렌더"}
         </Descriptions.Item>
       )}
       {log.workflowId && (

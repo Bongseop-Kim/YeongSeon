@@ -7,7 +7,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(12);
+SELECT plan(15);
 
 DO $setup$
 DECLARE
@@ -42,6 +42,12 @@ BEGIN
 
   PERFORM test_helpers.create_test_user(v_balance_user);
   PERFORM test_helpers.create_test_profile(v_balance_user, 'customer', '잔액 사용자');
+
+  DELETE FROM public.design_tokens
+  WHERE user_id = v_balance_user
+    AND type = 'grant'
+    AND token_class = 'free'
+    AND description = '신규 가입 토큰 지급';
 
   INSERT INTO public.pricing_constants (key, amount, category)
   VALUES
@@ -79,6 +85,11 @@ BEGIN
       v_balance_user, 7, 'grant', 'bonus',
       NULL, NULL,
       '보너스 토큰', 'bonus-balance-token'
+    ),
+    (
+      v_balance_user, 9, 'grant', 'free',
+      NULL, now() - interval '1 day',
+      '만료된 무료 토큰', 'expired-free-balance-token'
     );
 
   PERFORM test_helpers.create_test_user(v_refundable_user);
@@ -216,6 +227,28 @@ END $setup$;
 
 SELECT test_helpers.set_auth('fa000001-0000-0000-0000-000000000001'::uuid);
 
+SELECT test_helpers.set_auth('fa000001-0000-0000-0000-000000000002'::uuid);
+
+SELECT is(
+  ((public.get_design_token_balance())->>'total')::integer,
+  37,
+  'get_design_token_balance는 만료된 free 토큰을 total에서 제외한다'
+);
+
+SELECT is(
+  ((public.get_design_token_balance())->>'paid')::integer,
+  30,
+  'get_design_token_balance는 유효한 paid 토큰만 paid 잔액으로 반환한다'
+);
+
+SELECT is(
+  ((public.get_design_token_balance())->>'bonus')::integer,
+  7,
+  'get_design_token_balance는 만료되지 않은 bonus/free 토큰만 bonus 잔액으로 반환한다'
+);
+
+SELECT test_helpers.set_auth('fa000001-0000-0000-0000-000000000001'::uuid);
+
 SELECT is(
   (
     SELECT balance
@@ -223,7 +256,7 @@ SELECT is(
       ARRAY['fa000001-0000-0000-0000-000000000002'::uuid]
     )
   ),
-  67,
+  37,
   'get_design_token_balances_admin는 만료된 paid 토큰을 제외하고 잔액을 집계한다'
 );
 

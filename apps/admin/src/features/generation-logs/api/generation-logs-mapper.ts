@@ -19,6 +19,15 @@ function toNumber(v: unknown, fallback = 0): number {
   return fallback;
 }
 
+function toNumberOrNull(v: unknown): number | null {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "string") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
 function toString(v: unknown): string | null {
   return typeof v === "string" ? v : null;
 }
@@ -79,6 +88,11 @@ type GenerationLogRow = {
   image_edit_prompt?: unknown;
   image_generated: unknown;
   generated_image_url: unknown;
+  pattern_preparation_backend?: unknown;
+  pattern_repair_prompt_kind?: unknown;
+  pattern_repair_applied?: unknown;
+  pattern_repair_reason_codes?: unknown;
+  prep_tokens_charged?: unknown;
   detected_design: unknown;
   tokens_charged: unknown;
   tokens_refunded: unknown;
@@ -92,15 +106,20 @@ type GenerationLogRow = {
 
 function toRequestType(
   v: unknown,
-): "analysis" | "render_standard" | "render_high" | null {
-  if (v === "analysis" || v === "render_standard" || v === "render_high") {
+): "analysis" | "prep" | "render_standard" | "render_high" | null {
+  if (
+    v === "analysis" ||
+    v === "prep" ||
+    v === "render_standard" ||
+    v === "render_high"
+  ) {
     return v;
   }
   return null;
 }
 
-function toPhase(v: unknown): "analysis" | "render" | undefined {
-  if (v === "analysis" || v === "render") return v;
+function toPhase(v: unknown): "analysis" | "prep" | "render" | undefined {
+  if (v === "analysis" || v === "prep" || v === "render") return v;
   return undefined;
 }
 
@@ -176,6 +195,28 @@ export function toAdminGenerationLogItem(
   const imagePrompt = toString(row.image_prompt);
   const imageEditPrompt = toString(row.image_edit_prompt);
   const errorMessage = toString(row.error_message);
+  const patternPreparationBackend =
+    row.pattern_preparation_backend === "local" ||
+    row.pattern_preparation_backend === "openai_repair"
+      ? row.pattern_preparation_backend
+      : null;
+  const patternRepairPromptKind =
+    row.pattern_repair_prompt_kind === "all_over_tile" ||
+    row.pattern_repair_prompt_kind === "one_point_motif"
+      ? row.pattern_repair_prompt_kind
+      : null;
+  const patternRepairApplied =
+    typeof row.pattern_repair_applied === "boolean"
+      ? row.pattern_repair_applied
+      : null;
+  const patternRepairReasonCodes = Array.isArray(
+    row.pattern_repair_reason_codes,
+  )
+    ? row.pattern_repair_reason_codes.filter(
+        (value): value is string => typeof value === "string",
+      )
+    : null;
+  const prepTokensCharged = toNumberOrNull(row.prep_tokens_charged);
 
   return {
     id: toString(row.id) ?? "",
@@ -199,6 +240,11 @@ export function toAdminGenerationLogItem(
       typeof row.generate_image === "boolean" ? row.generate_image : null,
     imageGenerated: toBoolean(row.image_generated),
     generatedImageUrl: toString(row.generated_image_url),
+    ...(patternPreparationBackend ? { patternPreparationBackend } : {}),
+    ...(patternRepairPromptKind ? { patternRepairPromptKind } : {}),
+    ...(patternRepairApplied !== null ? { patternRepairApplied } : {}),
+    ...(patternRepairReasonCodes ? { patternRepairReasonCodes } : {}),
+    ...(prepTokensCharged !== null ? { prepTokensCharged } : {}),
     detectedDesign: isRecord(row.detected_design)
       ? (row.detected_design as Record<string, unknown>)
       : null,

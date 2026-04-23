@@ -13,6 +13,9 @@ const { addAttachment, removeAttachment, setDesignContext, onClose, state } =
         colors: [],
         pattern: null,
         fabricMethod: "yarn-dyed" as const,
+        sourceImage: null,
+        onePointOffsetX: 0,
+        onePointOffsetY: 0,
         ciImage: null,
         ciPlacement: null,
         referenceImage: null,
@@ -54,7 +57,7 @@ describe("AttachmentPopup", () => {
     state.pendingAttachments = [];
   });
 
-  it("CI 이미지 업로드는 ci attachment와 ciImage 컨텍스트를 설정한다", () => {
+  it("이미지 업로드는 단일 source attachment와 sourceImage 컨텍스트를 설정한다", () => {
     const { container } = render(<AttachmentPopup onClose={onClose} />);
     const file = new File(["ci"], "ci.png", { type: "image/png" });
     const imageInput = container.querySelector('input[type="file"]');
@@ -63,24 +66,28 @@ describe("AttachmentPopup", () => {
       throw new Error("image input not found");
     }
 
-    fireEvent.click(screen.getByRole("button", { name: "CI 이미지 첨부" }));
+    fireEvent.click(screen.getByRole("button", { name: "이미지 첨부" }));
     fireEvent.change(imageInput, {
       target: { files: [file] },
     });
 
     expect(addAttachment).toHaveBeenCalledWith({
       type: "image",
-      label: "CI 이미지",
-      value: "ci",
+      label: "이미지 첨부",
+      value: "source",
       file,
     });
     expect(setDesignContext).toHaveBeenCalledWith({
-      ciImage: file,
+      sourceImage: file,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
+      ciImage: null,
+      referenceImage: null,
     });
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it("파일 선택 change가 리렌더 전 동기로 발생해도 최신 이미지 종류를 사용한다", () => {
+  it("파일 선택 change가 리렌더 전 동기로 발생해도 단일 source 이미지를 사용한다", () => {
     const { container } = render(<AttachmentPopup onClose={onClose} />);
     const file = new File(["ci"], "ci-sync.png", { type: "image/png" });
     const imageInput = container.querySelector('input[type="file"]');
@@ -95,51 +102,59 @@ describe("AttachmentPopup", () => {
       });
     };
 
-    fireEvent.click(screen.getByRole("button", { name: "CI 이미지 첨부" }));
+    fireEvent.click(screen.getByRole("button", { name: "이미지 첨부" }));
 
     expect(addAttachment).toHaveBeenCalledWith({
       type: "image",
-      label: "CI 이미지",
-      value: "ci",
+      label: "이미지 첨부",
+      value: "source",
       file,
     });
     expect(setDesignContext).toHaveBeenCalledWith({
-      ciImage: file,
+      sourceImage: file,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
+      ciImage: null,
+      referenceImage: null,
     });
   });
 
-  it("참고 이미지 업로드는 기존 CI attachment를 제거하지 않는다", () => {
+  it("이미지 재업로드는 기존 image attachment를 교체한다", () => {
     state.pendingAttachments = [
       {
         type: "image",
-        label: "CI 이미지",
-        value: "ci",
+        label: "이미지 첨부",
+        value: "source",
         file: new File(["ci"], "ci.png", { type: "image/png" }),
       },
     ];
 
     const { container } = render(<AttachmentPopup onClose={onClose} />);
-    const file = new File(["ref"], "reference.png", { type: "image/png" });
+    const file = new File(["ref"], "source.png", { type: "image/png" });
     const imageInput = container.querySelector('input[type="file"]');
 
     if (!(imageInput instanceof HTMLInputElement)) {
       throw new Error("image input not found");
     }
 
-    fireEvent.click(screen.getByRole("button", { name: "참고 이미지 첨부" }));
+    fireEvent.click(screen.getByRole("button", { name: "이미지 첨부" }));
     fireEvent.change(imageInput, {
       target: { files: [file] },
     });
 
-    expect(removeAttachment).not.toHaveBeenCalled();
+    expect(removeAttachment).toHaveBeenCalledWith(0);
     expect(addAttachment).toHaveBeenCalledWith({
       type: "image",
-      label: "참고 이미지",
-      value: "reference",
+      label: "이미지 첨부",
+      value: "source",
       file,
     });
     expect(setDesignContext).toHaveBeenCalledWith({
-      referenceImage: file,
+      sourceImage: file,
+      onePointOffsetX: 0,
+      onePointOffsetY: 0,
+      ciImage: null,
+      referenceImage: null,
     });
   });
 });
