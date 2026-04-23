@@ -667,7 +667,7 @@ export function GenerationLogTable({
       width: 80,
       render: (v: string) => {
         const color =
-          v === "openai" ? "blue" : v === "gemini" ? "green" : "purple";
+          v === "openai" ? "blue" : "purple";
         return <Tag color={color}>{v}</Tag>;
       },
     },
@@ -759,7 +759,6 @@ export function GenerationLogTable({
           style={{ width: 140 }}
           options={[
             { value: "openai", label: "OpenAI" },
-            { value: "gemini", label: "Gemini" },
             { value: "fal", label: "Fal.ai" },
           ]}
         />
@@ -1056,7 +1055,6 @@ function requestTypeLabel(v: string | null) {
 
 function modelColor(model: string) {
   if (model === "openai") return "blue";
-  if (model === "gemini") return "green";
   return "purple";
 }
 
@@ -1214,7 +1212,7 @@ function ArtifactSection({ log }: { log: AdminGenerationLogItem }) {
           type="info"
           showIcon
           message="이 로그는 workflow와 연결되지 않아 아티팩트 추적이 불가합니다."
-          description="openai / gemini 단일 렌더 로그는 workflow_id가 없습니다."
+          description="단일 렌더 로그는 workflow_id가 없습니다."
         />
       )}
     </Card>

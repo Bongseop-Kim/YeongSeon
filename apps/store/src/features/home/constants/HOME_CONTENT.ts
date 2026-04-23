@@ -14,7 +14,7 @@ export const HERO_CONTENT = {
 export const AI_DESIGN_CONTENT = {
   headline: "원단 디자인, 프리뷰로 바로 확인",
   subCopy:
-    "GPT·Gemini 기반 AI와 채팅하듯 패턴을 만듭니다. 선염의 깊이, 날염의 선명함까지 질감 그대로 미리볼 수 있습니다.",
+    "OpenAI 기반 AI와 채팅하듯 패턴을 만듭니다. 선염의 깊이, 날염의 선명함까지 질감 그대로 미리볼 수 있습니다.",
   features: [
     "채팅 한 줄로 패턴·컬러·질감을 동시에 설정",
     "선염·날염 원단의 질감 차이까지 시각적으로 구분",
@@ -39,7 +39,7 @@ export const MANUFACTURING_STEPS: ManufacturingStep[] = [
   {
     step: 1,
     label: "AI 디자인",
-    description: "GPT·Gemini 기반 AI로 채팅하듯 원단 패턴을 디자인합니다.",
+    description: "OpenAI 기반 AI로 채팅하듯 원단 패턴을 디자인합니다.",
     imageSrc: "/images/detail/product1.png",
     imageAlt: "AI 디자인으로 원단 패턴을 설계하는 장면",
     eyebrow: "AI Design",

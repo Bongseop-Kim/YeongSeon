@@ -67,7 +67,6 @@ flowchart TD
 | preprocessing | `prepare-pattern-composite` | 패턴 준비      | `magick-wasm` 기반 소스 정리, 반복 타일/모티프 합성, 필요 시 OpenAI 보정 |
 | openai render | `generate-open-api`         | 최종 분석/생성 | 입력 이미지가 있으면 `images/edits`, 없으면 `images/generations` 사용    |
 | fal render    | `generate-fal-api`          | 최종 분석/생성 | `fal_edit`, `fal_inpaint`, `fal_controlnet`, 조건 충족 `fal_tiling` 담당 |
-| gemini render | `generate-google-api`       | 별도 유지 경로 | 함수는 유지되지만 현재 store의 기본 provider chain에는 포함되지 않음     |
 
 ## 비즈니스 규칙
 

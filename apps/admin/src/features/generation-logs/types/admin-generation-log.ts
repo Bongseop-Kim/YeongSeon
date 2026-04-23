@@ -7,7 +7,7 @@ export interface AdminGenerationLogItem {
   workId: string;
   parentWorkId?: string | null;
   userId: string;
-  aiModel: "openai" | "gemini" | "fal";
+  aiModel: "openai" | "fal";
   requestType: "analysis" | "prep" | "render_standard" | "render_high" | null;
   quality: "standard" | "high" | null;
   userMessage: string;

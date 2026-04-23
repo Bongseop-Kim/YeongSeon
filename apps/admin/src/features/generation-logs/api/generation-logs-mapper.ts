@@ -137,8 +137,8 @@ function toQuality(v: unknown): "standard" | "high" | null {
   return null;
 }
 
-function toAiModel(v: unknown): "openai" | "gemini" | "fal" {
-  if (v === "openai" || v === "gemini" || v === "fal") return v;
+function toAiModel(v: unknown): "openai" | "fal" {
+  if (v === "openai" || v === "fal") return v;
   console.warn(`[toAiModel] Invalid ai_model value: ${String(v)}`);
   return "openai";
 }

@@ -14,7 +14,7 @@ export type AiGenerationLogInsert = {
   phase: AiGenerationLogPhase;
   parent_work_id?: string | null;
   user_id: string;
-  ai_model: "openai" | "gemini" | "fal";
+  ai_model: "openai" | "fal";
   request_type: AiGenerationLogRequestType;
   quality?: AiGenerationLogQuality | null;
   user_message: string;

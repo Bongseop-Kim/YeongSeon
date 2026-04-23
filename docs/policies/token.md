@@ -68,9 +68,6 @@ last-verified: 2026-03-29
 | `design_token_cost_openai_prep`            | OpenAI | prep            | high     |
 | `design_token_cost_openai_render_standard` | OpenAI | render_standard | standard |
 | `design_token_cost_openai_render_high`     | OpenAI | render_high     | high     |
-| `design_token_cost_gemini_analysis`        | Gemini | analysis        | standard |
-| `design_token_cost_gemini_render_standard` | Gemini | render_standard | standard |
-| `design_token_cost_gemini_render_high`     | Gemini | render_high     | high     |
 | `design_token_cost_fal_analysis`           | FAL    | analysis        | standard |
 | `design_token_cost_fal_render_standard`    | FAL    | render_standard | standard |
 | `design_token_cost_fal_render_high`        | FAL    | render_high     | high     |

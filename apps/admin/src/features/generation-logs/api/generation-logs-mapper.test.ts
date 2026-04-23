@@ -65,9 +65,9 @@ describe("toAdminGenerationLogItem", () => {
     });
   });
 
-  it("gemini ai_model을 올바르게 매핑한다", () => {
-    const result = toAdminGenerationLogItem({ ...baseRow, ai_model: "gemini" });
-    expect(result.aiModel).toBe("gemini");
+  it("fal ai_model을 올바르게 매핑한다", () => {
+    const result = toAdminGenerationLogItem({ ...baseRow, ai_model: "fal" });
+    expect(result.aiModel).toBe("fal");
   });
 
   it("알 수 없는 ai_model은 openai로 폴백하고 경고를 출력한다", () => {

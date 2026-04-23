@@ -110,7 +110,7 @@ SC-design-003,design,high,토큰 잔액 표시,디자인 생성 페이지 접속
 SC-design-004,design,critical,텍스트 생성 요청,디자인 생성 페이지에서 텍스트 옵션 설정·충분한 토큰 있음,생성 버튼 클릭,생성 중 표시 후 텍스트 결과 표시·paid 토큰 먼저 차감됨,,
 SC-design-005,design,critical,이미지 포함 생성 요청,디자인 생성 페이지에서 text_and_image 선택·충분한 토큰 있음,생성 버튼 클릭,생성 중 표시 후 텍스트+이미지 결과 표시됨,,
 SC-design-006,design,critical,이미지 미생성 시 선차감 토큰 복원,text_and_image 요청했으나 AI가 이미지 생성 안 함 (텍스트만 응답),생성 결과 반환,refund_design_tokens 자동 호출·이미지 비용 토큰 즉시 복원됨,,
-SC-design-015,design,critical,이미지 미생성 시 이미지 비용만 환불,text_and_image 요청했으나 Gemini AI가 텍스트만 반환,생성 결과 반환,이미지 비용만 환불·텍스트 비용은 차감 유지됨 (admin_settings 조회 실패 시 환불 생략),,
+SC-design-015,design,critical,이미지 미생성 시 이미지 비용만 환불,이미지 생성을 요청했으나 이미지가 반환되지 않음,생성 결과 반환,이미지 비용만 환불·텍스트 비용은 차감 유지됨 (admin_settings 조회 실패 시 환불 생략),,
 SC-design-007,design,critical,토큰 부족 시 생성 시도,디자인 생성 페이지에서 토큰 잔액 0,생성 버튼 클릭,생성 불가 안내가 표시됨,,
 SC-design-016,design,medium,토큰 부족 시 필요 수량 상세 안내,현재 토큰 5개인 상태에서 20토큰 필요한 생성 시도,생성 버튼 클릭,"현재 5토큰, 필요 20토큰 상세 안내가 표시됨",,
 SC-design-014,design,critical,다중 탭 동시 생성 요청 — 중복 차감 방지,"디자인 페이지를 2개 탭에서 열고 잔액이 1회 비용 이상 2회 비용 미만",두 탭에서 0.1초 이내 동시 생성 클릭,한 탭 성공·다른 탭 토큰 부족으로 실패·최종 차감 1회분,,

@@ -6,8 +6,7 @@ export function requestTypeLabel(v: string | null): string {
   return "-";
 }
 
-export function modelColor(model: string): "blue" | "green" | "purple" {
+export function modelColor(model: string): "blue" | "purple" {
   if (model === "openai") return "blue";
-  if (model === "gemini") return "green";
   return "purple";
 }

@@ -136,7 +136,6 @@ export function GenerationLogTable({
           style={{ width: 140 }}
           options={[
             { value: "openai", label: "OpenAI" },
-            { value: "gemini", label: "Gemini" },
             { value: "fal", label: "Fal.ai" },
           ]}
         />

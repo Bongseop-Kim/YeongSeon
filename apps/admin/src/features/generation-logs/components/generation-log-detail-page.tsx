@@ -51,13 +51,15 @@ function StickyBar({
       }}
     >
       <div style={{ marginBottom: 6 }}>
-        <Text
-          type="secondary"
-          style={{ cursor: "pointer", fontSize: 13 }}
+        <Button
+          aria-label="AI 생성 로그 목록으로 돌아가기"
+          type="link"
+          size="small"
+          style={{ padding: 0, fontSize: 13, cursor: "pointer" }}
           onClick={onBack}
         >
           ← AI 생성 로그
-        </Text>
+        </Button>
         <Text type="secondary" style={{ fontSize: 13 }}>
           {" "}
           / {dayjs(log.createdAt).format("MM-DD HH:mm:ss")} · {log.aiModel} ·{" "}
@@ -124,6 +126,10 @@ function StickyBar({
 }
 
 function BasicInfoSection({ log }: { log: AdminGenerationLogItem }) {
+  const isArtifactWarning =
+    typeof log.errorMessage === "string" &&
+    log.errorMessage.startsWith("artifact_warnings:");
+
   return (
     <Card title="기본 정보" size="small" style={{ marginBottom: 16 }}>
       <Row gutter={[8, 8]}>
@@ -177,7 +183,7 @@ function BasicInfoSection({ log }: { log: AdminGenerationLogItem }) {
       </Row>
       {log.errorMessage && (
         <Alert
-          type="error"
+          type={isArtifactWarning ? "warning" : "error"}
           message={log.errorMessage}
           style={{ marginTop: 10 }}
           showIcon
@@ -286,7 +292,7 @@ function ArtifactSection({ log }: { log: AdminGenerationLogItem }) {
           type="info"
           showIcon
           message="이 로그는 workflow와 연결되지 않아 아티팩트 추적이 불가합니다."
-          description="openai / gemini 단일 렌더 로그는 workflow_id가 없습니다."
+          description="단일 렌더 로그는 workflow_id가 없습니다."
         />
       )}
     </Card>
@@ -333,12 +339,15 @@ function ExpandableText({
         {displayed}
       </div>
       {isLong && (
-        <Text
-          style={{ fontSize: 11, color: "#1677ff", cursor: "pointer" }}
+        <Button
+          aria-label={expanded ? `${label} 접기` : `${label} 더 보기`}
+          type="link"
+          size="small"
+          style={{ padding: 0, fontSize: 11, cursor: "pointer" }}
           onClick={() => setExpanded((v) => !v)}
         >
           {expanded ? "접기" : "더 보기"}
-        </Text>
+        </Button>
       )}
     </div>
   );

@@ -14,7 +14,7 @@ const PLAN_META: Record<
     description: "AI 디자인을 가볍게 시작해보세요",
     features: [
       "텍스트 · 이미지 디자인 생성",
-      "OpenAI · Gemini 모델 선택",
+      "OpenAI 기반 생성",
       "만료 없이 사용 가능",
     ],
   },
@@ -24,7 +24,7 @@ const PLAN_META: Record<
     description: "가장 많이 선택하는 합리적인 옵션",
     features: [
       "텍스트 · 이미지 디자인 생성",
-      "OpenAI · Gemini 모델 선택",
+      "OpenAI 기반 생성",
       "만료 없이 사용 가능",
     ],
   },
@@ -33,7 +33,7 @@ const PLAN_META: Record<
     description: "대량으로 쓸수록 더 저렴하게",
     features: [
       "텍스트 · 이미지 디자인 생성",
-      "OpenAI · Gemini 모델 선택",
+      "OpenAI 기반 생성",
       "만료 없이 사용 가능",
     ],
   },

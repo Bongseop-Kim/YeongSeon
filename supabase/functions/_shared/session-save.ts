@@ -17,7 +17,7 @@ export interface SessionMessage {
 
 export interface SessionSaveParams {
   sessionId: string;
-  aiModel: "openai" | "gemini" | "fal";
+  aiModel: "openai" | "fal";
   firstMessage: string;
   lastImageUrl: string | null;
   lastImageFileId: string | null;

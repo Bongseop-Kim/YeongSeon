@@ -9,7 +9,7 @@ CREATE TABLE public.ai_generation_logs (
   work_id              text        NOT NULL UNIQUE,
   parent_work_id       text        REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   user_id              uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  ai_model             text        NOT NULL CHECK (ai_model IN ('openai', 'gemini', 'fal')),
+  ai_model             text        NOT NULL CHECK (ai_model IN ('openai', 'fal')),
   request_type         text        NOT NULL CHECK (request_type IN ('analysis', 'prep', 'render_standard', 'render_high')),
   quality              text        CHECK (quality IN ('standard', 'high')),
   user_message         text        NOT NULL,

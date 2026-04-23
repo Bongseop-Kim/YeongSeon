@@ -5,7 +5,7 @@
 CREATE TABLE public.design_chat_sessions (
   id                  uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  ai_model            text        NOT NULL CHECK (ai_model IN ('openai', 'gemini', 'fal')),
+  ai_model            text        NOT NULL CHECK (ai_model IN ('openai', 'fal')),
   first_message       text        NOT NULL DEFAULT '',
   last_image_url      text,
   last_image_file_id  text,
