@@ -1,7 +1,7 @@
 ---
 domain: design
 status: implemented
-last-verified: 2026-04-20
+last-verified: 2026-04-23
 ---
 
 # Design (AI 디자인 생성)
@@ -24,20 +24,34 @@ last-verified: 2026-04-20
 
 ```mermaid
 flowchart TD
-    A[고객 텍스트/이미지 입력] --> B{라우트 결정}
-    B -->|all-over CI + yarn-dyed + auto| FAL[generate-fal-api Edge Function]
-    B -->|openai| C[generate-open-api Edge Function]
-    B -->|gemini| D[generate-google-api Edge Function]
-    FAL --> E{토큰 잔액 확인}
-    C --> E
-    D --> E
-    E -->|부족| F[InsufficientTokensError 반환]
-    E -->|충분| G[use_design_tokens RPC - 토큰 차감]
-    G --> H[AI API 호출]
-    H -->|성공| I[이미지 URL + 태그 + contextChip 반환]
-    H -->|실패| J[refund_design_tokens RPC - 토큰 복원]
-    J --> K[에러 반환]
+    A[고객 텍스트/이미지 입력] --> B{CI 이미지 + all-over/one-point 인가}
+    B -->|yes| C[prepare-pattern-composite]
+    B -->|no| D[라우트 결정]
+    C --> E[magick-wasm 전처리 및 타일/모티프 합성]
+    E --> F{보정 필요 여부}
+    F -->|yes| G[OpenAI images/edits 보정]
+    F -->|no| D
+    G --> D
+    D -->|fal_edit / fal_inpaint / fal_controlnet / 조건 충족 fal_tiling| H[generate-fal-api]
+    D -->|그 외| I[generate-open-api]
+    H --> J{토큰 잔액 확인 및 차감}
+    I --> J
+    J -->|부족| K[InsufficientTokensError 반환]
+    J -->|충분| L[분석 + 최종 렌더]
+    L -->|성공| M[이미지 URL + contextChip 반환]
+    L -->|실패| N[refund_design_tokens RPC - 토큰 복원]
+    N --> O[에러 반환]
 ```
+
+### 패턴 준비와 최종 렌더 분리
+
+- `prepare-pattern-composite`는 반복 패턴의 최종 렌더러가 아니라 **사전 준비 단계**다.
+- `all-over` 또는 `one-point`에서 CI 이미지가 있으면 먼저 이 Edge Function이 호출된다.
+- 준비 단계에서는 `magick-wasm` 기반으로 소스 이미지를 잘라내고, 반복 타일(`composeAllOverTile`) 또는 원포인트 모티프(`composeOnePointMotif`)를 합성한다.
+- 반복에 부적합한 소스만 OpenAI `images/edits`로 보정한다.
+- 그 다음 최종 렌더를 `fal` 또는 `OpenAI` 중 하나로 보낸다.
+- 따라서 `fal_tiling`은 “반복 패턴을 준비하는 단계”가 아니라 **준비된 반복 타일을 사용한 최종 렌더 라우트**를 뜻한다.
+- `fal_tiling`으로 판정돼도 준비된 타일이 없으면 최종 호출은 `openai`로 폴백한다.
 
 ## 토큰 유형
 
@@ -48,11 +62,12 @@ flowchart TD
 
 ## AI 모델별 Edge Function
 
-| 모델   | Edge Function         | 지원 입력       | 비고                                               |
-| ------ | --------------------- | --------------- | -------------------------------------------------- |
-| openai | `generate-open-api`   | 텍스트 / 이미지 |                                                    |
-| gemini | `generate-google-api` | 텍스트 / 이미지 |                                                    |
-| fal    | `generate-fal-api`    | 텍스트 / 이미지 | all-over CI + yarn-dyed + auto 조건일 때 자동 선택 |
+| 구분          | Edge Function               | 역할           | 비고                                                                     |
+| ------------- | --------------------------- | -------------- | ------------------------------------------------------------------------ |
+| preprocessing | `prepare-pattern-composite` | 패턴 준비      | `magick-wasm` 기반 소스 정리, 반복 타일/모티프 합성, 필요 시 OpenAI 보정 |
+| openai render | `generate-open-api`         | 최종 분석/생성 | 입력 이미지가 있으면 `images/edits`, 없으면 `images/generations` 사용    |
+| fal render    | `generate-fal-api`          | 최종 분석/생성 | `fal_edit`, `fal_inpaint`, `fal_controlnet`, 조건 충족 `fal_tiling` 담당 |
+| gemini render | `generate-google-api`       | 별도 유지 경로 | 함수는 유지되지만 현재 store의 기본 provider chain에는 포함되지 않음     |
 
 ## 비즈니스 규칙
 
@@ -79,34 +94,41 @@ flowchart TD
 
 ```
 프론트 → ai-design-api.ts
-  └─ 참조 이미지를 Base64로 변환
-  └─ shouldUseFalPipeline 판정 (all-over CI + yarn-dyed + auto 조건)
+  └─ source/ci/reference 이미지를 Base64로 변환
+  └─ CI 이미지 + all-over/one-point면 prepare-pattern-composite 호출
+       ├─ magick-wasm으로 source 정리
+       ├─ all-over면 반복 타일 합성
+       ├─ one-point면 모티프 합성
+       └─ 필요 시 OpenAI images/edits로 보정
+  └─ resolveGenerationRouteAsync로 최종 렌더 라우트 결정
+  └─ shouldUseFalPipeline 판정
   └─ one-point CI 배치 시 solid backgroundPattern 자동 생성
-  └─ Edge Function 선택
-       ├─ fal 조건 충족 → generate-fal-api  (타일링/업스케일/IP-어댑터)
-          referenceImageBase64만 있고 ciImageBase64는 없으면 A2(IP-Adapter) 분기로, 그 외 all-over CI 반복 렌더는 타일링 img2img 분기로 처리
-       ├─ openai → generate-open-api
-       └─ gemini → generate-google-api
-  └─ Edge Function 호출 (메시지 / 디자인 컨텍스트 / 대화 히스토리 / 첨부 파일 / backgroundPattern)
+  └─ provider chain 실행
+       ├─ fal 조건 충족 → generate-fal-api
+          fal_edit / fal_inpaint / fal_controlnet / 조건 충족 fal_tiling
+       └─ 그 외 → generate-open-api
+  └─ Edge Function 호출 (메시지 / 디자인 컨텍스트 / 대화 히스토리 / 첨부 파일 / backgroundPattern / prepared tile or motif)
   └─ 응답 파싱 (AI 메시지 / 이미지 URL / 태그 / contextChip / positionIntent)
   └─ RPC: get_design_token_balance (업데이트된 잔액 조회)
 ```
 
 ## 관련 파일
 
-| 파일                                                            | 설명                                                     |
-| --------------------------------------------------------------- | -------------------------------------------------------- |
-| `apps/store/src/entities/design/api/ai-design-api.ts`           | 프론트 AI 디자인 API 레이어                              |
-| `apps/store/src/entities/design/api/ai-design-mapper.ts`        | Edge Function 호출 payload 빌더 (backgroundPattern 포함) |
-| `apps/store/src/entities/design/api/should-use-fal-pipeline.ts` | Fal 파이프라인 라우팅 판정 로직                          |
-| `supabase/functions/generate-fal-api/index.ts`                  | Fal 기반 이미지 생성 Edge Function                       |
-| `supabase/functions/_shared/design-request.ts`                  | `BackgroundPattern` 타입 및 요청 스키마                  |
-| `supabase/functions/_shared/prompt-builders.ts`                 | 이미지/텍스트 프롬프트 빌더 (positionIntent 포함)        |
-| `supabase/functions/_shared/preprocessing/upscale.ts`           | 참조 이미지 업스케일 전처리 (512px 미만 자동 확대)       |
-| `supabase/functions/_shared/tile-pipeline/`                     | 타일 패턴 캔버스 렌더링 및 합성 파이프라인               |
-| `supabase/functions/_shared/verification/seamless.ts`           | 타일 이음새 검증                                         |
-| `supabase/schemas/86_design_tokens.sql`                         | 디자인 토큰 테이블 스키마                                |
-| `supabase/schemas/99_functions_design_tokens.sql`               | 토큰 RPC (use / refund / balance 등)                     |
+| 파일                                                             | 설명                                                     |
+| ---------------------------------------------------------------- | -------------------------------------------------------- |
+| `apps/store/src/entities/design/api/ai-design-api.ts`            | 프론트 AI 디자인 API 레이어 및 provider chain 진입점     |
+| `apps/store/src/entities/design/api/ai-design-mapper.ts`         | Edge Function 호출 payload 빌더 (backgroundPattern 포함) |
+| `apps/store/src/entities/design/api/resolve-generation-route.ts` | 최종 렌더 라우트 판정                                    |
+| `apps/store/src/entities/design/api/should-use-fal-pipeline.ts`  | `fal_tiling` 사용 가능 여부 probe                        |
+| `supabase/functions/prepare-pattern-composite/index.ts`          | CI 패턴 준비 Edge Function                               |
+| `supabase/functions/_shared/pattern-composite.ts`                | `magick-wasm` 기반 source 정리 / 타일 / 모티프 합성      |
+| `supabase/functions/generate-fal-api/index.ts`                   | Fal 기반 최종 렌더 Edge Function                         |
+| `supabase/functions/generate-open-api/index.ts`                  | OpenAI 기반 최종 렌더 Edge Function                      |
+| `supabase/functions/_shared/design-request.ts`                   | `BackgroundPattern` 타입 및 요청 스키마                  |
+| `supabase/functions/_shared/prompt-builders.ts`                  | 이미지/텍스트 프롬프트 빌더 (positionIntent 포함)        |
+| `supabase/functions/_shared/preprocessing/upscale.ts`            | 참조 이미지 업스케일 전처리 (512px 미만 자동 확대)       |
+| `supabase/schemas/86_design_tokens.sql`                          | 디자인 토큰 테이블 스키마                                |
+| `supabase/schemas/99_functions_design_tokens.sql`                | 토큰 RPC (use / refund / balance 등)                     |
 
 ## 횡단 참조
 
