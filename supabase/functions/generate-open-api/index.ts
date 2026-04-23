@@ -29,6 +29,7 @@ import {
   saveDesignSession,
   type SessionMessage,
 } from "@/functions/_shared/session-save.ts";
+import { recordSourceInputArtifact } from "@/functions/_shared/input-artifacts.ts";
 import { sanitizeLogRequestAttachments } from "@/functions/_shared/request-attachments.ts";
 import {
   isContextChip,
@@ -510,6 +511,24 @@ const runOpenAiAnalysis = async (params: {
     });
   };
 
+  const recordAnalysisSourceArtifact = async () => {
+    try {
+      await recordSourceInputArtifact({
+        adminClient,
+        workflowId,
+        sourceWorkId: analysisWorkId,
+        phase: "analysis",
+        payload,
+      });
+    } catch (error) {
+      console.error("Failed to record analysis source artifact", {
+        workflowId,
+        analysisWorkId,
+        error,
+      });
+    }
+  };
+
   const { data: tokenResult, error: tokenError } = await chargeTokens(
     adminClient,
     {
@@ -525,6 +544,7 @@ const runOpenAiAnalysis = async (params: {
       errorType: "token_processing_failed",
       errorMessage: tokenError.message,
     });
+    await recordAnalysisSourceArtifact();
     throw new HttpError(500, { error: "Token processing failed" });
   }
 
@@ -533,6 +553,7 @@ const runOpenAiAnalysis = async (params: {
       errorType: tokenResult?.error ?? "insufficient_tokens",
       errorMessage: tokenResult?.error ?? "Token deduction was rejected",
     });
+    await recordAnalysisSourceArtifact();
     throw new HttpError(403, {
       error: "insufficient_tokens",
       balance: tokenResult?.balance ?? 0,
@@ -615,6 +636,7 @@ const runOpenAiAnalysis = async (params: {
       imagePrompt,
       imageEditPrompt,
     });
+    await recordAnalysisSourceArtifact();
 
     return analysis;
   } catch (error) {
@@ -637,6 +659,7 @@ const runOpenAiAnalysis = async (params: {
       errorMessage: error instanceof Error ? error.message : "Unknown error",
       tokensRefunded,
     });
+    await recordAnalysisSourceArtifact();
 
     throw error;
   }

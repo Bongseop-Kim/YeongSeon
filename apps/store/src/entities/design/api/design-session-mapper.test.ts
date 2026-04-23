@@ -38,7 +38,7 @@ describe("toDesignSession", () => {
       toDesignSession({
         id: "session-2",
         user_id: "user-1",
-        ai_model: "gemini",
+        ai_model: "openai",
         first_message: "첫 메시지",
         last_image_url: null,
         last_image_file_id: null,

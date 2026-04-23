@@ -101,13 +101,16 @@ export const ensureImageMagick = async (): Promise<void> => {
   if (!magickInitialized) {
     magickInitialized = (async () => {
       try {
-        const wasmBytes = await Deno.readFile(
-          new URL(
-            "magick.wasm",
-            import.meta.resolve("npm:@imagemagick/magick-wasm@0.0.30"),
-          ),
+        const wasmUrl = import.meta
+          .resolve("npm:@imagemagick/magick-wasm@0.0.30/magick.wasm");
+        const response = await fetch(wasmUrl);
+        if (!response.ok) {
+          throw new Error(`imagemagick_wasm_fetch_failed:${response.status}`);
+        }
+
+        await initializeImageMagick(
+          new Uint8Array(await response.arrayBuffer()),
         );
-        await initializeImageMagick(wasmBytes);
       } catch (error) {
         magickInitialized = null;
         throw error;
@@ -117,6 +120,9 @@ export const ensureImageMagick = async (): Promise<void> => {
 
   await magickInitialized;
 };
+
+const copyMagickBytes = (bytes: Uint8Array): Uint8Array =>
+  new Uint8Array(bytes);
 
 const getBinaryMask = (
   pixels: Uint8ClampedArray,
@@ -494,7 +500,7 @@ export const maybeDownscaleImage = async (
       Math.max(1, Math.round(image.width * scale)),
       Math.max(1, Math.round(image.height * scale)),
     );
-    return await image.write(MagickFormat.Png, (data) => data);
+    return await image.write(MagickFormat.Png, copyMagickBytes);
   });
 };
 
@@ -512,7 +518,7 @@ const rgbaToPngBytes = async (
   const image = MagickImage.create();
   try {
     image.read(rgba, settings);
-    return await image.write(MagickFormat.Png, (data) => data);
+    return await image.write(MagickFormat.Png, copyMagickBytes);
   } finally {
     image.dispose();
   }
@@ -607,7 +613,7 @@ export const buildOpenAiEditCanvas = async (
       const offsetX = Math.round((OPENAI_EDITS_CANVAS_SIZE - image.width) / 2);
       const offsetY = Math.round((OPENAI_EDITS_CANVAS_SIZE - image.height) / 2);
       canvas.composite(image, new Point(offsetX, offsetY));
-      return await canvas.write(MagickFormat.Png, (data) => data);
+      return await canvas.write(MagickFormat.Png, copyMagickBytes);
     } finally {
       canvas.dispose();
     }
@@ -654,7 +660,7 @@ export const composeAllOverTile = async (input: {
           }
         }
 
-        return await canvas.write(MagickFormat.Png, (data) => data);
+        return await canvas.write(MagickFormat.Png, copyMagickBytes);
       } finally {
         canvas.dispose();
       }
@@ -699,7 +705,7 @@ export const composeOnePointMotif = async (input: {
         );
 
         canvas.composite(sprite, new Point(x, y));
-        return await canvas.write(MagickFormat.Png, (data) => data);
+        return await canvas.write(MagickFormat.Png, copyMagickBytes);
       } finally {
         canvas.dispose();
       }

@@ -547,18 +547,6 @@ test.describe.serial("Design/Token 플로우", () => {
         }),
       });
     });
-    await page.route("**/functions/v1/generate-google-api", async (route) => {
-      await route.fulfill({
-        status: 402,
-        contentType: "application/json",
-        body: JSON.stringify({
-          error: "insufficient_tokens",
-          balance: 0,
-          cost: 1,
-        }),
-      });
-    });
-
     const textarea = page.getByLabel("디자인 요청 메시지");
     await textarea.waitFor({ timeout: 10_000 });
     await textarea.fill("토큰 부족 테스트");

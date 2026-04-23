@@ -173,6 +173,132 @@ begin
 end;
 $$;
 
+CREATE OR REPLACE FUNCTION public.admin_get_generation_log_artifacts(
+  p_workflow_id text
+)
+RETURNS TABLE (
+  id uuid,
+  workflow_id text,
+  phase text,
+  artifact_type text,
+  source_work_id text,
+  parent_artifact_id uuid,
+  storage_provider text,
+  image_url text,
+  image_width integer,
+  image_height integer,
+  mime_type text,
+  file_size_bytes bigint,
+  status text,
+  meta jsonb,
+  created_at timestamptz
+)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+begin
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  if p_workflow_id is null or btrim(p_workflow_id) = '' then
+    raise exception 'p_workflow_id is required';
+  end if;
+
+  RETURN QUERY
+  SELECT
+    a.id,
+    a.workflow_id,
+    a.phase,
+    a.artifact_type,
+    a.source_work_id,
+    a.parent_artifact_id,
+    a.storage_provider,
+    a.image_url,
+    a.image_width,
+    a.image_height,
+    a.mime_type,
+    a.file_size_bytes,
+    a.status,
+    a.meta,
+    a.created_at
+  FROM public.ai_generation_log_artifacts a
+  WHERE a.workflow_id = p_workflow_id
+  ORDER BY a.created_at ASC, a.id ASC;
+end;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_get_generation_log_artifacts(text) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.write_ai_generation_log_artifact(
+  p_id uuid,
+  p_workflow_id text,
+  p_phase text,
+  p_artifact_type text,
+  p_source_work_id text,
+  p_parent_artifact_id uuid,
+  p_storage_provider text,
+  p_image_url text,
+  p_image_width integer,
+  p_image_height integer,
+  p_mime_type text,
+  p_file_size_bytes bigint,
+  p_status text,
+  p_meta jsonb
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+begin
+  INSERT INTO public.ai_generation_log_artifacts (
+    id,
+    workflow_id,
+    phase,
+    artifact_type,
+    source_work_id,
+    parent_artifact_id,
+    storage_provider,
+    image_url,
+    image_width,
+    image_height,
+    mime_type,
+    file_size_bytes,
+    status,
+    meta
+  ) VALUES (
+    p_id,
+    p_workflow_id,
+    p_phase,
+    p_artifact_type,
+    p_source_work_id,
+    p_parent_artifact_id,
+    p_storage_provider,
+    p_image_url,
+    p_image_width,
+    p_image_height,
+    p_mime_type,
+    p_file_size_bytes,
+    p_status,
+    COALESCE(p_meta, '{}'::jsonb)
+  );
+end;
+$$;
+
+COMMENT ON FUNCTION public.write_ai_generation_log_artifact(
+  uuid, text, text, text, text, uuid, text, text, integer, integer, text, bigint, text, jsonb
+) IS 'Service-role-only RPC used by Edge Functions to record ai_generation_log_artifacts without direct table inserts; no auth.uid() validation by design.';
+
+COMMENT ON FUNCTION public.admin_get_generation_logs(
+  date, date, text, integer, integer, uuid, text, text, text
+) IS 'Admin-only listing with optional filters: id / request_type / status(success|error) / id_search(workflow_id|work_id exact).';
+
+GRANT EXECUTE ON FUNCTION public.write_ai_generation_log_artifact(
+  uuid, text, text, text, text, uuid, text, text, integer, integer, text, bigint, text, jsonb
+) TO service_role;
+
 
 -- ── admin_get_today_stats ───────────────────────────────────
 CREATE OR REPLACE FUNCTION public.admin_get_today_stats(

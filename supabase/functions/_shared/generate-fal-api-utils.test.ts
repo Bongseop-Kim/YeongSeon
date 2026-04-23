@@ -1,14 +1,204 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert@1.0.19";
 import {
+  buildPlacedPreviewArtifacts,
   buildFalErrorResponseBody,
   getGenerationLogUserMessage,
   getTrustedFalImageUrl,
   inspectRemoteInpaintImage,
   parseValidatedInpaintDataUri,
+  recordFinalRenderArtifacts,
+  recordOptionalRenderArtifacts,
+  type RecordRenderArtifactFn,
   resolveInpaintBaseImageUrl,
   shouldExecuteFalRender,
   validateRemoteInpaintBaseImageUrl,
 } from "@/functions/_shared/generate-fal-api-utils.ts";
+
+Deno.test("recordFinalRenderArtifacts keeps fal_raw before final", async () => {
+  const calls: Array<{
+    artifactType: string;
+    parentArtifactId: string | null;
+    meta: Record<string, unknown> | undefined;
+    imageKind: string;
+    mimeType: string | null;
+    imageUrl: string | null;
+  }> = [];
+
+  const recordArtifact: RecordRenderArtifactFn = async (input) => {
+    calls.push({
+      artifactType: input.artifactType,
+      parentArtifactId: input.parentArtifactId ?? null,
+      meta: input.meta,
+      imageKind: input.image.kind,
+      mimeType: input.image.kind === "base64" ? input.image.mimeType : null,
+      imageUrl: input.image.kind === "url" ? input.image.url : null,
+    });
+
+    return {
+      artifactId: `artifact-${calls.length}`,
+      status: input.artifactType === "fal_raw" ? "success" : "partial",
+      imageUrl:
+        input.image.kind === "url"
+          ? input.image.url
+          : `https://ik.test/${input.artifactType}.png`,
+      error: null,
+    };
+  };
+
+  await recordFinalRenderArtifacts(recordArtifact, {
+    falImageUrl: "https://fal.media/raw.png",
+    finalImageUrl: "https://ik.test/final.png",
+    falRequestId: "fal-1",
+    renderBackend: "img2img",
+  });
+
+  assertEquals(
+    calls.map((call) => call.artifactType),
+    ["fal_raw", "final"],
+  );
+  assertEquals(calls[1]?.parentArtifactId, "artifact-1");
+  assertEquals(calls[0]?.imageKind, "url");
+  assertEquals(calls[0]?.imageUrl, "https://fal.media/raw.png");
+  assertEquals(calls[0]?.meta, {
+    fal_request_id: "fal-1",
+    render_backend: "img2img",
+  });
+  assertEquals(calls[1]?.imageKind, "url");
+  assertEquals(calls[1]?.imageUrl, "https://ik.test/final.png");
+  assertEquals(calls[1]?.meta, {
+    fal_request_id: "fal-1",
+    render_backend: "img2img",
+  });
+});
+
+Deno.test(
+  "recordFinalRenderArtifacts clears final parent when fal_raw save fails",
+  async () => {
+    const calls: Array<{
+      artifactType: string;
+      parentArtifactId: string | null;
+    }> = [];
+
+    const recordArtifact: RecordRenderArtifactFn = async (input) => {
+      calls.push({
+        artifactType: input.artifactType,
+        parentArtifactId: input.parentArtifactId ?? null,
+      });
+
+      return {
+        artifactId: `artifact-${calls.length}`,
+        status: input.artifactType === "fal_raw" ? "failed" : "partial",
+        imageUrl:
+          input.image.kind === "url"
+            ? input.image.url
+            : `https://ik.test/${input.artifactType}.png`,
+        error:
+          input.artifactType === "fal_raw" ? "imagekit_upload_failed" : null,
+      };
+    };
+
+    await recordFinalRenderArtifacts(recordArtifact, {
+      falImageUrl: "https://fal.media/raw.png",
+      finalImageUrl: "https://ik.test/final.png",
+      falRequestId: "fal-2",
+      renderBackend: "img2img",
+    });
+
+    assertEquals(
+      calls.map((call) => call.artifactType),
+      ["fal_raw", "final"],
+    );
+    assertEquals(calls[1]?.parentArtifactId, null);
+  },
+);
+
+Deno.test(
+  "recordOptionalRenderArtifacts skips absent values and records present branches",
+  async () => {
+    const artifactTypes: string[] = [];
+
+    const recordArtifact: RecordRenderArtifactFn = async (input) => {
+      artifactTypes.push(input.artifactType);
+      return {
+        artifactId: `artifact-${artifactTypes.length}`,
+        status: "success",
+        imageUrl: `https://ik.test/${input.artifactType}.png`,
+        error: null,
+      };
+    };
+
+    await recordOptionalRenderArtifacts(recordArtifact, {
+      placedPreviewBase64: "AAEC",
+      placedPreviewMimeType: "image/png",
+      falInputBase64: null,
+      falInputMimeType: "image/png",
+      upscaledReferenceBase64: "AQID",
+      upscaledReferenceMimeType: "image/png",
+    });
+
+    assertEquals(artifactTypes, ["placed_preview", "upscaled_reference"]);
+  },
+);
+
+Deno.test(
+  "recordOptionalRenderArtifacts trims base64 and mime type before saving",
+  async () => {
+    const calls: Array<
+      RecordRenderArtifactFn extends (input: infer T) => unknown ? T : never
+    > = [];
+
+    const recordArtifact: RecordRenderArtifactFn = async (input) => {
+      calls.push(input);
+      return {
+        artifactId: "artifact-1",
+        status: "success",
+        imageUrl: "https://ik.test/placed-preview.png",
+        error: null,
+      };
+    };
+
+    await recordOptionalRenderArtifacts(recordArtifact, {
+      placedPreviewBase64: "  AAEC\n",
+      placedPreviewMimeType: " image/png ",
+    });
+
+    assertEquals(calls.length, 1);
+    assertEquals(calls[0]?.image, {
+      kind: "base64",
+      base64: "AAEC",
+      mimeType: "image/png",
+    });
+  },
+);
+
+Deno.test(
+  "buildPlacedPreviewArtifacts uses tiled preview only for one-point placement",
+  () => {
+    assertEquals(
+      buildPlacedPreviewArtifacts({
+        ciPlacement: "one-point",
+        tiledBase64: "AAEC",
+        tiledMimeType: "image/png",
+      }),
+      {
+        placedPreviewBase64: "AAEC",
+        placedPreviewMimeType: "image/png",
+      },
+    );
+
+    assertEquals(
+      buildPlacedPreviewArtifacts({
+        ciPlacement: "all-over",
+        tiledBase64: "AAEC",
+        tiledMimeType: "image/png",
+      }),
+      {
+        placedPreviewBase64: null,
+        placedPreviewMimeType: null,
+      },
+    );
+  },
+);
 
 Deno.test("getTrustedFalImageUrl accepts fal.media subdomains", () => {
   assertEquals(

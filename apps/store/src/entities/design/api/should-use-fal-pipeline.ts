@@ -39,9 +39,9 @@ async function fetchFalPipelineEnabled(): Promise<boolean> {
     return probeCache.value;
   }
 
-  const fallbackToEnabled = () => {
-    probeCache = { value: true, expiresAt: Date.now() + PROBE_CACHE_TTL_MS };
-    return true;
+  const fallbackToDisabled = () => {
+    probeCache = { value: false, expiresAt: Date.now() + PROBE_CACHE_TTL_MS };
+    return false;
   };
 
   const sessionTimeout = Symbol("session-timeout");
@@ -59,7 +59,7 @@ async function fetchFalPipelineEnabled(): Promise<boolean> {
       }),
     ]);
     if (sessionResult === sessionTimeout) {
-      return fallbackToEnabled();
+      return fallbackToDisabled();
     }
 
     const {
@@ -85,12 +85,12 @@ async function fetchFalPipelineEnabled(): Promise<boolean> {
       signal: controller.signal,
     });
     const value = response.ok
-      ? ((await response.json()) as { enabled?: unknown }).enabled !== false
-      : true;
+      ? ((await response.json()) as { enabled?: unknown }).enabled === true
+      : false;
     probeCache = { value, expiresAt: Date.now() + PROBE_CACHE_TTL_MS };
     return value;
   } catch {
-    return fallbackToEnabled();
+    return fallbackToDisabled();
   } finally {
     if (sessionTimeoutId) {
       clearTimeout(sessionTimeoutId);

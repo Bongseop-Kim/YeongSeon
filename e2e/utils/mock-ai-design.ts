@@ -25,10 +25,7 @@ export const installMockAiDesign = async (
   page: Page,
   mode: MockAiDesignMode,
 ) => {
-  const routes = [
-    "**/functions/v1/generate-open-api",
-    "**/functions/v1/generate-google-api",
-  ];
+  const routes = ["**/functions/v1/generate-open-api"];
 
   await Promise.all(
     routes.map((url) =>

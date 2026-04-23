@@ -36,6 +36,8 @@ export type GenerateDesignRequest = {
     scale?: "large" | "medium" | "small" | null;
     backgroundPattern?: BackgroundPattern;
   };
+  workflowId?: string | null;
+  prepWorkId?: string | null;
   analysisWorkId?: string | null;
   executionMode?: "auto" | "render_from_analysis";
   autoGenerate?: boolean;

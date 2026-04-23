@@ -1,6 +1,7 @@
 import type {
   AdminGenerationLogItem,
   ErrorDistribution,
+  GenerationLogPhase,
   GenerationStatsData,
   GenerationSummaryStats,
   InputTypeStats,
@@ -11,6 +12,10 @@ import type {
 // ── helpers ──────────────────────────────────────────────────
 
 function toNumber(v: unknown, fallback = 0): number {
+  if (typeof v === "bigint") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
   if (typeof v === "number") return Number.isFinite(v) ? v : fallback;
   if (typeof v === "string") {
     const n = Number(v);
@@ -20,6 +25,10 @@ function toNumber(v: unknown, fallback = 0): number {
 }
 
 function toNumberOrNull(v: unknown): number | null {
+  if (typeof v === "bigint") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
   if (typeof v === "number") return Number.isFinite(v) ? v : null;
   if (typeof v === "string") {
     const n = Number(v);
@@ -118,7 +127,7 @@ function toRequestType(
   return null;
 }
 
-function toPhase(v: unknown): "analysis" | "prep" | "render" | undefined {
+function toPhase(v: unknown): GenerationLogPhase | undefined {
   if (v === "analysis" || v === "prep" || v === "render") return v;
   return undefined;
 }
@@ -128,8 +137,8 @@ function toQuality(v: unknown): "standard" | "high" | null {
   return null;
 }
 
-function toAiModel(v: unknown): "openai" | "gemini" | "fal" {
-  if (v === "openai" || v === "gemini" || v === "fal") return v;
+function toAiModel(v: unknown): "openai" | "fal" {
+  if (v === "openai" || v === "fal") return v;
   console.warn(`[toAiModel] Invalid ai_model value: ${String(v)}`);
   return "openai";
 }

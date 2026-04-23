@@ -23,6 +23,8 @@ interface DesignTokenBalance {
 }
 
 interface PatternPreparationResponse {
+  workflowId?: string | null;
+  prepWorkId?: string | null;
   placementMode: "all-over" | "one-point";
   sourceStatus: "ready" | "repair_required";
   fabricStatus: "ready" | "repair_required";
@@ -248,12 +250,6 @@ export async function aiDesignApi(
       ? (preparedCompositeMimeType ?? preparedSourceMimeType)
       : preparedSourceMimeType;
 
-  const useFalTiling = await shouldUseFalPipeline({
-    ciImageBase64: preparedSourceBase64,
-    ciPlacement: request.designContext.ciPlacement,
-    fabricMethod: request.designContext.fabricMethod,
-    allowFalRender: true,
-  });
   const backgroundPattern =
     request.designContext.ciPlacement === "one-point" &&
     request.designContext.colors[0]
@@ -270,6 +266,15 @@ export async function aiDesignApi(
     !preparedCompositeBase64
       ? "openai"
       : requestedRoute;
+  const useFalTiling =
+    resolvedRoute === "fal_tiling"
+      ? await shouldUseFalPipeline({
+          ciImageBase64: preparedSourceBase64,
+          ciPlacement: request.designContext.ciPlacement,
+          fabricMethod: request.designContext.fabricMethod,
+          allowFalRender: true,
+        })
+      : false;
   const shouldPrepareTiledPattern =
     resolvedRoute === "fal_tiling" && placementMode === "all-over";
   const controlStructureBase64 =
@@ -308,6 +313,8 @@ export async function aiDesignApi(
     sourceImageBase64: preparedRenderImageBase64,
     sourceImageMimeType: preparedRenderImageMimeType,
     ciImageBase64: preparedRenderImageBase64,
+    workflowId: patternPreparation?.workflowId,
+    prepWorkId: patternPreparation?.prepWorkId,
     backgroundPattern,
     patternPreparation: patternPreparationPayload,
     routeHint: request.routeHint,

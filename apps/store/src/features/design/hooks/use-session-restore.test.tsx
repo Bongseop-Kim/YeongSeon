@@ -106,7 +106,7 @@ describe("useSessionRestore", () => {
     act(() => {
       result.current.restoreSession({
         id: "session-2",
-        aiModel: "gemini",
+        aiModel: "openai",
         firstMessage: "텍스트만",
         lastImageUrl: null,
         lastImageFileId: null,

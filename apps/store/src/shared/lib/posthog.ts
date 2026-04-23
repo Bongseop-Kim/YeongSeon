@@ -7,7 +7,7 @@ type GenerationRoute =
   | "fal_controlnet"
   | "fal_inpaint";
 
-type PosthogAiModel = "openai" | "gemini" | "fal";
+type PosthogAiModel = "openai" | "fal";
 
 type PhEventParamsMap = {
   design_session_started: { ai_model: PosthogAiModel };
