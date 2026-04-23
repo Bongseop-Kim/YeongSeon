@@ -5,7 +5,7 @@ import type {
 } from "@/entities/design/model/design-context";
 import type { Scale } from "@/entities/design/model/design-scale";
 
-export type PatternPreparationReasonCode =
+type PatternPreparationReasonCode =
   | "non_seamless_edges"
   | "uneven_outer_margin"
   | "uneven_object_spacing"
@@ -33,7 +33,7 @@ interface AssessPatternPreparationInput {
   metrics: PatternPreparationMetrics;
 }
 
-export interface PatternPreparationResult {
+interface PatternPreparationResult {
   placementMode: Extract<CiPlacement, "all-over" | "one-point">;
   sourceStatus: "ready" | "repair_required";
   fabricStatus: "ready" | "repair_required";

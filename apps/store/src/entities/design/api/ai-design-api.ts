@@ -191,12 +191,11 @@ export async function aiDesignApi(
     detectedPattern: request.designContext.pattern,
   });
 
-  const [sourceImageBase64] = await Promise.all([
-    sourceImage ? fileToBase64(sourceImage) : Promise.resolve(undefined),
-  ]);
+  const sourceImageBase64 = sourceImage
+    ? await fileToBase64(sourceImage)
+    : undefined;
   const placementMode = request.designContext.ciPlacement;
   let patternPreparation: PatternPreparationResponse | null = null;
-  let patternPreparationFailed = false;
 
   if (
     sourceImageBase64 &&
@@ -225,20 +224,7 @@ export async function aiDesignApi(
       captureGenerationFailed({
         error_type: "pattern_preparation_failed",
       });
-      patternPreparationFailed = true;
     }
-  }
-
-  if (
-    sourceImageBase64 &&
-    sourceImage &&
-    (placementMode === "all-over" || placementMode === "one-point") &&
-    !patternPreparation?.preparedSourceBase64 &&
-    !patternPreparationFailed
-  ) {
-    captureGenerationFailed({
-      error_type: "pattern_preparation_failed",
-    });
   }
 
   const preparedSourceBase64 =
@@ -304,38 +290,42 @@ export async function aiDesignApi(
     resolvedRoute === "fal_inpaint" ||
     resolvedRoute === "fal_controlnet" ||
     (resolvedRoute === "fal_tiling" && useFalTiling);
-
-  const falPayload = buildInvokePayload(request, {
+  const patternPreparationPayload = patternPreparation
+    ? {
+        placementMode: patternPreparation.placementMode,
+        sourceStatus: patternPreparation.sourceStatus,
+        fabricStatus: patternPreparation.fabricStatus,
+        reasonCodes: patternPreparation.reasonCodes,
+        preparedSourceKind: patternPreparation.preparedSourceKind,
+        preparationBackend: patternPreparation.preparationBackend,
+        repairApplied: patternPreparation.repairApplied,
+        repairPromptKind: patternPreparation.repairPromptKind,
+        repairSummary: patternPreparation.repairSummary,
+        prepTokensCharged: patternPreparation.prepTokensCharged,
+      }
+    : undefined;
+  const sharedPayload = {
     sourceImageBase64: preparedRenderImageBase64,
     sourceImageMimeType: preparedRenderImageMimeType,
     ciImageBase64: preparedRenderImageBase64,
     backgroundPattern,
+    patternPreparation: patternPreparationPayload,
+    routeHint: request.routeHint,
+    baseImageUrl: request.baseImageUrl,
+    baseImageWorkId: request.baseImageWorkId,
+  };
+
+  const falPayload = buildInvokePayload(request, {
+    ...sharedPayload,
     tiledBase64: shouldPrepareTiledPattern
       ? preparedCompositeBase64
       : undefined,
     tiledMimeType: shouldPrepareTiledPattern
       ? preparedCompositeMimeType
       : undefined,
-    patternPreparation: patternPreparation
-      ? {
-          placementMode: patternPreparation.placementMode,
-          sourceStatus: patternPreparation.sourceStatus,
-          fabricStatus: patternPreparation.fabricStatus,
-          reasonCodes: patternPreparation.reasonCodes,
-          preparedSourceKind: patternPreparation.preparedSourceKind,
-          preparationBackend: patternPreparation.preparationBackend,
-          repairApplied: patternPreparation.repairApplied,
-          repairPromptKind: patternPreparation.repairPromptKind,
-          repairSummary: patternPreparation.repairSummary,
-          prepTokensCharged: patternPreparation.prepTokensCharged,
-        }
-      : undefined,
     route: resolvedRoute,
     routeSignals: routeResolution.signals,
     routeReason: routeResolution.reason,
-    routeHint: request.routeHint,
-    baseImageUrl: request.baseImageUrl,
-    baseImageWorkId: request.baseImageWorkId,
     controlType: request.controlType,
     structureImageBase64: controlStructureBase64,
     structureImageMimeType: controlStructureMimeType,
@@ -347,27 +337,7 @@ export async function aiDesignApi(
   }) as Record<string, unknown>;
 
   const defaultPayload = buildInvokePayload(request, {
-    sourceImageBase64: preparedRenderImageBase64,
-    sourceImageMimeType: preparedRenderImageMimeType,
-    ciImageBase64: preparedRenderImageBase64,
-    backgroundPattern,
-    patternPreparation: patternPreparation
-      ? {
-          placementMode: patternPreparation.placementMode,
-          sourceStatus: patternPreparation.sourceStatus,
-          fabricStatus: patternPreparation.fabricStatus,
-          reasonCodes: patternPreparation.reasonCodes,
-          preparedSourceKind: patternPreparation.preparedSourceKind,
-          preparationBackend: patternPreparation.preparationBackend,
-          repairApplied: patternPreparation.repairApplied,
-          repairPromptKind: patternPreparation.repairPromptKind,
-          repairSummary: patternPreparation.repairSummary,
-          prepTokensCharged: patternPreparation.prepTokensCharged,
-        }
-      : undefined,
-    routeHint: request.routeHint,
-    baseImageUrl: request.baseImageUrl,
-    baseImageWorkId: request.baseImageWorkId,
+    ...sharedPayload,
   }) as Record<string, unknown>;
 
   const startTime = Date.now();

@@ -69,6 +69,7 @@ const TILE_CANVAS_SIZE = 1024;
 const ONE_POINT_CANVAS_WIDTH = 316;
 const ONE_POINT_CANVAS_HEIGHT = 600;
 const MAX_EDGE = 1024;
+const BACKGROUND_SAMPLE_BLOCK_SIZE = 8;
 
 const SCALE_TO_LOGO_RATIO = {
   large: 0.2,
@@ -122,25 +123,46 @@ const getBinaryMask = (
   width: number,
   height: number,
 ) => {
-  const corners = [
-    0,
-    (width - 1) * 4,
-    (height - 1) * width * 4,
-    ((height - 1) * width + (width - 1)) * 4,
+  const sampleWidth = Math.min(BACKGROUND_SAMPLE_BLOCK_SIZE, width);
+  const sampleHeight = Math.min(BACKGROUND_SAMPLE_BLOCK_SIZE, height);
+  const sampleOrigins = [
+    { x: 0, y: 0 },
+    { x: width - sampleWidth, y: 0 },
+    { x: 0, y: height - sampleHeight },
+    { x: width - sampleWidth, y: height - sampleHeight },
   ];
-  const background = corners.reduce(
-    (acc, index) => {
-      acc.r += pixels[index];
-      acc.g += pixels[index + 1];
-      acc.b += pixels[index + 2];
-      return acc;
-    },
-    { r: 0, g: 0, b: 0 },
-  );
+  const sampledPixels = new Set<number>();
+  const redValues: number[] = [];
+  const greenValues: number[] = [];
+  const blueValues: number[] = [];
+
+  for (const origin of sampleOrigins) {
+    for (let y = origin.y; y < origin.y + sampleHeight; y += 1) {
+      for (let x = origin.x; x < origin.x + sampleWidth; x += 1) {
+        const pixelOffset = (y * width + x) * 4;
+        if (sampledPixels.has(pixelOffset)) {
+          continue;
+        }
+        sampledPixels.add(pixelOffset);
+        redValues.push(pixels[pixelOffset]);
+        greenValues.push(pixels[pixelOffset + 1]);
+        blueValues.push(pixels[pixelOffset + 2]);
+      }
+    }
+  }
+
+  const getMedian = (values: number[]) => {
+    const sorted = [...values].sort((a, b) => a - b);
+    const middle = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+      ? (sorted[middle - 1] + sorted[middle]) / 2
+      : sorted[middle];
+  };
+
   const backgroundRgb = {
-    r: background.r / corners.length,
-    g: background.g / corners.length,
-    b: background.b / corners.length,
+    r: getMedian(redValues),
+    g: getMedian(greenValues),
+    b: getMedian(blueValues),
   };
   const mask = new Uint8Array(width * height);
 
@@ -372,7 +394,7 @@ export function assessPatternPreparation(input: {
     sourceStatus,
     fabricStatus,
     reasonCodes,
-    preparedSourceKind: repaired ? "repaired" : "original",
+    preparedSourceKind: "original",
     preparationBackend: "local",
     repairApplied: false,
     repairPromptKind: null,
@@ -488,8 +510,12 @@ const rgbaToPngBytes = async (
     height,
   });
   const image = MagickImage.create();
-  image.read(rgba, settings);
-  return await image.write(MagickFormat.Png, (data) => data);
+  try {
+    image.read(rgba, settings);
+    return await image.write(MagickFormat.Png, (data) => data);
+  } finally {
+    image.dispose();
+  }
 };
 
 export const renderPreparedSource = async (
@@ -577,10 +603,14 @@ export const buildOpenAiEditCanvas = async (
       OPENAI_EDITS_CANVAS_SIZE,
       OPENAI_EDITS_CANVAS_SIZE,
     );
-    const offsetX = Math.round((OPENAI_EDITS_CANVAS_SIZE - image.width) / 2);
-    const offsetY = Math.round((OPENAI_EDITS_CANVAS_SIZE - image.height) / 2);
-    canvas.composite(image, new Point(offsetX, offsetY));
-    return await canvas.write(MagickFormat.Png, (data) => data);
+    try {
+      const offsetX = Math.round((OPENAI_EDITS_CANVAS_SIZE - image.width) / 2);
+      const offsetY = Math.round((OPENAI_EDITS_CANVAS_SIZE - image.height) / 2);
+      canvas.composite(image, new Point(offsetX, offsetY));
+      return await canvas.write(MagickFormat.Png, (data) => data);
+    } finally {
+      canvas.dispose();
+    }
   });
   return { bytes: outputBytes, sourceWidth, sourceHeight };
 };
@@ -615,15 +645,19 @@ export const composeAllOverTile = async (input: {
         metrics.compositeCanvasWidth,
         metrics.compositeCanvasHeight,
       );
-      const stride = metrics.tileSizePx + metrics.gapPx;
+      try {
+        const stride = metrics.tileSizePx + metrics.gapPx;
 
-      for (let y = 0; y < metrics.compositeCanvasHeight; y += stride) {
-        for (let x = 0; x < metrics.compositeCanvasWidth; x += stride) {
-          canvas.composite(sprite, new Point(x, y));
+        for (let y = 0; y < metrics.compositeCanvasHeight; y += stride) {
+          for (let x = 0; x < metrics.compositeCanvasWidth; x += stride) {
+            canvas.composite(sprite, new Point(x, y));
+          }
         }
-      }
 
-      return await canvas.write(MagickFormat.Png, (data) => data);
+        return await canvas.write(MagickFormat.Png, (data) => data);
+      } finally {
+        canvas.dispose();
+      }
     },
   );
 
@@ -658,11 +692,17 @@ export const composeOnePointMotif = async (input: {
         metrics.compositeCanvasWidth,
         metrics.compositeCanvasHeight,
       );
-      const x = Math.round((metrics.compositeCanvasWidth - sprite.width) / 2);
-      const y = Math.round((metrics.compositeCanvasHeight - sprite.height) / 2);
+      try {
+        const x = Math.round((metrics.compositeCanvasWidth - sprite.width) / 2);
+        const y = Math.round(
+          (metrics.compositeCanvasHeight - sprite.height) / 2,
+        );
 
-      canvas.composite(sprite, new Point(x, y));
-      return await canvas.write(MagickFormat.Png, (data) => data);
+        canvas.composite(sprite, new Point(x, y));
+        return await canvas.write(MagickFormat.Png, (data) => data);
+      } finally {
+        canvas.dispose();
+      }
     },
   );
 

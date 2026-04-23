@@ -7,7 +7,7 @@ const REPLAYS_ON_ERROR_SAMPLE_RATE = 1;
 
 type TracePropagationTarget = string | RegExp;
 
-export type StoreSentryConfig = {
+type StoreSentryConfig = {
   dsn?: string;
   supabaseUrl?: string;
   environment?: string;

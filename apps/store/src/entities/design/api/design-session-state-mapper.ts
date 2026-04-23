@@ -20,20 +20,14 @@ const CI_PLACEMENTS = [
   "one-point",
 ] as const satisfies ReadonlyArray<NonNullable<DesignContext["ciPlacement"]>>;
 
-const isPatternOption = (
-  value: string,
-): value is NonNullable<DesignContext["pattern"]> =>
-  PATTERN_OPTIONS.includes(value as NonNullable<DesignContext["pattern"]>);
+const isOptionOf =
+  <T extends string>(options: readonly T[]) =>
+  (value: string): value is T =>
+    options.some((option) => option === value);
 
-const isFabricMethod = (
-  value: string,
-): value is NonNullable<DesignContext["fabricMethod"]> =>
-  FABRIC_METHODS.includes(value as NonNullable<DesignContext["fabricMethod"]>);
-
-const isCiPlacement = (
-  value: string,
-): value is NonNullable<DesignContext["ciPlacement"]> =>
-  CI_PLACEMENTS.includes(value as NonNullable<DesignContext["ciPlacement"]>);
+const isPatternOption = isOptionOf(PATTERN_OPTIONS);
+const isFabricMethod = isOptionOf(FABRIC_METHODS);
+const isCiPlacement = isOptionOf(CI_PLACEMENTS);
 
 export interface RestoredDesignSessionState {
   messages: Message[];

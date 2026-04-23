@@ -63,8 +63,9 @@ const attachRemainingTokens = (
 ): ErrorWithRemainingTokens => {
   const normalizedError =
     error instanceof Error ? error : new Error(String(error));
-  normalizedError.remainingTokens = nextRemainingTokens;
-  return normalizedError as ErrorWithRemainingTokens;
+  const errorWithRemainingTokens = normalizedError as ErrorWithRemainingTokens;
+  errorWithRemainingTokens.remainingTokens = nextRemainingTokens;
+  return errorWithRemainingTokens;
 };
 
 const chargeTokens = async (
@@ -263,7 +264,7 @@ Deno.serve(async (req) => {
       phase: "prep",
       parent_work_id: null,
       user_id: user.id,
-      ai_model: result?.repairApplied ? PREP_AI_MODEL : "fal",
+      ai_model: PREP_AI_MODEL,
       request_type: PREP_REQUEST_TYPE,
       quality: PREP_QUALITY,
       user_message: "prepare-pattern-composite",
@@ -452,6 +453,7 @@ Deno.serve(async (req) => {
         preparedSourceBytes = decodeBase64Image(repairedBase64);
         result = {
           ...result,
+          preparedSourceKind: "repaired",
           preparationBackend: "openai_repair",
           repairApplied: true,
           repairPromptKind:

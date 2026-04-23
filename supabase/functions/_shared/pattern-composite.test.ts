@@ -1,11 +1,13 @@
 import {
   assertEquals,
+  assertLess,
   assertObjectMatch,
   assertRejects,
 } from "jsr:@std/assert";
 import {
   assessPatternPreparation,
   buildOpenAiEditCanvas,
+  computeMetrics,
   resolveOnePointCompositeMetrics,
   resolveTileCompositeMetrics,
 } from "@/functions/_shared/pattern-composite.ts";
@@ -66,6 +68,7 @@ Deno.test(
 
     assertEquals(result.sourceStatus, "repair_required");
     assertEquals(result.fabricStatus, "repair_required");
+    assertEquals(result.preparedSourceKind, "original");
     assertEquals(
       result.reasonCodes.includes("not_suitable_for_one_point"),
       true,
@@ -74,6 +77,41 @@ Deno.test(
       result.reasonCodes.includes("too_many_colors_for_yarn_dyed"),
       true,
     );
+  },
+);
+
+Deno.test(
+  "computeMetrics ignores a single contaminated corner when estimating background",
+  () => {
+    const width = 10;
+    const height = 10;
+    const pixels = new Uint8ClampedArray(width * height * 4);
+
+    for (let index = 0; index < width * height; index += 1) {
+      const pixelIndex = index * 4;
+      pixels[pixelIndex] = 255;
+      pixels[pixelIndex + 1] = 255;
+      pixels[pixelIndex + 2] = 255;
+      pixels[pixelIndex + 3] = 255;
+    }
+
+    const setPixel = (x: number, y: number, rgb: [number, number, number]) => {
+      const pixelIndex = (y * width + x) * 4;
+      pixels[pixelIndex] = rgb[0];
+      pixels[pixelIndex + 1] = rgb[1];
+      pixels[pixelIndex + 2] = rgb[2];
+    };
+
+    setPixel(0, 0, [0, 0, 0]);
+    setPixel(4, 4, [0, 0, 0]);
+    setPixel(4, 5, [0, 0, 0]);
+    setPixel(5, 4, [0, 0, 0]);
+    setPixel(5, 5, [0, 0, 0]);
+
+    const metrics = computeMetrics(pixels, width, height);
+
+    assertLess(metrics.opaqueCoverageRatio, 0.2);
+    assertEquals(metrics.componentCount, 2);
   },
 );
 

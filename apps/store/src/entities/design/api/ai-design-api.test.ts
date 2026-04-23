@@ -355,6 +355,73 @@ describe("aiDesignApi", () => {
     );
   });
 
+  it("prep 결과에 preparedSourceBase64가 없어도 원본 폴백 성공 시 실패 이벤트를 중복 기록하지 않는다", async () => {
+    MockFileReader.configure({
+      result: "data:image/png;base64,source-base64",
+    });
+    vi.stubGlobal("FileReader", MockFileReader);
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          placementMode: "all-over",
+          sourceStatus: "ready",
+          fabricStatus: "ready",
+          reasonCodes: [],
+          preparedSourceKind: "original",
+          preparationBackend: "local",
+          repairApplied: false,
+          repairPromptKind: null,
+          repairSummary: null,
+          userMessage: "첨부 이미지를 반복 가능한 패턴 소스로 정리했어요.",
+          preparedSourceMimeType: "image/png",
+          preparedPatternTileBase64: "prepared-tile-base64",
+          preparedPatternTileMimeType: "image/png",
+          tileSizePx: 123,
+          gapPx: 31,
+          compositeCanvasWidth: 1024,
+          compositeCanvasHeight: 1024,
+          harmonizationApplied: false,
+          harmonizationBackend: null,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: successResponse,
+        error: null,
+      });
+
+    await expect(
+      aiDesignApi({
+        ...baseRequest,
+        userMessage: "첨부한 이미지를 올패턴으로 뿌려줘",
+        designContext: {
+          ...baseRequest.designContext,
+          sourceImage: { type: "image/png" } as File,
+          ciPlacement: "all-over",
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        imageUrl: successResponse.imageUrl,
+        route: "openai",
+      }),
+    );
+
+    expect(phCapture).not.toHaveBeenCalledWith(
+      "design_generation_failed",
+      expect.objectContaining({
+        error_type: "pattern_preparation_failed",
+      }),
+    );
+    expect(phCapture).toHaveBeenCalledWith(
+      "design_generated",
+      expect.objectContaining({
+        ai_model: "openai",
+        route: "openai",
+      }),
+    );
+  });
+
   it("토큰 부족 응답은 InsufficientTokensError로 변환한다", async () => {
     invoke.mockResolvedValue({
       data: null,

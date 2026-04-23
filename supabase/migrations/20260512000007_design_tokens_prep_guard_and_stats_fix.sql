@@ -23,7 +23,7 @@ begin
       check (
         request_type is null or
         request_type = any (array['analysis'::text, 'prep'::text, 'render_standard'::text, 'render_high'::text])
-      ) not valid;
+      );
   end if;
 end
 $$;

@@ -83,6 +83,7 @@ export const createAdminReformOrderItemRowDTO = (
   reformData: {
     tie: {
       image: "image.jpg",
+      measurementType: "length",
       tieLength: 145,
     },
   },
