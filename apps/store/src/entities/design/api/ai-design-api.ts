@@ -23,6 +23,8 @@ interface DesignTokenBalance {
 }
 
 interface PatternPreparationResponse {
+  workflowId: string;
+  prepWorkId: string;
   placementMode: "all-over" | "one-point";
   sourceStatus: "ready" | "repair_required";
   fabricStatus: "ready" | "repair_required";
@@ -308,6 +310,8 @@ export async function aiDesignApi(
     sourceImageBase64: preparedRenderImageBase64,
     sourceImageMimeType: preparedRenderImageMimeType,
     ciImageBase64: preparedRenderImageBase64,
+    workflowId: patternPreparation?.workflowId,
+    prepWorkId: patternPreparation?.prepWorkId,
     backgroundPattern,
     patternPreparation: patternPreparationPayload,
     routeHint: request.routeHint,

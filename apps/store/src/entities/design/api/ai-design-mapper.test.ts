@@ -248,6 +248,16 @@ describe("buildInvokePayload", () => {
     expect(payload.maskMimeType).toBe("image/png");
     expect(payload.editPrompt).toBe("이 부분만 수정");
   });
+
+  it("prep workflow 식별자를 invoke payload에 포함한다", () => {
+    const payload = buildInvokePayload(createAiDesignRequest(), {
+      workflowId: "workflow-1",
+      prepWorkId: "prep-work-1",
+    });
+
+    expect(payload.workflowId).toBe("workflow-1");
+    expect(payload.prepWorkId).toBe("prep-work-1");
+  });
 });
 
 describe("buildInvokePayload — 세션 필드", () => {

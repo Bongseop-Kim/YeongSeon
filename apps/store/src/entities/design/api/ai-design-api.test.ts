@@ -585,6 +585,8 @@ describe("aiDesignApi", () => {
     invoke
       .mockResolvedValueOnce({
         data: {
+          workflowId: "prep-workflow-1",
+          prepWorkId: "prep-work-1",
           placementMode: "all-over",
           sourceStatus: "ready",
           fabricStatus: "ready",
@@ -631,6 +633,8 @@ describe("aiDesignApi", () => {
     });
     expect(invoke).toHaveBeenNthCalledWith(2, "generate-fal-api", {
       body: expect.objectContaining({
+        workflowId: "prep-workflow-1",
+        prepWorkId: "prep-work-1",
         route: "fal_tiling",
         routeSignals: expect.arrayContaining([
           "ci_image_present",

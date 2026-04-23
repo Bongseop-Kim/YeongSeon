@@ -4,4 +4,5 @@ export { DesignContextStats } from "./components/design-context-stats";
 export {
   useGenerationStatsQuery,
   useGenerationLogsQuery,
+  useGenerationLogDetailQuery,
 } from "./api/generation-logs-query";

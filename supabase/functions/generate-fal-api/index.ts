@@ -31,6 +31,11 @@ import {
   validateRemoteInpaintBaseImageUrl,
 } from "@/functions/_shared/generate-fal-api-utils.ts";
 import {
+  appendArtifactWarnings,
+  buildInitialRenderLogPayload,
+  resolveRenderWorkflowContext,
+} from "@/functions/_shared/generate-fal-render-workflow.ts";
+import {
   createArtifactRowRpcRecorder,
   saveGenerationArtifact,
   type SaveGenerationArtifactResult,
@@ -327,10 +332,16 @@ export const handleRequest = async (req: Request) => {
     base_image_work_id: payload.baseImageWorkId ?? null,
   } as const;
 
-  const workId = analysisSnapshot?.workflowId ?? crypto.randomUUID();
-  const analysisWorkId =
-    analysisSnapshot?.analysisWorkId ?? `${workId}_analysis`;
-  const renderWorkId = `${workId}_render`;
+  const {
+    workflowId: workId,
+    analysisWorkId,
+    renderWorkId,
+    parentWorkId,
+  } = resolveRenderWorkflowContext({
+    payloadWorkflowId: payload.workflowId,
+    payloadPrepWorkId: payload.prepWorkId,
+    analysisSnapshot,
+  });
   const renderSeed =
     route === "fal_edit"
       ? (payload.seed ??
@@ -615,7 +626,7 @@ export const handleRequest = async (req: Request) => {
       work_id: renderWorkId,
       workflow_id: workId,
       phase: "render",
-      parent_work_id: analysisWorkId,
+      parent_work_id: parentWorkId,
       user_id: user.id,
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
@@ -649,7 +660,7 @@ export const handleRequest = async (req: Request) => {
       work_id: renderWorkId,
       workflow_id: workId,
       phase: "render",
-      parent_work_id: analysisWorkId,
+      parent_work_id: parentWorkId,
       user_id: user.id,
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
@@ -679,11 +690,15 @@ export const handleRequest = async (req: Request) => {
   }
 
   renderTokensCharged = renderTokenResult.cost ?? 0;
+  const artifactFailures: Array<{
+    artifactType: string;
+    error: string;
+  }> = [];
   const recordRenderArtifact = async (
     input: RecordRenderArtifactInput,
   ): Promise<SaveGenerationArtifactResult | null> => {
     try {
-      return await saveGenerationArtifact(
+      const result = await saveGenerationArtifact(
         {
           workflowId: workId,
           phase: "render",
@@ -697,15 +712,57 @@ export const handleRequest = async (req: Request) => {
           recordArtifactRow: createArtifactRowRpcRecorder(adminClient),
         },
       );
+      if (result.status === "failed") {
+        artifactFailures.push({
+          artifactType: input.artifactType,
+          error: result.error ?? "artifact_record_failed",
+        });
+      }
+      return result;
     } catch (error) {
       errorLogger("artifact_record_failed", error, {
         workId,
         renderWorkId,
         artifactType: input.artifactType,
       });
+      artifactFailures.push({
+        artifactType: input.artifactType,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return null;
     }
   };
+  await logGeneration(adminClient, {
+    ...buildInitialRenderLogPayload({
+      workId: renderWorkId,
+      workflowId: workId,
+      parentWorkId,
+      userId: user.id,
+      userMessage: userMessageForLog,
+      promptLength: userMessagePromptLength,
+      route,
+      routeReason: payload.routeReason ?? null,
+      routeSignals: payload.routeSignals ?? [],
+      imageGenerated: false,
+      tokensCharged: renderTokensCharged,
+    }),
+    ...routeLogFields,
+    ...patternPreparationLogFields,
+    ...attachmentLogFields,
+    ...userMessageLogFields,
+    text_prompt: textPrompt,
+    image_prompt: imagePrompt,
+    image_edit_prompt: imageEditPrompt,
+    ai_message: aiMessage,
+    generate_image: true,
+    eligible_for_render: eligibility.eligibleForRender,
+    missing_requirements: eligibility.missingRequirements,
+    eligibility_reason: eligibility.eligibilityReason,
+    fal_request_id: falRequestId,
+    render_backend: renderBackend,
+    seed: renderSeed,
+    text_latency_ms: textLatencyMs,
+  });
   await recordOptionalRenderArtifacts(recordRenderArtifact, {
     ...buildPlacedPreviewArtifacts({
       ciPlacement: payload.designContext?.ciPlacement ?? null,
@@ -955,7 +1012,7 @@ export const handleRequest = async (req: Request) => {
       work_id: renderWorkId,
       workflow_id: workId,
       phase: "render",
-      parent_work_id: analysisWorkId,
+      parent_work_id: parentWorkId,
       user_id: user.id,
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
@@ -979,7 +1036,10 @@ export const handleRequest = async (req: Request) => {
       tokens_charged: renderTokensCharged,
       tokens_refunded: renderTokensRefunded,
       error_type: "fal_render_failed",
-      error_message: error instanceof Error ? error.message : String(error),
+      error_message: appendArtifactWarnings(
+        error instanceof Error ? error.message : String(error),
+        artifactFailures,
+      ),
     });
 
     return jsonResponse(
@@ -1113,7 +1173,7 @@ export const handleRequest = async (req: Request) => {
       work_id: renderWorkId,
       workflow_id: workId,
       phase: "render",
-      parent_work_id: analysisWorkId,
+      parent_work_id: parentWorkId,
       user_id: user.id,
       ai_model: RENDER_AI_MODEL,
       request_type: RENDER_REQUEST_TYPE,
@@ -1140,7 +1200,10 @@ export const handleRequest = async (req: Request) => {
       tokens_charged: renderTokensCharged,
       tokens_refunded: renderTokensRefunded,
       error_type: resolvedErrorCode,
-      error_message: error instanceof Error ? error.message : String(error),
+      error_message: appendArtifactWarnings(
+        error instanceof Error ? error.message : String(error),
+        artifactFailures,
+      ),
     });
     return jsonResponse(
       500,
@@ -1152,7 +1215,7 @@ export const handleRequest = async (req: Request) => {
     work_id: renderWorkId,
     workflow_id: workId,
     phase: "render",
-    parent_work_id: analysisWorkId,
+    parent_work_id: parentWorkId,
     user_id: user.id,
     ai_model: RENDER_AI_MODEL,
     request_type: RENDER_REQUEST_TYPE,
@@ -1179,6 +1242,7 @@ export const handleRequest = async (req: Request) => {
       textLatencyMs !== null ? textLatencyMs + imageLatencyMs : null,
     tokens_charged: renderTokensCharged,
     tokens_refunded: renderTokensRefunded,
+    error_message: appendArtifactWarnings(undefined, artifactFailures),
   });
 
   await saveSessionIfNeeded(

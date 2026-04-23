@@ -19,7 +19,6 @@ export function useGenerationStatsQuery(dateRange: [Dayjs, Dayjs]): {
 } {
   const startDate = dateRange[0].format("YYYY-MM-DD");
   const endDate = dateRange[1].format("YYYY-MM-DD");
-
   return useQuery({
     queryKey: ["generation-logs", "stats", startDate, endDate],
     queryFn: () => getGenerationStats(startDate, endDate),
@@ -30,6 +29,9 @@ export function useGenerationLogsQuery(params: {
   dateRange: [Dayjs, Dayjs];
   aiModel: string | null;
   page: number;
+  requestType?: string | null;
+  status?: string | null;
+  idSearch?: string | null;
 }): {
   data: AdminGenerationLogItem[] | undefined;
   hasMore: boolean;
@@ -47,6 +49,9 @@ export function useGenerationLogsQuery(params: {
       endDate,
       params.aiModel,
       normalizedPage,
+      params.requestType ?? null,
+      params.status ?? null,
+      params.idSearch ?? null,
     ],
     queryFn: () =>
       getGenerationLogs({
@@ -55,15 +60,44 @@ export function useGenerationLogsQuery(params: {
         aiModel: params.aiModel,
         limit: PAGE_SIZE + 1,
         offset: (normalizedPage - 1) * PAGE_SIZE,
+        requestType: params.requestType ?? null,
+        status: params.status ?? null,
+        idSearch: params.idSearch ?? null,
       }),
   });
 
   const rawData = query.data;
-
   return {
     data: rawData?.slice(0, PAGE_SIZE),
     hasMore: (rawData?.length ?? 0) > PAGE_SIZE,
     isLoading: query.isLoading,
+  };
+}
+
+export function useGenerationLogDetailQuery(id: string): {
+  data: AdminGenerationLogItem | undefined;
+  isLoading: boolean;
+  errorMessage: string | null;
+} {
+  // p_id 단건 조회 시 날짜 범위 필터가 항상 적용되므로
+  // 충분히 넓은 범위를 지정해 날짜 조건이 결과를 제한하지 않도록 한다.
+  const query = useQuery({
+    queryKey: ["generation-logs", "detail", id],
+    queryFn: () =>
+      getGenerationLogs({
+        startDate: "2020-01-01",
+        endDate: "2099-12-31",
+        id,
+        limit: 1,
+        offset: 0,
+      }),
+    enabled: Boolean(id),
+  });
+
+  return {
+    data: query.data?.[0],
+    isLoading: query.isLoading,
+    errorMessage: query.error instanceof Error ? query.error.message : null,
   };
 }
 

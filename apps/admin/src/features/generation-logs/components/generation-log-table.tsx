@@ -1,20 +1,11 @@
-import { useState } from "react";
-import {
-  Table,
-  Tag,
-  Select,
-  Space,
-  Typography,
-  Modal,
-  Descriptions,
-  List,
-} from "antd";
+import { Select, Space, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/api/generation-logs-query";
+import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
 import { formatNullableLocaleNumber } from "@/utils/format-number";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
-import { GenerationLogArtifactTimeline } from "@/features/generation-logs/components/generation-log-artifact-timeline";
 
 const { Text } = Typography;
 
@@ -32,10 +23,7 @@ const renderGenerateImageStatus = (
   generateImage: boolean | null | undefined,
   imageGenerated: boolean,
 ) => {
-  if (!generateImage) {
-    return <Tag>미요청</Tag>;
-  }
-
+  if (!generateImage) return <Tag>미요청</Tag>;
   return imageGenerated ? <Tag color="success">성공</Tag> : <Tag>실패</Tag>;
 };
 
@@ -48,9 +36,7 @@ export function GenerationLogTable({
   aiModel,
   onAiModelChange,
 }: GenerationLogTableProps) {
-  const [selectedLog, setSelectedLog] = useState<AdminGenerationLogItem | null>(
-    null,
-  );
+  const navigate = useNavigate();
 
   const columns: ColumnsType<AdminGenerationLogItem> = [
     {
@@ -65,28 +51,14 @@ export function GenerationLogTable({
       dataIndex: "aiModel",
       key: "aiModel",
       width: 80,
-      render: (v: string) => {
-        const color =
-          v === "openai" ? "blue" : v === "gemini" ? "green" : "purple";
-
-        return <Tag color={color}>{v}</Tag>;
-      },
+      render: (v: string) => <Tag color={modelColor(v)}>{v}</Tag>,
     },
     {
       title: "요청 유형",
       dataIndex: "requestType",
       key: "requestType",
       width: 120,
-      render: (v: string | null) =>
-        v === "analysis"
-          ? "분석"
-          : v === "prep"
-            ? "보정"
-            : v === "render_standard"
-              ? "렌더(표준)"
-              : v === "render_high"
-                ? "렌더(고품질)"
-                : "-",
+      render: (v: string | null) => requestTypeLabel(v),
     },
     {
       title: "프롬프트",
@@ -177,7 +149,7 @@ export function GenerationLogTable({
         loading={loading}
         size="small"
         onRow={(record) => ({
-          onClick: () => setSelectedLog(record),
+          onClick: () => navigate(`/generation-logs/${record.id}`),
           style: { cursor: "pointer" },
         })}
         pagination={{
@@ -192,216 +164,6 @@ export function GenerationLogTable({
         }}
         scroll={{ x: 900 }}
       />
-
-      <Modal
-        open={selectedLog !== null}
-        title="생성 로그 상세"
-        onCancel={() => setSelectedLog(null)}
-        footer={null}
-        width={980}
-      >
-        {selectedLog && <GenerationLogDetail log={selectedLog} />}
-      </Modal>
     </>
-  );
-}
-
-function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
-  return (
-    <Descriptions column={2} size="small" bordered>
-      <Descriptions.Item label="work_id" span={2}>
-        <Text code style={{ fontSize: 11 }}>
-          {log.workId}
-        </Text>
-      </Descriptions.Item>
-      <Descriptions.Item label="AI 모델">{log.aiModel}</Descriptions.Item>
-      <Descriptions.Item label="요청 유형">
-        {log.requestType === "analysis"
-          ? "분석"
-          : log.requestType === "prep"
-            ? "보정"
-            : log.requestType === "render_standard"
-              ? "렌더(표준)"
-              : log.requestType === "render_high"
-                ? "렌더(고품질)"
-                : "-"}
-      </Descriptions.Item>
-      {log.phase && (
-        <Descriptions.Item label="phase">
-          {log.phase === "analysis"
-            ? "분석"
-            : log.phase === "prep"
-              ? "보정"
-              : "렌더"}
-        </Descriptions.Item>
-      )}
-      {log.workflowId && (
-        <Descriptions.Item label="workflow_id">
-          <Text code style={{ fontSize: 11 }}>
-            {log.workflowId}
-          </Text>
-        </Descriptions.Item>
-      )}
-      {log.parentWorkId && (
-        <Descriptions.Item label="parent_work_id" span={2}>
-          <Text code style={{ fontSize: 11 }}>
-            {log.parentWorkId}
-          </Text>
-        </Descriptions.Item>
-      )}
-      {log.workflowId && (
-        <Descriptions.Item label="아티팩트" span={2}>
-          <GenerationLogArtifactTimeline workflowId={log.workflowId} />
-        </Descriptions.Item>
-      )}
-      <Descriptions.Item label="품질">{log.quality ?? "-"}</Descriptions.Item>
-      <Descriptions.Item label="이미지 생성">
-        {renderGenerateImageStatus(log.generateImage, log.imageGenerated)}
-      </Descriptions.Item>
-      {typeof log.eligibleForRender === "boolean" && (
-        <Descriptions.Item label="렌더 가능">
-          {log.eligibleForRender ? "가능" : "불가"}
-        </Descriptions.Item>
-      )}
-      {log.eligibilityReason && (
-        <Descriptions.Item label="렌더 판정 사유" span={2}>
-          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
-            {log.eligibilityReason}
-          </Text>
-        </Descriptions.Item>
-      )}
-      <Descriptions.Item label="프롬프트 길이">
-        {log.promptLength}자
-      </Descriptions.Item>
-      <Descriptions.Item label="첨부 파일" span={2}>
-        {log.requestAttachments && log.requestAttachments.length > 0 ? (
-          <List
-            size="small"
-            dataSource={log.requestAttachments}
-            renderItem={(attachment) => (
-              <List.Item>
-                <Space size={8} wrap>
-                  <Tag>{attachment.label}</Tag>
-                  <Text>{attachment.fileName ?? "(파일명 없음)"}</Text>
-                </Space>
-              </List.Item>
-            )}
-          />
-        ) : (
-          "-"
-        )}
-      </Descriptions.Item>
-      <Descriptions.Item label="대화 턴">
-        {log.conversationTurn}
-      </Descriptions.Item>
-      <Descriptions.Item label="CI 이미지">
-        {log.hasCiImage ? "있음" : "없음"}
-      </Descriptions.Item>
-      <Descriptions.Item label="레퍼런스 이미지">
-        {log.hasReferenceImage ? "있음" : "없음"}
-      </Descriptions.Item>
-      <Descriptions.Item label="이전 이미지(편집)">
-        {log.hasPreviousImage ? "있음" : "없음"}
-      </Descriptions.Item>
-      <Descriptions.Item label="토큰 차감">
-        {log.tokensCharged}
-      </Descriptions.Item>
-      <Descriptions.Item label="토큰 환불">
-        {log.tokensRefunded}
-      </Descriptions.Item>
-      <Descriptions.Item label="텍스트 API(ms)">
-        {log.textLatencyMs ?? "-"}
-      </Descriptions.Item>
-      <Descriptions.Item label="이미지 API(ms)">
-        {log.imageLatencyMs ?? "-"}
-      </Descriptions.Item>
-      <Descriptions.Item label="전체 응답(ms)">
-        {log.totalLatencyMs ?? "-"}
-      </Descriptions.Item>
-      <Descriptions.Item label="에러 유형">
-        {log.errorType ?? "없음"}
-      </Descriptions.Item>
-      {log.errorMessage && (
-        <Descriptions.Item label="에러 메시지" span={2}>
-          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
-            {log.errorMessage}
-          </Text>
-        </Descriptions.Item>
-      )}
-      <Descriptions.Item label="프롬프트" span={2}>
-        <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
-          {log.userMessage}
-        </Text>
-      </Descriptions.Item>
-      {log.textPrompt && (
-        <Descriptions.Item label="text_prompt" span={2}>
-          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
-            {log.textPrompt}
-          </Text>
-        </Descriptions.Item>
-      )}
-      {log.imagePrompt && (
-        <Descriptions.Item label="image_prompt" span={2}>
-          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
-            {log.imagePrompt}
-          </Text>
-        </Descriptions.Item>
-      )}
-      {log.imageEditPrompt && (
-        <Descriptions.Item label="image_edit_prompt" span={2}>
-          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
-            {log.imageEditPrompt}
-          </Text>
-        </Descriptions.Item>
-      )}
-      {log.aiMessage && (
-        <Descriptions.Item label="AI 응답" span={2}>
-          <Text style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
-            {log.aiMessage}
-          </Text>
-        </Descriptions.Item>
-      )}
-      {log.generatedImageUrl && (
-        <Descriptions.Item label="생성된 이미지" span={2}>
-          <img
-            src={log.generatedImageUrl}
-            alt="생성된 디자인"
-            style={{ maxWidth: "100%", maxHeight: 400, objectFit: "contain" }}
-          />
-        </Descriptions.Item>
-      )}
-      {log.designContext && (
-        <Descriptions.Item label="디자인 컨텍스트" span={2}>
-          <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
-            {JSON.stringify(log.designContext, null, 2)}
-          </Text>
-        </Descriptions.Item>
-      )}
-      {log.detectedDesign && (
-        <Descriptions.Item label="감지된 디자인" span={2}>
-          <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
-            {JSON.stringify(log.detectedDesign, null, 2)}
-          </Text>
-        </Descriptions.Item>
-      )}
-      {log.normalizedDesign && (
-        <Descriptions.Item label="정규화된 디자인" span={2}>
-          <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
-            {JSON.stringify(log.normalizedDesign, null, 2)}
-          </Text>
-        </Descriptions.Item>
-      )}
-      {Array.isArray(log.missingRequirements) &&
-        log.missingRequirements.length > 0 && (
-          <Descriptions.Item label="누락 요구사항" span={2}>
-            <Text code style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>
-              {JSON.stringify(log.missingRequirements, null, 2)}
-            </Text>
-          </Descriptions.Item>
-        )}
-      <Descriptions.Item label="생성 시각" span={2}>
-        {dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss")}
-      </Descriptions.Item>
-    </Descriptions>
   );
 }
