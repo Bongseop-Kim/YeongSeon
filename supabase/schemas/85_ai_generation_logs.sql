@@ -82,7 +82,7 @@ CREATE TABLE public.ai_generation_log_artifacts (
   workflow_id text NOT NULL,
   phase text NOT NULL CHECK (phase IN ('prep', 'analysis', 'render')),
   artifact_type text NOT NULL,
-  source_work_id text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
+  source_work_id text REFERENCES public.ai_generation_logs(work_id) ON DELETE CASCADE,
   parent_artifact_id uuid REFERENCES public.ai_generation_log_artifacts(id) ON DELETE SET NULL,
   storage_provider text NOT NULL DEFAULT 'imagekit',
   image_url text,
@@ -106,6 +106,9 @@ CREATE INDEX idx_ai_generation_log_artifacts_workflow_phase_created_at
 CREATE INDEX idx_ai_generation_log_artifacts_source_work_id
   ON public.ai_generation_log_artifacts (source_work_id);
 
+CREATE INDEX idx_ai_generation_log_artifacts_parent_artifact_id
+  ON public.ai_generation_log_artifacts (parent_artifact_id);
+
 CREATE INDEX idx_ai_generation_log_artifacts_artifact_type
   ON public.ai_generation_log_artifacts (artifact_type);
 
@@ -113,7 +116,7 @@ ALTER TABLE public.ai_generation_log_artifacts ENABLE ROW LEVEL SECURITY;
 
 REVOKE ALL ON TABLE public.ai_generation_log_artifacts FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON TABLE public.ai_generation_log_artifacts TO authenticated;
-GRANT SELECT, INSERT, UPDATE ON TABLE public.ai_generation_log_artifacts TO service_role;
+GRANT INSERT ON TABLE public.ai_generation_log_artifacts TO service_role;
 
 CREATE POLICY "Admins can view all generation artifacts"
   ON public.ai_generation_log_artifacts FOR SELECT

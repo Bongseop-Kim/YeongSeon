@@ -9,10 +9,33 @@ const toNumberOrNull = (v: unknown): number | null => {
     return v;
   }
   if (typeof v === "string") {
-    const parsed = Number(v);
-    return Number.isFinite(parsed) ? parsed : null;
+    const trimmed = v.trim();
+    if (/^[+-]?\d+$/.test(trimmed)) {
+      try {
+        const parsed = BigInt(trimmed);
+        if (
+          parsed > BigInt(Number.MAX_SAFE_INTEGER) ||
+          parsed < BigInt(Number.MIN_SAFE_INTEGER)
+        ) {
+          return null;
+        }
+
+        return Number(parsed);
+      } catch {
+        return null;
+      }
+    }
+
+    const parsed = Number.parseFloat(trimmed);
+    return Number.isFinite(parsed) && Number.isSafeInteger(parsed)
+      ? parsed
+      : null;
   }
-  if (typeof v === "bigint" && Number.isFinite(Number(v))) {
+  if (
+    typeof v === "bigint" &&
+    v <= BigInt(Number.MAX_SAFE_INTEGER) &&
+    v >= BigInt(Number.MIN_SAFE_INTEGER)
+  ) {
     return Number(v);
   }
   return null;

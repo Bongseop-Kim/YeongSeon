@@ -80,7 +80,9 @@ export async function logGeneration(
   data: AiGenerationLogInsert,
 ): Promise<void> {
   try {
-    const { error } = await adminClient.from("ai_generation_logs").insert(data);
+    const { error } = await adminClient
+      .from("ai_generation_logs")
+      .upsert(data, { onConflict: "work_id" });
     if (error) {
       console.error("logGeneration insert error:", error.message);
     }

@@ -127,16 +127,16 @@ Deno.test("buildOpenAiEditCanvas rejects empty input", async () => {
 Deno.test("buildOpenAiEditCanvas accepts a small PNG input", async () => {
   const pngBytes = Uint8Array.from(
     atob(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+KD9NAAAAAElFTkSuQmCC",
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oEFwsaH3I1Q20AAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDQtMjNUMTE6MjY6MzErMDA6MDBX4uiHAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA0LTIzVDExOjI2OjMxKzAwOjAwJr9QOwAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wNC0yM1QxMToyNjozMSswMDowMHGqceQAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC",
     ),
     (character) => character.charCodeAt(0),
   );
 
-  await assertRejects(
-    () => buildOpenAiEditCanvas(pngBytes),
-    Error,
-    "Requires read access",
-  );
+  const result = await buildOpenAiEditCanvas(pngBytes);
+
+  assertEquals(result.sourceWidth, 1);
+  assertEquals(result.sourceHeight, 1);
+  assertEquals(result.bytes.length > 0, true);
 });
 
 Deno.test(
@@ -180,20 +180,18 @@ Deno.test(
               };
             }
 
+            if (fn === "write_ai_generation_log_artifact") {
+              artifactCalls.push({
+                artifactType: String(args.p_artifact_type),
+                workflowId: String(args.p_workflow_id),
+                sourceWorkId: args.p_source_work_id as string | null,
+                parentArtifactId: args.p_parent_artifact_id as string | null,
+                status: String(args.p_status),
+              });
+            }
+
             return { data: null, error: null };
           },
-          from: () => ({
-            insert: async (row: Record<string, unknown>) => {
-              artifactCalls.push({
-                artifactType: String(row.artifact_type),
-                workflowId: String(row.workflow_id),
-                sourceWorkId: row.source_work_id as string | null,
-                parentArtifactId: row.parent_artifact_id as string | null,
-                status: String(row.status),
-              });
-              return { error: null };
-            },
-          }),
         }) as never,
       saveGenerationArtifact: async (input, deps) => {
         const artifactId = `artifact-${artifactCalls.length + 1}`;
@@ -315,7 +313,13 @@ Deno.test(
     assertEquals(artifactCalls[3]?.parentArtifactId, "artifact-3");
     assertEquals(
       rpcCalls.map((entry) => entry.fn),
-      ["use_design_tokens"],
+      [
+        "write_ai_generation_log_artifact",
+        "use_design_tokens",
+        "write_ai_generation_log_artifact",
+        "write_ai_generation_log_artifact",
+        "write_ai_generation_log_artifact",
+      ],
     );
     assertEquals(logCalls.length > 0, true);
   },
@@ -350,20 +354,17 @@ Deno.test(
         ({
           rpc: async (fn: string, args: Record<string, unknown>) => {
             rpcCalls.push({ fn, args });
+            if (fn === "write_ai_generation_log_artifact") {
+              artifactCalls.push({
+                artifactType: String(args.p_artifact_type),
+                workflowId: String(args.p_workflow_id),
+                sourceWorkId: args.p_source_work_id as string | null,
+                parentArtifactId: args.p_parent_artifact_id as string | null,
+                status: String(args.p_status),
+              });
+            }
             return { data: null, error: null };
           },
-          from: () => ({
-            insert: async (row: Record<string, unknown>) => {
-              artifactCalls.push({
-                artifactType: String(row.artifact_type),
-                workflowId: String(row.workflow_id),
-                sourceWorkId: row.source_work_id as string | null,
-                parentArtifactId: row.parent_artifact_id as string | null,
-                status: String(row.status),
-              });
-              return { error: null };
-            },
-          }),
         }) as never,
       saveGenerationArtifact: async (input, deps) => {
         const artifactId = `artifact-${artifactCalls.length + 1}`;
@@ -480,7 +481,150 @@ Deno.test(
     assertEquals(workflowId, String(logCalls[0]?.workflow_id));
     assertEquals(sourceWorkId, String(logCalls[0]?.work_id));
     assertEquals(artifactCalls[1]?.parentArtifactId, null);
-    assertEquals(rpcCalls.length, 0);
+    assertEquals(
+      rpcCalls.map((entry) => entry.fn),
+      ["write_ai_generation_log_artifact", "write_ai_generation_log_artifact"],
+    );
     assertEquals(logCalls.length > 0, true);
+  },
+);
+
+Deno.test(
+  "prepare-pattern-composite omits remainingTokens when repair is required without an OpenAI key",
+  async () => {
+    const logCalls: Array<Record<string, unknown>> = [];
+
+    const handler = createPreparePatternCompositeHandler({
+      getCorsHeaders: () => ({}),
+      getOpenAiApiKey: () => "",
+      createAuthenticatedSupabaseClient: () =>
+        ({
+          auth: {
+            getUser: async () => ({
+              data: { user: { id: "user-3" } },
+              error: null,
+            }),
+          },
+        }) as never,
+      createAdminSupabaseClient: () =>
+        ({
+          rpc: async () => ({ data: null, error: null }),
+          from: () => ({
+            insert: async () => ({ error: null }),
+            upsert: async () => ({ error: null }),
+          }),
+        }) as never,
+      maybeDownscaleImage: async (bytes) => bytes,
+      readImageRgba: async () => ({
+        pixels: new Uint8ClampedArray([255, 255, 255, 255]),
+        width: 128,
+        height: 128,
+      }),
+      assessPatternPreparation: (input) => ({
+        placementMode: input.placementMode,
+        sourceStatus: "repair_required",
+        fabricStatus: "ready",
+        preparedSourceKind: "original",
+        reasonCodes: ["low_confidence"],
+        userMessage: "repair needed",
+        preparationBackend: "local",
+        repairApplied: false,
+        repairPromptKind: "one_point_motif",
+        repairSummary: null,
+        prepTokensCharged: null,
+      }),
+      renderPreparedSource: async () => ({
+        bytes: new Uint8Array([1, 2, 3]),
+        width: 128,
+        height: 128,
+      }),
+      logGeneration: async (_client, payload) => {
+        logCalls.push(payload as Record<string, unknown>);
+      },
+    });
+
+    const response = await handler(
+      new Request("http://localhost/prepare-pattern-composite", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer user-token",
+        },
+        body: JSON.stringify({
+          sourceImageBase64: "AAEC",
+          sourceImageMimeType: "image/png",
+          placementMode: "one-point",
+        }),
+      }),
+    );
+
+    const body = await response.json();
+
+    assertEquals(response.status, 502);
+    assertEquals("remainingTokens" in body, false);
+    assertEquals(logCalls.length > 0, true);
+    assertEquals(
+      logCalls.some(
+        (entry) => entry.error_type === "openai_key_missing_for_repair",
+      ),
+      true,
+    );
+  },
+);
+
+Deno.test(
+  "prepare-pattern-composite emits a prep log when image decoding fails before artifacts are recorded",
+  async () => {
+    const logCalls: Array<Record<string, unknown>> = [];
+
+    const handler = createPreparePatternCompositeHandler({
+      getCorsHeaders: () => ({}),
+      getOpenAiApiKey: () => "openai-key",
+      createAuthenticatedSupabaseClient: () =>
+        ({
+          auth: {
+            getUser: async () => ({
+              data: { user: { id: "user-4" } },
+              error: null,
+            }),
+          },
+        }) as never,
+      createAdminSupabaseClient: () =>
+        ({
+          rpc: async () => ({ data: null, error: null }),
+          from: () => ({
+            insert: async () => ({ error: null }),
+            upsert: async () => ({ error: null }),
+          }),
+        }) as never,
+      maybeDownscaleImage: async (bytes) => bytes,
+      readImageRgba: async () => {
+        throw new Error("decode_failed");
+      },
+      logGeneration: async (_client, payload) => {
+        logCalls.push(payload as Record<string, unknown>);
+      },
+    });
+
+    const response = await handler(
+      new Request("http://localhost/prepare-pattern-composite", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer user-token",
+        },
+        body: JSON.stringify({
+          sourceImageBase64: "AAEC",
+          sourceImageMimeType: "image/png",
+          placementMode: "all-over",
+        }),
+      }),
+    );
+
+    const body = await response.json();
+
+    assertEquals(response.status, 500);
+    assertEquals(body.error, "pattern_preparation_failed");
+    assertEquals(logCalls.length, 1);
+    assertEquals(logCalls[0]?.error_type, "pattern_preparation_failed");
+    assertEquals(logCalls[0]?.error_message, "decode_failed");
   },
 );

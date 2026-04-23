@@ -2,7 +2,6 @@ import {
   ALLOWED_TILED_MIME_TYPES,
   MAX_IMAGE_BASE64_LENGTH,
 } from "@/functions/_shared/fal-request-validation.ts";
-import { bytesToBase64 } from "@/functions/_shared/color.ts";
 import type { SaveGenerationArtifactResult } from "@/functions/_shared/generation-artifacts.ts";
 
 const TRUSTED_FAL_IMAGE_BASE_HOST = "fal.media";
@@ -135,9 +134,6 @@ export type RecordRenderArtifactInput = {
   meta?: Record<string, unknown>;
 };
 
-const isNonEmptyTrimmed = (value: string | null | undefined): value is string =>
-  typeof value === "string" && value.trim().length > 0;
-
 export type RecordRenderArtifactFn = (
   input: RecordRenderArtifactInput,
 ) => Promise<SaveGenerationArtifactResult | null>;
@@ -161,7 +157,10 @@ export const buildPlacedPreviewArtifacts = (input: {
   ciPlacement?: string | null;
   tiledBase64?: string | null;
   tiledMimeType?: string | null;
-}): OptionalRenderArtifacts => ({
+}): Pick<
+  OptionalRenderArtifacts,
+  "placedPreviewBase64" | "placedPreviewMimeType"
+> => ({
   placedPreviewBase64:
     input.ciPlacement === "one-point" ? (input.tiledBase64 ?? null) : null,
   placedPreviewMimeType:
@@ -172,14 +171,17 @@ const toOptionalBase64Input = (
   base64: string | null | undefined,
   mimeType: string | null | undefined,
 ): RenderArtifactImageInput | null => {
-  if (!isNonEmptyTrimmed(base64) || !isNonEmptyTrimmed(mimeType)) {
+  const trimmedBase64 = base64?.trim() ?? "";
+  const trimmedMimeType = mimeType?.trim() ?? "";
+
+  if (!trimmedBase64 || !trimmedMimeType) {
     return null;
   }
 
   return {
     kind: "base64",
-    base64,
-    mimeType,
+    base64: trimmedBase64,
+    mimeType: trimmedMimeType,
   };
 };
 
@@ -267,21 +269,17 @@ export const recordFinalRenderArtifacts = async (
       | "controlnet"
       | "flux_fill"
       | null;
-    rawImageBytes: Uint8Array;
-    rawImageMimeType: string;
   },
 ) => {
   const falRawArtifact = await recordArtifact({
     artifactType: "fal_raw",
     image: {
-      kind: "base64",
-      base64: bytesToBase64(params.rawImageBytes),
-      mimeType: params.rawImageMimeType,
+      kind: "url",
+      url: params.falImageUrl,
     },
     meta: {
       fal_request_id: params.falRequestId,
       render_backend: params.renderBackend,
-      fal_image_url: params.falImageUrl,
     },
   });
 
@@ -296,7 +294,6 @@ export const recordFinalRenderArtifacts = async (
     meta: {
       fal_request_id: params.falRequestId,
       render_backend: params.renderBackend,
-      generated_image_url: params.finalImageUrl,
     },
   });
 };

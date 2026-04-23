@@ -31,7 +31,7 @@ import {
   validateRemoteInpaintBaseImageUrl,
 } from "@/functions/_shared/generate-fal-api-utils.ts";
 import {
-  type GenerationArtifactRow,
+  createArtifactRowRpcRecorder,
   saveGenerationArtifact,
   type SaveGenerationArtifactResult,
 } from "@/functions/_shared/generation-artifacts.ts";
@@ -694,13 +694,7 @@ export const handleRequest = async (req: Request) => {
           meta: input.meta,
         },
         {
-          recordArtifactRow: async (row: GenerationArtifactRow) => {
-            const { error } = await adminClient
-              .from("ai_generation_log_artifacts")
-              .insert(row);
-
-            return { error: error ? { message: error.message } : null };
-          },
+          recordArtifactRow: createArtifactRowRpcRecorder(adminClient),
         },
       );
     } catch (error) {
@@ -1098,8 +1092,6 @@ export const handleRequest = async (req: Request) => {
         finalImageUrl,
         falRequestId,
         renderBackend,
-        rawImageBytes: falRawImageBytes,
-        rawImageMimeType: falRawImageMimeType,
       });
     }
   } catch (error) {

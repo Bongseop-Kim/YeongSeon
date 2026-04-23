@@ -101,13 +101,16 @@ export const ensureImageMagick = async (): Promise<void> => {
   if (!magickInitialized) {
     magickInitialized = (async () => {
       try {
-        const wasmBytes = await Deno.readFile(
-          new URL(
-            "magick.wasm",
-            import.meta.resolve("npm:@imagemagick/magick-wasm@0.0.30"),
-          ),
+        const wasmUrl = import.meta
+          .resolve("npm:@imagemagick/magick-wasm@0.0.30/magick.wasm");
+        const response = await fetch(wasmUrl);
+        if (!response.ok) {
+          throw new Error(`imagemagick_wasm_fetch_failed:${response.status}`);
+        }
+
+        await initializeImageMagick(
+          new Uint8Array(await response.arrayBuffer()),
         );
-        await initializeImageMagick(wasmBytes);
       } catch (error) {
         magickInitialized = null;
         throw error;

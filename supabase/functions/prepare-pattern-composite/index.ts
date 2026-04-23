@@ -16,6 +16,7 @@ import {
   buildOnePointRepairPrompt,
 } from "@/functions/_shared/prompt-builders.ts";
 import {
+  createArtifactRowRpcRecorder,
   saveGenerationArtifact,
   type GenerationArtifactRow,
   type SaveGenerationArtifactResult,
@@ -35,6 +36,7 @@ import {
   type PatternPreparationResult,
 } from "@/functions/_shared/pattern-composite.ts";
 import { logGeneration } from "@/functions/_shared/log-generation.ts";
+import { getCorsHeaders } from "@/functions/_shared/cors.ts";
 
 type PreparePatternCompositeRequest = {
   sourceImageBase64?: string;
@@ -61,33 +63,6 @@ const PREP_REQUEST_TYPE = "prep" as const satisfies GenerationRequestType;
 const PREP_QUALITY = "high" as const satisfies ImageQuality;
 const PREP_AI_MODEL = "openai" as const;
 
-const getCorsHeaders = (
-  requestOrigin: string | null,
-): Record<string, string> => {
-  const raw = Deno.env.get("ALLOWED_ORIGINS") ?? "";
-  const allowedOrigins = raw
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-
-  const base: Record<string, string> = {
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type, baggage, sentry-trace",
-    Vary: "Origin",
-  };
-
-  if (allowedOrigins.length === 0) {
-    return base;
-  }
-
-  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
-    return { ...base, "Access-Control-Allow-Origin": requestOrigin };
-  }
-
-  return base;
-};
-
 export type PrepArtifactRecorderContext = {
   workflowId: string;
   prepWorkId: string;
@@ -102,7 +77,7 @@ type PrepArtifactRecorderDeps = {
   saveGenerationArtifact: typeof saveGenerationArtifact;
   recordArtifactRow: (
     row: GenerationArtifactRow,
-  ) => Promise<{ error: { message: string } | null } | void>;
+  ) => Promise<{ error: { message: string } | null }>;
 };
 
 type PrepArtifactRecorder = {
@@ -120,16 +95,6 @@ type PrepArtifactRecorder = {
     parentArtifactId: string | null,
     preparedSourceKind: "original" | "repaired",
   ) => Promise<SaveGenerationArtifactResult>;
-};
-
-const createRecordArtifactRow = (adminClient: SupabaseClient) => {
-  return async (row: GenerationArtifactRow) => {
-    const { error } = await adminClient
-      .from("ai_generation_log_artifacts")
-      .insert(row);
-
-    return { error: error ? { message: error.message } : null };
-  };
 };
 
 export const createPrepArtifactRecorder = (
@@ -450,11 +415,13 @@ export const createPreparePatternCompositeHandler = (
     let remainingTokens: number | null = null;
     let imageLatencyMs: number | null = null;
     let prepArtifactRecorder: PrepArtifactRecorder | null = null;
+    let result: PatternPreparationResult | null = null;
 
     const emitPrepLog = async (
-      result: PatternPreparationResult | null,
+      nextResult: PatternPreparationResult | null,
       overrides: Record<string, unknown> = {},
     ) => {
+      result = nextResult;
       await deps.logGeneration(adminClient, {
         work_id: prepWorkId,
         workflow_id: workflowId,
@@ -481,14 +448,14 @@ export const createPreparePatternCompositeHandler = (
         text_prompt: null,
         image_prompt: null,
         image_edit_prompt: null,
-        ai_message: result?.userMessage ?? null,
+        ai_message: nextResult?.userMessage ?? null,
         image_generated: false,
         generated_image_url: null,
-        pattern_preparation_backend: result?.preparationBackend ?? null,
-        pattern_repair_prompt_kind: result?.repairPromptKind ?? null,
-        pattern_repair_applied: result?.repairApplied ?? null,
-        pattern_repair_reason_codes: result?.reasonCodes ?? null,
-        prep_tokens_charged: result?.prepTokensCharged ?? null,
+        pattern_preparation_backend: nextResult?.preparationBackend ?? null,
+        pattern_repair_prompt_kind: nextResult?.repairPromptKind ?? null,
+        pattern_repair_applied: nextResult?.repairApplied ?? null,
+        pattern_repair_reason_codes: nextResult?.reasonCodes ?? null,
+        prep_tokens_charged: nextResult?.prepTokensCharged ?? null,
         tokens_charged: tokensCharged,
         tokens_refunded: tokensRefunded,
         text_latency_ms: null,
@@ -546,7 +513,7 @@ export const createPreparePatternCompositeHandler = (
         },
         {
           saveGenerationArtifact: deps.saveGenerationArtifact,
-          recordArtifactRow: createRecordArtifactRow(adminClient),
+          recordArtifactRow: createArtifactRowRpcRecorder(adminClient),
         },
       );
 
@@ -565,9 +532,7 @@ export const createPreparePatternCompositeHandler = (
         throw new Error("prep_artifact_recorder_missing");
       }
 
-      await artifactRecorder.recordSourceOriginal(preparedSourceBytes);
-
-      let result: PatternPreparationResult = {
+      result = {
         ...assessed,
         preparedSourceBase64: toPngBase64(preparedSourceBytes),
         preparedSourceMimeType: "image/png",
@@ -578,6 +543,8 @@ export const createPreparePatternCompositeHandler = (
         harmonizationApplied: false,
         harmonizationBackend: null,
       };
+      await emitPrepLog(result);
+      await artifactRecorder.recordSourceOriginal(preparedSourceBytes);
 
       const sourceTooSmallForRepair =
         preparedWidth < MIN_REPAIR_EDGE_PX ||
@@ -607,7 +574,6 @@ export const createPreparePatternCompositeHandler = (
         });
         return jsonResponse(502, {
           error: "openai_key_missing_for_repair",
-          remainingTokens: 0,
         });
       }
 
@@ -781,6 +747,13 @@ export const createPreparePatternCompositeHandler = (
 
       return jsonResponse(200, result as unknown as Record<string, unknown>);
     } catch (error) {
+      await emitPrepLog(result, {
+        error_type: "pattern_preparation_failed",
+        error_message: error instanceof Error ? error.message : String(error),
+        pattern_preparation_backend: result?.preparationBackend ?? null,
+        image_latency_ms: imageLatencyMs,
+        total_latency_ms: Date.now() - phaseStartTime,
+      });
       console.error("prepare-pattern-composite failed:", error);
       const remainingTokensFromError =
         error instanceof Error && "remainingTokens" in error

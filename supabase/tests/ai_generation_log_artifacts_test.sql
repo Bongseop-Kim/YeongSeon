@@ -114,6 +114,11 @@ SELECT throws_ok(
   '비관리자는 관리자 artifact RPC를 호출할 수 없다'
 );
 
+SELECT test_helpers.set_auth(
+  'dd000001-0000-0000-0000-000000000001'::uuid,
+  'authenticated'
+);
+
 SELECT is(
   (
     SELECT artifact_type

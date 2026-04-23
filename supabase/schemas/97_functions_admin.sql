@@ -231,6 +231,70 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.admin_get_generation_log_artifacts(text) TO authenticated;
 
+CREATE OR REPLACE FUNCTION public.write_ai_generation_log_artifact(
+  p_id uuid,
+  p_workflow_id text,
+  p_phase text,
+  p_artifact_type text,
+  p_source_work_id text,
+  p_parent_artifact_id uuid,
+  p_storage_provider text,
+  p_image_url text,
+  p_image_width integer,
+  p_image_height integer,
+  p_mime_type text,
+  p_file_size_bytes bigint,
+  p_status text,
+  p_meta jsonb
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+begin
+  INSERT INTO public.ai_generation_log_artifacts (
+    id,
+    workflow_id,
+    phase,
+    artifact_type,
+    source_work_id,
+    parent_artifact_id,
+    storage_provider,
+    image_url,
+    image_width,
+    image_height,
+    mime_type,
+    file_size_bytes,
+    status,
+    meta
+  ) VALUES (
+    p_id,
+    p_workflow_id,
+    p_phase,
+    p_artifact_type,
+    p_source_work_id,
+    p_parent_artifact_id,
+    p_storage_provider,
+    p_image_url,
+    p_image_width,
+    p_image_height,
+    p_mime_type,
+    p_file_size_bytes,
+    p_status,
+    COALESCE(p_meta, '{}'::jsonb)
+  );
+end;
+$$;
+
+COMMENT ON FUNCTION public.write_ai_generation_log_artifact(
+  uuid, text, text, text, text, uuid, text, text, integer, integer, text, bigint, text, jsonb
+) IS 'Service-role RPC used by Edge Functions to record ai_generation_log_artifacts without direct table inserts.';
+
+GRANT EXECUTE ON FUNCTION public.write_ai_generation_log_artifact(
+  uuid, text, text, text, text, uuid, text, text, integer, integer, text, bigint, text, jsonb
+) TO service_role;
+
 
 -- ── admin_get_today_stats ───────────────────────────────────
 CREATE OR REPLACE FUNCTION public.admin_get_today_stats(

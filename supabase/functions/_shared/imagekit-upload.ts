@@ -21,27 +21,13 @@ const bytesToBase64 = (bytes: Uint8Array): string => {
   return btoa(binary);
 };
 
-const base64ToBytes = (base64: string): Uint8Array => {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-  return bytes;
-};
-
 async function attemptUpload(
-  base64DataUri: string,
+  base64: string,
   fileName: string,
   folder: string,
   privateKey: string,
 ): Promise<ImageKitUploadResult | null> {
   try {
-    // base64 data URI에서 순수 base64 추출 (data:image/png;base64,... 형식 처리)
-    const base64 = base64DataUri.includes(",")
-      ? base64DataUri.split(",")[1]
-      : base64DataUri;
-
     const formData = new FormData();
     formData.append("file", base64);
     formData.append("fileName", fileName);
@@ -107,9 +93,8 @@ export async function uploadBytesToImageKit(
   }
 
   const base64 = bytesToBase64(bytes);
-  const dataUri = `data:${mimeType};base64,${base64}`;
 
-  return await attemptUpload(dataUri, fileName, folder, privateKey);
+  return await attemptUpload(base64, fileName, folder, privateKey);
 }
 
 /**
@@ -127,16 +112,15 @@ export async function uploadImageToImageKit(
 ): Promise<ImageKitUploadResult | null> {
   try {
     const dataUri = base64DataUri.trim();
-    const mimeTypeMatch = dataUri.match(/^data:([^;]+);base64,/);
-    const mimeType = mimeTypeMatch?.[1] ?? "image/png";
     const base64 = stripDataUriPrefix(dataUri);
 
-    return await uploadBytesToImageKit(
-      base64ToBytes(base64),
-      mimeType,
-      fileName,
-      folder,
-    );
+    const privateKey = Deno.env.get("IMAGEKIT_PRIVATE_KEY");
+    if (!privateKey) {
+      console.error("IMAGEKIT_PRIVATE_KEY 환경 변수가 설정되지 않음");
+      return null;
+    }
+
+    return await attemptUpload(base64, fileName, folder, privateKey);
   } catch (err) {
     console.error("ImageKit base64 decode error:", err);
     return null;

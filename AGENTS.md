@@ -21,7 +21,7 @@
 
 ```bash
 pnpm db:new        # 마이그레이션 파일 생성 (remote+local 최신 타임스탬프 자동 계산)
-supabase functions deploy  --use-api   # Docker 없이 서버 측 번들링 강제
+supabase functions deploy <function-name> --use-api   # 단일 Edge Function을 Docker 없이 서버 측 번들링으로 배포
 ```
 
 ## 하드 가드레일

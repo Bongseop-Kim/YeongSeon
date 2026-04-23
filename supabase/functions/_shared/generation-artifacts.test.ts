@@ -3,7 +3,10 @@ import {
   assert,
   assertObjectMatch,
 } from "jsr:@std/assert@1.0.19";
-import { saveGenerationArtifact } from "@/functions/_shared/generation-artifacts.ts";
+import {
+  createArtifactRowRpcRecorder,
+  saveGenerationArtifact,
+} from "@/functions/_shared/generation-artifacts.ts";
 
 Deno.test(
   "saveGenerationArtifact stores a success artifact for base64 input",
@@ -164,5 +167,47 @@ Deno.test(
             ?.error as string
         ).length > 0,
     );
+  },
+);
+
+Deno.test(
+  "createArtifactRowRpcRecorder writes artifacts through RPC",
+  async () => {
+    const calls: Array<{ fn: string; args: Record<string, unknown> }> = [];
+    const recordArtifactRow = createArtifactRowRpcRecorder({
+      rpc: async (fn: string, args: Record<string, unknown>) => {
+        calls.push({ fn, args });
+        return { data: null, error: null };
+      },
+    } as never);
+
+    const result = await recordArtifactRow({
+      id: "artifact-rpc-1",
+      workflow_id: "workflow-1",
+      phase: "render",
+      artifact_type: "final",
+      source_work_id: "render-1",
+      parent_artifact_id: null,
+      storage_provider: "url",
+      image_url: "https://ik.test/final.png",
+      image_width: null,
+      image_height: null,
+      mime_type: null,
+      file_size_bytes: null,
+      status: "partial",
+      meta: { render_backend: "img2img" },
+    });
+
+    assertEquals(result, { error: null });
+    assertEquals(calls.length, 1);
+    assertEquals(calls[0]?.fn, "write_ai_generation_log_artifact");
+    assertObjectMatch(calls[0]?.args ?? {}, {
+      p_id: "artifact-rpc-1",
+      p_workflow_id: "workflow-1",
+      p_phase: "render",
+      p_artifact_type: "final",
+      p_source_work_id: "render-1",
+      p_meta: { render_backend: "img2img" },
+    });
   },
 );

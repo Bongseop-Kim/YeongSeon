@@ -3,6 +3,7 @@ import { assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 Deno.test(
   "getCorsHeaders allows sentry tracing headers used by the store app",
   async () => {
+    const previousAllowedOrigins = Deno.env.get("ALLOWED_ORIGINS");
     Deno.env.set("ALLOWED_ORIGINS", "https://essesion.shop");
 
     try {
@@ -20,7 +21,11 @@ Deno.test(
         "sentry-trace",
       );
     } finally {
-      Deno.env.delete("ALLOWED_ORIGINS");
+      if (previousAllowedOrigins === undefined) {
+        Deno.env.delete("ALLOWED_ORIGINS");
+      } else {
+        Deno.env.set("ALLOWED_ORIGINS", previousAllowedOrigins);
+      }
     }
   },
 );

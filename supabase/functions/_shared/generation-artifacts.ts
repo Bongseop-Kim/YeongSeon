@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   uploadBytesToImageKit,
   type ImageKitUploadResult,
@@ -69,6 +70,34 @@ export type SaveGenerationArtifactDeps = {
         error: { message: string } | null;
       }
     | void;
+};
+
+export const createArtifactRowRpcRecorder = (
+  adminClient: Pick<SupabaseClient, "rpc">,
+) => {
+  return async (row: GenerationArtifactRow) => {
+    const { error } = await adminClient.rpc(
+      "write_ai_generation_log_artifact",
+      {
+        p_id: row.id,
+        p_workflow_id: row.workflow_id,
+        p_phase: row.phase,
+        p_artifact_type: row.artifact_type,
+        p_source_work_id: row.source_work_id,
+        p_parent_artifact_id: row.parent_artifact_id,
+        p_storage_provider: row.storage_provider,
+        p_image_url: row.image_url,
+        p_image_width: row.image_width,
+        p_image_height: row.image_height,
+        p_mime_type: row.mime_type,
+        p_file_size_bytes: row.file_size_bytes,
+        p_status: row.status,
+        p_meta: row.meta,
+      },
+    );
+
+    return { error: error ? { message: error.message } : null };
+  };
 };
 
 const DEFAULT_UPLOAD_FOLDER = "/ai-generation-artifacts";

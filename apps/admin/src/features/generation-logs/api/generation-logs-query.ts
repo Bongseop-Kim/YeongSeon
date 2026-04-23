@@ -76,7 +76,7 @@ export function useGenerationLogArtifactsQuery(params: {
 } {
   const normalizedWorkflowId =
     typeof params.workflowId === "string" && params.workflowId.trim().length > 0
-      ? params.workflowId
+      ? params.workflowId.trim()
       : null;
 
   const query = useQuery({

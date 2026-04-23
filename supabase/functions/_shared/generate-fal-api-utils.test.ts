@@ -50,8 +50,6 @@ Deno.test("recordFinalRenderArtifacts keeps fal_raw before final", async () => {
     finalImageUrl: "https://ik.test/final.png",
     falRequestId: "fal-1",
     renderBackend: "img2img",
-    rawImageBytes: new Uint8Array([1, 2, 3]),
-    rawImageMimeType: "image/png",
   });
 
   assertEquals(
@@ -59,19 +57,17 @@ Deno.test("recordFinalRenderArtifacts keeps fal_raw before final", async () => {
     ["fal_raw", "final"],
   );
   assertEquals(calls[1]?.parentArtifactId, "artifact-1");
-  assertEquals(calls[0]?.imageKind, "base64");
-  assertEquals(calls[0]?.mimeType, "image/png");
+  assertEquals(calls[0]?.imageKind, "url");
+  assertEquals(calls[0]?.imageUrl, "https://fal.media/raw.png");
   assertEquals(calls[0]?.meta, {
     fal_request_id: "fal-1",
     render_backend: "img2img",
-    fal_image_url: "https://fal.media/raw.png",
   });
   assertEquals(calls[1]?.imageKind, "url");
   assertEquals(calls[1]?.imageUrl, "https://ik.test/final.png");
   assertEquals(calls[1]?.meta, {
     fal_request_id: "fal-1",
     render_backend: "img2img",
-    generated_image_url: "https://ik.test/final.png",
   });
 });
 
@@ -106,8 +102,6 @@ Deno.test(
       finalImageUrl: "https://ik.test/final.png",
       falRequestId: "fal-2",
       renderBackend: "img2img",
-      rawImageBytes: new Uint8Array([4, 5, 6]),
-      rawImageMimeType: "image/png",
     });
 
     assertEquals(
@@ -143,6 +137,37 @@ Deno.test(
     });
 
     assertEquals(artifactTypes, ["placed_preview", "upscaled_reference"]);
+  },
+);
+
+Deno.test(
+  "recordOptionalRenderArtifacts trims base64 and mime type before saving",
+  async () => {
+    const calls: Array<
+      RecordRenderArtifactFn extends (input: infer T) => unknown ? T : never
+    > = [];
+
+    const recordArtifact: RecordRenderArtifactFn = async (input) => {
+      calls.push(input);
+      return {
+        artifactId: "artifact-1",
+        status: "success",
+        imageUrl: "https://ik.test/placed-preview.png",
+        error: null,
+      };
+    };
+
+    await recordOptionalRenderArtifacts(recordArtifact, {
+      placedPreviewBase64: "  AAEC\n",
+      placedPreviewMimeType: " image/png ",
+    });
+
+    assertEquals(calls.length, 1);
+    assertEquals(calls[0]?.image, {
+      kind: "base64",
+      base64: "AAEC",
+      mimeType: "image/png",
+    });
   },
 );
 

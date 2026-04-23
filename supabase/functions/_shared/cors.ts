@@ -1,5 +1,11 @@
 const ALLOWED_ORIGINS: readonly string[] = (() => {
-  const raw = Deno.env.get("ALLOWED_ORIGINS") ?? "";
+  const raw = (() => {
+    try {
+      return Deno.env.get("ALLOWED_ORIGINS") ?? "";
+    } catch {
+      return "";
+    }
+  })();
   if (!raw) return [];
   return raw
     .split(",")
