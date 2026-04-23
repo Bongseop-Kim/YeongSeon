@@ -1,5 +1,5 @@
 import type { AdminSampleOrderItemRowDTO } from "@yeongseon/shared";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   parseCustomReformData,
   parseRepairReformData,
@@ -38,6 +38,10 @@ function createSampleRowDTO(): AdminSampleOrderItemRowDTO {
     productImage: null,
   };
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("parseCustomReformData", () => {
   it("유효한 custom reformData를 파싱한다", () => {

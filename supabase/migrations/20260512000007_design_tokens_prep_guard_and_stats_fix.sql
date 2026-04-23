@@ -371,7 +371,6 @@ begin
         end as image_success_rate
       from filtered_logs
       group by
-        phase,
         case
           when phase = 'analysis' then '분석'
           when phase = 'prep' or request_type = 'prep' then '보정'
