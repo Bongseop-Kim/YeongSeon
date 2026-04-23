@@ -2,6 +2,14 @@ do $$
 declare
   v_invalid_request_types text;
 begin
+  update public.design_tokens
+  set request_type = case
+    when request_type = 'text_only' then 'analysis'
+    when request_type = 'text_and_image' then 'render_standard'
+    else request_type
+  end
+  where request_type in ('text_only', 'text_and_image');
+
   select string_agg(distinct request_type, ', ' order by request_type)
     into v_invalid_request_types
   from public.design_tokens
@@ -26,6 +34,37 @@ begin
       );
   end if;
 end
+$$;
+
+create or replace function public.get_design_token_balance()
+returns jsonb
+language sql
+stable
+security invoker
+set search_path to 'public'
+as $$
+  select jsonb_build_object(
+    'total', (
+      coalesce(sum(amount) filter (
+        where token_class = 'paid'
+          and (expires_at is null or expires_at > now())
+      ), 0) +
+      coalesce(sum(amount) filter (
+        where token_class in ('bonus', 'free')
+          and (expires_at is null or expires_at > now())
+      ), 0)
+    )::integer,
+    'paid',  coalesce(sum(amount) filter (
+               where token_class = 'paid'
+                 and (expires_at is null or expires_at > now())
+             ), 0)::integer,
+    'bonus', coalesce(sum(amount) filter (
+               where token_class in ('bonus', 'free')
+                 and (expires_at is null or expires_at > now())
+             ), 0)::integer
+  )
+  from public.design_tokens
+  where user_id = auth.uid();
 $$;
 
 create or replace function public.use_design_tokens(
