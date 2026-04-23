@@ -43,6 +43,12 @@ BEGIN
   PERFORM test_helpers.create_test_user(v_balance_user);
   PERFORM test_helpers.create_test_profile(v_balance_user, 'customer', '잔액 사용자');
 
+  DELETE FROM public.design_tokens
+  WHERE user_id = v_balance_user
+    AND type = 'grant'
+    AND token_class = 'free'
+    AND description = '신규 가입 토큰 지급';
+
   INSERT INTO public.pricing_constants (key, amount, category)
   VALUES
     ('token_plan_starter_price', 2900, 'token'),
@@ -250,7 +256,7 @@ SELECT is(
       ARRAY['fa000001-0000-0000-0000-000000000002'::uuid]
     )
   ),
-  67,
+  37,
   'get_design_token_balances_admin는 만료된 paid 토큰을 제외하고 잔액을 집계한다'
 );
 
