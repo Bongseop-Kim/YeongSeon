@@ -26,6 +26,7 @@ export default function GenerationLogList() {
   const [aiModel, setAiModel] = useState<string | null>(null);
   const [requestType, setRequestType] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [idSearchInput, setIdSearchInput] = useState<string>("");
   const [idSearch, setIdSearch] = useState<string>("");
   const [page, setPage] = useState(1);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -64,7 +65,10 @@ export default function GenerationLogList() {
     setStatus(v);
     resetPage();
   };
-  const handleIdSearchChange = (v: string) => {
+  const handleIdSearch = (v: string) => {
+    setIdSearchInput(v);
+  };
+  const handleIdSearchSubmit = (v: string) => {
     setIdSearch(v);
     resetPage();
   };
@@ -149,8 +153,9 @@ export default function GenerationLogList() {
           />
           <Input.Search
             placeholder="workflow_id / work_id"
-            value={idSearch}
-            onChange={(e) => handleIdSearchChange(e.target.value)}
+            value={idSearchInput}
+            onChange={(e) => handleIdSearch(e.target.value)}
+            onSearch={handleIdSearchSubmit}
             allowClear
             style={{ width: 220 }}
           />

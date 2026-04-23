@@ -34,7 +34,7 @@ supabase functions deploy <function-name> --use-api   # 단일 Edge Function을 
 
 - UI 타입(화면 모델)과 DTO(RPC 입출력)는 분리. 매핑은 API 계층에서만.
 - `packages/shared/src/mappers/`는 API 계층에서만 호출. 컴포넌트·훅 직접 호출 금지.
-- 하나의 타입에 `product`와 `product_id` 동시 사용 금지.
+- 하나의 타입에 `product`와 `product_id` 동시 사용 금지 (중복 참조 방지).
 
 **도메인 로직**
 

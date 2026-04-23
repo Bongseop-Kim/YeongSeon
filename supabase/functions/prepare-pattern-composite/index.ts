@@ -317,6 +317,7 @@ type PreparePatternCompositeDeps = {
   buildOnePointRepairPrompt: typeof buildOnePointRepairPrompt;
   requestOpenAiRepair: typeof requestOpenAiRepair;
   logGeneration: typeof logGeneration;
+  createArtifactRowRecorder: typeof createArtifactRowRpcRecorder;
 };
 
 const defaultPreparePatternCompositeDeps: PreparePatternCompositeDeps = {
@@ -336,6 +337,7 @@ const defaultPreparePatternCompositeDeps: PreparePatternCompositeDeps = {
   buildOnePointRepairPrompt,
   requestOpenAiRepair,
   logGeneration,
+  createArtifactRowRecorder: createArtifactRowRpcRecorder,
 };
 
 export const createPreparePatternCompositeHandler = (
@@ -428,6 +430,7 @@ export const createPreparePatternCompositeHandler = (
     let imageLatencyMs: number | null = null;
     let prepArtifactRecorder: PrepArtifactRecorder | null = null;
     let result: PatternPreparationResult | null = null;
+    let prepFailureLogged = false;
 
     const emitPrepLog = async (
       nextResult: PatternPreparationResult | null,
@@ -525,7 +528,7 @@ export const createPreparePatternCompositeHandler = (
         },
         {
           saveGenerationArtifact: deps.saveGenerationArtifact,
-          recordArtifactRow: createArtifactRowRpcRecorder(adminClient),
+          recordArtifactRow: deps.createArtifactRowRecorder(adminClient),
         },
       );
 
@@ -539,10 +542,10 @@ export const createPreparePatternCompositeHandler = (
       let preparedSourceBytes = prepared.bytes;
       const preparedWidth = prepared.width;
       const preparedHeight = prepared.height;
-      const artifactRecorder = prepArtifactRecorder;
-      if (!artifactRecorder) {
+      if (!prepArtifactRecorder) {
         throw new Error("prep_artifact_recorder_missing");
       }
+      const artifactRecorder = prepArtifactRecorder;
 
       result = {
         ...assessed,
@@ -754,6 +757,7 @@ export const createPreparePatternCompositeHandler = (
         });
       } catch (error) {
         await refundPrepCharge();
+        prepFailureLogged = true;
         await emitPrepLog(result, {
           error_type: "pattern_preparation_failed",
           error_message: error instanceof Error ? error.message : String(error),
@@ -763,13 +767,15 @@ export const createPreparePatternCompositeHandler = (
 
       return jsonResponse(200, result as unknown as Record<string, unknown>);
     } catch (error) {
-      await emitPrepLog(result, {
-        error_type: "pattern_preparation_failed",
-        error_message: error instanceof Error ? error.message : String(error),
-        pattern_preparation_backend: result?.preparationBackend ?? null,
-        image_latency_ms: imageLatencyMs,
-        total_latency_ms: Date.now() - phaseStartTime,
-      });
+      if (!prepFailureLogged) {
+        await emitPrepLog(result, {
+          error_type: "pattern_preparation_failed",
+          error_message: error instanceof Error ? error.message : String(error),
+          pattern_preparation_backend: result?.preparationBackend ?? null,
+          image_latency_ms: imageLatencyMs,
+          total_latency_ms: Date.now() - phaseStartTime,
+        });
+      }
       console.error("prepare-pattern-composite failed:", error);
       const remainingTokensFromError =
         error instanceof Error && "remainingTokens" in error

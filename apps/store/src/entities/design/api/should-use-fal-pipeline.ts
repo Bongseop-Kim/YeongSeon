@@ -85,7 +85,7 @@ async function fetchFalPipelineEnabled(): Promise<boolean> {
       signal: controller.signal,
     });
     const value = response.ok
-      ? ((await response.json()) as { enabled?: unknown }).enabled !== false
+      ? ((await response.json()) as { enabled?: unknown }).enabled === true
       : false;
     probeCache = { value, expiresAt: Date.now() + PROBE_CACHE_TTL_MS };
     return value;

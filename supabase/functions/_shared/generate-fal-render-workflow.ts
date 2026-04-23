@@ -23,15 +23,17 @@ export const resolveRenderWorkflowContext = (input: {
     crypto.randomUUID();
   const analysisWorkId =
     input.analysisSnapshot?.analysisWorkId ?? `${workflowId}_analysis`;
+  // This fallback work id can be orphaned when no FK enforces analysis-log existence.
+  const parentWorkId =
+    input.analysisSnapshot?.analysisWorkId ??
+    trimOptional(input.payloadPrepWorkId) ??
+    analysisWorkId;
 
   return {
     workflowId,
     analysisWorkId,
     renderWorkId: `${workflowId}_render`,
-    parentWorkId:
-      input.analysisSnapshot?.analysisWorkId ??
-      trimOptional(input.payloadPrepWorkId) ??
-      analysisWorkId,
+    parentWorkId,
   };
 };
 
@@ -45,15 +47,13 @@ export const buildArtifactWarningMessage = (
     return undefined;
   }
 
-  return artifactFailures
-    .map(({ artifactType, error }) => `${artifactType}: ${error}`)
-    .join("; ");
+  return JSON.stringify(artifactFailures);
 };
 
 export const buildInitialRenderLogPayload = (input: {
   workId: string;
   workflowId: string;
-  parentWorkId: string | null;
+  parentWorkId: string;
   userId: string;
   userMessage: string;
   promptLength: number;

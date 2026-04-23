@@ -64,12 +64,9 @@ export type SaveGenerationArtifactDeps = {
     fileName: string;
     folder: string;
   }) => Promise<ImageKitUploadResult | null>;
-  recordArtifactRow: (row: GenerationArtifactRow) =>
-    | Promise<{ error: { message: string } | null } | void>
-    | {
-        error: { message: string } | null;
-      }
-    | void;
+  recordArtifactRow: (
+    row: GenerationArtifactRow,
+  ) => Promise<{ error: { message: string } | null } | void>;
 };
 
 export const createArtifactRowRpcRecorder = (
@@ -126,9 +123,11 @@ const stripDataUriPrefix = (
   }
 
   const header = trimmedValue.slice(5, commaIndex);
-  const mimeType = header.endsWith(";base64")
-    ? header.slice(0, -";base64".length)
-    : null;
+  if (!header.endsWith(";base64")) {
+    throw new Error("artifact_data_uri_not_base64");
+  }
+
+  const mimeType = header.slice(0, -";base64".length);
 
   return {
     mimeType,
@@ -212,10 +211,7 @@ const buildRecordMeta = (
 });
 
 const resolveRecordError = (
-  result:
-    | { error: { message: string } | null }
-    | void
-    | Promise<{ error: { message: string } | null } | void>,
+  result: Promise<{ error: { message: string } | null } | void>,
 ): Promise<string | null> =>
   Promise.resolve(result).then((resolved) => resolved?.error?.message ?? null);
 

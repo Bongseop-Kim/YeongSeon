@@ -102,7 +102,7 @@ $$;
 
 comment on function public.write_ai_generation_log_artifact(
   uuid, text, text, text, text, uuid, text, text, integer, integer, text, bigint, text, jsonb
-) is 'Service-role RPC used by Edge Functions to record ai_generation_log_artifacts without direct table inserts.';
+) is 'Service-role-only RPC used by Edge Functions to record ai_generation_log_artifacts without direct table inserts; no auth.uid() validation by design.';
 
 grant execute on function public.write_ai_generation_log_artifact(
   uuid, text, text, text, text, uuid, text, text, integer, integer, text, bigint, text, jsonb

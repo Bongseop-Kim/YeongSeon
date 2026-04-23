@@ -1,13 +1,4 @@
--- supabase/migrations/20260512000009_generation_logs_filter_and_detail.sql
-
--- 기존 함수 제거 (grant 자동 해제)
 drop function if exists public.admin_get_generation_logs(date, date, text, integer, integer);
-
--- 파라미터 4개 추가:
---   p_id          – 단건 조회 (상세 페이지용)
---   p_request_type – 요청 유형 필터
---   p_status      – 'success' | 'error' | null(전체)
---   p_id_search   – workflow_id 또는 work_id exact match
 create function public.admin_get_generation_logs(
   p_start_date      date,
   p_end_date        date,
@@ -103,6 +94,10 @@ begin
   offset p_offset;
 end;
 $$;
+
+comment on function public.admin_get_generation_logs(
+  date, date, text, integer, integer, uuid, text, text, text
+) is 'Admin-only listing with optional filters: id / request_type / status(success|error) / id_search(workflow_id|work_id exact).';
 
 grant execute on function public.admin_get_generation_logs(
   date, date, text, integer, integer, uuid, text, text, text

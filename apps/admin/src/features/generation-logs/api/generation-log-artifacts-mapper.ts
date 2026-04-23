@@ -5,7 +5,7 @@ function toString(v: unknown): string | null {
 }
 
 const toNumberOrNull = (v: unknown): number | null => {
-  if (typeof v === "number" && Number.isFinite(v)) {
+  if (typeof v === "number" && Number.isSafeInteger(v)) {
     return v;
   }
   if (typeof v === "string") {
@@ -25,11 +25,6 @@ const toNumberOrNull = (v: unknown): number | null => {
         return null;
       }
     }
-
-    const parsed = Number.parseFloat(trimmed);
-    return Number.isFinite(parsed) && Number.isSafeInteger(parsed)
-      ? parsed
-      : null;
   }
   if (
     typeof v === "bigint" &&

@@ -732,46 +732,46 @@ export const handleRequest = async (req: Request) => {
       return null;
     }
   };
-  await logGeneration(adminClient, {
-    ...buildInitialRenderLogPayload({
-      workId: renderWorkId,
-      workflowId: workId,
-      parentWorkId,
-      userId: user.id,
-      userMessage: userMessageForLog,
-      promptLength: userMessagePromptLength,
-      route,
-      routeReason: payload.routeReason ?? null,
-      routeSignals: payload.routeSignals ?? [],
-      imageGenerated: false,
-      tokensCharged: renderTokensCharged,
-    }),
-    ...routeLogFields,
-    ...patternPreparationLogFields,
-    ...attachmentLogFields,
-    ...userMessageLogFields,
-    text_prompt: textPrompt,
-    image_prompt: imagePrompt,
-    image_edit_prompt: imageEditPrompt,
-    ai_message: aiMessage,
-    generate_image: true,
-    eligible_for_render: eligibility.eligibleForRender,
-    missing_requirements: eligibility.missingRequirements,
-    eligibility_reason: eligibility.eligibilityReason,
-    fal_request_id: falRequestId,
-    render_backend: renderBackend,
-    seed: renderSeed,
-    text_latency_ms: textLatencyMs,
-  });
-  await recordOptionalRenderArtifacts(recordRenderArtifact, {
-    ...buildPlacedPreviewArtifacts({
-      ciPlacement: payload.designContext?.ciPlacement ?? null,
-      tiledBase64: payload.tiledBase64,
-      tiledMimeType: payload.tiledMimeType,
-    }),
-  });
-
   try {
+    await logGeneration(adminClient, {
+      ...buildInitialRenderLogPayload({
+        workId: renderWorkId,
+        workflowId: workId,
+        parentWorkId,
+        userId: user.id,
+        userMessage: userMessageForLog,
+        promptLength: userMessagePromptLength,
+        route,
+        routeReason: payload.routeReason ?? null,
+        routeSignals: payload.routeSignals ?? [],
+        imageGenerated: false,
+        tokensCharged: renderTokensCharged,
+      }),
+      ...routeLogFields,
+      ...patternPreparationLogFields,
+      ...attachmentLogFields,
+      ...userMessageLogFields,
+      text_prompt: textPrompt,
+      image_prompt: imagePrompt,
+      image_edit_prompt: imageEditPrompt,
+      ai_message: aiMessage,
+      generate_image: true,
+      eligible_for_render: eligibility.eligibleForRender,
+      missing_requirements: eligibility.missingRequirements,
+      eligibility_reason: eligibility.eligibilityReason,
+      fal_request_id: falRequestId,
+      render_backend: renderBackend,
+      seed: renderSeed,
+      text_latency_ms: textLatencyMs,
+    });
+    await recordOptionalRenderArtifacts(recordRenderArtifact, {
+      ...buildPlacedPreviewArtifacts({
+        ciPlacement: payload.designContext?.ciPlacement ?? null,
+        tiledBase64: payload.tiledBase64,
+        tiledMimeType: payload.tiledMimeType,
+      }),
+    });
+
     if (route === "fal_edit") {
       if (!payload.baseImageUrl || !imageEditPrompt) {
         throw new Error(

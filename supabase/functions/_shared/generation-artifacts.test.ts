@@ -133,6 +133,7 @@ Deno.test(
   "saveGenerationArtifact records failed status for malformed base64 input",
   async () => {
     const inserted: unknown[] = [];
+    let uploadCalled = false;
 
     const result = await saveGenerationArtifact(
       {
@@ -147,6 +148,7 @@ Deno.test(
       {
         generateArtifactId: () => "artifact-3",
         uploadImage: () => {
+          uploadCalled = true;
           throw new Error("upload should not be called");
         },
         recordArtifactRow: async (row) => {
@@ -157,6 +159,7 @@ Deno.test(
     );
 
     assertEquals(result.status, "failed");
+    assertEquals(uploadCalled, false);
     assertEquals(inserted.length, 1);
     assertEquals((inserted[0] as { status?: string }).status, "failed");
     assert(
@@ -167,6 +170,43 @@ Deno.test(
             ?.error as string
         ).length > 0,
     );
+  },
+);
+
+Deno.test(
+  "saveGenerationArtifact rejects non-base64 data URIs before upload",
+  async () => {
+    const inserted: unknown[] = [];
+    let uploadCalled = false;
+
+    const result = await saveGenerationArtifact(
+      {
+        workflowId: "workflow-4",
+        phase: "analysis",
+        artifactType: "source_input",
+        image: {
+          kind: "base64",
+          base64: "data:image/svg+xml,<svg></svg>",
+        },
+      },
+      {
+        generateArtifactId: () => "artifact-4",
+        uploadImage: () => {
+          uploadCalled = true;
+          throw new Error("upload should not be called");
+        },
+        recordArtifactRow: async (row) => {
+          inserted.push(row);
+          return { error: null };
+        },
+      },
+    );
+
+    assertEquals(result.status, "failed");
+    assertEquals(result.error, "artifact_data_uri_not_base64");
+    assertEquals(uploadCalled, false);
+    assertEquals(inserted.length, 1);
+    assertEquals((inserted[0] as { status?: string }).status, "failed");
   },
 );
 

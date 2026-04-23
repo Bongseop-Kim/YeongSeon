@@ -1,5 +1,7 @@
 import { assertEquals } from "jsr:@std/assert@1.0.19";
 import {
+  appendArtifactWarnings,
+  buildArtifactWarningMessage,
   buildInitialRenderLogPayload,
   resolveRenderWorkflowContext,
 } from "./generate-fal-render-workflow.ts";
@@ -64,5 +66,32 @@ Deno.test(
     assertEquals(payload.error_type, undefined);
     assertEquals(payload.error_message, undefined);
     assertEquals(payload.tokens_charged, 5);
+  },
+);
+
+Deno.test("buildArtifactWarningMessage serializes warnings as JSON", () => {
+  assertEquals(
+    buildArtifactWarningMessage([
+      {
+        artifactType: "final:preview",
+        error: "schema; cache miss",
+      },
+    ]),
+    '[{"artifactType":"final:preview","error":"schema; cache miss"}]',
+  );
+});
+
+Deno.test(
+  "appendArtifactWarnings prefixes the serialized warning payload",
+  () => {
+    assertEquals(
+      appendArtifactWarnings(undefined, [
+        {
+          artifactType: "control_image",
+          error: "upload_failed",
+        },
+      ]),
+      'artifact_warnings: [{"artifactType":"control_image","error":"upload_failed"}]',
+    );
   },
 );

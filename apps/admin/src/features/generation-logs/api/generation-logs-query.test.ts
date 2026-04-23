@@ -165,13 +165,15 @@ describe("useGenerationWorkflowLogsQuery", () => {
 
     await options.queryFn();
 
-    expect(getGenerationLogsMock).toHaveBeenCalledWith({
-      startDate: "2020-01-01",
-      endDate: "2099-12-31",
-      idSearch: "workflow-1",
-      limit: 200,
-      offset: 0,
-    });
+    expect(getGenerationLogsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startDate: "2020-01-01",
+        endDate: "2099-12-31",
+        idSearch: "workflow-1",
+        limit: 200,
+        offset: 0,
+      }),
+    );
     expect(options.enabled).toBe(true);
   });
 

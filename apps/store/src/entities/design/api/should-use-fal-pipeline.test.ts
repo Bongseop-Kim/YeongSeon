@@ -129,6 +129,18 @@ describe("shouldUseFalPipeline", () => {
     await expect(shouldUseFalPipeline(base)).resolves.toBe(false);
   });
 
+  it("fails closed when the probe response omits enabled", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      }),
+    );
+
+    await expect(shouldUseFalPipeline(base)).resolves.toBe(false);
+  });
+
   it("fails closed when the probe request errors", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
 

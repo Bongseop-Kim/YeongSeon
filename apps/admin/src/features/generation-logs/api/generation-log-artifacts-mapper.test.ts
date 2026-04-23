@@ -46,4 +46,34 @@ describe("toAdminGenerationArtifactItem", () => {
       }).fileSizeBytes,
     ).toBe(1024);
   });
+
+  it("부분 숫자 문자열은 null로 버린다", () => {
+    expect(
+      toAdminGenerationArtifactItem({
+        id: "artifact-4",
+        workflow_id: "workflow-1",
+        artifact_type: "final",
+        storage_provider: "imagekit",
+        file_size_bytes: "12px",
+        status: "success",
+        meta: {},
+        created_at: "2026-05-12T00:00:00Z",
+      }).fileSizeBytes,
+    ).toBeNull();
+  });
+
+  it("안전한 정수가 아닌 number는 null로 버린다", () => {
+    expect(
+      toAdminGenerationArtifactItem({
+        id: "artifact-5",
+        workflow_id: "workflow-1",
+        artifact_type: "final",
+        storage_provider: "imagekit",
+        file_size_bytes: 1.5,
+        status: "success",
+        meta: {},
+        created_at: "2026-05-12T00:00:00Z",
+      }).fileSizeBytes,
+    ).toBeNull();
+  });
 });

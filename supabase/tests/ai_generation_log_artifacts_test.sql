@@ -74,24 +74,13 @@ BEGIN
 
   PERFORM test_helpers.set_auth(v_admin, 'authenticated');
 
-  INSERT INTO public.ai_generation_log_artifacts (
-    workflow_id,
-    phase,
-    artifact_type,
-    source_work_id,
-    storage_provider,
-    image_url,
-    image_width,
-    image_height,
-    mime_type,
-    file_size_bytes,
-    status,
-    meta
-  ) VALUES (
+  PERFORM public.write_ai_generation_log_artifact(
+    gen_random_uuid(),
     'workflow-1',
     'prep',
     'prepared_tile',
     'workflow-1-analysis',
+    null,
     'imagekit',
     'https://ik.example/artifacts/prepared-tile.png',
     1024,
@@ -102,24 +91,13 @@ BEGIN
     '{"repairApplied": true, "artifactKind": "prepared_tile"}'::jsonb
   );
 
-  INSERT INTO public.ai_generation_log_artifacts (
-    workflow_id,
-    phase,
-    artifact_type,
-    source_work_id,
-    storage_provider,
-    image_url,
-    image_width,
-    image_height,
-    mime_type,
-    file_size_bytes,
-    status,
-    meta
-  ) VALUES (
+  PERFORM public.write_ai_generation_log_artifact(
+    gen_random_uuid(),
     'workflow-1',
     'render',
     'final',
     'workflow-1-render',
+    null,
     'imagekit',
     'https://ik.example/artifacts/final.png',
     1024,

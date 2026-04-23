@@ -23,8 +23,8 @@ interface DesignTokenBalance {
 }
 
 interface PatternPreparationResponse {
-  workflowId: string;
-  prepWorkId: string;
+  workflowId?: string | null;
+  prepWorkId?: string | null;
   placementMode: "all-over" | "one-point";
   sourceStatus: "ready" | "repair_required";
   fabricStatus: "ready" | "repair_required";

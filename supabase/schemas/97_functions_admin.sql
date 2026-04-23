@@ -289,7 +289,11 @@ $$;
 
 COMMENT ON FUNCTION public.write_ai_generation_log_artifact(
   uuid, text, text, text, text, uuid, text, text, integer, integer, text, bigint, text, jsonb
-) IS 'Service-role RPC used by Edge Functions to record ai_generation_log_artifacts without direct table inserts.';
+) IS 'Service-role-only RPC used by Edge Functions to record ai_generation_log_artifacts without direct table inserts; no auth.uid() validation by design.';
+
+COMMENT ON FUNCTION public.admin_get_generation_logs(
+  date, date, text, integer, integer, uuid, text, text, text
+) IS 'Admin-only listing with optional filters: id / request_type / status(success|error) / id_search(workflow_id|work_id exact).';
 
 GRANT EXECUTE ON FUNCTION public.write_ai_generation_log_artifact(
   uuid, text, text, text, text, uuid, text, text, integer, integer, text, bigint, text, jsonb
