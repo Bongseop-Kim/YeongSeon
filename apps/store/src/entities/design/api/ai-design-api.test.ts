@@ -787,6 +787,29 @@ describe("aiDesignApi", () => {
     });
   });
 
+  it("fal_edit 라우트에서는 tiling probe를 호출하지 않는다", async () => {
+    invoke.mockResolvedValue({ data: successResponse, error: null });
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await aiDesignApi({
+      ...baseRequest,
+      userMessage: "포인트 위치가 너무 높아 아래로 내려줘",
+      baseImageUrl: "https://example.com/base.png",
+      baseImageWorkId: "work-base-1",
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledWith(
+      "generate-fal-api",
+      expect.objectContaining({
+        body: expect.objectContaining({
+          route: "fal_edit",
+        }),
+      }),
+    );
+  });
+
   it("reference-only all-over 요청도 fal_tiling 경로로 전달한다", async () => {
     MockFileReader.configure({
       result: "data:image/png;base64,reference-base64",

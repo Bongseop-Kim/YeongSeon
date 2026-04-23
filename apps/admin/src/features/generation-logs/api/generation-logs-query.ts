@@ -101,6 +101,32 @@ export function useGenerationLogDetailQuery(id: string): {
   };
 }
 
+export function useGenerationWorkflowLogsQuery(workflowId: string): {
+  data: AdminGenerationLogItem[];
+  isLoading: boolean;
+  errorMessage: string | null;
+} {
+  const normalizedWorkflowId = workflowId.trim();
+  const query = useQuery({
+    queryKey: ["generation-logs", "workflow", normalizedWorkflowId],
+    queryFn: () =>
+      getGenerationLogs({
+        startDate: "2020-01-01",
+        endDate: "2099-12-31",
+        idSearch: normalizedWorkflowId,
+        limit: 200,
+        offset: 0,
+      }),
+    enabled: normalizedWorkflowId.length > 0,
+  });
+
+  return {
+    data: query.data ?? [],
+    isLoading: query.isLoading,
+    errorMessage: query.error instanceof Error ? query.error.message : null,
+  };
+}
+
 export function useGenerationLogArtifactsQuery(params: {
   workflowId: string | null | undefined;
 }): {

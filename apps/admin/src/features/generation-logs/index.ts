@@ -5,4 +5,5 @@ export {
   useGenerationStatsQuery,
   useGenerationLogsQuery,
   useGenerationLogDetailQuery,
+  useGenerationWorkflowLogsQuery,
 } from "./api/generation-logs-query";

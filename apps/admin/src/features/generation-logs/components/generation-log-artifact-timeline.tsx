@@ -185,8 +185,10 @@ function ArtifactTimelineEntry({
 
 export function GenerationLogArtifactTimeline({
   workflowId,
+  logErrorMessage,
 }: {
   workflowId?: string | null;
+  logErrorMessage?: string | null;
 }) {
   const {
     data: artifacts,
@@ -231,15 +233,27 @@ export function GenerationLogArtifactTimeline({
   }
 
   const hasArtifacts = artifacts.length > 0;
+  const hasArtifactWarnings =
+    typeof logErrorMessage === "string" &&
+    logErrorMessage.includes("artifact_warnings:");
 
   if (!hasArtifacts) {
     return (
       <>
         <Title level={5}>생성 아티팩트 타임라인</Title>
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="워크플로우 아티팩트가 없습니다"
-        />
+        {hasArtifactWarnings ? (
+          <Alert
+            type="warning"
+            showIcon
+            message="아티팩트 저장이 실패해 타임라인이 비어 있습니다"
+            description={logErrorMessage}
+          />
+        ) : (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="워크플로우 아티팩트가 없습니다"
+          />
+        )}
       </>
     );
   }

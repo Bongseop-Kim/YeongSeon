@@ -5,12 +5,15 @@ import {
   useGenerationLogsQuery,
   useGenerationLogArtifactsQuery,
   useGenerationLogDetailQuery,
+  useGenerationWorkflowLogsQuery,
 } from "@/features/generation-logs/api/generation-logs-query";
 
-const { useQueryMock, getGenerationLogArtifactsMock } = vi.hoisted(() => ({
-  useQueryMock: vi.fn(),
-  getGenerationLogArtifactsMock: vi.fn(),
-}));
+const { useQueryMock, getGenerationLogArtifactsMock, getGenerationLogsMock } =
+  vi.hoisted(() => ({
+    useQueryMock: vi.fn(),
+    getGenerationLogArtifactsMock: vi.fn(),
+    getGenerationLogsMock: vi.fn(),
+  }));
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: useQueryMock,
@@ -22,13 +25,14 @@ vi.mock("@/features/generation-logs/api/generation-log-artifacts-api", () => ({
 
 vi.mock("@/features/generation-logs/api/generation-logs-api", () => ({
   getGenerationStats: vi.fn(),
-  getGenerationLogs: vi.fn(),
+  getGenerationLogs: getGenerationLogsMock,
 }));
 
 describe("generation logs artifact query contract", () => {
   beforeEach(() => {
     useQueryMock.mockReset();
     getGenerationLogArtifactsMock.mockReset();
+    getGenerationLogsMock.mockReset();
     useQueryMock.mockImplementation((options) => ({
       data: [],
       isLoading: false,
@@ -100,6 +104,7 @@ describe("useGenerationLogsQuery — new filter params", () => {
 describe("useGenerationLogDetailQuery", () => {
   beforeEach(() => {
     useQueryMock.mockReset();
+    getGenerationLogsMock.mockReset();
   });
 
   it("data[0]을 반환하고 queryKey가 ['generation-logs', 'detail', id]이다", () => {
@@ -130,6 +135,48 @@ describe("useGenerationLogDetailQuery", () => {
     }));
 
     useGenerationLogDetailQuery("");
+
+    const options = useQueryMock.mock.calls[0]?.[0];
+    expect(options.enabled).toBe(false);
+  });
+});
+
+describe("useGenerationWorkflowLogsQuery", () => {
+  beforeEach(() => {
+    useQueryMock.mockReset();
+    getGenerationLogsMock.mockReset();
+    useQueryMock.mockImplementation((options) => ({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      options,
+    }));
+  });
+
+  it("workflowId로 같은 workflow의 로그를 exact match 조회한다", async () => {
+    useGenerationWorkflowLogsQuery(" workflow-1 ");
+
+    const options = useQueryMock.mock.calls[0]?.[0];
+    expect(options.queryKey).toEqual([
+      "generation-logs",
+      "workflow",
+      "workflow-1",
+    ]);
+
+    await options.queryFn();
+
+    expect(getGenerationLogsMock).toHaveBeenCalledWith({
+      startDate: "2020-01-01",
+      endDate: "2099-12-31",
+      idSearch: "workflow-1",
+      limit: 200,
+      offset: 0,
+    });
+    expect(options.enabled).toBe(true);
+  });
+
+  it("workflowId가 비어 있으면 enabled: false이다", () => {
+    useGenerationWorkflowLogsQuery(" ");
 
     const options = useQueryMock.mock.calls[0]?.[0];
     expect(options.enabled).toBe(false);

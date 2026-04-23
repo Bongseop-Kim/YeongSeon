@@ -250,12 +250,6 @@ export async function aiDesignApi(
       ? (preparedCompositeMimeType ?? preparedSourceMimeType)
       : preparedSourceMimeType;
 
-  const useFalTiling = await shouldUseFalPipeline({
-    ciImageBase64: preparedSourceBase64,
-    ciPlacement: request.designContext.ciPlacement,
-    fabricMethod: request.designContext.fabricMethod,
-    allowFalRender: true,
-  });
   const backgroundPattern =
     request.designContext.ciPlacement === "one-point" &&
     request.designContext.colors[0]
@@ -272,6 +266,15 @@ export async function aiDesignApi(
     !preparedCompositeBase64
       ? "openai"
       : requestedRoute;
+  const useFalTiling =
+    resolvedRoute === "fal_tiling"
+      ? await shouldUseFalPipeline({
+          ciImageBase64: preparedSourceBase64,
+          ciPlacement: request.designContext.ciPlacement,
+          fabricMethod: request.designContext.fabricMethod,
+          allowFalRender: true,
+        })
+      : false;
   const shouldPrepareTiledPattern =
     resolvedRoute === "fal_tiling" && placementMode === "all-over";
   const controlStructureBase64 =

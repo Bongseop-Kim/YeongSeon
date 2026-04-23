@@ -1,18 +1,24 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  Button,
   Card,
   Col,
   Descriptions,
   Image,
   Row,
+  Space,
   Spin,
   Tag,
   Typography,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import { useGenerationLogDetailQuery } from "@/features/generation-logs/api/generation-logs-query";
+import {
+  useGenerationLogDetailQuery,
+  useGenerationLogArtifactsQuery,
+  useGenerationWorkflowLogsQuery,
+} from "@/features/generation-logs/api/generation-logs-query";
 import { GenerationLogArtifactTimeline } from "@/features/generation-logs/components/generation-log-artifact-timeline";
 import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
@@ -21,9 +27,15 @@ const { Text } = Typography;
 
 function StickyBar({
   log,
+  workflowLogs,
+  activeLogId,
+  onSelectLog,
   onBack,
 }: {
   log: AdminGenerationLogItem;
+  workflowLogs: AdminGenerationLogItem[];
+  activeLogId: string;
+  onSelectLog: (logId: string) => void;
   onBack: () => void;
 }) {
   return (
@@ -89,6 +101,24 @@ function StickyBar({
           </Text>
         )}
       </div>
+      {workflowLogs.length > 1 ? (
+        <Space wrap size={8} style={{ marginTop: 10 }}>
+          {workflowLogs.map((workflowLog) => {
+            const selected = workflowLog.id === activeLogId;
+            const label = `${requestTypeLabel(workflowLog.requestType)} · ${workflowLog.aiModel}`;
+            return (
+              <Button
+                key={workflowLog.id}
+                type={selected ? "primary" : "default"}
+                size="small"
+                onClick={() => onSelectLog(workflowLog.id)}
+              >
+                {label}
+              </Button>
+            );
+          })}
+        </Space>
+      ) : null}
     </div>
   );
 }
@@ -190,11 +220,67 @@ function GeneratedImageSection({ log }: { log: AdminGenerationLogItem }) {
   );
 }
 
+function InputImageSection({ log }: { log: AdminGenerationLogItem }) {
+  const { data: artifacts, isLoading } = useGenerationLogArtifactsQuery({
+    workflowId: log.workflowId,
+  });
+
+  const inputArtifact = useMemo(
+    () =>
+      artifacts.find((artifact) =>
+        [
+          "source_input",
+          "source_original",
+          "prepared_source",
+          "fal_input_preview",
+          "inpaint_base",
+          "upscaled_reference",
+          "control_image",
+        ].includes(artifact.artifactType),
+      ) ?? null,
+    [artifacts],
+  );
+
+  const hasImageAttachment = log.requestAttachments?.some(
+    (attachment) => attachment.type === "image",
+  );
+
+  if (!hasImageAttachment && !inputArtifact && !isLoading) {
+    return null;
+  }
+
+  return (
+    <Card title="입력 이미지" size="small" style={{ marginBottom: 16 }}>
+      {isLoading ? (
+        <Spin />
+      ) : inputArtifact?.imageUrl ? (
+        <Image
+          src={inputArtifact.imageUrl}
+          alt="입력 이미지"
+          style={{ maxWidth: "100%", maxHeight: 400, objectFit: "contain" }}
+        />
+      ) : hasImageAttachment ? (
+        <Alert
+          type="warning"
+          showIcon
+          message="첨부 이미지는 있었지만 저장된 원본 이미지가 없습니다"
+          description="당시 source artifact 저장이 실패했거나, 로그에는 파일명만 남고 실제 이미지 URL은 저장되지 않았습니다."
+        />
+      ) : (
+        <Alert type="info" showIcon message="입력 이미지가 없습니다" />
+      )}
+    </Card>
+  );
+}
+
 function ArtifactSection({ log }: { log: AdminGenerationLogItem }) {
   return (
     <Card title="아티팩트 타임라인" size="small" style={{ marginBottom: 16 }}>
       {log.workflowId ? (
-        <GenerationLogArtifactTimeline workflowId={log.workflowId} />
+        <GenerationLogArtifactTimeline
+          workflowId={log.workflowId}
+          logErrorMessage={log.errorMessage}
+        />
       ) : (
         <Alert
           type="info"
@@ -361,26 +447,129 @@ function DesignContextSection({ log }: { log: AdminGenerationLogItem }) {
   );
 }
 
+function getWorkflowPhaseRank(log: AdminGenerationLogItem): number {
+  if (log.phase === "render") return 0;
+  if (log.phase === "prep") return 1;
+  if (log.phase === "analysis") return 2;
+  return 3;
+}
+
+function WorkflowLogsSection({
+  workflowLogs,
+  activeLogId,
+  onSelectLog,
+}: {
+  workflowLogs: AdminGenerationLogItem[];
+  activeLogId: string;
+  onSelectLog: (logId: string) => void;
+}) {
+  if (workflowLogs.length <= 1) {
+    return null;
+  }
+
+  return (
+    <Card title="워크플로우 단계" size="small" style={{ marginBottom: 16 }}>
+      <Space direction="vertical" size="small" style={{ width: "100%" }}>
+        {workflowLogs.map((workflowLog) => {
+          const isActive = workflowLog.id === activeLogId;
+          return (
+            <button
+              key={workflowLog.id}
+              type="button"
+              onClick={() => onSelectLog(workflowLog.id)}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                borderRadius: 8,
+                border: isActive ? "1px solid #1677ff" : "1px solid #f0f0f0",
+                background: isActive ? "#f0f7ff" : "#fff",
+                padding: "12px 14px",
+                cursor: "pointer",
+              }}
+            >
+              <Space wrap size={8}>
+                <Tag color={modelColor(workflowLog.aiModel)}>
+                  {workflowLog.aiModel}
+                </Tag>
+                <Tag>{requestTypeLabel(workflowLog.requestType)}</Tag>
+                {workflowLog.errorType ? (
+                  <Tag color="error">{workflowLog.errorType}</Tag>
+                ) : (
+                  <Tag color="success">success</Tag>
+                )}
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {dayjs(workflowLog.createdAt).format("YYYY-MM-DD HH:mm:ss")}
+                </Text>
+                <Text code style={{ fontSize: 11 }}>
+                  {workflowLog.workId}
+                </Text>
+              </Space>
+            </button>
+          );
+        })}
+      </Space>
+    </Card>
+  );
+}
+
 export function GenerationLogDetailPage({ id }: { id: string }) {
   const navigate = useNavigate();
   const {
-    data: log,
-    isLoading,
-    errorMessage,
+    data: requestedLog,
+    isLoading: isDetailLoading,
+    errorMessage: detailErrorMessage,
   } = useGenerationLogDetailQuery(id);
+  const { data: workflowLogs, isLoading: isWorkflowLoading } =
+    useGenerationWorkflowLogsQuery(requestedLog?.workflowId ?? "");
+  const [activeLogId, setActiveLogId] = useState(id);
 
-  if (isLoading) {
+  useEffect(() => {
+    setActiveLogId(id);
+  }, [id]);
+
+  const orderedWorkflowLogs = useMemo(
+    () =>
+      [...workflowLogs].sort((left, right) => {
+        const rankDiff =
+          getWorkflowPhaseRank(left) - getWorkflowPhaseRank(right);
+        if (rankDiff !== 0) {
+          return rankDiff;
+        }
+
+        return (
+          dayjs(right.createdAt).valueOf() - dayjs(left.createdAt).valueOf()
+        );
+      }),
+    [workflowLogs],
+  );
+
+  const activeLog = useMemo(() => {
+    if (orderedWorkflowLogs.length === 0) {
+      return requestedLog;
+    }
+
+    return (
+      orderedWorkflowLogs.find((log) => log.id === activeLogId) ??
+      orderedWorkflowLogs.find((log) => log.id === id) ??
+      orderedWorkflowLogs[0] ??
+      requestedLog
+    );
+  }, [activeLogId, id, orderedWorkflowLogs, requestedLog]);
+
+  if (isDetailLoading || (requestedLog?.workflowId && isWorkflowLoading)) {
     return <Spin style={{ display: "block", margin: "80px auto" }} />;
   }
 
-  if (errorMessage || !log) {
+  if (detailErrorMessage || !activeLog) {
     return (
       <div style={{ padding: 24 }}>
         <Alert
           type="error"
           showIcon
           message="로그를 불러올 수 없습니다"
-          description={errorMessage ?? "해당 ID의 로그가 존재하지 않습니다."}
+          description={
+            detailErrorMessage ?? "해당 ID의 로그가 존재하지 않습니다."
+          }
         />
       </div>
     );
@@ -388,13 +577,25 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
 
   return (
     <>
-      <StickyBar log={log} onBack={() => navigate("/generation-logs")} />
+      <StickyBar
+        log={activeLog}
+        workflowLogs={orderedWorkflowLogs}
+        activeLogId={activeLog.id}
+        onSelectLog={setActiveLogId}
+        onBack={() => navigate("/generation-logs")}
+      />
       <div style={{ padding: 24 }}>
-        <BasicInfoSection log={log} />
-        <GeneratedImageSection log={log} />
-        <ArtifactSection log={log} />
-        <PromptSection log={log} />
-        <DesignContextSection log={log} />
+        <WorkflowLogsSection
+          workflowLogs={orderedWorkflowLogs}
+          activeLogId={activeLog.id}
+          onSelectLog={setActiveLogId}
+        />
+        <BasicInfoSection log={activeLog} />
+        <InputImageSection log={activeLog} />
+        <GeneratedImageSection log={activeLog} />
+        <ArtifactSection log={activeLog} />
+        <PromptSection log={activeLog} />
+        <DesignContextSection log={activeLog} />
       </div>
     </>
   );

@@ -81,6 +81,10 @@ type PrepArtifactRecorderDeps = {
 };
 
 type PrepArtifactRecorder = {
+  recordSourceInput: (
+    bytes: Uint8Array,
+    mimeType: string,
+  ) => Promise<SaveGenerationArtifactResult>;
   recordSourceOriginal: (
     bytes: Uint8Array,
   ) => Promise<SaveGenerationArtifactResult>;
@@ -125,6 +129,14 @@ export const createPrepArtifactRecorder = (
     );
 
   return {
+    recordSourceInput: async (bytes, mimeType) =>
+      await recordArtifact(
+        "source_input",
+        { kind: "buffer", bytes, mimeType },
+        {
+          placementMode: context.placementMode,
+        },
+      ),
     recordSourceOriginal: async (bytes) =>
       await recordArtifact(
         "source_original",
@@ -544,6 +556,10 @@ export const createPreparePatternCompositeHandler = (
         harmonizationBackend: null,
       };
       await emitPrepLog(result);
+      await artifactRecorder.recordSourceInput(
+        downscaledBytes,
+        payload.sourceImageMimeType,
+      );
       await artifactRecorder.recordSourceOriginal(preparedSourceBytes);
 
       const sourceTooSmallForRepair =

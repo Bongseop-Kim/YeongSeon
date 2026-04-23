@@ -292,6 +292,7 @@ Deno.test(
     assertEquals(
       artifactCalls.map((entry) => entry.artifactType),
       [
+        "source_input",
         "source_original",
         "openai_edit_canvas",
         "prepared_source",
@@ -302,18 +303,19 @@ Deno.test(
     const sourceWorkId = artifactCalls[0]?.sourceWorkId;
     assertEquals(
       artifactCalls.map((entry) => entry.workflowId),
-      [workflowId, workflowId, workflowId, workflowId],
+      [workflowId, workflowId, workflowId, workflowId, workflowId],
     );
     assertEquals(
       artifactCalls.map((entry) => entry.sourceWorkId),
-      [sourceWorkId, sourceWorkId, sourceWorkId, sourceWorkId],
+      [sourceWorkId, sourceWorkId, sourceWorkId, sourceWorkId, sourceWorkId],
     );
     assertEquals(workflowId, String(logCalls[0]?.workflow_id));
     assertEquals(sourceWorkId, String(logCalls[0]?.work_id));
-    assertEquals(artifactCalls[3]?.parentArtifactId, "artifact-3");
+    assertEquals(artifactCalls[4]?.parentArtifactId, "artifact-4");
     assertEquals(
       rpcCalls.map((entry) => entry.fn),
       [
+        "write_ai_generation_log_artifact",
         "write_ai_generation_log_artifact",
         "use_design_tokens",
         "write_ai_generation_log_artifact",
@@ -466,24 +468,28 @@ Deno.test(
     assertEquals(response.status, 200);
     assertEquals(
       artifactCalls.map((entry) => entry.artifactType),
-      ["source_original", "prepared_point_motif"],
+      ["source_input", "source_original", "prepared_point_motif"],
     );
     const workflowId = artifactCalls[0]?.workflowId;
     const sourceWorkId = artifactCalls[0]?.sourceWorkId;
     assertEquals(
       artifactCalls.map((entry) => entry.workflowId),
-      [workflowId, workflowId],
+      [workflowId, workflowId, workflowId],
     );
     assertEquals(
       artifactCalls.map((entry) => entry.sourceWorkId),
-      [sourceWorkId, sourceWorkId],
+      [sourceWorkId, sourceWorkId, sourceWorkId],
     );
     assertEquals(workflowId, String(logCalls[0]?.workflow_id));
     assertEquals(sourceWorkId, String(logCalls[0]?.work_id));
-    assertEquals(artifactCalls[1]?.parentArtifactId, null);
+    assertEquals(artifactCalls[2]?.parentArtifactId, null);
     assertEquals(
       rpcCalls.map((entry) => entry.fn),
-      ["write_ai_generation_log_artifact", "write_ai_generation_log_artifact"],
+      [
+        "write_ai_generation_log_artifact",
+        "write_ai_generation_log_artifact",
+        "write_ai_generation_log_artifact",
+      ],
     );
     assertEquals(logCalls.length > 0, true);
   },
