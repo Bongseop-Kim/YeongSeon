@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/api/generation-logs-query";
 import { formatNullableLocaleNumber } from "@/utils/format-number";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
+import { GenerationLogArtifactTimeline } from "@/features/generation-logs/components/generation-log-artifact-timeline";
 
 const { Text } = Typography;
 
@@ -197,7 +198,7 @@ export function GenerationLogTable({
         title="생성 로그 상세"
         onCancel={() => setSelectedLog(null)}
         footer={null}
-        width={720}
+        width={980}
       >
         {selectedLog && <GenerationLogDetail log={selectedLog} />}
       </Modal>
@@ -248,6 +249,9 @@ function GenerationLogDetail({ log }: { log: AdminGenerationLogItem }) {
           </Text>
         </Descriptions.Item>
       )}
+      <Descriptions.Item label="아티팩트" span={2}>
+        <GenerationLogArtifactTimeline workflowId={log.workflowId} />
+      </Descriptions.Item>
       <Descriptions.Item label="품질">{log.quality ?? "-"}</Descriptions.Item>
       <Descriptions.Item label="이미지 생성">
         {renderGenerateImageStatus(log.generateImage, log.imageGenerated)}

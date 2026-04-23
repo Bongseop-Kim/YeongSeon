@@ -1,10 +1,34 @@
 const IMAGEKIT_UPLOAD_URL = "https://upload.imagekit.io/api/v1/files/upload";
 const IMAGEKIT_UPLOAD_TIMEOUT_MS = 5000;
 
-interface ImageKitUploadResult {
+export interface ImageKitUploadResult {
   url: string;
   fileId: string;
 }
+
+const stripDataUriPrefix = (value: string): string => {
+  const trimmedValue = value.trim();
+  const commaIndex = trimmedValue.indexOf(",");
+  return commaIndex >= 0 ? trimmedValue.slice(commaIndex + 1) : trimmedValue;
+};
+
+const bytesToBase64 = (bytes: Uint8Array): string => {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+  return btoa(binary);
+};
+
+const base64ToBytes = (base64: string): Uint8Array => {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+};
 
 async function attemptUpload(
   base64DataUri: string,
@@ -67,6 +91,28 @@ async function attemptUpload(
 }
 
 /**
+ * Uint8Array 이미지를 ImageKit에 업로드한다.
+ * 실패 시 null 반환 (예외를 던지지 않음).
+ */
+export async function uploadBytesToImageKit(
+  bytes: Uint8Array,
+  mimeType: string,
+  fileName: string,
+  folder: string,
+): Promise<ImageKitUploadResult | null> {
+  const privateKey = Deno.env.get("IMAGEKIT_PRIVATE_KEY");
+  if (!privateKey) {
+    console.error("IMAGEKIT_PRIVATE_KEY 환경 변수가 설정되지 않음");
+    return null;
+  }
+
+  const base64 = bytesToBase64(bytes);
+  const dataUri = `data:${mimeType};base64,${base64}`;
+
+  return await attemptUpload(dataUri, fileName, folder, privateKey);
+}
+
+/**
  * base64 DataURI 이미지를 ImageKit에 업로드한다.
  * 실패 시 null 반환 (예외를 던지지 않음).
  *
@@ -79,17 +125,20 @@ export async function uploadImageToImageKit(
   fileName: string,
   folder: string,
 ): Promise<ImageKitUploadResult | null> {
-  const privateKey = Deno.env.get("IMAGEKIT_PRIVATE_KEY");
-  if (!privateKey) {
-    console.error("IMAGEKIT_PRIVATE_KEY 환경 변수가 설정되지 않음");
+  try {
+    const dataUri = base64DataUri.trim();
+    const mimeTypeMatch = dataUri.match(/^data:([^;]+);base64,/);
+    const mimeType = mimeTypeMatch?.[1] ?? "image/png";
+    const base64 = stripDataUriPrefix(dataUri);
+
+    return await uploadBytesToImageKit(
+      base64ToBytes(base64),
+      mimeType,
+      fileName,
+      folder,
+    );
+  } catch (err) {
+    console.error("ImageKit base64 decode error:", err);
     return null;
   }
-
-  const result = await attemptUpload(
-    base64DataUri,
-    fileName,
-    folder,
-    privateKey,
-  );
-  return result;
 }

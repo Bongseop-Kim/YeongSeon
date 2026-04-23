@@ -17,15 +17,24 @@ import {
 } from "@/functions/_shared/fal-client.ts";
 import { validateFalGeneratePayload } from "@/functions/_shared/fal-request-validation.ts";
 import {
+  buildPlacedPreviewArtifacts,
   buildAllowedInpaintBaseImageHosts,
   buildFalErrorResponseBody,
   getGenerationLogUserMessage,
   getTrustedFalImageUrl,
   inspectRemoteInpaintImage,
   parseValidatedInpaintDataUri,
+  recordFinalRenderArtifacts,
+  recordOptionalRenderArtifacts,
+  type RecordRenderArtifactInput,
   shouldExecuteFalRender,
   validateRemoteInpaintBaseImageUrl,
 } from "@/functions/_shared/generate-fal-api-utils.ts";
+import {
+  type GenerationArtifactRow,
+  saveGenerationArtifact,
+  type SaveGenerationArtifactResult,
+} from "@/functions/_shared/generation-artifacts.ts";
 import { planFalRender } from "@/functions/_shared/generate-fal-render-plan.ts";
 import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
 import { logGeneration } from "@/functions/_shared/log-generation.ts";
@@ -179,7 +188,7 @@ const toDeterministicSeed = (value: string): number => {
   return Math.abs(hash) || 1;
 };
 
-Deno.serve(async (req) => {
+export const handleRequest = async (req: Request) => {
   const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
   const jsonResponse = createJsonResponse(corsHeaders);
   const url = new URL(req.url);
@@ -670,6 +679,46 @@ Deno.serve(async (req) => {
   }
 
   renderTokensCharged = renderTokenResult.cost ?? 0;
+  const recordRenderArtifact = async (
+    input: RecordRenderArtifactInput,
+  ): Promise<SaveGenerationArtifactResult | null> => {
+    try {
+      return await saveGenerationArtifact(
+        {
+          workflowId: workId,
+          phase: "render",
+          artifactType: input.artifactType,
+          sourceWorkId: renderWorkId,
+          parentArtifactId: input.parentArtifactId ?? null,
+          image: input.image,
+          meta: input.meta,
+        },
+        {
+          recordArtifactRow: async (row: GenerationArtifactRow) => {
+            const { error } = await adminClient
+              .from("ai_generation_log_artifacts")
+              .insert(row);
+
+            return { error: error ? { message: error.message } : null };
+          },
+        },
+      );
+    } catch (error) {
+      errorLogger("artifact_record_failed", error, {
+        workId,
+        renderWorkId,
+        artifactType: input.artifactType,
+      });
+      return null;
+    }
+  };
+  await recordOptionalRenderArtifacts(recordRenderArtifact, {
+    ...buildPlacedPreviewArtifacts({
+      ciPlacement: payload.designContext?.ciPlacement ?? null,
+      tiledBase64: payload.tiledBase64,
+      tiledMimeType: payload.tiledMimeType,
+    }),
+  });
 
   try {
     if (route === "fal_edit") {
@@ -678,6 +727,13 @@ Deno.serve(async (req) => {
           "fal_edit route requires baseImageUrl and imageEditPrompt",
         );
       }
+      await recordRenderArtifact({
+        artifactType: "fal_input_preview",
+        image: {
+          kind: "url",
+          url: payload.baseImageUrl,
+        },
+      });
 
       const editImageUrls = [
         payload.baseImageUrl,
@@ -713,12 +769,17 @@ Deno.serve(async (req) => {
           "fal_controlnet requires structureImageBase64 or tiledBase64",
         );
       }
-
       const controlImage = await prepareControlImage({
         base64: sourceBase64,
         mimeType: sourceMimeType,
         controlType: payload.controlType ?? "lineart",
         apiKey: falApiKey,
+      });
+      await recordOptionalRenderArtifacts(recordRenderArtifact, {
+        falInputBase64: sourceBase64,
+        falInputMimeType: sourceMimeType,
+        controlImageBase64: controlImage.base64,
+        controlImageMimeType: controlImage.mimeType,
       });
       const preset = resolveRenderCapability(
         payload.designContext?.fabricMethod ?? null,
@@ -760,6 +821,14 @@ Deno.serve(async (req) => {
           "fal_inpaint route requires base image and mask payload",
         );
       }
+      await recordOptionalRenderArtifacts(recordRenderArtifact, {
+        falInputBase64: baseImage.base64,
+        falInputMimeType: baseImage.mimeType,
+        inpaintBaseBase64: baseImage.base64,
+        inpaintBaseMimeType: baseImage.mimeType,
+        inpaintMaskBase64: payload.maskBase64,
+        inpaintMaskMimeType: payload.maskMimeType,
+      });
 
       renderBackend = "flux_fill";
       const falResult = await callFalFluxFill({
@@ -795,6 +864,14 @@ Deno.serve(async (req) => {
           mimeType: payload.referenceImageMimeType ?? "image/png",
           apiKey: falApiKey,
         });
+        await recordOptionalRenderArtifacts(recordRenderArtifact, {
+          upscaledReferenceBase64: processedReference.upscaled
+            ? processedReference.base64
+            : null,
+          upscaledReferenceMimeType: processedReference.upscaled
+            ? processedReference.mimeType
+            : null,
+        });
       }
 
       const renderPlan = planFalRender(payload, processedReference);
@@ -810,6 +887,10 @@ Deno.serve(async (req) => {
           if (!referenceImageBase64) {
             throw new Error("workflow render requires referenceImageBase64");
           }
+          await recordOptionalRenderArtifacts(recordRenderArtifact, {
+            falInputBase64: referenceImageBase64,
+            falInputMimeType: payload.referenceImageMimeType ?? "image/png",
+          });
 
           const falResult = await callFalReferenceToIpAdapterWorkflow({
             referenceBase64: referenceImageBase64,
@@ -822,6 +903,10 @@ Deno.serve(async (req) => {
         } else if (processedReference === null) {
           throw new Error("ip_adapter render requires processed reference");
         } else {
+          await recordOptionalRenderArtifacts(recordRenderArtifact, {
+            falInputBase64: processedReference.base64,
+            falInputMimeType: processedReference.mimeType,
+          });
           const falResult = await callFalFluxIpAdapter({
             referenceBase64: processedReference.base64,
             referenceMimeType: processedReference.mimeType,
@@ -841,6 +926,10 @@ Deno.serve(async (req) => {
         );
       } else {
         renderBackend = renderPlan.renderBackend;
+        await recordOptionalRenderArtifacts(recordRenderArtifact, {
+          falInputBase64: payload.tiledBase64,
+          falInputMimeType: payload.tiledMimeType,
+        });
         const preset = resolveRenderCapability(
           payload.designContext?.fabricMethod ?? null,
         );
@@ -909,6 +998,8 @@ Deno.serve(async (req) => {
   let finalImageUrl = falImageUrl;
   let finalImageFileId: string | null = null;
   let errorCode: "fal_image_fetch_failed" | "image_upload_failed" | null = null;
+  let falRawImageBytes: Uint8Array | null = null;
+  let falRawImageMimeType: string | null = null;
 
   try {
     let imageBytes: Uint8Array;
@@ -938,6 +1029,8 @@ Deno.serve(async (req) => {
         falImageResp.headers.get("content-type") ??
         payload.tiledMimeType ??
         "image/png";
+      falRawImageBytes = imageBytes;
+      falRawImageMimeType = imageMimeType;
     } catch (error) {
       errorCode = "fal_image_fetch_failed";
       if (
@@ -997,6 +1090,17 @@ Deno.serve(async (req) => {
     } else {
       finalImageUrl = falImageUrl;
       finalImageFileId = null;
+    }
+
+    if (falRawImageBytes && falRawImageMimeType) {
+      await recordFinalRenderArtifacts(recordRenderArtifact, {
+        falImageUrl,
+        finalImageUrl,
+        falRequestId,
+        renderBackend,
+        rawImageBytes: falRawImageBytes,
+        rawImageMimeType: falRawImageMimeType,
+      });
     }
   } catch (error) {
     renderTokensRefunded = await tryRefund(adminClient, {
@@ -1111,4 +1215,8 @@ Deno.serve(async (req) => {
     missingRequirements: eligibility.missingRequirements,
     contextChips,
   });
-});
+};
+
+if (import.meta.main) {
+  Deno.serve(handleRequest);
+}

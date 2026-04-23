@@ -1,7 +1,9 @@
+export type GenerationLogPhase = "analysis" | "prep" | "render";
+
 export interface AdminGenerationLogItem {
   id: string;
   workflowId?: string;
-  phase?: "analysis" | "prep" | "render";
+  phase?: GenerationLogPhase;
   workId: string;
   parentWorkId?: string | null;
   userId: string;

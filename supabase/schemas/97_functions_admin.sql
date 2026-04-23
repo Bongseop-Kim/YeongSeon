@@ -173,6 +173,64 @@ begin
 end;
 $$;
 
+CREATE OR REPLACE FUNCTION public.admin_get_generation_log_artifacts(
+  p_workflow_id text
+)
+RETURNS TABLE (
+  id uuid,
+  workflow_id text,
+  phase text,
+  artifact_type text,
+  source_work_id text,
+  parent_artifact_id uuid,
+  storage_provider text,
+  image_url text,
+  image_width integer,
+  image_height integer,
+  mime_type text,
+  file_size_bytes bigint,
+  status text,
+  meta jsonb,
+  created_at timestamptz
+)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+begin
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  if p_workflow_id is null or btrim(p_workflow_id) = '' then
+    raise exception 'p_workflow_id is required';
+  end if;
+
+  RETURN QUERY
+  SELECT
+    a.id,
+    a.workflow_id,
+    a.phase,
+    a.artifact_type,
+    a.source_work_id,
+    a.parent_artifact_id,
+    a.storage_provider,
+    a.image_url,
+    a.image_width,
+    a.image_height,
+    a.mime_type,
+    a.file_size_bytes,
+    a.status,
+    a.meta,
+    a.created_at
+  FROM public.ai_generation_log_artifacts a
+  WHERE a.workflow_id = p_workflow_id
+  ORDER BY a.created_at ASC, a.id ASC;
+end;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_get_generation_log_artifacts(text) TO authenticated;
+
 
 -- ── admin_get_today_stats ───────────────────────────────────
 CREATE OR REPLACE FUNCTION public.admin_get_today_stats(

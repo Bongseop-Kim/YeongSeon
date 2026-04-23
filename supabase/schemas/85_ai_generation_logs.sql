@@ -76,3 +76,46 @@ CREATE POLICY "Admins can view all generation logs"
   ON public.ai_generation_logs FOR SELECT
   TO authenticated
   USING (public.is_admin());
+
+CREATE TABLE public.ai_generation_log_artifacts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workflow_id text NOT NULL,
+  phase text NOT NULL CHECK (phase IN ('prep', 'analysis', 'render')),
+  artifact_type text NOT NULL,
+  source_work_id text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
+  parent_artifact_id uuid REFERENCES public.ai_generation_log_artifacts(id) ON DELETE SET NULL,
+  storage_provider text NOT NULL DEFAULT 'imagekit',
+  image_url text,
+  image_width integer,
+  image_height integer,
+  mime_type text,
+  file_size_bytes bigint,
+  status text NOT NULL CHECK (status IN ('success', 'partial', 'failed')),
+  meta jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT ai_generation_log_artifacts_success_requires_image_url
+    CHECK (status <> 'success' OR image_url IS NOT NULL)
+);
+
+CREATE INDEX idx_ai_generation_log_artifacts_workflow_created_at
+  ON public.ai_generation_log_artifacts (workflow_id, created_at DESC);
+
+CREATE INDEX idx_ai_generation_log_artifacts_workflow_phase_created_at
+  ON public.ai_generation_log_artifacts (workflow_id, phase, created_at DESC);
+
+CREATE INDEX idx_ai_generation_log_artifacts_source_work_id
+  ON public.ai_generation_log_artifacts (source_work_id);
+
+CREATE INDEX idx_ai_generation_log_artifacts_artifact_type
+  ON public.ai_generation_log_artifacts (artifact_type);
+
+ALTER TABLE public.ai_generation_log_artifacts ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE public.ai_generation_log_artifacts FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON TABLE public.ai_generation_log_artifacts TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.ai_generation_log_artifacts TO service_role;
+
+CREATE POLICY "Admins can view all generation artifacts"
+  ON public.ai_generation_log_artifacts FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
