@@ -18,6 +18,9 @@ export function useSearch({
 }: UseSearchOptions): void {
   const setSearchEnabled = useSearchStore((state) => state.setSearchEnabled);
   const onSearchRef = useRef(onSearch);
+  const tabItems = tabs?.items;
+  const defaultTab = tabs?.defaultTab;
+  const onTabChange = tabs?.onTabChange;
 
   useEffect(() => {
     onSearchRef.current = onSearch;
@@ -29,23 +32,19 @@ export function useSearch({
       onSearch: (query, dateFilter) => {
         onSearchRef.current(query, dateFilter);
       },
-      ...(tabs
+      ...(tabItems !== undefined &&
+      defaultTab !== undefined &&
+      onTabChange !== undefined
         ? {
             tabs: {
-              items: [...tabs.items],
-              activeTab: tabs.defaultTab,
-              onTabChange: tabs.onTabChange,
+              items: [...tabItems],
+              activeTab: defaultTab,
+              onTabChange,
             },
           }
         : {}),
     });
 
     return () => setSearchEnabled(false);
-  }, [
-    placeholder,
-    setSearchEnabled,
-    tabs?.defaultTab,
-    tabs?.items,
-    tabs?.onTabChange,
-  ]);
+  }, [placeholder, setSearchEnabled, defaultTab, tabItems, onTabChange]);
 }

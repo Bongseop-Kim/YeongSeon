@@ -1,9 +1,7 @@
 import { useShallow } from "zustand/react/shallow";
 import { isActiveGeneration } from "@/entities/design";
-import {
-  TieMask,
-  tieMaskStyle,
-} from "@/features/design/components/preview/tie-mask";
+import { TieMask } from "@/features/design/components/preview/tie-mask";
+import { tieMaskStyle } from "@/features/design/components/preview/tie-mask-style";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 
 const TILE_BACKGROUND_SIZE = "80px 80px";

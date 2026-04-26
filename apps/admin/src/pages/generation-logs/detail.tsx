@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Alert } from "antd";
-import { GenerationLogDetailPage } from "@/features/generation-logs/components/generation-log-detail-page";
+import { GenerationLogDetailPage } from "@/features/generation-logs";
 
 export default function GenerationLogDetail() {
   const { id } = useParams<{ id: string }>();

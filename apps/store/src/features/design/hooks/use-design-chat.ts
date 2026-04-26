@@ -14,12 +14,12 @@ import {
   callTileGeneration,
   type TileGenerationPayload,
   fabricMethodToFabricType,
+  uploadDesignAsset,
 } from "@/entities/design";
 import {
   getRawImageUrlFromPreviewBackground,
   useDesignChatStore,
 } from "@/features/design/store/design-chat-store";
-import { uploadDesignAsset } from "@/entities/design/api/upload-design-asset";
 import type { Attachment, Message } from "@/features/design/types/chat";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { ph } from "@/shared/lib/posthog";

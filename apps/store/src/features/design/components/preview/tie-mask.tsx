@@ -1,17 +1,5 @@
-import type { CSSProperties } from "react";
-
+import { tieMaskStyle } from "@/features/design/components/preview/tie-mask-style";
 import { cn } from "@/shared/lib/utils";
-
-export const tieMaskStyle: CSSProperties = {
-  maskImage: "url(/images/tie.svg)",
-  maskSize: "contain",
-  maskPosition: "center",
-  maskRepeat: "no-repeat",
-  WebkitMaskImage: "url(/images/tie.svg)",
-  WebkitMaskSize: "contain",
-  WebkitMaskPosition: "center",
-  WebkitMaskRepeat: "no-repeat",
-};
 
 interface TieMaskProps {
   imageUrl: string;

@@ -26,6 +26,7 @@ export {
   fabricMethodToFabricType,
   fabricTypeToFabricMethod,
 } from "./api/design-session-mapper";
+export { uploadDesignAsset } from "./api/upload-design-asset";
 export {
   toRestoredDesignSessionState,
   type RestoredDesignSessionState,
