@@ -19,6 +19,7 @@
     "./create-sample-order",
     "./delete-account",
     "./generate-fal-api",
+    "./generate-tile",
     "./generate-open-api",
     "./imagekit-auth",
     "./notify-claim",

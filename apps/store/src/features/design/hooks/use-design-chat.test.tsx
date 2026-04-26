@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as DesignEntities from "@/entities/design";
 import { buildAnalysisReuseKey } from "@/entities/design";
@@ -21,6 +21,9 @@ const {
   restoreMessages,
   setCurrentSessionId,
   setLastAnalysisReuseKey,
+  setTileResult,
+  callTileGeneration,
+  uploadDesignAsset,
   phCapture,
   MockInsufficientTokensError,
 } = vi.hoisted(() => ({
@@ -69,6 +72,9 @@ const {
   restoreMessages: vi.fn(),
   setCurrentSessionId: vi.fn(),
   setLastAnalysisReuseKey: vi.fn(),
+  setTileResult: vi.fn(),
+  callTileGeneration: vi.fn(),
+  uploadDesignAsset: vi.fn(),
   phCapture: vi.fn(),
   MockInsufficientTokensError: class MockInsufficientTokensError extends Error {
     constructor(
@@ -168,6 +174,8 @@ const storeState = {
   messages: [...initialMessages],
   designContext: { ...defaultDesignContext },
   generationStatus: "idle",
+  generatedImageUrl:
+    'url("https://example.com/legacy.png") center/cover no-repeat',
   currentSessionId: null,
   selectedPreviewImageUrl: null as string | null,
   baseImageUrl: defaultBaseImageState.baseImageUrl,
@@ -181,6 +189,10 @@ const storeState = {
   lastEligibleForRender: false,
   lastGenerateImage: null as boolean | null,
   lastAnalysisReuseKey: null as string | null,
+  repeatTile: null as { url: string; workId: string } | null,
+  accentTile: null as { url: string; workId: string } | null,
+  patternType: null as "all_over" | "one_point" | null,
+  fabricType: null as "yarn_dyed" | "printed" | null,
   inpaintTarget: null as {
     imageUrl: string;
     imageWorkId: string | null;
@@ -191,6 +203,7 @@ const storeState = {
   setGenerationMetadata,
   setLastAnalysisResult,
   setLastAnalysisReuseKey,
+  setTileResult,
   clearAttachments,
   restoreMessages,
   setCurrentSessionId,
@@ -209,6 +222,7 @@ vi.mock("@/entities/design", async (importOriginal) => {
     ...actual,
     InsufficientTokensError: MockInsufficientTokensError,
     resolveGenerationRoute,
+    callTileGeneration,
   };
 });
 
@@ -217,6 +231,10 @@ vi.mock("@/features/design/hooks/ai-design-query", () => ({
   useAiDesignMutation: () => ({
     mutate,
   }),
+}));
+
+vi.mock("@/entities/design/api/upload-design-asset", () => ({
+  uploadDesignAsset,
 }));
 
 vi.mock("@/shared/lib/posthog", () => ({
@@ -253,9 +271,29 @@ describe("useDesignChat", () => {
     restoreMessages.mockReset();
     setCurrentSessionId.mockReset();
     setLastAnalysisReuseKey.mockReset();
+    setTileResult.mockReset();
+    callTileGeneration.mockReset();
+    uploadDesignAsset.mockReset();
+    uploadDesignAsset.mockResolvedValue({
+      signedUrl:
+        "https://project.supabase.co/storage/v1/object/sign/design-assets/reference.png",
+      storagePath: "user-1/20260512/reference.png",
+      hash: "hash-1",
+    });
+    callTileGeneration.mockResolvedValue({
+      repeatTileUrl: "https://example.com/repeat.webp",
+      repeatTileWorkId: "repeat-work-1",
+      accentTileUrl: null,
+      accentTileWorkId: null,
+      patternType: "all_over",
+      fabricType: "printed",
+      accentLayout: null,
+    });
     phCapture.mockReset();
     storeState.messages = [...initialMessages];
     storeState.designContext = { ...defaultDesignContext };
+    storeState.generatedImageUrl =
+      'url("https://example.com/legacy.png") center/cover no-repeat';
     storeState.selectedPreviewImageUrl = null;
     storeState.lastAnalysisWorkId = "analysis-work-1";
     storeState.lastEligibleForRender = false;
@@ -270,11 +308,21 @@ describe("useDesignChat", () => {
     storeState.lastRouteReason = null;
     storeState.lastFalRequestId = null;
     storeState.lastSeed = null;
+    storeState.repeatTile = null;
+    storeState.accentTile = null;
+    storeState.patternType = null;
+    storeState.fabricType = null;
     addMessage.mockImplementation((message) => {
       storeState.messages = [...storeState.messages, message];
     });
     restoreMessages.mockImplementation((messages) => {
       storeState.messages = messages;
+    });
+    setTileResult.mockImplementation((result) => {
+      storeState.repeatTile = result.repeatTile;
+      storeState.accentTile = result.accentTile;
+      storeState.patternType = result.patternType;
+      storeState.fabricType = result.fabricType;
     });
   });
 
@@ -356,6 +404,248 @@ describe("useDesignChat", () => {
       ai_model: "openai",
     });
     expect(mutate.mock.calls[0]?.[0]).not.toHaveProperty("aiModel");
+  });
+
+  it("신규 세션은 기존 fabricMethod를 타일 fabricType으로 매핑해 generate-tile을 호출한다", async () => {
+    Object.assign(storeState, {
+      generatedImageUrl: null,
+      repeatTile: null,
+      fabricType: null,
+      designContext: {
+        ...defaultDesignContext,
+        fabricMethod: "yarn-dyed",
+      },
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.sendMessage("새 디자인", []);
+
+    await waitFor(() => {
+      expect(callTileGeneration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          route: "tile_generation",
+          userMessage: "새 디자인",
+          uiFabricType: "yarn_dyed",
+          previousFabricType: null,
+        }),
+      );
+    });
+    expect(mutate).not.toHaveBeenCalled();
+    expect(setTileResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        repeatTile: {
+          url: "https://example.com/repeat.webp",
+          workId: "repeat-work-1",
+        },
+        patternType: "all_over",
+        fabricType: "printed",
+      }),
+    );
+    expect(setGeneratedImage).toHaveBeenCalledWith(
+      'url("https://example.com/repeat.webp") center/cover no-repeat',
+      [],
+    );
+  });
+
+  it("신규 타일 요청은 현재 userMessage를 conversationHistory에서 제외한다", async () => {
+    Object.assign(storeState, {
+      generatedImageUrl: null,
+      repeatTile: null,
+      fabricType: null,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.sendMessage("새 디자인", []);
+
+    await waitFor(() => {
+      expect(callTileGeneration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userMessage: "새 디자인",
+          conversationHistory: [
+            { role: "assistant", content: "이전 답변" },
+            { role: "user", content: "이전 요청" },
+          ],
+        }),
+      );
+    });
+  });
+
+  it("신규 타일 세션의 업로드 이미지 첨부는 signed URL로 변환해 generate-tile에 전달한다", async () => {
+    const file = new File(["logo"], "logo.png", { type: "image/png" });
+    Object.assign(storeState, {
+      generatedImageUrl: null,
+      repeatTile: null,
+      fabricType: null,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.sendMessage("이 이미지로 포인트 패턴 만들어줘", [
+      {
+        type: "image",
+        label: "이미지 첨부",
+        value: "source",
+        file,
+      },
+    ]);
+
+    await waitFor(() => {
+      expect(uploadDesignAsset).toHaveBeenCalledWith(file, {
+        kind: "reference",
+      });
+      expect(callTileGeneration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attachedImageUrl:
+            "https://project.supabase.co/storage/v1/object/sign/design-assets/reference.png",
+          allMessages: expect.arrayContaining([
+            expect.objectContaining({
+              content: "이 이미지로 포인트 패턴 만들어줘",
+              imageUrl:
+                "https://project.supabase.co/storage/v1/object/sign/design-assets/reference.png",
+              attachments: [
+                expect.objectContaining({
+                  type: "image",
+                  value:
+                    "https://project.supabase.co/storage/v1/object/sign/design-assets/reference.png",
+                  fileName: "logo.png",
+                }),
+              ],
+            }),
+          ]),
+        }),
+      );
+    });
+  });
+
+  it("신규 타일 세션의 원격 이미지 첨부는 업로드 없이 URL을 generate-tile에 전달한다", async () => {
+    Object.assign(storeState, {
+      generatedImageUrl: null,
+      repeatTile: null,
+      fabricType: null,
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.sendMessage("이 이미지로 포인트 패턴 만들어줘", [
+      {
+        type: "image",
+        label: "참고 이미지",
+        value: "https://ik.imagekit.io/app/logo.png",
+      },
+    ]);
+
+    await waitFor(() => {
+      expect(callTileGeneration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attachedImageUrl: "https://ik.imagekit.io/app/logo.png",
+        }),
+      );
+    });
+    expect(uploadDesignAsset).not.toHaveBeenCalled();
+  });
+
+  it("기존 타일 세션 수정은 tile_edit으로 호출하고 이전 타일 메타데이터를 전달한다", async () => {
+    Object.assign(storeState, {
+      generatedImageUrl: null,
+      repeatTile: {
+        url: "https://example.com/old-repeat.webp",
+        workId: "repeat-old",
+      },
+      accentTile: {
+        url: "https://example.com/old-accent.webp",
+        workId: "accent-old",
+      },
+      fabricType: "printed",
+      designContext: {
+        ...defaultDesignContext,
+        fabricMethod: "print",
+      },
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.sendMessage("색만 바꿔줘", []);
+
+    await waitFor(() => {
+      expect(callTileGeneration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          route: "tile_edit",
+          uiFabricType: "printed",
+          previousFabricType: "printed",
+          previousRepeatTileUrl: "https://example.com/old-repeat.webp",
+          previousRepeatTileWorkId: "repeat-old",
+          previousAccentTileUrl: "https://example.com/old-accent.webp",
+          previousAccentTileWorkId: "accent-old",
+        }),
+      );
+    });
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it("타일 regenerate는 재생성 대상 userMessage 이후 메시지를 conversationHistory에서 제외한다", async () => {
+    Object.assign(storeState, {
+      currentSessionId: "session-existing",
+      generatedImageUrl: null,
+      repeatTile: {
+        url: "https://example.com/old-repeat.webp",
+        workId: "repeat-old",
+      },
+      messages: [
+        ...initialMessages,
+        {
+          id: "user-regenerate-1",
+          role: "user",
+          content: "색만 바꿔줘",
+          attachments: [],
+          timestamp: 4,
+          designContext: {
+            ...defaultDesignContext,
+          },
+        },
+        {
+          id: "ai-regenerate-1",
+          role: "ai",
+          content: "타일 생성이 완료되었습니다.",
+          timestamp: 5,
+        },
+      ],
+    });
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.regenerate();
+
+    await waitFor(() => {
+      expect(callTileGeneration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userMessage: "색만 바꿔줘",
+          conversationHistory: [
+            { role: "assistant", content: "이전 답변" },
+            { role: "user", content: "이전 요청" },
+          ],
+        }),
+      );
+    });
+  });
+
+  it("타일 생성 중 토큰 부족 에러를 처리한다", async () => {
+    Object.assign(storeState, {
+      generatedImageUrl: null,
+      repeatTile: null,
+      fabricType: null,
+    });
+    callTileGeneration.mockRejectedValueOnce(
+      new MockInsufficientTokensError(3, 5),
+    );
+
+    const { result } = renderHook(() => useDesignChat());
+    result.current.sendMessage("새 디자인", []);
+
+    await waitFor(() => {
+      expect(addMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          uiOnly: true,
+          content: "토큰이 부족합니다. 현재 잔액: 3토큰, 필요: 5토큰",
+        }),
+      );
+    });
+    expect(setGenerationStatus).toHaveBeenCalledWith("idle");
   });
 
   it("편집 요청은 base image 정보를 함께 전송한다", () => {

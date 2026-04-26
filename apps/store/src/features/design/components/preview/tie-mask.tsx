@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-const tieMaskStyle: CSSProperties = {
+export const tieMaskStyle: CSSProperties = {
   maskImage: "url(/images/tie.svg)",
   maskSize: "contain",
   maskPosition: "center",

@@ -9,6 +9,8 @@ export const GENERATION_ROUTE_VALUES = [
   "fal_edit",
   "fal_controlnet",
   "fal_inpaint",
+  "tile_generation",
+  "tile_edit",
 ] as const;
 
 export type GenerationRoute = (typeof GENERATION_ROUTE_VALUES)[number];

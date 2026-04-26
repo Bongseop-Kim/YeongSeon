@@ -5,7 +5,9 @@ type GenerationRoute =
   | "fal_tiling"
   | "fal_edit"
   | "fal_controlnet"
-  | "fal_inpaint";
+  | "fal_inpaint"
+  | "tile_generation"
+  | "tile_edit";
 
 type PosthogAiModel = "openai" | "fal";
 

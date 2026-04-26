@@ -246,11 +246,15 @@ const PRINTED_KEYWORDS = [
     - 금지 영역: 상단 30% (매듭 가림), 중앙 (벨트/셔츠 가림)
   - v2에서 사용자 위치 선택 옵션 추가 검토
 
-### UI 구성요소 (신규)
+### UI 구성요소
 
-- 원단 선택 토글/셀렉트: `선염` / `날염` 2지 선택
-- 기본 선택값: 세션 이전 값 → 없으면 `날염`
-- 채팅으로 키워드 입력 시 토글 상태 자동 업데이트 (UI 동기화)
+원단 선택 토글은 채팅 입력창(`chat-input.tsx`)에 이미 구현되어 있다.
+
+- 위치: 채팅 입력창 하단 좌측, 전송 버튼 좌측
+- 선택지: `선염 (직조)` (`yarn-dyed`) / `날염 (프린팅)` (`print`) 2지 라디오
+- `designContext.fabricMethod` 값으로 관리, `toTileFabricType()`을 통해 Edge Function에 `uiFabricType`으로 전달
+- 기본 선택값: 세션 이전 값(`previousFabricType`) → 없으면 Edge Function 내 `resolveFabricType` 기본값(`"printed"`)
+- 채팅 키워드는 Edge Function의 `resolveFabricType` 우선순위 1로 처리되어 실제 생성에 반영된다. UI 토글은 사용자가 명시적으로 선택한 값을 유지하는 역할로 기존 컴포넌트를 그대로 활용한다.
 
 ---
 

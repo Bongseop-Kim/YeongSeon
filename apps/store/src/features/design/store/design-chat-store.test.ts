@@ -1,3 +1,4 @@
+import { act } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 
@@ -88,6 +89,11 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
       baseImageWorkId: "work-restored-1",
       resultTags: [],
       generationStatus: "completed",
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
     });
     expect(useDesignChatStore.getState().selectedPreviewImageUrl).toBe(url);
     expect(useDesignChatStore.getState().baseImageUrl).toBe(
@@ -109,6 +115,11 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
       baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
     });
     expect(useDesignChatStore.getState().selectedPreviewImageUrl).toBeNull();
   });
@@ -127,6 +138,11 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
       baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
     });
 
     expect(useDesignChatStore.getState().inpaintTarget).toBeNull();
@@ -139,6 +155,11 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
       baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
       designContext: {
         colors: ["#112233"],
         pattern: "stripe",
@@ -156,6 +177,45 @@ describe("design-chat-store — selectedPreviewImageUrl", () => {
       ciPlacement: null,
       referenceImage: null,
     });
+  });
+});
+
+describe("design-chat-store — tile state", () => {
+  beforeEach(() => {
+    useDesignChatStore.setState({
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
+    });
+  });
+
+  it("초기값: 타일 관련 필드 모두 null", () => {
+    const state = useDesignChatStore.getState();
+    expect(state.repeatTile).toBeNull();
+    expect(state.accentTile).toBeNull();
+    expect(state.patternType).toBeNull();
+    expect(state.fabricType).toBeNull();
+  });
+
+  it("setTileResult: 타일 상태 전체 업데이트", () => {
+    act(() => {
+      useDesignChatStore.getState().setTileResult({
+        repeatTile: { url: "https://ik.imagekit.io/r.webp", workId: "r1" },
+        accentTile: null,
+        accentLayout: null,
+        patternType: "all_over",
+        fabricType: "printed",
+      });
+    });
+    const state = useDesignChatStore.getState();
+    expect(state.repeatTile).toEqual({
+      url: "https://ik.imagekit.io/r.webp",
+      workId: "r1",
+    });
+    expect(state.patternType).toBe("all_over");
+    expect(state.fabricType).toBe("printed");
   });
 });
 

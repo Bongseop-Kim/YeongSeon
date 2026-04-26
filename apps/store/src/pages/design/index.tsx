@@ -23,10 +23,11 @@ function DesignPage() {
     useSessionRestore();
   const { hasPendingResult, markPending, clearPending } =
     usePendingGeneration();
-  const { sendMessage, requestRender, requestInpaint } = useDesignChat({
-    onGenerationStart: markPending,
-    onGenerationEnd: clearPending,
-  });
+  const { sendMessage, requestRender, requestInpaint, regenerate } =
+    useDesignChat({
+      onGenerationStart: markPending,
+      onGenerationEnd: clearPending,
+    });
 
   return (
     <MainLayout className="h-full">
@@ -53,7 +54,7 @@ function DesignPage() {
         >
           {isDesktop ? (
             <div className="w-1/2 overflow-hidden border-r">
-              <PreviewPanel className="h-full" />
+              <PreviewPanel className="h-full" onRegenerate={regenerate} />
             </div>
           ) : null}
           <div

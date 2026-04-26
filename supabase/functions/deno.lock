@@ -381,6 +381,12 @@
           "jsr:@supabase/supabase-js@2.99.3"
         ]
       },
+      "generate-tile": {
+        "dependencies": [
+          "jsr:@supabase/functions-js@*",
+          "jsr:@supabase/supabase-js@2.99.3"
+        ]
+      },
       "imagekit-auth": {
         "dependencies": [
           "jsr:@supabase/functions-js@*",

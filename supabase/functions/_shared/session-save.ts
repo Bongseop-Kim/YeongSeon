@@ -23,6 +23,13 @@ export interface SessionSaveParams {
   lastImageFileId: string | null;
   lastImageWorkId: string | null;
   messages: SessionMessage[];
+  repeatTileUrl?: string | null;
+  repeatTileWorkId?: string | null;
+  accentTileUrl?: string | null;
+  accentTileWorkId?: string | null;
+  accentLayout?: Record<string, unknown> | null;
+  patternType?: "all_over" | "one_point" | null;
+  fabricType?: "yarn_dyed" | "printed" | null;
 }
 
 export function buildSessionMessages(
@@ -69,6 +76,13 @@ export async function saveDesignSession(
       p_last_image_file_id: params.lastImageFileId,
       p_last_image_work_id: params.lastImageWorkId,
       p_messages: params.messages,
+      p_repeat_tile_url: params.repeatTileUrl ?? null,
+      p_repeat_tile_work_id: params.repeatTileWorkId ?? null,
+      p_accent_tile_url: params.accentTileUrl ?? null,
+      p_accent_tile_work_id: params.accentTileWorkId ?? null,
+      p_accent_layout_json: params.accentLayout ?? null,
+      p_pattern_type: params.patternType ?? null,
+      p_fabric_type: params.fabricType ?? null,
     });
 
     if (error) {

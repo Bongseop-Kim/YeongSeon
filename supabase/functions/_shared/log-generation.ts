@@ -45,6 +45,8 @@ export type AiGenerationLogInsert = {
     | "fal_edit"
     | "fal_controlnet"
     | "fal_inpaint"
+    | "tile_generation"
+    | "tile_edit"
     | null;
   route_reason?: string | null;
   route_signals?: string[] | null;
@@ -73,6 +75,15 @@ export type AiGenerationLogInsert = {
   total_latency_ms?: number | null;
   error_type?: string | null;
   error_message?: string | null;
+  repeat_tile_url?: string | null;
+  repeat_tile_work_id?: string | null;
+  accent_tile_url?: string | null;
+  accent_tile_work_id?: string | null;
+  pattern_type?: "all_over" | "one_point" | null;
+  fabric_type?: "yarn_dyed" | "printed" | null;
+  tile_role?: "repeat" | "accent" | null;
+  paired_tile_work_id?: string | null;
+  accent_layout_json?: Record<string, unknown> | null;
 };
 
 export async function logGeneration(

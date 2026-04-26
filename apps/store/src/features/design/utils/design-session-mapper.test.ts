@@ -65,6 +65,11 @@ describe("toRestoredDesignSessionState", () => {
       baseImageWorkId: null,
       resultTags: [],
       generationStatus: "completed",
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
     });
   });
 

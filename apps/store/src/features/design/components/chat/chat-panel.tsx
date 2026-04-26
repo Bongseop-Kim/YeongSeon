@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 
-import { createAnalysisReuseKeyForContext } from "@/entities/design";
+import {
+  createAnalysisReuseKeyForContext,
+  isActiveGeneration,
+} from "@/entities/design";
 import { ChatHeader } from "@/features/design/components/chat/chat-header";
 import { TiePreviewModal } from "@/features/design/components/chat/tie-preview-modal";
 import {
@@ -83,10 +86,7 @@ export function ChatPanel({
   const baseImageUrl = useDesignChatStore((state) => state.baseImageUrl);
   const baseImageWorkId = useDesignChatStore((state) => state.baseImageWorkId);
 
-  const isGenerating =
-    generationStatus === "generating" ||
-    generationStatus === "regenerating" ||
-    generationStatus === "rendering";
+  const isGenerating = isActiveGeneration(generationStatus);
 
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [pendingInpaintClose, setPendingInpaintClose] = useState(false);
@@ -167,9 +167,9 @@ export function ChatPanel({
     setPendingInpaintClose(true);
     setHasObservedInpaintGeneration(false);
   };
-  const latestAiMessage = [...messages]
-    .reverse()
-    .find((message) => message.role === "ai" && !message.uiOnly);
+  const latestAiMessage = messages.findLast(
+    (message) => message.role === "ai" && !message.uiOnly,
+  );
   const currentAnalysisReuseKey = createAnalysisReuseKeyForContext(
     designContext,
     baseImageUrl,

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { InsufficientTokensError } from "@/entities/design/api/ai-design-api";
+import type { InsufficientTokensError } from "@/entities/design";
 import { aiDesignApi } from "@/entities/design/api/ai-design-api";
 import { __resetProbeCacheForTesting } from "@/entities/design/api/should-use-fal-pipeline";
 import { MockFileReader } from "@/test/mock-file-reader";

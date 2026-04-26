@@ -1,8 +1,12 @@
 import { create } from "zustand";
 import type {
+  AccentLayout,
+  FabricType,
   GenerationRoute,
   GenerationRouteReason,
   GenerationRouteSignal,
+  PatternType,
+  TileRef,
 } from "@/entities/design";
 import type {
   Attachment,
@@ -52,6 +56,11 @@ interface DesignChatState {
   lastEligibleForRender: boolean;
   lastMissingRequirements: string[];
   lastAnalysisReuseKey: string | null;
+  repeatTile: TileRef | null;
+  accentTile: TileRef | null;
+  accentLayout: AccentLayout | null;
+  patternType: PatternType | null;
+  fabricType: FabricType | null;
   inpaintTarget: { imageUrl: string; imageWorkId: string | null } | null;
   addMessage: (message: Message) => void;
   setDesignContext: (patch: Partial<DesignContext>) => void;
@@ -76,6 +85,13 @@ interface DesignChatState {
     missingRequirements: string[];
   }) => void;
   setLastAnalysisReuseKey: (value: string | null) => void;
+  setTileResult: (result: {
+    repeatTile: TileRef;
+    accentTile: TileRef | null;
+    accentLayout: AccentLayout | null;
+    patternType: PatternType;
+    fabricType: FabricType;
+  }) => void;
   openInpaintDialog: (imageUrl: string, imageWorkId?: string | null) => void;
   closeInpaintDialog: () => void;
   restoreMessages: (messages: Message[]) => void;
@@ -129,6 +145,11 @@ const createConversationResetState = () => ({
     imageUrl: string;
     imageWorkId: string | null;
   } | null,
+  repeatTile: null as TileRef | null,
+  accentTile: null as TileRef | null,
+  accentLayout: null as AccentLayout | null,
+  patternType: null as PatternType | null,
+  fabricType: null as FabricType | null,
   ...createRouteMetadataReset(),
   ...createLastAnalysisReset(),
 });
@@ -199,6 +220,14 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
     set({
       lastAnalysisReuseKey: value,
     }),
+  setTileResult: (result) =>
+    set({
+      repeatTile: result.repeatTile,
+      accentTile: result.accentTile,
+      accentLayout: result.accentLayout,
+      patternType: result.patternType,
+      fabricType: result.fabricType,
+    }),
   openInpaintDialog: (imageUrl, imageWorkId = null) =>
     set({
       inpaintTarget: {
@@ -223,7 +252,6 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       baseImageUrl: getRawImageUrlFromPreviewBackground(
         sessionState.generatedImageUrl,
       ),
-      baseImageWorkId: sessionState.baseImageWorkId,
       inpaintTarget: null,
       currentSessionId: sessionId,
       pendingAttachments: [],

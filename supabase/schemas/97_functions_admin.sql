@@ -6,7 +6,6 @@ CREATE OR REPLACE FUNCTION public.admin_update_order_status(
   p_order_id uuid,
   p_new_status text,
   p_memo text DEFAULT NULL::text,
-  p_payment_key text DEFAULT NULL::text,
   p_is_rollback boolean DEFAULT false
 )
 RETURNS jsonb
@@ -18,14 +17,13 @@ declare
   v_admin_id uuid := auth.uid();
   v_current_status text;
   v_order_type text;
-  v_payment_key text;
 begin
   if v_admin_id is null or not public.is_admin() then
     raise exception 'Admin only';
   end if;
 
-  select status, order_type, payment_key
-  into v_current_status, v_order_type, v_payment_key
+  select status, order_type
+  into v_current_status, v_order_type
   from public.orders
   where id = p_order_id
   for update;
@@ -172,6 +170,46 @@ begin
   );
 end;
 $$;
+
+COMMENT ON FUNCTION public.admin_update_order_status(uuid, text, text, boolean)
+  IS 'SECURITY DEFINER is required so admins can update order status and write status logs while access is restricted by public.is_admin().';
+
+GRANT EXECUTE ON FUNCTION public.admin_update_order_status(uuid, text, text, boolean)
+  TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_update_order_status(
+  p_order_id uuid,
+  p_new_status text,
+  p_memo text,
+  p_payment_key text,
+  p_is_rollback boolean
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+begin
+  if auth.uid() is null or not public.is_admin() then
+    raise exception 'Admin only';
+  end if;
+
+  perform p_payment_key;
+
+  return public.admin_update_order_status(
+    p_order_id,
+    p_new_status,
+    p_memo,
+    p_is_rollback
+  );
+end;
+$$;
+
+COMMENT ON FUNCTION public.admin_update_order_status(uuid, text, text, text, boolean)
+  IS 'SECURITY DEFINER is required for legacy positional callers that still pass the deprecated p_payment_key placeholder while admin access remains restricted by public.is_admin() in the canonical function.';
+
+GRANT EXECUTE ON FUNCTION public.admin_update_order_status(uuid, text, text, text, boolean)
+  TO authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.admin_get_generation_log_artifacts(
   p_workflow_id text

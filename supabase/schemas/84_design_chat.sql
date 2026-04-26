@@ -11,6 +11,13 @@ CREATE TABLE public.design_chat_sessions (
   last_image_file_id  text,
   last_image_work_id  text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   image_count         int         NOT NULL DEFAULT 0,
+  repeat_tile_url      text,
+  repeat_tile_work_id  text,
+  accent_tile_url      text,
+  accent_tile_work_id  text,
+  accent_layout_json   jsonb,
+  pattern_type         text,
+  fabric_type          text,
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now()
 );
@@ -61,7 +68,14 @@ CREATE OR REPLACE FUNCTION public.save_design_session(
   p_last_image_url      text,
   p_last_image_file_id  text,
   p_last_image_work_id  text,
-  p_messages            jsonb
+  p_messages            jsonb,
+  p_repeat_tile_url      text DEFAULT null,
+  p_repeat_tile_work_id  text DEFAULT null,
+  p_accent_tile_url      text DEFAULT null,
+  p_accent_tile_work_id  text DEFAULT null,
+  p_accent_layout_json   jsonb DEFAULT null,
+  p_pattern_type         text DEFAULT null,
+  p_fabric_type          text DEFAULT null
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -89,16 +103,20 @@ BEGIN
 
   INSERT INTO public.design_chat_sessions (
     id, user_id, ai_model, first_message,
-    last_image_url, last_image_file_id, last_image_work_id, image_count, updated_at
+    last_image_url, last_image_file_id, last_image_work_id, image_count,
+    repeat_tile_url, repeat_tile_work_id,
+    accent_tile_url, accent_tile_work_id,
+    accent_layout_json,
+    pattern_type, fabric_type,
+    updated_at
   )
   VALUES (
     v_session_id, v_user_id, p_ai_model, p_first_message,
-    p_last_image_url, p_last_image_file_id, p_last_image_work_id,
-    (
-      SELECT COUNT(*)
-      FROM jsonb_array_elements(COALESCE(p_messages, '[]'::jsonb)) m
-      WHERE (m->>'image_url') IS NOT NULL
-    ),
+    p_last_image_url, p_last_image_file_id, p_last_image_work_id, 0,
+    p_repeat_tile_url, p_repeat_tile_work_id,
+    p_accent_tile_url, p_accent_tile_work_id,
+    p_accent_layout_json,
+    p_pattern_type, p_fabric_type,
     now()
   )
   ON CONFLICT (id) DO UPDATE
@@ -108,6 +126,13 @@ BEGIN
       last_image_file_id = EXCLUDED.last_image_file_id,
       last_image_work_id = EXCLUDED.last_image_work_id,
       image_count = EXCLUDED.image_count,
+      repeat_tile_url = EXCLUDED.repeat_tile_url,
+      repeat_tile_work_id = EXCLUDED.repeat_tile_work_id,
+      accent_tile_url = EXCLUDED.accent_tile_url,
+      accent_tile_work_id = EXCLUDED.accent_tile_work_id,
+      accent_layout_json = EXCLUDED.accent_layout_json,
+      pattern_type = EXCLUDED.pattern_type,
+      fabric_type = EXCLUDED.fabric_type,
       updated_at = now()
   WHERE public.design_chat_sessions.user_id = v_user_id;
 
@@ -148,5 +173,8 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.save_design_session(uuid, text, text, text, text, text, jsonb)
+COMMENT ON FUNCTION public.save_design_session(uuid, text, text, text, text, text, jsonb, text, text, text, text, jsonb, text, text)
+  IS 'SECURITY DEFINER is required so authenticated clients can upsert owned design sessions and replace child messages while ownership is enforced with auth.uid().';
+
+GRANT EXECUTE ON FUNCTION public.save_design_session(uuid, text, text, text, text, text, jsonb, text, text, text, text, jsonb, text, text)
   TO authenticated;

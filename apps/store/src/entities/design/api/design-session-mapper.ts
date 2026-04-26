@@ -2,6 +2,13 @@ import type {
   DesignSession,
   DesignSessionMessage,
 } from "@/entities/design/model/design-session";
+import type {
+  AccentLayout,
+  FabricType,
+  PatternType,
+} from "@/entities/design/model/tile-types";
+import type { FabricMethod } from "@/entities/design/model/design-context";
+import { isRecord, createGuard } from "@/shared/lib/type-guard";
 
 export interface DesignSessionRow {
   id: string;
@@ -11,6 +18,13 @@ export interface DesignSessionRow {
   last_image_url: string | null;
   last_image_file_id: string | null;
   last_image_work_id: string | null;
+  repeat_tile_url: string | null;
+  repeat_tile_work_id: string | null;
+  accent_tile_url: string | null;
+  accent_tile_work_id: string | null;
+  accent_layout_json: unknown;
+  pattern_type: string | null;
+  fabric_type: string | null;
   image_count: number;
   created_at: string;
   updated_at: string;
@@ -28,21 +42,40 @@ export interface DesignSessionMessageRow {
   created_at: string;
 }
 
-const AI_MODELS = ["openai", "fal"] as const;
-const MESSAGE_ROLES = ["user", "ai"] as const;
-const AI_MODEL_SET: ReadonlySet<string> = new Set(AI_MODELS);
-const MESSAGE_ROLE_SET: ReadonlySet<string> = new Set(MESSAGE_ROLES);
+const AI_MODEL_SET: ReadonlySet<string> = new Set(["openai", "fal"]);
+const MESSAGE_ROLE_SET: ReadonlySet<string> = new Set(["user", "ai"]);
+const PATTERN_TYPE_SET: ReadonlySet<string> = new Set([
+  "all_over",
+  "one_point",
+]);
+const FABRIC_TYPE_SET: ReadonlySet<string> = new Set(["yarn_dyed", "printed"]);
+const OBJECT_SOURCE_SET: ReadonlySet<string> = new Set([
+  "text",
+  "image",
+  "both",
+]);
+const ACCENT_SIZE_SET: ReadonlySet<string> = new Set([
+  "small",
+  "medium",
+  "large",
+]);
 
-function isAiModel(value: string): value is DesignSession["aiModel"] {
-  return AI_MODEL_SET.has(value);
-}
+const isAiModel = createGuard<DesignSession["aiModel"]>(AI_MODEL_SET);
+const isMessageRole =
+  createGuard<DesignSessionMessage["role"]>(MESSAGE_ROLE_SET);
+const isObjectSource =
+  createGuard<AccentLayout["objectSource"]>(OBJECT_SOURCE_SET);
+const isAccentSize =
+  createGuard<NonNullable<AccentLayout["size"]>>(ACCENT_SIZE_SET);
 
-function isMessageRole(value: string): value is DesignSessionMessage["role"] {
-  return MESSAGE_ROLE_SET.has(value);
-}
+const createEnumMapper = <T extends string>(set: ReadonlySet<string>) => {
+  const guard = createGuard<T>(set);
+  return (value: string | null): T | null =>
+    value !== null && guard(value) ? value : null;
+};
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+const toPatternType = createEnumMapper<PatternType>(PATTERN_TYPE_SET);
+const toFabricType = createEnumMapper<FabricType>(FABRIC_TYPE_SET);
 
 function toAttachments(value: unknown): DesignSessionMessage["attachments"] {
   if (!Array.isArray(value)) {
@@ -87,6 +120,24 @@ function toAttachments(value: unknown): DesignSessionMessage["attachments"] {
   return attachments.length > 0 ? attachments : null;
 }
 
+function toAccentLayout(value: unknown): AccentLayout | null {
+  if (!isRecord(value)) return null;
+
+  const objectDescription = value.objectDescription;
+  const objectSource = value.objectSource;
+  const color = value.color ?? null;
+  const size = value.size ?? null;
+
+  if (typeof objectDescription !== "string") return null;
+  if (typeof objectSource !== "string" || !isObjectSource(objectSource))
+    return null;
+  if (color !== null && typeof color !== "string") return null;
+  if (size !== null && (typeof size !== "string" || !isAccentSize(size)))
+    return null;
+
+  return { objectDescription, objectSource, color, size };
+}
+
 export function toDesignSession(row: DesignSessionRow): DesignSession {
   if (!isAiModel(row.ai_model)) {
     throw new Error(`알 수 없는 디자인 세션 모델입니다: ${row.ai_model}`);
@@ -99,6 +150,13 @@ export function toDesignSession(row: DesignSessionRow): DesignSession {
     lastImageUrl: row.last_image_url,
     lastImageFileId: row.last_image_file_id,
     lastImageWorkId: row.last_image_work_id,
+    repeatTileUrl: row.repeat_tile_url,
+    repeatTileWorkId: row.repeat_tile_work_id,
+    accentTileUrl: row.accent_tile_url,
+    accentTileWorkId: row.accent_tile_work_id,
+    accentLayout: toAccentLayout(row.accent_layout_json),
+    patternType: toPatternType(row.pattern_type),
+    fabricType: toFabricType(row.fabric_type),
     imageCount: row.image_count,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -124,3 +182,22 @@ export function toDesignSessionMessage(
     createdAt: row.created_at,
   };
 }
+
+const FABRIC_METHOD_TO_TYPE: Record<FabricMethod, FabricType> = {
+  "yarn-dyed": "yarn_dyed",
+  print: "printed",
+};
+
+const FABRIC_TYPE_TO_METHOD: Record<FabricType, FabricMethod> = {
+  yarn_dyed: "yarn-dyed",
+  printed: "print",
+};
+
+export const fabricMethodToFabricType = (
+  method: FabricMethod | null,
+): FabricType | null =>
+  method ? (FABRIC_METHOD_TO_TYPE[method] ?? null) : null;
+
+export const fabricTypeToFabricMethod = (
+  type: FabricType | null,
+): FabricMethod | null => (type ? (FABRIC_TYPE_TO_METHOD[type] ?? null) : null);

@@ -1,6 +1,7 @@
 import type { AiDesignRequest } from "@/entities/design/model/ai-design-request";
 import type { AiDesignResponse } from "@/entities/design/model/ai-design-response";
 import type { DesignTokenHistoryItem } from "@/entities/design/model/token-history";
+import { InsufficientTokensError } from "@/entities/design/model/design-errors";
 import { supabase } from "@/shared/lib/supabase";
 import {
   buildInvokePayload,
@@ -48,16 +49,6 @@ interface PatternPreparationResponse {
   compositeCanvasHeight?: number;
   harmonizationApplied?: boolean;
   harmonizationBackend?: "fal" | "openai" | null;
-}
-
-export class InsufficientTokensError extends Error {
-  constructor(
-    public readonly balance: number,
-    public readonly cost: number,
-  ) {
-    super("insufficient_tokens");
-    this.name = "InsufficientTokensError";
-  }
 }
 
 const DESIGN_TOKEN_SELECT_FIELDS =
