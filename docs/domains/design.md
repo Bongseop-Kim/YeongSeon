@@ -123,7 +123,7 @@ flowchart TD
 - **BR-design-008**: 토큰 비용은 `admin_settings`에서 모델×요청 타입 조합으로 관리한다. 기본 요청 타입은 `analysis`, `prep`, `render_standard`, `render_high`이며, `prep`은 부적합 이미지의 OpenAI 패턴 보정이 실제 실행된 경우에만 별도 차감된다. ※ 타일 전환 후 요청 타입은 `analysis`(gpt-4 계열 분석) + `render`(gpt-image-2 low 생성) 2종으로 단순화 예정. `prep`·`render_high`는 폐기.
 - **BR-design-009**: 멀티턴 대화 지원 — 프론트에서 `conversation_history` 유지해 Edge Function에 전달. ※ 타일 전환 후에도 유지.
 - **BR-design-010**: `ciPlacement === "one-point"` 요청 시 첫 번째 색상으로 `solid` backgroundPattern을 자동 생성해 payload에 주입한다. 프롬프트에 배경 패턴 명세로 반영되어 AI가 다른 배경을 임의로 생성하지 않도록 제한한다. ※ 타일 전환 후에는 원포인트가 `repeat tile(배경) + accent tile(중앙 오브젝트)` 2개 타일 구조로 대체되므로 본 규칙은 폐기되고 `accentLayout`·`patternType: "one_point"` 로직으로 이관된다.
-- **BR-design-011**: AI 응답의 `detectedDesign`에 `positionIntent`("move-left" | "move-right" | "move-up" | "move-down") 필드 포함. 모티프 위치 이동 요청을 감지해 후속 생성에 반영한다. ※ 타일 전환 시 accent tile 위치 이동과의 접점 재정의 필요 — [[tile_based_image_generation_design]] "미결 사항"으로 편입.
+- **BR-design-011**: AI 응답의 `detectedDesign`에 `positionIntent`("move-left" | "move-right" | "move-up" | "move-down") 필드 포함. 모티프 위치 이동 요청을 감지해 후속 생성에 반영한다. ※ 타일 전환 후 폐기 — repeat tile은 H/F/Q 구조 템플릿으로 위치가 고정되며, accent tile 위치는 프론트엔드 캔버스 배치 규칙(대검 하단 20% 고정)으로 통제하므로 positionIntent 추론 자체가 불필요해진다.
 - **BR-design-012** (신설, 타일 전환 시 적용): 원포인트(`patternType: "one_point"`) 요청은 `gpt-image-2` 호출이 2회(repeat + accent) 발생한다. 토큰 차감은 2회 독립 차감 방식을 기본으로 하며, 실패 시 각 호출 단위로 `work_id` 기반 멱등 복원한다. 세부 정책은 타일 전환 구현 시점에 [[tile_based_image_generation_design]] "미결 사항"에서 확정한다.
 
 ## 화면 및 진입점
@@ -157,24 +157,24 @@ flowchart TD
 
 ## 관련 파일
 
-| 파일                                                             | 설명                                                                                                                       |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| `apps/store/src/entities/design/api/ai-design-api.ts`            | 프론트 AI 디자인 API 레이어 및 provider chain 진입점. 타일 전환 시 provider chain 제거, 단일 `generate-tile` 호출로 단순화 |
-| `apps/store/src/entities/design/api/ai-design-mapper.ts`         | Edge Function 호출 payload 빌더 (backgroundPattern 포함). 타일 전환 시 `tileLayout`·`accentLayout` 빌더로 교체             |
-| `apps/store/src/entities/design/api/resolve-generation-route.ts` | 최종 렌더 라우트 판정. 타일 전환 시 **삭제**                                                                               |
-| `apps/store/src/entities/design/api/should-use-fal-pipeline.ts`  | `fal_tiling` 사용 가능 여부 probe. 타일 전환 시 **삭제**                                                                   |
-| `supabase/functions/prepare-pattern-composite/index.ts`          | CI 패턴 준비 Edge Function. 타일 전환 시 **삭제**                                                                          |
-| `supabase/functions/_shared/pattern-composite.ts`                | `magick-wasm` 기반 source 정리 / 타일 / 모티프 합성. 타일 전환 시 **삭제**                                                 |
-| `supabase/functions/generate-fal-api/index.ts`                   | Fal 기반 최종 렌더 Edge Function. 타일 전환 시 **삭제**                                                                    |
-| `supabase/functions/generate-open-api/index.ts`                  | OpenAI 기반 최종 렌더 Edge Function. 타일 전환 시 **삭제**                                                                 |
-| `supabase/functions/generate-tile/index.ts`                      | 타일 기반 통합 Edge Function (**신규, 구현 예정**). 상세 [[superpowers/specs/spec                                          | 타일 구현 계약]] |
-| `supabase/functions/_shared/design-request.ts`                   | `BackgroundPattern` 타입 및 요청 스키마. 타일 전환 시 `tileLayout`·`accentLayout` 스키마로 확장                            |
-| `supabase/functions/_shared/prompt-builders.ts`                  | 이미지/텍스트 프롬프트 빌더 (positionIntent 포함). 타일 전환 시 H/F/Q 구조 템플릿 빌더로 교체                              |
-| `supabase/functions/_shared/preprocessing/upscale.ts`            | 참조 이미지 업스케일 전처리 (512px 미만 자동 확대). 타일 전환 후에도 accent tile `images/edits` 입력 시 유지 검토 필요     |
-| `supabase/schemas/86_design_tokens.sql`                          | 디자인 토큰 테이블 스키마. 타일 전환 영향 없음                                                                             |
-| `supabase/schemas/99_functions_design_tokens.sql`                | 토큰 RPC (use / refund / balance 등). 타일 전환 영향 없음                                                                  |
-| `docs/domains/tile_based_image_generation_design.md`             | 타일 기반 시스템 설계 문서 (의사결정·재론 금지·v1/v2). [[tile_based_image_generation_design]]                              |
-| `docs/superpowers/specs/spec.md`                                 | 타일 기반 시스템 구현 계약 (Edge Function·프롬프트 템플릿·DB 스키마). [[superpowers/specs/spec                             | 타일 구현 계약]] |
+| 파일                                                             | 설명                                                                                                                                                                                                            |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `apps/store/src/entities/design/api/ai-design-api.ts`            | 프론트 AI 디자인 API 레이어 및 provider chain 진입점. 타일 전환 시 provider chain 제거, 단일 `generate-tile` 호출로 단순화                                                                                      |
+| `apps/store/src/entities/design/api/ai-design-mapper.ts`         | Edge Function 호출 payload 빌더 (backgroundPattern 포함). 타일 전환 시 `tileLayout`·`accentLayout` 빌더로 교체                                                                                                  |
+| `apps/store/src/entities/design/api/resolve-generation-route.ts` | 최종 렌더 라우트 판정. 타일 전환 시 **삭제**                                                                                                                                                                    |
+| `apps/store/src/entities/design/api/should-use-fal-pipeline.ts`  | `fal_tiling` 사용 가능 여부 probe. 타일 전환 시 **삭제**                                                                                                                                                        |
+| `supabase/functions/prepare-pattern-composite/index.ts`          | CI 패턴 준비 Edge Function. 타일 전환 시 **삭제**                                                                                                                                                               |
+| `supabase/functions/_shared/pattern-composite.ts`                | `magick-wasm` 기반 source 정리 / 타일 / 모티프 합성. 타일 전환 시 **삭제**                                                                                                                                      |
+| `supabase/functions/generate-fal-api/index.ts`                   | Fal 기반 최종 렌더 Edge Function. 타일 전환 시 **삭제**                                                                                                                                                         |
+| `supabase/functions/generate-open-api/index.ts`                  | OpenAI 기반 최종 렌더 Edge Function. 타일 전환 시 **삭제**                                                                                                                                                      |
+| `supabase/functions/generate-tile/index.ts`                      | 타일 기반 통합 Edge Function (**신규, 구현 예정**). 상세 [[superpowers/specs/spec                                                                                                                               | 타일 구현 계약]] |
+| `supabase/functions/_shared/design-request.ts`                   | `BackgroundPattern` 타입 및 요청 스키마. 타일 전환 시 BackgroundPattern 폐기, tileLayout·accentLayout·fabricType 신규 스키마로 전면 교체                                                                        |
+| `supabase/functions/_shared/prompt-builders.ts`                  | 이미지/텍스트 프롬프트 빌더 (positionIntent 포함). 타일 전환 시 전면 폐기 후 신규 작성 — H/F/Q 구조 템플릿 빌더 + Fabric 블록 빌더 + accent 빌더로 재구성. positionIntent 빌더는 BR-design-011 폐기와 함께 제거 |
+| `supabase/functions/_shared/preprocessing/upscale.ts`            | 참조 이미지 업스케일 전처리 (512px 미만 자동 확대). 타일 전환 시 삭제 — gpt-image-2가 입력 이미지 크기 제약(총 픽셀 ≥655,360, 변 16배수)을 자체 처리하므로 사전 업스케일 불필요                                 |
+| `supabase/schemas/86_design_tokens.sql`                          | 디자인 토큰 테이블 스키마. 타일 전환 영향 없음                                                                                                                                                                  |
+| `supabase/schemas/99_functions_design_tokens.sql`                | 토큰 RPC (use / refund / balance 등). 타일 전환 영향 없음                                                                                                                                                       |
+| `docs/domains/tile_based_image_generation_design.md`             | 타일 기반 시스템 설계 문서 (의사결정·재론 금지·v1/v2). [[tile_based_image_generation_design]]                                                                                                                   |
+| `docs/superpowers/specs/spec.md`                                 | 타일 기반 시스템 구현 계약 (Edge Function·프롬프트 템플릿·DB 스키마). [[superpowers/specs/spec                                                                                                                  | 타일 구현 계약]] |
 
 ## 횡단 참조
 
