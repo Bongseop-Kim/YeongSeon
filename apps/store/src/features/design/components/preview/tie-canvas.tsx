@@ -3,6 +3,7 @@ import { isActiveGeneration } from "@/entities/design";
 import { TieMask } from "@/features/design/components/preview/tie-mask";
 import { tieMaskStyle } from "@/features/design/components/preview/tie-mask-style";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import { escapeCssUrl } from "@/shared/lib/css-url";
 
 const TILE_BACKGROUND_SIZE = "80px 80px";
 const ACCENT_TILE_SIZE = "126px";
@@ -10,7 +11,7 @@ const ACCENT_TILE_BOTTOM = "20%";
 const ACCENT_TILE_BACKGROUND_SIZE = "cover";
 
 const tileRepeatStyle = (url: string) => ({
-  backgroundImage: `url("${url}")`,
+  backgroundImage: `url("${escapeCssUrl(url)}")`,
   backgroundRepeat: "repeat" as const,
   backgroundSize: TILE_BACKGROUND_SIZE,
 });
@@ -19,7 +20,7 @@ const accentOverlayStyle = (url: string) => ({
   bottom: ACCENT_TILE_BOTTOM,
   width: ACCENT_TILE_SIZE,
   height: ACCENT_TILE_SIZE,
-  backgroundImage: `url("${url}")`,
+  backgroundImage: `url("${escapeCssUrl(url)}")`,
   backgroundSize: ACCENT_TILE_BACKGROUND_SIZE,
   backgroundPosition: "center",
 });
@@ -52,14 +53,17 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
   const renderContent = () => {
     if (unmasked) {
       return (
-        <div
-          className="h-[600px] w-[316px]"
-          style={
-            repeatTile !== null
-              ? tileRepeatStyle(repeatTile.url)
-              : { background: previewBackground }
-          }
-        />
+        <div className="relative h-[600px] w-[316px]">
+          <div
+            className="h-full w-full"
+            style={
+              repeatTile !== null
+                ? tileRepeatStyle(repeatTile.url)
+                : { background: previewBackground }
+            }
+          />
+          {isLoading && <div className="animate-ai-shimmer absolute inset-0" />}
+        </div>
       );
     }
 

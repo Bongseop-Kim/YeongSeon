@@ -98,6 +98,14 @@ describe("toAdminGenerationArtifactItem", () => {
       "[toAdminGenerationArtifactItem] Invalid critical field",
       expect.objectContaining({ field: "id" }),
     );
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[toAdminGenerationArtifactItem] Invalid critical field",
+      expect.objectContaining({ field: "workflow_id" }),
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[toAdminGenerationArtifactItem] Invalid critical field",
+      expect.objectContaining({ field: "created_at" }),
+    );
 
     warnSpy.mockRestore();
   });

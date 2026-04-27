@@ -1,4 +1,5 @@
 import { isRecord } from "@/shared/lib/type-guard";
+import { createEnumMapper } from "@/shared/lib/enum-mapper";
 import { toAccentLayout } from "@/entities/design/api/design-session-mapper";
 import type {
   FabricType,
@@ -8,7 +9,7 @@ import type {
   TileRef,
 } from "@/entities/design/model/tile-types";
 
-export interface TileGenerationInvokePayload extends Omit<
+interface TileGenerationInvokePayload extends Omit<
   TileGenerationPayload,
   "previousRepeatTile" | "previousAccentTile"
 > {
@@ -21,11 +22,17 @@ export interface TileGenerationInvokePayload extends Omit<
 const toStringOrNull = (value: unknown): string | null =>
   typeof value === "string" && value.trim().length > 0 ? value : null;
 
-const toPatternType = (value: unknown): PatternType | null =>
-  value === "all_over" || value === "one_point" ? value : null;
+const PATTERN_TYPE_SET: ReadonlySet<PatternType> = new Set([
+  "all_over",
+  "one_point",
+]);
+const FABRIC_TYPE_SET: ReadonlySet<FabricType> = new Set([
+  "yarn_dyed",
+  "printed",
+]);
 
-const toFabricType = (value: unknown): FabricType | null =>
-  value === "yarn_dyed" || value === "printed" ? value : null;
+const toPatternType = createEnumMapper<PatternType>(PATTERN_TYPE_SET);
+const toFabricType = createEnumMapper<FabricType>(FABRIC_TYPE_SET);
 
 const toTileRef = (
   url: unknown,
@@ -73,20 +80,34 @@ export function normalizeInvokeResponse(raw: unknown): TileGenerationResult {
     throw new Error("Invalid generate-tile response: expected object");
   }
 
-  const patternType = toPatternType(raw.patternType) ?? "all_over";
-  const fabricType = toFabricType(raw.fabricType) ?? "printed";
+  const repeatTile = toTileRef(
+    raw.repeatTileUrl,
+    raw.repeatTileWorkId,
+    "repeatTile",
+  );
+  const accentTile = toOptionalTileRef(
+    raw.accentTileUrl,
+    raw.accentTileWorkId,
+    "accentTile",
+  );
+  const patternType = toPatternType(raw.patternType);
+  const fabricType = toFabricType(raw.fabricType);
+
+  if (!patternType) {
+    throw new Error(
+      `Invalid generate-tile response: patternType is invalid (${String(raw.patternType)})`,
+    );
+  }
+
+  if (!fabricType) {
+    throw new Error(
+      `Invalid generate-tile response: fabricType is invalid (${String(raw.fabricType)})`,
+    );
+  }
 
   return {
-    repeatTile: toTileRef(
-      raw.repeatTileUrl,
-      raw.repeatTileWorkId,
-      "repeatTile",
-    ),
-    accentTile: toOptionalTileRef(
-      raw.accentTileUrl,
-      raw.accentTileWorkId,
-      "accentTile",
-    ),
+    repeatTile,
+    accentTile,
     patternType,
     fabricType,
     accentLayout: toAccentLayout(raw.accentLayout),

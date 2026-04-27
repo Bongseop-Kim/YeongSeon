@@ -124,9 +124,9 @@ BEGIN
   ON CONFLICT (id) DO UPDATE
   SET ai_model = EXCLUDED.ai_model,
       first_message = EXCLUDED.first_message,
-      last_image_url = EXCLUDED.last_image_url,
-      last_image_file_id = EXCLUDED.last_image_file_id,
-      last_image_work_id = EXCLUDED.last_image_work_id,
+      last_image_url = COALESCE(EXCLUDED.last_image_url, design_chat_sessions.last_image_url),
+      last_image_file_id = COALESCE(EXCLUDED.last_image_file_id, design_chat_sessions.last_image_file_id),
+      last_image_work_id = COALESCE(EXCLUDED.last_image_work_id, design_chat_sessions.last_image_work_id),
       image_count = EXCLUDED.image_count,
       repeat_tile_url = COALESCE(EXCLUDED.repeat_tile_url, design_chat_sessions.repeat_tile_url),
       repeat_tile_work_id = COALESCE(EXCLUDED.repeat_tile_work_id, design_chat_sessions.repeat_tile_work_id),

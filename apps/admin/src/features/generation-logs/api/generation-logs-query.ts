@@ -143,10 +143,7 @@ export function useGenerationLogArtifactsQuery(params: {
 
   const query = useQuery({
     queryKey: ["generation-logs", "artifacts", normalizedWorkflowId],
-    queryFn: () =>
-      getGenerationLogArtifacts(
-        normalizedWorkflowId === null ? "" : normalizedWorkflowId,
-      ),
+    queryFn: () => getGenerationLogArtifacts(normalizedWorkflowId ?? ""),
     enabled: normalizedWorkflowId !== null,
   });
 

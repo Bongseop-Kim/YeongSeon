@@ -1,2 +1,4 @@
+import { escapeCssUrl } from "@/shared/lib/css-url";
+
 export const toPreviewBackground = (imageUrl: string): string =>
-  `url("${imageUrl}") center/cover no-repeat`;
+  `url("${escapeCssUrl(imageUrl)}") center/cover no-repeat`;

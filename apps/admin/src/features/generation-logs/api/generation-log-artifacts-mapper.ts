@@ -84,8 +84,8 @@ export function toAdminGenerationArtifactItem(
 
   for (const [field, value] of [
     ["id", id],
-    ["workflowId", workflowId],
-    ["createdAt", createdAt],
+    ["workflow_id", workflowId],
+    ["created_at", createdAt],
   ] as const) {
     if (value === null) {
       console.warn("[toAdminGenerationArtifactItem] Invalid critical field", {

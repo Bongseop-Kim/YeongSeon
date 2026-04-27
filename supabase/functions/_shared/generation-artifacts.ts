@@ -175,8 +175,14 @@ const getBytes = (
   };
 };
 
-const getFileExtension = (mimeType: string): string =>
-  MIME_EXTENSIONS[mimeType.toLowerCase()] ?? "png";
+const getFileExtension = (mimeType: string): string => {
+  const normalizedMimeType = mimeType.toLowerCase();
+  const extension = MIME_EXTENSIONS[normalizedMimeType];
+  if (!extension) {
+    throw new Error(`unsupported_artifact_mime_type: ${mimeType}`);
+  }
+  return extension;
+};
 
 const getUploadFolder = (
   workflowId: string,

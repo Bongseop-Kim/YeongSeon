@@ -3,7 +3,7 @@ import type { AttachmentType } from "./request-attachments.ts";
 export type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
 import type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
 
-export type FalGenerationRoute =
+export type GenerationRoute =
   | "fal_tiling"
   | "fal_edit"
   | "fal_controlnet"
@@ -67,7 +67,7 @@ export type GenerateDesignRequest = {
     repairSummary?: string | null;
     prepTokensCharged?: number | null;
   };
-  route?: FalGenerationRoute;
+  route?: GenerationRoute;
   controlType?: "lineart" | "edge" | "depth";
   structureImageBase64?: string;
   structureImageMimeType?: string;

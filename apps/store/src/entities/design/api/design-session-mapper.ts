@@ -8,6 +8,7 @@ import type {
   PatternType,
 } from "@/entities/design/model/tile-types";
 import type { FabricMethod } from "@/entities/design/model/design-context";
+import { createEnumMapper } from "@/shared/lib/enum-mapper";
 import { isRecord, createGuard } from "@/shared/lib/type-guard";
 
 export interface DesignSessionRow {
@@ -74,12 +75,6 @@ const isObjectSource =
   createGuard<AccentLayout["objectSource"]>(OBJECT_SOURCE_SET);
 const isAccentSize =
   createGuard<NonNullable<AccentLayout["size"]>>(ACCENT_SIZE_SET);
-
-const createEnumMapper = <T extends string>(set: ReadonlySet<T>) => {
-  const guard = createGuard<T>(set);
-  return (value: string | null): T | null =>
-    value !== null && guard(value) ? value : null;
-};
 
 const toPatternType = createEnumMapper<PatternType>(PATTERN_TYPE_SET);
 const toFabricType = createEnumMapper<FabricType>(FABRIC_TYPE_SET);

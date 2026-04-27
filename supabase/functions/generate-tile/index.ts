@@ -67,64 +67,24 @@ Deno.serve(async (req) => {
     );
     const renderWorkId = crypto.randomUUID();
 
-    const [analysis, { data: tokenResult, error: tokenError }] =
-      await Promise.all([
-        analyzeIntent(body),
-        chargeTileRenderTokens(adminClient, {
-          userId: user.id,
-          workId: renderWorkId,
-        }),
-      ]);
-
-    const fabricChanged =
-      body.previousFabricType !== null &&
-      body.previousFabricType !== fabricType;
-
-    if (fabricChanged && analysis.editTarget !== "new") {
-      analysis.editTarget = "both";
-    }
-
-    if (shouldFallbackToPreviousAccentLayout(analysis, body)) {
-      analysis.accentLayout = body.previousAccentLayoutJson;
-    }
-
-    const reuseRepeatTile = shouldReuseRepeatTile(analysis, body);
-    const repeatPrompt = reuseRepeatTile
-      ? null
-      : buildRepeatPrompt(analysis.tileLayout, fabricType);
-    let tokensRefunded = 0;
-
-    const accentBuilt =
-      analysis.patternType === "one_point" && analysis.accentLayout
-        ? buildAccentPrompt(
-            analysis.accentLayout,
-            analysis.tileLayout.backgroundColor,
-            fabricType,
-            resolveAccentReferenceImageUrl(analysis, body),
-          )
-        : null;
-
-    let accentResult: { url: string; workId: string } | null = null;
-
-    const promptLength =
-      (repeatPrompt?.length ?? 0) + (accentBuilt?.prompt.length ?? 0);
-    const parentWorkId = reuseRepeatTile
-      ? (body.previousAccentTileWorkId ?? body.previousRepeatTileWorkId ?? null)
-      : (body.previousRepeatTileWorkId ?? null);
-
     const baseLogFields = {
       work_id: renderWorkId,
       workflow_id: body.workflowId,
       phase: "render" as const,
-      parent_work_id: parentWorkId,
+      parent_work_id: null,
       user_id: user.id,
       ai_model: "openai" as const,
       request_type: TILE_RENDER_REQUEST_TYPE,
       quality: "standard" as const,
       user_message: body.userMessage,
-      prompt_length: promptLength,
+      prompt_length: 0,
       route: body.route,
     };
+    const { data: tokenResult, error: tokenError } =
+      await chargeTileRenderTokens(adminClient, {
+        userId: user.id,
+        workId: renderWorkId,
+      });
 
     if (tokenError) {
       await logGeneration(adminClient, {
@@ -155,9 +115,48 @@ Deno.serve(async (req) => {
     }
 
     const tokensCharged = tokenResult.cost;
+    let tokensRefunded = 0;
 
-    let repeatResult: { url: string; workId: string };
     try {
+      const analysis = await analyzeIntent(body);
+      const fabricChanged =
+        body.previousFabricType !== null &&
+        body.previousFabricType !== fabricType;
+
+      if (fabricChanged && analysis.editTarget !== "new") {
+        analysis.editTarget = "both";
+      }
+
+      if (shouldFallbackToPreviousAccentLayout(analysis, body)) {
+        analysis.accentLayout = body.previousAccentLayoutJson;
+      }
+
+      const reuseRepeatTile = shouldReuseRepeatTile(analysis, body);
+      const repeatPrompt = reuseRepeatTile
+        ? null
+        : buildRepeatPrompt(analysis.tileLayout, fabricType);
+      const accentBuilt =
+        analysis.patternType === "one_point" && analysis.accentLayout
+          ? buildAccentPrompt(
+              analysis.accentLayout,
+              analysis.tileLayout.backgroundColor,
+              fabricType,
+              resolveAccentReferenceImageUrl(analysis, body),
+            )
+          : null;
+      const promptLength =
+        (repeatPrompt?.length ?? 0) + (accentBuilt?.prompt.length ?? 0);
+      const parentWorkId = reuseRepeatTile
+        ? (body.previousAccentTileWorkId ??
+          body.previousRepeatTileWorkId ??
+          null)
+        : (body.previousRepeatTileWorkId ?? null);
+      const renderLogFields = {
+        ...baseLogFields,
+        parent_work_id: parentWorkId,
+        prompt_length: promptLength,
+      };
+
       let reusableRepeatTile: { url: string; workId: string } | null = null;
       if (reuseRepeatTile) {
         const previousRepeatTileUrl = body.previousRepeatTileUrl;
@@ -179,7 +178,7 @@ Deno.serve(async (req) => {
         };
       }
 
-      [repeatResult, accentResult] = await Promise.all([
+      const [repeatResult, accentResult] = await Promise.all([
         reusableRepeatTile
           ? Promise.resolve(reusableRepeatTile)
           : generateTileImage(repeatPrompt as string, null, renderWorkId),
@@ -191,6 +190,71 @@ Deno.serve(async (req) => {
             )
           : Promise.resolve(null),
       ]);
+
+      const accentLayoutRecord = analysis.accentLayout
+        ? (analysis.accentLayout as unknown as Record<string, unknown>)
+        : null;
+      const primaryResult =
+        reuseRepeatTile && accentResult ? accentResult : repeatResult;
+
+      await Promise.all([
+        logGeneration(adminClient, {
+          ...renderLogFields,
+          work_id: primaryResult.workId,
+          generate_image: true,
+          image_generated: true,
+          generated_image_url: primaryResult.url,
+          tokens_charged: tokensCharged,
+          tokens_refunded: tokensRefunded,
+          repeat_tile_url: repeatResult.url,
+          repeat_tile_work_id: repeatResult.workId,
+          accent_tile_url: accentResult?.url ?? null,
+          accent_tile_work_id: accentResult?.workId ?? null,
+          pattern_type: analysis.patternType,
+          fabric_type: fabricType,
+          tile_role: reuseRepeatTile ? "accent" : "repeat",
+          paired_tile_work_id: reuseRepeatTile
+            ? repeatResult.workId
+            : (accentResult?.workId ?? null),
+          accent_layout_json: accentLayoutRecord,
+        }),
+        saveDesignSession(authClient, {
+          sessionId: body.sessionId,
+          aiModel: "openai",
+          firstMessage: body.firstMessage,
+          lastImageUrl: repeatResult.url,
+          lastImageFileId: null,
+          lastImageWorkId: repeatResult.workId,
+          repeatTileUrl: repeatResult.url,
+          repeatTileWorkId: repeatResult.workId,
+          accentTileUrl: accentResult?.url ?? null,
+          accentTileWorkId: accentResult?.workId ?? null,
+          accentLayout: accentLayoutRecord,
+          patternType: analysis.patternType,
+          fabricType,
+          messages: buildSessionMessages(body.allMessages, {
+            id: crypto.randomUUID(),
+            role: "ai",
+            content: TILE_GENERATION_AI_MESSAGE,
+            image_url: repeatResult.url,
+            image_file_id: null,
+            attachments: null,
+            sequence_number: body.allMessages.length,
+          } satisfies SessionMessage),
+        }),
+      ]);
+
+      const result: TileGenerationResponse = {
+        repeatTileUrl: repeatResult.url,
+        repeatTileWorkId: repeatResult.workId,
+        accentTileUrl: accentResult?.url ?? null,
+        accentTileWorkId: accentResult?.workId ?? null,
+        patternType: analysis.patternType,
+        fabricType,
+        accentLayout: analysis.accentLayout,
+      };
+
+      return jsonResponse(200, result as unknown as Record<string, unknown>);
     } catch (error) {
       const refunded = await refundTileRenderTokens(adminClient, {
         userId: user.id,
@@ -208,7 +272,6 @@ Deno.serve(async (req) => {
         image_generated: false,
         tokens_charged: tokensCharged,
         tokens_refunded: tokensRefunded,
-        pattern_type: analysis.patternType,
         fabric_type: fabricType,
         error_type: "tile_generation_failed",
         error_message: error instanceof Error ? error.message : "Unknown error",
@@ -216,71 +279,6 @@ Deno.serve(async (req) => {
 
       return jsonResponse(500, { error: "tile_generation_failed" });
     }
-
-    const accentLayoutRecord = analysis.accentLayout
-      ? (analysis.accentLayout as unknown as Record<string, unknown>)
-      : null;
-    const primaryResult =
-      reuseRepeatTile && accentResult ? accentResult : repeatResult;
-
-    await Promise.all([
-      logGeneration(adminClient, {
-        ...baseLogFields,
-        work_id: primaryResult.workId,
-        generate_image: true,
-        image_generated: true,
-        generated_image_url: primaryResult.url,
-        tokens_charged: tokensCharged,
-        tokens_refunded: tokensRefunded,
-        repeat_tile_url: repeatResult.url,
-        repeat_tile_work_id: repeatResult.workId,
-        accent_tile_url: accentResult?.url ?? null,
-        accent_tile_work_id: accentResult?.workId ?? null,
-        pattern_type: analysis.patternType,
-        fabric_type: fabricType,
-        tile_role: reuseRepeatTile ? "accent" : "repeat",
-        paired_tile_work_id: reuseRepeatTile
-          ? repeatResult.workId
-          : (accentResult?.workId ?? null),
-        accent_layout_json: accentLayoutRecord,
-      }),
-      saveDesignSession(authClient, {
-        sessionId: body.sessionId,
-        aiModel: "openai",
-        firstMessage: body.firstMessage,
-        lastImageUrl: repeatResult.url,
-        lastImageFileId: null,
-        lastImageWorkId: repeatResult.workId,
-        repeatTileUrl: repeatResult.url,
-        repeatTileWorkId: repeatResult.workId,
-        accentTileUrl: accentResult?.url ?? null,
-        accentTileWorkId: accentResult?.workId ?? null,
-        accentLayout: accentLayoutRecord,
-        patternType: analysis.patternType,
-        fabricType,
-        messages: buildSessionMessages(body.allMessages, {
-          id: crypto.randomUUID(),
-          role: "ai",
-          content: TILE_GENERATION_AI_MESSAGE,
-          image_url: repeatResult.url,
-          image_file_id: null,
-          attachments: null,
-          sequence_number: body.allMessages.length,
-        } satisfies SessionMessage),
-      }),
-    ]);
-
-    const result: TileGenerationResponse = {
-      repeatTileUrl: repeatResult.url,
-      repeatTileWorkId: repeatResult.workId,
-      accentTileUrl: accentResult?.url ?? null,
-      accentTileWorkId: accentResult?.workId ?? null,
-      patternType: analysis.patternType,
-      fabricType,
-      accentLayout: analysis.accentLayout,
-    };
-
-    return jsonResponse(200, result as unknown as Record<string, unknown>);
   } catch (error) {
     console.error("generate-tile error:", error);
     return jsonResponse(500, { error: "internal_error" });

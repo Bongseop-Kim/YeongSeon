@@ -1,5 +1,6 @@
 import {
   assertEquals,
+  assertGreater,
   assertLess,
   assertObjectMatch,
   assertRejects,
@@ -136,7 +137,7 @@ Deno.test("buildOpenAiEditCanvas accepts a small PNG input", async () => {
 
   assertEquals(result.sourceWidth, 1);
   assertEquals(result.sourceHeight, 1);
-  assertEquals(result.bytes.length > 0, true);
+  assertGreater(result.bytes.length, 0);
 });
 
 Deno.test(

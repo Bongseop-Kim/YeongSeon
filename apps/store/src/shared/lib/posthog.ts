@@ -1,7 +1,14 @@
 import posthog from "posthog-js";
-import type { GenerationRoute } from "@/entities/design/model/ai-design-request";
 
 type PosthogAiModel = "openai" | "fal";
+type PosthogGenerationRoute =
+  | "openai"
+  | "fal_tiling"
+  | "fal_edit"
+  | "fal_controlnet"
+  | "fal_inpaint"
+  | "tile_generation"
+  | "tile_edit";
 
 type PhEventParamsMap = {
   design_session_started: { ai_model: PosthogAiModel };
@@ -10,7 +17,7 @@ type PhEventParamsMap = {
     latency_ms: number;
     has_image: boolean;
     pipeline?: "fal-ai";
-    route?: GenerationRoute;
+    route?: PosthogGenerationRoute;
     route_reason?: string;
     route_signals?: string[];
   };

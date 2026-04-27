@@ -11,7 +11,13 @@ export interface ImageKitUploadResult {
 const stripDataUriPrefix = (value: string): string => {
   const trimmedValue = value.trim();
   const commaIndex = trimmedValue.indexOf(",");
-  return commaIndex >= 0 ? trimmedValue.slice(commaIndex + 1) : trimmedValue;
+  if (commaIndex >= 0) {
+    return trimmedValue.slice(commaIndex + 1);
+  }
+  if (trimmedValue.startsWith("data:")) {
+    throw new Error("malformed data URI: missing comma");
+  }
+  return trimmedValue;
 };
 
 async function attemptUpload(

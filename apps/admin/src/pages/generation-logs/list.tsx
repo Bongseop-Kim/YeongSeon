@@ -7,13 +7,11 @@ import {
   DesignContextStats,
   GenerationLogStats,
   GenerationLogTable,
+  type GenerationRequestTypeFilter,
+  type GenerationStatusFilter,
   useGenerationLogsQuery,
   useGenerationStatsQuery,
 } from "@/features/generation-logs";
-import type {
-  GenerationRequestTypeFilter,
-  GenerationStatusFilter,
-} from "@/features/generation-logs/types/admin-generation-log";
 
 const EMPTY_SUMMARY = {
   totalRequests: 0,

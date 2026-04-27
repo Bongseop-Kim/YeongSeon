@@ -533,7 +533,7 @@ export function useDesignChat(
           error,
           "죄송합니다. 타일 기반 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
         ),
-        input.failureStatus,
+        error instanceof InsufficientTokensError ? "idle" : input.failureStatus,
       );
     }
   };

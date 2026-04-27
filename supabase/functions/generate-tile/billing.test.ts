@@ -47,7 +47,10 @@ Deno.test(
       },
     };
     const failedClient = {
-      rpc: () => Promise.resolve({ data: null, error: { message: "boom" } }),
+      rpc: (fn: string, args: Record<string, unknown>) => {
+        calls.push({ fn, args });
+        return Promise.resolve({ data: null, error: { message: "boom" } });
+      },
     };
 
     assertEquals(
@@ -67,6 +70,8 @@ Deno.test(
       }),
       "failed",
     );
+    assertEquals(calls.length, 1);
+    assertEquals(calls.at(-1)?.fn, "refund_design_tokens");
     assertEquals(
       await refundTileRenderTokens(successClient, {
         userId: "user-1",
@@ -75,5 +80,16 @@ Deno.test(
       }),
       "succeeded",
     );
+    assertEquals(calls.length, 2);
+    assertEquals(calls.at(-1), {
+      fn: "refund_design_tokens",
+      args: {
+        p_user_id: "user-1",
+        p_amount: 5,
+        p_ai_model: "openai",
+        p_request_type: "render_standard",
+        p_work_id: "refund-ok",
+      },
+    });
   },
 );

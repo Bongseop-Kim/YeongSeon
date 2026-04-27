@@ -200,7 +200,19 @@ export async function analyzeIntent(
     }
 
     const data = await response.json();
-    const raw = JSON.parse(data.choices[0].message.content) as AnalysisOutput;
+    const message = data.choices?.[0]?.message;
+    if (message?.refusal) {
+      console.error("analysis_model refusal:", message.refusal);
+      return structuredClone(FALLBACK);
+    }
+
+    const content = message?.content;
+    if (typeof content !== "string" || content.trim().length === 0) {
+      console.error("analysis_model empty content:", content ?? null);
+      return structuredClone(FALLBACK);
+    }
+
+    const raw = JSON.parse(content) as AnalysisOutput;
 
     if (editTargetOverride) {
       raw.intent = "edit";

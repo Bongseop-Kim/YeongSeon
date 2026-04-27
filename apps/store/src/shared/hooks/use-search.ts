@@ -33,26 +33,30 @@ export function useSearch({
 
   useEffect(() => {
     const items = tabItems ? [...tabItems] : undefined;
+    const tabsProp =
+      items !== undefined && defaultTab !== undefined
+        ? {
+            tabs: {
+              items,
+              activeTab: defaultTab,
+              onTabChange: (tab: string) => {
+                onTabChangeRef.current?.(tab);
+              },
+            },
+          }
+        : {};
+
     setSearchEnabled(true, {
       placeholder,
       onSearch: (query, dateFilter) => {
         onSearchRef.current(query, dateFilter);
       },
-      ...(items !== undefined &&
-      defaultTab !== undefined &&
-      onTabChangeRef.current !== undefined
-        ? {
-            tabs: {
-              items,
-              activeTab: defaultTab,
-              onTabChange: (tab) => {
-                onTabChangeRef.current?.(tab);
-              },
-            },
-          }
-        : {}),
+      ...tabsProp,
     });
 
     return () => setSearchEnabled(false);
+    // tabItems is intentionally omitted; itemsKey is the stable change marker
+    // while onSearchRef and onTabChangeRef keep the handlers current.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placeholder, setSearchEnabled, defaultTab, itemsKey]);
 }

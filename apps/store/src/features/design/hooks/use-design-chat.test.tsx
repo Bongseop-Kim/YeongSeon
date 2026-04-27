@@ -650,8 +650,8 @@ describe("useDesignChat", () => {
           content: "토큰이 부족합니다. 현재 잔액: 3토큰, 필요: 5토큰",
         }),
       );
+      expect(setGenerationStatus).toHaveBeenCalledWith("idle");
     });
-    expect(setGenerationStatus).toHaveBeenCalledWith("idle");
   });
 
   it("편집 요청은 base image 정보를 함께 전송한다", () => {

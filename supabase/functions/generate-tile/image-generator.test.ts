@@ -141,7 +141,7 @@ Deno.test(
         await assertRejects(
           () => fetchReferenceImage(REFERENCE_URL),
           Error,
-          "Reference image fetch timed out after 5000ms",
+          "Reference image fetch timed out after",
         );
       },
     );

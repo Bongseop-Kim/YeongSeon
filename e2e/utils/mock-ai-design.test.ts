@@ -25,8 +25,11 @@ async function fulfillBody(
 
   await installMockAiDesign(page, mode);
   expect(handler).not.toBeNull();
+  if (!handler) {
+    throw new Error("mock AI design route handler was not installed");
+  }
 
-  await handler?.({
+  await handler({
     fulfill: vi.fn(async (payload: FulfillPayload) => {
       fulfilled = payload;
     }),
@@ -34,6 +37,7 @@ async function fulfillBody(
 
   expect(fulfilled?.status).toBe(200);
   expect(fulfilled?.contentType).toBe("application/json");
+  expect(fulfilled?.body).toBeDefined();
   return JSON.parse(fulfilled?.body ?? "{}") as Record<string, unknown>;
 }
 
@@ -70,6 +74,7 @@ describe("installMockAiDesign", () => {
     const body = await fulfillBody({ type: "image", aiMessage: "ok" });
 
     expect(body.imageUrl).toEqual(expect.stringMatching(/^data:image\/png/));
+    expect(body.aiMessage).toEqual("ok");
   });
 
   it("image-missing 응답 body는 imageUrl을 null로 둔다", async () => {

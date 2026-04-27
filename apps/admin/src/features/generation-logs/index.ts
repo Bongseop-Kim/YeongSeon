@@ -6,3 +6,7 @@ export {
   useGenerationStatsQuery,
   useGenerationLogsQuery,
 } from "./api/generation-logs-query";
+export type {
+  GenerationRequestTypeFilter,
+  GenerationStatusFilter,
+} from "./types/admin-generation-log";

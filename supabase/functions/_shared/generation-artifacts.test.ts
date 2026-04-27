@@ -211,6 +211,44 @@ Deno.test(
 );
 
 Deno.test(
+  "saveGenerationArtifact records failed status for unsupported MIME types",
+  async () => {
+    const inserted: unknown[] = [];
+    let uploadCalled = false;
+
+    const result = await saveGenerationArtifact(
+      {
+        workflowId: "workflow-5",
+        phase: "prep",
+        artifactType: "prepared_tile",
+        image: {
+          kind: "base64",
+          base64: "AAEC",
+          mimeType: "image/heic",
+        },
+      },
+      {
+        generateArtifactId: () => "artifact-5",
+        uploadImage: () => {
+          uploadCalled = true;
+          throw new Error("upload should not be called");
+        },
+        recordArtifactRow: async (row) => {
+          inserted.push(row);
+          return { error: null };
+        },
+      },
+    );
+
+    assertEquals(result.status, "failed");
+    assertEquals(result.error, "unsupported_artifact_mime_type: image/heic");
+    assertEquals(uploadCalled, false);
+    assertEquals(inserted.length, 1);
+    assertEquals((inserted[0] as { status?: string }).status, "failed");
+  },
+);
+
+Deno.test(
   "createArtifactRowRpcRecorder writes artifacts through RPC",
   async () => {
     const calls: Array<{ fn: string; args: Record<string, unknown> }> = [];

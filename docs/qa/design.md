@@ -11,7 +11,7 @@ last-verified: 2026-04-27
 ## 생성 라우팅 골든셋
 
 > `fal_tiling`은 반복 패턴의 **최종 렌더 라우트**를 의미한다.
-> 반복 타일 준비 자체는 사전 단계 [`prepare-pattern-composite`](../../supabase/functions/prepare-pattern-composite/index.ts)가 수행하며, 준비된 타일이 없으면 실제 호출은 `openai`로 폴백할 수 있다. See prepare-pattern-composite fallback to openai.
+> 반복 타일 준비 자체는 사전 단계 [`prepare-pattern-composite`](../../supabase/functions/prepare-pattern-composite/index.ts)가 수행하며, 준비된 타일이 없으면 실제 호출은 `openai`로 폴백할 수 있다. 준비된 타일이 없을 경우 [`prepare-pattern-composite`](../../supabase/functions/prepare-pattern-composite/index.ts)가 `openai`로 폴백합니다.
 
 | 프롬프트                                                                                         | 기대 라우팅  |
 | ------------------------------------------------------------------------------------------------ | ------------ |
@@ -192,16 +192,17 @@ last-verified: 2026-04-27
 - **참조 규칙**: BR-design-004
 - **우선순위**: critical
 
-| 단계  | 내용                                                                   |
-| ----- | ---------------------------------------------------------------------- |
-| Given | store /design에서 이미지 생성을 요청했으나 이미지가 반환되지 않은 상태 |
-| When  | 생성 결과가 반환된다                                                   |
-| Then  | 이미지 비용만 환불되고 텍스트 비용은 그대로 차감 유지된다              |
+| 단계  | 내용                                                                                                           |
+| ----- | -------------------------------------------------------------------------------------------------------------- |
+| Given | store /design에서 이미지 생성을 요청했으나 이미지가 반환되지 않았고 비용 조회는 성공한 상태                    |
+| When  | 생성 결과가 반환된다                                                                                           |
+| Then  | 이미지 비용만 환불되고 텍스트 비용은 그대로 차감 유지된다. 비용 조회가 실패한 경우 환불 로직을 실행하지 않는다 |
 
 **경로**: `store /design`
 **결과**: untested
 **이슈**: admin_settings 조회 실패 시 자동 환불 로직이 잘못 작동하지 않도록, 비용 조회 실패 시 환불을 생략해야 한다.
 **경계**: SC-design-015는 비용 조회가 성공했지만 이미지 생성 결과에 이미지가 없는 경우에만 적용한다. SC-design-006의 즉시 선차감 이미지 토큰 복구 전제가 성립하면 SC-design-006이 우선하며, 이후 재시도/복구 흐름은 SC-design-017에서 확인한다.
+**우선순위 메모**: 즉시 선차감 복구 전제가 있으면 SC-design-006이 SC-design-015보다 우선한다.
 
 ---
 

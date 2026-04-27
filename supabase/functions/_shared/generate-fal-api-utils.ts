@@ -222,13 +222,11 @@ export const recordOptionalRenderArtifacts = async (
     },
   ];
 
-  await Promise.all(
-    optionalArtifacts.map(async ({ artifactType, base64, mimeType }) => {
-      const image = toOptionalBase64Input(base64, mimeType);
-      if (!image) return;
-      await recordArtifact({ artifactType, image });
-    }),
-  );
+  for (const { artifactType, base64, mimeType } of optionalArtifacts) {
+    const image = toOptionalBase64Input(base64, mimeType);
+    if (!image) continue;
+    await recordArtifact({ artifactType, image });
+  }
 };
 
 export const recordFinalRenderArtifacts = async (
@@ -258,6 +256,8 @@ export const recordFinalRenderArtifacts = async (
     },
   });
 
+  // See test "recordFinalRenderArtifacts clears final parent when fal_raw save fails":
+  // final is intentionally orphaned when fal_raw could not be recorded.
   await recordArtifact({
     artifactType: "final",
     image: {

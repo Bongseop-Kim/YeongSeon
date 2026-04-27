@@ -68,7 +68,7 @@ supabase functions deploy <function-name> --use-api   # 단일 Edge Function을 
 - CLI 실패 시 에러 전문 그대로 공유, 자동 재시도 금지.
 - `migration repair`, `db reset --linked`는 영향 범위 설명 후 승인받고 실행.
 - 마이그레이션 파일에 `--` 주석 금지 (squash 시 소실). 설명은 `supabase/schemas/*.sql` 또는 `COMMENT ON`으로.
-- `DROP CONSTRAINT/INDEX`에 `IF EXISTS` 금지. 존재하지 않으면 에러가 정상.
+- `DROP CONSTRAINT/INDEX`의 `IF EXISTS`는 허용. 원격 적용 여부가 불명확한 마이그레이션을 수정해 제거하지 않는다.
 
 ## 테스트
 
