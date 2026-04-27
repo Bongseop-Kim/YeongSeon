@@ -59,6 +59,55 @@ const getFabricOptionButtonClassName = (isSelected: boolean): string =>
     ? "rounded-sm px-3 py-1.5 text-xs font-medium transition-colors bg-background text-foreground shadow-sm"
     : "rounded-sm px-3 py-1.5 text-xs font-medium transition-colors bg-transparent text-muted-foreground hover:text-foreground";
 
+function ImageAttachmentPreview({
+  attachment,
+  onRemove,
+}: {
+  attachment: Attachment;
+  onRemove: () => void;
+}) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileName =
+    attachment.file?.name ?? attachment.fileName ?? "첨부 이미지";
+
+  useEffect(() => {
+    if (!attachment.file) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(attachment.file);
+    setPreviewUrl(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [attachment.file]);
+
+  if (!previewUrl) {
+    return null;
+  }
+
+  return (
+    <div className="group relative size-24 overflow-hidden rounded-lg border bg-muted">
+      <img
+        src={previewUrl}
+        alt={`${fileName} 프리뷰`}
+        className="size-full object-cover"
+      />
+      <button
+        type="button"
+        aria-label={`${fileName} 제거`}
+        onClick={onRemove}
+        className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-black text-white shadow-sm transition-colors hover:bg-gray-800"
+      >
+        <X className="size-3.5" />
+      </button>
+      <div className="absolute inset-x-0 bottom-0 truncate bg-black/55 px-2 py-1 text-[11px] text-white">
+        {fileName}
+      </div>
+    </div>
+  );
+}
+
 export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
   function ChatInput({ onSend, isLoading = false }, ref) {
     const designContext = useDesignChatStore((state) => state.designContext);
@@ -102,6 +151,12 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }, [showPopup]);
 
     const trimmedText = inputText.trim();
+    const imageAttachments = pendingAttachments.filter(
+      (attachment) => attachment.type === "image",
+    );
+    const nonImageAttachments = pendingAttachments.filter(
+      (attachment) => attachment.type !== "image",
+    );
 
     const handleAttachmentRemove = (removedIndex: number) => {
       const removalContext = resolveRemovedAttachmentContext(
@@ -131,8 +186,16 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       }
 
       if (attachment.type === "image") {
+        const nextSourceImage =
+          pendingAttachments
+            .filter(
+              (nextAttachment, index) =>
+                index !== removedIndex && nextAttachment.type === "image",
+            )
+            .find((nextAttachment) => nextAttachment.file)?.file ?? null;
+
         setDesignContext({
-          sourceImage: null,
+          sourceImage: nextSourceImage,
           onePointOffsetX: 0,
           onePointOffsetY: 0,
           ciImage: null,
@@ -158,33 +221,25 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
     return (
       <div className="relative flex flex-col gap-2">
-        {pendingAttachments.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {pendingAttachments.map((attachment, index) => (
-              <Badge
-                key={`${attachment.type}-${attachment.value}-${index}`}
-                variant="outline"
-                className="flex items-center gap-1"
-              >
-                {attachment.label}
-                <button
-                  type="button"
-                  aria-label={`${attachment.label} 제거`}
-                  onClick={() => handleAttachmentRemove(index)}
-                >
-                  <X className="size-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        ) : null}
-
         <div
           ref={popupWrapperRef}
           className="relative rounded-xl border bg-white p-2"
         >
           {showPopup ? (
             <AttachmentPopup onClose={() => setShowPopup(false)} />
+          ) : null}
+          {imageAttachments.length > 0 ? (
+            <div className="mb-3 flex flex-wrap gap-2 px-1 pt-1">
+              {pendingAttachments.map((attachment, index) =>
+                attachment.type === "image" ? (
+                  <ImageAttachmentPreview
+                    key={`${attachment.type}-${attachment.value}-${index}`}
+                    attachment={attachment}
+                    onRemove={() => handleAttachmentRemove(index)}
+                  />
+                ) : null,
+              )}
+            </div>
           ) : null}
           <textarea
             ref={textareaRef}
@@ -207,7 +262,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           />
           <div className="mt-2 flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+              <div
+                data-testid="chat-input-option-row"
+                className="flex min-w-0 flex-1 items-center gap-2"
+              >
                 <Button
                   type="button"
                   variant="ghost"
@@ -221,10 +279,32 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
                   />
                 </Button>
+                {nonImageAttachments.length > 0 ? (
+                  <div className="flex min-w-0 flex-wrap items-center gap-1">
+                    {pendingAttachments.map((attachment, index) =>
+                      attachment.type === "image" ? null : (
+                        <Badge
+                          key={`${attachment.type}-${attachment.value}-${index}`}
+                          variant="outline"
+                          className="flex max-w-32 items-center gap-1 truncate"
+                        >
+                          <span className="truncate">{attachment.label}</span>
+                          <button
+                            type="button"
+                            aria-label={`${attachment.label} 제거`}
+                            onClick={() => handleAttachmentRemove(index)}
+                          >
+                            <X className="size-3" />
+                          </button>
+                        </Badge>
+                      ),
+                    )}
+                  </div>
+                ) : null}
                 <div
                   role="radiogroup"
                   aria-label="원단 방식"
-                  className="inline-flex gap-0.5 rounded-md border bg-muted p-0.5"
+                  className="inline-flex shrink-0 gap-0.5 rounded-md border bg-muted p-0.5"
                 >
                   {FABRIC_OPTIONS.map((option) => {
                     const isSelected =

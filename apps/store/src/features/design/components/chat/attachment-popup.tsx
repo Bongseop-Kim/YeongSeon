@@ -128,27 +128,23 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   };
 
   const handleImageSelection = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files ?? []);
 
-    if (!file) {
+    if (files.length === 0) {
       return;
     }
 
-    const nextAttachment = {
-      type: "image" as const,
-      label: "이미지 첨부",
-      value: "source",
-      file,
-    };
+    files.forEach((file) => {
+      addAttachment({
+        type: "image",
+        label: "이미지 첨부",
+        value: `source-${crypto.randomUUID()}`,
+        file,
+      });
+    });
 
-    replaceSingleAttachment(
-      pendingAttachments,
-      removeAttachment,
-      nextAttachment,
-      addAttachment,
-    );
     setDesignContext({
-      sourceImage: file,
+      sourceImage: files[0],
       onePointOffsetX: 0,
       onePointOffsetY: 0,
       ciImage: null,
@@ -260,6 +256,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
               type="file"
               className="hidden"
               accept="image/*"
+              multiple
               onChange={handleImageSelection}
             />
             <Button
