@@ -30,6 +30,11 @@ supabase functions deploy <function-name> --use-api   # 단일 Edge Function을 
 
 - 별도 BFF/서버 서비스 계층 없음. 프론트 API 레이어가 Supabase를 직접 호출.
 
+**이미지 저장소**
+
+- Supabase Storage 사용 금지. 이미지 업로드·저장·CDN은 ImageKit으로 통합한다.
+- 예외가 필요하면 구현 전 사용자 승인과 정책 문서 업데이트가 필요하다.
+
 **타입·매핑**
 
 - UI 타입(화면 모델)과 DTO(RPC 입출력)는 분리. 매핑은 API 계층에서만.

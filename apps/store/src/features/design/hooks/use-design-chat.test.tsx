@@ -157,8 +157,8 @@ describe("useDesignChat", () => {
       accentLayout: null,
     });
     uploadDesignAsset.mockResolvedValue({
-      signedUrl: "https://project.supabase.co/storage/v1/object/sign/ref.png",
-      storagePath: "user-1/ref.png",
+      url: "https://ik.imagekit.io/essesion/design-sessions/ref.png",
+      fileId: "imagekit-file-1",
       hash: "hash-1",
     });
   });
@@ -207,7 +207,7 @@ describe("useDesignChat", () => {
     });
   });
 
-  it("첨부 이미지 파일은 업로드된 signedUrl로 타일 생성에 전달한다", async () => {
+  it("첨부 이미지 파일은 업로드된 ImageKit URL로 타일 생성에 전달한다", async () => {
     const { result } = renderHook(() => useDesignChat());
     const file = new File(["binary"], "reference.png", { type: "image/png" });
 
@@ -227,7 +227,7 @@ describe("useDesignChat", () => {
       expect(callTileGeneration).toHaveBeenCalledWith(
         expect.objectContaining({
           attachedImageUrls: [
-            "https://project.supabase.co/storage/v1/object/sign/ref.png",
+            "https://ik.imagekit.io/essesion/design-sessions/ref.png",
           ],
         }),
       );

@@ -123,7 +123,7 @@ const resolveAttachedImageUrls = async (
         const uploaded = await uploadDesignAsset(attachment.file, {
           kind: "reference",
         });
-        return uploaded.signedUrl;
+        return uploaded.url;
       }
 
       if (attachment.value.startsWith("https://")) {
