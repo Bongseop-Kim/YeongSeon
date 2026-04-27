@@ -5,7 +5,7 @@
 CREATE TABLE public.design_chat_sessions (
   id                  uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  ai_model            text        NOT NULL CHECK (ai_model IN ('openai', 'fal')),
+  ai_model            text        NOT NULL CHECK (ai_model IN ('openai')),
   first_message       text        NOT NULL DEFAULT '',
   last_image_url      text,
   last_image_file_id  text,
@@ -16,8 +16,8 @@ CREATE TABLE public.design_chat_sessions (
   accent_tile_url      text,
   accent_tile_work_id  text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   accent_layout_json   jsonb,
-  pattern_type         text,
-  fabric_type          text,
+  pattern_type         text CHECK (pattern_type IN ('all_over', 'one_point')),
+  fabric_type          text CHECK (fabric_type IN ('yarn_dyed', 'printed')),
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now()
 );

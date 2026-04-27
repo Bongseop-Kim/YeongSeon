@@ -45,7 +45,6 @@ describe("useSessionRestore", () => {
       ],
       generatedImageUrl:
         'url("https://example.com/tie.png") center/cover no-repeat',
-      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "completed",
       repeatTile: null,
@@ -89,7 +88,6 @@ describe("useSessionRestore", () => {
         ],
         generatedImageUrl:
           'url("https://example.com/tie.png") center/cover no-repeat',
-        baseImageWorkId: "work-restore-1",
         resultTags: [],
         generationStatus: "completed",
         repeatTile: null,
@@ -113,7 +111,6 @@ describe("useSessionRestore", () => {
         },
       ],
       generatedImageUrl: null,
-      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
       repeatTile: null,
@@ -151,7 +148,6 @@ describe("useSessionRestore", () => {
         "session-2",
         expect.objectContaining({
           generatedImageUrl: null,
-          baseImageWorkId: null,
           generationStatus: "idle",
         }),
       );
@@ -165,7 +161,6 @@ describe("useSessionRestore", () => {
         pattern: "stripe",
       },
       generatedImageUrl: null,
-      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
       repeatTile: null,

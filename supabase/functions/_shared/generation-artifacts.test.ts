@@ -22,11 +22,11 @@ Deno.test(
     const result = await saveGenerationArtifact(
       {
         workflowId: "workflow-1",
-        phase: "prep",
-        artifactType: "prepared_tile",
-        sourceWorkId: "workflow-1-analysis",
+        phase: "render",
+        artifactType: "repeat_tile",
+        sourceWorkId: "workflow-1-render",
         parentArtifactId: "parent-artifact-1",
-        meta: { repairApplied: true, artifactKind: "prepared_tile" },
+        meta: { artifactKind: "repeat_tile" },
         image: {
           kind: "base64",
           base64: "data:image/png;base64,AAEC",
@@ -63,13 +63,13 @@ Deno.test(
     assertObjectMatch(inserted[0] as Record<string, unknown>, {
       id: "artifact-1",
       workflow_id: "workflow-1",
-      phase: "prep",
-      artifact_type: "prepared_tile",
-      source_work_id: "workflow-1-analysis",
+      phase: "render",
+      artifact_type: "repeat_tile",
+      source_work_id: "workflow-1-render",
       parent_artifact_id: "parent-artifact-1",
       status: "success",
       image_url: "https://ik.example/artifacts/prepared-tile.png",
-      meta: { repairApplied: true, artifactKind: "prepared_tile" },
+      meta: { artifactKind: "repeat_tile" },
     });
   },
 );
@@ -138,8 +138,8 @@ Deno.test(
     const result = await saveGenerationArtifact(
       {
         workflowId: "workflow-3",
-        phase: "prep",
-        artifactType: "prepared_tile",
+        phase: "render",
+        artifactType: "repeat_tile",
         image: {
           kind: "base64",
           base64: "data:image/png;base64,###",
@@ -182,7 +182,7 @@ Deno.test(
     const result = await saveGenerationArtifact(
       {
         workflowId: "workflow-4",
-        phase: "analysis",
+        phase: "render",
         artifactType: "source_input",
         image: {
           kind: "base64",
@@ -219,8 +219,8 @@ Deno.test(
     const result = await saveGenerationArtifact(
       {
         workflowId: "workflow-5",
-        phase: "prep",
-        artifactType: "prepared_tile",
+        phase: "render",
+        artifactType: "repeat_tile",
         image: {
           kind: "base64",
           base64: "AAEC",
@@ -273,7 +273,7 @@ Deno.test(
       mime_type: null,
       file_size_bytes: null,
       status: "partial",
-      meta: { render_backend: "img2img" },
+      meta: { route: "tile_generation" },
     });
 
     assertEquals(result, { error: null });
@@ -285,7 +285,7 @@ Deno.test(
       p_phase: "render",
       p_artifact_type: "final",
       p_source_work_id: "render-1",
-      p_meta: { render_backend: "img2img" },
+      p_meta: { route: "tile_generation" },
     });
   },
 );

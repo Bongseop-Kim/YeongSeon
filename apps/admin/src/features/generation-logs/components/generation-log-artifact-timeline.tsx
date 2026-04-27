@@ -10,32 +10,21 @@ import {
   Tag,
   Typography,
 } from "antd";
-import dayjs from "dayjs";
 import { useGenerationLogArtifactsQuery } from "@/features/generation-logs/api/generation-logs-query";
 import type {
   AdminGenerationArtifactItem,
   AdminGenerationArtifactPhase,
 } from "@/features/generation-logs/types/admin-generation-artifact";
+import { formatDateTimeSeconds } from "@/utils/format-date-time";
 
 const { Text, Title } = Typography;
 
 type PhaseBucket = AdminGenerationArtifactPhase | "unclassified";
 
-const PHASE_ORDER: readonly PhaseBucket[] = [
-  "analysis",
-  "prep",
-  "render",
-  "unclassified",
-];
+const PHASE_ORDER: readonly PhaseBucket[] = ["render", "unclassified"];
 
 function getPhaseLabel(phase: PhaseBucket): string {
-  return phase === "analysis"
-    ? "분석"
-    : phase === "prep"
-      ? "보정"
-      : phase === "render"
-        ? "렌더"
-        : "미분류";
+  return phase === "render" ? "렌더" : "미분류";
 }
 
 function getStatusColor(status: AdminGenerationArtifactItem["status"]): string {
@@ -155,10 +144,7 @@ function ArtifactTimelineEntry({
         )}
 
         <Text type="secondary" style={{ fontSize: 11 }}>
-          생성 시각:{" "}
-          {artifact.createdAt
-            ? dayjs(artifact.createdAt).format("YYYY-MM-DD HH:mm:ss")
-            : "-"}
+          생성 시각: {formatDateTimeSeconds(artifact.createdAt)}
         </Text>
         <Text type="secondary" style={{ fontSize: 11 }}>
           소스: {getArtifactSourceLabel(artifact)}
@@ -200,8 +186,6 @@ export function GenerationLogArtifactTimeline({
 
   const groupedArtifacts = useMemo(() => {
     const grouped: Record<PhaseBucket, AdminGenerationArtifactItem[]> = {
-      analysis: [],
-      prep: [],
       render: [],
       unclassified: [],
     };

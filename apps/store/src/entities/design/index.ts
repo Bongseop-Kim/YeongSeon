@@ -1,18 +1,4 @@
-export { aiDesignApi } from "./api/ai-design-api";
 export { InsufficientTokensError } from "./model/design-errors";
-export { resolveGenerationRoute } from "./api/resolve-generation-route";
-export {
-  buildAnalysisReuseKey,
-  createAnalysisReuseKeyForContext,
-} from "./api/analysis-reuse-key";
-export type {
-  AiDesignRequest,
-  GenerationRoute,
-  GenerationRouteReason,
-  GenerationRouteSignal,
-  SessionMessagePayload,
-} from "./model/ai-design-request";
-export type { AiDesignResponse } from "./model/ai-design-response";
 export {
   DESIGN_TOKEN_BALANCE_QUERY_KEY,
   useDesignTokenBalanceQuery,
@@ -46,6 +32,7 @@ export type {
   AccentLayout,
   FabricType,
   PatternType,
+  SessionMessagePayload,
   TileGenerationPayload,
   TileGenerationResult,
   TileRef,

@@ -211,8 +211,147 @@ COMMENT ON FUNCTION public.admin_update_order_status(uuid, text, text, text, boo
 GRANT EXECUTE ON FUNCTION public.admin_update_order_status(uuid, text, text, text, boolean)
   TO authenticated, service_role;
 
+CREATE OR REPLACE FUNCTION public.admin_get_generation_logs(
+  p_start_date      date,
+  p_end_date        date,
+  p_ai_model        text    DEFAULT null,
+  p_limit           integer DEFAULT 50,
+  p_offset          integer DEFAULT 0,
+  p_id              uuid    DEFAULT null,
+  p_request_type    text    DEFAULT null,
+  p_status          text    DEFAULT null,
+  p_id_search       text    DEFAULT null
+)
+RETURNS TABLE (
+  id                    uuid,
+  workflow_id           text,
+  phase                 text,
+  work_id               text,
+  parent_work_id        text,
+  user_id               uuid,
+  ai_model              text,
+  request_type          text,
+  quality               text,
+  user_message          text,
+  prompt_length         integer,
+  request_attachments   jsonb,
+  design_context        jsonb,
+  normalized_design     jsonb,
+  conversation_turn     integer,
+  has_ci_image          boolean,
+  has_reference_image   boolean,
+  has_previous_image    boolean,
+  generate_image        boolean,
+  detected_design       jsonb,
+  image_prompt          text,
+  ai_message            text,
+  image_generated       boolean,
+  generated_image_url   text,
+  tokens_charged        integer,
+  tokens_refunded       integer,
+  text_latency_ms       integer,
+  image_latency_ms      integer,
+  total_latency_ms      integer,
+  error_type            text,
+  error_message         text,
+  created_at            timestamptz
+)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+begin
+  p_limit := least(greatest(coalesce(p_limit, 50), 0), 500);
+  p_offset := greatest(coalesce(p_offset, 0), 0);
+
+  if not public.is_admin() then
+    raise exception 'Forbidden' using errcode = '42501';
+  end if;
+
+  if p_id_search is not null then
+    return query
+    (
+      select
+        l.id, l.workflow_id, l.phase, l.work_id, l.parent_work_id,
+        l.user_id, l.ai_model, l.request_type, l.quality, l.user_message,
+        l.prompt_length, l.request_attachments, l.design_context,
+        l.normalized_design, l.conversation_turn, l.has_ci_image,
+        l.has_reference_image, l.has_previous_image, l.generate_image,
+        l.detected_design, l.image_prompt, l.ai_message, l.image_generated,
+        l.generated_image_url, l.tokens_charged, l.tokens_refunded,
+        l.text_latency_ms, l.image_latency_ms, l.total_latency_ms,
+        l.error_type, l.error_message, l.created_at
+      from public.ai_generation_logs l
+      where l.workflow_id = p_id_search
+        and (p_ai_model     is null or l.ai_model     = p_ai_model)
+        and (p_id           is null or l.id           = p_id)
+        and (p_request_type is null or l.request_type = p_request_type)
+        and (p_status       is null
+             or (p_status = 'success' and l.error_type is null)
+             or (p_status = 'error'   and l.error_type is not null))
+      union all
+      select
+        l.id, l.workflow_id, l.phase, l.work_id, l.parent_work_id,
+        l.user_id, l.ai_model, l.request_type, l.quality, l.user_message,
+        l.prompt_length, l.request_attachments, l.design_context,
+        l.normalized_design, l.conversation_turn, l.has_ci_image,
+        l.has_reference_image, l.has_previous_image, l.generate_image,
+        l.detected_design, l.image_prompt, l.ai_message, l.image_generated,
+        l.generated_image_url, l.tokens_charged, l.tokens_refunded,
+        l.text_latency_ms, l.image_latency_ms, l.total_latency_ms,
+        l.error_type, l.error_message, l.created_at
+      from public.ai_generation_logs l
+      where l.work_id = p_id_search
+        and l.workflow_id is distinct from p_id_search
+        and (p_ai_model     is null or l.ai_model     = p_ai_model)
+        and (p_id           is null or l.id           = p_id)
+        and (p_request_type is null or l.request_type = p_request_type)
+        and (p_status       is null
+             or (p_status = 'success' and l.error_type is null)
+             or (p_status = 'error'   and l.error_type is not null))
+    )
+    order by created_at desc
+    limit p_limit
+    offset p_offset;
+    return;
+  end if;
+
+  return query
+  select
+    l.id, l.workflow_id, l.phase, l.work_id, l.parent_work_id,
+    l.user_id, l.ai_model, l.request_type, l.quality, l.user_message,
+    l.prompt_length, l.request_attachments, l.design_context,
+    l.normalized_design, l.conversation_turn, l.has_ci_image,
+    l.has_reference_image, l.has_previous_image, l.generate_image,
+    l.detected_design, l.image_prompt, l.ai_message, l.image_generated,
+    l.generated_image_url, l.tokens_charged, l.tokens_refunded,
+    l.text_latency_ms, l.image_latency_ms, l.total_latency_ms,
+    l.error_type, l.error_message, l.created_at
+  from public.ai_generation_logs l
+  where (p_id is not null or (
+      l.created_at >= (p_start_date::timestamp at time zone 'UTC')::timestamptz
+      and l.created_at < ((p_end_date + 1)::timestamp at time zone 'UTC')::timestamptz
+    ))
+    and (p_ai_model      is null or l.ai_model      = p_ai_model)
+    and (p_id            is null or l.id            = p_id)
+    and (p_request_type  is null or l.request_type  = p_request_type)
+    and (p_status        is null
+         or (p_status = 'success' and l.error_type is null)
+         or (p_status = 'error'   and l.error_type is not null))
+  order by l.created_at desc
+  limit p_limit
+  offset p_offset;
+end;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_get_generation_logs(
+  date, date, text, integer, integer, uuid, text, text, text
+) TO authenticated;
+
 CREATE OR REPLACE FUNCTION public.admin_get_generation_log_artifacts(
-  p_workflow_id text
+  p_workflow_id text,
+  p_limit integer DEFAULT 100,
+  p_offset integer DEFAULT 0
 )
 RETURNS TABLE (
   id uuid,
@@ -244,6 +383,14 @@ begin
     raise exception 'p_workflow_id is required';
   end if;
 
+  if p_limit is null or p_limit < 1 or p_limit > 500 then
+    raise exception 'p_limit must be between 1 and 500';
+  end if;
+
+  if p_offset is null or p_offset < 0 then
+    raise exception 'p_offset must be greater than or equal to 0';
+  end if;
+
   RETURN QUERY
   SELECT
     a.id,
@@ -263,11 +410,13 @@ begin
     a.created_at
   FROM public.ai_generation_log_artifacts a
   WHERE a.workflow_id = p_workflow_id
-  ORDER BY a.created_at ASC, a.id ASC;
+  ORDER BY a.created_at ASC, a.id ASC
+  LIMIT p_limit
+  OFFSET p_offset;
 end;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.admin_get_generation_log_artifacts(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_get_generation_log_artifacts(text, integer, integer) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.write_ai_generation_log_artifact(
   p_id uuid,

@@ -8,8 +8,7 @@ import type {
   ModelStats,
   PatternStats,
 } from "@/features/generation-logs/types/admin-generation-log";
-
-// ── helpers ──────────────────────────────────────────────────
+import { isRecord } from "@/utils/type-guards";
 
 const isSafeNumber = (n: number): boolean =>
   Number.isFinite(n) && Math.abs(n) <= Number.MAX_SAFE_INTEGER;
@@ -32,10 +31,6 @@ function toNumber(v: unknown, fallback = 0): number {
   return parsed ?? fallback;
 }
 
-function toNumberOrNull(v: unknown): number | null {
-  return parseNumeric(v);
-}
-
 function toString(v: unknown): string | null {
   return typeof v === "string" ? v : null;
 }
@@ -44,8 +39,6 @@ function toBoolean(v: unknown): boolean {
   return v === true;
 }
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
 const REQUEST_ATTACHMENT_TYPES = [
   "color",
   "pattern",
@@ -64,8 +57,6 @@ function isAllowedAttachmentType(
 >[number]["type"] {
   return typeof value === "string" && REQUEST_ATTACHMENT_TYPE_SET.has(value);
 }
-
-// ── 로그 행 ──────────────────────────────────────────────────
 
 type GenerationLogRow = {
   id: unknown;
@@ -88,19 +79,9 @@ type GenerationLogRow = {
   has_previous_image: unknown;
   ai_message: unknown;
   generate_image: unknown;
-  eligible_for_render?: unknown;
-  missing_requirements?: unknown;
-  eligibility_reason?: unknown;
-  text_prompt?: unknown;
   image_prompt?: unknown;
-  image_edit_prompt?: unknown;
   image_generated: unknown;
   generated_image_url: unknown;
-  pattern_preparation_backend?: unknown;
-  pattern_repair_prompt_kind?: unknown;
-  pattern_repair_applied?: unknown;
-  pattern_repair_reason_codes?: unknown;
-  prep_tokens_charged?: unknown;
   detected_design: unknown;
   tokens_charged: unknown;
   tokens_refunded: unknown;
@@ -112,38 +93,25 @@ type GenerationLogRow = {
   created_at: unknown;
 };
 
-function toRequestType(
-  v: unknown,
-): "analysis" | "prep" | "render_standard" | "render_high" | null {
-  if (
-    v === "analysis" ||
-    v === "prep" ||
-    v === "render_standard" ||
-    v === "render_high"
-  ) {
+function toRequestType(v: unknown): "render_standard" | null {
+  if (v === "render_standard") {
     return v;
   }
   return null;
 }
 
 function toPhase(v: unknown): GenerationLogPhase | undefined {
-  if (v === "analysis" || v === "prep" || v === "render") return v;
+  if (v === "render") return v;
   return undefined;
 }
 
-function toQuality(v: unknown): "standard" | "high" | null {
-  if (v === "standard" || v === "high") return v;
+function toQuality(v: unknown): "standard" | null {
+  if (v === "standard") return v;
   return null;
 }
 
-function toAiModel(v: unknown): "openai" | "fal" {
-  if (v === "openai" || v === "fal") return v;
-  if (v === "gemini") {
-    console.warn(
-      "[toAiModel] Mapping deprecated ai_model='gemini' to 'openai'",
-    );
-    return "openai";
-  }
+function toAiModel(v: unknown): "openai" {
+  if (v === "openai") return v;
   console.warn(`[toAiModel] Invalid ai_model value: ${String(v)}`);
   return "openai";
 }
@@ -197,40 +165,8 @@ export function toAdminGenerationLogItem(
   const normalizedDesign = isRecord(row.normalized_design)
     ? row.normalized_design
     : null;
-  const eligibleForRender =
-    typeof row.eligible_for_render === "boolean"
-      ? row.eligible_for_render
-      : null;
-  const missingRequirements = Array.isArray(row.missing_requirements)
-    ? row.missing_requirements
-    : null;
-  const eligibilityReason = toString(row.eligibility_reason);
-  const textPrompt = toString(row.text_prompt);
   const imagePrompt = toString(row.image_prompt);
-  const imageEditPrompt = toString(row.image_edit_prompt);
   const errorMessage = toString(row.error_message);
-  const patternPreparationBackend =
-    row.pattern_preparation_backend === "local" ||
-    row.pattern_preparation_backend === "openai_repair"
-      ? row.pattern_preparation_backend
-      : null;
-  const patternRepairPromptKind =
-    row.pattern_repair_prompt_kind === "all_over_tile" ||
-    row.pattern_repair_prompt_kind === "one_point_motif"
-      ? row.pattern_repair_prompt_kind
-      : null;
-  const patternRepairApplied =
-    typeof row.pattern_repair_applied === "boolean"
-      ? row.pattern_repair_applied
-      : null;
-  const patternRepairReasonCodes = Array.isArray(
-    row.pattern_repair_reason_codes,
-  )
-    ? row.pattern_repair_reason_codes.filter(
-        (value): value is string => typeof value === "string",
-      )
-    : null;
-  const prepTokensCharged = toNumberOrNull(row.prep_tokens_charged);
 
   return {
     id: toString(row.id) ?? "",
@@ -254,11 +190,6 @@ export function toAdminGenerationLogItem(
       typeof row.generate_image === "boolean" ? row.generate_image : null,
     imageGenerated: toBoolean(row.image_generated),
     generatedImageUrl: toString(row.generated_image_url),
-    ...(patternPreparationBackend ? { patternPreparationBackend } : {}),
-    ...(patternRepairPromptKind ? { patternRepairPromptKind } : {}),
-    ...(patternRepairApplied !== null ? { patternRepairApplied } : {}),
-    ...(patternRepairReasonCodes ? { patternRepairReasonCodes } : {}),
-    ...(prepTokensCharged !== null ? { prepTokensCharged } : {}),
     detectedDesign: isRecord(row.detected_design)
       ? (row.detected_design as Record<string, unknown>)
       : null,
@@ -276,17 +207,10 @@ export function toAdminGenerationLogItem(
     ...(phase ? { phase } : {}),
     ...(parentWorkId !== null ? { parentWorkId } : {}),
     ...(normalizedDesign ? { normalizedDesign } : {}),
-    ...(eligibleForRender !== null ? { eligibleForRender } : {}),
-    ...(missingRequirements ? { missingRequirements } : {}),
-    ...(eligibilityReason ? { eligibilityReason } : {}),
-    ...(textPrompt ? { textPrompt } : {}),
     ...(imagePrompt ? { imagePrompt } : {}),
-    ...(imageEditPrompt ? { imageEditPrompt } : {}),
     ...(errorMessage ? { errorMessage } : {}),
   };
 }
-
-// ── 통계 ─────────────────────────────────────────────────────
 
 export function toGenerationStatsData(raw: unknown): GenerationStatsData {
   if (!isRecord(raw)) {

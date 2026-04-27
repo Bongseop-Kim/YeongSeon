@@ -131,7 +131,7 @@ const TokenPurchasePage = () => {
                     4
                   </span>
                   <span>
-                    Fal 이미지 생성 —{" "}
+                    OpenAI 이미지 생성 —{" "}
                     <span className="font-semibold text-foreground">
                       5 tokens
                     </span>

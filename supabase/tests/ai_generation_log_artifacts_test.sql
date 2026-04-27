@@ -14,46 +14,6 @@ BEGIN
     workflow_id,
     phase,
     work_id,
-    user_id,
-    ai_model,
-    request_type,
-    user_message,
-    image_generated
-  ) VALUES (
-    'workflow-1',
-    'analysis',
-    'workflow-1-analysis',
-    v_user,
-    'fal',
-    'analysis',
-    '기준 로그',
-    false
-  );
-
-  INSERT INTO public.ai_generation_logs (
-    workflow_id,
-    phase,
-    work_id,
-    user_id,
-    ai_model,
-    request_type,
-    user_message,
-    image_generated
-  ) VALUES (
-    'workflow-1',
-    'prep',
-    'workflow-1-prep',
-    v_user,
-    'openai',
-    'prep',
-    'prep 로그',
-    false
-  );
-
-  INSERT INTO public.ai_generation_logs (
-    workflow_id,
-    phase,
-    work_id,
     parent_work_id,
     user_id,
     ai_model,
@@ -64,9 +24,9 @@ BEGIN
     'workflow-1',
     'render',
     'workflow-1-render',
-    'workflow-1-prep',
+    null,
     v_user,
-    'fal',
+    'openai',
     'render_standard',
     'render 로그',
     true
@@ -77,18 +37,18 @@ BEGIN
   PERFORM public.write_ai_generation_log_artifact(
     gen_random_uuid(),
     'workflow-1',
-    'prep',
-    'prepared_tile',
-    'workflow-1-analysis',
+    'render',
+    'repeat_tile',
+    'workflow-1-render',
     null,
     'imagekit',
-    'https://ik.example/artifacts/prepared-tile.png',
+    'https://ik.example/artifacts/repeat-tile.png',
     1024,
     1024,
     'image/png',
     12345,
     'success',
-    '{"repairApplied": true, "artifactKind": "prepared_tile"}'::jsonb
+    '{"artifactKind": "repeat_tile"}'::jsonb
   );
 
   PERFORM public.write_ai_generation_log_artifact(
@@ -126,17 +86,17 @@ SELECT is(
     FROM public.admin_get_generation_log_artifacts('workflow-1')
   ),
   '2',
-  '관리자 RPC가 같은 workflow의 prep/render artifact를 함께 반환한다'
+  '관리자 RPC가 같은 workflow의 render artifact를 함께 반환한다'
 );
 
 SELECT is(
   (
     SELECT artifact_type
     FROM public.admin_get_generation_log_artifacts('workflow-1')
-    WHERE artifact_type = 'prepared_tile'
+    WHERE artifact_type = 'repeat_tile'
     LIMIT 1
   ),
-  'prepared_tile',
+  'repeat_tile',
   '관리자 RPC가 artifact_type을 반환한다'
 );
 
@@ -144,7 +104,7 @@ SELECT is(
   (
     SELECT status
     FROM public.admin_get_generation_log_artifacts('workflow-1')
-    WHERE artifact_type = 'prepared_tile'
+    WHERE artifact_type = 'repeat_tile'
     LIMIT 1
   ),
   'success',
@@ -155,10 +115,10 @@ SELECT is(
   (
     SELECT meta
     FROM public.admin_get_generation_log_artifacts('workflow-1')
-    WHERE artifact_type = 'prepared_tile'
+    WHERE artifact_type = 'repeat_tile'
     LIMIT 1
   ),
-  '{"repairApplied": true, "artifactKind": "prepared_tile"}'::jsonb,
+  '{"artifactKind": "repeat_tile"}'::jsonb,
   '관리자 RPC가 meta jsonb를 그대로 반환한다'
 );
 
@@ -186,7 +146,7 @@ SELECT is(
     WHERE workflow_id = 'workflow-1'
     LIMIT 1
   ),
-  'prepared_tile',
+  'repeat_tile',
   'artifact_type이 정확히 저장된다'
 );
 

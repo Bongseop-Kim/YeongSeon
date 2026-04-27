@@ -1,4 +1,5 @@
 import type { AdminGenerationArtifactItem } from "@/features/generation-logs/types/admin-generation-artifact";
+import { isRecord } from "@/utils/type-guards";
 
 function toStringOrNull(v: unknown): string | null {
   return typeof v === "string" ? v : null;
@@ -36,13 +37,8 @@ const toNumberOrNull = (v: unknown): number | null => {
   return null;
 };
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
-
-function toArtifactPhase(
-  v: unknown,
-): "analysis" | "prep" | "render" | undefined {
-  if (v === "analysis" || v === "prep" || v === "render") {
+function toArtifactPhase(v: unknown): "render" | undefined {
+  if (v === "render") {
     return v;
   }
   return undefined;

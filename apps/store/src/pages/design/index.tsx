@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageSeo } from "@/shared/ui/page-seo";
 import {
@@ -13,21 +15,49 @@ import {
   usePendingGeneration,
   useSessionRestore,
 } from "@/features/design";
+import type { Attachment } from "@/features/design";
 import { cn } from "@/shared/lib/utils";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { AUTH_REDIRECT_STORAGE_KEY } from "@/shared/lib/auth-redirect";
+import { useAuthStore } from "@/shared/store/auth";
+import { useModalStore } from "@/shared/store/modal";
+
+const LOGIN_REQUIRED_MESSAGE =
+  "로그인 후 이용 가능합니다. 로그인으로 이동하시겠습니까?";
 
 function DesignPage() {
+  const navigate = useNavigate();
   const { isDesktop } = useBreakpoint();
+  const user = useAuthStore((state) => state.user);
+  const confirm = useModalStore((state) => state.confirm);
   const { showOnboarding, completeOnboarding } = useOnboarding();
   const { isHistoryOpen, openHistory, closeHistory, restoreSession } =
     useSessionRestore();
   const { hasPendingResult, markPending, clearPending } =
     usePendingGeneration();
-  const { sendMessage, requestRender, requestInpaint, regenerate } =
-    useDesignChat({
-      onGenerationStart: markPending,
-      onGenerationEnd: clearPending,
-    });
+  const { sendMessage, regenerate } = useDesignChat({
+    onGenerationStart: markPending,
+    onGenerationEnd: clearPending,
+  });
+  const sendMessageWithAuthCheck = useCallback(
+    (text: string, attachments: Attachment[]) => {
+      if (user) {
+        sendMessage(text, attachments);
+        return;
+      }
+
+      confirm(
+        LOGIN_REQUIRED_MESSAGE,
+        () => {
+          sessionStorage.setItem(AUTH_REDIRECT_STORAGE_KEY, ROUTES.DESIGN);
+          navigate(ROUTES.LOGIN, { state: { from: ROUTES.DESIGN } });
+        },
+        { confirmText: "로그인", cancelText: "취소" },
+      );
+    },
+    [confirm, navigate, sendMessage, user],
+  );
 
   return (
     <MainLayout className="h-full">
@@ -64,9 +94,7 @@ function DesignPage() {
           >
             <ChatPanel
               className="h-full"
-              sendMessage={sendMessage}
-              requestRender={requestRender}
-              requestInpaint={requestInpaint}
+              sendMessage={sendMessageWithAuthCheck}
               onOpenHistory={openHistory}
             />
           </div>

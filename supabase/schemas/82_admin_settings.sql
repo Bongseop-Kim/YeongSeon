@@ -40,7 +40,5 @@ CREATE POLICY "Admins can update settings"
 INSERT INTO public.admin_settings (key, value)
 VALUES
   ('default_courier_company', ''),
-  ('design_token_cost_fal_analysis', '5'),
-  ('design_token_cost_fal_render_standard', '5'),
-  ('design_token_cost_fal_render_high', '5')
+  ('design_token_cost_tile_render_standard', '5')
 ON CONFLICT (key) DO NOTHING;

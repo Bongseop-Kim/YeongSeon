@@ -4,7 +4,7 @@ import {
   type ImageKitUploadResult,
 } from "@/functions/_shared/imagekit-upload.ts";
 
-export type GenerationArtifactPhase = "analysis" | "prep" | "render";
+export type GenerationArtifactPhase = "render";
 
 export type GenerationArtifactImageInput =
   | {

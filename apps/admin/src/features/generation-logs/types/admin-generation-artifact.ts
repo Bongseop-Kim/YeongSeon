@@ -1,4 +1,4 @@
-export type AdminGenerationArtifactPhase = "analysis" | "prep" | "render";
+export type AdminGenerationArtifactPhase = "render";
 
 export type AdminGenerationArtifactStatus = "success" | "partial" | "failed";
 

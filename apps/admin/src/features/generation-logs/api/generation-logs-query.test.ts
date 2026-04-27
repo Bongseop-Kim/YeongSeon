@@ -79,13 +79,13 @@ describe("useGenerationLogsQuery — new filter params", () => {
       dateRange: [dayjs("2026-04-17"), dayjs("2026-04-23")],
       aiModel: null,
       page: 1,
-      requestType: "analysis",
+      requestType: "render_standard",
       status: null,
       idSearch: null,
     });
 
     const options = useQueryMock.mock.calls[0]?.[0];
-    expect(options.queryKey).toContain("analysis");
+    expect(options.queryKey).toContain("render_standard");
   });
 
   it("status가 queryKey에 포함된다", () => {

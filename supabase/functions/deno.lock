@@ -373,18 +373,6 @@
           "jsr:@supabase/supabase-js@2.99.3"
         ]
       },
-      "generate-fal-api": {
-        "dependencies": [
-          "jsr:@supabase/functions-js@*",
-          "jsr:@supabase/supabase-js@2.99.3"
-        ]
-      },
-      "generate-open-api": {
-        "dependencies": [
-          "jsr:@supabase/functions-js@*",
-          "jsr:@supabase/supabase-js@2.99.3"
-        ]
-      },
       "generate-tile": {
         "dependencies": [
           "jsr:@supabase/functions-js@*",
@@ -398,18 +386,6 @@
         ]
       },
       "notify-claim": {
-        "dependencies": [
-          "jsr:@supabase/functions-js@*",
-          "jsr:@supabase/supabase-js@2.99.3"
-        ]
-      },
-      "prepare-pattern-composite": {
-        "dependencies": [
-          "jsr:@supabase/functions-js@*",
-          "jsr:@supabase/supabase-js@2.99.3"
-        ]
-      },
-      "prepare-pattern-source-openai": {
         "dependencies": [
           "jsr:@supabase/functions-js@*",
           "jsr:@supabase/supabase-js@2.99.3"

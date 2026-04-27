@@ -197,52 +197,69 @@ Deno.serve(async (req) => {
       const primaryResult =
         reuseRepeatTile && accentResult ? accentResult : repeatResult;
 
-      await Promise.all([
-        logGeneration(adminClient, {
-          ...renderLogFields,
-          work_id: primaryResult.workId,
-          generate_image: true,
-          image_generated: true,
-          generated_image_url: primaryResult.url,
-          tokens_charged: tokensCharged,
-          tokens_refunded: tokensRefunded,
-          repeat_tile_url: repeatResult.url,
-          repeat_tile_work_id: repeatResult.workId,
-          accent_tile_url: accentResult?.url ?? null,
-          accent_tile_work_id: accentResult?.workId ?? null,
-          pattern_type: analysis.patternType,
-          fabric_type: fabricType,
-          tile_role: reuseRepeatTile ? "accent" : "repeat",
-          paired_tile_work_id: reuseRepeatTile
-            ? repeatResult.workId
-            : (accentResult?.workId ?? null),
-          accent_layout_json: accentLayoutRecord,
-        }),
-        saveDesignSession(authClient, {
-          sessionId: body.sessionId,
-          aiModel: "openai",
-          firstMessage: body.firstMessage,
-          lastImageUrl: repeatResult.url,
-          lastImageFileId: null,
-          lastImageWorkId: repeatResult.workId,
-          repeatTileUrl: repeatResult.url,
-          repeatTileWorkId: repeatResult.workId,
-          accentTileUrl: accentResult?.url ?? null,
-          accentTileWorkId: accentResult?.workId ?? null,
-          accentLayout: accentLayoutRecord,
-          patternType: analysis.patternType,
-          fabricType,
-          messages: buildSessionMessages(body.allMessages, {
-            id: crypto.randomUUID(),
-            role: "ai",
-            content: TILE_GENERATION_AI_MESSAGE,
-            image_url: repeatResult.url,
-            image_file_id: null,
-            attachments: null,
-            sequence_number: body.allMessages.length,
-          } satisfies SessionMessage),
-        }),
-      ]);
+      const [generationLogResult, sessionSaveResult] = await Promise.allSettled(
+        [
+          logGeneration(adminClient, {
+            ...renderLogFields,
+            work_id: primaryResult.workId,
+            generate_image: true,
+            image_generated: true,
+            generated_image_url: primaryResult.url,
+            tokens_charged: tokensCharged,
+            tokens_refunded: tokensRefunded,
+            repeat_tile_url: repeatResult.url,
+            repeat_tile_work_id: repeatResult.workId,
+            accent_tile_url: accentResult?.url ?? null,
+            accent_tile_work_id: accentResult?.workId ?? null,
+            pattern_type: analysis.patternType,
+            fabric_type: fabricType,
+            tile_role: reuseRepeatTile ? "accent" : "repeat",
+            paired_tile_work_id: reuseRepeatTile
+              ? repeatResult.workId
+              : (accentResult?.workId ?? null),
+            accent_layout_json: accentLayoutRecord,
+          }),
+          saveDesignSession(authClient, {
+            sessionId: body.sessionId,
+            aiModel: "openai",
+            firstMessage: body.firstMessage,
+            lastImageUrl: repeatResult.url,
+            lastImageFileId: null,
+            lastImageWorkId: repeatResult.workId,
+            repeatTileUrl: repeatResult.url,
+            repeatTileWorkId: repeatResult.workId,
+            accentTileUrl: accentResult?.url ?? null,
+            accentTileWorkId: accentResult?.workId ?? null,
+            accentLayout: accentLayoutRecord,
+            patternType: analysis.patternType,
+            fabricType,
+            messages: buildSessionMessages(body.allMessages, {
+              id: crypto.randomUUID(),
+              role: "ai",
+              content: TILE_GENERATION_AI_MESSAGE,
+              image_url: repeatResult.url,
+              image_file_id: null,
+              attachments: null,
+              sequence_number: body.allMessages.length,
+            } satisfies SessionMessage),
+          }),
+        ],
+      );
+
+      if (generationLogResult.status === "rejected") {
+        console.error("generate-tile logGeneration failed:", {
+          workId: primaryResult.workId,
+          error: generationLogResult.reason,
+        });
+      }
+
+      if (sessionSaveResult.status === "rejected") {
+        console.error("generate-tile saveDesignSession failed:", {
+          workId: primaryResult.workId,
+          error: sessionSaveResult.reason,
+        });
+        return jsonResponse(500, { error: "persistence_failed" });
+      }
 
       const result: TileGenerationResponse = {
         repeatTileUrl: repeatResult.url,
@@ -261,13 +278,13 @@ Deno.serve(async (req) => {
         amount: tokensCharged,
         workId: `${renderWorkId}_tile_failed_refund`,
       });
-
       if (refunded === "succeeded") {
-        tokensRefunded += tokensCharged;
+        tokensRefunded = tokensCharged;
       }
 
       await logGeneration(adminClient, {
         ...baseLogFields,
+        work_id: renderWorkId,
         generate_image: true,
         image_generated: false,
         tokens_charged: tokensCharged,

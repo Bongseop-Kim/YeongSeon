@@ -6,7 +6,7 @@ import type {
 
 export interface DesignSession {
   id: string;
-  aiModel: "openai" | "fal";
+  aiModel: "openai";
   firstMessage: string;
   lastImageUrl: string | null;
   lastImageFileId: string | null;

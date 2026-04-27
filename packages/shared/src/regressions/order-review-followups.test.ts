@@ -60,12 +60,26 @@ describe("review follow-up regressions", () => {
       "admin_product_list_view",
       "admin_quote_request_detail_view",
     ];
-    const migrationSql = normalize(readMigrationFiles().join("\n"));
+    const migrationSql = normalize(
+      readMigrationFiles().join("\n"),
+    ).toLowerCase();
 
     for (const viewName of reportedViewNames) {
-      expect(migrationSql).toContain(
+      const hasAlterSecurityInvoker = migrationSql.includes(
         `alter view public.${viewName} set (security_invoker = true);`,
       );
+      const hasCreateSecurityInvoker = migrationSql
+        .split(";")
+        .some(
+          (statement) =>
+            statement.includes(`create or replace view public.${viewName}`) &&
+            statement.includes("with (security_invoker = true)"),
+        );
+
+      expect(
+        hasAlterSecurityInvoker || hasCreateSecurityInvoker,
+        `${viewName} must set security_invoker=true`,
+      ).toBe(true);
     }
   });
 

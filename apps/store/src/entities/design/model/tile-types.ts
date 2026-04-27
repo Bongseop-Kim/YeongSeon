@@ -1,4 +1,4 @@
-import type { SessionMessagePayload } from "@/entities/design/model/ai-design-request";
+import type { Attachment } from "@/entities/design/model/ai-design-types";
 
 export type PatternType = "all_over" | "one_point";
 export type FabricType = "yarn_dyed" | "printed";
@@ -13,8 +13,18 @@ export interface AccentLayout {
 
 export type ConversationTurn = {
   role: "user" | "assistant";
-  content: SessionMessagePayload["content"];
+  content: string;
 };
+
+export interface SessionMessagePayload {
+  id: string;
+  role: "user" | "ai";
+  content: string;
+  imageUrl: string | null;
+  imageFileId: string | null;
+  attachments?: Attachment[];
+  sequenceNumber: number;
+}
 
 export interface TileGenerationPayload {
   route: "tile_generation" | "tile_edit";

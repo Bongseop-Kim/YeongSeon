@@ -67,7 +67,6 @@ export function useSessionRestore(
     restoreSessionState(pendingSession.id, {
       ...sessionMessages,
       designContext,
-      baseImageWorkId: pendingSession.lastImageWorkId,
       repeatTile,
       accentTile,
       accentLayout: pendingSession.accentLayout,

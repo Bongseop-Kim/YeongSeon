@@ -26,9 +26,7 @@ BEGIN
 
   -- 이 테스트는 계산 단순화를 위해 admin_settings 비용을 5로 덮어쓴다.
   -- 20260511000003_add_design_token_cost_keys.sql 기본값(1/5/12)과는 다르다.
-  PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_analysis', '5');
   PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_render_standard', '5');
-  PERFORM test_helpers.ensure_admin_setting('design_token_cost_openai_render_high', '5');
 END $setup$;
 
 -- service_role 컨텍스트 설정 (트랜잭션 내내 유지, 소유권 검증 우회)
@@ -56,7 +54,7 @@ SELECT lives_ok(
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000001'::uuid,
       'openai',
-      'analysis',
+      'render_standard',
       'standard',
       'work-test-0001'
     )
@@ -89,7 +87,7 @@ SELECT is(
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000001'::uuid,
-    'openai', 'analysis', 'standard', 'work-test-0001'
+    'openai', 'render_standard', 'standard', 'work-test-0001'
   ))->>'cost'),
   '5',
   '이미 처리된 work_id 재호출 시 원래 cost를 반환한다 (멱등성)'
@@ -113,7 +111,7 @@ SELECT throws_ok(
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000001'::uuid,
       'openai',
-      'analysis',
+      'render_standard',
       'standard',
       'work-unauthorized-0001'
     )
@@ -129,7 +127,7 @@ SELECT test_helpers.set_service_role();
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000002'::uuid,
-    'openai', 'analysis'
+    'openai', 'render_standard'
   ))->>'error'),
   'insufficient_tokens',
   '잔액 부족 시 error=insufficient_tokens 반환'
@@ -139,7 +137,7 @@ SELECT is(
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000002'::uuid,
-    'openai', 'render_high', 'high'
+    'openai', 'render_standard', 'standard'
   ))->>'success'),
   'false',
   '잔액 부족 시 success=false 반환'
@@ -151,7 +149,7 @@ SELECT throws_ok(
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000001'::uuid,
       'invalid_model',
-      'analysis'
+      'render_standard'
     )
   $$,
   'P0001', NULL,
@@ -175,12 +173,12 @@ SELECT throws_ok(
   $$
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000001'::uuid,
-      'fal',
+      'openai',
       'prep'
     )
   $$,
   'P0001', NULL,
-  'prep request_type은 openai 이외 모델에서 예외 발생'
+  'prep request_type은 예외 발생'
 );
 
 -- ── 테스트 10b: 유효하지 않은 quality → 예외 ──────────────────
@@ -189,7 +187,7 @@ SELECT throws_ok(
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000001'::uuid,
       'openai',
-      'analysis',
+      'render_standard',
       'invalid',
       'work-invalid-quality-0001'
     )
@@ -207,7 +205,7 @@ SELECT throws_ok(
       'dd000001-0000-0000-0000-000000000001'::uuid,
       5,
       'openai',
-      'analysis',
+      'render_standard',
       'refund-unauthorized-0001'
     )
   $$,
@@ -224,7 +222,7 @@ SELECT throws_ok(
       'dd000001-0000-0000-0000-000000000001'::uuid,
       5,
       'openai',
-      'analysis',
+      'render_standard',
       '   '
     )
   $$,
@@ -347,7 +345,7 @@ END $expired_only_setup$;
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000004'::uuid,
-    'openai', 'analysis'
+    'openai', 'render_standard'
   ))->>'error'),
   'insufficient_tokens',
   '만료 토큰만 있는 사용자: use_design_tokens → insufficient_tokens'
@@ -356,7 +354,7 @@ SELECT is(
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000006'::uuid,
-    'openai', 'analysis'
+    'openai', 'render_standard'
   ))->>'error'),
   'insufficient_tokens',
   '만료된 bonus 토큰만 있는 사용자도 use_design_tokens에서 제외된다'
@@ -398,7 +396,7 @@ SELECT ok(
 SELECT is(
   (SELECT (public.use_design_tokens(
     'dd000001-0000-0000-0000-000000000005'::uuid,
-    'openai', 'render_high', 'high', 'work-legacy-null-expiry-001'
+    'openai', 'render_standard', 'standard', 'work-legacy-null-expiry-001'
   ))->>'success'),
   'true',
   'source_order_id가 있고 expires_at이 NULL인 paid 토큰도 use_design_tokens가 사용한다'

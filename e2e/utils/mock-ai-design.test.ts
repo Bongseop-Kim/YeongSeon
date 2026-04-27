@@ -18,7 +18,7 @@ async function fulfillBody(
   let fulfilled: FulfillPayload | null = null;
   const page = {
     route: vi.fn((url, nextHandler) => {
-      expect(url).toBe("**/functions/v1/generate-open-api");
+      expect(url).toBe("**/functions/v1/generate-tile");
       handler = nextHandler;
     }),
   } as unknown as Parameters<typeof installMockAiDesign>[0];
@@ -42,47 +42,46 @@ async function fulfillBody(
 }
 
 describe("installMockAiDesign", () => {
-  it("design mock은 OpenAI endpoint만 라우팅한다", async () => {
+  it("design mock은 generate-tile endpoint만 라우팅한다", async () => {
     const route = vi.fn();
     const page = {
       route,
     } as unknown as Parameters<typeof installMockAiDesign>[0];
 
-    await installMockAiDesign(page, {
-      type: "text",
-      aiMessage: "ok",
-    });
+    await installMockAiDesign(page, { type: "text" });
 
     expect(route).toHaveBeenCalledTimes(1);
     expect(route).toHaveBeenCalledWith(
-      "**/functions/v1/generate-open-api",
+      "**/functions/v1/generate-tile",
       expect.any(Function),
     );
   });
 
-  it("text 응답 body를 fulfill한다", async () => {
-    await expect(
-      fulfillBody({ type: "text", aiMessage: "ok", remainingTokens: 7 }),
-    ).resolves.toMatchObject({
-      aiMessage: "ok",
-      imageUrl: null,
-      remainingTokens: 7,
+  it("tile 응답 body를 fulfill한다", async () => {
+    await expect(fulfillBody({ type: "text" })).resolves.toMatchObject({
+      repeatTileUrl: expect.stringMatching(/^data:image\/png/),
+      repeatTileWorkId: "mock-repeat-work",
+      accentTileUrl: null,
+      accentTileWorkId: null,
+      patternType: "all_over",
+      fabricType: "printed",
     });
   });
 
-  it("image 응답 body에 기본 imageUrl을 포함한다", async () => {
-    const body = await fulfillBody({ type: "image", aiMessage: "ok" });
+  it("image 응답 body에 기본 repeatTileUrl을 포함한다", async () => {
+    const body = await fulfillBody({ type: "image" });
 
-    expect(body.imageUrl).toEqual(expect.stringMatching(/^data:image\/png/));
-    expect(body.aiMessage).toEqual("ok");
+    expect(body.repeatTileUrl).toEqual(
+      expect.stringMatching(/^data:image\/png/),
+    );
   });
 
-  it("image-missing 응답 body는 imageUrl을 null로 둔다", async () => {
-    await expect(
-      fulfillBody({ type: "image-missing", aiMessage: "missing" }),
-    ).resolves.toMatchObject({
-      aiMessage: "missing",
-      imageUrl: null,
-    });
+  it("image-missing 응답 body도 유효한 tile 응답을 반환한다", async () => {
+    await expect(fulfillBody({ type: "image-missing" })).resolves.toMatchObject(
+      {
+        repeatTileUrl: expect.stringMatching(/^data:image\/png/),
+        repeatTileWorkId: "mock-repeat-work",
+      },
+    );
   });
 });

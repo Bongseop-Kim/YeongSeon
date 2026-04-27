@@ -134,10 +134,7 @@ export function GenerationLogTable({
           onChange={onAiModelChange}
           allowClear
           style={{ width: 140 }}
-          options={[
-            { value: "openai", label: "OpenAI" },
-            { value: "fal", label: "Fal.ai" },
-          ]}
+          options={[{ value: "openai", label: "OpenAI" }]}
         />
       </Space>
 

@@ -41,7 +41,6 @@ export interface RestoredDesignSessionState {
   messages: Message[];
   designContext?: Partial<DesignContext>;
   generatedImageUrl: string | null;
-  baseImageWorkId: string | null;
   resultTags: string[];
   generationStatus: GenerationStatus;
   repeatTile: TileRef | null;
@@ -130,7 +129,6 @@ export function toRestoredDesignSessionState(
     messages: restoredMessages,
     ...(designContext ? { designContext } : {}),
     generatedImageUrl,
-    baseImageWorkId: null,
     resultTags: [],
     generationStatus: generatedImageUrl ? "completed" : "idle",
     // Tile metadata is merged from the session row in use-session-restore.ts.

@@ -1,8 +1,8 @@
 import { uploadImageToImageKit } from "@/functions/_shared/imagekit-upload.ts";
 import {
-  buildAllowedInpaintBaseImageHosts,
-  validateRemoteInpaintBaseImageUrl,
-} from "@/functions/_shared/generate-fal-api-utils.ts";
+  buildAllowedReferenceImageHosts,
+  validateRemoteReferenceImageUrl,
+} from "@/functions/_shared/reference-image-validation.ts";
 
 export interface GeneratedTile {
   url: string;
@@ -30,7 +30,7 @@ const getOptionalEnv = (name: string): string | undefined => {
 };
 
 const ALLOWED_REFERENCE_IMAGE_HOSTS: readonly string[] =
-  buildAllowedInpaintBaseImageHosts({
+  buildAllowedReferenceImageHosts({
     supabaseUrl: getOptionalEnv("SUPABASE_URL"),
     imagekitUrlEndpoint:
       getOptionalEnv("IMAGEKIT_URL_ENDPOINT") ??
@@ -41,7 +41,7 @@ export const validateReferenceImageUrl = (
   value: string,
   allowedHosts?: readonly string[],
 ): string | null =>
-  validateRemoteInpaintBaseImageUrl(
+  validateRemoteReferenceImageUrl(
     value,
     allowedHosts ?? ALLOWED_REFERENCE_IMAGE_HOSTS,
   );

@@ -4,10 +4,8 @@ import { toast } from "sonner";
 import { isActiveGeneration } from "@/entities/design";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui-extended/button";
-import {
-  getRawImageUrlFromPreviewBackground,
-  useDesignChatStore,
-} from "@/features/design/store/design-chat-store";
+import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import { getRawImageUrlFromPreviewBackground } from "@/shared/lib/to-preview-background";
 import { cn } from "@/shared/lib/utils";
 
 const SHADOW_TOP_OFFSET = -57;

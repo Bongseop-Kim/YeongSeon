@@ -53,7 +53,7 @@ describe("getGenerationLogArtifacts", () => {
         {
           id: "artifact-1",
           workflow_id: "workflow-1",
-          phase: "analysis",
+          phase: "render",
           artifact_type: "rendered_preview",
           source_work_id: null,
           parent_artifact_id: null,

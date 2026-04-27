@@ -136,12 +136,7 @@ export default function GenerationLogList() {
             onChange={handleRequestTypeChange}
             allowClear
             style={{ width: 150 }}
-            options={[
-              { value: "analysis", label: "분석" },
-              { value: "prep", label: "보정" },
-              { value: "render_standard", label: "렌더(표준)" },
-              { value: "render_high", label: "렌더(고품질)" },
-            ]}
+            options={[{ value: "render_standard", label: "렌더(표준)" }]}
           />
           <Select
             placeholder="모든 상태"

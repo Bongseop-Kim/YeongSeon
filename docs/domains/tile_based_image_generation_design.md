@@ -10,7 +10,7 @@
 현재 이미지 생성 시스템의 두 가지 핵심 품질 문제:
 
 1. **OpenAI route**: 넥타이 전체 이미지를 한 번에 생성 → 타일 개념 없음, 패턴 반복 시 이질감
-2. **FAL route**: 이미지 생성 후 Edge Function에서 픽셀 레벨 합성 → 합성 단계에서 품질 손실
+2. **legacy provider route**: 이미지 생성 후 Edge Function에서 픽셀 레벨 합성 → 합성 단계에서 품질 손실
 
 ## 해결 접근
 
@@ -262,14 +262,14 @@ const PRINTED_KEYWORDS = [
 
 ### 기존 route 전면 폐기
 
-| 기존 route       | 변경                                    |
-| ---------------- | --------------------------------------- |
-| `openai`         | 폐기 → 신규 파이프라인으로 통합         |
-| `fal_tiling`     | 폐기 → 신규 파이프라인으로 통합         |
-| `fal_edit`       | 폐기 → 타일 편집 플로우로 통합          |
-| `fal_controlnet` | 폐기 → 신규 파이프라인으로 통합         |
-| `fal_inpaint`    | 폐기 → 타일 단위 inpaint로 통합         |
-| `gemini`         | 분석 단계에서 완전 제거 (OpenAI로 통일) |
+| 기존 route        | 변경                                    |
+| ----------------- | --------------------------------------- |
+| `openai`          | 폐기 → 신규 파이프라인으로 통합         |
+| `tile_generation` | 폐기 → 신규 파이프라인으로 통합         |
+| `tile_edit`       | 폐기 → 타일 편집 플로우로 통합          |
+| `tile_generation` | 폐기 → 신규 파이프라인으로 통합         |
+| `tile_edit`       | 폐기 → 타일 단위 inpaint로 통합         |
+| `gemini`          | 분석 단계에서 완전 제거 (OpenAI로 통일) |
 
 ### 신규 route와 Edge Function 대응
 
@@ -332,7 +332,6 @@ fabric_type          TEXT
 ```
 work_id              이 로그에서 생성된 타일의 고유 ID
 parent_work_id       직전 편집 타일의 work_id (히스토리 체인)
-base_image_work_id   최초 원본 타일의 work_id (루트 추적)
 tile_role            "repeat" | "accent" — 이 로그가 어느 타일을 생성했는지
 paired_tile_work_id  짝 타일의 work_id (원포인트만, NULL 허용)
 fabric_type          이 타일이 어떤 원단 타입으로 생성되었는지
@@ -386,7 +385,7 @@ fabricType: "yarn_dyed" | "printed"
 
 - `generate-google-api` — Gemini 분석 포함 전면 폐기
 - `prepare-pattern-composite` — 폐기
-- `generate-fal-api` — 폐기
+- `generate-tile` — 폐기
 - `generate-open-api` — 폐기
 
 ### 신규: `generate-tile`
@@ -915,6 +914,6 @@ function buildAccentPrompt(
 - **seamless 품질 검증**: 자동 검증 단계 불필요. POC에서 프롬프트 설계만으로 품질 확보 검증 완료. offset test, boundary MSE, seam line detection 등 자동 검증 로직은 도입하지 않음.
 - **이미지 후처리**: edge feathering, boundary inpaint, texture resynthesis, 경계 블렌딩 등 어떠한 이미지 후처리도 v1·v2에서 도입하지 않음. 양산 원단으로 확대 사용이 결정되는 시점(=본 문서의 전제를 벗어나는 시점)에만 재검토. 이전 문서 개정의 "v2 이후 재검토 가능" 단서는 철회됨.
 - **accent 배경 일치**: 프롬프트로만 해결. 편차 발생 시 프롬프트 어휘 개선으로 대응 (위 "이미지 후처리" 항목의 특수 사례).
-- **모델 선택**: `gpt-image-2` + `quality: "low"`로 고정. mini/1.5/기타 fal 경유 등은 비용·품질 동시 역전 상황이 아니므로 선택지 아님. gpt-image-3 이상 차세대 모델 출시 시에만 재검토.
+- **모델 선택**: `gpt-image-2` + `quality: "low"`로 고정. mini/1.5/기타 openai 경유 등은 비용·품질 동시 역전 상황이 아니므로 선택지 아님. gpt-image-3 이상 차세대 모델 출시 시에만 재검토.
 - **해상도**: `size: "1024x1024"` 고정. gpt-image-2 API 제약(변 16배수, 총 픽셀 ≥655,360)상 더 작은 해상도 생성으로의 비용 절감은 불가. 프론트 표시 크기 축소가 더 큰 비용 효과를 가진다면 그쪽으로 대응.
 - **OpenAI API 실패 처리**: 표준 재시도(exponential backoff, 최대 3회) + 최종 실패 시 사용자에게 에러 메시지.

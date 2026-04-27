@@ -1,5 +1,6 @@
 ---
 domain: design
+status: implemented
 last-verified: 2026-04-27
 ---
 
@@ -8,29 +9,16 @@ last-verified: 2026-04-27
 > 토큰 구매/환불과 AI 생성 두 흐름을 모두 커버합니다.
 > E2E 테스트 자동 생성의 입력으로 사용됩니다.
 
-## 생성 라우팅 골든셋
+## 타일 기반 QA 기준
 
-> `fal_tiling`은 반복 패턴의 **최종 렌더 라우트**를 의미한다.
-> 반복 타일 준비 자체는 사전 단계 [`prepare-pattern-composite`](../../supabase/functions/prepare-pattern-composite/index.ts)가 수행하며, 준비된 타일이 없으면 실제 호출은 `openai`로 폴백할 수 있다. 준비된 타일이 없을 경우 [`prepare-pattern-composite`](../../supabase/functions/prepare-pattern-composite/index.ts)가 `openai`로 폴백합니다.
+> 기본 경로는 단일 Edge Function [`generate-tile`](../../supabase/functions/generate-tile/index.ts)이다.
+> 이미지 생성 모델은 `gpt-image-2` + `quality: "low"`로 단일화되어 있다.
 
-| 프롬프트                                                                                         | 기대 라우팅  |
-| ------------------------------------------------------------------------------------------------ | ------------ |
-| 첨부한 이미지를 올 패턴으로 넥타이 디자인해줘                                                    | `fal_tiling` |
-| 첨부한 이미지를 우측 하단에 위치 시켜줘                                                          | `fal_edit`   |
-| 첨부한 이미지의 올 패턴으로 뿌리고 넥타이 원단 배경 색은 녹색으로 해줘                           | `fal_tiling` |
-| 첨부한 이미지 참고해서 비슷하게 만들어줘                                                         | `openai`     |
-| 스트라이프 배경에 작은 새 올 패턴 넥타이 디자인해줘                                              | `openai`     |
-| 포인트 위치가 너무 높아 아래로 내려줘 50px 정도 아니면 적당히 내려봐                             | `fal_edit`   |
-| 패턴의 사이즈가 너무 커 50% 정도 사이즈로 줄여줘 한 줄에 패턴이 20개 정도 들어올 정도의 사이즈로 | `fal_edit`   |
-| 포인트에 위치한 내 로고가 첨부한 이미지랑 일치하지가 않아. 다시 수정해줘                         | `fal_edit`   |
-
-## 수동 라우팅 확인
-
-1. CI 이미지를 첨부하고 `올 패턴` 요청 시 `prepare-pattern-composite` 이후 최종 렌더 라우트가 `fal_tiling`인지 확인한다.
-2. 생성 결과가 있는 상태에서 `아래로 내려줘` 요청 시 `fal_edit`로 라우팅되는지 확인한다.
-3. `참고해서 비슷하게` 요청 시 `openai`로 유지되는지 확인한다.
-4. `fal_tiling`으로 판정되더라도 준비된 반복 타일이 없으면 실제 호출이 `openai`로 폴백하는지 확인한다.
-5. base image 없이 수정 요청 시 생성 호출 대신 UI 안내 메시지로 차단되는지 확인한다.
+1. 신규 디자인 생성은 `generate-tile`만 호출하는지 확인한다.
+2. `all_over` 요청은 repeat tile 결과(`repeat_tile_url`, `repeat_tile_work_id`)를 저장하는지 확인한다.
+3. `one_point` 요청은 repeat tile과 accent tile 결과를 함께 저장하는지 확인한다.
+4. 이미지 생성 실패 시 해당 `work_id` 기준으로 차감 토큰이 한 번만 복원되는지 확인한다.
+5. 타일 결과는 프론트 캔버스 합성에 사용되고, Edge Function은 최종 넥타이 합성 이미지를 만들지 않는지 확인한다.
 
 ---
 

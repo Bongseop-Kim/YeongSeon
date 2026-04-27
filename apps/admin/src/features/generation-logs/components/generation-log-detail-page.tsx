@@ -22,8 +22,88 @@ import {
 import { GenerationLogArtifactTimeline } from "@/features/generation-logs/components/generation-log-artifact-timeline";
 import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
+import { formatDateTimeSeconds } from "@/utils/format-date-time";
 
 const { Text } = Typography;
+
+type WorkflowStepListVariant = "chip" | "card";
+
+interface WorkflowStepListProps {
+  workflowLogs: AdminGenerationLogItem[];
+  activeLogId: string;
+  onSelectLog: (logId: string) => void;
+  variant: WorkflowStepListVariant;
+}
+
+function WorkflowStepList({
+  workflowLogs,
+  activeLogId,
+  onSelectLog,
+  variant,
+}: WorkflowStepListProps) {
+  if (workflowLogs.length <= 1) {
+    return null;
+  }
+
+  if (variant === "chip") {
+    return (
+      <Space wrap size={8} style={{ marginTop: 10 }}>
+        {workflowLogs.map((workflowLog) => (
+          <Button
+            key={workflowLog.id}
+            type={workflowLog.id === activeLogId ? "primary" : "default"}
+            size="small"
+            onClick={() => onSelectLog(workflowLog.id)}
+          >
+            {requestTypeLabel(workflowLog.requestType)} · {workflowLog.aiModel}
+          </Button>
+        ))}
+      </Space>
+    );
+  }
+
+  return (
+    <Space direction="vertical" size="small" style={{ width: "100%" }}>
+      {workflowLogs.map((workflowLog) => {
+        const isActive = workflowLog.id === activeLogId;
+        return (
+          <button
+            key={workflowLog.id}
+            type="button"
+            onClick={() => onSelectLog(workflowLog.id)}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              borderRadius: 8,
+              border: isActive ? "1px solid #1677ff" : "1px solid #f0f0f0",
+              background: isActive ? "#f0f7ff" : "#fff",
+              padding: "12px 14px",
+              cursor: "pointer",
+            }}
+          >
+            <Space wrap size={8}>
+              <Tag color={modelColor(workflowLog.aiModel)}>
+                {workflowLog.aiModel}
+              </Tag>
+              <Tag>{requestTypeLabel(workflowLog.requestType)}</Tag>
+              {workflowLog.errorType ? (
+                <Tag color="error">{workflowLog.errorType}</Tag>
+              ) : (
+                <Tag color="success">success</Tag>
+              )}
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {formatDateTimeSeconds(workflowLog.createdAt)}
+              </Text>
+              <Text code style={{ fontSize: 11 }}>
+                {workflowLog.workId}
+              </Text>
+            </Space>
+          </button>
+        );
+      })}
+    </Space>
+  );
+}
 
 function StickyBar({
   log,
@@ -103,24 +183,12 @@ function StickyBar({
           </Text>
         )}
       </div>
-      {workflowLogs.length > 1 ? (
-        <Space wrap size={8} style={{ marginTop: 10 }}>
-          {workflowLogs.map((workflowLog) => {
-            const selected = workflowLog.id === activeLogId;
-            const label = `${requestTypeLabel(workflowLog.requestType)} · ${workflowLog.aiModel}`;
-            return (
-              <Button
-                key={workflowLog.id}
-                type={selected ? "primary" : "default"}
-                size="small"
-                onClick={() => onSelectLog(workflowLog.id)}
-              >
-                {label}
-              </Button>
-            );
-          })}
-        </Space>
-      ) : null}
+      <WorkflowStepList
+        workflowLogs={workflowLogs}
+        activeLogId={activeLogId}
+        onSelectLog={onSelectLog}
+        variant="chip"
+      />
     </div>
   );
 }
@@ -234,15 +302,9 @@ function InputImageSection({ log }: { log: AdminGenerationLogItem }) {
   const inputArtifact = useMemo(
     () =>
       artifacts.find((artifact) =>
-        [
-          "source_input",
-          "source_original",
-          "prepared_source",
-          "fal_input_preview",
-          "inpaint_base",
-          "upscaled_reference",
-          "control_image",
-        ].includes(artifact.artifactType),
+        ["source_input", "repeat_tile", "accent_tile"].includes(
+          artifact.artifactType,
+        ),
       ) ?? null,
     [artifacts],
   );
@@ -359,22 +421,9 @@ function PromptSection({ log }: { log: AdminGenerationLogItem }) {
       <Row gutter={16}>
         <Col xs={24} md={12}>
           <ExpandableText label="사용자 프롬프트" content={log.userMessage} />
-          {log.textPrompt && (
-            <div style={{ marginTop: 10 }}>
-              <ExpandableText label="text_prompt" content={log.textPrompt} />
-            </div>
-          )}
           {log.imagePrompt && (
             <div style={{ marginTop: 10 }}>
               <ExpandableText label="image_prompt" content={log.imagePrompt} />
-            </div>
-          )}
-          {log.imageEditPrompt && (
-            <div style={{ marginTop: 10 }}>
-              <ExpandableText
-                label="image_edit_prompt"
-                content={log.imageEditPrompt}
-              />
             </div>
           )}
         </Col>
@@ -390,12 +439,7 @@ function PromptSection({ log }: { log: AdminGenerationLogItem }) {
 
 function DesignContextSection({ log }: { log: AdminGenerationLogItem }) {
   const hasContent =
-    log.designContext ||
-    log.detectedDesign ||
-    log.normalizedDesign ||
-    (Array.isArray(log.missingRequirements) &&
-      log.missingRequirements.length > 0) ||
-    log.eligibilityReason;
+    log.designContext || log.detectedDesign || log.normalizedDesign;
 
   if (!hasContent) return null;
 
@@ -421,24 +465,6 @@ function DesignContextSection({ log }: { log: AdminGenerationLogItem }) {
             ))}
         </Descriptions>
       )}
-      {log.eligibilityReason && (
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>
-            렌더 판정 사유
-          </div>
-          <div
-            style={{
-              background: "#fafafa",
-              borderRadius: 6,
-              padding: "8px 10px",
-              fontSize: 12,
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {log.eligibilityReason}
-          </div>
-        </div>
-      )}
       {log.detectedDesign && (
         <div style={{ marginBottom: 8 }}>
           <div style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>
@@ -458,9 +484,7 @@ function DesignContextSection({ log }: { log: AdminGenerationLogItem }) {
 
 function getWorkflowPhaseRank(log: AdminGenerationLogItem): number {
   if (log.phase === "render") return 0;
-  if (log.phase === "prep") return 1;
-  if (log.phase === "analysis") return 2;
-  return 3;
+  return 1;
 }
 
 function WorkflowLogsSection({
@@ -478,45 +502,12 @@ function WorkflowLogsSection({
 
   return (
     <Card title="워크플로우 단계" size="small" style={{ marginBottom: 16 }}>
-      <Space direction="vertical" size="small" style={{ width: "100%" }}>
-        {workflowLogs.map((workflowLog) => {
-          const isActive = workflowLog.id === activeLogId;
-          return (
-            <button
-              key={workflowLog.id}
-              type="button"
-              onClick={() => onSelectLog(workflowLog.id)}
-              style={{
-                width: "100%",
-                textAlign: "left",
-                borderRadius: 8,
-                border: isActive ? "1px solid #1677ff" : "1px solid #f0f0f0",
-                background: isActive ? "#f0f7ff" : "#fff",
-                padding: "12px 14px",
-                cursor: "pointer",
-              }}
-            >
-              <Space wrap size={8}>
-                <Tag color={modelColor(workflowLog.aiModel)}>
-                  {workflowLog.aiModel}
-                </Tag>
-                <Tag>{requestTypeLabel(workflowLog.requestType)}</Tag>
-                {workflowLog.errorType ? (
-                  <Tag color="error">{workflowLog.errorType}</Tag>
-                ) : (
-                  <Tag color="success">success</Tag>
-                )}
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {dayjs(workflowLog.createdAt).format("YYYY-MM-DD HH:mm:ss")}
-                </Text>
-                <Text code style={{ fontSize: 11 }}>
-                  {workflowLog.workId}
-                </Text>
-              </Space>
-            </button>
-          );
-        })}
-      </Space>
+      <WorkflowStepList
+        workflowLogs={workflowLogs}
+        activeLogId={activeLogId}
+        onSelectLog={onSelectLog}
+        variant="card"
+      />
     </Card>
   );
 }

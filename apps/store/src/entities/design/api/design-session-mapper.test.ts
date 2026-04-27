@@ -89,15 +89,15 @@ describe("toDesignSession", () => {
     });
   });
 
-  it("fal 세션도 DesignSession UI 타입으로 변환한다", () => {
+  it("openai 세션도 DesignSession UI 타입으로 변환한다", () => {
     expect(
       toDesignSession(
         createSessionRow({
           id: "session-3",
           user_id: "user-1",
-          ai_model: "fal",
+          ai_model: "openai",
           first_message: "CI 패턴으로 올오버 생성",
-          last_image_url: "https://example.com/fal.png",
+          last_image_url: "https://example.com/openai.png",
           last_image_file_id: "file-3",
           last_image_work_id: "work-3",
           image_count: 1,
@@ -107,7 +107,7 @@ describe("toDesignSession", () => {
       ),
     ).toMatchObject({
       id: "session-3",
-      aiModel: "fal",
+      aiModel: "openai",
       firstMessage: "CI 패턴으로 올오버 생성",
     });
   });

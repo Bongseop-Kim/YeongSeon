@@ -43,10 +43,7 @@ export interface DesignSessionMessageRow {
   created_at: string;
 }
 
-const AI_MODEL_SET: ReadonlySet<DesignSession["aiModel"]> = new Set([
-  "openai",
-  "fal",
-]);
+const AI_MODEL_SET: ReadonlySet<DesignSession["aiModel"]> = new Set(["openai"]);
 const MESSAGE_ROLE_SET: ReadonlySet<DesignSessionMessage["role"]> = new Set([
   "user",
   "ai",
