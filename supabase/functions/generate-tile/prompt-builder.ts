@@ -1,4 +1,9 @@
-import type { AccentLayout, FabricType, TileLayout } from "./types.ts";
+import type {
+  AccentLayout,
+  FabricType,
+  ReferenceImageUsage,
+  TileLayout,
+} from "./types.ts";
 import {
   ACCENT_IMAGE_TEMPLATE,
   ACCENT_TEXT_TEMPLATE,
@@ -35,6 +40,24 @@ function selectRepeatTemplate(layout: TileLayout): string {
   return Q_DIFFERENT_MOTIF_TEMPLATE;
 }
 
+function buildReferenceInstruction(
+  usage: ReferenceImageUsage,
+  referenceImageCount: number,
+): string {
+  if (referenceImageCount <= 0 || usage === "none") return "";
+  if (usage === "single_motif") {
+    return "Reference image rule (critical):\n- Use Image 1 as the motif reference.\n- Reproduce the main object from Image 1 as the repeated motif, simplifying only as needed for clean tie fabric rendering.\n\n";
+  }
+  if (usage === "composite_motif") {
+    const end = Math.min(referenceImageCount, 5);
+    return `Reference image rule (critical):\n- Combine Images 1-${end} into one unified motif.\n- The repeated motif must look like a single designed emblem, not separate pasted images.\n\n`;
+  }
+  if (usage === "multiple_motifs") {
+    return "Reference image rule (critical):\n- Use Image 1 as MOTIF_A.\n- Use Image 2 as MOTIF_B.\n- Keep the two motifs visually distinct and alternate them according to the placement rule.\n\n";
+  }
+  return "Reference image rule (critical):\n- Use Image 1 as the repeat-pattern motif reference.\n- Reserve Image 2 for the one-point accent when an accent tile is generated.\n\n";
+}
+
 function resolveMotifColors(
   motif: TileLayout["motifs"][number] | { color?: string | null },
 ): [string, string] {
@@ -51,10 +74,15 @@ function resolveMotifColors(
 export function buildRepeatPrompt(
   layout: TileLayout,
   fabricType: FabricType,
+  referenceImageUsage: ReferenceImageUsage = "none",
+  referenceImageCount = 0,
 ): string {
   const firstMotif = layout.motifs[0] ?? { name: "abstract motif" };
   const [colorA, colorB] = resolveMotifColors(firstMotif);
-  return selectRepeatTemplate(layout)
+  return (
+    buildReferenceInstruction(referenceImageUsage, referenceImageCount) +
+    selectRepeatTemplate(layout)
+  )
     .replace(/{FABRIC_BLOCK}/g, makeFabricBlock(fabricType, true))
     .replace(/{BG}/g, layout.backgroundColor)
     .replace(/{MOTIF}/g, firstMotif.name)

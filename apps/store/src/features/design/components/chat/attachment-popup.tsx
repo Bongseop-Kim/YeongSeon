@@ -99,12 +99,16 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       return;
     }
 
-    if (selectedColorValues.length >= 2) {
-      return;
+    if (selectedColorValues.length >= 1) {
+      removeAttachmentsByFilter(
+        pendingAttachments,
+        removeAttachment,
+        (attachment) => attachment.type === "color",
+      );
     }
 
     addAttachment({ type: "color", label, value });
-    setDesignContext({ colors: [...selectedColorValues, value] });
+    setDesignContext({ colors: [value] });
   };
 
   const handlePatternSelect = (label: string, value: PatternOption) => {
@@ -174,12 +178,12 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
         <section className="space-y-2">
           <div className="flex items-center justify-between">
             <FieldTitle>색상</FieldTitle>
-            <Badge variant="outline">{selectedColorValues.length}/2</Badge>
+            <Badge variant="outline">{selectedColorValues.length}/1</Badge>
           </div>
           <div className="flex flex-wrap gap-2">
             {COLOR_OPTIONS.map((option) => {
               const isSelected = selectedColorValues.includes(option.value);
-              const isDisabled = !isSelected && selectedColorValues.length >= 2;
+              const isDisabled = false;
 
               return (
                 <button

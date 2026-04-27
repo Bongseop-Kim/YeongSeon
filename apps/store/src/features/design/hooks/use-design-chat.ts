@@ -248,6 +248,7 @@ export function useDesignChat(
         route,
         userMessage: input.userText,
         uiFabricType,
+        selectedColors: state.designContext.colors,
         previousFabricType: state.fabricType,
         previousRepeatTile: state.repeatTile,
         previousAccentTile: state.accentTile,

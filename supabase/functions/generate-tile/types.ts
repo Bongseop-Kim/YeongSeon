@@ -6,6 +6,12 @@ export type TileStructure = "H" | "F" | "Q";
 export type TileVariation = "rotation" | "color" | "different_motif" | null;
 export type EditTarget = "repeat" | "accent" | "both" | "new";
 export type ObjectSource = "text" | "image" | "both";
+export type ReferenceImageUsage =
+  | "none"
+  | "single_motif"
+  | "composite_motif"
+  | "multiple_motifs"
+  | "repeat_and_accent";
 export type { AttachmentType };
 
 export interface Motif {
@@ -33,6 +39,7 @@ export interface AnalysisOutput {
   patternType: PatternType;
   editTarget: EditTarget;
   fabricTypeHint: FabricType | null;
+  referenceImageUsage: ReferenceImageUsage;
   tileLayout: TileLayout;
   accentLayout: AccentLayout | null;
 }
@@ -41,6 +48,7 @@ export interface TileGenerationRequest {
   route: "tile_generation" | "tile_edit";
   userMessage: string;
   uiFabricType: FabricType | null;
+  selectedColors?: string[];
   previousFabricType: FabricType | null;
   previousRepeatTileUrl: string | null;
   previousRepeatTileWorkId: string | null;

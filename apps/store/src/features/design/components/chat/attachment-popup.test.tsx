@@ -10,7 +10,7 @@ const { addAttachment, removeAttachment, setDesignContext, onClose, state } =
     onClose: vi.fn(),
     state: {
       designContext: {
-        colors: [],
+        colors: [] as string[],
         pattern: null,
         fabricMethod: "yarn-dyed" as const,
         sourceImage: null,
@@ -55,6 +55,45 @@ describe("AttachmentPopup", () => {
     setDesignContext.mockReset();
     onClose.mockReset();
     state.pendingAttachments = [];
+    state.designContext.colors = [];
+  });
+
+  it("색상은 한 개만 선택하며 새 색상 선택 시 기존 색상을 교체한다", () => {
+    state.pendingAttachments = [
+      {
+        type: "color",
+        label: "네이비",
+        value: "#1a2c5b",
+      },
+    ];
+    state.designContext.colors = ["#1a2c5b"];
+
+    render(<AttachmentPopup onClose={onClose} />);
+
+    const nextColorButton = screen
+      .getAllByRole("button")
+      .find(
+        (button) =>
+          button.getAttribute("aria-label") !== null &&
+          button.getAttribute("aria-label") !== "네이비",
+      );
+
+    if (!nextColorButton) {
+      throw new Error("next color button not found");
+    }
+
+    const nextColor = nextColorButton.getAttribute("aria-label");
+    fireEvent.click(nextColorButton);
+
+    expect(removeAttachment).toHaveBeenCalledWith(0);
+    expect(addAttachment).toHaveBeenCalledWith({
+      type: "color",
+      label: nextColor,
+      value: expect.any(String),
+    });
+    expect(setDesignContext).toHaveBeenCalledWith({
+      colors: [expect.any(String)],
+    });
   });
 
   it("이미지 업로드는 선택한 이미지들을 attachment로 추가하고 첫 이미지를 sourceImage 컨텍스트로 설정한다", () => {

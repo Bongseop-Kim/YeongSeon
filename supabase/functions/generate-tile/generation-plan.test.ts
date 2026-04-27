@@ -1,6 +1,7 @@
 import { assertEquals } from "jsr:@std/assert";
 import {
   resolveAccentReferenceImageUrls,
+  resolveRepeatReferenceImageUrls,
   shouldFallbackToPreviousAccentLayout,
   shouldReuseRepeatTile,
 } from "./generation-plan.ts";
@@ -29,6 +30,7 @@ const baseAnalysis: AnalysisOutput = {
   patternType: "one_point",
   editTarget: "accent",
   fabricTypeHint: null,
+  referenceImageUsage: "none",
   tileLayout: {
     structure: "F",
     variation: null,
@@ -47,6 +49,48 @@ Deno.test(
   "shouldReuseRepeatTile preserves repeat for accent-only one-point edits",
   () => {
     assertEquals(shouldReuseRepeatTile(baseAnalysis, baseRequest), true);
+  },
+);
+
+Deno.test(
+  "resolveRepeatReferenceImageUrls uses first two images for separate motifs",
+  () => {
+    assertEquals(
+      resolveRepeatReferenceImageUrls(
+        { ...baseAnalysis, referenceImageUsage: "multiple_motifs" },
+        {
+          ...baseRequest,
+          attachedImageUrls: [
+            "https://ik.imagekit.io/app/motif-1.png",
+            "https://ik.imagekit.io/app/motif-2.png",
+            "https://ik.imagekit.io/app/motif-3.png",
+          ],
+        },
+      ),
+      [
+        "https://ik.imagekit.io/app/motif-1.png",
+        "https://ik.imagekit.io/app/motif-2.png",
+      ],
+    );
+  },
+);
+
+Deno.test(
+  "resolveRepeatReferenceImageUrls uses first image for repeat_and_accent",
+  () => {
+    assertEquals(
+      resolveRepeatReferenceImageUrls(
+        { ...baseAnalysis, referenceImageUsage: "repeat_and_accent" },
+        {
+          ...baseRequest,
+          attachedImageUrls: [
+            "https://ik.imagekit.io/app/repeat.png",
+            "https://ik.imagekit.io/app/accent.png",
+          ],
+        },
+      ),
+      ["https://ik.imagekit.io/app/repeat.png"],
+    );
   },
 );
 

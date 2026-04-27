@@ -18,6 +18,7 @@ const payload: TileGenerationPayload = {
   route: "tile_generation",
   userMessage: "새 디자인",
   uiFabricType: "printed",
+  selectedColors: [],
   previousFabricType: null,
   previousRepeatTile: null,
   previousAccentTile: null,

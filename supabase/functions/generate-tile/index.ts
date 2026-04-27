@@ -23,6 +23,7 @@ import { resolveFabricType } from "./fabric-type-resolver.ts";
 import { generateTileImage } from "./image-generator.ts";
 import {
   resolveAccentReferenceImageUrls,
+  resolveRepeatReferenceImageUrls,
   shouldFallbackToPreviousAccentLayout,
   shouldReuseRepeatTile,
 } from "./generation-plan.ts";
@@ -144,11 +145,23 @@ Deno.serve(async (req) => {
       if (shouldFallbackToPreviousAccentLayout(analysis, body)) {
         analysis.accentLayout = body.previousAccentLayoutJson;
       }
+      if (body.selectedColors?.[0]) {
+        analysis.tileLayout.backgroundColor = body.selectedColors[0];
+      }
 
       const reuseRepeatTile = shouldReuseRepeatTile(analysis, body);
+      const repeatReferenceImageUrls = resolveRepeatReferenceImageUrls(
+        analysis,
+        body,
+      );
       const repeatPrompt = reuseRepeatTile
         ? null
-        : buildRepeatPrompt(analysis.tileLayout, fabricType);
+        : buildRepeatPrompt(
+            analysis.tileLayout,
+            fabricType,
+            analysis.referenceImageUsage,
+            repeatReferenceImageUrls.length,
+          );
       const accentBuilt =
         analysis.patternType === "one_point" && analysis.accentLayout
           ? buildAccentPrompt(
@@ -197,7 +210,7 @@ Deno.serve(async (req) => {
           ? Promise.resolve(reusableRepeatTile)
           : generateTileImage(
               repeatPrompt as string,
-              body.attachedImageUrls,
+              repeatReferenceImageUrls,
               renderWorkId,
             ),
         accentBuilt

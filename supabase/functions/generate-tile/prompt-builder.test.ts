@@ -81,6 +81,67 @@ Deno.test("Q-different_motif: 두 모티프 치환", () => {
 });
 
 Deno.test(
+  "reference single motif: 첨부 이미지 1개를 반복 모티프로 지시한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "F",
+        variation: null,
+        motifs: [{ name: "reference motif", color: null, colors: null }],
+        backgroundColor: "white",
+      },
+      "printed",
+      "single_motif",
+      1,
+    );
+
+    assertStringIncludes(prompt, "Use Image 1 as the motif reference");
+  },
+);
+
+Deno.test(
+  "reference composite motif: 여러 첨부 이미지를 하나의 모티프로 조합하도록 지시한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "F",
+        variation: null,
+        motifs: [{ name: "combined motif", color: null, colors: null }],
+        backgroundColor: "white",
+      },
+      "printed",
+      "composite_motif",
+      2,
+    );
+
+    assertStringIncludes(prompt, "Combine Images 1-2 into one unified motif");
+  },
+);
+
+Deno.test(
+  "reference multiple motifs: 첨부 이미지 두 개를 MOTIF_A/MOTIF_B로 지시한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "Q",
+        variation: "different_motif",
+        motifs: [
+          { name: "reference motif A", color: null, colors: null },
+          { name: "reference motif B", color: null, colors: null },
+        ],
+        backgroundColor: "white",
+      },
+      "printed",
+      "multiple_motifs",
+      2,
+    );
+
+    assertStringIncludes(prompt, "Use Image 1 as MOTIF_A");
+    assertStringIncludes(prompt, "Use Image 2 as MOTIF_B");
+  },
+);
+
+Deno.test(
   "Q: variation이 누락되어도 different motif placeholder를 남기지 않는다",
   () => {
     const prompt = buildRepeatPrompt(
@@ -108,7 +169,7 @@ Deno.test("accent text: seamless suffix 없음, 오브젝트 설명 포함", () 
     },
     "navy blue",
     "yarn_dyed",
-    null,
+    [],
   );
   assertStringIncludes(prompt, "a gold anchor");
   assertStringIncludes(prompt, "navy blue");
@@ -119,8 +180,8 @@ Deno.test("accent text: seamless suffix 없음, 오브젝트 설명 포함", () 
   assertStringIncludes(prompt, "45%");
 });
 
-Deno.test("accent image: referenceImageUrl 전달", () => {
-  const { referenceImageUrl } = buildAccentPrompt(
+Deno.test("accent image: referenceImageUrls 전달", () => {
+  const { referenceImageUrls } = buildAccentPrompt(
     {
       objectDescription: "the attached logo",
       objectSource: "image",
@@ -129,9 +190,9 @@ Deno.test("accent image: referenceImageUrl 전달", () => {
     },
     "white",
     "printed",
-    "https://example.com/logo.png",
+    ["https://example.com/logo.png"],
   );
-  assertStringIncludes(referenceImageUrl ?? "", "example.com");
+  assertStringIncludes(referenceImageUrls[0] ?? "", "example.com");
 });
 
 Deno.test("accent small size -> 30%", () => {
@@ -144,7 +205,7 @@ Deno.test("accent small size -> 30%", () => {
     },
     "red",
     "printed",
-    null,
+    [],
   );
   assertStringIncludes(prompt, "30%");
 });

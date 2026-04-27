@@ -66,6 +66,9 @@ export function resolveAccentReferenceImageUrls(
   const validAttached = request.attachedImageUrls.filter((url) =>
     validateReferenceImageUrl(url),
   );
+  if (analysis.referenceImageUsage === "repeat_and_accent") {
+    return validAttached.slice(1, 2);
+  }
   if (validAttached.length > 0) return validAttached;
 
   const latestUserImageUrl = findLatestUserImageUrl(request.allMessages);
@@ -79,4 +82,22 @@ export function resolveAccentReferenceImageUrls(
   }
 
   return [];
+}
+
+export function resolveRepeatReferenceImageUrls(
+  analysis: AnalysisOutput,
+  request: TileGenerationRequest,
+): string[] {
+  const validAttached = request.attachedImageUrls.filter((url) =>
+    validateReferenceImageUrl(url),
+  );
+
+  if (analysis.referenceImageUsage === "none") return [];
+  if (analysis.referenceImageUsage === "multiple_motifs") {
+    return validAttached.slice(0, 2);
+  }
+  if (analysis.referenceImageUsage === "repeat_and_accent") {
+    return validAttached.slice(0, 1);
+  }
+  return validAttached;
 }

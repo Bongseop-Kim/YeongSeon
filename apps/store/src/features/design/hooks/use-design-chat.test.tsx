@@ -186,6 +186,7 @@ describe("useDesignChat", () => {
           route: "tile_generation",
           userMessage: "새 디자인",
           uiFabricType: "printed",
+          selectedColors: ["navy"],
           sessionId: "uuid-1",
           workflowId: "uuid-1",
         }),
