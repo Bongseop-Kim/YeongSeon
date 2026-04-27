@@ -135,28 +135,30 @@ export function referenceFileName(blob: Blob): string {
 
 export async function generateTileImage(
   prompt: string,
-  referenceImageUrl: string | null,
+  referenceImageUrls: string[],
   workId = crypto.randomUUID(),
 ): Promise<GeneratedTile> {
   if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not set");
 
   let b64: string;
 
-  if (referenceImageUrl) {
-    const trustedReferenceImageUrl =
-      validateReferenceImageUrl(referenceImageUrl);
-    if (!trustedReferenceImageUrl) {
-      throw new Error("Invalid reference image URL");
-    }
+  if (referenceImageUrls.length > 0) {
+    const trustedUrls = referenceImageUrls.map((url) => {
+      const trusted = validateReferenceImageUrl(url);
+      if (!trusted) throw new Error("Invalid reference image URL");
+      return trusted;
+    });
 
-    const imageBlob = await fetchReferenceImage(trustedReferenceImageUrl);
+    const imageBlobs = await Promise.all(trustedUrls.map(fetchReferenceImage));
 
     const form = new FormData();
     for (const [key, val] of Object.entries(OPENAI_IMAGE_PARAMS)) {
       form.append(key, String(val));
     }
     form.append("prompt", prompt);
-    form.append("image", imageBlob, referenceFileName(imageBlob));
+    for (const blob of imageBlobs) {
+      form.append("image", blob, referenceFileName(blob));
+    }
 
     const editsResponse = await fetch(
       "https://api.openai.com/v1/images/edits",

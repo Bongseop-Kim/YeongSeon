@@ -68,8 +68,8 @@ export function buildAccentPrompt(
   accentLayout: AccentLayout,
   backgroundColor: string,
   fabricType: FabricType,
-  attachedImageUrl: string | null,
-): { prompt: string; referenceImageUrl?: string } {
+  attachedImageUrls: string[],
+): { prompt: string; referenceImageUrls: string[] } {
   const isImageBased = accentLayout.objectSource !== "text";
   const fabric = makeFabricBlock(fabricType, false);
   const sizeRatio = SIZE_RATIO_MAP[accentLayout.size ?? "medium"];
@@ -96,7 +96,6 @@ export function buildAccentPrompt(
 
   return {
     prompt: template,
-    referenceImageUrl:
-      isImageBased && attachedImageUrl ? attachedImageUrl : undefined,
+    referenceImageUrls: isImageBased ? attachedImageUrls : [],
   };
 }

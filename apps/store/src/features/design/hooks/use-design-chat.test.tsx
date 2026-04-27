@@ -225,8 +225,9 @@ describe("useDesignChat", () => {
       });
       expect(callTileGeneration).toHaveBeenCalledWith(
         expect.objectContaining({
-          attachedImageUrl:
+          attachedImageUrls: [
             "https://project.supabase.co/storage/v1/object/sign/ref.png",
+          ],
         }),
       );
     });

@@ -51,34 +51,32 @@ function findLatestUserImageUrl(
   return null;
 }
 
-export function resolveAccentReferenceImageUrl(
+export function resolveAccentReferenceImageUrls(
   analysis: AnalysisOutput,
   request: TileGenerationRequest,
-): string | null {
+): string[] {
   if (
     analysis.patternType !== "one_point" ||
     analysis.accentLayout === null ||
     analysis.accentLayout.objectSource === "text"
   ) {
-    return null;
+    return [];
   }
 
-  if (
-    request.attachedImageUrl &&
-    validateReferenceImageUrl(request.attachedImageUrl)
-  ) {
-    return request.attachedImageUrl;
-  }
+  const validAttached = request.attachedImageUrls.filter((url) =>
+    validateReferenceImageUrl(url),
+  );
+  if (validAttached.length > 0) return validAttached;
 
   const latestUserImageUrl = findLatestUserImageUrl(request.allMessages);
-  if (latestUserImageUrl) return latestUserImageUrl;
+  if (latestUserImageUrl) return [latestUserImageUrl];
 
   if (
     request.previousAccentTileUrl &&
     validateReferenceImageUrl(request.previousAccentTileUrl)
   ) {
-    return request.previousAccentTileUrl;
+    return [request.previousAccentTileUrl];
   }
 
-  return null;
+  return [];
 }

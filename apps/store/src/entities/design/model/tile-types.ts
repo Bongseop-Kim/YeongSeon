@@ -35,7 +35,7 @@ export interface TileGenerationPayload {
   previousAccentTile: TileRef | null;
   previousAccentLayoutJson: AccentLayout | null;
   conversationHistory: ConversationTurn[];
-  attachedImageUrl: string | null;
+  attachedImageUrls: string[];
   sessionId: string;
   workflowId: string;
   firstMessage: string;

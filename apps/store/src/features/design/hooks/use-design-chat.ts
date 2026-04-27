@@ -82,12 +82,12 @@ const toSessionPayload = (messages: Message[]) => {
   return { firstUserMsg, allMessages };
 };
 
-const withResolvedImageAttachmentUrl = (
+const withResolvedImageAttachmentUrls = (
   allMessages: ReturnType<typeof toSessionPayload>["allMessages"],
   messageId: string,
-  resolvedImageUrl: string | null,
+  resolvedImageUrls: string[],
 ): ReturnType<typeof toSessionPayload>["allMessages"] => {
-  if (!resolvedImageUrl) {
+  if (resolvedImageUrls.length === 0) {
     return allMessages;
   }
 
@@ -96,46 +96,50 @@ const withResolvedImageAttachmentUrl = (
 
   const message = allMessages[index];
   const updated = [...allMessages];
+  let urlIndex = 0;
   updated[index] = {
     ...message,
-    imageUrl: resolvedImageUrl,
+    imageUrl: resolvedImageUrls[0] ?? message.imageUrl,
     attachments: message.attachments?.map((attachment) =>
       attachment.type === "image"
-        ? { ...attachment, value: resolvedImageUrl }
+        ? {
+            ...attachment,
+            value: resolvedImageUrls[urlIndex++] ?? attachment.value,
+          }
         : attachment,
     ),
   };
   return updated;
 };
 
-const resolveAttachedImageUrl = async (
+const resolveAttachedImageUrls = async (
   attachments: Attachment[],
-): Promise<string | null> => {
-  const imageAttachment = attachments.find(
-    (attachment) => attachment.type === "image",
+): Promise<string[]> => {
+  const imageAttachments = attachments.filter((a) => a.type === "image");
+
+  const results = await Promise.all(
+    imageAttachments.map(async (attachment) => {
+      if (attachment.file) {
+        const uploaded = await uploadDesignAsset(attachment.file, {
+          kind: "reference",
+        });
+        return uploaded.signedUrl;
+      }
+
+      if (attachment.value.startsWith("https://")) {
+        return attachment.value;
+      }
+
+      console.warn("[resolveAttachedImageUrls] Rejected non-HTTPS image URL", {
+        fileName: attachment.fileName,
+        type: attachment.type,
+        value: attachment.value,
+      });
+      return null;
+    }),
   );
 
-  if (!imageAttachment) {
-    return null;
-  }
-
-  if (imageAttachment.file) {
-    const uploaded = await uploadDesignAsset(imageAttachment.file, {
-      kind: "reference",
-    });
-    return uploaded.signedUrl;
-  }
-
-  if (imageAttachment.value.startsWith("https://")) {
-    return imageAttachment.value;
-  }
-
-  console.warn("[resolveAttachedImageUrl] Rejected non-HTTPS image URL", {
-    fileName: imageAttachment.fileName,
-    type: imageAttachment.type,
-    value: imageAttachment.value,
-  });
-  return null;
+  return results.filter((url): url is string => url !== null);
 };
 
 const toApiConversationHistory = (
@@ -229,11 +233,13 @@ export function useDesignChat(
       : "tile_generation";
 
     try {
-      const attachedImageUrl = await resolveAttachedImageUrl(input.attachments);
-      const sessionMessages = withResolvedImageAttachmentUrl(
+      const attachedImageUrls = await resolveAttachedImageUrls(
+        input.attachments,
+      );
+      const sessionMessages = withResolvedImageAttachmentUrls(
         allMessages,
         input.activeUserMessageId,
-        attachedImageUrl,
+        attachedImageUrls,
       );
       const uiFabricType = fabricMethodToFabricType(
         state.designContext.fabricMethod,
@@ -247,7 +253,7 @@ export function useDesignChat(
         previousAccentTile: state.accentTile,
         previousAccentLayoutJson: state.accentLayout,
         conversationHistory: toApiConversationHistory(priorMessages),
-        attachedImageUrl,
+        attachedImageUrls,
         sessionId: input.sessionId,
         workflowId: crypto.randomUUID(),
         firstMessage: firstUserMsg?.content ?? input.userText,

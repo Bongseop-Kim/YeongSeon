@@ -23,7 +23,7 @@ const payload: TileGenerationPayload = {
   previousAccentTile: null,
   previousAccentLayoutJson: null,
   conversationHistory: [],
-  attachedImageUrl: null,
+  attachedImageUrls: [],
   sessionId: "session-1",
   workflowId: "workflow-1",
   firstMessage: "새 디자인",

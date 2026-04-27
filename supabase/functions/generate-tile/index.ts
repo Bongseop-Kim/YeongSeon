@@ -22,7 +22,7 @@ import {
 import { resolveFabricType } from "./fabric-type-resolver.ts";
 import { generateTileImage } from "./image-generator.ts";
 import {
-  resolveAccentReferenceImageUrl,
+  resolveAccentReferenceImageUrls,
   shouldFallbackToPreviousAccentLayout,
   shouldReuseRepeatTile,
 } from "./generation-plan.ts";
@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
               analysis.accentLayout,
               analysis.tileLayout.backgroundColor,
               fabricType,
-              resolveAccentReferenceImageUrl(analysis, body),
+              resolveAccentReferenceImageUrls(analysis, body),
             )
           : null;
       const promptLength =
@@ -195,11 +195,15 @@ Deno.serve(async (req) => {
       const [repeatResult, accentResult] = await Promise.all([
         reusableRepeatTile
           ? Promise.resolve(reusableRepeatTile)
-          : generateTileImage(repeatPrompt as string, null, renderWorkId),
+          : generateTileImage(
+              repeatPrompt as string,
+              body.attachedImageUrls,
+              renderWorkId,
+            ),
         accentBuilt
           ? generateTileImage(
               accentBuilt.prompt,
-              accentBuilt.referenceImageUrl ?? null,
+              accentBuilt.referenceImageUrls,
               reuseRepeatTile ? renderWorkId : undefined,
             )
           : Promise.resolve(null),

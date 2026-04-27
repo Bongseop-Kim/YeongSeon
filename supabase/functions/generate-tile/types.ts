@@ -51,7 +51,7 @@ export interface TileGenerationRequest {
     role: "user" | "assistant";
     content: string;
   }>;
-  attachedImageUrl: string | null;
+  attachedImageUrls: string[];
   sessionId: string;
   workflowId: string;
   firstMessage: string;

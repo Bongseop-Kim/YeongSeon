@@ -1,6 +1,6 @@
 import { assertEquals } from "jsr:@std/assert";
 import {
-  resolveAccentReferenceImageUrl,
+  resolveAccentReferenceImageUrls,
   shouldFallbackToPreviousAccentLayout,
   shouldReuseRepeatTile,
 } from "./generation-plan.ts";
@@ -17,7 +17,7 @@ const baseRequest: TileGenerationRequest = {
   previousAccentTileWorkId: "accent-old",
   previousAccentLayoutJson: null,
   conversationHistory: [],
-  attachedImageUrl: null,
+  attachedImageUrls: [],
   sessionId: "session-1",
   workflowId: "workflow-1",
   firstMessage: "처음 요청",
@@ -136,10 +136,10 @@ Deno.test(
 );
 
 Deno.test(
-  "resolveAccentReferenceImageUrl prefers the newly attached image for image accents",
+  "resolveAccentReferenceImageUrls prefers the newly attached image for image accents",
   () => {
     assertEquals(
-      resolveAccentReferenceImageUrl(
+      resolveAccentReferenceImageUrls(
         {
           ...baseAnalysis,
           accentLayout: {
@@ -151,20 +151,50 @@ Deno.test(
         },
         {
           ...baseRequest,
-          attachedImageUrl: "https://ik.imagekit.io/app/new-logo.png",
+          attachedImageUrls: ["https://ik.imagekit.io/app/new-logo.png"],
           previousAccentTileUrl: "https://ik.imagekit.io/app/old-accent.webp",
         },
       ),
-      "https://ik.imagekit.io/app/new-logo.png",
+      ["https://ik.imagekit.io/app/new-logo.png"],
     );
   },
 );
 
 Deno.test(
-  "resolveAccentReferenceImageUrl reuses the latest user image when no new image is attached",
+  "resolveAccentReferenceImageUrls returns all attached images for image accents",
   () => {
     assertEquals(
-      resolveAccentReferenceImageUrl(
+      resolveAccentReferenceImageUrls(
+        {
+          ...baseAnalysis,
+          accentLayout: {
+            objectDescription: "brand logo",
+            objectSource: "image",
+            color: null,
+            size: null,
+          },
+        },
+        {
+          ...baseRequest,
+          attachedImageUrls: [
+            "https://ik.imagekit.io/app/logo-1.png",
+            "https://ik.imagekit.io/app/logo-2.png",
+          ],
+        },
+      ),
+      [
+        "https://ik.imagekit.io/app/logo-1.png",
+        "https://ik.imagekit.io/app/logo-2.png",
+      ],
+    );
+  },
+);
+
+Deno.test(
+  "resolveAccentReferenceImageUrls reuses the latest user image when no new image is attached",
+  () => {
+    assertEquals(
+      resolveAccentReferenceImageUrls(
         {
           ...baseAnalysis,
           accentLayout: {
@@ -203,16 +233,16 @@ Deno.test(
           ],
         },
       ),
-      "https://ik.imagekit.io/app/old-logo.png",
+      ["https://ik.imagekit.io/app/old-logo.png"],
     );
   },
 );
 
 Deno.test(
-  "resolveAccentReferenceImageUrl ignores stale non-url image attachments before reusing the previous accent tile",
+  "resolveAccentReferenceImageUrls ignores stale non-url image attachments before reusing the previous accent tile",
   () => {
     assertEquals(
-      resolveAccentReferenceImageUrl(
+      resolveAccentReferenceImageUrls(
         {
           ...baseAnalysis,
           accentLayout: {
@@ -252,16 +282,16 @@ Deno.test(
           previousAccentTileUrl: "https://ik.imagekit.io/app/accent.webp",
         },
       ),
-      "https://ik.imagekit.io/app/accent.webp",
+      ["https://ik.imagekit.io/app/accent.webp"],
     );
   },
 );
 
 Deno.test(
-  "resolveAccentReferenceImageUrl falls back to the previous accent tile for image accents",
+  "resolveAccentReferenceImageUrls falls back to the previous accent tile for image accents",
   () => {
     assertEquals(
-      resolveAccentReferenceImageUrl(
+      resolveAccentReferenceImageUrls(
         {
           ...baseAnalysis,
           accentLayout: {
@@ -273,20 +303,20 @@ Deno.test(
         },
         baseRequest,
       ),
-      "https://ik.imagekit.io/app/accent.webp",
+      ["https://ik.imagekit.io/app/accent.webp"],
     );
   },
 );
 
 Deno.test(
-  "resolveAccentReferenceImageUrl skips references for text accents",
+  "resolveAccentReferenceImageUrls skips references for text accents",
   () => {
     assertEquals(
-      resolveAccentReferenceImageUrl(baseAnalysis, {
+      resolveAccentReferenceImageUrls(baseAnalysis, {
         ...baseRequest,
-        attachedImageUrl: "https://ik.imagekit.io/app/logo.png",
+        attachedImageUrls: ["https://ik.imagekit.io/app/logo.png"],
       }),
-      null,
+      [],
     );
   },
 );
