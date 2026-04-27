@@ -151,10 +151,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }, [showPopup]);
 
     const trimmedText = inputText.trim();
-    const imageAttachments = pendingAttachments.filter(
+    const hasImageAttachments = pendingAttachments.some(
       (attachment) => attachment.type === "image",
     );
-    const nonImageAttachments = pendingAttachments.filter(
+    const hasNonImageAttachments = pendingAttachments.some(
       (attachment) => attachment.type !== "image",
     );
 
@@ -228,7 +228,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           {showPopup ? (
             <AttachmentPopup onClose={() => setShowPopup(false)} />
           ) : null}
-          {imageAttachments.length > 0 ? (
+          {hasImageAttachments ? (
             <div className="mb-3 flex flex-wrap gap-2 px-1 pt-1">
               {pendingAttachments.map((attachment, index) =>
                 attachment.type === "image" ? (
@@ -279,7 +279,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
                   />
                 </Button>
-                {nonImageAttachments.length > 0 ? (
+                {hasNonImageAttachments ? (
                   <div className="flex min-w-0 flex-wrap items-center gap-1">
                     {pendingAttachments.map((attachment, index) =>
                       attachment.type === "image" ? null : (

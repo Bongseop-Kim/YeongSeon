@@ -740,7 +740,6 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
   } = useGenerationLogDetailQuery(id);
   const { data: workflowLogs, isLoading: isWorkflowLoading } =
     useGenerationWorkflowLogsQuery(requestedLog?.workflowId ?? "");
-  // override는 props.id에 묶여 있어, id가 바뀌면 자동으로 무효화된다.
   const [logOverride, setLogOverride] = useState<{
     overrideForId: string;
     logId: string;
