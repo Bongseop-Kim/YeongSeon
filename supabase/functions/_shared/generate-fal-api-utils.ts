@@ -2,6 +2,7 @@ import {
   ALLOWED_TILED_MIME_TYPES,
   MAX_IMAGE_BASE64_LENGTH,
 } from "@/functions/_shared/fal-request-validation.ts";
+import type { SaveGenerationArtifactResult } from "@/functions/_shared/generation-artifacts.ts";
 
 const TRUSTED_FAL_IMAGE_BASE_HOST = "fal.media";
 const DEFAULT_INPAINT_BASE_IMAGE_ALLOWED_HOSTS = [
@@ -114,6 +115,163 @@ const cancelResponseBody = (response: Response) => {
 
 const isRedirectResponse = (response: Response): boolean =>
   response.status >= 300 && response.status < 400;
+
+type RenderArtifactImageInput =
+  | {
+      kind: "url";
+      url: string;
+    }
+  | {
+      kind: "base64";
+      base64: string;
+      mimeType: string;
+    };
+
+export type RecordRenderArtifactInput = {
+  artifactType: string;
+  image: RenderArtifactImageInput;
+  parentArtifactId?: string | null;
+  meta?: Record<string, unknown>;
+};
+
+export type RecordRenderArtifactFn = (
+  input: RecordRenderArtifactInput,
+) => Promise<SaveGenerationArtifactResult | null>;
+
+type OptionalRenderArtifacts = {
+  placedPreviewBase64?: string | null;
+  placedPreviewMimeType?: string | null;
+  falInputBase64?: string | null;
+  falInputMimeType?: string | null;
+  controlImageBase64?: string | null;
+  controlImageMimeType?: string | null;
+  upscaledReferenceBase64?: string | null;
+  upscaledReferenceMimeType?: string | null;
+  inpaintBaseBase64?: string | null;
+  inpaintBaseMimeType?: string | null;
+  inpaintMaskBase64?: string | null;
+  inpaintMaskMimeType?: string | null;
+};
+
+export const buildPlacedPreviewArtifacts = (input: {
+  ciPlacement?: string | null;
+  tiledBase64?: string | null;
+  tiledMimeType?: string | null;
+}): Pick<
+  OptionalRenderArtifacts,
+  "placedPreviewBase64" | "placedPreviewMimeType"
+> => ({
+  placedPreviewBase64:
+    input.ciPlacement === "one-point" ? (input.tiledBase64 ?? null) : null,
+  placedPreviewMimeType:
+    input.ciPlacement === "one-point" ? (input.tiledMimeType ?? null) : null,
+});
+
+const toOptionalBase64Input = (
+  base64: string | null | undefined,
+  mimeType: string | null | undefined,
+): RenderArtifactImageInput | null => {
+  const trimmedBase64 = base64?.trim() ?? "";
+  const trimmedMimeType = mimeType?.trim() ?? "";
+
+  if (!trimmedBase64 || !trimmedMimeType) {
+    return null;
+  }
+
+  return {
+    kind: "base64",
+    base64: trimmedBase64,
+    mimeType: trimmedMimeType,
+  };
+};
+
+export const recordOptionalRenderArtifacts = async (
+  recordArtifact: RecordRenderArtifactFn,
+  artifacts: OptionalRenderArtifacts,
+) => {
+  const optionalArtifacts = [
+    {
+      artifactType: "placed_preview" as const,
+      base64: artifacts.placedPreviewBase64,
+      mimeType: artifacts.placedPreviewMimeType,
+    },
+    {
+      artifactType: "fal_input_preview" as const,
+      base64: artifacts.falInputBase64,
+      mimeType: artifacts.falInputMimeType,
+    },
+    {
+      artifactType: "control_image" as const,
+      base64: artifacts.controlImageBase64,
+      mimeType: artifacts.controlImageMimeType,
+    },
+    {
+      artifactType: "upscaled_reference" as const,
+      base64: artifacts.upscaledReferenceBase64,
+      mimeType: artifacts.upscaledReferenceMimeType,
+    },
+    {
+      artifactType: "inpaint_base" as const,
+      base64: artifacts.inpaintBaseBase64,
+      mimeType: artifacts.inpaintBaseMimeType,
+    },
+    {
+      artifactType: "inpaint_mask" as const,
+      base64: artifacts.inpaintMaskBase64,
+      mimeType: artifacts.inpaintMaskMimeType,
+    },
+  ];
+
+  for (const { artifactType, base64, mimeType } of optionalArtifacts) {
+    const image = toOptionalBase64Input(base64, mimeType);
+    if (!image) continue;
+    await recordArtifact({ artifactType, image });
+  }
+};
+
+export const recordFinalRenderArtifacts = async (
+  recordArtifact: RecordRenderArtifactFn,
+  params: {
+    falImageUrl: string;
+    finalImageUrl: string;
+    falRequestId: string | null;
+    renderBackend:
+      | "ip_adapter"
+      | "img2img"
+      | "nano_banana_edit"
+      | "controlnet"
+      | "flux_fill"
+      | null;
+  },
+) => {
+  const falRawArtifact = await recordArtifact({
+    artifactType: "fal_raw",
+    image: {
+      kind: "url",
+      url: params.falImageUrl,
+    },
+    meta: {
+      fal_request_id: params.falRequestId,
+      render_backend: params.renderBackend,
+    },
+  });
+
+  // See test "recordFinalRenderArtifacts clears final parent when fal_raw save fails":
+  // final is intentionally orphaned when fal_raw could not be recorded.
+  await recordArtifact({
+    artifactType: "final",
+    image: {
+      kind: "url",
+      url: params.finalImageUrl,
+    },
+    parentArtifactId:
+      falRawArtifact?.status === "success" ? falRawArtifact.artifactId : null,
+    meta: {
+      fal_request_id: params.falRequestId,
+      render_backend: params.renderBackend,
+    },
+  });
+};
 
 export const buildAllowedInpaintBaseImageHosts = (
   input: {

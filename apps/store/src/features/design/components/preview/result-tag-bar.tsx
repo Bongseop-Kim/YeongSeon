@@ -1,16 +1,14 @@
 import { Download, Maximize2, Minimize2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
+import { isActiveGeneration } from "@/entities/design";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui-extended/button";
-import { useDesignChat } from "@/features/design/hooks/use-design-chat";
-import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import {
+  getRawImageUrlFromPreviewBackground,
+  useDesignChatStore,
+} from "@/features/design/store/design-chat-store";
 import { cn } from "@/shared/lib/utils";
-
-const extractImageUrl = (background: string): string | null => {
-  const match = /url\("(.+?)"\)/.exec(background);
-  return match?.[1] ?? null;
-};
 
 const SHADOW_TOP_OFFSET = -57;
 
@@ -18,12 +16,14 @@ interface ResultTagBarProps {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   unmasked: boolean;
+  onRegenerate: () => void;
 }
 
 export function ResultTagBar({
   isFullscreen,
   onToggleFullscreen,
   unmasked,
+  onRegenerate,
 }: ResultTagBarProps) {
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
@@ -32,15 +32,12 @@ export function ResultTagBar({
   const generatedImageUrl = useDesignChatStore(
     (state) => state.generatedImageUrl,
   );
-  const { regenerate, isLoading } = useDesignChat();
+  const isLoading = isActiveGeneration(generationStatus);
 
-  const hidden =
-    generationStatus === "idle" ||
-    generationStatus === "generating" ||
-    generationStatus === "rendering";
+  const hidden = generationStatus === "idle" || isLoading;
 
   const handleDownload = async () => {
-    const url = extractImageUrl(generatedImageUrl ?? "");
+    const url = getRawImageUrlFromPreviewBackground(generatedImageUrl);
     if (!url) {
       toast.error("이미지 URL을 추출할 수 없습니다.");
       return;
@@ -71,7 +68,7 @@ export function ResultTagBar({
 
     const ctx = canvas.getContext("2d");
     if (!ctx) {
-      console.error("canvas 2D context 없음");
+      console.warn("canvas 2D context 없음");
       toast.error("다운로드 실패: canvas를 초기화할 수 없습니다.");
       return;
     }
@@ -184,7 +181,7 @@ export function ResultTagBar({
           title="같은 조건으로 다시 생성"
           aria-label="같은 조건으로 다시 생성"
           disabled={isLoading}
-          onClick={regenerate}
+          onClick={onRegenerate}
         >
           <RefreshCw className="size-3.5" />
         </Button>

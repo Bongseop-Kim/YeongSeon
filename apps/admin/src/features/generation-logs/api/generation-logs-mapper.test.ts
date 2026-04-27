@@ -65,9 +65,9 @@ describe("toAdminGenerationLogItem", () => {
     });
   });
 
-  it("gemini ai_model을 올바르게 매핑한다", () => {
-    const result = toAdminGenerationLogItem({ ...baseRow, ai_model: "gemini" });
-    expect(result.aiModel).toBe("gemini");
+  it("fal ai_model을 올바르게 매핑한다", () => {
+    const result = toAdminGenerationLogItem({ ...baseRow, ai_model: "fal" });
+    expect(result.aiModel).toBe("fal");
   });
 
   it("알 수 없는 ai_model은 openai로 폴백하고 경고를 출력한다", () => {
@@ -79,6 +79,30 @@ describe("toAdminGenerationLogItem", () => {
     expect(result.aiModel).toBe("openai");
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
+  });
+
+  it("deprecated gemini ai_model은 openai로 매핑하고 별도 경고를 출력한다", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      ai_model: "gemini",
+    });
+
+    expect(result.aiModel).toBe("openai");
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[toAiModel] Mapping deprecated ai_model='gemini' to 'openai'",
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it("safe number 범위를 벗어난 숫자 문자열은 fallback으로 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      prompt_length: "9007199254740992",
+    });
+
+    expect(result.promptLength).toBe(0);
   });
 
   it("request_type이 render_standard이면 그대로 매핑한다", () => {

@@ -129,13 +129,25 @@ describe("shouldUseFalPipeline", () => {
     await expect(shouldUseFalPipeline(base)).resolves.toBe(false);
   });
 
-  it("fails open when the probe request errors", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+  it("fails closed when the probe response omits enabled", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      }),
+    );
 
-    await expect(shouldUseFalPipeline(base)).resolves.toBe(true);
+    await expect(shouldUseFalPipeline(base)).resolves.toBe(false);
   });
 
-  it("aborts a slow probe request and caches the fail-open result", async () => {
+  it("fails closed when the probe request errors", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+
+    await expect(shouldUseFalPipeline(base)).resolves.toBe(false);
+  });
+
+  it("aborts a slow probe request and caches the fail-closed result", async () => {
     vi.useFakeTimers();
     const fetchMock = vi.fn(
       (_input: RequestInfo | URL, init?: RequestInit) =>
@@ -150,13 +162,13 @@ describe("shouldUseFalPipeline", () => {
     const firstCall = shouldUseFalPipeline(base);
     await vi.advanceTimersByTimeAsync(3_100);
 
-    await expect(firstCall).resolves.toBe(true);
-    await expect(shouldUseFalPipeline(base)).resolves.toBe(true);
+    await expect(firstCall).resolves.toBe(false);
+    await expect(shouldUseFalPipeline(base)).resolves.toBe(false);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
   });
 
-  it("getSession이 지연되면 probe timeout 안에 fail-open 한다", async () => {
+  it("getSession이 지연되면 probe timeout 안에 fail-closed 한다", async () => {
     vi.useFakeTimers();
     getSessionMock.mockImplementation(
       () =>
@@ -170,7 +182,7 @@ describe("shouldUseFalPipeline", () => {
     const call = shouldUseFalPipeline(base);
     await vi.advanceTimersByTimeAsync(3_100);
 
-    await expect(call).resolves.toBe(true);
+    await expect(call).resolves.toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

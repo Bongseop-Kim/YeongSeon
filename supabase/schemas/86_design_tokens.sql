@@ -8,7 +8,7 @@ CREATE TABLE public.design_tokens (
   amount          integer     NOT NULL CHECK (amount != 0),
   type            text        NOT NULL CHECK (type = ANY(ARRAY['grant','use','refund','admin','purchase'])),
   token_class     text        NOT NULL CHECK (token_class IN ('paid', 'bonus', 'free')),
-  ai_model        text,       -- 'openai' | 'gemini' | NULL
+  ai_model        text,       -- 'openai' | 'fal' | NULL
   request_type    text        CHECK (
     request_type IS NULL OR
     request_type = ANY(ARRAY['analysis', 'prep', 'render_standard', 'render_high'])

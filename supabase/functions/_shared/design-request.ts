@@ -1,15 +1,18 @@
 import type { ConversationTurn } from "./conversation.ts";
+import type { AttachmentType } from "./request-attachments.ts";
 export type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
 import type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
 
-export type FalGenerationRoute =
+export type GenerationRoute =
   | "fal_tiling"
   | "fal_edit"
   | "fal_controlnet"
-  | "fal_inpaint";
+  | "fal_inpaint"
+  | "tile_generation"
+  | "tile_edit";
 
 interface RequestSessionAttachment {
-  type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+  type: AttachmentType;
   label: string;
   value: string;
   fileName?: string;
@@ -36,6 +39,8 @@ export type GenerateDesignRequest = {
     scale?: "large" | "medium" | "small" | null;
     backgroundPattern?: BackgroundPattern;
   };
+  workflowId?: string | null;
+  prepWorkId?: string | null;
   analysisWorkId?: string | null;
   executionMode?: "auto" | "render_from_analysis";
   autoGenerate?: boolean;
@@ -62,7 +67,7 @@ export type GenerateDesignRequest = {
     repairSummary?: string | null;
     prepTokensCharged?: number | null;
   };
-  route?: FalGenerationRoute;
+  route?: GenerationRoute;
   controlType?: "lineart" | "edge" | "depth";
   structureImageBase64?: string;
   structureImageMimeType?: string;

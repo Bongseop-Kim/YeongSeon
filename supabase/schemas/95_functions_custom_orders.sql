@@ -247,7 +247,6 @@ declare
   v_sewing_cost integer;
   v_fabric_cost integer;
   v_total_cost integer;
-  v_reform_data jsonb;
   v_elem jsonb;
   v_idx integer;
   v_base_unit integer;
@@ -466,6 +465,9 @@ begin
   );
 end;
 $$;
+
+COMMENT ON FUNCTION public.create_custom_order_txn(uuid, jsonb, integer, jsonb, text, boolean, text, uuid)
+  IS 'SECURITY DEFINER is required so authenticated clients can create owned custom orders and order items while ownership is enforced with auth.uid() and shipping address validation.';
 
 -- ── calculate_refund_amount ───────────────────────────────────
 CREATE OR REPLACE FUNCTION public.calculate_refund_amount(p_order_id uuid)

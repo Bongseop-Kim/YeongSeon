@@ -1,10 +1,23 @@
+import type {
+  AccentLayout,
+  FabricType,
+  PatternType,
+} from "@/entities/design/model/tile-types";
+
 export interface DesignSession {
   id: string;
-  aiModel: "openai" | "gemini" | "fal";
+  aiModel: "openai" | "fal";
   firstMessage: string;
   lastImageUrl: string | null;
   lastImageFileId: string | null;
   lastImageWorkId: string | null;
+  repeatTileUrl: string | null;
+  repeatTileWorkId: string | null;
+  accentTileUrl: string | null;
+  accentTileWorkId: string | null;
+  accentLayout: AccentLayout | null;
+  patternType: PatternType | null;
+  fabricType: FabricType | null;
   imageCount: number;
   createdAt: string;
   updatedAt: string;

@@ -13,6 +13,11 @@ export type GenerationStatus =
   | "regenerating"
   | "rendering";
 
+export const isActiveGeneration = (status: GenerationStatus): boolean =>
+  status === "generating" ||
+  status === "regenerating" ||
+  status === "rendering";
+
 export interface Message {
   id: string;
   role: "user" | "ai";

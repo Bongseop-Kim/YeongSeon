@@ -1,7 +1,7 @@
 import type { ConversationTurn } from "./conversation.ts";
 import { filterValidConversationTurns } from "./conversation.ts";
 import type {
-  FalGenerationRoute,
+  GenerationRoute,
   GenerateDesignRequest,
 } from "./design-request.ts";
 import type { ExecutionMode } from "@/functions/_shared/design-generation.ts";
@@ -28,7 +28,7 @@ export const ALLOWED_TILED_MIME_TYPES = new Set([
   "image/webp",
 ]);
 
-const ALLOWED_FAL_ROUTES = new Set<FalGenerationRoute>([
+const ALLOWED_FAL_ROUTES = new Set<GenerationRoute>([
   "fal_tiling",
   "fal_edit",
   "fal_controlnet",
@@ -51,7 +51,7 @@ export type FalPayloadValidationResult = ValidationFailure | ValidationSuccess;
 
 const getFalRoute = (
   payload: GenerateDesignRequest,
-): FalGenerationRoute | null => {
+): GenerationRoute | null => {
   if (payload.route === undefined) {
     return "fal_tiling";
   }

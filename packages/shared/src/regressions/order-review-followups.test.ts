@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const fromRepoRoot = (...segments: string[]) =>
@@ -8,6 +9,17 @@ const fromRepoRoot = (...segments: string[]) =>
 const readRepoFile = (...segments: string[]) =>
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   readFileSync(fromRepoRoot(...segments), "utf8");
+
+const readMigrationFiles = () => {
+  const migrationsDir = fromRepoRoot("supabase", "migrations");
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  return readdirSync(migrationsDir)
+    .filter((file) => file.endsWith(".sql"))
+    .map((file) =>
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      readFileSync(join(migrationsDir, file), "utf8"),
+    );
+};
 
 function extractViewBlock(sql: string, viewName: string): string {
   const marker = `CREATE OR REPLACE VIEW public.${viewName}`;
@@ -30,6 +42,33 @@ function normalize(s: string): string {
 }
 
 describe("review follow-up regressions", () => {
+  it("security definer view lint remediation keeps reported views as security invoker", () => {
+    const reportedViewNames = [
+      "admin_quote_request_list_view",
+      "order_detail_view",
+      "product_list_view",
+      "claim_list_view",
+      "order_list_view",
+      "quote_request_list_view",
+      "quote_request_detail_view",
+      "order_item_view",
+      "admin_order_detail_view",
+      "admin_claim_list_view",
+      "admin_claim_status_log_view",
+      "admin_order_list_view",
+      "admin_order_status_log_view",
+      "admin_product_list_view",
+      "admin_quote_request_detail_view",
+    ];
+    const migrationSql = normalize(readMigrationFiles().join("\n"));
+
+    for (const viewName of reportedViewNames) {
+      expect(migrationSql).toContain(
+        `alter view public.${viewName} set (security_invoker = true);`,
+      );
+    }
+  });
+
   it("store order detail query and view expose 업체 발송 필드", () => {
     const orderApi = readRepoFile(
       "apps",

@@ -1,5 +1,6 @@
 import {
   assertEquals,
+  assertGreater,
   assertLess,
   assertObjectMatch,
   assertRejects,
@@ -11,6 +12,7 @@ import {
   resolveOnePointCompositeMetrics,
   resolveTileCompositeMetrics,
 } from "@/functions/_shared/pattern-composite.ts";
+import { createPreparePatternCompositeHandler } from "@/functions/prepare-pattern-composite/index.ts";
 
 Deno.test(
   "resolveTileCompositeMetrics maps scale to deterministic tile sizes",
@@ -122,3 +124,514 @@ Deno.test("buildOpenAiEditCanvas rejects empty input", async () => {
     "prepared_source_empty",
   );
 });
+
+Deno.test("buildOpenAiEditCanvas accepts a small PNG input", async () => {
+  const pngBytes = Uint8Array.from(
+    atob(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oEFwsaH3I1Q20AAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDQtMjNUMTE6MjY6MzErMDA6MDBX4uiHAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA0LTIzVDExOjI2OjMxKzAwOjAwJr9QOwAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wNC0yM1QxMToyNjozMSswMDowMHGqceQAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC",
+    ),
+    (character) => character.charCodeAt(0),
+  );
+
+  const result = await buildOpenAiEditCanvas(pngBytes);
+
+  assertEquals(result.sourceWidth, 1);
+  assertEquals(result.sourceHeight, 1);
+  assertGreater(result.bytes.length, 0);
+});
+
+Deno.test(
+  "prepare-pattern-composite records repaired all-over prep artifacts in order",
+  async () => {
+    const artifactCalls: Array<{
+      artifactType: string;
+      workflowId: string;
+      sourceWorkId: string | null;
+      parentArtifactId: string | null;
+      status: string;
+    }> = [];
+    const rpcCalls: Array<{ fn: string; args: Record<string, unknown> }> = [];
+    const logCalls: Array<Record<string, unknown>> = [];
+
+    const handler = createPreparePatternCompositeHandler({
+      getCorsHeaders: () => ({}),
+      getOpenAiApiKey: () => "openai-key",
+      createAuthenticatedSupabaseClient: () =>
+        ({
+          auth: {
+            getUser: async () => ({
+              data: { user: { id: "user-1" } },
+              error: null,
+            }),
+          },
+        }) as never,
+      createAdminSupabaseClient: () =>
+        ({
+          rpc: async (fn: string, args: Record<string, unknown>) => {
+            rpcCalls.push({ fn, args });
+            if (fn === "use_design_tokens") {
+              return {
+                data: {
+                  success: true,
+                  balance: 9,
+                  cost: 1,
+                  remaining: 9,
+                },
+                error: null,
+              };
+            }
+
+            if (fn === "write_ai_generation_log_artifact") {
+              artifactCalls.push({
+                artifactType: String(args.p_artifact_type),
+                workflowId: String(args.p_workflow_id),
+                sourceWorkId: args.p_source_work_id as string | null,
+                parentArtifactId: args.p_parent_artifact_id as string | null,
+                status: String(args.p_status),
+              });
+            }
+
+            return { data: null, error: null };
+          },
+        }) as never,
+      saveGenerationArtifact: async (input, deps) => {
+        const artifactId = `artifact-${artifactCalls.length + 1}`;
+        const insertResult = await deps.recordArtifactRow({
+          id: artifactId,
+          workflow_id: input.workflowId,
+          phase: input.phase,
+          artifact_type: input.artifactType,
+          source_work_id: input.sourceWorkId ?? null,
+          parent_artifact_id: input.parentArtifactId ?? null,
+          storage_provider: "imagekit",
+          image_url: "https://ik.test/image.png",
+          image_width: null,
+          image_height: null,
+          mime_type: "image/png",
+          file_size_bytes: 3,
+          status: "success",
+          meta: input.meta ?? {},
+        });
+        if (insertResult && "error" in insertResult && insertResult.error) {
+          throw new Error(insertResult.error.message);
+        }
+
+        return {
+          artifactId,
+          status: "success",
+          imageUrl: "https://ik.test/image.png",
+          error: null,
+        };
+      },
+      maybeDownscaleImage: async (bytes) => bytes,
+      readImageRgba: async () => ({
+        pixels: new Uint8ClampedArray([255, 255, 255, 255]),
+        width: 128,
+        height: 128,
+      }),
+      assessPatternPreparation: (input) => ({
+        placementMode: input.placementMode,
+        sourceStatus: "repair_required",
+        fabricStatus: "repair_required",
+        preparedSourceKind: "original",
+        reasonCodes: ["too_many_colors_for_yarn_dyed"],
+        userMessage: "repair needed",
+        preparationBackend: "openai_repair",
+        repairApplied: false,
+        repairPromptKind: "all_over_tile",
+        repairSummary: null,
+        prepTokensCharged: null,
+      }),
+      renderPreparedSource: async () => ({
+        bytes: new Uint8Array([1, 2, 3]),
+        width: 128,
+        height: 128,
+      }),
+      buildOpenAiEditCanvas: async () => ({
+        bytes: new Uint8Array([4, 5, 6]),
+        sourceWidth: 1,
+        sourceHeight: 1,
+      }),
+      composeAllOverTile: async () => ({
+        tileBytes: new Uint8Array([7, 8, 9]),
+        tileSizePx: 123,
+        gapPx: 31,
+        compositeCanvasWidth: 1024,
+        compositeCanvasHeight: 1024,
+      }),
+      composeOnePointMotif: async () => ({
+        motifBytes: new Uint8Array([7, 8, 9]),
+        tileSizePx: 38,
+        gapPx: 0,
+        compositeCanvasWidth: 316,
+        compositeCanvasHeight: 600,
+      }),
+      buildAllOverRepairPrompt: () => "all-over repair prompt",
+      buildOnePointRepairPrompt: () => "one-point repair prompt",
+      requestOpenAiRepair: async () => "AAEC",
+      logGeneration: async (_client, payload) => {
+        logCalls.push(payload as Record<string, unknown>);
+      },
+    });
+
+    const response = await handler(
+      new Request("http://localhost/prepare-pattern-composite", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer user-token",
+        },
+        body: JSON.stringify({
+          sourceImageBase64: "AAEC",
+          sourceImageMimeType: "image/png",
+          placementMode: "all-over",
+          fabricMethod: "yarn-dyed",
+        }),
+      }),
+    );
+
+    assertEquals(response.status, 200);
+    assertEquals(
+      artifactCalls.map((entry) => entry.artifactType),
+      [
+        "source_input",
+        "source_original",
+        "openai_edit_canvas",
+        "prepared_source",
+        "prepared_tile",
+      ],
+    );
+    const workflowId = artifactCalls[0]?.workflowId;
+    const sourceWorkId = artifactCalls[0]?.sourceWorkId;
+    assertEquals(
+      artifactCalls.map((entry) => entry.workflowId),
+      [workflowId, workflowId, workflowId, workflowId, workflowId],
+    );
+    assertEquals(
+      artifactCalls.map((entry) => entry.sourceWorkId),
+      [sourceWorkId, sourceWorkId, sourceWorkId, sourceWorkId, sourceWorkId],
+    );
+    assertEquals(workflowId, String(logCalls[0]?.workflow_id));
+    assertEquals(sourceWorkId, String(logCalls[0]?.work_id));
+    assertEquals(artifactCalls[4]?.parentArtifactId, "artifact-4");
+    assertEquals(
+      rpcCalls.map((entry) => entry.fn),
+      [
+        "write_ai_generation_log_artifact",
+        "write_ai_generation_log_artifact",
+        "use_design_tokens",
+        "write_ai_generation_log_artifact",
+        "write_ai_generation_log_artifact",
+        "write_ai_generation_log_artifact",
+      ],
+    );
+    assertEquals(logCalls.length > 0, true);
+  },
+);
+
+Deno.test(
+  "prepare-pattern-composite records original one-point artifacts without repair",
+  async () => {
+    const artifactCalls: Array<{
+      artifactType: string;
+      workflowId: string;
+      sourceWorkId: string | null;
+      parentArtifactId: string | null;
+      status: string;
+    }> = [];
+    const rpcCalls: Array<{ fn: string; args: Record<string, unknown> }> = [];
+    const logCalls: Array<Record<string, unknown>> = [];
+
+    const handler = createPreparePatternCompositeHandler({
+      getCorsHeaders: () => ({}),
+      getOpenAiApiKey: () => "openai-key",
+      createAuthenticatedSupabaseClient: () =>
+        ({
+          auth: {
+            getUser: async () => ({
+              data: { user: { id: "user-2" } },
+              error: null,
+            }),
+          },
+        }) as never,
+      createAdminSupabaseClient: () =>
+        ({
+          rpc: async (fn: string, args: Record<string, unknown>) => {
+            rpcCalls.push({ fn, args });
+            if (fn === "write_ai_generation_log_artifact") {
+              artifactCalls.push({
+                artifactType: String(args.p_artifact_type),
+                workflowId: String(args.p_workflow_id),
+                sourceWorkId: args.p_source_work_id as string | null,
+                parentArtifactId: args.p_parent_artifact_id as string | null,
+                status: String(args.p_status),
+              });
+            }
+            return { data: null, error: null };
+          },
+        }) as never,
+      saveGenerationArtifact: async (input, deps) => {
+        const artifactId = `artifact-${artifactCalls.length + 1}`;
+        const insertResult = await deps.recordArtifactRow({
+          id: artifactId,
+          workflow_id: input.workflowId,
+          phase: input.phase,
+          artifact_type: input.artifactType,
+          source_work_id: input.sourceWorkId ?? null,
+          parent_artifact_id: input.parentArtifactId ?? null,
+          storage_provider: "imagekit",
+          image_url: "https://ik.test/image.png",
+          image_width: null,
+          image_height: null,
+          mime_type: "image/png",
+          file_size_bytes: 3,
+          status: "success",
+          meta: input.meta ?? {},
+        });
+        if (insertResult && "error" in insertResult && insertResult.error) {
+          throw new Error(insertResult.error.message);
+        }
+
+        return {
+          artifactId,
+          status: "success",
+          imageUrl: "https://ik.test/image.png",
+          error: null,
+        };
+      },
+      maybeDownscaleImage: async (bytes) => bytes,
+      readImageRgba: async () => ({
+        pixels: new Uint8ClampedArray([255, 255, 255, 255]),
+        width: 96,
+        height: 96,
+      }),
+      assessPatternPreparation: (input) => ({
+        placementMode: input.placementMode,
+        sourceStatus: "ready",
+        fabricStatus: "ready",
+        preparedSourceKind: "original",
+        reasonCodes: [],
+        userMessage: "ready",
+        preparationBackend: "local",
+        repairApplied: false,
+        repairPromptKind: "one_point_motif",
+        repairSummary: null,
+        prepTokensCharged: null,
+      }),
+      renderPreparedSource: async () => ({
+        bytes: new Uint8Array([1, 2, 3]),
+        width: 96,
+        height: 96,
+      }),
+      buildOpenAiEditCanvas: async () => ({
+        bytes: new Uint8Array([4, 5, 6]),
+        sourceWidth: 1,
+        sourceHeight: 1,
+      }),
+      composeAllOverTile: async () => ({
+        tileBytes: new Uint8Array([7, 8, 9]),
+        tileSizePx: 123,
+        gapPx: 31,
+        compositeCanvasWidth: 1024,
+        compositeCanvasHeight: 1024,
+      }),
+      composeOnePointMotif: async () => ({
+        motifBytes: new Uint8Array([9, 8, 7]),
+        tileSizePx: 38,
+        gapPx: 0,
+        compositeCanvasWidth: 316,
+        compositeCanvasHeight: 600,
+      }),
+      buildAllOverRepairPrompt: () => "all-over repair prompt",
+      buildOnePointRepairPrompt: () => "one-point repair prompt",
+      requestOpenAiRepair: async () => {
+        throw new Error("repair should not run");
+      },
+      logGeneration: async (_client, payload) => {
+        logCalls.push(payload as Record<string, unknown>);
+      },
+    });
+
+    const response = await handler(
+      new Request("http://localhost/prepare-pattern-composite", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer user-token",
+        },
+        body: JSON.stringify({
+          sourceImageBase64: "AAEC",
+          sourceImageMimeType: "image/png",
+          placementMode: "one-point",
+          fabricMethod: "print",
+        }),
+      }),
+    );
+
+    assertEquals(response.status, 200);
+    assertEquals(
+      artifactCalls.map((entry) => entry.artifactType),
+      ["source_input", "source_original", "prepared_point_motif"],
+    );
+    const workflowId = artifactCalls[0]?.workflowId;
+    const sourceWorkId = artifactCalls[0]?.sourceWorkId;
+    assertEquals(
+      artifactCalls.map((entry) => entry.workflowId),
+      [workflowId, workflowId, workflowId],
+    );
+    assertEquals(
+      artifactCalls.map((entry) => entry.sourceWorkId),
+      [sourceWorkId, sourceWorkId, sourceWorkId],
+    );
+    assertEquals(workflowId, String(logCalls[0]?.workflow_id));
+    assertEquals(sourceWorkId, String(logCalls[0]?.work_id));
+    assertEquals(artifactCalls[2]?.parentArtifactId, null);
+    assertEquals(
+      rpcCalls.map((entry) => entry.fn),
+      [
+        "write_ai_generation_log_artifact",
+        "write_ai_generation_log_artifact",
+        "write_ai_generation_log_artifact",
+      ],
+    );
+    assertEquals(logCalls.length > 0, true);
+  },
+);
+
+Deno.test(
+  "prepare-pattern-composite omits remainingTokens when repair is required without an OpenAI key",
+  async () => {
+    const logCalls: Array<Record<string, unknown>> = [];
+
+    const handler = createPreparePatternCompositeHandler({
+      getCorsHeaders: () => ({}),
+      getOpenAiApiKey: () => "",
+      createAuthenticatedSupabaseClient: () =>
+        ({
+          auth: {
+            getUser: async () => ({
+              data: { user: { id: "user-3" } },
+              error: null,
+            }),
+          },
+        }) as never,
+      createAdminSupabaseClient: () =>
+        ({
+          rpc: async () => ({ data: null, error: null }),
+          from: () => ({
+            insert: async () => ({ error: null }),
+            upsert: async () => ({ error: null }),
+          }),
+        }) as never,
+      maybeDownscaleImage: async (bytes) => bytes,
+      readImageRgba: async () => ({
+        pixels: new Uint8ClampedArray([255, 255, 255, 255]),
+        width: 128,
+        height: 128,
+      }),
+      assessPatternPreparation: (input) => ({
+        placementMode: input.placementMode,
+        sourceStatus: "repair_required",
+        fabricStatus: "ready",
+        preparedSourceKind: "original",
+        reasonCodes: ["low_confidence"],
+        userMessage: "repair needed",
+        preparationBackend: "local",
+        repairApplied: false,
+        repairPromptKind: "one_point_motif",
+        repairSummary: null,
+        prepTokensCharged: null,
+      }),
+      renderPreparedSource: async () => ({
+        bytes: new Uint8Array([1, 2, 3]),
+        width: 128,
+        height: 128,
+      }),
+      logGeneration: async (_client, payload) => {
+        logCalls.push(payload as Record<string, unknown>);
+      },
+    });
+
+    const response = await handler(
+      new Request("http://localhost/prepare-pattern-composite", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer user-token",
+        },
+        body: JSON.stringify({
+          sourceImageBase64: "AAEC",
+          sourceImageMimeType: "image/png",
+          placementMode: "one-point",
+        }),
+      }),
+    );
+
+    const body = await response.json();
+
+    assertEquals(response.status, 502);
+    assertEquals("remainingTokens" in body, false);
+    assertEquals(logCalls.length > 0, true);
+    assertEquals(
+      logCalls.some(
+        (entry) => entry.error_type === "openai_key_missing_for_repair",
+      ),
+      true,
+    );
+  },
+);
+
+Deno.test(
+  "prepare-pattern-composite emits a prep log when image decoding fails before artifacts are recorded",
+  async () => {
+    const logCalls: Array<Record<string, unknown>> = [];
+
+    const handler = createPreparePatternCompositeHandler({
+      getCorsHeaders: () => ({}),
+      getOpenAiApiKey: () => "openai-key",
+      createAuthenticatedSupabaseClient: () =>
+        ({
+          auth: {
+            getUser: async () => ({
+              data: { user: { id: "user-4" } },
+              error: null,
+            }),
+          },
+        }) as never,
+      createAdminSupabaseClient: () =>
+        ({
+          rpc: async () => ({ data: null, error: null }),
+          from: () => ({
+            insert: async () => ({ error: null }),
+            upsert: async () => ({ error: null }),
+          }),
+        }) as never,
+      maybeDownscaleImage: async (bytes) => bytes,
+      readImageRgba: async () => {
+        throw new Error("decode_failed");
+      },
+      logGeneration: async (_client, payload) => {
+        logCalls.push(payload as Record<string, unknown>);
+      },
+    });
+
+    const response = await handler(
+      new Request("http://localhost/prepare-pattern-composite", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer user-token",
+        },
+        body: JSON.stringify({
+          sourceImageBase64: "AAEC",
+          sourceImageMimeType: "image/png",
+          placementMode: "all-over",
+        }),
+      }),
+    );
+
+    const body = await response.json();
+
+    assertEquals(response.status, 500);
+    assertEquals(body.error, "pattern_preparation_failed");
+    assertEquals(logCalls.length, 1);
+    assertEquals(logCalls[0]?.error_type, "pattern_preparation_failed");
+    assertEquals(logCalls[0]?.error_message, "decode_failed");
+  },
+);

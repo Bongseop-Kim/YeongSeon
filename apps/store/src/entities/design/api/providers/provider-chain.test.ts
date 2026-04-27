@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { InsufficientTokensError } from "@/entities/design/api/ai-design-api";
+import { InsufficientTokensError } from "@/entities/design";
 import {
   runProviderChain,
   NoProviderAvailableError,

@@ -109,9 +109,9 @@ const TokenPurchasePage = () => {
                     2
                   </span>
                   <span>
-                    Gemini 텍스트 생성 —{" "}
+                    OpenAI 패턴 보정 —{" "}
                     <span className="font-semibold text-foreground">
-                      1 token
+                      5 tokens
                     </span>
                   </span>
                 </div>
@@ -131,9 +131,9 @@ const TokenPurchasePage = () => {
                     4
                   </span>
                   <span>
-                    Gemini 이미지 생성 —{" "}
+                    Fal 이미지 생성 —{" "}
                     <span className="font-semibold text-foreground">
-                      3 tokens
+                      5 tokens
                     </span>
                   </span>
                 </div>

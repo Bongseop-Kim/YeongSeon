@@ -130,6 +130,8 @@ export const getTags = (request: AiDesignRequest): string[] => {
 };
 
 interface InvokePayloadInput {
+  workflowId?: string | null;
+  prepWorkId?: string | null;
   sourceImageBase64?: string;
   sourceImageMimeType?: string;
   ciImageBase64?: string;
@@ -206,6 +208,8 @@ type InvokePayload = {
   firstMessage: string;
   allMessages: AiDesignRequest["allMessages"];
   executionMode: NonNullable<AiDesignRequest["executionMode"]> | "auto";
+  workflowId?: string | null;
+  prepWorkId?: string | null;
   analysisWorkId: string | null;
   autoGenerate?: AiDesignRequest["autoGenerate"];
   route?: AiDesignResponse["route"];
@@ -399,6 +403,14 @@ export function buildInvokePayload(
 
   if (input.patternPreparation !== undefined) {
     payload.patternPreparation = input.patternPreparation;
+  }
+
+  if (input.workflowId !== undefined) {
+    payload.workflowId = input.workflowId;
+  }
+
+  if (input.prepWorkId !== undefined) {
+    payload.prepWorkId = input.prepWorkId;
   }
 
   if (input.route !== undefined) {

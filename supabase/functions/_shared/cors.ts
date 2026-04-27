@@ -1,5 +1,11 @@
 const ALLOWED_ORIGINS: readonly string[] = (() => {
-  const raw = Deno.env.get("ALLOWED_ORIGINS") ?? "";
+  const raw = (() => {
+    try {
+      return Deno.env.get("ALLOWED_ORIGINS") ?? "";
+    } catch {
+      return "";
+    }
+  })();
   if (!raw) return [];
   return raw
     .split(",")
@@ -16,9 +22,9 @@ export const getCorsHeaders = (
   requestOrigin: string | null,
 ): Record<string, string> => {
   const base: Record<string, string> = {
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type",
+      "authorization, x-client-info, apikey, content-type, baggage, sentry-trace",
     Vary: "Origin",
   };
 

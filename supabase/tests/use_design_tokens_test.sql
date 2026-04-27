@@ -175,7 +175,7 @@ SELECT throws_ok(
   $$
     SELECT public.use_design_tokens(
       'dd000001-0000-0000-0000-000000000001'::uuid,
-      'gemini',
+      'fal',
       'prep'
     )
   $$,

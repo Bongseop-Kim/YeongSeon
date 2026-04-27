@@ -1,6 +1,7 @@
 import type { AiDesignRequest } from "@/entities/design/model/ai-design-request";
 import type { AiDesignResponse } from "@/entities/design/model/ai-design-response";
 import type { DesignTokenHistoryItem } from "@/entities/design/model/token-history";
+import { InsufficientTokensError } from "@/entities/design/model/design-errors";
 import { supabase } from "@/shared/lib/supabase";
 import {
   buildInvokePayload,
@@ -23,6 +24,8 @@ interface DesignTokenBalance {
 }
 
 interface PatternPreparationResponse {
+  workflowId?: string | null;
+  prepWorkId?: string | null;
   placementMode: "all-over" | "one-point";
   sourceStatus: "ready" | "repair_required";
   fabricStatus: "ready" | "repair_required";
@@ -46,16 +49,6 @@ interface PatternPreparationResponse {
   compositeCanvasHeight?: number;
   harmonizationApplied?: boolean;
   harmonizationBackend?: "fal" | "openai" | null;
-}
-
-export class InsufficientTokensError extends Error {
-  constructor(
-    public readonly balance: number,
-    public readonly cost: number,
-  ) {
-    super("insufficient_tokens");
-    this.name = "InsufficientTokensError";
-  }
 }
 
 const DESIGN_TOKEN_SELECT_FIELDS =
@@ -248,12 +241,6 @@ export async function aiDesignApi(
       ? (preparedCompositeMimeType ?? preparedSourceMimeType)
       : preparedSourceMimeType;
 
-  const useFalTiling = await shouldUseFalPipeline({
-    ciImageBase64: preparedSourceBase64,
-    ciPlacement: request.designContext.ciPlacement,
-    fabricMethod: request.designContext.fabricMethod,
-    allowFalRender: true,
-  });
   const backgroundPattern =
     request.designContext.ciPlacement === "one-point" &&
     request.designContext.colors[0]
@@ -270,6 +257,15 @@ export async function aiDesignApi(
     !preparedCompositeBase64
       ? "openai"
       : requestedRoute;
+  const useFalTiling =
+    resolvedRoute === "fal_tiling"
+      ? await shouldUseFalPipeline({
+          ciImageBase64: preparedSourceBase64,
+          ciPlacement: request.designContext.ciPlacement,
+          fabricMethod: request.designContext.fabricMethod,
+          allowFalRender: true,
+        })
+      : false;
   const shouldPrepareTiledPattern =
     resolvedRoute === "fal_tiling" && placementMode === "all-over";
   const controlStructureBase64 =
@@ -308,6 +304,8 @@ export async function aiDesignApi(
     sourceImageBase64: preparedRenderImageBase64,
     sourceImageMimeType: preparedRenderImageMimeType,
     ciImageBase64: preparedRenderImageBase64,
+    workflowId: patternPreparation?.workflowId,
+    prepWorkId: patternPreparation?.prepWorkId,
     backgroundPattern,
     patternPreparation: patternPreparationPayload,
     routeHint: request.routeHint,

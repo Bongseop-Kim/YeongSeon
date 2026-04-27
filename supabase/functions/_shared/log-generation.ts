@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AttachmentType } from "./request-attachments.ts";
 
 export type AiGenerationLogPhase = "analysis" | "prep" | "render";
 export type AiGenerationLogRequestType =
@@ -14,13 +15,13 @@ export type AiGenerationLogInsert = {
   phase: AiGenerationLogPhase;
   parent_work_id?: string | null;
   user_id: string;
-  ai_model: "openai" | "gemini" | "fal";
+  ai_model: "openai" | "fal";
   request_type: AiGenerationLogRequestType;
   quality?: AiGenerationLogQuality | null;
   user_message: string;
   prompt_length: number;
   request_attachments?: Array<{
-    type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+    type: AttachmentType;
     label: string;
     value: string;
     fileName?: string;
@@ -45,6 +46,8 @@ export type AiGenerationLogInsert = {
     | "fal_edit"
     | "fal_controlnet"
     | "fal_inpaint"
+    | "tile_generation"
+    | "tile_edit"
     | null;
   route_reason?: string | null;
   route_signals?: string[] | null;
@@ -73,16 +76,36 @@ export type AiGenerationLogInsert = {
   total_latency_ms?: number | null;
   error_type?: string | null;
   error_message?: string | null;
+  repeat_tile_url?: string | null;
+  repeat_tile_work_id?: string | null;
+  accent_tile_url?: string | null;
+  accent_tile_work_id?: string | null;
+  pattern_type?: "all_over" | "one_point" | null;
+  fabric_type?: "yarn_dyed" | "printed" | null;
+  tile_role?: "repeat" | "accent" | null;
+  paired_tile_work_id?: string | null;
+  accent_layout_json?: Record<string, unknown> | null;
 };
 
+/**
+ * `undefined`인 키는 제외하고 upsert한다(= 기존 값 유지).
+ * 명시적으로 `null`을 넘기면 그대로 컬럼을 비우는 의도로 보존된다.
+ */
 export async function logGeneration(
   adminClient: SupabaseClient,
   data: AiGenerationLogInsert,
 ): Promise<void> {
   try {
-    const { error } = await adminClient.from("ai_generation_logs").insert(data);
+    const { error } = await adminClient
+      .from("ai_generation_logs")
+      .upsert(
+        Object.fromEntries(
+          Object.entries(data).filter(([, value]) => value !== undefined),
+        ),
+        { onConflict: "work_id" },
+      );
     if (error) {
-      console.error("logGeneration insert error:", error.message);
+      console.error("logGeneration upsert error:", error);
     }
   } catch (err) {
     console.error("logGeneration unexpected error:", err);

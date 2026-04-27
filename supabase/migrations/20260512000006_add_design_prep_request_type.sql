@@ -115,7 +115,7 @@ begin
     raise exception 'unauthorized: caller does not own this resource';
   end if;
 
-  if p_ai_model not in ('openai', 'gemini', 'fal') then
+  if p_ai_model not in ('openai', 'fal') then
     raise exception 'invalid ai_model: %', p_ai_model;
   end if;
   if p_request_type not in ('analysis', 'prep', 'render_standard', 'render_high') then
@@ -274,7 +274,7 @@ begin
     raise exception 'unauthorized: refund requires service_role';
   end if;
 
-  if p_ai_model not in ('openai', 'gemini', 'fal') then
+  if p_ai_model not in ('openai', 'fal') then
     raise exception 'invalid ai_model: %', p_ai_model;
   end if;
 

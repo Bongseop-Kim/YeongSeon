@@ -50,4 +50,26 @@ describe("useSearch", () => {
 
     expect(onSearch).toHaveBeenCalledWith("query", { preset: "1month" });
   });
+
+  it("tabs 콜백 identity만 바뀌면 search 설정을 재등록하지 않는다", () => {
+    const onSearch = vi.fn();
+    const { rerender } = renderHook(
+      ({ onTabChange }: { onTabChange: (tab: string) => void }) =>
+        useSearch({
+          placeholder: "검색",
+          onSearch,
+          tabs: {
+            items: ["전체", "상품"],
+            defaultTab: "전체",
+            onTabChange,
+          },
+        }),
+      { initialProps: { onTabChange: vi.fn() } },
+    );
+
+    setSearchEnabled.mockClear();
+    rerender({ onTabChange: vi.fn() });
+
+    expect(setSearchEnabled).not.toHaveBeenCalled();
+  });
 });

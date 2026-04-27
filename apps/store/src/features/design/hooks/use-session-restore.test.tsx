@@ -48,6 +48,11 @@ describe("useSessionRestore", () => {
       baseImageWorkId: null,
       resultTags: [],
       generationStatus: "completed",
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
     };
 
     const onRestored = vi.fn();
@@ -61,6 +66,13 @@ describe("useSessionRestore", () => {
         lastImageUrl: "https://example.com/tie.png",
         lastImageFileId: "file-1",
         lastImageWorkId: "work-restore-1",
+        repeatTileUrl: null,
+        repeatTileWorkId: null,
+        accentTileUrl: null,
+        accentTileWorkId: null,
+        accentLayout: null,
+        patternType: null,
+        fabricType: null,
         imageCount: 1,
         createdAt: "2026-03-19T10:00:00Z",
         updatedAt: "2026-03-19T10:00:00Z",
@@ -80,6 +92,11 @@ describe("useSessionRestore", () => {
         baseImageWorkId: "work-restore-1",
         resultTags: [],
         generationStatus: "completed",
+        repeatTile: null,
+        accentTile: null,
+        accentLayout: null,
+        patternType: null,
+        fabricType: null,
       });
     });
     expect(onRestored).toHaveBeenCalledOnce();
@@ -99,6 +116,11 @@ describe("useSessionRestore", () => {
       baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
     };
 
     const { result } = renderHook(() => useSessionRestore());
@@ -106,11 +128,18 @@ describe("useSessionRestore", () => {
     act(() => {
       result.current.restoreSession({
         id: "session-2",
-        aiModel: "gemini",
+        aiModel: "openai",
         firstMessage: "텍스트만",
         lastImageUrl: null,
         lastImageFileId: null,
         lastImageWorkId: null,
+        repeatTileUrl: null,
+        repeatTileWorkId: null,
+        accentTileUrl: null,
+        accentTileWorkId: null,
+        accentLayout: null,
+        patternType: null,
+        fabricType: null,
         imageCount: 0,
         createdAt: "2026-03-19T10:00:00Z",
         updatedAt: "2026-03-19T10:00:00Z",
@@ -124,6 +153,80 @@ describe("useSessionRestore", () => {
           generatedImageUrl: null,
           baseImageWorkId: null,
           generationStatus: "idle",
+        }),
+      );
+    });
+  });
+
+  it("one-point 타일 세션 복원 시 accentLayout을 유지한다", async () => {
+    mockQueryData.data = {
+      messages: [],
+      designContext: {
+        pattern: "stripe",
+      },
+      generatedImageUrl: null,
+      baseImageWorkId: null,
+      resultTags: [],
+      generationStatus: "idle",
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
+    };
+
+    const { result } = renderHook(() => useSessionRestore());
+
+    act(() => {
+      result.current.restoreSession({
+        id: "session-tile",
+        aiModel: "openai",
+        firstMessage: "로고 포인트",
+        lastImageUrl: "https://example.com/repeat.png",
+        lastImageFileId: null,
+        lastImageWorkId: "repeat-work",
+        repeatTileUrl: "https://example.com/repeat.png",
+        repeatTileWorkId: "repeat-work",
+        accentTileUrl: "https://example.com/accent.png",
+        accentTileWorkId: "accent-work",
+        accentLayout: {
+          objectDescription: "브랜드 로고",
+          objectSource: "text",
+          color: "navy",
+          size: "medium",
+        },
+        patternType: "one_point",
+        fabricType: "printed",
+        imageCount: 1,
+        createdAt: "2026-03-19T10:00:00Z",
+        updatedAt: "2026-03-19T10:00:00Z",
+      });
+    });
+
+    await waitFor(() => {
+      expect(restoreSessionState).toHaveBeenCalledWith(
+        "session-tile",
+        expect.objectContaining({
+          repeatTile: {
+            url: "https://example.com/repeat.png",
+            workId: "repeat-work",
+          },
+          accentTile: {
+            url: "https://example.com/accent.png",
+            workId: "accent-work",
+          },
+          accentLayout: {
+            objectDescription: "브랜드 로고",
+            objectSource: "text",
+            color: "navy",
+            size: "medium",
+          },
+          patternType: "one_point",
+          fabricType: "printed",
+          designContext: {
+            pattern: "stripe",
+            fabricMethod: "print",
+          },
         }),
       );
     });
