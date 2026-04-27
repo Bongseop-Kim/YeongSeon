@@ -1,6 +1,9 @@
+import {
+  DESIGN_TOKEN_SELECT_FIELDS,
+  type DesignTokenRow,
+} from "@yeongseon/shared";
 import { supabase } from "@/lib/supabase";
 import type { AdminCustomerTokenBalanceRow } from "@/features/customers/types/admin-customer";
-import type { DesignTokenRow } from "@/features/customers/api/customers-mapper";
 
 export interface ManageCustomerTokensParams {
   userId: string;
@@ -12,9 +15,6 @@ interface TokenBalanceRpcRow {
   user_id: string | null;
   balance: number | null;
 }
-
-const DESIGN_TOKEN_SELECT_FIELDS =
-  "id, user_id, amount, type, ai_model, request_type, description, created_at, work_id";
 
 export async function getCustomerTokenBalances(
   userIds: string[],

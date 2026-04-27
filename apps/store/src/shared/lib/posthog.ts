@@ -1,37 +1,9 @@
 import posthog from "posthog-js";
 
-type GenerationRoute =
-  | "openai"
-  | "fal_tiling"
-  | "fal_edit"
-  | "fal_controlnet"
-  | "fal_inpaint";
-
-type PosthogAiModel = "openai" | "gemini" | "fal";
+type PosthogAiModel = "openai";
 
 type PhEventParamsMap = {
   design_session_started: { ai_model: PosthogAiModel };
-  design_generated: {
-    ai_model: PosthogAiModel;
-    latency_ms: number;
-    has_image: boolean;
-    pipeline?: "fal-ai";
-    route?: GenerationRoute;
-    route_reason?: string;
-    route_signals?: string[];
-  };
-  design_generation_failed: {
-    ai_model: PosthogAiModel;
-    error_type:
-      | "insufficient_tokens"
-      | "api_error"
-      | "tile_logo_on_canvas_failed";
-    pipeline?: "fal-ai";
-    scale?: "large" | "medium" | "small";
-    colors?: string[];
-    fabric_method?: "yarn-dyed" | "print" | null;
-    error?: string;
-  };
   order_completed: { order_id: string; amount: number };
   token_purchased: {
     order_id: string;

@@ -18,8 +18,6 @@ export interface RenderCapabilityPreset {
   fabricConstruction: string[];
   patternExtraHint: string | null;
   referenceLabel: string;
-  img2imgStrength: number;
-  controlNetConditioningScale: number;
 }
 
 export const RENDER_CAPABILITY_PRESETS: Record<
@@ -40,8 +38,6 @@ export const RENDER_CAPABILITY_PRESETS: Record<
     patternExtraHint:
       "Render each motif as a single-color silhouette only — no inner color variation or detail.",
     referenceLabel: "yarn-dyed woven",
-    img2imgStrength: 0.3,
-    controlNetConditioningScale: 0.65,
   },
   printed_surface_render: {
     id: "printed_surface_render",
@@ -56,8 +52,6 @@ export const RENDER_CAPABILITY_PRESETS: Record<
     ],
     patternExtraHint: null,
     referenceLabel: "printed",
-    img2imgStrength: 0.28,
-    controlNetConditioningScale: 0.65,
   },
 };
 

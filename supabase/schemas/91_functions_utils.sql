@@ -2,6 +2,8 @@
 -- 91_functions_utils.sql  – Number generator utilities 
 -- =============================================================
 -- ── generate_order_number ────────────────────────────────────
+-- SECURITY DEFINER 사유: 주문 생성 RPC 내부에서 orders 조회 시
+-- 호출자 RLS/권한에 영향을 받지 않고 동일한 번호 시퀀스를 계산하기 위해 사용한다.
 CREATE OR REPLACE FUNCTION public.generate_order_number()
 RETURNS text
 LANGUAGE plpgsql

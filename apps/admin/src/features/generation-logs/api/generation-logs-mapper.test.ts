@@ -9,11 +9,11 @@ const baseRow = {
   work_id: "work-1",
   user_id: "user-1",
   ai_model: "openai",
-  request_type: "analysis",
+  request_type: "render_standard",
   quality: "standard",
   user_message: "디자인 생성해줘",
   prompt_length: 100,
-  design_context: { style: "classic" },
+  design_context: { pattern: "classic" },
   conversation_turn: 2,
   has_ci_image: true,
   has_reference_image: false,
@@ -40,11 +40,11 @@ describe("toAdminGenerationLogItem", () => {
       workId: "work-1",
       userId: "user-1",
       aiModel: "openai",
-      requestType: "analysis",
+      requestType: "render_standard",
       quality: "standard",
       userMessage: "디자인 생성해줘",
       promptLength: 100,
-      designContext: { style: "classic" },
+      designContext: { pattern: "classic" },
       conversationTurn: 2,
       hasCiImage: true,
       hasReferenceImage: false,
@@ -65,9 +65,9 @@ describe("toAdminGenerationLogItem", () => {
     });
   });
 
-  it("gemini ai_model을 올바르게 매핑한다", () => {
-    const result = toAdminGenerationLogItem({ ...baseRow, ai_model: "gemini" });
-    expect(result.aiModel).toBe("gemini");
+  it("openai ai_model을 올바르게 매핑한다", () => {
+    const result = toAdminGenerationLogItem({ ...baseRow, ai_model: "openai" });
+    expect(result.aiModel).toBe("openai");
   });
 
   it("알 수 없는 ai_model은 openai로 폴백하고 경고를 출력한다", () => {
@@ -81,36 +81,21 @@ describe("toAdminGenerationLogItem", () => {
     warnSpy.mockRestore();
   });
 
+  it("safe number 범위를 벗어난 숫자 문자열은 fallback으로 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      prompt_length: "9007199254740992",
+    });
+
+    expect(result.promptLength).toBe(0);
+  });
+
   it("request_type이 render_standard이면 그대로 매핑한다", () => {
     const result = toAdminGenerationLogItem({
       ...baseRow,
       request_type: "render_standard",
     });
     expect(result.requestType).toBe("render_standard");
-  });
-
-  it("request_type이 render_high이면 그대로 매핑한다", () => {
-    const result = toAdminGenerationLogItem({
-      ...baseRow,
-      request_type: "render_high",
-    });
-    expect(result.requestType).toBe("render_high");
-  });
-
-  it("request_type이 prep이면 그대로 매핑한다", () => {
-    const result = toAdminGenerationLogItem({
-      ...baseRow,
-      request_type: "prep",
-    });
-    expect(result.requestType).toBe("prep");
-  });
-
-  it("잘못된 문자열 prep_tokens_charged는 0이 아니라 undefined로 버린다", () => {
-    const result = toAdminGenerationLogItem({
-      ...baseRow,
-      prep_tokens_charged: "not-a-number",
-    });
-    expect(result.prepTokensCharged).toBeUndefined();
   });
 
   it("request_type이 알 수 없는 값이면 null을 반환한다", () => {
@@ -121,9 +106,9 @@ describe("toAdminGenerationLogItem", () => {
     expect(result.requestType).toBeNull();
   });
 
-  it("quality가 high이면 그대로 매핑한다", () => {
+  it("quality가 high이면 null을 반환한다", () => {
     const result = toAdminGenerationLogItem({ ...baseRow, quality: "high" });
-    expect(result.quality).toBe("high");
+    expect(result.quality).toBeNull();
   });
 
   it("quality가 알 수 없는 값이면 null을 반환한다", () => {
@@ -152,6 +137,41 @@ describe("toAdminGenerationLogItem", () => {
       ...baseRow,
       design_context: [1, 2, 3],
     });
+    expect(result.designContext).toBeNull();
+  });
+
+  it("design_context는 알려진 필드만 검증해 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      design_context: {
+        colors: ["navy", "silver", 123],
+        pattern: "stripe",
+        fabricMethod: "yarn_dyed",
+        ciPlacement: null,
+        scale: "large",
+        ignored: "value",
+      },
+    });
+
+    expect(result.designContext).toEqual({
+      colors: ["navy", "silver"],
+      pattern: "stripe",
+      fabricMethod: "yarn_dyed",
+      ciPlacement: null,
+      scale: "large",
+    });
+  });
+
+  it("design_context에 유효한 필드가 없으면 null을 반환한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      design_context: {
+        colors: [123],
+        pattern: 123,
+        scale: "huge",
+      },
+    });
+
     expect(result.designContext).toBeNull();
   });
 
@@ -187,12 +207,39 @@ describe("toAdminGenerationLogItem", () => {
     expect(result.totalLatencyMs).toBeNull();
   });
 
+  it("latency 필드는 문자열과 bigint RPC 값을 숫자로 변환한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      text_latency_ms: "301",
+      image_latency_ms: 1201n,
+      total_latency_ms: "1502",
+    });
+
+    expect(result.textLatencyMs).toBe(301);
+    expect(result.imageLatencyMs).toBe(1201);
+    expect(result.totalLatencyMs).toBe(1502);
+  });
+
   it("문자열 prompt_length를 숫자로 변환한다", () => {
     const result = toAdminGenerationLogItem({
       ...baseRow,
       prompt_length: "50",
     });
     expect(result.promptLength).toBe(50);
+  });
+
+  it("정수가 아닌 number/string 숫자는 integer 필드 fallback으로 매핑한다", () => {
+    const numberResult = toAdminGenerationLogItem({
+      ...baseRow,
+      prompt_length: 10.5,
+    });
+    const stringResult = toAdminGenerationLogItem({
+      ...baseRow,
+      prompt_length: "10.5",
+    });
+
+    expect(numberResult.promptLength).toBe(0);
+    expect(stringResult.promptLength).toBe(0);
   });
 
   it("has_ci_image가 false면 false를 반환한다", () => {
@@ -274,46 +321,26 @@ describe("toAdminGenerationLogItem", () => {
     ]);
   });
 
-  it("유효한 워크플로우/패턴 준비 메타데이터를 함께 매핑한다", () => {
+  it("유효한 워크플로우와 렌더 메타데이터를 함께 매핑한다", () => {
     const result = toAdminGenerationLogItem({
       ...baseRow,
       workflow_id: "workflow-1",
-      phase: "prep",
+      phase: "render",
       parent_work_id: "parent-1",
       normalized_design: { motif: "stripe" },
-      eligible_for_render: false,
-      missing_requirements: ["fabric", 3],
-      eligibility_reason: "fabric_required",
-      text_prompt: "텍스트 프롬프트",
       image_prompt: "이미지 프롬프트",
-      image_edit_prompt: "이미지 편집 프롬프트",
       generated_image_url: "https://example.com/generated.png",
-      pattern_preparation_backend: "openai_repair",
-      pattern_repair_prompt_kind: "one_point_motif",
-      pattern_repair_applied: false,
-      pattern_repair_reason_codes: ["non_seamless_edges", 1, null],
-      prep_tokens_charged: "42",
       error_message: "retry exhausted",
     });
 
     expect(result).toEqual(
       expect.objectContaining({
         workflowId: "workflow-1",
-        phase: "prep",
+        phase: "render",
         parentWorkId: "parent-1",
         normalizedDesign: { motif: "stripe" },
-        eligibleForRender: false,
-        missingRequirements: ["fabric", 3],
-        eligibilityReason: "fabric_required",
-        textPrompt: "텍스트 프롬프트",
         imagePrompt: "이미지 프롬프트",
-        imageEditPrompt: "이미지 편집 프롬프트",
         generatedImageUrl: "https://example.com/generated.png",
-        patternPreparationBackend: "openai_repair",
-        patternRepairPromptKind: "one_point_motif",
-        patternRepairApplied: false,
-        patternRepairReasonCodes: ["non_seamless_edges"],
-        prepTokensCharged: 42,
         errorMessage: "retry exhausted",
       }),
     );

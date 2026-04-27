@@ -1,4 +1,9 @@
-type AttachmentType = "color" | "pattern" | "fabric" | "image" | "ci-placement";
+export type AttachmentType =
+  | "color"
+  | "pattern"
+  | "fabric"
+  | "image"
+  | "ci-placement";
 
 const LOG_ATTACHMENT_TYPES: readonly AttachmentType[] = [
   "color",

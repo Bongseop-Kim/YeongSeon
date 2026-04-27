@@ -1,0 +1,15 @@
+alter view public.admin_quote_request_list_view set (security_invoker = true);
+alter view public.order_detail_view set (security_invoker = true);
+alter view public.product_list_view set (security_invoker = true);
+alter view public.claim_list_view set (security_invoker = true);
+alter view public.order_list_view set (security_invoker = true);
+alter view public.quote_request_list_view set (security_invoker = true);
+alter view public.quote_request_detail_view set (security_invoker = true);
+alter view public.order_item_view set (security_invoker = true);
+alter view public.admin_order_detail_view set (security_invoker = true);
+alter view public.admin_claim_list_view set (security_invoker = true);
+alter view public.admin_claim_status_log_view set (security_invoker = true);
+alter view public.admin_order_list_view set (security_invoker = true);
+alter view public.admin_order_status_log_view set (security_invoker = true);
+alter view public.admin_product_list_view set (security_invoker = true);
+alter view public.admin_quote_request_detail_view set (security_invoker = true);

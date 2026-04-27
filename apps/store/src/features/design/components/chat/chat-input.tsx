@@ -21,7 +21,7 @@ interface ChatInputProps {
   isLoading?: boolean;
 }
 
-export interface ChatInputHandle {
+interface ChatInputHandle {
   focus: () => void;
   openOptions: () => void;
 }

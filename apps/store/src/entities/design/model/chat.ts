@@ -10,8 +10,10 @@ export type GenerationStatus =
   | "idle"
   | "generating"
   | "completed"
-  | "regenerating"
-  | "rendering";
+  | "regenerating";
+
+export const isActiveGeneration = (status: GenerationStatus): boolean =>
+  status === "generating" || status === "regenerating";
 
 export interface Message {
   id: string;

@@ -109,17 +109,26 @@ type HistoryItem = {
   workId: string | null;
 };
 
+const USAGE_HISTORY_TYPES = ["use", "refund"] as const;
+
 interface UsageTabProps {
   history: HistoryItem[];
   isLoading: boolean;
   error: Error | null;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
 }
 
-function UsageTab({ history, isLoading, error }: UsageTabProps) {
-  const rawUsageItems = history.filter(
-    (item) => item.type === "use" || item.type === "refund",
-  );
-  const usageItems = mergeTokenUsageItems(rawUsageItems);
+function UsageTab({
+  history,
+  isLoading,
+  error,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
+}: UsageTabProps) {
+  const usageItems = useMemo(() => mergeTokenUsageItems(history), [history]);
 
   if (isLoading && history.length === 0) {
     return <HistorySkeleton />;
@@ -166,6 +175,18 @@ function UsageTab({ history, isLoading, error }: UsageTabProps) {
           </span>
         </div>
       ))}
+      {hasMore && (
+        <div className="flex justify-center px-4 py-4">
+          <button
+            type="button"
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            className="rounded-full border border-stone-300 px-4 py-1.5 text-xs text-zinc-600 transition-colors hover:border-zinc-500 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoadingMore ? "불러오는 중..." : "더 보기"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -191,38 +212,26 @@ export default function TokenHistoryPage() {
     isLoading: isBalanceLoading,
     error: balanceError,
   } = useDesignTokenBalanceQuery();
+  const { dateFrom, dateTo } = searchFilters;
   const {
     data: rawHistory,
     isLoading: isHistoryLoading,
     error: historyError,
-  } = useDesignTokenHistoryQuery();
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useDesignTokenHistoryQuery({
+    dateFrom,
+    dateTo,
+    keyword: debouncedKeyword,
+    types: USAGE_HISTORY_TYPES,
+  });
 
   const balance = rawBalance ?? { total: 0, paid: 0, bonus: 0 };
-  const { dateFrom, dateTo } = searchFilters;
 
   const usageHistory = useMemo(() => {
-    const history = rawHistory ?? [];
-    let result = history.filter(
-      (item) => item.type === "use" || item.type === "refund",
-    );
-
-    if (debouncedKeyword) {
-      const keyword = debouncedKeyword.toLowerCase();
-      result = result.filter((item) =>
-        (item.description ?? "").toLowerCase().includes(keyword),
-      );
-    }
-
-    if (dateFrom) {
-      result = result.filter((item) => item.createdAt.slice(0, 10) >= dateFrom);
-    }
-
-    if (dateTo) {
-      result = result.filter((item) => item.createdAt.slice(0, 10) <= dateTo);
-    }
-
-    return result;
-  }, [rawHistory, debouncedKeyword, dateFrom, dateTo]);
+    return rawHistory?.pages.flat() ?? [];
+  }, [rawHistory]);
   const balanceProps: BalanceSummaryProps = {
     total: balance.total,
     paid: balance.paid,
@@ -262,6 +271,11 @@ export default function TokenHistoryPage() {
                     history={usageHistory}
                     isLoading={isHistoryLoading}
                     error={historyError instanceof Error ? historyError : null}
+                    hasMore={hasNextPage ?? false}
+                    isLoadingMore={isFetchingNextPage}
+                    onLoadMore={() => {
+                      void fetchNextPage();
+                    }}
                   />
                 </UtilityPageSection>
               </div>

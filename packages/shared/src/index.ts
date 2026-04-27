@@ -17,11 +17,9 @@ export type * from "./types/dto/admin-settings";
 export type * from "./types/dto/admin-quote-request";
 export type * from "./types/dto/admin-inquiry";
 export type * from "./types/dto/token-purchase";
+export type { DesignTokenRow } from "./types/dto/design-token";
 export type * from "./types/image-ref";
 export type * from "./types/type-utils";
-
-// Types - Design
-export type * from "./types/design/background-pattern";
 
 // Types - View
 export type * from "./types/view/product";
@@ -36,6 +34,7 @@ export type * from "./types/view/quote-request";
 
 // Constants
 export * from "./constants/image-folders";
+export { DESIGN_TOKEN_SELECT_FIELDS } from "./types/dto/design-token";
 export * from "./types/view/inquiry";
 export * from "./constants/claim-actions";
 export * from "./constants/claim-status";

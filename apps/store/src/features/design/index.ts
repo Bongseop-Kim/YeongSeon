@@ -8,3 +8,4 @@ export { useSessionRestore } from "./hooks/use-session-restore";
 export { usePendingGeneration } from "./hooks/use-pending-generation";
 export { PendingResultBanner } from "./components/chat/pending-result-banner";
 export { DesignImagePicker } from "./components/design-image-picker";
+export type { Attachment } from "./types/chat";

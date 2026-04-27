@@ -1,15 +1,7 @@
-import type { ConversationTurn } from "./conversation.ts";
-export type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
-import type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
-
-export type FalGenerationRoute =
-  | "fal_tiling"
-  | "fal_edit"
-  | "fal_controlnet"
-  | "fal_inpaint";
+import type { AttachmentType } from "./request-attachments.ts";
 
 interface RequestSessionAttachment {
-  type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+  type: AttachmentType;
   label: string;
   value: string;
   fileName?: string;
@@ -34,49 +26,14 @@ export type GenerateDesignRequest = {
     fabricMethod?: string | null;
     ciPlacement?: string | null;
     scale?: "large" | "medium" | "small" | null;
-    backgroundPattern?: BackgroundPattern;
   };
-  analysisWorkId?: string | null;
-  executionMode?: "auto" | "render_from_analysis";
-  autoGenerate?: boolean;
-  conversationHistory?: ConversationTurn[];
-  previousImageBase64?: string;
-  previousImageMimeType?: string;
+  workflowId?: string | null;
   sourceImageBase64?: string;
   sourceImageMimeType?: string;
   ciImageBase64?: string;
   ciImageMimeType?: string;
   referenceImageBase64?: string;
   referenceImageMimeType?: string;
-  tiledBase64?: string;
-  tiledMimeType?: string;
-  patternPreparation?: {
-    placementMode: "all-over" | "one-point";
-    sourceStatus: "ready" | "repair_required";
-    fabricStatus: "ready" | "repair_required";
-    reasonCodes: string[];
-    preparedSourceKind: "original" | "repaired";
-    preparationBackend?: "local" | "openai_repair";
-    repairApplied?: boolean;
-    repairPromptKind?: "all_over_tile" | "one_point_motif" | null;
-    repairSummary?: string | null;
-    prepTokensCharged?: number | null;
-  };
-  route?: FalGenerationRoute;
-  controlType?: "lineart" | "edge" | "depth";
-  structureImageBase64?: string;
-  structureImageMimeType?: string;
-  baseImageBase64?: string;
-  baseImageMimeType?: string;
-  maskBase64?: string;
-  maskMimeType?: string;
-  editPrompt?: string;
-  routeSignals?: string[];
-  routeReason?: string | null;
-  routeHint?: "openai" | "fal_tiling" | "fal_edit";
-  baseImageUrl?: string | null;
-  baseImageWorkId?: string | null;
-  seed?: number | null;
   sessionId?: string;
   firstMessage?: string;
   allMessages?: RequestSessionMessage[];

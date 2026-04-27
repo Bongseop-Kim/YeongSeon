@@ -18,13 +18,9 @@
     "./create-quote-request",
     "./create-sample-order",
     "./delete-account",
-    "./generate-fal-api",
-    "./generate-google-api",
-    "./generate-open-api",
+    "./generate-tile",
     "./imagekit-auth",
     "./notify-claim",
-    "./prepare-pattern-composite",
-    "./prepare-pattern-source-openai",
     "./send-phone-verification",
     "./verify-phone"
   ]

@@ -18,34 +18,45 @@ export function useSearch({
 }: UseSearchOptions): void {
   const setSearchEnabled = useSearchStore((state) => state.setSearchEnabled);
   const onSearchRef = useRef(onSearch);
+  const onTabChangeRef = useRef(tabs?.onTabChange);
+  const tabItems = tabs?.items;
+  const defaultTab = tabs?.defaultTab;
+  const itemsKey = tabItems?.join("\u0000");
 
   useEffect(() => {
     onSearchRef.current = onSearch;
   }, [onSearch]);
 
   useEffect(() => {
+    onTabChangeRef.current = tabs?.onTabChange;
+  }, [tabs?.onTabChange]);
+
+  useEffect(() => {
+    const items = tabItems ? [...tabItems] : undefined;
+    const tabsProp =
+      items !== undefined && defaultTab !== undefined
+        ? {
+            tabs: {
+              items,
+              activeTab: defaultTab,
+              onTabChange: (tab: string) => {
+                onTabChangeRef.current?.(tab);
+              },
+            },
+          }
+        : {};
+
     setSearchEnabled(true, {
       placeholder,
       onSearch: (query, dateFilter) => {
         onSearchRef.current(query, dateFilter);
       },
-      ...(tabs
-        ? {
-            tabs: {
-              items: [...tabs.items],
-              activeTab: tabs.defaultTab,
-              onTabChange: tabs.onTabChange,
-            },
-          }
-        : {}),
+      ...tabsProp,
     });
 
     return () => setSearchEnabled(false);
-  }, [
-    placeholder,
-    setSearchEnabled,
-    tabs?.defaultTab,
-    tabs?.items,
-    tabs?.onTabChange,
-  ]);
+    // tabItems is intentionally omitted; itemsKey is the stable change marker
+    // while onSearchRef and onTabChangeRef keep the handlers current.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placeholder, setSearchEnabled, defaultTab, itemsKey]);
 }

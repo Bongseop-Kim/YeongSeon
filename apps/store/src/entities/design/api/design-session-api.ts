@@ -11,7 +11,7 @@ import type {
 } from "@/entities/design/model/design-session";
 
 const DESIGN_SESSION_SELECT_FIELDS =
-  "id, user_id, ai_model, first_message, last_image_url, last_image_file_id, last_image_work_id, image_count, created_at, updated_at";
+  "id, user_id, ai_model, first_message, last_image_url, last_image_file_id, last_image_work_id, repeat_tile_url, repeat_tile_work_id, accent_tile_url, accent_tile_work_id, accent_layout_json, pattern_type, fabric_type, image_count, created_at, updated_at";
 
 const DESIGN_SESSION_MESSAGE_SELECT_FIELDS =
   "id, session_id, role, content, image_url, image_file_id, attachments, sequence_number, created_at";

@@ -6,6 +6,7 @@ interface PageSeoProps {
   ogImage?: string;
   ogUrl?: string;
   fullTitle?: boolean;
+  robots?: string;
 }
 
 export function PageSeo({
@@ -14,12 +15,14 @@ export function PageSeo({
   ogImage = "https://essesion.shop/logo/logo.png",
   ogUrl,
   fullTitle,
+  robots,
 }: PageSeoProps) {
   const resolvedTitle = fullTitle ? title : `${title} | ESSE SION`;
   return (
     <Helmet>
       <title>{resolvedTitle}</title>
       <meta name="description" content={description} />
+      {robots && <meta name="robots" content={robots} />}
       {ogUrl && <link rel="canonical" href={ogUrl} />}
       <meta property="og:title" content={resolvedTitle} />
       <meta property="og:description" content={description} />

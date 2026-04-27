@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import type {
-  GenerationRoute,
-  GenerationRouteReason,
-  GenerationRouteSignal,
+  AccentLayout,
+  FabricType,
+  PatternType,
+  TileRef,
 } from "@/entities/design";
 import type {
   Attachment,
@@ -12,25 +13,9 @@ import type {
 import type { DesignContext } from "@/features/design/types/design-context";
 import type { RestoredDesignSessionState } from "@/entities/design";
 
-export const getRawImageUrlFromPreviewBackground = (
-  value: string | null | undefined,
-): string | null => {
-  if (!value) {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  if (trimmed.length === 0) {
-    return null;
-  }
-
-  const match = trimmed.match(/^url\((['"]?)(.*?)\1\)/i);
-  if (match?.[2]) {
-    return match[2];
-  }
-
-  return trimmed;
-};
+export const isLegacySessionSelector = (
+  state: Pick<DesignChatState, "generatedImageUrl" | "repeatTile">,
+): boolean => state.generatedImageUrl !== null && state.repeatTile === null;
 
 interface DesignChatState {
   messages: Message[];
@@ -41,18 +26,11 @@ interface DesignChatState {
   resultTags: string[];
   pendingAttachments: Attachment[];
   currentSessionId: string | null;
-  baseImageUrl: string | null;
-  baseImageWorkId: string | null;
-  lastRoute: GenerationRoute | null;
-  lastRouteSignals: GenerationRouteSignal[];
-  lastRouteReason: GenerationRouteReason | null;
-  lastFalRequestId: string | null;
-  lastSeed: number | null;
-  lastAnalysisWorkId: string | null;
-  lastEligibleForRender: boolean;
-  lastMissingRequirements: string[];
-  lastAnalysisReuseKey: string | null;
-  inpaintTarget: { imageUrl: string; imageWorkId: string | null } | null;
+  repeatTile: TileRef | null;
+  accentTile: TileRef | null;
+  accentLayout: AccentLayout | null;
+  patternType: PatternType | null;
+  fabricType: FabricType | null;
   addMessage: (message: Message) => void;
   setDesignContext: (patch: Partial<DesignContext>) => void;
   addAttachment: (attachment: Attachment) => void;
@@ -61,23 +39,13 @@ interface DesignChatState {
   setGenerationStatus: (status: GenerationStatus) => void;
   setGeneratedImage: (imageUrl: string | null, tags: string[]) => void;
   setSelectedPreviewImage: (url: string) => void;
-  setGenerationMetadata: (input: {
-    baseImageUrl: string | null;
-    baseImageWorkId: string | null;
-    lastRoute: GenerationRoute | null;
-    lastRouteSignals: GenerationRouteSignal[];
-    lastRouteReason: GenerationRouteReason | null;
-    lastFalRequestId: string | null;
-    lastSeed: number | null;
+  setTileResult: (result: {
+    repeatTile: TileRef;
+    accentTile: TileRef | null;
+    accentLayout: AccentLayout | null;
+    patternType: PatternType;
+    fabricType: FabricType;
   }) => void;
-  setLastAnalysisResult: (input: {
-    analysisWorkId: string | null;
-    eligibleForRender: boolean;
-    missingRequirements: string[];
-  }) => void;
-  setLastAnalysisReuseKey: (value: string | null) => void;
-  openInpaintDialog: (imageUrl: string, imageWorkId?: string | null) => void;
-  closeInpaintDialog: () => void;
   restoreMessages: (messages: Message[]) => void;
   restoreSessionState: (
     sessionId: string,
@@ -99,21 +67,6 @@ const createInitialDesignContext = (): DesignContext => ({
   referenceImage: null,
 });
 
-const createLastAnalysisReset = () => ({
-  lastAnalysisWorkId: null as string | null,
-  lastEligibleForRender: false,
-  lastMissingRequirements: [] as string[],
-  lastAnalysisReuseKey: null as string | null,
-});
-
-const createRouteMetadataReset = () => ({
-  lastRoute: null as GenerationRoute | null,
-  lastRouteSignals: [] as GenerationRouteSignal[],
-  lastRouteReason: null as GenerationRouteReason | null,
-  lastFalRequestId: null as string | null,
-  lastSeed: null as number | null,
-});
-
 const createConversationResetState = () => ({
   messages: [],
   designContext: createInitialDesignContext(),
@@ -123,14 +76,11 @@ const createConversationResetState = () => ({
   resultTags: [] as string[],
   pendingAttachments: [] as Attachment[],
   currentSessionId: null as string | null,
-  baseImageUrl: null as string | null,
-  baseImageWorkId: null as string | null,
-  inpaintTarget: null as {
-    imageUrl: string;
-    imageWorkId: string | null;
-  } | null,
-  ...createRouteMetadataReset(),
-  ...createLastAnalysisReset(),
+  repeatTile: null as TileRef | null,
+  accentTile: null as TileRef | null,
+  accentLayout: null as AccentLayout | null,
+  patternType: null as PatternType | null,
+  fabricType: null as FabricType | null,
 });
 
 export const useDesignChatStore = create<DesignChatState>((set) => ({
@@ -157,13 +107,15 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       ),
     })),
   clearAttachments: () =>
-    set({
-      pendingAttachments: [],
-    }),
+    set((state) =>
+      state.pendingAttachments.length === 0
+        ? state
+        : { pendingAttachments: [] },
+    ),
   setGenerationStatus: (status) =>
-    set({
-      generationStatus: status,
-    }),
+    set((state) =>
+      state.generationStatus === status ? state : { generationStatus: status },
+    ),
   setGeneratedImage: (imageUrl, tags) =>
     set(
       imageUrl !== null
@@ -178,37 +130,19 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
             resultTags: [],
           },
     ),
-  setSelectedPreviewImage: (url) => set({ selectedPreviewImageUrl: url }),
-  setGenerationMetadata: (input) =>
+  setSelectedPreviewImage: (url) =>
+    set((state) =>
+      state.selectedPreviewImageUrl === url
+        ? state
+        : { selectedPreviewImageUrl: url },
+    ),
+  setTileResult: (result) =>
     set({
-      baseImageUrl: input.baseImageUrl,
-      baseImageWorkId: input.baseImageWorkId,
-      lastRoute: input.lastRoute,
-      lastRouteSignals: input.lastRouteSignals,
-      lastRouteReason: input.lastRouteReason,
-      lastFalRequestId: input.lastFalRequestId,
-      lastSeed: input.lastSeed,
-    }),
-  setLastAnalysisResult: (input) =>
-    set({
-      lastAnalysisWorkId: input.analysisWorkId,
-      lastEligibleForRender: input.eligibleForRender,
-      lastMissingRequirements: input.missingRequirements,
-    }),
-  setLastAnalysisReuseKey: (value) =>
-    set({
-      lastAnalysisReuseKey: value,
-    }),
-  openInpaintDialog: (imageUrl, imageWorkId = null) =>
-    set({
-      inpaintTarget: {
-        imageUrl,
-        imageWorkId,
-      },
-    }),
-  closeInpaintDialog: () =>
-    set({
-      inpaintTarget: null,
+      repeatTile: result.repeatTile,
+      accentTile: result.accentTile,
+      accentLayout: result.accentLayout,
+      patternType: result.patternType,
+      fabricType: result.fabricType,
     }),
   resetConversation: () => set(createConversationResetState()),
   restoreMessages: (messages) => set({ messages }),
@@ -220,15 +154,8 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
         ...sessionState.designContext,
       },
       selectedPreviewImageUrl: sessionState.generatedImageUrl,
-      baseImageUrl: getRawImageUrlFromPreviewBackground(
-        sessionState.generatedImageUrl,
-      ),
-      baseImageWorkId: sessionState.baseImageWorkId,
-      inpaintTarget: null,
       currentSessionId: sessionId,
       pendingAttachments: [],
-      ...createRouteMetadataReset(),
-      ...createLastAnalysisReset(),
     }),
   setCurrentSessionId: (id) => set({ currentSessionId: id }),
 }));

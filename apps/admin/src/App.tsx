@@ -49,6 +49,7 @@ import QuoteRequestShow from "@/pages/quote-requests/show";
 import SettingsPage from "@/pages/settings";
 import PricingPage from "@/pages/pricing";
 import GenerationLogList from "@/pages/generation-logs/list";
+import GenerationLogDetailPage from "@/pages/generation-logs/detail";
 
 import "@refinedev/antd/dist/reset.css";
 
@@ -127,6 +128,7 @@ export default function App() {
             {
               name: "ai_generation_logs",
               list: "/generation-logs",
+              show: "/generation-logs/:id",
               meta: { label: "AI 생성 로그", icon: <RobotOutlined /> },
             },
             {
@@ -170,6 +172,10 @@ export default function App() {
               <Route path="/inquiries/show/:id" element={<InquiryShow />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/generation-logs" element={<GenerationLogList />} />
+              <Route
+                path="/generation-logs/:id"
+                element={<GenerationLogDetailPage />}
+              />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             <Route

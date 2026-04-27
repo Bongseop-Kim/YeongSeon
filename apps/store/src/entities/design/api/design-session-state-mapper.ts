@@ -1,7 +1,14 @@
 import type { DesignSessionMessage } from "@/entities/design/model/design-session";
 import type { DesignContext } from "@/entities/design/model/design-context";
 import type { GenerationStatus, Message } from "@/entities/design/model/chat";
+import type {
+  AccentLayout,
+  FabricType,
+  PatternType,
+  TileRef,
+} from "@/entities/design/model/tile-types";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
+import { createGuard } from "@/shared/lib/type-guard";
 
 const PATTERN_OPTIONS = [
   "stripe",
@@ -20,22 +27,27 @@ const CI_PLACEMENTS = [
   "one-point",
 ] as const satisfies ReadonlyArray<NonNullable<DesignContext["ciPlacement"]>>;
 
-const isOptionOf =
-  <T extends string>(options: readonly T[]) =>
-  (value: string): value is T =>
-    options.some((option) => option === value);
-
-const isPatternOption = isOptionOf(PATTERN_OPTIONS);
-const isFabricMethod = isOptionOf(FABRIC_METHODS);
-const isCiPlacement = isOptionOf(CI_PLACEMENTS);
+const isPatternOption = createGuard<NonNullable<DesignContext["pattern"]>>(
+  new Set(PATTERN_OPTIONS),
+);
+const isFabricMethod = createGuard<NonNullable<DesignContext["fabricMethod"]>>(
+  new Set(FABRIC_METHODS),
+);
+const isCiPlacement = createGuard<NonNullable<DesignContext["ciPlacement"]>>(
+  new Set(CI_PLACEMENTS),
+);
 
 export interface RestoredDesignSessionState {
   messages: Message[];
   designContext?: Partial<DesignContext>;
   generatedImageUrl: string | null;
-  baseImageWorkId: string | null;
   resultTags: string[];
   generationStatus: GenerationStatus;
+  repeatTile: TileRef | null;
+  accentTile: TileRef | null;
+  accentLayout: AccentLayout | null;
+  patternType: PatternType | null;
+  fabricType: FabricType | null;
 }
 
 function sessionMessageToMessage(message: DesignSessionMessage): Message {
@@ -117,8 +129,13 @@ export function toRestoredDesignSessionState(
     messages: restoredMessages,
     ...(designContext ? { designContext } : {}),
     generatedImageUrl,
-    baseImageWorkId: null,
     resultTags: [],
     generationStatus: generatedImageUrl ? "completed" : "idle",
+    // Tile metadata is merged from the session row in use-session-restore.ts.
+    repeatTile: null,
+    accentTile: null,
+    accentLayout: null,
+    patternType: null,
+    fabricType: null,
   };
 }

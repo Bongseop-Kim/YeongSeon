@@ -62,9 +62,13 @@ describe("toRestoredDesignSessionState", () => {
       ],
       generatedImageUrl:
         'url("https://example.com/design.png") center/cover no-repeat',
-      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "completed",
+      repeatTile: null,
+      accentTile: null,
+      accentLayout: null,
+      patternType: null,
+      fabricType: null,
     });
   });
 
@@ -85,7 +89,6 @@ describe("toRestoredDesignSessionState", () => {
       ]),
     ).toMatchObject({
       generatedImageUrl: null,
-      baseImageWorkId: null,
       resultTags: [],
       generationStatus: "idle",
     });

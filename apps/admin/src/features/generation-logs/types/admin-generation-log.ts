@@ -1,12 +1,16 @@
+export type GenerationLogPhase = "render";
+export type GenerationRequestTypeFilter = "render_standard";
+export type GenerationStatusFilter = "success" | "error";
+
 export interface AdminGenerationLogItem {
   id: string;
   workflowId?: string;
-  phase?: "analysis" | "prep" | "render";
+  phase?: GenerationLogPhase;
   workId: string;
   parentWorkId?: string | null;
   userId: string;
-  aiModel: "openai" | "gemini" | "fal";
-  requestType: "analysis" | "prep" | "render_standard" | "render_high" | null;
+  aiModel: "openai";
+  requestType: GenerationRequestTypeFilter | null;
   quality: "standard" | "high" | null;
   userMessage: string;
   promptLength: number;
@@ -24,19 +28,9 @@ export interface AdminGenerationLogItem {
   hasPreviousImage: boolean;
   aiMessage: string | null;
   generateImage: boolean | null;
-  eligibleForRender?: boolean | null;
-  missingRequirements?: unknown[] | null;
-  eligibilityReason?: string | null;
-  textPrompt?: string | null;
   imagePrompt?: string | null;
-  imageEditPrompt?: string | null;
   imageGenerated: boolean;
   generatedImageUrl: string | null;
-  patternPreparationBackend?: "local" | "openai_repair" | null;
-  patternRepairPromptKind?: "all_over_tile" | "one_point_motif" | null;
-  patternRepairApplied?: boolean | null;
-  patternRepairReasonCodes?: string[] | null;
-  prepTokensCharged?: number | null;
   requestAttachments: Array<{
     type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
     label: string;

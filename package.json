@@ -24,6 +24,7 @@
     "db:lint": "supabase db lint --level warning",
     "sql:security-check": "node scripts/check-sql-security.mjs",
     "db:test": "supabase test db",
+    "functions:deploy": "supabase functions deploy --use-api",
     "preinstall": "npx only-allow pnpm",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

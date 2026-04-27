@@ -50,8 +50,8 @@ $$;
 -- Returns: { success, cost, balance } or { success: false, error: '...', balance, cost }
 CREATE OR REPLACE FUNCTION public.use_design_tokens(
   p_user_id      uuid,
-  p_ai_model     text,             -- 'openai' | 'gemini' | 'fal'
-  p_request_type text,             -- 'analysis' | 'prep' | 'render_standard' | 'render_high'
+  p_ai_model     text,             -- 'openai'
+  p_request_type text,             -- 'render_standard'
   p_quality      text DEFAULT 'standard',
   p_work_id      text DEFAULT NULL
 )
@@ -81,19 +81,15 @@ BEGIN
   END IF;
 
   -- 파라미터 화이트리스트 검증
-  IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
+  IF p_ai_model NOT IN ('openai') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
-  IF p_request_type NOT IN ('analysis', 'prep', 'render_standard', 'render_high') THEN
+  IF p_request_type != 'render_standard' THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
   IF p_quality NOT IN ('standard', 'high') THEN
     RAISE EXCEPTION 'invalid quality: %', p_quality;
   END IF;
-  IF p_request_type = 'prep' AND p_ai_model != 'openai' THEN
-    RAISE EXCEPTION 'prep request_type is only supported for openai: %', p_ai_model;
-  END IF;
-
   -- 동시 요청 advisory lock (사용자별)
   PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
 
@@ -259,11 +255,11 @@ BEGIN
     RAISE EXCEPTION 'unauthorized: refund requires service_role';
   END IF;
 
-  IF p_ai_model NOT IN ('openai', 'gemini', 'fal') THEN
+  IF p_ai_model NOT IN ('openai') THEN
     RAISE EXCEPTION 'invalid ai_model: %', p_ai_model;
   END IF;
 
-  IF p_request_type NOT IN ('analysis', 'prep', 'render_standard', 'render_high') THEN
+  IF p_request_type != 'render_standard' THEN
     RAISE EXCEPTION 'invalid request_type: %', p_request_type;
   END IF;
 
