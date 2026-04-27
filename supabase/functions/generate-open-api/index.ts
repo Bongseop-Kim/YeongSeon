@@ -654,12 +654,15 @@ const runOpenAiAnalysis = async (params: {
       }
     }
 
-    await emitAnalysisLog({
-      errorType: "analysis_failed",
-      errorMessage: error instanceof Error ? error.message : "Unknown error",
-      tokensRefunded,
-    });
-    await recordAnalysisSourceArtifact();
+    try {
+      await emitAnalysisLog({
+        errorType: "analysis_failed",
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
+        tokensRefunded,
+      });
+    } finally {
+      await recordAnalysisSourceArtifact();
+    }
 
     throw error;
   }

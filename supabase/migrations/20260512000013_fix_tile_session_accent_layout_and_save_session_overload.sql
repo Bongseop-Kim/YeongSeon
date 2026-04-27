@@ -69,13 +69,13 @@ begin
       last_image_file_id = excluded.last_image_file_id,
       last_image_work_id = excluded.last_image_work_id,
       image_count = excluded.image_count,
-      repeat_tile_url = excluded.repeat_tile_url,
-      repeat_tile_work_id = excluded.repeat_tile_work_id,
-      accent_tile_url = excluded.accent_tile_url,
-      accent_tile_work_id = excluded.accent_tile_work_id,
-      accent_layout_json = excluded.accent_layout_json,
-      pattern_type = excluded.pattern_type,
-      fabric_type = excluded.fabric_type,
+      repeat_tile_url = coalesce(excluded.repeat_tile_url, design_chat_sessions.repeat_tile_url),
+      repeat_tile_work_id = coalesce(excluded.repeat_tile_work_id, design_chat_sessions.repeat_tile_work_id),
+      accent_tile_url = coalesce(excluded.accent_tile_url, design_chat_sessions.accent_tile_url),
+      accent_tile_work_id = coalesce(excluded.accent_tile_work_id, design_chat_sessions.accent_tile_work_id),
+      accent_layout_json = coalesce(excluded.accent_layout_json, design_chat_sessions.accent_layout_json),
+      pattern_type = coalesce(excluded.pattern_type, design_chat_sessions.pattern_type),
+      fabric_type = coalesce(excluded.fabric_type, design_chat_sessions.fabric_type),
       updated_at = now()
   where public.design_chat_sessions.user_id = v_user_id;
 

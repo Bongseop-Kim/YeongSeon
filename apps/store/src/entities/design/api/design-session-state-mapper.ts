@@ -133,6 +133,7 @@ export function toRestoredDesignSessionState(
     baseImageWorkId: null,
     resultTags: [],
     generationStatus: generatedImageUrl ? "completed" : "idle",
+    // Tile metadata is merged from the session row in use-session-restore.ts.
     repeatTile: null,
     accentTile: null,
     accentLayout: null,

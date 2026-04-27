@@ -1,6 +1,6 @@
 import type { AdminGenerationArtifactItem } from "@/features/generation-logs/types/admin-generation-artifact";
 
-function toString(v: unknown): string | null {
+function toStringOrNull(v: unknown): string | null {
   return typeof v === "string" ? v : null;
 }
 
@@ -78,22 +78,38 @@ export function toAdminGenerationArtifactItem(
   row: GenerationArtifactRow,
 ): AdminGenerationArtifactItem {
   const phase = toArtifactPhase(row.phase);
+  const id = toStringOrNull(row.id);
+  const workflowId = toStringOrNull(row.workflow_id);
+  const createdAt = toStringOrNull(row.created_at);
+
+  for (const [field, value] of [
+    ["id", id],
+    ["workflowId", workflowId],
+    ["createdAt", createdAt],
+  ] as const) {
+    if (value === null) {
+      console.warn("[toAdminGenerationArtifactItem] Invalid critical field", {
+        field,
+        row,
+      });
+    }
+  }
 
   return {
-    id: toString(row.id) ?? "",
-    workflowId: toString(row.workflow_id) ?? "",
+    id,
+    workflowId,
     ...(phase ? { phase } : {}),
-    artifactType: toString(row.artifact_type) ?? "",
-    sourceWorkId: toString(row.source_work_id),
-    parentArtifactId: toString(row.parent_artifact_id),
-    storageProvider: toString(row.storage_provider) ?? "imagekit",
-    imageUrl: toString(row.image_url),
+    artifactType: toStringOrNull(row.artifact_type) ?? "",
+    sourceWorkId: toStringOrNull(row.source_work_id),
+    parentArtifactId: toStringOrNull(row.parent_artifact_id),
+    storageProvider: toStringOrNull(row.storage_provider) ?? "imagekit",
+    imageUrl: toStringOrNull(row.image_url),
     imageWidth: toNumberOrNull(row.image_width),
     imageHeight: toNumberOrNull(row.image_height),
-    mimeType: toString(row.mime_type),
+    mimeType: toStringOrNull(row.mime_type),
     fileSizeBytes: toNumberOrNull(row.file_size_bytes),
     status: toArtifactStatus(row.status),
     meta: isRecord(row.meta) ? row.meta : {},
-    createdAt: toString(row.created_at) ?? "",
+    createdAt,
   };
 }

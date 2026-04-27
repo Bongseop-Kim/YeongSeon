@@ -119,6 +119,15 @@ function resolveEditTargetKeyword(message: string): EditTarget | null {
   return null;
 }
 
+const createFallbackAccentLayout = (
+  message: string,
+): NonNullable<AnalysisOutput["accentLayout"]> => ({
+  objectDescription: message.trim() || "accent motif",
+  objectSource: "text",
+  color: null,
+  size: "medium",
+});
+
 const SYSTEM_PROMPT = `You analyze fabric pattern design requests and output structured JSON.
 
 Output this exact schema:
@@ -194,7 +203,12 @@ export async function analyzeIntent(
     const raw = JSON.parse(data.choices[0].message.content) as AnalysisOutput;
 
     if (editTargetOverride) {
+      raw.intent = "edit";
       raw.editTarget = editTargetOverride;
+      if (editTargetOverride === "accent") {
+        raw.patternType = "one_point";
+        raw.accentLayout ??= createFallbackAccentLayout(req.userMessage);
+      }
     }
 
     return raw;

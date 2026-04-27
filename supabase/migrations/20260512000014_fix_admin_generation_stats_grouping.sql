@@ -30,11 +30,11 @@ begin
       'total_requests', count(*)::integer,
       'image_success_rate',
       case
-        when count(*) filter (where generate_image is true) = 0 then 0
+        when count(*) filter (where phase <> 'analysis' and generate_image is true) = 0 then null
         else round(
           (
-            count(*) filter (where image_generated)::numeric
-            / count(*) filter (where generate_image is true)
+            count(*) filter (where phase <> 'analysis' and image_generated)::numeric
+            / count(*) filter (where phase <> 'analysis' and generate_image is true)
           ),
           4
         )
@@ -102,8 +102,8 @@ begin
       count(*)::integer as count,
       avg(total_latency_ms) as avg_latency_ms,
       avg(tokens_charged) as avg_tokens,
-      count(*) filter (where generate_image is true) as render_request_count,
-      count(*) filter (where image_generated) as image_generated_count
+      count(*) filter (where phase <> 'analysis' and generate_image is true) as render_request_count,
+      count(*) filter (where phase <> 'analysis' and image_generated) as image_generated_count
     from filtered_logs
     group by 1
   ),
@@ -119,7 +119,7 @@ begin
           'image_success_rate',
           case
             when input_type = '분석' then null
-            when render_request_count = 0 then 0
+            when render_request_count = 0 then null
             else round(
               image_generated_count::numeric / render_request_count,
               4
@@ -158,11 +158,17 @@ begin
         count(*)::integer as count,
         avg(tokens_charged) as avg_tokens,
         case
-          when count(*) filter (where generate_image is true) = 0 then 0
+          when count(*) filter (
+            where phase <> 'analysis' and generate_image is true
+          ) = 0 then null
           else round(
             (
-              count(*) filter (where image_generated)::numeric
-              / count(*) filter (where generate_image is true)
+              count(*) filter (
+                where phase <> 'analysis' and image_generated
+              )::numeric
+              / count(*) filter (
+                where phase <> 'analysis' and generate_image is true
+              )
             ),
             4
           )

@@ -223,6 +223,7 @@ vi.mock("@/entities/design", async (importOriginal) => {
     InsufficientTokensError: MockInsufficientTokensError,
     resolveGenerationRoute,
     callTileGeneration,
+    uploadDesignAsset,
   };
 });
 
@@ -281,10 +282,11 @@ describe("useDesignChat", () => {
       hash: "hash-1",
     });
     callTileGeneration.mockResolvedValue({
-      repeatTileUrl: "https://example.com/repeat.webp",
-      repeatTileWorkId: "repeat-work-1",
-      accentTileUrl: null,
-      accentTileWorkId: null,
+      repeatTile: {
+        url: "https://example.com/repeat.webp",
+        workId: "repeat-work-1",
+      },
+      accentTile: null,
       patternType: "all_over",
       fabricType: "printed",
       accentLayout: null,
@@ -569,10 +571,14 @@ describe("useDesignChat", () => {
           route: "tile_edit",
           uiFabricType: "printed",
           previousFabricType: "printed",
-          previousRepeatTileUrl: "https://example.com/old-repeat.webp",
-          previousRepeatTileWorkId: "repeat-old",
-          previousAccentTileUrl: "https://example.com/old-accent.webp",
-          previousAccentTileWorkId: "accent-old",
+          previousRepeatTile: {
+            url: "https://example.com/old-repeat.webp",
+            workId: "repeat-old",
+          },
+          previousAccentTile: {
+            url: "https://example.com/old-accent.webp",
+            workId: "accent-old",
+          },
         }),
       );
     });

@@ -5,12 +5,23 @@ import { tieMaskStyle } from "@/features/design/components/preview/tie-mask-styl
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 
 const TILE_BACKGROUND_SIZE = "80px 80px";
+const ACCENT_TILE_SIZE = "126px";
 const ACCENT_TILE_BOTTOM = "20%";
+const ACCENT_TILE_BACKGROUND_SIZE = "cover";
 
 const tileRepeatStyle = (url: string) => ({
   backgroundImage: `url("${url}")`,
   backgroundRepeat: "repeat" as const,
   backgroundSize: TILE_BACKGROUND_SIZE,
+});
+
+const accentOverlayStyle = (url: string) => ({
+  bottom: ACCENT_TILE_BOTTOM,
+  width: ACCENT_TILE_SIZE,
+  height: ACCENT_TILE_SIZE,
+  backgroundImage: `url("${url}")`,
+  backgroundSize: ACCENT_TILE_BACKGROUND_SIZE,
+  backgroundPosition: "center",
 });
 
 interface TieCanvasProps {
@@ -38,15 +49,13 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
 
   const isLoading = isActiveGeneration(generationStatus);
   const previewBackground = selectedPreviewImageUrl ?? fallbackColor;
-  const isTileMode = repeatTile !== null;
-
   const renderContent = () => {
     if (unmasked) {
       return (
         <div
           className="h-[600px] w-[316px]"
           style={
-            isTileMode
+            repeatTile !== null
               ? tileRepeatStyle(repeatTile.url)
               : { background: previewBackground }
           }
@@ -54,7 +63,7 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
       );
     }
 
-    if (isTileMode) {
+    if (repeatTile !== null) {
       return (
         <div className="relative h-[600px] w-[316px]">
           <div
@@ -63,13 +72,8 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
           />
           {patternType === "one_point" && accentTile && (
             <div
-              className="absolute left-1/2 h-[126px] w-[126px] -translate-x-1/2"
-              style={{
-                bottom: ACCENT_TILE_BOTTOM,
-                backgroundImage: `url("${accentTile.url}")`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
+              className="absolute left-1/2 -translate-x-1/2"
+              style={accentOverlayStyle(accentTile.url)}
             />
           )}
           {isLoading && <div className="animate-ai-shimmer absolute inset-0" />}

@@ -1,13 +1,5 @@
 import posthog from "posthog-js";
-
-type GenerationRoute =
-  | "openai"
-  | "fal_tiling"
-  | "fal_edit"
-  | "fal_controlnet"
-  | "fal_inpaint"
-  | "tile_generation"
-  | "tile_edit";
+import type { GenerationRoute } from "@/entities/design/model/ai-design-request";
 
 type PosthogAiModel = "openai" | "fal";
 

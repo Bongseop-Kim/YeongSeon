@@ -19,10 +19,8 @@ const payload: TileGenerationPayload = {
   userMessage: "새 디자인",
   uiFabricType: "printed",
   previousFabricType: null,
-  previousRepeatTileUrl: null,
-  previousRepeatTileWorkId: null,
-  previousAccentTileUrl: null,
-  previousAccentTileWorkId: null,
+  previousRepeatTile: null,
+  previousAccentTile: null,
   previousAccentLayoutJson: null,
   conversationHistory: [],
   attachedImageUrl: null,
@@ -70,5 +68,45 @@ describe("callTileGeneration", () => {
     });
 
     await expect(callTileGeneration(payload)).rejects.toBe(error);
+  });
+
+  it("Edge Function 응답을 안전한 타일 결과 모델로 정규화한다", async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        repeatTileUrl: "https://example.com/repeat.webp",
+        repeatTileWorkId: "repeat-work",
+        accentTileUrl: null,
+        accentTileWorkId: null,
+        patternType: "all_over",
+        fabricType: "printed",
+        accentLayout: null,
+      },
+      error: null,
+    });
+
+    await expect(callTileGeneration(payload)).resolves.toEqual({
+      repeatTile: {
+        url: "https://example.com/repeat.webp",
+        workId: "repeat-work",
+      },
+      accentTile: null,
+      patternType: "all_over",
+      fabricType: "printed",
+      accentLayout: null,
+    });
+  });
+
+  it("필수 타일 응답 필드가 없으면 명확한 에러를 던진다", async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        repeatTileUrl: "https://example.com/repeat.webp",
+        repeatTileWorkId: null,
+      },
+      error: null,
+    });
+
+    await expect(callTileGeneration(payload)).rejects.toThrow(
+      "Invalid generate-tile response: repeatTile is missing",
+    );
   });
 });

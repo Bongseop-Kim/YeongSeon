@@ -36,6 +36,10 @@ export const getRawImageUrlFromPreviewBackground = (
   return trimmed;
 };
 
+export const isLegacySessionSelector = (
+  state: Pick<DesignChatState, "generatedImageUrl" | "repeatTile">,
+): boolean => state.generatedImageUrl !== null && state.repeatTile === null;
+
 interface DesignChatState {
   messages: Message[];
   designContext: DesignContext;

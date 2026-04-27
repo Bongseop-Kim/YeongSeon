@@ -64,6 +64,8 @@ describe("generation logs artifact query contract", () => {
 describe("useGenerationLogsQuery — new filter params", () => {
   beforeEach(() => {
     useQueryMock.mockReset();
+    getGenerationLogsMock.mockReset();
+    getGenerationLogArtifactsMock.mockReset();
     useQueryMock.mockImplementation((options) => ({
       data: undefined,
       isLoading: false,
@@ -167,8 +169,8 @@ describe("useGenerationWorkflowLogsQuery", () => {
 
     expect(getGenerationLogsMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        startDate: "2020-01-01",
-        endDate: "2099-12-31",
+        startDate: null,
+        endDate: null,
         idSearch: "workflow-1",
         limit: 200,
         offset: 0,

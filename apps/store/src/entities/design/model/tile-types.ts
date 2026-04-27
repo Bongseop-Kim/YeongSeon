@@ -11,17 +11,20 @@ export interface AccentLayout {
   size: "small" | "medium" | "large" | null;
 }
 
+export type ConversationTurn = {
+  role: "user" | "assistant";
+  content: SessionMessagePayload["content"];
+};
+
 export interface TileGenerationPayload {
   route: "tile_generation" | "tile_edit";
   userMessage: string;
   uiFabricType: FabricType | null;
   previousFabricType: FabricType | null;
-  previousRepeatTileUrl: string | null;
-  previousRepeatTileWorkId: string | null;
-  previousAccentTileUrl: string | null;
-  previousAccentTileWorkId: string | null;
+  previousRepeatTile: TileRef | null;
+  previousAccentTile: TileRef | null;
   previousAccentLayoutJson: AccentLayout | null;
-  conversationHistory: Array<{ role: "user" | "assistant"; content: string }>;
+  conversationHistory: ConversationTurn[];
   attachedImageUrl: string | null;
   sessionId: string;
   workflowId: string;
@@ -30,10 +33,8 @@ export interface TileGenerationPayload {
 }
 
 export interface TileGenerationResult {
-  repeatTileUrl: string;
-  repeatTileWorkId: string;
-  accentTileUrl: string | null;
-  accentTileWorkId: string | null;
+  repeatTile: TileRef;
+  accentTile: TileRef | null;
   patternType: PatternType;
   fabricType: FabricType;
   accentLayout: AccentLayout | null;

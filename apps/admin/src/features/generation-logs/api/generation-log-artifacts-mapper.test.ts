@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { toAdminGenerationArtifactItem } from "@/features/generation-logs/api/generation-log-artifacts-mapper";
 
 describe("toAdminGenerationArtifactItem", () => {
@@ -75,5 +75,30 @@ describe("toAdminGenerationArtifactItem", () => {
         created_at: "2026-05-12T00:00:00Z",
       }).fileSizeBytes,
     ).toBeNull();
+  });
+
+  it("critical field가 문자열이 아니면 null로 매핑하고 경고를 남긴다", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = toAdminGenerationArtifactItem({
+      id: 123,
+      workflow_id: null,
+      artifact_type: "final",
+      storage_provider: "imagekit",
+      status: "success",
+      meta: {},
+      created_at: undefined,
+    });
+
+    expect(result.id).toBeNull();
+    expect(result.workflowId).toBeNull();
+    expect(result.createdAt).toBeNull();
+    expect(warnSpy).toHaveBeenCalledTimes(3);
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[toAdminGenerationArtifactItem] Invalid critical field",
+      expect.objectContaining({ field: "id" }),
+    );
+
+    warnSpy.mockRestore();
   });
 });

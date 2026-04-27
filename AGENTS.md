@@ -52,7 +52,7 @@ supabase functions deploy <function-name> --use-api   # 단일 Edge Function을 
 - 도메인 스펙: `docs/domains/{domain}.md`
 - 횡단 정책: `docs/policies/{payment,coupon,token}.md`
 - QA 시나리오: `docs/qa/{domain}.md`
-- 앱별 규칙: `apps/store/AGENTS.md`
+- 앱별 규칙: `apps/{app}/AGENTS.md` (e.g., `apps/store/AGENTS.md`)
 
 ## 프론트엔드
 

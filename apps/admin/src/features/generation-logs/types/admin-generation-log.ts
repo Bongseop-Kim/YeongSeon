@@ -1,4 +1,10 @@
 export type GenerationLogPhase = "analysis" | "prep" | "render";
+export type GenerationRequestTypeFilter =
+  | "analysis"
+  | "prep"
+  | "render_standard"
+  | "render_high";
+export type GenerationStatusFilter = "success" | "error";
 
 export interface AdminGenerationLogItem {
   id: string;
@@ -8,7 +14,7 @@ export interface AdminGenerationLogItem {
   parentWorkId?: string | null;
   userId: string;
   aiModel: "openai" | "fal";
-  requestType: "analysis" | "prep" | "render_standard" | "render_high" | null;
+  requestType: GenerationRequestTypeFilter | null;
   quality: "standard" | "high" | null;
   userMessage: string;
   promptLength: number;

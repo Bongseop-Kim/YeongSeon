@@ -11,30 +11,29 @@ import type {
 
 // ── helpers ──────────────────────────────────────────────────
 
-function toNumber(v: unknown, fallback = 0): number {
+const isSafeNumber = (n: number): boolean =>
+  Number.isFinite(n) && Math.abs(n) <= Number.MAX_SAFE_INTEGER;
+
+function parseNumeric(v: unknown): number | null {
   if (typeof v === "bigint") {
     const n = Number(v);
-    return Number.isFinite(n) ? n : fallback;
+    return Number.isSafeInteger(n) ? n : null;
   }
-  if (typeof v === "number") return Number.isFinite(v) ? v : fallback;
+  if (typeof v === "number") return isSafeNumber(v) ? v : null;
   if (typeof v === "string") {
     const n = Number(v);
-    return Number.isFinite(n) ? n : fallback;
+    return isSafeNumber(n) ? n : null;
   }
-  return fallback;
+  return null;
+}
+
+function toNumber(v: unknown, fallback = 0): number {
+  const parsed = parseNumeric(v);
+  return parsed ?? fallback;
 }
 
 function toNumberOrNull(v: unknown): number | null {
-  if (typeof v === "bigint") {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  }
-  if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  if (typeof v === "string") {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  }
-  return null;
+  return parseNumeric(v);
 }
 
 function toString(v: unknown): string | null {
@@ -139,6 +138,12 @@ function toQuality(v: unknown): "standard" | "high" | null {
 
 function toAiModel(v: unknown): "openai" | "fal" {
   if (v === "openai" || v === "fal") return v;
+  if (v === "gemini") {
+    console.warn(
+      "[toAiModel] Mapping deprecated ai_model='gemini' to 'openai'",
+    );
+    return "openai";
+  }
   console.warn(`[toAiModel] Invalid ai_model value: ${String(v)}`);
   return "openai";
 }

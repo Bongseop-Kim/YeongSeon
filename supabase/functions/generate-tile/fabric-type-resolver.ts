@@ -27,9 +27,10 @@ const PRINTED_KEYWORDS = [
 
 export function matchKeyword(message: string, keywords: string[]): boolean {
   const lower = message.toLowerCase();
-  return keywords.some((keyword) => lower.includes(keyword));
+  return keywords.some((keyword) => lower.includes(keyword.toLowerCase()));
 }
 
+// Priority is explicit: yarn-dyed keywords > printed keywords > UI selection > previous value > default.
 export function resolveFabricType(
   uiSelection: FabricType | null,
   userMessage: string,

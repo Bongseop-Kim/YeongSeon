@@ -7,6 +7,8 @@ import {
 import { getGenerationLogArtifacts } from "@/features/generation-logs/api/generation-log-artifacts-api";
 import type {
   AdminGenerationLogItem,
+  GenerationRequestTypeFilter,
+  GenerationStatusFilter,
   GenerationStatsData,
 } from "@/features/generation-logs/types/admin-generation-log";
 import type { AdminGenerationArtifactItem } from "@/features/generation-logs/types/admin-generation-artifact";
@@ -29,8 +31,8 @@ export function useGenerationLogsQuery(params: {
   dateRange: [Dayjs, Dayjs];
   aiModel: string | null;
   page: number;
-  requestType?: string | null;
-  status?: string | null;
+  requestType?: GenerationRequestTypeFilter | null;
+  status?: GenerationStatusFilter | null;
   idSearch?: string | null;
 }): {
   data: AdminGenerationLogItem[] | undefined;
@@ -85,8 +87,8 @@ export function useGenerationLogDetailQuery(id: string): {
     queryKey: ["generation-logs", "detail", id],
     queryFn: () =>
       getGenerationLogs({
-        startDate: "2020-01-01",
-        endDate: "2099-12-31",
+        startDate: null,
+        endDate: null,
         id,
         limit: 1,
         offset: 0,
@@ -111,8 +113,8 @@ export function useGenerationWorkflowLogsQuery(workflowId: string): {
     queryKey: ["generation-logs", "workflow", normalizedWorkflowId],
     queryFn: () =>
       getGenerationLogs({
-        startDate: "2020-01-01",
-        endDate: "2099-12-31",
+        startDate: null,
+        endDate: null,
         idSearch: normalizedWorkflowId,
         limit: 200,
         offset: 0,

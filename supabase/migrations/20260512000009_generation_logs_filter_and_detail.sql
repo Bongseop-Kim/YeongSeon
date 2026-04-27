@@ -59,6 +59,8 @@ security invoker
 set search_path to public
 as $$
 begin
+  p_limit := least(coalesce(p_limit, 50), 500);
+
   if not public.is_admin() then
     raise exception 'Forbidden' using errcode = '42501';
   end if;
@@ -79,7 +81,10 @@ begin
     l.text_latency_ms, l.image_latency_ms, l.total_latency_ms,
     l.error_type, l.error_message, l.created_at
   from public.ai_generation_logs l
-  where l.created_at::date between p_start_date and p_end_date
+  where (p_id is not null or p_id_search is not null or (
+      l.created_at >= p_start_date::timestamptz
+      and l.created_at < (p_end_date + 1)::timestamptz
+    ))
     and (p_ai_model      is null or l.ai_model      = p_ai_model)
     and (p_id            is null or l.id            = p_id)
     and (p_request_type  is null or l.request_type  = p_request_type)

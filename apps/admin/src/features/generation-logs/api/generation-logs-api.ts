@@ -5,6 +5,8 @@ import {
 } from "@/features/generation-logs/api/generation-logs-mapper";
 import type {
   AdminGenerationLogItem,
+  GenerationRequestTypeFilter,
+  GenerationStatusFilter,
   GenerationStatsData,
 } from "@/features/generation-logs/types/admin-generation-log";
 
@@ -21,19 +23,19 @@ export async function getGenerationStats(
 }
 
 export async function getGenerationLogs(params: {
-  startDate: string;
-  endDate: string;
+  startDate?: string | null;
+  endDate?: string | null;
   aiModel?: string | null;
   limit?: number;
   offset?: number;
   id?: string | null;
-  requestType?: string | null;
-  status?: string | null;
+  requestType?: GenerationRequestTypeFilter | null;
+  status?: GenerationStatusFilter | null;
   idSearch?: string | null;
 }): Promise<AdminGenerationLogItem[]> {
   const { data, error } = await supabase.rpc("admin_get_generation_logs", {
-    p_start_date: params.startDate,
-    p_end_date: params.endDate,
+    p_start_date: params.startDate ?? null,
+    p_end_date: params.endDate ?? null,
     p_ai_model: params.aiModel ?? null,
     p_limit: params.limit ?? 50,
     p_offset: params.offset ?? 0,

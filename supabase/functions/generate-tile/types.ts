@@ -1,9 +1,12 @@
+import type { AttachmentType } from "@/functions/_shared/request-attachments.ts";
+
 export type FabricType = "yarn_dyed" | "printed";
 export type PatternType = "all_over" | "one_point";
 export type TileStructure = "H" | "F" | "Q";
 export type TileVariation = "rotation" | "color" | "different_motif" | null;
 export type EditTarget = "repeat" | "accent" | "both" | "new";
 export type ObjectSource = "text" | "image" | "both";
+export type { AttachmentType };
 
 export interface Motif {
   name: string;
@@ -44,7 +47,10 @@ export interface TileGenerationRequest {
   previousAccentTileUrl: string | null;
   previousAccentTileWorkId: string | null;
   previousAccentLayoutJson: AccentLayout | null;
-  conversationHistory: Array<{ role: "user" | "assistant"; content: string }>;
+  conversationHistory: Array<{
+    role: "user" | "assistant";
+    content: string;
+  }>;
   attachedImageUrl: string | null;
   sessionId: string;
   workflowId: string;
@@ -56,7 +62,7 @@ export interface TileGenerationRequest {
     imageUrl: string | null;
     imageFileId: string | null;
     attachments?: Array<{
-      type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+      type: AttachmentType;
       label: string;
       value: string;
       fileName?: string;

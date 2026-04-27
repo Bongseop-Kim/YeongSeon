@@ -13,7 +13,7 @@ export async function getGenerationLogArtifacts(
   );
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(error.message, { cause: error });
   }
 
   if (!Array.isArray(data)) {

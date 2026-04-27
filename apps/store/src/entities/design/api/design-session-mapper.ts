@@ -42,23 +42,30 @@ export interface DesignSessionMessageRow {
   created_at: string;
 }
 
-const AI_MODEL_SET: ReadonlySet<string> = new Set(["openai", "fal"]);
-const MESSAGE_ROLE_SET: ReadonlySet<string> = new Set(["user", "ai"]);
-const PATTERN_TYPE_SET: ReadonlySet<string> = new Set([
+const AI_MODEL_SET: ReadonlySet<DesignSession["aiModel"]> = new Set([
+  "openai",
+  "fal",
+]);
+const MESSAGE_ROLE_SET: ReadonlySet<DesignSessionMessage["role"]> = new Set([
+  "user",
+  "ai",
+]);
+const PATTERN_TYPE_SET: ReadonlySet<PatternType> = new Set([
   "all_over",
   "one_point",
 ]);
-const FABRIC_TYPE_SET: ReadonlySet<string> = new Set(["yarn_dyed", "printed"]);
-const OBJECT_SOURCE_SET: ReadonlySet<string> = new Set([
+const FABRIC_TYPE_SET: ReadonlySet<FabricType> = new Set([
+  "yarn_dyed",
+  "printed",
+]);
+const OBJECT_SOURCE_SET: ReadonlySet<AccentLayout["objectSource"]> = new Set([
   "text",
   "image",
   "both",
 ]);
-const ACCENT_SIZE_SET: ReadonlySet<string> = new Set([
-  "small",
-  "medium",
-  "large",
-]);
+const ACCENT_SIZE_SET: ReadonlySet<NonNullable<AccentLayout["size"]>> = new Set(
+  ["small", "medium", "large"],
+);
 
 const isAiModel = createGuard<DesignSession["aiModel"]>(AI_MODEL_SET);
 const isMessageRole =
@@ -68,7 +75,7 @@ const isObjectSource =
 const isAccentSize =
   createGuard<NonNullable<AccentLayout["size"]>>(ACCENT_SIZE_SET);
 
-const createEnumMapper = <T extends string>(set: ReadonlySet<string>) => {
+const createEnumMapper = <T extends string>(set: ReadonlySet<T>) => {
   const guard = createGuard<T>(set);
   return (value: string | null): T | null =>
     value !== null && guard(value) ? value : null;
@@ -120,7 +127,7 @@ function toAttachments(value: unknown): DesignSessionMessage["attachments"] {
   return attachments.length > 0 ? attachments : null;
 }
 
-function toAccentLayout(value: unknown): AccentLayout | null {
+export function toAccentLayout(value: unknown): AccentLayout | null {
   if (!isRecord(value)) return null;
 
   const objectDescription = value.objectDescription;

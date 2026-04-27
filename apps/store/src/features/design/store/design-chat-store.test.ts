@@ -195,6 +195,7 @@ describe("design-chat-store — tile state", () => {
     const state = useDesignChatStore.getState();
     expect(state.repeatTile).toBeNull();
     expect(state.accentTile).toBeNull();
+    expect(state.accentLayout).toBeNull();
     expect(state.patternType).toBeNull();
     expect(state.fabricType).toBeNull();
   });

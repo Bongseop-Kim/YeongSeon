@@ -3,8 +3,8 @@ export type AdminGenerationArtifactPhase = "analysis" | "prep" | "render";
 export type AdminGenerationArtifactStatus = "success" | "partial" | "failed";
 
 export interface AdminGenerationArtifactItem {
-  id: string;
-  workflowId: string;
+  id: string | null;
+  workflowId: string | null;
   phase?: AdminGenerationArtifactPhase;
   artifactType: string;
   sourceWorkId: string | null;
@@ -17,5 +17,5 @@ export interface AdminGenerationArtifactItem {
   fileSizeBytes: number | null;
   status: AdminGenerationArtifactStatus;
   meta: Record<string, unknown>;
-  createdAt: string;
+  createdAt: string | null;
 }

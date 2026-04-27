@@ -10,6 +10,10 @@ import {
   useGenerationLogsQuery,
   useGenerationStatsQuery,
 } from "@/features/generation-logs";
+import type {
+  GenerationRequestTypeFilter,
+  GenerationStatusFilter,
+} from "@/features/generation-logs/types/admin-generation-log";
 
 const EMPTY_SUMMARY = {
   totalRequests: 0,
@@ -24,8 +28,9 @@ export default function GenerationLogList() {
     dayjs(),
   ]);
   const [aiModel, setAiModel] = useState<string | null>(null);
-  const [requestType, setRequestType] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [requestType, setRequestType] =
+    useState<GenerationRequestTypeFilter | null>(null);
+  const [status, setStatus] = useState<GenerationStatusFilter | null>(null);
   const [idSearchInput, setIdSearchInput] = useState<string>("");
   const [idSearch, setIdSearch] = useState<string>("");
   const [page, setPage] = useState(1);
@@ -57,11 +62,11 @@ export default function GenerationLogList() {
     setAiModel(v);
     resetPage();
   };
-  const handleRequestTypeChange = (v: string | null) => {
+  const handleRequestTypeChange = (v: GenerationRequestTypeFilter | null) => {
     setRequestType(v);
     resetPage();
   };
-  const handleStatusChange = (v: string | null) => {
+  const handleStatusChange = (v: GenerationStatusFilter | null) => {
     setStatus(v);
     resetPage();
   };
@@ -154,7 +159,13 @@ export default function GenerationLogList() {
           <Input.Search
             placeholder="workflow_id / work_id"
             value={idSearchInput}
-            onChange={(e) => handleIdSearch(e.target.value)}
+            onChange={(e) => {
+              const nextValue = e.target.value;
+              handleIdSearch(nextValue);
+              if (nextValue === "") {
+                handleIdSearchSubmit("");
+              }
+            }}
             onSearch={handleIdSearchSubmit}
             allowClear
             style={{ width: 220 }}

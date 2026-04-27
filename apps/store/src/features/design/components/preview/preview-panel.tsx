@@ -6,7 +6,10 @@ import { ResultTagBar } from "@/features/design/components/preview/result-tag-ba
 import { TieCanvas } from "@/features/design/components/preview/tie-canvas";
 import { HistoryTab } from "@/features/design/components/history/history-tab";
 import { useSessionRestore } from "@/features/design/hooks/use-session-restore";
-import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import {
+  isLegacySessionSelector,
+  useDesignChatStore,
+} from "@/features/design/store/design-chat-store";
 import type { DesignSession } from "@/features/design/types/session";
 import { cn } from "@/shared/lib/utils";
 
@@ -21,9 +24,7 @@ export function PreviewPanel({ className, onRegenerate }: PreviewPanelProps) {
   const [tab, setTab] = useState<PreviewTab>("preview");
   const [unmasked, setUnmasked] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const isLegacySession = useDesignChatStore(
-    (state) => state.generatedImageUrl !== null && state.repeatTile === null,
-  );
+  const isLegacySession = useDesignChatStore(isLegacySessionSelector);
   const resetConversation = useDesignChatStore(
     (state) => state.resetConversation,
   );
@@ -86,7 +87,7 @@ export function PreviewPanel({ className, onRegenerate }: PreviewPanelProps) {
             />
           )}
           {!isFullscreen && isLegacySession && (
-            <div className="mt-3 flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            <div className="mt-3 flex items-center justify-between gap-3 border-b border-warning bg-warning-muted px-3 py-2 text-xs text-warning">
               <span>
                 이전 방식으로 생성된 디자인입니다. 수정하려면 새 세션을
                 시작하세요.

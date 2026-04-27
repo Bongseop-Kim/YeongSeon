@@ -144,11 +144,6 @@ const decodeBase64 = (base64: string): Uint8Array => {
   return bytes;
 };
 
-const getMimeType = (input: { mimeType?: string; base64: string }): string => {
-  const parsed = stripDataUriPrefix(input.base64);
-  return input.mimeType?.trim() || parsed.mimeType || DEFAULT_MIME_TYPE;
-};
-
 const getBytes = (
   input: GenerationArtifactImageInput,
 ): {
@@ -168,11 +163,9 @@ const getBytes = (
     };
   }
 
-  const mimeType = getMimeType({
-    base64: input.base64,
-    mimeType: input.mimeType,
-  });
   const parsed = stripDataUriPrefix(input.base64);
+  const mimeType =
+    input.mimeType?.trim() || parsed.mimeType || DEFAULT_MIME_TYPE;
   const bytes = decodeBase64(parsed.base64);
 
   return {
@@ -230,7 +223,6 @@ export async function saveGenerationArtifact(
     }) =>
       await uploadBytesToImageKit(
         uploadInput.bytes,
-        uploadInput.mimeType,
         uploadInput.fileName,
         uploadInput.folder,
       ));
@@ -247,7 +239,6 @@ export async function saveGenerationArtifact(
       }
 
       imageUrl = providedUrl;
-      status = "partial";
     } else {
       decodedImage = getBytes(input.image);
       if (!decodedImage) {

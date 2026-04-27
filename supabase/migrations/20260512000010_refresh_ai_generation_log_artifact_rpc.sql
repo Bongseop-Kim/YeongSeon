@@ -86,7 +86,7 @@ comment on function public.write_ai_generation_log_artifact(
   bigint,
   text,
   jsonb
-) is 'Service-role-only RPC used by Edge Functions to record ai_generation_log_artifacts without direct table inserts; no auth.uid() validation by design.';
+) is 'Service-role-only RPC used by Edge Functions to record ai_generation_log_artifacts without direct table inserts; no auth.uid() validation by design. Refreshed to force PostgREST schema cache invalidation for this RPC signature.';
 
 grant execute on function public.write_ai_generation_log_artifact(
   uuid,

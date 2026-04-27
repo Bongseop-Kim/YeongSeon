@@ -41,9 +41,9 @@ export const refundTileRenderTokens = async (
     amount: number;
     workId: string;
   },
-) => {
+): Promise<"skipped" | "succeeded" | "failed"> => {
   if (params.amount <= 0) {
-    return false;
+    return "skipped";
   }
 
   const { error } = await adminClient.rpc("refund_design_tokens", {
@@ -56,8 +56,8 @@ export const refundTileRenderTokens = async (
 
   if (error) {
     console.error("Tile token refund failed:", error);
-    return false;
+    return "failed";
   }
 
-  return true;
+  return "succeeded";
 };

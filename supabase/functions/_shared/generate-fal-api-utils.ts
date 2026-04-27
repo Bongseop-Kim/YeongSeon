@@ -189,71 +189,46 @@ export const recordOptionalRenderArtifacts = async (
   recordArtifact: RecordRenderArtifactFn,
   artifacts: OptionalRenderArtifacts,
 ) => {
-  const placedPreview = toOptionalBase64Input(
-    artifacts.placedPreviewBase64,
-    artifacts.placedPreviewMimeType,
-  );
-  if (placedPreview) {
-    await recordArtifact({
-      artifactType: "placed_preview",
-      image: placedPreview,
-    });
-  }
+  const optionalArtifacts = [
+    {
+      artifactType: "placed_preview" as const,
+      base64: artifacts.placedPreviewBase64,
+      mimeType: artifacts.placedPreviewMimeType,
+    },
+    {
+      artifactType: "fal_input_preview" as const,
+      base64: artifacts.falInputBase64,
+      mimeType: artifacts.falInputMimeType,
+    },
+    {
+      artifactType: "control_image" as const,
+      base64: artifacts.controlImageBase64,
+      mimeType: artifacts.controlImageMimeType,
+    },
+    {
+      artifactType: "upscaled_reference" as const,
+      base64: artifacts.upscaledReferenceBase64,
+      mimeType: artifacts.upscaledReferenceMimeType,
+    },
+    {
+      artifactType: "inpaint_base" as const,
+      base64: artifacts.inpaintBaseBase64,
+      mimeType: artifacts.inpaintBaseMimeType,
+    },
+    {
+      artifactType: "inpaint_mask" as const,
+      base64: artifacts.inpaintMaskBase64,
+      mimeType: artifacts.inpaintMaskMimeType,
+    },
+  ];
 
-  const falInputPreview = toOptionalBase64Input(
-    artifacts.falInputBase64,
-    artifacts.falInputMimeType,
+  await Promise.all(
+    optionalArtifacts.map(async ({ artifactType, base64, mimeType }) => {
+      const image = toOptionalBase64Input(base64, mimeType);
+      if (!image) return;
+      await recordArtifact({ artifactType, image });
+    }),
   );
-  if (falInputPreview) {
-    await recordArtifact({
-      artifactType: "fal_input_preview",
-      image: falInputPreview,
-    });
-  }
-
-  const controlImage = toOptionalBase64Input(
-    artifacts.controlImageBase64,
-    artifacts.controlImageMimeType,
-  );
-  if (controlImage) {
-    await recordArtifact({
-      artifactType: "control_image",
-      image: controlImage,
-    });
-  }
-
-  const upscaledReference = toOptionalBase64Input(
-    artifacts.upscaledReferenceBase64,
-    artifacts.upscaledReferenceMimeType,
-  );
-  if (upscaledReference) {
-    await recordArtifact({
-      artifactType: "upscaled_reference",
-      image: upscaledReference,
-    });
-  }
-
-  const inpaintBase = toOptionalBase64Input(
-    artifacts.inpaintBaseBase64,
-    artifacts.inpaintBaseMimeType,
-  );
-  if (inpaintBase) {
-    await recordArtifact({
-      artifactType: "inpaint_base",
-      image: inpaintBase,
-    });
-  }
-
-  const inpaintMask = toOptionalBase64Input(
-    artifacts.inpaintMaskBase64,
-    artifacts.inpaintMaskMimeType,
-  );
-  if (inpaintMask) {
-    await recordArtifact({
-      artifactType: "inpaint_mask",
-      image: inpaintMask,
-    });
-  }
 };
 
 export const recordFinalRenderArtifacts = async (

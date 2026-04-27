@@ -194,8 +194,6 @@ begin
     raise exception 'Admin only';
   end if;
 
-  perform p_payment_key;
-
   return public.admin_update_order_status(
     p_order_id,
     p_new_status,
@@ -206,7 +204,7 @@ end;
 $$;
 
 COMMENT ON FUNCTION public.admin_update_order_status(uuid, text, text, text, boolean)
-  IS 'SECURITY DEFINER is required for legacy positional callers that still pass the deprecated p_payment_key placeholder while admin access remains restricted by public.is_admin() in the canonical function.';
+  IS 'SECURITY DEFINER is required for legacy positional callers that still pass the deprecated p_payment_key placeholder while admin access remains restricted by public.is_admin() in the canonical function. Deprecated: placeholder p_payment_key retained for legacy positional callers; scheduled for removal in the next major release.';
 
 GRANT EXECUTE ON FUNCTION public.admin_update_order_status(uuid, text, text, text, boolean)
   TO authenticated, service_role;

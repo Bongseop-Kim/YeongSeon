@@ -1,4 +1,5 @@
 import type { ConversationTurn } from "./conversation.ts";
+import type { AttachmentType } from "./request-attachments.ts";
 export type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
 import type { BackgroundPattern } from "@/packages/shared/src/types/design/background-pattern.ts";
 
@@ -6,10 +7,12 @@ export type FalGenerationRoute =
   | "fal_tiling"
   | "fal_edit"
   | "fal_controlnet"
-  | "fal_inpaint";
+  | "fal_inpaint"
+  | "tile_generation"
+  | "tile_edit";
 
 interface RequestSessionAttachment {
-  type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+  type: AttachmentType;
   label: string;
   value: string;
   fileName?: string;

@@ -37,3 +37,10 @@ Deno.test("woven 키워드 -> yarn_dyed", () => {
 Deno.test("print 키워드 -> printed", () => {
   assertEquals(resolveFabricType(null, "print style", null), "printed");
 });
+
+Deno.test(
+  "yarn-dyed 키워드와 printed 키워드가 함께 있으면 yarn_dyed가 우선한다",
+  () => {
+    assertEquals(resolveFabricType(null, "woven print", null), "yarn_dyed");
+  },
+);

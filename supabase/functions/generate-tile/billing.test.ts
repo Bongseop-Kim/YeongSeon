@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert";
-import { chargeTileRenderTokens } from "./billing.ts";
+import { chargeTileRenderTokens, refundTileRenderTokens } from "./billing.ts";
 
 Deno.test(
   "chargeTileRenderTokens charges an OpenAI render_standard token against the tile work id",
@@ -33,5 +33,47 @@ Deno.test(
         },
       },
     ]);
+  },
+);
+
+Deno.test(
+  "refundTileRenderTokens distinguishes skipped, failed and succeeded",
+  async () => {
+    const calls: Array<{ fn: string; args: Record<string, unknown> }> = [];
+    const successClient = {
+      rpc: (fn: string, args: Record<string, unknown>) => {
+        calls.push({ fn, args });
+        return Promise.resolve({ data: null, error: null });
+      },
+    };
+    const failedClient = {
+      rpc: () => Promise.resolve({ data: null, error: { message: "boom" } }),
+    };
+
+    assertEquals(
+      await refundTileRenderTokens(successClient, {
+        userId: "user-1",
+        amount: 0,
+        workId: "refund-0",
+      }),
+      "skipped",
+    );
+    assertEquals(calls.length, 0);
+    assertEquals(
+      await refundTileRenderTokens(failedClient, {
+        userId: "user-1",
+        amount: 5,
+        workId: "refund-failed",
+      }),
+      "failed",
+    );
+    assertEquals(
+      await refundTileRenderTokens(successClient, {
+        userId: "user-1",
+        amount: 5,
+        workId: "refund-ok",
+      }),
+      "succeeded",
+    );
   },
 );

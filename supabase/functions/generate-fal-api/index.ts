@@ -1052,8 +1052,7 @@ export const handleRequest = async (req: Request) => {
   let finalImageUrl = falImageUrl;
   let finalImageFileId: string | null = null;
   let errorCode: "fal_image_fetch_failed" | "image_upload_failed" | null = null;
-  let falRawImageBytes: Uint8Array | null = null;
-  let falRawImageMimeType: string | null = null;
+  let falImageFetched = false;
 
   try {
     let imageBytes: Uint8Array;
@@ -1083,8 +1082,7 @@ export const handleRequest = async (req: Request) => {
         falImageResp.headers.get("content-type") ??
         payload.tiledMimeType ??
         "image/png";
-      falRawImageBytes = imageBytes;
-      falRawImageMimeType = imageMimeType;
+      falImageFetched = true;
     } catch (error) {
       errorCode = "fal_image_fetch_failed";
       if (
@@ -1146,7 +1144,8 @@ export const handleRequest = async (req: Request) => {
       finalImageFileId = null;
     }
 
-    if (falRawImageBytes && falRawImageMimeType) {
+    if (falImageFetched) {
+      // Reaching this point means the Fal image was fetched and bounded above.
       await recordFinalRenderArtifacts(recordRenderArtifact, {
         falImageUrl,
         finalImageUrl,

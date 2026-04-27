@@ -158,12 +158,30 @@ Deno.serve(async (req) => {
 
     let repeatResult: { url: string; workId: string };
     try {
+      let reusableRepeatTile: { url: string; workId: string } | null = null;
+      if (reuseRepeatTile) {
+        const previousRepeatTileUrl = body.previousRepeatTileUrl;
+        const previousRepeatTileWorkId = body.previousRepeatTileWorkId;
+        if (previousRepeatTileUrl == null || previousRepeatTileWorkId == null) {
+          const missingFields = [
+            previousRepeatTileUrl == null ? "previousRepeatTileUrl" : null,
+            previousRepeatTileWorkId == null
+              ? "previousRepeatTileWorkId"
+              : null,
+          ].filter((value): value is string => value !== null);
+          throw new Error(
+            `reuseRepeatTile missing required field(s): ${missingFields.join(", ")}`,
+          );
+        }
+        reusableRepeatTile = {
+          url: previousRepeatTileUrl,
+          workId: previousRepeatTileWorkId,
+        };
+      }
+
       [repeatResult, accentResult] = await Promise.all([
-        reuseRepeatTile
-          ? Promise.resolve({
-              url: body.previousRepeatTileUrl as string,
-              workId: body.previousRepeatTileWorkId as string,
-            })
+        reusableRepeatTile
+          ? Promise.resolve(reusableRepeatTile)
           : generateTileImage(repeatPrompt as string, null, renderWorkId),
         accentBuilt
           ? generateTileImage(
@@ -180,7 +198,7 @@ Deno.serve(async (req) => {
         workId: `${renderWorkId}_tile_failed_refund`,
       });
 
-      if (refunded) {
+      if (refunded === "succeeded") {
         tokensRefunded += tokensCharged;
       }
 
@@ -264,8 +282,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse(200, result as unknown as Record<string, unknown>);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("generate-tile error:", message);
-    return jsonResponse(500, { error: message });
+    console.error("generate-tile error:", error);
+    return jsonResponse(500, { error: "internal_error" });
   }
 });

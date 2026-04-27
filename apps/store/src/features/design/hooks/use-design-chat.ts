@@ -176,9 +176,16 @@ const resolveAttachedImageUrl = async (
     return uploaded.signedUrl;
   }
 
-  return imageAttachment.value.startsWith("https://")
-    ? imageAttachment.value
-    : null;
+  if (imageAttachment.value.startsWith("https://")) {
+    return imageAttachment.value;
+  }
+
+  console.warn("[resolveAttachedImageUrl] Rejected non-HTTPS image URL", {
+    fileName: imageAttachment.fileName,
+    type: imageAttachment.type,
+    value: imageAttachment.value,
+  });
+  return null;
 };
 
 const createAnalysisReset = () => ({
@@ -459,6 +466,7 @@ export function useDesignChat(
     messages: Message[];
     activeUserMessageId: string;
     sessionId: string;
+    failureStatus?: "idle" | "completed";
   }): Promise<void> => {
     const state = useDesignChatStore.getState();
     const { firstUserMsg, allMessages } = toSessionPayload(input.messages);
@@ -485,10 +493,8 @@ export function useDesignChat(
         userMessage: input.userText,
         uiFabricType,
         previousFabricType: state.fabricType,
-        previousRepeatTileUrl: state.repeatTile?.url ?? null,
-        previousRepeatTileWorkId: state.repeatTile?.workId ?? null,
-        previousAccentTileUrl: state.accentTile?.url ?? null,
-        previousAccentTileWorkId: state.accentTile?.workId ?? null,
+        previousRepeatTile: state.repeatTile,
+        previousAccentTile: state.accentTile,
         previousAccentLayoutJson: state.accentLayout,
         conversationHistory: toApiConversationHistory(priorMessages),
         attachedImageUrl,
@@ -499,28 +505,19 @@ export function useDesignChat(
       });
 
       setTileResult({
-        repeatTile: {
-          url: result.repeatTileUrl,
-          workId: result.repeatTileWorkId,
-        },
-        accentTile:
-          result.accentTileUrl && result.accentTileWorkId
-            ? {
-                url: result.accentTileUrl,
-                workId: result.accentTileWorkId,
-              }
-            : null,
+        repeatTile: result.repeatTile,
+        accentTile: result.accentTile,
         accentLayout: result.accentLayout,
         patternType: result.patternType,
         fabricType: result.fabricType,
       });
-      setGeneratedImage(toPreviewBackground(result.repeatTileUrl), []);
+      setGeneratedImage(toPreviewBackground(result.repeatTile.url), []);
       addMessage({
         id: crypto.randomUUID(),
         role: "ai",
         content: TILE_GENERATION_SUCCESS_MESSAGE,
-        imageUrl: result.repeatTileUrl,
-        workId: result.repeatTileWorkId,
+        imageUrl: result.repeatTile.url,
+        workId: result.repeatTile.workId,
         timestamp: Date.now(),
       });
       setGenerationStatus("completed");
@@ -536,6 +533,7 @@ export function useDesignChat(
           error,
           "죄송합니다. 타일 기반 디자인 생성 중 오류가 발생했습니다. 다시 시도해 주세요.",
         ),
+        input.failureStatus,
       );
     }
   };
@@ -630,6 +628,7 @@ export function useDesignChat(
         messages: storeState.messages,
         activeUserMessageId: lastUserMessage.id,
         sessionId,
+        failureStatus: "completed",
       });
       return;
     }

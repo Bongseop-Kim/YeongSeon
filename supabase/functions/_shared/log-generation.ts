@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AttachmentType } from "./request-attachments.ts";
 
 export type AiGenerationLogPhase = "analysis" | "prep" | "render";
 export type AiGenerationLogRequestType =
@@ -20,7 +21,7 @@ export type AiGenerationLogInsert = {
   user_message: string;
   prompt_length: number;
   request_attachments?: Array<{
-    type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+    type: AttachmentType;
     label: string;
     value: string;
     fileName?: string;
@@ -86,6 +87,10 @@ export type AiGenerationLogInsert = {
   accent_layout_json?: Record<string, unknown> | null;
 };
 
+/**
+ * `undefined`인 키는 제외하고 upsert한다(= 기존 값 유지).
+ * 명시적으로 `null`을 넘기면 그대로 컬럼을 비우는 의도로 보존된다.
+ */
 export async function logGeneration(
   adminClient: SupabaseClient,
   data: AiGenerationLogInsert,
@@ -93,9 +98,14 @@ export async function logGeneration(
   try {
     const { error } = await adminClient
       .from("ai_generation_logs")
-      .upsert(data, { onConflict: "work_id" });
+      .upsert(
+        Object.fromEntries(
+          Object.entries(data).filter(([, value]) => value !== undefined),
+        ),
+        { onConflict: "work_id" },
+      );
     if (error) {
-      console.error("logGeneration insert error:", error.message);
+      console.error("logGeneration upsert error:", error);
     }
   } catch (err) {
     console.error("logGeneration unexpected error:", err);

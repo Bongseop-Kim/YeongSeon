@@ -1,3 +1,5 @@
+import { encodeBase64 } from "jsr:@std/encoding/base64";
+
 const IMAGEKIT_UPLOAD_URL = "https://upload.imagekit.io/api/v1/files/upload";
 const IMAGEKIT_UPLOAD_TIMEOUT_MS = 5000;
 
@@ -10,15 +12,6 @@ const stripDataUriPrefix = (value: string): string => {
   const trimmedValue = value.trim();
   const commaIndex = trimmedValue.indexOf(",");
   return commaIndex >= 0 ? trimmedValue.slice(commaIndex + 1) : trimmedValue;
-};
-
-const bytesToBase64 = (bytes: Uint8Array): string => {
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
-  }
-  return btoa(binary);
 };
 
 async function attemptUpload(
@@ -82,7 +75,6 @@ async function attemptUpload(
  */
 export async function uploadBytesToImageKit(
   bytes: Uint8Array,
-  mimeType: string,
   fileName: string,
   folder: string,
 ): Promise<ImageKitUploadResult | null> {
@@ -92,7 +84,7 @@ export async function uploadBytesToImageKit(
     return null;
   }
 
-  const base64 = bytesToBase64(bytes);
+  const base64 = encodeBase64(bytes);
 
   return await attemptUpload(base64, fileName, folder, privateKey);
 }

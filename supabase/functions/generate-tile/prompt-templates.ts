@@ -93,7 +93,7 @@ Placement rule (critical):
 {FABRIC_BLOCK}
 
 Each motif size: about 30% of the tile width.
-Flat 2D top-down view, no shadow, no text, no border.`;
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
 
 export const ACCENT_TEXT_TEMPLATE = `Square tile 1024x1024 on plain {BG} tie silk fabric.
 

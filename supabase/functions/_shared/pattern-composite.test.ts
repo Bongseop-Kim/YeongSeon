@@ -460,7 +460,7 @@ Deno.test(
           sourceImageBase64: "AAEC",
           sourceImageMimeType: "image/png",
           placementMode: "one-point",
-          fabricMethod: "digital-print",
+          fabricMethod: "print",
         }),
       }),
     );

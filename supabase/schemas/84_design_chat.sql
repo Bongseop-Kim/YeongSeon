@@ -12,9 +12,9 @@ CREATE TABLE public.design_chat_sessions (
   last_image_work_id  text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   image_count         int         NOT NULL DEFAULT 0,
   repeat_tile_url      text,
-  repeat_tile_work_id  text,
+  repeat_tile_work_id  text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   accent_tile_url      text,
-  accent_tile_work_id  text,
+  accent_tile_work_id  text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   accent_layout_json   jsonb,
   pattern_type         text,
   fabric_type          text,
@@ -119,6 +119,8 @@ BEGIN
     p_pattern_type, p_fabric_type,
     now()
   )
+  -- 타일/패턴/패브릭 필드는 NULL 인자를 "변경 없음"으로 해석한다(부분 업데이트).
+  -- 컬럼을 실제로 비우려면 호출자가 sentinel(예: 빈 문자열)을 직접 넣어 처리해야 한다.
   ON CONFLICT (id) DO UPDATE
   SET ai_model = EXCLUDED.ai_model,
       first_message = EXCLUDED.first_message,
@@ -126,13 +128,13 @@ BEGIN
       last_image_file_id = EXCLUDED.last_image_file_id,
       last_image_work_id = EXCLUDED.last_image_work_id,
       image_count = EXCLUDED.image_count,
-      repeat_tile_url = EXCLUDED.repeat_tile_url,
-      repeat_tile_work_id = EXCLUDED.repeat_tile_work_id,
-      accent_tile_url = EXCLUDED.accent_tile_url,
-      accent_tile_work_id = EXCLUDED.accent_tile_work_id,
-      accent_layout_json = EXCLUDED.accent_layout_json,
-      pattern_type = EXCLUDED.pattern_type,
-      fabric_type = EXCLUDED.fabric_type,
+      repeat_tile_url = COALESCE(EXCLUDED.repeat_tile_url, design_chat_sessions.repeat_tile_url),
+      repeat_tile_work_id = COALESCE(EXCLUDED.repeat_tile_work_id, design_chat_sessions.repeat_tile_work_id),
+      accent_tile_url = COALESCE(EXCLUDED.accent_tile_url, design_chat_sessions.accent_tile_url),
+      accent_tile_work_id = COALESCE(EXCLUDED.accent_tile_work_id, design_chat_sessions.accent_tile_work_id),
+      accent_layout_json = COALESCE(EXCLUDED.accent_layout_json, design_chat_sessions.accent_layout_json),
+      pattern_type = COALESCE(EXCLUDED.pattern_type, design_chat_sessions.pattern_type),
+      fabric_type = COALESCE(EXCLUDED.fabric_type, design_chat_sessions.fabric_type),
       updated_at = now()
   WHERE public.design_chat_sessions.user_id = v_user_id;
 

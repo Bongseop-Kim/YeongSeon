@@ -38,14 +38,13 @@ describe("getGenerationLogArtifacts", () => {
   });
 
   it("비배열 데이터는 계약 위반으로 에러를 던진다", async () => {
-    rpcMock.mockResolvedValue({
-      data: null,
-      error: null,
-    });
+    for (const data of [null, {}, "string", 123, false]) {
+      rpcMock.mockResolvedValueOnce({ data, error: null });
 
-    await expect(getGenerationLogArtifacts("workflow-1")).rejects.toThrow(
-      "Unexpected artifact response shape",
-    );
+      await expect(getGenerationLogArtifacts("workflow-1")).rejects.toThrow(
+        "Unexpected artifact response shape",
+      );
+    }
   });
 
   it("정상 데이터는 매핑하여 반환한다", async () => {
