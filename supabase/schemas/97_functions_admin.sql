@@ -194,6 +194,8 @@ begin
     raise exception 'Admin only';
   end if;
 
+  perform p_payment_key;
+
   return public.admin_update_order_status(
     p_order_id,
     p_new_status,
