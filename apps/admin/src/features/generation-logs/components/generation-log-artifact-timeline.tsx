@@ -11,6 +11,7 @@ import {
   Typography,
 } from "antd";
 import { useGenerationLogArtifactsQuery } from "@/features/generation-logs/api/generation-logs-query";
+import { isArtifactWarningMessage } from "@/features/generation-logs/utils";
 import type {
   AdminGenerationArtifactItem,
   AdminGenerationArtifactPhase,
@@ -91,7 +92,20 @@ function getArtifactSizeLabel(artifact: AdminGenerationArtifactItem): string {
 
 function getFileSizeLabel(bytes: number | null): string {
   if (bytes == null) return "-";
-  return `${bytes.toLocaleString()}B`;
+
+  const units = ["B", "KB", "MB", "GB", "TB"] as const;
+  let value = bytes;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  const maximumFractionDigits = unitIndex === 0 ? 0 : 2;
+  return `${value.toLocaleString(undefined, {
+    maximumFractionDigits,
+  })} ${units[unitIndex]}`;
 }
 
 function ArtifactTimelineEntry({
@@ -217,9 +231,7 @@ export function GenerationLogArtifactTimeline({
   }
 
   const hasArtifacts = artifacts.length > 0;
-  const hasArtifactWarnings =
-    typeof logErrorMessage === "string" &&
-    logErrorMessage.includes("artifact_warnings:");
+  const hasArtifactWarnings = isArtifactWarningMessage(logErrorMessage);
 
   if (!hasArtifacts) {
     return (

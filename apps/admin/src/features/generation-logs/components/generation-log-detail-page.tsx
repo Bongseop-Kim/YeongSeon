@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -20,7 +20,11 @@ import {
   useGenerationWorkflowLogsQuery,
 } from "@/features/generation-logs/api/generation-logs-query";
 import { GenerationLogArtifactTimeline } from "@/features/generation-logs/components/generation-log-artifact-timeline";
-import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
+import {
+  isArtifactWarningMessage,
+  modelColor,
+  requestTypeLabel,
+} from "@/features/generation-logs/utils";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
 import { formatDateTimeSeconds } from "@/utils/format-date-time";
 
@@ -194,9 +198,7 @@ function StickyBar({
 }
 
 function BasicInfoSection({ log }: { log: AdminGenerationLogItem }) {
-  const isArtifactWarning =
-    typeof log.errorMessage === "string" &&
-    log.errorMessage.startsWith("artifact_warnings:");
+  const isArtifactWarning = isArtifactWarningMessage(log.errorMessage);
 
   return (
     <Card title="기본 정보" size="small" style={{ marginBottom: 16 }}>
@@ -521,11 +523,15 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
   } = useGenerationLogDetailQuery(id);
   const { data: workflowLogs, isLoading: isWorkflowLoading } =
     useGenerationWorkflowLogsQuery(requestedLog?.workflowId ?? "");
-  const [activeLogId, setActiveLogId] = useState(id);
-
-  useEffect(() => {
-    setActiveLogId(id);
-  }, [id]);
+  // override는 props.id에 묶여 있어, id가 바뀌면 자동으로 무효화된다.
+  const [logOverride, setLogOverride] = useState<{
+    overrideForId: string;
+    logId: string;
+  } | null>(null);
+  const activeLogId =
+    logOverride?.overrideForId === id ? logOverride.logId : id;
+  const selectLog = (logId: string) =>
+    setLogOverride({ overrideForId: id, logId });
 
   const orderedWorkflowLogs = useMemo(
     () =>
@@ -581,14 +587,14 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
         log={activeLog}
         workflowLogs={orderedWorkflowLogs}
         activeLogId={activeLog.id}
-        onSelectLog={setActiveLogId}
+        onSelectLog={selectLog}
         onBack={() => navigate("/generation-logs")}
       />
       <div style={{ padding: 24 }}>
         <WorkflowLogsSection
           workflowLogs={orderedWorkflowLogs}
           activeLogId={activeLog.id}
-          onSelectLog={setActiveLogId}
+          onSelectLog={selectLog}
         />
         <BasicInfoSection log={activeLog} />
         <InputImageSection log={activeLog} />

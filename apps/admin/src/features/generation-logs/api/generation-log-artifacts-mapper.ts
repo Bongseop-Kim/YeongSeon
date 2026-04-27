@@ -1,41 +1,17 @@
 import type { AdminGenerationArtifactItem } from "@/features/generation-logs/types/admin-generation-artifact";
+import {
+  isSafeInteger,
+  parseNumberWith,
+} from "@/features/generation-logs/api/generation-logs-mapper";
 import { isRecord } from "@/utils/type-guards";
 
 function toStringOrNull(v: unknown): string | null {
   return typeof v === "string" ? v : null;
 }
 
-const toNumberOrNull = (v: unknown): number | null => {
-  if (typeof v === "number" && Number.isSafeInteger(v)) {
-    return v;
-  }
-  if (typeof v === "string") {
-    const trimmed = v.trim();
-    if (/^[+-]?\d+$/.test(trimmed)) {
-      try {
-        const parsed = BigInt(trimmed);
-        if (
-          parsed > BigInt(Number.MAX_SAFE_INTEGER) ||
-          parsed < BigInt(Number.MIN_SAFE_INTEGER)
-        ) {
-          return null;
-        }
-
-        return Number(parsed);
-      } catch {
-        return null;
-      }
-    }
-  }
-  if (
-    typeof v === "bigint" &&
-    v <= BigInt(Number.MAX_SAFE_INTEGER) &&
-    v >= BigInt(Number.MIN_SAFE_INTEGER)
-  ) {
-    return Number(v);
-  }
-  return null;
-};
+function toNumberOrNull(v: unknown): number | null {
+  return parseNumberWith(v, isSafeInteger);
+}
 
 function toArtifactPhase(v: unknown): "render" | undefined {
   if (v === "render") {

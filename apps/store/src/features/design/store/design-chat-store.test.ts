@@ -10,20 +10,26 @@ describe("design-chat-store", () => {
   it("setGeneratedImage는 selectedPreviewImageUrl을 같은 값으로 설정한다", () => {
     const url = 'url("https://example.com/tie.png") center/cover no-repeat';
 
-    useDesignChatStore.getState().setGeneratedImage(url, ["네이비"]);
+    act(() => {
+      useDesignChatStore.getState().setGeneratedImage(url, ["네이비"]);
+    });
 
     expect(useDesignChatStore.getState().selectedPreviewImageUrl).toBe(url);
   });
 
   it("setGeneratedImage(null)은 프리뷰와 태그를 초기화한다", () => {
-    useDesignChatStore
-      .getState()
-      .setGeneratedImage(
-        'url("https://example.com/tie.png") center/cover no-repeat',
-        ["네이비"],
-      );
+    act(() => {
+      useDesignChatStore
+        .getState()
+        .setGeneratedImage(
+          'url("https://example.com/tie.png") center/cover no-repeat',
+          ["네이비"],
+        );
+    });
 
-    useDesignChatStore.getState().setGeneratedImage(null, []);
+    act(() => {
+      useDesignChatStore.getState().setGeneratedImage(null, []);
+    });
 
     expect(useDesignChatStore.getState().generatedImageUrl).toBeNull();
     expect(useDesignChatStore.getState().selectedPreviewImageUrl).toBeNull();
@@ -34,24 +40,26 @@ describe("design-chat-store", () => {
     const url =
       'url("https://example.com/restored.png") center/cover no-repeat';
 
-    useDesignChatStore.getState().restoreSessionState("session-1", {
-      messages: [
-        {
-          id: "msg-1",
-          role: "ai",
-          content: "생성 완료",
-          imageUrl: "https://example.com/restored.png",
-          timestamp: 1,
-        },
-      ],
-      generatedImageUrl: url,
-      resultTags: [],
-      generationStatus: "completed",
-      repeatTile: { url: "https://example.com/repeat.webp", workId: "r1" },
-      accentTile: null,
-      accentLayout: null,
-      patternType: "all_over",
-      fabricType: "printed",
+    act(() => {
+      useDesignChatStore.getState().restoreSessionState("session-1", {
+        messages: [
+          {
+            id: "msg-1",
+            role: "ai",
+            content: "생성 완료",
+            imageUrl: "https://example.com/restored.png",
+            timestamp: 1,
+          },
+        ],
+        generatedImageUrl: url,
+        resultTags: [],
+        generationStatus: "completed",
+        repeatTile: { url: "https://example.com/repeat.webp", workId: "r1" },
+        accentTile: null,
+        accentLayout: null,
+        patternType: "all_over",
+        fabricType: "printed",
+      });
     });
 
     const state = useDesignChatStore.getState();
@@ -66,20 +74,22 @@ describe("design-chat-store", () => {
   });
 
   it("restoreSessionState는 누락된 designContext 필드를 기본값으로 보완한다", () => {
-    useDesignChatStore.getState().restoreSessionState("session-1", {
-      messages: [],
-      generatedImageUrl: null,
-      resultTags: [],
-      generationStatus: "idle",
-      repeatTile: null,
-      accentTile: null,
-      accentLayout: null,
-      patternType: null,
-      fabricType: null,
-      designContext: {
-        colors: ["#112233"],
-        pattern: "stripe",
-      },
+    act(() => {
+      useDesignChatStore.getState().restoreSessionState("session-1", {
+        messages: [],
+        generatedImageUrl: null,
+        resultTags: [],
+        generationStatus: "idle",
+        repeatTile: null,
+        accentTile: null,
+        accentLayout: null,
+        patternType: null,
+        fabricType: null,
+        designContext: {
+          colors: ["#112233"],
+          pattern: "stripe",
+        },
+      });
     });
 
     expect(useDesignChatStore.getState().designContext).toEqual({

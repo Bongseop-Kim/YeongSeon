@@ -15,6 +15,7 @@ const readMigrationFiles = () => {
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   return readdirSync(migrationsDir)
     .filter((file) => file.endsWith(".sql"))
+    .sort()
     .map((file) =>
       // eslint-disable-next-line security/detect-non-literal-fs-filename
       readFileSync(join(migrationsDir, file), "utf8"),
@@ -63,22 +64,23 @@ describe("review follow-up regressions", () => {
     const migrationSql = normalize(
       readMigrationFiles().join("\n"),
     ).toLowerCase();
+    const allStatements = migrationSql.split(";");
 
     for (const viewName of reportedViewNames) {
-      const hasAlterSecurityInvoker = migrationSql.includes(
-        `alter view public.${viewName} set (security_invoker = true);`,
-      );
-      const hasCreateSecurityInvoker = migrationSql
-        .split(";")
-        .some(
-          (statement) =>
-            statement.includes(`create or replace view public.${viewName}`) &&
-            statement.includes("with (security_invoker = true)"),
-        );
+      const viewMarker = `view public.${viewName}`;
+      const quotedViewMarker = `view "public"."${viewName}"`;
+      const lastStatement =
+        allStatements
+          .filter(
+            (statement) =>
+              statement.includes(viewMarker) ||
+              statement.includes(quotedViewMarker),
+          )
+          .at(-1) ?? "";
 
       expect(
-        hasAlterSecurityInvoker || hasCreateSecurityInvoker,
-        `${viewName} must set security_invoker=true`,
+        lastStatement.includes("security_invoker = true"),
+        `${viewName} final security_invoker setting must be true`,
       ).toBe(true);
     }
   });

@@ -44,7 +44,7 @@ describe("기타 customer 매퍼", () => {
     );
   });
 
-  it("쿠폰과 토큰 row의 null 필드를 기본값으로 정규화한다", () => {
+  it("쿠폰 row의 null 필드를 기본값으로 정규화한다", () => {
     expect(
       toAdminCustomerCouponRow(
         createUserCouponRow({
@@ -60,22 +60,19 @@ describe("기타 customer 매퍼", () => {
       issuedAt: "",
       expiresAt: "2026-03-31T23:59:59Z",
     });
+  });
 
-    expect(
-      toAdminCustomerTokenRow(
-        createDesignTokenRow({
-          amount: null,
-          type: null,
-          created_at: null,
-        }),
-      ),
-    ).toEqual(
-      expect.objectContaining({
-        amount: 0,
-        type: "",
-        createdAt: "",
-      }),
-    );
+  it("토큰 row를 snake_case → camelCase로 매핑한다", () => {
+    expect(toAdminCustomerTokenRow(createDesignTokenRow())).toEqual({
+      id: "token-1",
+      amount: 30,
+      type: "purchase",
+      aiModel: "gpt-image-1",
+      requestType: "design",
+      description: "토큰 구매",
+      createdAt: "2026-03-15T09:00:00Z",
+      workId: "work-1",
+    });
   });
 
   it("주문 row를 고객 주문 UI 모델로 매핑한다", () => {

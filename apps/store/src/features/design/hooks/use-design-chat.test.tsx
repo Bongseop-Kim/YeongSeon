@@ -262,7 +262,7 @@ describe("useDesignChat", () => {
         expect.objectContaining({
           role: "ai",
           uiOnly: true,
-          content: "토큰이 부족합니다. 현재 잔액: 1토큰, 필요: 3토큰",
+          content: expect.stringMatching(/잔액:\s*1.*필요:\s*3/s),
         }),
       );
     });

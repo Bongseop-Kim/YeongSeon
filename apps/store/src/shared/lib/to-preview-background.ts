@@ -1,4 +1,4 @@
-import { escapeCssUrl } from "@/shared/lib/css-url";
+import { escapeCssUrl, unescapeCssUrl } from "@/shared/lib/css-url";
 
 export const toPreviewBackground = (imageUrl: string): string =>
   `url("${escapeCssUrl(imageUrl)}") center/cover no-repeat`;
@@ -15,9 +15,12 @@ export const getRawImageUrlFromPreviewBackground = (
     return null;
   }
 
-  const match = trimmed.match(/^url\((['"]?)(.*?)\1\)/i);
-  if (match?.[2]) {
-    return match[2];
+  const match = trimmed.match(
+    /^url\(\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^)]*?))\s*\)/i,
+  );
+  const captured = match?.[1] ?? match?.[2] ?? match?.[3];
+  if (captured) {
+    return unescapeCssUrl(captured);
   }
 
   return trimmed;

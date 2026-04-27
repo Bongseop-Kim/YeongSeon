@@ -262,16 +262,14 @@ const PRINTED_KEYWORDS = [
 
 ### 기존 route 전면 폐기
 
-| 기존 route        | 변경                                    |
-| ----------------- | --------------------------------------- |
-| `openai`          | 폐기 → 신규 파이프라인으로 통합         |
-| `tile_generation` | 폐기 → 신규 파이프라인으로 통합         |
-| `tile_edit`       | 폐기 → 타일 편집 플로우로 통합          |
-| `tile_generation` | 폐기 → 신규 파이프라인으로 통합         |
-| `tile_edit`       | 폐기 → 타일 단위 inpaint로 통합         |
-| `gemini`          | 분석 단계에서 완전 제거 (OpenAI로 통일) |
+| 기존 route | 변경                                    |
+| ---------- | --------------------------------------- |
+| `openai`   | 폐기 → 신규 파이프라인으로 통합         |
+| `gemini`   | 분석 단계에서 완전 제거 (OpenAI로 통일) |
 
 ### 신규 route와 Edge Function 대응
+
+라우트 이름은 유지하고, 처리 Edge Function만 `generate-tile` 하나로 단일화한다. `intent` 필드(`new` | `edit`)로 신규 생성과 편집을 내부 분기한다.
 
 | Route             | 처리 Edge Function | 용도                                        |
 | ----------------- | ------------------ | ------------------------------------------- |
@@ -385,10 +383,10 @@ fabricType: "yarn_dyed" | "printed"
 
 - `generate-google-api` — Gemini 분석 포함 전면 폐기
 - `prepare-pattern-composite` — 폐기
-- `generate-tile` — 폐기
+- 기존 `generate-tile` 구현 — 신규 스펙으로 재구현
 - `generate-open-api` — 폐기
 
-### 신규: `generate-tile`
+### 신규: `generate-tile` (기존 함수 재구현)
 
 단일 Edge Function이 `tile_generation`과 `tile_edit` 두 route를 모두 처리.
 

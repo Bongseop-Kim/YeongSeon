@@ -1,19 +1,22 @@
 import { useDesignSessionsQuery } from "@/features/design/hooks/design-session-query";
 import { SessionCard } from "@/features/design/components/history/session-card";
 import type { DesignSession } from "@/features/design/types/session";
+import { useAuthStore } from "@/shared/store/auth";
 
 interface HistoryTabProps {
   onSessionSelect: (session: DesignSession) => void;
 }
 
 export function HistoryTab({ onSessionSelect }: HistoryTabProps) {
+  const user = useAuthStore((state) => state.user);
+  const initialized = useAuthStore((state) => state.initialized);
   const {
     data: sessions = [],
     isLoading,
     isError,
     error,
     refetch,
-  } = useDesignSessionsQuery();
+  } = useDesignSessionsQuery({ enabled: initialized && Boolean(user) });
 
   if (isLoading) {
     return (

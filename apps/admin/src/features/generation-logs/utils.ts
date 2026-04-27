@@ -15,3 +15,7 @@ export function requestTypeLabel(v: string | null): string {
 export function modelColor(model: string): "blue" | "purple" {
   return MODEL_COLORS[model] ?? "purple";
 }
+
+export function isArtifactWarningMessage(msg: unknown): msg is string {
+  return typeof msg === "string" && msg.startsWith("artifact_warnings:");
+}

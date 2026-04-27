@@ -19,6 +19,8 @@ export function useDesignTokenBalanceQuery() {
 interface UseDesignTokenHistoryQueryParams {
   dateFrom?: string;
   dateTo?: string;
+  keyword?: string;
+  types?: readonly string[];
 }
 
 export function useDesignTokenHistoryQuery(
@@ -29,6 +31,8 @@ export function useDesignTokenHistoryQuery(
       DESIGN_TOKEN_HISTORY_QUERY_KEY,
       params.dateFrom ?? null,
       params.dateTo ?? null,
+      params.keyword ?? null,
+      params.types ?? null,
     ],
     queryFn: ({ pageParam }) =>
       getDesignTokenHistory({
@@ -36,11 +40,13 @@ export function useDesignTokenHistoryQuery(
         offset: pageParam,
         dateFrom: params.dateFrom,
         dateTo: params.dateTo,
+        keyword: params.keyword,
+        types: params.types,
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length < DESIGN_TOKEN_HISTORY_PAGE_SIZE
         ? undefined
-        : allPages.reduce((sum, page) => sum + page.length, 0),
+        : allPages.length * DESIGN_TOKEN_HISTORY_PAGE_SIZE,
   });
 }

@@ -10,25 +10,34 @@ import type {
 } from "@/features/generation-logs/types/admin-generation-log";
 import { isRecord } from "@/utils/type-guards";
 
-const isSafeNumber = (n: number): boolean =>
+export const isSafeInteger = (n: number): boolean => Number.isSafeInteger(n);
+const isSafeFinite = (n: number): boolean =>
   Number.isFinite(n) && Math.abs(n) <= Number.MAX_SAFE_INTEGER;
 
-function parseNumeric(v: unknown): number | null {
+export function parseNumberWith(
+  v: unknown,
+  isAcceptable: (n: number) => boolean,
+): number | null {
   if (typeof v === "bigint") {
     const n = Number(v);
-    return Number.isSafeInteger(n) ? n : null;
+    return isAcceptable(n) ? n : null;
   }
-  if (typeof v === "number") return isSafeNumber(v) ? v : null;
+  if (typeof v === "number") {
+    return isAcceptable(v) ? v : null;
+  }
   if (typeof v === "string") {
     const n = Number(v);
-    return isSafeNumber(n) ? n : null;
+    return isAcceptable(n) ? n : null;
   }
   return null;
 }
 
 function toNumber(v: unknown, fallback = 0): number {
-  const parsed = parseNumeric(v);
-  return parsed ?? fallback;
+  return parseNumberWith(v, isSafeInteger) ?? fallback;
+}
+
+function toStatsNumber(v: unknown, fallback = 0): number {
+  return parseNumberWith(v, isSafeFinite) ?? fallback;
 }
 
 function toString(v: unknown): string | null {
@@ -230,46 +239,46 @@ export function toGenerationStatsData(raw: unknown): GenerationStatsData {
 
   const summary = isRecord(raw.summary) ? raw.summary : {};
   const parsedSummary: GenerationSummaryStats = {
-    totalRequests: toNumber(summary.total_requests),
-    imageSuccessRate: toNumber(summary.image_success_rate),
-    totalTokensConsumed: toNumber(summary.total_tokens_consumed),
-    avgTotalLatencyMs: toNumber(summary.avg_total_latency_ms),
+    totalRequests: toStatsNumber(summary.total_requests),
+    imageSuccessRate: toStatsNumber(summary.image_success_rate),
+    totalTokensConsumed: toStatsNumber(summary.total_tokens_consumed),
+    avgTotalLatencyMs: toStatsNumber(summary.avg_total_latency_ms),
   };
 
   const byModel: ModelStats[] = Array.isArray(raw.by_model)
     ? raw.by_model.filter(isRecord).map((m) => ({
         aiModel: toString(m.ai_model) ?? "",
-        requestCount: toNumber(m.request_count),
-        avgTextLatencyMs: toNumber(m.avg_text_latency_ms),
-        avgImageLatencyMs: toNumber(m.avg_image_latency_ms),
-        avgTokenCost: toNumber(m.avg_token_cost),
-        imageSuccessRate: toNumber(m.image_success_rate),
+        requestCount: toStatsNumber(m.request_count),
+        avgTextLatencyMs: toStatsNumber(m.avg_text_latency_ms),
+        avgImageLatencyMs: toStatsNumber(m.avg_image_latency_ms),
+        avgTokenCost: toStatsNumber(m.avg_token_cost),
+        imageSuccessRate: toStatsNumber(m.image_success_rate),
       }))
     : [];
 
   const byInputType: InputTypeStats[] = Array.isArray(raw.by_input_type)
     ? raw.by_input_type.filter(isRecord).map((it) => ({
         inputType: toString(it.input_type) ?? "",
-        requestCount: toNumber(it.request_count),
-        imageSuccessRate: toNumber(it.image_success_rate),
-        avgLatencyMs: toNumber(it.avg_latency_ms),
-        avgTokenCost: toNumber(it.avg_token_cost),
+        requestCount: toStatsNumber(it.request_count),
+        imageSuccessRate: toStatsNumber(it.image_success_rate),
+        avgLatencyMs: toStatsNumber(it.avg_latency_ms),
+        avgTokenCost: toStatsNumber(it.avg_token_cost),
       }))
     : [];
 
   const byPattern: PatternStats[] = Array.isArray(raw.by_pattern)
     ? raw.by_pattern.filter(isRecord).map((p) => ({
         pattern: toString(p.pattern) ?? "(미지정)",
-        requestCount: toNumber(p.request_count),
-        imageSuccessRate: toNumber(p.image_success_rate),
-        avgTokenCost: toNumber(p.avg_token_cost),
+        requestCount: toStatsNumber(p.request_count),
+        imageSuccessRate: toStatsNumber(p.image_success_rate),
+        avgTokenCost: toStatsNumber(p.avg_token_cost),
       }))
     : [];
 
   const byError: ErrorDistribution[] = Array.isArray(raw.by_error)
     ? raw.by_error.filter(isRecord).map((e) => ({
         errorType: toString(e.error_type) ?? "성공",
-        count: toNumber(e.count),
+        count: toStatsNumber(e.count),
       }))
     : [];
 

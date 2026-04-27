@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatPanel } from "@/features/design/components/chat/chat-panel";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import type { Attachment } from "@/features/design";
 import type * as DesignEntities from "@/entities/design";
 
 const { messageListSpy } = vi.hoisted(() => ({
@@ -18,7 +19,9 @@ vi.mock("@/features/design/components/chat/tie-preview-modal", () => ({
 }));
 
 vi.mock("@/features/design/components/chat/chat-input", () => ({
-  ChatInput: (props: { onSend: (text: string, attachments: []) => void }) => (
+  ChatInput: (props: {
+    onSend: (text: string, attachments: Attachment[]) => void;
+  }) => (
     <button
       type="button"
       data-testid="chat-input"

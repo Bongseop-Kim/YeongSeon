@@ -1,39 +1,17 @@
 import type { DesignTokenHistoryItem } from "@/entities/design/model/token-history";
+import {
+  DESIGN_TOKEN_SELECT_FIELDS,
+  toDesignTokenHistoryItem,
+  type DesignTokenRow,
+} from "@/entities/design/api/design-token-mapper";
+import { escapeIlikePattern } from "@/shared/lib/ilike-escape";
 import { supabase } from "@/shared/lib/supabase";
-
-interface DesignTokenRow {
-  id: string;
-  user_id: string;
-  amount: number;
-  type: string;
-  ai_model: string | null;
-  request_type: string | null;
-  description: string | null;
-  created_at: string;
-  work_id: string | null;
-}
 
 interface DesignTokenBalance {
   total: number;
   paid: number;
   bonus: number;
 }
-
-const DESIGN_TOKEN_SELECT_FIELDS =
-  "id, user_id, amount, type, ai_model, request_type, description, created_at, work_id";
-
-const toDesignTokenHistoryItem = (
-  row: DesignTokenRow,
-): DesignTokenHistoryItem => ({
-  id: row.id,
-  amount: row.amount,
-  type: row.type,
-  aiModel: row.ai_model,
-  requestType: row.request_type,
-  description: row.description,
-  createdAt: row.created_at,
-  workId: row.work_id,
-});
 
 export async function getDesignTokenBalance(): Promise<DesignTokenBalance> {
   const { data, error } = await supabase.rpc("get_design_token_balance");
@@ -55,6 +33,8 @@ interface GetDesignTokenHistoryParams {
   offset: number;
   dateFrom?: string;
   dateTo?: string;
+  types?: readonly string[];
+  keyword?: string;
 }
 
 export async function getDesignTokenHistory(
@@ -66,10 +46,18 @@ export async function getDesignTokenHistory(
     .order("created_at", { ascending: false });
 
   if (params.dateFrom) {
-    query = query.gte("created_at", `${params.dateFrom}T00:00:00`);
+    query = query.gte("created_at", toKstDayBoundaryUtcIso(params.dateFrom, 0));
   }
   if (params.dateTo) {
-    query = query.lt("created_at", `${nextDay(params.dateTo)}T00:00:00`);
+    query = query.lt("created_at", toKstDayBoundaryUtcIso(params.dateTo, 1));
+  }
+  if (params.types && params.types.length > 0) {
+    query = query.in("type", [...params.types]);
+  }
+
+  const keyword = params.keyword?.trim();
+  if (keyword) {
+    query = query.ilike("description", `%${escapeIlikePattern(keyword)}%`);
   }
 
   const { data, error } = await query.range(
@@ -85,8 +73,9 @@ export async function getDesignTokenHistory(
   return rows.map(toDesignTokenHistoryItem);
 }
 
-const nextDay = (yyyyMmDd: string): string => {
-  const date = new Date(`${yyyyMmDd}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + 1);
-  return date.toISOString().slice(0, 10);
-};
+function toKstDayBoundaryUtcIso(yyyyMmDd: string, dayOffset: number): string {
+  const [year, month, day] = yyyyMmDd.split("-").map(Number);
+  const utcTime =
+    Date.UTC(year, month - 1, day + dayOffset) - 9 * 60 * 60 * 1000;
+  return new Date(utcTime).toISOString();
+}

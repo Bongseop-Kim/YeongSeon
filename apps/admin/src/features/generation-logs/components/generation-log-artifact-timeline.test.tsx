@@ -32,4 +32,26 @@ describe("GenerationLogArtifactTimeline", () => {
       screen.getByText(/artifact_warnings: final: schema cache miss/),
     ).toBeInTheDocument();
   });
+
+  it("artifact_warnings가 접두사가 아니면 저장 실패 안내를 보여주지 않는다", () => {
+    useGenerationLogArtifactsQueryMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      errorMessage: null,
+    });
+
+    render(
+      <GenerationLogArtifactTimeline
+        workflowId="workflow-1"
+        logErrorMessage="render failed after artifact_warnings: final"
+      />,
+    );
+
+    expect(
+      screen.queryByText("아티팩트 저장이 실패해 타임라인이 비어 있습니다"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("워크플로우 아티팩트가 없습니다"),
+    ).toBeInTheDocument();
+  });
 });

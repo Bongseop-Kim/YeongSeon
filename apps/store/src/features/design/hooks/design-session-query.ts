@@ -11,10 +11,11 @@ const DESIGN_SESSIONS_QUERY_KEY = ["design-sessions"] as const;
 const designSessionMessagesQueryKey = (sessionId: string) =>
   ["design-session-messages", sessionId] as const;
 
-export function useDesignSessionsQuery() {
+export function useDesignSessionsQuery({ enabled = true } = {}) {
   return useQuery({
     queryKey: DESIGN_SESSIONS_QUERY_KEY,
     queryFn: getDesignSessions,
+    enabled,
     staleTime: 5 * 60 * 1000,
   });
 }

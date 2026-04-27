@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as ReactRouterDom from "react-router-dom";
+import type * as DesignFeature from "@/features/design";
 import type { Attachment } from "@/features/design";
 import DesignPage from "@/pages/design";
 import { AUTH_REDIRECT_STORAGE_KEY } from "@/shared/lib/auth-redirect";
@@ -10,6 +11,21 @@ import { useModalStore } from "@/shared/store/modal";
 const navigate = vi.fn();
 const sendMessage = vi.fn();
 const chatPanelSpy = vi.fn();
+
+type ChatPanelProps = {
+  sendMessage: (text: string, attachments: Attachment[]) => void;
+};
+
+const latestChatPanelProps = (): ChatPanelProps => {
+  const props = chatPanelSpy.mock.calls.at(-1)?.[0] as
+    | ChatPanelProps
+    | undefined;
+  expect(props).toBeDefined();
+  if (!props) {
+    throw new Error("ChatPanel props were not captured");
+  }
+  return props;
+};
 
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal<typeof ReactRouterDom>();
@@ -23,37 +39,39 @@ vi.mock("@/shared/lib/breakpoint-provider", () => ({
   useBreakpoint: () => ({ isDesktop: false }),
 }));
 
-vi.mock("@/features/design", () => ({
-  ChatPanel: (props: {
-    sendMessage: (text: string, attachments: Attachment[]) => void;
-  }) => {
-    chatPanelSpy(props);
-    return <div data-testid="chat-panel" />;
-  },
-  MobileHistorySheet: () => null,
-  OnboardingDialog: () => null,
-  PendingResultBanner: () => null,
-  PreviewPanel: () => null,
-  useDesignChat: () => ({
-    sendMessage,
-    regenerate: vi.fn(),
-  }),
-  useOnboarding: () => ({
-    showOnboarding: false,
-    completeOnboarding: vi.fn(),
-  }),
-  usePendingGeneration: () => ({
-    hasPendingResult: false,
-    markPending: vi.fn(),
-    clearPending: vi.fn(),
-  }),
-  useSessionRestore: () => ({
-    isHistoryOpen: false,
-    openHistory: vi.fn(),
-    closeHistory: vi.fn(),
-    restoreSession: vi.fn(),
-  }),
-}));
+vi.mock("@/features/design", async (importOriginal) => {
+  const actual = await importOriginal<typeof DesignFeature>();
+  return {
+    ...actual,
+    ChatPanel: (props: ChatPanelProps) => {
+      chatPanelSpy(props);
+      return <div data-testid="chat-panel" />;
+    },
+    MobileHistorySheet: () => null,
+    OnboardingDialog: () => null,
+    PendingResultBanner: () => null,
+    PreviewPanel: () => null,
+    useDesignChat: () => ({
+      sendMessage,
+      regenerate: vi.fn(),
+    }),
+    useOnboarding: () => ({
+      showOnboarding: false,
+      completeOnboarding: vi.fn(),
+    }),
+    usePendingGeneration: () => ({
+      hasPendingResult: false,
+      markPending: vi.fn(),
+      clearPending: vi.fn(),
+    }),
+    useSessionRestore: () => ({
+      isHistoryOpen: false,
+      openHistory: vi.fn(),
+      closeHistory: vi.fn(),
+      restoreSession: vi.fn(),
+    }),
+  };
+});
 
 describe("DesignPage", () => {
   beforeEach(() => {
@@ -68,7 +86,8 @@ describe("DesignPage", () => {
   it("비로그인 상태에서 채팅을 시도하면 로그인 안내 confirm을 띄우고 확인 시 로그인으로 이동한다", () => {
     render(<DesignPage />);
 
-    const chatProps = chatPanelSpy.mock.calls.at(-1)?.[0];
+    expect(chatPanelSpy).toHaveBeenCalled();
+    const chatProps = latestChatPanelProps();
     chatProps.sendMessage("새 디자인", []);
 
     expect(sendMessage).not.toHaveBeenCalled();
@@ -97,7 +116,8 @@ describe("DesignPage", () => {
 
     render(<DesignPage />);
 
-    const chatProps = chatPanelSpy.mock.calls.at(-1)?.[0];
+    expect(chatPanelSpy).toHaveBeenCalled();
+    const chatProps = latestChatPanelProps();
     const attachments: Attachment[] = [
       { type: "color", label: "네이비", value: "navy" },
     ];

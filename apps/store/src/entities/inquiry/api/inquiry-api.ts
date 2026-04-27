@@ -1,3 +1,4 @@
+import { escapeIlikePattern } from "@/shared/lib/ilike-escape";
 import { supabase } from "@/shared/lib/supabase";
 import type {
   InquiryProductDTO,
@@ -82,8 +83,9 @@ export const searchProductsForInquiry = async (
     .order("id", { ascending: false })
     .limit(10);
 
-  if (query.trim()) {
-    req = req.ilike("name", `%${query.trim()}%`);
+  const trimmedQuery = query.trim();
+  if (trimmedQuery) {
+    req = req.ilike("name", `%${escapeIlikePattern(trimmedQuery)}%`);
   }
 
   const { data, error } = await req;

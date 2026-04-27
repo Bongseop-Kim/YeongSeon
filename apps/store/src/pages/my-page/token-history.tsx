@@ -109,6 +109,8 @@ type HistoryItem = {
   workId: string | null;
 };
 
+const USAGE_HISTORY_TYPES = ["use", "refund"] as const;
+
 interface UsageTabProps {
   history: HistoryItem[];
   isLoading: boolean;
@@ -174,7 +176,7 @@ function UsageTab({
         </div>
       ))}
       {hasMore && (
-        <div className="flex justify-center px-4 py-4 lg:px-0">
+        <div className="flex justify-center px-4 py-4">
           <button
             type="button"
             onClick={onLoadMore}
@@ -218,25 +220,18 @@ export default function TokenHistoryPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useDesignTokenHistoryQuery({ dateFrom, dateTo });
+  } = useDesignTokenHistoryQuery({
+    dateFrom,
+    dateTo,
+    keyword: debouncedKeyword,
+    types: USAGE_HISTORY_TYPES,
+  });
 
   const balance = rawBalance ?? { total: 0, paid: 0, bonus: 0 };
 
   const usageHistory = useMemo(() => {
-    const history = rawHistory?.pages.flat() ?? [];
-    let result = history.filter(
-      (item) => item.type === "use" || item.type === "refund",
-    );
-
-    if (debouncedKeyword) {
-      const keyword = debouncedKeyword.toLowerCase();
-      result = result.filter((item) =>
-        (item.description ?? "").toLowerCase().includes(keyword),
-      );
-    }
-
-    return result;
-  }, [rawHistory, debouncedKeyword]);
+    return rawHistory?.pages.flat() ?? [];
+  }, [rawHistory]);
   const balanceProps: BalanceSummaryProps = {
     total: balance.total,
     paid: balance.paid,

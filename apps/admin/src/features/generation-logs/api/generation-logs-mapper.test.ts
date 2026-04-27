@@ -180,6 +180,20 @@ describe("toAdminGenerationLogItem", () => {
     expect(result.promptLength).toBe(50);
   });
 
+  it("정수가 아닌 number/string 숫자는 integer 필드 fallback으로 매핑한다", () => {
+    const numberResult = toAdminGenerationLogItem({
+      ...baseRow,
+      prompt_length: 10.5,
+    });
+    const stringResult = toAdminGenerationLogItem({
+      ...baseRow,
+      prompt_length: "10.5",
+    });
+
+    expect(numberResult.promptLength).toBe(0);
+    expect(stringResult.promptLength).toBe(0);
+  });
+
   it("has_ci_image가 false면 false를 반환한다", () => {
     const result = toAdminGenerationLogItem({
       ...baseRow,

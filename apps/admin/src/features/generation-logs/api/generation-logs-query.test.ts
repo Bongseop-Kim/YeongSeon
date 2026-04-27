@@ -59,6 +59,16 @@ describe("generation logs artifact query contract", () => {
     expect(getGenerationLogArtifactsMock).toHaveBeenCalledWith("workflow-1");
     expect(options.enabled).toBe(true);
   });
+
+  it("workflowId가 공백뿐이면 query를 비활성화한다", () => {
+    useGenerationLogArtifactsQuery({
+      workflowId: "   ",
+    });
+
+    const options = useQueryMock.mock.calls[0]?.[0];
+
+    expect(options.enabled).toBe(false);
+  });
 });
 
 describe("useGenerationLogsQuery — new filter params", () => {
