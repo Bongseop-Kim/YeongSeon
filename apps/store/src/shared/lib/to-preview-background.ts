@@ -18,10 +18,10 @@ export const getRawImageUrlFromPreviewBackground = (
   const match = trimmed.match(
     /^url\(\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^)]*?))\s*\)/i,
   );
-  const captured = match?.[1] ?? match?.[2] ?? match?.[3];
-  if (captured) {
-    return unescapeCssUrl(captured);
+  if (!match) {
+    return trimmed;
   }
 
-  return trimmed;
+  const captured = match[1] ?? match[2] ?? match[3] ?? "";
+  return unescapeCssUrl(captured);
 };

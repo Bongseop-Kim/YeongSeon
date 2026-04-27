@@ -48,6 +48,20 @@ function toBoolean(v: unknown): boolean {
   return v === true;
 }
 
+function toNullableString(v: unknown): string | null | undefined {
+  if (v === null) return null;
+  if (typeof v === "string") return v;
+  return undefined;
+}
+
+function toDesignScale(
+  v: unknown,
+): NonNullable<AdminGenerationLogItem["designContext"]>["scale"] | undefined {
+  if (v === null) return null;
+  if (v === "large" || v === "medium" || v === "small") return v;
+  return undefined;
+}
+
 const REQUEST_ATTACHMENT_TYPES = [
   "color",
   "pattern",
@@ -165,6 +179,43 @@ function toRequestAttachments(
   return attachments.length > 0 ? attachments : null;
 }
 
+function toDesignContext(
+  value: unknown,
+): AdminGenerationLogItem["designContext"] {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const colors = Array.isArray(value.colors)
+    ? value.colors.filter((color): color is string => typeof color === "string")
+    : undefined;
+  const pattern = toNullableString(value.pattern);
+  const fabricMethod = toNullableString(value.fabricMethod);
+  const ciPlacement = toNullableString(value.ciPlacement);
+  const scale = toDesignScale(value.scale);
+
+  const designContext: NonNullable<AdminGenerationLogItem["designContext"]> =
+    {};
+
+  if (colors && colors.length > 0) {
+    designContext.colors = colors;
+  }
+  if (pattern !== undefined) {
+    designContext.pattern = pattern;
+  }
+  if (fabricMethod !== undefined) {
+    designContext.fabricMethod = fabricMethod;
+  }
+  if (ciPlacement !== undefined) {
+    designContext.ciPlacement = ciPlacement;
+  }
+  if (scale !== undefined) {
+    designContext.scale = scale;
+  }
+
+  return Object.keys(designContext).length > 0 ? designContext : null;
+}
+
 export function toAdminGenerationLogItem(
   row: GenerationLogRow,
 ): AdminGenerationLogItem {
@@ -187,9 +238,7 @@ export function toAdminGenerationLogItem(
     userMessage: toString(row.user_message) ?? "",
     promptLength: toNumber(row.prompt_length),
     requestAttachments: toRequestAttachments(row.request_attachments),
-    designContext: isRecord(row.design_context)
-      ? (row.design_context as AdminGenerationLogItem["designContext"])
-      : null,
+    designContext: toDesignContext(row.design_context),
     conversationTurn: toNumber(row.conversation_turn),
     hasCiImage: toBoolean(row.has_ci_image),
     hasReferenceImage: toBoolean(row.has_reference_image),
@@ -199,17 +248,12 @@ export function toAdminGenerationLogItem(
       typeof row.generate_image === "boolean" ? row.generate_image : null,
     imageGenerated: toBoolean(row.image_generated),
     generatedImageUrl: toString(row.generated_image_url),
-    detectedDesign: isRecord(row.detected_design)
-      ? (row.detected_design as Record<string, unknown>)
-      : null,
+    detectedDesign: isRecord(row.detected_design) ? row.detected_design : null,
     tokensCharged: toNumber(row.tokens_charged),
     tokensRefunded: toNumber(row.tokens_refunded),
-    textLatencyMs:
-      typeof row.text_latency_ms === "number" ? row.text_latency_ms : null,
-    imageLatencyMs:
-      typeof row.image_latency_ms === "number" ? row.image_latency_ms : null,
-    totalLatencyMs:
-      typeof row.total_latency_ms === "number" ? row.total_latency_ms : null,
+    textLatencyMs: parseNumberWith(row.text_latency_ms, isSafeInteger),
+    imageLatencyMs: parseNumberWith(row.image_latency_ms, isSafeInteger),
+    totalLatencyMs: parseNumberWith(row.total_latency_ms, isSafeInteger),
     errorType: toString(row.error_type),
     createdAt: toString(row.created_at) ?? "",
     ...(workflowId ? { workflowId } : {}),

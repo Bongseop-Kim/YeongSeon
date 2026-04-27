@@ -11,7 +11,7 @@ export function HistoryTab({ onSessionSelect }: HistoryTabProps) {
   const user = useAuthStore((state) => state.user);
   const initialized = useAuthStore((state) => state.initialized);
   const {
-    data: sessions = [],
+    data: sessions,
     isLoading,
     isError,
     error,
@@ -48,7 +48,20 @@ export function HistoryTab({ onSessionSelect }: HistoryTabProps) {
     );
   }
 
-  if (sessions.length === 0) {
+  if (initialized && !user) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+        <p className="text-sm text-gray-400">
+          로그인하면 저장한 디자인을 볼 수 있어요
+        </p>
+        <p className="text-xs text-gray-300">
+          AI와 대화하고 이미지를 생성한 기록이 계정에 저장됩니다
+        </p>
+      </div>
+    );
+  }
+
+  if (!sessions || sessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
         <p className="text-sm text-gray-400">아직 저장된 디자인이 없어요</p>

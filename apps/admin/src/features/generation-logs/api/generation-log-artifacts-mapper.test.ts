@@ -109,4 +109,52 @@ describe("toAdminGenerationArtifactItem", () => {
 
     warnSpy.mockRestore();
   });
+
+  it("알 수 없는 status는 failed로 폴백하고 경고한다", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = toAdminGenerationArtifactItem({
+      id: "artifact-6",
+      workflow_id: "workflow-1",
+      artifact_type: "final",
+      storage_provider: "imagekit",
+      status: "unknown",
+      meta: {},
+      created_at: "2026-05-12T00:00:00Z",
+    });
+
+    expect(result.status).toBe("failed");
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[toArtifactStatus] Invalid status value",
+      expect.objectContaining({ status: "unknown" }),
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it("storage_provider가 문자열이 아니면 null로 매핑하고 경고한다", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = toAdminGenerationArtifactItem({
+      id: "artifact-7",
+      workflow_id: "workflow-1",
+      artifact_type: "final",
+      storage_provider: 123,
+      status: "success",
+      meta: {},
+      created_at: "2026-05-12T00:00:00Z",
+    });
+
+    expect(result.storageProvider).toBeNull();
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[toAdminGenerationArtifactItem] Invalid storage_provider",
+      expect.objectContaining({
+        id: "artifact-7",
+        workflowId: "workflow-1",
+        storageProvider: 123,
+      }),
+    );
+
+    warnSpy.mockRestore();
+  });
 });

@@ -40,24 +40,35 @@ function DesignPage() {
     onGenerationStart: markPending,
     onGenerationEnd: clearPending,
   });
+  const confirmLoginRequired = useCallback(() => {
+    confirm(
+      LOGIN_REQUIRED_MESSAGE,
+      () => {
+        sessionStorage.setItem(AUTH_REDIRECT_STORAGE_KEY, ROUTES.DESIGN);
+        navigate(ROUTES.LOGIN, { state: { from: ROUTES.DESIGN } });
+      },
+      { confirmText: "로그인", cancelText: "취소" },
+    );
+  }, [confirm, navigate]);
   const sendMessageWithAuthCheck = useCallback(
     (text: string, attachments: Attachment[]) => {
-      if (user) {
-        sendMessage(text, attachments);
+      if (!user) {
+        confirmLoginRequired();
         return;
       }
 
-      confirm(
-        LOGIN_REQUIRED_MESSAGE,
-        () => {
-          sessionStorage.setItem(AUTH_REDIRECT_STORAGE_KEY, ROUTES.DESIGN);
-          navigate(ROUTES.LOGIN, { state: { from: ROUTES.DESIGN } });
-        },
-        { confirmText: "로그인", cancelText: "취소" },
-      );
+      sendMessage(text, attachments);
     },
-    [confirm, navigate, sendMessage, user],
+    [confirmLoginRequired, sendMessage, user],
   );
+  const regenerateWithAuthCheck = useCallback(() => {
+    if (!user) {
+      confirmLoginRequired();
+      return;
+    }
+
+    regenerate();
+  }, [confirmLoginRequired, regenerate, user]);
 
   return (
     <MainLayout className="h-full">
@@ -85,7 +96,10 @@ function DesignPage() {
         >
           {isDesktop ? (
             <div className="w-1/2 overflow-hidden border-r">
-              <PreviewPanel className="h-full" onRegenerate={regenerate} />
+              <PreviewPanel
+                className="h-full"
+                onRegenerate={regenerateWithAuthCheck}
+              />
             </div>
           ) : null}
           <div

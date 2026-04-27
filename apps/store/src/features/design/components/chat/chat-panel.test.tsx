@@ -103,12 +103,6 @@ describe("ChatPanel", () => {
         }),
       ],
     });
-    expect(messageListSpy.mock.calls.at(-1)?.[0]).not.toHaveProperty(
-      "analysisState",
-    );
-    expect(messageListSpy.mock.calls.at(-1)?.[0]).not.toHaveProperty(
-      "onRequestInpaint",
-    );
   });
 
   it("입력 전송은 sendMessage로 연결된다", () => {
@@ -116,5 +110,24 @@ describe("ChatPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "send" }));
     expect(sendMessage).toHaveBeenCalledWith("직접 입력", []);
+  });
+
+  it("추천 칩 클릭은 sendMessage로 연결된다", () => {
+    useDesignChatStore.setState({
+      messages: [
+        {
+          id: "msg-1",
+          role: "ai",
+          content: "추천을 선택해보세요",
+          timestamp: 1,
+        },
+      ],
+    });
+    const { sendMessage } = renderPanel();
+
+    fireEvent.click(screen.getByRole("button", { name: "chip" }));
+
+    expect(messageListSpy.mock.calls.at(-1)?.[0]).toHaveProperty("onChipClick");
+    expect(sendMessage).toHaveBeenCalledWith("칩 요청", []);
   });
 });

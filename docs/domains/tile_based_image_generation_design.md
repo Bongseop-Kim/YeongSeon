@@ -87,7 +87,7 @@
 
 ## 생성 파이프라인
 
-```
+```text
 [1단계: 분석]
   (1-a) Edge Function: 참고 이미지가 첨부되어 있으면 분석 입력 컨텍스트에 포함
         (참고 이미지는 스타일/색상/모티프 힌트로만 활용, 별도 메트릭 평가 없음)
@@ -327,7 +327,7 @@ fabric_type          TEXT
 
 `ai_generation_logs` 컬럼 의미 명확화:
 
-```
+```text
 work_id              이 로그에서 생성된 타일의 고유 ID
 parent_work_id       직전 편집 타일의 work_id (히스토리 체인)
 tile_role            "repeat" | "accent" — 이 로그가 어느 타일을 생성했는지
@@ -337,7 +337,7 @@ fabric_type          이 타일이 어떤 원단 타입으로 생성되었는지
 
 편집 라우팅 (analysis_model이 판정):
 
-```
+```text
 edit_target: "repeat" | "accent" | "both" | "new"
 
 "repeat"  → repeat tile 재생성 + accent 자동 재생성 (단방향)
@@ -519,7 +519,7 @@ analysis_model 호출은 structured output 강제 (JSON schema 검증).
 
 파싱 실패 시 기본값 라우팅:
 
-```
+```text
 edit_target = "new"
 patternType = "all_over"
 fabricTypeHint = null  (Edge Function resolveFabricType으로 처리)
@@ -574,7 +574,7 @@ LLM 판정 전 결정론적 룰 오버라이드 (Edge Function에서 선처리):
 
 **yarn_dyed 블록**
 
-```
+```text
 Fabric rendering (critical):
 - Entire surface is realistic yarn-dyed tie silk jacquard fabric, top-down flat view.
 - Visible woven warp and weft threads with subtle natural sheen.
@@ -585,7 +585,7 @@ Fabric rendering (critical):
 
 **printed 블록**
 
-```
+```text
 Fabric rendering (critical):
 - Entire surface is printed tie silk fabric, top-down flat view.
 - Smooth matte surface with flat color fields.
@@ -596,7 +596,7 @@ Fabric rendering (critical):
 
 **Seamless requirement suffix (repeat tile에만 주입)**
 
-```
+```text
 - The fabric surface must tile seamlessly on all four edges:
   left edge matches right edge, top edge matches bottom edge.
 - No directional weave/grain bias, no visible texture seam at any edge when the tile is repeated.
@@ -613,7 +613,7 @@ Fabric rendering (critical):
 
 **H (single)**
 
-```
+```text
 Square tile 1024x1024 with exactly 1 {모티프} on plain {배경색} tie silk fabric.
 
 Placement rule (critical):
@@ -629,7 +629,7 @@ Flat 2D top-down view, no shadow, no text, no border, no additional decoration.
 
 **F (pair)**
 
-```
+```text
 Square tile 1024x1024 with exactly 2 identical {모티프} on plain {배경색} tie silk fabric.
 
 Placement rule (critical):
@@ -647,7 +647,7 @@ Flat 2D top-down view, no shadow, no text, no border, no additional decoration.
 
 **Q-rotation**
 
-```
+```text
 Square tile 1024x1024 with exactly 4 {모티프} on plain {배경색} tie silk fabric.
 
 Placement rule (critical):
@@ -671,7 +671,7 @@ Flat 2D top-down view, no shadow, no text, no border, no additional decoration.
 
 **Q-color**
 
-```
+```text
 Square tile 1024x1024 with exactly 4 {모티프} on plain {배경색} tie silk fabric.
 
 Placement rule (critical):
@@ -693,7 +693,7 @@ Flat 2D top-down view, no shadow, no text, no border, no additional decoration.
 
 **Q-different_motif**
 
-```
+```text
 Square tile 1024x1024 with exactly 4 motifs on plain {배경색} tie silk fabric.
 
 Placement rule (critical):
@@ -718,7 +718,7 @@ accent tile은 seamless 속성이 불필요하며, 단일 오브젝트가 중앙
 
 **accent-text (objectSource가 "text"인 경우)**
 
-```
+```text
 Square tile 1024x1024 on plain {배경색} tie silk fabric.
 
 Subject:
@@ -740,7 +740,7 @@ Flat 2D top-down view, no shadow, no text, no border, no additional decoration.
 
 image_model의 이미지 입력 기능을 활용. 첨부 이미지가 생성 요청에 포함되며 프롬프트로 의도를 보강.
 
-```
+```text
 Square tile 1024x1024 on plain {배경색} tie silk fabric.
 
 Subject:
@@ -828,7 +828,7 @@ function buildAccentPrompt(
 
 근거:
 
-- POC에서 gpt-image-1이 구조화된 배치 규칙 프롬프트에 대해 육안 기준 안정적 seamless 확인. gpt-image-2는 O-시리즈 reasoning 내장으로 그리드·간격 제약 준수도가 동등 이상 예상.
+- 사내 POC 실측 기준으로 gpt-image-2는 구조화된 배치 규칙 프롬프트에서 그리드·간격 제약 준수도가 gpt-image-1과 동등 이상으로 확인됨.
 - **외곽 여백 = 모티프 간 간격 / 2** 수학 조건을 프롬프트로 명시하면 반복 시 간격이 균일해져 **썸네일 스케일에서 이음새가 인지되지 않음**.
 - 프론트 표시 80px(생성 1024px의 약 1/12.8 스케일)에서는 픽셀 단위 경계 불일치가 다운스케일로 자연스럽게 마스킹됨.
 
@@ -914,4 +914,4 @@ function buildAccentPrompt(
 - **accent 배경 일치**: 프롬프트로만 해결. 편차 발생 시 프롬프트 어휘 개선으로 대응 (위 "이미지 후처리" 항목의 특수 사례).
 - **모델 선택**: `gpt-image-2` + `quality: "low"`로 고정. mini/1.5/기타 openai 경유 등은 비용·품질 동시 역전 상황이 아니므로 선택지 아님. gpt-image-3 이상 차세대 모델 출시 시에만 재검토.
 - **해상도**: `size: "1024x1024"` 고정. gpt-image-2 API 제약(변 16배수, 총 픽셀 ≥655,360)상 더 작은 해상도 생성으로의 비용 절감은 불가. 프론트 표시 크기 축소가 더 큰 비용 효과를 가진다면 그쪽으로 대응.
-- **OpenAI API 실패 처리**: 표준 재시도(exponential backoff, 최대 3회) + 최종 실패 시 사용자에게 에러 메시지.
+- **OpenAI API 실패 처리**: 표준 재시도(exponential backoff, 최대 3회) + 최종 실패 시 사용자에게 에러 메시지. 모든 타일 업로드, 로그 기록, 요금 청구 호출은 `request_id` 또는 `operation_id` 기반 고유 idempotency key를 필수로 가진다. 저장 계층은 idempotency key를 먼저 확인하고 upsert 또는 conditional write로 중복 업로드·중복 로그·중복 청구를 방지한다. 멱등 작업만 최대 3회 재시도하며, charge-then-generate처럼 비멱등 흐름은 청구 성공 후 상태를 `queued` → `charged`로 전이한 뒤 생성 실패 시 자동 보상(refund)을 실행하고 `failed`로 마감한다. 이 경우 생성·청구 호출은 자동 재시도하지 않으며, 실패 로그에는 idempotency key, 환불/보상 상태, 상태 전이 이력을 남겨 운영자가 추적할 수 있게 한다. 생성 성공 시에는 `charged` → `generated`로 전이한다.

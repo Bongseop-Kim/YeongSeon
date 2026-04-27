@@ -25,6 +25,7 @@ function toArtifactStatus(v: unknown): "success" | "partial" | "failed" {
     return v;
   }
 
+  console.warn("[toArtifactStatus] Invalid status value", { status: v });
   return "failed";
 }
 
@@ -53,6 +54,7 @@ export function toAdminGenerationArtifactItem(
   const id = toStringOrNull(row.id);
   const workflowId = toStringOrNull(row.workflow_id);
   const createdAt = toStringOrNull(row.created_at);
+  const storageProvider = toStringOrNull(row.storage_provider);
 
   for (const [field, value] of [
     ["id", id],
@@ -67,6 +69,14 @@ export function toAdminGenerationArtifactItem(
     }
   }
 
+  if (row.storage_provider != null && storageProvider === null) {
+    console.warn("[toAdminGenerationArtifactItem] Invalid storage_provider", {
+      id,
+      workflowId,
+      storageProvider: row.storage_provider,
+    });
+  }
+
   return {
     id,
     workflowId,
@@ -74,7 +84,7 @@ export function toAdminGenerationArtifactItem(
     artifactType: toStringOrNull(row.artifact_type) ?? "",
     sourceWorkId: toStringOrNull(row.source_work_id),
     parentArtifactId: toStringOrNull(row.parent_artifact_id),
-    storageProvider: toStringOrNull(row.storage_provider) ?? "imagekit",
+    storageProvider,
     imageUrl: toStringOrNull(row.image_url),
     imageWidth: toNumberOrNull(row.image_width),
     imageHeight: toNumberOrNull(row.image_height),

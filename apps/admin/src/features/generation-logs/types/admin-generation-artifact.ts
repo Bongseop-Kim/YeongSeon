@@ -9,7 +9,7 @@ export interface AdminGenerationArtifactItem {
   artifactType: string;
   sourceWorkId: string | null;
   parentArtifactId: string | null;
-  storageProvider: string;
+  storageProvider: string | null;
   imageUrl: string | null;
   imageWidth: number | null;
   imageHeight: number | null;

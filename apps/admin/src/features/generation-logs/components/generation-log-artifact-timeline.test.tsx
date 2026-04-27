@@ -54,4 +54,40 @@ describe("GenerationLogArtifactTimeline", () => {
       screen.getByText("워크플로우 아티팩트가 없습니다"),
     ).toBeInTheDocument();
   });
+
+  it("알 수 없는 phase는 미분류로 표시한다", () => {
+    useGenerationLogArtifactsQueryMock.mockReturnValue({
+      data: [
+        {
+          id: "artifact-unknown",
+          workflowId: "workflow-1",
+          phase: "unexpected",
+          artifactType: "debug_tile",
+          sourceWorkId: null,
+          parentArtifactId: null,
+          storageProvider: null,
+          imageUrl: null,
+          imageWidth: null,
+          imageHeight: null,
+          mimeType: null,
+          fileSizeBytes: null,
+          status: "success",
+          meta: {},
+          createdAt: "2026-05-12T00:00:00Z",
+        },
+      ],
+      isLoading: false,
+      errorMessage: null,
+    });
+
+    render(
+      <GenerationLogArtifactTimeline
+        workflowId="workflow-1"
+        logErrorMessage={null}
+      />,
+    );
+
+    expect(screen.getByText("미분류 (1)")).toBeInTheDocument();
+    expect(screen.getByText("debug_tile")).toBeInTheDocument();
+  });
 });

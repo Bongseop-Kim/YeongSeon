@@ -13,7 +13,7 @@ const baseRow = {
   quality: "standard",
   user_message: "디자인 생성해줘",
   prompt_length: 100,
-  design_context: { style: "classic" },
+  design_context: { pattern: "classic" },
   conversation_turn: 2,
   has_ci_image: true,
   has_reference_image: false,
@@ -44,7 +44,7 @@ describe("toAdminGenerationLogItem", () => {
       quality: "standard",
       userMessage: "디자인 생성해줘",
       promptLength: 100,
-      designContext: { style: "classic" },
+      designContext: { pattern: "classic" },
       conversationTurn: 2,
       hasCiImage: true,
       hasReferenceImage: false,
@@ -140,6 +140,41 @@ describe("toAdminGenerationLogItem", () => {
     expect(result.designContext).toBeNull();
   });
 
+  it("design_context는 알려진 필드만 검증해 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      design_context: {
+        colors: ["navy", "silver", 123],
+        pattern: "stripe",
+        fabricMethod: "yarn_dyed",
+        ciPlacement: null,
+        scale: "large",
+        ignored: "value",
+      },
+    });
+
+    expect(result.designContext).toEqual({
+      colors: ["navy", "silver"],
+      pattern: "stripe",
+      fabricMethod: "yarn_dyed",
+      ciPlacement: null,
+      scale: "large",
+    });
+  });
+
+  it("design_context에 유효한 필드가 없으면 null을 반환한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      design_context: {
+        colors: [123],
+        pattern: 123,
+        scale: "huge",
+      },
+    });
+
+    expect(result.designContext).toBeNull();
+  });
+
   it("detected_design이 null이면 null을 반환한다", () => {
     const result = toAdminGenerationLogItem({
       ...baseRow,
@@ -170,6 +205,19 @@ describe("toAdminGenerationLogItem", () => {
       total_latency_ms: null,
     });
     expect(result.totalLatencyMs).toBeNull();
+  });
+
+  it("latency 필드는 문자열과 bigint RPC 값을 숫자로 변환한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      text_latency_ms: "301",
+      image_latency_ms: 1201n,
+      total_latency_ms: "1502",
+    });
+
+    expect(result.textLatencyMs).toBe(301);
+    expect(result.imageLatencyMs).toBe(1201);
+    expect(result.totalLatencyMs).toBe(1502);
   });
 
   it("문자열 prompt_length를 숫자로 변환한다", () => {

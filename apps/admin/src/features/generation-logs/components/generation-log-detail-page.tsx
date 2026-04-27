@@ -31,6 +31,7 @@ import { formatDateTimeSeconds } from "@/utils/format-date-time";
 const { Text } = Typography;
 
 type WorkflowStepListVariant = "chip" | "card";
+const FALLBACK_INPUT_ARTIFACT_TYPES = ["repeat_tile", "accent_tile"] as const;
 
 interface WorkflowStepListProps {
   workflowLogs: AdminGenerationLogItem[];
@@ -122,6 +123,8 @@ function StickyBar({
   onSelectLog: (logId: string) => void;
   onBack: () => void;
 }) {
+  const netTokensCharged = Math.max(0, log.tokensCharged - log.tokensRefunded);
+
   return (
     <div
       style={{
@@ -161,7 +164,7 @@ function StickyBar({
         <Tag color={modelColor(log.aiModel)}>{log.aiModel}</Tag>
         <Tag>{requestTypeLabel(log.requestType)}</Tag>
         <Text type="secondary" style={{ fontSize: 13 }}>
-          토큰 <strong>{log.tokensCharged - log.tokensRefunded}</strong>
+          토큰 <strong>{netTokensCharged}</strong>
         </Text>
         <Text type="secondary" style={{ fontSize: 13 }}>
           응답{" "}
@@ -301,15 +304,22 @@ function InputImageSection({ log }: { log: AdminGenerationLogItem }) {
     workflowId: log.workflowId,
   });
 
-  const inputArtifact = useMemo(
-    () =>
+  const inputArtifact = useMemo(() => {
+    const sourceInput = artifacts.find(
+      (artifact) => artifact.artifactType === "source_input",
+    );
+    if (sourceInput) {
+      return sourceInput;
+    }
+
+    return (
       artifacts.find((artifact) =>
-        ["source_input", "repeat_tile", "accent_tile"].includes(
-          artifact.artifactType,
+        FALLBACK_INPUT_ARTIFACT_TYPES.some(
+          (artifactType) => artifactType === artifact.artifactType,
         ),
-      ) ?? null,
-    [artifacts],
-  );
+      ) ?? null
+    );
+  }, [artifacts]);
 
   const hasImageAttachment = log.requestAttachments?.some(
     (attachment) => attachment.type === "image",
@@ -417,6 +427,22 @@ function ExpandableText({
   );
 }
 
+function JsonBlock({ label, value }: { label: string; value: unknown }) {
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>
+        {label}
+      </div>
+      <Text
+        code
+        style={{ fontSize: 11, whiteSpace: "pre-wrap", display: "block" }}
+      >
+        {JSON.stringify(value, null, 2)}
+      </Text>
+    </div>
+  );
+}
+
 function PromptSection({ log }: { log: AdminGenerationLogItem }) {
   return (
     <Card title="프롬프트 & AI 응답" size="small" style={{ marginBottom: 16 }}>
@@ -458,7 +484,7 @@ function DesignContextSection({ log }: { log: AdminGenerationLogItem }) {
           bordered
           style={{ marginBottom: 10 }}
         >
-          {Object.entries(log.designContext as Record<string, unknown>)
+          {Object.entries(log.designContext)
             .filter(([, v]) => v != null)
             .map(([k, v]) => (
               <Descriptions.Item key={k} label={k}>
@@ -468,17 +494,10 @@ function DesignContextSection({ log }: { log: AdminGenerationLogItem }) {
         </Descriptions>
       )}
       {log.detectedDesign && (
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>
-            감지된 디자인 (raw)
-          </div>
-          <Text
-            code
-            style={{ fontSize: 11, whiteSpace: "pre-wrap", display: "block" }}
-          >
-            {JSON.stringify(log.detectedDesign, null, 2)}
-          </Text>
-        </div>
+        <JsonBlock label="감지된 디자인 (raw)" value={log.detectedDesign} />
+      )}
+      {log.normalizedDesign && (
+        <JsonBlock label="정규화된 디자인" value={log.normalizedDesign} />
       )}
     </Card>
   );

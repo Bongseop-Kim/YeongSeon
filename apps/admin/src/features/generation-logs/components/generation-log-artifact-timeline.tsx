@@ -24,6 +24,10 @@ type PhaseBucket = AdminGenerationArtifactPhase | "unclassified";
 
 const PHASE_ORDER: readonly PhaseBucket[] = ["render", "unclassified"];
 
+function isPhaseBucket(phase: unknown): phase is PhaseBucket {
+  return PHASE_ORDER.includes(phase as PhaseBucket);
+}
+
 function getPhaseLabel(phase: PhaseBucket): string {
   return phase === "render" ? "렌더" : "미분류";
 }
@@ -137,7 +141,6 @@ function ArtifactTimelineEntry({
             alt={`${artifact.artifactType} artifact`}
             width={140}
             style={{ borderRadius: 6, objectFit: "cover" }}
-            fallback=""
           />
         ) : (
           <div
@@ -164,8 +167,8 @@ function ArtifactTimelineEntry({
           소스: {getArtifactSourceLabel(artifact)}
         </Text>
         <Text type="secondary" style={{ fontSize: 11 }}>
-          크기: {artifact.storageProvider} / {getArtifactSizeLabel(artifact)} /{" "}
-          {artifact.mimeType ?? "-"} /{" "}
+          크기: {artifact.storageProvider ?? "-"} /{" "}
+          {getArtifactSizeLabel(artifact)} / {artifact.mimeType ?? "-"} /{" "}
           {getFileSizeLabel(artifact.fileSizeBytes)}
         </Text>
 
@@ -205,7 +208,9 @@ export function GenerationLogArtifactTimeline({
     };
 
     artifacts.forEach((artifact) => {
-      const key = artifact.phase ?? "unclassified";
+      const key = isPhaseBucket(artifact.phase)
+        ? artifact.phase
+        : "unclassified";
       grouped[key].push(artifact);
     });
 
