@@ -9,6 +9,7 @@ import {
   uploadDesignAsset,
 } from "@/entities/design";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import { DESIGN_SESSIONS_QUERY_KEY } from "@/features/design/hooks/design-session-query";
 import type { Attachment, Message } from "@/features/design/types/chat";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { ph } from "@/shared/lib/posthog";
@@ -274,6 +275,9 @@ export function useDesignChat(
 
       void queryClient.invalidateQueries({
         queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: DESIGN_SESSIONS_QUERY_KEY,
       });
     } catch (error) {
       console.error("tile generation failed:", error);

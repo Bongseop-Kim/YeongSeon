@@ -198,6 +198,9 @@ describe("useDesignChat", () => {
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["design-token-balance"],
     });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["design-sessions"],
+    });
     expect(phCapture).toHaveBeenCalledWith("design_session_started", {
       ai_model: "openai",
     });
