@@ -6,6 +6,7 @@ import {
   Col,
   Descriptions,
   Image,
+  List,
   Row,
   Space,
   Spin,
@@ -19,7 +20,6 @@ import {
   useGenerationLogArtifactsQuery,
   useGenerationWorkflowLogsQuery,
 } from "@/features/generation-logs/api/generation-logs-query";
-import { GenerationLogArtifactTimeline } from "@/features/generation-logs/components/generation-log-artifact-timeline";
 import {
   isArtifactWarningMessage,
   modelColor,
@@ -31,7 +31,16 @@ import { formatDateTimeSeconds } from "@/utils/format-date-time";
 const { Text } = Typography;
 
 type WorkflowStepListVariant = "chip" | "card";
-const FALLBACK_INPUT_ARTIFACT_TYPES = ["repeat_tile", "accent_tile"] as const;
+const INPUT_ARTIFACT_TYPE_PRIORITY = [
+  "source_input",
+  "input_image",
+  "attached_image",
+  "reference_image",
+  "ci_image",
+  "previous_image",
+  "repeat_tile",
+  "accent_tile",
+] as const;
 
 interface WorkflowStepListProps {
   workflowLogs: AdminGenerationLogItem[];
@@ -132,7 +141,9 @@ function StickyBar({
         top: 0,
         zIndex: 10,
         background: "#fff",
-        borderBottom: "1px solid #f0f0f0",
+        border: "1px solid #f0f0f0",
+        borderRadius: 0,
+        margin: 0,
         padding: "10px 24px",
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
       }}
@@ -200,74 +211,29 @@ function StickyBar({
   );
 }
 
-function BasicInfoSection({ log }: { log: AdminGenerationLogItem }) {
-  const isArtifactWarning = isArtifactWarningMessage(log.errorMessage);
-
-  return (
-    <Card title="기본 정보" size="small" style={{ marginBottom: 16 }}>
-      <Row gutter={[8, 8]}>
-        {[
-          { label: "CI 이미지", value: log.hasCiImage ? "있음" : "없음" },
-          {
-            label: "레퍼런스 이미지",
-            value: log.hasReferenceImage ? "있음" : "없음",
-          },
-          {
-            label: "이전 이미지",
-            value: log.hasPreviousImage ? "있음" : "없음",
-          },
-          { label: "대화 턴", value: String(log.conversationTurn) },
-          { label: "프롬프트 길이", value: `${log.promptLength}자` },
-          {
-            label: "이미지 생성",
-            value: !log.generateImage
-              ? "미요청"
-              : log.imageGenerated
-                ? "성공"
-                : "실패",
-          },
-          {
-            label: "텍스트 API",
-            value: log.textLatencyMs != null ? `${log.textLatencyMs}ms` : "—",
-          },
-          {
-            label: "이미지 API",
-            value: log.imageLatencyMs != null ? `${log.imageLatencyMs}ms` : "—",
-          },
-        ].map(({ label, value }) => (
-          <Col key={label} xs={12} sm={6}>
-            <div
-              style={{
-                background: "#fafafa",
-                borderRadius: 6,
-                padding: "8px 12px",
-                border: "1px solid #f0f0f0",
-              }}
-            >
-              <div style={{ fontSize: 11, color: "#999", marginBottom: 3 }}>
-                {label}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#222" }}>
-                {value}
-              </div>
-            </div>
-          </Col>
-        ))}
-      </Row>
-      {log.errorMessage && (
-        <Alert
-          type={isArtifactWarning ? "warning" : "error"}
-          message={log.errorMessage}
-          style={{ marginTop: 10 }}
-          showIcon
-        />
-      )}
-    </Card>
-  );
-}
-
 function GeneratedImageSection({ log }: { log: AdminGenerationLogItem }) {
-  if (!log.generatedImageUrl) {
+  const generatedImages = [
+    {
+      label: "generated_image_url",
+      url: log.generatedImageUrl,
+      workId: log.workId,
+    },
+    {
+      label: "repeat_tile_url",
+      url: log.repeatTileUrl,
+      workId: log.repeatTileWorkId,
+    },
+    {
+      label: "accent_tile_url",
+      url: log.accentTileUrl,
+      workId: log.accentTileWorkId,
+    },
+  ].filter(
+    (item): item is { label: string; url: string; workId: string | null } =>
+      Boolean(item.url),
+  );
+
+  if (generatedImages.length === 0) {
     return (
       <Card title="생성된 이미지" size="small" style={{ marginBottom: 16 }}>
         <div
@@ -290,13 +256,47 @@ function GeneratedImageSection({ log }: { log: AdminGenerationLogItem }) {
 
   return (
     <Card title="생성된 이미지" size="small" style={{ marginBottom: 16 }}>
-      <Image
-        src={log.generatedImageUrl}
-        alt="생성된 디자인"
-        style={{ maxWidth: "100%", maxHeight: 500, objectFit: "contain" }}
+      <List
+        grid={{ gutter: 12, xs: 1, sm: 2, md: 3 }}
+        dataSource={generatedImages}
+        renderItem={(item) => (
+          <List.Item>
+            <Space direction="vertical" size={6} style={{ width: "100%" }}>
+              <Image
+                src={item.url}
+                alt={item.label}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 360,
+                  objectFit: "contain",
+                  borderRadius: 6,
+                }}
+              />
+              <Text strong style={{ fontSize: 12 }}>
+                {item.label}
+              </Text>
+              <Text code style={{ fontSize: 11, whiteSpace: "pre-wrap" }}>
+                {item.workId ?? "-"}
+              </Text>
+              <Text
+                type="secondary"
+                style={{ fontSize: 11, overflowWrap: "anywhere" }}
+              >
+                {item.url}
+              </Text>
+            </Space>
+          </List.Item>
+        )}
       />
     </Card>
   );
+}
+
+function getInputArtifactPriority(artifactType: string): number {
+  const index = INPUT_ARTIFACT_TYPE_PRIORITY.findIndex(
+    (candidate) => candidate === artifactType,
+  );
+  return index === -1 ? INPUT_ARTIFACT_TYPE_PRIORITY.length : index;
 }
 
 function InputImageSection({ log }: { log: AdminGenerationLogItem }) {
@@ -304,28 +304,23 @@ function InputImageSection({ log }: { log: AdminGenerationLogItem }) {
     workflowId: log.workflowId,
   });
 
-  const inputArtifact = useMemo(() => {
-    const sourceInput = artifacts.find(
-      (artifact) => artifact.artifactType === "source_input",
-    );
-    if (sourceInput) {
-      return sourceInput;
-    }
-
-    return (
-      artifacts.find((artifact) =>
-        FALLBACK_INPUT_ARTIFACT_TYPES.some(
-          (artifactType) => artifactType === artifact.artifactType,
-        ),
-      ) ?? null
-    );
+  const inputArtifacts = useMemo(() => {
+    return artifacts
+      .filter((artifact) => artifact.imageUrl)
+      .sort((left, right) => {
+        const priorityDiff =
+          getInputArtifactPriority(left.artifactType) -
+          getInputArtifactPriority(right.artifactType);
+        if (priorityDiff !== 0) return priorityDiff;
+        return left.artifactType.localeCompare(right.artifactType);
+      });
   }, [artifacts]);
 
   const hasImageAttachment = log.requestAttachments?.some(
     (attachment) => attachment.type === "image",
   );
 
-  if (!hasImageAttachment && !inputArtifact && !isLoading) {
+  if (!hasImageAttachment && inputArtifacts.length === 0 && !isLoading) {
     return null;
   }
 
@@ -333,11 +328,45 @@ function InputImageSection({ log }: { log: AdminGenerationLogItem }) {
     <Card title="입력 이미지" size="small" style={{ marginBottom: 16 }}>
       {isLoading ? (
         <Spin />
-      ) : inputArtifact?.imageUrl ? (
-        <Image
-          src={inputArtifact.imageUrl}
-          alt="입력 이미지"
-          style={{ maxWidth: "100%", maxHeight: 400, objectFit: "contain" }}
+      ) : inputArtifacts.length > 0 ? (
+        <List
+          grid={{ gutter: 12, xs: 1, sm: 2, md: 3 }}
+          dataSource={inputArtifacts}
+          renderItem={(artifact) => (
+            <List.Item>
+              <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                <Image
+                  src={artifact.imageUrl ?? undefined}
+                  alt={`${artifact.artifactType} 입력 이미지`}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: 320,
+                    objectFit: "contain",
+                    borderRadius: 6,
+                  }}
+                />
+                <Space wrap size={6}>
+                  <Tag>{artifact.artifactType}</Tag>
+                  <Tag
+                    color={
+                      artifact.status === "success" ? "success" : "warning"
+                    }
+                  >
+                    {artifact.status}
+                  </Tag>
+                </Space>
+                <Text code style={{ fontSize: 11, whiteSpace: "pre-wrap" }}>
+                  {artifact.sourceWorkId ?? artifact.id ?? "-"}
+                </Text>
+                <Text
+                  type="secondary"
+                  style={{ fontSize: 11, overflowWrap: "anywhere" }}
+                >
+                  {artifact.imageUrl}
+                </Text>
+              </Space>
+            </List.Item>
+          )}
         />
       ) : hasImageAttachment ? (
         <Alert
@@ -353,22 +382,61 @@ function InputImageSection({ log }: { log: AdminGenerationLogItem }) {
   );
 }
 
-function ArtifactSection({ log }: { log: AdminGenerationLogItem }) {
+function AttachedImageSection({ log }: { log: AdminGenerationLogItem }) {
+  const imageAttachments =
+    log.requestAttachments?.filter(
+      (attachment) => attachment.type === "image",
+    ) ?? [];
+
+  if (imageAttachments.length === 0) {
+    return null;
+  }
+
   return (
-    <Card title="아티팩트 타임라인" size="small" style={{ marginBottom: 16 }}>
-      {log.workflowId ? (
-        <GenerationLogArtifactTimeline
-          workflowId={log.workflowId}
-          logErrorMessage={log.errorMessage}
-        />
-      ) : (
-        <Alert
-          type="info"
-          showIcon
-          message="이 로그는 workflow와 연결되지 않아 아티팩트 추적이 불가합니다."
-          description="단일 렌더 로그는 workflow_id가 없습니다."
-        />
-      )}
+    <Card title="첨부 이미지" size="small" style={{ marginBottom: 16 }}>
+      <List
+        grid={{ gutter: 12, xs: 1, sm: 2, md: 3 }}
+        dataSource={imageAttachments}
+        renderItem={(attachment) => (
+          <List.Item>
+            <Space direction="vertical" size={6} style={{ width: "100%" }}>
+              {attachment.value.startsWith("https://") ? (
+                <Image
+                  src={attachment.value}
+                  alt={attachment.label}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: 320,
+                    objectFit: "contain",
+                    borderRadius: 6,
+                  }}
+                />
+              ) : (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="첨부 이미지 URL이 저장되지 않았습니다"
+                  description={attachment.value}
+                />
+              )}
+              <Text strong style={{ fontSize: 12 }}>
+                {attachment.label}
+              </Text>
+              {attachment.fileName && (
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  {attachment.fileName}
+                </Text>
+              )}
+              <Text
+                type="secondary"
+                style={{ fontSize: 11, overflowWrap: "anywhere" }}
+              >
+                {attachment.value}
+              </Text>
+            </Space>
+          </List.Item>
+        )}
+      />
     </Card>
   );
 }
@@ -435,11 +503,179 @@ function JsonBlock({ label, value }: { label: string; value: unknown }) {
       </div>
       <Text
         code
-        style={{ fontSize: 11, whiteSpace: "pre-wrap", display: "block" }}
+        style={{
+          fontSize: 11,
+          whiteSpace: "pre-wrap",
+          display: "block",
+          maxHeight: 520,
+          overflow: "auto",
+        }}
       >
         {JSON.stringify(value, null, 2)}
       </Text>
     </div>
+  );
+}
+
+function buildLoggedRequestSnapshot(log: AdminGenerationLogItem) {
+  return {
+    route: log.route,
+    userMessage: log.userMessage,
+    workflowId: log.workflowId ?? null,
+    workId: log.workId,
+    parentWorkId: log.parentWorkId ?? null,
+    requestAttachments: log.requestAttachments,
+    designContext: log.designContext,
+    normalizedDesign: log.normalizedDesign ?? null,
+    detectedDesign: log.detectedDesign,
+    imagePrompt: log.imagePrompt ?? null,
+  };
+}
+
+function buildLoggedResultSnapshot(log: AdminGenerationLogItem) {
+  return {
+    imageGenerated: log.imageGenerated,
+    generatedImageUrl: log.generatedImageUrl,
+    repeatTileUrl: log.repeatTileUrl,
+    repeatTileWorkId: log.repeatTileWorkId,
+    accentTileUrl: log.accentTileUrl,
+    accentTileWorkId: log.accentTileWorkId,
+    patternType: log.patternType,
+    fabricType: log.fabricType,
+    tileRole: log.tileRole,
+    pairedTileWorkId: log.pairedTileWorkId,
+    accentLayoutJson: log.accentLayoutJson,
+  };
+}
+
+function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
+  const hasOptions =
+    (log.requestAttachments?.length ?? 0) > 0 ||
+    log.designContext ||
+    log.normalizedDesign ||
+    log.patternType ||
+    log.fabricType ||
+    log.accentLayoutJson;
+
+  if (!hasOptions) return null;
+
+  return (
+    <Card title="사용자 선택 옵션" size="small" style={{ marginBottom: 16 }}>
+      {log.requestAttachments && (
+        <Space wrap size={[8, 8]} style={{ marginBottom: 12 }}>
+          {log.requestAttachments.map((attachment, index) => (
+            <Tag key={`${attachment.type}-${attachment.value}-${index}`}>
+              {attachment.label}: {attachment.value}
+              {attachment.fileName ? ` (${attachment.fileName})` : ""}
+            </Tag>
+          ))}
+        </Space>
+      )}
+      <Descriptions
+        column={3}
+        size="small"
+        bordered
+        style={{ marginBottom: 12 }}
+      >
+        <Descriptions.Item label="pattern_type">
+          {log.patternType ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="fabric_type">
+          {log.fabricType ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="tile_role">
+          {log.tileRole ?? "-"}
+        </Descriptions.Item>
+      </Descriptions>
+      {log.designContext && (
+        <JsonBlock label="design_context" value={log.designContext} />
+      )}
+      {log.normalizedDesign && (
+        <JsonBlock label="normalized_design" value={log.normalizedDesign} />
+      )}
+      {log.accentLayoutJson && (
+        <JsonBlock label="accent_layout_json" value={log.accentLayoutJson} />
+      )}
+    </Card>
+  );
+}
+
+function ExecutionLogSection({ log }: { log: AdminGenerationLogItem }) {
+  const isArtifactWarning = isArtifactWarningMessage(log.errorMessage);
+
+  return (
+    <Card
+      title="기본 정보 & API 전송/실행 로그"
+      size="small"
+      style={{ marginBottom: 16 }}
+    >
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 12 }}
+        message="로그에 저장된 실제 필드만 표시합니다"
+        description="Edge Function body 전체 스냅샷은 별도 저장하지 않으므로, 저장되지 않은 previous* 요청값은 표시하지 않습니다."
+      />
+      <Descriptions
+        column={3}
+        size="small"
+        bordered
+        style={{ marginBottom: 12 }}
+      >
+        <Descriptions.Item label="created_at">
+          {formatDateTimeSeconds(log.createdAt)}
+        </Descriptions.Item>
+        <Descriptions.Item label="conversation_turn">
+          {log.conversationTurn}
+        </Descriptions.Item>
+        <Descriptions.Item label="prompt_length">
+          {log.promptLength}자
+        </Descriptions.Item>
+        <Descriptions.Item label="result">
+          {!log.generateImage ? "미요청" : log.imageGenerated ? "성공" : "실패"}
+        </Descriptions.Item>
+        <Descriptions.Item label="workflow_id">
+          {log.workflowId ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="work_id">{log.workId}</Descriptions.Item>
+        <Descriptions.Item label="parent_work_id">
+          {log.parentWorkId ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="route">{log.route ?? "-"}</Descriptions.Item>
+        <Descriptions.Item label="request_type">
+          {log.requestType ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="quality">
+          {log.quality ?? "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="latency">
+          total {log.totalLatencyMs ?? "-"}ms / text {log.textLatencyMs ?? "-"}
+          ms / image {log.imageLatencyMs ?? "-"}ms
+        </Descriptions.Item>
+        <Descriptions.Item label="tokens">
+          charged {log.tokensCharged} / refunded {log.tokensRefunded}
+        </Descriptions.Item>
+        <Descriptions.Item label="error">
+          {log.errorType ?? "없음"}
+        </Descriptions.Item>
+      </Descriptions>
+      {log.errorMessage && (
+        <Alert
+          type={isArtifactWarning ? "warning" : "error"}
+          message={log.errorMessage}
+          style={{ marginBottom: 12 }}
+          showIcon
+        />
+      )}
+      <JsonBlock
+        label="logged_request_fields"
+        value={buildLoggedRequestSnapshot(log)}
+      />
+      <JsonBlock
+        label="logged_result_fields"
+        value={buildLoggedResultSnapshot(log)}
+      />
+    </Card>
   );
 }
 
@@ -461,44 +697,6 @@ function PromptSection({ log }: { log: AdminGenerationLogItem }) {
           )}
         </Col>
       </Row>
-    </Card>
-  );
-}
-
-function DesignContextSection({ log }: { log: AdminGenerationLogItem }) {
-  const hasContent =
-    log.designContext || log.detectedDesign || log.normalizedDesign;
-
-  if (!hasContent) return null;
-
-  return (
-    <Card
-      title="디자인 컨텍스트 & 감지 결과"
-      size="small"
-      style={{ marginBottom: 16 }}
-    >
-      {log.designContext && (
-        <Descriptions
-          column={4}
-          size="small"
-          bordered
-          style={{ marginBottom: 10 }}
-        >
-          {Object.entries(log.designContext)
-            .filter(([, v]) => v != null)
-            .map(([k, v]) => (
-              <Descriptions.Item key={k} label={k}>
-                {Array.isArray(v) ? v.join(", ") : String(v)}
-              </Descriptions.Item>
-            ))}
-        </Descriptions>
-      )}
-      {log.detectedDesign && (
-        <JsonBlock label="감지된 디자인 (raw)" value={log.detectedDesign} />
-      )}
-      {log.normalizedDesign && (
-        <JsonBlock label="정규화된 디자인" value={log.normalizedDesign} />
-      )}
     </Card>
   );
 }
@@ -587,7 +785,7 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
 
   if (detailErrorMessage || !activeLog) {
     return (
-      <div style={{ padding: 24 }}>
+      <div style={{ padding: "0 24px 24px" }}>
         <Alert
           type="error"
           showIcon
@@ -601,7 +799,7 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
   }
 
   return (
-    <>
+    <div style={{ padding: 24 }}>
       <StickyBar
         log={activeLog}
         workflowLogs={orderedWorkflowLogs}
@@ -609,19 +807,19 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
         onSelectLog={selectLog}
         onBack={() => navigate("/generation-logs")}
       />
-      <div style={{ padding: 24 }}>
+      <div style={{ padding: 0 }}>
         <WorkflowLogsSection
           workflowLogs={orderedWorkflowLogs}
           activeLogId={activeLog.id}
           onSelectLog={selectLog}
         />
-        <BasicInfoSection log={activeLog} />
+        <ExecutionLogSection log={activeLog} />
+        <AttachedImageSection log={activeLog} />
         <InputImageSection log={activeLog} />
         <GeneratedImageSection log={activeLog} />
-        <ArtifactSection log={activeLog} />
+        <RequestOptionsSection log={activeLog} />
         <PromptSection log={activeLog} />
-        <DesignContextSection log={activeLog} />
       </div>
-    </>
+    </div>
   );
 }

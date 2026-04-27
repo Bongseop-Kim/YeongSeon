@@ -29,8 +29,18 @@ export interface AdminGenerationLogItem {
   aiMessage: string | null;
   generateImage: boolean | null;
   imagePrompt?: string | null;
+  route: "openai" | "tile_generation" | "tile_edit" | null;
   imageGenerated: boolean;
   generatedImageUrl: string | null;
+  repeatTileUrl: string | null;
+  repeatTileWorkId: string | null;
+  accentTileUrl: string | null;
+  accentTileWorkId: string | null;
+  patternType: "all_over" | "one_point" | null;
+  fabricType: "yarn_dyed" | "printed" | null;
+  tileRole: "repeat" | "accent" | null;
+  pairedTileWorkId: string | null;
+  accentLayoutJson: Record<string, unknown> | null;
   requestAttachments: Array<{
     type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
     label: string;

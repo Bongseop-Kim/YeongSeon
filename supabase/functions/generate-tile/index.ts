@@ -8,6 +8,7 @@ import {
   saveDesignSession,
   type SessionMessage,
 } from "@/functions/_shared/session-save.ts";
+import { sanitizeLogRequestAttachments } from "@/functions/_shared/request-attachments.ts";
 import {
   createAdminSupabaseClient,
   createAuthenticatedSupabaseClient,
@@ -29,6 +30,17 @@ import { buildAccentPrompt, buildRepeatPrompt } from "./prompt-builder.ts";
 import type { TileGenerationRequest, TileGenerationResponse } from "./types.ts";
 
 const TILE_GENERATION_AI_MESSAGE = "타일 기반 디자인을 생성했습니다.";
+
+function getLatestUserRequestAttachments(body: TileGenerationRequest) {
+  for (let index = body.allMessages.length - 1; index >= 0; index -= 1) {
+    const message = body.allMessages[index];
+    if (message.role === "user" && message.attachments) {
+      return sanitizeLogRequestAttachments(message.attachments);
+    }
+  }
+
+  return null;
+}
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
@@ -65,6 +77,7 @@ Deno.serve(async (req) => {
       body.userMessage,
       body.previousFabricType,
     );
+    const requestAttachments = getLatestUserRequestAttachments(body);
     const renderWorkId = crypto.randomUUID();
 
     const baseLogFields = {
@@ -78,6 +91,7 @@ Deno.serve(async (req) => {
       quality: "standard" as const,
       user_message: body.userMessage,
       prompt_length: 0,
+      request_attachments: requestAttachments,
       route: body.route,
     };
     const { data: tokenResult, error: tokenError } =
