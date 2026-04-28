@@ -142,6 +142,10 @@ BEGIN
       RAISE EXCEPTION 'You do not own %:%', p_entity_type, p_entity_id;
     END IF;
   ELSIF p_entity_type = 'design_session' THEN
+    -- design_session intentionally rejects only sessions owned by another user.
+    -- Missing sessions are allowed because save_design_session may implicitly
+    -- create them, unlike quote_request/custom_order/reform/design_message
+    -- checks that require an existing row owned by the current user.
     IF EXISTS (
       SELECT 1
       FROM public.design_chat_sessions s

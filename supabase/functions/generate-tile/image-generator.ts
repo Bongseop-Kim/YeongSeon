@@ -140,6 +140,27 @@ export function referenceFileName(blob: Blob): string {
   return `reference.${extension}`;
 }
 
+const isAbortError = (reason: unknown): boolean =>
+  reason instanceof DOMException
+    ? reason.name === "AbortError"
+    : reason instanceof Error && reason.name === "AbortError";
+
+export function selectReferenceImageFailure<T>(
+  imageResults: PromiseSettledResult<T>[],
+): PromiseRejectedResult | null {
+  const failedImage = imageResults.find(
+    (result): result is PromiseRejectedResult => result.status === "rejected",
+  );
+  if (!failedImage) return null;
+
+  return (
+    imageResults.find(
+      (result): result is PromiseRejectedResult =>
+        result.status === "rejected" && !isAbortError(result.reason),
+    ) ?? failedImage
+  );
+}
+
 export async function generateTileImage(
   prompt: string,
   referenceImageUrls: string[],
@@ -175,9 +196,7 @@ export async function generateTileImage(
         }),
       ),
     );
-    const failedImage = imageResults.find(
-      (result): result is PromiseRejectedResult => result.status === "rejected",
-    );
+    const failedImage = selectReferenceImageFailure(imageResults);
     if (failedImage) {
       controllers.forEach((controller) => controller.abort());
       throw failedImage.reason;

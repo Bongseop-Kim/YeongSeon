@@ -142,6 +142,26 @@ Deno.test(
 );
 
 Deno.test(
+  "reference repeat_and_accent: 첨부 이미지가 하나면 Image 2를 언급하지 않는다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "F",
+        variation: null,
+        motifs: [{ name: "reference motif", color: null, colors: null }],
+        backgroundColor: "white",
+      },
+      "printed",
+      "repeat_and_accent",
+      1,
+    );
+
+    assertStringIncludes(prompt, "Use Image 1 as the repeat-pattern motif");
+    assert(!prompt.includes("Image 2"));
+  },
+);
+
+Deno.test(
   "Q: variation이 누락되어도 different motif placeholder를 남기지 않는다",
   () => {
     const prompt = buildRepeatPrompt(

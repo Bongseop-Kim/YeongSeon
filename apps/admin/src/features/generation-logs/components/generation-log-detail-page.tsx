@@ -228,10 +228,19 @@ function GeneratedImageSection({ log }: { log: AdminGenerationLogItem }) {
       url: log.accentTileUrl,
       workId: log.accentTileWorkId,
     },
-  ].filter(
-    (item): item is { label: string; url: string; workId: string | null } =>
-      Boolean(item.url),
-  );
+  ]
+    .filter(
+      (item): item is { label: string; url: string; workId: string | null } =>
+        Boolean(item.url),
+    )
+    .filter((item, index, items) => {
+      const key = `${item.url}|${item.workId ?? ""}`;
+      return (
+        items.findIndex(
+          (candidate) => `${candidate.url}|${candidate.workId ?? ""}` === key,
+        ) === index
+      );
+    });
 
   if (generatedImages.length === 0) {
     return (

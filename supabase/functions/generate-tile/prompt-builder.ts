@@ -55,7 +55,13 @@ function buildReferenceInstruction(
     return `Reference image rule (critical):\n- Combine Images 1-${end} into one unified motif.\n- The repeated motif must look like a single designed emblem, not separate pasted images.\n\n`;
   }
   if (usage === "multiple_motifs") {
+    if (referenceImageCount < 2) {
+      return "Reference image rule (critical):\n- Use Image 1 as the repeated motif reference.\n- Reproduce the main object from Image 1 as the motif, simplifying only as needed for clean tie fabric rendering.\n\n";
+    }
     return "Reference image rule (critical):\n- Use Image 1 as MOTIF_A.\n- Use Image 2 as MOTIF_B.\n- Keep the two motifs visually distinct and alternate them according to the placement rule.\n\n";
+  }
+  if (usage === "repeat_and_accent" && referenceImageCount < 2) {
+    return "Reference image rule (critical):\n- Use Image 1 as the repeat-pattern motif reference.\n\n";
   }
   return "Reference image rule (critical):\n- Use Image 1 as the repeat-pattern motif reference.\n- Reserve Image 2 for the one-point accent when an accent tile is generated.\n\n";
 }

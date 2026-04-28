@@ -4,9 +4,11 @@ import { validateReferenceImageUrl } from "./image-generator.ts";
 export function shouldReuseRepeatTile(
   analysis: AnalysisOutput,
   request: TileGenerationRequest,
+  selectedBackgroundColor: string | null = null,
 ): boolean {
   return (
     request.route === "tile_edit" &&
+    selectedBackgroundColor === null &&
     analysis.patternType === "one_point" &&
     analysis.editTarget === "accent" &&
     analysis.accentLayout !== null &&
@@ -93,13 +95,37 @@ export function resolveRepeatReferenceImageUrls(
   const validAttached = request.attachedImageUrls.filter((url) =>
     validateReferenceImageUrl(url),
   );
+  const repeatFallbacks = () => {
+    const fallbackUrls: string[] = [];
+    const latestUserImageUrl = findLatestUserImageUrl(request.allMessages);
+    const previousRepeatTileUrl = request.previousRepeatTileUrl;
+    if (latestUserImageUrl) fallbackUrls.push(latestUserImageUrl);
+    if (
+      previousRepeatTileUrl &&
+      validateReferenceImageUrl(previousRepeatTileUrl)
+    ) {
+      fallbackUrls.push(previousRepeatTileUrl);
+    }
+    return fallbackUrls;
+  };
+  const fillReferences = (urls: string[], count: number) => {
+    const seen = new Set<string>();
+    const resolved: string[] = [];
+    for (const url of [...urls, ...repeatFallbacks()]) {
+      if (seen.has(url)) continue;
+      seen.add(url);
+      resolved.push(url);
+      if (resolved.length >= count) break;
+    }
+    return resolved;
+  };
 
   if (analysis.referenceImageUsage === "none") return [];
   if (analysis.referenceImageUsage === "multiple_motifs") {
-    return validAttached.slice(0, 2);
+    return fillReferences(validAttached, 2);
   }
   if (analysis.referenceImageUsage === "repeat_and_accent") {
-    return validAttached.slice(0, 1);
+    return fillReferences(validAttached.slice(0, 1), 1);
   }
-  return validAttached;
+  return validAttached.length > 0 ? validAttached : fillReferences([], 1);
 }

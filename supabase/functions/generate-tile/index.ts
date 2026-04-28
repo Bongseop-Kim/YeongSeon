@@ -152,7 +152,12 @@ Deno.serve(async (req) => {
         analysis.tileLayout.backgroundColor = body.selectedColors[0];
       }
 
-      const reuseRepeatTile = shouldReuseRepeatTile(analysis, body);
+      const selectedBackgroundColor = body.selectedColors?.[0] ?? null;
+      const reuseRepeatTile = shouldReuseRepeatTile(
+        analysis,
+        body,
+        selectedBackgroundColor,
+      );
       const repeatReferenceImageUrls = resolveRepeatReferenceImageUrls(
         analysis,
         body,
@@ -230,6 +235,7 @@ Deno.serve(async (req) => {
         : null;
       const primaryResult =
         reuseRepeatTile && accentResult ? accentResult : repeatResult;
+      const representativeResult = primaryResult;
 
       const [generationLogResult, sessionSaveResult] = await Promise.allSettled(
         [
@@ -257,9 +263,9 @@ Deno.serve(async (req) => {
             sessionId: body.sessionId,
             aiModel: "openai",
             firstMessage: body.firstMessage,
-            lastImageUrl: repeatResult.url,
+            lastImageUrl: representativeResult.url,
             lastImageFileId: null,
-            lastImageWorkId: repeatResult.workId,
+            lastImageWorkId: representativeResult.workId,
             repeatTileUrl: repeatResult.url,
             repeatTileWorkId: repeatResult.workId,
             accentTileUrl: accentResult?.url ?? null,
@@ -271,7 +277,7 @@ Deno.serve(async (req) => {
               id: crypto.randomUUID(),
               role: "ai",
               content: TILE_GENERATION_AI_MESSAGE,
-              image_url: repeatResult.url,
+              image_url: representativeResult.url,
               image_file_id: null,
               attachments: null,
               sequence_number: body.allMessages.length,

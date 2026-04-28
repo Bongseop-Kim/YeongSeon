@@ -96,6 +96,44 @@ Deno.test(
 );
 
 Deno.test(
+  "resolveRepeatReferenceImageUrls falls back to latest user image for repeat_and_accent",
+  () => {
+    assertEquals(
+      resolveRepeatReferenceImageUrls(
+        { ...baseAnalysis, referenceImageUsage: "repeat_and_accent" },
+        {
+          ...baseRequest,
+          allMessages: [
+            {
+              id: "msg-1",
+              role: "user",
+              content: "이 이미지를 반복 패턴으로",
+              imageUrl: "https://ik.imagekit.io/app/latest-user.png",
+              imageFileId: null,
+              sequenceNumber: 0,
+            },
+          ],
+        },
+      ),
+      ["https://ik.imagekit.io/app/latest-user.png"],
+    );
+  },
+);
+
+Deno.test(
+  "resolveRepeatReferenceImageUrls falls back to previous repeat image",
+  () => {
+    assertEquals(
+      resolveRepeatReferenceImageUrls(
+        { ...baseAnalysis, referenceImageUsage: "single_motif" },
+        baseRequest,
+      ),
+      ["https://ik.imagekit.io/app/repeat.webp"],
+    );
+  },
+);
+
+Deno.test(
   "shouldReuseRepeatTile regenerates repeat when edit target is both",
   () => {
     assertEquals(
@@ -103,6 +141,16 @@ Deno.test(
         { ...baseAnalysis, editTarget: "both" },
         baseRequest,
       ),
+      false,
+    );
+  },
+);
+
+Deno.test(
+  "shouldReuseRepeatTile regenerates repeat when a selected background color is present",
+  () => {
+    assertEquals(
+      shouldReuseRepeatTile(baseAnalysis, baseRequest, "red"),
       false,
     );
   },

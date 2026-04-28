@@ -2,6 +2,7 @@ import { assertEquals, assertRejects } from "jsr:@std/assert@1.0.19";
 import {
   fetchReferenceImage,
   referenceFileName,
+  selectReferenceImageFailure,
   validateReferenceImageUrl,
 } from "./image-generator.ts";
 
@@ -160,6 +161,24 @@ Deno.test("fetchReferenceImage rejects when response is not ok", async () => {
     },
   );
 });
+
+Deno.test(
+  "selectReferenceImageFailure prefers the first non-abort rejection",
+  () => {
+    const abortError = Object.assign(new Error("aborted"), {
+      name: "AbortError",
+    });
+    const fetchError = new Error("Reference image fetch failed");
+
+    assertEquals(
+      selectReferenceImageFailure([
+        { status: "rejected", reason: abortError },
+        { status: "rejected", reason: fetchError },
+      ])?.reason,
+      fetchError,
+    );
+  },
+);
 
 Deno.test("referenceFileName maps allowed MIME types to extensions", () => {
   assertEquals(
