@@ -25,6 +25,7 @@ import {
   modelColor,
   requestTypeLabel,
 } from "@/features/generation-logs/utils";
+import { hasJsonBlockContent } from "@/features/generation-logs/utils/json-block";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
 import { formatDateTimeSeconds } from "@/utils/format-date-time";
 
@@ -510,18 +511,6 @@ function ExpandableText({
   );
 }
 
-export function hasJsonBlockContent(value: unknown): boolean {
-  if (value == null) return false;
-  if (
-    typeof value === "object" &&
-    !Array.isArray(value) &&
-    Object.keys(value).length === 0
-  ) {
-    return false;
-  }
-  return true;
-}
-
 function JsonBlock({ label, value }: { label: string; value: unknown }) {
   if (!hasJsonBlockContent(value)) {
     return null;
@@ -586,6 +575,7 @@ function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
     hasJsonBlockContent(log.normalizedDesign) ||
     log.patternType ||
     log.fabricType ||
+    log.tileRole ||
     hasJsonBlockContent(log.accentLayoutJson);
 
   if (!hasOptions) return null;

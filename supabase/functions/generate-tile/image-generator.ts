@@ -75,6 +75,9 @@ export async function fetchReferenceImage(
 ): Promise<Blob> {
   const controller = new AbortController();
   const onAbort = () => controller.abort();
+  if (signal?.aborted) {
+    onAbort();
+  }
   signal?.addEventListener("abort", onAbort, { once: true });
   const timeoutId = setTimeout(
     () => controller.abort(),

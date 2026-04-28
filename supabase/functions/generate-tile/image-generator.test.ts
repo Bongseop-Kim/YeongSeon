@@ -154,6 +154,33 @@ Deno.test(
   },
 );
 
+Deno.test(
+  "fetchReferenceImage rejects when signal is already aborted",
+  async () => {
+    const controller = new AbortController();
+    controller.abort();
+    let sawAbortedSignal = false;
+
+    await withMockedFetch(
+      (_input, init) => {
+        sawAbortedSignal = init?.signal?.aborted === true;
+        return Promise.reject(
+          Object.assign(new Error("aborted"), { name: "AbortError" }),
+        );
+      },
+      async () => {
+        const rejected = await assertRejects(
+          () => fetchReferenceImage(REFERENCE_URL, controller.signal),
+          Error,
+        );
+        assertEquals(rejected.name, "AbortError");
+      },
+    );
+
+    assertEquals(sawAbortedSignal, true);
+  },
+);
+
 Deno.test("fetchReferenceImage rejects when response is not ok", async () => {
   await withMockedFetch(
     () => Promise.resolve(new Response("not found", { status: 404 })),
