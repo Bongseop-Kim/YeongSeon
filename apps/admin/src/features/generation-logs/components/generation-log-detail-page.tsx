@@ -569,8 +569,12 @@ function buildLoggedResultSnapshot(log: AdminGenerationLogItem) {
 }
 
 function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
+  const visibleRequestAttachments =
+    log.requestAttachments?.filter(
+      (attachment) => attachment.type !== "image",
+    ) ?? [];
   const hasOptions =
-    (log.requestAttachments?.length ?? 0) > 0 ||
+    visibleRequestAttachments.length > 0 ||
     hasJsonBlockContent(log.designContext) ||
     hasJsonBlockContent(log.normalizedDesign) ||
     log.patternType ||
@@ -582,9 +586,9 @@ function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
 
   return (
     <Card title="사용자 선택 옵션" size="small" style={{ marginBottom: 16 }}>
-      {(log.requestAttachments?.length ?? 0) > 0 && (
+      {visibleRequestAttachments.length > 0 && (
         <Space wrap size={[8, 8]} style={{ marginBottom: 12 }}>
-          {log.requestAttachments?.map((attachment, index) => (
+          {visibleRequestAttachments.map((attachment, index) => (
             <Tag key={`${attachment.type}-${attachment.value}-${index}`}>
               {attachment.label}: {attachment.value}
               {attachment.fileName ? ` (${attachment.fileName})` : ""}

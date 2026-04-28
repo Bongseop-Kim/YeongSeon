@@ -16,6 +16,7 @@ export interface FetchReferenceImageOptions {
 
 const REFERENCE_IMAGE_TIMEOUT_MS = 5000;
 const MAX_REFERENCE_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_TOTAL_REFERENCE_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_REFERENCE_IMAGE_COUNT = 8;
 const REFERENCE_IMAGE_EXTENSIONS: Record<string, string> = {
   "image/png": "png",
@@ -72,7 +73,8 @@ async function parseB64FromOpenAiResponse(
   return b64;
 }
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const getOpenAiApiKey = (): string | undefined =>
+  Deno.env.get("OPENAI_API_KEY");
 
 export async function fetchReferenceImage(
   url: string,
@@ -144,33 +146,13 @@ export function referenceFileName(blob: Blob): string {
   return `reference.${extension}`;
 }
 
-const isAbortError = (reason: unknown): boolean =>
-  reason instanceof DOMException
-    ? reason.name === "AbortError"
-    : reason instanceof Error && reason.name === "AbortError";
-
-export function selectReferenceImageFailure<T>(
-  imageResults: PromiseSettledResult<T>[],
-): PromiseRejectedResult | null {
-  const failedImage = imageResults.find(
-    (result): result is PromiseRejectedResult => result.status === "rejected",
-  );
-  if (!failedImage) return null;
-
-  return (
-    imageResults.find(
-      (result): result is PromiseRejectedResult =>
-        result.status === "rejected" && !isAbortError(result.reason),
-    ) ?? failedImage
-  );
-}
-
 export async function generateTileImage(
   prompt: string,
   referenceImageUrls: string[],
   workId = crypto.randomUUID(),
 ): Promise<GeneratedTile> {
-  if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not set");
+  const openAiApiKey = getOpenAiApiKey();
+  if (!openAiApiKey) throw new Error("OPENAI_API_KEY not set");
 
   let b64: string;
 
@@ -187,36 +169,19 @@ export async function generateTileImage(
       return trusted;
     });
 
-    const controllers = trustedUrls.map(() => new AbortController());
-    const imageResults = await Promise.allSettled(
-      trustedUrls.map((url, index) =>
-        fetchReferenceImage(url, { signal: controllers[index].signal }).catch(
-          (error) => {
-            controllers.forEach((controller, controllerIndex) => {
-              if (controllerIndex !== index) {
-                controller.abort();
-              }
-            });
-            throw error;
-          },
-        ),
-      ),
-    );
-    const failedImage = selectReferenceImageFailure(imageResults);
-    if (failedImage) {
-      controllers.forEach((controller) => controller.abort());
-      throw failedImage.reason;
-    }
-    const imageBlobs = imageResults.map(
-      (result) => (result as PromiseFulfilledResult<Blob>).value,
-    );
-
     const form = new FormData();
     for (const [key, val] of Object.entries(OPENAI_IMAGE_PARAMS)) {
       form.append(key, String(val));
     }
     form.append("prompt", prompt);
-    for (const blob of imageBlobs) {
+
+    let totalReferenceImageBytes = 0;
+    for (const url of trustedUrls) {
+      const blob = await fetchReferenceImage(url);
+      totalReferenceImageBytes += blob.size;
+      if (totalReferenceImageBytes > MAX_TOTAL_REFERENCE_IMAGE_BYTES) {
+        throw new Error("Reference images exceed maximum total size");
+      }
       form.append("image[]", blob, referenceFileName(blob));
     }
 
@@ -224,7 +189,7 @@ export async function generateTileImage(
       "https://api.openai.com/v1/images/edits",
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
+        headers: { Authorization: `Bearer ${openAiApiKey}` },
         body: form,
       },
     );
@@ -238,7 +203,7 @@ export async function generateTileImage(
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          Authorization: `Bearer ${openAiApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ ...OPENAI_IMAGE_PARAMS, prompt }),

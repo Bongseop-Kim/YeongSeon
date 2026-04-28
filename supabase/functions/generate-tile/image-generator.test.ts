@@ -1,8 +1,12 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert@1.0.19";
+import {
+  assertEquals,
+  assertRejects,
+  assertStrictEquals,
+} from "jsr:@std/assert@1.0.19";
 import {
   fetchReferenceImage,
+  generateTileImage,
   referenceFileName,
-  selectReferenceImageFailure,
   validateReferenceImageUrl,
 } from "./image-generator.ts";
 
@@ -147,10 +151,49 @@ Deno.test(
           () => fetchReferenceImage(REFERENCE_URL, { timeoutMs: 5 }),
           Error,
         );
-        assertEquals(rejected, abortError);
+        assertStrictEquals(rejected, abortError);
         assertEquals(rejected.name, "AbortError");
       },
     );
+  },
+);
+
+Deno.test(
+  "generateTileImage rejects when cumulative reference image bytes exceed the cap",
+  async () => {
+    const originalApiKey = Deno.env.get("OPENAI_API_KEY");
+    Deno.env.set("OPENAI_API_KEY", "test-key");
+    const halfCapPlusOne = new Uint8Array(4 * 1024 * 1024 + 1);
+
+    try {
+      await withMockedFetch(
+        () =>
+          Promise.resolve(
+            new Response(halfCapPlusOne, {
+              status: 200,
+              headers: { "content-type": "image/png" },
+            }),
+          ),
+        async () => {
+          await assertRejects(
+            () =>
+              generateTileImage(
+                "make a tile",
+                [REFERENCE_URL, REFERENCE_URL],
+                "00000000-0000-4000-8000-000000000001",
+              ),
+            Error,
+            "Reference images exceed maximum total size",
+          );
+        },
+      );
+    } finally {
+      if (originalApiKey == null) {
+        Deno.env.delete("OPENAI_API_KEY");
+      } else {
+        Deno.env.set("OPENAI_API_KEY", originalApiKey);
+      }
+    }
   },
 );
 
@@ -193,24 +236,6 @@ Deno.test("fetchReferenceImage rejects when response is not ok", async () => {
     },
   );
 });
-
-Deno.test(
-  "selectReferenceImageFailure prefers the first non-abort rejection",
-  () => {
-    const abortError = Object.assign(new Error("aborted"), {
-      name: "AbortError",
-    });
-    const fetchError = new Error("Reference image fetch failed");
-
-    assertEquals(
-      selectReferenceImageFailure([
-        { status: "rejected", reason: abortError },
-        { status: "rejected", reason: fetchError },
-      ])?.reason,
-      fetchError,
-    );
-  },
-);
 
 Deno.test("referenceFileName maps allowed MIME types to extensions", () => {
   assertEquals(

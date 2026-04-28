@@ -96,4 +96,37 @@ describe("GenerationLogDetailPage", () => {
     expect(screen.getByText("사용자 선택 옵션")).toBeInTheDocument();
     expect(screen.getByText("accent")).toBeInTheDocument();
   });
+
+  it("첨부 이미지 옵션은 사용자 선택 옵션 Tag로 중복 표시하지 않는다", () => {
+    mocks.detailLog = {
+      ...tileRoleOnlyLog,
+      requestAttachments: [
+        {
+          type: "image",
+          label: "첨부 이미지",
+          value: "https://ik.imagekit.io/app/ref.png",
+          fileName: "ref.png",
+        },
+        {
+          type: "color",
+          label: "색상",
+          value: "blue",
+        },
+      ],
+    };
+
+    render(
+      <MemoryRouter>
+        <GenerationLogDetailPage id="log-1" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getAllByText("첨부 이미지").length).toBeGreaterThan(0);
+    expect(screen.getByText("색상: blue")).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "첨부 이미지: https://ik.imagekit.io/app/ref.png (ref.png)",
+      ),
+    ).not.toBeInTheDocument();
+  });
 });
