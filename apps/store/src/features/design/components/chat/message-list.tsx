@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 
-import { MessageBubble } from "@/features/design/components/chat/message-bubble";
+import {
+  MessageBubble,
+  type TilePreviewSelection,
+} from "@/features/design/components/chat/message-bubble";
 import { TypingIndicator } from "@/features/design/components/chat/typing-indicator";
 import type { Message } from "@/features/design/types/chat";
 
@@ -8,9 +11,9 @@ interface MessageListProps {
   messages: Message[];
   isTyping: boolean;
   onChipClick?: (text: string) => void;
-  onTiePreviewClick?: (imageUrl: string) => void;
+  onTiePreviewClick?: (preview: TilePreviewSelection) => void;
   selectedPreviewImageUrl?: string | null;
-  onSelectPreview?: (imageUrl: string) => void;
+  onSelectPreview?: (preview: TilePreviewSelection) => void;
 }
 
 export function MessageList({

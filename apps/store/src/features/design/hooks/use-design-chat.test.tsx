@@ -257,6 +257,41 @@ describe("useDesignChat", () => {
     expect(phCapture).not.toHaveBeenCalled();
   });
 
+  it("강조 타일이 있으면 AI 메시지에 accentTileUrl을 포함한다", async () => {
+    callTileGeneration.mockResolvedValueOnce({
+      repeatTile: {
+        url: "https://example.com/repeat.webp",
+        workId: "repeat-work-1",
+      },
+      accentTile: {
+        url: "https://example.com/accent.webp",
+        workId: "accent-work-1",
+      },
+      patternType: "one_point",
+      fabricType: "printed",
+      accentLayout: {
+        objectDescription: "small logo",
+        objectSource: "text",
+        color: null,
+        size: "small",
+      },
+    });
+    const { result } = renderHook(() => useDesignChat());
+
+    result.current.sendMessage("원포인트 로고", []);
+
+    await waitFor(() => {
+      expect(addMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: "ai",
+          imageUrl: "https://example.com/repeat.webp",
+          accentTileUrl: "https://example.com/accent.webp",
+          accentTileWorkId: "accent-work-1",
+        }),
+      );
+    });
+  });
+
   it("토큰 부족 오류는 사용자 메시지로 표시하고 idle로 되돌린다", async () => {
     callTileGeneration.mockRejectedValue(new MockInsufficientTokensError(1, 3));
     const { result } = renderHook(() => useDesignChat());

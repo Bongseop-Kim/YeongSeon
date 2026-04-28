@@ -125,6 +125,67 @@ describe("design-chat-store", () => {
     expect(state.fabricType).toBe("printed");
   });
 
+  it("setSelectedTilePreview는 선택한 메시지의 반복 타일 렌더링 상태를 복원한다", () => {
+    act(() => {
+      useDesignChatStore.getState().setSelectedTilePreview({
+        previewBackground:
+          'url("https://example.com/repeat.webp") center/cover no-repeat',
+        repeatTile: {
+          url: "https://example.com/repeat.webp",
+          workId: "repeat-work",
+        },
+        accentTile: {
+          url: "https://example.com/accent.webp",
+          workId: "accent-work",
+        },
+        patternType: "one_point",
+      });
+    });
+
+    const state = useDesignChatStore.getState();
+    expect(state.selectedPreviewImageUrl).toBe(
+      'url("https://example.com/repeat.webp") center/cover no-repeat',
+    );
+    expect(state.selectedTilePreview?.repeatTile).toEqual({
+      url: "https://example.com/repeat.webp",
+      workId: "repeat-work",
+    });
+    expect(state.selectedTilePreview?.accentTile).toEqual({
+      url: "https://example.com/accent.webp",
+      workId: "accent-work",
+    });
+    expect(state.selectedTilePreview?.patternType).toBe("one_point");
+    expect(state.repeatTile).toBeNull();
+  });
+
+  it("setSelectedTilePreview는 workId 없는 기존 메시지도 반복 타일 렌더링 상태로 선택한다", () => {
+    act(() => {
+      useDesignChatStore.getState().setSelectedTilePreview({
+        previewBackground:
+          'url("https://example.com/repeat.webp") center/cover no-repeat',
+        repeatTile: {
+          url: "https://example.com/repeat.webp",
+          workId: null,
+        },
+        accentTile: null,
+        patternType: "all_over",
+      });
+    });
+
+    const state = useDesignChatStore.getState();
+    expect(state.selectedTilePreview).toEqual({
+      previewBackground:
+        'url("https://example.com/repeat.webp") center/cover no-repeat',
+      repeatTile: {
+        url: "https://example.com/repeat.webp",
+        workId: null,
+      },
+      accentTile: null,
+      patternType: "all_over",
+    });
+    expect(state.repeatTile).toBeNull();
+  });
+
   it("제거된 레거시 모델 상태를 노출하지 않는다", () => {
     const state = useDesignChatStore.getState() as unknown as Record<
       string,

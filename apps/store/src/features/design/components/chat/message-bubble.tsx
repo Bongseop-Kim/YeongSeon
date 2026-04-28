@@ -1,26 +1,52 @@
 import { Badge } from "@/shared/ui/badge";
-import { TieMask } from "@/features/design/components/preview/tie-mask";
 import type { Message } from "@/features/design/types/chat";
 import { cn } from "@/shared/lib/utils";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
+import { escapeCssUrl } from "@/shared/lib/css-url";
 
 interface MessageBubbleProps {
   message: Message;
   onChipClick?: (text: string) => void;
-  onTiePreviewClick?: (imageUrl: string) => void;
+  onTiePreviewClick?: (preview: TilePreviewSelection) => void;
   selectedPreviewImageUrl?: string | null;
-  onSelectPreview?: (imageUrl: string) => void;
+  onSelectPreview?: (preview: TilePreviewSelection) => void;
 }
 
-function ChatTieMask({ imageUrl }: { imageUrl: string }) {
+export interface TilePreviewSelection {
+  previewBackground: string;
+  repeatTile: {
+    url: string;
+    workId: string | null;
+  };
+  accentTile: {
+    url: string;
+    workId: string | null;
+  } | null;
+}
+
+function ChatTilePreview({
+  repeatTileUrl,
+  accentTileUrl,
+}: {
+  repeatTileUrl: string;
+  accentTileUrl?: string;
+}) {
+  const tileUrls = accentTileUrl
+    ? [repeatTileUrl, accentTileUrl]
+    : [repeatTileUrl];
+
   return (
-    <TieMask
-      imageUrl={imageUrl}
-      width={128}
-      height={244}
-      shadowClassName="top-[-22px]"
-    />
+    <div className="flex gap-2">
+      {tileUrls.map((url, index) => (
+        <div
+          key={`${url}-${index}`}
+          aria-label={index === 0 ? "반복 타일 이미지" : "강조 타일 이미지"}
+          className="aspect-square w-20 rounded-md border border-gray-200 bg-cover bg-center bg-no-repeat shadow-sm"
+          style={{ backgroundImage: `url("${escapeCssUrl(url)}")` }}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -33,9 +59,26 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const { isMobile } = useBreakpoint();
-  const previewBackground = message.imageUrl
-    ? toPreviewBackground(message.imageUrl)
+  const repeatTileUrl = message.imageUrl;
+  const previewBackground = repeatTileUrl
+    ? toPreviewBackground(repeatTileUrl)
     : undefined;
+  const tilePreview =
+    repeatTileUrl && previewBackground
+      ? {
+          previewBackground,
+          repeatTile: {
+            url: repeatTileUrl,
+            workId: message.workId ?? null,
+          },
+          accentTile: message.accentTileUrl
+            ? {
+                url: message.accentTileUrl,
+                workId: message.accentTileWorkId ?? null,
+              }
+            : null,
+        }
+      : null;
   const timestamp = new Intl.DateTimeFormat("ko-KR", {
     hour: "2-digit",
     minute: "2-digit",
@@ -72,26 +115,32 @@ export function MessageBubble({
       >
         {message.content}
       </div>
-      {!isUser && previewBackground ? (
+      {!isUser && repeatTileUrl && previewBackground && tilePreview ? (
         <div className="space-y-2">
           {isMobile ? (
             onTiePreviewClick ? (
               <button
                 type="button"
-                aria-label="넥타이 프리뷰 확대"
+                aria-label="타일 프리뷰 확대"
                 className="cursor-pointer"
-                onClick={() => onTiePreviewClick(previewBackground)}
+                onClick={() => onTiePreviewClick(tilePreview)}
               >
-                <ChatTieMask imageUrl={previewBackground} />
+                <ChatTilePreview
+                  repeatTileUrl={repeatTileUrl}
+                  accentTileUrl={message.accentTileUrl}
+                />
               </button>
             ) : (
-              <ChatTieMask imageUrl={previewBackground} />
+              <ChatTilePreview
+                repeatTileUrl={repeatTileUrl}
+                accentTileUrl={message.accentTileUrl}
+              />
             )
           ) : (
             <div className="relative">
               <button
                 type="button"
-                aria-label="넥타이 프리뷰 선택"
+                aria-label="타일 프리뷰 선택"
                 aria-pressed={selectedPreviewImageUrl === previewBackground}
                 className={cn(
                   "cursor-pointer transition-all",
@@ -99,9 +148,12 @@ export function MessageBubble({
                     ? "opacity-100"
                     : "opacity-40 grayscale hover:opacity-70",
                 )}
-                onClick={() => onSelectPreview?.(previewBackground)}
+                onClick={() => onSelectPreview?.(tilePreview)}
               >
-                <ChatTieMask imageUrl={previewBackground} />
+                <ChatTilePreview
+                  repeatTileUrl={repeatTileUrl}
+                  accentTileUrl={message.accentTileUrl}
+                />
               </button>
               {selectedPreviewImageUrl === previewBackground && (
                 <div

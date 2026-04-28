@@ -1,11 +1,10 @@
 import { useShallow } from "zustand/react/shallow";
 import { isActiveGeneration } from "@/entities/design";
 import { TieMask } from "@/features/design/components/preview/tie-mask";
-import { tieMaskStyle } from "@/features/design/components/preview/tie-mask-style";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import { escapeCssUrl } from "@/shared/lib/css-url";
 
-const TILE_BACKGROUND_SIZE = "80px 80px";
+const TILE_BACKGROUND_SIZE = "35px 35px";
 const ACCENT_TILE_SIZE = "126px";
 const ACCENT_TILE_BOTTOM = "20%";
 const ACCENT_TILE_BACKGROUND_SIZE = "cover";
@@ -33,6 +32,7 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
   const {
     generationStatus,
     selectedPreviewImageUrl,
+    selectedTilePreview,
     fallbackColor,
     repeatTile,
     accentTile,
@@ -41,6 +41,7 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
     useShallow((state) => ({
       generationStatus: state.generationStatus,
       selectedPreviewImageUrl: state.selectedPreviewImageUrl,
+      selectedTilePreview: state.selectedTilePreview,
       fallbackColor: state.designContext.colors[0] ?? "#e5e7eb",
       repeatTile: state.repeatTile,
       accentTile: state.accentTile,
@@ -50,6 +51,10 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
 
   const isLoading = isActiveGeneration(generationStatus);
   const previewBackground = selectedPreviewImageUrl ?? fallbackColor;
+  const activeRepeatTile = selectedTilePreview?.repeatTile ?? repeatTile;
+  const activeAccentTile =
+    selectedTilePreview !== null ? selectedTilePreview.accentTile : accentTile;
+  const activePatternType = selectedTilePreview?.patternType ?? patternType;
   const renderContent = () => {
     if (unmasked) {
       return (
@@ -57,8 +62,8 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
           <div
             className="h-full w-full"
             style={
-              repeatTile !== null
-                ? tileRepeatStyle(repeatTile.url)
+              activeRepeatTile !== null
+                ? tileRepeatStyle(activeRepeatTile.url)
                 : { background: previewBackground }
             }
           />
@@ -67,21 +72,23 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
       );
     }
 
-    if (repeatTile !== null) {
+    if (activeRepeatTile !== null) {
       return (
-        <div className="relative h-[600px] w-[316px]">
-          <div
-            className="h-full w-full"
-            style={{ ...tileRepeatStyle(repeatTile.url), ...tieMaskStyle }}
-          />
-          {patternType === "one_point" && accentTile && (
+        <TieMask
+          imageUrl={previewBackground}
+          width={316}
+          height={600}
+          imageStyle={tileRepeatStyle(activeRepeatTile.url)}
+          shadowClassName="top-[-57px]"
+        >
+          {activePatternType === "one_point" && activeAccentTile && (
             <div
               className="absolute left-1/2 -translate-x-1/2"
-              style={accentOverlayStyle(accentTile.url)}
+              style={accentOverlayStyle(activeAccentTile.url)}
             />
           )}
           {isLoading && <div className="animate-ai-shimmer absolute inset-0" />}
-        </div>
+        </TieMask>
       );
     }
 

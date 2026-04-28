@@ -16,8 +16,8 @@ const baseMessage = {
   timestamp: Date.now(),
 };
 
-describe("MessageBubble — 모바일 넥타이 프리뷰", () => {
-  it("imageUrl이 있을 때 모바일에서 넥타이 프리뷰를 탭하면 onTiePreviewClick을 호출한다", async () => {
+describe("MessageBubble — 모바일 타일 프리뷰", () => {
+  it("imageUrl이 있을 때 모바일에서 타일 프리뷰를 탭하면 onTiePreviewClick을 호출한다", async () => {
     const onTiePreviewClick = vi.fn();
     const imageUrl = "https://example.com/tie.png";
     render(
@@ -27,16 +27,91 @@ describe("MessageBubble — 모바일 넥타이 프리뷰", () => {
       />,
     );
 
-    const preview = screen.getByRole("button", { name: /넥타이 프리뷰/i });
+    const preview = screen.getByRole("button", { name: /타일 프리뷰/i });
     await userEvent.click(preview);
 
     expect(onTiePreviewClick).toHaveBeenCalledOnce();
-    expect(onTiePreviewClick).toHaveBeenCalledWith(
-      'url("https://example.com/tie.png") center/cover no-repeat',
-    );
+    expect(onTiePreviewClick).toHaveBeenCalledWith({
+      previewBackground:
+        'url("https://example.com/tie.png") center/cover no-repeat',
+      repeatTile: { url: "https://example.com/tie.png", workId: null },
+      accentTile: null,
+    });
   });
 
-  it("imageUrl이 없으면 넥타이 프리뷰 버튼이 렌더링되지 않는다", () => {
+  it("반복 타일만 있으면 정사각형 타일 하나만 렌더링한다", () => {
+    render(
+      <MessageBubble
+        message={{ ...baseMessage, imageUrl: "https://example.com/repeat.png" }}
+        onTiePreviewClick={vi.fn()}
+      />,
+    );
+
+    const tiles = screen.getAllByLabelText(/타일 이미지/);
+    expect(tiles).toHaveLength(1);
+    expect(tiles[0]).toHaveStyle({
+      backgroundImage: 'url("https://example.com/repeat.png")',
+    });
+    expect(tiles[0]).toHaveClass("aspect-square");
+    expect(screen.queryByRole("img")).toBeNull();
+  });
+
+  it("강조 타일이 있으면 반복 타일과 강조 타일을 함께 렌더링한다", () => {
+    render(
+      <MessageBubble
+        message={{
+          ...baseMessage,
+          imageUrl: "https://example.com/repeat.png",
+          workId: "repeat-work",
+          accentTileUrl: "https://example.com/accent.png",
+          accentTileWorkId: "accent-work",
+        }}
+        onTiePreviewClick={vi.fn()}
+      />,
+    );
+
+    const tiles = screen.getAllByLabelText(/타일 이미지/);
+    expect(tiles).toHaveLength(2);
+    expect(tiles[0]).toHaveStyle({
+      backgroundImage: 'url("https://example.com/repeat.png")',
+    });
+    expect(tiles[1]).toHaveStyle({
+      backgroundImage: 'url("https://example.com/accent.png")',
+    });
+  });
+
+  it("강조 타일이 있는 썸네일 클릭 시 반복 타일과 강조 타일 메타데이터를 전달한다", async () => {
+    const onTiePreviewClick = vi.fn();
+    render(
+      <MessageBubble
+        message={{
+          ...baseMessage,
+          imageUrl: "https://example.com/repeat.png",
+          workId: "repeat-work",
+          accentTileUrl: "https://example.com/accent.png",
+          accentTileWorkId: "accent-work",
+        }}
+        onTiePreviewClick={onTiePreviewClick}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /타일 프리뷰/i }));
+
+    expect(onTiePreviewClick).toHaveBeenCalledWith({
+      previewBackground:
+        'url("https://example.com/repeat.png") center/cover no-repeat',
+      repeatTile: {
+        url: "https://example.com/repeat.png",
+        workId: "repeat-work",
+      },
+      accentTile: {
+        url: "https://example.com/accent.png",
+        workId: "accent-work",
+      },
+    });
+  });
+
+  it("imageUrl이 없으면 타일 프리뷰 버튼이 렌더링되지 않는다", () => {
     render(
       <MessageBubble
         message={{ ...baseMessage }}
@@ -44,11 +119,11 @@ describe("MessageBubble — 모바일 넥타이 프리뷰", () => {
       />,
     );
 
-    expect(screen.queryByRole("button", { name: /넥타이 프리뷰/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /타일 프리뷰/i })).toBeNull();
   });
 });
 
-describe("MessageBubble — PC 넥타이 썸네일", () => {
+describe("MessageBubble — PC 타일 썸네일", () => {
   beforeEach(() => {
     breakpoint.isMobile = false;
     breakpoint.isDesktop = true;
@@ -59,7 +134,7 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
     breakpoint.isDesktop = false;
   });
 
-  it("imageUrl이 있을 때 PC에서 썸네일 버튼을 렌더링한다", () => {
+  it("imageUrl이 있을 때 PC에서 타일 썸네일 버튼을 렌더링한다", () => {
     render(
       <MessageBubble
         message={{ ...baseMessage, imageUrl: "https://example.com/tie.png" }}
@@ -68,7 +143,7 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
       />,
     );
     expect(
-      screen.getByRole("button", { name: "넥타이 프리뷰 선택" }),
+      screen.getByRole("button", { name: "타일 프리뷰 선택" }),
     ).toBeInTheDocument();
   });
 
@@ -83,7 +158,7 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
       />,
     );
     expect(
-      screen.getByRole("button", { name: "넥타이 프리뷰 선택" }),
+      screen.getByRole("button", { name: "타일 프리뷰 선택" }),
     ).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByLabelText("선택됨")).toBeInTheDocument();
   });
@@ -97,7 +172,7 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
       />,
     );
     expect(
-      screen.getByRole("button", { name: "넥타이 프리뷰 선택" }),
+      screen.getByRole("button", { name: "타일 프리뷰 선택" }),
     ).toHaveAttribute("aria-pressed", "false");
     expect(screen.queryByLabelText("선택됨")).toBeNull();
   });
@@ -112,12 +187,15 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
       />,
     );
     await userEvent.click(
-      screen.getByRole("button", { name: "넥타이 프리뷰 선택" }),
+      screen.getByRole("button", { name: "타일 프리뷰 선택" }),
     );
     expect(onSelectPreview).toHaveBeenCalledOnce();
-    expect(onSelectPreview).toHaveBeenCalledWith(
-      'url("https://example.com/tie.png") center/cover no-repeat',
-    );
+    expect(onSelectPreview).toHaveBeenCalledWith({
+      previewBackground:
+        'url("https://example.com/tie.png") center/cover no-repeat',
+      repeatTile: { url: "https://example.com/tie.png", workId: null },
+      accentTile: null,
+    });
   });
 
   it("imageUrl이 없으면 PC 썸네일이 렌더링되지 않는다", () => {
@@ -129,7 +207,7 @@ describe("MessageBubble — PC 넥타이 썸네일", () => {
       />,
     );
     expect(
-      screen.queryByRole("button", { name: "넥타이 프리뷰 선택" }),
+      screen.queryByRole("button", { name: "타일 프리뷰 선택" }),
     ).toBeNull();
   });
 });

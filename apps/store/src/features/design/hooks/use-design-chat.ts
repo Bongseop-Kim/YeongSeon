@@ -277,6 +277,12 @@ export function useDesignChat(
         role: "ai",
         content: TILE_GENERATION_SUCCESS_MESSAGE,
         imageUrl: result.repeatTile.url,
+        ...(result.accentTile
+          ? {
+              accentTileUrl: result.accentTile.url,
+              accentTileWorkId: result.accentTile.workId,
+            }
+          : {}),
         workId: result.repeatTile.workId,
         timestamp: Date.now(),
       });

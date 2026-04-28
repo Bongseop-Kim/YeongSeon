@@ -13,12 +13,25 @@ import type {
 import type { DesignContext } from "@/features/design/types/design-context";
 import type { RestoredDesignSessionState } from "@/entities/design";
 
+type PreviewTileRef = {
+  url: string;
+  workId: string | null;
+};
+
+interface SelectedTilePreview {
+  previewBackground: string;
+  repeatTile: PreviewTileRef;
+  accentTile: PreviewTileRef | null;
+  patternType: PatternType;
+}
+
 interface DesignChatState {
   messages: Message[];
   designContext: DesignContext;
   generationStatus: GenerationStatus;
   generatedImageUrl: string | null;
   selectedPreviewImageUrl: string | null;
+  selectedTilePreview: SelectedTilePreview | null;
   resultTags: string[];
   pendingAttachments: Attachment[];
   currentSessionId: string | null;
@@ -35,6 +48,7 @@ interface DesignChatState {
   setGenerationStatus: (status: GenerationStatus) => void;
   setGeneratedImage: (imageUrl: string | null, tags: string[]) => void;
   setSelectedPreviewImage: (url: string) => void;
+  setSelectedTilePreview: (preview: SelectedTilePreview) => void;
   setTileResult: (result: {
     repeatTile: TileRef;
     accentTile: TileRef | null;
@@ -69,6 +83,7 @@ const createConversationResetState = () => ({
   generationStatus: "idle" as GenerationStatus,
   generatedImageUrl: null as string | null,
   selectedPreviewImageUrl: null as string | null,
+  selectedTilePreview: null as SelectedTilePreview | null,
   resultTags: [] as string[],
   pendingAttachments: [] as Attachment[],
   currentSessionId: null as string | null,
@@ -118,11 +133,13 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
         ? {
             generatedImageUrl: imageUrl,
             selectedPreviewImageUrl: imageUrl,
+            selectedTilePreview: null,
             resultTags: tags,
           }
         : {
             generatedImageUrl: null,
             selectedPreviewImageUrl: null,
+            selectedTilePreview: null,
             resultTags: [],
           },
     ),
@@ -130,8 +147,13 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
     set((state) =>
       state.selectedPreviewImageUrl === url
         ? state
-        : { selectedPreviewImageUrl: url },
+        : { selectedPreviewImageUrl: url, selectedTilePreview: null },
     ),
+  setSelectedTilePreview: (preview) =>
+    set({
+      selectedPreviewImageUrl: preview.previewBackground,
+      selectedTilePreview: preview,
+    }),
   setTileResult: (result) =>
     set({
       repeatTile: result.repeatTile,
@@ -139,6 +161,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       accentLayout: result.accentLayout,
       patternType: result.patternType,
       fabricType: result.fabricType,
+      selectedTilePreview: null,
     }),
   resetConversation: () => set(createConversationResetState()),
   restoreMessages: (messages) => set({ messages }),
@@ -150,6 +173,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
         ...sessionState.designContext,
       },
       selectedPreviewImageUrl: sessionState.generatedImageUrl,
+      selectedTilePreview: null,
       currentSessionId: sessionId,
       pendingAttachments: [],
     }),

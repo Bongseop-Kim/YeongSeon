@@ -16,6 +16,8 @@ Deno.test("H + yarn_dyed: 모티프/배경/원단블록/seamless 포함", () => 
   assertStringIncludes(prompt, "yarn-dyed");
   assertStringIncludes(prompt, "tile seamlessly");
   assertStringIncludes(prompt, "45%");
+  assertStringIncludes(prompt, "Yarn-dyed weaving constraints");
+  assertStringIncludes(prompt, "no element appears too thin");
 });
 
 Deno.test("F + printed: 모티프 2개 배치 명시", () => {
@@ -32,6 +34,7 @@ Deno.test("F + printed: 모티프 2개 배치 명시", () => {
   assertStringIncludes(prompt, "upper-left quadrant");
   assertStringIncludes(prompt, "lower-right quadrant");
   assertStringIncludes(prompt, "tile seamlessly");
+  assert(!prompt.includes("Yarn-dyed weaving constraints"));
 });
 
 Deno.test("Q-color: 두 색상 치환", () => {
@@ -218,6 +221,7 @@ Deno.test("accent text: seamless suffix 없음, 오브젝트 설명 포함", () 
     "seamless suffix must not appear in accent",
   );
   assertStringIncludes(prompt, "45%");
+  assertStringIncludes(prompt, "Yarn-dyed weaving constraints");
 });
 
 Deno.test("accent image: referenceImageUrls 전달", () => {
