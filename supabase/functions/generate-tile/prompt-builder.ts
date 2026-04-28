@@ -1,4 +1,9 @@
-import type { AccentLayout, FabricType, TileLayout } from "./types.ts";
+import type {
+  AccentLayout,
+  FabricType,
+  ReferenceImageUsage,
+  TileLayout,
+} from "./types.ts";
 import {
   ACCENT_IMAGE_TEMPLATE,
   ACCENT_TEXT_TEMPLATE,
@@ -18,6 +23,8 @@ const SIZE_RATIO_MAP: Record<"small" | "medium" | "large", number> = {
   large: 60,
 };
 
+const MAX_COMPOSITE_REFERENCE_IMAGES = 5;
+
 function makeFabricBlock(
   fabricType: FabricType,
   withSeamless: boolean,
@@ -33,6 +40,33 @@ function selectRepeatTemplate(layout: TileLayout): string {
   if (layout.variation === "rotation") return Q_ROTATION_TEMPLATE;
   if (layout.variation === "color") return Q_COLOR_TEMPLATE;
   return Q_DIFFERENT_MOTIF_TEMPLATE;
+}
+
+function buildReferenceInstruction(
+  usage: ReferenceImageUsage,
+  referenceImageCount: number,
+): string {
+  if (referenceImageCount <= 0 || usage === "none") return "";
+  if (usage === "single_motif") {
+    return "Reference image rule (critical):\n- Use Image 1 as the motif reference.\n- Reproduce the main object from Image 1 as the repeated motif, simplifying only as needed for clean tie fabric rendering.\n\n";
+  }
+  if (usage === "composite_motif") {
+    const end = Math.min(referenceImageCount, MAX_COMPOSITE_REFERENCE_IMAGES);
+    if (end === 1) {
+      return "Reference image rule (critical):\n- Use Image 1 as the unified motif reference.\n- The repeated motif must look like a single designed emblem, not separate pasted images.\n\n";
+    }
+    return `Reference image rule (critical):\n- Combine Images 1-${end} into one unified motif.\n- The repeated motif must look like a single designed emblem, not separate pasted images.\n\n`;
+  }
+  if (usage === "multiple_motifs") {
+    if (referenceImageCount < 2) {
+      return "Reference image rule (critical):\n- Use Image 1 as the repeated motif reference.\n- Reproduce the main object from Image 1 as the motif, simplifying only as needed for clean tie fabric rendering.\n\n";
+    }
+    return "Reference image rule (critical):\n- Use Image 1 as MOTIF_A.\n- Use Image 2 as MOTIF_B.\n- Keep the two motifs visually distinct and alternate them according to the placement rule.\n\n";
+  }
+  if (usage === "repeat_and_accent" && referenceImageCount < 2) {
+    return "Reference image rule (critical):\n- Use Image 1 as the repeat-pattern motif reference.\n\n";
+  }
+  return "Reference image rule (critical):\n- Use Image 1 as the repeat-pattern motif reference.\n- Reserve Image 2 for the one-point accent when an accent tile is generated.\n\n";
 }
 
 function resolveMotifColors(
@@ -51,10 +85,15 @@ function resolveMotifColors(
 export function buildRepeatPrompt(
   layout: TileLayout,
   fabricType: FabricType,
+  referenceImageUsage: ReferenceImageUsage = "none",
+  referenceImageCount = 0,
 ): string {
   const firstMotif = layout.motifs[0] ?? { name: "abstract motif" };
   const [colorA, colorB] = resolveMotifColors(firstMotif);
-  return selectRepeatTemplate(layout)
+  return (
+    buildReferenceInstruction(referenceImageUsage, referenceImageCount) +
+    selectRepeatTemplate(layout)
+  )
     .replace(/{FABRIC_BLOCK}/g, makeFabricBlock(fabricType, true))
     .replace(/{BG}/g, layout.backgroundColor)
     .replace(/{MOTIF}/g, firstMotif.name)
@@ -68,8 +107,8 @@ export function buildAccentPrompt(
   accentLayout: AccentLayout,
   backgroundColor: string,
   fabricType: FabricType,
-  attachedImageUrl: string | null,
-): { prompt: string; referenceImageUrl?: string } {
+  attachedImageUrls: string[],
+): { prompt: string; referenceImageUrls: string[] } {
   const isImageBased = accentLayout.objectSource !== "text";
   const fabric = makeFabricBlock(fabricType, false);
   const sizeRatio = SIZE_RATIO_MAP[accentLayout.size ?? "medium"];
@@ -96,7 +135,6 @@ export function buildAccentPrompt(
 
   return {
     prompt: template,
-    referenceImageUrl:
-      isImageBased && attachedImageUrl ? attachedImageUrl : undefined,
+    referenceImageUrls: isImageBased ? attachedImageUrls : [],
   };
 }

@@ -1,4 +1,4 @@
-import { assert, assertStringIncludes } from "jsr:@std/assert";
+import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert";
 import { buildAccentPrompt, buildRepeatPrompt } from "./prompt-builder.ts";
 
 Deno.test("H + yarn_dyed: 모티프/배경/원단블록/seamless 포함", () => {
@@ -16,6 +16,8 @@ Deno.test("H + yarn_dyed: 모티프/배경/원단블록/seamless 포함", () => 
   assertStringIncludes(prompt, "yarn-dyed");
   assertStringIncludes(prompt, "tile seamlessly");
   assertStringIncludes(prompt, "45%");
+  assertStringIncludes(prompt, "Yarn-dyed weaving constraints");
+  assertStringIncludes(prompt, "no element appears too thin");
 });
 
 Deno.test("F + printed: 모티프 2개 배치 명시", () => {
@@ -32,6 +34,7 @@ Deno.test("F + printed: 모티프 2개 배치 명시", () => {
   assertStringIncludes(prompt, "upper-left quadrant");
   assertStringIncludes(prompt, "lower-right quadrant");
   assertStringIncludes(prompt, "tile seamlessly");
+  assert(!prompt.includes("Yarn-dyed weaving constraints"));
 });
 
 Deno.test("Q-color: 두 색상 치환", () => {
@@ -81,6 +84,107 @@ Deno.test("Q-different_motif: 두 모티프 치환", () => {
 });
 
 Deno.test(
+  "reference single motif: 첨부 이미지 1개를 반복 모티프로 지시한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "F",
+        variation: null,
+        motifs: [{ name: "reference motif", color: null, colors: null }],
+        backgroundColor: "white",
+      },
+      "printed",
+      "single_motif",
+      1,
+    );
+
+    assertStringIncludes(prompt, "Use Image 1 as the motif reference");
+  },
+);
+
+Deno.test(
+  "reference composite motif: 여러 첨부 이미지를 하나의 모티프로 조합하도록 지시한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "F",
+        variation: null,
+        motifs: [{ name: "combined motif", color: null, colors: null }],
+        backgroundColor: "white",
+      },
+      "printed",
+      "composite_motif",
+      2,
+    );
+
+    assertStringIncludes(prompt, "Combine Images 1-2 into one unified motif");
+  },
+);
+
+Deno.test(
+  "reference composite motif: 첨부 이미지가 하나면 단수 Image 1로 지시한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "F",
+        variation: null,
+        motifs: [{ name: "combined motif", color: null, colors: null }],
+        backgroundColor: "white",
+      },
+      "printed",
+      "composite_motif",
+      1,
+    );
+
+    assertStringIncludes(prompt, "Use Image 1 as the unified motif reference");
+    assert(!prompt.includes("Images 1-1"));
+  },
+);
+
+Deno.test(
+  "reference multiple motifs: 첨부 이미지 두 개를 MOTIF_A/MOTIF_B로 지시한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "Q",
+        variation: "different_motif",
+        motifs: [
+          { name: "reference motif A", color: null, colors: null },
+          { name: "reference motif B", color: null, colors: null },
+        ],
+        backgroundColor: "white",
+      },
+      "printed",
+      "multiple_motifs",
+      2,
+    );
+
+    assertStringIncludes(prompt, "Use Image 1 as MOTIF_A");
+    assertStringIncludes(prompt, "Use Image 2 as MOTIF_B");
+  },
+);
+
+Deno.test(
+  "reference repeat_and_accent: 첨부 이미지가 하나면 Image 2를 언급하지 않는다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "F",
+        variation: null,
+        motifs: [{ name: "reference motif", color: null, colors: null }],
+        backgroundColor: "white",
+      },
+      "printed",
+      "repeat_and_accent",
+      1,
+    );
+
+    assertStringIncludes(prompt, "Use Image 1 as the repeat-pattern motif");
+    assert(!prompt.includes("Image 2"));
+  },
+);
+
+Deno.test(
   "Q: variation이 누락되어도 different motif placeholder를 남기지 않는다",
   () => {
     const prompt = buildRepeatPrompt(
@@ -108,7 +212,7 @@ Deno.test("accent text: seamless suffix 없음, 오브젝트 설명 포함", () 
     },
     "navy blue",
     "yarn_dyed",
-    null,
+    [],
   );
   assertStringIncludes(prompt, "a gold anchor");
   assertStringIncludes(prompt, "navy blue");
@@ -117,10 +221,12 @@ Deno.test("accent text: seamless suffix 없음, 오브젝트 설명 포함", () 
     "seamless suffix must not appear in accent",
   );
   assertStringIncludes(prompt, "45%");
+  assertStringIncludes(prompt, "Yarn-dyed weaving constraints");
 });
 
-Deno.test("accent image: referenceImageUrl 전달", () => {
-  const { referenceImageUrl } = buildAccentPrompt(
+Deno.test("accent image: referenceImageUrls 전달", () => {
+  const logoUrl = "https://example.com/logo.png";
+  const { referenceImageUrls } = buildAccentPrompt(
     {
       objectDescription: "the attached logo",
       objectSource: "image",
@@ -129,9 +235,11 @@ Deno.test("accent image: referenceImageUrl 전달", () => {
     },
     "white",
     "printed",
-    "https://example.com/logo.png",
+    [logoUrl],
   );
-  assertStringIncludes(referenceImageUrl ?? "", "example.com");
+  assertEquals(referenceImageUrls.length, 1);
+  assertEquals(referenceImageUrls[0], logoUrl);
+  assertStringIncludes(referenceImageUrls[0] ?? "", "example.com");
 });
 
 Deno.test("accent small size -> 30%", () => {
@@ -144,7 +252,7 @@ Deno.test("accent small size -> 30%", () => {
     },
     "red",
     "printed",
-    null,
+    [],
   );
   assertStringIncludes(prompt, "30%");
 });

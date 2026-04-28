@@ -20,6 +20,8 @@ export interface Message {
   role: "user" | "ai";
   content: string;
   imageUrl?: string;
+  accentTileUrl?: string;
+  accentTileWorkId?: string | null;
   imageFileId?: string;
   workId?: string | null;
   attachments?: Attachment[];

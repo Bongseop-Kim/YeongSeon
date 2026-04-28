@@ -9,8 +9,15 @@ export interface GeneratedTile {
   workId: string;
 }
 
+export interface FetchReferenceImageOptions {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+}
+
 const REFERENCE_IMAGE_TIMEOUT_MS = 5000;
 const MAX_REFERENCE_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_TOTAL_REFERENCE_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_REFERENCE_IMAGE_COUNT = 8;
 const REFERENCE_IMAGE_EXTENSIONS: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
@@ -66,14 +73,26 @@ async function parseB64FromOpenAiResponse(
   return b64;
 }
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const getOpenAiApiKey = (): string | undefined =>
+  Deno.env.get("OPENAI_API_KEY");
 
-export async function fetchReferenceImage(url: string): Promise<Blob> {
+export async function fetchReferenceImage(
+  url: string,
+  optionsOrSignal?: FetchReferenceImageOptions | AbortSignal,
+): Promise<Blob> {
+  const options =
+    optionsOrSignal instanceof AbortSignal
+      ? { signal: optionsOrSignal }
+      : optionsOrSignal;
+  const signal = options?.signal;
+  const timeoutMs = options?.timeoutMs ?? REFERENCE_IMAGE_TIMEOUT_MS;
   const controller = new AbortController();
-  const timeoutId = setTimeout(
-    () => controller.abort(),
-    REFERENCE_IMAGE_TIMEOUT_MS,
-  );
+  const onAbort = () => controller.abort();
+  if (signal?.aborted) {
+    onAbort();
+  }
+  signal?.addEventListener("abort", onAbort, { once: true });
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, { signal: controller.signal });
@@ -112,15 +131,9 @@ export async function fetchReferenceImage(url: string): Promise<Blob> {
     return new Blob(chunks, {
       type: response.headers.get("content-type") ?? "application/octet-stream",
     });
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(
-        `Reference image fetch timed out after ${REFERENCE_IMAGE_TIMEOUT_MS}ms`,
-      );
-    }
-    throw error;
   } finally {
     clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", onAbort);
   }
 }
 
@@ -135,34 +148,48 @@ export function referenceFileName(blob: Blob): string {
 
 export async function generateTileImage(
   prompt: string,
-  referenceImageUrl: string | null,
+  referenceImageUrls: string[],
   workId = crypto.randomUUID(),
 ): Promise<GeneratedTile> {
-  if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not set");
+  const openAiApiKey = getOpenAiApiKey();
+  if (!openAiApiKey) throw new Error("OPENAI_API_KEY not set");
 
   let b64: string;
 
-  if (referenceImageUrl) {
-    const trustedReferenceImageUrl =
-      validateReferenceImageUrl(referenceImageUrl);
-    if (!trustedReferenceImageUrl) {
-      throw new Error("Invalid reference image URL");
+  if (referenceImageUrls.length > 0) {
+    if (referenceImageUrls.length > MAX_REFERENCE_IMAGE_COUNT) {
+      throw new Error(
+        `Too many reference images: maximum ${MAX_REFERENCE_IMAGE_COUNT}`,
+      );
     }
 
-    const imageBlob = await fetchReferenceImage(trustedReferenceImageUrl);
+    const trustedUrls = referenceImageUrls.map((url) => {
+      const trusted = validateReferenceImageUrl(url);
+      if (!trusted) throw new Error("Invalid reference image URL");
+      return trusted;
+    });
 
     const form = new FormData();
     for (const [key, val] of Object.entries(OPENAI_IMAGE_PARAMS)) {
       form.append(key, String(val));
     }
     form.append("prompt", prompt);
-    form.append("image", imageBlob, referenceFileName(imageBlob));
+
+    let totalReferenceImageBytes = 0;
+    for (const url of trustedUrls) {
+      const blob = await fetchReferenceImage(url);
+      totalReferenceImageBytes += blob.size;
+      if (totalReferenceImageBytes > MAX_TOTAL_REFERENCE_IMAGE_BYTES) {
+        throw new Error("Reference images exceed maximum total size");
+      }
+      form.append("image[]", blob, referenceFileName(blob));
+    }
 
     const editsResponse = await fetch(
       "https://api.openai.com/v1/images/edits",
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
+        headers: { Authorization: `Bearer ${openAiApiKey}` },
         body: form,
       },
     );
@@ -176,7 +203,7 @@ export async function generateTileImage(
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          Authorization: `Bearer ${openAiApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ ...OPENAI_IMAGE_PARAMS, prompt }),

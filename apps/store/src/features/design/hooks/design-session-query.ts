@@ -6,7 +6,7 @@ import {
   type RestoredDesignSessionState,
 } from "@/entities/design";
 
-const DESIGN_SESSIONS_QUERY_KEY = ["design-sessions"] as const;
+export const DESIGN_SESSIONS_QUERY_KEY = ["design-sessions"] as const;
 
 const designSessionMessagesQueryKey = (sessionId: string) =>
   ["design-session-messages", sessionId] as const;

@@ -27,9 +27,9 @@ export function SessionCard({ session, onClick }: SessionCardProps) {
       onClick={() => onClick(session)}
     >
       <div className="h-11 w-11 shrink-0 overflow-hidden rounded bg-gray-100">
-        {session.lastImageUrl ? (
+        {session.repeatTileUrl ? (
           <img
-            src={session.lastImageUrl}
+            src={session.repeatTileUrl}
             alt=""
             className="h-full w-full object-cover"
           />

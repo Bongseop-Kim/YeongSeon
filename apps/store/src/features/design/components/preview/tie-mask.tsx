@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { tieMaskStyle } from "@/features/design/components/preview/tie-mask-style";
 import { cn } from "@/shared/lib/utils";
 
@@ -7,6 +8,8 @@ interface TieMaskProps {
   height: number;
   /** 배경 레이어에 추가할 className (예: opacity transition) */
   imageClassName?: string;
+  /** 배경 레이어에 추가할 style (예: repeat tile background) */
+  imageStyle?: CSSProperties;
   /** 그림자 이미지 위치 className. 기본값: inset-0 h-full w-full object-contain */
   shadowClassName?: string;
   /** 마스킹 영역 안에 렌더링할 오버레이 (예: shimmer) */
@@ -18,6 +21,7 @@ export function TieMask({
   width,
   height,
   imageClassName,
+  imageStyle,
   shadowClassName,
   children,
 }: TieMaskProps) {
@@ -26,7 +30,7 @@ export function TieMask({
       <div className="absolute inset-0" style={tieMaskStyle}>
         <div
           className={cn("absolute inset-0", imageClassName)}
-          style={{ background: imageUrl }}
+          style={imageStyle ?? { background: imageUrl }}
         />
         {children}
       </div>

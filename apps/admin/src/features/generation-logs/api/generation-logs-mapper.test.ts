@@ -20,8 +20,18 @@ const baseRow = {
   has_previous_image: false,
   ai_message: "생성 완료",
   generate_image: true,
+  route: "tile_generation",
   image_generated: true,
   generated_image_url: null,
+  repeat_tile_url: null,
+  repeat_tile_work_id: null,
+  accent_tile_url: null,
+  accent_tile_work_id: null,
+  pattern_type: null,
+  fabric_type: null,
+  tile_role: null,
+  paired_tile_work_id: null,
+  accent_layout_json: null,
   request_attachments: null,
   detected_design: { pattern: "solid" },
   tokens_charged: 10,
@@ -51,8 +61,18 @@ describe("toAdminGenerationLogItem", () => {
       hasPreviousImage: false,
       aiMessage: "생성 완료",
       generateImage: true,
+      route: "tile_generation",
       imageGenerated: true,
       generatedImageUrl: null,
+      repeatTileUrl: null,
+      repeatTileWorkId: null,
+      accentTileUrl: null,
+      accentTileWorkId: null,
+      patternType: null,
+      fabricType: null,
+      tileRole: null,
+      pairedTileWorkId: null,
+      accentLayoutJson: null,
       requestAttachments: null,
       detectedDesign: { pattern: "solid" },
       tokensCharged: 10,
@@ -130,6 +150,88 @@ describe("toAdminGenerationLogItem", () => {
       generate_image: false,
     });
     expect(result.generateImage).toBe(false);
+  });
+
+  it("실제 렌더 경로와 타일 결과 컬럼을 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      route: "tile_edit",
+      repeat_tile_url: "https://example.com/repeat.png",
+      repeat_tile_work_id: "repeat-work",
+      accent_tile_url: "https://example.com/accent.png",
+      accent_tile_work_id: "accent-work",
+      pattern_type: "one_point",
+      fabric_type: "printed",
+      tile_role: "accent",
+      paired_tile_work_id: "repeat-work",
+      accent_layout_json: { position: "center", scale: 0.5 },
+    });
+
+    expect(result.route).toBe("tile_edit");
+    expect(result.repeatTileUrl).toBe("https://example.com/repeat.png");
+    expect(result.repeatTileWorkId).toBe("repeat-work");
+    expect(result.accentTileUrl).toBe("https://example.com/accent.png");
+    expect(result.accentTileWorkId).toBe("accent-work");
+    expect(result.patternType).toBe("one_point");
+    expect(result.fabricType).toBe("printed");
+    expect(result.tileRole).toBe("accent");
+    expect(result.pairedTileWorkId).toBe("repeat-work");
+    expect(result.accentLayoutJson).toEqual({ position: "center", scale: 0.5 });
+  });
+
+  it("repeat 타일 컬럼만 있으면 accent와 페어링 값은 null로 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      repeat_tile_url: "https://example.com/repeat.png",
+      repeat_tile_work_id: "repeat-work",
+      accent_tile_url: null,
+      accent_tile_work_id: null,
+      tile_role: "repeat",
+      paired_tile_work_id: null,
+      accent_layout_json: null,
+    });
+
+    expect(result.repeatTileUrl).toBe("https://example.com/repeat.png");
+    expect(result.repeatTileWorkId).toBe("repeat-work");
+    expect(result.accentTileUrl).toBeNull();
+    expect(result.accentTileWorkId).toBeNull();
+    expect(result.tileRole).toBe("repeat");
+    expect(result.pairedTileWorkId).toBeNull();
+    expect(result.accentLayoutJson).toBeNull();
+  });
+
+  it("accent 타일 컬럼만 있으면 repeat와 페어링 값은 null로 매핑한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      repeat_tile_url: null,
+      repeat_tile_work_id: null,
+      accent_tile_url: "https://example.com/accent.png",
+      accent_tile_work_id: "accent-work",
+      tile_role: "accent",
+      paired_tile_work_id: null,
+      accent_layout_json: { objectDescription: "logo" },
+    });
+
+    expect(result.repeatTileUrl).toBeNull();
+    expect(result.repeatTileWorkId).toBeNull();
+    expect(result.accentTileUrl).toBe("https://example.com/accent.png");
+    expect(result.accentTileWorkId).toBe("accent-work");
+    expect(result.tileRole).toBe("accent");
+    expect(result.pairedTileWorkId).toBeNull();
+    expect(result.accentLayoutJson).toEqual({ objectDescription: "logo" });
+  });
+
+  it("accent_layout_json 타입이 잘못되면 null로 매핑하고 paired/tile role은 검증한다", () => {
+    const result = toAdminGenerationLogItem({
+      ...baseRow,
+      tile_role: "invalid",
+      paired_tile_work_id: 123,
+      accent_layout_json: "not-json",
+    });
+
+    expect(result.tileRole).toBeNull();
+    expect(result.pairedTileWorkId).toBeNull();
+    expect(result.accentLayoutJson).toBeNull();
   });
 
   it("design_context가 배열이면 null을 반환한다", () => {

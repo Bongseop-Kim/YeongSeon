@@ -9,6 +9,7 @@ import {
   uploadDesignAsset,
 } from "@/entities/design";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import { DESIGN_SESSIONS_QUERY_KEY } from "@/features/design/hooks/design-session-query";
 import type { Attachment, Message } from "@/features/design/types/chat";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { ph } from "@/shared/lib/posthog";
@@ -81,12 +82,12 @@ const toSessionPayload = (messages: Message[]) => {
   return { firstUserMsg, allMessages };
 };
 
-const withResolvedImageAttachmentUrl = (
+const withResolvedImageAttachmentUrls = (
   allMessages: ReturnType<typeof toSessionPayload>["allMessages"],
   messageId: string,
-  resolvedImageUrl: string | null,
+  resolvedImageUrls: Array<string | null>,
 ): ReturnType<typeof toSessionPayload>["allMessages"] => {
-  if (!resolvedImageUrl) {
+  if (resolvedImageUrls.length === 0) {
     return allMessages;
   }
 
@@ -95,46 +96,50 @@ const withResolvedImageAttachmentUrl = (
 
   const message = allMessages[index];
   const updated = [...allMessages];
+  let imageIndex = 0;
   updated[index] = {
     ...message,
-    imageUrl: resolvedImageUrl,
-    attachments: message.attachments?.map((attachment) =>
-      attachment.type === "image"
-        ? { ...attachment, value: resolvedImageUrl }
-        : attachment,
-    ),
+    imageUrl: resolvedImageUrls.find((url) => url !== null) ?? message.imageUrl,
+    attachments: message.attachments?.map((attachment) => {
+      if (attachment.type !== "image") {
+        return attachment;
+      }
+
+      const resolvedUrl = resolvedImageUrls[imageIndex++];
+      return resolvedUrl ? { ...attachment, value: resolvedUrl } : attachment;
+    }),
   };
   return updated;
 };
 
-const resolveAttachedImageUrl = async (
+const resolveAttachedImageUrls = async (
   attachments: Attachment[],
-): Promise<string | null> => {
-  const imageAttachment = attachments.find(
-    (attachment) => attachment.type === "image",
+  sessionId: string,
+): Promise<Array<string | null>> => {
+  const imageAttachments = attachments.filter((a) => a.type === "image");
+
+  return Promise.all(
+    imageAttachments.map(async (attachment) => {
+      if (attachment.file) {
+        const uploaded = await uploadDesignAsset(attachment.file, {
+          kind: "reference",
+          sessionId,
+        });
+        return uploaded.url;
+      }
+
+      if (attachment.value.startsWith("https://")) {
+        return attachment.value;
+      }
+
+      console.warn("[resolveAttachedImageUrls] Rejected non-HTTPS image URL", {
+        fileName: attachment.fileName,
+        type: attachment.type,
+        value: attachment.value,
+      });
+      return null;
+    }),
   );
-
-  if (!imageAttachment) {
-    return null;
-  }
-
-  if (imageAttachment.file) {
-    const uploaded = await uploadDesignAsset(imageAttachment.file, {
-      kind: "reference",
-    });
-    return uploaded.signedUrl;
-  }
-
-  if (imageAttachment.value.startsWith("https://")) {
-    return imageAttachment.value;
-  }
-
-  console.warn("[resolveAttachedImageUrl] Rejected non-HTTPS image URL", {
-    fileName: imageAttachment.fileName,
-    type: imageAttachment.type,
-    value: imageAttachment.value,
-  });
-  return null;
 };
 
 const toApiConversationHistory = (
@@ -228,11 +233,14 @@ export function useDesignChat(
       : "tile_generation";
 
     try {
-      const attachedImageUrl = await resolveAttachedImageUrl(input.attachments);
-      const sessionMessages = withResolvedImageAttachmentUrl(
+      const attachedImageUrls = await resolveAttachedImageUrls(
+        input.attachments,
+        input.sessionId,
+      );
+      const sessionMessages = withResolvedImageAttachmentUrls(
         allMessages,
         input.activeUserMessageId,
-        attachedImageUrl,
+        attachedImageUrls,
       );
       const uiFabricType = fabricMethodToFabricType(
         state.designContext.fabricMethod,
@@ -241,12 +249,15 @@ export function useDesignChat(
         route,
         userMessage: input.userText,
         uiFabricType,
+        selectedColors: state.designContext.colors,
         previousFabricType: state.fabricType,
         previousRepeatTile: state.repeatTile,
         previousAccentTile: state.accentTile,
         previousAccentLayoutJson: state.accentLayout,
         conversationHistory: toApiConversationHistory(priorMessages),
-        attachedImageUrl,
+        attachedImageUrls: attachedImageUrls.filter(
+          (url): url is string => url !== null,
+        ),
         sessionId: input.sessionId,
         workflowId: crypto.randomUUID(),
         firstMessage: firstUserMsg?.content ?? input.userText,
@@ -266,6 +277,12 @@ export function useDesignChat(
         role: "ai",
         content: TILE_GENERATION_SUCCESS_MESSAGE,
         imageUrl: result.repeatTile.url,
+        ...(result.accentTile
+          ? {
+              accentTileUrl: result.accentTile.url,
+              accentTileWorkId: result.accentTile.workId,
+            }
+          : {}),
         workId: result.repeatTile.workId,
         timestamp: Date.now(),
       });
@@ -274,6 +291,9 @@ export function useDesignChat(
 
       void queryClient.invalidateQueries({
         queryKey: DESIGN_TOKEN_BALANCE_QUERY_KEY,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: DESIGN_SESSIONS_QUERY_KEY,
       });
     } catch (error) {
       console.error("tile generation failed:", error);

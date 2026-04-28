@@ -30,12 +30,13 @@ export interface TileGenerationPayload {
   route: "tile_generation" | "tile_edit";
   userMessage: string;
   uiFabricType: FabricType | null;
+  selectedColors: string[];
   previousFabricType: FabricType | null;
   previousRepeatTile: TileRef | null;
   previousAccentTile: TileRef | null;
   previousAccentLayoutJson: AccentLayout | null;
   conversationHistory: ConversationTurn[];
-  attachedImageUrl: string | null;
+  attachedImageUrls: string[];
   sessionId: string;
   workflowId: string;
   firstMessage: string;

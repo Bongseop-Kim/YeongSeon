@@ -7,6 +7,12 @@
 
 - 폼 필드의 레이블·설명·에러 마크업은 `@/shared/ui/field`의 `Field`, `FieldTitle`, `FieldDescription`, `FieldLabel`, `FieldContent`, `FieldError`를 사용한다. raw HTML(`<h3>`, `<p>`, `<div>` 등)로 직접 구성하지 않는다.
 
+## 이미지 업로드 규칙
+
+- Store 앱 이미지 업로드는 `@/shared/lib/imagekit` 인증 경로와 `@imagekit/react`를 사용한다.
+- `supabase.storage` 직접 호출 금지.
+- 디자인 첨부 이미지는 `IMAGE_FOLDERS.DESIGN_SESSIONS`에 업로드한다.
+
 ## 레이아웃 여백 규칙
 
 좌우 여백은 `PageLayout`이 단일 소스 오브 트루스다. 페이지가 직접 `px-*`로 여백을 설정하지 않는다.

@@ -7,7 +7,7 @@ CREATE TABLE public.images (
   url         text        NOT NULL,
   file_id     text,                          -- ImageKit fileId (null = 레거시)
   folder      text        NOT NULL,          -- '/products', '/custom-orders', '/reform'
-  entity_type text        NOT NULL,          -- 'product', 'custom_order', 'quote_request', 'reform', 'design_message'
+  entity_type text        NOT NULL,          -- 'product', 'custom_order', 'quote_request', 'reform', 'design_message', 'design_session'
   entity_id   text        NOT NULL,          -- 연결된 엔티티 ID
   uploaded_by uuid        REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE SET NULL,
   expires_at            timestamptz,           -- null = 영구 보관
@@ -141,6 +141,19 @@ BEGIN
     ) THEN
       RAISE EXCEPTION 'You do not own %:%', p_entity_type, p_entity_id;
     END IF;
+  ELSIF p_entity_type = 'design_session' THEN
+    -- design_session intentionally rejects only sessions owned by another user.
+    -- Missing sessions are allowed because save_design_session may implicitly
+    -- create them, unlike quote_request/custom_order/reform/design_message
+    -- checks that require an existing row owned by the current user.
+    IF EXISTS (
+      SELECT 1
+      FROM public.design_chat_sessions s
+      WHERE s.id::text = p_entity_id
+        AND s.user_id <> v_user_id
+    ) THEN
+      RAISE EXCEPTION 'You do not own %:%', p_entity_type, p_entity_id;
+    END IF;
   ELSE
     RAISE EXCEPTION 'Unsupported entity_type: %', p_entity_type;
   END IF;
@@ -214,6 +227,7 @@ GRANT EXECUTE ON FUNCTION public.register_reform_upload(text, text) TO authentic
 -- | quote_request | 견적 종료/확정 시 트리거       | +90일 |
 -- | reform        | 주문 완료/취소 시 트리거       | +90일 |
 -- | design_message | 설정 안 함 (영구)             | -     |
+-- | design_session | 업로드 시점                   | +90일 |
 
 -- 견적 종료/확정 시 이미지 만료 설정 (+90일)
 -- SECURITY DEFINER: admin이 상태를 변경하는 경우 RLS bypass 필요

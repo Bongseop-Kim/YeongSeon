@@ -7,9 +7,6 @@ CREATE TABLE public.design_chat_sessions (
   user_id             uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   ai_model            text        NOT NULL CHECK (ai_model IN ('openai')),
   first_message       text        NOT NULL DEFAULT '',
-  last_image_url      text,
-  last_image_file_id  text,
-  last_image_work_id  text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
   image_count         int         NOT NULL DEFAULT 0,
   repeat_tile_url      text,
   repeat_tile_work_id  text REFERENCES public.ai_generation_logs(work_id) ON DELETE SET NULL,
@@ -65,9 +62,6 @@ CREATE OR REPLACE FUNCTION public.save_design_session(
   p_session_id          uuid,
   p_ai_model            text,
   p_first_message       text,
-  p_last_image_url      text,
-  p_last_image_file_id  text,
-  p_last_image_work_id  text,
   p_messages            jsonb,
   p_repeat_tile_url      text DEFAULT null,
   p_repeat_tile_work_id  text DEFAULT null,
@@ -103,7 +97,7 @@ BEGIN
 
   INSERT INTO public.design_chat_sessions (
     id, user_id, ai_model, first_message,
-    last_image_url, last_image_file_id, last_image_work_id, image_count,
+    image_count,
     repeat_tile_url, repeat_tile_work_id,
     accent_tile_url, accent_tile_work_id,
     accent_layout_json,
@@ -112,7 +106,7 @@ BEGIN
   )
   VALUES (
     v_session_id, v_user_id, p_ai_model, p_first_message,
-    p_last_image_url, p_last_image_file_id, p_last_image_work_id, 0,
+    0,
     p_repeat_tile_url, p_repeat_tile_work_id,
     p_accent_tile_url, p_accent_tile_work_id,
     p_accent_layout_json,
@@ -124,9 +118,6 @@ BEGIN
   ON CONFLICT (id) DO UPDATE
   SET ai_model = EXCLUDED.ai_model,
       first_message = EXCLUDED.first_message,
-      last_image_url = COALESCE(EXCLUDED.last_image_url, design_chat_sessions.last_image_url),
-      last_image_file_id = COALESCE(EXCLUDED.last_image_file_id, design_chat_sessions.last_image_file_id),
-      last_image_work_id = COALESCE(EXCLUDED.last_image_work_id, design_chat_sessions.last_image_work_id),
       image_count = EXCLUDED.image_count,
       repeat_tile_url = COALESCE(EXCLUDED.repeat_tile_url, design_chat_sessions.repeat_tile_url),
       repeat_tile_work_id = COALESCE(EXCLUDED.repeat_tile_work_id, design_chat_sessions.repeat_tile_work_id),
@@ -175,8 +166,8 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.save_design_session(uuid, text, text, text, text, text, jsonb, text, text, text, text, jsonb, text, text)
+COMMENT ON FUNCTION public.save_design_session(uuid, text, text, jsonb, text, text, text, text, jsonb, text, text)
   IS 'SECURITY DEFINER is required so authenticated clients can upsert owned design sessions and replace child messages while ownership is enforced with auth.uid().';
 
-GRANT EXECUTE ON FUNCTION public.save_design_session(uuid, text, text, text, text, text, jsonb, text, text, text, text, jsonb, text, text)
+GRANT EXECUTE ON FUNCTION public.save_design_session(uuid, text, text, jsonb, text, text, text, text, jsonb, text, text)
   TO authenticated;

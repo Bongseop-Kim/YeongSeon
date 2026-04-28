@@ -1,6 +1,11 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert@1.0.19";
+import {
+  assertEquals,
+  assertRejects,
+  assertStrictEquals,
+} from "jsr:@std/assert@1.0.19";
 import {
   fetchReferenceImage,
+  generateTileImage,
   referenceFileName,
   validateReferenceImageUrl,
 } from "./image-generator.ts";
@@ -130,21 +135,92 @@ Deno.test(
 Deno.test(
   "fetchReferenceImage rejects after the configured timeout",
   async () => {
+    const abortError = Object.assign(new Error("aborted"), {
+      name: "AbortError",
+    });
+
     await withMockedFetch(
       (_input, init) =>
         new Promise<Response>((_resolve, reject) => {
           init?.signal?.addEventListener("abort", () => {
-            reject(Object.assign(new Error("aborted"), { name: "AbortError" }));
+            reject(abortError);
           });
         }),
       async () => {
-        await assertRejects(
-          () => fetchReferenceImage(REFERENCE_URL),
+        const rejected = await assertRejects(
+          () => fetchReferenceImage(REFERENCE_URL, { timeoutMs: 5 }),
           Error,
-          "Reference image fetch timed out after",
         );
+        assertStrictEquals(rejected, abortError);
+        assertEquals(rejected.name, "AbortError");
       },
     );
+  },
+);
+
+Deno.test(
+  "generateTileImage rejects when cumulative reference image bytes exceed the cap",
+  async () => {
+    const originalApiKey = Deno.env.get("OPENAI_API_KEY");
+    Deno.env.set("OPENAI_API_KEY", "test-key");
+    const halfCapPlusOne = new Uint8Array(4 * 1024 * 1024 + 1);
+
+    try {
+      await withMockedFetch(
+        () =>
+          Promise.resolve(
+            new Response(halfCapPlusOne, {
+              status: 200,
+              headers: { "content-type": "image/png" },
+            }),
+          ),
+        async () => {
+          await assertRejects(
+            () =>
+              generateTileImage(
+                "make a tile",
+                [REFERENCE_URL, REFERENCE_URL],
+                "00000000-0000-4000-8000-000000000001",
+              ),
+            Error,
+            "Reference images exceed maximum total size",
+          );
+        },
+      );
+    } finally {
+      if (originalApiKey == null) {
+        Deno.env.delete("OPENAI_API_KEY");
+      } else {
+        Deno.env.set("OPENAI_API_KEY", originalApiKey);
+      }
+    }
+  },
+);
+
+Deno.test(
+  "fetchReferenceImage rejects when signal is already aborted",
+  async () => {
+    const controller = new AbortController();
+    controller.abort();
+    let sawAbortedSignal = false;
+
+    await withMockedFetch(
+      (_input, init) => {
+        sawAbortedSignal = init?.signal?.aborted === true;
+        return Promise.reject(
+          Object.assign(new Error("aborted"), { name: "AbortError" }),
+        );
+      },
+      async () => {
+        const rejected = await assertRejects(
+          () => fetchReferenceImage(REFERENCE_URL, controller.signal),
+          Error,
+        );
+        assertEquals(rejected.name, "AbortError");
+      },
+    );
+
+    assertEquals(sawAbortedSignal, true);
   },
 );
 

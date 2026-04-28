@@ -10,7 +10,7 @@ const { addAttachment, removeAttachment, setDesignContext, onClose, state } =
     onClose: vi.fn(),
     state: {
       designContext: {
-        colors: [],
+        colors: [] as string[],
         pattern: null,
         fabricMethod: "yarn-dyed" as const,
         sourceImage: null,
@@ -55,11 +55,51 @@ describe("AttachmentPopup", () => {
     setDesignContext.mockReset();
     onClose.mockReset();
     state.pendingAttachments = [];
+    state.designContext.colors = [];
   });
 
-  it("이미지 업로드는 단일 source attachment와 sourceImage 컨텍스트를 설정한다", () => {
+  it("색상은 한 개만 선택하며 새 색상 선택 시 기존 색상을 교체한다", () => {
+    state.pendingAttachments = [
+      {
+        type: "color",
+        label: "네이비",
+        value: "#1a2c5b",
+      },
+    ];
+    state.designContext.colors = ["#1a2c5b"];
+
+    render(<AttachmentPopup onClose={onClose} />);
+
+    const nextColorButton = screen
+      .getAllByRole("button")
+      .find(
+        (button) =>
+          button.getAttribute("aria-label") !== null &&
+          button.getAttribute("aria-label") !== "네이비",
+      );
+
+    if (!nextColorButton) {
+      throw new Error("next color button not found");
+    }
+
+    const nextColor = nextColorButton.getAttribute("aria-label");
+    fireEvent.click(nextColorButton);
+
+    expect(removeAttachment).toHaveBeenCalledWith(0);
+    expect(addAttachment).toHaveBeenCalledWith({
+      type: "color",
+      label: nextColor,
+      value: expect.any(String),
+    });
+    expect(setDesignContext).toHaveBeenCalledWith({
+      colors: [expect.any(String)],
+    });
+  });
+
+  it("이미지 업로드는 선택한 이미지들을 attachment로 추가하고 첫 이미지를 sourceImage 컨텍스트로 설정한다", () => {
     const { container } = render(<AttachmentPopup onClose={onClose} />);
-    const file = new File(["ci"], "ci.png", { type: "image/png" });
+    const firstFile = new File(["ci"], "ci.png", { type: "image/png" });
+    const secondFile = new File(["ref"], "ref.png", { type: "image/png" });
     const imageInput = container.querySelector('input[type="file"]');
 
     if (!(imageInput instanceof HTMLInputElement)) {
@@ -68,17 +108,23 @@ describe("AttachmentPopup", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "이미지 첨부" }));
     fireEvent.change(imageInput, {
-      target: { files: [file] },
+      target: { files: [firstFile, secondFile] },
     });
 
-    expect(addAttachment).toHaveBeenCalledWith({
+    expect(addAttachment).toHaveBeenNthCalledWith(1, {
       type: "image",
       label: "이미지 첨부",
-      value: "source",
-      file,
+      value: expect.stringMatching(/^source-/),
+      file: firstFile,
+    });
+    expect(addAttachment).toHaveBeenNthCalledWith(2, {
+      type: "image",
+      label: "이미지 첨부",
+      value: expect.stringMatching(/^source-/),
+      file: secondFile,
     });
     expect(setDesignContext).toHaveBeenCalledWith({
-      sourceImage: file,
+      sourceImage: firstFile,
       onePointOffsetX: 0,
       onePointOffsetY: 0,
       ciImage: null,
@@ -107,7 +153,7 @@ describe("AttachmentPopup", () => {
     expect(addAttachment).toHaveBeenCalledWith({
       type: "image",
       label: "이미지 첨부",
-      value: "source",
+      value: expect.stringMatching(/^source-/),
       file,
     });
     expect(setDesignContext).toHaveBeenCalledWith({
@@ -119,7 +165,7 @@ describe("AttachmentPopup", () => {
     });
   });
 
-  it("이미지 재업로드는 기존 image attachment를 교체한다", () => {
+  it("이미지 추가 업로드는 기존 image attachment를 유지하고 새 이미지를 추가한다", () => {
     state.pendingAttachments = [
       {
         type: "image",
@@ -142,11 +188,11 @@ describe("AttachmentPopup", () => {
       target: { files: [file] },
     });
 
-    expect(removeAttachment).toHaveBeenCalledWith(0);
+    expect(removeAttachment).not.toHaveBeenCalled();
     expect(addAttachment).toHaveBeenCalledWith({
       type: "image",
       label: "이미지 첨부",
-      value: "source",
+      value: expect.stringMatching(/^source-/),
       file,
     });
     expect(setDesignContext).toHaveBeenCalledWith({

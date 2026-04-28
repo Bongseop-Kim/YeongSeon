@@ -32,7 +32,7 @@ describe("useSessionRestore", () => {
     mockQueryData.data = undefined;
   });
 
-  it("세션 복원 시 메시지와 프리뷰 상태를 함께 스토어에 반영한다", async () => {
+  it("세션 복원 시 타일 프리뷰 상태를 스토어에 반영한다", async () => {
     mockQueryData.data = {
       messages: [
         {
@@ -43,10 +43,9 @@ describe("useSessionRestore", () => {
           timestamp: new Date("2026-03-19T10:00:00Z").getTime(),
         },
       ],
-      generatedImageUrl:
-        'url("https://example.com/tie.png") center/cover no-repeat',
+      generatedImageUrl: null,
       resultTags: [],
-      generationStatus: "completed",
+      generationStatus: "idle",
       repeatTile: null,
       accentTile: null,
       accentLayout: null,
@@ -62,11 +61,8 @@ describe("useSessionRestore", () => {
         id: "session-1",
         aiModel: "openai",
         firstMessage: "생성",
-        lastImageUrl: "https://example.com/tie.png",
-        lastImageFileId: "file-1",
-        lastImageWorkId: "work-restore-1",
-        repeatTileUrl: null,
-        repeatTileWorkId: null,
+        repeatTileUrl: "https://example.com/repeat.webp",
+        repeatTileWorkId: "repeat-work-1",
         accentTileUrl: null,
         accentTileWorkId: null,
         accentLayout: null,
@@ -86,11 +82,13 @@ describe("useSessionRestore", () => {
             imageUrl: "https://example.com/tie.png",
           }),
         ],
-        generatedImageUrl:
-          'url("https://example.com/tie.png") center/cover no-repeat',
+        generatedImageUrl: null,
         resultTags: [],
-        generationStatus: "completed",
-        repeatTile: null,
+        generationStatus: "idle",
+        repeatTile: {
+          url: "https://example.com/repeat.webp",
+          workId: "repeat-work-1",
+        },
         accentTile: null,
         accentLayout: null,
         patternType: null,
@@ -127,9 +125,6 @@ describe("useSessionRestore", () => {
         id: "session-2",
         aiModel: "openai",
         firstMessage: "텍스트만",
-        lastImageUrl: null,
-        lastImageFileId: null,
-        lastImageWorkId: null,
         repeatTileUrl: null,
         repeatTileWorkId: null,
         accentTileUrl: null,
@@ -177,9 +172,6 @@ describe("useSessionRestore", () => {
         id: "session-tile",
         aiModel: "openai",
         firstMessage: "로고 포인트",
-        lastImageUrl: "https://example.com/repeat.png",
-        lastImageFileId: null,
-        lastImageWorkId: "repeat-work",
         repeatTileUrl: "https://example.com/repeat.png",
         repeatTileWorkId: "repeat-work",
         accentTileUrl: "https://example.com/accent.png",

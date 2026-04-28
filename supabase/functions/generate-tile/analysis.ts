@@ -15,6 +15,7 @@ const ANALYSIS_JSON_SCHEMA = {
     "patternType",
     "editTarget",
     "fabricTypeHint",
+    "referenceImageUsage",
     "tileLayout",
     "accentLayout",
   ],
@@ -29,6 +30,16 @@ const ANALYSIS_JSON_SCHEMA = {
       anyOf: [
         { type: "string", enum: ["yarn_dyed", "printed"] },
         { type: "null" },
+      ],
+    },
+    referenceImageUsage: {
+      type: "string",
+      enum: [
+        "none",
+        "single_motif",
+        "composite_motif",
+        "multiple_motifs",
+        "repeat_and_accent",
       ],
     },
     tileLayout: {
@@ -101,6 +112,7 @@ const FALLBACK: AnalysisOutput = {
   patternType: "all_over",
   editTarget: "new",
   fabricTypeHint: null,
+  referenceImageUsage: "none",
   tileLayout: {
     structure: "F",
     variation: null,
@@ -136,6 +148,7 @@ Output this exact schema:
   "patternType": "all_over" | "one_point",
   "editTarget": "repeat" | "accent" | "both" | "new",
   "fabricTypeHint": "yarn_dyed" | "printed" | null,
+  "referenceImageUsage": "none" | "single_motif" | "composite_motif" | "multiple_motifs" | "repeat_and_accent",
   "tileLayout": {
     "structure": "H" | "F" | "Q",
     "variation": "rotation" | "color" | "different_motif" | null,
@@ -157,7 +170,15 @@ Structure rules:
 - Q-color: 4 motifs same shape, 2 colors alternating diagonally. Use for "두 가지 색".
 - Q-different_motif: 4 motifs, 2 types alternating. Use when 2 distinct motifs named.
 - one_point: repeat tile as background + single accent object at center.
-- accentLayout is non-null only when patternType is "one_point".`;
+- accentLayout is non-null only when patternType is "one_point".
+
+Reference image usage rules:
+- Use "none" when there are no useful attached reference images.
+- Use "single_motif" when one attached image should become the repeated motif.
+- Use "composite_motif" when multiple attached images should be combined into one motif.
+- Use "multiple_motifs" when multiple attached images should remain separate alternating motifs.
+- Use "repeat_and_accent" when one image is for the repeated background pattern and another image is for a one-point accent.
+- Infer from wording; do not choose solely by image count.`;
 
 export async function analyzeIntent(
   req: TileGenerationRequest,
@@ -168,6 +189,10 @@ export async function analyzeIntent(
   const editTargetOverride = resolveEditTargetKeyword(req.userMessage);
   const messages: Array<{ role: string; content: string }> = [
     { role: "system", content: SYSTEM_PROMPT },
+    {
+      role: "system",
+      content: `Attached reference image count: ${req.attachedImageUrls.length}. Use this count only as context; infer referenceImageUsage from the user's wording.`,
+    },
     ...req.conversationHistory,
     { role: "user", content: req.userMessage },
   ];

@@ -1,10 +1,14 @@
+import { upload } from "@imagekit/react";
+import { getImageKitAuth, IMAGEKIT_PUBLIC_KEY } from "@/shared/lib/imagekit";
 import { supabase } from "@/shared/lib/supabase";
+import { IMAGE_FOLDERS } from "@yeongseon/shared";
 
 type AssetKind = "ci" | "reference" | "mask" | "base";
+const DESIGN_SESSION_IMAGE_TTL_DAYS = 90;
 
 interface UploadResult {
-  signedUrl: string;
-  storagePath: string;
+  url: string;
+  fileId: string;
   hash: string;
 }
 
@@ -15,16 +19,6 @@ class UnsupportedMimeTypeError extends Error {
     super(`Unsupported MIME type: ${mime}`);
     this.name = "UnsupportedMimeTypeError";
   }
-}
-
-const BUCKET = "design-assets";
-const SIGNED_URL_TTL_SECONDS = 600;
-
-function ymd(): string {
-  const date = new Date();
-  return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(
-    date.getDate(),
-  ).padStart(2, "0")}`;
 }
 
 function extOf(mime: string): string {
@@ -55,56 +49,47 @@ async function hashBlob(blob: Blob): Promise<string> {
 
 export async function uploadDesignAsset(
   blob: Blob,
-  options: { kind: AssetKind },
+  options: { kind: AssetKind; sessionId: string },
 ): Promise<UploadResult> {
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError) {
-    throw userError;
-  }
-
-  const user = userData?.user;
-  if (!user) {
-    throw new Error("unauthenticated");
-  }
-
   const hash = await hashBlob(blob);
   const extension = extOf(blob.type);
-  const path = `${user.id}/${ymd()}/${options.kind}-${crypto.randomUUID()}.${extension}`;
-  const { data: uploaded, error: uploadError } = await supabase.storage
-    .from(BUCKET)
-    .upload(path, blob, {
-      contentType: blob.type,
-      upsert: false,
-    });
+  const { signature, token, expire } = await getImageKitAuth();
+  const response = await upload({
+    file: blob,
+    fileName: `${options.kind}-${crypto.randomUUID()}.${extension}`,
+    signature,
+    token,
+    expire,
+    publicKey: IMAGEKIT_PUBLIC_KEY,
+    folder: IMAGE_FOLDERS.DESIGN_SESSIONS,
+  });
 
-  if (uploadError || !uploaded) {
-    throw uploadError ?? new Error("upload-failed");
+  if (!response.url) {
+    throw new Error("이미지 URL을 받지 못했습니다.");
+  }
+  if (!response.fileId) {
+    throw new Error("파일 ID를 받지 못했습니다.");
   }
 
-  const { data: signed, error: signError } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrl(uploaded.path, SIGNED_URL_TTL_SECONDS);
+  const expiresAt = new Date(
+    Date.now() + DESIGN_SESSION_IMAGE_TTL_DAYS * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const { error } = await supabase.rpc("register_image", {
+    p_url: response.url,
+    p_file_id: response.fileId,
+    p_folder: IMAGE_FOLDERS.DESIGN_SESSIONS,
+    p_entity_type: "design_session",
+    p_entity_id: options.sessionId,
+    p_expires_at: expiresAt,
+  });
 
-  if (signError || !signed) {
-    const cleanupError =
-      (await supabase.storage.from(BUCKET).remove([uploaded.path])).error ??
-      null;
-
-    if (cleanupError) {
-      throw new Error(
-        `${signError?.message ?? "sign-failed"}; cleanup failed: ${cleanupError.message}`,
-        {
-          cause: signError ?? cleanupError,
-        },
-      );
-    }
-
-    throw signError ?? new Error("sign-failed");
+  if (error) {
+    throw error;
   }
 
   return {
-    signedUrl: signed.signedUrl,
-    storagePath: uploaded.path,
+    url: response.url,
+    fileId: response.fileId,
     hash,
   };
 }

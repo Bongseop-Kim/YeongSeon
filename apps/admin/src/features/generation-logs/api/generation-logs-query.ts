@@ -4,14 +4,12 @@ import {
   getGenerationStats,
   getGenerationLogs,
 } from "@/features/generation-logs/api/generation-logs-api";
-import { getGenerationLogArtifacts } from "@/features/generation-logs/api/generation-log-artifacts-api";
 import type {
   AdminGenerationLogItem,
   GenerationRequestTypeFilter,
   GenerationStatusFilter,
   GenerationStatsData,
 } from "@/features/generation-logs/types/admin-generation-log";
-import type { AdminGenerationArtifactItem } from "@/features/generation-logs/types/admin-generation-artifact";
 
 const PAGE_SIZE = 50;
 
@@ -120,31 +118,6 @@ export function useGenerationWorkflowLogsQuery(workflowId: string): {
         offset: 0,
       }),
     enabled: normalizedWorkflowId.length > 0,
-  });
-
-  return {
-    data: query.data ?? [],
-    isLoading: query.isLoading,
-    errorMessage: query.error instanceof Error ? query.error.message : null,
-  };
-}
-
-export function useGenerationLogArtifactsQuery(params: {
-  workflowId: string | null | undefined;
-}): {
-  data: AdminGenerationArtifactItem[];
-  isLoading: boolean;
-  errorMessage: string | null;
-} {
-  const normalizedWorkflowId =
-    typeof params.workflowId === "string" && params.workflowId.trim().length > 0
-      ? params.workflowId.trim()
-      : null;
-
-  const query = useQuery({
-    queryKey: ["generation-logs", "artifacts", normalizedWorkflowId],
-    queryFn: () => getGenerationLogArtifacts(normalizedWorkflowId ?? ""),
-    enabled: normalizedWorkflowId !== null,
   });
 
   return {

@@ -2,7 +2,13 @@ export const YARN_DYED_FABRIC_BLOCK = `Fabric rendering (critical):
 - Entire surface is realistic yarn-dyed tie silk jacquard fabric, top-down flat view.
 - Visible woven warp and weft threads with subtle natural sheen.
 - Motifs appear as woven into the fabric structure, not printed on top.
-- The pattern emerges from the weave itself, with thread-level texture visible on both the motifs and the background.`;
+- The pattern emerges from the weave itself, with thread-level texture visible on both the motifs and the background.
+
+Yarn-dyed weaving constraints:
+- Keep the original design mostly intact, but simplify details that are too fine to weave.
+- Thicken all fine lines and small details so no element appears too thin for woven jacquard fabric.
+- Prefer 2-3 solid thread colors for the motif and background unless the design clearly requires more.
+- Render the result as yarn-dyed woven silk with visible interlaced threads, not printed ink.`;
 
 export const PRINTED_FABRIC_BLOCK = `Fabric rendering (critical):
 - Entire surface is printed tie silk fabric, top-down flat view.

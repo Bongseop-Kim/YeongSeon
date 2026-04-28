@@ -8,9 +8,6 @@ export interface DesignSession {
   id: string;
   aiModel: "openai";
   firstMessage: string;
-  lastImageUrl: string | null;
-  lastImageFileId: string | null;
-  lastImageWorkId: string | null;
   repeatTileUrl: string | null;
   repeatTileWorkId: string | null;
   accentTileUrl: string | null;

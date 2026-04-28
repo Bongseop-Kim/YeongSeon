@@ -1,12 +1,36 @@
-import type { AnalysisOutput, TileGenerationRequest } from "./types.ts";
+import type {
+  AnalysisOutput,
+  ReferenceImageUsage,
+  TileGenerationRequest,
+} from "./types.ts";
 import { validateReferenceImageUrl } from "./image-generator.ts";
+
+export function resolveEffectiveReferenceImageUsage(
+  analysis: AnalysisOutput,
+  request: TileGenerationRequest,
+): ReferenceImageUsage {
+  if (analysis.referenceImageUsage !== "none") {
+    return analysis.referenceImageUsage;
+  }
+
+  const hasValidAttachedImage = request.attachedImageUrls.some((url) =>
+    validateReferenceImageUrl(url),
+  );
+  if (request.route === "tile_generation" && hasValidAttachedImage) {
+    return "single_motif";
+  }
+
+  return "none";
+}
 
 export function shouldReuseRepeatTile(
   analysis: AnalysisOutput,
   request: TileGenerationRequest,
+  selectedBackgroundColor: string | null = null,
 ): boolean {
   return (
     request.route === "tile_edit" &&
+    selectedBackgroundColor === null &&
     analysis.patternType === "one_point" &&
     analysis.editTarget === "accent" &&
     analysis.accentLayout !== null &&
@@ -51,34 +75,79 @@ function findLatestUserImageUrl(
   return null;
 }
 
-export function resolveAccentReferenceImageUrl(
+export function resolveAccentReferenceImageUrls(
   analysis: AnalysisOutput,
   request: TileGenerationRequest,
-): string | null {
+): string[] {
   if (
     analysis.patternType !== "one_point" ||
     analysis.accentLayout === null ||
     analysis.accentLayout.objectSource === "text"
   ) {
-    return null;
+    return [];
   }
 
-  if (
-    request.attachedImageUrl &&
-    validateReferenceImageUrl(request.attachedImageUrl)
-  ) {
-    return request.attachedImageUrl;
+  const validAttached = request.attachedImageUrls.filter((url) =>
+    validateReferenceImageUrl(url),
+  );
+  if (analysis.referenceImageUsage === "none") return [];
+  if (analysis.referenceImageUsage === "repeat_and_accent") {
+    const accent = validAttached.slice(1, 2);
+    if (accent.length > 0) return accent;
   }
+  if (validAttached.length > 0) return validAttached;
 
   const latestUserImageUrl = findLatestUserImageUrl(request.allMessages);
-  if (latestUserImageUrl) return latestUserImageUrl;
+  if (latestUserImageUrl) return [latestUserImageUrl];
 
   if (
     request.previousAccentTileUrl &&
     validateReferenceImageUrl(request.previousAccentTileUrl)
   ) {
-    return request.previousAccentTileUrl;
+    return [request.previousAccentTileUrl];
   }
 
-  return null;
+  return [];
+}
+
+export function resolveRepeatReferenceImageUrls(
+  analysis: AnalysisOutput,
+  request: TileGenerationRequest,
+): string[] {
+  const validAttached = request.attachedImageUrls.filter((url) =>
+    validateReferenceImageUrl(url),
+  );
+  const repeatFallbacks = () => {
+    const fallbackUrls: string[] = [];
+    const latestUserImageUrl = findLatestUserImageUrl(request.allMessages);
+    const previousRepeatTileUrl = request.previousRepeatTileUrl;
+    if (latestUserImageUrl) fallbackUrls.push(latestUserImageUrl);
+    if (
+      previousRepeatTileUrl &&
+      validateReferenceImageUrl(previousRepeatTileUrl)
+    ) {
+      fallbackUrls.push(previousRepeatTileUrl);
+    }
+    return fallbackUrls;
+  };
+  const fillReferences = (urls: string[], count: number) => {
+    const seen = new Set<string>();
+    const resolved: string[] = [];
+    for (const url of [...urls, ...repeatFallbacks()]) {
+      if (seen.has(url)) continue;
+      seen.add(url);
+      resolved.push(url);
+      if (resolved.length >= count) break;
+    }
+    return resolved;
+  };
+
+  if (analysis.referenceImageUsage === "none") return [];
+  if (analysis.referenceImageUsage === "multiple_motifs") {
+    return fillReferences(validAttached, 2);
+  }
+  if (analysis.referenceImageUsage === "repeat_and_accent") {
+    return fillReferences(validAttached.slice(0, 1), 1);
+  }
+  return validAttached.length > 0 ? validAttached : fillReferences([], 1);
 }

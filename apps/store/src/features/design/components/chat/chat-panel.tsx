@@ -8,6 +8,7 @@ import {
 import { ChatHeader } from "@/features/design/components/chat/chat-header";
 import { TiePreviewModal } from "@/features/design/components/chat/tie-preview-modal";
 import { ChatInput } from "@/features/design/components/chat/chat-input";
+import type { TilePreviewSelection } from "@/features/design/components/chat/message-bubble";
 import { MessageList } from "@/features/design/components/chat/message-list";
 import {
   QUICK_CHIPS,
@@ -42,8 +43,8 @@ export function ChatPanel({
   const selectedPreviewImageUrl = useDesignChatStore(
     (state) => state.selectedPreviewImageUrl,
   );
-  const setSelectedPreviewImage = useDesignChatStore(
-    (state) => state.setSelectedPreviewImage,
+  const setSelectedTilePreview = useDesignChatStore(
+    (state) => state.setSelectedTilePreview,
   );
 
   const isGenerating = isActiveGeneration(generationStatus);
@@ -61,6 +62,15 @@ export function ChatPanel({
 
   const handleChipClick = (text: string) => {
     sendMessage(text, pendingAttachments);
+  };
+
+  const handleSelectTilePreview = (preview: TilePreviewSelection) => {
+    setSelectedTilePreview({
+      previewBackground: preview.previewBackground,
+      repeatTile: preview.repeatTile,
+      accentTile: preview.accentTile,
+      patternType: preview.accentTile ? "one_point" : "all_over",
+    });
   };
 
   return (
@@ -101,9 +111,11 @@ export function ChatPanel({
             messages={messages}
             isTyping={isGenerating}
             onChipClick={handleChipClick}
-            onTiePreviewClick={(url) => setSelectedImageUrl(url)}
+            onTiePreviewClick={(preview) =>
+              setSelectedImageUrl(preview.previewBackground)
+            }
             selectedPreviewImageUrl={selectedPreviewImageUrl}
-            onSelectPreview={setSelectedPreviewImage}
+            onSelectPreview={handleSelectTilePreview}
           />
         )}
       </div>

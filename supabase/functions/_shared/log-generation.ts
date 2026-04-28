@@ -53,10 +53,15 @@ export type AiGenerationLogInsert = {
   accent_layout_json?: Record<string, unknown> | null;
 };
 
+export interface LogGenerationOptions {
+  requireSuccess?: boolean;
+}
+
 // `undefined`는 키를 제외해 기존 값을 유지하고, `null`은 컬럼을 비우는 의도로 보존한다.
 export async function logGeneration(
   adminClient: SupabaseClient,
   data: AiGenerationLogInsert,
+  options: LogGenerationOptions = {},
 ): Promise<void> {
   try {
     const { error } = await adminClient
@@ -68,9 +73,16 @@ export async function logGeneration(
         { onConflict: "work_id" },
       );
     if (error) {
-      console.error("logGeneration upsert error:", error);
+      const message = `logGeneration upsert error: ${error.message}`;
+      console.error(message, error);
+      if (options.requireSuccess) {
+        throw new Error(message, { cause: error });
+      }
     }
   } catch (err) {
+    if (options.requireSuccess) {
+      throw err;
+    }
     console.error("logGeneration unexpected error:", err);
   }
 }

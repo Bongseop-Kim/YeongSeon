@@ -111,3 +111,16 @@ Deno.test(
     ]);
   },
 );
+
+Deno.test(
+  "sanitizeSessionAttachments returns an empty array when no attachments remain",
+  () => {
+    const sanitized = sanitizeSessionAttachments([
+      {
+        nested: { unexpected: true },
+      },
+    ]);
+
+    assertEquals(sanitized, []);
+  },
+);

@@ -148,9 +148,9 @@ export function sanitizeLogRequestAttachments(
 
 export function sanitizeSessionAttachments(
   value: unknown,
-): SessionAttachment[] | null {
+): SessionAttachment[] {
   if (!Array.isArray(value)) {
-    return null;
+    return [];
   }
 
   const attachments = value
@@ -198,5 +198,5 @@ export function sanitizeSessionAttachments(
       (attachment): attachment is SessionAttachment => attachment !== null,
     );
 
-  return attachments.length > 0 ? attachments : null;
+  return attachments;
 }

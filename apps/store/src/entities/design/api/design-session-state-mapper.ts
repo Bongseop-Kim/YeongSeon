@@ -7,7 +7,6 @@ import type {
   PatternType,
   TileRef,
 } from "@/entities/design/model/tile-types";
-import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { createGuard } from "@/shared/lib/type-guard";
 
 const PATTERN_OPTIONS = [
@@ -112,25 +111,12 @@ export function toRestoredDesignSessionState(
   const restoredMessages = messages.map(sessionMessageToMessage);
   const designContext = restoreDesignContextFromMessages(messages);
 
-  let lastImageMessage: DesignSessionMessage | undefined;
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const candidate = messages[index];
-    if (candidate.imageUrl) {
-      lastImageMessage = candidate;
-      break;
-    }
-  }
-
-  const generatedImageUrl = lastImageMessage?.imageUrl
-    ? toPreviewBackground(lastImageMessage.imageUrl)
-    : null;
-
   return {
     messages: restoredMessages,
     ...(designContext ? { designContext } : {}),
-    generatedImageUrl,
+    generatedImageUrl: null,
     resultTags: [],
-    generationStatus: generatedImageUrl ? "completed" : "idle",
+    generationStatus: "idle",
     // Tile metadata is merged from the session row in use-session-restore.ts.
     repeatTile: null,
     accentTile: null,

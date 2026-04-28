@@ -10,11 +10,11 @@ import type {
 } from "@/features/generation-logs/types/admin-generation-log";
 import { isRecord } from "@/utils/type-guards";
 
-export const isSafeInteger = (n: number): boolean => Number.isSafeInteger(n);
+const isSafeInteger = (n: number): boolean => Number.isSafeInteger(n);
 const isSafeFinite = (n: number): boolean =>
   Number.isFinite(n) && Math.abs(n) <= Number.MAX_SAFE_INTEGER;
 
-export function parseNumberWith(
+function parseNumberWith(
   v: unknown,
   isAcceptable: (n: number) => boolean,
 ): number | null {
@@ -103,8 +103,18 @@ type GenerationLogRow = {
   ai_message: unknown;
   generate_image: unknown;
   image_prompt?: unknown;
+  route?: unknown;
   image_generated: unknown;
   generated_image_url: unknown;
+  repeat_tile_url?: unknown;
+  repeat_tile_work_id?: unknown;
+  accent_tile_url?: unknown;
+  accent_tile_work_id?: unknown;
+  pattern_type?: unknown;
+  fabric_type?: unknown;
+  tile_role?: unknown;
+  paired_tile_work_id?: unknown;
+  accent_layout_json?: unknown;
   detected_design: unknown;
   tokens_charged: unknown;
   tokens_refunded: unknown;
@@ -130,6 +140,34 @@ function toPhase(v: unknown): GenerationLogPhase | undefined {
 
 function toQuality(v: unknown): "standard" | null {
   if (v === "standard") return v;
+  return null;
+}
+
+function toRoute(v: unknown): AdminGenerationLogItem["route"] {
+  if (v === "openai" || v === "tile_generation" || v === "tile_edit") {
+    return v;
+  }
+  return null;
+}
+
+function toPatternType(v: unknown): AdminGenerationLogItem["patternType"] {
+  if (v === "all_over" || v === "one_point") {
+    return v;
+  }
+  return null;
+}
+
+function toFabricType(v: unknown): AdminGenerationLogItem["fabricType"] {
+  if (v === "yarn_dyed" || v === "printed") {
+    return v;
+  }
+  return null;
+}
+
+function toTileRole(v: unknown): AdminGenerationLogItem["tileRole"] {
+  if (v === "repeat" || v === "accent") {
+    return v;
+  }
   return null;
 }
 
@@ -246,8 +284,23 @@ export function toAdminGenerationLogItem(
     aiMessage: toString(row.ai_message),
     generateImage:
       typeof row.generate_image === "boolean" ? row.generate_image : null,
+    route: toRoute(row.route),
     imageGenerated: toBoolean(row.image_generated),
     generatedImageUrl: toString(row.generated_image_url),
+    repeatTileUrl: toString(row.repeat_tile_url),
+    repeatTileWorkId: toString(row.repeat_tile_work_id),
+    accentTileUrl: toString(row.accent_tile_url),
+    accentTileWorkId: toString(row.accent_tile_work_id),
+    patternType: toPatternType(row.pattern_type),
+    fabricType: toFabricType(row.fabric_type),
+    tileRole: toTileRole(row.tile_role),
+    pairedTileWorkId: toString(row.paired_tile_work_id),
+    // TODO: If accentLayoutJson is reused outside admin display or sent via RPC,
+    // replace this loose record check with validateAccentLayout/parseAccentLayout
+    // to enforce objectDescription, objectSource, and value types.
+    accentLayoutJson: isRecord(row.accent_layout_json)
+      ? row.accent_layout_json
+      : null,
     detectedDesign: isRecord(row.detected_design) ? row.detected_design : null,
     tokensCharged: toNumber(row.tokens_charged),
     tokensRefunded: toNumber(row.tokens_refunded),

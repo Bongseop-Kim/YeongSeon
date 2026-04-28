@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { toRestoredDesignSessionState } from "@/entities/design/api/design-session-state-mapper";
 
 describe("toRestoredDesignSessionState", () => {
-  it("빈 문자열 image 필드를 보존한다", () => {
+  it("메시지의 image 필드는 채팅 메시지에만 보존한다", () => {
     expect(
       toRestoredDesignSessionState([
         {
@@ -16,11 +16,17 @@ describe("toRestoredDesignSessionState", () => {
           sequenceNumber: 0,
           createdAt: "2026-03-19T10:00:00Z",
         },
-      ]).messages[0],
+      ]),
     ).toMatchObject({
-      id: "msg-1",
-      imageUrl: "",
-      imageFileId: "",
+      messages: [
+        {
+          id: "msg-1",
+          imageUrl: "",
+          imageFileId: "",
+        },
+      ],
+      generatedImageUrl: null,
+      generationStatus: "idle",
     });
   });
 
@@ -109,6 +115,27 @@ describe("toRestoredDesignSessionState", () => {
       pattern: "check",
       fabricMethod: "print",
       ciPlacement: "one-point",
+    });
+  });
+
+  it("이미지 메시지가 있어도 레거시 프리뷰 상태로 복원하지 않는다", () => {
+    expect(
+      toRestoredDesignSessionState([
+        {
+          id: "msg-1",
+          sessionId: "session-1",
+          role: "ai",
+          content: "이전 이미지",
+          imageUrl: "https://example.com/legacy.png",
+          imageFileId: "file-1",
+          attachments: null,
+          sequenceNumber: 0,
+          createdAt: "2026-03-19T10:00:00Z",
+        },
+      ]),
+    ).toMatchObject({
+      generatedImageUrl: null,
+      generationStatus: "idle",
     });
   });
 });
