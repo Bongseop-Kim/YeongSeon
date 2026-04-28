@@ -67,14 +67,18 @@ describe("chat tile preview integration", () => {
     });
 
     const { container } = renderChatWithCanvas();
+    const findTileLayer = () =>
+      Array.from(container.querySelectorAll("div")).find(
+        (element) => element.style.backgroundRepeat === "repeat",
+      );
+
+    expect(findTileLayer()).toBeUndefined();
 
     await userEvent.click(
       screen.getByRole("button", { name: "타일 프리뷰 선택" }),
     );
 
-    const tileLayer = Array.from(container.querySelectorAll("div")).find(
-      (element) => element.style.backgroundRepeat === "repeat",
-    );
+    const tileLayer = findTileLayer();
     expect(tileLayer?.style.backgroundImage).toBe(
       'url("https://example.com/repeat.webp")',
     );

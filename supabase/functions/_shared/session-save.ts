@@ -46,15 +46,13 @@ export function buildSessionMessages(
 
   return [
     ...requestMessages.map((m, idx) => {
-      const sanitizedAttachments = sanitizeSessionAttachments(m.attachments);
-
       return {
         id: m.id,
         role: m.role,
         content: m.content,
         image_url: m.imageUrl ?? null,
         image_file_id: m.imageFileId ?? null,
-        attachments: sanitizedAttachments ?? [],
+        attachments: sanitizeSessionAttachments(m.attachments),
         sequence_number: idx,
       };
     }),

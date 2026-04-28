@@ -1,4 +1,4 @@
-import { assertRejects } from "jsr:@std/assert@1.0.19";
+import { assertEquals, assertRejects } from "jsr:@std/assert@1.0.19";
 import { logGeneration } from "@/functions/_shared/log-generation.ts";
 
 const baseLog = {
@@ -19,19 +19,21 @@ const baseLog = {
 Deno.test(
   "logGeneration rejects when requireSuccess is enabled and upsert fails",
   async () => {
+    const supabaseError = { message: "violates foreign key constraint" };
     const client = {
       from: () => ({
         upsert: () =>
           Promise.resolve({
-            error: { message: "violates foreign key constraint" },
+            error: supabaseError,
           }),
       }),
     };
 
-    await assertRejects(
+    const error = await assertRejects(
       () => logGeneration(client as never, baseLog, { requireSuccess: true }),
       Error,
       "logGeneration upsert error: violates foreign key constraint",
     );
+    assertEquals(error.cause, supabaseError);
   },
 );

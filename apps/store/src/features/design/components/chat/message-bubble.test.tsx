@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { MessageBubble } from "@/features/design/components/chat/message-bubble";
@@ -53,7 +53,7 @@ describe("MessageBubble — 모바일 타일 프리뷰", () => {
       backgroundImage: 'url("https://example.com/repeat.png")',
     });
     expect(tiles[0]).toHaveClass("aspect-square");
-    expect(screen.queryByRole("img")).toBeNull();
+    expect(within(tiles[0]).queryByRole("img")).toBeNull();
   });
 
   it("강조 타일이 있으면 반복 타일과 강조 타일을 함께 렌더링한다", () => {

@@ -91,6 +91,8 @@ export function buildSuccessfulTileGenerationLogs({
   } as AiGenerationLogInsert;
 
   if (reusedRepeatTile) {
+    // When reusedRepeatTile is true, primaryLog is the accent row and already
+    // points back to the reused repeat tile, so no separate accent log is needed.
     return [primaryLog];
   }
 

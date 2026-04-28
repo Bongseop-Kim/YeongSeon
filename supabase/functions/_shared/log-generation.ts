@@ -76,7 +76,7 @@ export async function logGeneration(
       const message = `logGeneration upsert error: ${error.message}`;
       console.error(message, error);
       if (options.requireSuccess) {
-        throw new Error(message);
+        throw new Error(message, { cause: error });
       }
     }
   } catch (err) {

@@ -10,11 +10,11 @@ import type {
 } from "@/features/generation-logs/types/admin-generation-log";
 import { isRecord } from "@/utils/type-guards";
 
-export const isSafeInteger = (n: number): boolean => Number.isSafeInteger(n);
+const isSafeInteger = (n: number): boolean => Number.isSafeInteger(n);
 const isSafeFinite = (n: number): boolean =>
   Number.isFinite(n) && Math.abs(n) <= Number.MAX_SAFE_INTEGER;
 
-export function parseNumberWith(
+function parseNumberWith(
   v: unknown,
   isAcceptable: (n: number) => boolean,
 ): number | null {

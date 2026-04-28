@@ -20,8 +20,7 @@ export async function getDesignSessions(): Promise<DesignSession[]> {
   const { data, error } = await supabase
     .from("design_chat_sessions")
     .select(DESIGN_SESSION_SELECT_FIELDS)
-    .not("repeat_tile_url", "is", null)
-    .not("repeat_tile_work_id", "is", null)
+    .or("repeat_tile_url.not.is.null,repeat_tile_work_id.not.is.null")
     .order("updated_at", { ascending: false });
 
   if (error) {
