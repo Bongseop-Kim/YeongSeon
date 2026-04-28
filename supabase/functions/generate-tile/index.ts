@@ -23,10 +23,12 @@ import { resolveFabricType } from "./fabric-type-resolver.ts";
 import { generateTileImage } from "./image-generator.ts";
 import {
   resolveAccentReferenceImageUrls,
+  resolveEffectiveReferenceImageUsage,
   resolveRepeatReferenceImageUrls,
   shouldFallbackToPreviousAccentLayout,
   shouldReuseRepeatTile,
 } from "./generation-plan.ts";
+import { buildSuccessfulTileGenerationLogs } from "./log-plan.ts";
 import { buildAccentPrompt, buildRepeatPrompt } from "./prompt-builder.ts";
 import type { TileGenerationRequest, TileGenerationResponse } from "./types.ts";
 
@@ -151,6 +153,10 @@ Deno.serve(async (req) => {
         // instead of assuming selectedColors[0] is the background color.
         analysis.tileLayout.backgroundColor = body.selectedColors[0];
       }
+      analysis.referenceImageUsage = resolveEffectiveReferenceImageUsage(
+        analysis,
+        body,
+      );
 
       const selectedBackgroundColor = body.selectedColors?.[0] ?? null;
       const reuseRepeatTile = shouldReuseRepeatTile(
@@ -186,10 +192,30 @@ Deno.serve(async (req) => {
           body.previousRepeatTileWorkId ??
           null)
         : (body.previousRepeatTileWorkId ?? null);
+      const promptParts = [
+        repeatPrompt ? `repeat_prompt:\n${repeatPrompt}` : null,
+        accentBuilt ? `accent_prompt:\n${accentBuilt.prompt}` : null,
+      ].filter((part): part is string => part !== null);
+      const referenceImageCount =
+        repeatReferenceImageUrls.length +
+        (accentBuilt?.referenceImageUrls.length ?? 0);
       const renderLogFields = {
         ...baseLogFields,
         parent_work_id: parentWorkId,
         prompt_length: promptLength,
+        image_prompt: promptParts.length > 0 ? promptParts.join("\n\n") : null,
+        normalized_design: {
+          ...analysis,
+          attachedImageCount: body.attachedImageUrls.length,
+          repeatReferenceImageCount: repeatReferenceImageUrls.length,
+          accentReferenceImageCount:
+            accentBuilt?.referenceImageUrls.length ?? 0,
+          imageEndpoint: referenceImageCount > 0 ? "edits" : "generations",
+        } as Record<string, unknown>,
+        has_reference_image: referenceImageCount > 0,
+        has_previous_image:
+          body.previousRepeatTileUrl !== null ||
+          body.previousAccentTileUrl !== null,
       };
 
       let reusableRepeatTile: { url: string; workId: string } | null = null;
@@ -204,7 +230,9 @@ Deno.serve(async (req) => {
               : null,
           ].filter((value): value is string => value !== null);
           throw new Error(
-            `reuseRepeatTile missing required field(s): ${missingFields.join(", ")}`,
+            `reuseRepeatTile missing required field(s): ${missingFields.join(
+              ", ",
+            )}`,
           );
         }
         reusableRepeatTile = {
@@ -230,47 +258,50 @@ Deno.serve(async (req) => {
           : Promise.resolve(null),
       ]);
 
-      const accentLayoutRecord = analysis.accentLayout
-        ? (analysis.accentLayout as unknown as Record<string, unknown>)
-        : null;
       const primaryResult =
         reuseRepeatTile && accentResult ? accentResult : repeatResult;
       const representativeResult = primaryResult;
 
-      const [generationLogResult, sessionSaveResult] = await Promise.allSettled(
-        [
-          logGeneration(adminClient, {
-            ...renderLogFields,
-            work_id: primaryResult.workId,
-            generate_image: true,
-            image_generated: true,
-            generated_image_url: primaryResult.url,
-            tokens_charged: tokensCharged,
-            tokens_refunded: tokensRefunded,
-            repeat_tile_url: repeatResult.url,
-            repeat_tile_work_id: repeatResult.workId,
-            accent_tile_url: accentResult?.url ?? null,
-            accent_tile_work_id: accentResult?.workId ?? null,
-            pattern_type: analysis.patternType,
-            fabric_type: fabricType,
-            tile_role: reuseRepeatTile ? "accent" : "repeat",
-            paired_tile_work_id: reuseRepeatTile
-              ? repeatResult.workId
-              : (accentResult?.workId ?? null),
-            accent_layout_json: accentLayoutRecord,
-          }),
-          saveDesignSession(authClient, {
+      try {
+        const generationLogs = buildSuccessfulTileGenerationLogs({
+          baseLog: renderLogFields,
+          repeatResult,
+          accentResult,
+          primaryWorkId: primaryResult.workId,
+          tokensCharged,
+          tokensRefunded,
+          patternType: analysis.patternType,
+          fabricType,
+          accentLayout: analysis.accentLayout,
+          reusedRepeatTile: reuseRepeatTile,
+        });
+        for (const generationLog of generationLogs) {
+          await logGeneration(adminClient, generationLog, {
+            requireSuccess: true,
+          });
+        }
+      } catch (error) {
+        console.error("generate-tile logGeneration failed:", {
+          workId: primaryResult.workId,
+          error,
+        });
+        return jsonResponse(500, { error: "persistence_failed" });
+      }
+
+      try {
+        await saveDesignSession(
+          authClient,
+          {
             sessionId: body.sessionId,
             aiModel: "openai",
             firstMessage: body.firstMessage,
-            lastImageUrl: representativeResult.url,
-            lastImageFileId: null,
-            lastImageWorkId: representativeResult.workId,
             repeatTileUrl: repeatResult.url,
             repeatTileWorkId: repeatResult.workId,
             accentTileUrl: accentResult?.url ?? null,
             accentTileWorkId: accentResult?.workId ?? null,
-            accentLayout: accentLayoutRecord,
+            accentLayout: analysis.accentLayout
+              ? (analysis.accentLayout as unknown as Record<string, unknown>)
+              : null,
             patternType: analysis.patternType,
             fabricType,
             messages: buildSessionMessages(body.allMessages, {
@@ -282,21 +313,13 @@ Deno.serve(async (req) => {
               attachments: null,
               sequence_number: body.allMessages.length,
             } satisfies SessionMessage),
-          }),
-        ],
-      );
-
-      if (generationLogResult.status === "rejected") {
-        console.error("generate-tile logGeneration failed:", {
-          workId: primaryResult.workId,
-          error: generationLogResult.reason,
-        });
-      }
-
-      if (sessionSaveResult.status === "rejected") {
+          },
+          { requireSuccess: true },
+        );
+      } catch (error) {
         console.error("generate-tile saveDesignSession failed:", {
           workId: primaryResult.workId,
-          error: sessionSaveResult.reason,
+          error,
         });
         return jsonResponse(500, { error: "persistence_failed" });
       }

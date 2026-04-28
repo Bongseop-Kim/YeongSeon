@@ -1,5 +1,27 @@
-import type { AnalysisOutput, TileGenerationRequest } from "./types.ts";
+import type {
+  AnalysisOutput,
+  ReferenceImageUsage,
+  TileGenerationRequest,
+} from "./types.ts";
 import { validateReferenceImageUrl } from "./image-generator.ts";
+
+export function resolveEffectiveReferenceImageUsage(
+  analysis: AnalysisOutput,
+  request: TileGenerationRequest,
+): ReferenceImageUsage {
+  if (analysis.referenceImageUsage !== "none") {
+    return analysis.referenceImageUsage;
+  }
+
+  const hasValidAttachedImage = request.attachedImageUrls.some((url) =>
+    validateReferenceImageUrl(url),
+  );
+  if (request.route === "tile_generation" && hasValidAttachedImage) {
+    return "single_motif";
+  }
+
+  return "none";
+}
 
 export function shouldReuseRepeatTile(
   analysis: AnalysisOutput,

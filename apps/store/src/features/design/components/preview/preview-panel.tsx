@@ -6,10 +6,6 @@ import { ResultTagBar } from "@/features/design/components/preview/result-tag-ba
 import { TieCanvas } from "@/features/design/components/preview/tie-canvas";
 import { HistoryTab } from "@/features/design/components/history/history-tab";
 import { useSessionRestore } from "@/features/design/hooks/use-session-restore";
-import {
-  isLegacySessionSelector,
-  useDesignChatStore,
-} from "@/features/design/store/design-chat-store";
 import type { DesignSession } from "@/features/design/types/session";
 import { cn } from "@/shared/lib/utils";
 
@@ -24,10 +20,6 @@ export function PreviewPanel({ className, onRegenerate }: PreviewPanelProps) {
   const [tab, setTab] = useState<PreviewTab>("preview");
   const [unmasked, setUnmasked] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const isLegacySession = useDesignChatStore(isLegacySessionSelector);
-  const resetConversation = useDesignChatStore(
-    (state) => state.resetConversation,
-  );
   const sectionRef = useRef<HTMLElement>(null);
   const { restoreSession } = useSessionRestore({
     onRestored: () => setTab("preview"),
@@ -85,21 +77,6 @@ export function PreviewPanel({ className, onRegenerate }: PreviewPanelProps) {
               unmasked={unmasked}
               onToggle={() => setUnmasked((v) => !v)}
             />
-          )}
-          {!isFullscreen && isLegacySession && (
-            <div className="mt-3 flex items-center justify-between gap-3 border-b border-warning bg-warning-muted px-3 py-2 text-xs text-warning">
-              <span>
-                이전 방식으로 생성된 디자인입니다. 수정하려면 새 세션을
-                시작하세요.
-              </span>
-              <button
-                type="button"
-                className="shrink-0 underline"
-                onClick={resetConversation}
-              >
-                새 세션 시작
-              </button>
-            </div>
           )}
           <div className="flex flex-1 items-center justify-center overflow-hidden">
             <TieCanvas unmasked={unmasked} />

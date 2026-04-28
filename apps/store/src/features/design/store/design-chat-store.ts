@@ -13,10 +13,6 @@ import type {
 import type { DesignContext } from "@/features/design/types/design-context";
 import type { RestoredDesignSessionState } from "@/entities/design";
 
-export const isLegacySessionSelector = (
-  state: Pick<DesignChatState, "generatedImageUrl" | "repeatTile">,
-): boolean => state.generatedImageUrl !== null && state.repeatTile === null;
-
 interface DesignChatState {
   messages: Message[];
   designContext: DesignContext;

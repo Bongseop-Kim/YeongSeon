@@ -17,14 +17,9 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import {
   useGenerationLogDetailQuery,
-  useGenerationLogArtifactsQuery,
   useGenerationWorkflowLogsQuery,
 } from "@/features/generation-logs/api/generation-logs-query";
-import {
-  isArtifactWarningMessage,
-  modelColor,
-  requestTypeLabel,
-} from "@/features/generation-logs/utils";
+import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
 import { hasJsonBlockContent } from "@/features/generation-logs/utils/json-block";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
 import { formatDateTimeSeconds } from "@/utils/format-date-time";
@@ -32,17 +27,6 @@ import { formatDateTimeSeconds } from "@/utils/format-date-time";
 const { Text } = Typography;
 
 type WorkflowStepListVariant = "chip" | "card";
-const INPUT_ARTIFACT_TYPE_PRIORITY = [
-  "source_input",
-  "input_image",
-  "attached_image",
-  "reference_image",
-  "ci_image",
-  "previous_image",
-  "repeat_tile",
-  "accent_tile",
-] as const;
-
 interface WorkflowStepListProps {
   workflowLogs: AdminGenerationLogItem[];
   activeLogId: string;
@@ -302,96 +286,6 @@ function GeneratedImageSection({ log }: { log: AdminGenerationLogItem }) {
   );
 }
 
-function getInputArtifactPriority(artifactType: string): number {
-  const index = INPUT_ARTIFACT_TYPE_PRIORITY.findIndex(
-    (candidate) => candidate === artifactType,
-  );
-  return index === -1 ? INPUT_ARTIFACT_TYPE_PRIORITY.length : index;
-}
-
-function InputImageSection({ log }: { log: AdminGenerationLogItem }) {
-  const { data: artifacts, isLoading } = useGenerationLogArtifactsQuery({
-    workflowId: log.workflowId,
-  });
-
-  const inputArtifacts = useMemo(() => {
-    return artifacts
-      .filter((artifact) => artifact.imageUrl)
-      .sort((left, right) => {
-        const priorityDiff =
-          getInputArtifactPriority(left.artifactType) -
-          getInputArtifactPriority(right.artifactType);
-        if (priorityDiff !== 0) return priorityDiff;
-        return left.artifactType.localeCompare(right.artifactType);
-      });
-  }, [artifacts]);
-
-  const hasImageAttachment = log.requestAttachments?.some(
-    (attachment) => attachment.type === "image",
-  );
-
-  if (!hasImageAttachment && inputArtifacts.length === 0 && !isLoading) {
-    return null;
-  }
-
-  return (
-    <Card title="입력 이미지" size="small" style={{ marginBottom: 16 }}>
-      {isLoading ? (
-        <Spin />
-      ) : inputArtifacts.length > 0 ? (
-        <List
-          grid={{ gutter: 12, xs: 1, sm: 2, md: 3 }}
-          dataSource={inputArtifacts}
-          renderItem={(artifact) => (
-            <List.Item>
-              <Space direction="vertical" size={6} style={{ width: "100%" }}>
-                <Image
-                  src={artifact.imageUrl ?? undefined}
-                  alt={`${artifact.artifactType} 입력 이미지`}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: 320,
-                    objectFit: "contain",
-                    borderRadius: 6,
-                  }}
-                />
-                <Space wrap size={6}>
-                  <Tag>{artifact.artifactType}</Tag>
-                  <Tag
-                    color={
-                      artifact.status === "success" ? "success" : "warning"
-                    }
-                  >
-                    {artifact.status}
-                  </Tag>
-                </Space>
-                <Text code style={{ fontSize: 11, whiteSpace: "pre-wrap" }}>
-                  {artifact.sourceWorkId ?? artifact.id ?? "-"}
-                </Text>
-                <Text
-                  type="secondary"
-                  style={{ fontSize: 11, overflowWrap: "anywhere" }}
-                >
-                  {artifact.imageUrl}
-                </Text>
-              </Space>
-            </List.Item>
-          )}
-        />
-      ) : hasImageAttachment ? (
-        <Alert
-          type="warning"
-          showIcon
-          message="첨부 이미지는 있었지만 저장된 원본 이미지가 없습니다"
-          description="당시 source artifact 저장이 실패했거나, 로그에는 파일명만 남고 실제 이미지 URL은 저장되지 않았습니다."
-        />
-      ) : (
-        <Alert type="info" showIcon message="입력 이미지가 없습니다" />
-      )}
-    </Card>
-  );
-}
-
 function AttachedImageSection({ log }: { log: AdminGenerationLogItem }) {
   const imageAttachments =
     log.requestAttachments?.filter(
@@ -537,37 +431,6 @@ function JsonBlock({ label, value }: { label: string; value: unknown }) {
   );
 }
 
-function buildLoggedRequestSnapshot(log: AdminGenerationLogItem) {
-  return {
-    route: log.route,
-    userMessage: log.userMessage,
-    workflowId: log.workflowId ?? null,
-    workId: log.workId,
-    parentWorkId: log.parentWorkId ?? null,
-    requestAttachments: log.requestAttachments,
-    designContext: log.designContext,
-    normalizedDesign: log.normalizedDesign ?? null,
-    detectedDesign: log.detectedDesign,
-    imagePrompt: log.imagePrompt ?? null,
-  };
-}
-
-function buildLoggedResultSnapshot(log: AdminGenerationLogItem) {
-  return {
-    imageGenerated: log.imageGenerated,
-    generatedImageUrl: log.generatedImageUrl,
-    repeatTileUrl: log.repeatTileUrl,
-    repeatTileWorkId: log.repeatTileWorkId,
-    accentTileUrl: log.accentTileUrl,
-    accentTileWorkId: log.accentTileWorkId,
-    patternType: log.patternType,
-    fabricType: log.fabricType,
-    tileRole: log.tileRole,
-    pairedTileWorkId: log.pairedTileWorkId,
-    accentLayoutJson: log.accentLayoutJson,
-  };
-}
-
 function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
   const visibleRequestAttachments =
     log.requestAttachments?.filter(
@@ -626,21 +489,12 @@ function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
 }
 
 function ExecutionLogSection({ log }: { log: AdminGenerationLogItem }) {
-  const isArtifactWarning = isArtifactWarningMessage(log.errorMessage);
-
   return (
     <Card
       title="기본 정보 & API 전송/실행 로그"
       size="small"
       style={{ marginBottom: 16 }}
     >
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 12 }}
-        message="로그에 저장된 실제 필드만 표시합니다"
-        description="Edge Function body 전체 스냅샷은 별도 저장하지 않으므로, 저장되지 않은 previous* 요청값은 표시하지 않습니다."
-      />
       <Descriptions
         column={3}
         size="small"
@@ -686,34 +540,47 @@ function ExecutionLogSection({ log }: { log: AdminGenerationLogItem }) {
       </Descriptions>
       {log.errorMessage && (
         <Alert
-          type={isArtifactWarning ? "warning" : "error"}
+          type="error"
           message={log.errorMessage}
           style={{ marginBottom: 12 }}
           showIcon
         />
       )}
-      <JsonBlock
-        label="logged_request_fields"
-        value={buildLoggedRequestSnapshot(log)}
-      />
-      <JsonBlock
-        label="logged_result_fields"
-        value={buildLoggedResultSnapshot(log)}
-      />
     </Card>
   );
 }
 
 function PromptSection({ log }: { log: AdminGenerationLogItem }) {
+  const shouldHaveImagePrompt = log.generateImage === true;
+
   return (
     <Card title="프롬프트 & AI 응답" size="small" style={{ marginBottom: 16 }}>
       <Row gutter={16}>
         <Col xs={24} md={12}>
           <ExpandableText label="사용자 프롬프트" content={log.userMessage} />
-          {log.imagePrompt && (
+          {log.imagePrompt ? (
             <div style={{ marginTop: 10 }}>
-              <ExpandableText label="image_prompt" content={log.imagePrompt} />
+              <ExpandableText
+                label="이미지 생성 프롬프트"
+                content={log.imagePrompt}
+              />
             </div>
+          ) : shouldHaveImagePrompt ? (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginTop: 10 }}
+              message="이미지 생성 프롬프트가 저장되지 않았습니다"
+              description="이 로그는 image_prompt 저장 이전에 생성되었거나, 생성 함수가 최종 이미지 프롬프트를 저장하지 못한 기록입니다."
+            />
+          ) : (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginTop: 10 }}
+              message="이미지 생성 프롬프트가 없습니다"
+              description="이미지 생성을 요청하지 않은 로그입니다."
+            />
           )}
         </Col>
         <Col xs={24} md={12}>
@@ -802,7 +669,6 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
       requestedLog
     );
   }, [activeLogId, id, orderedWorkflowLogs, requestedLog]);
-
   if (isDetailLoading || (requestedLog?.workflowId && isWorkflowLoading)) {
     return <Spin style={{ display: "block", margin: "80px auto" }} />;
   }
@@ -839,7 +705,6 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
         />
         <ExecutionLogSection log={activeLog} />
         <AttachedImageSection log={activeLog} />
-        <InputImageSection log={activeLog} />
         <GeneratedImageSection log={activeLog} />
         <RequestOptionsSection log={activeLog} />
         <PromptSection log={activeLog} />

@@ -133,5 +133,6 @@ describe("design-chat-store", () => {
 
     expect(state).not.toHaveProperty("aiModel");
     expect(state).not.toHaveProperty("setGenerationMetadata");
+    expect(state).not.toHaveProperty("isLegacySession");
   });
 });

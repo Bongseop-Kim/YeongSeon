@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { GenerationLogDetailPage } from "@/features/generation-logs/components/generation-log-detail-page";
@@ -10,10 +10,6 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/features/generation-logs/api/generation-logs-query", () => ({
-  useGenerationLogArtifactsQuery: () => ({
-    data: [],
-    isLoading: false,
-  }),
   useGenerationLogDetailQuery: () => ({
     data: mocks.detailLog,
     isLoading: false,
@@ -84,6 +80,10 @@ describe("hasJsonBlockContent", () => {
 });
 
 describe("GenerationLogDetailPage", () => {
+  beforeEach(() => {
+    mocks.detailLog = null;
+  });
+
   it("tileRole만 있는 로그도 사용자 선택 옵션을 표시한다", () => {
     mocks.detailLog = tileRoleOnlyLog;
 
@@ -126,6 +126,86 @@ describe("GenerationLogDetailPage", () => {
     expect(
       screen.queryByText(
         "첨부 이미지: https://ik.imagekit.io/app/ref.png (ref.png)",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("저장된 이미지 프롬프트가 있으면 프롬프트 기록으로 표시한다", () => {
+    mocks.detailLog = {
+      ...tileRoleOnlyLog,
+      imagePrompt: "repeat_prompt:\nReference image rule",
+    };
+
+    render(
+      <MemoryRouter>
+        <GenerationLogDetailPage id="log-1" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("이미지 생성 프롬프트")).toBeInTheDocument();
+    expect(screen.getAllByText(/Reference image rule/).length).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it("이미지 프롬프트가 저장되지 않은 과거 로그에는 미저장 안내를 표시한다", () => {
+    mocks.detailLog = {
+      ...tileRoleOnlyLog,
+      imagePrompt: null,
+    };
+
+    render(
+      <MemoryRouter>
+        <GenerationLogDetailPage id="log-1" />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByText("이미지 생성 프롬프트가 저장되지 않았습니다"),
+    ).toBeInTheDocument();
+  });
+
+  it("실행 로그 상세 JSON 스냅샷과 저장 필드 안내를 표시하지 않는다", () => {
+    mocks.detailLog = {
+      ...tileRoleOnlyLog,
+      requestAttachments: [
+        {
+          type: "color",
+          label: "색상",
+          value: "blue",
+        },
+      ],
+      generatedImageUrl: "https://ik.imagekit.io/app/generated.webp",
+    };
+
+    render(
+      <MemoryRouter>
+        <GenerationLogDetailPage id="log-1" />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.queryByText("로그에 저장된 실제 필드만 표시합니다"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("logged_request_fields")).not.toBeInTheDocument();
+    expect(screen.queryByText("logged_result_fields")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("기본 정보 & API 전송/실행 로그"),
+    ).toBeInTheDocument();
+  });
+
+  it("레거시 입력 이미지 저장 실패 안내를 표시하지 않는다", () => {
+    mocks.detailLog = tileRoleOnlyLog;
+
+    render(
+      <MemoryRouter>
+        <GenerationLogDetailPage id="log-1" />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.queryByText(
+        "첨부 이미지는 있었지만 저장된 원본 이미지가 없습니다",
       ),
     ).not.toBeInTheDocument();
   });

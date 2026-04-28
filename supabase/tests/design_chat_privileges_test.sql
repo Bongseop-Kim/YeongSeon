@@ -15,8 +15,6 @@ BEGIN
     user_id,
     ai_model,
     first_message,
-    last_image_url,
-    last_image_file_id,
     image_count
   )
   VALUES (
@@ -24,8 +22,6 @@ BEGIN
     v_user_a,
     'openai',
     '첫 요청',
-    NULL,
-    NULL,
     1
   );
 
@@ -109,11 +105,8 @@ SELECT lives_ok(
   $$
     SELECT public.save_design_session(
       'dc100001-0000-0000-0000-000000000001'::uuid,
-      'openai',
-      '첫 요청',
-      NULL,
-      NULL,
-      NULL,
+      'openai'::text,
+      '첫 요청'::text,
       '[
         {
           "id": "dc200001-0000-0000-0000-000000000011",
@@ -182,11 +175,8 @@ SELECT throws_ok(
   $$
     SELECT public.save_design_session(
       'dc100001-0000-0000-0000-000000000001'::uuid,
-      'openai',
-      '침범 시도',
-      NULL,
-      NULL,
-      NULL,
+      'openai'::text,
+      '침범 시도'::text,
       '[]'::jsonb
     )
   $$,

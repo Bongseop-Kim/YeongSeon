@@ -16,9 +16,6 @@ export interface DesignSessionRow {
   user_id: string;
   ai_model: string;
   first_message: string;
-  last_image_url: string | null;
-  last_image_file_id: string | null;
-  last_image_work_id: string | null;
   repeat_tile_url: string | null;
   repeat_tile_work_id: string | null;
   accent_tile_url: string | null;
@@ -146,9 +143,6 @@ export function toDesignSession(row: DesignSessionRow): DesignSession {
     id: row.id,
     aiModel: row.ai_model,
     firstMessage: row.first_message,
-    lastImageUrl: row.last_image_url,
-    lastImageFileId: row.last_image_file_id,
-    lastImageWorkId: row.last_image_work_id,
     repeatTileUrl: row.repeat_tile_url,
     repeatTileWorkId: row.repeat_tile_work_id,
     accentTileUrl: row.accent_tile_url,

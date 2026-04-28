@@ -1,6 +1,7 @@
 import { assertEquals } from "jsr:@std/assert";
 import {
   resolveAccentReferenceImageUrls,
+  resolveEffectiveReferenceImageUsage,
   resolveRepeatReferenceImageUrls,
   shouldFallbackToPreviousAccentLayout,
   shouldReuseRepeatTile,
@@ -45,6 +46,65 @@ const baseAnalysis: AnalysisOutput = {
     size: null,
   },
 };
+
+Deno.test(
+  "resolveEffectiveReferenceImageUsage treats attached images as a single motif for new tile generation",
+  () => {
+    assertEquals(
+      resolveEffectiveReferenceImageUsage(
+        {
+          ...baseAnalysis,
+          patternType: "all_over",
+          referenceImageUsage: "none",
+        },
+        {
+          ...baseRequest,
+          route: "tile_generation",
+          attachedImageUrls: ["https://ik.imagekit.io/app/reference.png"],
+        },
+      ),
+      "single_motif",
+    );
+  },
+);
+
+Deno.test(
+  "resolveEffectiveReferenceImageUsage keeps none when no valid attached image exists",
+  () => {
+    assertEquals(
+      resolveEffectiveReferenceImageUsage(
+        {
+          ...baseAnalysis,
+          patternType: "all_over",
+          referenceImageUsage: "none",
+        },
+        {
+          ...baseRequest,
+          route: "tile_generation",
+          attachedImageUrls: ["data:image/png;base64,abc"],
+        },
+      ),
+      "none",
+    );
+  },
+);
+
+Deno.test(
+  "resolveEffectiveReferenceImageUsage preserves explicit analysis usage",
+  () => {
+    assertEquals(
+      resolveEffectiveReferenceImageUsage(
+        { ...baseAnalysis, referenceImageUsage: "multiple_motifs" },
+        {
+          ...baseRequest,
+          route: "tile_generation",
+          attachedImageUrls: ["https://ik.imagekit.io/app/reference.png"],
+        },
+      ),
+      "multiple_motifs",
+    );
+  },
+);
 
 Deno.test(
   "shouldReuseRepeatTile preserves repeat for accent-only one-point edits",

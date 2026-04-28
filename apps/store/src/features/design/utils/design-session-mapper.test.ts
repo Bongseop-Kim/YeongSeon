@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { toRestoredDesignSessionState } from "@/entities/design";
 
 describe("toRestoredDesignSessionState", () => {
-  it("마지막 이미지 메시지를 프리뷰 상태로 복원한다", () => {
+  it("메시지 이미지를 레거시 프리뷰 상태로 복원하지 않는다", () => {
     expect(
       toRestoredDesignSessionState([
         {
@@ -60,10 +60,9 @@ describe("toRestoredDesignSessionState", () => {
           timestamp: new Date("2026-03-19T10:01:00Z").getTime(),
         },
       ],
-      generatedImageUrl:
-        'url("https://example.com/design.png") center/cover no-repeat',
+      generatedImageUrl: null,
       resultTags: [],
-      generationStatus: "completed",
+      generationStatus: "idle",
       repeatTile: null,
       accentTile: null,
       accentLayout: null,

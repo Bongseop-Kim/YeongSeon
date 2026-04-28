@@ -5,20 +5,12 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   GENERATION_LOG_PAGE_SIZE,
-  useGenerationLogArtifactsQuery,
   useGenerationLogsQuery,
 } from "@/features/generation-logs/api/generation-logs-query";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
 
-const { getGenerationLogArtifactsMock, getGenerationLogsMock } = vi.hoisted(
-  () => ({
-    getGenerationLogArtifactsMock: vi.fn(),
-    getGenerationLogsMock: vi.fn(),
-  }),
-);
-
-vi.mock("@/features/generation-logs/api/generation-log-artifacts-api", () => ({
-  getGenerationLogArtifacts: getGenerationLogArtifactsMock,
+const { getGenerationLogsMock } = vi.hoisted(() => ({
+  getGenerationLogsMock: vi.fn(),
 }));
 
 vi.mock("@/features/generation-logs/api/generation-logs-api", () => ({
@@ -86,18 +78,7 @@ function createLog(id: string): AdminGenerationLogItem {
 
 describe("generation logs query integration", () => {
   beforeEach(() => {
-    getGenerationLogArtifactsMock.mockReset();
     getGenerationLogsMock.mockReset();
-  });
-
-  it("disabled artifact query does not call the API", () => {
-    const { result } = renderHook(
-      () => useGenerationLogArtifactsQuery({ workflowId: "   " }),
-      { wrapper: createWrapper() },
-    );
-
-    expect(result.current.data).toEqual([]);
-    expect(getGenerationLogArtifactsMock).not.toHaveBeenCalled();
   });
 
   it("formats dayjs filters for the API and slices the overfetched page", async () => {

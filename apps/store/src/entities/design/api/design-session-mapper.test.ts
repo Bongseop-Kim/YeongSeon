@@ -12,9 +12,6 @@ const createSessionRow = (
   user_id: "user-1",
   ai_model: "openai",
   first_message: "넥타이 디자인",
-  last_image_url: null,
-  last_image_file_id: null,
-  last_image_work_id: null,
   repeat_tile_url: null,
   repeat_tile_work_id: null,
   accent_tile_url: null,
@@ -37,10 +34,9 @@ describe("toDesignSession", () => {
           user_id: "user-1",
           ai_model: "openai",
           first_message: "넥타이 디자인",
-          last_image_url:
-            "https://ik.imagekit.io/essesion/design-sessions/img.png",
-          last_image_file_id: "file-1",
-          last_image_work_id: "work-1",
+          repeat_tile_url:
+            "https://ik.imagekit.io/essesion/design-sessions/tile.webp",
+          repeat_tile_work_id: "tile-work-1",
           image_count: 2,
           created_at: "2026-03-19T10:00:00Z",
           updated_at: "2026-03-19T10:05:00Z",
@@ -50,11 +46,9 @@ describe("toDesignSession", () => {
       id: "session-1",
       aiModel: "openai",
       firstMessage: "넥타이 디자인",
-      lastImageUrl: "https://ik.imagekit.io/essesion/design-sessions/img.png",
-      lastImageFileId: "file-1",
-      lastImageWorkId: "work-1",
-      repeatTileUrl: null,
-      repeatTileWorkId: null,
+      repeatTileUrl:
+        "https://ik.imagekit.io/essesion/design-sessions/tile.webp",
+      repeatTileWorkId: "tile-work-1",
       accentTileUrl: null,
       accentTileWorkId: null,
       accentLayout: null,
@@ -66,7 +60,7 @@ describe("toDesignSession", () => {
     });
   });
 
-  it("last_image_url이 null이면 null로 유지한다", () => {
+  it("repeat_tile_url이 null이면 null로 유지한다", () => {
     expect(
       toDesignSession(
         createSessionRow({
@@ -74,18 +68,16 @@ describe("toDesignSession", () => {
           user_id: "user-1",
           ai_model: "openai",
           first_message: "첫 메시지",
-          last_image_url: null,
-          last_image_file_id: null,
-          last_image_work_id: null,
+          repeat_tile_url: null,
+          repeat_tile_work_id: null,
           image_count: 0,
           created_at: "2026-03-19T10:00:00Z",
           updated_at: "2026-03-19T10:00:00Z",
         }),
       ),
     ).toMatchObject({
-      lastImageUrl: null,
-      lastImageFileId: null,
-      lastImageWorkId: null,
+      repeatTileUrl: null,
+      repeatTileWorkId: null,
     });
   });
 
@@ -97,9 +89,8 @@ describe("toDesignSession", () => {
           user_id: "user-1",
           ai_model: "openai",
           first_message: "CI 패턴으로 올오버 생성",
-          last_image_url: "https://example.com/openai.png",
-          last_image_file_id: "file-3",
-          last_image_work_id: "work-3",
+          repeat_tile_url: "https://example.com/repeat.webp",
+          repeat_tile_work_id: "repeat-work-3",
           image_count: 1,
           created_at: "2026-03-19T10:10:00Z",
           updated_at: "2026-03-19T10:15:00Z",
