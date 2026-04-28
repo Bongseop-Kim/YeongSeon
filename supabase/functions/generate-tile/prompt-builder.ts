@@ -52,6 +52,9 @@ function buildReferenceInstruction(
   }
   if (usage === "composite_motif") {
     const end = Math.min(referenceImageCount, MAX_COMPOSITE_REFERENCE_IMAGES);
+    if (end === 1) {
+      return "Reference image rule (critical):\n- Use Image 1 as the unified motif reference.\n- The repeated motif must look like a single designed emblem, not separate pasted images.\n\n";
+    }
     return `Reference image rule (critical):\n- Combine Images 1-${end} into one unified motif.\n- The repeated motif must look like a single designed emblem, not separate pasted images.\n\n`;
   }
   if (usage === "multiple_motifs") {

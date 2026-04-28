@@ -510,13 +510,20 @@ function ExpandableText({
   );
 }
 
-function JsonBlock({ label, value }: { label: string; value: unknown }) {
+export function hasJsonBlockContent(value: unknown): boolean {
+  if (value == null) return false;
   if (
     typeof value === "object" &&
-    value !== null &&
     !Array.isArray(value) &&
     Object.keys(value).length === 0
   ) {
+    return false;
+  }
+  return true;
+}
+
+function JsonBlock({ label, value }: { label: string; value: unknown }) {
+  if (!hasJsonBlockContent(value)) {
     return null;
   }
 
@@ -575,19 +582,19 @@ function buildLoggedResultSnapshot(log: AdminGenerationLogItem) {
 function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
   const hasOptions =
     (log.requestAttachments?.length ?? 0) > 0 ||
-    log.designContext ||
-    log.normalizedDesign ||
+    hasJsonBlockContent(log.designContext) ||
+    hasJsonBlockContent(log.normalizedDesign) ||
     log.patternType ||
     log.fabricType ||
-    log.accentLayoutJson;
+    hasJsonBlockContent(log.accentLayoutJson);
 
   if (!hasOptions) return null;
 
   return (
     <Card title="사용자 선택 옵션" size="small" style={{ marginBottom: 16 }}>
-      {log.requestAttachments && (
+      {(log.requestAttachments?.length ?? 0) > 0 && (
         <Space wrap size={[8, 8]} style={{ marginBottom: 12 }}>
-          {log.requestAttachments.map((attachment, index) => (
+          {log.requestAttachments?.map((attachment, index) => (
             <Tag key={`${attachment.type}-${attachment.value}-${index}`}>
               {attachment.label}: {attachment.value}
               {attachment.fileName ? ` (${attachment.fileName})` : ""}
@@ -611,13 +618,13 @@ function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
           {log.tileRole ?? "-"}
         </Descriptions.Item>
       </Descriptions>
-      {log.designContext && (
+      {hasJsonBlockContent(log.designContext) && (
         <JsonBlock label="design_context" value={log.designContext} />
       )}
-      {log.normalizedDesign && (
+      {hasJsonBlockContent(log.normalizedDesign) && (
         <JsonBlock label="normalized_design" value={log.normalizedDesign} />
       )}
-      {log.accentLayoutJson && (
+      {hasJsonBlockContent(log.accentLayoutJson) && (
         <JsonBlock label="accent_layout_json" value={log.accentLayoutJson} />
       )}
     </Card>

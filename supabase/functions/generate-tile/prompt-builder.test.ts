@@ -119,6 +119,26 @@ Deno.test(
 );
 
 Deno.test(
+  "reference composite motif: 첨부 이미지가 하나면 단수 Image 1로 지시한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "F",
+        variation: null,
+        motifs: [{ name: "combined motif", color: null, colors: null }],
+        backgroundColor: "white",
+      },
+      "printed",
+      "composite_motif",
+      1,
+    );
+
+    assertStringIncludes(prompt, "Use Image 1 as the unified motif reference");
+    assert(!prompt.includes("Images 1-1"));
+  },
+);
+
+Deno.test(
   "reference multiple motifs: 첨부 이미지 두 개를 MOTIF_A/MOTIF_B로 지시한다",
   () => {
     const prompt = buildRepeatPrompt(

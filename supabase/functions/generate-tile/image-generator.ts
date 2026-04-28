@@ -118,13 +118,6 @@ export async function fetchReferenceImage(
     return new Blob(chunks, {
       type: response.headers.get("content-type") ?? "application/octet-stream",
     });
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(
-        `Reference image fetch timed out after ${REFERENCE_IMAGE_TIMEOUT_MS}ms`,
-      );
-    }
-    throw error;
   } finally {
     clearTimeout(timeoutId);
     signal?.removeEventListener("abort", onAbort);

@@ -131,19 +131,24 @@ Deno.test(
 Deno.test(
   "fetchReferenceImage rejects after the configured timeout",
   async () => {
+    const abortError = Object.assign(new Error("aborted"), {
+      name: "AbortError",
+    });
+
     await withMockedFetch(
       (_input, init) =>
         new Promise<Response>((_resolve, reject) => {
           init?.signal?.addEventListener("abort", () => {
-            reject(Object.assign(new Error("aborted"), { name: "AbortError" }));
+            reject(abortError);
           });
         }),
       async () => {
-        await assertRejects(
+        const rejected = await assertRejects(
           () => fetchReferenceImage(REFERENCE_URL),
           Error,
-          "Reference image fetch timed out after",
         );
+        assertEquals(rejected, abortError);
+        assertEquals(rejected.name, "AbortError");
       },
     );
   },
