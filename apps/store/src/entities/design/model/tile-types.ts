@@ -3,12 +3,6 @@ import type { Attachment } from "@/entities/design/model/ai-design-types";
 export type PatternType = "all_over" | "one_point";
 export type FabricType = "yarn_dyed" | "printed";
 export type TileRef = { url: string; workId: string };
-export type ReferenceImageUsage =
-  | "none"
-  | "single_motif"
-  | "composite_motif"
-  | "multiple_motifs"
-  | "repeat_and_accent";
 
 export interface AccentLayout {
   objectDescription: string;

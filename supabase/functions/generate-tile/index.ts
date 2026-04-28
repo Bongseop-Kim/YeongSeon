@@ -146,6 +146,9 @@ Deno.serve(async (req) => {
         analysis.accentLayout = body.previousAccentLayoutJson;
       }
       if (body.selectedColors?.[0]) {
+        // Current UI allows one selected color and treats it as the background.
+        // If color roles are added, pass role/intent metadata into analysis
+        // instead of assuming selectedColors[0] is the background color.
         analysis.tileLayout.backgroundColor = body.selectedColors[0];
       }
 

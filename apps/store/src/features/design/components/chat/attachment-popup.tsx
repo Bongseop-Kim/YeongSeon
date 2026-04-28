@@ -183,21 +183,17 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
           <div className="flex flex-wrap gap-2">
             {COLOR_OPTIONS.map((option) => {
               const isSelected = selectedColorValues.includes(option.value);
-              const isDisabled = false;
 
               return (
                 <button
                   key={option.value}
                   type="button"
                   aria-label={option.label}
-                  disabled={isDisabled}
                   onClick={() => handleColorToggle(option.label, option.value)}
                   className={cn(
                     "h-8 w-8 rounded-full border-2 transition-opacity",
                     isSelected ? "border-black" : "border-transparent",
-                    isDisabled
-                      ? "cursor-not-allowed opacity-40"
-                      : "hover:opacity-80",
+                    "hover:opacity-80",
                   )}
                   style={{ backgroundColor: option.value }}
                 />

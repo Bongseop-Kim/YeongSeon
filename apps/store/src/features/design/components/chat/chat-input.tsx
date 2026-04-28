@@ -66,20 +66,49 @@ function ImageAttachmentPreview({
   attachment: Attachment;
   onRemove: () => void;
 }) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const createdUrlRef = useRef<string | null>(null);
+  const fileRef = useRef<File | undefined>(attachment.file);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(() => {
+    if (!attachment.file) {
+      return null;
+    }
+
+    const objectUrl = URL.createObjectURL(attachment.file);
+    createdUrlRef.current = objectUrl;
+    return objectUrl;
+  });
   const fileName =
     attachment.file?.name ?? attachment.fileName ?? "첨부 이미지";
 
   useEffect(() => {
     if (!attachment.file) {
+      if (createdUrlRef.current) {
+        URL.revokeObjectURL(createdUrlRef.current);
+        createdUrlRef.current = null;
+      }
+      fileRef.current = undefined;
       setPreviewUrl(null);
       return;
     }
 
-    const objectUrl = URL.createObjectURL(attachment.file);
-    setPreviewUrl(objectUrl);
+    if (!createdUrlRef.current || fileRef.current !== attachment.file) {
+      if (createdUrlRef.current) {
+        URL.revokeObjectURL(createdUrlRef.current);
+      }
 
-    return () => URL.revokeObjectURL(objectUrl);
+      const objectUrl = URL.createObjectURL(attachment.file);
+      createdUrlRef.current = objectUrl;
+      fileRef.current = attachment.file;
+      setPreviewUrl(objectUrl);
+    }
+
+    return () => {
+      if (createdUrlRef.current) {
+        URL.revokeObjectURL(createdUrlRef.current);
+        createdUrlRef.current = null;
+        fileRef.current = undefined;
+      }
+    };
   }, [attachment.file]);
 
   if (!previewUrl) {

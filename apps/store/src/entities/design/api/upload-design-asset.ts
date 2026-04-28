@@ -1,8 +1,10 @@
 import { upload } from "@imagekit/react";
 import { getImageKitAuth, IMAGEKIT_PUBLIC_KEY } from "@/shared/lib/imagekit";
+import { supabase } from "@/shared/lib/supabase";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 
 type AssetKind = "ci" | "reference" | "mask" | "base";
+const DESIGN_SESSION_IMAGE_TTL_DAYS = 90;
 
 interface UploadResult {
   url: string;
@@ -47,7 +49,7 @@ async function hashBlob(blob: Blob): Promise<string> {
 
 export async function uploadDesignAsset(
   blob: Blob,
-  options: { kind: AssetKind },
+  options: { kind: AssetKind; sessionId: string },
 ): Promise<UploadResult> {
   const hash = await hashBlob(blob);
   const extension = extOf(blob.type);
@@ -67,6 +69,22 @@ export async function uploadDesignAsset(
   }
   if (!response.fileId) {
     throw new Error("파일 ID를 받지 못했습니다.");
+  }
+
+  const expiresAt = new Date(
+    Date.now() + DESIGN_SESSION_IMAGE_TTL_DAYS * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const { error } = await supabase.rpc("register_image", {
+    p_url: response.url,
+    p_file_id: response.fileId,
+    p_folder: IMAGE_FOLDERS.DESIGN_SESSIONS,
+    p_entity_type: "design_session",
+    p_entity_id: options.sessionId,
+    p_expires_at: expiresAt,
+  });
+
+  if (error) {
+    throw error;
   }
 
   return {

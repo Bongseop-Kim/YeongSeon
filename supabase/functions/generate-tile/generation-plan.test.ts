@@ -11,6 +11,7 @@ const baseRequest: TileGenerationRequest = {
   route: "tile_edit",
   userMessage: "로고만 더 크게 바꿔줘",
   uiFabricType: "printed",
+  selectedColors: [],
   previousFabricType: "printed",
   previousRepeatTileUrl: "https://ik.imagekit.io/app/repeat.webp",
   previousRepeatTileWorkId: "repeat-old",
@@ -186,6 +187,7 @@ Deno.test(
       resolveAccentReferenceImageUrls(
         {
           ...baseAnalysis,
+          referenceImageUsage: "single_motif",
           accentLayout: {
             objectDescription: "brand logo",
             objectSource: "image",
@@ -211,6 +213,7 @@ Deno.test(
       resolveAccentReferenceImageUrls(
         {
           ...baseAnalysis,
+          referenceImageUsage: "single_motif",
           accentLayout: {
             objectDescription: "brand logo",
             objectSource: "image",
@@ -241,6 +244,7 @@ Deno.test(
       resolveAccentReferenceImageUrls(
         {
           ...baseAnalysis,
+          referenceImageUsage: "single_motif",
           accentLayout: {
             objectDescription: "brand logo",
             objectSource: "both",
@@ -289,6 +293,7 @@ Deno.test(
       resolveAccentReferenceImageUrls(
         {
           ...baseAnalysis,
+          referenceImageUsage: "single_motif",
           accentLayout: {
             objectDescription: "brand logo",
             objectSource: "image",
@@ -338,6 +343,7 @@ Deno.test(
       resolveAccentReferenceImageUrls(
         {
           ...baseAnalysis,
+          referenceImageUsage: "single_motif",
           accentLayout: {
             objectDescription: "brand logo",
             objectSource: "image",
@@ -348,6 +354,31 @@ Deno.test(
         baseRequest,
       ),
       ["https://ik.imagekit.io/app/accent.webp"],
+    );
+  },
+);
+
+Deno.test(
+  "resolveAccentReferenceImageUrls returns no references when usage is none",
+  () => {
+    assertEquals(
+      resolveAccentReferenceImageUrls(
+        {
+          ...baseAnalysis,
+          referenceImageUsage: "none",
+          accentLayout: {
+            objectDescription: "brand logo",
+            objectSource: "image",
+            color: null,
+            size: null,
+          },
+        },
+        {
+          ...baseRequest,
+          attachedImageUrls: ["https://ik.imagekit.io/app/logo.png"],
+        },
+      ),
+      [],
     );
   },
 );

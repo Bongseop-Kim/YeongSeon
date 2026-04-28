@@ -72,6 +72,13 @@ describe("callTileGeneration", () => {
   });
 
   it("Edge Function 응답을 안전한 타일 결과 모델로 정규화한다", async () => {
+    const payloadWithAttachments = {
+      ...payload,
+      attachedImageUrls: [
+        "https://ik.imagekit.io/essesion/design-sessions/reference.png",
+        "https://ik.imagekit.io/essesion/design-sessions/accent.png",
+      ],
+    };
     invoke.mockResolvedValueOnce({
       data: {
         repeatTileUrl: "https://example.com/repeat.webp",
@@ -85,7 +92,7 @@ describe("callTileGeneration", () => {
       error: null,
     });
 
-    await expect(callTileGeneration(payload)).resolves.toEqual({
+    await expect(callTileGeneration(payloadWithAttachments)).resolves.toEqual({
       repeatTile: {
         url: "https://example.com/repeat.webp",
         workId: "repeat-work",
@@ -94,6 +101,11 @@ describe("callTileGeneration", () => {
       patternType: "all_over",
       fabricType: "printed",
       accentLayout: null,
+    });
+    expect(invoke).toHaveBeenCalledWith("generate-tile", {
+      body: expect.objectContaining({
+        attachedImageUrls: payloadWithAttachments.attachedImageUrls,
+      }),
     });
   });
 

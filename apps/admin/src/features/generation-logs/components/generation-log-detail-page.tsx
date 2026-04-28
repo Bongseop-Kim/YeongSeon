@@ -397,45 +397,51 @@ function AttachedImageSection({ log }: { log: AdminGenerationLogItem }) {
       <List
         grid={{ gutter: 12, xs: 1, sm: 2, md: 3 }}
         dataSource={imageAttachments}
-        renderItem={(attachment) => (
-          <List.Item>
-            <Space direction="vertical" size={6} style={{ width: "100%" }}>
-              {attachment.value.startsWith("https://") ? (
-                <Image
-                  src={attachment.value}
-                  alt={attachment.label}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: 320,
-                    objectFit: "contain",
-                    borderRadius: 6,
-                  }}
-                />
-              ) : (
-                <Alert
-                  type="warning"
-                  showIcon
-                  message="첨부 이미지 URL이 저장되지 않았습니다"
-                  description={attachment.value}
-                />
-              )}
-              <Text strong style={{ fontSize: 12 }}>
-                {attachment.label}
-              </Text>
-              {attachment.fileName && (
-                <Text type="secondary" style={{ fontSize: 11 }}>
-                  {attachment.fileName}
+        renderItem={(attachment) => {
+          const isHttpsUrl = attachment.value.startsWith("https://");
+
+          return (
+            <List.Item>
+              <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                {isHttpsUrl ? (
+                  <Image
+                    src={attachment.value}
+                    alt={attachment.label}
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: 320,
+                      objectFit: "contain",
+                      borderRadius: 6,
+                    }}
+                  />
+                ) : (
+                  <Alert
+                    type="warning"
+                    showIcon
+                    message="첨부 이미지 URL이 저장되지 않았습니다"
+                    description={attachment.value}
+                  />
+                )}
+                <Text strong style={{ fontSize: 12 }}>
+                  {attachment.label}
                 </Text>
-              )}
-              <Text
-                type="secondary"
-                style={{ fontSize: 11, overflowWrap: "anywhere" }}
-              >
-                {attachment.value}
-              </Text>
-            </Space>
-          </List.Item>
-        )}
+                {attachment.fileName && (
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    {attachment.fileName}
+                  </Text>
+                )}
+                {isHttpsUrl && (
+                  <Text
+                    type="secondary"
+                    style={{ fontSize: 11, overflowWrap: "anywhere" }}
+                  >
+                    {attachment.value}
+                  </Text>
+                )}
+              </Space>
+            </List.Item>
+          );
+        }}
       />
     </Card>
   );
@@ -496,6 +502,15 @@ function ExpandableText({
 }
 
 function JsonBlock({ label, value }: { label: string; value: unknown }) {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.keys(value).length === 0
+  ) {
+    return null;
+  }
+
   return (
     <div style={{ marginBottom: 8 }}>
       <div style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>

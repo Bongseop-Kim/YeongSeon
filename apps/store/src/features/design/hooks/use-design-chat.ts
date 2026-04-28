@@ -85,7 +85,7 @@ const toSessionPayload = (messages: Message[]) => {
 const withResolvedImageAttachmentUrls = (
   allMessages: ReturnType<typeof toSessionPayload>["allMessages"],
   messageId: string,
-  resolvedImageUrls: string[],
+  resolvedImageUrls: Array<string | null>,
 ): ReturnType<typeof toSessionPayload>["allMessages"] => {
   if (resolvedImageUrls.length === 0) {
     return allMessages;
@@ -96,32 +96,34 @@ const withResolvedImageAttachmentUrls = (
 
   const message = allMessages[index];
   const updated = [...allMessages];
-  let urlIndex = 0;
+  let imageIndex = 0;
   updated[index] = {
     ...message,
-    imageUrl: resolvedImageUrls[0] ?? message.imageUrl,
-    attachments: message.attachments?.map((attachment) =>
-      attachment.type === "image"
-        ? {
-            ...attachment,
-            value: resolvedImageUrls[urlIndex++] ?? attachment.value,
-          }
-        : attachment,
-    ),
+    imageUrl: resolvedImageUrls.find((url) => url !== null) ?? message.imageUrl,
+    attachments: message.attachments?.map((attachment) => {
+      if (attachment.type !== "image") {
+        return attachment;
+      }
+
+      const resolvedUrl = resolvedImageUrls[imageIndex++];
+      return resolvedUrl ? { ...attachment, value: resolvedUrl } : attachment;
+    }),
   };
   return updated;
 };
 
 const resolveAttachedImageUrls = async (
   attachments: Attachment[],
-): Promise<string[]> => {
+  sessionId: string,
+): Promise<Array<string | null>> => {
   const imageAttachments = attachments.filter((a) => a.type === "image");
 
-  const results = await Promise.all(
+  return Promise.all(
     imageAttachments.map(async (attachment) => {
       if (attachment.file) {
         const uploaded = await uploadDesignAsset(attachment.file, {
           kind: "reference",
+          sessionId,
         });
         return uploaded.url;
       }
@@ -138,8 +140,6 @@ const resolveAttachedImageUrls = async (
       return null;
     }),
   );
-
-  return results.filter((url): url is string => url !== null);
 };
 
 const toApiConversationHistory = (
@@ -235,6 +235,7 @@ export function useDesignChat(
     try {
       const attachedImageUrls = await resolveAttachedImageUrls(
         input.attachments,
+        input.sessionId,
       );
       const sessionMessages = withResolvedImageAttachmentUrls(
         allMessages,
@@ -254,7 +255,9 @@ export function useDesignChat(
         previousAccentTile: state.accentTile,
         previousAccentLayoutJson: state.accentLayout,
         conversationHistory: toApiConversationHistory(priorMessages),
-        attachedImageUrls,
+        attachedImageUrls: attachedImageUrls.filter(
+          (url): url is string => url !== null,
+        ),
         sessionId: input.sessionId,
         workflowId: crypto.randomUUID(),
         firstMessage: firstUserMsg?.content ?? input.userText,

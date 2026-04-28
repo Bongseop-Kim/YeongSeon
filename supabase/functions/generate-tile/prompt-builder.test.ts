@@ -1,4 +1,4 @@
-import { assert, assertStringIncludes } from "jsr:@std/assert";
+import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert";
 import { buildAccentPrompt, buildRepeatPrompt } from "./prompt-builder.ts";
 
 Deno.test("H + yarn_dyed: 모티프/배경/원단블록/seamless 포함", () => {
@@ -181,6 +181,7 @@ Deno.test("accent text: seamless suffix 없음, 오브젝트 설명 포함", () 
 });
 
 Deno.test("accent image: referenceImageUrls 전달", () => {
+  const logoUrl = "https://example.com/logo.png";
   const { referenceImageUrls } = buildAccentPrompt(
     {
       objectDescription: "the attached logo",
@@ -190,8 +191,10 @@ Deno.test("accent image: referenceImageUrls 전달", () => {
     },
     "white",
     "printed",
-    ["https://example.com/logo.png"],
+    [logoUrl],
   );
+  assertEquals(referenceImageUrls.length, 1);
+  assertEquals(referenceImageUrls[0], logoUrl);
   assertStringIncludes(referenceImageUrls[0] ?? "", "example.com");
 });
 

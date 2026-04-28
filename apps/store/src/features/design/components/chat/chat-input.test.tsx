@@ -1,19 +1,50 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChatInput } from "@/features/design/components/chat/chat-input";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 
 describe("ChatInput", () => {
+  let createdCreateObjectUrl = false;
+  let createdRevokeObjectUrl = false;
+
   beforeEach(() => {
     useDesignChatStore.getState().resetConversation();
-    vi.stubGlobal(
-      "URL",
-      Object.assign(URL, {
-        createObjectURL: vi.fn(() => "blob:preview"),
-        revokeObjectURL: vi.fn(),
-      }),
-    );
+    if (!("createObjectURL" in URL)) {
+      createdCreateObjectUrl = true;
+      Object.defineProperty(URL, "createObjectURL", {
+        configurable: true,
+        value: () => "",
+      });
+    }
+    if (!("revokeObjectURL" in URL)) {
+      createdRevokeObjectUrl = true;
+      Object.defineProperty(URL, "revokeObjectURL", {
+        configurable: true,
+        value: () => undefined,
+      });
+    }
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:preview");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+    if (createdCreateObjectUrl) {
+      delete (URL as Partial<typeof URL>).createObjectURL;
+      createdCreateObjectUrl = false;
+    }
+    if (createdRevokeObjectUrl) {
+      delete (URL as Partial<typeof URL>).revokeObjectURL;
+      createdRevokeObjectUrl = false;
+    }
   });
 
   it("첨부한 이미지를 입력 박스 안에서 프리뷰로 보여준다", () => {

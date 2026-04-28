@@ -295,6 +295,9 @@ export function toAdminGenerationLogItem(
     fabricType: toFabricType(row.fabric_type),
     tileRole: toTileRole(row.tile_role),
     pairedTileWorkId: toString(row.paired_tile_work_id),
+    // TODO: If accentLayoutJson is reused outside admin display or sent via RPC,
+    // replace this loose record check with validateAccentLayout/parseAccentLayout
+    // to enforce objectDescription, objectSource, and value types.
     accentLayoutJson: isRecord(row.accent_layout_json)
       ? row.accent_layout_json
       : null,

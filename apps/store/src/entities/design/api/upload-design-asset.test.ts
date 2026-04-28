@@ -5,6 +5,10 @@ import { uploadDesignAsset } from "@/entities/design/api/upload-design-asset";
 import { getImageKitAuth, IMAGEKIT_PUBLIC_KEY } from "@/shared/lib/imagekit";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
 
+const { rpc } = vi.hoisted(() => ({
+  rpc: vi.fn(),
+}));
+
 vi.mock("@imagekit/react", () => ({
   upload: vi.fn(),
 }));
@@ -12,6 +16,12 @@ vi.mock("@imagekit/react", () => ({
 vi.mock("@/shared/lib/imagekit", () => ({
   IMAGEKIT_PUBLIC_KEY: "public-key",
   getImageKitAuth: vi.fn(),
+}));
+
+vi.mock("@/shared/lib/supabase", () => ({
+  supabase: {
+    rpc,
+  },
 }));
 
 const uploadMock = vi.mocked(upload);
@@ -33,6 +43,7 @@ function uploadResponse(
 describe("uploadDesignAsset", () => {
   beforeEach(() => {
     uploadMock.mockReset();
+    rpc.mockReset();
     getImageKitAuthMock.mockReset();
     getImageKitAuthMock.mockResolvedValue({
       signature: "signature",
@@ -49,9 +60,13 @@ describe("uploadDesignAsset", () => {
         name: "reference.png",
       }),
     );
+    rpc.mockResolvedValueOnce({ data: "image-row-1", error: null });
 
     const blob = new Blob([new Uint8Array([1, 2, 3])], { type: "image/png" });
-    const result = await uploadDesignAsset(blob, { kind: "reference" });
+    const result = await uploadDesignAsset(blob, {
+      kind: "reference",
+      sessionId: "session-1",
+    });
 
     expect(uploadMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -62,6 +77,17 @@ describe("uploadDesignAsset", () => {
         expire: 1234567890,
         publicKey: IMAGEKIT_PUBLIC_KEY,
         folder: IMAGE_FOLDERS.DESIGN_SESSIONS,
+      }),
+    );
+    expect(rpc).toHaveBeenCalledWith(
+      "register_image",
+      expect.objectContaining({
+        p_url: "https://ik.imagekit.io/essesion/design-sessions/reference.png",
+        p_file_id: "imagekit-file-1",
+        p_folder: IMAGE_FOLDERS.DESIGN_SESSIONS,
+        p_entity_type: "design_session",
+        p_entity_id: "session-1",
+        p_expires_at: expect.any(String),
       }),
     );
     expect(result.url).toBe(
@@ -75,9 +101,9 @@ describe("uploadDesignAsset", () => {
     const blob = new Blob(["x"], { type: "image/png" });
     vi.spyOn(blob, "arrayBuffer").mockRejectedValueOnce(new Error("hash-fail"));
 
-    await expect(uploadDesignAsset(blob, { kind: "ci" })).rejects.toThrow(
-      "hash-fail",
-    );
+    await expect(
+      uploadDesignAsset(blob, { kind: "ci", sessionId: "session-1" }),
+    ).rejects.toThrow("hash-fail");
 
     expect(getImageKitAuthMock).not.toHaveBeenCalled();
     expect(uploadMock).not.toHaveBeenCalled();
@@ -87,6 +113,7 @@ describe("uploadDesignAsset", () => {
     await expect(
       uploadDesignAsset(new Blob(["x"], { type: "application/pdf" }), {
         kind: "ci",
+        sessionId: "session-1",
       }),
     ).rejects.toMatchObject({
       message: "Unsupported MIME type: application/pdf",
@@ -104,7 +131,10 @@ describe("uploadDesignAsset", () => {
     );
 
     await expect(
-      uploadDesignAsset(new Blob(["x"], { type: "image/png" }), { kind: "ci" }),
+      uploadDesignAsset(new Blob(["x"], { type: "image/png" }), {
+        kind: "ci",
+        sessionId: "session-1",
+      }),
     ).rejects.toThrow("이미지 URL을 받지 못했습니다.");
   });
 
@@ -116,7 +146,10 @@ describe("uploadDesignAsset", () => {
     );
 
     await expect(
-      uploadDesignAsset(new Blob(["x"], { type: "image/png" }), { kind: "ci" }),
+      uploadDesignAsset(new Blob(["x"], { type: "image/png" }), {
+        kind: "ci",
+        sessionId: "session-1",
+      }),
     ).rejects.toThrow("파일 ID를 받지 못했습니다.");
   });
 
@@ -124,7 +157,10 @@ describe("uploadDesignAsset", () => {
     uploadMock.mockRejectedValueOnce(new Error("imagekit-fail"));
 
     await expect(
-      uploadDesignAsset(new Blob(["x"], { type: "image/png" }), { kind: "ci" }),
+      uploadDesignAsset(new Blob(["x"], { type: "image/png" }), {
+        kind: "ci",
+        sessionId: "session-1",
+      }),
     ).rejects.toThrow("imagekit-fail");
   });
 });

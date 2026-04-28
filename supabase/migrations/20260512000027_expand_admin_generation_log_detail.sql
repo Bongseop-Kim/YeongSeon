@@ -62,12 +62,17 @@ security invoker
 set search_path to 'public'
 as $$
 begin
-  p_limit := least(greatest(coalesce(p_limit, 50), 0), 500);
-  p_offset := greatest(coalesce(p_offset, 0), 0);
-
   if not public.is_admin() then
     raise exception 'Forbidden' using errcode = '42501';
   end if;
+
+  if p_id is null and p_id_search is null and (p_start_date is null or p_end_date is null) then
+    raise exception 'p_start_date and p_end_date are required when p_id and p_id_search are null'
+      using errcode = '22004';
+  end if;
+
+  p_limit := least(greatest(coalesce(p_limit, 50), 0), 500);
+  p_offset := greatest(coalesce(p_offset, 0), 0);
 
   if p_id_search is not null then
     return query

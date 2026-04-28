@@ -223,6 +223,7 @@ describe("useDesignChat", () => {
     await waitFor(() => {
       expect(uploadDesignAsset).toHaveBeenCalledWith(file, {
         kind: "reference",
+        sessionId: "uuid-1",
       });
       expect(callTileGeneration).toHaveBeenCalledWith(
         expect.objectContaining({

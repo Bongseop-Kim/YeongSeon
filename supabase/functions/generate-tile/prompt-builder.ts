@@ -23,6 +23,8 @@ const SIZE_RATIO_MAP: Record<"small" | "medium" | "large", number> = {
   large: 60,
 };
 
+const MAX_COMPOSITE_REFERENCE_IMAGES = 5;
+
 function makeFabricBlock(
   fabricType: FabricType,
   withSeamless: boolean,
@@ -49,7 +51,7 @@ function buildReferenceInstruction(
     return "Reference image rule (critical):\n- Use Image 1 as the motif reference.\n- Reproduce the main object from Image 1 as the repeated motif, simplifying only as needed for clean tie fabric rendering.\n\n";
   }
   if (usage === "composite_motif") {
-    const end = Math.min(referenceImageCount, 5);
+    const end = Math.min(referenceImageCount, MAX_COMPOSITE_REFERENCE_IMAGES);
     return `Reference image rule (critical):\n- Combine Images 1-${end} into one unified motif.\n- The repeated motif must look like a single designed emblem, not separate pasted images.\n\n`;
   }
   if (usage === "multiple_motifs") {

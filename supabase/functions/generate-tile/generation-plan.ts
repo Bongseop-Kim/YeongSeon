@@ -66,8 +66,10 @@ export function resolveAccentReferenceImageUrls(
   const validAttached = request.attachedImageUrls.filter((url) =>
     validateReferenceImageUrl(url),
   );
+  if (analysis.referenceImageUsage === "none") return [];
   if (analysis.referenceImageUsage === "repeat_and_accent") {
-    return validAttached.slice(1, 2);
+    const accent = validAttached.slice(1, 2);
+    if (accent.length > 0) return accent;
   }
   if (validAttached.length > 0) return validAttached;
 

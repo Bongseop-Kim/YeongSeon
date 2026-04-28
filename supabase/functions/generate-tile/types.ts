@@ -48,7 +48,8 @@ export interface TileGenerationRequest {
   route: "tile_generation" | "tile_edit";
   userMessage: string;
   uiFabricType: FabricType | null;
-  selectedColors?: string[];
+  // Empty array means no colors selected.
+  selectedColors: string[];
   previousFabricType: FabricType | null;
   previousRepeatTileUrl: string | null;
   previousRepeatTileWorkId: string | null;

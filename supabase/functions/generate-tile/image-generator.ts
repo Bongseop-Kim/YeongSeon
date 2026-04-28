@@ -11,6 +11,7 @@ export interface GeneratedTile {
 
 const REFERENCE_IMAGE_TIMEOUT_MS = 5000;
 const MAX_REFERENCE_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_REFERENCE_IMAGE_COUNT = 8;
 const REFERENCE_IMAGE_EXTENSIONS: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
@@ -68,8 +69,13 @@ async function parseB64FromOpenAiResponse(
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-export async function fetchReferenceImage(url: string): Promise<Blob> {
+export async function fetchReferenceImage(
+  url: string,
+  signal?: AbortSignal,
+): Promise<Blob> {
   const controller = new AbortController();
+  const onAbort = () => controller.abort();
+  signal?.addEventListener("abort", onAbort, { once: true });
   const timeoutId = setTimeout(
     () => controller.abort(),
     REFERENCE_IMAGE_TIMEOUT_MS,
@@ -121,6 +127,7 @@ export async function fetchReferenceImage(url: string): Promise<Blob> {
     throw error;
   } finally {
     clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", onAbort);
   }
 }
 
@@ -143,13 +150,41 @@ export async function generateTileImage(
   let b64: string;
 
   if (referenceImageUrls.length > 0) {
+    if (referenceImageUrls.length > MAX_REFERENCE_IMAGE_COUNT) {
+      throw new Error(
+        `Too many reference images: maximum ${MAX_REFERENCE_IMAGE_COUNT}`,
+      );
+    }
+
     const trustedUrls = referenceImageUrls.map((url) => {
       const trusted = validateReferenceImageUrl(url);
       if (!trusted) throw new Error("Invalid reference image URL");
       return trusted;
     });
 
-    const imageBlobs = await Promise.all(trustedUrls.map(fetchReferenceImage));
+    const controllers = trustedUrls.map(() => new AbortController());
+    const imageResults = await Promise.allSettled(
+      trustedUrls.map((url, index) =>
+        fetchReferenceImage(url, controllers[index].signal).catch((error) => {
+          controllers.forEach((controller, controllerIndex) => {
+            if (controllerIndex !== index) {
+              controller.abort();
+            }
+          });
+          throw error;
+        }),
+      ),
+    );
+    const failedImage = imageResults.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    if (failedImage) {
+      controllers.forEach((controller) => controller.abort());
+      throw failedImage.reason;
+    }
+    const imageBlobs = imageResults.map(
+      (result) => (result as PromiseFulfilledResult<Blob>).value,
+    );
 
     const form = new FormData();
     for (const [key, val] of Object.entries(OPENAI_IMAGE_PARAMS)) {
@@ -157,7 +192,7 @@ export async function generateTileImage(
     }
     form.append("prompt", prompt);
     for (const blob of imageBlobs) {
-      form.append("image", blob, referenceFileName(blob));
+      form.append("image[]", blob, referenceFileName(blob));
     }
 
     const editsResponse = await fetch(
