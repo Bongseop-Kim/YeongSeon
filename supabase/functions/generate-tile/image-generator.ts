@@ -9,6 +9,11 @@ export interface GeneratedTile {
   workId: string;
 }
 
+export interface FetchReferenceImageOptions {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+}
+
 const REFERENCE_IMAGE_TIMEOUT_MS = 5000;
 const MAX_REFERENCE_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_REFERENCE_IMAGE_COUNT = 8;
@@ -71,18 +76,21 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 export async function fetchReferenceImage(
   url: string,
-  signal?: AbortSignal,
+  optionsOrSignal?: FetchReferenceImageOptions | AbortSignal,
 ): Promise<Blob> {
+  const options =
+    optionsOrSignal instanceof AbortSignal
+      ? { signal: optionsOrSignal }
+      : optionsOrSignal;
+  const signal = options?.signal;
+  const timeoutMs = options?.timeoutMs ?? REFERENCE_IMAGE_TIMEOUT_MS;
   const controller = new AbortController();
   const onAbort = () => controller.abort();
   if (signal?.aborted) {
     onAbort();
   }
   signal?.addEventListener("abort", onAbort, { once: true });
-  const timeoutId = setTimeout(
-    () => controller.abort(),
-    REFERENCE_IMAGE_TIMEOUT_MS,
-  );
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, { signal: controller.signal });
@@ -182,14 +190,16 @@ export async function generateTileImage(
     const controllers = trustedUrls.map(() => new AbortController());
     const imageResults = await Promise.allSettled(
       trustedUrls.map((url, index) =>
-        fetchReferenceImage(url, controllers[index].signal).catch((error) => {
-          controllers.forEach((controller, controllerIndex) => {
-            if (controllerIndex !== index) {
-              controller.abort();
-            }
-          });
-          throw error;
-        }),
+        fetchReferenceImage(url, { signal: controllers[index].signal }).catch(
+          (error) => {
+            controllers.forEach((controller, controllerIndex) => {
+              if (controllerIndex !== index) {
+                controller.abort();
+              }
+            });
+            throw error;
+          },
+        ),
       ),
     );
     const failedImage = selectReferenceImageFailure(imageResults);

@@ -144,7 +144,7 @@ Deno.test(
         }),
       async () => {
         const rejected = await assertRejects(
-          () => fetchReferenceImage(REFERENCE_URL),
+          () => fetchReferenceImage(REFERENCE_URL, { timeoutMs: 5 }),
           Error,
         );
         assertEquals(rejected, abortError);
