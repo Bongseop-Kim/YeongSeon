@@ -7,15 +7,15 @@ import {
   GENERATION_LOG_PAGE_SIZE,
   useGenerationLogsQuery,
 } from "@/features/generation-logs/api/generation-logs-query";
-import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
+import type { AdminGenerationLogGroup } from "@/features/generation-logs/types/admin-generation-log";
 
-const { getGenerationLogsMock } = vi.hoisted(() => ({
-  getGenerationLogsMock: vi.fn(),
+const { getGenerationLogGroupsMock } = vi.hoisted(() => ({
+  getGenerationLogGroupsMock: vi.fn(),
 }));
 
 vi.mock("@/features/generation-logs/api/generation-logs-api", () => ({
   getGenerationStats: vi.fn(),
-  getGenerationLogs: getGenerationLogsMock,
+  getGenerationLogGroups: getGenerationLogGroupsMock,
 }));
 
 function createWrapper() {
@@ -35,57 +35,38 @@ function createWrapper() {
   };
 }
 
-function createLog(id: string): AdminGenerationLogItem {
+function createGroup(id: string): AdminGenerationLogGroup {
   return {
-    id,
-    workId: `work-${id}`,
+    workflowId: `workflow-${id}`,
+    primaryLogId: id,
+    primaryWorkId: `work-${id}`,
     userId: "user-1",
     aiModel: "openai",
     requestType: "render_standard",
-    quality: "standard",
     userMessage: "message",
-    promptLength: 1,
-    designContext: null,
-    conversationTurn: 1,
-    hasCiImage: false,
-    hasReferenceImage: false,
-    hasPreviousImage: false,
-    aiMessage: null,
-    generateImage: true,
-    route: "tile_generation",
-    imageGenerated: true,
-    generatedImageUrl: null,
-    repeatTileUrl: null,
-    repeatTileWorkId: null,
-    accentTileUrl: null,
-    accentTileWorkId: null,
     patternType: null,
     fabricType: null,
-    tileRole: null,
-    pairedTileWorkId: null,
-    accentLayoutJson: null,
-    requestAttachments: null,
-    detectedDesign: null,
+    imageCount: 4,
+    successCount: 4,
+    errorCount: 0,
     tokensCharged: 0,
     tokensRefunded: 0,
-    textLatencyMs: null,
-    imageLatencyMs: null,
     totalLatencyMs: null,
-    errorType: null,
     createdAt: "2026-04-17T00:00:00Z",
+    resultImages: [],
   };
 }
 
 describe("generation logs query integration", () => {
   beforeEach(() => {
-    getGenerationLogsMock.mockReset();
+    getGenerationLogGroupsMock.mockReset();
   });
 
   it("formats dayjs filters for the API and slices the overfetched page", async () => {
     const logs = Array.from({ length: GENERATION_LOG_PAGE_SIZE + 1 }, (_, i) =>
-      createLog(`log-${i}`),
+      createGroup(`log-${i}`),
     );
-    getGenerationLogsMock.mockResolvedValue(logs);
+    getGenerationLogGroupsMock.mockResolvedValue(logs);
 
     const { result } = renderHook(
       () =>
@@ -105,7 +86,7 @@ describe("generation logs query integration", () => {
     });
 
     expect(result.current.hasMore).toBe(true);
-    expect(getGenerationLogsMock).toHaveBeenCalledWith({
+    expect(getGenerationLogGroupsMock).toHaveBeenCalledWith({
       startDate: "2026-04-17",
       endDate: "2026-04-23",
       aiModel: null,

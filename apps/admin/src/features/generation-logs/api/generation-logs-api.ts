@@ -1,9 +1,11 @@
 import { supabase } from "@/lib/supabase";
 import {
   toAdminGenerationLogItem,
+  toAdminGenerationLogGroup,
   toGenerationStatsData,
 } from "@/features/generation-logs/api/generation-logs-mapper";
 import type {
+  AdminGenerationLogGroup,
   AdminGenerationLogItem,
   GenerationRequestTypeFilter,
   GenerationStatusFilter,
@@ -47,4 +49,32 @@ export async function getGenerationLogs(params: {
   if (error) throw new Error(error.message);
   if (!Array.isArray(data)) return [];
   return data.map(toAdminGenerationLogItem);
+}
+
+export async function getGenerationLogGroups(params: {
+  startDate?: string | null;
+  endDate?: string | null;
+  aiModel?: string | null;
+  limit?: number;
+  offset?: number;
+  requestType?: GenerationRequestTypeFilter | null;
+  status?: GenerationStatusFilter | null;
+  idSearch?: string | null;
+}): Promise<AdminGenerationLogGroup[]> {
+  const { data, error } = await supabase.rpc(
+    "admin_get_generation_log_groups",
+    {
+      p_start_date: params.startDate ?? null,
+      p_end_date: params.endDate ?? null,
+      p_ai_model: params.aiModel ?? null,
+      p_limit: params.limit ?? 50,
+      p_offset: params.offset ?? 0,
+      p_request_type: params.requestType ?? null,
+      p_status: params.status ?? null,
+      p_id_search: params.idSearch ?? null,
+    },
+  );
+  if (error) throw new Error(error.message);
+  if (!Array.isArray(data)) return [];
+  return data.map(toAdminGenerationLogGroup);
 }

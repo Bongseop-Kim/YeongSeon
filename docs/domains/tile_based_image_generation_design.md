@@ -104,7 +104,7 @@
 
 [2단계: 프롬프트 조립]
   Edge Function이 tileLayout을 검증된 구조 템플릿
-  (H / F / Q-rotation / Q-color / Q-different_motif)에 주입
+  (H / F / Q / STRIPE / DOT / TOSSED / MEDALLION / GEOMETRIC)에 주입
   + fabricType에 따라 Fabric rendering 블록 주입 (선염용 or 날염용)
   LLM이 프롬프트 전체를 자유 생성하지 않음 (구조 품질 보장 목적).
 
@@ -449,10 +449,28 @@ fabricType: "yarn_dyed" | "printed"
 
   // repeat tile 내부 구성 (항상 존재)
   tileLayout: {
-    structure: "H" | "F" | "Q",
-    variation: "rotation" | "color" | "different_motif" | null,
+    structure: "H" | "F" | "Q" | "STRIPE" | "DOT" | "TOSSED" | "MEDALLION" | "GEOMETRIC",
+    variation:
+      | "rotation"
+      | "color"
+      | "different_motif"
+      | "stripe_classic_diagonal"
+      | "stripe_multi_width"
+      | "stripe_regimental"
+      | "stripe_textured"
+      | "stripe_dotted"
+      | "dot_micro"
+      | "dot_pin"
+      | "tossed_scattered"
+      | "medallion_classic"
+      | "geometric_diamond"
+      | "geometric_check"
+      | "geometric_herringbone"
+      | null,
     // H, F → null
     // Q → rotation | color | different_motif 중 하나
+    // STRIPE → stripe_* 중 하나 (null이면 stripe_classic_diagonal)
+    // DOT/TOSSED/MEDALLION/GEOMETRIC → 각 계열 variation 중 하나
 
     motifs: Motif[],
     // H: 길이 1
@@ -460,6 +478,7 @@ fabricType: "yarn_dyed" | "printed"
     // Q-rotation: 길이 1 (4개 배치되지만 동일 모티프, 방향만 다름)
     // Q-color: 길이 1, motif.colors에 [색상A, 색상B] 2개 지정
     // Q-different_motif: 길이 2
+    // STRIPE/DOT/GEOMETRIC 등: 길이 1, 모티프는 색상·형태 영감으로 사용
 
     backgroundColor: string,  // 예: "plain navy blue", "cream"
   },
@@ -490,14 +509,23 @@ type Motif = {
 
 ### 사용자 표현 → 구조/variation 매핑
 
-| 사용자 표현                                      | structure | variation       |
-| ------------------------------------------------ | --------- | --------------- |
-| "심플하게", "깔끔하게", "포인트로" + 단일 모티프 | H         | null            |
-| "엇갈리게", "대각으로" + 단일 모티프             | F         | null            |
-| 단일 모티프만 언급 (기본값)                      | F         | null            |
-| "방향 다르게", "회전", "돌아가는" + 단일 모티프  | Q         | rotation        |
-| "색 섞어서", "두 가지 색으로" + 단일 모티프      | Q         | color           |
-| 두 종류 모티프 명시 (예: "닻이랑 키")            | Q         | different_motif |
+| 사용자 표현                                      | structure | variation                           |
+| ------------------------------------------------ | --------- | ----------------------------------- |
+| "심플하게", "깔끔하게", "포인트로" + 단일 모티프 | H         | null                                |
+| "엇갈리게", "대각으로" + 단일 모티프             | F         | null                                |
+| 단일 모티프만 언급 (기본값)                      | F         | null                                |
+| "방향 다르게", "회전", "돌아가는" + 단일 모티프  | Q         | rotation                            |
+| "색 섞어서", "두 가지 색으로" + 단일 모티프      | Q         | color                               |
+| 두 종류 모티프 명시 (예: "닻이랑 키")            | Q         | different_motif                     |
+| "스트라이프", "사선", "넥타이 기본"              | STRIPE    | stripe_classic_diagonal             |
+| "줄마다 색/두께 다르게"                          | STRIPE    | stripe_multi_width                  |
+| "레지멘탈", "클래식 타이"                        | STRIPE    | stripe_regimental                   |
+| "트윌", "자가드", "질감이 다른 줄"               | STRIPE    | stripe_textured                     |
+| "줄 안에 점", "도트 스트라이프"                  | STRIPE    | stripe_dotted                       |
+| "도트", "핀도트"                                 | DOT       | dot_micro 또는 dot_pin              |
+| "흩뿌린", "랜덤", "자연스럽게"                   | TOSSED    | tossed_scattered                    |
+| "메달리온", "작은 엠블럼 반복"                   | MEDALLION | medallion_classic                   |
+| "다이아", "체커", "헤링본", "기하학"             | GEOMETRIC | geometric_diamond/check/herringbone |
 
 ### 결정 흐름 예시
 
@@ -540,15 +568,22 @@ LLM 판정 전 결정론적 룰 오버라이드 (Edge Function에서 선처리):
 
 ## 타일 생성 템플릿 체계
 
-### 구조 분기 (3개) × variation (Q만 3개)
+### 구조 분기
 
-| 템플릿                | 모티프 배치                               | variation       | 사용자 표현 예시                                 |
-| --------------------- | ----------------------------------------- | --------------- | ------------------------------------------------ |
-| **H (single)**        | 1개 중앙                                  | 없음            | "심플하게", "깔끔하게", "포인트로" + 단일 모티프 |
-| **F (pair)**          | 2개 대각, 나머지 사분면 비움              | 없음            | "엇갈리게", "대각으로", 단일 모티프 기본값       |
-| **Q-rotation**        | 2×2 그리드, 모두 동일 모티프, 방향만 다름 | rotation        | "방향 다르게", "회전", "돌아가는"                |
-| **Q-color**           | 2×2 그리드, 대각 쌍끼리 색 다름           | color           | "색 섞어서", "두 가지 색으로"                    |
-| **Q-different_motif** | 2×2 그리드, 대각 쌍끼리 모티프 종류 다름  | different_motif | "A랑 B 같이" (2종 명시)                          |
+| 템플릿                | 모티프 배치/패턴 성격                     | variation         | 사용자 표현 예시                                 |
+| --------------------- | ----------------------------------------- | ----------------- | ------------------------------------------------ |
+| **H (single)**        | 1개 중앙                                  | 없음              | "심플하게", "깔끔하게", "포인트로" + 단일 모티프 |
+| **F (pair)**          | 2개 대각, 나머지 사분면 비움              | 없음              | "엇갈리게", "대각으로", 단일 모티프 기본값       |
+| **Q-rotation**        | 2×2 그리드, 모두 동일 모티프, 방향만 다름 | rotation          | "방향 다르게", "회전", "돌아가는"                |
+| **Q-color**           | 2×2 그리드, 대각 쌍끼리 색 다름           | color             | "색 섞어서", "두 가지 색으로"                    |
+| **Q-different_motif** | 2×2 그리드, 대각 쌍끼리 모티프 종류 다름  | different_motif   | "A랑 B 같이" (2종 명시)                          |
+| **STRIPE**            | 넥타이용 사선 스트라이프                  | stripe\_\*        | "스트라이프", "사선", "레지멘탈", "줄마다 질감"  |
+| **DOT**               | 마이크로 도트/핀도트 반복                 | dot\_\*           | "도트", "핀도트"                                 |
+| **TOSSED**            | 작은 모티프를 자연스럽게 흩뿌린 반복      | tossed_scattered  | "흩뿌린", "랜덤", "자연스럽게"                   |
+| **MEDALLION**         | 작은 메달리온/엠블럼 반복                 | medallion_classic | "메달리온", "작은 엠블럼 반복"                   |
+| **GEOMETRIC**         | 다이아몬드/체커/헤링본 등 기하 반복       | geometric\_\*     | "다이아", "체커", "헤링본", "기하학"             |
+
+STRIPE 계열은 1차 품질 개선의 중심이다. 기본값은 `stripe_classic_diagonal`이며, `stripe_multi_width`, `stripe_regimental`, `stripe_textured`, `stripe_dotted`로 줄의 두께·색·질감·내부 도트 차이를 만든다.
 
 ### 원단 분기 (2개)
 
@@ -559,14 +594,14 @@ LLM 판정 전 결정론적 룰 오버라이드 (Edge Function에서 선처리):
 
 ### 배치 수학적 근거
 
-타일을 2×2 invisible grid로 분할 시:
+H/F/Q 계열에서 타일을 2×2 invisible grid로 분할 시:
 
 - 외곽 여백 = 모티프 간 간격 / 2
 
 반복 시 타일 경계를 넘어간 모티프 간 간격 = 외곽 여백(왼쪽 타일의 우측 여백) + 외곽 여백(오른쪽 타일의 좌측 여백) = 모티프 간 간격과 동일.
 → 이 조건을 프롬프트로 명시하면 seamless가 구조적으로 성립 (경계 봉합 단계 불필요).
 
-구체 좌표(1024 기준 (256,256), (768,256), (256,768), (768,768))는 프롬프트에 직접 들어가지 않으며, 원칙 검증용 부록으로만 보존.
+구체 좌표(1024 기준 (256,256), (768,256), (256,768), (768,768))는 프롬프트에 직접 들어가지 않으며, 원칙 검증용 부록으로만 보존. STRIPE/DOT/TOSSED/MEDALLION/GEOMETRIC 계열은 각 템플릿에 반복 리듬과 edge 연속성을 직접 명시한다.
 
 ### Fabric rendering 블록 — 단일 정의
 
@@ -711,6 +746,25 @@ Each motif size: about 30% of the tile width.
 Flat 2D top-down view, no shadow, no text, no border.
 ```
 
+**추가 repeat 템플릿**
+
+구현은 아래 템플릿을 `supabase/functions/generate-tile/prompt-templates.ts`에 상수로 정의한다. 모든 템플릿은 `{FABRIC_BLOCK}`에 Seamless suffix를 포함한다.
+
+| 템플릿                             | 핵심 프롬프트 의도                                                             |
+| ---------------------------------- | ------------------------------------------------------------------------------ |
+| `STRIPE_CLASSIC_DIAGONAL_TEMPLATE` | top-left to bottom-right 방향의 클래식 사선 넥타이 스트라이프                  |
+| `STRIPE_MULTI_WIDTH_TEMPLATE`      | 굵은 주 줄, 중간 보조 줄, 얇은 pinstripe가 섞인 스트라이프                     |
+| `STRIPE_REGIMENTAL_TEMPLATE`       | 넓은 main stripe + narrow contrast stripe + fine pinline의 레지멘탈 스트라이프 |
+| `STRIPE_TEXTURED_TEMPLATE`         | 줄마다 woven twill, jacquard-like, smooth printed silk 질감을 다르게 부여      |
+| `STRIPE_DOTTED_TEMPLATE`           | 일부 사선 줄 내부에 tiny dot/pindot 디테일을 포함                              |
+| `DOT_MICRO_TEMPLATE`               | 작은 도트가 균일하게 반복되는 마이크로 도트                                    |
+| `DOT_PIN_TEMPLATE`                 | 더 작고 정제된 핀도트 반복                                                     |
+| `TOSSED_SCATTERED_TEMPLATE`        | 작은 모티프를 규칙 격자 없이 자연스럽게 흩뿌린 반복                            |
+| `MEDALLION_CLASSIC_TEMPLATE`       | 작은 장식 메달리온을 offset grid로 반복                                        |
+| `GEOMETRIC_DIAMOND_TEMPLATE`       | 작은 다이아몬드 lattice/check 반복                                             |
+| `GEOMETRIC_CHECK_TEMPLATE`         | 작은 check 또는 mini-grid 반복                                                 |
+| `GEOMETRIC_HERRINGBONE_TEMPLATE`   | 미세한 herringbone 또는 broken-chevron 반복                                    |
+
 ### 프롬프트 템플릿 (accent tile)
 
 accent tile은 seamless 속성이 불필요하며, 단일 오브젝트가 중앙에 배치되는 구조.
@@ -762,10 +816,10 @@ Flat 2D top-down view, no shadow, no text, no border, no additional decoration.
 
 repeat tile과 accent tile의 크기 체계는 **독립**이다 (repeat은 구조별 고정, accent는 사용자 지정 가능).
 
-| 대상                 | 크기 결정 방식           | 값                                              |
-| -------------------- | ------------------------ | ----------------------------------------------- |
-| repeat tile 모티프   | 템플릿별 고정            | H 45%, F·Q 35%, Q-different_motif 30%           |
-| accent tile 오브젝트 | `accentLayout.size` 매핑 | `small` 30% / `medium` 45% (기본) / `large` 60% |
+| 대상                 | 크기 결정 방식           | 값                                                                              |
+| -------------------- | ------------------------ | ------------------------------------------------------------------------------- |
+| repeat tile 모티프   | 템플릿별 고정            | H 45%, F·Q 35%, Q-different_motif 30%, 추가 템플릿은 각 프롬프트 내 스케일 지시 |
+| accent tile 오브젝트 | `accentLayout.size` 매핑 | `small` 30% / `medium` 45% (기본) / `large` 60%                                 |
 
 ### 프롬프트 조립 로직
 

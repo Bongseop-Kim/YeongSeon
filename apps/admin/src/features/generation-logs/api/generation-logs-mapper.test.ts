@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   toAdminGenerationLogItem,
+  toAdminGenerationLogGroup,
   toGenerationStatsData,
 } from "@/features/generation-logs/api/generation-logs-mapper";
 
@@ -467,6 +468,142 @@ describe("toAdminGenerationLogItem", () => {
         createdAt: "",
       }),
     );
+  });
+});
+
+describe("toAdminGenerationLogGroup", () => {
+  it("workflow 그룹 row를 4개 결과 세트 뷰 모델로 매핑한다", () => {
+    const result = toAdminGenerationLogGroup({
+      workflow_id: "workflow-1",
+      primary_log_id: "log-1",
+      primary_work_id: "work-1",
+      user_id: "user-1",
+      ai_model: "openai",
+      request_type: "render_standard",
+      user_message: "넥타이 패턴 4개 생성",
+      pattern_type: "all_over",
+      fabric_type: "printed",
+      image_count: "4",
+      success_count: "4",
+      error_count: "0",
+      tokens_charged: "4",
+      tokens_refunded: "1",
+      total_latency_ms: "8123",
+      created_at: "2026-04-29T05:00:00Z",
+      result_images: [
+        {
+          log_id: "log-1",
+          work_id: "work-1",
+          url: "https://ik.imagekit.io/app/1.webp",
+          tile_role: "repeat",
+          status: "success",
+          total_latency_ms: 2000,
+        },
+        {
+          log_id: "log-2",
+          work_id: "work-2",
+          url: "https://ik.imagekit.io/app/2.webp",
+          tile_role: "repeat",
+          status: "success",
+          total_latency_ms: 2020,
+        },
+        {
+          log_id: "log-3",
+          work_id: "work-3",
+          url: "https://ik.imagekit.io/app/3.webp",
+          tile_role: "repeat",
+          status: "success",
+          total_latency_ms: 2040,
+        },
+        {
+          log_id: "log-4",
+          work_id: "work-4",
+          url: "https://ik.imagekit.io/app/4.webp",
+          tile_role: "repeat",
+          status: "success",
+          total_latency_ms: 2063,
+        },
+      ],
+    });
+
+    expect(result).toEqual({
+      workflowId: "workflow-1",
+      primaryLogId: "log-1",
+      primaryWorkId: "work-1",
+      userId: "user-1",
+      aiModel: "openai",
+      requestType: "render_standard",
+      userMessage: "넥타이 패턴 4개 생성",
+      patternType: "all_over",
+      fabricType: "printed",
+      imageCount: 4,
+      successCount: 4,
+      errorCount: 0,
+      tokensCharged: 4,
+      tokensRefunded: 1,
+      totalLatencyMs: 8123,
+      createdAt: "2026-04-29T05:00:00Z",
+      resultImages: [
+        {
+          logId: "log-1",
+          workId: "work-1",
+          url: "https://ik.imagekit.io/app/1.webp",
+          tileRole: "repeat",
+          status: "success",
+          totalLatencyMs: 2000,
+        },
+        {
+          logId: "log-2",
+          workId: "work-2",
+          url: "https://ik.imagekit.io/app/2.webp",
+          tileRole: "repeat",
+          status: "success",
+          totalLatencyMs: 2020,
+        },
+        {
+          logId: "log-3",
+          workId: "work-3",
+          url: "https://ik.imagekit.io/app/3.webp",
+          tileRole: "repeat",
+          status: "success",
+          totalLatencyMs: 2040,
+        },
+        {
+          logId: "log-4",
+          workId: "work-4",
+          url: "https://ik.imagekit.io/app/4.webp",
+          tileRole: "repeat",
+          status: "success",
+          totalLatencyMs: 2063,
+        },
+      ],
+    });
+  });
+
+  it("result_images가 없으면 빈 썸네일 목록으로 폴백한다", () => {
+    const result = toAdminGenerationLogGroup({
+      workflow_id: "workflow-legacy",
+      primary_log_id: "log-legacy",
+      primary_work_id: "work-legacy",
+      user_id: "user-1",
+      ai_model: "openai",
+      request_type: "render_standard",
+      user_message: "legacy",
+      pattern_type: null,
+      fabric_type: null,
+      image_count: 0,
+      success_count: 0,
+      error_count: 1,
+      tokens_charged: 0,
+      tokens_refunded: 0,
+      total_latency_ms: null,
+      created_at: "2026-04-29T05:00:00Z",
+      result_images: null,
+    });
+
+    expect(result.resultImages).toEqual([]);
+    expect(result.errorCount).toBe(1);
+    expect(result.totalLatencyMs).toBeNull();
   });
 });
 

@@ -51,6 +51,104 @@ Deno.test("Q-color: 두 색상 치환", () => {
   assertStringIncludes(prompt, "silver");
 });
 
+Deno.test("variant instruction: 반복 프롬프트에 해석 방향을 추가한다", () => {
+  const prompt = buildRepeatPrompt(
+    {
+      structure: "F",
+      variation: null,
+      motifs: [{ name: "rose", color: null, colors: null }],
+      backgroundColor: "ivory",
+    },
+    "yarn_dyed",
+    "none",
+    0,
+    "Interpret the rose as geometric art deco petal arcs.",
+  );
+
+  assertStringIncludes(prompt, "Variant direction");
+  assertStringIncludes(prompt, "geometric art deco petal arcs");
+  assertStringIncludes(prompt, "2 identical rose");
+  assertStringIncludes(prompt, "Yarn-dyed weaving constraints");
+});
+
+Deno.test(
+  "STRIPE null variation: classic diagonal stripe로 fallback한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "STRIPE",
+        variation: null,
+        motifs: [{ name: "navy stripe", color: "navy", colors: null }],
+        backgroundColor: "ivory",
+      },
+      "printed",
+    );
+
+    assertStringIncludes(prompt, "classic diagonal necktie stripe");
+    assertStringIncludes(prompt, "top-left to bottom-right diagonal");
+    assertStringIncludes(prompt, "tile seamlessly");
+  },
+);
+
+Deno.test(
+  "STRIPE textured: 줄마다 twill/jacquard/smooth 질감 지시를 포함한다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "STRIPE",
+        variation: "stripe_textured",
+        motifs: [
+          { name: "navy and burgundy stripe", color: null, colors: null },
+        ],
+        backgroundColor: "deep navy",
+      },
+      "yarn_dyed",
+    );
+
+    assertStringIncludes(prompt, "textured diagonal stripe");
+    assertStringIncludes(prompt, "woven twill");
+    assertStringIncludes(prompt, "jacquard-like");
+    assertStringIncludes(prompt, "smooth printed silk");
+    assertStringIncludes(prompt, "tile seamlessly");
+  },
+);
+
+Deno.test("STRIPE dotted: stripe 내부 dot/pindot 지시를 포함한다", () => {
+  const prompt = buildRepeatPrompt(
+    {
+      structure: "STRIPE",
+      variation: "stripe_dotted",
+      motifs: [{ name: "gold pindot stripe", color: "gold", colors: null }],
+      backgroundColor: "navy",
+    },
+    "printed",
+  );
+
+  assertStringIncludes(prompt, "diagonal stripe with internal pindot detail");
+  assertStringIncludes(prompt, "tiny dots or pindots inside selected stripes");
+  assertStringIncludes(prompt, "tile seamlessly");
+});
+
+Deno.test(
+  "GEOMETRIC null variation: diamond repeat로 fallback하고 placeholder를 남기지 않는다",
+  () => {
+    const prompt = buildRepeatPrompt(
+      {
+        structure: "GEOMETRIC",
+        variation: null,
+        motifs: [{ name: "abstract diamond", color: null, colors: null }],
+        backgroundColor: "charcoal",
+      },
+      "printed",
+    );
+
+    assertStringIncludes(prompt, "geometric diamond repeat");
+    assertStringIncludes(prompt, "charcoal");
+    assert(!prompt.includes("{"));
+    assertStringIncludes(prompt, "tile seamlessly");
+  },
+);
+
 Deno.test("Q-color: 색상 분석이 누락되어도 placeholder를 남기지 않는다", () => {
   const prompt = buildRepeatPrompt(
     {

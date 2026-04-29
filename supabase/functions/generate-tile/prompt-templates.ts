@@ -101,6 +101,167 @@ Placement rule (critical):
 Each motif size: about 30% of the tile width.
 Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
 
+export const STRIPE_CLASSIC_DIAGONAL_TEMPLATE = `Square tile 1024x1024 with a classic diagonal necktie stripe pattern on {BG} tie silk fabric.
+
+Stripe rule (critical):
+- Create clean repeating diagonal stripes running top-left to bottom-right diagonal.
+- Use {MOTIF} as the stripe character or color inspiration, not as a separate centered icon.
+- Use 2-3 restrained necktie colors, including {BG}, {COLOR_A}, and {COLOR_B} when appropriate.
+- Keep stripe spacing regular and production-ready, with no isolated motifs or empty quadrants.
+- The diagonal stripe rhythm must continue seamlessly across all four tile edges.
+
+{FABRIC_BLOCK}
+
+Classic necktie scale: medium-width diagonal bands, crisp edges, balanced negative space.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const STRIPE_MULTI_WIDTH_TEMPLATE = `Square tile 1024x1024 with a multi-width diagonal necktie stripe pattern on {BG} tie silk fabric.
+
+Stripe rule (critical):
+- Create repeating diagonal stripes running top-left to bottom-right diagonal.
+- Mix broad primary stripes, medium secondary stripes, and very thin pinstripes.
+- Use {MOTIF} only as color or decorative inspiration within the stripe system.
+- Alternate stripe widths deliberately so the pattern feels like a luxury necktie, not a simple barcode.
+- The stripe sequence must repeat seamlessly across all four tile edges.
+
+{FABRIC_BLOCK}
+
+Use {COLOR_A} for the dominant stripe family and {COLOR_B} for narrow accent lines when appropriate.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const STRIPE_REGIMENTAL_TEMPLATE = `Square tile 1024x1024 with a classic regimental diagonal necktie stripe pattern on {BG} tie silk fabric.
+
+Stripe rule (critical):
+- Create structured diagonal stripes running top-left to bottom-right diagonal.
+- Use a repeating sequence of one broad main stripe, one narrow contrast stripe, and one fine pinline.
+- Keep the rhythm crisp, formal, and conservative, suitable for a classic tie.
+- Use {MOTIF} only as subtle color inspiration, not as a standalone motif.
+- The regimental stripe sequence must tile seamlessly on all four edges.
+
+{FABRIC_BLOCK}
+
+Palette: refined {BG}, {COLOR_A}, and {COLOR_B}; avoid gradients and pictorial elements.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const STRIPE_TEXTURED_TEMPLATE = `Square tile 1024x1024 with a textured diagonal stripe necktie pattern on {BG} tie silk fabric.
+
+Stripe rule (critical):
+- Create repeating diagonal stripes running top-left to bottom-right diagonal.
+- Vary the stripe treatment by band: one stripe woven twill, one stripe jacquard-like, one stripe smooth printed silk.
+- Keep every stripe flat and integrated into the fabric surface; no raised shadow or 3D embossing.
+- Use {MOTIF} only as subtle textile inspiration inside the stripe rhythm.
+- The textured diagonal stripe sequence must repeat seamlessly across all four tile edges.
+
+{FABRIC_BLOCK}
+
+Texture contrast should be visible at thumbnail scale but remain elegant and tie-appropriate.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const STRIPE_DOTTED_TEMPLATE = `Square tile 1024x1024 with a diagonal stripe with internal pindot detail on {BG} tie silk fabric.
+
+Stripe rule (critical):
+- Create repeating diagonal stripes running top-left to bottom-right diagonal.
+- Add tiny dots or pindots inside selected stripes only; keep other stripes clean.
+- The dots must follow the diagonal stripe direction and stay contained inside stripe bands.
+- Use {MOTIF} as dot or accent inspiration, not as a large standalone motif.
+- The dotted stripe sequence must repeat seamlessly across all four tile edges.
+
+{FABRIC_BLOCK}
+
+Dot scale: tiny, regular, luxury tie pindot scale, visible in thumbnail without clutter.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const DOT_MICRO_TEMPLATE = `Square tile 1024x1024 with a refined micro-dot repeat on plain {BG} tie silk fabric.
+
+Dot rule (critical):
+- Fill the tile with tiny evenly spaced {MOTIF} dots or simple round dots.
+- Keep dot scale small and dense enough for a luxury necktie thumbnail.
+- Keep spacing consistent so the pattern tiles seamlessly on all four edges.
+- No large centered motif, no diagonal quadrant layout, no extra decorations.
+
+{FABRIC_BLOCK}
+
+Dot size: about 3-5% of the tile width per dot cluster.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const DOT_PIN_TEMPLATE = `Square tile 1024x1024 with a classic pindot repeat on plain {BG} tie silk fabric.
+
+Dot rule (critical):
+- Create very small pinpoint dots in a precise regular repeat.
+- Use {COLOR_A} or {MOTIF} color inspiration for the dots against {BG}.
+- Keep the layout quiet, formal, and high-end.
+- The pindot grid must tile seamlessly on all four edges.
+
+{FABRIC_BLOCK}
+
+Pindot scale: tiny and restrained, with generous background visible.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const TOSSED_SCATTERED_TEMPLATE = `Square tile 1024x1024 with a tossed scattered repeat of {MOTIF} on plain {BG} tie silk fabric.
+
+Placement rule (critical):
+- Scatter small {MOTIF} elements across the tile with varied rotation and spacing.
+- Keep the distribution balanced and natural, avoiding obvious rows, columns, or a 2x2 grid.
+- Motifs near tile edges must continue naturally when repeated.
+- Keep each motif small and tie-appropriate; no oversized central object.
+
+{FABRIC_BLOCK}
+
+Motif size: about 12-18% of the tile width, repeated at varied angles.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const MEDALLION_CLASSIC_TEMPLATE = `Square tile 1024x1024 with a classic small medallion repeat on plain {BG} tie silk fabric.
+
+Placement rule (critical):
+- Create a regular repeat of small ornamental {MOTIF} medallions.
+- Arrange medallions in a refined offset grid suitable for a classic necktie.
+- Keep each medallion simplified, symmetric, and readable at thumbnail scale.
+- The medallion repeat must tile seamlessly on all four edges.
+
+{FABRIC_BLOCK}
+
+Medallion size: about 18-24% of the tile width, with balanced spacing.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const GEOMETRIC_DIAMOND_TEMPLATE = `Square tile 1024x1024 with a geometric diamond repeat on plain {BG} tie silk fabric.
+
+Geometry rule (critical):
+- Create a small repeating diamond lattice or diamond-check pattern.
+- Use {MOTIF} only as abstract shape inspiration inside the diamond geometry.
+- Keep line weight and spacing consistent, refined, and tie-appropriate.
+- The diamond repeat must tile seamlessly on all four edges.
+
+{FABRIC_BLOCK}
+
+Scale: small to medium geometric repeat, readable in an 80px thumbnail.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const GEOMETRIC_CHECK_TEMPLATE = `Square tile 1024x1024 with a refined small check repeat on plain {BG} tie silk fabric.
+
+Geometry rule (critical):
+- Create a tight repeating check or mini-grid pattern using {COLOR_A} and {COLOR_B} when appropriate.
+- Keep the check scale small, formal, and suitable for necktie fabric.
+- Avoid large squares, pictorial motifs, or empty quadrants.
+- The check repeat must tile seamlessly on all four edges.
+
+{FABRIC_BLOCK}
+
+Scale: compact check pattern with crisp intersections.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
+export const GEOMETRIC_HERRINGBONE_TEMPLATE = `Square tile 1024x1024 with a subtle geometric herringbone repeat on plain {BG} tie silk fabric.
+
+Geometry rule (critical):
+- Create a small repeating herringbone or broken-chevron textile pattern.
+- Keep the pattern tonal and refined, using {MOTIF} only as abstract inspiration.
+- Avoid large zigzags or high-contrast optical effects.
+- The herringbone repeat must tile seamlessly on all four edges.
+
+{FABRIC_BLOCK}
+
+Scale: fine textile herringbone, visible but not overpowering.
+Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
+
 export const ACCENT_TEXT_TEMPLATE = `Square tile 1024x1024 on plain {BG} tie silk fabric.
 
 Subject:

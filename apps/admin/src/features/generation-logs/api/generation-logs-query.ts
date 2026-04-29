@@ -3,8 +3,10 @@ import type { Dayjs } from "dayjs";
 import {
   getGenerationStats,
   getGenerationLogs,
+  getGenerationLogGroups,
 } from "@/features/generation-logs/api/generation-logs-api";
 import type {
+  AdminGenerationLogGroup,
   AdminGenerationLogItem,
   GenerationRequestTypeFilter,
   GenerationStatusFilter,
@@ -33,7 +35,7 @@ export function useGenerationLogsQuery(params: {
   status?: GenerationStatusFilter | null;
   idSearch?: string | null;
 }): {
-  data: AdminGenerationLogItem[] | undefined;
+  data: AdminGenerationLogGroup[] | undefined;
   hasMore: boolean;
   isLoading: boolean;
 } {
@@ -54,7 +56,7 @@ export function useGenerationLogsQuery(params: {
       params.idSearch ?? null,
     ],
     queryFn: () =>
-      getGenerationLogs({
+      getGenerationLogGroups({
         startDate,
         endDate,
         aiModel: params.aiModel,

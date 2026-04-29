@@ -7,10 +7,12 @@ import {
   useGenerationWorkflowLogsQuery,
 } from "@/features/generation-logs/api/generation-logs-query";
 
-const { useQueryMock, getGenerationLogsMock } = vi.hoisted(() => ({
-  useQueryMock: vi.fn(),
-  getGenerationLogsMock: vi.fn(),
-}));
+const { useQueryMock, getGenerationLogsMock, getGenerationLogGroupsMock } =
+  vi.hoisted(() => ({
+    useQueryMock: vi.fn(),
+    getGenerationLogsMock: vi.fn(),
+    getGenerationLogGroupsMock: vi.fn(),
+  }));
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: useQueryMock,
@@ -19,12 +21,14 @@ vi.mock("@tanstack/react-query", () => ({
 vi.mock("@/features/generation-logs/api/generation-logs-api", () => ({
   getGenerationStats: vi.fn(),
   getGenerationLogs: getGenerationLogsMock,
+  getGenerationLogGroups: getGenerationLogGroupsMock,
 }));
 
 describe("useGenerationLogsQuery — new filter params", () => {
   beforeEach(() => {
     useQueryMock.mockReset();
     getGenerationLogsMock.mockReset();
+    getGenerationLogGroupsMock.mockReset();
     useQueryMock.mockImplementation((options) => ({
       data: undefined,
       isLoading: false,
@@ -59,6 +63,32 @@ describe("useGenerationLogsQuery — new filter params", () => {
 
     const options = useQueryMock.mock.calls[0]?.[0];
     expect(options.queryKey).toContain("success");
+  });
+
+  it("목록은 workflow 그룹 RPC를 호출한다", async () => {
+    useGenerationLogsQuery({
+      dateRange: [dayjs("2026-04-17"), dayjs("2026-04-23")],
+      aiModel: "openai",
+      page: 2,
+      requestType: "render_standard",
+      status: "success",
+      idSearch: "workflow-1",
+    });
+
+    const options = useQueryMock.mock.calls[0]?.[0];
+    await options.queryFn();
+
+    expect(getGenerationLogGroupsMock).toHaveBeenCalledWith({
+      startDate: "2026-04-17",
+      endDate: "2026-04-23",
+      aiModel: "openai",
+      limit: 51,
+      offset: 50,
+      requestType: "render_standard",
+      status: "success",
+      idSearch: "workflow-1",
+    });
+    expect(getGenerationLogsMock).not.toHaveBeenCalled();
   });
 });
 

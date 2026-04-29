@@ -13,14 +13,14 @@ import {
   createAdminSupabaseClient,
   createAuthenticatedSupabaseClient,
 } from "@/functions/_shared/supabase-clients.ts";
-import { analyzeIntent } from "./analysis.ts";
+import { analyzeIntent, planDiversity } from "./analysis.ts";
 import {
   chargeTileRenderTokens,
   refundTileRenderTokens,
   TILE_RENDER_REQUEST_TYPE,
 } from "./billing.ts";
 import { resolveFabricType } from "./fabric-type-resolver.ts";
-import { generateTileImage, type GeneratedTile } from "./image-generator.ts";
+import { type GeneratedTile, generateTileImage } from "./image-generator.ts";
 import {
   resolveAccentReferenceImageUrls,
   resolveEffectiveReferenceImageUsage,
@@ -31,7 +31,12 @@ import {
 import { buildSuccessfulTileGenerationLogs } from "./log-plan.ts";
 import { persistDesignGeneration } from "./generation-persistence.ts";
 import { buildAccentPrompt, buildRepeatPrompt } from "./prompt-builder.ts";
-import type { TileGenerationRequest, TileGenerationResponse } from "./types.ts";
+import type {
+  AnalysisOutput,
+  GenerationSpec,
+  TileGenerationRequest,
+  TileGenerationResponse,
+} from "./types.ts";
 import { buildTileGenerationVariantResponse } from "./variant-response.ts";
 
 const TILE_GENERATION_AI_MESSAGE = "타일 기반 디자인을 생성했습니다.";
@@ -50,6 +55,16 @@ function getLatestUserRequestAttachments(body: TileGenerationRequest) {
 
 const repeatTile = (tile: GeneratedTile): GeneratedTile[] =>
   Array.from({ length: TILE_VARIANT_COUNT }, () => tile);
+
+const analysisForVariant = (
+  baseAnalysis: AnalysisOutput,
+  variant: GenerationSpec,
+): AnalysisOutput => ({
+  ...baseAnalysis,
+  tileLayout: variant.tileLayout,
+  accentLayout: variant.accentLayout,
+  referenceImageUsage: variant.referenceImageUsage,
+});
 
 const buildGenerationRequestMetadata = (
   body: TileGenerationRequest,
@@ -191,18 +206,30 @@ Deno.serve(async (req) => {
         body,
         selectedBackgroundColor,
       );
-      const repeatReferenceImageUrls = resolveRepeatReferenceImageUrls(
-        analysis,
-        body,
-      );
-      const repeatPrompt = reuseRepeatTile
+      const diversityPlan = reuseRepeatTile
         ? null
-        : buildRepeatPrompt(
-            analysis.tileLayout,
-            fabricType,
-            analysis.referenceImageUsage,
-            repeatReferenceImageUrls.length,
-          );
+        : await planDiversity(body, analysis, fabricType);
+      const repeatGenerationPlans =
+        reuseRepeatTile || !diversityPlan
+          ? []
+          : diversityPlan.variants.map((variant) => {
+              const variantAnalysis = analysisForVariant(analysis, variant);
+              const referenceImageUrls = resolveRepeatReferenceImageUrls(
+                variantAnalysis,
+                body,
+              );
+              return {
+                variant,
+                referenceImageUrls,
+                prompt: buildRepeatPrompt(
+                  variant.tileLayout,
+                  fabricType,
+                  variant.referenceImageUsage,
+                  referenceImageUrls.length,
+                  variant,
+                ),
+              };
+            });
       const accentBuilt =
         analysis.patternType === "one_point" && analysis.accentLayout
           ? buildAccentPrompt(
@@ -213,21 +240,28 @@ Deno.serve(async (req) => {
             )
           : null;
       const promptLength =
-        (repeatPrompt?.length ?? 0) + (accentBuilt?.prompt.length ?? 0);
+        repeatGenerationPlans.reduce(
+          (sum, plan) => sum + plan.prompt.length,
+          0,
+        ) + (accentBuilt?.prompt.length ?? 0);
       const parentWorkId = reuseRepeatTile
         ? (body.previousAccentTileWorkId ??
           body.previousRepeatTileWorkId ??
           null)
         : (body.previousRepeatTileWorkId ?? null);
       const promptParts = [
-        repeatPrompt ? `repeat_prompt:\n${repeatPrompt}` : null,
+        ...repeatGenerationPlans.map(
+          (plan, index) => `repeat_prompt_${index + 1}:\n${plan.prompt}`,
+        ),
         accentBuilt ? `accent_prompt:\n${accentBuilt.prompt}` : null,
       ].filter((part): part is string => part !== null);
       const generationPrompt =
         promptParts.length > 0 ? promptParts.join("\n\n") : body.userMessage;
       const referenceImageCount =
-        repeatReferenceImageUrls.length +
-        (accentBuilt?.referenceImageUrls.length ?? 0);
+        repeatGenerationPlans.reduce(
+          (sum, plan) => sum + plan.referenceImageUrls.length,
+          0,
+        ) + (accentBuilt?.referenceImageUrls.length ?? 0);
       const renderLogFields = {
         ...baseLogFields,
         parent_work_id: parentWorkId,
@@ -236,10 +270,14 @@ Deno.serve(async (req) => {
         normalized_design: {
           ...analysis,
           attachedImageCount: body.attachedImageUrls.length,
-          repeatReferenceImageCount: repeatReferenceImageUrls.length,
+          repeatReferenceImageCount: repeatGenerationPlans.reduce(
+            (sum, plan) => sum + plan.referenceImageUrls.length,
+            0,
+          ),
           accentReferenceImageCount:
             accentBuilt?.referenceImageUrls.length ?? 0,
           imageEndpoint: referenceImageCount > 0 ? "edits" : "generations",
+          diversityPlan,
         } as Record<string, unknown>,
         has_reference_image: referenceImageCount > 0,
         has_previous_image:
@@ -277,10 +315,10 @@ Deno.serve(async (req) => {
       const repeatResults = reusableRepeatTile
         ? repeatTile(reusableRepeatTile)
         : await Promise.all(
-            Array.from({ length: TILE_VARIANT_COUNT }, (_, index) =>
+            repeatGenerationPlans.map((plan, index) =>
               generateTileImage(
-                repeatPrompt as string,
-                repeatReferenceImageUrls,
+                plan.prompt,
+                plan.referenceImageUrls,
                 index === 0 ? renderWorkId : undefined,
               ),
             ),
@@ -357,7 +395,10 @@ Deno.serve(async (req) => {
           fabricType,
           requestMetadata: buildGenerationRequestMetadata(
             body,
-            analysis as unknown as Record<string, unknown>,
+            {
+              ...(analysis as unknown as Record<string, unknown>),
+              diversityPlan,
+            },
             selectedBackgroundColor,
             reuseRepeatTile,
             referenceImageCount,
