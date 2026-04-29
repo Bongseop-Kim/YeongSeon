@@ -20,7 +20,7 @@ import {
   TILE_RENDER_REQUEST_TYPE,
 } from "./billing.ts";
 import { resolveFabricType } from "./fabric-type-resolver.ts";
-import { generateTileImage } from "./image-generator.ts";
+import { generateTileImage, type GeneratedTile } from "./image-generator.ts";
 import {
   resolveAccentReferenceImageUrls,
   resolveEffectiveReferenceImageUsage,
@@ -29,10 +29,13 @@ import {
   shouldReuseRepeatTile,
 } from "./generation-plan.ts";
 import { buildSuccessfulTileGenerationLogs } from "./log-plan.ts";
+import { persistDesignGeneration } from "./generation-persistence.ts";
 import { buildAccentPrompt, buildRepeatPrompt } from "./prompt-builder.ts";
 import type { TileGenerationRequest, TileGenerationResponse } from "./types.ts";
+import { buildTileGenerationVariantResponse } from "./variant-response.ts";
 
 const TILE_GENERATION_AI_MESSAGE = "타일 기반 디자인을 생성했습니다.";
+const TILE_VARIANT_COUNT = 4;
 
 function getLatestUserRequestAttachments(body: TileGenerationRequest) {
   for (let index = body.allMessages.length - 1; index >= 0; index -= 1) {
@@ -44,6 +47,30 @@ function getLatestUserRequestAttachments(body: TileGenerationRequest) {
 
   return null;
 }
+
+const repeatTile = (tile: GeneratedTile): GeneratedTile[] =>
+  Array.from({ length: TILE_VARIANT_COUNT }, () => tile);
+
+const buildGenerationRequestMetadata = (
+  body: TileGenerationRequest,
+  analysis: Record<string, unknown>,
+  selectedBackgroundColor: string | null,
+  reuseRepeatTile: boolean,
+  referenceImageCount: number,
+): Record<string, unknown> => ({
+  route: body.route,
+  sessionId: body.sessionId,
+  workflowId: body.workflowId,
+  selectedColors: body.selectedColors,
+  attachments: body.allMessages.at(-1)?.attachments ?? [],
+  selectedBackgroundColor,
+  attachedImageUrls: body.attachedImageUrls,
+  previousRepeatTileWorkId: body.previousRepeatTileWorkId,
+  previousAccentTileWorkId: body.previousAccentTileWorkId,
+  reusedRepeatTile: reuseRepeatTile,
+  referenceImageCount,
+  analysis,
+});
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
@@ -196,6 +223,8 @@ Deno.serve(async (req) => {
         repeatPrompt ? `repeat_prompt:\n${repeatPrompt}` : null,
         accentBuilt ? `accent_prompt:\n${accentBuilt.prompt}` : null,
       ].filter((part): part is string => part !== null);
+      const generationPrompt =
+        promptParts.length > 0 ? promptParts.join("\n\n") : body.userMessage;
       const referenceImageCount =
         repeatReferenceImageUrls.length +
         (accentBuilt?.referenceImageUrls.length ?? 0);
@@ -203,7 +232,7 @@ Deno.serve(async (req) => {
         ...baseLogFields,
         parent_work_id: parentWorkId,
         prompt_length: promptLength,
-        image_prompt: promptParts.length > 0 ? promptParts.join("\n\n") : null,
+        image_prompt: generationPrompt,
         normalized_design: {
           ...analysis,
           attachedImageCount: body.attachedImageUrls.length,
@@ -241,32 +270,63 @@ Deno.serve(async (req) => {
         };
       }
 
-      const [repeatResult, accentResult] = await Promise.all([
-        reusableRepeatTile
-          ? Promise.resolve(reusableRepeatTile)
-          : generateTileImage(
-              repeatPrompt as string,
-              repeatReferenceImageUrls,
-              renderWorkId,
+      if (reuseRepeatTile && !accentBuilt) {
+        throw new Error("reuseRepeatTile requires an accent generation");
+      }
+
+      const repeatResults = reusableRepeatTile
+        ? repeatTile(reusableRepeatTile)
+        : await Promise.all(
+            Array.from({ length: TILE_VARIANT_COUNT }, (_, index) =>
+              generateTileImage(
+                repeatPrompt as string,
+                repeatReferenceImageUrls,
+                index === 0 ? renderWorkId : undefined,
+              ),
             ),
-        accentBuilt
-          ? generateTileImage(
-              accentBuilt.prompt,
-              accentBuilt.referenceImageUrls,
-              reuseRepeatTile ? renderWorkId : undefined,
-            )
-          : Promise.resolve(null),
-      ]);
+          );
+
+      const accentResults = accentBuilt
+        ? await Promise.all(
+            Array.from({ length: TILE_VARIANT_COUNT }, (_, index) =>
+              generateTileImage(
+                accentBuilt.prompt,
+                accentBuilt.referenceImageUrls,
+                reuseRepeatTile && index === 0 ? renderWorkId : undefined,
+              ),
+            ),
+          )
+        : [];
+
+      const firstRepeatResult = repeatResults[0];
+      const firstAccentResult = accentResults[0] ?? null;
+      if (!firstRepeatResult) {
+        throw new Error("repeat generation returned no variants");
+      }
 
       const primaryResult =
-        reuseRepeatTile && accentResult ? accentResult : repeatResult;
+        reuseRepeatTile && firstAccentResult
+          ? firstAccentResult
+          : firstRepeatResult;
       const representativeResult = primaryResult;
+      const generationId = crypto.randomUUID();
+      const result: TileGenerationResponse = buildTileGenerationVariantResponse(
+        {
+          generationId,
+          prompt: generationPrompt,
+          patternType: analysis.patternType,
+          fabricType,
+          repeatResults,
+          accentResults,
+          accentLayout: analysis.accentLayout,
+        },
+      );
 
       try {
         const generationLogs = buildSuccessfulTileGenerationLogs({
           baseLog: renderLogFields,
-          repeatResult,
-          accentResult,
+          repeatResults,
+          accentResults,
           primaryWorkId: primaryResult.workId,
           tokensCharged,
           tokensRefunded,
@@ -289,16 +349,41 @@ Deno.serve(async (req) => {
       }
 
       try {
+        await persistDesignGeneration(adminClient, {
+          generationId,
+          userId: user.id,
+          prompt: generationPrompt,
+          patternType: analysis.patternType,
+          fabricType,
+          requestMetadata: buildGenerationRequestMetadata(
+            body,
+            analysis as unknown as Record<string, unknown>,
+            selectedBackgroundColor,
+            reuseRepeatTile,
+            referenceImageCount,
+          ),
+          variants: result.variants,
+        });
+      } catch (error) {
+        console.error("generate-tile persistDesignGeneration failed:", {
+          workId: primaryResult.workId,
+          generationId,
+          error,
+        });
+        return jsonResponse(500, { error: "persistence_failed" });
+      }
+
+      try {
         await saveDesignSession(
           authClient,
           {
             sessionId: body.sessionId,
             aiModel: "openai",
             firstMessage: body.firstMessage,
-            repeatTileUrl: repeatResult.url,
-            repeatTileWorkId: repeatResult.workId,
-            accentTileUrl: accentResult?.url ?? null,
-            accentTileWorkId: accentResult?.workId ?? null,
+            repeatTileUrl: firstRepeatResult.url,
+            repeatTileWorkId: firstRepeatResult.workId,
+            accentTileUrl: firstAccentResult?.url ?? null,
+            accentTileWorkId: firstAccentResult?.workId ?? null,
             accentLayout: analysis.accentLayout
               ? (analysis.accentLayout as unknown as Record<string, unknown>)
               : null,
@@ -323,16 +408,6 @@ Deno.serve(async (req) => {
         });
         return jsonResponse(500, { error: "persistence_failed" });
       }
-
-      const result: TileGenerationResponse = {
-        repeatTileUrl: repeatResult.url,
-        repeatTileWorkId: repeatResult.workId,
-        accentTileUrl: accentResult?.url ?? null,
-        accentTileWorkId: accentResult?.workId ?? null,
-        patternType: analysis.patternType,
-        fabricType,
-        accentLayout: analysis.accentLayout,
-      };
 
       return jsonResponse(200, result as unknown as Record<string, unknown>);
     } catch (error) {

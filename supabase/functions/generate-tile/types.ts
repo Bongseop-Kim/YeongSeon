@@ -81,11 +81,17 @@ export interface TileGenerationRequest {
 }
 
 export interface TileGenerationResponse {
-  repeatTileUrl: string;
-  repeatTileWorkId: string;
-  accentTileUrl: string | null;
-  accentTileWorkId: string | null;
+  generationId: string;
+  prompt: string;
   patternType: PatternType;
   fabricType: FabricType;
-  accentLayout: AccentLayout | null;
+  variants: Array<{
+    id: string;
+    index: number;
+    repeatTileUrl: string;
+    repeatTileWorkId: string;
+    accentTileUrl: string | null;
+    accentTileWorkId: string | null;
+    accentLayout: AccentLayout | null;
+  }>;
 }

@@ -28,6 +28,46 @@ vi.mock("@/entities/design", async (importOriginal) => {
   return {
     ...actual,
     useDesignTokenBalanceQuery: () => ({ data: undefined }),
+    useDesignGenerationsQuery: () => ({
+      data: [
+        {
+          id: "generation-1",
+          userId: "user-1",
+          prompt: "네이비 스트라이프",
+          patternType: "all_over",
+          fabricType: "printed",
+          requestMetadata: {
+            selectedColors: [],
+            attachments: [],
+            route: "tile_generation",
+          },
+          variants: [1, 2, 3, 4].map((index) => ({
+            id: `variant-${index}`,
+            generationId: "generation-1",
+            index,
+            repeatTile: {
+              url:
+                index === 1
+                  ? "https://example.com/repeat.webp"
+                  : `https://example.com/repeat-${index}.webp`,
+              workId: `repeat-work-${index}`,
+            },
+            accentTile: null,
+            accentLayout: null,
+            patternType: "all_over",
+            fabricType: "printed",
+            createdAt: "2026-04-29T00:00:00.000Z",
+          })),
+          createdAt: "2026-04-29T00:00:00.000Z",
+          updatedAt: "2026-04-29T00:00:00.000Z",
+        },
+      ],
+      isLoading: false,
+    }),
+    useDeleteDesignGenerationMutation: () => ({
+      mutate: vi.fn(),
+      isPending: false,
+    }),
   };
 });
 
@@ -50,7 +90,7 @@ describe("chat tile preview integration", () => {
     useDesignChatStore.getState().resetConversation();
   });
 
-  it("채팅 타일 클릭은 workId가 없어도 메인 타이 캔버스를 반복 타일 배치로 전환한다", async () => {
+  it("feed 타일 클릭은 메인 타이 캔버스를 반복 타일 배치로 전환한다", async () => {
     useDesignChatStore.setState({
       messages: [
         {
@@ -75,7 +115,7 @@ describe("chat tile preview integration", () => {
     expect(findTileLayer()).toBeUndefined();
 
     await userEvent.click(
-      screen.getByRole("button", { name: "타일 프리뷰 선택" }),
+      screen.getByRole("button", { name: "variant 1 선택" }),
     );
 
     const tileLayer = findTileLayer();

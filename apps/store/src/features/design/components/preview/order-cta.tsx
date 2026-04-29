@@ -9,9 +9,12 @@ export function OrderCta() {
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
   );
+  const selectedPreviewImageUrl = useDesignChatStore(
+    (state) => state.selectedPreviewImageUrl,
+  );
 
   const hidden =
-    generationStatus === "idle" ||
+    !selectedPreviewImageUrl ||
     generationStatus === "generating" ||
     generationStatus === "regenerating";
 

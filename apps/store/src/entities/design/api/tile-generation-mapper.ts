@@ -6,6 +6,7 @@ import type {
   PatternType,
   TileGenerationPayload,
   TileGenerationResult,
+  TileGenerationVariantResult,
   TileRef,
 } from "@/entities/design/model/tile-types";
 
@@ -61,6 +62,48 @@ const toOptionalTileRef = (
   return toTileRef(url, workId, fieldName);
 };
 
+const toVariantIndex = (value: unknown): 1 | 2 | 3 | 4 => {
+  if (value === 1 || value === 2 || value === 3 || value === 4) {
+    return value;
+  }
+
+  throw new Error(
+    `Invalid generate-tile response: variant index is invalid (${String(value)})`,
+  );
+};
+
+const toRequiredString = (value: unknown, fieldName: string): string => {
+  const normalized = toStringOrNull(value);
+
+  if (!normalized) {
+    throw new Error(`Invalid generate-tile response: ${fieldName} is missing`);
+  }
+
+  return normalized;
+};
+
+const toVariant = (raw: unknown): TileGenerationVariantResult => {
+  if (!isRecord(raw)) {
+    throw new Error("Invalid generate-tile response: variant is invalid");
+  }
+
+  return {
+    id: toRequiredString(raw.id, "variant id"),
+    index: toVariantIndex(raw.index),
+    repeatTile: toTileRef(
+      raw.repeatTileUrl,
+      raw.repeatTileWorkId,
+      "repeatTile",
+    ),
+    accentTile: toOptionalTileRef(
+      raw.accentTileUrl,
+      raw.accentTileWorkId,
+      "accentTile",
+    ),
+    accentLayout: toAccentLayout(raw.accentLayout),
+  };
+};
+
 export function toTileGenerationInvokePayload(
   payload: TileGenerationPayload,
 ): TileGenerationInvokePayload {
@@ -80,18 +123,11 @@ export function normalizeInvokeResponse(raw: unknown): TileGenerationResult {
     throw new Error("Invalid generate-tile response: expected object");
   }
 
-  const repeatTile = toTileRef(
-    raw.repeatTileUrl,
-    raw.repeatTileWorkId,
-    "repeatTile",
-  );
-  const accentTile = toOptionalTileRef(
-    raw.accentTileUrl,
-    raw.accentTileWorkId,
-    "accentTile",
-  );
   const patternType = toPatternType(raw.patternType);
   const fabricType = toFabricType(raw.fabricType);
+  const variants = Array.isArray(raw.variants)
+    ? raw.variants.map(toVariant)
+    : [];
 
   if (!patternType) {
     throw new Error(
@@ -105,11 +141,20 @@ export function normalizeInvokeResponse(raw: unknown): TileGenerationResult {
     );
   }
 
+  if (variants.length !== 4) {
+    throw new Error("Invalid generate-tile response: expected 4 variants");
+  }
+
+  const firstVariant = variants[0];
+
   return {
-    repeatTile,
-    accentTile,
+    generationId: toRequiredString(raw.generationId, "generationId"),
+    prompt: toStringOrNull(raw.prompt) ?? "",
+    variants,
+    repeatTile: firstVariant.repeatTile,
+    accentTile: firstVariant.accentTile,
     patternType,
     fabricType,
-    accentLayout: toAccentLayout(raw.accentLayout),
+    accentLayout: firstVariant.accentLayout,
   };
 }

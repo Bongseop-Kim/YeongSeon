@@ -6,14 +6,12 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageSeo } from "@/shared/ui/page-seo";
 import {
   ChatPanel,
-  MobileHistorySheet,
   OnboardingDialog,
   PendingResultBanner,
   PreviewPanel,
   useDesignChat,
   useOnboarding,
   usePendingGeneration,
-  useSessionRestore,
 } from "@/features/design";
 import type { Attachment } from "@/features/design";
 import { cn } from "@/shared/lib/utils";
@@ -32,8 +30,6 @@ function DesignPage() {
   const user = useAuthStore((state) => state.user);
   const confirm = useModalStore((state) => state.confirm);
   const { showOnboarding, completeOnboarding } = useOnboarding();
-  const { isHistoryOpen, openHistory, closeHistory, restoreSession } =
-    useSessionRestore();
   const { hasPendingResult, markPending, clearPending } =
     usePendingGeneration();
   const { sendMessage, regenerate } = useDesignChat({
@@ -82,7 +78,6 @@ function DesignPage() {
         {hasPendingResult && (
           <PendingResultBanner
             onConfirm={() => {
-              openHistory();
               clearPending();
             }}
             onDismiss={clearPending}
@@ -110,17 +105,9 @@ function DesignPage() {
             <ChatPanel
               className="h-full"
               sendMessage={sendMessageWithAuthCheck}
-              onOpenHistory={openHistory}
             />
           </div>
         </div>
-        {!isDesktop ? (
-          <MobileHistorySheet
-            open={isHistoryOpen}
-            onClose={closeHistory}
-            onSessionSelect={restoreSession}
-          />
-        ) : null}
         <OnboardingDialog open={showOnboarding} onClose={completeOnboarding} />
       </MainContent>
     </MainLayout>

@@ -32,15 +32,15 @@ Deno.test(
   () => {
     const logs = buildSuccessfulTileGenerationLogs({
       baseLog,
-      repeatResult: {
-        url: "https://imagekit.example/repeat.webp",
-        workId: "repeat-work",
-      },
-      accentResult: {
-        url: "https://imagekit.example/accent.webp",
-        workId: "accent-work",
-      },
-      primaryWorkId: "repeat-work",
+      repeatResults: [1, 2, 3, 4].map((index) => ({
+        url: `https://imagekit.example/repeat-${index}.webp`,
+        workId: `repeat-work-${index}`,
+      })),
+      accentResults: [1, 2, 3, 4].map((index) => ({
+        url: `https://imagekit.example/accent-${index}.webp`,
+        workId: `accent-work-${index}`,
+      })),
+      primaryWorkId: "repeat-work-1",
       tokensCharged: 3,
       tokensRefunded: 0,
       patternType: "one_point",
@@ -56,12 +56,47 @@ Deno.test(
 
     assertEquals(
       logs.map((log) => log.work_id),
-      ["repeat-work", "accent-work"],
+      [
+        "repeat-work-1",
+        "accent-work-1",
+        "repeat-work-2",
+        "accent-work-2",
+        "repeat-work-3",
+        "accent-work-3",
+        "repeat-work-4",
+        "accent-work-4",
+      ],
     );
     assertEquals(logs[0]?.tokens_charged, 3);
     assertEquals(logs[1]?.tokens_charged, 0);
-    assertEquals(logs[0]?.paired_tile_work_id, "accent-work");
-    assertEquals(logs[1]?.paired_tile_work_id, "repeat-work");
+    assertEquals(logs[0]?.paired_tile_work_id, "accent-work-1");
+    assertEquals(logs[1]?.paired_tile_work_id, "repeat-work-1");
+  },
+);
+
+Deno.test(
+  "buildSuccessfulTileGenerationLogs charges only the primary generated work id",
+  () => {
+    const logs = buildSuccessfulTileGenerationLogs({
+      baseLog,
+      repeatResults: [1, 2, 3, 4].map((index) => ({
+        url: `https://imagekit.example/repeat-${index}.webp`,
+        workId: index === 1 ? "render-work" : `repeat-work-${index}`,
+      })),
+      accentResults: [],
+      primaryWorkId: "render-work",
+      tokensCharged: 3,
+      tokensRefunded: 0,
+      patternType: "all_over",
+      fabricType: "printed",
+      accentLayout: null,
+      reusedRepeatTile: false,
+    });
+
+    assertEquals(
+      logs.map((log) => log.tokens_charged),
+      [3, 0, 0, 0],
+    );
   },
 );
 
@@ -70,14 +105,14 @@ Deno.test(
   () => {
     const logs = buildSuccessfulTileGenerationLogs({
       baseLog,
-      repeatResult: {
+      repeatResults: [1, 2, 3, 4].map(() => ({
         url: "https://imagekit.example/repeat.webp",
         workId: "previous-repeat-work",
-      },
-      accentResult: {
-        url: "https://imagekit.example/accent.webp",
-        workId: "render-work",
-      },
+      })),
+      accentResults: [1, 2, 3, 4].map((index) => ({
+        url: `https://imagekit.example/accent-${index}.webp`,
+        workId: index === 1 ? "render-work" : `accent-work-${index}`,
+      })),
       primaryWorkId: "render-work",
       tokensCharged: 3,
       tokensRefunded: 0,
@@ -89,9 +124,13 @@ Deno.test(
 
     assertEquals(
       logs.map((log) => log.work_id),
-      ["render-work"],
+      ["render-work", "accent-work-2", "accent-work-3", "accent-work-4"],
     );
     assertEquals(logs[0]?.repeat_tile_work_id, "previous-repeat-work");
     assertEquals(logs[0]?.paired_tile_work_id, "previous-repeat-work");
+    assertEquals(
+      logs.map((log) => log.tokens_charged),
+      [3, 0, 0, 0],
+    );
   },
 );

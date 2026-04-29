@@ -5,6 +5,11 @@ export {
   useDesignTokenHistoryQuery,
 } from "./api/ai-design-query";
 export {
+  DESIGN_GENERATIONS_QUERY_KEY,
+  useDeleteDesignGenerationMutation,
+  useDesignGenerationsQuery,
+} from "./api/design-generation-query";
+export {
   getDesignSessionMessages,
   getDesignSessions,
 } from "./api/design-session-api";
@@ -20,6 +25,11 @@ export {
 export type { Attachment, ContextChip } from "./model/ai-design-types";
 export { isActiveGeneration } from "./model/chat";
 export type { GenerationStatus, Message } from "./model/chat";
+export type {
+  DesignGeneration,
+  DesignGenerationRequestMetadata,
+  DesignGenerationVariant,
+} from "./model/design-generation";
 export type {
   CiPlacement,
   DesignContext,

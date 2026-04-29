@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import {
   DESIGN_TOKEN_BALANCE_QUERY_KEY,
+  DESIGN_GENERATIONS_QUERY_KEY,
   isActiveGeneration,
   InsufficientTokensError,
   callTileGeneration,
@@ -294,6 +295,9 @@ export function useDesignChat(
       });
       void queryClient.invalidateQueries({
         queryKey: DESIGN_SESSIONS_QUERY_KEY,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: DESIGN_GENERATIONS_QUERY_KEY,
       });
     } catch (error) {
       console.error("tile generation failed:", error);

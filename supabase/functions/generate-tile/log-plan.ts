@@ -21,8 +21,8 @@ type SuccessfulTileGenerationBaseLog = Omit<
 
 export interface BuildSuccessfulTileGenerationLogsParams {
   baseLog: SuccessfulTileGenerationBaseLog;
-  repeatResult: GeneratedTile;
-  accentResult: GeneratedTile | null;
+  repeatResults: GeneratedTile[];
+  accentResults: GeneratedTile[];
   primaryWorkId: string;
   tokensCharged: number;
   tokensRefunded: number;
@@ -39,8 +39,8 @@ const toAccentLayoutRecord = (
 
 export function buildSuccessfulTileGenerationLogs({
   baseLog,
-  repeatResult,
-  accentResult,
+  repeatResults,
+  accentResults,
   primaryWorkId,
   tokensCharged,
   tokensRefunded,
@@ -49,52 +49,64 @@ export function buildSuccessfulTileGenerationLogs({
   accentLayout,
   reusedRepeatTile,
 }: BuildSuccessfulTileGenerationLogsParams): AiGenerationLogInsert[] {
+  if (repeatResults.length !== 4) {
+    throw new Error("generation logs require 4 repeat results");
+  }
+
+  if (patternType === "one_point" && accentResults.length !== 4) {
+    throw new Error("one_point generation logs require 4 accent results");
+  }
+
+  if (patternType === "all_over" && accentResults.length !== 0) {
+    throw new Error("all_over generation logs must not include accent results");
+  }
+
   const accentLayoutRecord = toAccentLayoutRecord(accentLayout);
-  const shared = {
-    ...baseLog,
-    generate_image: true,
-    image_generated: true,
-    tokens_refunded: tokensRefunded,
-    repeat_tile_url: repeatResult.url,
-    repeat_tile_work_id: repeatResult.workId,
-    accent_tile_url: accentResult?.url ?? null,
-    accent_tile_work_id: accentResult?.workId ?? null,
-    pattern_type: patternType,
-    fabric_type: fabricType,
-    accent_layout_json: accentLayoutRecord,
-  } satisfies Partial<AiGenerationLogInsert>;
+  const logs: AiGenerationLogInsert[] = [];
 
-  const primaryIsAccent = primaryWorkId === accentResult?.workId;
-  const primaryLog: AiGenerationLogInsert = {
-    ...shared,
-    work_id: primaryWorkId,
-    generated_image_url: primaryIsAccent ? accentResult.url : repeatResult.url,
-    tokens_charged: tokensCharged,
-    tile_role: primaryIsAccent ? "accent" : "repeat",
-    paired_tile_work_id: primaryIsAccent
-      ? repeatResult.workId
-      : (accentResult?.workId ?? null),
-  } as AiGenerationLogInsert;
+  repeatResults.forEach((repeatResult, index) => {
+    const accentResult = accentResults[index] ?? null;
+    const shared = {
+      ...baseLog,
+      generate_image: true,
+      image_generated: true,
+      tokens_refunded:
+        repeatResult.workId === primaryWorkId ? tokensRefunded : 0,
+      repeat_tile_url: repeatResult.url,
+      repeat_tile_work_id: repeatResult.workId,
+      accent_tile_url: accentResult?.url ?? null,
+      accent_tile_work_id: accentResult?.workId ?? null,
+      pattern_type: patternType,
+      fabric_type: fabricType,
+      accent_layout_json: accentResult ? accentLayoutRecord : null,
+    } satisfies Partial<AiGenerationLogInsert>;
 
-  if (!accentResult || accentResult.workId === primaryWorkId) {
-    return [primaryLog];
-  }
+    if (!reusedRepeatTile) {
+      logs.push({
+        ...shared,
+        work_id: repeatResult.workId,
+        generated_image_url: repeatResult.url,
+        tokens_charged:
+          repeatResult.workId === primaryWorkId ? tokensCharged : 0,
+        tile_role: "repeat",
+        paired_tile_work_id: accentResult?.workId ?? null,
+      } as AiGenerationLogInsert);
+    }
 
-  const accentLog: AiGenerationLogInsert = {
-    ...shared,
-    work_id: accentResult.workId,
-    parent_work_id: repeatResult.workId,
-    generated_image_url: accentResult.url,
-    tokens_charged: 0,
-    tile_role: "accent",
-    paired_tile_work_id: repeatResult.workId,
-  } as AiGenerationLogInsert;
+    if (!accentResult) return;
 
-  if (reusedRepeatTile) {
-    // When reusedRepeatTile is true, primaryLog is the accent row and already
-    // points back to the reused repeat tile, so no separate accent log is needed.
-    return [primaryLog];
-  }
+    logs.push({
+      ...shared,
+      work_id: accentResult.workId,
+      parent_work_id: repeatResult.workId,
+      generated_image_url: accentResult.url,
+      tokens_charged: accentResult.workId === primaryWorkId ? tokensCharged : 0,
+      tokens_refunded:
+        accentResult.workId === primaryWorkId ? tokensRefunded : 0,
+      tile_role: "accent",
+      paired_tile_work_id: repeatResult.workId,
+    } as AiGenerationLogInsert);
+  });
 
-  return [primaryLog, accentLog];
+  return logs;
 }
