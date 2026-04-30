@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { GenerationLogTable } from "@/features/generation-logs/components/generation-log-table";
 import type { AdminGenerationLogGroup } from "@/features/generation-logs/types/admin-generation-log";
 
@@ -57,6 +57,12 @@ const group: AdminGenerationLogGroup = {
   ],
 };
 
+function LocationProbe() {
+  const location = useLocation();
+
+  return <span data-testid="location">{location.pathname}</span>;
+}
+
 describe("GenerationLogTable", () => {
   it("workflow 그룹의 4개 결과 썸네일과 성공 카운트를 표시한다", () => {
     render(
@@ -77,5 +83,34 @@ describe("GenerationLogTable", () => {
     expect(screen.getByText("이미지 없음")).toBeInTheDocument();
     expect(screen.getByText("3/4 성공")).toBeInTheDocument();
     expect(screen.getByText("workflow-1")).toBeInTheDocument();
+  });
+
+  it("workflow 그룹 행은 키보드로 상세 화면에 진입할 수 있다", () => {
+    render(
+      <MemoryRouter initialEntries={["/generation-logs"]}>
+        <GenerationLogTable
+          data={[group]}
+          loading={false}
+          page={1}
+          hasMore={false}
+          onPageChange={() => undefined}
+          aiModel={null}
+          onAiModelChange={() => undefined}
+        />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    const row = screen.getByText("workflow-1").closest("tr");
+
+    expect(row).toHaveAttribute("role", "button");
+    expect(row).toHaveAttribute("tabindex", "0");
+    if (!row) throw new Error("workflow row not found");
+
+    fireEvent.keyDown(row, { key: "Enter" });
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/generation-logs/log-1",
+    );
   });
 });

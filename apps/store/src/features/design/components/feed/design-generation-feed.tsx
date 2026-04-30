@@ -47,7 +47,7 @@ async function downloadImage(url: string) {
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   } catch {
-    window.open(url, "_blank");
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 }
 

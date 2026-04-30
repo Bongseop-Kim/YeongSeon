@@ -165,7 +165,9 @@ export function normalizeInvokeResponse(raw: unknown): TileGenerationResult {
   const patternType = toPatternType(raw.patternType);
   const fabricType = toFabricType(raw.fabricType);
   const variants = Array.isArray(raw.variants)
-    ? raw.variants.map(toVariant)
+    ? raw.variants
+        .map(toVariant)
+        .sort((left, right) => left.index - right.index)
     : [];
 
   if (!patternType) {

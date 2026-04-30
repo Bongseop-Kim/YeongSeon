@@ -217,7 +217,14 @@ BEGIN
     generation->>'pattern_type',
     generation->>'fabric_type',
     COALESCE(generation->'request_metadata', '{}'::jsonb)
-  );
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET user_id = EXCLUDED.user_id,
+      prompt = EXCLUDED.prompt,
+      pattern_type = EXCLUDED.pattern_type,
+      fabric_type = EXCLUDED.fabric_type,
+      request_metadata = EXCLUDED.request_metadata,
+      updated_at = now();
 
   FOR v_variant IN
     SELECT *
@@ -246,13 +253,25 @@ BEGIN
       NULLIF(v_variant->'accent_layout_json', 'null'::jsonb),
       v_variant->>'pattern_type',
       v_variant->>'fabric_type'
-    );
+    )
+    ON CONFLICT (id) DO UPDATE
+    SET generation_id = EXCLUDED.generation_id,
+        variant_index = EXCLUDED.variant_index,
+        repeat_tile_url = EXCLUDED.repeat_tile_url,
+        repeat_tile_work_id = EXCLUDED.repeat_tile_work_id,
+        accent_tile_url = EXCLUDED.accent_tile_url,
+        accent_tile_work_id = EXCLUDED.accent_tile_work_id,
+        accent_layout_json = EXCLUDED.accent_layout_json,
+        pattern_type = EXCLUDED.pattern_type,
+        fabric_type = EXCLUDED.fabric_type;
   END LOOP;
 END;
 $$;
 
 COMMENT ON FUNCTION public.persist_design_generation(jsonb, jsonb)
-  IS 'SECURITY DEFINER is required so Edge Functions can atomically persist an owned design generation bundle and child variants without granting direct table insert privileges; service_role bypasses auth.uid() ownership while authenticated callers must own the user_id.';
+  IS 'SECURITY DEFINER is required because design generation writes are exposed only through this RPC without direct table insert grants; EXECUTE is restricted to service_role, and authenticated callers must still own generation.user_id through auth.uid() if the grant is broadened later.';
 
+REVOKE EXECUTE ON FUNCTION public.persist_design_generation(jsonb, jsonb)
+  FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.persist_design_generation(jsonb, jsonb)
-  TO authenticated, service_role;
+  TO service_role;

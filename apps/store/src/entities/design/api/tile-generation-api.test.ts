@@ -130,6 +130,37 @@ describe("callTileGeneration", () => {
     });
   });
 
+  it("variant index 순서로 정렬한 뒤 대표 타일을 선택한다", async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        generationId: "gen-1",
+        prompt: "새 디자인",
+        patternType: "all_over",
+        fabricType: "printed",
+        variants: [3, 1, 4, 2].map((index) => ({
+          id: `var-${index}`,
+          index,
+          repeatTileUrl: `https://example.com/repeat-${index}.webp`,
+          repeatTileWorkId: `repeat-work-${index}`,
+          accentTileUrl: null,
+          accentTileWorkId: null,
+          accentLayout: null,
+        })),
+      },
+      error: null,
+    });
+
+    const result = await callTileGeneration(payload);
+
+    expect(result.variants.map((variant) => variant.index)).toEqual([
+      1, 2, 3, 4,
+    ]);
+    expect(result.repeatTile).toEqual({
+      url: "https://example.com/repeat-1.webp",
+      workId: "repeat-work-1",
+    });
+  });
+
   it("원포인트 4-variant 응답을 repeat/accent pair로 정규화한다", async () => {
     invoke.mockResolvedValueOnce({
       data: {

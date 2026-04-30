@@ -206,6 +206,13 @@ export function GenerationLogTable({
         size="small"
         onRow={(record) => ({
           onClick: () => navigate(`/generation-logs/${record.primaryLogId}`),
+          onKeyDown: (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            if (event.key === " ") event.preventDefault();
+            navigate(`/generation-logs/${record.primaryLogId}`);
+          },
+          role: "button",
+          tabIndex: 0,
           style: { cursor: "pointer" },
         })}
         pagination={{

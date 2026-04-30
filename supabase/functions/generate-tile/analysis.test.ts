@@ -64,7 +64,7 @@ const withOpenAiKey = async (body: () => Promise<void>) => {
 };
 
 Deno.test(
-  "createFallbackDiversityPlan returns stripe-centered deterministic variants",
+  "createFallbackDiversityPlan returns structure-specific deterministic variants",
   () => {
     const plan = createFallbackDiversityPlan(
       baseRequest,
@@ -80,15 +80,60 @@ Deno.test(
         variant.tileLayout.variation,
       ]),
       [
-        ["STRIPE", "stripe_classic_diagonal"],
-        ["STRIPE", "stripe_textured"],
-        ["DOT", "dot_micro"],
-        ["GEOMETRIC", "geometric_diamond"],
+        ["F", null],
+        ["F", null],
+        ["F", null],
+        ["F", null],
       ],
     );
     assertEquals(plan.cohesionAnchor.fabricType, "yarn_dyed");
     assertEquals(plan.cohesionAnchor.backgroundColor, "ivory");
     assertEquals(plan.cohesionAnchor.motifKernel, "rose");
+  },
+);
+
+Deno.test(
+  "createFallbackDiversityPlan varies density and color for single-variation families",
+  () => {
+    const plan = createFallbackDiversityPlan(
+      baseRequest,
+      {
+        ...baseAnalysis,
+        tileLayout: {
+          ...baseAnalysis.tileLayout,
+          structure: "MEDALLION",
+          variation: "medallion_classic",
+        },
+      },
+      "printed",
+    );
+
+    assertEquals(
+      plan.variants.map((variant) => [
+        variant.tileLayout.structure,
+        variant.tileLayout.variation,
+      ]),
+      [
+        ["MEDALLION", "medallion_classic"],
+        ["MEDALLION", "medallion_classic"],
+        ["MEDALLION", "medallion_classic"],
+        ["MEDALLION", "medallion_classic"],
+      ],
+    );
+    assertEquals(
+      plan.variants.map((variant) => variant.styleDirection.density),
+      ["minimal", "balanced", "maximal", "minimal"],
+    );
+    assertEquals(
+      plan.variants.map((variant) => variant.motifInterpretation.colorEmphasis),
+      ["balanced", "dominant", "monochrome", "high_contrast"],
+    );
+    assertEquals(
+      plan.variants.some((variant) =>
+        variant.styleDirection.medium.includes("stripe"),
+      ),
+      false,
+    );
   },
 );
 
@@ -172,6 +217,68 @@ Deno.test(
 );
 
 Deno.test(
+  "planDiversity normalizes invalid structure and variation combinations",
+  async () => {
+    const modelPlan = {
+      variants: [1, 2, 3, 4].map((index) => ({
+        id: `variant_${index}`,
+        tileLayout: {
+          ...baseAnalysis.tileLayout,
+          structure: "DOT",
+          variation: index === 1 ? "stripe_regimental" : "dot_micro",
+        },
+        accentLayout: null,
+        motifInterpretation: {
+          axis: [
+            "iconographic",
+            "geometric_abstract",
+            "textural_abstract",
+            "symbolic_variation",
+          ][index - 1],
+          description: `rose direction ${index}`,
+          colorEmphasis: "balanced",
+        },
+        styleDirection: {
+          medium: `medium ${index}`,
+          aestheticVector: `vector ${index}`,
+          density: "balanced",
+        },
+        referenceImageUsage: "none",
+      })),
+      cohesionAnchor: {
+        fabricType: "yarn_dyed",
+        backgroundColor: "ivory",
+        motifKernel: "rose",
+      },
+    };
+
+    await withOpenAiKey(async () => {
+      await withMockedFetch(
+        () =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({
+                choices: [{ message: { content: JSON.stringify(modelPlan) } }],
+              }),
+              { status: 200 },
+            ),
+          ),
+        async () => {
+          const plan = await planDiversity(
+            baseRequest,
+            baseAnalysis,
+            "yarn_dyed",
+          );
+
+          assertEquals(plan.variants[0]?.tileLayout.structure, "DOT");
+          assertEquals(plan.variants[0]?.tileLayout.variation, null);
+        },
+      );
+    });
+  },
+);
+
+Deno.test(
   "planDiversity falls back when model returns fewer than 4 variants",
   async () => {
     await withOpenAiKey(async () => {
@@ -206,11 +313,8 @@ Deno.test(
           );
 
           assertEquals(plan.variants.length, 4);
-          assertEquals(plan.variants[0]?.tileLayout.structure, "STRIPE");
-          assertEquals(
-            plan.variants[0]?.tileLayout.variation,
-            "stripe_classic_diagonal",
-          );
+          assertEquals(plan.variants[0]?.tileLayout.structure, "F");
+          assertEquals(plan.variants[0]?.tileLayout.variation, null);
         },
       );
     });

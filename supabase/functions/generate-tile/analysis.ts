@@ -12,6 +12,125 @@ import { matchKeyword } from "./fabric-type-resolver.ts";
 
 const ANALYSIS_MODEL = "gpt-4o-2024-08-06";
 const DIVERSITY_VARIANT_COUNT = 4;
+type ConcreteTileVariation = NonNullable<TileVariation>;
+
+const ALLOWED_VARIATIONS_BY_STRUCTURE = {
+  H: [],
+  F: [],
+  Q: ["different_motif", "rotation", "color"],
+  STRIPE: [
+    "stripe_classic_diagonal",
+    "stripe_multi_width",
+    "stripe_regimental",
+    "stripe_textured",
+    "stripe_dotted",
+  ],
+  DOT: ["dot_micro", "dot_pin"],
+  TOSSED: ["tossed_scattered"],
+  MEDALLION: ["medallion_classic"],
+  GEOMETRIC: ["geometric_diamond", "geometric_check", "geometric_herringbone"],
+} as const satisfies Record<TileStructure, readonly ConcreteTileVariation[]>;
+
+const FALLBACK_MEDIUMS_BY_STRUCTURE = {
+  H: [
+    "centered silk motif textile",
+    "single emblem woven textile",
+    "minimal jacquard motif textile",
+    "quiet focal motif tie textile",
+  ],
+  F: [
+    "balanced diagonal motif textile",
+    "paired jacquard motif textile",
+    "refined mirrored motif textile",
+    "classic repeat tie textile",
+  ],
+  Q: [
+    "rotational motif textile",
+    "alternating color jacquard textile",
+    "quartered motif repeat textile",
+    "formal geometric repeat textile",
+  ],
+  STRIPE: [
+    "classic diagonal stripe textile",
+    "mixed-width stripe textile",
+    "regimental stripe tie textile",
+    "textured stripe jacquard textile",
+  ],
+  DOT: [
+    "micro dot silk textile",
+    "pin dot tie textile",
+    "tonal dotted jacquard textile",
+    "ordered dot repeat textile",
+  ],
+  TOSSED: [
+    "scattered motif silk textile",
+    "tossed small-pattern textile",
+    "organic all-over motif textile",
+    "randomized repeat tie textile",
+  ],
+  MEDALLION: [
+    "classic medallion tie textile",
+    "ornamental emblem repeat textile",
+    "small medallion jacquard textile",
+    "formal foulard medallion textile",
+  ],
+  GEOMETRIC: [
+    "diamond geometric tie textile",
+    "checked jacquard textile",
+    "herringbone geometric textile",
+    "precise angular repeat textile",
+  ],
+} as const satisfies Record<TileStructure, readonly string[]>;
+
+const FALLBACK_DENSITIES = ["minimal", "balanced", "maximal"] as const;
+const FALLBACK_COLOR_EMPHASES = [
+  "balanced",
+  "dominant",
+  "monochrome",
+  "high_contrast",
+] as const;
+
+function isValidVariationForStructure(
+  structure: TileStructure,
+  variation: TileVariation,
+): boolean {
+  if (variation === null) return true;
+  return (
+    ALLOWED_VARIATIONS_BY_STRUCTURE[
+      structure
+    ] as readonly ConcreteTileVariation[]
+  ).includes(variation);
+}
+
+function normalizeTileLayoutVariation(
+  tileLayout: AnalysisOutput["tileLayout"],
+  context: string,
+): AnalysisOutput["tileLayout"] {
+  if (
+    isValidVariationForStructure(tileLayout.structure, tileLayout.variation)
+  ) {
+    return tileLayout;
+  }
+
+  console.warn(
+    `${context}: invalid tile variation "${tileLayout.variation}" for structure "${tileLayout.structure}", normalizing to null`,
+  );
+
+  return {
+    ...tileLayout,
+    variation: null,
+  };
+}
+
+function normalizeAnalysisOutput(
+  analysis: AnalysisOutput,
+  context: string,
+): AnalysisOutput {
+  return {
+    ...analysis,
+    tileLayout: normalizeTileLayoutVariation(analysis.tileLayout, context),
+  };
+}
 
 const ANALYSIS_JSON_SCHEMA = {
   type: "object",
@@ -342,51 +461,14 @@ function createFallbackVariant(
     "textural_abstract",
     "symbolic_variation",
   ] as const;
-  const mediums = [
-    "classic diagonal stripe textile",
-    "mixed fabric stripe textile",
-    "refined tonal textile",
-    "geometric luxury tie textile",
-  ] as const;
-  const variationsByStructure: Partial<
-    Record<TileStructure, readonly NonNullable<TileVariation>[]>
-  > = {
-    H: [],
-    F: [],
-    Q: ["different_motif", "rotation", "color"],
-    STRIPE: [
-      "stripe_classic_diagonal",
-      "stripe_textured",
-      "stripe_multi_width",
-      "stripe_regimental",
-      "stripe_dotted",
-    ],
-    DOT: ["dot_micro", "dot_pin"],
-    TOSSED: ["tossed_scattered"],
-    MEDALLION: ["medallion_classic"],
-    GEOMETRIC: [
-      "geometric_diamond",
-      "geometric_check",
-      "geometric_herringbone",
-    ],
-  };
-  const crossFamilyFallbackLayouts = [
-    { structure: "STRIPE", variation: "stripe_classic_diagonal" },
-    { structure: "STRIPE", variation: "stripe_textured" },
-    { structure: "DOT", variation: "dot_micro" },
-    { structure: "GEOMETRIC", variation: "geometric_diamond" },
-  ] as const;
   const baseStructure = baseAnalysis.tileLayout.structure;
-  const familyVariations = variationsByStructure[baseStructure];
-  const fallbackLayout =
-    familyVariations !== undefined
-      ? {
-          structure: baseStructure,
-          variation:
-            familyVariations[index % Math.max(familyVariations.length, 1)] ??
-            baseAnalysis.tileLayout.variation,
-        }
-      : (crossFamilyFallbackLayouts[index] ?? crossFamilyFallbackLayouts[0]);
+  const familyVariations = ALLOWED_VARIATIONS_BY_STRUCTURE[baseStructure];
+  const fallbackLayout = {
+    structure: baseStructure,
+    variation: familyVariations[index % familyVariations.length] ?? null,
+  };
+  const mediums = FALLBACK_MEDIUMS_BY_STRUCTURE[fallbackLayout.structure];
+  const shouldRotateSecondaryAxes = familyVariations.length <= 1;
 
   return {
     id: `variant_${index + 1}`,
@@ -404,12 +486,16 @@ function createFallbackVariant(
         index === 0
           ? `Preserve the requested ${fallbackLayout.structure} layout family while refining the primary motif.`
           : `Reinterpret the same motif within the ${fallbackLayout.structure} layout family while preserving tie-pattern usability.`,
-      colorEmphasis: "balanced",
+      colorEmphasis: shouldRotateSecondaryAxes
+        ? FALLBACK_COLOR_EMPHASES[index % FALLBACK_COLOR_EMPHASES.length]
+        : "balanced",
     },
     styleDirection: {
-      medium: mediums[index] ?? "clean textile illustration",
+      medium: mediums[index % mediums.length] ?? "clean textile illustration",
       aestheticVector: "ESSE SION restrained luxury necktie pattern",
-      density: "balanced",
+      density: shouldRotateSecondaryAxes
+        ? FALLBACK_DENSITIES[index % FALLBACK_DENSITIES.length]
+        : "balanced",
     },
     referenceImageUsage: baseAnalysis.referenceImageUsage,
   };
@@ -420,15 +506,20 @@ export function createFallbackDiversityPlan(
   baseAnalysis: AnalysisOutput,
   fabricType: FabricType,
 ): DiversityPlan {
-  return {
+  const normalizedBaseAnalysis = normalizeAnalysisOutput(
     baseAnalysis,
+    "createFallbackDiversityPlan baseAnalysis",
+  );
+
+  return {
+    baseAnalysis: normalizedBaseAnalysis,
     variants: Array.from({ length: DIVERSITY_VARIANT_COUNT }, (_, index) =>
-      createFallbackVariant(baseAnalysis, index),
+      createFallbackVariant(normalizedBaseAnalysis, index),
     ),
     cohesionAnchor: {
       fabricType,
-      backgroundColor: baseAnalysis.tileLayout.backgroundColor,
-      motifKernel: resolveMotifKernel(baseAnalysis, req),
+      backgroundColor: normalizedBaseAnalysis.tileLayout.backgroundColor,
+      motifKernel: resolveMotifKernel(normalizedBaseAnalysis, req),
     },
   };
 }
@@ -457,6 +548,10 @@ function normalizeDiversityPlan(
     variants: raw.variants.map((variant, index) => ({
       ...variant,
       id: variant.id || `variant_${index + 1}`,
+      tileLayout: normalizeTileLayoutVariation(
+        variant.tileLayout,
+        `normalizeDiversityPlan variant_${index + 1}`,
+      ),
       accentLayout:
         baseAnalysis.patternType === "one_point"
           ? (variant.accentLayout ?? baseAnalysis.accentLayout)
@@ -533,7 +628,10 @@ export async function analyzeIntent(
       return structuredClone(FALLBACK);
     }
 
-    const raw = JSON.parse(content) as AnalysisOutput;
+    const raw = normalizeAnalysisOutput(
+      JSON.parse(content) as AnalysisOutput,
+      "analyzeIntent",
+    );
 
     if (editTargetOverride) {
       raw.intent = "edit";
@@ -556,11 +654,15 @@ export async function planDiversity(
   baseAnalysis: AnalysisOutput,
   fabricType: FabricType,
 ): Promise<DiversityPlan> {
+  const normalizedBaseAnalysis = normalizeAnalysisOutput(
+    baseAnalysis,
+    "planDiversity baseAnalysis",
+  );
   const openaiKey = Deno.env.get("OPENAI_API_KEY");
   if (!openaiKey) throw new Error("OPENAI_API_KEY not set");
 
   const fallback = () =>
-    createFallbackDiversityPlan(req, baseAnalysis, fabricType);
+    createFallbackDiversityPlan(req, normalizedBaseAnalysis, fabricType);
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -583,7 +685,7 @@ export async function planDiversity(
               userMessage: req.userMessage,
               selectedColors: req.selectedColors,
               fabricType,
-              baseAnalysis,
+              baseAnalysis: normalizedBaseAnalysis,
             }),
           },
         ],
@@ -619,7 +721,7 @@ export async function planDiversity(
 
     return normalizeDiversityPlan(
       req,
-      baseAnalysis,
+      normalizedBaseAnalysis,
       fabricType,
       JSON.parse(content) as Omit<DiversityPlan, "baseAnalysis">,
     );
