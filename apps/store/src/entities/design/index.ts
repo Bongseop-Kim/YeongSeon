@@ -22,12 +22,11 @@ export {
   toRestoredDesignSessionState,
   type RestoredDesignSessionState,
 } from "./api/design-session-state-mapper";
-export type { Attachment, ContextChip } from "./model/ai-design-types";
+export type { Attachment } from "./model/ai-design-types";
 export { isActiveGeneration } from "./model/chat";
 export type { GenerationStatus, Message } from "./model/chat";
 export type {
   DesignGeneration,
-  DesignGenerationRequestMetadata,
   DesignGenerationVariant,
 } from "./model/design-generation";
 export type {
@@ -42,9 +41,7 @@ export type {
   AccentLayout,
   FabricType,
   PatternType,
-  SessionMessagePayload,
   TileGenerationPayload,
-  TileGenerationResult,
   TileRef,
 } from "./model/tile-types";
 export { getDesignImages } from "./api/design-image-api";

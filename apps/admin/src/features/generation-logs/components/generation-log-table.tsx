@@ -35,7 +35,7 @@ function ResultThumbnailGrid({ group }: { group: AdminGenerationLogGroup }) {
     >
       {cells.map((image, index) => (
         <div
-          key={image?.logId ?? `empty-${index}`}
+          key={image?.workId ?? `empty-${index}`}
           style={{
             width: THUMB_SIZE,
             height: THUMB_SIZE,
@@ -171,8 +171,8 @@ export function GenerationLogTable({
     },
     {
       title: "상태",
-      dataIndex: "errorType",
-      key: "errorType",
+      dataIndex: "errorCount",
+      key: "errorCount",
       width: 90,
       render: (_, record) =>
         record.errorCount > 0 ? (
