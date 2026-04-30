@@ -1,6 +1,6 @@
 import { Select, Space, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
 import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
@@ -55,6 +55,8 @@ function ResultThumbnailGrid({ group }: { group: AdminGenerationLogGroup }) {
             <img
               src={image.url}
               alt={`생성 결과 ${index + 1}`}
+              loading="lazy"
+              decoding="async"
               style={{
                 width: "100%",
                 height: "100%",
@@ -98,8 +100,6 @@ export function GenerationLogTable({
   aiModel,
   onAiModelChange,
 }: GenerationLogTableProps) {
-  const navigate = useNavigate();
-
   const columns: ColumnsType<AdminGenerationLogGroup> = [
     {
       title: "생성 결과",
@@ -124,7 +124,12 @@ export function GenerationLogTable({
             {record.fabricType && <Tag>{record.fabricType}</Tag>}
           </Space>
           <Text code style={{ fontSize: 11 }}>
-            {record.workflowId}
+            <Link
+              to={`/generation-logs/${record.primaryLogId}`}
+              aria-label={`${record.workflowId} 생성 로그 상세 보기`}
+            >
+              {record.workflowId}
+            </Link>
           </Text>
         </Space>
       ),
@@ -204,17 +209,6 @@ export function GenerationLogTable({
         rowKey="workflowId"
         loading={loading}
         size="small"
-        onRow={(record) => ({
-          onClick: () => navigate(`/generation-logs/${record.primaryLogId}`),
-          onKeyDown: (event) => {
-            if (event.key !== "Enter" && event.key !== " ") return;
-            if (event.key === " ") event.preventDefault();
-            navigate(`/generation-logs/${record.primaryLogId}`);
-          },
-          role: "button",
-          tabIndex: 0,
-          style: { cursor: "pointer" },
-        })}
         pagination={{
           current: page,
           pageSize: GENERATION_LOG_PAGE_SIZE,

@@ -35,6 +35,9 @@ const getFabricLabel = (generation: DesignGeneration): string =>
 const getPairingLabel = (generation: DesignGeneration): string | null =>
   generation.patternType === "one_point" ? "accent paired" : null;
 
+const getVariantPreviewKey = (variant: DesignGenerationVariant): string =>
+  `${variant.id}|${variant.repeatTile.url}|${variant.accentTile?.url ?? ""}`;
+
 async function downloadImage(url: string) {
   try {
     const response = await fetch(url);
@@ -114,7 +117,7 @@ function GenerationRow({
 
   const handleSelectVariant = (variant: DesignGenerationVariant) => {
     setSelectedTilePreview({
-      previewKey: `${variant.repeatTile.url}|${variant.accentTile?.url ?? ""}`,
+      previewKey: getVariantPreviewKey(variant),
       previewBackground: toPreviewBackground(variant.repeatTile.url),
       repeatTile: variant.repeatTile,
       accentTile: variant.accentTile,
@@ -134,8 +137,7 @@ function GenerationRow({
         <div className="grid grid-cols-4 gap-2">
           {generation.variants.map((variant) => {
             const selected =
-              selectedPreviewImageUrl ===
-              `${variant.repeatTile.url}|${variant.accentTile?.url ?? ""}`;
+              selectedPreviewImageUrl === getVariantPreviewKey(variant);
 
             return (
               <GenerationTile
@@ -218,11 +220,19 @@ export function DesignGenerationFeed({
   className,
   onReusePrompt,
 }: DesignGenerationFeedProps) {
-  const { data: generations = [], isLoading } = useDesignGenerationsQuery();
+  const {
+    data: generations = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useDesignGenerationsQuery();
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
   );
   const isGenerating = isActiveGeneration(generationStatus);
+  const errorMessage =
+    error instanceof Error ? error.message : "잠시 후 다시 시도해주세요.";
 
   return (
     <div className={cn("min-h-0 overflow-y-auto px-4", className)}>
@@ -248,6 +258,23 @@ export function DesignGenerationFeed({
       {isLoading ? (
         <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
           생성 기록을 불러오는 중입니다.
+        </div>
+      ) : isError && !isGenerating ? (
+        <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-sm text-muted-foreground">
+          <p>
+            <span className="block font-medium text-gray-950">
+              생성 기록을 불러오지 못했습니다.
+            </span>
+            <span className="mt-1 block">{errorMessage}</span>
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void refetch()}
+          >
+            다시 시도
+          </Button>
         </div>
       ) : generations.length === 0 && !isGenerating ? (
         <div className="flex h-full items-center justify-center px-8 text-center text-sm text-muted-foreground">

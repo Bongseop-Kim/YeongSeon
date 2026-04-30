@@ -85,7 +85,7 @@ describe("GenerationLogTable", () => {
     expect(screen.getByText("workflow-1")).toBeInTheDocument();
   });
 
-  it("workflow 그룹 행은 키보드로 상세 화면에 진입할 수 있다", () => {
+  it("workflow 그룹 상세 이동은 행이 아니라 셀 내부 링크로 제공한다", () => {
     render(
       <MemoryRouter initialEntries={["/generation-logs"]}>
         <GenerationLogTable
@@ -101,13 +101,15 @@ describe("GenerationLogTable", () => {
       </MemoryRouter>,
     );
 
-    const row = screen.getByText("workflow-1").closest("tr");
+    const link = screen.getByRole("link", {
+      name: "workflow-1 생성 로그 상세 보기",
+    });
+    const row = link.closest("tr");
 
-    expect(row).toHaveAttribute("role", "button");
-    expect(row).toHaveAttribute("tabindex", "0");
-    if (!row) throw new Error("workflow row not found");
+    expect(row).not.toHaveAttribute("role", "button");
+    expect(row).not.toHaveAttribute("tabindex");
 
-    fireEvent.keyDown(row, { key: "Enter" });
+    fireEvent.click(link);
 
     expect(screen.getByTestId("location")).toHaveTextContent(
       "/generation-logs/log-1",

@@ -178,15 +178,14 @@ CREATE OR REPLACE FUNCTION public.persist_design_generation(
 )
 RETURNS void
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 DECLARE
-  v_caller_role text := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
   v_user_id uuid := (generation->>'user_id')::uuid;
   v_variant jsonb;
 BEGIN
-  IF v_caller_role IS DISTINCT FROM 'service_role' AND auth.uid() IS DISTINCT FROM v_user_id THEN
+  IF auth.uid() IS DISTINCT FROM v_user_id THEN
     RAISE EXCEPTION 'unauthorized: caller does not own this resource';
   END IF;
 
@@ -219,12 +218,12 @@ BEGIN
     COALESCE(generation->'request_metadata', '{}'::jsonb)
   )
   ON CONFLICT (id) DO UPDATE
-  SET user_id = EXCLUDED.user_id,
-      prompt = EXCLUDED.prompt,
+  SET prompt = EXCLUDED.prompt,
       pattern_type = EXCLUDED.pattern_type,
       fabric_type = EXCLUDED.fabric_type,
       request_metadata = EXCLUDED.request_metadata,
-      updated_at = now();
+      updated_at = now()
+  WHERE design_generations.user_id = EXCLUDED.user_id;
 
   FOR v_variant IN
     SELECT *
@@ -255,21 +254,21 @@ BEGIN
       v_variant->>'fabric_type'
     )
     ON CONFLICT (id) DO UPDATE
-    SET generation_id = EXCLUDED.generation_id,
-        variant_index = EXCLUDED.variant_index,
-        repeat_tile_url = EXCLUDED.repeat_tile_url,
+    SET repeat_tile_url = EXCLUDED.repeat_tile_url,
         repeat_tile_work_id = EXCLUDED.repeat_tile_work_id,
         accent_tile_url = EXCLUDED.accent_tile_url,
         accent_tile_work_id = EXCLUDED.accent_tile_work_id,
         accent_layout_json = EXCLUDED.accent_layout_json,
         pattern_type = EXCLUDED.pattern_type,
-        fabric_type = EXCLUDED.fabric_type;
+        fabric_type = EXCLUDED.fabric_type
+    WHERE design_generation_variants.generation_id = EXCLUDED.generation_id
+      AND design_generation_variants.variant_index = EXCLUDED.variant_index;
   END LOOP;
 END;
 $$;
 
 COMMENT ON FUNCTION public.persist_design_generation(jsonb, jsonb)
-  IS 'SECURITY DEFINER is required because design generation writes are exposed only through this RPC without direct table insert grants; EXECUTE is restricted to service_role, and authenticated callers must still own generation.user_id through auth.uid() if the grant is broadened later.';
+  IS 'Persists a design generation bundle while requiring auth.uid() to match generation.user_id and preserving immutable owner and variant identity fields on conflict.';
 
 REVOKE EXECUTE ON FUNCTION public.persist_design_generation(jsonb, jsonb)
   FROM anon, authenticated;

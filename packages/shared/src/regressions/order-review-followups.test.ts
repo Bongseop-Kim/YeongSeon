@@ -42,6 +42,31 @@ function normalize(s: string): string {
 }
 
 describe("review follow-up regressions", () => {
+  it("persist_design_generation upserts preserve ownership and variant identity", () => {
+    const migrationSql = normalize(
+      readRepoFile(
+        "supabase",
+        "migrations",
+        "20260512000038_restrict_persist_design_generation_rpc_identity.sql",
+      ),
+    ).toLowerCase();
+
+    expect(migrationSql).toContain("security invoker");
+    expect(migrationSql).toContain(
+      "where design_generations.user_id = excluded.user_id",
+    );
+    expect(migrationSql).not.toContain("set user_id = excluded.user_id");
+    expect(migrationSql).not.toContain(
+      "set generation_id = excluded.generation_id",
+    );
+    expect(migrationSql).not.toContain(
+      "set variant_index = excluded.variant_index",
+    );
+    expect(migrationSql).toContain(
+      "where design_generation_variants.generation_id = excluded.generation_id and design_generation_variants.variant_index = excluded.variant_index",
+    );
+  });
+
   it("security definer view lint remediation keeps reported views as security invoker", () => {
     const reportedViewNames = [
       "admin_quote_request_list_view",
