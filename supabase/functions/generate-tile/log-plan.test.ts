@@ -45,12 +45,12 @@ Deno.test(
       tokensRefunded: 0,
       patternType: "one_point",
       fabricType: "printed",
-      accentLayout: {
+      accentLayouts: [1, 2, 3, 4].map(() => ({
         objectDescription: "로고",
         objectSource: "text",
         color: null,
         size: "medium",
-      },
+      })),
       reusedRepeatTile: false,
     });
 
@@ -89,7 +89,7 @@ Deno.test(
       tokensRefunded: 0,
       patternType: "all_over",
       fabricType: "printed",
-      accentLayout: null,
+      accentLayouts: [],
       reusedRepeatTile: false,
     });
 
@@ -118,7 +118,12 @@ Deno.test(
       tokensRefunded: 0,
       patternType: "one_point",
       fabricType: "printed",
-      accentLayout: null,
+      accentLayouts: [1, 2, 3, 4].map(() => ({
+        objectDescription: "로고",
+        objectSource: "text",
+        color: null,
+        size: "medium",
+      })),
       reusedRepeatTile: true,
     });
 

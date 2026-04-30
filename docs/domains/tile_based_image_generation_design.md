@@ -112,7 +112,7 @@
   OpenAI image_model (gpt-image-2) 호출
     파라미터: quality="low", size="1024x1024",
               output_format="webp", output_compression=70, n=1
-    → 구조화된 배치 규칙 + 원단 질감 포함 프롬프트로 seamless 타일 직접 생성
+    → diversity plan의 variants[4]별 구조화된 배치 규칙 + 원단 질감 포함 프롬프트로 seamless 타일 직접 생성
     → 검증 없이 결과 확정
     (구조 템플릿 + 배치 수학 조건으로 썸네일 스케일 seamless 성립)
 
@@ -120,10 +120,10 @@
   입력: repeat tile과 동일한 배경 사양 (backgroundColor, fabricType)
         + accentLayout (원포인트로 그릴 오브젝트 명세)
 
-  생성 방식: OpenAI image_model (gpt-image-2) text2img 단일 호출
+  생성 방식: OpenAI image_model (gpt-image-2) text2img 호출
     파라미터: repeat tile과 동일 (quality="low", size="1024x1024",
               output_format="webp", output_compression=70, n=1)
-    → 프롬프트: repeat tile과 동일한 배경 + 중앙에 accent 오브젝트 명시
+    → 프롬프트: 각 variant의 accentLayout + repeat tile과 동일한 배경 + 중앙에 accent 오브젝트 명시
     → 질감도 생성 시점에 내재 (repeat tile과 동일한 Fabric 블록, seamless 문구만 제거)
 
   설계 근거:
@@ -131,9 +131,15 @@
     질감 품질이 우수하여 repeat tile과 동일하게 단일 호출 text2img로 통일.
 
 [결과]
-  올패턴: repeat_tile_url
-  원포인트: repeat_tile_url + accent_tile_url
-  → 클라이언트 반환 → 프론트 캔버스 렌더링
+  응답: generationId + variants[4]
+  variants[n]: id, index, repeatTileUrl, repeatTileWorkId,
+               accentTileUrl, accentTileWorkId, accentLayout
+  올패턴: 각 variant의 repeatTileUrl만 사용
+  원포인트: 각 variant의 repeatTileUrl + accentTileUrl 사용
+  저장: design_generations 1행 + design_generation_variants 4행을
+        persist_design_generation RPC로 원자적으로 기록
+  렌더링: 클라이언트는 generationId에 묶인 design_generation_variants의
+          variant URL들을 읽어 캔버스/피드에 표시
 ```
 
 ---
@@ -755,7 +761,7 @@ Flat 2D top-down view, no shadow, no text, no border.
 | `STRIPE_CLASSIC_DIAGONAL_TEMPLATE` | top-left to bottom-right 방향의 클래식 사선 넥타이 스트라이프                  |
 | `STRIPE_MULTI_WIDTH_TEMPLATE`      | 굵은 주 줄, 중간 보조 줄, 얇은 pinstripe가 섞인 스트라이프                     |
 | `STRIPE_REGIMENTAL_TEMPLATE`       | 넓은 main stripe + narrow contrast stripe + fine pinline의 레지멘탈 스트라이프 |
-| `STRIPE_TEXTURED_TEMPLATE`         | 줄마다 woven twill, jacquard-like, smooth printed silk 질감을 다르게 부여      |
+| `STRIPE_TEXTURED_TEMPLATE`         | 줄마다 woven twill, jacquard-like, smooth woven silk 질감을 다르게 부여        |
 | `STRIPE_DOTTED_TEMPLATE`           | 일부 사선 줄 내부에 tiny dot/pindot 디테일을 포함                              |
 | `DOT_MICRO_TEMPLATE`               | 작은 도트가 균일하게 반복되는 마이크로 도트                                    |
 | `DOT_PIN_TEMPLATE`                 | 더 작고 정제된 핀도트 반복                                                     |

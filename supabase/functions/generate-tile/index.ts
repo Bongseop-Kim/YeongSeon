@@ -230,20 +230,50 @@ Deno.serve(async (req) => {
                 ),
               };
             });
-      const accentBuilt =
-        analysis.patternType === "one_point" && analysis.accentLayout
-          ? buildAccentPrompt(
-              analysis.accentLayout,
-              analysis.tileLayout.backgroundColor,
-              fabricType,
-              resolveAccentReferenceImageUrls(analysis, body),
-            )
-          : null;
+      const accentGenerationPlans =
+        analysis.patternType === "one_point"
+          ? reuseRepeatTile || !diversityPlan
+            ? Array.from({ length: TILE_VARIANT_COUNT }, () => {
+                if (!analysis.accentLayout) {
+                  throw new Error("one_point generation requires accentLayout");
+                }
+
+                return {
+                  accentLayout: analysis.accentLayout,
+                  ...buildAccentPrompt(
+                    analysis.accentLayout,
+                    analysis.tileLayout.backgroundColor,
+                    fabricType,
+                    resolveAccentReferenceImageUrls(analysis, body),
+                  ),
+                };
+              })
+            : diversityPlan.variants.map((variant) => {
+                if (!variant.accentLayout) {
+                  throw new Error("one_point variant requires accentLayout");
+                }
+                const variantAnalysis = analysisForVariant(analysis, variant);
+
+                return {
+                  accentLayout: variant.accentLayout,
+                  ...buildAccentPrompt(
+                    variant.accentLayout,
+                    variant.tileLayout.backgroundColor,
+                    fabricType,
+                    resolveAccentReferenceImageUrls(variantAnalysis, body),
+                  ),
+                };
+              })
+          : [];
       const promptLength =
         repeatGenerationPlans.reduce(
           (sum, plan) => sum + plan.prompt.length,
           0,
-        ) + (accentBuilt?.prompt.length ?? 0);
+        ) +
+        accentGenerationPlans.reduce(
+          (sum, plan) => sum + plan.prompt.length,
+          0,
+        );
       const parentWorkId = reuseRepeatTile
         ? (body.previousAccentTileWorkId ??
           body.previousRepeatTileWorkId ??
@@ -253,7 +283,9 @@ Deno.serve(async (req) => {
         ...repeatGenerationPlans.map(
           (plan, index) => `repeat_prompt_${index + 1}:\n${plan.prompt}`,
         ),
-        accentBuilt ? `accent_prompt:\n${accentBuilt.prompt}` : null,
+        ...accentGenerationPlans.map(
+          (plan, index) => `accent_prompt_${index + 1}:\n${plan.prompt}`,
+        ),
       ].filter((part): part is string => part !== null);
       const generationPrompt =
         promptParts.length > 0 ? promptParts.join("\n\n") : body.userMessage;
@@ -261,7 +293,11 @@ Deno.serve(async (req) => {
         repeatGenerationPlans.reduce(
           (sum, plan) => sum + plan.referenceImageUrls.length,
           0,
-        ) + (accentBuilt?.referenceImageUrls.length ?? 0);
+        ) +
+        accentGenerationPlans.reduce(
+          (sum, plan) => sum + plan.referenceImageUrls.length,
+          0,
+        );
       const renderLogFields = {
         ...baseLogFields,
         parent_work_id: parentWorkId,
@@ -274,8 +310,10 @@ Deno.serve(async (req) => {
             (sum, plan) => sum + plan.referenceImageUrls.length,
             0,
           ),
-          accentReferenceImageCount:
-            accentBuilt?.referenceImageUrls.length ?? 0,
+          accentReferenceImageCount: accentGenerationPlans.reduce(
+            (sum, plan) => sum + plan.referenceImageUrls.length,
+            0,
+          ),
           imageEndpoint: referenceImageCount > 0 ? "edits" : "generations",
           diversityPlan,
         } as Record<string, unknown>,
@@ -308,7 +346,7 @@ Deno.serve(async (req) => {
         };
       }
 
-      if (reuseRepeatTile && !accentBuilt) {
+      if (reuseRepeatTile && accentGenerationPlans.length === 0) {
         throw new Error("reuseRepeatTile requires an accent generation");
       }
 
@@ -324,17 +362,21 @@ Deno.serve(async (req) => {
             ),
           );
 
-      const accentResults = accentBuilt
-        ? await Promise.all(
-            Array.from({ length: TILE_VARIANT_COUNT }, (_, index) =>
-              generateTileImage(
-                accentBuilt.prompt,
-                accentBuilt.referenceImageUrls,
-                reuseRepeatTile && index === 0 ? renderWorkId : undefined,
+      const accentResults =
+        accentGenerationPlans.length > 0
+          ? await Promise.all(
+              accentGenerationPlans.map((plan, index) =>
+                generateTileImage(
+                  plan.prompt,
+                  plan.referenceImageUrls,
+                  reuseRepeatTile && index === 0 ? renderWorkId : undefined,
+                ),
               ),
-            ),
-          )
-        : [];
+            )
+          : [];
+      const accentLayouts = accentGenerationPlans.map(
+        (plan) => plan.accentLayout,
+      );
 
       const firstRepeatResult = repeatResults[0];
       const firstAccentResult = accentResults[0] ?? null;
@@ -356,7 +398,7 @@ Deno.serve(async (req) => {
           fabricType,
           repeatResults,
           accentResults,
-          accentLayout: analysis.accentLayout,
+          accentLayouts,
         },
       );
 
@@ -370,7 +412,7 @@ Deno.serve(async (req) => {
           tokensRefunded,
           patternType: analysis.patternType,
           fabricType,
-          accentLayout: analysis.accentLayout,
+          accentLayouts,
           reusedRepeatTile: reuseRepeatTile,
         });
         for (const generationLog of generationLogs) {
@@ -381,9 +423,10 @@ Deno.serve(async (req) => {
       } catch (error) {
         console.error("generate-tile logGeneration failed:", {
           workId: primaryResult.workId,
+          generationId,
           error,
         });
-        return jsonResponse(500, { error: "persistence_failed" });
+        throw error;
       }
 
       try {
@@ -411,7 +454,7 @@ Deno.serve(async (req) => {
           generationId,
           error,
         });
-        return jsonResponse(500, { error: "persistence_failed" });
+        throw error;
       }
 
       try {
@@ -425,8 +468,11 @@ Deno.serve(async (req) => {
             repeatTileWorkId: firstRepeatResult.workId,
             accentTileUrl: firstAccentResult?.url ?? null,
             accentTileWorkId: firstAccentResult?.workId ?? null,
-            accentLayout: analysis.accentLayout
-              ? (analysis.accentLayout as unknown as Record<string, unknown>)
+            accentLayout: result.variants[0]?.accentLayout
+              ? (result.variants[0].accentLayout as unknown as Record<
+                  string,
+                  unknown
+                >)
               : null,
             patternType: analysis.patternType,
             fabricType,
@@ -445,9 +491,10 @@ Deno.serve(async (req) => {
       } catch (error) {
         console.error("generate-tile saveDesignSession failed:", {
           workId: primaryResult.workId,
+          generationId,
           error,
         });
-        return jsonResponse(500, { error: "persistence_failed" });
+        throw error;
       }
 
       return jsonResponse(200, result as unknown as Record<string, unknown>);

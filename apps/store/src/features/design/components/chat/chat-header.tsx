@@ -16,7 +16,7 @@ export function ChatHeader({ tokenBalance }: ChatHeaderProps) {
         <span className="text-xs text-gray-500">
           보유 토큰{" "}
           <strong className="font-semibold text-gray-950">
-            {tokenBalance !== undefined ? tokenBalance.toLocaleString() : "0"}
+            {tokenBalance === undefined ? "—" : tokenBalance.toLocaleString()}
           </strong>
         </span>
         <Button

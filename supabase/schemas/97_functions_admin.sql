@@ -417,8 +417,12 @@ begin
     select l.*
     from public.ai_generation_logs l
     where (p_id_search is not null or (
-        l.created_at >= (p_start_date::timestamp at time zone 'UTC')::timestamptz
-        and l.created_at < ((p_end_date + 1)::timestamp at time zone 'UTC')::timestamptz
+        p_start_date is null
+        or p_end_date is null
+        or (
+          l.created_at >= (p_start_date::timestamp at time zone 'UTC')::timestamptz
+          and l.created_at < ((p_end_date + 1)::timestamp at time zone 'UTC')::timestamptz
+        )
       ))
       and (p_ai_model is null or l.ai_model = p_ai_model)
       and (p_request_type is null or l.request_type = p_request_type)
@@ -437,7 +441,7 @@ begin
       count(*) filter (where l.error_type is not null or not l.image_generated)::integer as error_count,
       coalesce(sum(l.tokens_charged), 0)::integer as tokens_charged,
       coalesce(sum(l.tokens_refunded), 0)::integer as tokens_refunded,
-      sum(l.total_latency_ms)::integer as total_latency_ms,
+      coalesce(sum(l.total_latency_ms), 0)::integer as total_latency_ms,
       max(l.created_at) as created_at,
       jsonb_agg(
         jsonb_build_object(

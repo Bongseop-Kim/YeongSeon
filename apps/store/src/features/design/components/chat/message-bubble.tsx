@@ -13,7 +13,7 @@ interface MessageBubbleProps {
   onSelectPreview?: (preview: TilePreviewSelection) => void;
 }
 
-export interface TilePreviewSelection {
+interface TilePreviewSelection {
   previewBackground: string;
   repeatTile: {
     url: string;

@@ -110,6 +110,7 @@ function GenerationRow({
   const setSelectedTilePreview = useDesignChatStore(
     (state) => state.setSelectedTilePreview,
   );
+  const variantCount = generation.variants.length;
 
   const handleSelectVariant = (variant: DesignGenerationVariant) => {
     setSelectedTilePreview({
@@ -152,7 +153,9 @@ function GenerationRow({
               {generation.prompt}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              <Badge variant="secondary">4 variants</Badge>
+              <Badge variant="secondary">
+                {`${variantCount} ${variantCount === 1 ? "variant" : "variants"}`}
+              </Badge>
               <Badge variant="secondary">{getPatternLabel(generation)}</Badge>
               <Badge variant="secondary">{getFabricLabel(generation)}</Badge>
               {getPairingLabel(generation) ? (

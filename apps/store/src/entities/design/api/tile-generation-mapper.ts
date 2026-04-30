@@ -104,6 +104,28 @@ const toVariant = (raw: unknown): TileGenerationVariantResult => {
   };
 };
 
+const getRepresentativeVariant = (
+  variants: TileGenerationVariantResult[],
+): TileGenerationVariantResult => {
+  const variantsByIndex = new Map<number, TileGenerationVariantResult>();
+
+  for (const variant of variants) {
+    if (!variantsByIndex.has(variant.index)) {
+      variantsByIndex.set(variant.index, variant);
+    }
+  }
+
+  const representative = [...variantsByIndex.entries()].sort(
+    ([left], [right]) => left - right,
+  )[0]?.[1];
+
+  if (!representative) {
+    throw new Error("Invalid generate-tile response: variants are missing");
+  }
+
+  return representative;
+};
+
 export function toTileGenerationInvokePayload(
   payload: TileGenerationPayload,
 ): TileGenerationInvokePayload {
@@ -145,16 +167,16 @@ export function normalizeInvokeResponse(raw: unknown): TileGenerationResult {
     throw new Error("Invalid generate-tile response: expected 4 variants");
   }
 
-  const firstVariant = variants[0];
+  const representativeVariant = getRepresentativeVariant(variants);
 
   return {
     generationId: toRequiredString(raw.generationId, "generationId"),
     prompt: toStringOrNull(raw.prompt) ?? "",
     variants,
-    repeatTile: firstVariant.repeatTile,
-    accentTile: firstVariant.accentTile,
+    repeatTile: representativeVariant.repeatTile,
+    accentTile: representativeVariant.accentTile,
     patternType,
     fabricType,
-    accentLayout: firstVariant.accentLayout,
+    accentLayout: representativeVariant.accentLayout,
   };
 }

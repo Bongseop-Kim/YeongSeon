@@ -17,17 +17,23 @@ Deno.test(
         url: `accent-${index}`,
         workId: `accent-work-${index}`,
       })),
-      accentLayout: {
+      accentLayouts: [1, 2, 3, 4].map(() => ({
         objectDescription: "crest",
         objectSource: "text",
         color: "gold",
         size: "medium",
-      },
+      })),
     });
 
     assertEquals(response.variants.length, 4);
-    assertEquals(response.variants[0].repeatTileUrl, "repeat-1");
-    assertEquals(response.variants[0].accentTileUrl, "accent-1");
+    response.variants.forEach((variant, index) => {
+      const expectedIndex = index + 1;
+
+      assertEquals(variant.repeatTileUrl, `repeat-${expectedIndex}`);
+      assertEquals(variant.repeatTileWorkId, `repeat-work-${expectedIndex}`);
+      assertEquals(variant.accentTileUrl, `accent-${expectedIndex}`);
+      assertEquals(variant.accentTileWorkId, `accent-work-${expectedIndex}`);
+    });
   },
 );
 
@@ -46,7 +52,7 @@ Deno.test(
             workId: `repeat-work-${index}`,
           })),
           accentResults: [],
-          accentLayout: null,
+          accentLayouts: [],
         }),
       Error,
       "one_point generation requires 4 accent results",
@@ -67,7 +73,7 @@ Deno.test(
         workId: `repeat-work-${index}`,
       })),
       accentResults: [],
-      accentLayout: null,
+      accentLayouts: [],
     });
 
     assertEquals(

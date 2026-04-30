@@ -28,7 +28,7 @@ export interface BuildSuccessfulTileGenerationLogsParams {
   tokensRefunded: number;
   patternType: PatternType;
   fabricType: FabricType;
-  accentLayout: AccentLayout | null;
+  accentLayouts: AccentLayout[];
   reusedRepeatTile: boolean;
 }
 
@@ -46,7 +46,7 @@ export function buildSuccessfulTileGenerationLogs({
   tokensRefunded,
   patternType,
   fabricType,
-  accentLayout,
+  accentLayouts,
   reusedRepeatTile,
 }: BuildSuccessfulTileGenerationLogsParams): AiGenerationLogInsert[] {
   if (repeatResults.length !== 4) {
@@ -60,12 +60,17 @@ export function buildSuccessfulTileGenerationLogs({
   if (patternType === "all_over" && accentResults.length !== 0) {
     throw new Error("all_over generation logs must not include accent results");
   }
+  if (patternType === "one_point" && accentLayouts.length !== 4) {
+    throw new Error("one_point generation logs require 4 accent layouts");
+  }
 
-  const accentLayoutRecord = toAccentLayoutRecord(accentLayout);
   const logs: AiGenerationLogInsert[] = [];
 
   repeatResults.forEach((repeatResult, index) => {
     const accentResult = accentResults[index] ?? null;
+    const accentLayoutRecord = toAccentLayoutRecord(
+      accentResult ? accentLayouts[index] : null,
+    );
     const shared = {
       ...baseLog,
       generate_image: true,

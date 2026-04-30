@@ -8,7 +8,7 @@ interface BuildTileGenerationVariantResponseParams {
   fabricType: FabricType;
   repeatResults: GeneratedTile[];
   accentResults: GeneratedTile[];
-  accentLayout: AccentLayout | null;
+  accentLayouts: AccentLayout[];
 }
 
 interface TileGenerationVariantResponse {
@@ -41,6 +41,9 @@ export function buildTileGenerationVariantResponse(
   if (params.patternType === "all_over" && params.accentResults.length !== 0) {
     throw new Error("all_over generation must not include accent results");
   }
+  if (params.patternType === "one_point" && params.accentLayouts.length !== 4) {
+    throw new Error("one_point generation requires 4 accent layouts");
+  }
 
   return {
     generationId: params.generationId,
@@ -57,7 +60,7 @@ export function buildTileGenerationVariantResponse(
         repeatTileWorkId: repeatResult.workId,
         accentTileUrl: accentResult?.url ?? null,
         accentTileWorkId: accentResult?.workId ?? null,
-        accentLayout: accentResult ? params.accentLayout : null,
+        accentLayout: accentResult ? params.accentLayouts[index] : null,
       };
     }),
   };

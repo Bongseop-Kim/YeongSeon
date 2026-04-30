@@ -194,7 +194,10 @@ function toTileRole(v: unknown): AdminGenerationLogItem["tileRole"] {
 }
 
 function toResultStatus(v: unknown): AdminGenerationLogResultImage["status"] {
-  return v === "error" ? "error" : "success";
+  if (v === "success" || v === "error") {
+    return v;
+  }
+  return "error";
 }
 
 function toAiModel(v: unknown): "openai" {

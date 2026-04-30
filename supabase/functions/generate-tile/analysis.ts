@@ -5,6 +5,8 @@ import type {
   FabricType,
   GenerationSpec,
   TileGenerationRequest,
+  TileStructure,
+  TileVariation,
 } from "./types.ts";
 import { matchKeyword } from "./fabric-type-resolver.ts";
 
@@ -343,16 +345,48 @@ function createFallbackVariant(
   const mediums = [
     "classic diagonal stripe textile",
     "mixed fabric stripe textile",
-    "refined micro-dot textile",
-    "geometric diamond tie textile",
+    "refined tonal textile",
+    "geometric luxury tie textile",
   ] as const;
-  const fallbackLayouts = [
+  const variationsByStructure: Partial<
+    Record<TileStructure, readonly NonNullable<TileVariation>[]>
+  > = {
+    H: [],
+    F: [],
+    Q: ["different_motif", "rotation", "color"],
+    STRIPE: [
+      "stripe_classic_diagonal",
+      "stripe_textured",
+      "stripe_multi_width",
+      "stripe_regimental",
+      "stripe_dotted",
+    ],
+    DOT: ["dot_micro", "dot_pin"],
+    TOSSED: ["tossed_scattered"],
+    MEDALLION: ["medallion_classic"],
+    GEOMETRIC: [
+      "geometric_diamond",
+      "geometric_check",
+      "geometric_herringbone",
+    ],
+  };
+  const crossFamilyFallbackLayouts = [
     { structure: "STRIPE", variation: "stripe_classic_diagonal" },
     { structure: "STRIPE", variation: "stripe_textured" },
     { structure: "DOT", variation: "dot_micro" },
     { structure: "GEOMETRIC", variation: "geometric_diamond" },
   ] as const;
-  const fallbackLayout = fallbackLayouts[index] ?? fallbackLayouts[0];
+  const baseStructure = baseAnalysis.tileLayout.structure;
+  const familyVariations = variationsByStructure[baseStructure];
+  const fallbackLayout =
+    familyVariations !== undefined
+      ? {
+          structure: baseStructure,
+          variation:
+            familyVariations[index % Math.max(familyVariations.length, 1)] ??
+            baseAnalysis.tileLayout.variation,
+        }
+      : (crossFamilyFallbackLayouts[index] ?? crossFamilyFallbackLayouts[0]);
 
   return {
     id: `variant_${index + 1}`,
@@ -368,8 +402,8 @@ function createFallbackVariant(
       axis: axes[index] ?? "iconographic",
       description:
         index === 0
-          ? "Translate the user's subject into a classic diagonal necktie stripe."
-          : "Reinterpret the same motif while preserving tie-pattern usability.",
+          ? `Preserve the requested ${fallbackLayout.structure} layout family while refining the primary motif.`
+          : `Reinterpret the same motif within the ${fallbackLayout.structure} layout family while preserving tie-pattern usability.`,
       colorEmphasis: "balanced",
     },
     styleDirection: {

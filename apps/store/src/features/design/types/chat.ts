@@ -1,6 +1,1 @@
-export type {
-  Attachment,
-  ContextChip,
-  GenerationStatus,
-  Message,
-} from "@/entities/design";
+export type { Attachment, GenerationStatus, Message } from "@/entities/design";

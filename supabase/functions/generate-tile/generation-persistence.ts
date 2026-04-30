@@ -30,39 +30,30 @@ export async function persistDesignGeneration(
   client: SupabaseClient,
   params: PersistDesignGenerationParams,
 ): Promise<void> {
-  const { error: generationError } = await client
-    .from("design_generations")
-    .insert({
+  const { error } = await client.rpc("persist_design_generation", {
+    generation: {
       id: params.generationId,
       user_id: params.userId,
       prompt: params.prompt,
       pattern_type: params.patternType,
       fabric_type: params.fabricType,
       request_metadata: params.requestMetadata,
-    });
+    },
+    variants: params.variants.map((variant) => ({
+      id: variant.id,
+      generation_id: params.generationId,
+      variant_index: variant.index,
+      repeat_tile_url: variant.repeatTileUrl,
+      repeat_tile_work_id: variant.repeatTileWorkId,
+      accent_tile_url: variant.accentTileUrl,
+      accent_tile_work_id: variant.accentTileWorkId,
+      accent_layout_json: toAccentLayoutRecord(variant.accentLayout),
+      pattern_type: params.patternType,
+      fabric_type: params.fabricType,
+    })),
+  });
 
-  if (generationError) {
-    throw generationError;
-  }
-
-  const { error: variantsError } = await client
-    .from("design_generation_variants")
-    .insert(
-      params.variants.map((variant) => ({
-        id: variant.id,
-        generation_id: params.generationId,
-        variant_index: variant.index,
-        repeat_tile_url: variant.repeatTileUrl,
-        repeat_tile_work_id: variant.repeatTileWorkId,
-        accent_tile_url: variant.accentTileUrl,
-        accent_tile_work_id: variant.accentTileWorkId,
-        accent_layout_json: toAccentLayoutRecord(variant.accentLayout),
-        pattern_type: params.patternType,
-        fabric_type: params.fabricType,
-      })),
-    );
-
-  if (variantsError) {
-    throw variantsError;
+  if (error) {
+    throw error;
   }
 }

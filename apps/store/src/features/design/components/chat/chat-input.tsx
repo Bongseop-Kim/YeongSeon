@@ -170,8 +170,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     );
 
     useEffect(() => {
-      if (draftText === undefined) return;
-      setInputText(draftText);
+      setInputText(draftText ?? "");
       textareaRef.current?.focus();
     }, [draftText, draftRevision]);
 

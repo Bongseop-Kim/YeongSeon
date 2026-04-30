@@ -1,6 +1,11 @@
 import { toAccentLayout } from "@/entities/design/api/design-session-mapper";
 import type { Attachment } from "@/entities/design/model/ai-design-types";
 import type {
+  CiPlacement,
+  FabricMethod,
+  PatternOption,
+} from "@/entities/design/model/design-context";
+import type {
   DesignGeneration,
   DesignGenerationRequestMetadata,
   DesignGenerationVariant,
@@ -21,6 +26,7 @@ const FABRIC_TYPE_SET: ReadonlySet<FabricType> = new Set([
   "printed",
 ]);
 const ROUTE_SET = new Set(["tile_generation", "tile_edit"]);
+const REQUIRED_VARIANT_INDEXES = [1, 2, 3, 4] as const;
 
 const toPatternType = createEnumMapper<PatternType>(PATTERN_TYPE_SET);
 const toFabricType = createEnumMapper<FabricType>(FABRIC_TYPE_SET);
@@ -91,6 +97,64 @@ function toAttachments(value: unknown): Attachment[] {
   });
 }
 
+function isPatternOption(value: unknown): value is PatternOption {
+  return (
+    value === "stripe" ||
+    value === "dot" ||
+    value === "check" ||
+    value === "paisley" ||
+    value === "plain" ||
+    value === "houndstooth" ||
+    value === "floral"
+  );
+}
+
+function isFabricMethod(value: unknown): value is FabricMethod {
+  return value === "yarn-dyed" || value === "print";
+}
+
+function isCiPlacement(value: unknown): value is CiPlacement {
+  return value === "all-over" || value === "one-point";
+}
+
+function toDesignContext(
+  value: unknown,
+): DesignGenerationRequestMetadata["designContext"] | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const designContext: DesignGenerationRequestMetadata["designContext"] = {};
+
+  if (
+    Array.isArray(value.colors) &&
+    value.colors.every((color) => typeof color === "string")
+  ) {
+    designContext.colors = value.colors;
+  }
+  if (isPatternOption(value.pattern)) {
+    designContext.pattern = value.pattern;
+  } else if (value.pattern === null) {
+    designContext.pattern = null;
+  }
+  if (isFabricMethod(value.fabricMethod)) {
+    designContext.fabricMethod = value.fabricMethod;
+  } else if (value.fabricMethod === null) {
+    designContext.fabricMethod = null;
+  }
+  if (typeof value.onePointOffsetX === "number") {
+    designContext.onePointOffsetX = value.onePointOffsetX;
+  }
+  if (typeof value.onePointOffsetY === "number") {
+    designContext.onePointOffsetY = value.onePointOffsetY;
+  }
+  if (isCiPlacement(value.ciPlacement)) {
+    designContext.ciPlacement = value.ciPlacement;
+  } else if (value.ciPlacement === null) {
+    designContext.ciPlacement = null;
+  }
+
+  return Object.keys(designContext).length > 0 ? designContext : undefined;
+}
+
 function toRequestMetadata(value: unknown): DesignGenerationRequestMetadata {
   if (!isRecord(value)) {
     return { selectedColors: [], attachments: [], route: "tile_generation" };
@@ -105,6 +169,7 @@ function toRequestMetadata(value: unknown): DesignGenerationRequestMetadata {
     typeof value.route === "string" && ROUTE_SET.has(value.route)
       ? (value.route as "tile_generation" | "tile_edit")
       : "tile_generation";
+  const designContext = toDesignContext(value.designContext);
 
   return {
     selectedColors,
@@ -116,12 +181,7 @@ function toRequestMetadata(value: unknown): DesignGenerationRequestMetadata {
     ...(typeof value.sourceVariantId === "string"
       ? { sourceVariantId: value.sourceVariantId }
       : {}),
-    ...(isRecord(value.designContext)
-      ? {
-          designContext:
-            value.designContext as DesignGenerationRequestMetadata["designContext"],
-        }
-      : {}),
+    ...(designContext ? { designContext } : {}),
   };
 }
 
@@ -179,12 +239,26 @@ function toDesignGenerationVariant(
 export function toDesignGeneration(row: DesignGenerationRow): DesignGeneration {
   const patternType = toPatternType(row.pattern_type);
   const fabricType = toFabricType(row.fabric_type);
+  const sortedVariants = [...row.design_generation_variants].sort(
+    (a, b) => a.variant_index - b.variant_index,
+  );
+  const variantIndexes = new Set(
+    row.design_generation_variants.map((variant) => variant.variant_index),
+  );
 
   if (!patternType) {
     throw new Error(`invalid generation pattern_type: ${row.pattern_type}`);
   }
   if (!fabricType) {
     throw new Error(`invalid generation fabric_type: ${row.fabric_type}`);
+  }
+  if (
+    variantIndexes.size !== REQUIRED_VARIANT_INDEXES.length ||
+    !REQUIRED_VARIANT_INDEXES.every((index) => variantIndexes.has(index))
+  ) {
+    throw new Error(
+      `generation requires unique variant indexes 1..4: ${row.id}`,
+    );
   }
 
   return {
@@ -194,9 +268,7 @@ export function toDesignGeneration(row: DesignGenerationRow): DesignGeneration {
     patternType,
     fabricType,
     requestMetadata: toRequestMetadata(row.request_metadata),
-    variants: [...row.design_generation_variants]
-      .sort((a, b) => a.variant_index - b.variant_index)
-      .map(toDesignGenerationVariant),
+    variants: sortedVariants.map(toDesignGenerationVariant),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

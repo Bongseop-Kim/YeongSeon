@@ -147,7 +147,7 @@ export const STRIPE_TEXTURED_TEMPLATE = `Square tile 1024x1024 with a textured d
 
 Stripe rule (critical):
 - Create repeating diagonal stripes running top-left to bottom-right diagonal.
-- Vary the stripe treatment by band: one stripe woven twill, one stripe jacquard-like, one stripe smooth printed silk.
+- Vary the stripe treatment by band: one stripe woven twill, one stripe jacquard-like, one stripe smooth woven silk.
 - Keep every stripe flat and integrated into the fabric surface; no raised shadow or 3D embossing.
 - Use {MOTIF} only as subtle textile inspiration inside the stripe rhythm.
 - The textured diagonal stripe sequence must repeat seamlessly across all four tile edges.
