@@ -3,10 +3,8 @@ import { renderHook, waitFor } from "@testing-library/react";
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  GENERATION_LOG_PAGE_SIZE,
-  useGenerationLogsQuery,
-} from "@/features/generation-logs/api/generation-logs-query";
+import { useGenerationLogsQuery } from "@/features/generation-logs/api/generation-logs-query";
+import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
 import type { AdminGenerationLogGroup } from "@/features/generation-logs/types/admin-generation-log";
 
 const { getGenerationLogGroupsMock } = vi.hoisted(() => ({

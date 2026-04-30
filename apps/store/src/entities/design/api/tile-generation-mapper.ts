@@ -126,6 +126,23 @@ const getRepresentativeVariant = (
   return representative;
 };
 
+const validateVariantIndexes = (
+  variants: TileGenerationVariantResult[],
+): void => {
+  const expectedIndexes = [1, 2, 3, 4] as const;
+  const indexes = variants.map((variant) => variant.index);
+  const uniqueIndexes = new Set(indexes);
+  const hasExpectedIndexes = expectedIndexes.every((index) =>
+    uniqueIndexes.has(index),
+  );
+
+  if (uniqueIndexes.size !== indexes.length || !hasExpectedIndexes) {
+    throw new Error(
+      `Invalid generate-tile response: expected unique variant indexes 1..4, received [${indexes.join(", ")}]`,
+    );
+  }
+};
+
 export function toTileGenerationInvokePayload(
   payload: TileGenerationPayload,
 ): TileGenerationInvokePayload {
@@ -166,6 +183,7 @@ export function normalizeInvokeResponse(raw: unknown): TileGenerationResult {
   if (variants.length !== 4) {
     throw new Error("Invalid generate-tile response: expected 4 variants");
   }
+  validateVariantIndexes(variants);
 
   const representativeVariant = getRepresentativeVariant(variants);
 

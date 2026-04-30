@@ -190,8 +190,16 @@ BEGIN
     RAISE EXCEPTION 'unauthorized: caller does not own this resource';
   END IF;
 
-  IF jsonb_typeof(variants) IS DISTINCT FROM 'array' OR jsonb_array_length(variants) <> 4 THEN
-    RAISE EXCEPTION 'persist_design_generation requires exactly 4 variants';
+  IF jsonb_typeof(variants) IS DISTINCT FROM 'array' THEN
+    RAISE EXCEPTION 'persist_design_generation variants must be an array';
+  END IF;
+
+  IF jsonb_array_length(variants) < 1 THEN
+    RAISE EXCEPTION 'persist_design_generation requires at least 1 variant';
+  END IF;
+
+  IF jsonb_array_length(variants) > 4 THEN
+    RAISE EXCEPTION 'persist_design_generation supports at most 4 variants';
   END IF;
 
   INSERT INTO public.design_generations (

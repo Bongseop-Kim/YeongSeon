@@ -1,0 +1,1 @@
+export const GENERATION_LOG_PAGE_SIZE = 50;

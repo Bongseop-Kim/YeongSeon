@@ -9,6 +9,7 @@ interface MessageBubbleProps {
   message: Message;
   onChipClick?: (text: string) => void;
   onTiePreviewClick?: (preview: TilePreviewSelection) => void;
+  selectedPreviewKey?: string | null;
   selectedPreviewImageUrl?: string | null;
   onSelectPreview?: (preview: TilePreviewSelection) => void;
 }
@@ -54,6 +55,7 @@ export function MessageBubble({
   message,
   onChipClick,
   onTiePreviewClick,
+  selectedPreviewKey,
   selectedPreviewImageUrl,
   onSelectPreview,
 }: MessageBubbleProps) {
@@ -63,8 +65,11 @@ export function MessageBubble({
   const previewBackground = repeatTileUrl
     ? toPreviewBackground(repeatTileUrl)
     : undefined;
+  const previewKey = repeatTileUrl
+    ? `${repeatTileUrl}|${message.accentTileUrl ?? ""}`
+    : undefined;
   const tilePreview =
-    repeatTileUrl && previewBackground
+    repeatTileUrl && previewBackground && previewKey
       ? {
           previewBackground,
           repeatTile: {
@@ -79,6 +84,10 @@ export function MessageBubble({
             : null,
         }
       : null;
+  const isSelectedPreview =
+    selectedPreviewKey !== undefined
+      ? selectedPreviewKey === previewKey
+      : selectedPreviewImageUrl === previewBackground;
   const timestamp = new Intl.DateTimeFormat("ko-KR", {
     hour: "2-digit",
     minute: "2-digit",
@@ -115,7 +124,11 @@ export function MessageBubble({
       >
         {message.content}
       </div>
-      {!isUser && repeatTileUrl && previewBackground && tilePreview ? (
+      {!isUser &&
+      repeatTileUrl &&
+      previewBackground &&
+      previewKey &&
+      tilePreview ? (
         <div className="space-y-2">
           {isMobile ? (
             onTiePreviewClick ? (
@@ -138,24 +151,33 @@ export function MessageBubble({
             )
           ) : (
             <div className="relative">
-              <button
-                type="button"
-                aria-label="타일 프리뷰 선택"
-                aria-pressed={selectedPreviewImageUrl === previewBackground}
-                className={cn(
-                  "cursor-pointer transition-all",
-                  selectedPreviewImageUrl === previewBackground
-                    ? "opacity-100"
-                    : "opacity-40 grayscale hover:opacity-70",
-                )}
-                onClick={() => onSelectPreview?.(tilePreview)}
-              >
-                <ChatTilePreview
-                  repeatTileUrl={repeatTileUrl}
-                  accentTileUrl={message.accentTileUrl}
-                />
-              </button>
-              {selectedPreviewImageUrl === previewBackground && (
+              {onSelectPreview ? (
+                <button
+                  type="button"
+                  aria-label="타일 프리뷰 선택"
+                  aria-pressed={isSelectedPreview}
+                  className={cn(
+                    "cursor-pointer transition-all",
+                    isSelectedPreview
+                      ? "opacity-100"
+                      : "opacity-40 grayscale hover:opacity-70",
+                  )}
+                  onClick={() => onSelectPreview(tilePreview)}
+                >
+                  <ChatTilePreview
+                    repeatTileUrl={repeatTileUrl}
+                    accentTileUrl={message.accentTileUrl}
+                  />
+                </button>
+              ) : (
+                <div aria-disabled="true" className="opacity-100">
+                  <ChatTilePreview
+                    repeatTileUrl={repeatTileUrl}
+                    accentTileUrl={message.accentTileUrl}
+                  />
+                </div>
+              )}
+              {isSelectedPreview && (
                 <div
                   aria-label="선택됨"
                   className="pointer-events-none absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-indigo-600"

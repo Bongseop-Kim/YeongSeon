@@ -442,6 +442,15 @@ function normalizeDiversityPlan(
   if (!Array.isArray(raw.variants) || raw.variants.length !== 4) {
     throw new Error("Diversity plan must contain exactly 4 variants");
   }
+  const axes = raw.variants.map((variant) => variant.motifInterpretation.axis);
+  const duplicateAxes = axes.filter(
+    (axis, index) => axes.indexOf(axis) !== index,
+  );
+  if (duplicateAxes.length > 0) {
+    throw new Error(
+      `Diversity plan variants must use unique motifInterpretation.axis values: ${duplicateAxes.join(", ")}`,
+    );
+  }
 
   return {
     baseAnalysis,

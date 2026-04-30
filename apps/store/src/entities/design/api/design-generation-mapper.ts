@@ -25,7 +25,8 @@ const FABRIC_TYPE_SET: ReadonlySet<FabricType> = new Set([
   "yarn_dyed",
   "printed",
 ]);
-const ROUTE_SET = new Set(["tile_generation", "tile_edit"]);
+const ROUTE_SET: ReadonlySet<DesignGenerationRequestMetadata["route"]> =
+  new Set(["tile_generation", "tile_edit"]);
 const REQUIRED_VARIANT_INDEXES = [1, 2, 3, 4] as const;
 
 const toPatternType = createEnumMapper<PatternType>(PATTERN_TYPE_SET);
@@ -157,7 +158,9 @@ function toDesignContext(
 
 function toRequestMetadata(value: unknown): DesignGenerationRequestMetadata {
   if (!isRecord(value)) {
-    return { selectedColors: [], attachments: [], route: "tile_generation" };
+    throw new TypeError(
+      "Invalid or missing route in DesignGenerationRequestMetadata",
+    );
   }
 
   const selectedColors = Array.isArray(value.selectedColors)
@@ -165,10 +168,15 @@ function toRequestMetadata(value: unknown): DesignGenerationRequestMetadata {
         (color): color is string => typeof color === "string",
       )
     : [];
-  const route =
-    typeof value.route === "string" && ROUTE_SET.has(value.route)
-      ? (value.route as "tile_generation" | "tile_edit")
-      : "tile_generation";
+  if (
+    typeof value.route !== "string" ||
+    !ROUTE_SET.has(value.route as DesignGenerationRequestMetadata["route"])
+  ) {
+    throw new TypeError(
+      "Invalid or missing route in DesignGenerationRequestMetadata",
+    );
+  }
+  const route = value.route as DesignGenerationRequestMetadata["route"];
   const designContext = toDesignContext(value.designContext);
 
   return {
@@ -187,18 +195,20 @@ function toRequestMetadata(value: unknown): DesignGenerationRequestMetadata {
 
 function toDesignGenerationVariant(
   row: DesignGenerationVariantRow,
+  parentPatternType: PatternType,
+  parentFabricType: FabricType,
 ): DesignGenerationVariant {
   const patternType = toPatternType(row.pattern_type);
   const fabricType = toFabricType(row.fabric_type);
 
-  if (!patternType) {
+  if (!patternType || patternType !== parentPatternType) {
     throw new Error(
-      `invalid generation variant pattern_type: ${row.pattern_type}`,
+      `generation variant pattern_type mismatch: ${row.pattern_type}`,
     );
   }
-  if (!fabricType) {
+  if (!fabricType || fabricType !== parentFabricType) {
     throw new Error(
-      `invalid generation variant fabric_type: ${row.fabric_type}`,
+      `generation variant fabric_type mismatch: ${row.fabric_type}`,
     );
   }
   if (!row.repeat_tile_url || !row.repeat_tile_work_id) {
@@ -230,8 +240,8 @@ function toDesignGenerationVariant(
         ? { url: row.accent_tile_url, workId: row.accent_tile_work_id }
         : null,
     accentLayout: toAccentLayout(row.accent_layout_json),
-    patternType,
-    fabricType,
+    patternType: parentPatternType,
+    fabricType: parentFabricType,
     createdAt: row.created_at,
   };
 }
@@ -268,7 +278,9 @@ export function toDesignGeneration(row: DesignGenerationRow): DesignGeneration {
     patternType,
     fabricType,
     requestMetadata: toRequestMetadata(row.request_metadata),
-    variants: sortedVariants.map(toDesignGenerationVariant),
+    variants: sortedVariants.map((variant) =>
+      toDesignGenerationVariant(variant, patternType, fabricType),
+    ),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

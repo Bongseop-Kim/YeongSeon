@@ -175,6 +175,7 @@ Deno.serve(async (req) => {
 
     const tokensCharged = tokenResult.cost;
     let tokensRefunded = 0;
+    let persistenceSucceeded = false;
 
     try {
       const analysis = await analyzeIntent(body);
@@ -448,6 +449,7 @@ Deno.serve(async (req) => {
           ),
           variants: result.variants,
         });
+        persistenceSucceeded = true;
       } catch (error) {
         console.error("generate-tile persistDesignGeneration failed:", {
           workId: primaryResult.workId,
@@ -499,13 +501,15 @@ Deno.serve(async (req) => {
 
       return jsonResponse(200, result as unknown as Record<string, unknown>);
     } catch (error) {
-      const refunded = await refundTileRenderTokens(adminClient, {
-        userId: user.id,
-        amount: tokensCharged,
-        workId: `${renderWorkId}_tile_failed_refund`,
-      });
-      if (refunded === "succeeded") {
-        tokensRefunded = tokensCharged;
+      if (!persistenceSucceeded) {
+        const refunded = await refundTileRenderTokens(adminClient, {
+          userId: user.id,
+          amount: tokensCharged,
+          workId: `${renderWorkId}_tile_failed_refund`,
+        });
+        if (refunded === "succeeded") {
+          tokensRefunded = tokensCharged;
+        }
       }
 
       await logGeneration(adminClient, {

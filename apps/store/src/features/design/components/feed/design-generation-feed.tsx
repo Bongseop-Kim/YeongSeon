@@ -105,7 +105,7 @@ function GenerationRow({
 }) {
   const deleteGeneration = useDeleteDesignGenerationMutation();
   const selectedPreviewImageUrl = useDesignChatStore(
-    (state) => state.selectedPreviewImageUrl,
+    (state) => state.selectedPreviewKey,
   );
   const setSelectedTilePreview = useDesignChatStore(
     (state) => state.setSelectedTilePreview,
@@ -114,6 +114,7 @@ function GenerationRow({
 
   const handleSelectVariant = (variant: DesignGenerationVariant) => {
     setSelectedTilePreview({
+      previewKey: `${variant.repeatTile.url}|${variant.accentTile?.url ?? ""}`,
       previewBackground: toPreviewBackground(variant.repeatTile.url),
       repeatTile: variant.repeatTile,
       accentTile: variant.accentTile,
@@ -134,7 +135,7 @@ function GenerationRow({
           {generation.variants.map((variant) => {
             const selected =
               selectedPreviewImageUrl ===
-              toPreviewBackground(variant.repeatTile.url);
+              `${variant.repeatTile.url}|${variant.accentTile?.url ?? ""}`;
 
             return (
               <GenerationTile

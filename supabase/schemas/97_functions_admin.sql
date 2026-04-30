@@ -426,16 +426,21 @@ begin
       ))
       and (p_ai_model is null or l.ai_model = p_ai_model)
       and (p_request_type is null or l.request_type = p_request_type)
-      and (p_id_search is null or l.workflow_id = p_id_search or exists (
-        select 1
-        from public.ai_generation_logs matched
-        where matched.work_id = p_id_search
-          and matched.workflow_id = l.workflow_id
-      ))
+      and (
+        p_id_search is null
+        or coalesce(l.workflow_id, l.work_id) = p_id_search
+        or l.work_id = p_id_search
+        or exists (
+          select 1
+          from public.ai_generation_logs matched
+          where matched.work_id = p_id_search
+            and coalesce(matched.workflow_id, matched.work_id) = coalesce(l.workflow_id, l.work_id)
+        )
+      )
   ),
   grouped_logs as (
     select
-      l.workflow_id,
+      coalesce(l.workflow_id, l.work_id) as workflow_id,
       count(*)::integer as image_count,
       count(*) filter (where l.error_type is null and l.image_generated)::integer as success_count,
       count(*) filter (where l.error_type is not null or not l.image_generated)::integer as error_count,
@@ -455,11 +460,11 @@ begin
         order by l.created_at asc, l.work_id asc
       ) as result_images
     from filtered_logs l
-    group by l.workflow_id
+    group by coalesce(l.workflow_id, l.work_id)
   ),
   primary_logs as (
-    select distinct on (l.workflow_id)
-      l.workflow_id,
+    select distinct on (coalesce(l.workflow_id, l.work_id))
+      coalesce(l.workflow_id, l.work_id) as workflow_id,
       l.id as primary_log_id,
       l.work_id as primary_work_id,
       l.user_id,
@@ -469,7 +474,7 @@ begin
       l.pattern_type,
       l.fabric_type
     from filtered_logs l
-    order by l.workflow_id, l.created_at asc, l.work_id asc
+    order by coalesce(l.workflow_id, l.work_id), l.created_at asc, l.work_id asc
   )
   select
     g.workflow_id,

@@ -2,7 +2,7 @@ import { Select, Space, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/api/generation-logs-query";
+import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
 import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
 import { formatNullableLocaleNumber } from "@/utils/format-number";
 import type { AdminGenerationLogGroup } from "@/features/generation-logs/types/admin-generation-log";
