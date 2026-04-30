@@ -196,40 +196,102 @@ function StickyBar({
   );
 }
 
-function GeneratedImageSection({ log }: { log: AdminGenerationLogItem }) {
-  const generatedImages = [
+interface GeneratedImageItem {
+  label: string;
+  url: string | null;
+  workId: string;
+  logId: string;
+  status: "success" | "error";
+  totalLatencyMs: number | null;
+}
+
+function getPrimaryImageUrl(log: AdminGenerationLogItem): string | null {
+  return log.generatedImageUrl ?? log.repeatTileUrl ?? log.accentTileUrl;
+}
+
+function getLogStatus(
+  log: AdminGenerationLogItem,
+): GeneratedImageItem["status"] {
+  return log.errorType ? "error" : "success";
+}
+
+function getGeneratedImageItems(
+  log: AdminGenerationLogItem,
+  workflowLogs: AdminGenerationLogItem[],
+): GeneratedImageItem[] {
+  const sourceLogs = workflowLogs.length > 1 ? workflowLogs : [log];
+
+  const items = sourceLogs.map((workflowLog, index) => ({
+    label: `Variant ${index + 1}`,
+    url: getPrimaryImageUrl(workflowLog),
+    workId: workflowLog.workId,
+    logId: workflowLog.id,
+    status: getLogStatus(workflowLog),
+    totalLatencyMs: workflowLog.totalLatencyMs,
+  }));
+
+  if (items.length > 1) {
+    return items;
+  }
+
+  return [
     {
       label: "generated_image_url",
       url: log.generatedImageUrl,
       workId: log.workId,
+      logId: log.id,
+      status: getLogStatus(log),
+      totalLatencyMs: log.totalLatencyMs,
     },
     {
       label: "repeat_tile_url",
       url: log.repeatTileUrl,
-      workId: log.repeatTileWorkId,
+      workId: log.repeatTileWorkId ?? log.workId,
+      logId: log.id,
+      status: getLogStatus(log),
+      totalLatencyMs: log.totalLatencyMs,
     },
     {
       label: "accent_tile_url",
       url: log.accentTileUrl,
-      workId: log.accentTileWorkId,
+      workId: log.accentTileWorkId ?? log.workId,
+      logId: log.id,
+      status: getLogStatus(log),
+      totalLatencyMs: log.totalLatencyMs,
     },
   ]
-    .filter(
-      (item): item is { label: string; url: string; workId: string | null } =>
-        Boolean(item.url),
+    .filter((item): item is GeneratedImageItem & { url: string } =>
+      Boolean(item.url),
     )
-    .filter((item, index, items) => {
-      const key = `${item.url}|${item.workId ?? ""}`;
+    .filter((item, index, allItems) => {
+      const key = `${item.url}|${item.workId}`;
       return (
-        items.findIndex(
-          (candidate) => `${candidate.url}|${candidate.workId ?? ""}` === key,
-        ) === index
+        allItems.findIndex((candidate) => {
+          return `${candidate.url}|${candidate.workId}` === key;
+        }) === index
       );
     });
+}
+
+function GeneratedImageSection({
+  log,
+  workflowLogs,
+  activeLogId,
+  onSelectLog,
+}: {
+  log: AdminGenerationLogItem;
+  workflowLogs: AdminGenerationLogItem[];
+  activeLogId: string;
+  onSelectLog: (logId: string) => void;
+}) {
+  const generatedImages = getGeneratedImageItems(log, workflowLogs);
+  const successCount = generatedImages.filter(
+    (image) => image.status === "success" && image.url,
+  ).length;
 
   if (generatedImages.length === 0) {
     return (
-      <Card title="생성된 이미지" size="small" style={{ marginBottom: 16 }}>
+      <Card title="생성 결과 세트" size="small" style={{ marginBottom: 16 }}>
         <div
           style={{
             background: "#f5f5f5",
@@ -249,36 +311,91 @@ function GeneratedImageSection({ log }: { log: AdminGenerationLogItem }) {
   }
 
   return (
-    <Card title="생성된 이미지" size="small" style={{ marginBottom: 16 }}>
+    <Card
+      title="생성 결과 세트"
+      size="small"
+      style={{ marginBottom: 16 }}
+      extra={
+        <Tag
+          color={successCount === generatedImages.length ? "success" : "error"}
+        >
+          {successCount}/{generatedImages.length} 성공
+        </Tag>
+      }
+    >
       <List
-        grid={{ gutter: 12, xs: 1, sm: 2, md: 3 }}
+        grid={{ gutter: 12, xs: 1, sm: 2, md: 4 }}
         dataSource={generatedImages}
         renderItem={(item) => (
           <List.Item>
-            <Space direction="vertical" size={6} style={{ width: "100%" }}>
-              <Image
-                src={item.url}
-                alt={item.label}
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: 360,
-                  objectFit: "contain",
-                  borderRadius: 6,
-                }}
-              />
-              <Text strong style={{ fontSize: 12 }}>
-                {item.label}
-              </Text>
-              <Text code style={{ fontSize: 11, whiteSpace: "pre-wrap" }}>
-                {item.workId ?? "-"}
-              </Text>
-              <Text
-                type="secondary"
-                style={{ fontSize: 11, overflowWrap: "anywhere" }}
-              >
-                {item.url}
-              </Text>
-            </Space>
+            <button
+              type="button"
+              onClick={() => onSelectLog(item.logId)}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                padding: 0,
+                border: item.logId === activeLogId ? "1px solid #1677ff" : 0,
+                borderRadius: 8,
+                background: "transparent",
+                cursor: "pointer",
+              }}
+            >
+              <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                {item.url ? (
+                  <Image
+                    src={item.url}
+                    alt={`생성 결과 ${item.label}`}
+                    preview={false}
+                    style={{
+                      width: "100%",
+                      maxHeight: 260,
+                      objectFit: "contain",
+                      borderRadius: 6,
+                      background: "#fafafa",
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      height: 180,
+                      borderRadius: 6,
+                      background: "#fff2f0",
+                      border: "1px dashed #ffccc7",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text type="secondary">이미지 없음</Text>
+                  </div>
+                )}
+                <Text strong style={{ fontSize: 12 }}>
+                  {item.label}
+                </Text>
+                <Text code style={{ fontSize: 11, whiteSpace: "pre-wrap" }}>
+                  {item.workId}
+                </Text>
+                <Space size={6}>
+                  <Tag color={item.status === "error" ? "error" : "success"}>
+                    {item.status === "error" ? "실패" : "성공"}
+                  </Tag>
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    {item.totalLatencyMs != null
+                      ? `${item.totalLatencyMs}ms`
+                      : "-"}
+                  </Text>
+                </Space>
+                {item.url && (
+                  <Text
+                    type="secondary"
+                    style={{ fontSize: 11, overflowWrap: "anywhere" }}
+                  >
+                    {item.url}
+                  </Text>
+                )}
+              </Space>
+            </button>
           </List.Item>
         )}
       />
@@ -705,7 +822,12 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
         />
         <ExecutionLogSection log={activeLog} />
         <AttachedImageSection log={activeLog} />
-        <GeneratedImageSection log={activeLog} />
+        <GeneratedImageSection
+          log={activeLog}
+          workflowLogs={orderedWorkflowLogs}
+          activeLogId={activeLog.id}
+          onSelectLog={selectLog}
+        />
         <RequestOptionsSection log={activeLog} />
         <PromptSection log={activeLog} />
       </div>

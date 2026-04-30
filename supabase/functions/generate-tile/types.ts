@@ -2,8 +2,32 @@ import type { AttachmentType } from "@/functions/_shared/request-attachments.ts"
 
 export type FabricType = "yarn_dyed" | "printed";
 export type PatternType = "all_over" | "one_point";
-export type TileStructure = "H" | "F" | "Q";
-export type TileVariation = "rotation" | "color" | "different_motif" | null;
+export type TileStructure =
+  | "H"
+  | "F"
+  | "Q"
+  | "STRIPE"
+  | "DOT"
+  | "TOSSED"
+  | "MEDALLION"
+  | "GEOMETRIC";
+export type TileVariation =
+  | "rotation"
+  | "color"
+  | "different_motif"
+  | "stripe_classic_diagonal"
+  | "stripe_multi_width"
+  | "stripe_regimental"
+  | "stripe_textured"
+  | "stripe_dotted"
+  | "dot_micro"
+  | "dot_pin"
+  | "tossed_scattered"
+  | "medallion_classic"
+  | "geometric_diamond"
+  | "geometric_check"
+  | "geometric_herringbone"
+  | null;
 export type EditTarget = "repeat" | "accent" | "both" | "new";
 export type ObjectSource = "text" | "image" | "both";
 export type ReferenceImageUsage =
@@ -44,6 +68,53 @@ export interface AnalysisOutput {
   accentLayout: AccentLayout | null;
 }
 
+export type MotifInterpretationAxis =
+  | "iconographic"
+  | "geometric_abstract"
+  | "textural_abstract"
+  | "symbolic_variation";
+
+export type ColorEmphasis =
+  | "balanced"
+  | "dominant"
+  | "monochrome"
+  | "high_contrast";
+
+export type CompositionDensity = "minimal" | "balanced" | "maximal";
+
+export interface MotifInterpretation {
+  axis: MotifInterpretationAxis;
+  description: string;
+  colorEmphasis: ColorEmphasis;
+}
+
+export interface StyleDirection {
+  medium: string;
+  aestheticVector: string;
+  density: CompositionDensity;
+}
+
+export interface GenerationSpec {
+  id: string;
+  tileLayout: TileLayout;
+  accentLayout: AccentLayout | null;
+  motifInterpretation: MotifInterpretation;
+  styleDirection: StyleDirection;
+  referenceImageUsage: ReferenceImageUsage;
+}
+
+export interface CohesionAnchor {
+  fabricType: FabricType;
+  backgroundColor: string;
+  motifKernel: string;
+}
+
+export interface DiversityPlan {
+  baseAnalysis: AnalysisOutput;
+  variants: GenerationSpec[];
+  cohesionAnchor: CohesionAnchor;
+}
+
 export interface TileGenerationRequest {
   route: "tile_generation" | "tile_edit";
   userMessage: string;
@@ -81,11 +152,17 @@ export interface TileGenerationRequest {
 }
 
 export interface TileGenerationResponse {
-  repeatTileUrl: string;
-  repeatTileWorkId: string;
-  accentTileUrl: string | null;
-  accentTileWorkId: string | null;
+  generationId: string;
+  prompt: string;
   patternType: PatternType;
   fabricType: FabricType;
-  accentLayout: AccentLayout | null;
+  variants: Array<{
+    id: string;
+    index: number;
+    repeatTileUrl: string;
+    repeatTileWorkId: string;
+    accentTileUrl: string | null;
+    accentTileWorkId: string | null;
+    accentLayout: AccentLayout | null;
+  }>;
 }

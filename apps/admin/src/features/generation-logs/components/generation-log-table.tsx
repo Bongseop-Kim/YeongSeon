@@ -1,16 +1,16 @@
 import { Select, Space, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import dayjs from "dayjs";
-import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/api/generation-logs-query";
+import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
 import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
 import { formatNullableLocaleNumber } from "@/utils/format-number";
-import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
+import type { AdminGenerationLogGroup } from "@/features/generation-logs/types/admin-generation-log";
 
 const { Text } = Typography;
 
 interface GenerationLogTableProps {
-  data: AdminGenerationLogItem[];
+  data: AdminGenerationLogGroup[];
   loading: boolean;
   page: number;
   hasMore: boolean;
@@ -19,12 +19,76 @@ interface GenerationLogTableProps {
   onAiModelChange: (model: string | null) => void;
 }
 
-const renderGenerateImageStatus = (
-  generateImage: boolean | null | undefined,
-  imageGenerated: boolean,
-) => {
-  if (!generateImage) return <Tag>미요청</Tag>;
-  return imageGenerated ? <Tag color="success">성공</Tag> : <Tag>실패</Tag>;
+const THUMB_SIZE = 54;
+
+function ResultThumbnailGrid({ group }: { group: AdminGenerationLogGroup }) {
+  const images = group.resultImages.slice(0, 4);
+  const cells = Array.from({ length: 4 }, (_, index) => images[index] ?? null);
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(2, ${THUMB_SIZE}px)`,
+        gap: 4,
+      }}
+    >
+      {cells.map((image, index) => (
+        <div
+          key={image?.workId ?? `empty-${index}`}
+          style={{
+            width: THUMB_SIZE,
+            height: THUMB_SIZE,
+            borderRadius: 6,
+            border:
+              image?.status === "error"
+                ? "1px solid #ffccc7"
+                : "1px solid #f0f0f0",
+            background: image?.status === "error" ? "#fff2f0" : "#fafafa",
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {image?.url ? (
+            <img
+              src={image.url}
+              alt={`생성 결과 ${index + 1}`}
+              loading="lazy"
+              decoding="async"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          ) : (
+            <Text type="secondary" style={{ fontSize: 10 }}>
+              이미지 없음
+            </Text>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const renderGroupStatus = (group: AdminGenerationLogGroup) => {
+  if (group.errorCount > 0) {
+    return (
+      <Tag color="error">
+        {group.successCount}/{group.imageCount} 성공
+      </Tag>
+    );
+  }
+
+  return (
+    <Tag color="success">
+      {group.successCount}/{group.imageCount} 성공
+    </Tag>
+  );
 };
 
 export function GenerationLogTable({
@@ -36,56 +100,46 @@ export function GenerationLogTable({
   aiModel,
   onAiModelChange,
 }: GenerationLogTableProps) {
-  const navigate = useNavigate();
-
-  const columns: ColumnsType<AdminGenerationLogItem> = [
+  const columns: ColumnsType<AdminGenerationLogGroup> = [
     {
-      title: "시각",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 160,
-      render: (v: string) => dayjs(v).format("MM-DD HH:mm:ss"),
+      title: "생성 결과",
+      key: "resultImages",
+      width: 132,
+      render: (_, record) => <ResultThumbnailGrid group={record} />,
     },
     {
-      title: "모델",
-      dataIndex: "aiModel",
-      key: "aiModel",
-      width: 80,
-      render: (v: string) => <Tag color={modelColor(v)}>{v}</Tag>,
-    },
-    {
-      title: "요청 유형",
-      dataIndex: "requestType",
-      key: "requestType",
-      width: 120,
-      render: (v: string | null) => requestTypeLabel(v),
-    },
-    {
-      title: "프롬프트",
+      title: "요청",
       dataIndex: "userMessage",
       key: "userMessage",
       ellipsis: true,
-      render: (v: string) => (
-        <Text ellipsis style={{ maxWidth: 240 }}>
-          {v}
-        </Text>
+      render: (v: string, record) => (
+        <Space direction="vertical" size={4} style={{ width: "100%" }}>
+          <Text ellipsis style={{ maxWidth: 360 }}>
+            {v}
+          </Text>
+          <Space wrap size={4}>
+            <Tag color={modelColor(record.aiModel)}>{record.aiModel}</Tag>
+            <Tag>{requestTypeLabel(record.requestType)}</Tag>
+            {record.patternType && <Tag>{record.patternType}</Tag>}
+            {record.fabricType && <Tag>{record.fabricType}</Tag>}
+          </Space>
+          <Text code style={{ fontSize: 11 }}>
+            <Link
+              to={`/generation-logs/${record.primaryLogId}`}
+              aria-label={`${record.workflowId} 생성 로그 상세 보기`}
+            >
+              {record.workflowId}
+            </Link>
+          </Text>
+        </Space>
       ),
     },
     {
-      title: "턴",
-      dataIndex: "conversationTurn",
-      key: "conversationTurn",
-      width: 50,
-      align: "right",
-    },
-    {
       title: "이미지",
-      dataIndex: "imageGenerated",
-      key: "imageGenerated",
-      width: 70,
+      key: "imageCount",
+      width: 100,
       align: "center",
-      render: (v: boolean, record) =>
-        renderGenerateImageStatus(record.generateImage, v),
+      render: (_, record) => renderGroupStatus(record),
     },
     {
       title: "토큰",
@@ -117,11 +171,22 @@ export function GenerationLogTable({
     },
     {
       title: "상태",
-      dataIndex: "errorType",
-      key: "errorType",
+      dataIndex: "errorCount",
+      key: "errorCount",
       width: 90,
-      render: (v: string | null) =>
-        v ? <Tag color="error">{v}</Tag> : <Tag color="success">성공</Tag>,
+      render: (_, record) =>
+        record.errorCount > 0 ? (
+          <Tag color="error">에러 {record.errorCount}</Tag>
+        ) : (
+          <Tag color="success">성공</Tag>
+        ),
+    },
+    {
+      title: "시각",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 150,
+      render: (v: string) => dayjs(v).format("MM-DD HH:mm:ss"),
     },
   ];
 
@@ -138,16 +203,12 @@ export function GenerationLogTable({
         />
       </Space>
 
-      <Table<AdminGenerationLogItem>
+      <Table<AdminGenerationLogGroup>
         columns={columns}
         dataSource={data}
-        rowKey="id"
+        rowKey="workflowId"
         loading={loading}
         size="small"
-        onRow={(record) => ({
-          onClick: () => navigate(`/generation-logs/${record.id}`),
-          style: { cursor: "pointer" },
-        })}
         pagination={{
           current: page,
           pageSize: GENERATION_LOG_PAGE_SIZE,
@@ -158,7 +219,7 @@ export function GenerationLogTable({
           showSizeChanger: false,
           simple: true,
         }}
-        scroll={{ x: 900 }}
+        scroll={{ x: 980 }}
       />
     </>
   );

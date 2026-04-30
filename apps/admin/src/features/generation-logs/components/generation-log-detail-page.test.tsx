@@ -7,6 +7,7 @@ import type { AdminGenerationLogItem } from "@/features/generation-logs/types/ad
 
 const mocks = vi.hoisted(() => ({
   detailLog: null as AdminGenerationLogItem | null,
+  workflowLogs: [] as AdminGenerationLogItem[],
 }));
 
 vi.mock("@/features/generation-logs/api/generation-logs-query", () => ({
@@ -16,7 +17,7 @@ vi.mock("@/features/generation-logs/api/generation-logs-query", () => ({
     errorMessage: null,
   }),
   useGenerationWorkflowLogsQuery: () => ({
-    data: [],
+    data: mocks.workflowLogs,
     isLoading: false,
   }),
 }));
@@ -82,6 +83,7 @@ describe("hasJsonBlockContent", () => {
 describe("GenerationLogDetailPage", () => {
   beforeEach(() => {
     mocks.detailLog = null;
+    mocks.workflowLogs = [];
   });
 
   it("tileRole만 있는 로그도 사용자 선택 옵션을 표시한다", () => {
@@ -208,5 +210,30 @@ describe("GenerationLogDetailPage", () => {
         "첨부 이미지는 있었지만 저장된 원본 이미지가 없습니다",
       ),
     ).not.toBeInTheDocument();
+  });
+
+  it("같은 workflow의 4개 생성 결과를 하나의 결과 세트로 표시한다", () => {
+    const logs = Array.from({ length: 4 }, (_, index) => ({
+      ...tileRoleOnlyLog,
+      id: `log-${index + 1}`,
+      workflowId: "workflow-1",
+      workId: `work-${index + 1}`,
+      generatedImageUrl: `https://ik.imagekit.io/app/${index + 1}.webp`,
+      imageGenerated: true,
+      totalLatencyMs: 2000 + index,
+    }));
+    mocks.detailLog = logs[0];
+    mocks.workflowLogs = logs;
+
+    render(
+      <MemoryRouter>
+        <GenerationLogDetailPage id="log-1" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("생성 결과 세트")).toBeInTheDocument();
+    expect(screen.getAllByAltText(/생성 결과/)).toHaveLength(4);
+    expect(screen.getByText("4/4 성공")).toBeInTheDocument();
+    expect(screen.getByText("Variant 4")).toBeInTheDocument();
   });
 });

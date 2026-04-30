@@ -1,5 +1,7 @@
 import type {
+  AdminGenerationLogGroup,
   AdminGenerationLogItem,
+  AdminGenerationLogResultImage,
   ErrorDistribution,
   GenerationLogPhase,
   GenerationStatsData,
@@ -126,6 +128,26 @@ type GenerationLogRow = {
   created_at: unknown;
 };
 
+type GenerationLogGroupRow = {
+  workflow_id: unknown;
+  primary_log_id: unknown;
+  primary_work_id: unknown;
+  user_id: unknown;
+  ai_model: unknown;
+  request_type: unknown;
+  user_message: unknown;
+  pattern_type?: unknown;
+  fabric_type?: unknown;
+  image_count: unknown;
+  success_count: unknown;
+  error_count: unknown;
+  tokens_charged: unknown;
+  tokens_refunded: unknown;
+  total_latency_ms: unknown;
+  created_at: unknown;
+  result_images: unknown;
+};
+
 function toRequestType(v: unknown): "render_standard" | null {
   if (v === "render_standard") {
     return v;
@@ -169,6 +191,13 @@ function toTileRole(v: unknown): AdminGenerationLogItem["tileRole"] {
     return v;
   }
   return null;
+}
+
+function toResultStatus(v: unknown): AdminGenerationLogResultImage["status"] {
+  if (v === "success" || v === "error") {
+    return v;
+  }
+  return "error";
 }
 
 function toAiModel(v: unknown): "openai" {
@@ -315,6 +344,47 @@ export function toAdminGenerationLogItem(
     ...(normalizedDesign ? { normalizedDesign } : {}),
     ...(imagePrompt ? { imagePrompt } : {}),
     ...(errorMessage ? { errorMessage } : {}),
+  };
+}
+
+function toResultImages(
+  value: unknown,
+): AdminGenerationLogGroup["resultImages"] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isRecord).map((image) => ({
+    logId: toString(image.log_id) ?? "",
+    workId: toString(image.work_id) ?? "",
+    url: toString(image.url),
+    tileRole: toTileRole(image.tile_role),
+    status: toResultStatus(image.status),
+    totalLatencyMs: parseNumberWith(image.total_latency_ms, isSafeInteger),
+  }));
+}
+
+export function toAdminGenerationLogGroup(
+  row: GenerationLogGroupRow,
+): AdminGenerationLogGroup {
+  return {
+    workflowId: toString(row.workflow_id) ?? "",
+    primaryLogId: toString(row.primary_log_id) ?? "",
+    primaryWorkId: toString(row.primary_work_id) ?? "",
+    userId: toString(row.user_id) ?? "",
+    aiModel: toAiModel(row.ai_model),
+    requestType: toRequestType(row.request_type),
+    userMessage: toString(row.user_message) ?? "",
+    patternType: toPatternType(row.pattern_type),
+    fabricType: toFabricType(row.fabric_type),
+    imageCount: toNumber(row.image_count),
+    successCount: toNumber(row.success_count),
+    errorCount: toNumber(row.error_count),
+    tokensCharged: toNumber(row.tokens_charged),
+    tokensRefunded: toNumber(row.tokens_refunded),
+    totalLatencyMs: parseNumberWith(row.total_latency_ms, isSafeInteger),
+    createdAt: toString(row.created_at) ?? "",
+    resultImages: toResultImages(row.result_images),
   };
 }
 

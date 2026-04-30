@@ -5,6 +5,11 @@ export {
   useDesignTokenHistoryQuery,
 } from "./api/ai-design-query";
 export {
+  DESIGN_GENERATIONS_QUERY_KEY,
+  useDeleteDesignGenerationMutation,
+  useDesignGenerationsQuery,
+} from "./api/design-generation-query";
+export {
   getDesignSessionMessages,
   getDesignSessions,
 } from "./api/design-session-api";
@@ -17,9 +22,13 @@ export {
   toRestoredDesignSessionState,
   type RestoredDesignSessionState,
 } from "./api/design-session-state-mapper";
-export type { Attachment, ContextChip } from "./model/ai-design-types";
+export type { Attachment } from "./model/ai-design-types";
 export { isActiveGeneration } from "./model/chat";
 export type { GenerationStatus, Message } from "./model/chat";
+export type {
+  DesignGeneration,
+  DesignGenerationVariant,
+} from "./model/design-generation";
 export type {
   CiPlacement,
   DesignContext,
@@ -32,9 +41,7 @@ export type {
   AccentLayout,
   FabricType,
   PatternType,
-  SessionMessagePayload,
   TileGenerationPayload,
-  TileGenerationResult,
   TileRef,
 } from "./model/tile-types";
 export { getDesignImages } from "./api/design-image-api";

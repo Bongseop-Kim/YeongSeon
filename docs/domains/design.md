@@ -27,7 +27,7 @@ flowchart TD
     A[고객 텍스트/이미지 입력] --> B[generate-tile Edge Function]
     B --> C[analysis_model: 의도·패턴·fabricType 힌트 분석]
     C --> D[resolveFabricType: yarn_dyed / printed 확정]
-    D --> E[프롬프트 조립: H/F/Q 템플릿 + Fabric 블록 + Seamless suffix]
+    D --> E[프롬프트 조립: H/F/Q/STRIPE/DOT/TOSSED/MEDALLION/GEOMETRIC 템플릿 + Fabric 블록 + Seamless suffix]
     E --> F{토큰 잔액 확인 및 차감}
     F -->|부족| G[InsufficientTokensError 반환]
     F -->|충분| H[gpt-image-2 호출: repeat tile]

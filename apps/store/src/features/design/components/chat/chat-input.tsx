@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Plus, Send, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 import { analytics } from "@/shared/lib/analytics";
 import { Badge } from "@/shared/ui/badge";
@@ -19,6 +19,8 @@ import type { Attachment } from "@/features/design/types/chat";
 interface ChatInputProps {
   onSend: (text: string, attachments: Attachment[]) => void;
   isLoading?: boolean;
+  draftText?: string;
+  draftRevision?: number;
 }
 
 interface ChatInputHandle {
@@ -138,7 +140,10 @@ function ImageAttachmentPreview({
 }
 
 export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
-  function ChatInput({ onSend, isLoading = false }, ref) {
+  function ChatInput(
+    { onSend, isLoading = false, draftText, draftRevision },
+    ref,
+  ) {
     const designContext = useDesignChatStore((state) => state.designContext);
     const pendingAttachments = useDesignChatStore(
       (state) => state.pendingAttachments,
@@ -163,6 +168,11 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       }),
       [],
     );
+
+    useEffect(() => {
+      setInputText(draftText ?? "");
+      textareaRef.current?.focus();
+    }, [draftText, draftRevision]);
 
     useEffect(() => {
       if (!showPopup) return;
@@ -275,7 +285,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             rows={1}
             aria-label="디자인 요청 메시지"
             value={inputText}
-            placeholder="원하는 넥타이 스타일을 자유롭게 입력하세요…"
+            placeholder="원하는 넥타이 스타일, 원단, 색상, 로고 배치를 입력하세요..."
             onChange={(event) => setInputText(event.target.value)}
             onKeyDown={(event) => {
               if (
@@ -289,7 +299,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             }}
             className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 text-sm outline-none"
           />
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="mt-2 flex flex-col gap-2 border-t pt-2">
             <div className="flex items-center justify-between gap-2">
               <div
                 data-testid="chat-input-option-row"
@@ -360,12 +370,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               </div>
               <Button
                 type="button"
-                size="icon"
-                aria-label="메시지 전송"
+                size="sm"
+                aria-label="Generate"
+                className="h-8 rounded-md px-4 text-xs"
                 onClick={handleSend}
                 disabled={!trimmedText || isLoading}
               >
-                <Send className="size-4" />
+                Generate
               </Button>
             </div>
           </div>

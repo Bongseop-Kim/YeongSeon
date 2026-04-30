@@ -81,27 +81,48 @@ describe("callTileGeneration", () => {
     };
     invoke.mockResolvedValueOnce({
       data: {
-        repeatTileUrl: "https://example.com/repeat.webp",
-        repeatTileWorkId: "repeat-work",
-        accentTileUrl: null,
-        accentTileWorkId: null,
+        generationId: "gen-1",
+        prompt: "새 디자인",
         patternType: "all_over",
         fabricType: "printed",
-        accentLayout: null,
+        variants: [1, 2, 3, 4].map((index) => ({
+          id: `var-${index}`,
+          index,
+          repeatTileUrl: `https://example.com/repeat-${index}.webp`,
+          repeatTileWorkId: `repeat-work-${index}`,
+          accentTileUrl: null,
+          accentTileWorkId: null,
+          accentLayout: null,
+        })),
       },
       error: null,
     });
 
-    await expect(callTileGeneration(payloadWithAttachments)).resolves.toEqual({
-      repeatTile: {
-        url: "https://example.com/repeat.webp",
-        workId: "repeat-work",
-      },
-      accentTile: null,
-      patternType: "all_over",
-      fabricType: "printed",
-      accentLayout: null,
-    });
+    await expect(callTileGeneration(payloadWithAttachments)).resolves.toEqual(
+      expect.objectContaining({
+        generationId: "gen-1",
+        prompt: "새 디자인",
+        repeatTile: {
+          url: "https://example.com/repeat-1.webp",
+          workId: "repeat-work-1",
+        },
+        accentTile: null,
+        patternType: "all_over",
+        fabricType: "printed",
+        accentLayout: null,
+        variants: expect.arrayContaining([
+          expect.objectContaining({
+            id: "var-1",
+            index: 1,
+            repeatTile: {
+              url: "https://example.com/repeat-1.webp",
+              workId: "repeat-work-1",
+            },
+            accentTile: null,
+          }),
+        ]),
+      }),
+    );
     expect(invoke).toHaveBeenCalledWith("generate-tile", {
       body: expect.objectContaining({
         attachedImageUrls: payloadWithAttachments.attachedImageUrls,
@@ -109,11 +130,96 @@ describe("callTileGeneration", () => {
     });
   });
 
+  it("variant index 순서로 정렬한 뒤 대표 타일을 선택한다", async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        generationId: "gen-1",
+        prompt: "새 디자인",
+        patternType: "all_over",
+        fabricType: "printed",
+        variants: [3, 1, 4, 2].map((index) => ({
+          id: `var-${index}`,
+          index,
+          repeatTileUrl: `https://example.com/repeat-${index}.webp`,
+          repeatTileWorkId: `repeat-work-${index}`,
+          accentTileUrl: null,
+          accentTileWorkId: null,
+          accentLayout: null,
+        })),
+      },
+      error: null,
+    });
+
+    const result = await callTileGeneration(payload);
+
+    expect(result.variants.map((variant) => variant.index)).toEqual([
+      1, 2, 3, 4,
+    ]);
+    expect(result.repeatTile).toEqual({
+      url: "https://example.com/repeat-1.webp",
+      workId: "repeat-work-1",
+    });
+  });
+
+  it("원포인트 4-variant 응답을 repeat/accent pair로 정규화한다", async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        generationId: "gen-1",
+        prompt: "네이비 원포인트",
+        patternType: "one_point",
+        fabricType: "yarn_dyed",
+        variants: [1, 2, 3, 4].map((index) => ({
+          id: `var-${index}`,
+          index,
+          repeatTileUrl: `https://example.com/repeat-${index}.webp`,
+          repeatTileWorkId: `repeat-${index}`,
+          accentTileUrl: `https://example.com/accent-${index}.webp`,
+          accentTileWorkId: `accent-${index}`,
+          accentLayout: {
+            objectDescription: "crest",
+            objectSource: "text",
+            color: "gold",
+            size: "medium",
+          },
+        })),
+      },
+      error: null,
+    });
+
+    const result = await callTileGeneration(payload);
+
+    expect(result.generationId).toBe("gen-1");
+    expect(result.variants).toHaveLength(4);
+    expect(result.variants[0]).toMatchObject({
+      id: "var-1",
+      index: 1,
+      repeatTile: {
+        url: "https://example.com/repeat-1.webp",
+        workId: "repeat-1",
+      },
+      accentTile: {
+        url: "https://example.com/accent-1.webp",
+        workId: "accent-1",
+      },
+    });
+  });
+
   it("필수 타일 응답 필드가 없으면 명확한 에러를 던진다", async () => {
     invoke.mockResolvedValueOnce({
       data: {
-        repeatTileUrl: "https://example.com/repeat.webp",
-        repeatTileWorkId: null,
+        generationId: "gen-1",
+        prompt: "새 디자인",
+        patternType: "all_over",
+        fabricType: "printed",
+        variants: [1, 2, 3, 4].map((index) => ({
+          id: `var-${index}`,
+          index,
+          repeatTileUrl: "https://example.com/repeat.webp",
+          repeatTileWorkId: index === 1 ? null : `repeat-work-${index}`,
+          accentTileUrl: null,
+          accentTileWorkId: null,
+          accentLayout: null,
+        })),
       },
       error: null,
     });

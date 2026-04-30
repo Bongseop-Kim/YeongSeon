@@ -6,6 +6,7 @@ import type {
   PatternType,
   TileGenerationPayload,
   TileGenerationResult,
+  TileGenerationVariantResult,
   TileRef,
 } from "@/entities/design/model/tile-types";
 
@@ -61,6 +62,87 @@ const toOptionalTileRef = (
   return toTileRef(url, workId, fieldName);
 };
 
+const toVariantIndex = (value: unknown): 1 | 2 | 3 | 4 => {
+  if (value === 1 || value === 2 || value === 3 || value === 4) {
+    return value;
+  }
+
+  throw new Error(
+    `Invalid generate-tile response: variant index is invalid (${String(value)})`,
+  );
+};
+
+const toRequiredString = (value: unknown, fieldName: string): string => {
+  const normalized = toStringOrNull(value);
+
+  if (!normalized) {
+    throw new Error(`Invalid generate-tile response: ${fieldName} is missing`);
+  }
+
+  return normalized;
+};
+
+const toVariant = (raw: unknown): TileGenerationVariantResult => {
+  if (!isRecord(raw)) {
+    throw new Error("Invalid generate-tile response: variant is invalid");
+  }
+
+  return {
+    id: toRequiredString(raw.id, "variant id"),
+    index: toVariantIndex(raw.index),
+    repeatTile: toTileRef(
+      raw.repeatTileUrl,
+      raw.repeatTileWorkId,
+      "repeatTile",
+    ),
+    accentTile: toOptionalTileRef(
+      raw.accentTileUrl,
+      raw.accentTileWorkId,
+      "accentTile",
+    ),
+    accentLayout: toAccentLayout(raw.accentLayout),
+  };
+};
+
+const getRepresentativeVariant = (
+  variants: TileGenerationVariantResult[],
+): TileGenerationVariantResult => {
+  const variantsByIndex = new Map<number, TileGenerationVariantResult>();
+
+  for (const variant of variants) {
+    if (!variantsByIndex.has(variant.index)) {
+      variantsByIndex.set(variant.index, variant);
+    }
+  }
+
+  const representative = [...variantsByIndex.entries()].sort(
+    ([left], [right]) => left - right,
+  )[0]?.[1];
+
+  if (!representative) {
+    throw new Error("Invalid generate-tile response: variants are missing");
+  }
+
+  return representative;
+};
+
+const validateVariantIndexes = (
+  variants: TileGenerationVariantResult[],
+): void => {
+  const expectedIndexes = [1, 2, 3, 4] as const;
+  const indexes = variants.map((variant) => variant.index);
+  const uniqueIndexes = new Set(indexes);
+  const hasExpectedIndexes = expectedIndexes.every((index) =>
+    uniqueIndexes.has(index),
+  );
+
+  if (uniqueIndexes.size !== indexes.length || !hasExpectedIndexes) {
+    throw new Error(
+      `Invalid generate-tile response: expected unique variant indexes 1..4, received [${indexes.join(", ")}]`,
+    );
+  }
+};
+
 export function toTileGenerationInvokePayload(
   payload: TileGenerationPayload,
 ): TileGenerationInvokePayload {
@@ -80,18 +162,13 @@ export function normalizeInvokeResponse(raw: unknown): TileGenerationResult {
     throw new Error("Invalid generate-tile response: expected object");
   }
 
-  const repeatTile = toTileRef(
-    raw.repeatTileUrl,
-    raw.repeatTileWorkId,
-    "repeatTile",
-  );
-  const accentTile = toOptionalTileRef(
-    raw.accentTileUrl,
-    raw.accentTileWorkId,
-    "accentTile",
-  );
   const patternType = toPatternType(raw.patternType);
   const fabricType = toFabricType(raw.fabricType);
+  const variants = Array.isArray(raw.variants)
+    ? raw.variants
+        .map(toVariant)
+        .sort((left, right) => left.index - right.index)
+    : [];
 
   if (!patternType) {
     throw new Error(
@@ -105,11 +182,21 @@ export function normalizeInvokeResponse(raw: unknown): TileGenerationResult {
     );
   }
 
+  if (variants.length !== 4) {
+    throw new Error("Invalid generate-tile response: expected 4 variants");
+  }
+  validateVariantIndexes(variants);
+
+  const representativeVariant = getRepresentativeVariant(variants);
+
   return {
-    repeatTile,
-    accentTile,
+    generationId: toRequiredString(raw.generationId, "generationId"),
+    prompt: toStringOrNull(raw.prompt) ?? "",
+    variants,
+    repeatTile: representativeVariant.repeatTile,
+    accentTile: representativeVariant.accentTile,
     patternType,
     fabricType,
-    accentLayout: toAccentLayout(raw.accentLayout),
+    accentLayout: representativeVariant.accentLayout,
   };
 }

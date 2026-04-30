@@ -3,15 +3,16 @@ import type { Dayjs } from "dayjs";
 import {
   getGenerationStats,
   getGenerationLogs,
+  getGenerationLogGroups,
 } from "@/features/generation-logs/api/generation-logs-api";
+import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
 import type {
+  AdminGenerationLogGroup,
   AdminGenerationLogItem,
   GenerationRequestTypeFilter,
   GenerationStatusFilter,
   GenerationStatsData,
 } from "@/features/generation-logs/types/admin-generation-log";
-
-const PAGE_SIZE = 50;
 
 export function useGenerationStatsQuery(dateRange: [Dayjs, Dayjs]): {
   data: GenerationStatsData | undefined;
@@ -33,7 +34,7 @@ export function useGenerationLogsQuery(params: {
   status?: GenerationStatusFilter | null;
   idSearch?: string | null;
 }): {
-  data: AdminGenerationLogItem[] | undefined;
+  data: AdminGenerationLogGroup[] | undefined;
   hasMore: boolean;
   isLoading: boolean;
 } {
@@ -54,12 +55,12 @@ export function useGenerationLogsQuery(params: {
       params.idSearch ?? null,
     ],
     queryFn: () =>
-      getGenerationLogs({
+      getGenerationLogGroups({
         startDate,
         endDate,
         aiModel: params.aiModel,
-        limit: PAGE_SIZE + 1,
-        offset: (normalizedPage - 1) * PAGE_SIZE,
+        limit: GENERATION_LOG_PAGE_SIZE + 1,
+        offset: (normalizedPage - 1) * GENERATION_LOG_PAGE_SIZE,
         requestType: params.requestType ?? null,
         status: params.status ?? null,
         idSearch: params.idSearch ?? null,
@@ -68,8 +69,8 @@ export function useGenerationLogsQuery(params: {
 
   const rawData = query.data;
   return {
-    data: rawData?.slice(0, PAGE_SIZE),
-    hasMore: (rawData?.length ?? 0) > PAGE_SIZE,
+    data: rawData?.slice(0, GENERATION_LOG_PAGE_SIZE),
+    hasMore: (rawData?.length ?? 0) > GENERATION_LOG_PAGE_SIZE,
     isLoading: query.isLoading,
   };
 }
@@ -126,5 +127,3 @@ export function useGenerationWorkflowLogsQuery(workflowId: string): {
     errorMessage: query.error instanceof Error ? query.error.message : null,
   };
 }
-
-export { PAGE_SIZE as GENERATION_LOG_PAGE_SIZE };

@@ -43,7 +43,20 @@ export interface TileGenerationPayload {
   allMessages: SessionMessagePayload[];
 }
 
+export interface TileGenerationVariantResult {
+  id: string;
+  index: 1 | 2 | 3 | 4;
+  repeatTile: TileRef;
+  accentTile: TileRef | null;
+  accentLayout: AccentLayout | null;
+}
+
 export interface TileGenerationResult {
+  generationId: string;
+  prompt: string;
+  variants: TileGenerationVariantResult[];
+  // Transitional fields used by the existing preview/chat flow until the feed
+  // UI becomes the only consumer.
   repeatTile: TileRef;
   accentTile: TileRef | null;
   patternType: PatternType;

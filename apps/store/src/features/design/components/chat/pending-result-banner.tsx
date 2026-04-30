@@ -15,7 +15,7 @@ export function PendingResultBanner({ onConfirm, onDismiss }: Props) {
           onClick={onConfirm}
           className="font-medium text-primary underline-offset-2 hover:underline"
         >
-          기록에서 확인하기
+          결과 확인
         </button>
         <button
           type="button"

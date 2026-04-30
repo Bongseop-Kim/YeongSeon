@@ -19,6 +19,7 @@ type PreviewTileRef = {
 };
 
 interface SelectedTilePreview {
+  previewKey?: string;
   previewBackground: string;
   repeatTile: PreviewTileRef;
   accentTile: PreviewTileRef | null;
@@ -30,6 +31,7 @@ interface DesignChatState {
   designContext: DesignContext;
   generationStatus: GenerationStatus;
   generatedImageUrl: string | null;
+  selectedPreviewKey: string | null;
   selectedPreviewImageUrl: string | null;
   selectedTilePreview: SelectedTilePreview | null;
   resultTags: string[];
@@ -83,6 +85,7 @@ const createConversationResetState = () => ({
   generationStatus: "idle" as GenerationStatus,
   generatedImageUrl: null as string | null,
   selectedPreviewImageUrl: null as string | null,
+  selectedPreviewKey: null as string | null,
   selectedTilePreview: null as SelectedTilePreview | null,
   resultTags: [] as string[],
   pendingAttachments: [] as Attachment[],
@@ -132,12 +135,14 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
       imageUrl !== null
         ? {
             generatedImageUrl: imageUrl,
+            selectedPreviewKey: imageUrl,
             selectedPreviewImageUrl: imageUrl,
             selectedTilePreview: null,
             resultTags: tags,
           }
         : {
             generatedImageUrl: null,
+            selectedPreviewKey: null,
             selectedPreviewImageUrl: null,
             selectedTilePreview: null,
             resultTags: [],
@@ -147,10 +152,17 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
     set((state) =>
       state.selectedPreviewImageUrl === url
         ? state
-        : { selectedPreviewImageUrl: url, selectedTilePreview: null },
+        : {
+            selectedPreviewKey: url,
+            selectedPreviewImageUrl: url,
+            selectedTilePreview: null,
+          },
     ),
   setSelectedTilePreview: (preview) =>
     set({
+      selectedPreviewKey:
+        preview.previewKey ??
+        `${preview.repeatTile.url}|${preview.accentTile?.url ?? ""}`,
       selectedPreviewImageUrl: preview.previewBackground,
       selectedTilePreview: preview,
     }),
@@ -172,6 +184,7 @@ export const useDesignChatStore = create<DesignChatState>((set) => ({
         ...createInitialDesignContext(),
         ...sessionState.designContext,
       },
+      selectedPreviewKey: sessionState.generatedImageUrl,
       selectedPreviewImageUrl: sessionState.generatedImageUrl,
       selectedTilePreview: null,
       currentSessionId: sessionId,

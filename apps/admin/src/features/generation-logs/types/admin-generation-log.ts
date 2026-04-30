@@ -58,6 +58,35 @@ export interface AdminGenerationLogItem {
   createdAt: string;
 }
 
+export interface AdminGenerationLogResultImage {
+  logId: string;
+  workId: string;
+  url: string | null;
+  tileRole: "repeat" | "accent" | null;
+  status: "success" | "error";
+  totalLatencyMs: number | null;
+}
+
+export interface AdminGenerationLogGroup {
+  workflowId: string;
+  primaryLogId: string;
+  primaryWorkId: string;
+  userId: string;
+  aiModel: "openai";
+  requestType: GenerationRequestTypeFilter | null;
+  userMessage: string;
+  patternType: "all_over" | "one_point" | null;
+  fabricType: "yarn_dyed" | "printed" | null;
+  imageCount: number;
+  successCount: number;
+  errorCount: number;
+  tokensCharged: number;
+  tokensRefunded: number;
+  totalLatencyMs: number | null;
+  createdAt: string;
+  resultImages: AdminGenerationLogResultImage[];
+}
+
 export interface GenerationSummaryStats {
   totalRequests: number;
   imageSuccessRate: number;
