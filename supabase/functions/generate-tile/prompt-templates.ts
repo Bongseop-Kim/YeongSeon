@@ -262,31 +262,35 @@ Geometry rule (critical):
 Scale: fine textile herringbone, visible but not overpowering.
 Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
 
-export const ACCENT_TEXT_TEMPLATE = `Square tile 1024x1024 on plain {BG} tie silk fabric.
+export const ACCENT_TEXT_TEMPLATE = `Square tile 1024x1024 tie silk fabric using Image 1 as the exact repeat tile source.
 
 Subject:
 - {OBJECT_DESC}, placed at the exact geometric center of the tile.
 - Object size: about {SIZE_RATIO}% of the tile width.
 {COLOR_LINE}
 Background:
-- Plain {BG} covering the entire tile outside of the central object.
-- No additional motifs, patterns, or decorations anywhere on the background.
-- Background tone, brightness, and fabric treatment must match the repeat tile's background exactly.
+- Use Image 1 as the exact repeat tile source for the entire square background.
+- Keep the base background color consistent with {BG}.
+- Preserve Image 1's repeat pattern, motif spacing, stripe rhythm, colors, scale, weave/grain, and fabric texture exactly outside the central object.
+- The accent tile background must align naturally with the repeat tile when the two square tiles are placed side by side or repeated together.
+- Add only the central object; do not add, remove, blur, recolor, rescale, or replace the underlying repeat pattern.
 
 {FABRIC_BLOCK}
 
 Flat 2D top-down view, no shadow, no text, no border, no additional decoration.`;
 
-export const ACCENT_IMAGE_TEMPLATE = `Square tile 1024x1024 on plain {BG} tie silk fabric.
+export const ACCENT_IMAGE_TEMPLATE = `Square tile 1024x1024 tie silk fabric using Image 1 as the exact repeat tile source.
 
 Subject:
-- Reproduce the attached reference image as a single decorative element at the exact geometric center of the tile.
+- {OBJECT_REFERENCE_INSTRUCTION}
 {EXTRA_INSTRUCTION}- Object size: about {SIZE_RATIO}% of the tile width.
 
 Background:
-- Plain {BG} covering the entire tile outside of the central object.
-- No additional motifs, patterns, or decorations anywhere on the background.
-- Background tone, brightness, and fabric treatment must match the repeat tile's background exactly.
+- Use Image 1 as the exact repeat tile source for the entire square background.
+- Keep the base background color consistent with {BG}.
+- Preserve Image 1's repeat pattern, motif spacing, stripe rhythm, colors, scale, weave/grain, and fabric texture exactly outside the central object.
+- The accent tile background must align naturally with the repeat tile when the two square tiles are placed side by side or repeated together.
+- Add only the central object; do not add, remove, blur, recolor, rescale, or replace the underlying repeat pattern.
 
 {FABRIC_BLOCK}
 

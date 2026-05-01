@@ -231,10 +231,45 @@ Deno.serve(async (req) => {
                 ),
               };
             });
+      let reusableRepeatTile: { url: string; workId: string } | null = null;
+      if (reuseRepeatTile) {
+        const previousRepeatTileUrl = body.previousRepeatTileUrl;
+        const previousRepeatTileWorkId = body.previousRepeatTileWorkId;
+        if (previousRepeatTileUrl == null || previousRepeatTileWorkId == null) {
+          const missingFields = [
+            previousRepeatTileUrl == null ? "previousRepeatTileUrl" : null,
+            previousRepeatTileWorkId == null
+              ? "previousRepeatTileWorkId"
+              : null,
+          ].filter((value): value is string => value !== null);
+          throw new Error(
+            `reuseRepeatTile missing required field(s): ${missingFields.join(
+              ", ",
+            )}`,
+          );
+        }
+        reusableRepeatTile = {
+          url: previousRepeatTileUrl,
+          workId: previousRepeatTileWorkId,
+        };
+      }
+
+      const repeatResults = reusableRepeatTile
+        ? repeatTile(reusableRepeatTile)
+        : await Promise.all(
+            repeatGenerationPlans.map((plan, index) =>
+              generateTileImage(
+                plan.prompt,
+                plan.referenceImageUrls,
+                index === 0 ? renderWorkId : undefined,
+              ),
+            ),
+          );
+
       const accentGenerationPlans =
         analysis.patternType === "one_point"
           ? reuseRepeatTile || !diversityPlan
-            ? Array.from({ length: TILE_VARIANT_COUNT }, () => {
+            ? repeatResults.map((repeatResult) => {
                 if (!analysis.accentLayout) {
                   throw new Error("one_point generation requires accentLayout");
                 }
@@ -245,13 +280,18 @@ Deno.serve(async (req) => {
                     analysis.accentLayout,
                     analysis.tileLayout.backgroundColor,
                     fabricType,
+                    repeatResult.url,
                     resolveAccentReferenceImageUrls(analysis, body),
                   ),
                 };
               })
-            : diversityPlan.variants.map((variant) => {
+            : diversityPlan.variants.map((variant, index) => {
                 if (!variant.accentLayout) {
                   throw new Error("one_point variant requires accentLayout");
+                }
+                const repeatResult = repeatResults[index];
+                if (!repeatResult) {
+                  throw new Error("one_point variant missing repeat tile");
                 }
                 const variantAnalysis = analysisForVariant(analysis, variant);
 
@@ -261,11 +301,17 @@ Deno.serve(async (req) => {
                     variant.accentLayout,
                     variant.tileLayout.backgroundColor,
                     fabricType,
+                    repeatResult.url,
                     resolveAccentReferenceImageUrls(variantAnalysis, body),
                   ),
                 };
               })
           : [];
+
+      if (reuseRepeatTile && accentGenerationPlans.length === 0) {
+        throw new Error("reuseRepeatTile requires an accent generation");
+      }
+
       const promptLength =
         repeatGenerationPlans.reduce(
           (sum, plan) => sum + plan.prompt.length,
@@ -323,45 +369,6 @@ Deno.serve(async (req) => {
           body.previousRepeatTileUrl !== null ||
           body.previousAccentTileUrl !== null,
       };
-
-      let reusableRepeatTile: { url: string; workId: string } | null = null;
-      if (reuseRepeatTile) {
-        const previousRepeatTileUrl = body.previousRepeatTileUrl;
-        const previousRepeatTileWorkId = body.previousRepeatTileWorkId;
-        if (previousRepeatTileUrl == null || previousRepeatTileWorkId == null) {
-          const missingFields = [
-            previousRepeatTileUrl == null ? "previousRepeatTileUrl" : null,
-            previousRepeatTileWorkId == null
-              ? "previousRepeatTileWorkId"
-              : null,
-          ].filter((value): value is string => value !== null);
-          throw new Error(
-            `reuseRepeatTile missing required field(s): ${missingFields.join(
-              ", ",
-            )}`,
-          );
-        }
-        reusableRepeatTile = {
-          url: previousRepeatTileUrl,
-          workId: previousRepeatTileWorkId,
-        };
-      }
-
-      if (reuseRepeatTile && accentGenerationPlans.length === 0) {
-        throw new Error("reuseRepeatTile requires an accent generation");
-      }
-
-      const repeatResults = reusableRepeatTile
-        ? repeatTile(reusableRepeatTile)
-        : await Promise.all(
-            repeatGenerationPlans.map((plan, index) =>
-              generateTileImage(
-                plan.prompt,
-                plan.referenceImageUrls,
-                index === 0 ? renderWorkId : undefined,
-              ),
-            ),
-          );
 
       const accentResults =
         accentGenerationPlans.length > 0

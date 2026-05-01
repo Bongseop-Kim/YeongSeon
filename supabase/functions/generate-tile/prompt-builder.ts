@@ -166,10 +166,11 @@ export function buildAccentPrompt(
   accentLayout: AccentLayout,
   backgroundColor: string,
   fabricType: FabricType,
-  attachedImageUrls: string[],
+  repeatTileReferenceUrl: string,
+  objectReferenceImageUrls: string[],
 ): { prompt: string; referenceImageUrls: string[] } {
   const isImageBased = accentLayout.objectSource !== "text";
-  const fabric = makeFabricBlock(fabricType, false);
+  const fabric = makeFabricBlock(fabricType, true);
   const sizeRatio = SIZE_RATIO_MAP[accentLayout.size ?? "medium"];
 
   let template = isImageBased ? ACCENT_IMAGE_TEMPLATE : ACCENT_TEXT_TEMPLATE;
@@ -180,11 +181,17 @@ export function buildAccentPrompt(
     .replace("{OBJECT_DESC}", accentLayout.objectDescription);
 
   if (isImageBased) {
+    const objectReferenceInstruction =
+      objectReferenceImageUrls.length > 0
+        ? "Use Image 2 as the object reference and reproduce it as a single decorative element at the exact geometric center of the tile."
+        : "Create the central decorative object from the object description at the exact geometric center of the tile.";
     const extra =
       accentLayout.objectSource === "both"
         ? `- ${accentLayout.objectDescription}\n`
         : "";
-    template = template.replace("{EXTRA_INSTRUCTION}", extra);
+    template = template
+      .replace("{OBJECT_REFERENCE_INSTRUCTION}", objectReferenceInstruction)
+      .replace("{EXTRA_INSTRUCTION}", extra);
   } else {
     const colorLine = accentLayout.color
       ? `- Object color: ${accentLayout.color}.\n`
@@ -194,6 +201,9 @@ export function buildAccentPrompt(
 
   return {
     prompt: template,
-    referenceImageUrls: isImageBased ? attachedImageUrls : [],
+    referenceImageUrls: [
+      repeatTileReferenceUrl,
+      ...(isImageBased ? objectReferenceImageUrls : []),
+    ],
   };
 }
