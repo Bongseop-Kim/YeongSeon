@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Router from "@/app/router";
 import { Button } from "@/shared/ui-extended/button";
@@ -29,7 +28,6 @@ import {
 } from "@/shared/layout/footer";
 import { usePopup } from "@/shared/hooks/usePopup";
 
-const HEADER_SCROLL_THRESHOLD = 24;
 const HEADER_BTN_CLASS =
   "border-white/18 bg-white/10 text-white hover:bg-white hover:text-black";
 
@@ -40,7 +38,6 @@ function isActiveNavItem(pathname: string, href: string) {
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hideHeaderPaths = [
     ROUTES.SHIPPING,
     ROUTES.PRIVACY_POLICY,
@@ -56,7 +53,6 @@ export default function AppLayout() {
   const signOutMutation = useSignOut();
   const { openPopup } = usePopup();
   const isHomePage = location.pathname === ROUTES.HOME;
-  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
   const shouldHideFooter = showHeader && !isHomePage && isMobile;
 
   const handleSignOut = async () => {
@@ -110,33 +106,7 @@ export default function AppLayout() {
     navigate(-1);
   };
 
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-
-    if (!scrollContainer || !showHeader || !isHomePage) {
-      setIsHeaderScrolled(false);
-      return;
-    }
-
-    const updateScrolledState = () => {
-      setIsHeaderScrolled(scrollContainer.scrollTop > HEADER_SCROLL_THRESHOLD);
-    };
-
-    updateScrolledState();
-    scrollContainer.addEventListener("scroll", updateScrolledState, {
-      passive: true,
-    });
-
-    return () => {
-      scrollContainer.removeEventListener("scroll", updateScrolledState);
-    };
-  }, [isHomePage, showHeader]);
-
-  const isOverlayHeader = showHeader && isHomePage;
-  const headerTone = isOverlayHeader && !isHeaderScrolled ? "overlay" : "solid";
-  const headerClassName = isOverlayHeader
-    ? "absolute inset-x-0 top-0 z-50 h-auto"
-    : "relative z-30 h-auto";
+  const headerClassName = "relative z-30 h-auto";
 
   return (
     <div className="relative flex h-dvh flex-col overflow-x-auto">
@@ -144,16 +114,10 @@ export default function AppLayout() {
         <Header
           size="sm"
           sticky={false}
-          tone={headerTone}
+          tone="solid"
           className={headerClassName}
         >
-          <HeaderContent
-            className={
-              isOverlayHeader && !isHeaderScrolled
-                ? "min-h-16 lg:min-h-[4.5rem]"
-                : "min-h-14"
-            }
-          >
+          <HeaderContent className="min-h-14">
             <HeaderTitle
               className={`flex items-center ${
                 isMobile ? "gap-2 text-base" : "gap-4 text-[1.05rem]"
@@ -259,10 +223,7 @@ export default function AppLayout() {
         </Header>
       )}
 
-      <div
-        ref={scrollContainerRef}
-        className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
-      >
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         <Router />
 
         {showHeader ? (

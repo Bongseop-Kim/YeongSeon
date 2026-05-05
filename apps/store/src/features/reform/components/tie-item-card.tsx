@@ -105,9 +105,9 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
   const isWidthActive = widthField.value === true;
 
   return (
-    <div className="py-4">
+    <div className="py-4 lg:py-5">
       {/* 항목 선택 체크박스 + 닫기 버튼 */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 px-0.5">
         <Field orientation="horizontal" className="items-center gap-3">
           <FieldContent
             className={cn(
@@ -130,17 +130,16 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
             <FieldTitle>항목 {index + 1}</FieldTitle>
           </FieldLabel>
         </Field>
-        <CloseButton
-          onRemove={onRemove}
-          className="-mr-2 -mt-1"
-          variant="none"
-        />
+        <CloseButton onRemove={onRemove} className="-mr-2" variant="none" />
       </div>
 
       {isMobile ? (
-        <div className="mt-3 grid grid-cols-[107px_minmax(0,1fr)] items-start gap-x-3">
-          <Field orientation="vertical">
-            <FieldLabel htmlFor={`tie-image-${index}-mobile`}>
+        <div className="mt-3 grid grid-cols-[107px_minmax(0,1fr)] items-start gap-x-3 rounded-2xl bg-white px-3.5 py-4">
+          <Field orientation="vertical" className="min-w-0">
+            <FieldLabel
+              htmlFor={`tie-image-${index}-mobile`}
+              className="sr-only"
+            >
               <FieldTitle>넥타이 사진</FieldTitle>
             </FieldLabel>
             <ImagePicker
@@ -221,8 +220,6 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
               />
               <FieldError errors={[lengthFieldState.error]} />
             </div>
-
-            <hr className="border-border" />
 
             <div className="space-y-2">
               <Field

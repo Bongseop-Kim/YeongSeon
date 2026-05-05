@@ -43,10 +43,7 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Empty } from "@/shared/composite/empty";
 import { TieLengthGuideAccordion } from "@/shared/composite/tie-length-guide-accordion";
-import {
-  UtilityPageIntro,
-  UtilityPageSection,
-} from "@/shared/composite/utility-page";
+import { UtilityPageSection } from "@/shared/composite/utility-page";
 import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
 import { ShopActionBar } from "@/shared/composite/shop-action-bar";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
@@ -338,21 +335,6 @@ const ReformPage = () => {
       0,
     );
   }, [hasValidPricing, pricing, selectedTies]);
-  const tieRows = selectedTies.map(({ tie, index }) => {
-    const services = [
-      tie.hasLengthReform !== false ? "자동수선" : null,
-      tie.hasWidthReform === true ? "폭수선" : null,
-    ]
-      .filter((s): s is string => s !== null)
-      .join(" · ");
-    const tieCost =
-      hasValidPricing && pricing ? calcTieCost(tie, pricing) : undefined;
-    return {
-      id: `tie-${index}`,
-      label: `항목 ${index + 1}`,
-      value: tieCost !== undefined ? formatCost(tieCost) : services || "-",
-    };
-  });
   const estimatedShipping =
     hasValidPricing && selectedCount > 0 && pricing
       ? pricing.shippingCost
@@ -395,50 +377,43 @@ const ReformPage = () => {
         description="수동 넥타이를 자동 넥타이로 바꾸거나 원하는 폭으로 수선해 보세요. 사진 첨부와 일괄 적용으로 여러 개도 쉽게 접수할 수 있습니다."
         ogUrl="https://essesion.shop/reform"
       />
-      <MainLayout>
+      <MainLayout className="bg-stone-100 lg:bg-background">
         <MainContent className="overflow-visible">
           <Form {...form}>
             <PageLayout
-              contentClassName="pt-0"
+              contentClassName="pt-0 lg:pt-0"
               sidebar={
                 <OrderSummaryAside
-                  title="접수 요약"
-                  description="현재 접수 수량과 예상 결제를 확인합니다."
+                  title="결제 예상 금액"
                   rows={[
-                    ...tieRows,
                     {
-                      id: "selected-count",
-                      label: "수선 수량",
-                      value: `총 ${selectedCount}개`,
+                      id: "service-cost",
+                      label: "상품 금액",
+                      value: formatCost(totalServiceCost),
+                      className: "border-b-0 pb-1",
                     },
                     {
                       id: "shipping-cost",
-                      label: "예상 배송비",
+                      label: "배송비",
                       value: formatCost(estimatedShipping),
-                    },
-                    {
-                      id: "total-cost",
-                      label: "예상 결제",
-                      value: formatCost(totalCost),
-                      className: "pt-4",
-                    },
-                    {
-                      id: "estimated-days",
-                      label: "예상 수선 기간",
-                      value: "7~14일",
+                      className: "border-b-0 pt-1",
                     },
                   ]}
+                  totalAmount={totalCost}
                   footer={
-                    <TieLengthGuideAccordion
-                      notices={[
-                        "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
-                        "예상 수선 기간은 영업일 기준 7~14일입니다.",
-                        "접수 이후에는 취소 및 환불이 불가능합니다.",
-                        "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
-                      ]}
-                      className="mt-4"
-                    />
+                    <div className="mt-4 border-t border-stone-100 pt-3">
+                      <TieLengthGuideAccordion
+                        notices={[
+                          "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
+                          "예상 수선 기간은 영업일 기준 7~14일입니다.",
+                          "접수 이후에는 취소 및 환불이 불가능합니다.",
+                          "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
+                        ]}
+                        className="text-xs text-zinc-400"
+                      />
+                    </div>
                   }
+                  className="mt-6 rounded-2xl bg-white px-4 py-5 lg:mt-0"
                 />
               }
               actionBar={
@@ -623,14 +598,18 @@ const ReformPage = () => {
               }
             >
               <div>
-                <UtilityPageIntro
-                  eyebrow="Reform"
-                  title="넥타이 수선 접수"
-                  description="사진만 준비해 주세요. 수동 넥타이를 자동 넥타이로 바꾸거나 원하는 폭으로 수선할 수 있어요."
-                  className="pb-4 lg:pb-5"
-                />
+                <section className="px-1 pb-5 pt-2 lg:border-b lg:border-stone-200">
+                  <h1 className="text-2xl font-semibold text-zinc-950">
+                    수선 접수
+                  </h1>
+                  <p className="mt-2 text-sm font-medium leading-6 text-zinc-400">
+                    수동 넥타이를 자동 넥타이로 바꾸거나
+                    <br />
+                    넥타이 폭을 원하는 크기로 수선할 수 있습니다.
+                  </p>
+                </section>
 
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-2">
+                <div className="flex items-center justify-between gap-3 border-b border-stone-200 px-0.5 pb-2.5 pt-2">
                   <Field orientation="horizontal" className="w-auto gap-4">
                     <Checkbox
                       id={selectAllCheckboxId}
@@ -642,14 +621,14 @@ const ReformPage = () => {
                       htmlFor={selectAllCheckboxId}
                       className="cursor-pointer"
                     >
-                      <FieldTitle className="text-foreground">
+                      <FieldTitle className="text-sm font-medium text-zinc-700">
                         전체 선택
                       </FieldTitle>
                     </FieldLabel>
                   </Field>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-4 text-sm font-medium text-zinc-700">
                     <Button
-                      variant="outline"
+                      variant="none"
                       type="button"
                       size="sm"
                       onClick={() => {
@@ -679,7 +658,7 @@ const ReformPage = () => {
                           },
                         );
                       }}
-                      variant="outline"
+                      variant="none"
                       type="button"
                       size="sm"
                       disabled={selectedTieIndices.length === 0}
@@ -716,13 +695,8 @@ const ReformPage = () => {
                   />
                 )}
 
-                <div className="flex justify-end border-t border-border py-3">
-                  <Button
-                    type="button"
-                    onClick={addTie}
-                    variant="outline"
-                    size="sm"
-                  >
+                <div className="flex justify-end py-4">
+                  <Button type="button" onClick={addTie} size="xl">
                     넥타이 추가
                   </Button>
                 </div>
