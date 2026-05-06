@@ -21,7 +21,7 @@ export const EsProductGrid = ({
     <section className="mx-auto w-full max-w-[1280px] px-4 md:px-6">
       <div className="flex items-end justify-between pb-3 pt-9 md:pb-3 md:pt-14">
         <h2 className="m-0 text-[18px] font-bold tracking-[-0.03em] md:text-2xl">
-          이번 주 잘 나가는 넥타이
+          지금 가장 많이 찾는 넥타이
         </h2>
         <Link
           to={ROUTES.SHOP}

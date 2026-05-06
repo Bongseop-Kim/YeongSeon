@@ -1,42 +1,9 @@
 import type { Product } from "@yeongseon/shared/types/view/product";
+import { Link } from "react-router-dom";
 
+import { ROUTES } from "@/shared/constants/ROUTES";
 import { cn } from "@/shared/lib/utils";
 import { EsProductGrid } from "@/features/home/components/es-product-grid";
-
-type PhKind = "default" | "alt" | "dark";
-
-const phKindClass: Record<PhKind, string> = {
-  default: "bg-[#EAEAE6]",
-  alt: "bg-[#E0E0DC]",
-  dark: "bg-[#1a1a1a]",
-};
-
-type PhProps = {
-  kind?: PhKind;
-  size?: string;
-  className?: string;
-};
-
-const Ph = ({ kind = "default", size, className }: PhProps) => (
-  <div
-    className={cn(
-      "relative h-full w-full overflow-hidden",
-      phKindClass[kind],
-      className,
-    )}
-  >
-    {size && (
-      <span
-        className={cn(
-          "absolute bottom-3 right-3 font-mono text-[10.5px] tracking-[0.1em]",
-          kind === "dark" ? "text-white/45" : "text-black/40",
-        )}
-      >
-        {size}
-      </span>
-    )}
-  </div>
-);
 
 const Wrap = ({
   children,
@@ -50,14 +17,31 @@ const Wrap = ({
   </div>
 );
 
-const SectionHeader = ({ title, more }: { title: string; more: string }) => (
+const SectionHeader = ({
+  title,
+  more,
+  href,
+}: {
+  title: string;
+  more?: string;
+  href?: string;
+}) => (
   <div className="flex items-end justify-between pb-3 pt-9 md:pb-3 md:pt-14">
     <h2 className="m-0 text-[18px] font-bold tracking-[-0.03em] md:text-2xl">
       {title}
     </h2>
-    <span className="text-[12.5px] text-[#999] md:text-[13.5px] md:text-[#555]">
-      {more} →
-    </span>
+    {href && more ? (
+      <Link
+        to={href}
+        className="text-[12.5px] text-[#999] md:text-[13.5px] md:text-[#555]"
+      >
+        {more} →
+      </Link>
+    ) : more ? (
+      <span className="text-[12.5px] text-[#999] md:text-[13.5px] md:text-[#555]">
+        {more} →
+      </span>
+    ) : null}
   </div>
 );
 
@@ -66,30 +50,35 @@ const HERO_BANNERS: {
   title: string;
   image: string;
   alt: string;
+  href: string;
 }[] = [
   {
-    tag: "NEW",
-    title: "AI로 내 패턴\n30초 만에 만들기",
+    tag: "AI",
+    title: "쉽고 간편하게\n30초 만에 만들기",
     image: "/images/home/ai.png",
     alt: "AI 디자인 생성",
+    href: ROUTES.DESIGN,
   },
   {
     tag: "CUSTOM",
-    title: "4개부터 시작하는\n주문 제작",
+    title: "행사와 단체를 위한\n주문 제작",
     image: "/images/home/custom.png",
     alt: "주문 제작",
+    href: ROUTES.CUSTOM_ORDER,
   },
   {
     tag: "STORE",
     title: "2026 봄\n실크 9종 입고",
     image: "/images/home/showcase.png",
     alt: "넥타이 스토어",
+    href: ROUTES.SHOP,
   },
   {
     tag: "REPAIR",
-    title: "낡은 넥타이\n새로 고쳐 매기",
+    title: "수동 넥타이를\n자동 넥타이로",
     image: "/images/home/repair.png",
     alt: "넥타이 수선",
+    href: ROUTES.REFORM,
   },
 ];
 
@@ -104,10 +93,11 @@ const Hero = () => (
         )}
       >
         {HERO_BANNERS.map((b, i) => (
-          <article
+          <Link
             key={b.tag}
+            to={b.href}
             className={cn(
-              "relative flex-[0_0_100%] cursor-pointer snap-start overflow-hidden",
+              "relative block flex-[0_0_100%] cursor-pointer snap-start overflow-hidden",
               "aspect-[4/5] rounded-none",
               "md:aspect-[3/4] md:flex-none md:rounded-[14px]",
               "transition-transform duration-200 hover:-translate-y-0.5",
@@ -134,78 +124,97 @@ const Hero = () => (
                 {b.title}
               </h3>
             </div>
-          </article>
+          </Link>
         ))}
       </div>
     </Wrap>
   </section>
 );
 
-type CaseItem = { nm: string; desc: string };
+type CaseItem = { nm: string; desc: string; image: string };
 
 const CaseSection = ({
   title,
   more,
+  href,
   items,
 }: {
   title: string;
   more: string;
+  href?: string;
   items: CaseItem[];
 }) => (
   <Wrap>
-    <SectionHeader title={title} more={more} />
+    <SectionHeader title={title} more={more} href={href} />
     <div className="grid grid-cols-1 gap-3 pt-1 md:grid-cols-2 md:gap-4">
-      {items.map((it, i) => (
-        <article
-          key={it.nm}
-          className={cn(
-            "relative aspect-[4/3] cursor-pointer overflow-hidden rounded-xl md:aspect-[5/4] md:rounded-[14px]",
-            "transition-transform duration-200 hover:-translate-y-0.5",
-          )}
-        >
-          <Ph kind={i % 2 === 0 ? "default" : "alt"} size="640 × 512" />
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.6) 100%)",
-            }}
-          />
-          <div className="absolute inset-x-[18px] bottom-[18px] z-10 text-white md:inset-x-[22px] md:bottom-[22px]">
-            <div className="mb-1 text-[16px] font-bold leading-[1.3] tracking-[-0.025em] md:mb-1.5 md:text-[19px]">
-              {it.nm}
+      {items.map((it, i) => {
+        const content = (
+          <>
+            <img
+              src={it.image}
+              alt={it.nm}
+              loading={i === 0 ? "eager" : "lazy"}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.6) 100%)",
+              }}
+            />
+            <div className="absolute inset-x-[18px] bottom-[18px] z-10 text-white md:inset-x-[22px] md:bottom-[22px]">
+              <div className="mb-1 text-[16px] font-bold leading-[1.3] tracking-[-0.025em] md:mb-1.5 md:text-[19px]">
+                {it.nm}
+              </div>
+              <div className="text-[12px] opacity-85 md:text-[13px]">
+                {it.desc}
+              </div>
             </div>
-            <div className="text-[12px] opacity-85 md:text-[13px]">
-              {it.desc}
-            </div>
-          </div>
-        </article>
-      ))}
+          </>
+        );
+        const className = cn(
+          "relative aspect-[4/3] cursor-pointer overflow-hidden rounded-xl md:aspect-[5/4] md:rounded-[14px]",
+          "transition-transform duration-200 hover:-translate-y-0.5",
+        );
+
+        return href ? (
+          <Link key={it.nm} to={href} className={cn("block", className)}>
+            {content}
+          </Link>
+        ) : (
+          <article key={it.nm} className={className}>
+            {content}
+          </article>
+        );
+      })}
     </div>
   </Wrap>
 );
 
 const LOOKBOOK_ITEMS: {
-  kind: PhKind;
-  label: string;
-  size: string;
+  alt: string;
+  image: string;
   main?: boolean;
 }[] = [
   {
-    kind: "default",
-    label: "네이비 스트라이프 × 블랙 수트",
-    size: "640 × 500",
+    alt: "AI로 만든 넥타이 디자인",
+    image: "/images/home/tile.png",
     main: true,
   },
-  { kind: "alt", label: "그레이 도트", size: "320 × 240" },
-  { kind: "default", label: "와인 솔리드", size: "320 × 240" },
-  { kind: "alt", label: "페이즐리", size: "320 × 240" },
-  { kind: "dark", label: "블랙 솔리드", size: "320 × 240" },
+  { alt: "AI 넥타이 디자인 예시 1", image: "/images/home/1.png" },
+  { alt: "AI 넥타이 디자인 예시 2", image: "/images/home/2.png" },
+  { alt: "AI 넥타이 디자인 예시 3", image: "/images/home/3.png" },
+  { alt: "AI 넥타이 디자인 예시 4", image: "/images/home/4.png" },
 ];
 
 const Lookbook = () => (
   <Wrap>
-    <SectionHeader title="이렇게 매보세요" more="스타일 더 보기" />
+    <SectionHeader
+      title="문장 하나로 만드는 넥타이 디자인"
+      more="AI 디자인 생성"
+      href={ROUTES.DESIGN}
+    />
     <div
       className={cn(
         "-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pt-1",
@@ -214,36 +223,45 @@ const Lookbook = () => (
       )}
     >
       {LOOKBOOK_ITEMS.map((it) => (
-        <article
-          key={it.label}
+        <Link
+          key={it.image}
+          to={ROUTES.DESIGN}
           className={cn(
-            "relative h-[320px] flex-[0_0_240px] cursor-pointer snap-start overflow-hidden rounded-xl",
+            "relative block h-[320px] flex-[0_0_240px] cursor-pointer snap-start overflow-hidden rounded-xl",
             "md:h-auto md:flex-none md:rounded-[14px]",
             it.main && "md:row-span-2 md:flex-[0_0_280px]",
           )}
         >
-          <Ph kind={it.kind} size={it.size} />
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(0,0,0,.5) 100%)",
-            }}
+          <img
+            src={it.image}
+            alt={it.alt}
+            loading={it.main ? "eager" : "lazy"}
+            className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="absolute inset-x-3.5 bottom-3 z-10 flex items-center justify-between text-[12px] font-semibold text-white md:inset-x-4 md:bottom-3.5 md:text-[13.5px]">
-            <span>{it.label}</span>
-            <span>→</span>
-          </div>
-        </article>
+        </Link>
       ))}
     </div>
   </Wrap>
 );
 
-const PARTNERS = Array.from(
-  { length: 12 },
-  (_, i) => `LOGO ${String(i + 1).padStart(2, "0")}`,
-);
+const PARTNERS = [
+  {
+    name: "경찰청",
+    image: "/images/home/partner-police.png",
+  },
+  {
+    name: "교정본부",
+    image: "/images/home/partner-corrections.png",
+  },
+  {
+    name: "대전",
+    image: "/images/home/partner-daejeon.png",
+  },
+  {
+    name: "우체국",
+    image: "/images/home/partner-post.png",
+  },
+];
 
 const Partners = () => {
   return (
@@ -251,23 +269,27 @@ const Partners = () => {
       <Wrap>
         <div className="mb-6 text-center md:mb-9">
           <h3 className="m-0 mb-1.5 text-[18px] font-bold tracking-[-0.03em] md:text-2xl">
-            조용히 오래 함께한 곳들
+            믿고 맡길 수 있는 제작 경험
           </h3>
           <div className="text-[11.5px] text-[#aaa] md:text-[12px]">
-            120개 이상의 기업·단체와 함께해요
+            관공서·기업·단체 납품 경험을 바탕으로 꼼꼼하게 제작합니다
           </div>
         </div>
-        <div className="grid grid-cols-3 items-center justify-items-center gap-x-2 gap-y-2 md:grid-cols-6 md:gap-x-6 md:gap-y-9">
+        <div className="grid grid-cols-2 items-center justify-items-center gap-2 md:grid-cols-4 md:gap-x-6">
           {PARTNERS.map((p) => (
             <div
-              key={p}
+              key={p.name}
               className={cn(
-                "grid h-11 w-full place-items-center rounded-lg bg-[#F6F6F4]",
-                "font-mono text-[10px] tracking-[0.12em] text-[#aaa] transition-colors",
-                "hover:bg-[#EFEFE9] md:h-14 md:rounded-[10px] md:text-[11.5px]",
+                "grid h-11 w-full place-items-center rounded-lg bg-[#F6F6F4] px-3",
+                "transition-colors hover:bg-[#EFEFE9] md:h-12 md:rounded-[10px] md:px-4",
               )}
             >
-              {p}
+              <img
+                src={p.image}
+                alt={`${p.name} 로고`}
+                loading="lazy"
+                className="max-h-7 max-w-[78%] object-contain md:max-h-8"
+              />
             </div>
           ))}
         </div>
@@ -283,7 +305,7 @@ const REVIEWS = [
     from: "주문 제작",
   },
   {
-    q: "낡아서 안 매던 넥타이를 자동으로 고쳤어요. 새로 산 것 같아서 출근할 때마다 매고 있어요.",
+    q: "손으로 매번 묶던 넥타이를 자동 매듭으로 바꾸니 출근 준비가 훨씬 편해졌어요.",
     nm: "이ㅅㅎ",
     from: "수선",
   },
@@ -296,7 +318,7 @@ const REVIEWS = [
 
 const Reviews = () => (
   <Wrap>
-    <SectionHeader title="먼저 써본 분들 이야기" more="리뷰 더 보기" />
+    <SectionHeader title="먼저 써본 분들 이야기" />
     <div
       className={cn(
         "-mx-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-4 pt-1",
@@ -339,31 +361,37 @@ export const EsLanding = ({ products, isProductsLoading }: EsLandingProps) => (
     <Hero />
     <EsProductGrid items={products} isLoading={isProductsLoading} />
     <CaseSection
-      title="이렇게 만드는 분들이 있어요"
-      more="내 디자인 만들래요"
+      title="단체의 분위기에 맞춰 제작해요"
+      more="주문 제작 상담하기"
+      href={ROUTES.CUSTOM_ORDER}
       items={[
         {
-          nm: "한 줄 입력으로 만든 회사 단체용 패턴",
-          desc: '"네이비 바탕에 작은 도트, 차분하게" 라고 입력했어요',
+          nm: "워크숍과 행사에 맞춘 기업 넥타이",
+          desc: "로고, 컬러, 행사 분위기를 반영해 제작합니다",
+          image: "/images/home/custom1.png",
         },
         {
-          nm: "결혼식 답례용 30개, 30분 만에 완성",
-          desc: "AI 시안 4개 중에 골라 바로 주문했어요",
+          nm: "관공서 단체 착용을 위한 넥타이",
+          desc: "격식 있는 자리에도 어울리도록 단정하게 완성합니다",
+          image: "/images/home/custom2.png",
         },
       ]}
     />
     <Lookbook />
     <CaseSection
-      title="요즘 맡기는 수선, 이런 거예요"
+      title="수동 넥타이, 자동 매듭으로 바꿔보세요"
       more="수선 맡기기"
+      href={ROUTES.REFORM}
       items={[
         {
-          nm: "20년 된 아버지 넥타이, 자동으로 다시 매기",
-          desc: "낡은 수동 넥타이를 자동으로 바꿔드렸어요",
+          nm: "손으로 묶던 넥타이를 간편한 자동 매듭으로",
+          desc: "매번 매듭을 잡지 않아도 단정하게 착용할 수 있어요",
+          image: "/images/home/repair1.png",
         },
         {
-          nm: "결혼식용으로 길이 줄이고 매듭선 새로 잡기",
-          desc: "몸에 맞게 깔끔하게 다듬었어요",
+          nm: "행사·출근용 넥타이를 더 편하게 착용",
+          desc: "기존 넥타이의 분위기는 살리고 착용 방식만 바꿔드려요",
+          image: "/images/home/repair2.png",
         },
       ]}
     />

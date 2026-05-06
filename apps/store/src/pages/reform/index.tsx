@@ -103,16 +103,6 @@ const IMAGE_SECTIONS = [
     video: "/images/reform/reform-ver.mov",
     aspect: "aspect-[3/4]",
   },
-  {
-    eyebrow: "Width Reform",
-    title: "넥타이 폭, 지금 취향에 맞게",
-    description: "넓은 폭도 더 슬림하고 깔끔하게",
-  },
-  {
-    eyebrow: "Bulk Apply",
-    title: "여러 개 맡겨도 어렵지 않아요",
-    description: "일괄 적용으로 한 번에 같은 요청 전달",
-  },
 ] as const;
 
 const DIMPLE_CONTENT = [
