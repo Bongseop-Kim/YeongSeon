@@ -217,7 +217,7 @@ const Lookbook = () => (
     />
     <div
       className={cn(
-        "-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pt-1",
+        "flex snap-x snap-mandatory gap-2 overflow-x-auto pt-1",
         "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         "md:mx-0 md:grid md:grid-cols-[2fr_1fr_1fr] md:grid-rows-[240px_240px] md:gap-3 md:overflow-visible md:px-0",
       )}
@@ -321,7 +321,7 @@ const Reviews = () => (
     <SectionHeader title="먼저 써본 분들 이야기" />
     <div
       className={cn(
-        "-mx-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-4 pt-1",
+        "flex snap-x snap-mandatory gap-2.5 overflow-x-auto pt-1",
         "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         "md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0",
       )}
