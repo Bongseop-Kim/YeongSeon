@@ -691,7 +691,7 @@ const ReformPage = () => {
                 )}
 
                 <div className="flex justify-end py-4">
-                  <Button type="button" onClick={addTie} size="xl">
+                  <Button type="button" onClick={addTie}>
                     넥타이 추가
                   </Button>
                 </div>
