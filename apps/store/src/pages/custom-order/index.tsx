@@ -26,13 +26,14 @@ import {
   ConfirmStep,
 } from "@/features/custom-order";
 import { DesignImagePicker } from "@/features/design";
-import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import { useAuthStore } from "@/shared/store/auth";
 import { toast } from "@/shared/lib/toast";
 import { useShippingAddressPopup } from "@/features/shipping";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { usePricingConfig } from "@/entities/custom-order";
 import { PageSeo } from "@/shared/ui/page-seo";
+import { ROUTES } from "@/shared/constants/ROUTES";
 
 export default function OrderPage() {
   const { user } = useAuthStore();
@@ -151,14 +152,27 @@ export default function OrderPage() {
         <MainContent className="overflow-visible">
           <Form {...form}>
             <PageLayout
+              breadcrumbs={[
+                { label: "홈", to: ROUTES.HOME },
+                { label: "주문 제작" },
+              ]}
               contentClassName="space-y-8"
               sidebarClassName="space-y-4"
               sidebar={
-                <OrderSummaryAside
-                  title="주문 요약"
-                  description="현재 선택한 사양을 기준으로 제작 방식과 예상 비용을 확인합니다."
-                  rows={summaryRows}
-                  footer={
+                <SummaryCard>
+                  <SummaryCard.Header
+                    title="주문 요약"
+                    description="현재 선택한 사양을 기준으로 제작 방식과 예상 비용을 확인합니다."
+                  />
+                  <SummaryCard.Section>
+                    {summaryRows.map((row) => (
+                      <SummaryCard.Row
+                        key={row.id}
+                        label={row.label}
+                        value={row.value}
+                        className={row.className}
+                      />
+                    ))}
                     <CustomOrderCostFooter
                       options={watchedValues}
                       totalCost={totalCost}
@@ -167,8 +181,19 @@ export default function OrderPage() {
                       pricingConfig={pricingConfig}
                       isLoggedIn={isLoggedIn}
                     />
-                  }
-                />
+                  </SummaryCard.Section>
+                  <SummaryCard.Section>
+                    <SummaryCard.NoticeList
+                      label="유의사항"
+                      items={[
+                        "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
+                        "예상 제작 기간은 영업일 기준 28~42일입니다.",
+                        "접수 이후에는 취소 및 환불이 불가능합니다.",
+                        "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
+                      ]}
+                    />
+                  </SummaryCard.Section>
+                </SummaryCard>
               }
               actionBar={
                 <WizardActionButtons
@@ -187,9 +212,6 @@ export default function OrderPage() {
               }
             >
               <ProgressBar
-                eyebrow="Custom Order"
-                pageTitle="주문 제작"
-                pageDescription="수량과 제작 사양을 순서대로 정리하면 예상 제작 기간과 비용을 바로 확인할 수 있습니다."
                 steps={wizard.steps}
                 currentStepIndex={wizard.currentStepIndex}
                 visitedSteps={wizard.visitedSteps}

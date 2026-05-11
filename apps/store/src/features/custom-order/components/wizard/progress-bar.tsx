@@ -1,12 +1,8 @@
 import { useMemo } from "react";
 import type { StepConfig } from "@/features/custom-order/types/wizard";
-import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { StepIndicator } from "@/shared/composite/step-indicator";
 
 interface ProgressBarProps {
-  eyebrow: string;
-  pageTitle: string;
-  pageDescription: string;
   steps: StepConfig[];
   currentStepIndex: number;
   visitedSteps: Set<number>;
@@ -28,9 +24,6 @@ const STEP_DESCRIPTIONS: Record<string, string> = {
 };
 
 export const ProgressBar = ({
-  eyebrow,
-  pageTitle,
-  pageDescription,
   steps,
   currentStepIndex,
   visitedSteps,
@@ -58,11 +51,8 @@ export const ProgressBar = ({
   );
 
   return (
-    <UtilityPageIntro
-      eyebrow={eyebrow}
-      title={pageTitle}
-      description={pageDescription}
-      meta={
+    <section className="border-b border-stone-200 pb-6 pt-2 lg:pb-8 lg:pt-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
@@ -76,8 +66,7 @@ export const ProgressBar = ({
             {currentStepDescription}
           </p>
         </div>
-      }
-      trailing={
+
         <div className="flex flex-col items-start gap-3 lg:items-end">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
             Step {currentDisplayStep} of {visibleStepCount}
@@ -92,7 +81,7 @@ export const ProgressBar = ({
             onStepClick={onStepClick}
           />
         </div>
-      }
-    />
+      </div>
+    </section>
   );
 };
