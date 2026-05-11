@@ -372,6 +372,10 @@ const ReformPage = () => {
         <MainContent className="overflow-visible">
           <Form {...form}>
             <PageLayout
+              breadcrumbs={[
+                { label: "홈", to: ROUTES.HOME },
+                { label: "넥타이 수선·리폼" },
+              ]}
               contentClassName="pt-0 lg:pt-0"
               sidebar={
                 <SummaryCard className="mt-6 bg-white lg:mt-0">
@@ -600,17 +604,6 @@ const ReformPage = () => {
               }
             >
               <div>
-                <section className="px-1 pb-5 pt-2 lg:border-b lg:border-stone-200">
-                  <h1 className="text-2xl font-semibold text-zinc-950">
-                    수선 접수
-                  </h1>
-                  <p className="mt-2 text-sm font-medium leading-6 text-zinc-400">
-                    수동 넥타이를 자동 넥타이로 바꾸거나
-                    <br />
-                    넥타이 폭을 원하는 크기로 수선할 수 있습니다.
-                  </p>
-                </section>
-
                 <div className="flex items-center justify-between gap-3 border-b border-stone-200 px-0.5 pb-2.5 pt-2">
                   <Field orientation="horizontal" className="w-auto gap-4">
                     <Checkbox

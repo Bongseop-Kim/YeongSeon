@@ -26,12 +26,21 @@ vi.mock("@/shared/layout/page-layout", () => ({
     children,
     detail,
     sidebar,
+    breadcrumbs,
   }: {
     children: React.ReactNode;
     detail: React.ReactNode;
     sidebar?: React.ReactNode;
+    breadcrumbs?: { label: string; to?: string }[];
   }) => (
     <main>
+      {breadcrumbs ? (
+        <nav aria-label="breadcrumb">
+          {breadcrumbs.map((item) => (
+            <span key={item.label}>{item.label}</span>
+          ))}
+        </nav>
+      ) : null}
       {sidebar}
       {detail}
       {children}
@@ -272,6 +281,19 @@ vi.mock("@/shared/store/modal", () => ({
 }));
 
 describe("ReformPage", () => {
+  it("공통 페이지 브래드크럼 항목을 PageLayout에 전달한다", () => {
+    render(<ReformPage />);
+
+    const breadcrumb = screen.getByRole("navigation", {
+      name: "breadcrumb",
+    });
+
+    expect(within(breadcrumb).getByText("홈")).toBeInTheDocument();
+    expect(
+      within(breadcrumb).getByText("넥타이 수선·리폼"),
+    ).toBeInTheDocument();
+  });
+
   it("일괄 적용 안내 이미지 섹션을 렌더링하지 않는다", () => {
     render(<ReformPage />);
 
