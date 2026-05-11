@@ -20,6 +20,7 @@ import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import type { SampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { analytics } from "@/shared/lib/analytics";
+import { createShippingNoticeItems } from "@/shared/lib/shipping-notices";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
@@ -137,6 +138,10 @@ export default function SampleOrderPage() {
           card.designType === values.designType,
       )?.label ?? "-")
     : "봉제 전용";
+  const shippingNoticeItems = createShippingNoticeItems({
+    shippingCost: pricingConfig?.REFORM_SHIPPING_COST,
+    periodNotice: "예상 제작 기간은 영업일 기준 28~42일입니다.",
+  });
 
   const isSubmitDisabled =
     !user || samplePrice === null || imageUpload.isUploading;
@@ -223,12 +228,7 @@ export default function SampleOrderPage() {
                   <SummaryCard.Section>
                     <SummaryCard.NoticeList
                       label="유의사항"
-                      items={[
-                        "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
-                        "예상 제작 기간은 영업일 기준 28~42일입니다.",
-                        "접수 이후에는 취소 및 환불이 불가능합니다.",
-                        "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
-                      ]}
+                      items={shippingNoticeItems}
                     />
                   </SummaryCard.Section>
                 </SummaryCard>
