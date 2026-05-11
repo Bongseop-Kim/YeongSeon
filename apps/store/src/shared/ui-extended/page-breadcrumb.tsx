@@ -25,12 +25,7 @@ export function PageBreadcrumb({ items, className }: PageBreadcrumbProps) {
   if (items.length === 0) return null;
 
   return (
-    <div
-      className={cn(
-        "mb-7 border-b border-stone-200 pb-5 pt-6 lg:mb-8 lg:pt-8",
-        className,
-      )}
-    >
+    <div className={cn("mb-7 pb-5 pt-6 lg:mb-8 lg:pt-8", className)}>
       <Breadcrumb>
         <BreadcrumbList className="flex-nowrap gap-0 overflow-hidden text-[15px] leading-6 sm:gap-0 lg:text-base">
           {items.map((item, index) => {

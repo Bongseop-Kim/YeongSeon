@@ -604,7 +604,7 @@ const ReformPage = () => {
               }
             >
               <div>
-                <div className="flex items-center justify-between gap-3 border-b border-stone-200 px-0.5 pb-2.5 pt-2">
+                <div className="flex items-center justify-between gap-3 border-b border-t border-stone-200 px-0.5 pb-2.5 pt-2">
                   <Field orientation="horizontal" className="w-auto gap-4">
                     <Checkbox
                       id={selectAllCheckboxId}
