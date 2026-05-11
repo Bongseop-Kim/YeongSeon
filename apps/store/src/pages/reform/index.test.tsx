@@ -254,9 +254,9 @@ vi.mock("@/entities/reform", () => ({
   calcTieCost: () => 0,
   useReformPricing: () => ({
     data: {
-      REFORM_BASE_COST: 0,
-      REFORM_SHIPPING_COST: 0,
-      REFORM_WIDTH_COST: 0,
+      baseCost: 0,
+      shippingCost: 4200,
+      widthReformCost: 0,
     },
   }),
 }));
@@ -337,10 +337,13 @@ describe("ReformPage", () => {
 
     expect(screen.getByText("유의사항")).toBeInTheDocument();
     expect(
-      screen.getByText("제주/도서산간 지역은 배송비 3,000원이 추가됩니다."),
+      screen.getByText("제주/도서산간 지역은 배송비 4,200원이 추가됩니다."),
     ).toBeInTheDocument();
     expect(
       screen.getByText("예상 수선 기간은 영업일 기준 7~14일입니다."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("접수 전 취소 시 택배비 4,200원을 제외하고 환불됩니다."),
     ).toBeInTheDocument();
     expect(
       within(summaryCard).queryByText("내게 맞는 넥타이 길이"),

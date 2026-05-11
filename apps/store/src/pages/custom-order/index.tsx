@@ -34,6 +34,7 @@ import { PageLayout } from "@/shared/layout/page-layout";
 import { usePricingConfig } from "@/entities/custom-order";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { ROUTES } from "@/shared/constants/ROUTES";
+import { createShippingNoticeItems } from "@/shared/lib/shipping-notices";
 
 export default function OrderPage() {
   const { user } = useAuthStore();
@@ -93,6 +94,10 @@ export default function OrderPage() {
     : { sewingCost: 0, fabricCost: 0, totalCost: 0 };
 
   const isQuoteMode = watchedValues.quantity >= 100;
+  const shippingNoticeItems = createShippingNoticeItems({
+    shippingCost: pricingConfig?.REFORM_SHIPPING_COST,
+    periodNotice: "예상 제작 기간은 영업일 기준 28~42일입니다.",
+  });
 
   const wizard = useWizardStep({
     steps: WIZARD_STEPS,
@@ -185,12 +190,7 @@ export default function OrderPage() {
                   <SummaryCard.Section>
                     <SummaryCard.NoticeList
                       label="유의사항"
-                      items={[
-                        "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
-                        "예상 제작 기간은 영업일 기준 28~42일입니다.",
-                        "접수 이후에는 취소 및 환불이 불가능합니다.",
-                        "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
-                      ]}
+                      items={shippingNoticeItems}
                     />
                   </SummaryCard.Section>
                 </SummaryCard>

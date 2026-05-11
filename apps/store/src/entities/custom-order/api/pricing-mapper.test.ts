@@ -29,6 +29,7 @@ const pricingConstants: PricingConstantRow[] = [
   createConstant("SAMPLE_FABRIC_YARN_DYED_COST", 175),
   createConstant("SAMPLE_FABRIC_AND_SEWING_PRINTING_COST", 180),
   createConstant("SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST", 185),
+  createConstant("REFORM_SHIPPING_COST", 4200),
 ];
 
 const fabricPrices: PricingConstantRow[] = [
@@ -39,7 +40,7 @@ const fabricPrices: PricingConstantRow[] = [
 ];
 
 describe("toPricingConfig", () => {
-  it("21개 상수와 4개 원단 가격 조합을 매핑한다", () => {
+  it("22개 상수와 4개 원단 가격 조합을 매핑한다", () => {
     expect(toPricingConfig(pricingConstants, fabricPrices)).toEqual(
       expect.objectContaining({
         START_COST: 10000,
@@ -55,6 +56,7 @@ describe("toPricingConfig", () => {
             POLY: 1300,
           },
         },
+        REFORM_SHIPPING_COST: 4200,
       }),
     );
   });

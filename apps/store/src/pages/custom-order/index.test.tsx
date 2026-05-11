@@ -118,7 +118,7 @@ vi.mock("@/features/shipping", () => ({
 }));
 
 vi.mock("@/entities/custom-order", () => ({
-  usePricingConfig: () => ({ data: undefined }),
+  usePricingConfig: () => ({ data: { REFORM_SHIPPING_COST: 4200 } }),
 }));
 
 vi.mock("@/features/custom-order", () => ({
@@ -222,7 +222,7 @@ describe("OrderPage", () => {
     expect(within(summaryCard).getByText("유의사항")).toBeInTheDocument();
     expect(
       within(summaryCard).getByText(
-        "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
+        "제주/도서산간 지역은 배송비 4,200원이 추가됩니다.",
       ),
     ).toBeInTheDocument();
     expect(
@@ -237,7 +237,7 @@ describe("OrderPage", () => {
     ).toBeInTheDocument();
     expect(
       within(summaryCard).getByText(
-        "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
+        "접수 전 취소 시 택배비 4,200원을 제외하고 환불됩니다.",
       ),
     ).toBeInTheDocument();
   });

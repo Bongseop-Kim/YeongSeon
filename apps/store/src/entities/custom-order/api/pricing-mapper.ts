@@ -23,6 +23,7 @@ const ALLOWED_PRICING_KEYS = [
   "SAMPLE_FABRIC_YARN_DYED_COST",
   "SAMPLE_FABRIC_AND_SEWING_PRINTING_COST",
   "SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST",
+  "REFORM_SHIPPING_COST",
 ] as const;
 
 type PricingConstantKey = (typeof ALLOWED_PRICING_KEYS)[number];
@@ -127,6 +128,10 @@ export const toPricingConfig = (
     SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST: getConstantValue(
       constantsMap,
       "SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST",
+    ),
+    REFORM_SHIPPING_COST: getConstantValue(
+      constantsMap,
+      "REFORM_SHIPPING_COST",
     ),
   };
 };

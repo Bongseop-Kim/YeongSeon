@@ -13,12 +13,9 @@ import { useImageUpload, ImageUpload } from "@/features/custom-order";
 import { DesignImagePicker } from "@/features/design";
 import { usePricingConfig } from "@/entities/custom-order";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
-import {
-  UtilityPageIntro,
-  UtilityPageSection,
-} from "@/shared/composite/utility-page";
+import { UtilityPageSection } from "@/shared/composite/utility-page";
 import { Field, FieldTitle, FieldDescription } from "@/shared/ui/field";
-import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import type { SampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
 import { PageSeo } from "@/shared/ui/page-seo";
@@ -193,40 +190,48 @@ export default function SampleOrderPage() {
         <MainContent className="overflow-visible">
           <Form {...form}>
             <PageLayout
+              breadcrumbs={[
+                { label: "홈", to: ROUTES.HOME },
+                { label: "샘플 제작" },
+              ]}
               contentClassName="space-y-8"
               sidebarClassName="space-y-4"
               sidebar={
-                <OrderSummaryAside
-                  title="주문 요약"
-                  description="선택한 샘플 구성과 예상 결제 금액을 확인합니다."
-                  rows={[
-                    {
-                      id: "sample-type",
-                      label: "샘플 유형",
-                      value: selectedSampleLabel,
-                    },
-                    {
-                      id: "sample-config",
-                      label: "구성",
-                      value: selectedFabricLabel,
-                    },
-                    {
-                      id: "estimated-days",
-                      label: "예상 제작 기간",
-                      value: "28~42일",
-                    },
-                    {
-                      id: "sample-total",
-                      label: "총 결제 금액",
-                      value:
+                <SummaryCard>
+                  <SummaryCard.Header
+                    title="주문 요약"
+                    description="선택한 샘플 구성과 예상 결제 금액을 확인합니다."
+                  />
+                  <SummaryCard.Section>
+                    <SummaryCard.Row
+                      label="샘플 유형"
+                      value={selectedSampleLabel}
+                    />
+                    <SummaryCard.Row label="구성" value={selectedFabricLabel} />
+                    <SummaryCard.Row label="예상 제작 기간" value="28~42일" />
+                    <SummaryCard.Total
+                      label="총 결제 금액"
+                      value={
                         samplePrice === null
                           ? isPricingError
                             ? "불러오지 못함"
                             : "불러오는 중..."
-                          : `${samplePrice.toLocaleString()}원`,
-                    },
-                  ]}
-                />
+                          : `${samplePrice.toLocaleString()}원`
+                      }
+                    />
+                  </SummaryCard.Section>
+                  <SummaryCard.Section>
+                    <SummaryCard.NoticeList
+                      label="유의사항"
+                      items={[
+                        "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
+                        "예상 제작 기간은 영업일 기준 28~42일입니다.",
+                        "접수 이후에는 취소 및 환불이 불가능합니다.",
+                        "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
+                      ]}
+                    />
+                  </SummaryCard.Section>
+                </SummaryCard>
               }
               actionBar={
                 <PaymentActionBar
@@ -245,12 +250,6 @@ export default function SampleOrderPage() {
                 />
               }
             >
-              <UtilityPageIntro
-                eyebrow="Sample Order"
-                title="샘플 주문"
-                description="확인하고 싶은 원단과 봉제 사양을 정리한 뒤 결제를 진행하세요."
-              />
-
               <UtilityPageSection
                 title="샘플 유형"
                 description="확인하려는 범위를 먼저 정하면 필요한 옵션만 노출됩니다."

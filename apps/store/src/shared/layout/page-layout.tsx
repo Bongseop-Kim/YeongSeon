@@ -63,7 +63,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <div
           className={cn(
             "w-full",
-            !isMobile && sidebar ? "flex-1 w-2/3 pt-6" : "pt-4",
+            !isMobile && sidebar && "flex-1 w-2/3",
             contentClassName,
           )}
         >
