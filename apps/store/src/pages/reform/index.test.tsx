@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import ReformPage from "@/pages/reform";
@@ -24,11 +25,14 @@ vi.mock("@/shared/layout/page-layout", () => ({
   PageLayout: ({
     children,
     detail,
+    sidebar,
   }: {
     children: React.ReactNode;
     detail: React.ReactNode;
+    sidebar?: React.ReactNode;
   }) => (
     <main>
+      {sidebar}
       {detail}
       {children}
     </main>
@@ -58,15 +62,85 @@ vi.mock("@/shared/composite/utility-page", () => ({
 }));
 
 vi.mock("@/shared/composite/order-summary-aside", () => ({
-  OrderSummaryAside: () => null,
+  OrderSummaryAside: () => <div data-testid="legacy-order-summary-aside" />,
+}));
+
+vi.mock("@/shared/composite/summary-card", () => ({
+  SummaryCard: Object.assign(
+    ({ children }: { children: React.ReactNode }) => (
+      <section data-testid="summary-card">{children}</section>
+    ),
+    {
+      Header: ({
+        title,
+        description,
+      }: {
+        title: React.ReactNode;
+        description?: React.ReactNode;
+      }) => (
+        <header>
+          <h2>{title}</h2>
+          {description ? <p>{description}</p> : null}
+        </header>
+      ),
+      Section: ({
+        title,
+        children,
+      }: {
+        title?: React.ReactNode;
+        children: React.ReactNode;
+      }) => (
+        <section>
+          {title ? <p>{title}</p> : null}
+          {children}
+        </section>
+      ),
+      Row: ({
+        label,
+        value,
+      }: {
+        label: React.ReactNode;
+        value: React.ReactNode;
+      }) => (
+        <div>
+          <span>{label}</span>
+          <span>{value}</span>
+        </div>
+      ),
+      Total: ({
+        label,
+        value,
+      }: {
+        label: React.ReactNode;
+        value: React.ReactNode;
+      }) => (
+        <div>
+          <strong>{label}</strong>
+          <strong>{value}</strong>
+        </div>
+      ),
+      NoticeList: ({
+        label,
+        items,
+      }: {
+        label?: React.ReactNode;
+        items: React.ReactNode[];
+      }) => (
+        <div>
+          {label ? <p>{label}</p> : null}
+          <ul>
+            {items.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ),
+    },
+  ),
 }));
 
 vi.mock("@/shared/composite/shop-action-bar", () => ({
   ShopActionBar: () => null,
-}));
-
-vi.mock("@/shared/composite/tie-length-guide-accordion", () => ({
-  TieLengthGuideAccordion: () => null,
 }));
 
 vi.mock("@/shared/composite/empty", () => ({
@@ -120,6 +194,35 @@ vi.mock("@/shared/ui/field", () => ({
   }) => <label htmlFor={htmlFor}>{children}</label>,
   FieldTitle: ({ children }: { children: React.ReactNode }) => (
     <span>{children}</span>
+  ),
+}));
+
+vi.mock("@/shared/ui/data-table", () => ({
+  DataTable: ({
+    headers,
+    data,
+  }: {
+    headers: string[];
+    data: Record<string, string | number>[];
+  }) => (
+    <table>
+      <thead>
+        <tr>
+          {headers.map((header) => (
+            <th key={header}>{header}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row, index) => (
+          <tr key={index}>
+            {headers.map((header) => (
+              <td key={header}>{row[header]}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   ),
 }));
 
@@ -190,5 +293,45 @@ describe("ReformPage", () => {
     expect(
       screen.queryByText("넓은 폭도 더 슬림하고 깔끔하게"),
     ).not.toBeInTheDocument();
+  });
+
+  it("리폼 결제 예상 금액을 SummaryCard로 렌더링한다", () => {
+    render(<ReformPage />);
+
+    expect(screen.getByTestId("summary-card")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("legacy-order-summary-aside"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("결제 예상 금액")).toBeInTheDocument();
+    expect(screen.getByText("상품 금액")).toBeInTheDocument();
+    expect(screen.getByText("배송비")).toBeInTheDocument();
+    expect(screen.getByText("총 결제 금액")).toBeInTheDocument();
+  });
+
+  it("리폼 유의사항을 SummaryCard 안에서 상시 노출한다", () => {
+    render(<ReformPage />);
+
+    const summaryCard = screen.getByTestId("summary-card");
+
+    expect(screen.getByText("유의사항")).toBeInTheDocument();
+    expect(
+      screen.getByText("제주/도서산간 지역은 배송비 3,000원이 추가됩니다."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("예상 수선 기간은 영업일 기준 7~14일입니다."),
+    ).toBeInTheDocument();
+    expect(
+      within(summaryCard).queryByText("내게 맞는 넥타이 길이"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("키별 넥타이 길이 가이드를 본문에서 렌더링한다", () => {
+    render(<ReformPage />);
+
+    expect(screen.getByText("내게 맞는 넥타이 길이")).toBeInTheDocument();
+    expect(screen.getByText("키")).toBeInTheDocument();
+    expect(screen.getByText("권장 길이")).toBeInTheDocument();
+    expect(screen.getByText("170cm")).toBeInTheDocument();
+    expect(screen.getByText("49cm")).toBeInTheDocument();
   });
 });

@@ -42,13 +42,14 @@ import { useOrderStore } from "@/shared/store/order";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Empty } from "@/shared/composite/empty";
-import { TieLengthGuideAccordion } from "@/shared/composite/tie-length-guide-accordion";
 import { UtilityPageSection } from "@/shared/composite/utility-page";
-import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import { ShopActionBar } from "@/shared/composite/shop-action-bar";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { analytics } from "@/shared/lib/analytics";
+import { DataTable } from "@/shared/ui/data-table";
+import { HEIGHT_GUIDE } from "@/shared/constants/HEIGHT_GUIDE";
 
 const DEFAULT_TIE_ITEM = {
   id: "tie-1",
@@ -373,38 +374,34 @@ const ReformPage = () => {
             <PageLayout
               contentClassName="pt-0 lg:pt-0"
               sidebar={
-                <OrderSummaryAside
-                  title="결제 예상 금액"
-                  rows={[
-                    {
-                      id: "service-cost",
-                      label: "상품 금액",
-                      value: formatCost(totalServiceCost),
-                      className: "border-b-0 pb-1",
-                    },
-                    {
-                      id: "shipping-cost",
-                      label: "배송비",
-                      value: formatCost(estimatedShipping),
-                      className: "border-b-0 pt-1",
-                    },
-                  ]}
-                  totalAmount={totalCost}
-                  footer={
-                    <div className="mt-4 border-t border-stone-100 pt-3">
-                      <TieLengthGuideAccordion
-                        notices={[
-                          "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
-                          "예상 수선 기간은 영업일 기준 7~14일입니다.",
-                          "접수 이후에는 취소 및 환불이 불가능합니다.",
-                          "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
-                        ]}
-                        className="text-xs text-zinc-400"
-                      />
-                    </div>
-                  }
-                  className="mt-6 rounded-2xl bg-white px-4 py-5 lg:mt-0"
-                />
+                <SummaryCard className="mt-6 bg-white lg:mt-0">
+                  <SummaryCard.Header title="결제 예상 금액" />
+                  <SummaryCard.Section>
+                    <SummaryCard.Row
+                      label="상품 금액"
+                      value={formatCost(totalServiceCost)}
+                    />
+                    <SummaryCard.Row
+                      label="배송비"
+                      value={formatCost(estimatedShipping)}
+                    />
+                    <SummaryCard.Total
+                      label="총 결제 금액"
+                      value={formatCost(totalCost)}
+                    />
+                  </SummaryCard.Section>
+                  <SummaryCard.Section>
+                    <SummaryCard.NoticeList
+                      label="유의사항"
+                      items={[
+                        "제주/도서산간 지역은 배송비 3,000원이 추가됩니다.",
+                        "예상 수선 기간은 영업일 기준 7~14일입니다.",
+                        "접수 이후에는 취소 및 환불이 불가능합니다.",
+                        "접수 전 취소 시 택배비 3,000원을 제외하고 환불됩니다.",
+                      ]}
+                    />
+                  </SummaryCard.Section>
+                </SummaryCard>
               }
               actionBar={
                 <ShopActionBar
@@ -472,6 +469,21 @@ const ReformPage = () => {
                         );
                       })}
                     </div>
+                  </UtilityPageSection>
+
+                  <UtilityPageSection
+                    icon={RulerIcon}
+                    title="내게 맞는 넥타이 길이"
+                    description="착용자의 키를 기준으로 수선 후 권장 길이를 확인하세요."
+                  >
+                    <DataTable
+                      headers={["키", "권장 길이"]}
+                      data={HEIGHT_GUIDE.map((guide) => ({
+                        키: guide.height,
+                        "권장 길이": guide.length,
+                      }))}
+                      size="sm"
+                    />
                   </UtilityPageSection>
 
                   {IMAGE_SECTIONS.map((section) => (
