@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { Button } from "@/shared/ui-extended/button";
 import { Input } from "@/shared/ui-extended/input";
@@ -95,7 +96,7 @@ const RepairShippingPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout>
+          <PageLayout breadcrumbs={PAGE_BREADCRUMBS.REPAIR_SHIPPING}>
             <div className="flex items-center justify-center min-h-96">
               <Loader2 className="h-8 w-8 animate-spin text-info" />
             </div>
@@ -112,7 +113,7 @@ const RepairShippingPage = () => {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout>
+        <PageLayout breadcrumbs={PAGE_BREADCRUMBS.REPAIR_SHIPPING}>
           <div className="mx-auto max-w-3xl py-6 lg:py-10">
             <div className="space-y-8">
               <UtilityPageIntro

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Empty } from "@/shared/composite/empty";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
+import type { PageBreadcrumbItem } from "@/shared/ui-extended/page-breadcrumb";
 import { Button } from "@/shared/ui-extended/button";
 
 interface UtilityListPageShellProps {
@@ -11,6 +12,7 @@ interface UtilityListPageShellProps {
   errorTitle: string;
   children: ReactNode;
   onRetry?: () => void;
+  breadcrumbs: PageBreadcrumbItem[];
 }
 
 export function UtilityListPageShell({
@@ -20,6 +22,7 @@ export function UtilityListPageShell({
   errorTitle,
   children,
   onRetry,
+  breadcrumbs,
 }: UtilityListPageShellProps) {
   if (isLoading) {
     return (
@@ -37,7 +40,7 @@ export function UtilityListPageShell({
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-4 lg:py-8">
+          <PageLayout breadcrumbs={breadcrumbs} contentClassName="py-4 lg:py-8">
             <div>
               <Empty
                 title={errorTitle}

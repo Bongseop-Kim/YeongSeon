@@ -20,6 +20,7 @@ import {
   FieldTitle,
 } from "@/shared/ui/field";
 import { QuantitySelector } from "@/shared/composite/quantity-selector";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { toast } from "@/shared/lib/toast";
 import { Empty } from "@/shared/composite/empty";
@@ -234,6 +235,10 @@ const ClaimFormPage = () => {
     <MainLayout>
       <MainContent>
         <PageLayout
+          breadcrumbs={[
+            ...PAGE_BREADCRUMBS.CLAIM_LIST,
+            { label: `${claimTypeLabel} 신청` },
+          ]}
           sidebar={
             <Card>
               <CardHeader>

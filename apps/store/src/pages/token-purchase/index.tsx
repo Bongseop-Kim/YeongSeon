@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
@@ -73,7 +74,7 @@ const TokenPurchasePage = () => {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout>
+        <PageLayout breadcrumbs={PAGE_BREADCRUMBS.TOKEN_PURCHASE}>
           <div className="mx-auto max-w-5xl py-12">
             <div className="mb-10 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-accent">

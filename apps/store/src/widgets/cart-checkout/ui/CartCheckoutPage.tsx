@@ -11,8 +11,8 @@ import {
   CartItemsPanel,
   CartRecommendationsCard,
 } from "@/features/cart";
-import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
 import { buildPriceRows } from "@/shared/composite/order-summary-utils";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { useModalStore } from "@/shared/store/modal";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
@@ -30,7 +30,6 @@ import { useReformPricing } from "@/entities/reform";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { toast } from "sonner";
-import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { cartKeys, removeCartItemsByIds } from "@/entities/cart";
 import { useAuthStore } from "@/shared/store/auth";
 
@@ -288,6 +287,10 @@ export function CartCheckoutPage() {
       : 0;
     return calculateOrderSummary(selectedCartItems, shippingCost);
   }, [selectedCartItems, reformPricing]);
+  const selectedPriceRows = useMemo(
+    () => buildPriceRows(selectedTotals),
+    [selectedTotals],
+  );
 
   const isAllChecked =
     items.length > 0 && selectedItems.length === items.length;
@@ -309,6 +312,10 @@ export function CartCheckoutPage() {
       <MainLayout>
         <MainContent className="overflow-visible">
           <PageLayout
+            breadcrumbs={[
+              { label: "홈", to: ROUTES.HOME },
+              { label: "장바구니" },
+            ]}
             detail={
               <CartRecommendationsCard
                 products={similarProducts}
@@ -319,13 +326,26 @@ export function CartCheckoutPage() {
               />
             }
             sidebar={
-              <OrderSummaryAside
-                title="주문 금액"
-                description="선택한 상품 기준 예상 결제 금액입니다."
-                rows={buildPriceRows(selectedTotals)}
-                totalAmount={selectedTotals.totalPrice}
-                totalLabel={`총 ${selectedTotals.totalQuantity}개`}
-              />
+              <SummaryCard>
+                <SummaryCard.Header
+                  title="주문 금액"
+                  description="선택한 상품 기준 예상 결제 금액입니다."
+                />
+                <SummaryCard.Section>
+                  {selectedPriceRows.map((row) => (
+                    <SummaryCard.Row
+                      key={row.id}
+                      label={row.label}
+                      value={row.value}
+                      className={row.className}
+                    />
+                  ))}
+                  <SummaryCard.Total
+                    label={`총 ${selectedTotals.totalQuantity}개`}
+                    value={`${selectedTotals.totalPrice.toLocaleString()}원`}
+                  />
+                </SummaryCard.Section>
+              </SummaryCard>
             }
             actionBar={
               <Button
@@ -342,12 +362,6 @@ export function CartCheckoutPage() {
               </Button>
             }
           >
-            <UtilityPageIntro
-              eyebrow="Cart"
-              title="장바구니"
-              description="지금 주문할 상품을 고르고 옵션과 쿠폰을 정리합니다."
-            />
-
             <CartSelectionToolbar
               isAllChecked={isAllChecked}
               onToggleAll={handleSelectAll}

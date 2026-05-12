@@ -8,6 +8,7 @@ import {
   ShieldAlertIcon,
   UserRoundIcon,
 } from "lucide-react";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useProfile } from "@/entities/my-page";
 import { usePopup } from "@/shared/hooks/usePopup";
@@ -117,7 +118,10 @@ export default function MyInfoPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout contentClassName="py-4 lg:py-8">
+        <PageLayout
+          breadcrumbs={PAGE_BREADCRUMBS.MY_INFO}
+          contentClassName="py-4 lg:py-8"
+        >
           <div className="space-y-8 lg:space-y-10">
             <UtilityPageIntro
               eyebrow="Profile Settings"
@@ -166,7 +170,7 @@ export default function MyInfoPage() {
 
                 <UtilityPageSection
                   icon={ShieldAlertIcon}
-                  title="계정 종료"
+                  title="계정 탈퇴"
                   description="회원 탈퇴 전 주문과 환불 진행 상태를 먼저 확인해 주세요."
                   className="pb-1"
                 >

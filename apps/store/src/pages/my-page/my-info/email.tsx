@@ -5,6 +5,7 @@ import { PageLayout } from "@/shared/layout/page-layout";
 import { Button } from "@/shared/ui-extended/button";
 import { Input } from "@/shared/ui-extended/input";
 import { Label } from "@/shared/ui/label";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import {
   UtilityPageAside,
@@ -38,7 +39,10 @@ export default function MyInfoEmailPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout contentClassName="py-4 lg:py-8">
+        <PageLayout
+          breadcrumbs={PAGE_BREADCRUMBS.MY_INFO_EMAIL}
+          contentClassName="py-4 lg:py-8"
+        >
           <div className="space-y-8 lg:space-y-10">
             <UtilityPageIntro
               eyebrow="Email Update"

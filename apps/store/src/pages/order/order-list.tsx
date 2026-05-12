@@ -13,6 +13,7 @@ import { OrderItemCard } from "@/shared/composite/order-item-card";
 import { TokenRefundAction } from "@/features/order";
 import { Link, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useOrders } from "@/entities/order";
 import { useRefundableTokenOrdersQuery } from "@/entities/my-page";
@@ -117,10 +118,14 @@ export default function OrderListPage() {
       loadingMessage="주문 목록을 불러오는 중..."
       error={error}
       errorTitle="주문 목록을 불러올 수 없습니다."
+      breadcrumbs={PAGE_BREADCRUMBS.ORDER_LIST}
     >
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-4 lg:py-8">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.ORDER_LIST}
+            contentClassName="py-4 lg:py-8"
+          >
             <div className="space-y-8 lg:space-y-10">
               <UtilityPageIntro
                 eyebrow="Orders"

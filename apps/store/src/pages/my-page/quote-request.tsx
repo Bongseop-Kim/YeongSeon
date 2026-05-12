@@ -7,6 +7,7 @@ import {
 } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useQuoteRequests } from "@/entities/quote-request";
 import { QuoteRequestCard } from "@/features/quote-request";
@@ -72,7 +73,10 @@ export default function QuoteRequestListPage() {
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-4 lg:py-8">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.QUOTE_REQUEST}
+            contentClassName="py-4 lg:py-8"
+          >
             <div>
               <Empty
                 title="견적 요청 내역을 불러올 수 없습니다."
@@ -92,7 +96,10 @@ export default function QuoteRequestListPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout contentClassName="py-4 lg:py-8">
+        <PageLayout
+          breadcrumbs={PAGE_BREADCRUMBS.QUOTE_REQUEST}
+          contentClassName="py-4 lg:py-8"
+        >
           <div className="space-y-8 lg:space-y-10">
             <UtilityPageIntro
               eyebrow="Quote Requests"

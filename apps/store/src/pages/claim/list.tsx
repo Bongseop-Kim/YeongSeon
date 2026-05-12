@@ -14,6 +14,7 @@ import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/shared/composite/order-item-card";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { buildClaimDetailRoute } from "@/shared/constants/ROUTES";
 import { useClaims } from "@/entities/claim";
 import { toDateString, type ListFilters } from "@/shared/lib/list-filters";
@@ -93,10 +94,14 @@ export default function ClaimListPage() {
       error={error}
       errorTitle="클레임 목록을 불러올 수 없습니다."
       onRetry={() => void refetch()}
+      breadcrumbs={PAGE_BREADCRUMBS.CLAIM_LIST}
     >
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-4 lg:py-8">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.CLAIM_LIST}
+            contentClassName="py-4 lg:py-8"
+          >
             <div className="space-y-8 lg:space-y-10">
               <UtilityPageIntro
                 eyebrow="Claims"

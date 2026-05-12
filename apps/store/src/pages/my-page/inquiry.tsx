@@ -9,6 +9,7 @@ import {
 } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { Button } from "@/shared/ui-extended/button";
 import {
   Sheet,
@@ -275,7 +276,10 @@ export default function InquiryPage() {
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-4 lg:py-8">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.INQUIRY}
+            contentClassName="py-4 lg:py-8"
+          >
             <Empty
               title="문의 목록을 불러올 수 없습니다."
               description={
@@ -292,6 +296,7 @@ export default function InquiryPage() {
     <MainLayout>
       <MainContent>
         <PageLayout
+          breadcrumbs={PAGE_BREADCRUMBS.INQUIRY}
           sidebar={
             isDesktopComposerOpen ? (
               <motion.div

@@ -373,7 +373,7 @@ const ReformPage = () => {
         description="수동 넥타이를 자동 넥타이로 바꾸거나 원하는 폭으로 수선해 보세요. 사진 첨부와 일괄 적용으로 여러 개도 쉽게 접수할 수 있습니다."
         ogUrl="https://essesion.shop/reform"
       />
-      <MainLayout className="bg-stone-100 lg:bg-background">
+      <MainLayout>
         <MainContent className="overflow-visible">
           <Form {...form}>
             <PageLayout
@@ -381,7 +381,6 @@ const ReformPage = () => {
                 { label: "홈", to: ROUTES.HOME },
                 { label: "넥타이 수선·리폼" },
               ]}
-              contentClassName="pt-0 lg:pt-0"
               sidebar={
                 <SummaryCard className="mt-6 bg-white lg:mt-0">
                   <SummaryCard.Header title="결제 예상 금액" />

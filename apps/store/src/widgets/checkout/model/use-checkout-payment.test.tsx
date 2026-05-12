@@ -47,8 +47,6 @@ const makePageState = (overrides = {}) => ({
   navigate,
   isPaymentLoading: false,
   setIsPaymentLoading: vi.fn(),
-  cancellationConsent: true,
-  setCancellationConsent: vi.fn(),
   serverAmount: null,
   setServerAmount: vi.fn(),
   appliedCoupon: undefined,
@@ -162,16 +160,6 @@ describe("useCheckoutPayment", () => {
     it("selectedAddress가 없으면 true", () => {
       mockUseCheckoutPageState.mockReturnValue(
         makePageState({ selectedAddress: null }),
-      );
-
-      const { result } = renderCheckoutHook({ orderName: "테스트" });
-
-      expect(result.current.isSubmitDisabled).toBe(true);
-    });
-
-    it("cancellationConsent가 false면 true", () => {
-      mockUseCheckoutPageState.mockReturnValue(
-        makePageState({ cancellationConsent: false }),
       );
 
       const { result } = renderCheckoutHook({ orderName: "테스트" });

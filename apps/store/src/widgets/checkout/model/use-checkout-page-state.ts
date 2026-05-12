@@ -16,7 +16,6 @@ export function useCheckoutPageState({
 }: UseCheckoutPageStateOptions) {
   const navigate = useNavigate();
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const [cancellationConsent, setCancellationConsent] = useState(false);
   const [serverAmount, setServerAmount] = useState<number | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | undefined>(
     undefined,
@@ -56,8 +55,6 @@ export function useCheckoutPageState({
     navigate,
     isPaymentLoading,
     setIsPaymentLoading,
-    cancellationConsent,
-    setCancellationConsent,
     serverAmount,
     setServerAmount,
     appliedCoupon,

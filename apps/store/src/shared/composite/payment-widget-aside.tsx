@@ -3,15 +3,6 @@ import { cn } from "@/shared/lib/utils";
 import PaymentWidget, {
   type PaymentWidgetRef,
 } from "@/shared/composite/payment-widget";
-import { CheckboxInput } from "@/shared/composite/checkbox-input";
-
-interface ConsentProps {
-  id: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  label: string;
-  description: string;
-}
 
 interface PaymentWidgetAsideProps {
   paymentWidgetRef: RefObject<PaymentWidgetRef | null>;
@@ -19,7 +10,6 @@ interface PaymentWidgetAsideProps {
   customerKey: string;
   title?: string;
   description?: string;
-  consent?: ConsentProps;
   priceFallback?: ReactNode;
   className?: string;
 }
@@ -30,7 +20,6 @@ export function PaymentWidgetAside({
   customerKey,
   title = "결제 수단",
   description,
-  consent,
   priceFallback,
   className,
 }: PaymentWidgetAsideProps) {
@@ -51,17 +40,6 @@ export function PaymentWidgetAside({
           (priceFallback ?? null)
         )}
       </div>
-      {consent ? (
-        <CheckboxInput
-          id={consent.id}
-          checked={consent.checked}
-          onCheckedChange={consent.onCheckedChange}
-          label={consent.label}
-          description={consent.description}
-          required
-          className="pt-4"
-        />
-      ) : null}
     </section>
   );
 }

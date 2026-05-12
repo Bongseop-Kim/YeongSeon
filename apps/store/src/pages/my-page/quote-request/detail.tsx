@@ -12,6 +12,7 @@ import {
 } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useQuoteRequest } from "@/entities/quote-request";
 import { QUOTE_REQUEST_BADGE_CLASS } from "@/features/quote-request";
@@ -23,7 +24,10 @@ function QuoteRequestDetailSkeleton() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout contentClassName="py-4 lg:py-8">
+        <PageLayout
+          breadcrumbs={PAGE_BREADCRUMBS.QUOTE_REQUEST_DETAIL}
+          contentClassName="py-4 lg:py-8"
+        >
           <div className="space-y-4">
             <div className="h-8 w-52 rounded bg-zinc-200" />
             <div className="h-5 w-80 rounded bg-zinc-200" />
@@ -67,7 +71,10 @@ export default function QuoteRequestDetailPage() {
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-4 lg:py-8">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.QUOTE_REQUEST_DETAIL}
+            contentClassName="py-4 lg:py-8"
+          >
             <div>
               <Empty
                 title="견적 요청 상세를 불러올 수 없습니다."
@@ -96,7 +103,10 @@ export default function QuoteRequestDetailPage() {
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-4 lg:py-8">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.QUOTE_REQUEST_DETAIL}
+            contentClassName="py-4 lg:py-8"
+          >
             <div>
               <Empty
                 title="견적 요청 정보를 찾을 수 없습니다."
@@ -117,7 +127,13 @@ export default function QuoteRequestDetailPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout contentClassName="py-4 lg:py-8">
+        <PageLayout
+          breadcrumbs={[
+            ...PAGE_BREADCRUMBS.QUOTE_REQUEST_DETAIL.slice(0, -1),
+            { label: `견적번호 ${quoteRequest.quoteNumber}` },
+          ]}
+          contentClassName="py-4 lg:py-8"
+        >
           <div className="space-y-8 lg:space-y-10">
             <UtilityPageIntro
               eyebrow="Quote Detail"

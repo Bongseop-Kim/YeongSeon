@@ -1,6 +1,6 @@
 import { Button } from "@/shared/ui-extended/button";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { Label } from "@/shared/ui/label";
+import { Field, FieldLabel, FieldTitle } from "@/shared/ui/field";
 
 interface CartSelectionToolbarProps {
   isAllChecked: boolean;
@@ -13,20 +13,27 @@ export function CartSelectionToolbar({
   onToggleAll,
   onRemoveSelected,
 }: CartSelectionToolbarProps) {
+  const selectAllCheckboxId = "cart-select-all";
+
   return (
-    <div className="flex items-center justify-between border-b border-stone-200 py-4">
-      <div className="flex gap-4 items-center">
+    <div className="flex items-center justify-between gap-3 border-b border-t border-stone-200 px-0.5 pb-2.5 pt-2">
+      <Field orientation="horizontal" className="w-auto gap-4">
         <Checkbox
+          id={selectAllCheckboxId}
           checked={isAllChecked}
           onCheckedChange={(checked) => onToggleAll(checked === true)}
           data-testid="cart-select-all"
         />
-        <Label className="text-md">전체 선택</Label>
-      </div>
-      <div className="flex gap-2">
+        <FieldLabel htmlFor={selectAllCheckboxId} className="cursor-pointer">
+          <FieldTitle className="text-sm font-medium text-zinc-700">
+            전체 선택
+          </FieldTitle>
+        </FieldLabel>
+      </Field>
+      <div className="flex items-center gap-4 text-sm font-medium text-zinc-700">
         <Button
           onClick={onRemoveSelected}
-          variant="outline"
+          variant="none"
           type="button"
           size="sm"
           data-testid="cart-remove-selected"

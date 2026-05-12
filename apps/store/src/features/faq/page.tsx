@@ -1,6 +1,7 @@
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { PageLayout } from "@/shared/layout/page-layout";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { Accordion } from "@/shared/ui/accordion";
 import {
   UtilityPageIntro,
@@ -19,7 +20,10 @@ export default function FaqPage() {
       />
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-4 lg:py-8">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.FAQ}
+            contentClassName="py-4 lg:py-8"
+          >
             <div className="space-y-8 lg:space-y-10">
               <UtilityPageIntro
                 eyebrow="FAQ"
