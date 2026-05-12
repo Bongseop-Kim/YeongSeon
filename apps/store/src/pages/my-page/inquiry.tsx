@@ -5,7 +5,6 @@ import { Empty } from "@/shared/composite/empty";
 import {
   UtilityPageAside,
   UtilityPageIntro,
-  UtilityPageSection,
 } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
@@ -367,39 +366,34 @@ export default function InquiryPage() {
               {...sectionMotion}
               transition={{ ...sectionMotion.transition, delay: 0.05 }}
             >
-              <UtilityPageSection
-                title="문의 목록"
-                description="답변 대기 상태의 문의만 수정하거나 삭제할 수 있습니다."
-              >
-                {inquiries.length === 0 ? (
-                  <Empty
-                    title="문의 내역이 없습니다."
-                    description="궁금한 점이 생기면 새 문의를 등록해 주세요."
-                  />
-                ) : (
-                  <div className="divide-y divide-stone-200">
-                    {inquiries.map((inquiry, index) => (
-                      <motion.div
-                        key={inquiry.id}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          duration: 0.28,
-                          ease: "easeOut",
-                          delay: Math.min(index * 0.03, MAX_INQUIRY_CARD_DELAY),
-                        }}
-                      >
-                        <InquiryCard
-                          inquiry={inquiry}
-                          isMutating={isMutating}
-                          onEdit={handleEdit}
-                          onDelete={handleDelete}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </UtilityPageSection>
+              {inquiries.length === 0 ? (
+                <Empty
+                  title="문의 내역이 없습니다."
+                  description="궁금한 점이 생기면 새 문의를 등록해 주세요."
+                />
+              ) : (
+                <div className="divide-y divide-stone-200">
+                  {inquiries.map((inquiry, index) => (
+                    <motion.div
+                      key={inquiry.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.28,
+                        ease: "easeOut",
+                        delay: Math.min(index * 0.03, MAX_INQUIRY_CARD_DELAY),
+                      }}
+                    >
+                      <InquiryCard
+                        inquiry={inquiry}
+                        isMutating={isMutating}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           </div>
         </PageLayout>

@@ -3,10 +3,7 @@ import { PageSeo } from "@/shared/ui/page-seo";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { Accordion } from "@/shared/ui/accordion";
-import {
-  UtilityPageIntro,
-  UtilityPageSection,
-} from "@/shared/composite/utility-page";
+import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { FAQ_DATA } from "@/features/faq/constants/FAQ";
 import { FaqAccordionItem } from "./components/faq-accordion-item";
 
@@ -31,16 +28,11 @@ export default function FaqPage() {
                 description="배송, 주문, 환불과 관련해 자주 확인하는 답변을 모아두었습니다."
               />
 
-              <UtilityPageSection
-                title="질문 목록"
-                description="궁금한 항목을 펼쳐 자세한 답변을 확인하세요."
-              >
-                <Accordion type="single" collapsible className="w-full">
-                  {FAQ_DATA.map((faq) => (
-                    <FaqAccordionItem key={faq.id} faq={faq} />
-                  ))}
-                </Accordion>
-              </UtilityPageSection>
+              <Accordion type="single" collapsible className="w-full">
+                {FAQ_DATA.map((faq) => (
+                  <FaqAccordionItem key={faq.id} faq={faq} />
+                ))}
+              </Accordion>
             </div>
           </PageLayout>
         </MainContent>

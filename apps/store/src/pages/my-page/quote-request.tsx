@@ -1,10 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Empty } from "@/shared/composite/empty";
-import {
-  UtilityPageIntro,
-  UtilityPageSection,
-} from "@/shared/composite/utility-page";
+import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
@@ -107,34 +104,29 @@ export default function QuoteRequestListPage() {
               description="주문 제작 상담과 견적 응답 상태를 시간순으로 확인합니다."
             />
 
-            <UtilityPageSection
-              title="요청 목록"
-              description="검색과 기간 필터는 상단 공용 검색 도구를 사용합니다."
-            >
-              {filteredQuoteRequests.length === 0 ? (
-                <div className="px-4 lg:px-0">
-                  <Empty
-                    title="견적 요청 내역이 없습니다."
-                    description="필요한 상품의 견적을 요청해보세요."
-                  />
-                </div>
-              ) : (
-                filteredQuoteRequests.map((quoteRequest) => (
-                  <QuoteRequestCard
-                    key={quoteRequest.id}
-                    quoteRequest={quoteRequest}
-                    onClick={() =>
-                      navigate(
-                        ROUTES.MY_PAGE_QUOTE_REQUEST_DETAIL.replace(
-                          ":id",
-                          quoteRequest.id,
-                        ),
-                      )
-                    }
-                  />
-                ))
-              )}
-            </UtilityPageSection>
+            {filteredQuoteRequests.length === 0 ? (
+              <div className="px-4 lg:px-0">
+                <Empty
+                  title="견적 요청 내역이 없습니다."
+                  description="필요한 상품의 견적을 요청해보세요."
+                />
+              </div>
+            ) : (
+              filteredQuoteRequests.map((quoteRequest) => (
+                <QuoteRequestCard
+                  key={quoteRequest.id}
+                  quoteRequest={quoteRequest}
+                  onClick={() =>
+                    navigate(
+                      ROUTES.MY_PAGE_QUOTE_REQUEST_DETAIL.replace(
+                        ":id",
+                        quoteRequest.id,
+                      ),
+                    )
+                  }
+                />
+              ))
+            )}
           </div>
         </PageLayout>
       </MainContent>

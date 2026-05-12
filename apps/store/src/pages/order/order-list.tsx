@@ -4,10 +4,7 @@ import { Empty } from "@/shared/composite/empty";
 import { OrderStatusBadge } from "@/shared/composite/status-badge";
 import { UtilityListPageShell } from "@/shared/composite/utility-list-page-shell";
 import { Button } from "@/shared/ui-extended/button";
-import {
-  UtilityPageIntro,
-  UtilityPageSection,
-} from "@/shared/composite/utility-page";
+import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/shared/composite/order-item-card";
 import { TokenRefundAction } from "@/features/order";
@@ -133,125 +130,120 @@ export default function OrderListPage() {
                 description="결제 이후 진행 상태, 상품 구성, 클레임 가능 동작을 확인합니다."
               />
 
-              <UtilityPageSection
-                title="주문 목록"
-                description="검색과 기간 필터, 주문 유형 탭은 상단 공용 도구를 사용합니다."
-              >
-                {ordersByDate.length === 0 ? (
-                  <Empty
-                    title={
-                      activeTab === "전체"
-                        ? "주문 내역이 없습니다."
-                        : `${activeTab} 내역이 없습니다.`
-                    }
-                    description={
-                      activeTab === "전체"
-                        ? "첫 주문을 시작해보세요!"
-                        : `${activeTab}에 해당하는 주문이 없습니다.`
-                    }
-                  />
-                ) : (
-                  ordersByDate.map(([dateLabel, dateOrders]) => (
-                    <section key={dateLabel} className="space-y-0">
-                      <h2 className="sticky top-0 z-10 bg-background py-3 text-lg font-semibold tracking-tight text-zinc-950">
-                        {dateLabel}
-                      </h2>
-                      {dateOrders.map((order) => (
-                        <Link
-                          key={order.id}
-                          data-testid={`order-card-${order.id}`}
-                          className="block border-b border-stone-200 py-5"
-                          to={`${ROUTES.ORDER_DETAIL}/${order.id}`}
-                        >
-                          <div className="flex flex-col gap-5">
-                            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <OrderStatusBadge status={order.status} />
-                                </div>
-                                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-                                  <span>주문번호: {order.orderNumber}</span>
-                                  <span className="text-stone-300">/</span>
-                                  <span>상품 {order.items.length}개</span>
-                                </div>
+              {ordersByDate.length === 0 ? (
+                <Empty
+                  title={
+                    activeTab === "전체"
+                      ? "주문 내역이 없습니다."
+                      : `${activeTab} 내역이 없습니다.`
+                  }
+                  description={
+                    activeTab === "전체"
+                      ? "첫 주문을 시작해보세요!"
+                      : `${activeTab}에 해당하는 주문이 없습니다.`
+                  }
+                />
+              ) : (
+                ordersByDate.map(([dateLabel, dateOrders]) => (
+                  <section key={dateLabel} className="space-y-0">
+                    <h2 className="sticky top-0 z-10 bg-background py-3 text-lg font-semibold tracking-tight text-zinc-950">
+                      {dateLabel}
+                    </h2>
+                    {dateOrders.map((order) => (
+                      <Link
+                        key={order.id}
+                        data-testid={`order-card-${order.id}`}
+                        className="block border-b border-stone-200 py-5"
+                        to={`${ROUTES.ORDER_DETAIL}/${order.id}`}
+                      >
+                        <div className="flex flex-col gap-5">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <OrderStatusBadge status={order.status} />
+                              </div>
+                              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+                                <span>주문번호: {order.orderNumber}</span>
+                                <span className="text-stone-300">/</span>
+                                <span>상품 {order.items.length}개</span>
                               </div>
                             </div>
-
-                            <div className="divide-y divide-stone-200">
-                              {order.items.map((item, index) => {
-                                const isLastItem =
-                                  index === order.items.length - 1;
-                                const claimActions =
-                                  item.type === "token"
-                                    ? ([] as ClaimActionType[])
-                                    : getClaimActionsFromCustomerActions(
-                                        order.customerActions,
-                                      );
-
-                                return (
-                                  <div
-                                    key={item.id}
-                                    className="py-4 first:pt-0 last:pb-0"
-                                    data-testid={`order-item-wrapper-${order.id}-${item.id}`}
-                                  >
-                                    <OrderItemCard
-                                      item={item}
-                                      showPrice={isLastItem}
-                                      price={
-                                        isLastItem
-                                          ? `합계: ${order.totalPrice.toLocaleString()}원`
-                                          : undefined
-                                      }
-                                      actions={
-                                        item.type === "token" ? (
-                                          <div
-                                            className="flex gap-2"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            <TokenRefundAction
-                                              refundOrder={
-                                                refundOrderMap.get(order.id) ??
-                                                null
-                                              }
-                                            />
-                                          </div>
-                                        ) : claimActions.length > 0 ? (
-                                          <div
-                                            className="flex gap-2"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            {claimActions.map((actionType) => (
-                                              <Button
-                                                key={actionType}
-                                                variant="outline"
-                                                size="sm"
-                                                className="flex-1"
-                                                onClick={() =>
-                                                  handleClaimRequest(
-                                                    actionType,
-                                                    order.id,
-                                                    item.id,
-                                                  )
-                                                }
-                                              >
-                                                {CLAIM_ACTION_LABEL[actionType]}
-                                              </Button>
-                                            ))}
-                                          </div>
-                                        ) : undefined
-                                      }
-                                    />
-                                  </div>
-                                );
-                              })}
-                            </div>
                           </div>
-                        </Link>
-                      ))}
-                    </section>
-                  ))
-                )}
-              </UtilityPageSection>
+
+                          <div className="divide-y divide-stone-200">
+                            {order.items.map((item, index) => {
+                              const isLastItem =
+                                index === order.items.length - 1;
+                              const claimActions =
+                                item.type === "token"
+                                  ? ([] as ClaimActionType[])
+                                  : getClaimActionsFromCustomerActions(
+                                      order.customerActions,
+                                    );
+
+                              return (
+                                <div
+                                  key={item.id}
+                                  className="py-4 first:pt-0 last:pb-0"
+                                  data-testid={`order-item-wrapper-${order.id}-${item.id}`}
+                                >
+                                  <OrderItemCard
+                                    item={item}
+                                    showPrice={isLastItem}
+                                    price={
+                                      isLastItem
+                                        ? `합계: ${order.totalPrice.toLocaleString()}원`
+                                        : undefined
+                                    }
+                                    actions={
+                                      item.type === "token" ? (
+                                        <div
+                                          className="flex gap-2"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <TokenRefundAction
+                                            refundOrder={
+                                              refundOrderMap.get(order.id) ??
+                                              null
+                                            }
+                                          />
+                                        </div>
+                                      ) : claimActions.length > 0 ? (
+                                        <div
+                                          className="flex gap-2"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {claimActions.map((actionType) => (
+                                            <Button
+                                              key={actionType}
+                                              variant="outline"
+                                              size="sm"
+                                              className="flex-1"
+                                              onClick={() =>
+                                                handleClaimRequest(
+                                                  actionType,
+                                                  order.id,
+                                                  item.id,
+                                                )
+                                              }
+                                            >
+                                              {CLAIM_ACTION_LABEL[actionType]}
+                                            </Button>
+                                          ))}
+                                        </div>
+                                      ) : undefined
+                                    }
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </section>
+                ))
+              )}
             </div>
           </PageLayout>
         </MainContent>

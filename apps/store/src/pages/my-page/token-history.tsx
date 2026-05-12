@@ -3,7 +3,6 @@ import { Empty } from "@/shared/composite/empty";
 import {
   UtilityPageAside,
   UtilityPageIntro,
-  UtilityPageSection,
 } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
@@ -267,21 +266,16 @@ export default function TokenHistoryPage() {
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-12">
               <div className="min-w-0 space-y-8">
-                <UtilityPageSection
-                  title="사용 및 환불 이력"
-                  description="검색과 기간 필터는 상단 공용 검색 도구를 사용합니다."
-                >
-                  <UsageTab
-                    history={usageHistory}
-                    isLoading={isHistoryLoading}
-                    error={historyError instanceof Error ? historyError : null}
-                    hasMore={hasNextPage ?? false}
-                    isLoadingMore={isFetchingNextPage}
-                    onLoadMore={() => {
-                      void fetchNextPage();
-                    }}
-                  />
-                </UtilityPageSection>
+                <UsageTab
+                  history={usageHistory}
+                  isLoading={isHistoryLoading}
+                  error={historyError instanceof Error ? historyError : null}
+                  hasMore={hasNextPage ?? false}
+                  isLoadingMore={isFetchingNextPage}
+                  onLoadMore={() => {
+                    void fetchNextPage();
+                  }}
+                />
               </div>
 
               <div className="hidden min-w-0 space-y-5 lg:sticky lg:top-24 lg:block lg:self-start">
