@@ -1,10 +1,10 @@
+import type { ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { Form } from "@/shared/ui/form";
 import { Textarea } from "@/shared/ui/textarea";
-import { RadioGroup } from "@/shared/ui/radio-group";
-import { RadioChoiceField } from "@/shared/composite/radio-choice-field";
+import { ChipSinglePicker } from "@/shared/composite/chip-single-picker";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useAuthStore } from "@/shared/store/auth";
@@ -13,8 +13,6 @@ import { useImageUpload, ImageUpload } from "@/features/custom-order";
 import { DesignImagePicker } from "@/features/design";
 import { usePricingConfig } from "@/entities/custom-order";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
-import { UtilityPageSection } from "@/shared/composite/utility-page";
-import { Field, FieldTitle, FieldDescription } from "@/shared/ui/field";
 import { SummaryCard } from "@/shared/composite/summary-card";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import type { SampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
@@ -34,14 +32,12 @@ interface SampleOrderFormValues {
 const SAMPLE_TYPE_CARDS: {
   value: SampleOrderFormValues["sampleType"];
   label: string;
-  description: string;
 }[] = [
-  { value: "fabric", label: "원단 샘플", description: "원단 소재·색상 확인" },
-  { value: "sewing", label: "봉제 샘플", description: "봉제 품질·마감 확인" },
+  { value: "fabric", label: "원단 샘플" },
+  { value: "sewing", label: "봉제 샘플" },
   {
     value: "fabric_and_sewing",
-    label: "원단+봉제 샘플",
-    description: "원단과 봉제 동시 확인",
+    label: "원단 + 봉제 샘플",
   },
 ];
 
@@ -49,40 +45,28 @@ const FABRIC_CARDS: {
   fabricType: "POLY" | "SILK";
   designType: "PRINTING" | "YARN_DYED";
   label: string;
-  description: string;
 }[] = [
   {
     fabricType: "POLY",
     designType: "PRINTING",
-    label: "폴리 · 날염",
-    description: "가장 경제적인 선택. 선명한 프린팅 가능",
+    label: "폴리 · 납염",
   },
   {
     fabricType: "POLY",
     designType: "YARN_DYED",
     label: "폴리 · 선염",
-    description: "실로 짜는 고급스러운 패턴",
   },
   {
     fabricType: "SILK",
     designType: "PRINTING",
-    label: "실크 · 날염",
-    description: "실크의 광택과 선명한 프린팅",
+    label: "실크 · 납염",
   },
   {
     fabricType: "SILK",
     designType: "YARN_DYED",
     label: "실크 · 선염",
-    description: "최고급 소재와 전통 직조 기법",
   },
 ];
-
-const FABRIC_META_LABELS = {
-  POLY: "경제형 베이스",
-  SILK: "광택 중심",
-  PRINTING: "선명한 발색",
-  YARN_DYED: "직조 패턴",
-} as const;
 
 const getSamplePrice = (
   pricingConfig: ReturnType<typeof usePricingConfig>["data"] | undefined,
@@ -106,6 +90,23 @@ const getSamplePrice = (
     ? pricingConfig.SAMPLE_FABRIC_AND_SEWING_PRINTING_COST
     : pricingConfig.SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST;
 };
+
+function SampleOrderSection({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={className}>
+      <h2 className="text-sm font-semibold text-zinc-950">{title}</h2>
+      <div className="mt-3">{children}</div>
+    </section>
+  );
+}
 
 export default function SampleOrderPage() {
   const navigate = useNavigate();
@@ -199,7 +200,7 @@ export default function SampleOrderPage() {
                 { label: "홈", to: ROUTES.HOME },
                 { label: "샘플 제작" },
               ]}
-              contentClassName="space-y-8"
+              contentClassName="space-y-6"
               sidebarClassName="space-y-4"
               sidebar={
                 <SummaryCard>
@@ -250,12 +251,12 @@ export default function SampleOrderPage() {
                 />
               }
             >
-              <UtilityPageSection
+              <SampleOrderSection
                 title="샘플 유형"
-                description="확인하려는 범위를 먼저 정하면 필요한 옵션만 노출됩니다."
-                className="border-b border-stone-200 pb-8"
+                className="border-t border-stone-200 pt-4"
               >
-                <RadioGroup
+                <ChipSinglePicker
+                  ariaLabel="샘플 유형"
                   value={values.sampleType}
                   onValueChange={(v) =>
                     form.setValue(
@@ -263,38 +264,17 @@ export default function SampleOrderPage() {
                       v as SampleOrderFormValues["sampleType"],
                     )
                   }
-                >
-                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]">
-                    {SAMPLE_TYPE_CARDS.map((card) => (
-                      <RadioChoiceField
-                        key={card.value}
-                        value={card.value}
-                        id={`sample-type-${card.value}`}
-                        selected={values.sampleType === card.value}
-                        variant="row"
-                        title={card.label}
-                        description={card.description}
-                        meta={
-                          <span>
-                            {card.value === "fabric"
-                              ? "원단 중심 검토"
-                              : card.value === "sewing"
-                                ? "봉제 중심 검토"
-                                : "원단 + 봉제 동시 검토"}
-                          </span>
-                        }
-                      />
-                    ))}
-                  </div>
-                </RadioGroup>
-              </UtilityPageSection>
+                  options={SAMPLE_TYPE_CARDS.map((card) => ({
+                    value: card.value,
+                    label: card.label,
+                  }))}
+                />
+              </SampleOrderSection>
 
               {isFabricVisible && (
-                <UtilityPageSection
-                  title="원단 조합"
-                  description="소재와 직조 방식을 선택하면 샘플 구성과 가격이 결정됩니다."
-                >
-                  <RadioGroup
+                <SampleOrderSection title="원단 조합">
+                  <ChipSinglePicker
+                    ariaLabel="원단 조합"
                     value={currentFabricValue}
                     onValueChange={(val) => {
                       const found = FABRIC_CARDS.find(
@@ -305,178 +285,73 @@ export default function SampleOrderPage() {
                         form.setValue("designType", found.designType);
                       }
                     }}
-                  >
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                      {FABRIC_CARDS.map((card) => {
-                        const cardValue = `${card.fabricType}-${card.designType}`;
-                        return (
-                          <RadioChoiceField
-                            key={cardValue}
-                            value={cardValue}
-                            id={`fabric-${cardValue}`}
-                            selected={currentFabricValue === cardValue}
-                            variant="row"
-                            title={card.label}
-                            description={card.description}
-                            meta={
-                              <>
-                                <span>
-                                  {FABRIC_META_LABELS[card.fabricType]}
-                                </span>
-                                <span
-                                  aria-hidden="true"
-                                  className="text-zinc-300"
-                                >
-                                  ·
-                                </span>
-                                <span>
-                                  {FABRIC_META_LABELS[card.designType]}
-                                </span>
-                              </>
-                            }
-                          />
-                        );
-                      })}
-                    </div>
-                  </RadioGroup>
-                </UtilityPageSection>
+                    options={FABRIC_CARDS.map((card) => ({
+                      value: `${card.fabricType}-${card.designType}`,
+                      label: card.label,
+                    }))}
+                  />
+                </SampleOrderSection>
               )}
 
-              <UtilityPageSection
-                title="봉제 사양"
-                description="타이 방식과 심지 구성을 정하면 샘플의 완성도가 달라집니다."
-              >
-                <div className="space-y-6 border-y border-stone-200 py-4">
-                  <section>
-                    <Field className="mb-3">
-                      <FieldTitle>타이 방식</FieldTitle>
-                    </Field>
-                    <RadioGroup
-                      value={values.tieType ?? "MANUAL"}
-                      onValueChange={(v) =>
-                        form.setValue("tieType", v === "AUTO" ? "AUTO" : null)
-                      }
-                    >
-                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                        <RadioChoiceField
-                          value="AUTO"
-                          id="tie-type-auto"
-                          selected={values.tieType === "AUTO"}
-                          variant="row"
-                          title="자동 타이 (지퍼)"
-                          description="행사 운영과 빠른 착용이 필요한 경우에 적합합니다."
-                          meta={
-                            <>
-                              <span>딤플 가능</span>
-                              <span
-                                aria-hidden="true"
-                                className="text-zinc-300"
-                              >
-                                ·
-                              </span>
-                              <span>착용 속도 우선</span>
-                            </>
-                          }
-                        />
-                        <RadioChoiceField
-                          value="MANUAL"
-                          id="tie-type-manual"
-                          selected={values.tieType === null}
-                          variant="row"
-                          title="수동 타이 (손매듭)"
-                          description="매듭 형태를 직접 조절해 전통적인 실루엣을 만듭니다."
-                          meta={
-                            <>
-                              <span>수동 매듭</span>
-                              <span
-                                aria-hidden="true"
-                                className="text-zinc-300"
-                              >
-                                ·
-                              </span>
-                              <span>표현 자유도 우선</span>
-                            </>
-                          }
-                        />
-                      </div>
-                    </RadioGroup>
-                  </section>
+              <SampleOrderSection title="타이 방식">
+                <ChipSinglePicker
+                  ariaLabel="타이 방식"
+                  value={values.tieType ?? "MANUAL"}
+                  onValueChange={(v) =>
+                    form.setValue("tieType", v === "AUTO" ? "AUTO" : null)
+                  }
+                  options={[
+                    { value: "AUTO", label: "자동 타이 (재고)" },
+                    { value: "MANUAL", label: "수동 타이 (손매듭)" },
+                  ]}
+                />
+              </SampleOrderSection>
 
-                  <section className="border-t border-stone-200 pt-6">
-                    <Field className="mb-3">
-                      <FieldTitle>심지</FieldTitle>
-                      <FieldDescription>
-                        착용감과 형태 유지 기준으로 선택하세요.
-                      </FieldDescription>
-                    </Field>
-                    <RadioGroup
-                      value={values.interlining}
-                      onValueChange={(v) =>
-                        form.setValue(
-                          "interlining",
-                          v as SampleOrderFormValues["interlining"],
-                        )
-                      }
-                    >
-                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                        <RadioChoiceField
-                          value="WOOL"
-                          id="interlining-wool"
-                          selected={values.interlining === "WOOL"}
-                          variant="row"
-                          title="울 심지"
-                          description="볼륨감과 복원력이 좋아 형태 유지에 유리합니다."
-                          meta={<span>탄탄한 실루엣</span>}
-                        />
-                        <RadioChoiceField
-                          value="POLY"
-                          id="interlining-poly"
-                          selected={values.interlining === "POLY"}
-                          variant="row"
-                          title="폴리 심지"
-                          description="가볍고 안정적인 기본형으로 일상적인 샘플 확인에 적합합니다."
-                          meta={<span>가벼운 기본형</span>}
-                        />
-                      </div>
-                    </RadioGroup>
-                  </section>
-                </div>
-              </UtilityPageSection>
+              <SampleOrderSection title="심지">
+                <ChipSinglePicker
+                  ariaLabel="심지"
+                  value={values.interlining}
+                  onValueChange={(v) =>
+                    form.setValue(
+                      "interlining",
+                      v as SampleOrderFormValues["interlining"],
+                    )
+                  }
+                  options={[
+                    { value: "WOOL", label: "울 심지" },
+                    { value: "POLY", label: "폴리 심지" },
+                  ]}
+                />
+              </SampleOrderSection>
 
-              <UtilityPageSection
-                title="참고 자료"
-                description="참고 이미지를 함께 전달하면 제작 오차를 줄일 수 있습니다."
-              >
-                <section className="border-b border-stone-200 py-6">
+              <SampleOrderSection title="참고 이미지">
+                <div className="space-y-2.5">
                   <ImageUpload
                     uploadedImages={imageUpload.uploadedImages}
                     isUploading={imageUpload.isUploading}
                     onFileSelect={imageUpload.uploadFile}
                     onRemoveImage={imageUpload.removeImage}
+                    showHeader={false}
                   />
-                  {user && (
-                    <DesignImagePicker onAdd={imageUpload.addExistingImages} />
-                  )}
+                  <DesignImagePicker onAdd={imageUpload.addExistingImages} />
+                </div>
+              </SampleOrderSection>
 
-                  <Field className="py-6">
-                    <FieldTitle>요청사항</FieldTitle>
-                    <FieldDescription>메모로 전달해 주세요.</FieldDescription>
-                  </Field>
-                  <Controller
-                    name="additionalNotes"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Textarea
-                        id="additionalNotes"
-                        placeholder="요청사항을 입력해주세요."
-                        maxLength={500}
-                        className="min-h-24 rounded-lg border-zinc-300 shadow-none"
-                        {...field}
-                      />
-                    )}
-                  />
-                </section>
-              </UtilityPageSection>
+              <SampleOrderSection title="요청사항">
+                <Controller
+                  name="additionalNotes"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Textarea
+                      id="additionalNotes"
+                      placeholder="제작 시 참고할 메모를 자유롭게 적어주세요"
+                      maxLength={500}
+                      className="min-h-24 rounded-lg border-zinc-300 pb-7 shadow-none"
+                      {...field}
+                    />
+                  )}
+                />
+              </SampleOrderSection>
             </PageLayout>
           </Form>
         </MainContent>

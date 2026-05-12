@@ -131,7 +131,7 @@ vi.mock("@/shared/lib/analytics", () => ({
 }));
 
 vi.mock("@/features/design", () => ({
-  DesignImagePicker: () => null,
+  DesignImagePicker: () => <button>내 AI 디자인에서 선택</button>,
 }));
 
 vi.mock("@/features/custom-order", () => ({
@@ -143,7 +143,7 @@ vi.mock("@/features/custom-order", () => ({
     addExistingImages: vi.fn(),
     getImageRefs: () => [],
   }),
-  ImageUpload: () => null,
+  ImageUpload: () => <div>이미지를 업로드하세요</div>,
 }));
 
 vi.mock("@/entities/custom-order", () => ({
@@ -161,6 +161,45 @@ vi.mock("@/entities/custom-order", () => ({
 }));
 
 describe("SampleOrderPage", () => {
+  it("레퍼런스와 같은 샘플 주문 입력 위계를 노출한다", () => {
+    render(<SampleOrderPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "샘플 유형" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "원단 조합" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "타이 방식" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "심지" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "참고 이미지" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "요청사항" }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("radio", { name: "원단 + 봉제 샘플" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: "폴리 · 납염" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: "실크 · 납염" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: "자동 타이 (재고)" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("내 AI 디자인에서 선택")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("제작 시 참고할 메모를 자유롭게 적어주세요"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("0 / 500")).toBeInTheDocument();
+  });
+
   it("주문 요약 유의사항에 가격 설정의 배송비를 노출한다", () => {
     render(<SampleOrderPage />);
 

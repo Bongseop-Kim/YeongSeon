@@ -15,5 +15,3 @@ export interface StepConfig {
   validate: (values: QuoteOrderOptions) => string | null;
   isSkippable: (values: OrderOptions) => boolean;
 }
-
-export type PackagePreset = "basic" | "recommended" | "premium";

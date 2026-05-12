@@ -30,7 +30,7 @@ function Textarea({
       />
       {maxLength && (
         <div className="absolute bottom-2 right-3 text-xs text-zinc-400">
-          {String(value).length}/{maxLength}
+          {String(value).length} / {maxLength}
         </div>
       )}
     </div>

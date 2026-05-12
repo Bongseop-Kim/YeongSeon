@@ -16,10 +16,12 @@ vi.mock("@/shared/layout/page-layout", () => ({
   PageLayout: ({
     children,
     sidebar,
+    actionBar,
     breadcrumbs,
   }: {
     children: React.ReactNode;
     sidebar?: React.ReactNode;
+    actionBar?: React.ReactNode;
     breadcrumbs?: { label: string; to?: string }[];
   }) => (
     <main>
@@ -32,6 +34,7 @@ vi.mock("@/shared/layout/page-layout", () => ({
       ) : null}
       {sidebar}
       {children}
+      {actionBar}
     </main>
   ),
 }));
@@ -97,6 +100,20 @@ vi.mock("@/shared/composite/summary-card", () => ({
   ),
 }));
 
+vi.mock("@/shared/composite/payment-action-bar", () => ({
+  PaymentActionBar: ({
+    onClick,
+    amount,
+  }: {
+    onClick: () => void;
+    amount: number | null;
+  }) => (
+    <button type="button" onClick={onClick}>
+      payment action {amount}
+    </button>
+  ),
+}));
+
 vi.mock("@/features/design", () => ({
   DesignImagePicker: () => null,
 }));
@@ -129,28 +146,7 @@ vi.mock("@/features/custom-order", () => ({
   }),
   useImageUpload: () => ({
     addExistingImages: vi.fn(),
-  }),
-  WIZARD_STEPS: [
-    {
-      id: "quantity",
-      validate: () => undefined,
-    },
-  ],
-  PACKAGE_PRESETS: [],
-  useWizardStep: () => ({
-    steps: [{ id: "quantity" }],
-    currentStep: { id: "quantity" },
-    currentStepIndex: 0,
-    visitedSteps: new Set(["quantity"]),
-    completedSteps: new Set(),
-    isFirstStep: true,
-    isLastStep: false,
-    shouldShowStep: () => true,
-    goToStep: vi.fn(),
-    goNext: vi.fn(),
-    goPrev: vi.fn(),
-    forceGoToStep: vi.fn(),
-    skipToStep: vi.fn(),
+    isUploading: false,
   }),
   useCustomOrderSubmit: () => ({
     handleSubmit: vi.fn(),
@@ -162,16 +158,13 @@ vi.mock("@/features/custom-order", () => ({
     { id: "sewing", label: "봉제", value: "자동 · 기본" },
     { id: "quantity", label: "수량", value: "4개" },
   ],
-  ProgressBar: () => <div>progress</div>,
   CustomOrderCostFooter: () => <div>cost footer</div>,
-  WizardActionButtons: () => null,
   QuantityStep: () => <div>quantity step</div>,
-  FabricStep: () => null,
-  SewingStep: () => null,
-  SpecStep: () => null,
-  FinishingStep: () => null,
-  AttachmentStep: () => null,
-  ConfirmStep: () => null,
+  FabricStep: () => <div>fabric step</div>,
+  SewingStep: () => <div>sewing step</div>,
+  SpecStep: () => <div>spec step</div>,
+  FinishingStep: () => <div>finishing step</div>,
+  AttachmentStep: () => <div>attachment step</div>,
 }));
 
 describe("OrderPage", () => {
@@ -240,5 +233,18 @@ describe("OrderPage", () => {
         "접수 전 취소 시 택배비 4,200원을 제외하고 환불됩니다.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("wizard 진행 표시 없이 주문 제작 섹션을 한 페이지에 모두 렌더링한다", () => {
+    render(<OrderPage />);
+
+    expect(screen.queryByText("progress")).not.toBeInTheDocument();
+    expect(screen.getByText("quantity step")).toBeInTheDocument();
+    expect(screen.getByText("fabric step")).toBeInTheDocument();
+    expect(screen.getByText("sewing step")).toBeInTheDocument();
+    expect(screen.getByText("spec step")).toBeInTheDocument();
+    expect(screen.getByText("finishing step")).toBeInTheDocument();
+    expect(screen.getByText("attachment step")).toBeInTheDocument();
+    expect(screen.getByText("payment action 0")).toBeInTheDocument();
   });
 });

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { MainLayout, MainContent } from "@/shared/layout/main-layout";
 import { Form } from "@/shared/ui/form";
@@ -6,27 +5,20 @@ import {
   calculateTotalCost,
   useImageUpload,
   type QuoteOrderOptions,
-  type OrderOptions,
-  type PackagePreset,
-  type WizardStepId,
   WIZARD_STEPS,
-  PACKAGE_PRESETS,
-  useWizardStep,
   useCustomOrderSubmit,
   useCustomOrderSummaryRows,
-  ProgressBar,
   CustomOrderCostFooter,
-  WizardActionButtons,
   QuantityStep,
   FabricStep,
   SewingStep,
   SpecStep,
   FinishingStep,
   AttachmentStep,
-  ConfirmStep,
 } from "@/features/custom-order";
 import { DesignImagePicker } from "@/features/design";
 import { SummaryCard } from "@/shared/composite/summary-card";
+import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { useAuthStore } from "@/shared/store/auth";
 import { toast } from "@/shared/lib/toast";
 import { useShippingAddressPopup } from "@/features/shipping";
@@ -39,15 +31,10 @@ import { createShippingNoticeItems } from "@/shared/lib/shipping-notices";
 export default function OrderPage() {
   const { user } = useAuthStore();
   const isLoggedIn = !!user;
-  const { data: pricingConfig } = usePricingConfig();
+  const { data: pricingConfig, isError: isPricingError } = usePricingConfig();
   const imageUpload = useImageUpload();
 
-  const [selectedPackage, setSelectedPackage] = useState<PackagePreset | null>(
-    null,
-  );
-
-  const { selectedAddressId, selectedAddress, openShippingPopup } =
-    useShippingAddressPopup();
+  const { selectedAddressId, selectedAddress } = useShippingAddressPopup();
 
   const form = useForm<QuoteOrderOptions>({
     defaultValues: {
@@ -78,15 +65,6 @@ export default function OrderPage() {
     },
   });
 
-  const handleSelectPackage = (preset: PackagePreset) => {
-    const config = PACKAGE_PRESETS.find((p) => p.id === preset);
-    if (!config) return;
-    for (const [key, value] of Object.entries(config.values)) {
-      form.setValue(key as keyof OrderOptions, value);
-    }
-    setSelectedPackage(preset);
-  };
-
   const watchedValues = form.watch();
 
   const { sewingCost, fabricCost, totalCost } = pricingConfig
@@ -99,31 +77,7 @@ export default function OrderPage() {
     periodNotice: "예상 제작 기간은 영업일 기준 28~42일입니다.",
   });
 
-  const wizard = useWizardStep({
-    steps: WIZARD_STEPS,
-    getValues: form.getValues,
-  });
   const summaryRows = useCustomOrderSummaryRows(watchedValues);
-
-  const handleNext = () => {
-    if (wizard.currentStep.id === "quantity" && selectedPackage !== null) {
-      const values = form.getValues();
-      const error = WIZARD_STEPS[0].validate(values);
-      if (error) {
-        toast.error(error);
-        return;
-      }
-      const attachmentIdx = WIZARD_STEPS.findIndex(
-        (s) => s.id === "attachment",
-      );
-      if (attachmentIdx !== -1) wizard.skipToStep(attachmentIdx);
-      return;
-    }
-    const error = wizard.goNext();
-    if (error) {
-      toast.error(error);
-    }
-  };
 
   const { handleSubmit, isPending, isSubmitDisabled } = useCustomOrderSubmit({
     selectedAddressId,
@@ -136,15 +90,27 @@ export default function OrderPage() {
 
   const isFabricHidden = watchedValues.fabricProvided || watchedValues.reorder;
 
-  const goToStepById = (id: WizardStepId) => {
-    const idx = WIZARD_STEPS.findIndex((s) => s.id === id);
-    if (idx === -1) return;
+  const scrollToSectionById = (id: string) => {
     if (id === "fabric" && isFabricHidden) return;
-    wizard.forceGoToStep(idx);
+    document.getElementById(`custom-order-${id}`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
-  const isHiddenStep = (index: number) =>
-    WIZARD_STEPS[index]?.id === "fabric" && isFabricHidden;
+  const handleSubmitAll = () => {
+    const values = form.getValues();
+    for (const step of WIZARD_STEPS) {
+      if (step.id === "fabric" && isFabricHidden) continue;
+      const error = step.validate(values);
+      if (error) {
+        toast.error(error);
+        scrollToSectionById(step.id);
+        return;
+      }
+    }
+    void handleSubmit();
+  };
 
   return (
     <>
@@ -196,43 +162,49 @@ export default function OrderPage() {
                 </SummaryCard>
               }
               actionBar={
-                <WizardActionButtons
-                  isFirstStep={wizard.isFirstStep}
-                  isLastStep={wizard.isLastStep}
-                  onPrev={wizard.goPrev}
-                  onNext={handleNext}
-                  onSubmit={handleSubmit}
-                  isPending={isPending}
-                  isSubmitDisabled={isSubmitDisabled}
-                  isQuoteMode={isQuoteMode}
-                  grandTotal={totalCost}
-                  isLoggedIn={isLoggedIn}
-                  hasAddress={!!selectedAddress}
+                <PaymentActionBar
+                  amount={totalCost}
+                  onClick={handleSubmitAll}
+                  isLoading={isPending}
+                  isPriceReady={!!pricingConfig}
+                  isPriceError={isPricingError && !pricingConfig}
+                  disabled={isSubmitDisabled}
+                  helperText={
+                    !isLoggedIn ? (
+                      <p className="text-sm text-center text-zinc-500">
+                        로그인 후 {isQuoteMode ? "견적요청" : "주문"}을 진행할
+                        수 있어요
+                      </p>
+                    ) : isQuoteMode && !selectedAddress ? (
+                      <p className="text-sm text-center text-zinc-500">
+                        배송지를 추가하면 견적요청을 진행할 수 있어요
+                      </p>
+                    ) : null
+                  }
                 />
               }
             >
-              <ProgressBar
-                steps={wizard.steps}
-                currentStepIndex={wizard.currentStepIndex}
-                visitedSteps={wizard.visitedSteps}
-                completedSteps={wizard.completedSteps}
-                shouldShowStep={wizard.shouldShowStep}
-                isHiddenStep={isHiddenStep}
-                onStepClick={wizard.goToStep}
-              />
-              {wizard.currentStep.id === "quantity" && (
-                <QuantityStep
-                  isLoggedIn={isLoggedIn}
-                  selectedPackage={selectedPackage}
-                  onSelectPackage={handleSelectPackage}
-                  pricingConfig={pricingConfig}
-                />
+              <section
+                id="custom-order-quantity"
+                className="scroll-mt-28 border-t border-stone-200 pt-4"
+              >
+                <QuantityStep />
+              </section>
+              {!isFabricHidden && (
+                <section id="custom-order-fabric" className="scroll-mt-28">
+                  <FabricStep />
+                </section>
               )}
-              {wizard.currentStep.id === "fabric" && <FabricStep />}
-              {wizard.currentStep.id === "sewing" && <SewingStep />}
-              {wizard.currentStep.id === "spec" && <SpecStep />}
-              {wizard.currentStep.id === "finishing" && <FinishingStep />}
-              {wizard.currentStep.id === "attachment" && (
+              <section id="custom-order-sewing" className="scroll-mt-28">
+                <SewingStep />
+              </section>
+              <section id="custom-order-spec" className="scroll-mt-28">
+                <SpecStep />
+              </section>
+              <section id="custom-order-finishing" className="scroll-mt-28">
+                <FinishingStep />
+              </section>
+              <section id="custom-order-attachment" className="scroll-mt-28">
                 <AttachmentStep
                   imageUpload={imageUpload}
                   pickerSlot={
@@ -243,15 +215,7 @@ export default function OrderPage() {
                     ) : undefined
                   }
                 />
-              )}
-              {wizard.currentStep.id === "confirm" && (
-                <ConfirmStep
-                  selectedAddress={selectedAddress}
-                  onOpenShippingPopup={openShippingPopup}
-                  imageUpload={imageUpload}
-                  goToStepById={goToStepById}
-                />
-              )}
+              </section>
             </PageLayout>
           </Form>
         </MainContent>

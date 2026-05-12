@@ -1,51 +1,29 @@
 import { Controller, useFormContext } from "react-hook-form";
 import type { QuoteOrderOptions } from "@/entities/custom-order";
+import { ChipSinglePicker } from "@/shared/composite/chip-single-picker";
 import { UtilityPagePanel } from "@/shared/composite/utility-page";
 import { Input } from "@/shared/ui-extended/input";
 import { TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
-import { RadioChoiceOptionGrid } from "@/features/custom-order/components/radio-choice-option-grid";
-import { StepLayout } from "./step-layout";
 
 export const SpecStep = () => {
   const { control, watch, setValue } = useFormContext<QuoteOrderOptions>();
   const sizeType = watch("sizeType");
 
   return (
-    <StepLayout
-      guideTitle="규격 팁"
-      guideItems={[
-        "성인용 기본 폭 8cm 권장",
-        "아동용은 폭을 6~7cm로 축소",
-        "최소/최대 범위 내 조정",
-      ]}
-    >
+    <div className="space-y-6">
       <UtilityPagePanel title="사이즈 타입" contentClassName="px-0">
-        <RadioChoiceOptionGrid
+        <ChipSinglePicker
+          ariaLabel="사이즈 타입"
           value={sizeType}
           onValueChange={(v) => setValue("sizeType", v as "ADULT" | "CHILD")}
           options={(["ADULT", "CHILD"] as const).map((type) => ({
             value: type,
-            id: `size-type-${type}`,
-            selected: sizeType === type,
-            title: type === "ADULT" ? "성인용" : "아동용",
-            description:
-              type === "ADULT"
-                ? "가장 일반적인 행사·유니폼 기준 폭과 길이를 적용합니다."
-                : "폭과 길이를 줄여 아동 착용 비율에 맞춘 규격입니다.",
-            meta: (
-              <span>
-                {type === "ADULT" ? "기본 8cm 권장" : "폭 6~7cm 권장"}
-              </span>
-            ),
+            label: type === "ADULT" ? "성인용" : "아동용",
           }))}
         />
       </UtilityPagePanel>
 
-      <UtilityPagePanel
-        title="넥타이 폭"
-        description="실제 착용감과 스타일 기준으로 폭을 조절합니다."
-        contentClassName="space-y-2"
-      >
+      <UtilityPagePanel title="넥타이 폭" contentClassName="space-y-2">
         <Controller
           name="tieWidth"
           control={control}
@@ -84,6 +62,6 @@ export const SpecStep = () => {
           {TIE_WIDTH_CONFIG.step} 단위)
         </p>
       </UtilityPagePanel>
-    </StepLayout>
+    </div>
   );
 };
