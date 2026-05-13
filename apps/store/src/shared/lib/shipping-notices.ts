@@ -1,4 +1,4 @@
-export const formatShippingCost = (shippingCost: number | undefined) =>
+const formatShippingCost = (shippingCost: number | undefined) =>
   typeof shippingCost === "number" && Number.isFinite(shippingCost)
     ? `${shippingCost.toLocaleString()}원`
     : null;

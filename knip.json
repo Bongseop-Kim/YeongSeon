@@ -6,8 +6,7 @@
       "project": []
     },
     "apps/store": {
-      "project": ["src/**/*.{ts,tsx}"],
-      "ignore": ["src/shared/ui/**", "src/model-viewer.d.ts"]
+      "project": ["src/**/*.{ts,tsx}"]
     },
     "apps/admin": {
       "project": ["src/**/*.{ts,tsx}"]

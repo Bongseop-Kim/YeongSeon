@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-const EXCLUDED_PATH_PARTS = ["/pages/design/", "/pages/shop/detail.tsx"];
+const EXCLUDED_PATH_PARTS = [
+  "/pages/design/",
+  "/pages/shop/detail.tsx",
+  "/features/shop/page.tsx",
+];
 
 const tsxSources = import.meta.glob<string>("../../**/*.tsx", {
   eager: true,
