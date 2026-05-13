@@ -6,8 +6,7 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { Button } from "@/shared/ui-extended/button";
 import { type PaymentWidgetRef } from "@/shared/composite/payment-widget";
-import { UtilityPageIntro } from "@/shared/composite/utility-page";
-import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 import { useAuthStore } from "@/shared/store/auth";
@@ -39,9 +38,6 @@ const TokenPaymentPage = ({
   const { user } = useAuthStore();
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const isRequestingRef = useRef(false);
-  const [withdrawalConsent, setWithdrawalConsent] = useState(false);
-  const withdrawalConsentRef = useRef(false);
-  withdrawalConsentRef.current = withdrawalConsent;
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const {
     data: tokenPlans,
@@ -77,20 +73,8 @@ const TokenPaymentPage = ({
   const tokenAmount = selectedPlan?.tokenAmount;
 
   const proceedToPayment = useCallback(async () => {
-    console.log("[proceedToPayment] called", {
-      isRequesting: isRequestingRef.current,
-      hasPurchaseInfo: !!purchaseInfo,
-      hasSelectedPlan: !!selectedPlan,
-      hasUser: !!user,
-      withdrawalConsent: withdrawalConsentRef.current,
-      hasPaymentWidget: !!paymentWidgetRef.current,
-    });
     if (isRequestingRef.current) return;
     if (!purchaseInfo || !selectedPlan || !user) return;
-    if (!withdrawalConsentRef.current) {
-      toast.error("청약철회 제한에 동의해주세요.");
-      return;
-    }
     if (!paymentWidgetRef.current) {
       toast.error("결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
       return;
@@ -164,64 +148,46 @@ const TokenPaymentPage = ({
     <MainLayout>
       <MainContent className="overflow-visible">
         <PageLayout
+          breadcrumbs={[
+            { label: "홈", to: ROUTES.HOME },
+            { label: "토큰 충전", to: ROUTES.TOKEN_PURCHASE },
+            { label: "결제" },
+          ]}
           contentClassName="space-y-8"
-          sidebarClassName="space-y-4 pt-6"
           sidebar={
-            <>
-              <OrderSummaryAside
-                title="결제 금액"
-                rows={[
-                  { id: "token-package", label: "패키지", value: label },
-                  {
-                    id: "token-amount",
-                    label: "토큰",
-                    value: `${tokenAmount.toLocaleString()}개`,
-                  },
-                  {
-                    id: "token-total",
-                    label: "합계",
-                    value: (
-                      <span className="text-base font-semibold tracking-tight">
-                        {price.toLocaleString()}원
-                      </span>
-                    ),
-                    className: "pt-5",
-                  },
-                ]}
-              />
-
-              <PaymentWidgetAside
-                title="결제 수단"
-                paymentWidgetRef={paymentWidgetRef}
-                amount={price}
-                customerKey={user.id}
-                consent={{
-                  id: "withdrawal-consent",
-                  checked: withdrawalConsent,
-                  onCheckedChange: setWithdrawalConsent,
-                  label: "청약철회 제한 동의",
-                  description:
-                    "토큰은 구매 즉시 사용 가능한 디지털 이용권으로, 이미지 생성에 사용한 후에는 환불되지 않습니다.",
-                }}
-                className="rounded-2xl"
-              />
-            </>
+            <SummaryCard>
+              <SummaryCard.Header title="결제 금액" />
+              <SummaryCard.Section>
+                <SummaryCard.Row label="패키지" value={label} />
+                <SummaryCard.Row
+                  label="토큰"
+                  value={`${tokenAmount.toLocaleString()}개`}
+                />
+                <SummaryCard.Total
+                  label="합계"
+                  value={`${price.toLocaleString()}원`}
+                />
+              </SummaryCard.Section>
+              <SummaryCard.Section>
+                <PaymentWidgetAside
+                  title="결제 수단"
+                  description="결제 방식과 약관 동의를 확인합니다."
+                  paymentWidgetRef={paymentWidgetRef}
+                  amount={price}
+                  customerKey={user.id}
+                />
+              </SummaryCard.Section>
+            </SummaryCard>
           }
           actionBar={
             <PaymentActionBar
               amount={price}
               onClick={onRequestPayment}
               isLoading={isPaymentLoading}
-              disabled={!withdrawalConsent}
+              disabled={false}
             />
           }
         >
-          <UtilityPageIntro
-            eyebrow="Token"
-            title="토큰 결제"
-            description="선택한 토큰 패키지를 확인하고 결제를 진행합니다."
-          />
-
           <div className="rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
             <div className="bg-zinc-900 px-6 py-6 text-white">
               <div className="flex items-start justify-between">

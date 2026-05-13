@@ -36,7 +36,6 @@ export function useCheckoutPayment({
     navigate,
     isPaymentLoading,
     setIsPaymentLoading,
-    cancellationConsent,
     serverAmount,
     setServerAmount,
     appliedCoupon,
@@ -138,8 +137,7 @@ export function useCheckoutPayment({
     : 0;
   const amount = serverAmount ?? pricePerUnit * quantity - discountAmount;
 
-  const isSubmitDisabled =
-    !user || !selectedAddress || !cancellationConsent || isPaymentLoading;
+  const isSubmitDisabled = !user || !selectedAddress || isPaymentLoading;
 
   return {
     ...pageState,

@@ -5,14 +5,7 @@ import { FilterButtons } from "./components/filter-buttons";
 import { FilterContent } from "./components/filter-content";
 import { ProductGrid } from "./components/product-grid";
 import { SortSelect } from "./components/sort-select";
-import {
-  CATEGORY_OPTIONS,
-  COLOR_OPTIONS,
-  MATERIAL_OPTIONS,
-  PATTERN_OPTIONS,
-  PRICE_RANGE_OPTIONS,
-  SORT_OPTIONS,
-} from "./constants/FILTER_OPTIONS";
+import { PRICE_RANGE_OPTIONS } from "./constants/FILTER_OPTIONS";
 import { useProducts } from "@/entities/shop";
 import { analytics } from "@/shared/lib/analytics";
 import type {
@@ -33,11 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui-extended/dialog";
-import { Badge } from "@/shared/ui/badge";
-import {
-  UtilityPageIntro,
-  UtilityKeyValueRow,
-} from "@/shared/composite/utility-page";
 
 export default function ShopPage() {
   const [selectedCategories, setSelectedCategories] = useState<
@@ -113,37 +101,6 @@ export default function ShopPage() {
     [selectedPriceRange],
   );
 
-  const selectedFilterLabels = useMemo(() => {
-    const labels: Array<string | null | undefined> = [
-      ...selectedCategories.map(
-        (category) =>
-          CATEGORY_OPTIONS.find((option) => option.value === category)?.label,
-      ),
-      ...selectedColors.map(
-        (color) =>
-          COLOR_OPTIONS.find((option) => option.value === color)?.label,
-      ),
-      ...selectedPatterns.map(
-        (pattern) =>
-          PATTERN_OPTIONS.find((option) => option.value === pattern)?.label,
-      ),
-      ...selectedMaterials.map(
-        (material) =>
-          MATERIAL_OPTIONS.find((option) => option.value === material)?.label,
-      ),
-      selectedPriceRange !== "all" ? selectedPriceOption.label : null,
-    ];
-
-    return labels.filter((label): label is string => label != null);
-  }, [
-    selectedCategories,
-    selectedColors,
-    selectedPatterns,
-    selectedMaterials,
-    selectedPriceRange,
-    selectedPriceOption.label,
-  ]);
-
   const activeFilterCounts = {
     category: selectedCategories.length,
     price: selectedPriceRange !== "all" ? 1 : 0,
@@ -180,8 +137,6 @@ export default function ShopPage() {
     }
   }, [isLoading, products.length]);
 
-  const selectedFilterCount = selectedFilterLabels.length;
-
   return (
     <>
       <PageSeo
@@ -191,56 +146,10 @@ export default function ShopPage() {
       />
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="pt-0 lg:py-8" wrapperClassName="px-0">
+          <PageLayout>
             <div className="pb-16">
-              <UtilityPageIntro
-                eyebrow="YeongSeon Store"
-                title={
-                  <>
-                    바로 구매 가능한
-                    <br />
-                    넥타이 컬렉션
-                  </>
-                }
-                description="제작이 끝난 제품을 카테고리, 색상, 패턴 기준으로 빠르게 추려볼 수 있습니다. 첫 선택은 단순하게, 비교는 편하게 구성했습니다."
-                actions={
-                  <dl className="hidden w-[280px] border-t border-stone-200 lg:block">
-                    <UtilityKeyValueRow
-                      label="현재 상품 수"
-                      value={isLoading ? "불러오는 중" : `${products.length}개`}
-                    />
-                    <UtilityKeyValueRow
-                      label="선택된 필터"
-                      value={`${selectedFilterCount}개`}
-                    />
-                    <UtilityKeyValueRow
-                      label="기본 정렬"
-                      value={
-                        SORT_OPTIONS.find((o) => o.value === sortOption)
-                          ?.label ?? ""
-                      }
-                    />
-                  </dl>
-                }
-                meta={
-                  selectedFilterLabels.length > 0 ? (
-                    <div className="flex flex-wrap items-center gap-2">
-                      {selectedFilterLabels.map((label) => (
-                        <Badge
-                          key={label}
-                          variant="outline"
-                          className="rounded-full border-zinc-200 bg-zinc-50 px-3 py-1 text-zinc-700"
-                        >
-                          {label}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : undefined
-                }
-              />
-
               <section className="sticky top-0 z-30 border-b border-zinc-200 bg-background/92 backdrop-blur">
-                <div className="flex flex-col gap-2 py-2 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-col gap-2 py-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="min-w-0">
                     {isMobile ? (
                       <FilterSheet

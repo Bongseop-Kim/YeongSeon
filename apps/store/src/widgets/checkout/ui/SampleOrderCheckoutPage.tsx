@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useCreateSampleOrder } from "@/entities/sample-order";
 import { getTieTypeLabel } from "@/features/custom-order";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { isSampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
 import { useCheckoutPayment } from "../model/use-checkout-payment";
@@ -97,7 +98,7 @@ export function SampleOrderCheckoutPage() {
       optionsSection={optionsSection}
       summaryRows={summaryRows}
       totalOriginalPrice={state.samplePrice}
-      consentDescription="샘플 주문은 결제 후 중도 취소 및 환불이 불가능합니다."
+      breadcrumbs={PAGE_BREADCRUMBS.SAMPLE_PAYMENT}
     />
   );
 }

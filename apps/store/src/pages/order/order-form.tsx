@@ -36,17 +36,13 @@ import {
   useNotificationConsentFlow,
   NotificationConsentFlowModals,
 } from "@/features/notification";
-import {
-  UtilityPageIntro,
-  UtilityPageSection,
-} from "@/shared/composite/utility-page";
+import { UtilityPageSection } from "@/shared/composite/utility-page";
 import { Field, FieldTitle, FieldContent } from "@/shared/ui/field";
-import { OrderSummaryAside } from "@/shared/composite/order-summary-aside";
 import { buildPriceRows } from "@/shared/composite/order-summary-utils";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const [cancellationConsent, setCancellationConsent] = useState(false);
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const isPaymentProcessingRef = useRef(false);
   const navigate = useNavigate();
@@ -179,6 +175,7 @@ const OrderFormPage = () => {
     ? (reformPricing?.shippingCost ?? 0)
     : 0;
   const totals = calculateOrderTotals(orderItems, estimatedShippingCost);
+  const priceRows = buildPriceRows(totals);
   const isPricingReady = !hasReformItems || !isReformPricingLoading;
 
   if (orderItems.length === 0) {
@@ -201,38 +198,44 @@ const OrderFormPage = () => {
       <MainLayout>
         <MainContent className="overflow-visible">
           <PageLayout
-            contentClassName="py-4 lg:py-8"
+            breadcrumbs={[
+              { label: "홈", to: ROUTES.HOME },
+              { label: "장바구니", to: ROUTES.CART },
+              { label: "주문서" },
+            ]}
             sidebar={
-              <div className="space-y-4">
-                <OrderSummaryAside
+              <SummaryCard>
+                <SummaryCard.Header
                   title="결제 금액"
                   description="주문서에 반영된 할인과 배송비를 포함한 예상 결제 금액입니다."
-                  rows={buildPriceRows(totals)}
-                  totalAmount={totals.totalPrice}
-                  totalClassName="text-blue-600"
                 />
-                {user && isPricingReady && (
-                  <PaymentWidgetAside
-                    title="결제 수단"
-                    description="결제 방식과 약관 동의를 확인합니다."
-                    paymentWidgetRef={paymentWidgetRef}
-                    amount={totals.totalPrice}
-                    customerKey={user.id}
-                    consent={
-                      hasReformItems
-                        ? {
-                            id: "order-form-cancellation-consent",
-                            checked: cancellationConsent,
-                            onCheckedChange: setCancellationConsent,
-                            label: "취소/환불 불가 동의",
-                            description:
-                              "판매자가 수선물을 수령(접수)한 이후부터 취소 및 환불이 불가능합니다.",
-                          }
-                        : undefined
-                    }
+                <SummaryCard.Section>
+                  {priceRows.map((row) => (
+                    <SummaryCard.Row
+                      key={row.id}
+                      label={row.label}
+                      value={row.value}
+                      className={row.className}
+                    />
+                  ))}
+                  <SummaryCard.Total
+                    label="총 결제 금액"
+                    value={`${totals.totalPrice.toLocaleString()}원`}
+                    valueClassName="text-blue-600"
                   />
+                </SummaryCard.Section>
+                {user && isPricingReady && (
+                  <SummaryCard.Section>
+                    <PaymentWidgetAside
+                      title="결제 수단"
+                      description="결제 방식과 약관 동의를 확인합니다."
+                      paymentWidgetRef={paymentWidgetRef}
+                      amount={totals.totalPrice}
+                      customerKey={user.id}
+                    />
+                  </SummaryCard.Section>
                 )}
-              </div>
+              </SummaryCard>
             }
             actionBar={
               <PaymentActionBar
@@ -240,11 +243,7 @@ const OrderFormPage = () => {
                 onClick={handleRequestPayment}
                 isLoading={isPaymentLoading}
                 isPriceReady={isPricingReady}
-                disabled={
-                  !user ||
-                  !selectedAddress ||
-                  (hasReformItems && !cancellationConsent)
-                }
+                disabled={!user || !selectedAddress}
                 data-testid="order-submit-button"
                 helperText={
                   !selectedAddress ? (
@@ -256,30 +255,7 @@ const OrderFormPage = () => {
               />
             }
           >
-            <div className="space-y-8">
-              <UtilityPageIntro
-                eyebrow="Order"
-                title="주문서"
-                description="배송지와 쿠폰을 확인한 뒤 결제를 진행합니다."
-                meta={
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-600">
-                    <span>
-                      주문 상품{" "}
-                      <span className="font-medium text-zinc-950">
-                        {orderItems.length}개
-                      </span>
-                    </span>
-                    <span className="text-stone-300">/</span>
-                    <span>
-                      예상 결제{" "}
-                      <span className="font-medium text-zinc-950">
-                        {totals.totalPrice.toLocaleString()}원
-                      </span>
-                    </span>
-                  </div>
-                }
-              />
-
+            <div className="space-y-8 border-t border-stone-200 pt-2">
               <ShippingAddressCard
                 address={selectedAddress ?? null}
                 editable

@@ -84,7 +84,8 @@ describe("useCheckoutPageState", () => {
       recipientName: "홍길동",
     });
     expect(result.current.serverAmount).toBeNull();
-    expect(result.current.cancellationConsent).toBe(false);
+    expect(result.current).not.toHaveProperty("cancellationConsent");
+    expect(result.current).not.toHaveProperty("setCancellationConsent");
     expect(result.current.appliedCoupon).toBeUndefined();
     expect(result.current.paymentWidgetRef.current).toBeNull();
     expect(result.current.pendingOrderIdRef.current).toBeNull();

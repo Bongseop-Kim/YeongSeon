@@ -2,10 +2,15 @@ import React from "react";
 import { cn } from "@/shared/lib/utils";
 import { Separator } from "@/shared/ui/separator";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
+import {
+  PageBreadcrumb,
+  type PageBreadcrumbItem,
+} from "@/shared/ui-extended/page-breadcrumb";
 
 interface PageLayoutProps {
   children: React.ReactNode;
   sidebar?: React.ReactNode;
+  breadcrumbs?: PageBreadcrumbItem[];
   contentClassName?: string;
   sidebarClassName?: string;
   className?: string;
@@ -17,6 +22,7 @@ interface PageLayoutProps {
 export const PageLayout: React.FC<PageLayoutProps> = ({
   children,
   sidebar,
+  breadcrumbs,
   contentClassName,
   sidebarClassName,
   className,
@@ -46,6 +52,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         isMobile && actionBar && "pb-24",
       )}
     >
+      {breadcrumbs ? <PageBreadcrumb items={breadcrumbs} /> : null}
+
       <div
         className={cn(
           `flex ${isMobile ? "flex-col" : "flex-row gap-4"}`,
@@ -53,9 +61,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         )}
       >
         <div
+          data-testid="page-layout-content"
           className={cn(
             "w-full",
-            !isMobile && sidebar ? "flex-1 w-2/3 pt-6" : "pt-4",
+            !isMobile && sidebar && "flex-1 w-2/3",
             contentClassName,
           )}
         >
@@ -72,6 +81,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
         {sidebar && (
           <div
+            data-testid="page-layout-sidebar"
             className={cn(
               isMobile ? "w-full relative" : "w-1/3 sticky top-20 self-start",
               sidebarClassName,

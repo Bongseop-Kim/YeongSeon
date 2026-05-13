@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AdPanel } from "@/shared/composite/ad-panel";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useSignOut } from "@/entities/auth";
 import { useProfile, profileKeys } from "@/entities/my-page";
@@ -112,7 +113,10 @@ export default function MypagePage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout contentClassName="py-4 lg:py-8">
+        <PageLayout
+          breadcrumbs={PAGE_BREADCRUMBS.MY_PAGE}
+          contentClassName="py-4 lg:py-8"
+        >
           <div className="space-y-8 lg:space-y-10">
             <UtilityPageIntro
               eyebrow="My Account"

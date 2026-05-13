@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>공통 주문 페이지 샘플</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #ffffff;
+        --surface: #fafaf9;
+        --surface-strong: #f5f5f4;
+        --border: #e7e5e4;
+        --text: #09090b;
+        --muted: #71717a;
+        --muted-strong: #52525b;
+        --accent: #1f2937;
+        --accent-soft: #f4f4f5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--text);
+        font-family:
+          Pretendard,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      .site-header {
+        position: relative;
+        z-index: 30;
+        background: #09090b;
+        color: #ffffff;
+      }
+
+      .site-header-inner {
+        display: flex;
+        min-height: 56px;
+        width: min(100%, 1280px);
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        margin: 0 auto;
+        padding: 0 32px;
+      }
+
+      .site-title {
+        margin: 0;
+        color: #ffffff;
+        font-size: 17px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        line-height: 1;
+      }
+
+      .site-nav,
+      .site-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .site-nav a,
+      .site-actions a {
+        color: rgb(255 255 255 / 58%);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1;
+        text-decoration: none;
+      }
+
+      .site-nav a[aria-current="page"],
+      .site-actions a.cart-link {
+        color: rgb(255 255 255 / 82%);
+      }
+
+      .login-button {
+        border: 1px solid rgb(255 255 255 / 18%);
+        background: rgb(255 255 255 / 10%);
+        color: #ffffff;
+        padding: 9px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      main {
+        min-height: 100vh;
+      }
+
+      .page-shell {
+        width: min(100%, 1280px);
+        margin: 0 auto;
+        padding: 24px 32px 40px;
+      }
+
+      .page-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .page-main {
+        min-width: 0;
+      }
+
+      .krds-breadcrumb-wrap {
+        margin-bottom: 24px;
+        padding: 8px 0 18px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        white-space: nowrap;
+      }
+
+      .breadcrumb li {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .breadcrumb li + li::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        margin: 0 10px;
+        border-top: 1.5px solid #71717a;
+        border-right: 1.5px solid #71717a;
+        transform: rotate(45deg);
+        flex: 0 0 auto;
+      }
+
+      .breadcrumb a {
+        color: var(--muted-strong);
+        text-underline-offset: 3px;
+      }
+
+      .breadcrumb .home a {
+        font-weight: 650;
+      }
+
+      .breadcrumb [aria-current="page"] {
+        overflow: hidden;
+        color: var(--text);
+        font-weight: 650;
+        text-overflow: ellipsis;
+      }
+
+      .body-placeholder {
+        padding: 0 0 36px;
+      }
+
+      .section-heading {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+
+      .section-copy {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .placeholder-panel {
+        display: grid;
+        place-items: center;
+        min-height: 280px;
+        margin-top: 18px;
+        border: 1px dashed #d6d3d1;
+        background: linear-gradient(135deg, #fafaf9, #ffffff);
+        color: #a1a1aa;
+        font-size: 14px;
+        line-height: 1.6;
+        text-align: center;
+      }
+
+      .summary-column {
+        position: sticky;
+        top: 24px;
+      }
+
+      .summary-card {
+        border: 1px solid var(--border);
+        background: var(--background);
+        padding: 20px;
+      }
+
+      .summary-header {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 16px;
+      }
+
+      .summary-title {
+        margin: 0;
+        color: var(--text);
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+
+      .summary-description {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .summary-section {
+        margin-top: 16px;
+      }
+
+      .summary-section + .summary-section {
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+      }
+
+      .summary-section-title {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        line-height: 1.4;
+        text-transform: uppercase;
+      }
+
+      .summary-list {
+        margin: 0;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 7px 0;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .summary-row dt {
+        color: var(--muted);
+      }
+
+      .summary-row dd {
+        margin: 0;
+        min-width: 0;
+        color: var(--text);
+        font-weight: 650;
+        text-align: right;
+      }
+
+      .summary-row.is-muted dd {
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      .summary-total {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 10px;
+        border-top: 1px solid var(--border);
+        padding-top: 14px;
+      }
+
+      .summary-total dt {
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .summary-total dd {
+        margin: 0;
+        color: var(--text);
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.2;
+        text-align: right;
+      }
+
+      .summary-notice {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      .summary-notice-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .summary-notice-list li + li {
+        margin-top: 6px;
+      }
+
+      .summary-control {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        border: 1px solid var(--border);
+        background: #ffffff;
+        padding: 11px 12px;
+        color: var(--muted-strong);
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .summary-control + .summary-control {
+        margin-top: 8px;
+      }
+
+      .summary-control strong {
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .summary-consent {
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        padding: 12px;
+      }
+
+      .summary-consent input {
+        width: 18px;
+        height: 18px;
+        margin: 1px 0 0;
+        accent-color: #1d4ed8;
+      }
+
+      .summary-consent-title {
+        margin: 0;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.5;
+      }
+
+      .summary-consent-description {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.65;
+      }
+
+      .summary-action-rule {
+        display: grid;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .summary-action-rule.two {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #0f172a;
+        background: #0f172a;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .button.secondary {
+        border-color: var(--border);
+        background: #ffffff;
+        color: var(--text);
+      }
+
+      @media (max-width: 900px) {
+        .site-header-inner {
+          padding: 0 16px;
+        }
+
+        .site-nav {
+          display: none;
+        }
+
+        .page-shell {
+          padding: 16px 16px 32px;
+        }
+
+        .page-grid {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+
+        .krds-breadcrumb-wrap {
+          margin-bottom: 20px;
+          padding-top: 4px;
+        }
+
+        .summary-column {
+          position: static;
+        }
+
+        .summary-card {
+          padding: 16px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .breadcrumb li:not(.home):not(:last-child) {
+          display: none;
+        }
+
+        .breadcrumb li:last-child::before {
+          content: "...";
+          width: auto;
+          height: auto;
+          margin: 0 10px;
+          border: 0;
+          color: var(--muted);
+          transform: none;
+        }
+
+        .site-actions a:not(.cart-link),
+        .login-button {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <p class="site-title">ESSE SION</p>
+        <nav class="site-nav" aria-label="주요 메뉴">
+          <a href="#">홈</a>
+          <a href="#">스토어</a>
+          <a href="#" aria-current="page">주문 제작</a>
+          <a href="#">샘플 제작</a>
+          <a href="#">리폼</a>
+        </nav>
+        <div class="site-actions">
+          <a href="#">마이</a>
+          <a class="cart-link" href="#">장바구니</a>
+          <a class="login-button" href="#">로그인</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-shell">
+        <nav class="krds-breadcrumb-wrap" aria-label="브레드크럼">
+          <ol class="breadcrumb">
+            <li class="home">
+              <a href="#">홈</a>
+            </li>
+            <li>
+              <a href="#">주문</a>
+            </li>
+            <li>
+              <span aria-current="page">주문 제작</span>
+            </li>
+          </ol>
+        </nav>
+
+        <div class="page-grid">
+          <div class="page-main">
+            <section class="body-placeholder" aria-labelledby="body-title">
+              <h2 id="body-title" class="section-heading">페이지별 본문 영역</h2>
+              <p class="section-copy">
+                실제 입력 폼, 상품 목록, 업로드 UI, 장바구니 아이템 등은
+                페이지마다 달라지므로 이 샘플에서는 제외합니다.
+              </p>
+              <div class="placeholder-panel">
+                <span>
+                  reform / custom-order / sample-order / cart 전용 본문이
+                  들어갈 자리
+                </span>
+              </div>
+            </section>
+          </div>
+
+          <aside class="summary-column" aria-label="오른쪽 카드 샘플">
+            <section class="summary-card">
+              <div class="summary-header">
+                <div>
+                  <h2 class="summary-title">요약 카드 기준</h2>
+                  <p class="summary-description">
+                    현재 페이지의 선택값과 다음 행동에 필요한 정보만 배치합니다.
+                  </p>
+                </div>
+              </div>
+
+              <div class="summary-section">
+                <p class="summary-section-title">Core rows</p>
+                <dl class="summary-list">
+                  <div class="summary-row">
+                    <dt>핵심 선택값</dt>
+                    <dd>값</dd>
+                  </div>
+                  <div class="summary-row">
+                    <dt>상태 또는 기준</dt>
+                    <dd>값</dd>
+                  </div>
+                  <div class="summary-row is-muted">
+                    <dt>보조 정보</dt>
+                    <dd>필요 시 노출</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div class="summary-section">
+                <p class="summary-section-title">Amount rows</p>
+                <dl class="summary-list">
+                  <div class="summary-row">
+                    <dt>금액 항목</dt>
+                    <dd>값</dd>
+                  </div>
+                  <div class="summary-row">
+                    <dt>할인/배송/추가 비용</dt>
+                    <dd>값</dd>
+                  </div>
+                  <div class="summary-total">
+                    <dt>최종 금액 또는 CTA 기준값</dt>
+                    <dd>강조값</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div class="summary-section">
+                <p class="summary-section-title">Controls</p>
+                <button class="summary-control" type="button">
+                  <span>사용자가 바꿀 수 있는 항목</span>
+                  <strong>선택/변경</strong>
+                </button>
+                <button class="summary-control" type="button">
+                  <span>확인이 필요한 조건</span>
+                  <strong>확인</strong>
+                </button>
+              </div>
+
+              <div class="summary-section">
+                <p class="summary-section-title">Required consent</p>
+                <label class="summary-consent">
+                  <input type="checkbox" />
+                  <span>
+                    <span class="summary-consent-title">필수 동의 또는 확인</span>
+                    <span class="summary-consent-description">
+                      취소/환불 불가 동의처럼 결제 전 반드시 확인해야 하는
+                      조건은 카드 안에서 액션과 가까운 위치에 둡니다.
+                    </span>
+                  </span>
+                </label>
+              </div>
+
+              <div class="summary-section">
+                <p class="summary-section-title">Content rule</p>
+                <ul class="summary-notice-list summary-notice">
+                  <li>카드에는 결제/주문 판단에 필요한 짧은 안내만 둡니다.</li>
+                  <li>긴 설명, 상세 조건, 이미지, 폼 본문은 카드 밖에서 처리합니다.</li>
+                </ul>
+              </div>
+
+              <div class="summary-action-rule two" aria-label="버튼 2개 규칙">
+                <a class="button secondary" href="#">보조 액션</a>
+                <a class="button" href="#">주 액션</a>
+              </div>
+
+              <div class="summary-section">
+                <p class="summary-section-title">Button rules</p>
+                <div class="summary-action-rule" aria-label="버튼 1개 규칙">
+                  <a class="button" href="#">단일 주 액션은 전체 너비</a>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

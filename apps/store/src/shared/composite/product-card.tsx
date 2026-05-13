@@ -1,86 +1,48 @@
-import { HeartIcon } from "lucide-react";
-import { motion } from "motion/react";
-import { Link } from "react-router-dom";
-import { ROUTES } from "@/shared/constants/ROUTES";
 import type { Product } from "@yeongseon/shared/types/view/product";
 import { Image } from "@imagekit/react";
+import { Link } from "react-router-dom";
+
+import { ROUTES } from "@/shared/constants/ROUTES";
+import { cn } from "@/shared/lib/utils";
+import { Skeleton } from "@/shared/ui/skeleton";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export const ProductCard = ({ product }: ProductCardProps) => {
-  const options = product.options ?? [];
-  const isSoldOut =
-    options.length > 0
-      ? options.every((o) => o.stock === 0)
-      : product.stock === 0;
   const href = `${ROUTES.SHOP}/${product.id}`;
 
   return (
-    <Link
-      to={href}
-      aria-disabled={isSoldOut}
-      onClick={isSoldOut ? (event) => event.preventDefault() : undefined}
-      className={`block w-full ${isSoldOut ? "cursor-default" : ""}`}
-      tabIndex={isSoldOut ? -1 : undefined}
-    >
-      <motion.article
-        whileHover={isSoldOut ? undefined : { y: -6 }}
-        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-        className={`group w-full text-left ${isSoldOut ? "opacity-60" : "cursor-pointer"}`}
-      >
-        <div className="relative aspect-[4/4.9] overflow-hidden bg-zinc-100">
-          <Image
-            src={product.image}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-            transformation={[
-              {
-                width: 500,
-                height: 500,
-                quality: 80,
-              },
-            ]}
-          />
-          {isSoldOut && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-              <span className="rounded-full border border-white/40 bg-black/30 px-4 py-1 text-sm font-semibold tracking-[0.2em] text-white">
-                SOLD OUT
-              </span>
-            </div>
+    <Link to={href} className="group block">
+      <div className="aspect-square overflow-hidden rounded-[14px] bg-[#EAEAE6]">
+        <Image
+          src={product.image}
+          alt={product.name}
+          transformation={[{ width: 500, height: 500, quality: 80 }]}
+          className={cn(
+            "h-full w-full object-cover transition-transform duration-300",
+            "group-hover:scale-[1.03]",
           )}
-          <div className="absolute left-3 top-3 flex items-center gap-2">
-            <span className="bg-white/88 px-2 py-1 text-[10px] font-medium tracking-[0.24em] text-zinc-700 backdrop-blur">
-              {product.categoryLabel ?? product.category}
-            </span>
-          </div>
-          {product.likes > 0 ? (
-            <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/55 px-2 py-1 text-[11px] text-white backdrop-blur">
-              <HeartIcon
-                className={`size-3 ${
-                  product.isLiked
-                    ? "fill-red-400 text-red-400"
-                    : "fill-white/20 text-white/80"
-                }`}
-              />
-              <span>{product.likes}</span>
-            </div>
-          ) : null}
-        </div>
-        <div className="border-b border-zinc-200 pb-2 px-1">
-          <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.24em] text-zinc-400">
-            <span>{product.materialLabel ?? product.material}</span>
-            <span>{product.code}</span>
-          </div>
-          <p className="line-clamp-2 min-h-8 text-[15px] font-medium leading-6 text-zinc-900">
-            {product.name}
-          </p>
-          <p className="text-base font-semibold tracking-[-0.02em] text-zinc-900">
-            {product.price.toLocaleString()}원
-          </p>
-        </div>
-      </motion.article>
+        />
+      </div>
+      <div className="mt-2.5 line-clamp-2 text-[12.5px] leading-[1.35] md:mt-3 md:text-[13.5px] md:leading-[1.4]">
+        {product.name}
+      </div>
+      <div className="mt-1 text-[13px] font-bold md:text-[14px]">
+        {product.price.toLocaleString()}원
+      </div>
+      <div className="mt-0.5 text-[10.5px] text-[#aaa] md:text-[11px]">
+        좋아요 {product.likes}
+      </div>
     </Link>
   );
 };
+
+export const ProductCardSkeleton = () => (
+  <div>
+    <Skeleton className="aspect-square w-full rounded-[14px]" />
+    <Skeleton className="mt-2.5 h-4 w-3/4 md:mt-3" />
+    <Skeleton className="mt-1.5 h-4 w-1/3" />
+  </div>
+);

@@ -79,14 +79,22 @@ const fieldVariants = cva(
 function Field({
   className,
   orientation = "vertical",
+  variant = "default",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof fieldVariants> & {
+    variant?: "default" | "toolbar";
+  }) {
   return (
     <div
       role="group"
       data-slot="field"
       data-orientation={orientation}
-      className={cn(fieldVariants({ orientation }), className)}
+      className={cn(
+        fieldVariants({ orientation }),
+        variant === "toolbar" && "w-auto gap-4",
+        className,
+      )}
       {...props}
     />
   );
@@ -107,8 +115,11 @@ function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
 
 function FieldLabel({
   className,
+  variant = "default",
   ...props
-}: React.ComponentProps<typeof Label>) {
+}: React.ComponentProps<typeof Label> & {
+  variant?: "default" | "toolbar";
+}) {
   return (
     <Label
       data-slot="field-label"
@@ -116,6 +127,7 @@ function FieldLabel({
         "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50",
         "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border [&>*]:data-[slot=field]:p-4",
         "has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/5 dark:has-data-[state=checked]:bg-primary/10",
+        variant === "toolbar" && "cursor-pointer",
         className,
       )}
       {...props}
@@ -123,12 +135,23 @@ function FieldLabel({
   );
 }
 
-function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
+function FieldTitle({
+  as,
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<"div"> & {
+  as?: "div" | "h2" | "h3";
+  variant?: "default" | "toolbar";
+}) {
+  const Component = as ?? "div";
+
   return (
-    <div
+    <Component
       data-slot="field-label"
       className={cn(
         "flex w-fit items-center gap-2 text-sm leading-snug font-medium group-data-[disabled=true]/field:opacity-50",
+        variant === "toolbar" && "text-zinc-700",
         className,
       )}
       {...props}

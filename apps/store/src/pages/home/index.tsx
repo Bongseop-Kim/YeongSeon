@@ -1,14 +1,5 @@
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
-import {
-  EsAiDesign,
-  EsBrandStory,
-  EsCta,
-  EsHero,
-  EsManufacturing,
-  EsMoldViewer,
-  EsProductGrid,
-  EsReformHighlight,
-} from "@/features/home";
+import { EsLanding } from "@/features/home";
 import { useProducts } from "@/entities/shop";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { Helmet } from "react-helmet-async";
@@ -59,14 +50,7 @@ export default function HomePage() {
       </Helmet>
       <MainLayout>
         <MainContent>
-          <EsHero />
-          <EsManufacturing />
-          <EsReformHighlight />
-          <EsAiDesign />
-          <EsMoldViewer />
-          <EsProductGrid items={products} isLoading={isLoading} />
-          <EsBrandStory />
-          <EsCta />
+          <EsLanding products={products} isProductsLoading={isLoading} />
         </MainContent>
       </MainLayout>
     </>

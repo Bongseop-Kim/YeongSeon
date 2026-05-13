@@ -12,6 +12,7 @@ import { Empty } from "@/shared/composite/empty";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { CLAIM_REASON_LABELS } from "@yeongseon/shared/constants/claim-status";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { toast } from "@/shared/lib/toast";
 import { useClaim, useCancelClaim } from "@/entities/claim";
@@ -120,7 +121,12 @@ export default function ClaimDetailPage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout>
+        <PageLayout
+          breadcrumbs={[
+            ...PAGE_BREADCRUMBS.CLAIM_DETAIL.slice(0, -1),
+            { label: `${getClaimTypeLabel(claim.type)} 상세` },
+          ]}
+        >
           <Card>
             {/* 헤더 */}
             <CardHeader>

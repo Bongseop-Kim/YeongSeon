@@ -14,6 +14,7 @@ import {
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
 import { toast } from "@/shared/lib/toast";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import {
@@ -161,7 +162,10 @@ export default function MyInfoNoticePage() {
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-4 lg:py-8">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.MY_INFO_NOTICE}
+            contentClassName="py-4 lg:py-8"
+          >
             <Empty
               title="수신 동의 정보를 불러오지 못했습니다."
               description={
@@ -179,7 +183,10 @@ export default function MyInfoNoticePage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout contentClassName="py-4 lg:py-8">
+        <PageLayout
+          breadcrumbs={PAGE_BREADCRUMBS.MY_INFO_NOTICE}
+          contentClassName="py-4 lg:py-8"
+        >
           <div className="space-y-8 lg:space-y-10">
             <UtilityPageIntro
               eyebrow="Notification Settings"

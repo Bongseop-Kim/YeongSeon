@@ -15,6 +15,7 @@ interface ImageUploadProps {
   isUploading: ImageUploadHook["isUploading"];
   onFileSelect: ImageUploadHook["uploadFile"];
   onRemoveImage: ImageUploadHook["removeImage"];
+  showHeader?: boolean;
 }
 
 export const ImageUpload = ({
@@ -22,6 +23,7 @@ export const ImageUpload = ({
   isUploading,
   onFileSelect,
   onRemoveImage,
+  showHeader = true,
 }: ImageUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
@@ -36,10 +38,14 @@ export const ImageUpload = ({
 
   return (
     <Field orientation="vertical">
-      <FieldLabel>
-        <FieldTitle>참고 이미지</FieldTitle>
-      </FieldLabel>
-      <FieldDescription>PNG, JPG, GIF 파일 지원</FieldDescription>
+      {showHeader ? (
+        <>
+          <FieldLabel>
+            <FieldTitle>참고 이미지</FieldTitle>
+          </FieldLabel>
+          <FieldDescription>PNG, JPG, GIF 파일 지원</FieldDescription>
+        </>
+      ) : null}
       <FieldContent className="space-y-3">
         <div className="relative rounded-lg border-2 border-dashed border-border p-5 text-center transition-colors">
           <input

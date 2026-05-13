@@ -29,6 +29,7 @@ import { Separator } from "@/shared/ui/separator";
 import { Button } from "@/shared/ui-extended/button";
 import { RepairShippingAddressBanner } from "@/features/order";
 import { useConfirmPurchase, useOrderDetail } from "@/entities/order";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { buildClaimFormRoute, ROUTES } from "@/shared/constants/ROUTES";
 import { ShippingAddressCard } from "@/shared/composite";
 
@@ -178,7 +179,10 @@ const RepairShippingPendingSection = ({ orderId }: { orderId: string }) => {
 const OrderDetailSkeleton = () => (
   <MainLayout>
     <MainContent>
-      <PageLayout contentClassName="py-4 lg:py-8">
+      <PageLayout
+        breadcrumbs={PAGE_BREADCRUMBS.ORDER_DETAIL}
+        contentClassName="py-4 lg:py-8"
+      >
         <div className="animate-pulse space-y-8">
           <div className="space-y-3 border-b border-stone-200 pb-6">
             <div className="h-4 w-20 rounded bg-zinc-200" />
@@ -266,7 +270,10 @@ const OrderDetailPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-6 lg:py-10">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.ORDER_DETAIL}
+            contentClassName="py-6 lg:py-10"
+          >
             <div className="mx-auto max-w-2xl" data-testid="order-detail-error">
               <Empty
                 title="주문 정보를 불러오지 못했습니다."
@@ -291,7 +298,10 @@ const OrderDetailPage = () => {
     return (
       <MainLayout>
         <MainContent>
-          <PageLayout contentClassName="py-6 lg:py-10">
+          <PageLayout
+            breadcrumbs={PAGE_BREADCRUMBS.ORDER_DETAIL}
+            contentClassName="py-6 lg:py-10"
+          >
             <div className="mx-auto max-w-2xl">
               <Empty
                 title="주문 정보를 찾을 수 없습니다."
@@ -329,6 +339,7 @@ const OrderDetailPage = () => {
     <MainLayout>
       <MainContent>
         <PageLayout
+          breadcrumbs={PAGE_BREADCRUMBS.ORDER_DETAIL}
           contentClassName="py-4 lg:py-8"
           sidebar={
             <div className="space-y-5">

@@ -347,45 +347,56 @@ Deno.test(
   },
 );
 
-Deno.test("accent text: seamless suffix 없음, 오브젝트 설명 포함", () => {
-  const { prompt } = buildAccentPrompt(
-    {
-      objectDescription: "a gold anchor",
-      objectSource: "text",
-      color: null,
-      size: "medium",
-    },
-    "navy blue",
-    "yarn_dyed",
-    [],
-  );
-  assertStringIncludes(prompt, "a gold anchor");
-  assertStringIncludes(prompt, "navy blue");
-  assert(
-    !prompt.includes("tile seamlessly"),
-    "seamless suffix must not appear in accent",
-  );
-  assertStringIncludes(prompt, "45%");
-  assertStringIncludes(prompt, "Yarn-dyed weaving constraints");
-});
+Deno.test(
+  "accent text: repeat tile reference 위에 seamless 오브젝트 타일을 만든다",
+  () => {
+    const { prompt } = buildAccentPrompt(
+      {
+        objectDescription: "a gold anchor",
+        objectSource: "text",
+        color: null,
+        size: "medium",
+      },
+      "navy blue",
+      "yarn_dyed",
+      "https://ik.imagekit.io/app/repeat.webp",
+      [],
+    );
+    assertStringIncludes(prompt, "a gold anchor");
+    assertStringIncludes(prompt, "navy blue");
+    assertStringIncludes(prompt, "Use Image 1 as the exact repeat tile source");
+    assertStringIncludes(prompt, "tile seamlessly");
+    assertStringIncludes(prompt, "left edge matches right edge");
+    assert(!prompt.includes("Plain navy blue covering"));
+    assertStringIncludes(prompt, "45%");
+    assertStringIncludes(prompt, "Yarn-dyed weaving constraints");
+  },
+);
 
-Deno.test("accent image: referenceImageUrls 전달", () => {
-  const logoUrl = "https://example.com/logo.png";
-  const { referenceImageUrls } = buildAccentPrompt(
-    {
-      objectDescription: "the attached logo",
-      objectSource: "image",
-      color: null,
-      size: "large",
-    },
-    "white",
-    "printed",
-    [logoUrl],
-  );
-  assertEquals(referenceImageUrls.length, 1);
-  assertEquals(referenceImageUrls[0], logoUrl);
-  assertStringIncludes(referenceImageUrls[0] ?? "", "example.com");
-});
+Deno.test(
+  "accent image: repeat tile을 Image 1, 오브젝트 참조를 Image 2로 전달",
+  () => {
+    const logoUrl = "https://example.com/logo.png";
+    const repeatUrl = "https://ik.imagekit.io/app/repeat.webp";
+    const { prompt, referenceImageUrls } = buildAccentPrompt(
+      {
+        objectDescription: "the attached logo",
+        objectSource: "image",
+        color: null,
+        size: "large",
+      },
+      "white",
+      "printed",
+      repeatUrl,
+      [logoUrl],
+    );
+    assertEquals(referenceImageUrls.length, 2);
+    assertEquals(referenceImageUrls[0], repeatUrl);
+    assertEquals(referenceImageUrls[1], logoUrl);
+    assertStringIncludes(prompt, "Use Image 1 as the exact repeat tile source");
+    assertStringIncludes(prompt, "Use Image 2 as the object reference");
+  },
+);
 
 Deno.test("accent small size -> 30%", () => {
   const { prompt } = buildAccentPrompt(
@@ -397,6 +408,7 @@ Deno.test("accent small size -> 30%", () => {
     },
     "red",
     "printed",
+    "https://ik.imagekit.io/app/repeat.webp",
     [],
   );
   assertStringIncludes(prompt, "30%");

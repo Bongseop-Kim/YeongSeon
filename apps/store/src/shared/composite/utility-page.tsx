@@ -118,14 +118,10 @@ export function UtilityPagePanel({
   contentClassName,
 }: UtilityPagePanelProps) {
   return (
-    <section
-      className={cn("border-y border-stone-200 py-4 lg:py-5", className)}
-    >
+    <section className={className}>
       {title ? (
         <div className="max-w-2xl">
-          <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
-            {title}
-          </h3>
+          <h3 className="text-sm font-semibold text-zinc-950">{title}</h3>
           {description ? (
             <p className="mt-2 text-sm leading-6 text-zinc-600">
               {description}
@@ -133,7 +129,7 @@ export function UtilityPagePanel({
           ) : null}
         </div>
       ) : null}
-      <div className={cn(title && "mt-5", contentClassName)}>{children}</div>
+      <div className={cn(title && "mt-3", contentClassName)}>{children}</div>
     </section>
   );
 }

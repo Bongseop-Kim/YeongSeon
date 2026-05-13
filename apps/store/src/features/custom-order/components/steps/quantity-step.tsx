@@ -1,34 +1,19 @@
 import { useEffect, useRef } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import type { PricingConfig, QuoteOrderOptions } from "@/entities/custom-order";
+import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { CheckboxField } from "@/shared/composite/check-box-field";
 import { QuantitySelector } from "@/shared/composite/quantity-selector";
-import { PackageSelector } from "@/features/custom-order/components/package-selector";
-import type { PackagePreset } from "@/features/custom-order/types/wizard";
-import { StepLayout } from "./step-layout";
+import { UtilityPagePanel } from "@/shared/composite/utility-page";
 import { ButtonGroup } from "@/shared/ui/button-group";
+import { Field, FieldContent, FieldDescription } from "@/shared/ui/field";
 import { Button } from "@/shared/ui-extended/button";
-import { Field, FieldTitle, FieldDescription } from "@/shared/ui/field";
 
 const QUANTITY_PRESETS = [4, 8, 12, 20, 50, 100] as const;
 
-interface QuantityStepProps {
-  isLoggedIn: boolean;
-  selectedPackage: PackagePreset | null;
-  onSelectPackage: (preset: PackagePreset) => void;
-  pricingConfig: PricingConfig | undefined;
-}
-
-export const QuantityStep = ({
-  isLoggedIn,
-  selectedPackage,
-  onSelectPackage,
-  pricingConfig,
-}: QuantityStepProps) => {
+export const QuantityStep = () => {
   const { control, watch, setValue } = useFormContext<QuoteOrderOptions>();
   const quantity = watch("quantity");
   const fabricProvided = watch("fabricProvided");
-  const reorder = watch("reorder");
   const prevFabricProvided = useRef(fabricProvided);
 
   // fabricProvided true 전환 시 연관 필드 리셋
@@ -46,87 +31,60 @@ export const QuantityStep = ({
   };
 
   return (
-    <StepLayout
-      guideTitle="결정 가이드"
-      guideItems={[
-        "4개, 8개, 12개처럼 기본 단위 추천",
-        "100개 이상은 견적요청으로 전환",
-        "시작 방식 선택 후 패키지 추천 사용",
-      ]}
-    >
-      <section>
+    <div className="space-y-6">
+      <UtilityPagePanel title="시작 방식" contentClassName="space-y-3">
         <Field>
-          <FieldTitle>시작 방식</FieldTitle>
-          <FieldDescription>
-            원단 보유 여부와 재주문 여부를 먼저 정하면 이후 단계가 간결해집니다.
-          </FieldDescription>
+          <FieldContent>
+            <CheckboxField
+              name="fabricProvided"
+              control={control}
+              label="원단 직접 제공"
+            />
+          </FieldContent>
         </Field>
-        <div className="mt-5 space-y-3 border-y border-stone-200 py-4">
-          <CheckboxField
-            name="fabricProvided"
-            control={control}
-            label="원단 직접 제공"
-            description="보유한 원단을 보내주시면 봉제만 진행합니다"
-          />
-          <CheckboxField
-            name="reorder"
-            control={control}
-            label="재주문"
-            description="이전에 주문한 동일 디자인으로 재주문합니다"
-            disabled={fabricProvided}
-          />
-        </div>
-      </section>
-
-      <section>
         <Field>
-          <FieldTitle>수량 선택</FieldTitle>
-          <FieldDescription>
-            기본 단위로 빠르게 선택하거나 직접 조절해 예상 단가를 확인하세요.
-          </FieldDescription>
+          <FieldContent>
+            <CheckboxField
+              name="reorder"
+              control={control}
+              label="재주문"
+              disabled={fabricProvided}
+            />
+          </FieldContent>
         </Field>
-        <div className="mt-5 space-y-4">
-          <ButtonGroup>
-            {QUANTITY_PRESETS.map((preset) => (
-              <Button
-                key={preset}
-                type="button"
-                variant={quantity === preset ? "default" : "outline"}
-                onClick={() => handlePresetClick(preset)}
-              >
-                {preset}개
-              </Button>
-            ))}
-          </ButtonGroup>
+      </UtilityPagePanel>
 
-          <Controller
-            name="quantity"
-            control={control}
-            render={({ field }) => (
-              <QuantitySelector value={field.value} onChange={field.onChange} />
-            )}
-          />
+      <UtilityPagePanel title="수량 선택" contentClassName="space-y-4">
+        <ButtonGroup>
+          {QUANTITY_PRESETS.map((preset) => (
+            <Button
+              key={preset}
+              type="button"
+              variant={quantity === preset ? "default" : "outline"}
+              onClick={() => handlePresetClick(preset)}
+            >
+              {preset}개
+            </Button>
+          ))}
+        </ButtonGroup>
 
-          {quantity >= 100 && (
-            <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
-              <p className="text-sm text-muted-foreground">
-                100개 이상은 견적요청으로 전환됩니다. 수량 확정 후 담당자가 세부
-                사양과 일정을 안내합니다.
-              </p>
-            </div>
+        <Controller
+          name="quantity"
+          control={control}
+          render={({ field }) => (
+            <QuantitySelector value={field.value} onChange={field.onChange} />
           )}
-        </div>
-      </section>
-
-      {!fabricProvided && !reorder && (
-        <PackageSelector
-          quantity={quantity}
-          isLoggedIn={isLoggedIn}
-          selectedPackage={selectedPackage}
-          onSelectPackage={onSelectPackage}
-          pricingConfig={pricingConfig}
         />
-      )}
-    </StepLayout>
+
+        {quantity >= 100 && (
+          <Field className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+            <FieldDescription>
+              100개 이상은 견적요청으로 전환됩니다. 수량 확정 후 담당자가 세부
+              사양과 일정을 안내합니다.
+            </FieldDescription>
+          </Field>
+        )}
+      </UtilityPagePanel>
+    </div>
   );
 };

@@ -8,6 +8,7 @@ import {
   getTieTypeLabel,
 } from "@/features/custom-order";
 import { isCustomOrderPaymentState } from "@/features/order";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useCheckoutPayment } from "../model/use-checkout-payment";
 import { BaseCheckoutPage } from "./BaseCheckoutPage";
@@ -121,7 +122,7 @@ export function OrderCheckoutPage() {
       optionsSection={optionsSection}
       summaryRows={summaryRows}
       totalOriginalPrice={state.totalCost}
-      consentDescription="주문제작은 진행 후 중도 취소 및 환불이 불가능합니다."
+      breadcrumbs={PAGE_BREADCRUMBS.CUSTOM_PAYMENT}
     />
   );
 }

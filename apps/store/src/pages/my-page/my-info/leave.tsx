@@ -11,6 +11,7 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/shared/ui/field";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { signOut } from "@/entities/auth";
 import { useDeleteAccount } from "@/entities/auth";
@@ -122,7 +123,10 @@ export default function MyInfoLeavePage() {
   return (
     <MainLayout>
       <MainContent>
-        <PageLayout contentClassName="py-4 lg:py-8">
+        <PageLayout
+          breadcrumbs={PAGE_BREADCRUMBS.MY_INFO_LEAVE}
+          contentClassName="py-4 lg:py-8"
+        >
           <div className="space-y-8 lg:space-y-10">
             <UtilityPageIntro
               eyebrow="Account Close"
