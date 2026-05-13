@@ -5,3 +5,5 @@ pnpm-lock.yaml
 supabase/functions/**/node_modules
 supabase/functions/**/deno.lock
 supabase/migrations
+supabase/.temp
+docs/common-page-shell-sample.html
