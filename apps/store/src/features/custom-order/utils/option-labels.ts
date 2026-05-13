@@ -44,7 +44,11 @@ export function getInterliningLabel(
   opts: Pick<OrderOptions, "interlining" | "interliningThickness">,
 ): string {
   const parts = [
-    opts.interlining === "WOOL" ? "울 심지" : null,
+    opts.interlining === "WOOL"
+      ? "울 심지"
+      : opts.interlining === "POLY"
+        ? "폴리 심지"
+        : null,
     opts.interlining === "WOOL" && opts.interliningThickness === "THIN"
       ? "얇음"
       : opts.interlining === "WOOL" && opts.interliningThickness

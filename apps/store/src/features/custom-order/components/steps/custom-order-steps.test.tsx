@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { FormProvider, useForm } from "react-hook-form";
 import { describe, expect, it } from "vitest";
 import type { QuoteOrderOptions } from "@/entities/custom-order";
@@ -16,7 +17,7 @@ const defaultValues: QuoteOrderOptions = {
   fabricType: "POLY",
   designType: "PRINTING",
   tieType: null,
-  interlining: null,
+  interlining: "WOOL",
   interliningThickness: "THICK",
   sizeType: "ADULT",
   tieWidth: 8,
@@ -128,6 +129,23 @@ describe("custom order steps", () => {
     expect(
       screen.queryByText("자동 타이에서만 선택할 수 있어요"),
     ).not.toBeInTheDocument();
+  });
+
+  it("심지 종류는 칩으로 렌더링하고 두께 선택은 숨긴다", async () => {
+    renderWithForm(<FinishingStep />);
+
+    const wool = screen.getByRole("radio", { name: "울 심지" });
+    const poly = screen.getByRole("radio", { name: "폴리 심지" });
+
+    expect(wool).toHaveAttribute("aria-checked", "true");
+    expect(poly).toHaveAttribute("aria-checked", "false");
+    expect(screen.queryByText("심지 두께")).not.toBeInTheDocument();
+    expect(screen.queryByText("두꺼움")).not.toBeInTheDocument();
+
+    await userEvent.click(poly);
+
+    expect(poly).toHaveAttribute("aria-checked", "true");
+    expect(wool).toHaveAttribute("aria-checked", "false");
   });
 
   it("연속된 선택 섹션 사이에 border-y로 인한 이중 라인을 만들지 않는다", () => {

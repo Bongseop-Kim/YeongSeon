@@ -16,7 +16,7 @@ export interface OrderOptions {
 
   // 제작 옵션
   tieType: "AUTO" | null;
-  interlining: "WOOL" | null;
+  interlining: "WOOL" | "POLY" | null;
   interliningThickness: "THICK" | "THIN" | null;
   sizeType: "ADULT" | "CHILD" | null;
   tieWidth: number;

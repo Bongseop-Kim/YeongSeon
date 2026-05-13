@@ -7,7 +7,7 @@ interface CustomOrderCoreOptions {
   fabricType: "SILK" | "POLY" | null;
   designType: "PRINTING" | "YARN_DYED" | null;
   tieType: "AUTO" | null;
-  interlining: "WOOL" | null;
+  interlining: "WOOL" | "POLY" | null;
   interliningThickness: "THICK" | "THIN" | null;
   sizeType: "ADULT" | "CHILD" | null;
   tieWidth: number;
@@ -68,7 +68,7 @@ const isImageRef = (value: unknown): value is ImageRef =>
 const SHARED_FABRIC_TYPES = ["SILK", "POLY"] as const;
 const SHARED_DESIGN_TYPES = ["PRINTING", "YARN_DYED"] as const;
 const SHARED_TIE_TYPES = ["AUTO"] as const;
-const CUSTOM_ORDER_INTERLININGS = ["WOOL"] as const;
+const CUSTOM_ORDER_INTERLININGS = ["WOOL", "POLY"] as const;
 const CUSTOM_ORDER_INTERLINING_THICKNESSES = ["THICK", "THIN"] as const;
 const CUSTOM_ORDER_SIZE_TYPES = ["ADULT", "CHILD"] as const;
 const SAMPLE_ORDER_INTERLININGS = ["WOOL", "POLY"] as const;

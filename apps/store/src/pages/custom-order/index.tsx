@@ -43,7 +43,7 @@ export default function OrderPage() {
       fabricType: "POLY",
       designType: "PRINTING",
       tieType: null,
-      interlining: null,
+      interlining: "WOOL",
       interliningThickness: "THICK",
       sizeType: "ADULT",
       tieWidth: 8,
