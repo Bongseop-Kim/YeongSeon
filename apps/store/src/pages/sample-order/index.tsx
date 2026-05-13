@@ -19,6 +19,7 @@ import type { SampleOrderPaymentState } from "@/shared/lib/custom-payment-state"
 import { PageSeo } from "@/shared/ui/page-seo";
 import { analytics } from "@/shared/lib/analytics";
 import { createShippingNoticeItems } from "@/shared/lib/shipping-notices";
+import { Field, FieldContent, FieldTitle } from "@/shared/ui/field";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
@@ -101,10 +102,10 @@ function SampleOrderSection({
   className?: string;
 }) {
   return (
-    <section className={className}>
-      <h2 className="text-sm font-semibold text-zinc-950">{title}</h2>
-      <div className="mt-3">{children}</div>
-    </section>
+    <Field className={className}>
+      <FieldTitle as="h2">{title}</FieldTitle>
+      <FieldContent>{children}</FieldContent>
+    </Field>
   );
 }
 
@@ -346,7 +347,7 @@ export default function SampleOrderPage() {
                       id="additionalNotes"
                       placeholder="제작 시 참고할 메모를 자유롭게 적어주세요"
                       maxLength={500}
-                      className="min-h-24 rounded-lg border-zinc-300 pb-7 shadow-none"
+                      minHeight="large"
                       {...field}
                     />
                   )}

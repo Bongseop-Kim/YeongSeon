@@ -119,7 +119,7 @@ function SummaryCardRow({
   valueClassName,
 }: SummaryCardRowProps) {
   return (
-    <div
+    <dl
       className={cn(
         "flex items-center justify-between gap-4 py-1.5 text-sm leading-6",
         className,
@@ -135,7 +135,7 @@ function SummaryCardRow({
       >
         {value}
       </dd>
-    </div>
+    </dl>
   );
 }
 
@@ -153,7 +153,7 @@ function SummaryCardTotal({
   valueClassName,
 }: SummaryCardTotalProps) {
   return (
-    <div
+    <dl
       className={cn(
         "mt-2 flex items-center justify-between gap-4 border-t border-border pt-3",
         className,
@@ -168,7 +168,7 @@ function SummaryCardTotal({
       >
         {value}
       </dd>
-    </div>
+    </dl>
   );
 }
 

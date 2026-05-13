@@ -61,6 +61,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         )}
       >
         <div
+          data-testid="page-layout-content"
           className={cn(
             "w-full",
             !isMobile && sidebar && "flex-1 w-2/3",
@@ -80,6 +81,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
         {sidebar && (
           <div
+            data-testid="page-layout-sidebar"
             className={cn(
               isMobile ? "w-full relative" : "w-1/3 sticky top-20 self-start",
               sidebarClassName,

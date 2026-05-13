@@ -44,7 +44,7 @@ describe("SummaryCard", () => {
       </SummaryCard>,
     );
 
-    expect(screen.getByText("선택 항목").closest("div")).toHaveClass(
+    expect(screen.getByText("선택 항목").closest("dl")).toHaveClass(
       "items-center",
     );
   });
@@ -103,7 +103,7 @@ describe("SummaryCard", () => {
       </SummaryCard>,
     );
 
-    expect(screen.getByText("총 결제 금액").closest("div")).toHaveClass(
+    expect(screen.getByText("총 결제 금액").closest("dl")).toHaveClass(
       "items-center",
     );
   });

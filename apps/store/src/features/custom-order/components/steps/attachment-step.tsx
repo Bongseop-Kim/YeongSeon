@@ -40,7 +40,7 @@ export const AttachmentStep = ({
               id="additionalNotes"
               placeholder="참고할 내용이 있으면 자유롭게 작성해주세요"
               maxLength={500}
-              className="min-h-24 rounded-lg border-zinc-300 shadow-none"
+              minHeight="large"
               {...field}
             />
           )}

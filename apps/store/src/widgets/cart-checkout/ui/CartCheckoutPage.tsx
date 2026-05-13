@@ -29,6 +29,7 @@ import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-
 import { useReformPricing } from "@/entities/reform";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { ROUTES } from "@/shared/constants/ROUTES";
+import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { toast } from "sonner";
 import { cartKeys, removeCartItemsByIds } from "@/entities/cart";
 import { useAuthStore } from "@/shared/store/auth";
@@ -312,10 +313,7 @@ export function CartCheckoutPage() {
       <MainLayout>
         <MainContent className="overflow-visible">
           <PageLayout
-            breadcrumbs={[
-              { label: "홈", to: ROUTES.HOME },
-              { label: "장바구니" },
-            ]}
+            breadcrumbs={PAGE_BREADCRUMBS.CART}
             detail={
               <CartRecommendationsCard
                 products={similarProducts}

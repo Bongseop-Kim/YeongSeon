@@ -109,13 +109,7 @@ const Hero = () => (
               loading={i === 0 ? "eager" : "lazy"}
               className="absolute inset-0 h-full w-full object-cover"
             />
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 60%, rgba(0,0,0,.55) 100%)",
-              }}
-            />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.15)_0%,rgba(0,0,0,0)_30%,rgba(0,0,0,0)_60%,rgba(0,0,0,.55)_100%)]" />
             <div className="absolute inset-x-5 bottom-7 z-10 text-white md:inset-x-[18px] md:bottom-5">
               <div className="text-[10.5px] font-semibold tracking-[0.12em] opacity-85 md:text-[11px]">
                 {b.tag}

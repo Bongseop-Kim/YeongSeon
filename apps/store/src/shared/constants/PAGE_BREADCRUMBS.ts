@@ -46,6 +46,7 @@ export const PAGE_BREADCRUMBS = {
   CLAIM_LIST: [HOME, MY_PAGE, { label: "취소/반품/교환 내역" }],
   CLAIM_DETAIL: [HOME, MY_PAGE, CLAIM_LIST, { label: "클레임 상세" }],
   TOKEN_PURCHASE: [HOME, { label: "토큰 충전" }],
+  CART: [HOME, { label: "장바구니" }],
   CUSTOM_PAYMENT: [
     HOME,
     { label: "주문 제작", to: ROUTES.CUSTOM_ORDER },

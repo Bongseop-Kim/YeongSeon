@@ -1,7 +1,13 @@
 import { Controller, useFormContext } from "react-hook-form";
 import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { ChipSinglePicker } from "@/shared/composite/chip-single-picker";
-import { UtilityPagePanel } from "@/shared/composite/utility-page";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldTitle,
+} from "@/shared/ui/field";
 import { Input } from "@/shared/ui-extended/input";
 import { TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS";
 
@@ -10,25 +16,29 @@ export const SpecStep = () => {
   const sizeType = watch("sizeType");
 
   return (
-    <div className="space-y-6">
-      <UtilityPagePanel title="사이즈 타입" contentClassName="px-0">
-        <ChipSinglePicker
-          ariaLabel="사이즈 타입"
-          value={sizeType}
-          onValueChange={(v) => setValue("sizeType", v as "ADULT" | "CHILD")}
-          options={(["ADULT", "CHILD"] as const).map((type) => ({
-            value: type,
-            label: type === "ADULT" ? "성인용" : "아동용",
-          }))}
-        />
-      </UtilityPagePanel>
+    <FieldGroup>
+      <Field>
+        <FieldTitle>사이즈 타입</FieldTitle>
+        <FieldContent>
+          <ChipSinglePicker
+            ariaLabel="사이즈 타입"
+            value={sizeType}
+            onValueChange={(v) => setValue("sizeType", v as "ADULT" | "CHILD")}
+            options={(["ADULT", "CHILD"] as const).map((type) => ({
+              value: type,
+              label: type === "ADULT" ? "성인용" : "아동용",
+            }))}
+          />
+        </FieldContent>
+      </Field>
 
-      <UtilityPagePanel title="넥타이 폭" contentClassName="space-y-2">
+      <Field>
+        <FieldTitle>넥타이 폭</FieldTitle>
         <Controller
           name="tieWidth"
           control={control}
           render={({ field }) => (
-            <div className="flex items-center gap-2">
+            <FieldContent className="flex-row items-center">
               <Input
                 type="number"
                 min={TIE_WIDTH_CONFIG.min}
@@ -54,14 +64,14 @@ export const SpecStep = () => {
                 className="h-9 w-[90px] rounded-lg border-zinc-300 text-center shadow-none"
               />
               <span className="text-xs text-zinc-500">cm</span>
-            </div>
+            </FieldContent>
           )}
         />
-        <p className="text-xs text-zinc-500">
+        <FieldDescription>
           허용 범위: {TIE_WIDTH_CONFIG.min}~{TIE_WIDTH_CONFIG.max}cm (
           {TIE_WIDTH_CONFIG.step} 단위)
-        </p>
-      </UtilityPagePanel>
-    </div>
+        </FieldDescription>
+      </Field>
+    </FieldGroup>
   );
 };

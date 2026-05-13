@@ -15,7 +15,6 @@ interface ChipSinglePickerProps {
   onValueChange: (value: string) => void;
   ariaLabel: string;
   disabled?: boolean;
-  className?: string;
 }
 
 export function ChipSinglePicker({
@@ -24,7 +23,6 @@ export function ChipSinglePicker({
   onValueChange,
   ariaLabel,
   disabled,
-  className,
 }: ChipSinglePickerProps) {
   const handleValueChange = (nextValue: string) => {
     if (!nextValue || nextValue === value) return;
@@ -40,7 +38,7 @@ export function ChipSinglePicker({
       disabled={disabled}
       variant="outline"
       spacing={1}
-      className={cn("flex-wrap", disabled && "opacity-50", className)}
+      className={cn("flex-wrap", disabled && "opacity-50")}
     >
       {options.map((option) => (
         <ToggleGroupItem

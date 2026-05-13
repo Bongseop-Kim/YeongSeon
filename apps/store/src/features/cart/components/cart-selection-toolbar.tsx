@@ -17,17 +17,15 @@ export function CartSelectionToolbar({
 
   return (
     <div className="flex items-center justify-between gap-3 border-b border-t border-stone-200 px-0.5 pb-2.5 pt-2">
-      <Field orientation="horizontal" className="w-auto gap-4">
+      <Field orientation="horizontal" variant="toolbar">
         <Checkbox
           id={selectAllCheckboxId}
           checked={isAllChecked}
           onCheckedChange={(checked) => onToggleAll(checked === true)}
           data-testid="cart-select-all"
         />
-        <FieldLabel htmlFor={selectAllCheckboxId} className="cursor-pointer">
-          <FieldTitle className="text-sm font-medium text-zinc-700">
-            전체 선택
-          </FieldTitle>
+        <FieldLabel htmlFor={selectAllCheckboxId} variant="toolbar">
+          <FieldTitle variant="toolbar">전체 선택</FieldTitle>
         </FieldLabel>
       </Field>
       <div className="flex items-center gap-4 text-sm font-medium text-zinc-700">

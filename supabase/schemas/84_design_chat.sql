@@ -182,10 +182,15 @@ SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
 DECLARE
+  v_caller_role text := current_setting('request.jwt.claims', true)::jsonb ->> 'role';
+  v_generation_id uuid := (generation->>'id')::uuid;
   v_user_id uuid := (generation->>'user_id')::uuid;
   v_variant jsonb;
+  v_variant_id uuid;
+  v_variant_index int;
 BEGIN
-  IF auth.uid() IS DISTINCT FROM v_user_id THEN
+  IF v_caller_role IS DISTINCT FROM 'service_role'
+     AND auth.uid() IS DISTINCT FROM v_user_id THEN
     RAISE EXCEPTION 'unauthorized: caller does not own this resource';
   END IF;
 
@@ -201,6 +206,15 @@ BEGIN
     RAISE EXCEPTION 'persist_design_generation supports at most 4 variants';
   END IF;
 
+  IF EXISTS (
+    SELECT 1
+    FROM public.design_generations dg
+    WHERE dg.id = v_generation_id
+      AND dg.user_id IS DISTINCT FROM v_user_id
+  ) THEN
+    RAISE EXCEPTION 'persist_design_generation immutable user_id mismatch for generation %', v_generation_id;
+  END IF;
+
   INSERT INTO public.design_generations (
     id,
     user_id,
@@ -210,7 +224,7 @@ BEGIN
     request_metadata
   )
   VALUES (
-    (generation->>'id')::uuid,
+    v_generation_id,
     v_user_id,
     generation->>'prompt',
     generation->>'pattern_type',
@@ -222,13 +236,37 @@ BEGIN
       pattern_type = EXCLUDED.pattern_type,
       fabric_type = EXCLUDED.fabric_type,
       request_metadata = EXCLUDED.request_metadata,
-      updated_at = now()
-  WHERE design_generations.user_id = EXCLUDED.user_id;
+      updated_at = now();
 
   FOR v_variant IN
     SELECT *
     FROM jsonb_array_elements(variants)
   LOOP
+    v_variant_id := (v_variant->>'id')::uuid;
+    v_variant_index := (v_variant->>'variant_index')::int;
+
+    IF EXISTS (
+      SELECT 1
+      FROM public.design_generation_variants dgv
+      WHERE dgv.id = v_variant_id
+        AND (
+          dgv.generation_id IS DISTINCT FROM v_generation_id
+          OR dgv.variant_index IS DISTINCT FROM v_variant_index
+        )
+    ) THEN
+      RAISE EXCEPTION 'persist_design_generation immutable variant identity mismatch for variant %', v_variant_id;
+    END IF;
+
+    IF EXISTS (
+      SELECT 1
+      FROM public.design_generation_variants dgv
+      WHERE dgv.generation_id = v_generation_id
+        AND dgv.variant_index = v_variant_index
+        AND dgv.id IS DISTINCT FROM v_variant_id
+    ) THEN
+      RAISE EXCEPTION 'persist_design_generation immutable variant id mismatch for generation %, index %', v_generation_id, v_variant_index;
+    END IF;
+
     INSERT INTO public.design_generation_variants (
       id,
       generation_id,
@@ -242,9 +280,9 @@ BEGIN
       fabric_type
     )
     VALUES (
-      (v_variant->>'id')::uuid,
-      (generation->>'id')::uuid,
-      (v_variant->>'variant_index')::int,
+      v_variant_id,
+      v_generation_id,
+      v_variant_index,
       v_variant->>'repeat_tile_url',
       v_variant->>'repeat_tile_work_id',
       v_variant->>'accent_tile_url',
@@ -253,22 +291,20 @@ BEGIN
       v_variant->>'pattern_type',
       v_variant->>'fabric_type'
     )
-    ON CONFLICT (id) DO UPDATE
+    ON CONFLICT (generation_id, variant_index) DO UPDATE
     SET repeat_tile_url = EXCLUDED.repeat_tile_url,
         repeat_tile_work_id = EXCLUDED.repeat_tile_work_id,
         accent_tile_url = EXCLUDED.accent_tile_url,
         accent_tile_work_id = EXCLUDED.accent_tile_work_id,
         accent_layout_json = EXCLUDED.accent_layout_json,
         pattern_type = EXCLUDED.pattern_type,
-        fabric_type = EXCLUDED.fabric_type
-    WHERE design_generation_variants.generation_id = EXCLUDED.generation_id
-      AND design_generation_variants.variant_index = EXCLUDED.variant_index;
+        fabric_type = EXCLUDED.fabric_type;
   END LOOP;
 END;
 $$;
 
 COMMENT ON FUNCTION public.persist_design_generation(jsonb, jsonb)
-  IS 'Persists a design generation bundle while requiring auth.uid() to match generation.user_id and preserving immutable owner and variant identity fields on conflict.';
+  IS 'Persists a design generation bundle. service_role (Edge Functions) bypasses ownership check; authenticated caller auth.uid() check is kept as defense-in-depth in case GRANTs change. Preserves immutable owner and variant identity fields on conflict.';
 
 REVOKE EXECUTE ON FUNCTION public.persist_design_generation(jsonb, jsonb)
   FROM anon, authenticated;

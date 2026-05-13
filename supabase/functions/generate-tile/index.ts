@@ -233,14 +233,12 @@ Deno.serve(async (req) => {
             });
       let reusableRepeatTile: { url: string; workId: string } | null = null;
       if (reuseRepeatTile) {
-        const previousRepeatTileUrl = body.previousRepeatTileUrl;
-        const previousRepeatTileWorkId = body.previousRepeatTileWorkId;
-        if (previousRepeatTileUrl == null || previousRepeatTileWorkId == null) {
+        const previousRepeatTileUrl = body.previousRepeatTileUrl?.trim();
+        const previousRepeatTileWorkId = body.previousRepeatTileWorkId?.trim();
+        if (!previousRepeatTileUrl || !previousRepeatTileWorkId) {
           const missingFields = [
-            previousRepeatTileUrl == null ? "previousRepeatTileUrl" : null,
-            previousRepeatTileWorkId == null
-              ? "previousRepeatTileWorkId"
-              : null,
+            !previousRepeatTileUrl ? "previousRepeatTileUrl" : null,
+            !previousRepeatTileWorkId ? "previousRepeatTileWorkId" : null,
           ].filter((value): value is string => value !== null);
           throw new Error(
             `reuseRepeatTile missing required field(s): ${missingFields.join(

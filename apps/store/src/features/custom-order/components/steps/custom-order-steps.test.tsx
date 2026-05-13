@@ -117,17 +117,17 @@ describe("custom order steps", () => {
   });
 
   it("봉제 스타일을 다른 체크박스 섹션과 같은 리스트 형태로 렌더링한다", () => {
-    const { container } = renderWithForm(<SewingStep />);
+    renderWithForm(<SewingStep />);
 
     expect(screen.getByRole("checkbox", { name: "딤플" })).toBeInTheDocument();
     expect(
       screen.getByRole("checkbox", { name: "스포데라토" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "7폴드" })).toBeInTheDocument();
+    expect(screen.getAllByRole("checkbox")).toHaveLength(3);
     expect(
       screen.queryByText("자동 타이에서만 선택할 수 있어요"),
     ).not.toBeInTheDocument();
-    expect(container.querySelectorAll(".grid").length).toBe(0);
   });
 
   it("연속된 선택 섹션 사이에 border-y로 인한 이중 라인을 만들지 않는다", () => {
@@ -142,9 +142,30 @@ describe("custom order steps", () => {
       </>,
     );
 
-    expect(container.querySelectorAll(".border-y").length).toBe(0);
-    expect(container.querySelectorAll(".border-b").length).toBe(0);
-    expect(container.querySelectorAll(".pb-6").length).toBe(0);
+    const sectionLabels = [
+      "시작 방식",
+      "수량 선택",
+      "원단 조합",
+      "타이 종류",
+      "봉제 스타일",
+      "사이즈 타입",
+      "넥타이 폭",
+      "심지",
+      "추가 봉제",
+      "라벨",
+      "참고 이미지",
+      "추가 요청사항",
+    ].map((label) => screen.getByText(label));
+
+    sectionLabels.slice(0, -1).forEach((label, index) => {
+      expect(
+        label.compareDocumentPosition(sectionLabels[index + 1]) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+    expect(container.querySelectorAll('[data-slot="separator"]')).toHaveLength(
+      0,
+    );
   });
 
   it("첨부 단계는 sample-order처럼 중복 제목과 불필요한 업로드 설명을 숨긴다", () => {

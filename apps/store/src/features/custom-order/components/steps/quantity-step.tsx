@@ -5,6 +5,7 @@ import { CheckboxField } from "@/shared/composite/check-box-field";
 import { QuantitySelector } from "@/shared/composite/quantity-selector";
 import { UtilityPagePanel } from "@/shared/composite/utility-page";
 import { ButtonGroup } from "@/shared/ui/button-group";
+import { Field, FieldContent, FieldDescription } from "@/shared/ui/field";
 import { Button } from "@/shared/ui-extended/button";
 
 const QUANTITY_PRESETS = [4, 8, 12, 20, 50, 100] as const;
@@ -31,20 +32,26 @@ export const QuantityStep = () => {
 
   return (
     <div className="space-y-6">
-      <UtilityPagePanel title="시작 방식">
-        <div className="space-y-3">
-          <CheckboxField
-            name="fabricProvided"
-            control={control}
-            label="원단 직접 제공"
-          />
-          <CheckboxField
-            name="reorder"
-            control={control}
-            label="재주문"
-            disabled={fabricProvided}
-          />
-        </div>
+      <UtilityPagePanel title="시작 방식" contentClassName="space-y-3">
+        <Field>
+          <FieldContent>
+            <CheckboxField
+              name="fabricProvided"
+              control={control}
+              label="원단 직접 제공"
+            />
+          </FieldContent>
+        </Field>
+        <Field>
+          <FieldContent>
+            <CheckboxField
+              name="reorder"
+              control={control}
+              label="재주문"
+              disabled={fabricProvided}
+            />
+          </FieldContent>
+        </Field>
       </UtilityPagePanel>
 
       <UtilityPagePanel title="수량 선택" contentClassName="space-y-4">
@@ -70,12 +77,12 @@ export const QuantityStep = () => {
         />
 
         {quantity >= 100 && (
-          <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
-            <p className="text-sm text-muted-foreground">
+          <Field className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+            <FieldDescription>
               100개 이상은 견적요청으로 전환됩니다. 수량 확정 후 담당자가 세부
               사양과 일정을 안내합니다.
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
         )}
       </UtilityPagePanel>
     </div>
