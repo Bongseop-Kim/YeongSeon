@@ -1,17 +1,17 @@
 import type { DesignImage } from "@/entities/design/model/design-image";
 
 export interface DesignImageRow {
-  image_url: string;
-  image_file_id: string;
+  id: string;
+  repeat_tile_url: string;
   created_at: string;
-  design_chat_sessions: { first_message: string } | null;
+  design_generations: { prompt: string } | null;
 }
 
 export function toDesignImage(row: DesignImageRow): DesignImage {
   return {
-    imageUrl: row.image_url,
-    imageFileId: row.image_file_id,
+    imageUrl: row.repeat_tile_url,
+    imageFileId: null,
     createdAt: row.created_at,
-    sessionFirstMessage: row.design_chat_sessions?.first_message ?? "",
+    sessionFirstMessage: row.design_generations?.prompt ?? "",
   };
 }

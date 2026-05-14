@@ -5,26 +5,26 @@ describe("toDesignImage", () => {
   it("row를 DesignImage 타입으로 변환한다", () => {
     expect(
       toDesignImage({
-        image_url: "https://cdn.example.com/img.png",
-        image_file_id: "file-1",
+        id: "variant-1",
+        repeat_tile_url: "https://cdn.example.com/img.png",
         created_at: "2026-04-01T10:00:00Z",
-        design_chat_sessions: { first_message: "파란 넥타이" },
+        design_generations: { prompt: "파란 넥타이" },
       }),
     ).toEqual({
       imageUrl: "https://cdn.example.com/img.png",
-      imageFileId: "file-1",
+      imageFileId: null,
       createdAt: "2026-04-01T10:00:00Z",
       sessionFirstMessage: "파란 넥타이",
     });
   });
 
-  it("세션 정보가 null이면 sessionFirstMessage를 빈 문자열로 반환한다", () => {
+  it("generation 정보가 null이면 sessionFirstMessage를 빈 문자열로 반환한다", () => {
     expect(
       toDesignImage({
-        image_url: "https://cdn.example.com/img2.png",
-        image_file_id: "file-2",
+        id: "variant-2",
+        repeat_tile_url: "https://cdn.example.com/img2.png",
         created_at: "2026-04-02T10:00:00Z",
-        design_chat_sessions: null,
+        design_generations: null,
       }),
     ).toMatchObject({ sessionFirstMessage: "" });
   });

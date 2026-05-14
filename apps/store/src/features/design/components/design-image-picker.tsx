@@ -52,27 +52,30 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
     setSelectedIds(new Set());
   };
 
-  const toggleSelect = (fileId: string) => {
+  const getImageId = (img: { imageFileId: string | null; imageUrl: string }) =>
+    img.imageFileId ?? img.imageUrl;
+
+  const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(fileId)) {
-        next.delete(fileId);
+      if (next.has(id)) {
+        next.delete(id);
       } else {
-        next.add(fileId);
+        next.add(id);
       }
       return next;
     });
   };
 
   const handleAdd = () => {
-    const selected = images.filter((img) => selectedIds.has(img.imageFileId));
+    const selected = images.filter((img) => selectedIds.has(getImageId(img)));
     onAdd(
       selected.map((img) => {
         const formattedCreatedAt = formatCreatedAt(img.createdAt);
 
         return {
           url: img.imageUrl,
-          fileId: img.imageFileId,
+          fileId: img.imageFileId ?? "",
           name: formattedCreatedAt
             ? `AI 디자인 ${formattedCreatedAt}`
             : "AI 디자인",
@@ -113,13 +116,6 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
 
       {isOpen && (
         <div className="space-y-4 border-t border-border p-4">
-          {selectedIds.size > 0 && (
-            <p className="rounded-md border border-success/20 bg-success-muted px-3 py-2 text-xs text-success">
-              {selectedIds.size}장 선택됨 — 추가 버튼을 누르면 참고 이미지에
-              추가됩니다.
-            </p>
-          )}
-
           {isLoading ? (
             <div className="grid grid-cols-4 gap-2">
               {Array.from({ length: pageSize }).map((_, i) => (
@@ -152,15 +148,16 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
           ) : (
             <div className="grid grid-cols-4 gap-2">
               {images.map((img) => {
-                const isSelected = selectedIds.has(img.imageFileId);
+                const imageId = getImageId(img);
+                const isSelected = selectedIds.has(imageId);
                 const formattedCreatedAt = formatCreatedAt(img.createdAt);
                 return (
                   <button
-                    key={img.imageFileId}
+                    key={imageId}
                     type="button"
                     aria-pressed={isSelected}
                     aria-label={img.sessionFirstMessage || "AI 디자인 이미지"}
-                    onClick={() => toggleSelect(img.imageFileId)}
+                    onClick={() => toggleSelect(imageId)}
                     className={cn(
                       "relative aspect-square overflow-hidden rounded-md border-2 transition-all",
                       isSelected
