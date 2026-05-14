@@ -334,6 +334,7 @@ Deno.serve(async (req) => {
       ].filter((part): part is string => part !== null);
       const generationPrompt =
         promptParts.length > 0 ? promptParts.join("\n\n") : body.userMessage;
+      const displayPrompt = body.userMessage.trim() || generationPrompt;
       const referenceImageCount =
         repeatGenerationPlans.reduce(
           (sum, plan) => sum + plan.referenceImageUrls.length,
@@ -399,7 +400,7 @@ Deno.serve(async (req) => {
       const result: TileGenerationResponse = buildTileGenerationVariantResponse(
         {
           generationId,
-          prompt: generationPrompt,
+          prompt: displayPrompt,
           patternType: analysis.patternType,
           fabricType,
           repeatResults,
@@ -439,7 +440,7 @@ Deno.serve(async (req) => {
         await persistDesignGeneration(adminClient, {
           generationId,
           userId: user.id,
-          prompt: generationPrompt,
+          prompt: displayPrompt,
           patternType: analysis.patternType,
           fabricType,
           requestMetadata: buildGenerationRequestMetadata(

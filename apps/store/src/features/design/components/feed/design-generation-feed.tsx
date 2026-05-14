@@ -1,4 +1,4 @@
-import { Download, Loader2, RotateCcw, Trash2 } from "lucide-react";
+import { Loader2, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -9,7 +9,6 @@ import {
   type DesignGenerationVariant,
 } from "@/entities/design";
 import { Button } from "@/shared/ui-extended/button";
-import { Badge } from "@/shared/ui/badge";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { cn } from "@/shared/lib/utils";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
@@ -26,33 +25,8 @@ const formatGenerationDate = (value: string): string =>
     year: "numeric",
   }).format(new Date(value));
 
-const getPatternLabel = (generation: DesignGeneration): string =>
-  generation.patternType === "one_point" ? "one point" : "repeat only";
-
-const getFabricLabel = (generation: DesignGeneration): string =>
-  generation.fabricType === "printed" ? "printed" : "yarn dyed";
-
-const getPairingLabel = (generation: DesignGeneration): string | null =>
-  generation.patternType === "one_point" ? "accent paired" : null;
-
 const getVariantPreviewKey = (variant: DesignGenerationVariant): string =>
   `${variant.id}|${variant.repeatTile.url}|${variant.accentTile?.url ?? ""}`;
-
-async function downloadImage(url: string) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`download failed: ${response.status}`);
-    const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = objectUrl;
-    anchor.download = "design-tile.webp";
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-  } catch {
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
-}
 
 function GenerationTile({
   variant,
@@ -82,9 +56,6 @@ function GenerationTile({
         className="size-full object-cover"
         draggable={false}
       />
-      <span className="absolute left-1 top-1 flex size-5 items-center justify-center rounded bg-white/90 text-[11px] font-semibold text-gray-700 shadow-sm">
-        {variant.index}
-      </span>
       {variant.accentTile ? (
         <span className="absolute bottom-1.5 right-1.5 size-[30%] overflow-hidden rounded border border-white bg-white shadow-sm">
           <img
@@ -113,7 +84,6 @@ function GenerationRow({
   const setSelectedTilePreview = useDesignChatStore(
     (state) => state.setSelectedTilePreview,
   );
-  const variantCount = generation.variants.length;
 
   const handleSelectVariant = (variant: DesignGenerationVariant) => {
     setSelectedTilePreview({
@@ -152,19 +122,8 @@ function GenerationRow({
         <div className="flex min-w-0 flex-col justify-between gap-3">
           <div className="min-w-0">
             <p className="line-clamp-4 text-sm leading-6 text-gray-700">
-              <span className="font-medium text-gray-950">Korean Prompt: </span>
               {generation.prompt}
             </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <Badge variant="secondary">
-                {`${variantCount} ${variantCount === 1 ? "variant" : "variants"}`}
-              </Badge>
-              <Badge variant="secondary">{getPatternLabel(generation)}</Badge>
-              <Badge variant="secondary">{getFabricLabel(generation)}</Badge>
-              {getPairingLabel(generation) ? (
-                <Badge variant="secondary">{getPairingLabel(generation)}</Badge>
-              ) : null}
-            </div>
           </div>
           <div className="flex items-center justify-end gap-1">
             <Button
@@ -177,21 +136,6 @@ function GenerationRow({
               onClick={() => onReusePrompt(generation.prompt)}
             >
               <RotateCcw className="size-3.5" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-8"
-              title="대표 타일 다운로드"
-              aria-label="대표 타일 다운로드"
-              onClick={() => {
-                const firstVariant = generation.variants[0];
-                if (firstVariant)
-                  void downloadImage(firstVariant.repeatTile.url);
-              }}
-            >
-              <Download className="size-3.5" />
             </Button>
             <Button
               type="button"

@@ -52,7 +52,7 @@ export interface DesignGenerationRow {
   prompt: string;
   pattern_type: string;
   fabric_type: string;
-  request_metadata: unknown;
+  request_metadata?: unknown;
   created_at: string;
   updated_at: string;
   design_generation_variants: DesignGenerationVariantRow[];
@@ -277,7 +277,9 @@ export function toDesignGeneration(row: DesignGenerationRow): DesignGeneration {
     prompt: row.prompt,
     patternType,
     fabricType,
-    requestMetadata: toRequestMetadata(row.request_metadata),
+    requestMetadata: row.request_metadata
+      ? toRequestMetadata(row.request_metadata)
+      : { selectedColors: [], attachments: [], route: "tile_generation" },
     variants: sortedVariants.map((variant) =>
       toDesignGenerationVariant(variant, patternType, fabricType),
     ),
