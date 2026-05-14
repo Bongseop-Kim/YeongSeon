@@ -27,7 +27,7 @@ const FABRIC_TYPE_SET: ReadonlySet<FabricType> = new Set([
 ]);
 const ROUTE_SET: ReadonlySet<DesignGenerationRequestMetadata["route"]> =
   new Set(["tile_generation", "tile_edit"]);
-const REQUIRED_VARIANT_INDEXES = [1, 2, 3, 4] as const;
+const ALLOWED_VARIANT_INDEXES = [1, 2, 3, 4] as const;
 
 const toPatternType = createEnumMapper<PatternType>(PATTERN_TYPE_SET);
 const toFabricType = createEnumMapper<FabricType>(FABRIC_TYPE_SET);
@@ -80,7 +80,8 @@ function toAttachments(value: unknown): Attachment[] {
         type !== "pattern" &&
         type !== "fabric" &&
         type !== "image" &&
-        type !== "ci-placement") ||
+        type !== "ci-placement" &&
+        type !== "image-count") ||
       typeof label !== "string" ||
       typeof itemValue !== "string"
     ) {
@@ -118,6 +119,10 @@ function isCiPlacement(value: unknown): value is CiPlacement {
   return value === "all-over" || value === "one-point";
 }
 
+function isImageCount(value: unknown): value is 1 | 2 | 3 | 4 {
+  return value === 1 || value === 2 || value === 3 || value === 4;
+}
+
 function toDesignContext(
   value: unknown,
 ): DesignGenerationRequestMetadata["designContext"] | undefined {
@@ -140,6 +145,9 @@ function toDesignContext(
     designContext.fabricMethod = value.fabricMethod;
   } else if (value.fabricMethod === null) {
     designContext.fabricMethod = null;
+  }
+  if (isImageCount(value.imageCount)) {
+    designContext.imageCount = value.imageCount;
   }
   if (typeof value.onePointOffsetX === "number") {
     designContext.onePointOffsetX = value.onePointOffsetX;
@@ -263,11 +271,14 @@ export function toDesignGeneration(row: DesignGenerationRow): DesignGeneration {
     throw new Error(`invalid generation fabric_type: ${row.fabric_type}`);
   }
   if (
-    variantIndexes.size !== REQUIRED_VARIANT_INDEXES.length ||
-    !REQUIRED_VARIANT_INDEXES.every((index) => variantIndexes.has(index))
+    variantIndexes.size === 0 ||
+    variantIndexes.size !== row.design_generation_variants.length ||
+    ![...variantIndexes].every((index) =>
+      ALLOWED_VARIANT_INDEXES.includes(index as 1 | 2 | 3 | 4),
+    )
   ) {
     throw new Error(
-      `generation requires unique variant indexes 1..4: ${row.id}`,
+      `generation requires 1-4 unique variant indexes: ${row.id}`,
     );
   }
 

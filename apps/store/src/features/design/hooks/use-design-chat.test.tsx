@@ -41,6 +41,7 @@ const defaultDesignContext = {
   colors: ["navy"],
   pattern: "stripe",
   fabricMethod: "print",
+  imageCount: 4 as 1 | 2 | 3 | 4,
   sourceImage: null,
   onePointOffsetX: 0,
   onePointOffsetY: 0,
@@ -186,6 +187,7 @@ describe("useDesignChat", () => {
           route: "tile_generation",
           userMessage: "새 디자인",
           uiFabricType: "printed",
+          imageCount: 4,
           selectedColors: ["navy"],
           sessionId: "uuid-1",
           workflowId: "uuid-1",
@@ -230,6 +232,24 @@ describe("useDesignChat", () => {
           attachedImageUrls: [
             "https://ik.imagekit.io/essesion/design-sessions/ref.png",
           ],
+        }),
+      );
+    });
+  });
+
+  it("선택한 이미지 생성 수량을 타일 생성 API에 전달한다", async () => {
+    storeState.designContext = {
+      ...storeState.designContext,
+      imageCount: 2,
+    };
+    const { result } = renderHook(() => useDesignChat());
+
+    result.current.sendMessage("두 개만 생성", []);
+
+    await waitFor(() => {
+      expect(callTileGeneration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          imageCount: 2,
         }),
       );
     });

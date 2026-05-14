@@ -1,4 +1,3 @@
-import { useRef, type ChangeEvent } from "react";
 import { X } from "lucide-react";
 
 import { Badge } from "@/shared/ui/badge";
@@ -8,10 +7,12 @@ import { FieldTitle } from "@/shared/ui/field";
 import {
   CI_PLACEMENT_OPTIONS,
   COLOR_OPTIONS,
+  FABRIC_OPTIONS,
   PATTERN_OPTIONS,
 } from "@/features/design/constants/design-options";
 import type {
   CiPlacement,
+  FabricMethod,
   PatternOption,
 } from "@/features/design/types/design-context";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
@@ -21,6 +22,8 @@ import { cn } from "@/shared/lib/utils";
 interface AttachmentPopupProps {
   onClose: () => void;
 }
+
+const IMAGE_COUNT_OPTIONS = [1, 2, 3, 4] as const;
 
 function removeAttachmentsByFilter(
   attachments: Attachment[],
@@ -63,7 +66,6 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   const setDesignContext = useDesignChatStore(
     (state) => state.setDesignContext,
   );
-  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   const selectedColors = pendingAttachments.filter(
     (attachment) => attachment.type === "color",
@@ -78,6 +80,17 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   const selectedCiPlacement =
     pendingAttachments.find((attachment) => attachment.type === "ci-placement")
       ?.value ?? designContext.ciPlacement;
+  const selectedImageCount = designContext.imageCount;
+
+  const handleFabricMethodSelect = (value: FabricMethod) => {
+    setDesignContext({ fabricMethod: value });
+  };
+
+  const handleImageCountSelect = (
+    value: (typeof IMAGE_COUNT_OPTIONS)[number],
+  ) => {
+    setDesignContext({ imageCount: value });
+  };
 
   const handleColorToggle = (label: string, value: string) => {
     const existingIndex = pendingAttachments.findIndex(
@@ -129,37 +142,6 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
       addAttachment,
     );
     setDesignContext({ ciPlacement: value });
-  };
-
-  const handleImageSelection = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? []);
-
-    if (files.length === 0) {
-      return;
-    }
-
-    files.forEach((file) => {
-      addAttachment({
-        type: "image",
-        label: "이미지 첨부",
-        value: `source-${crypto.randomUUID()}`,
-        file,
-      });
-    });
-
-    setDesignContext({
-      sourceImage: files[0],
-      onePointOffsetX: 0,
-      onePointOffsetY: 0,
-      ciImage: null,
-      referenceImage: null,
-    });
-    event.target.value = "";
-    onClose();
-  };
-
-  const openImagePicker = () => {
-    imageInputRef.current?.click();
   };
 
   return (
@@ -226,6 +208,48 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
         <Separator />
 
         <section className="space-y-2">
+          <FieldTitle>원단</FieldTitle>
+          <div className="flex flex-wrap gap-2">
+            {FABRIC_OPTIONS.map((option) => (
+              <Button
+                key={option.value}
+                type="button"
+                size="sm"
+                variant={
+                  designContext.fabricMethod === option.value
+                    ? "default"
+                    : "outline"
+                }
+                onClick={() => handleFabricMethodSelect(option.value)}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+        </section>
+
+        <Separator />
+
+        <section className="space-y-2">
+          <FieldTitle>생성 수량</FieldTitle>
+          <div className="flex flex-wrap gap-2">
+            {IMAGE_COUNT_OPTIONS.map((count) => (
+              <Button
+                key={count}
+                type="button"
+                size="sm"
+                variant={selectedImageCount === count ? "default" : "outline"}
+                onClick={() => handleImageCountSelect(count)}
+              >
+                {count}개
+              </Button>
+            ))}
+          </div>
+        </section>
+
+        <Separator />
+
+        <section className="space-y-2">
           <FieldTitle>배치</FieldTitle>
           <div className="flex flex-wrap gap-2">
             {CI_PLACEMENT_OPTIONS.map((option) => (
@@ -243,29 +267,6 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                 {option.label}
               </Button>
             ))}
-          </div>
-        </section>
-
-        <Separator />
-
-        <section className="space-y-2">
-          <FieldTitle>이미지 업로드</FieldTitle>
-          <div className="flex flex-col gap-2">
-            <input
-              ref={imageInputRef}
-              type="file"
-              className="hidden"
-              accept="image/*"
-              multiple
-              onChange={handleImageSelection}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => openImagePicker()}
-            >
-              이미지 첨부
-            </Button>
           </div>
         </section>
       </div>

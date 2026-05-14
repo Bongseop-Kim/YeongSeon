@@ -1,19 +1,13 @@
 import { useShallow } from "zustand/react/shallow";
 import { isActiveGeneration } from "@/entities/design";
 import { TieMask } from "@/features/design/components/preview/tie-mask";
+import { tileRepeatStyle } from "@/features/design/components/preview/tile-preview-style";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import { escapeCssUrl } from "@/shared/lib/css-url";
 
-const TILE_BACKGROUND_SIZE = "35px 35px";
 const ACCENT_TILE_SIZE = "126px";
 const ACCENT_TILE_BOTTOM = "20%";
 const ACCENT_TILE_BACKGROUND_SIZE = "cover";
-
-const tileRepeatStyle = (url: string) => ({
-  backgroundImage: `url("${escapeCssUrl(url)}")`,
-  backgroundRepeat: "repeat" as const,
-  backgroundSize: TILE_BACKGROUND_SIZE,
-});
 
 const accentOverlayStyle = (url: string) => ({
   bottom: ACCENT_TILE_BOTTOM,

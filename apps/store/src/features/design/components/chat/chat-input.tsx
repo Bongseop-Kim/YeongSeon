@@ -1,19 +1,22 @@
 import {
+  type ChangeEvent,
   forwardRef,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
 } from "react";
-import { Plus, X } from "lucide-react";
+import { Coins, Ellipsis, ImagePlus, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { analytics } from "@/shared/lib/analytics";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui-extended/button";
+import { ROUTES } from "@/shared/constants/ROUTES";
 import { AttachmentPopup } from "@/features/design/components/chat/attachment-popup";
 import { FABRIC_OPTIONS } from "@/features/design/constants/design-options";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
-import type { FabricMethod } from "@/features/design/types/design-context";
+import type { DesignContext } from "@/features/design/types/design-context";
 import type { Attachment } from "@/features/design/types/chat";
 
 interface ChatInputProps {
@@ -21,6 +24,7 @@ interface ChatInputProps {
   isLoading?: boolean;
   draftText?: string;
   draftRevision?: number;
+  tokenBalance?: number;
 }
 
 interface ChatInputHandle {
@@ -56,10 +60,9 @@ const resolveRemovedAttachmentContext = (
   };
 };
 
-const getFabricOptionButtonClassName = (isSelected: boolean): string =>
-  isSelected
-    ? "rounded-sm px-3 py-1.5 text-xs font-medium transition-colors bg-background text-foreground shadow-sm"
-    : "rounded-sm px-3 py-1.5 text-xs font-medium transition-colors bg-transparent text-muted-foreground hover:text-foreground";
+const getFabricMethodLabel = (value: DesignContext["fabricMethod"]): string =>
+  FABRIC_OPTIONS.find((option) => option.value === value)?.label ??
+  "원단 미선택";
 
 function ImageAttachmentPreview({
   attachment,
@@ -141,13 +144,15 @@ function ImageAttachmentPreview({
 
 export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
   function ChatInput(
-    { onSend, isLoading = false, draftText, draftRevision },
+    { onSend, isLoading = false, draftText, draftRevision, tokenBalance },
     ref,
   ) {
+    const navigate = useNavigate();
     const designContext = useDesignChatStore((state) => state.designContext);
     const pendingAttachments = useDesignChatStore(
       (state) => state.pendingAttachments,
     );
+    const addAttachment = useDesignChatStore((state) => state.addAttachment);
     const removeAttachment = useDesignChatStore(
       (state) => state.removeAttachment,
     );
@@ -157,6 +162,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     const [inputText, setInputText] = useState("");
     const [showPopup, setShowPopup] = useState(false);
     const popupWrapperRef = useRef<HTMLDivElement>(null);
+    const imageInputRef = useRef<HTMLInputElement | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const hasTrackedStartRef = useRef(false);
 
@@ -243,6 +249,33 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       }
     };
 
+    const handleImageSelection = (event: ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files ?? []);
+
+      if (files.length === 0) {
+        return;
+      }
+
+      files.forEach((file) => {
+        addAttachment({
+          type: "image",
+          label: "이미지 첨부",
+          value: `source-${crypto.randomUUID()}`,
+          file,
+        });
+      });
+
+      setDesignContext({
+        sourceImage: files[0],
+        onePointOffsetX: 0,
+        onePointOffsetY: 0,
+        ciImage: null,
+        referenceImage: null,
+      });
+      event.target.value = "";
+      setShowPopup(false);
+    };
+
     const handleSend = () => {
       if (!trimmedText || isLoading) {
         return;
@@ -267,6 +300,21 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           {showPopup ? (
             <AttachmentPopup onClose={() => setShowPopup(false)} />
           ) : null}
+          <div className="absolute right-3 top-3 flex items-center gap-1.5 text-xs">
+            <span className="inline-flex items-center gap-1 text-muted-foreground">
+              <Coins className="size-3 text-muted-foreground" />
+              {tokenBalance === undefined ? "—" : tokenBalance.toLocaleString()}
+            </span>
+            <Button
+              type="button"
+              variant="none"
+              size="sm"
+              className="h-auto rounded-none p-0 text-xs font-medium text-foreground underline underline-offset-2"
+              onClick={() => navigate(ROUTES.TOKEN_PURCHASE)}
+            >
+              충전
+            </Button>
+          </div>
           {hasImageAttachments ? (
             <div className="mb-3 flex flex-wrap gap-2 px-1 pt-1">
               {pendingAttachments.map((attachment, index) =>
@@ -297,86 +345,87 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 handleSend();
               }
             }}
-            className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 text-sm outline-none"
+            className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 pr-20 text-sm outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           />
+          <div
+            data-testid="chat-input-selected-option-row"
+            className="mt-2 flex min-w-0 items-start justify-between gap-2 px-1"
+          >
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+              {hasNonImageAttachments
+                ? pendingAttachments.map((attachment, index) =>
+                    attachment.type === "image" ? null : (
+                      <Badge
+                        key={`${attachment.type}-${attachment.value}-${index}`}
+                        variant="outline"
+                        className="flex max-w-32 items-center gap-1 truncate"
+                      >
+                        <span className="truncate">{attachment.label}</span>
+                        <button
+                          type="button"
+                          aria-label={`${attachment.label} 제거`}
+                          onClick={() => handleAttachmentRemove(index)}
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </Badge>
+                    ),
+                  )
+                : null}
+            </div>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {getFabricMethodLabel(designContext.fabricMethod)} ·{" "}
+              {designContext.imageCount}개
+            </span>
+          </div>
           <div className="mt-2 flex flex-col gap-2 border-t pt-2">
             <div className="flex items-center justify-between gap-2">
               <div
                 data-testid="chat-input-option-row"
                 className="flex min-w-0 flex-1 items-center gap-2"
               >
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="옵션 추가"
-                  aria-expanded={showPopup}
-                  aria-controls="attachment-popup"
-                  onClick={() => setShowPopup((prev) => !prev)}
-                >
-                  <Plus
-                    className={`size-4 transition-transform duration-200 ${showPopup ? "rotate-45" : "rotate-0"}`}
+                <div className="flex items-center gap-0.5">
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageSelection}
                   />
-                </Button>
-                {hasNonImageAttachments ? (
-                  <div className="flex min-w-0 flex-wrap items-center gap-1">
-                    {pendingAttachments.map((attachment, index) =>
-                      attachment.type === "image" ? null : (
-                        <Badge
-                          key={`${attachment.type}-${attachment.value}-${index}`}
-                          variant="outline"
-                          className="flex max-w-32 items-center gap-1 truncate"
-                        >
-                          <span className="truncate">{attachment.label}</span>
-                          <button
-                            type="button"
-                            aria-label={`${attachment.label} 제거`}
-                            onClick={() => handleAttachmentRemove(index)}
-                          >
-                            <X className="size-3" />
-                          </button>
-                        </Badge>
-                      ),
-                    )}
-                  </div>
-                ) : null}
-                <div
-                  role="radiogroup"
-                  aria-label="원단 방식"
-                  className="inline-flex shrink-0 gap-0.5 rounded-md border bg-muted p-0.5"
-                >
-                  {FABRIC_OPTIONS.map((option) => {
-                    const isSelected =
-                      designContext.fabricMethod === option.value;
-
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        role="radio"
-                        aria-checked={isSelected}
-                        className={getFabricOptionButtonClassName(isSelected)}
-                        onClick={() =>
-                          setDesignContext({
-                            fabricMethod: option.value as FabricMethod,
-                          })
-                        }
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="이미지 첨부"
+                    className="bg-transparent hover:bg-transparent"
+                    onClick={() => imageInputRef.current?.click()}
+                  >
+                    <ImagePlus className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="옵션 추가"
+                    aria-expanded={showPopup}
+                    aria-controls="attachment-popup"
+                    className="bg-transparent hover:bg-transparent"
+                    onClick={() => setShowPopup((prev) => !prev)}
+                  >
+                    <Ellipsis className="size-4" />
+                  </Button>
                 </div>
               </div>
               <Button
                 type="button"
                 size="sm"
-                aria-label="Generate"
+                aria-label="생성"
                 className="h-8 rounded-md px-4 text-xs"
                 onClick={handleSend}
                 disabled={!trimmedText || isLoading}
               >
-                Generate
+                생성
               </Button>
             </div>
           </div>

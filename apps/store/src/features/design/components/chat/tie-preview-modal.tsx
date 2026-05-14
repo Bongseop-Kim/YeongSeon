@@ -1,15 +1,33 @@
-import { useEffect, useRef, useState } from "react";
-import { Crop, Square, X } from "lucide-react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from "react";
+import { Crop, Download, Square, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import { TieMask } from "@/features/design/components/preview/tie-mask";
+import { downloadTiePreviewImage } from "@/features/design/components/preview/download-tie-preview-image";
+import { ROUTES } from "@/shared/constants/ROUTES";
 import { Button } from "@/shared/ui-extended/button";
 
 interface TiePreviewModalProps {
   imageUrl: string;
+  imageStyle?: CSSProperties;
+  repeatTileUrl?: string | null;
   onClose: () => void;
 }
 
-export function TiePreviewModal({ imageUrl, onClose }: TiePreviewModalProps) {
+export function TiePreviewModal({
+  imageUrl,
+  imageStyle,
+  repeatTileUrl,
+  onClose,
+}: TiePreviewModalProps) {
+  const navigate = useNavigate();
   const overlayRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
@@ -72,6 +90,30 @@ export function TiePreviewModal({ imageUrl, onClose }: TiePreviewModalProps) {
     };
   }, []);
 
+  const handleDownload = async (event: MouseEvent) => {
+    event.stopPropagation();
+    try {
+      await downloadTiePreviewImage({
+        imageUrl,
+        repeatTileUrl,
+        unmasked,
+        filename: unmasked ? "design.png" : "design-masked.png",
+      });
+    } catch (error) {
+      console.error("이미지 다운로드 실패:", error);
+      toast.error(
+        error instanceof Error
+          ? `다운로드 실패: ${error.message}`
+          : "다운로드 실패",
+      );
+    }
+  };
+
+  const handleOrderClick = (event: MouseEvent) => {
+    event.stopPropagation();
+    navigate(ROUTES.CUSTOM_ORDER);
+  };
+
   return (
     <div
       ref={overlayRef}
@@ -96,6 +138,17 @@ export function TiePreviewModal({ imageUrl, onClose }: TiePreviewModalProps) {
       >
         {unmasked ? <Crop className="size-4" /> : <Square className="size-4" />}
       </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="absolute top-4 left-14 z-10"
+        onClick={handleDownload}
+        title="이미지 다운로드"
+        aria-label="이미지 다운로드"
+      >
+        <Download className="size-4" />
+      </Button>
       <button
         ref={closeButtonRef}
         type="button"
@@ -113,16 +166,30 @@ export function TiePreviewModal({ imageUrl, onClose }: TiePreviewModalProps) {
         {unmasked ? (
           <div
             className="h-[488px] w-[256px]"
-            style={{ background: imageUrl }}
+            style={imageStyle ?? { background: imageUrl }}
           />
         ) : (
           <TieMask
             imageUrl={imageUrl}
             width={256}
             height={488}
+            imageStyle={imageStyle}
             shadowClassName="top-[-46px]"
           />
         )}
+      </div>
+      <div
+        className="absolute bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-4 right-4 z-10"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <Button
+          type="button"
+          size="lg"
+          className="w-full"
+          onClick={handleOrderClick}
+        >
+          주문 제작하기
+        </Button>
       </div>
     </div>
   );

@@ -128,7 +128,16 @@ describe("toDesignGeneration", () => {
     };
 
     expect(() => toDesignGeneration(row)).toThrow(
-      "generation requires unique variant indexes 1..4",
+      "generation requires 1-4 unique variant indexes",
     );
+  });
+
+  it("maps generation rows with fewer than 4 requested variants", () => {
+    const generation = toDesignGeneration({
+      ...baseRow,
+      design_generation_variants: [makeVariant(1), makeVariant(2)],
+    });
+
+    expect(generation.variants.map((variant) => variant.index)).toEqual([1, 2]);
   });
 });

@@ -18,6 +18,7 @@ const payload: TileGenerationPayload = {
   route: "tile_generation",
   userMessage: "새 디자인",
   uiFabricType: "printed",
+  imageCount: 4,
   selectedColors: [],
   previousFabricType: null,
   previousRepeatTile: null,
@@ -201,6 +202,34 @@ describe("callTileGeneration", () => {
         url: "https://example.com/accent-1.webp",
         workId: "accent-1",
       },
+    });
+  });
+
+  it("요청 수량만큼 내려온 2-variant 응답을 정규화한다", async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        generationId: "gen-1",
+        prompt: "두 개 생성",
+        patternType: "all_over",
+        fabricType: "printed",
+        variants: [1, 2].map((index) => ({
+          id: `var-${index}`,
+          index,
+          repeatTileUrl: `https://example.com/repeat-${index}.webp`,
+          repeatTileWorkId: `repeat-work-${index}`,
+          accentTileUrl: null,
+          accentTileWorkId: null,
+          accentLayout: null,
+        })),
+      },
+      error: null,
+    });
+
+    const result = await callTileGeneration({ ...payload, imageCount: 2 });
+
+    expect(result.variants).toHaveLength(2);
+    expect(invoke).toHaveBeenCalledWith("generate-tile", {
+      body: expect.objectContaining({ imageCount: 2 }),
     });
   });
 

@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as DesignEntities from "@/entities/design";
 import { DesignGenerationFeed } from "@/features/design/components/feed/design-generation-feed";
@@ -8,6 +9,11 @@ import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 
 const { designGenerationsQuery } = vi.hoisted(() => ({
   designGenerationsQuery: vi.fn(),
+}));
+const breakpoint = { isMobile: false, isDesktop: true };
+
+vi.mock("@/shared/lib/breakpoint-provider", () => ({
+  useBreakpoint: () => breakpoint,
 }));
 
 vi.mock("@/entities/design", async (importOriginal) => {
@@ -58,7 +64,9 @@ const renderFeed = () => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <DesignGenerationFeed onReusePrompt={vi.fn()} />
+      <MemoryRouter>
+        <DesignGenerationFeed onReusePrompt={vi.fn()} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 };
@@ -66,6 +74,8 @@ const renderFeed = () => {
 describe("DesignGenerationFeed", () => {
   beforeEach(() => {
     designGenerationsQuery.mockReset();
+    breakpoint.isMobile = false;
+    breakpoint.isDesktop = true;
     useDesignChatStore.getState().resetConversation();
     useDesignChatStore.setState({ generationStatus: "idle" });
   });
@@ -90,6 +100,35 @@ describe("DesignGenerationFeed", () => {
     expect(
       screen.getByRole("button", { name: "variant 2 선택" }),
     ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("모바일에서 생성 이미지 클릭 시 PC 프리뷰와 같은 반복 타일 모달을 표시한다", async () => {
+    breakpoint.isMobile = true;
+    breakpoint.isDesktop = false;
+    designGenerationsQuery.mockReturnValue({
+      data: [duplicateAssetGeneration],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderFeed();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "variant 1 선택" }),
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "넥타이 미리보기" }),
+    ).toBeInTheDocument();
+    const tileLayer = Array.from(
+      screen.getByTestId("tie-preview-container").querySelectorAll("div"),
+    ).find((element) => element.style.backgroundRepeat === "repeat");
+
+    expect(tileLayer?.style.backgroundImage).toBe(
+      'url("https://example.com/shared-repeat.webp")',
+    );
+    expect(tileLayer?.style.backgroundSize).toBe("35px 35px");
   });
 
   it("생성 기록 조회 실패는 빈 상태 대신 오류 메시지와 재시도 버튼을 표시한다", async () => {

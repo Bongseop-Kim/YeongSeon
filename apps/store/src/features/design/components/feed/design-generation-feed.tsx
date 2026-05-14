@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Loader2, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,6 +13,9 @@ import { Button } from "@/shared/ui-extended/button";
 import { toPreviewBackground } from "@/shared/lib/to-preview-background";
 import { cn } from "@/shared/lib/utils";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
+import { TiePreviewModal } from "@/features/design/components/chat/tie-preview-modal";
+import { tileRepeatStyle } from "@/features/design/components/preview/tile-preview-style";
+import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 
 interface DesignGenerationFeedProps {
   className?: string;
@@ -77,6 +81,9 @@ function GenerationRow({
   generation: DesignGeneration;
   onReusePrompt: (prompt: string) => void;
 }) {
+  const { isMobile } = useBreakpoint();
+  const [mobilePreviewVariant, setMobilePreviewVariant] =
+    useState<DesignGenerationVariant | null>(null);
   const deleteGeneration = useDeleteDesignGenerationMutation();
   const selectedPreviewImageUrl = useDesignChatStore(
     (state) => state.selectedPreviewKey,
@@ -86,13 +93,19 @@ function GenerationRow({
   );
 
   const handleSelectVariant = (variant: DesignGenerationVariant) => {
+    const previewBackground = toPreviewBackground(variant.repeatTile.url);
+
     setSelectedTilePreview({
       previewKey: getVariantPreviewKey(variant),
-      previewBackground: toPreviewBackground(variant.repeatTile.url),
+      previewBackground,
       repeatTile: variant.repeatTile,
       accentTile: variant.accentTile,
       patternType: variant.patternType,
     });
+
+    if (isMobile) {
+      setMobilePreviewVariant(variant);
+    }
   };
 
   const handleDelete = () => {
@@ -156,6 +169,14 @@ function GenerationRow({
           </div>
         </div>
       </div>
+      {mobilePreviewVariant ? (
+        <TiePreviewModal
+          imageUrl={toPreviewBackground(mobilePreviewVariant.repeatTile.url)}
+          imageStyle={tileRepeatStyle(mobilePreviewVariant.repeatTile.url)}
+          repeatTileUrl={mobilePreviewVariant.repeatTile.url}
+          onClose={() => setMobilePreviewVariant(null)}
+        />
+      ) : null}
     </article>
   );
 }

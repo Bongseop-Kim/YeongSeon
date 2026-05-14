@@ -96,6 +96,7 @@ describe("design-chat-store", () => {
       colors: ["#112233"],
       pattern: "stripe",
       fabricMethod: "yarn-dyed",
+      imageCount: 4,
       sourceImage: null,
       onePointOffsetX: 0,
       onePointOffsetY: 0,

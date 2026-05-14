@@ -30,19 +30,25 @@ export function buildTileGenerationVariantResponse(
   fabricType: FabricType;
   variants: TileGenerationVariantResponse[];
 } {
-  if (params.repeatResults.length !== 4) {
-    throw new Error("generation requires 4 repeat results");
+  if (params.repeatResults.length < 1 || params.repeatResults.length > 4) {
+    throw new Error("generation requires 1-4 repeat results");
   }
 
-  if (params.patternType === "one_point" && params.accentResults.length !== 4) {
-    throw new Error("one_point generation requires 4 accent results");
+  if (
+    params.patternType === "one_point" &&
+    params.accentResults.length !== params.repeatResults.length
+  ) {
+    throw new Error("one_point generation requires matching accent results");
   }
 
   if (params.patternType === "all_over" && params.accentResults.length !== 0) {
     throw new Error("all_over generation must not include accent results");
   }
-  if (params.patternType === "one_point" && params.accentLayouts.length !== 4) {
-    throw new Error("one_point generation requires 4 accent layouts");
+  if (
+    params.patternType === "one_point" &&
+    params.accentLayouts.length !== params.repeatResults.length
+  ) {
+    throw new Error("one_point generation requires matching accent layouts");
   }
 
   return {

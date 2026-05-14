@@ -4,10 +4,8 @@ import { toast } from "sonner";
 import { isActiveGeneration } from "@/entities/design";
 import { Button } from "@/shared/ui-extended/button";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
-import { getRawImageUrlFromPreviewBackground } from "@/shared/lib/to-preview-background";
+import { downloadTiePreviewImage } from "@/features/design/components/preview/download-tie-preview-image";
 import { cn } from "@/shared/lib/utils";
-
-const SHADOW_TOP_OFFSET = -57;
 
 interface ResultTagBarProps {
   isFullscreen: boolean;
@@ -31,132 +29,30 @@ export function ResultTagBar({
   const selectedPreviewImageUrl = useDesignChatStore(
     (state) => state.selectedPreviewImageUrl,
   );
+  const repeatTile = useDesignChatStore((state) => state.repeatTile);
+  const selectedTilePreview = useDesignChatStore(
+    (state) => state.selectedTilePreview,
+  );
   const isLoading = isActiveGeneration(generationStatus);
 
   const hidden = !selectedPreviewImageUrl || isLoading;
 
   const handleDownload = async () => {
-    const url = getRawImageUrlFromPreviewBackground(
-      selectedPreviewImageUrl ?? generatedImageUrl,
-    );
-    if (!url) {
-      toast.error("이미지 URL을 추출할 수 없습니다.");
-      return;
-    }
-
-    if (unmasked) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`Failed to fetch image: ${res.status}`);
-        }
-        const blob = await res.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = objectUrl;
-        a.download = "design.png";
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-      } catch {
-        window.open(url, "_blank");
-      }
-      return;
-    }
-
-    const canvas = document.createElement("canvas");
-    canvas.width = 316;
-    canvas.height = 600;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      console.warn("canvas 2D context 없음");
-      toast.error("다운로드 실패: canvas를 초기화할 수 없습니다.");
-      return;
-    }
-
-    const loadImage = async (src: string): Promise<HTMLImageElement> => {
-      const image = new Image();
-      if (!src.startsWith("data:")) {
-        image.crossOrigin = "anonymous";
-      }
-      const loadPromise = new Promise<void>((resolve, reject) => {
-        image.onload = () => resolve();
-        image.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-      });
-      image.src = src;
-
-      try {
-        await image.decode();
-      } catch {
-        if (image.complete && image.naturalWidth > 0) {
-          return image;
-        }
-        await loadPromise;
-      }
-
-      return image;
-    };
-
-    let img: HTMLImageElement;
-    let maskImg: HTMLImageElement;
-    let shadowImg: HTMLImageElement;
     try {
-      [img, maskImg, shadowImg] = await Promise.all([
-        loadImage(url),
-        loadImage("/images/tie.svg"),
-        loadImage("/images/tieShadow.png"),
-      ]);
-    } catch (err) {
-      console.error("이미지 로드 실패:", err);
-      toast.error("다운로드 실패: 이미지를 불러올 수 없습니다.");
-      return;
+      await downloadTiePreviewImage({
+        imageUrl: selectedPreviewImageUrl ?? generatedImageUrl,
+        repeatTileUrl: selectedTilePreview?.repeatTile.url ?? repeatTile?.url,
+        unmasked,
+        filename: unmasked ? "design.png" : "design-masked.png",
+      });
+    } catch (error) {
+      console.error("이미지 다운로드 실패:", error);
+      toast.error(
+        error instanceof Error
+          ? `다운로드 실패: ${error.message}`
+          : "다운로드 실패",
+      );
     }
-
-    const scale = Math.max(
-      canvas.width / img.naturalWidth,
-      canvas.height / img.naturalHeight,
-    );
-    const drawWidth = img.naturalWidth * scale;
-    const drawHeight = img.naturalHeight * scale;
-    const offsetX = (canvas.width - drawWidth) / 2;
-    const offsetY = (canvas.height - drawHeight) / 2;
-    const maskScale = Math.min(
-      canvas.width / maskImg.naturalWidth,
-      canvas.height / maskImg.naturalHeight,
-    );
-    const maskW = maskImg.naturalWidth * maskScale;
-    const maskH = maskImg.naturalHeight * maskScale;
-    const maskX = (canvas.width - maskW) / 2;
-    const maskY = (canvas.height - maskH) / 2;
-    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-    ctx.globalCompositeOperation = "destination-in";
-    ctx.drawImage(maskImg, maskX, maskY, maskW, maskH);
-    ctx.globalCompositeOperation = "source-over";
-    // CSS: Tailwind preflight의 max-width: 100%가 img에 적용되어
-    // shadow가 컨테이너 너비(316px)에 맞게 축소되고 height: auto로 비율 유지
-    // canvas에서도 동일하게 너비 기준으로 scale
-    const shadowScale = canvas.width / shadowImg.naturalWidth;
-    const shadowW = canvas.width;
-    const shadowH = shadowImg.naturalHeight * shadowScale;
-    ctx.drawImage(shadowImg, 0, SHADOW_TOP_OFFSET, shadowW, shadowH);
-
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob(resolve, "image/png");
-    });
-    if (!blob) {
-      console.error("canvas.toBlob 실패: blob이 null");
-      toast.error("다운로드 실패: 이미지를 변환할 수 없습니다.");
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = objectUrl;
-    a.download = "design-masked.png";
-    a.click();
-    setTimeout(() => {
-      URL.revokeObjectURL(objectUrl);
-    }, 100);
   };
 
   return (
