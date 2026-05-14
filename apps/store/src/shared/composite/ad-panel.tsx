@@ -8,7 +8,7 @@ const AD_DATA = [
   {
     id: 1,
     imageUrl: "/images/banner/banner1.png",
-    title: "무신사 후기왕",
+    title: "후기왕",
     description: "100만원 적립금의 후기왕에 도전해보세요",
     linkUrl: "/promotion/review",
     backgroundColor: "bg-green-800",
