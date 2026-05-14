@@ -17,7 +17,7 @@ export const SortSelect = ({ value, onChange }: SortSelectProps) => {
   return (
     <Select value={value} onValueChange={(val) => onChange(val as SortOption)}>
       <SelectTrigger
-        className="h-9 w-[140px] rounded-full border-zinc-200 bg-white text-zinc-700"
+        className="h-8 w-[112px] rounded-lg border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none"
         size="sm"
       >
         <SelectValue placeholder="정렬" />
