@@ -109,7 +109,7 @@ export default function AppLayout() {
   const headerClassName = "relative z-30 h-auto";
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-x-auto">
+    <div className="relative flex h-dvh flex-col overflow-x-auto overflow-y-hidden">
       {showHeader && (
         <Header
           size="sm"
