@@ -1,10 +1,13 @@
 import { useShallow } from "zustand/react/shallow";
 import { isActiveGeneration } from "@/entities/design";
+import { DesignPreviewMagnifier } from "@/features/design/components/preview/design-preview-magnifier";
 import { TieMask } from "@/features/design/components/preview/tie-mask";
 import { tileRepeatStyle } from "@/features/design/components/preview/tile-preview-style";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import { escapeCssUrl } from "@/shared/lib/css-url";
 
+const TIE_PREVIEW_WIDTH = 316;
+const TIE_PREVIEW_HEIGHT = 600;
 const ACCENT_TILE_SIZE = "126px";
 const ACCENT_TILE_BOTTOM = "20%";
 const ACCENT_TILE_BACKGROUND_SIZE = "cover";
@@ -20,9 +23,13 @@ const accentOverlayStyle = (url: string) => ({
 
 interface TieCanvasProps {
   unmasked?: boolean;
+  enableMagnifier?: boolean;
 }
 
-export function TieCanvas({ unmasked = false }: TieCanvasProps) {
+export function TieCanvas({
+  unmasked = false,
+  enableMagnifier = false,
+}: TieCanvasProps) {
   const {
     generationStatus,
     selectedPreviewImageUrl,
@@ -49,18 +56,15 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
   const activeAccentTile =
     selectedTilePreview !== null ? selectedTilePreview.accentTile : accentTile;
   const activePatternType = selectedTilePreview?.patternType ?? patternType;
+  const activeImageStyle =
+    activeRepeatTile !== null
+      ? tileRepeatStyle(activeRepeatTile.url)
+      : { background: previewBackground };
   const renderContent = () => {
     if (unmasked) {
       return (
         <div className="relative h-[600px] w-[316px]">
-          <div
-            className="h-full w-full"
-            style={
-              activeRepeatTile !== null
-                ? tileRepeatStyle(activeRepeatTile.url)
-                : { background: previewBackground }
-            }
-          />
+          <div className="h-full w-full" style={activeImageStyle} />
           {isLoading && <div className="animate-ai-shimmer absolute inset-0" />}
         </div>
       );
@@ -70,10 +74,10 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
       return (
         <TieMask
           imageUrl={previewBackground}
-          width={316}
-          height={600}
-          imageStyle={tileRepeatStyle(activeRepeatTile.url)}
-          shadowClassName="top-[-57px]"
+          width={TIE_PREVIEW_WIDTH}
+          height={TIE_PREVIEW_HEIGHT}
+          imageStyle={activeImageStyle}
+          shadowClassName="top-[-58px]"
         >
           {activePatternType === "one_point" && activeAccentTile && (
             <div
@@ -89,10 +93,10 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
     return (
       <TieMask
         imageUrl={previewBackground}
-        width={316}
-        height={600}
+        width={TIE_PREVIEW_WIDTH}
+        height={TIE_PREVIEW_HEIGHT}
         imageClassName="transition-opacity duration-500 opacity-100"
-        shadowClassName="top-[-57px]"
+        shadowClassName="top-[-58px]"
       >
         {isLoading && <div className="animate-ai-shimmer absolute inset-0" />}
       </TieMask>
@@ -100,6 +104,14 @@ export function TieCanvas({ unmasked = false }: TieCanvasProps) {
   };
 
   return (
-    <div className="relative flex flex-col items-center">{renderContent()}</div>
+    <div className="relative flex flex-col items-center">
+      <DesignPreviewMagnifier
+        enabled={enableMagnifier}
+        width={TIE_PREVIEW_WIDTH}
+        height={TIE_PREVIEW_HEIGHT}
+      >
+        {renderContent()}
+      </DesignPreviewMagnifier>
+    </div>
   );
 }

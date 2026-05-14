@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type * as ReactRouterDom from "react-router-dom";
@@ -102,5 +102,123 @@ describe("TiePreviewModal", () => {
 
     expect(navigate).toHaveBeenCalledWith("/custom-order");
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("두 손가락 핀치로 미리보기를 확대한다", () => {
+    render(
+      <TiePreviewModal
+        imageUrl='url("https://example.com/repeat.webp") center/cover no-repeat'
+        onClose={vi.fn()}
+      />,
+    );
+
+    const container = screen.getByTestId("tie-preview-container");
+
+    fireEvent.pointerDown(container, {
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 100,
+      clientY: 100,
+    });
+    fireEvent.pointerDown(container, {
+      pointerId: 2,
+      pointerType: "touch",
+      clientX: 140,
+      clientY: 100,
+    });
+    fireEvent.pointerMove(container, {
+      pointerId: 2,
+      pointerType: "touch",
+      clientX: 220,
+      clientY: 100,
+    });
+
+    expect(container).toHaveStyle({
+      transform: "translate3d(0px, 0px, 0) scale(3)",
+    });
+  });
+
+  it("확대 후 한 손가락 드래그로 미리보기를 이동한다", () => {
+    render(
+      <TiePreviewModal
+        imageUrl='url("https://example.com/repeat.webp") center/cover no-repeat'
+        onClose={vi.fn()}
+      />,
+    );
+
+    const container = screen.getByTestId("tie-preview-container");
+
+    fireEvent.pointerDown(container, {
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 100,
+      clientY: 100,
+    });
+    fireEvent.pointerDown(container, {
+      pointerId: 2,
+      pointerType: "touch",
+      clientX: 140,
+      clientY: 100,
+    });
+    fireEvent.pointerMove(container, {
+      pointerId: 2,
+      pointerType: "touch",
+      clientX: 180,
+      clientY: 100,
+    });
+    fireEvent.pointerUp(container, {
+      pointerId: 2,
+      pointerType: "touch",
+      clientX: 180,
+      clientY: 100,
+    });
+    fireEvent.pointerMove(container, {
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 130,
+      clientY: 120,
+    });
+
+    expect(container).toHaveStyle({
+      transform: "translate3d(30px, 20px, 0) scale(2)",
+    });
+  });
+
+  it("마스크 표시 방식을 바꾸면 확대 상태를 초기화한다", async () => {
+    render(
+      <TiePreviewModal
+        imageUrl='url("https://example.com/repeat.webp") center/cover no-repeat'
+        onClose={vi.fn()}
+      />,
+    );
+
+    const container = screen.getByTestId("tie-preview-container");
+
+    fireEvent.pointerDown(container, {
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 100,
+      clientY: 100,
+    });
+    fireEvent.pointerDown(container, {
+      pointerId: 2,
+      pointerType: "touch",
+      clientX: 140,
+      clientY: 100,
+    });
+    fireEvent.pointerMove(container, {
+      pointerId: 2,
+      pointerType: "touch",
+      clientX: 180,
+      clientY: 100,
+    });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "패턴 전체 보기" }),
+    );
+
+    expect(container).toHaveStyle({
+      transform: "translate3d(0px, 0px, 0) scale(1)",
+    });
   });
 });

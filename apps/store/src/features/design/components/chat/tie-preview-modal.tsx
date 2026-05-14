@@ -4,6 +4,7 @@ import {
   useState,
   type CSSProperties,
   type MouseEvent,
+  type PointerEvent,
 } from "react";
 import { Crop, Download, Square, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +22,20 @@ interface TiePreviewModalProps {
   onClose: () => void;
 }
 
+interface Point {
+  x: number;
+  y: number;
+}
+
+const MIN_ZOOM_SCALE = 1;
+const MAX_ZOOM_SCALE = 4;
+
+const distanceBetween = (a: Point, b: Point) =>
+  Math.hypot(a.x - b.x, a.y - b.y);
+
+const clampScale = (scale: number) =>
+  Math.min(Math.max(scale, MIN_ZOOM_SCALE), MAX_ZOOM_SCALE);
+
 export function TiePreviewModal({
   imageUrl,
   imageStyle,
@@ -31,11 +46,40 @@ export function TiePreviewModal({
   const overlayRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
+  const activePointersRef = useRef(new Map<number, Point>());
+  const pinchStartRef = useRef<{
+    distance: number;
+    scale: number;
+  } | null>(null);
+  const panStartRef = useRef<{
+    point: Point;
+    offset: Point;
+  } | null>(null);
   const [unmasked, setUnmasked] = useState(false);
+  const [zoomState, setZoomState] = useState({
+    scale: MIN_ZOOM_SCALE,
+    offsetX: 0,
+    offsetY: 0,
+  });
+
+  const resetZoom = () => {
+    activePointersRef.current.clear();
+    pinchStartRef.current = null;
+    panStartRef.current = null;
+    setZoomState({
+      scale: MIN_ZOOM_SCALE,
+      offsetX: 0,
+      offsetY: 0,
+    });
+  };
 
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
+
+  useEffect(() => {
+    resetZoom();
+  }, [unmasked]);
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -114,6 +158,111 @@ export function TiePreviewModal({
     navigate(ROUTES.CUSTOM_ORDER);
   };
 
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "touch") {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    const nextPoint = { x: event.clientX, y: event.clientY };
+    activePointersRef.current.set(event.pointerId, nextPoint);
+
+    const points = Array.from(activePointersRef.current.values());
+    if (points.length >= 2) {
+      pinchStartRef.current = {
+        distance: distanceBetween(points[0], points[1]),
+        scale: zoomState.scale,
+      };
+      panStartRef.current = null;
+      return;
+    }
+
+    if (zoomState.scale > MIN_ZOOM_SCALE) {
+      panStartRef.current = {
+        point: nextPoint,
+        offset: {
+          x: zoomState.offsetX,
+          y: zoomState.offsetY,
+        },
+      };
+    }
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "touch") {
+      return;
+    }
+
+    const activePointers = activePointersRef.current;
+    if (!activePointers.has(event.pointerId)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    activePointers.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    const points = Array.from(activePointers.values());
+    if (points.length >= 2 && pinchStartRef.current) {
+      const nextDistance = distanceBetween(points[0], points[1]);
+      const nextScale = clampScale(
+        pinchStartRef.current.scale *
+          (nextDistance / pinchStartRef.current.distance),
+      );
+
+      setZoomState((current) => ({
+        ...current,
+        scale: nextScale,
+        offsetX: nextScale === MIN_ZOOM_SCALE ? 0 : current.offsetX,
+        offsetY: nextScale === MIN_ZOOM_SCALE ? 0 : current.offsetY,
+      }));
+      return;
+    }
+
+    if (points.length === 1 && panStartRef.current) {
+      const point = points[0];
+      const panStart = panStartRef.current;
+      setZoomState((current) =>
+        current.scale <= MIN_ZOOM_SCALE
+          ? current
+          : {
+              ...current,
+              offsetX: panStart.offset.x + point.x - panStart.point.x,
+              offsetY: panStart.offset.y + point.y - panStart.point.y,
+            },
+      );
+    }
+  };
+
+  const handlePointerEnd = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "touch") {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    activePointersRef.current.delete(event.pointerId);
+    pinchStartRef.current = null;
+
+    const points = Array.from(activePointersRef.current.values());
+    if (points.length === 1 && zoomState.scale > MIN_ZOOM_SCALE) {
+      panStartRef.current = {
+        point: points[0],
+        offset: {
+          x: zoomState.offsetX,
+          y: zoomState.offsetY,
+        },
+      };
+    } else {
+      panStartRef.current = null;
+    }
+  };
+
   return (
     <div
       ref={overlayRef}
@@ -161,7 +310,15 @@ export function TiePreviewModal({
       <div
         data-testid="tie-preview-container"
         className="relative"
+        style={{
+          touchAction: "none",
+          transform: `translate3d(${zoomState.offsetX}px, ${zoomState.offsetY}px, 0) scale(${zoomState.scale})`,
+        }}
         onClick={(event) => event.stopPropagation()}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
       >
         {unmasked ? (
           <div
