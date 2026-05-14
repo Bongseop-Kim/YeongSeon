@@ -76,6 +76,7 @@ interface UtilityPageSectionProps {
 interface UtilityPagePanelProps {
   title?: string;
   description?: string;
+  action?: ReactNode;
   children: ReactNode;
   className?: string;
   contentClassName?: string;
@@ -113,23 +114,31 @@ export function UtilityPageSection({
 export function UtilityPagePanel({
   title,
   description,
+  action,
   children,
   className,
   contentClassName,
 }: UtilityPagePanelProps) {
   return (
     <section className={className}>
-      {title ? (
-        <div className="max-w-2xl">
-          <h3 className="text-sm font-semibold text-zinc-950">{title}</h3>
-          {description ? (
-            <p className="mt-2 text-sm leading-6 text-zinc-600">
-              {description}
-            </p>
+      {title || action ? (
+        <div className="flex items-start justify-between gap-3">
+          {title ? (
+            <div className="max-w-2xl">
+              <h3 className="text-sm font-semibold text-zinc-950">{title}</h3>
+              {description ? (
+                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                  {description}
+                </p>
+              ) : null}
+            </div>
           ) : null}
+          {action ? <div className="shrink-0">{action}</div> : null}
         </div>
       ) : null}
-      <div className={cn(title && "mt-3", contentClassName)}>{children}</div>
+      <div className={cn((title || action) && "mt-3", contentClassName)}>
+        {children}
+      </div>
     </section>
   );
 }

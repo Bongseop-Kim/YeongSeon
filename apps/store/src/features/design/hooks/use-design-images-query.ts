@@ -1,26 +1,34 @@
-import {
-  keepPreviousData,
-  useQuery,
-  type UseQueryOptions,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, type InfiniteData } from "@tanstack/react-query";
 import { getDesignImages } from "@/entities/design";
 
 type DesignImagesQueryResult = Awaited<ReturnType<typeof getDesignImages>>;
-type DesignImagesQueryOptions = Omit<
-  UseQueryOptions<DesignImagesQueryResult>,
-  "queryKey" | "queryFn" | "placeholderData"
->;
+interface DesignImagesQueryOptions {
+  enabled?: boolean;
+}
 
 export function useDesignImagesQuery(
-  page: number,
   pageSize = 12,
   options?: DesignImagesQueryOptions,
 ) {
-  return useQuery({
-    queryKey: ["design-images", page, pageSize],
-    queryFn: () => getDesignImages(page, pageSize),
+  return useInfiniteQuery<
+    DesignImagesQueryResult,
+    Error,
+    InfiniteData<DesignImagesQueryResult, number>,
+    readonly unknown[],
+    number
+  >({
+    queryKey: ["design-images", pageSize],
+    queryFn: ({ pageParam }) => getDesignImages(pageParam, pageSize),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const loadedCount = allPages.reduce(
+        (sum, page) => sum + page.images.length,
+        0,
+      );
+
+      return loadedCount < lastPage.total ? allPages.length + 1 : undefined;
+    },
     staleTime: 2 * 60 * 1000,
-    placeholderData: keepPreviousData,
     ...options,
   });
 }

@@ -18,7 +18,7 @@ export const AttachmentStep = ({
 
   return (
     <div className="space-y-6">
-      <UtilityPagePanel title="참고 이미지">
+      <UtilityPagePanel title="참고 이미지" action={pickerSlot}>
         <div className="space-y-2.5">
           <ImageUpload
             uploadedImages={imageUpload.uploadedImages}
@@ -27,7 +27,6 @@ export const AttachmentStep = ({
             onRemoveImage={imageUpload.removeImage}
             showHeader={false}
           />
-          {pickerSlot}
         </div>
       </UtilityPagePanel>
 
