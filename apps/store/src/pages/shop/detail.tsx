@@ -312,7 +312,7 @@ export default function ShopDetailPage() {
                 title="상품 정보"
                 description="실제 결을 확인할 수 있는 상세 이미지와 가이드를 제공합니다."
               >
-                <div className="border-t border-stone-200 pt-5">
+                <div className="border-t border-stone-200 md:pt-5 max-md:-mx-[16px]">
                   {product.detailImages && product.detailImages.length > 0 ? (
                     product.detailImages.map((detailImage, index) => (
                       <Image
