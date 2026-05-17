@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FormProvider, useForm } from "react-hook-form";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { QuantityStep } from "@/features/custom-order/components/steps/quantity-step";
 import { FabricStep } from "@/features/custom-order/components/steps/fabric-step";
@@ -10,6 +10,14 @@ import { SpecStep } from "@/features/custom-order/components/steps/spec-step";
 import { FinishingStep } from "@/features/custom-order/components/steps/finishing-step";
 import { AttachmentStep } from "@/features/custom-order/components/steps/attachment-step";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
+
+const toastInfo = vi.hoisted(() => vi.fn());
+
+vi.mock("@/shared/lib/toast", () => ({
+  toast: {
+    info: toastInfo,
+  },
+}));
 
 const defaultValues: QuoteOrderOptions = {
   fabricProvided: false,
@@ -47,6 +55,20 @@ function renderWithForm(ui: React.ReactNode) {
   return render(<Wrapper />);
 }
 
+function renderWithFormValues(
+  ui: React.ReactNode,
+  values: Partial<QuoteOrderOptions>,
+) {
+  function Wrapper() {
+    const form = useForm<QuoteOrderOptions>({
+      defaultValues: { ...defaultValues, ...values },
+    });
+    return <FormProvider {...form}>{ui}</FormProvider>;
+  }
+
+  return render(<Wrapper />);
+}
+
 const imageUploadStub = {
   uploadedImages: [],
   isUploading: false,
@@ -58,6 +80,10 @@ const imageUploadStub = {
 } satisfies ImageUploadHook;
 
 describe("custom order steps", () => {
+  beforeEach(() => {
+    toastInfo.mockReset();
+  });
+
   it("부연 설명 없이 주요 선택 항목만 렌더링한다", () => {
     renderWithForm(
       <>
@@ -129,6 +155,45 @@ describe("custom order steps", () => {
     expect(
       screen.queryByText("자동 타이에서만 선택할 수 있어요"),
     ).not.toBeInTheDocument();
+  });
+
+  it("수량이 100개 이상이면 견적요청 담당자 연락처 입력란을 렌더링하고 안내 토스트를 띄운다", async () => {
+    renderWithFormValues(<QuantityStep />, { quantity: 100 });
+
+    expect(
+      screen.queryByText(
+        "100개 이상은 견적요청으로 전환됩니다. 수량 확정 후 담당자가 세부 사양과 일정을 안내합니다.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("담당자 연락처")).not.toBeInTheDocument();
+    expect(screen.queryByText("*")).not.toBeInTheDocument();
+    expect(screen.queryByText("sm:grid-cols-2")).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/담당자 성함/)).toBeInTheDocument();
+    expect(screen.getByLabelText("직책 (선택)")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "전화" })).toHaveAttribute(
+      "data-slot",
+      "toggle-group-item",
+    );
+    expect(screen.getByLabelText(/연락처/)).toHaveAttribute(
+      "data-slot",
+      "input",
+    );
+    expect(screen.getByLabelText(/담당자 성함/)).toHaveClass("sm:w-1/2");
+    expect(screen.getByLabelText("직책 (선택)")).toHaveClass("sm:w-1/2");
+    expect(screen.getByLabelText(/연락처/)).toHaveClass("sm:w-1/2");
+    expect(screen.getByLabelText(/연락처/)).not.toHaveClass("rounded-lg");
+    await waitFor(() => {
+      expect(toastInfo).toHaveBeenCalledTimes(1);
+    });
+    expect(toastInfo).toHaveBeenCalledWith(
+      "100개 이상은 견적요청으로 전환됩니다.",
+    );
+  });
+
+  it("넥타이 폭 입력은 데스크톱에서 절반 너비로 렌더링한다", () => {
+    renderWithForm(<SpecStep />);
+
+    expect(screen.getByLabelText("넥타이 폭")).toHaveClass("sm:w-1/2");
   });
 
   it("심지 종류는 칩으로 렌더링하고 두께 선택은 숨긴다", async () => {

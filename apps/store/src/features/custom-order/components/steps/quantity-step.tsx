@@ -5,8 +5,10 @@ import { CheckboxField } from "@/shared/composite/check-box-field";
 import { QuantitySelector } from "@/shared/composite/quantity-selector";
 import { UtilityPagePanel } from "@/shared/composite/utility-page";
 import { ButtonGroup } from "@/shared/ui/button-group";
-import { Field, FieldContent, FieldDescription } from "@/shared/ui/field";
+import { Field, FieldContent } from "@/shared/ui/field";
 import { Button } from "@/shared/ui-extended/button";
+import { ContactInfoSection } from "@/features/custom-order/components/contact-info-section";
+import { toast } from "@/shared/lib/toast";
 
 const QUANTITY_PRESETS = [4, 8, 12, 20, 50, 100] as const;
 
@@ -15,6 +17,7 @@ export const QuantityStep = () => {
   const quantity = watch("quantity");
   const fabricProvided = watch("fabricProvided");
   const prevFabricProvided = useRef(fabricProvided);
+  const hasShownQuoteModeToast = useRef(false);
 
   // fabricProvided true 전환 시 연관 필드 리셋
   useEffect(() => {
@@ -25,6 +28,13 @@ export const QuantityStep = () => {
     }
     prevFabricProvided.current = fabricProvided;
   }, [fabricProvided, setValue]);
+
+  useEffect(() => {
+    if (quantity >= 100 && !hasShownQuoteModeToast.current) {
+      toast.info("100개 이상은 견적요청으로 전환됩니다.");
+      hasShownQuoteModeToast.current = true;
+    }
+  }, [quantity]);
 
   const handlePresetClick = (preset: number) => {
     setValue("quantity", preset);
@@ -76,14 +86,7 @@ export const QuantityStep = () => {
           )}
         />
 
-        {quantity >= 100 && (
-          <Field className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
-            <FieldDescription>
-              100개 이상은 견적요청으로 전환됩니다. 수량 확정 후 담당자가 세부
-              사양과 일정을 안내합니다.
-            </FieldDescription>
-          </Field>
-        )}
+        {quantity >= 100 && <ContactInfoSection control={control} />}
       </UtilityPagePanel>
     </div>
   );
