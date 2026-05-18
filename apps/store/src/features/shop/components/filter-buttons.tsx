@@ -40,12 +40,7 @@ export const FilterButtons = ({
       {mainButton ? (
         mainButton
       ) : onMainButtonClick ? (
-        <Button
-          variant="none"
-          size="sm"
-          className="h-9 gap-2 rounded-full !border !border-solid !border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-none hover:bg-zinc-50"
-          onClick={onMainButtonClick}
-        >
+        <Button variant="filter-chip" size="filter" onClick={onMainButtonClick}>
           <SlidersHorizontal className="size-4" />
           전체 필터
         </Button>
@@ -58,15 +53,9 @@ export const FilterButtons = ({
           return (
             <Button
               key={tab.key}
-              variant="none"
-              size="sm"
+              variant={isActive ? "filter-chip-active" : "filter-chip"}
+              size="filter"
               aria-label={isActive ? `${tab.label} ${count}` : tab.label}
-              className={cn(
-                "h-9 rounded-full !border !border-solid px-4 text-sm font-medium shadow-none transition-colors",
-                isActive
-                  ? "!border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800"
-                  : "!border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
-              )}
               onClick={() => onFilterClick(tab.key)}
             >
               <span>{tab.label}</span>
@@ -85,9 +74,8 @@ export const FilterButtons = ({
       {onReset && hasActiveFilters ? (
         <Button
           type="button"
-          variant="none"
-          size="sm"
-          className="h-9 shrink-0 rounded-full px-3 text-sm text-zinc-700 shadow-none transition-colors hover:bg-zinc-50"
+          variant="filter-reset"
+          size="filter-reset"
           onClick={onReset}
         >
           초기화

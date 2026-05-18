@@ -129,6 +129,16 @@ describe("AttachmentPopup", () => {
     fireEvent.click(screen.getByRole("button", { name: "날염 (프린팅)" }));
     fireEvent.click(screen.getByRole("button", { name: "2개" }));
 
+    expect(addAttachment).toHaveBeenCalledWith({
+      type: "fabric",
+      label: "날염 (프린팅)",
+      value: "print",
+    });
+    expect(addAttachment).toHaveBeenCalledWith({
+      type: "image-count",
+      label: "2개",
+      value: "2",
+    });
     expect(setDesignContext).toHaveBeenCalledWith({ fabricMethod: "print" });
     expect(setDesignContext).toHaveBeenCalledWith({ imageCount: 2 });
   });

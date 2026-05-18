@@ -32,7 +32,7 @@ import { createShippingNoticeItems } from "@/shared/lib/shipping-notices";
 import {
   getQuoteContactDefaults,
   getQuoteContactValueForMethod,
-} from "@/features/custom-order/utils/contact-defaults";
+} from "@/shared/lib/quote-contact-defaults";
 
 export default function OrderPage() {
   const { user } = useAuthStore();

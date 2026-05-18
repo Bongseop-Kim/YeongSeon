@@ -3,11 +3,6 @@ export const INTERLINING_TYPES = [
   { value: "POLY", label: "폴리 심지" },
 ] as const;
 
-export const INTERLINING_THICKNESS = [
-  { value: "THIN", label: "얇음" },
-  { value: "THICK", label: "두꺼움" },
-] as const;
-
 export const QUANTITY_CONFIG = {
   min: 4,
 } as const;

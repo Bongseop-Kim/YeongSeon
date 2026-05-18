@@ -7,12 +7,13 @@ describe("toDesignImage", () => {
       toDesignImage({
         id: "variant-1",
         repeat_tile_url: "https://cdn.example.com/img.png",
+        repeat_tile_work_id: "repeat-work-1",
         created_at: "2026-04-01T10:00:00Z",
         design_generations: { prompt: "파란 넥타이" },
       }),
     ).toEqual({
       imageUrl: "https://cdn.example.com/img.png",
-      imageFileId: null,
+      imageFileId: "repeat-work-1",
       createdAt: "2026-04-01T10:00:00Z",
       sessionFirstMessage: "파란 넥타이",
     });
@@ -23,6 +24,7 @@ describe("toDesignImage", () => {
       toDesignImage({
         id: "variant-2",
         repeat_tile_url: "https://cdn.example.com/img2.png",
+        repeat_tile_work_id: null,
         created_at: "2026-04-02T10:00:00Z",
         design_generations: null,
       }),

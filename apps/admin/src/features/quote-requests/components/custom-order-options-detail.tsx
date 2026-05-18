@@ -10,6 +10,14 @@ interface Props {
 
 const normalize = (value: string) => value.trim().toLowerCase();
 
+const detailColors = {
+  border: "#d6d3d1",
+  surface: "#fff",
+  surfaceMuted: "#f5f5f4",
+  textMuted: "#78716c",
+  textPrimary: "#18181b",
+};
+
 const formatUnitPrice = (quotedAmount: number | null, quantity: number) => {
   if (quotedAmount === null || quantity <= 0) return "-";
   return formatMoney(quotedAmount / quantity);
@@ -85,11 +93,13 @@ function SummaryItem({
 }) {
   return (
     <div style={{ minWidth: 0 }}>
-      <p style={{ margin: 0, color: "#78716c", fontSize: 12 }}>{label}</p>
+      <p style={{ margin: 0, color: detailColors.textMuted, fontSize: 12 }}>
+        {label}
+      </p>
       <div
         style={{
           marginTop: 8,
-          color: "#18181b",
+          color: detailColors.textPrimary,
           fontSize: 14,
           fontWeight: 600,
           lineHeight: 1.55,
@@ -111,8 +121,12 @@ function OptionRow({ label, value }: { label: string; value: string }) {
         lineHeight: 1.6,
       }}
     >
-      <dt style={{ color: "#78716c" }}>{label}</dt>
-      <dd style={{ margin: 0, color: "#18181b", fontWeight: 500 }}>{value}</dd>
+      <dt style={{ color: detailColors.textMuted }}>{label}</dt>
+      <dd
+        style={{ margin: 0, color: detailColors.textPrimary, fontWeight: 500 }}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
@@ -128,22 +142,22 @@ export function CustomOrderOptionsDetail({
       style={{
         marginBottom: 24,
         overflow: "hidden",
-        border: "1px solid #d6d3d1",
+        border: `1px solid ${detailColors.border}`,
         borderRadius: 8,
-        background: "#fff",
+        background: detailColors.surface,
       }}
     >
       <div
         style={{
-          borderBottom: "1px solid #d6d3d1",
-          background: "#f5f5f4",
+          borderBottom: `1px solid ${detailColors.border}`,
+          background: detailColors.surfaceMuted,
           padding: "16px 20px",
         }}
       >
         <h3
           style={{
             margin: 0,
-            color: "#18181b",
+            color: detailColors.textPrimary,
             fontSize: 18,
             fontWeight: 600,
             letterSpacing: "-0.01em",
@@ -153,7 +167,12 @@ export function CustomOrderOptionsDetail({
         </h3>
       </div>
 
-      <div style={{ borderBottom: "1px solid #d6d3d1", padding: 20 }}>
+      <div
+        style={{
+          borderBottom: `1px solid ${detailColors.border}`,
+          padding: 20,
+        }}
+      >
         <div
           style={{
             display: "grid",
@@ -176,7 +195,7 @@ export function CustomOrderOptionsDetail({
         <h4
           style={{
             margin: 0,
-            color: "#18181b",
+            color: detailColors.textPrimary,
             fontSize: 14,
             fontWeight: 600,
           }}

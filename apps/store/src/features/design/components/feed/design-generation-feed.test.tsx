@@ -121,9 +121,7 @@ describe("DesignGenerationFeed", () => {
     expect(
       screen.getByRole("dialog", { name: "넥타이 미리보기" }),
     ).toBeInTheDocument();
-    const tileLayer = Array.from(
-      screen.getByTestId("tie-preview-container").querySelectorAll("div"),
-    ).find((element) => element.style.backgroundRepeat === "repeat");
+    const tileLayer = screen.getByTestId("tile-preview-layer");
 
     expect(tileLayer?.style.backgroundImage).toBe(
       'url("https://example.com/shared-repeat.webp")',

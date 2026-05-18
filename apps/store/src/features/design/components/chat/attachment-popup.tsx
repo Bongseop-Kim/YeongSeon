@@ -80,15 +80,34 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   const selectedCiPlacement =
     pendingAttachments.find((attachment) => attachment.type === "ci-placement")
       ?.value ?? designContext.ciPlacement;
-  const selectedImageCount = designContext.imageCount;
+  const selectedFabricMethod =
+    pendingAttachments.find((attachment) => attachment.type === "fabric")
+      ?.value ?? designContext.fabricMethod;
+  const selectedImageCount = Number(
+    pendingAttachments.find((attachment) => attachment.type === "image-count")
+      ?.value ?? designContext.imageCount,
+  ) as (typeof IMAGE_COUNT_OPTIONS)[number];
 
-  const handleFabricMethodSelect = (value: FabricMethod) => {
+  const handleFabricMethodSelect = (label: string, value: FabricMethod) => {
+    replaceSingleAttachment(
+      pendingAttachments,
+      removeAttachment,
+      { type: "fabric", label, value },
+      addAttachment,
+    );
     setDesignContext({ fabricMethod: value });
   };
 
   const handleImageCountSelect = (
+    label: string,
     value: (typeof IMAGE_COUNT_OPTIONS)[number],
   ) => {
+    replaceSingleAttachment(
+      pendingAttachments,
+      removeAttachment,
+      { type: "image-count", label, value: String(value) },
+      addAttachment,
+    );
     setDesignContext({ imageCount: value });
   };
 
@@ -216,11 +235,11 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                 type="button"
                 size="sm"
                 variant={
-                  designContext.fabricMethod === option.value
-                    ? "default"
-                    : "outline"
+                  selectedFabricMethod === option.value ? "default" : "outline"
                 }
-                onClick={() => handleFabricMethodSelect(option.value)}
+                onClick={() =>
+                  handleFabricMethodSelect(option.label, option.value)
+                }
               >
                 {option.label}
               </Button>
@@ -239,7 +258,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
                 type="button"
                 size="sm"
                 variant={selectedImageCount === count ? "default" : "outline"}
-                onClick={() => handleImageCountSelect(count)}
+                onClick={() => handleImageCountSelect(`${count}개`, count)}
               >
                 {count}개
               </Button>

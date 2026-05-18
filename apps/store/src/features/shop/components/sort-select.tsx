@@ -16,10 +16,7 @@ interface SortSelectProps {
 export const SortSelect = ({ value, onChange }: SortSelectProps) => {
   return (
     <Select value={value} onValueChange={(val) => onChange(val as SortOption)}>
-      <SelectTrigger
-        className="h-8 w-[112px] rounded-lg border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none"
-        size="sm"
-      >
+      <SelectTrigger variant="sort" size="sm">
         <SelectValue placeholder="정렬" />
       </SelectTrigger>
       <SelectContent>

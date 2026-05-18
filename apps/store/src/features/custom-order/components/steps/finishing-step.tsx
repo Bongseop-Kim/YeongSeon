@@ -1,4 +1,4 @@
-import { useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { UtilityPagePanel } from "@/shared/composite/utility-page";
 import { CheckboxField } from "@/shared/composite/check-box-field";
@@ -6,19 +6,24 @@ import { ChipSinglePicker } from "@/shared/composite/chip-single-picker";
 import { INTERLINING_TYPES } from "@/features/custom-order/constants/FORM_OPTIONS";
 
 export const FinishingStep = () => {
-  const { control, watch, setValue } = useFormContext<QuoteOrderOptions>();
-  const interlining = watch("interlining");
+  const { control } = useFormContext<QuoteOrderOptions>();
 
   return (
     <div className="space-y-6">
       <UtilityPagePanel title="심지">
-        <ChipSinglePicker
-          ariaLabel="심지 종류"
-          value={interlining}
-          onValueChange={(value) =>
-            setValue("interlining", value as QuoteOrderOptions["interlining"])
-          }
-          options={INTERLINING_TYPES}
+        <Controller
+          name="interlining"
+          control={control}
+          render={({ field }) => (
+            <ChipSinglePicker
+              ariaLabel="심지 종류"
+              value={field.value}
+              onValueChange={(value) =>
+                field.onChange(value as QuoteOrderOptions["interlining"])
+              }
+              options={INTERLINING_TYPES}
+            />
+          )}
         />
       </UtilityPagePanel>
 

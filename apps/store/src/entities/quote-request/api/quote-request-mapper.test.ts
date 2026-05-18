@@ -122,6 +122,9 @@ describe("quote-request 상세/입력 매핑", () => {
       expect.objectContaining({
         shipping_address_id: "addr-1",
         quantity: 100,
+        business_name: request.businessName,
+        contact_method: request.contactMethod,
+        contact_value: request.contactValue,
         reference_images: [
           { url: "https://example.com/1.jpg", file_id: "file-1" },
         ],

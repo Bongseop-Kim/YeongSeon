@@ -158,7 +158,7 @@ describe("custom order steps", () => {
   });
 
   it("수량이 100개 이상이면 견적요청 담당자 연락처 입력란을 렌더링하고 안내 토스트를 띄운다", async () => {
-    renderWithFormValues(<QuantityStep />, { quantity: 100 });
+    renderWithFormValues(<QuantityStep />, { quantity: 50 });
 
     expect(
       screen.queryByText(
@@ -168,11 +168,14 @@ describe("custom order steps", () => {
     expect(screen.queryByText("담당자 연락처")).not.toBeInTheDocument();
     expect(screen.queryByText("*")).not.toBeInTheDocument();
     expect(screen.queryByText("sm:grid-cols-2")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "100개" }));
+
     expect(screen.getByLabelText(/담당자 성함/)).toBeInTheDocument();
     expect(screen.getByLabelText("상호명")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "전화" })).toHaveAttribute(
-      "data-slot",
-      "toggle-group-item",
+      "aria-checked",
+      "true",
     );
     expect(screen.getByRole("radio", { name: "이메일" })).toBeInTheDocument();
     expect(screen.queryByRole("radio", { name: "카카오톡" })).toBeNull();

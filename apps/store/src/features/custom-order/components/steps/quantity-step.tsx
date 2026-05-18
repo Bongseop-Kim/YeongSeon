@@ -17,7 +17,7 @@ export const QuantityStep = () => {
   const quantity = watch("quantity");
   const fabricProvided = watch("fabricProvided");
   const prevFabricProvided = useRef(fabricProvided);
-  const hasShownQuoteModeToast = useRef(false);
+  const prevQuantityRef = useRef(quantity);
 
   // fabricProvided true 전환 시 연관 필드 리셋
   useEffect(() => {
@@ -30,10 +30,10 @@ export const QuantityStep = () => {
   }, [fabricProvided, setValue]);
 
   useEffect(() => {
-    if (quantity >= 100 && !hasShownQuoteModeToast.current) {
+    if (prevQuantityRef.current < 100 && quantity >= 100) {
       toast.info("100개 이상은 견적요청으로 전환됩니다.");
-      hasShownQuoteModeToast.current = true;
     }
+    prevQuantityRef.current = quantity;
   }, [quantity]);
 
   const handlePresetClick = (preset: number) => {

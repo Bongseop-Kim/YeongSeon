@@ -171,8 +171,14 @@ export function TiePreviewModal({
 
     const points = Array.from(activePointersRef.current.values());
     if (points.length >= 2) {
+      const distance = distanceBetween(points[0], points[1]);
+      if (distance === 0) {
+        pinchStartRef.current = null;
+        panStartRef.current = null;
+        return;
+      }
       pinchStartRef.current = {
-        distance: distanceBetween(points[0], points[1]),
+        distance,
         scale: zoomState.scale,
       };
       panStartRef.current = null;
@@ -323,7 +329,13 @@ export function TiePreviewModal({
         {unmasked ? (
           <div
             className="h-[488px] w-[256px]"
-            style={imageStyle ?? { background: imageUrl }}
+            style={
+              imageStyle ?? {
+                backgroundImage: `url(${imageUrl})`,
+                backgroundPosition: "center",
+                backgroundSize: "cover",
+              }
+            }
           />
         ) : (
           <TieMask

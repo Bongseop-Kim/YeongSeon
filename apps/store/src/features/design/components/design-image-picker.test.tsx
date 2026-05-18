@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DesignImagePicker } from "@/features/design/components/design-image-picker";
 
 const { useDesignImagesQuery } = vi.hoisted(() => ({
@@ -35,6 +35,10 @@ const mockImages = [
 ];
 
 describe("DesignImagePicker", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
     useBreakpoint.mockReturnValue({ isMobile: false });
     useDesignImagesQuery.mockReturnValue({
@@ -264,7 +268,6 @@ describe("DesignImagePicker", () => {
     );
 
     await waitFor(() => expect(fetchNextPage).toHaveBeenCalled());
-    vi.unstubAllGlobals();
   });
 
   it("createdAt이 비정상이어도 날짜 대체 문구를 표시하지 않는다", async () => {

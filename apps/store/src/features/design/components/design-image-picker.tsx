@@ -97,7 +97,7 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
 
         return {
           url: img.imageUrl,
-          fileId: img.imageFileId ?? "",
+          fileId: img.imageFileId ?? img.imageUrl,
           name: formattedCreatedAt
             ? `AI 디자인 ${formattedCreatedAt}`
             : "AI 디자인",

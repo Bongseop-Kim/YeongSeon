@@ -20,7 +20,7 @@ export async function getDesignImages(
   const { data, error, count } = await supabase
     .from("design_generation_variants")
     .select(
-      "id, repeat_tile_url, created_at, design_generations!inner(prompt)",
+      "id, repeat_tile_url, repeat_tile_work_id, created_at, design_generations!inner(prompt)",
       { count: "exact" },
     )
     .order("created_at", { ascending: false })

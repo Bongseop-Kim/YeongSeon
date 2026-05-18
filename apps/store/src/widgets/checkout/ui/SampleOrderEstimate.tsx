@@ -16,7 +16,6 @@ interface SampleOrderEstimateProps {
   options: SampleOrderOptions;
   imageRefs: ImageRef[];
   totalCost: number;
-  className?: string;
 }
 
 export const getSampleOrderTypeLabel = (
@@ -45,7 +44,6 @@ export function SampleOrderEstimate({
   options,
   imageRefs,
   totalCost,
-  className,
 }: SampleOrderEstimateProps) {
   return (
     <OrderSpecificationConfirmation
@@ -73,7 +71,6 @@ export function SampleOrderEstimate({
         },
       ]}
       totalCost={totalCost}
-      className={className}
     />
   );
 }

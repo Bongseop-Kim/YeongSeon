@@ -270,15 +270,19 @@ export function toDesignGeneration(row: DesignGenerationRow): DesignGeneration {
   if (!fabricType) {
     throw new Error(`invalid generation fabric_type: ${row.fabric_type}`);
   }
+  if (variantIndexes.size === 0) {
+    throw new Error(`generation requires at least one variant: ${row.id}`);
+  }
+  if (variantIndexes.size !== row.design_generation_variants.length) {
+    throw new Error(`generation contains duplicate variant indexes: ${row.id}`);
+  }
   if (
-    variantIndexes.size === 0 ||
-    variantIndexes.size !== row.design_generation_variants.length ||
     ![...variantIndexes].every((index) =>
       ALLOWED_VARIANT_INDEXES.includes(index as 1 | 2 | 3 | 4),
     )
   ) {
     throw new Error(
-      `generation requires 1-4 unique variant indexes: ${row.id}`,
+      `generation contains out-of-range variant index: ${row.id}`,
     );
   }
 

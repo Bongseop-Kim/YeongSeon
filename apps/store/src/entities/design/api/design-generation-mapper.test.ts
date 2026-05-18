@@ -116,7 +116,7 @@ describe("toDesignGeneration", () => {
     );
   });
 
-  it("rejects missing or duplicated variant indexes", () => {
+  it("rejects duplicated variant indexes", () => {
     const row: DesignGenerationRow = {
       ...baseRow,
       design_generation_variants: [
@@ -128,8 +128,31 @@ describe("toDesignGeneration", () => {
     };
 
     expect(() => toDesignGeneration(row)).toThrow(
-      "generation requires 1-4 unique variant indexes",
+      "generation contains duplicate variant indexes",
     );
+  });
+
+  it("rejects missing variant indexes", () => {
+    expect(() =>
+      toDesignGeneration({
+        ...baseRow,
+        design_generation_variants: [],
+      }),
+    ).toThrow("generation requires at least one variant");
+  });
+
+  it("rejects out-of-range variant indexes", () => {
+    expect(() =>
+      toDesignGeneration({
+        ...baseRow,
+        design_generation_variants: [
+          makeVariant(1),
+          makeVariant(2),
+          makeVariant(3),
+          makeVariant(4, { variant_index: 5 }),
+        ],
+      }),
+    ).toThrow("generation contains out-of-range variant index");
   });
 
   it("maps generation rows with fewer than 4 requested variants", () => {
