@@ -77,7 +77,7 @@ export function toAdminQuoteRequestDetail(
     referenceImageUrls: (dto.referenceImages ?? []).map((img) => img.url),
     additionalNotes: dto.additionalNotes,
     contactName: dto.contactName,
-    contactTitle: dto.contactTitle,
+    businessName: dto.businessName,
     contactMethod: dto.contactMethod,
     contactValue: dto.contactValue,
     quotedAmount: dto.quotedAmount,

@@ -40,7 +40,7 @@ const QUOTE_REQUEST_DETAIL_SELECT_COLUMNS = [
   '"referenceImages"',
   '"additionalNotes"',
   '"contactName"',
-  '"contactTitle"',
+  '"businessName"',
   '"contactMethod"',
   '"contactValue"',
   '"quotedAmount"',

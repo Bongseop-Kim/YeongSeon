@@ -28,10 +28,9 @@ export const QUOTE_REQUEST_STATUS_OPTIONS: { label: string; value: string }[] =
     { label: "종료", value: "종료" },
   ];
 
-export type ContactMethod = "email" | "kakao" | "phone";
+export type ContactMethod = "email" | "phone";
 
 export const CONTACT_METHOD_LABELS: Record<ContactMethod, string> = {
   email: "이메일",
-  kakao: "카카오톡",
   phone: "전화",
 };

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.quote_requests (
   reference_images    jsonb        NOT NULL DEFAULT '[]'::jsonb,
   additional_notes     text        NOT NULL DEFAULT '',
   contact_name         varchar     NOT NULL,
-  contact_title        varchar     NOT NULL DEFAULT '',
+  business_name        varchar     NOT NULL DEFAULT '',
   contact_method       text        NOT NULL,
   contact_value        varchar     NOT NULL,
   status               text        NOT NULL DEFAULT '요청',
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.quote_requests (
   CONSTRAINT quote_requests_quantity_check
     CHECK (quantity >= 100),
   CONSTRAINT quote_requests_contact_method_check
-    CHECK (contact_method IN ('email', 'kakao', 'phone')),
+    CHECK (contact_method IN ('email', 'phone')),
   CONSTRAINT quote_requests_status_check
     CHECK (status IN ('요청', '견적발송', '협의중', '확정', '종료'))
 );

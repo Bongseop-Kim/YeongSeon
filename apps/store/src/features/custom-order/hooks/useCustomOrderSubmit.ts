@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/shared/store/auth";
+import { useModalStore } from "@/shared/store/modal";
 import { toast } from "@/shared/lib/toast";
 import { analytics } from "@/shared/lib/analytics";
 import { ROUTES } from "@/shared/constants/ROUTES";
@@ -33,6 +34,7 @@ export function useCustomOrderSubmit({
 }: UseCustomOrderSubmitParams) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const modal = useModalStore();
   const isLoggedIn = !!user;
   const createQuoteRequest = useCreateQuoteRequest();
 
@@ -63,6 +65,15 @@ export function useCustomOrderSubmit({
         toast.error("연락처를 입력해주세요.");
         return;
       }
+      const confirmed = await new Promise<boolean>((resolve) => {
+        modal.openModal({
+          title: "견적 요청",
+          description: "입력한 사양과 연락처로 견적 요청을 접수할까요?",
+          onConfirm: () => resolve(true),
+          onCancel: () => resolve(false),
+        });
+      });
+      if (!confirmed) return;
     }
     if (imageUpload.isUploading) {
       toast.error("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.");
@@ -71,7 +82,7 @@ export function useCustomOrderSubmit({
     const {
       additionalNotes,
       contactName,
-      contactTitle,
+      businessName,
       contactMethod,
       contactValue,
       ...coreOptions
@@ -92,7 +103,7 @@ export function useCustomOrderSubmit({
             referenceImages: imageUpload.getImageRefs(),
             additionalNotes,
             contactName,
-            contactTitle,
+            businessName,
             contactMethod,
             contactValue,
           }),

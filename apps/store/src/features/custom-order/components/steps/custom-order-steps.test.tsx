@@ -41,7 +41,7 @@ const defaultValues: QuoteOrderOptions = {
   referenceImages: null,
   additionalNotes: "",
   contactName: "",
-  contactTitle: "",
+  businessName: "",
   contactMethod: "phone",
   contactValue: "",
 };
@@ -169,17 +169,19 @@ describe("custom order steps", () => {
     expect(screen.queryByText("*")).not.toBeInTheDocument();
     expect(screen.queryByText("sm:grid-cols-2")).not.toBeInTheDocument();
     expect(screen.getByLabelText(/담당자 성함/)).toBeInTheDocument();
-    expect(screen.getByLabelText("직책 (선택)")).toBeInTheDocument();
+    expect(screen.getByLabelText("상호명")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "전화" })).toHaveAttribute(
       "data-slot",
       "toggle-group-item",
     );
+    expect(screen.getByRole("radio", { name: "이메일" })).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "카카오톡" })).toBeNull();
     expect(screen.getByLabelText(/연락처/)).toHaveAttribute(
       "data-slot",
       "input",
     );
     expect(screen.getByLabelText(/담당자 성함/)).toHaveClass("sm:w-1/2");
-    expect(screen.getByLabelText("직책 (선택)")).toHaveClass("sm:w-1/2");
+    expect(screen.getByLabelText("상호명")).toHaveClass("sm:w-1/2");
     expect(screen.getByLabelText(/연락처/)).toHaveClass("sm:w-1/2");
     expect(screen.getByLabelText(/연락처/)).not.toHaveClass("rounded-lg");
     await waitFor(() => {
@@ -188,6 +190,15 @@ describe("custom order steps", () => {
     expect(toastInfo).toHaveBeenCalledWith(
       "100개 이상은 견적요청으로 전환됩니다.",
     );
+  });
+
+  it("연락 방법을 이메일로 선택하면 이메일 주소 라벨을 렌더링한다", async () => {
+    renderWithFormValues(<QuantityStep />, { quantity: 100 });
+
+    await userEvent.click(screen.getByRole("radio", { name: "이메일" }));
+
+    expect(screen.getByLabelText("이메일 주소")).toBeInTheDocument();
+    expect(screen.queryByLabelText("연락처")).toBeNull();
   });
 
   it("넥타이 폭 입력은 데스크톱에서 절반 너비로 렌더링한다", () => {

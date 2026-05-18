@@ -14,10 +14,11 @@ export const profileKeys = {
   detail: () => [...profileKeys.all, "detail"] as const,
 };
 
-export const useProfile = () => {
+export const useProfile = (enabled = true) => {
   return useQuery({
     queryKey: profileKeys.detail(),
     queryFn: getProfile,
+    enabled,
     staleTime: 1000 * 60 * 5,
     retry: 1,
   });

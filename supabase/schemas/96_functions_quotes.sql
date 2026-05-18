@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION public.create_quote_request_txn(
   p_reference_images jsonb DEFAULT '[]'::jsonb,
   p_additional_notes text DEFAULT '',
   p_contact_name text DEFAULT '',
-  p_contact_title text DEFAULT '',
+  p_business_name text DEFAULT '',
   p_contact_method text DEFAULT 'phone',
   p_contact_value text DEFAULT ''
 )
@@ -54,7 +54,7 @@ begin
     raise exception 'Contact name is required';
   end if;
 
-  if p_contact_method is null or p_contact_method not in ('email', 'kakao', 'phone') then
+  if p_contact_method is null or p_contact_method not in ('email', 'phone') then
     raise exception 'Invalid contact method';
   end if;
 
@@ -96,7 +96,7 @@ begin
     reference_images,
     additional_notes,
     contact_name,
-    contact_title,
+    business_name,
     contact_method,
     contact_value,
     status
@@ -110,7 +110,7 @@ begin
     coalesce(p_reference_images, '[]'::jsonb),
     coalesce(p_additional_notes, ''),
     trim(p_contact_name),
-    coalesce(trim(p_contact_title), ''),
+    coalesce(trim(p_business_name), ''),
     p_contact_method,
     trim(p_contact_value),
     '요청'

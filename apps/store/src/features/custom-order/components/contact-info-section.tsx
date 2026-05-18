@@ -14,13 +14,11 @@ import type { ContactMethod } from "@yeongseon/shared";
 
 const CONTACT_METHOD_OPTIONS = [
   { value: "phone", label: "전화" },
-  { value: "kakao", label: "카카오톡" },
   { value: "email", label: "이메일" },
 ] as const satisfies ReadonlyArray<{ value: ContactMethod; label: string }>;
 
 const CONTACT_METHOD_PLACEHOLDERS: Record<ContactMethod, string> = {
   phone: "010-1234-5678",
-  kakao: "카카오톡 ID",
   email: "example@email.com",
 };
 
@@ -57,17 +55,17 @@ export const ContactInfoSection = ({ control }: ContactInfoSectionProps) => {
           )}
         />
         <Controller
-          name="contactTitle"
+          name="businessName"
           control={control}
           render={({ field }) => (
             <Field orientation="vertical">
-              <FieldLabel htmlFor="contactTitle">
-                <FieldTitle>직책 (선택)</FieldTitle>
+              <FieldLabel htmlFor="businessName">
+                <FieldTitle>상호명</FieldTitle>
               </FieldLabel>
               <FieldContent>
                 <Input
-                  id="contactTitle"
-                  placeholder="대리"
+                  id="businessName"
+                  placeholder="영선산업"
                   className="sm:w-1/2"
                   {...field}
                 />
@@ -106,7 +104,9 @@ export const ContactInfoSection = ({ control }: ContactInfoSectionProps) => {
           render={({ field }) => (
             <Field orientation="vertical">
               <FieldLabel htmlFor="contactValue">
-                <FieldTitle>연락처</FieldTitle>
+                <FieldTitle>
+                  {currentContactMethod === "email" ? "이메일 주소" : "연락처"}
+                </FieldTitle>
               </FieldLabel>
               <FieldContent>
                 <Input

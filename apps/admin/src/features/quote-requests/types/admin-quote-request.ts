@@ -28,7 +28,7 @@ export interface AdminQuoteRequestListItem {
   quotedAmount: number | null;
   customerName: string;
   contactName: string;
-  contactMethod: "email" | "kakao" | "phone";
+  contactMethod: "email" | "phone";
 }
 
 // ── Detail UI model ───────────────────────────────────────────
@@ -44,8 +44,8 @@ export interface AdminQuoteRequestDetail {
   referenceImageUrls: string[];
   additionalNotes: string;
   contactName: string;
-  contactTitle: string;
-  contactMethod: "email" | "kakao" | "phone";
+  businessName: string;
+  contactMethod: "email" | "phone";
   contactValue: string;
   quotedAmount: number | null;
   quoteConditions: string | null;

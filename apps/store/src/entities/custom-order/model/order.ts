@@ -1,7 +1,7 @@
 export interface QuoteContactInfo {
   contactName: string;
-  contactTitle: string;
-  contactMethod: "email" | "kakao" | "phone";
+  businessName: string;
+  contactMethod: "email" | "phone";
   contactValue: string;
 }
 

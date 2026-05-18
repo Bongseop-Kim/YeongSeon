@@ -29,8 +29,8 @@ interface ToCreateQuoteRequestInput {
   referenceImages: ImageRef[];
   additionalNotes: string;
   contactName: string;
-  contactTitle: string;
-  contactMethod: "email" | "kakao" | "phone";
+  businessName: string;
+  contactMethod: "email" | "phone";
   contactValue: string;
 }
 
@@ -43,7 +43,7 @@ export const toCreateQuoteRequestInput = (
   referenceImages: normalizeReferenceImages(input.referenceImages),
   additionalNotes: input.additionalNotes.trim(),
   contactName: input.contactName.trim(),
-  contactTitle: input.contactTitle.trim(),
+  businessName: input.businessName.trim(),
   contactMethod: input.contactMethod,
   contactValue: input.contactValue.trim(),
 });
@@ -57,7 +57,7 @@ export const toCreateQuoteRequestInputDto = (
   reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
   contact_name: request.contactName,
-  contact_title: request.contactTitle,
+  business_name: request.businessName,
   contact_method: request.contactMethod,
   contact_value: request.contactValue,
 });
@@ -84,7 +84,7 @@ interface QuoteRequestDetailRowDTO {
   referenceImages: unknown;
   additionalNotes: string;
   contactName: string;
-  contactTitle: string;
+  businessName: string;
   contactMethod: ContactMethod;
   contactValue: string;
   quotedAmount: number | null;
@@ -92,7 +92,7 @@ interface QuoteRequestDetailRowDTO {
 }
 
 const isContactMethod = (value: unknown): value is ContactMethod =>
-  value === "email" || value === "kakao" || value === "phone";
+  value === "email" || value === "phone";
 
 const isQuoteRequestStatus = (value: unknown): value is QuoteRequestStatus =>
   value === "요청" ||
@@ -226,7 +226,7 @@ export const parseQuoteRequestDetailRow = (
     typeof data.quantity !== "number" ||
     typeof data.additionalNotes !== "string" ||
     typeof data.contactName !== "string" ||
-    typeof data.contactTitle !== "string" ||
+    typeof data.businessName !== "string" ||
     typeof data.contactValue !== "string"
   ) {
     throw new Error(
@@ -277,7 +277,7 @@ export const parseQuoteRequestDetailRow = (
     referenceImages: data.referenceImages,
     additionalNotes: data.additionalNotes,
     contactName: data.contactName,
-    contactTitle: data.contactTitle,
+    businessName: data.businessName,
     contactMethod: data.contactMethod,
     contactValue: data.contactValue,
     quotedAmount: data.quotedAmount,
@@ -297,7 +297,7 @@ export const toQuoteRequestDetail = (
   referenceImageUrls: toReferenceImageUrls(row.referenceImages),
   additionalNotes: row.additionalNotes,
   contactName: row.contactName,
-  contactTitle: row.contactTitle,
+  businessName: row.businessName,
   contactMethod: row.contactMethod,
   contactValue: row.contactValue,
   quotedAmount: row.quotedAmount,

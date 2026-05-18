@@ -41,21 +41,11 @@ export function getSizeLabel(sizeType: OrderOptions["sizeType"]): string {
 }
 
 export function getInterliningLabel(
-  opts: Pick<OrderOptions, "interlining" | "interliningThickness">,
+  opts: Pick<OrderOptions, "interlining">,
 ): string {
-  const parts = [
-    opts.interlining === "WOOL"
-      ? "울 심지"
-      : opts.interlining === "POLY"
-        ? "폴리 심지"
-        : null,
-    opts.interlining === "WOOL" && opts.interliningThickness === "THIN"
-      ? "얇음"
-      : opts.interlining === "WOOL" && opts.interliningThickness
-        ? "두꺼움"
-        : null,
-  ].filter(Boolean);
-  return parts.join(", ") || "미선택";
+  if (opts.interlining === "WOOL") return "울 심지";
+  if (opts.interlining === "POLY") return "폴리 심지";
+  return "미선택";
 }
 
 export function getLabelOptionsLabel(

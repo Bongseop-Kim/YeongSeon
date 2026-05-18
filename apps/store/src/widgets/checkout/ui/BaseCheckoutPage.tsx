@@ -4,7 +4,6 @@ import { buildPriceRows } from "@/shared/composite/order-summary-utils";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
 import { SummaryCard } from "@/shared/composite/summary-card";
-import { UtilityPageSection } from "@/shared/composite/utility-page";
 import { MainLayout, MainContent } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import type { PageBreadcrumbItem } from "@/shared/ui-extended/page-breadcrumb";
@@ -26,7 +25,6 @@ interface BaseCheckoutPageProps {
     meta: ReactNode;
   };
   optionsSection: {
-    title: string;
     content: ReactNode;
   };
   summaryRows: SummaryRow[];
@@ -119,13 +117,8 @@ export function BaseCheckoutPage({
               />
             }
           >
-            <div className="space-y-8 border-t border-stone-200 pt-4">
-              <UtilityPageSection
-                title={optionsSection.title}
-                description="수정이 필요한 항목이 있으면 이전 페이지로 돌아가 조정할 수 있습니다."
-              >
-                {optionsSection.content}
-              </UtilityPageSection>
+            <div className="space-y-8 pb-4">
+              {optionsSection.content}
               <CheckoutBodySections
                 appliedCoupon={appliedCoupon}
                 discountAmount={discountAmount}

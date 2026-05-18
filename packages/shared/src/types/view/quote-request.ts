@@ -41,7 +41,7 @@ export interface QuoteRequestDetail {
   referenceImageUrls: string[];
   additionalNotes: string;
   contactName: string;
-  contactTitle: string;
+  businessName: string;
   contactMethod: ContactMethod;
   contactValue: string;
   quotedAmount: number | null;

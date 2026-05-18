@@ -179,10 +179,10 @@ export default function QuoteRequestDetailPage() {
                       label="담당자"
                       value={quoteRequest.contactName}
                     />
-                    {quoteRequest.contactTitle && (
+                    {quoteRequest.businessName && (
                       <UtilityKeyValueRow
-                        label="직함"
-                        value={quoteRequest.contactTitle}
+                        label="상호명"
+                        value={quoteRequest.businessName}
                       />
                     )}
                     <UtilityKeyValueRow

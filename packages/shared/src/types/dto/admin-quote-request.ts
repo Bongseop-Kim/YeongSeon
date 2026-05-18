@@ -10,8 +10,8 @@ export interface AdminQuoteRequestListRowDTO {
   quantity: number;
   quotedAmount: number | null;
   contactName: string;
-  contactTitle: string;
-  contactMethod: "email" | "kakao" | "phone";
+  businessName: string;
+  contactMethod: "email" | "phone";
   contactValue: string;
   createdAt: string;
   updatedAt: string | null;
@@ -32,8 +32,8 @@ export interface AdminQuoteRequestDetailRowDTO {
   referenceImages: ImageRef[];
   additionalNotes: string;
   contactName: string;
-  contactTitle: string;
-  contactMethod: "email" | "kakao" | "phone";
+  businessName: string;
+  contactMethod: "email" | "phone";
   contactValue: string;
   quotedAmount: number | null;
   quoteConditions: string | null;
