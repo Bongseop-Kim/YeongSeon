@@ -14,16 +14,16 @@ describe("FilterButtons", () => {
     );
 
     expect(screen.getByRole("button", { name: /전체 필터/ })).toHaveClass(
-      "!border",
-      "!border-zinc-200",
+      "border!",
+      "border-zinc-200!",
     );
     expect(screen.getByRole("button", { name: /가격 1/ })).toHaveClass(
       "bg-zinc-900",
-      "!border-zinc-900",
+      "border-zinc-900!",
     );
     expect(screen.getByRole("button", { name: /색상 2/ })).toHaveClass(
       "bg-zinc-900",
-      "!border-zinc-900",
+      "border-zinc-900!",
     );
   });
 

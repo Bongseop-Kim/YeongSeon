@@ -1,5 +1,14 @@
 import type { ImageRef } from "@yeongseon/shared";
 import { isRecord } from "@/shared/lib/type-guard";
+import {
+  CUSTOM_ORDER_INTERLININGS,
+  CUSTOM_ORDER_INTERLINING_THICKNESSES,
+  CUSTOM_ORDER_SIZE_TYPES,
+  SAMPLE_ORDER_INTERLININGS,
+  SHARED_DESIGN_TYPES,
+  SHARED_FABRIC_TYPES,
+  SHARED_TIE_TYPES,
+} from "@/shared/lib/custom-order-option-constants";
 
 interface CustomOrderCoreOptions {
   fabricProvided: boolean;
@@ -64,14 +73,6 @@ const isImageRef = (value: unknown): value is ImageRef =>
   isRecord(value) &&
   typeof value.url === "string" &&
   typeof value.fileId === "string";
-
-const SHARED_FABRIC_TYPES = ["SILK", "POLY"] as const;
-const SHARED_DESIGN_TYPES = ["PRINTING", "YARN_DYED"] as const;
-const SHARED_TIE_TYPES = ["AUTO"] as const;
-const CUSTOM_ORDER_INTERLININGS = ["WOOL", "POLY"] as const;
-const CUSTOM_ORDER_INTERLINING_THICKNESSES = ["THICK", "THIN"] as const;
-const CUSTOM_ORDER_SIZE_TYPES = ["ADULT", "CHILD"] as const;
-const SAMPLE_ORDER_INTERLININGS = ["WOOL", "POLY"] as const;
 
 const isOneOf = <T extends string>(
   value: unknown,

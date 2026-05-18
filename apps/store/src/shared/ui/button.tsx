@@ -20,9 +20,9 @@ const buttonVariants = cva(
         text: "text-foreground underline underline-offset-4",
         none: "border-none bg-transparent shadow-none",
         "filter-chip":
-          "!border !border-zinc-200 border border-solid border-zinc-200 bg-white text-zinc-700 shadow-none hover:bg-zinc-50",
+          "border! border-solid border-zinc-200! bg-white text-zinc-700 shadow-none hover:bg-zinc-50",
         "filter-chip-active":
-          "!border !border-zinc-900 border border-solid border-zinc-900 bg-zinc-900 text-white shadow-none hover:bg-zinc-800",
+          "border! border-solid border-zinc-900! bg-zinc-900 text-white shadow-none hover:bg-zinc-800",
         "filter-reset":
           "border-none bg-transparent text-zinc-700 shadow-none hover:bg-zinc-50",
       },

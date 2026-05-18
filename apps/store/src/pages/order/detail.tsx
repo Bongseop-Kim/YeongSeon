@@ -380,11 +380,7 @@ const OrderDetailPage = () => {
                   <SummaryCard.Total
                     label="총 결제 금액"
                     value={`${order.totalPrice.toLocaleString()}원`}
-                    className={
-                      order.orderType === "token"
-                        ? "mt-0 border-t-0 pt-0"
-                        : undefined
-                    }
+                    compact={order.orderType === "token"}
                   />
                 </SummaryCard.Section>
               </SummaryCard>

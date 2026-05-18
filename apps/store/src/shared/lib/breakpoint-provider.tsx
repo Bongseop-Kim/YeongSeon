@@ -29,13 +29,13 @@ const BreakpointContext = createContext<BreakpointContextValue | undefined>(
   undefined,
 );
 
-const DEFAULT_WIDTH = BREAKPOINTS.lg;
+const DEFAULT_WIDTH = 0;
 
 const defaultBreakpointContext: BreakpointContextValue = {
   width: DEFAULT_WIDTH,
-  isMobile: false,
+  isMobile: true,
   isTablet: false,
-  isDesktop: true,
+  isDesktop: false,
   isAbove: (breakpoint: Breakpoint) => DEFAULT_WIDTH >= BREAKPOINTS[breakpoint],
   isBelow: (breakpoint: Breakpoint) => DEFAULT_WIDTH < BREAKPOINTS[breakpoint],
 };

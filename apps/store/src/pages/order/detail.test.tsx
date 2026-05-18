@@ -93,16 +93,19 @@ vi.mock("@/shared/composite/summary-card", () => ({
       Total: ({
         label,
         value,
+        compact,
         className,
         valueClassName,
       }: {
         label: React.ReactNode;
         value: React.ReactNode;
+        compact?: boolean;
         className?: string;
         valueClassName?: string;
       }) => (
         <div
           data-testid="summary-card-total"
+          data-compact={compact ? "true" : "false"}
           data-class-name={className ?? ""}
           data-value-class-name={valueClassName ?? ""}
         >
@@ -253,8 +256,8 @@ describe("OrderDetailPage", () => {
 
     expect(screen.queryByText("배송비")).not.toBeInTheDocument();
     expect(screen.getByTestId("summary-card-total")).toHaveAttribute(
-      "data-class-name",
-      expect.stringContaining("border-t-0"),
+      "data-compact",
+      "true",
     );
   });
 

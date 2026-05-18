@@ -17,6 +17,14 @@ import type {
   QuoteRequestOptions,
   QuoteRequestStatus,
 } from "@yeongseon/shared";
+import {
+  CUSTOM_ORDER_INTERLININGS,
+  CUSTOM_ORDER_INTERLINING_THICKNESSES,
+  CUSTOM_ORDER_SIZE_TYPES,
+  SHARED_DESIGN_TYPES,
+  SHARED_FABRIC_TYPES,
+  SHARED_TIE_TYPES,
+} from "@/shared/lib/custom-order-option-constants";
 
 type OrderOptionsForMapping = Omit<
   OrderOptions,
@@ -30,7 +38,7 @@ interface ToCreateQuoteRequestInput {
   additionalNotes: string;
   contactName: string;
   businessName: string;
-  contactMethod: "email" | "phone";
+  contactMethod: SupportedContactMethod;
   contactValue: string;
 }
 
@@ -91,8 +99,19 @@ interface QuoteRequestDetailRowDTO {
   quoteConditions: string | null;
 }
 
-const isContactMethod = (value: unknown): value is ContactMethod =>
-  value === "email" || value === "phone";
+const SupportedContactMethods = ["email", "phone"] as const;
+type SupportedContactMethod = (typeof SupportedContactMethods)[number];
+
+const isSupportedContactMethod = (
+  value: unknown,
+): value is SupportedContactMethod =>
+  typeof value === "string" &&
+  SupportedContactMethods.includes(value as SupportedContactMethod);
+
+const isOneOf = <T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+): value is T => typeof value === "string" && allowed.includes(value as T);
 
 const isQuoteRequestStatus = (value: unknown): value is QuoteRequestStatus =>
   value === "요청" ||
@@ -137,7 +156,7 @@ export const parseQuoteRequestListRows = (
       );
     }
 
-    if (!isContactMethod(row.contactMethod)) {
+    if (!isSupportedContactMethod(row.contactMethod)) {
       throw new Error(
         `견적 요청 행(${index})이 올바르지 않습니다: contactMethod 값(${String(row.contactMethod)})이 허용된 값이 아닙니다.`,
       );
@@ -179,28 +198,27 @@ export const toQuoteRequestListItem = (
 export const toQuoteRequestOptions = (
   raw: Record<string, unknown>,
 ): QuoteRequestOptions => ({
-  tieType: raw.tie_type === "AUTO" ? raw.tie_type : "",
-  interlining:
-    raw.interlining === "WOOL" || raw.interlining === "POLY"
-      ? raw.interlining
-      : "",
-  designType:
-    raw.design_type === "PRINTING" || raw.design_type === "YARN_DYED"
-      ? raw.design_type
-      : "",
-  fabricType:
-    raw.fabric_type === "SILK" || raw.fabric_type === "POLY"
-      ? raw.fabric_type
-      : "",
+  tieType: isOneOf(raw.tie_type, SHARED_TIE_TYPES) ? raw.tie_type : "",
+  interlining: isOneOf(raw.interlining, CUSTOM_ORDER_INTERLININGS)
+    ? raw.interlining
+    : "",
+  designType: isOneOf(raw.design_type, SHARED_DESIGN_TYPES)
+    ? raw.design_type
+    : "",
+  fabricType: isOneOf(raw.fabric_type, SHARED_FABRIC_TYPES)
+    ? raw.fabric_type
+    : "",
   fabricProvided: raw.fabric_provided === true,
   reorder: raw.reorder === true,
-  interliningThickness:
-    raw.interlining_thickness === "THICK" ||
-    raw.interlining_thickness === "THIN"
-      ? raw.interlining_thickness
-      : "",
-  sizeType:
-    raw.size_type === "ADULT" || raw.size_type === "CHILD" ? raw.size_type : "",
+  interliningThickness: isOneOf(
+    raw.interlining_thickness,
+    CUSTOM_ORDER_INTERLINING_THICKNESSES,
+  )
+    ? raw.interlining_thickness
+    : "",
+  sizeType: isOneOf(raw.size_type, CUSTOM_ORDER_SIZE_TYPES)
+    ? raw.size_type
+    : "",
   tieWidth:
     typeof raw.tie_width === "number" && Number.isFinite(raw.tie_width)
       ? raw.tie_width
@@ -264,7 +282,7 @@ export const parseQuoteRequestDetailRow = (
     );
   }
 
-  if (!isContactMethod(data.contactMethod)) {
+  if (!isSupportedContactMethod(data.contactMethod)) {
     throw new Error(
       `견적 요청 상세 응답이 올바르지 않습니다: contactMethod 값(${String(data.contactMethod)})이 허용된 값이 아닙니다.`,
     );
