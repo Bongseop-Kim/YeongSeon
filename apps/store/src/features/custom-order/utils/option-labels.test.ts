@@ -67,15 +67,13 @@ describe("option-labels", () => {
     expect(
       getInterliningLabel({
         interlining: "WOOL",
-        interliningThickness: "THIN",
       }),
-    ).toBe("울 심지, 얇음");
+    ).toBe("울 심지");
     expect(
       getInterliningLabel({
-        interlining: "WOOL",
-        interliningThickness: "THICK",
+        interlining: "POLY",
       }),
-    ).toBe("울 심지, 두꺼움");
+    ).toBe("폴리 심지");
     expect(getLabelOptionsLabel({ brandLabel: true, careLabel: true })).toBe(
       "브랜드 라벨, 케어 라벨",
     );
@@ -89,7 +87,7 @@ describe("option-labels", () => {
         brandLabel: true,
         careLabel: false,
       }),
-    ).toBe("울 심지, 얇음 · 브랜드 라벨");
+    ).toBe("울 심지 · 브랜드 라벨");
   });
 
   it("샘플 타입 라벨을 반환한다", () => {

@@ -58,7 +58,7 @@ describe("QuoteRequestDetailSection", () => {
         customerPhone: "01012345678",
         customerEmail: "user@example.com",
         contactName: "홍길동",
-        contactTitle: null,
+        businessName: "영선산업",
         contactMethod: "phone",
         contactValue: "01012345678",
         options: [],

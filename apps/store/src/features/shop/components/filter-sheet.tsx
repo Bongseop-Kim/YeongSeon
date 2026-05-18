@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/shared/ui-extended/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/shared/ui-extended/sheet";
 import { FilterContent } from "./filter-content";
 import { FilterButtons } from "./filter-buttons";
-import { SlidersHorizontal } from "lucide-react";
 import {
   type ProductCategory,
   type ProductColor,
@@ -66,14 +63,7 @@ export const FilterSheet = ({
       <FilterButtons
         onFilterClick={handleFilterButtonClick}
         activeCounts={activeCounts}
-        mainButton={
-          <SheetTrigger asChild>
-            <Button variant="none" size="sm">
-              <SlidersHorizontal />
-              필터
-            </Button>
-          </SheetTrigger>
-        }
+        onReset={onReset}
       />
       <SheetContent className="flex flex-col h-[70vh]" side="bottom">
         <SheetHeader className="sr-only">

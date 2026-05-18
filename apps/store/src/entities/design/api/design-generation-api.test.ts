@@ -28,7 +28,7 @@ describe("design-generation-api", () => {
 
     expect(supabase.from).toHaveBeenCalledWith("design_generations");
     expect(select).toHaveBeenCalledWith(
-      "id, user_id, prompt, pattern_type, fabric_type, request_metadata, created_at, updated_at, design_generation_variants(id, generation_id, variant_index, repeat_tile_url, repeat_tile_work_id, accent_tile_url, accent_tile_work_id, accent_layout_json, pattern_type, fabric_type, created_at)",
+      "id, user_id, prompt, pattern_type, fabric_type, created_at, updated_at, design_generation_variants(id, generation_id, variant_index, repeat_tile_url, repeat_tile_work_id, accent_tile_url, accent_tile_work_id, accent_layout_json, pattern_type, fabric_type, created_at)",
     );
     expect(is).toHaveBeenCalledWith("deleted_at", null);
     expect(order).toHaveBeenCalledWith("created_at", { ascending: false });

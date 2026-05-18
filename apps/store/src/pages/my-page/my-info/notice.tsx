@@ -8,8 +8,8 @@ import {
 } from "@/entities/notification";
 import { PhoneVerificationForm } from "@/features/notification";
 import { Empty } from "@/shared/composite/empty";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import {
-  UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
@@ -277,18 +277,16 @@ export default function MyInfoNoticePage() {
               </div>
 
               <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
-                <UtilityPageAside title="알림 안내" tone="muted">
-                  {profile && !profile.phoneVerified ? (
-                    <p className="text-sm text-zinc-600">
-                      휴대폰 인증 및 수신 동의를 하지 않으면 주문 완료 및 진행
-                      상황을 카카오톡 또는 메신저로 받을 수 없습니다.
+                <SummaryCard>
+                  <SummaryCard.Header title="알림 안내" />
+                  <SummaryCard.Section>
+                    <p className="text-sm leading-6 text-foreground-muted">
+                      {profile && !profile.phoneVerified
+                        ? "휴대폰 인증 및 수신 동의를 하지 않으면 주문 완료 및 진행 상황을 카카오톡 또는 메신저로 받을 수 없습니다."
+                        : "서비스 알림은 마케팅 동의와 무관하게 발송됩니다."}
                     </p>
-                  ) : (
-                    <p className="text-sm text-zinc-600">
-                      서비스 알림은 마케팅 동의와 무관하게 발송됩니다.
-                    </p>
-                  )}
-                </UtilityPageAside>
+                  </SummaryCard.Section>
+                </SummaryCard>
               </div>
             </div>
           </div>

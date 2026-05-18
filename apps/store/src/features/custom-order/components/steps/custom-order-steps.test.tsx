@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { FormProvider, useForm } from "react-hook-form";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { QuoteOrderOptions } from "@/entities/custom-order";
 import { QuantityStep } from "@/features/custom-order/components/steps/quantity-step";
 import { FabricStep } from "@/features/custom-order/components/steps/fabric-step";
@@ -10,13 +11,21 @@ import { FinishingStep } from "@/features/custom-order/components/steps/finishin
 import { AttachmentStep } from "@/features/custom-order/components/steps/attachment-step";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
 
+const toastInfo = vi.hoisted(() => vi.fn());
+
+vi.mock("@/shared/lib/toast", () => ({
+  toast: {
+    info: toastInfo,
+  },
+}));
+
 const defaultValues: QuoteOrderOptions = {
   fabricProvided: false,
   reorder: false,
   fabricType: "POLY",
   designType: "PRINTING",
   tieType: null,
-  interlining: null,
+  interlining: "WOOL",
   interliningThickness: "THICK",
   sizeType: "ADULT",
   tieWidth: 8,
@@ -32,7 +41,7 @@ const defaultValues: QuoteOrderOptions = {
   referenceImages: null,
   additionalNotes: "",
   contactName: "",
-  contactTitle: "",
+  businessName: "",
   contactMethod: "phone",
   contactValue: "",
 };
@@ -40,6 +49,20 @@ const defaultValues: QuoteOrderOptions = {
 function renderWithForm(ui: React.ReactNode) {
   function Wrapper() {
     const form = useForm<QuoteOrderOptions>({ defaultValues });
+    return <FormProvider {...form}>{ui}</FormProvider>;
+  }
+
+  return render(<Wrapper />);
+}
+
+function renderWithFormValues(
+  ui: React.ReactNode,
+  values: Partial<QuoteOrderOptions>,
+) {
+  function Wrapper() {
+    const form = useForm<QuoteOrderOptions>({
+      defaultValues: { ...defaultValues, ...values },
+    });
     return <FormProvider {...form}>{ui}</FormProvider>;
   }
 
@@ -57,6 +80,10 @@ const imageUploadStub = {
 } satisfies ImageUploadHook;
 
 describe("custom order steps", () => {
+  beforeEach(() => {
+    toastInfo.mockReset();
+  });
+
   it("부연 설명 없이 주요 선택 항목만 렌더링한다", () => {
     renderWithForm(
       <>
@@ -128,6 +155,76 @@ describe("custom order steps", () => {
     expect(
       screen.queryByText("자동 타이에서만 선택할 수 있어요"),
     ).not.toBeInTheDocument();
+  });
+
+  it("수량이 100개 이상이면 견적요청 담당자 연락처 입력란을 렌더링하고 안내 토스트를 띄운다", async () => {
+    renderWithFormValues(<QuantityStep />, { quantity: 50 });
+
+    expect(
+      screen.queryByText(
+        "100개 이상은 견적요청으로 전환됩니다. 수량 확정 후 담당자가 세부 사양과 일정을 안내합니다.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("담당자 연락처")).not.toBeInTheDocument();
+    expect(screen.queryByText("*")).not.toBeInTheDocument();
+    expect(screen.queryByText("sm:grid-cols-2")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "100개" }));
+
+    expect(screen.getByLabelText(/담당자 성함/)).toBeInTheDocument();
+    expect(screen.getByLabelText("상호명")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "전화" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(screen.getByRole("radio", { name: "이메일" })).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "카카오톡" })).toBeNull();
+    expect(screen.getByLabelText(/연락처/)).toHaveAttribute(
+      "data-slot",
+      "input",
+    );
+    expect(screen.getByLabelText(/담당자 성함/)).toHaveClass("sm:w-1/2");
+    expect(screen.getByLabelText("상호명")).toHaveClass("sm:w-1/2");
+    expect(screen.getByLabelText(/연락처/)).toHaveClass("sm:w-1/2");
+    expect(screen.getByLabelText(/연락처/)).not.toHaveClass("rounded-lg");
+    await waitFor(() => {
+      expect(toastInfo).toHaveBeenCalledTimes(1);
+    });
+    expect(toastInfo).toHaveBeenCalledWith(
+      "100개 이상은 견적요청으로 전환됩니다.",
+    );
+  });
+
+  it("연락 방법을 이메일로 선택하면 이메일 주소 라벨을 렌더링한다", async () => {
+    renderWithFormValues(<QuantityStep />, { quantity: 100 });
+
+    await userEvent.click(screen.getByRole("radio", { name: "이메일" }));
+
+    expect(screen.getByLabelText("이메일 주소")).toBeInTheDocument();
+    expect(screen.queryByLabelText("연락처")).toBeNull();
+  });
+
+  it("넥타이 폭 입력은 데스크톱에서 절반 너비로 렌더링한다", () => {
+    renderWithForm(<SpecStep />);
+
+    expect(screen.getByLabelText("넥타이 폭")).toHaveClass("sm:w-1/2");
+  });
+
+  it("심지 종류는 칩으로 렌더링하고 두께 선택은 숨긴다", async () => {
+    renderWithForm(<FinishingStep />);
+
+    const wool = screen.getByRole("radio", { name: "울 심지" });
+    const poly = screen.getByRole("radio", { name: "폴리 심지" });
+
+    expect(wool).toHaveAttribute("aria-checked", "true");
+    expect(poly).toHaveAttribute("aria-checked", "false");
+    expect(screen.queryByText("심지 두께")).not.toBeInTheDocument();
+    expect(screen.queryByText("두꺼움")).not.toBeInTheDocument();
+
+    await userEvent.click(poly);
+
+    expect(poly).toHaveAttribute("aria-checked", "true");
+    expect(wool).toHaveAttribute("aria-checked", "false");
   });
 
   it("연속된 선택 섹션 사이에 border-y로 인한 이중 라인을 만들지 않는다", () => {

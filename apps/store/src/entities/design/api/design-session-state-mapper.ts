@@ -36,6 +36,9 @@ const isCiPlacement = createGuard<NonNullable<DesignContext["ciPlacement"]>>(
   new Set(CI_PLACEMENTS),
 );
 
+const toImageCount = (value: unknown): DesignContext["imageCount"] | null =>
+  value === 1 || value === 2 || value === 3 || value === 4 ? value : null;
+
 export interface RestoredDesignSessionState {
   messages: Message[];
   designContext?: Partial<DesignContext>;
@@ -90,6 +93,14 @@ function restoreDesignContextFromMessages(
 
       if (attachment.type === "fabric" && isFabricMethod(attachment.value)) {
         restored.fabricMethod = attachment.value;
+        continue;
+      }
+
+      if (attachment.type === "image-count") {
+        const imageCount = toImageCount(Number(attachment.value));
+        if (imageCount) {
+          restored.imageCount = imageCount;
+        }
         continue;
       }
 

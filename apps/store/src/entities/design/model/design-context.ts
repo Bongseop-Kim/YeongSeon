@@ -13,6 +13,7 @@ export interface DesignContext {
   colors: string[];
   pattern: PatternOption | null;
   fabricMethod: FabricMethod | null;
+  imageCount: 1 | 2 | 3 | 4;
   sourceImage: File | null;
   onePointOffsetX: number;
   onePointOffsetY: number;

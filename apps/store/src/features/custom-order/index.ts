@@ -15,6 +15,7 @@ export { calculateTotalCost } from "./utils/pricing";
 export {
   getFabricLabel,
   getFinishingLabel,
+  getInterliningLabel,
   getSewingStyleLabel,
   getSizeLabel,
   getTieTypeLabel,

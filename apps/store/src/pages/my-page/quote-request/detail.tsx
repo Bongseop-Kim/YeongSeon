@@ -3,10 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui-extended/button";
 import { Empty } from "@/shared/composite/empty";
-import { CustomOrderOptionsSection } from "@/shared/composite/custom-order-options-section";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import {
   UtilityKeyValueRow,
-  UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
@@ -14,9 +13,11 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
+import { usePricingConfig } from "@/entities/custom-order";
 import { useQuoteRequest } from "@/entities/quote-request";
 import { QUOTE_REQUEST_BADGE_CLASS } from "@/features/quote-request";
 import { cn } from "@/shared/lib/utils";
+import { QuoteRequestSpecificationCard } from "@/widgets/checkout";
 import { CONTACT_METHOD_LABELS } from "@yeongseon/shared";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 
@@ -52,6 +53,7 @@ export default function QuoteRequestDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: quoteRequest, isLoading, error, refetch } = useQuoteRequest(id);
+  const { data: pricingConfig } = usePricingConfig();
 
   useEffect(() => {
     if (!id) {
@@ -139,17 +141,6 @@ export default function QuoteRequestDetailPage() {
               eyebrow="Quote Detail"
               title={`견적번호 ${quoteRequest.quoteNumber}`}
               description="요청 기본 정보와 연락처, 옵션, 견적 응답 상태를 확인합니다."
-              meta={
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "shrink-0",
-                    QUOTE_REQUEST_BADGE_CLASS[quoteRequest.status],
-                  )}
-                >
-                  {quoteRequest.status}
-                </Badge>
-              }
             />
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:gap-12">
@@ -179,10 +170,10 @@ export default function QuoteRequestDetailPage() {
                       label="담당자"
                       value={quoteRequest.contactName}
                     />
-                    {quoteRequest.contactTitle && (
+                    {quoteRequest.businessName && (
                       <UtilityKeyValueRow
-                        label="직함"
-                        value={quoteRequest.contactTitle}
+                        label="상호명"
+                        value={quoteRequest.businessName}
                       />
                     )}
                     <UtilityKeyValueRow
@@ -198,52 +189,54 @@ export default function QuoteRequestDetailPage() {
 
                 <UtilityPageSection
                   title="주문 옵션"
-                  description="요청 당시 선택한 옵션과 참고 자료입니다."
+                  description="요청 당시 선택한 사양과 견적 기준 금액입니다."
                 >
-                  <CustomOrderOptionsSection
-                    options={quoteRequest.options}
-                    referenceImageUrls={quoteRequest.referenceImageUrls}
-                    additionalNotes={quoteRequest.additionalNotes}
-                    hasSample={false}
+                  <QuoteRequestSpecificationCard
+                    quoteRequest={quoteRequest}
+                    pricingConfig={pricingConfig}
                   />
                 </UtilityPageSection>
               </div>
 
-              <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
-                <UtilityPageAside
-                  title="요약"
-                  description="견적 진행 상태를 빠르게 확인합니다."
-                  tone="muted"
-                >
-                  <dl>
-                    <UtilityKeyValueRow
+              <div className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
+                <SummaryCard>
+                  <SummaryCard.Header
+                    title="요약"
+                    description="견적 진행 상태를 빠르게 확인합니다."
+                  />
+                  <SummaryCard.Section>
+                    <SummaryCard.Row
                       label="상태"
-                      value={quoteRequest.status}
+                      value={
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "shrink-0",
+                            QUOTE_REQUEST_BADGE_CLASS[quoteRequest.status],
+                          )}
+                        >
+                          {quoteRequest.status}
+                        </Badge>
+                      }
                     />
-                    {quoteRequest.quotedAmount != null && (
-                      <UtilityKeyValueRow
+                    {quoteRequest.quotedAmount != null ? (
+                      <SummaryCard.Total
                         label="견적 금액"
                         value={`${quoteRequest.quotedAmount.toLocaleString()}원`}
                       />
-                    )}
-                  </dl>
-                </UtilityPageAside>
+                    ) : null}
+                  </SummaryCard.Section>
 
-                {quoteRequest.quoteConditions && (
-                  <UtilityPageAside
-                    title="견적 조건"
-                    description="담당자가 전달한 추가 조건입니다."
-                  >
-                    <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-600">
-                      {quoteRequest.quoteConditions}
-                    </p>
-                  </UtilityPageAside>
-                )}
+                  {quoteRequest.quoteConditions && (
+                    <SummaryCard.Section title="견적 조건">
+                      <p className="whitespace-pre-wrap text-sm leading-6 text-foreground-muted">
+                        {quoteRequest.quoteConditions}
+                      </p>
+                    </SummaryCard.Section>
+                  )}
+                </SummaryCard>
 
-                <UtilityPageAside
-                  title="이동"
-                  description="다른 요청을 확인하려면 목록으로 이동하세요."
-                >
+                <div className="pt-1">
                   <Button
                     variant="outline"
                     className="w-full"
@@ -251,7 +244,7 @@ export default function QuoteRequestDetailPage() {
                   >
                     목록으로
                   </Button>
-                </UtilityPageAside>
+                </div>
               </div>
             </div>
           </div>

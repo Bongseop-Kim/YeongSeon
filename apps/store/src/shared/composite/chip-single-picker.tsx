@@ -10,7 +10,7 @@ export interface ChipSinglePickerOption {
 }
 
 interface ChipSinglePickerProps {
-  options: ChipSinglePickerOption[];
+  options: readonly ChipSinglePickerOption[];
   value: string | null;
   onValueChange: (value: string) => void;
   ariaLabel: string;

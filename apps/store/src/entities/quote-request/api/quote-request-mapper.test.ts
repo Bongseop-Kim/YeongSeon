@@ -104,7 +104,7 @@ describe("quote-request 상세/입력 매핑", () => {
       ],
       additionalNotes: " 메모 ",
       contactName: " 홍길동 ",
-      contactTitle: " 팀장 ",
+      businessName: " 영선산업 ",
       contactMethod: "email",
       contactValue: " hello@example.com ",
     });
@@ -114,7 +114,7 @@ describe("quote-request 상세/입력 매핑", () => {
         quantity: 100,
         additionalNotes: "메모",
         contactName: "홍길동",
-        contactTitle: "팀장",
+        businessName: "영선산업",
         contactValue: "hello@example.com",
       }),
     );
@@ -122,6 +122,9 @@ describe("quote-request 상세/입력 매핑", () => {
       expect.objectContaining({
         shipping_address_id: "addr-1",
         quantity: 100,
+        business_name: request.businessName,
+        contact_method: request.contactMethod,
+        contact_value: request.contactValue,
         reference_images: [
           { url: "https://example.com/1.jpg", file_id: "file-1" },
         ],
@@ -143,7 +146,7 @@ describe("quote-request 상세/입력 매핑", () => {
       referenceImages: [{ url: "https://example.com/1.jpg" }, { bad: true }],
       additionalNotes: "메모",
       contactName: "홍길동",
-      contactTitle: "팀장",
+      businessName: "영선산업",
       contactMethod: "phone",
       contactValue: "010-1234-5678",
       quotedAmount: 100000,
@@ -181,6 +184,31 @@ describe("quote-request 상세/입력 매핑", () => {
     expect(toReferenceImageUrls("bad")).toEqual([]);
   });
 
+  it("legacy contactTitle 상세 응답을 businessName으로 정규화한다", () => {
+    const detail = parseQuoteRequestDetailRow({
+      id: "quote-1",
+      quoteNumber: "Q-001",
+      date: "2026-03-15",
+      status: "요청",
+      quantity: 100,
+      options: {},
+      referenceImages: [],
+      additionalNotes: "",
+      contactName: "홍길동",
+      contactTitle: "영선산업",
+      contactMethod: "email",
+      contactValue: "hello@example.com",
+      quotedAmount: null,
+      quoteConditions: null,
+    });
+
+    expect(detail).toEqual(
+      expect.objectContaining({
+        businessName: "영선산업",
+      }),
+    );
+  });
+
   it("상세 응답의 에러 케이스를 검증한다", () => {
     expect(parseQuoteRequestDetailRow(null)).toBeNull();
     expect(() => parseQuoteRequestDetailRow([])).toThrow(
@@ -197,7 +225,7 @@ describe("quote-request 상세/입력 매핑", () => {
         referenceImages: [],
         additionalNotes: "메모",
         contactName: "홍길동",
-        contactTitle: "팀장",
+        businessName: "영선산업",
         contactMethod: "email",
         contactValue: "hello@example.com",
         quotedAmount: null,
@@ -215,7 +243,7 @@ describe("quote-request 상세/입력 매핑", () => {
         referenceImages: [],
         additionalNotes: "메모",
         contactName: "홍길동",
-        contactTitle: "팀장",
+        businessName: "영선산업",
         contactMethod: "email",
         contactValue: "hello@example.com",
         quotedAmount: null,
@@ -234,7 +262,10 @@ describe("toQuoteRequestOptions", () => {
         design_type: "PRINTING",
         fabric_type: "SILK",
         fabric_provided: true,
+        reorder: true,
         interlining_thickness: "THICK",
+        size_type: "ADULT",
+        tie_width: 8,
         triangle_stitch: true,
         side_stitch: true,
         bar_tack: true,
@@ -250,7 +281,10 @@ describe("toQuoteRequestOptions", () => {
       designType: "PRINTING",
       fabricType: "SILK",
       fabricProvided: true,
+      reorder: true,
       interliningThickness: "THICK",
+      sizeType: "ADULT",
+      tieWidth: 8,
       triangleStitch: true,
       sideStitch: true,
       barTack: true,
@@ -267,6 +301,9 @@ describe("toQuoteRequestOptions", () => {
       toQuoteRequestOptions({
         tie_type: 1,
         fabric_provided: "yes",
+        reorder: "yes",
+        size_type: "BIG",
+        tie_width: "8",
         triangle_stitch: null,
       }),
     ).toEqual({
@@ -275,7 +312,10 @@ describe("toQuoteRequestOptions", () => {
       designType: "",
       fabricType: "",
       fabricProvided: false,
+      reorder: false,
       interliningThickness: "",
+      sizeType: "",
+      tieWidth: 8,
       triangleStitch: false,
       sideStitch: false,
       barTack: false,

@@ -12,8 +12,8 @@ export interface CreateQuoteRequestRequest {
   referenceImages: ImageRef[];
   additionalNotes: string;
   contactName: string;
-  contactTitle: string;
-  contactMethod: "email" | "kakao" | "phone";
+  businessName: string;
+  contactMethod: "email" | "phone";
   contactValue: string;
 }
 
@@ -24,7 +24,7 @@ export interface CreateQuoteRequestRequestDto {
   reference_images: DbImageRef[];
   additional_notes: string;
   contact_name: string;
-  contact_title: string;
-  contact_method: "email" | "kakao" | "phone";
+  business_name: string;
+  contact_method: "email" | "phone";
   contact_value: string;
 }

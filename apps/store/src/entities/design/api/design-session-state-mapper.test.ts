@@ -101,6 +101,11 @@ describe("toRestoredDesignSessionState", () => {
               value: "print",
             },
             {
+              type: "image-count",
+              label: "생성 수량",
+              value: "2",
+            },
+            {
               type: "ci-placement",
               label: "원포인트",
               value: "one-point",
@@ -114,6 +119,7 @@ describe("toRestoredDesignSessionState", () => {
       colors: ["#112233"],
       pattern: "check",
       fabricMethod: "print",
+      imageCount: 2,
       ciPlacement: "one-point",
     });
   });

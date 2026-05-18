@@ -11,6 +11,8 @@ const { navigate, success, error, createQuoteRequestMutateAsync } = vi.hoisted(
   }),
 );
 
+const modalOpenModal = vi.hoisted(() => vi.fn());
+
 const authState = vi.hoisted(() => ({
   user: { id: "user-1" } as { id: string } | null,
 }));
@@ -30,6 +32,12 @@ vi.mock("@/shared/lib/toast", () => ({
     success,
     error,
   },
+}));
+
+vi.mock("@/shared/store/modal", () => ({
+  useModalStore: () => ({
+    openModal: modalOpenModal,
+  }),
 }));
 
 vi.mock("@/entities/quote-request", () => ({
@@ -62,7 +70,7 @@ const createValues = (quantity: number) => ({
   referenceImages: null,
   additionalNotes: "메모",
   contactName: "홍길동",
-  contactTitle: "팀장",
+  businessName: "영선산업",
   contactMethod: "email" as const,
   contactValue: "hello@example.com",
 });
@@ -70,10 +78,46 @@ const createValues = (quantity: number) => ({
 describe("useCustomOrderSubmit", () => {
   beforeEach(() => {
     authState.user = { id: "user-1" };
+    modalOpenModal.mockReset();
+    modalOpenModal.mockImplementation(
+      ({ onConfirm }: { onConfirm?: () => void }) => onConfirm?.(),
+    );
     navigate.mockReset();
     success.mockReset();
     error.mockReset();
     createQuoteRequestMutateAsync.mockReset();
+  });
+
+  it("견적 요청 전 확인창에서 취소하면 제출하지 않는다", async () => {
+    modalOpenModal.mockImplementationOnce(
+      ({ onCancel }: { onCancel?: () => void }) => onCancel?.(),
+    );
+
+    const { result } = renderHook(() =>
+      useCustomOrderSubmit({
+        selectedAddressId: "addr-1",
+        selectedAddress: { id: "addr-1" } as never,
+        imageUpload: {
+          isUploading: false,
+          getImageRefs: () => [],
+        } as never,
+        watchedValues: createValues(100),
+        formReset: vi.fn(),
+        totalCost: 0,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(modalOpenModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "견적 요청",
+        description: "입력한 사양과 연락처로 견적 요청을 접수할까요?",
+      }),
+    );
+    expect(createQuoteRequestMutateAsync).not.toHaveBeenCalled();
   });
 
   it("즉시주문(수량 < 100) 시 결제 페이지로 navigate한다", async () => {

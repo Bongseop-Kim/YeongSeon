@@ -3,7 +3,8 @@ export type AttachmentType =
   | "pattern"
   | "fabric"
   | "image"
-  | "ci-placement";
+  | "ci-placement"
+  | "image-count";
 
 const LOG_ATTACHMENT_TYPES: readonly AttachmentType[] = [
   "color",
@@ -11,6 +12,7 @@ const LOG_ATTACHMENT_TYPES: readonly AttachmentType[] = [
   "fabric",
   "image",
   "ci-placement",
+  "image-count",
 ] as const;
 
 const MAX_ATTACHMENT_COUNT = 20;

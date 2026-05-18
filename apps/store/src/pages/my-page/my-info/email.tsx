@@ -7,8 +7,8 @@ import { Input } from "@/shared/ui-extended/input";
 import { Label } from "@/shared/ui/label";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import {
-  UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
@@ -189,20 +189,21 @@ export default function MyInfoEmailPage() {
               </div>
 
               <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
-                <UtilityPageAside
-                  title="안내"
-                  description="이메일이 바뀌면 이후 로그인과 안내 메일 수신 주소도 함께 변경됩니다."
-                  tone="muted"
-                >
-                  <ul className="space-y-2 text-sm leading-6 text-zinc-600">
-                    <li>현재 사용 가능한 이메일 주소만 입력해 주세요.</li>
-                    <li>인증이 완료되기 전까지 기존 이메일은 유지됩니다.</li>
-                    <li>
-                      완료 후 내 정보 화면으로 돌아가 변경 내용을 확인할 수
-                      있습니다.
-                    </li>
-                  </ul>
-                </UtilityPageAside>
+                <SummaryCard>
+                  <SummaryCard.Header
+                    title="안내"
+                    description="이메일이 바뀌면 이후 로그인과 안내 메일 수신 주소도 함께 변경됩니다."
+                  />
+                  <SummaryCard.Section>
+                    <SummaryCard.NoticeList
+                      items={[
+                        "현재 사용 가능한 이메일 주소만 입력해 주세요.",
+                        "인증이 완료되기 전까지 기존 이메일은 유지됩니다.",
+                        "완료 후 내 정보 화면으로 돌아가 변경 내용을 확인할 수 있습니다.",
+                      ]}
+                    />
+                  </SummaryCard.Section>
+                </SummaryCard>
               </div>
             </div>
           </div>

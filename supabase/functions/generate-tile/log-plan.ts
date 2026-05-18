@@ -49,19 +49,29 @@ export function buildSuccessfulTileGenerationLogs({
   accentLayouts,
   reusedRepeatTile,
 }: BuildSuccessfulTileGenerationLogsParams): AiGenerationLogInsert[] {
-  if (repeatResults.length !== 4) {
-    throw new Error("generation logs require 4 repeat results");
+  if (repeatResults.length < 1 || repeatResults.length > 4) {
+    throw new Error("generation logs require 1-4 repeat results");
   }
 
-  if (patternType === "one_point" && accentResults.length !== 4) {
-    throw new Error("one_point generation logs require 4 accent results");
+  if (
+    patternType === "one_point" &&
+    accentResults.length !== repeatResults.length
+  ) {
+    throw new Error(
+      "one_point generation logs require matching accent results",
+    );
   }
 
   if (patternType === "all_over" && accentResults.length !== 0) {
     throw new Error("all_over generation logs must not include accent results");
   }
-  if (patternType === "one_point" && accentLayouts.length !== 4) {
-    throw new Error("one_point generation logs require 4 accent layouts");
+  if (
+    patternType === "one_point" &&
+    accentLayouts.length !== repeatResults.length
+  ) {
+    throw new Error(
+      "one_point generation logs require matching accent layouts",
+    );
   }
 
   const logs: AiGenerationLogInsert[] = [];

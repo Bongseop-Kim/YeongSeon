@@ -30,6 +30,7 @@ export interface TileGenerationPayload {
   route: "tile_generation" | "tile_edit";
   userMessage: string;
   uiFabricType: FabricType | null;
+  imageCount: 1 | 2 | 3 | 4;
   selectedColors: string[];
   previousFabricType: FabricType | null;
   previousRepeatTile: TileRef | null;

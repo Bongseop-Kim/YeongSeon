@@ -1,5 +1,11 @@
 export interface Attachment {
-  type: "color" | "pattern" | "fabric" | "image" | "ci-placement";
+  type:
+    | "color"
+    | "pattern"
+    | "fabric"
+    | "image"
+    | "ci-placement"
+    | "image-count";
   label: string;
   value: string;
   file?: File;

@@ -72,6 +72,8 @@ export function CartRecommendationsCard({
     return null;
   }
 
+  const visibleProducts = isMobile ? products.slice(0, 6) : products;
+
   return (
     <UtilityPageSection
       title="추천 상품"
@@ -82,7 +84,7 @@ export function CartRecommendationsCard({
         <div
           className={`grid ${isMobile ? "grid-cols-3" : "grid-cols-4"} gap-2`}
         >
-          {products.map((product) => (
+          {visibleProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

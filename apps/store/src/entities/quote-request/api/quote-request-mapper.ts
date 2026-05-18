@@ -17,6 +17,14 @@ import type {
   QuoteRequestOptions,
   QuoteRequestStatus,
 } from "@yeongseon/shared";
+import {
+  CUSTOM_ORDER_INTERLININGS,
+  CUSTOM_ORDER_INTERLINING_THICKNESSES,
+  CUSTOM_ORDER_SIZE_TYPES,
+  SHARED_DESIGN_TYPES,
+  SHARED_FABRIC_TYPES,
+  SHARED_TIE_TYPES,
+} from "@/shared/lib/custom-order-option-constants";
 
 type OrderOptionsForMapping = Omit<
   OrderOptions,
@@ -29,8 +37,8 @@ interface ToCreateQuoteRequestInput {
   referenceImages: ImageRef[];
   additionalNotes: string;
   contactName: string;
-  contactTitle: string;
-  contactMethod: "email" | "kakao" | "phone";
+  businessName: string;
+  contactMethod: SupportedContactMethod;
   contactValue: string;
 }
 
@@ -43,7 +51,7 @@ export const toCreateQuoteRequestInput = (
   referenceImages: normalizeReferenceImages(input.referenceImages),
   additionalNotes: input.additionalNotes.trim(),
   contactName: input.contactName.trim(),
-  contactTitle: input.contactTitle.trim(),
+  businessName: input.businessName.trim(),
   contactMethod: input.contactMethod,
   contactValue: input.contactValue.trim(),
 });
@@ -57,7 +65,7 @@ export const toCreateQuoteRequestInputDto = (
   reference_images: request.referenceImages.map(toDbImageRef),
   additional_notes: request.additionalNotes,
   contact_name: request.contactName,
-  contact_title: request.contactTitle,
+  business_name: request.businessName,
   contact_method: request.contactMethod,
   contact_value: request.contactValue,
 });
@@ -84,15 +92,26 @@ interface QuoteRequestDetailRowDTO {
   referenceImages: unknown;
   additionalNotes: string;
   contactName: string;
-  contactTitle: string;
+  businessName: string;
   contactMethod: ContactMethod;
   contactValue: string;
   quotedAmount: number | null;
   quoteConditions: string | null;
 }
 
-const isContactMethod = (value: unknown): value is ContactMethod =>
-  value === "email" || value === "kakao" || value === "phone";
+const SupportedContactMethods = ["email", "phone"] as const;
+type SupportedContactMethod = (typeof SupportedContactMethods)[number];
+
+const isSupportedContactMethod = (
+  value: unknown,
+): value is SupportedContactMethod =>
+  typeof value === "string" &&
+  SupportedContactMethods.includes(value as SupportedContactMethod);
+
+const isOneOf = <T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+): value is T => typeof value === "string" && allowed.includes(value as T);
 
 const isQuoteRequestStatus = (value: unknown): value is QuoteRequestStatus =>
   value === "요청" ||
@@ -137,7 +156,7 @@ export const parseQuoteRequestListRows = (
       );
     }
 
-    if (!isContactMethod(row.contactMethod)) {
+    if (!isSupportedContactMethod(row.contactMethod)) {
       throw new Error(
         `견적 요청 행(${index})이 올바르지 않습니다: contactMethod 값(${String(row.contactMethod)})이 허용된 값이 아닙니다.`,
       );
@@ -179,15 +198,31 @@ export const toQuoteRequestListItem = (
 export const toQuoteRequestOptions = (
   raw: Record<string, unknown>,
 ): QuoteRequestOptions => ({
-  tieType: typeof raw.tie_type === "string" ? raw.tie_type : "",
-  interlining: typeof raw.interlining === "string" ? raw.interlining : "",
-  designType: typeof raw.design_type === "string" ? raw.design_type : "",
-  fabricType: typeof raw.fabric_type === "string" ? raw.fabric_type : "",
+  tieType: isOneOf(raw.tie_type, SHARED_TIE_TYPES) ? raw.tie_type : "",
+  interlining: isOneOf(raw.interlining, CUSTOM_ORDER_INTERLININGS)
+    ? raw.interlining
+    : "",
+  designType: isOneOf(raw.design_type, SHARED_DESIGN_TYPES)
+    ? raw.design_type
+    : "",
+  fabricType: isOneOf(raw.fabric_type, SHARED_FABRIC_TYPES)
+    ? raw.fabric_type
+    : "",
   fabricProvided: raw.fabric_provided === true,
-  interliningThickness:
-    typeof raw.interlining_thickness === "string"
-      ? raw.interlining_thickness
-      : "",
+  reorder: raw.reorder === true,
+  interliningThickness: isOneOf(
+    raw.interlining_thickness,
+    CUSTOM_ORDER_INTERLINING_THICKNESSES,
+  )
+    ? raw.interlining_thickness
+    : "",
+  sizeType: isOneOf(raw.size_type, CUSTOM_ORDER_SIZE_TYPES)
+    ? raw.size_type
+    : "",
+  tieWidth:
+    typeof raw.tie_width === "number" && Number.isFinite(raw.tie_width)
+      ? raw.tie_width
+      : 8,
   triangleStitch: raw.triangle_stitch === true,
   sideStitch: raw.side_stitch === true,
   barTack: raw.bar_tack === true,
@@ -219,6 +254,13 @@ export const parseQuoteRequestDetailRow = (
     );
   }
 
+  const businessName =
+    typeof data.businessName === "string"
+      ? data.businessName
+      : typeof data.contactTitle === "string"
+        ? data.contactTitle
+        : null;
+
   if (
     typeof data.id !== "string" ||
     typeof data.quoteNumber !== "string" ||
@@ -226,7 +268,7 @@ export const parseQuoteRequestDetailRow = (
     typeof data.quantity !== "number" ||
     typeof data.additionalNotes !== "string" ||
     typeof data.contactName !== "string" ||
-    typeof data.contactTitle !== "string" ||
+    businessName === null ||
     typeof data.contactValue !== "string"
   ) {
     throw new Error(
@@ -240,7 +282,7 @@ export const parseQuoteRequestDetailRow = (
     );
   }
 
-  if (!isContactMethod(data.contactMethod)) {
+  if (!isSupportedContactMethod(data.contactMethod)) {
     throw new Error(
       `견적 요청 상세 응답이 올바르지 않습니다: contactMethod 값(${String(data.contactMethod)})이 허용된 값이 아닙니다.`,
     );
@@ -277,7 +319,7 @@ export const parseQuoteRequestDetailRow = (
     referenceImages: data.referenceImages,
     additionalNotes: data.additionalNotes,
     contactName: data.contactName,
-    contactTitle: data.contactTitle,
+    businessName,
     contactMethod: data.contactMethod,
     contactValue: data.contactValue,
     quotedAmount: data.quotedAmount,
@@ -297,7 +339,7 @@ export const toQuoteRequestDetail = (
   referenceImageUrls: toReferenceImageUrls(row.referenceImages),
   additionalNotes: row.additionalNotes,
   contactName: row.contactName,
-  contactTitle: row.contactTitle,
+  businessName: row.businessName,
   contactMethod: row.contactMethod,
   contactValue: row.contactValue,
   quotedAmount: row.quotedAmount,

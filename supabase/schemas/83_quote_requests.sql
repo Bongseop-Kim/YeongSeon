@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.quote_requests (
   reference_images    jsonb        NOT NULL DEFAULT '[]'::jsonb,
   additional_notes     text        NOT NULL DEFAULT '',
   contact_name         varchar     NOT NULL,
-  contact_title        varchar     NOT NULL DEFAULT '',
+  business_name        varchar     NOT NULL DEFAULT '',
   contact_method       text        NOT NULL,
   contact_value        varchar     NOT NULL,
   status               text        NOT NULL DEFAULT '요청',
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.quote_requests (
   CONSTRAINT quote_requests_quantity_check
     CHECK (quantity >= 100),
   CONSTRAINT quote_requests_contact_method_check
-    CHECK (contact_method IN ('email', 'kakao', 'phone')),
+    CHECK (contact_method IN ('email', 'phone')),
   CONSTRAINT quote_requests_status_check
     CHECK (status IN ('요청', '견적발송', '협의중', '확정', '종료'))
 );
@@ -81,6 +81,24 @@ CREATE POLICY "Admins can update all quote requests"
 -- Privilege hardening: admins can only update specific columns
 REVOKE UPDATE ON TABLE public.quote_requests FROM authenticated;
 GRANT UPDATE (status, quoted_amount, quote_conditions, admin_memo) ON TABLE public.quote_requests TO authenticated;
+
+CREATE TABLE IF NOT EXISTS public.quote_request_contact_migration_audit (
+  quote_request_id        uuid        NOT NULL,
+  observed_contact_method text        NOT NULL,
+  observed_contact_value  varchar     NOT NULL,
+  reason                  text        NOT NULL,
+  created_at              timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT quote_request_contact_migration_audit_pkey PRIMARY KEY (quote_request_id),
+  CONSTRAINT quote_request_contact_migration_audit_quote_request_id_fkey
+    FOREIGN KEY (quote_request_id) REFERENCES public.quote_requests (id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+COMMENT ON TABLE public.quote_request_contact_migration_audit
+  IS 'Stores quote request contact values that were already migrated from kakao to email but do not look like email addresses before masking them for review and rollback.';
+
+ALTER TABLE public.quote_request_contact_migration_audit ENABLE ROW LEVEL SECURITY;
 
 -- =============================================================
 -- quote_request_status_logs  –  Status change audit trail

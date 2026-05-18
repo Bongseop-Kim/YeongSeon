@@ -18,12 +18,11 @@ export async function getDesignImages(
   const to = from + pageSize - 1;
 
   const { data, error, count } = await supabase
-    .from("design_chat_messages")
+    .from("design_generation_variants")
     .select(
-      "image_url, image_file_id, created_at, design_chat_sessions!inner(first_message)",
+      "id, repeat_tile_url, repeat_tile_work_id, created_at, design_generations!inner(prompt)",
       { count: "exact" },
     )
-    .not("image_url", "is", null)
     .order("created_at", { ascending: false })
     .range(from, to);
 

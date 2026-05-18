@@ -113,6 +113,16 @@ function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+function FieldHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="field-header"
+      className={cn("flex items-center justify-between gap-3", className)}
+      {...props}
+    />
+  );
+}
+
 function FieldLabel({
   className,
   variant = "default",
@@ -265,5 +275,6 @@ export {
   FieldSeparator,
   FieldSet,
   FieldContent,
+  FieldHeader,
   FieldTitle,
 };

@@ -15,12 +15,15 @@ export interface QuoteRequestListItem {
 }
 
 export interface QuoteRequestOptions {
-  tieType: string;
-  interlining: string;
-  designType: string;
-  fabricType: string;
+  tieType: "AUTO" | null | "";
+  interlining: "WOOL" | "POLY" | null | "";
+  designType: "PRINTING" | "YARN_DYED" | null | "";
+  fabricType: "SILK" | "POLY" | null | "";
   fabricProvided: boolean;
-  interliningThickness: string;
+  reorder: boolean;
+  interliningThickness: "THICK" | "THIN" | null | "";
+  sizeType: "ADULT" | "CHILD" | null | "";
+  tieWidth: number;
   triangleStitch: boolean;
   sideStitch: boolean;
   barTack: boolean;
@@ -41,7 +44,7 @@ export interface QuoteRequestDetail {
   referenceImageUrls: string[];
   additionalNotes: string;
   contactName: string;
-  contactTitle: string;
+  businessName: string;
   contactMethod: ContactMethod;
   contactValue: string;
   quotedAmount: number | null;

@@ -29,8 +29,15 @@ export function TieMask({
     <div className="relative" style={{ width, height }}>
       <div className="absolute inset-0" style={tieMaskStyle}>
         <div
+          data-testid="tile-preview-layer"
           className={cn("absolute inset-0", imageClassName)}
-          style={imageStyle ?? { background: imageUrl }}
+          style={
+            imageStyle ?? {
+              backgroundImage: `url(${imageUrl})`,
+              backgroundPosition: "center",
+              backgroundSize: "cover",
+            }
+          }
         />
         {children}
       </div>

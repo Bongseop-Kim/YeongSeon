@@ -117,8 +117,12 @@ describe("ChatPanel", () => {
 
     renderPanel();
 
-    expect(screen.getByText(/Korean Prompt:/)).toBeInTheDocument();
     expect(screen.getByText("네이비 스트라이프")).toBeInTheDocument();
+    expect(screen.queryByText(/Korean Prompt:/)).not.toBeInTheDocument();
+    expect(screen.queryByText("4 variants")).not.toBeInTheDocument();
+    expect(screen.queryByText("one point")).not.toBeInTheDocument();
+    expect(screen.queryByText("printed")).not.toBeInTheDocument();
+    expect(screen.queryByText("accent paired")).not.toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: /variant \d 선택/ }),
     ).toHaveLength(4);

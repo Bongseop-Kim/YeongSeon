@@ -40,7 +40,11 @@ import type {
 import { buildTileGenerationVariantResponse } from "./variant-response.ts";
 
 const TILE_GENERATION_AI_MESSAGE = "타일 기반 디자인을 생성했습니다.";
-const TILE_VARIANT_COUNT = 4;
+
+const toRequestedImageCount = (
+  value: TileGenerationRequest["imageCount"],
+): 1 | 2 | 3 | 4 =>
+  value === 1 || value === 2 || value === 3 || value === 4 ? value : 4;
 
 function getLatestUserRequestAttachments(body: TileGenerationRequest) {
   for (let index = body.allMessages.length - 1; index >= 0; index -= 1) {
@@ -53,8 +57,8 @@ function getLatestUserRequestAttachments(body: TileGenerationRequest) {
   return null;
 }
 
-const repeatTile = (tile: GeneratedTile): GeneratedTile[] =>
-  Array.from({ length: TILE_VARIANT_COUNT }, () => tile);
+const repeatTile = (tile: GeneratedTile, count: number): GeneratedTile[] =>
+  Array.from({ length: count }, () => tile);
 
 const analysisForVariant = (
   baseAnalysis: AnalysisOutput,
@@ -76,6 +80,7 @@ const buildGenerationRequestMetadata = (
   route: body.route,
   sessionId: body.sessionId,
   workflowId: body.workflowId,
+  imageCount: toRequestedImageCount(body.imageCount),
   selectedColors: body.selectedColors,
   attachments: body.allMessages.at(-1)?.attachments ?? [],
   selectedBackgroundColor,
@@ -122,6 +127,7 @@ Deno.serve(async (req) => {
       body.userMessage,
       body.previousFabricType,
     );
+    const requestedImageCount = toRequestedImageCount(body.imageCount);
     const requestAttachments = getLatestUserRequestAttachments(body);
     const renderWorkId = crypto.randomUUID();
 
@@ -210,10 +216,12 @@ Deno.serve(async (req) => {
       const diversityPlan = reuseRepeatTile
         ? null
         : await planDiversity(body, analysis, fabricType);
+      const requestedVariants =
+        diversityPlan?.variants.slice(0, requestedImageCount) ?? [];
       const repeatGenerationPlans =
         reuseRepeatTile || !diversityPlan
           ? []
-          : diversityPlan.variants.map((variant) => {
+          : requestedVariants.map((variant) => {
               const variantAnalysis = analysisForVariant(analysis, variant);
               const referenceImageUrls = resolveRepeatReferenceImageUrls(
                 variantAnalysis,
@@ -253,7 +261,7 @@ Deno.serve(async (req) => {
       }
 
       const repeatResults = reusableRepeatTile
-        ? repeatTile(reusableRepeatTile)
+        ? repeatTile(reusableRepeatTile, requestedImageCount)
         : await Promise.all(
             repeatGenerationPlans.map((plan, index) =>
               generateTileImage(
@@ -283,7 +291,7 @@ Deno.serve(async (req) => {
                   ),
                 };
               })
-            : diversityPlan.variants.map((variant, index) => {
+            : requestedVariants.map((variant, index) => {
                 if (!variant.accentLayout) {
                   throw new Error("one_point variant requires accentLayout");
                 }
@@ -334,15 +342,17 @@ Deno.serve(async (req) => {
       ].filter((part): part is string => part !== null);
       const generationPrompt =
         promptParts.length > 0 ? promptParts.join("\n\n") : body.userMessage;
+      const displayPrompt = body.userMessage.trim() || generationPrompt;
+      const repeatReferenceImageCount = repeatGenerationPlans.reduce(
+        (sum, plan) => sum + plan.referenceImageUrls.length,
+        0,
+      );
+      const accentReferenceImageCount = accentGenerationPlans.reduce(
+        (sum, plan) => sum + plan.referenceImageUrls.length,
+        0,
+      );
       const referenceImageCount =
-        repeatGenerationPlans.reduce(
-          (sum, plan) => sum + plan.referenceImageUrls.length,
-          0,
-        ) +
-        accentGenerationPlans.reduce(
-          (sum, plan) => sum + plan.referenceImageUrls.length,
-          0,
-        );
+        repeatReferenceImageCount + accentReferenceImageCount;
       const renderLogFields = {
         ...baseLogFields,
         parent_work_id: parentWorkId,
@@ -350,15 +360,10 @@ Deno.serve(async (req) => {
         image_prompt: generationPrompt,
         normalized_design: {
           ...analysis,
+          requestedImageCount,
           attachedImageCount: body.attachedImageUrls.length,
-          repeatReferenceImageCount: repeatGenerationPlans.reduce(
-            (sum, plan) => sum + plan.referenceImageUrls.length,
-            0,
-          ),
-          accentReferenceImageCount: accentGenerationPlans.reduce(
-            (sum, plan) => sum + plan.referenceImageUrls.length,
-            0,
-          ),
+          repeatReferenceImageCount,
+          accentReferenceImageCount,
           imageEndpoint: referenceImageCount > 0 ? "edits" : "generations",
           diversityPlan,
         } as Record<string, unknown>,
@@ -399,7 +404,7 @@ Deno.serve(async (req) => {
       const result: TileGenerationResponse = buildTileGenerationVariantResponse(
         {
           generationId,
-          prompt: generationPrompt,
+          prompt: displayPrompt,
           patternType: analysis.patternType,
           fabricType,
           repeatResults,
@@ -421,11 +426,11 @@ Deno.serve(async (req) => {
           accentLayouts,
           reusedRepeatTile: reuseRepeatTile,
         });
-        for (const generationLog of generationLogs) {
-          await logGeneration(adminClient, generationLog, {
-            requireSuccess: true,
-          });
-        }
+        await Promise.all(
+          generationLogs.map((generationLog) =>
+            logGeneration(adminClient, generationLog, { requireSuccess: true }),
+          ),
+        );
       } catch (error) {
         console.error("generate-tile logGeneration failed:", {
           workId: primaryResult.workId,
@@ -439,7 +444,7 @@ Deno.serve(async (req) => {
         await persistDesignGeneration(adminClient, {
           generationId,
           userId: user.id,
-          prompt: generationPrompt,
+          prompt: displayPrompt,
           patternType: analysis.patternType,
           fabricType,
           requestMetadata: buildGenerationRequestMetadata(

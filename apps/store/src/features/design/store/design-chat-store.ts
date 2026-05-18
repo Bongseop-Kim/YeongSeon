@@ -71,6 +71,7 @@ const createInitialDesignContext = (): DesignContext => ({
   colors: [],
   pattern: null,
   fabricMethod: "yarn-dyed",
+  imageCount: 4,
   sourceImage: null,
   onePointOffsetX: 0,
   onePointOffsetY: 0,

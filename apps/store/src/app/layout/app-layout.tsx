@@ -30,6 +30,8 @@ import { usePopup } from "@/shared/hooks/usePopup";
 
 const HEADER_BTN_CLASS =
   "border-white/18 bg-white/10 text-white hover:bg-white hover:text-black";
+const BRAND_LABEL = "ㅇㅅㅅㅇ";
+const BRAND_LOGO_SRC = "/logo/logo_no_bg.png";
 
 function isActiveNavItem(pathname: string, href: string) {
   return href === ROUTES.HOME ? pathname === href : pathname.startsWith(href);
@@ -66,7 +68,7 @@ export default function AppLayout() {
 
   const getCurrentPageName = () => {
     if (!isMobile) {
-      return "ESSE SION";
+      return BRAND_LABEL;
     }
 
     const { pathname } = location;
@@ -95,7 +97,7 @@ export default function AppLayout() {
       return matchedTitle;
     }
 
-    return "ESSE SION";
+    return BRAND_LABEL;
   };
 
   const canGoBack = () => {
@@ -107,9 +109,11 @@ export default function AppLayout() {
   };
 
   const headerClassName = "relative z-30 h-auto";
+  const currentPageName = getCurrentPageName();
+  const shouldShowBrandLogo = currentPageName === BRAND_LABEL;
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-x-auto">
+    <div className="relative flex h-dvh flex-col overflow-x-auto overflow-y-hidden">
       {showHeader && (
         <Header
           size="sm"
@@ -140,8 +144,17 @@ export default function AppLayout() {
                 onClick={() => !isMobile && navigate(ROUTES.HOME)}
                 disabled={isMobile}
                 aria-disabled={isMobile}
+                aria-label={shouldShowBrandLogo ? BRAND_LABEL : currentPageName}
               >
-                {getCurrentPageName()}
+                {shouldShowBrandLogo ? (
+                  <img
+                    src={BRAND_LOGO_SRC}
+                    alt={BRAND_LABEL}
+                    className={isMobile ? "h-8 w-8" : "h-10 w-10"}
+                  />
+                ) : (
+                  currentPageName
+                )}
               </button>
             </HeaderTitle>
 

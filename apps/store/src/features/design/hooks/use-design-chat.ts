@@ -250,6 +250,7 @@ export function useDesignChat(
         route,
         userMessage: input.userText,
         uiFabricType,
+        imageCount: state.designContext.imageCount,
         selectedColors: state.designContext.colors,
         previousFabricType: state.fabricType,
         previousRepeatTile: state.repeatTile,

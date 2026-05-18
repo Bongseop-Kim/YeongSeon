@@ -47,7 +47,7 @@ export function PreviewPanel({ className, onRegenerate }: PreviewPanelProps) {
           </div>
         )}
         <div className="flex flex-1 items-center justify-center overflow-hidden">
-          <TieCanvas unmasked={unmasked} />
+          <TieCanvas unmasked={unmasked} enableMagnifier={!isFullscreen} />
         </div>
         {!isFullscreen && (
           <div className="flex flex-col gap-4 border-t border-gray-200 pt-3">

@@ -8,10 +8,10 @@ import { ROUTES } from "@/shared/constants/ROUTES";
 import { useProfile } from "@/entities/my-page";
 import {
   UtilityKeyValueRow,
-  UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
+import { SummaryCard } from "@/shared/composite/summary-card";
 
 export default function MyInfoDetailPage() {
   const navigate = useNavigate();
@@ -80,39 +80,41 @@ export default function MyInfoDetailPage() {
               </div>
 
               <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
-                <UtilityPageAside
-                  title="다음 작업"
-                  description="자주 사용하는 정보 변경 경로입니다."
-                  tone="muted"
-                >
-                  <div className="space-y-3">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-center"
-                      disabled
-                      aria-disabled="true"
-                      title="준비 중인 기능입니다."
-                    >
-                      회원정보 변경 준비 중
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-center"
-                      onClick={() => navigate(ROUTES.MY_PAGE_MY_INFO_NOTICE)}
-                      disabled={isLoading || !profile}
-                    >
-                      알림 설정
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-center"
-                      onClick={() => navigate(ROUTES.MY_PAGE_MY_INFO_EMAIL)}
-                      disabled={isLoading || !profile}
-                    >
-                      이메일 변경
-                    </Button>
-                  </div>
-                </UtilityPageAside>
+                <SummaryCard>
+                  <SummaryCard.Header
+                    title="다음 작업"
+                    description="자주 사용하는 정보 변경 경로입니다."
+                  />
+                  <SummaryCard.Section>
+                    <div className="space-y-3">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-center"
+                        disabled
+                        aria-disabled="true"
+                        title="준비 중인 기능입니다."
+                      >
+                        회원정보 변경 준비 중
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-center"
+                        onClick={() => navigate(ROUTES.MY_PAGE_MY_INFO_NOTICE)}
+                        disabled={isLoading || !profile}
+                      >
+                        알림 설정
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-center"
+                        onClick={() => navigate(ROUTES.MY_PAGE_MY_INFO_EMAIL)}
+                        disabled={isLoading || !profile}
+                      >
+                        이메일 변경
+                      </Button>
+                    </div>
+                  </SummaryCard.Section>
+                </SummaryCard>
               </div>
             </div>
           </div>

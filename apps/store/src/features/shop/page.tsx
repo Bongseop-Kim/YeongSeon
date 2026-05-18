@@ -148,8 +148,8 @@ export default function ShopPage() {
         <MainContent>
           <PageLayout>
             <div className="pb-16">
-              <section className="sticky top-0 z-30 border-b border-zinc-200 bg-background/92 backdrop-blur">
-                <div className="flex flex-col gap-2 py-4 lg:flex-row lg:items-center lg:justify-between">
+              <section className="sticky top-0 z-30 bg-background/92 backdrop-blur">
+                <div className="rounded-lg bg-white py-3">
                   <div className="min-w-0">
                     {isMobile ? (
                       <FilterSheet
@@ -172,12 +172,13 @@ export default function ShopPage() {
                         onFilterClick={handleFilterButtonClick}
                         onMainButtonClick={() => setIsFilterModalOpen(true)}
                         activeCounts={activeFilterCounts}
+                        onReset={handleResetFilters}
                       />
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 lg:justify-end px-2">
-                    <div className="text-sm text-zinc-500">
+                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-zinc-200 pt-3">
+                    <div className="text-sm font-medium text-zinc-700">
                       {isLoading
                         ? "상품을 찾는 중"
                         : `총 ${products.length}개 상품`}
@@ -187,9 +188,7 @@ export default function ShopPage() {
                 </div>
               </section>
 
-              <section className="lg:pt-10">
-                <ProductGrid products={products} isLoading={isLoading} />
-              </section>
+              <ProductGrid products={products} isLoading={isLoading} />
             </div>
           </PageLayout>
         </MainContent>

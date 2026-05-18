@@ -1,6 +1,5 @@
 import { useId, useRef } from "react";
-import { Button } from "@/shared/ui-extended/button";
-import { Upload, X, Loader2, ImageOff } from "lucide-react";
+import { X, Loader2, Plus } from "lucide-react";
 import {
   Field,
   FieldContent,
@@ -9,6 +8,7 @@ import {
   FieldTitle,
 } from "@/shared/ui/field";
 import type { ImageUploadHook } from "@/features/custom-order/types/image-upload";
+import { cn } from "@/shared/lib/utils";
 
 interface ImageUploadProps {
   uploadedImages: ImageUploadHook["uploadedImages"];
@@ -46,72 +46,68 @@ export const ImageUpload = ({
           <FieldDescription>PNG, JPG, GIF 파일 지원</FieldDescription>
         </>
       ) : null}
-      <FieldContent className="space-y-3">
-        <div className="relative rounded-lg border-2 border-dashed border-border p-5 text-center transition-colors">
-          <input
-            ref={inputRef}
-            id={inputId}
-            type="file"
-            accept="image/*"
-            onChange={handleChange}
-            className="sr-only"
-          />
+      <FieldContent>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          {uploadedImages.map((image, index) => (
+            <div
+              key={`${image.fileId}-${image.url}-${index}`}
+              className="relative aspect-square overflow-hidden rounded-lg bg-muted"
+            >
+              {image.url ? (
+                <img
+                  src={image.url}
+                  alt={image.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div
+                  role="img"
+                  aria-label={`${image.name} 미리보기 없음`}
+                  className="h-full w-full bg-[repeating-linear-gradient(45deg,var(--color-muted)_0,var(--color-muted)_8px,var(--color-border)_8px,var(--color-border)_16px)]"
+                />
+              )}
+              <button
+                type="button"
+                aria-label={`${image.name} 삭제`}
+                onClick={() => onRemoveImage(index)}
+                className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-foreground/80 text-background transition-colors hover:bg-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+
           <label
             htmlFor={inputId}
-            className="cursor-pointer flex flex-col items-center gap-2"
+            aria-label="이미지 추가"
+            className={cn(
+              "flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border bg-background text-foreground transition-colors hover:bg-muted",
+              isUploading && "cursor-wait text-foreground-muted",
+            )}
           >
+            <input
+              ref={inputRef}
+              id={inputId}
+              type="file"
+              aria-label="이미지 파일 선택"
+              accept="image/*"
+              onChange={handleChange}
+              disabled={isUploading}
+              className="sr-only"
+            />
             {isUploading ? (
               <>
-                <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
-                <span className="text-sm text-zinc-600">업로드 중...</span>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-xs">업로드 중...</span>
               </>
             ) : (
               <>
-                <Upload className="h-8 w-8 text-zinc-400" />
-                <span className="text-sm text-zinc-600">
-                  이미지를 업로드하세요
-                </span>
+                <Plus className="h-5 w-5" />
+                <span className="text-xs">추가</span>
               </>
             )}
           </label>
         </div>
-
-        {uploadedImages.length > 0 && (
-          <div className="grid grid-cols-2 gap-3">
-            {uploadedImages.map((image, index) => (
-              <div
-                key={image.url}
-                className="relative rounded-lg border border-zinc-300 bg-white p-2"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded bg-zinc-100">
-                    {image.url ? (
-                      <img
-                        src={image.url}
-                        alt={image.name}
-                        className="w-8 h-8 object-cover"
-                      />
-                    ) : (
-                      <ImageOff className="w-4 h-4 text-zinc-400" />
-                    )}
-                  </div>
-                  <span className="text-sm text-zinc-700 truncate">
-                    {image.name}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onRemoveImage(index)}
-                    className="ml-auto h-6 w-6 flex-shrink-0 p-0"
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </FieldContent>
     </Field>
   );

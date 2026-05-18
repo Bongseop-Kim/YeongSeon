@@ -1,23 +1,11 @@
 import { useLocation } from "react-router-dom";
 import { useCreateCustomOrder } from "@/entities/custom-order";
-import {
-  getFabricLabel,
-  getFinishingLabel,
-  getSewingStyleLabel,
-  getSizeLabel,
-  getTieTypeLabel,
-} from "@/features/custom-order";
 import { isCustomOrderPaymentState } from "@/features/order";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useCheckoutPayment } from "../model/use-checkout-payment";
 import { BaseCheckoutPage } from "./BaseCheckoutPage";
-import {
-  CheckoutAmountMeta,
-  CheckoutOptionList,
-  CheckoutOptionRow,
-  CheckoutSupplementaryDetails,
-} from "./CheckoutOptionPrimitives";
+import { CustomOrderEstimate } from "./CustomOrderEstimate";
 import { createAmountSummaryRow } from "./checkout-summary";
 
 export function OrderCheckoutPage() {
@@ -56,54 +44,21 @@ export function OrderCheckoutPage() {
   const { amount } = checkout;
   const intro = {
     eyebrow: "Custom Order",
-    title: "주문제작 결제",
+    title: "주문 옵션 확인",
     meta: (
-      <CheckoutAmountMeta
-        label="주문제작"
-        value={`${state.coreOptions.quantity}개`}
-        amount={amount}
-      />
+      <p className="text-sm text-foreground-muted">
+        아래 사양으로 제작이 진행됩니다.
+      </p>
     ),
   };
   const optionsSection = {
-    title: "주문 옵션 확인",
     content: (
-      <CheckoutOptionList>
-        <CheckoutOptionRow
-          label="수량"
-          value={`${state.coreOptions.quantity}개`}
-        />
-        <CheckoutOptionRow
-          label="원단"
-          value={getFabricLabel(state.coreOptions)}
-        />
-        <CheckoutOptionRow
-          label="봉제"
-          value={
-            <>
-              {getTieTypeLabel(state.coreOptions.tieType)} ·{" "}
-              {getSewingStyleLabel(state.coreOptions)}
-            </>
-          }
-        />
-        <CheckoutOptionRow
-          label="사이즈"
-          value={
-            <>
-              {getSizeLabel(state.coreOptions.sizeType)}, 폭{" "}
-              {state.coreOptions.tieWidth}cm
-            </>
-          }
-        />
-        <CheckoutOptionRow
-          label="상세 옵션"
-          value={getFinishingLabel(state.coreOptions)}
-        />
-        <CheckoutSupplementaryDetails
-          imageRefs={state.imageRefs}
-          notes={state.additionalNotes}
-        />
-      </CheckoutOptionList>
+      <CustomOrderEstimate
+        recipientName={checkout.selectedAddress?.recipientName}
+        options={state.coreOptions}
+        imageRefs={state.imageRefs}
+        totalCost={state.totalCost}
+      />
     ),
   };
   const summaryRows = [

@@ -119,6 +119,7 @@ export interface TileGenerationRequest {
   route: "tile_generation" | "tile_edit";
   userMessage: string;
   uiFabricType: FabricType | null;
+  imageCount?: 1 | 2 | 3 | 4;
   // Empty array means no colors selected.
   selectedColors: string[];
   previousFabricType: FabricType | null;

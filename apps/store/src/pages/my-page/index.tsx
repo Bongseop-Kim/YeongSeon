@@ -5,8 +5,6 @@ import {
   ChevronRightIcon,
   HeadphonesIcon,
   Package2Icon,
-  ShieldCheckIcon,
-  WalletCardsIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AdPanel } from "@/shared/composite/ad-panel";
@@ -18,11 +16,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   UtilityLinkList,
   UtilityLinkRow,
-  UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
-  UtilityStatList,
 } from "@/shared/composite/utility-page";
+import { SummaryCard } from "@/shared/composite/summary-card";
 
 const ORDER_LINKS = [
   {
@@ -188,23 +185,23 @@ export default function MypagePage() {
               </div>
 
               <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
-                <UtilityPageAside
-                  icon={ShieldCheckIcon}
-                  title="현재 상태"
-                  description="지금 계정에서 확인할 설정 상태입니다."
-                  tone="muted"
-                >
-                  <UtilityStatList items={accountSignals} />
-                </UtilityPageAside>
+                <SummaryCard>
+                  <SummaryCard.Header
+                    title="현재 상태"
+                    description="지금 계정에서 확인할 설정 상태입니다."
+                  />
+                  <SummaryCard.Section>
+                    {accountSignals.map((item) => (
+                      <SummaryCard.Row
+                        key={item.label}
+                        label={item.label}
+                        value={item.value}
+                      />
+                    ))}
+                  </SummaryCard.Section>
+                </SummaryCard>
 
-                <UtilityPageAside
-                  icon={WalletCardsIcon}
-                  title="프로모션"
-                  description="현재 진행 중인 혜택과 이벤트를 확인합니다."
-                  tone="muted"
-                >
-                  <AdPanel />
-                </UtilityPageAside>
+                <AdPanel />
               </div>
             </div>
 

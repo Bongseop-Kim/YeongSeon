@@ -29,6 +29,17 @@ const BreakpointContext = createContext<BreakpointContextValue | undefined>(
   undefined,
 );
 
+const DEFAULT_WIDTH = 0;
+
+const defaultBreakpointContext: BreakpointContextValue = {
+  width: DEFAULT_WIDTH,
+  isMobile: true,
+  isTablet: false,
+  isDesktop: false,
+  isAbove: (breakpoint: Breakpoint) => DEFAULT_WIDTH >= BREAKPOINTS[breakpoint],
+  isBelow: (breakpoint: Breakpoint) => DEFAULT_WIDTH < BREAKPOINTS[breakpoint],
+};
+
 function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   wait: number,
@@ -80,8 +91,5 @@ export function BreakpointProvider({ children }: BreakpointProviderProps) {
 
 export function useBreakpoint() {
   const context = useContext(BreakpointContext);
-  if (!context) {
-    throw new Error("useBreakpoint must be used within BreakpointProvider");
-  }
-  return context;
+  return context ?? defaultBreakpointContext;
 }

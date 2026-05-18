@@ -142,6 +142,7 @@ function SummaryCardRow({
 interface SummaryCardTotalProps {
   label: ReactNode;
   value: ReactNode;
+  compact?: boolean;
   className?: string;
   valueClassName?: string;
 }
@@ -149,6 +150,7 @@ interface SummaryCardTotalProps {
 function SummaryCardTotal({
   label,
   value,
+  compact,
   className,
   valueClassName,
 }: SummaryCardTotalProps) {
@@ -156,6 +158,7 @@ function SummaryCardTotal({
     <dl
       className={cn(
         "mt-2 flex items-center justify-between gap-4 border-t border-border pt-3",
+        compact && "mt-0 border-t-0 pt-0",
         className,
       )}
     >

@@ -13,7 +13,7 @@ export {
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof BaseSelectTrigger>,
   React.ComponentPropsWithoutRef<typeof BaseSelectTrigger> & {
-    variant?: "default" | "borderless";
+    variant?: "default" | "borderless" | "sort";
   }
 >(({ className, variant = "default", ...props }, ref) => {
   return (
@@ -21,6 +21,8 @@ const SelectTrigger = React.forwardRef<
       ref={ref}
       className={cn(
         variant === "borderless" && "border-0 shadow-none",
+        variant === "sort" &&
+          "w-[112px] rounded-lg border-zinc-200 bg-white text-sm font-medium text-zinc-700 shadow-none",
         className,
       )}
       {...props}

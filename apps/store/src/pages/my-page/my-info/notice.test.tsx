@@ -84,20 +84,21 @@ vi.mock("@/shared/layout/page-layout", () => ({
   ),
 }));
 
-vi.mock("@/shared/composite/utility-page", () => ({
-  UtilityPageAside: ({
-    title,
-    children,
-  }: {
-    title: string;
-    description?: string;
-    children: React.ReactNode;
-  }) => (
-    <aside>
-      <h3>{title}</h3>
-      {children}
-    </aside>
+vi.mock("@/shared/composite/summary-card", () => ({
+  SummaryCard: Object.assign(
+    ({ children }: { children: React.ReactNode }) => (
+      <section data-testid="summary-card">{children}</section>
+    ),
+    {
+      Header: ({ title }: { title: React.ReactNode }) => <h3>{title}</h3>,
+      Section: ({ children }: { children: React.ReactNode }) => (
+        <div>{children}</div>
+      ),
+    },
   ),
+}));
+
+vi.mock("@/shared/composite/utility-page", () => ({
   UtilityPageIntro: ({
     title,
     description,
@@ -346,6 +347,10 @@ describe("MyInfoNoticePage", () => {
     profileState.phoneVerified = false;
     renderPage();
 
+    expect(screen.getByTestId("summary-card")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "알림 안내" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         "휴대폰 인증 및 수신 동의를 하지 않으면 주문 완료 및 진행 상황을 카카오톡 또는 메신저로 받을 수 없습니다.",

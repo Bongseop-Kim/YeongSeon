@@ -19,7 +19,12 @@ import type { SampleOrderPaymentState } from "@/shared/lib/custom-payment-state"
 import { PageSeo } from "@/shared/ui/page-seo";
 import { analytics } from "@/shared/lib/analytics";
 import { createShippingNoticeItems } from "@/shared/lib/shipping-notices";
-import { Field, FieldContent, FieldTitle } from "@/shared/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldHeader,
+  FieldTitle,
+} from "@/shared/ui/field";
 
 interface SampleOrderFormValues {
   sampleType: "fabric" | "sewing" | "fabric_and_sewing";
@@ -95,15 +100,20 @@ const getSamplePrice = (
 function SampleOrderSection({
   title,
   children,
+  action,
   className,
 }: {
   title: string;
   children: ReactNode;
+  action?: ReactNode;
   className?: string;
 }) {
   return (
     <Field className={className}>
-      <FieldTitle as="h2">{title}</FieldTitle>
+      <FieldHeader>
+        <FieldTitle as="h2">{title}</FieldTitle>
+        {action}
+      </FieldHeader>
       <FieldContent>{children}</FieldContent>
     </Field>
   );
@@ -325,7 +335,12 @@ export default function SampleOrderPage() {
                 />
               </SampleOrderSection>
 
-              <SampleOrderSection title="참고 이미지">
+              <SampleOrderSection
+                title="참고 이미지"
+                action={
+                  <DesignImagePicker onAdd={imageUpload.addExistingImages} />
+                }
+              >
                 <div className="space-y-2.5">
                   <ImageUpload
                     uploadedImages={imageUpload.uploadedImages}
@@ -334,7 +349,6 @@ export default function SampleOrderPage() {
                     onRemoveImage={imageUpload.removeImage}
                     showHeader={false}
                   />
-                  <DesignImagePicker onAdd={imageUpload.addExistingImages} />
                 </div>
               </SampleOrderSection>
 

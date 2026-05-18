@@ -38,7 +38,7 @@ Deno.test(
 );
 
 Deno.test(
-  "buildTileGenerationVariantResponse rejects one_point without 4 accent results",
+  "buildTileGenerationVariantResponse rejects one_point without matching accent results",
   () => {
     assertThrows(
       () =>
@@ -55,7 +55,7 @@ Deno.test(
           accentLayouts: [],
         }),
       Error,
-      "one_point generation requires 4 accent results",
+      "one_point generation requires matching accent results",
     );
   },
 );
@@ -79,6 +79,30 @@ Deno.test(
     assertEquals(
       response.variants.map((variant) => variant.accentTileUrl),
       [null, null, null, null],
+    );
+  },
+);
+
+Deno.test(
+  "buildTileGenerationVariantResponse supports fewer requested variants",
+  () => {
+    const response = buildTileGenerationVariantResponse({
+      generationId: "gen-1",
+      prompt: "두 개",
+      patternType: "all_over",
+      fabricType: "printed",
+      repeatResults: [1, 2].map((index) => ({
+        url: `repeat-${index}`,
+        workId: `repeat-work-${index}`,
+      })),
+      accentResults: [],
+      accentLayouts: [],
+    });
+
+    assertEquals(response.variants.length, 2);
+    assertEquals(
+      response.variants.map((variant) => variant.index),
+      [1, 2],
     );
   },
 );

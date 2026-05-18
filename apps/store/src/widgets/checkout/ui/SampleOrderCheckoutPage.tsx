@@ -1,17 +1,12 @@
 import { useLocation } from "react-router-dom";
 import { useCreateSampleOrder } from "@/entities/sample-order";
-import { getTieTypeLabel } from "@/features/custom-order";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { isSampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
 import { useCheckoutPayment } from "../model/use-checkout-payment";
 import { BaseCheckoutPage } from "./BaseCheckoutPage";
-import {
-  CheckoutAmountMeta,
-  CheckoutOptionList,
-  CheckoutOptionRow,
-  CheckoutSupplementaryDetails,
-} from "./CheckoutOptionPrimitives";
+import { CheckoutAmountMeta } from "./CheckoutOptionPrimitives";
+import { SampleOrderEstimate } from "./SampleOrderEstimate";
 import { createAmountSummaryRow } from "./checkout-summary";
 
 export function SampleOrderCheckoutPage() {
@@ -61,32 +56,15 @@ export function SampleOrderCheckoutPage() {
     ),
   };
   const optionsSection = {
-    title: "샘플 옵션 확인",
     content: (
-      <CheckoutOptionList>
-        <CheckoutOptionRow label="샘플 유형" value={state.sampleLabel} />
-        {state.options.fabricType ? (
-          <CheckoutOptionRow label="원단 조합" value={state.fabricLabel} />
-        ) : null}
-        <CheckoutOptionRow
-          label="타이 방식"
-          value={getTieTypeLabel(state.options.tieType)}
-        />
-        <CheckoutOptionRow
-          label="심지"
-          value={
-            state.options.interlining === "WOOL"
-              ? "울 심지"
-              : state.options.interlining === "POLY"
-                ? "폴리 심지"
-                : "미지정"
-          }
-        />
-        <CheckoutSupplementaryDetails
-          imageRefs={state.imageRefs}
-          notes={state.additionalNotes}
-        />
-      </CheckoutOptionList>
+      <SampleOrderEstimate
+        recipientName={checkout.selectedAddress?.recipientName}
+        sampleLabel={state.sampleLabel}
+        fabricLabel={state.fabricLabel}
+        options={state.options}
+        imageRefs={state.imageRefs}
+        totalCost={state.samplePrice}
+      />
     ),
   };
   const summaryRows = [createAmountSummaryRow(amount)];

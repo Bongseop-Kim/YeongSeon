@@ -24,7 +24,7 @@ const makeOptions = (overrides?: Partial<OrderOptions>): OrderOptions =>
     referenceImages: null,
     additionalNotes: "",
     contactName: "",
-    contactTitle: "",
+    businessName: "",
     contactMethod: "phone",
     contactValue: "",
     ...overrides,

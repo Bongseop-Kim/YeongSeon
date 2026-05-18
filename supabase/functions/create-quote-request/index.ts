@@ -12,7 +12,7 @@ type CreateQuoteRequestInput = {
   reference_images?: Array<{ url: string; fileId: string }>;
   additional_notes?: string;
   contact_name: string;
-  contact_title?: string;
+  business_name?: string;
   contact_method: string;
   contact_value: string;
 };
@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: "Contact name is required" });
   }
 
-  if (!["email", "kakao", "phone"].includes(payload.contact_method)) {
+  if (!["email", "phone"].includes(payload.contact_method)) {
     return jsonResponse(400, { error: "Invalid contact method" });
   }
 
@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
       p_reference_images: payload.reference_images ?? [],
       p_additional_notes: payload.additional_notes ?? "",
       p_contact_name: payload.contact_name,
-      p_contact_title: payload.contact_title ?? "",
+      p_business_name: payload.business_name ?? "",
       p_contact_method: payload.contact_method,
       p_contact_value: payload.contact_value,
     },

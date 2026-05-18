@@ -1,8 +1,6 @@
-export const INTERLINING_TYPES = [{ value: "WOOL", label: "울 심지" }] as const;
-
-export const INTERLINING_THICKNESS = [
-  { value: "THIN", label: "얇음" },
-  { value: "THICK", label: "두꺼움" },
+export const INTERLINING_TYPES = [
+  { value: "WOOL", label: "울 심지" },
+  { value: "POLY", label: "폴리 심지" },
 ] as const;
 
 export const QUANTITY_CONFIG = {

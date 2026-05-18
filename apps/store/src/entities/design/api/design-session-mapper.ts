@@ -91,7 +91,8 @@ function toAttachments(value: unknown): DesignSessionMessage["attachments"] {
           type !== "pattern" &&
           type !== "fabric" &&
           type !== "image" &&
-          type !== "ci-placement") ||
+          type !== "ci-placement" &&
+          type !== "image-count") ||
         typeof label !== "string" ||
         typeof itemValue !== "string"
       ) {

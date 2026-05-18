@@ -138,6 +138,16 @@ vi.mock("@/entities/custom-order", () => ({
   usePricingConfig: () => ({ data: { REFORM_SHIPPING_COST: 4200 } }),
 }));
 
+vi.mock("@/entities/my-page", () => ({
+  useProfile: () => ({
+    data: {
+      name: "홍길동",
+      phone: "01012345678",
+      email: "user@example.com",
+    },
+  }),
+}));
+
 vi.mock("@/features/custom-order", () => ({
   calculateTotalCost: () => ({
     sewingCost: 0,

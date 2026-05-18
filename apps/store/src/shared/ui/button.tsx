@@ -19,12 +19,20 @@ const buttonVariants = cva(
         link: "text-primary underline underline-offset-4 decoration-primary/30",
         text: "text-foreground underline underline-offset-4",
         none: "border-none bg-transparent shadow-none",
+        "filter-chip":
+          "border! border-solid border-zinc-200! bg-white text-zinc-700 shadow-none hover:bg-zinc-50",
+        "filter-chip-active":
+          "border! border-solid border-zinc-900! bg-zinc-900 text-white shadow-none hover:bg-zinc-800",
+        "filter-reset":
+          "border-none bg-transparent text-zinc-700 shadow-none hover:bg-zinc-50",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-8 rounded-sm gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-sm px-6 has-[>svg]:px-4",
         xl: "h-12 rounded-sm px-8 has-[>svg]:px-6",
+        filter: "h-9 rounded-full gap-2 px-4 text-sm",
+        "filter-reset": "h-9 rounded-full px-3 text-sm",
         icon: "size-9",
         "icon-sm": "size-8",
         "icon-lg": "size-10",

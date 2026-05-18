@@ -6,6 +6,7 @@ import {
   FieldContent,
   FieldDescription,
   FieldGroup,
+  FieldLabel,
   FieldTitle,
 } from "@/shared/ui/field";
 import { Input } from "@/shared/ui-extended/input";
@@ -14,6 +15,7 @@ import { TIE_WIDTH_CONFIG } from "@/features/custom-order/constants/FORM_OPTIONS
 export const SpecStep = () => {
   const { control, watch, setValue } = useFormContext<QuoteOrderOptions>();
   const sizeType = watch("sizeType");
+  const tieWidthId = "custom-order-tie-width";
 
   return (
     <FieldGroup>
@@ -33,13 +35,16 @@ export const SpecStep = () => {
       </Field>
 
       <Field>
-        <FieldTitle>넥타이 폭</FieldTitle>
+        <FieldLabel htmlFor={tieWidthId}>
+          <FieldTitle>넥타이 폭</FieldTitle>
+        </FieldLabel>
         <Controller
           name="tieWidth"
           control={control}
           render={({ field }) => (
             <FieldContent className="flex-row items-center">
               <Input
+                id={tieWidthId}
                 type="number"
                 min={TIE_WIDTH_CONFIG.min}
                 max={TIE_WIDTH_CONFIG.max}
@@ -61,7 +66,7 @@ export const SpecStep = () => {
                     TIE_WIDTH_CONFIG.min;
                   field.onChange(normalized);
                 }}
-                className="h-9 w-[90px] rounded-lg border-zinc-300 text-center shadow-none"
+                className="sm:w-1/2"
               />
               <span className="text-xs text-zinc-500">cm</span>
             </FieldContent>

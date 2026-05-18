@@ -126,8 +126,8 @@ export function QuoteRequestDetailSection() {
         style={{ marginBottom: 24 }}
       >
         <Descriptions.Item label="성함">{detail.contactName}</Descriptions.Item>
-        <Descriptions.Item label="직책">
-          {detail.contactTitle || "-"}
+        <Descriptions.Item label="상호명">
+          {detail.businessName || "-"}
         </Descriptions.Item>
         <Descriptions.Item label="연락방법">
           {CONTACT_METHOD_LABELS[detail.contactMethod]}
@@ -137,7 +137,11 @@ export function QuoteRequestDetailSection() {
         </Descriptions.Item>
       </Descriptions>
 
-      <CustomOrderOptionsDetail options={detail.options} />
+      <CustomOrderOptionsDetail
+        options={detail.options}
+        quantity={detail.quantity}
+        quotedAmount={detail.quotedAmount}
+      />
 
       {detail.referenceImageUrls.length > 0 && (
         <>

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { MainLayout, MainContent } from "@/shared/layout/main-layout";
 import { Form } from "@/shared/ui/form";
@@ -24,13 +25,19 @@ import { toast } from "@/shared/lib/toast";
 import { useShippingAddressPopup } from "@/features/shipping";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { usePricingConfig } from "@/entities/custom-order";
+import { useProfile } from "@/entities/my-page";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { createShippingNoticeItems } from "@/shared/lib/shipping-notices";
+import {
+  getQuoteContactDefaults,
+  getQuoteContactValueForMethod,
+} from "@/shared/lib/quote-contact-defaults";
 
 export default function OrderPage() {
   const { user } = useAuthStore();
   const isLoggedIn = !!user;
+  const { data: profile } = useProfile(isLoggedIn);
   const { data: pricingConfig, isError: isPricingError } = usePricingConfig();
   const imageUpload = useImageUpload();
 
@@ -43,7 +50,7 @@ export default function OrderPage() {
       fabricType: "POLY",
       designType: "PRINTING",
       tieType: null,
-      interlining: null,
+      interlining: "WOOL",
       interliningThickness: "THICK",
       sizeType: "ADULT",
       tieWidth: 8,
@@ -59,13 +66,55 @@ export default function OrderPage() {
       referenceImages: null,
       additionalNotes: "",
       contactName: "",
-      contactTitle: "",
+      businessName: "",
       contactMethod: "phone",
       contactValue: "",
     },
   });
 
   const watchedValues = form.watch();
+  const previousContactMethodRef =
+    useRef<QuoteOrderOptions["contactMethod"]>("phone");
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    if (!profile) return;
+
+    const defaults = getQuoteContactDefaults({ profile, user });
+    const current = form.getValues();
+    const contactMethodChanged =
+      previousContactMethodRef.current !== current.contactMethod;
+    previousContactMethodRef.current = current.contactMethod;
+    const nextContactName = current.contactName || defaults.contactName;
+    const nextContactMethod = current.contactValue
+      ? current.contactMethod
+      : defaults.contactMethod;
+    const nextContactValue = contactMethodChanged
+      ? getQuoteContactValueForMethod({
+          method: nextContactMethod,
+          profile,
+          user,
+        })
+      : current.contactValue || defaults.contactValue;
+
+    if (
+      current.contactName === nextContactName &&
+      current.contactMethod === nextContactMethod &&
+      current.contactValue === nextContactValue
+    ) {
+      return;
+    }
+
+    form.reset(
+      {
+        ...current,
+        contactName: nextContactName,
+        contactMethod: nextContactMethod,
+        contactValue: nextContactValue,
+      },
+      { keepDirtyValues: true },
+    );
+  }, [form, isLoggedIn, profile, user, watchedValues.contactMethod]);
 
   const { sewingCost, fabricCost, totalCost } = pricingConfig
     ? calculateTotalCost(watchedValues, pricingConfig)
