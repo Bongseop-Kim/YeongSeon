@@ -179,15 +179,32 @@ export const toQuoteRequestListItem = (
 export const toQuoteRequestOptions = (
   raw: Record<string, unknown>,
 ): QuoteRequestOptions => ({
-  tieType: typeof raw.tie_type === "string" ? raw.tie_type : "",
-  interlining: typeof raw.interlining === "string" ? raw.interlining : "",
-  designType: typeof raw.design_type === "string" ? raw.design_type : "",
-  fabricType: typeof raw.fabric_type === "string" ? raw.fabric_type : "",
+  tieType: raw.tie_type === "AUTO" ? raw.tie_type : "",
+  interlining:
+    raw.interlining === "WOOL" || raw.interlining === "POLY"
+      ? raw.interlining
+      : "",
+  designType:
+    raw.design_type === "PRINTING" || raw.design_type === "YARN_DYED"
+      ? raw.design_type
+      : "",
+  fabricType:
+    raw.fabric_type === "SILK" || raw.fabric_type === "POLY"
+      ? raw.fabric_type
+      : "",
   fabricProvided: raw.fabric_provided === true,
+  reorder: raw.reorder === true,
   interliningThickness:
-    typeof raw.interlining_thickness === "string"
+    raw.interlining_thickness === "THICK" ||
+    raw.interlining_thickness === "THIN"
       ? raw.interlining_thickness
       : "",
+  sizeType:
+    raw.size_type === "ADULT" || raw.size_type === "CHILD" ? raw.size_type : "",
+  tieWidth:
+    typeof raw.tie_width === "number" && Number.isFinite(raw.tie_width)
+      ? raw.tie_width
+      : 8,
   triangleStitch: raw.triangle_stitch === true,
   sideStitch: raw.side_stitch === true,
   barTack: raw.bar_tack === true,
@@ -219,6 +236,13 @@ export const parseQuoteRequestDetailRow = (
     );
   }
 
+  const businessName =
+    typeof data.businessName === "string"
+      ? data.businessName
+      : typeof data.contactTitle === "string"
+        ? data.contactTitle
+        : null;
+
   if (
     typeof data.id !== "string" ||
     typeof data.quoteNumber !== "string" ||
@@ -226,7 +250,7 @@ export const parseQuoteRequestDetailRow = (
     typeof data.quantity !== "number" ||
     typeof data.additionalNotes !== "string" ||
     typeof data.contactName !== "string" ||
-    typeof data.businessName !== "string" ||
+    businessName === null ||
     typeof data.contactValue !== "string"
   ) {
     throw new Error(
@@ -277,7 +301,7 @@ export const parseQuoteRequestDetailRow = (
     referenceImages: data.referenceImages,
     additionalNotes: data.additionalNotes,
     contactName: data.contactName,
-    businessName: data.businessName,
+    businessName,
     contactMethod: data.contactMethod,
     contactValue: data.contactValue,
     quotedAmount: data.quotedAmount,

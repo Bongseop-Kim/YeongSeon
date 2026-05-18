@@ -16,7 +16,9 @@ interface OrderSpecificationConfirmationProps {
   recipientName: string | null | undefined;
   summaryItems: SpecificationSummaryItem[];
   optionRows: SpecificationOptionRow[];
-  totalCost: number;
+  totalCost?: number;
+  amountLabel?: ReactNode;
+  amountFallback?: ReactNode;
   className?: string;
 }
 
@@ -57,6 +59,8 @@ export function OrderSpecificationConfirmation({
   summaryItems,
   optionRows,
   totalCost,
+  amountLabel = "합 계 금 액",
+  amountFallback,
   className,
 }: OrderSpecificationConfirmationProps) {
   const displayRecipientName = recipientName?.trim() || "고객";
@@ -111,10 +115,12 @@ export function OrderSpecificationConfirmation({
 
       <div className="flex items-center justify-between gap-4 bg-zinc-950 px-5 py-4 text-white">
         <span className="text-sm font-semibold tracking-[0.16em]">
-          합 계 금 액
+          {amountLabel}
         </span>
         <strong className="text-xl font-bold">
-          ₩{formatSpecificationMoney(totalCost)}
+          {typeof totalCost === "number"
+            ? `₩${formatSpecificationMoney(totalCost)}`
+            : amountFallback}
         </strong>
       </div>
     </section>

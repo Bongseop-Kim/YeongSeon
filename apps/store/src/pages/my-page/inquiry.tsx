@@ -2,10 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { useSearchParams } from "react-router-dom";
 import { Empty } from "@/shared/composite/empty";
-import {
-  UtilityPageAside,
-  UtilityPageIntro,
-} from "@/shared/composite/utility-page";
+import { SummaryCard } from "@/shared/composite/summary-card";
+import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
@@ -303,18 +301,18 @@ export default function InquiryPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.32, ease: "easeOut" }}
               >
-                <UtilityPageAside
-                  title={isEditingInquiry ? "문의 수정" : "문의 등록"}
-                  description="문의 유형과 내용을 정리해 등록하세요."
-                  tone="muted"
-                >
-                  <div className="pt-1">
+                <SummaryCard>
+                  <SummaryCard.Header
+                    title={isEditingInquiry ? "문의 수정" : "문의 등록"}
+                    description="문의 유형과 내용을 정리해 등록하세요."
+                  />
+                  <SummaryCard.Section>
                     <InquiryForm
                       {...inquiryFormProps}
                       onCancel={handleFormCancel}
                     />
-                  </div>
-                </UtilityPageAside>
+                  </SummaryCard.Section>
+                </SummaryCard>
               </motion.div>
             ) : undefined
           }

@@ -68,31 +68,53 @@ vi.mock("@/shared/composite/custom-order-options-section", () => ({
   CustomOrderOptionsSection: () => <div>custom-order-options</div>,
 }));
 
+vi.mock("@/shared/composite/summary-card", () => ({
+  SummaryCard: Object.assign(
+    ({ children }: { children: React.ReactNode }) => (
+      <section data-testid="summary-card">{children}</section>
+    ),
+    {
+      Header: ({ title }: { title: React.ReactNode }) => <h2>{title}</h2>,
+      Section: ({ children }: { children: React.ReactNode }) => (
+        <div>{children}</div>
+      ),
+      Row: ({
+        label,
+        value,
+      }: {
+        label: React.ReactNode;
+        value: React.ReactNode;
+      }) => (
+        <div>
+          <span>{label}</span>
+          <span>{value}</span>
+        </div>
+      ),
+      Total: ({
+        label,
+        value,
+        className,
+        valueClassName,
+      }: {
+        label: React.ReactNode;
+        value: React.ReactNode;
+        className?: string;
+        valueClassName?: string;
+      }) => (
+        <div
+          data-testid="summary-card-total"
+          data-class-name={className ?? ""}
+          data-value-class-name={valueClassName ?? ""}
+        >
+          <strong>{label}</strong>
+          <strong>{value}</strong>
+        </div>
+      ),
+    },
+  ),
+}));
+
 vi.mock("@/shared/composite/utility-page", () => ({
-  UtilityKeyValueRow: ({
-    label,
-    value,
-  }: {
-    label: string;
-    value: React.ReactNode;
-  }) => (
-    <div>
-      <span>{label}</span>
-      <span>{value}</span>
-    </div>
-  ),
-  UtilityPageAside: ({
-    title,
-    children,
-  }: {
-    title: string;
-    children: React.ReactNode;
-  }) => (
-    <aside>
-      <h2>{title}</h2>
-      {children}
-    </aside>
-  ),
   UtilityPageIntro: ({
     title,
     description,
@@ -196,6 +218,44 @@ describe("OrderDetailPage", () => {
       isNotFound: false,
       refetch: vi.fn(),
     });
+  });
+
+  it("결제 정보를 SummaryCard로 렌더링한다", () => {
+    render(<OrderDetailPage />);
+
+    expect(screen.getByTestId("summary-card")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "결제 정보" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("배송비")).toBeInTheDocument();
+    expect(screen.getByText("총 결제 금액")).toBeInTheDocument();
+    expect(screen.getByText("10,000원")).toBeInTheDocument();
+    expect(screen.getByTestId("summary-card-total")).toHaveAttribute(
+      "data-value-class-name",
+      "",
+    );
+  });
+
+  it("토큰 주문 결제 정보는 배송비 row가 없어도 Total 상단 border를 중복 표시하지 않는다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        orderType: "token",
+        shippingInfo: null,
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(screen.queryByText("배송비")).not.toBeInTheDocument();
+    expect(screen.getByTestId("summary-card-total")).toHaveAttribute(
+      "data-class-name",
+      expect.stringContaining("border-t-0"),
+    );
   });
 
   it("주문 아이템이 없으면 중립 안내 문구와 이동 버튼을 표시한다", async () => {
@@ -401,5 +461,57 @@ describe("OrderDetailPage", () => {
     expect(
       screen.getByRole("button", { name: "구매확정" }),
     ).toBeInTheDocument();
+  });
+
+  it("샘플 주문의 제작 옵션은 결제 화면과 같은 주문 사양 확인 카드로 표시한다", () => {
+    useOrderDetailMock.mockReturnValue({
+      order: createOrder({
+        orderType: "sample",
+        totalPrice: 58000,
+        items: [
+          {
+            id: "sample-item-1",
+            type: "sample",
+            quantity: 1,
+            sampleData: {
+              sampleType: "fabric_and_sewing",
+              options: {
+                fabricType: "POLY",
+                designType: "PRINTING",
+                tieType: "AUTO",
+                interlining: "WOOL",
+              },
+              pricing: {
+                totalCost: 58000,
+              },
+              referenceImageUrls: ["https://example.com/ref.jpg"],
+              additionalNotes: "로고 색상 확인 필요",
+            },
+          },
+        ],
+      }),
+      isLoading: false,
+      isError: false,
+      error: null,
+      isNotFound: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OrderDetailPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "샘플 제작 옵션" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "주문 사양 확인" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("원단 + 봉제 샘플")).toBeInTheDocument();
+    expect(screen.getByText("폴리 · 납염")).toBeInTheDocument();
+    expect(screen.getByText("자동 타이")).toBeInTheDocument();
+    expect(screen.getByText("울 심지")).toBeInTheDocument();
+    expect(screen.getByText("1개 첨부")).toBeInTheDocument();
+    expect(screen.getAllByText("58,000원")).toHaveLength(2);
+    expect(screen.getByText("₩58,000")).toBeInTheDocument();
+    expect(screen.queryByText("custom-order-options")).not.toBeInTheDocument();
   });
 });

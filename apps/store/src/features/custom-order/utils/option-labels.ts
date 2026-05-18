@@ -42,10 +42,11 @@ export function getSizeLabel(sizeType: OrderOptions["sizeType"]): string {
 
 export function getInterliningLabel(
   opts: Pick<OrderOptions, "interlining">,
+  fallback = "미선택",
 ): string {
   if (opts.interlining === "WOOL") return "울 심지";
   if (opts.interlining === "POLY") return "폴리 심지";
-  return "미선택";
+  return fallback;
 }
 
 export function getLabelOptionsLabel(

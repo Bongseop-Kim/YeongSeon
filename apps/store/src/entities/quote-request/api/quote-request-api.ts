@@ -47,6 +47,20 @@ const QUOTE_REQUEST_DETAIL_SELECT_COLUMNS = [
   '"quoteConditions"',
   "created_at",
 ].join(", ");
+const QUOTE_REQUEST_DETAIL_LEGACY_SELECT_COLUMNS =
+  QUOTE_REQUEST_DETAIL_SELECT_COLUMNS.replace(
+    '"businessName"',
+    '"contactTitle"',
+  );
+
+const isMissingBusinessNameColumnError = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  "message" in error &&
+  error.code === "42703" &&
+  typeof error.message === "string" &&
+  error.message.includes("businessName");
 
 export const createQuoteRequest = async (
   request: CreateQuoteRequestRequest,
@@ -92,11 +106,22 @@ export const getQuoteRequests = async (): Promise<QuoteRequestListItem[]> => {
 export const getQuoteRequest = async (
   id: string,
 ): Promise<QuoteRequestDetail | null> => {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("quote_request_detail_view")
     .select(QUOTE_REQUEST_DETAIL_SELECT_COLUMNS)
     .eq("id", id)
     .maybeSingle();
+
+  if (error && isMissingBusinessNameColumnError(error)) {
+    const legacyResult = await supabase
+      .from("quote_request_detail_view")
+      .select(QUOTE_REQUEST_DETAIL_LEGACY_SELECT_COLUMNS)
+      .eq("id", id)
+      .maybeSingle();
+
+    data = legacyResult.data;
+    error = legacyResult.error;
+  }
 
   if (error) {
     console.error(error);

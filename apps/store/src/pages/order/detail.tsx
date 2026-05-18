@@ -16,10 +16,9 @@ import type { OrderItem } from "@yeongseon/shared/types/view/order";
 import { CustomOrderOptionsSection } from "@/shared/composite/custom-order-options-section";
 import { Empty } from "@/shared/composite/empty";
 import { OrderItemCard } from "@/shared/composite/order-item-card";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import { OrderStatusBadge } from "@/shared/composite/status-badge";
 import {
-  UtilityKeyValueRow,
-  UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
 } from "@/shared/composite/utility-page";
@@ -31,7 +30,13 @@ import { RepairShippingAddressBanner } from "@/features/order";
 import { useConfirmPurchase, useOrderDetail } from "@/entities/order";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { buildClaimFormRoute, ROUTES } from "@/shared/constants/ROUTES";
+import type { SampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
 import { ShippingAddressCard } from "@/shared/composite";
+import {
+  getSampleOrderFabricLabel,
+  getSampleOrderTypeLabel,
+  SampleOrderEstimate,
+} from "@/widgets/checkout";
 
 const detailRowLabelClass =
   "shrink-0 text-sm font-medium text-muted-foreground";
@@ -81,6 +86,26 @@ const InlineActionLink = ({
     {children}
   </a>
 );
+
+const normalizeSampleOrderEstimateOptions = (
+  options: NonNullable<
+    Extract<OrderItem, { type: "sample" }>["sampleData"]
+  >["options"],
+): SampleOrderPaymentState["options"] => ({
+  fabricType:
+    options.fabricType === "SILK" || options.fabricType === "POLY"
+      ? options.fabricType
+      : null,
+  designType:
+    options.designType === "PRINTING" || options.designType === "YARN_DYED"
+      ? options.designType
+      : null,
+  tieType: options.tieType === "AUTO" ? options.tieType : null,
+  interlining:
+    options.interlining === "WOOL" || options.interlining === "POLY"
+      ? options.interlining
+      : null,
+});
 
 const renderClaimButtons = (
   customerActions: CustomerAction[],
@@ -343,25 +368,26 @@ const OrderDetailPage = () => {
           contentClassName="py-4 lg:py-8"
           sidebar={
             <div className="space-y-5">
-              <UtilityPageAside
-                title="결제 정보"
-                description="주문에 반영된 결제 금액입니다."
-                tone="muted"
-                className="rounded-2xl"
-              >
-                {order.orderType !== "token" ? (
-                  <UtilityKeyValueRow label="배송비" value="무료" />
-                ) : null}
-                <UtilityKeyValueRow
-                  className="pt-5"
-                  label="총 결제 금액"
-                  value={
-                    <span className="text-base font-semibold tracking-tight text-info">
-                      {order.totalPrice.toLocaleString()}원
-                    </span>
-                  }
+              <SummaryCard>
+                <SummaryCard.Header
+                  title="결제 정보"
+                  description="주문에 반영된 결제 금액입니다."
                 />
-              </UtilityPageAside>
+                <SummaryCard.Section>
+                  {order.orderType !== "token" ? (
+                    <SummaryCard.Row label="배송비" value="무료" />
+                  ) : null}
+                  <SummaryCard.Total
+                    label="총 결제 금액"
+                    value={`${order.totalPrice.toLocaleString()}원`}
+                    className={
+                      order.orderType === "token"
+                        ? "mt-0 border-t-0 pt-0"
+                        : undefined
+                    }
+                  />
+                </SummaryCard.Section>
+              </SummaryCard>
             </div>
           }
           actionBar={
@@ -480,12 +506,14 @@ const OrderDetailPage = () => {
                     <React.Fragment key={item.id}>
                       {(() => {
                         const isSample = item.type === "sample";
-                        const isCustomizableItem =
-                          item.type === "custom" || isSample;
-                        const orderData = isCustomizableItem
-                          ? isSample
-                            ? item.sampleData
-                            : item.customData
+                        const sampleData = isSample ? item.sampleData : null;
+                        const customData =
+                          item.type === "custom" ? item.customData : null;
+                        const orderData = sampleData ?? customData;
+                        const sampleEstimateOptions = sampleData
+                          ? normalizeSampleOrderEstimateOptions(
+                              sampleData.options,
+                            )
                           : null;
 
                         return (
@@ -506,31 +534,46 @@ const OrderDetailPage = () => {
                               <>
                                 <Separator />
                                 <div className="py-5">
-                                  <p className="text-base font-semibold tracking-tight text-zinc-950">
+                                  <h3 className="text-base font-semibold tracking-tight text-zinc-950">
                                     {isSample
                                       ? "샘플 제작 옵션"
                                       : "주문 제작 옵션"}
-                                  </p>
+                                  </h3>
                                   <p className="mt-1 text-sm text-zinc-500">
                                     제작 조건과 참조 이미지를 확인합니다.
                                   </p>
                                   <div className="mt-4">
-                                    <CustomOrderOptionsSection
-                                      options={orderData.options}
-                                      referenceImageUrls={
-                                        orderData.referenceImageUrls
-                                      }
-                                      additionalNotes={
-                                        orderData.additionalNotes
-                                      }
-                                      hasSample={isSample}
-                                      sampleType={
-                                        isSample
-                                          ? (item.sampleData?.sampleType ??
-                                            null)
-                                          : null
-                                      }
-                                    />
+                                    {sampleData && sampleEstimateOptions ? (
+                                      <SampleOrderEstimate
+                                        recipientName={
+                                          order.shippingInfo?.recipientName
+                                        }
+                                        sampleLabel={getSampleOrderTypeLabel(
+                                          sampleData.sampleType,
+                                        )}
+                                        fabricLabel={getSampleOrderFabricLabel(
+                                          sampleEstimateOptions,
+                                        )}
+                                        options={sampleEstimateOptions}
+                                        imageRefs={sampleData.referenceImageUrls.map(
+                                          (url, imageIndex) => ({
+                                            fileId: `${item.id}-${imageIndex}`,
+                                            url,
+                                          }),
+                                        )}
+                                        totalCost={sampleData.pricing.totalCost}
+                                      />
+                                    ) : (
+                                      <CustomOrderOptionsSection
+                                        options={customData?.options}
+                                        referenceImageUrls={
+                                          customData?.referenceImageUrls
+                                        }
+                                        additionalNotes={
+                                          customData?.additionalNotes
+                                        }
+                                      />
+                                    )}
                                   </div>
                                 </div>
                               </>

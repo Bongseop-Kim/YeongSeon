@@ -3,7 +3,6 @@ import { PageLayout } from "@/shared/layout/page-layout";
 import {
   BellRingIcon,
   CircleCheckIcon,
-  MailIcon,
   MapPinnedIcon,
   ShieldAlertIcon,
   UserRoundIcon,
@@ -16,11 +15,10 @@ import { useNavigate } from "react-router-dom";
 import {
   UtilityLinkList,
   UtilityLinkRow,
-  UtilityPageAside,
   UtilityPageIntro,
   UtilityPageSection,
-  UtilityStatList,
 } from "@/shared/composite/utility-page";
+import { SummaryCard } from "@/shared/composite/summary-card";
 
 export default function MyInfoPage() {
   const navigate = useNavigate();
@@ -187,14 +185,21 @@ export default function MyInfoPage() {
               </div>
 
               <div className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
-                <UtilityPageAside
-                  icon={MailIcon}
-                  title="현재 계정 요약"
-                  description="지금 저장된 정보만 빠르게 확인합니다."
-                  tone="muted"
-                >
-                  <UtilityStatList items={asideItems} />
-                </UtilityPageAside>
+                <SummaryCard>
+                  <SummaryCard.Header
+                    title="현재 계정 요약"
+                    description="지금 저장된 정보만 빠르게 확인합니다."
+                  />
+                  <SummaryCard.Section>
+                    {asideItems.map((item) => (
+                      <SummaryCard.Row
+                        key={item.id}
+                        label={item.label}
+                        value={item.value}
+                      />
+                    ))}
+                  </SummaryCard.Section>
+                </SummaryCard>
               </div>
             </div>
           </div>

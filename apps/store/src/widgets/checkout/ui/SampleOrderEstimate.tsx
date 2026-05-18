@@ -1,12 +1,13 @@
 import type { ImageRef } from "@yeongseon/shared";
 import type { SampleOrderPaymentState } from "@/shared/lib/custom-payment-state";
-import { getTieTypeLabel } from "@/features/custom-order";
+import { getInterliningLabel, getTieTypeLabel } from "@/features/custom-order";
 import {
   formatSpecificationMoney,
   OrderSpecificationConfirmation,
 } from "./OrderSpecificationConfirmation";
 
 type SampleOrderOptions = SampleOrderPaymentState["options"];
+type SampleOrderType = SampleOrderPaymentState["sampleType"];
 
 interface SampleOrderEstimateProps {
   recipientName: string | null | undefined;
@@ -18,12 +19,23 @@ interface SampleOrderEstimateProps {
   className?: string;
 }
 
-const getInterliningLabel = (
-  interlining: SampleOrderOptions["interlining"],
+export const getSampleOrderTypeLabel = (
+  sampleType: SampleOrderType,
 ): string => {
-  if (interlining === "WOOL") return "울 심지";
-  if (interlining === "POLY") return "폴리 심지";
-  return "미지정";
+  if (sampleType === "sewing") return "봉제 샘플";
+  if (sampleType === "fabric") return "원단 샘플";
+  return "원단 + 봉제 샘플";
+};
+
+export const getSampleOrderFabricLabel = (
+  options: Pick<SampleOrderOptions, "fabricType" | "designType">,
+): string => {
+  if (!options.fabricType || !options.designType) return "봉제 전용";
+
+  const fabricLabel = options.fabricType === "SILK" ? "실크" : "폴리";
+  const designLabel = options.designType === "YARN_DYED" ? "선염" : "납염";
+
+  return `${fabricLabel} · ${designLabel}`;
 };
 
 export function SampleOrderEstimate({
@@ -47,7 +59,13 @@ export function SampleOrderEstimate({
       ]}
       optionRows={[
         { label: "타이 방식", value: getTieTypeLabel(options.tieType, true) },
-        { label: "심지", value: getInterliningLabel(options.interlining) },
+        {
+          label: "심지",
+          value: getInterliningLabel(
+            { interlining: options.interlining },
+            "미지정",
+          ),
+        },
         {
           label: "참고 이미지",
           value:

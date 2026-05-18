@@ -19,10 +19,8 @@ import { toast } from "@/shared/lib/toast";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { useAuthStore } from "@/shared/store/auth";
 import { useModalStore } from "@/shared/store/modal";
-import {
-  UtilityPageAside,
-  UtilityPageIntro,
-} from "@/shared/composite/utility-page";
+import { SummaryCard } from "@/shared/composite/summary-card";
+import { UtilityPageIntro } from "@/shared/composite/utility-page";
 
 function LeaveConfirmationBlock({
   agree,
@@ -38,47 +36,49 @@ function LeaveConfirmationBlock({
   control: ReturnType<typeof useForm<{ agree: boolean }>>["control"];
 }) {
   return (
-    <UtilityPageAside
-      title="탈퇴 확인"
-      description="유의사항을 확인한 뒤 동의 체크를 해야 탈퇴를 진행할 수 있습니다."
-      tone="danger"
-    >
-      <Controller
-        name="agree"
-        control={control}
-        render={({ field }) => (
-          <Field orientation="horizontal" className="items-start gap-3">
-            <Checkbox
-              id="agree"
-              checked={field.value}
-              onCheckedChange={field.onChange}
-            />
-            <FieldContent className="gap-1">
-              <FieldLabel htmlFor="agree">
-                <FieldTitle>탈퇴 동의</FieldTitle>
-              </FieldLabel>
-              <FieldDescription className="mt-0">
-                유의사항을 확인하였으며, 이에 동의합니다.
-              </FieldDescription>
-            </FieldContent>
-          </Field>
-        )}
+    <SummaryCard className="border-red-200 bg-red-50/80">
+      <SummaryCard.Header
+        title="탈퇴 확인"
+        description="유의사항을 확인한 뒤 동의 체크를 해야 탈퇴를 진행할 수 있습니다."
       />
+      <SummaryCard.Section>
+        <Controller
+          name="agree"
+          control={control}
+          render={({ field }) => (
+            <Field orientation="horizontal" className="items-start gap-3">
+              <Checkbox
+                id="agree"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+              <FieldContent className="gap-1">
+                <FieldLabel htmlFor="agree">
+                  <FieldTitle>탈퇴 동의</FieldTitle>
+                </FieldLabel>
+                <FieldDescription className="mt-0">
+                  유의사항을 확인하였으며, 이에 동의합니다.
+                </FieldDescription>
+              </FieldContent>
+            </Field>
+          )}
+        />
 
-      <div className="mt-5 flex flex-col gap-2">
-        <Button
-          variant="destructive"
-          className="w-full"
-          disabled={!agree || isPending}
-          onClick={onLeave}
-        >
-          {isPending ? "처리 중..." : "회원 탈퇴"}
-        </Button>
-        <Button className="w-full" variant="outline" onClick={onCancel}>
-          탈퇴 그만두기
-        </Button>
-      </div>
-    </UtilityPageAside>
+        <div className="mt-5 flex flex-col gap-2">
+          <Button
+            variant="destructive"
+            className="w-full"
+            disabled={!agree || isPending}
+            onClick={onLeave}
+          >
+            {isPending ? "처리 중..." : "회원 탈퇴"}
+          </Button>
+          <Button className="w-full" variant="outline" onClick={onCancel}>
+            탈퇴 그만두기
+          </Button>
+        </div>
+      </SummaryCard.Section>
+    </SummaryCard>
   );
 }
 

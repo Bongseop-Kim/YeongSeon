@@ -1,9 +1,7 @@
 import { useMemo, useState } from "react";
 import { Empty } from "@/shared/composite/empty";
-import {
-  UtilityPageAside,
-  UtilityPageIntro,
-} from "@/shared/composite/utility-page";
+import { SummaryCard } from "@/shared/composite/summary-card";
+import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
@@ -255,13 +253,15 @@ export default function TokenHistoryPage() {
             />
 
             <div className="lg:hidden">
-              <UtilityPageAside
-                title="현재 토큰 잔액"
-                description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
-                tone="muted"
-              >
-                <BalanceSummary {...balanceProps} />
-              </UtilityPageAside>
+              <SummaryCard>
+                <SummaryCard.Header
+                  title="현재 토큰 잔액"
+                  description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
+                />
+                <SummaryCard.Section>
+                  <BalanceSummary {...balanceProps} />
+                </SummaryCard.Section>
+              </SummaryCard>
             </div>
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-12">
@@ -279,13 +279,15 @@ export default function TokenHistoryPage() {
               </div>
 
               <div className="hidden min-w-0 space-y-5 lg:sticky lg:top-24 lg:block lg:self-start">
-                <UtilityPageAside
-                  title="현재 토큰 잔액"
-                  description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
-                  tone="muted"
-                >
-                  <BalanceSummary {...balanceProps} />
-                </UtilityPageAside>
+                <SummaryCard>
+                  <SummaryCard.Header
+                    title="현재 토큰 잔액"
+                    description="유료 토큰과 보너스 토큰을 구분해 보여줍니다."
+                  />
+                  <SummaryCard.Section>
+                    <BalanceSummary {...balanceProps} />
+                  </SummaryCard.Section>
+                </SummaryCard>
               </div>
             </div>
           </div>
