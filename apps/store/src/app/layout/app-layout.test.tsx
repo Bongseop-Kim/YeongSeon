@@ -73,7 +73,16 @@ describe("AppLayout footer rendering", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.clearAllMocks();
+  });
+
+  it("local 환경에서는 header를 파란색으로 표시한다", () => {
+    vi.stubEnv("VITE_APP_ENV", "local");
+
+    renderAppLayout(ROUTES.HOME);
+
+    expect(screen.getByRole("banner")).toHaveClass("bg-blue-950");
   });
 
   it("모바일 서브페이지에서도 footer 노드를 유지하고 숨김 처리한다", () => {

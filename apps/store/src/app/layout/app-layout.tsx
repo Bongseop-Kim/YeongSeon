@@ -56,6 +56,7 @@ export default function AppLayout() {
   const { openPopup } = usePopup();
   const isHomePage = location.pathname === ROUTES.HOME;
   const shouldHideFooter = showHeader && !isHomePage && isMobile;
+  const isLocalAppEnv = import.meta.env.VITE_APP_ENV === "local";
 
   const handleSignOut = async () => {
     try {
@@ -108,7 +109,9 @@ export default function AppLayout() {
     navigate(-1);
   };
 
-  const headerClassName = "relative z-30 h-auto";
+  const headerClassName = `relative z-30 h-auto ${
+    isLocalAppEnv ? "border-blue-300/30 bg-blue-950" : ""
+  }`;
   const currentPageName = getCurrentPageName();
   const shouldShowBrandLogo = currentPageName === BRAND_LABEL;
 
@@ -120,6 +123,7 @@ export default function AppLayout() {
           sticky={false}
           tone="solid"
           className={headerClassName}
+          style={isLocalAppEnv ? { backgroundColor: "#001f4d" } : undefined}
         >
           <HeaderContent className="min-h-14">
             <HeaderTitle
