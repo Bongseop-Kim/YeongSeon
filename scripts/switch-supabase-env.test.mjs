@@ -85,20 +85,28 @@ test("local writes app runtime env into store and admin profile files", async ()
   );
 });
 
-test("set profile and profile switch restore store and admin Supabase env together", async () => {
+test("profile switch restores store and admin Supabase env together", async () => {
   const root = await makeWorkspace();
 
-  await runScript("node", [
-    scriptPath,
-    "set",
-    "--url",
-    "https://cloud.example.supabase.co",
-    "--anon-key",
-    "cloud-anon",
-    "--profile",
-    "cloud",
-    "--root",
-    root,
+  await Promise.all([
+    fs.writeFile(
+      path.join(root, "apps/store/.env.supabase.cloud"),
+      [
+        "VITE_SUPABASE_URL=https://cloud.example.supabase.co",
+        "VITE_SUPABASE_ANON_KEY=cloud-anon",
+        "VITE_APP_ENV=cloud",
+        "",
+      ].join("\n"),
+    ),
+    fs.writeFile(
+      path.join(root, "apps/admin/.env.supabase.cloud"),
+      [
+        "VITE_SUPABASE_URL=https://cloud.example.supabase.co",
+        "VITE_SUPABASE_ANON_KEY=cloud-anon",
+        "VITE_APP_ENV=cloud",
+        "",
+      ].join("\n"),
+    ),
   ]);
   await runScript("node", [scriptPath, "local", "--root", root]);
   await runScript("node", [scriptPath, "cloud", "--root", root]);

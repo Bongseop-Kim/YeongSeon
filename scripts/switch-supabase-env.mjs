@@ -26,7 +26,6 @@ const localFallback = {
 const usage = `Usage:
   pnpm env:supabase:local
   pnpm env:supabase:cloud
-  pnpm env:supabase:set -- --url <url> --anon-key <key> [--profile <name>]
 
 Profiles are stored per app as apps/<app>/.env.supabase.<name>.`;
 
@@ -199,7 +198,7 @@ const readProfile = (root, profile) => {
 
     if (!fs.existsSync(profilePath)) {
       throw new Error(
-        `Missing ${path.relative(root, profilePath)}. Create it manually or use env:supabase:set with --profile ${profile}.`,
+        `Missing ${path.relative(root, profilePath)}. Create it manually before switching to ${profile}.`,
       );
     }
 
@@ -283,23 +282,6 @@ const main = () => {
     writeProfile(options.root, "local", supabaseEnv, "local");
     writeActiveEnv(options.root, supabaseEnv, "local");
     console.log(`Switched store/admin Supabase env to local: ${supabaseEnv.url}`);
-    return;
-  }
-
-  if (command === "set") {
-    if (!options.url || !options.anonKey) {
-      throw new Error("set requires --url and --anon-key.");
-    }
-
-    const supabaseEnv = { url: options.url, anonKey: options.anonKey };
-    const appEnv = options.appEnv ?? options.profile ?? "custom";
-
-    if (options.profile) {
-      writeProfile(options.root, options.profile, supabaseEnv, appEnv);
-    }
-
-    writeActiveEnv(options.root, supabaseEnv, appEnv);
-    console.log(`Set store/admin Supabase env to ${supabaseEnv.url}`);
     return;
   }
 
