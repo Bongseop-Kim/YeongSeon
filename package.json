@@ -24,6 +24,7 @@
     "db:push": "supabase db push",
     "db:migrations": "supabase migration list",
     "db:new": "bash scripts/new-migration.sh",
+    "db:seed:pull-reference": "node scripts/pull-reference-seed.mjs",
     "db:lint": "supabase db lint --level warning",
     "sql:security-check": "node scripts/check-sql-security.mjs",
     "db:test": "supabase test db",
