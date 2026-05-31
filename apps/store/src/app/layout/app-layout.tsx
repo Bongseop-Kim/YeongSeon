@@ -125,7 +125,6 @@ export default function AppLayout() {
           sticky={false}
           tone="solid"
           className={headerClassName}
-          style={isLocalAppEnv ? { backgroundColor: "#001f4d" } : undefined}
         >
           <HeaderContent className="min-h-14">
             <HeaderTitle

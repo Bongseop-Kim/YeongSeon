@@ -47,7 +47,11 @@ export function ResultTagBar({
       });
     } catch (error) {
       console.error("이미지 다운로드 오류:", error);
-      toast.error("이미지를 다운로드하지 못했어요. 잠시 후 다시 시도해주세요.");
+      const message =
+        error instanceof Error
+          ? error.message
+          : "이미지를 다운로드하지 못했어요. 잠시 후 다시 시도해주세요.";
+      toast.error(message);
     }
   };
 

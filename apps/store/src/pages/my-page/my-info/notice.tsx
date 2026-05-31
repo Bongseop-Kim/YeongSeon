@@ -114,14 +114,9 @@ export default function MyInfoNoticePage() {
     });
   }, [form, profile]);
 
-  const handleMarketingToggle = async (checked: boolean) => {
+  const handleMarketingToggle = (checked: boolean) => {
     form.setValue("kakaoSms", checked);
-    try {
-      await updateMarketingConsentMutation.mutateAsync({ kakaoSms: checked });
-    } catch {
-      await refetch();
-      toast.error("설정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.");
-    }
+    updateMarketingConsentMutation.mutate({ kakaoSms: checked });
   };
 
   const handleNotificationToggle = async (checked: boolean) => {

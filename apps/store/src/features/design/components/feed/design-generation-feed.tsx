@@ -110,7 +110,13 @@ function GenerationRow({
 
   const handleDelete = () => {
     deleteGeneration.mutate(generation.id, {
-      onError: () => toast.error("삭제하지 못했어요. 다시 시도해주세요."),
+      onError: (error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "삭제하지 못했어요. 다시 시도해주세요.";
+        toast.error(message);
+      },
     });
   };
 
