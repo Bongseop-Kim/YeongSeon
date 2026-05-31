@@ -37,6 +37,8 @@ dist-ssr
 # Local AI agent settings
 .claude/
 .mcp.json
+.omc/
+.serena/
 
 # Git worktrees
 .worktrees/
