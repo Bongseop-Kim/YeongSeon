@@ -7,12 +7,10 @@ import {
   useState,
 } from "react";
 import { Coins, Ellipsis, ImagePlus, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 import { analytics } from "@/shared/lib/analytics";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui-extended/button";
-import { ROUTES } from "@/shared/constants/ROUTES";
 import { AttachmentPopup } from "@/features/design/components/chat/attachment-popup";
 import { FABRIC_OPTIONS } from "@/features/design/constants/design-options";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
@@ -25,6 +23,7 @@ interface ChatInputProps {
   draftText?: string;
   draftRevision?: number;
   tokenBalance?: number;
+  onCharge?: () => void;
 }
 
 interface ChatInputHandle {
@@ -144,10 +143,16 @@ function ImageAttachmentPreview({
 
 export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
   function ChatInput(
-    { onSend, isLoading = false, draftText, draftRevision, tokenBalance },
+    {
+      onSend,
+      isLoading = false,
+      draftText,
+      draftRevision,
+      tokenBalance,
+      onCharge,
+    },
     ref,
   ) {
-    const navigate = useNavigate();
     const designContext = useDesignChatStore((state) => state.designContext);
     const pendingAttachments = useDesignChatStore(
       (state) => state.pendingAttachments,
@@ -310,7 +315,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               variant="none"
               size="sm"
               className="h-auto rounded-none p-0 text-xs font-medium text-foreground underline underline-offset-2"
-              onClick={() => navigate(ROUTES.TOKEN_PURCHASE)}
+              onClick={onCharge}
             >
               충전
             </Button>

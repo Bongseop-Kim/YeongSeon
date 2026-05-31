@@ -37,7 +37,7 @@ export const SewingStep = () => {
   useEffect(() => {
     if (tieType !== "AUTO" && dimple) {
       setValue("dimple", false);
-      toast.info("수동 타이에서는 딤플을 선택할 수 없어요. 선택이 해제됐어요.");
+      toast.info("수동 타이는 딤플을 선택할 수 없어 선택을 해제했어요.");
     }
   }, [tieType, dimple, setValue]);
 

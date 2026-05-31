@@ -212,7 +212,7 @@ const ClaimFormPage = () => {
       },
       {
         onSuccess: () => {
-          toast.success(`${claimTypeLabel} 신청이 완료되었습니다.`);
+          toast.success(`${claimTypeLabel} 접수가 완료되었습니다.`);
           navigate(ROUTES.CLAIM_LIST);
         },
         onError: (err) => {
@@ -224,7 +224,7 @@ const ClaimFormPage = () => {
           }
 
           toast.error(
-            `${claimTypeLabel} 신청에 실패했습니다. 다시 시도해주세요.`,
+            `${claimTypeLabel} 신청을 접수하지 못했어요. 다시 시도해주세요.`,
           );
         },
       },
@@ -326,7 +326,7 @@ const ClaimFormPage = () => {
               <Separator />
             </CardContent>
 
-            {/* 클레임 신청 폼 */}
+            {/* 신청 폼 */}
             <CardContent>
               <Form {...form}>
                 <form

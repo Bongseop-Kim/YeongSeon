@@ -54,7 +54,7 @@ export const useUpdateMarketingConsent = () => {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "마케팅 동의 저장에 실패했습니다. 다시 시도해주세요.";
+          : "수신 동의 설정을 저장하지 못했어요. 다시 시도해주세요.";
       toast.error(errorMessage);
     },
     onSuccess: () => {

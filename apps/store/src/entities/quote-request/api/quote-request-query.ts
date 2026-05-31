@@ -32,12 +32,12 @@ export const useCreateQuoteRequest = () => {
   return useMutation({
     mutationFn: (request: CreateQuoteRequestRequest) => {
       if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
+        throw new Error("로그인 후 이용할 수 있어요.");
       }
       return createQuoteRequest(request);
     },
     onError: (error) => {
-      console.error("견적요청 생성 실패:", error);
+      console.error("견적 요청 생성 실패:", error);
     },
   });
 };

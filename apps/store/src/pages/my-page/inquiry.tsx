@@ -107,7 +107,7 @@ export default function InquiryPage() {
     confirm("문의를 삭제하시겠습니까?", () => {
       deleteMutation.mutate(id, {
         onSuccess: (_, deletedInquiryId) => {
-          toast.success("문의가 삭제되었습니다.");
+          toast.success("문의를 삭제했습니다.");
           if (deletedInquiryId === editingInquiryId) {
             setEditingInquiryId(null);
             setIsSheetOpen(false);
@@ -115,7 +115,9 @@ export default function InquiryPage() {
         },
         onError: (err) => {
           toast.error(
-            err instanceof Error ? err.message : "삭제에 실패했습니다.",
+            err instanceof Error
+              ? err.message
+              : "삭제하지 못했어요. 다시 시도해주세요.",
           );
         },
       });
@@ -135,13 +137,15 @@ export default function InquiryPage() {
           },
           {
             onSuccess: () => {
-              toast.success("문의가 수정되었습니다.");
+              toast.success("문의를 수정했습니다.");
               setEditingInquiryId(null);
               setIsSheetOpen(false);
             },
             onError: (err) => {
               toast.error(
-                err instanceof Error ? err.message : "수정에 실패했습니다.",
+                err instanceof Error
+                  ? err.message
+                  : "수정하지 못했어요. 다시 시도해주세요.",
               );
             },
           },
@@ -156,13 +160,15 @@ export default function InquiryPage() {
           },
           {
             onSuccess: () => {
-              toast.success("문의가 등록되었습니다.");
+              toast.success("문의를 등록했습니다.");
               setEditingInquiryId(null);
               setIsSheetOpen(false);
             },
             onError: (err) => {
               toast.error(
-                err instanceof Error ? err.message : "등록에 실패했습니다.",
+                err instanceof Error
+                  ? err.message
+                  : "등록하지 못했어요. 다시 시도해주세요.",
               );
             },
           },

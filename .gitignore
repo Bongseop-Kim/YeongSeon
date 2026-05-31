@@ -29,6 +29,7 @@ dist-ssr
 
 # Environment variables
 .env
+.env.supabase.*
 # .env.development* 계열은 .env.local보다 높은 우선순위이므로 실수 방지를 위해 차단
 .env.development
 .env.development.local
@@ -36,6 +37,9 @@ dist-ssr
 # Local AI agent settings
 .claude/
 .mcp.json
+.omc/
+.omx/
+.serena/
 
 # Git worktrees
 .worktrees/

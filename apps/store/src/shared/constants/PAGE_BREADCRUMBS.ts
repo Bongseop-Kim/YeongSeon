@@ -35,7 +35,7 @@ export const PAGE_BREADCRUMBS = {
   MY_INFO_DETAIL: [HOME, MY_PAGE, MY_INFO, { label: "회원정보 변경" }],
   MY_INFO_EMAIL: [HOME, MY_PAGE, MY_INFO, { label: "이메일 변경" }],
   MY_INFO_NOTICE: [HOME, MY_PAGE, MY_INFO, { label: "알림 설정" }],
-  MY_INFO_LEAVE: [HOME, MY_PAGE, MY_INFO, { label: "회원탈퇴" }],
+  MY_INFO_LEAVE: [HOME, MY_PAGE, MY_INFO, { label: "회원 탈퇴" }],
   INQUIRY: [HOME, MY_PAGE, { label: "1:1 문의" }],
   TOKEN_HISTORY: [HOME, MY_PAGE, { label: "토큰 내역" }],
   QUOTE_REQUEST: [HOME, MY_PAGE, { label: "견적 요청 내역" }],

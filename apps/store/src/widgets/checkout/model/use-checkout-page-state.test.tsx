@@ -156,7 +156,7 @@ describe("useCheckoutPageState", () => {
     expect(result.current.pendingSnapshotRef.current).toBeNull();
     expect(success).toHaveBeenNthCalledWith(
       1,
-      "신규 쿠폰이(가) 적용되었습니다.",
+      "신규 쿠폰 적용을 완료했습니다.",
     );
 
     act(() => {

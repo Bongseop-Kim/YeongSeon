@@ -34,6 +34,23 @@ interface AdminSiderProps {
   Title?: React.FC<{ collapsed: boolean }>;
 }
 
+const localSiderColor = "#001f4d";
+const localSiderElevatedColor = "#001529";
+const localSiderBorderColor = "rgba(255, 255, 255, 0.24)";
+const localSiderMenuTheme = {
+  components: {
+    Menu: {
+      itemBg: localSiderColor,
+      itemColor: "rgba(255, 255, 255, 0.82)",
+      itemHoverBg: "rgba(255, 255, 255, 0.12)",
+      itemHoverColor: "#ffffff",
+      itemSelectedBg: "rgba(255, 255, 255, 0.2)",
+      itemSelectedColor: "#ffffff",
+      subMenuItemBg: localSiderColor,
+    },
+  },
+};
+
 export const AdminSider: React.FC<AdminSiderProps> = ({
   Title: TitleFromProps,
 }) => {
@@ -53,6 +70,7 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu();
   const { mutate: mutateLogout } = useLogout();
   const isMobile = useIsMobile();
+  const isLocalAppEnv = import.meta.env.VITE_APP_ENV === "local";
 
   const RenderToTitle = TitleFromProps ?? ThemedTitle;
 
@@ -167,7 +185,10 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
           justifyContent: collapsed ? "center" : "flex-start",
           alignItems: "center",
           height: 64,
-          backgroundColor: token.colorBgElevated,
+          backgroundColor: isLocalAppEnv
+            ? localSiderElevatedColor
+            : token.colorBgElevated,
+          color: isLocalAppEnv ? "#ffffff" : undefined,
           fontSize: 14,
           flexShrink: 0,
         }}
@@ -176,28 +197,34 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
       </div>
 
       {/* Nav menu — scrollable */}
-      <Menu
-        selectedKeys={selectedKey ? [selectedKey] : []}
-        defaultOpenKeys={defaultOpenKeys}
-        mode="inline"
-        style={{
-          paddingTop: 8,
-          border: "none",
-          flex: 1,
-          overflowY: "auto",
-        }}
-        onClick={() => {
-          if (isMobile) setMobileSiderOpen(false);
-        }}
-        items={buildMenuItems(menuItems)}
-      />
+      <ConfigProvider theme={isLocalAppEnv ? localSiderMenuTheme : undefined}>
+        <Menu
+          selectedKeys={selectedKey ? [selectedKey] : []}
+          defaultOpenKeys={defaultOpenKeys}
+          mode="inline"
+          style={{
+            paddingTop: 8,
+            border: "none",
+            flex: 1,
+            overflowY: "auto",
+            backgroundColor: isLocalAppEnv ? localSiderColor : undefined,
+          }}
+          onClick={() => {
+            if (isMobile) setMobileSiderOpen(false);
+          }}
+          items={buildMenuItems(menuItems)}
+        />
+      </ConfigProvider>
 
       {/* Logout area */}
       <div
         style={{
-          borderTop: `1px solid ${token.colorBorderSecondary}`,
+          borderTop: `1px solid ${
+            isLocalAppEnv ? localSiderBorderColor : token.colorBorderSecondary
+          }`,
           padding: collapsed ? "8px 4px" : "8px 12px",
           flexShrink: 0,
+          backgroundColor: isLocalAppEnv ? localSiderColor : undefined,
         }}
       >
         {renderLogoutButton(collapsed)}
@@ -217,12 +244,28 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
     >
       <Layout>
         <Layout.Sider
+          theme={isLocalAppEnv ? "light" : undefined}
           style={{
             height: "100vh",
-            backgroundColor: token.colorBgContainer,
+            backgroundColor: isLocalAppEnv
+              ? localSiderColor
+              : token.colorBgContainer,
+            background: isLocalAppEnv ? localSiderColor : undefined,
             ...(direction === "rtl"
-              ? { borderLeft: `1px solid ${token.colorBgElevated}` }
-              : { borderRight: `1px solid ${token.colorBgElevated}` }),
+              ? {
+                  borderLeft: `1px solid ${
+                    isLocalAppEnv
+                      ? localSiderBorderColor
+                      : token.colorBgElevated
+                  }`,
+                }
+              : {
+                  borderRight: `1px solid ${
+                    isLocalAppEnv
+                      ? localSiderBorderColor
+                      : token.colorBgElevated
+                  }`,
+                }),
           }}
         >
           {renderSiderContent(false)}
@@ -236,14 +279,25 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
   }
 
   const siderStyles: CSSProperties = {
-    backgroundColor: token.colorBgContainer,
+    backgroundColor: isLocalAppEnv ? localSiderColor : token.colorBgContainer,
+    background: isLocalAppEnv ? localSiderColor : undefined,
     ...(direction === "rtl"
-      ? { borderLeft: `1px solid ${token.colorBgElevated}` }
-      : { borderRight: `1px solid ${token.colorBgElevated}` }),
+      ? {
+          borderLeft: `1px solid ${
+            isLocalAppEnv ? localSiderBorderColor : token.colorBgElevated
+          }`,
+        }
+      : {
+          borderRight: `1px solid ${
+            isLocalAppEnv ? localSiderBorderColor : token.colorBgElevated
+          }`,
+        }),
   };
 
   const renderClosingIcons = () => {
-    const iconProps = { style: { color: token.colorPrimary } };
+    const iconProps = {
+      style: { color: isLocalAppEnv ? "#ffffff" : token.colorPrimary },
+    };
     const OpenIcon = direction === "rtl" ? RightOutlined : LeftOutlined;
     const CollapsedIcon = direction === "rtl" ? LeftOutlined : RightOutlined;
     const IconComponent = siderCollapsed ? CollapsedIcon : OpenIcon;
@@ -252,6 +306,7 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
 
   return (
     <Layout.Sider
+      theme={isLocalAppEnv ? "light" : undefined}
       style={siderStyles}
       collapsible
       collapsed={siderCollapsed}
@@ -271,7 +326,9 @@ export const AdminSider: React.FC<AdminSiderProps> = ({
             borderRadius: 0,
             height: "100%",
             width: "100%",
-            backgroundColor: token.colorBgElevated,
+            backgroundColor: isLocalAppEnv
+              ? localSiderElevatedColor
+              : token.colorBgElevated,
           }}
         >
           {renderClosingIcons()}

@@ -1,5 +1,5 @@
 import { Download, Maximize2, Minimize2, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/shared/lib/toast";
 
 import { isActiveGeneration } from "@/entities/design";
 import { Button } from "@/shared/ui-extended/button";
@@ -46,12 +46,16 @@ export function ResultTagBar({
         filename: unmasked ? "design.png" : "design-masked.png",
       });
     } catch (error) {
-      console.error("이미지 다운로드 실패:", error);
-      toast.error(
-        error instanceof Error
-          ? `다운로드 실패: ${error.message}`
-          : "다운로드 실패",
-      );
+      if (error instanceof Error) {
+        console.error("이미지 다운로드 오류:", {
+          message: error.message,
+          stack: error.stack,
+        });
+      } else {
+        console.error("이미지 다운로드 오류:", error);
+      }
+
+      toast.error("이미지를 다운로드하지 못했어요. 잠시 후 다시 시도해주세요.");
     }
   };
 

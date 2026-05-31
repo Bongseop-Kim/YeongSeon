@@ -65,7 +65,7 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
 
         if (!CLIENT_KEY) {
           const message =
-            "VITE_TOSS_CLIENT_KEY가 설정되지 않아 결제위젯을 초기화할 수 없습니다.";
+            "VITE_TOSS_CLIENT_KEY가 설정되지 않아 결제 화면을 초기화할 수 없습니다.";
           console.error(`[payment-widget] ${message}`);
           if (!cancelled) {
             setInitError(message);
@@ -104,7 +104,7 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
             });
           }
         } catch (error) {
-          const message = "결제위젯 초기화에 실패했습니다.";
+          const message = "결제 화면 초기화에 실패했습니다.";
           console.error(`[payment-widget] ${message}`, error);
           if (!cancelled) {
             setInitError(message);
@@ -151,7 +151,7 @@ const PaymentWidget = forwardRef<PaymentWidgetRef, PaymentWidgetProps>(
             throw new Error(initError);
           }
           if (!widgetsRef.current) {
-            throw new Error("결제위젯이 초기화되지 않았습니다.");
+            throw new Error("결제 화면이 초기화되지 않았습니다.");
           }
           await widgetsRef.current.requestPayment({
             orderId: params.orderId,

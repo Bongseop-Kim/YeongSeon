@@ -5,7 +5,7 @@ export const sendPhoneVerification = async (phone: string): Promise<void> => {
     data: { session },
   } = await supabase.auth.getSession();
   if (!session?.access_token) {
-    throw new Error("로그인이 필요합니다.");
+    throw new Error("로그인 후 이용할 수 있어요.");
   }
 
   const res = await fetch(

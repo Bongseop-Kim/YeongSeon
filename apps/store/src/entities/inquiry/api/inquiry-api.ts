@@ -35,7 +35,7 @@ export const createInquiry = async (params: {
 }): Promise<void> => {
   const { data, error: authError } = await supabase.auth.getUser();
   if (authError) throw new Error(`인증 오류: ${authError.message}`);
-  if (!data.user) throw new Error("로그인이 필요합니다.");
+  if (!data.user) throw new Error("로그인 후 이용할 수 있어요.");
 
   const { error } = await supabase.from("inquiries").insert({
     user_id: data.user.id,

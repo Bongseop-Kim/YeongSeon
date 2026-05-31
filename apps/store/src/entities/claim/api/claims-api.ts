@@ -118,7 +118,7 @@ export const getClaim = async (claimId: string): Promise<ClaimItem | null> => {
 };
 
 /**
- * 클레임 신청 취소 (접수 상태에서만 가능)
+ * 신청 취소 (접수 상태에서만 가능)
  */
 export const cancelClaim = async (claimId: string): Promise<void> => {
   const { error } = await supabase.rpc("cancel_claim", {

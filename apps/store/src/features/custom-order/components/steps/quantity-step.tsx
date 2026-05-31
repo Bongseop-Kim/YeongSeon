@@ -31,7 +31,7 @@ export const QuantityStep = () => {
 
   useEffect(() => {
     if (prevQuantityRef.current < 100 && quantity >= 100) {
-      toast.info("100개 이상은 견적요청으로 전환됩니다.");
+      toast.info("100개 이상은 견적 요청으로 접수됩니다.");
     }
     prevQuantityRef.current = quantity;
   }, [quantity]);

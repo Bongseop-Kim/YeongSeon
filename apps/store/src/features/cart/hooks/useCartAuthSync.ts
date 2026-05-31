@@ -15,7 +15,7 @@ import type { CartItem } from "@yeongseon/shared/types/view/cart";
  * 로그인/로그아웃 시 장바구니 동기화를 처리하는 hook
  *
  * 단순화된 전략:
- * - 로그인 시: 로컬(guest) 장바구니가 있으면 서버로 업로드하고 서버 장바구니 사용
+ * - 로그인 시: 기기(guest) 장바구니가 있으면 서버로 업로드하고 계정 장바구니 사용
  * - 로그아웃 시: guest 장바구니로 전환
  */
 export function useCartAuthSync() {
@@ -65,7 +65,7 @@ export function useCartAuthSync() {
           return;
         }
 
-        // 로그인: 서버 장바구니 로드
+        // 로그인: 계정 장바구니 로드
         let serverItems: CartItem[] = [];
         try {
           serverItems =
@@ -74,38 +74,42 @@ export function useCartAuthSync() {
               queryFn: () => getCartItems(userId),
             })) ?? [];
         } catch (error) {
-          console.error("서버 장바구니 조회 실패:", error);
-          toast.error("장바구니를 불러오지 못했어요.");
+          console.error("계정 장바구니 조회 실패:", error);
+          toast.error(
+            "장바구니를 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+          );
           previousUserIdRef.current = userId;
           return;
         }
 
-        // 로컬(guest) 장바구니가 있으면 서버로 업로드
+        // 기기(guest) 장바구니가 있으면 서버로 업로드
         const guestItems = await getGuestItems();
         if (guestItems.length > 0) {
           try {
-            // 로컬 장바구니를 서버로 업로드 (서버 장바구니 대체)
+            // 기기 장바구니를 계정 장바구니로 업로드
             await mutateAsync(guestItems);
             queryClient.setQueryData(cartKeys.items(userId), guestItems);
             await clearGuest();
           } catch (error) {
-            console.error("로컬 장바구니 업로드 실패:", error);
-            // 업로드 실패 시 서버 장바구니 사용, 로컬 장바구니 제거 (재로그인 시 재시도 방지)
+            console.error("기기 장바구니 업로드 실패:", error);
+            // 업로드 실패 시 계정 장바구니 사용, 기기 장바구니 제거 (재로그인 시 재시도 방지)
             queryClient.setQueryData(cartKeys.items(userId), serverItems);
             await clearGuest();
             toast.error(
-              "로컬 장바구니를 서버로 업로드하지 못했습니다. 서버 장바구니를 사용합니다.",
+              "장바구니를 동기화하지 못했어요. 기존 장바구니를 불러왔습니다.",
             );
           }
         } else {
-          // 로컬 장바구니가 없으면 서버 장바구니만 사용
+          // 기기 장바구니가 없으면 계정 장바구니만 사용
           queryClient.setQueryData(cartKeys.items(userId), serverItems);
         }
 
         previousUserIdRef.current = userId;
       } catch (error) {
         console.error("장바구니 동기화 실패:", error);
-        toast.error("장바구니 동기화 중 오류가 발생했습니다.");
+        toast.error(
+          "장바구니를 동기화하지 못했어요. 잠시 후 다시 시도해주세요.",
+        );
       } finally {
         isProcessingRef.current = false;
       }

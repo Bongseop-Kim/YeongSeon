@@ -29,7 +29,7 @@ export const useSetCartItems = () => {
   return useMutation({
     mutationFn: (items: CartItem[]) => {
       const { user } = getAuthState();
-      if (!user?.id) throw new Error("로그인이 필요합니다.");
+      if (!user?.id) throw new Error("로그인 후 이용할 수 있어요.");
       return setCartItems(user.id, items);
     },
     onMutate: async (items: CartItem[]) => {
@@ -67,7 +67,7 @@ export const useClearCartItems = () => {
   return useMutation({
     mutationFn: () => {
       const { user } = getAuthState();
-      if (!user?.id) throw new Error("로그인이 필요합니다.");
+      if (!user?.id) throw new Error("로그인 후 이용할 수 있어요.");
       return clearCartItems(user.id);
     },
     onMutate: async () => {

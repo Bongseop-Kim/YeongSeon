@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import type { CSSProperties, ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AdminSider } from "@/components/AdminSider";
 
 const useMenuMock = vi.hoisted(() => vi.fn());
@@ -79,6 +79,11 @@ function createFixture(overrides?: {
 }
 
 describe("AdminSider", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.clearAllMocks();
+  });
+
   it("선택된 메뉴도 다시 클릭할 수 있다", async () => {
     const fixture = createFixture();
 
@@ -108,5 +113,35 @@ describe("AdminSider", () => {
     ).not.toHaveStyle({
       pointerEvents: "none",
     });
+  });
+
+  it("local 환경에서는 sider를 파란색으로 표시한다", async () => {
+    const fixture = createFixture();
+
+    vi.stubEnv("VITE_APP_ENV", "local");
+    useIsMobileMock.mockImplementation(() => fixture.isMobile);
+    useMenuMock.mockImplementation(() => fixture.menuData);
+    useLinkMock.mockImplementation(
+      () =>
+        ({
+          to,
+          children,
+          style,
+        }: {
+          to: string;
+          children: ReactNode;
+          style?: CSSProperties;
+        }) => (
+          <a href={to} style={style}>
+            {children}
+          </a>
+        ),
+    );
+
+    const { container } = render(<AdminSider />);
+    await screen.findByRole("link", { name: "주문 관리" });
+    const sider = container.querySelector(".ant-layout-sider");
+
+    expect(sider).toHaveStyle("background-color: #001f4d");
   });
 });

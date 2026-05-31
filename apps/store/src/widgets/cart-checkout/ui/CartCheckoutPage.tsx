@@ -30,9 +30,10 @@ import { useReformPricing } from "@/entities/reform";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
-import { toast } from "sonner";
+import { toast } from "@/shared/lib/toast";
 import { cartKeys, removeCartItemsByIds } from "@/entities/cart";
 import { useAuthStore } from "@/shared/store/auth";
+import { useLoginConfirm } from "@/shared/hooks/use-login-confirm";
 
 export function CartCheckoutPage() {
   const { confirm } = useModalStore();
@@ -49,6 +50,7 @@ export function CartCheckoutPage() {
   } = useCart();
   const { setOrderItems } = useOrderStore();
   const userId = useAuthStore((state) => state.user?.id);
+  const confirmLogin = useLoginConfirm();
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
@@ -168,7 +170,7 @@ export function CartCheckoutPage() {
       : undefined;
 
     if (optionId && !newOption) {
-      toast.error("선택한 옵션을 찾을 수 없습니다.");
+      toast.error("선택한 옵션을 확인할 수 없어요. 다시 선택해주세요.");
       console.error("Cart option mismatch", {
         itemId: item.id,
         optionId,
@@ -181,14 +183,14 @@ export function CartCheckoutPage() {
       setIsOptionSubmitting(true);
       if (optionId === item.selectedOption?.id) {
         await updateQuantity(item.id, quantity);
-        toast.success("수량이 변경되었습니다.");
+        toast.success("수량을 변경했습니다.");
       } else {
         await updateProductOption(item.id, newOption, quantity);
-        toast.success("옵션이 변경되었습니다.");
+        toast.success("옵션을 변경했습니다.");
       }
       setOptionDialogItemId(null);
     } catch (error) {
-      toast.error("변경에 실패했습니다.");
+      toast.error("변경 내용을 저장하지 못했어요. 다시 시도해주세요.");
       console.error(error);
     } finally {
       setIsOptionSubmitting(false);
@@ -225,15 +227,19 @@ export function CartCheckoutPage() {
     try {
       if (!reformPricing) {
         setReformDialogItemId(null);
-        toast.error("수선 비용 정보를 불러오지 못했습니다.");
+        toast.error(
+          "수선 비용 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+        );
         return;
       }
       setIsReformSubmitting(true);
       await updateReformOption(item.id, updatedTie);
-      toast.success("수선 옵션이 변경되었습니다.");
+      toast.success("수선 옵션을 변경했습니다.");
       setReformDialogItemId(null);
     } catch (error) {
-      toast.error("수선 옵션 변경에 실패했습니다.");
+      toast.error(
+        "수선 옵션 변경 내용을 저장하지 못했어요. 다시 시도해주세요.",
+      );
       console.error(error);
     } finally {
       setIsReformSubmitting(false);
@@ -241,6 +247,10 @@ export function CartCheckoutPage() {
   };
 
   const handleChangeCoupon = async (itemId: string) => {
+    if (!userId) {
+      confirmLogin();
+      return;
+    }
     try {
       const item = items.find((i) => i.id === itemId);
       if (!item) return;
@@ -255,12 +265,12 @@ export function CartCheckoutPage() {
 
       toast.success(
         selectedCoupon
-          ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`
+          ? `${selectedCoupon.coupon.name} 적용을 완료했습니다.`
           : "쿠폰 사용을 취소했습니다.",
       );
     } catch (error) {
       console.error(error);
-      toast.error("쿠폰 변경에 실패했습니다.");
+      toast.error("쿠폰 변경 내용을 저장하지 못했어요. 다시 시도해주세요.");
     }
   };
 
@@ -272,6 +282,11 @@ export function CartCheckoutPage() {
   const handleOrder = () => {
     if (selectedCartItems.length === 0) {
       confirm("주문할 상품을 선택해주세요.");
+      return;
+    }
+
+    if (!userId) {
+      confirmLogin();
       return;
     }
 

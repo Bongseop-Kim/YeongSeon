@@ -50,7 +50,9 @@ const ShippingPage = () => {
 
   const handleDelete = (id: string, isDefault: boolean) => {
     if (isDefault) {
-      toast.error("기본 배송지는 삭제할 수 없습니다.");
+      toast.error(
+        "기본 배송지는 삭제할 수 없어요. 다른 배송지를 기본으로 설정한 뒤 삭제해주세요.",
+      );
       return;
     }
 

@@ -67,7 +67,7 @@ const RepairShippingPage = () => {
       return;
     }
     if (!trackingNumber.trim()) {
-      toast.error("송장번호를 입력해주세요.");
+      toast.error("송장 번호를 입력해주세요.");
       return;
     }
 
@@ -81,11 +81,13 @@ const RepairShippingPage = () => {
       await queryClient.refetchQueries({
         queryKey: orderKeys.detail(orderId),
       });
-      toast.success("발송 처리가 완료되었습니다.");
+      toast.success("발송 정보를 등록했습니다.");
       navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`, { replace: true });
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "발송 처리에 실패했습니다.",
+        err instanceof Error
+          ? err.message
+          : "발송 정보를 등록하지 못했어요. 다시 시도해주세요.",
       );
     } finally {
       setIsSubmitting(false);

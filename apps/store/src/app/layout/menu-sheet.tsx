@@ -11,6 +11,7 @@ import { Button } from "@/shared/ui-extended/button";
 import { useState } from "react";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { useAuthStore } from "@/shared/store/auth";
+import { useLoginConfirm } from "@/shared/hooks/use-login-confirm";
 import { useSignOut } from "@/entities/auth";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/shared/constants/ROUTES";
@@ -19,6 +20,7 @@ export default function MenuSheet() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { isMobile } = useBreakpoint();
   const { user } = useAuthStore();
+  const confirmLogin = useLoginConfirm();
   const signOutMutation = useSignOut();
   const navigate = useNavigate();
 
@@ -55,7 +57,16 @@ export default function MenuSheet() {
         </nav>
 
         <div className="flex items-center justify-between pr-4">
-          <NavLink to="/my-page" onClick={() => setIsSheetOpen(false)}>
+          <NavLink
+            to={ROUTES.MY_PAGE}
+            onClick={(e) => {
+              setIsSheetOpen(false);
+              if (!user) {
+                e.preventDefault();
+                confirmLogin();
+              }
+            }}
+          >
             마이페이지
           </NavLink>
 

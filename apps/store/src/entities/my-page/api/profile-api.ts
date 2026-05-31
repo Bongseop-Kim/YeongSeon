@@ -15,7 +15,7 @@ export const getProfile = async (): Promise<UserProfile> => {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("로그인이 필요합니다.");
+    throw new Error("로그인 후 이용할 수 있어요.");
   }
 
   const { data: profile, error: profileError } = await supabase

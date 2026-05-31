@@ -91,11 +91,11 @@ const PaymentSuccessPage = () => {
           (order) => order.orderType === "sample",
         );
         if (sampleCouponResult?.couponIssued === true) {
-          toast.success("결제가 완료되었습니다. 쿠폰이 발급되었습니다.");
+          toast.success("결제가 완료되었습니다. 쿠폰을 발급했습니다.");
         } else if (sampleCouponResult?.couponIssued === false) {
-          toast.success("결제가 완료되었습니다. 이미 쿠폰을 보유 중입니다.");
+          toast.success("결제가 완료되었습니다. 이미 보유 중인 쿠폰이 있어요.");
         } else {
-          toast.success("결제가 완료되었습니다!");
+          toast.success("결제가 완료되었습니다.");
         }
         if (paymentResult.type === "token_purchase") {
           navigate(ROUTES.TOKEN_PURCHASE_SUCCESS, { replace: true });

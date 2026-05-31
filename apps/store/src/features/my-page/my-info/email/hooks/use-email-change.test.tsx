@@ -74,7 +74,7 @@ describe("useEmailChange", () => {
     expect(result.current.step).toBe("verify");
     expect(result.current.requestedEmail).toBe("next@example.com");
     expect(result.current.canVerifyCode).toBe(false);
-    expect(success).toHaveBeenCalledWith("인증번호를 전송했습니다.");
+    expect(success).toHaveBeenCalledWith("인증 번호를 보냈습니다.");
   });
 
   it("재전송 쿨다운과 인증 성공을 처리한다", async () => {
@@ -119,7 +119,7 @@ describe("useEmailChange", () => {
       code: "123456",
     });
     expect(result.current.step).toBe("complete");
-    expect(success).toHaveBeenCalledWith("이메일이 변경되었습니다.");
+    expect(success).toHaveBeenCalledWith("이메일을 변경했습니다.");
   });
 
   it("실패 시 에러 메시지를 저장하고 뒤로가기를 처리한다", async () => {

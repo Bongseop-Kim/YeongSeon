@@ -65,6 +65,14 @@ function DesignPage() {
 
     regenerate();
   }, [confirmLoginRequired, regenerate, user]);
+  const handleChargeWithAuthCheck = useCallback(() => {
+    if (!user) {
+      confirmLoginRequired();
+      return;
+    }
+
+    navigate(ROUTES.TOKEN_PURCHASE);
+  }, [confirmLoginRequired, navigate, user]);
 
   return (
     <MainLayout className="h-full">
@@ -105,6 +113,7 @@ function DesignPage() {
             <ChatPanel
               className="h-full"
               sendMessage={sendMessageWithAuthCheck}
+              onCharge={handleChargeWithAuthCheck}
             />
           </div>
         </div>

@@ -29,7 +29,7 @@ export const getUserCoupons = async (): Promise<UserCoupon[]> => {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("로그인이 필요합니다.");
+    throw new Error("로그인 후 이용할 수 있어요.");
   }
 
   const today = new Date().toISOString().split("T")[0];

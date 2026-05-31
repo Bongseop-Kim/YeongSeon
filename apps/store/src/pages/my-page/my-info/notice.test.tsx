@@ -12,7 +12,7 @@ const profileState = vi.hoisted(() => ({
 }));
 
 const refetchMock = vi.hoisted(() => vi.fn());
-const mutateAsyncMock = vi.hoisted(() => vi.fn());
+const mutateMock = vi.hoisted(() => vi.fn());
 const toastErrorMock = vi.hoisted(() => vi.fn());
 const setNotificationPreferencesMock = vi.hoisted(() => vi.fn());
 const profileData = vi.hoisted(() => ({
@@ -39,7 +39,7 @@ vi.mock("@/entities/my-page", () => ({
     refetch: refetchMock,
   }),
   useUpdateMarketingConsent: () => ({
-    mutateAsync: mutateAsyncMock,
+    mutate: mutateMock,
     isPending: false,
   }),
 }));
@@ -158,7 +158,7 @@ describe("MyInfoNoticePage", () => {
     profileState.notificationEnabled = false;
     profileState.notificationConsent = false;
     refetchMock.mockReset().mockResolvedValue(undefined);
-    mutateAsyncMock.mockReset().mockResolvedValue(undefined);
+    mutateMock.mockReset();
     toastErrorMock.mockReset();
     setNotificationPreferencesMock.mockReset().mockResolvedValue(undefined);
   });
@@ -177,18 +177,18 @@ describe("MyInfoNoticePage", () => {
     ).toBeInTheDocument();
   });
 
-  it("마케팅 저장 실패 시 프로필을 다시 조회하고 에러 토스트를 표시한다", async () => {
+  it("마케팅 설정 변경은 중복 에러 처리 없이 mutation에 위임한다", async () => {
     const user = userEvent.setup();
-    mutateAsyncMock.mockRejectedValueOnce(new Error("timeout"));
     renderPage();
 
     const toggle = screen.getByRole("switch", { name: "카카오톡/문자" });
     await user.click(toggle);
 
     await waitFor(() => {
-      expect(refetchMock).toHaveBeenCalled();
+      expect(mutateMock).toHaveBeenCalledWith({ kakaoSms: true });
     });
-    expect(toastErrorMock).toHaveBeenCalledWith("설정 저장에 실패했습니다.");
+    expect(refetchMock).not.toHaveBeenCalled();
+    expect(toastErrorMock).not.toHaveBeenCalled();
   });
 
   it("미인증 유저가 서비스 알림 토글을 켜면 인증 모달이 표시된다", async () => {

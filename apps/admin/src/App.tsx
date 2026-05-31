@@ -138,6 +138,7 @@ export default function App() {
             },
           ]}
           options={{
+            disableTelemetry: true,
             syncWithLocation: true,
             warnWhenUnsavedChanges: true,
           }}

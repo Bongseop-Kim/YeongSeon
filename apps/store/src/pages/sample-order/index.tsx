@@ -8,6 +8,7 @@ import { ChipSinglePicker } from "@/shared/composite/chip-single-picker";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useAuthStore } from "@/shared/store/auth";
+import { useLoginConfirm } from "@/shared/hooks/use-login-confirm";
 import { toast } from "@/shared/lib/toast";
 import { useImageUpload, ImageUpload } from "@/features/custom-order";
 import { DesignImagePicker } from "@/features/design";
@@ -122,6 +123,7 @@ function SampleOrderSection({
 export default function SampleOrderPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const confirmLogin = useLoginConfirm();
   const imageUpload = useImageUpload(IMAGE_FOLDERS.SAMPLE_ORDERS);
   const { data: pricingConfig, isError: isPricingError } = usePricingConfig();
 
@@ -155,24 +157,22 @@ export default function SampleOrderPage() {
     periodNotice: "예상 제작 기간은 영업일 기준 28~42일입니다.",
   });
 
-  const isSubmitDisabled =
-    !user || samplePrice === null || imageUpload.isUploading;
+  const isSubmitDisabled = samplePrice === null || imageUpload.isUploading;
 
   const handleNavigateToPayment = async () => {
     if (!user) {
-      toast.error("로그인이 필요합니다.");
-      navigate(ROUTES.LOGIN);
+      confirmLogin();
       return;
     }
     if (imageUpload.isUploading) {
-      toast.error("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.");
+      toast.error("이미지 업로드가 끝난 뒤 다시 시도해주세요.");
       return;
     }
     if (samplePrice === null) {
       toast.error(
         isPricingError
-          ? "샘플 가격 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
-          : "샘플 가격 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
+          ? "샘플 가격 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
+          : "샘플 가격 정보를 불러오고 있어요. 잠시 후 다시 시도해주세요.",
       );
       return;
     }

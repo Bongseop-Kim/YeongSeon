@@ -21,7 +21,7 @@ export function getTokenRefundErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return "환불 신청 중 오류가 발생했습니다.";
+  return "환불 신청을 접수하지 못했어요. 다시 시도해주세요.";
 }
 
 export function useRefundableTokenOrdersQuery() {

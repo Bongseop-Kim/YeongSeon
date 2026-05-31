@@ -8,7 +8,7 @@ export const useCreateSampleOrder = () => {
     mutationFn: (request: CreateSampleOrderFormInput) => {
       const { user } = useAuthStore.getState();
       if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
+        throw new Error("로그인 후 이용할 수 있어요.");
       }
       return createSampleOrder(request);
     },

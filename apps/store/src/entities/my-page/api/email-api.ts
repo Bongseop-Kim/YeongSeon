@@ -66,7 +66,7 @@ const ensureCurrentUser = async () => {
   }
 
   if (!user) {
-    throw new EmailChangeError("로그인이 필요합니다.", "auth-required");
+    throw new EmailChangeError("로그인 후 이용할 수 있어요.", "auth-required");
   }
 
   return user;
@@ -106,7 +106,10 @@ export const resendEmailChangeCode = async (
   });
 
   if (error) {
-    throw toEmailChangeError(error, "인증번호 재요청에 실패했습니다.");
+    throw toEmailChangeError(
+      error,
+      "인증 번호를 다시 보내지 못했어요. 다시 시도해주세요.",
+    );
   }
 };
 

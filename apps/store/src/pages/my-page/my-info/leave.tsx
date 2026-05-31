@@ -101,11 +101,11 @@ export default function MyInfoLeavePage() {
           try {
             await signOut();
             useAuthStore.setState({ user: null, initialized: false });
-            toast.success("회원탈퇴가 완료되었습니다.");
+            toast.success("회원 탈퇴가 완료되었습니다.");
             navigate(ROUTES.HOME);
           } catch {
             toast.error(
-              "로그아웃 중 오류가 발생했습니다. 앱을 재시작해주세요.",
+              "탈퇴는 완료되었지만 로그아웃하지 못했어요. 새로고침 후 다시 확인해주세요.",
             );
           }
         },
@@ -113,7 +113,7 @@ export default function MyInfoLeavePage() {
           toast.error(
             err instanceof Error
               ? err.message
-              : "회원탈퇴에 실패했습니다. 다시 시도해주세요.",
+              : "회원 탈퇴를 완료하지 못했어요. 다시 시도해주세요.",
           );
         },
       });
@@ -130,7 +130,7 @@ export default function MyInfoLeavePage() {
           <div className="space-y-8 lg:space-y-10">
             <UtilityPageIntro
               eyebrow="Account Close"
-              title="회원탈퇴"
+              title="회원 탈퇴"
               description="탈퇴 후 복구가 어려운 항목이 있으므로 아래 내용을 먼저 확인해 주세요."
             />
 

@@ -19,9 +19,9 @@ export function RepairShippingAddressBanner({
     try {
       const text = `${REPAIR_SHIPPING_ADDRESS.recipient} / ${REPAIR_SHIPPING_ADDRESS.address} / ${REPAIR_SHIPPING_ADDRESS.phone}`;
       await navigator.clipboard.writeText(text);
-      toast.success("주소가 복사되었습니다.");
+      toast.success("주소를 복사했습니다.");
     } catch {
-      toast.error("주소 복사에 실패했습니다.");
+      toast.error("주소를 복사하지 못했어요. 다시 시도해주세요.");
     }
   };
 

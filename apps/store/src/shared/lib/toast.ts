@@ -5,22 +5,23 @@ import { toast as sonnerToast } from "sonner";
  */
 const ERROR_MESSAGES: Record<string, string> = {
   // 인증 관련
-  "auth/kakao-failed": "카카오 로그인에 실패했습니다.",
-  "auth/google-failed": "구글 로그인에 실패했습니다.",
-  "auth/signout-failed": "로그아웃에 실패했습니다.",
-  "auth/unauthorized": "인증이 필요합니다.",
+  "auth/kakao-failed": "카카오로 로그인하지 못했어요. 다시 시도해주세요.",
+  "auth/google-failed": "구글로 로그인하지 못했어요. 다시 시도해주세요.",
+  "auth/signout-failed": "로그아웃하지 못했어요. 다시 시도해주세요.",
+  "auth/unauthorized": "로그인 후 이용할 수 있어요.",
 
   // 주문 관련
   "order/option-required": "옵션을 선택해주세요.",
-  "order/complete": "주문이 완료되었습니다!",
-  "order/coupon-applied": "쿠폰이 적용되었습니다.",
+  "order/complete": "주문이 완료되었습니다.",
+  "order/coupon-applied": "쿠폰을 적용했습니다.",
   "order/coupon-cancelled": "쿠폰 사용을 취소했습니다.",
 
   // 클레임 관련
-  "claim/complete": "신청이 완료되었습니다.",
+  "claim/complete": "신청이 접수되었습니다.",
 
   // 일반
-  "common/unknown-error": "알 수 없는 오류가 발생했습니다.",
+  "common/unknown-error":
+    "요청을 처리하지 못했어요. 잠시 후 다시 시도해주세요.",
 };
 
 /**

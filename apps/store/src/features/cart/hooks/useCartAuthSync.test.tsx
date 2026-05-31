@@ -141,7 +141,7 @@ describe("useCartAuthSync", () => {
     expect(clearGuest).toHaveBeenCalled();
   });
 
-  it("서버 조회 실패와 업로드 실패 시 에러를 표시하고 서버 장바구니로 폴백한다", async () => {
+  it("서버 조회 실패와 업로드 실패 시 에러를 표시하고 계정 장바구니로 폴백한다", async () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
@@ -152,10 +152,12 @@ describe("useCartAuthSync", () => {
     const { rerender } = renderHook(() => useCartAuthSync());
 
     await waitFor(() => {
-      expect(error).toHaveBeenCalledWith("장바구니를 불러오지 못했어요.");
+      expect(error).toHaveBeenCalledWith(
+        "장바구니를 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+      );
     });
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "서버 장바구니 조회 실패:",
+      "계정 장바구니 조회 실패:",
       expect.any(Error),
     );
 
@@ -178,10 +180,10 @@ describe("useCartAuthSync", () => {
       queryKey: ["cart", "items", "user-3"],
     });
     expect(error).toHaveBeenCalledWith(
-      "로컬 장바구니를 서버로 업로드하지 못했습니다. 서버 장바구니를 사용합니다.",
+      "장바구니를 동기화하지 못했어요. 기존 장바구니를 불러왔습니다.",
     );
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "로컬 장바구니 업로드 실패:",
+      "기기 장바구니 업로드 실패:",
       expect.any(Error),
     );
   });

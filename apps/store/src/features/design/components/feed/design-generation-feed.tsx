@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Loader2, RotateCcw, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/shared/lib/toast";
 
 import {
   isActiveGeneration,
@@ -110,7 +110,13 @@ function GenerationRow({
 
   const handleDelete = () => {
     deleteGeneration.mutate(generation.id, {
-      onError: () => toast.error("삭제에 실패했습니다."),
+      onError: (error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "삭제하지 못했어요. 다시 시도해주세요.";
+        toast.error(message);
+      },
     });
   };
 
