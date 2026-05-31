@@ -156,13 +156,16 @@ describe("ChatInput", () => {
   });
 
   it("토큰 잔액과 텍스트 충전 버튼을 입력 박스 우측 상단에 표시한다", () => {
-    render(<ChatInput onSend={vi.fn()} tokenBalance={121} />);
+    const onCharge = vi.fn();
+    render(
+      <ChatInput onSend={vi.fn()} tokenBalance={121} onCharge={onCharge} />,
+    );
 
     expect(screen.getByText("121")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "충전" }));
 
-    expect(navigate).toHaveBeenCalledWith("/token/purchase");
+    expect(onCharge).toHaveBeenCalled();
   });
 
   it("이미지 첨부 버튼은 선택한 이미지들을 attachment로 추가하고 첫 이미지를 sourceImage 컨텍스트로 설정한다", () => {

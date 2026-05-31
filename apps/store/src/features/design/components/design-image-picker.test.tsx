@@ -11,12 +11,39 @@ const { useBreakpoint } = vi.hoisted(() => ({
   useBreakpoint: vi.fn(),
 }));
 
+const { navigate } = vi.hoisted(() => ({
+  navigate: vi.fn(),
+}));
+
+const modalConfirm = vi.hoisted(() => vi.fn());
+
+const authState = vi.hoisted(() => ({
+  user: { id: "user-1" } as { id: string } | null,
+}));
+
 vi.mock("@/features/design/hooks/use-design-images-query", () => ({
   useDesignImagesQuery,
 }));
 
 vi.mock("@/shared/lib/breakpoint-provider", () => ({
   useBreakpoint,
+}));
+
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => navigate,
+}));
+
+vi.mock("@/shared/store/auth", () => ({
+  useAuthStore: () => ({ user: authState.user }),
+}));
+
+vi.mock("@/shared/store/modal", () => ({
+  useModalStore: (
+    selector?: (state: { confirm: typeof modalConfirm }) => unknown,
+  ) => {
+    const state = { confirm: modalConfirm };
+    return selector ? selector(state) : state;
+  },
 }));
 
 const mockImages = [
@@ -40,6 +67,9 @@ describe("DesignImagePicker", () => {
   });
 
   beforeEach(() => {
+    authState.user = { id: "user-1" };
+    navigate.mockReset();
+    modalConfirm.mockReset();
     useBreakpoint.mockReturnValue({ isMobile: false });
     useDesignImagesQuery.mockReturnValue({
       data: { images: mockImages, total: 2 },
@@ -74,6 +104,27 @@ describe("DesignImagePicker", () => {
     });
     expect(trigger).toBeInTheDocument();
     expect(trigger).toHaveClass("border", "h-8");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("비로그인 상태에서 트리거를 클릭하면 Dialog 대신 로그인 확인창을 띄운다", async () => {
+    authState.user = null;
+    useDesignImagesQuery.mockReturnValue({
+      data: { pages: [{ images: mockImages, total: 2 }] },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
+
+    render(<DesignImagePicker onAdd={vi.fn()} />);
+    await userEvent.click(
+      screen.getByRole("button", { name: /내 AI 디자인에서 선택/ }),
+    );
+
+    expect(modalConfirm).toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 

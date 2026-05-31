@@ -13,10 +13,15 @@ import { cn } from "@/shared/lib/utils";
 interface ChatPanelProps {
   className?: string;
   sendMessage: (text: string, attachments: Attachment[]) => void;
+  onCharge?: () => void;
   onOpenHistory?: () => void;
 }
 
-export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
+export function ChatPanel({
+  className,
+  sendMessage,
+  onCharge,
+}: ChatPanelProps) {
   const { data: tokenBalance } = useDesignTokenBalanceQuery();
   const generationStatus = useDesignChatStore(
     (state) => state.generationStatus,
@@ -39,6 +44,7 @@ export function ChatPanel({ className, sendMessage }: ChatPanelProps) {
           draftText={draftText}
           draftRevision={draftRevision}
           tokenBalance={tokenBalance?.total}
+          onCharge={onCharge}
         />
       </div>
       <DesignGenerationFeed

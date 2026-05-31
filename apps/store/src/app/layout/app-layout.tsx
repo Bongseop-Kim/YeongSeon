@@ -17,6 +17,7 @@ import MenuSheet from "@/app/layout/menu-sheet";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { useCart } from "@/features/cart";
 import { useAuthStore } from "@/shared/store/auth";
+import { useLoginConfirm } from "@/shared/hooks/use-login-confirm";
 import { useSignOut } from "@/entities/auth";
 import { Badge } from "@/shared/ui/badge";
 import {
@@ -52,6 +53,7 @@ export default function AppLayout() {
   const { isMobile } = useBreakpoint();
   const { totalItems: cartItemCount } = useCart();
   const { user } = useAuthStore();
+  const confirmLogin = useLoginConfirm();
   const signOutMutation = useSignOut();
   const { openPopup } = usePopup();
   const isHomePage = location.pathname === ROUTES.HOME;
@@ -199,7 +201,16 @@ export default function AppLayout() {
               <MenuSheet />
               {!isMobile && (
                 <div className="flex items-center">
-                  <NavLink to={ROUTES.MY_PAGE} className="text-white/58">
+                  <NavLink
+                    to={ROUTES.MY_PAGE}
+                    className="text-white/58"
+                    onClick={(e) => {
+                      if (!user) {
+                        e.preventDefault();
+                        confirmLogin();
+                      }
+                    }}
+                  >
                     마이
                   </NavLink>
                   <NavLink

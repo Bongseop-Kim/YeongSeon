@@ -257,11 +257,7 @@ export default function OrderPage() {
                 <AttachmentStep
                   imageUpload={imageUpload}
                   pickerSlot={
-                    isLoggedIn ? (
-                      <DesignImagePicker
-                        onAdd={imageUpload.addExistingImages}
-                      />
-                    ) : undefined
+                    <DesignImagePicker onAdd={imageUpload.addExistingImages} />
                   }
                 />
               </section>

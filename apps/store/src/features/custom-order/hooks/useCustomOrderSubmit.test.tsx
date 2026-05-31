@@ -12,6 +12,7 @@ const { navigate, success, error, createQuoteRequestMutateAsync } = vi.hoisted(
 );
 
 const modalOpenModal = vi.hoisted(() => vi.fn());
+const modalConfirm = vi.hoisted(() => vi.fn());
 
 const authState = vi.hoisted(() => ({
   user: { id: "user-1" } as { id: string } | null,
@@ -35,9 +36,15 @@ vi.mock("@/shared/lib/toast", () => ({
 }));
 
 vi.mock("@/shared/store/modal", () => ({
-  useModalStore: () => ({
-    openModal: modalOpenModal,
-  }),
+  useModalStore: (
+    selector?: (state: {
+      openModal: typeof modalOpenModal;
+      confirm: typeof modalConfirm;
+    }) => unknown,
+  ) => {
+    const state = { openModal: modalOpenModal, confirm: modalConfirm };
+    return selector ? selector(state) : state;
+  },
 }));
 
 vi.mock("@/entities/quote-request", () => ({
@@ -82,6 +89,7 @@ describe("useCustomOrderSubmit", () => {
     modalOpenModal.mockImplementation(
       ({ onConfirm }: { onConfirm?: () => void }) => onConfirm?.(),
     );
+    modalConfirm.mockReset();
     navigate.mockReset();
     success.mockReset();
     error.mockReset();
@@ -157,7 +165,7 @@ describe("useCustomOrderSubmit", () => {
     );
   });
 
-  it("즉시주문에서는 로그인과 배송지 선택 가드 없이 결제 페이지로 이동한다", async () => {
+  it("즉시주문이라도 비로그인이면 로그인 확인창을 띄우고 결제 페이지로 이동하지 않는다", async () => {
     authState.user = null;
 
     const { result } = renderHook(() =>
@@ -180,16 +188,8 @@ describe("useCustomOrderSubmit", () => {
       await result.current.handleSubmit();
     });
 
-    expect(error).not.toHaveBeenCalledWith("로그인이 필요합니다.");
-    expect(error).not.toHaveBeenCalledWith("배송지를 선택해주세요.");
-    expect(navigate).toHaveBeenCalledWith(
-      "/order/custom-payment",
-      expect.objectContaining({
-        state: expect.objectContaining({
-          orderType: "custom",
-        }),
-      }),
-    );
+    expect(modalConfirm).toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it("견적 요청 모드에서 필수 연락처와 업로드 상태를 검증한다", async () => {

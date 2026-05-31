@@ -8,6 +8,7 @@ import { ChipSinglePicker } from "@/shared/composite/chip-single-picker";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useAuthStore } from "@/shared/store/auth";
+import { useLoginConfirm } from "@/shared/hooks/use-login-confirm";
 import { toast } from "@/shared/lib/toast";
 import { useImageUpload, ImageUpload } from "@/features/custom-order";
 import { DesignImagePicker } from "@/features/design";
@@ -122,6 +123,7 @@ function SampleOrderSection({
 export default function SampleOrderPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const confirmLogin = useLoginConfirm();
   const imageUpload = useImageUpload(IMAGE_FOLDERS.SAMPLE_ORDERS);
   const { data: pricingConfig, isError: isPricingError } = usePricingConfig();
 
@@ -155,13 +157,11 @@ export default function SampleOrderPage() {
     periodNotice: "예상 제작 기간은 영업일 기준 28~42일입니다.",
   });
 
-  const isSubmitDisabled =
-    !user || samplePrice === null || imageUpload.isUploading;
+  const isSubmitDisabled = samplePrice === null || imageUpload.isUploading;
 
   const handleNavigateToPayment = async () => {
     if (!user) {
-      toast.error("로그인이 필요합니다.");
-      navigate(ROUTES.LOGIN);
+      confirmLogin();
       return;
     }
     if (imageUpload.isUploading) {

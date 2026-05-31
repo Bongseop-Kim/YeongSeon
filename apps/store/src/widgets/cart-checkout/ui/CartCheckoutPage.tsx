@@ -33,6 +33,7 @@ import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { toast } from "sonner";
 import { cartKeys, removeCartItemsByIds } from "@/entities/cart";
 import { useAuthStore } from "@/shared/store/auth";
+import { useLoginConfirm } from "@/shared/hooks/use-login-confirm";
 
 export function CartCheckoutPage() {
   const { confirm } = useModalStore();
@@ -49,6 +50,7 @@ export function CartCheckoutPage() {
   } = useCart();
   const { setOrderItems } = useOrderStore();
   const userId = useAuthStore((state) => state.user?.id);
+  const confirmLogin = useLoginConfirm();
   const { isMobile } = useBreakpoint();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
@@ -241,6 +243,10 @@ export function CartCheckoutPage() {
   };
 
   const handleChangeCoupon = async (itemId: string) => {
+    if (!userId) {
+      confirmLogin();
+      return;
+    }
     try {
       const item = items.find((i) => i.id === itemId);
       if (!item) return;
@@ -272,6 +278,11 @@ export function CartCheckoutPage() {
   const handleOrder = () => {
     if (selectedCartItems.length === 0) {
       confirm("주문할 상품을 선택해주세요.");
+      return;
+    }
+
+    if (!userId) {
+      confirmLogin();
       return;
     }
 

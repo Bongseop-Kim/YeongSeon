@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/shared/store/auth";
 import { useModalStore } from "@/shared/store/modal";
+import { useLoginConfirm } from "@/shared/hooks/use-login-confirm";
 import { toast } from "@/shared/lib/toast";
 import { analytics } from "@/shared/lib/analytics";
 import { ROUTES } from "@/shared/constants/ROUTES";
@@ -35,6 +36,7 @@ export function useCustomOrderSubmit({
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const modal = useModalStore();
+  const confirmLogin = useLoginConfirm();
   const isLoggedIn = !!user;
   const createQuoteRequest = useCreateQuoteRequest();
 
@@ -47,12 +49,11 @@ export function useCustomOrderSubmit({
     imageUpload.isUploading;
 
   const handleSubmit = async () => {
+    if (!user) {
+      confirmLogin();
+      return;
+    }
     if (isQuoteMode) {
-      if (!user) {
-        toast.error("로그인이 필요합니다.");
-        navigate(ROUTES.LOGIN);
-        return;
-      }
       if (!hasSelectedAddress) {
         toast.error("배송지를 선택해주세요.");
         return;

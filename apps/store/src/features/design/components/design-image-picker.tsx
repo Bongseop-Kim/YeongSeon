@@ -3,6 +3,8 @@ import { Check, ImageOff, Loader2, Sparkles } from "lucide-react";
 import type { UploadedImage } from "@/entities/custom-order";
 import { useDesignImagesQuery } from "@/features/design/hooks/use-design-images-query";
 import { cn } from "@/shared/lib/utils";
+import { useAuthStore } from "@/shared/store/auth";
+import { useLoginConfirm } from "@/shared/hooks/use-login-confirm";
 import { Button } from "@/shared/ui-extended/button";
 import {
   Dialog,
@@ -42,6 +44,8 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { isMobile } = useBreakpoint();
+  const { user } = useAuthStore();
+  const confirmLogin = useLoginConfirm();
   const [sentinelNode, setSentinelNode] = useState<HTMLDivElement | null>(null);
   const pageSize = 24;
 
@@ -220,12 +224,20 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
     </>
   );
 
+  const handleTriggerClick = () => {
+    if (!user) {
+      confirmLogin();
+      return;
+    }
+    setIsOpen(true);
+  };
+
   const trigger = (
     <Button
       type="button"
       variant="outline"
       size="sm"
-      onClick={() => setIsOpen(true)}
+      onClick={handleTriggerClick}
     >
       <Sparkles className="h-3.5 w-3.5" />내 AI 디자인에서 선택
     </Button>
