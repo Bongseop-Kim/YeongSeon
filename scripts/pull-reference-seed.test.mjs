@@ -20,6 +20,11 @@ test("serializeSqlValue handles nulls, numbers, arrays, and objects", () => {
     ]),
     "ARRAY['https://example.com/a.jpg','https://example.com/b.jpg']",
   );
+  assert.equal(serializeSqlValue([], "text"), "ARRAY[]::text[]");
+  assert.throws(
+    () => serializeSqlValue([]),
+    /Cannot serialize empty array without element type/,
+  );
   assert.equal(
     serializeSqlValue({ color: "navy", label: "네이비" }),
     `'{"color":"navy","label":"네이비"}'::jsonb`,
@@ -51,7 +56,7 @@ test("buildReferenceSeedSql emits allowlisted tables in dependency order", () =>
         pattern: "solid",
         material: "silk",
         info: "sample",
-        detail_images: ["https://example.com/detail.jpg"],
+        detail_images: [],
         stock: 20,
         option_label: null,
       },
@@ -81,4 +86,5 @@ test("buildReferenceSeedSql emits allowlisted tables in dependency order", () =>
   );
   assert.doesNotMatch(sql, /updated_by/);
   assert.match(sql, /'Kid''s Navy Tie'/);
+  assert.match(sql, /ARRAY\[\]::text\[\]/);
 });

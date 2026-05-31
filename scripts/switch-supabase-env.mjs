@@ -15,8 +15,13 @@ const appRuntimeKeys = {
     "VITE_IMAGEKIT_PUBLIC_KEY",
     "VITE_TOSS_CLIENT_KEY",
   ],
-  admin: ["VITE_APP_ENV", "VITE_IMAGEKIT_URL_ENDPOINT", "VITE_IMAGEKIT_PUBLIC_KEY"],
+  admin: [
+    "VITE_APP_ENV",
+    "VITE_IMAGEKIT_URL_ENDPOINT",
+    "VITE_IMAGEKIT_PUBLIC_KEY",
+  ],
 };
+// Supabase local demo anon key: public constant for local development, not a secret.
 const localFallback = {
   url: "http://127.0.0.1:54321",
   anonKey:
@@ -281,7 +286,9 @@ const main = () => {
     const supabaseEnv = getLocalSupabaseEnv(options.root);
     writeProfile(options.root, "local", supabaseEnv, "local");
     writeActiveEnv(options.root, supabaseEnv, "local");
-    console.log(`Switched store/admin Supabase env to local: ${supabaseEnv.url}`);
+    console.log(
+      `Switched store/admin Supabase env to local: ${supabaseEnv.url}`,
+    );
     return;
   }
 

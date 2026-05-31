@@ -51,17 +51,14 @@ test("local switches store and admin Supabase env while preserving other values"
 
   await runScript("node", [scriptPath, "local", "--root", root]);
 
-  assert.match(
-    await readEnv(root, "store"),
-    /VITE_SUPABASE_URL=http:\/\/127\.0\.0\.1:54321/,
-  );
-  assert.match(await readEnv(root, "store"), /VITE_APP_ENV=local/);
-  assert.match(await readEnv(root, "store"), /VITE_IMAGEKIT_PUBLIC_KEY=imagekit/);
-  assert.match(
-    await readEnv(root, "admin"),
-    /VITE_SUPABASE_URL=http:\/\/127\.0\.0\.1:54321/,
-  );
-  assert.match(await readEnv(root, "admin"), /VITE_APP_ENV=local/);
+  const storeEnv = await readEnv(root, "store");
+  const adminEnv = await readEnv(root, "admin");
+
+  assert.match(storeEnv, /VITE_SUPABASE_URL=http:\/\/127\.0\.0\.1:54321/);
+  assert.match(storeEnv, /VITE_APP_ENV=local/);
+  assert.match(storeEnv, /VITE_IMAGEKIT_PUBLIC_KEY=imagekit/);
+  assert.match(adminEnv, /VITE_SUPABASE_URL=http:\/\/127\.0\.0\.1:54321/);
+  assert.match(adminEnv, /VITE_APP_ENV=local/);
 });
 
 test("local writes app runtime env into store and admin profile files", async () => {
@@ -111,16 +108,19 @@ test("profile switch restores store and admin Supabase env together", async () =
   await runScript("node", [scriptPath, "local", "--root", root]);
   await runScript("node", [scriptPath, "cloud", "--root", root]);
 
+  const storeEnv = await readEnv(root, "store");
+  const adminEnv = await readEnv(root, "admin");
+
   assert.match(
-    await readEnv(root, "store"),
+    storeEnv,
     /VITE_SUPABASE_URL=https:\/\/cloud\.example\.supabase\.co/,
   );
-  assert.match(await readEnv(root, "store"), /VITE_APP_ENV=cloud/);
-  assert.match(await readEnv(root, "store"), /VITE_SUPABASE_ANON_KEY=cloud-anon/);
+  assert.match(storeEnv, /VITE_APP_ENV=cloud/);
+  assert.match(storeEnv, /VITE_SUPABASE_ANON_KEY=cloud-anon/);
   assert.match(
-    await readEnv(root, "admin"),
+    adminEnv,
     /VITE_SUPABASE_URL=https:\/\/cloud\.example\.supabase\.co/,
   );
-  assert.match(await readEnv(root, "admin"), /VITE_APP_ENV=cloud/);
-  assert.match(await readEnv(root, "admin"), /VITE_SUPABASE_ANON_KEY=cloud-anon/);
+  assert.match(adminEnv, /VITE_APP_ENV=cloud/);
+  assert.match(adminEnv, /VITE_SUPABASE_ANON_KEY=cloud-anon/);
 });

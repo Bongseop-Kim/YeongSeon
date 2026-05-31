@@ -23,7 +23,7 @@
     "test:e2e:admin": "playwright test -c e2e/playwright.config.ts --project=admin",
     "test:e2e:ui": "playwright test -c e2e/playwright.config.ts --ui",
     "// ── DB 관리 ─────────────────────────────────────────────────────────────": "",
-    "db:reset": "supabase db reset",
+    "db:reset": "DEV_SEEDS=true supabase db reset",
     "db:diff": "supabase db diff",
     "db:push": "supabase db push",
     "db:migrations": "supabase migration list",

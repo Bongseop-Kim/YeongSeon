@@ -42,6 +42,9 @@ const tableDefinitions = [
       "stock",
       "option_label",
     ],
+    arrayElementTypes: {
+      detail_images: "text",
+    },
     orderBy: "id",
   },
   {
@@ -102,7 +105,15 @@ const loadCloudEnv = () => {
 export const escapeSqlLiteral = (value) =>
   `'${String(value).replaceAll("'", "''")}'`;
 
-export const serializeSqlValue = (value) => {
+function serializeEmptySqlArray(elementType) {
+  if (!elementType) {
+    throw new Error("Cannot serialize empty array without element type.");
+  }
+
+  return `ARRAY[]::${elementType}[]`;
+}
+
+export const serializeSqlValue = (value, elementType) => {
   if (value === null || value === undefined) {
     return "NULL";
   }
@@ -120,6 +131,10 @@ export const serializeSqlValue = (value) => {
   }
 
   if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return serializeEmptySqlArray(elementType);
+    }
+
     return `ARRAY[${value.map((item) => serializeSqlValue(item)).join(",")}]`;
   }
 
@@ -130,13 +145,18 @@ export const serializeSqlValue = (value) => {
   return escapeSqlLiteral(value);
 };
 
-const buildInsertStatement = ({ tableName, columns }, rows) => {
+const buildInsertStatement = (
+  { tableName, columns, arrayElementTypes = {} },
+  rows,
+) => {
   if (!rows?.length) {
     return `-- public.${tableName}: no rows`;
   }
 
   const rowValues = rows.map((row) => {
-    const values = columns.map((column) => serializeSqlValue(row[column]));
+    const values = columns.map((column) =>
+      serializeSqlValue(row[column], arrayElementTypes[column]),
+    );
     return `  (${values.join(", ")})`;
   });
 

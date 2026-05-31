@@ -79,5 +79,4 @@ VALUES (
 )
 ON CONFLICT (user_id, coupon_id) DO UPDATE
 SET status = EXCLUDED.status,
-    expires_at = EXCLUDED.expires_at,
-    used_at = NULL;
+    expires_at = EXCLUDED.expires_at;
