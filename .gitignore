@@ -38,6 +38,7 @@ dist-ssr
 .claude/
 .mcp.json
 .omc/
+.omx/
 .serena/
 
 # Git worktrees
