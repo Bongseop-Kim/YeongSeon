@@ -46,12 +46,16 @@ export function ResultTagBar({
         filename: unmasked ? "design.png" : "design-masked.png",
       });
     } catch (error) {
-      console.error("이미지 다운로드 오류:", error);
-      const message =
-        error instanceof Error
-          ? error.message
-          : "이미지를 다운로드하지 못했어요. 잠시 후 다시 시도해주세요.";
-      toast.error(message);
+      if (error instanceof Error) {
+        console.error("이미지 다운로드 오류:", {
+          message: error.message,
+          stack: error.stack,
+        });
+      } else {
+        console.error("이미지 다운로드 오류:", error);
+      }
+
+      toast.error("이미지를 다운로드하지 못했어요. 잠시 후 다시 시도해주세요.");
     }
   };
 
