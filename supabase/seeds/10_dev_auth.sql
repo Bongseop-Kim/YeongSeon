@@ -1,19 +1,3 @@
-\set ON_ERROR_STOP on
-\getenv dev_seeds DEV_SEEDS
-\if :{?dev_seeds}
-\else
-\set dev_seeds false
-\endif
-\if :dev_seeds
-\else
-\warn 'Refusing to run supabase/seeds/10_dev_auth.sql without DEV_SEEDS=true.'
-DO $$
-BEGIN
-  RAISE EXCEPTION 'Refusing to run supabase/seeds/10_dev_auth.sql without DEV_SEEDS=true.';
-END
-$$;
-\endif
-
 INSERT INTO auth.users (
   instance_id,
   id,
