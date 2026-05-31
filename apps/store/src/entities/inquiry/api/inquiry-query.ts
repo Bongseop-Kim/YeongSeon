@@ -56,7 +56,7 @@ export const useUpdateInquiry = () => {
       title: string;
       content: string;
     }) => {
-      if (!user?.id) throw new Error("로그인이 필요합니다.");
+      if (!user?.id) throw new Error("로그인 후 이용할 수 있어요.");
       return updateInquiry(params);
     },
     onSuccess: () => {
@@ -73,7 +73,7 @@ export const useDeleteInquiry = () => {
 
   return useMutation({
     mutationFn: (id: string) => {
-      if (!user?.id) throw new Error("로그인이 필요합니다.");
+      if (!user?.id) throw new Error("로그인 후 이용할 수 있어요.");
       return deleteInquiry(id);
     },
     onSuccess: () => {

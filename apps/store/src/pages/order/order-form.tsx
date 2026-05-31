@@ -94,7 +94,7 @@ const OrderFormPage = () => {
 
     toast.success(
       selectedCoupon
-        ? `${selectedCoupon.coupon.name}이(가) 적용되었습니다.`
+        ? `${selectedCoupon.coupon.name} 적용을 완료했습니다.`
         : "쿠폰 사용을 취소했습니다.",
     );
   };
@@ -106,7 +106,7 @@ const OrderFormPage = () => {
 
     try {
       if (!user) {
-        toast.error("로그인이 필요합니다. 로그인 후 결제를 진행해주세요.");
+        toast.error("로그인 후 결제를 진행해주세요.");
         navigate(ROUTES.LOGIN);
         return;
       }
@@ -117,14 +117,12 @@ const OrderFormPage = () => {
       }
 
       if (orderItems.length === 0) {
-        toast.error("주문할 상품이 없습니다.");
+        toast.error("주문할 상품을 먼저 선택해주세요.");
         return;
       }
 
       if (!paymentWidgetRef.current) {
-        toast.error(
-          "결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.",
-        );
+        toast.error("결제 화면을 준비하고 있어요. 잠시 후 다시 시도해주세요.");
         return;
       }
 
@@ -157,7 +155,7 @@ const OrderFormPage = () => {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "결제 요청 중 오류가 발생했습니다.";
+          : "결제를 시작하지 못했어요. 잠시 후 다시 시도해주세요.";
       if (errorCode !== "USER_CANCEL") {
         toast.error(errorMessage);
       }

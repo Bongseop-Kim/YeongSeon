@@ -53,7 +53,7 @@ export const useCreateClaim = () => {
   return useMutation({
     mutationFn: (request: CreateClaimRequest) => {
       if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
+        throw new Error("로그인 후 이용할 수 있어요.");
       }
       return createClaim(request);
     },
@@ -103,7 +103,7 @@ export const useCancelClaim = () => {
   return useMutation({
     mutationFn: (claimId: string) => {
       if (!user?.id) {
-        throw new Error("로그인이 필요합니다.");
+        throw new Error("로그인 후 이용할 수 있어요.");
       }
       return cancelClaim(claimId);
     },

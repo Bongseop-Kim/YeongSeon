@@ -77,7 +77,7 @@ export function useCustomOrderSubmit({
       if (!confirmed) return;
     }
     if (imageUpload.isUploading) {
-      toast.error("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.");
+      toast.error("이미지 업로드가 끝난 뒤 다시 시도해주세요.");
       return;
     }
     const {
@@ -89,7 +89,7 @@ export function useCustomOrderSubmit({
       ...coreOptions
     } = watchedValues;
 
-    // 견적요청 경로 (수량 >= 100)
+    // 견적 요청 경로 (수량 >= 100)
     if (isQuoteMode) {
       if (!selectedAddressId) {
         toast.error("배송지를 선택해주세요.");
@@ -109,7 +109,7 @@ export function useCustomOrderSubmit({
             contactValue,
           }),
         });
-        toast.success("견적요청이 완료되었습니다!");
+        toast.success("견적 요청이 접수되었습니다.");
         analytics.track("form_submit", { form_type: "custom_order" });
         formReset();
         navigate(ROUTES.MY_PAGE_QUOTE_REQUEST);
@@ -117,7 +117,7 @@ export function useCustomOrderSubmit({
         toast.error(
           error instanceof Error
             ? error.message
-            : "견적요청 처리 중 오류가 발생했습니다.",
+            : "견적 요청을 접수하지 못했어요. 다시 시도해주세요.",
         );
       }
       return;

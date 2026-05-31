@@ -221,12 +221,12 @@ export default function OrderPage() {
                   helperText={
                     !isLoggedIn ? (
                       <p className="text-sm text-center text-zinc-500">
-                        로그인 후 {isQuoteMode ? "견적요청" : "주문"}을 진행할
+                        로그인 후 {isQuoteMode ? "견적 요청" : "주문"}을 진행할
                         수 있어요
                       </p>
                     ) : isQuoteMode && !selectedAddress ? (
                       <p className="text-sm text-center text-zinc-500">
-                        배송지를 추가하면 견적요청을 진행할 수 있어요
+                        배송지를 추가하면 견적 요청을 진행할 수 있어요
                       </p>
                     ) : null
                   }

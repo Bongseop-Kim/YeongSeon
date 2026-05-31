@@ -168,7 +168,7 @@ export default function MyInfoEmailPage() {
                     {step === "complete" && (
                       <div className="space-y-3">
                         <p className="text-sm text-zinc-700">
-                          이메일이 변경되었습니다.
+                          이메일을 변경했습니다.
                         </p>
                         <Button
                           className="w-full sm:w-auto"

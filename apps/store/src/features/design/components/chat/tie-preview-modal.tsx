@@ -8,7 +8,7 @@ import {
 } from "react";
 import { Crop, Download, Square, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "@/shared/lib/toast";
 
 import { TieMask } from "@/features/design/components/preview/tie-mask";
 import { downloadTiePreviewImage } from "@/features/design/components/preview/download-tie-preview-image";
@@ -144,12 +144,8 @@ export function TiePreviewModal({
         filename: unmasked ? "design.png" : "design-masked.png",
       });
     } catch (error) {
-      console.error("이미지 다운로드 실패:", error);
-      toast.error(
-        error instanceof Error
-          ? `다운로드 실패: ${error.message}`
-          : "다운로드 실패",
-      );
+      console.error("이미지 다운로드 오류:", error);
+      toast.error("이미지를 다운로드하지 못했어요. 잠시 후 다시 시도해주세요.");
     }
   };
 

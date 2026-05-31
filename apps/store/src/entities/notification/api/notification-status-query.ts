@@ -13,7 +13,7 @@ const getNotificationStatus = async (): Promise<NotificationStatus> => {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("로그인이 필요합니다.");
+    throw new Error("로그인 후 이용할 수 있어요.");
   }
 
   const { data, error } = await supabase

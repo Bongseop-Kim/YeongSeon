@@ -165,14 +165,14 @@ export default function SampleOrderPage() {
       return;
     }
     if (imageUpload.isUploading) {
-      toast.error("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.");
+      toast.error("이미지 업로드가 끝난 뒤 다시 시도해주세요.");
       return;
     }
     if (samplePrice === null) {
       toast.error(
         isPricingError
-          ? "샘플 가격 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
-          : "샘플 가격 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
+          ? "샘플 가격 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
+          : "샘플 가격 정보를 불러오고 있어요. 잠시 후 다시 시도해주세요.",
       );
       return;
     }

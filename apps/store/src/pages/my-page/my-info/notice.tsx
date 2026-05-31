@@ -53,7 +53,7 @@ async function applyNotificationUpdateRollback(params: {
   const message =
     params.error instanceof Error
       ? params.error.message
-      : "알림 설정 변경에 실패했습니다.";
+      : "알림 설정 변경 내용을 저장하지 못했어요. 다시 시도해주세요.";
   toast.error(message);
 }
 
@@ -120,7 +120,7 @@ export default function MyInfoNoticePage() {
       await updateMarketingConsentMutation.mutateAsync({ kakaoSms: checked });
     } catch {
       await refetch();
-      toast.error("설정 저장에 실패했습니다.");
+      toast.error("설정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.");
     }
   };
 

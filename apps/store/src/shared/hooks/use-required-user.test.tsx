@@ -26,7 +26,7 @@ describe("useRequiredUser", () => {
   it("user.id가 없으면 에러를 던진다", () => {
     authState.initialized = true;
     expect(() => renderHook(() => useRequiredUser())).toThrow(
-      "로그인이 필요합니다.",
+      "로그인 후 이용할 수 있어요.",
     );
   });
 

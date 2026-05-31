@@ -37,7 +37,7 @@ const TokenPurchasePage = () => {
   const handlePlanSelect = async (planKey: TokenPlanKey) => {
     if (isPending) return;
     if (!user) {
-      toast.error("로그인이 필요합니다.");
+      toast.error("로그인 후 이용할 수 있어요.");
       navigate(ROUTES.LOGIN);
       return;
     }
@@ -64,7 +64,7 @@ const TokenPurchasePage = () => {
         const message =
           err instanceof Error
             ? err.message
-            : "플랜 선택 중 오류가 발생했습니다.";
+            : "토큰 플랜을 선택하지 못했어요. 잠시 후 다시 시도해주세요.";
         toast.error(message);
         setSelectedPlan(null);
       }

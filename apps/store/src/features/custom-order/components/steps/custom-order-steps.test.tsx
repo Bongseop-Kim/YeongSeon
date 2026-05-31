@@ -157,12 +157,12 @@ describe("custom order steps", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("수량이 100개 이상이면 견적요청 담당자 연락처 입력란을 렌더링하고 안내 토스트를 띄운다", async () => {
+  it("수량이 100개 이상이면 견적 요청 담당자 연락처 입력란을 렌더링하고 안내 토스트를 띄운다", async () => {
     renderWithFormValues(<QuantityStep />, { quantity: 50 });
 
     expect(
       screen.queryByText(
-        "100개 이상은 견적요청으로 전환됩니다. 수량 확정 후 담당자가 세부 사양과 일정을 안내합니다.",
+        "100개 이상은 견적 요청으로 접수됩니다. 수량 확정 후 담당자가 세부 사양과 일정을 안내합니다.",
       ),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("담당자 연락처")).not.toBeInTheDocument();
@@ -191,7 +191,7 @@ describe("custom order steps", () => {
       expect(toastInfo).toHaveBeenCalledTimes(1);
     });
     expect(toastInfo).toHaveBeenCalledWith(
-      "100개 이상은 견적요청으로 전환됩니다.",
+      "100개 이상은 견적 요청으로 접수됩니다.",
     );
   });
 

@@ -127,7 +127,7 @@ export const useShippingAddressPopup = ({
     const win = openPopup(`${ROUTES.SHIPPING}?mode=select`);
     if (!win) {
       toast.error(
-        "팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.",
+        "배송지 선택 창을 열 수 없어요. 브라우저에서 팝업을 허용해주세요.",
       );
     }
   };

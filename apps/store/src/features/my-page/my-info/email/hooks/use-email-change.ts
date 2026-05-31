@@ -88,12 +88,12 @@ export function useEmailChange() {
       setCooldownEndAt(Date.now() + RESEND_COOLDOWN_SECONDS * 1000);
       setStep("verify");
       form.setValue("emailCode", "");
-      toast.success("인증번호를 전송했습니다.");
+      toast.success("인증 번호를 보냈습니다.");
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "인증요청에 실패했습니다. 다시 시도해주세요.";
+          : "인증 번호를 보내지 못했어요. 다시 시도해주세요.";
       setErrorMessage(message);
       toast.error(message);
     }
@@ -108,12 +108,12 @@ export function useEmailChange() {
     try {
       await resendCodeMutation.mutateAsync(requestedEmail);
       setCooldownEndAt(Date.now() + RESEND_COOLDOWN_SECONDS * 1000);
-      toast.success("인증번호를 다시 전송했습니다.");
+      toast.success("인증 번호를 다시 보냈습니다.");
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "인증번호 재요청에 실패했습니다.";
+          : "인증 번호를 다시 보내지 못했어요. 다시 시도해주세요.";
       setErrorMessage(message);
       toast.error(message);
     }
@@ -131,12 +131,12 @@ export function useEmailChange() {
         code: code.trim(),
       });
       setStep("complete");
-      toast.success("이메일이 변경되었습니다.");
+      toast.success("이메일을 변경했습니다.");
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "인증번호 확인에 실패했습니다.";
+          : "인증 번호를 확인하지 못했어요. 다시 시도해주세요.";
       setErrorMessage(message);
       toast.error(message);
     }

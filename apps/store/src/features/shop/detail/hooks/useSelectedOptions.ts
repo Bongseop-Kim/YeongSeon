@@ -35,7 +35,7 @@ export function useSelectedOptions() {
     setSelectedOptions(nextSelectedOptions);
 
     if (isStockExceeded) {
-      toast.warning("재고가 부족합니다.");
+      toast.warning("선택 가능한 재고가 부족해요.");
     }
   };
 
@@ -52,7 +52,7 @@ export function useSelectedOptions() {
     setBaseQuantity(clampedQuantity);
 
     if (isStockExceeded) {
-      toast.warning("재고가 부족합니다.");
+      toast.warning("선택 가능한 재고가 부족해요.");
     }
   };
 

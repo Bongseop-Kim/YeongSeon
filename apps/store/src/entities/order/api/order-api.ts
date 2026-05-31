@@ -274,6 +274,8 @@ export const submitRepairTracking = async (
   });
 
   if (error) {
-    throw new Error(error.message || "발송 처리에 실패했습니다.");
+    throw new Error(
+      error.message || "발송 정보를 등록하지 못했어요. 다시 시도해주세요.",
+    );
   }
 };

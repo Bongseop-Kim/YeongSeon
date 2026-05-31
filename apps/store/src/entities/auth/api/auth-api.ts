@@ -76,7 +76,7 @@ export const signOut = async (): Promise<void> => {
 };
 
 /**
- * 회원탈퇴
+ * 회원 탈퇴
  * Edge Function을 호출하여 유저 삭제
  */
 export const deleteAccount = async (): Promise<void> => {
@@ -85,7 +85,7 @@ export const deleteAccount = async (): Promise<void> => {
   } = await supabase.auth.getSession();
 
   if (!session) {
-    throw new Error("로그인이 필요합니다.");
+    throw new Error("로그인 후 이용할 수 있어요.");
   }
 
   const res = await fetch(
@@ -101,6 +101,6 @@ export const deleteAccount = async (): Promise<void> => {
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.error ?? "회원탈퇴에 실패했습니다.");
+    throw new Error(body?.error ?? "회원 탈퇴에 실패했습니다.");
   }
 };

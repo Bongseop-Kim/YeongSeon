@@ -242,7 +242,7 @@ describe("useCustomOrderSubmit", () => {
     });
     expect(createQuoteRequestMutateAsync).toHaveBeenCalled();
     expect(formReset).toHaveBeenCalled();
-    expect(success).toHaveBeenCalledWith("견적요청이 완료되었습니다!");
+    expect(success).toHaveBeenCalledWith("견적 요청이 접수되었습니다.");
     expect(navigate).toHaveBeenCalledWith("/my-page/quote-request");
   });
 

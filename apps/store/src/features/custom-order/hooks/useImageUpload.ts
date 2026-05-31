@@ -65,7 +65,7 @@ export const useImageUpload = (
         toast.error(
           error instanceof Error
             ? error.message
-            : "이미지 업로드에 실패했습니다.",
+            : "이미지를 업로드하지 못했어요. 다시 시도해주세요.",
         );
       } finally {
         setActiveUploads((n) => n - 1);

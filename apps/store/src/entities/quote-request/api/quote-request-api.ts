@@ -75,11 +75,11 @@ export const createQuoteRequest = async (
   );
 
   if (error) {
-    throw new Error(`견적요청 생성 실패: ${error.message}`);
+    throw new Error(`견적 요청 생성 실패: ${error.message}`);
   }
 
   if (!data) {
-    throw new Error("견적요청 생성 결과를 받을 수 없습니다.");
+    throw new Error("견적 요청 생성 결과를 받을 수 없습니다.");
   }
 
   return {

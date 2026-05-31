@@ -200,7 +200,7 @@ describe("useCheckoutPayment", () => {
       });
 
       expect(initiateWithConsentCheck).toHaveBeenCalled();
-      expect(errorFn).toHaveBeenCalledWith("로그인이 필요합니다.");
+      expect(errorFn).toHaveBeenCalledWith("로그인 후 이용할 수 있어요.");
       expect(navigate).toHaveBeenCalledWith("/login");
     });
 
@@ -226,7 +226,7 @@ describe("useCheckoutPayment", () => {
       });
 
       expect(errorFn).toHaveBeenCalledWith(
-        "결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.",
+        "결제 화면을 준비하고 있어요. 잠시 후 다시 시도해주세요.",
       );
     });
 
@@ -324,7 +324,9 @@ describe("useCheckoutPayment", () => {
         await result.current.handleRequestPayment();
       });
 
-      expect(errorFn).toHaveBeenCalledWith("결제 요청 중 오류가 발생했습니다.");
+      expect(errorFn).toHaveBeenCalledWith(
+        "결제를 시작하지 못했어요. 잠시 후 다시 시도해주세요.",
+      );
     });
   });
 });

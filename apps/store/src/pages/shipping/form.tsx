@@ -123,7 +123,7 @@ const ShippingFormPage = () => {
       return;
     }
     if (!data.recipientPhone.trim()) {
-      toast.error("휴대폰번호를 입력해주세요.");
+      toast.error("휴대폰 번호를 입력해주세요.");
       return;
     }
     if (!data.address.trim() || !data.postalCode.trim()) {
@@ -218,11 +218,11 @@ const ShippingFormPage = () => {
             name="recipientPhone"
             control={form.control}
             rules={{
-              required: "휴대폰번호를 입력해주세요.",
+              required: "휴대폰 번호를 입력해주세요.",
               validate: (value) => {
                 const numbers = extractPhoneNumber(value);
                 if (numbers.length < 10 || numbers.length > 11) {
-                  return "올바른 휴대폰번호를 입력해주세요.";
+                  return "올바른 휴대폰 번호를 입력해주세요.";
                 }
                 return true;
               },
@@ -231,7 +231,7 @@ const ShippingFormPage = () => {
               <Field orientation="vertical">
                 <FieldLabel htmlFor="recipientPhone">
                   <FieldTitle>
-                    휴대폰번호 <span className="text-red-500">*</span>
+                    휴대폰 번호 <span className="text-red-500">*</span>
                   </FieldTitle>
                 </FieldLabel>
                 <FieldContent>
@@ -241,7 +241,7 @@ const ShippingFormPage = () => {
                     name={field.name}
                     type="tel"
                     inputMode="numeric"
-                    placeholder="휴대폰번호를 입력해주세요."
+                    placeholder="휴대폰 번호를 입력해주세요."
                     value={formatPhoneNumber(field.value ?? "")}
                     onChange={(e) => {
                       const numbers = extractPhoneNumber(e.target.value);

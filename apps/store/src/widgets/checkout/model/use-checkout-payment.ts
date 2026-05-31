@@ -55,7 +55,7 @@ export function useCheckoutPayment({
   const proceedToPayment = async () => {
     if (!state) return;
     if (!user) {
-      toast.error("로그인이 필요합니다.");
+      toast.error("로그인 후 이용할 수 있어요.");
       navigate(ROUTES.LOGIN);
       return;
     }
@@ -66,7 +66,7 @@ export function useCheckoutPayment({
     }
 
     if (!paymentWidgetRef.current) {
-      toast.error("결제위젯이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
+      toast.error("결제 화면을 준비하고 있어요. 잠시 후 다시 시도해주세요.");
       return;
     }
 
@@ -123,7 +123,7 @@ export function useCheckoutPayment({
         pendingSnapshotRef.current = null;
       }
 
-      toast.error("결제 요청 중 오류가 발생했습니다.");
+      toast.error("결제를 시작하지 못했어요. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsPaymentLoading(false);
     }

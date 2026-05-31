@@ -53,7 +53,7 @@ const TokenPurchaseSuccessPage = () => {
           amount: parsedAmount,
         });
         toast.success(
-          `토큰 ${result.tokenAmount.toLocaleString()}개가 충전되었습니다!`,
+          `토큰 ${result.tokenAmount.toLocaleString()}개가 충전되었습니다.`,
         );
         navigate(ROUTES.DESIGN, { replace: true });
       } catch (err) {

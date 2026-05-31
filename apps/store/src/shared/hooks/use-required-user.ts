@@ -5,6 +5,6 @@ export const useRequiredUser = (): string => {
   if (!initialized) {
     throw new Error("인증 상태를 확인하는 중입니다.");
   }
-  if (!user?.id) throw new Error("로그인이 필요합니다.");
+  if (!user?.id) throw new Error("로그인 후 이용할 수 있어요.");
   return user.id;
 };

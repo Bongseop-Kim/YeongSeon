@@ -45,7 +45,7 @@ export function useCheckoutPageState({
     setAppliedCoupon(selected ?? undefined);
     resetPendingOrderState();
     if (selected) {
-      toast.success(`${selected.coupon.name}이(가) 적용되었습니다.`);
+      toast.success(`${selected.coupon.name} 적용을 완료했습니다.`);
     } else {
       toast.success("쿠폰 사용을 취소했습니다.");
     }

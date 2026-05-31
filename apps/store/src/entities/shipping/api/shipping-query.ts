@@ -79,14 +79,14 @@ export const useCreateShippingAddress = () => {
       // 배송지 목록 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
       queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
-      toast.success("배송지가 추가되었습니다.");
+      toast.success("배송지를 추가했습니다.");
     },
     onError: (error) => {
       console.error("Shipping address creation error:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "배송지 추가에 실패했습니다. 다시 시도해주세요.";
+          : "배송지를 추가하지 못했어요. 다시 시도해주세요.";
       toast.error(errorMessage);
     },
   });
@@ -108,14 +108,14 @@ export const useUpdateShippingAddress = () => {
       queryClient.invalidateQueries({
         queryKey: shippingKeys.detail(variables.id),
       });
-      toast.success("배송지가 수정되었습니다.");
+      toast.success("배송지를 수정했습니다.");
     },
     onError: (error) => {
       console.error("Shipping address update error:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "배송지 수정에 실패했습니다. 다시 시도해주세요.";
+          : "배송지를 수정하지 못했어요. 다시 시도해주세요.";
       toast.error(errorMessage);
     },
   });
@@ -132,14 +132,14 @@ export const useDeleteShippingAddress = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: shippingKeys.list() });
       queryClient.invalidateQueries({ queryKey: shippingKeys.default() });
-      toast.success("배송지가 삭제되었습니다.");
+      toast.success("배송지를 삭제했습니다.");
     },
     onError: (error) => {
       console.error("Shipping address deletion error:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "배송지 삭제에 실패했습니다. 다시 시도해주세요.";
+          : "배송지를 삭제하지 못했어요. 다시 시도해주세요.";
       toast.error(errorMessage);
     },
   });

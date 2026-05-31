@@ -22,7 +22,7 @@ describe("getTokenRefundErrorMessage", () => {
 
   it("알 수 없는 오류는 기본 문구를 반환한다", () => {
     expect(getTokenRefundErrorMessage("x")).toBe(
-      "환불 신청 중 오류가 발생했습니다.",
+      "환불 신청을 접수하지 못했어요. 다시 시도해주세요.",
     );
   });
 });

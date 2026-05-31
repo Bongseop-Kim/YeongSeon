@@ -188,7 +188,9 @@ describe("MyInfoNoticePage", () => {
     await waitFor(() => {
       expect(refetchMock).toHaveBeenCalled();
     });
-    expect(toastErrorMock).toHaveBeenCalledWith("설정 저장에 실패했습니다.");
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "설정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.",
+    );
   });
 
   it("미인증 유저가 서비스 알림 토글을 켜면 인증 모달이 표시된다", async () => {

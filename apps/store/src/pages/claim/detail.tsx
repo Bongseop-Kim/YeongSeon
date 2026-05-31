@@ -103,15 +103,17 @@ export default function ClaimDetailPage() {
   }
 
   const handleCancelClaim = () => {
-    confirm("클레임 신청을 취소하시겠습니까?", () => {
+    confirm("신청을 취소하시겠습니까?", () => {
       cancelClaimMutation.mutate(claimId, {
         onSuccess: () => {
-          toast.success("클레임 신청이 취소되었습니다.");
+          toast.success("취소 신청이 완료되었습니다.");
           navigate(ROUTES.CLAIM_LIST);
         },
         onError: (err) => {
           toast.error(
-            err instanceof Error ? err.message : "클레임 취소에 실패했습니다.",
+            err instanceof Error
+              ? err.message
+              : "신청을 취소하지 못했어요. 다시 시도해주세요.",
           );
         },
       });

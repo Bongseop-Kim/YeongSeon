@@ -48,7 +48,7 @@ type AddToCartOptions = {
 
 /**
  * React Query + localStorage 기반 장바구니 hook
- * - 로그인: 서버 장바구니 쿼리 + mutation 사용
+ * - 로그인: 계정 장바구니 쿼리 + mutation 사용
  * - 비로그인: localStorage를 쿼리로 관리
  */
 export function useCart() {
@@ -214,7 +214,9 @@ export function useCart() {
   const updateReformOption = useCallback(
     async (itemId: string, tie: TieItem) => {
       if (!reformPricing) {
-        throw new Error("수선 비용 정보를 불러오지 못했습니다.");
+        throw new Error(
+          "수선 비용 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+        );
       }
 
       const nextItems = updateReformCartItemOption(

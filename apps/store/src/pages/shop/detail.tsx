@@ -157,7 +157,7 @@ export default function ShopDetailPage() {
     try {
       await toggleLikeMutation.mutateAsync(isLiked);
     } catch {
-      toast.error("좋아요 처리 중 오류가 발생했습니다.");
+      toast.error("관심 상품을 변경하지 못했어요. 다시 시도해주세요.");
     }
   };
 
@@ -179,13 +179,13 @@ export default function ShopDetailPage() {
       });
 
       if (failed === total) {
-        toast.error("장바구니 추가 중 오류가 발생했습니다.");
+        toast.error("장바구니에 담지 못했어요. 다시 시도해주세요.");
         return;
       }
 
       if (failed > 0) {
         toast.warning(
-          `일부 옵션을 장바구니에 추가하지 못했습니다. (${succeeded}/${total}개 추가됨)`,
+          `일부 옵션을 장바구니에 담지 못했어요. (${succeeded}/${total}개 담김)`,
         );
         return;
       }

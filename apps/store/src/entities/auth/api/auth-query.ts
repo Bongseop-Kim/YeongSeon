@@ -50,7 +50,7 @@ export const useSignIn = () => {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "로그인에 실패했습니다. 다시 시도해주세요.";
+          : "로그인하지 못했어요. 다시 시도해주세요.";
       toast.error(errorMessage);
     },
   });
@@ -73,7 +73,7 @@ export const useEmailSignIn = () => {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "이메일 로그인에 실패했습니다. 다시 시도해주세요.";
+          : "이메일로 로그인하지 못했어요. 다시 시도해주세요.";
       toast.error(errorMessage);
     },
   });
@@ -98,14 +98,14 @@ export const useSignOut = () => {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "로그아웃에 실패했습니다. 다시 시도해주세요.";
+          : "로그아웃하지 못했어요. 다시 시도해주세요.";
       toast.error(errorMessage);
     },
   });
 };
 
 /**
- * 회원탈퇴 뮤테이션
+ * 회원 탈퇴 뮤테이션
  */
 export const useDeleteAccount = () => {
   const queryClient = useQueryClient();

@@ -29,13 +29,13 @@ function TokenRefundDialog({ order, open, onClose }: TokenRefundDialogProps) {
   const handleConfirm = async () => {
     try {
       await requestRefund({ orderId: order.orderId });
-      toast.success("환불 신청이 완료되었습니다. 관리자 승인 후 처리됩니다.");
+      toast.success("환불 신청이 접수되었습니다. 확인 후 처리해드릴게요.");
       onClose();
     } catch (err) {
       toast.error(
         err instanceof Error
           ? err.message
-          : "환불 신청 중 오류가 발생했습니다.",
+          : "환불 신청을 접수하지 못했어요. 다시 시도해주세요.",
       );
     }
   };
@@ -51,8 +51,7 @@ function TokenRefundDialog({ order, open, onClose }: TokenRefundDialogProps) {
         <DialogHeader>
           <DialogTitle>환불 신청</DialogTitle>
           <DialogDescription>
-            아래 주문에 대해 환불을 신청합니다. 관리자 승인 후 결제 취소가
-            진행됩니다.
+            아래 주문에 대해 환불을 신청합니다. 확인 후 결제 취소가 진행됩니다.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 rounded-lg bg-zinc-50 p-4 text-sm">
@@ -104,12 +103,12 @@ export function TokenRefundAction({ refundOrder }: TokenRefundActionProps) {
   const handleCancelRefund = async (pendingRequestId: string) => {
     try {
       await cancelRefund(pendingRequestId);
-      toast.success("환불 신청이 취소되었습니다.");
+      toast.success("환불 신청을 취소했습니다.");
     } catch (err) {
       toast.error(
         err instanceof Error
           ? err.message
-          : "환불 취소 중 오류가 발생했습니다.",
+          : "환불 신청을 취소하지 못했어요. 다시 시도해주세요.",
       );
     }
   };

@@ -44,7 +44,7 @@ export const ROUTES = {
 type ClaimRouteType = "return" | "exchange" | "cancel" | "token_refund";
 
 /**
- * 클레임 신청 폼 경로 생성 (기존 buildClaimDetailRoute에서 rename)
+ * 신청 폼 경로 생성 (기존 buildClaimDetailRoute에서 rename)
  */
 export const buildClaimFormRoute = (
   type: ClaimRouteType,
