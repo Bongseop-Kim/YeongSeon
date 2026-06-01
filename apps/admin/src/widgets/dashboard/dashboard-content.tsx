@@ -12,6 +12,19 @@ import "@/features/dashboard/components/dashboard.css";
 
 type DashboardTab = "orders" | "quotes";
 type DashboardDateRange = [string, string];
+type DashboardDatePreset = "today" | "week" | "month";
+
+const DATE_RANGE_PRESETS: { label: string; value: DashboardDatePreset }[] = [
+  { label: "오늘", value: "today" },
+  { label: "최근 1주", value: "week" },
+  { label: "최근 1달", value: "month" },
+];
+
+const DATE_RANGE_PRESET_OFFSETS: Record<DashboardDatePreset, number> = {
+  today: 0,
+  week: 6,
+  month: 29,
+};
 
 function toDateInputValue(date: Date): string {
   const year = date.getFullYear();
@@ -20,19 +33,37 @@ function toDateInputValue(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function getDefaultDateRange(): DashboardDateRange {
-  const endDate = new Date();
+function getPresetDateRange(
+  preset: DashboardDatePreset,
+  baseDate = new Date(),
+): DashboardDateRange {
+  const endDate = new Date(baseDate);
   const startDate = new Date(endDate);
-  startDate.setDate(endDate.getDate() - 6);
+  startDate.setDate(endDate.getDate() - DATE_RANGE_PRESET_OFFSETS[preset]);
 
   return [toDateInputValue(startDate), toDateInputValue(endDate)];
+}
+
+function getMatchingPreset(
+  dateRange: DashboardDateRange,
+): DashboardDatePreset | null {
+  const baseDate = new Date();
+
+  return (
+    DATE_RANGE_PRESETS.find((preset) => {
+      const presetRange = getPresetDateRange(preset.value, baseDate);
+      return presetRange[0] === dateRange[0] && presetRange[1] === dateRange[1];
+    })?.value ?? null
+  );
 }
 
 export function DashboardContent() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("orders");
   const [segment, setSegment] = useState<SegmentValue>("all");
-  const [dateRange, setDateRange] =
-    useState<DashboardDateRange>(getDefaultDateRange);
+  const [dateRange, setDateRange] = useState<DashboardDateRange>(() =>
+    getPresetDateRange("week"),
+  );
+  const activePreset = getMatchingPreset(dateRange);
 
   const stats = useDashboardStats(segment, dateRange);
   const recentOrders = useDashboardRecentOrders(segment, dateRange);
@@ -96,43 +127,60 @@ export function DashboardContent() {
                 </Text>
               </div>
             </div>
-            <div className="dashboardDateRange" aria-label="조회 기간">
-              <label className="dashboardField">
-                <Text
-                  as="span"
-                  textStyle="t3Bold"
-                  className="dashboardFieldLabel"
-                >
-                  시작일
-                </Text>
-                <input
-                  className="dashboardInput"
-                  type="date"
-                  value={dateRange[0]}
-                  max={dateRange[1]}
-                  onChange={(event) =>
-                    setDateRange([event.target.value, dateRange[1]])
-                  }
-                />
-              </label>
-              <label className="dashboardField">
-                <Text
-                  as="span"
-                  textStyle="t3Bold"
-                  className="dashboardFieldLabel"
-                >
-                  종료일
-                </Text>
-                <input
-                  className="dashboardInput"
-                  type="date"
-                  value={dateRange[1]}
-                  min={dateRange[0]}
-                  onChange={(event) =>
-                    setDateRange([dateRange[0], event.target.value])
-                  }
-                />
-              </label>
+            <div className="dashboardPeriodControls">
+              <div className="dashboardPresetGroup" aria-label="빠른 조회 기간">
+                {DATE_RANGE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    className="dashboardPresetButton"
+                    aria-pressed={activePreset === preset.value}
+                    onClick={() =>
+                      setDateRange(getPresetDateRange(preset.value))
+                    }
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <div className="dashboardDateRange" aria-label="조회 기간">
+                <label className="dashboardField">
+                  <Text
+                    as="span"
+                    textStyle="t3Bold"
+                    className="dashboardFieldLabel"
+                  >
+                    시작일
+                  </Text>
+                  <input
+                    className="dashboardInput"
+                    type="date"
+                    value={dateRange[0]}
+                    max={dateRange[1]}
+                    onChange={(event) =>
+                      setDateRange([event.target.value, dateRange[1]])
+                    }
+                  />
+                </label>
+                <label className="dashboardField">
+                  <Text
+                    as="span"
+                    textStyle="t3Bold"
+                    className="dashboardFieldLabel"
+                  >
+                    종료일
+                  </Text>
+                  <input
+                    className="dashboardInput"
+                    type="date"
+                    value={dateRange[1]}
+                    min={dateRange[0]}
+                    onChange={(event) =>
+                      setDateRange([dateRange[0], event.target.value])
+                    }
+                  />
+                </label>
+              </div>
             </div>
             <DashboardStatsRow stats={stats} />
           </section>

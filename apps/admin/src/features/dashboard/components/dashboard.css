@@ -32,13 +32,21 @@
 
 .dashboardTabList,
 .dashboardDateRange,
+.dashboardPresetGroup,
 .dashboardSegmentGroup {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
+.dashboardPeriodControls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .dashboardTabButton,
+.dashboardPresetButton,
 .dashboardSegmentButton {
   border: 1px solid var(--seed-color-stroke-neutral-muted);
   border-radius: 999px;
@@ -51,6 +59,7 @@
 }
 
 .dashboardTabButton[aria-selected="true"],
+.dashboardPresetButton[aria-pressed="true"],
 .dashboardSegmentButton[aria-pressed="true"] {
   border-color: var(--seed-color-stroke-brand);
   background: var(--seed-color-bg-brand-weak);
@@ -58,6 +67,7 @@
 }
 
 .dashboardTabButton:focus-visible,
+.dashboardPresetButton:focus-visible,
 .dashboardSegmentButton:focus-visible,
 .dashboardInput:focus-visible {
   outline: 2px solid var(--seed-color-stroke-brand);
