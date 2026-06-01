@@ -172,9 +172,14 @@ export function SettingsForm() {
         className="settingsPanel adminSettingsCard"
         aria-labelledby="settings-panel-title"
       >
-        <h2 id="settings-panel-title" className="settingsPanelTitle">
-          배송 및 가입 보상 설정
-        </h2>
+        <div className="settingsPanelHeader">
+          <h2 id="settings-panel-title" className="settingsPanelTitle">
+            배송·가입 보상
+          </h2>
+          <p className="settingsPanelDescription">
+            배송 기본값과 가입 보상 토큰을 설정합니다.
+          </p>
+        </div>
 
         <SettingSection
           titleId="settings-default-courier"

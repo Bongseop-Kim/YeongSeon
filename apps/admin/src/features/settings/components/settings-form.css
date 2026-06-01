@@ -27,11 +27,24 @@
   gap: 16px;
 }
 
+.settingsPanelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .settingsPanelTitle {
   margin: 0;
   font-size: 18px;
   line-height: 26px;
   font-weight: 700;
+}
+
+.settingsPanelDescription {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
 }
 
 .settingsSection {

@@ -84,7 +84,10 @@ export default function CouponList() {
       >
         <div className="couponPanelHeader">
           <h2 id="coupon-list-title" className="couponPanelTitle">
-            쿠폰 목록 ({KR_NUMBER_FORMAT.format(total)}건)
+            쿠폰 목록
+            <span className="adminPanelCountBadge">
+              {KR_NUMBER_FORMAT.format(total)}건
+            </span>
           </h2>
           {query.isFetching ? (
             <span aria-live="polite">불러오는 중…</span>

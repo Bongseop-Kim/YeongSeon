@@ -15,7 +15,8 @@
 }
 
 .pricingDescription,
-.pricingMutedText {
+.pricingMutedText,
+.pricingTabLegend {
   margin: 0;
   color: var(--seed-color-fg-neutral-muted);
   font-size: 14px;
@@ -40,6 +41,10 @@
 }
 
 .pricingTabList {
+  margin-bottom: 8px;
+}
+
+.pricingTabLegend {
   margin-bottom: 20px;
 }
 

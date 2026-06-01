@@ -117,7 +117,10 @@ export function CustomerListTable() {
       <div className="customerPanelHeader">
         <div>
           <h2 id="customer-list-title" className="customerPanelTitle">
-            고객 목록 ({KR_NUMBER_FORMAT.format(total)}건)
+            고객 목록
+            <span className="adminPanelCountBadge">
+              {KR_NUMBER_FORMAT.format(total)}건
+            </span>
           </h2>
           {query.isFetching ? (
             <p className="customerMutedText">불러오는 중…</p>

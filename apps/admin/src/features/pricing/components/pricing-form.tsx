@@ -637,12 +637,13 @@ export function PricingForm() {
           <h2 id="pricing-panel-title" className="pricingPanelTitle">
             가격 항목
           </h2>
-          <p className="pricingMutedText">
-            탭의 점 표시는 오류 또는 저장하지 않은 변경사항입니다.
-          </p>
         </div>
         <TabsRoot value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="pricingTabList" aria-label="가격 설정 영역">
+          <TabsList
+            className="pricingTabList"
+            aria-label="가격 설정 영역"
+            aria-describedby="pricing-tab-status-legend"
+          >
             <TabsTrigger
               value="sewing"
               notification={hasConstantChanges(allSewingKeys)}
@@ -673,6 +674,9 @@ export function PricingForm() {
               토큰
             </TabsTrigger>
           </TabsList>
+          <p id="pricing-tab-status-legend" className="pricingTabLegend">
+            탭의 점: 오류 또는 저장하지 않은 변경사항
+          </p>
 
           <TabsContent value="sewing">
             <div className="pricingStack">
