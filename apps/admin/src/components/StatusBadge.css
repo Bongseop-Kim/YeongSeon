@@ -1,0 +1,31 @@
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--seed-color-bg-neutral-weak);
+  color: var(--seed-color-fg-neutral);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusBadge-positive {
+  background: var(--seed-color-bg-positive-weak);
+  color: var(--seed-color-fg-positive);
+}
+
+.statusBadge-warning {
+  background: var(--seed-color-bg-warning-weak);
+  color: var(--seed-color-fg-warning);
+}
+
+.statusBadge-critical {
+  background: var(--seed-color-bg-critical-weak);
+  color: var(--seed-color-fg-critical);
+}
+
+.statusBadge-brand {
+  background: var(--seed-color-bg-brand-weak);
+  color: var(--seed-color-fg-brand);
+}

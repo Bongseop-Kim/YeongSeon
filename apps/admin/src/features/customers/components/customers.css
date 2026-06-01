@@ -1,0 +1,159 @@
+.customerPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.customerHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customerTitle {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.customerDescription,
+.customerMutedText {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.customerPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 16px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 20px;
+}
+
+.customerPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.customerPanelTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.customerToolbar,
+.customerPagination,
+.customerTokenHeader,
+.customerTokenActions,
+.customerFormActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.customerToolbar {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.customerSearchLabel {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.customerSearchControls {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.customerSearchFieldSlot {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.customerSearchField {
+  width: 100%;
+}
+
+.customerDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+
+.customerDetailItem {
+  display: grid;
+  gap: 4px;
+}
+
+.customerDetailLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.customerTokenHeader {
+  justify-content: space-between;
+}
+
+.customerModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 45%);
+  padding: 24px;
+}
+
+.customerModal {
+  width: min(520px, 100%);
+  border-radius: 20px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 20px;
+  box-shadow: 0 20px 80px rgb(0 0 0 / 24%);
+}
+
+.customerModalTitle {
+  margin: 0 0 16px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.customerTokenForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .customerToolbar,
+  .customerSearchControls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .customerSearchFieldSlot {
+    width: 100%;
+  }
+
+  .customerDetailGrid {
+    grid-template-columns: 1fr;
+  }
+}
