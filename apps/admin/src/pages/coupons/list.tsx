@@ -78,7 +78,10 @@ export default function CouponList() {
         <Callout tone="critical" description={query.error.message} />
       ) : null}
 
-      <section className="couponPanel" aria-labelledby="coupon-list-title">
+      <section
+        className="couponPanel couponListPanel"
+        aria-labelledby="coupon-list-title"
+      >
         <div className="couponPanelHeader">
           <h2 id="coupon-list-title" className="couponPanelTitle">
             쿠폰 목록 ({KR_NUMBER_FORMAT.format(total)}건)

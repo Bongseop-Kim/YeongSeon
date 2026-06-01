@@ -39,6 +39,12 @@
   padding: 20px;
 }
 
+.couponListPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .couponPanelHeader {
   display: flex;
   align-items: center;
@@ -80,6 +86,12 @@
 
 .couponPagination {
   margin-top: 16px;
+}
+
+.couponListPanel > .couponPanelHeader,
+.couponListPanel > .couponPagination {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .couponTableWrap {
