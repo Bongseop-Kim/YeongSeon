@@ -5,6 +5,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import {
+  AdminFilterField,
+  AdminFilterSelect,
+} from "@/components/AdminFilterControls";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   INQUIRY_STATUS_OPTIONS,
@@ -96,12 +100,8 @@ export function InquiryListTable() {
         aria-label="문의 목록 필터"
         onSubmit={(event) => event.preventDefault()}
       >
-        <label className="inquiryFilterField">
-          <Text as="span" textStyle="t3Bold" className="inquiryFilterLabel">
-            상태
-          </Text>
-          <select
-            className="inquirySelect"
+        <AdminFilterField label="상태">
+          <AdminFilterSelect
             name="inquiry-status"
             value={status ?? ""}
             onChange={(event) => setStatus(event.target.value)}
@@ -112,8 +112,8 @@ export function InquiryListTable() {
                 {option.label}
               </option>
             ))}
-          </select>
-        </label>
+          </AdminFilterSelect>
+        </AdminFilterField>
       </form>
 
       {query.error ? (

@@ -1,8 +1,14 @@
 import { Text } from "seed-design/ui/text";
 import { useState } from "react";
 import dayjs from "dayjs";
+import { IconMagnifyingglassLine } from "@karrotmarket/react-monochrome-icon";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import {
+  AdminFilterField,
+  AdminFilterSelect,
+  AdminFilterTextField,
+} from "@/components/AdminFilterControls";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   DesignContextStats,
@@ -101,46 +107,23 @@ export default function GenerationLogList() {
           className="generationLogToolbar"
           onSubmit={(event) => event.preventDefault()}
         >
-          <label className="generationLogField">
-            <Text
-              as="span"
-              textStyle="t3Bold"
-              className="generationLogFieldLabel"
-            >
-              시작일
-            </Text>
-            <input
-              className="generationLogInput"
-              type="date"
+          <AdminFilterField label="시작일">
+            <AdminFilterTextField
               value={dateRange[0]}
-              onChange={(event) => updateDateRange(0, event.target.value)}
+              onValueChange={({ value }) => updateDateRange(0, value)}
+              inputProps={{ name: "generation-date-from", type: "date" }}
             />
-          </label>
-          <label className="generationLogField">
-            <Text
-              as="span"
-              textStyle="t3Bold"
-              className="generationLogFieldLabel"
-            >
-              종료일
-            </Text>
-            <input
-              className="generationLogInput"
-              type="date"
+          </AdminFilterField>
+          <AdminFilterField label="종료일">
+            <AdminFilterTextField
               value={dateRange[1]}
-              onChange={(event) => updateDateRange(1, event.target.value)}
+              onValueChange={({ value }) => updateDateRange(1, value)}
+              inputProps={{ name: "generation-date-to", type: "date" }}
             />
-          </label>
-          <label className="generationLogField">
-            <Text
-              as="span"
-              textStyle="t3Bold"
-              className="generationLogFieldLabel"
-            >
-              요청 유형
-            </Text>
-            <select
-              className="generationLogSelect"
+          </AdminFilterField>
+          <AdminFilterField label="요청 유형">
+            <AdminFilterSelect
+              name="generation-request-type"
               value={requestType ?? ""}
               onChange={(event) => {
                 setRequestType(
@@ -152,18 +135,11 @@ export default function GenerationLogList() {
             >
               <option value="">모든 요청 유형</option>
               <option value="render_standard">렌더(표준)</option>
-            </select>
-          </label>
-          <label className="generationLogField">
-            <Text
-              as="span"
-              textStyle="t3Bold"
-              className="generationLogFieldLabel"
-            >
-              상태
-            </Text>
-            <select
-              className="generationLogSelect"
+            </AdminFilterSelect>
+          </AdminFilterField>
+          <AdminFilterField label="상태">
+            <AdminFilterSelect
+              name="generation-status"
               value={status ?? ""}
               onChange={(event) => {
                 setStatus(
@@ -175,30 +151,30 @@ export default function GenerationLogList() {
               <option value="">모든 상태</option>
               <option value="success">성공</option>
               <option value="error">에러</option>
-            </select>
-          </label>
-          <label className="generationLogField generationLogSearchField">
-            <Text
-              as="span"
-              textStyle="t3Bold"
-              className="generationLogFieldLabel"
-            >
-              workflow_id / work_id
-            </Text>
-            <input
-              className="generationLogInput"
+            </AdminFilterSelect>
+          </AdminFilterField>
+          <AdminFilterField
+            label="workflow_id / work_id"
+            className="adminFilterFieldWide"
+          >
+            <AdminFilterTextField
+              prefixIcon={<IconMagnifyingglassLine />}
               value={idSearchInput}
-              placeholder="workflow_id / work_id"
-              onChange={(event) => {
-                const nextValue = event.target.value;
+              onValueChange={({ value }) => {
+                const nextValue = value;
                 setIdSearchInput(nextValue);
                 if (nextValue === "") {
                   setIdSearch("");
                   resetPage();
                 }
               }}
+              inputProps={{
+                name: "generation-id-search",
+                autoComplete: "off",
+                placeholder: "workflow_id / work_id",
+              }}
             />
-          </label>
+          </AdminFilterField>
           <ActionButton type="button" onClick={handleIdSearchSubmit}>
             검색
           </ActionButton>

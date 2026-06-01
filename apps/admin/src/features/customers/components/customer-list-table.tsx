@@ -5,7 +5,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { IconMagnifyingglassLine } from "@karrotmarket/react-monochrome-icon";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
-import { TextField, TextFieldInput } from "seed-design/ui/text-field";
+import {
+  AdminFilterField,
+  AdminFilterTextField,
+} from "@/components/AdminFilterControls";
 import { AdminDataTable } from "@/components/AdminDataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
@@ -138,26 +141,19 @@ export function CustomerListTable() {
           event.preventDefault();
         }}
       >
-        <Text as="span" textStyle="t3Bold" className="customerSearchLabel">
-          검색
-        </Text>
-        <div className="customerSearchControls">
-          <div className="customerSearchFieldSlot">
-            <TextField
-              className="customerSearchField"
-              prefixIcon={<IconMagnifyingglassLine />}
-              value={draftName}
-              onValueChange={({ value }) => setDraftName(value)}
-            >
-              <TextFieldInput
-                name="customer-name"
-                aria-label="고객 이름 검색"
-                autoComplete="off"
-                placeholder="고객 이름을 입력하세요"
-              />
-            </TextField>
-          </div>
-        </div>
+        <AdminFilterField label="검색" className="adminFilterFieldWide">
+          <AdminFilterTextField
+            prefixIcon={<IconMagnifyingglassLine />}
+            value={draftName}
+            onValueChange={({ value }) => setDraftName(value)}
+            inputProps={{
+              name: "customer-name",
+              "aria-label": "고객 이름 검색",
+              autoComplete: "off",
+              placeholder: "고객 이름을 입력하세요",
+            }}
+          />
+        </AdminFilterField>
       </form>
 
       {query.error ? (

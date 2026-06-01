@@ -87,21 +87,6 @@
   width: 100%;
 }
 
-.quoteRequestSelect {
-  width: 100%;
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 10px;
-  background: var(--seed-color-bg-layer-default);
-  padding: 10px 12px;
-  color: var(--seed-color-fg-neutral);
-  font: inherit;
-}
-
-.quoteRequestSelect:focus-visible {
-  outline: 2px solid var(--seed-color-stroke-brand);
-  outline-offset: 2px;
-}
-
 .quoteRequestDetailGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

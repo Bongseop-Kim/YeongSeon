@@ -7,6 +7,10 @@ import { CLAIM_STATUS_OPTIONS, CLAIM_TYPE_LABELS } from "@yeongseon/shared";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import {
+  AdminFilterField,
+  AdminFilterSelect,
+} from "@/components/AdminFilterControls";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   CLAIM_PAGE_SIZE,
@@ -131,12 +135,9 @@ export function ClaimListTable() {
         className="claimToolbar"
         onSubmit={(event) => event.preventDefault()}
       >
-        <label className="claimFilterField">
-          <Text as="span" textStyle="t3Bold" className="claimFilterLabel">
-            상태
-          </Text>
-          <select
-            className="claimSelect"
+        <AdminFilterField label="상태">
+          <AdminFilterSelect
+            name="claim-status"
             value={status || ""}
             onChange={(event) => setFilter("status", event.target.value)}
           >
@@ -146,14 +147,11 @@ export function ClaimListTable() {
                 {option.label}
               </option>
             ))}
-          </select>
-        </label>
-        <label className="claimFilterField">
-          <Text as="span" textStyle="t3Bold" className="claimFilterLabel">
-            유형
-          </Text>
-          <select
-            className="claimSelect"
+          </AdminFilterSelect>
+        </AdminFilterField>
+        <AdminFilterField label="유형">
+          <AdminFilterSelect
+            name="claim-type"
             value={type || ""}
             onChange={(event) => setFilter("type", event.target.value)}
           >
@@ -163,8 +161,8 @@ export function ClaimListTable() {
                 {option.label}
               </option>
             ))}
-          </select>
-        </label>
+          </AdminFilterSelect>
+        </AdminFilterField>
       </form>
 
       {query.error ? (

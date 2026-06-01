@@ -3,11 +3,17 @@ import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
 import type { ColumnDef } from "@tanstack/react-table";
+import { IconMagnifyingglassLine } from "@karrotmarket/react-monochrome-icon";
 import { ORDER_STATUS_OPTIONS } from "@yeongseon/shared";
 import type { OrderType } from "@yeongseon/shared";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import {
+  AdminFilterField,
+  AdminFilterSelect,
+  AdminFilterTextField,
+} from "@/components/AdminFilterControls";
 import {
   ORDER_PAGE_SIZE,
   useAdminOrderTable,
@@ -185,25 +191,24 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
         className="orderToolbar"
         onSubmit={(event) => event.preventDefault()}
       >
-        <label className="orderField orderSearchField">
-          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
-            주문번호
-          </Text>
-          <input
-            className="orderInput"
+        <AdminFilterField label="주문번호" className="adminFilterFieldWide">
+          <AdminFilterTextField
+            prefixIcon={<IconMagnifyingglassLine />}
             value={orderNumber}
-            onChange={(event) =>
-              updateParams({ orderNumber: event.target.value.trim() })
+            onValueChange={({ value }) =>
+              updateParams({ orderNumber: value.trim() })
             }
-            placeholder="주문번호 검색"
+            inputProps={{
+              name: "order-number",
+              "aria-label": "주문번호 검색",
+              autoComplete: "off",
+              placeholder: "주문번호 검색",
+            }}
           />
-        </label>
-        <label className="orderSelectField">
-          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
-            상태
-          </Text>
-          <select
-            className="orderSelect"
+        </AdminFilterField>
+        <AdminFilterField label="상태">
+          <AdminFilterSelect
+            name="order-status"
             value={status}
             onChange={(event) => updateParams({ status: event.target.value })}
           >
@@ -212,30 +217,30 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
                 {option.label}
               </option>
             ))}
-          </select>
-        </label>
-        <label className="orderField">
-          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
-            시작일
-          </Text>
-          <input
-            className="orderInput"
-            type="date"
+          </AdminFilterSelect>
+        </AdminFilterField>
+        <AdminFilterField label="시작일">
+          <AdminFilterTextField
             value={dateFrom}
-            onChange={(event) => updateParams({ dateFrom: event.target.value })}
+            onValueChange={({ value }) => updateParams({ dateFrom: value })}
+            inputProps={{
+              name: "date-from",
+              "aria-label": "시작일",
+              type: "date",
+            }}
           />
-        </label>
-        <label className="orderField">
-          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
-            종료일
-          </Text>
-          <input
-            className="orderInput"
-            type="date"
+        </AdminFilterField>
+        <AdminFilterField label="종료일">
+          <AdminFilterTextField
             value={dateTo}
-            onChange={(event) => updateParams({ dateTo: event.target.value })}
+            onValueChange={({ value }) => updateParams({ dateTo: value })}
+            inputProps={{
+              name: "date-to",
+              "aria-label": "종료일",
+              type: "date",
+            }}
           />
-        </label>
+        </AdminFilterField>
       </form>
 
       {query.error ? (

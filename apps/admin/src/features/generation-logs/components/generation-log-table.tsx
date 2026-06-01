@@ -5,6 +5,10 @@ import dayjs from "dayjs";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import {
+  AdminFilterField,
+  AdminFilterSelect,
+} from "@/components/AdminFilterControls";
 import { StatusBadge } from "@/components/StatusBadge";
 import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
 import { requestTypeLabel } from "@/features/generation-logs/utils";
@@ -179,23 +183,16 @@ export function GenerationLogTable({
   return (
     <div className="generationLogPanel">
       <div className="generationLogToolbar">
-        <label className="generationLogField">
-          <Text
-            as="span"
-            textStyle="t3Bold"
-            className="generationLogFieldLabel"
-          >
-            AI 모델
-          </Text>
-          <select
-            className="generationLogSelect"
+        <AdminFilterField label="AI 모델">
+          <AdminFilterSelect
+            name="generation-ai-model"
             value={aiModel ?? ""}
             onChange={(event) => onAiModelChange(event.target.value || null)}
           >
             <option value="">모든 모델</option>
             <option value="openai">OpenAI</option>
-          </select>
-        </label>
+          </AdminFilterSelect>
+        </AdminFilterField>
       </div>
 
       <AdminDataTable

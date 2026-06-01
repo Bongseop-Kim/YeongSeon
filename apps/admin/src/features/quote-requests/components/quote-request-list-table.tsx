@@ -9,8 +9,12 @@ import {
 } from "@yeongseon/shared";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
-import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import {
+  AdminFilterField,
+  AdminFilterSelect,
+  AdminFilterTextField,
+} from "@/components/AdminFilterControls";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   QUOTE_REQUEST_PAGE_SIZE,
@@ -194,36 +198,20 @@ export function QuoteRequestListPanel() {
         aria-label="견적 요청 필터"
         onSubmit={(event) => event.preventDefault()}
       >
-        <div className="quoteRequestFilterField">
-          <label className="quoteRequestFilterLabel" htmlFor="quote-number">
-            견적번호
-          </label>
-          <div className="quoteRequestSearchFieldSlot">
-            <TextField
-              className="quoteRequestSearchField"
-              prefixIcon={<IconMagnifyingglassLine />}
-              value={draftQuoteNumber}
-              onValueChange={({ value }) => setDraftQuoteNumber(value)}
-            >
-              <TextFieldInput
-                id="quote-number"
-                name="quote-number"
-                autoComplete="off"
-                placeholder="견적번호를 입력하세요"
-              />
-            </TextField>
-          </div>
-        </div>
-        <label className="quoteRequestFilterField">
-          <Text
-            as="span"
-            textStyle="t3Bold"
-            className="quoteRequestFilterLabel"
-          >
-            상태
-          </Text>
-          <select
-            className="quoteRequestSelect"
+        <AdminFilterField label="견적번호" className="adminFilterFieldWide">
+          <AdminFilterTextField
+            prefixIcon={<IconMagnifyingglassLine />}
+            value={draftQuoteNumber}
+            onValueChange={({ value }) => setDraftQuoteNumber(value)}
+            inputProps={{
+              name: "quote-number",
+              autoComplete: "off",
+              placeholder: "견적번호를 입력하세요",
+            }}
+          />
+        </AdminFilterField>
+        <AdminFilterField label="상태">
+          <AdminFilterSelect
             name="quote-request-status"
             value={status}
             onChange={(event) => setStatus(event.target.value)}
@@ -234,8 +222,8 @@ export function QuoteRequestListPanel() {
                 {option.label}
               </option>
             ))}
-          </select>
-        </label>
+          </AdminFilterSelect>
+        </AdminFilterField>
       </form>
 
       {query.error ? (

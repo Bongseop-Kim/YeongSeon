@@ -1,0 +1,56 @@
+.adminFilterField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.adminFilterFieldWide {
+  min-width: 240px;
+}
+
+.adminFilterLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.adminFilterTextField {
+  width: 100%;
+}
+
+.adminFilterSelect {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
+.adminFilterSelectButton {
+  width: 100%;
+}
+
+.adminFilterSelectButton .seed-input-button__root {
+  gap: var(--seed-dimension-x1_5);
+  height: var(--seed-dimension-x10);
+}
+
+.adminFilterSelectButton .seed-input-button__value,
+.adminFilterSelectButton .seed-input-button__placeholder {
+  font-size: var(--seed-font-size-t4);
+  line-height: var(--seed-line-height-t4);
+}
+
+.adminFilterSelectNative {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.adminFilterSelect:focus-within .seed-input-button__button::after {
+  border-color: var(--seed-color-stroke-neutral-contrast);
+  border-width: 2px;
+}

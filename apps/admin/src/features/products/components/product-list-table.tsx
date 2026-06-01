@@ -5,6 +5,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import {
+  AdminFilterField,
+  AdminFilterSelect,
+} from "@/components/AdminFilterControls";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   PRODUCT_PAGE_SIZE,
@@ -147,21 +151,19 @@ export function ProductListTable() {
         className="productToolbar"
         onSubmit={(event) => event.preventDefault()}
       >
-        <label className="productFieldLabel" htmlFor="product-category-filter">
-          카테고리
-        </label>
-        <select
-          id="product-category-filter"
-          className="productSelect"
-          value={category}
-          onChange={(event) => updateCategory(event.target.value)}
-        >
-          {CATEGORY_FILTER_OPTIONS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <AdminFilterField label="카테고리">
+          <AdminFilterSelect
+            name="product-category"
+            value={category}
+            onChange={(event) => updateCategory(event.target.value)}
+          >
+            {CATEGORY_FILTER_OPTIONS.map((option) => (
+              <option key={option.value || "all"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </AdminFilterSelect>
+        </AdminFilterField>
       </form>
 
       {query.error ? (
