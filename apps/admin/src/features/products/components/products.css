@@ -1,0 +1,244 @@
+.productPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.productPageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.productPageTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.productPageTitle,
+.productPanelTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.productPageTitle {
+  font-size: 24px;
+  line-height: 32px;
+}
+
+.productPageDescription,
+.productPanelDescription,
+.productMutedText {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.productPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 16px;
+  background: var(--seed-color-bg-layer-default);
+}
+
+.productPanelHeader,
+.productToolbar,
+.productPagination,
+.productImageActions,
+.productImageControls,
+.productFormActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.productPanelHeader {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.productPanelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.productPagination {
+  margin-top: 4px;
+}
+
+.productThumb,
+.productImagePreview {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.productImageFallback,
+.productImagePlaceholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 12px;
+}
+
+.productImageFallback {
+  min-width: 56px;
+  min-height: 40px;
+}
+
+.productForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.productFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.productFormField,
+.productSelectField {
+  min-width: 0;
+}
+
+.productFormFieldFull {
+  grid-column: 1 / -1;
+}
+
+.productSelectField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.productFieldLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.productSelect {
+  min-height: 40px;
+  width: 100%;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 10px;
+  background: var(--seed-color-bg-layer-default);
+  color: var(--seed-color-fg-neutral);
+  padding: 0 12px;
+  font: inherit;
+}
+
+.productSelect:focus-visible {
+  outline: 2px solid var(--seed-color-stroke-brand);
+  outline-offset: 2px;
+}
+
+.productFileInput {
+  display: none;
+}
+
+.productImageList,
+.productOptionList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.productImageItem,
+.productOptionRow {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 12px;
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.productImageItem {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.productImageMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.productImageMeta strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.productPrimaryImage {
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--seed-color-bg-brand-weak);
+  color: var(--seed-color-fg-brand);
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.productOptionLabelField {
+  max-width: 360px;
+}
+
+.productOptionRow {
+  grid-template-columns: minmax(160px, 1fr) minmax(120px, 180px) minmax(
+      120px,
+      180px
+    ) auto;
+}
+
+.productFormActions {
+  justify-content: flex-end;
+}
+
+.productErrorText {
+  margin: 0;
+  color: var(--seed-color-fg-critical);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+@media (max-width: 840px) {
+  .productPageHeader,
+  .productPanelHeader,
+  .productFormActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .productFormGrid,
+  .productImageItem,
+  .productOptionRow {
+    grid-template-columns: 1fr;
+  }
+
+  .productImageControls {
+    justify-content: flex-start;
+  }
+}

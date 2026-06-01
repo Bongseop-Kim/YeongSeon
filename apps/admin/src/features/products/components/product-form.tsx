@@ -1,7 +1,12 @@
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Card, Form, Input, InputNumber, Select, Space } from "antd";
-import type { FormInstance, FormProps } from "antd";
-import { ProductImageUpload } from "@/components/ProductImageUpload";
+import { useRef, useState, type ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Callout } from "seed-design/ui/callout";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldTextarea,
+} from "seed-design/ui/text-field";
 import type { useImageKitUpload } from "@/hooks/useImageKitUpload";
 import {
   PRODUCT_CATEGORIES,
@@ -9,152 +14,509 @@ import {
   PRODUCT_MATERIALS,
   PRODUCT_PATTERNS,
 } from "@/features/products/types/admin-product";
-import type { AdminProductOption } from "@/features/products/types/admin-product";
+import type {
+  AdminProductFormOption,
+  AdminProductFormValues,
+  AdminProductOption,
+} from "@/features/products/types/admin-product";
+import "./products.css";
 
-interface ProductFormValues {
-  code?: string | null;
-  name?: string;
-  category?: string;
-  color?: string;
-  pattern?: string;
-  material?: string;
-  info?: string;
-  price?: number;
-  stock?: number | null;
-  image?: string | null;
-  detail_images?: string[] | null;
-  options?: AdminProductOption[];
-  option_label?: string | null;
-}
+type ProductImageUploadController = ReturnType<typeof useImageKitUpload>;
+type UploadFileItem = ProductImageUploadController["fileList"][number];
+
+type ProductFormFieldSetter = <K extends keyof AdminProductFormValues>(
+  key: K,
+  value: AdminProductFormValues[K],
+) => void;
 
 interface ProductFormProps {
   mode: "create" | "edit";
-  formProps: FormProps<ProductFormValues>;
-  form: FormInstance<ProductFormValues>;
-  imageUpload: ReturnType<typeof useImageKitUpload>;
-  handleFinish: (values: ProductFormValues) => Promise<void>;
+  values: AdminProductFormValues;
+  setField: ProductFormFieldSetter;
+  setOption: (index: number, patch: Partial<AdminProductOption>) => void;
+  addOption: () => void;
+  removeOption: (index: number) => void;
+  imageUpload: ProductImageUploadController;
+  handleSubmit: () => Promise<void>;
+  validationError: string | null;
+  submitError: Error | null;
+  isSubmitting: boolean;
+}
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ACCEPTED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+]);
+
+function toInputNumber(value: number | null): string {
+  return value === null ? "" : String(value);
+}
+
+function parseOptionalNumber(value: string): number | null {
+  return value === "" ? null : Number(value);
+}
+
+function createSelectOptions(values: readonly string[]) {
+  return (
+    <>
+      <option value="">선택</option>
+      {values.map((value) => (
+        <option key={value} value={value}>
+          {value}
+        </option>
+      ))}
+    </>
+  );
+}
+
+const CATEGORY_OPTIONS = createSelectOptions(PRODUCT_CATEGORIES);
+const COLOR_OPTIONS = createSelectOptions(PRODUCT_COLORS);
+const PATTERN_OPTIONS = createSelectOptions(PRODUCT_PATTERNS);
+const MATERIAL_OPTIONS = createSelectOptions(PRODUCT_MATERIALS);
+
+function productSubmitErrorMessage(error: Error | null): string | null {
+  return error?.message ?? null;
+}
+
+interface ProductOptionRowProps {
+  option: AdminProductFormOption;
+  index: number;
+  setOption: (index: number, patch: Partial<AdminProductOption>) => void;
+  removeOption: (index: number) => void;
+}
+
+function ProductOptionRow({
+  option,
+  index,
+  setOption,
+  removeOption,
+}: ProductOptionRowProps) {
+  return (
+    <div className="productOptionRow">
+      <TextField
+        className="productFormField"
+        label="옵션명"
+        value={option.name}
+        onValueChange={({ value }) => setOption(index, { name: value })}
+      >
+        <TextFieldInput name={`option-${option.formKey}-name`} />
+      </TextField>
+      <TextField
+        className="productFormField"
+        label="추가금액"
+        value={String(option.additionalPrice)}
+        onValueChange={({ value }) =>
+          setOption(index, { additionalPrice: Number(value || 0) })
+        }
+      >
+        <TextFieldInput
+          name={`option-${option.formKey}-price`}
+          type="number"
+          min={0}
+          inputMode="numeric"
+        />
+      </TextField>
+      <TextField
+        className="productFormField"
+        label="재고"
+        value={toInputNumber(option.stock)}
+        description="비워두면 무제한"
+        onValueChange={({ value }) =>
+          setOption(index, { stock: parseOptionalNumber(value) })
+        }
+      >
+        <TextFieldInput
+          name={`option-${option.formKey}-stock`}
+          type="number"
+          min={0}
+          inputMode="numeric"
+        />
+      </TextField>
+      <ActionButton
+        type="button"
+        variant="neutralWeak"
+        onClick={() => removeOption(index)}
+      >
+        삭제
+      </ActionButton>
+    </div>
+  );
 }
 
 export function ProductForm({
   mode,
-  formProps,
-  form,
+  values,
+  setField,
+  setOption,
+  addOption,
+  removeOption,
   imageUpload,
-  handleFinish,
+  handleSubmit,
+  validationError,
+  submitError,
+  isSubmitting,
 }: ProductFormProps) {
-  const options = Form.useWatch("options", form);
-  const hasOptions = Array.isArray(options) && options.length > 0;
+  const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const hasOptions = values.options.length > 0;
+  const submitErrorMessage = productSubmitErrorMessage(submitError);
+
+  const handleFiles = (event: ChangeEvent<HTMLInputElement>): void => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    setImageError(null);
+
+    if (files.length === 0) return;
+
+    const invalidFile = files.find(
+      (file) => !ACCEPTED_TYPES.has(file.type) || file.size > MAX_FILE_SIZE,
+    );
+    if (invalidFile) {
+      setImageError(
+        "JPG, PNG, GIF, WebP 형식의 10MB 이하 이미지만 업로드할 수 있습니다.",
+      );
+      return;
+    }
+
+    const uploadRequests = files.map((file, index) => {
+      const uid = `native-${Date.now()}-${index}-${file.name}`;
+      return {
+        file: Object.assign(file, {
+          uid,
+          lastModifiedDate: new Date(file.lastModified),
+        }),
+        item: {
+          uid,
+          name: file.name,
+          status: "uploading" as const,
+        } satisfies UploadFileItem,
+      };
+    });
+
+    imageUpload.handleChange({
+      fileList: [
+        ...imageUpload.fileList,
+        ...uploadRequests.map(({ item }) => item),
+      ],
+    });
+
+    uploadRequests.forEach(({ file }) => {
+      void imageUpload.customRequest({
+        file,
+        onError: (error) => setImageError(error.message),
+      });
+    });
+  };
+
+  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    void handleSubmit();
+  };
 
   return (
-    <Form {...formProps} form={form} layout="vertical" onFinish={handleFinish}>
-      {mode === "edit" ? (
-        <Form.Item label="코드" name="code">
-          <Input disabled />
-        </Form.Item>
-      ) : (
-        <Form.Item label="코드">
-          <Input disabled placeholder="카테고리 선택 후 자동 생성됩니다" />
-        </Form.Item>
-      )}
+    <form className="productForm" onSubmit={handleFormSubmit}>
+      <section className="productPanel" aria-labelledby="product-basic-title">
+        <div className="productPanelHeader">
+          <h2 id="product-basic-title" className="productPanelTitle">
+            기본 정보
+          </h2>
+        </div>
 
-      <Form.Item label="상품명" name="name" rules={[{ required: true }]}>
-        <Input />
-      </Form.Item>
-      <Form.Item label="가격" name="price" rules={[{ required: true }]}>
-        <InputNumber min={0} style={{ width: "100%" }} />
-      </Form.Item>
+        <div className="productFormGrid">
+          <TextField
+            className="productFormField"
+            label="코드"
+            value={values.code ?? ""}
+            disabled
+          >
+            <TextFieldInput
+              name="code"
+              placeholder={
+                mode === "create"
+                  ? "카테고리 선택 후 자동 생성됩니다"
+                  : undefined
+              }
+              disabled
+            />
+          </TextField>
 
-      <Form.Item label="상품 이미지" style={{ marginBottom: 60 }}>
-        <ProductImageUpload
-          fileList={imageUpload.fileList}
-          uploading={imageUpload.uploading}
-          customRequest={imageUpload.customRequest}
-          onChange={imageUpload.handleChange}
-          onRemove={imageUpload.handleRemove}
-          onMove={imageUpload.moveFile}
-        />
-      </Form.Item>
+          <TextField
+            className="productFormField"
+            label="상품명"
+            value={values.name}
+            required
+            showRequiredIndicator
+            onValueChange={({ value }) => setField("name", value)}
+          >
+            <TextFieldInput name="name" autoComplete="off" />
+          </TextField>
 
-      <Form.Item label="카테고리" name="category" rules={[{ required: true }]}>
-        <Select
-          options={PRODUCT_CATEGORIES.map((v) => ({ label: v, value: v }))}
-        />
-      </Form.Item>
-      <Form.Item label="색상" name="color" rules={[{ required: true }]}>
-        <Select options={PRODUCT_COLORS.map((v) => ({ label: v, value: v }))} />
-      </Form.Item>
-      <Form.Item label="패턴" name="pattern" rules={[{ required: true }]}>
-        <Select
-          options={PRODUCT_PATTERNS.map((v) => ({ label: v, value: v }))}
-        />
-      </Form.Item>
-      <Form.Item label="소재" name="material" rules={[{ required: true }]}>
-        <Select
-          options={PRODUCT_MATERIALS.map((v) => ({ label: v, value: v }))}
-        />
-      </Form.Item>
-      <Form.Item label="상품 정보" name="info" rules={[{ required: true }]}>
-        <Input.TextArea rows={4} />
-      </Form.Item>
-      {!hasOptions && (
-        <Form.Item
-          label="재고"
-          name="stock"
-          tooltip="비워두면 무제한"
-          preserve={false}
-        >
-          <InputNumber
-            min={0}
-            style={{ width: "100%" }}
-            placeholder="비워두면 무제한"
-          />
-        </Form.Item>
-      )}
+          <TextField
+            className="productFormField"
+            label="가격"
+            value={toInputNumber(values.price)}
+            required
+            showRequiredIndicator
+            onValueChange={({ value }) =>
+              setField("price", parseOptionalNumber(value))
+            }
+          >
+            <TextFieldInput
+              name="price"
+              type="number"
+              min={0}
+              inputMode="numeric"
+            />
+          </TextField>
 
-      <Card title="옵션" size="small" style={{ marginBottom: 24 }}>
-        {hasOptions && (
-          <Form.Item label="옵션 제목" name="option_label" preserve={false}>
-            <Input placeholder="예: 길이, 색상, 사이즈" />
-          </Form.Item>
-        )}
-        <Form.List name="options">
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map(({ key, name, ...restField }) => (
-                <Space
-                  key={key}
-                  wrap
-                  style={{ display: "flex", marginBottom: 8 }}
-                  align="baseline"
+          <label className="productSelectField">
+            <span className="productFieldLabel">카테고리 *</span>
+            <select
+              className="productSelect"
+              value={values.category}
+              required
+              onChange={(event) => setField("category", event.target.value)}
+            >
+              {CATEGORY_OPTIONS}
+            </select>
+          </label>
+
+          <label className="productSelectField">
+            <span className="productFieldLabel">색상 *</span>
+            <select
+              className="productSelect"
+              value={values.color}
+              required
+              onChange={(event) => setField("color", event.target.value)}
+            >
+              {COLOR_OPTIONS}
+            </select>
+          </label>
+
+          <label className="productSelectField">
+            <span className="productFieldLabel">패턴 *</span>
+            <select
+              className="productSelect"
+              value={values.pattern}
+              required
+              onChange={(event) => setField("pattern", event.target.value)}
+            >
+              {PATTERN_OPTIONS}
+            </select>
+          </label>
+
+          <label className="productSelectField">
+            <span className="productFieldLabel">소재 *</span>
+            <select
+              className="productSelect"
+              value={values.material}
+              required
+              onChange={(event) => setField("material", event.target.value)}
+            >
+              {MATERIAL_OPTIONS}
+            </select>
+          </label>
+
+          <TextField
+            className="productFormField productFormFieldFull"
+            label="상품 정보"
+            value={values.info}
+            required
+            showRequiredIndicator
+            onValueChange={({ value }) => setField("info", value)}
+          >
+            <TextFieldTextarea name="info" />
+          </TextField>
+
+          {!hasOptions ? (
+            <TextField
+              className="productFormField"
+              label="재고"
+              value={toInputNumber(values.stock)}
+              description="비워두면 무제한으로 저장됩니다."
+              onValueChange={({ value }) =>
+                setField("stock", parseOptionalNumber(value))
+              }
+            >
+              <TextFieldInput
+                name="stock"
+                type="number"
+                min={0}
+                inputMode="numeric"
+                placeholder="비워두면 무제한"
+              />
+            </TextField>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="productPanel" aria-labelledby="product-image-title">
+        <div className="productPanelHeader">
+          <div>
+            <h2 id="product-image-title" className="productPanelTitle">
+              상품 이미지
+            </h2>
+            <p className="productPanelDescription">
+              첫 번째 이미지가 대표 이미지로 저장됩니다.
+            </p>
+          </div>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          className="productFileInput"
+          type="file"
+          accept=".jpg,.jpeg,.png,.gif,.webp"
+          aria-label="상품 이미지 파일 선택"
+          multiple
+          onChange={handleFiles}
+        />
+        <div className="productImageActions">
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            disabled={imageUpload.uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {imageUpload.uploading ? "업로드 중…" : "이미지 추가"}
+          </ActionButton>
+          <span className="productMutedText">
+            JPG, PNG, GIF, WebP · 최대 10MB
+          </span>
+        </div>
+        {imageError || imageUpload.error ? (
+          <p className="productErrorText">{imageError ?? imageUpload.error}</p>
+        ) : null}
+        <ul className="productImageList">
+          {imageUpload.fileList.map((file, index) => (
+            <li key={file.uid} className="productImageItem">
+              {file.url || file.thumbUrl ? (
+                <img
+                  className="productImagePreview"
+                  src={file.url ?? file.thumbUrl}
+                  alt=""
+                />
+              ) : (
+                <div className="productImagePreview productImagePlaceholder">
+                  업로드 중
+                </div>
+              )}
+              <div className="productImageMeta">
+                <strong>{file.name}</strong>
+                {index === 0 && file.status === "done" ? (
+                  <span className="productPrimaryImage">대표</span>
+                ) : null}
+                <span className="productMutedText">
+                  {file.status === "done" ? "업로드 완료" : "업로드 중"}
+                </span>
+              </div>
+              <div className="productImageControls">
+                <ActionButton
+                  type="button"
+                  variant="neutralWeak"
+                  disabled={index === 0}
+                  onClick={() => imageUpload.moveFile(index, index - 1)}
                 >
-                  <Form.Item
-                    {...restField}
-                    name={[name, "name"]}
-                    rules={[{ required: true, message: "이름" }]}
-                  >
-                    <Input placeholder="옵션명" />
-                  </Form.Item>
-                  <Form.Item {...restField} name={[name, "additionalPrice"]}>
-                    <InputNumber placeholder="추가금액" min={0} />
-                  </Form.Item>
-                  <Form.Item {...restField} name={[name, "stock"]}>
-                    <InputNumber placeholder="재고 (무제한)" min={0} />
-                  </Form.Item>
-                  <MinusCircleOutlined onClick={() => remove(name)} />
-                </Space>
+                  위로
+                </ActionButton>
+                <ActionButton
+                  type="button"
+                  variant="neutralWeak"
+                  disabled={index === imageUpload.fileList.length - 1}
+                  onClick={() => imageUpload.moveFile(index, index + 1)}
+                >
+                  아래로
+                </ActionButton>
+                <ActionButton
+                  type="button"
+                  variant="neutralWeak"
+                  onClick={() => imageUpload.handleRemove(file)}
+                >
+                  제거
+                </ActionButton>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="productPanel" aria-labelledby="product-option-title">
+        <div className="productPanelHeader">
+          <div>
+            <h2 id="product-option-title" className="productPanelTitle">
+              옵션
+            </h2>
+            <p className="productPanelDescription">
+              옵션을 추가하면 상품 단일 재고 대신 옵션 재고를 사용합니다.
+            </p>
+          </div>
+          <ActionButton type="button" variant="neutralWeak" onClick={addOption}>
+            옵션 추가
+          </ActionButton>
+        </div>
+
+        {hasOptions ? (
+          <>
+            <TextField
+              className="productFormField productOptionLabelField"
+              label="옵션 제목"
+              value={values.optionLabel}
+              onValueChange={({ value }) => setField("optionLabel", value)}
+            >
+              <TextFieldInput
+                name="optionLabel"
+                placeholder="예: 길이, 색상, 사이즈"
+              />
+            </TextField>
+            <div className="productOptionList">
+              {values.options.map((option, index) => (
+                <ProductOptionRow
+                  key={option.formKey}
+                  option={option}
+                  index={index}
+                  setOption={setOption}
+                  removeOption={removeOption}
+                />
               ))}
-              <Button
-                type="dashed"
-                onClick={() => add()}
-                block
-                icon={<PlusOutlined />}
-              >
-                옵션 추가
-              </Button>
-            </>
-          )}
-        </Form.List>
-      </Card>
-    </Form>
+            </div>
+          </>
+        ) : (
+          <p className="productMutedText">등록된 옵션이 없습니다.</p>
+        )}
+      </section>
+
+      {validationError ? (
+        <Callout tone="critical" description={validationError} role="alert" />
+      ) : null}
+      {submitErrorMessage ? (
+        <Callout
+          tone="critical"
+          description={submitErrorMessage}
+          role="alert"
+        />
+      ) : null}
+
+      <div className="productFormActions">
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          disabled={isSubmitting}
+          onClick={() => navigate("/products")}
+        >
+          취소
+        </ActionButton>
+        <ActionButton
+          type="submit"
+          loading={isSubmitting}
+          disabled={isSubmitting || imageUpload.uploading}
+        >
+          {mode === "create" ? "상품 생성" : "상품 저장"}
+        </ActionButton>
+      </div>
+    </form>
   );
 }
