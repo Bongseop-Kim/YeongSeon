@@ -50,3 +50,7 @@ select,
 textarea {
   font-family: var(--font-sans);
 }
+
+body {
+  margin: 0;
+}
