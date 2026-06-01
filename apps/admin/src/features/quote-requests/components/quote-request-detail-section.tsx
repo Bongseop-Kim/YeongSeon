@@ -1,24 +1,30 @@
+import { useMemo, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
-  Descriptions,
-  Tag,
-  Table,
-  Button,
-  Space,
-  Modal,
-  Typography,
-  InputNumber,
-  Input,
-  Image,
-  Spin,
-  Alert,
-} from "antd";
-import { useNavigation } from "@refinedev/core";
-import {
-  QUOTE_REQUEST_STATUS_FLOW,
-  QUOTE_REQUEST_STATUS_COLORS,
   CONTACT_METHOD_LABELS,
+  QUOTE_REQUEST_STATUS_FLOW,
   getDeliveryRequestLabel,
 } from "@yeongseon/shared";
+import { ActionButton } from "seed-design/ui/action-button";
+import {
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogRoot,
+  AlertDialogTitle,
+} from "seed-design/ui/alert-dialog";
+import { Callout } from "seed-design/ui/callout";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldTextarea,
+} from "seed-design/ui/text-field";
+import { AdminDataTable } from "@/components/AdminDataTable";
+import { StatusBadge } from "@/components/StatusBadge";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/imagekit";
 import {
   useAdminQuoteRequestDetail,
   useAdminQuoteRequestStatusLogs,
@@ -26,15 +32,70 @@ import {
   useQuoteRequestStatusUpdate,
 } from "@/features/quote-requests/api/quote-requests-query";
 import { CustomOrderOptionsDetail } from "@/features/quote-requests/components/custom-order-options-detail";
-import { formatWithComma } from "@/utils/format-number";
+import type { AdminQuoteRequestStatusLog } from "@/features/quote-requests/types/admin-quote-request";
+import "./quote-requests.css";
 
-const { Title, Text } = Typography;
-const { TextArea } = Input;
+const IMAGEKIT_PATH_SEPARATOR = "/";
 
-export function QuoteRequestDetailSection() {
-  const { show } = useNavigation();
-  const { detail, refetch, isLoading, error } = useAdminQuoteRequestDetail();
-  const { logs } = useAdminQuoteRequestStatusLogs(detail?.id);
+function quoteRequestStatusTone(status: string) {
+  if (status === "확정") return "positive";
+  if (status === "종료") return "critical";
+  if (status === "협의중") return "warning";
+  if (status === "견적발송") return "brand";
+  return "neutral";
+}
+
+function formatDateTime(value: string): string {
+  return value ? new Date(value).toLocaleString("ko-KR") : "-";
+}
+
+function DetailItem({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="quoteRequestDetailItem">
+      <dt className="quoteRequestDetailLabel">{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+function normalizeAmountInput(value: string): number | null {
+  const digits = value.replace(/[^0-9]/g, "");
+  if (!digits) return null;
+  return Number(digits);
+}
+
+function isSafeReferenceImageUrl(url: string): boolean {
+  if (!IMAGEKIT_URL_ENDPOINT) return false;
+
+  try {
+    const parsedUrl = new URL(url);
+    const endpointUrl = new URL(IMAGEKIT_URL_ENDPOINT);
+    const basePath = endpointUrl.pathname.endsWith(IMAGEKIT_PATH_SEPARATOR)
+      ? endpointUrl.pathname
+      : `${endpointUrl.pathname}${IMAGEKIT_PATH_SEPARATOR}`;
+
+    return (
+      parsedUrl.protocol === "https:" &&
+      parsedUrl.origin === endpointUrl.origin &&
+      parsedUrl.pathname.startsWith(basePath)
+    );
+  } catch {
+    return false;
+  }
+}
+
+interface QuoteRequestDetailSectionProps {
+  quoteRequestId?: string;
+}
+
+export function QuoteRequestDetailSection({
+  quoteRequestId,
+}: QuoteRequestDetailSectionProps) {
+  const navigate = useNavigate();
+  const [endConfirmOpen, setEndConfirmOpen] = useState(false);
+  const detailQuery = useAdminQuoteRequestDetail(quoteRequestId);
+  const detail = detailQuery.data;
+  const logsQuery = useAdminQuoteRequestStatusLogs(quoteRequestId);
 
   const {
     formValues,
@@ -44,98 +105,172 @@ export function QuoteRequestDetailSection() {
     setStatusMemo,
   } = useQuoteRequestFormState(detail);
 
-  const { updateStatus, isUpdating } = useQuoteRequestStatusUpdate(
-    detail,
-    formValues,
-    refetch,
-    () => setStatusMemo(""),
+  const {
+    updateStatus,
+    isUpdating,
+    error: updateError,
+    successMessage,
+  } = useQuoteRequestStatusUpdate(detail, formValues, () => setStatusMemo(""));
+
+  const logColumns = useMemo<ColumnDef<AdminQuoteRequestStatusLog>[]>(
+    () => [
+      {
+        accessorKey: "createdAt",
+        header: "일시",
+        cell: ({ row }) => formatDateTime(row.original.createdAt),
+      },
+      {
+        accessorKey: "previousStatus",
+        header: "이전 상태",
+        cell: ({ row }) => (
+          <StatusBadge
+            tone={quoteRequestStatusTone(row.original.previousStatus)}
+          >
+            {row.original.previousStatus}
+          </StatusBadge>
+        ),
+      },
+      {
+        accessorKey: "newStatus",
+        header: "변경 상태",
+        cell: ({ row }) => (
+          <StatusBadge tone={quoteRequestStatusTone(row.original.newStatus)}>
+            {row.original.newStatus}
+          </StatusBadge>
+        ),
+      },
+      {
+        accessorKey: "memo",
+        header: "메모",
+        cell: ({ row }) => row.original.memo ?? "-",
+      },
+    ],
+    [],
   );
 
-  if (isLoading) return <Spin style={{ display: "block", marginTop: 48 }} />;
-  if (error)
+  if (detailQuery.isLoading) {
+    return <p className="quoteRequestMutedText">견적 정보를 불러오는 중…</p>;
+  }
+
+  if (detailQuery.error) {
     return (
-      <Alert
-        type="error"
-        message={`데이터를 불러오는 데 실패했습니다: ${error instanceof Error ? error.message : String(error)}`}
+      <Callout
+        tone="critical"
+        title="견적 정보를 불러오지 못했습니다"
+        description={detailQuery.error.message}
       />
     );
-  if (!detail)
-    return <Alert type="warning" message="견적 정보를 찾을 수 없습니다." />;
+  }
+
+  if (!detail) {
+    return (
+      <Callout tone="warning" description="견적 정보를 찾을 수 없습니다." />
+    );
+  }
 
   const nextStatus = QUOTE_REQUEST_STATUS_FLOW[detail.status];
+  const deliveryRequestText = detail.deliveryRequest
+    ? (getDeliveryRequestLabel(detail.deliveryRequest, detail.deliveryMemo) ??
+      detail.deliveryRequest)
+    : "-";
+  const shippingAddressText = detail.shippingAddress
+    ? [detail.shippingAddress, detail.shippingAddressDetail]
+        .filter(Boolean)
+        .join(" ")
+    : "-";
 
-  const handleStatusChange = (newStatus: string) => {
-    if (newStatus === "종료") {
-      Modal.confirm({
-        title: "견적 종료",
-        content: "정말 이 견적을 종료하시겠습니까?",
-        okText: "종료 처리",
-        cancelText: "닫기",
-        okButtonProps: { danger: true },
-        onOk: () => updateStatus(newStatus),
-      });
-      return;
+  const safeReferenceImageUrls = detail.referenceImageUrls.filter(
+    isSafeReferenceImageUrl,
+  );
+
+  const handleStatusChange = async (newStatus: string): Promise<boolean> => {
+    try {
+      await updateStatus(newStatus);
+      return true;
+    } catch {
+      return false;
     }
-    updateStatus(newStatus);
+  };
+
+  const handleEndStatusChange = async (): Promise<void> => {
+    const succeeded = await handleStatusChange("종료");
+    if (succeeded) setEndConfirmOpen(false);
   };
 
   return (
     <>
-      <Title level={5}>견적 기본 정보</Title>
-      <Descriptions
-        bordered
-        column={{ xs: 1, sm: 1, md: 2 }}
-        style={{ marginBottom: 24 }}
-      >
-        <Descriptions.Item label="견적번호">
-          {detail.quoteNumber}
-        </Descriptions.Item>
-        <Descriptions.Item label="요청일">{detail.date}</Descriptions.Item>
-        <Descriptions.Item label="상태">
-          <Tag color={QUOTE_REQUEST_STATUS_COLORS[detail.status]}>
-            {detail.status}
-          </Tag>
-        </Descriptions.Item>
-        <Descriptions.Item label="수량">
-          {detail.quantity?.toLocaleString()}개
-        </Descriptions.Item>
-        <Descriptions.Item label="고객명">
-          {detail.userId ? (
-            <a
-              onClick={() => show("profiles", detail.userId)}
-              style={{ cursor: "pointer" }}
-            >
-              {detail.customerName}
-            </a>
-          ) : (
-            detail.customerName
-          )}
-        </Descriptions.Item>
-        <Descriptions.Item label="고객 연락처">
-          {detail.customerPhone ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="고객 이메일">
-          {detail.customerEmail ?? "-"}
-        </Descriptions.Item>
-      </Descriptions>
+      {successMessage ? (
+        <Callout tone="positive" description={successMessage} role="status" />
+      ) : null}
+      {updateError ? (
+        <Callout
+          tone="critical"
+          title="상태 변경 실패"
+          description={updateError.message}
+          role="alert"
+        />
+      ) : null}
 
-      <Title level={5}>담당자 연락처</Title>
-      <Descriptions
-        bordered
-        column={{ xs: 1, sm: 1, md: 2 }}
-        style={{ marginBottom: 24 }}
+      <section
+        className="quoteRequestPanel"
+        aria-labelledby="quote-basic-title"
       >
-        <Descriptions.Item label="성함">{detail.contactName}</Descriptions.Item>
-        <Descriptions.Item label="상호명">
-          {detail.businessName || "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="연락방법">
-          {CONTACT_METHOD_LABELS[detail.contactMethod]}
-        </Descriptions.Item>
-        <Descriptions.Item label="연락처">
-          {detail.contactValue}
-        </Descriptions.Item>
-      </Descriptions>
+        <h2 id="quote-basic-title" className="quoteRequestPanelTitle">
+          견적 기본 정보
+        </h2>
+        <dl className="quoteRequestDetailGrid">
+          <DetailItem label="견적번호" value={detail.quoteNumber} />
+          <DetailItem label="요청일" value={detail.date} />
+          <DetailItem
+            label="상태"
+            value={
+              <StatusBadge tone={quoteRequestStatusTone(detail.status)}>
+                {detail.status}
+              </StatusBadge>
+            }
+          />
+          <DetailItem
+            label="수량"
+            value={`${detail.quantity.toLocaleString("ko-KR")}개`}
+          />
+          <DetailItem
+            label="고객명"
+            value={
+              detail.userId ? (
+                <button
+                  className="quoteRequestTextButton"
+                  type="button"
+                  onClick={() => navigate(`/customers/show/${detail.userId}`)}
+                >
+                  {detail.customerName}
+                </button>
+              ) : (
+                detail.customerName
+              )
+            }
+          />
+          <DetailItem label="고객 연락처" value={detail.customerPhone ?? "-"} />
+          <DetailItem label="고객 이메일" value={detail.customerEmail ?? "-"} />
+        </dl>
+      </section>
+
+      <section
+        className="quoteRequestPanel"
+        aria-labelledby="quote-contact-title"
+      >
+        <h2 id="quote-contact-title" className="quoteRequestPanelTitle">
+          담당자 연락처
+        </h2>
+        <dl className="quoteRequestDetailGrid">
+          <DetailItem label="성함" value={detail.contactName} />
+          <DetailItem label="상호명" value={detail.businessName || "-"} />
+          <DetailItem
+            label="연락방법"
+            value={CONTACT_METHOD_LABELS[detail.contactMethod]}
+          />
+          <DetailItem label="연락처" value={detail.contactValue} />
+        </dl>
+      </section>
 
       <CustomOrderOptionsDetail
         options={detail.options}
@@ -143,164 +278,189 @@ export function QuoteRequestDetailSection() {
         quotedAmount={detail.quotedAmount}
       />
 
-      {detail.referenceImageUrls.length > 0 && (
-        <>
-          <Title level={5}>참고 이미지</Title>
-          <Image.PreviewGroup>
-            <Space wrap style={{ marginBottom: 24 }}>
-              {detail.referenceImageUrls.map((url, idx) => (
-                <Image key={idx} width={120} src={url} />
-              ))}
-            </Space>
-          </Image.PreviewGroup>
-        </>
-      )}
+      {safeReferenceImageUrls.length > 0 ? (
+        <section
+          className="quoteRequestPanel"
+          aria-labelledby="quote-images-title"
+        >
+          <h2 id="quote-images-title" className="quoteRequestPanelTitle">
+            참고 이미지
+          </h2>
+          <ul className="quoteRequestImageList">
+            {safeReferenceImageUrls.map((url) => (
+              <li key={url}>
+                <a href={url} target="_blank" rel="noreferrer">
+                  <img
+                    className="quoteRequestReferenceImage"
+                    src={url}
+                    alt="견적 참고 이미지"
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
-      {detail.additionalNotes && (
-        <Descriptions bordered column={1} style={{ marginBottom: 24 }}>
-          <Descriptions.Item label="추가 요청사항">
-            {detail.additionalNotes}
-          </Descriptions.Item>
-        </Descriptions>
-      )}
+      {detail.additionalNotes ? (
+        <section
+          className="quoteRequestPanel"
+          aria-labelledby="quote-notes-title"
+        >
+          <h2 id="quote-notes-title" className="quoteRequestPanelTitle">
+            추가 요청사항
+          </h2>
+          <p className="quoteRequestLongText">{detail.additionalNotes}</p>
+        </section>
+      ) : null}
 
-      <Title level={5}>배송지 정보</Title>
-      <Descriptions
-        bordered
-        column={{ xs: 1, sm: 1, md: 2 }}
-        style={{ marginBottom: 24 }}
+      <section
+        className="quoteRequestPanel"
+        aria-labelledby="quote-shipping-title"
       >
-        <Descriptions.Item label="수령인">
-          {detail.recipientName ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="연락처">
-          {detail.recipientPhone ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="우편번호">
-          {detail.shippingPostalCode ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="주소" span={2}>
-          {detail.shippingAddress ?? "-"}
-          {detail.shippingAddressDetail && ` ${detail.shippingAddressDetail}`}
-        </Descriptions.Item>
-        <Descriptions.Item label="배송메모">
-          {detail.deliveryMemo ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="배송요청사항">
-          {detail.deliveryRequest
-            ? (getDeliveryRequestLabel(
-                detail.deliveryRequest,
-                detail.deliveryMemo,
-              ) ?? detail.deliveryRequest)
-            : "-"}
-        </Descriptions.Item>
-      </Descriptions>
+        <h2 id="quote-shipping-title" className="quoteRequestPanelTitle">
+          배송지 정보
+        </h2>
+        <dl className="quoteRequestDetailGrid">
+          <DetailItem label="수령인" value={detail.recipientName ?? "-"} />
+          <DetailItem label="연락처" value={detail.recipientPhone ?? "-"} />
+          <DetailItem
+            label="우편번호"
+            value={detail.shippingPostalCode ?? "-"}
+          />
+          <DetailItem label="주소" value={shippingAddressText} />
+          <DetailItem label="배송메모" value={detail.deliveryMemo ?? "-"} />
+          <DetailItem label="배송요청사항" value={deliveryRequestText} />
+        </dl>
+      </section>
 
-      <Title level={5}>견적 입력</Title>
-      <Space
-        direction="vertical"
-        style={{ width: "100%", marginBottom: 24 }}
-        size="middle"
+      <section
+        className="quoteRequestPanel"
+        aria-labelledby="quote-input-title"
       >
-        <div>
-          <Text strong>견적금액 (원)</Text>
-          <InputNumber
-            value={formValues.quotedAmount}
-            onChange={(v) => setQuotedAmount(v)}
-            formatter={(v) => formatWithComma(v)}
-            parser={(v) => Number(v?.replace(/,/g, ""))}
-            style={{ width: "100%", marginTop: 4 }}
-            min={0}
-            placeholder="견적금액을 입력해주세요"
-          />
-        </div>
-        <div>
-          <Text strong>견적 조건</Text>
-          <TextArea
-            value={formValues.quoteConditions}
-            onChange={(e) => setQuoteConditions(e.target.value)}
-            rows={3}
-            placeholder="납기, 결제 조건 등"
-            style={{ marginTop: 4 }}
-          />
-        </div>
-        <div>
-          <Text strong>관리자 메모</Text>
-          <TextArea
-            value={formValues.adminMemo}
-            onChange={(e) => setAdminMemo(e.target.value)}
-            rows={2}
-            placeholder="내부 메모 (고객에게 노출되지 않음)"
-            style={{ marginTop: 4 }}
-          />
-        </div>
-        <div>
-          <Text strong>상태 변경 메모</Text>
-          <TextArea
-            value={formValues.statusMemo}
-            onChange={(e) => setStatusMemo(e.target.value)}
-            rows={2}
-            placeholder="상태 변경 사유 (이력에 기록됨)"
-            style={{ marginTop: 4 }}
-          />
-        </div>
-      </Space>
-
-      <Space style={{ marginBottom: 24 }}>
-        {nextStatus && (
-          <Button
-            type="primary"
-            loading={isUpdating}
-            onClick={() => handleStatusChange(nextStatus)}
+        <h2 id="quote-input-title" className="quoteRequestPanelTitle">
+          견적 입력
+        </h2>
+        <div className="quoteRequestFormGrid">
+          <TextField
+            label="견적금액"
+            suffix="원"
+            value={formValues.quotedAmount?.toLocaleString("ko-KR") ?? ""}
+            onValueChange={({ value }) =>
+              setQuotedAmount(normalizeAmountInput(value))
+            }
           >
-            {nextStatus} 으로 변경
-          </Button>
-        )}
-        {detail.status !== "종료" && detail.status !== "확정" && (
-          <Button
-            danger
-            loading={isUpdating}
-            onClick={() => handleStatusChange("종료")}
-          >
-            종료 처리
-          </Button>
-        )}
-      </Space>
+            <TextFieldInput
+              inputMode="numeric"
+              placeholder="견적금액을 입력해주세요"
+              aria-label="견적금액"
+            />
+          </TextField>
+          <div className="quoteRequestFieldFull">
+            <TextField
+              label="견적 조건"
+              value={formValues.quoteConditions}
+              onValueChange={({ value }) => setQuoteConditions(value)}
+            >
+              <TextFieldTextarea placeholder="납기, 결제 조건 등" />
+            </TextField>
+          </div>
+          <div className="quoteRequestFieldFull">
+            <TextField
+              label="관리자 메모"
+              value={formValues.adminMemo}
+              onValueChange={({ value }) => setAdminMemo(value)}
+            >
+              <TextFieldTextarea placeholder="내부 메모 (고객에게 노출되지 않음)" />
+            </TextField>
+          </div>
+          <div className="quoteRequestFieldFull">
+            <TextField
+              label="상태 변경 메모"
+              value={formValues.statusMemo}
+              onValueChange={({ value }) => setStatusMemo(value)}
+            >
+              <TextFieldTextarea placeholder="상태 변경 사유 (이력에 기록됨)" />
+            </TextField>
+          </div>
+        </div>
+        <div className="quoteRequestActions">
+          {nextStatus ? (
+            <ActionButton
+              type="button"
+              loading={isUpdating}
+              disabled={isUpdating}
+              onClick={() => void handleStatusChange(nextStatus)}
+            >
+              {nextStatus} 으로 변경
+            </ActionButton>
+          ) : null}
+          {detail.status !== "종료" && detail.status !== "확정" ? (
+            <ActionButton
+              type="button"
+              variant="criticalSolid"
+              loading={isUpdating}
+              disabled={isUpdating}
+              onClick={() => setEndConfirmOpen(true)}
+            >
+              종료 처리
+            </ActionButton>
+          ) : null}
+        </div>
+      </section>
 
-      <Title level={5}>상태 변경 이력</Title>
-      <Table
-        dataSource={logs}
-        rowKey="id"
-        pagination={false}
-        style={{ marginBottom: 24 }}
-      >
-        <Table.Column
-          dataIndex="createdAt"
-          title="일시"
-          render={(v: string) =>
-            v ? new Date(v).toLocaleString("ko-KR") : "-"
-          }
+      <section className="quoteRequestPanel" aria-labelledby="quote-log-title">
+        <div className="quoteRequestPanelHeader">
+          <div>
+            <h2 id="quote-log-title" className="quoteRequestPanelTitle">
+              상태 변경 이력
+            </h2>
+            {logsQuery.isFetching ? (
+              <p className="quoteRequestMutedText">상태 이력을 불러오는 중…</p>
+            ) : null}
+          </div>
+        </div>
+        {logsQuery.error ? (
+          <Callout tone="critical" description={logsQuery.error.message} />
+        ) : null}
+        <AdminDataTable
+          data={logsQuery.data ?? []}
+          columns={logColumns}
+          getRowId={(row) => row.id}
+          emptyText="상태 변경 이력이 없습니다."
+          minWidth={640}
         />
-        <Table.Column
-          dataIndex="previousStatus"
-          title="이전 상태"
-          render={(v: string) => (
-            <Tag color={QUOTE_REQUEST_STATUS_COLORS[v]}>{v}</Tag>
-          )}
-        />
-        <Table.Column
-          dataIndex="newStatus"
-          title="변경 상태"
-          render={(v: string) => (
-            <Tag color={QUOTE_REQUEST_STATUS_COLORS[v]}>{v}</Tag>
-          )}
-        />
-        <Table.Column
-          dataIndex="memo"
-          title="메모"
-          render={(v: string | null) => v ?? "-"}
-        />
-      </Table>
+      </section>
+
+      <AlertDialogRoot open={endConfirmOpen} onOpenChange={setEndConfirmOpen}>
+        <AlertDialogContent layerIndex={60}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>견적 종료</AlertDialogTitle>
+            <AlertDialogDescription>
+              정말 이 견적을 종료하시겠습니까?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              variant="neutralWeak"
+              onClick={() => setEndConfirmOpen(false)}
+            >
+              닫기
+            </AlertDialogAction>
+            <ActionButton
+              type="button"
+              variant="criticalSolid"
+              loading={isUpdating}
+              disabled={isUpdating}
+              onClick={() => {
+                void handleEndStatusChange();
+              }}
+            >
+              종료 처리
+            </ActionButton>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogRoot>
     </>
   );
 }

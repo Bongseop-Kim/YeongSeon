@@ -8,7 +8,7 @@ import {
   DashboardStatsRow,
 } from "@/features/dashboard";
 import type { SegmentValue } from "@/features/dashboard";
-import { QuoteRequestListTable } from "@/features/quote-requests";
+import { QuoteRequestDashboardTable } from "@/features/quote-requests/components/quote-request-list-table";
 import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
 
 const { Title } = Typography;
@@ -56,7 +56,7 @@ export function DashboardContent() {
                 <Title level={5} style={{ marginTop: 0 }}>
                   견적 요청
                 </Title>
-                <QuoteRequestListTable />
+                <QuoteRequestDashboardTable />
               </>
             ),
           },

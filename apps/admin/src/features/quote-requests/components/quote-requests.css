@@ -1,0 +1,189 @@
+.quoteRequestPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.quoteRequestHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quoteRequestTitle {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.quoteRequestDescription,
+.quoteRequestMutedText {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.quoteRequestPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 16px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 20px;
+}
+
+.quoteRequestPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quoteRequestPanelTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.quoteRequestToolbar,
+.quoteRequestPagination,
+.quoteRequestActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quoteRequestToolbarLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.quoteRequestSearchFieldSlot {
+  flex: 1 1 280px;
+  min-width: 0;
+  max-width: 420px;
+}
+
+.quoteRequestSearchField {
+  width: 100%;
+}
+
+.quoteRequestStatusFilter {
+  width: fit-content;
+}
+
+.quoteRequestDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+
+.quoteRequestDetailItem {
+  display: grid;
+  gap: 4px;
+}
+
+.quoteRequestDetailItem dd {
+  margin: 0;
+}
+
+.quoteRequestDetailLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.quoteRequestTextButton {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--seed-color-fg-brand);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quoteRequestTextButton:hover {
+  text-decoration: underline;
+}
+
+.quoteRequestImageList {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quoteRequestReferenceImage {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 12px;
+}
+
+.quoteRequestLongText {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.quoteRequestFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.quoteRequestFieldFull {
+  grid-column: 1 / -1;
+}
+
+.quoteRequestActions {
+  justify-content: flex-end;
+  border-top: 1px solid var(--seed-color-stroke-neutral-muted);
+  padding-top: 16px;
+}
+
+.quoteRequestActions > button {
+  min-width: 132px;
+}
+
+@media (max-width: 720px) {
+  .quoteRequestPage {
+    padding: 16px;
+  }
+
+  .quoteRequestToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quoteRequestSearchFieldSlot,
+  .quoteRequestStatusFilter,
+  .quoteRequestStatusFilter > label {
+    width: 100%;
+    max-width: none;
+  }
+
+  .quoteRequestDetailGrid,
+  .quoteRequestFormGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .quoteRequestActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

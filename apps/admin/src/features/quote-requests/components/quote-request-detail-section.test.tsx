@@ -1,17 +1,71 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QuoteRequestDetailSection } from "./quote-request-detail-section";
 
-const { showMock, detailHookMock, statusLogsHookMock, statusUpdateHookMock } =
-  vi.hoisted(() => ({
-    showMock: vi.fn(),
+const { detailHookMock, statusLogsHookMock, statusUpdateHookMock } = vi.hoisted(
+  () => ({
     detailHookMock: vi.fn(),
     statusLogsHookMock: vi.fn(),
     statusUpdateHookMock: vi.fn(),
-  }));
+  }),
+);
 
-vi.mock("@refinedev/core", () => ({
-  useNavigation: () => ({ show: showMock }),
+vi.mock("seed-design/ui/action-button", () => ({
+  ActionButton: ({
+    children,
+    loading: _loading,
+    ...props
+  }: {
+    children?: ReactNode;
+    loading?: boolean;
+  }) => <button {...props}>{children}</button>,
+}));
+
+vi.mock("seed-design/ui/alert-dialog", () => ({
+  AlertDialogRoot: ({ children }: { children?: ReactNode }) => <>{children}</>,
+  AlertDialogContent: ({ children }: { children?: ReactNode }) => (
+    <div>{children}</div>
+  ),
+  AlertDialogDescription: ({ children }: { children?: ReactNode }) => (
+    <p>{children}</p>
+  ),
+  AlertDialogFooter: ({ children }: { children?: ReactNode }) => (
+    <footer>{children}</footer>
+  ),
+  AlertDialogHeader: ({ children }: { children?: ReactNode }) => (
+    <header>{children}</header>
+  ),
+  AlertDialogTitle: ({ children }: { children?: ReactNode }) => (
+    <h2>{children}</h2>
+  ),
+  AlertDialogAction: ({
+    children,
+    loading: _loading,
+    ...props
+  }: {
+    children?: ReactNode;
+    loading?: boolean;
+  }) => <button {...props}>{children}</button>,
+}));
+
+vi.mock("seed-design/ui/callout", () => ({
+  Callout: ({ description }: { description?: ReactNode }) => (
+    <div role="alert">{description}</div>
+  ),
+}));
+
+vi.mock("seed-design/ui/text-field", () => ({
+  TextField: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  TextFieldInput: (props: { [key: string]: unknown }) => <input {...props} />,
+  TextFieldTextarea: (props: { [key: string]: unknown }) => (
+    <textarea {...props} />
+  ),
+}));
+
+vi.mock("@/lib/imagekit", () => ({
+  IMAGEKIT_URL_ENDPOINT: "https://ik.imagekit.io/yeongseon/",
 }));
 
 vi.mock("@/features/quote-requests/api/quote-requests-query", () => ({
@@ -41,17 +95,16 @@ vi.mock(
 
 describe("QuoteRequestDetailSection", () => {
   beforeEach(() => {
-    showMock.mockReset();
     detailHookMock.mockReset();
     statusLogsHookMock.mockReset();
     statusUpdateHookMock.mockReset();
 
     detailHookMock.mockReturnValue({
-      detail: {
+      data: {
         id: "quote-1",
         quoteNumber: "Q-001",
         date: "2026-03-15",
-        status: "접수",
+        status: "요청",
         quantity: 10,
         userId: "user-1",
         customerName: "홍길동",
@@ -61,9 +114,12 @@ describe("QuoteRequestDetailSection", () => {
         businessName: "영선산업",
         contactMethod: "phone",
         contactValue: "01012345678",
-        options: [],
+        options: {},
+        quotedAmount: null,
+        quoteConditions: null,
+        adminMemo: null,
         referenceImageUrls: [],
-        additionalNotes: null,
+        additionalNotes: "",
         recipientName: "수령인",
         recipientPhone: "01098765432",
         shippingPostalCode: "12345",
@@ -72,21 +128,64 @@ describe("QuoteRequestDetailSection", () => {
         deliveryMemo: null,
         deliveryRequest: "DELIVERY_REQUEST_3",
       },
-      refetch: vi.fn(),
       isLoading: false,
       error: null,
     });
-    statusLogsHookMock.mockReturnValue({ logs: [] });
+    statusLogsHookMock.mockReturnValue({
+      data: [],
+      isFetching: false,
+      error: null,
+    });
     statusUpdateHookMock.mockReturnValue({
       updateStatus: vi.fn(),
       isUpdating: false,
+      error: null,
+      successMessage: null,
     });
   });
 
   it("배송요청 코드를 한글 레이블로 표시한다", () => {
-    render(<QuoteRequestDetailSection />);
+    render(
+      <MemoryRouter>
+        <QuoteRequestDetailSection quoteRequestId="quote-1" />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText("택배함에 넣어 주세요.")).toBeInTheDocument();
     expect(screen.queryByText("DELIVERY_REQUEST_3")).not.toBeInTheDocument();
+  });
+
+  it("ImageKit https 참고 이미지만 링크로 표시한다", () => {
+    detailHookMock.mockReturnValue({
+      data: {
+        ...detailHookMock().data,
+        referenceImageUrls: [
+          "https://ik.imagekit.io/yeongseon/quote/ref.jpg",
+          "javascript:alert(1)",
+          "https://example.com/ref.jpg",
+        ],
+      },
+      isLoading: false,
+      error: null,
+    });
+
+    render(
+      <MemoryRouter>
+        <QuoteRequestDetailSection quoteRequestId="quote-1" />
+      </MemoryRouter>,
+    );
+
+    const image = screen.getByRole("img", { name: "견적 참고 이미지" });
+    expect(image).toHaveAttribute(
+      "src",
+      "https://ik.imagekit.io/yeongseon/quote/ref.jpg",
+    );
+    expect(screen.getByRole("link")).toHaveAttribute(
+      "href",
+      "https://ik.imagekit.io/yeongseon/quote/ref.jpg",
+    );
+    expect(
+      screen.getAllByRole("img", { name: "견적 참고 이미지" }),
+    ).toHaveLength(1);
   });
 });
