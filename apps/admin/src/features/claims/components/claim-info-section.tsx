@@ -1,85 +1,79 @@
-import { Descriptions, Tag } from "antd";
-import { useNavigation } from "@refinedev/core";
-import {
-  CLAIM_STATUS_COLORS,
-  CLAIM_TYPE_LABELS,
-  CLAIM_REASON_LABELS,
-} from "@yeongseon/shared";
+import { useNavigate } from "react-router-dom";
+import { CLAIM_REASON_LABELS, CLAIM_TYPE_LABELS } from "@yeongseon/shared";
+import { StatusBadge } from "@/components/StatusBadge";
+import { ClaimDetailItem } from "@/features/claims/components/claim-detail-item";
+import { getClaimStatusTone } from "@/features/claims/components/claim-status-tone";
 import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
 import { formatDateTime } from "@/utils/format-date-time";
+import "./claims.css";
 
 interface ClaimInfoSectionProps {
   claim: AdminClaimDetail;
 }
 
 export function ClaimInfoSection({ claim }: ClaimInfoSectionProps) {
-  const { show } = useNavigation();
+  const navigate = useNavigate();
 
   return (
-    <Descriptions
-      bordered
-      column={{ xs: 1, sm: 1, md: 2 }}
-      style={{ marginBottom: 24 }}
-    >
-      <Descriptions.Item label="클레임번호">
-        {claim.claimNumber}
-      </Descriptions.Item>
-      <Descriptions.Item label="접수일">
-        {formatDateTime(claim.createdAt)}
-      </Descriptions.Item>
-      <Descriptions.Item label="유형">
-        {CLAIM_TYPE_LABELS[claim.claimType]}
-      </Descriptions.Item>
-      <Descriptions.Item label="상태">
-        <Tag color={CLAIM_STATUS_COLORS[claim.status]}>{claim.status}</Tag>
-      </Descriptions.Item>
-      <Descriptions.Item label="고객명">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            show("profiles", claim.customer.userId);
-          }}
-          style={{
-            cursor: "pointer",
-            background: "none",
-            border: "none",
-            padding: 0,
-          }}
-        >
-          {claim.customer.name}
-        </button>
-      </Descriptions.Item>
-      <Descriptions.Item label="연락처">
-        {claim.customer.phone ?? "-"}
-      </Descriptions.Item>
-      <Descriptions.Item label="주문번호">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            show("admin_order_list_view", claim.linkedOrder.orderId);
-          }}
-          style={{
-            cursor: "pointer",
-            background: "none",
-            border: "none",
-            padding: 0,
-          }}
-        >
-          {claim.linkedOrder.orderNumber}
-        </button>
-      </Descriptions.Item>
-      <Descriptions.Item label="상품명">
-        {claim.productName ?? "-"}
-      </Descriptions.Item>
-      <Descriptions.Item label="사유">
-        {CLAIM_REASON_LABELS[claim.reason] ?? claim.reason}
-      </Descriptions.Item>
-      <Descriptions.Item label="수량">{claim.claimQuantity}</Descriptions.Item>
-      <Descriptions.Item label="상세설명" span={2}>
-        {claim.description ?? "-"}
-      </Descriptions.Item>
-    </Descriptions>
+    <section className="claimPanel" aria-labelledby="claim-info-title">
+      <h2 id="claim-info-title" className="claimPanelTitle">
+        클레임 정보
+      </h2>
+      <dl className="claimDetailGrid">
+        <ClaimDetailItem label="클레임번호" value={claim.claimNumber} />
+        <ClaimDetailItem
+          label="접수일"
+          value={formatDateTime(claim.createdAt)}
+        />
+        <ClaimDetailItem
+          label="유형"
+          value={CLAIM_TYPE_LABELS[claim.claimType]}
+        />
+        <ClaimDetailItem
+          label="상태"
+          value={
+            <StatusBadge tone={getClaimStatusTone(claim.status)}>
+              {claim.status}
+            </StatusBadge>
+          }
+        />
+        <ClaimDetailItem
+          label="고객명"
+          value={
+            <button
+              className="claimTextButton"
+              type="button"
+              onClick={() =>
+                navigate(`/customers/show/${claim.customer.userId}`)
+              }
+            >
+              {claim.customer.name}
+            </button>
+          }
+        />
+        <ClaimDetailItem label="연락처" value={claim.customer.phone ?? "-"} />
+        <ClaimDetailItem
+          label="주문번호"
+          value={
+            <button
+              className="claimTextButton"
+              type="button"
+              onClick={() =>
+                navigate(`/orders/show/${claim.linkedOrder.orderId}`)
+              }
+            >
+              {claim.linkedOrder.orderNumber}
+            </button>
+          }
+        />
+        <ClaimDetailItem label="상품명" value={claim.productName ?? "-"} />
+        <ClaimDetailItem
+          label="사유"
+          value={CLAIM_REASON_LABELS[claim.reason] ?? claim.reason}
+        />
+        <ClaimDetailItem label="수량" value={claim.claimQuantity} />
+        <ClaimDetailItem label="상세설명" value={claim.description ?? "-"} />
+      </dl>
+    </section>
   );
 }

@@ -1,6 +1,10 @@
-import { Descriptions, Tag, Button, Space } from "antd";
-import { ORDER_STATUS_COLORS, buildTrackingUrl } from "@yeongseon/shared";
+import { buildTrackingUrl } from "@yeongseon/shared";
+import { StatusBadge } from "@/components/StatusBadge";
+import { ClaimDetailItem } from "@/features/claims/components/claim-detail-item";
+import { getOrderStatusTone } from "@/features/claims/components/claim-status-tone";
 import type { AdminClaimOrderShipping } from "@/features/claims/types/admin-claim";
+import { formatDateTime } from "@/utils/format-date-time";
+import "./claims.css";
 
 interface OrderShippingSectionProps {
   shipping: AdminClaimOrderShipping;
@@ -13,41 +17,46 @@ export function OrderShippingSection({ shipping }: OrderShippingSectionProps) {
       : null;
 
   return (
-    <Descriptions
-      bordered
-      column={{ xs: 1, sm: 1, md: 2 }}
-      style={{ marginBottom: 24 }}
-    >
-      <Descriptions.Item label="주문상태">
-        <Tag color={ORDER_STATUS_COLORS[shipping.orderStatus]}>
-          {shipping.orderStatus}
-        </Tag>
-      </Descriptions.Item>
-      <Descriptions.Item label="택배사">
-        {shipping.courierCompany ?? "-"}
-      </Descriptions.Item>
-      <Descriptions.Item label="송장번호">
-        <Space>
-          {shipping.trackingNumber ?? "-"}
-          {trackingUrl && (
-            <Button
-              size="small"
-              href={trackingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              배송추적
-            </Button>
-          )}
-        </Space>
-      </Descriptions.Item>
-      <Descriptions.Item label="발송일">
-        {(() => {
-          if (!shipping.shippedAt) return "-";
-          const d = new Date(shipping.shippedAt);
-          return isNaN(d.getTime()) ? "-" : d.toLocaleString("ko-KR");
-        })()}
-      </Descriptions.Item>
-    </Descriptions>
+    <section className="claimPanel" aria-labelledby="claim-shipping-title">
+      <h2 id="claim-shipping-title" className="claimPanelTitle">
+        주문 배송 정보
+      </h2>
+      <dl className="claimDetailGrid">
+        <ClaimDetailItem
+          label="주문상태"
+          value={
+            <StatusBadge tone={getOrderStatusTone(shipping.orderStatus)}>
+              {shipping.orderStatus}
+            </StatusBadge>
+          }
+        />
+        <ClaimDetailItem
+          label="택배사"
+          value={shipping.courierCompany ?? "-"}
+        />
+        <ClaimDetailItem
+          label="송장번호"
+          value={
+            <span className="claimInlineRow">
+              {shipping.trackingNumber ?? "-"}
+              {trackingUrl ? (
+                <a
+                  className="claimTextButton"
+                  href={trackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  배송추적
+                </a>
+              ) : null}
+            </span>
+          }
+        />
+        <ClaimDetailItem
+          label="발송일"
+          value={formatDateTime(shipping.shippedAt)}
+        />
+      </dl>
+    </section>
   );
 }

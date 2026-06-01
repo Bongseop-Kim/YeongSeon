@@ -1,78 +1,199 @@
-import { Table, Tag, Select, Space } from "antd";
-import { useNavigation } from "@refinedev/core";
+import { useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { ClaimType } from "@yeongseon/shared";
+import { CLAIM_STATUS_OPTIONS, CLAIM_TYPE_LABELS } from "@yeongseon/shared";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Callout } from "seed-design/ui/callout";
+import { AdminDataTable } from "@/components/AdminDataTable";
+import { StatusBadge } from "@/components/StatusBadge";
 import {
-  CLAIM_STATUS_COLORS,
-  CLAIM_STATUS_OPTIONS,
-  CLAIM_TYPE_LABELS,
-} from "@yeongseon/shared";
-import { useAdminClaimTable } from "@/features/claims/api/claims-query";
+  CLAIM_PAGE_SIZE,
+  useAdminClaimTable,
+} from "@/features/claims/api/claims-query";
+import { getClaimStatusTone } from "@/features/claims/components/claim-status-tone";
 import type { AdminClaimListItem } from "@/features/claims/types/admin-claim";
 import { formatDateTime } from "@/utils/format-date-time";
+import "./claims.css";
+
+const KR_NUMBER_FORMAT = new Intl.NumberFormat("ko-KR");
+const CLAIM_TYPE_OPTIONS = Object.entries(CLAIM_TYPE_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
+const EMPTY_CLAIM_ROWS: AdminClaimListItem[] = [];
+
+function parsePageParam(value: string | null): number {
+  const page = Number(value ?? "1");
+  if (!Number.isFinite(page)) return 1;
+  return Math.max(1, Math.floor(page));
+}
+
+function normalizeStatusParam(value: string | null): string {
+  if (!value || value === "all") return "";
+  return CLAIM_STATUS_OPTIONS.some((option) => option.value === value)
+    ? value
+    : "";
+}
+
+function normalizeTypeParam(value: string | null): ClaimType | "" {
+  if (!value || value === "all") return "";
+  return CLAIM_TYPE_OPTIONS.some((option) => option.value === value)
+    ? (value as ClaimType)
+    : "";
+}
 
 export function ClaimListTable() {
-  const { show } = useNavigation();
-  const { tableProps, setFilters } = useAdminClaimTable();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parsePageParam(searchParams.get("page"));
+  const status = normalizeStatusParam(searchParams.get("status"));
+  const type = normalizeTypeParam(searchParams.get("type"));
+  const query = useAdminClaimTable({
+    page,
+    status: status || null,
+    type: type || null,
+  });
+  const rows = query.data?.rows ?? EMPTY_CLAIM_ROWS;
+  const total = query.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / CLAIM_PAGE_SIZE));
+
+  const columns = useMemo<ColumnDef<AdminClaimListItem>[]>(
+    () => [
+      { accessorKey: "claimNumber", header: "클레임번호" },
+      {
+        accessorKey: "claimType",
+        header: "유형",
+        cell: ({ row }) => CLAIM_TYPE_LABELS[row.original.claimType],
+      },
+      {
+        accessorKey: "status",
+        header: "상태",
+        cell: ({ row }) => (
+          <StatusBadge tone={getClaimStatusTone(row.original.status)}>
+            {row.original.status}
+          </StatusBadge>
+        ),
+      },
+      { accessorKey: "orderNumber", header: "주문번호" },
+      { accessorKey: "customerName", header: "고객명" },
+      {
+        accessorKey: "productName",
+        header: "상품명",
+        cell: ({ row }) => row.original.productName ?? "-",
+      },
+      {
+        accessorKey: "createdAt",
+        header: "접수일",
+        cell: ({ row }) => formatDateTime(row.original.createdAt),
+      },
+    ],
+    [],
+  );
+
+  const setFilter = (key: "status" | "type", value: string): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", "1");
+      if (value) next.set(key, value);
+      else next.delete(key);
+      return next;
+    });
+  };
+
+  const updatePage = (nextPage: number): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", String(nextPage));
+      return next;
+    });
+  };
 
   return (
-    <>
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Select
-          placeholder="상태"
-          allowClear
-          options={CLAIM_STATUS_OPTIONS}
-          onChange={(value) => {
-            setFilters([
-              { field: "status", operator: "eq", value: value || undefined },
-            ]);
-          }}
-          style={{ width: 120 }}
-        />
-        <Select
-          placeholder="유형"
-          allowClear
-          options={Object.entries(CLAIM_TYPE_LABELS).map(([value, label]) => ({
-            label,
-            value,
-          }))}
-          onChange={(value) => {
-            setFilters([
-              { field: "type", operator: "eq", value: value || undefined },
-            ]);
-          }}
-          style={{ width: 120 }}
-        />
-      </Space>
+    <section className="claimPanel" aria-labelledby="claim-list-title">
+      <div className="claimPanelHeader">
+        <div>
+          <h2 id="claim-list-title" className="claimPanelTitle">
+            클레임 목록
+            <span className="adminPanelCountBadge">
+              {KR_NUMBER_FORMAT.format(total)}건
+            </span>
+          </h2>
+          {query.isFetching ? (
+            <p className="claimMutedText">불러오는 중…</p>
+          ) : null}
+        </div>
+      </div>
 
-      <Table
-        {...tableProps}
-        rowKey="id"
-        onRow={(record: AdminClaimListItem) => ({
-          onClick: () => show("admin_claim_list_view", record.id),
-          style: { cursor: "pointer" },
-        })}
+      <form
+        className="claimToolbar"
+        onSubmit={(event) => event.preventDefault()}
       >
-        <Table.Column dataIndex="claimNumber" title="클레임번호" />
-        <Table.Column
-          dataIndex="claimType"
-          title="유형"
-          render={(v: string) =>
-            CLAIM_TYPE_LABELS[v as keyof typeof CLAIM_TYPE_LABELS] ?? v
-          }
-        />
-        <Table.Column
-          dataIndex="status"
-          title="상태"
-          render={(v: string) => <Tag color={CLAIM_STATUS_COLORS[v]}>{v}</Tag>}
-        />
-        <Table.Column dataIndex="orderNumber" title="주문번호" />
-        <Table.Column dataIndex="customerName" title="고객명" />
-        <Table.Column dataIndex="productName" title="상품명" />
-        <Table.Column
-          dataIndex="createdAt"
-          title="접수일"
-          render={formatDateTime}
-        />
-      </Table>
-    </>
+        <label className="claimFilterField">
+          <span className="claimFilterLabel">상태</span>
+          <select
+            className="claimSelect"
+            value={status || ""}
+            onChange={(event) => setFilter("status", event.target.value)}
+          >
+            <option value="">전체</option>
+            {CLAIM_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="claimFilterField">
+          <span className="claimFilterLabel">유형</span>
+          <select
+            className="claimSelect"
+            value={type || ""}
+            onChange={(event) => setFilter("type", event.target.value)}
+          >
+            <option value="">전체</option>
+            {CLAIM_TYPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </form>
+
+      {query.error ? (
+        <Callout tone="critical" description={query.error.message} />
+      ) : null}
+
+      <AdminDataTable
+        data={rows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        emptyText="클레임이 없습니다."
+        onRowClick={(row) => navigate(`/claims/show/${row.id}`)}
+        getRowActionLabel={(row) => `${row.claimNumber} 클레임 상세 보기`}
+      />
+
+      <nav className="claimPagination" aria-label="클레임 페이지네이션">
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          disabled={page <= 1}
+          onClick={() => updatePage(page - 1)}
+        >
+          이전
+        </ActionButton>
+        <span>
+          {page} / {totalPages}
+        </span>
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          disabled={page >= totalPages}
+          onClick={() => updatePage(page + 1)}
+        >
+          다음
+        </ActionButton>
+      </nav>
+    </section>
   );
 }

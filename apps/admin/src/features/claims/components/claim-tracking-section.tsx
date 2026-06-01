@@ -1,27 +1,36 @@
-import { Button, Flex, Input, Select } from "antd";
 import {
   COURIER_COMPANY_NAMES,
   buildTrackingUrl,
 } from "@yeongseon/shared/constants/courier-companies";
+import { ActionButton } from "seed-design/ui/action-button";
+import "./claims.css";
+
+const COURIER_OPTIONS = COURIER_COMPANY_NAMES.map((name) => ({
+  label: name,
+  value: name,
+}));
+
+const TRACKING_TITLE = {
+  return: "수거 정보",
+  resend: "재발송 정보",
+} as const;
+
+const TRACKING_LABEL = {
+  return: "수거추적",
+  resend: "배송추적",
+} as const;
 
 interface ClaimTrackingSectionProps {
-  claimId: string;
   trackingType: "return" | "resend";
   courierCompany: string;
   trackingNumber: string;
   onCourierChange: (value: string) => void;
   onTrackingNumberChange: (value: string) => void;
-  onSave: (
-    claimId: string,
-    trackingType: "return" | "resend",
-    courierCompany: string,
-    trackingNumber: string,
-  ) => void;
+  onSave: () => void;
   isPending: boolean;
 }
 
 export function ClaimTrackingSection({
-  claimId,
   trackingType,
   courierCompany,
   trackingNumber,
@@ -35,41 +44,53 @@ export function ClaimTrackingSection({
       ? buildTrackingUrl(courierCompany, trackingNumber)
       : null;
 
-  const trackingLabel = trackingType === "return" ? "수거추적" : "배송추적";
-
   return (
-    <Flex wrap="wrap" gap={8} style={{ width: "100%", marginBottom: 24 }}>
-      <Select
-        value={courierCompany || undefined}
-        placeholder="택배사 선택"
-        onChange={(value) => onCourierChange(value ?? "")}
-        style={{ flex: 1, minWidth: 140 }}
-        options={COURIER_COMPANY_NAMES.map((name) => ({
-          label: name,
-          value: name,
-        }))}
-        allowClear
-      />
-      <Input
-        value={trackingNumber}
-        placeholder="송장번호"
-        onChange={(e) => onTrackingNumberChange(e.target.value)}
-        style={{ flex: 1, minWidth: 140 }}
-      />
-      <Button
-        type="primary"
-        onClick={() =>
-          onSave(claimId, trackingType, courierCompany, trackingNumber)
-        }
-        loading={isPending}
-      >
-        저장
-      </Button>
-      {trackingUrl && (
-        <Button href={trackingUrl} target="_blank" rel="noopener noreferrer">
-          {trackingLabel}
-        </Button>
-      )}
-    </Flex>
+    <section
+      className="claimPanel"
+      aria-labelledby={`${trackingType}-tracking-title`}
+    >
+      <h2 id={`${trackingType}-tracking-title`} className="claimPanelTitle">
+        {TRACKING_TITLE[trackingType]}
+      </h2>
+      <div className="claimTrackingForm">
+        <label className="claimTrackingField">
+          <span className="claimFilterLabel">택배사</span>
+          <select
+            className="claimSelect"
+            value={courierCompany}
+            onChange={(event) => onCourierChange(event.target.value)}
+          >
+            <option value="">택배사 선택</option>
+            {COURIER_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="claimTrackingField">
+          <span className="claimFilterLabel">송장번호</span>
+          <input
+            className="claimInput"
+            value={trackingNumber}
+            placeholder="송장번호"
+            onChange={(event) => onTrackingNumberChange(event.target.value)}
+          />
+        </label>
+        <ActionButton type="button" loading={isPending} onClick={onSave}>
+          저장
+        </ActionButton>
+        {trackingUrl ? (
+          <a
+            className="claimTextButton"
+            href={trackingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {TRACKING_LABEL[trackingType]}
+          </a>
+        ) : null}
+      </div>
+    </section>
   );
 }
