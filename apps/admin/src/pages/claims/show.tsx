@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useParams } from "react-router-dom";
 import { CLAIM_ROLLBACK_FLOW, CLAIM_STATUS_FLOW } from "@yeongseon/shared";
 import { Callout } from "seed-design/ui/callout";
@@ -62,14 +63,18 @@ export default function ClaimShow() {
   return (
     <main className="claimPage">
       <header className="claimHeader">
-        <h1 className="claimTitle">클레임 상세</h1>
-        <p className="claimDescription">
+        <Text as="h1" textStyle="screenTitle" className="claimTitle">
+          클레임 상세
+        </Text>
+        <Text as="p" textStyle="t4Regular" className="claimDescription">
           클레임 정보, 주문 배송, 수거·재발송 송장, 상태 이력을 관리합니다.
-        </p>
+        </Text>
       </header>
 
       {claimQuery.isLoading ? (
-        <p className="claimMutedText">클레임 정보를 불러오는 중…</p>
+        <Text as="p" textStyle="t4Regular" className="claimMutedText">
+          클레임 정보를 불러오는 중…
+        </Text>
       ) : null}
       {claimQuery.error ? (
         <Callout tone="critical" description={claimQuery.error.message} />
@@ -153,11 +158,18 @@ export default function ClaimShow() {
       <section className="claimPanel" aria-labelledby="claim-status-log-title">
         <div className="claimPanelHeader">
           <div>
-            <h2 id="claim-status-log-title" className="claimPanelTitle">
+            <Text
+              as="h2"
+              textStyle="t6Bold"
+              id="claim-status-log-title"
+              className="claimPanelTitle"
+            >
               상태 변경 이력
-            </h2>
+            </Text>
             {logsQuery.isFetching ? (
-              <p className="claimMutedText">상태 이력을 불러오는 중…</p>
+              <Text as="p" textStyle="t4Regular" className="claimMutedText">
+                상태 이력을 불러오는 중…
+              </Text>
             ) : null}
           </div>
         </div>

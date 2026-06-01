@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -74,7 +75,13 @@ export function ProductListTable() {
               loading="lazy"
             />
           ) : (
-            <span className="productImageFallback">이미지 없음</span>
+            <Text
+              as="span"
+              textStyle="t4Regular"
+              className="productImageFallback"
+            >
+              이미지 없음
+            </Text>
           ),
       },
       {
@@ -122,14 +129,21 @@ export function ProductListTable() {
     <section className="productPanel" aria-labelledby="product-list-title">
       <div className="productPanelHeader">
         <div>
-          <h2 id="product-list-title" className="productPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="product-list-title"
+            className="productPanelTitle"
+          >
             상품 목록
-            <span className="adminPanelCountBadge">
+            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
               {KR_NUMBER_FORMAT.format(total)}건
-            </span>
-          </h2>
+            </Text>
+          </Text>
           {query.isFetching ? (
-            <p className="productMutedText">불러오는 중…</p>
+            <Text as="p" textStyle="t4Regular" className="productMutedText">
+              불러오는 중…
+            </Text>
           ) : null}
         </div>
       </div>
@@ -176,9 +190,9 @@ export function ProductListTable() {
         >
           이전
         </ActionButton>
-        <span>
+        <Text as="span" textStyle="t4Regular">
           {page} / {totalPages}
-        </span>
+        </Text>
         <ActionButton
           type="button"
           variant="neutralWeak"

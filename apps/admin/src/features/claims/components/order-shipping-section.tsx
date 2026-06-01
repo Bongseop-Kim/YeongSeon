@@ -5,6 +5,7 @@ import { getOrderStatusTone } from "@/features/claims/components/claim-status-to
 import type { AdminClaimOrderShipping } from "@/features/claims/types/admin-claim";
 import { formatDateTime } from "@/utils/format-date-time";
 import "./claims.css";
+import { Text } from "seed-design/ui/text";
 
 interface OrderShippingSectionProps {
   shipping: AdminClaimOrderShipping;
@@ -18,9 +19,14 @@ export function OrderShippingSection({ shipping }: OrderShippingSectionProps) {
 
   return (
     <section className="claimPanel" aria-labelledby="claim-shipping-title">
-      <h2 id="claim-shipping-title" className="claimPanelTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="claim-shipping-title"
+        className="claimPanelTitle"
+      >
         주문 배송 정보
-      </h2>
+      </Text>
       <dl className="claimDetailGrid">
         <ClaimDetailItem
           label="주문상태"

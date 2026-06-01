@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import type { AdminReformOrderItem } from "@/features/orders/types/admin-order";
 import { OrderDetailGrid, OrderDetailItem } from "./order-detail-grid";
 
@@ -15,14 +16,18 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
 
   return (
     <div className="orderOptionCard">
-      <h2 className="orderSectionTitle">수선 상세</h2>
+      <Text as="h2" textStyle="t6Bold" className="orderSectionTitle">
+        수선 상세
+      </Text>
       {repairItems.map((item, index) => {
         if (!item.reformData) return null;
         const { ties } = item.reformData;
 
         return (
           <section key={item.id} className="orderRepairCard">
-            <h3 className="orderSubsectionTitle">넥타이 {index + 1}</h3>
+            <Text as="h3" textStyle="t5Bold" className="orderSubsectionTitle">
+              넥타이 {index + 1}
+            </Text>
             {ties.length === 0 ? (
               <OrderDetailGrid>
                 <OrderDetailItem label="수량">{item.quantity}</OrderDetailItem>

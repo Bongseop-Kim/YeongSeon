@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { AdminDataTable } from "@/components/AdminDataTable";
@@ -41,7 +42,11 @@ function formatNullablePercent(
 }
 
 function NumberCell({ children }: { children: string }) {
-  return <span className="generationLogNumberCell">{children}</span>;
+  return (
+    <Text as="span" textStyle="t4Regular" className="generationLogNumberCell">
+      {children}
+    </Text>
+  );
 }
 
 export function DesignContextStats({
@@ -214,7 +219,11 @@ export function DesignContextStats({
           </button>
         ))}
       </div>
-      {loading ? <p className="generationLogMutedText">불러오는 중…</p> : null}
+      {loading ? (
+        <Text as="p" textStyle="t4Regular" className="generationLogMutedText">
+          불러오는 중…
+        </Text>
+      ) : null}
       {activeTab === "by_model" ? (
         <AdminDataTable
           data={byModel}

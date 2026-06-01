@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CLAIM_TYPE_LABELS } from "@yeongseon/shared";
 import { AdminDataTable } from "@/components/AdminDataTable";
@@ -35,10 +36,10 @@ const columns: ColumnDef<AdminOrderHistoryEntry>[] = [
     header: "클레임 정보",
     cell: ({ row }) =>
       row.original.kind === "claim" ? (
-        <span>
+        <Text as="span" textStyle="t4Regular">
           <StatusBadge>{CLAIM_TYPE_LABELS[row.original.claimType]}</StatusBadge>{" "}
           {row.original.claimNumber}
-        </span>
+        </Text>
       ) : (
         "-"
       ),

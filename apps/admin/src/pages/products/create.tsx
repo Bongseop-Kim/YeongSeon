@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { ProductForm, useAdminProductCreateForm } from "@/features/products";
 import "@/features/products/components/products.css";
 
@@ -7,10 +8,12 @@ export default function ProductCreate() {
   return (
     <main className="productPage">
       <header className="productPageTitleGroup">
-        <h1 className="productPageTitle">상품 생성</h1>
-        <p className="productPageDescription">
+        <Text as="h1" textStyle="screenTitle" className="productPageTitle">
+          상품 생성
+        </Text>
+        <Text as="p" textStyle="t4Regular" className="productPageDescription">
           상품 기본 정보와 이미지를 등록합니다.
-        </p>
+        </Text>
       </header>
       <ProductForm mode="create" {...formHook} />
     </main>

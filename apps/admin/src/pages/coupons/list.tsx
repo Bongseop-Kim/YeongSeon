@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -33,7 +34,11 @@ const COUPON_COLUMNS: ColumnDef<AdminCoupon>[] = [
   {
     id: "discountValue",
     header: "할인값",
-    cell: ({ row }) => <span>{formatDiscount(row.original)}</span>,
+    cell: ({ row }) => (
+      <Text as="span" textStyle="t4Regular">
+        {formatDiscount(row.original)}
+      </Text>
+    ),
   },
   { accessorKey: "expiryDate", header: "만료일" },
   {
@@ -64,10 +69,12 @@ export default function CouponList() {
     <main className="couponPage">
       <header className="couponPageHeader">
         <div className="couponPageTitleGroup">
-          <h1 className="couponPageTitle">쿠폰</h1>
-          <p className="couponPageDescription">
+          <Text as="h1" textStyle="screenTitle" className="couponPageTitle">
+            쿠폰
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="couponPageDescription">
             생성된 쿠폰을 최신순으로 확인합니다.
-          </p>
+          </Text>
         </div>
         <ActionButton type="button" onClick={() => navigate("/coupons/create")}>
           쿠폰 생성
@@ -83,14 +90,21 @@ export default function CouponList() {
         aria-labelledby="coupon-list-title"
       >
         <div className="couponPanelHeader">
-          <h2 id="coupon-list-title" className="couponPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="coupon-list-title"
+            className="couponPanelTitle"
+          >
             쿠폰 목록
-            <span className="adminPanelCountBadge">
+            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
               {KR_NUMBER_FORMAT.format(total)}건
-            </span>
-          </h2>
+            </Text>
+          </Text>
           {query.isFetching ? (
-            <span aria-live="polite">불러오는 중…</span>
+            <Text as="span" textStyle="t4Regular" aria-live="polite">
+              불러오는 중…
+            </Text>
           ) : null}
         </div>
 
@@ -112,9 +126,9 @@ export default function CouponList() {
           >
             이전
           </ActionButton>
-          <span>
+          <Text as="span" textStyle="t4Regular">
             {page} / {totalPages}
-          </span>
+          </Text>
           <ActionButton
             type="button"
             variant="neutralWeak"

@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -52,8 +53,12 @@ function formatDateTime(value: string): string {
 function DetailItem({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="quoteRequestDetailItem">
-      <dt className="quoteRequestDetailLabel">{label}</dt>
-      <dd>{value}</dd>
+      <Text as="dt" textStyle="t4Medium" className="quoteRequestDetailLabel">
+        {label}
+      </Text>
+      <Text as="dd" textStyle="t4Regular">
+        {value}
+      </Text>
     </div>
   );
 }
@@ -149,7 +154,11 @@ export function QuoteRequestDetailSection({
   );
 
   if (detailQuery.isLoading) {
-    return <p className="quoteRequestMutedText">견적 정보를 불러오는 중…</p>;
+    return (
+      <Text as="p" textStyle="t4Regular" className="quoteRequestMutedText">
+        견적 정보를 불러오는 중…
+      </Text>
+    );
   }
 
   if (detailQuery.error) {
@@ -215,9 +224,14 @@ export function QuoteRequestDetailSection({
         className="quoteRequestPanel"
         aria-labelledby="quote-basic-title"
       >
-        <h2 id="quote-basic-title" className="quoteRequestPanelTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="quote-basic-title"
+          className="quoteRequestPanelTitle"
+        >
           견적 기본 정보
-        </h2>
+        </Text>
         <dl className="quoteRequestDetailGrid">
           <DetailItem label="견적번호" value={detail.quoteNumber} />
           <DetailItem label="요청일" value={detail.date} />
@@ -258,9 +272,14 @@ export function QuoteRequestDetailSection({
         className="quoteRequestPanel"
         aria-labelledby="quote-contact-title"
       >
-        <h2 id="quote-contact-title" className="quoteRequestPanelTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="quote-contact-title"
+          className="quoteRequestPanelTitle"
+        >
           담당자 연락처
-        </h2>
+        </Text>
         <dl className="quoteRequestDetailGrid">
           <DetailItem label="성함" value={detail.contactName} />
           <DetailItem label="상호명" value={detail.businessName || "-"} />
@@ -283,9 +302,14 @@ export function QuoteRequestDetailSection({
           className="quoteRequestPanel"
           aria-labelledby="quote-images-title"
         >
-          <h2 id="quote-images-title" className="quoteRequestPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="quote-images-title"
+            className="quoteRequestPanelTitle"
+          >
             참고 이미지
-          </h2>
+          </Text>
           <ul className="quoteRequestImageList">
             {safeReferenceImageUrls.map((url) => (
               <li key={url}>
@@ -307,10 +331,17 @@ export function QuoteRequestDetailSection({
           className="quoteRequestPanel"
           aria-labelledby="quote-notes-title"
         >
-          <h2 id="quote-notes-title" className="quoteRequestPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="quote-notes-title"
+            className="quoteRequestPanelTitle"
+          >
             추가 요청사항
-          </h2>
-          <p className="quoteRequestLongText">{detail.additionalNotes}</p>
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="quoteRequestLongText">
+            {detail.additionalNotes}
+          </Text>
         </section>
       ) : null}
 
@@ -318,9 +349,14 @@ export function QuoteRequestDetailSection({
         className="quoteRequestPanel"
         aria-labelledby="quote-shipping-title"
       >
-        <h2 id="quote-shipping-title" className="quoteRequestPanelTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="quote-shipping-title"
+          className="quoteRequestPanelTitle"
+        >
           배송지 정보
-        </h2>
+        </Text>
         <dl className="quoteRequestDetailGrid">
           <DetailItem label="수령인" value={detail.recipientName ?? "-"} />
           <DetailItem label="연락처" value={detail.recipientPhone ?? "-"} />
@@ -338,9 +374,14 @@ export function QuoteRequestDetailSection({
         className="quoteRequestPanel"
         aria-labelledby="quote-input-title"
       >
-        <h2 id="quote-input-title" className="quoteRequestPanelTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="quote-input-title"
+          className="quoteRequestPanelTitle"
+        >
           견적 입력
-        </h2>
+        </Text>
         <div className="quoteRequestFormGrid">
           <TextField
             label="견적금액"
@@ -412,11 +453,22 @@ export function QuoteRequestDetailSection({
       <section className="quoteRequestPanel" aria-labelledby="quote-log-title">
         <div className="quoteRequestPanelHeader">
           <div>
-            <h2 id="quote-log-title" className="quoteRequestPanelTitle">
+            <Text
+              as="h2"
+              textStyle="t6Bold"
+              id="quote-log-title"
+              className="quoteRequestPanelTitle"
+            >
               상태 변경 이력
-            </h2>
+            </Text>
             {logsQuery.isFetching ? (
-              <p className="quoteRequestMutedText">상태 이력을 불러오는 중…</p>
+              <Text
+                as="p"
+                textStyle="t4Regular"
+                className="quoteRequestMutedText"
+              >
+                상태 이력을 불러오는 중…
+              </Text>
             ) : null}
           </div>
         </div>

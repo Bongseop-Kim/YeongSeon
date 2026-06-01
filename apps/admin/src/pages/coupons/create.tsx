@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Callout } from "seed-design/ui/callout";
@@ -33,8 +34,12 @@ export default function CouponCreate() {
     <main className="couponPage adminSettingsPage">
       <header className="couponPageHeader">
         <div className="couponPageTitleGroup">
-          <h1 className="couponPageTitle">쿠폰 생성</h1>
-          <p className="couponPageDescription">관리자 쿠폰을 생성합니다.</p>
+          <Text as="h1" textStyle="screenTitle" className="couponPageTitle">
+            쿠폰 생성
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="couponPageDescription">
+            관리자 쿠폰을 생성합니다.
+          </Text>
         </div>
       </header>
 
@@ -50,9 +55,14 @@ export default function CouponCreate() {
         className="couponPanel adminSettingsCard"
         aria-labelledby="coupon-create-form-title"
       >
-        <h2 id="coupon-create-form-title" className="couponPanelTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="coupon-create-form-title"
+          className="couponPanelTitle"
+        >
           기본 정보
-        </h2>
+        </Text>
         <form onSubmit={onSubmit} noValidate>
           <CouponForm
             control={control}

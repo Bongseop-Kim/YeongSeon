@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import type { ReactNode } from "react";
 
 interface OrderDetailGridProps {
@@ -25,8 +26,12 @@ export function OrderDetailItem({
 
   return (
     <div className={className}>
-      <dt className="orderDetailLabel">{label}</dt>
-      <dd className="orderDetailValue">{children}</dd>
+      <Text as="dt" textStyle="t4Medium" className="orderDetailLabel">
+        {label}
+      </Text>
+      <Text as="dd" textStyle="t4Regular" className="orderDetailValue">
+        {children}
+      </Text>
     </div>
   );
 }

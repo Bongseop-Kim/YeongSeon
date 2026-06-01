@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -116,14 +117,21 @@ export function CustomerListTable() {
     <section className="customerPanel" aria-labelledby="customer-list-title">
       <div className="customerPanelHeader">
         <div>
-          <h2 id="customer-list-title" className="customerPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="customer-list-title"
+            className="customerPanelTitle"
+          >
             고객 목록
-            <span className="adminPanelCountBadge">
+            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
               {KR_NUMBER_FORMAT.format(total)}건
-            </span>
-          </h2>
+            </Text>
+          </Text>
           {query.isFetching ? (
-            <p className="customerMutedText">불러오는 중…</p>
+            <Text as="p" textStyle="t4Regular" className="customerMutedText">
+              불러오는 중…
+            </Text>
           ) : null}
         </div>
       </div>
@@ -135,7 +143,9 @@ export function CustomerListTable() {
           event.preventDefault();
         }}
       >
-        <span className="customerSearchLabel">검색</span>
+        <Text as="span" textStyle="t3Bold" className="customerSearchLabel">
+          검색
+        </Text>
         <div className="customerSearchControls">
           <div className="customerSearchFieldSlot">
             <TextField
@@ -175,9 +185,9 @@ export function CustomerListTable() {
         >
           이전
         </ActionButton>
-        <span>
+        <Text as="span" textStyle="t4Regular">
           {page} / {totalPages}
-        </span>
+        </Text>
         <ActionButton
           type="button"
           variant="neutralWeak"

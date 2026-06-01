@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
@@ -166,14 +167,21 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
     <section className="orderPanel" aria-labelledby="order-list-title">
       <div className="orderPanelHeader">
         <div className="orderPanelTitleGroup">
-          <h2 id="order-list-title" className="orderPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="order-list-title"
+            className="orderPanelTitle"
+          >
             주문 목록
-            <span className="adminPanelCountBadge">
+            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
               {KR_NUMBER_FORMAT.format(total)}건
-            </span>
-          </h2>
+            </Text>
+          </Text>
           {query.isFetching ? (
-            <p className="orderMutedText">불러오는 중…</p>
+            <Text as="p" textStyle="t4Regular" className="orderMutedText">
+              불러오는 중…
+            </Text>
           ) : null}
         </div>
       </div>
@@ -183,7 +191,9 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
         onSubmit={(event) => event.preventDefault()}
       >
         <label className="orderField orderSearchField">
-          <span className="orderFieldLabel">주문번호</span>
+          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
+            주문번호
+          </Text>
           <input
             className="orderInput"
             value={orderNumber}
@@ -194,7 +204,9 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
           />
         </label>
         <label className="orderSelectField">
-          <span className="orderFieldLabel">상태</span>
+          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
+            상태
+          </Text>
           <select
             className="orderSelect"
             value={status}
@@ -208,7 +220,9 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
           </select>
         </label>
         <label className="orderField">
-          <span className="orderFieldLabel">시작일</span>
+          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
+            시작일
+          </Text>
           <input
             className="orderInput"
             type="date"
@@ -217,7 +231,9 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
           />
         </label>
         <label className="orderField">
-          <span className="orderFieldLabel">종료일</span>
+          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
+            종료일
+          </Text>
           <input
             className="orderInput"
             type="date"
@@ -248,9 +264,9 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
         >
           이전
         </ActionButton>
-        <span>
+        <Text as="span" textStyle="t4Regular">
           {page} / {totalPages}
-        </span>
+        </Text>
         <ActionButton
           type="button"
           variant="neutralWeak"

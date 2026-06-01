@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useCallback } from "react";
 import type { ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -74,12 +75,17 @@ export function CouponIssueDialog({
     >
       <header className="couponModalHeader">
         <div>
-          <h2 id="coupon-issue-title" className="couponModalTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="coupon-issue-title"
+            className="couponModalTitle"
+          >
             쿠폰 발급
-          </h2>
-          <p className="couponPageDescription">
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="couponPageDescription">
             대상 고객을 선택해 쿠폰을 발급합니다.
-          </p>
+          </Text>
         </div>
         <ActionButton type="button" variant="neutralWeak" onClick={onClose}>
           닫기
@@ -94,7 +100,9 @@ export function CouponIssueDialog({
       >
         {COUPON_PRESET_KEYS.map((preset) => (
           <Chip.RadioItem key={preset} value={preset}>
-            <span>{COUPON_PRESET_LABELS[preset]}</span>
+            <Text as="span" textStyle="t4Regular">
+              {COUPON_PRESET_LABELS[preset]}
+            </Text>
           </Chip.RadioItem>
         ))}
       </Chip.RadioRoot>
@@ -115,10 +123,10 @@ export function CouponIssueDialog({
         />
       </div>
 
-      <p aria-live="polite">
+      <Text as="p" textStyle="t4Regular" aria-live="polite">
         {KR_NUMBER_FORMAT.format(selectedUserIds.size)}명 선택됨
         {isFetching ? " · 고객 조회 중…" : ""}
-      </p>
+      </Text>
 
       <AdminDataTable
         data={users}

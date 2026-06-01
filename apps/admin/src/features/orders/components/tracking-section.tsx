@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { ActionButton } from "seed-design/ui/action-button";
 import {
   COURIER_COMPANY_NAMES,
@@ -40,7 +41,9 @@ export function TrackingSection({
     <div className="orderTrackingSection">
       <div className="orderTrackingControls">
         <label className="orderSelectField">
-          <span className="orderFieldLabel">택배사</span>
+          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
+            택배사
+          </Text>
           <select
             className="orderSelect"
             disabled={isReadOnly}
@@ -56,7 +59,9 @@ export function TrackingSection({
           </select>
         </label>
         <label className="orderField">
-          <span className="orderFieldLabel">송장번호</span>
+          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
+            송장번호
+          </Text>
           <input
             className="orderInput"
             disabled={isReadOnly}
@@ -87,9 +92,9 @@ export function TrackingSection({
         ) : null}
       </div>
       {shippedAt ? (
-        <p className="orderMutedText">
+        <Text as="p" textStyle="t4Regular" className="orderMutedText">
           발송일시: {new Date(shippedAt).toLocaleString("ko-KR")}
-        </p>
+        </Text>
       ) : null}
     </div>
   );

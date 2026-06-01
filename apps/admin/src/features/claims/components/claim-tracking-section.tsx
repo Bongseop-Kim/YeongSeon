@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import {
   COURIER_COMPANY_NAMES,
   buildTrackingUrl,
@@ -49,12 +50,19 @@ export function ClaimTrackingSection({
       className="claimPanel"
       aria-labelledby={`${trackingType}-tracking-title`}
     >
-      <h2 id={`${trackingType}-tracking-title`} className="claimPanelTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id={`${trackingType}-tracking-title`}
+        className="claimPanelTitle"
+      >
         {TRACKING_TITLE[trackingType]}
-      </h2>
+      </Text>
       <div className="claimTrackingForm">
         <label className="claimTrackingField">
-          <span className="claimFilterLabel">택배사</span>
+          <Text as="span" textStyle="t3Bold" className="claimFilterLabel">
+            택배사
+          </Text>
           <select
             className="claimSelect"
             value={courierCompany}
@@ -69,7 +77,9 @@ export function ClaimTrackingSection({
           </select>
         </label>
         <label className="claimTrackingField">
-          <span className="claimFilterLabel">송장번호</span>
+          <Text as="span" textStyle="t3Bold" className="claimFilterLabel">
+            송장번호
+          </Text>
           <input
             className="claimInput"
             value={trackingNumber}

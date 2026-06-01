@@ -4,6 +4,7 @@ import { ActionButton } from "seed-design/ui/action-button";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { AdminActiveClaimSummary } from "@/features/orders/types/admin-order";
 import { OrderDetailGrid, OrderDetailItem } from "./order-detail-grid";
+import { Text } from "seed-design/ui/text";
 
 interface ActiveClaimSectionProps {
   claim: AdminActiveClaimSummary;
@@ -15,9 +16,14 @@ export function ActiveClaimSection({ claim }: ActiveClaimSectionProps) {
   return (
     <section className="orderPanel" aria-labelledby="active-claim-title">
       <div className="orderPanelHeader">
-        <h2 id="active-claim-title" className="orderSectionTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="active-claim-title"
+          className="orderSectionTitle"
+        >
           활성 클레임
-        </h2>
+        </Text>
         <ActionButton
           type="button"
           variant="neutralWeak"

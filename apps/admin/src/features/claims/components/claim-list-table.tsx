@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -112,14 +113,21 @@ export function ClaimListTable() {
     <section className="claimPanel" aria-labelledby="claim-list-title">
       <div className="claimPanelHeader">
         <div>
-          <h2 id="claim-list-title" className="claimPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="claim-list-title"
+            className="claimPanelTitle"
+          >
             클레임 목록
-            <span className="adminPanelCountBadge">
+            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
               {KR_NUMBER_FORMAT.format(total)}건
-            </span>
-          </h2>
+            </Text>
+          </Text>
           {query.isFetching ? (
-            <p className="claimMutedText">불러오는 중…</p>
+            <Text as="p" textStyle="t4Regular" className="claimMutedText">
+              불러오는 중…
+            </Text>
           ) : null}
         </div>
       </div>
@@ -129,7 +137,9 @@ export function ClaimListTable() {
         onSubmit={(event) => event.preventDefault()}
       >
         <label className="claimFilterField">
-          <span className="claimFilterLabel">상태</span>
+          <Text as="span" textStyle="t3Bold" className="claimFilterLabel">
+            상태
+          </Text>
           <select
             className="claimSelect"
             value={status || ""}
@@ -144,7 +154,9 @@ export function ClaimListTable() {
           </select>
         </label>
         <label className="claimFilterField">
-          <span className="claimFilterLabel">유형</span>
+          <Text as="span" textStyle="t3Bold" className="claimFilterLabel">
+            유형
+          </Text>
           <select
             className="claimSelect"
             value={type || ""}
@@ -182,9 +194,9 @@ export function ClaimListTable() {
         >
           이전
         </ActionButton>
-        <span>
+        <Text as="span" textStyle="t4Regular">
           {page} / {totalPages}
-        </span>
+        </Text>
         <ActionButton
           type="button"
           variant="neutralWeak"

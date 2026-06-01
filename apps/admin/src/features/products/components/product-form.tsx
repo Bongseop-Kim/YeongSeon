@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useRef, useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -221,9 +222,14 @@ export function ProductForm({
     <form className="productForm" onSubmit={handleFormSubmit}>
       <section className="productPanel" aria-labelledby="product-basic-title">
         <div className="productPanelHeader">
-          <h2 id="product-basic-title" className="productPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="product-basic-title"
+            className="productPanelTitle"
+          >
             기본 정보
-          </h2>
+          </Text>
         </div>
 
         <div className="productFormGrid">
@@ -274,7 +280,9 @@ export function ProductForm({
           </TextField>
 
           <label className="productSelectField">
-            <span className="productFieldLabel">카테고리 *</span>
+            <Text as="span" textStyle="t3Bold" className="productFieldLabel">
+              카테고리 *
+            </Text>
             <select
               className="productSelect"
               value={values.category}
@@ -286,7 +294,9 @@ export function ProductForm({
           </label>
 
           <label className="productSelectField">
-            <span className="productFieldLabel">색상 *</span>
+            <Text as="span" textStyle="t3Bold" className="productFieldLabel">
+              색상 *
+            </Text>
             <select
               className="productSelect"
               value={values.color}
@@ -298,7 +308,9 @@ export function ProductForm({
           </label>
 
           <label className="productSelectField">
-            <span className="productFieldLabel">패턴 *</span>
+            <Text as="span" textStyle="t3Bold" className="productFieldLabel">
+              패턴 *
+            </Text>
             <select
               className="productSelect"
               value={values.pattern}
@@ -310,7 +322,9 @@ export function ProductForm({
           </label>
 
           <label className="productSelectField">
-            <span className="productFieldLabel">소재 *</span>
+            <Text as="span" textStyle="t3Bold" className="productFieldLabel">
+              소재 *
+            </Text>
             <select
               className="productSelect"
               value={values.material}
@@ -357,12 +371,21 @@ export function ProductForm({
       <section className="productPanel" aria-labelledby="product-image-title">
         <div className="productPanelHeader">
           <div>
-            <h2 id="product-image-title" className="productPanelTitle">
+            <Text
+              as="h2"
+              textStyle="t6Bold"
+              id="product-image-title"
+              className="productPanelTitle"
+            >
               상품 이미지
-            </h2>
-            <p className="productPanelDescription">
+            </Text>
+            <Text
+              as="p"
+              textStyle="t4Regular"
+              className="productPanelDescription"
+            >
               첫 번째 이미지가 대표 이미지로 저장됩니다.
-            </p>
+            </Text>
           </div>
         </div>
 
@@ -384,12 +407,14 @@ export function ProductForm({
           >
             {imageUpload.uploading ? "업로드 중…" : "이미지 추가"}
           </ActionButton>
-          <span className="productMutedText">
+          <Text as="span" textStyle="t4Regular" className="productMutedText">
             JPG, PNG, GIF, WebP · 최대 10MB
-          </span>
+          </Text>
         </div>
         {imageError || imageUpload.error ? (
-          <p className="productErrorText">{imageError ?? imageUpload.error}</p>
+          <Text as="p" textStyle="t4Regular" className="productErrorText">
+            {imageError ?? imageUpload.error}
+          </Text>
         ) : null}
         <ul className="productImageList">
           {imageUpload.fileList.map((file, index) => (
@@ -406,13 +431,25 @@ export function ProductForm({
                 </div>
               )}
               <div className="productImageMeta">
-                <strong>{file.name}</strong>
+                <Text as="strong" textStyle="t5Bold">
+                  {file.name}
+                </Text>
                 {index === 0 && file.status === "done" ? (
-                  <span className="productPrimaryImage">대표</span>
+                  <Text
+                    as="span"
+                    textStyle="t4Regular"
+                    className="productPrimaryImage"
+                  >
+                    대표
+                  </Text>
                 ) : null}
-                <span className="productMutedText">
+                <Text
+                  as="span"
+                  textStyle="t4Regular"
+                  className="productMutedText"
+                >
                   {file.status === "done" ? "업로드 완료" : "업로드 중"}
-                </span>
+                </Text>
               </div>
               <div className="productImageControls">
                 <ActionButton
@@ -447,12 +484,21 @@ export function ProductForm({
       <section className="productPanel" aria-labelledby="product-option-title">
         <div className="productPanelHeader">
           <div>
-            <h2 id="product-option-title" className="productPanelTitle">
+            <Text
+              as="h2"
+              textStyle="t6Bold"
+              id="product-option-title"
+              className="productPanelTitle"
+            >
               옵션
-            </h2>
-            <p className="productPanelDescription">
+            </Text>
+            <Text
+              as="p"
+              textStyle="t4Regular"
+              className="productPanelDescription"
+            >
               옵션을 추가하면 상품 단일 재고 대신 옵션 재고를 사용합니다.
-            </p>
+            </Text>
           </div>
           <ActionButton type="button" variant="neutralWeak" onClick={addOption}>
             옵션 추가
@@ -485,7 +531,9 @@ export function ProductForm({
             </div>
           </>
         ) : (
-          <p className="productMutedText">등록된 옵션이 없습니다.</p>
+          <Text as="p" textStyle="t4Regular" className="productMutedText">
+            등록된 옵션이 없습니다.
+          </Text>
         )}
       </section>
 

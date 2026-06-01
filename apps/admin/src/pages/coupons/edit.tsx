@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useCallback, useEffect, useMemo, useReducer } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -274,10 +275,12 @@ export default function CouponEdit(): ReactNode {
     <main className="couponPage adminSettingsPage">
       <header className="couponPageHeader">
         <div className="couponPageTitleGroup">
-          <h1 className="couponPageTitle">쿠폰 수정</h1>
-          <p className="couponPageDescription">
+          <Text as="h1" textStyle="screenTitle" className="couponPageTitle">
+            쿠폰 수정
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="couponPageDescription">
             쿠폰 정보와 발급 내역을 관리합니다.
-          </p>
+          </Text>
         </div>
       </header>
 
@@ -297,9 +300,14 @@ export default function CouponEdit(): ReactNode {
         className="couponPanel adminSettingsCard"
         aria-labelledby="coupon-edit-form-title"
       >
-        <h2 id="coupon-edit-form-title" className="couponPanelTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="coupon-edit-form-title"
+          className="couponPanelTitle"
+        >
           기본 정보
-        </h2>
+        </Text>
         <form onSubmit={submitCoupon} noValidate>
           <CouponForm
             control={control}

@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { AdminCustomerDetail } from "@/features/customers/types/admin-customer";
 import "./customers.css";
@@ -9,39 +10,64 @@ interface Props {
 export function CustomerProfileSection({ customer }: Props) {
   return (
     <section className="customerPanel" aria-labelledby="customer-profile-title">
-      <h2 id="customer-profile-title" className="customerPanelTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="customer-profile-title"
+        className="customerPanelTitle"
+      >
         기본 정보
-      </h2>
+      </Text>
       <dl className="customerDetailGrid">
         <div className="customerDetailItem">
-          <dt className="customerDetailLabel">이름</dt>
-          <dd>{customer.name}</dd>
+          <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
+            이름
+          </Text>
+          <Text as="dd" textStyle="t4Regular">
+            {customer.name}
+          </Text>
         </div>
         <div className="customerDetailItem">
-          <dt className="customerDetailLabel">전화번호</dt>
-          <dd>{customer.phone ?? "-"}</dd>
+          <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
+            전화번호
+          </Text>
+          <Text as="dd" textStyle="t4Regular">
+            {customer.phone ?? "-"}
+          </Text>
         </div>
         <div className="customerDetailItem">
-          <dt className="customerDetailLabel">역할</dt>
-          <dd>
+          <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
+            역할
+          </Text>
+          <Text as="dd" textStyle="t4Regular">
             <StatusBadge>{customer.role}</StatusBadge>
-          </dd>
+          </Text>
         </div>
         <div className="customerDetailItem">
-          <dt className="customerDetailLabel">활성</dt>
-          <dd>
+          <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
+            활성
+          </Text>
+          <Text as="dd" textStyle="t4Regular">
             <StatusBadge tone={customer.isActive ? "positive" : "neutral"}>
               {customer.isActive ? "활성" : "비활성"}
             </StatusBadge>
-          </dd>
+          </Text>
         </div>
         <div className="customerDetailItem">
-          <dt className="customerDetailLabel">가입일</dt>
-          <dd>{customer.createdAt.slice(0, 10)}</dd>
+          <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
+            가입일
+          </Text>
+          <Text as="dd" textStyle="t4Regular">
+            {customer.createdAt.slice(0, 10)}
+          </Text>
         </div>
         <div className="customerDetailItem">
-          <dt className="customerDetailLabel">생년월일</dt>
-          <dd>{customer.birth ?? "-"}</dd>
+          <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
+            생년월일
+          </Text>
+          <Text as="dd" textStyle="t4Regular">
+            {customer.birth ?? "-"}
+          </Text>
         </div>
       </dl>
     </section>

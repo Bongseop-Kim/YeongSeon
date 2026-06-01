@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import type { ReactNode } from "react";
 
 interface ClaimDetailItemProps {
@@ -8,8 +9,12 @@ interface ClaimDetailItemProps {
 export function ClaimDetailItem({ label, value }: ClaimDetailItemProps) {
   return (
     <div className="claimDetailItem">
-      <dt className="claimDetailLabel">{label}</dt>
-      <dd>{value}</dd>
+      <Text as="dt" textStyle="t4Medium" className="claimDetailLabel">
+        {label}
+      </Text>
+      <Text as="dd" textStyle="t4Regular">
+        {value}
+      </Text>
     </div>
   );
 }

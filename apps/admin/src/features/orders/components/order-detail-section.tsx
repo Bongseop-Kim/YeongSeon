@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { ORDER_ROLLBACK_FLOW, ORDER_STATUS_FLOW } from "@yeongseon/shared";
@@ -37,9 +38,14 @@ function Section({
   return (
     <section className="orderPanel" aria-labelledby={`order-section-${title}`}>
       <div className="orderPanelHeader">
-        <h2 id={`order-section-${title}`} className="orderSectionTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id={`order-section-${title}`}
+          className="orderSectionTitle"
+        >
           {title}
-        </h2>
+        </Text>
       </div>
       {children}
     </section>
@@ -72,9 +78,14 @@ export function OrderDetailSection() {
 
   if (isLoading) {
     return (
-      <p className="orderMutedText" aria-live="polite">
+      <Text
+        as="p"
+        textStyle="t4Regular"
+        className="orderMutedText"
+        aria-live="polite"
+      >
         불러오는 중…
-      </p>
+      </Text>
     );
   }
 
@@ -296,7 +307,9 @@ export function OrderDetailSection() {
       {orderType === "repair" && orderId ? (
         <Section title="배송 정보">
           <div className="orderOptionCard">
-            <h3 className="orderSubsectionTitle">고객→회사 배송 정보</h3>
+            <Text as="h3" textStyle="t5Bold" className="orderSubsectionTitle">
+              고객→회사 배송 정보
+            </Text>
             <TrackingSection
               isReadOnly
               orderId={orderId}
@@ -306,7 +319,9 @@ export function OrderDetailSection() {
             />
           </div>
           <div className="orderOptionCard">
-            <h3 className="orderSubsectionTitle">회사→고객 배송 정보</h3>
+            <Text as="h3" textStyle="t5Bold" className="orderSubsectionTitle">
+              회사→고객 배송 정보
+            </Text>
             <TrackingSection
               isReadOnly={!["수선완료", "배송중"].includes(order.status)}
               orderId={orderId}
@@ -335,7 +350,9 @@ export function OrderDetailSection() {
           <Callout tone="critical" description={itemsQuery.error.message} />
         ) : null}
         {itemsQuery.isLoading ? (
-          <p className="orderMutedText">불러오는 중…</p>
+          <Text as="p" textStyle="t4Regular" className="orderMutedText">
+            불러오는 중…
+          </Text>
         ) : null}
         <OrderItemsTable items={items} />
       </Section>
@@ -345,7 +362,9 @@ export function OrderDetailSection() {
           <Callout tone="critical" description={historyQuery.error.message} />
         ) : null}
         {historyQuery.isLoading ? (
-          <p className="orderMutedText">불러오는 중…</p>
+          <Text as="p" textStyle="t4Regular" className="orderMutedText">
+            불러오는 중…
+          </Text>
         ) : null}
         <StatusLogTable logs={historyQuery.logs} />
       </Section>

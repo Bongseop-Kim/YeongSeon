@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -80,11 +81,18 @@ export function InquiryListTable() {
     <section className="inquiryPanel" aria-labelledby="inquiry-list-title">
       <div className="inquiryPanelHeader">
         <div>
-          <h2 id="inquiry-list-title" className="inquiryPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="inquiry-list-title"
+            className="inquiryPanelTitle"
+          >
             문의 목록 ({KR_NUMBER_FORMAT.format(total)}건)
-          </h2>
+          </Text>
           {query.isFetching ? (
-            <p className="inquiryMutedText">불러오는 중…</p>
+            <Text as="p" textStyle="t4Regular" className="inquiryMutedText">
+              불러오는 중…
+            </Text>
           ) : null}
         </div>
         <SegmentedControl
@@ -123,9 +131,9 @@ export function InquiryListTable() {
         >
           이전
         </ActionButton>
-        <span>
+        <Text as="span" textStyle="t4Regular">
           {page} / {totalPages}
-        </span>
+        </Text>
         <ActionButton
           type="button"
           variant="neutralWeak"

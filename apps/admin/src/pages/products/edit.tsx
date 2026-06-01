@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useNavigate, useParams } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
@@ -19,10 +20,12 @@ export default function ProductEdit() {
     return (
       <main className="productPage">
         <header className="productPageTitleGroup">
-          <h1 className="productPageTitle">상품 수정</h1>
-          <p className="productPageDescription">
+          <Text as="h1" textStyle="screenTitle" className="productPageTitle">
+            상품 수정
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="productPageDescription">
             상품 정보를 찾을 수 없습니다.
-          </p>
+          </Text>
         </header>
         <Callout tone="critical" description="올바르지 않은 상품 ID입니다." />
         <ActionButton
@@ -40,14 +43,21 @@ export default function ProductEdit() {
     return (
       <main className="productPage">
         <header className="productPageTitleGroup">
-          <h1 className="productPageTitle">상품 수정</h1>
-          <p className="productPageDescription">
+          <Text as="h1" textStyle="screenTitle" className="productPageTitle">
+            상품 수정
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="productPageDescription">
             상품 정보를 불러오는 중입니다.
-          </p>
+          </Text>
         </header>
-        <p className="productMutedText" aria-live="polite">
+        <Text
+          as="p"
+          textStyle="t4Regular"
+          className="productMutedText"
+          aria-live="polite"
+        >
           불러오는 중…
-        </p>
+        </Text>
       </main>
     );
   }
@@ -56,10 +66,12 @@ export default function ProductEdit() {
     return (
       <main className="productPage">
         <header className="productPageTitleGroup">
-          <h1 className="productPageTitle">상품 수정</h1>
-          <p className="productPageDescription">
+          <Text as="h1" textStyle="screenTitle" className="productPageTitle">
+            상품 수정
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="productPageDescription">
             상품 정보를 불러오지 못했습니다.
-          </p>
+          </Text>
         </header>
         <Callout
           tone="critical"
@@ -76,10 +88,12 @@ export default function ProductEdit() {
   return (
     <main className="productPage">
       <header className="productPageTitleGroup">
-        <h1 className="productPageTitle">상품 수정</h1>
-        <p className="productPageDescription">
+        <Text as="h1" textStyle="screenTitle" className="productPageTitle">
+          상품 수정
+        </Text>
+        <Text as="p" textStyle="t4Regular" className="productPageDescription">
           상품 기본 정보와 이미지, 옵션을 수정합니다.
-        </p>
+        </Text>
       </header>
       <ProductForm mode="edit" {...formHook} />
     </main>

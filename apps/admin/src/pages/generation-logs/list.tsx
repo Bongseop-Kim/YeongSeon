@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useState } from "react";
 import dayjs from "dayjs";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -68,10 +69,16 @@ export default function GenerationLogList() {
     <main className="generationLogPage">
       <header className="generationLogHeader">
         <div className="generationLogTitleGroup">
-          <h1 className="generationLogTitle">AI 생성 로그</h1>
-          <p className="generationLogDescription">
+          <Text as="h1" textStyle="screenTitle" className="generationLogTitle">
+            AI 생성 로그
+          </Text>
+          <Text
+            as="p"
+            textStyle="t4Regular"
+            className="generationLogDescription"
+          >
             생성 요청, 결과 이미지, 토큰 사용량과 오류 분포를 확인합니다.
-          </p>
+          </Text>
         </div>
       </header>
 
@@ -80,16 +87,27 @@ export default function GenerationLogList() {
         aria-labelledby="generation-filter-title"
       >
         <div className="generationLogPanelHeader">
-          <h2 id="generation-filter-title" className="generationLogPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="generation-filter-title"
+            className="generationLogPanelTitle"
+          >
             조회 조건
-          </h2>
+          </Text>
         </div>
         <form
           className="generationLogToolbar"
           onSubmit={(event) => event.preventDefault()}
         >
           <label className="generationLogField">
-            <span className="generationLogFieldLabel">시작일</span>
+            <Text
+              as="span"
+              textStyle="t3Bold"
+              className="generationLogFieldLabel"
+            >
+              시작일
+            </Text>
             <input
               className="generationLogInput"
               type="date"
@@ -98,7 +116,13 @@ export default function GenerationLogList() {
             />
           </label>
           <label className="generationLogField">
-            <span className="generationLogFieldLabel">종료일</span>
+            <Text
+              as="span"
+              textStyle="t3Bold"
+              className="generationLogFieldLabel"
+            >
+              종료일
+            </Text>
             <input
               className="generationLogInput"
               type="date"
@@ -107,7 +131,13 @@ export default function GenerationLogList() {
             />
           </label>
           <label className="generationLogField">
-            <span className="generationLogFieldLabel">요청 유형</span>
+            <Text
+              as="span"
+              textStyle="t3Bold"
+              className="generationLogFieldLabel"
+            >
+              요청 유형
+            </Text>
             <select
               className="generationLogSelect"
               value={requestType ?? ""}
@@ -124,7 +154,13 @@ export default function GenerationLogList() {
             </select>
           </label>
           <label className="generationLogField">
-            <span className="generationLogFieldLabel">상태</span>
+            <Text
+              as="span"
+              textStyle="t3Bold"
+              className="generationLogFieldLabel"
+            >
+              상태
+            </Text>
             <select
               className="generationLogSelect"
               value={status ?? ""}
@@ -141,9 +177,13 @@ export default function GenerationLogList() {
             </select>
           </label>
           <label className="generationLogField generationLogSearchField">
-            <span className="generationLogFieldLabel">
+            <Text
+              as="span"
+              textStyle="t3Bold"
+              className="generationLogFieldLabel"
+            >
               workflow_id / work_id
-            </span>
+            </Text>
             <input
               className="generationLogInput"
               value={idSearchInput}
@@ -165,9 +205,14 @@ export default function GenerationLogList() {
       </section>
 
       {statsLoading ? (
-        <p className="generationLogMutedText" aria-live="polite">
+        <Text
+          as="p"
+          textStyle="t4Regular"
+          className="generationLogMutedText"
+          aria-live="polite"
+        >
           통계 불러오는 중…
-        </p>
+        </Text>
       ) : (
         <GenerationLogStats stats={statsData?.summary ?? EMPTY_SUMMARY} />
       )}
@@ -178,9 +223,14 @@ export default function GenerationLogList() {
       >
         <div className="generationLogPanelHeader">
           <div className="generationLogPanelTitleGroup">
-            <h2 id="generation-stats-title" className="generationLogPanelTitle">
+            <Text
+              as="h2"
+              textStyle="t6Bold"
+              id="generation-stats-title"
+              className="generationLogPanelTitle"
+            >
               모델·패턴·에러 통계
-            </h2>
+            </Text>
           </div>
           <ActionButton
             type="button"
@@ -206,12 +256,14 @@ export default function GenerationLogList() {
         aria-labelledby="generation-log-list-title"
       >
         <div className="generationLogPanelHeader">
-          <h2
+          <Text
+            as="h2"
+            textStyle="t6Bold"
             id="generation-log-list-title"
             className="generationLogPanelTitle"
           >
             로그 목록
-          </h2>
+          </Text>
         </div>
         {dateRange[0] > dateRange[1] ? (
           <Callout

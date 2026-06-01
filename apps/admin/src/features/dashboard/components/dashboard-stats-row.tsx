@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import type { AdminDashboardStats } from "@/features/dashboard/types/admin-dashboard";
 import { formatMoney } from "@/utils/format-number";
 
@@ -35,9 +36,15 @@ export function DashboardStatsRow({ stats }: { stats: AdminDashboardStats }) {
     <div className="dashboardStatsGrid" aria-label="대시보드 통계">
       {cards.map((card) => (
         <article key={card.label} className="dashboardStatCard">
-          <p className="dashboardStatLabel">{card.label}</p>
-          <strong className="dashboardStatValue">{card.value}</strong>
-          <p className="dashboardMutedText">{card.helper}</p>
+          <Text as="p" textStyle="t3Bold" className="dashboardStatLabel">
+            {card.label}
+          </Text>
+          <Text as="strong" textStyle="t5Bold" className="dashboardStatValue">
+            {card.value}
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="dashboardMutedText">
+            {card.helper}
+          </Text>
         </article>
       ))}
     </div>

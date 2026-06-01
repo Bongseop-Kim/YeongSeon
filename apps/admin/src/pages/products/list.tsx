@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useNavigate } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { ProductListTable } from "@/features/products";
@@ -10,10 +11,12 @@ export default function ProductList() {
     <main className="productPage">
       <header className="productPageHeader">
         <div className="productPageTitleGroup">
-          <h1 className="productPageTitle">상품</h1>
-          <p className="productPageDescription">
+          <Text as="h1" textStyle="screenTitle" className="productPageTitle">
+            상품
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="productPageDescription">
             판매 상품, 이미지, 옵션과 재고를 관리합니다.
-          </p>
+          </Text>
         </div>
         <ActionButton
           type="button"

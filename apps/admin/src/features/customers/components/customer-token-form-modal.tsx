@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useEffect, useState, type FormEvent } from "react";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
@@ -81,9 +82,14 @@ export function CustomerTokenFormModal({
         aria-modal="true"
         aria-labelledby="customer-token-modal-title"
       >
-        <h2 id="customer-token-modal-title" className="customerModalTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="customer-token-modal-title"
+          className="customerModalTitle"
+        >
           {MODAL_TITLE[mode]}
-        </h2>
+        </Text>
         {notice ? <Callout tone="warning" description={notice} /> : null}
         {mutation.error ? (
           <Callout

@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import type { HTMLInputTypeAttribute, ReactNode } from "react";
 import { useController, type Control, type FieldErrors } from "react-hook-form";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -252,9 +253,13 @@ export function CouponForm({
             }}
           />
           {isDirty ? (
-            <p className="couponSaveSummary adminSettingsActionSummary">
+            <Text
+              as="p"
+              textStyle="t4Regular"
+              className="couponSaveSummary adminSettingsActionSummary"
+            >
               저장하지 않은 변경사항 {dirtyCount}개가 있습니다.
-            </p>
+            </Text>
           ) : null}
         </div>
         <div className="couponActionButtons">

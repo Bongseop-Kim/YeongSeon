@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { mergeTokenUsageItems, type MergedTokenItem } from "@yeongseon/shared";
@@ -82,7 +83,9 @@ export function CustomerTokenSection({ userId }: Props) {
         accessorKey: "netAmount",
         header: "수량",
         cell: ({ row }) => (
-          <span>{formatSignedAmount(row.original.netAmount)}</span>
+          <Text as="span" textStyle="t4Regular">
+            {formatSignedAmount(row.original.netAmount)}
+          </Text>
         ),
       },
     ],
@@ -93,9 +96,14 @@ export function CustomerTokenSection({ userId }: Props) {
     <section className="customerPanel" aria-labelledby="customer-token-title">
       <div className="customerTokenHeader">
         <div>
-          <h2 id="customer-token-title" className="customerPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="customer-token-title"
+            className="customerPanelTitle"
+          >
             토큰
-          </h2>
+          </Text>
           <StatusBadge tone={balancesQuery.isError ? "critical" : "brand"}>
             {tokenBalanceLabel({
               balance: currentBalance,
@@ -126,7 +134,9 @@ export function CustomerTokenSection({ userId }: Props) {
       ) : (
         <>
           {historyQuery.isLoading ? (
-            <p className="customerMutedText">토큰 내역을 불러오는 중…</p>
+            <Text as="p" textStyle="t4Regular" className="customerMutedText">
+              토큰 내역을 불러오는 중…
+            </Text>
           ) : null}
           <AdminDataTable
             data={mergedHistory}

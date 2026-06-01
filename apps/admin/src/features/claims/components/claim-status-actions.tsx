@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useState } from "react";
 import { CLAIM_REJECT_RESTORE_STATUS, eulo } from "@yeongseon/shared";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -69,9 +70,14 @@ export function ClaimStatusActions({
 
   return (
     <section className="claimPanel" aria-labelledby="claim-actions-title">
-      <h2 id="claim-actions-title" className="claimPanelTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="claim-actions-title"
+        className="claimPanelTitle"
+      >
         상태 처리
-      </h2>
+      </Text>
       <div className="claimActions">
         {nextStatus ? (
           <ActionButton

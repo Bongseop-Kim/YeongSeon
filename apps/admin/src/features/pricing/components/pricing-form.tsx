@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
@@ -614,10 +615,12 @@ export function PricingForm() {
   return (
     <main className="pricingPage adminSettingsPage">
       <header className="pricingHeader">
-        <h1 className="pricingTitle">가격 설정</h1>
-        <p className="pricingDescription">
+        <Text as="h1" textStyle="screenTitle" className="pricingTitle">
+          가격 설정
+        </Text>
+        <Text as="p" textStyle="t4Regular" className="pricingDescription">
           주문/수선/원단/샘플/토큰 가격 기준을 관리합니다.
-        </p>
+        </Text>
       </header>
 
       {notice ? (
@@ -634,9 +637,14 @@ export function PricingForm() {
         aria-labelledby="pricing-panel-title"
       >
         <div className="pricingPanelHeader">
-          <h2 id="pricing-panel-title" className="pricingPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="pricing-panel-title"
+            className="pricingPanelTitle"
+          >
             가격 항목
-          </h2>
+          </Text>
         </div>
         <TabsRoot value={activeTab} onValueChange={handleTabChange}>
           <TabsList
@@ -674,22 +682,35 @@ export function PricingForm() {
               토큰
             </TabsTrigger>
           </TabsList>
-          <p id="pricing-tab-status-legend" className="pricingTabLegend">
+          <Text
+            as="p"
+            textStyle="t4Regular"
+            id="pricing-tab-status-legend"
+            className="pricingTabLegend"
+          >
             탭의 점: 오류 또는 저장하지 않은 변경사항
-          </p>
+          </Text>
 
           <TabsContent value="sewing">
             <div className="pricingStack">
               {SEWING_GROUPS.map((group) => (
                 <section key={group.title} className="pricingGroup">
-                  <h3 className="pricingGroupTitle">{group.title}</h3>
+                  <Text
+                    as="h3"
+                    textStyle="t5Bold"
+                    className="pricingGroupTitle"
+                  >
+                    {group.title}
+                  </Text>
                   <div className="pricingGrid">
                     {group.keys.map((key) => renderConstantInput(key, "원"))}
                   </div>
                 </section>
               ))}
               <section className="pricingGroup">
-                <h3 className="pricingGroupTitle">원단 수량</h3>
+                <Text as="h3" textStyle="t5Bold" className="pricingGroupTitle">
+                  원단 수량
+                </Text>
                 <div className="pricingGrid">
                   {FABRIC_QTY_KEYS.map((key) =>
                     renderConstantInput(key, "장/마", 1, 1),
@@ -732,7 +753,9 @@ export function PricingForm() {
           <TabsContent value="sample">
             <div className="pricingStack">
               <section className="pricingGroup">
-                <h3 className="pricingGroupTitle">샘플 가격</h3>
+                <Text as="h3" textStyle="t5Bold" className="pricingGroupTitle">
+                  샘플 가격
+                </Text>
                 <div className="pricingGrid">
                   {SAMPLE_KEYS.map((key) =>
                     renderConstantInput(key, "원", 1000),
@@ -740,13 +763,17 @@ export function PricingForm() {
                 </div>
               </section>
               <section className="pricingGroup">
-                <h3 className="pricingGroupTitle">샘플 결제 시 지급 쿠폰</h3>
-                <p className="pricingMutedText">
+                <Text as="h3" textStyle="t5Bold" className="pricingGroupTitle">
+                  샘플 결제 시 지급 쿠폰
+                </Text>
+                <Text as="p" textStyle="t4Regular" className="pricingMutedText">
                   이 값은 시스템 설정으로 관리됩니다. 쿠폰 관리 페이지에서
                   별도로 수정하지 마세요.
-                </p>
+                </Text>
                 {sampleCouponQuery.isLoading ? (
-                  <p>샘플 쿠폰 금액을 불러오는 중…</p>
+                  <Text as="p" textStyle="t4Regular">
+                    샘플 쿠폰 금액을 불러오는 중…
+                  </Text>
                 ) : null}
                 {sampleCouponQuery.isError ? (
                   <Callout
@@ -791,7 +818,11 @@ export function PricingForm() {
           </TabsContent>
 
           <TabsContent value="token">
-            {tokenQuery.isLoading ? <p>토큰 가격 정보를 불러오는 중…</p> : null}
+            {tokenQuery.isLoading ? (
+              <Text as="p" textStyle="t4Regular">
+                토큰 가격 정보를 불러오는 중…
+              </Text>
+            ) : null}
             {tokenQuery.isError ? (
               <Callout
                 tone="critical"
@@ -803,9 +834,9 @@ export function PricingForm() {
               />
             ) : (
               <div className="pricingStack">
-                <p className="pricingMutedText">
+                <Text as="p" textStyle="t4Regular" className="pricingMutedText">
                   많이 살수록 토큰 1개당 단가가 낮아집니다.
-                </p>
+                </Text>
                 <div className="pricingGrid">
                   {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => {
                     const tier =
@@ -829,9 +860,13 @@ export function PricingForm() {
                     };
                     return (
                       <section key={priceKey} className="pricingTierCard">
-                        <h3 className="pricingTierTitle">
+                        <Text
+                          as="h3"
+                          textStyle="t5Bold"
+                          className="pricingTierTitle"
+                        >
                           {tier?.label ?? label}
-                        </h3>
+                        </Text>
                         <PricingNumberField
                           fieldKey={priceKey}
                           label="가격"
@@ -864,12 +899,14 @@ export function PricingForm() {
 
         <div className="pricingPanelActions adminSettingsActionRow">
           {hasPendingChanges ? (
-            <p
+            <Text
+              as="p"
+              textStyle="t4Regular"
               className="pricingSaveSummary adminSettingsActionSummary"
               aria-live="polite"
             >
               {saveSummary}
-            </p>
+            </Text>
           ) : null}
           {hasPendingChanges ? (
             <ActionButton

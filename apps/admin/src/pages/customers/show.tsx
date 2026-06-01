@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useParams } from "react-router-dom";
 import { Callout } from "seed-design/ui/callout";
 import {
@@ -20,13 +21,19 @@ export default function CustomerShow() {
   return (
     <main className="customerPage">
       <header className="customerHeader">
-        <h1 className="customerTitle">고객 상세</h1>
-        <p className="customerDescription">
+        <Text as="h1" textStyle="screenTitle" className="customerTitle">
+          고객 상세
+        </Text>
+        <Text as="p" textStyle="t4Regular" className="customerDescription">
           고객 기본 정보, 주문, 쿠폰, 토큰을 확인합니다.
-        </p>
+        </Text>
       </header>
 
-      {customerQuery.isLoading ? <p>고객 정보를 불러오는 중…</p> : null}
+      {customerQuery.isLoading ? (
+        <Text as="p" textStyle="t4Regular">
+          고객 정보를 불러오는 중…
+        </Text>
+      ) : null}
       {customerQuery.error ? (
         <Callout tone="critical" description={customerQuery.error.message} />
       ) : null}
@@ -38,14 +45,21 @@ export default function CustomerShow() {
         className="customerPanel"
         aria-labelledby="customer-orders-title"
       >
-        <h2 id="customer-orders-title" className="customerPanelTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="customer-orders-title"
+          className="customerPanelTitle"
+        >
           최근 주문
-        </h2>
+        </Text>
         {ordersQuery.error ? (
           <Callout tone="critical" description={ordersQuery.error.message} />
         ) : null}
         {ordersQuery.isFetching ? (
-          <p className="customerMutedText">주문 내역을 불러오는 중…</p>
+          <Text as="p" textStyle="t4Regular" className="customerMutedText">
+            주문 내역을 불러오는 중…
+          </Text>
         ) : null}
         <CustomerOrdersTable orders={ordersQuery.data ?? []} />
       </section>
@@ -54,14 +68,21 @@ export default function CustomerShow() {
         className="customerPanel"
         aria-labelledby="customer-coupons-title"
       >
-        <h2 id="customer-coupons-title" className="customerPanelTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="customer-coupons-title"
+          className="customerPanelTitle"
+        >
           보유 쿠폰
-        </h2>
+        </Text>
         {couponsQuery.error ? (
           <Callout tone="critical" description={couponsQuery.error.message} />
         ) : null}
         {couponsQuery.isFetching ? (
-          <p className="customerMutedText">쿠폰 내역을 불러오는 중…</p>
+          <Text as="p" textStyle="t4Regular" className="customerMutedText">
+            쿠폰 내역을 불러오는 중…
+          </Text>
         ) : null}
         <CustomerCouponsTable coupons={couponsQuery.data ?? []} />
       </section>

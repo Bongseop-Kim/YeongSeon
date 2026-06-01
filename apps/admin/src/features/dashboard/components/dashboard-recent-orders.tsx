@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -73,9 +74,14 @@ export function DashboardRecentOrders({
     <section className="dashboardPanel" aria-labelledby="recent-orders-title">
       <div className="dashboardPanelHeader">
         <div>
-          <h2 id="recent-orders-title" className="dashboardPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="recent-orders-title"
+            className="dashboardPanelTitle"
+          >
             최근 주문
-          </h2>
+          </Text>
         </div>
       </div>
 

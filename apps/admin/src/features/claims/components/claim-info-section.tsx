@@ -6,6 +6,7 @@ import { getClaimStatusTone } from "@/features/claims/components/claim-status-to
 import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
 import { formatDateTime } from "@/utils/format-date-time";
 import "./claims.css";
+import { Text } from "seed-design/ui/text";
 
 interface ClaimInfoSectionProps {
   claim: AdminClaimDetail;
@@ -16,9 +17,14 @@ export function ClaimInfoSection({ claim }: ClaimInfoSectionProps) {
 
   return (
     <section className="claimPanel" aria-labelledby="claim-info-title">
-      <h2 id="claim-info-title" className="claimPanelTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="claim-info-title"
+        className="claimPanelTitle"
+      >
         클레임 정보
-      </h2>
+      </Text>
       <dl className="claimDetailGrid">
         <ClaimDetailItem label="클레임번호" value={claim.claimNumber} />
         <ClaimDetailItem

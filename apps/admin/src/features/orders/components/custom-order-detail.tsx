@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import type {
   AdminCustomOrderItem,
   AdminSampleOrderItem,
@@ -23,7 +24,9 @@ function ReferenceImages({ urls }: { urls: string[] }) {
 
   return (
     <section className="orderOptionCard" aria-label="참고 이미지">
-      <h3 className="orderSubsectionTitle">참고 이미지</h3>
+      <Text as="h3" textStyle="t5Bold" className="orderSubsectionTitle">
+        참고 이미지
+      </Text>
       <div className="orderImageGrid">
         {urls.map((url, index) => (
           <a
@@ -130,7 +133,9 @@ export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
 
   return (
     <div className="orderOptionCard">
-      <h2 className="orderSectionTitle">주문 제작 상세</h2>
+      <Text as="h2" textStyle="t6Bold" className="orderSectionTitle">
+        주문 제작 상세
+      </Text>
       <OptionsGrid options={data.options} quantity={data.quantity} />
       <PricingGrid pricing={data.pricing} />
       <ReferenceImages urls={data.referenceImageUrls} />
@@ -147,7 +152,9 @@ function SampleOrderDetail({ item }: { item: AdminSampleOrderItem }) {
 
   return (
     <div className="orderOptionCard">
-      <h2 className="orderSectionTitle">샘플 제작 상세</h2>
+      <Text as="h2" textStyle="t6Bold" className="orderSectionTitle">
+        샘플 제작 상세
+      </Text>
       <OrderDetailGrid>
         <OrderDetailItem label="샘플 유형">
           {sampleData.sampleType}

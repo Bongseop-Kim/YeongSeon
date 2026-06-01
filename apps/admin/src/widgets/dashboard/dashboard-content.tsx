@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useState } from "react";
 import {
   useDashboardRecentOrders,
@@ -39,10 +40,12 @@ export function DashboardContent() {
   return (
     <main className="dashboardPage">
       <div className="dashboardPageTitleGroup">
-        <h1 className="dashboardPageTitle">대시보드</h1>
-        <p className="dashboardPageDescription">
+        <Text as="h1" textStyle="screenTitle" className="dashboardPageTitle">
+          대시보드
+        </Text>
+        <Text as="p" textStyle="t4Regular" className="dashboardPageDescription">
           주문, 매출, 미처리 업무와 최근 요청을 한 곳에서 확인합니다.
-        </p>
+        </Text>
       </div>
 
       <div className="dashboardTabList" role="tablist" aria-label="대시보드 탭">
@@ -83,14 +86,25 @@ export function DashboardContent() {
           >
             <div className="dashboardPanelHeader">
               <div>
-                <h2 id="dashboard-period-title" className="dashboardPanelTitle">
+                <Text
+                  as="h2"
+                  textStyle="t6Bold"
+                  id="dashboard-period-title"
+                  className="dashboardPanelTitle"
+                >
                   주문 지표
-                </h2>
+                </Text>
               </div>
             </div>
             <div className="dashboardDateRange" aria-label="조회 기간">
               <label className="dashboardField">
-                <span className="dashboardFieldLabel">시작일</span>
+                <Text
+                  as="span"
+                  textStyle="t3Bold"
+                  className="dashboardFieldLabel"
+                >
+                  시작일
+                </Text>
                 <input
                   className="dashboardInput"
                   type="date"
@@ -102,7 +116,13 @@ export function DashboardContent() {
                 />
               </label>
               <label className="dashboardField">
-                <span className="dashboardFieldLabel">종료일</span>
+                <Text
+                  as="span"
+                  textStyle="t3Bold"
+                  className="dashboardFieldLabel"
+                >
+                  종료일
+                </Text>
                 <input
                   className="dashboardInput"
                   type="date"
@@ -138,9 +158,14 @@ export function DashboardContent() {
           >
             <div className="dashboardPanelHeader">
               <div>
-                <h2 id="dashboard-quotes-title" className="dashboardPanelTitle">
+                <Text
+                  as="h2"
+                  textStyle="t6Bold"
+                  id="dashboard-quotes-title"
+                  className="dashboardPanelTitle"
+                >
                   견적 요청
-                </h2>
+                </Text>
               </div>
             </div>
             <QuoteRequestDashboardTable />

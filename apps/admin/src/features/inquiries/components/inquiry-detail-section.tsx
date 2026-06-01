@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -23,7 +24,12 @@ export function InquiryDetailSection() {
   const [answerText, setAnswerText] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
 
-  if (query.isLoading) return <p>문의 정보를 불러오는 중…</p>;
+  if (query.isLoading)
+    return (
+      <Text as="p" textStyle="t4Regular">
+        문의 정보를 불러오는 중…
+      </Text>
+    );
   if (query.error) {
     return <Callout tone="critical" description={query.error.message} />;
   }
@@ -49,9 +55,14 @@ export function InquiryDetailSection() {
 
   return (
     <section className="inquiryPanel" aria-labelledby="inquiry-detail-title">
-      <h2 id="inquiry-detail-title" className="inquiryPanelTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="inquiry-detail-title"
+        className="inquiryPanelTitle"
+      >
         문의 상세
-      </h2>
+      </Text>
       {notice ? <Callout tone="positive" description={notice} /> : null}
       {answerMutation.error ? (
         <Callout
@@ -61,39 +72,69 @@ export function InquiryDetailSection() {
       ) : null}
 
       <dl className="inquiryDetailGrid">
-        <dt className="inquiryDetailLabel">제목</dt>
-        <dd>{detail.title}</dd>
-        <dt className="inquiryDetailLabel">상태</dt>
-        <dd>
+        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
+          제목
+        </Text>
+        <Text as="dd" textStyle="t4Regular">
+          {detail.title}
+        </Text>
+        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
+          상태
+        </Text>
+        <Text as="dd" textStyle="t4Regular">
           <StatusBadge tone={statusTone(detail.status)}>
             {detail.status}
           </StatusBadge>
-        </dd>
-        <dt className="inquiryDetailLabel">문의 유형</dt>
-        <dd>{detail.category}</dd>
+        </Text>
+        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
+          문의 유형
+        </Text>
+        <Text as="dd" textStyle="t4Regular">
+          {detail.category}
+        </Text>
         {detail.category === "상품" && detail.product ? (
           <>
-            <dt className="inquiryDetailLabel">상품</dt>
-            <dd className="inquiryProductRow">
+            <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
+              상품
+            </Text>
+            <Text as="dd" textStyle="t4Regular" className="inquiryProductRow">
               <img
                 src={`${IMAGEKIT_URL_ENDPOINT}${detail.product.image}`}
                 alt={detail.product.name}
                 className="inquiryProductImage"
               />
-              <span>{detail.product.name}</span>
-            </dd>
+              <Text as="span" textStyle="t4Regular">
+                {detail.product.name}
+              </Text>
+            </Text>
           </>
         ) : null}
-        <dt className="inquiryDetailLabel">작성일</dt>
-        <dd>{detail.date}</dd>
-        <dt className="inquiryDetailLabel">내용</dt>
-        <dd>{detail.content}</dd>
+        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
+          작성일
+        </Text>
+        <Text as="dd" textStyle="t4Regular">
+          {detail.date}
+        </Text>
+        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
+          내용
+        </Text>
+        <Text as="dd" textStyle="t4Regular">
+          {detail.content}
+        </Text>
         {detail.type === "answered" ? (
           <>
-            <dt className="inquiryDetailLabel">답변</dt>
-            <dd>{detail.answer}</dd>
-            <dt className="inquiryDetailLabel">답변일</dt>
-            <dd>{detail.answerDate}</dd>
+            <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
+              답변
+            </Text>
+            <Text as="dd" textStyle="t4Regular">
+              {detail.answer}
+            </Text>
+            <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
+              답변일
+            </Text>
+            <Text as="dd" textStyle="t4Regular">
+              {detail.answerDate}
+            </Text>
           </>
         ) : null}
       </dl>

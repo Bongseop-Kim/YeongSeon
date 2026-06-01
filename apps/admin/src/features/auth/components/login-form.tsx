@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -43,12 +44,17 @@ export function LoginForm() {
     <main className="authPage">
       <section className="authCard" aria-labelledby="admin-login-title">
         <div className="authTitleGroup">
-          <h1 id="admin-login-title" className="authTitle">
+          <Text
+            as="h1"
+            textStyle="screenTitle"
+            id="admin-login-title"
+            className="authTitle"
+          >
             ESSE SION 관리자
-          </h1>
-          <p className="authDescription">
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="authDescription">
             관리자 권한이 있는 계정으로 로그인하세요.
-          </p>
+          </Text>
         </div>
 
         {errorMessage ? (
@@ -57,7 +63,9 @@ export function LoginForm() {
 
         <form className="authForm" autoComplete="off" onSubmit={handleSubmit}>
           <label className="authField" htmlFor="admin-email">
-            <span className="authFieldLabel">이메일</span>
+            <Text as="span" textStyle="t3Bold" className="authFieldLabel">
+              이메일
+            </Text>
             <input
               id="admin-email"
               className="authInput"
@@ -72,7 +80,9 @@ export function LoginForm() {
           </label>
 
           <label className="authField" htmlFor="admin-password">
-            <span className="authFieldLabel">비밀번호</span>
+            <Text as="span" textStyle="t3Bold" className="authFieldLabel">
+              비밀번호
+            </Text>
             <input
               id="admin-password"
               className="authInput"

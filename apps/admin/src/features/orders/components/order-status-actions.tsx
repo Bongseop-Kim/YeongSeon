@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useEffect, useRef, useState } from "react";
 import { eulo } from "@yeongseon/shared";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -121,14 +122,19 @@ export function OrderStatusActions({
   return (
     <section className="orderPanel" aria-labelledby="order-status-action-title">
       <div className="orderPanelHeader">
-        <h2 id="order-status-action-title" className="orderSectionTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="order-status-action-title"
+          className="orderSectionTitle"
+        >
           상태 처리
-        </h2>
+        </Text>
       </div>
       {isClaimLocked ? (
-        <p className="orderMutedText">
+        <Text as="p" textStyle="t4Regular" className="orderMutedText">
           활성 클레임이 있어 주문 상태는 클레임 상세에서 처리해야 합니다.
-        </p>
+        </Text>
       ) : null}
       <div className="orderActionRow">
         {order.adminActions.includes("advance") && nextStatus ? (
@@ -179,24 +185,45 @@ export function OrderStatusActions({
         {activeModal ? (
           <>
             <div className="orderModalHeader">
-              <h3 id="order-status-dialog-title" className="orderSectionTitle">
+              <Text
+                as="h3"
+                textStyle="t5Bold"
+                id="order-status-dialog-title"
+                className="orderSectionTitle"
+              >
                 {getModalTitle(activeModal, nextStatus, rollbackStatus)}
-              </h3>
+              </Text>
             </div>
             {activeModal === "advance" ? (
-              <p>
-                현재 상태 <strong>{order.status}</strong> →{" "}
-                <strong>{nextStatus}</strong>으로 변경합니다.
-              </p>
+              <Text as="p" textStyle="t4Regular">
+                현재 상태{" "}
+                <Text as="strong" textStyle="t5Bold">
+                  {order.status}
+                </Text>{" "}
+                →{" "}
+                <Text as="strong" textStyle="t5Bold">
+                  {nextStatus}
+                </Text>
+                으로 변경합니다.
+              </Text>
             ) : null}
             {activeModal === "cancel" ? (
-              <p>이 주문을 취소하시겠습니까?</p>
+              <Text as="p" textStyle="t4Regular">
+                이 주문을 취소하시겠습니까?
+              </Text>
             ) : null}
             {activeModal === "rollback" ? (
-              <p>
-                현재 상태 <strong>{order.status}</strong> →{" "}
-                <strong>{rollbackStatus}</strong>으로 롤백합니다.
-              </p>
+              <Text as="p" textStyle="t4Regular">
+                현재 상태{" "}
+                <Text as="strong" textStyle="t5Bold">
+                  {order.status}
+                </Text>{" "}
+                →{" "}
+                <Text as="strong" textStyle="t5Bold">
+                  {rollbackStatus}
+                </Text>
+                으로 롤백합니다.
+              </Text>
             ) : null}
             {validationError ? (
               <Callout
@@ -206,11 +233,11 @@ export function OrderStatusActions({
               />
             ) : null}
             <label className="orderField">
-              <span className="orderFieldLabel">
+              <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
                 {activeModal === "rollback"
                   ? "롤백 사유 (필수)"
                   : "메모 (선택)"}
-              </span>
+              </Text>
               <textarea
                 className="orderInput orderTextarea"
                 placeholder={

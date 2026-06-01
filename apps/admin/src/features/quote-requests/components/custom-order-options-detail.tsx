@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { formatMoney } from "@/utils/format-number";
 import type { QuoteRequestOptions } from "@/features/quote-requests/types/admin-quote-request";
+import { Text } from "seed-design/ui/text";
 
 interface Props {
   options: QuoteRequestOptions;
@@ -93,9 +94,13 @@ function SummaryItem({
 }) {
   return (
     <div style={{ minWidth: 0 }}>
-      <p style={{ margin: 0, color: detailColors.textMuted, fontSize: 12 }}>
+      <Text
+        as="p"
+        textStyle="t4Regular"
+        style={{ margin: 0, color: detailColors.textMuted, fontSize: 12 }}
+      >
         {label}
-      </p>
+      </Text>
       <div
         style={{
           marginTop: 8,
@@ -121,12 +126,20 @@ function OptionRow({ label, value }: { label: string; value: string }) {
         lineHeight: 1.6,
       }}
     >
-      <dt style={{ color: detailColors.textMuted }}>{label}</dt>
-      <dd
+      <Text
+        as="dt"
+        textStyle="t4Medium"
+        style={{ color: detailColors.textMuted }}
+      >
+        {label}
+      </Text>
+      <Text
+        as="dd"
+        textStyle="t4Regular"
         style={{ margin: 0, color: detailColors.textPrimary, fontWeight: 500 }}
       >
         {value}
-      </dd>
+      </Text>
     </div>
   );
 }
@@ -154,7 +167,9 @@ export function CustomOrderOptionsDetail({
           padding: "16px 20px",
         }}
       >
-        <h3
+        <Text
+          as="h3"
+          textStyle="t5Bold"
           style={{
             margin: 0,
             color: detailColors.textPrimary,
@@ -164,7 +179,7 @@ export function CustomOrderOptionsDetail({
           }}
         >
           주문 사양 확인
-        </h3>
+        </Text>
       </div>
 
       <div
@@ -192,7 +207,9 @@ export function CustomOrderOptionsDetail({
       </div>
 
       <div style={{ padding: 20 }}>
-        <h4
+        <Text
+          as="h4"
+          textStyle="t4Bold"
           style={{
             margin: 0,
             color: detailColors.textPrimary,
@@ -201,7 +218,7 @@ export function CustomOrderOptionsDetail({
           }}
         >
           제작 옵션
-        </h4>
+        </Text>
         <dl
           style={{
             display: "grid",

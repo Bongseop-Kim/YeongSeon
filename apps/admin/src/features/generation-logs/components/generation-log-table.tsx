@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
@@ -45,7 +46,9 @@ function ResultThumbnailGrid({ group }: { group: AdminGenerationLogGroup }) {
               decoding="async"
             />
           ) : (
-            <span>이미지 없음</span>
+            <Text as="span" textStyle="t4Regular">
+              이미지 없음
+            </Text>
           )}
         </div>
       ))}
@@ -92,9 +95,13 @@ export function GenerationLogTable({
           const record = row.original;
           return (
             <div className="generationLogRequestCell">
-              <span className="generationLogRequestText">
+              <Text
+                as="span"
+                textStyle="t4Regular"
+                className="generationLogRequestText"
+              >
                 {record.userMessage}
-              </span>
+              </Text>
               <div className="generationLogChipRow">
                 <StatusBadge tone="brand">{record.aiModel}</StatusBadge>
                 <StatusBadge>
@@ -129,15 +136,19 @@ export function GenerationLogTable({
         cell: ({ row }) => {
           const net = row.original.tokensCharged - row.original.tokensRefunded;
           return (
-            <span>
+            <Text as="span" textStyle="t4Regular">
               {net}
               {row.original.tokensRefunded > 0 ? (
-                <span className="generationLogMutedText">
+                <Text
+                  as="span"
+                  textStyle="t4Regular"
+                  className="generationLogMutedText"
+                >
                   {" "}
                   (-{row.original.tokensRefunded})
-                </span>
+                </Text>
               ) : null}
-            </span>
+            </Text>
           );
         },
       },
@@ -169,7 +180,13 @@ export function GenerationLogTable({
     <div className="generationLogPanel">
       <div className="generationLogToolbar">
         <label className="generationLogField">
-          <span className="generationLogFieldLabel">AI 모델</span>
+          <Text
+            as="span"
+            textStyle="t3Bold"
+            className="generationLogFieldLabel"
+          >
+            AI 모델
+          </Text>
           <select
             className="generationLogSelect"
             value={aiModel ?? ""}
@@ -180,7 +197,9 @@ export function GenerationLogTable({
           </select>
         </label>
         {loading ? (
-          <p className="generationLogMutedText">불러오는 중…</p>
+          <Text as="p" textStyle="t4Regular" className="generationLogMutedText">
+            불러오는 중…
+          </Text>
         ) : null}
       </div>
 
@@ -203,9 +222,9 @@ export function GenerationLogTable({
         >
           이전
         </ActionButton>
-        <span>
+        <Text as="span" textStyle="t4Regular">
           {page} · {totalText}건
-        </span>
+        </Text>
         <ActionButton
           type="button"
           variant="neutralWeak"

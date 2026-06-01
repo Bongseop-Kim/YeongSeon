@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -73,12 +74,20 @@ function WorkflowStepList({
               >
                 {workflowLog.errorType ?? "success"}
               </StatusBadge>
-              <span className="generationLogMetaText">
+              <Text
+                as="span"
+                textStyle="t2Regular"
+                className="generationLogMetaText"
+              >
                 {formatDateTimeSeconds(workflowLog.createdAt)}
-              </span>
-              <span className="generationLogCodeText">
+              </Text>
+              <Text
+                as="span"
+                textStyle="t2Regular"
+                className="generationLogCodeText"
+              >
                 {workflowLog.workId}
-              </span>
+              </Text>
             </span>
           </button>
         );
@@ -108,30 +117,49 @@ function StickyBar({
         <ActionButton type="button" variant="neutralWeak" onClick={onBack}>
           ← AI 생성 로그
         </ActionButton>
-        <span className="generationLogMutedText">
+        <Text
+          as="span"
+          textStyle="t4Regular"
+          className="generationLogMutedText"
+        >
           {dayjs(log.createdAt).format("MM-DD HH:mm:ss")} · {log.aiModel} ·{" "}
           {requestTypeLabel(log.requestType)}
-        </span>
+        </Text>
       </div>
       <div className="generationLogChipRow">
         <StatusBadge tone="brand">{log.aiModel}</StatusBadge>
         <StatusBadge>{requestTypeLabel(log.requestType)}</StatusBadge>
-        <span className="generationLogMutedText">
-          토큰 <strong>{netTokensCharged}</strong>
-        </span>
-        <span className="generationLogMutedText">
+        <Text
+          as="span"
+          textStyle="t4Regular"
+          className="generationLogMutedText"
+        >
+          토큰{" "}
+          <Text as="strong" textStyle="t5Bold">
+            {netTokensCharged}
+          </Text>
+        </Text>
+        <Text
+          as="span"
+          textStyle="t4Regular"
+          className="generationLogMutedText"
+        >
           응답{" "}
-          <strong>
+          <Text as="strong" textStyle="t5Bold">
             {log.totalLatencyMs != null ? `${log.totalLatencyMs}ms` : "—"}
-          </strong>
-        </span>
+          </Text>
+        </Text>
         <StatusBadge tone={log.errorType ? "critical" : "positive"}>
           {log.errorType ?? "성공"}
         </StatusBadge>
         {log.workflowId ? (
-          <span className="generationLogMetaText">
+          <Text
+            as="span"
+            textStyle="t2Regular"
+            className="generationLogMetaText"
+          >
             workflow: {log.workflowId}
-          </span>
+          </Text>
         ) : null}
       </div>
       <WorkflowStepList
@@ -231,9 +259,14 @@ function GeneratedImageSection({
       aria-labelledby="generated-images-title"
     >
       <div className="generationLogPanelHeader">
-        <h2 id="generated-images-title" className="generationLogSectionTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="generated-images-title"
+          className="generationLogSectionTitle"
+        >
           생성 결과 세트
-        </h2>
+        </Text>
         {generatedImages.length > 0 ? (
           <StatusBadge
             tone={
@@ -272,20 +305,42 @@ function GeneratedImageSection({
                   이미지 없음
                 </div>
               )}
-              <h3 className="generationLogSubTitle">{item.label}</h3>
-              <p className="generationLogCodeText">{item.workId}</p>
+              <Text
+                as="h3"
+                textStyle="t5Bold"
+                className="generationLogSubTitle"
+              >
+                {item.label}
+              </Text>
+              <Text
+                as="p"
+                textStyle="t2Regular"
+                className="generationLogCodeText"
+              >
+                {item.workId}
+              </Text>
               <div className="generationLogChipRow">
                 <StatusBadge tone={statusTone(item.status)}>
                   {item.status === "error" ? "실패" : "성공"}
                 </StatusBadge>
-                <span className="generationLogMetaText">
+                <Text
+                  as="span"
+                  textStyle="t2Regular"
+                  className="generationLogMetaText"
+                >
                   {item.totalLatencyMs != null
                     ? `${item.totalLatencyMs}ms`
                     : "-"}
-                </span>
+                </Text>
               </div>
               {item.url ? (
-                <p className="generationLogMetaText">{item.url}</p>
+                <Text
+                  as="p"
+                  textStyle="t2Regular"
+                  className="generationLogMetaText"
+                >
+                  {item.url}
+                </Text>
               ) : null}
             </button>
           ))}
@@ -308,9 +363,14 @@ function AttachedImageSection({ log }: { log: AdminGenerationLogItem }) {
       className="generationLogPanel"
       aria-labelledby="attached-images-title"
     >
-      <h2 id="attached-images-title" className="generationLogSectionTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="attached-images-title"
+        className="generationLogSectionTitle"
+      >
         첨부 이미지
-      </h2>
+      </Text>
       <div className="generationLogImageGrid">
         {imageAttachments.map((attachment) => {
           const isHttpsUrl = attachment.value.startsWith("https://");
@@ -333,16 +393,26 @@ function AttachedImageSection({ log }: { log: AdminGenerationLogItem }) {
                   description={attachment.value}
                 />
               )}
-              <strong>{attachment.label}</strong>
+              <Text as="strong" textStyle="t5Bold">
+                {attachment.label}
+              </Text>
               {attachment.fileName ? (
-                <span className="generationLogMetaText">
+                <Text
+                  as="span"
+                  textStyle="t2Regular"
+                  className="generationLogMetaText"
+                >
                   {attachment.fileName}
-                </span>
+                </Text>
               ) : null}
               {isHttpsUrl ? (
-                <span className="generationLogMetaText">
+                <Text
+                  as="span"
+                  textStyle="t2Regular"
+                  className="generationLogMetaText"
+                >
                   {attachment.value}
-                </span>
+                </Text>
               ) : null}
             </div>
           );
@@ -367,7 +437,9 @@ function ExpandableText({
 
   return (
     <div className="generationLogExpandable">
-      <strong className="generationLogFieldLabel">{label}</strong>
+      <Text as="strong" textStyle="t5Bold" className="generationLogFieldLabel">
+        {label}
+      </Text>
       <div className="generationLogExpandableBody">{displayed}</div>
       {isLong ? (
         <ActionButton
@@ -388,7 +460,9 @@ function JsonBlock({ label, value }: { label: string; value: unknown }) {
 
   return (
     <div className="generationLogOptionCard">
-      <strong className="generationLogFieldLabel">{label}</strong>
+      <Text as="strong" textStyle="t5Bold" className="generationLogFieldLabel">
+        {label}
+      </Text>
       <pre className="generationLogJsonBlock">
         {JSON.stringify(value, null, 2)}
       </pre>
@@ -409,8 +483,12 @@ function DetailItem({
 }) {
   return (
     <div className="generationLogDetailItem">
-      <dt className="generationLogDetailLabel">{label}</dt>
-      <dd className="generationLogDetailValue">{children}</dd>
+      <Text as="dt" textStyle="t4Medium" className="generationLogDetailLabel">
+        {label}
+      </Text>
+      <Text as="dd" textStyle="t4Regular" className="generationLogDetailValue">
+        {children}
+      </Text>
     </div>
   );
 }
@@ -436,9 +514,14 @@ function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
       className="generationLogPanel"
       aria-labelledby="request-options-title"
     >
-      <h2 id="request-options-title" className="generationLogSectionTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="request-options-title"
+        className="generationLogSectionTitle"
+      >
         사용자 선택 옵션
-      </h2>
+      </Text>
       {visibleRequestAttachments.length > 0 ? (
         <div className="generationLogChipRow">
           {visibleRequestAttachments.map((attachment, index) => (
@@ -469,9 +552,14 @@ function ExecutionLogSection({ log }: { log: AdminGenerationLogItem }) {
       className="generationLogPanel"
       aria-labelledby="execution-log-title"
     >
-      <h2 id="execution-log-title" className="generationLogSectionTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="execution-log-title"
+        className="generationLogSectionTitle"
+      >
         기본 정보 & API 전송/실행 로그
-      </h2>
+      </Text>
       <DetailGrid>
         <DetailItem label="created_at">
           {formatDateTimeSeconds(log.createdAt)}
@@ -512,9 +600,14 @@ function PromptSection({ log }: { log: AdminGenerationLogItem }) {
 
   return (
     <section className="generationLogPanel" aria-labelledby="prompt-title">
-      <h2 id="prompt-title" className="generationLogSectionTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="prompt-title"
+        className="generationLogSectionTitle"
+      >
         프롬프트 & AI 응답
-      </h2>
+      </Text>
       <div className="generationLogPromptGrid">
         <div className="generationLogOptionCard">
           <ExpandableText label="사용자 프롬프트" content={log.userMessage} />
@@ -540,7 +633,13 @@ function PromptSection({ log }: { log: AdminGenerationLogItem }) {
           {log.aiMessage ? (
             <ExpandableText label="AI 응답" content={log.aiMessage} />
           ) : (
-            <p className="generationLogMutedText">AI 응답이 없습니다.</p>
+            <Text
+              as="p"
+              textStyle="t4Regular"
+              className="generationLogMutedText"
+            >
+              AI 응답이 없습니다.
+            </Text>
           )}
         </div>
       </div>
@@ -569,9 +668,14 @@ function WorkflowLogsSection({
       className="generationLogPanel"
       aria-labelledby="workflow-steps-title"
     >
-      <h2 id="workflow-steps-title" className="generationLogSectionTitle">
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id="workflow-steps-title"
+        className="generationLogSectionTitle"
+      >
         워크플로우 단계
-      </h2>
+      </Text>
       <WorkflowStepList
         workflowLogs={workflowLogs}
         activeLogId={activeLogId}
@@ -624,9 +728,14 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
   if (isDetailLoading || (requestedLog?.workflowId && isWorkflowLoading)) {
     return (
       <main className="generationLogPage">
-        <p className="generationLogMutedText" aria-live="polite">
+        <Text
+          as="p"
+          textStyle="t4Regular"
+          className="generationLogMutedText"
+          aria-live="polite"
+        >
           불러오는 중…
-        </p>
+        </Text>
       </main>
     );
   }

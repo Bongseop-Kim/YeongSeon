@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useSearchParams } from "react-router-dom";
 import { ORDER_TYPE_LABELS } from "@yeongseon/shared";
 import type { OrderType } from "@yeongseon/shared";
@@ -32,10 +33,12 @@ export default function OrderList() {
   return (
     <main className="orderPage">
       <header className="orderPageTitleGroup">
-        <h1 className="orderPageTitle">주문</h1>
-        <p className="orderPageDescription">
+        <Text as="h1" textStyle="screenTitle" className="orderPageTitle">
+          주문
+        </Text>
+        <Text as="p" textStyle="t4Regular" className="orderPageDescription">
           판매·제작·수선·토큰 주문 상태와 배송 정보를 관리합니다.
-        </p>
+        </Text>
       </header>
 
       <nav className="orderTabList" aria-label="주문 유형">

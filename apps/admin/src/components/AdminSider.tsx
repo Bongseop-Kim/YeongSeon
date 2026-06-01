@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ADMIN_NAV_ITEMS } from "@/components/admin-navigation";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -73,11 +74,17 @@ export function AdminSider({
               >
                 <span className="adminSiderLinkMark" aria-hidden="true" />
                 {collapsed && !isMobile ? (
-                  <span className="adminSiderCollapsedLabel">
+                  <Text
+                    as="span"
+                    textStyle="t3Bold"
+                    className="adminSiderCollapsedLabel"
+                  >
                     {item.label.slice(0, 2)}
-                  </span>
+                  </Text>
                 ) : (
-                  <span>{item.label}</span>
+                  <Text as="span" textStyle="t4Regular">
+                    {item.label}
+                  </Text>
                 )}
               </Link>
             );

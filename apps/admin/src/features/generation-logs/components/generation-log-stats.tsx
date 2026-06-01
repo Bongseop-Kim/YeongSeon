@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import type { GenerationSummaryStats } from "@/features/generation-logs/types/admin-generation-log";
 import "./generation-logs.css";
 
@@ -33,8 +34,16 @@ export function GenerationLogStats({ stats }: GenerationLogStatsProps) {
     <section className="generationLogStatsGrid" aria-label="AI 생성 로그 요약">
       {cards.map((card) => (
         <div key={card.label} className="generationLogStatCard">
-          <span className="generationLogStatLabel">{card.label}</span>
-          <strong className="generationLogStatValue">{card.value}</strong>
+          <Text as="span" textStyle="t3Bold" className="generationLogStatLabel">
+            {card.label}
+          </Text>
+          <Text
+            as="strong"
+            textStyle="t5Bold"
+            className="generationLogStatValue"
+          >
+            {card.value}
+          </Text>
         </div>
       ))}
     </section>

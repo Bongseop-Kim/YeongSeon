@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -57,12 +58,20 @@ export function RelatedOrdersSection({
   );
 
   if (!isLoading && (!paymentGroupId || relatedOrders.length === 0)) {
-    return <p className="orderMutedText">함께 결제된 주문이 없습니다.</p>;
+    return (
+      <Text as="p" textStyle="t4Regular" className="orderMutedText">
+        함께 결제된 주문이 없습니다.
+      </Text>
+    );
   }
 
   return (
     <>
-      {isLoading ? <p className="orderMutedText">불러오는 중…</p> : null}
+      {isLoading ? (
+        <Text as="p" textStyle="t4Regular" className="orderMutedText">
+          불러오는 중…
+        </Text>
+      ) : null}
       {error ? <Callout tone="critical" description={error.message} /> : null}
       <AdminDataTable
         data={relatedOrders}

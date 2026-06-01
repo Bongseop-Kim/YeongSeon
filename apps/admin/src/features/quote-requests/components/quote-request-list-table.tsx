@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -175,14 +176,25 @@ export function QuoteRequestListPanel() {
     <section className="quoteRequestPanel" aria-labelledby="quote-list-title">
       <div className="quoteRequestPanelHeader">
         <div>
-          <h2 id="quote-list-title" className="quoteRequestPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="quote-list-title"
+            className="quoteRequestPanelTitle"
+          >
             견적 요청 목록
-            <span className="adminPanelCountBadge">
+            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
               {KR_NUMBER_FORMAT.format(total)}건
-            </span>
-          </h2>
+            </Text>
+          </Text>
           {query.isFetching ? (
-            <p className="quoteRequestMutedText">불러오는 중…</p>
+            <Text
+              as="p"
+              textStyle="t4Regular"
+              className="quoteRequestMutedText"
+            >
+              불러오는 중…
+            </Text>
           ) : null}
         </div>
       </div>
@@ -248,9 +260,9 @@ export function QuoteRequestListPanel() {
         >
           이전
         </ActionButton>
-        <span>
+        <Text as="span" textStyle="t4Regular">
           {page} / {totalPages}
-        </span>
+        </Text>
         <ActionButton
           type="button"
           variant="neutralWeak"
@@ -274,7 +286,9 @@ export function QuoteRequestDashboardTable() {
         <Callout tone="critical" description={query.error.message} />
       ) : null}
       {query.isFetching ? (
-        <p className="quoteRequestMutedText">불러오는 중…</p>
+        <Text as="p" textStyle="t4Regular" className="quoteRequestMutedText">
+          불러오는 중…
+        </Text>
       ) : null}
       <QuoteRequestListTable
         rows={query.data?.rows ?? []}

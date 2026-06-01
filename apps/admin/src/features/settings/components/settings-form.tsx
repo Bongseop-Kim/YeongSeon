@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useRef, useState } from "react";
 import { COURIER_COMPANY_NAMES } from "@yeongseon/shared/constants/courier-companies";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -52,11 +53,18 @@ function SettingSection({
 }: SettingSectionProps) {
   return (
     <section className="settingsSection" aria-labelledby={titleId}>
-      <h3 id={titleId} className="settingsSectionTitle">
+      <Text
+        as="h3"
+        textStyle="t5Bold"
+        id={titleId}
+        className="settingsSectionTitle"
+      >
         {title}
-      </h3>
+      </Text>
       {isLoading ? (
-        <p aria-live="polite">불러오는 중…</p>
+        <Text as="p" textStyle="t4Regular" aria-live="polite">
+          불러오는 중…
+        </Text>
       ) : isError ? (
         <SettingsErrorCard
           errorMessage={error?.message ?? "알 수 없는 오류"}
@@ -153,10 +161,12 @@ export function SettingsForm() {
   return (
     <main className="settingsPage adminSettingsPage">
       <header className="settingsTitleGroup">
-        <h1 className="settingsTitle">관리자 설정</h1>
-        <p className="settingsDescription">
+        <Text as="h1" textStyle="screenTitle" className="settingsTitle">
+          관리자 설정
+        </Text>
+        <Text as="p" textStyle="t4Regular" className="settingsDescription">
           운영 기본값과 가입 보상 설정을 관리합니다.
-        </p>
+        </Text>
       </header>
 
       {notice ? (
@@ -173,12 +183,21 @@ export function SettingsForm() {
         aria-labelledby="settings-panel-title"
       >
         <div className="settingsPanelHeader">
-          <h2 id="settings-panel-title" className="settingsPanelTitle">
+          <Text
+            as="h2"
+            textStyle="t6Bold"
+            id="settings-panel-title"
+            className="settingsPanelTitle"
+          >
             배송·가입 보상
-          </h2>
-          <p className="settingsPanelDescription">
+          </Text>
+          <Text
+            as="p"
+            textStyle="t4Regular"
+            className="settingsPanelDescription"
+          >
             배송 기본값과 가입 보상 토큰을 설정합니다.
-          </p>
+          </Text>
         </div>
 
         <SettingSection
@@ -210,9 +229,13 @@ export function SettingsForm() {
             </RadioSelectBoxRoot>
             <div className="settingsActionRow adminSettingsActionRow">
               {isCourierDirty ? (
-                <p className="settingsSaveSummary adminSettingsActionSummary">
+                <Text
+                  as="p"
+                  textStyle="t4Regular"
+                  className="settingsSaveSummary adminSettingsActionSummary"
+                >
                   저장하지 않은 변경사항 1개가 있습니다.
-                </p>
+                </Text>
               ) : null}
               {isCourierDirty ? (
                 <ActionButton
@@ -293,9 +316,13 @@ export function SettingsForm() {
             </TextField>
             <div className="settingsActionRow adminSettingsActionRow">
               {isTokenGrantDirty ? (
-                <p className="settingsSaveSummary adminSettingsActionSummary">
+                <Text
+                  as="p"
+                  textStyle="t4Regular"
+                  className="settingsSaveSummary adminSettingsActionSummary"
+                >
                   저장하지 않은 변경사항 1개가 있습니다.
-                </p>
+                </Text>
               ) : null}
               {isTokenGrantDirty ? (
                 <ActionButton

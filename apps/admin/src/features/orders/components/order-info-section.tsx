@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useNavigate } from "react-router-dom";
 import { ORDER_TYPE_LABELS } from "@yeongseon/shared";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -45,7 +46,9 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
         {order.customerEmail ?? "-"}
       </OrderDetailItem>
       <OrderDetailItem label="결제금액">
-        <strong>{order.totalPrice.toLocaleString()}원</strong>
+        <Text as="strong" textStyle="t5Bold">
+          {order.totalPrice.toLocaleString()}원
+        </Text>
       </OrderDetailItem>
       <OrderDetailItem label="원가">
         {order.originalPrice.toLocaleString()}원

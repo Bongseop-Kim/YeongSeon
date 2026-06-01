@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -83,9 +84,14 @@ export function CouponIssuedSection({
   return (
     <section className="couponPanel" aria-labelledby="coupon-issued-title">
       <div className="couponPanelHeader">
-        <h2 id="coupon-issued-title" className="couponPanelTitle">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="coupon-issued-title"
+          className="couponPanelTitle"
+        >
           발급 내역 ({KR_NUMBER_FORMAT.format(issuedRows.length)}건)
-        </h2>
+        </Text>
         <div className="couponInlineActions">
           <ActionButton type="button" onClick={onOpenIssueDialog}>
             쿠폰 발급
@@ -102,7 +108,11 @@ export function CouponIssuedSection({
         </div>
       </div>
 
-      {isFetching ? <p aria-live="polite">발급 내역을 불러오는 중…</p> : null}
+      {isFetching ? (
+        <Text as="p" textStyle="t4Regular" aria-live="polite">
+          발급 내역을 불러오는 중…
+        </Text>
+      ) : null}
       <AdminDataTable
         data={issuedRows}
         columns={issuedColumns}

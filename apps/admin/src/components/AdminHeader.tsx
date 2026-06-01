@@ -1,3 +1,4 @@
+import { Text } from "seed-design/ui/text";
 import { useLocation } from "react-router-dom";
 import { getActiveNavItem } from "@/components/admin-navigation";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -23,9 +24,9 @@ export function AdminHeader({ onMenuOpen }: AdminHeaderProps) {
       >
         ☰
       </button>
-      <span className="adminHeaderTitle">
+      <Text as="span" textStyle="t6Bold" className="adminHeaderTitle">
         {getActiveNavItem(location.pathname).label}
-      </span>
+      </Text>
     </header>
   );
 }
