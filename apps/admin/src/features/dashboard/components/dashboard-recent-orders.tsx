@@ -1,13 +1,14 @@
-import { useNavigation } from "@refinedev/core";
-import { Segmented, Table, Tag, Typography } from "antd";
-import type { OrderType } from "@yeongseon/shared";
-import { ORDER_STATUS_COLORS, ORDER_TYPE_LABELS } from "@yeongseon/shared";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import type { ColumnDef } from "@tanstack/react-table";
+import { ORDER_TYPE_LABELS } from "@yeongseon/shared";
+import { AdminDataTable } from "@/components/AdminDataTable";
+import { StatusBadge } from "@/components/StatusBadge";
 import type {
   AdminDashboardRecentOrder,
   SegmentValue,
 } from "@/features/dashboard/types/admin-dashboard";
-
-const { Title } = Typography;
+import { formatMoney } from "@/utils/format-number";
 
 const SEGMENT_OPTIONS: { label: string; value: SegmentValue }[] = [
   { label: "전체", value: "all" },
@@ -18,6 +19,14 @@ const SEGMENT_OPTIONS: { label: string; value: SegmentValue }[] = [
   { label: ORDER_TYPE_LABELS.token, value: "token" },
 ];
 
+function orderStatusTone(status: string) {
+  if (status === "배송완료" || status === "확정") return "positive";
+  if (status === "취소") return "critical";
+  if (status === "결제중") return "warning";
+  if (status === "진행중" || status === "배송중") return "brand";
+  return "neutral";
+}
+
 export function DashboardRecentOrders({
   segment,
   onSegmentChange,
@@ -27,59 +36,72 @@ export function DashboardRecentOrders({
   onSegmentChange: (v: SegmentValue) => void;
   recentOrders: AdminDashboardRecentOrder[];
 }) {
-  const { show } = useNavigation();
+  const navigate = useNavigate();
+  const columns = useMemo<ColumnDef<AdminDashboardRecentOrder>[]>(
+    () => [
+      { accessorKey: "orderNumber", header: "주문번호" },
+      { accessorKey: "date", header: "주문일" },
+      { accessorKey: "customerName", header: "고객명" },
+      {
+        accessorKey: "orderType",
+        header: "유형",
+        cell: ({ row }) =>
+          ORDER_TYPE_LABELS[row.original.orderType] ?? row.original.orderType,
+      },
+      {
+        accessorKey: "status",
+        header: "상태",
+        cell: ({ row }) => (
+          <StatusBadge tone={orderStatusTone(row.original.status)}>
+            {row.original.status}
+          </StatusBadge>
+        ),
+      },
+      {
+        accessorKey: "totalPrice",
+        header: "결제금액",
+        cell: ({ row }) =>
+          row.original.totalPrice != null
+            ? formatMoney(row.original.totalPrice)
+            : "-",
+      },
+    ],
+    [],
+  );
 
   return (
-    <>
-      <Segmented
-        options={SEGMENT_OPTIONS}
-        value={segment}
-        onChange={(val) => {
-          const valid = SEGMENT_OPTIONS.find((option) => option.value === val);
-          if (valid) onSegmentChange(valid.value);
-        }}
-        style={{ marginBottom: 16 }}
-      />
+    <section className="dashboardPanel" aria-labelledby="recent-orders-title">
+      <div className="dashboardPanelHeader">
+        <div>
+          <h2 id="recent-orders-title" className="dashboardPanelTitle">
+            최근 주문
+          </h2>
+        </div>
+      </div>
 
-      <Title level={5}>최근 주문</Title>
-      <Table
-        dataSource={recentOrders}
-        rowKey="id"
-        pagination={false}
-        size="small"
-        onRow={(record) => ({
-          onClick: () => show("admin_order_list_view", record.id),
-          tabIndex: 0,
-          onKeyDown: (e: React.KeyboardEvent) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              show("admin_order_list_view", record.id);
-            }
-          },
-          style: { cursor: "pointer" },
-        })}
-      >
-        <Table.Column dataIndex="orderNumber" title="주문번호" />
-        <Table.Column dataIndex="date" title="주문일" />
-        <Table.Column dataIndex="customerName" title="고객명" />
-        <Table.Column
-          dataIndex="orderType"
-          title="유형"
-          render={(v: OrderType) => ORDER_TYPE_LABELS[v] ?? v}
-        />
-        <Table.Column
-          dataIndex="status"
-          title="상태"
-          render={(v: string) => <Tag color={ORDER_STATUS_COLORS[v]}>{v}</Tag>}
-        />
-        <Table.Column
-          dataIndex="totalPrice"
-          title="결제금액"
-          render={(v: number | null) =>
-            v != null ? `${v.toLocaleString()}원` : "-"
-          }
-        />
-      </Table>
-    </>
+      <div className="dashboardSegmentGroup" aria-label="주문 유형 필터">
+        {SEGMENT_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className="dashboardSegmentButton"
+            aria-pressed={segment === option.value}
+            onClick={() => onSegmentChange(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      <AdminDataTable
+        data={recentOrders}
+        columns={columns}
+        getRowId={(row) => row.id}
+        emptyText="최근 주문이 없습니다."
+        minWidth={760}
+        onRowClick={(row) => navigate(`/orders/show/${row.id}`)}
+        getRowActionLabel={(row) => `${row.orderNumber} 주문 상세 보기`}
+      />
+    </section>
   );
 }
