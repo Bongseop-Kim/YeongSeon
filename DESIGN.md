@@ -37,7 +37,7 @@
 
 - Primary navigation: Refine/Ant Design 관리자 사이드바 리소스 목록.
 - Core routes/screens: `/coupons`, `/coupons/create`, `/coupons/edit/:id`, `/pricing`, `/settings`.
-- Content hierarchy: 페이지 제목/설명 → 상태 Callout → 설정 카드 → 필드 영역 → 하단 액션 row.
+- Content hierarchy: 페이지 제목/설명 → 상태 Callout → 설정 카드 또는 목록 패널 → 필터/검색 row → 데이터/필드 영역 → 하단 액션 row.
 
 ## Design principles
 
@@ -59,6 +59,7 @@
 - Existing components to reuse: `ActionButton`, `Callout`, `TextField`, `RadioSelectBoxRoot`, `RadioSelectBoxItem`, `Switch`, `Tabs`.
 - New/changed components: 새 React 컴포넌트 대신 공통 CSS 패턴 `adminSettings*` 클래스로 카드/폼/action row를 맞춘다.
 - Variants and states: primary save button, `neutralWeak` 변경 취소, disabled no-dirty save, loading save, inline invalid field.
+- Selection hierarchy: `Tabs`는 화면 또는 주요 콘텐츠 섹션 전환에 사용하고, 전환 대상 카드/패널의 바깥에 둔다. `SegmentedControl`은 2~4개 이하의 즉시 보기 전환/정렬/간단 필터에만 사용한다. 목록 상태 필터처럼 선택지가 많거나 검색과 함께 조합되는 필터는 라벨이 보이는 필터 row의 `select`/입력 필드로 배치한다.
 - Token/component ownership: SEED 컴포넌트가 control 상태와 접근성 기본값을 소유하고, repo CSS는 레이아웃만 소유한다.
 
 ## Accessibility

@@ -4,10 +4,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
-import {
-  SegmentedControl,
-  SegmentedControlItem,
-} from "seed-design/ui/segmented-control";
 import { AdminDataTable } from "@/components/AdminDataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
@@ -87,24 +83,38 @@ export function InquiryListTable() {
             id="inquiry-list-title"
             className="inquiryPanelTitle"
           >
-            문의 목록 ({KR_NUMBER_FORMAT.format(total)}건)
+            문의 목록
+            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
+              {KR_NUMBER_FORMAT.format(total)}건
+            </Text>
           </Text>
         </div>
-        <SegmentedControl
-          className="inquiryStatusFilter"
-          aria-label="문의 상태 필터"
-          name="inquiry-status"
-          value={status ?? "all"}
-          onValueChange={(value) => setStatus(value === "all" ? "" : value)}
-        >
-          <SegmentedControlItem value="all">전체</SegmentedControlItem>
-          {INQUIRY_STATUS_OPTIONS.map((option) => (
-            <SegmentedControlItem key={option.value} value={option.value}>
-              {option.label}
-            </SegmentedControlItem>
-          ))}
-        </SegmentedControl>
       </div>
+
+      <form
+        className="inquiryToolbar"
+        aria-label="문의 목록 필터"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <label className="inquiryFilterField">
+          <Text as="span" textStyle="t3Bold" className="inquiryFilterLabel">
+            상태
+          </Text>
+          <select
+            className="inquirySelect"
+            name="inquiry-status"
+            value={status ?? ""}
+            onChange={(event) => setStatus(event.target.value)}
+          >
+            <option value="">전체</option>
+            {INQUIRY_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </form>
 
       {query.error ? (
         <Callout tone="critical" description={query.error.message} />

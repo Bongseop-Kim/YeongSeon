@@ -633,64 +633,56 @@ export function PricingForm() {
         />
       ) : null}
 
-      <section
-        className="pricingPanel adminSettingsCard"
-        aria-labelledby="pricing-panel-title"
+      <TabsRoot
+        className="pricingTabs"
+        value={activeTab}
+        onValueChange={handleTabChange}
       >
-        <div className="pricingPanelHeader">
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="pricing-panel-title"
-            className="pricingPanelTitle"
+        <TabsList className="pricingTabList" aria-label="가격 설정 영역">
+          <TabsTrigger
+            value="sewing"
+            notification={hasConstantChanges(allSewingKeys)}
           >
-            가격 항목
-          </Text>
-        </div>
-        <TabsRoot value={activeTab} onValueChange={handleTabChange}>
-          <TabsList
-            className="pricingTabList"
-            aria-label="가격 설정 영역"
-            aria-describedby="pricing-tab-status-legend"
+            봉제
+          </TabsTrigger>
+          <TabsTrigger
+            value="reform"
+            notification={hasConstantChanges(REFORM_KEYS)}
           >
-            <TabsTrigger
-              value="sewing"
-              notification={hasConstantChanges(allSewingKeys)}
-            >
-              봉제
-            </TabsTrigger>
-            <TabsTrigger
-              value="reform"
-              notification={hasConstantChanges(REFORM_KEYS)}
-            >
-              수선
-            </TabsTrigger>
-            <TabsTrigger value="fabric" notification={hasFabricChanges}>
-              원단
-            </TabsTrigger>
-            <TabsTrigger
-              value="sample"
-              notification={Boolean(
-                hasSampleChanges || sampleCouponQuery.isError,
-              )}
-            >
-              샘플
-            </TabsTrigger>
-            <TabsTrigger
-              value="token"
-              notification={Boolean(hasTokenChanges || tokenQuery.isError)}
-            >
-              토큰
-            </TabsTrigger>
-          </TabsList>
-          <Text
-            as="p"
-            textStyle="t4Regular"
-            id="pricing-tab-status-legend"
-            className="pricingTabLegend"
+            수선
+          </TabsTrigger>
+          <TabsTrigger value="fabric" notification={hasFabricChanges}>
+            원단
+          </TabsTrigger>
+          <TabsTrigger
+            value="sample"
+            notification={Boolean(
+              hasSampleChanges || sampleCouponQuery.isError,
+            )}
           >
-            탭의 점: 오류 또는 저장하지 않은 변경사항
-          </Text>
+            샘플
+          </TabsTrigger>
+          <TabsTrigger
+            value="token"
+            notification={Boolean(hasTokenChanges || tokenQuery.isError)}
+          >
+            토큰
+          </TabsTrigger>
+        </TabsList>
+        <section
+          className="pricingPanel adminSettingsCard"
+          aria-labelledby="pricing-panel-title"
+        >
+          <div className="pricingPanelHeader">
+            <Text
+              as="h2"
+              textStyle="t6Bold"
+              id="pricing-panel-title"
+              className="pricingPanelTitle"
+            >
+              가격 항목
+            </Text>
+          </div>
 
           <TabsContent value="sewing">
             <div className="pricingStack">
@@ -890,39 +882,39 @@ export function PricingForm() {
               </div>
             )}
           </TabsContent>
-        </TabsRoot>
 
-        <div className="pricingPanelActions adminSettingsActionRow">
-          {hasPendingChanges ? (
-            <Text
-              as="p"
-              textStyle="t4Regular"
-              className="pricingSaveSummary adminSettingsActionSummary"
-              aria-live="polite"
-            >
-              {saveSummary}
-            </Text>
-          ) : null}
-          {hasPendingChanges ? (
+          <div className="pricingPanelActions adminSettingsActionRow">
+            {hasPendingChanges ? (
+              <Text
+                as="p"
+                textStyle="t4Regular"
+                className="pricingSaveSummary adminSettingsActionSummary"
+                aria-live="polite"
+              >
+                {saveSummary}
+              </Text>
+            ) : null}
+            {hasPendingChanges ? (
+              <ActionButton
+                type="button"
+                variant="neutralWeak"
+                disabled={isSaving}
+                onClick={resetDrafts}
+              >
+                변경 취소
+              </ActionButton>
+            ) : null}
             <ActionButton
               type="button"
-              variant="neutralWeak"
-              disabled={isSaving}
-              onClick={resetDrafts}
+              onClick={() => void saveAll()}
+              loading={isSaving}
+              disabled={isSaving || !hasPendingChanges}
             >
-              변경 취소
+              {saveButtonLabel}
             </ActionButton>
-          ) : null}
-          <ActionButton
-            type="button"
-            onClick={() => void saveAll()}
-            loading={isSaving}
-            disabled={isSaving || !hasPendingChanges}
-          >
-            {saveButtonLabel}
-          </ActionButton>
-        </div>
-      </section>
+          </div>
+        </section>
+      </TabsRoot>
     </main>
   );
 }

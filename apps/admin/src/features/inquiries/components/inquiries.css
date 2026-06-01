@@ -52,6 +52,7 @@
 }
 
 .inquiryPagination,
+.inquiryToolbar,
 .inquiryAnswerActions,
 .inquiryProductRow {
   display: flex;
@@ -60,8 +61,36 @@
   flex-wrap: wrap;
 }
 
-.inquiryStatusFilter {
-  min-width: 128px;
+.inquiryToolbar {
+  align-items: flex-end;
+}
+
+.inquiryFilterField {
+  display: grid;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.inquiryFilterLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.inquirySelect {
+  width: 100%;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 10px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 10px 12px;
+  color: var(--seed-color-fg-neutral);
+  font: inherit;
+}
+
+.inquirySelect:focus-visible {
+  outline: 2px solid var(--seed-color-stroke-brand);
+  outline-offset: 2px;
 }
 
 .inquiryDetailGrid {
@@ -89,9 +118,14 @@
 }
 
 @media (max-width: 720px) {
-  .inquiryStatusFilter,
-  .inquiryStatusFilter > label {
+  .inquiryToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inquiryFilterField {
     width: 100%;
+    max-width: none;
   }
 
   .inquiryDetailGrid {

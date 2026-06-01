@@ -60,10 +60,20 @@
   flex-wrap: wrap;
 }
 
-.quoteRequestToolbarLabel {
+.quoteRequestToolbar {
+  align-items: flex-end;
+}
+
+.quoteRequestFilterField {
+  display: grid;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.quoteRequestFilterLabel {
   color: var(--seed-color-fg-neutral-muted);
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 13px;
+  line-height: 18px;
   font-weight: 700;
 }
 
@@ -77,8 +87,19 @@
   width: 100%;
 }
 
-.quoteRequestStatusFilter {
-  width: fit-content;
+.quoteRequestSelect {
+  width: 100%;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 10px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 10px 12px;
+  color: var(--seed-color-fg-neutral);
+  font: inherit;
+}
+
+.quoteRequestSelect:focus-visible {
+  outline: 2px solid var(--seed-color-stroke-brand);
+  outline-offset: 2px;
 }
 
 .quoteRequestDetailGrid {
@@ -171,8 +192,7 @@
   }
 
   .quoteRequestSearchFieldSlot,
-  .quoteRequestStatusFilter,
-  .quoteRequestStatusFilter > label {
+  .quoteRequestFilterField {
     width: 100%;
     max-width: none;
   }

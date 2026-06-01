@@ -9,10 +9,6 @@ import {
 } from "@yeongseon/shared";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
-import {
-  SegmentedControl,
-  SegmentedControlItem,
-} from "seed-design/ui/segmented-control";
 import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 import { AdminDataTable } from "@/components/AdminDataTable";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -195,43 +191,52 @@ export function QuoteRequestListPanel() {
 
       <form
         className="quoteRequestToolbar"
-        role="search"
+        aria-label="견적 요청 필터"
         onSubmit={(event) => event.preventDefault()}
       >
-        <label className="quoteRequestToolbarLabel" htmlFor="quote-number">
-          견적번호 검색
-        </label>
-        <div className="quoteRequestSearchFieldSlot">
-          <TextField
-            className="quoteRequestSearchField"
-            prefixIcon={<IconMagnifyingglassLine />}
-            value={draftQuoteNumber}
-            onValueChange={({ value }) => setDraftQuoteNumber(value)}
-          >
-            <TextFieldInput
-              id="quote-number"
-              name="quote-number"
-              autoComplete="off"
-              placeholder="견적번호를 입력하세요"
-            />
-          </TextField>
+        <div className="quoteRequestFilterField">
+          <label className="quoteRequestFilterLabel" htmlFor="quote-number">
+            견적번호
+          </label>
+          <div className="quoteRequestSearchFieldSlot">
+            <TextField
+              className="quoteRequestSearchField"
+              prefixIcon={<IconMagnifyingglassLine />}
+              value={draftQuoteNumber}
+              onValueChange={({ value }) => setDraftQuoteNumber(value)}
+            >
+              <TextFieldInput
+                id="quote-number"
+                name="quote-number"
+                autoComplete="off"
+                placeholder="견적번호를 입력하세요"
+              />
+            </TextField>
+          </div>
         </div>
+        <label className="quoteRequestFilterField">
+          <Text
+            as="span"
+            textStyle="t3Bold"
+            className="quoteRequestFilterLabel"
+          >
+            상태
+          </Text>
+          <select
+            className="quoteRequestSelect"
+            name="quote-request-status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+          >
+            <option value="">전체</option>
+            {QUOTE_REQUEST_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </form>
-
-      <SegmentedControl
-        className="quoteRequestStatusFilter"
-        aria-label="견적 상태 필터"
-        name="quote-request-status"
-        value={status || "all"}
-        onValueChange={(value) => setStatus(value === "all" ? "" : value)}
-      >
-        <SegmentedControlItem value="all">전체</SegmentedControlItem>
-        {QUOTE_REQUEST_STATUS_OPTIONS.map((option) => (
-          <SegmentedControlItem key={option.value} value={option.value}>
-            {option.label}
-          </SegmentedControlItem>
-        ))}
-      </SegmentedControl>
 
       {query.error ? (
         <Callout tone="critical" description={query.error.message} />
