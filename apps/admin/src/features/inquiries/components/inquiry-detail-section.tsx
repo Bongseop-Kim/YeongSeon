@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { TextField, TextFieldTextarea } from "seed-design/ui/text-field";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { InquiryStatus } from "@/features/inquiries/types/admin-inquiry";
 import {
@@ -24,12 +25,7 @@ export function InquiryDetailSection() {
   const [answerText, setAnswerText] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
 
-  if (query.isLoading)
-    return (
-      <Text as="p" textStyle="t4Regular">
-        문의 정보를 불러오는 중…
-      </Text>
-    );
+  if (query.isLoading) return <AdminPanelSkeleton lines={5} />;
   if (query.error) {
     return <Callout tone="critical" description={query.error.message} />;
   }

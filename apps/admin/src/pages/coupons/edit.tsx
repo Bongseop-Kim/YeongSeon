@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import { isActiveIssuedStatus } from "@/features/coupons/api/coupons-api";
 import { toCouponFormValues } from "@/features/coupons/api/coupons-mapper";
 import {
@@ -266,7 +267,7 @@ export default function CouponEdit(): ReactNode {
   if (couponQuery.isLoading) {
     return (
       <main className="couponPage adminSettingsPage">
-        쿠폰 정보를 불러오는 중…
+        <AdminPanelSkeleton lines={5} />
       </main>
     );
   }

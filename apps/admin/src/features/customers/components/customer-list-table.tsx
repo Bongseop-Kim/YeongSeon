@@ -128,11 +128,6 @@ export function CustomerListTable() {
               {KR_NUMBER_FORMAT.format(total)}건
             </Text>
           </Text>
-          {query.isFetching ? (
-            <Text as="p" textStyle="t4Regular" className="customerMutedText">
-              불러오는 중…
-            </Text>
-          ) : null}
         </div>
       </div>
 
@@ -175,6 +170,7 @@ export function CustomerListTable() {
         emptyText="고객이 없습니다."
         onRowClick={(row) => navigate(`/customers/show/${row.id}`)}
         getRowActionLabel={(row) => `${row.name} 고객 상세 보기`}
+        isLoading={query.isFetching}
       />
       <nav className="customerPagination" aria-label="고객 페이지네이션">
         <ActionButton

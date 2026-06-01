@@ -52,12 +52,14 @@ interface QuoteRequestListTableProps {
   rows: AdminQuoteRequestListItem[];
   onRowClick: (row: AdminQuoteRequestListItem) => void;
   emptyText?: string;
+  isLoading?: boolean;
 }
 
 export function QuoteRequestListTable({
   rows,
   onRowClick,
   emptyText = "견적 요청이 없습니다.",
+  isLoading = false,
 }: QuoteRequestListTableProps) {
   const columns = useMemo<ColumnDef<AdminQuoteRequestListItem>[]>(
     () => [
@@ -101,6 +103,7 @@ export function QuoteRequestListTable({
       emptyText={emptyText}
       onRowClick={onRowClick}
       getRowActionLabel={(row) => `${row.quoteNumber} 견적 상세 보기`}
+      isLoading={isLoading}
     />
   );
 }
@@ -187,15 +190,6 @@ export function QuoteRequestListPanel() {
               {KR_NUMBER_FORMAT.format(total)}건
             </Text>
           </Text>
-          {query.isFetching ? (
-            <Text
-              as="p"
-              textStyle="t4Regular"
-              className="quoteRequestMutedText"
-            >
-              불러오는 중…
-            </Text>
-          ) : null}
         </div>
       </div>
 
@@ -246,6 +240,7 @@ export function QuoteRequestListPanel() {
       <QuoteRequestListTable
         rows={rows}
         onRowClick={(row) => navigate(`/quote-requests/show/${row.id}`)}
+        isLoading={query.isFetching}
       />
 
       <nav
@@ -285,14 +280,10 @@ export function QuoteRequestDashboardTable() {
       {query.error ? (
         <Callout tone="critical" description={query.error.message} />
       ) : null}
-      {query.isFetching ? (
-        <Text as="p" textStyle="t4Regular" className="quoteRequestMutedText">
-          불러오는 중…
-        </Text>
-      ) : null}
       <QuoteRequestListTable
         rows={query.data?.rows ?? []}
         onRowClick={(row) => navigate(`/quote-requests/show/${row.id}`)}
+        isLoading={query.isFetching}
       />
     </>
   );

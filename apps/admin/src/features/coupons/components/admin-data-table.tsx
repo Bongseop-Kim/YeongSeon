@@ -5,6 +5,7 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import type { KeyboardEvent, ReactNode } from "react";
+import { AdminTableSkeletonBody } from "@/components/AdminSkeleton";
 import "./coupon-admin.css";
 
 interface AdminDataTableProps<TData> {
@@ -17,6 +18,8 @@ interface AdminDataTableProps<TData> {
   selectedRowIds?: Set<string>;
   onSelectedRowIdsChange?: (ids: Set<string>) => void;
   isRowSelectable?: (row: TData) => boolean;
+  isLoading?: boolean;
+  loadingRowCount?: number;
 }
 
 export function AdminDataTable<TData>({
@@ -29,6 +32,8 @@ export function AdminDataTable<TData>({
   selectedRowIds,
   onSelectedRowIdsChange,
   isRowSelectable,
+  isLoading = false,
+  loadingRowCount = 5,
 }: AdminDataTableProps<TData>): ReactNode {
   const selectionEnabled = Boolean(selectedRowIds && onSelectedRowIdsChange);
   const table = useReactTable({
@@ -59,6 +64,21 @@ export function AdminDataTable<TData>({
     }
     onSelectedRowIdsChange(new Set(selectableRows.map(getRowId)));
   };
+
+  if (isLoading) {
+    const skeletonColumnCount = columns.length + (selectionEnabled ? 1 : 0);
+
+    return (
+      <div className="couponTableWrap" aria-busy="true">
+        <table className="couponTable">
+          <AdminTableSkeletonBody
+            columnCount={skeletonColumnCount}
+            rowCount={loadingRowCount}
+          />
+        </table>
+      </div>
+    );
+  }
 
   if (data.length === 0) {
     return <div className="couponEmptyState">{emptyText}</div>;

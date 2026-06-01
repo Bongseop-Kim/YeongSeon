@@ -108,11 +108,6 @@ export function CouponIssuedSection({
         </div>
       </div>
 
-      {isFetching ? (
-        <Text as="p" textStyle="t4Regular" aria-live="polite">
-          발급 내역을 불러오는 중…
-        </Text>
-      ) : null}
       <AdminDataTable
         data={issuedRows}
         columns={issuedColumns}
@@ -121,6 +116,7 @@ export function CouponIssuedSection({
         selectedRowIds={selectedIssuedIds}
         onSelectedRowIdsChange={onSelectedIssuedIdsChange}
         isRowSelectable={(row) => isActiveIssuedStatus(row.status)}
+        isLoading={isFetching}
       />
     </section>
   );

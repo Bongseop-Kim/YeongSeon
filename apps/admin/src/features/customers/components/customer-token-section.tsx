@@ -132,19 +132,13 @@ export function CustomerTokenSection({ userId }: Props) {
           description="내역 조회 중 오류가 발생했습니다."
         />
       ) : (
-        <>
-          {historyQuery.isLoading ? (
-            <Text as="p" textStyle="t4Regular" className="customerMutedText">
-              토큰 내역을 불러오는 중…
-            </Text>
-          ) : null}
-          <AdminDataTable
-            data={mergedHistory}
-            columns={columns}
-            getRowId={(row) => row.id}
-            emptyText="토큰 내역이 없습니다."
-          />
-        </>
+        <AdminDataTable
+          data={mergedHistory}
+          columns={columns}
+          getRowId={(row) => row.id}
+          emptyText="토큰 내역이 없습니다."
+          isLoading={historyQuery.isLoading}
+        />
       )}
 
       {mode ? (

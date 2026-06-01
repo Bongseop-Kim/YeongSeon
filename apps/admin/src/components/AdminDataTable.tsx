@@ -5,6 +5,7 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import type { KeyboardEvent } from "react";
+import { AdminTableSkeletonBody } from "@/components/AdminSkeleton";
 import "./AdminDataTable.css";
 
 interface AdminDataTableProps<TData> {
@@ -18,6 +19,8 @@ interface AdminDataTableProps<TData> {
   onSelectedRowIdsChange?: (ids: Set<string>) => void;
   isRowSelectable?: (row: TData) => boolean;
   minWidth?: number;
+  isLoading?: boolean;
+  loadingRowCount?: number;
 }
 
 export function AdminDataTable<TData>({
@@ -31,6 +34,8 @@ export function AdminDataTable<TData>({
   onSelectedRowIdsChange,
   isRowSelectable,
   minWidth = 720,
+  isLoading = false,
+  loadingRowCount = 5,
 }: AdminDataTableProps<TData>) {
   const selectionEnabled = Boolean(selectedRowIds && onSelectedRowIdsChange);
   const table = useReactTable({
@@ -75,6 +80,21 @@ export function AdminDataTable<TData>({
     event.preventDefault();
     onRowClick?.(row);
   };
+
+  if (isLoading) {
+    const skeletonColumnCount = columns.length + (selectionEnabled ? 1 : 0);
+
+    return (
+      <div className="adminDataTableWrap" aria-busy="true">
+        <table className="adminDataTable" style={{ minWidth }}>
+          <AdminTableSkeletonBody
+            columnCount={skeletonColumnCount}
+            rowCount={loadingRowCount}
+          />
+        </table>
+      </div>
+    );
+  }
 
   if (data.length === 0) {
     return <div className="adminDataTableEmpty">{emptyText}</div>;

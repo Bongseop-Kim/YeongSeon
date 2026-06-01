@@ -2,6 +2,7 @@ import { Text } from "seed-design/ui/text";
 import { useParams } from "react-router-dom";
 import { CLAIM_ROLLBACK_FLOW, CLAIM_STATUS_FLOW } from "@yeongseon/shared";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   ClaimInfoSection,
   ClaimStatusActions,
@@ -71,11 +72,7 @@ export default function ClaimShow() {
         </Text>
       </header>
 
-      {claimQuery.isLoading ? (
-        <Text as="p" textStyle="t4Regular" className="claimMutedText">
-          클레임 정보를 불러오는 중…
-        </Text>
-      ) : null}
+      {claimQuery.isLoading ? <AdminPanelSkeleton lines={5} /> : null}
       {claimQuery.error ? (
         <Callout tone="critical" description={claimQuery.error.message} />
       ) : null}
@@ -166,17 +163,15 @@ export default function ClaimShow() {
             >
               상태 변경 이력
             </Text>
-            {logsQuery.isFetching ? (
-              <Text as="p" textStyle="t4Regular" className="claimMutedText">
-                상태 이력을 불러오는 중…
-              </Text>
-            ) : null}
           </div>
         </div>
         {logsQuery.error ? (
           <Callout tone="critical" description={logsQuery.error.message} />
         ) : null}
-        <ClaimStatusLogTable logs={logsQuery.data ?? EMPTY_CLAIM_STATUS_LOGS} />
+        <ClaimStatusLogTable
+          logs={logsQuery.data ?? EMPTY_CLAIM_STATUS_LOGS}
+          isLoading={logsQuery.isFetching}
+        />
       </section>
     </main>
   );

@@ -15,9 +15,10 @@ function orderTone(status: string) {
 
 interface Props {
   orders: AdminCustomerOrderRow[];
+  isLoading?: boolean;
 }
 
-export function CustomerOrdersTable({ orders }: Props) {
+export function CustomerOrdersTable({ orders, isLoading = false }: Props) {
   const navigate = useNavigate();
   const columns = useMemo<ColumnDef<AdminCustomerOrderRow>[]>(
     () => [
@@ -50,6 +51,7 @@ export function CustomerOrdersTable({ orders }: Props) {
       emptyText="주문 내역이 없습니다."
       onRowClick={(row) => navigate(`/orders/show/${row.id}`)}
       getRowActionLabel={(row) => `${row.orderNumber} 주문 상세 보기`}
+      isLoading={isLoading}
     />
   );
 }

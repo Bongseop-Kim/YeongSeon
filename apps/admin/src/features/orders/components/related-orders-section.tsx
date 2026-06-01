@@ -67,11 +67,6 @@ export function RelatedOrdersSection({
 
   return (
     <>
-      {isLoading ? (
-        <Text as="p" textStyle="t4Regular" className="orderMutedText">
-          불러오는 중…
-        </Text>
-      ) : null}
       {error ? <Callout tone="critical" description={error.message} /> : null}
       <AdminDataTable
         data={relatedOrders}
@@ -79,6 +74,7 @@ export function RelatedOrdersSection({
         getRowId={(row) => row.id}
         emptyText="함께 결제된 주문이 없습니다."
         minWidth={720}
+        isLoading={isLoading}
       />
     </>
   );

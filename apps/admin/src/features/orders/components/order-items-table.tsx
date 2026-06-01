@@ -6,6 +6,7 @@ import type { AdminOrderItem } from "@/features/orders/types/admin-order";
 
 interface OrderItemsTableProps {
   items: AdminOrderItem[];
+  isLoading?: boolean;
 }
 
 function getItemName(record: AdminOrderItem): string {
@@ -23,7 +24,10 @@ function formatPrice(value: number): string {
   return `${value.toLocaleString()}원`;
 }
 
-export function OrderItemsTable({ items }: OrderItemsTableProps) {
+export function OrderItemsTable({
+  items,
+  isLoading = false,
+}: OrderItemsTableProps) {
   const navigate = useNavigate();
   const columns = useMemo<ColumnDef<AdminOrderItem>[]>(
     () => [
@@ -83,6 +87,7 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
       getRowId={(row) => row.id}
       emptyText="주문 아이템이 없습니다."
       minWidth={720}
+      isLoading={isLoading}
     />
   );
 }

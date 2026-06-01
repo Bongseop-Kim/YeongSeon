@@ -3,6 +3,7 @@ import { useState } from "react";
 import dayjs from "dayjs";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   DesignContextStats,
   GenerationLogStats,
@@ -205,14 +206,7 @@ export default function GenerationLogList() {
       </section>
 
       {statsLoading ? (
-        <Text
-          as="p"
-          textStyle="t4Regular"
-          className="generationLogMutedText"
-          aria-live="polite"
-        >
-          통계 불러오는 중…
-        </Text>
+        <AdminPanelSkeleton lines={3} />
       ) : (
         <GenerationLogStats stats={statsData?.summary ?? EMPTY_SUMMARY} />
       )}

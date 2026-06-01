@@ -89,11 +89,6 @@ export function InquiryListTable() {
           >
             문의 목록 ({KR_NUMBER_FORMAT.format(total)}건)
           </Text>
-          {query.isFetching ? (
-            <Text as="p" textStyle="t4Regular" className="inquiryMutedText">
-              불러오는 중…
-            </Text>
-          ) : null}
         </div>
         <SegmentedControl
           className="inquiryStatusFilter"
@@ -121,6 +116,7 @@ export function InquiryListTable() {
         emptyText="문의가 없습니다."
         onRowClick={(row) => navigate(`/inquiries/show/${row.id}`)}
         getRowActionLabel={(row) => `${row.title} 문의 상세 보기`}
+        isLoading={query.isFetching}
       />
       <nav className="inquiryPagination" aria-label="문의 페이지네이션">
         <ActionButton

@@ -140,11 +140,6 @@ export function ProductListTable() {
               {KR_NUMBER_FORMAT.format(total)}건
             </Text>
           </Text>
-          {query.isFetching ? (
-            <Text as="p" textStyle="t4Regular" className="productMutedText">
-              불러오는 중…
-            </Text>
-          ) : null}
         </div>
       </div>
 
@@ -180,6 +175,7 @@ export function ProductListTable() {
         onRowClick={(row) => navigate(`/products/edit/${row.id}`)}
         getRowActionLabel={(row) => `${row.name} 상품 수정`}
         minWidth={920}
+        isLoading={query.isFetching}
       />
       <nav className="productPagination" aria-label="상품 페이지네이션">
         <ActionButton

@@ -2,6 +2,7 @@ import { Text } from "seed-design/ui/text";
 import { useNavigate, useParams } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import { ProductForm, useAdminProductEditForm } from "@/features/products";
 import "@/features/products/components/products.css";
 
@@ -47,17 +48,10 @@ export default function ProductEdit() {
             상품 수정
           </Text>
           <Text as="p" textStyle="t4Regular" className="productPageDescription">
-            상품 정보를 불러오는 중입니다.
+            상품 기본 정보와 이미지, 옵션을 수정합니다.
           </Text>
         </header>
-        <Text
-          as="p"
-          textStyle="t4Regular"
-          className="productMutedText"
-          aria-live="polite"
-        >
-          불러오는 중…
-        </Text>
+        <AdminPanelSkeleton lines={5} />
       </main>
     );
   }

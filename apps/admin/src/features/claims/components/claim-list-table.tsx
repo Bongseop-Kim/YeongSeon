@@ -124,11 +124,6 @@ export function ClaimListTable() {
               {KR_NUMBER_FORMAT.format(total)}건
             </Text>
           </Text>
-          {query.isFetching ? (
-            <Text as="p" textStyle="t4Regular" className="claimMutedText">
-              불러오는 중…
-            </Text>
-          ) : null}
         </div>
       </div>
 
@@ -183,6 +178,7 @@ export function ClaimListTable() {
         emptyText="클레임이 없습니다."
         onRowClick={(row) => navigate(`/claims/show/${row.id}`)}
         getRowActionLabel={(row) => `${row.claimNumber} 클레임 상세 보기`}
+        isLoading={query.isFetching}
       />
 
       <nav className="claimPagination" aria-label="클레임 페이지네이션">

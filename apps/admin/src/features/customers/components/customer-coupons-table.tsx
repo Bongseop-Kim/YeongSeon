@@ -7,9 +7,10 @@ import type { AdminCustomerCouponRow } from "@/features/customers/types/admin-cu
 
 interface Props {
   coupons: AdminCustomerCouponRow[];
+  isLoading?: boolean;
 }
 
-export function CustomerCouponsTable({ coupons }: Props) {
+export function CustomerCouponsTable({ coupons, isLoading = false }: Props) {
   const navigate = useNavigate();
   const columns = useMemo<ColumnDef<AdminCustomerCouponRow>[]>(
     () => [
@@ -45,6 +46,7 @@ export function CustomerCouponsTable({ coupons }: Props) {
       emptyText="보유 쿠폰이 없습니다."
       onRowClick={openCouponEditor}
       getRowActionLabel={(row) => `${row.couponId} 쿠폰 수정`}
+      isLoading={isLoading}
     />
   );
 }

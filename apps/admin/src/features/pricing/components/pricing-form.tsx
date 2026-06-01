@@ -2,6 +2,7 @@ import { Text } from "seed-design/ui/text";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPanelSkeleton, AdminSkeleton } from "@/components/AdminSkeleton";
 import {
   TabsContent,
   TabsList,
@@ -594,7 +595,7 @@ export function PricingForm() {
   if (constantsQuery.isLoading || fabricsQuery.isLoading) {
     return (
       <main className="pricingPage adminSettingsPage">
-        가격 정보를 불러오는 중…
+        <AdminPanelSkeleton lines={6} />
       </main>
     );
   }
@@ -771,9 +772,7 @@ export function PricingForm() {
                   별도로 수정하지 마세요.
                 </Text>
                 {sampleCouponQuery.isLoading ? (
-                  <Text as="p" textStyle="t4Regular">
-                    샘플 쿠폰 금액을 불러오는 중…
-                  </Text>
+                  <AdminSkeleton className="adminSkeletonStatus" />
                 ) : null}
                 {sampleCouponQuery.isError ? (
                   <Callout
@@ -818,11 +817,7 @@ export function PricingForm() {
           </TabsContent>
 
           <TabsContent value="token">
-            {tokenQuery.isLoading ? (
-              <Text as="p" textStyle="t4Regular">
-                토큰 가격 정보를 불러오는 중…
-              </Text>
-            ) : null}
+            {tokenQuery.isLoading ? <AdminPanelSkeleton lines={4} /> : null}
             {tokenQuery.isError ? (
               <Callout
                 tone="critical"

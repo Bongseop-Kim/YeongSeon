@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { ORDER_ROLLBACK_FLOW, ORDER_STATUS_FLOW } from "@yeongseon/shared";
 import { Callout } from "seed-design/ui/callout";
 import { useDefaultCourier } from "@/entities/settings";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   useAdminOrderDetail,
   useAdminOrderHistory,
@@ -77,16 +78,7 @@ export function OrderDetailSection() {
   } = useTrackingState(order, defaultCourier);
 
   if (isLoading) {
-    return (
-      <Text
-        as="p"
-        textStyle="t4Regular"
-        className="orderMutedText"
-        aria-live="polite"
-      >
-        불러오는 중…
-      </Text>
-    );
+    return <AdminPanelSkeleton lines={5} />;
   }
 
   if (isError) {
@@ -349,24 +341,17 @@ export function OrderDetailSection() {
         {itemsQuery.error ? (
           <Callout tone="critical" description={itemsQuery.error.message} />
         ) : null}
-        {itemsQuery.isLoading ? (
-          <Text as="p" textStyle="t4Regular" className="orderMutedText">
-            불러오는 중…
-          </Text>
-        ) : null}
-        <OrderItemsTable items={items} />
+        <OrderItemsTable items={items} isLoading={itemsQuery.isLoading} />
       </Section>
 
       <Section title="상태 변경 이력">
         {historyQuery.error ? (
           <Callout tone="critical" description={historyQuery.error.message} />
         ) : null}
-        {historyQuery.isLoading ? (
-          <Text as="p" textStyle="t4Regular" className="orderMutedText">
-            불러오는 중…
-          </Text>
-        ) : null}
-        <StatusLogTable logs={historyQuery.logs} />
+        <StatusLogTable
+          logs={historyQuery.logs}
+          isLoading={historyQuery.isLoading}
+        />
       </Section>
     </>
   );

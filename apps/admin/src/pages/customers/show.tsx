@@ -1,6 +1,7 @@
 import { Text } from "seed-design/ui/text";
 import { useParams } from "react-router-dom";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   useAdminCustomerCoupons,
   useAdminCustomerDetail,
@@ -29,11 +30,7 @@ export default function CustomerShow() {
         </Text>
       </header>
 
-      {customerQuery.isLoading ? (
-        <Text as="p" textStyle="t4Regular">
-          고객 정보를 불러오는 중…
-        </Text>
-      ) : null}
+      {customerQuery.isLoading ? <AdminPanelSkeleton lines={4} /> : null}
       {customerQuery.error ? (
         <Callout tone="critical" description={customerQuery.error.message} />
       ) : null}
@@ -56,12 +53,10 @@ export default function CustomerShow() {
         {ordersQuery.error ? (
           <Callout tone="critical" description={ordersQuery.error.message} />
         ) : null}
-        {ordersQuery.isFetching ? (
-          <Text as="p" textStyle="t4Regular" className="customerMutedText">
-            주문 내역을 불러오는 중…
-          </Text>
-        ) : null}
-        <CustomerOrdersTable orders={ordersQuery.data ?? []} />
+        <CustomerOrdersTable
+          orders={ordersQuery.data ?? []}
+          isLoading={ordersQuery.isFetching}
+        />
       </section>
 
       <section
@@ -79,12 +74,10 @@ export default function CustomerShow() {
         {couponsQuery.error ? (
           <Callout tone="critical" description={couponsQuery.error.message} />
         ) : null}
-        {couponsQuery.isFetching ? (
-          <Text as="p" textStyle="t4Regular" className="customerMutedText">
-            쿠폰 내역을 불러오는 중…
-          </Text>
-        ) : null}
-        <CustomerCouponsTable coupons={couponsQuery.data ?? []} />
+        <CustomerCouponsTable
+          coupons={couponsQuery.data ?? []}
+          isLoading={couponsQuery.isFetching}
+        />
       </section>
 
       {id ? <CustomerTokenSection userId={id} /> : null}

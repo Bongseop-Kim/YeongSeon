@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from "seed-design/ui/alert-dialog";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   TextField,
   TextFieldInput,
@@ -154,11 +155,7 @@ export function QuoteRequestDetailSection({
   );
 
   if (detailQuery.isLoading) {
-    return (
-      <Text as="p" textStyle="t4Regular" className="quoteRequestMutedText">
-        견적 정보를 불러오는 중…
-      </Text>
-    );
+    return <AdminPanelSkeleton lines={5} />;
   }
 
   if (detailQuery.error) {
@@ -461,15 +458,6 @@ export function QuoteRequestDetailSection({
             >
               상태 변경 이력
             </Text>
-            {logsQuery.isFetching ? (
-              <Text
-                as="p"
-                textStyle="t4Regular"
-                className="quoteRequestMutedText"
-              >
-                상태 이력을 불러오는 중…
-              </Text>
-            ) : null}
           </div>
         </div>
         {logsQuery.error ? (
@@ -481,6 +469,7 @@ export function QuoteRequestDetailSection({
           getRowId={(row) => row.id}
           emptyText="상태 변경 이력이 없습니다."
           minWidth={640}
+          isLoading={logsQuery.isFetching}
         />
       </section>
 

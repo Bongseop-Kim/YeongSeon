@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   useGenerationLogDetailQuery,
@@ -728,14 +729,7 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
   if (isDetailLoading || (requestedLog?.workflowId && isWorkflowLoading)) {
     return (
       <main className="generationLogPage">
-        <Text
-          as="p"
-          textStyle="t4Regular"
-          className="generationLogMutedText"
-          aria-live="polite"
-        >
-          불러오는 중…
-        </Text>
+        <AdminPanelSkeleton lines={6} />
       </main>
     );
   }

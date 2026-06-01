@@ -178,11 +178,6 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
               {KR_NUMBER_FORMAT.format(total)}건
             </Text>
           </Text>
-          {query.isFetching ? (
-            <Text as="p" textStyle="t4Regular" className="orderMutedText">
-              불러오는 중…
-            </Text>
-          ) : null}
         </div>
       </div>
 
@@ -254,6 +249,7 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
         onRowClick={(row) => navigate(`/orders/show/${row.id}`)}
         getRowActionLabel={(row) => `${row.orderNumber} 주문 상세 보기`}
         minWidth={980}
+        isLoading={query.isFetching}
       />
       <nav className="orderPagination" aria-label="주문 페이지네이션">
         <ActionButton

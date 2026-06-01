@@ -8,6 +8,7 @@ import { OrderStatusBadge } from "./order-status-badge";
 
 interface StatusLogTableProps {
   logs: AdminOrderHistoryEntry[];
+  isLoading?: boolean;
 }
 
 function renderDate(value: string) {
@@ -79,7 +80,10 @@ const columns: ColumnDef<AdminOrderHistoryEntry>[] = [
   },
 ];
 
-export function StatusLogTable({ logs }: StatusLogTableProps) {
+export function StatusLogTable({
+  logs,
+  isLoading = false,
+}: StatusLogTableProps) {
   return (
     <AdminDataTable
       data={logs}
@@ -87,6 +91,7 @@ export function StatusLogTable({ logs }: StatusLogTableProps) {
       getRowId={(row) => `${row.kind}:${row.id}`}
       emptyText="상태 변경 이력이 없습니다."
       minWidth={960}
+      isLoading={isLoading}
     />
   );
 }

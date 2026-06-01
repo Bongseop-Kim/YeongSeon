@@ -196,11 +196,6 @@ export function GenerationLogTable({
             <option value="openai">OpenAI</option>
           </select>
         </label>
-        {loading ? (
-          <Text as="p" textStyle="t4Regular" className="generationLogMutedText">
-            불러오는 중…
-          </Text>
-        ) : null}
       </div>
 
       <AdminDataTable
@@ -209,6 +204,7 @@ export function GenerationLogTable({
         getRowId={(row) => row.workflowId}
         emptyText="생성 로그가 없습니다."
         minWidth={980}
+        isLoading={loading}
       />
       <nav
         className="generationLogPagination"

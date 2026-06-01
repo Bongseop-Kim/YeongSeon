@@ -101,11 +101,6 @@ export default function CouponList() {
               {KR_NUMBER_FORMAT.format(total)}건
             </Text>
           </Text>
-          {query.isFetching ? (
-            <Text as="span" textStyle="t4Regular" aria-live="polite">
-              불러오는 중…
-            </Text>
-          ) : null}
         </div>
 
         <AdminDataTable
@@ -115,6 +110,7 @@ export default function CouponList() {
           emptyText="등록된 쿠폰이 없습니다."
           onRowClick={(row) => navigate(`/coupons/edit/${row.id}`)}
           getRowActionLabel={(row) => `${row.name} 쿠폰 수정`}
+          isLoading={query.isFetching}
         />
 
         <nav className="couponPagination" aria-label="쿠폰 페이지네이션">

@@ -8,9 +8,13 @@ import { formatDateTime } from "@/utils/format-date-time";
 
 interface ClaimStatusLogTableProps {
   logs: AdminClaimStatusLogEntry[];
+  isLoading?: boolean;
 }
 
-export function ClaimStatusLogTable({ logs }: ClaimStatusLogTableProps) {
+export function ClaimStatusLogTable({
+  logs,
+  isLoading = false,
+}: ClaimStatusLogTableProps) {
   const columns = useMemo<ColumnDef<AdminClaimStatusLogEntry>[]>(
     () => [
       {
@@ -61,6 +65,7 @@ export function ClaimStatusLogTable({ logs }: ClaimStatusLogTableProps) {
       getRowId={(row) => row.id}
       emptyText="상태 변경 이력이 없습니다."
       minWidth={640}
+      isLoading={isLoading}
     />
   );
 }

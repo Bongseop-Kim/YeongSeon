@@ -219,11 +219,6 @@ export function DesignContextStats({
           </button>
         ))}
       </div>
-      {loading ? (
-        <Text as="p" textStyle="t4Regular" className="generationLogMutedText">
-          불러오는 중…
-        </Text>
-      ) : null}
       {activeTab === "by_model" ? (
         <AdminDataTable
           data={byModel}
@@ -231,6 +226,7 @@ export function DesignContextStats({
           getRowId={(row) => row.aiModel}
           emptyText="모델별 통계가 없습니다."
           minWidth={860}
+          isLoading={loading}
         />
       ) : null}
       {activeTab === "by_input_type" ? (
@@ -240,6 +236,7 @@ export function DesignContextStats({
           getRowId={(row) => row.inputType}
           emptyText="입력 유형별 통계가 없습니다."
           minWidth={760}
+          isLoading={loading}
         />
       ) : null}
       {activeTab === "by_pattern" ? (
@@ -249,6 +246,7 @@ export function DesignContextStats({
           getRowId={(row) => row.pattern}
           emptyText="패턴별 통계가 없습니다."
           minWidth={640}
+          isLoading={loading}
         />
       ) : null}
       {activeTab === "by_error" ? (
@@ -258,6 +256,7 @@ export function DesignContextStats({
           getRowId={(row) => row.errorType}
           emptyText="에러 분포가 없습니다."
           minWidth={420}
+          isLoading={loading}
         />
       ) : null}
     </div>

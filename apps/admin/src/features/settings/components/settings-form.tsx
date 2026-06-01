@@ -9,6 +9,7 @@ import {
 } from "seed-design/ui/select-box";
 import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   useDefaultCourierForm,
   useDesignTokenInitialGrantForm,
@@ -62,9 +63,7 @@ function SettingSection({
         {title}
       </Text>
       {isLoading ? (
-        <Text as="p" textStyle="t4Regular" aria-live="polite">
-          불러오는 중…
-        </Text>
+        <AdminPanelSkeleton lines={3} />
       ) : isError ? (
         <SettingsErrorCard
           errorMessage={error?.message ?? "알 수 없는 오류"}
