@@ -1,5 +1,4 @@
-import { useOne, useUpdate, type HttpError } from "@refinedev/core";
-import { message } from "antd";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useCallback,
   useEffect,
@@ -11,6 +10,10 @@ import {
 import type { AdminSettingRowDTO } from "@yeongseon/shared";
 
 import {
+  getAdminSetting,
+  updateAdminSetting,
+} from "@/features/settings/api/settings-api";
+import {
   DEFAULT_DESIGN_TOKEN_INITIAL_GRANT,
   sanitizeDesignTokenInitialGrantAmount,
   toDefaultCourierSetting,
@@ -20,9 +23,6 @@ import {
 
 const DEFAULT_COURIER_COMPANY_KEY = "default_courier_company";
 const DESIGN_TOKEN_INITIAL_GRANT_KEY = "design_token_initial_grant";
-const SETTING_RESOURCE = "admin_settings";
-const SETTING_ID_META = { idColumnName: "key" } as const;
-const SETTING_SAVE_SUCCESS_MESSAGE = "설정이 저장되었습니다.";
 
 interface AdminSettingFormOptions<TValue> {
   key: string;
@@ -33,13 +33,17 @@ interface AdminSettingFormOptions<TValue> {
 
 interface AdminSettingFormResult<TValue> {
   value: TValue;
+  savedValue: TValue;
   setValue: Dispatch<SetStateAction<TValue>>;
-  save: () => void;
+  save: () => Promise<AdminSettingRowDTO>;
+  reset: () => void;
+  isDirty: boolean;
   isLoading: boolean;
   isError: boolean;
-  error: HttpError | null;
+  error: Error | null;
   refetch: () => Promise<unknown>;
   isSaving: boolean;
+  saveError: Error | null;
 }
 
 function useAdminSettingForm<TValue>({
@@ -48,60 +52,69 @@ function useAdminSettingForm<TValue>({
   fromDTO,
   toDTOValue,
 }: AdminSettingFormOptions<TValue>): AdminSettingFormResult<TValue> {
-  const { query, result } = useOne<AdminSettingRowDTO>({
-    resource: SETTING_RESOURCE,
-    id: key,
-    meta: SETTING_ID_META,
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: ["admin-settings", key],
+    queryFn: () => getAdminSetting(key),
   });
 
-  const { mutate: updateSetting, mutation } = useUpdate();
+  const mutation = useMutation({
+    mutationFn: (value: TValue) =>
+      updateAdminSetting({ key, value: toDTOValue(value) }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-settings", key] });
+    },
+  });
 
   const [value, setValue] = useState<TValue>(initialValue);
-  const isDirtyRef = useRef(false);
+  const [savedValue, setSavedValue] = useState<TValue>(initialValue);
+  const hasUserEditedRef = useRef(false);
 
   const setDirtyValue = useCallback<Dispatch<SetStateAction<TValue>>>(
     (nextValue) => {
-      isDirtyRef.current = true;
+      hasUserEditedRef.current = true;
       setValue(nextValue);
     },
     [],
   );
 
   useEffect(() => {
-    if (!isDirtyRef.current && result !== undefined) {
-      setValue(fromDTO(result));
+    if (query.data !== undefined) {
+      const nextSavedValue = fromDTO(query.data);
+      setSavedValue(nextSavedValue);
+      if (!hasUserEditedRef.current) {
+        setValue(nextSavedValue);
+      }
     }
-  }, [fromDTO, result, setValue]);
+  }, [fromDTO, query.data]);
 
-  const save = () => {
-    updateSetting(
-      {
-        resource: SETTING_RESOURCE,
-        id: key,
-        values: { value: toDTOValue(value) },
-        meta: SETTING_ID_META,
-      },
-      {
-        onSuccess: () => {
-          isDirtyRef.current = false;
-          message.success(SETTING_SAVE_SUCCESS_MESSAGE);
-        },
-        onError: (error) => {
-          message.error(`설정 저장에 실패했습니다: ${error.message}`);
-        },
-      },
-    );
+  const save = async () => {
+    const result = await mutation.mutateAsync(value);
+    const nextSavedValue = fromDTO(result);
+    setSavedValue(nextSavedValue);
+    setValue(nextSavedValue);
+    hasUserEditedRef.current = false;
+    return result;
+  };
+
+  const reset = () => {
+    setValue(savedValue);
+    hasUserEditedRef.current = false;
   };
 
   return {
     value,
+    savedValue,
     setValue: setDirtyValue,
     save,
+    reset,
+    isDirty: !Object.is(value, savedValue),
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
     isSaving: mutation.isPending,
+    saveError: mutation.error,
   };
 }
 
@@ -121,13 +134,17 @@ export function useDefaultCourierForm() {
 
   return {
     courierCompany: form.value,
+    savedCourierCompany: form.savedValue,
     setCourierCompany: form.setValue,
     save: form.save,
+    reset: form.reset,
+    isDirty: form.isDirty,
     isLoading: form.isLoading,
     isError: form.isError,
     error: form.error,
     refetch: form.refetch,
     isSaving: form.isSaving,
+    saveError: form.saveError,
   };
 }
 
@@ -147,6 +164,7 @@ export function useDesignTokenInitialGrantForm() {
 
   return {
     amount: form.value,
+    savedAmount: form.savedValue,
     setAmount: (value: SetStateAction<number>) => {
       form.setValue((currentValue) => {
         const nextValue =
@@ -155,10 +173,13 @@ export function useDesignTokenInitialGrantForm() {
       });
     },
     save: form.save,
+    reset: form.reset,
+    isDirty: form.isDirty,
     isLoading: form.isLoading,
     isError: form.isError,
     error: form.error,
     refetch: form.refetch,
     isSaving: form.isSaving,
+    saveError: form.saveError,
   };
 }

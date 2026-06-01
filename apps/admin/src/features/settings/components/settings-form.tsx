@@ -1,23 +1,18 @@
-import type React from "react";
-import {
-  Card,
-  Typography,
-  Select,
-  Space,
-  Button,
-  Spin,
-  InputNumber,
-} from "antd";
+import { useRef, useState } from "react";
 import { COURIER_COMPANY_NAMES } from "@yeongseon/shared/constants/courier-companies";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Callout } from "seed-design/ui/callout";
+import {
+  RadioSelectBoxItem,
+  RadioSelectBoxRoot,
+} from "seed-design/ui/select-box";
+import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 
-import { DEFAULT_DESIGN_TOKEN_INITIAL_GRANT } from "@/features/settings/api/settings-mapper";
 import {
   useDefaultCourierForm,
   useDesignTokenInitialGrantForm,
 } from "@/features/settings/api/settings-query";
-
-const { Title } = Typography;
-const SECTION_TITLE_STYLE = { marginTop: 24 } as const;
+import "./settings-form.css";
 
 interface SettingsErrorCardProps {
   errorMessage: string;
@@ -26,19 +21,18 @@ interface SettingsErrorCardProps {
 
 function SettingsErrorCard({ errorMessage, onRetry }: SettingsErrorCardProps) {
   return (
-    <Card>
-      <Typography.Text type="danger">
-        설정을 불러오는데 실패했습니다: {errorMessage}
-      </Typography.Text>
-      <br />
-      <Button onClick={onRetry} style={{ marginTop: 8 }}>
-        다시 시도
-      </Button>
-    </Card>
+    <Callout
+      tone="critical"
+      title="설정을 불러오지 못했습니다"
+      description={errorMessage}
+      role="alert"
+      linkProps={{ children: "다시 시도", onClick: onRetry }}
+    />
   );
 }
 
 interface SettingSectionProps {
+  titleId: string;
   title: string;
   isLoading: boolean;
   isError: boolean;
@@ -48,6 +42,7 @@ interface SettingSectionProps {
 }
 
 function SettingSection({
+  titleId,
   title,
   isLoading,
   isError,
@@ -56,12 +51,12 @@ function SettingSection({
   children,
 }: SettingSectionProps) {
   return (
-    <>
-      <Title level={5} style={SECTION_TITLE_STYLE}>
+    <section className="settingsSection" aria-labelledby={titleId}>
+      <h3 id={titleId} className="settingsSectionTitle">
         {title}
-      </Title>
+      </h3>
       {isLoading ? (
-        <Spin />
+        <p aria-live="polite">불러오는 중…</p>
       ) : isError ? (
         <SettingsErrorCard
           errorMessage={error?.message ?? "알 수 없는 오류"}
@@ -70,93 +65,270 @@ function SettingSection({
       ) : (
         children
       )}
-    </>
+    </section>
   );
 }
 
 export function SettingsForm() {
+  const [notice, setNotice] = useState<string | null>(null);
+  const [amountInputDraft, setAmountInputDraft] = useState<string | null>(null);
+  const [tokenGrantValidationError, setTokenGrantValidationError] = useState<
+    string | null
+  >(null);
+  const tokenGrantInputRef = useRef<HTMLInputElement>(null);
   const {
     courierCompany,
     setCourierCompany,
     save,
+    reset: resetCourierCompany,
+    isDirty: isCourierDirty,
     isLoading,
     isError,
     error,
     refetch,
     isSaving,
+    saveError,
   } = useDefaultCourierForm();
 
   const {
     amount,
+    savedAmount,
     setAmount,
     save: saveTokenGrant,
+    reset: resetTokenGrant,
+    isDirty: isTokenGrantAmountDirty,
     isLoading: isTokenGrantLoading,
     isError: isTokenGrantError,
     error: tokenGrantError,
     refetch: refetchTokenGrant,
     isSaving: isTokenGrantSaving,
+    saveError: tokenGrantSaveError,
   } = useDesignTokenInitialGrantForm();
 
+  const amountInputValue = amountInputDraft ?? String(amount);
+  const parsedTokenGrantAmount = Number(amountInputValue);
+  const isTokenGrantInputValid =
+    Number.isInteger(parsedTokenGrantAmount) && parsedTokenGrantAmount >= 1;
+  const tokenGrantInputError =
+    amountInputValue === "" || !isTokenGrantInputValid
+      ? "1개 이상의 정수를 입력해주세요."
+      : null;
+  const isTokenGrantDirty =
+    amountInputDraft === null
+      ? isTokenGrantAmountDirty
+      : amountInputDraft !== String(savedAmount);
+
+  const handleSaveCourier = async () => {
+    setNotice(null);
+
+    try {
+      await save();
+      setNotice("기본 택배사를 저장했습니다.");
+    } catch {
+      // saveError로 렌더링한다.
+    }
+  };
+
+  const handleSaveTokenGrant = async () => {
+    setNotice(null);
+
+    const parsedAmount = Number(amountInputValue);
+    if (!Number.isInteger(parsedAmount) || parsedAmount < 1) {
+      setTokenGrantValidationError("1개 이상의 정수를 입력해주세요.");
+      tokenGrantInputRef.current?.focus();
+      return;
+    }
+
+    setTokenGrantValidationError(null);
+
+    try {
+      await saveTokenGrant();
+      setAmountInputDraft(null);
+      setNotice("신규 가입 토큰 지급량을 저장했습니다.");
+    } catch {
+      // saveError로 렌더링한다.
+    }
+  };
+
   return (
-    <Card>
-      <Title level={4}>관리자 설정</Title>
+    <main className="settingsPage adminSettingsPage">
+      <header className="settingsTitleGroup">
+        <h1 className="settingsTitle">관리자 설정</h1>
+        <p className="settingsDescription">
+          운영 기본값과 가입 보상 설정을 관리합니다.
+        </p>
+      </header>
 
-      <SettingSection
-        title="기본 택배사"
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        onRetry={() => void refetch()}
-      >
-        <Space>
-          <Select
-            value={courierCompany || undefined}
-            placeholder="기본 택배사 선택"
-            onChange={setCourierCompany}
-            style={{ minWidth: 140, maxWidth: 200, flex: 1 }}
-            options={COURIER_COMPANY_NAMES.map((name) => ({
-              label: name,
-              value: name,
-            }))}
-          />
-          <Button
-            type="primary"
-            onClick={save}
-            loading={isSaving}
-            disabled={!courierCompany || isSaving}
-          >
-            저장
-          </Button>
-        </Space>
-      </SettingSection>
+      {notice ? (
+        <Callout
+          tone="positive"
+          description={notice}
+          role="status"
+          aria-live="polite"
+        />
+      ) : null}
 
-      <SettingSection
-        title="신규 가입 토큰 지급량"
-        isLoading={isTokenGrantLoading}
-        isError={isTokenGrantError}
-        error={tokenGrantError}
-        onRetry={() => void refetchTokenGrant()}
+      <section
+        className="settingsPanel adminSettingsCard"
+        aria-labelledby="settings-panel-title"
       >
-        <Space>
-          <InputNumber
-            value={amount}
-            min={1}
-            step={1}
-            precision={0}
-            onChange={(value) =>
-              setAmount(value ?? DEFAULT_DESIGN_TOKEN_INITIAL_GRANT)
-            }
-          />
-          <Button
-            type="primary"
-            onClick={saveTokenGrant}
-            loading={isTokenGrantSaving}
-            disabled={isTokenGrantSaving}
+        <h2 id="settings-panel-title" className="settingsPanelTitle">
+          배송 및 가입 보상 설정
+        </h2>
+
+        <SettingSection
+          titleId="settings-default-courier"
+          title="기본 택배사"
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          onRetry={() => void refetch()}
+        >
+          <form
+            className="settingsSectionForm adminSettingsSectionForm"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSaveCourier();
+            }}
           >
-            저장
-          </Button>
-        </Space>
-      </SettingSection>
-    </Card>
+            <RadioSelectBoxRoot
+              className="settingsCourierOptions adminSettingsFieldFull"
+              aria-labelledby="settings-default-courier"
+              name="default-courier-company"
+              value={courierCompany}
+              onValueChange={setCourierCompany}
+              columns={2}
+            >
+              {COURIER_COMPANY_NAMES.map((name) => (
+                <RadioSelectBoxItem key={name} value={name} label={name} />
+              ))}
+            </RadioSelectBoxRoot>
+            <div className="settingsActionRow adminSettingsActionRow">
+              {isCourierDirty ? (
+                <p className="settingsSaveSummary adminSettingsActionSummary">
+                  저장하지 않은 변경사항 1개가 있습니다.
+                </p>
+              ) : null}
+              {isCourierDirty ? (
+                <ActionButton
+                  type="button"
+                  variant="neutralWeak"
+                  disabled={isSaving}
+                  onClick={resetCourierCompany}
+                >
+                  변경 취소
+                </ActionButton>
+              ) : null}
+              <ActionButton
+                type="submit"
+                loading={isSaving}
+                disabled={!courierCompany || isSaving || !isCourierDirty}
+              >
+                기본 택배사 저장
+              </ActionButton>
+            </div>
+          </form>
+          {saveError ? (
+            <Callout
+              tone="critical"
+              title="기본 택배사를 저장하지 못했습니다"
+              description={saveError.message}
+              role="alert"
+            />
+          ) : null}
+        </SettingSection>
+
+        <SettingSection
+          titleId="settings-design-token-initial-grant"
+          title="신규 가입 토큰 지급량"
+          isLoading={isTokenGrantLoading}
+          isError={isTokenGrantError}
+          error={tokenGrantError}
+          onRetry={() => void refetchTokenGrant()}
+        >
+          <form
+            className="settingsSectionForm adminSettingsSectionForm"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSaveTokenGrant();
+            }}
+          >
+            <TextField
+              className="settingsNumberField adminSettingsField"
+              label="토큰 지급량"
+              name="design-token-initial-grant"
+              value={amountInputValue}
+              onValueChange={({ value }) => {
+                setAmountInputDraft(value);
+
+                const parsed = Number(value);
+                if (Number.isInteger(parsed) && parsed >= 1) {
+                  setAmount(parsed);
+                  setTokenGrantValidationError(null);
+                }
+              }}
+              suffix="개"
+              required
+              showRequiredIndicator
+              invalid={Boolean(
+                tokenGrantValidationError ?? tokenGrantInputError,
+              )}
+              errorMessage={tokenGrantValidationError ?? tokenGrantInputError}
+            >
+              <TextFieldInput
+                ref={tokenGrantInputRef}
+                name="design-token-initial-grant"
+                type="number"
+                min={1}
+                step={1}
+                inputMode="numeric"
+                autoComplete="off"
+              />
+            </TextField>
+            <div className="settingsActionRow adminSettingsActionRow">
+              {isTokenGrantDirty ? (
+                <p className="settingsSaveSummary adminSettingsActionSummary">
+                  저장하지 않은 변경사항 1개가 있습니다.
+                </p>
+              ) : null}
+              {isTokenGrantDirty ? (
+                <ActionButton
+                  type="button"
+                  variant="neutralWeak"
+                  disabled={isTokenGrantSaving}
+                  onClick={() => {
+                    resetTokenGrant();
+                    setAmountInputDraft(null);
+                    setTokenGrantValidationError(null);
+                  }}
+                >
+                  변경 취소
+                </ActionButton>
+              ) : null}
+              <ActionButton
+                type="submit"
+                loading={isTokenGrantSaving}
+                disabled={
+                  isTokenGrantSaving ||
+                  !isTokenGrantDirty ||
+                  Boolean(tokenGrantInputError)
+                }
+              >
+                토큰 지급량 저장
+              </ActionButton>
+            </div>
+          </form>
+          {tokenGrantSaveError ? (
+            <Callout
+              tone="critical"
+              title="토큰 지급량을 저장하지 못했습니다"
+              description={tokenGrantSaveError.message}
+              role="alert"
+            />
+          ) : null}
+        </SettingSection>
+      </section>
+    </main>
   );
 }

@@ -8,16 +8,20 @@ import {
 } from "@/features/coupons";
 import "@/features/coupons/components/coupon-admin.css";
 
+const DEFAULT_COUPON_FORM_VALUES = createDefaultCouponFormValues();
+
 export default function CouponCreate() {
   const navigate = useNavigate();
   const mutation = useCreateCouponMutation();
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty, dirtyFields },
   } = useForm<AdminCouponFormValues>({
-    defaultValues: createDefaultCouponFormValues(),
+    defaultValues: DEFAULT_COUPON_FORM_VALUES,
   });
+  const dirtyCount = Object.keys(dirtyFields).length;
 
   const onSubmit = handleSubmit((values) => {
     mutation.mutate(values, {
@@ -26,7 +30,7 @@ export default function CouponCreate() {
   });
 
   return (
-    <main className="couponPage">
+    <main className="couponPage adminSettingsPage">
       <header className="couponPageHeader">
         <div className="couponPageTitleGroup">
           <h1 className="couponPageTitle">쿠폰 생성</h1>
@@ -35,11 +39,15 @@ export default function CouponCreate() {
       </header>
 
       {mutation.error ? (
-        <Callout tone="critical" description={mutation.error.message} />
+        <Callout
+          tone="critical"
+          description={mutation.error.message}
+          role="alert"
+        />
       ) : null}
 
       <section
-        className="couponPanel"
+        className="couponPanel adminSettingsCard"
         aria-labelledby="coupon-create-form-title"
       >
         <h2 id="coupon-create-form-title" className="couponPanelTitle">
@@ -51,7 +59,9 @@ export default function CouponCreate() {
             errors={errors}
             submitting={mutation.isPending}
             submitLabel="생성"
-            onCancel={() => navigate("/coupons")}
+            isDirty={isDirty}
+            dirtyCount={dirtyCount}
+            onCancel={() => reset(DEFAULT_COUPON_FORM_VALUES)}
           />
         </form>
       </section>

@@ -22,6 +22,8 @@ interface CouponFormProps {
   errors: FieldErrors<AdminCouponFormValues>;
   submitting: boolean;
   submitLabel: string;
+  isDirty: boolean;
+  dirtyCount: number;
   onCancel: () => void;
 }
 
@@ -37,6 +39,8 @@ interface ControlledTextFieldProps {
   required?: boolean;
   error?: string;
   textarea?: boolean;
+  min?: number;
+  className?: string;
 }
 
 function isCouponDiscountType(value: string): value is CouponDiscountType {
@@ -47,6 +51,21 @@ function FieldError({ message }: FieldErrorProps): ReactNode {
   return message ? <>{message}</> : null;
 }
 
+function createNumberValidator(
+  label: string,
+  min = 0,
+): (value: unknown) => true | string {
+  return (nextValue) => {
+    const value = Number(nextValue);
+
+    if (nextValue == null || !Number.isInteger(value) || value < min) {
+      return `${label}은 ${min} 이상의 정수로 입력해주세요.`;
+    }
+
+    return true;
+  };
+}
+
 function ControlledTextField({
   control,
   name,
@@ -55,12 +74,24 @@ function ControlledTextField({
   required,
   error,
   textarea,
+  min,
+  className,
 }: ControlledTextFieldProps): ReactNode {
-  const { field } = useController({ control, name });
+  const validate =
+    type === "number" ? createNumberValidator(label, min) : undefined;
+  const { field } = useController({
+    control,
+    name,
+    rules: {
+      required: required ? `${label}을 입력해주세요.` : false,
+      validate,
+    },
+  });
   const value = field.value == null ? "" : String(field.value);
 
   return (
     <TextField
+      className={className}
       label={label}
       name={name}
       value={value}
@@ -77,12 +108,18 @@ function ControlledTextField({
       }}
     >
       {textarea ? (
-        <TextFieldTextarea onBlur={field.onBlur} />
+        <TextFieldTextarea
+          name={name}
+          autoComplete="off"
+          onBlur={field.onBlur}
+        />
       ) : (
         <TextFieldInput
           ref={field.ref}
+          name={name}
           type={type}
           autoComplete="off"
+          min={type === "number" ? (min ?? 0) : undefined}
           inputMode={type === "number" ? "numeric" : undefined}
           onBlur={field.onBlur}
         />
@@ -96,8 +133,10 @@ export function CouponForm({
   errors,
   submitting,
   submitLabel,
+  isDirty,
+  dirtyCount,
   onCancel,
-}: CouponFormProps) {
+}: CouponFormProps): ReactNode {
   const { field: discountTypeField } = useController({
     control,
     name: "discountType",
@@ -115,8 +154,9 @@ export function CouponForm({
   const discountType = discountTypeField.value;
 
   return (
-    <div className="couponForm">
+    <div className="couponForm adminSettingsForm">
       <ControlledTextField
+        className="adminSettingsField"
         control={control}
         name="name"
         label="쿠폰명"
@@ -125,7 +165,9 @@ export function CouponForm({
       />
 
       <RadioSelectBoxRoot
+        className="adminSettingsField"
         label="할인유형"
+        name={discountTypeField.name}
         value={discountTypeField.value}
         onValueChange={(value) => {
           if (!isCouponDiscountType(value)) {
@@ -147,26 +189,31 @@ export function CouponForm({
       </RadioSelectBoxRoot>
 
       <ControlledTextField
+        className="adminSettingsField"
         control={control}
         name="discountValue"
         label="할인값"
         type="number"
+        min={1}
         required
         error={errors.discountValue?.message}
       />
 
       {discountType === "percentage" ? (
         <ControlledTextField
+          className="adminSettingsField"
           control={control}
           name="maxDiscountAmount"
           label="최대할인금액"
           type="number"
+          min={1}
           required
           error={errors.maxDiscountAmount?.message}
         />
       ) : null}
 
       <ControlledTextField
+        className="adminSettingsFieldFull"
         control={control}
         name="description"
         label="설명"
@@ -175,6 +222,7 @@ export function CouponForm({
       />
 
       <ControlledTextField
+        className="adminSettingsField"
         control={control}
         name="expiryDate"
         label="만료일"
@@ -184,6 +232,7 @@ export function CouponForm({
       />
 
       <ControlledTextField
+        className="adminSettingsFieldFull"
         control={control}
         name="additionalInfo"
         label="추가정보"
@@ -191,20 +240,42 @@ export function CouponForm({
         error={errors.additionalInfo?.message}
       />
 
-      <Switch
-        checked={isActiveField.value}
-        onCheckedChange={isActiveField.onChange}
-        label="활성"
-        inputProps={{ name: isActiveField.name, onBlur: isActiveField.onBlur }}
-      />
-
-      <div className="couponFormActions">
-        <ActionButton type="submit" loading={submitting} disabled={submitting}>
-          {submitLabel}
-        </ActionButton>
-        <ActionButton type="button" variant="neutralWeak" onClick={onCancel}>
-          취소
-        </ActionButton>
+      <div className="couponFormActions adminSettingsActionRow">
+        <div className="couponActionMeta">
+          <Switch
+            checked={isActiveField.value}
+            onCheckedChange={isActiveField.onChange}
+            label="활성"
+            inputProps={{
+              name: isActiveField.name,
+              onBlur: isActiveField.onBlur,
+            }}
+          />
+          {isDirty ? (
+            <p className="couponSaveSummary adminSettingsActionSummary">
+              저장하지 않은 변경사항 {dirtyCount}개가 있습니다.
+            </p>
+          ) : null}
+        </div>
+        <div className="couponActionButtons">
+          {isDirty ? (
+            <ActionButton
+              type="button"
+              variant="neutralWeak"
+              disabled={submitting}
+              onClick={onCancel}
+            >
+              변경 취소
+            </ActionButton>
+          ) : null}
+          <ActionButton
+            type="submit"
+            loading={submitting}
+            disabled={submitting || !isDirty}
+          >
+            {submitLabel}
+          </ActionButton>
+        </div>
       </div>
     </div>
   );

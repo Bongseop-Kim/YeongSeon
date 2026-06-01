@@ -143,10 +143,11 @@ export default function CouponEdit(): ReactNode {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty, dirtyFields },
   } = useForm<AdminCouponFormValues>({
     defaultValues: createDefaultCouponFormValues(),
   });
+  const dirtyCount = Object.keys(dirtyFields).length;
 
   useEffect(() => {
     if (couponQuery.data) {
@@ -262,11 +263,15 @@ export default function CouponEdit(): ReactNode {
     null;
 
   if (couponQuery.isLoading) {
-    return <main className="couponPage">쿠폰 정보를 불러오는 중…</main>;
+    return (
+      <main className="couponPage adminSettingsPage">
+        쿠폰 정보를 불러오는 중…
+      </main>
+    );
   }
 
   return (
-    <main className="couponPage">
+    <main className="couponPage adminSettingsPage">
       <header className="couponPageHeader">
         <div className="couponPageTitleGroup">
           <h1 className="couponPageTitle">쿠폰 수정</h1>
@@ -276,17 +281,22 @@ export default function CouponEdit(): ReactNode {
         </div>
       </header>
 
-      <div className="couponA11yMessage" aria-live="polite">
-        {state.notice}
-      </div>
       {state.notice ? (
-        <Callout tone="positive" description={state.notice} />
+        <Callout
+          tone="positive"
+          description={state.notice}
+          role="status"
+          aria-live="polite"
+        />
       ) : null}
       {errorMessage ? (
-        <Callout tone="critical" description={errorMessage} />
+        <Callout tone="critical" description={errorMessage} role="alert" />
       ) : null}
 
-      <section className="couponPanel" aria-labelledby="coupon-edit-form-title">
+      <section
+        className="couponPanel adminSettingsCard"
+        aria-labelledby="coupon-edit-form-title"
+      >
         <h2 id="coupon-edit-form-title" className="couponPanelTitle">
           기본 정보
         </h2>
@@ -296,7 +306,13 @@ export default function CouponEdit(): ReactNode {
             errors={errors}
             submitting={updateMutation.isPending}
             submitLabel="저장"
-            onCancel={() => navigate("/coupons")}
+            isDirty={isDirty}
+            dirtyCount={dirtyCount}
+            onCancel={() => {
+              if (couponQuery.data) {
+                reset(toCouponFormValues(couponQuery.data));
+              }
+            }}
           />
         </form>
       </section>

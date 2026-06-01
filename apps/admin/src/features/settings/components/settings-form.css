@@ -1,0 +1,72 @@
+.settingsPage {
+}
+
+.settingsTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settingsTitle {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.settingsDescription {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.settingsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settingsPanelTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.settingsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--seed-color-stroke-neutral-muted);
+}
+
+.settingsSection:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.settingsSectionTitle {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.settingsSectionForm {
+  display: grid;
+  gap: 16px;
+}
+
+.settingsCourierOptions {
+  max-width: 520px;
+}
+
+.settingsNumberField {
+  max-width: 260px;
+}
+
+.settingsSaveSummary {
+  margin: 0;
+}
