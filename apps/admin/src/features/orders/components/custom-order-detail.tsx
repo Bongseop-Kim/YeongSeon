@@ -1,13 +1,115 @@
-import { Descriptions, Image, Space, Typography } from "antd";
 import type {
   AdminCustomOrderItem,
   AdminSampleOrderItem,
+  CustomOrderOptions,
+  CustomOrderPricing,
 } from "@/features/orders/types/admin-order";
-
-const { Title } = Typography;
+import { OrderDetailGrid, OrderDetailItem } from "./order-detail-grid";
 
 interface CustomOrderDetailProps {
   items: AdminCustomOrderItem[] | AdminSampleOrderItem[];
+}
+
+function yn(value: boolean): string {
+  return value ? "O" : "-";
+}
+
+function money(value: number): string {
+  return `${value.toLocaleString()}원`;
+}
+
+function ReferenceImages({ urls }: { urls: string[] }) {
+  if (urls.length === 0) return null;
+
+  return (
+    <section className="orderOptionCard" aria-label="참고 이미지">
+      <h3 className="orderSubsectionTitle">참고 이미지</h3>
+      <div className="orderImageGrid">
+        {urls.map((url, index) => (
+          <a
+            key={`${url}-${index}`}
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <img className="orderPreviewImage" src={url} alt="참고 이미지" />
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AdditionalNotes({ notes }: { notes: string | null }) {
+  if (!notes) return null;
+  return (
+    <OrderDetailGrid>
+      <OrderDetailItem label="추가 메모" full>
+        {notes}
+      </OrderDetailItem>
+    </OrderDetailGrid>
+  );
+}
+
+function OptionsGrid({
+  options,
+  quantity,
+}: {
+  options: CustomOrderOptions;
+  quantity: number;
+}) {
+  return (
+    <OrderDetailGrid>
+      <OrderDetailItem label="넥타이 유형">
+        {options.tieType ?? "-"}
+      </OrderDetailItem>
+      <OrderDetailItem label="심지">
+        {options.interlining ?? "-"}
+      </OrderDetailItem>
+      <OrderDetailItem label="디자인 유형">
+        {options.designType ?? "-"}
+      </OrderDetailItem>
+      <OrderDetailItem label="원단 유형">
+        {options.fabricType ?? "-"}
+      </OrderDetailItem>
+      <OrderDetailItem label="원단 지참">
+        {options.fabricProvided ? "예" : "아니오"}
+      </OrderDetailItem>
+      <OrderDetailItem label="수량">{quantity}</OrderDetailItem>
+      <OrderDetailItem label="삼각봉제">
+        {yn(options.triangleStitch)}
+      </OrderDetailItem>
+      <OrderDetailItem label="옆선봉제">
+        {yn(options.sideStitch)}
+      </OrderDetailItem>
+      <OrderDetailItem label="바택">{yn(options.barTack)}</OrderDetailItem>
+      <OrderDetailItem label="딤플">{yn(options.dimple)}</OrderDetailItem>
+      <OrderDetailItem label="스포데라토">
+        {yn(options.spoderato)}
+      </OrderDetailItem>
+      <OrderDetailItem label="7폴드">{yn(options.fold7)}</OrderDetailItem>
+      <OrderDetailItem label="브랜드 라벨">
+        {yn(options.brandLabel)}
+      </OrderDetailItem>
+      <OrderDetailItem label="케어 라벨">
+        {yn(options.careLabel)}
+      </OrderDetailItem>
+    </OrderDetailGrid>
+  );
+}
+
+function PricingGrid({ pricing }: { pricing: CustomOrderPricing }) {
+  return (
+    <OrderDetailGrid>
+      <OrderDetailItem label="봉제비용">
+        {money(pricing.sewingCost)}
+      </OrderDetailItem>
+      <OrderDetailItem label="원단비용">
+        {money(pricing.fabricCost)}
+      </OrderDetailItem>
+      <OrderDetailItem label="합계">{money(pricing.totalCost)}</OrderDetailItem>
+    </OrderDetailGrid>
+  );
 }
 
 export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
@@ -19,108 +121,21 @@ export function CustomOrderDetail({ items }: CustomOrderDetailProps) {
   }
 
   const reformItem = items.find(
-    (i): i is AdminCustomOrderItem =>
-      i.type === "custom" && i.customData != null,
+    (item): item is AdminCustomOrderItem =>
+      item.type === "custom" && item.customData != null,
   );
-  if (!reformItem || !reformItem.customData) return null;
+  if (!reformItem?.customData) return null;
 
-  const rd = reformItem.customData;
-  const { options, pricing } = rd;
+  const data = reformItem.customData;
 
   return (
-    <>
-      <Title level={5}>주문 제작 상세</Title>
-      <Descriptions
-        bordered
-        column={{ xs: 1, sm: 1, md: 2 }}
-        style={{ marginBottom: 24 }}
-      >
-        <Descriptions.Item label="넥타이 유형">
-          {options.tieType ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="심지">
-          {options.interlining ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="디자인 유형">
-          {options.designType ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="원단 유형">
-          {options.fabricType ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="원단 지참">
-          {options.fabricProvided ? "예" : "아니오"}
-        </Descriptions.Item>
-        <Descriptions.Item label="수량">{rd.quantity}</Descriptions.Item>
-      </Descriptions>
-
-      <Descriptions
-        bordered
-        column={{ xs: 1, sm: 2, md: 3 }}
-        style={{ marginBottom: 24 }}
-      >
-        <Descriptions.Item label="삼각봉제">
-          {options.triangleStitch ? "O" : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="옆선봉제">
-          {options.sideStitch ? "O" : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="바택">
-          {options.barTack ? "O" : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="딤플">
-          {options.dimple ? "O" : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="스포데라토">
-          {options.spoderato ? "O" : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="7폴드">
-          {options.fold7 ? "O" : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="브랜드 라벨">
-          {options.brandLabel ? "O" : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="케어 라벨">
-          {options.careLabel ? "O" : "-"}
-        </Descriptions.Item>
-      </Descriptions>
-
-      <Descriptions
-        bordered
-        column={{ xs: 1, sm: 2, md: 3 }}
-        style={{ marginBottom: 24 }}
-      >
-        <Descriptions.Item label="봉제비용">
-          {pricing.sewingCost.toLocaleString()}원
-        </Descriptions.Item>
-        <Descriptions.Item label="원단비용">
-          {pricing.fabricCost.toLocaleString()}원
-        </Descriptions.Item>
-        <Descriptions.Item label="합계">
-          {pricing.totalCost.toLocaleString()}원
-        </Descriptions.Item>
-      </Descriptions>
-
-      {rd.referenceImageUrls.length > 0 && (
-        <>
-          <Title level={5}>참고 이미지</Title>
-          <Image.PreviewGroup>
-            <Space wrap style={{ marginBottom: 24 }}>
-              {rd.referenceImageUrls.map((url) => (
-                <Image key={url} width={120} src={url} />
-              ))}
-            </Space>
-          </Image.PreviewGroup>
-        </>
-      )}
-
-      {rd.additionalNotes && (
-        <Descriptions bordered column={1} style={{ marginBottom: 24 }}>
-          <Descriptions.Item label="추가 메모">
-            {rd.additionalNotes}
-          </Descriptions.Item>
-        </Descriptions>
-      )}
-    </>
+    <div className="orderOptionCard">
+      <h2 className="orderSectionTitle">주문 제작 상세</h2>
+      <OptionsGrid options={data.options} quantity={data.quantity} />
+      <PricingGrid pricing={data.pricing} />
+      <ReferenceImages urls={data.referenceImageUrls} />
+      <AdditionalNotes notes={data.additionalNotes} />
+    </div>
   );
 }
 
@@ -131,63 +146,31 @@ function SampleOrderDetail({ item }: { item: AdminSampleOrderItem }) {
   const { options, pricing } = sampleData;
 
   return (
-    <>
-      <Title level={5}>샘플 제작 상세</Title>
-      <Descriptions
-        bordered
-        column={{ xs: 1, sm: 1, md: 2 }}
-        style={{ marginBottom: 24 }}
-      >
-        <Descriptions.Item label="샘플 유형">
+    <div className="orderOptionCard">
+      <h2 className="orderSectionTitle">샘플 제작 상세</h2>
+      <OrderDetailGrid>
+        <OrderDetailItem label="샘플 유형">
           {sampleData.sampleType}
-        </Descriptions.Item>
-        <Descriptions.Item label="수량">{item.quantity}</Descriptions.Item>
-        <Descriptions.Item label="넥타이 유형">
+        </OrderDetailItem>
+        <OrderDetailItem label="수량">{item.quantity}</OrderDetailItem>
+        <OrderDetailItem label="넥타이 유형">
           {options.tieType ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="심지">
+        </OrderDetailItem>
+        <OrderDetailItem label="심지">
           {options.interlining ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="디자인 유형">
+        </OrderDetailItem>
+        <OrderDetailItem label="디자인 유형">
           {options.designType ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="원단 유형">
+        </OrderDetailItem>
+        <OrderDetailItem label="원단 유형">
           {options.fabricType ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="고정 금액">
-          {pricing.totalCost.toLocaleString()}원
-        </Descriptions.Item>
-      </Descriptions>
-
+        </OrderDetailItem>
+        <OrderDetailItem label="고정 금액">
+          {money(pricing.totalCost)}
+        </OrderDetailItem>
+      </OrderDetailGrid>
       <ReferenceImages urls={sampleData.referenceImageUrls} />
       <AdditionalNotes notes={sampleData.additionalNotes} />
-    </>
-  );
-}
-
-function ReferenceImages({ urls }: { urls: string[] }) {
-  if (urls.length === 0) return null;
-
-  return (
-    <>
-      <Title level={5}>참고 이미지</Title>
-      <Image.PreviewGroup>
-        <Space wrap style={{ marginBottom: 24 }}>
-          {urls.map((url, index) => (
-            <Image key={`${url}-${index}`} width={120} src={url} />
-          ))}
-        </Space>
-      </Image.PreviewGroup>
-    </>
-  );
-}
-
-function AdditionalNotes({ notes }: { notes: string | null }) {
-  if (!notes) return null;
-
-  return (
-    <Descriptions bordered column={1} style={{ marginBottom: 24 }}>
-      <Descriptions.Item label="추가 메모">{notes}</Descriptions.Item>
-    </Descriptions>
+    </div>
   );
 }

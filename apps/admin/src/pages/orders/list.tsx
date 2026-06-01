@@ -1,10 +1,8 @@
-import { List } from "@refinedev/antd";
-import { Tabs } from "antd";
-import { useGo } from "@refinedev/core";
 import { useSearchParams } from "react-router-dom";
 import { ORDER_TYPE_LABELS } from "@yeongseon/shared";
 import type { OrderType } from "@yeongseon/shared";
 import { DomainOrderTable } from "@/features/orders";
+import "@/features/orders/components/orders.css";
 
 const VALID_ORDER_TYPES = Object.keys(ORDER_TYPE_LABELS) as OrderType[];
 
@@ -12,38 +10,50 @@ function isValidOrderType(value: string | null): value is OrderType {
   return value !== null && VALID_ORDER_TYPES.includes(value as OrderType);
 }
 
-const TAB_ITEMS = VALID_ORDER_TYPES.map((key) => ({
-  key,
-  label: ORDER_TYPE_LABELS[key],
-}));
-
 export default function OrderList() {
-  const [searchParams] = useSearchParams();
-  const go = useGo();
+  const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get("tab");
   const activeTab: OrderType = isValidOrderType(rawTab) ? rawTab : "sale";
 
-  const handleTabChange = (key: string) => {
-    if (!isValidOrderType(key)) return;
-    go({
-      query: { tab: key },
-      options: { keepQuery: false },
-      type: "replace",
-    });
+  const handleTabChange = (nextTab: OrderType): void => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", nextTab);
+        next.set("page", "1");
+        next.delete("status");
+        next.delete("orderNumber");
+        return next;
+      },
+      { replace: true },
+    );
   };
 
   return (
-    <List>
-      <Tabs
-        activeKey={activeTab}
-        onChange={handleTabChange}
-        destroyInactiveTabPane
-        items={TAB_ITEMS.map((item) => ({
-          key: item.key,
-          label: item.label,
-          children: <DomainOrderTable orderType={item.key} />,
-        }))}
-      />
-    </List>
+    <main className="orderPage">
+      <header className="orderPageTitleGroup">
+        <h1 className="orderPageTitle">주문</h1>
+        <p className="orderPageDescription">
+          판매·제작·수선·토큰 주문 상태와 배송 정보를 관리합니다.
+        </p>
+      </header>
+
+      <nav className="orderTabList" aria-label="주문 유형">
+        {VALID_ORDER_TYPES.map((orderType) => (
+          <button
+            key={orderType}
+            type="button"
+            className="orderTabButton"
+            role="tab"
+            aria-selected={activeTab === orderType}
+            onClick={() => handleTabChange(orderType)}
+          >
+            {ORDER_TYPE_LABELS[orderType]}
+          </button>
+        ))}
+      </nav>
+
+      <DomainOrderTable orderType={activeTab} />
+    </main>
   );
 }

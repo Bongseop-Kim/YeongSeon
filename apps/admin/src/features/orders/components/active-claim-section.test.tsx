@@ -1,14 +1,24 @@
+import type { ButtonHTMLAttributes } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ActiveClaimSection } from "@/features/orders/components/active-claim-section";
 import type { AdminActiveClaimSummary } from "@/features/orders/types/admin-order";
 
-const { showMock } = vi.hoisted(() => ({
-  showMock: vi.fn(),
+const { navigateMock } = vi.hoisted(() => ({
+  navigateMock: vi.fn(),
 }));
 
-vi.mock("@refinedev/core", () => ({
-  useNavigation: () => ({ show: showMock }),
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => navigateMock,
+}));
+
+vi.mock("seed-design/ui/action-button", () => ({
+  ActionButton: ({
+    children,
+    ...props
+  }: ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button {...props}>{children}</button>
+  ),
 }));
 
 function createClaim(
@@ -26,7 +36,7 @@ function createClaim(
 
 describe("ActiveClaimSection", () => {
   beforeEach(() => {
-    showMock.mockReset();
+    navigateMock.mockReset();
   });
 
   it("활성 클레임 요약 정보를 렌더링하고 상세 페이지로 이동한다", () => {
@@ -42,6 +52,6 @@ describe("ActiveClaimSection", () => {
       screen.getByRole("button", { name: "클레임 상세 바로가기" }),
     );
 
-    expect(showMock).toHaveBeenCalledWith("admin_claim_list_view", "claim-1");
+    expect(navigateMock).toHaveBeenCalledWith("/claims/show/claim-1");
   });
 });

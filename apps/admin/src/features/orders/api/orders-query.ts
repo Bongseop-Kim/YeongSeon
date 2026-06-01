@@ -1,210 +1,168 @@
-import { useState, useEffect, useRef } from "react";
-import dayjs from "dayjs";
+import { useEffect, useRef, useState } from "react";
 import { eulo } from "@yeongseon/shared";
-import { useTable } from "@refinedev/antd";
-import { useShow, useList, useInvalidate } from "@refinedev/core";
-import { message } from "antd";
-import type { TableProps } from "antd";
-import type {
-  AdminOrderListRowDTO,
-  AdminOrderDetailRowDTO,
-  AdminOrderItemRowDTO,
-  ClaimStatusLogDTO,
-  OrderStatusLogDTO,
-  OrderType,
-} from "@yeongseon/shared";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { OrderType } from "@yeongseon/shared";
 import {
-  toAdminOrderListItem,
-  toAdminOrderDetail,
-  toAdminOrderItem,
-} from "./orders-mapper";
-import { toAdminOrderHistoryEntries } from "./order-history-mapper";
-import { updateOrderStatus, updateOrderTracking } from "./orders-api";
-import type {
-  AdminOrderListItem,
-  AdminOrderDetail,
-  AdminOrderItem,
-  AdminOrderHistoryEntry,
-} from "@/features/orders/types/admin-order";
+  getAdminOrderDetail,
+  getAdminOrderHistory,
+  getAdminOrderItems,
+  getAdminOrders,
+  getRelatedOrders,
+  updateOrderStatus,
+  updateOrderTracking,
+} from "./orders-api";
+import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
 
-// ── List ───────────────────────────────────────────────────────
-// useTable returns { tableProps, setFilters } — tableProps.dataSource is TData[]
-// We cast tableProps to TableProps<AdminOrderListItem> at this boundary:
-// all Refine internal callbacks (onChange, sorter, etc.) operate on column keys,
-// not on the data shape, so the cast is structurally safe at runtime.
+export const ORDER_PAGE_SIZE = 20;
 
-export function useAdminOrderTable(
-  orderType: OrderType,
-  initialDateRange: [string, string],
-) {
-  const { tableProps: rawTableProps, setFilters } =
-    useTable<AdminOrderListRowDTO>({
-      resource: "admin_order_list_view",
-      sorters: { initial: [{ field: "createdAt", order: "desc" }] },
-      filters: {
-        permanent: [{ field: "orderType", operator: "eq", value: orderType }],
-        initial: [
-          {
-            field: "createdAt",
-            operator: "gte",
-            value: dayjs(initialDateRange[0]).startOf("day").toISOString(),
-          },
-          {
-            field: "createdAt",
-            operator: "lte",
-            value: dayjs(initialDateRange[1]).endOf("day").toISOString(),
-          },
-        ],
-      },
-      syncWithLocation: false,
-    });
+const ORDER_LIST_KEY = ["orders", "list"] as const;
+const ORDER_DETAIL_KEY = ["orders", "detail"] as const;
+const ORDER_ITEMS_KEY = ["orders", "items"] as const;
+const ORDER_HISTORY_KEY = ["orders", "history"] as const;
+const ORDER_RELATED_KEY = ["orders", "related"] as const;
 
-  const tableProps: TableProps<AdminOrderListItem> = {
-    loading: rawTableProps.loading,
-    pagination: rawTableProps.pagination,
-    onChange:
-      rawTableProps.onChange as TableProps<AdminOrderListItem>["onChange"],
-    dataSource: (rawTableProps.dataSource ?? []).map(toAdminOrderListItem),
-  };
-
-  return {
-    tableProps,
-    setFilters,
-  };
+export function useAdminOrderTable(params: {
+  orderType: OrderType;
+  page: number;
+  dateFrom: string;
+  dateTo: string;
+  orderNumber?: string | null;
+  status?: string | null;
+}) {
+  return useQuery({
+    queryKey: [
+      ...ORDER_LIST_KEY,
+      params.orderType,
+      params.page,
+      params.dateFrom,
+      params.dateTo,
+      params.orderNumber ?? null,
+      params.status ?? null,
+    ],
+    queryFn: () => getAdminOrders({ ...params, pageSize: ORDER_PAGE_SIZE }),
+  });
 }
 
-// ── Detail ────────────────────────────────────────────────────
-// useShow returns { query, result } where result: TData | undefined
-
 export function useAdminOrderDetail(orderId: string | undefined) {
-  const { query, result: rawOrder } = useShow<AdminOrderDetailRowDTO>({
-    resource: "admin_order_detail_view",
-    id: orderId,
-    queryOptions: { enabled: !!orderId },
+  const query = useQuery({
+    queryKey: [...ORDER_DETAIL_KEY, orderId ?? null],
+    queryFn: () => getAdminOrderDetail(orderId ?? ""),
+    enabled: Boolean(orderId),
   });
 
-  const order: AdminOrderDetail | undefined = rawOrder
-    ? toAdminOrderDetail(rawOrder)
-    : undefined;
-
   return {
-    order,
+    order: query.data,
     refetch: query.refetch,
     isLoading: query.isLoading,
     isError: query.isError,
+    error: query.error,
   };
 }
-
-// ── Items ────────────────────────────────────────────────────
-// useList returns { result: { data: TData[], total } }
 
 export function useAdminOrderItems(
   orderId: string | undefined,
   orderType: OrderType,
 ) {
-  const { result } = useList<AdminOrderItemRowDTO>({
-    resource: "admin_order_item_view",
-    filters: [{ field: "orderId", operator: "eq", value: orderId }],
-    queryOptions: { enabled: !!orderId },
+  const query = useQuery({
+    queryKey: [...ORDER_ITEMS_KEY, orderId ?? null, orderType],
+    queryFn: () => getAdminOrderItems({ orderId: orderId ?? "", orderType }),
+    enabled: Boolean(orderId),
   });
 
-  const items: AdminOrderItem[] = result.data.map((dto) =>
-    toAdminOrderItem(dto, orderType),
-  );
-
-  return { items };
+  return {
+    items: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+  };
 }
-
-// ── Related orders ────────────────────────────────────────────
 
 export function useRelatedOrders(
   paymentGroupId: string | null | undefined,
   currentOrderId: string,
 ) {
-  const { query, result } = useList<AdminOrderListRowDTO>({
-    resource: "admin_order_list_view",
-    filters: [
-      { field: "paymentGroupId", operator: "eq", value: paymentGroupId },
-    ],
-    queryOptions: { enabled: !!paymentGroupId },
+  const query = useQuery({
+    queryKey: [...ORDER_RELATED_KEY, paymentGroupId ?? null, currentOrderId],
+    queryFn: () =>
+      getRelatedOrders({
+        paymentGroupId: paymentGroupId ?? "",
+        currentOrderId,
+      }),
+    enabled: Boolean(paymentGroupId),
   });
 
-  const relatedOrders = result.data
-    .filter((dto) => dto.id !== currentOrderId)
-    .map(toAdminOrderListItem);
-
-  return { relatedOrders, isLoading: query.isLoading };
+  return {
+    relatedOrders: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+  };
 }
-
-// ── Status logs ───────────────────────────────────────────────
 
 export function useAdminOrderHistory(orderId: string | undefined) {
-  const { result: orderResult } = useList<OrderStatusLogDTO>({
-    resource: "admin_order_status_log_view",
-    filters: [{ field: "orderId", operator: "eq", value: orderId }],
-    sorters: [{ field: "createdAt", order: "desc" }],
-    queryOptions: { enabled: !!orderId },
+  const query = useQuery({
+    queryKey: [...ORDER_HISTORY_KEY, orderId ?? null],
+    queryFn: () => getAdminOrderHistory(orderId ?? ""),
+    enabled: Boolean(orderId),
   });
 
-  const { result: claimResult } = useList<ClaimStatusLogDTO>({
-    resource: "admin_claim_status_log_view",
-    filters: [{ field: "orderId", operator: "eq", value: orderId }],
-    sorters: [{ field: "createdAt", order: "desc" }],
-    queryOptions: { enabled: !!orderId },
-  });
-
-  const logs: AdminOrderHistoryEntry[] = toAdminOrderHistoryEntries({
-    orderLogs: orderResult.data,
-    claimLogs: claimResult.data,
-  });
-
-  return { logs };
+  return {
+    logs: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+  };
 }
-
-// ── Status update ─────────────────────────────────────────────
 
 export function useOrderStatusUpdate(
   orderId: string | undefined,
   refetch: () => void,
 ) {
-  const invalidate = useInvalidate();
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const invalidateLogs = () =>
-    invalidate({
-      resource: "admin_order_status_log_view",
-      invalidates: ["list"],
-    });
+  const queryClient = useQueryClient();
+  const [notice, setNotice] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const mutation = useMutation({
+    mutationFn: (params: {
+      newStatus: string;
+      memo: string;
+      isRollback: boolean;
+    }) => {
+      if (!orderId) throw new Error("주문 정보를 찾을 수 없습니다.");
+      return updateOrderStatus({
+        orderId,
+        newStatus: params.newStatus,
+        memo: params.memo || null,
+        isRollback: params.isRollback,
+      });
+    },
+    onSuccess: async (_data, variables) => {
+      refetch();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ORDER_LIST_KEY }),
+        queryClient.invalidateQueries({ queryKey: ORDER_DETAIL_KEY }),
+        queryClient.invalidateQueries({ queryKey: ORDER_HISTORY_KEY }),
+      ]);
+      setErrorMessage(null);
+      setNotice(
+        variables.isRollback
+          ? `"${variables.newStatus}"${eulo(variables.newStatus)} 롤백되었습니다.`
+          : `상태가 "${variables.newStatus}"${eulo(variables.newStatus)} 변경되었습니다.`,
+      );
+    },
+  });
 
   const updateStatus = async (
     newStatus: string,
     memo: string,
     isRollback: boolean,
   ): Promise<boolean> => {
-    if (!orderId) return false;
-    setIsUpdating(true);
+    setNotice(null);
+    setErrorMessage(null);
     try {
-      await updateOrderStatus({
-        orderId,
-        newStatus,
-        memo: memo || null,
-        isRollback,
-      });
-      message.success(
-        isRollback
-          ? `"${newStatus}"${eulo(newStatus)} 롤백되었습니다.`
-          : `상태가 "${newStatus}"${eulo(newStatus)} 변경되었습니다.`,
-      );
-      refetch();
-      invalidateLogs();
+      await mutation.mutateAsync({ newStatus, memo, isRollback });
       return true;
     } catch (err) {
-      message.error(
+      setErrorMessage(
         `${isRollback ? "롤백" : "상태 변경"} 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
       );
       return false;
-    } finally {
-      setIsUpdating(false);
     }
   };
 
@@ -214,12 +172,27 @@ export function useOrderStatusUpdate(
   const rollback = (targetStatus: string, memo: string) =>
     updateStatus(targetStatus, memo, true);
 
-  return { isUpdating, changeStatus, rollback };
+  return {
+    isUpdating: mutation.isPending,
+    changeStatus,
+    rollback,
+    notice,
+    errorMessage,
+    clearNotice: () => setNotice(null),
+  };
 }
 
-// ── Tracking save ─────────────────────────────────────────────
 export function useTrackingSave(onSuccess?: () => void | Promise<unknown>) {
-  const [isPending, setIsPending] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const mutation = useMutation({
+    mutationFn: updateOrderTracking,
+    onSuccess: async () => {
+      await onSuccess?.();
+      setErrorMessage(null);
+      setNotice("배송 정보가 저장되었습니다.");
+    },
+  });
 
   const saveTracking = async (
     orderId: string,
@@ -228,32 +201,33 @@ export function useTrackingSave(onSuccess?: () => void | Promise<unknown>) {
     companyCourierCompany?: string,
     companyTrackingNumber?: string,
   ): Promise<boolean> => {
-    setIsPending(true);
+    setNotice(null);
+    setErrorMessage(null);
     try {
-      await updateOrderTracking({
+      await mutation.mutateAsync({
         orderId,
         courierCompany,
         trackingNumber,
         companyCourierCompany,
         companyTrackingNumber,
       });
-      message.success("배송 정보가 저장되었습니다.");
-      await onSuccess?.();
       return true;
     } catch (err) {
-      message.error(
+      setErrorMessage(
         err instanceof Error ? err.message : "배송 정보 저장에 실패했습니다.",
       );
       return false;
-    } finally {
-      setIsPending(false);
     }
   };
 
-  return { saveTracking, isPending };
+  return {
+    saveTracking,
+    isPending: mutation.isPending,
+    notice,
+    errorMessage,
+    clearNotice: () => setNotice(null),
+  };
 }
-
-// ── Tracking local state ──────────────────────────────────────
 
 export function useTrackingState(
   order: AdminOrderDetail | undefined,
