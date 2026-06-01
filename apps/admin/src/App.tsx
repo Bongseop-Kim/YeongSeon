@@ -1,32 +1,16 @@
-import { Refine, Authenticated } from "@refinedev/core";
-import { ThemedLayout, useNotificationProvider } from "@refinedev/antd";
-import routerProvider from "@refinedev/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   BrowserRouter,
-  Routes,
-  Route,
-  Outlet,
   Navigate,
+  Outlet,
+  Route,
+  Routes,
 } from "react-router-dom";
-import { App as AntdApp } from "antd";
-import {
-  ShoppingOutlined,
-  SkinOutlined,
-  TagOutlined,
-  ExceptionOutlined,
-  TeamOutlined,
-  QuestionCircleOutlined,
-  DashboardOutlined,
-  SettingOutlined,
-  FileTextOutlined,
-  DollarOutlined,
-  RobotOutlined,
-} from "@ant-design/icons";
 
-import { authProvider } from "@/providers/auth-provider";
-import { dataProvider } from "@/providers/data-provider";
-import { AdminSider } from "@/components/AdminSider";
 import { AdminHeader } from "@/components/AdminHeader";
+import { AdminSider } from "@/components/AdminSider";
+import { checkAdminAuth } from "@/providers/auth-provider";
 
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
@@ -51,145 +35,123 @@ import PricingPage from "@/pages/pricing";
 import GenerationLogList from "@/pages/generation-logs/list";
 import GenerationLogDetailPage from "@/pages/generation-logs/detail";
 
-import "@refinedev/antd/dist/reset.css";
+function useAdminAuthCheck() {
+  const [state, setState] = useState<{
+    authenticated: boolean;
+    loading: boolean;
+  }>({
+    authenticated: false,
+    loading: true,
+  });
+
+  useEffect(() => {
+    let active = true;
+
+    void checkAdminAuth()
+      .then((authenticated) => {
+        if (active) setState({ authenticated, loading: false });
+      })
+      .catch(() => {
+        if (active) setState({ authenticated: false, loading: false });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return state;
+}
+
+function AuthLoading() {
+  return <div className="adminAuthLoading">권한을 확인하는 중…</div>;
+}
+
+function ProtectedRoute() {
+  const { authenticated, loading } = useAdminAuthCheck();
+
+  if (loading) return <AuthLoading />;
+  if (!authenticated) return <Navigate to="/login" replace />;
+
+  return <Outlet />;
+}
+
+function LoginRoute() {
+  const { authenticated, loading } = useAdminAuthCheck();
+
+  if (loading) return <AuthLoading />;
+  if (authenticated) return <Navigate to="/" replace />;
+
+  return <LoginPage />;
+}
 
 function AppLayout() {
+  const [siderCollapsed, setSiderCollapsed] = useState(false);
+  const [mobileSiderOpen, setMobileSiderOpen] = useState(false);
+
   return (
-    <ThemedLayout Sider={AdminSider} Header={AdminHeader}>
-      <Outlet />
-    </ThemedLayout>
+    <div className="adminLayout">
+      <AdminSider
+        collapsed={siderCollapsed}
+        mobileOpen={mobileSiderOpen}
+        onCollapsedChange={setSiderCollapsed}
+        onMobileOpenChange={setMobileSiderOpen}
+      />
+      <div className="adminMainArea">
+        <AdminHeader onMenuOpen={() => setMobileSiderOpen(true)} />
+        <Outlet />
+      </div>
+    </div>
+  );
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="/orders" element={<OrderList />} />
+          <Route path="/orders/show/:id" element={<OrderShow />} />
+          <Route path="/products" element={<ProductList />} />
+          <Route path="/products/create" element={<ProductCreate />} />
+          <Route path="/products/edit/:id" element={<ProductEdit />} />
+          <Route path="/coupons" element={<CouponList />} />
+          <Route path="/coupons/create" element={<CouponCreate />} />
+          <Route path="/coupons/edit/:id" element={<CouponEdit />} />
+          <Route path="/quote-requests" element={<QuoteRequestList />} />
+          <Route
+            path="/quote-requests/show/:id"
+            element={<QuoteRequestShow />}
+          />
+          <Route path="/claims" element={<ClaimList />} />
+          <Route path="/claims/show/:id" element={<ClaimShow />} />
+          <Route path="/customers" element={<CustomerList />} />
+          <Route path="/customers/show/:id" element={<CustomerShow />} />
+          <Route path="/inquiries" element={<InquiryList />} />
+          <Route path="/inquiries/show/:id" element={<InquiryShow />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/generation-logs" element={<GenerationLogList />} />
+          <Route
+            path="/generation-logs/:id"
+            element={<GenerationLogDetailPage />}
+          />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Route>
+      </Route>
+      <Route path="/login" element={<LoginRoute />} />
+    </Routes>
   );
 }
 
 export default function App() {
+  const queryClient = useMemo(() => new QueryClient(), []);
+
   return (
-    <BrowserRouter>
-      <AntdApp>
-        <Refine
-          routerProvider={routerProvider}
-          dataProvider={dataProvider}
-          authProvider={authProvider}
-          notificationProvider={useNotificationProvider}
-          resources={[
-            {
-              name: "dashboard",
-              list: "/",
-              meta: { label: "대시보드", icon: <DashboardOutlined /> },
-            },
-            {
-              name: "admin_order_list_view",
-              list: "/orders",
-              show: "/orders/show/:id",
-              meta: { label: "주문 관리", icon: <ShoppingOutlined /> },
-            },
-            {
-              name: "products",
-              list: "/products",
-              create: "/products/create",
-              edit: "/products/edit/:id",
-              meta: { label: "상품 관리", icon: <SkinOutlined /> },
-            },
-            {
-              name: "coupons",
-              list: "/coupons",
-              create: "/coupons/create",
-              edit: "/coupons/edit/:id",
-              meta: { label: "쿠폰 관리", icon: <TagOutlined /> },
-            },
-            {
-              name: "admin_quote_request_list_view",
-              list: "/quote-requests",
-              show: "/quote-requests/show/:id",
-              meta: { label: "견적 관리", icon: <FileTextOutlined /> },
-            },
-            {
-              name: "admin_claim_list_view",
-              list: "/claims",
-              show: "/claims/show/:id",
-              meta: { label: "클레임 관리", icon: <ExceptionOutlined /> },
-            },
-            {
-              name: "profiles",
-              list: "/customers",
-              show: "/customers/show/:id",
-              meta: { label: "고객 관리", icon: <TeamOutlined /> },
-            },
-            {
-              name: "inquiries",
-              list: "/inquiries",
-              show: "/inquiries/show/:id",
-              meta: { label: "문의 관리", icon: <QuestionCircleOutlined /> },
-            },
-            {
-              name: "pricing",
-              list: "/pricing",
-              meta: { label: "가격 관리", icon: <DollarOutlined /> },
-            },
-            {
-              name: "ai_generation_logs",
-              list: "/generation-logs",
-              show: "/generation-logs/:id",
-              meta: { label: "AI 생성 로그", icon: <RobotOutlined /> },
-            },
-            {
-              name: "admin_settings",
-              list: "/settings",
-              meta: { label: "설정", icon: <SettingOutlined /> },
-            },
-          ]}
-          options={{
-            disableTelemetry: true,
-            syncWithLocation: true,
-            warnWhenUnsavedChanges: true,
-          }}
-        >
-          <Routes>
-            <Route
-              element={
-                <Authenticated key="auth" fallback={<Navigate to="/login" />}>
-                  <AppLayout />
-                </Authenticated>
-              }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="/orders" element={<OrderList />} />
-              <Route path="/orders/show/:id" element={<OrderShow />} />
-              <Route path="/products" element={<ProductList />} />
-              <Route path="/products/create" element={<ProductCreate />} />
-              <Route path="/products/edit/:id" element={<ProductEdit />} />
-              <Route path="/coupons" element={<CouponList />} />
-              <Route path="/coupons/create" element={<CouponCreate />} />
-              <Route path="/coupons/edit/:id" element={<CouponEdit />} />
-              <Route path="/quote-requests" element={<QuoteRequestList />} />
-              <Route
-                path="/quote-requests/show/:id"
-                element={<QuoteRequestShow />}
-              />
-              <Route path="/claims" element={<ClaimList />} />
-              <Route path="/claims/show/:id" element={<ClaimShow />} />
-              <Route path="/customers" element={<CustomerList />} />
-              <Route path="/customers/show/:id" element={<CustomerShow />} />
-              <Route path="/inquiries" element={<InquiryList />} />
-              <Route path="/inquiries/show/:id" element={<InquiryShow />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/generation-logs" element={<GenerationLogList />} />
-              <Route
-                path="/generation-logs/:id"
-                element={<GenerationLogDetailPage />}
-              />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Route>
-            <Route
-              path="/login"
-              element={
-                <Authenticated key="login" fallback={<LoginPage />}>
-                  <Navigate to="/" />
-                </Authenticated>
-              }
-            />
-          </Routes>
-        </Refine>
-      </AntdApp>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }

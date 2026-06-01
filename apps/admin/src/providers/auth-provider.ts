@@ -1,91 +1,54 @@
-import type { AuthProvider } from "@refinedev/core";
+import { loginAdmin } from "@/features/auth/api/auth-api";
 import { supabase } from "@/lib/supabase";
 
-export const authProvider: AuthProvider = {
-  login: async ({ email, password }) => {
-    const { data: authData, error: authError } =
-      await supabase.auth.signInWithPassword({ email, password });
+export interface AdminIdentity {
+  id: string;
+  name: string | undefined;
+  email: string | undefined;
+  role: string | undefined;
+}
 
-    if (authError) {
-      return { success: false, error: authError };
-    }
+export async function loginWithAdminRole(params: {
+  email: string;
+  password: string;
+}): Promise<void> {
+  await loginAdmin(params);
+}
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", authData.user.id)
-      .single();
+export async function logoutAdmin(): Promise<void> {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(error.message);
+}
 
-    if (!profile || !["admin", "manager"].includes(profile.role)) {
-      await supabase.auth.signOut();
-      return {
-        success: false,
-        error: {
-          name: "AuthorizationError",
-          message: "관리자 권한이 없습니다.",
-        },
-      };
-    }
+export async function checkAdminAuth(): Promise<boolean> {
+  const { data } = await supabase.auth.getUser();
 
-    return { success: true, redirectTo: "/" };
-  },
+  if (!data.user) return false;
 
-  logout: async () => {
-    const { error } = await supabase.auth.signOut();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .single();
 
-    if (error) {
-      return { success: false, error };
-    }
+  return Boolean(profile && ["admin", "manager"].includes(profile.role));
+}
 
-    return { success: true, redirectTo: "/login" };
-  },
+export async function getAdminIdentity(): Promise<AdminIdentity | null> {
+  const { data } = await supabase.auth.getUser();
 
-  check: async () => {
-    const { data } = await supabase.auth.getUser();
+  if (!data.user) return null;
 
-    if (!data.user) {
-      return { authenticated: false, redirectTo: "/login" };
-    }
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name, role")
+    .eq("id", data.user.id)
+    .single();
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-
-    if (!profile || !["admin", "manager"].includes(profile.role)) {
-      return { authenticated: false, redirectTo: "/login" };
-    }
-
-    return { authenticated: true };
-  },
-
-  getIdentity: async () => {
-    const { data } = await supabase.auth.getUser();
-
-    if (!data.user) {
-      return null;
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("name, role")
-      .eq("id", data.user.id)
-      .single();
-
-    return {
-      id: data.user.id,
-      name: profile?.name ?? data.user.email,
-      email: data.user.email,
-      role: profile?.role,
-    };
-  },
-
-  onError: async (error) => {
-    if (error?.statusCode === 401 || error?.statusCode === 403) {
-      return { logout: true, redirectTo: "/login" };
-    }
-
-    return { error };
-  },
-};
+  return {
+    id: data.user.id,
+    name: profile?.name ?? data.user.email,
+    email: data.user.email,
+    role: profile?.role,
+  };
+}

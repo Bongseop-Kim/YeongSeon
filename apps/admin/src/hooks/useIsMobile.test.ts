@@ -1,36 +1,63 @@
-import { renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
-const useBreakpointMock = vi.hoisted(() => vi.fn());
+function mockMatchMedia(initialMatches: boolean) {
+  let matches = initialMatches;
+  const listeners = new Set<() => void>();
+  const mediaQuery = {
+    get matches() {
+      return matches;
+    },
+    addEventListener: vi.fn((_event: "change", listener: () => void) => {
+      listeners.add(listener);
+    }),
+    removeEventListener: vi.fn((_event: "change", listener: () => void) => {
+      listeners.delete(listener);
+    }),
+  };
 
-vi.mock("antd", () => ({
-  Grid: {
-    useBreakpoint: useBreakpointMock,
-  },
-}));
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => mediaQuery),
+  );
+
+  return {
+    setMatches(nextMatches: boolean) {
+      matches = nextMatches;
+      listeners.forEach((listener) => listener());
+    },
+  };
+}
 
 describe("useIsMobile", () => {
-  it("lg 값이 없으면 false를 반환한다", () => {
-    useBreakpointMock.mockReturnValue({});
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("matchMedia가 없으면 false를 반환한다", () => {
+    vi.stubGlobal("matchMedia", undefined);
 
     const { result } = renderHook(() => useIsMobile());
 
     expect(result.current).toBe(false);
   });
 
-  it("lg가 true면 desktop으로 판단한다", () => {
-    useBreakpointMock.mockReturnValue({ lg: true });
+  it("미디어 쿼리가 match되면 mobile로 판단한다", () => {
+    mockMatchMedia(true);
 
+    const { result } = renderHook(() => useIsMobile());
+
+    expect(result.current).toBe(true);
+  });
+
+  it("미디어 쿼리 변경을 반영한다", () => {
+    const controller = mockMatchMedia(false);
     const { result } = renderHook(() => useIsMobile());
 
     expect(result.current).toBe(false);
-  });
 
-  it("lg가 false면 mobile로 판단한다", () => {
-    useBreakpointMock.mockReturnValue({ lg: false });
-
-    const { result } = renderHook(() => useIsMobile());
+    act(() => controller.setMatches(true));
 
     expect(result.current).toBe(true);
   });
