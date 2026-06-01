@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { GenerationLogDetailPage } from "@/features/generation-logs/components/generation-log-detail-page";
@@ -20,6 +21,37 @@ vi.mock("@/features/generation-logs/api/generation-logs-query", () => ({
     data: mocks.workflowLogs,
     isLoading: false,
   }),
+}));
+
+vi.mock("seed-design/ui/action-button", () => ({
+  ActionButton: ({
+    children,
+    loading: _loading,
+    size: _size,
+    variant: _variant,
+    ...props
+  }: ButtonHTMLAttributes<HTMLButtonElement> & {
+    loading?: boolean;
+    size?: string;
+    variant?: string;
+  }) => <button {...props}>{children}</button>,
+}));
+
+vi.mock("seed-design/ui/callout", () => ({
+  Callout: ({
+    description,
+    role,
+    title,
+  }: {
+    description?: ReactNode;
+    role?: string;
+    title?: ReactNode;
+  }) => (
+    <div role={role}>
+      {title ? <p>{title}</p> : null}
+      {description ? <p>{description}</p> : null}
+    </div>
+  ),
 }));
 
 const tileRoleOnlyLog: AdminGenerationLogItem = {

@@ -1,13 +1,15 @@
-import { Select, Space, Table, Tag, Typography } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
+import type { ColumnDef } from "@tanstack/react-table";
+import { ActionButton } from "seed-design/ui/action-button";
+import { AdminDataTable } from "@/components/AdminDataTable";
+import { StatusBadge } from "@/components/StatusBadge";
 import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
-import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
+import { requestTypeLabel } from "@/features/generation-logs/utils";
 import { formatNullableLocaleNumber } from "@/utils/format-number";
 import type { AdminGenerationLogGroup } from "@/features/generation-logs/types/admin-generation-log";
-
-const { Text } = Typography;
+import "./generation-logs.css";
 
 interface GenerationLogTableProps {
   data: AdminGenerationLogGroup[];
@@ -19,55 +21,31 @@ interface GenerationLogTableProps {
   onAiModelChange: (model: string | null) => void;
 }
 
-const THUMB_SIZE = 54;
-
 function ResultThumbnailGrid({ group }: { group: AdminGenerationLogGroup }) {
   const images = group.resultImages.slice(0, 4);
   const cells = Array.from({ length: 4 }, (_, index) => images[index] ?? null);
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(2, ${THUMB_SIZE}px)`,
-        gap: 4,
-      }}
-    >
+    <div className="generationLogThumbGrid">
       {cells.map((image, index) => (
         <div
           key={image?.workId ?? `empty-${index}`}
-          style={{
-            width: THUMB_SIZE,
-            height: THUMB_SIZE,
-            borderRadius: 6,
-            border:
-              image?.status === "error"
-                ? "1px solid #ffccc7"
-                : "1px solid #f0f0f0",
-            background: image?.status === "error" ? "#fff2f0" : "#fafafa",
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className={
+            image?.status === "error"
+              ? "generationLogThumbCell generationLogThumbCellError"
+              : "generationLogThumbCell"
+          }
         >
           {image?.url ? (
             <img
+              className="generationLogThumbImage"
               src={image.url}
               alt={`생성 결과 ${index + 1}`}
               loading="lazy"
               decoding="async"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-              }}
             />
           ) : (
-            <Text type="secondary" style={{ fontSize: 10 }}>
-              이미지 없음
-            </Text>
+            <span>이미지 없음</span>
           )}
         </div>
       ))}
@@ -75,21 +53,21 @@ function ResultThumbnailGrid({ group }: { group: AdminGenerationLogGroup }) {
   );
 }
 
-const renderGroupStatus = (group: AdminGenerationLogGroup) => {
-  if (group.errorCount > 0) {
-    return (
-      <Tag color="error">
-        {group.successCount}/{group.imageCount} 성공
-      </Tag>
-    );
-  }
-
+function GroupStatusBadge({ group }: { group: AdminGenerationLogGroup }) {
   return (
-    <Tag color="success">
+    <StatusBadge tone={group.errorCount > 0 ? "critical" : "positive"}>
       {group.successCount}/{group.imageCount} 성공
-    </Tag>
+    </StatusBadge>
   );
-};
+}
+
+function StatusCell({ group }: { group: AdminGenerationLogGroup }) {
+  return group.errorCount > 0 ? (
+    <StatusBadge tone="critical">에러 {group.errorCount}</StatusBadge>
+  ) : (
+    <StatusBadge tone="positive">성공</StatusBadge>
+  );
+}
 
 export function GenerationLogTable({
   data,
@@ -100,127 +78,143 @@ export function GenerationLogTable({
   aiModel,
   onAiModelChange,
 }: GenerationLogTableProps) {
-  const columns: ColumnsType<AdminGenerationLogGroup> = [
-    {
-      title: "생성 결과",
-      key: "resultImages",
-      width: 132,
-      render: (_, record) => <ResultThumbnailGrid group={record} />,
-    },
-    {
-      title: "요청",
-      dataIndex: "userMessage",
-      key: "userMessage",
-      ellipsis: true,
-      render: (v: string, record) => (
-        <Space direction="vertical" size={4} style={{ width: "100%" }}>
-          <Text ellipsis style={{ maxWidth: 360 }}>
-            {v}
-          </Text>
-          <Space wrap size={4}>
-            <Tag color={modelColor(record.aiModel)}>{record.aiModel}</Tag>
-            <Tag>{requestTypeLabel(record.requestType)}</Tag>
-            {record.patternType && <Tag>{record.patternType}</Tag>}
-            {record.fabricType && <Tag>{record.fabricType}</Tag>}
-          </Space>
-          <Text code style={{ fontSize: 11 }}>
-            <Link
-              to={`/generation-logs/${record.primaryLogId}`}
-              aria-label={`${record.workflowId} 생성 로그 상세 보기`}
-            >
-              {record.workflowId}
-            </Link>
-          </Text>
-        </Space>
-      ),
-    },
-    {
-      title: "이미지",
-      key: "imageCount",
-      width: 100,
-      align: "center",
-      render: (_, record) => renderGroupStatus(record),
-    },
-    {
-      title: "토큰",
-      key: "tokens",
-      width: 90,
-      align: "right",
-      render: (_, record) => {
-        const net = record.tokensCharged - record.tokensRefunded;
-        return (
-          <span>
-            {net}
-            {record.tokensRefunded > 0 && (
-              <Text type="secondary" style={{ fontSize: 11 }}>
-                {" "}
-                (-{record.tokensRefunded})
-              </Text>
-            )}
-          </span>
-        );
+  const columns = useMemo<ColumnDef<AdminGenerationLogGroup>[]>(
+    () => [
+      {
+        id: "resultImages",
+        header: "생성 결과",
+        cell: ({ row }) => <ResultThumbnailGrid group={row.original} />,
       },
-    },
-    {
-      title: "응답(ms)",
-      dataIndex: "totalLatencyMs",
-      key: "totalLatencyMs",
-      width: 90,
-      align: "right",
-      render: (v: number | null) => formatNullableLocaleNumber(v),
-    },
-    {
-      title: "상태",
-      dataIndex: "errorCount",
-      key: "errorCount",
-      width: 90,
-      render: (_, record) =>
-        record.errorCount > 0 ? (
-          <Tag color="error">에러 {record.errorCount}</Tag>
-        ) : (
-          <Tag color="success">성공</Tag>
-        ),
-    },
-    {
-      title: "시각",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 150,
-      render: (v: string) => dayjs(v).format("MM-DD HH:mm:ss"),
-    },
-  ];
+      {
+        accessorKey: "userMessage",
+        header: "요청",
+        cell: ({ row }) => {
+          const record = row.original;
+          return (
+            <div className="generationLogRequestCell">
+              <span className="generationLogRequestText">
+                {record.userMessage}
+              </span>
+              <div className="generationLogChipRow">
+                <StatusBadge tone="brand">{record.aiModel}</StatusBadge>
+                <StatusBadge>
+                  {requestTypeLabel(record.requestType)}
+                </StatusBadge>
+                {record.patternType ? (
+                  <StatusBadge>{record.patternType}</StatusBadge>
+                ) : null}
+                {record.fabricType ? (
+                  <StatusBadge>{record.fabricType}</StatusBadge>
+                ) : null}
+              </div>
+              <Link
+                className="generationLogCodeText"
+                to={`/generation-logs/${record.primaryLogId}`}
+                aria-label={`${record.workflowId} 생성 로그 상세 보기`}
+              >
+                {record.workflowId}
+              </Link>
+            </div>
+          );
+        },
+      },
+      {
+        id: "imageCount",
+        header: "이미지",
+        cell: ({ row }) => <GroupStatusBadge group={row.original} />,
+      },
+      {
+        id: "tokens",
+        header: "토큰",
+        cell: ({ row }) => {
+          const net = row.original.tokensCharged - row.original.tokensRefunded;
+          return (
+            <span>
+              {net}
+              {row.original.tokensRefunded > 0 ? (
+                <span className="generationLogMutedText">
+                  {" "}
+                  (-{row.original.tokensRefunded})
+                </span>
+              ) : null}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "totalLatencyMs",
+        header: "응답(ms)",
+        cell: ({ row }) =>
+          formatNullableLocaleNumber(row.original.totalLatencyMs),
+      },
+      {
+        accessorKey: "errorCount",
+        header: "상태",
+        cell: ({ row }) => <StatusCell group={row.original} />,
+      },
+      {
+        accessorKey: "createdAt",
+        header: "시각",
+        cell: ({ row }) =>
+          dayjs(row.original.createdAt).format("MM-DD HH:mm:ss"),
+      },
+    ],
+    [],
+  );
+  const totalText = hasMore
+    ? `${page * GENERATION_LOG_PAGE_SIZE}+`
+    : String((page - 1) * GENERATION_LOG_PAGE_SIZE + data.length);
 
   return (
-    <>
-      <Space style={{ marginBottom: 12 }}>
-        <Select
-          placeholder="모든 모델"
-          value={aiModel}
-          onChange={onAiModelChange}
-          allowClear
-          style={{ width: 140 }}
-          options={[{ value: "openai", label: "OpenAI" }]}
-        />
-      </Space>
+    <div className="generationLogPanel">
+      <div className="generationLogToolbar">
+        <label className="generationLogField">
+          <span className="generationLogFieldLabel">AI 모델</span>
+          <select
+            className="generationLogSelect"
+            value={aiModel ?? ""}
+            onChange={(event) => onAiModelChange(event.target.value || null)}
+          >
+            <option value="">모든 모델</option>
+            <option value="openai">OpenAI</option>
+          </select>
+        </label>
+        {loading ? (
+          <p className="generationLogMutedText">불러오는 중…</p>
+        ) : null}
+      </div>
 
-      <Table<AdminGenerationLogGroup>
+      <AdminDataTable
+        data={data}
         columns={columns}
-        dataSource={data}
-        rowKey="workflowId"
-        loading={loading}
-        size="small"
-        pagination={{
-          current: page,
-          pageSize: GENERATION_LOG_PAGE_SIZE,
-          total: hasMore
-            ? page * GENERATION_LOG_PAGE_SIZE + 1
-            : (page - 1) * GENERATION_LOG_PAGE_SIZE + data.length,
-          onChange: onPageChange,
-          showSizeChanger: false,
-          simple: true,
-        }}
-        scroll={{ x: 980 }}
+        getRowId={(row) => row.workflowId}
+        emptyText="생성 로그가 없습니다."
+        minWidth={980}
       />
-    </>
+      <nav
+        className="generationLogPagination"
+        aria-label="생성 로그 페이지네이션"
+      >
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+        >
+          이전
+        </ActionButton>
+        <span>
+          {page} · {totalText}건
+        </span>
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          disabled={!hasMore}
+          onClick={() => onPageChange(page + 1)}
+        >
+          다음
+        </ActionButton>
+      </nav>
+    </div>
   );
 }

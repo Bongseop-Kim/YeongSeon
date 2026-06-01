@@ -1,37 +1,39 @@
 import { useMemo, useState } from "react";
-import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Descriptions,
-  Image,
-  List,
-  Row,
-  Space,
-  Spin,
-  Tag,
-  Typography,
-} from "antd";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Callout } from "seed-design/ui/callout";
+import { StatusBadge } from "@/components/StatusBadge";
 import {
   useGenerationLogDetailQuery,
   useGenerationWorkflowLogsQuery,
 } from "@/features/generation-logs/api/generation-logs-query";
-import { modelColor, requestTypeLabel } from "@/features/generation-logs/utils";
+import { requestTypeLabel } from "@/features/generation-logs/utils";
 import { hasJsonBlockContent } from "@/features/generation-logs/utils/json-block";
 import type { AdminGenerationLogItem } from "@/features/generation-logs/types/admin-generation-log";
 import { formatDateTimeSeconds } from "@/utils/format-date-time";
-
-const { Text } = Typography;
+import "./generation-logs.css";
 
 type WorkflowStepListVariant = "chip" | "card";
+
 interface WorkflowStepListProps {
   workflowLogs: AdminGenerationLogItem[];
   activeLogId: string;
   onSelectLog: (logId: string) => void;
   variant: WorkflowStepListVariant;
+}
+
+interface GeneratedImageItem {
+  label: string;
+  url: string | null;
+  workId: string;
+  logId: string;
+  status: "success" | "error";
+  totalLatencyMs: number | null;
+}
+
+function statusTone(status: "success" | "error") {
+  return status === "success" ? "positive" : "critical";
 }
 
 function WorkflowStepList({
@@ -40,67 +42,48 @@ function WorkflowStepList({
   onSelectLog,
   variant,
 }: WorkflowStepListProps) {
-  if (workflowLogs.length <= 1) {
-    return null;
-  }
-
-  if (variant === "chip") {
-    return (
-      <Space wrap size={8} style={{ marginTop: 10 }}>
-        {workflowLogs.map((workflowLog) => (
-          <Button
-            key={workflowLog.id}
-            type={workflowLog.id === activeLogId ? "primary" : "default"}
-            size="small"
-            onClick={() => onSelectLog(workflowLog.id)}
-          >
-            {requestTypeLabel(workflowLog.requestType)} · {workflowLog.aiModel}
-          </Button>
-        ))}
-      </Space>
-    );
-  }
+  if (workflowLogs.length <= 1) return null;
 
   return (
-    <Space direction="vertical" size="small" style={{ width: "100%" }}>
+    <div
+      className={
+        variant === "chip" ? "generationLogChipRow" : "generationLogOptionCard"
+      }
+    >
       {workflowLogs.map((workflowLog) => {
         const isActive = workflowLog.id === activeLogId;
         return (
           <button
             key={workflowLog.id}
             type="button"
+            className={
+              isActive
+                ? "generationLogButtonLike generationLogButtonLikeActive"
+                : "generationLogButtonLike"
+            }
             onClick={() => onSelectLog(workflowLog.id)}
-            style={{
-              width: "100%",
-              textAlign: "left",
-              borderRadius: 8,
-              border: isActive ? "1px solid #1677ff" : "1px solid #f0f0f0",
-              background: isActive ? "#f0f7ff" : "#fff",
-              padding: "12px 14px",
-              cursor: "pointer",
-            }}
           >
-            <Space wrap size={8}>
-              <Tag color={modelColor(workflowLog.aiModel)}>
-                {workflowLog.aiModel}
-              </Tag>
-              <Tag>{requestTypeLabel(workflowLog.requestType)}</Tag>
-              {workflowLog.errorType ? (
-                <Tag color="error">{workflowLog.errorType}</Tag>
-              ) : (
-                <Tag color="success">success</Tag>
-              )}
-              <Text type="secondary" style={{ fontSize: 12 }}>
+            <span className="generationLogChipRow">
+              <StatusBadge tone="brand">{workflowLog.aiModel}</StatusBadge>
+              <StatusBadge>
+                {requestTypeLabel(workflowLog.requestType)}
+              </StatusBadge>
+              <StatusBadge
+                tone={workflowLog.errorType ? "critical" : "positive"}
+              >
+                {workflowLog.errorType ?? "success"}
+              </StatusBadge>
+              <span className="generationLogMetaText">
                 {formatDateTimeSeconds(workflowLog.createdAt)}
-              </Text>
-              <Text code style={{ fontSize: 11 }}>
+              </span>
+              <span className="generationLogCodeText">
                 {workflowLog.workId}
-              </Text>
-            </Space>
+              </span>
+            </span>
           </button>
         );
       })}
-    </Space>
+    </div>
   );
 }
 
@@ -120,71 +103,36 @@ function StickyBar({
   const netTokensCharged = Math.max(0, log.tokensCharged - log.tokensRefunded);
 
   return (
-    <div
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 10,
-        background: "#fff",
-        border: "1px solid #f0f0f0",
-        borderRadius: 0,
-        margin: 0,
-        padding: "10px 24px",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-      }}
-    >
-      <div style={{ marginBottom: 6 }}>
-        <Button
-          aria-label="AI 생성 로그 목록으로 돌아가기"
-          type="link"
-          size="small"
-          style={{ padding: 0, fontSize: 13, cursor: "pointer" }}
-          onClick={onBack}
-        >
+    <section className="generationLogStickyBar" aria-label="생성 로그 요약">
+      <div className="generationLogActionRow">
+        <ActionButton type="button" variant="neutralWeak" onClick={onBack}>
           ← AI 생성 로그
-        </Button>
-        <Text type="secondary" style={{ fontSize: 13 }}>
-          {" "}
-          / {dayjs(log.createdAt).format("MM-DD HH:mm:ss")} · {log.aiModel} ·{" "}
+        </ActionButton>
+        <span className="generationLogMutedText">
+          {dayjs(log.createdAt).format("MM-DD HH:mm:ss")} · {log.aiModel} ·{" "}
           {requestTypeLabel(log.requestType)}
-        </Text>
+        </span>
       </div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          flexWrap: "wrap",
-        }}
-      >
-        <Tag color={modelColor(log.aiModel)}>{log.aiModel}</Tag>
-        <Tag>{requestTypeLabel(log.requestType)}</Tag>
-        <Text type="secondary" style={{ fontSize: 13 }}>
+      <div className="generationLogChipRow">
+        <StatusBadge tone="brand">{log.aiModel}</StatusBadge>
+        <StatusBadge>{requestTypeLabel(log.requestType)}</StatusBadge>
+        <span className="generationLogMutedText">
           토큰 <strong>{netTokensCharged}</strong>
-        </Text>
-        <Text type="secondary" style={{ fontSize: 13 }}>
+        </span>
+        <span className="generationLogMutedText">
           응답{" "}
           <strong>
             {log.totalLatencyMs != null ? `${log.totalLatencyMs}ms` : "—"}
           </strong>
-        </Text>
-        {log.errorType ? (
-          <Tag color="error">{log.errorType}</Tag>
-        ) : (
-          <Tag color="success">성공</Tag>
-        )}
-        {log.workflowId && (
-          <Text
-            type="secondary"
-            style={{
-              fontSize: 11,
-              marginLeft: "auto",
-              fontFamily: "monospace",
-            }}
-          >
+        </span>
+        <StatusBadge tone={log.errorType ? "critical" : "positive"}>
+          {log.errorType ?? "성공"}
+        </StatusBadge>
+        {log.workflowId ? (
+          <span className="generationLogMetaText">
             workflow: {log.workflowId}
-          </Text>
-        )}
+          </span>
+        ) : null}
       </div>
       <WorkflowStepList
         workflowLogs={workflowLogs}
@@ -192,17 +140,8 @@ function StickyBar({
         onSelectLog={onSelectLog}
         variant="chip"
       />
-    </div>
+    </section>
   );
-}
-
-interface GeneratedImageItem {
-  label: string;
-  url: string | null;
-  workId: string;
-  logId: string;
-  status: "success" | "error";
-  totalLatencyMs: number | null;
 }
 
 function getPrimaryImageUrl(log: AdminGenerationLogItem): string | null {
@@ -220,7 +159,6 @@ function getGeneratedImageItems(
   workflowLogs: AdminGenerationLogItem[],
 ): GeneratedImageItem[] {
   const sourceLogs = workflowLogs.length > 1 ? workflowLogs : [log];
-
   const items = sourceLogs.map((workflowLog, index) => ({
     label: `Variant ${index + 1}`,
     url: getPrimaryImageUrl(workflowLog),
@@ -230,9 +168,7 @@ function getGeneratedImageItems(
     totalLatencyMs: workflowLog.totalLatencyMs,
   }));
 
-  if (items.length > 1) {
-    return items;
-  }
+  if (items.length > 1) return items;
 
   return [
     {
@@ -266,9 +202,9 @@ function getGeneratedImageItems(
     .filter((item, index, allItems) => {
       const key = `${item.url}|${item.workId}`;
       return (
-        allItems.findIndex((candidate) => {
-          return `${candidate.url}|${candidate.workId}` === key;
-        }) === index
+        allItems.findIndex(
+          (candidate) => `${candidate.url}|${candidate.workId}` === key,
+        ) === index
       );
     });
 }
@@ -289,117 +225,73 @@ function GeneratedImageSection({
     (image) => image.status === "success" && image.url,
   ).length;
 
-  if (generatedImages.length === 0) {
-    return (
-      <Card title="생성 결과 세트" size="small" style={{ marginBottom: 16 }}>
-        <div
-          style={{
-            background: "#f5f5f5",
-            borderRadius: 8,
-            height: 120,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#bbb",
-            border: "1px dashed #d9d9d9",
-          }}
-        >
+  return (
+    <section
+      className="generationLogPanel"
+      aria-labelledby="generated-images-title"
+    >
+      <div className="generationLogPanelHeader">
+        <h2 id="generated-images-title" className="generationLogSectionTitle">
+          생성 결과 세트
+        </h2>
+        {generatedImages.length > 0 ? (
+          <StatusBadge
+            tone={
+              successCount === generatedImages.length ? "positive" : "critical"
+            }
+          >
+            {successCount}/{generatedImages.length} 성공
+          </StatusBadge>
+        ) : null}
+      </div>
+      {generatedImages.length === 0 ? (
+        <div className="generationLogPreviewPlaceholder">
           이미지 없음 ({requestTypeLabel(log.requestType)} 단계)
         </div>
-      </Card>
-    );
-  }
-
-  return (
-    <Card
-      title="생성 결과 세트"
-      size="small"
-      style={{ marginBottom: 16 }}
-      extra={
-        <Tag
-          color={successCount === generatedImages.length ? "success" : "error"}
-        >
-          {successCount}/{generatedImages.length} 성공
-        </Tag>
-      }
-    >
-      <List
-        grid={{ gutter: 12, xs: 1, sm: 2, md: 4 }}
-        dataSource={generatedImages}
-        renderItem={(item) => (
-          <List.Item>
+      ) : (
+        <div className="generationLogImageGrid">
+          {generatedImages.map((item) => (
             <button
+              key={`${item.logId}-${item.workId}`}
               type="button"
+              className={
+                item.logId === activeLogId
+                  ? "generationLogImageButton generationLogImageButtonActive"
+                  : "generationLogImageButton"
+              }
               onClick={() => onSelectLog(item.logId)}
-              style={{
-                width: "100%",
-                textAlign: "left",
-                padding: 0,
-                border: item.logId === activeLogId ? "1px solid #1677ff" : 0,
-                borderRadius: 8,
-                background: "transparent",
-                cursor: "pointer",
-              }}
             >
-              <Space direction="vertical" size={6} style={{ width: "100%" }}>
-                {item.url ? (
-                  <Image
-                    src={item.url}
-                    alt={`생성 결과 ${item.label}`}
-                    preview={false}
-                    style={{
-                      width: "100%",
-                      maxHeight: 260,
-                      objectFit: "contain",
-                      borderRadius: 6,
-                      background: "#fafafa",
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      height: 180,
-                      borderRadius: 6,
-                      background: "#fff2f0",
-                      border: "1px dashed #ffccc7",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text type="secondary">이미지 없음</Text>
-                  </div>
-                )}
-                <Text strong style={{ fontSize: 12 }}>
-                  {item.label}
-                </Text>
-                <Text code style={{ fontSize: 11, whiteSpace: "pre-wrap" }}>
-                  {item.workId}
-                </Text>
-                <Space size={6}>
-                  <Tag color={item.status === "error" ? "error" : "success"}>
-                    {item.status === "error" ? "실패" : "성공"}
-                  </Tag>
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    {item.totalLatencyMs != null
-                      ? `${item.totalLatencyMs}ms`
-                      : "-"}
-                  </Text>
-                </Space>
-                {item.url && (
-                  <Text
-                    type="secondary"
-                    style={{ fontSize: 11, overflowWrap: "anywhere" }}
-                  >
-                    {item.url}
-                  </Text>
-                )}
-              </Space>
+              {item.url ? (
+                <img
+                  className="generationLogPreviewImage"
+                  src={item.url}
+                  alt={`생성 결과 ${item.label}`}
+                />
+              ) : (
+                <div className="generationLogPreviewPlaceholder generationLogPreviewPlaceholderError">
+                  이미지 없음
+                </div>
+              )}
+              <h3 className="generationLogSubTitle">{item.label}</h3>
+              <p className="generationLogCodeText">{item.workId}</p>
+              <div className="generationLogChipRow">
+                <StatusBadge tone={statusTone(item.status)}>
+                  {item.status === "error" ? "실패" : "성공"}
+                </StatusBadge>
+                <span className="generationLogMetaText">
+                  {item.totalLatencyMs != null
+                    ? `${item.totalLatencyMs}ms`
+                    : "-"}
+                </span>
+              </div>
+              {item.url ? (
+                <p className="generationLogMetaText">{item.url}</p>
+              ) : null}
             </button>
-          </List.Item>
-        )}
-      />
-    </Card>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -409,62 +301,54 @@ function AttachedImageSection({ log }: { log: AdminGenerationLogItem }) {
       (attachment) => attachment.type === "image",
     ) ?? [];
 
-  if (imageAttachments.length === 0) {
-    return null;
-  }
+  if (imageAttachments.length === 0) return null;
 
   return (
-    <Card title="첨부 이미지" size="small" style={{ marginBottom: 16 }}>
-      <List
-        grid={{ gutter: 12, xs: 1, sm: 2, md: 3 }}
-        dataSource={imageAttachments}
-        renderItem={(attachment) => {
+    <section
+      className="generationLogPanel"
+      aria-labelledby="attached-images-title"
+    >
+      <h2 id="attached-images-title" className="generationLogSectionTitle">
+        첨부 이미지
+      </h2>
+      <div className="generationLogImageGrid">
+        {imageAttachments.map((attachment) => {
           const isHttpsUrl = attachment.value.startsWith("https://");
 
           return (
-            <List.Item>
-              <Space direction="vertical" size={6} style={{ width: "100%" }}>
-                {isHttpsUrl ? (
-                  <Image
-                    src={attachment.value}
-                    alt={attachment.label}
-                    style={{
-                      maxWidth: "100%",
-                      maxHeight: 320,
-                      objectFit: "contain",
-                      borderRadius: 6,
-                    }}
-                  />
-                ) : (
-                  <Alert
-                    type="warning"
-                    showIcon
-                    message="첨부 이미지 URL이 저장되지 않았습니다"
-                    description={attachment.value}
-                  />
-                )}
-                <Text strong style={{ fontSize: 12 }}>
-                  {attachment.label}
-                </Text>
-                {attachment.fileName && (
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    {attachment.fileName}
-                  </Text>
-                )}
-                {isHttpsUrl && (
-                  <Text
-                    type="secondary"
-                    style={{ fontSize: 11, overflowWrap: "anywhere" }}
-                  >
-                    {attachment.value}
-                  </Text>
-                )}
-              </Space>
-            </List.Item>
+            <div
+              key={`${attachment.label}-${attachment.value}`}
+              className="generationLogOptionCard"
+            >
+              {isHttpsUrl ? (
+                <img
+                  className="generationLogPreviewImage"
+                  src={attachment.value}
+                  alt={attachment.label}
+                />
+              ) : (
+                <Callout
+                  tone="warning"
+                  title="첨부 이미지 URL이 저장되지 않았습니다"
+                  description={attachment.value}
+                />
+              )}
+              <strong>{attachment.label}</strong>
+              {attachment.fileName ? (
+                <span className="generationLogMetaText">
+                  {attachment.fileName}
+                </span>
+              ) : null}
+              {isHttpsUrl ? (
+                <span className="generationLogMetaText">
+                  {attachment.value}
+                </span>
+              ) : null}
+            </div>
           );
-        }}
-      />
-    </Card>
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -476,74 +360,57 @@ function ExpandableText({
   content: string;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const LIMIT = 300;
-  const isLong = content.length > LIMIT;
+  const limit = 300;
+  const isLong = content.length > limit;
   const displayed =
-    expanded || !isLong ? content : content.slice(0, LIMIT) + "…";
+    expanded || !isLong ? content : `${content.slice(0, limit)}…`;
 
   return (
-    <div>
-      <div
-        style={{
-          fontSize: 11,
-          color: "#999",
-          marginBottom: 5,
-          fontWeight: 600,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          background: "#fafafa",
-          borderRadius: 6,
-          border: "1px solid #f0f0f0",
-          padding: "8px 10px",
-          fontSize: 12,
-          color: "#374151",
-          lineHeight: 1.7,
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        {displayed}
-      </div>
-      {isLong && (
-        <Button
+    <div className="generationLogExpandable">
+      <strong className="generationLogFieldLabel">{label}</strong>
+      <div className="generationLogExpandableBody">{displayed}</div>
+      {isLong ? (
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
           aria-label={expanded ? `${label} 접기` : `${label} 더 보기`}
-          type="link"
-          size="small"
-          style={{ padding: 0, fontSize: 11, cursor: "pointer" }}
-          onClick={() => setExpanded((v) => !v)}
+          onClick={() => setExpanded((value) => !value)}
         >
           {expanded ? "접기" : "더 보기"}
-        </Button>
-      )}
+        </ActionButton>
+      ) : null}
     </div>
   );
 }
 
 function JsonBlock({ label, value }: { label: string; value: unknown }) {
-  if (!hasJsonBlockContent(value)) {
-    return null;
-  }
+  if (!hasJsonBlockContent(value)) return null;
 
   return (
-    <div style={{ marginBottom: 8 }}>
-      <div style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>
-        {label}
-      </div>
-      <Text
-        code
-        style={{
-          fontSize: 11,
-          whiteSpace: "pre-wrap",
-          display: "block",
-          maxHeight: 520,
-          overflow: "auto",
-        }}
-      >
+    <div className="generationLogOptionCard">
+      <strong className="generationLogFieldLabel">{label}</strong>
+      <pre className="generationLogJsonBlock">
         {JSON.stringify(value, null, 2)}
-      </Text>
+      </pre>
+    </div>
+  );
+}
+
+function DetailGrid({ children }: { children: React.ReactNode }) {
+  return <dl className="generationLogDetailGrid">{children}</dl>;
+}
+
+function DetailItem({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="generationLogDetailItem">
+      <dt className="generationLogDetailLabel">{label}</dt>
+      <dd className="generationLogDetailValue">{children}</dd>
     </div>
   );
 }
@@ -565,105 +432,78 @@ function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
   if (!hasOptions) return null;
 
   return (
-    <Card title="사용자 선택 옵션" size="small" style={{ marginBottom: 16 }}>
-      {visibleRequestAttachments.length > 0 && (
-        <Space wrap size={[8, 8]} style={{ marginBottom: 12 }}>
+    <section
+      className="generationLogPanel"
+      aria-labelledby="request-options-title"
+    >
+      <h2 id="request-options-title" className="generationLogSectionTitle">
+        사용자 선택 옵션
+      </h2>
+      {visibleRequestAttachments.length > 0 ? (
+        <div className="generationLogChipRow">
           {visibleRequestAttachments.map((attachment, index) => (
-            <Tag key={`${attachment.type}-${attachment.value}-${index}`}>
+            <StatusBadge
+              key={`${attachment.type}-${attachment.value}-${index}`}
+            >
               {attachment.label}: {attachment.value}
               {attachment.fileName ? ` (${attachment.fileName})` : ""}
-            </Tag>
+            </StatusBadge>
           ))}
-        </Space>
-      )}
-      <Descriptions
-        column={3}
-        size="small"
-        bordered
-        style={{ marginBottom: 12 }}
-      >
-        <Descriptions.Item label="pattern_type">
-          {log.patternType ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="fabric_type">
-          {log.fabricType ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="tile_role">
-          {log.tileRole ?? "-"}
-        </Descriptions.Item>
-      </Descriptions>
-      {hasJsonBlockContent(log.designContext) && (
-        <JsonBlock label="design_context" value={log.designContext} />
-      )}
-      {hasJsonBlockContent(log.normalizedDesign) && (
-        <JsonBlock label="normalized_design" value={log.normalizedDesign} />
-      )}
-      {hasJsonBlockContent(log.accentLayoutJson) && (
-        <JsonBlock label="accent_layout_json" value={log.accentLayoutJson} />
-      )}
-    </Card>
+        </div>
+      ) : null}
+      <DetailGrid>
+        <DetailItem label="pattern_type">{log.patternType ?? "-"}</DetailItem>
+        <DetailItem label="fabric_type">{log.fabricType ?? "-"}</DetailItem>
+        <DetailItem label="tile_role">{log.tileRole ?? "-"}</DetailItem>
+      </DetailGrid>
+      <JsonBlock label="design_context" value={log.designContext} />
+      <JsonBlock label="normalized_design" value={log.normalizedDesign} />
+      <JsonBlock label="accent_layout_json" value={log.accentLayoutJson} />
+    </section>
   );
 }
 
 function ExecutionLogSection({ log }: { log: AdminGenerationLogItem }) {
   return (
-    <Card
-      title="기본 정보 & API 전송/실행 로그"
-      size="small"
-      style={{ marginBottom: 16 }}
+    <section
+      className="generationLogPanel"
+      aria-labelledby="execution-log-title"
     >
-      <Descriptions
-        column={3}
-        size="small"
-        bordered
-        style={{ marginBottom: 12 }}
-      >
-        <Descriptions.Item label="created_at">
+      <h2 id="execution-log-title" className="generationLogSectionTitle">
+        기본 정보 & API 전송/실행 로그
+      </h2>
+      <DetailGrid>
+        <DetailItem label="created_at">
           {formatDateTimeSeconds(log.createdAt)}
-        </Descriptions.Item>
-        <Descriptions.Item label="conversation_turn">
+        </DetailItem>
+        <DetailItem label="conversation_turn">
           {log.conversationTurn}
-        </Descriptions.Item>
-        <Descriptions.Item label="prompt_length">
-          {log.promptLength}자
-        </Descriptions.Item>
-        <Descriptions.Item label="result">
+        </DetailItem>
+        <DetailItem label="prompt_length">{log.promptLength}자</DetailItem>
+        <DetailItem label="result">
           {!log.generateImage ? "미요청" : log.imageGenerated ? "성공" : "실패"}
-        </Descriptions.Item>
-        <Descriptions.Item label="workflow_id">
-          {log.workflowId ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="work_id">{log.workId}</Descriptions.Item>
-        <Descriptions.Item label="parent_work_id">
+        </DetailItem>
+        <DetailItem label="workflow_id">{log.workflowId ?? "-"}</DetailItem>
+        <DetailItem label="work_id">{log.workId}</DetailItem>
+        <DetailItem label="parent_work_id">
           {log.parentWorkId ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="route">{log.route ?? "-"}</Descriptions.Item>
-        <Descriptions.Item label="request_type">
-          {log.requestType ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="quality">
-          {log.quality ?? "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="latency">
+        </DetailItem>
+        <DetailItem label="route">{log.route ?? "-"}</DetailItem>
+        <DetailItem label="request_type">{log.requestType ?? "-"}</DetailItem>
+        <DetailItem label="quality">{log.quality ?? "-"}</DetailItem>
+        <DetailItem label="latency">
           total {log.totalLatencyMs ?? "-"}ms / text {log.textLatencyMs ?? "-"}
           ms / image {log.imageLatencyMs ?? "-"}ms
-        </Descriptions.Item>
-        <Descriptions.Item label="tokens">
+        </DetailItem>
+        <DetailItem label="tokens">
           charged {log.tokensCharged} / refunded {log.tokensRefunded}
-        </Descriptions.Item>
-        <Descriptions.Item label="error">
-          {log.errorType ?? "없음"}
-        </Descriptions.Item>
-      </Descriptions>
-      {log.errorMessage && (
-        <Alert
-          type="error"
-          message={log.errorMessage}
-          style={{ marginBottom: 12 }}
-          showIcon
-        />
-      )}
-    </Card>
+        </DetailItem>
+        <DetailItem label="error">{log.errorType ?? "없음"}</DetailItem>
+      </DetailGrid>
+      {log.errorMessage ? (
+        <Callout tone="critical" description={log.errorMessage} role="alert" />
+      ) : null}
+    </section>
   );
 }
 
@@ -671,42 +511,40 @@ function PromptSection({ log }: { log: AdminGenerationLogItem }) {
   const shouldHaveImagePrompt = log.generateImage === true;
 
   return (
-    <Card title="프롬프트 & AI 응답" size="small" style={{ marginBottom: 16 }}>
-      <Row gutter={16}>
-        <Col xs={24} md={12}>
+    <section className="generationLogPanel" aria-labelledby="prompt-title">
+      <h2 id="prompt-title" className="generationLogSectionTitle">
+        프롬프트 & AI 응답
+      </h2>
+      <div className="generationLogPromptGrid">
+        <div className="generationLogOptionCard">
           <ExpandableText label="사용자 프롬프트" content={log.userMessage} />
           {log.imagePrompt ? (
-            <div style={{ marginTop: 10 }}>
-              <ExpandableText
-                label="이미지 생성 프롬프트"
-                content={log.imagePrompt}
-              />
-            </div>
+            <ExpandableText
+              label="이미지 생성 프롬프트"
+              content={log.imagePrompt}
+            />
           ) : shouldHaveImagePrompt ? (
-            <Alert
-              type="warning"
-              showIcon
-              style={{ marginTop: 10 }}
-              message="이미지 생성 프롬프트가 저장되지 않았습니다"
+            <Callout
+              tone="warning"
+              title="이미지 생성 프롬프트가 저장되지 않았습니다"
               description="이 로그는 image_prompt 저장 이전에 생성되었거나, 생성 함수가 최종 이미지 프롬프트를 저장하지 못한 기록입니다."
             />
           ) : (
-            <Alert
-              type="info"
-              showIcon
-              style={{ marginTop: 10 }}
-              message="이미지 생성 프롬프트가 없습니다"
+            <Callout
+              title="이미지 생성 프롬프트가 없습니다"
               description="이미지 생성을 요청하지 않은 로그입니다."
             />
           )}
-        </Col>
-        <Col xs={24} md={12}>
-          {log.aiMessage && (
+        </div>
+        <div className="generationLogOptionCard">
+          {log.aiMessage ? (
             <ExpandableText label="AI 응답" content={log.aiMessage} />
+          ) : (
+            <p className="generationLogMutedText">AI 응답이 없습니다.</p>
           )}
-        </Col>
-      </Row>
-    </Card>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -724,19 +562,23 @@ function WorkflowLogsSection({
   activeLogId: string;
   onSelectLog: (logId: string) => void;
 }) {
-  if (workflowLogs.length <= 1) {
-    return null;
-  }
+  if (workflowLogs.length <= 1) return null;
 
   return (
-    <Card title="워크플로우 단계" size="small" style={{ marginBottom: 16 }}>
+    <section
+      className="generationLogPanel"
+      aria-labelledby="workflow-steps-title"
+    >
+      <h2 id="workflow-steps-title" className="generationLogSectionTitle">
+        워크플로우 단계
+      </h2>
       <WorkflowStepList
         workflowLogs={workflowLogs}
         activeLogId={activeLogId}
         onSelectLog={onSelectLog}
         variant="card"
       />
-    </Card>
+    </section>
   );
 }
 
@@ -757,28 +599,20 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
     logOverride?.overrideForId === id ? logOverride.logId : id;
   const selectLog = (logId: string) =>
     setLogOverride({ overrideForId: id, logId });
-
   const orderedWorkflowLogs = useMemo(
     () =>
       [...workflowLogs].sort((left, right) => {
         const rankDiff =
           getWorkflowPhaseRank(left) - getWorkflowPhaseRank(right);
-        if (rankDiff !== 0) {
-          return rankDiff;
-        }
-
+        if (rankDiff !== 0) return rankDiff;
         return (
           dayjs(right.createdAt).valueOf() - dayjs(left.createdAt).valueOf()
         );
       }),
     [workflowLogs],
   );
-
   const activeLog = useMemo(() => {
-    if (orderedWorkflowLogs.length === 0) {
-      return requestedLog;
-    }
-
+    if (orderedWorkflowLogs.length === 0) return requestedLog;
     return (
       orderedWorkflowLogs.find((log) => log.id === activeLogId) ??
       orderedWorkflowLogs.find((log) => log.id === id) ??
@@ -786,27 +620,34 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
       requestedLog
     );
   }, [activeLogId, id, orderedWorkflowLogs, requestedLog]);
+
   if (isDetailLoading || (requestedLog?.workflowId && isWorkflowLoading)) {
-    return <Spin style={{ display: "block", margin: "80px auto" }} />;
+    return (
+      <main className="generationLogPage">
+        <p className="generationLogMutedText" aria-live="polite">
+          불러오는 중…
+        </p>
+      </main>
+    );
   }
 
   if (detailErrorMessage || !activeLog) {
     return (
-      <div style={{ padding: "0 24px 24px" }}>
-        <Alert
-          type="error"
-          showIcon
-          message="로그를 불러올 수 없습니다"
+      <main className="generationLogPage">
+        <Callout
+          tone="critical"
+          title="로그를 불러올 수 없습니다"
           description={
             detailErrorMessage ?? "해당 ID의 로그가 존재하지 않습니다."
           }
+          role="alert"
         />
-      </div>
+      </main>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
+    <main className="generationLogPage">
       <StickyBar
         log={activeLog}
         workflowLogs={orderedWorkflowLogs}
@@ -814,23 +655,21 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
         onSelectLog={selectLog}
         onBack={() => navigate("/generation-logs")}
       />
-      <div style={{ padding: 0 }}>
-        <WorkflowLogsSection
-          workflowLogs={orderedWorkflowLogs}
-          activeLogId={activeLog.id}
-          onSelectLog={selectLog}
-        />
-        <ExecutionLogSection log={activeLog} />
-        <AttachedImageSection log={activeLog} />
-        <GeneratedImageSection
-          log={activeLog}
-          workflowLogs={orderedWorkflowLogs}
-          activeLogId={activeLog.id}
-          onSelectLog={selectLog}
-        />
-        <RequestOptionsSection log={activeLog} />
-        <PromptSection log={activeLog} />
-      </div>
-    </div>
+      <WorkflowLogsSection
+        workflowLogs={orderedWorkflowLogs}
+        activeLogId={activeLog.id}
+        onSelectLog={selectLog}
+      />
+      <ExecutionLogSection log={activeLog} />
+      <AttachedImageSection log={activeLog} />
+      <GeneratedImageSection
+        log={activeLog}
+        workflowLogs={orderedWorkflowLogs}
+        activeLogId={activeLog.id}
+        onSelectLog={selectLog}
+      />
+      <RequestOptionsSection log={activeLog} />
+      <PromptSection log={activeLog} />
+    </main>
   );
 }

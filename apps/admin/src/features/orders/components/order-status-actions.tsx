@@ -36,6 +36,24 @@ function getConfirmLabel(activeModal: ActiveModal) {
   return "취소 처리";
 }
 
+function openDialog(dialog: HTMLDialogElement | null): void {
+  if (!dialog) return;
+  if (typeof dialog.showModal === "function") {
+    dialog.showModal();
+    return;
+  }
+  dialog.setAttribute("open", "");
+}
+
+function closeDialog(dialog: HTMLDialogElement | null): void {
+  if (!dialog) return;
+  if (typeof dialog.close === "function") {
+    dialog.close();
+    return;
+  }
+  dialog.removeAttribute("open");
+}
+
 export function OrderStatusActions({
   order,
   nextStatus,
@@ -56,11 +74,11 @@ export function OrderStatusActions({
     setActiveModal(nextModal);
     setMemo("");
     setValidationError(null);
-    dialogRef.current?.showModal();
+    openDialog(dialogRef.current);
   };
 
   const closeModal = () => {
-    dialogRef.current?.close();
+    closeDialog(dialogRef.current);
     setActiveModal(null);
     setMemo("");
     setValidationError(null);
@@ -96,7 +114,7 @@ export function OrderStatusActions({
 
   useEffect(() => {
     if (isClaimLocked && dialogRef.current?.open) {
-      dialogRef.current.close();
+      closeDialog(dialogRef.current);
     }
   }, [isClaimLocked]);
 

@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Button, Card, Input, Select, Space, Spin, Typography } from "antd";
-import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Callout } from "seed-design/ui/callout";
 import {
   DesignContextStats,
   GenerationLogStats,
@@ -12,6 +11,7 @@ import {
   useGenerationLogsQuery,
   useGenerationStatsQuery,
 } from "@/features/generation-logs";
+import "@/features/generation-logs/components/generation-logs.css";
 
 const EMPTY_SUMMARY = {
   totalRequests: 0,
@@ -21,22 +21,20 @@ const EMPTY_SUMMARY = {
 };
 
 export default function GenerationLogList() {
-  const [dateRange, setDateRange] = useState<DateRange>([
-    dayjs().subtract(6, "day"),
-    dayjs(),
+  const [dateRange, setDateRange] = useState<[string, string]>([
+    dayjs().subtract(6, "day").format("YYYY-MM-DD"),
+    dayjs().format("YYYY-MM-DD"),
   ]);
   const [aiModel, setAiModel] = useState<string | null>(null);
   const [requestType, setRequestType] =
     useState<GenerationRequestTypeFilter | null>(null);
   const [status, setStatus] = useState<GenerationStatusFilter | null>(null);
-  const [idSearchInput, setIdSearchInput] = useState<string>("");
-  const [idSearch, setIdSearch] = useState<string>("");
+  const [idSearchInput, setIdSearchInput] = useState("");
+  const [idSearch, setIdSearch] = useState("");
   const [page, setPage] = useState(1);
   const [statsOpen, setStatsOpen] = useState(false);
-
   const { data: statsData, isLoading: statsLoading } =
     useGenerationStatsQuery(dateRange);
-
   const {
     data: logsData,
     hasMore: logsHasMore,
@@ -52,119 +50,176 @@ export default function GenerationLogList() {
 
   const resetPage = () => setPage(1);
 
-  const handleDateRangeChange = (range: DateRange) => {
-    setDateRange(range);
+  const updateDateRange = (index: 0 | 1, value: string): void => {
+    setDateRange((prev) => {
+      const next: [string, string] = [...prev];
+      next[index] = value;
+      return next;
+    });
     resetPage();
   };
-  const handleAiModelChange = (v: string | null) => {
-    setAiModel(v);
-    resetPage();
-  };
-  const handleRequestTypeChange = (v: GenerationRequestTypeFilter | null) => {
-    setRequestType(v);
-    resetPage();
-  };
-  const handleStatusChange = (v: GenerationStatusFilter | null) => {
-    setStatus(v);
-    resetPage();
-  };
-  const handleIdSearch = (v: string) => {
-    setIdSearchInput(v);
-  };
-  const handleIdSearchSubmit = (v: string) => {
-    setIdSearch(v);
+
+  const handleIdSearchSubmit = (): void => {
+    setIdSearch(idSearchInput);
     resetPage();
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <Typography.Title level={4} style={{ marginBottom: 16 }}>
-        AI 생성 로그
-      </Typography.Title>
+    <main className="generationLogPage">
+      <header className="generationLogHeader">
+        <div className="generationLogTitleGroup">
+          <h1 className="generationLogTitle">AI 생성 로그</h1>
+          <p className="generationLogDescription">
+            생성 요청, 결과 이미지, 토큰 사용량과 오류 분포를 확인합니다.
+          </p>
+        </div>
+      </header>
 
-      <div style={{ marginBottom: 16 }}>
-        <DateRangeFilter value={dateRange} onChange={handleDateRangeChange} />
-      </div>
+      <section
+        className="generationLogPanel"
+        aria-labelledby="generation-filter-title"
+      >
+        <div className="generationLogPanelHeader">
+          <h2 id="generation-filter-title" className="generationLogPanelTitle">
+            조회 조건
+          </h2>
+        </div>
+        <form
+          className="generationLogToolbar"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <label className="generationLogField">
+            <span className="generationLogFieldLabel">시작일</span>
+            <input
+              className="generationLogInput"
+              type="date"
+              value={dateRange[0]}
+              onChange={(event) => updateDateRange(0, event.target.value)}
+            />
+          </label>
+          <label className="generationLogField">
+            <span className="generationLogFieldLabel">종료일</span>
+            <input
+              className="generationLogInput"
+              type="date"
+              value={dateRange[1]}
+              onChange={(event) => updateDateRange(1, event.target.value)}
+            />
+          </label>
+          <label className="generationLogField">
+            <span className="generationLogFieldLabel">요청 유형</span>
+            <select
+              className="generationLogSelect"
+              value={requestType ?? ""}
+              onChange={(event) => {
+                setRequestType(
+                  (event.target.value ||
+                    null) as GenerationRequestTypeFilter | null,
+                );
+                resetPage();
+              }}
+            >
+              <option value="">모든 요청 유형</option>
+              <option value="render_standard">렌더(표준)</option>
+            </select>
+          </label>
+          <label className="generationLogField">
+            <span className="generationLogFieldLabel">상태</span>
+            <select
+              className="generationLogSelect"
+              value={status ?? ""}
+              onChange={(event) => {
+                setStatus(
+                  (event.target.value || null) as GenerationStatusFilter | null,
+                );
+                resetPage();
+              }}
+            >
+              <option value="">모든 상태</option>
+              <option value="success">성공</option>
+              <option value="error">에러</option>
+            </select>
+          </label>
+          <label className="generationLogField generationLogSearchField">
+            <span className="generationLogFieldLabel">
+              workflow_id / work_id
+            </span>
+            <input
+              className="generationLogInput"
+              value={idSearchInput}
+              placeholder="workflow_id / work_id"
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                setIdSearchInput(nextValue);
+                if (nextValue === "") {
+                  setIdSearch("");
+                  resetPage();
+                }
+              }}
+            />
+          </label>
+          <ActionButton type="button" onClick={handleIdSearchSubmit}>
+            검색
+          </ActionButton>
+        </form>
+      </section>
 
       {statsLoading ? (
-        <Spin style={{ display: "block", margin: "40px auto" }} />
+        <p className="generationLogMutedText" aria-live="polite">
+          통계 불러오는 중…
+        </p>
       ) : (
         <GenerationLogStats stats={statsData?.summary ?? EMPTY_SUMMARY} />
       )}
 
-      <Card
-        style={{ marginBottom: 16 }}
-        styles={{ body: { padding: 0 } }}
-        extra={
-          <Button
-            type="link"
-            size="small"
-            icon={statsOpen ? <UpOutlined /> : <DownOutlined />}
-            onClick={() => setStatsOpen((v) => !v)}
+      <section
+        className="generationLogPanel"
+        aria-labelledby="generation-stats-title"
+      >
+        <div className="generationLogPanelHeader">
+          <div className="generationLogPanelTitleGroup">
+            <h2 id="generation-stats-title" className="generationLogPanelTitle">
+              모델·패턴·에러 통계
+            </h2>
+          </div>
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            onClick={() => setStatsOpen((value) => !value)}
           >
             {statsOpen ? "통계 접기" : "통계 펼치기"}
-          </Button>
-        }
-        title={
-          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-            모델·패턴·에러 통계
-          </Typography.Text>
-        }
+          </ActionButton>
+        </div>
+        {statsOpen ? (
+          <DesignContextStats
+            byModel={statsData?.byModel ?? []}
+            byInputType={statsData?.byInputType ?? []}
+            byPattern={statsData?.byPattern ?? []}
+            byError={statsData?.byError ?? []}
+            loading={statsLoading}
+          />
+        ) : null}
+      </section>
+
+      <section
+        className="generationLogPanel"
+        aria-labelledby="generation-log-list-title"
       >
-        {statsOpen && (
-          <div style={{ padding: 16 }}>
-            <DesignContextStats
-              byModel={statsData?.byModel ?? []}
-              byInputType={statsData?.byInputType ?? []}
-              byPattern={statsData?.byPattern ?? []}
-              byError={statsData?.byError ?? []}
-              loading={statsLoading}
-            />
-          </div>
-        )}
-      </Card>
-
-      <Card>
-        <Typography.Title level={5} style={{ marginBottom: 12 }}>
-          로그 목록
-        </Typography.Title>
-
-        <Space wrap style={{ marginBottom: 12 }}>
-          <Select
-            placeholder="모든 요청 유형"
-            value={requestType}
-            onChange={handleRequestTypeChange}
-            allowClear
-            style={{ width: 150 }}
-            options={[{ value: "render_standard", label: "렌더(표준)" }]}
+        <div className="generationLogPanelHeader">
+          <h2
+            id="generation-log-list-title"
+            className="generationLogPanelTitle"
+          >
+            로그 목록
+          </h2>
+        </div>
+        {dateRange[0] > dateRange[1] ? (
+          <Callout
+            tone="critical"
+            description="시작일은 종료일보다 늦을 수 없습니다."
+            role="alert"
           />
-          <Select
-            placeholder="모든 상태"
-            value={status}
-            onChange={handleStatusChange}
-            allowClear
-            style={{ width: 120 }}
-            options={[
-              { value: "success", label: "성공" },
-              { value: "error", label: "에러" },
-            ]}
-          />
-          <Input.Search
-            placeholder="workflow_id / work_id"
-            value={idSearchInput}
-            onChange={(e) => {
-              const nextValue = e.target.value;
-              handleIdSearch(nextValue);
-              if (nextValue === "") {
-                handleIdSearchSubmit("");
-              }
-            }}
-            onSearch={handleIdSearchSubmit}
-            allowClear
-            style={{ width: 220 }}
-          />
-        </Space>
-
+        ) : null}
         <GenerationLogTable
           data={logsData ?? []}
           loading={logsLoading}
@@ -172,9 +227,12 @@ export default function GenerationLogList() {
           hasMore={logsHasMore}
           onPageChange={setPage}
           aiModel={aiModel}
-          onAiModelChange={handleAiModelChange}
+          onAiModelChange={(model) => {
+            setAiModel(model);
+            resetPage();
+          }}
         />
-      </Card>
-    </div>
+      </section>
+    </main>
   );
 }
