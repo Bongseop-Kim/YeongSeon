@@ -35,11 +35,13 @@ dist-ssr
 .env.development.local
 
 # Local AI agent settings
+.agents/
 .claude/
 .mcp.json
 .omc/
 .omx/
 .serena/
+skills-lock.json
 
 # Git worktrees
 .worktrees/
