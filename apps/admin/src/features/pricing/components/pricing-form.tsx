@@ -202,6 +202,7 @@ function PricingNumberField({
       className="adminSettingsField"
       label={label}
       name={fieldKey}
+      size="medium"
       value={value == null || Number.isNaN(value) ? "" : String(value)}
       onValueChange={({ value: nextValue }) => onChange(parseAmount(nextValue))}
       suffix={suffix}

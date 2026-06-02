@@ -108,6 +108,7 @@ function ProductOptionRow({
       <TextField
         className="productFormField"
         label="추가금액"
+        suffix="원"
         value={String(option.additionalPrice)}
         onValueChange={({ value }) =>
           setOption(index, { additionalPrice: Number(value || 0) })
@@ -265,6 +266,7 @@ export function ProductForm({
           <TextField
             className="productFormField"
             label="가격"
+            suffix="원"
             value={toInputNumber(values.price)}
             required
             showRequiredIndicator

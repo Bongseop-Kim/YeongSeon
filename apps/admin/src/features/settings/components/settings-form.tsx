@@ -3,12 +3,9 @@ import { useRef, useState } from "react";
 import { COURIER_COMPANY_NAMES } from "@yeongseon/shared/constants/courier-companies";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
-import {
-  RadioSelectBoxItem,
-  RadioSelectBoxRoot,
-} from "seed-design/ui/select-box";
 import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 
+import { AdminFilterSelect } from "@/components/AdminFilterControls";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   useDefaultCourierForm,
@@ -201,18 +198,22 @@ export function SettingsForm() {
             void handleSaveCourier();
           }}
         >
-          <RadioSelectBoxRoot
+          <AdminFilterSelect
             className="settingsCourierOptions adminSettingsFieldFull"
             aria-labelledby="settings-default-courier"
             name="default-courier-company"
             value={courierCompany}
-            onValueChange={setCourierCompany}
-            columns={2}
+            onChange={(event) => setCourierCompany(event.currentTarget.value)}
           >
+            <option value="" disabled>
+              택배사를 선택하세요
+            </option>
             {COURIER_COMPANY_NAMES.map((name) => (
-              <RadioSelectBoxItem key={name} value={name} label={name} />
+              <option key={name} value={name}>
+                {name}
+              </option>
             ))}
-          </RadioSelectBoxRoot>
+          </AdminFilterSelect>
           <div className="settingsActionRow adminSettingsActionRow">
             {isCourierDirty ? (
               <Text
@@ -272,6 +273,7 @@ export function SettingsForm() {
             className="settingsNumberField adminSettingsField"
             label="토큰 지급량"
             name="design-token-initial-grant"
+            size="medium"
             value={amountInputValue}
             onValueChange={({ value }) => {
               setAmountInputDraft(value);
