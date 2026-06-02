@@ -87,6 +87,7 @@ describe("GenerationLogTable", () => {
           loading={false}
           page={1}
           hasMore={false}
+          logCountText="1"
           onPageChange={() => undefined}
           aiModel={null}
           onAiModelChange={() => undefined}
@@ -108,6 +109,7 @@ describe("GenerationLogTable", () => {
           loading={false}
           page={1}
           hasMore={false}
+          logCountText="1"
           onPageChange={() => undefined}
           aiModel={null}
           onAiModelChange={() => undefined}

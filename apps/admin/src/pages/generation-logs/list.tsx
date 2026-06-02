@@ -19,6 +19,7 @@ import {
   useGenerationLogsQuery,
   useGenerationStatsQuery,
 } from "@/features/generation-logs";
+import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
 import "@/features/generation-logs/components/generation-logs.css";
 
 const EMPTY_SUMMARY = {
@@ -57,6 +58,9 @@ export default function GenerationLogList() {
   });
 
   const resetPage = () => setPage(1);
+  const logCountText = logsHasMore
+    ? `${page * GENERATION_LOG_PAGE_SIZE}+`
+    : String((page - 1) * GENERATION_LOG_PAGE_SIZE + (logsData?.length ?? 0));
 
   const updateDateRange = (index: 0 | 1, value: string): void => {
     setDateRange((prev) => {
@@ -233,6 +237,9 @@ export default function GenerationLogList() {
             className="generationLogPanelTitle"
           >
             로그 목록
+            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
+              {logCountText}건
+            </Text>
           </Text>
         </div>
         {dateRange[0] > dateRange[1] ? (
@@ -247,6 +254,7 @@ export default function GenerationLogList() {
           loading={logsLoading}
           page={page}
           hasMore={logsHasMore}
+          logCountText={logCountText}
           onPageChange={setPage}
           aiModel={aiModel}
           onAiModelChange={(model) => {

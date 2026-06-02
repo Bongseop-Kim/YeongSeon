@@ -10,7 +10,6 @@ import {
   AdminFilterSelect,
 } from "@/components/AdminFilterControls";
 import { StatusBadge } from "@/components/StatusBadge";
-import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
 import { requestTypeLabel } from "@/features/generation-logs/utils";
 import { formatNullableLocaleNumber } from "@/utils/format-number";
 import type { AdminGenerationLogGroup } from "@/features/generation-logs/types/admin-generation-log";
@@ -21,6 +20,7 @@ interface GenerationLogTableProps {
   loading: boolean;
   page: number;
   hasMore: boolean;
+  logCountText: string;
   onPageChange: (page: number) => void;
   aiModel: string | null;
   onAiModelChange: (model: string | null) => void;
@@ -81,6 +81,7 @@ export function GenerationLogTable({
   loading,
   page,
   hasMore,
+  logCountText,
   onPageChange,
   aiModel,
   onAiModelChange,
@@ -176,13 +177,13 @@ export function GenerationLogTable({
     ],
     [],
   );
-  const totalText = hasMore
-    ? `${page * GENERATION_LOG_PAGE_SIZE}+`
-    : String((page - 1) * GENERATION_LOG_PAGE_SIZE + data.length);
-
   return (
-    <div className="generationLogPanel">
-      <div className="generationLogToolbar">
+    <>
+      <form
+        className="generationLogToolbar"
+        aria-label="생성 로그 목록 필터"
+        onSubmit={(event) => event.preventDefault()}
+      >
         <AdminFilterField label="AI 모델">
           <AdminFilterSelect
             name="generation-ai-model"
@@ -193,7 +194,7 @@ export function GenerationLogTable({
             <option value="openai">OpenAI</option>
           </AdminFilterSelect>
         </AdminFilterField>
-      </div>
+      </form>
 
       <AdminDataTable
         data={data}
@@ -216,7 +217,7 @@ export function GenerationLogTable({
           이전
         </ActionButton>
         <Text as="span" textStyle="t4Regular">
-          {page} · {totalText}건
+          {page} · {logCountText}건
         </Text>
         <ActionButton
           type="button"
@@ -227,6 +228,6 @@ export function GenerationLogTable({
           다음
         </ActionButton>
       </nav>
-    </div>
+    </>
   );
 }
