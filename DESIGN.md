@@ -3,10 +3,15 @@
 ## Source of truth
 
 - Status: Active
-- Last refreshed: 2026-06-01
+- Last refreshed: 2026-06-02
 - Primary product surfaces: Store customer flows, Admin operating console, Admin settings-style forms.
 - Evidence reviewed:
   - `apps/admin/seed-design.json`
+  - `apps/admin/src/components/AdminPageHeader.tsx`
+  - `apps/admin/src/components/AdminPanelHeader.tsx`
+  - `apps/admin/src/components/AdminCountBadge.tsx`
+  - `apps/admin/src/components/AdminFilterControls.tsx`
+  - `apps/admin/src/components/AdminSegmentedControl.tsx`
   - `apps/admin/src/features/coupons/components/coupon-form.tsx`
   - `apps/admin/src/features/coupons/components/coupon-admin.css`
   - `apps/admin/src/features/pricing/components/pricing-form.tsx`
@@ -56,8 +61,9 @@
 
 ## Components
 
-- Existing components to reuse: `ActionButton`, `Callout`, `TextField`, `RadioSelectBoxRoot`, `RadioSelectBoxItem`, `Switch`, `Tabs`.
-- New/changed components: 새 React 컴포넌트 대신 공통 CSS 패턴 `adminSettings*` 클래스로 카드/폼/action row를 맞춘다.
+- Existing components to reuse: `ActionButton`, `Callout`, `Text`, `TextField`, `RadioSelectBoxRoot`, `RadioSelectBoxItem`, `Switch`, `Tabs`.
+- Admin common components to reuse: admin shell은 `AdminHeader`/`AdminSider`/`admin-layout.css`, 목록은 `AdminDataTable`, 필터는 `AdminFilterControls`, 폼 select는 `AdminSelectField`, 간단 보기 전환은 `AdminSegmentedControl`, 로딩은 `AdminSkeleton`, 상태 chip은 `StatusBadge`를 우선 사용한다. 기능별 clone을 만들지 않는다.
+- New/changed components: 페이지 제목/설명은 `AdminPageHeader`, 카드/패널 제목과 action/count 배치는 `AdminPanelHeader`, 목록 개수 표시는 `AdminCountBadge`를 사용한다. 설정성 폼 내부 레이아웃은 공통 CSS 패턴 `adminSettings*` 클래스로 카드/폼/action row를 맞춘다.
 - Variants and states: primary save button, `neutralWeak` 변경 취소, disabled no-dirty save, loading save, inline invalid field.
 - Selection hierarchy: `Tabs`는 화면 또는 주요 콘텐츠 섹션 전환에 사용하고, 전환 대상 카드/패널의 바깥에 둔다. `SegmentedControl`은 2~4개 이하의 즉시 보기 전환/정렬/간단 필터에만 사용한다. 목록 상태 필터처럼 선택지가 많거나 검색과 함께 조합되는 필터는 라벨이 보이는 필터 row의 `select`/입력 필드로 배치한다.
 - Token/component ownership: SEED 컴포넌트가 control 상태와 접근성 기본값을 소유하고, repo CSS는 레이아웃만 소유한다.
@@ -78,8 +84,8 @@
 
 ## Interaction states
 
-- Loading: 데이터 로딩 문구는 `…`를 사용하고 필요한 곳만 polite live region으로 알린다.
-- Empty: 데이터 테이블/목록은 기존 empty text를 유지한다.
+- Loading: 데이터 로딩 문구는 `…`를 사용하고 필요한 곳만 polite live region으로 알린다. 테이블 데이터 로딩은 주변 문구보다 `AdminDataTable`/`AdminSkeleton` 위치의 skeleton을 우선한다.
+- Empty: 데이터 테이블/목록은 기존 empty text를 유지하고 `AdminDataTable`의 빈 상태 영역에 둔다.
 - Error: 카드 상단 또는 관련 섹션에 `Callout role="alert"`를 렌더링한다.
 - Success: 페이지 header 아래 또는 카드 상단에 `Callout role="status" aria-live="polite"`를 렌더링한다.
 - Disabled: 변경사항이 없으면 저장 버튼은 표시하되 disabled; dirty 상태에서만 저장 활성화 및 변경 취소 표시.
@@ -97,7 +103,19 @@
 - Design-token constraints: raw color/elevation 추가 없이 SEED CSS variable만 사용한다.
 - Performance constraints: 입력별 controlled 상태는 기존 폼 범위에서 유지하고, 새 전역 상태를 만들지 않는다.
 - Compatibility constraints: 프론트 API 레이어가 Supabase를 직접 호출하며, 데이터/API 로직은 UI dirty/reset에 필요한 범위 외 변경하지 않는다.
-- Test/screenshot expectations: admin type-check, lint, build, react-doctor diff를 통과해야 한다.
+- Test/screenshot expectations: admin type-check, lint, 관련/전체 테스트, react-doctor diff를 통과해야 한다.
+
+## Retained custom admin CSS
+
+- Shared admin CSS (`admin-layout.css`, `AdminDataTable.css`, `AdminFilterControls.css`, `AdminSegmentedControl.css`, `AdminSelectField.css`, `AdminSkeleton.css`, `StatusBadge.css`) stays because SEED component props do not encode admin shell layout, responsive table overflow, hidden-native select/date overlays, skeleton geometry, or badge tone styling.
+- Feature CSS (`claims.css`, `coupon-admin.css`, `customers.css`, `dashboard.css`, `generation-logs.css`, `inquiries.css`, `orders.css`, `products.css`, `quote-requests.css`, `pricing-form.css`, `settings-form.css`) stays only for domain-specific grids, sticky/toolbars, modal sizing, image/table overflow, and mobile stacking.
+- When a feature CSS rule only restates shared table/badge/skeleton behavior, remove it and reuse the common admin component CSS instead.
+
+## Recent admin UI cleanup summary
+
+- Coupon admin tables now reuse `AdminDataTable` instead of a coupon-local table clone.
+- Coupon status chips now flow through `StatusBadge`; coupon CSS retains only coupon-specific page, panel, action, modal, and numeric-cell layout.
+- Table empty messages are centralized in `AdminDataTable` with polite status semantics, and coupon issue loading appears in the table position via the shared skeleton.
 
 ## Open questions
 

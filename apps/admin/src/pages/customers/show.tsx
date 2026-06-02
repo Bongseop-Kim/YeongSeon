@@ -1,6 +1,7 @@
-import { Text } from "seed-design/ui/text";
 import { useParams } from "react-router-dom";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   useAdminCustomerCoupons,
@@ -21,14 +22,13 @@ export default function CustomerShow() {
 
   return (
     <main className="customerPage">
-      <header className="customerHeader">
-        <Text as="h1" textStyle="screenTitle" className="customerTitle">
-          고객 상세
-        </Text>
-        <Text as="p" textStyle="t4Regular" className="customerDescription">
-          고객 기본 정보, 주문, 쿠폰, 토큰을 확인합니다.
-        </Text>
-      </header>
+      <AdminPageHeader
+        title="고객 상세"
+        description="고객 기본 정보, 주문, 쿠폰, 토큰을 확인합니다."
+        className="customerHeader"
+        titleClassName="customerTitle"
+        descriptionClassName="customerDescription"
+      />
 
       {customerQuery.isLoading ? <AdminPanelSkeleton lines={4} /> : null}
       {customerQuery.error ? (
@@ -42,14 +42,12 @@ export default function CustomerShow() {
         className="customerPanel"
         aria-labelledby="customer-orders-title"
       >
-        <Text
-          as="h2"
-          textStyle="t6Bold"
+        <AdminPanelHeader
+          title="최근 주문"
           id="customer-orders-title"
-          className="customerPanelTitle"
-        >
-          최근 주문
-        </Text>
+          className="customerPanelHeader"
+          titleClassName="customerPanelTitle"
+        />
         {ordersQuery.error ? (
           <Callout tone="critical" description={ordersQuery.error.message} />
         ) : null}
@@ -63,14 +61,12 @@ export default function CustomerShow() {
         className="customerPanel"
         aria-labelledby="customer-coupons-title"
       >
-        <Text
-          as="h2"
-          textStyle="t6Bold"
+        <AdminPanelHeader
+          title="보유 쿠폰"
           id="customer-coupons-title"
-          className="customerPanelTitle"
-        >
-          보유 쿠폰
-        </Text>
+          className="customerPanelHeader"
+          titleClassName="customerPanelTitle"
+        />
         {couponsQuery.error ? (
           <Callout tone="critical" description={couponsQuery.error.message} />
         ) : null}

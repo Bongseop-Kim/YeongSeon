@@ -1,17 +1,13 @@
-import { Text } from "seed-design/ui/text";
 import type { ReactNode } from "react";
+import { StatusBadge } from "@/components/StatusBadge";
 
 import "./coupon-admin.css";
 
 export function CouponStatusBadge({ active }: { active: boolean }): ReactNode {
   return (
-    <Text
-      as="span"
-      textStyle="t2Bold"
-      className={`couponBadge ${active ? "couponBadgePositive" : "couponBadgeMuted"}`}
-    >
+    <StatusBadge tone={active ? "positive" : "neutral"}>
       {active ? "활성" : "비활성"}
-    </Text>
+    </StatusBadge>
   );
 }
 
@@ -20,9 +16,5 @@ export function CouponTextBadge({
 }: {
   children: ReactNode;
 }): ReactNode {
-  return (
-    <Text as="span" textStyle="t2Bold" className="couponBadge">
-      {children}
-    </Text>
-  );
+  return <StatusBadge>{children}</StatusBadge>;
 }

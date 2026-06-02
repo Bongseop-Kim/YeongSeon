@@ -98,7 +98,11 @@ export function AdminDataTable<TData>({
   }
 
   if (data.length === 0) {
-    return <div className="adminDataTableEmpty">{emptyText}</div>;
+    return (
+      <div className="adminDataTableEmpty" role="status" aria-live="polite">
+        {emptyText}
+      </div>
+    );
   }
 
   return (

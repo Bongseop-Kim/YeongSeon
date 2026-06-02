@@ -1,4 +1,3 @@
-import { Text } from "seed-design/ui/text";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
@@ -9,7 +8,9 @@ import {
   AdminFilterSelect,
   AdminFilterTextField,
 } from "@/components/AdminFilterControls";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import {
   DesignContextStats,
   GenerationLogStats,
@@ -147,35 +148,25 @@ export default function GenerationLogList() {
 
   return (
     <main className="generationLogPage">
-      <header className="generationLogHeader">
-        <div className="generationLogTitleGroup">
-          <Text as="h1" textStyle="screenTitle" className="generationLogTitle">
-            AI 생성 로그
-          </Text>
-          <Text
-            as="p"
-            textStyle="t4Regular"
-            className="generationLogDescription"
-          >
-            생성 요청, 결과 이미지, 토큰 사용량과 오류 분포를 확인합니다.
-          </Text>
-        </div>
-      </header>
+      <AdminPageHeader
+        title="AI 생성 로그"
+        description="생성 요청, 결과 이미지, 토큰 사용량과 오류 분포를 확인합니다."
+        className="generationLogHeader"
+        titleGroupClassName="generationLogTitleGroup"
+        titleClassName="generationLogTitle"
+        descriptionClassName="generationLogDescription"
+      />
 
       <section
         className="generationLogPanel"
         aria-labelledby="generation-filter-title"
       >
-        <div className="generationLogPanelHeader">
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="generation-filter-title"
-            className="generationLogPanelTitle"
-          >
-            조회 조건
-          </Text>
-        </div>
+        <AdminPanelHeader
+          title="조회 조건"
+          id="generation-filter-title"
+          className="generationLogPanelHeader"
+          titleClassName="generationLogPanelTitle"
+        />
         <form
           className="generationLogToolbar"
           onSubmit={(event) => event.preventDefault()}
@@ -236,18 +227,13 @@ export default function GenerationLogList() {
         className="generationLogPanel"
         aria-labelledby="generation-stats-title"
       >
-        <div className="generationLogPanelHeader">
-          <div className="generationLogPanelTitleGroup">
-            <Text
-              as="h2"
-              textStyle="t6Bold"
-              id="generation-stats-title"
-              className="generationLogPanelTitle"
-            >
-              모델·패턴·에러 통계
-            </Text>
-          </div>
-        </div>
+        <AdminPanelHeader
+          title="모델·패턴·에러 통계"
+          id="generation-stats-title"
+          className="generationLogPanelHeader"
+          titleGroupClassName="generationLogPanelTitleGroup"
+          titleClassName="generationLogPanelTitle"
+        />
         <DesignContextStats
           byModel={statsData?.byModel ?? []}
           byInputType={statsData?.byInputType ?? []}
@@ -261,19 +247,13 @@ export default function GenerationLogList() {
         className="generationLogPanel"
         aria-labelledby="generation-log-list-title"
       >
-        <div className="generationLogPanelHeader">
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="generation-log-list-title"
-            className="generationLogPanelTitle"
-          >
-            로그 목록
-            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
-              {logCountText}건
-            </Text>
-          </Text>
-        </div>
+        <AdminPanelHeader
+          title="로그 목록"
+          id="generation-log-list-title"
+          className="generationLogPanelHeader"
+          titleClassName="generationLogPanelTitle"
+          count={`${logCountText}건`}
+        />
         {dateRange[0] > dateRange[1] ? (
           <Callout
             tone="critical"

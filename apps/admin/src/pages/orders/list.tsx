@@ -1,7 +1,7 @@
-import { Text } from "seed-design/ui/text";
 import { useSearchParams } from "react-router-dom";
 import { ORDER_TYPE_LABELS } from "@yeongseon/shared";
 import type { OrderType } from "@yeongseon/shared";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminSegmentedControl } from "@/components/AdminSegmentedControl";
 import { DomainOrderTable } from "@/features/orders";
 import "@/features/orders/components/orders.css";
@@ -39,14 +39,13 @@ export default function OrderList() {
 
   return (
     <main className="orderPage">
-      <header className="orderPageTitleGroup">
-        <Text as="h1" textStyle="screenTitle" className="orderPageTitle">
-          주문
-        </Text>
-        <Text as="p" textStyle="t4Regular" className="orderPageDescription">
-          판매·제작·수선·토큰 주문 상태와 배송 정보를 관리합니다.
-        </Text>
-      </header>
+      <AdminPageHeader
+        title="주문"
+        description="판매·제작·수선·토큰 주문 상태와 배송 정보를 관리합니다."
+        className="orderPageTitleGroup"
+        titleClassName="orderPageTitle"
+        descriptionClassName="orderPageDescription"
+      />
 
       <AdminSegmentedControl
         ariaLabel="주문 유형"

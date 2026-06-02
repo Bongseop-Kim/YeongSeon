@@ -112,75 +112,9 @@
   margin-bottom: 0;
 }
 
-.couponTableWrap {
-  overflow-x: auto;
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 12px;
-}
-
-.couponTable {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 720px;
-  font-size: 14px;
-}
-
-.couponTable th,
-.couponTable td {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
-  text-align: left;
-  vertical-align: middle;
-}
-
-.couponTable th {
-  color: var(--seed-color-fg-neutral-muted);
-  font-weight: 600;
-  white-space: nowrap;
-  background: var(--seed-color-bg-neutral-weak);
-}
-
-.couponTable tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.couponTableRowButton {
-  cursor: pointer;
-}
-
-.couponTableRowButton:hover {
-  background: var(--seed-color-bg-neutral-weak);
-}
-
-.couponTableRowButton:focus-visible {
-  outline: 2px solid var(--seed-color-stroke-brand);
-  outline-offset: -2px;
-}
-
 .couponNumberCell {
   text-align: right;
   font-variant-numeric: tabular-nums;
-}
-
-.couponBadge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: var(--seed-color-bg-neutral-weak);
-  color: var(--seed-color-fg-neutral);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.couponBadgePositive {
-  background: var(--seed-color-bg-positive-weak);
-  color: var(--seed-color-fg-positive);
-}
-
-.couponBadgeMuted {
-  color: var(--seed-color-fg-neutral-muted);
 }
 
 .couponModal {
@@ -214,12 +148,6 @@
   gap: 12px;
   align-items: end;
   margin-bottom: 12px;
-}
-
-.couponEmptyState {
-  padding: 28px;
-  text-align: center;
-  color: var(--seed-color-fg-neutral-muted);
 }
 
 @media (max-width: 720px) {

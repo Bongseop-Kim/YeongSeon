@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import { isActiveIssuedStatus } from "@/features/coupons/api/coupons-api";
 import { toCouponFormValues } from "@/features/coupons/api/coupons-mapper";
@@ -275,16 +276,14 @@ export default function CouponEdit(): ReactNode {
 
   return (
     <main className="couponPage adminSettingsPage">
-      <header className="couponPageHeader">
-        <div className="couponPageTitleGroup">
-          <Text as="h1" textStyle="screenTitle" className="couponPageTitle">
-            쿠폰 수정
-          </Text>
-          <Text as="p" textStyle="t4Regular" className="couponPageDescription">
-            쿠폰 정보와 발급 내역을 관리합니다.
-          </Text>
-        </div>
-      </header>
+      <AdminPageHeader
+        title="쿠폰 수정"
+        description="쿠폰 정보와 발급 내역을 관리합니다."
+        className="couponPageHeader"
+        titleGroupClassName="couponPageTitleGroup"
+        titleClassName="couponPageTitle"
+        descriptionClassName="couponPageDescription"
+      />
 
       {state.notice ? (
         <Callout

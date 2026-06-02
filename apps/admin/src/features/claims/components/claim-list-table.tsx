@@ -11,6 +11,7 @@ import {
   AdminFilterField,
   AdminFilterSelect,
 } from "@/components/AdminFilterControls";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   CLAIM_PAGE_SIZE,
@@ -26,6 +27,18 @@ const CLAIM_TYPE_OPTIONS = Object.entries(CLAIM_TYPE_LABELS).map(
   ([value, label]) => ({ value, label }),
 );
 const EMPTY_CLAIM_ROWS: AdminClaimListItem[] = [];
+
+interface ClaimListFiltersProps {
+  status: string;
+  type: ClaimType | "";
+  onFilterChange: (key: "status" | "type", value: string) => void;
+}
+
+interface ClaimPaginationProps {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
 
 function parsePageParam(value: string | null): number {
   const page = Number(value ?? "1");
@@ -45,6 +58,77 @@ function normalizeTypeParam(value: string | null): ClaimType | "" {
   return CLAIM_TYPE_OPTIONS.some((option) => option.value === value)
     ? (value as ClaimType)
     : "";
+}
+
+function ClaimListFilters({
+  status,
+  type,
+  onFilterChange,
+}: ClaimListFiltersProps) {
+  return (
+    <form className="claimToolbar" onSubmit={(event) => event.preventDefault()}>
+      <AdminFilterField>
+        <AdminFilterSelect
+          label="상태"
+          name="claim-status"
+          value={status}
+          onChange={(event) => onFilterChange("status", event.target.value)}
+        >
+          <option value="">전체</option>
+          {CLAIM_STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </AdminFilterSelect>
+      </AdminFilterField>
+      <AdminFilterField>
+        <AdminFilterSelect
+          label="유형"
+          name="claim-type"
+          value={type}
+          onChange={(event) => onFilterChange("type", event.target.value)}
+        >
+          <option value="">전체</option>
+          {CLAIM_TYPE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </AdminFilterSelect>
+      </AdminFilterField>
+    </form>
+  );
+}
+
+function ClaimPagination({
+  page,
+  totalPages,
+  onPageChange,
+}: ClaimPaginationProps) {
+  return (
+    <nav className="claimPagination" aria-label="클레임 페이지네이션">
+      <ActionButton
+        type="button"
+        variant="neutralWeak"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+      >
+        이전
+      </ActionButton>
+      <Text as="span" textStyle="t4Regular">
+        {page} / {totalPages}
+      </Text>
+      <ActionButton
+        type="button"
+        variant="neutralWeak"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+      >
+        다음
+      </ActionButton>
+    </nav>
+  );
 }
 
 export function ClaimListTable() {
@@ -115,57 +199,19 @@ export function ClaimListTable() {
 
   return (
     <section className="claimPanel" aria-labelledby="claim-list-title">
-      <div className="claimPanelHeader">
-        <div>
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="claim-list-title"
-            className="claimPanelTitle"
-          >
-            클레임 목록
-            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
-              {KR_NUMBER_FORMAT.format(total)}건
-            </Text>
-          </Text>
-        </div>
-      </div>
+      <AdminPanelHeader
+        title="클레임 목록"
+        id="claim-list-title"
+        className="claimPanelHeader"
+        titleClassName="claimPanelTitle"
+        count={`${KR_NUMBER_FORMAT.format(total)}건`}
+      />
 
-      <form
-        className="claimToolbar"
-        onSubmit={(event) => event.preventDefault()}
-      >
-        <AdminFilterField>
-          <AdminFilterSelect
-            label="상태"
-            name="claim-status"
-            value={status || ""}
-            onChange={(event) => setFilter("status", event.target.value)}
-          >
-            <option value="">전체</option>
-            {CLAIM_STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </AdminFilterSelect>
-        </AdminFilterField>
-        <AdminFilterField>
-          <AdminFilterSelect
-            label="유형"
-            name="claim-type"
-            value={type || ""}
-            onChange={(event) => setFilter("type", event.target.value)}
-          >
-            <option value="">전체</option>
-            {CLAIM_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </AdminFilterSelect>
-        </AdminFilterField>
-      </form>
+      <ClaimListFilters
+        status={status}
+        type={type}
+        onFilterChange={setFilter}
+      />
 
       {query.error ? (
         <Callout tone="critical" description={query.error.message} />
@@ -181,27 +227,11 @@ export function ClaimListTable() {
         isLoading={query.isFetching}
       />
 
-      <nav className="claimPagination" aria-label="클레임 페이지네이션">
-        <ActionButton
-          type="button"
-          variant="neutralWeak"
-          disabled={page <= 1}
-          onClick={() => updatePage(page - 1)}
-        >
-          이전
-        </ActionButton>
-        <Text as="span" textStyle="t4Regular">
-          {page} / {totalPages}
-        </Text>
-        <ActionButton
-          type="button"
-          variant="neutralWeak"
-          disabled={page >= totalPages}
-          onClick={() => updatePage(page + 1)}
-        >
-          다음
-        </ActionButton>
-      </nav>
+      <ClaimPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={updatePage}
+      />
     </section>
   );
 }

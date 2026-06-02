@@ -2,6 +2,7 @@ import { Text } from "seed-design/ui/text";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { CouponForm, useCreateCouponMutation } from "@/features/coupons";
 import {
   createDefaultCouponFormValues,
@@ -34,16 +35,14 @@ export default function CouponCreate() {
 
   return (
     <main className="couponPage adminSettingsPage">
-      <header className="couponPageHeader">
-        <div className="couponPageTitleGroup">
-          <Text as="h1" textStyle="screenTitle" className="couponPageTitle">
-            쿠폰 생성
-          </Text>
-          <Text as="p" textStyle="t4Regular" className="couponPageDescription">
-            관리자 쿠폰을 생성합니다.
-          </Text>
-        </div>
-      </header>
+      <AdminPageHeader
+        title="쿠폰 생성"
+        description="관리자 쿠폰을 생성합니다."
+        className="couponPageHeader"
+        titleGroupClassName="couponPageTitleGroup"
+        titleClassName="couponPageTitle"
+        descriptionClassName="couponPageDescription"
+      />
 
       {mutation.error ? (
         <Callout

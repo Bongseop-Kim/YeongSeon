@@ -2,6 +2,7 @@ import { Text } from "seed-design/ui/text";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminPanelSkeleton, AdminSkeleton } from "@/components/AdminSkeleton";
 import { AdminSegmentedControl } from "@/components/AdminSegmentedControl";
 import { TextField, TextFieldInput } from "seed-design/ui/text-field";
@@ -663,14 +664,13 @@ export function PricingForm() {
 
   return (
     <main className="pricingPage adminSettingsPage">
-      <header className="pricingHeader">
-        <Text as="h1" textStyle="screenTitle" className="pricingTitle">
-          가격 설정
-        </Text>
-        <Text as="p" textStyle="t4Regular" className="pricingDescription">
-          주문/수선/원단/샘플/토큰 가격 기준을 관리합니다.
-        </Text>
-      </header>
+      <AdminPageHeader
+        title="가격 설정"
+        description="주문/수선/원단/샘플/토큰 가격 기준을 관리합니다."
+        className="pricingHeader"
+        titleClassName="pricingTitle"
+        descriptionClassName="pricingDescription"
+      />
 
       {notice ? (
         <Callout

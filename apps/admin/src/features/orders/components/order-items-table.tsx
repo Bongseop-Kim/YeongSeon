@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import { AdminDataTable } from "@/components/AdminDataTable";
 import type { AdminOrderItem } from "@/features/orders/types/admin-order";
+import { ActionButton } from "seed-design/ui/action-button";
 
 interface OrderItemsTableProps {
   items: AdminOrderItem[];
@@ -39,9 +40,11 @@ export function OrderItemsTable({
           const name = getItemName(record);
           if (record.type === "product" && record.productId != null) {
             return (
-              <button
+              <ActionButton
                 type="button"
                 className="orderLinkButton"
+                variant="ghost"
+                size="small"
                 aria-label={name}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -49,7 +52,7 @@ export function OrderItemsTable({
                 }}
               >
                 {name}
-              </button>
+              </ActionButton>
             );
           }
           return name;

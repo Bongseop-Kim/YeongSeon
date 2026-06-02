@@ -1,8 +1,4 @@
 import {
-  IconCalendarLine,
-  IconChevronDownLine,
-} from "@karrotmarket/react-monochrome-icon";
-import {
   FieldButton,
   FieldButtonPlaceholder,
   FieldButtonValue,
@@ -14,13 +10,16 @@ import {
   type TextFieldProps,
 } from "seed-design/ui/text-field";
 import {
-  Children,
-  isValidElement,
   useState,
   type ChangeEvent,
   type ReactNode,
   type SelectHTMLAttributes,
 } from "react";
+import {
+  getFieldButtonAriaLabel,
+  getSelectedOptionLabel,
+  getTextLabel,
+} from "./admin-select-utils";
 import "./AdminFilterControls.css";
 
 interface AdminFilterFieldProps {
@@ -39,10 +38,8 @@ interface AdminFilterTextFieldProps extends Omit<
 interface AdminFilterSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label: ReactNode;
   placeholder?: ReactNode;
+  suffixIcon?: ReactNode;
 }
-
-const DATE_FIELD_PREFIX_ICON = <IconCalendarLine />;
-const SELECT_SUFFIX_ICON = <IconChevronDownLine />;
 
 function cx(...classNames: Array<string | undefined>): string {
   return classNames.filter(Boolean).join(" ");
@@ -75,7 +72,7 @@ export function AdminFilterTextField(props: AdminFilterTextFieldProps) {
 
 function AdminFilterDateField({
   inputProps,
-  prefixIcon = DATE_FIELD_PREFIX_ICON,
+  prefixIcon,
   label,
   labelWeight,
   indicator,
@@ -130,7 +127,7 @@ function AdminFilterDateField({
         className="adminFilterDateButton"
         prefixIcon={prefixIcon}
         buttonProps={{
-          "aria-label": getFieldButtonAriaLabel(label, stringValue),
+          "aria-label": getFieldButtonAriaLabel(label, stringValue, "필터"),
           "aria-hidden": true,
           tabIndex: -1,
           type: "button",
@@ -173,6 +170,7 @@ export function AdminFilterSelect({
   children,
   label,
   placeholder = "선택",
+  suffixIcon,
   value,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
@@ -183,14 +181,18 @@ export function AdminFilterSelect({
   const selectLabel = ariaLabelledBy
     ? undefined
     : (ariaLabel ?? getTextLabel(label));
-  const fieldButtonLabel = getFieldButtonAriaLabel(label, selectedLabel);
+  const fieldButtonLabel = getFieldButtonAriaLabel(
+    label,
+    selectedLabel,
+    "필터",
+  );
 
   return (
     <span className={cx("adminFilterSelect", className)}>
       <FieldButton
         label={label}
         className="adminFilterSelectButton"
-        suffixIcon={SELECT_SUFFIX_ICON}
+        suffixIcon={suffixIcon}
         buttonProps={{
           "aria-label": fieldButtonLabel,
           "aria-hidden": true,
@@ -215,39 +217,4 @@ export function AdminFilterSelect({
       </select>
     </span>
   );
-}
-
-function getSelectedOptionLabel(
-  children: ReactNode,
-  selectedValue: string,
-): ReactNode {
-  let selectedLabel: ReactNode = null;
-
-  Children.forEach(children, (child) => {
-    if (
-      selectedLabel ||
-      !isValidElement<{ children?: ReactNode; value?: string }>(child)
-    ) {
-      return;
-    }
-    if (String(child.props.value ?? "") === selectedValue) {
-      selectedLabel = child.props.children;
-    }
-  });
-
-  return selectedLabel;
-}
-
-function getTextLabel(label: ReactNode): string | undefined {
-  return typeof label === "string" ? label : undefined;
-}
-
-function getFieldButtonAriaLabel(
-  label: ReactNode,
-  selectedLabel: ReactNode,
-): string {
-  const fieldLabel = getTextLabel(label) ?? "필터";
-  const valueLabel = getTextLabel(selectedLabel) ?? "선택 안 됨";
-
-  return `${fieldLabel}: ${valueLabel}`;
 }

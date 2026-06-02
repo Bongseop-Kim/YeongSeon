@@ -95,18 +95,7 @@
 }
 
 .claimTextButton {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  color: var(--seed-color-fg-brand);
-  font: inherit;
   font-weight: 700;
-  cursor: pointer;
-}
-
-.claimTextButton:hover {
-  text-decoration: underline;
 }
 
 .claimTrackingForm {

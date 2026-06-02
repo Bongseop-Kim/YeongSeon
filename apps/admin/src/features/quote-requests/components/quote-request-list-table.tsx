@@ -15,6 +15,7 @@ import {
   AdminFilterSelect,
   AdminFilterTextField,
 } from "@/components/AdminFilterControls";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   QUOTE_REQUEST_PAGE_SIZE,
@@ -177,21 +178,13 @@ export function QuoteRequestListPanel() {
 
   return (
     <section className="quoteRequestPanel" aria-labelledby="quote-list-title">
-      <div className="quoteRequestPanelHeader">
-        <div>
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="quote-list-title"
-            className="quoteRequestPanelTitle"
-          >
-            견적 요청 목록
-            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
-              {KR_NUMBER_FORMAT.format(total)}건
-            </Text>
-          </Text>
-        </div>
-      </div>
+      <AdminPanelHeader
+        title="견적 요청 목록"
+        id="quote-list-title"
+        className="quoteRequestPanelHeader"
+        titleClassName="quoteRequestPanelTitle"
+        count={`${KR_NUMBER_FORMAT.format(total)}건`}
+      />
 
       <form
         className="quoteRequestToolbar"

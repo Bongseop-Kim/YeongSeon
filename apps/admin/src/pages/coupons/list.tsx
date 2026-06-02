@@ -3,8 +3,10 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
+import { AdminDataTable } from "@/components/AdminDataTable";
 import {
-  AdminDataTable,
   COUPON_PAGE_SIZE,
   CouponStatusBadge,
   CouponTextBadge,
@@ -68,24 +70,24 @@ export default function CouponList() {
 
   return (
     <main className="couponPage">
-      <header className="couponPageHeader">
-        <div className="couponPageTitleGroup">
-          <Text as="h1" textStyle="screenTitle" className="couponPageTitle">
-            쿠폰
-          </Text>
-          <Text as="p" textStyle="t4Regular" className="couponPageDescription">
-            생성된 쿠폰을 최신순으로 확인합니다.
-          </Text>
-        </div>
-        <ActionButton
-          type="button"
-          onClick={() =>
-            navigate({ pathname: "/coupons/create", search: location.search })
-          }
-        >
-          쿠폰 생성
-        </ActionButton>
-      </header>
+      <AdminPageHeader
+        title="쿠폰"
+        description="생성된 쿠폰을 최신순으로 확인합니다."
+        className="couponPageHeader"
+        titleGroupClassName="couponPageTitleGroup"
+        titleClassName="couponPageTitle"
+        descriptionClassName="couponPageDescription"
+        actions={
+          <ActionButton
+            type="button"
+            onClick={() =>
+              navigate({ pathname: "/coupons/create", search: location.search })
+            }
+          >
+            쿠폰 생성
+          </ActionButton>
+        }
+      />
 
       {query.error ? (
         <Callout tone="critical" description={query.error.message} />
@@ -95,19 +97,13 @@ export default function CouponList() {
         className="couponPanel couponListPanel"
         aria-labelledby="coupon-list-title"
       >
-        <div className="couponPanelHeader">
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="coupon-list-title"
-            className="couponPanelTitle"
-          >
-            쿠폰 목록
-            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
-              {KR_NUMBER_FORMAT.format(total)}건
-            </Text>
-          </Text>
-        </div>
+        <AdminPanelHeader
+          title="쿠폰 목록"
+          id="coupon-list-title"
+          className="couponPanelHeader"
+          titleClassName="couponPanelTitle"
+          count={`${KR_NUMBER_FORMAT.format(total)}건`}
+        />
 
         <AdminDataTable
           data={rows}

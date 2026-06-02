@@ -1,4 +1,9 @@
 import type { ReactNode } from "react";
+import { ActionButton } from "seed-design/ui/action-button";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "seed-design/ui/segmented-control";
 import "./AdminSegmentedControl.css";
 
 export interface AdminSegmentedControlOption<T extends string> {
@@ -36,6 +41,29 @@ function cx(...classNames: Array<string | undefined>): string {
   return classNames.filter(Boolean).join(" ");
 }
 
+function isTabOption<T extends string>(
+  option: AdminSegmentedControlOption<T>,
+): option is AdminSegmentedControlTabOption<T> {
+  return "tabId" in option && "panelId" in option;
+}
+
+interface AdminSegmentedControlOptionContentProps<T extends string> {
+  option: AdminSegmentedControlOption<T>;
+}
+
+function AdminSegmentedControlOptionContent<T extends string>({
+  option,
+}: AdminSegmentedControlOptionContentProps<T>) {
+  return (
+    <>
+      <span className="adminSegmentedControlLabel">{option.label}</span>
+      {option.notification ? (
+        <span className="adminSegmentedControlDot" aria-hidden="true" />
+      ) : null}
+    </>
+  );
+}
+
 export function AdminSegmentedControl<T extends string>({
   ariaLabel,
   as: Component = "div",
@@ -44,61 +72,79 @@ export function AdminSegmentedControl<T extends string>({
   onValueChange,
   ...props
 }: AdminSegmentedControlProps<T>) {
-  if (props.selectionMode === "tab") {
-    return (
-      <Component
+  if (props.selectionMode !== "tab") {
+    const buttonGroup = (
+      <div
         aria-label={ariaLabel}
-        className={cx("adminSegmentedControl", className)}
-        role="tablist"
+        className={cx("adminSegmentedControlButtonGroup", className)}
       >
         {props.options.map((option) => {
           const isSelected = value === option.value;
 
           return (
-            <button
+            <ActionButton
               key={option.value}
-              id={option.tabId}
               type="button"
-              className="adminSegmentedControlButton"
-              role="tab"
-              aria-controls={option.panelId}
-              aria-selected={isSelected}
+              variant={isSelected ? "brandOutline" : "neutralWeak"}
+              size="small"
+              aria-pressed={isSelected}
               onClick={() => onValueChange(option.value)}
             >
-              <span className="adminSegmentedControlLabel">{option.label}</span>
-              {option.notification ? (
-                <span className="adminSegmentedControlDot" aria-hidden="true" />
-              ) : null}
-            </button>
+              <AdminSegmentedControlOptionContent option={option} />
+            </ActionButton>
           );
         })}
-      </Component>
+      </div>
+    );
+
+    return Component === "nav" ? (
+      <nav aria-label={ariaLabel}>{buttonGroup}</nav>
+    ) : (
+      buttonGroup
     );
   }
 
-  return (
-    <Component
+  const segmentedControl = (
+    <SegmentedControl
       aria-label={ariaLabel}
-      className={cx("adminSegmentedControl", className)}
+      className={cx("adminSegmentedControlTabs", className)}
+      role="tablist"
+      value={value ?? undefined}
+      onValueChange={(nextValue) => {
+        const option = props.options.find(
+          (candidate) => candidate.value === nextValue,
+        );
+
+        if (option) onValueChange(option.value);
+      }}
     >
       {props.options.map((option) => {
-        const isSelected = value === option.value;
+        const tabProps = isTabOption(option)
+          ? {
+              id: option.tabId,
+              role: "tab",
+              "aria-controls": option.panelId,
+              "aria-selected": value === option.value,
+            }
+          : {};
 
         return (
-          <button
+          <SegmentedControlItem
             key={option.value}
-            type="button"
-            className="adminSegmentedControlButton"
-            aria-pressed={isSelected}
-            onClick={() => onValueChange(option.value)}
+            value={option.value}
+            notification={option.notification}
+            {...tabProps}
           >
-            <span className="adminSegmentedControlLabel">{option.label}</span>
-            {option.notification ? (
-              <span className="adminSegmentedControlDot" aria-hidden="true" />
-            ) : null}
-          </button>
+            {option.label}
+          </SegmentedControlItem>
         );
       })}
-    </Component>
+    </SegmentedControl>
+  );
+
+  return Component === "nav" ? (
+    <nav aria-label={ariaLabel}>{segmentedControl}</nav>
+  ) : (
+    segmentedControl
   );
 }

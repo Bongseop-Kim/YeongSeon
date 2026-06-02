@@ -1,5 +1,5 @@
 import { Text } from "seed-design/ui/text";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   AdminFilterField,
   AdminFilterTextField,
@@ -51,6 +51,12 @@ const DATE_RANGE_PRESET_OFFSETS: Record<DashboardDatePreset, number> = {
   month: 29,
 };
 
+interface DashboardPanelProps {
+  children: ReactNode;
+  title: string;
+  titleId: string;
+}
+
 function toDateInputValue(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -82,6 +88,24 @@ function getMatchingPreset(
   );
 }
 
+function DashboardPanel({ children, title, titleId }: DashboardPanelProps) {
+  return (
+    <section className="dashboardPanel" aria-labelledby={titleId}>
+      <div className="dashboardPanelHeader">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id={titleId}
+          className="dashboardPanelTitle"
+        >
+          {title}
+        </Text>
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export function DashboardContent() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("orders");
   const [segment, setSegment] = useState<SegmentValue>("all");
@@ -95,14 +119,14 @@ export function DashboardContent() {
 
   return (
     <main className="dashboardPage">
-      <div className="dashboardPageTitleGroup">
+      <header className="dashboardPageTitleGroup">
         <Text as="h1" textStyle="screenTitle" className="dashboardPageTitle">
           대시보드
         </Text>
         <Text as="p" textStyle="t4Regular" className="dashboardPageDescription">
           주문, 매출, 미처리 업무와 최근 요청을 한 곳에서 확인합니다.
         </Text>
-      </div>
+      </header>
 
       <AdminSegmentedControl
         ariaLabel="대시보드 탭"
@@ -119,22 +143,7 @@ export function DashboardContent() {
           aria-labelledby="dashboard-orders-tab"
           className="dashboardTabPanel"
         >
-          <section
-            className="dashboardPanel"
-            aria-labelledby="dashboard-period-title"
-          >
-            <div className="dashboardPanelHeader">
-              <div>
-                <Text
-                  as="h2"
-                  textStyle="t6Bold"
-                  id="dashboard-period-title"
-                  className="dashboardPanelTitle"
-                >
-                  주문 지표
-                </Text>
-              </div>
-            </div>
+          <DashboardPanel title="주문 지표" titleId="dashboard-period-title">
             <div className="dashboardPeriodControls">
               <AdminSegmentedControl
                 ariaLabel="빠른 조회 기간"
@@ -176,7 +185,7 @@ export function DashboardContent() {
               </div>
             </div>
             <DashboardStatsRow stats={stats} />
-          </section>
+          </DashboardPanel>
 
           <DashboardRecentOrders
             segment={segment}
@@ -193,24 +202,9 @@ export function DashboardContent() {
           aria-labelledby="dashboard-quotes-tab"
           className="dashboardTabPanel"
         >
-          <section
-            className="dashboardPanel"
-            aria-labelledby="dashboard-quotes-title"
-          >
-            <div className="dashboardPanelHeader">
-              <div>
-                <Text
-                  as="h2"
-                  textStyle="t6Bold"
-                  id="dashboard-quotes-title"
-                  className="dashboardPanelTitle"
-                >
-                  견적 요청
-                </Text>
-              </div>
-            </div>
+          <DashboardPanel title="견적 요청" titleId="dashboard-quotes-title">
             <QuoteRequestDashboardTable />
-          </section>
+          </DashboardPanel>
         </section>
       ) : null}
     </main>

@@ -1,3 +1,4 @@
+import { ActionButton } from "seed-design/ui/action-button";
 import { Text } from "seed-design/ui/text";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ADMIN_NAV_ITEMS } from "@/components/admin-navigation";
@@ -92,23 +93,25 @@ export function AdminSider({
         </nav>
         <div className="adminSiderFooter">
           {!isMobile ? (
-            <button
+            <ActionButton
               type="button"
+              variant="neutralWeak"
               className="adminSiderCollapseButton"
               aria-label={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
               aria-expanded={!collapsed}
               onClick={() => onCollapsedChange(!collapsed)}
             >
               {collapsed ? "›" : "‹"}
-            </button>
+            </ActionButton>
           ) : null}
-          <button
+          <ActionButton
             type="button"
+            variant="neutralWeak"
             className="adminSiderLogoutButton"
             onClick={handleLogout}
           >
             {collapsed && !isMobile ? "나감" : "로그아웃"}
-          </button>
+          </ActionButton>
         </div>
       </aside>
     </>

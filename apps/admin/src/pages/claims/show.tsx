@@ -1,7 +1,8 @@
-import { Text } from "seed-design/ui/text";
 import { useParams } from "react-router-dom";
 import { CLAIM_ROLLBACK_FLOW, CLAIM_STATUS_FLOW } from "@yeongseon/shared";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   ClaimInfoSection,
@@ -63,14 +64,13 @@ export default function ClaimShow() {
 
   return (
     <main className="claimPage">
-      <header className="claimHeader">
-        <Text as="h1" textStyle="screenTitle" className="claimTitle">
-          클레임 상세
-        </Text>
-        <Text as="p" textStyle="t4Regular" className="claimDescription">
-          클레임 정보, 주문 배송, 수거·재발송 송장, 상태 이력을 관리합니다.
-        </Text>
-      </header>
+      <AdminPageHeader
+        title="클레임 상세"
+        description="클레임 정보, 주문 배송, 수거·재발송 송장, 상태 이력을 관리합니다."
+        className="claimHeader"
+        titleClassName="claimTitle"
+        descriptionClassName="claimDescription"
+      />
 
       {claimQuery.isLoading ? <AdminPanelSkeleton lines={5} /> : null}
       {claimQuery.error ? (
@@ -153,18 +153,12 @@ export default function ClaimShow() {
       ) : null}
 
       <section className="claimPanel" aria-labelledby="claim-status-log-title">
-        <div className="claimPanelHeader">
-          <div>
-            <Text
-              as="h2"
-              textStyle="t6Bold"
-              id="claim-status-log-title"
-              className="claimPanelTitle"
-            >
-              상태 변경 이력
-            </Text>
-          </div>
-        </div>
+        <AdminPanelHeader
+          title="상태 변경 이력"
+          id="claim-status-log-title"
+          className="claimPanelHeader"
+          titleClassName="claimPanelTitle"
+        />
         {logsQuery.error ? (
           <Callout tone="critical" description={logsQuery.error.message} />
         ) : null}

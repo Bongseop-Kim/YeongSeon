@@ -1,3 +1,4 @@
+import { ActionButton } from "seed-design/ui/action-button";
 import { Text } from "seed-design/ui/text";
 import { useNavigate } from "react-router-dom";
 import { ORDER_TYPE_LABELS } from "@yeongseon/shared";
@@ -28,13 +29,15 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
       </OrderDetailItem>
       <OrderDetailItem label="고객명">
         {order.userId ? (
-          <button
+          <ActionButton
             type="button"
             className="orderLinkButton"
+            variant="ghost"
+            size="small"
             onClick={() => navigate(`/customers/show/${order.userId}`)}
           >
             {order.customerName}
-          </button>
+          </ActionButton>
         ) : (
           order.customerName
         )}

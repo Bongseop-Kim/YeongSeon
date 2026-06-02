@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { COURIER_COMPANY_NAMES } from "@yeongseon/shared/constants/courier-companies";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 
 import { AdminFilterSelect } from "@/components/AdminFilterControls";
@@ -165,14 +166,13 @@ export function SettingsForm() {
 
   return (
     <main className="settingsPage adminSettingsPage">
-      <header className="settingsTitleGroup">
-        <Text as="h1" textStyle="screenTitle" className="settingsTitle">
-          관리자 설정
-        </Text>
-        <Text as="p" textStyle="t4Regular" className="settingsDescription">
-          운영 기본값과 가입 보상 설정을 관리합니다.
-        </Text>
-      </header>
+      <AdminPageHeader
+        title="관리자 설정"
+        description="운영 기본값과 가입 보상 설정을 관리합니다."
+        className="settingsTitleGroup"
+        titleClassName="settingsTitle"
+        descriptionClassName="settingsDescription"
+      />
 
       {notice ? (
         <Callout

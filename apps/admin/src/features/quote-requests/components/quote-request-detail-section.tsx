@@ -248,13 +248,15 @@ export function QuoteRequestDetailSection({
             label="고객명"
             value={
               detail.userId ? (
-                <button
+                <ActionButton
                   className="quoteRequestTextButton"
                   type="button"
+                  variant="ghost"
+                  size="small"
                   onClick={() => navigate(`/customers/show/${detail.userId}`)}
                 >
                   {detail.customerName}
-                </button>
+                </ActionButton>
               ) : (
                 detail.customerName
               )

@@ -1,5 +1,4 @@
 export { CouponForm } from "./components/coupon-form";
-export { AdminDataTable } from "./components/admin-data-table";
 export {
   CouponStatusBadge,
   CouponTextBadge,

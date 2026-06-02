@@ -10,6 +10,7 @@ import {
   AdminFilterTextField,
 } from "@/components/AdminFilterControls";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   CUSTOMER_PAGE_SIZE,
@@ -121,21 +122,13 @@ export function CustomerListTable() {
 
   return (
     <section className="customerPanel" aria-labelledby="customer-list-title">
-      <div className="customerPanelHeader">
-        <div>
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="customer-list-title"
-            className="customerPanelTitle"
-          >
-            고객 목록
-            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
-              {KR_NUMBER_FORMAT.format(total)}건
-            </Text>
-          </Text>
-        </div>
-      </div>
+      <AdminPanelHeader
+        title="고객 목록"
+        id="customer-list-title"
+        className="customerPanelHeader"
+        titleClassName="customerPanelTitle"
+        count={`${KR_NUMBER_FORMAT.format(total)}건`}
+      />
 
       <form
         className="customerToolbar"

@@ -6,6 +6,7 @@ import { getClaimStatusTone } from "@/features/claims/components/claim-status-to
 import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
 import { formatDateTime } from "@/utils/format-date-time";
 import "./claims.css";
+import { ActionButton } from "seed-design/ui/action-button";
 import { Text } from "seed-design/ui/text";
 
 interface ClaimInfoSectionProps {
@@ -46,30 +47,34 @@ export function ClaimInfoSection({ claim }: ClaimInfoSectionProps) {
         <ClaimDetailItem
           label="고객명"
           value={
-            <button
+            <ActionButton
               className="claimTextButton"
               type="button"
+              variant="ghost"
+              size="small"
               onClick={() =>
                 navigate(`/customers/show/${claim.customer.userId}`)
               }
             >
               {claim.customer.name}
-            </button>
+            </ActionButton>
           }
         />
         <ClaimDetailItem label="연락처" value={claim.customer.phone ?? "-"} />
         <ClaimDetailItem
           label="주문번호"
           value={
-            <button
+            <ActionButton
               className="claimTextButton"
               type="button"
+              variant="ghost"
+              size="small"
               onClick={() =>
                 navigate(`/orders/show/${claim.linkedOrder.orderId}`)
               }
             >
               {claim.linkedOrder.orderNumber}
-            </button>
+            </ActionButton>
           }
         />
         <ClaimDetailItem label="상품명" value={claim.productName ?? "-"} />

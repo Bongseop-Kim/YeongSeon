@@ -11,6 +11,8 @@ const { useAdminCustomerTableMock, useCustomerTokenBalancesQueryMock } =
   }));
 
 vi.mock("@karrotmarket/react-monochrome-icon", () => ({
+  IconCalendarLine: () => <span aria-hidden="true" />,
+  IconChevronDownLine: () => <span aria-hidden="true" />,
   IconMagnifyingglassLine: () => <span aria-hidden="true" />,
 }));
 

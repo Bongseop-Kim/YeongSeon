@@ -3,9 +3,9 @@ import { useMemo } from "react";
 import type { ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
+import { AdminDataTable } from "@/components/AdminDataTable";
 import { isActiveIssuedStatus } from "@/features/coupons/api/coupons-api";
 import type { IssuedCouponRow } from "@/features/coupons/types/admin-coupon";
-import { AdminDataTable } from "./admin-data-table";
 import { CouponTextBadge } from "./coupon-status-badge";
 
 const KR_NUMBER_FORMAT = new Intl.NumberFormat("ko-KR");

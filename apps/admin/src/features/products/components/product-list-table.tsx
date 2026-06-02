@@ -5,6 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import {
   AdminFilterField,
   AdminFilterSelect,
@@ -132,21 +133,13 @@ export function ProductListTable() {
 
   return (
     <section className="productPanel" aria-labelledby="product-list-title">
-      <div className="productPanelHeader">
-        <div>
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="product-list-title"
-            className="productPanelTitle"
-          >
-            상품 목록
-            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
-              {KR_NUMBER_FORMAT.format(total)}건
-            </Text>
-          </Text>
-        </div>
-      </div>
+      <AdminPanelHeader
+        title="상품 목록"
+        id="product-list-title"
+        className="productPanelHeader"
+        titleClassName="productPanelTitle"
+        count={`${KR_NUMBER_FORMAT.format(total)}건`}
+      />
 
       <form
         className="productToolbar"

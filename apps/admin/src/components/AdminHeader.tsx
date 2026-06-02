@@ -1,3 +1,4 @@
+import { ActionButton } from "seed-design/ui/action-button";
 import { Text } from "seed-design/ui/text";
 import { useLocation } from "react-router-dom";
 import { getActiveNavItem } from "@/components/admin-navigation";
@@ -16,14 +17,15 @@ export function AdminHeader({ onMenuOpen }: AdminHeaderProps) {
 
   return (
     <header className="adminHeader">
-      <button
+      <ActionButton
         type="button"
+        variant="neutralWeak"
         className="adminHeaderMenuButton"
         onClick={onMenuOpen}
         aria-label="메뉴 열기"
       >
         ☰
-      </button>
+      </ActionButton>
       <Text as="span" textStyle="t6Bold" className="adminHeaderTitle">
         {getActiveNavItem(location.pathname).label}
       </Text>

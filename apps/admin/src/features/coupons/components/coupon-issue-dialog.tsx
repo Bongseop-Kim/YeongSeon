@@ -20,7 +20,7 @@ import {
   type CouponPresetKey,
   type CouponUser,
 } from "@/features/coupons/types/admin-coupon";
-import { AdminDataTable } from "./admin-data-table";
+import { AdminDataTable } from "@/components/AdminDataTable";
 
 const KR_NUMBER_FORMAT = new Intl.NumberFormat("ko-KR");
 
@@ -127,6 +127,7 @@ export function CouponIssueDialog({
           emptyText="조건에 맞는 고객이 없습니다."
           selectedRowIds={selectedUserIds}
           onSelectedRowIdsChange={onSelectedUserIdsChange}
+          isLoading={isFetching}
         />
 
         <AlertDialogFooter>

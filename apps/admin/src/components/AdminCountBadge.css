@@ -1,0 +1,13 @@
+.adminPanelCountBadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--seed-color-bg-neutral-weak);
+  margin-left: 8px;
+  padding: 2px 8px;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+  vertical-align: 2px;
+}

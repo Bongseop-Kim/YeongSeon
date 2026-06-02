@@ -14,6 +14,7 @@ import {
   AdminFilterSelect,
   AdminFilterTextField,
 } from "@/components/AdminFilterControls";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import {
   ORDER_PAGE_SIZE,
   useAdminOrderTable,
@@ -24,6 +25,21 @@ import { OrderStatusBadge } from "./order-status-badge";
 
 interface DomainOrderTableProps {
   orderType: OrderType;
+}
+
+interface OrderListFiltersProps {
+  dateFrom: string;
+  dateTo: string;
+  orderNumber: string;
+  orderType: OrderType;
+  status: string;
+  onFilterChange: (patch: Record<string, string>) => void;
+}
+
+interface OrderPaginationProps {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
 const KR_NUMBER_FORMAT = new Intl.NumberFormat("ko-KR");
@@ -128,6 +144,101 @@ function getColumnsForType(
   return [...common, nullableColumn("reformSummary", "수선요약"), ...tail];
 }
 
+function OrderListFilters({
+  dateFrom,
+  dateTo,
+  orderNumber,
+  orderType,
+  status,
+  onFilterChange,
+}: OrderListFiltersProps) {
+  return (
+    <form className="orderToolbar" onSubmit={(event) => event.preventDefault()}>
+      <AdminFilterField className="adminFilterFieldWide">
+        <AdminFilterTextField
+          label="주문번호"
+          prefixIcon={<IconMagnifyingglassLine />}
+          value={orderNumber}
+          onValueChange={({ value }) =>
+            onFilterChange({ orderNumber: value.trim() })
+          }
+          inputProps={{
+            name: "order-number",
+            autoComplete: "off",
+            placeholder: "주문번호 검색",
+          }}
+        />
+      </AdminFilterField>
+      <AdminFilterField>
+        <AdminFilterSelect
+          label="상태"
+          name="order-status"
+          value={status}
+          onChange={(event) => onFilterChange({ status: event.target.value })}
+        >
+          {ORDER_STATUS_OPTIONS[orderType].map((option) => (
+            <option key={option.value || "all"} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </AdminFilterSelect>
+      </AdminFilterField>
+      <AdminFilterField>
+        <AdminFilterTextField
+          label="시작일"
+          value={dateFrom}
+          onValueChange={({ value }) => onFilterChange({ dateFrom: value })}
+          inputProps={{
+            name: "date-from",
+            type: "date",
+          }}
+        />
+      </AdminFilterField>
+      <AdminFilterField>
+        <AdminFilterTextField
+          label="종료일"
+          value={dateTo}
+          onValueChange={({ value }) => onFilterChange({ dateTo: value })}
+          inputProps={{
+            name: "date-to",
+            type: "date",
+          }}
+        />
+      </AdminFilterField>
+    </form>
+  );
+}
+
+function OrderPagination({
+  page,
+  totalPages,
+  onPageChange,
+}: OrderPaginationProps) {
+  return (
+    <nav className="orderPagination" aria-label="주문 페이지네이션">
+      <ActionButton
+        type="button"
+        variant="neutralWeak"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+      >
+        이전
+      </ActionButton>
+      <Text as="span" textStyle="t4Regular">
+        {page} / {totalPages}
+      </Text>
+      <ActionButton
+        type="button"
+        variant="neutralWeak"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+      >
+        다음
+      </ActionButton>
+    </nav>
+  );
+}
+
 export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -171,78 +282,23 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
 
   return (
     <section className="orderPanel" aria-labelledby="order-list-title">
-      <div className="orderPanelHeader">
-        <div className="orderPanelTitleGroup">
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="order-list-title"
-            className="orderPanelTitle"
-          >
-            주문 목록
-            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
-              {KR_NUMBER_FORMAT.format(total)}건
-            </Text>
-          </Text>
-        </div>
-      </div>
+      <AdminPanelHeader
+        title="주문 목록"
+        id="order-list-title"
+        className="orderPanelHeader"
+        titleGroupClassName="orderPanelTitleGroup"
+        titleClassName="orderPanelTitle"
+        count={`${KR_NUMBER_FORMAT.format(total)}건`}
+      />
 
-      <form
-        className="orderToolbar"
-        onSubmit={(event) => event.preventDefault()}
-      >
-        <AdminFilterField className="adminFilterFieldWide">
-          <AdminFilterTextField
-            label="주문번호"
-            prefixIcon={<IconMagnifyingglassLine />}
-            value={orderNumber}
-            onValueChange={({ value }) =>
-              updateParams({ orderNumber: value.trim() })
-            }
-            inputProps={{
-              name: "order-number",
-              autoComplete: "off",
-              placeholder: "주문번호 검색",
-            }}
-          />
-        </AdminFilterField>
-        <AdminFilterField>
-          <AdminFilterSelect
-            label="상태"
-            name="order-status"
-            value={status}
-            onChange={(event) => updateParams({ status: event.target.value })}
-          >
-            {ORDER_STATUS_OPTIONS[orderType].map((option) => (
-              <option key={option.value || "all"} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </AdminFilterSelect>
-        </AdminFilterField>
-        <AdminFilterField>
-          <AdminFilterTextField
-            label="시작일"
-            value={dateFrom}
-            onValueChange={({ value }) => updateParams({ dateFrom: value })}
-            inputProps={{
-              name: "date-from",
-              type: "date",
-            }}
-          />
-        </AdminFilterField>
-        <AdminFilterField>
-          <AdminFilterTextField
-            label="종료일"
-            value={dateTo}
-            onValueChange={({ value }) => updateParams({ dateTo: value })}
-            inputProps={{
-              name: "date-to",
-              type: "date",
-            }}
-          />
-        </AdminFilterField>
-      </form>
+      <OrderListFilters
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        orderNumber={orderNumber}
+        orderType={orderType}
+        status={status}
+        onFilterChange={updateParams}
+      />
 
       {query.error ? (
         <Callout tone="critical" description={query.error.message} />
@@ -257,27 +313,11 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
         minWidth={980}
         isLoading={query.isFetching}
       />
-      <nav className="orderPagination" aria-label="주문 페이지네이션">
-        <ActionButton
-          type="button"
-          variant="neutralWeak"
-          disabled={page <= 1}
-          onClick={() => updatePage(page - 1)}
-        >
-          이전
-        </ActionButton>
-        <Text as="span" textStyle="t4Regular">
-          {page} / {totalPages}
-        </Text>
-        <ActionButton
-          type="button"
-          variant="neutralWeak"
-          disabled={page >= totalPages}
-          onClick={() => updatePage(page + 1)}
-        >
-          다음
-        </ActionButton>
-      </nav>
+      <OrderPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={updatePage}
+      />
     </section>
   );
 }

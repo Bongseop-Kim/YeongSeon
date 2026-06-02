@@ -127,13 +127,7 @@
 .adminSiderLogoutButton,
 .adminHeaderMenuButton {
   min-height: 40px;
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 10px;
-  background: var(--seed-color-bg-layer-default);
-  color: var(--seed-color-fg-neutral);
-  font: inherit;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .adminSiderLocal .adminSiderCollapseButton,
@@ -141,13 +135,6 @@
   border-color: rgb(255 255 255 / 24%);
   background: #001529;
   color: #fff;
-}
-
-.adminSiderCollapseButton:focus-visible,
-.adminSiderLogoutButton:focus-visible,
-.adminHeaderMenuButton:focus-visible {
-  outline: 2px solid var(--seed-color-stroke-brand);
-  outline-offset: 2px;
 }
 
 .adminHeader {

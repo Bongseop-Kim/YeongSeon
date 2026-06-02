@@ -5,6 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import {
   AdminFilterField,
   AdminFilterSelect,
@@ -79,21 +80,13 @@ export function InquiryListTable() {
 
   return (
     <section className="inquiryPanel" aria-labelledby="inquiry-list-title">
-      <div className="inquiryPanelHeader">
-        <div>
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="inquiry-list-title"
-            className="inquiryPanelTitle"
-          >
-            문의 목록
-            <Text as="span" textStyle="t2Bold" className="adminPanelCountBadge">
-              {KR_NUMBER_FORMAT.format(total)}건
-            </Text>
-          </Text>
-        </div>
-      </div>
+      <AdminPanelHeader
+        title="문의 목록"
+        id="inquiry-list-title"
+        className="inquiryPanelHeader"
+        titleClassName="inquiryPanelTitle"
+        count={`${KR_NUMBER_FORMAT.format(total)}건`}
+      />
 
       <form
         className="inquiryToolbar"

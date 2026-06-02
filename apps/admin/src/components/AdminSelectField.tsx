@@ -1,15 +1,15 @@
 import { IconChevronDownLine } from "@karrotmarket/react-monochrome-icon";
-import {
-  Children,
-  isValidElement,
-  type ReactNode,
-  type SelectHTMLAttributes,
-} from "react";
+import { type ReactNode, type SelectHTMLAttributes } from "react";
 import {
   FieldButton,
   FieldButtonPlaceholder,
   FieldButtonValue,
 } from "seed-design/ui/field-button";
+import {
+  getFieldButtonAriaLabel,
+  getSelectedOptionLabel,
+  getTextLabel,
+} from "./admin-select-utils";
 import "./AdminSelectField.css";
 
 interface AdminSelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
@@ -44,7 +44,11 @@ export function AdminSelectField({
   const selectLabel = ariaLabelledBy
     ? undefined
     : (ariaLabel ?? getTextLabel(label));
-  const buttonLabel = getFieldButtonAriaLabel(label, selectedLabel);
+  const buttonLabel = getFieldButtonAriaLabel(
+    label,
+    selectedLabel,
+    "선택 필드",
+  );
 
   return (
     <span className={cx("adminSelectField", className)}>
@@ -81,40 +85,4 @@ export function AdminSelectField({
       </select>
     </span>
   );
-}
-
-function getSelectedOptionLabel(
-  children: ReactNode,
-  selectedValue: string,
-): ReactNode {
-  let selectedLabel: ReactNode = null;
-
-  Children.forEach(children, (child) => {
-    if (
-      selectedLabel ||
-      !isValidElement<{ children?: ReactNode; value?: string }>(child)
-    ) {
-      return;
-    }
-
-    if (String(child.props.value ?? "") === selectedValue) {
-      selectedLabel = child.props.children;
-    }
-  });
-
-  return selectedLabel;
-}
-
-function getTextLabel(label: ReactNode): string | undefined {
-  return typeof label === "string" ? label : undefined;
-}
-
-function getFieldButtonAriaLabel(
-  label: ReactNode,
-  selectedLabel: ReactNode,
-): string {
-  const fieldLabel = getTextLabel(label) ?? "선택 필드";
-  const valueLabel = getTextLabel(selectedLabel) ?? "선택 안 됨";
-
-  return `${fieldLabel}: ${valueLabel}`;
 }
