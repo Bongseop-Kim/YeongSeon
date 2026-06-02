@@ -152,8 +152,9 @@ export function ProductListTable() {
         className="productToolbar"
         onSubmit={(event) => event.preventDefault()}
       >
-        <AdminFilterField label="카테고리">
+        <AdminFilterField>
           <AdminFilterSelect
+            label="카테고리"
             name="product-category"
             value={category}
             onChange={(event) => updateCategory(event.target.value)}

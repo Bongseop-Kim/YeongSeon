@@ -68,8 +68,7 @@
 
 .dashboardTabButton:focus-visible,
 .dashboardPresetButton:focus-visible,
-.dashboardSegmentButton:focus-visible,
-.dashboardInput:focus-visible {
+.dashboardSegmentButton:focus-visible {
   outline: 2px solid var(--seed-color-stroke-brand);
   outline-offset: 2px;
 }
@@ -98,30 +97,6 @@
 .dashboardPanelTitle {
   font-size: 18px;
   line-height: 26px;
-}
-
-.dashboardField {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 160px;
-}
-
-.dashboardFieldLabel {
-  color: var(--seed-color-fg-neutral-muted);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-}
-
-.dashboardInput {
-  min-height: 40px;
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 10px;
-  background: var(--seed-color-bg-layer-default);
-  color: var(--seed-color-fg-neutral);
-  padding: 0 12px;
-  font: inherit;
 }
 
 .dashboardStatsGrid {
@@ -170,9 +145,5 @@
 
   .dashboardStatsGrid {
     grid-template-columns: 1fr;
-  }
-
-  .dashboardField {
-    flex: 1 1 100%;
   }
 }

@@ -198,8 +198,9 @@ export function QuoteRequestListPanel() {
         aria-label="견적 요청 필터"
         onSubmit={(event) => event.preventDefault()}
       >
-        <AdminFilterField label="견적번호" className="adminFilterFieldWide">
+        <AdminFilterField className="adminFilterFieldWide">
           <AdminFilterTextField
+            label="견적번호"
             prefixIcon={<IconMagnifyingglassLine />}
             value={draftQuoteNumber}
             onValueChange={({ value }) => setDraftQuoteNumber(value)}
@@ -210,8 +211,9 @@ export function QuoteRequestListPanel() {
             }}
           />
         </AdminFilterField>
-        <AdminFilterField label="상태">
+        <AdminFilterField>
           <AdminFilterSelect
+            label="상태"
             name="quote-request-status"
             value={status}
             onChange={(event) => setStatus(event.target.value)}

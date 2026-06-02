@@ -1,6 +1,10 @@
 import { Text } from "seed-design/ui/text";
 import { useState } from "react";
 import {
+  AdminFilterField,
+  AdminFilterTextField,
+} from "@/components/AdminFilterControls";
+import {
   useDashboardRecentOrders,
   useDashboardStats,
   DashboardRecentOrders,
@@ -144,42 +148,34 @@ export function DashboardContent() {
                 ))}
               </div>
               <div className="dashboardDateRange" aria-label="조회 기간">
-                <label className="dashboardField">
-                  <Text
-                    as="span"
-                    textStyle="t3Bold"
-                    className="dashboardFieldLabel"
-                  >
-                    시작일
-                  </Text>
-                  <input
-                    className="dashboardInput"
-                    type="date"
+                <AdminFilterField>
+                  <AdminFilterTextField
+                    label="시작일"
                     value={dateRange[0]}
-                    max={dateRange[1]}
-                    onChange={(event) =>
-                      setDateRange([event.target.value, dateRange[1]])
+                    onValueChange={({ value }) =>
+                      setDateRange(([, endDate]) => [value, endDate])
                     }
+                    inputProps={{
+                      name: "dashboard-date-from",
+                      type: "date",
+                      max: dateRange[1],
+                    }}
                   />
-                </label>
-                <label className="dashboardField">
-                  <Text
-                    as="span"
-                    textStyle="t3Bold"
-                    className="dashboardFieldLabel"
-                  >
-                    종료일
-                  </Text>
-                  <input
-                    className="dashboardInput"
-                    type="date"
+                </AdminFilterField>
+                <AdminFilterField>
+                  <AdminFilterTextField
+                    label="종료일"
                     value={dateRange[1]}
-                    min={dateRange[0]}
-                    onChange={(event) =>
-                      setDateRange([dateRange[0], event.target.value])
+                    onValueChange={({ value }) =>
+                      setDateRange(([startDate]) => [startDate, value])
                     }
+                    inputProps={{
+                      name: "dashboard-date-to",
+                      type: "date",
+                      min: dateRange[0],
+                    }}
                   />
-                </label>
+                </AdminFilterField>
               </div>
             </div>
             <DashboardStatsRow stats={stats} />

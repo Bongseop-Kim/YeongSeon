@@ -27,6 +27,11 @@ export default mergeConfig(
             environment: "jsdom",
             setupFiles: ["./src/test/setup.ts"],
             include: ["src/**/*.test.tsx", "src/hooks/**/*.test.ts"],
+            server: {
+              deps: {
+                inline: ["@seed-design/react", "@seed-design/css"],
+              },
+            },
           },
         },
       ],

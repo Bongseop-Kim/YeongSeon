@@ -1,5 +1,5 @@
 import { Text } from "seed-design/ui/text";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import { IconMagnifyingglassLine } from "@karrotmarket/react-monochrome-icon";
@@ -21,6 +21,7 @@ import "./customers.css";
 
 const KR_NUMBER_FORMAT = new Intl.NumberFormat("ko-KR");
 const CUSTOMER_SEARCH_DEBOUNCE_MS = 300;
+const EMPTY_CUSTOMER_ROWS: AdminCustomerListItem[] = [];
 
 function parsePageParam(value: string | null): number {
   return Math.max(1, Number(value ?? "1") || 1);
@@ -32,11 +33,17 @@ export function CustomerListTable() {
   const page = parsePageParam(searchParams.get("page"));
   const name = searchParams.get("name") ?? "";
   const [draftName, setDraftName] = useState(name);
+  const syncedNameRef = useRef(name);
+  if (name !== syncedNameRef.current) {
+    syncedNameRef.current = name;
+    setDraftName(name);
+  }
+
   const query = useAdminCustomerTable({ page, name });
-  const rows = query.data?.rows ?? [];
+  const rows = query.data?.rows ?? EMPTY_CUSTOMER_ROWS;
   const total = query.data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / CUSTOMER_PAGE_SIZE));
-  const userIds = rows.map((customer) => customer.id);
+  const userIds = useMemo(() => rows.map((customer) => customer.id), [rows]);
   const { data: balances, isLoading: isBalancesLoading } =
     useCustomerTokenBalancesQuery(userIds);
   const tokenBalanceMap = useMemo(
@@ -50,10 +57,6 @@ export function CustomerListTable() {
     },
     [isBalancesLoading, tokenBalanceMap],
   );
-
-  useEffect(() => {
-    setDraftName(name);
-  }, [name]);
 
   useEffect(() => {
     const nextName = draftName.trim();
@@ -141,14 +144,14 @@ export function CustomerListTable() {
           event.preventDefault();
         }}
       >
-        <AdminFilterField label="검색" className="adminFilterFieldWide">
+        <AdminFilterField className="adminFilterFieldWide">
           <AdminFilterTextField
+            label="검색"
             prefixIcon={<IconMagnifyingglassLine />}
             value={draftName}
             onValueChange={({ value }) => setDraftName(value)}
             inputProps={{
               name: "customer-name",
-              "aria-label": "고객 이름 검색",
               autoComplete: "off",
               placeholder: "고객 이름을 입력하세요",
             }}

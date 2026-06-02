@@ -200,6 +200,7 @@ export function SettingsForm() {
         >
           <AdminFilterSelect
             className="settingsCourierOptions adminSettingsFieldFull"
+            label="택배사"
             aria-labelledby="settings-default-courier"
             name="default-courier-company"
             value={courierCompany}

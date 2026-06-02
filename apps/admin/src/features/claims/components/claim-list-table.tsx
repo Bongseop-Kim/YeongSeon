@@ -135,8 +135,9 @@ export function ClaimListTable() {
         className="claimToolbar"
         onSubmit={(event) => event.preventDefault()}
       >
-        <AdminFilterField label="상태">
+        <AdminFilterField>
           <AdminFilterSelect
+            label="상태"
             name="claim-status"
             value={status || ""}
             onChange={(event) => setFilter("status", event.target.value)}
@@ -149,8 +150,9 @@ export function ClaimListTable() {
             ))}
           </AdminFilterSelect>
         </AdminFilterField>
-        <AdminFilterField label="유형">
+        <AdminFilterField>
           <AdminFilterSelect
+            label="유형"
             name="claim-type"
             value={type || ""}
             onChange={(event) => setFilter("type", event.target.value)}

@@ -1,4 +1,3 @@
-import { Text } from "seed-design/ui/text";
 import {
   FieldButton,
   FieldButtonPlaceholder,
@@ -21,17 +20,20 @@ import "./AdminFilterControls.css";
 interface AdminFilterFieldProps {
   children: ReactNode;
   className?: string;
-  label: ReactNode;
 }
 
 interface AdminFilterTextFieldProps extends Omit<
   TextFieldProps,
-  "children" | "className" | "size"
+  "children" | "className" | "label" | "size"
 > {
   inputProps: TextFieldInputProps;
+  label: ReactNode;
 }
 
-type AdminFilterSelectProps = SelectHTMLAttributes<HTMLSelectElement>;
+interface AdminFilterSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label: ReactNode;
+  placeholder?: ReactNode;
+}
 
 function cx(...classNames: Array<string | undefined>): string {
   return classNames.filter(Boolean).join(" ");
@@ -40,16 +42,8 @@ function cx(...classNames: Array<string | undefined>): string {
 export function AdminFilterField({
   children,
   className,
-  label,
 }: AdminFilterFieldProps) {
-  return (
-    <label className={cx("adminFilterField", className)}>
-      <Text as="span" textStyle="t3Bold" className="adminFilterLabel">
-        {label}
-      </Text>
-      {children}
-    </label>
-  );
+  return <div className={cx("adminFilterField", className)}>{children}</div>;
 }
 
 export function AdminFilterTextField({
@@ -59,7 +53,7 @@ export function AdminFilterTextField({
   return (
     <TextField
       className="adminFilterTextField"
-      size="medium"
+      size="large"
       {...textFieldProps}
     >
       <TextFieldInput {...inputProps} />
@@ -70,18 +64,27 @@ export function AdminFilterTextField({
 export function AdminFilterSelect({
   className,
   children,
+  label,
+  placeholder = "선택",
   value,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   ...props
 }: AdminFilterSelectProps) {
   const stringValue = value == null ? "" : String(value);
   const selectedLabel = getSelectedOptionLabel(children, stringValue);
+  const selectLabel = ariaLabelledBy
+    ? undefined
+    : (ariaLabel ?? getTextLabel(label));
+  const fieldButtonLabel = getFieldButtonAriaLabel(label, selectedLabel);
 
   return (
     <span className={cx("adminFilterSelect", className)}>
       <FieldButton
+        label={label}
         className="adminFilterSelectButton"
         buttonProps={{
-          "aria-label": "선택된 필터 값",
+          "aria-label": fieldButtonLabel,
           "aria-hidden": true,
           tabIndex: -1,
           type: "button",
@@ -90,10 +93,16 @@ export function AdminFilterSelect({
         {selectedLabel ? (
           <FieldButtonValue>{selectedLabel}</FieldButtonValue>
         ) : (
-          <FieldButtonPlaceholder>선택</FieldButtonPlaceholder>
+          <FieldButtonPlaceholder>{placeholder}</FieldButtonPlaceholder>
         )}
       </FieldButton>
-      <select className="adminFilterSelectNative" value={value} {...props}>
+      <select
+        aria-label={selectLabel}
+        aria-labelledby={ariaLabelledBy}
+        className="adminFilterSelectNative"
+        value={value}
+        {...props}
+      >
         {children}
       </select>
     </span>
@@ -119,4 +128,18 @@ function getSelectedOptionLabel(
   });
 
   return selectedLabel;
+}
+
+function getTextLabel(label: ReactNode): string | undefined {
+  return typeof label === "string" ? label : undefined;
+}
+
+function getFieldButtonAriaLabel(
+  label: ReactNode,
+  selectedLabel: ReactNode,
+): string {
+  const fieldLabel = getTextLabel(label) ?? "필터";
+  const valueLabel = getTextLabel(selectedLabel) ?? "선택 안 됨";
+
+  return `${fieldLabel}: ${valueLabel}`;
 }

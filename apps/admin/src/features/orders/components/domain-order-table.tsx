@@ -191,8 +191,9 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
         className="orderToolbar"
         onSubmit={(event) => event.preventDefault()}
       >
-        <AdminFilterField label="주문번호" className="adminFilterFieldWide">
+        <AdminFilterField className="adminFilterFieldWide">
           <AdminFilterTextField
+            label="주문번호"
             prefixIcon={<IconMagnifyingglassLine />}
             value={orderNumber}
             onValueChange={({ value }) =>
@@ -200,14 +201,14 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
             }
             inputProps={{
               name: "order-number",
-              "aria-label": "주문번호 검색",
               autoComplete: "off",
               placeholder: "주문번호 검색",
             }}
           />
         </AdminFilterField>
-        <AdminFilterField label="상태">
+        <AdminFilterField>
           <AdminFilterSelect
+            label="상태"
             name="order-status"
             value={status}
             onChange={(event) => updateParams({ status: event.target.value })}
@@ -219,24 +220,24 @@ export function DomainOrderTable({ orderType }: DomainOrderTableProps) {
             ))}
           </AdminFilterSelect>
         </AdminFilterField>
-        <AdminFilterField label="시작일">
+        <AdminFilterField>
           <AdminFilterTextField
+            label="시작일"
             value={dateFrom}
             onValueChange={({ value }) => updateParams({ dateFrom: value })}
             inputProps={{
               name: "date-from",
-              "aria-label": "시작일",
               type: "date",
             }}
           />
         </AdminFilterField>
-        <AdminFilterField label="종료일">
+        <AdminFilterField>
           <AdminFilterTextField
+            label="종료일"
             value={dateTo}
             onValueChange={({ value }) => updateParams({ dateTo: value })}
             inputProps={{
               name: "date-to",
-              "aria-label": "종료일",
               type: "date",
             }}
           />

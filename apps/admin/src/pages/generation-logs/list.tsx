@@ -182,22 +182,25 @@ export default function GenerationLogList() {
           className="generationLogToolbar"
           onSubmit={(event) => event.preventDefault()}
         >
-          <AdminFilterField label="시작일">
+          <AdminFilterField>
             <AdminFilterTextField
+              label="시작일"
               value={dateRange[0]}
               onValueChange={({ value }) => updateParams({ dateFrom: value })}
               inputProps={{ name: "generation-date-from", type: "date" }}
             />
           </AdminFilterField>
-          <AdminFilterField label="종료일">
+          <AdminFilterField>
             <AdminFilterTextField
+              label="종료일"
               value={dateRange[1]}
               onValueChange={({ value }) => updateParams({ dateTo: value })}
               inputProps={{ name: "generation-date-to", type: "date" }}
             />
           </AdminFilterField>
-          <AdminFilterField label="상태">
+          <AdminFilterField>
             <AdminFilterSelect
+              label="상태"
               name="generation-status"
               value={status ?? ""}
               onChange={(event) =>
@@ -209,11 +212,9 @@ export default function GenerationLogList() {
               <option value="error">에러</option>
             </AdminFilterSelect>
           </AdminFilterField>
-          <AdminFilterField
-            label="워크플로우/작업 ID"
-            className="adminFilterFieldWide"
-          >
+          <AdminFilterField className="adminFilterFieldWide">
             <AdminFilterTextField
+              label="워크플로우/작업 ID"
               prefixIcon={<IconMagnifyingglassLine />}
               value={idSearchInput}
               onValueChange={({ value }) => setIdSearchInput(value)}

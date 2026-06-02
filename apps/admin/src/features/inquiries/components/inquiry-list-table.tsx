@@ -100,8 +100,9 @@ export function InquiryListTable() {
         aria-label="문의 목록 필터"
         onSubmit={(event) => event.preventDefault()}
       >
-        <AdminFilterField label="상태">
+        <AdminFilterField>
           <AdminFilterSelect
+            label="상태"
             name="inquiry-status"
             value={status ?? ""}
             onChange={(event) => setStatus(event.target.value)}

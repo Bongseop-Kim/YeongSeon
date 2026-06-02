@@ -189,8 +189,9 @@ export function GenerationLogTable({
         aria-label="생성 로그 목록 필터"
         onSubmit={(event) => event.preventDefault()}
       >
-        <AdminFilterField label="AI 모델">
+        <AdminFilterField>
           <AdminFilterSelect
+            label="AI 모델"
             name="generation-ai-model"
             value={aiModel ?? ""}
             onChange={(event) => onAiModelChange(event.target.value || null)}
