@@ -64,7 +64,6 @@ export function LoginForm() {
 
         <form className="authForm" autoComplete="off" onSubmit={handleSubmit}>
           <TextField
-            className="authField"
             label="이메일"
             value={email}
             disabled={isPending}
@@ -82,7 +81,6 @@ export function LoginForm() {
           </TextField>
 
           <TextField
-            className="authField"
             label="비밀번호"
             value={password}
             disabled={isPending}

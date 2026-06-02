@@ -1,5 +1,5 @@
 import { Text } from "seed-design/ui/text";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
@@ -16,6 +16,19 @@ import "./inquiries.css";
 
 function statusTone(status: InquiryStatus) {
   return status === "답변완료" ? "positive" : "warning";
+}
+
+function DetailItem({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="inquiryDetailItem">
+      <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
+        {label}
+      </Text>
+      <Text as="dd" textStyle="t4Regular" className="inquiryDetailValue">
+        {value}
+      </Text>
+    </div>
+  );
 }
 
 export function InquiryDetailSection() {
@@ -51,14 +64,16 @@ export function InquiryDetailSection() {
 
   return (
     <section className="inquiryPanel" aria-labelledby="inquiry-detail-title">
-      <Text
-        as="h2"
-        textStyle="t6Bold"
-        id="inquiry-detail-title"
-        className="inquiryPanelTitle"
-      >
-        문의 상세
-      </Text>
+      <div className="inquiryPanelHeader">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="inquiry-detail-title"
+          className="inquiryPanelTitle"
+        >
+          문의 상세
+        </Text>
+      </div>
       {notice ? <Callout tone="positive" description={notice} /> : null}
       {answerMutation.error ? (
         <Callout
@@ -68,69 +83,42 @@ export function InquiryDetailSection() {
       ) : null}
 
       <dl className="inquiryDetailGrid">
-        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
-          제목
-        </Text>
-        <Text as="dd" textStyle="t4Regular">
-          {detail.title}
-        </Text>
-        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
-          상태
-        </Text>
-        <Text as="dd" textStyle="t4Regular">
-          <StatusBadge tone={statusTone(detail.status)}>
-            {detail.status}
-          </StatusBadge>
-        </Text>
-        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
-          문의 유형
-        </Text>
-        <Text as="dd" textStyle="t4Regular">
-          {detail.category}
-        </Text>
+        <DetailItem label="제목" value={detail.title} />
+        <DetailItem
+          label="상태"
+          value={
+            <StatusBadge tone={statusTone(detail.status)}>
+              {detail.status}
+            </StatusBadge>
+          }
+        />
+        <DetailItem label="문의 유형" value={detail.category} />
         {detail.category === "상품" && detail.product ? (
-          <>
-            <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
-              상품
-            </Text>
-            <Text as="dd" textStyle="t4Regular" className="inquiryProductRow">
-              <img
-                src={`${IMAGEKIT_URL_ENDPOINT}${detail.product.image}`}
-                alt={detail.product.name}
-                className="inquiryProductImage"
-              />
-              <Text as="span" textStyle="t4Regular">
-                {detail.product.name}
-              </Text>
-            </Text>
-          </>
+          <DetailItem
+            label="상품"
+            value={
+              <span className="inquiryProductRow">
+                <img
+                  src={`${IMAGEKIT_URL_ENDPOINT}${detail.product.image}`}
+                  alt={detail.product.name}
+                  className="inquiryProductImage"
+                  width={48}
+                  height={48}
+                  loading="lazy"
+                />
+                <Text as="span" textStyle="t4Regular">
+                  {detail.product.name}
+                </Text>
+              </span>
+            }
+          />
         ) : null}
-        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
-          작성일
-        </Text>
-        <Text as="dd" textStyle="t4Regular">
-          {detail.date}
-        </Text>
-        <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
-          내용
-        </Text>
-        <Text as="dd" textStyle="t4Regular">
-          {detail.content}
-        </Text>
+        <DetailItem label="작성일" value={detail.date} />
+        <DetailItem label="내용" value={detail.content} />
         {detail.type === "answered" ? (
           <>
-            <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
-              답변
-            </Text>
-            <Text as="dd" textStyle="t4Regular">
-              {detail.answer}
-            </Text>
-            <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
-              답변일
-            </Text>
-            <Text as="dd" textStyle="t4Regular">
-              {detail.answerDate}
-            </Text>
+            <DetailItem label="답변" value={detail.answer} />
+            <DetailItem label="답변일" value={detail.answerDate} />
           </>
         ) : null}
       </dl>

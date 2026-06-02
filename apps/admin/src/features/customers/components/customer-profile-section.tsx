@@ -10,20 +10,22 @@ interface Props {
 export function CustomerProfileSection({ customer }: Props) {
   return (
     <section className="customerPanel" aria-labelledby="customer-profile-title">
-      <Text
-        as="h2"
-        textStyle="t6Bold"
-        id="customer-profile-title"
-        className="customerPanelTitle"
-      >
-        기본 정보
-      </Text>
+      <div className="customerPanelHeader">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="customer-profile-title"
+          className="customerPanelTitle"
+        >
+          기본 정보
+        </Text>
+      </div>
       <dl className="customerDetailGrid">
         <div className="customerDetailItem">
           <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
             이름
           </Text>
-          <Text as="dd" textStyle="t4Regular">
+          <Text as="dd" textStyle="t4Regular" className="customerDetailValue">
             {customer.name}
           </Text>
         </div>
@@ -31,7 +33,7 @@ export function CustomerProfileSection({ customer }: Props) {
           <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
             전화번호
           </Text>
-          <Text as="dd" textStyle="t4Regular">
+          <Text as="dd" textStyle="t4Regular" className="customerDetailValue">
             {customer.phone ?? "-"}
           </Text>
         </div>
@@ -39,7 +41,7 @@ export function CustomerProfileSection({ customer }: Props) {
           <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
             역할
           </Text>
-          <Text as="dd" textStyle="t4Regular">
+          <Text as="dd" textStyle="t4Regular" className="customerDetailValue">
             <StatusBadge>{customer.role}</StatusBadge>
           </Text>
         </div>
@@ -47,7 +49,7 @@ export function CustomerProfileSection({ customer }: Props) {
           <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
             활성
           </Text>
-          <Text as="dd" textStyle="t4Regular">
+          <Text as="dd" textStyle="t4Regular" className="customerDetailValue">
             <StatusBadge tone={customer.isActive ? "positive" : "neutral"}>
               {customer.isActive ? "활성" : "비활성"}
             </StatusBadge>
@@ -57,7 +59,7 @@ export function CustomerProfileSection({ customer }: Props) {
           <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
             가입일
           </Text>
-          <Text as="dd" textStyle="t4Regular">
+          <Text as="dd" textStyle="t4Regular" className="customerDetailValue">
             {customer.createdAt.slice(0, 10)}
           </Text>
         </div>
@@ -65,7 +67,7 @@ export function CustomerProfileSection({ customer }: Props) {
           <Text as="dt" textStyle="t4Medium" className="customerDetailLabel">
             생년월일
           </Text>
-          <Text as="dd" textStyle="t4Regular">
+          <Text as="dd" textStyle="t4Regular" className="customerDetailValue">
             {customer.birth ?? "-"}
           </Text>
         </div>

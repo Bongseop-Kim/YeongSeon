@@ -20,8 +20,7 @@
 }
 
 .authTitleGroup,
-.authForm,
-.authField {
+.authForm {
   display: flex;
   flex-direction: column;
 }
@@ -48,10 +47,6 @@
 
 .authForm {
   gap: 16px;
-}
-
-.authField {
-  gap: 6px;
 }
 
 .authActions {

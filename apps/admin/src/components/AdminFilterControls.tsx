@@ -10,8 +10,10 @@ import {
   type TextFieldProps,
 } from "seed-design/ui/text-field";
 import {
+  useRef,
   useState,
   type ChangeEvent,
+  type MouseEvent,
   type ReactNode,
   type SelectHTMLAttributes,
 } from "react";
@@ -87,6 +89,7 @@ function AdminFilterDateField({
   defaultValue,
   onValueChange,
 }: AdminFilterTextFieldProps) {
+  const nativeInputRef = useRef<HTMLInputElement>(null);
   const [uncontrolledValue, setUncontrolledValue] = useState(
     () => defaultValue ?? "",
   );
@@ -96,6 +99,7 @@ function AdminFilterDateField({
   const {
     className: inputClassName,
     onChange: inputOnChange,
+    onClick: inputOnClick,
     ...nativeInputProps
   } = inputProps;
   const placeholder = inputProps.placeholder ?? "날짜를 선택해주세요";
@@ -113,8 +117,28 @@ function AdminFilterDateField({
     onValueChange?.(createValueChangePayload(nextValue));
   };
 
+  const openDatePicker = (event: MouseEvent<HTMLInputElement>) => {
+    inputOnClick?.(event);
+
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    const nativeInput = nativeInputRef.current;
+
+    if (!nativeInput?.showPicker) {
+      return;
+    }
+
+    try {
+      nativeInput.showPicker();
+    } catch {
+      return;
+    }
+  };
+
   return (
-    <span className="adminFilterDateField">
+    <div className="adminFilterDateField">
       <FieldButton
         label={label}
         labelWeight={labelWeight}
@@ -141,6 +165,7 @@ function AdminFilterDateField({
       </FieldButton>
       <input
         {...nativeInputProps}
+        ref={nativeInputRef}
         aria-label={nativeAriaLabel}
         className={cx("adminFilterDateNative", inputClassName)}
         disabled={disabled ?? inputProps.disabled}
@@ -149,8 +174,9 @@ function AdminFilterDateField({
         type="date"
         value={stringValue}
         onChange={updateDateFieldValue}
+        onClick={openDatePicker}
       />
-    </span>
+    </div>
   );
 }
 
