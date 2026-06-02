@@ -223,9 +223,7 @@ describe("GenerationLogDetailPage", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("logged_request_fields")).not.toBeInTheDocument();
     expect(screen.queryByText("logged_result_fields")).not.toBeInTheDocument();
-    expect(
-      screen.getByText("기본 정보 & API 전송/실행 로그"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("선택 결과 실행 정보")).toBeInTheDocument();
   });
 
   it("레거시 입력 이미지 저장 실패 안내를 표시하지 않는다", () => {
@@ -266,6 +264,6 @@ describe("GenerationLogDetailPage", () => {
     expect(screen.getByText("생성 결과 세트")).toBeInTheDocument();
     expect(screen.getAllByAltText(/생성 결과/)).toHaveLength(4);
     expect(screen.getByText("4/4 성공")).toBeInTheDocument();
-    expect(screen.getByText("Variant 4")).toBeInTheDocument();
+    expect(screen.getByText("결과 4")).toBeInTheDocument();
   });
 });

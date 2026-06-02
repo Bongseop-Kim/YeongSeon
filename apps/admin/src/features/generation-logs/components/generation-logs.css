@@ -13,7 +13,8 @@
 .generationLogChipRow,
 .generationLogImageGrid,
 .generationLogStatsGrid,
-.generationLogPromptGrid {
+.generationLogPromptGrid,
+.generationLogSummaryStrip {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
@@ -65,11 +66,16 @@
 
 .generationLogDescription,
 .generationLogMutedText,
-.generationLogMetaText {
+.generationLogMetaText,
+.generationLogBreadcrumb {
   margin: 0;
   color: var(--seed-color-fg-neutral-muted);
   font-size: 14px;
   line-height: 20px;
+}
+
+.generationLogBreadcrumb {
+  font-size: 12px;
 }
 
 .generationLogMetaText {
@@ -79,8 +85,7 @@
 
 .generationLogPanel,
 .generationLogStatCard,
-.generationLogOptionCard,
-.generationLogStickyBar {
+.generationLogSummaryStrip {
   border: 1px solid var(--seed-color-stroke-neutral-muted);
   border-radius: 16px;
   background: var(--seed-color-bg-layer-default);
@@ -93,12 +98,10 @@
   gap: 16px;
 }
 
-.generationLogStickyBar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-radius: 0 0 16px 16px;
-  box-shadow: 0 1px 8px rgb(0 0 0 / 8%);
+.generationLogSummaryStrip {
+  align-items: center;
+  justify-content: space-between;
+  background: var(--seed-color-bg-neutral-weak);
 }
 
 .generationLogToolbar {
@@ -147,7 +150,7 @@
 
 .generationLogInput:focus-visible,
 .generationLogSelect:focus-visible,
-.generationLogButtonLike:focus-visible {
+.generationLogImageButton:focus-visible {
   outline: 2px solid var(--seed-color-stroke-brand);
   outline-offset: 2px;
 }
@@ -248,8 +251,7 @@
   flex-wrap: wrap;
 }
 
-.generationLogTabButton,
-.generationLogButtonLike {
+.generationLogTabButton {
   border: 1px solid var(--seed-color-stroke-neutral-muted);
   border-radius: 999px;
   background: var(--seed-color-bg-layer-default);
@@ -260,8 +262,7 @@
   cursor: pointer;
 }
 
-.generationLogTabButton[aria-selected="true"],
-.generationLogButtonLikeActive {
+.generationLogTabButton[aria-selected="true"] {
   border-color: var(--seed-color-stroke-brand);
   background: var(--seed-color-bg-brand-weak);
   color: var(--seed-color-fg-brand);
@@ -297,10 +298,17 @@
   font-weight: 600;
 }
 
-.generationLogOptionCard {
+.generationLogMediaItem,
+.generationLogDataBlock,
+.generationLogTextColumn {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.generationLogDataBlock,
+.generationLogTextColumn {
+  min-width: 0;
 }
 
 .generationLogImageGrid {
@@ -316,6 +324,10 @@
   padding: 10px;
   text-align: left;
   cursor: pointer;
+}
+
+.generationLogImageButton:hover {
+  border-color: var(--seed-color-stroke-neutral);
 }
 
 .generationLogImageButtonActive {

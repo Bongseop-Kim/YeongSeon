@@ -1,6 +1,5 @@
 import { Text } from "seed-design/ui/text";
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
@@ -16,15 +15,6 @@ import type { AdminGenerationLogItem } from "@/features/generation-logs/types/ad
 import { formatDateTimeSeconds } from "@/utils/format-date-time";
 import "./generation-logs.css";
 
-type WorkflowStepListVariant = "chip" | "card";
-
-interface WorkflowStepListProps {
-  workflowLogs: AdminGenerationLogItem[];
-  activeLogId: string;
-  onSelectLog: (logId: string) => void;
-  variant: WorkflowStepListVariant;
-}
-
 interface GeneratedImageItem {
   label: string;
   url: string | null;
@@ -38,138 +28,81 @@ function statusTone(status: "success" | "error") {
   return status === "success" ? "positive" : "critical";
 }
 
-function WorkflowStepList({
-  workflowLogs,
-  activeLogId,
-  onSelectLog,
-  variant,
-}: WorkflowStepListProps) {
-  if (workflowLogs.length <= 1) return null;
-
-  return (
-    <div
-      className={
-        variant === "chip" ? "generationLogChipRow" : "generationLogOptionCard"
-      }
-    >
-      {workflowLogs.map((workflowLog) => {
-        const isActive = workflowLog.id === activeLogId;
-        return (
-          <button
-            key={workflowLog.id}
-            type="button"
-            className={
-              isActive
-                ? "generationLogButtonLike generationLogButtonLikeActive"
-                : "generationLogButtonLike"
-            }
-            onClick={() => onSelectLog(workflowLog.id)}
-          >
-            <span className="generationLogChipRow">
-              <StatusBadge tone="brand">{workflowLog.aiModel}</StatusBadge>
-              <StatusBadge>
-                {requestTypeLabel(workflowLog.requestType)}
-              </StatusBadge>
-              <StatusBadge
-                tone={workflowLog.errorType ? "critical" : "positive"}
-              >
-                {workflowLog.errorType ?? "success"}
-              </StatusBadge>
-              <Text
-                as="span"
-                textStyle="t2Regular"
-                className="generationLogMetaText"
-              >
-                {formatDateTimeSeconds(workflowLog.createdAt)}
-              </Text>
-              <Text
-                as="span"
-                textStyle="t2Regular"
-                className="generationLogCodeText"
-              >
-                {workflowLog.workId}
-              </Text>
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function StickyBar({
-  log,
-  workflowLogs,
-  activeLogId,
-  onSelectLog,
-  onBack,
-}: {
-  log: AdminGenerationLogItem;
-  workflowLogs: AdminGenerationLogItem[];
-  activeLogId: string;
-  onSelectLog: (logId: string) => void;
-  onBack: () => void;
-}) {
+function DetailHeader({ log }: { log: AdminGenerationLogItem }) {
   const netTokensCharged = Math.max(0, log.tokensCharged - log.tokensRefunded);
 
   return (
-    <section className="generationLogStickyBar" aria-label="생성 로그 요약">
-      <div className="generationLogActionRow">
-        <ActionButton type="button" variant="neutralWeak" onClick={onBack}>
-          ← AI 생성 로그
-        </ActionButton>
-        <Text
-          as="span"
-          textStyle="t4Regular"
-          className="generationLogMutedText"
-        >
-          {dayjs(log.createdAt).format("MM-DD HH:mm:ss")} · {log.aiModel} ·{" "}
-          {requestTypeLabel(log.requestType)}
+    <header className="generationLogHeader">
+      <div className="generationLogTitleGroup">
+        <Text as="p" textStyle="t2Regular" className="generationLogBreadcrumb">
+          AI 생성 로그 / 상세
+        </Text>
+        <Text as="h1" textStyle="t8Bold" className="generationLogTitle">
+          AI 생성 로그 상세
+        </Text>
+        <Text as="p" textStyle="t4Regular" className="generationLogDescription">
+          생성 요청 1건의 결과 이미지, 실행 정보, 입력/프롬프트 기록을
+          확인합니다.
         </Text>
       </div>
-      <div className="generationLogChipRow">
-        <StatusBadge tone="brand">{log.aiModel}</StatusBadge>
-        <StatusBadge>{requestTypeLabel(log.requestType)}</StatusBadge>
-        <Text
-          as="span"
-          textStyle="t4Regular"
-          className="generationLogMutedText"
-        >
-          토큰{" "}
-          <Text as="strong" textStyle="t5Bold">
-            {netTokensCharged}
+      <section
+        className="generationLogSummaryStrip"
+        aria-label="생성 로그 요약"
+      >
+        <div className="generationLogChipRow">
+          <StatusBadge tone={log.errorType ? "critical" : "positive"}>
+            {log.errorType ?? "성공"}
+          </StatusBadge>
+          <StatusBadge tone="brand">{log.aiModel}</StatusBadge>
+          <StatusBadge>{requestTypeLabel(log.requestType)}</StatusBadge>
+          <Text
+            as="span"
+            textStyle="t4Regular"
+            className="generationLogMutedText"
+          >
+            {dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss")}
           </Text>
-        </Text>
-        <Text
-          as="span"
-          textStyle="t4Regular"
-          className="generationLogMutedText"
-        >
-          응답{" "}
-          <Text as="strong" textStyle="t5Bold">
-            {log.totalLatencyMs != null ? `${log.totalLatencyMs}ms` : "—"}
+        </div>
+        <div className="generationLogChipRow">
+          <Text
+            as="span"
+            textStyle="t4Regular"
+            className="generationLogMutedText"
+          >
+            토큰{" "}
+            <Text as="strong" textStyle="t5Bold">
+              {netTokensCharged}
+            </Text>
           </Text>
-        </Text>
-        <StatusBadge tone={log.errorType ? "critical" : "positive"}>
-          {log.errorType ?? "성공"}
-        </StatusBadge>
-        {log.workflowId ? (
+          <Text
+            as="span"
+            textStyle="t4Regular"
+            className="generationLogMutedText"
+          >
+            응답{" "}
+            <Text as="strong" textStyle="t5Bold">
+              {log.totalLatencyMs != null ? `${log.totalLatencyMs}ms` : "—"}
+            </Text>
+          </Text>
           <Text
             as="span"
             textStyle="t2Regular"
-            className="generationLogMetaText"
+            className="generationLogCodeText"
           >
-            workflow: {log.workflowId}
+            work_id: {log.workId}
           </Text>
-        ) : null}
-      </div>
-      <WorkflowStepList
-        workflowLogs={workflowLogs}
-        activeLogId={activeLogId}
-        onSelectLog={onSelectLog}
-        variant="chip"
-      />
-    </section>
+          {log.workflowId ? (
+            <Text
+              as="span"
+              textStyle="t2Regular"
+              className="generationLogCodeText"
+            >
+              workflow_id: {log.workflowId}
+            </Text>
+          ) : null}
+        </div>
+      </section>
+    </header>
   );
 }
 
@@ -187,17 +120,16 @@ function getGeneratedImageItems(
   log: AdminGenerationLogItem,
   workflowLogs: AdminGenerationLogItem[],
 ): GeneratedImageItem[] {
-  const sourceLogs = workflowLogs.length > 1 ? workflowLogs : [log];
-  const items = sourceLogs.map((workflowLog, index) => ({
-    label: `Variant ${index + 1}`,
-    url: getPrimaryImageUrl(workflowLog),
-    workId: workflowLog.workId,
-    logId: workflowLog.id,
-    status: getLogStatus(workflowLog),
-    totalLatencyMs: workflowLog.totalLatencyMs,
-  }));
-
-  if (items.length > 1) return items;
+  if (workflowLogs.length > 1) {
+    return workflowLogs.map((workflowLog, index) => ({
+      label: `결과 ${index + 1}`,
+      url: getPrimaryImageUrl(workflowLog),
+      workId: workflowLog.workId,
+      logId: workflowLog.id,
+      status: getLogStatus(workflowLog),
+      totalLatencyMs: workflowLog.totalLatencyMs,
+    }));
+  }
 
   return [
     {
@@ -236,6 +168,12 @@ function getGeneratedImageItems(
         ) === index
       );
     });
+}
+
+function getGenerationResultLabel(log: AdminGenerationLogItem): string {
+  if (!log.generateImage) return "미요청";
+  if (log.imageGenerated) return "성공";
+  return "실패";
 }
 
 function GeneratedImageSection({
@@ -379,7 +317,7 @@ function AttachedImageSection({ log }: { log: AdminGenerationLogItem }) {
           return (
             <div
               key={`${attachment.label}-${attachment.value}`}
-              className="generationLogOptionCard"
+              className="generationLogMediaItem"
             >
               {isHttpsUrl ? (
                 <img
@@ -460,7 +398,7 @@ function JsonBlock({ label, value }: { label: string; value: unknown }) {
   if (!hasJsonBlockContent(value)) return null;
 
   return (
-    <div className="generationLogOptionCard">
+    <div className="generationLogDataBlock">
       <Text as="strong" textStyle="t5Bold" className="generationLogFieldLabel">
         {label}
       </Text>
@@ -559,7 +497,7 @@ function ExecutionLogSection({ log }: { log: AdminGenerationLogItem }) {
         id="execution-log-title"
         className="generationLogSectionTitle"
       >
-        기본 정보 & API 전송/실행 로그
+        선택 결과 실행 정보
       </Text>
       <DetailGrid>
         <DetailItem label="created_at">
@@ -569,9 +507,7 @@ function ExecutionLogSection({ log }: { log: AdminGenerationLogItem }) {
           {log.conversationTurn}
         </DetailItem>
         <DetailItem label="prompt_length">{log.promptLength}자</DetailItem>
-        <DetailItem label="result">
-          {!log.generateImage ? "미요청" : log.imageGenerated ? "성공" : "실패"}
-        </DetailItem>
+        <DetailItem label="result">{getGenerationResultLabel(log)}</DetailItem>
         <DetailItem label="workflow_id">{log.workflowId ?? "-"}</DetailItem>
         <DetailItem label="work_id">{log.workId}</DetailItem>
         <DetailItem label="parent_work_id">
@@ -610,7 +546,7 @@ function PromptSection({ log }: { log: AdminGenerationLogItem }) {
         프롬프트 & AI 응답
       </Text>
       <div className="generationLogPromptGrid">
-        <div className="generationLogOptionCard">
+        <div className="generationLogTextColumn">
           <ExpandableText label="사용자 프롬프트" content={log.userMessage} />
           {log.imagePrompt ? (
             <ExpandableText
@@ -630,7 +566,7 @@ function PromptSection({ log }: { log: AdminGenerationLogItem }) {
             />
           )}
         </div>
-        <div className="generationLogOptionCard">
+        <div className="generationLogTextColumn">
           {log.aiMessage ? (
             <ExpandableText label="AI 응답" content={log.aiMessage} />
           ) : (
@@ -648,48 +584,12 @@ function PromptSection({ log }: { log: AdminGenerationLogItem }) {
   );
 }
 
-function getWorkflowPhaseRank(log: AdminGenerationLogItem): number {
+function getGenerationResultRank(log: AdminGenerationLogItem): number {
   if (log.phase === "render") return 0;
   return 1;
 }
 
-function WorkflowLogsSection({
-  workflowLogs,
-  activeLogId,
-  onSelectLog,
-}: {
-  workflowLogs: AdminGenerationLogItem[];
-  activeLogId: string;
-  onSelectLog: (logId: string) => void;
-}) {
-  if (workflowLogs.length <= 1) return null;
-
-  return (
-    <section
-      className="generationLogPanel"
-      aria-labelledby="workflow-steps-title"
-    >
-      <Text
-        as="h2"
-        textStyle="t6Bold"
-        id="workflow-steps-title"
-        className="generationLogSectionTitle"
-      >
-        워크플로우 단계
-      </Text>
-      <WorkflowStepList
-        workflowLogs={workflowLogs}
-        activeLogId={activeLogId}
-        onSelectLog={onSelectLog}
-        variant="card"
-      />
-    </section>
-  );
-}
-
 export function GenerationLogDetailPage({ id }: { id: string }) {
-  const navigate = useNavigate();
-  const location = useLocation();
   const {
     data: requestedLog,
     isLoading: isDetailLoading,
@@ -709,7 +609,7 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
     () =>
       [...workflowLogs].sort((left, right) => {
         const rankDiff =
-          getWorkflowPhaseRank(left) - getWorkflowPhaseRank(right);
+          getGenerationResultRank(left) - getGenerationResultRank(right);
         if (rankDiff !== 0) return rankDiff;
         return (
           dayjs(right.createdAt).valueOf() - dayjs(left.createdAt).valueOf()
@@ -752,28 +652,15 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
 
   return (
     <main className="generationLogPage">
-      <StickyBar
-        log={activeLog}
-        workflowLogs={orderedWorkflowLogs}
-        activeLogId={activeLog.id}
-        onSelectLog={selectLog}
-        onBack={() =>
-          navigate({ pathname: "/generation-logs", search: location.search })
-        }
-      />
-      <WorkflowLogsSection
-        workflowLogs={orderedWorkflowLogs}
-        activeLogId={activeLog.id}
-        onSelectLog={selectLog}
-      />
-      <ExecutionLogSection log={activeLog} />
-      <AttachedImageSection log={activeLog} />
+      <DetailHeader log={activeLog} />
       <GeneratedImageSection
         log={activeLog}
         workflowLogs={orderedWorkflowLogs}
         activeLogId={activeLog.id}
         onSelectLog={selectLog}
       />
+      <ExecutionLogSection log={activeLog} />
+      <AttachedImageSection log={activeLog} />
       <RequestOptionsSection log={activeLog} />
       <PromptSection log={activeLog} />
     </main>
