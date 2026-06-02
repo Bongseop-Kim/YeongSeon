@@ -79,6 +79,7 @@ export const TextField = React.forwardRef<HTMLDivElement, TextFieldProps>(
 
       fieldRef,
 
+      className,
       ...otherProps
     },
     ref,
@@ -124,7 +125,12 @@ export const TextField = React.forwardRef<HTMLDivElement, TextFieldProps>(
             {/* You might want to put your custom element here */}
           </SeedField.Header>
         )}
-        <SeedTextField.Root ref={ref} {...otherProps} {...textFieldRootProps}>
+        <SeedTextField.Root
+          ref={ref}
+          {...textFieldRootProps}
+          {...otherProps}
+          className={className}
+        >
           {prefixIcon && <SeedTextField.PrefixIcon svg={prefixIcon} />}
           {prefix && (
             <SeedTextField.PrefixText>{prefix}</SeedTextField.PrefixText>
