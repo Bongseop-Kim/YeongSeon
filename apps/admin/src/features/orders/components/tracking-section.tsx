@@ -38,6 +38,7 @@ export function TrackingSection({
     courierCompany && trackingNumber
       ? buildTrackingUrl(courierCompany, trackingNumber)
       : null;
+  const hasTrackingActions = !isReadOnly || trackingUrl != null;
 
   return (
     <div className="orderTrackingSection">
@@ -70,22 +71,28 @@ export function TrackingSection({
             placeholder="송장번호"
           />
         </TextField>
-        {!isReadOnly ? (
-          <ActionButton
-            type="button"
-            loading={isPending}
-            disabled={isPending}
-            onClick={() => onSave?.(orderId, courierCompany, trackingNumber)}
-          >
-            저장
-          </ActionButton>
-        ) : null}
-        {trackingUrl ? (
-          <ActionButton asChild variant="neutralWeak">
-            <a href={trackingUrl} target="_blank" rel="noreferrer">
-              배송추적
-            </a>
-          </ActionButton>
+        {hasTrackingActions ? (
+          <div className="orderTrackingActions">
+            {!isReadOnly ? (
+              <ActionButton
+                type="button"
+                loading={isPending}
+                disabled={isPending}
+                onClick={() =>
+                  onSave?.(orderId, courierCompany, trackingNumber)
+                }
+              >
+                저장
+              </ActionButton>
+            ) : null}
+            {trackingUrl ? (
+              <ActionButton asChild variant="neutralWeak">
+                <a href={trackingUrl} target="_blank" rel="noreferrer">
+                  배송추적
+                </a>
+              </ActionButton>
+            ) : null}
+          </div>
         ) : null}
       </div>
       {shippedAt ? (

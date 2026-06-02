@@ -57,10 +57,36 @@ function DetailItem({ label, value }: { label: string; value: ReactNode }) {
       <Text as="dt" textStyle="t4Medium" className="quoteRequestDetailLabel">
         {label}
       </Text>
-      <Text as="dd" textStyle="t4Regular">
+      <Text as="dd" textStyle="t4Regular" className="quoteRequestDetailValue">
         {value}
       </Text>
     </div>
+  );
+}
+
+function DetailSection({
+  title,
+  id,
+  children,
+}: {
+  title: string;
+  id: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="quoteRequestPanel" aria-labelledby={id}>
+      <div className="quoteRequestPanelHeader">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id={id}
+          className="quoteRequestPanelTitle"
+        >
+          {title}
+        </Text>
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -217,18 +243,7 @@ export function QuoteRequestDetailSection({
         />
       ) : null}
 
-      <section
-        className="quoteRequestPanel"
-        aria-labelledby="quote-basic-title"
-      >
-        <Text
-          as="h2"
-          textStyle="t6Bold"
-          id="quote-basic-title"
-          className="quoteRequestPanelTitle"
-        >
-          견적 기본 정보
-        </Text>
+      <DetailSection title="견적 기본 정보" id="quote-basic-title">
         <dl className="quoteRequestDetailGrid">
           <DetailItem label="견적번호" value={detail.quoteNumber} />
           <DetailItem label="요청일" value={detail.date} />
@@ -265,20 +280,9 @@ export function QuoteRequestDetailSection({
           <DetailItem label="고객 연락처" value={detail.customerPhone ?? "-"} />
           <DetailItem label="고객 이메일" value={detail.customerEmail ?? "-"} />
         </dl>
-      </section>
+      </DetailSection>
 
-      <section
-        className="quoteRequestPanel"
-        aria-labelledby="quote-contact-title"
-      >
-        <Text
-          as="h2"
-          textStyle="t6Bold"
-          id="quote-contact-title"
-          className="quoteRequestPanelTitle"
-        >
-          담당자 연락처
-        </Text>
+      <DetailSection title="담당자 연락처" id="quote-contact-title">
         <dl className="quoteRequestDetailGrid">
           <DetailItem label="성함" value={detail.contactName} />
           <DetailItem label="상호명" value={detail.businessName || "-"} />
@@ -288,7 +292,7 @@ export function QuoteRequestDetailSection({
           />
           <DetailItem label="연락처" value={detail.contactValue} />
         </dl>
-      </section>
+      </DetailSection>
 
       <CustomOrderOptionsDetail
         options={detail.options}
@@ -297,18 +301,7 @@ export function QuoteRequestDetailSection({
       />
 
       {safeReferenceImageUrls.length > 0 ? (
-        <section
-          className="quoteRequestPanel"
-          aria-labelledby="quote-images-title"
-        >
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="quote-images-title"
-            className="quoteRequestPanelTitle"
-          >
-            참고 이미지
-          </Text>
+        <DetailSection title="참고 이미지" id="quote-images-title">
           <ul className="quoteRequestImageList">
             {safeReferenceImageUrls.map((url) => (
               <li key={url}>
@@ -317,45 +310,26 @@ export function QuoteRequestDetailSection({
                     className="quoteRequestReferenceImage"
                     src={url}
                     alt="견적 참고 이미지"
+                    width={120}
+                    height={120}
+                    loading="lazy"
                   />
                 </a>
               </li>
             ))}
           </ul>
-        </section>
+        </DetailSection>
       ) : null}
 
       {detail.additionalNotes ? (
-        <section
-          className="quoteRequestPanel"
-          aria-labelledby="quote-notes-title"
-        >
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="quote-notes-title"
-            className="quoteRequestPanelTitle"
-          >
-            추가 요청사항
-          </Text>
+        <DetailSection title="추가 요청사항" id="quote-notes-title">
           <Text as="p" textStyle="t4Regular" className="quoteRequestLongText">
             {detail.additionalNotes}
           </Text>
-        </section>
+        </DetailSection>
       ) : null}
 
-      <section
-        className="quoteRequestPanel"
-        aria-labelledby="quote-shipping-title"
-      >
-        <Text
-          as="h2"
-          textStyle="t6Bold"
-          id="quote-shipping-title"
-          className="quoteRequestPanelTitle"
-        >
-          배송지 정보
-        </Text>
+      <DetailSection title="배송지 정보" id="quote-shipping-title">
         <dl className="quoteRequestDetailGrid">
           <DetailItem label="수령인" value={detail.recipientName ?? "-"} />
           <DetailItem label="연락처" value={detail.recipientPhone ?? "-"} />
@@ -367,22 +341,12 @@ export function QuoteRequestDetailSection({
           <DetailItem label="배송메모" value={detail.deliveryMemo ?? "-"} />
           <DetailItem label="배송요청사항" value={deliveryRequestText} />
         </dl>
-      </section>
+      </DetailSection>
 
-      <section
-        className="quoteRequestPanel"
-        aria-labelledby="quote-input-title"
-      >
-        <Text
-          as="h2"
-          textStyle="t6Bold"
-          id="quote-input-title"
-          className="quoteRequestPanelTitle"
-        >
-          견적 입력
-        </Text>
-        <div className="quoteRequestFormGrid">
+      <DetailSection title="견적 입력" id="quote-input-title">
+        <div className="quoteRequestFormGrid adminSettingsForm">
           <TextField
+            className="adminSettingsField"
             label="견적금액"
             suffix="원"
             value={formValues.quotedAmount?.toLocaleString("ko-KR") ?? ""}
@@ -396,7 +360,7 @@ export function QuoteRequestDetailSection({
               aria-label="견적금액"
             />
           </TextField>
-          <div className="quoteRequestFieldFull">
+          <div className="adminSettingsFieldFull">
             <TextField
               label="견적 조건"
               value={formValues.quoteConditions}
@@ -405,7 +369,7 @@ export function QuoteRequestDetailSection({
               <TextFieldTextarea placeholder="납기, 결제 조건 등" />
             </TextField>
           </div>
-          <div className="quoteRequestFieldFull">
+          <div className="adminSettingsFieldFull">
             <TextField
               label="관리자 메모"
               value={formValues.adminMemo}
@@ -414,7 +378,7 @@ export function QuoteRequestDetailSection({
               <TextFieldTextarea placeholder="내부 메모 (고객에게 노출되지 않음)" />
             </TextField>
           </div>
-          <div className="quoteRequestFieldFull">
+          <div className="adminSettingsFieldFull">
             <TextField
               label="상태 변경 메모"
               value={formValues.statusMemo}
@@ -424,7 +388,7 @@ export function QuoteRequestDetailSection({
             </TextField>
           </div>
         </div>
-        <div className="quoteRequestActions">
+        <div className="quoteRequestActions adminSettingsActionRow">
           {nextStatus ? (
             <ActionButton
               type="button"
@@ -447,21 +411,9 @@ export function QuoteRequestDetailSection({
             </ActionButton>
           ) : null}
         </div>
-      </section>
+      </DetailSection>
 
-      <section className="quoteRequestPanel" aria-labelledby="quote-log-title">
-        <div className="quoteRequestPanelHeader">
-          <div>
-            <Text
-              as="h2"
-              textStyle="t6Bold"
-              id="quote-log-title"
-              className="quoteRequestPanelTitle"
-            >
-              상태 변경 이력
-            </Text>
-          </div>
-        </div>
+      <DetailSection title="상태 변경 이력" id="quote-log-title">
         {logsQuery.error ? (
           <Callout tone="critical" description={logsQuery.error.message} />
         ) : null}
@@ -473,7 +425,7 @@ export function QuoteRequestDetailSection({
           minWidth={640}
           isLoading={logsQuery.isFetching}
         />
-      </section>
+      </DetailSection>
 
       <AlertDialogRoot open={endConfirmOpen} onOpenChange={setEndConfirmOpen}>
         <AlertDialogContent layerIndex={60}>

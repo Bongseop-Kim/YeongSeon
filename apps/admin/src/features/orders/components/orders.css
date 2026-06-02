@@ -48,7 +48,6 @@
 .orderToolbar,
 .orderPagination,
 .orderActionRow,
-.orderTrackingControls,
 .orderDetailActions,
 .orderImageGrid {
   display: flex;
@@ -90,7 +89,24 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 160px;
+  min-width: 0;
+  width: 100%;
+}
+
+.orderTrackingControls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.orderTrackingActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--seed-color-stroke-neutral-muted);
+  padding-top: 16px;
 }
 
 .orderSearchField {
@@ -186,8 +202,16 @@
 
 @media (max-width: 840px) {
   .orderPanelHeader,
-  .orderDetailActions,
+  .orderDetailActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .orderTrackingControls {
+    grid-template-columns: 1fr;
+  }
+
+  .orderTrackingActions {
     align-items: stretch;
     flex-direction: column;
   }

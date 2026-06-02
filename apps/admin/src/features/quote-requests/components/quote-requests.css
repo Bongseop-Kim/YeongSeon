@@ -46,8 +46,8 @@
 
 .quoteRequestPanelTitle {
   margin: 0;
-  font-size: 18px;
-  line-height: 26px;
+  font-size: 17px;
+  line-height: 24px;
   font-weight: 700;
 }
 
@@ -90,12 +90,21 @@
 .quoteRequestDetailGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 20px;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 12px;
 }
 
 .quoteRequestDetailItem {
   display: grid;
-  gap: 4px;
+  grid-template-columns: minmax(120px, 36%) 1fr;
+  min-height: 48px;
+  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+}
+
+.quoteRequestDetailItem:nth-last-child(-n + 2) {
+  border-bottom: 0;
 }
 
 .quoteRequestDetailItem dd {
@@ -103,9 +112,25 @@
 }
 
 .quoteRequestDetailLabel {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--seed-color-bg-neutral-weak);
   color: var(--seed-color-fg-neutral-muted);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.quoteRequestDetailValue {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 20px;
+  word-break: break-word;
 }
 
 .quoteRequestTextButton {
@@ -135,20 +160,9 @@
   line-height: 1.6;
 }
 
-.quoteRequestFormGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.quoteRequestFieldFull {
-  grid-column: 1 / -1;
-}
-
 .quoteRequestActions {
+  grid-column: 1 / -1;
   justify-content: flex-end;
-  border-top: 1px solid var(--seed-color-stroke-neutral-muted);
-  padding-top: 16px;
 }
 
 .quoteRequestActions > button {
@@ -172,12 +186,16 @@
   }
 
   .quoteRequestDetailGrid,
-  .quoteRequestFormGrid {
+  .quoteRequestDetailItem {
     grid-template-columns: 1fr;
   }
 
-  .quoteRequestActions {
-    align-items: stretch;
-    flex-direction: column;
+  .quoteRequestDetailItem,
+  .quoteRequestDetailItem:nth-last-child(-n + 2) {
+    border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+  }
+
+  .quoteRequestDetailItem:last-child {
+    border-bottom: 0;
   }
 }
