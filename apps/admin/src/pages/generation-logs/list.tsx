@@ -15,7 +15,6 @@ import {
   DesignContextStats,
   GenerationLogStats,
   GenerationLogTable,
-  type GenerationRequestTypeFilter,
   type GenerationStatusFilter,
   useGenerationLogsQuery,
   useGenerationStatsQuery,
@@ -31,7 +30,6 @@ const EMPTY_SUMMARY = {
 };
 const GENERATION_LOG_SEARCH_DEBOUNCE_MS = 300;
 const DEFAULT_AI_MODEL = "openai";
-const VALID_REQUEST_TYPES: GenerationRequestTypeFilter[] = ["render_standard"];
 const VALID_STATUSES: GenerationStatusFilter[] = ["success", "error"];
 
 function getDefaultDateRange(): [string, string] {
@@ -50,19 +48,6 @@ function parsePageParam(value: string | null): number {
 function normalizeAiModelParam(value: string | null): string | null {
   if (!value) return null;
   return value === DEFAULT_AI_MODEL ? value : null;
-}
-
-function isGenerationRequestTypeFilter(
-  value: string,
-): value is GenerationRequestTypeFilter {
-  return VALID_REQUEST_TYPES.some((requestType) => requestType === value);
-}
-
-function normalizeRequestTypeParam(
-  value: string | null,
-): GenerationRequestTypeFilter | null {
-  if (!value) return null;
-  return isGenerationRequestTypeFilter(value) ? value : null;
 }
 
 function isGenerationStatusFilter(
@@ -86,9 +71,6 @@ export default function GenerationLogList() {
     searchParams.get("dateTo") ?? defaultDateTo,
   ];
   const aiModel = normalizeAiModelParam(searchParams.get("aiModel"));
-  const requestType = normalizeRequestTypeParam(
-    searchParams.get("requestType"),
-  );
   const status = normalizeStatusParam(searchParams.get("status"));
   const idSearch = searchParams.get("idSearch") ?? "";
   const page = parsePageParam(searchParams.get("page"));
@@ -141,7 +123,7 @@ export default function GenerationLogList() {
     dateRange,
     aiModel,
     page,
-    requestType,
+    requestType: null,
     status,
     idSearch: idSearch || null,
   });
@@ -213,18 +195,6 @@ export default function GenerationLogList() {
               onValueChange={({ value }) => updateParams({ dateTo: value })}
               inputProps={{ name: "generation-date-to", type: "date" }}
             />
-          </AdminFilterField>
-          <AdminFilterField label="요청 유형">
-            <AdminFilterSelect
-              name="generation-request-type"
-              value={requestType ?? ""}
-              onChange={(event) =>
-                updateParams({ requestType: event.target.value || null })
-              }
-            >
-              <option value="">모든 요청 유형</option>
-              <option value="render_standard">렌더(표준)</option>
-            </AdminFilterSelect>
           </AdminFilterField>
           <AdminFilterField label="상태">
             <AdminFilterSelect
