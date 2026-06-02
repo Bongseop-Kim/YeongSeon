@@ -52,26 +52,33 @@ function SettingSection({
   onRetry,
   children,
 }: SettingSectionProps) {
+  let content = children;
+
+  if (isLoading) {
+    content = <AdminPanelSkeleton lines={3} />;
+  } else if (isError) {
+    content = (
+      <SettingsErrorCard
+        errorMessage={error?.message ?? "알 수 없는 오류"}
+        onRetry={onRetry}
+      />
+    );
+  }
+
   return (
-    <section className="settingsSection" aria-labelledby={titleId}>
+    <section
+      className="settingsSection adminSettingsCard"
+      aria-labelledby={titleId}
+    >
       <Text
-        as="h3"
+        as="h2"
         textStyle="t5Bold"
         id={titleId}
         className="settingsSectionTitle"
       >
         {title}
       </Text>
-      {isLoading ? (
-        <AdminPanelSkeleton lines={3} />
-      ) : isError ? (
-        <SettingsErrorCard
-          errorMessage={error?.message ?? "알 수 없는 오류"}
-          onRetry={onRetry}
-        />
-      ) : (
-        children
-      )}
+      {content}
     </section>
   );
 }
@@ -124,6 +131,8 @@ export function SettingsForm() {
     amountInputDraft === null
       ? isTokenGrantAmountDirty
       : amountInputDraft !== String(savedAmount);
+  const tokenGrantFieldError =
+    tokenGrantValidationError ?? tokenGrantInputError;
 
   const handleSaveCourier = async () => {
     setNotice(null);
@@ -177,189 +186,164 @@ export function SettingsForm() {
         />
       ) : null}
 
-      <section
-        className="settingsPanel adminSettingsCard"
-        aria-labelledby="settings-panel-title"
+      <SettingSection
+        titleId="settings-default-courier"
+        title="기본 택배사"
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        onRetry={() => void refetch()}
       >
-        <div className="settingsPanelHeader">
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="settings-panel-title"
-            className="settingsPanelTitle"
-          >
-            배송·가입 보상
-          </Text>
-          <Text
-            as="p"
-            textStyle="t4Regular"
-            className="settingsPanelDescription"
-          >
-            배송 기본값과 가입 보상 토큰을 설정합니다.
-          </Text>
-        </div>
-
-        <SettingSection
-          titleId="settings-default-courier"
-          title="기본 택배사"
-          isLoading={isLoading}
-          isError={isError}
-          error={error}
-          onRetry={() => void refetch()}
+        <form
+          className="settingsSectionForm adminSettingsSectionForm"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSaveCourier();
+          }}
         >
-          <form
-            className="settingsSectionForm adminSettingsSectionForm"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleSaveCourier();
-            }}
+          <RadioSelectBoxRoot
+            className="settingsCourierOptions adminSettingsFieldFull"
+            aria-labelledby="settings-default-courier"
+            name="default-courier-company"
+            value={courierCompany}
+            onValueChange={setCourierCompany}
+            columns={2}
           >
-            <RadioSelectBoxRoot
-              className="settingsCourierOptions adminSettingsFieldFull"
-              aria-labelledby="settings-default-courier"
-              name="default-courier-company"
-              value={courierCompany}
-              onValueChange={setCourierCompany}
-              columns={2}
-            >
-              {COURIER_COMPANY_NAMES.map((name) => (
-                <RadioSelectBoxItem key={name} value={name} label={name} />
-              ))}
-            </RadioSelectBoxRoot>
-            <div className="settingsActionRow adminSettingsActionRow">
-              {isCourierDirty ? (
-                <Text
-                  as="p"
-                  textStyle="t4Regular"
-                  className="settingsSaveSummary adminSettingsActionSummary"
-                >
-                  저장하지 않은 변경사항 1개가 있습니다.
-                </Text>
-              ) : null}
-              {isCourierDirty ? (
-                <ActionButton
-                  type="button"
-                  variant="neutralWeak"
-                  disabled={isSaving}
-                  onClick={resetCourierCompany}
-                >
-                  변경 취소
-                </ActionButton>
-              ) : null}
-              <ActionButton
-                type="submit"
-                loading={isSaving}
-                disabled={!courierCompany || isSaving || !isCourierDirty}
+            {COURIER_COMPANY_NAMES.map((name) => (
+              <RadioSelectBoxItem key={name} value={name} label={name} />
+            ))}
+          </RadioSelectBoxRoot>
+          <div className="settingsActionRow adminSettingsActionRow">
+            {isCourierDirty ? (
+              <Text
+                as="p"
+                textStyle="t4Regular"
+                className="settingsSaveSummary adminSettingsActionSummary"
               >
-                기본 택배사 저장
+                저장하지 않은 변경사항 1개가 있습니다.
+              </Text>
+            ) : null}
+            {isCourierDirty ? (
+              <ActionButton
+                type="button"
+                variant="neutralWeak"
+                disabled={isSaving}
+                onClick={resetCourierCompany}
+              >
+                변경 취소
               </ActionButton>
-            </div>
-          </form>
-          {saveError ? (
-            <Callout
-              tone="critical"
-              title="기본 택배사를 저장하지 못했습니다"
-              description={saveError.message}
-              role="alert"
-            />
-          ) : null}
-        </SettingSection>
+            ) : null}
+            <ActionButton
+              type="submit"
+              loading={isSaving}
+              disabled={!courierCompany || isSaving || !isCourierDirty}
+            >
+              기본 택배사 저장
+            </ActionButton>
+          </div>
+        </form>
+        {saveError ? (
+          <Callout
+            tone="critical"
+            title="기본 택배사를 저장하지 못했습니다"
+            description={saveError.message}
+            role="alert"
+          />
+        ) : null}
+      </SettingSection>
 
-        <SettingSection
-          titleId="settings-design-token-initial-grant"
-          title="신규 가입 토큰 지급량"
-          isLoading={isTokenGrantLoading}
-          isError={isTokenGrantError}
-          error={tokenGrantError}
-          onRetry={() => void refetchTokenGrant()}
+      <SettingSection
+        titleId="settings-design-token-initial-grant"
+        title="신규 가입 토큰 지급량"
+        isLoading={isTokenGrantLoading}
+        isError={isTokenGrantError}
+        error={tokenGrantError}
+        onRetry={() => void refetchTokenGrant()}
+      >
+        <form
+          className="settingsSectionForm adminSettingsSectionForm"
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSaveTokenGrant();
+          }}
         >
-          <form
-            className="settingsSectionForm adminSettingsSectionForm"
-            noValidate
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleSaveTokenGrant();
+          <TextField
+            className="settingsNumberField adminSettingsField"
+            label="토큰 지급량"
+            name="design-token-initial-grant"
+            value={amountInputValue}
+            onValueChange={({ value }) => {
+              setAmountInputDraft(value);
+
+              const parsed = Number(value);
+              if (Number.isInteger(parsed) && parsed >= 1) {
+                setAmount(parsed);
+                setTokenGrantValidationError(null);
+              }
             }}
+            suffix="개"
+            required
+            showRequiredIndicator
+            invalid={Boolean(tokenGrantFieldError)}
+            errorMessage={tokenGrantFieldError}
           >
-            <TextField
-              className="settingsNumberField adminSettingsField"
-              label="토큰 지급량"
+            <TextFieldInput
+              ref={tokenGrantInputRef}
               name="design-token-initial-grant"
-              value={amountInputValue}
-              onValueChange={({ value }) => {
-                setAmountInputDraft(value);
-
-                const parsed = Number(value);
-                if (Number.isInteger(parsed) && parsed >= 1) {
-                  setAmount(parsed);
-                  setTokenGrantValidationError(null);
-                }
-              }}
-              suffix="개"
-              required
-              showRequiredIndicator
-              invalid={Boolean(
-                tokenGrantValidationError ?? tokenGrantInputError,
-              )}
-              errorMessage={tokenGrantValidationError ?? tokenGrantInputError}
-            >
-              <TextFieldInput
-                ref={tokenGrantInputRef}
-                name="design-token-initial-grant"
-                type="number"
-                min={1}
-                step={1}
-                inputMode="numeric"
-                autoComplete="off"
-              />
-            </TextField>
-            <div className="settingsActionRow adminSettingsActionRow">
-              {isTokenGrantDirty ? (
-                <Text
-                  as="p"
-                  textStyle="t4Regular"
-                  className="settingsSaveSummary adminSettingsActionSummary"
-                >
-                  저장하지 않은 변경사항 1개가 있습니다.
-                </Text>
-              ) : null}
-              {isTokenGrantDirty ? (
-                <ActionButton
-                  type="button"
-                  variant="neutralWeak"
-                  disabled={isTokenGrantSaving}
-                  onClick={() => {
-                    resetTokenGrant();
-                    setAmountInputDraft(null);
-                    setTokenGrantValidationError(null);
-                  }}
-                >
-                  변경 취소
-                </ActionButton>
-              ) : null}
-              <ActionButton
-                type="submit"
-                loading={isTokenGrantSaving}
-                disabled={
-                  isTokenGrantSaving ||
-                  !isTokenGrantDirty ||
-                  Boolean(tokenGrantInputError)
-                }
-              >
-                토큰 지급량 저장
-              </ActionButton>
-            </div>
-          </form>
-          {tokenGrantSaveError ? (
-            <Callout
-              tone="critical"
-              title="토큰 지급량을 저장하지 못했습니다"
-              description={tokenGrantSaveError.message}
-              role="alert"
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              autoComplete="off"
             />
-          ) : null}
-        </SettingSection>
-      </section>
+          </TextField>
+          <div className="settingsActionRow adminSettingsActionRow">
+            {isTokenGrantDirty ? (
+              <Text
+                as="p"
+                textStyle="t4Regular"
+                className="settingsSaveSummary adminSettingsActionSummary"
+              >
+                저장하지 않은 변경사항 1개가 있습니다.
+              </Text>
+            ) : null}
+            {isTokenGrantDirty ? (
+              <ActionButton
+                type="button"
+                variant="neutralWeak"
+                disabled={isTokenGrantSaving}
+                onClick={() => {
+                  resetTokenGrant();
+                  setAmountInputDraft(null);
+                  setTokenGrantValidationError(null);
+                }}
+              >
+                변경 취소
+              </ActionButton>
+            ) : null}
+            <ActionButton
+              type="submit"
+              loading={isTokenGrantSaving}
+              disabled={
+                isTokenGrantSaving ||
+                !isTokenGrantDirty ||
+                Boolean(tokenGrantInputError)
+              }
+            >
+              토큰 지급량 저장
+            </ActionButton>
+          </div>
+        </form>
+        {tokenGrantSaveError ? (
+          <Callout
+            tone="critical"
+            title="토큰 지급량을 저장하지 못했습니다"
+            description={tokenGrantSaveError.message}
+            role="alert"
+          />
+        ) : null}
+      </SettingSection>
     </main>
   );
 }
