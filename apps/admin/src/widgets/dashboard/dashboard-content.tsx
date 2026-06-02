@@ -4,6 +4,7 @@ import {
   AdminFilterField,
   AdminFilterTextField,
 } from "@/components/AdminFilterControls";
+import { AdminSegmentedControl } from "@/components/AdminSegmentedControl";
 import {
   useDashboardRecentOrders,
   useDashboardStats,
@@ -22,6 +23,26 @@ const DATE_RANGE_PRESETS: { label: string; value: DashboardDatePreset }[] = [
   { label: "오늘", value: "today" },
   { label: "최근 1주", value: "week" },
   { label: "최근 1달", value: "month" },
+];
+
+const DASHBOARD_TABS: {
+  label: string;
+  panelId: string;
+  tabId: string;
+  value: DashboardTab;
+}[] = [
+  {
+    label: "주문",
+    panelId: "dashboard-orders-panel",
+    tabId: "dashboard-orders-tab",
+    value: "orders",
+  },
+  {
+    label: "견적",
+    panelId: "dashboard-quotes-panel",
+    tabId: "dashboard-quotes-tab",
+    value: "quotes",
+  },
 ];
 
 const DATE_RANGE_PRESET_OFFSETS: Record<DashboardDatePreset, number> = {
@@ -83,30 +104,13 @@ export function DashboardContent() {
         </Text>
       </div>
 
-      <div className="dashboardTabList" role="tablist" aria-label="대시보드 탭">
-        <button
-          id="dashboard-orders-tab"
-          type="button"
-          className="dashboardTabButton"
-          role="tab"
-          aria-selected={activeTab === "orders"}
-          aria-controls="dashboard-orders-panel"
-          onClick={() => setActiveTab("orders")}
-        >
-          주문
-        </button>
-        <button
-          id="dashboard-quotes-tab"
-          type="button"
-          className="dashboardTabButton"
-          role="tab"
-          aria-selected={activeTab === "quotes"}
-          aria-controls="dashboard-quotes-panel"
-          onClick={() => setActiveTab("quotes")}
-        >
-          견적
-        </button>
-      </div>
+      <AdminSegmentedControl
+        ariaLabel="대시보드 탭"
+        options={DASHBOARD_TABS}
+        selectionMode="tab"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      />
 
       {activeTab === "orders" ? (
         <section
@@ -132,21 +136,14 @@ export function DashboardContent() {
               </div>
             </div>
             <div className="dashboardPeriodControls">
-              <div className="dashboardPresetGroup" aria-label="빠른 조회 기간">
-                {DATE_RANGE_PRESETS.map((preset) => (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    className="dashboardPresetButton"
-                    aria-pressed={activePreset === preset.value}
-                    onClick={() =>
-                      setDateRange(getPresetDateRange(preset.value))
-                    }
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
+              <AdminSegmentedControl
+                ariaLabel="빠른 조회 기간"
+                options={DATE_RANGE_PRESETS}
+                value={activePreset}
+                onValueChange={(preset) =>
+                  setDateRange(getPresetDateRange(preset))
+                }
+              />
               <div className="dashboardDateRange" aria-label="조회 기간">
                 <AdminFilterField>
                   <AdminFilterTextField

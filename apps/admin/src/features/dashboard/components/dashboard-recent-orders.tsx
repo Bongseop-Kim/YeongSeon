@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ORDER_TYPE_LABELS } from "@yeongseon/shared";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import { AdminSegmentedControl } from "@/components/AdminSegmentedControl";
 import { StatusBadge } from "@/components/StatusBadge";
 import type {
   AdminDashboardRecentOrder,
@@ -85,19 +86,12 @@ export function DashboardRecentOrders({
         </div>
       </div>
 
-      <div className="dashboardSegmentGroup" aria-label="주문 유형 필터">
-        {SEGMENT_OPTIONS.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            className="dashboardSegmentButton"
-            aria-pressed={segment === option.value}
-            onClick={() => onSegmentChange(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      <AdminSegmentedControl
+        ariaLabel="주문 유형 필터"
+        options={SEGMENT_OPTIONS}
+        value={segment}
+        onValueChange={onSegmentChange}
+      />
 
       <AdminDataTable
         data={recentOrders}

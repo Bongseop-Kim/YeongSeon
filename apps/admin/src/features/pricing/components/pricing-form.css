@@ -45,47 +45,6 @@
   font-weight: 700;
 }
 
-.pricingTabList {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-}
-
-.pricingTabList::before,
-.pricingTabList::after {
-  display: none;
-}
-
-.pricingTabList [role="tab"] {
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 999px;
-  background: var(--seed-color-bg-layer-default);
-  color: var(--seed-color-fg-neutral);
-  padding: 8px 14px;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pricingTabList [role="tab"][aria-selected="true"] {
-  border-color: var(--seed-color-stroke-brand);
-  background: var(--seed-color-bg-brand-weak);
-  color: var(--seed-color-fg-brand);
-}
-
-.pricingTabList [role="tab"]:focus-visible {
-  outline: 2px solid var(--seed-color-stroke-brand);
-  outline-offset: 2px;
-}
-
-.pricingTabList :where([class*="indicator"], [data-part="indicator"]) {
-  display: none;
-}
-
 .pricingStack {
   display: flex;
   flex-direction: column;

@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { IconMagnifyingglassLine } from "@karrotmarket/react-monochrome-icon";
-import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import {
   AdminFilterField,
@@ -78,7 +77,6 @@ export default function GenerationLogList() {
     source: idSearch,
     value: idSearch,
   });
-  const [statsOpen, setStatsOpen] = useState(false);
   const { data: statsData, isLoading: statsLoading } =
     useGenerationStatsQuery(dateRange);
 
@@ -249,23 +247,14 @@ export default function GenerationLogList() {
               모델·패턴·에러 통계
             </Text>
           </div>
-          <ActionButton
-            type="button"
-            variant="neutralWeak"
-            onClick={() => setStatsOpen((value) => !value)}
-          >
-            {statsOpen ? "통계 접기" : "통계 펼치기"}
-          </ActionButton>
         </div>
-        {statsOpen ? (
-          <DesignContextStats
-            byModel={statsData?.byModel ?? []}
-            byInputType={statsData?.byInputType ?? []}
-            byPattern={statsData?.byPattern ?? []}
-            byError={statsData?.byError ?? []}
-            loading={statsLoading}
-          />
-        ) : null}
+        <DesignContextStats
+          byModel={statsData?.byModel ?? []}
+          byInputType={statsData?.byInputType ?? []}
+          byPattern={statsData?.byPattern ?? []}
+          byError={statsData?.byError ?? []}
+          loading={statsLoading}
+        />
       </section>
 
       <section

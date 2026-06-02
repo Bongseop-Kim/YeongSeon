@@ -3,12 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { AdminPanelSkeleton, AdminSkeleton } from "@/components/AdminSkeleton";
-import {
-  TabsContent,
-  TabsList,
-  TabsRoot,
-  TabsTrigger,
-} from "seed-design/ui/tabs";
+import { AdminSegmentedControl } from "@/components/AdminSegmentedControl";
 import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 import {
   SAMPLE_DISCOUNT_KEYS,
@@ -128,6 +123,44 @@ const PRICING_TABS = new Set<PricingTab>([
   "sample",
   "token",
 ]);
+
+const PRICING_TAB_OPTIONS: {
+  label: string;
+  panelId: string;
+  tabId: string;
+  value: PricingTab;
+}[] = [
+  {
+    label: "봉제",
+    panelId: "pricing-panel",
+    tabId: "pricing-sewing-tab",
+    value: "sewing",
+  },
+  {
+    label: "수선",
+    panelId: "pricing-panel",
+    tabId: "pricing-reform-tab",
+    value: "reform",
+  },
+  {
+    label: "원단",
+    panelId: "pricing-panel",
+    tabId: "pricing-fabric-tab",
+    value: "fabric",
+  },
+  {
+    label: "샘플",
+    panelId: "pricing-panel",
+    tabId: "pricing-sample-tab",
+    value: "sample",
+  },
+  {
+    label: "토큰",
+    panelId: "pricing-panel",
+    tabId: "pricing-token-tab",
+    value: "token",
+  },
+];
 
 function getInitialPricingTab(): PricingTab {
   if (typeof window === "undefined") return "sewing";
@@ -566,6 +599,17 @@ export function PricingForm() {
       `${url.pathname}${url.search}${url.hash}`,
     );
   };
+  const pricingTabNotifications: Record<PricingTab, boolean> = {
+    sewing: hasConstantChanges(allSewingKeys),
+    reform: hasConstantChanges(REFORM_KEYS),
+    fabric: hasFabricChanges,
+    sample: Boolean(hasSampleChanges || sampleCouponQuery.isError),
+    token: Boolean(hasTokenChanges || tokenQuery.isError),
+  };
+  const pricingTabOptions = PRICING_TAB_OPTIONS.map((option) => ({
+    ...option,
+    notification: pricingTabNotifications[option.value],
+  }));
 
   const renderConstantInput = (
     key: string,
@@ -637,45 +681,19 @@ export function PricingForm() {
         />
       ) : null}
 
-      <TabsRoot
-        className="pricingTabs"
-        value={activeTab}
-        onValueChange={handleTabChange}
-      >
-        <TabsList className="pricingTabList" aria-label="가격 설정 영역">
-          <TabsTrigger
-            value="sewing"
-            notification={hasConstantChanges(allSewingKeys)}
-          >
-            봉제
-          </TabsTrigger>
-          <TabsTrigger
-            value="reform"
-            notification={hasConstantChanges(REFORM_KEYS)}
-          >
-            수선
-          </TabsTrigger>
-          <TabsTrigger value="fabric" notification={hasFabricChanges}>
-            원단
-          </TabsTrigger>
-          <TabsTrigger
-            value="sample"
-            notification={Boolean(
-              hasSampleChanges || sampleCouponQuery.isError,
-            )}
-          >
-            샘플
-          </TabsTrigger>
-          <TabsTrigger
-            value="token"
-            notification={Boolean(hasTokenChanges || tokenQuery.isError)}
-          >
-            토큰
-          </TabsTrigger>
-        </TabsList>
+      <div className="pricingTabs">
+        <AdminSegmentedControl
+          ariaLabel="가격 설정 영역"
+          options={pricingTabOptions}
+          selectionMode="tab"
+          value={activeTab}
+          onValueChange={handleTabChange}
+        />
         <section
+          id="pricing-panel"
+          role="tabpanel"
           className="pricingPanel adminSettingsCard"
-          aria-labelledby="pricing-panel-title"
+          aria-labelledby={`pricing-${activeTab}-tab pricing-panel-title`}
         >
           <div className="pricingPanelHeader">
             <Text
@@ -688,7 +706,7 @@ export function PricingForm() {
             </Text>
           </div>
 
-          <TabsContent value="sewing">
+          {activeTab === "sewing" ? (
             <div className="pricingStack">
               {SEWING_GROUPS.map((group) => (
                 <section key={group.title} className="pricingGroup">
@@ -715,15 +733,15 @@ export function PricingForm() {
                 </div>
               </section>
             </div>
-          </TabsContent>
+          ) : null}
 
-          <TabsContent value="reform">
+          {activeTab === "reform" ? (
             <div className="pricingGrid">
               {REFORM_KEYS.map((key) => renderConstantInput(key, "원"))}
             </div>
-          </TabsContent>
+          ) : null}
 
-          <TabsContent value="fabric">
+          {activeTab === "fabric" ? (
             <div className="pricingGrid">
               {(fabrics ?? []).map((row) => {
                 const { designType, fabricType } = parseFabricKey(row.key);
@@ -745,9 +763,9 @@ export function PricingForm() {
                 );
               })}
             </div>
-          </TabsContent>
+          ) : null}
 
-          <TabsContent value="sample">
+          {activeTab === "sample" ? (
             <div className="pricingStack">
               <section className="pricingGroup">
                 <Text as="h3" textStyle="t5Bold" className="pricingGroupTitle">
@@ -810,82 +828,93 @@ export function PricingForm() {
                 )}
               </section>
             </div>
-          </TabsContent>
+          ) : null}
 
-          <TabsContent value="token">
-            {tokenQuery.isLoading ? <AdminPanelSkeleton lines={4} /> : null}
-            {tokenQuery.isError ? (
-              <Callout
-                tone="critical"
-                description={
-                  tokenQuery.error?.message ??
-                  "토큰 가격 정보를 불러오는데 실패했습니다."
-                }
-                role="alert"
-              />
-            ) : (
-              <div className="pricingStack">
-                <Text as="p" textStyle="t4Regular" className="pricingMutedText">
-                  많이 살수록 토큰 1개당 단가가 낮아집니다.
-                </Text>
-                <div className="pricingGrid">
-                  {TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => {
-                    const tier =
-                      tokenDraft[priceKey] ??
-                      tokenSettings?.find((item) => item.priceKey === priceKey);
-                    const setTier = (patch: Partial<TokenTierUI>) => {
-                      clearFieldError(
-                        patch.price === undefined ? amountKey : priceKey,
-                      );
-                      setTokenDraft((prev) => ({
-                        ...prev,
-                        [priceKey]: {
-                          label,
-                          priceKey,
-                          amountKey,
-                          price: prev[priceKey]?.price ?? tier?.price ?? 0,
-                          amount: prev[priceKey]?.amount ?? tier?.amount ?? 0,
-                          ...patch,
-                        },
-                      }));
-                    };
-                    return (
-                      <section key={priceKey} className="pricingTierCard">
-                        <Text
-                          as="h3"
-                          textStyle="t5Bold"
-                          className="pricingTierTitle"
-                        >
-                          {tier?.label ?? label}
-                        </Text>
-                        <PricingNumberField
-                          fieldKey={priceKey}
-                          label="가격"
-                          value={tier?.price}
-                          min={1}
-                          suffix="원"
-                          errorMessage={fieldErrors[priceKey]}
-                          inputRef={registerFieldRef(priceKey)}
-                          onChange={(value) => setTier({ price: value })}
-                        />
-                        <PricingNumberField
-                          fieldKey={amountKey}
-                          label="토큰 수량"
-                          value={tier?.amount}
-                          min={1}
-                          step={1}
-                          suffix="T"
-                          errorMessage={fieldErrors[amountKey]}
-                          inputRef={registerFieldRef(amountKey)}
-                          onChange={(value) => setTier({ amount: value })}
-                        />
-                      </section>
-                    );
-                  })}
+          {activeTab === "token" ? (
+            <>
+              {tokenQuery.isLoading ? <AdminPanelSkeleton lines={4} /> : null}
+              {tokenQuery.isError ? (
+                <Callout
+                  tone="critical"
+                  description={
+                    tokenQuery.error?.message ??
+                    "토큰 가격 정보를 불러오는데 실패했습니다."
+                  }
+                  role="alert"
+                />
+              ) : (
+                <div className="pricingStack">
+                  <Text
+                    as="p"
+                    textStyle="t4Regular"
+                    className="pricingMutedText"
+                  >
+                    많이 살수록 토큰 1개당 단가가 낮아집니다.
+                  </Text>
+                  <div className="pricingGrid">
+                    {TOKEN_PRICING_TIERS.map(
+                      ({ label, priceKey, amountKey }) => {
+                        const tier =
+                          tokenDraft[priceKey] ??
+                          tokenSettings?.find(
+                            (item) => item.priceKey === priceKey,
+                          );
+                        const setTier = (patch: Partial<TokenTierUI>) => {
+                          clearFieldError(
+                            patch.price === undefined ? amountKey : priceKey,
+                          );
+                          setTokenDraft((prev) => ({
+                            ...prev,
+                            [priceKey]: {
+                              label,
+                              priceKey,
+                              amountKey,
+                              price: prev[priceKey]?.price ?? tier?.price ?? 0,
+                              amount:
+                                prev[priceKey]?.amount ?? tier?.amount ?? 0,
+                              ...patch,
+                            },
+                          }));
+                        };
+                        return (
+                          <section key={priceKey} className="pricingTierCard">
+                            <Text
+                              as="h3"
+                              textStyle="t5Bold"
+                              className="pricingTierTitle"
+                            >
+                              {tier?.label ?? label}
+                            </Text>
+                            <PricingNumberField
+                              fieldKey={priceKey}
+                              label="가격"
+                              value={tier?.price}
+                              min={1}
+                              suffix="원"
+                              errorMessage={fieldErrors[priceKey]}
+                              inputRef={registerFieldRef(priceKey)}
+                              onChange={(value) => setTier({ price: value })}
+                            />
+                            <PricingNumberField
+                              fieldKey={amountKey}
+                              label="토큰 수량"
+                              value={tier?.amount}
+                              min={1}
+                              step={1}
+                              suffix="T"
+                              errorMessage={fieldErrors[amountKey]}
+                              inputRef={registerFieldRef(amountKey)}
+                              onChange={(value) => setTier({ amount: value })}
+                            />
+                          </section>
+                        );
+                      },
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </TabsContent>
+              )}
+            </>
+          ) : null}
 
           <div className="pricingPanelActions adminSettingsActionRow">
             {hasPendingChanges ? (
@@ -918,7 +947,7 @@ export function PricingForm() {
             </ActionButton>
           </div>
         </section>
-      </TabsRoot>
+      </div>
     </main>
   );
 }

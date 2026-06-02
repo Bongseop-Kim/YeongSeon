@@ -200,7 +200,7 @@ export function DesignContextStats({
   );
 
   return (
-    <div className="generationLogPanel">
+    <>
       <div
         className="generationLogTabList"
         role="tablist"
@@ -259,6 +259,6 @@ export function DesignContextStats({
           isLoading={loading}
         />
       ) : null}
-    </div>
+    </>
   );
 }

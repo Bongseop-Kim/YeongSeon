@@ -82,29 +82,6 @@
   line-height: 22px;
 }
 
-.orderTabList {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.orderTabButton {
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 999px;
-  background: var(--seed-color-bg-layer-default);
-  color: var(--seed-color-fg-neutral);
-  padding: 8px 14px;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.orderTabButton[aria-selected="true"] {
-  border-color: var(--seed-color-stroke-brand);
-  background: var(--seed-color-bg-brand-weak);
-  color: var(--seed-color-fg-brand);
-}
-
 .orderToolbar {
   align-items: flex-end;
 }
@@ -148,7 +125,6 @@
 .orderInput:focus-visible,
 .orderSelect:focus-visible,
 .orderTextarea:focus-visible,
-.orderTabButton:focus-visible,
 .orderLinkButton:focus-visible {
   outline: 2px solid var(--seed-color-stroke-brand);
   outline-offset: 2px;
