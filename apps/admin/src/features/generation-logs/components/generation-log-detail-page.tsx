@@ -1,6 +1,6 @@
 import { Text } from "seed-design/ui/text";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
@@ -689,6 +689,7 @@ function WorkflowLogsSection({
 
 export function GenerationLogDetailPage({ id }: { id: string }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     data: requestedLog,
     isLoading: isDetailLoading,
@@ -756,7 +757,9 @@ export function GenerationLogDetailPage({ id }: { id: string }) {
         workflowLogs={orderedWorkflowLogs}
         activeLogId={activeLog.id}
         onSelectLog={selectLog}
-        onBack={() => navigate("/generation-logs")}
+        onBack={() =>
+          navigate({ pathname: "/generation-logs", search: location.search })
+        }
       />
       <WorkflowLogsSection
         workflowLogs={orderedWorkflowLogs}

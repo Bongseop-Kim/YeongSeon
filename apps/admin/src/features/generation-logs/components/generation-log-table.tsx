@@ -1,6 +1,6 @@
 import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -86,6 +86,8 @@ export function GenerationLogTable({
   aiModel,
   onAiModelChange,
 }: GenerationLogTableProps) {
+  const location = useLocation();
+  const detailSearch = location.search;
   const columns = useMemo<ColumnDef<AdminGenerationLogGroup>[]>(
     () => [
       {
@@ -121,7 +123,10 @@ export function GenerationLogTable({
               </div>
               <Link
                 className="generationLogCodeText"
-                to={`/generation-logs/${record.primaryLogId}`}
+                to={{
+                  pathname: `/generation-logs/${record.primaryLogId}`,
+                  search: detailSearch,
+                }}
                 aria-label={`${record.workflowId} 생성 로그 상세 보기`}
               >
                 {record.workflowId}
@@ -175,7 +180,7 @@ export function GenerationLogTable({
           dayjs(row.original.createdAt).format("MM-DD HH:mm:ss"),
       },
     ],
-    [],
+    [detailSearch],
   );
   return (
     <>

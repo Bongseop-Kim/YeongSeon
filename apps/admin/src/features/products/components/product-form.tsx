@@ -1,6 +1,6 @@
 import { Text } from "seed-design/ui/text";
 import { useRef, useState, type ChangeEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import {
@@ -160,6 +160,7 @@ export function ProductForm({
   submitError,
   isSubmitting,
 }: ProductFormProps) {
+  const location = useLocation();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -553,7 +554,9 @@ export function ProductForm({
           type="button"
           variant="neutralWeak"
           disabled={isSubmitting}
-          onClick={() => navigate("/products")}
+          onClick={() =>
+            navigate({ pathname: "/products", search: location.search })
+          }
         >
           취소
         </ActionButton>

@@ -1,10 +1,11 @@
 import { Text } from "seed-design/ui/text";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { ProductListTable } from "@/features/products";
 import "@/features/products/components/products.css";
 
 export default function ProductList() {
+  const location = useLocation();
   const navigate = useNavigate();
 
   return (
@@ -20,7 +21,9 @@ export default function ProductList() {
         </div>
         <ActionButton
           type="button"
-          onClick={() => navigate("/products/create")}
+          onClick={() =>
+            navigate({ pathname: "/products/create", search: location.search })
+          }
         >
           상품 생성
         </ActionButton>

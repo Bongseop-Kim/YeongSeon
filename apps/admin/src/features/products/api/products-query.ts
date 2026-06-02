@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useImageKitUpload } from "@/hooks/useImageKitUpload";
 import {
@@ -152,6 +152,7 @@ function useProductFormState(initialValues = EMPTY_PRODUCT_FORM_VALUES) {
 }
 
 export function useAdminProductCreateForm() {
+  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const imageUpload = useImageKitUpload();
@@ -162,7 +163,7 @@ export function useAdminProductCreateForm() {
       createProduct({ values, imageUrls: imageUpload.getUrls() }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: PRODUCT_LIST_KEY });
-      navigate("/products");
+      navigate({ pathname: "/products", search: location.search });
     },
   });
 
@@ -207,6 +208,7 @@ export function useAdminProductCreateForm() {
 }
 
 export function useAdminProductEditForm(productId: number | null) {
+  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const imageUpload = useImageKitUpload();
@@ -241,7 +243,7 @@ export function useAdminProductEditForm(productId: number | null) {
           queryKey: [...PRODUCT_DETAIL_KEY, productId],
         }),
       ]);
-      navigate("/products");
+      navigate({ pathname: "/products", search: location.search });
     },
   });
 

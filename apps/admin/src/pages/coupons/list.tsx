@@ -1,5 +1,5 @@
 import { Text } from "seed-design/ui/text";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
@@ -49,6 +49,7 @@ const COUPON_COLUMNS: ColumnDef<AdminCoupon>[] = [
 ];
 
 export default function CouponList() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
@@ -76,7 +77,12 @@ export default function CouponList() {
             생성된 쿠폰을 최신순으로 확인합니다.
           </Text>
         </div>
-        <ActionButton type="button" onClick={() => navigate("/coupons/create")}>
+        <ActionButton
+          type="button"
+          onClick={() =>
+            navigate({ pathname: "/coupons/create", search: location.search })
+          }
+        >
           쿠폰 생성
         </ActionButton>
       </header>
@@ -108,7 +114,12 @@ export default function CouponList() {
           columns={COUPON_COLUMNS}
           getRowId={(row) => row.id}
           emptyText="등록된 쿠폰이 없습니다."
-          onRowClick={(row) => navigate(`/coupons/edit/${row.id}`)}
+          onRowClick={(row) =>
+            navigate({
+              pathname: `/coupons/edit/${row.id}`,
+              search: location.search,
+            })
+          }
           getRowActionLabel={(row) => `${row.name} 쿠폰 수정`}
           isLoading={query.isFetching}
         />

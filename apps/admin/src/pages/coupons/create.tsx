@@ -1,5 +1,5 @@
 import { Text } from "seed-design/ui/text";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Callout } from "seed-design/ui/callout";
 import { CouponForm, useCreateCouponMutation } from "@/features/coupons";
@@ -12,6 +12,7 @@ import "@/features/coupons/components/coupon-admin.css";
 const DEFAULT_COUPON_FORM_VALUES = createDefaultCouponFormValues();
 
 export default function CouponCreate() {
+  const location = useLocation();
   const navigate = useNavigate();
   const mutation = useCreateCouponMutation();
   const {
@@ -26,7 +27,8 @@ export default function CouponCreate() {
 
   const onSubmit = handleSubmit((values) => {
     mutation.mutate(values, {
-      onSuccess: () => navigate("/coupons"),
+      onSuccess: () =>
+        navigate({ pathname: "/coupons", search: location.search }),
     });
   });
 

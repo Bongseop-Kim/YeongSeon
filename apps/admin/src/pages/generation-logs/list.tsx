@@ -1,5 +1,6 @@
 import { Text } from "seed-design/ui/text";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { IconMagnifyingglassLine } from "@karrotmarket/react-monochrome-icon";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -29,34 +30,108 @@ const EMPTY_SUMMARY = {
   avgTotalLatencyMs: 0,
 };
 const GENERATION_LOG_SEARCH_DEBOUNCE_MS = 300;
+const DEFAULT_AI_MODEL = "openai";
+const VALID_REQUEST_TYPES: GenerationRequestTypeFilter[] = ["render_standard"];
+const VALID_STATUSES: GenerationStatusFilter[] = ["success", "error"];
 
-export default function GenerationLogList() {
-  const [dateRange, setDateRange] = useState<[string, string]>([
+function getDefaultDateRange(): [string, string] {
+  return [
     dayjs().subtract(6, "day").format("YYYY-MM-DD"),
     dayjs().format("YYYY-MM-DD"),
-  ]);
-  const [aiModel, setAiModel] = useState<string | null>(null);
-  const [requestType, setRequestType] =
-    useState<GenerationRequestTypeFilter | null>(null);
-  const [status, setStatus] = useState<GenerationStatusFilter | null>(null);
-  const [idSearchInput, setIdSearchInput] = useState("");
-  const [idSearch, setIdSearch] = useState("");
-  const [page, setPage] = useState(1);
+  ];
+}
+
+function parsePageParam(value: string | null): number {
+  const page = Number(value ?? "1");
+  if (!Number.isFinite(page)) return 1;
+  return Math.max(1, Math.floor(page));
+}
+
+function normalizeAiModelParam(value: string | null): string | null {
+  if (!value) return null;
+  return value === DEFAULT_AI_MODEL ? value : null;
+}
+
+function isGenerationRequestTypeFilter(
+  value: string,
+): value is GenerationRequestTypeFilter {
+  return VALID_REQUEST_TYPES.some((requestType) => requestType === value);
+}
+
+function normalizeRequestTypeParam(
+  value: string | null,
+): GenerationRequestTypeFilter | null {
+  if (!value) return null;
+  return isGenerationRequestTypeFilter(value) ? value : null;
+}
+
+function isGenerationStatusFilter(
+  value: string,
+): value is GenerationStatusFilter {
+  return VALID_STATUSES.some((status) => status === value);
+}
+
+function normalizeStatusParam(
+  value: string | null,
+): GenerationStatusFilter | null {
+  if (!value) return null;
+  return isGenerationStatusFilter(value) ? value : null;
+}
+
+export default function GenerationLogList() {
+  const [defaultDateFrom, defaultDateTo] = getDefaultDateRange();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dateRange: [string, string] = [
+    searchParams.get("dateFrom") ?? defaultDateFrom,
+    searchParams.get("dateTo") ?? defaultDateTo,
+  ];
+  const aiModel = normalizeAiModelParam(searchParams.get("aiModel"));
+  const requestType = normalizeRequestTypeParam(
+    searchParams.get("requestType"),
+  );
+  const status = normalizeStatusParam(searchParams.get("status"));
+  const idSearch = searchParams.get("idSearch") ?? "";
+  const page = parsePageParam(searchParams.get("page"));
+  const [idSearchInputState, setIdSearchInputState] = useState({
+    source: idSearch,
+    value: idSearch,
+  });
   const [statsOpen, setStatsOpen] = useState(false);
   const { data: statsData, isLoading: statsLoading } =
     useGenerationStatsQuery(dateRange);
+
+  if (idSearchInputState.source !== idSearch) {
+    setIdSearchInputState({ source: idSearch, value: idSearch });
+  }
+
+  const idSearchInput =
+    idSearchInputState.source === idSearch
+      ? idSearchInputState.value
+      : idSearch;
+
+  const setIdSearchInput = (value: string): void => {
+    setIdSearchInputState({ source: idSearch, value });
+  };
 
   useEffect(() => {
     const nextIdSearch = idSearchInput.trim();
     if (nextIdSearch === idSearch) return;
 
     const timeoutId = window.setTimeout(() => {
-      setIdSearch(nextIdSearch);
-      setPage(1);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("page", "1");
+          if (nextIdSearch) next.set("idSearch", nextIdSearch);
+          else next.delete("idSearch");
+          return next;
+        },
+        { replace: true },
+      );
     }, GENERATION_LOG_SEARCH_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [idSearchInput, idSearch]);
+  }, [idSearchInput, idSearch, setSearchParams]);
 
   const {
     data: logsData,
@@ -71,18 +146,23 @@ export default function GenerationLogList() {
     idSearch: idSearch || null,
   });
 
-  const resetPage = () => setPage(1);
   const logCountText = logsHasMore
     ? `${page * GENERATION_LOG_PAGE_SIZE}+`
     : String((page - 1) * GENERATION_LOG_PAGE_SIZE + (logsData?.length ?? 0));
 
-  const updateDateRange = (index: 0 | 1, value: string): void => {
-    setDateRange((prev) => {
-      const next: [string, string] = [...prev];
-      next[index] = value;
+  const updateParams = (
+    patch: Record<string, string | null>,
+    options: { resetPage?: boolean } = { resetPage: true },
+  ): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      Object.entries(patch).forEach(([key, value]) => {
+        if (value) next.set(key, value);
+        else next.delete(key);
+      });
+      if (options.resetPage) next.set("page", "1");
       return next;
     });
-    resetPage();
   };
 
   return (
@@ -123,14 +203,14 @@ export default function GenerationLogList() {
           <AdminFilterField label="시작일">
             <AdminFilterTextField
               value={dateRange[0]}
-              onValueChange={({ value }) => updateDateRange(0, value)}
+              onValueChange={({ value }) => updateParams({ dateFrom: value })}
               inputProps={{ name: "generation-date-from", type: "date" }}
             />
           </AdminFilterField>
           <AdminFilterField label="종료일">
             <AdminFilterTextField
               value={dateRange[1]}
-              onValueChange={({ value }) => updateDateRange(1, value)}
+              onValueChange={({ value }) => updateParams({ dateTo: value })}
               inputProps={{ name: "generation-date-to", type: "date" }}
             />
           </AdminFilterField>
@@ -138,13 +218,9 @@ export default function GenerationLogList() {
             <AdminFilterSelect
               name="generation-request-type"
               value={requestType ?? ""}
-              onChange={(event) => {
-                setRequestType(
-                  (event.target.value ||
-                    null) as GenerationRequestTypeFilter | null,
-                );
-                resetPage();
-              }}
+              onChange={(event) =>
+                updateParams({ requestType: event.target.value || null })
+              }
             >
               <option value="">모든 요청 유형</option>
               <option value="render_standard">렌더(표준)</option>
@@ -154,12 +230,9 @@ export default function GenerationLogList() {
             <AdminFilterSelect
               name="generation-status"
               value={status ?? ""}
-              onChange={(event) => {
-                setStatus(
-                  (event.target.value || null) as GenerationStatusFilter | null,
-                );
-                resetPage();
-              }}
+              onChange={(event) =>
+                updateParams({ status: event.target.value || null })
+              }
             >
               <option value="">모든 상태</option>
               <option value="success">성공</option>
@@ -254,12 +327,11 @@ export default function GenerationLogList() {
           page={page}
           hasMore={logsHasMore}
           logCountText={logCountText}
-          onPageChange={setPage}
+          onPageChange={(nextPage) =>
+            updateParams({ page: String(nextPage) }, { resetPage: false })
+          }
           aiModel={aiModel}
-          onAiModelChange={(model) => {
-            setAiModel(model);
-            resetPage();
-          }}
+          onAiModelChange={(model) => updateParams({ aiModel: model })}
         />
       </section>
     </main>

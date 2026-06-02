@@ -1,5 +1,5 @@
 import { Text } from "seed-design/ui/text";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
@@ -12,6 +12,7 @@ function parseProductId(value: string | undefined): number | null {
 }
 
 export default function ProductEdit() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
   const productId = parseProductId(id);
@@ -32,7 +33,9 @@ export default function ProductEdit() {
         <ActionButton
           type="button"
           variant="neutralWeak"
-          onClick={() => navigate("/products")}
+          onClick={() =>
+            navigate({ pathname: "/products", search: location.search })
+          }
         >
           목록으로 돌아가기
         </ActionButton>

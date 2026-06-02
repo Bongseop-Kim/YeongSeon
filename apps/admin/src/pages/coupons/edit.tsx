@@ -1,7 +1,7 @@
 import { Text } from "seed-design/ui/text";
 import { useCallback, useEffect, useMemo, useReducer } from "react";
 import type { ReactNode } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Callout } from "seed-design/ui/callout";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
@@ -122,6 +122,7 @@ function couponEditReducer(
 
 export default function CouponEdit(): ReactNode {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const couponQuery = useCouponQuery(id);
   const issuedQuery = useIssuedCouponsQuery(id);
@@ -212,7 +213,7 @@ export default function CouponEdit(): ReactNode {
           type: "noticeChanged",
           notice: "쿠폰 정보를 저장했습니다.",
         });
-        navigate("/coupons");
+        navigate({ pathname: "/coupons", search: location.search });
       },
     });
   });

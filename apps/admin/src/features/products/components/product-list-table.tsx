@@ -1,6 +1,6 @@
 import { Text } from "seed-design/ui/text";
 import { useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
@@ -56,6 +56,7 @@ function renderStockBadge(record: AdminProductListItem) {
 }
 
 export function ProductListTable() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parsePageParam(searchParams.get("page"));
@@ -174,7 +175,12 @@ export function ProductListTable() {
         columns={columns}
         getRowId={(row) => String(row.id)}
         emptyText="상품이 없습니다."
-        onRowClick={(row) => navigate(`/products/edit/${row.id}`)}
+        onRowClick={(row) =>
+          navigate({
+            pathname: `/products/edit/${row.id}`,
+            search: location.search,
+          })
+        }
         getRowActionLabel={(row) => `${row.name} 상품 수정`}
         minWidth={920}
         isLoading={query.isFetching}
