@@ -51,6 +51,9 @@ const CONSTANT_LABELS: Record<string, string> = {
   SAMPLE_FABRIC_YARN_DYED_COST: "원단 샘플 (선염)",
   SAMPLE_FABRIC_AND_SEWING_PRINTING_COST: "원단+봉제 샘플 (날염)",
   SAMPLE_FABRIC_AND_SEWING_YARN_DYED_COST: "원단+봉제 샘플 (선염)",
+  FABRIC_QTY_ADULT: "원단 소요량 (성인)",
+  FABRIC_QTY_ADULT_FOLD7: "원단 소요량 (성인 7폴드)",
+  FABRIC_QTY_CHILD: "원단 소요량 (아동)",
 };
 
 const SEWING_GROUPS: { title: string; keys: string[] }[] = [

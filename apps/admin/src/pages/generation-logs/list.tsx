@@ -154,7 +154,7 @@ export default function GenerationLogList() {
             </AdminFilterSelect>
           </AdminFilterField>
           <AdminFilterField
-            label="workflow_id / work_id"
+            label="워크플로우/작업 ID"
             className="adminFilterFieldWide"
           >
             <AdminFilterTextField
@@ -171,7 +171,7 @@ export default function GenerationLogList() {
               inputProps={{
                 name: "generation-id-search",
                 autoComplete: "off",
-                placeholder: "workflow_id / work_id",
+                placeholder: "워크플로우 ID 또는 작업 ID",
               }}
             />
           </AdminFilterField>
