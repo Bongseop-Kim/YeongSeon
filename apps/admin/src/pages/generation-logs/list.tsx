@@ -286,7 +286,6 @@ export default function GenerationLogList() {
           loading={logsLoading}
           page={page}
           hasMore={logsHasMore}
-          logCountText={logCountText}
           onPageChange={(nextPage) =>
             updateParams({ page: String(nextPage) }, { resetPage: false })
           }

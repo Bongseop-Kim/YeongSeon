@@ -105,6 +105,11 @@
   align-items: flex-end;
 }
 
+.generationLogPagination {
+  align-items: center;
+  gap: 8px;
+}
+
 .generationLogField {
   display: flex;
   flex-direction: column;

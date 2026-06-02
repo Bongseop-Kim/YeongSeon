@@ -20,7 +20,6 @@ interface GenerationLogTableProps {
   loading: boolean;
   page: number;
   hasMore: boolean;
-  logCountText: string;
   onPageChange: (page: number) => void;
   aiModel: string | null;
   onAiModelChange: (model: string | null) => void;
@@ -81,13 +80,13 @@ export function GenerationLogTable({
   loading,
   page,
   hasMore,
-  logCountText,
   onPageChange,
   aiModel,
   onAiModelChange,
 }: GenerationLogTableProps) {
   const location = useLocation();
   const detailSearch = location.search;
+  const totalPages = hasMore ? page + 1 : page;
   const columns = useMemo<ColumnDef<AdminGenerationLogGroup>[]>(
     () => [
       {
@@ -223,7 +222,7 @@ export function GenerationLogTable({
           이전
         </ActionButton>
         <Text as="span" textStyle="t4Regular">
-          {page} · {logCountText}건
+          {page} / {totalPages}
         </Text>
         <ActionButton
           type="button"
