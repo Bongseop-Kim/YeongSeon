@@ -13,6 +13,32 @@
   width: 100%;
 }
 
+.adminFilterDateField {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
+.adminFilterDateButton {
+  width: 100%;
+  pointer-events: none;
+}
+
+.adminFilterDateNative {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.adminFilterDateField:focus-within {
+  border-radius: var(--seed-radius-r3);
+  outline: 2px solid var(--seed-color-stroke-brand);
+  outline-offset: 2px;
+}
+
 .adminFilterSelect {
   display: block;
   position: relative;

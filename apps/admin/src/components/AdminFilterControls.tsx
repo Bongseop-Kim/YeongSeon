@@ -1,4 +1,8 @@
 import {
+  IconCalendarLine,
+  IconChevronDownLine,
+} from "@karrotmarket/react-monochrome-icon";
+import {
   FieldButton,
   FieldButtonPlaceholder,
   FieldButtonValue,
@@ -12,6 +16,8 @@ import {
 import {
   Children,
   isValidElement,
+  useState,
+  type ChangeEvent,
   type ReactNode,
   type SelectHTMLAttributes,
 } from "react";
@@ -35,6 +41,9 @@ interface AdminFilterSelectProps extends SelectHTMLAttributes<HTMLSelectElement>
   placeholder?: ReactNode;
 }
 
+const DATE_FIELD_PREFIX_ICON = <IconCalendarLine />;
+const SELECT_SUFFIX_ICON = <IconChevronDownLine />;
+
 function cx(...classNames: Array<string | undefined>): string {
   return classNames.filter(Boolean).join(" ");
 }
@@ -46,10 +55,13 @@ export function AdminFilterField({
   return <div className={cx("adminFilterField", className)}>{children}</div>;
 }
 
-export function AdminFilterTextField({
-  inputProps,
-  ...textFieldProps
-}: AdminFilterTextFieldProps) {
+export function AdminFilterTextField(props: AdminFilterTextFieldProps) {
+  if (props.inputProps.type === "date") {
+    return <AdminFilterDateField {...props} />;
+  }
+
+  const { inputProps, ...textFieldProps } = props;
+
   return (
     <TextField
       className="adminFilterTextField"
@@ -59,6 +71,101 @@ export function AdminFilterTextField({
       <TextFieldInput {...inputProps} />
     </TextField>
   );
+}
+
+function AdminFilterDateField({
+  inputProps,
+  prefixIcon = DATE_FIELD_PREFIX_ICON,
+  label,
+  labelWeight,
+  indicator,
+  description,
+  errorMessage,
+  required,
+  disabled,
+  invalid,
+  readOnly,
+  showRequiredIndicator,
+  value,
+  defaultValue,
+  onValueChange,
+}: AdminFilterTextFieldProps) {
+  const [uncontrolledValue, setUncontrolledValue] = useState(
+    () => defaultValue ?? "",
+  );
+  const isControlled = value !== undefined;
+  const currentValue = isControlled ? value : uncontrolledValue;
+  const stringValue = currentValue == null ? "" : String(currentValue);
+  const {
+    className: inputClassName,
+    onChange: inputOnChange,
+    ...nativeInputProps
+  } = inputProps;
+  const placeholder = inputProps.placeholder ?? "날짜를 선택해주세요";
+  const nativeAriaLabel = inputProps["aria-label"] ?? getTextLabel(label);
+
+  const updateDateFieldValue = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.currentTarget.value;
+
+    inputOnChange?.(event);
+
+    if (!isControlled) {
+      setUncontrolledValue(nextValue);
+    }
+
+    onValueChange?.(createValueChangePayload(nextValue));
+  };
+
+  return (
+    <span className="adminFilterDateField">
+      <FieldButton
+        label={label}
+        labelWeight={labelWeight}
+        indicator={indicator}
+        description={description}
+        errorMessage={errorMessage}
+        disabled={disabled ?? inputProps.disabled}
+        invalid={invalid}
+        showRequiredIndicator={showRequiredIndicator}
+        className="adminFilterDateButton"
+        prefixIcon={prefixIcon}
+        buttonProps={{
+          "aria-label": getFieldButtonAriaLabel(label, stringValue),
+          "aria-hidden": true,
+          tabIndex: -1,
+          type: "button",
+        }}
+      >
+        {stringValue ? (
+          <FieldButtonValue>{stringValue}</FieldButtonValue>
+        ) : (
+          <FieldButtonPlaceholder>{placeholder}</FieldButtonPlaceholder>
+        )}
+      </FieldButton>
+      <input
+        {...nativeInputProps}
+        aria-label={nativeAriaLabel}
+        className={cx("adminFilterDateNative", inputClassName)}
+        disabled={disabled ?? inputProps.disabled}
+        readOnly={readOnly ?? inputProps.readOnly}
+        required={required ?? inputProps.required}
+        type="date"
+        value={stringValue}
+        onChange={updateDateFieldValue}
+      />
+    </span>
+  );
+}
+
+function createValueChangePayload(value: string) {
+  const graphemes = Array.from(value);
+
+  return {
+    value,
+    graphemes,
+    slicedValue: value,
+    slicedGraphemes: graphemes,
+  };
 }
 
 export function AdminFilterSelect({
@@ -83,6 +190,7 @@ export function AdminFilterSelect({
       <FieldButton
         label={label}
         className="adminFilterSelectButton"
+        suffixIcon={SELECT_SUFFIX_ICON}
         buttonProps={{
           "aria-label": fieldButtonLabel,
           "aria-hidden": true,
