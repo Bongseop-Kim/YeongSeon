@@ -1,5 +1,5 @@
 import { Text } from "seed-design/ui/text";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { IconMagnifyingglassLine } from "@karrotmarket/react-monochrome-icon";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -28,6 +28,7 @@ const EMPTY_SUMMARY = {
   totalTokensConsumed: 0,
   avgTotalLatencyMs: 0,
 };
+const GENERATION_LOG_SEARCH_DEBOUNCE_MS = 300;
 
 export default function GenerationLogList() {
   const [dateRange, setDateRange] = useState<[string, string]>([
@@ -44,6 +45,19 @@ export default function GenerationLogList() {
   const [statsOpen, setStatsOpen] = useState(false);
   const { data: statsData, isLoading: statsLoading } =
     useGenerationStatsQuery(dateRange);
+
+  useEffect(() => {
+    const nextIdSearch = idSearchInput.trim();
+    if (nextIdSearch === idSearch) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setIdSearch(nextIdSearch);
+      setPage(1);
+    }, GENERATION_LOG_SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [idSearchInput, idSearch]);
+
   const {
     data: logsData,
     hasMore: logsHasMore,
@@ -54,7 +68,7 @@ export default function GenerationLogList() {
     page,
     requestType,
     status,
-    idSearch: idSearch.trim() || null,
+    idSearch: idSearch || null,
   });
 
   const resetPage = () => setPage(1);
@@ -68,11 +82,6 @@ export default function GenerationLogList() {
       next[index] = value;
       return next;
     });
-    resetPage();
-  };
-
-  const handleIdSearchSubmit = (): void => {
-    setIdSearch(idSearchInput);
     resetPage();
   };
 
@@ -164,14 +173,7 @@ export default function GenerationLogList() {
             <AdminFilterTextField
               prefixIcon={<IconMagnifyingglassLine />}
               value={idSearchInput}
-              onValueChange={({ value }) => {
-                const nextValue = value;
-                setIdSearchInput(nextValue);
-                if (nextValue === "") {
-                  setIdSearch("");
-                  resetPage();
-                }
-              }}
+              onValueChange={({ value }) => setIdSearchInput(value)}
               inputProps={{
                 name: "generation-id-search",
                 autoComplete: "off",
@@ -179,9 +181,6 @@ export default function GenerationLogList() {
               }}
             />
           </AdminFilterField>
-          <ActionButton type="button" onClick={handleIdSearchSubmit}>
-            검색
-          </ActionButton>
         </form>
       </section>
 
